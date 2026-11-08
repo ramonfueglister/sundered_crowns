@@ -464,7 +464,9 @@ const DEFS: SituationDef[] = [
       if (cityOwner && cityOwner.faith !== o.faith) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
       // a campaign season every quarter: the sultan only waits while he is already on the offensive somewhere
       const attacking = s.wars.some((x) => x.att.includes(o.id));
-      if (m % 3 === 1 && y >= sit.data.nextWar && !attacking && o.warExhaustion < 60 && !human(s, o.id)) {
+      // the siege of the City outranks any other campaign
+      const cityWar = sit.stage === 2 && !!cityOwner && cityOwner.id !== o.id && !atWar(s, o.id, cityOwner.id);
+      if (m % 3 === 1 && (y >= sit.data.nextWar || cityWar) && (!attacking || cityWar) && o.warExhaustion < 60 && !human(s, o.id)) {
         const tries: [number, number[]][] = [];
         if (sit.stage === 2 && cityOwner && cityOwner.id !== o.id && !hasTreaty(s, o.id, cityOwner.id, 'truce')) tries.push([cityOwner.id, [city]]);
         else {

@@ -148,7 +148,7 @@ function aiColonize(s: GameState, w: World) {
 /** AI exploration: Atlantic crowns fit out ships once their navigators are able and send them west. */
 function aiExplore(s: GameState, w: World, year: number) {
   for (const n of s.nations) {
-    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 7 || n.capital < 0 || n.overlord >= 0) continue;
+    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 10 || n.capital < 0 || n.overlord >= 0) continue;
     if (!europeanCrown(w, n) || !n.flags.atlantic) continue;
     if (s.explorers.some((x) => x.nation === n.id) || !chance(s.rng, 0.35)) continue;
     const f = s.armies.find((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length && !s.explorers.some((x) => x.id === a.id));
@@ -249,7 +249,8 @@ export function charterOptions(s: GameState, w: World, n: Nation): number[] {
     const o = s.loc.owner[i];
     if (o !== n.id && !(o >= 0 && s.nations[o]?.overlord === n.id && s.nations[o]?.subjectType === 'colonial')) continue;
     if (!colonialRegion(w, i) || w.distKm(i, n.capital) < 2500) continue;
-    const m = s.loc.market[i]; if (m !== home && s.markets[m]) out.add(m);
+    const m = s.loc.market[i]; const hub = s.markets[m]?.hub ?? -1;
+    if (m !== home && hub >= 0 && colonialRegion(w, hub) && w.distKm(hub, n.capital) >= 2500) out.add(m);
   }
   return [...out].sort((a, b) => a - b);
 }

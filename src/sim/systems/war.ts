@@ -8,6 +8,7 @@ import { EPOCH } from '../ctx';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
 import { lawEffect, estate } from './politics';
+import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
 
 // Per-nation location lists (OC) and development sums (DC), both refreshed lazily after an EPOCH bump.
 // Owner and dev are written in many places, so instead of rebuilding on every bump each cache compares
@@ -322,8 +323,20 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
   const loser = winner === from ? to : from;
   const pre = s.nations[war.attLead], legit = s.nations[war.goal.target];
   const leadersPeace = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
-  if (war.goal.type === 'civil_war' && leadersPeace && pre?.flags.pretender_of === legit?.id && legit.alive) endCivilWar(s, w, war, pre, legit, war.att.includes(winner) && score > 10);
-  else applyPeace(s, w, war, winner, loser, terms.length ? terms : [{ type: 'white_peace' }]);
+  const civil = war.goal.type === 'civil_war' && leadersPeace && pre?.flags.pretender_of === legit?.id && legit.alive;
+  // a war of succession reunites the realm, unless a vast steppe realm ends it undecided: then the khanate splits for good
+  const attScore = computeScore(s, war);
+  const splits = civil && Math.abs(attScore) < 20 && (legit.gov === 'nomadic_horde' || legit.gov === 'tribal_federation') && nationLocs(s, legit.id).length + nationLocs(s, pre.id).length >= 120;
+  if (civil && !splits) endCivilWar(s, w, war, pre, legit, attScore > 10);
+  else {
+    applyPeace(s, w, war, winner, loser, terms.length ? terms : [{ type: 'white_peace' }]);
+    if (splits) {
+      const city = w.names[pre.capital] ?? pre.short.en, cityDe = w.namesDe[pre.capital] ?? city;
+      pre.name = { en: `Khanate of ${city}`, de: `Khanat ${cityDe}` }; pre.short = { en: city, de: cityDe }; pre.adj = { en: city, de: cityDe };
+      delete pre.flags.pretender_of;
+      chronicle(s, pre.id, 'independence', { en: `The war of succession in ${legit.short.en} ended undecided: the ${pre.name.en} goes its own way.`, de: `Der Erbfolgekrieg in ${legit.short.de} endete unentschieden: das ${pre.name.de} geht seinen eigenen Weg.` });
+    }
+  }
   // if the offer was between the war leaders, the whole war ends; otherwise only the separate peace
   const leaders = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
   const ending = leaders ? [...war.att, ...war.def] : [from === war.attLead || from === war.defLead ? to : from];
@@ -453,7 +466,31 @@ export function startCivilWar(s: GameState, w: World, n: Nation) {
   void err;
 }
 
+/** Gathering the lands: the strongest crown of a people lays claim to small neighbours of the same people
+ *  (Moscow and the Rus principalities, the French crown and its great fiefs, and so on). */
+function gatheringYear(s: GameState, w: World) {
+  const neigh = new Map<number, Set<number>>();
+  const o = s.loc.owner;
+  for (let i = 0; i < w.L; i++) {
+    const a = o[i]; if (a < 0) continue;
+    for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) { const v = w.adj[e]; if (v >= w.L) continue; const b = o[v]; if (b >= 0 && b !== a) { let st = neigh.get(a); if (!st) neigh.set(a, (st = new Set())); st.add(b); } }
+  }
+  for (const n of s.nations) {
+    if (!n.alive || (n.overlord >= 0 && n.subjectType !== 'tributary') || !chance(s.rng, 0.2)) continue;
+    const grp = GROUP_OF[ALL_CULTURES[n.culture]]; if (!grp || grp === 'other') continue;
+    const dev = nationDev(s, n.id); if (dev < 80) continue;
+    for (const b of [...(neigh.get(n.id) ?? [])].sort((x, y) => x - y)) {
+      const bn = s.nations[b];
+      if (!bn.alive || bn.overlord === n.id || GROUP_OF[ALL_CULTURES[bn.culture]] !== grp || nationDev(s, b) > dev * 0.5) continue;
+      if (hasTreaty(s, n.id, b, 'claim') || hasTreaty(s, n.id, b, 'alliance')) continue;
+      s.treaties.push({ a: Math.min(n.id, b), b: Math.max(n.id, b), type: 'claim', since: s.day, until: s.day + 365 * 25 });
+      break;
+    }
+  }
+}
+
 export const war: System = {
   id: 'war',
   monthly({ s, w }) { warsMonth(s, w); dreadMonth(s, w); },
+  yearly({ s, w }) { gatheringYear(s, w); },
 };
