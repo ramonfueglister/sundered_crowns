@@ -60,4 +60,6 @@ export class SimClient {
 }
 
 let _client: SimClient | null = null;
+/** Swap the active client (the online world client replaces the local worker before the map mounts). */
+export function setClient(c: SimClient | null) { _client = c; }
 export function sim(): SimClient { return (_client ||= new SimClient()); }

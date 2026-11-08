@@ -34,7 +34,7 @@ export async function saveNow(name?: string, auto = false) { const data = await 
 
 let lastAutoDay = -1;
 export function autosaveTick() {
-  const v = view.value; if (!v || v.speed === 0) return;
+  const v = view.value; if (!v || v.speed === 0 || (sim() as any).online) return; // the world server keeps online saves
   const every = Math.max(1, settings.value.autosaveMonths) * 30;
   if (lastAutoDay < 0) { lastAutoDay = v.day; return; }
   if (v.day - lastAutoDay >= every) { lastAutoDay = v.day; saveNow(undefined, true).catch((e) => console.warn('autosave failed', e)); }

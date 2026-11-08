@@ -6,3 +6,5 @@ dist/
 tools/geo/__pycache__/
 test-results/
 playwright-report/
+world-data/
+build/

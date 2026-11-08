@@ -11,6 +11,7 @@ import * as P from './panels';
 import { initAudio, setMood, setVolumes, sfx } from './audio';
 import { autosaveTick, listSaves, loadSave } from './saves';
 import { rgb, num } from './format';
+import { OnlineHud } from './online/OnlineButton';
 
 const LORE = [
   { en: 'The Great Mortality has passed, but it will return.', de: 'Das große Sterben ist vorüber, doch es wird wiederkehren.' },
@@ -127,6 +128,7 @@ function GameUI() {
   const pid = playerId.value;
   return <>
     <TopBar />
+    <OnlineHud />
     <P.Notices />
     <div class="left-col">
       {panel.value === 'none' && selectedLoc.value >= 0 && <P.LocationPanel loc={selectedLoc.value} />}

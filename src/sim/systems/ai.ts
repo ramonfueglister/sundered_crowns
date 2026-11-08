@@ -46,7 +46,7 @@ function neighbours(s: GameState, w: World, n: number): Set<number> {
 const neighCache = new Map<number, { day: number; set: Set<number> }>();
 export function neighboursCached(s: GameState, w: World, n: number) {
   const c = neighCache.get(n);
-  if (c && s.day - c.day < 90 && !(s.flags.ownershipDirty > c.day)) return c.set;
+  if (c && s.day >= c.day && s.day - c.day < 90 && !(s.flags.ownershipDirty > c.day)) return c.set;
   const set = neighbours(s, w, n); neighCache.set(n, { day: s.day, set }); return set;
 }
 

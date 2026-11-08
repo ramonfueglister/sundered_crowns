@@ -26,3 +26,15 @@ Read via `lawEffect(n,key)` (laws + values + modifiers) or `mod(n,key)` (modifie
 `tax, trade, production, unrest` (fractions/points; read with mod), `morale, discipline, fire, cavalry, speed, manpower, army_cost,
 mercenary_cost, fort_strength, attrition` (military, fractions), `concord_gain, mandate_gain, authority_gain, corruption, interest,
 dread_decay, tolerance, admin, control, integration, research, conversion, assimilation, colonial_range, colonial_growth, colonists, agents`.
+
+## Online (persistent world, accounts, cloud saves)
+- `server/world.ts` – `WorldCore`: authoritative world without sockets. Every state change is a `LogEntry`
+  (player command, join, online/offline, release, player offer, admin dev command, season end) appended to the
+  command log in application order, interleaved with day markers; `applyEntry` + `replayLines` reproduce `hashState`
+  from any snapshot (`tests/world_replay.test.ts`). Player commands are queued and applied at the start of the next day.
+- `server/main.ts` – HTTP + WebSocket transport, `server/auth.ts` – Supabase JWT (HS256/JWKS) or DEV name login,
+  `server/store.ts` – Supabase persistence via service role (best effort; local files are the source of truth).
+- `src/online/protocol.ts` – wire protocol; `src/online/worldClient.ts` – `OnlineClient`, same surface and signals as
+  `SimClient`; `src/online/supabase.ts`, `cloudSaves.ts`, `achievements.ts` (cosmetic, checked by the server).
+- `src/ui/online/*` – online panel (account, worlds, join, standing orders, messages/offers, leaderboard, achievements,
+  cloud saves, admin), world clock, in-game HUD. Deployment: `docs/DEPLOY.md`.
