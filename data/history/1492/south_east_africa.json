@@ -1,0 +1,4920 @@
+{
+ "region": "south_east_africa",
+ "year": 1492,
+ "date": "1492-01-01",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "New Cambridge History of Islam vol. 2 and 3",
+  "Oxford Atlas of World History",
+  "H. Inalcık, The Ottoman Empire: The Classical Age 1300-1600",
+  "C. Imber, The Ottoman Empire 1300-1650",
+  "C. F. Petry, Twilight of Majesty: the reigns of al-Ashraf Qaytbay and Qansuh al-Ghawri",
+  "J. E. Woods, The Aqquyunlu: Clan, Confederation, Empire",
+  "B. F. Manz / M. Subtelny on the late Timurids (Husayn Bayqara)",
+  "A. M. Abun-Nasr, A History of the Maghrib in the Islamic Period",
+  "Cambridge History of Africa vol. 3 (c.1050-c.1600)",
+  "J. Hunwick, Timbuktu and the Songhay Empire",
+  "J. Thornton, The Kingdom of Kongo; A. Hilton",
+  "Taddesse Tamrat, Church and State in Ethiopia 1270-1527",
+  "Wikipedia articles on the respective states and rulers (incl. List of rulers of Aq Qoyunlu, Zayyanid dynasty, Mahmud II (mansa), Hintata)"
+ ],
+ "new_ids": [],
+ "notes": [
+  "Aq Qoyunlu: Baysunghur, son of Ya'qub, reigns from Tabriz under the regency of Sufi Khalil; his cousin Rustam deposes him in 1492/93.",
+  "The Ottoman Black Sea forts in the Crimea and at Azov are marked as outposts so that the Crimean steppe stays with the khan.",
+  "Rulers whose names are uncertain in the sources (Hintata emir, Jolof, Mossi, Kilwa, Agadez, Alodia, Ife, Oman) are flagged in dynasty_note."
+ ],
+ "states": [
+  {
+   "id": "ottoman",
+   "name": {
+    "en": "Ottoman Empire",
+    "de": "Osmanisches Reich"
+   },
+   "short": {
+    "en": "Ottomans",
+    "de": "Osmanen"
+   },
+   "adjective": {
+    "en": "Ottoman",
+    "de": "osmanisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "anatolian_turkish",
+   "faith": "sunni",
+   "color": "#b8332a",
+   "capital": {
+    "name": "Constantinople",
+    "lat": 41.008,
+    "lon": 28.978
+   },
+   "holdings": [
+    {
+     "name": "Constantinople",
+     "lat": 41.008,
+     "lon": 28.978
+    },
+    {
+     "name": "Edirne",
+     "lat": 41.68,
+     "lon": 26.56
+    },
+    {
+     "name": "Gallipoli",
+     "lat": 40.411,
+     "lon": 26.67
+    },
+    {
+     "name": "Philippopolis",
+     "lat": 42.15,
+     "lon": 24.75
+    },
+    {
+     "name": "Sredets",
+     "lat": 42.698,
+     "lon": 23.322
+    },
+    {
+     "name": "Tarnovo",
+     "lat": 43.081,
+     "lon": 25.629
+    },
+    {
+     "name": "Vidin",
+     "lat": 43.99,
+     "lon": 22.873
+    },
+    {
+     "name": "Nikopol",
+     "lat": 43.705,
+     "lon": 24.895
+    },
+    {
+     "name": "Silistra",
+     "lat": 44.117,
+     "lon": 27.261
+    },
+    {
+     "name": "Varna",
+     "lat": 43.21,
+     "lon": 27.91
+    },
+    {
+     "name": "Kaliakra",
+     "lat": 43.362,
+     "lon": 28.465
+    },
+    {
+     "name": "Thessalonica",
+     "lat": 40.64,
+     "lon": 22.944
+    },
+    {
+     "name": "Serres",
+     "lat": 41.09,
+     "lon": 23.548
+    },
+    {
+     "name": "Drama",
+     "lat": 41.151,
+     "lon": 24.147
+    },
+    {
+     "name": "Skopje",
+     "lat": 41.996,
+     "lon": 21.431
+    },
+    {
+     "name": "Prizren",
+     "lat": 42.213,
+     "lon": 20.739
+    },
+    {
+     "name": "Novo Brdo",
+     "lat": 42.612,
+     "lon": 21.418
+    },
+    {
+     "name": "Smederevo",
+     "lat": 44.66,
+     "lon": 20.93
+    },
+    {
+     "name": "Kruševac",
+     "lat": 43.58,
+     "lon": 21.33
+    },
+    {
+     "name": "Niš",
+     "lat": 43.32,
+     "lon": 21.9
+    },
+    {
+     "name": "Vrhbosna",
+     "lat": 43.86,
+     "lon": 18.41
+    },
+    {
+     "name": "Bobovac",
+     "lat": 44.11,
+     "lon": 18.19
+    },
+    {
+     "name": "Srebrenica",
+     "lat": 44.104,
+     "lon": 19.297
+    },
+    {
+     "name": "Zvornik",
+     "lat": 44.38,
+     "lon": 19.1
+    },
+    {
+     "name": "Blagaj",
+     "lat": 43.256,
+     "lon": 17.886
+    },
+    {
+     "name": "Novi",
+     "lat": 42.45,
+     "lon": 18.54
+    },
+    {
+     "name": "Scutari",
+     "lat": 41.02,
+     "lon": 29.02
+    },
+    {
+     "name": "Kruja",
+     "lat": 41.509,
+     "lon": 19.792
+    },
+    {
+     "name": "Berat",
+     "lat": 40.705,
+     "lon": 19.952
+    },
+    {
+     "name": "Valona",
+     "lat": 40.466,
+     "lon": 19.49
+    },
+    {
+     "name": "Ohrid",
+     "lat": 41.117,
+     "lon": 20.802
+    },
+    {
+     "name": "Prilep",
+     "lat": 41.345,
+     "lon": 21.555
+    },
+    {
+     "name": "Ioannina",
+     "lat": 39.665,
+     "lon": 20.853
+    },
+    {
+     "name": "Arta",
+     "lat": 39.16,
+     "lon": 20.985
+    },
+    {
+     "name": "Trikala",
+     "lat": 39.555,
+     "lon": 21.768
+    },
+    {
+     "name": "Larissa",
+     "lat": 39.639,
+     "lon": 22.419
+    },
+    {
+     "name": "Athens",
+     "lat": 37.971,
+     "lon": 23.726
+    },
+    {
+     "name": "Thebes",
+     "lat": 38.32,
+     "lon": 23.32
+    },
+    {
+     "name": "Corinth",
+     "lat": 37.906,
+     "lon": 22.88
+    },
+    {
+     "name": "Patras",
+     "lat": 38.246,
+     "lon": 21.735
+    },
+    {
+     "name": "Mistra",
+     "lat": 37.073,
+     "lon": 22.367
+    },
+    {
+     "name": "Kalamata",
+     "lat": 37.04,
+     "lon": 22.11
+    },
+    {
+     "name": "Negroponte",
+     "lat": 38.463,
+     "lon": 23.6
+    },
+    {
+     "name": "Lemnos",
+     "lat": 39.875,
+     "lon": 25.062
+    },
+    {
+     "name": "Mytilene",
+     "lat": 39.107,
+     "lon": 26.555
+    },
+    {
+     "name": "Kilia",
+     "lat": 45.43,
+     "lon": 29.27
+    },
+    {
+     "name": "Akkerman",
+     "lat": 46.2,
+     "lon": 30.35
+    },
+    {
+     "name": "Giurgiu",
+     "lat": 43.903,
+     "lon": 25.97
+    },
+    {
+     "name": "Bursa",
+     "lat": 40.183,
+     "lon": 29.067
+    },
+    {
+     "name": "Nicaea",
+     "lat": 40.429,
+     "lon": 29.721
+    },
+    {
+     "name": "Nicomedia",
+     "lat": 40.765,
+     "lon": 29.94
+    },
+    {
+     "name": "Balıkesir",
+     "lat": 39.65,
+     "lon": 27.88
+    },
+    {
+     "name": "Bergama",
+     "lat": 39.12,
+     "lon": 27.18
+    },
+    {
+     "name": "Biga",
+     "lat": 40.23,
+     "lon": 27.24
+    },
+    {
+     "name": "Kütahya",
+     "lat": 39.42,
+     "lon": 29.98
+    },
+    {
+     "name": "Karahisar",
+     "lat": 38.76,
+     "lon": 30.54
+    },
+    {
+     "name": "Uşak",
+     "lat": 38.68,
+     "lon": 29.41
+    },
+    {
+     "name": "Ayasoluk",
+     "lat": 37.95,
+     "lon": 27.37
+    },
+    {
+     "name": "Tire",
+     "lat": 38.09,
+     "lon": 27.73
+    },
+    {
+     "name": "Smyrna",
+     "lat": 38.42,
+     "lon": 27.14
+    },
+    {
+     "name": "Magnesia",
+     "lat": 38.61,
+     "lon": 27.43
+    },
+    {
+     "name": "Milas",
+     "lat": 37.32,
+     "lon": 27.78
+    },
+    {
+     "name": "Muğla",
+     "lat": 37.22,
+     "lon": 28.36
+    },
+    {
+     "name": "Antalya",
+     "lat": 36.89,
+     "lon": 30.7
+    },
+    {
+     "name": "Eğirdir",
+     "lat": 37.87,
+     "lon": 30.85
+    },
+    {
+     "name": "Isparta",
+     "lat": 37.76,
+     "lon": 30.55
+    },
+    {
+     "name": "Burdur",
+     "lat": 37.72,
+     "lon": 30.29
+    },
+    {
+     "name": "Konya",
+     "lat": 37.87,
+     "lon": 32.49
+    },
+    {
+     "name": "Larende",
+     "lat": 37.18,
+     "lon": 33.22
+    },
+    {
+     "name": "Ermenek",
+     "lat": 36.64,
+     "lon": 32.89
+    },
+    {
+     "name": "Silifke",
+     "lat": 36.38,
+     "lon": 33.93
+    },
+    {
+     "name": "Kastamonu",
+     "lat": 41.38,
+     "lon": 33.78
+    },
+    {
+     "name": "Sinop",
+     "lat": 42.03,
+     "lon": 35.15
+    },
+    {
+     "name": "Ankara",
+     "lat": 39.93,
+     "lon": 32.86
+    },
+    {
+     "name": "Kayseri",
+     "lat": 38.72,
+     "lon": 35.49
+    },
+    {
+     "name": "Sivas",
+     "lat": 39.75,
+     "lon": 37.02
+    },
+    {
+     "name": "Tokat",
+     "lat": 40.31,
+     "lon": 36.55
+    },
+    {
+     "name": "Amasya",
+     "lat": 40.65,
+     "lon": 35.83
+    },
+    {
+     "name": "Niğde",
+     "lat": 37.97,
+     "lon": 34.68
+    },
+    {
+     "name": "Kırşehir",
+     "lat": 39.15,
+     "lon": 34.16
+    },
+    {
+     "name": "Aksaray",
+     "lat": 38.37,
+     "lon": 34.03
+    },
+    {
+     "name": "Trebizond",
+     "lat": 41.0,
+     "lon": 39.72
+    },
+    {
+     "name": "Samsun",
+     "lat": 41.29,
+     "lon": 36.33
+    },
+    {
+     "name": "Kerasous",
+     "lat": 40.91,
+     "lon": 38.39
+    },
+    {
+     "name": "Rizaion",
+     "lat": 41.02,
+     "lon": 40.52
+    },
+    {
+     "name": "Şebinkarahisar",
+     "lat": 40.29,
+     "lon": 38.42
+    },
+    {
+     "name": "Caffa",
+     "lat": 45.03,
+     "lon": 35.38,
+     "outpost": true
+    },
+    {
+     "name": "Mangup",
+     "lat": 44.59,
+     "lon": 33.81,
+     "outpost": true
+    },
+    {
+     "name": "Sudak",
+     "lat": 44.85,
+     "lon": 34.97,
+     "outpost": true
+    },
+    {
+     "name": "Kerch",
+     "lat": 45.36,
+     "lon": 36.47,
+     "outpost": true
+    },
+    {
+     "name": "Azov",
+     "lat": 47.1,
+     "lon": 39.42,
+     "outpost": true
+    },
+    {
+     "name": "Taman",
+     "lat": 45.21,
+     "lon": 36.72,
+     "outpost": true
+    }
+   ],
+   "ruler": {
+    "name": "Bayezid II",
+    "born": 1447,
+    "dynasty": "Osmanoğlu",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "cautious",
+     "just"
+    ]
+   },
+   "heir": {
+    "name": "Şehzade Ahmed",
+    "born": 1466,
+    "dynasty": "Osmanoğlu",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "House of Osman; Bayezid II (since 1481) defeated his brother Cem, who is now held in Rome; his sons Ahmed, Korkut and Selim govern Anatolian provinces.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "crimea"
+   ],
+   "rivals": [
+    "hungary",
+    "venice",
+    "mamluk",
+    "hospitallers"
+   ],
+   "claims_on": [
+    "hungary"
+   ],
+   "personality": "builder",
+   "difficulty": 1,
+   "summary": {
+    "en": "After the conquering reign of Mehmed II, the pious Bayezid II consolidates: he has taken Kilia and Akkerman (1484) and fought the Mamluks to a draw (1485-91). As long as his brother Cem lives in papal hands he must avoid a great Christian war, but his akıncı raiders never stop.",
+    "de": "Nach der Eroberungsherrschaft Mehmeds II. festigt der fromme Bayezid II.: Er hat Kilia und Akkerman genommen (1484) und gegen die Mamluken ein Unentschieden erkämpft (1485-91). Solange sein Bruder Cem in päpstlicher Hand lebt, muss er einen großen Krieg mit den Christen meiden, doch seine Akıncı-Streifscharen ruhen nie."
+   },
+   "coa": {
+    "blazon": "Gules, a crescent Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crescent",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "dulkadir",
+   "name": {
+    "en": "Beylik of Dulkadir",
+    "de": "Beylik Dulkadir"
+   },
+   "short": {
+    "en": "Dulkadir",
+    "de": "Dulkadir"
+   },
+   "adjective": {
+    "en": "Dulkadirid",
+    "de": "dulkadiridisch"
+   },
+   "rank": "beylik",
+   "government": "tribal_federation",
+   "culture": "turkmen",
+   "faith": "sunni",
+   "color": "#b0763a",
+   "capital": {
+    "name": "Elbistan",
+    "lat": 38.2,
+    "lon": 37.19
+   },
+   "holdings": [
+    {
+     "name": "Elbistan",
+     "lat": 38.2,
+     "lon": 37.19
+    },
+    {
+     "name": "Maraş",
+     "lat": 37.58,
+     "lon": 36.93
+    },
+    {
+     "name": "Göksun",
+     "lat": 38.02,
+     "lon": 36.5
+    }
+   ],
+   "ruler": {
+    "name": "Alaüddevle Bozkurt",
+    "born": 1440,
+    "dynasty": "Dulkadir",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "cunning"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Dulkadirids; Alaüddevle was installed in 1480 with Ottoman help but has balanced between Istanbul and Cairo ever since.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ottoman"
+   ],
+   "rivals": [
+    "ak_koyunlu"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Turkmen beylik of Dulkadir in the Taurus is the buffer and bone of contention between Ottomans and Mamluks.",
+    "de": "Das turkmenische Beylik Dulkadir im Taurus ist Puffer und Zankapfel zwischen Osmanen und Mamluken."
+   },
+   "coa": {
+    "blazon": "Or, a horse Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ramadanid",
+   "name": {
+    "en": "Ramadanid Emirate",
+    "de": "Emirat der Ramadaniden"
+   },
+   "short": {
+    "en": "Ramadanids",
+    "de": "Ramadaniden"
+   },
+   "adjective": {
+    "en": "Ramadanid",
+    "de": "ramadanidisch"
+   },
+   "rank": "beylik",
+   "government": "tribal_federation",
+   "culture": "turkmen",
+   "faith": "sunni",
+   "color": "#8c9c3a",
+   "capital": {
+    "name": "Adana",
+    "lat": 37.0,
+    "lon": 35.32
+   },
+   "holdings": [
+    {
+     "name": "Adana",
+     "lat": 37.0,
+     "lon": 35.32
+    },
+    {
+     "name": "Ceyhan plain",
+     "lat": 36.99,
+     "lon": 35.85
+    },
+    {
+     "name": "Tarsus",
+     "lat": 36.92,
+     "lon": 34.89
+    }
+   ],
+   "ruler": {
+    "name": "Halil Bey",
+    "born": 1440,
+    "dynasty": "Ramazanoğlu",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ramadanid Turkmen beys of Adana, vassals of the Mamluk sultan.",
+   "overlord": "mamluk",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Ramadanid beys hold Adana and the Cilician plain as Mamluk vassals; the plain was a battlefield of the last war.",
+    "de": "Die ramadanidischen Begs halten Adana und die kilikische Ebene als mamlukische Vasallen; die Ebene war Schlachtfeld des letzten Krieges."
+   },
+   "coa": {
+    "blazon": "Vert, a horse Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mamluk",
+   "name": {
+    "en": "Mamluk Sultanate",
+    "de": "Mamlukensultanat"
+   },
+   "short": {
+    "en": "Mamluks",
+    "de": "Mamluken"
+   },
+   "adjective": {
+    "en": "Mamluk",
+    "de": "mamlukisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "egyptian_arab",
+   "faith": "sunni",
+   "color": "#e0b84a",
+   "capital": {
+    "name": "Cairo",
+    "lat": 30.044,
+    "lon": 31.236
+   },
+   "holdings": [
+    {
+     "name": "Cairo",
+     "lat": 30.044,
+     "lon": 31.236
+    },
+    {
+     "name": "Alexandria",
+     "lat": 31.2,
+     "lon": 29.92
+    },
+    {
+     "name": "Damietta",
+     "lat": 31.42,
+     "lon": 31.81
+    },
+    {
+     "name": "Fayyum",
+     "lat": 29.31,
+     "lon": 30.84
+    },
+    {
+     "name": "Minya",
+     "lat": 28.1,
+     "lon": 30.75
+    },
+    {
+     "name": "Asyut",
+     "lat": 27.18,
+     "lon": 31.18
+    },
+    {
+     "name": "Qus",
+     "lat": 25.91,
+     "lon": 32.76
+    },
+    {
+     "name": "Aswan",
+     "lat": 24.09,
+     "lon": 32.9
+    },
+    {
+     "name": "Suez",
+     "lat": 29.97,
+     "lon": 32.55
+    },
+    {
+     "name": "Ayla",
+     "lat": 29.53,
+     "lon": 35.0
+    },
+    {
+     "name": "Gaza",
+     "lat": 31.5,
+     "lon": 34.47
+    },
+    {
+     "name": "Jerusalem",
+     "lat": 31.78,
+     "lon": 35.23
+    },
+    {
+     "name": "Karak",
+     "lat": 31.18,
+     "lon": 35.7
+    },
+    {
+     "name": "Safad",
+     "lat": 32.96,
+     "lon": 35.5
+    },
+    {
+     "name": "Damascus",
+     "lat": 33.51,
+     "lon": 36.29
+    },
+    {
+     "name": "Baalbek",
+     "lat": 34.0,
+     "lon": 36.21
+    },
+    {
+     "name": "Tripoli",
+     "lat": 34.44,
+     "lon": 35.83
+    },
+    {
+     "name": "Homs",
+     "lat": 34.73,
+     "lon": 36.71
+    },
+    {
+     "name": "Hama",
+     "lat": 35.13,
+     "lon": 36.75
+    },
+    {
+     "name": "Aleppo",
+     "lat": 36.2,
+     "lon": 37.16
+    },
+    {
+     "name": "Antioch",
+     "lat": 36.2,
+     "lon": 36.16
+    },
+    {
+     "name": "Ayas",
+     "lat": 36.77,
+     "lon": 35.79
+    },
+    {
+     "name": "al-Bira",
+     "lat": 37.03,
+     "lon": 37.98
+    },
+    {
+     "name": "Malatya",
+     "lat": 38.35,
+     "lon": 38.31
+    },
+    {
+     "name": "al-Rahba",
+     "lat": 35.0,
+     "lon": 40.45
+    },
+    {
+     "name": "Divriği",
+     "lat": 39.37,
+     "lon": 38.12
+    },
+    {
+     "name": "Ayntab",
+     "lat": 37.07,
+     "lon": 37.38
+    }
+   ],
+   "ruler": {
+    "name": "al-Ashraf Qaytbay",
+    "born": 1418,
+    "dynasty": "Circassian Mamluk",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     3
+    ],
+    "traits": [
+     "pious",
+     "builder",
+     "stern"
+    ]
+   },
+   "heir": {
+    "name": "al-Nasir Muhammad",
+    "born": 1482,
+    "dynasty": "Qaytbay",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child",
+     "cruel"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Circassian Mamluk sultanate; Qaytbay, sultan since 1468, a former slave soldier, is the longest-reigning Mamluk sultan since al-Nasir Muhammad; his son is designated but the emirs elect.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "mecca_sharifate"
+   ],
+   "rivals": [
+    "ottoman",
+    "ak_koyunlu",
+    "hospitallers"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Qaytbay has fought the Ottomans to a standstill in Cilicia and built mosques and the fortress of Alexandria, but the war emptied the treasury. The Levant spice trade still pays, but Portuguese ships have already rounded Africa.",
+    "de": "Qaitbay hat die Osmanen in Kilikien zum Stillstand gebracht und Moscheen und die Festung von Alexandria gebaut, doch der Krieg hat die Kasse geleert. Der Levante-Gewürzhandel zahlt sich noch aus, aber portugiesische Schiffe haben Afrika bereits umrundet."
+   },
+   "coa": {
+    "blazon": "Or, a cup Gules between two inscriptions Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "letter",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single",
+      "text": "Glory to our lord the Sultan"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mecca_sharifate",
+   "name": {
+    "en": "Sharifate of Mecca",
+    "de": "Scherifat von Mekka"
+   },
+   "short": {
+    "en": "Mecca",
+    "de": "Mekka"
+   },
+   "adjective": {
+    "en": "Meccan",
+    "de": "mekkanisch"
+   },
+   "rank": "emirate",
+   "government": "theocracy",
+   "culture": "hejazi",
+   "faith": "shia",
+   "color": "#2e8b57",
+   "capital": {
+    "name": "Mecca",
+    "lat": 21.422,
+    "lon": 39.826
+   },
+   "holdings": [
+    {
+     "name": "Mecca",
+     "lat": 21.422,
+     "lon": 39.826
+    },
+    {
+     "name": "Jeddah",
+     "lat": 21.49,
+     "lon": 39.19
+    },
+    {
+     "name": "Ta'if",
+     "lat": 21.27,
+     "lon": 40.42
+    },
+    {
+     "name": "Yanbu",
+     "lat": 24.09,
+     "lon": 38.06
+    }
+   ],
+   "ruler": {
+    "name": "Sharif Muhammad ibn Barakat",
+    "born": 1437,
+    "dynasty": "Banu Qatada",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hasanid sharifs of Mecca, vassals of the Mamluk sultan; Muhammad ibn Barakat has ruled since 1455.",
+   "overlord": "mamluk",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Sharif of Mecca guards the holy cities under Mamluk suzerainty.",
+    "de": "Der Scherif von Mekka hütet die heiligen Städte unter mamlukischer Oberhoheit."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tahirid",
+   "name": {
+    "en": "Tahirid Sultanate of Yemen",
+    "de": "Tahiridisches Sultanat Jemen"
+   },
+   "short": {
+    "en": "Yemen",
+    "de": "Jemen"
+   },
+   "adjective": {
+    "en": "Yemeni",
+    "de": "jemenitisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "yemeni",
+   "faith": "sunni",
+   "color": "#8e2c48",
+   "capital": {
+    "name": "Ta'izz",
+    "lat": 13.58,
+    "lon": 44.02
+   },
+   "holdings": [
+    {
+     "name": "Ta'izz",
+     "lat": 13.58,
+     "lon": 44.02
+    },
+    {
+     "name": "Zabid",
+     "lat": 14.2,
+     "lon": 43.32
+    },
+    {
+     "name": "Aden",
+     "lat": 12.78,
+     "lon": 45.03
+    },
+    {
+     "name": "Ibb",
+     "lat": 13.97,
+     "lon": 44.18
+    },
+    {
+     "name": "Rada'",
+     "lat": 14.42,
+     "lon": 44.84
+    },
+    {
+     "name": "Zafar",
+     "lat": 17.0,
+     "lon": 54.05
+    }
+   ],
+   "ruler": {
+    "name": "al-Zafir 'Amir II",
+    "born": 1450,
+    "dynasty": "Tahirid",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     3
+    ],
+    "traits": [
+     "builder",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tahirids, successors of the Rasulids since 1454; Amir ibn Abd al-Wahhab reigns 1489-1517.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "zaydi_imamate"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Tahirid sultans rule lower Yemen with the port of Aden, rich from the Indian Ocean trade.",
+    "de": "Die tahiridischen Sultane regieren den unteren Jemen mit dem Hafen Aden, reich durch den Indienhandel."
+   },
+   "coa": {
+    "blazon": "Argent, a rose Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "rose",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "zaydi_imamate",
+   "name": {
+    "en": "Zaydi Imamate",
+    "de": "Zaiditisches Imamat"
+   },
+   "short": {
+    "en": "Zaydis",
+    "de": "Zaiditen"
+   },
+   "adjective": {
+    "en": "Zaydi",
+    "de": "zaiditisch"
+   },
+   "rank": "emirate",
+   "government": "theocracy",
+   "culture": "yemeni",
+   "faith": "shia",
+   "color": "#4f6b2a",
+   "capital": {
+    "name": "Sa'da",
+    "lat": 16.94,
+    "lon": 43.76
+   },
+   "holdings": [
+    {
+     "name": "Sa'da",
+     "lat": 16.94,
+     "lon": 43.76
+    },
+    {
+     "name": "Thula",
+     "lat": 15.58,
+     "lon": 43.88
+    },
+    {
+     "name": "Sana'a",
+     "lat": 15.35,
+     "lon": 44.21
+    }
+   ],
+   "ruler": {
+    "name": "Imam al-Hadi Izz al-Din",
+    "born": 1440,
+    "dynasty": "Rassid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious",
+     "learned"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Zaydi imams of the northern highlands; al-Hadi Izz al-Din ibn al-Hasan, imam 1474-1495.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tahirid"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Zaydi imams hold the northern highlands of Yemen against the Tahirid sultans.",
+    "de": "Die zaiditischen Imame halten das nördliche Hochland des Jemen gegen die tahiridischen Sultane."
+   },
+   "coa": {
+    "blazon": "Vert, a sword Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nabhani_oman",
+   "name": {
+    "en": "Nabhanid Oman",
+    "de": "Nabhaniden-Oman"
+   },
+   "short": {
+    "en": "Oman",
+    "de": "Oman"
+   },
+   "adjective": {
+    "en": "Omani",
+    "de": "omanisch"
+   },
+   "rank": "emirate",
+   "government": "feudal_monarchy",
+   "culture": "bedouin",
+   "faith": "ibadi",
+   "color": "#a3473a",
+   "capital": {
+    "name": "Bahla",
+    "lat": 22.96,
+    "lon": 57.3
+   },
+   "holdings": [
+    {
+     "name": "Bahla",
+     "lat": 22.96,
+     "lon": 57.3
+    },
+    {
+     "name": "Nizwa",
+     "lat": 22.93,
+     "lon": 57.53
+    },
+    {
+     "name": "Rustaq",
+     "lat": 23.39,
+     "lon": 57.42
+    }
+   ],
+   "ruler": {
+    "name": "Sulayman ibn Sulayman al-Nabhani",
+    "born": 1440,
+    "dynasty": "Nabhani",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Nabhani maliks of inner Oman, challenged by the revived Ibadi imamate; the ruler name is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "hormuz"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Nabhani kings hold the oases of inner Oman, contested by Ibadi imams; the coast belongs to Hormuz.",
+    "de": "Die Nabhani-Könige halten die Oasen des inneren Oman, umstritten von ibaditischen Imamen; die Küste gehört Hormus."
+   },
+   "coa": {
+    "blazon": "Gules, a sword Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "hormuz",
+   "name": {
+    "en": "Kingdom of Hormuz",
+    "de": "Königreich Hormus"
+   },
+   "short": {
+    "en": "Hormuz",
+    "de": "Hormus"
+   },
+   "adjective": {
+    "en": "Hormuzi",
+    "de": "hormusisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "sunni",
+   "color": "#1f7a8c",
+   "capital": {
+    "name": "Hormuz",
+    "lat": 27.1,
+    "lon": 56.45
+   },
+   "holdings": [
+    {
+     "name": "Hormuz",
+     "lat": 27.1,
+     "lon": 56.45
+    },
+    {
+     "name": "Minab",
+     "lat": 27.15,
+     "lon": 57.08
+    },
+    {
+     "name": "Qalhat",
+     "lat": 22.7,
+     "lon": 59.37
+    },
+    {
+     "name": "Muscat",
+     "lat": 23.61,
+     "lon": 58.59
+    },
+    {
+     "name": "Julfar",
+     "lat": 25.8,
+     "lon": 55.95
+    }
+   ],
+   "ruler": {
+    "name": "Salghur Shah",
+    "born": 1440,
+    "dynasty": "Hormuzi",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Kings of Hormuz; Salghur Shah (1475-1505).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ak_koyunlu"
+   ],
+   "rivals": [
+    "jabrid"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The island kingdom of Hormuz is the great entrepôt of the Gulf, trading horses, pearls and spices between India and Persia.",
+    "de": "Das Inselkönigreich Hormus ist der große Umschlagplatz des Golfs und handelt Pferde, Perlen und Gewürze zwischen Indien und Persien."
+   },
+   "coa": {
+    "blazon": "Azure, a ship Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "ship",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "jabrid",
+   "name": {
+    "en": "Jabrid Emirate",
+    "de": "Emirat der Dschabriden"
+   },
+   "short": {
+    "en": "al-Hasa",
+    "de": "al-Hasa"
+   },
+   "adjective": {
+    "en": "Jabrid",
+    "de": "dschabridisch"
+   },
+   "rank": "emirate",
+   "government": "tribal_federation",
+   "culture": "bedouin",
+   "faith": "sunni",
+   "color": "#b07a40",
+   "capital": {
+    "name": "al-Hasa",
+    "lat": 25.38,
+    "lon": 49.58
+   },
+   "holdings": [
+    {
+     "name": "al-Hasa",
+     "lat": 25.38,
+     "lon": 49.58
+    },
+    {
+     "name": "Qatif",
+     "lat": 26.56,
+     "lon": 50.0
+    },
+    {
+     "name": "Bahrain",
+     "lat": 26.22,
+     "lon": 50.58
+    }
+   ],
+   "ruler": {
+    "name": "Ajwad ibn Zamil",
+    "born": 1450,
+    "dynasty": "Jabrid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Jabrid emirs of eastern Arabia; Ajwad ibn Zamil rules c.1480-1507.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "hormuz"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Bedouin Jabrids rule al-Hasa, Qatif and Bahrain with its pearl banks.",
+    "de": "Die beduinischen Dschabriden beherrschen al-Hasa, Qatif und Bahrain mit seinen Perlenbänken."
+   },
+   "coa": {
+    "blazon": "Vert a palm tree Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "ak_koyunlu",
+   "name": {
+    "en": "Aq Qoyunlu Sultanate",
+    "de": "Sultanat der Aq Qoyunlu"
+   },
+   "short": {
+    "en": "Ak Koyunlu",
+    "de": "Aq Qoyunlu"
+   },
+   "adjective": {
+    "en": "Ak Koyunlu",
+    "de": "aq-qoyunlu"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "turkmen",
+   "faith": "sunni",
+   "color": "#e8e2d0",
+   "capital": {
+    "name": "Tabriz",
+    "lat": 38.08,
+    "lon": 46.29
+   },
+   "holdings": [
+    {
+     "name": "Tabriz",
+     "lat": 38.08,
+     "lon": 46.29
+    },
+    {
+     "name": "Marand",
+     "lat": 38.43,
+     "lon": 45.77
+    },
+    {
+     "name": "Khoy",
+     "lat": 38.55,
+     "lon": 44.95
+    },
+    {
+     "name": "Nakhchivan",
+     "lat": 39.21,
+     "lon": 45.41
+    },
+    {
+     "name": "Ardabil",
+     "lat": 38.25,
+     "lon": 48.29
+    },
+    {
+     "name": "Maragha",
+     "lat": 37.39,
+     "lon": 46.24
+    },
+    {
+     "name": "Urmia",
+     "lat": 37.55,
+     "lon": 45.07
+    },
+    {
+     "name": "Zanjan",
+     "lat": 36.67,
+     "lon": 48.48
+    },
+    {
+     "name": "Sultaniyya",
+     "lat": 36.43,
+     "lon": 48.8
+    },
+    {
+     "name": "Qazvin",
+     "lat": 36.27,
+     "lon": 50.0
+    },
+    {
+     "name": "Hamadan",
+     "lat": 34.8,
+     "lon": 48.51
+    },
+    {
+     "name": "Isfahan",
+     "lat": 32.65,
+     "lon": 51.67
+    },
+    {
+     "name": "Kashan",
+     "lat": 33.98,
+     "lon": 51.44
+    },
+    {
+     "name": "Rey",
+     "lat": 35.59,
+     "lon": 51.43
+    },
+    {
+     "name": "Shiraz",
+     "lat": 29.61,
+     "lon": 52.53
+    },
+    {
+     "name": "Kazerun",
+     "lat": 29.62,
+     "lon": 51.65
+    },
+    {
+     "name": "Yazd",
+     "lat": 31.9,
+     "lon": 54.37
+    },
+    {
+     "name": "Kerman",
+     "lat": 30.28,
+     "lon": 57.08
+    },
+    {
+     "name": "Abarqu",
+     "lat": 31.13,
+     "lon": 53.28
+    },
+    {
+     "name": "Baghdad",
+     "lat": 33.31,
+     "lon": 44.36
+    },
+    {
+     "name": "Hilla",
+     "lat": 32.48,
+     "lon": 44.42
+    },
+    {
+     "name": "Wasit",
+     "lat": 32.19,
+     "lon": 46.29
+    },
+    {
+     "name": "Basra",
+     "lat": 30.51,
+     "lon": 47.81
+    },
+    {
+     "name": "Mosul",
+     "lat": 36.34,
+     "lon": 43.13
+    },
+    {
+     "name": "Kirkuk",
+     "lat": 35.47,
+     "lon": 44.39
+    },
+    {
+     "name": "Erbil",
+     "lat": 36.19,
+     "lon": 44.01
+    },
+    {
+     "name": "Mardin",
+     "lat": 37.31,
+     "lon": 40.74
+    },
+    {
+     "name": "Diyarbakır",
+     "lat": 37.91,
+     "lon": 40.24
+    },
+    {
+     "name": "Erzurum",
+     "lat": 39.9,
+     "lon": 41.27
+    },
+    {
+     "name": "Erzincan",
+     "lat": 39.75,
+     "lon": 39.49
+    },
+    {
+     "name": "Bayburt",
+     "lat": 40.26,
+     "lon": 40.22
+    },
+    {
+     "name": "Van",
+     "lat": 38.5,
+     "lon": 43.38
+    },
+    {
+     "name": "Erciş",
+     "lat": 39.03,
+     "lon": 43.36
+    },
+    {
+     "name": "Ganja",
+     "lat": 40.68,
+     "lon": 46.36
+    }
+   ],
+   "ruler": {
+    "name": "Baysunghur",
+    "born": 1477,
+    "dynasty": "Bayandur",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "young",
+     "weak_willed"
+    ]
+   },
+   "heir": {
+    "name": "Rustam",
+    "born": 1475,
+    "dynasty": "Bayandur",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Bayandur Turkmen dynasty; Baysunghur succeeded his father Ya'qub in December 1490 under the regency of Sufi Khalil; his cousin Rustam will depose him in 1492/93.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hormuz"
+   ],
+   "rivals": [
+    "mamluk",
+    "ottoman",
+    "georgia",
+    "shirvan"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Uzun Hasan's empire still stretches from Diyarbakır to Kerman, but since Ya'qub's death a boy sultan rules in Tabriz and the emirs fight over the regency. In Ardabil the Safavid order waits; its young heir Ismail is hidden in Gilan.",
+    "de": "Uzun Hasans Reich erstreckt sich noch von Diyarbakır bis Kerman, doch seit dem Tod Ya'qubs herrscht in Täbris ein Knabe, und die Emire streiten um die Regentschaft. In Ardabil wartet der Safawiden-Orden; sein junger Erbe Ismail ist in Gilan versteckt."
+   },
+   "coa": {
+    "blazon": "Argent, a tamga Sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "shirvan",
+   "name": {
+    "en": "Shirvanshahdom",
+    "de": "Schirwanschah-Reich"
+   },
+   "short": {
+    "en": "Shirvan",
+    "de": "Schirwan"
+   },
+   "adjective": {
+    "en": "Shirvani",
+    "de": "schirwanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "azeri",
+   "faith": "sunni",
+   "color": "#4a9a9a",
+   "capital": {
+    "name": "Shamakhi",
+    "lat": 40.63,
+    "lon": 48.64
+   },
+   "holdings": [
+    {
+     "name": "Shamakhi",
+     "lat": 40.63,
+     "lon": 48.64
+    },
+    {
+     "name": "Baku",
+     "lat": 40.37,
+     "lon": 49.84
+    },
+    {
+     "name": "Derbent",
+     "lat": 42.06,
+     "lon": 48.29
+    },
+    {
+     "name": "Shabran",
+     "lat": 41.21,
+     "lon": 48.99
+    },
+    {
+     "name": "Sheki",
+     "lat": 41.2,
+     "lon": 47.17
+    }
+   ],
+   "ruler": {
+    "name": "Farrukh Yassar",
+    "born": 1430,
+    "dynasty": "Darbandi (Kasranid)",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Bahram Beg",
+    "born": 1460,
+    "dynasty": "Darbandi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Darbandi line of the Shirvanshahs; Farrukh Yassar (1465-1500) killed Shaykh Haydar of the Safavid order at Tabarsaran in 1488 with Aq Qoyunlu help.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ak_koyunlu",
+    "kakheti"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Shirvanshahs rule the silk lands of the eastern Caucasus from Shamakhi and Baku. Their killing of the Safavid Shaykh Haydar has made the order their mortal enemy.",
+    "de": "Die Schirwanschahs beherrschen von Schamachi und Baku aus die Seidenlande des Ostkaukasus. Die Tötung des Safawiden-Scheichs Haidar hat ihnen den Orden zum Todfeind gemacht."
+   },
+   "coa": {
+    "blazon": "Azure a lion Or before a sun",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "gilan",
+   "name": {
+    "en": "Kar-Kiya of Gilan",
+    "de": "Kar-Kiya von Gilan"
+   },
+   "short": {
+    "en": "Gilan",
+    "de": "Gilan"
+   },
+   "adjective": {
+    "en": "Gilaki",
+    "de": "gilanisch"
+   },
+   "rank": "emirate",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "shia",
+   "color": "#3a8a5a",
+   "capital": {
+    "name": "Lahijan",
+    "lat": 37.2,
+    "lon": 50.0
+   },
+   "holdings": [
+    {
+     "name": "Lahijan",
+     "lat": 37.2,
+     "lon": 50.0
+    },
+    {
+     "name": "Rasht",
+     "lat": 37.28,
+     "lon": 49.58
+    }
+   ],
+   "ruler": {
+    "name": "Mirza Ali Kar-Kiya",
+    "born": 1450,
+    "dynasty": "Kar-Kiya",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Zaydi Kar-Kiya sayyids of Biyapas (Lahijan); Mirza Ali will shelter the boy Ismail Safavi from 1494.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ak_koyunlu"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Kar-Kiya sayyids of Lahijan rule eastern Gilan behind the Alborz forests.",
+    "de": "Die Kar-Kiya-Sayyids von Lahidschan regieren das östliche Gilan hinter den Wäldern des Alborz."
+   },
+   "coa": {
+    "blazon": "Vert a crescent Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crescent",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mazandaran",
+   "name": {
+    "en": "Marashi Sayyids of Mazandaran",
+    "de": "Mar'aschi-Sayyids von Masandaran"
+   },
+   "short": {
+    "en": "Mazandaran",
+    "de": "Masandaran"
+   },
+   "adjective": {
+    "en": "Mazandarani",
+    "de": "masandaranisch"
+   },
+   "rank": "emirate",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "shia",
+   "color": "#5aa07a",
+   "capital": {
+    "name": "Amol",
+    "lat": 36.47,
+    "lon": 52.35
+   },
+   "holdings": [
+    {
+     "name": "Amol",
+     "lat": 36.47,
+     "lon": 52.35
+    },
+    {
+     "name": "Sari",
+     "lat": 36.56,
+     "lon": 53.06
+    }
+   ],
+   "ruler": {
+    "name": "Sayyid Abd al-Karim II",
+    "born": 1450,
+    "dynasty": "Mar'ashi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mar'ashi sayyids, tributary to the Aq Qoyunlu and the Timurids in turn; the ruler name is uncertain.",
+   "overlord": "ak_koyunlu",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Shiite Marashi sayyids rule the Caspian lowlands of Mazandaran as tributaries.",
+    "de": "Die schiitischen Marʿaschi-Sayyids regieren das kaspische Tiefland von Masandaran als Tributpflichtige."
+   },
+   "coa": {
+    "blazon": "Vert a sword Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "timurid_herat",
+   "name": {
+    "en": "Timurid Sultanate of Herat",
+    "de": "Timuridisches Sultanat Herat"
+   },
+   "short": {
+    "en": "Herat",
+    "de": "Herat"
+   },
+   "adjective": {
+    "en": "Timurid",
+    "de": "timuridisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "sunni",
+   "color": "#a0522d",
+   "capital": {
+    "name": "Herat",
+    "lat": 34.35,
+    "lon": 62.2
+   },
+   "holdings": [
+    {
+     "name": "Herat",
+     "lat": 34.35,
+     "lon": 62.2
+    },
+    {
+     "name": "Badghis",
+     "lat": 34.98,
+     "lon": 63.12
+    },
+    {
+     "name": "Farah",
+     "lat": 32.37,
+     "lon": 62.11
+    },
+    {
+     "name": "Mashhad",
+     "lat": 36.3,
+     "lon": 59.6
+    },
+    {
+     "name": "Nishapur",
+     "lat": 36.21,
+     "lon": 58.8
+    },
+    {
+     "name": "Sabzevar",
+     "lat": 36.21,
+     "lon": 57.68
+    },
+    {
+     "name": "Esfarayen",
+     "lat": 37.07,
+     "lon": 57.51
+    },
+    {
+     "name": "Astarabad",
+     "lat": 36.84,
+     "lon": 54.43
+    },
+    {
+     "name": "Damghan",
+     "lat": 36.17,
+     "lon": 54.34
+    },
+    {
+     "name": "Merv",
+     "lat": 37.66,
+     "lon": 62.16
+    },
+    {
+     "name": "Balkh",
+     "lat": 36.76,
+     "lon": 66.9
+    },
+    {
+     "name": "Kandahar",
+     "lat": 31.61,
+     "lon": 65.71
+    },
+    {
+     "name": "Urgench",
+     "lat": 42.34,
+     "lon": 59.15
+    },
+    {
+     "name": "Khiva",
+     "lat": 41.38,
+     "lon": 60.36
+    },
+    {
+     "name": "Sheberghan",
+     "lat": 36.67,
+     "lon": 65.75
+    }
+   ],
+   "ruler": {
+    "name": "Sultan Husayn Bayqara",
+    "born": 1438,
+    "dynasty": "Timurid",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "cultured",
+     "pleasure-loving"
+    ]
+   },
+   "heir": {
+    "name": "Badi' al-Zaman Mirza",
+    "born": 1458,
+    "dynasty": "Timurid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "rebellious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Timurids; Husayn Bayqara has ruled Khorasan since 1469; his vizier Ali-Shir Nava'i and the painter Bihzad make Herat the cultural capital of the Persianate world.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "kazakh"
+   ],
+   "rivals": [
+    "timurid_samarkand",
+    "ak_koyunlu"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Herat under Husayn Bayqara is the last brilliant Timurid court, home of Jami, Nava'i and Bihzad. Its ageing sultan quarrels with his sons, and beyond the Oxus the Uzbeks are gathering.",
+    "de": "Herat unter Husain Baiqara ist der letzte glänzende Timuridenhof, Heimat Dschamis, Nawais und Bihzads. Der alternde Sultan streitet mit seinen Söhnen, und jenseits des Oxus sammeln sich die Usbeken."
+   },
+   "coa": {
+    "blazon": "Gules three roundels Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "timurid_samarkand",
+   "name": {
+    "en": "Timurid Sultanate of Samarkand",
+    "de": "Timuridisches Sultanat Samarkand"
+   },
+   "short": {
+    "en": "Samarkand",
+    "de": "Samarkand"
+   },
+   "adjective": {
+    "en": "Timurid",
+    "de": "timuridisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "sunni",
+   "color": "#6a3a8a",
+   "capital": {
+    "name": "Samarkand",
+    "lat": 39.65,
+    "lon": 66.96
+   },
+   "holdings": [
+    {
+     "name": "Samarkand",
+     "lat": 39.65,
+     "lon": 66.96
+    },
+    {
+     "name": "Bukhara",
+     "lat": 39.77,
+     "lon": 64.42
+    },
+    {
+     "name": "Karshi",
+     "lat": 38.86,
+     "lon": 65.79
+    },
+    {
+     "name": "Shahrisabz",
+     "lat": 39.05,
+     "lon": 66.83
+    },
+    {
+     "name": "Termez",
+     "lat": 37.22,
+     "lon": 67.28
+    },
+    {
+     "name": "Jizzakh",
+     "lat": 40.12,
+     "lon": 67.84
+    },
+    {
+     "name": "Hisar",
+     "lat": 38.52,
+     "lon": 68.55
+    }
+   ],
+   "ruler": {
+    "name": "Sultan Ahmad Mirza",
+    "born": 1451,
+    "dynasty": "Timurid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "pleasure-loving"
+    ]
+   },
+   "heir": {
+    "name": "Sultan Mahmud Mirza",
+    "born": 1453,
+    "dynasty": "Timurid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "cruel"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Timurids (line of Abu Sa'id); Sultan Ahmad (1469-1494) rules Transoxiana; his brother Umar Shaykh rules Ferghana, where young Babur (b. 1483) is growing up.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "moghulistan"
+   ],
+   "rivals": [
+    "timurid_herat",
+    "kazakh"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Timur's own capital is ruled by his weak descendant Sultan Ahmad, dominated by the Naqshbandi sheikh Khwaja Ahrar. The Shaybanid Uzbeks already raid the Zarafshan valley.",
+    "de": "Timurs eigene Hauptstadt wird von seinem schwachen Nachkommen Sultan Ahmad regiert, beherrscht vom Naqschbandi-Scheich Chwadscha Ahrar. Die schaibanidischen Usbeken plündern schon das Serafschantal."
+   },
+   "coa": {
+    "blazon": "Sable three roundels Or",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "timurid_kabul",
+   "name": {
+    "en": "Timurid Kabul",
+    "de": "Timuridisches Kabul"
+   },
+   "short": {
+    "en": "Kabul",
+    "de": "Kabul"
+   },
+   "adjective": {
+    "en": "Kabuli",
+    "de": "kabulisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "persian",
+   "faith": "sunni",
+   "color": "#8a6aaa",
+   "capital": {
+    "name": "Kabul",
+    "lat": 34.53,
+    "lon": 69.17
+   },
+   "holdings": [
+    {
+     "name": "Kabul",
+     "lat": 34.53,
+     "lon": 69.17
+    },
+    {
+     "name": "Ghazni",
+     "lat": 33.55,
+     "lon": 68.42
+    },
+    {
+     "name": "Bamiyan",
+     "lat": 34.82,
+     "lon": 67.83
+    }
+   ],
+   "ruler": {
+    "name": "Ulugh Beg Kabuli",
+    "born": 1450,
+    "dynasty": "Timurid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Timurids (line of Abu Sa'id); Ulugh Beg Mirza rules Kabul and Ghazni 1461-1502.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "timurid_samarkand"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "A Timurid prince holds Kabul and Ghazni among the Afghan and Hazara tribes.",
+    "de": "Ein timuridischer Prinz hält Kabul und Ghazni inmitten der afghanischen und Hazara-Stämme."
+   },
+   "coa": {
+    "blazon": "Azure three roundels Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "moghulistan",
+   "name": {
+    "en": "Khanate of Moghulistan",
+    "de": "Khanat Moghulistan"
+   },
+   "short": {
+    "en": "Moghulistan",
+    "de": "Moghulistan"
+   },
+   "adjective": {
+    "en": "Moghul",
+    "de": "moghulisch"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "mongol",
+   "faith": "sunni",
+   "color": "#9a8a3a",
+   "capital": {
+    "name": "Tashkent",
+    "lat": 41.3,
+    "lon": 69.24
+   },
+   "holdings": [
+    {
+     "name": "Tashkent",
+     "lat": 41.3,
+     "lon": 69.24
+    },
+    {
+     "name": "Chimkent",
+     "lat": 42.32,
+     "lon": 69.59
+    },
+    {
+     "name": "Sayram",
+     "lat": 42.3,
+     "lon": 69.76
+    }
+   ],
+   "ruler": {
+    "name": "Mahmud Khan",
+    "born": 1462,
+    "dynasty": "Chagatayid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chagatayids; Mahmud Khan (1487-1508) holds Tashkent, granted by the Timurids; his brother rules the eastern Moghuls beyond the map.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "timurid_samarkand"
+   ],
+   "rivals": [
+    "kazakh"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Chagatayid khan Mahmud holds Tashkent and the middle Syr Darya, the western edge of the Moghul khanate.",
+    "de": "Der Tschagataiden-Khan Mahmud hält Taschkent und den mittleren Syrdarja, den Westrand des Moghul-Khanats."
+   },
+   "coa": {
+    "blazon": "Or a tamga Azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "wattasid",
+   "name": {
+    "en": "Wattasid Sultanate of Fez",
+    "de": "Wattasidisches Sultanat Fès"
+   },
+   "short": {
+    "en": "Morocco",
+    "de": "Marokko"
+   },
+   "adjective": {
+    "en": "Moroccan",
+    "de": "marokkanisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "maghrebi",
+   "faith": "sunni",
+   "color": "#c4302b",
+   "capital": {
+    "name": "Fez",
+    "lat": 34.06,
+    "lon": -4.97
+   },
+   "holdings": [
+    {
+     "name": "Fez",
+     "lat": 34.06,
+     "lon": -4.97
+    },
+    {
+     "name": "Meknes",
+     "lat": 33.89,
+     "lon": -5.55
+    },
+    {
+     "name": "Taza",
+     "lat": 34.21,
+     "lon": -4.01
+    },
+    {
+     "name": "Salé",
+     "lat": 34.04,
+     "lon": -6.8
+    },
+    {
+     "name": "Ksar el-Kebir",
+     "lat": 35.0,
+     "lon": -5.9
+    },
+    {
+     "name": "Larache",
+     "lat": 35.19,
+     "lon": -6.15
+    },
+    {
+     "name": "Chefchaouen",
+     "lat": 35.17,
+     "lon": -5.27
+    },
+    {
+     "name": "Tetouan",
+     "lat": 35.57,
+     "lon": -5.37
+    },
+    {
+     "name": "Sefrou",
+     "lat": 33.83,
+     "lon": -4.83
+    },
+    {
+     "name": "Debdou",
+     "lat": 33.98,
+     "lon": -3.05
+    },
+    {
+     "name": "Sijilmasa",
+     "lat": 31.28,
+     "lon": -4.27
+    }
+   ],
+   "ruler": {
+    "name": "Muhammad al-Shaykh",
+    "born": 1442,
+    "dynasty": "Wattasid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Muhammad al-Burtuqali",
+    "born": 1470,
+    "dynasty": "Wattasid",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Wattasids, former viziers of the Marinids, sultans of Fez since 1472; their writ barely reaches beyond northern Morocco.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "granada"
+   ],
+   "rivals": [
+    "portugal",
+    "hintata",
+    "zayyanid"
+   ],
+   "claims_on": [
+    "portugal"
+   ],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Wattasids rule a shrunken Morocco from Fez, while the Portuguese hold Ceuta, Tangier, Asilah and Ksar es-Seghir and Marrakesh obeys its own emirs. Refugees from Granada are founding Tetouan and Chefchaouen.",
+    "de": "Die Wattasiden regieren von Fès aus ein geschrumpftes Marokko, während die Portugiesen Ceuta, Tanger, Asilah und Ksar es-Seghir halten und Marrakesch eigenen Emiren gehorcht. Flüchtlinge aus Granada gründen Tetouan und Chefchaouen neu."
+   },
+   "coa": {
+    "blazon": "Gules, plain (the Marinid red banner)",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hintata",
+   "name": {
+    "en": "Hintata Emirate of Marrakesh",
+    "de": "Hintata-Emirat Marrakesch"
+   },
+   "short": {
+    "en": "Marrakesh",
+    "de": "Marrakesch"
+   },
+   "adjective": {
+    "en": "Hintata",
+    "de": "hintatisch"
+   },
+   "rank": "emirate",
+   "government": "tribal_federation",
+   "culture": "berber",
+   "faith": "sunni",
+   "color": "#c06a4a",
+   "capital": {
+    "name": "Marrakesh",
+    "lat": 31.63,
+    "lon": -8.0
+   },
+   "holdings": [
+    {
+     "name": "Marrakesh",
+     "lat": 31.63,
+     "lon": -8.0
+    },
+    {
+     "name": "Aghmat",
+     "lat": 31.42,
+     "lon": -7.8
+    },
+    {
+     "name": "Safi",
+     "lat": 32.3,
+     "lon": -9.24
+    },
+    {
+     "name": "Azemmour",
+     "lat": 33.29,
+     "lon": -8.34
+    },
+    {
+     "name": "Taroudant",
+     "lat": 30.47,
+     "lon": -8.88
+    }
+   ],
+   "ruler": {
+    "name": "Hintata emir",
+    "born": 1440,
+    "dynasty": "Hintata",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Masmuda Berber Hintata chiefs who have ruled Marrakesh autonomously since the decline of the Marinids; the name of the emir in 1492 is not recorded in the sources available to us.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "wattasid",
+    "portugal"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Hintata chiefs of the High Atlas rule Marrakesh and the south independently of Fez; Safi and Azemmour already trade with Portugal.",
+    "de": "Die Hintata-Häuptlinge des Hohen Atlas regieren Marrakesch und den Süden unabhängig von Fès; Safi und Azemmour handeln bereits mit Portugal."
+   },
+   "coa": {
+    "blazon": "Sable plain",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "zayyanid",
+   "name": {
+    "en": "Zayyanid Kingdom of Tlemcen",
+    "de": "Zayyanidisches Königreich Tlemcen"
+   },
+   "short": {
+    "en": "Tlemcen",
+    "de": "Tlemcen"
+   },
+   "adjective": {
+    "en": "Tlemcenian",
+    "de": "tlemcenisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "maghrebi",
+   "faith": "sunni",
+   "color": "#8a4a6a",
+   "capital": {
+    "name": "Tlemcen",
+    "lat": 34.88,
+    "lon": -1.31
+   },
+   "holdings": [
+    {
+     "name": "Tlemcen",
+     "lat": 34.88,
+     "lon": -1.31
+    },
+    {
+     "name": "Oran",
+     "lat": 35.7,
+     "lon": -0.63
+    },
+    {
+     "name": "Nedroma",
+     "lat": 35.01,
+     "lon": -1.75
+    },
+    {
+     "name": "Mostaganem",
+     "lat": 35.93,
+     "lon": 0.09
+    },
+    {
+     "name": "Ténès",
+     "lat": 36.51,
+     "lon": 1.31
+    },
+    {
+     "name": "Miliana",
+     "lat": 36.3,
+     "lon": 2.23
+    },
+    {
+     "name": "Médéa",
+     "lat": 36.27,
+     "lon": 2.75
+    },
+    {
+     "name": "Algiers",
+     "lat": 36.75,
+     "lon": 3.06
+    }
+   ],
+   "ruler": {
+    "name": "Abu Abdallah IV",
+    "born": 1440,
+    "dynasty": "Zayyanid",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Zayyanids (Banu Abd al-Wad); Abu Abdallah IV Muhammad reigns 1468-1504; Algiers is governed by its own notables under nominal Zayyanid lordship.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "wattasid",
+    "hafsid_tunis"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Zayyanid kingdom of Tlemcen controls the western end of the Saharan gold routes and the port of Oran, but is wedged between Fez and the Hafsids.",
+    "de": "Das zayyanidische Königreich Tlemcen beherrscht das Westende der Saharagoldrouten und den Hafen Oran, ist aber zwischen Fès und den Hafsiden eingeklemmt."
+   },
+   "coa": {
+    "blazon": "Or a crescent Azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crescent",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "hafsid_tunis",
+   "name": {
+    "en": "Hafsid Sultanate of Tunis",
+    "de": "Hafsidensultanat Tunis"
+   },
+   "short": {
+    "en": "Tunis",
+    "de": "Tunis"
+   },
+   "adjective": {
+    "en": "Hafsid",
+    "de": "hafsidisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "maghrebi",
+   "faith": "sunni",
+   "color": "#e6e6e6",
+   "capital": {
+    "name": "Tunis",
+    "lat": 36.8,
+    "lon": 10.18
+   },
+   "holdings": [
+    {
+     "name": "Tunis",
+     "lat": 36.8,
+     "lon": 10.18
+    },
+    {
+     "name": "Bizerte",
+     "lat": 37.27,
+     "lon": 9.87
+    },
+    {
+     "name": "Béja",
+     "lat": 36.73,
+     "lon": 9.18
+    },
+    {
+     "name": "Kairouan",
+     "lat": 35.68,
+     "lon": 10.1
+    },
+    {
+     "name": "Sousse",
+     "lat": 35.83,
+     "lon": 10.64
+    },
+    {
+     "name": "Mahdia",
+     "lat": 35.5,
+     "lon": 11.06
+    },
+    {
+     "name": "Sfax",
+     "lat": 34.74,
+     "lon": 10.76
+    },
+    {
+     "name": "Tozeur",
+     "lat": 33.92,
+     "lon": 8.13
+    },
+    {
+     "name": "Constantine",
+     "lat": 36.37,
+     "lon": 6.61
+    },
+    {
+     "name": "Bône",
+     "lat": 36.9,
+     "lon": 7.76
+    },
+    {
+     "name": "Bougie",
+     "lat": 36.75,
+     "lon": 5.08
+    },
+    {
+     "name": "Gabès",
+     "lat": 33.88,
+     "lon": 10.1
+    },
+    {
+     "name": "Tripoli",
+     "lat": 32.89,
+     "lon": 13.19
+    },
+    {
+     "name": "Djerba",
+     "lat": 33.81,
+     "lon": 10.86
+    }
+   ],
+   "ruler": {
+    "name": "Abu Yahya Zakariya",
+    "born": 1460,
+    "dynasty": "Hafsid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Abu Abd Allah Muhammad",
+    "born": 1470,
+    "dynasty": "Hafsid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Hafsids; after the long reign of Abu Amr Uthman (1435-88) three sultans followed in quick succession; Abu Yahya Zakariya reigns 1490-1494.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "zayyanid"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Hafsid sultanate of Ifriqiya, from Bougie to Tripoli, is declining after Uthman's great reign; Tunis lives from the corsairs and the trade with Italy.",
+    "de": "Das hafsidische Sultanat Ifriqiya von Bougie bis Tripolis verfällt nach Uthmans großer Herrschaft; Tunis lebt von den Korsaren und dem Italienhandel."
+   },
+   "coa": {
+    "blazon": "Argent, a crescent Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crescent",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tenerife_menceyatos",
+   "name": {
+    "en": "Menceyatos of Achinech",
+    "de": "Menceyate von Achinech"
+   },
+   "short": {
+    "en": "Tenerife",
+    "de": "Teneriffa"
+   },
+   "adjective": {
+    "en": "Guanche",
+    "de": "guanchisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "guanche",
+   "faith": "african_traditional",
+   "color": "#8b6c42",
+   "capital": {
+    "name": "Taoro",
+    "lat": 28.39,
+    "lon": -16.52
+   },
+   "holdings": [
+    {
+     "name": "Taoro",
+     "lat": 28.39,
+     "lon": -16.52
+    },
+    {
+     "name": "Güímar",
+     "lat": 28.31,
+     "lon": -16.41
+    },
+    {
+     "name": "Anaga",
+     "lat": 28.53,
+     "lon": -16.2
+    }
+   ],
+   "ruler": {
+    "name": "Bencomo, Mencey of Taoro",
+    "born": 1440,
+    "dynasty": "Guanche",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The nine Guanche menceyatos of Tenerife; Bencomo of Taoro leads those resisting Castile.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "castile"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Tenerife is still free under its nine Guanche kings; Bencomo of Taoro will defeat the Castilians at Acentejo in 1494.",
+    "de": "Teneriffa ist noch frei unter seinen neun Guanchen-Königen; Bencomo von Taoro wird 1494 die Kastilier bei Acentejo schlagen."
+   },
+   "coa": {
+    "blazon": "Vert, a mountain Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "benahoare",
+   "name": {
+    "en": "Benahoare (La Palma)",
+    "de": "Benahoare (La Palma)"
+   },
+   "short": {
+    "en": "La Palma",
+    "de": "La Palma"
+   },
+   "adjective": {
+    "en": "Auarita",
+    "de": "auaritisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "guanche",
+   "faith": "african_traditional",
+   "color": "#a07a5a",
+   "capital": {
+    "name": "Aceró",
+    "lat": 28.72,
+    "lon": -17.88
+   },
+   "holdings": [
+    {
+     "name": "Aceró",
+     "lat": 28.72,
+     "lon": -17.88
+    },
+    {
+     "name": "Tedote",
+     "lat": 28.68,
+     "lon": -17.77
+    }
+   ],
+   "ruler": {
+    "name": "Tanausú",
+    "born": 1460,
+    "dynasty": "Auarita",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "brave",
+     "defiant"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Twelve cantons of the Auarita; Tanausú of Aceró (Caldera de Taburiente) will resist Alonso Fernández de Lugo's conquest (1492-93).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "castile"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "La Palma is still free; Alonso Fernández de Lugo is preparing the expedition that will land in September.",
+    "de": "La Palma ist noch frei; Alonso Fernández de Lugo rüstet die Expedition, die im September landen wird."
+   },
+   "coa": {
+    "blazon": "Vert a mountain Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "songhai",
+   "name": {
+    "en": "Songhai Empire",
+    "de": "Songhai-Reich"
+   },
+   "short": {
+    "en": "Songhai",
+    "de": "Songhai"
+   },
+   "adjective": {
+    "en": "Songhai",
+    "de": "songhaisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "songhai",
+   "faith": "sunni",
+   "color": "#b8642a",
+   "capital": {
+    "name": "Gao",
+    "lat": 16.27,
+    "lon": -0.04
+   },
+   "holdings": [
+    {
+     "name": "Gao",
+     "lat": 16.27,
+     "lon": -0.04
+    },
+    {
+     "name": "Timbuktu",
+     "lat": 16.77,
+     "lon": -3.01
+    },
+    {
+     "name": "Djenné",
+     "lat": 13.91,
+     "lon": -4.55
+    },
+    {
+     "name": "Walata",
+     "lat": 17.3,
+     "lon": -7.03
+    },
+    {
+     "name": "Kukiya",
+     "lat": 15.0,
+     "lon": 0.8
+    },
+    {
+     "name": "Hombori",
+     "lat": 15.28,
+     "lon": -1.7
+    },
+    {
+     "name": "Tillabéri",
+     "lat": 14.21,
+     "lon": 1.45
+    },
+    {
+     "name": "Tendirma",
+     "lat": 16.23,
+     "lon": -3.5
+    },
+    {
+     "name": "Kebbi",
+     "lat": 12.45,
+     "lon": 4.2
+    }
+   ],
+   "ruler": {
+    "name": "Sunni Ali Ber",
+    "born": 1435,
+    "dynasty": "Sunni",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     6
+    ],
+    "traits": [
+     "warlike",
+     "cruel"
+    ]
+   },
+   "heir": {
+    "name": "Sunni Baru",
+    "born": 1465,
+    "dynasty": "Sunni",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Sunni dynasty of Gao; Sunni Ali (1464-1492) conquered Timbuktu (1468) and Djenné (1473); he will drown in November 1492 and be overthrown by Askia Muhammad.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "mali",
+    "mossi"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Sunni Ali, the \"Great\", has turned Songhai into the leading power of the Niger bend with his river fleet and cavalry. The Muslim scholars of Timbuktu, whom he persecutes, see him as a pagan tyrant.",
+    "de": "Sunni Ali der Große hat Songhai mit Flussflotte und Reiterei zur führenden Macht am Nigerbogen gemacht. Die muslimischen Gelehrten Timbuktus, die er verfolgt, halten ihn für einen heidnischen Tyrannen."
+   },
+   "coa": {
+    "blazon": "Or a fish Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mali",
+   "name": {
+    "en": "Mali Empire",
+    "de": "Reich Mali"
+   },
+   "short": {
+    "en": "Mali",
+    "de": "Mali"
+   },
+   "adjective": {
+    "en": "Malian",
+    "de": "malisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "mande",
+   "faith": "sunni",
+   "color": "#d4a62a",
+   "capital": {
+    "name": "Niani",
+    "lat": 11.38,
+    "lon": -8.38
+   },
+   "holdings": [
+    {
+     "name": "Niani",
+     "lat": 11.38,
+     "lon": -8.38
+    },
+    {
+     "name": "Kangaba",
+     "lat": 11.93,
+     "lon": -8.41
+    },
+    {
+     "name": "Bambuk",
+     "lat": 13.4,
+     "lon": -11.2
+    },
+    {
+     "name": "Kita",
+     "lat": 13.03,
+     "lon": -9.49
+    },
+    {
+     "name": "Kansala",
+     "lat": 12.66,
+     "lon": -14.8
+    },
+    {
+     "name": "Ségou",
+     "lat": 13.43,
+     "lon": -6.26
+    }
+   ],
+   "ruler": {
+    "name": "Mansa Mahmud II",
+    "born": 1440,
+    "dynasty": "Keita",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Keita dynasty; Mansa Mahmud II reigns c.1481-1496 and exchanges embassies with João II of Portugal.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "portugal"
+   ],
+   "rivals": [
+    "songhai"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The once great empire of Mali has lost the Niger bend to Songhai and the Sahel cities to the Tuareg. Mahmud II looks to the Portuguese on the Gambia for help.",
+    "de": "Das einst große Reich Mali hat den Nigerbogen an Songhai und die Sahelstädte an die Tuareg verloren. Mahmud II. sucht Hilfe bei den Portugiesen am Gambia."
+   },
+   "coa": {
+    "blazon": "Or, a horse Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "jolof",
+   "name": {
+    "en": "Kingdom of Jolof",
+    "de": "Königreich Jolof"
+   },
+   "short": {
+    "en": "Jolof",
+    "de": "Jolof"
+   },
+   "adjective": {
+    "en": "Wolof",
+    "de": "wolof"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "wolof",
+   "faith": "african_traditional",
+   "color": "#5b7f3b",
+   "capital": {
+    "name": "Yang-Yang",
+    "lat": 15.3,
+    "lon": -15.36
+   },
+   "holdings": [
+    {
+     "name": "Yang-Yang",
+     "lat": 15.3,
+     "lon": -15.36
+    },
+    {
+     "name": "Waalo",
+     "lat": 16.4,
+     "lon": -15.7
+    },
+    {
+     "name": "Kayor",
+     "lat": 15.3,
+     "lon": -16.5
+    },
+    {
+     "name": "Sine",
+     "lat": 14.3,
+     "lon": -16.4
+    }
+   ],
+   "ruler": {
+    "name": "Burba Tase Daagulen",
+    "born": 1450,
+    "dynasty": "Ndiaye",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ndiaye dynasty of the Jolof Empire; after the civil war of 1489 the name and dates of the burba are uncertain in the sources; Prince Buumi Jeleen sought Portuguese aid in 1488.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "portugal"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Wolof empire of Jolof rules the coast between the Senegal and the Gambia, but civil war and Portuguese trade are pulling its provinces apart.",
+    "de": "Das Wolof-Reich Jolof beherrscht die Küste zwischen Senegal und Gambia, doch Bürgerkrieg und portugiesischer Handel reißen seine Provinzen auseinander."
+   },
+   "coa": {
+    "blazon": "Vert, a horse Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mossi",
+   "name": {
+    "en": "Mossi Kingdom of Ouagadougou",
+    "de": "Mossi-Königreich Ouagadougou"
+   },
+   "short": {
+    "en": "Mossi",
+    "de": "Mossi"
+   },
+   "adjective": {
+    "en": "Mossi",
+    "de": "mossi"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "mossi",
+   "faith": "african_traditional",
+   "color": "#8a5a2a",
+   "capital": {
+    "name": "Ouagadougou",
+    "lat": 12.37,
+    "lon": -1.53
+   },
+   "holdings": [
+    {
+     "name": "Ouagadougou",
+     "lat": 12.37,
+     "lon": -1.53
+    },
+    {
+     "name": "Ouahigouya",
+     "lat": 13.58,
+     "lon": -2.42
+    },
+    {
+     "name": "Tenkodogo",
+     "lat": 11.78,
+     "lon": -0.37
+    }
+   ],
+   "ruler": {
+    "name": "Mogho Naaba",
+    "born": 1450,
+    "dynasty": "Ouedraogo",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mossi kingdoms (Ouagadougou, Yatenga); the Mogho Naaba's personal name in 1492 is uncertain; Mossi armies sacked Walata in 1480 and fought Sunni Ali in 1483.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "songhai"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Mossi cavalry kingdoms of the Volta basin resist Islam and Songhai, raiding north to the Niger.",
+    "de": "Die Mossi-Reiterreiche des Voltabeckens widerstehen Islam und Songhai und streifen bis zum Niger."
+   },
+   "coa": {
+    "blazon": "Gules a horse Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "agadez",
+   "name": {
+    "en": "Sultanate of Agadez",
+    "de": "Sultanat Agadez"
+   },
+   "short": {
+    "en": "Aïr",
+    "de": "Aïr"
+   },
+   "adjective": {
+    "en": "Aïr",
+    "de": "aïrisch"
+   },
+   "rank": "sultanate",
+   "government": "tribal_federation",
+   "culture": "tuareg",
+   "faith": "sunni",
+   "color": "#c8a060",
+   "capital": {
+    "name": "Agadez",
+    "lat": 16.97,
+    "lon": 7.99
+   },
+   "holdings": [
+    {
+     "name": "Agadez",
+     "lat": 16.97,
+     "lon": 7.99
+    },
+    {
+     "name": "Assodé",
+     "lat": 18.45,
+     "lon": 8.6
+    },
+    {
+     "name": "Takedda",
+     "lat": 16.8,
+     "lon": 6.6
+    }
+   ],
+   "ruler": {
+    "name": "Sultan Muhammad al-Adil",
+    "born": 1450,
+    "dynasty": "Agadez sultans",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Sultanate of the Aïr Tuareg; the ruler name for 1492 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "songhai"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Sultan of Agadez arbitrates among the Tuareg of Aïr and taxes the caravans between the Hausa lands and North Africa.",
+    "de": "Der Sultan von Agadez schlichtet unter den Tuareg des Aïr und besteuert die Karawanen zwischen dem Hausaland und Nordafrika."
+   },
+   "coa": {
+    "blazon": "Sable a cross Argent",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kanem",
+   "name": {
+    "en": "Sultanate of Bornu",
+    "de": "Sultanat Bornu"
+   },
+   "short": {
+    "en": "Bornu",
+    "de": "Bornu"
+   },
+   "adjective": {
+    "en": "Bornuan",
+    "de": "bornuisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "kanuri",
+   "faith": "sunni",
+   "color": "#b8860b",
+   "capital": {
+    "name": "Ngazargamu",
+    "lat": 13.0,
+    "lon": 11.0
+   },
+   "holdings": [
+    {
+     "name": "Ngazargamu",
+     "lat": 13.0,
+     "lon": 11.0
+    },
+    {
+     "name": "Bornu (Kaga)",
+     "lat": 12.3,
+     "lon": 13.6
+    },
+    {
+     "name": "Bilma",
+     "lat": 18.69,
+     "lon": 12.92
+    },
+    {
+     "name": "Kukawa",
+     "lat": 12.92,
+     "lon": 13.57
+    }
+   ],
+   "ruler": {
+    "name": "Mai Ali Gaji",
+    "born": 1440,
+    "dynasty": "Sayfawa",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "pious",
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Sayfawa dynasty; Ali Gaji (c.1465-1497) ended the civil wars and founded the walled capital Ngazargamu west of Lake Chad.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bulala",
+    "kano"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Mai Ali Gaji has restored Sayfawa power in Bornu from his new capital Ngazargamu and is preparing to win back Kanem from the Bulala.",
+    "de": "Mai Ali Gaji hat die Macht der Sayfawa in Bornu von seiner neuen Hauptstadt Ngazargamu aus wiederhergestellt und will Kanem von den Bulala zurückgewinnen."
+   },
+   "coa": {
+    "blazon": "Sable, a horse Argent",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bulala",
+   "name": {
+    "en": "Bulala Kingdom of Kanem",
+    "de": "Bulala-Königreich Kanem"
+   },
+   "short": {
+    "en": "Bulala",
+    "de": "Bulala"
+   },
+   "adjective": {
+    "en": "Bulala",
+    "de": "bulala"
+   },
+   "rank": "kingdom",
+   "government": "tribal_federation",
+   "culture": "kanuri",
+   "faith": "sunni",
+   "color": "#9a7a3a",
+   "capital": {
+    "name": "Njimi",
+    "lat": 14.0,
+    "lon": 15.3
+   },
+   "holdings": [
+    {
+     "name": "Njimi",
+     "lat": 14.0,
+     "lon": 15.3
+    },
+    {
+     "name": "Lake Fitri",
+     "lat": 13.0,
+     "lon": 17.5
+    }
+   ],
+   "ruler": {
+    "name": "Bulala king",
+    "born": 1450,
+    "dynasty": "Bulala",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Bulala rulers of Kanem since driving out the Sayfawa in the 14th century; the king's name is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kanem"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Bulala hold old Kanem east of Lake Chad against the resurgent Sayfawa of Bornu.",
+    "de": "Die Bulala halten das alte Kanem östlich des Tschadsees gegen die wiedererstarkten Sayfawa von Bornu."
+   },
+   "coa": {
+    "blazon": "Or a spear Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kano",
+   "name": {
+    "en": "Kingdom of Kano",
+    "de": "Königreich Kano"
+   },
+   "short": {
+    "en": "Kano",
+    "de": "Kano"
+   },
+   "adjective": {
+    "en": "Kano",
+    "de": "kanoisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "hausa",
+   "faith": "african_traditional",
+   "color": "#8f5e2a",
+   "capital": {
+    "name": "Kano",
+    "lat": 12.0,
+    "lon": 8.52
+   },
+   "holdings": [
+    {
+     "name": "Kano",
+     "lat": 12.0,
+     "lon": 8.52
+    },
+    {
+     "name": "Dutse",
+     "lat": 11.76,
+     "lon": 9.34
+    }
+   ],
+   "ruler": {
+    "name": "Muhammad Rumfa",
+    "born": 1440,
+    "dynasty": "Bagauda",
+    "female": false,
+    "skills": [
+     5,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "builder"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Bagauda dynasty; Muhammad Rumfa (1463-1499) reformed the government on Islamic lines on the advice of al-Maghili.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "katsina",
+    "kanem"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Muhammad Rumfa has made Kano a walled Islamic city with a great market and a reformed court.",
+    "de": "Muhammad Rumfa hat Kano zu einer ummauerten islamischen Stadt mit großem Markt und reformiertem Hof gemacht."
+   },
+   "coa": {
+    "blazon": "Vert, a tower Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "katsina",
+   "name": {
+    "en": "Kingdom of Katsina",
+    "de": "Königreich Katsina"
+   },
+   "short": {
+    "en": "Katsina",
+    "de": "Katsina"
+   },
+   "adjective": {
+    "en": "Katsina",
+    "de": "katsinisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "hausa",
+   "faith": "african_traditional",
+   "color": "#a37b45",
+   "capital": {
+    "name": "Katsina",
+    "lat": 12.99,
+    "lon": 7.6
+   },
+   "holdings": [
+    {
+     "name": "Katsina",
+     "lat": 12.99,
+     "lon": 7.6
+    },
+    {
+     "name": "Daura",
+     "lat": 13.03,
+     "lon": 8.32
+    }
+   ],
+   "ruler": {
+    "name": "Muhammadu Korau",
+    "born": 1430,
+    "dynasty": "Korau",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Korau dynasty; Muhammadu Korau, the first Muslim king of Katsina, reigns c.1445-1495.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kano"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Katsina is Kano's rival for the trans-Saharan trade of Hausaland.",
+    "de": "Katsina ist Kanos Rivale um den Transsaharahandel des Hausalandes."
+   },
+   "coa": {
+    "blazon": "Gules, a tower Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "benin",
+   "name": {
+    "en": "Kingdom of Benin",
+    "de": "Königreich Benin"
+   },
+   "short": {
+    "en": "Benin",
+    "de": "Benin"
+   },
+   "adjective": {
+    "en": "Edo",
+    "de": "edo"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "edo",
+   "faith": "african_traditional",
+   "color": "#b71c1c",
+   "capital": {
+    "name": "Edo (Benin City)",
+    "lat": 6.34,
+    "lon": 5.63
+   },
+   "holdings": [
+    {
+     "name": "Edo (Benin City)",
+     "lat": 6.34,
+     "lon": 5.63
+    },
+    {
+     "name": "Ughoton",
+     "lat": 6.24,
+     "lon": 5.43
+    },
+    {
+     "name": "Owo",
+     "lat": 7.2,
+     "lon": 5.59
+    },
+    {
+     "name": "Lagos (Eko)",
+     "lat": 6.45,
+     "lon": 3.39
+    }
+   ],
+   "ruler": {
+    "name": "Oba Ozolua",
+    "born": 1450,
+    "dynasty": "Eweka",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     5
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": {
+    "name": "Esigie",
+    "born": 1475,
+    "dynasty": "Eweka",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Second dynasty of Benin; Oba Ozolua \"the Conqueror\" (c.1481-1504) received the first Portuguese visitors (1486).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "portugal"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Oba Ozolua leads the armies of Benin in constant wars of expansion and has opened trade with the Portuguese at Ughoton.",
+    "de": "Oba Ozolua führt die Heere Benins in ständigen Eroberungskriegen und hat in Ughoton den Handel mit den Portugiesen eröffnet."
+   },
+   "coa": {
+    "blazon": "Gules, a horse Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ife",
+   "name": {
+    "en": "Kingdom of Ife",
+    "de": "Königreich Ife"
+   },
+   "short": {
+    "en": "Ife",
+    "de": "Ife"
+   },
+   "adjective": {
+    "en": "Ife",
+    "de": "ifeisch"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "yoruba",
+   "faith": "african_traditional",
+   "color": "#ef6c00",
+   "capital": {
+    "name": "Ile-Ife",
+    "lat": 7.48,
+    "lon": 4.56
+   },
+   "holdings": [
+    {
+     "name": "Ile-Ife",
+     "lat": 7.48,
+     "lon": 4.56
+    },
+    {
+     "name": "Ilesa",
+     "lat": 7.63,
+     "lon": 4.74
+    }
+   ],
+   "ruler": {
+    "name": "Ooni of Ife",
+    "born": 1450,
+    "dynasty": "Oduduwa",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Sacred kingship of Ife, spiritual centre of the Yoruba; the Ooni's name in 1492 is unknown.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Ile-Ife is the holy city of the Yoruba, famed for its bronze heads, though Oyo is now the rising military power.",
+    "de": "Ile-Ife ist die heilige Stadt der Yoruba, berühmt für ihre Bronzeköpfe, doch Oyo ist nun die aufsteigende Militärmacht."
+   },
+   "coa": {
+    "blazon": "Or, a crown Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "kongo",
+   "name": {
+    "en": "Kingdom of Kongo",
+    "de": "Königreich Kongo"
+   },
+   "short": {
+    "en": "Kongo",
+    "de": "Kongo"
+   },
+   "adjective": {
+    "en": "Kongolese",
+    "de": "kongolesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "kongo",
+   "faith": "african_traditional",
+   "color": "#c8302a",
+   "capital": {
+    "name": "Mbanza Kongo",
+    "lat": -6.27,
+    "lon": 14.24
+   },
+   "holdings": [
+    {
+     "name": "Mbanza Kongo",
+     "lat": -6.27,
+     "lon": 14.24
+    },
+    {
+     "name": "Mbanza Soyo",
+     "lat": -6.13,
+     "lon": 12.37
+    },
+    {
+     "name": "Mbanza Nsundi",
+     "lat": -5.4,
+     "lon": 14.9
+    },
+    {
+     "name": "Mbanza Mbata",
+     "lat": -5.8,
+     "lon": 15.5
+    },
+    {
+     "name": "Mpemba",
+     "lat": -7.0,
+     "lon": 14.0
+    },
+    {
+     "name": "Mbamba",
+     "lat": -7.3,
+     "lon": 13.5
+    }
+   ],
+   "ruler": {
+    "name": "João I Nzinga a Nkuwu",
+    "born": 1440,
+    "dynasty": "Lukeni",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Afonso Mvemba a Nzinga",
+    "born": 1456,
+    "dynasty": "Lukeni",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     3
+    ],
+    "traits": [
+     "pious",
+     "learned"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Kilukeni kanda; the Manikongo Nzinga a Nkuwu was baptised João I on 3 May 1491 by Portuguese missionaries, though many nobles cling to the old religion.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "portugal"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Manikongo has just been baptised and Portuguese priests and masons are building a church in Mbanza Kongo. His son Afonso, governor of Nsundi, is the most zealous Christian at court.",
+    "de": "Der Manikongo ist eben getauft worden, und portugiesische Priester und Maurer bauen in Mbanza Kongo eine Kirche. Sein Sohn Afonso, Statthalter von Nsundi, ist der eifrigste Christ am Hof."
+   },
+   "coa": {
+    "blazon": "Azure a cross Or between five escutcheons",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "ethiopia",
+   "name": {
+    "en": "Ethiopian Empire",
+    "de": "Kaiserreich Äthiopien"
+   },
+   "short": {
+    "en": "Ethiopia",
+    "de": "Äthiopien"
+   },
+   "adjective": {
+    "en": "Ethiopian",
+    "de": "äthiopisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "amhara",
+   "faith": "ethiopian",
+   "color": "#2e7d32",
+   "capital": {
+    "name": "Debre Birhan",
+    "lat": 9.68,
+    "lon": 39.53
+   },
+   "holdings": [
+    {
+     "name": "Debre Birhan",
+     "lat": 9.68,
+     "lon": 39.53
+    },
+    {
+     "name": "Tegulet",
+     "lat": 9.7,
+     "lon": 39.55
+    },
+    {
+     "name": "Debre Libanos",
+     "lat": 9.71,
+     "lon": 38.85
+    },
+    {
+     "name": "Amba Geshen",
+     "lat": 11.5,
+     "lon": 39.3
+    },
+    {
+     "name": "Lalibela",
+     "lat": 12.03,
+     "lon": 39.04
+    },
+    {
+     "name": "Gojjam",
+     "lat": 10.5,
+     "lon": 37.9
+    },
+    {
+     "name": "Damot",
+     "lat": 9.3,
+     "lon": 37.5
+    },
+    {
+     "name": "Tana Qirqos",
+     "lat": 12.15,
+     "lon": 37.4
+    },
+    {
+     "name": "Aksum",
+     "lat": 14.13,
+     "lon": 38.72
+    },
+    {
+     "name": "Enderta",
+     "lat": 13.5,
+     "lon": 39.5
+    },
+    {
+     "name": "Massawa",
+     "lat": 15.61,
+     "lon": 39.45
+    }
+   ],
+   "ruler": {
+    "name": "Eskender",
+    "born": 1471,
+    "dynasty": "Solomonic",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "young"
+    ]
+   },
+   "heir": {
+    "name": "Amda Seyon II",
+    "born": 1487,
+    "dynasty": "Solomonic",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Solomonic dynasty; Eskender (Alexander) came to the throne as a child in 1478; the Portuguese envoy Pêro da Covilhã reached his court in 1488 and is not allowed to leave.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ifat"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "Young Emperor Eskender rules the Christian highlands while the court factions and the queen-mother Eleni govern. A Portuguese spy, Pêro da Covilhã, has reached the court of Prester John.",
+    "de": "Der junge Kaiser Eskender herrscht über das christliche Hochland, während Hofparteien und die Königinmutter Eleni regieren. Ein portugiesischer Kundschafter, Pêro da Covilhã, hat den Hof des Priesterkönigs Johannes erreicht."
+   },
+   "coa": {
+    "blazon": "Vert, a lion Or bearing a cross",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ifat",
+   "name": {
+    "en": "Sultanate of Adal",
+    "de": "Sultanat Adal"
+   },
+   "short": {
+    "en": "Adal",
+    "de": "Adal"
+   },
+   "adjective": {
+    "en": "Adali",
+    "de": "adalisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "somali",
+   "faith": "sunni",
+   "color": "#c7a252",
+   "capital": {
+    "name": "Dakkar",
+    "lat": 9.2,
+    "lon": 42.2
+   },
+   "holdings": [
+    {
+     "name": "Dakkar",
+     "lat": 9.2,
+     "lon": 42.2
+    },
+    {
+     "name": "Zeila",
+     "lat": 11.35,
+     "lon": 43.47
+    },
+    {
+     "name": "Harar",
+     "lat": 9.31,
+     "lon": 42.12
+    },
+    {
+     "name": "Ifat",
+     "lat": 10.1,
+     "lon": 39.88
+    },
+    {
+     "name": "Berbera",
+     "lat": 10.44,
+     "lon": 45.01
+    }
+   ],
+   "ruler": {
+    "name": "Sultan Muhammad ibn Azhar ad-Din",
+    "born": 1450,
+    "dynasty": "Walashma",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Walashma dynasty (successors of Ifat); Muhammad ibn Azhar ad-Din reigns 1488-1518.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ethiopia"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Walashma sultans of Adal rule the lowlands and the port of Zeila and wage holy war against the Christian highlands.",
+    "de": "Die Walashma-Sultane von Adal beherrschen das Tiefland und den Hafen Zeila und führen den Glaubenskrieg gegen das christliche Hochland."
+   },
+   "coa": {
+    "blazon": "Vert, a crescent Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crescent",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "alodia",
+   "name": {
+    "en": "Kingdom of Alodia",
+    "de": "Königreich Alodia"
+   },
+   "short": {
+    "en": "Alodia",
+    "de": "Alodia"
+   },
+   "adjective": {
+    "en": "Alodian",
+    "de": "alodisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nubian",
+   "faith": "coptic",
+   "color": "#8d6e63",
+   "capital": {
+    "name": "Soba",
+    "lat": 15.52,
+    "lon": 32.68
+   },
+   "holdings": [
+    {
+     "name": "Soba",
+     "lat": 15.52,
+     "lon": 32.68
+    },
+    {
+     "name": "Arbaji",
+     "lat": 14.6,
+     "lon": 33.2
+    }
+   ],
+   "ruler": {
+    "name": "King of Alodia",
+    "born": 1450,
+    "dynasty": "Alodian",
+    "female": false,
+    "skills": [
+     1,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The last Christian Nubian kingdom, in deep decline; its kings' names are not recorded. The Funj will destroy it around 1504.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Christian Alodia survives on the Blue and White Nile, cut off from Alexandria and pressed by Arab tribes.",
+    "de": "Das christliche Alodia überlebt am Blauen und Weißen Nil, abgeschnitten von Alexandria und bedrängt von arabischen Stämmen."
+   },
+   "coa": {
+    "blazon": "Gules, a cross Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "kilwa",
+   "name": {
+    "en": "Kilwa Sultanate",
+    "de": "Sultanat Kilwa"
+   },
+   "short": {
+    "en": "Kilwa",
+    "de": "Kilwa"
+   },
+   "adjective": {
+    "en": "Kilwan",
+    "de": "kilwanisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "swahili",
+   "faith": "sunni",
+   "color": "#00897b",
+   "capital": {
+    "name": "Kilwa Kisiwani",
+    "lat": -8.96,
+    "lon": 39.51
+   },
+   "holdings": [
+    {
+     "name": "Kilwa Kisiwani",
+     "lat": -8.96,
+     "lon": 39.51
+    },
+    {
+     "name": "Mafia",
+     "lat": -7.97,
+     "lon": 39.7
+    },
+    {
+     "name": "Sofala",
+     "lat": -20.15,
+     "lon": 34.73
+    }
+   ],
+   "ruler": {
+    "name": "Sultan al-Fudail",
+    "born": 1450,
+    "dynasty": "Mahdali",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mahdali sultans of Kilwa; the succession around 1490 is confused and the ruler name uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Kilwa controls the gold of Sofala and is the richest city of the Swahili coast, though its sultans are puppets of powerful emirs.",
+    "de": "Kilwa beherrscht das Gold von Sofala und ist die reichste Stadt der Swahili-Küste, doch seine Sultane sind Marionetten mächtiger Emire."
+   },
+   "coa": {
+    "blazon": "Azure, a ship Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "ship",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mutapa",
+   "name": {
+    "en": "Kingdom of Mutapa",
+    "de": "Reich Mutapa"
+   },
+   "short": {
+    "en": "Mutapa",
+    "de": "Mutapa"
+   },
+   "adjective": {
+    "en": "Mutapa",
+    "de": "mutapanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "shona",
+   "faith": "african_traditional",
+   "color": "#795548",
+   "capital": {
+    "name": "Zvongombe",
+    "lat": -16.3,
+    "lon": 30.9
+   },
+   "holdings": [
+    {
+     "name": "Zvongombe",
+     "lat": -16.3,
+     "lon": 30.9
+    },
+    {
+     "name": "Great Zimbabwe",
+     "lat": -20.27,
+     "lon": 30.93
+    },
+    {
+     "name": "Mapela",
+     "lat": -21.1,
+     "lon": 28.6
+    },
+    {
+     "name": "Mazoe",
+     "lat": -17.5,
+     "lon": 31.0
+    }
+   ],
+   "ruler": {
+    "name": "Changamire",
+    "born": 1450,
+    "dynasty": "Changamire",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Shona kingdom; around 1490 the Mutapa Nyahuma was killed by the rebel Changamire, who rules until 1494 when Chikuyo restores the Mutapa line.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Mutapa kingdom on the Zambezi plateau controls the gold mines that feed Sofala and Kilwa; a usurper, Changamire, holds the throne.",
+    "de": "Das Reich Mutapa auf dem Sambesi-Plateau beherrscht die Goldminen, die Sofala und Kilwa speisen; ein Usurpator, Changamire, hält den Thron."
+   },
+   "coa": {
+    "blazon": "Or, a tower Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}
