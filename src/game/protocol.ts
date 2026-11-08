@@ -1,0 +1,76 @@
+// Messages between the UI thread and the simulation worker.
+import type { Command, CmdResult, I18n, Notice, PendingEvent, ChronEntry } from '../sim/types';
+
+export type ToWorker =
+  | { type: 'init'; seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number }
+  | { type: 'cmd'; id: number; cmd: Command }
+  | { type: 'speed'; speed: number }            // 0 = paused, 1..5
+  | { type: 'player'; player: number | null }   // choose / change the played realm
+  | { type: 'query'; id: number; q: Query }
+  | { type: 'save'; id: number }
+  | { type: 'mapmode'; mode: MapMode; focus: number };
+
+export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored';
+export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods'];
+
+export type Query =
+  | { q: 'loc'; loc: number }
+  | { q: 'nation'; nation: number }
+  | { q: 'ledger'; kind: 'nations' | 'markets' | 'wars' }
+  | { q: 'market'; market: number }
+  | { q: 'diplo'; target: number; action: string }
+  | { q: 'peace'; war: number; to: number; terms: any[]; concede?: boolean }
+  | { q: 'path'; army: number; to: number }
+  | { q: 'realm' }           // full data for the player's realm panels (laws, estates, council, tech, doctrines, decisions)
+  | { q: 'chronicle'; from?: number }
+  | { q: 'timelapse' }
+  | { q: 'endstats' };
+
+export type FromWorker =
+  | { type: 'ready'; L: number; S: number; nations: NationLite[] }
+  | { type: 'tick'; view: TickView }
+  | { type: 'cmdResult'; id: number; res: CmdResult }
+  | { type: 'reply'; id: number; data: any }
+  | { type: 'saved'; id: number; data: Uint8Array }
+  | { type: 'colors'; mode: MapMode; rgba: Uint8Array; legend: Legend }
+  | { type: 'error'; message: string };
+
+export interface Legend { title: I18n; items: { color: string; label: I18n | string }[] }
+
+export interface NationLite {
+  id: number; key: string; alive: boolean; name: I18n; short: I18n; adj: I18n; color: [number, number, number];
+  capital: number; rank: string; gov: string; score: number; overlord: number; faith: number; culture: number; coa: any;
+  ruler: string; difficulty: number; summary: I18n; dev: number; locs: number; personality: string; player: boolean;
+}
+
+export interface ArmyLite {
+  id: number; owner: number; loc: number; x: number; y: number; men: number; fleet: boolean; morale: number; path: number[];
+  siege: number; battle: number; rebels: boolean; name: string; general: string; embarked: boolean; mercenary: boolean;
+}
+
+export interface PlayerView {
+  id: number; treasury: number; income: number; expense: number; manpower: number; maxManpower: number; sailors: number;
+  concord: number; mandate: number; authority: number; prestige: number; warExhaustion: number; inflation: number; corruption: number;
+  dread: number; envoys: number; envoysBusy: number; insight: number; tech: number[]; techProgress: number[]; era: number;
+  incomeBreak: Record<string, number>; expenseBreak: Record<string, number>; ruler: string; rulerAge: number; heir: string;
+  atWar: boolean; taxRate: number[]; armyMaint: number; navyMaint: number; tariff: number; coinage: number; loans: number; debt: number;
+  stats: Record<string, number>;
+}
+
+export interface TickView {
+  day: number; startYear: number; speed: number; ended: boolean; victory?: { nation: number; kind: string };
+  owner?: Int16Array; ctrl?: Int16Array;          // sent only when changed
+  ownerChanges?: { loc: number; order: number }[]; changeOrigin?: number;
+  nations?: NationLite[];                          // refreshed monthly
+  armies: ArmyLite[];
+  player: PlayerView | null;
+  notices: Notice[];                               // new since last tick
+  pending: (PendingEvent & { title: I18n; text: I18n; options: { label: I18n; hint?: I18n }[]; art?: string })[];
+  wars: { id: number; name: I18n; att: number[]; def: number[]; attLead: number; defLead: number; score: number; offers: { from: number; to: number; terms: any[]; concede?: boolean; idx: number }[] }[];
+  sieges: { loc: number; nation: number; progress: number; garrison: number }[];
+  battles: { id: number; loc: number; att: number; def: number; lossA: number; lossD: number; startA: number; startD: number; phase: number }[];
+  chronicle: ChronEntry[];                         // new entries
+  snow?: Float32Array;                             // monthly
+  ranking: number[];
+  msPerDay: number;
+}
