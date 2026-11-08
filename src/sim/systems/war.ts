@@ -328,7 +328,8 @@ export function startCivilWar(s: GameState, w: World, n: Nation) {
   const take = locs.slice(0, Math.floor(locs.length * 0.4));
   const { releaseNation, newArmy, availableUnits } = require_military();
   const pre = releaseNation(s, w, n, take, n.culture) as Nation;
-  pre.name = { en: `${n.short.en} (pretender)`, de: `${n.short.de} (Prätendent)` }; pre.short = pre.name; pre.adj = n.adj; pre.faith = n.faith; pre.gov = n.gov;
+  const bare = (x: string) => x.replace(/\s*\((pretender|Prätendent)\)$/, '');
+  pre.name = { en: `${bare(n.short.en)} (pretender)`, de: `${bare(n.short.de)} (Prätendent)` }; pre.short = pre.name; pre.adj = n.adj; pre.faith = n.faith; pre.gov = n.gov;
   pre.color = n.color.map((v) => Math.min(255, v + 45)) as any;
   pre.flags.pretender_of = n.id;
   for (const l of take) s.loc.core[l] = n.id;
