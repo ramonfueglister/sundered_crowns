@@ -7,7 +7,7 @@ import { step, hashState, serialize, deserialize } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
 import { hasCasusBelli, nationLocs } from '../src/sim/systems/war';
 import { nationPower, neighboursCached } from '../src/sim/systems/ai';
-import { findPath, seaNear, newArmy } from '../src/sim/systems/military';
+import { findPath, seaNear, newArmy, availableUnits } from '../src/sim/systems/military';
 import { allies, hasTreaty, atWar } from '../src/sim/ctx';
 import { LAWS, VALUES } from '../src/sim/content/laws';
 import { SITUATIONS } from '../src/sim/content/situations';
@@ -68,6 +68,12 @@ describe('acceptance (point 119)', () => {
         }
         const occ = nationLocs(s, T.id).filter((l) => s.loc.ctrl[l] === P.id);
         if (occ.length && day % 30 === 0) cmds.push({ t: 'peace', n: P.id, war: war.id, to: war.defLead, terms: [{ type: 'cede', locs: occ.slice(0, 1), to: P.id }] });
+      }
+      // spend like a player: levies from the capital while men last, sell-swords in wartime, white peace offers to other attackers
+      if (day % 30 === 0 && P.capital >= 0) {
+        if (P.manpower > 600 && P.treasury > 300) cmds.push({ t: 'recruit', n: P.id, loc: P.capital, unit: availableUnits(s, P, false)[0] ?? 0, men: 500 });
+        if (s.wars.some((x) => x.att.includes(P.id) || x.def.includes(P.id)) && P.treasury > 1200) cmds.push({ t: 'mercs', n: P.id, loc: P.capital, company: 1500 });
+        for (const x of s.wars) if (x.def.includes(P.id) && x.defLead === P.id) cmds.push({ t: 'peace', n: P.id, war: x.id, to: x.attLead, terms: [] });
       }
       // answer our own events with the first choice, decline foreign proposals
       for (const pe of s.pending.filter((x) => x.nation === P.id)) cmds.push({ t: 'event', n: P.id, pending: pe.id, choice: pe.event.startsWith('diplo_') ? 1 : 0 });

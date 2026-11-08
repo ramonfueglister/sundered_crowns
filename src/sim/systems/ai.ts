@@ -124,6 +124,12 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
     if (n.treasury < unitCost(s, n, u, m) * 1.2) continue;
     applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: u, men: Math.round(m) });
   }
+  // a few transports for any coastal realm of size, so its armies can cross straits and seas
+  if (w.coastal[n.capital] && s.loc.buildings[n.capital * B + BI.port] > 0 && n.treasury > inc * 3 && (atWarNow || (s.day + n.id) % 360 < 30)) {
+    let hulls = 0; for (const a of armiesOf(s, n.id)) if (a.fleet) hulls += armyMen(a);
+    const ships = availableUnits(s, n, true);
+    if (!hulls && ships.length && nationLocsRO(s, n.id).length >= 12) applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: ships[0], men: 4 });
+  }
   // fleets for coastal trade powers
   if ((P(n, 'trader') || n.gov === 'merchant_republic') && w.coastal[n.capital] && n.treasury > inc * 5) {
     const ships = availableUnits(s, n, true);
@@ -227,7 +233,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
   if (!chance(s.rng, aggr)) return;
-  if (n.warExhaustion > 20 || n.concord < -30 || n.treasury < 0 || n.dread > 60) return;
+  if (n.warExhaustion > 30 || n.concord < -30 || n.treasury < 0 || n.dread > 60) return;
   const myBloc = [n.id, ...allies(s, n.id), ...subjectsOf(s, n.id)];
   const myPower = blocPower(s, myBloc);
   if (myPower <= 0) return;
@@ -245,6 +251,10 @@ function considerWar(s: GameState, w: World, n: Nation) {
     const cb = hasCasusBelli(s, n.id, t);
     let score = ratio * 10 + (cb ? 25 : -40) + (n.rivals.includes(t) ? 20 : 0) - totalOpinion(s, w, n.id, t) * 0.2 + (tn.faith !== n.faith && P(n, 'zealot') ? 25 : 0);
     if (s.playerNations.includes(t)) score -= 10 + (s.difficulty < 2 ? 20 : 0);
+    // no pile-ons: a realm already defending gets fewer separate attackers; a human player faces one war at a time (on hard: one aggressor at a time)
+    const defending = s.wars.filter((x) => x.def.includes(t) && !x.att.includes(n.id)).length;
+    if (s.playerNations.includes(t) && (defending || (s.difficulty <= 2 && s.wars.some((x) => x.att.includes(t) || x.def.includes(t))))) continue;
+    score -= defending * 15;
     if (score > bestScore) { bestScore = score; best = t; }
   }
   if (best < 0 || bestScore < 30) {
@@ -379,6 +389,14 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     if (threat > myStr * 1.6 && n.capital >= 0 && a.loc !== n.capital) { applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: n.capital }); continue; }
     if (tgt >= 0) { applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: tgt }); continue; }
     if (a.siege >= 0) continue; // keep sieging
+    // a great host splits so it can besiege several places at once
+    if (armyMen(a) > 24000 && enemies.size) applyCommand(s, w, { t: 'split', n: n.id, army: a.id }); // the half that stays picks its own siege next turn
+    // places this army found no road to (kept on the army for 90 days, so saves and replays agree)
+    let blocked: Set<number> | null = null;
+    if (a.mission?.startsWith('blk:')) {
+      const [d, list] = a.mission.slice(4).split(':');
+      if (s.day - +d < 90) blocked = new Set(list ? list.split(',').map(Number) : []); else a.mission = undefined;
+    }
     // siege: nearest enemy-controlled location of the war target (forts first), within supply
     let best = -1, bd = Infinity;
     if (!targets) {
@@ -392,7 +410,7 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     for (const i of targets) {
       const dk = w.distKm(a.loc, i);
       if (dk > 1500) continue;
-      if (claimed.has(i)) continue;
+      if (claimed.has(i) || blocked?.has(i)) continue;
       const fort = s.loc.buildings[i * B + BI.fort];
       let d = dk * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
       if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
@@ -401,7 +419,11 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     if (best >= 0) claimed.add(best);
     if (best >= 0 && best !== a.loc) {
       const r = applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: best });
-      if (!r.ok) a.mission = 'blocked';
+      if (!r.ok) {
+        // remember the unreachable place and try another one on the next turn
+        const list = blocked ? [...blocked].slice(-11) : [];
+        a.mission = `blk:${blocked && a.mission?.startsWith('blk:') ? a.mission.slice(4).split(':')[0] : s.day}:${[...list, best].join(',')}`;
+      }
     }
   }
   // fleets: blockade enemy coastal forts under siege, else hunt weaker enemy fleets near home

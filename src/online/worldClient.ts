@@ -4,9 +4,9 @@
 import { signal, batch, computed } from '@preact/signals';
 import { view, nations, notices, chronicle, legend, workerError, ready } from '../game/client';
 import type { Command, CmdResult } from '../sim/types';
-import type { MapMode, Query, TickView } from '../game/protocol';
+import type { ArmyLite, MapMode, Query, TickView } from '../game/protocol';
 import {
-  PROTOCOL_VERSION, BIN_OWNERS, BIN_COLORS, BIN_SNOW, MAP_MODE_LIST, decodeBinary,
+  PROTOCOL_VERSION, BIN_OWNERS, applyArmies, applyNations, BIN_COLORS, BIN_SNOW, MAP_MODE_LIST, decodeBinary,
   type ClientMsg, type ServerMsg, type WorldInfo, type SeatInfo, type FreeNation, type ChatMsg, type PlayerOffer, type RosterEntry,
   type EarnedAchievement, type LeaderRow, type OfferAction, type AdminAction,
 } from './protocol';
@@ -162,6 +162,7 @@ export class OnlineClient implements GameClient {
       }
     }
   }
+  private armies = new Map<number, ArmyLite>();
   private onTickMsg(m: Extract<ServerMsg, { type: 'tick' }>) {
     const d = m.ownerDelta;
     if (d && d.length && this.owner && this.ctrl) {
@@ -169,7 +170,10 @@ export class OnlineClient implements GameClient {
       for (let i = 0; i < d.length; i += 3) { o[d[i]] = d[i + 1]; c[d[i]] = d[i + 2]; }
       this.owner = o; this.ctrl = c; this.ownersFresh = true;
     }
-    const v: TickView = { ...(m.view as TickView), owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined };
+    const armies = applyArmies(this.armies, m.view);
+    const v: TickView = { ...(m.view as any), armies, owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined };
+    const nl = applyNations(nations.value, m.view); v.nations = nl;
+    delete (v as any).armyUpd; delete (v as any).armyDel; delete (v as any).nationUpd;
     this.snow = null; this.ownersFresh = false;
     batch(() => {
       if (v.nations) nations.value = v.nations;

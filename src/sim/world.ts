@@ -1,5 +1,6 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
 import { deName } from './content/names_de';
+import { refineNames } from './content/placenames';
 import { TERRAINS, GI } from './defs';
 
 export interface GeoJson {
@@ -49,6 +50,7 @@ export class World {
     for (const [l] of geo.passes) this.pass[l - 1] = 1;
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
+    this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours
     this.namesDe = this.names.map((n) => deName(n));
     this.altNames = geo.loc.alt.slice(0, L);
     this.townSize = Uint8Array.from(geo.loc.size.slice(0, L).map((v) => v || 0));

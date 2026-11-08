@@ -7,7 +7,9 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WorldCore, type WorldConfig, type Conn, type Session } from '../server/world';
-import type { ServerMsg } from '../src/online/protocol';
+import { applyArmies, applyNations, type ServerMsg } from '../src/online/protocol';
+import type { ArmyLite, NationLite } from '../src/game/protocol';
+import { armyLites, nationLites } from '../src/game/view';
 import type { Command } from '../src/sim/types';
 import { hasTreaty } from '../src/sim/ctx';
 
@@ -20,10 +22,10 @@ const cfg: WorldConfig = {
 };
 
 class Client {
-  msgs: ServerMsg[] = []; session: Session | null = null; seq = 1;
+  msgs: ServerMsg[] = []; session: Session | null = null; seq = 1; armies = new Map<number, ArmyLite>(); nations: NationLite[] = [];
   constructor(readonly uid: string, readonly name: string) {}
   conn: Conn = {
-    send: (m) => { this.msgs.push(JSON.parse(JSON.stringify(m))); }, // round-trip like the wire
+    send: (m) => { const c = JSON.parse(JSON.stringify(m)); if (c.type === 'welcome') this.nations = c.nations; if (c.type === 'tick') { c.view.armies = applyArmies(this.armies, c.view); this.nations = applyNations(this.nations, c.view) ?? this.nations; } this.msgs.push(c); }, // round-trip like the wire; armies merged like the browser does
     sendBin: () => {},
     close: () => { this.session?.disconnect(); this.session = null; },
   };
@@ -93,7 +95,7 @@ describe('world server core', () => {
         expect(bertram.last('chat')?.msgs[0].text).toBe('Long live the alliance!');
       }
       if (day === 3) {
-        const army = alice.last('tick')!.view.armies.find((a) => a.owner === A && !a.fleet);
+        const army = alice.last('tick')!.view.armies!.find((a) => a.owner === A && !a.fleet);
         if (army) alice.cmd({ t: 'move', n: A, army: army.id, to: capA });
         bertram.cmd({ t: 'recruit', n: B, loc: capB, unit: 0, men: 1000 });
         alice.cmd({ t: 'tech', n: A, branch: 1 });
@@ -134,6 +136,10 @@ describe('world server core', () => {
     const tick = alice.last('tick')!;
     expect(tick.view.day).toBe(60);
     expect(tick.view.player?.id).toBe(A);
+    // the client's copy built from daily changes equals the server's whole lists (realms as of the last month start)
+    expect(JSON.parse(JSON.stringify(tick.view.armies))).toEqual(JSON.parse(JSON.stringify(armyLites(core.s, core.w))));
+    expect(alice.nations.length).toBe(core.s.nations.length);
+    expect(alice.nations.map((n) => n.name)).toEqual(nationLites(core.s, core.w).map((n) => n.name));
     expect(core.snapshotDays()).toEqual([0, 20, 40, 60]);
 
     liveHash = core.hash();

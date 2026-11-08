@@ -14,6 +14,7 @@ mkdirSync(out, { recursive: true });
 const { s, w } = newGame(seed, start, []);
 const t0 = Date.now();
 const report: any[] = [];
+let lastChron = 0;
 
 function snapshot(year: number) {
   const locs = new Map<number, number>();
@@ -28,7 +29,16 @@ function snapshot(year: number) {
   for (let i = 0; i < w.L; i++) if (s.loc.owner[i] >= 0) faiths[s.loc.faith[i]] = (faiths[s.loc.faith[i]] ?? 0) + 1;
   const ruler = (key: string) => { const n = s.nations.find((x) => x.key === key); return n ? `${n.short.en}:${n.alive ? `${locs.get(n.id) ?? 0}/t${n.tech[1]}/g${Math.round(n.treasury / 1000)}k` : 'gone'}` : `${key}:?`; };
   const techs = alive.map((n) => n.tech[1]).sort((a, b) => a - b);
+  // point 99 measures: largest share of European land, longest running war, realms in bankruptcy, use of the systems
+  let euro = 0; const euroBy = new Map<number, number>();
+  for (let i = 0; i < w.L; i++) if (w.lon[i] > -12 && w.lon[i] < 45 && w.lat[i] > 35 && w.lat[i] < 72) { euro++; const o = s.loc.owner[i]; if (o >= 0) { const top = s.nations[o].overlord >= 0 && s.nations[o].subjectType !== 'tributary' ? s.nations[o].overlord : o; euroBy.set(top, (euroBy.get(top) ?? 0) + 1); } }
+  const [bigId, bigN] = [...euroBy.entries()].sort((a, b) => b[1] - a[1])[0] ?? [-1, 0];
+  const longestWar = s.wars.reduce((m, x) => Math.max(m, (s.day - x.start) / 365), 0);
+  const bankrupt = alive.filter((n) => (n.flags.bankrupt_until ?? 0) > s.day).length;
+  const kinds: Record<string, number> = {}; for (const c of (s.chronicle ?? []).slice(lastChron)) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1; lastChron = s.chronicle?.length ?? 0;
   const row = {
+    largestEuropeShare: `${s.nations[bigId]?.short.en ?? '-'} ${(bigN / Math.max(1, euro) * 100).toFixed(1)}%`, longestWarYears: +longestWar.toFixed(1), bankrupt,
+    chronicleKinds: kinds,
     year, msPerDay: +((Date.now() - t0) / Math.max(1, s.day)).toFixed(1), alive: alive.length, subjects, wars: s.wars.length,
     popM: +(pop / 1e6).toFixed(1), europeM: +(popEu / 1e6).toFixed(1), priceLevel: +s.priceLevel.toFixed(2),
     top, colonial, companies: (s.companies ?? []).map((c) => c.name.en),

@@ -1,9 +1,35 @@
 // Wire protocol between the browser (OnlineClient) and the world server (server/main.ts).
 // JSON text frames for everything except bulky typed arrays, which travel as binary frames (see BIN_*).
 import type { Command, CmdResult, I18n, StandingOrders } from '../sim/types';
-import type { Legend, MapMode, NationLite, Query, TickView } from '../game/protocol';
+import type { ArmyLite, Legend, MapMode, NationLite, Query, TickView } from '../game/protocol';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
+
+/** A tick on the wire: armies come whole only in a full view; daily ticks carry the armies that changed and the ids that are gone. */
+export type WireTickView = Omit<TickView, 'owner' | 'ctrl' | 'snow' | 'armies'> & {
+  armies?: ArmyLite[]; armyUpd?: ArmyLite[]; armyDel?: number[];
+  /** changed fields of changed realms (a new realm comes whole) */
+  nationUpd?: (Partial<NationLite> & { id: number })[];
+};
+/** Applies a tick's realm changes to the receiver's list; returns a new list when anything changed. */
+export function applyNations(have: NationLite[], v: WireTickView): NationLite[] | undefined {
+  if (v.nations) return v.nations;
+  if (!v.nationUpd?.length) return undefined;
+  const out = have.slice();
+  for (const u of v.nationUpd) {
+    const m: any = out[u.id] ? { ...out[u.id], ...u } : { ...u };
+    for (const k in u) if ((u as any)[k] === null) m[k] = undefined;
+    out[u.id] = m;
+  }
+  return out;
+}
+/** Applies a tick's army data to the receiver's copy (kept in server order) and returns the current list. */
+export function applyArmies(have: Map<number, ArmyLite>, v: WireTickView): ArmyLite[] {
+  if (v.armies) { have.clear(); for (const a of v.armies) have.set(a.id, a); }
+  if (v.armyDel) for (const id of v.armyDel) have.delete(id);
+  if (v.armyUpd) for (const a of v.armyUpd) have.set(a.id, a);
+  return [...have.values()];
+}
 
 // ---------------- binary frames: [kind u8][pad u8 x3][len u32 LE][payload] ----------------
 export const BIN_OWNERS = 1; // payload: Int16Array owner (N) followed by Int16Array ctrl (N)
@@ -68,7 +94,7 @@ export type ServerMsg =
   | { type: 'world'; world: WorldInfo }
   | { type: 'free'; nations: FreeNation[] }
   | { type: 'seat'; seat: SeatInfo | null }
-  | { type: 'tick'; view: Omit<TickView, 'owner' | 'ctrl' | 'snow'>; ownerDelta?: number[] } // ownerDelta: flat [loc, owner, ctrl, ...]
+  | { type: 'tick'; view: WireTickView; ownerDelta?: number[] } // ownerDelta: flat [loc, owner, ctrl, ...]
   | { type: 'queued'; id: number; day: number }
   | { type: 'cmdResult'; id: number; res: CmdResult }
   | { type: 'reply'; id: number; data: any }

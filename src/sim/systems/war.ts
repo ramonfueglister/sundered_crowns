@@ -256,7 +256,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       for (const l of t.locs) {
         const prev = s.loc.owner[l];
         if (prev < 0) continue;
-        transferLoc(s, l, recv, k++);
+        transferLoc(s, w, l, recv, k++);
       }
       s.nations[recv].stats.locsGained += t.locs.length; Ln.stats.locsLost += t.locs.length;
       // Dread grows with the value taken
@@ -297,7 +297,7 @@ let _mil: any = null;
 function require_military() { return _mil; }
 export function _setMilitary(m: any) { _mil = m; }
 
-export function transferLoc(s: GameState, l: number, to: number, order = 0) {
+export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0) {
   const from = s.loc.owner[l];
   s.loc.owner[l] = to; s.loc.ctrl[l] = to; EPOCH.v++;
   s.loc.integ[l] = 0; // conquered land starts unintegrated
@@ -306,11 +306,11 @@ export function transferLoc(s: GameState, l: number, to: number, order = 0) {
   (s as any).ownerChanges = (s as any).ownerChanges || [];
   (s as any).ownerChanges.push({ loc: l, day: s.day, from, to, order });
   if ((s as any).ownerChanges.length > 2000) (s as any).ownerChanges.splice(0, 1000);
-  // capital lost → move capital
+  // capital lost → the court moves to a great town near the old seat (not to a distant colony)
   const fn = s.nations[from];
   if (fn && fn.capital === l) {
     let best = -1, bd = -1;
-    for (let i = 0; i < s.loc.owner.length; i++) if (s.loc.owner[i] === from && s.loc.dev[i] > bd) { bd = s.loc.dev[i]; best = i; }
+    for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === from) { const v = (s.loc.dev[i] + 1) / (1 + w.distKm(l, i) / 250); if (v > bd) { bd = v; best = i; } }
     fn.capital = best;
   }
 }
@@ -424,7 +424,7 @@ function warsMonth(s: GameState, w: World) {
 /** A war of succession ends with one realm again: the pretender's lands return, and if the pretender prevailed,
  *  the pretender wears the crown. */
 function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Nation, pretenderWon: boolean) {
-  for (const l of nationLocs(s, pre.id)) { transferLoc(s, l, legit.id); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
+  for (const l of nationLocs(s, pre.id)) { transferLoc(s, w, l, legit.id); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
   for (const a of s.armies) if (a.owner === pre.id) { a.owner = legit.id; a.path = []; a.siege = -1; }
   const sides = new Set([...war.att, ...war.def]);
   for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (sides.has(o) && s.loc.ctrl[i] !== o && s.loc.ctrl[i] !== -2) s.loc.ctrl[i] = o; }

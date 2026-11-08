@@ -34,7 +34,7 @@ function rename(n: Nation, name: I18n, short: I18n, adj: I18n, rank?: string) { 
 /** Peacefully absorb another (AI) realm: all its land, treasury and subjects pass to us. */
 function annex(e: EvApi, other: Nation) {
   const s = e.s;
-  for (let i = 0; i < e.w.L; i++) if (s.loc.owner[i] === other.id) { transferLoc(s, i, e.n.id); s.loc.integ[i] = 0.5; s.loc.unrest[i] = Math.min(s.loc.unrest[i], 10); s.loc.core[i] = e.n.id; }
+  for (let i = 0; i < e.w.L; i++) if (s.loc.owner[i] === other.id) { transferLoc(s, e.w, i, e.n.id); s.loc.integ[i] = 0.5; s.loc.unrest[i] = Math.min(s.loc.unrest[i], 10); s.loc.core[i] = e.n.id; }
   e.n.treasury += Math.max(0, other.treasury); other.treasury = 0;
   for (const x of s.nations) if (x.alive && x.overlord === other.id) x.overlord = e.n.id;
   other.overlord = -1; // the realm ranking retires the empty realm (armies, treaties, wars) at the next month
@@ -281,12 +281,12 @@ export const DECISIONS: DecisionDef[] = [
     can: (e) => {
       if ((e.n.flags.capital_moved || -1e9) > e.s.day - 365 * 50) return 'the capital was moved recently';
       if (H.atWar(e.s, e.n.id)) return 'not while at war';
-      const b = H.biggestLoc(e); if (b < 0 || b === e.n.capital) return 'the capital is already our greatest town';
+      const b = H.biggestLoc(e, (l) => e.w.distKm(l, e.n.capital) < 900); if (b < 0 || b === e.n.capital) return 'the capital is already our greatest town';
       if (e.s.loc.dev[e.n.capital] > e.s.loc.dev[b] * 0.6) return 'the capital is still great enough';
       return e.n.authority < 50 ? 'need 50 Authority' : e.n.treasury < months(e, 4) ? 'not enough gold' : null;
     },
     effect: (e) => {
-      const b = H.biggestLoc(e), old = e.n.capital;
+      const b = H.biggestLoc(e, (l) => e.w.distKm(l, e.n.capital) < 900), old = e.n.capital;
       e.n.capital = b; e.fx.authority(-50); e.fx.gold(-4); e.fx.concord(-5); e.fx.unrest(old, 10);
       e.n.flags.capital_moved = e.s.day; e.s.flags.ownershipDirty = e.s.day;
       e.fx.chronicle({ en: `The court moved from ${e.w.names[old]} to ${e.w.names[b]}.`, de: `Der Hof zog von ${e.w.namesDe[old]} nach ${e.w.namesDe[b]}.` }, b);

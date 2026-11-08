@@ -195,6 +195,15 @@ export function succession(s: GameState, w: World, n: Nation) {
         const other = s.nations[k];
         // personal union: the claimant's ruler inherits; nation becomes junior partner
         if (other.overlord < 0 && n.overlord < 0 && !s.wars.some((wr) => wr.att.includes(k) && wr.def.includes(n.id))) {
+          // the greater crown is the seat of the union: a small claimant's realm joins it as the junior partner
+          const flip = !s.playerNations.includes(k) && !s.nations.some((x) => x.overlord === k) && (s.playerNations.includes(n.id) || nationDevOf(s, n.id) > nationDevOf(s, k) * 1.5);
+          if (flip) {
+            other.overlord = n.id; other.subjectType = 'personal_union'; other.subjectSince = s.day;
+            n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.dynasty = other.dynasty;
+            chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${s.chars[other.ruler]?.name} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
+            notice(s, other.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
+            return;
+          }
           n.overlord = k; n.subjectType = 'personal_union'; n.subjectSince = s.day; n.dynasty = other.dynasty;
           n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort;
           chronicle(s, n.id, 'union', { en: `${n.short.en} passed by inheritance to ${other.short.en}: a personal union under ${s.chars[other.ruler]?.name}.`, de: `${n.short.de} fiel durch Erbschaft an ${other.short.de}: Personalunion unter ${s.chars[other.ruler]?.name}.` });
@@ -259,13 +268,14 @@ function characterMonth(s: GameState, w: World, n: Nation) {
   // ruler, heir, consort, officials age and may die; births to the ruling couple
   for (const cid of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)]) {
     const c = s.chars[cid]; if (!c || !c.alive) continue;
+    // a ruler shared in personal union lives and dies with the senior crown's turn
+    if (cid === n.ruler && n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === cid) continue;
     const age = ageOf(s, c);
     if (age > 50) c.health = Math.max(0.2, c.health - 0.002);
     if (chance(s.rng, monthlyDeathChance(age, c))) {
       c.alive = false; c.died = s.day;
       if (cid === n.ruler && s.nations[n.id].ruler === cid) {
         // only the true ruler of this nation (personal unions share the ruler)
-        for (const other of s.nations) if (other.alive && other.ruler === cid) { if (other.overlord >= 0 && other.subjectType === 'personal_union' && other.id !== n.id) continue; }
         succession(s, w, n);
         for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid) {
           // a junior crown in personal union may choose its own ruler when the shared one dies
@@ -434,7 +444,7 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   const mTarget = 45 + (r ? r.skills[1] * 5 : 10) + n.prestige * 0.1 + lawEffect(n, 'mandate_gain') * 100 + (n.regent ? -15 : 0) + (n.excommunicated ? -25 : 0) + mod(n, 'mandate');
   n.mandate = clamp(n.mandate + (mTarget - n.mandate) * 0.03, 0, 100);
   n.prestige = clamp(n.prestige * 0.995, -100, 100);
-  n.warExhaustion = Math.max(0, n.warExhaustion - (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0 : 0.6));
+  n.warExhaustion = Math.max(0, n.warExhaustion - (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0 : 1.5));
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {

@@ -14,7 +14,7 @@ if (existsSync('.env') && typeof (process as any).loadEnvFile === 'function') (p
 const env = process.env;
 const PORT = Number(env.PORT || env.WORLD_PORT || 8787);
 const ORIGINS = (env.ALLOWED_ORIGINS || '').split(',').map((x) => x.trim()).filter(Boolean);
-const MAX_PER_USER = 3, MAX_PER_IP = 12;
+const MAX_PER_USER = Number(env.MAX_CONN_PER_USER || 3), MAX_PER_IP = Number(env.MAX_CONN_PER_IP || 12); // raised only for local load tests
 
 const cfg = configFromEnv(env);
 const store = SupabaseStore.fromEnv(env) ?? new NullStore();
@@ -30,7 +30,7 @@ const cors = (req: IncomingMessage) => {
 };
 const http = createServer((req, res) => {
   const h = { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) };
-  if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day })); return; }
+  if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day, players: core.seats().length, stepMs: core.stepMs })); return; }
   if (req.url === '/world') { res.writeHead(200, h); res.end(JSON.stringify(core.worldInfo())); return; }
   if (req.url === '/leaderboard') { res.writeHead(200, h); res.end(JSON.stringify({ season: core.meta.season, rows: core.leaderRows(50) })); return; }
   res.writeHead(404, h); res.end('{"error":"not found"}');
@@ -65,7 +65,7 @@ wss.on('connection', (ws, req) => {
     if (ws.readyState !== ws.OPEN) return;
     clearTimeout(helloTimer);
     uid = user.uid; perUser.set(uid, (perUser.get(uid) ?? 0) + 1);
-    session = core.attach({ send, sendBin: (b) => { if (ws.readyState === ws.OPEN) ws.send(b, { binary: true }); }, close: (c, r) => ws.close(c, r) }, user);
+    session = core.attach({ send, sendRaw: (j) => { if (ws.readyState === ws.OPEN) ws.send(j); }, sendBin: (b) => { if (ws.readyState === ws.OPEN) ws.send(b, { binary: true }); }, close: (c, r) => ws.close(c, r) }, user);
   });
   ws.on('close', () => {
     clearTimeout(helloTimer);

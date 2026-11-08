@@ -219,7 +219,7 @@ function colonialSubjectsYear(s: GameState, w: World) {
     const [os, reg] = k.split(':'); const ov = s.nations[+os];
     // an existing colonial realm of this crown in the region takes the new land instead
     const existing = s.nations.find((x) => x.alive && x.overlord === ov.id && x.subjectType === 'colonial' && x.flags.colonial_region === regionCode(reg));
-    if (existing) { const { transferLoc } = require_war(); for (const l of locs) transferLoc(s, l, existing.id); continue; }
+    if (existing) { const { transferLoc } = require_war(); for (const l of locs) transferLoc(s, w, l, existing.id); continue; }
     // the most populous settlement becomes the seat
     let seat = locs[0], best = -1;
     for (const l of locs) { let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[l * C + c]; if (p > best) { best = p; seat = l; } }

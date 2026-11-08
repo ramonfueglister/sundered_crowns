@@ -9,7 +9,7 @@ import { mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, readdir
 import { join } from 'node:path';
 import type { GameState, Command, CmdResult } from '../src/sim/types';
 import type { World } from '../src/sim/world';
-import type { MapMode, Query, TickView } from '../src/game/protocol';
+import type { ArmyLite, MapMode, NationLite, Query } from '../src/game/protocol';
 import { createGame } from '../src/sim/setup';
 import { advanceDay, saveBinary, loadBinary, hashState, END_YEAR } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
@@ -24,6 +24,7 @@ import { checkAchievements, type AchievementCtx } from '../src/online/achievemen
 import {
   type ServerMsg, type ClientMsg, type WorldInfo, type FreeNation, type SeatInfo, type ChatMsg, type PlayerOffer, type OfferAction, type LeaderRow,
   type EarnedAchievement, type RosterEntry, OFFER_ACTIONS, DEFAULT_ORDERS, sanitizeOrders, encodeBinary, BIN_OWNERS, BIN_COLORS, BIN_SNOW, MAP_MODE_LIST, PROTOCOL_VERSION,
+  type WireTickView,
 } from '../src/online/protocol';
 import { NullStore, type WorldStore } from './store';
 
@@ -231,7 +232,7 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
 }
 
 export interface UserAuth { uid: string; name: string; admin: boolean }
-export interface Conn { send(m: ServerMsg): void; sendBin(b: Uint8Array): void; close(code: number, reason: string): void }
+export interface Conn { send(m: ServerMsg): void; sendBin(b: Uint8Array): void; close(code: number, reason: string): void; /** an already serialized JSON frame (optional) */ sendRaw?(json: string): void }
 
 interface Seat {
   uid: string; name: string; nation: number; key: string; joinedDay: number; joinedAt: number; lastSeen: number;
@@ -257,6 +258,8 @@ export class Session {
   get seat(): Seat | null { return this.core.meta.seats[this.user.uid] ?? null; }
   send(m: ServerMsg) { if (!this.closed) try { this.conn.send(m); } catch { /* socket gone */ } }
   sendBin(b: Uint8Array) { if (!this.closed) try { this.conn.sendBin(b); } catch { /* socket gone */ } }
+  /** Sends a frame serialized once for many sessions; transports without raw frames get the parsed message. */
+  sendJson(json: string) { if (this.closed) return; try { if (this.conn.sendRaw) this.conn.sendRaw(json); else this.conn.send(JSON.parse(json)); } catch { /* socket gone */ } }
   handle(m: ClientMsg) { this.core.handle(this, m); }
   disconnect() { if (this.closed) return; this.closed = true; this.core.detach(this); }
 }
@@ -276,6 +279,8 @@ export class WorldCore {
   private stepping = false;
   nextDayAt = 0;
   msPerDay = 0;
+  /** Smoothed real time of each part of a day step (ms), for /health and load tests. */
+  stepMs = { cmds: 0, day: 0, persist: 0, broadcast: 0 };
   private prevOwner!: Int16Array; private prevCtrl!: Int16Array;
   private lastChron = 0; private lastOwnerChange = 0; private lastMonth = -1;
   private nationsDirty = true;
@@ -382,25 +387,31 @@ export class WorldCore {
         else if (now - seat.lastSeen > this.cfg.inactiveReleaseMs) this.releaseSeat(seat, 'inactive');
       }
       if (!s.ended && s.day >= this.seasonEndDay) this.apply({ k: 'end_season' });
+      const sm = this.stepMs, ema = (k: keyof typeof sm, t: number) => { sm[k] = sm[k] * 0.8 + (performance.now() - t) * 0.2; };
+      let t1 = performance.now();
       const q = this.queue; this.queue = [];
       for (const it of q) {
         const res = this.apply(it.e);
         if (it.session) it.session.send({ type: 'cmdResult', id: it.id, res });
         if (res.ok && it.e.k === 'cmd' && it.e.cmd.t === 'orders') { const seat = this.meta.seats[it.e.uid]; if (seat) this.store.upsertSeat(this.meta.id, this.meta.season, seat, this.s.nations[seat.nation].standingOrders ?? DEFAULT_ORDERS, this.s.nations[seat.nation].flags.protected_until ?? 0).catch(() => {}); }
       }
+      ema('cmds', t1);
       if (!s.ended) {
         this.files.append({ d: s.day, adv: 1 });
         const t0 = performance.now();
         advanceDay(s, this.w); afterDay(s);
-        this.msPerDay = this.msPerDay * 0.8 + (performance.now() - t0) * 0.2;
+        this.msPerDay = this.msPerDay * 0.8 + (performance.now() - t0) * 0.2; sm.day = this.msPerDay;
       }
+      t1 = performance.now();
       const d = dayToDate(s.day, s.startYear);
       for (const seat of Object.values(this.meta.seats)) if (s.wars.some((x) => x.att.includes(seat.nation) || x.def.includes(seat.nation))) seat.lastWarDay = s.day;
       if (d.d === 1) this.checkAchievements(false);
       if (s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
       if (s.day % 10 === 0) this.store.upsertWorld(this.worldInfo()).catch(() => {});
       this.saveMeta();
+      ema('persist', t1); t1 = performance.now();
       this.broadcastTick();
+      ema('broadcast', t1);
       for (const f of this.onDay) f(s.day);
       if (s.ended) this.finishSeason();
     } finally { this.stepping = false; }
@@ -694,17 +705,47 @@ export class WorldCore {
     return {
       day: s.day, startYear: s.startYear, speed: this.meta.paused ? 0 : 1, ended: s.ended, victory: s.victory,
       ownerChanges: changes && changes.length ? changes : undefined, changeOrigin: lp && lp.day === s.day ? lp.origin : undefined,
-      nations: monthly || this.nationsDirty ? nationLites(s, w) : undefined, armies: armyLites(s, w), wars: warsView(s),
+      nationUpd: monthly || this.nationsDirty ? this.nationDelta() : undefined, ...this.armyDelta(), wars: warsView(s),
       sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
       battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
       chronicle: chron, ranking: s.ranking, msPerDay: this.msPerDay,
     };
   }
-  private personal(ss: Session, shared: ReturnType<WorldCore['sharedView']>): Omit<TickView, 'owner' | 'ctrl' | 'snow'> {
+  private prevNations: Record<string, string>[] = [];
+  /** Realm fields that changed since the last time realms went out (descriptions and arms rarely change, dev and score monthly). */
+  private nationDelta() {
+    const out: (Partial<NationLite> & { id: number })[] = [];
+    for (const n of nationLites(this.s, this.w)) {
+      const prev = this.prevNations[n.id], cur: Record<string, string> = {}; let ch: any = null;
+      for (const k in n) { const j = JSON.stringify((n as any)[k]); cur[k] = j; if (!prev || prev[k] !== j) (ch ??= { id: n.id })[k] = (n as any)[k] ?? null; } // null: JSON would drop a field that became undefined
+      this.prevNations[n.id] = cur;
+      if (ch) out.push(ch);
+    }
+    return out.length ? out : undefined;
+  }
+  private prevArmies = new Map<number, string>();
+  /** Armies that changed since the last broadcast (whole lists only go out in full views). */
+  private armyDelta() {
+    const upd: ArmyLite[] = [], del: number[] = [], seen = new Set<number>();
+    for (const a of armyLites(this.s, this.w)) {
+      seen.add(a.id); const j = JSON.stringify(a);
+      if (this.prevArmies.get(a.id) !== j) { upd.push(a); this.prevArmies.set(a.id, j); }
+    }
+    for (const id of this.prevArmies.keys()) if (!seen.has(id)) { del.push(id); this.prevArmies.delete(id); }
+    return { armyUpd: upd.length ? upd : undefined, armyDel: del.length ? del : undefined };
+  }
+  private personal(ss: Session, shared: ReturnType<WorldCore['sharedView']> | ReturnType<WorldCore['sharedViewNoAdvance']>): WireTickView {
     const s = this.s; const nat = ss.seat?.nation ?? -1;
     const notices = s.notices.filter((n) => n.id > ss.lastNotice && (n.nation === nat || n.nation === -1));
     ss.lastNotice = this.lastNoticeId();
     return { ...shared, player: nat >= 0 && s.nations[nat] ? playerView(s, s.nations[nat]) : null, notices, pending: nat >= 0 ? pendingView(s, this.w, nat) : [] };
+  }
+  /** The personal part of a tick as JSON members, to append to the shared part serialized once per day. */
+  private personalJson(ss: Session): string {
+    const s = this.s; const nat = ss.seat?.nation ?? -1;
+    const notices = s.notices.filter((n) => n.id > ss.lastNotice && (n.nation === nat || n.nation === -1));
+    ss.lastNotice = this.lastNoticeId();
+    return `"player":${JSON.stringify(nat >= 0 && s.nations[nat] ? playerView(s, s.nations[nat]) : null)},"notices":${JSON.stringify(notices)},"pending":${JSON.stringify(nat >= 0 ? pendingView(s, this.w, nat) : [])}`;
   }
   private ownersBin() {
     const N = this.w.N, buf = new Int16Array(N * 2); buf.set(this.s.loc.owner.subarray(0, N), 0); buf.set(this.s.loc.ctrl.subarray(0, N), N);
@@ -742,13 +783,14 @@ export class WorldCore {
     for (let i = 0; i < N; i++) if (o[i] !== this.prevOwner[i] || c[i] !== this.prevCtrl[i]) { delta.push(i, o[i], c[i]); this.prevOwner[i] = o[i]; this.prevCtrl[i] = c[i]; }
     const big = delta.length > 3 * 1500; const full = big ? this.ownersBin() : null;
     const snow = monthly ? encodeBinary(BIN_SNOW, s.loc.snow) : null;
-    const wi = this.worldInfo();
+    const wi = JSON.stringify({ type: 'world', world: this.worldInfo() });
+    const head = `{"type":"tick",${!full && delta.length ? `"ownerDelta":${JSON.stringify(delta)},` : ''}"view":${JSON.stringify(shared).slice(0, -1)},`;
     for (const ss of this.sessions) {
       if (ss.needFull) { this.sendFullView(ss); continue; }
       if (full) ss.sendBin(full);
       if (snow) ss.sendBin(snow);
-      ss.send({ type: 'world', world: wi });
-      ss.send({ type: 'tick', view: this.personal(ss, shared), ownerDelta: !full && delta.length ? delta : undefined });
+      ss.sendJson(wi);
+      ss.sendJson(head + this.personalJson(ss) + '}}');
       if (monthly && ss.mapMode !== 'political' && ss.mapMode !== 'terrain') this.sendColors(ss);
     }
     if (monthly) this.sendOffers();
