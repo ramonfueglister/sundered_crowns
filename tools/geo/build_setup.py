@@ -21,6 +21,8 @@ ALIASES = {'bavaria': 'bavaria_upper', 'chobanids': 'chobanid', 'holy_roman_empi
            'knights_hospitaller': 'hospitallers', 'mamluks': 'mamluk', 'marinids': 'marinid', 'ottomans': 'ottoman',
            'trier': 'archbishopric_trier'}
 
+OUTPOST_KM = 45  # reach of an anchor marked 'outpost': true
+
 TERRAINS = ['plains', 'farmland', 'forest', 'hills', 'mountains', 'marsh', 'steppe', 'desert', 'jungle', 'tundra', 'wasteland']
 
 def load_states():
@@ -90,20 +92,62 @@ def main():
     best = np.full(L + 1, INF); owner = np.full(L + 1, -1, np.int32)
     pq = []
     capital_loc = []
+    weights = []
     for si, s in enumerate(states):
         w = rank_w.get(s.get('rank'), 1.0)
         if s.get('government') in ('nomadic_horde',): w *= 0.7
-        cap = loc_at(s['capital']['lon'], s['capital']['lat'])
-        capital_loc.append(cap)
-        pts = [s['capital']] + list(s.get('holdings') or [])
-        for p in pts:
+        weights.append(w)
+        cl = loc_at(s['capital']['lon'], s['capital']['lat'])
+        if not cl:  # seat outside the land raster window: take the nearest land location centre
+            cx, cy = lonlat_to_px(s['capital']['lon'], s['capital']['lat'])
+            cl = int(np.argmin((lx[:L] - cx) ** 2 + (ly[:L] - cy) ** 2)) + 1
+        capital_loc.append(cl)
+    # Two seats on one location (a free city and its bishop, a county town and its overlord): the realm
+    # with more researched holdings keeps it, the other moves to the nearest free neighbouring location.
+    by_loc = {}
+    for si in range(len(states)): by_loc.setdefault(capital_loc[si], []).append(si)
+    taken = set(capital_loc)
+    for l, sis in by_loc.items():
+        if len(sis) < 2: continue
+        sis.sort(key=lambda si: -len(states[si].get('holdings') or []))
+        for si in sis[1:]:
+            seen = {l}; frontier = [l]; new = 0
+            for _ in range(4):
+                nxt = []
+                for u in frontier:
+                    for v in adj[u]:
+                        if v > L or v in seen: continue
+                        seen.add(v); nxt.append(v)
+                cand = [v for v in nxt if v not in taken]
+                if cand:
+                    cx, cy = lonlat_to_px(states[si]['capital']['lon'], states[si]['capital']['lat'])
+                    new = min(cand, key=lambda v: (lx[v - 1] - cx) ** 2 + (ly[v - 1] - cy) ** 2); break
+                frontier = nxt
+            if new:
+                print('  seat moved:', states[si]['id'], 'shares', states[sis[0]]['id'], '->', loc['name'][new - 1] or new)
+                capital_loc[si] = new; taken.add(new)
+    # Anchors in two passes: every capital first, so that a neighbour's holding that snaps onto the same
+    # location (Pera onto Constantinople, a Habsburg town onto Basel) can never take a realm's seat.
+    conflicts = []
+    def anchor(si, p, l=None):
+        if l is None:
             try:
                 l = loc_at(float(p['lon']), float(p['lat']))
             except Exception:
-                continue
-            if l and best[l] > 0:
-                best[l] = 0; owner[l] = si
-                heapq.heappush(pq, (0.0, l, si, w))
+                return
+        if not l: return
+        if best[l] > 0:
+            best[l] = 0; owner[l] = si
+            # optional per-anchor reach limit (small coastal forts, trading posts): 'radius_km' or 'outpost': true
+            rcap = float(p.get('radius_km') or (OUTPOST_KM if p.get('outpost') else math.inf))
+            heapq.heappush(pq, (0.0, l, si, weights[si], rcap))
+        elif owner[l] != si:
+            conflicts.append((states[si]['id'], p.get('name'), states[owner[l]]['id']))
+    for si, s in enumerate(states): anchor(si, s['capital'], capital_loc[si])
+    for si, s in enumerate(states):
+        for p in (s.get('holdings') or []): anchor(si, p)
+    print('anchor conflicts (holding dropped, location kept by first owner):', len(conflicts))
+    for c in conflicts[:40]: print('  ', c)
     # Dijkstra over the land graph; cost = km * weight; max reach by region
     kmpp = km_per_px(lat)
     def reach(i):
@@ -111,16 +155,16 @@ def main():
         if 40 < lon[i - 1] or lat[i - 1] < 30: return 420
         return 300
     while pq:
-        d, u, si, w = heapq.heappop(pq)
+        d, u, si, w, rcap = heapq.heappop(pq)
         if d > best[u] or owner[u] != si: continue
         for v in adj[u]:
             if v > L: continue
             dx = (lx[u - 1] - lx[v - 1]); dy = (ly[u - 1] - ly[v - 1])
             km = math.sqrt(dx * dx + dy * dy) * kmpp[u - 1]
             nd = d + km * w
-            if nd < best[v] and nd < reach(v):
+            if nd < best[v] and nd < reach(v) and nd < rcap * w:
                 best[v] = nd; owner[v] = si
-                heapq.heappush(pq, (nd, v, si, w))
+                heapq.heappush(pq, (nd, v, si, w, rcap))
     owned = (owner[1:] >= 0).sum()
     print('owned locations', owned, 'of', L)
     # ---------------- demography ----------------
