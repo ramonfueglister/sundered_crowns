@@ -1,7 +1,7 @@
 // The tick: one call = one in-game day. Deterministic given state + commands; used by the worker and the world server.
 import type { GameState, Command, CmdResult } from './types';
 import type { World } from './world';
-import { mkCtx, bump } from './ctx';
+import { mkCtx, bump, DAY_EPOCH } from './ctx';
 import { SYSTEMS } from './systems';
 import { applyCommand } from './commands';
 import { gzipSync, gunzipSync, strToU8, strFromU8 } from 'fflate';
@@ -18,7 +18,7 @@ const now = () => (typeof performance !== 'undefined' ? performance.now() : Date
 export function advanceDay(s: GameState, w: World) {
   if (s.ended) return;
   s.day++;
-  bump();
+  bump(); DAY_EPOCH.v++;
   const c = mkCtx(s, w);
   const firstOfMonth = c.date.d === 1;
   const newYear = firstOfMonth && c.date.m === 0;
@@ -74,6 +74,7 @@ function reviver(_k: string, v: any) {
 export function serialize(s: GameState): string { return JSON.stringify({ ...s, v: SAVE_VERSION }, replacer); }
 export function deserialize(json: string): GameState {
   const s = JSON.parse(json, reviver) as GameState;
+  DAY_EPOCH.v++; bump();
   return migrate(s);
 }
 function migrate(s: GameState): GameState {

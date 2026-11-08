@@ -1,7 +1,7 @@
 // Knowledge: three branches (Governance, Commerce, Warfare), four eras, doctrines and spreading innovations.
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, mod } from '../ctx';
+import { type System, clamp, chronicle, notice, mod, DAY_EPOCH } from '../ctx';
 import { B, BI, C, CL } from '../defs';
 import { DOCTRINES, DOCTRINE_INDEX } from '../content/doctrines';
 import { INNOVATIONS } from '../content/innovations';
@@ -32,17 +32,23 @@ export function techCost(s: GameState, n: Nation, branch: number): number {
 }
 
 /** Monthly research points per branch. */
-export function researchRate(s: GameState, w: World, n: Nation): [number, number, number] {
-  let pop = 0, lit = 0, dev = 0, uni = 0, burghers = 0, nobles = 0, clergy = 0;
-  const o = s.loc.owner;
+let AG: { e: number; s: GameState | null; a: Float64Array } = { e: -1, s: null, a: new Float64Array(0) };
+const AGK = 7; // pop, lit, dev, uni, burghers, nobles, clergy
+function aggregates(s: GameState, w: World) {
+  if (AG.e === DAY_EPOCH.v && AG.s === s) return AG.a;
+  const a = new Float64Array(s.nations.length * AGK); const o = s.loc.owner;
   for (let i = 0; i < w.L; i++) {
-    if (o[i] !== n.id) continue;
-    const base = i * C;
+    const k = o[i]; if (k < 0) continue;
+    const base = i * C, q = k * AGK;
     let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[base + c];
-    pop += p; lit += s.loc.literacy[i] * p; dev += s.loc.dev[i];
-    uni += s.loc.buildings[i * B + BI.university];
-    burghers += s.loc.pop[base + CL.burghers]; nobles += s.loc.pop[base + CL.nobles]; clergy += s.loc.pop[base + CL.clergy];
+    a[q] += p; a[q + 1] += s.loc.literacy[i] * p; a[q + 2] += s.loc.dev[i]; a[q + 3] += s.loc.buildings[i * B + BI.university];
+    a[q + 4] += s.loc.pop[base + CL.burghers]; a[q + 5] += s.loc.pop[base + CL.nobles]; a[q + 6] += s.loc.pop[base + CL.clergy];
   }
+  AG = { e: DAY_EPOCH.v, s, a }; return a;
+}
+export function researchRate(s: GameState, w: World, n: Nation): [number, number, number] {
+  const A = aggregates(s, w), q = n.id * AGK;
+  const pop = A[q], lit = A[q + 1], dev = A[q + 2], uni = A[q + 3], burghers = A[q + 4], nobles = A[q + 5], clergy = A[q + 6];
   const litAvg = pop > 0 ? lit / pop : 0;
   const r = s.chars[n.ruler];
   const scale = Math.sqrt(Math.max(1, dev)) * 0.55;

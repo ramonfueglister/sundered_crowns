@@ -17,6 +17,8 @@ export interface System {
 /** Bumped every simulated day and every applied command; caches keyed on it stay valid within a step. */
 export const EPOCH = { v: 0 };
 export function bump() { EPOCH.v++; }
+/** Bumped once per simulated day (and on load); law/modifier caches use it. */
+export const DAY_EPOCH = { v: 0 };
 
 export function newId(s: GameState) { return s.nextId++; }
 

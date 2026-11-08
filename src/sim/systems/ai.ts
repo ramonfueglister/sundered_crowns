@@ -15,8 +15,18 @@ import { reformCost } from './politics';
 const P = (n: Nation, k: string) => n.personality === k;
 function isAI(s: GameState, n: Nation) { return n.alive && !s.playerNations.includes(n.id) && !s.aiDisabled.includes(n.id) && !n.playerId; }
 
+let AO: { day: number; len: number; s: GameState | null; by: Map<number, Army[]> } = { day: -1, len: -1, s: null, by: new Map() };
+/** Armies grouped by owner (cached per day). */
+export function armiesOf(s: GameState, n: number): Army[] {
+  if (AO.day !== s.day || AO.len !== s.armies.length || AO.s !== s) {
+    const by = new Map<number, Army[]>();
+    for (const a of s.armies) { let l = by.get(a.owner); if (!l) by.set(a.owner, (l = [])); l.push(a); }
+    AO = { day: s.day, len: s.armies.length, s, by };
+  }
+  return AO.by.get(n) ?? [];
+}
 export function nationPower(s: GameState, n: number) {
-  let p = 0; for (const a of s.armies) if (a.owner === n && !a.fleet && !a.rebels) p += armyStrength(s, a);
+  let p = 0; for (const a of armiesOf(s, n)) if (!a.fleet && !a.rebels) p += armyStrength(s, a);
   return p + s.nations[n].manpower * 0.4;
 }
 function blocPower(s: GameState, ns: number[]) { return ns.reduce((p, n) => p + nationPower(s, n), 0); }
@@ -73,7 +83,7 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
 
 function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   if (n.capital < 0 || s.loc.ctrl[n.capital] !== n.id) return;
-  let men = 0; for (const a of s.armies) if (a.owner === n.id && !a.fleet && !a.rebels) men += armyMen(a);
+  let men = 0; for (const a of armiesOf(s, n.id)) if (!a.fleet && !a.rebels) men += armyMen(a);
   for (const r of s.recruits) if (r.nation === n.id) men += r.men;
   const inc = (n.income.tax || 0) + (n.income.trade || 0) + (n.income.tariffs || 0);
   const affordable = inc * 0.45 / Math.max(0.1, 1.0 * 600 * 0.1 * s.priceLevel / 1000); // men affordable at ~1 upkeep/1000
@@ -105,7 +115,7 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   // fleets for coastal trade powers
   if ((P(n, 'trader') || n.gov === 'merchant_republic') && w.coastal[n.capital] && n.treasury > inc * 5) {
     const ships = availableUnits(s, n, true);
-    let fleet = 0; for (const a of s.armies) if (a.owner === n.id && a.fleet) fleet += armyMen(a);
+    let fleet = 0; for (const a of armiesOf(s, n.id)) if (a.fleet) fleet += armyMen(a);
     if (ships.length && fleet < 25 && s.loc.buildings[n.capital * B + BI.port] > 0) applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: ships[ships.length - 1], men: 4 });
   }
 }
@@ -292,7 +302,8 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
 // ---------------- military AI ----------------
 function militaryAI(s: GameState, w: World, n: Nation) {
   const enemies = enemiesOf(s, n.id);
-  const myArmies = s.armies.filter((a) => a.owner === n.id && !a.fleet && !a.rebels && !a.battle && !a.embarkedOn && !a.retreating);
+  const own = armiesOf(s, n.id);
+  const myArmies = own.filter((a) => !a.fleet && !a.rebels && !a.battle && !a.embarkedOn && !a.retreating);
   if (!myArmies.length) return;
   // rebels in our land count as enemies to fight
   const rebels = s.armies.filter((a) => a.rebels && a.rebels.target === n.id);
@@ -306,6 +317,8 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   const enemyArmies = s.armies.filter((a) => !a.fleet && (enemies.has(a.owner) && !a.rebels || (a.rebels && a.rebels.target === n.id)) && !a.embarkedOn);
   // defend: enemy army in our land or near capital
   let targets: number[] | null = null;
+  const claimed = new Set<number>();
+  for (const x of own) { if (x.siege >= 0) claimed.add(x.siege); if (x.path.length) claimed.add(x.path[x.path.length - 1]); }
   const goal = new Set(s.wars.filter((x) => x.att.includes(n.id) || x.def.includes(n.id)).flatMap((x) => x.goal.locs));
   for (const a of myArmies) {
     if (a.path.length && s.day - a.lastMoveDay < 40) continue; // keep marching
@@ -337,19 +350,20 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     }
     for (const i of targets) {
       if (w.distKm(a.loc, i) > 1500) continue;
-      if (s.armies.some((x) => x.owner === n.id && x !== a && (x.siege === i || (x.path.length && x.path[x.path.length - 1] === i)))) continue;
+      if (claimed.has(i)) continue;
       const fort = s.loc.buildings[i * B + BI.fort];
       let d = w.distKm(a.loc, i) * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
       if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
       if (d < bd) { bd = d; best = i; }
     }
+    if (best >= 0) claimed.add(best);
     if (best >= 0 && best !== a.loc) {
       const r = applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: best });
       if (!r.ok) a.mission = 'blocked';
     }
   }
   // fleets: blockade enemy coastal forts under siege, else hunt weaker enemy fleets near home
-  for (const f of s.armies.filter((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length)) {
+  for (const f of own.filter((a) => a.fleet && !a.battle && !a.path.length)) {
     const sg = s.sieges.find((x) => x.nation === n.id && w.coastal[x.loc]);
     if (sg) { const sea = seaNear(w, sg.loc); if (sea >= 0 && sea !== f.loc) applyCommand(s, w, { t: 'move', n: n.id, army: f.id, to: sea }); }
   }

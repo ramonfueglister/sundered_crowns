@@ -330,19 +330,23 @@ export class MinHeap {
   private k: number[] = []; private v: number[] = [];
   get size() { return this.k.length; }
   push(key: number, val: number) {
-    const k = this.k, v = this.v; k.push(key); v.push(val);
-    let i = k.length - 1;
-    while (i > 0) { const p = (i - 1) >> 1; if (k[p] <= k[i]) break; [k[p], k[i]] = [k[i], k[p]]; [v[p], v[i]] = [v[i], v[p]]; i = p; }
+    const k = this.k, v = this.v; let i = k.length; k.push(key); v.push(val);
+    while (i > 0) { const p = (i - 1) >> 1; const kp = k[p]; if (kp <= key) break; k[i] = kp; v[i] = v[p]; i = p; }
+    k[i] = key; v[i] = val;
   }
-  pop(): [number, number] {
-    const k = this.k, v = this.v; const rk = k[0], rv = v[0];
-    const lk = k.pop()!, lv = v.pop()!;
-    if (k.length) {
-      k[0] = lk; v[0] = lv; let i = 0;
-      for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < k.length && k[l] < k[m]) m = l; if (r < k.length && k[r] < k[m]) m = r; if (m === i) break; [k[m], k[i]] = [k[i], k[m]]; [v[m], v[i]] = [v[i], v[m]]; i = m; }
+  /** key of the smallest element (call before popVal) */
+  peekKey() { return this.k[0]; }
+  popVal(): number {
+    const k = this.k, v = this.v; const rv = v[0];
+    const lk = k.pop()!, lv = v.pop()!; const n = k.length;
+    if (n) {
+      let i = 0;
+      for (;;) { const l = 2 * i + 1; if (l >= n) break; const r = l + 1; const m = r < n && k[r] < k[l] ? r : l; if (k[m] >= lk) break; k[i] = k[m]; v[i] = v[m]; i = m; }
+      k[i] = lk; v[i] = lv;
     }
-    return [rk, rv];
+    return rv;
   }
+  pop(): [number, number] { const key = this.k[0]; const val = this.popVal(); return [key, val]; }
 }
 export { TERRAIN_DEF };
 export type { I18n };

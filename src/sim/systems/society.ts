@@ -10,36 +10,40 @@ import { chance } from '../rng';
 
 // ---------------- control ----------------
 /** Distance-based control from the capital and administrative seats (roads extend reach). */
+let DIST: Float64Array | null = null; let STAMP: Int32Array | null = null; let STAMPV = 0;
 export function computeControl(s: GameState, w: World, n: Nation) {
-  const L = w.L;
+  const L = w.L, N = w.N;
+  if (!DIST || DIST.length !== N) { DIST = new Float64Array(N); STAMP = new Int32Array(N); }
+  const dist = DIST, stamp = STAMP!; const sv = ++STAMPV;
+  const get = (i: number) => (stamp[i] === sv ? dist[i] : Infinity);
   const own: number[] = [];
   for (let i = 0; i < L; i++) if (s.loc.owner[i] === n.id) own.push(i);
   if (!own.length) return;
-  const dist = new Map<number, number>();
   const heap = new MinHeap();
   const srcs = own.filter((i) => i === n.capital || s.loc.buildings[i * B + BI.admin] > 0);
   if (!srcs.length) srcs.push(own[0]);
-  for (const i of srcs) { dist.set(i, i === n.capital ? 0 : 60); heap.push(dist.get(i)!, i); }
+  for (const i of srcs) { const d0 = i === n.capital ? 0 : 60; stamp[i] = sv; dist[i] = d0; heap.push(d0, i); }
   const reach = 520 * (1 + lawEffect(n, 'admin') + mod(n, 'control') + n.tech[0] * 0.015);
+  const lim = reach * 1.6;
+  const owner = s.loc.owner, bld = s.loc.buildings, rough = w.rough, adjS = w.adjStart, adj = w.adj, adjKm = w.adjKm;
   while (heap.size) {
-    const [d, u] = heap.pop();
-    if (d > (dist.get(u) ?? Infinity)) continue;
-    if (d > reach * 1.6) continue;
-    for (let e = w.adjStart[u]; e < w.adjStart[u + 1]; e++) {
-      const v = w.adj[e];
-      let cost = w.adjKm[e];
-      if (v >= L) cost *= 1.6; // across the sea: harder to govern
+    const d = heap.peekKey(); const u = heap.popVal();
+    if (d > get(u) || d > lim) continue;
+    for (let e = adjS[u]; e < adjS[u + 1]; e++) {
+      const v = adj[e];
+      let cost = adjKm[e];
+      if (v >= L) cost *= 1.6;
       else {
-        if (s.loc.owner[v] !== n.id) cost *= 1.8; // through foreign land
-        cost /= 1 + s.loc.buildings[v * B + BI.road] * 0.25;
-        cost *= 1 + w.rough[v] * 0.0004;
+        if (owner[v] !== n.id) cost *= 1.8;
+        cost /= 1 + bld[v * B + BI.road] * 0.25;
+        cost *= 1 + rough[v] * 0.0004;
       }
       const nd = d + cost;
-      if (nd < (dist.get(v) ?? Infinity)) { dist.set(v, nd); heap.push(nd, v); }
+      if (nd < get(v) && nd <= lim) { stamp[v] = sv; dist[v] = nd; heap.push(nd, v); }
     }
   }
   for (const i of own) {
-    const d = dist.get(i) ?? reach * 2;
+    const d = stamp[i] === sv ? dist[i] : reach * 2;
     const target = clamp(1 - d / reach * 0.75, 0.12, 1) * (s.loc.ctrl[i] === n.id ? 1 : 0.4);
     s.loc.control[i] += (target - s.loc.control[i]) * 0.25;
   }

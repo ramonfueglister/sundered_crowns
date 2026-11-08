@@ -1,34 +1,35 @@
 // Internal politics: laws & reforms, Powers of the Realm, value axes, council, rulers, succession, Concord & Mandate.
 import type { GameState, Nation, Character, Estate } from '../types';
 import type { World } from '../world';
-import { type Ctx, type System, EPOCH, clamp, chronicle, notice, newId, mod, addExpense, addOpinion } from '../ctx';
+import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, mod, addExpense, addOpinion } from '../ctx';
 import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
 import { rand, chance, hash01, pick } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
 import { FAITHS } from '../content/peoples';
 
 const LE_CACHE = new WeakMap<Nation, { e: number; m: Map<string, number> }>();
+const MOD_ONLY = new Set(['tax', 'trade', 'production', 'unrest']); // read through mod() instead
+/** Sum of an effect over laws, value axes and modifiers. Whole table built once per nation per day. */
 export function lawEffect(n: Nation, key: string): number {
   let c = LE_CACHE.get(n);
-  if (!c || c.e !== EPOCH.v) { c = { e: EPOCH.v, m: new Map() }; LE_CACHE.set(n, c); }
-  const hit = c.m.get(key); if (hit !== undefined) return hit;
-  const v = lawEffectRaw(n, key); c.m.set(key, v); return v;
+  if (!c || c.e !== DAY_EPOCH.v) { c = { e: DAY_EPOCH.v, m: buildEffects(n) }; LE_CACHE.set(n, c); }
+  return c.m.get(key) ?? 0;
 }
-function lawEffectRaw(n: Nation, key: string): number {
-  let v = 0;
+function buildEffects(n: Nation): Map<string, number> {
+  const m = new Map<string, number>();
+  const add = (k: string, v: number) => { if (v) m.set(k, (m.get(k) ?? 0) + v); };
   for (const id in n.laws) {
     const L = LAWS[LAW_INDEX[id]]; if (!L) continue;
     const opt = L.options[n.laws[id]]; if (!opt) continue;
-    const e = opt.effects[key]; if (e) v += e;
+    for (const k in opt.effects) add(k, opt.effects[k]);
   }
-  // value axes contribute
   for (let a = 0; a < VALUES.length; a++) {
-    const val = n.values[a] || 0;
+    const val = n.values[a] || 0; if (!val) continue;
     const eff = val < 0 ? VALUES[a].effectsLow : VALUES[a].effectsHigh;
-    const e = eff[key]; if (e) v += e * Math.abs(val) / 100;
+    for (const k in eff) add(k, eff[k] * Math.abs(val) / 100);
   }
-  for (const m of n.modifiers) { const e = m.effects[key]; if (e && key !== 'tax' && key !== 'trade' && key !== 'production' && key !== 'unrest') v += e; }
-  return v;
+  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) add(k, md.effects[k]);
+  return m;
 }
 
 // ---------------- Powers of the Realm ----------------

@@ -98,16 +98,19 @@ export function moveSpeed(s: GameState, w: World, a: Army, to: number, day = s.d
 }
 
 /** A* over the location graph; cost = travel days. Returns path excluding the start. */
+let PG: Float64Array | null = null, PP: Int32Array | null = null, PS: Int32Array | null = null, PSV = 0;
 export function findPath(s: GameState, w: World, a: Army, from: number, to: number, maxNodes = 20000): number[] | null {
   if (from === to) return [];
+  const N = w.N;
+  if (!PG || PG.length !== N) { PG = new Float64Array(N); PP = new Int32Array(N); PS = new Int32Array(N); }
+  const g = PG, prev = PP!, st = PS!; const sv = ++PSV;
   const goalX = w.x[to], goalY = w.y[to];
-  const g = new Map<number, number>(); const prev = new Map<number, number>();
   const heap = new MinHeap();
-  g.set(from, 0); heap.push(0, from);
+  st[from] = sv; g[from] = 0; prev[from] = -1; heap.push(0, from);
   const kmpx = w.kmPerPx[to];
   const maxSpeed = a.fleet ? 110 : BASE_SPEED_KM * 1.6;
   let visited = 0;
-  // per-call cache of which realms' land this army may enter
+  // per-call caches: which realms' land this army may enter, and its speed factors
   const ownerOk = new Map<number, boolean>();
   const waste = TERRAINS.indexOf('wasteland');
   const enter = (v: number): boolean => {
@@ -119,31 +122,48 @@ export function findPath(s: GameState, w: World, a: Army, from: number, to: numb
     if (ok === undefined) { ok = canEnter(s, w, a, v); ownerOk.set(o, ok); }
     return ok;
   };
+  let speedOf: (v: number) => number;
+  if (a.fleet) { const sp = moveSpeed(s, w, a, to); speedOf = () => sp; }
+  else {
+    let slow = 1; for (const r of a.regs) slow = Math.min(slow, UNITS[r.type].speed);
+    const n = s.nations[a.owner];
+    const k = BASE_SPEED_KM * slow * (n ? 1 + lawEffect(n, 'speed') + (s.chars[a.general]?.traits.includes('energetic') ? 0.1 : 0) : 1);
+    const tm = TERRAINS.map((x) => TERRAIN_DEF[x].move);
+    const bld = s.loc.buildings, snow = s.loc.snow, terr = w.terrain, pass = w.pass, L = w.L;
+    speedOf = (v: number) => {
+      if (v >= L) return 55;
+      const m = tm[terr[v]];
+      const sp = k * (pass[v] ? Math.max(0.75, m) : m) * (1 + bld[v * B + BI.road] * 0.15) * (1 - 0.45 * snow[v]);
+      return sp > 3 ? sp : 3;
+    };
+  }
+  const adjS = w.adjStart, adj = w.adj, adjKm = w.adjKm, adjF = w.adjFlag, X = w.x, Y = w.y, L = w.L;
+  let found = false;
   while (heap.size) {
-    const [, u] = heap.pop();
-    if (u === to) break;
+    const u = heap.popVal();
+    if (u === to) { found = true; break; }
     if (++visited > maxNodes) return null;
-    const gu = g.get(u)!;
-    for (let e = w.adjStart[u]; e < w.adjStart[u + 1]; e++) {
-      const v = w.adj[e];
+    const gu = g[u];
+    for (let e = adjS[u]; e < adjS[u + 1]; e++) {
+      const v = adj[e];
       if (!enter(v)) continue;
-      if (!a.fleet && (w.adjFlag[e] & EDGE_STRAIT) && straitBlocked(s, w, a.owner, u, v)) continue;
-      let cost = w.adjKm[e] / moveSpeed(s, w, a, v);
-      if (!a.fleet && (w.adjFlag[e] & EDGE_RIVER)) cost += 0.5;
-      if (!a.fleet && v >= w.L && u < w.L) cost += 4; // embarking takes days
+      const f = adjF[e];
+      if (!a.fleet && (f & EDGE_STRAIT) && straitBlocked(s, w, a.owner, u, v)) continue;
+      let cost = adjKm[e] / speedOf(v);
+      if (!a.fleet && (f & EDGE_RIVER)) cost += 0.5;
+      if (!a.fleet && v >= L && u < L) cost += 4; // embarking takes days
       const ng = gu + cost;
-      if (ng < (g.get(v) ?? Infinity)) {
-        g.set(v, ng); prev.set(v, u);
-        const dx = w.x[v] - goalX, dy = w.y[v] - goalY;
-        const h = Math.sqrt(dx * dx + dy * dy) * kmpx / maxSpeed;
-        heap.push(ng + h, v);
+      if (st[v] !== sv || ng < g[v]) {
+        st[v] = sv; g[v] = ng; prev[v] = u;
+        const dx = X[v] - goalX, dy = Y[v] - goalY;
+        heap.push(ng + Math.sqrt(dx * dx + dy * dy) * kmpx / maxSpeed, v);
       }
     }
   }
-  if (!prev.has(to)) return null;
+  if (!found && st[to] !== sv) return null;
   const path: number[] = [];
-  let c = to;
-  while (c !== from) { path.push(c); c = prev.get(c)!; }
+  let c = to, guard = 0;
+  while (c !== from && guard++ < 100000) { path.push(c); c = prev[c]; if (c < 0) return null; }
   return path.reverse();
 }
 
