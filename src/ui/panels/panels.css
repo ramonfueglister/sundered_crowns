@@ -240,7 +240,19 @@ svg.chart .ax { font-size: 10px; fill: #6b5236; font-family: var(--serif); }
 .priv .pv-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
 .priv.on .pv-n { font-weight: bold; color: #5a3410; }
 .est-btns { display: flex; gap: 4px; justify-content: flex-end; margin-top: 3px; flex-wrap: wrap; }
-.council-row { display: flex; justify-content: space-between; gap: 6px; padding: 2px 0; border-bottom: 1px dotted var(--p-line); }
+.council-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 2px 0; border-bottom: 1px dotted var(--p-line); }
+.council-row > .k { flex: none; min-width: 7.5em; }
+.council-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.council-office.open { background: rgba(255, 250, 235, .45); }
+.council-cands { padding: 2px 0 4px 1em; border-bottom: 1px solid var(--p-line); }
+.cand-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 4em auto; gap: 6px; align-items: center; padding: 1px 0; font-size: .92em; }
+.cand-row > * { min-width: 0; }
+.cand-row > span:first-child { overflow: hidden; }
+.cand-sk { white-space: nowrap; }
+.cand-n { cursor: help; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.cand-b { text-align: right; font-variant-numeric: tabular-nums; }
+.tooltip .hl { color: var(--gilt2); font-weight: bold; }
+.army-here .k { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .axis { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 6px; align-items: center; padding: 2px 0; font-size: .88em; cursor: help; }
 .ax-l { text-align: right; color: var(--p-mut); } .ax-r { color: var(--p-mut); }
 .ax-l.on, .ax-r.on { color: var(--p-ink); font-weight: bold; }

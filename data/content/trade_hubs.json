@@ -1,711 +1,802 @@
 {
-  "sources": [
-    "Oxford Atlas of World History",
-    "P. Dollinger, The German Hansa",
-    "J. Abu-Lughod, Before European Hegemony",
-    "Cambridge Economic History of Europe vol. II",
-    "Wikipedia articles on the individual cities"
-  ],
-  "trade_hubs": [
-    {
-      "id": "bruges",
-      "name": "Bruges",
-      "lat": 51.21,
-      "lon": 3.22,
-      "importance": 5,
-      "active_from": 1200,
-      "sea": true,
-      "notes": "Hub of the Flemish cloth trade and chief Hanseatic Kontor in the west; Italian galleys call yearly. Declines after the Zwin silts up (late 15th c.)."
-    },
-    {
-      "id": "lubeck",
-      "name": "Lübeck",
-      "lat": 53.87,
-      "lon": 10.69,
-      "importance": 5,
-      "active_from": 1160,
-      "sea": true,
-      "notes": "Head of the Hanseatic League; salt from Lüneburg westward, Baltic grain, furs and wax eastward."
-    },
-    {
-      "id": "venice",
-      "name": "Venice",
-      "lat": 45.44,
-      "lon": 12.33,
-      "importance": 5,
-      "active_from": 900,
-      "sea": true,
-      "notes": "Mistress of the Levant trade: spices, silk and cotton through the state galley convoys (mude)."
-    },
-    {
-      "id": "genoa",
-      "name": "Genoa",
-      "lat": 44.41,
-      "lon": 8.93,
-      "importance": 5,
-      "active_from": 1000,
-      "sea": true,
-      "notes": "Rival of Venice; Black Sea colonies (Pera, Caffa), alum of Phocaea, Atlantic galleys to Bruges and England."
-    },
-    {
-      "id": "constantinople",
-      "name": "Constantinople",
-      "lat": 41.01,
-      "lon": 28.98,
-      "importance": 5,
-      "active_from": 330,
-      "sea": true,
-      "notes": "Gate between the Black Sea and the Mediterranean, its trade now largely in Genoese and Venetian hands."
-    },
-    {
-      "id": "alexandria",
-      "name": "Alexandria",
-      "lat": 31.2,
-      "lon": 29.92,
-      "importance": 5,
-      "active_from": 640,
-      "sea": true,
-      "notes": "Main Mediterranean outlet of the Red Sea spice route under the Mamluks; Venetian and Genoese fondaci."
-    },
-    {
-      "id": "cairo",
-      "name": "Cairo",
-      "lat": 30.05,
-      "lon": 31.25,
-      "importance": 5,
-      "active_from": 970,
-      "sea": false,
-      "notes": "Largest city of the Islamic world; Karimi merchants dominate the Indian Ocean spice trade."
-    },
-    {
-      "id": "novgorod",
-      "name": "Novgorod",
-      "lat": 58.52,
-      "lon": 31.27,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Hanseatic Peterhof; furs, wax and silver of the Russian north exchanged for Flemish cloth."
-    },
-    {
-      "id": "champagne_fairs",
-      "name": "Champagne Fairs (Troyes)",
-      "lat": 48.3,
-      "lon": 4.08,
-      "importance": 2,
-      "active_from": 1150,
-      "sea": false,
-      "notes": "Former clearing house of European trade, in steep decline since c.1300 as the sea route to Bruges takes over."
-    },
-    {
-      "id": "cologne",
-      "name": "Cologne",
-      "lat": 50.94,
-      "lon": 6.96,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Largest German city; Rhine wine and metalwork; staple right on all Rhine traffic."
-    },
-    {
-      "id": "paris",
-      "name": "Paris",
-      "lat": 48.86,
-      "lon": 2.35,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Largest city of Latin Europe; luxury crafts and the Seine trade of the Hanse of the water-merchants."
-    },
-    {
-      "id": "london",
-      "name": "London",
-      "lat": 51.51,
-      "lon": -0.09,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": true,
-      "notes": "Wool and later cloth exports; Hanseatic Steelyard and Italian merchants."
-    },
-    {
-      "id": "barcelona",
-      "name": "Barcelona",
-      "lat": 41.38,
-      "lon": 2.18,
-      "importance": 4,
-      "active_from": 1100,
-      "sea": true,
-      "notes": "Catalan Mediterranean commerce with Sicily, Sardinia, North Africa and the Levant; Consulate of the Sea."
-    },
-    {
-      "id": "seville",
-      "name": "Seville",
-      "lat": 37.39,
-      "lon": -5.99,
-      "importance": 4,
-      "active_from": 1248,
-      "sea": true,
-      "notes": "Oil, wine and Genoese finance; later the monopoly port for the Indies (1503)."
-    },
-    {
-      "id": "lisbon",
-      "name": "Lisbon",
-      "lat": 38.71,
-      "lon": -9.14,
-      "importance": 3,
-      "active_from": 1147,
-      "sea": true,
-      "notes": "Atlantic port with a Genoese colony; becomes the hub of the Guinea and India trade after 1450–1500."
-    },
-    {
-      "id": "antwerp",
-      "name": "Antwerp",
-      "lat": 51.22,
-      "lon": 4.4,
-      "importance": 2,
-      "active_from": 1450,
-      "sea": true,
-      "notes": "Brabant fairs town; becomes the leading market of northern Europe c.1450–1560."
-    },
-    {
-      "id": "amsterdam",
-      "name": "Amsterdam",
-      "lat": 52.37,
-      "lon": 4.9,
-      "importance": 1,
-      "active_from": 1580,
-      "sea": true,
-      "notes": "Small Holland port in 1356; dominant entrepôt of Europe from c.1580."
-    },
-    {
-      "id": "nuremberg",
-      "name": "Nuremberg",
-      "lat": 49.45,
-      "lon": 11.08,
-      "importance": 4,
-      "active_from": 1200,
-      "sea": false,
-      "notes": "Imperial city of metalworkers and long-distance merchants linking Venice and the north."
-    },
-    {
-      "id": "frankfurt",
-      "name": "Frankfurt am Main",
-      "lat": 50.11,
-      "lon": 8.68,
-      "importance": 3,
-      "active_from": 1240,
-      "sea": false,
-      "notes": "Imperial fairs in spring and autumn; book fair later."
-    },
-    {
-      "id": "vienna",
-      "name": "Vienna",
-      "lat": 48.21,
-      "lon": 16.37,
-      "importance": 3,
-      "active_from": 1200,
-      "sea": false,
-      "notes": "Staple right on the Danube route to Hungary."
-    },
-    {
-      "id": "prague",
-      "name": "Prague",
-      "lat": 50.09,
-      "lon": 14.42,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Imperial residence under Charles IV; silver of Kutná Hora."
-    },
-    {
-      "id": "krakow",
-      "name": "Kraków",
-      "lat": 50.06,
-      "lon": 19.94,
-      "importance": 3,
-      "active_from": 1257,
-      "sea": false,
-      "notes": "Royal Polish capital; copper of Hungary, salt of Wieliczka, route to Lemberg and the Black Sea."
-    },
-    {
-      "id": "buda",
-      "name": "Buda",
-      "lat": 47.5,
-      "lon": 19.04,
-      "importance": 3,
-      "active_from": 1250,
-      "sea": false,
-      "notes": "Royal seat of Hungary; gold florins from Kremnitz, cattle and wine."
-    },
-    {
-      "id": "ragusa",
-      "name": "Ragusa",
-      "lat": 42.64,
-      "lon": 18.11,
-      "importance": 3,
-      "active_from": 1000,
-      "sea": true,
-      "notes": "Dalmatian republic trading Balkan silver and lead to Italy."
-    },
-    {
-      "id": "tana",
-      "name": "Tana",
-      "lat": 47.11,
-      "lon": 39.41,
-      "importance": 3,
-      "active_from": 1300,
-      "sea": true,
-      "notes": "Venetian–Genoese post at the mouth of the Don, terminus of the overland silk road via Sarai."
-    },
-    {
-      "id": "caffa",
-      "name": "Caffa",
-      "lat": 45.03,
-      "lon": 35.38,
-      "importance": 4,
-      "active_from": 1266,
-      "sea": true,
-      "notes": "Genoese capital of the Black Sea trade: slaves, grain, furs and silk."
-    },
-    {
-      "id": "trebizond",
-      "name": "Trebizond",
-      "lat": 41.0,
-      "lon": 39.72,
-      "importance": 3,
-      "active_from": 1204,
-      "sea": true,
-      "notes": "Black Sea outlet of the Tabriz caravan road."
-    },
-    {
-      "id": "tabriz",
-      "name": "Tabriz",
-      "lat": 38.08,
-      "lon": 46.29,
-      "importance": 5,
-      "active_from": 1260,
-      "sea": false,
-      "notes": "Former Ilkhanid capital, great silk and caravan market between Persia, Anatolia and the Black Sea."
-    },
-    {
-      "id": "aleppo",
-      "name": "Aleppo",
-      "lat": 36.2,
-      "lon": 37.16,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Caravan city between Iraq, Anatolia and the Syrian coast."
-    },
-    {
-      "id": "damascus",
-      "name": "Damascus",
-      "lat": 33.51,
-      "lon": 36.31,
-      "importance": 4,
-      "active_from": 700,
-      "sea": false,
-      "notes": "Mamluk Syria's metropolis; spices via Beirut, Hajj caravans, steel and textiles."
-    },
-    {
-      "id": "beirut",
-      "name": "Beirut",
-      "lat": 33.89,
-      "lon": 35.5,
-      "importance": 3,
-      "active_from": 1291,
-      "sea": true,
-      "notes": "Port of Damascus where Venetian galleys load spices."
-    },
-    {
-      "id": "tunis",
-      "name": "Tunis",
-      "lat": 36.8,
-      "lon": 10.18,
-      "importance": 4,
-      "active_from": 1159,
-      "sea": true,
-      "notes": "Hafsid capital; Italian and Catalan fondouks; Saharan gold and wool."
-    },
-    {
-      "id": "fez",
-      "name": "Fez",
-      "lat": 34.06,
-      "lon": -4.98,
-      "importance": 4,
-      "active_from": 800,
-      "sea": false,
-      "notes": "Marinid capital; leather, textiles and the northern end of the trans-Saharan gold road."
-    },
-    {
-      "id": "sijilmasa",
-      "name": "Sijilmasa",
-      "lat": 31.28,
-      "lon": -4.27,
-      "importance": 2,
-      "active_from": 757,
-      "sea": false,
-      "notes": "Old Saharan gateway oasis, past its peak."
-    },
-    {
-      "id": "timbuktu",
-      "name": "Timbuktu",
-      "lat": 16.77,
-      "lon": -3.01,
-      "importance": 4,
-      "active_from": 1100,
-      "sea": false,
-      "notes": "Mali's Niger-bend market for gold, salt and books."
-    },
-    {
-      "id": "gao",
-      "name": "Gao",
-      "lat": 16.27,
-      "lon": -0.04,
-      "importance": 3,
-      "active_from": 900,
-      "sea": false,
-      "notes": "Songhai trading city on the Niger."
-    },
-    {
-      "id": "kilwa",
-      "name": "Kilwa",
-      "lat": -8.96,
-      "lon": 39.51,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": true,
-      "notes": "Swahili sultanate controlling the gold of Sofala."
-    },
-    {
-      "id": "mogadishu",
-      "name": "Mogadishu",
-      "lat": 2.04,
-      "lon": 45.34,
-      "importance": 3,
-      "active_from": 900,
-      "sea": true,
-      "notes": "Swahili–Somali textile and ivory port described by Ibn Battuta."
-    },
-    {
-      "id": "aden",
-      "name": "Aden",
-      "lat": 12.78,
-      "lon": 45.03,
-      "importance": 4,
-      "active_from": 600,
-      "sea": true,
-      "notes": "Rasulid entrepôt between India and the Red Sea."
-    },
-    {
-      "id": "hormuz",
-      "name": "Hormuz",
-      "lat": 27.1,
-      "lon": 56.46,
-      "importance": 4,
-      "active_from": 1300,
-      "sea": true,
-      "notes": "Island kingdom controlling the Gulf trade with India."
-    },
-    {
-      "id": "basra",
-      "name": "Basra",
-      "lat": 30.51,
-      "lon": 47.81,
-      "importance": 3,
-      "active_from": 636,
-      "sea": true,
-      "notes": "Old Gulf port of Iraq, much reduced since the Mongol conquest."
-    },
-    {
-      "id": "baghdad",
-      "name": "Baghdad",
-      "lat": 33.34,
-      "lon": 44.4,
-      "importance": 3,
-      "active_from": 762,
-      "sea": false,
-      "notes": "Jalayirid capital, recovering slowly since 1258."
-    },
-    {
-      "id": "bergen",
-      "name": "Bergen",
-      "lat": 60.39,
-      "lon": 5.32,
-      "importance": 4,
-      "active_from": 1070,
-      "sea": true,
-      "notes": "Hanseatic Bryggen; Norwegian stockfish for grain."
-    },
-    {
-      "id": "visby",
-      "name": "Visby",
-      "lat": 57.64,
-      "lon": 18.3,
-      "importance": 3,
-      "active_from": 1100,
-      "sea": true,
-      "notes": "Gotland's walled trading town, early centre of Baltic commerce."
-    },
-    {
-      "id": "stockholm",
-      "name": "Stockholm",
-      "lat": 59.33,
-      "lon": 18.07,
-      "importance": 3,
-      "active_from": 1252,
-      "sea": true,
-      "notes": "Swedish iron and copper exports, run largely by German burghers."
-    },
-    {
-      "id": "danzig",
-      "name": "Danzig",
-      "lat": 54.35,
-      "lon": 18.65,
-      "importance": 4,
-      "active_from": 1300,
-      "sea": true,
-      "notes": "Teutonic Order's port for Prussian and Polish grain and timber."
-    },
-    {
-      "id": "riga",
-      "name": "Riga",
-      "lat": 56.95,
-      "lon": 24.11,
-      "importance": 3,
-      "active_from": 1201,
-      "sea": true,
-      "notes": "Hanseatic gateway up the Daugava to Polotsk and Smolensk."
-    },
-    {
-      "id": "reval",
-      "name": "Reval",
-      "lat": 59.44,
-      "lon": 24.75,
-      "importance": 3,
-      "active_from": 1248,
-      "sea": true,
-      "notes": "Hanseatic port for the Novgorod trade."
-    },
-    {
-      "id": "lemberg",
-      "name": "Lemberg",
-      "lat": 49.84,
-      "lon": 24.03,
-      "importance": 3,
-      "active_from": 1350,
-      "sea": false,
-      "notes": "Polish since 1349; Armenian and Italian merchants on the road to Caffa."
-    },
-    {
-      "id": "kiev",
-      "name": "Kiev",
-      "lat": 50.45,
-      "lon": 30.52,
-      "importance": 2,
-      "active_from": 900,
-      "sea": false,
-      "notes": "Former Rus metropolis, reduced under Mongol overlordship."
-    },
-    {
-      "id": "sarai",
-      "name": "Sarai",
-      "lat": 48.68,
-      "lon": 45.3,
-      "importance": 4,
-      "active_from": 1260,
-      "sea": false,
-      "notes": "Golden Horde capital on the Volga, hub of the silk road and fur trade."
-    },
-    {
-      "id": "astrakhan",
-      "name": "Hajji Tarkhan (Astrakhan)",
-      "lat": 46.35,
-      "lon": 48.05,
-      "importance": 3,
-      "active_from": 1300,
-      "sea": true,
-      "notes": "Volga delta market linking the Caspian and the Horde."
-    },
-    {
-      "id": "bolghar",
-      "name": "Bolghar",
-      "lat": 54.98,
-      "lon": 49.06,
-      "importance": 3,
-      "active_from": 900,
-      "sea": false,
-      "notes": "Volga fur market of the north."
-    },
-    {
-      "id": "urgench",
-      "name": "Urgench",
-      "lat": 42.33,
-      "lon": 59.15,
-      "importance": 3,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Khwarazm's caravan city on the road from Sarai to Central Asia."
-    },
-    {
-      "id": "samarkand",
-      "name": "Samarkand",
-      "lat": 39.65,
-      "lon": 66.96,
-      "importance": 4,
-      "active_from": 700,
-      "sea": false,
-      "notes": "Transoxianan silk and paper market."
-    },
-    {
-      "id": "bursa",
-      "name": "Bursa",
-      "lat": 40.19,
-      "lon": 29.06,
-      "importance": 3,
-      "active_from": 1326,
-      "sea": false,
-      "notes": "Ottoman capital and rising silk market."
-    },
-    {
-      "id": "famagusta",
-      "name": "Famagusta",
-      "lat": 35.12,
-      "lon": 33.94,
-      "importance": 4,
-      "active_from": 1291,
-      "sea": true,
-      "notes": "Christian clearing port for Levantine goods since the fall of Acre."
-    },
-    {
-      "id": "candia",
-      "name": "Candia",
-      "lat": 35.34,
-      "lon": 25.13,
-      "importance": 3,
-      "active_from": 1211,
-      "sea": true,
-      "notes": "Capital of Venetian Crete; wine, grain and a galley base."
-    },
-    {
-      "id": "naples",
-      "name": "Naples",
-      "lat": 40.85,
-      "lon": 14.27,
-      "importance": 3,
-      "active_from": 1000,
-      "sea": true,
-      "notes": "Angevin capital; grain and silk of the south."
-    },
-    {
-      "id": "palermo",
-      "name": "Palermo",
-      "lat": 38.12,
-      "lon": 13.36,
-      "importance": 3,
-      "active_from": 900,
-      "sea": true,
-      "notes": "Sicilian grain and sugar."
-    },
-    {
-      "id": "florence",
-      "name": "Florence",
-      "lat": 43.77,
-      "lon": 11.25,
-      "importance": 4,
-      "active_from": 1200,
-      "sea": false,
-      "notes": "Banking and woollen cloth; the gold florin is the standard coin of Europe."
-    },
-    {
-      "id": "milan",
-      "name": "Milan",
-      "lat": 45.46,
-      "lon": 9.19,
-      "importance": 4,
-      "active_from": 1000,
-      "sea": false,
-      "notes": "Arms, fustian and Lombard banking under the Visconti."
-    },
-    {
-      "id": "majorca",
-      "name": "Palma de Mallorca",
-      "lat": 39.57,
-      "lon": 2.65,
-      "importance": 3,
-      "active_from": 1229,
-      "sea": true,
-      "notes": "Catalan-Majorcan trade and cartography centre."
-    },
-    {
-      "id": "granada",
-      "name": "Granada",
-      "lat": 37.18,
-      "lon": -3.6,
-      "importance": 3,
-      "active_from": 1238,
-      "sea": false,
-      "notes": "Nasrid silk and the Genoese-run sugar of Málaga."
-    },
-    {
-      "id": "havana",
-      "name": "Havana",
-      "lat": 23.14,
-      "lon": -82.36,
-      "importance": 3,
-      "active_from": 1519,
-      "sea": true,
-      "notes": "Later Spanish treasure-fleet harbour (from 1519/1561)."
-    },
-    {
-      "id": "veracruz",
-      "name": "Veracruz",
-      "lat": 19.17,
-      "lon": -96.13,
-      "importance": 3,
-      "active_from": 1519,
-      "sea": true,
-      "notes": "Later Atlantic port of New Spain (from 1519)."
-    },
-    {
-      "id": "salvador",
-      "name": "Salvador da Bahia",
-      "lat": -12.97,
-      "lon": -38.51,
-      "importance": 3,
-      "active_from": 1549,
-      "sea": true,
-      "notes": "Later capital of Portuguese Brazil and sugar port (from 1549)."
-    },
-    {
-      "id": "elmina",
-      "name": "Elmina",
-      "lat": 5.08,
-      "lon": -1.35,
-      "importance": 3,
-      "active_from": 1482,
-      "sea": true,
-      "notes": "Later Portuguese gold-trading castle São Jorge da Mina (from 1482)."
-    },
-    {
-      "id": "luanda",
-      "name": "Luanda",
-      "lat": -8.81,
-      "lon": 13.23,
-      "importance": 2,
-      "active_from": 1576,
-      "sea": true,
-      "notes": "Later Portuguese slave-trading port in Angola (from 1576)."
-    },
-    {
-      "id": "cape",
-      "name": "Cape of Good Hope (Table Bay)",
-      "lat": -33.92,
-      "lon": 18.42,
-      "importance": 2,
-      "active_from": 1652,
-      "sea": true,
-      "notes": "Later Dutch victualling station (from 1652)."
-    }
-  ]
+ "sources": [
+  "Oxford Atlas of World History",
+  "P. Dollinger, The German Hansa",
+  "J. Abu-Lughod, Before European Hegemony",
+  "Cambridge Economic History of Europe vol. II",
+  "Wikipedia articles on the individual cities",
+  "Native American and West African hubs added 2026-11-08 (Smith, \"The Aztecs\"; D'Altroy, \"The Incas\"; Pauketat, \"Ancient Cahokia and the Mississippians\"; Shillington, \"History of Africa\")."
+ ],
+ "trade_hubs": [
+  {
+   "id": "bruges",
+   "name": "Bruges",
+   "lat": 51.21,
+   "lon": 3.22,
+   "importance": 5,
+   "active_from": 1200,
+   "sea": true,
+   "notes": "Hub of the Flemish cloth trade and chief Hanseatic Kontor in the west; Italian galleys call yearly. Declines after the Zwin silts up (late 15th c.)."
+  },
+  {
+   "id": "lubeck",
+   "name": "Lübeck",
+   "lat": 53.87,
+   "lon": 10.69,
+   "importance": 5,
+   "active_from": 1160,
+   "sea": true,
+   "notes": "Head of the Hanseatic League; salt from Lüneburg westward, Baltic grain, furs and wax eastward."
+  },
+  {
+   "id": "venice",
+   "name": "Venice",
+   "lat": 45.44,
+   "lon": 12.33,
+   "importance": 5,
+   "active_from": 900,
+   "sea": true,
+   "notes": "Mistress of the Levant trade: spices, silk and cotton through the state galley convoys (mude)."
+  },
+  {
+   "id": "genoa",
+   "name": "Genoa",
+   "lat": 44.41,
+   "lon": 8.93,
+   "importance": 5,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Rival of Venice; Black Sea colonies (Pera, Caffa), alum of Phocaea, Atlantic galleys to Bruges and England."
+  },
+  {
+   "id": "constantinople",
+   "name": "Constantinople",
+   "lat": 41.01,
+   "lon": 28.98,
+   "importance": 5,
+   "active_from": 330,
+   "sea": true,
+   "notes": "Gate between the Black Sea and the Mediterranean, its trade now largely in Genoese and Venetian hands."
+  },
+  {
+   "id": "alexandria",
+   "name": "Alexandria",
+   "lat": 31.2,
+   "lon": 29.92,
+   "importance": 5,
+   "active_from": 640,
+   "sea": true,
+   "notes": "Main Mediterranean outlet of the Red Sea spice route under the Mamluks; Venetian and Genoese fondaci."
+  },
+  {
+   "id": "cairo",
+   "name": "Cairo",
+   "lat": 30.05,
+   "lon": 31.25,
+   "importance": 5,
+   "active_from": 970,
+   "sea": false,
+   "notes": "Largest city of the Islamic world; Karimi merchants dominate the Indian Ocean spice trade."
+  },
+  {
+   "id": "novgorod",
+   "name": "Novgorod",
+   "lat": 58.52,
+   "lon": 31.27,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Hanseatic Peterhof; furs, wax and silver of the Russian north exchanged for Flemish cloth."
+  },
+  {
+   "id": "champagne_fairs",
+   "name": "Champagne Fairs (Troyes)",
+   "lat": 48.3,
+   "lon": 4.08,
+   "importance": 2,
+   "active_from": 1150,
+   "sea": false,
+   "notes": "Former clearing house of European trade, in steep decline since c.1300 as the sea route to Bruges takes over."
+  },
+  {
+   "id": "cologne",
+   "name": "Cologne",
+   "lat": 50.94,
+   "lon": 6.96,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Largest German city; Rhine wine and metalwork; staple right on all Rhine traffic."
+  },
+  {
+   "id": "paris",
+   "name": "Paris",
+   "lat": 48.86,
+   "lon": 2.35,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Largest city of Latin Europe; luxury crafts and the Seine trade of the Hanse of the water-merchants."
+  },
+  {
+   "id": "london",
+   "name": "London",
+   "lat": 51.51,
+   "lon": -0.09,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Wool and later cloth exports; Hanseatic Steelyard and Italian merchants."
+  },
+  {
+   "id": "barcelona",
+   "name": "Barcelona",
+   "lat": 41.38,
+   "lon": 2.18,
+   "importance": 4,
+   "active_from": 1100,
+   "sea": true,
+   "notes": "Catalan Mediterranean commerce with Sicily, Sardinia, North Africa and the Levant; Consulate of the Sea."
+  },
+  {
+   "id": "seville",
+   "name": "Seville",
+   "lat": 37.39,
+   "lon": -5.99,
+   "importance": 4,
+   "active_from": 1248,
+   "sea": true,
+   "notes": "Oil, wine and Genoese finance; later the monopoly port for the Indies (1503)."
+  },
+  {
+   "id": "lisbon",
+   "name": "Lisbon",
+   "lat": 38.71,
+   "lon": -9.14,
+   "importance": 3,
+   "active_from": 1147,
+   "sea": true,
+   "notes": "Atlantic port with a Genoese colony; becomes the hub of the Guinea and India trade after 1450–1500."
+  },
+  {
+   "id": "antwerp",
+   "name": "Antwerp",
+   "lat": 51.22,
+   "lon": 4.4,
+   "importance": 2,
+   "active_from": 1450,
+   "sea": true,
+   "notes": "Brabant fairs town; becomes the leading market of northern Europe c.1450–1560."
+  },
+  {
+   "id": "amsterdam",
+   "name": "Amsterdam",
+   "lat": 52.37,
+   "lon": 4.9,
+   "importance": 1,
+   "active_from": 1580,
+   "sea": true,
+   "notes": "Small Holland port in 1356; dominant entrepôt of Europe from c.1580."
+  },
+  {
+   "id": "nuremberg",
+   "name": "Nuremberg",
+   "lat": 49.45,
+   "lon": 11.08,
+   "importance": 4,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Imperial city of metalworkers and long-distance merchants linking Venice and the north."
+  },
+  {
+   "id": "frankfurt",
+   "name": "Frankfurt am Main",
+   "lat": 50.11,
+   "lon": 8.68,
+   "importance": 3,
+   "active_from": 1240,
+   "sea": false,
+   "notes": "Imperial fairs in spring and autumn; book fair later."
+  },
+  {
+   "id": "vienna",
+   "name": "Vienna",
+   "lat": 48.21,
+   "lon": 16.37,
+   "importance": 3,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Staple right on the Danube route to Hungary."
+  },
+  {
+   "id": "prague",
+   "name": "Prague",
+   "lat": 50.09,
+   "lon": 14.42,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Imperial residence under Charles IV; silver of Kutná Hora."
+  },
+  {
+   "id": "krakow",
+   "name": "Kraków",
+   "lat": 50.06,
+   "lon": 19.94,
+   "importance": 3,
+   "active_from": 1257,
+   "sea": false,
+   "notes": "Royal Polish capital; copper of Hungary, salt of Wieliczka, route to Lemberg and the Black Sea."
+  },
+  {
+   "id": "buda",
+   "name": "Buda",
+   "lat": 47.5,
+   "lon": 19.04,
+   "importance": 3,
+   "active_from": 1250,
+   "sea": false,
+   "notes": "Royal seat of Hungary; gold florins from Kremnitz, cattle and wine."
+  },
+  {
+   "id": "ragusa",
+   "name": "Ragusa",
+   "lat": 42.64,
+   "lon": 18.11,
+   "importance": 3,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Dalmatian republic trading Balkan silver and lead to Italy."
+  },
+  {
+   "id": "tana",
+   "name": "Tana",
+   "lat": 47.11,
+   "lon": 39.41,
+   "importance": 3,
+   "active_from": 1300,
+   "sea": true,
+   "notes": "Venetian–Genoese post at the mouth of the Don, terminus of the overland silk road via Sarai."
+  },
+  {
+   "id": "caffa",
+   "name": "Caffa",
+   "lat": 45.03,
+   "lon": 35.38,
+   "importance": 4,
+   "active_from": 1266,
+   "sea": true,
+   "notes": "Genoese capital of the Black Sea trade: slaves, grain, furs and silk."
+  },
+  {
+   "id": "trebizond",
+   "name": "Trebizond",
+   "lat": 41.0,
+   "lon": 39.72,
+   "importance": 3,
+   "active_from": 1204,
+   "sea": true,
+   "notes": "Black Sea outlet of the Tabriz caravan road."
+  },
+  {
+   "id": "tabriz",
+   "name": "Tabriz",
+   "lat": 38.08,
+   "lon": 46.29,
+   "importance": 5,
+   "active_from": 1260,
+   "sea": false,
+   "notes": "Former Ilkhanid capital, great silk and caravan market between Persia, Anatolia and the Black Sea."
+  },
+  {
+   "id": "aleppo",
+   "name": "Aleppo",
+   "lat": 36.2,
+   "lon": 37.16,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Caravan city between Iraq, Anatolia and the Syrian coast."
+  },
+  {
+   "id": "damascus",
+   "name": "Damascus",
+   "lat": 33.51,
+   "lon": 36.31,
+   "importance": 4,
+   "active_from": 700,
+   "sea": false,
+   "notes": "Mamluk Syria's metropolis; spices via Beirut, Hajj caravans, steel and textiles."
+  },
+  {
+   "id": "beirut",
+   "name": "Beirut",
+   "lat": 33.89,
+   "lon": 35.5,
+   "importance": 3,
+   "active_from": 1291,
+   "sea": true,
+   "notes": "Port of Damascus where Venetian galleys load spices."
+  },
+  {
+   "id": "tunis",
+   "name": "Tunis",
+   "lat": 36.8,
+   "lon": 10.18,
+   "importance": 4,
+   "active_from": 1159,
+   "sea": true,
+   "notes": "Hafsid capital; Italian and Catalan fondouks; Saharan gold and wool."
+  },
+  {
+   "id": "fez",
+   "name": "Fez",
+   "lat": 34.06,
+   "lon": -4.98,
+   "importance": 4,
+   "active_from": 800,
+   "sea": false,
+   "notes": "Marinid capital; leather, textiles and the northern end of the trans-Saharan gold road."
+  },
+  {
+   "id": "sijilmasa",
+   "name": "Sijilmasa",
+   "lat": 31.28,
+   "lon": -4.27,
+   "importance": 2,
+   "active_from": 757,
+   "sea": false,
+   "notes": "Old Saharan gateway oasis, past its peak."
+  },
+  {
+   "id": "timbuktu",
+   "name": "Timbuktu",
+   "lat": 16.77,
+   "lon": -3.01,
+   "importance": 4,
+   "active_from": 1100,
+   "sea": false,
+   "notes": "Mali's Niger-bend market for gold, salt and books."
+  },
+  {
+   "id": "gao",
+   "name": "Gao",
+   "lat": 16.27,
+   "lon": -0.04,
+   "importance": 3,
+   "active_from": 900,
+   "sea": false,
+   "notes": "Songhai trading city on the Niger."
+  },
+  {
+   "id": "kilwa",
+   "name": "Kilwa",
+   "lat": -8.96,
+   "lon": 39.51,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Swahili sultanate controlling the gold of Sofala."
+  },
+  {
+   "id": "mogadishu",
+   "name": "Mogadishu",
+   "lat": 2.04,
+   "lon": 45.34,
+   "importance": 3,
+   "active_from": 900,
+   "sea": true,
+   "notes": "Swahili–Somali textile and ivory port described by Ibn Battuta."
+  },
+  {
+   "id": "aden",
+   "name": "Aden",
+   "lat": 12.78,
+   "lon": 45.03,
+   "importance": 4,
+   "active_from": 600,
+   "sea": true,
+   "notes": "Rasulid entrepôt between India and the Red Sea."
+  },
+  {
+   "id": "hormuz",
+   "name": "Hormuz",
+   "lat": 27.1,
+   "lon": 56.46,
+   "importance": 4,
+   "active_from": 1300,
+   "sea": true,
+   "notes": "Island kingdom controlling the Gulf trade with India."
+  },
+  {
+   "id": "basra",
+   "name": "Basra",
+   "lat": 30.51,
+   "lon": 47.81,
+   "importance": 3,
+   "active_from": 636,
+   "sea": true,
+   "notes": "Old Gulf port of Iraq, much reduced since the Mongol conquest."
+  },
+  {
+   "id": "baghdad",
+   "name": "Baghdad",
+   "lat": 33.34,
+   "lon": 44.4,
+   "importance": 3,
+   "active_from": 762,
+   "sea": false,
+   "notes": "Jalayirid capital, recovering slowly since 1258."
+  },
+  {
+   "id": "bergen",
+   "name": "Bergen",
+   "lat": 60.39,
+   "lon": 5.32,
+   "importance": 4,
+   "active_from": 1070,
+   "sea": true,
+   "notes": "Hanseatic Bryggen; Norwegian stockfish for grain."
+  },
+  {
+   "id": "visby",
+   "name": "Visby",
+   "lat": 57.64,
+   "lon": 18.3,
+   "importance": 3,
+   "active_from": 1100,
+   "sea": true,
+   "notes": "Gotland's walled trading town, early centre of Baltic commerce."
+  },
+  {
+   "id": "stockholm",
+   "name": "Stockholm",
+   "lat": 59.33,
+   "lon": 18.07,
+   "importance": 3,
+   "active_from": 1252,
+   "sea": true,
+   "notes": "Swedish iron and copper exports, run largely by German burghers."
+  },
+  {
+   "id": "danzig",
+   "name": "Danzig",
+   "lat": 54.35,
+   "lon": 18.65,
+   "importance": 4,
+   "active_from": 1300,
+   "sea": true,
+   "notes": "Teutonic Order's port for Prussian and Polish grain and timber."
+  },
+  {
+   "id": "riga",
+   "name": "Riga",
+   "lat": 56.95,
+   "lon": 24.11,
+   "importance": 3,
+   "active_from": 1201,
+   "sea": true,
+   "notes": "Hanseatic gateway up the Daugava to Polotsk and Smolensk."
+  },
+  {
+   "id": "reval",
+   "name": "Reval",
+   "lat": 59.44,
+   "lon": 24.75,
+   "importance": 3,
+   "active_from": 1248,
+   "sea": true,
+   "notes": "Hanseatic port for the Novgorod trade."
+  },
+  {
+   "id": "lemberg",
+   "name": "Lemberg",
+   "lat": 49.84,
+   "lon": 24.03,
+   "importance": 3,
+   "active_from": 1350,
+   "sea": false,
+   "notes": "Polish since 1349; Armenian and Italian merchants on the road to Caffa."
+  },
+  {
+   "id": "kiev",
+   "name": "Kiev",
+   "lat": 50.45,
+   "lon": 30.52,
+   "importance": 2,
+   "active_from": 900,
+   "sea": false,
+   "notes": "Former Rus metropolis, reduced under Mongol overlordship."
+  },
+  {
+   "id": "sarai",
+   "name": "Sarai",
+   "lat": 48.68,
+   "lon": 45.3,
+   "importance": 4,
+   "active_from": 1260,
+   "sea": false,
+   "notes": "Golden Horde capital on the Volga, hub of the silk road and fur trade."
+  },
+  {
+   "id": "astrakhan",
+   "name": "Hajji Tarkhan (Astrakhan)",
+   "lat": 46.35,
+   "lon": 48.05,
+   "importance": 3,
+   "active_from": 1300,
+   "sea": true,
+   "notes": "Volga delta market linking the Caspian and the Horde."
+  },
+  {
+   "id": "bolghar",
+   "name": "Bolghar",
+   "lat": 54.98,
+   "lon": 49.06,
+   "importance": 3,
+   "active_from": 900,
+   "sea": false,
+   "notes": "Volga fur market of the north."
+  },
+  {
+   "id": "urgench",
+   "name": "Urgench",
+   "lat": 42.33,
+   "lon": 59.15,
+   "importance": 3,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Khwarazm's caravan city on the road from Sarai to Central Asia."
+  },
+  {
+   "id": "samarkand",
+   "name": "Samarkand",
+   "lat": 39.65,
+   "lon": 66.96,
+   "importance": 4,
+   "active_from": 700,
+   "sea": false,
+   "notes": "Transoxianan silk and paper market."
+  },
+  {
+   "id": "bursa",
+   "name": "Bursa",
+   "lat": 40.19,
+   "lon": 29.06,
+   "importance": 3,
+   "active_from": 1326,
+   "sea": false,
+   "notes": "Ottoman capital and rising silk market."
+  },
+  {
+   "id": "famagusta",
+   "name": "Famagusta",
+   "lat": 35.12,
+   "lon": 33.94,
+   "importance": 4,
+   "active_from": 1291,
+   "sea": true,
+   "notes": "Christian clearing port for Levantine goods since the fall of Acre."
+  },
+  {
+   "id": "candia",
+   "name": "Candia",
+   "lat": 35.34,
+   "lon": 25.13,
+   "importance": 3,
+   "active_from": 1211,
+   "sea": true,
+   "notes": "Capital of Venetian Crete; wine, grain and a galley base."
+  },
+  {
+   "id": "naples",
+   "name": "Naples",
+   "lat": 40.85,
+   "lon": 14.27,
+   "importance": 3,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Angevin capital; grain and silk of the south."
+  },
+  {
+   "id": "palermo",
+   "name": "Palermo",
+   "lat": 38.12,
+   "lon": 13.36,
+   "importance": 3,
+   "active_from": 900,
+   "sea": true,
+   "notes": "Sicilian grain and sugar."
+  },
+  {
+   "id": "florence",
+   "name": "Florence",
+   "lat": 43.77,
+   "lon": 11.25,
+   "importance": 4,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Banking and woollen cloth; the gold florin is the standard coin of Europe."
+  },
+  {
+   "id": "milan",
+   "name": "Milan",
+   "lat": 45.46,
+   "lon": 9.19,
+   "importance": 4,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Arms, fustian and Lombard banking under the Visconti."
+  },
+  {
+   "id": "majorca",
+   "name": "Palma de Mallorca",
+   "lat": 39.57,
+   "lon": 2.65,
+   "importance": 3,
+   "active_from": 1229,
+   "sea": true,
+   "notes": "Catalan-Majorcan trade and cartography centre."
+  },
+  {
+   "id": "granada",
+   "name": "Granada",
+   "lat": 37.18,
+   "lon": -3.6,
+   "importance": 3,
+   "active_from": 1238,
+   "sea": false,
+   "notes": "Nasrid silk and the Genoese-run sugar of Málaga."
+  },
+  {
+   "id": "havana",
+   "name": "Havana",
+   "lat": 23.14,
+   "lon": -82.36,
+   "importance": 3,
+   "active_from": 1519,
+   "sea": true,
+   "notes": "Later Spanish treasure-fleet harbour (from 1519/1561)."
+  },
+  {
+   "id": "veracruz",
+   "name": "Veracruz",
+   "lat": 19.17,
+   "lon": -96.13,
+   "importance": 3,
+   "active_from": 1519,
+   "sea": true,
+   "notes": "Later Atlantic port of New Spain (from 1519)."
+  },
+  {
+   "id": "salvador",
+   "name": "Salvador da Bahia",
+   "lat": -12.97,
+   "lon": -38.51,
+   "importance": 3,
+   "active_from": 1549,
+   "sea": true,
+   "notes": "Later capital of Portuguese Brazil and sugar port (from 1549)."
+  },
+  {
+   "id": "elmina",
+   "name": "Elmina",
+   "lat": 5.08,
+   "lon": -1.35,
+   "importance": 3,
+   "active_from": 1482,
+   "sea": true,
+   "notes": "Later Portuguese gold-trading castle São Jorge da Mina (from 1482)."
+  },
+  {
+   "id": "luanda",
+   "name": "Luanda",
+   "lat": -8.81,
+   "lon": 13.23,
+   "importance": 2,
+   "active_from": 1576,
+   "sea": true,
+   "notes": "Later Portuguese slave-trading port in Angola (from 1576)."
+  },
+  {
+   "id": "cape",
+   "name": "Cape of Good Hope (Table Bay)",
+   "lat": -33.92,
+   "lon": 18.42,
+   "importance": 2,
+   "active_from": 1652,
+   "sea": true,
+   "notes": "Later Dutch victualling station (from 1652)."
+  },
+  {
+   "id": "tenochtitlan",
+   "name": "Tenochtitlan",
+   "lat": 19.43,
+   "lon": -99.13,
+   "importance": 5,
+   "active_from": 1325,
+   "sea": false,
+   "notes": "Island capital of the Mexica; the great market of Tlatelolco drew goods from all Mesoamerica."
+  },
+  {
+   "id": "mayapan",
+   "name": "Mayapan",
+   "lat": 20.63,
+   "lon": -89.46,
+   "importance": 3,
+   "active_from": 1220,
+   "sea": false,
+   "notes": "Political centre of the northern Maya lowlands; salt, cotton and cacao trade along the Yucatán coast."
+  },
+  {
+   "id": "xaragua",
+   "name": "Xaraguá",
+   "lat": 18.55,
+   "lon": -72.34,
+   "importance": 2,
+   "active_from": 1200,
+   "sea": true,
+   "notes": "Taíno chiefdom in western Hispaniola; canoe exchange across the Greater Antilles."
+  },
+  {
+   "id": "spiro",
+   "name": "Spiro",
+   "lat": 35.31,
+   "lon": -94.57,
+   "importance": 2,
+   "active_from": 1100,
+   "sea": false,
+   "notes": "Mississippian mound centre on the Arkansas River, linking the Plains and the Southeast."
+  },
+  {
+   "id": "cusco",
+   "name": "Cusco",
+   "lat": -13.53,
+   "lon": -71.97,
+   "importance": 4,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Seat of the Inca; redistribution centre of the Andean highlands."
+  },
+  {
+   "id": "chan_chan",
+   "name": "Chan Chan",
+   "lat": -8.11,
+   "lon": -79.07,
+   "importance": 3,
+   "active_from": 1000,
+   "sea": true,
+   "notes": "Capital of Chimor on the Peruvian coast; metalwork and textiles."
+  },
+  {
+   "id": "bacata",
+   "name": "Bacatá",
+   "lat": 4.6,
+   "lon": -74.08,
+   "importance": 2,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Muisca confederation; salt, emeralds and gold exchanged in the Andes."
+  },
+  {
+   "id": "benin",
+   "name": "Benin",
+   "lat": 6.34,
+   "lon": 5.63,
+   "importance": 3,
+   "active_from": 1200,
+   "sea": false,
+   "notes": "Edo kingdom; ivory, pepper and cloth, later trade with the Portuguese."
+  },
+  {
+   "id": "kano",
+   "name": "Kano",
+   "lat": 12.0,
+   "lon": 8.52,
+   "importance": 3,
+   "active_from": 1000,
+   "sea": false,
+   "notes": "Hausa city-state on the trans-Saharan routes; leather and cloth."
+  }
+ ]
 }

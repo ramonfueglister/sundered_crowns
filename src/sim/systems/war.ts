@@ -8,19 +8,70 @@ import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
 import { lawEffect, estate } from './politics';
 
-let NC: { e: number; s: GameState | null; locs: number[][]; dev: Float64Array } = { e: -1, s: null, locs: [], dev: new Float64Array(0) };
-function natCache(s: GameState) {
-  if (NC.e === EPOCH.v && NC.s === s) return NC;
-  const N = s.nations.length; const locs: number[][] = Array.from({ length: N }, () => []); const dev = new Float64Array(N);
-  const o = s.loc.owner;
-  for (let i = 0; i < o.length; i++) { const k = o[i]; if (k >= 0 && k < N) { locs[k].push(i); dev[k] += s.loc.dev[i]; } }
-  NC = { e: EPOCH.v, s, locs, dev }; return NC;
+// Per-nation location lists (OC) and development sums (DC), both refreshed lazily after an EPOCH bump.
+// Owner and dev are written in many places, so instead of rebuilding on every bump each cache compares
+// itself with a snapshot of the array it depends on and rebuilds only when that changed.
+// The dev sums are taken when nationDev/nationLocs is first called after a bump (dev also drifts daily without
+// a bump); ownedLocs() reads only the owner lists and leaves that moment alone.
+/** Bitwise equality of two typed arrays of the same type (compared four bytes at a time where aligned). */
+function sameBits(a: Int16Array | Float32Array, b: Int16Array | Float32Array): boolean {
+  if (a.length !== b.length) return false;
+  let i = 0;
+  if ((a.byteOffset & 3) === 0 && (b.byteOffset & 3) === 0) {
+    const n4 = a.byteLength >> 2;
+    const x = new Int32Array(a.buffer, a.byteOffset, n4), y = new Int32Array(b.buffer, b.byteOffset, n4);
+    for (let k = 0; k < n4; k++) if (x[k] !== y[k]) return false;
+    i = (n4 * 4) / a.BYTES_PER_ELEMENT;
+  }
+  for (; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+let OC: { e: number; s: GameState | null; locs: number[][]; own: Int16Array } = { e: -1, s: null, locs: [], own: new Int16Array(0) };
+let DC: { e: number; s: GameState | null; dev: Float64Array; devs: Float32Array; oc: number[][] | null } = { e: -1, s: null, dev: new Float64Array(0), devs: new Float32Array(0), oc: null };
+function ownerCache(s: GameState) {
+  if (OC.e === EPOCH.v && OC.s === s) return OC;
+  const N = s.nations.length; const o = s.loc.owner, len = o.length;
+  if (OC.s === s && OC.locs.length === N && OC.own.length === len) {
+    if (sameBits(OC.own, o)) { OC.e = EPOCH.v; return OC; }
+  }
+  const locs: number[][] = Array.from({ length: N }, () => []);
+  for (let i = 0; i < len; i++) { const k = o[i]; if (k >= 0 && k < N) locs[k].push(i); }
+  OC = { e: EPOCH.v, s, locs, own: Int16Array.from(o) }; return OC;
+}
+function devCache(s: GameState) {
+  if (DC.e === EPOCH.v && DC.s === s) return DC;
+  const oc = ownerCache(s); const dv = s.loc.dev, len = dv.length;
+  if (DC.s === s && DC.oc === oc.locs && DC.devs.length === len) {
+    if (sameBits(DC.devs, dv)) { DC.e = EPOCH.v; return DC; }
+  }
+  const N = s.nations.length, o = s.loc.owner; const dev = new Float64Array(N);
+  for (let i = 0; i < o.length; i++) { const k = o[i]; if (k >= 0 && k < N) dev[k] += dv[i]; }
+  DC = { e: EPOCH.v, s, dev, devs: Float32Array.from(dv), oc: oc.locs }; return DC;
 }
 /** Locations owned by n (cached per step; do not mutate the returned array). */
-export function nationLocs(s: GameState, n: number): number[] { return natCache(s).locs[n]?.slice() ?? []; }
-export function nationLocsRO(s: GameState, n: number): readonly number[] { return natCache(s).locs[n] ?? []; }
+export function nationLocs(s: GameState, n: number): number[] { devCache(s); return ownerCache(s).locs[n]?.slice() ?? []; }
+export function nationLocsRO(s: GameState, n: number): readonly number[] { devCache(s); return ownerCache(s).locs[n] ?? []; }
+/** Same as nationLocsRO, in ascending order, without touching the development sums. */
+export function ownedLocs(s: GameState, n: number): readonly number[] { return ownerCache(s).locs[n] ?? []; }
+/** All owner lists of s at once. The table stays the same object exactly while s.loc.owner is unchanged, so its
+ *  identity can key caches derived from ownership. Do not mutate. */
+export function ownerTable(s: GameState): readonly (readonly number[])[] { return ownerCache(s).locs; }
+// Locations by controller (index ctrl + 2, so rebels -2 and nobody -1 have lists too). Control changes without
+// an EPOCH bump during the military step, so every call compares the snapshot.
+let CC: { s: GameState | null; locs: number[][]; snap: Int16Array } = { s: null, locs: [], snap: new Int16Array(0) };
+function ctrlCache(s: GameState) {
+  const c = s.loc.ctrl;
+  if (CC.s === s && CC.locs.length === s.nations.length + 2 && sameBits(CC.snap, c)) return CC;
+  const locs: number[][] = Array.from({ length: s.nations.length + 2 }, () => []);
+  for (let i = 0; i < c.length; i++) { const k = c[i] + 2; if (k >= 0 && k < locs.length) locs[k].push(i); }
+  CC = { s, locs, snap: Int16Array.from(c) }; return CC;
+}
+/** Locations controlled by c (ascending; -2 = rebels). Do not mutate. */
+export function ctrlLocs(s: GameState, c: number): readonly number[] { return ctrlCache(s).locs[c + 2] ?? []; }
+/** All of ctrlLocs at once, indexed by controller + 2 (one check of the cache for several lookups). Do not mutate. */
+export function ctrlTable(s: GameState): readonly (readonly number[])[] { return ctrlCache(s).locs; }
 export function locValue(s: GameState, l: number) { return Math.max(1, s.loc.dev[l]); }
-export function nationDev(s: GameState, n: number) { return natCache(s).dev[n] ?? 0; }
+export function nationDev(s: GameState, n: number) { return devCache(s).dev[n] ?? 0; }
 
 export function hasCasusBelli(s: GameState, a: number, b: number): string | null {
   if (hasTreaty(s, a, b, 'claim')) return 'claim';
@@ -103,12 +154,45 @@ export function warScoreEvent(s: GameState, winner: number, loser: number, kind:
   }
 }
 
+/** Every justification a has against b (hasCasusBelli returns the first of these). */
+export function casusBelliAll(s: GameState, a: number, b: number): string[] {
+  const out: string[] = [];
+  const na = s.nations[a], nb = s.nations[b]; if (!na || !nb) return out;
+  if (hasTreaty(s, a, b, 'claim')) out.push('claim');
+  if (na.rivals.includes(b)) out.push('rivalry');
+  if (na.faith !== nb.faith && (na.flags.holy_war || 0) > 0) out.push('holy_war');
+  if (s.flags[`cb_${a}_${b}`] && s.flags[`cb_${a}_${b}`] > s.day) out.push('fabricated');
+  if (nb.excommunicated && na.faith === nb.faith) out.push('excommunicated');
+  if (na.overlord === b) out.push('independence');
+  const o = s.loc.owner, core = s.loc.core;
+  for (let i = 0; i < o.length; i++) if (o[i] === b && core[i] === a) { out.push('reconquest'); break; }
+  return out;
+}
+
 /** War score: battles + share of enemy value occupied + ticking score from the war goal. */
+/** Ascending list of the locations owned by the participants of a war (only these count for the score). */
+const WL = new WeakMap<War, { locs: number[][]; key: string; idx: Int32Array }>();
+function warLocs(s: GameState, war: War): Int32Array {
+  const locs = ownerCache(s).locs; const key = war.att.join(',') + '|' + war.def.join(',');
+  const c = WL.get(war);
+  if (c && c.locs === locs && c.key === key) return c.idx;
+  let n = 0; const seen = new Set<number>();
+  for (const p of [...war.att, ...war.def]) if (!seen.has(p)) { seen.add(p); n += locs[p]?.length ?? 0; }
+  const idx = new Int32Array(n); let k = 0;
+  for (const p of seen) for (const i of locs[p] ?? []) idx[k++] = i;
+  idx.sort();
+  WL.set(war, { locs, key, idx }); return idx;
+}
 export function computeScore(s: GameState, war: War): number {
+  const p = scoreParts(s, war);
+  return clamp(p.battles + p.occupation + p.capital + p.ticking, -100, 100);
+}
+/** The parts of the war score from the attackers' side (before the ±100 cap). */
+export function scoreParts(s: GameState, war: War): { battles: number; occupation: number; capital: number; ticking: number } {
   const att = new Set(war.att), def = new Set(war.def);
   let defTotal = 0, defOcc = 0, attTotal = 0, attOcc = 0;
   const o = s.loc.owner, c = s.loc.ctrl;
-  for (let i = 0; i < o.length; i++) {
+  for (const i of warLocs(s, war)) {
     const ow = o[i]; if (ow < 0) continue;
     const v = s.loc.dev[i];
     if (def.has(ow)) { defTotal += v; if (att.has(c[i])) defOcc += v; }
@@ -118,7 +202,7 @@ export function computeScore(s: GameState, war: War): number {
   // capital capture
   const capD = s.nations[war.defLead]?.capital, capA = s.nations[war.attLead]?.capital;
   const cap = (capD >= 0 && att.has(c[capD]) ? 15 : 0) - (capA >= 0 && def.has(c[capA]) ? 15 : 0);
-  return clamp(war.battleScore + occ * 0.75 + cap + war.tickScore, -100, 100);
+  return { battles: war.battleScore, occupation: occ * 0.75, capital: cap, ticking: war.tickScore };
 }
 
 // ---------------- peace ----------------

@@ -3,10 +3,10 @@ import type { GameState, Nation, I18n } from '../sim/types';
 import type { World } from '../sim/world';
 import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query } from './protocol';
 import { C, CL, CLASSES, CLASS_NAME, B, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
-import { armyMen, findPath, travelDays, unitCost, availableUnits } from '../sim/systems/military';
-import { nationDev, computeScore, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS } from '../sim/systems/diplomacy';
-import { ageOf, ESTATES, PRIVILEGES, OFFICES, reformCost, councilBonus } from '../sim/systems/politics';
+import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
+import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget } from '../sim/systems/diplomacy';
+import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf } from '../sim/systems/politics';
 import { LAWS } from '../sim/content/laws';
 import { FAITHS, ALL_CULTURES, cultureName, GROUP_OF } from '../sim/content/peoples';
 import { BRANCHES, ERAS, techCost, researchRate, doctrineCost, doctrineSlots } from '../sim/systems/progress';
@@ -15,7 +15,7 @@ import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
 import { LOC_ECON } from '../sim/systems/economy';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
-import { buildCost } from '../sim/commands';
+import { buildCost, merchantCap } from '../sim/commands';
 import { agentSlots } from '../sim/systems/society';
 import { colonySlots, canColonize } from '../sim/systems/colonial';
 import { SITUATIONS } from '../sim/content/situations';
@@ -48,11 +48,13 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     incomeBreak: { ...n.income }, expenseBreak: { ...n.expense }, ruler: r ? `${r.name}${r.dynasty ? ' ' + r.dynasty : ''}` : '—', rulerAge: r ? Math.floor(ageOf(s, r)) : 0,
     heir: h && h.alive ? h.name : '—', atWar: s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)), taxRate: [...n.taxRate],
     armyMaint: n.armyMaint, navyMaint: n.navyMaint, tariff: n.tariff, coinage: n.coinage, loans: n.loans.reduce((p, l) => p + l.amount, 0), debt: n.debt, stats: { ...n.stats },
+    homeMarket: n.capital >= 0 ? s.loc.market[n.capital] ?? -1 : -1,
+    merchants: { used: s.markets.reduce((p, m) => p + (m.merchants[n.id] || 0), 0), cap: merchantCap(n) },
   };
 }
 
 export function warsView(s: GameState): TickView['wars'] {
-  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x),
+  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x), parts: scoreParts(s, x),
     offers: x.offers.map((o, idx) => ({ from: o.from, to: o.to, terms: o.terms, concede: o.concede, idx })) }));
 }
 
@@ -157,11 +159,14 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
   return null;
 }
 
+/** Company sizes offered in the location panel. */
+const MERC_SIZES = [1000, 2000, 3000, 5000, 8000];
+
 function locDetail(s: GameState, w: World, l: number, player: number) {
   if (l < 0 || l >= w.N) return null;
   const lc = s.loc;
   if (l >= w.L) {
-    const fleets = s.armies.filter((a) => a.loc === l && a.fleet).map((a) => ({ id: a.id, owner: a.owner, ships: armyMen(a) }));
+    const fleets = s.armies.filter((a) => a.loc === l && a.fleet).map((a) => ({ id: a.id, owner: a.owner, ships: armyMen(a), name: a.name }));
     return { sea: true, id: l, name: w.names[l], fleets };
   }
   const prov = w.provinces[w.provOf[l]], area = prov ? w.areas.find((a) => a.provinces.includes(prov.id)) : null;
@@ -192,7 +197,8 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     tax: lc.income[l], econ: ec ? { grain: ec.grain[l], rgo: ec.rgo[l], craft: ec.craft[l], income: ec.income[l] } : null, elev: w.elev[l], lat: w.lat[l], lon: w.lon[l],
     canColonize: o < 0 && player >= 0 ? canColonize(s, w, s.nations[player], l) : 'owned', colony: s.colonies.find((c) => c.loc === l) ?? null,
     agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null,
-    armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet })),
+    armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet, name: a.name, mercenary: !!a.mercenary, rebels: !!a.rebels })),
+    mercenaries: n && player === o ? MERC_SIZES.map((men) => ({ men, ...mercenaryCostParts(s, n, men) })) : [],
     units: n && player === o ? availableUnits(s, n, false).concat(w.coastal[l] ? availableUnits(s, n, true) : []).map((u) => ({ id: u, name: UNITS[u].name, kind: UNITS[u].kind, cost1000: unitCost(s, n, u, UNITS[u].kind === 'ship' ? 1 : 1000) })) : [],
   };
 }
@@ -206,6 +212,9 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     theirOpinion: opinionBreakdown(s, w, id, player), ourOpinion: opinionBreakdown(s, w, player, id), trust: trust(s, id, player),
     treaties: (['alliance', 'marriage', 'access', 'guarantee', 'trade', 'truce'] as const).filter((t) => hasTreaty(s, id, player, t)),
     atWar: atWar(s, id, player), rival: s.nations[player].rivals.includes(id),
+    // justifications for war: ours against them, theirs against us, a claim being fabricated by our clerks
+    cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player),
+    fabricating: s.spies.find((x) => x.nation === player && x.target === id && x.action === 'fabricate') ?? null,
     actions: DIPLO_ACTIONS.map((a) => ({ id: a, name: ACT_NAME[a] ?? { en: a, de: a } })),
   } : null;
   return {
@@ -215,8 +224,15 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),
     personality: n.personality, summary: n.summary, difficulty: n.difficulty, dread: n.dread, front: (s as any).fronts?.[id] ?? [], rel, alive: n.alive,
     wars: s.wars.filter((x) => x.att.includes(id) || x.def.includes(id)).map((x) => x.id), isHRE: n.isHRE, elector: n.elector, emperor: s.empire.emperor === id,
+    subject: n.overlord >= 0 && s.nations[n.overlord] ? {
+      type: n.subjectType, since: n.subjectSince, libertyDesire: n.libertyDesire, target: libertyTarget(s, w, n, s.nations[n.overlord]),
+      parts: libertyParts(s, w, n, s.nations[n.overlord]).filter(([, v]) => Math.abs(v) >= 0.5), integration: n.integration, integrating: !!n.flags.integrating,
+    } : null,
   };
 }
+
+/** Name with house for the council lists; names that already carry a title ("Pedro, Infante of Portugal") stay as they are. */
+const courtName = (c: { name: string; dynasty?: string }) => (c.dynasty && !/,| of | von /.test(c.name) ? `${c.name} ${c.dynasty}` : c.name);
 
 function realmDetail(s: GameState, w: World, player: number) {
   const n = s.nations[player]; if (!n) return null;
@@ -225,7 +241,10 @@ function realmDetail(s: GameState, w: World, player: number) {
     laws: LAWS.map((L) => ({ id: L.id, name: L.name, group: L.group, current: n.laws[L.id] ?? 0, options: L.options.map((o, k) => ({ id: o.id, name: o.name, desc: o.desc, effects: o.effects, estates: o.estates, cost: reformCost(n, L.id, k), locked: (o.minEra ?? 0) > n.era || (o.gov ? !o.gov.includes(n.gov) : false) })) })),
     reform: n.reform ?? null,
     estates: n.estates.map((e) => ({ ...e, name: ESTATES.find((x) => x.id === e.id)?.name, desc: ESTATES.find((x) => x.id === e.id)?.desc, privileges: PRIVILEGES.filter((p) => p.estate === e.id).map((p) => ({ id: p.id, name: p.name, effects: p.effects, granted: e.privileges.includes(p.id) })) })),
-    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, char: c ? { id: c.id, name: c.name + (c.dynasty ? ' ' + c.dynasty : ''), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption } : null, bonus: councilBonus(s, n, o.id) }; }),
+    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, skill: o.skill, effect: o.effect, char: c ? { id: c.id, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits } : null, bonus: councilBonus(s, n, o.id) }; }),
+    candidates: officeCandidates(s, n).map((c) => ({ id: c.id, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits, female: c.female,
+      kin: c.id === n.consort || (s.chars[n.ruler]?.children ?? []).includes(c.id), bonus: Object.fromEntries(OFFICES.map((o) => [o.id, officeBonusOf(c, o.id)])) })),
+    officeCost: OFFICE_COST,
     values: n.values,
     tech: BRANCHES.map((b, k) => ({ name: b.name, level: n.tech[k], progress: n.techProgress[k], cost: techCost(s, n, k), rate: rr[k] })), focus: n.flags.research_focus ?? -1,
     era: ERAS[n.era], eras: ERAS,

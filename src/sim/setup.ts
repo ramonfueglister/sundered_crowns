@@ -271,10 +271,13 @@ function buildMarkets(s: GameState, w: World, hubs: TradeHub[]) {
     const prev = linkCost.get(key);
     if (!prev || prev.cost > cost) linkCost.set(key, { cost, sea: true });
   }
+  // the two shores of the Atlantic: no regular traffic until someone has made the crossing
+  const side = (m: Market) => (w.lon[m.hub] < -30 ? 1 : 0);
   for (const [k, v] of linkCost) {
     const [a, b] = k.split(',').map(Number);
-    s.markets[a].links.push({ to: b, cost: v.cost, sea: v.sea });
-    s.markets[b].links.push({ to: a, cost: v.cost, sea: v.sea });
+    const ocean = v.sea && side(s.markets[a]) !== side(s.markets[b]);
+    s.markets[a].links.push({ to: b, cost: v.cost, sea: v.sea, ...(ocean ? { ocean: true } : {}) });
+    s.markets[b].links.push({ to: a, cost: v.cost, sea: v.sea, ...(ocean ? { ocean: true } : {}) });
   }
 }
 
@@ -327,18 +330,24 @@ function initKnowledge(s: GameState, w: World) {
 }
 
 export class MinHeap {
-  private k: number[] = []; private v: number[] = [];
-  get size() { return this.k.length; }
+  // typed storage, grown on demand; clear() keeps the capacity so a heap can be reused between searches
+  private k = new Float64Array(64); private v = new Float64Array(64); private n = 0;
+  get size() { return this.n; }
+  clear() { this.n = 0; }
   push(key: number, val: number) {
-    const k = this.k, v = this.v; let i = k.length; k.push(key); v.push(val);
+    if (this.n === this.k.length) {
+      const k2 = new Float64Array(this.n * 2); k2.set(this.k); this.k = k2;
+      const v2 = new Float64Array(this.n * 2); v2.set(this.v); this.v = v2;
+    }
+    const k = this.k, v = this.v; let i = this.n++;
     while (i > 0) { const p = (i - 1) >> 1; const kp = k[p]; if (kp <= key) break; k[i] = kp; v[i] = v[p]; i = p; }
     k[i] = key; v[i] = val;
   }
   /** key of the smallest element (call before popVal) */
-  peekKey() { return this.k[0]; }
+  peekKey() { return this.n ? this.k[0] : undefined as unknown as number; }
   popVal(): number {
     const k = this.k, v = this.v; const rv = v[0];
-    const lk = k.pop()!, lv = v.pop()!; const n = k.length;
+    const n = --this.n; const lk = k[n], lv = v[n];
     if (n) {
       let i = 0;
       for (;;) { const l = 2 * i + 1; if (l >= n) break; const r = l + 1; const m = r < n && k[r] < k[l] ? r : l; if (k[m] >= lk) break; k[i] = k[m]; v[i] = v[m]; i = m; }

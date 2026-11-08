@@ -10,6 +10,20 @@ export function setLang(l: 'en' | 'de') { lang.value = l; try { localStorage.set
 export function L(t: I18n | string | undefined | null): string { if (!t) return ''; if (typeof t === 'string') return t; return t[lang.value] ?? t.en; }
 
 const S: Record<string, [string, string]> = {
+  // war score parts, liberty desire, justifications, mercenary prices, council appointments
+  ws_battles: ['Battles', 'Schlachten'], ws_occupation: ['Occupied land', 'Besetztes Land'], ws_capital: ['Enemy capital held', 'Feindliche Hauptstadt besetzt'], ws_ticking: ['Holding the war goal', 'Kriegsziel gehalten'],
+  ws_capped: ['Capped at ±100.', 'Begrenzt auf ±100.'], ws_us: ['From our side', 'Aus unserer Sicht'],
+  r_subject_strength: ['Their strength compared to ours', 'Ihre Stärke im Vergleich zu uns'], r_opinion_of_overlord: ['Their opinion of us', 'Ihre Meinung über uns'],
+  r_overlord_concord: ['Our Concord is negative', 'Unsere Eintracht ist negativ'], r_overlord_war_exhaustion: ['Our war exhaustion', 'Unsere Kriegsmüdigkeit'],
+  r_tributary: ['Only a tributary', 'Nur tributpflichtig'], r_colonial_distance: ['Distance from the crown', 'Ferne zur Krone'],
+  liberty_drift: ['Drifting toward', 'Strebt gegen'], integrating_now: ['Integration under way', 'Eingliederung läuft'],
+  cb_holy_war: ['Holy war', 'Glaubenskrieg'], cb_fabricated: ['Fabricated claim', 'Fabrizierter Anspruch'], cb_excommunicated: ['Excommunicated ruler', 'Gebannter Herrscher'], cb_reconquest: ['Reconquest of our land', 'Rückeroberung unseres Landes'],
+  cb_all: ['Our justifications', 'Unsere Kriegsgründe'], cb_theirs: ['They have a justification against us', 'Sie haben einen Kriegsgrund gegen uns'], cb_in_progress: ['Fabrication progress', 'Fortschritt der Fälschung'],
+  merc_base: ['Base price', 'Grundpreis'], merc_price_level: ['Price level', 'Preisniveau'], merc_modifiers: ['Laws and modifiers', 'Gesetze und Modifikatoren'],
+  appoint: ['Appoint', 'Ernennen'], replace_official: ['Replace…', 'Ersetzen…'], candidates_court: ['Candidates at court', 'Kandidaten bei Hofe'],
+  no_candidates: ['No candidates at court yet. New ones arrive each month.', 'Noch keine Kandidaten bei Hofe. Jeden Monat kommen neue.'],
+  appoint_hint: ['Costs {n} Authority. A dismissed official takes offence and waits at court.', 'Kostet {n} Autorität. Ein entlassener Amtsträger ist gekränkt und wartet bei Hofe.'],
+  appointed: ['Appointed', 'Ernannt'], kin: ['family', 'Familie'], office_skill: ['Relevant skill', 'Maßgebliche Fähigkeit'], bonus_if: ['Bonus if appointed', 'Bonus bei Ernennung'],
   new_game: ['New game', 'Neues Spiel'], continue: ['Continue', 'Fortsetzen'], load: ['Load game', 'Spiel laden'], settings: ['Settings', 'Einstellungen'], online: ['Online world', 'Online-Welt'],
   observer: ['Watch the AI play', 'Der KI zusehen'], tutorial: ['Tutorial', 'Tutorial'], quit: ['Main menu', 'Hauptmenü'], resume: ['Resume', 'Weiter'], save: ['Save', 'Speichern'],
   start_1356: ['1 January 1356', '1. Januar 1356'], start_1492: ['1 January 1492', '1. Januar 1492'], choose_realm: ['Choose your realm', 'Wähle dein Reich'],
@@ -208,10 +222,11 @@ const ERRORS: Record<string, string> = {
   'nothing left to learn': 'Nichts mehr zu lernen', 'already of our faith': 'Schon unseres Glaubens', 'already of our culture': 'Schon unserer Kultur', 'already working there': 'Dort ist schon jemand tätig', 'no free preachers or officials': 'Keine freien Prediger oder Beamten',
   'not land': 'Kein Land', 'already claimed': 'Schon beansprucht', 'unknown land': 'Unbekanntes Land', 'someone is already settling here': 'Hier siedelt schon jemand', 'no colonists available': 'Keine Kolonisten verfügbar', 'out of colonial range': 'Außerhalb der Kolonialreichweite',
   'no such person': 'Keine solche Person', 'no lender will extend more credit': 'Kein Geldgeber gewährt mehr Kredit', 'no loans': 'Keine Kredite', 'no such market': 'Kein solcher Markt', 'no merchants left': 'Keine Kaufleute mehr frei',
-  'not your subject': 'Nicht dein Untertan', 'tributaries cannot be integrated': 'Tributpflichtige können nicht eingegliedert werden', 'must be a subject for ten years': 'Muss zehn Jahre Untertan sein', 'too restless': 'Zu unruhig',
+  'not your subject': 'Nicht dein Untertan', 'tributaries cannot be integrated': 'Tributpflichtige können nicht eingegliedert werden', 'colonial realms cannot be integrated': 'Kolonialreiche können nicht eingegliedert werden', 'our merchants are not ready (Commerce 12)': 'Unsere Kaufleute sind noch nicht so weit (Handel 12)', 'no charter available': 'Kein Freibrief verfügbar', 'already chartered': 'Bereits gegründet', 'we hold no harbour there': 'Wir besitzen dort keinen Hafen', 'must be a subject for ten years': 'Muss zehn Jahre Untertan sein', 'too restless': 'Zu unruhig',
   'bad slot': 'Ungültiger Platz', 'build more workshops first': 'Erst mehr Werkstätten bauen', 'unknown recipe': 'Unbekanntes Verfahren', 'need an army and a fleet': 'Heer und Flotte nötig', 'fleet must lie off the coast': 'Die Flotte muss vor der Küste liegen',
   'not enough ships': 'Nicht genug Schiffe', 'developer tools are disabled': 'Entwicklerwerkzeuge sind abgeschaltet', 'already taken': 'Bereits getroffen', 'unknown decision': 'Unbekannte Entscheidung', 'not enough favour with the Curia': 'Zu wenig Gunst bei der Kurie',
   'not of the Latin church': 'Nicht der lateinischen Kirche zugehörig', 'not in the same place': 'Nicht am selben Ort', 'select one army': 'Ein Heer wählen', 'select a location': 'Einen Ort wählen', 'select a realm': 'Ein Reich wählen', 'already under way': 'Bereits im Gange',
+  'unknown office': 'Unbekanntes Amt', 'the ruler cannot hold an office': 'Der Herrscher kann kein Amt bekleiden', 'too young for office': 'Zu jung für ein Amt', 'already holds this office': 'Bekleidet dieses Amt bereits',
   'no terms': 'Keine Bedingungen', 'none': 'Keine', 'no such realm': 'Kein solches Reich', 'failed': 'Fehlgeschlagen', 'unknown': 'Unbekannt', 'invalid': 'Ungültig',
 };
 /** Translate an error/refusal text from the simulation. */

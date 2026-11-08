@@ -54,6 +54,7 @@ export interface Nation {
   values: number[];                 // society value axes -100..100
   estates: Estate[];
   council: Record<string, number>;  // office -> character id
+  candidates?: number[];           // character ids at court who could be appointed to an office (missing in older saves)
   // diplomacy
   overlord: number; subjectType: string | null; subjectSince: number; libertyDesire: number; integration: number;
   envoys: number; envoysBusy: number;
@@ -87,7 +88,7 @@ export interface Loan { amount: number; rate: number; due: number; lender: strin
 
 export interface Regiment { type: number; men: number }  // ships: men = number of ships
 export interface Army {
-  id: number; owner: number; loc: number; name: string;
+  id: number; owner: number; loc: number; name: I18n | string; // bilingual; older saves hold a plain English string
   regs: Regiment[];
   morale: number; // 0..1 current morale fraction
   general: number;  // character id or 0
@@ -140,7 +141,7 @@ export interface Market {
   hist: Float32Array; // G * 120 months ring
   histPos: number;
   owner: number; // nation controlling the hub
-  links: { to: number; cost: number; sea: boolean }[];
+  links: { to: number; cost: number; sea: boolean; ocean?: boolean }[];  // ocean: crosses an ocean, closed until the New World is reached
   flowOut: Float64Array; // per good, last month's net exports
   merchants: Record<number, number>; // nation -> steering strength
   priceIndex: number;
@@ -209,6 +210,8 @@ export interface GameState {
   silverStock: number;    // money in circulation (abstract)
   ended: boolean; victory?: { nation: number; kind: string };
   flags: Record<string, number>;
+  /** chartered overseas trade companies: a direct route between an overseas market and the home market */
+  companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string } }[];
   playerNations: number[]; // nations controlled by humans
   observer: boolean;
   aiDisabled: number[];
@@ -238,6 +241,7 @@ export type Command =
   | { t: 'doctrine'; n: number; group: string }
   | { t: 'agent'; n: number; loc: number; kind: 'faith' | 'culture' }
   | { t: 'colonize'; n: number; loc: number }
+  | { t: 'charter'; n: number; market: number }
   | { t: 'explore'; n: number; fleet: number; to: number }
   | { t: 'spy'; n: number; target: number; action: string }
   | { t: 'office'; n: number; office: string; char: number }

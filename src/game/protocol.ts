@@ -45,7 +45,7 @@ export interface NationLite {
 
 export interface ArmyLite {
   id: number; owner: number; loc: number; x: number; y: number; men: number; fleet: boolean; morale: number; path: number[];
-  siege: number; battle: number; rebels: boolean; name: string; general: string; embarked: boolean; mercenary: boolean;
+  siege: number; battle: number; rebels: boolean; name: I18n | string; general: string; embarked: boolean; mercenary: boolean;
 }
 
 export interface PlayerView {
@@ -55,7 +55,12 @@ export interface PlayerView {
   incomeBreak: Record<string, number>; expenseBreak: Record<string, number>; ruler: string; rulerAge: number; heir: string;
   atWar: boolean; taxRate: number[]; armyMaint: number; navyMaint: number; tariff: number; coinage: number; loans: number; debt: number;
   stats: Record<string, number>;
+  homeMarket: number;                              // market of the capital (-1 without a capital)
+  merchants: { used: number; cap: number };
 }
+
+/** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */
+export interface WarScoreParts { battles: number; occupation: number; capital: number; ticking: number }
 
 export interface TickView {
   day: number; startYear: number; speed: number; ended: boolean; victory?: { nation: number; kind: string };
@@ -66,7 +71,7 @@ export interface TickView {
   player: PlayerView | null;
   notices: Notice[];                               // new since last tick
   pending: (PendingEvent & { title: I18n; text: I18n; options: { label: I18n; hint?: I18n }[]; art?: string })[];
-  wars: { id: number; name: I18n; att: number[]; def: number[]; attLead: number; defLead: number; score: number; offers: { from: number; to: number; terms: any[]; concede?: boolean; idx: number }[] }[];
+  wars: { id: number; name: I18n; att: number[]; def: number[]; attLead: number; defLead: number; score: number; parts: WarScoreParts; offers: { from: number; to: number; terms: any[]; concede?: boolean; idx: number }[] }[];
   sieges: { loc: number; nation: number; progress: number; garrison: number }[];
   battles: { id: number; loc: number; att: number; def: number; lossA: number; lossD: number; startA: number; startD: number; phase: number }[];
   chronicle: ChronEntry[];                         // new entries

@@ -1,10 +1,11 @@
+import { useLayoutEffect, useRef, useEffect } from 'preact/hooks';
 import { view, nations } from '../game/client';
 import { sim } from '../game/client';
 import { t, L, lang } from './i18n';
 import { Tip, Breakdown } from './Tip';
 import { num, signed, pct, rgb } from './format';
 import { fmtDate } from '../sim/calendar';
-import { openPanel, panel, lastSpeed } from './store';
+import { openPanel, panel, lastSpeed, settings } from './store';
 import { Coa } from './panels';
 import { sfx } from './audio';
 
@@ -13,18 +14,52 @@ const KEY_NAMES: Record<string, [string, string]> = {
   army: ['Army upkeep', 'Heeresunterhalt'], navy: ['Navy upkeep', 'Flottenunterhalt'], fortresses: ['Fortresses', 'Festungen'], recruitment: ['Recruitment', 'Rekrutierung'], construction: ['Construction', 'Bauten'],
   graft: ['Graft', 'Veruntreuung'], court: ['Court', 'Hof'], interest: ['Interest', 'Zinsen'], mercenaries: ['Mercenaries', 'Söldner'], scholars: ['Scholars', 'Gelehrte'], agents: ['Preachers & officials', 'Prediger & Beamte'],
   colonists: ['Colonists', 'Kolonisten'], coinage: ['Coinage', 'Münzgewinn'], loans: ['Loans', 'Kredite'], subsidies: ['Subsidies', 'Subsidien'], gifts: ['Gifts', 'Geschenke'],
+  company: ['Company profits', 'Kompaniegewinne'], charter: ['Company charters', 'Kompaniegründungen'], minting: ['Minting', 'Münzprägung'], loan_repay: ['Loan repayment', 'Kredittilgung'],
 };
 export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 
+// Main menu entries: icon, short label for narrow screens, keyboard shortcut (full name and shortcut in the tooltip).
+const MENU = [
+  { k: 'economy', icon: '⚖', key: 'E', main: true }, { k: 'government', icon: '♛', key: 'G', main: true }, { k: 'diplomacy', icon: '✉', key: 'Shift+D', main: true },
+  { k: 'military', icon: '⚔', key: 'M', main: true }, { k: 'knowledge', icon: '⚗', key: 'K', main: false }, { k: 'society', icon: '✝', key: '', main: false },
+  { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
+] as const;
+const MAX_LEVEL = 4;
+const SHORT: Record<string, [string, string]> = { government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Decisions', 'Beschlüsse'], knowledge: ['Learning', 'Wissen'] };
+const short = (k: string) => SHORT[k]?.[lang.value === 'de' ? 1 : 0] ?? t(k);
+
+/**
+ * The bar compacts itself until nothing overflows: 0 full labels, 1 short labels, 2 short labels only for the four main
+ * entries, 3 icons only, 4 also without the realm name. The level is a class set directly on the bar and tried synchronously
+ * (no re-render per step); it is re-checked after every render (numbers grow) and starts again from 0 when the window,
+ * the language or the UI scale changes.
+ */
+function useCompaction(dep: string) {
+  const ref = useRef<HTMLDivElement>(null);
+  const level = useRef(0), lastDep = useRef('');
+  const fit = (reset: boolean) => {
+    const el = ref.current; if (!el) return;
+    const apply = (l: number) => { for (let i = 0; i <= MAX_LEVEL; i++) el.classList.toggle(`tb-l${i}`, i === l); };
+    let l = reset ? 0 : level.current;
+    apply(l);
+    while (el.scrollWidth > el.clientWidth + 1 && l < MAX_LEVEL) apply(++l);
+    level.current = l;
+  };
+  useEffect(() => { const f = () => fit(true); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
+  useLayoutEffect(() => { const reset = lastDep.current !== dep; lastDep.current = dep; fit(reset); });
+  return ref;
+}
+
 export function TopBar() {
+  const ref = useCompaction(`${lang.value}|${settings.value.uiScale}|${view.value?.player?.id ?? -1}`);
   const v = view.value; if (!v) return null;
   const p = v.player; const n = p ? nations.value[p.id] : null;
   const date = fmtDate(v.day, v.startYear, lang.value);
   const sp = v.speed;
   const setSp = (x: number) => { sfx('click'); if (x > 0) lastSpeed.value = x; sim().speed(x); };
   const net = p ? p.income - p.expense : 0;
-  return <div class="topbar">
-    {n && p && <button class="tb-flag" onClick={() => openPanel('government')}><Coa coa={n.coa} color={n.color} size={34} /><span class="tb-name">{L(n.short)}</span></button>}
+  return <div class="topbar" ref={ref}>
+    {n && p && <button class="tb-flag" title={L(n.name)} onClick={() => openPanel('government')}><Coa coa={n.coa} color={n.color} size={34} /><span class="tb-name">{L(n.short)}</span></button>}
     {p && <>
       <Tip content={() => <><Breakdown title={t('income')} rows={Object.entries(p.incomeBreak).map(([k, x]) => [keyName(k), x])} total={p.income} /><Breakdown title={t('expenses')} rows={Object.entries(p.expenseBreak).map(([k, x]) => [keyName(k), -x])} total={-p.expense} /></>}>
         <div class="stat" onClick={() => openPanel('economy')}><i class="ic gold" />{num(p.treasury)}<small class={net >= 0 ? 'pos' : 'neg'}>{signed(net)}</small></div>
@@ -49,7 +84,11 @@ export function TopBar() {
     </>}
     <div class="tb-spacer" />
     <div class="tb-menu">
-      {(['economy', 'government', 'diplomacy', 'military', 'knowledge', 'society', 'decisions', 'ledger', 'chronicle'] as const).map((k) => <button class={panel.value === k ? 'on' : ''} onClick={() => { sfx('open'); openPanel(k); }}>{t(k)}</button>)}
+      {MENU.map(({ k, icon, key, main }) => <Tip content={<div><b>{t(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
+        <button class={`${panel.value === k ? 'on' : ''} ${main ? 'main' : ''}`} aria-label={t(k)} onClick={() => { sfx('open'); openPanel(k); }}>
+          <span class="tb-ic" aria-hidden="true">{icon}</span><span class="tb-lbl tb-full">{t(k)}</span><span class="tb-lbl tb-short">{short(k)}</span>
+        </button>
+      </Tip>)}
     </div>
     <div class="tb-date">
       <div class="date">{date}</div>

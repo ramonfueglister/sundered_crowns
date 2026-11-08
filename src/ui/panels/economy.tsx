@@ -80,16 +80,14 @@ function Loans() {
 
 function Markets() {
   const r = realm.value; const pid = playerId.value;
-  const cap = nations.value[pid]?.capital ?? -1;
-  const [capLoc] = useQuery<any>(cap >= 0 ? { q: 'loc', loc: cap } : null, [cap], 1e9);
+  const pv = view.value?.player;
   const [sel, setSel] = useState(-1);
-  const home = capLoc?.market?.id ?? -1;
+  const home = pv?.homeMarket ?? -1;
   const mid = sel >= 0 ? sel : home >= 0 ? home : r?.markets?.[0]?.id ?? -1;
   const [m] = useQuery<any>(mid >= 0 ? { q: 'market', market: mid } : null, [mid], 3000);
   const [sort, setSort] = useState<'name' | 'price' | 'supply' | 'demand' | 'dev'>('dev');
-  const me = nations.value[pid];
-  const used = (r?.markets ?? []).reduce((p: number, x: any) => p + (x.mine || 0), 0);
-  const capM = 2 + Math.floor((view.value?.player?.tech?.[0] ?? 0) / 4) + (me?.gov === 'merchant_republic' ? 2 : 0);
+  const used = pv?.merchants.used ?? 0;
+  const capM = pv?.merchants.cap ?? 0;
   const mine = m?.merchants?.[pid] || 0;
   const goods = (m?.goods ?? []).filter((g: any) => g.supply > 0.01 || g.demand > 0.01);
   const sorted = [...goods].sort((a: any, b: any) => sort === 'name' ? L(a.name).localeCompare(L(b.name)) : sort === 'price' ? b.price - a.price : sort === 'supply' ? b.supply - a.supply : sort === 'demand' ? b.demand - a.demand : (b.price / Math.max(1e-6, b.base)) - (a.price / Math.max(1e-6, a.base)));

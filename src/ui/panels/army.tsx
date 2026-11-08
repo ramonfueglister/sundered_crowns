@@ -4,6 +4,7 @@ import { sim, view, nations } from '../../game/client';
 import { selectedArmies, playerId, hoverLoc, openPanel, panel } from '../store';
 import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, Tip, useRealm, selectArmy, flyToLoc, daysText, locName, namesVersion, selectLoc } from './common';
 import { sfx } from '../audio';
+import { WarScoreTip } from './realmtabs';
 
 export function ArmyPanel() {
   const ids = selectedArmies.value; const v = view.value; const pid = playerId.value;
@@ -29,15 +30,15 @@ export function ArmyPanel() {
   const close = () => { selectedArmies.value = []; };
   const all = (f: (id: number) => Promise<any>) => Promise.all(armies.map((a) => f(a.id)));
   return <div class="army-wrap"><Panel cls="army-pnl" onClose={close}
-    title={armies.length === 1 ? (first.name || (first.fleet ? t('fleet') : t('army'))) : `${armies.length} ${fleet ? t('fleets') : t('armies')}`}
+    title={armies.length === 1 ? (L(first.name) || (first.fleet ? t('fleet') : t('army'))) : `${armies.length} ${fleet ? t('fleets') : t('armies')}`}
     sub={<>{num(men)} {fleet ? t('ships') : t('men')} · <LocName id={first.loc} /></>}>
     <div class="army-list">{armies.map((a) => {
       const dest = a.path.length ? a.path[a.path.length - 1] : -1;
       return <div class="army-row">
-        <Tip content={<div><b>{a.name}</b><div>{t('general')}: {a.general || t('none')}</div>{a.mercenary && <div>{t('mercenary')}</div>}</div>}>
+        <Tip content={<div><b>{L(a.name)}</b><div>{t('general')}: {a.general || t('none')}</div>{a.mercenary && <div>{t('mercenary')}</div>}</div>}>
           <span class={`unit-ic ${a.fleet ? 'ship' : 'land'}`}>{a.fleet ? '⚓' : '⚔'}</span>
         </Tip>
-        <span class="aname">{a.name}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span>
+        <span class="aname">{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span>
         <span class="amen">{num(a.men)}</span>
         <span class="amorale"><Bar value={a.morale} color="#4d7a3a" tip={<div><b>{t('morale')}</b> {pct(a.morale)}</div>} /></span>
         <span class="astate muted">{a.battle ? <span class="neg">{t('in_battle')}</span> : a.siege >= 0 ? <>{t('besieging')} <LocName id={a.siege} /></> : dest >= 0 ? <>→ <LocName id={dest} /></> : a.embarked ? t('embarked') : t('idle')}</span>
@@ -53,7 +54,7 @@ export function ArmyPanel() {
       <Btn disabled={armies.length !== 1 ? 'select one army' : first.men < 2 ? 'too small' : null} onClick={() => act({ t: 'split', army: first.id })}>{t('split')}</Btn>
       {!fleet && <Btn tip={t('auto_general_hint')} onClick={() => all((id) => act({ t: 'general', army: id, char: 0 }))}>{t('assign_general')}</Btn>}
       {!fleet && myFleets.length > 0 && <select class="embark-sel" value="" onChange={(e) => { const f = Number((e.target as HTMLSelectElement).value); if (f) all((id) => act({ t: 'embark', army: id, fleet: f }, 'march')); }}>
-        <option value="">{t('embark')}…</option>{myFleets.map((f) => <option value={f.id}>{f.name} ({num(f.men)} {t('ships')}) · {locName(f.loc)}</option>)}
+        <option value="">{t('embark')}…</option>{myFleets.map((f) => <option value={f.id}>{L(f.name)} ({num(f.men)} {t('ships')}) · {locName(f.loc)}</option>)}
       </select>}
       {!fleet && armies.length === 1 && <Btn tip={t('stop_hint')} onClick={() => act({ t: 'move', army: first.id, to: first.loc })}>{t('stop')}</Btn>}
       <Btn cls="danger" onClick={() => { if (!confirm) { setConfirm(true); sfx('click'); return; } all((id) => act({ t: 'disband', army: id })).then(() => { selectedArmies.value = []; }); }}>{confirm ? t('confirm_disband') : t('disband')}</Btn>
@@ -83,20 +84,20 @@ export function Outliner() {
           return <div class="ol-row click" onClick={() => { sfx('open'); openPanel('peace', { war: w.id }); }}>
             <NLink id={foe} size={14} name={false} /><span class="ol-name">{L(w.name)}</span>
             {offers > 0 && <span class="badge">{offers}</span>}
-            <Tip content={<div><b>{t('war_score')}</b> {signed(sc)}<div class="muted">{t('war_score_hint')}</div></div>}><span class={`ol-v ${sc >= 0 ? 'pos' : 'neg'}`}>{signed(sc)}</span></Tip>
+            <Tip content={() => <WarScoreTip w={w} pid={pid} />}><span class={`ol-v ${sc >= 0 ? 'pos' : 'neg'}`}>{signed(sc)}</span></Tip>
           </div>; })}
       </Section>}
       <Section title={<>{t('armies')} <small>({land.length} · {num(total)})</small></>} id="ol-armies">
         {land.length === 0 && <div class="muted small">{t('no_armies')}</div>}
         {land.map((a) => <div class={`ol-row click ${sel.has(a.id) ? 'sel' : ''}`} onClick={(e) => { if ((e as MouseEvent).shiftKey) { selectedArmies.value = [...new Set([...selectedArmies.value, a.id])]; return; } selectArmy(a.id); }}>
           <span class={`dot ${a.battle ? 'bat' : a.siege >= 0 ? 'sie' : a.path.length ? 'mov' : ''}`} />
-          <span class="ol-name">{a.name}</span><span class="ol-sub">{locName(a.loc)}</span><span class="ol-v">{num(a.men)}</span>
+          <span class="ol-name">{L(a.name)}</span><span class="ol-sub">{locName(a.loc)}</span><span class="ol-v">{num(a.men)}</span>
           <span class="ol-bar"><i style={{ width: `${Math.round(a.morale * 100)}%` }} /></span>
         </div>)}
       </Section>
       {fleets.length > 0 && <Section title={<>{t('fleets')} <small>({fleets.length})</small></>} id="ol-fleets">
         {fleets.map((a) => <div class={`ol-row click ${sel.has(a.id) ? 'sel' : ''}`} onClick={() => selectArmy(a.id)}>
-          <span class={`dot ${a.battle ? 'bat' : a.path.length ? 'mov' : ''}`} /><span class="ol-name">{a.name}</span><span class="ol-sub">{locName(a.loc)}</span><span class="ol-v">{num(a.men)}</span>
+          <span class={`dot ${a.battle ? 'bat' : a.path.length ? 'mov' : ''}`} /><span class="ol-name">{L(a.name)}</span><span class="ol-sub">{locName(a.loc)}</span><span class="ol-v">{num(a.men)}</span>
         </div>)}
       </Section>}
       {sieges.length > 0 && <Section title={t('sieges')} id="ol-sieges">

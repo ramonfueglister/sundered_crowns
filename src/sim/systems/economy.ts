@@ -46,15 +46,20 @@ export function marketFill(m: Market, g: number): number {
 
 /** Rate at which the crown taxes class c in location i (after control, privileges and law). */
 const TAXC = new WeakMap<Nation, { e: number; rate: Float64Array; farm: boolean }>();
-export function effectiveTax(s: GameState, n: Nation, i: number, c: number): number {
+const EXEMPT_KEYS = Array.from({ length: C }, (_, q) => `exempt_${q}`);
+function taxTable(n: Nation) {
   let k = TAXC.get(n);
   if (!k || k.e !== EPOCH.v) {
     const rate = new Float64Array(C);
     const common = Math.max(0, (1 - n.corruption) * (1 + mod(n, 'tax')));
-    for (let q = 0; q < C; q++) rate[q] = (n.taxRate[q] ?? 0.05) * (1 - clamp(lawEffect(n, `exempt_${q}`), 0, 1)) * common;
+    for (let q = 0; q < C; q++) rate[q] = (n.taxRate[q] ?? 0.05) * (1 - clamp(lawEffect(n, EXEMPT_KEYS[q]), 0, 1)) * common;
     k = { e: EPOCH.v, rate, farm: lawEffect(n, 'tax_farming') > 0 };
     TAXC.set(n, k);
   }
+  return k;
+}
+export function effectiveTax(s: GameState, n: Nation, i: number, c: number): number {
+  const k = taxTable(n);
   const ctrl = s.loc.control[i];
   return k.rate[c] * (k.farm ? 0.75 + 0.25 * ctrl : ctrl);
 }
@@ -68,199 +73,271 @@ const RURAL: Record<number, [number, number, number]> = {
   [GI.wool]: [GI.cloth, 0.6, 0.3], [GI.livestock]: [GI.leather, 0.25, 0.25], [GI.sugarcane]: [GI.sugar, 0.4, 0.3],
 };
 
-export function locationStep(s: GameState, w: World, i: number) {
-  const lc = s.loc; const o = lc.owner[i];
-  const m = s.markets[lc.market[i]];
-  if (!m) return;
-  const n = o >= 0 ? s.nations[o] : null;
-  const base = i * C;
-  const P = lc.pop;
-  const pl = s.priceLevel;
-  const terr = TERRAIN_DEF[TERRAINS[w.terrain[i]]];
-  const farmLvl = lc.buildings[i * B + BI.farm];
-  const mineLvl = lc.buildings[i * B + BI.mine];
-  const wsLvl = lc.buildings[i * B + BI.workshop];
-  const portLvl = lc.buildings[i * B + BI.port];
-  const devast = lc.devast[i];
-  const techA = n ? 1 + (n.tech[1] - 1) * 0.04 : 1;
-  const arid = w.arid[i];
-  const ec = locEcon(w.L);
-  // ---- agriculture ----
-  const peas = P[base + CL.peasants], lab = P[base + CL.labourers];
-  const aridMult = arid > 0.85 ? 0.25 : arid > 0.6 ? 0.6 : 1;
-  const serfdom = n ? lawEffect(n, 'serfdom') : 0; // 0 free .. 1 full serfdom
-  const yieldMult = terr.yield * lc.harvest[i] * (1 + 0.12 * farmLvl) * (1 - 0.7 * devast) * techA * aridMult * (1 - 0.08 * serfdom);
-  const grainQ = peas * 0.155 * yieldMult;
-  m.sAcc[GI.grain] += grainQ;
-  // ---- natural resource ----
-  const r = w.resource[i];
-  const rgoWorkers = lab * 0.55 + peas * 0.22;
-  let rgoMult = (1 + 0.6 * mineLvl * (RAW_FROM_MINE.has(GOODS[r].id) ? 1 : 0)) * (1 - 0.6 * devast);
-  if (GOODS[r].id === 'fish') rgoMult *= 1 + 0.25 * portLvl;
-  if (r === GI.grain) rgoMult *= yieldMult;
-  const rgoQ = rgoWorkers * 0.22 / GOODS[r].base * rgoMult * techA;
-  if (r === SILVER || r === GOLD) {
-    // precious metals become coin: money supply
-    s.silverStock += rgoQ * GOODS[r].base * 2e-8;
+// lookups resolved once for the per-location step
+const TERR_AT = TERRAINS.map((x) => TERRAIN_DEF[x]);
+const FROM_MINE = Uint8Array.from(GOODS, (g) => (RAW_FROM_MINE.has(g.id) ? 1 : 0));
+const FISH = GI.fish;
+const REC_IN: Int32Array[] = RECIPES.map((rc) => Int32Array.from(rc.inputs, ([gid]) => GI[gid]));
+const REC_Q: Float64Array[] = RECIPES.map((rc) => Float64Array.from(rc.inputs, ([, q]) => q));
+const REC_OUT = Int32Array.from(RECIPES, (rc) => GI[rc.out]);
+const G_GRAIN = GI.grain, G_TIMBER = GI.timber, G_CLOTHING = GI.clothing, G_BREAD = GI.bread, G_BEER = GI.beer, G_LINEN = GI.linen, G_LEATHER = GI.leather;
+const INC = new Float64Array(C);
+const SLOTS = new Int32Array(3);
+// Per-nation numbers read by locationStep, gathered once per pass over the locations (economy.daily / init).
+// Reading them from one typed table keeps locationStep away from the many shapes nation objects take on,
+// which otherwise keep throwing its optimised code away. Values are exactly what the step read before.
+const NK = 14 + C; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C]
+let NS = new Float64Array(0), NST = new Int32Array(0), PASS = 0;
+function nationRow(n: Nation): number {
+  const o = n.id;
+  if (o >= NST.length) { const ns = new Float64Array((o + 64) * NK); ns.set(NS); NS = ns; const st = new Int32Array(o + 64); st.set(NST); NST = st; }
+  const r = o * NK;
+  if (NST[o] === PASS) return r;
+  NST[o] = PASS;
+  const t1 = n.tech[1] - 1;
+  NS[r] = 1 + t1 * 0.04;
+  NS[r + 1] = lawEffect(n, 'serfdom');
+  NS[r + 2] = mod(n, 'production') + t1 * 0.03;
+  NS[r + 3] = mod(n, 'trade');
+  NS[r + 4] = n.taxRate[CL.peasants];
+  NS[r + 5] = lawEffect(n, 'tolerance');
+  NS[r + 6] = n.warExhaustion; NS[r + 7] = n.concord; NS[r + 8] = n.inflation;
+  NS[r + 9] = mod(n, 'unrest');
+  NS[r + 10] = (n.tech[0] - 1) * 0.01;
+  NS[r + 11] = n.culture; NS[r + 12] = n.faith;
+  const tt = taxTable(n); NS[r + 13] = tt.farm ? 1 : 0;
+  for (let c = 0; c < C; c++) NS[r + 14 + c] = tt.rate[c];
+  return r;
+}
+
+/** One location's month of production, income, consumption and growth (see stepLocations). */
+export function locationStep(s: GameState, w: World, i: number) { PASS++; stepLocations(s, w, i, i + 1, 1, false); } // a pass of its own: no per-nation row from an earlier pass (or another game) is reused
+/** The step for locations from, from + stride, ... below to (only settled ones if settled is set). The loop lives
+ *  inside the function so V8 can re-optimise it mid-loop (on-stack replacement) after a deoptimisation, instead of
+ *  running it unoptimised for thousands of separate calls. */
+// Tax and contribution payments of a pass, paid out in the same order after the loop (nothing in the loop reads
+// treasuries or income ledgers), so the loop does not touch the differently shaped ledger objects.
+let PAY_N = new Int32Array(1024), PAY_V = new Float64Array(1024), PAY_K = new Uint8Array(1024), NPAY = 0;
+function pay(nation: number, kind: number, v: number) {
+  if (NPAY === PAY_N.length) {
+    const n2 = new Int32Array(NPAY * 2); n2.set(PAY_N); PAY_N = n2;
+    const v2 = new Float64Array(NPAY * 2); v2.set(PAY_V); PAY_V = v2;
+    const k2 = new Uint8Array(NPAY * 2); k2.set(PAY_K); PAY_K = k2;
   }
-  // rural processing: villages press their own grapes and olives, ret their flax, card their wool
-  const rp = RURAL[r];
-  let ruralValue = 0;
-  if (rp) {
-    const raw = rgoQ * rp[2], out = raw * rp[1];
-    m.sAcc[r] += rgoQ - raw; m.sAcc[rp[0]] += out;
-    ruralValue = out * m.price[rp[0]] - raw * m.price[r];
-  } else m.sAcc[r] += rgoQ;
-  const pGrain = m.price[GI.grain], pR = m.price[r];
-  // ---- household production: firewood, homespun cloth, baking and brewing (most of what common folk use) ----
-  let ptotH = 0; for (let c = 0; c < C; c++) ptotH += P[base + c];
-  const hh = ptotH / 100 * (1 - 0.6 * devast);
-  const woodQ = hh * 1.5 * clamp(0.25 + w.forest[i] * 1.4, 0.1, 1.4);
-  const clothQ = hh * 0.7 * (arid > 0.85 ? 0.6 : 1);
-  const breadQ = hh * 1.7, beerQ = hh * (arid > 0.6 ? 0.3 : 1.1);
-  const linenQ = hh * (arid > 0.6 ? 0.05 : 0.15), leatherQ = hh * 0.1; // a flax patch and the hides of the household's own beasts
-  m.sAcc[GI.timber] += woodQ; m.sAcc[GI.clothing] += clothQ; m.sAcc[GI.bread] += breadQ; m.sAcc[GI.beer] += beerQ;
-  m.sAcc[GI.linen] += linenQ; m.sAcc[GI.leather] += leatherQ;
-  m.dAcc[GI.grain] += breadQ * 0.8 + beerQ * 0.5; // baking and brewing use grain
-  const hhValue = woodQ * m.price[GI.timber] + clothQ * m.price[GI.clothing] * 0.5 + (breadQ * (m.price[GI.bread] - pGrain * 0.8) + beerQ * (m.price[GI.beer] - pGrain * 0.5))
-    + (linenQ * m.price[GI.linen] + leatherQ * m.price[GI.leather]) * 0.5 + Math.max(0, ruralValue);
-  const agriValue = grainQ * pGrain + rgoQ * pR;
-  // ---- crafts ----
-  let craftValue = 0, craftProfit = 0;
-  const art = P[base + CL.artisans] + P[base + CL.wage_workers];
-  const slots = [lc.workshop[i * 3], lc.workshop[i * 3 + 1], lc.workshop[i * 3 + 2]].filter((v) => v > 0);
-  if (slots.length && art > 0) {
-    const cap = (1 + wsLvl) * 1600 * (1 + lc.buildings[i * B + BI.manufactory]);
-    const workers = Math.min(art, cap * slots.length);
-    const per = workers / slots.length;
-    const meth = METHODS[lc.method[i]]?.mult ?? 1;
-    const prodMod = 1 + (n ? mod(n, 'production') + (n.tech[1] - 1) * 0.03 : 0);
-    for (const sl of slots) {
-      const rc = RECIPES[sl - 1];
-      let scale = 1;
-      for (const [gid, q] of rc.inputs) scale = Math.min(scale, 0.25 + 0.75 * marketFill(m, GI[gid]));
-      const k = per / 100 * CRAFT_PROD * scale;
-      let inCost = 0;
-      for (const [gid, q] of rc.inputs) { const gi = GI[gid]; m.dAcc[gi] += q * k; inCost += q * k * m.price[gi]; }
-      const outQ = rc.outQty * k * meth * prodMod;
-      const og = GI[rc.out];
-      m.sAcc[og] += outQ;
-      const val = outQ * m.price[og];
-      craftValue += val; craftProfit += val - inCost;
+  PAY_N[NPAY] = nation; PAY_K[NPAY] = kind; PAY_V[NPAY] = v; NPAY++;
+}
+function flushPayments(s: GameState) {
+  for (let k = 0; k < NPAY; k++) addIncome(s.nations[PAY_N[k]], PAY_K[k] ? 'contributions' : 'tax', PAY_V[k]);
+  NPAY = 0;
+}
+function stepLocations(s: GameState, w: World, from: number, to: number, stride: number, settled: boolean) {
+  NPAY = 0;
+  s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled);
+  flushPayments(s);
+}
+// The state's own fields are read once by the caller and passed in (the state object changes shape as a game
+// goes on, which would otherwise throw the optimised loop away); silver is threaded through and written back.
+function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl: number, silverIn: number, w: World, from: number, to: number, stride: number, settled: boolean): number {
+  let silver = silverIn;
+  for (let i = from; i < to; i += stride) {
+    if (settled && !(lc.owner[i] >= 0 || lc.pop[i * C] > 0)) continue;
+    const o = lc.owner[i];
+    const m = markets[lc.market[i]];
+    if (!m) continue;
+    const n = o >= 0 ? nations[o] : null;
+    const base = i * C;
+    const P = lc.pop;
+    const terr = TERR_AT[w.terrain[i]];
+    const farmLvl = lc.buildings[i * B + BI.farm];
+    const mineLvl = lc.buildings[i * B + BI.mine];
+    const wsLvl = lc.buildings[i * B + BI.workshop];
+    const portLvl = lc.buildings[i * B + BI.port];
+    const devast = lc.devast[i];
+    const nr = n ? nationRow(n) : -1, ns = NS;
+    const techA = n ? ns[nr] : 1;
+    const arid = w.arid[i];
+    const ec = locEcon(w.L);
+    // ---- agriculture ----
+    const peas = P[base + CL.peasants], lab = P[base + CL.labourers];
+    const aridMult = arid > 0.85 ? 0.25 : arid > 0.6 ? 0.6 : 1;
+    const serfdom = n ? ns[nr + 1] : 0; // 0 free .. 1 full serfdom
+    const yieldMult = terr.yield * lc.harvest[i] * (1 + 0.12 * farmLvl) * (1 - 0.7 * devast) * techA * aridMult * (1 - 0.08 * serfdom);
+    const grainQ = peas * 0.155 * yieldMult;
+    m.sAcc[G_GRAIN] += grainQ;
+    // ---- natural resource ----
+    const r = w.resource[i];
+    const rgoWorkers = lab * 0.55 + peas * 0.22;
+    let rgoMult = (1 + 0.6 * mineLvl * FROM_MINE[r]) * (1 - 0.6 * devast);
+    if (r === FISH) rgoMult *= 1 + 0.25 * portLvl;
+    if (r === G_GRAIN) rgoMult *= yieldMult;
+    const rgoQ = rgoWorkers * 0.22 / GOODS[r].base * rgoMult * techA;
+    if (r === SILVER || r === GOLD) {
+      // precious metals become coin: money supply
+      silver += rgoQ * GOODS[r].base * 2e-8;
     }
-  }
-  // ---- incomes per class (marks per month, total for the class in this location) ----
-  const rent = 0.12 + 0.2 * serfdom;      // dues to the nobility
-  const tithe = 0.08;
-  const inc = new Float64Array(C);
-  inc[CL.peasants] = (grainQ * pGrain + rgoQ * pR * (peas * 0.22 / Math.max(1, rgoWorkers))) * (1 - rent - tithe) + Math.max(0, hhValue) * 0.65;
-  const hhRest = Math.max(0, hhValue) * 0.35;
-  inc[CL.labourers] = rgoQ * pR * (lab * 0.55 / Math.max(1, rgoWorkers)) * 0.8 + Math.max(0, craftProfit) * 0.1 + hhRest * 0.6 + grainQ * pGrain * 0.12;
-  inc[CL.artisans] = hhRest * 0.4;
-  inc[CL.artisans] += Math.max(0, craftProfit) * 0.6 + craftValue * 0.05;
-  inc[CL.wage_workers] = 0;
-  if (P[base + CL.wage_workers] > 0) { const ww = P[base + CL.wage_workers] / Math.max(1, art); inc[CL.wage_workers] = inc[CL.artisans] * ww * 0.6; inc[CL.artisans] *= 1 - ww * 0.6; }
-  const marketBonus = 1 + 0.25 * lc.buildings[i * B + BI.market];
-  inc[CL.burghers] = (Math.max(0, craftProfit) * 0.3 + (agriValue + craftValue) * 0.035 * marketBonus) * (1 + (n ? mod(n, 'trade') : 0));
-  inc[CL.nobles] = agriValue * rent;
-  inc[CL.clergy] = agriValue * tithe + rgoQ * 0;
-  // ---- taxes ----
-  let taxTotal = 0;
-  if (n) {
+    // rural processing: villages press their own grapes and olives, ret their flax, card their wool
+    const rp = RURAL[r];
+    let ruralValue = 0;
+    if (rp) {
+      const raw = rgoQ * rp[2], out = raw * rp[1];
+      m.sAcc[r] += rgoQ - raw; m.sAcc[rp[0]] += out;
+      ruralValue = out * m.price[rp[0]] - raw * m.price[r];
+    } else m.sAcc[r] += rgoQ;
+    const pGrain = m.price[G_GRAIN], pR = m.price[r];
+    // ---- household production: firewood, homespun cloth, baking and brewing (most of what common folk use) ----
+    let ptotH = 0; for (let c = 0; c < C; c++) ptotH += P[base + c];
+    const hh = ptotH / 100 * (1 - 0.6 * devast);
+    const woodQ = hh * 1.5 * clamp(0.25 + w.forest[i] * 1.4, 0.1, 1.4);
+    const clothQ = hh * 0.7 * (arid > 0.85 ? 0.6 : 1);
+    const breadQ = hh * 1.7, beerQ = hh * (arid > 0.6 ? 0.3 : 1.1);
+    const linenQ = hh * (arid > 0.6 ? 0.05 : 0.15), leatherQ = hh * 0.1; // a flax patch and the hides of the household's own beasts
+    m.sAcc[G_TIMBER] += woodQ; m.sAcc[G_CLOTHING] += clothQ; m.sAcc[G_BREAD] += breadQ; m.sAcc[G_BEER] += beerQ;
+    m.sAcc[G_LINEN] += linenQ; m.sAcc[G_LEATHER] += leatherQ;
+    m.dAcc[G_GRAIN] += breadQ * 0.8 + beerQ * 0.5; // baking and brewing use grain
+    const hhValue = woodQ * m.price[G_TIMBER] + clothQ * m.price[G_CLOTHING] * 0.5 + (breadQ * (m.price[G_BREAD] - pGrain * 0.8) + beerQ * (m.price[G_BEER] - pGrain * 0.5))
+      + (linenQ * m.price[G_LINEN] + leatherQ * m.price[G_LEATHER]) * 0.5 + Math.max(0, ruralValue);
+    const agriValue = grainQ * pGrain + rgoQ * pR;
+    // ---- crafts ----
+    let craftValue = 0, craftProfit = 0;
+    const art = P[base + CL.artisans] + P[base + CL.wage_workers];
+    let nSlots = 0;
+    for (let k = 0; k < 3; k++) { const v = lc.workshop[i * 3 + k]; if (v > 0) SLOTS[nSlots++] = v; }
+    if (nSlots && art > 0) {
+      const cap = (1 + wsLvl) * 1600 * (1 + lc.buildings[i * B + BI.manufactory]);
+      const workers = Math.min(art, cap * nSlots);
+      const per = workers / nSlots;
+      const meth = METHODS[lc.method[i]]?.mult ?? 1;
+      const prodMod = 1 + (n ? ns[nr + 2] : 0);
+      for (let si = 0; si < nSlots; si++) {
+        const sl = SLOTS[si];
+        const rc = RECIPES[sl - 1], ins = REC_IN[sl - 1], qs = REC_Q[sl - 1];
+        let scale = 1;
+        for (let j = 0; j < ins.length; j++) scale = Math.min(scale, 0.25 + 0.75 * marketFill(m, ins[j]));
+        const k = per / 100 * CRAFT_PROD * scale;
+        let inCost = 0;
+        for (let j = 0; j < ins.length; j++) { const gi = ins[j], q = qs[j]; m.dAcc[gi] += q * k; inCost += q * k * m.price[gi]; }
+        const outQ = rc.outQty * k * meth * prodMod;
+        const og = REC_OUT[sl - 1];
+        m.sAcc[og] += outQ;
+        const val = outQ * m.price[og];
+        craftValue += val; craftProfit += val - inCost;
+      }
+    }
+    // ---- incomes per class (marks per month, total for the class in this location) ----
+    const rent = 0.12 + 0.2 * serfdom;      // dues to the nobility
+    const tithe = 0.08;
+    const inc = INC; inc.fill(0);
+    inc[CL.peasants] = (grainQ * pGrain + rgoQ * pR * (peas * 0.22 / Math.max(1, rgoWorkers))) * (1 - rent - tithe) + Math.max(0, hhValue) * 0.65;
+    const hhRest = Math.max(0, hhValue) * 0.35;
+    inc[CL.labourers] = rgoQ * pR * (lab * 0.55 / Math.max(1, rgoWorkers)) * 0.8 + Math.max(0, craftProfit) * 0.1 + hhRest * 0.6 + grainQ * pGrain * 0.12;
+    inc[CL.artisans] = hhRest * 0.4;
+    inc[CL.artisans] += Math.max(0, craftProfit) * 0.6 + craftValue * 0.05;
+    inc[CL.wage_workers] = 0;
+    if (P[base + CL.wage_workers] > 0) { const ww = P[base + CL.wage_workers] / Math.max(1, art); inc[CL.wage_workers] = inc[CL.artisans] * ww * 0.6; inc[CL.artisans] *= 1 - ww * 0.6; }
+    const marketBonus = 1 + 0.25 * lc.buildings[i * B + BI.market];
+    inc[CL.burghers] = (Math.max(0, craftProfit) * 0.3 + (agriValue + craftValue) * 0.035 * marketBonus) * (1 + (n ? ns[nr + 3] : 0));
+    inc[CL.nobles] = agriValue * rent;
+    inc[CL.clergy] = agriValue * tithe + rgoQ * 0;
+    // ---- taxes ----
+    let taxTotal = 0;
+    if (n) {
+      const ctl = lc.control[i], tf = ns[nr + 13] ? 0.75 + 0.25 * ctl : ctl;
+      for (let c = 0; c < C; c++) {
+        const t = inc[c] * (ns[nr + 14 + c] * tf);
+        inc[c] -= t; taxTotal += t;
+      }
+      // most of what the people pay stays with lords, towns and collectors; the crown receives its share
+      taxTotal *= CROWN_SHARE;
+      if (lc.ctrl[i] === o) {
+        pay(o, 0, taxTotal);
+      } else if (lc.ctrl[i] >= 0) {
+        // occupied: occupier collects a contribution
+        pay(lc.ctrl[i], 1, taxTotal * 0.5);
+      }
+    }
+    lc.income[i] = taxTotal;
+    ec.grain[i] = grainQ; ec.rgo[i] = rgoQ; ec.craft[i] = craftValue; ec.tax[i] = taxTotal; ec.income[i] = 0;
+    // ---- consumption of needs ----
+    let unrestSol = 0, popTot = 0;
+    let tc: ReturnType<typeof tierCache> | null = null;
     for (let c = 0; c < C; c++) {
-      const t = inc[c] * effectiveTax(s, n, i, c);
-      inc[c] -= t; taxTotal += t;
+      const pc = P[base + c];
+      if (pc < 1) { lc.sol[base + c] = 0.5; continue; }
+      const wealthPC = lc.wealth[base + c];
+      let budget = inc[c] + wealthPC * pc * 0.08;
+      ec.income[i] += inc[c];
+      const mult = CLASS_NEED_MULT[c];
+      const maxT = CLASS_MAX_TIER[c];
+      let sol = 0, spent = 0;
+      if (!tc) tc = tierCache(m, pl);
+      for (let t = 0; t <= 3; t++) {
+        if (t > maxT) break;
+        const cost = tc.cost[t] * mult * pc;
+        if (cost <= 0) continue;
+        // poorer classes get basic food partly through subsistence (own harvest), not only purchases
+        const subsidy = t === 0 && (c === CL.peasants) ? Math.min(cost * 0.6, grainQ * pGrain * 0.6) : 0;
+        const f = clamp((budget + subsidy) / cost, 0, 1);
+        m.tierAcc![t] += mult * pc * f; // demand units, distributed over the tier's goods at month end
+        const ful = f * tc.fill[t];
+        sol += TIER_W[t] * ful;
+        const sp = Math.max(0, cost * f - subsidy);
+        spent += sp; budget -= sp;
+        if (f < 1) break;
+      }
+      // normalise: classes that cannot reach top tiers judge by what they expect
+      let wmax = 0; for (let t = 0; t <= maxT; t++) wmax += TIER_W[t];
+      sol = sol / wmax;
+      lc.sol[base + c] = lc.sol[base + c] * 0.6 + sol * 0.4;
+      // savings
+      const saved = inc[c] - spent;
+      lc.wealth[base + c] = Math.max(0, wealthPC * 0.995 + saved / pc);
+      unrestSol += lc.sol[base + c] * pc; popTot += pc;
     }
-    // most of what the people pay stays with lords, towns and collectors; the crown receives its share
-    taxTotal *= CROWN_SHARE;
-    if (lc.ctrl[i] === o) {
-      addIncome(n, 'tax', taxTotal);
-    } else if (lc.ctrl[i] >= 0) {
-      // occupied: occupier collects a contribution
-      addIncome(s.nations[lc.ctrl[i]], 'contributions', taxTotal * 0.5);
+    // ---- demography ----
+    // food security: own harvest plus what the market supplies
+    const grainNeed = Math.max(1, ptotH / 100 * 9);
+    const food = clamp(0.55 * Math.min(1, grainQ / grainNeed) + 0.45 * marketFill(m, G_GRAIN) * Math.min(1, lc.harvest[i] + 0.2) + 0.1, 0, 1);
+    const plague = Math.max(0, lc.plague[i]); // below 0 only marks the survivors' resistance after an outbreak (society.ts)
+    const growthMod = terr.growth;
+    for (let c = 0; c < C; c++) {
+      const pc = P[base + c]; if (pc <= 0) continue;
+      const fs = c === CL.peasants || c === CL.labourers ? food : Math.max(food, 0.8);
+      const birth = 0.0034 * (0.7 + 0.3 * growthMod) * (0.85 + 0.3 * lc.sol[base + c]);
+      const death = 0.0028 + Math.max(0, 0.6 - fs) * 0.035 + plague * 0.035 + devast * 0.003;
+      P[base + c] = Math.max(0, pc * (1 + birth - death));
     }
-  }
-  lc.income[i] = taxTotal;
-  ec.grain[i] = grainQ; ec.rgo[i] = rgoQ; ec.craft[i] = craftValue; ec.tax[i] = taxTotal; ec.income[i] = 0;
-  // ---- consumption of needs ----
-  let unrestSol = 0, popTot = 0;
-  for (let c = 0; c < C; c++) {
-    const pc = P[base + c];
-    if (pc < 1) { lc.sol[base + c] = 0.5; continue; }
-    const wealthPC = lc.wealth[base + c];
-    let budget = inc[c] + wealthPC * pc * 0.08;
-    ec.income[i] += inc[c];
-    const mult = CLASS_NEED_MULT[c];
-    const maxT = CLASS_MAX_TIER[c];
-    let sol = 0, spent = 0;
-    const tc = tierCache(m, s.priceLevel);
-    for (let t = 0; t <= 3; t++) {
-      if (t > maxT) break;
-      const cost = tc.cost[t] * mult * pc;
-      if (cost <= 0) continue;
-      // poorer classes get basic food partly through subsistence (own harvest), not only purchases
-      const subsidy = t === 0 && (c === CL.peasants) ? Math.min(cost * 0.6, grainQ * pGrain * 0.6) : 0;
-      const f = clamp((budget + subsidy) / cost, 0, 1);
-      m.tierAcc![t] += mult * pc * f; // demand units, distributed over the tier's goods at month end
-      const ful = f * tc.fill[t];
-      sol += TIER_W[t] * ful;
-      const sp = Math.max(0, cost * f - subsidy);
-      spent += sp; budget -= sp;
-      if (f < 1) break;
+    // social mobility: profitable crafts draw peasants into towns, failing crafts push artisans back
+    const urbanPull = clamp((lc.sol[base + CL.artisans] - lc.sol[base + CL.peasants]) * 0.002, -0.002, 0.002);
+    const capArt = (1 + wsLvl) * 1600 * Math.max(1, nSlots);
+    if (urbanPull > 0 && P[base + CL.artisans] < capArt) { const mv = P[base + CL.peasants] * urbanPull; P[base + CL.peasants] -= mv; P[base + CL.artisans] += mv * 0.7; P[base + CL.burghers] += mv * 0.1; P[base + CL.labourers] += mv * 0.2; }
+    else if (urbanPull < 0 && P[base + CL.artisans] > 50) { const mv = P[base + CL.artisans] * -urbanPull; P[base + CL.artisans] -= mv; P[base + CL.peasants] += mv; }
+    // manufactories turn artisans into wage workers
+    if (lc.buildings[i * B + BI.manufactory] > 0 && P[base + CL.artisans] > 100) { const mv = P[base + CL.artisans] * 0.01; P[base + CL.artisans] -= mv; P[base + CL.wage_workers] += mv; }
+    // ---- unrest ----
+    if (n) {
+      const avgSol = popTot > 0 ? unrestSol / popTot : 0.5;
+      let u = (0.55 - avgSol) * 40;
+      const taxBurden = ns[nr + 4] * 60;
+      u += taxBurden;
+      if (lc.faith[i] !== ns[nr + 12]) u += 8 * (1 - ns[nr + 5]);
+      if (lc.culture[i] !== ns[nr + 11]) u += 4;
+      u += ns[nr + 6] * 0.12 + devast * 12 + (1 - lc.control[i]) * 6 - ns[nr + 7] * 0.08 - 2;
+      u += ns[nr + 9];
+      u += ns[nr + 8] * 20;
+      if (lc.core[i] !== o) u += 6;
+      lc.unrest[i] = clamp(lc.unrest[i] * 0.7 + u * 0.3, 0, 100);
     }
-    // normalise: classes that cannot reach top tiers judge by what they expect
-    let wmax = 0; for (let t = 0; t <= maxT; t++) wmax += TIER_W[t];
-    sol = sol / wmax;
-    lc.sol[base + c] = lc.sol[base + c] * 0.6 + sol * 0.4;
-    // savings
-    const saved = inc[c] - spent;
-    lc.wealth[base + c] = Math.max(0, wealthPC * 0.995 + saved / pc);
-    unrestSol += lc.sol[base + c] * pc; popTot += pc;
+    // ---- development drifts toward what the population and buildings support ----
+    let bsum = 0; for (let b = 0; b < B; b++) bsum += lc.buildings[i * B + b];
+    let ptot = 0; for (let c = 0; c < C; c++) ptot += P[base + c];
+    const target = Math.sqrt(ptot / 1000) * 2.2 * (1 + bsum * 0.04) * (0.8 + 0.4 * lc.control[i]);
+    lc.dev[i] += (target - lc.dev[i]) * 0.02;
+    lc.devast[i] = Math.max(0, devast - 0.01);
+    // literacy grows with clergy/schools/universities
+    const lit = 0.02 + lc.buildings[i * B + BI.church] * 0.02 + lc.buildings[i * B + BI.university] * 0.08 + (n ? ns[nr + 10] : 0);
+    lc.literacy[i] += (lit - lc.literacy[i]) * 0.01;
   }
-  // ---- demography ----
-  // food security: own harvest plus what the market supplies
-  const grainNeed = Math.max(1, ptotH / 100 * 9);
-  const food = clamp(0.55 * Math.min(1, grainQ / grainNeed) + 0.45 * marketFill(m, GI.grain) * Math.min(1, lc.harvest[i] + 0.2) + 0.1, 0, 1);
-  const plague = lc.plague[i];
-  const growthMod = terr.growth;
-  for (let c = 0; c < C; c++) {
-    const pc = P[base + c]; if (pc <= 0) continue;
-    const fs = c === CL.peasants || c === CL.labourers ? food : Math.max(food, 0.8);
-    const birth = 0.0034 * (0.7 + 0.3 * growthMod) * (0.85 + 0.3 * lc.sol[base + c]);
-    const death = 0.0028 + Math.max(0, 0.6 - fs) * 0.035 + plague * 0.05 + devast * 0.003;
-    P[base + c] = Math.max(0, pc * (1 + birth - death));
-  }
-  // social mobility: profitable crafts draw peasants into towns, failing crafts push artisans back
-  const urbanPull = clamp((lc.sol[base + CL.artisans] - lc.sol[base + CL.peasants]) * 0.002, -0.002, 0.002);
-  const capArt = (1 + wsLvl) * 1600 * Math.max(1, slots.length);
-  if (urbanPull > 0 && P[base + CL.artisans] < capArt) { const mv = P[base + CL.peasants] * urbanPull; P[base + CL.peasants] -= mv; P[base + CL.artisans] += mv * 0.7; P[base + CL.burghers] += mv * 0.1; P[base + CL.labourers] += mv * 0.2; }
-  else if (urbanPull < 0 && P[base + CL.artisans] > 50) { const mv = P[base + CL.artisans] * -urbanPull; P[base + CL.artisans] -= mv; P[base + CL.peasants] += mv; }
-  // manufactories turn artisans into wage workers
-  if (lc.buildings[i * B + BI.manufactory] > 0 && P[base + CL.artisans] > 100) { const mv = P[base + CL.artisans] * 0.01; P[base + CL.artisans] -= mv; P[base + CL.wage_workers] += mv; }
-  // ---- unrest ----
-  if (n) {
-    const avgSol = popTot > 0 ? unrestSol / popTot : 0.5;
-    let u = (0.55 - avgSol) * 40;
-    const taxBurden = n.taxRate[CL.peasants] * 60;
-    u += taxBurden;
-    if (lc.faith[i] !== n.faith) u += 8 * (1 - (n ? lawEffect(n, 'tolerance') : 0));
-    if (lc.culture[i] !== n.culture) u += 4;
-    u += n.warExhaustion * 0.12 + devast * 12 + (1 - lc.control[i]) * 6 - n.concord * 0.08 - 2;
-    u += mod(n, 'unrest');
-    u += n.inflation * 20;
-    if (s.loc.core[i] !== o) u += 6;
-    lc.unrest[i] = clamp(lc.unrest[i] * 0.7 + u * 0.3, 0, 100);
-  }
-  // ---- development drifts toward what the population and buildings support ----
-  let bsum = 0; for (let b = 0; b < B; b++) bsum += lc.buildings[i * B + b];
-  let ptot = 0; for (let c = 0; c < C; c++) ptot += P[base + c];
-  const target = Math.sqrt(ptot / 1000) * 2.2 * (1 + bsum * 0.04) * (0.8 + 0.4 * lc.control[i]);
-  lc.dev[i] += (target - lc.dev[i]) * 0.02;
-  lc.devast[i] = Math.max(0, devast - 0.01);
-  // literacy grows with clergy/schools/universities
-  const lit = 0.02 + lc.buildings[i * B + BI.church] * 0.02 + lc.buildings[i * B + BI.university] * 0.08 + (n ? (n.tech[0] - 1) * 0.01 : 0);
-  lc.literacy[i] += (lit - lc.literacy[i]) * 0.01;
-  void pl;
+  return silver;
 }
 
 /** Market clearing, inter-market trade, price history. Called at the start of each month. */
@@ -279,6 +356,35 @@ function shareOut(s: GameState, m: Market, kind: 'trade' | 'tariffs', amount: nu
   for (const [o, sh] of SHARES.get(m) || []) { const n = s.nations[o]; if (n?.alive && sh > 0.002) addIncome(n, kind, amount * 0.66 * sh * (1 + (kind === 'trade' ? mod(n, 'trade') : 0))); }
 }
 
+/** Arbitrage between two linked markets for every good (one direction per good), with margins and tolls. */
+function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolean, flows: GameState['flows'], company: Nation | null) {
+  const blocked = tradeBlocked(s, a, b, sea);
+  if (blocked >= 1) return;
+  for (let g = 0; g < G; g++) {
+    const pa = a.price[g], pb = b.price[g];
+    const tc = cost * WEIGHT[g] * 4 + 0.03 * Math.min(pa, pb);
+    const tariff = (s.nations[b.owner]?.tariff ?? 0) * 0.5;
+    let from = a, to = b, diff = pb - pa * (1 + tariff) - tc;
+    if (diff < 0) { from = b; to = a; diff = pa - pb * (1 + (s.nations[a.owner]?.tariff ?? 0) * 0.5) - tc; }
+    if (diff <= 0) continue;
+    const surplus = Math.max(0, from.sAcc[g] - from.dAcc[g] * 0.7);
+    if (surplus <= 0) continue;
+    const steer = 1 + (to.merchants[to.owner] || 0) * 0.02;
+    const qty = Math.min(surplus * 0.35, surplus * clamp(diff / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked);
+    if (qty <= 1e-6) continue;
+    from.sAcc[g] -= qty; to.sAcc[g] += qty;
+    from.flowOut[g] += qty; to.flowOut[g] -= qty;
+    const value = qty * from.price[g];
+    flows.push({ from: from.id, to: to.id, good: g, qty, value });
+    // merchants of the exporting hub earn the margin (a company keeps most of it on its own route);
+    // tolls go to the importing hub's ruler
+    if (company) { addIncome(company, 'company', qty * diff * 0.03 * (1 + mod(company, 'trade'))); shareOut(s, from, 'trade', qty * diff * 0.015); }
+    else shareOut(s, from, 'trade', qty * diff * 0.04);
+    const tr = s.nations[to.owner]?.tariff ?? 0;
+    if (tr > 0) shareOut(s, to, 'tariffs', value * tr * 0.35);
+  }
+}
+
 export function clearMarkets(s: GameState, w: World) {
   const ms = s.markets;
   computeShares(s, w);
@@ -287,36 +393,18 @@ export function clearMarkets(s: GameState, w: World) {
   for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
   // 1. inter-market trade on last month's prices
   for (const a of ms) a.flowOut.fill(0);
+  const oceanOpen = !!(s.flags.ocean_open || s.flags.west_route_found);
   for (const a of ms) {
     for (const lk of a.links) {
-      if (lk.to < a.id) continue;
-      const b = ms[lk.to];
-      const blocked = tradeBlocked(s, a, b, lk.sea);
-      if (blocked >= 1) continue;
-      for (let g = 0; g < G; g++) {
-        const pa = a.price[g], pb = b.price[g];
-        const cost = lk.cost * WEIGHT[g] * GOODS[g].base * 0 + lk.cost * WEIGHT[g] * 4 + 0.03 * Math.min(pa, pb);
-        const tariff = (s.nations[b.owner]?.tariff ?? 0) * 0.5;
-        let from = a, to = b, diff = pb - pa * (1 + tariff) - cost;
-        if (diff < 0) { from = b; to = a; diff = pa - pb * (1 + (s.nations[a.owner]?.tariff ?? 0) * 0.5) - cost; }
-        if (diff <= 0) continue;
-        const surplus = Math.max(0, from.sAcc[g] - from.dAcc[g] * 0.7);
-        if (surplus <= 0) continue;
-        const steer = 1 + (to.merchants[to.owner] || 0) * 0.02;
-        const qty = Math.min(surplus * 0.35, surplus * clamp(diff / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked);
-        if (qty <= 1e-6) continue;
-        from.sAcc[g] -= qty; to.sAcc[g] += qty;
-        from.flowOut[g] += qty; to.flowOut[g] -= qty;
-        const value = qty * from.price[g];
-        flows.push({ from: from.id, to: to.id, good: g, qty, value });
-        // merchants of the exporting hub earn the margin; tolls go to the importing hub's ruler
-        const fo = s.nations[from.owner]; const tn = s.nations[to.owner];
-        void fo; void tn;
-        shareOut(s, from, 'trade', qty * diff * 0.04);
-        const tr = s.nations[to.owner]?.tariff ?? 0;
-        if (tr > 0) shareOut(s, to, 'tariffs', value * tr * 0.35);
-      }
+      if (lk.to < a.id || (lk.ocean && !oceanOpen)) continue;
+      tradeLink(s, a, ms[lk.to], lk.cost, lk.sea, flows, null);
     }
+  }
+  // chartered companies: a direct, cheap sea route between an overseas market and the home market
+  for (const co of s.companies ?? []) {
+    const n = s.nations[co.nation]; const a = ms[co.market], b = ms[co.home];
+    if (!n?.alive || !a || !b || a === b) continue;
+    tradeLink(s, a, b, 1.5, true, flows, n);
   }
   flows.sort((p, q) => q.value - p.value);
   s.flows = flows.slice(0, 400);
@@ -413,10 +501,12 @@ export function monthlyLedger(s: GameState, w: World) {
     n.debt = n.loans.reduce((a, l) => a + l.amount, 0);
     // bankruptcy when debt crushing and treasury negative
     if (n.treasury < 0) {
-      const need = -n.treasury + 50;
-      if (n.loans.length < 6 + (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day ? -10 : 0)) {
-        takeLoan(s, n, need);
-      } else declareBankruptcy(s, n);
+      if (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day) {
+        // no lender will deal with a bankrupt crown: wages go unpaid, soldiers drift away, the deficit is written off
+        n.treasury = 0; n.armyMaint = 0.5;
+        for (const a of s.armies) if (a.owner === n.id && !a.fleet) for (const r of a.regs) r.men *= a.mercenary ? 0.8 : 0.95;
+      } else if (n.loans.length < 6) takeLoan(s, n, -n.treasury + 50);
+      else declareBankruptcy(s, n);
     }
     // roll ledger
     n.income = n.incomeAcc; n.expense = n.expenseAcc; n.incomeAcc = {}; n.expenseAcc = {};
@@ -524,7 +614,8 @@ export const economy: System = {
     harvests(s, w, s.startYear);
     // warm up: two full passes to settle prices and incomes
     for (let k = 0; k < 2; k++) {
-      for (let i = 0; i < w.L; i++) if (s.loc.owner[i] >= 0 || s.loc.pop[i * C] > 0) locationStep(s, w, i);
+      PASS++;
+      stepLocations(s, w, 0, w.L, 1, true);
       clearMarkets(s, w);
       for (const n of s.nations) { n.treasury = 0; n.income = n.incomeAcc; n.incomeAcc = {}; n.expenseAcc = {}; }
       if (k === 0) retoolWorkshops(s, w, true);
@@ -534,7 +625,8 @@ export const economy: System = {
   },
   daily({ s, w }) {
     const b = s.day % BUCKETS;
-    for (let i = b; i < w.L; i += BUCKETS) locationStep(s, w, i);
+    PASS++;
+    stepLocations(s, w, b, w.L, BUCKETS, false);
   },
   monthly({ s, w }) {
     clearMarkets(s, w);

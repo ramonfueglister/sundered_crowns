@@ -38,15 +38,7 @@ export function GovernmentTab() {
     <Laws r={r} authority={p.authority} />
     <Estates r={r} />
     <div class="cols2">
-      <Section title={t('council')} id="gov-council">
-        {r.council.map((o: any) => <div class="council-row">
-          <span class="k">{L(o.name)}</span>
-          {o.char ? <Tip content={<div><b>{o.char.name}</b><div>{SK.map((k, i) => `${t(k)} ${o.char.skills[i]}`).join(' · ')}</div>{o.char.loyalty !== undefined && <div>{t('loyalty')}: {num(o.char.loyalty * (o.char.loyalty <= 1 ? 100 : 1))}</div>}{o.char.corruption !== undefined && <div>{t('corruption')}: {pct(o.char.corruption)}</div>}<div class="muted">{t('council_bonus')}: {signed(o.bonus * 100, 1)} %</div></div>}>
-            <span class="v">{o.char.name} <small class="muted">({o.char.skills.join('/')})</small></span>
-          </Tip> : <span class="v muted">{t('vacant')}</span>}
-        </div>)}
-        <div class="muted small">{t('council_hint')}</div>
-      </Section>
+      <Council r={r} authority={p.authority} />
       <Section title={t('values')} id="gov-values">
         {VALUES.map((a, k) => { const val = r.values[k] || 0; const fx = val < 0 ? a.effectsLow : a.effectsHigh; const s = Math.abs(val) / 100;
           return <Tip tag="div" content={() => <div><b>{L(val < 0 ? a.low : a.high)}</b> ({signed(val)})<Effects fx={Object.fromEntries(Object.entries(fx).map(([kk, x]) => [kk, x * s]))} /></div>}>
@@ -59,6 +51,50 @@ export function GovernmentTab() {
     </Section>
   </div>;
 }
+
+/** Council: current officials and, per office, the candidates at court who could replace them. */
+function Council({ r, authority }: { r: any; authority: number }) {
+  const [openOff, setOpen] = useState<string | null>(null);
+  const cands: any[] = r.candidates ?? [];
+  const cost = r.officeCost ?? 10;
+  const person = (c: any, office: any, bonus: number) => <div>
+    <b>{c.name}</b>{c.age !== undefined && <span class="muted"> · {c.age} {t('years_old')}</span>}
+    <div>{SK.map((k, i) => <span class={i === office.skill ? 'hl' : ''}>{t(k)} {c.skills[i]}{i < 2 ? ' · ' : ''}</span>)}</div>
+    {c.traits?.length > 0 && <div class="muted">{c.traits.map((x: string) => traitName(x)).join(', ')}</div>}
+    {c.loyalty !== undefined && <div>{t('loyalty')}: {num(c.loyalty)}</div>}
+    {c.corruption !== undefined && <div>{t('corruption')}: {pct(c.corruption)}</div>}
+    <div class="muted">{t('council_bonus')} ({L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}): {signed(bonus * 100, 1)} %</div>
+  </div>;
+  return <Section title={t('council')} id="gov-council" right={<span class="muted">{t('authority')}: <b>{num(authority)}</b></span>}>
+    {r.council.map((o: any) => { const open = openOff === o.id;
+      return <div class={`council-office ${open ? 'open' : ''}`}>
+        <div class="council-row">
+          <span class="k">{L(o.name)}</span>
+          {o.char ? <Tip content={() => person(o.char, o, o.bonus)}>
+            <span class="v">{o.char.name} <small class="muted">({o.char.skills.join('/')}) · {signed(o.bonus * 100, 1)} %</small></span>
+          </Tip> : <span class="v muted">{t('vacant')}</span>}
+          <Btn tip={t('appoint_hint').replace('{n}', String(cost))} onClick={() => setOpen(open ? null : o.id)}>{open ? t('cancel') : o.char ? t('replace_official') : t('appoint')}</Btn>
+        </div>
+        {open && <div class="council-cands">
+          {cands.length ? [...cands].sort((a, b) => (b.bonus?.[o.id] ?? 0) - (a.bonus?.[o.id] ?? 0)).map((c) => {
+            const bonus = c.bonus?.[o.id] ?? 0; const better = bonus - (o.bonus ?? 0);
+            return <div class="cand-row">
+              <Tip content={() => person(c, o, bonus)}><span class="cand-n">{c.name}{c.kin && <small class="muted"> ({t('kin')})</small>}</span></Tip>
+              <span class="cand-sk muted">{c.age} · {c.skills.map((x: number, i: number) => i === o.skill ? <b>{x}</b> : String(x)).reduce((acc: any[], x: any, i: number) => (i ? [...acc, '/', x] : [x]), [])}</span>
+              <span class={`cand-b ${better > 0.0005 ? 'pos' : better < -0.0005 ? 'neg' : 'muted'}`}>{signed(bonus * 100, 1)} %</span>
+              <Btn disabled={authority < cost ? 'not enough Authority' : null} tip={<div>{t('appoint_hint').replace('{n}', String(cost))}</div>}
+                onClick={() => act({ t: 'office', office: o.id, char: c.id }, 'bell', `${t('appointed')}: ${c.name}`).then((res) => { if (res.ok) setOpen(null); })}>{t('appoint')}</Btn>
+            </div>;
+          }) : <div class="muted small">{t('no_candidates')}</div>}
+        </div>}
+      </div>; })}
+    <div class="muted small">{t('council_hint')}</div>
+  </Section>;
+}
+const OFFICE_FX: Record<string, { en: string; de: string }> = {
+  diplomacy: { en: 'diplomacy', de: 'Diplomatie' }, tax: { en: 'taxes', de: 'Steuern' }, discipline: { en: 'discipline', de: 'Disziplin' },
+  conversion: { en: 'conversion', de: 'Bekehrung' }, spy: { en: 'espionage', de: 'Spionage' },
+};
 
 function Laws({ r, authority }: { r: any; authority: number }) {
   const [openLaw, setOpen] = useState<string | null>(null);

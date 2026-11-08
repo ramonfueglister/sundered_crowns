@@ -3,7 +3,9 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, mod, bump } from '../ctx';
 import { C, CL } from '../defs';
-import { findPath, armyMen, newArmy, availableUnits } from './military';
+import { findPath, armyMen, newArmy, availableUnits, releaseNation } from './military';
+import * as warmod from './war';
+const require_war = () => warmod;
 import { lawEffect } from './politics';
 import { chance, rand } from '../rng';
 
@@ -108,6 +110,7 @@ function explorersDay(s: GameState, w: World) {
       // first sighting of a new continent
       if (w.lon[f.loc] < -40 && !s.flags[`newworld_${n.id}`]) {
         s.flags[`newworld_${n.id}`] = s.day;
+        s.flags.ocean_open = s.flags.ocean_open || s.day;
         chronicle(s, n.id, 'discovery', { en: `Sailors of ${n.short.en} sighted unknown lands across the Ocean Sea.`, de: `Seeleute aus ${n.short.de} sichteten unbekannte Länder jenseits des Ozeans.` }, f.loc);
       }
       // long voyages cost ships
@@ -157,6 +160,98 @@ function aiExplore(s: GameState, w: World, year: number) {
   }
 }
 
+// ---------------- colonial subjects and chartered companies ----------------
+/** Lands far from the mother country: regions that count as overseas when the capital lies elsewhere. */
+const OVERSEAS = new Set(['americas', 'west_africa', 'east_africa', 'sahel']);
+const REGION_NAME: Record<string, { en: string; de: string }> = {
+  americas_n: { en: 'North America', de: 'Nordamerika' }, americas_c: { en: 'New Spain', de: 'Neuspanien' }, americas_s: { en: 'South America', de: 'Südamerika' },
+  west_africa: { en: 'Guinea', de: 'Guinea' }, east_africa: { en: 'Swahili Coast', de: 'Suaheliküste' }, sahel: { en: 'Sahel', de: 'Sahel' },
+};
+function colonialRegion(w: World, i: number): string | null {
+  const r = w.provinces[w.provOf[i]]?.region; if (!r || !OVERSEAS.has(r)) return null;
+  if (r !== 'americas') return r;
+  return w.lat[i] >= 28 ? 'americas_n' : w.lat[i] >= 8 ? 'americas_c' : 'americas_s';
+}
+const FORM_AT = 10; // owned overseas locations in one region before they become a colonial realm
+
+/** Large overseas holdings become a colonial realm under the crown: it pays a share of its revenue, grows its own
+ *  interests over the decades and may one day fight for independence. */
+function colonialSubjectsYear(s: GameState, w: World) {
+  const groups = new Map<string, number[]>();
+  for (let i = 0; i < w.L; i++) {
+    const o = s.loc.owner[i]; if (o < 0) continue;
+    const n = s.nations[o]; if (!n?.alive || n.capital < 0 || n.subjectType === 'colonial') continue;
+    const reg = colonialRegion(w, i); if (!reg) continue;
+    if (colonialRegion(w, n.capital) === reg || w.distKm(i, n.capital) < 2500) continue;
+    const k = o + ':' + reg; let g = groups.get(k); if (!g) groups.set(k, (g = [])); g.push(i);
+  }
+  for (const [k, locs] of [...groups.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    if (locs.length < FORM_AT) continue;
+    const [os, reg] = k.split(':'); const ov = s.nations[+os];
+    // an existing colonial realm of this crown in the region takes the new land instead
+    const existing = s.nations.find((x) => x.alive && x.overlord === ov.id && x.subjectType === 'colonial' && x.flags.colonial_region === regionCode(reg));
+    if (existing) { const { transferLoc } = require_war(); for (const l of locs) transferLoc(s, l, existing.id); continue; }
+    // the most populous settlement becomes the seat
+    let seat = locs[0], best = -1;
+    for (const l of locs) { let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[l * C + c]; if (p > best) { best = p; seat = l; } }
+    const ordered = [seat, ...locs.filter((l) => l !== seat)];
+    const sub = releaseNation(s, w, ov, ordered, ov.culture);
+    const rn = REGION_NAME[reg] ?? { en: reg, de: reg };
+    sub.name = { en: `${ov.adj.en} ${rn.en}`, de: `${rn.de} (${ov.short.de})` }; sub.short = { en: `${ov.adj.en} ${rn.en}`, de: `${rn.de} (${ov.short.de})` }; sub.adj = { ...ov.adj };
+    sub.faith = ov.faith; sub.gov = ov.gov; sub.rank = 'duchy'; sub.rivals = [];
+    sub.color = ov.color.map((v, j) => clamp(v + (j === 1 ? 30 : -20), 0, 255)) as any;
+    sub.overlord = ov.id; sub.subjectType = 'colonial'; sub.subjectSince = s.day; sub.libertyDesire = 5;
+    sub.flags.colonial_region = regionCode(reg);
+    for (const l of locs) s.loc.core[l] = sub.id;
+    chronicle(s, ov.id, 'colony', { en: `The overseas holdings of ${ov.short.en} were organised as ${sub.short.en}.`, de: `Die überseeischen Besitzungen von ${ov.short.de} wurden als ${sub.short.de} eingerichtet.` }, seat);
+    if (s.playerNations.includes(ov.id)) notice(s, ov.id, 'colonial_realm', { en: `Our lands overseas now form ${sub.short.en}, a colonial realm under our crown.`, de: `Unsere Länder in Übersee bilden nun ${sub.short.de}, ein Kolonialreich unter unserer Krone.` }, { loc: seat });
+  }
+}
+function regionCode(reg: string) { return ['americas_n', 'americas_c', 'americas_s', 'west_africa', 'east_africa', 'sahel'].indexOf(reg) + 1; }
+
+export function companySlots(n: Nation) { return n.tech[1] >= 12 ? 1 + Math.floor((n.tech[1] - 12) / 6) : 0; }
+/** Overseas markets a realm may charter a company for: it must hold a coastal place in that market's area, far from home. */
+export function charterOptions(s: GameState, w: World, n: Nation): number[] {
+  if (n.capital < 0) return [];
+  const home = s.loc.market[n.capital];
+  const out = new Set<number>();
+  for (let i = 0; i < w.L; i++) {
+    if (!w.coastal[i]) continue;
+    const o = s.loc.owner[i];
+    if (o !== n.id && !(o >= 0 && s.nations[o]?.overlord === n.id && s.nations[o]?.subjectType === 'colonial')) continue;
+    if (!colonialRegion(w, i) || w.distKm(i, n.capital) < 2500) continue;
+    const m = s.loc.market[i]; if (m !== home && s.markets[m]) out.add(m);
+  }
+  return [...out].sort((a, b) => a - b);
+}
+export function charterCompany(s: GameState, w: World, n: Nation, market: number): string | null {
+  if (n.tech[1] < 12) return 'our merchants are not ready (Commerce 12)';
+  const mine = (s.companies ?? []).filter((c) => c.nation === n.id);
+  if (mine.length >= companySlots(n)) return 'no charter available';
+  if (mine.some((c) => c.market === market)) return 'already chartered';
+  if (!charterOptions(s, w, n).includes(market)) return 'we hold no harbour there';
+  const cost = 600 * s.priceLevel;
+  if (n.treasury < cost) return 'not enough gold';
+  n.treasury -= cost; n.expenseAcc.charter = (n.expenseAcc.charter || 0) + cost;
+  const hub = w.names[s.markets[market].hub];
+  const name = { en: `${n.adj.en} ${hub} Company`, de: `${hub}-Kompanie (${n.short.de})` };
+  (s.companies ??= []).push({ nation: n.id, market, home: s.loc.market[n.capital], since: s.day, name });
+  chronicle(s, n.id, 'company', { en: `${n.short.en} chartered the ${name.en}.`, de: `${n.short.de} gründete die ${name.de}.` }, s.markets[market].hub);
+  return null;
+}
+function companiesYear(s: GameState, w: World) {
+  // companies lapse when their realm falls or no longer holds a harbour in the market
+  if (s.companies?.length) s.companies = s.companies.filter((c) => { const n = s.nations[c.nation]; return n?.alive && charterOptions(s, w, n).includes(c.market); });
+  for (const n of s.nations) {
+    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 12) continue;
+    const inc = Object.values(n.income).reduce((a, b) => a + b, 0);
+    if (n.treasury < Math.max(1200 * s.priceLevel, inc * 3)) continue;
+    const have = new Set((s.companies ?? []).filter((c) => c.nation === n.id).map((c) => c.market));
+    const opt = charterOptions(s, w, n).find((m) => !have.has(m));
+    if (opt !== undefined) charterCompany(s, w, n, opt);
+  }
+}
+
 export const colonial: System = {
   id: 'colonial',
   init(s) { s.loc.colonist.fill(-1); },
@@ -166,5 +261,6 @@ export const colonial: System = {
     if (date.m % 3 === 1) aiColonize(s, w);
     if (date.m === 4) aiExplore(s, w, date.y);
   },
+  yearly({ s, w }) { colonialSubjectsYear(s, w); companiesYear(s, w); },
 };
 void armyMen; void newArmy; void availableUnits;

@@ -33,7 +33,7 @@ for (const [g, ms] of Object.entries(CULTURE_GROUPS)) for (const m of ms) GROUP_
 export const ALL_CULTURES: string[] = Object.values(CULTURE_GROUPS).flat();
 
 export function cultureName(id: string): string {
-  return id.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ').replace('Fr', '').trim();
+  return id.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ').trim();
 }
 
 // Group-level traditions with real effects (applied through modifiers in the simulation)

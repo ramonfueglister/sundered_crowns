@@ -7,7 +7,7 @@ import { UNITS, B, BI, BUILDINGS, C, CL } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand } from '../commands';
 import { armyMen, armyStrength, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE } from './military';
-import { nationDev, nationLocs, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost } from './politics';
@@ -34,8 +34,8 @@ function blocPower(s: GameState, ns: number[]) { return ns.reduce((p, n) => p + 
 function neighbours(s: GameState, w: World, n: number): Set<number> {
   const out = new Set<number>();
   const o = s.loc.owner;
-  for (let i = 0; i < w.L; i++) {
-    if (o[i] !== n) continue;
+  for (const i of ownedLocs(s, n)) {
+    if (i >= w.L) continue;
     for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
       const v = w.adj[e]; if (v >= w.L) continue;
       const ov = o[v]; if (ov >= 0 && ov !== n) out.add(ov);
@@ -43,11 +43,17 @@ function neighbours(s: GameState, w: World, n: number): Set<number> {
   }
   return out;
 }
-const neighCache = new Map<number, { day: number; set: Set<number> }>();
+// Per state, and kept exactly while the ownership map is unchanged (ownerTable gives a new object whenever
+// s.loc.owner differs), so a cached set always equals a fresh one: the same in a warm process, after loading a save
+// and with several games in one process. (A cache keyed only by nation id and day leaked sets between games and kept
+// sets made before a same-day change of borders.)
+const neighCache = new WeakMap<GameState, Map<number, { tab: readonly (readonly number[])[]; set: Set<number> }>>();
 export function neighboursCached(s: GameState, w: World, n: number) {
-  const c = neighCache.get(n);
-  if (c && s.day >= c.day && s.day - c.day < 90 && !(s.flags.ownershipDirty > c.day)) return c.set;
-  const set = neighbours(s, w, n); neighCache.set(n, { day: s.day, set }); return set;
+  const tab = ownerTable(s);
+  let m = neighCache.get(s); if (!m) neighCache.set(s, (m = new Map()));
+  const c = m.get(n);
+  if (c && c.tab === tab) return c.set;
+  const set = neighbours(s, w, n); m.set(n, { tab, set }); return set;
 }
 
 // ---------------- strategic monthly ----------------
@@ -69,7 +75,7 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const so = n.standingOrders;
   // taxes: raise when in deficit, lower when unrest is high
   let avgUnrest = 0, cnt = 0;
-  for (let i = 0; i < w.L; i += 7) if (s.loc.owner[i] === n.id) { avgUnrest += s.loc.unrest[i]; cnt++; }
+  for (const i of ownedLocs(s, n.id)) if (i % 7 === 0 && i < w.L) { avgUnrest += s.loc.unrest[i]; cnt++; }
   avgUnrest = cnt ? avgUnrest / cnt : 0;
   // only cut taxes for a chest that the army and the building sites cannot use up
   const rich = !atWarNow && n.treasury > inc * 36;
@@ -132,7 +138,7 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
   const chest = inc > 0 ? Math.floor(clamp(n.treasury / (inc * 12), 0, 6)) : 0;
   if (s.constructions.filter((c) => c.nation === n.id).length >= 2 + Math.floor(nationDev(s, n.id) / 150) + chest) return;
   if (n.treasury < inc * 2) return;
-  const locs = nationLocs(s, n.id);
+  const locs = nationLocsRO(s, n.id);
   if (!locs.length) return;
   // pick the richest location lacking a useful building
   let best = -1, bb = -1, bv = 0;
@@ -284,7 +290,7 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
     const terms: PeaceTerm[] = [];
     const occ: number[] = [];
     const enemyLeader = other;
-    for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === enemyLeader && s.loc.ctrl[i] === n.id) occ.push(i);
+    for (const i of ownedLocs(s, enemyLeader)) if (i < w.L && s.loc.ctrl[i] === n.id) occ.push(i);
     const goal = new Set(war.goal.locs);
     occ.sort((a, b) => (goal.has(b) ? 1 : 0) - (goal.has(a) ? 1 : 0) || locValue(s, b) - locValue(s, a));
     const pick: number[] = [];
@@ -302,7 +308,8 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
     // losing: offer concessions the enemy would accept, or white peace
     const terms: PeaceTerm[] = [];
     if (score < -25) {
-      const mine = nationLocs(s, n.id).filter((l) => war.att.concat(war.def).includes(s.loc.ctrl[l]) && s.loc.ctrl[l] !== n.id && l !== n.capital);
+      const sides = war.att.concat(war.def);
+      const mine = nationLocs(s, n.id).filter((l) => sides.includes(s.loc.ctrl[l]) && s.loc.ctrl[l] !== n.id && l !== n.capital);
       if (mine.length) terms.push({ type: 'cede', locs: mine.slice(0, 4), to: other });
     }
     applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: terms.length ? terms.map((t) => ({ ...t })) : [], ...(terms.length ? { concede: true } : {}) } as any);
@@ -310,13 +317,25 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
 }
 
 // ---------------- military AI ----------------
+// Rebel armies in s.armies order. A rebel army is pushed as a new army and stays one (its target never changes), and
+// armies are only pushed, spliced or filtered, so the list follows the array's identity, length and last element.
+let RB: { arr: Army[] | null; len: number; last: Army | undefined; list: Army[] } = { arr: null, len: -1, last: undefined, list: [] };
+function rebelArmies(s: GameState): Army[] {
+  const arr = s.armies;
+  if (RB.arr !== arr || RB.len !== arr.length || RB.last !== arr[arr.length - 1]) {
+    const list: Army[] = []; for (const a of arr) if (a.rebels) list.push(a);
+    RB = { arr, len: arr.length, last: arr[arr.length - 1], list };
+  }
+  return RB.list;
+}
 function militaryAI(s: GameState, w: World, n: Nation) {
   const enemies = enemiesOf(s, n.id);
   const own = armiesOf(s, n.id);
   const myArmies = own.filter((a) => !a.fleet && !a.rebels && !a.battle && !a.embarkedOn && !a.retreating);
   if (!myArmies.length) return;
   // rebels in our land count as enemies to fight
-  const rebels = s.armies.filter((a) => a.rebels && a.rebels.target === n.id);
+  const rebels: Army[] = [];
+  for (const a of rebelArmies(s)) if (a.rebels!.target === n.id) rebels.push(a);
   if (!enemies.size && !rebels.length) {
     // peacetime: gather at capital, merge
     for (const a of myArmies) if (a.loc !== n.capital && !a.path.length && n.capital >= 0 && s.loc.owner[a.loc] !== n.id) applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: n.capital });
@@ -324,7 +343,17 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     if (atCap.length > 1) applyCommand(s, w, { t: 'merge', n: n.id, armies: atCap.map((a) => a.id) });
     return;
   }
-  const enemyArmies = s.armies.filter((a) => !a.fleet && (enemies.has(a.owner) && !a.rebels || (a.rebels && a.rebels.target === n.id)) && !a.embarkedOn);
+  // (without a war only rebels can be enemies, and they are already listed in s.armies order)
+  const enemyArmies: Army[] = [];
+  for (const a of enemies.size ? s.armies : rebels) if (!a.fleet && (a.rebels ? a.rebels.target === n.id : enemies.has(a.owner)) && !a.embarkedOn) enemyArmies.push(a);
+  // strengths of the enemy armies and of the enemy concentration around each (our moves and merges do not change them)
+  const E = enemyArmies.length;
+  const eStr = new Float64Array(E); for (let j = 0; j < E; j++) eStr[j] = armyStrength(s, enemyArmies[j]);
+  const eNear = new Float64Array(E).fill(-1);
+  const nearOf = (j: number) => {
+    if (eNear[j] < 0) { const l = enemyArmies[j].loc; let p = 0; for (let q = 0; q < E; q++) if (w.distKm(enemyArmies[q].loc, l) < 60) p += eStr[q]; eNear[j] = p; }
+    return eNear[j];
+  };
   // defend: enemy army in our land or near capital
   let targets: number[] | null = null;
   const claimed = new Set<number>();
@@ -338,31 +367,34 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     if (same.length) { applyCommand(s, w, { t: 'merge', n: n.id, armies: [a.id, ...same.map((x) => x.id)] }); return; }
     // nearest beatable enemy army within reach
     let tgt = -1, td = Infinity;
-    for (const e of enemyArmies) {
+    for (let j = 0; j < E; j++) {
+      const e = enemyArmies[j];
       const d = w.distKm(a.loc, e.loc);
       if (d > 600) continue;
-      const near = enemyArmies.filter((x) => w.distKm(x.loc, e.loc) < 60).reduce((p, x) => p + armyStrength(s, x), 0);
+      const near = nearOf(j);
       if (myStr > near * 1.15 && d < td) { td = d; tgt = e.loc; }
     }
     // threatened by a much stronger enemy: fall back toward capital / friendly fort
-    const threat = enemyArmies.filter((x) => w.distKm(x.loc, a.loc) < 150).reduce((p, x) => p + armyStrength(s, x), 0);
+    let threat = 0; for (let j = 0; j < E; j++) if (w.distKm(enemyArmies[j].loc, a.loc) < 150) threat += eStr[j];
     if (threat > myStr * 1.6 && n.capital >= 0 && a.loc !== n.capital) { applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: n.capital }); continue; }
     if (tgt >= 0) { applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to: tgt }); continue; }
     if (a.siege >= 0) continue; // keep sieging
     // siege: nearest enemy-controlled location of the war target (forts first), within supply
     let best = -1, bd = Infinity;
     if (!targets) {
+      // land held by the enemy or by rebels in our realm, in ascending order (each location has one controller)
       targets = [];
-      for (let i = 0; i < w.L; i++) {
-        const c = s.loc.ctrl[i];
-        if (enemies.has(c) || (c === -2 && s.loc.owner[i] === n.id)) targets.push(i);
-      }
+      const byCtrl = ctrlTable(s);
+      for (const e of enemies) for (const i of byCtrl[e + 2] ?? []) if (i < w.L) targets.push(i);
+      for (const i of byCtrl[0] ?? []) if (i < w.L && s.loc.owner[i] === n.id) targets.push(i);
+      targets.sort((p, q) => p - q);
     }
     for (const i of targets) {
-      if (w.distKm(a.loc, i) > 1500) continue;
+      const dk = w.distKm(a.loc, i);
+      if (dk > 1500) continue;
       if (claimed.has(i)) continue;
       const fort = s.loc.buildings[i * B + BI.fort];
-      let d = w.distKm(a.loc, i) * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
+      let d = dk * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
       if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
       if (d < bd) { bd = d; best = i; }
     }

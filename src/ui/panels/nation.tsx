@@ -111,31 +111,32 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   </Section>;
 }
 
-/** Known justifications visible to the UI: rivalry, claims, own core land held by them, overlord. */
-function knownCB(d: any): string | null {
-  const rel = d.rel; if (!rel) return null;
-  if (rel.rival) return 'rivalry';
-  if (rel.theirOpinion.some((x: [string, number]) => x[0] === 'claims_on_us')) return 'claim';
-  if (d.overlord === playerId.value) return null;
-  const me = nations.value[playerId.value]; if (me && me.overlord === d.id) return 'independence';
-  const r = realm.value; if (r?.spies?.some((s: any) => s.target === d.id && s.action === 'fabricate')) return 'fabricating';
-  return null;
+/** Our justifications against this realm, as the simulation sees them (src/sim/systems/war.ts casusBelliAll). */
+const cbList = (d: any): string[] => d.rel?.cb ?? [];
+function CbTip({ d }: { d: any }) {
+  const cbs = cbList(d), theirs: string[] = d.rel?.theirCb ?? [], fab = d.rel?.fabricating;
+  return <div>
+    <div class="bd-title">{t('cb_all')}</div>
+    {cbs.length ? cbs.map((c) => <div>✔ {t(`cb_${c}`)}</div>) : <div class="muted">{t('no_cb_short')}</div>}
+    {fab && <div>{t('cb_in_progress')}: {num(Math.min(100, fab.progress / Math.max(1, fab.days) * 100))} %</div>}
+    {theirs.length > 0 && <div class="neg">⚠ {t('cb_theirs')}: {theirs.map((c) => t(`cb_${c}`)).join(', ')}</div>}
+  </div>;
 }
 
 function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
   const [open, setOpen] = useState(false);
   const [goal, setGoal] = useState<WarGoal['type']>('conquest');
-  const cb = knownCB(d);
+  const cbs = cbList(d); const fabricating = !!d.rel?.fabricating;
   const truce = d.rel.treaties.includes('truce'), allied = d.rel.treaties.includes('alliance');
   const me = nations.value[playerId.value];
   const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : true) && (g === 'subjugate' ? true : true));
   return <Section title={t('declare_war')} id="nat-war" open={false}>
-    {!open ? <div class="act-row"><span class="muted">{cb && cb !== 'fabricating' ? <>{t('casus_belli')}: <b>{t(`cb_${cb}`)}</b></> : t('no_cb_short')}</span><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
+    {!open ? <div class="act-row"><Tip content={() => <CbTip d={d} />}><span class="muted">{cbs.length ? <>{t('casus_belli')}: <b>{cbs.map((c) => t(`cb_${c}`)).join(', ')}</b></> : t('no_cb_short')}</span></Tip><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
       : <div class="war-form">
         <label class="k">{t('war_goal')}</label>
         <div class="goal-grid">{goals.map((g) => <label class={`goal ${goal === g ? 'on' : ''}`}><input type="radio" name="goal" checked={goal === g} onChange={() => setGoal(g)} />{t(`goal_${g}`)}</label>)}</div>
         <div class="muted small">{t(`goalhint_${goal}`)}</div>
-        {(!cb || cb === 'fabricating') && <div class="warn-box"><b>⚠ {t('no_cb')}</b><div>{t('no_cb_hint')}</div>{cb === 'fabricating' && <div class="muted">{t('cb_fabricating')}</div>}</div>}
+        {!cbs.length && goal !== 'independence' && <div class="warn-box"><b>⚠ {t('no_cb')}</b><div>{t('no_cb_hint')}</div>{fabricating && <div class="muted">{t('cb_fabricating')}</div>}</div>}
         {truce && <div class="warn-box"><b>⚠ {t('truce_break')}</b><div>{t('truce_break_hint')}</div></div>}
         {allied && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
         <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" onClick={() => act({ t: 'declare', target: d.id, goal }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>

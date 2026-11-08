@@ -7,11 +7,11 @@ import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost } from './systems/military';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
-import { enactReform, grantPrivilege, revokePrivilege, OFFICES, estate } from './systems/politics';
+import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial } from './systems/politics';
 import { takeLoan } from './systems/economy';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
-import { startColony, startExplorer } from './systems/colonial';
+import { startColony, startExplorer, charterCompany } from './systems/colonial';
 import { answerEvent, takeDecision } from './systems/events';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
@@ -22,6 +22,9 @@ const err = (e: string): CmdResult => ({ ok: false, err: e });
 export function buildCost(s: GameState, n: { inflation: number }, b: number, level: number) {
   return BUILDINGS[b].cost * (1 + level * 0.5) * s.priceLevel * (1 + n.inflation) * 6;
 }
+
+/** How many merchants a realm can place in markets. */
+export function merchantCap(n: { tech: number[]; gov: string }): number { return 2 + Math.floor(n.tech[0] / 4) + (n.gov === 'merchant_republic' ? 2 : 0); }
 
 function myArmy(s: GameState, n: number, id: number): Army | null {
   const a = s.armies.find((x) => x.id === id);
@@ -193,14 +196,10 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'doctrine': { const e = takeDoctrine(s, w, n, cmd.group); return e ? err(e) : OK; }
     case 'agent': { const e = startAgent(s, w, n, cmd.loc, cmd.kind); return e ? err(e) : OK; }
     case 'colonize': { const e = startColony(s, w, n, cmd.loc); return e ? err(e) : OK; }
+    case 'charter': { const e = charterCompany(s, w, n, cmd.market); return e ? err(e) : OK; }
     case 'explore': { const e = startExplorer(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
     case 'spy': { const e = startSpy(s, cmd.n, cmd.target, cmd.action); return e ? err(e) : OK; }
-    case 'office': {
-      if (!OFFICES.some((o) => o.id === cmd.office)) return err('unknown office');
-      const c = s.chars[cmd.char]; if (!c || !c.alive || c.nation !== cmd.n) return err('no such person');
-      if (n.authority < 10) return err('not enough Authority');
-      n.authority -= 10; n.council[cmd.office] = c.id; c.role = 'official'; return OK;
-    }
+    case 'office': { const e = appointOfficial(s, n, cmd.office, cmd.char); return e ? err(e) : OK; }
     case 'loan': {
       if (cmd.take) {
         if (n.loans.length >= 8) return err('no lender will extend more credit');
@@ -214,7 +213,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const m = s.markets[cmd.market]; if (!m) return err('no such market');
       const cur = Object.values(n.flags).length ? 0 : 0; void cur;
       const used = s.markets.reduce((p, x) => p + (x.merchants[cmd.n] || 0), 0) - (m.merchants[cmd.n] || 0);
-      const cap = 2 + Math.floor(n.tech[0] / 4) + (n.gov === 'merchant_republic' ? 2 : 0);
+      const cap = merchantCap(n);
       const v = clamp(Math.round(cmd.amount), 0, cap - used);
       if (v <= 0 && cmd.amount > 0) return err('no merchants left');
       if (v) m.merchants[cmd.n] = v; else delete m.merchants[cmd.n];
@@ -223,6 +222,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'integrate': {
       const sub = s.nations[cmd.subject]; if (!sub || sub.overlord !== cmd.n) return err('not your subject');
       if (sub.subjectType === 'tributary') return err('tributaries cannot be integrated');
+      if (sub.subjectType === 'colonial') return err('colonial realms cannot be integrated');
       if (s.day - sub.subjectSince < 365 * 10) return err('must be a subject for ten years');
       if (sub.libertyDesire > 50) return err('too restless');
       sub.flags.integrating = s.day; return OK;

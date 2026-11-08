@@ -1,6 +1,11 @@
 // 2D canvas overlay: labels and unit counters, positioned with the map camera.
 
-export interface MapLabel { text: string; x: number; y: number; angle: number; size: number; color?: string }
+/**
+ * size: font size in map px (on screen it is size × zoom). weight: priority when labels collide (e.g. the realm's area).
+ * id: stable key for fading in and out (e.g. the nation id). room: how far (map px) the name may move across its own
+ * direction, still inside the realm, to make way for a name that would otherwise hide it.
+ */
+export interface MapLabel { text: string; x: number; y: number; angle: number; size: number; color?: string; weight?: number; id?: number; room?: number }
 export type UnitKind = 'army' | 'fleet' | 'siege' | 'battle';
 export interface MapUnit {
   id: number; x: number; y: number; color: [number, number, number]; label: string; kind: UnitKind;
@@ -15,6 +20,21 @@ export interface OverlayView {
 
 const LABEL_FONT = `"Cormorant Garamond", "EB Garamond", Garamond, Georgia, "Times New Roman", serif`;
 const UNIT_FONT = `600 11px system-ui, "Segoe UI", Roboto, sans-serif`;
+// Label sizes on screen (css px): hidden below MIN, never drawn larger than MAX; labels that would be much larger fade to a watermark.
+const LABEL_MIN = 7, LABEL_FULL = 10, LABEL_MAX = 64, LABEL_FADE_FROM = 70, LABEL_FADE_TO = 150, LABEL_FLOOR = 0.22;
+
+interface Placed { cx: number; cy: number; ux: number; uy: number; hw: number; hh: number }
+/** Separating-axis test for two rotated rectangles. */
+function obbOverlap(a: Placed, b: Placed): boolean {
+  const dx = b.cx - a.cx, dy = b.cy - a.cy;
+  const axes: [number, number][] = [[a.ux, a.uy], [-a.uy, a.ux], [b.ux, b.uy], [-b.uy, b.ux]];
+  for (const [ax, ay] of axes) {
+    const ra = a.hw * Math.abs(a.ux * ax + a.uy * ay) + a.hh * Math.abs(-a.uy * ax + a.ux * ay);
+    const rb = b.hw * Math.abs(b.ux * ax + b.uy * ay) + b.hh * Math.abs(-b.uy * ax + b.ux * ay);
+    if (Math.abs(dx * ax + dy * ay) > ra + rb) return false;
+  }
+  return true;
+}
 
 export class Overlay {
   canvas: HTMLCanvasElement;
@@ -22,6 +42,10 @@ export class Overlay {
   labels: MapLabel[] = [];
   units: MapUnit[] = [];
   private dpr = 1;
+  private fade = new Map<number | string, number>(); // current opacity per label, eased toward its target
+  private shift = new Map<number | string, number>(); // offset (map px, across the text) a label last moved to, tried first
+  private lastTime = -1;
+  private widths = new Map<string, number>();       // text width at 100 px without letter spacing
 
   constructor(host: HTMLCanvasElement) {
     this.canvas = document.createElement('canvas');
@@ -57,35 +81,100 @@ export class Overlay {
     const saved = this.ctx; const savedDpr = this.dpr;
     this.ctx = ctx; this.dpr = scale;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.drawLabels(v); this.drawUnits(v);
+    this.drawLabels(v, true); this.drawUnits(v);
     this.ctx = saved; this.dpr = savedDpr;
   }
 
-  private drawLabels(v: OverlayView) {
+  private textWidth100(text: string): number {
+    let w = this.widths.get(text);
+    if (w === undefined) {
+      const ctx = this.ctx;
+      (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+      ctx.font = `600 100px ${LABEL_FONT}`;
+      w = ctx.measureText(text).width;
+      if (this.widths.size > 4000) this.widths.clear();
+      this.widths.set(text, w);
+    }
+    return w;
+  }
+
+  /**
+   * Realm names like on a printed map: the size follows the realm's extent but stays between LABEL_MIN and LABEL_MAX on screen,
+   * names that would be far larger fade out, and of two overlapping names the smaller realm's yields.
+   */
+  private drawLabels(v: OverlayView, instant = false) {
     const ctx = this.ctx;
+    const dt = instant || this.lastTime < 0 ? 1 : Math.max(0, Math.min(0.25, v.time - this.lastTime));
+    if (!instant) this.lastTime = v.time;
+    type Cand = { l: MapLabel; key: number | string; fs: number; ds: number; spacing: number; alpha: number; tier: number; box: Placed; sx: number; sy: number };
+    const cands: Cand[] = [];
+    for (let i = 0; i < this.labels.length; i++) {
+      const l = this.labels[i];
+      const fs = l.size * v.zoom;
+      const key = l.id ?? `${l.text}@${i}`;
+      if (fs < LABEL_MIN) { if (!instant) this.fade.delete(key); continue; }
+      const ds = Math.min(fs, LABEL_MAX);
+      const [sx, sy] = v.toScreen(l.x, l.y);
+      const n = Math.max(1, l.text.length);
+      // oversized names spread their letters a little, as engravers did across large lands
+      const spacing = ds * (ds > 18 ? 0.18 : 0.06) + (fs > ds ? Math.min(ds * 0.5, (fs - ds) * 0.08) : 0);
+      const tw = this.textWidth100(l.text) * ds / 100 + spacing * (n - 1);
+      const hw = tw / 2 + 4, hh = ds * 0.42 + 2;
+      const reach = hw + hh;
+      if (sx < -reach || sy < -reach || sx > v.cssW + reach || sy > v.cssH + reach) continue;
+      let alpha = Math.min(1, (fs - LABEL_MIN) / (LABEL_FULL - LABEL_MIN));
+      if (fs > LABEL_FADE_FROM) alpha *= Math.max(LABEL_FLOOR, 1 - (1 - LABEL_FLOOR) * (fs - LABEL_FADE_FROM) / (LABEL_FADE_TO - LABEL_FADE_FROM));
+      const c = Math.cos(l.angle), s = Math.sin(l.angle);
+      cands.push({ l, key, fs, ds, spacing, alpha, tier: fs > LABEL_FADE_FROM ? 1 : 0, box: { cx: sx, cy: sy, ux: c, uy: s, hw, hh }, sx, sy });
+    }
+    // legible names first (larger realms first), then oversized ones (least oversized first);
+    // a name is shown only where it does not cover one already placed
+    cands.sort((a, b) => a.tier - b.tier || (a.tier ? a.fs - b.fs : (b.l.weight ?? b.fs) - (a.l.weight ?? a.fs)));
+    const placed: Placed[] = [];
+    const k = 1 - Math.exp(-dt * 7);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
-    for (const l of this.labels) {
-      const fs = l.size * v.zoom;
-      if (fs < 6 || fs > 220) continue;
-      const a = Math.min(1, (fs - 6) / 5) * Math.min(1, (220 - fs) / 80);
+    const seen = new Set<number | string>();
+    const fits = (b: Placed) => {
+      for (const p of placed) {
+        if (Math.abs(p.cx - b.cx) > p.hw + p.hh + b.hw + b.hh || Math.abs(p.cy - b.cy) > p.hw + p.hh + b.hw + b.hh) continue;
+        if (obbOverlap(p, b)) return false;
+      }
+      return true;
+    };
+    for (const cd of cands) {
+      // a name that is covered tries a few places across its direction (within its realm), the last one used first
+      const l0 = cd.l, room = l0.room ?? 0;
+      const tries = [this.shift.get(cd.key) ?? 0, 0];
+      if (room > 0) { const step = cd.box.hh * 1.1 / v.zoom; for (let j = 1; j <= 6 && j * step <= room; j++) tries.push(j * step, -j * step); }
+      let b = cd.box, free = false, used = 0;
+      for (const d of tries) {
+        if (Math.abs(d) > room) continue;
+        let tb = cd.box;
+        if (d) { const [tx, ty] = v.toScreen(l0.x - Math.sin(l0.angle) * d, l0.y + Math.cos(l0.angle) * d); tb = { ...cd.box, cx: tx, cy: ty }; }
+        if (fits(tb)) { b = tb; free = true; used = d; break; }
+      }
+      if (free) { placed.push(b); cd.sx = b.cx; cd.sy = b.cy; if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
+      const target = free ? cd.alpha : 0;
+      const cur = instant ? target : (this.fade.get(cd.key) ?? 0);
+      const a = instant ? target : cur + (target - cur) * k;
+      seen.add(cd.key);
+      if (!instant) this.fade.set(cd.key, a);
       if (a <= 0.02) continue;
-      const [sx, sy] = v.toScreen(l.x, l.y);
-      const reach = fs * Math.max(4, l.text.length) * 0.8;
-      if (sx < -reach || sy < -reach || sx > v.cssW + reach || sy > v.cssH + reach) continue;
+      const { l, ds, spacing } = cd;
       ctx.save();
-      ctx.translate(sx, sy); ctx.rotate(l.angle);
+      ctx.translate(cd.sx, cd.sy); ctx.rotate(l.angle);
       ctx.globalAlpha = a * 0.92;
-      ctx.font = `600 ${fs.toFixed(1)}px ${LABEL_FONT}`;
-      const spacing = fs > 18 ? fs * 0.18 : fs * 0.06;
+      ctx.font = `600 ${ds.toFixed(1)}px ${LABEL_FONT}`;
       (ctx as unknown as { letterSpacing: string }).letterSpacing = spacing.toFixed(1) + 'px';
-      ctx.lineWidth = Math.max(2, fs * 0.16);
+      ctx.lineWidth = Math.max(2, ds * 0.16);
       ctx.strokeStyle = 'rgba(250, 242, 222, 0.55)';
       ctx.strokeText(l.text, 0, 0);
       ctx.fillStyle = l.color ?? 'rgba(38, 28, 18, 0.95)';
       ctx.fillText(l.text, 0, 0);
       ctx.restore();
     }
+    if (!instant) for (const key of [...this.fade.keys()]) if (!seen.has(key)) { this.fade.delete(key); this.shift.delete(key); }
     (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
   }
 

@@ -2,17 +2,30 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, openPanel } from '../store';
-import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, LocName, useQuery, act, t, L, num, signed, pct, Tip, realm, daysText, locName, namesVersion, selectArmy, selectLoc, fmtDateShort, Coa } from './common';
+import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, LocName, useQuery, act, t, L, num, signed, pct, Tip, Breakdown, Reasons, realm, daysText, locName, namesVersion, selectArmy, selectLoc, fmtDateShort, Coa } from './common';
 import { sfx } from '../audio';
 
 // ---------------------------------------------------------------- wars (shared)
+/** Tooltip body: war score and its parts from the player's side. */
+export function WarScoreTip({ w, pid }: { w: any; pid: number }) {
+  const sign = w.def.includes(pid) ? -1 : 1; const p = w.parts;
+  const total = w.score * sign;
+  return <div>
+    {p ? <Breakdown title={`${t('war_score')} · ${t('ws_us')}`} digits={1} total={total}
+      rows={[[t('ws_battles'), p.battles * sign], [t('ws_occupation'), p.occupation * sign], [t('ws_capital'), p.capital * sign], [t('ws_ticking'), p.ticking * sign]]} />
+      : <div><b>{t('war_score')}</b> {signed(total)}</div>}
+    {p && Math.abs(p.battles + p.occupation + p.capital + p.ticking) > 100 && <div class="muted">{t('ws_capped')}</div>}
+    <div class="muted">{t('war_score_hint')}</div>
+  </div>;
+}
+
 export function WarCard({ w, inPeace }: { w: any; inPeace?: boolean }) {
   const pid = playerId.value;
   const us = w.att.includes(pid) ? 'att' : w.def.includes(pid) ? 'def' : null;
   const sc = us === 'def' ? -w.score : w.score;
   const offers = w.offers.filter((o: any) => o.to === pid);
   return <div class="war-card">
-    <div class="war-h"><b>{L(w.name)}</b>{us && <Tip content={<div><b>{t('war_score')}</b><div class="muted">{t('war_score_hint')}</div></div>}><span class={`ws ${sc >= 0 ? 'pos' : 'neg'}`}>{signed(sc)}</span></Tip>}</div>
+    <div class="war-h"><b>{L(w.name)}</b>{us && <Tip content={() => <WarScoreTip w={w} pid={pid} />}><span class={`ws ${sc >= 0 ? 'pos' : 'neg'}`}>{signed(sc)}</span></Tip>}</div>
     <div class="war-sides">
       <div class="side"><NList ids={w.att} size={16} /></div>
       <div class="vs">⚔</div>
@@ -58,11 +71,14 @@ function RelRow({ id }: { id: number }) {
 }
 function SubjectRow({ id }: { id: number }) {
   const [d] = useQuery<any>({ q: 'nation', nation: id }, [id], 5000);
-  const ov = d?.rel?.theirOpinion?.find((x: [string, number]) => x[0] === 'overlord');
-  const ld = ov ? Math.max(0, Math.round((-ov[1] - 10) / 0.3)) : null;
+  const sub = d?.subject;
+  const ld = sub ? Math.round(sub.libertyDesire) : null;
   return <div class="subj-row">
     <NLink id={id} size={20} />
-    {ld !== null ? <Tip content={<div><b>{t('liberty_desire')}</b> {ld}<div class="muted">{t('liberty_hint')}</div></div>}><span class="ld"><Bar value={ld} max={100} color={ld > 50 ? '#9b2a20' : '#c08a2a'} /> {ld}</span></Tip> : <span class="muted">…</span>}
+    {ld !== null ? <Tip content={() => <div><b>{t('liberty_desire')}</b> {ld}
+      <Reasons title={`${t('liberty_drift')} ${num(sub.target)}`} rows={sub.parts} total={sub.target} />
+      {sub.integrating && <div>{t('integrating_now')}: {num(sub.integration)} %</div>}
+      <div class="muted">{t('liberty_hint')}</div></div>}><span class="ld"><Bar value={ld} max={100} color={ld > 50 ? '#9b2a20' : '#c08a2a'} /> {ld}</span></Tip> : <span class="muted">…</span>}
     <Btn tip={t('integrate_hint')} disabled={ld !== null && ld > 50 ? 'too restless' : null} onClick={() => act({ t: 'integrate', subject: id }, 'bell')}>{t('integrate')}</Btn>
   </div>;
 }
@@ -88,12 +104,12 @@ export function MilitaryTab() {
     </div>
     <Section title={t('armies')} id="mil-armies">
       {land.length ? <table class="tbl"><thead><tr><th>{t('name')}</th><th>{t('location')}</th><th class="r">{t('men')}</th><th>{t('morale')}</th><th>{t('general')}</th><th>{t('status')}</th></tr></thead>
-        <tbody>{land.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{a.name}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</td><td>{locName(a.loc)}</td><td class="r">{num(a.men)}</td><td><Bar value={a.morale} color="#4d7a3a" /></td><td>{a.general || <span class="muted">—</span>}</td>
+        <tbody>{land.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</td><td>{locName(a.loc)}</td><td class="r">{num(a.men)}</td><td><Bar value={a.morale} color="#4d7a3a" /></td><td>{a.general || <span class="muted">—</span>}</td>
           <td class="muted">{a.battle ? <span class="neg">{t('in_battle')}</span> : a.siege >= 0 ? t('besieging') : a.path.length ? <>→ {locName(a.path[a.path.length - 1])}</> : a.embarked ? t('embarked') : t('idle')}</td></tr>)}</tbody></table> : <div class="muted small">{t('no_armies')}</div>}
     </Section>
     <Section title={t('fleets')} id="mil-fleets">
       {fleets.length ? <table class="tbl"><thead><tr><th>{t('name')}</th><th>{t('location')}</th><th class="r">{t('ships')}</th><th>{t('status')}</th></tr></thead>
-        <tbody>{fleets.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{a.name}</td><td>{locName(a.loc)}</td><td class="r">{num(a.men)}</td><td class="muted">{a.battle ? t('in_battle') : a.path.length ? <>→ {locName(a.path[a.path.length - 1])}</> : t('idle')}</td></tr>)}</tbody></table> : <div class="muted small">{t('no_fleets')}</div>}
+        <tbody>{fleets.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{L(a.name)}</td><td>{locName(a.loc)}</td><td class="r">{num(a.men)}</td><td class="muted">{a.battle ? t('in_battle') : a.path.length ? <>→ {locName(a.path[a.path.length - 1])}</> : t('idle')}</td></tr>)}</tbody></table> : <div class="muted small">{t('no_fleets')}</div>}
     </Section>
     <div class="cols2">
       <Section title={t('recruit_queue')} id="mil-queue">

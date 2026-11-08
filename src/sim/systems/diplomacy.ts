@@ -171,18 +171,30 @@ export function acceptProposal(s: GameState, w: World, a: number, b: number, act
 }
 
 // ---------------- subjects ----------------
+/** What a subject's liberty desire drifts toward, by cause (relative strength, opinion, overlord's weakness, subject type). */
+export function libertyParts(s: GameState, w: World, n: Nation, ov: Nation): [string, number][] {
+  const rs = nationDev(s, n.id) / Math.max(1, nationDev(s, ov.id));
+  return [
+    ['subject_strength', rs * 120], ['opinion_of_overlord', -totalOpinion(s, w, n.id, ov.id) * 0.3], ['overlord_concord', ov.concord < 0 ? 15 : 0],
+    ['overlord_war_exhaustion', ov.warExhaustion > 40 ? 10 : 0], ['tributary', n.subjectType === 'tributary' ? 10 : 0],
+    // colonial realms drift apart from the crown over generations
+    ['colonial_distance', n.subjectType === 'colonial' ? 5 + Math.min(45, (s.day - n.subjectSince) / 365 * 0.35) : 0],
+  ];
+}
+export function libertyTarget(s: GameState, w: World, n: Nation, ov: Nation): number {
+  let t = 0; for (const [, v] of libertyParts(s, w, n, ov)) t += v;
+  return clamp(t, 0, 100);
+}
 function subjectsMonth(s: GameState, w: World) {
   for (const n of s.nations) {
     if (!n.alive || n.overlord < 0) continue;
     const ov = s.nations[n.overlord];
     if (!ov?.alive) { n.overlord = -1; n.subjectType = null; continue; }
-    // liberty desire: relative strength, opinion, overlord's wars and weakness
-    const rs = nationDev(s, n.id) / Math.max(1, nationDev(s, ov.id));
-    const target = clamp(rs * 120 - totalOpinion(s, w, n.id, ov.id) * 0.3 + (ov.concord < 0 ? 15 : 0) + (ov.warExhaustion > 40 ? 10 : 0) + (n.subjectType === 'tributary' ? 10 : 0), 0, 100);
+    const target = libertyTarget(s, w, n, ov);
     n.libertyDesire += (target - n.libertyDesire) * 0.05;
     // tribute
-    if (n.subjectType === 'tributary' || n.subjectType === 'vassal') {
-      const t = (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1);
+    if (n.subjectType === 'tributary' || n.subjectType === 'vassal' || n.subjectType === 'colonial') {
+      const t = (n.subjectType === 'colonial' ? (n.income.tax || 0) * 0.25 + (n.income.trade || 0) * 0.25 : (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1));
       if (t > 0) { n.treasury -= t; n.expenseAcc.tribute = (n.expenseAcc.tribute || 0) + t; ov.treasury += t; ov.incomeAcc.tribute = (ov.incomeAcc.tribute || 0) + t; }
     }
     // integration in progress

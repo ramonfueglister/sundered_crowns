@@ -57,13 +57,36 @@ export function addOpinion(s: GameState, a: number, b: number, id: string, v: nu
   if (ex && !stack) { ex.v = v; ex.until = s.day + days; } else if (ex && stack) { ex.v = Math.max(-200, Math.min(200, ex.v + v)); ex.until = s.day + days; }
   else r.mods.push({ id, v, until: s.day + days });
 }
+/** Index of s.treaties by pair and by nation, in array order. Treaties are only ever pushed onto s.treaties or
+ *  filtered into a new array (entries are not edited in place), so the index follows the array's identity and
+ *  length; pushes are appended incrementally. Lookups give exactly the results of a scan of s.treaties. */
+const TI: { arr: Treaty[] | null; len: number; last: Treaty | undefined; pair: Map<number, Treaty[]>; nat: Treaty[][] } = { arr: null, len: 0, last: undefined, pair: new Map(), nat: [] };
+const pairKey = (a: number, b: number) => (a < b ? a * 65536 + b : b * 65536 + a);
+function indexTreaty(t: Treaty) {
+  const k = pairKey(t.a, t.b); let l = TI.pair.get(k); if (!l) TI.pair.set(k, (l = [])); l.push(t);
+  (TI.nat[t.a] ??= []).push(t); if (t.b !== t.a) (TI.nat[t.b] ??= []).push(t);
+}
+function treatyIndex(s: GameState) {
+  const arr = s.treaties;
+  if (TI.arr === arr && TI.len === arr.length && TI.last === arr[arr.length - 1]) return TI;
+  if (TI.arr === arr && TI.len > 0 && arr.length > TI.len && arr[TI.len - 1] === TI.last) {
+    for (let i = TI.len; i < arr.length; i++) indexTreaty(arr[i]);
+  } else {
+    TI.pair = new Map(); TI.nat = [];
+    for (const t of arr) indexTreaty(t);
+  }
+  TI.arr = arr; TI.len = arr.length; TI.last = arr[arr.length - 1];
+  return TI;
+}
 export function hasTreaty(s: GameState, a: number, b: number, type: Treaty['type']): boolean {
-  for (const t of s.treaties) if (t.type === type && ((t.a === a && t.b === b) || (t.a === b && t.b === a)) && t.until > s.day) return true;
+  const l = treatyIndex(s).pair.get(pairKey(a, b)); if (!l) return false;
+  for (const t of l) if (t.type === type && ((t.a === a && t.b === b) || (t.a === b && t.b === a)) && t.until > s.day) return true;
   return false;
 }
 export function treatiesOf(s: GameState, a: number, type: Treaty['type']): number[] {
   const out: number[] = [];
-  for (const t of s.treaties) if (t.type === type && t.until > s.day) { if (t.a === a) out.push(t.b); else if (t.b === a) out.push(t.a); }
+  const l = treatyIndex(s).nat[a]; if (!l) return out;
+  for (const t of l) if (t.type === type && t.until > s.day) { if (t.a === a) out.push(t.b); else if (t.b === a) out.push(t.a); }
   return out;
 }
 export function allies(s: GameState, a: number) { return treatiesOf(s, a, 'alliance').filter((x) => s.nations[x].alive); }

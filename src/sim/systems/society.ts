@@ -5,30 +5,36 @@ import { type System, clamp, chronicle, notice, mod } from '../ctx';
 import { B, BI, C } from '../defs';
 import { MinHeap } from '../setup';
 import { lawEffect, councilBonus } from './politics';
+import { ownedLocs } from './war';
 import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
 import { chance } from '../rng';
 
 // ---------------- control ----------------
 /** Distance-based control from the capital and administrative seats (roads extend reach). */
-let DIST: Float64Array | null = null; let STAMP: Int32Array | null = null; let STAMPV = 0;
+let DIST: Float64Array | null = null; let STAMP: Int32Array | null = null; let DONE: Int32Array | null = null; let STAMPV = 0;
+let CHEAP: MinHeap | null = null; // created on first use (setup.ts imports the systems)
 export function computeControl(s: GameState, w: World, n: Nation) {
   const L = w.L, N = w.N;
-  if (!DIST || DIST.length !== N) { DIST = new Float64Array(N); STAMP = new Int32Array(N); }
-  const dist = DIST, stamp = STAMP!; const sv = ++STAMPV;
-  const get = (i: number) => (stamp[i] === sv ? dist[i] : Infinity);
-  const own: number[] = [];
-  for (let i = 0; i < L; i++) if (s.loc.owner[i] === n.id) own.push(i);
+  if (!DIST || DIST.length !== N) { DIST = new Float64Array(N); STAMP = new Int32Array(N); DONE = new Int32Array(N); }
+  const dist = DIST, stamp = STAMP!, done = DONE!; const sv = ++STAMPV;
+  const own = ownedLocs(s, n.id);
   if (!own.length) return;
-  const heap = new MinHeap();
+  const heap = (CHEAP ??= new MinHeap()); heap.clear();
   const srcs = own.filter((i) => i === n.capital || s.loc.buildings[i * B + BI.admin] > 0);
   if (!srcs.length) srcs.push(own[0]);
   for (const i of srcs) { const d0 = i === n.capital ? 0 : 60; stamp[i] = sv; dist[i] = d0; heap.push(d0, i); }
   const reach = 520 * (1 + lawEffect(n, 'admin') + mod(n, 'control') + n.tech[0] * 0.015);
-  const lim = reach * 1.6;
+  // beyond 0.88/0.75 of the reach the target is at its 0.12 floor, the same as for land the search never
+  // reaches, so it can stop there (distances inside the limit are unaffected)
+  const lim = reach * 1.18;
   const owner = s.loc.owner, bld = s.loc.buildings, rough = w.rough, adjS = w.adjStart, adj = w.adj, adjKm = w.adjKm;
+  // only the realm's own land is read afterwards: once all of it is settled (popped at its final distance) nothing
+  // further can lower those distances, so the search ends there
+  let left = own.length;
   while (heap.size) {
     const d = heap.peekKey(); const u = heap.popVal();
-    if (d > get(u) || d > lim) continue;
+    if (d > (stamp[u] === sv ? dist[u] : Infinity) || d > lim) continue;
+    if (u < L && owner[u] === n.id && done[u] !== sv) { done[u] = sv; if (--left === 0) break; }
     for (let e = adjS[u]; e < adjS[u + 1]; e++) {
       const v = adj[e];
       let cost = adjKm[e];
@@ -39,11 +45,12 @@ export function computeControl(s: GameState, w: World, n: Nation) {
         cost *= 1 + rough[v] * 0.0004;
       }
       const nd = d + cost;
-      if (nd < get(v) && nd <= lim) { stamp[v] = sv; dist[v] = nd; heap.push(nd, v); }
+      if (nd < (stamp[v] === sv ? dist[v] : Infinity) && nd <= lim) { stamp[v] = sv; dist[v] = nd; heap.push(nd, v); }
     }
   }
+  const far = reach * 2;
   for (const i of own) {
-    const d = stamp[i] === sv ? dist[i] : reach * 2;
+    const d = stamp[i] === sv ? dist[i] : far;
     const target = clamp(1 - d / reach * 0.75, 0.12, 1) * (s.loc.ctrl[i] === n.id ? 1 : 0.4);
     s.loc.control[i] += (target - s.loc.control[i]) * 0.25;
   }
@@ -114,28 +121,94 @@ function assimilationYear(s: GameState, w: World) {
 }
 
 // ---------------- plague ----------------
+// s.loc.plague[i] > 0: an outbreak of that intensity (0..1) is raging. < 0: the place was struck recently and its
+// survivors resist the next wave; the value climbs back to 0 over PLAGUE_IMMUNE_MONTHS and the place grows
+// susceptible again, so waves return every 10–15 years. Waves travel along roads, along coasts by ship and between
+// the hubs of linked markets with the merchants; they die out where everyone has had it.
+const PLAGUE_DECAY = 0.1; // intensity a local outbreak loses per month (≈ 5–9 months)
+const PLAGUE_IMMUNE_MONTHS = 12 * 11;
+const PLAGUE_PORT_CHANCE = 0.06; // per month and draw (two draws among the market hubs), for a port long spared
 export function seedPlague(s: GameState, w: World, loc: number, intensity = 0.8) {
   if (loc < 0 || loc >= w.L) return;
   s.loc.plague[loc] = Math.max(s.loc.plague[loc], intensity);
 }
-function plagueMonth(s: GameState, w: World, month: number) {
-  const P = s.loc.plague; const add: [number, number][] = [];
-  const summer = month >= 4 && month <= 9 ? 1.4 : 0.6;
-  for (let i = 0; i < w.L; i++) {
-    const p = P[i]; if (p <= 0.01) { P[i] = 0; continue; }
-    for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
-      let v = w.adj[e];
-      if (v >= w.L) { // ships carry it along the coast
-        for (let e2 = w.adjStart[v]; e2 < w.adjStart[v + 1]; e2++) { const u = w.adj[e2]; if (u < w.L && w.coastal[u] && P[u] < 0.05 && ((u * 31 + s.day) % 100) < p * 6 * summer) add.push([u, p * 0.8]); }
-        continue;
+/** Deterministic uniform [0,1) from three integers (target, source/salt, day). */
+function plagueHash(a: number, b: number, c: number): number {
+  let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((b + 0x7f4a7c15) | 0, 0xc2b2ae35) ^ Math.imul(c | 0, 0x27d4eb2f);
+  h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; h = Math.imul(h, 0x297a2d39); h ^= h >>> 15;
+  return (h >>> 0) / 4294967296;
+}
+/** 0..1: how readily a place takes the sickness (1 = never struck, or long ago). */
+export function plagueSusceptibility(s: GameState, i: number) { const p = s.loc.plague[i]; return p >= 0 ? 1 : (1 + p) * (1 + p); }
+/** How hard an outbreak strikes a place: crowded towns and ports worst. */
+function plagueCap(s: GameState, w: World, i: number) { return Math.min(0.95, 0.42 + 0.4 * Math.min(1, s.loc.dev[i] / 22) + (w.coastal[i] ? 0.08 : 0)); }
+/** Spreading force of an outbreak of intensity p (weak sporadic cases barely travel). */
+const plagueForce = (p: number) => clamp((p - 0.22) / 0.45, 0, 1.4);
+export function plagueMonth(s: GameState, w: World, month: number) {
+  const P = s.loc.plague, L = w.L, dev = s.loc.dev, day = s.day;
+  const season = month >= 4 && month <= 9 ? 1 : month === 3 || month === 10 ? 0.6 : 0.3; // fleas need warmth
+  const add: number[] = []; // pairs (target, intensity)
+  const tryInfect = (v: number, src: number, p: number, prob: number, salt: number) => {
+    if (P[v] > 0.02) return;
+    const sus = P[v] >= 0 ? 1 : (1 + P[v]) * (1 + P[v]);
+    if (sus <= 0.01 || plagueHash(v, src * 8 + salt, day) >= prob * sus) return;
+    add.push(v, Math.min(plagueCap(s, w, v), p + 0.15) * (0.55 + 0.45 * sus));
+  };
+  for (let i = 0; i < L; i++) {
+    const p = P[i];
+    if (p <= 0.02) { P[i] = p < 0 ? Math.min(0, p + 1 / PLAGUE_IMMUNE_MONTHS) : 0; continue; }
+    const f = plagueForce(p) * season;
+    if (f > 0) {
+      const portI = w.coastal[i] ? Math.min(1.5, 0.25 + dev[i] / 18) : 0;
+      for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
+        const v = w.adj[e];
+        if (v < L) { tryInfect(v, i, p, 0.8 * f * (0.6 + Math.min(1, dev[v] / 18)), 0); continue; }
+        if (!portI) continue;
+        // ships carry it to the ports of this sea zone and, from greater ports, of the neighbouring zones
+        for (let e2 = w.adjStart[v]; e2 < w.adjStart[v + 1]; e2++) {
+          const u = w.adj[e2];
+          if (u < L) { if (u !== i && w.coastal[u]) tryInfect(u, i, p, 0.09 * f * portI * Math.min(1.5, 0.15 + dev[u] / 18), 1); continue; }
+          if (portI < 0.7) continue;
+          for (let e3 = w.adjStart[u]; e3 < w.adjStart[u + 1]; e3++) {
+            const x = w.adj[e3];
+            if (x < L && x !== i && w.coastal[x] && dev[x] > 8) tryInfect(x, i, p, 0.035 * f * portI * Math.min(1.5, dev[x] / 18), 2);
+          }
+        }
       }
-      if (P[v] > 0.05) continue;
-      const density = Math.min(2, s.loc.dev[v] / 15);
-      if (((v * 131 + i * 7 + s.day) % 1000) < p * 220 * summer * (0.3 + density)) add.push([v, p * 0.9]);
     }
-    P[i] = Math.max(0, p - 0.18);
+    // the outbreak burns out; the survivors keep their resistance for about a decade
+    P[i] = p - PLAGUE_DECAY > 0.02 ? p - PLAGUE_DECAY : -1;
   }
-  for (const [v, p] of add) if (P[v] < 0.05) P[v] = Math.min(1, p);
+  // merchants carry it between the hubs of linked markets
+  for (const m of s.markets) {
+    const p = P[m.hub]; if (p <= 0.3) continue;
+    const f = plagueForce(p) * season;
+    for (const lk of m.links) if (!lk.ocean) tryInfect(s.markets[lk.to].hub, m.hub, p, (lk.sea ? 0.3 : 0.2) * f, 3);
+  }
+  for (let k = 0; k < add.length; k += 2) { const v = add[k]; if (P[v] <= 0.02 && add[k + 1] > P[v]) P[v] = add[k + 1]; }
+}
+
+/** Resistance at the start: in 1356 the survivors of the great mortality of 1347–51 are still largely spared for a
+ *  few years (the next wave is due around 1361); in later starts the last wave lies a varying number of years back. */
+function plagueInit(s: GameState, w: World) {
+  if (s.startYear >= 1720) return;
+  const P = s.loc.plague;
+  for (let i = 0; i < w.L; i++) {
+    if (P[i] !== 0) continue;
+    const h = plagueHash(i, s.startYear, 0x1347);
+    P[i] = s.startYear < 1360 ? -(0.52 + 0.16 * h) : -0.85 * h;
+  }
+}
+/** Sporadic outbreaks in great ports until the plague retreats from Europe: ships bring it from the Levant and the
+ *  Black Sea, and where a town has long been spared it may start a new wave. */
+export function plaguePorts(s: GameState, w: World, y: number) {
+  if (y >= 1720) return;
+  const ms = s.markets; if (!ms.length) return;
+  for (let k = 0; k < 2; k++) {
+    const i = ms[Math.floor(plagueHash(s.day, k, 0x5eed) * ms.length)].hub;
+    // (Old World only: the sickness cannot cross the ocean before the ships do)
+    if (w.coastal[i] && w.lon[i] > -30 && plagueSusceptibility(s, i) > 0.5 && chance(s.rng, PLAGUE_PORT_CHANCE)) seedPlague(s, w, i, 0.6);
+  }
 }
 
 // ---------------- climate: seasons and snow ----------------
@@ -159,6 +232,7 @@ export const society: System = {
     for (const n of s.nations) if (n.alive) computeControl(s, w, n);
     for (let i = 0; i < w.L; i++) if (s.loc.owner[i] >= 0) s.loc.control[i] = Math.max(s.loc.control[i], 0.2);
     climateMonth(s, w, 0);
+    plagueInit(s, w);
   },
   monthly({ s, w, date }) {
     // control for a third of the realms each month (all of them if borders changed recently)
@@ -168,11 +242,7 @@ export const society: System = {
     agentsMonth(s, w);
     plagueMonth(s, w, date.m);
     climateMonth(s, w, date.m);
-    // sporadic outbreaks in great ports until the plague retreats from Europe
-    if (date.y < 1720) for (let k = 0; k < 2; k++) {
-      const i = Math.floor((((s.day * 2654435761) >>> 0) + k * 977) % w.L);
-      if (w.coastal[i] && s.loc.dev[i] > 18 && chance(s.rng, 0.02)) seedPlague(s, w, i, 0.6);
-    }
+    plaguePorts(s, w, date.y);
   },
   yearly({ s, w }) { assimilationYear(s, w); },
 };

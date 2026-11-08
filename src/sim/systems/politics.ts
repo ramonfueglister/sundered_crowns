@@ -3,32 +3,64 @@ import type { GameState, Nation, Character, Estate } from '../types';
 import type { World } from '../world';
 import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, mod, addExpense, addOpinion } from '../ctx';
 import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
-import { rand, chance, hash01, pick } from '../rng';
+import { rand, chance, hash01, pick, seedRng } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
 import { FAITHS } from '../content/peoples';
 
-const LE_CACHE = new WeakMap<Nation, { e: number; m: Map<string, number> }>();
 const MOD_ONLY = new Set(['tax', 'trade', 'production', 'unrest']); // read through mod() instead
+// Effect keys get a slot in a numeric table; law options and value axes are resolved to [slot, value, ...] once.
+const EK = new Map<string, number>();
+function ekey(k: string): number { let i = EK.get(k); if (i === undefined) { i = EK.size; EK.set(k, i); } return i; }
+function flatFx(fx: Record<string, number>): number[] { const a: number[] = []; for (const k in fx) a.push(ekey(k), fx[k]); return a; }
+let LAW_FX: number[][][] | null = null, VAL_LO: number[][] = [], VAL_HI: number[][] = [];
+function resolveFx() {
+  LAW_FX = LAWS.map((L) => L.options.map((o) => flatFx(o.effects)));
+  VAL_LO = VALUES.map((v) => flatFx(v.effectsLow)); VAL_HI = VALUES.map((v) => flatFx(v.effectsHigh));
+}
+const LE_CACHE = new WeakMap<Nation, { e: number; m: Float64Array }>();
 /** Sum of an effect over laws, value axes and modifiers. Whole table built once per nation per day. */
 export function lawEffect(n: Nation, key: string): number {
   let c = LE_CACHE.get(n);
-  if (!c || c.e !== DAY_EPOCH.v) { c = { e: DAY_EPOCH.v, m: buildEffects(n) }; LE_CACHE.set(n, c); }
-  return c.m.get(key) ?? 0;
+  if (!c) { c = { e: DAY_EPOCH.v, m: buildEffects(n, null) }; LE_CACHE.set(n, c); }
+  else if (c.e !== DAY_EPOCH.v) { c.e = DAY_EPOCH.v; c.m = buildEffects(n, c.m); }
+  const k = EK.get(key);
+  return k === undefined || k >= c.m.length ? 0 : c.m[k];
 }
-function buildEffects(n: Nation): Map<string, number> {
-  const m = new Map<string, number>();
-  const add = (k: string, v: number) => { if (v) m.set(k, (m.get(k) ?? 0) + v); };
-  for (const id in n.laws) {
-    const L = LAWS[LAW_INDEX[id]]; if (!L) continue;
-    const opt = L.options[n.laws[id]]; if (!opt) continue;
-    for (const k in opt.effects) add(k, opt.effects[k]);
+/** The laws' share of the table (summed first, so later additions are unchanged). Laws change rarely: the sum is kept
+ *  per nation while the same laws hold the same options in the same order. */
+const LAW_PART = new WeakMap<Nation, { ids: string[]; opts: number[]; m: Float64Array }>();
+function lawPart(n: Nation): Float64Array {
+  const c = LAW_PART.get(n);
+  if (c) {
+    let k = 0, ok = true;
+    for (const id in n.laws) { if (c.ids[k] !== id || c.opts[k] !== n.laws[id]) { ok = false; break; } k++; }
+    if (ok && k === c.ids.length) return c.m;
   }
+  const ids: string[] = [], opts: number[] = [];
+  const m = new Float64Array(EK.size);
+  for (const id in n.laws) {
+    ids.push(id); opts.push(n.laws[id]);
+    const li = LAW_INDEX[id]; if (!LAWS[li]) continue;
+    const fx = LAW_FX![li][n.laws[id]]; if (!fx) continue;
+    for (let j = 0; j < fx.length; j += 2) { const v = fx[j + 1]; if (v) m[fx[j]] += v; }
+  }
+  LAW_PART.set(n, { ids, opts, m });
+  return m;
+}
+/** Same sums, in the same order, as adding each law option's, value axis' and modifier's effects into a map. */
+function buildEffects(n: Nation, reuse: Float64Array | null): Float64Array {
+  if (!LAW_FX) resolveFx();
+  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) ekey(k);
+  // the previous day's table is overwritten when it still has the right size
+  const m = reuse && reuse.length === EK.size ? reuse : new Float64Array(EK.size);
+  const lp = lawPart(n);
+  m.set(lp); if (lp.length < m.length) m.fill(0, lp.length);
   for (let a = 0; a < VALUES.length; a++) {
     const val = n.values[a] || 0; if (!val) continue;
-    const eff = val < 0 ? VALUES[a].effectsLow : VALUES[a].effectsHigh;
-    for (const k in eff) add(k, eff[k] * Math.abs(val) / 100);
+    const fx = val < 0 ? VAL_LO[a] : VAL_HI[a];
+    for (let j = 0; j < fx.length; j += 2) { const v = fx[j + 1] * Math.abs(val) / 100; if (v) m[fx[j]] += v; }
   }
-  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) add(k, md.effects[k]);
+  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) { const v = md.effects[k]; if (v) m[EK.get(k)!] += v; }
   return m;
 }
 
@@ -87,10 +119,10 @@ const FEMALE_NAMES: Record<string, string[]> = {
   default: ['Anna', 'Maria', 'Helena', 'Sophia', 'Elena', 'Fatima', 'Aisha', 'Zeynep'],
 };
 import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
-function nameFor(s: GameState, n: Nation, female: boolean): string {
+function nameFor(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): string {
   const grp = GROUP_OF[ALL_CULTURES[n.culture]] || 'default';
   const pool = female ? (FEMALE_NAMES[grp] || FEMALE_NAMES.default) : (MALE_NAMES[grp] || MALE_NAMES.german);
-  return pick(s.rng, pool);
+  return pick(rng, pool);
 }
 const TRAITS_GOOD = ['just', 'wise', 'brave', 'diligent', 'charming', 'pious', 'shrewd', 'patient', 'learned', 'energetic'];
 const TRAITS_BAD = ['cruel', 'lazy', 'craven', 'greedy', 'rash', 'sickly', 'paranoid', 'weak_willed', 'profligate'];
@@ -266,21 +298,88 @@ export const OFFICES = [
 ];
 export function councilBonus(s: GameState, n: Nation, office: string): number {
   const c = s.chars[n.council[office]]; if (!c || !c.alive) return 0;
-  const off = OFFICES.find((o) => o.id === office)!;
+  return officeBonusOf(c, office);
+}
+/** The bonus a person would give in an office (skill for the office, reduced by corruption). */
+export function officeBonusOf(c: Character, office: string): number {
+  const off = OFFICES.find((o) => o.id === office); if (!off) return 0;
   return (c.skills[off.skill] / 6) * 0.1 * (1 - (c.corruption ?? 0));
 }
+const COURT_HOUSES = ['de Vere', 'von Stein', 'Orsini', 'Colonna', 'Lannoy', 'Rožmberk', 'Tęczyński', 'Hunyadi', 'Strozzi', 'Mendoza', 'Percy', 'Neville', 'Wittelsbach', 'Gonzaga'];
 function fillCouncil(s: GameState, n: Nation) {
   for (const off of OFFICES) {
     const c = s.chars[n.council[off.id]];
     if (c && c.alive) continue;
-    const nc = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false, dynasty: pick(s.rng, ['de Vere', 'von Stein', 'Orsini', 'Colonna', 'Lannoy', 'Rožmberk', 'Tęczyński', 'Hunyadi', 'Strozzi', 'Mendoza', 'Percy', 'Neville', 'Wittelsbach', 'Gonzaga']) });
+    const nc = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false, dynasty: pick(s.rng, COURT_HOUSES) });
     nc.loyalty = 40 + rand(s.rng) * 50; nc.corruption = rand(s.rng) * 0.3; nc.ambition = rand(s.rng);
     n.council[off.id] = nc.id;
   }
 }
+// ---------------- candidates for office ----------------
+export const OFFICE_COST = 10; // Authority per appointment
+const CANDIDATES = 3;
+const holdsOffice = (n: Nation, id: number) => { for (const o of OFFICES) if (n.council[o.id] === id) return o.id; return null; };
+/** Who could be appointed: the court's candidates plus adult kin of the ruler (never the ruler or the regent). */
+export function officeCandidates(s: GameState, n: Nation): Character[] {
+  const out: Character[] = []; const seen = new Set<number>();
+  const add = (id: number | undefined) => {
+    const c = id ? s.chars[id] : undefined;
+    if (!c || seen.has(c.id) || !c.alive || c.nation !== n.id || c.id === n.ruler || c.id === n.regent || ageOf(s, c) < 16 || holdsOffice(n, c.id)) return;
+    seen.add(c.id); out.push(c);
+  };
+  for (const id of n.candidates ?? []) add(id);
+  const r = s.chars[n.ruler];
+  if (r) { add(n.consort); for (const k of r.children) add(k); }
+  return out;
+}
+/** Keep a few candidates at court. Uses its own random stream so the main sequence of the game is not shifted. */
+function refreshCandidates(s: GameState, n: Nation, yearly: boolean) {
+  const pool = (n.candidates ?? []).filter((id) => { const c = s.chars[id]; return c && c.alive && c.nation === n.id && ageOf(s, c) < 70 && !holdsOffice(n, id); });
+  if (yearly && pool.length >= CANDIDATES) pool.shift(); // the longest-waiting candidate leaves court
+  if (pool.length >= CANDIDATES) { n.candidates = pool; return; }
+  // keyed by the game's seed too, so each new game has its own court (still independent of the main random sequence)
+  const rng = seedRng(Math.floor(hash01(n.id, s.day, (0x0ff1ce ^ (s.seed | 0)) | 0) * 4294967296));
+  while (pool.length < CANDIDATES) {
+    const skills: [number, number, number] = [Math.floor(rand(rng) * 4), Math.floor(rand(rng) * 4), Math.floor(rand(rng) * 4)];
+    skills[Math.floor(rand(rng) * 3)] += 1 + Math.floor(rand(rng) * 3); // each candidate is good at one thing
+    const female = rand(rng) < 0.15;
+    const c = newChar(s, n, {
+      name: nameFor(s, n, female, rng), female, born: s.day - Math.floor((24 + rand(rng) * 30) * 365), skills, role: 'courtier',
+      dynasty: COURT_HOUSES[Math.floor(rand(rng) * COURT_HOUSES.length)], traits: rand(rng) < 0.5 ? [TRAITS_GOOD[Math.floor(rand(rng) * TRAITS_GOOD.length)]] : [],
+    });
+    c.loyalty = 40 + rand(rng) * 50; c.corruption = rand(rng) * 0.3; c.ambition = rand(rng);
+    pool.push(c.id);
+  }
+  n.candidates = pool;
+}
+/** Appoint a person to an office. Returns an error text or null. */
+export function appointOfficial(s: GameState, n: Nation, office: string, charId: number): string | null {
+  const off = OFFICES.find((o) => o.id === office); if (!off) return 'unknown office';
+  const c = s.chars[charId]; if (!c || !c.alive || c.nation !== n.id) return 'no such person';
+  if (c.id === n.ruler || c.id === n.regent) return 'the ruler cannot hold an office';
+  if (ageOf(s, c) < 16) return 'too young for office';
+  if (n.council[office] === c.id) return 'already holds this office';
+  if (n.authority < OFFICE_COST) return 'not enough Authority';
+  n.authority -= OFFICE_COST;
+  const other = holdsOffice(n, c.id); if (other) delete n.council[other];
+  const prev = s.chars[n.council[office]];
+  if (prev && prev.alive && prev.id !== c.id) {
+    // the dismissed official is offended and waits at court for another chance
+    prev.loyalty = clamp((prev.loyalty ?? 50) - 15, 0, 100); prev.role = 'courtier';
+    (n.candidates ??= []).push(prev.id);
+  }
+  n.council[office] = c.id; c.role = 'official';
+  if (c.loyalty === undefined) c.loyalty = 60;
+  if (c.corruption === undefined) c.corruption = 0;
+  if (c.ambition === undefined) c.ambition = 0.3;
+  n.candidates = (n.candidates ?? []).filter((id) => id !== c.id);
+  return null;
+}
+
 export function officialsMonth(s: GameState, n: Nation) {
   for (const off of OFFICES) {
     const c = s.chars[n.council[off.id]]; if (!c || !c.alive) continue;
+    if (c.id === n.ruler) { delete n.council[off.id]; continue; } // an official who inherited the throne leaves the council
     // corruption creeps up; ambitious officials intrigue when loyalty is low
     c.corruption = clamp((c.corruption ?? 0) + (c.ambition ?? 0.5) * 0.002 - (n.laws.administration ? 0.001 : 0), 0, 1);
     c.loyalty = clamp((c.loyalty ?? 50) + (n.mandate - 50) * 0.01 - (c.ambition ?? 0.5) * 0.05, 0, 100);
@@ -345,7 +444,7 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
       // value axis drift from reform group
       shiftValuesForLaw(n, L.group, n.reform.option, L.options.length);
       notice(s, n.id, 'reform', { en: `Reform completed: ${L.name.en} — ${opt.name.en}.`, de: `Reform abgeschlossen: ${L.name.de} — ${opt.name.de}.` });
-      chronicle(s, n.id, 'reform', { en: `${n.short.en} enacted “${opt.name.en}”.`, de: `${n.short.de} führte „${opt.name.de}“ ein.` });
+      if (s.playerNations.includes(n.id) || n.rank === 'kingdom' || n.rank === 'empire') chronicle(s, n.id, 'reform', { en: `${n.short.en} enacted “${opt.name.en}”.`, de: `${n.short.de} führte „${opt.name.de}“ ein.` });
       n.reform = undefined;
     }
   }
@@ -428,6 +527,7 @@ export const politics: System = {
       if (n.gov === 'theocracy' || n.gov === 'military_order') { n.values[3] = -80; n.values[7] = 30; }
       n.estates = estateDefaults(n);
       fillCouncil(s, n);
+      refreshCandidates(s, n, false);
       if (n.ruler && s.chars[n.ruler] && ageOf(s, s.chars[n.ruler]) < 16) n.regent = newChar(s, n, { born: s.day - 40 * 365, role: 'courtier' }).id;
     }
   },
@@ -438,6 +538,7 @@ export const politics: System = {
       nationPoliticsMonth(s, w, n);
       officialsMonth(s, n);
       if (s.day % 365 < 31) fillCouncil(s, n);
+      if (s.playerNations.includes(n.id)) refreshCandidates(s, n, s.day % 365 < 31);
       n.modifiers = n.modifiers.filter((m) => m.until > s.day);
     }
   },

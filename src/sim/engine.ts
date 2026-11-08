@@ -15,8 +15,23 @@ let profiling = false;
 export function setProfiling(v: boolean) { profiling = v; for (const k in PROFILE) delete PROFILE[k]; }
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
+// Numeric fields that start out as whole numbers and later take fractions. Writing a fraction once and putting
+// the value back gives every object the final field layout up front, so optimised code is not thrown away
+// each time one of these fields first takes a fraction in some realm. Values (and saves) are unchanged.
+const NATION_NUM = ['treasury', 'debt', 'manpower', 'sailors', 'concord', 'mandate', 'authority', 'prestige', 'warExhaustion', 'inflation', 'armyMaint', 'libertyDesire', 'integration', 'dread', 'maxManpower', 'corruption', 'score'];
+const ARMY_NUM = ['morale', 'progress', 'supplyDeficit'];
+const SHAPED = new WeakSet<GameState>();
+function widen(o: any, keys: string[]) { for (const k of keys) { const v = o[k]; if (typeof v === 'number' && Number.isInteger(v)) { o[k] = 0.5; o[k] = v; } } }
+function shapeState(s: GameState) {
+  for (const n of s.nations) widen(n, NATION_NUM);
+  for (const a of s.armies) widen(a, ARMY_NUM);
+  widen(s, ['priceLevel', 'silverStock']);
+  SHAPED.add(s);
+}
+
 export function advanceDay(s: GameState, w: World) {
   if (s.ended) return;
+  if (!SHAPED.has(s)) shapeState(s);
   s.day++;
   bump(); DAY_EPOCH.v++;
   const c = mkCtx(s, w);

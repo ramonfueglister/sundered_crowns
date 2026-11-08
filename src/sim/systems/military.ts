@@ -1,6 +1,6 @@
 // Armies and fleets: recruitment, movement on the location graph (A*), supply & attrition, zone of control,
 // battles in phases over several days, sieges with random events, occupation, naval blockades, transport.
-import type { GameState, Army, Battle, Siege, Nation, Regiment } from '../types';
+import type { GameState, Army, Battle, Siege, Nation, Regiment, I18n } from '../types';
 import type { World } from '../world';
 import { EDGE_RIVER, EDGE_STRAIT } from '../world';
 import { type Ctx, type System, clamp, chronicle, notice, newId, addExpense, enemiesOf, atWar, mod, hasTreaty, allies, bump } from '../ctx';
@@ -9,7 +9,7 @@ import { rand, chance, hash01 } from '../rng';
 import { dayToDate } from '../calendar';
 import { lawEffect, ageOf } from './politics';
 import { MinHeap } from '../setup';
-import { warScoreEvent } from './war';
+import { warScoreEvent, ownedLocs } from './war';
 
 export const UPKEEP_SCALE = 1500, COST_SCALE = 900;
 export const BASE_SPEED_KM = 20; // medieval army ~15–25 km/day
@@ -48,10 +48,23 @@ export function unitCost(s: GameState, n: Nation, unit: number, men: number) {
   return u.cost * k * COST_SCALE * 0.1 * s.priceLevel * (1 + n.inflation);
 }
 
-export function newArmy(s: GameState, owner: number, loc: number, regs: Regiment[], fleet = false, name?: string): Army {
+/** Default bilingual name of a realm's army or fleet ("Portuguese host" / "Portugiesisches Heer"). */
+export function armyName(n: Nation, fleet: boolean): I18n {
+  const en = `${n.adj.en} ${fleet ? 'fleet' : 'host'}`;
+  const adj = (n.adj.de || '').trim(), noun = fleet ? 'Flotte' : 'Heer';
+  let de: string;
+  if (/sch$/.test(adj)) de = `${adj.charAt(0).toUpperCase()}${adj.slice(1)}${fleet ? 'e' : 'es'} ${noun}`; // portugiesisch → Portugiesisches Heer
+  else if (/er$/.test(adj) && adj !== n.short.de) de = `${adj} ${noun}`;                                    // Nürnberger Heer
+  else de = `${noun} von ${n.short.de || adj}`;                                                              // Heer von Lisboa
+  return { en, de };
+}
+/** Army names are bilingual; saves from before kept a plain (English) string. */
+export function armyNameText(a: Army, lang: 'en' | 'de' = 'en'): string { return typeof a.name === 'string' ? a.name : a.name[lang] ?? a.name.en; }
+
+export function newArmy(s: GameState, owner: number, loc: number, regs: Regiment[], fleet = false, name?: I18n | string): Army {
   const n = s.nations[owner];
   const a: Army = {
-    id: newId(s), owner, loc, name: name ?? (fleet ? `${n.adj.en} fleet` : `${n.adj.en} host`), regs, morale: 1, general: 0, path: [], progress: 0,
+    id: newId(s), owner, loc, name: name ?? armyName(n, fleet), regs, morale: 1, general: 0, path: [], progress: 0,
     fleet, carrying: [], embarkedOn: 0, siege: -1, battle: 0, supplyDeficit: 0, retreating: false, lastMoveDay: s.day,
   };
   s.armies.push(a);
@@ -99,28 +112,33 @@ export function moveSpeed(s: GameState, w: World, a: Army, to: number, day = s.d
 
 /** A* over the location graph; cost = travel days. Returns path excluding the start. */
 let PG: Float64Array | null = null, PP: Int32Array | null = null, PS: Int32Array | null = null, PSV = 0;
+let PSP: Float64Array | null = null, PSS: Int32Array | null = null; // speed into each node, worked out once per search
+let PHEAP: MinHeap | null = null; // created on first use (setup.ts imports the systems)
+// per-search answers of canEnter by realm (stamped, so nothing is cleared between searches)
+let OK_ST = new Int32Array(0), OK_V = new Uint8Array(0), OKV = 0;
 export function findPath(s: GameState, w: World, a: Army, from: number, to: number, maxNodes = 20000): number[] | null {
   if (from === to) return [];
   const N = w.N;
-  if (!PG || PG.length !== N) { PG = new Float64Array(N); PP = new Int32Array(N); PS = new Int32Array(N); }
-  const g = PG, prev = PP!, st = PS!; const sv = ++PSV;
+  if (!PG || PG.length !== N) { PG = new Float64Array(N); PP = new Int32Array(N); PS = new Int32Array(N); PSP = new Float64Array(N); PSS = new Int32Array(N); }
+  const g = PG, prev = PP!, st = PS!, spV = PSP!, spS = PSS!; const sv = ++PSV;
   const goalX = w.x[to], goalY = w.y[to];
-  const heap = new MinHeap();
+  const heap = (PHEAP ??= new MinHeap()); heap.clear();
   st[from] = sv; g[from] = 0; prev[from] = -1; heap.push(0, from);
   const kmpx = w.kmPerPx[to];
   const maxSpeed = a.fleet ? 110 : BASE_SPEED_KM * 1.6;
   let visited = 0;
   // per-call caches: which realms' land this army may enter, and its speed factors
-  const ownerOk = new Map<number, boolean>();
+  if (OK_ST.length < s.nations.length) { OK_ST = new Int32Array(s.nations.length + 64); OK_V = new Uint8Array(s.nations.length + 64); }
+  const okSt = OK_ST, okV = OK_V, okv = ++OKV;
   const waste = TERRAINS.indexOf('wasteland');
   const enter = (v: number): boolean => {
     if (a.fleet || v >= w.L) return canEnter(s, w, a, v);
     if (w.terrain[v] === waste) return false;
     const o = s.loc.owner[v];
     if (o < 0 || o === a.owner) return true;
-    let ok = ownerOk.get(o);
-    if (ok === undefined) { ok = canEnter(s, w, a, v); ownerOk.set(o, ok); }
-    return ok;
+    if (o >= okSt.length) return canEnter(s, w, a, v);
+    if (okSt[o] !== okv) { okSt[o] = okv; okV[o] = canEnter(s, w, a, v) ? 1 : 0; }
+    return okV[o] === 1;
   };
   let speedOf: (v: number) => number;
   if (a.fleet) { const sp = moveSpeed(s, w, a, to); speedOf = () => sp; }
@@ -149,7 +167,8 @@ export function findPath(s: GameState, w: World, a: Army, from: number, to: numb
       if (!enter(v)) continue;
       const f = adjF[e];
       if (!a.fleet && (f & EDGE_STRAIT) && straitBlocked(s, w, a.owner, u, v)) continue;
-      let cost = adjKm[e] / speedOf(v);
+      let sp: number; if (spS[v] === sv) sp = spV[v]; else { sp = speedOf(v); spV[v] = sp; spS[v] = sv; }
+      let cost = adjKm[e] / sp;
       if (!a.fleet && (f & EDGE_RIVER)) cost += 0.5;
       if (!a.fleet && v >= L && u < L) cost += 4; // embarking takes days
       const ng = gu + cost;
@@ -422,7 +441,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   if (lnN) { lnN.stats.battlesLost++; lnN.prestige = clamp(lnN.prestige - 2, -100, 100); lnN.warExhaustion = clamp(lnN.warExhaustion + lossL / 3000 + 1, 0, 100); }
   if (wnN) wnN.warExhaustion = clamp(wnN.warExhaustion + lossW / 5000, 0, 100);
   // manpower lost permanently comes out of population (peasants/labourers)
-  const big = lossW + lossL > 4000;
+  const big = lossW + lossL > 1500;
   const kind = b.naval ? 'naval battle' : 'battle';
   const text = {
     en: `${wnN?.short.en ?? 'Rebels'} defeated ${lnN?.short.en ?? 'rebels'} in the ${kind} of ${w.names[b.loc]} (${Math.round(lossW)} vs ${Math.round(lossL)} lost).`,
@@ -620,16 +639,26 @@ export function seaNear(w: World, l: number): number {
   return -1;
 }
 
+/** Up-front price of a free company of `size` men (the UI shows the same number). */
+export function mercenaryCost(s: GameState, n: Nation, size: number): number {
+  return size / 1000 * 18 * COST_SCALE * 0.1 * s.priceLevel * (1 + lawEffect(n, 'mercenary_cost')) * 3;
+}
+/** Parts of mercenaryCost for a breakdown tooltip: base price, price level and modifiers (multiplied in this order). */
+export function mercenaryCostParts(s: GameState, n: Nation, size: number): { base: number; priceLevel: number; modifier: number; total: number } {
+  return { base: size / 1000 * 18 * COST_SCALE * 0.1 * 3, priceLevel: s.priceLevel, modifier: lawEffect(n, 'mercenary_cost'), total: mercenaryCost(s, n, size) };
+}
 export function hireMercenaries(s: GameState, w: World, n: Nation, loc: number, size: number): string | null {
   if (s.loc.owner[loc] !== n.id) return 'not your location';
-  const cost = size / 1000 * 18 * COST_SCALE * 0.1 * s.priceLevel * (1 + lawEffect(n, 'mercenary_cost')) * 3;
+  const cost = mercenaryCost(s, n, size);
   if (n.treasury < cost) return 'not enough gold';
   n.treasury -= cost; n.expenseAcc.mercenaries = (n.expenseAcc.mercenaries || 0) + cost;
   const units = availableUnits(s, n, false);
   const inf = units.find((u) => UNITS[u].kind === 'inf' && UNITS[u].id !== 'levy') ?? units[0];
   const rng = units.find((u) => UNITS[u].kind === 'ranged') ?? inf;
   const cav = units.find((u) => UNITS[u].kind === 'cav') ?? inf;
-  const names = ['White Company', 'Great Company', 'Company of the Star', 'Company of St George', 'Black Band', 'Swiss Reisläufer', 'Catalan Company', 'Company of the Hat'];
+  const names: I18n[] = [{ en: 'White Company', de: 'Weiße Kompanie' }, { en: 'Great Company', de: 'Große Kompanie' }, { en: 'Company of the Star', de: 'Kompanie vom Stern' },
+    { en: 'Company of St George', de: 'Kompanie des heiligen Georg' }, { en: 'Black Band', de: 'Schwarze Bande' }, { en: 'Swiss Reisläufer', de: 'Schweizer Reisläufer' },
+    { en: 'Catalan Company', de: 'Katalanische Kompanie' }, { en: 'Company of the Hat', de: 'Kompanie vom Hut' }];
   const a = newArmy(s, n.id, loc, [{ type: inf, men: size * 0.5 }, { type: rng, men: size * 0.3 }, { type: cav, men: size * 0.2 }], false, names[(s.day + n.id) % names.length]);
   a.mercenary = true;
   return null;
@@ -660,8 +689,7 @@ function upkeepMonth(s: GameState, w: World) {
     let forts = 0;
     // manpower: from peasant & labourer population of controlled, integrated land
     let mp = 0, sail = 0;
-    for (let i = 0; i < w.L; i++) {
-      if (s.loc.owner[i] !== n.id) continue;
+    for (const i of ownedLocs(s, n.id)) {
       forts += s.loc.buildings[i * B + BI.fort];
       if (s.loc.ctrl[i] !== n.id) continue;
       const base = i * C;
@@ -679,6 +707,11 @@ function upkeepMonth(s: GameState, w: World) {
 }
 
 // ---------------- rebels ----------------
+const REBEL_NAMES: Record<string, I18n> = {
+  peasant: { en: 'Peasant host', de: 'Aufständische Bauern' }, faith: { en: 'Faith zealots', de: 'Glaubenseiferer' },
+  separatist: { en: 'Separatists', de: 'Separatisten' }, noble: { en: 'Rebel lords', de: 'Aufständische Herren' },
+};
+const REBEL_KIND_DE: Record<string, string> = { peasant: 'Bauern', faith: 'Glaubenseiferer', separatist: 'Separatisten', noble: 'Adel' };
 function rebelsMonth(s: GameState, w: World) {
   for (let i = 0; i < w.L; i++) {
     const u = s.loc.unrest[i]; const o = s.loc.owner[i];
@@ -692,11 +725,11 @@ function rebelsMonth(s: GameState, w: World) {
     const faction = faithDiff ? 'faith' : cultDiff ? 'separatist' : s.loc.sol[i * C] < 0.4 ? 'peasant' : 'noble';
     const units = availableUnits(s, n, false);
     const levy = units.find((x) => UNITS[x].id === 'levy') ?? units[0];
-    const a = newArmy(s, o, i, [{ type: levy, men: size }], false, { peasant: 'Peasant host', faith: 'Faith zealots', separatist: 'Separatists', noble: 'Rebel lords' }[faction]);
+    const a = newArmy(s, o, i, [{ type: levy, men: size }], false, REBEL_NAMES[faction]);
     a.owner = o; a.rebels = { faction, demand: faction === 'peasant' ? 'concessions' : faction === 'separatist' ? 'independence' : faction === 'faith' ? 'faith' : 'concessions', target: o };
     s.loc.unrest[i] = 20;
-    notice(s, o, 'revolt', { en: `Revolt! ${a.name} rise at ${w.names[i]}.`, de: `Aufstand! ${a.name} erheben sich bei ${w.names[i]}.` }, { loc: i });
-    chronicle(s, o, 'revolt', { en: `A ${faction} revolt broke out in ${w.names[i]} (${n.short.en}).`, de: `Ein Aufstand (${faction}) brach in ${w.names[i]} (${n.short.de}) aus.` }, i);
+    notice(s, o, 'revolt', { en: `Revolt! ${armyNameText(a, 'en')} rise at ${w.names[i]}.`, de: `Aufstand! ${armyNameText(a, 'de')} erheben sich bei ${w.names[i]}.` }, { loc: i });
+    chronicle(s, o, 'revolt', { en: `A ${faction} revolt broke out in ${w.names[i]} (${n.short.en}).`, de: `Ein Aufstand (${REBEL_KIND_DE[faction] ?? faction}) brach in ${w.names[i]} (${n.short.de}) aus.` }, i);
   }
   // rebels that hold enough land enforce their demands
   for (const a of s.armies.filter((x) => x.rebels)) {

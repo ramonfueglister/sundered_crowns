@@ -79,7 +79,7 @@ export function LocationPanel({ loc }: { loc: number }) {
         : <div class="act-row"><span class="muted">{d.canColonize ? t('cannot_colonize') : t('colonize_hint')}</span><Btn disabled={d.canColonize} onClick={() => act({ t: 'colonize', loc: d.id }, 'build', t('colony_started')).then(refresh)}>{t('colonize')}</Btn></div>}
     </Section>}
     {d.armies.length > 0 && <Section title={t('armies_here')} id="loc-armies">
-      {d.armies.map((a: any) => <div class="kv"><span class="k"><NLink id={a.owner} size={14} /></span><span class="v">{a.owner === pid ? <a class="lk" onClick={() => selectArmy(a.id)}>{num(a.men)} {a.fleet ? t('ships') : t('men')}</a> : <>{num(a.men)} {a.fleet ? t('ships') : t('men')}</>}</span></div>)}
+      {d.armies.map((a: any) => <div class="kv army-here"><span class="k"><NLink id={a.owner} size={14} name={false} /> {a.owner === pid ? <a class="lk" onClick={() => selectArmy(a.id)}>{L(a.name)}</a> : <span>{L(a.name)}</span>}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span><span class="v">{num(a.men)} {a.fleet ? t('ships') : t('men')}</span></div>)}
     </Section>}
   </Panel>;
 }
@@ -88,7 +88,7 @@ function SeaPanel({ d, close }: { d: any; close: () => void }) {
   const pid = playerId.value;
   return <Panel cls="loc-pnl" onClose={close} title={d.name} sub={t('sea_zone')} coa={<div class="coa-sea">≈</div>}>
     <Section title={t('fleets')} id="sea-fleets">
-      {d.fleets.length ? d.fleets.map((f: any) => <div class="kv"><span class="k"><NLink id={f.owner} size={16} /></span><span class="v">{f.owner === pid ? <a class="lk" onClick={() => selectArmy(f.id)}>{num(f.ships)} {t('ships')}</a> : <>{num(f.ships)} {t('ships')}</>}</span></div>) : <Empty>{t('no_fleets')}</Empty>}
+      {d.fleets.length ? d.fleets.map((f: any) => <div class="kv army-here"><span class="k"><NLink id={f.owner} size={16} name={false} /> {f.owner === pid ? <a class="lk" onClick={() => selectArmy(f.id)}>{L(f.name)}</a> : <span>{L(f.name)}</span>}</span><span class="v">{num(f.ships)} {t('ships')}</span></div>) : <Empty>{t('no_fleets')}</Empty>}
     </Section>
   </Panel>;
 }
@@ -137,9 +137,10 @@ function Recruit({ d, refresh }: { d: any; refresh: () => void }) {
   const ships = d.units.filter((u: any) => u.kind === 'ship');
   const hasPort = (d.buildings.find((b: any) => b.key === 'port')?.level ?? 0) > 0;
   const occupied = d.ctrl !== d.owner;
-  // mercenary price estimated from the price of regular infantry (same formula as the simulation)
-  const ref = land.find((u: any) => u.kind === 'inf');
-  const mercCost = ref ? (merc / 1000) * 18 * 3 * (ref.cost1000 / Math.max(1, UNITS[ref.id].cost)) : 0;
+  // price and breakdown come from the simulation (mercenaryCostParts)
+  const mercs: any[] = d.mercenaries ?? [];
+  const mc = mercs.find((x) => x.men === merc) ?? mercs[0];
+  const mercCost = mc?.total ?? 0;
   return <Section title={t('recruit')} id="loc-rec">
     {occupied && <div class="neg small">{t('occupied')}</div>}
     <div class="ulist">{land.map((u: any) => {
@@ -156,10 +157,20 @@ function Recruit({ d, refresh }: { d: any; refresh: () => void }) {
     })}</div>}
     <div class="act-row merc">
       <span class="k">{t('mercenaries')}</span>
-      <select value={merc} onChange={(e) => setMerc(Number((e.target as HTMLSelectElement).value))}>{[1000, 2000, 3000, 5000, 8000].map((m) => <option value={m}>{num(m)} {t('men')}</option>)}</select>
-      <Btn disabled={(p?.treasury ?? 0) < mercCost ? 'not enough gold' : null} tip={<div>{t('merc_hint')}<br />≈ {num(mercCost)} <i class="ic gold sm" /></div>} onClick={() => act({ t: 'mercs', loc: d.id, company: merc }, 'coins', t('mercs_hired')).then(refresh)}>≈ {num(mercCost)}</Btn>
+      <select value={merc} onChange={(e) => setMerc(Number((e.target as HTMLSelectElement).value))}>{mercs.map((m) => <option value={m.men}>{num(m.men)} {t('men')} · {num(m.total)}</option>)}</select>
+      <Btn disabled={!mc ? 'none' : (p?.treasury ?? 0) < mercCost ? 'not enough gold' : null} tip={() => <div>{t('merc_hint')}{mc && <MercBreakdown m={mc} />}</div>} onClick={() => act({ t: 'mercs', loc: d.id, company: mc?.men ?? merc }, 'coins', t('mercs_hired')).then(refresh)}>{num(mercCost)} <i class="ic gold sm" /></Btn>
     </div>
   </Section>;
+}
+
+/** Mercenary price: base × price level × (1 + modifiers), as in the simulation. */
+function MercBreakdown({ m }: { m: any }) {
+  return <div class="breakdown">
+    <div class="bd-row"><span>{t('merc_base')}</span><span>{num(m.base, 1)}</span></div>
+    <div class="bd-row"><span>{t('merc_price_level')}</span><span>× {num(m.priceLevel, 2)}</span></div>
+    {Math.abs(m.modifier) > 1e-6 && <div class="bd-row"><span>{t('merc_modifiers')}</span><span class={m.modifier > 0 ? 'neg' : 'pos'}>× {num(1 + m.modifier, 2)} ({signed(m.modifier * 100, 0)} %)</span></div>}
+    <div class="bd-row bd-total"><span>Σ</span><span>{num(m.total, 1)} <i class="ic gold sm" /></span></div>
+  </div>;
 }
 
 function Agents({ d, refresh }: { d: any; refresh: () => void }) {

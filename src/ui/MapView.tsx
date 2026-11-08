@@ -4,31 +4,69 @@ import { signal } from '@preact/signals';
 import { sim, view, nations } from '../game/client';
 import type { TickView } from '../game/protocol';
 import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast } from './store';
-import { t, L } from './i18n';
+import { t, L, lang } from './i18n';
 import { sfx } from './audio';
 
 export const rendererRef: { r: any | null; assets: any | null } = { r: null, assets: null };
 export const mapError = signal<string | null>(null);
 export const mapReady = signal(false);
+let labelOwner: Int16Array | null = null; // owners the labels were last computed from (for relabelling on a language switch)
 
-/** Nation names placed along the main axis of their land (recomputed when borders change). */
-export function computeLabels(owner: Int16Array, assets: any, ns: { short: any; alive: boolean }[]) {
+/**
+ * Nation names placed along the main axis of their land (recomputed when borders change). Only the realm's main body is used
+ * (the connected cluster around the capital, unless that is a small exclave), so overseas holdings do not drag the name into
+ * the sea. The size follows the extent along the text (in map px); the overlay keeps it within a readable range on screen and
+ * resolves overlaps by `weight` (the area of that body).
+ */
+export function computeLabels(owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[]) {
   const geo = assets.geo; const L0 = geo.L;
-  const sx = new Float64Array(ns.length), sy = new Float64Array(ns.length), cnt = new Float64Array(ns.length);
-  const xx = new Float64Array(ns.length), yy = new Float64Array(ns.length), xy = new Float64Array(ns.length);
   const X = geo.loc.x, Y = geo.loc.y, A = geo.loc.area;
-  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o < 0) continue; const a = Math.max(1, A[i]); sx[o] += X[i] * a; sy[o] += Y[i] * a; cnt[o] += a; }
-  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o < 0 || !cnt[o]) continue; const a = Math.max(1, A[i]); const dx = X[i] - sx[o] / cnt[o], dy = Y[i] - sy[o] / cnt[o]; xx[o] += dx * dx * a; yy[o] += dy * dy * a; xy[o] += dx * dy * a; }
+  const locs: number[][] = ns.map(() => []);
+  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length) locs[o].push(i); }
+  const CELL = 40;
   const out: any[] = [];
   for (let n = 0; n < ns.length; n++) {
-    if (!cnt[n] || !ns[n]?.alive) continue;
-    const cx = sx[n] / cnt[n], cy = sy[n] / cnt[n];
-    const a = xx[n] / cnt[n], b = xy[n] / cnt[n], c = yy[n] / cnt[n];
-    const ang = 0.5 * Math.atan2(2 * b, a - c);
-    const spread = Math.sqrt(Math.max(a, c));
+    const all = locs[n]; if (!all.length || !ns[n]?.alive) continue;
+    // connected clusters on a coarse grid (gaps up to about one cell, e.g. narrow straits, are bridged)
+    const cells = new Map<number, number[]>();
+    for (const i of all) { const k = Math.floor(X[i] / CELL) * 65536 + Math.floor(Y[i] / CELL); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(i); }
+    const comp = new Map<number, number>(); const comps: { locs: number[]; area: number }[] = [];
+    for (const k0 of cells.keys()) {
+      if (comp.has(k0)) continue;
+      const id = comps.length; const cur = { locs: [] as number[], area: 0 }; comps.push(cur);
+      const stack = [k0]; comp.set(k0, id);
+      while (stack.length) {
+        const k = stack.pop()!; for (const i of cells.get(k)!) { cur.locs.push(i); cur.area += Math.max(1, A[i]); }
+        const cx = Math.floor(k / 65536), cy = k - cx * 65536;
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { const kk = (cx + dx) * 65536 + (cy + dy); if (cells.has(kk) && !comp.has(kk)) { comp.set(kk, id); stack.push(kk); } }
+      }
+    }
+    let body = comps[0];
+    for (const c of comps) if (c.area > body.area) body = c;
+    const cap = ns[n].capital ?? -1;
+    if (cap >= 0 && owner[cap] === n) { const ck = Math.floor(X[cap] / CELL) * 65536 + Math.floor(Y[cap] / CELL); const cc = comps[comp.get(ck) ?? -1]; if (cc && cc.area >= body.area * 0.3) body = cc; }
+    let sx = 0, sy = 0, cnt = 0;
+    for (const i of body.locs) { const a = Math.max(1, A[i]); sx += X[i] * a; sy += Y[i] * a; cnt += a; }
+    const cx = sx / cnt, cy = sy / cnt;
+    let xx = 0, yy = 0, xy = 0;
+    for (const i of body.locs) {
+      // each location counts as a small disc, so one-location realms get an extent too
+      const a = Math.max(1, A[i]), inner = a / (4 * Math.PI), dx = X[i] - cx, dy = Y[i] - cy;
+      xx += (dx * dx + inner) * a; yy += (dy * dy + inner) * a; xy += dx * dy * a;
+    }
+    const a = xx / cnt, b = xy / cnt, c = yy / cnt;
+    // text follows the main axis, but steep realms get level text (sized by their width) and the slant stays moderate
+    let ang = 0.5 * Math.atan2(2 * b, a - c);
+    if (Math.abs(ang) > 1.1) ang = 0; else ang = Math.max(-0.75, Math.min(0.75, ang));
+    const co = Math.cos(ang), si = Math.sin(ang);
+    const along = Math.sqrt(Math.max(0, a * co * co + 2 * b * si * co + c * si * si));
+    const across = Math.sqrt(Math.max(0, a * si * si - 2 * b * si * co + c * co * co));
     const text = L(ns[n].short).toUpperCase();
-    const size = Math.max(10, Math.min(spread * 2.4 / Math.max(3, text.length) * 1.6, 90));
-    out.push({ text, x: cx, y: cy, angle: Math.abs(ang) > 1.2 ? 0 : ang, size, nation: n });
+    // the name spans about the realm's length along the text and is never much taller than the realm is wide
+    const size = Math.max(1, Math.min(along * 3.84 / Math.max(3, text.length), across * 2.2));
+    // a covered name may slide across its direction while it stays well inside the realm (about 1.2 standard deviations)
+    const room = Math.max(0, across * 1.2 - size * 0.45);
+    out.push({ text, x: cx, y: cy, angle: ang, size, nation: n, id: n, weight: body.area, room });
   }
   return out;
 }
@@ -53,7 +91,7 @@ export function MapView() {
           r.animateOwnerChange(v.ownerChanges, g.loc.x[o] ?? 0, g.loc.y[o] ?? 0);
         }
         if (changed) {
-          lastOwner = v.owner;
+          lastOwner = v.owner; labelOwner = v.owner;
           clearTimeout(labelTimer);
           labelTimer = setTimeout(() => { if (rendererRef.r && lastOwner) rendererRef.r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value)); }, force ? 0 : 400);
         }
@@ -107,6 +145,7 @@ export function MapView() {
     };
   }, []);
   useEffect(() => { rendererRef.r?.setQuality?.(settings.value.quality); }, [settings.value.quality]);
+  useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); }, [lang.value]);
   useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value); }, [mapMode.value, selectedNation.value]);
   useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
   return <div class="mapwrap">
