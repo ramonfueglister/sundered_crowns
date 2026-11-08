@@ -2,7 +2,7 @@
 // Personalities: conqueror, trader, isolationist, zealot, opportunist, diplomat, builder.
 import type { GameState, Nation, Army, PeaceTerm, War } from '../types';
 import type { World } from '../world';
-import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf } from '../ctx';
+import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf, topOverlord } from '../ctx';
 import { UNITS, B, BI, BUILDINGS, C, CL } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand } from '../commands';
@@ -78,7 +78,7 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   for (const i of ownedLocs(s, n.id)) if (i % 7 === 0 && i < w.L) { avgUnrest += s.loc.unrest[i]; cnt++; }
   avgUnrest = cnt ? avgUnrest / cnt : 0;
   // only cut taxes for a chest that the army and the building sites cannot use up
-  const rich = !atWarNow && n.treasury > inc * 36;
+  const rich = !atWarNow && n.treasury > inc * 12;
   const delta = exp > inc * 1.05 && avgUnrest < 40 && !rich ? 0.005 : avgUnrest > 45 || rich ? -0.006 : 0;
   if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), 0.02, 0.25));
   if (!atWarNow && exp > inc && n.treasury < inc * 2) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
@@ -219,11 +219,11 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     if (t !== undefined) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
   }
   // integrate long-standing vassals
-  for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
+  for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
 }
 
 function considerWar(s: GameState, w: World, n: Nation) {
-  if (n.overlord >= 0 || n.capital < 0) return;
+  if ((n.overlord >= 0 && n.subjectType !== 'tributary') || n.capital < 0) return;
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
   if (!chance(s.rng, aggr)) return;
@@ -234,11 +234,11 @@ function considerWar(s: GameState, w: World, n: Nation) {
   let best = -1, bestScore = 0;
   for (const t of neighboursCached(s, w, n.id)) {
     const tn = s.nations[t];
-    if (!tn.alive || hasTreaty(s, n.id, t, 'truce') || hasTreaty(s, n.id, t, 'alliance') || tn.overlord === n.id) continue;
+    if (!tn.alive || hasTreaty(s, n.id, t, 'truce') || hasTreaty(s, n.id, t, 'alliance') || tn.overlord === n.id || t === n.overlord) continue;
     if (s.playerNations.includes(t) && s.day < 180) continue; // grace period for the player at start
     if (tn.flags.protected_until && tn.flags.protected_until > s.day) continue;
-    const top = tn.overlord >= 0 ? tn.overlord : t;
-    const theirBloc = [top, ...allies(s, top).filter((a) => !hasTreaty(s, n.id, a, 'alliance')), ...subjectsOf(s, top)];
+    const top = topOverlord(s, t);
+    const theirBloc = [top, ...allies(s, top).filter((a) => !hasTreaty(s, n.id, a, 'alliance')), ...subjectsOf(s, top).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== n.id)];
     const theirPower = blocPower(s, theirBloc);
     const ratio = myPower / Math.max(1, theirPower);
     if (ratio < 1.25) continue;

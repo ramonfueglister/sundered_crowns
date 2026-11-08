@@ -12,7 +12,7 @@ import { sfx } from './audio';
 const KEY_NAMES: Record<string, [string, string]> = {
   tax: ['Taxes', 'Steuern'], trade: ['Trade profits', 'Handelsgewinne'], tariffs: ['Tariffs', 'Zölle'], tribute: ['Tribute', 'Tribut'], contributions: ['War contributions', 'Kriegskontributionen'],
   army: ['Army upkeep', 'Heeresunterhalt'], navy: ['Navy upkeep', 'Flottenunterhalt'], fortresses: ['Fortresses', 'Festungen'], recruitment: ['Recruitment', 'Rekrutierung'], construction: ['Construction', 'Bauten'],
-  graft: ['Graft', 'Veruntreuung'], court: ['Court', 'Hof'], interest: ['Interest', 'Zinsen'], mercenaries: ['Mercenaries', 'Söldner'], scholars: ['Scholars', 'Gelehrte'], agents: ['Preachers & officials', 'Prediger & Beamte'],
+  graft: ['Graft', 'Veruntreuung'], court: ['Court', 'Hof'], splendour: ['Splendour of a full chest', 'Prachtentfaltung des vollen Schatzes'], interest: ['Interest', 'Zinsen'], mercenaries: ['Mercenaries', 'Söldner'], scholars: ['Scholars', 'Gelehrte'], agents: ['Preachers & officials', 'Prediger & Beamte'],
   colonists: ['Colonists', 'Kolonisten'], coinage: ['Coinage', 'Münzgewinn'], loans: ['Loans', 'Kredite'], subsidies: ['Subsidies', 'Subsidien'], gifts: ['Gifts', 'Geschenke'],
   company: ['Company profits', 'Kompaniegewinne'], charter: ['Company charters', 'Kompaniegründungen'], minting: ['Minting', 'Münzprägung'], loan_repay: ['Loan repayment', 'Kredittilgung'],
 };

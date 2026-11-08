@@ -1,5 +1,6 @@
 // Event engine: data-driven events with triggers, mean-time-to-happen and choices; decisions players can take.
 // Content lives in src/sim/content/events/*.ts and src/sim/content/decisions.ts.
+import { techBase } from './progress';
 import type { GameState, Nation, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies } from '../ctx';
@@ -74,7 +75,7 @@ export class Effects {
   faithAt(loc: number, faith: number) { if (loc >= 0) { this.s.loc.minFaith[loc] = this.s.loc.faith[loc]; this.s.loc.minShare[loc] = 0.25; this.s.loc.faith[loc] = faith; } }
   convertRealm(faith: number) { this.n.faith = faith; }
   plague(loc: number, v = 0.8) { if (loc >= 0) this.s.loc.plague[loc] = Math.max(this.s.loc.plague[loc], v); }
-  tech(branch: number, frac: number) { this.n.techProgress[branch] += 100 * frac; }
+  tech(branch: number, frac: number) { this.n.techProgress[branch] += techBase(this.n, branch) * frac; }
   insight(v: number) { this.n.flags.doctrine_pts = (this.n.flags.doctrine_pts || 0) + v; }
   war(target: number, goal: any = 'conquest') { const w = this.e().w; return declareWar(this.s, w, this.n.id, target, goal); }
   chronicle(text: I18n, loc?: number) { chronicle(this.s, this.n.id, 'event', text, loc); }

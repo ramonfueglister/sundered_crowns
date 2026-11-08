@@ -2,8 +2,8 @@
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, mod, bump } from '../ctx';
-import { C, CL } from '../defs';
-import { findPath, armyMen, newArmy, availableUnits, releaseNation } from './military';
+import { B, BI, C, CL } from '../defs';
+import { findPath, armyMen, newArmy, availableUnits, releaseNation, recruit } from './military';
 import * as warmod from './war';
 const require_war = () => warmod;
 import { lawEffect } from './politics';
@@ -26,7 +26,12 @@ function reveal(s: GameState, w: World, n: Nation, center: number, km: number) {
   return k;
 }
 
-export function colonialRange(n: Nation) { return 300 + n.tech[1] * 70 + lawEffect(n, 'colonial_range') * 1000; }
+/** How far from our coasts settlers can be sent. Once our own sailors have crossed the Ocean Sea (or the route is
+ *  common knowledge and our navigators are able), the far shore is in reach. */
+export function colonialRange(n: Nation, s?: GameState, w?: World) {
+  const crossed = s && (s.flags[`newworld_${n.id}`] || (s.flags.ocean_open && n.tech[1] >= 12 && n.flags.atlantic && w && europeanCrown(w, n)));
+  return 300 + n.tech[1] * 70 + lawEffect(n, 'colonial_range') * 1000 + (crossed ? 4000 : 0);
+}
 export function colonySlots(n: Nation) { return n.tech[1] >= 9 ? 1 + Math.floor((n.tech[1] - 9) / 5) + (lawEffect(n, 'colonists') | 0) : 0; }
 
 /** Send a fleet beyond the known world toward a sea zone; it reveals coasts as it sails. */
@@ -53,7 +58,9 @@ export function canColonize(s: GameState, w: World, n: Nation, loc: number): str
   if (!near) {
     let bd = Infinity;
     for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === n.id && w.coastal[i]) { const d = w.distKm(i, loc); if (d < bd) bd = d; }
-    if (bd > colonialRange(n) || !w.coastal[loc]) return 'out of colonial range';
+    // empty land within the old world is settled from next door, not from across the continent
+    const oldWorld = EUROPE.has(w.provinces[w.provOf[loc]]?.region ?? '');
+    if (bd > (oldWorld ? 400 : colonialRange(n, s, w)) || !w.coastal[loc]) return 'out of colonial range';
   }
   return null;
 }
@@ -79,7 +86,7 @@ function coloniesMonth(s: GameState, w: World) {
     // natives may resist
     if (native > 2000 && chance(s.rng, Math.min(0.12, native / 200000))) {
       c.settlers *= 0.7; c.progress = Math.max(0, c.progress - 10);
-      if (s.playerNations.includes(n.id)) notice(s, n.id, 'natives', { en: `Natives attacked our settlers at ${w.names[c.loc]}.`, de: `Einheimische haben unsere Siedler bei ${w.names[c.loc]} angegriffen.` }, { loc: c.loc });
+      if (s.playerNations.includes(n.id)) notice(s, n.id, 'natives', { en: `Natives attacked our settlers at ${w.names[c.loc]}.`, de: `Einheimische haben unsere Siedler bei ${w.namesDe[c.loc]} angegriffen.` }, { loc: c.loc });
     }
     if (c.progress >= 100) {
       s.colonies.splice(s.colonies.indexOf(c), 1);
@@ -92,8 +99,8 @@ function coloniesMonth(s: GameState, w: World) {
       if (c.settlers * 1.5 > native) { s.loc.minCulture[c.loc] = s.loc.culture[c.loc]; s.loc.minFaith[c.loc] = s.loc.faith[c.loc]; s.loc.minShare[c.loc] = clamp(native / (native + c.settlers), 0, 0.9); s.loc.culture[c.loc] = n.culture; s.loc.faith[c.loc] = n.faith; }
       s.flags.ownershipDirty = s.day; bump();
       n.stats.locsGained++;
-      chronicle(s, n.id, 'colony', { en: `${n.short.en} founded a settlement at ${w.names[c.loc]}.`, de: `${n.short.de} gründete eine Siedlung bei ${w.names[c.loc]}.` }, c.loc);
-      if (s.playerNations.includes(n.id)) notice(s, n.id, 'colony', { en: `Our colony at ${w.names[c.loc]} is established.`, de: `Unsere Kolonie bei ${w.names[c.loc]} ist gegründet.` }, { loc: c.loc });
+      chronicle(s, n.id, 'colony', { en: `${n.short.en} founded a settlement at ${w.names[c.loc]}.`, de: `${n.short.de} gründete eine Siedlung bei ${w.namesDe[c.loc]}.` }, c.loc);
+      if (s.playerNations.includes(n.id)) notice(s, n.id, 'colony', { en: `Our colony at ${w.names[c.loc]} is established.`, de: `Unsere Kolonie bei ${w.namesDe[c.loc]} ist gegründet.` }, { loc: c.loc });
     }
   }
 }
@@ -106,7 +113,7 @@ function explorersDay(s: GameState, w: World) {
     if (f.loc !== ex.loc) {
       ex.loc = f.loc;
       const k = reveal(s, w, n, f.loc, 260);
-      if (k > 0 && s.playerNations.includes(n.id) && chance(s.rng, 0.1)) notice(s, n.id, 'discovery', { en: `Our navigators charted new waters near ${w.names[f.loc]}.`, de: `Unsere Seefahrer kartierten neue Gewässer bei ${w.names[f.loc]}.` }, { loc: f.loc });
+      if (k > 0 && s.playerNations.includes(n.id) && chance(s.rng, 0.1)) notice(s, n.id, 'discovery', { en: `Our navigators charted new waters near ${w.names[f.loc]}.`, de: `Unsere Seefahrer kartierten neue Gewässer bei ${w.namesDe[f.loc]}.` }, { loc: f.loc });
       // first sighting of a new continent
       if (w.lon[f.loc] < -40 && !s.flags[`newworld_${n.id}`]) {
         s.flags[`newworld_${n.id}`] = s.day;
@@ -138,29 +145,51 @@ function aiColonize(s: GameState, w: World) {
   }
 }
 
-/** AI exploration: Atlantic realms send explorers once their navigators are able. */
+/** AI exploration: Atlantic crowns fit out ships once their navigators are able and send them west. */
 function aiExplore(s: GameState, w: World, year: number) {
   for (const n of s.nations) {
-    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 7 || n.capital < 0) continue;
-    if (w.lon[n.capital] > 10 || !w.coastal[n.capital] && n.capital >= 0 && w.lon[n.capital] > -2) continue;
-    if (s.explorers.some((x) => x.nation === n.id) || !chance(s.rng, 0.25)) continue;
-    let f = s.armies.find((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length);
-    if (!f) continue;
-    // pick an unknown sea zone in the Atlantic
+    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 7 || n.capital < 0 || n.overlord >= 0) continue;
+    if (!europeanCrown(w, n) || !n.flags.atlantic) continue;
+    if (s.explorers.some((x) => x.nation === n.id) || !chance(s.rng, 0.35)) continue;
+    const f = s.armies.find((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length && !s.explorers.some((x) => x.id === a.id));
+    if (!f) { fitOutExpedition(s, w, n); continue; }
+    // pick an unknown sea zone in the Atlantic: westward, a voyage of a few weeks
     const e = s.explored[n.knows];
     let tgt = -1, bd = Infinity;
     for (let i = w.L; i < w.N; i++) {
       if (e && e[i]) continue;
       if (w.lon[i] > -5) continue;
-      const d = w.distKm(f.loc, i) + rand(s.rng) * 800;
-      if (d < bd) { bd = d; tgt = i; }
+      const d = w.distKm(f.loc, i);
+      if (d > 6000) continue;
+      const v = w.lon[i] * 40 + Math.abs(d - 2500) * 0.4 + rand(s.rng) * 600;
+      if (v < bd) { bd = v; tgt = i; }
     }
     if (tgt >= 0) startExplorer(s, w, n, f.id, tgt);
     void year;
   }
 }
+/** A small squadron in an Atlantic harbour, paid from the treasury, for exploration. */
+function fitOutExpedition(s: GameState, w: World, n: Nation) {
+  const ships = availableUnits(s, n, true); if (!ships.length) return;
+  const inc = Object.values(n.income).reduce((a, b) => a + b, 0);
+  if (n.treasury < Math.max(150 * s.priceLevel, inc * 2)) return;
+  if (s.recruits.some((r) => r.nation === n.id && ships.includes(r.type))) return;
+  let port = -1, west = Infinity;
+  for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === n.id && s.loc.ctrl[i] === n.id && w.coastal[i] && s.loc.buildings[i * B + BI.port] > 0 && w.lon[i] < west) { west = w.lon[i]; port = i; }
+  if (port < 0) return;
+  recruit(s, w, n, port, ships[0], 3);
+}
 
 // ---------------- colonial subjects and chartered companies ----------------
+/** Regions whose crowns build overseas empires: colonial realms and chartered companies are theirs. */
+const EUROPE = new Set(['france', 'low_countries', 'italy', 'iberia', 'bohemia', 'greece', 'british_isles', 'germany', 'baltic', 'poland', 'hungary', 'balkans', 'scandinavia', 'rus']);
+export function europeanCrown(w: World, n: Nation): boolean { return n.capital >= 0 && EUROPE.has(w.provinces[w.provOf[n.capital]]?.region ?? ''); }
+/** Realms on the Atlantic and the North Sea: a coastal holding west of 6°E, between Gibraltar and Norway. */
+function atlantic(s: GameState, w: World, n: Nation): boolean {
+  let k = 0;
+  for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === n.id && w.coastal[i] && w.lon[i] < 6 && w.lon[i] > -12 && w.lat[i] > 35 && w.lat[i] < 62 && ++k >= 3) return true;
+  return false;
+}
 /** Lands far from the mother country: regions that count as overseas when the capital lies elsewhere. */
 const OVERSEAS = new Set(['americas', 'west_africa', 'east_africa', 'sahel']);
 const REGION_NAME: Record<string, { en: string; de: string }> = {
@@ -180,7 +209,7 @@ function colonialSubjectsYear(s: GameState, w: World) {
   const groups = new Map<string, number[]>();
   for (let i = 0; i < w.L; i++) {
     const o = s.loc.owner[i]; if (o < 0) continue;
-    const n = s.nations[o]; if (!n?.alive || n.capital < 0 || n.subjectType === 'colonial') continue;
+    const n = s.nations[o]; if (!n?.alive || n.capital < 0 || n.subjectType === 'colonial' || !europeanCrown(w, n)) continue;
     const reg = colonialRegion(w, i); if (!reg) continue;
     if (colonialRegion(w, n.capital) === reg || w.distKm(i, n.capital) < 2500) continue;
     const k = o + ':' + reg; let g = groups.get(k); if (!g) groups.set(k, (g = [])); g.push(i);
@@ -243,7 +272,7 @@ function companiesYear(s: GameState, w: World) {
   // companies lapse when their realm falls or no longer holds a harbour in the market
   if (s.companies?.length) s.companies = s.companies.filter((c) => { const n = s.nations[c.nation]; return n?.alive && charterOptions(s, w, n).includes(c.market); });
   for (const n of s.nations) {
-    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 12) continue;
+    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 12 || !europeanCrown(w, n)) continue;
     const inc = Object.values(n.income).reduce((a, b) => a + b, 0);
     if (n.treasury < Math.max(1200 * s.priceLevel, inc * 3)) continue;
     const have = new Set((s.companies ?? []).filter((c) => c.nation === n.id).map((c) => c.market));
@@ -254,13 +283,16 @@ function companiesYear(s: GameState, w: World) {
 
 export const colonial: System = {
   id: 'colonial',
-  init(s) { s.loc.colonist.fill(-1); },
+  init(s, w) { s.loc.colonist.fill(-1); for (const n of s.nations) n.flags.atlantic = atlantic(s, w, n) ? 1 : 0; },
   daily({ s, w }) { explorersDay(s, w); },
   monthly({ s, w, date }) {
     coloniesMonth(s, w);
     if (date.m % 3 === 1) aiColonize(s, w);
-    if (date.m === 4) aiExplore(s, w, date.y);
+    if (date.m % 3 === 1) aiExplore(s, w, date.y);
   },
-  yearly({ s, w }) { colonialSubjectsYear(s, w); companiesYear(s, w); },
+  yearly({ s, w }) {
+    for (const n of s.nations) if (n.alive) n.flags.atlantic = atlantic(s, w, n) ? 1 : 0;
+    colonialSubjectsYear(s, w); companiesYear(s, w);
+  },
 };
 void armyMen; void newArmy; void availableUnits;

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, openPanel } from '../store';
-import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, LocName, useQuery, act, t, L, num, signed, pct, Tip, Breakdown, Reasons, realm, daysText, locName, namesVersion, selectArmy, selectLoc, fmtDateShort, Coa } from './common';
+import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, LocName, useQuery, act, t, L, num, signed, pct, Tip, Breakdown, Reasons, realm, daysText, locName, namesVersion, selectArmy, selectLoc, fmtDateShort, Coa, placeName } from './common';
 import { sfx } from '../audio';
 
 // ---------------------------------------------------------------- wars (shared)
@@ -113,7 +113,7 @@ export function MilitaryTab() {
     </Section>
     <div class="cols2">
       <Section title={t('recruit_queue')} id="mil-queue">
-        {r?.recruits?.length ? r.recruits.map((q: any) => <div class="kv"><span class="k">{L(q.unit)} · {num(q.men)}</span><span class="v"><a class="lk" onClick={() => selectLoc(q.loc)}>{q.name}</a> · {daysText(q.left)}</span></div>) : <div class="muted small">{t('none')}</div>}
+        {r?.recruits?.length ? r.recruits.map((q: any) => <div class="kv"><span class="k">{L(q.unit)} · {num(q.men)}</span><span class="v"><a class="lk" onClick={() => selectLoc(q.loc)}>{placeName(q.name)}</a> · {daysText(q.left)}</span></div>) : <div class="muted small">{t('none')}</div>}
         <div class="muted small">{t('recruit_hint')}</div>
       </Section>
       <Section title={t('sieges')} id="mil-sieges">
@@ -187,10 +187,10 @@ export function SocietyTab() {
     </div>
     <div class="cols2">
       <Section title={t('agents')} id="soc-agents" right={<span class="muted">{r.agents.length}/{r.agentSlots}</span>}>
-        {r.agents.length ? r.agents.map((a: any) => <div class="kv"><span class="k">{a.kind === 'faith' ? '✝' : '✒'} <a class="lk" onClick={() => selectLoc(a.loc)}>{a.name}</a></span><span class="v"><Bar value={a.progress} max={100} color="#3a5a80" /></span></div>) : <div class="muted small">{t('agents_none')}</div>}
+        {r.agents.length ? r.agents.map((a: any) => <div class="kv"><span class="k">{a.kind === 'faith' ? '✝' : '✒'} <a class="lk" onClick={() => selectLoc(a.loc)}>{placeName(a.name)}</a></span><span class="v"><Bar value={a.progress} max={100} color="#3a5a80" /></span></div>) : <div class="muted small">{t('agents_none')}</div>}
       </Section>
       <Section title={t('colonies')} id="soc-col" right={<span class="muted">{r.colonies.length}/{r.colonySlots}</span>}>
-        {r.colonies.length ? r.colonies.map((c: any) => <div class="kv"><span class="k"><a class="lk" onClick={() => selectLoc(c.loc)}>{c.name}</a></span><span class="v">{num(c.settlers)} {t('settlers')} · <Bar value={c.progress} max={100} color="#4d7a3a" /></span></div>) : <div class="muted small">{r.colonySlots ? t('colonies_none') : t('colonies_locked')}</div>}
+        {r.colonies.length ? r.colonies.map((c: any) => <div class="kv"><span class="k"><a class="lk" onClick={() => selectLoc(c.loc)}>{placeName(c.name)}</a></span><span class="v">{num(c.settlers)} {t('settlers')} · <Bar value={c.progress} max={100} color="#4d7a3a" /></span></div>) : <div class="muted small">{r.colonySlots ? t('colonies_none') : t('colonies_locked')}</div>}
       </Section>
     </div>
     <Section title={t('situations')} id="soc-sit">

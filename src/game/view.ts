@@ -8,7 +8,7 @@ import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, term
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf } from '../sim/systems/politics';
 import { LAWS } from '../sim/content/laws';
-import { FAITHS, ALL_CULTURES, cultureName, GROUP_OF } from '../sim/content/peoples';
+import { FAITHS, ALL_CULTURES, cultureLabel as cultureName, GROUP_OF } from '../sim/content/peoples';
 import { BRANCHES, ERAS, techCost, researchRate, doctrineCost, doctrineSlots } from '../sim/systems/progress';
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';

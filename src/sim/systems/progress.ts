@@ -21,14 +21,18 @@ export const ERAS = [
   { id: 'reason', name: { en: 'Age of Reason and Revolution', de: 'Zeitalter der Vernunft und Revolution' }, start: 1680, tech: 22 },
 ];
 
+/** Progress points of one level at the pace of the age (events and envoys grant fractions of it). */
+export function techBase(n: Nation, branch: number): number { return 450 * (1 + n.tech[branch] * 0.08); }
 /** Progress points needed to reach the next level of a branch. Ahead-of-time research is expensive. */
 export function techCost(s: GameState, n: Nation, branch: number): number {
   const lvl = n.tech[branch];
   const year = s.startYear + s.day / 365.25;
-  const expectedYear = 1356 + lvl * 14.5;
-  const ahead = Math.max(0, expectedYear - year) / 14.5;
+  // the pace of the age: level 1 in 1356, level 32 around 1806; each level beyond it costs much more
+  const expected = (year - 1342) / 14.5;
+  const ahead = lvl - expected;
+  const pace = ahead > 0 ? Math.pow(3, ahead) : Math.max(0.5, 1 + ahead * 0.15);
   const neighbours = (s as any)._techSpread?.[n.id]?.[branch] ?? 0; // knowledge of neighbours lowers cost
-  return 100 * (1 + lvl * 0.08) * (1 + ahead * 0.6) * (1 - Math.min(0.3, neighbours));
+  return techBase(n, branch) * pace * (1 - Math.min(0.3, neighbours));
 }
 
 /** Monthly research points per branch. */
@@ -51,7 +55,7 @@ export function researchRate(s: GameState, w: World, n: Nation): [number, number
   const pop = A[q], lit = A[q + 1], dev = A[q + 2], uni = A[q + 3], burghers = A[q + 4], nobles = A[q + 5], clergy = A[q + 6];
   const litAvg = pop > 0 ? lit / pop : 0;
   const r = s.chars[n.ruler];
-  const scale = Math.sqrt(Math.max(1, dev)) * 0.55;
+  const scale = Math.pow(Math.max(1, dev), 0.3) * 0.9; // large realms learn more, but not in proportion to their size
   const base = (1.2 + scale) * (0.5 + litAvg * 3) * (1 + uni * 0.12) * (1 + lawEffect(n, 'research') + mod(n, 'research'));
   const burgherShare = pop > 0 ? burghers / pop : 0;
   const g = base * (1 + (r ? r.skills[0] * 0.04 : 0));
@@ -128,8 +132,8 @@ function innovationsYear(s: GameState, w: World, year: number) {
       st.reached[o] = 1;
       s.innovations.push(st);
       const on = s.loc.owner[o];
-      chronicle(s, on, 'innovation', { en: `${inv.name.en} appeared in ${w.names[o]}.`, de: `${inv.name.de} tauchte in ${w.names[o]} auf.` }, o);
-      for (const p of s.playerNations) notice(s, p, 'innovation', { en: `New knowledge: ${inv.name.en} (${w.names[o]}).`, de: `Neues Wissen: ${inv.name.de} (${w.names[o]}).` }, { loc: o });
+      chronicle(s, on, 'innovation', { en: `${inv.name.en} appeared in ${w.names[o]}.`, de: `${inv.name.de} tauchte in ${w.namesDe[o]} auf.` }, o);
+      for (const p of s.playerNations) notice(s, p, 'innovation', { en: `New knowledge: ${inv.name.en} (${w.names[o]}).`, de: `Neues Wissen: ${inv.name.de} (${w.namesDe[o]}).` }, { loc: o });
     }
     // spread along the location graph: speed by literacy, markets, universities, trade
     const r = st.reached; const add: number[] = [];
@@ -215,7 +219,7 @@ export const progress: System = {
       }
       // insight for doctrines: from learning, prestige and a capable ruler
       const ru = s.chars[n.ruler];
-      n.flags.doctrine_pts = (n.flags.doctrine_pts || 0) + 1.5 + (r[0] + r[1] + r[2]) * 0.08 + (ru ? (ru.skills[0] + ru.skills[1]) * 0.15 : 0) + Math.max(0, n.prestige) * 0.01;
+      n.flags.doctrine_pts = (n.flags.doctrine_pts || 0) + 1.5 + (r[0] + r[1] + r[2]) * 0.13 + (ru ? (ru.skills[0] + ru.skills[1]) * 0.15 : 0) + Math.max(0, n.prestige) * 0.01;
       const e = eraOf(s, n);
       if (e > n.era) {
         n.era = e;

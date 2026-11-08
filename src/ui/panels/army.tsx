@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { selectedArmies, playerId, hoverLoc, openPanel, panel } from '../store';
-import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, Tip, useRealm, selectArmy, flyToLoc, daysText, locName, namesVersion, selectLoc } from './common';
+import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, Tip, useRealm, selectArmy, flyToLoc, daysText, locName, namesVersion, selectLoc, placeName } from './common';
 import { sfx } from '../audio';
 import { WarScoreTip } from './realmtabs';
 
@@ -107,8 +107,8 @@ export function Outliner() {
         </div>)}
       </Section>}
       {r && (r.constructions.length > 0 || r.recruits.length > 0) && <Section title={t('works')} id="ol-works">
-        {r.constructions.map((c: any) => <div class="ol-row click" onClick={() => selectLoc(c.loc)}><span class="ico">⚒</span><span class="ol-name">{L(c.building)}</span><span class="ol-sub">{c.name}</span><span class="ol-v">{daysText(c.left)}</span></div>)}
-        {r.recruits.map((c: any) => <div class="ol-row click" onClick={() => selectLoc(c.loc)}><span class="ico">⚔</span><span class="ol-name">{L(c.unit)}</span><span class="ol-sub">{c.name}</span><span class="ol-v">{daysText(c.left)}</span></div>)}
+        {r.constructions.map((c: any) => <div class="ol-row click" onClick={() => selectLoc(c.loc)}><span class="ico">⚒</span><span class="ol-name">{L(c.building)}</span><span class="ol-sub">{placeName(c.name)}</span><span class="ol-v">{daysText(c.left)}</span></div>)}
+        {r.recruits.map((c: any) => <div class="ol-row click" onClick={() => selectLoc(c.loc)}><span class="ico">⚔</span><span class="ol-name">{L(c.unit)}</span><span class="ol-sub">{placeName(c.name)}</span><span class="ol-v">{daysText(c.left)}</span></div>)}
       </Section>}
       {v.player && <div class="ol-foot"><Tip content={t('ledger_hint')}><a class="lk" onClick={() => openPanel('military')}>{t('military')} →</a></Tip></div>}
     </div>}

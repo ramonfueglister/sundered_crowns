@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { nations, view } from '../../game/client';
 import { selectedLoc, playerId } from '../store';
 import { RECIPES, UNITS } from '../../sim/defs';
-import { Panel, Section, Row, Bar, NLink, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy } from './common';
+import { Panel, Section, Row, Bar, NLink, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName } from './common';
 import { sfx } from '../audio';
 
 const TERRAIN: Record<string, [string, string]> = {
@@ -27,8 +27,8 @@ export function LocationPanel({ loc }: { loc: number }) {
   const unrestTotal = d.unrestWhy.reduce((p: number, x: [string, number]) => p + x[1], 0);
   return <Panel cls="loc-pnl" onClose={close}
     coa={owner ? <Coa coa={owner.coa} color={owner.color} size={44} /> : <div class="coa-empty" />}
-    title={<>{d.name}{d.alt && d.alt !== d.name && <small class="alt"> ({d.alt})</small>}</>}
-    sub={[d.province, d.area, d.region && regionName(d.region)].filter(Boolean).join(' · ')}>
+    title={<>{placeName(d.name)}{d.alt && d.alt !== d.name && d.alt !== placeName(d.name) && <small class="alt"> ({d.alt})</small>}</>}
+    sub={[placeName(d.province), placeName(d.area), d.region && regionName(d.region)].filter(Boolean).join(' · ')}>
     <div class="loc-owner">
       {owner ? <NLink id={d.owner} size={20} full /> : <span class="muted">{t('unclaimed')}</span>}
       {d.ctrl === -2 && <span class="tag neg">{t('rebels_hold')}</span>}

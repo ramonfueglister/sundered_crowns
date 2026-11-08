@@ -7,6 +7,7 @@ import type { Query } from '../../game/protocol';
 import type { Command, CmdResult, I18n } from '../../sim/types';
 import { playerId, selectedLoc, selectedNation, selectedArmies, panel, showToast } from '../store';
 import { t, L, lang, errText, reason } from '../i18n';
+import { deName } from '../../sim/content/names_de';
 import { Tip, Breakdown, hideTip } from '../Tip';
 import { num, signed, pct, rgb } from '../format';
 import { sfx, type Sfx } from '../audio';
@@ -74,11 +75,13 @@ export function useRealm(every = 1000): any {
 const nameCache = new Map<number, string>();
 const nameWait = new Map<number, Promise<string>>();
 export const namesVersion = signal(0);
+/** A place or province name in the current language (German exonyms where they exist). */
+export function placeName(en: string | null | undefined): string { return lang.value === 'de' ? deName(en) : en ?? ''; }
 export function locName(id: number): string {
   if (id < 0) return '—';
   const g = rendererRef.assets?.geo;
-  const c = nameCache.get(id); if (c) return c;
-  if (g?.loc?.name?.[id]) { nameCache.set(id, g.loc.name[id]); return g.loc.name[id]; }
+  const c = nameCache.get(id); if (c) return placeName(c);
+  if (g?.loc?.name?.[id]) { nameCache.set(id, g.loc.name[id]); return placeName(g.loc.name[id]); }
   if (!nameWait.has(id)) nameWait.set(id, sim().query({ q: 'loc', loc: id }).then((d: any) => { const nm = d?.name ?? `#${id}`; nameCache.set(id, nm); namesVersion.value++; return nm; }));
   return '…';
 }

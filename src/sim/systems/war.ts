@@ -1,5 +1,6 @@
 // Wars: justifications, declarations, war score, war exhaustion, peace treaties with costed terms,
 // AI acceptance with reasons, truces, Dread (expansion backlash) and the Common Front (coalitions).
+import { deName } from '../content/names_de';
 import type { GameState, War, PeaceTerm, Nation, WarGoal } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, subjectsOf, topOverlord, treatiesOf } from '../ctx';
@@ -95,7 +96,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     // breaking a truce is possible but costly
     na.concord = clamp(na.concord - 30, -100, 100); na.prestige -= 20;
   }
-  if (na.overlord >= 0 && goalType !== 'independence') return 'subjects cannot declare wars';
+  if (na.overlord >= 0 && na.subjectType !== 'tributary' && goalType !== 'independence') return 'subjects cannot declare wars';
+  if (na.overlord === b && goalType !== 'independence') return 'we pay tribute to them';
   if (hasTreaty(s, a, b, 'alliance')) { s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); na.prestige -= 10; }
   const cb = hasCasusBelli(s, a, b);
   if (!cb && goalType !== 'coalition' && goalType !== 'civil_war' && goalType !== 'independence') {
@@ -108,7 +110,7 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     const e = estate(na, 'burghers'); if (e && e.contentment < 35) return 'the assembly refused to fund the war';
   }
   const target = topOverlord(s, b);
-  const def = [target, ...subjectsOf(s, target)];
+  const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a)];
   if (!def.includes(b)) def.push(b);
   const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary')];
   const war: War = {
@@ -260,7 +262,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       const val = t.locs.reduce((p, l) => p + locValue(s, l), 0);
       s.nations[recv].dread += val * 0.35;
       parts.push(`${t.locs.length} locations (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
-      partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
+      partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
     if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); Ln.treasury -= amt; W.treasury += amt; parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
     if (t.type === 'vassal') { Ln.overlord = winner; Ln.subjectType = 'vassal'; Ln.subjectSince = s.day; Ln.libertyDesire = 30; parts.push('vassalage'); partsDe.push('Vasallität'); }
@@ -318,7 +320,10 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
   const score = computeScore(s, war) * (fromAtt ? 1 : -1);
   const winner = score >= 0 || terms.length ? from : to;
   const loser = winner === from ? to : from;
-  applyPeace(s, w, war, winner, loser, terms.length ? terms : [{ type: 'white_peace' }]);
+  const pre = s.nations[war.attLead], legit = s.nations[war.goal.target];
+  const leadersPeace = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
+  if (war.goal.type === 'civil_war' && leadersPeace && pre?.flags.pretender_of === legit?.id && legit.alive) endCivilWar(s, w, war, pre, legit, war.att.includes(winner) && score > 10);
+  else applyPeace(s, w, war, winner, loser, terms.length ? terms : [{ type: 'white_peace' }]);
   // if the offer was between the war leaders, the whole war ends; otherwise only the separate peace
   const leaders = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
   const ending = leaders ? [...war.att, ...war.def] : [from === war.attLead || from === war.defLead ? to : from];
@@ -401,6 +406,29 @@ function warsMonth(s: GameState, w: World) {
     const t = s.flags[`civil_war_pending_${n.id}`];
     if (t && t <= s.day && n.alive) { delete s.flags[`civil_war_pending_${n.id}`]; startCivilWar(s, w, n); }
   }
+}
+
+/** A war of succession ends with one realm again: the pretender's lands return, and if the pretender prevailed,
+ *  the pretender wears the crown. */
+function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Nation, pretenderWon: boolean) {
+  for (const l of nationLocs(s, pre.id)) { transferLoc(s, l, legit.id); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
+  for (const a of s.armies) if (a.owner === pre.id) { a.owner = legit.id; a.path = []; a.siege = -1; }
+  const sides = new Set([...war.att, ...war.def]);
+  for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (sides.has(o) && s.loc.ctrl[i] !== o && s.loc.ctrl[i] !== -2) s.loc.ctrl[i] = o; }
+  if (pretenderWon && s.chars[pre.ruler]?.alive) {
+    legit.ruler = pre.ruler; legit.heir = pre.heir; legit.consort = pre.consort; legit.regent = 0;
+    if (s.chars[pre.ruler]) s.chars[pre.ruler].role = 'ruler';
+    legit.dynasty = pre.dynasty || legit.dynasty; legit.mandate = 40;
+  } else legit.mandate = clamp(legit.mandate + 15, 0, 100);
+  pre.alive = false; pre.overlord = -1;
+  s.treaties = s.treaties.filter((x) => x.a !== pre.id && x.b !== pre.id);
+  const r = s.chars[legit.ruler]?.name ?? '';
+  const text = pretenderWon
+    ? { en: `The pretender prevailed in ${legit.short.en}: ${r} now wears the crown of a reunited realm.`, de: `Der Prätendent setzte sich in ${legit.short.de} durch: ${r} trägt nun die Krone des wiedervereinten Reiches.` }
+    : { en: `The pretender in ${legit.short.en} submitted; the realm is whole again under ${r}.`, de: `Der Prätendent in ${legit.short.de} unterwarf sich; das Reich ist unter ${r} wieder vereint.` };
+  chronicle(s, legit.id, 'peace', text);
+  for (const p of s.playerNations) if (sides.has(p)) notice(s, p, 'peace', text, { loc: legit.capital });
+  s.flags.lastPeaceDay = s.day;
 }
 
 export function startCivilWar(s: GameState, w: World, n: Nation) {

@@ -35,6 +35,31 @@ export const ALL_CULTURES: string[] = Object.values(CULTURE_GROUPS).flat();
 export function cultureName(id: string): string {
   return id.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ').trim();
 }
+const CULTURE_DE: Record<string, string> = {
+  english: 'Englisch', scottish: 'Schottisch', irish: 'Irisch', welsh: 'Walisisch', french: 'Französisch', occitan: 'Okzitanisch',
+  breton: 'Bretonisch', picard: 'Pikardisch', burgundian_fr: 'Burgundisch', castilian: 'Kastilisch', portuguese: 'Portugiesisch',
+  galician: 'Galicisch', catalan: 'Katalanisch', aragonese: 'Aragonesisch', basque: 'Baskisch', andalusi: 'Andalusisch',
+  flemish: 'Flämisch', hollandic: 'Holländisch', frisian: 'Friesisch', low_saxon: 'Niedersächsisch', central_german: 'Mitteldeutsch',
+  bavarian: 'Bairisch', alemannic: 'Alemannisch', franconian: 'Fränkisch', rhinelander: 'Rheinländisch', prussian_german: 'Preußisch',
+  romansh: 'Rätoromanisch', tuscan: 'Toskanisch', lombard: 'Lombardisch', venetian: 'Venezianisch', ligurian: 'Ligurisch',
+  neapolitan: 'Neapolitanisch', sicilian: 'Sizilianisch', sardinian: 'Sardisch', roman: 'Römisch', czech: 'Tschechisch', slovak: 'Slowakisch',
+  polish: 'Polnisch', silesian: 'Schlesisch', sorbian: 'Sorbisch', pomeranian: 'Pommersch', russian: 'Russisch', ruthenian: 'Ruthenisch',
+  novgorodian: 'Nowgoroder', croatian: 'Kroatisch', serbian: 'Serbisch', bosnian: 'Bosnisch', bulgarian: 'Bulgarisch', slovene: 'Slowenisch',
+  lithuanian: 'Litauisch', latvian: 'Lettisch', old_prussian: 'Altpreußisch', samogitian: 'Schemaitisch', finnish: 'Finnisch',
+  estonian: 'Estnisch', karelian: 'Karelisch', sami: 'Samisch', mordvin: 'Mordwinisch', komi: 'Komi', swedish: 'Schwedisch',
+  danish: 'Dänisch', norwegian: 'Norwegisch', icelandic: 'Isländisch', hungarian: 'Ungarisch', vlach: 'Walachisch', szekely: 'Szeklerisch',
+  greek: 'Griechisch', albanian: 'Albanisch', armenian: 'Armenisch', georgian: 'Georgisch', circassian: 'Tscherkessisch',
+  dagestani: 'Dagestanisch', assyrian: 'Assyrisch', anatolian_turkish: 'Anatolisch-Türkisch', turkmen: 'Turkmenisch', tatar: 'Tatarisch',
+  bashkir: 'Baschkirisch', crimean: 'Krimtatarisch', azeri: 'Aserbaidschanisch', kipchak_nomad: 'Kiptschakisch', mongol: 'Mongolisch',
+  maghrebi: 'Maghrebinisch', egyptian_arab: 'Ägyptisch-Arabisch', levantine: 'Levantinisch', iraqi_arab: 'Irakisch-Arabisch',
+  bedouin: 'Beduinisch', hejazi: 'Hedschasisch', yemeni: 'Jemenitisch', berber: 'Berberisch', tuareg: 'Tuareg', guanche: 'Guanchisch',
+  persian: 'Persisch', kurdish: 'Kurdisch', lur: 'Lurisch', baluch: 'Belutschisch', pashtun: 'Paschtunisch', sindhi: 'Sindhi', alan: 'Alanisch',
+  ashkenazi: 'Aschkenasisch', sephardi: 'Sephardisch', nubian: 'Nubisch', somali: 'Somalisch', swahili: 'Swahili', amhara: 'Amharisch',
+  taino: 'Taíno', carib: 'Karibisch', maya: 'Maya', mississippian: 'Mississippisch', algonquian: 'Algonkin', iroquoian: 'Irokesisch',
+  inuit: 'Inuit', samoyed: 'Samojedisch', ob_ugric: 'Obugrisch', mari: 'Mari', chuvash: 'Tschuwaschisch', unknown: 'Unbekannt',
+};
+/** Culture name in both languages. */
+export function cultureLabel(id: string): I18n { const en = cultureName(id); return { en, de: CULTURE_DE[id] ?? en }; }
 
 // Group-level traditions with real effects (applied through modifiers in the simulation)
 export const GROUP_TRADITIONS: Record<string, { name: I18n; effects: Record<string, number> }> = {

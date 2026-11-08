@@ -288,8 +288,10 @@ function attritionMonth(s: GameState, w: World) {
     const men = perLoc.get(a.loc * 1000 + a.owner) || armyMen(a);
     const lim = supplyLimit(s, w, a.loc, a.owner);
     const t = TERRAIN_DEF[TERRAINS[w.terrain[a.loc]]];
-    let att = 0.002 + t.attrition * 0.01;
-    if (men > lim) att += Math.min(0.12, (men / lim - 1) * 0.05);
+    // in peace at home the regiments lie in winter quarters spread over the country: little is lost
+    const quartered = s.loc.owner[a.loc] === a.owner && !a.rebels && !s.wars.some((x) => x.att.includes(a.owner) || x.def.includes(a.owner));
+    let att = quartered ? 0.001 + t.attrition * 0.002 : 0.002 + t.attrition * 0.01;
+    if (men > lim) att += quartered ? Math.min(0.01, (men / lim - 1) * 0.005) : Math.min(0.12, (men / lim - 1) * 0.05);
     att += s.loc.snow[a.loc] * 0.02;
     const n = s.nations[a.owner];
     if (n) att *= 1 + mod(n, 'attrition');
@@ -335,7 +337,7 @@ function startBattles(s: GameState, w: World) {
       };
       for (const x of [...attSide, ...defSide]) { x.battle = b.id; x.path = []; x.siege = -1; }
       s.battles.push(b);
-      if (s.playerNations.includes(att.owner) || s.playerNations.includes(def.owner)) notice(s, s.playerNations.includes(att.owner) ? att.owner : def.owner, 'battle', { en: `Battle of ${w.names[loc]} has begun!`, de: `Die Schlacht bei ${w.names[loc]} hat begonnen!` }, { loc });
+      if (s.playerNations.includes(att.owner) || s.playerNations.includes(def.owner)) notice(s, s.playerNations.includes(att.owner) ? att.owner : def.owner, 'battle', { en: `Battle of ${w.names[loc]} has begun!`, de: `Die Schlacht bei ${w.namesDe[loc]} hat begonnen!` }, { loc });
     }
   }
 }
@@ -427,7 +429,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   const wn = winner === 'att' ? b.attNation : b.defNation, ln = winner === 'att' ? b.defNation : b.attNation;
   const lossW = winner === 'att' ? b.lossA : b.lossD, lossL = winner === 'att' ? b.lossD : b.lossA;
   // generals may die
-  for (const a of Lz) if (a.general && chance(s.rng, 0.08)) { const g = s.chars[a.general]; if (g) { g.alive = false; g.died = s.day; notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.names[b.loc]}.` }, { loc: b.loc }); a.general = 0; } }
+  for (const a of Lz) if (a.general && chance(s.rng, 0.08)) { const g = s.chars[a.general]; if (g) { g.alive = false; g.died = s.day; notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc }); a.general = 0; } }
   // losers retreat to the nearest friendly location
   for (const a of Lz) {
     if (armyMen(a) < 50) { removeArmy(s, a); continue; }
@@ -445,7 +447,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   const kind = b.naval ? 'naval battle' : 'battle';
   const text = {
     en: `${wnN?.short.en ?? 'Rebels'} defeated ${lnN?.short.en ?? 'rebels'} in the ${kind} of ${w.names[b.loc]} (${Math.round(lossW)} vs ${Math.round(lossL)} lost).`,
-    de: `${wnN?.short.de ?? 'Rebellen'} besiegte ${lnN?.short.de ?? 'Rebellen'} in der ${b.naval ? 'Seeschlacht' : 'Schlacht'} bei ${w.names[b.loc]} (${Math.round(lossW)} gegen ${Math.round(lossL)} Verluste).`,
+    de: `${wnN?.short.de ?? 'Rebellen'} besiegte ${lnN?.short.de ?? 'Rebellen'} in der ${b.naval ? 'Seeschlacht' : 'Schlacht'} bei ${w.namesDe[b.loc]} (${Math.round(lossW)} gegen ${Math.round(lossL)} Verluste).`,
   };
   if (big) chronicle(s, wn, 'battle', text, b.loc);
   s.flags[`last_battle_${b.loc}`] = s.day;
@@ -511,7 +513,7 @@ function siegesDay(s: GameState, w: World) {
       sg = { loc: l, nation: a.owner, progress: 0, days: 0, garrison: s.loc.garrison[l] || fort * 1000, breach: 0, blockade: false, log: [] };
       s.sieges.push(sg);
       a.siege = l;
-      if (s.playerNations.includes(ctrl)) notice(s, ctrl, 'siege', { en: `${w.names[l]} is under siege!`, de: `${w.names[l]} wird belagert!` }, { loc: l });
+      if (s.playerNations.includes(ctrl)) notice(s, ctrl, 'siege', { en: `${w.names[l]} is under siege!`, de: `${w.namesDe[l]} wird belagert!` }, { loc: l });
     }
     if (sg.nation !== a.owner && !s.armies.some((x) => x.siege === l && x.owner === sg!.nation)) sg.nation = a.owner;
     a.siege = l;
@@ -591,8 +593,8 @@ export function occupy(s: GameState, w: World, l: number, by: number, army?: Arm
   if (owner >= 0 && by >= 0 && by !== owner) {
     warScoreEvent(s, by, owner, 'occupy', 0, l);
     const cap = s.nations[owner]?.capital === l;
-    if (cap) notice(s, owner, 'capital_lost', { en: `Our capital ${w.names[l]} has fallen to the enemy!`, de: `Unsere Hauptstadt ${w.names[l]} ist in Feindeshand!` }, { loc: l });
-    if (s.loc.buildings[l * B + BI.fort] >= 2 || cap) chronicle(s, by, 'siege', { en: `${s.nations[by].short.en} took ${w.names[l]}${cap ? `, capital of ${s.nations[owner].short.en}` : ''}.`, de: `${s.nations[by].short.de} nahm ${w.names[l]} ein${cap ? `, Hauptstadt von ${s.nations[owner].short.de}` : ''}.` }, l);
+    if (cap) notice(s, owner, 'capital_lost', { en: `Our capital ${w.names[l]} has fallen to the enemy!`, de: `Unsere Hauptstadt ${w.namesDe[l]} ist in Feindeshand!` }, { loc: l });
+    if (s.loc.buildings[l * B + BI.fort] >= 2 || cap) chronicle(s, by, 'siege', { en: `${s.nations[by].short.en} took ${w.names[l]}${cap ? `, capital of ${s.nations[owner].short.en}` : ''}.`, de: `${s.nations[by].short.de} nahm ${w.namesDe[l]} ein${cap ? `, Hauptstadt von ${s.nations[owner].short.de}` : ''}.` }, l);
   }
   s.flags.ownershipDirty = s.day;
 }
@@ -631,7 +633,7 @@ function recruitsDay(s: GameState, w: World) {
     } else if (!target) target = newArmy(s, r.nation, r.loc, []);
     const reg = target.regs.find((x) => x.type === r.type);
     if (reg) reg.men += r.men; else target.regs.push({ type: r.type, men: r.men });
-    if (s.playerNations.includes(r.nation)) notice(s, r.nation, 'recruited', { en: `${UNITS[r.type].name.en} ready at ${w.names[r.loc]}.`, de: `${UNITS[r.type].name.de} bereit in ${w.names[r.loc]}.` }, { loc: r.loc });
+    if (s.playerNations.includes(r.nation)) notice(s, r.nation, 'recruited', { en: `${UNITS[r.type].name.en} ready at ${w.names[r.loc]}.`, de: `${UNITS[r.type].name.de} bereit in ${w.namesDe[r.loc]}.` }, { loc: r.loc });
   }
 }
 export function seaNear(w: World, l: number): number {
@@ -676,7 +678,7 @@ function upkeepMonth(s: GameState, w: World) {
     for (const r of a.regs) {
       const u = UNITS[r.type];
       const k = u.kind === 'ship' ? r.men : r.men / 1000;
-      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * (1 + lawEffect(n, 'army_cost'));
+      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * (1 + lawEffect(n, 'army_cost') + mod(n, 'army_cost'));
       if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
       if (u.kind === 'ship') navy[a.owner] += c * n.navyMaint; else army[a.owner] += c * n.armyMaint;
     }
@@ -728,8 +730,8 @@ function rebelsMonth(s: GameState, w: World) {
     const a = newArmy(s, o, i, [{ type: levy, men: size }], false, REBEL_NAMES[faction]);
     a.owner = o; a.rebels = { faction, demand: faction === 'peasant' ? 'concessions' : faction === 'separatist' ? 'independence' : faction === 'faith' ? 'faith' : 'concessions', target: o };
     s.loc.unrest[i] = 20;
-    notice(s, o, 'revolt', { en: `Revolt! ${armyNameText(a, 'en')} rise at ${w.names[i]}.`, de: `Aufstand! ${armyNameText(a, 'de')} erheben sich bei ${w.names[i]}.` }, { loc: i });
-    chronicle(s, o, 'revolt', { en: `A ${faction} revolt broke out in ${w.names[i]} (${n.short.en}).`, de: `Ein Aufstand (${REBEL_KIND_DE[faction] ?? faction}) brach in ${w.names[i]} (${n.short.de}) aus.` }, i);
+    notice(s, o, 'revolt', { en: `Revolt! ${armyNameText(a, 'en')} rise at ${w.names[i]}.`, de: `Aufstand! ${armyNameText(a, 'de')} erheben sich bei ${w.namesDe[i]}.` }, { loc: i });
+    chronicle(s, o, 'revolt', { en: `A ${faction} revolt broke out in ${w.names[i]} (${n.short.en}).`, de: `Ein Aufstand (${REBEL_KIND_DE[faction] ?? faction}) brach in ${w.namesDe[i]} (${n.short.de}) aus.` }, i);
   }
   // rebels that hold enough land enforce their demands
   for (const a of s.armies.filter((x) => x.rebels)) {
@@ -744,7 +746,7 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   if (f === 'separatist' && locs.length >= 3) {
     // break away as a new nation
     const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]]);
-    chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.names[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
+    chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
   } else {
     for (const l of locs) s.loc.ctrl[l] = n.id as any;
     if (f === 'peasant') { n.taxRate = n.taxRate.map((t) => t * 0.8); n.modifiers.push({ id: 'peasant_concessions', until: s.day + 365 * 5, label: { en: 'Concessions to the commons', de: 'Zugeständnisse an die Gemeinen' }, effects: { unrest: -6, tax: -0.05 } }); }

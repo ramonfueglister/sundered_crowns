@@ -103,7 +103,7 @@ function agentsMonth(s: GameState, w: World) {
       if (a.kind === 'faith') { s.loc.minFaith[a.loc] = s.loc.faith[a.loc]; s.loc.faith[a.loc] = n.faith; }
       else { s.loc.minCulture[a.loc] = s.loc.culture[a.loc]; s.loc.culture[a.loc] = n.culture; }
       s.loc.minShare[a.loc] = 0.15;
-      if (s.playerNations.includes(n.id)) notice(s, n.id, 'converted', { en: `${w.names[a.loc]} has adopted our ${a.kind === 'faith' ? 'faith' : 'culture'}.`, de: `${w.names[a.loc]} hat unseren ${a.kind === 'faith' ? 'Glauben' : 'Kultur'} angenommen.` }, { loc: a.loc });
+      if (s.playerNations.includes(n.id)) notice(s, n.id, 'converted', { en: `${w.names[a.loc]} has adopted our ${a.kind === 'faith' ? 'faith' : 'culture'}.`, de: `${w.namesDe[a.loc]} hat unseren ${a.kind === 'faith' ? 'Glauben' : 'Kultur'} angenommen.` }, { loc: a.loc });
     }
   }
 }

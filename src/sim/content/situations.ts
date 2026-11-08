@@ -341,7 +341,7 @@ const DEFS: SituationDef[] = [
       s.loc.faith[seed] = FAITH_INDEX.hussite; s.loc.unrest[seed] = clamp(s.loc.unrest[seed] + 15, 0, 100);
       sit.data.owner = s.loc.owner[seed];
       const on = s.nations[s.loc.owner[seed]];
-      world(s, { en: `A preacher in ${w.names[seed]} denounced the corruption of the Church; crowds take the chalice.`, de: `Ein Prediger in ${w.names[seed]} prangerte die Verderbnis der Kirche an; die Menge nimmt den Kelch.` }, on?.id ?? -1, seed);
+      world(s, { en: `A preacher in ${w.names[seed]} denounced the corruption of the Church; crowds take the chalice.`, de: `Ein Prediger in ${w.namesDe[seed]} prangerte die Verderbnis der Kirche an; die Menge nimmt den Kelch.` }, on?.id ?? -1, seed);
     },
     monthly: (s, w, sit, y, m) => {
       const H = FAITH_INDEX.hussite;
@@ -401,7 +401,7 @@ const DEFS: SituationDef[] = [
       s.loc.faith[seed] = FAITH_INDEX.evangelical; s.loc.unrest[seed] = clamp(s.loc.unrest[seed] + 10, 0, 100);
       s.flags.reformation_start = s.day;
       const on = s.nations[s.loc.owner[seed]];
-      world(s, { en: `A professor in ${w.names[seed]} published theses against the sale of indulgences. Printers carry them everywhere.`, de: `Ein Professor in ${w.names[seed]} veröffentlichte Thesen gegen den Ablasshandel. Drucker tragen sie überallhin.` }, on?.id ?? -1, seed);
+      world(s, { en: `A professor in ${w.names[seed]} published theses against the sale of indulgences. Printers carry them everywhere.`, de: `Ein Professor in ${w.namesDe[seed]} veröffentlichte Thesen gegen den Ablasshandel. Drucker tragen sie überallhin.` }, on?.id ?? -1, seed);
     },
     monthly: (s, w, sit, y, m) => {
       const E = FAITH_INDEX.evangelical, R = FAITH_INDEX.reformed;
@@ -416,7 +416,7 @@ const DEFS: SituationDef[] = [
         const seed2 = g >= 0 && s.loc.faith[g] === LATIN ? g : reformSeed(s, w, sit.data.seed);
         if (seed2 >= 0) {
           sit.data.seed2 = seed2; s.loc.faith[seed2] = R;
-          world(s, { en: `In ${w.names[seed2]} a stricter reformed church was founded.`, de: `In ${w.names[seed2]} wurde eine strengere reformierte Kirche gegründet.` }, s.loc.owner[seed2], seed2);
+          world(s, { en: `In ${w.names[seed2]} a stricter reformed church was founded.`, de: `In ${w.namesDe[seed2]} wurde eine strengere reformierte Kirche gegründet.` }, s.loc.owner[seed2], seed2);
         }
       }
       sit.stage = years < 3 ? 0 : years < 12 ? 1 : years < 28 ? 2 : 3;
@@ -458,7 +458,9 @@ const DEFS: SituationDef[] = [
       }
       sit.stage = y >= 1440 && nearCity ? 2 : europe > 0 ? 1 : 0;
       sit.progress = Math.round(clamp(europe * 2.5 + (sit.stage === 2 ? 40 : 0), 0, 100));
-      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.05, manpower: 0.1, cavalry: 0.05 });
+      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.1, manpower: 0.6, cavalry: 0.1, army_cost: -0.15 });
+      // fighters from all over Anatolia flock to a victorious banner
+      o.manpower = Math.min(o.maxManpower, o.manpower + o.maxManpower * 0.015);
       if (cityOwner && cityOwner.faith !== o.faith) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
       // a campaign season every quarter: the sultan only waits while he is already on the offensive somewhere
       const attacking = s.wars.some((x) => x.att.includes(o.id));

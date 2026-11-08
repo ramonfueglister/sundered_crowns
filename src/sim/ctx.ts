@@ -105,7 +105,8 @@ export function enemiesOf(s: GameState, a: number): Set<number> {
   }
   return out;
 }
-export function topOverlord(s: GameState, n: number): number { let k = n, g = 0; while (s.nations[k].overlord >= 0 && g++ < 10) k = s.nations[k].overlord; return k; }
+/** Who leads a realm's wars: its overlord, up the chain. Tributaries only pay; they fight their own wars. */
+export function topOverlord(s: GameState, n: number): number { let k = n, g = 0; while (s.nations[k].overlord >= 0 && s.nations[k].subjectType !== 'tributary' && g++ < 10) k = s.nations[k].overlord; return k; }
 export function subjectsOf(s: GameState, n: number) { return s.nations.filter((x) => x.alive && x.overlord === n).map((x) => x.id); }
 
 export function L(s: GameState, lang: 'en' | 'de', t: I18n) { return t[lang] ?? t.en; }

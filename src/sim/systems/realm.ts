@@ -17,7 +17,7 @@ function constructionsDay(s: GameState, w: World) {
     s.loc.buildings[k] = Math.min(BUILDINGS[c.building].max, s.loc.buildings[k] + 1);
     if (c.building === BI.fort) s.loc.garrison[c.loc] = s.loc.buildings[k] * 1000;
     s.flags.buildingsDirty = s.day;
-    if (s.playerNations.includes(c.nation)) notice(s, c.nation, 'built', { en: `${BUILDINGS[c.building].name.en} completed in ${w.names[c.loc]}.`, de: `${BUILDINGS[c.building].name.de} in ${w.names[c.loc]} fertiggestellt.` }, { loc: c.loc });
+    if (s.playerNations.includes(c.nation)) notice(s, c.nation, 'built', { en: `${BUILDINGS[c.building].name.en} completed in ${w.names[c.loc]}.`, de: `${BUILDINGS[c.building].name.de} in ${w.namesDe[c.loc]} fertiggestellt.` }, { loc: c.loc });
   }
 }
 

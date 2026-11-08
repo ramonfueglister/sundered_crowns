@@ -1,4 +1,5 @@
 // Diplomacy: opinion with reasons, trust, envoys that travel, actions with AI answers and reasons, subjects, espionage.
+import { techBase } from './progress';
 import type { GameState, Nation, Envoy } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, opinion, rel, hasTreaty, allies, atWar, subjectsOf, treatiesOf, addExpense } from '../ctx';
@@ -251,7 +252,7 @@ function spiesDay(s: GameState, w: World) {
       case 'fabricate': s.flags[`cb_${sp.nation}_${sp.target}`] = s.day + 365 * 3; notice(s, sp.nation, 'cb', { en: `Our clerks have “found” a claim against ${Bn.short.en}.`, de: `Unsere Schreiber haben einen Anspruch gegen ${Bn.short.de} „gefunden“.` }); break;
       case 'slander': Bn.prestige -= 10; for (const o of s.nations) if (o.alive && o.id !== sp.target) addOpinion(s, o.id, sp.target, 'slandered', -10, 365 * 2); break;
       case 'support_rebels': for (let i = 0; i < s.loc.owner.length; i++) if (s.loc.owner[i] === sp.target) s.loc.unrest[i] = Math.min(100, s.loc.unrest[i] + 15); break;
-      case 'steal_tech': { const br = A.tech.findIndex((t, k) => Bn.tech[k] > t); if (br >= 0) A.techProgress[br] += 50; break; }
+      case 'steal_tech': { const br = A.tech.findIndex((t, k) => Bn.tech[k] > t); if (br >= 0) A.techProgress[br] += techBase(A, br) * 0.3; break; }
     }
   }
 }

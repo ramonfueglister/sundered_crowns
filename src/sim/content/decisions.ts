@@ -270,7 +270,7 @@ export const DECISIONS: DecisionDef[] = [
       if (l < 0) return;
       e.fx.gold(-12); e.fx.building(l, BI.university, 1); e.fx.prestige(3); e.fx.estate('prelates', 5);
       e.n.flags.university_until = e.s.day + 365 * 30;
-      e.fx.chronicle({ en: `A university was founded in ${e.w.names[l]}.`, de: `In ${e.w.names[l]} wurde eine Universität gegründet.` }, l);
+      e.fx.chronicle({ en: `A university was founded in ${e.w.names[l]}.`, de: `In ${e.w.namesDe[l]} wurde eine Universität gegründet.` }, l);
     },
     ai: (e) => e.n.treasury > months(e, 30) && !H.atWar(e.s, e.n.id) && H.locs(e.s, e.n.id).length >= 12 && worldUniversities(e) < 20 + (e.year - 1356) * 0.3 && chance(e.s.rng, 0.05),
   },
@@ -289,7 +289,7 @@ export const DECISIONS: DecisionDef[] = [
       const b = H.biggestLoc(e), old = e.n.capital;
       e.n.capital = b; e.fx.authority(-50); e.fx.gold(-4); e.fx.concord(-5); e.fx.unrest(old, 10);
       e.n.flags.capital_moved = e.s.day; e.s.flags.ownershipDirty = e.s.day;
-      e.fx.chronicle({ en: `The court moved from ${e.w.names[old]} to ${e.w.names[b]}.`, de: `Der Hof zog von ${e.w.names[old]} nach ${e.w.names[b]}.` }, b);
+      e.fx.chronicle({ en: `The court moved from ${e.w.names[old]} to ${e.w.names[b]}.`, de: `Der Hof zog von ${e.w.namesDe[old]} nach ${e.w.namesDe[b]}.` }, b);
     },
     ai: (e) => { const b = H.biggestLoc(e); return b >= 0 && H.locs(e.s, e.n.id).length >= 8 && e.s.loc.dev[e.n.capital] < e.s.loc.dev[b] * 0.35 && chance(e.s.rng, 0.15); },
   },

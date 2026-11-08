@@ -1,4 +1,5 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
+import { deName } from './content/names_de';
 import { TERRAINS, GI } from './defs';
 
 export interface GeoJson {
@@ -25,7 +26,7 @@ export class World {
   area: Float32Array; elev: Float32Array; rough: Float32Array;
   terrain: Uint8Array; resource: Uint8Array; coastal: Uint8Array; pass: Uint8Array;
   temp: Float32Array; arid: Float32Array; forest: Float32Array;
-  names: string[]; altNames: (string | null)[]; townSize: Uint8Array;
+  names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
   rivers: GeoJson['rivers'];
@@ -48,6 +49,7 @@ export class World {
     for (const [l] of geo.passes) this.pass[l - 1] = 1;
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
+    this.namesDe = this.names.map((n) => deName(n));
     this.altNames = geo.loc.alt.slice(0, L);
     this.townSize = Uint8Array.from(geo.loc.size.slice(0, L).map((v) => v || 0));
     this.kmPerPx = new Float32Array(N);

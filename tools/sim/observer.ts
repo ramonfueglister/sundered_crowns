@@ -1,9 +1,10 @@
 // Observer test (spec point 99): the AI plays alone from the start date to a target year.
 // Prints a plausibility report every N years and writes owner snapshots for map previews.
 // usage: npx tsx tools/sim/observer.ts [toYear=1600] [seed=1356] [startYear=1356] [every=25]
+// env: OBSERVER_OUT (report dir), OBSERVER_SAVES (dir for full save states at each report year)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { newGame } from './load';
-import { step, hashState } from '../../src/sim/engine';
+import { step, hashState, serialize } from '../../src/sim/engine';
 import { dayToDate } from '../../src/sim/calendar';
 import { C } from '../../src/sim/defs';
 
@@ -25,18 +26,20 @@ function snapshot(year: number) {
   const colonial = alive.filter((n) => n.subjectType === 'colonial').map((n) => n.short.en);
   const faiths: Record<string, number> = {};
   for (let i = 0; i < w.L; i++) if (s.loc.owner[i] >= 0) faiths[s.loc.faith[i]] = (faiths[s.loc.faith[i]] ?? 0) + 1;
-  const ruler = (key: string) => { const n = s.nations.find((x) => x.key === key); return n ? `${n.short.en}:${n.alive ? locs.get(n.id) ?? 0 : 'gone'}` : `${key}:?`; };
+  const ruler = (key: string) => { const n = s.nations.find((x) => x.key === key); return n ? `${n.short.en}:${n.alive ? `${locs.get(n.id) ?? 0}/t${n.tech[1]}/g${Math.round(n.treasury / 1000)}k` : 'gone'}` : `${key}:?`; };
+  const techs = alive.map((n) => n.tech[1]).sort((a, b) => a - b);
   const row = {
     year, msPerDay: +((Date.now() - t0) / Math.max(1, s.day)).toFixed(1), alive: alive.length, subjects, wars: s.wars.length,
     popM: +(pop / 1e6).toFixed(1), europeM: +(popEu / 1e6).toFixed(1), priceLevel: +s.priceLevel.toFixed(2),
     top, colonial, companies: (s.companies ?? []).map((c) => c.name.en),
     watch: ['france', 'england', 'castile', 'aragon', 'portugal', 'ottoman', 'byzantium', 'hungary', 'poland', 'lithuania', 'moscow', 'golden_horde', 'venice', 'milan', 'bohemia', 'austria', 'burgundy'].map(ruler),
     situations: (s.situations ?? []).filter((x: any) => x.active || x.ended).map((x: any) => `${x.id}${x.active ? '*' : ''}${x.outcome ? '=' + x.outcome : ''}`),
-    faiths,
+    faiths, tech: { median: techs[techs.length >> 1], max: techs[techs.length - 1] }, colonies: s.colonies.length, explorers: s.explorers.length, ocean: s.flags.ocean_open ? dayToDate(s.flags.ocean_open, s.startYear).y : null,
     hash: hashState(s),
   };
   report.push(row);
   console.log(JSON.stringify(row));
+  if (process.env.OBSERVER_SAVES) writeFileSync(`${process.env.OBSERVER_SAVES}/state_${year}.json`, serialize(s));
   writeFileSync(`${out}/owner_${year}.json`, JSON.stringify({ year, owner: Array.from(s.loc.owner.slice(0, w.L)), colors: s.nations.map((n) => n.color), names: s.nations.map((n) => n.short.en) }));
 }
 

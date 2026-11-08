@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
-import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc } from './common';
+import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
 const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access'];
@@ -38,7 +38,7 @@ export function NationPanel({ nation }: { nation: number }) {
       <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <>{d.heir.name} <span class="muted">({d.heir.age})</span></> : <span class="muted">{t('none')}</span>}</div></div>
     </div>
     <div class="grid2">
-      <Row k={t('capital')} v={<a class="lk" onClick={() => flyToLoc(d.capital)}>{d.capitalName}</a>} />
+      <Row k={t('capital')} v={<a class="lk" onClick={() => flyToLoc(d.capital)}>{placeName(d.capitalName)}</a>} />
       <Row k={t('faith')} v={L(d.faith)} />
       <Row k={t('culture')} v={L(d.culture)} />
       <Row k={t('development')} v={num(d.dev)} />
