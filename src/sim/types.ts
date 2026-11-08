@@ -185,6 +185,7 @@ export interface League { id: string; name: I18n; members: number[]; leader: num
 
 export interface Situation { id: string; active: boolean; progress: number; stage: number; started: number; ended?: number; outcome?: string; data: Record<string, any> }
 
+export interface ReplayLog { seed: number; year: number; player: number | null; difficulty?: number; devtools?: boolean; log: [number, Command | { t: '__player'; player: number | null }][] }
 export interface GameState {
   v: number; seed: number; startYear: number; day: number; rng: number[];
   nextId: number;
@@ -212,6 +213,8 @@ export interface GameState {
   flags: Record<string, number>;
   /** chartered overseas trade companies: a direct route between an overseas market and the home market */
   companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string } }[];
+  /** Single player: how the game was started and every command with the day it was given, so it can be replayed. */
+  replay?: ReplayLog;
   playerNations: number[]; // nations controlled by humans
   observer: boolean;
   aiDisabled: number[];

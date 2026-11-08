@@ -3,7 +3,7 @@
 import { World } from '../sim/world';
 import { createGame } from '../sim/setup';
 import { advanceDay, saveBinary, loadBinary } from '../sim/engine';
-import { applyCommand } from '../sim/commands';
+import { startRecorded, recordCommand } from '../sim/replay';
 import type { GameState, Notice } from '../sim/types';
 import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
 import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer } from './view';
@@ -103,21 +103,20 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       case 'init': {
         const b = await loadBase(m.year);
         if (m.save) s = loadBinary(m.save);
-        else s = createGame(w, b.setups[m.year], b.hubs, m.seed, { player: m.player !== null ? [m.player] : [] });
+        else s = startRecorded(w, b.setups[m.year], b.hubs, { seed: m.seed, year: m.year, player: m.player, difficulty: m.difficulty, devtools: !!m.devtools });
         player = m.save ? (s.playerNations[0] ?? null) : m.player;
-        if (m.devtools) s.flags.devtools = 1;
-        if (m.difficulty !== undefined) s.difficulty = m.difficulty;
-        if (player !== null && !m.save) s.flags.peaceful_start = 30;
+        if (m.save && m.devtools) s.flags.devtools = 1;
+        if (m.save && m.difficulty !== undefined) s.difficulty = m.difficulty;
         lastNotice = s.notices.length ? s.notices[s.notices.length - 1].id : 0; lastChron = s.chronicle.length; lastOwnerChange = ((s as any).ownerChanges || []).length;
         speed = 0; mapDirty = true;
         post({ type: 'ready', L: w.L, S: w.S, nations: nationLites(s, w) });
         sendTick(true);
         break;
       }
-      case 'player': player = m.player; s.playerNations = m.player !== null ? [m.player] : []; sendTick(true); break;
+      case 'player': player = m.player; recordCommand(s, w, { t: '__player', player: m.player }); sendTick(true); break;
       case 'speed': setSpeed(m.speed); break;
       case 'cmd': {
-        const res = applyCommand(s, w, m.cmd);
+        const res = recordCommand(s, w, m.cmd);
         post({ type: 'cmdResult', id: m.id, res });
         sendTick();
         break;
