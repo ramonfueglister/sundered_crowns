@@ -1,7 +1,8 @@
 // Load test for the world server (point 118): 100 bot players over real WebSockets in one world.
 //   MAX_CONN_PER_IP=300 SECONDS_PER_DAY=0.5 PORT=8790 MAX_PLAYERS=200 WORLD_DATA_DIR=/tmp/sc-load npx tsx server/main.ts &
 //   WORLD_URL=ws://localhost:8790 BOTS=100 SECONDS=90 npx tsx tools/load_test.ts
-// Each bot joins its own realm and plays (taxes, budget, research, standing orders); at the end one bot declares war on another.
+// Each bot joins its own realm and plays (taxes, budget, research, standing orders); at the end one bot offers another
+// military access and one bot declares war on another.
 // Reports join time, tick delivery, command acknowledgement (queued) and result times (applied at the next day boundary) and the server's day rate.
 import WebSocket from 'ws';
 import { PROTOCOL_VERSION, type ServerMsg, type ClientMsg } from '../src/online/protocol';
@@ -77,8 +78,16 @@ async function main() {
     round++;
     await sleep(2000);
   }
-  // a war between two bots and a peace offer (dev auth worlds allow declaring without justification)
-  const [A, B] = seated;
+  // a diplomatic offer between two bots, answered by the other side
+  const [A, B, C, D] = seated;
+  const tOffer = Date.now(); C.msgs = []; D.msgs = [];
+  C.send({ type: 'offer', to: D.nation, action: 'access' });
+  const got = await until(() => D.msgs.find((m: any) => m.type === 'offers' && m.offers.some((o: any) => o.from === C.nation)) as any, 'offer arrives', 15_000).catch(() => null);
+  const offerMs = got ? Date.now() - tOffer : null;
+  if (got) D.send({ type: 'offer_answer', offer: got.offers.find((o: any) => o.from === C.nation).id, accept: true });
+  await sleep(2000);
+  const offerOk = !!got && !D.msgs.some((m: any) => m.type === 'error') && !C.msgs.some((m: any) => m.type === 'error');
+  // a war between two bots (dev auth worlds allow declaring without justification)
   const decl = A.cmd({ t: 'declare', n: A.nation, target: B.nation, goal: 'conquest' }); await A.result(decl);
   const declOk = !!A.results.get(decl)?.ok;
   await sleep(3000);
@@ -92,7 +101,7 @@ async function main() {
   console.log(JSON.stringify({
     bots: BOTS, seated: seated.length, seconds: SECONDS, daysAdvanced: endDay - startDay, commands: rtts.length,
     ackMs: { p50: q(0.5, acks), p95: q(0.95, acks), max: acks[acks.length - 1] }, resultMs: { p50: q(0.5), p95: q(0.95), max: rtts[rtts.length - 1] }, minTicksPerBot: minTicks, kbPerBotPerDay: Math.round(seated.reduce((p, b) => p + b.bytes, 0) / seated.length / Math.max(1, endDay - startDay) / 1024 * 10) / 10, rejected: seated.reduce((p, b) => p + b.errors, 0),
-    warDeclared: declOk, declareResult: A.results.get(decl), serverStepMs: health?.stepMs,
+    offerDeliveredMs: offerMs, offerAccepted: offerOk, warDeclared: declOk, declareResult: A.results.get(decl), serverStepMs: health?.stepMs,
   }, null, 1));
   for (const b of bots) b.ws.close(1000, 'bye');
   process.exit(seated.length === BOTS && minTicks > 0 ? 0 : 1);
