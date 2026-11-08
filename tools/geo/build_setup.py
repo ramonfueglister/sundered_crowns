@@ -222,6 +222,8 @@ def main():
             t = 'hills'
         elif A > 0.55:
             t = 'steppe'
+            # groves and gallery woods thin out gradually into the steppe instead of stopping at its edge
+            forest_cover[i] = float(np.clip((0.68 - A) * 2.2 - dens[i] / 60 + ffb[i] * 0.5, 0, 0.3))
         else:
             # forest vs open farmland: humid temperate land is forested unless people cleared it (density)
             humid = 1 - A
@@ -276,6 +278,31 @@ def main():
     print('terrain', Counter(terrain).most_common())
     print('total pop (M)', round(pop.sum() / 1e6, 1), 'europe-ish', round(pop[((lon > -12) & (lon < 45) & (lat > 35))[:L]].sum() / 1e6, 1))
 
+def smoothstep(a, b, x):
+    t = np.clip((np.asarray(x, float) - a) / (b - a), 0, 1)
+    return t * t * (3 - 2 * t)
+
+# northern edge of the true steppe (aridity ≈ 0.55) as (lon, lat), c.1356
+STEPPE_EDGE = [(24, 45.0), (26, 45.6), (28, 46.6), (30, 47.6), (32, 48.4), (34, 48.9), (36, 49.3), (38, 49.9),
+               (40, 50.5), (42, 51.0), (44, 51.5), (46, 52.0), (48, 52.5), (50, 52.8), (55, 53.2), (60, 53.5),
+               (65, 54.0), (70, 54.3)]
+
+def steppe_aridity(lon, lat):
+    """Aridity of the Pontic–Caspian steppe belt and its forest-steppe fringe; 0.25 (humid) far to the north."""
+    lon = np.asarray(lon, float); lat = np.asarray(lat, float)
+    ex, ey = zip(*STEPPE_EDGE)
+    # signed distance (degrees latitude) north of the steppe edge, with a gentle meander so the ecotone is not a ruled line
+    d = lat - np.interp(lon, ex, ey) + 0.45 * np.sin(0.55 * lon + 1.3) + 0.3 * np.sin(1.7 * lon + 0.8 * lat)
+    # steppe core 0.62 → edge 0.55 → forest-steppe (open land with groves, 0.55–0.47) → mixed forest 0.25
+    A = np.interp(d, [-2.0, -0.3, 0.0, 1.0, 2.0, 3.0, 4.0], [0.62, 0.575, 0.55, 0.51, 0.47, 0.34, 0.25])
+    # forest-steppe mosaic: per-location jitter, strongest in the ecotone (deterministic hash of position)
+    h = np.array([int(hashlib.md5(f'{a:.3f},{b:.3f}'.encode()).hexdigest()[:6], 16) / 0xFFFFFF for a, b in zip(lon, lat)])
+    eco = np.interp(d, [-1.5, -0.3, 2.0, 3.2], [0.0, 1.0, 1.0, 0.0])
+    A = A + eco * 0.06 * (h * 2 - 1)
+    # fades out towards the Wallachian plain in the west and the Caucasus in the south
+    fade = smoothstep(25.0, 27.5, lon) * smoothstep(43.2, 44.2, lat)
+    return 0.25 + (A - 0.25) * fade
+
 def climate(lon, lat, elev):
     lon = np.asarray(lon, float); lat = np.asarray(lat, float)
     alat = np.abs(lat)
@@ -286,8 +313,10 @@ def climate(lon, lat, elev):
     # Mediterranean summer drought
     med = (lat > 30) & (lat < 43.5) & (lon > -10) & (lon < 42)
     A = np.where(med, 0.45, A)
-    # Pontic–Caspian & Central Asian steppe
-    A = np.where((lat > 44) & (lat < 52.5) & (lon > 30) & (lon < 70), 0.62, A)
+    # Pontic–Caspian & Central Asian steppe. No box: aridity follows the distance to the northern edge of the
+    # true steppe, which runs south-west to north-east (Budjak – lower Dnieper – Donets – middle Volga – southern Urals).
+    # North of it lies a 2–3° wide forest-steppe ecotone (a mosaic of open land and groves), then mixed forest.
+    A = np.maximum(A, steppe_aridity(lon, lat))
     A = np.where((lat > 35) & (lat <= 44.5) & (lon > 50) & (lon < 70), 0.82, A)
     A = np.where((lat > 46) & (lat < 49) & (lon > 19) & (lon < 22), 0.48, A)  # Hungarian puszta
     # Anatolian & Iranian plateaus
