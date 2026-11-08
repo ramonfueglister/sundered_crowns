@@ -1,0 +1,6683 @@
+{
+ "region": "italy_balkans",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "Cambridge Medieval History vol. VII",
+  "New Cambridge Medieval History vol. VI",
+  "Oxford Dictionary of Byzantium",
+  "J. V. A. Fine, The Late Medieval Balkans",
+  "D. M. Nicol, The Last Centuries of Byzantium",
+  "K. M. Setton, The Papacy and the Levant vol. I",
+  "J. Larner, Italy in the Age of Dante and Petrarch",
+  "Putzger Historischer Weltatlas",
+  "Wikipedia articles on the respective states and rulers"
+ ],
+ "new_ids": [],
+ "external_refs": [
+  "aragon",
+  "savoy",
+  "france",
+  "holy_roman_empire",
+  "gorizia",
+  "ottomans",
+  "aydin",
+  "mamluks",
+  "golden_horde",
+  "poland"
+ ],
+ "notes": [
+  "Genoa is modelled as a vassal of the Visconti (lordship 1353 - Nov 1356) rather than folded into Milan.",
+  "Milan is one state jointly ruled by Bernabò and Galeazzo II Visconti after Matteo II's death (Sept 1355); Bernabò given as lead ruler.",
+  "Provence, Forcalquier and Cuneo are holdings of Naples (Joanna I); Avignon and Comtat Venaissin are papal holdings and the papal capital.",
+  "Palermo and Girgenti are given to Naples (Chiaramonte delivered them to the Angevins 1354); Malta and Gozo are Sicilian holdings.",
+  "Corsica coastal anchors are given to Genoa; Crete, Negroponte, Modon, Coron and Dalmatia are Venetian holdings; Corfu is in Achaea (Robert of Taranto).",
+  "Croatia, Slavonia and Dalmatian interior are holdings of Hungary, not a separate state.",
+  "Epirus on 1 Jan 1356 is under Simeon Uroš (Nikephoros II Orsini's restoration begins later in 1356); Thessaly included in his holdings.",
+  "Albanian lords Thopia and Balsha are not yet independent in 1356 and are omitted; Valona (John Komnenos Asen) and Angevin Durazzo are included.",
+  "Pera (Galata) is a Genoese enclave beside Constantinople; Smyrna harbour castle given to the Hospitallers (held by the Latin league)."
+ ],
+ "states": [
+  {
+   "id": "papal_states",
+   "name": {
+    "en": "Papal States",
+    "de": "Kirchenstaat"
+   },
+   "short": {
+    "en": "Papacy",
+    "de": "Papsttum"
+   },
+   "adjective": {
+    "en": "Papal",
+    "de": "päpstlich"
+   },
+   "rank": "principality",
+   "government": "theocracy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#f2e6a0",
+   "capital": {
+    "name": "Avignon",
+    "lat": 43.949,
+    "lon": 4.806
+   },
+   "holdings": [
+    {
+     "name": "Avignon",
+     "lat": 43.949,
+     "lon": 4.806
+    },
+    {
+     "name": "Carpentras",
+     "lat": 44.055,
+     "lon": 5.048
+    },
+    {
+     "name": "Rome",
+     "lat": 41.902,
+     "lon": 12.496
+    },
+    {
+     "name": "Viterbo",
+     "lat": 42.42,
+     "lon": 12.107
+    },
+    {
+     "name": "Orvieto",
+     "lat": 42.718,
+     "lon": 12.111
+    },
+    {
+     "name": "Spoleto",
+     "lat": 42.734,
+     "lon": 12.738
+    },
+    {
+     "name": "Foligno",
+     "lat": 42.956,
+     "lon": 12.703
+    },
+    {
+     "name": "Rieti",
+     "lat": 42.404,
+     "lon": 12.857
+    },
+    {
+     "name": "Civitavecchia",
+     "lat": 42.093,
+     "lon": 11.796
+    },
+    {
+     "name": "Anagni",
+     "lat": 41.744,
+     "lon": 13.158
+    },
+    {
+     "name": "Terracina",
+     "lat": 41.291,
+     "lon": 13.248
+    },
+    {
+     "name": "Ancona",
+     "lat": 43.616,
+     "lon": 13.519
+    },
+    {
+     "name": "Macerata",
+     "lat": 43.3,
+     "lon": 13.453
+    },
+    {
+     "name": "Fermo",
+     "lat": 43.16,
+     "lon": 13.718
+    },
+    {
+     "name": "Ascoli",
+     "lat": 42.854,
+     "lon": 13.575
+    },
+    {
+     "name": "Benevento",
+     "lat": 41.13,
+     "lon": 14.782
+    }
+   ],
+   "ruler": {
+    "name": "Innocent VI",
+    "born": 1282,
+    "dynasty": "Aubert",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "pious",
+     "frugal",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Étienne Aubert, a Limousin jurist elected pope in 1352; papal succession is elective by the cardinals",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "hungary",
+    "rimini"
+   ],
+   "rivals": [
+    "forli",
+    "faenza",
+    "bologna"
+   ],
+   "claims_on": [
+    "bologna",
+    "forli",
+    "faenza",
+    "ravenna",
+    "perugia"
+   ],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "Pope Innocent VI rules from Avignon and its Comtat Venaissin, far from Rome. His legate Cardinal Gil Álvarez de Albornoz has since 1353 forced the Patrimony, the Duchy of Spoleto and the March of Ancona back into obedience. The rebel lords of Romagna – Ordelaffi and Manfredi – remain to be crushed.",
+    "de": "Papst Innozenz VI. regiert von Avignon und dem Comtat Venaissin aus, fern von Rom. Sein Legat Kardinal Albornoz hat seit 1353 das Patrimonium, das Herzogtum Spoleto und die Mark Ancona zurückgewonnen. Die aufständischen Herren der Romagna – Ordelaffi und Manfredi – sind noch nicht bezwungen."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire Or and argent beneath a papal tiara",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "crown",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "naples",
+   "name": {
+    "en": "Kingdom of Naples",
+    "de": "Königreich Neapel"
+   },
+   "short": {
+    "en": "Naples",
+    "de": "Neapel"
+   },
+   "adjective": {
+    "en": "Neapolitan",
+    "de": "neapolitanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "neapolitan",
+   "faith": "latin",
+   "color": "#5b7fd1",
+   "capital": {
+    "name": "Naples",
+    "lat": 40.852,
+    "lon": 14.268
+   },
+   "holdings": [
+    {
+     "name": "Naples",
+     "lat": 40.852,
+     "lon": 14.268
+    },
+    {
+     "name": "Capua",
+     "lat": 41.106,
+     "lon": 14.212
+    },
+    {
+     "name": "Gaeta",
+     "lat": 41.213,
+     "lon": 13.571
+    },
+    {
+     "name": "L'Aquila",
+     "lat": 42.35,
+     "lon": 13.4
+    },
+    {
+     "name": "Sulmona",
+     "lat": 42.048,
+     "lon": 13.926
+    },
+    {
+     "name": "Chieti",
+     "lat": 42.351,
+     "lon": 14.168
+    },
+    {
+     "name": "Foggia",
+     "lat": 41.462,
+     "lon": 15.545
+    },
+    {
+     "name": "Manfredonia",
+     "lat": 41.63,
+     "lon": 15.917
+    },
+    {
+     "name": "Trani",
+     "lat": 41.277,
+     "lon": 16.416
+    },
+    {
+     "name": "Bari",
+     "lat": 41.117,
+     "lon": 16.872
+    },
+    {
+     "name": "Brindisi",
+     "lat": 40.638,
+     "lon": 17.946
+    },
+    {
+     "name": "Taranto",
+     "lat": 40.464,
+     "lon": 17.247
+    },
+    {
+     "name": "Lecce",
+     "lat": 40.352,
+     "lon": 18.169
+    },
+    {
+     "name": "Otranto",
+     "lat": 40.146,
+     "lon": 18.491
+    },
+    {
+     "name": "Matera",
+     "lat": 40.666,
+     "lon": 16.604
+    },
+    {
+     "name": "Melfi",
+     "lat": 40.996,
+     "lon": 15.652
+    },
+    {
+     "name": "Potenza",
+     "lat": 40.64,
+     "lon": 15.806
+    },
+    {
+     "name": "Salerno",
+     "lat": 40.682,
+     "lon": 14.768
+    },
+    {
+     "name": "Cosenza",
+     "lat": 39.298,
+     "lon": 16.254
+    },
+    {
+     "name": "Rossano",
+     "lat": 39.576,
+     "lon": 16.634
+    },
+    {
+     "name": "Catanzaro",
+     "lat": 38.91,
+     "lon": 16.588
+    },
+    {
+     "name": "Gerace",
+     "lat": 38.271,
+     "lon": 16.22
+    },
+    {
+     "name": "Palermo",
+     "lat": 38.116,
+     "lon": 13.361
+    },
+    {
+     "name": "Girgenti",
+     "lat": 37.311,
+     "lon": 13.577
+    },
+    {
+     "name": "Aix",
+     "lat": 43.529,
+     "lon": 5.447
+    },
+    {
+     "name": "Marseille",
+     "lat": 43.296,
+     "lon": 5.37
+    },
+    {
+     "name": "Arles",
+     "lat": 43.677,
+     "lon": 4.631
+    },
+    {
+     "name": "Tarascon",
+     "lat": 43.806,
+     "lon": 4.66
+    },
+    {
+     "name": "Toulon",
+     "lat": 43.124,
+     "lon": 5.928
+    },
+    {
+     "name": "Draguignan",
+     "lat": 43.538,
+     "lon": 6.464
+    },
+    {
+     "name": "Grasse",
+     "lat": 43.658,
+     "lon": 6.923
+    },
+    {
+     "name": "Digne",
+     "lat": 44.092,
+     "lon": 6.236
+    },
+    {
+     "name": "Sisteron",
+     "lat": 44.195,
+     "lon": 5.944
+    },
+    {
+     "name": "Forcalquier",
+     "lat": 43.96,
+     "lon": 5.78
+    },
+    {
+     "name": "Cuneo",
+     "lat": 44.384,
+     "lon": 7.543
+    }
+   ],
+   "ruler": {
+    "name": "Joanna I",
+    "born": 1326,
+    "dynasty": "Anjou",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "charming",
+     "imperious"
+    ]
+   },
+   "heir": {
+    "name": "Maria of Calabria",
+    "born": 1329,
+    "dynasty": "Anjou",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": {
+    "name": "Louis of Taranto",
+    "born": 1320,
+    "dynasty": "Anjou-Taranto",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "dynasty_note": "Angevin house of Naples, a cadet branch of the Capetians; Joanna reigns with her husband Louis of Taranto, crowned king in 1352",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "papal_states",
+    "achaea",
+    "florence",
+    "durazzo"
+   ],
+   "rivals": [
+    "sicily",
+    "hungary"
+   ],
+   "claims_on": [
+    "sicily",
+    "athens"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Queen Joanna I and her husband King Louis of Taranto rule southern Italy and the counties of Provence and Forcalquier, with Angevin outposts in Piedmont. Since 1354 their troops and the Chiaramonte faction hold Palermo, and they hope to reunite Sicily with the mainland. The barons are restless and the memory of the Hungarian invasions of 1348–1350 is fresh.",
+    "de": "Königin Johanna I. und ihr Gemahl König Ludwig von Tarent beherrschen Süditalien sowie die Grafschaften Provence und Forcalquier, dazu angevinische Posten im Piemont. Seit 1354 halten ihre Truppen mit den Chiaramonte Palermo, und sie hoffen, Sizilien wieder mit dem Festland zu vereinen. Die Barone sind unruhig, die ungarischen Feldzüge von 1348–1350 unvergessen."
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or, a label gules",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 9,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sicily",
+   "name": {
+    "en": "Kingdom of Trinacria",
+    "de": "Königreich Trinakria"
+   },
+   "short": {
+    "en": "Sicily",
+    "de": "Sizilien"
+   },
+   "adjective": {
+    "en": "Sicilian",
+    "de": "sizilianisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sicilian",
+   "faith": "latin",
+   "color": "#d9a03a",
+   "capital": {
+    "name": "Catania",
+    "lat": 37.502,
+    "lon": 15.087
+   },
+   "holdings": [
+    {
+     "name": "Catania",
+     "lat": 37.502,
+     "lon": 15.087
+    },
+    {
+     "name": "Messina",
+     "lat": 38.193,
+     "lon": 15.554
+    },
+    {
+     "name": "Syracuse",
+     "lat": 37.075,
+     "lon": 15.286
+    },
+    {
+     "name": "Castrogiovanni",
+     "lat": 37.567,
+     "lon": 14.279
+    },
+    {
+     "name": "Trapani",
+     "lat": 38.017,
+     "lon": 12.514
+    },
+    {
+     "name": "Mdina",
+     "lat": 35.886,
+     "lon": 14.403
+    },
+    {
+     "name": "Gozo",
+     "lat": 36.044,
+     "lon": 14.24
+    }
+   ],
+   "ruler": {
+    "name": "Frederick III the Simple",
+    "born": 1341,
+    "dynasty": "Barcelona (Sicilian line)",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "sickly",
+     "gentle"
+    ]
+   },
+   "heir": {
+    "name": "Eufemia",
+    "born": 1330,
+    "dynasty": "Barcelona (Sicilian line)",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "diligent"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Sicilian branch of the House of Barcelona; Frederick succeeded his brother Louis in October 1355 under the regency of his sister Eufemia",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "athens",
+    "sardinia_aragon"
+   ],
+   "rivals": [
+    "naples"
+   ],
+   "claims_on": [
+    "naples"
+   ],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The fourteen-year-old Frederick III has just inherited a kingdom torn between the Catalan and Latin baronial factions. The Chiaramonte have handed Palermo to the Angevins of Naples, and the court survives in Catania under the regent Eufemia. Malta and Gozo and the Catalan duchies in Greece also owe him allegiance.",
+    "de": "Der vierzehnjährige Friedrich III. hat ein Reich geerbt, das zwischen katalanischer und lateinischer Baronenpartei zerrissen ist. Die Chiaramonte haben Palermo den Anjou von Neapel ausgeliefert; der Hof hält sich in Catania unter der Regentin Eufemia. Auch Malta, Gozo und die katalanischen Herzogtümer in Griechenland gehören ihm."
+   },
+   "coa": {
+    "blazon": "Per saltire Or paly gules and argent an eagle sable",
+    "field": "or",
+    "division": "per_saltire",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "sardinia_aragon",
+   "name": {
+    "en": "Kingdom of Sardinia",
+    "de": "Königreich Sardinien"
+   },
+   "short": {
+    "en": "Sardinia",
+    "de": "Sardinien"
+   },
+   "adjective": {
+    "en": "Sardinian",
+    "de": "sardisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sardinian",
+   "faith": "latin",
+   "color": "#c45a5a",
+   "capital": {
+    "name": "Cagliari",
+    "lat": 39.223,
+    "lon": 9.121
+   },
+   "holdings": [
+    {
+     "name": "Cagliari",
+     "lat": 39.223,
+     "lon": 9.121
+    },
+    {
+     "name": "Iglesias",
+     "lat": 39.31,
+     "lon": 8.537
+    },
+    {
+     "name": "Alghero",
+     "lat": 40.558,
+     "lon": 8.319
+    },
+    {
+     "name": "Sassari",
+     "lat": 40.727,
+     "lon": 8.56
+    }
+   ],
+   "ruler": {
+    "name": "Peter IV the Ceremonious",
+    "born": 1319,
+    "dynasty": "Barcelona",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     2
+    ],
+    "traits": [
+     "cunning",
+     "pious",
+     "vengeful"
+    ]
+   },
+   "heir": {
+    "name": "John",
+    "born": 1350,
+    "dynasty": "Barcelona",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "bookish"
+    ]
+   },
+   "consort": {
+    "name": "Eleanor of Sicily",
+    "born": 1325,
+    "dynasty": "Barcelona (Sicilian line)",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "devout"
+    ]
+   },
+   "dynasty_note": "Ruled by the Kings of Aragon of the House of Barcelona; Alghero was taken from the Genoese Doria in 1354",
+   "overlord": "aragon",
+   "subject_type": "personal_union",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sicily",
+    "venice"
+   ],
+   "rivals": [
+    "arborea",
+    "genoa"
+   ],
+   "claims_on": [
+    "arborea"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Sardinian realm of the Crown of Aragon holds Cagliari, the mining town of Iglesias, Sassari and Alghero, resettled with Catalans in 1354. King Peter IV campaigned on the island himself in 1354–1355 and made a fragile peace with Arborea at Sanluri. Corsica is claimed under the same papal grant but is not in Aragonese hands.",
+    "de": "Das sardische Reich der Krone Aragon hält Cagliari, die Bergbaustadt Iglesias, Sassari und das 1354 mit Katalanen neu besiedelte Alghero. König Peter IV. führte 1354–1355 selbst Krieg auf der Insel und schloss mit Arborea den brüchigen Frieden von Sanluri. Korsika wird aus derselben päpstlichen Belehnung beansprucht, ist aber nicht in aragonesischer Hand."
+   },
+   "coa": {
+    "blazon": "Or, four pallets gules",
+    "field": "or",
+    "division": "paly",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "arborea",
+   "name": {
+    "en": "Judicate of Arborea",
+    "de": "Judikat Arborea"
+   },
+   "short": {
+    "en": "Arborea",
+    "de": "Arborea"
+   },
+   "adjective": {
+    "en": "Arborean",
+    "de": "arboreisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "sardinian",
+   "faith": "latin",
+   "color": "#4f8f4a",
+   "capital": {
+    "name": "Oristano",
+    "lat": 39.903,
+    "lon": 8.592
+   },
+   "holdings": [
+    {
+     "name": "Oristano",
+     "lat": 39.903,
+     "lon": 8.592
+    },
+    {
+     "name": "Bosa",
+     "lat": 40.298,
+     "lon": 8.498
+    },
+    {
+     "name": "Sanluri",
+     "lat": 39.56,
+     "lon": 8.9
+    },
+    {
+     "name": "Goceano",
+     "lat": 40.39,
+     "lon": 8.99
+    },
+    {
+     "name": "Nuoro",
+     "lat": 40.321,
+     "lon": 9.33
+    }
+   ],
+   "ruler": {
+    "name": "Marianus IV",
+    "born": 1317,
+    "dynasty": "Bas-Serra",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "patriotic"
+    ]
+   },
+   "heir": {
+    "name": "Hugh",
+    "born": 1337,
+    "dynasty": "Bas-Serra",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     4
+    ],
+    "traits": [
+     "cruel",
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Timbora de Rocabertí",
+    "born": 1320,
+    "dynasty": "Rocabertí",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Bas-Serra (Catalan viscounts of Bas married into the Sardinian judges)",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [
+    "sardinia_aragon"
+   ],
+   "claims_on": [
+    "sardinia_aragon"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "The last native Sardinian judicate is ruled by Marianus IV, a former friend of the Aragonese court turned their fiercest enemy. He fought King Peter IV to a standstill before Alghero and agreed a truce at Sanluri in 1355. He dreams of uniting the whole island under Arborea.",
+    "de": "Das letzte einheimische sardische Judikat regiert Marianus IV., einst Freund des aragonesischen Hofes, nun sein erbittertster Feind. Er brachte Peter IV. vor Alghero zum Stillstand und schloss 1355 in Sanluri Waffenstillstand. Er träumt davon, die ganze Insel unter Arborea zu vereinen."
+   },
+   "coa": {
+    "blazon": "Argent, an uprooted tree vert",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "venice",
+   "name": {
+    "en": "Republic of Venice",
+    "de": "Republik Venedig"
+   },
+   "short": {
+    "en": "Venice",
+    "de": "Venedig"
+   },
+   "adjective": {
+    "en": "Venetian",
+    "de": "venezianisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#2e8b8b",
+   "capital": {
+    "name": "Venice",
+    "lat": 45.438,
+    "lon": 12.335
+   },
+   "holdings": [
+    {
+     "name": "Venice",
+     "lat": 45.438,
+     "lon": 12.335
+    },
+    {
+     "name": "Treviso",
+     "lat": 45.666,
+     "lon": 12.243
+    },
+    {
+     "name": "Capodistria",
+     "lat": 45.548,
+     "lon": 13.73
+    },
+    {
+     "name": "Parenzo",
+     "lat": 45.227,
+     "lon": 13.594
+    },
+    {
+     "name": "Pola",
+     "lat": 44.87,
+     "lon": 13.85
+    },
+    {
+     "name": "Zara",
+     "lat": 44.119,
+     "lon": 15.231
+    },
+    {
+     "name": "Sebenico",
+     "lat": 43.735,
+     "lon": 15.89
+    },
+    {
+     "name": "Traù",
+     "lat": 43.517,
+     "lon": 16.25
+    },
+    {
+     "name": "Spalato",
+     "lat": 43.508,
+     "lon": 16.44
+    },
+    {
+     "name": "Candia",
+     "lat": 35.339,
+     "lon": 25.144
+    },
+    {
+     "name": "Canea",
+     "lat": 35.514,
+     "lon": 24.018
+    },
+    {
+     "name": "Rettimo",
+     "lat": 35.366,
+     "lon": 24.474
+    },
+    {
+     "name": "Sitia",
+     "lat": 35.207,
+     "lon": 26.104
+    },
+    {
+     "name": "Negroponte",
+     "lat": 38.463,
+     "lon": 23.6
+    },
+    {
+     "name": "Karystos",
+     "lat": 38.016,
+     "lon": 24.42
+    },
+    {
+     "name": "Modon",
+     "lat": 36.82,
+     "lon": 21.705
+    },
+    {
+     "name": "Coron",
+     "lat": 36.795,
+     "lon": 21.96
+    }
+   ],
+   "ruler": {
+    "name": "Doge Giovanni Gradenigo",
+    "born": 1279,
+    "dynasty": "Gradenigo",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "prudent",
+     "elderly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected doge in April 1355 after the execution of Marino Faliero; the dogeship is elective for life",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sardinia_aragon",
+    "ragusa",
+    "archipelago"
+   ],
+   "rivals": [
+    "genoa",
+    "hungary",
+    "milan"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "Venice has just emerged from a ruinous war with Genoa, ended by the peace of June 1355, and from the conspiracy of Doge Marino Faliero. The aged Doge Giovanni Gradenigo presides over a maritime empire stretching from Treviso and Istria through Dalmatia to Crete, Negroponte, Modon and Coron. King Louis of Hungary is preparing to wrest Dalmatia from the Republic.",
+    "de": "Venedig ist gerade aus einem verlustreichen Krieg gegen Genua (Frieden vom Juni 1355) und der Verschwörung des Dogen Marino Faliero hervorgegangen. Der greise Doge Giovanni Gradenigo führt ein Seereich von Treviso und Istrien über Dalmatien bis Kreta, Negroponte, Modon und Coron. König Ludwig von Ungarn rüstet, um der Republik Dalmatien zu entreißen."
+   },
+   "coa": {
+    "blazon": "Azure, a winged lion passant Or holding a book",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "genoa",
+   "name": {
+    "en": "Republic of Genoa",
+    "de": "Republik Genua"
+   },
+   "short": {
+    "en": "Genoa",
+    "de": "Genua"
+   },
+   "adjective": {
+    "en": "Genoese",
+    "de": "genuesisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#c8c8d8",
+   "capital": {
+    "name": "Genoa",
+    "lat": 44.407,
+    "lon": 8.934
+   },
+   "holdings": [
+    {
+     "name": "Genoa",
+     "lat": 44.407,
+     "lon": 8.934
+    },
+    {
+     "name": "Savona",
+     "lat": 44.309,
+     "lon": 8.477
+    },
+    {
+     "name": "Albenga",
+     "lat": 44.05,
+     "lon": 8.218
+    },
+    {
+     "name": "Ventimiglia",
+     "lat": 43.79,
+     "lon": 7.608
+    },
+    {
+     "name": "Chiavari",
+     "lat": 44.317,
+     "lon": 9.322
+    },
+    {
+     "name": "La Spezia",
+     "lat": 44.103,
+     "lon": 9.824
+    },
+    {
+     "name": "Bonifacio",
+     "lat": 41.387,
+     "lon": 9.159
+    },
+    {
+     "name": "Calvi",
+     "lat": 42.567,
+     "lon": 8.757
+    },
+    {
+     "name": "Biguglia",
+     "lat": 42.627,
+     "lon": 9.42
+    },
+    {
+     "name": "Corte",
+     "lat": 42.306,
+     "lon": 9.15
+    },
+    {
+     "name": "Pera",
+     "lat": 41.026,
+     "lon": 28.974
+    }
+   ],
+   "ruler": {
+    "name": "Guglielmo Pallavicino (Visconti governor)",
+    "born": null,
+    "dynasty": "Pallavicino",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     2
+    ],
+    "traits": [
+     "loyal"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Genoa gave itself to Archbishop Giovanni Visconti in October 1353 after defeat at Alghero; the Visconti rule through a governor until the city expels them in November 1356",
+   "overlord": "milan",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "milan",
+    "chios",
+    "arborea"
+   ],
+   "rivals": [
+    "venice",
+    "sardinia_aragon"
+   ],
+   "claims_on": [
+    "sardinia_aragon"
+   ],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Exhausted by the war with Venice and Aragon, Genoa has accepted the lordship of the Visconti since 1353, governed in their name by Guglielmo Pallavicino. Its colonies – Pera at Constantinople, Chios, Caffa – still carry its trade across the Levant and Black Sea. Genoese nominally rule Corsica through coastal fortresses like Bonifacio and Calvi; the island interior is held by quarrelsome seigneurs.",
+    "de": "Erschöpft vom Krieg gegen Venedig und Aragon hat Genua sich 1353 der Herrschaft der Visconti unterworfen, in deren Namen Guglielmo Pallavicino regiert. Seine Kolonien – Pera bei Konstantinopel, Chios, Kaffa – tragen den Handel in Levante und Schwarzes Meer. Korsika beherrscht Genua nominell über Küstenfestungen wie Bonifacio und Calvi; das Inselinnere halten streitbare Signori."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "milan",
+   "name": {
+    "en": "Lordship of Milan",
+    "de": "Herrschaft Mailand"
+   },
+   "short": {
+    "en": "Milan",
+    "de": "Mailand"
+   },
+   "adjective": {
+    "en": "Milanese",
+    "de": "mailändisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#3a6fb5",
+   "capital": {
+    "name": "Milan",
+    "lat": 45.464,
+    "lon": 9.19
+   },
+   "holdings": [
+    {
+     "name": "Milan",
+     "lat": 45.464,
+     "lon": 9.19
+    },
+    {
+     "name": "Como",
+     "lat": 45.808,
+     "lon": 9.085
+    },
+    {
+     "name": "Bergamo",
+     "lat": 45.698,
+     "lon": 9.677
+    },
+    {
+     "name": "Brescia",
+     "lat": 45.541,
+     "lon": 10.211
+    },
+    {
+     "name": "Crema",
+     "lat": 45.363,
+     "lon": 9.686
+    },
+    {
+     "name": "Cremona",
+     "lat": 45.133,
+     "lon": 10.022
+    },
+    {
+     "name": "Lodi",
+     "lat": 45.314,
+     "lon": 9.503
+    },
+    {
+     "name": "Piacenza",
+     "lat": 45.052,
+     "lon": 9.693
+    },
+    {
+     "name": "Parma",
+     "lat": 44.801,
+     "lon": 10.328
+    },
+    {
+     "name": "Novara",
+     "lat": 45.446,
+     "lon": 8.622
+    },
+    {
+     "name": "Vercelli",
+     "lat": 45.32,
+     "lon": 8.42
+    },
+    {
+     "name": "Alessandria",
+     "lat": 44.913,
+     "lon": 8.615
+    },
+    {
+     "name": "Tortona",
+     "lat": 44.895,
+     "lon": 8.865
+    },
+    {
+     "name": "Asti",
+     "lat": 44.9,
+     "lon": 8.207
+    },
+    {
+     "name": "Bormio",
+     "lat": 46.467,
+     "lon": 10.371
+    }
+   ],
+   "ruler": {
+    "name": "Bernabò Visconti",
+    "born": 1323,
+    "dynasty": "Visconti",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "cruel",
+     "ambitious",
+     "lustful"
+    ]
+   },
+   "heir": {
+    "name": "Gian Galeazzo Visconti",
+    "born": 1351,
+    "dynasty": "Visconti",
+    "female": false,
+    "skills": [
+     5,
+     6,
+     2
+    ],
+    "traits": [
+     "child",
+     "shrewd"
+    ]
+   },
+   "consort": {
+    "name": "Beatrice Regina della Scala",
+    "born": 1331,
+    "dynasty": "della Scala",
+    "female": true,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "dynasty_note": "House of Visconti; after Matteo II died in September 1355 Bernabò (eastern share) and Galeazzo II (western share) co-rule and share the city of Milan",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [
+    "montferrat",
+    "venice",
+    "bologna",
+    "mantua",
+    "ferrara",
+    "padua",
+    "florence"
+   ],
+   "claims_on": [
+    "bologna"
+   ],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Since Matteo II's sudden death in September 1355 – rumoured to be poison – the brothers Bernabò and Galeazzo II Visconti rule the greatest state of Lombardy jointly, Bernabò the east and Galeazzo the west. Their former governor Giovanni da Oleggio has seized Bologna for himself and a league of Montferrat, Este, Gonzaga, Carrara and Venice is in arms against them. Genoa is subject to them.",
+    "de": "Seit dem plötzlichen Tod Matteos II. im September 1355 – angeblich durch Gift – regieren die Brüder Bernabò und Galeazzo II. Visconti gemeinsam den mächtigsten Staat der Lombardei, Bernabò den Osten, Galeazzo den Westen. Ihr einstiger Statthalter Giovanni da Oleggio hat Bologna an sich gerissen, und eine Liga aus Montferrat, Este, Gonzaga, Carrara und Venedig steht gegen sie im Feld. Genua ist ihnen untertan."
+   },
+   "coa": {
+    "blazon": "Argent, a serpent azure crowned Or devouring a child gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "dragon",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "florence",
+   "name": {
+    "en": "Republic of Florence",
+    "de": "Republik Florenz"
+   },
+   "short": {
+    "en": "Florence",
+    "de": "Florenz"
+   },
+   "adjective": {
+    "en": "Florentine",
+    "de": "florentinisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#b22a2a",
+   "capital": {
+    "name": "Florence",
+    "lat": 43.769,
+    "lon": 11.256
+   },
+   "holdings": [
+    {
+     "name": "Florence",
+     "lat": 43.769,
+     "lon": 11.256
+    },
+    {
+     "name": "Pistoia",
+     "lat": 43.933,
+     "lon": 10.917
+    },
+    {
+     "name": "Prato",
+     "lat": 43.88,
+     "lon": 11.097
+    },
+    {
+     "name": "San Miniato",
+     "lat": 43.68,
+     "lon": 10.85
+    },
+    {
+     "name": "Colle di Val d'Elsa",
+     "lat": 43.422,
+     "lon": 11.126
+    },
+    {
+     "name": "Firenzuola",
+     "lat": 44.12,
+     "lon": 11.38
+    }
+   ],
+   "ruler": {
+    "name": "The Signoria (Priors and Gonfalonier of Justice)",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guild republic governed by a Signoria of priors renewed every two months",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "siena",
+    "perugia",
+    "papal_states"
+   ],
+   "rivals": [
+    "pisa",
+    "milan"
+   ],
+   "claims_on": [
+    "pisa",
+    "lucca",
+    "arezzo"
+   ],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Guelf republic is recovering from the Black Death and the bank collapses of the 1340s, but its wool and banking houses remain among the richest in Europe. Prato was bought from Naples in 1351 and Pistoia is under Florentine protection. Florence watches Visconti ambitions in Tuscany and Pisa's grip on Lucca with suspicion.",
+    "de": "Die guelfische Republik erholt sich vom Schwarzen Tod und den Bankzusammenbrüchen der 1340er Jahre, doch ihre Tuch- und Bankhäuser gehören zu den reichsten Europas. Prato wurde 1351 von Neapel gekauft, Pistoia steht unter florentinischem Schutz. Florenz beobachtet die Ambitionen der Visconti und Pisas Griff nach Lucca mit Argwohn."
+   },
+   "coa": {
+    "blazon": "Argent, a fleur-de-lis florencée gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "siena",
+   "name": {
+    "en": "Republic of Siena",
+    "de": "Republik Siena"
+   },
+   "short": {
+    "en": "Siena",
+    "de": "Siena"
+   },
+   "adjective": {
+    "en": "Sienese",
+    "de": "sienesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#2b2b2b",
+   "capital": {
+    "name": "Siena",
+    "lat": 43.318,
+    "lon": 11.331
+   },
+   "holdings": [
+    {
+     "name": "Siena",
+     "lat": 43.318,
+     "lon": 11.331
+    },
+    {
+     "name": "Grosseto",
+     "lat": 42.76,
+     "lon": 11.113
+    },
+    {
+     "name": "Massa Marittima",
+     "lat": 43.049,
+     "lon": 10.889
+    },
+    {
+     "name": "Montalcino",
+     "lat": 43.058,
+     "lon": 11.49
+    },
+    {
+     "name": "Montepulciano",
+     "lat": 43.093,
+     "lon": 11.781
+    },
+    {
+     "name": "Talamone",
+     "lat": 42.556,
+     "lon": 11.135
+    }
+   ],
+   "ruler": {
+    "name": "The Twelve (Dodici)",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "factional"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Republic governed since March 1355 by the regime of the Twelve after the fall of the Nine",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [
+    "perugia"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "The fall of the oligarchy of the Nine in March 1355, during Emperor Charles IV's visit, brought the regime of the Twelve to power. Siena controls the Maremma and southern Tuscany but has lost half its people to plague. Factional strife between nobles, merchants and popolo minuto is never far away.",
+    "de": "Der Sturz der Oligarchie der Neun im März 1355, während des Besuchs Kaiser Karls IV., brachte das Regiment der Zwölf an die Macht. Siena beherrscht die Maremma und die südliche Toskana, hat aber die Hälfte seiner Bevölkerung an die Pest verloren. Parteikämpfe zwischen Adel, Kaufleuten und kleinem Volk drohen ständig."
+   },
+   "coa": {
+    "blazon": "Per fess argent and sable (the Balzana)",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "pisa",
+   "name": {
+    "en": "Republic of Pisa",
+    "de": "Republik Pisa"
+   },
+   "short": {
+    "en": "Pisa",
+    "de": "Pisa"
+   },
+   "adjective": {
+    "en": "Pisan",
+    "de": "pisanisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#a8324a",
+   "capital": {
+    "name": "Pisa",
+    "lat": 43.716,
+    "lon": 10.401
+   },
+   "holdings": [
+    {
+     "name": "Pisa",
+     "lat": 43.716,
+     "lon": 10.401
+    },
+    {
+     "name": "Porto Pisano",
+     "lat": 43.55,
+     "lon": 10.31
+    },
+    {
+     "name": "Piombino",
+     "lat": 42.926,
+     "lon": 10.526
+    },
+    {
+     "name": "Volterra",
+     "lat": 43.402,
+     "lon": 10.861
+    },
+    {
+     "name": "Campiglia",
+     "lat": 43.06,
+     "lon": 10.613
+    }
+   ],
+   "ruler": {
+    "name": "The Anziani (Raspanti regime)",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "factional"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ghibelline republic; the Gambacorta regime fell in May 1355 and the Raspanti faction governs through the Anziani",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lucca",
+    "milan"
+   ],
+   "rivals": [
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Imperial Pisa welcomed Charles IV in 1355, and in his wake the Gambacorta were overthrown and their leaders beheaded. The Raspanti now govern the city and its subject Lucca. Pisa's harbour still competes with Florence for the trade of Tuscany.",
+    "de": "Das kaisertreue Pisa empfing 1355 Karl IV.; in seinem Gefolge wurden die Gambacorta gestürzt und ihre Häupter enthauptet. Nun regieren die Raspanti die Stadt und das untertänige Lucca. Pisas Hafen konkurriert weiter mit Florenz um den Handel der Toskana."
+   },
+   "coa": {
+    "blazon": "Gules, a cross pommée argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "lucca",
+   "name": {
+    "en": "Commune of Lucca",
+    "de": "Kommune Lucca"
+   },
+   "short": {
+    "en": "Lucca",
+    "de": "Lucca"
+   },
+   "adjective": {
+    "en": "Lucchese",
+    "de": "lucchesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#d0d0d0",
+   "capital": {
+    "name": "Lucca",
+    "lat": 43.843,
+    "lon": 10.507
+   },
+   "holdings": [
+    {
+     "name": "Lucca",
+     "lat": 43.843,
+     "lon": 10.507
+    },
+    {
+     "name": "Pietrasanta",
+     "lat": 43.959,
+     "lon": 10.227
+    },
+    {
+     "name": "Castelnuovo di Garfagnana",
+     "lat": 44.11,
+     "lon": 10.41
+    }
+   ],
+   "ruler": {
+    "name": "Pisan Anziani and Podestà",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Subject commune of Pisa since 1342, governed by Pisan officials",
+   "overlord": "pisa",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "pisa"
+   ],
+   "rivals": [
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The silk city of Lucca has been subject to Pisa since 1342. Its Pisan masters tax its weavers and garrison its walls. Lucchese exiles lobby the emperor for the restoration of their liberty.",
+    "de": "Die Seidenstadt Lucca ist seit 1342 Pisa untertan. Pisanische Amtsträger besteuern ihre Weber und besetzen ihre Mauern. Lucchesische Exilanten bitten den Kaiser um Wiederherstellung der Freiheit."
+   },
+   "coa": {
+    "blazon": "Per fess argent and gules",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "perugia",
+   "name": {
+    "en": "Commune of Perugia",
+    "de": "Kommune Perugia"
+   },
+   "short": {
+    "en": "Perugia",
+    "de": "Perugia"
+   },
+   "adjective": {
+    "en": "Perugian",
+    "de": "perugianisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#9a5fb0",
+   "capital": {
+    "name": "Perugia",
+    "lat": 43.112,
+    "lon": 12.389
+   },
+   "holdings": [
+    {
+     "name": "Perugia",
+     "lat": 43.112,
+     "lon": 12.389
+    },
+    {
+     "name": "Città di Castello",
+     "lat": 43.457,
+     "lon": 12.24
+    },
+    {
+     "name": "Castiglione del Lago",
+     "lat": 43.127,
+     "lon": 12.051
+    }
+   ],
+   "ruler": {
+    "name": "The Priors of the Arts",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "independent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelf commune under nominal papal sovereignty, ruled by the Priors of the Raspanti popular regime",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [
+    "siena"
+   ],
+   "claims_on": [
+    "arezzo"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Perugia is the strongest commune of Umbria and rules a sizable contado in nominal obedience to the Church. It cooperates warily with Albornoz while guarding its autonomy. Its eyes are on Cortona and Arezzo.",
+    "de": "Perugia ist die stärkste Kommune Umbriens und beherrscht unter nomineller Kirchenhoheit ein großes Umland. Vorsichtig arbeitet sie mit Albornoz zusammen und wahrt dabei ihre Selbständigkeit. Ihr Blick richtet sich auf Cortona und Arezzo."
+   },
+   "coa": {
+    "blazon": "Argent, a griffin rampant gules crowned Or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "griffin",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "arezzo",
+   "name": {
+    "en": "Commune of Arezzo",
+    "de": "Kommune Arezzo"
+   },
+   "short": {
+    "en": "Arezzo",
+    "de": "Arezzo"
+   },
+   "adjective": {
+    "en": "Aretine",
+    "de": "aretinisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#7a4a2a",
+   "capital": {
+    "name": "Arezzo",
+    "lat": 43.463,
+    "lon": 11.88
+   },
+   "holdings": [
+    {
+     "name": "Arezzo",
+     "lat": 43.463,
+     "lon": 11.88
+    },
+    {
+     "name": "Sansepolcro",
+     "lat": 43.572,
+     "lon": 12.14
+    }
+   ],
+   "ruler": {
+    "name": "The Priors",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune that regained independence from Florence in 1343 after the fall of the Duke of Athens",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "florence",
+    "perugia"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Arezzo shook off Florentine rule in 1343 and has governed itself since, amid feuds of the Tarlati and other noble clans. Florence and Perugia both covet it. It survives by balancing between them and the Empire.",
+    "de": "Arezzo schüttelte 1343 die florentinische Herrschaft ab und regiert sich seitdem selbst, inmitten von Fehden der Tarlati und anderer Adelssippen. Florenz und Perugia begehren die Stadt. Sie überlebt, indem sie zwischen ihnen und dem Reich laviert."
+   },
+   "coa": {
+    "blazon": "Argent, a horse rampant sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "san_marino",
+   "name": {
+    "en": "Commune of San Marino",
+    "de": "Kommune San Marino"
+   },
+   "short": {
+    "en": "San Marino",
+    "de": "San Marino"
+   },
+   "adjective": {
+    "en": "Sammarinese",
+    "de": "san-marinesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#6fb4d8",
+   "capital": {
+    "name": "San Marino",
+    "lat": 43.936,
+    "lon": 12.447
+   },
+   "holdings": [
+    {
+     "name": "San Marino",
+     "lat": 43.936,
+     "lon": 12.447
+    }
+   ],
+   "ruler": {
+    "name": "The Captains Regent",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "frugal"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mountain commune governed by its Arengo and two Captains",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "urbino"
+   ],
+   "rivals": [
+    "rimini"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "A tiny mountain commune on Monte Titano, governing itself through its assembly and captains. It leans on the Montefeltro against the Malatesta of Rimini. Survival is its only ambition.",
+    "de": "Eine winzige Bergkommune auf dem Monte Titano, die sich durch ihre Versammlung und ihre Kapitäne selbst regiert. Gegen die Malatesta von Rimini stützt sie sich auf die Montefeltro. Überleben ist ihr einziger Ehrgeiz."
+   },
+   "coa": {
+    "blazon": "Azure, three towers argent on three peaks vert",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "argent",
+      "count": 3
+     },
+     {
+      "type": "mountain",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mantua",
+   "name": {
+    "en": "Lordship of Mantua",
+    "de": "Herrschaft Mantua"
+   },
+   "short": {
+    "en": "Mantua",
+    "de": "Mantua"
+   },
+   "adjective": {
+    "en": "Mantuan",
+    "de": "mantuanisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#e07b39",
+   "capital": {
+    "name": "Mantua",
+    "lat": 45.156,
+    "lon": 10.791
+   },
+   "holdings": [
+    {
+     "name": "Mantua",
+     "lat": 45.156,
+     "lon": 10.791
+    },
+    {
+     "name": "Reggio",
+     "lat": 44.698,
+     "lon": 10.631
+    },
+    {
+     "name": "Guastalla",
+     "lat": 44.92,
+     "lon": 10.66
+    }
+   ],
+   "ruler": {
+    "name": "Luigi I Gonzaga",
+    "born": 1268,
+    "dynasty": "Gonzaga",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "elderly",
+     "cunning"
+    ]
+   },
+   "heir": {
+    "name": "Guido Gonzaga",
+    "born": 1290,
+    "dynasty": "Gonzaga",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Novella Malaspina",
+    "born": 1310,
+    "dynasty": "Malaspina",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Gonzaga, Captains of the People of Mantua since 1328 and imperial vicars",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "ferrara",
+    "padua",
+    "verona",
+    "venice"
+   ],
+   "rivals": [
+    "milan"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "The nonagenarian Luigi Gonzaga has ruled Mantua since overthrowing the Bonacolsi in 1328. He also holds Reggio, coveted by the Visconti. Mantua is a pillar of the anti-Visconti league.",
+    "de": "Der über achtzigjährige Luigi Gonzaga regiert Mantua seit dem Sturz der Bonacolsi 1328. Er hält auch Reggio, das die Visconti begehren. Mantua ist ein Pfeiler der Liga gegen die Visconti."
+   },
+   "coa": {
+    "blazon": "Barry of six Or and sable",
+    "field": "or",
+    "division": "barry",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ferrara",
+   "name": {
+    "en": "Lordship of Ferrara and Modena",
+    "de": "Herrschaft Ferrara und Modena"
+   },
+   "short": {
+    "en": "Ferrara",
+    "de": "Ferrara"
+   },
+   "adjective": {
+    "en": "Ferrarese",
+    "de": "ferraresisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#ffffff",
+   "capital": {
+    "name": "Ferrara",
+    "lat": 44.836,
+    "lon": 11.62
+   },
+   "holdings": [
+    {
+     "name": "Ferrara",
+     "lat": 44.836,
+     "lon": 11.62
+    },
+    {
+     "name": "Modena",
+     "lat": 44.647,
+     "lon": 10.925
+    },
+    {
+     "name": "Rovigo",
+     "lat": 45.07,
+     "lon": 11.79
+    },
+    {
+     "name": "Comacchio",
+     "lat": 44.694,
+     "lon": 12.183
+    },
+    {
+     "name": "Argenta",
+     "lat": 44.614,
+     "lon": 11.836
+    }
+   ],
+   "ruler": {
+    "name": "Aldobrandino III d'Este",
+    "born": 1335,
+    "dynasty": "Este",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "sickly"
+    ]
+   },
+   "heir": {
+    "name": "Niccolò II d'Este",
+    "born": 1338,
+    "dynasty": "Este",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "lame",
+     "shrewd"
+    ]
+   },
+   "consort": {
+    "name": "Beatrice da Camino",
+    "born": 1335,
+    "dynasty": "da Camino",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Este; Ferrara is held as papal vicariate, Modena as imperial fief",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mantua",
+    "padua",
+    "venice"
+   ],
+   "rivals": [
+    "milan",
+    "bologna"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Young Aldobrandino III d'Este governs Ferrara as papal vicar and Modena as imperial vassal. The Este court is famous for its splendour, but the lord's health is poor. Ferrara stands with the league against the Visconti.",
+    "de": "Der junge Aldobrandino III. d'Este regiert Ferrara als päpstlicher und Modena als kaiserlicher Vikar. Der Hof der Este ist für seine Pracht berühmt, doch der Fürst ist kränklich. Ferrara steht in der Liga gegen die Visconti."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle argent crowned Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "verona",
+   "name": {
+    "en": "Lordship of Verona",
+    "de": "Herrschaft Verona"
+   },
+   "short": {
+    "en": "Verona",
+    "de": "Verona"
+   },
+   "adjective": {
+    "en": "Veronese",
+    "de": "veronesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#b8312f",
+   "capital": {
+    "name": "Verona",
+    "lat": 45.438,
+    "lon": 10.992
+   },
+   "holdings": [
+    {
+     "name": "Verona",
+     "lat": 45.438,
+     "lon": 10.992
+    },
+    {
+     "name": "Vicenza",
+     "lat": 45.548,
+     "lon": 11.546
+    },
+    {
+     "name": "Legnago",
+     "lat": 45.193,
+     "lon": 11.307
+    },
+    {
+     "name": "Peschiera",
+     "lat": 45.44,
+     "lon": 10.69
+    }
+   ],
+   "ruler": {
+    "name": "Cangrande II della Scala",
+    "born": 1332,
+    "dynasty": "della Scala",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "cruel",
+     "paranoid"
+    ]
+   },
+   "heir": {
+    "name": "Cansignorio della Scala",
+    "born": 1340,
+    "dynasty": "della Scala",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "ruthless",
+     "builder"
+    ]
+   },
+   "consort": {
+    "name": "Elisabeth of Bavaria",
+    "born": 1329,
+    "dynasty": "Wittelsbach",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of della Scala (Scaligeri), imperial vicars in Verona and Vicenza",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "milan"
+   ],
+   "rivals": [
+    "padua"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Cangrande II rules Verona and Vicenza through fear, having survived a revolt by his half-brother Fregnano in 1354. He hoards treasure and builds the Castelvecchio fortress. His sister is married to Bernabò Visconti, but his brothers covet his throne.",
+    "de": "Cangrande II. beherrscht Verona und Vicenza durch Furcht, nachdem er 1354 den Aufstand seines Halbbruders Fregnano überstand. Er hortet Schätze und baut die Festung Castelvecchio. Seine Schwester ist mit Bernabò Visconti verheiratet, doch seine Brüder begehren seinen Thron."
+   },
+   "coa": {
+    "blazon": "Gules, a ladder argent ensigned with an imperial eagle sable",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "pale",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "padua",
+   "name": {
+    "en": "Lordship of Padua",
+    "de": "Herrschaft Padua"
+   },
+   "short": {
+    "en": "Padua",
+    "de": "Padua"
+   },
+   "adjective": {
+    "en": "Paduan",
+    "de": "paduanisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#c9472c",
+   "capital": {
+    "name": "Padua",
+    "lat": 45.406,
+    "lon": 11.876
+   },
+   "holdings": [
+    {
+     "name": "Padua",
+     "lat": 45.406,
+     "lon": 11.876
+    },
+    {
+     "name": "Monselice",
+     "lat": 45.243,
+     "lon": 11.75
+    },
+    {
+     "name": "Cittadella",
+     "lat": 45.648,
+     "lon": 11.784
+    }
+   ],
+   "ruler": {
+    "name": "Francesco I da Carrara",
+    "born": 1325,
+    "dynasty": "da Carrara",
+    "female": false,
+    "skills": [
+     5,
+     4,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "shrewd"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Fina Buzzaccarini",
+    "born": 1330,
+    "dynasty": "Buzzaccarini",
+    "female": true,
+    "skills": [
+     3,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of da Carrara (Carraresi); Francesco ousted his uncle and co-lord Giacomino in 1355",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mantua",
+    "ferrara",
+    "hungary"
+   ],
+   "rivals": [
+    "verona",
+    "milan",
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Francesco 'il Vecchio' da Carrara rules Padua alone since imprisoning his uncle Giacomino in 1355. He is a capable, ambitious lord squeezed between Venice and the Scaligeri. A Hungarian alliance could give him room to grow.",
+    "de": "Francesco 'il Vecchio' da Carrara regiert Padua allein, seit er 1355 seinen Onkel Giacomino einkerkerte. Er ist ein fähiger, ehrgeiziger Herr zwischen Venedig und den Scaligeri. Ein Bündnis mit Ungarn könnte ihm Raum zum Wachsen geben."
+   },
+   "coa": {
+    "blazon": "Argent, a cart (carro) gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "montferrat",
+   "name": {
+    "en": "Marquisate of Montferrat",
+    "de": "Markgrafschaft Montferrat"
+   },
+   "short": {
+    "en": "Montferrat",
+    "de": "Montferrat"
+   },
+   "adjective": {
+    "en": "Montferratese",
+    "de": "montferratisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#d94848",
+   "capital": {
+    "name": "Chivasso",
+    "lat": 45.191,
+    "lon": 7.889
+   },
+   "holdings": [
+    {
+     "name": "Chivasso",
+     "lat": 45.191,
+     "lon": 7.889
+    },
+    {
+     "name": "Casale",
+     "lat": 45.133,
+     "lon": 8.453
+    },
+    {
+     "name": "Moncalvo",
+     "lat": 45.05,
+     "lon": 8.266
+    },
+    {
+     "name": "Acqui",
+     "lat": 44.676,
+     "lon": 8.468
+    },
+    {
+     "name": "Trino",
+     "lat": 45.193,
+     "lon": 8.296
+    }
+   ],
+   "ruler": {
+    "name": "John II Palaiologos",
+    "born": 1321,
+    "dynasty": "Palaiologos-Montferrat",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "brave",
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Italian branch of the Byzantine Palaiologos dynasty, marquesses since 1306",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mantua",
+    "ferrara",
+    "padua",
+    "venice"
+   ],
+   "rivals": [
+    "milan",
+    "piedmont"
+   ],
+   "claims_on": [
+    "milan",
+    "piedmont"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Marquess John II, a Palaiologos and imperial vicar, leads the league against the Visconti in Piedmont. With Charles IV's backing he has taken Visconti towns and hires mercenary companies. He also quarrels with the Savoy-Achaea lords over the Canavese.",
+    "de": "Markgraf Johann II., ein Palaiologe und Reichsvikar, führt im Piemont die Liga gegen die Visconti. Mit Rückendeckung Karls IV. hat er Visconti-Städte genommen und wirbt Söldnerkompanien. Mit den Herren von Savoyen-Achaia streitet er um das Canavese."
+   },
+   "coa": {
+    "blazon": "Argent, a chief gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "saluzzo",
+   "name": {
+    "en": "Marquisate of Saluzzo",
+    "de": "Markgrafschaft Saluzzo"
+   },
+   "short": {
+    "en": "Saluzzo",
+    "de": "Saluzzo"
+   },
+   "adjective": {
+    "en": "Saluzzese",
+    "de": "saluzzisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#4a6fa0",
+   "capital": {
+    "name": "Saluzzo",
+    "lat": 44.645,
+    "lon": 7.49
+   },
+   "holdings": [
+    {
+     "name": "Saluzzo",
+     "lat": 44.645,
+     "lon": 7.49
+    },
+    {
+     "name": "Carmagnola",
+     "lat": 44.847,
+     "lon": 7.718
+    },
+    {
+     "name": "Dronero",
+     "lat": 44.466,
+     "lon": 7.364
+    }
+   ],
+   "ruler": {
+    "name": "Thomas II",
+    "born": 1304,
+    "dynasty": "Aleramici (del Vasto)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "elderly"
+    ]
+   },
+   "heir": {
+    "name": "Frederick",
+    "born": 1332,
+    "dynasty": "Aleramici (del Vasto)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Ricciarda Visconti",
+    "born": 1310,
+    "dynasty": "Visconti",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Branch of the Aleramici, marquesses of Saluzzo",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "milan"
+   ],
+   "rivals": [
+    "piedmont",
+    "naples"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Thomas II of Saluzzo holds a small Alpine march between Savoy-Achaea, the Angevin lands of Cuneo and Montferrat. His marriage to a Visconti binds him to Milan. He refuses homage to Savoy and seeks protection from the Dauphin of Viennois – now the French crown.",
+    "de": "Thomas II. von Saluzzo hält eine kleine Alpenmark zwischen Savoyen-Achaia, dem angevinischen Cuneo und Montferrat. Seine Ehe mit einer Visconti bindet ihn an Mailand. Er verweigert Savoyen die Huldigung und sucht Schutz beim Dauphin – nun der französischen Krone."
+   },
+   "coa": {
+    "blazon": "Argent, a chief azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "piedmont",
+   "name": {
+    "en": "Lordship of Piedmont (Savoy-Achaea)",
+    "de": "Herrschaft Piemont (Savoyen-Achaia)"
+   },
+   "short": {
+    "en": "Piedmont",
+    "de": "Piemont"
+   },
+   "adjective": {
+    "en": "Piedmontese",
+    "de": "piemontesisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#a52a2a",
+   "capital": {
+    "name": "Pinerolo",
+    "lat": 44.885,
+    "lon": 7.331
+   },
+   "holdings": [
+    {
+     "name": "Pinerolo",
+     "lat": 44.885,
+     "lon": 7.331
+    },
+    {
+     "name": "Turin",
+     "lat": 45.07,
+     "lon": 7.686
+    },
+    {
+     "name": "Fossano",
+     "lat": 44.55,
+     "lon": 7.725
+    },
+    {
+     "name": "Moncalieri",
+     "lat": 45.0,
+     "lon": 7.683
+    }
+   ],
+   "ruler": {
+    "name": "Giacomo of Savoy-Achaea",
+    "born": 1315,
+    "dynasty": "Savoy-Achaea",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "proud",
+     "quarrelsome"
+    ]
+   },
+   "heir": {
+    "name": "Filippo",
+    "born": 1340,
+    "dynasty": "Savoy-Achaea",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "rebellious"
+    ]
+   },
+   "consort": {
+    "name": "Sibylle de Baux",
+    "born": 1325,
+    "dynasty": "Baux",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Cadet branch of the House of Savoy, titular princes of Achaea, holding Piedmont as vassals of the Count of Savoy",
+   "overlord": "savoy",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "savoy"
+   ],
+   "rivals": [
+    "montferrat",
+    "saluzzo"
+   ],
+   "claims_on": [
+    "achaea",
+    "saluzzo"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Giacomo, titular Prince of Achaea, rules Turin and the Piedmont plain from Pinerolo as vassal of his cousin, the Green Count Amadeus VI of Savoy. He chafes at that dependence and quarrels with Montferrat and Saluzzo. His claim to the Morean principality is only a title.",
+    "de": "Giacomo, Titularfürst von Achaia, regiert Turin und die piemontesische Ebene von Pinerolo aus als Vasall seines Vetters, des Grünen Grafen Amadeus VI. von Savoyen. Er hadert mit dieser Abhängigkeit und streitet mit Montferrat und Saluzzo. Sein Anspruch auf das Fürstentum in der Morea ist nur ein Titel."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent, a bendlet azure",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bologna",
+   "name": {
+    "en": "Lordship of Bologna",
+    "de": "Herrschaft Bologna"
+   },
+   "short": {
+    "en": "Bologna",
+    "de": "Bologna"
+   },
+   "adjective": {
+    "en": "Bolognese",
+    "de": "bolognesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#e8c547",
+   "capital": {
+    "name": "Bologna",
+    "lat": 44.494,
+    "lon": 11.343
+   },
+   "holdings": [
+    {
+     "name": "Bologna",
+     "lat": 44.494,
+     "lon": 11.343
+    },
+    {
+     "name": "Castel San Pietro",
+     "lat": 44.398,
+     "lon": 11.589
+    },
+    {
+     "name": "Cento",
+     "lat": 44.727,
+     "lon": 11.288
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni Visconti da Oleggio",
+    "born": 1304,
+    "dynasty": "Visconti da Oleggio",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "treacherous",
+     "capable"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "A Visconti kinsman and former governor who usurped Bologna in April 1355; Bologna is papal by right",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ferrara"
+   ],
+   "rivals": [
+    "milan",
+    "papal_states"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Giovanni da Oleggio, the Visconti governor of Bologna, turned on his masters after Archbishop Giovanni's death and in 1355 made himself lord of the city. He is hated by the Visconti and unrecognised by the Church, which regards Bologna as its own. His survival depends on playing Milan and Albornoz against each other.",
+    "de": "Giovanni da Oleggio, Statthalter der Visconti in Bologna, wandte sich nach dem Tod Erzbischof Giovannis gegen seine Herren und machte sich 1355 zum Stadtherrn. Die Visconti hassen ihn, die Kirche, die Bologna als ihr Eigen betrachtet, erkennt ihn nicht an. Sein Überleben hängt davon ab, Mailand und Albornoz gegeneinander auszuspielen."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules (Bologna)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "rimini",
+   "name": {
+    "en": "Lordship of Rimini",
+    "de": "Herrschaft Rimini"
+   },
+   "short": {
+    "en": "Rimini",
+    "de": "Rimini"
+   },
+   "adjective": {
+    "en": "Malatesta",
+    "de": "malatestisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#3c8f5a",
+   "capital": {
+    "name": "Rimini",
+    "lat": 44.06,
+    "lon": 12.568
+   },
+   "holdings": [
+    {
+     "name": "Rimini",
+     "lat": 44.06,
+     "lon": 12.568
+    },
+    {
+     "name": "Pesaro",
+     "lat": 43.91,
+     "lon": 12.913
+    },
+    {
+     "name": "Fano",
+     "lat": 43.84,
+     "lon": 13.019
+    }
+   ],
+   "ruler": {
+    "name": "Malatesta III 'Guastafamiglia'",
+    "born": 1299,
+    "dynasty": "Malatesta",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "ruthless",
+     "cunning"
+    ]
+   },
+   "heir": {
+    "name": "Pandolfo II Malatesta",
+    "born": 1325,
+    "dynasty": "Malatesta",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "learned",
+     "brave"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "House of Malatesta; since June 1355 papal vicars for Rimini, Pesaro, Fano and Fossombrone, co-ruling with brother Galeotto",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "papal_states"
+   ],
+   "rivals": [
+    "urbino",
+    "forli"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Defeated by Albornoz's captain Galeotto at Paderno in 1355, the Malatesta submitted and were confirmed as papal vicars over Rimini, Pesaro, Fano and Fossombrone. Malatesta and his brother Galeotto now serve the Church's reconquest. They hope to profit from the fall of the Ordelaffi.",
+    "de": "Nach der Niederlage bei Paderno 1355 unterwarfen sich die Malatesta Albornoz und wurden als päpstliche Vikare über Rimini, Pesaro, Fano und Fossombrone bestätigt. Malatesta und sein Bruder Galeotto dienen nun der Rückeroberung der Kirche. Sie hoffen vom Sturz der Ordelaffi zu profitieren."
+   },
+   "coa": {
+    "blazon": "Bendy chequy Or and gules on vert",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "urbino",
+   "name": {
+    "en": "County of Urbino",
+    "de": "Grafschaft Urbino"
+   },
+   "short": {
+    "en": "Urbino",
+    "de": "Urbino"
+   },
+   "adjective": {
+    "en": "Urbinate",
+    "de": "urbinatisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#5a6db8",
+   "capital": {
+    "name": "Urbino",
+    "lat": 43.726,
+    "lon": 12.637
+   },
+   "holdings": [
+    {
+     "name": "Urbino",
+     "lat": 43.726,
+     "lon": 12.637
+    },
+    {
+     "name": "Cagli",
+     "lat": 43.546,
+     "lon": 12.65
+    },
+    {
+     "name": "Gubbio",
+     "lat": 43.351,
+     "lon": 12.577
+    }
+   ],
+   "ruler": {
+    "name": "Nolfo da Montefeltro",
+    "born": 1290,
+    "dynasty": "Montefeltro",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "ghibelline",
+     "stubborn"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Montefeltro, Ghibelline counts of Urbino",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "san_marino"
+   ],
+   "rivals": [
+    "rimini"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Ghibelline Montefeltro counts hold Urbino in the hills of the Marche, now forced into nominal submission to Albornoz. Count Nolfo, old and weakened, keeps a low profile. The Malatesta are their hereditary enemies.",
+    "de": "Die ghibellinischen Grafen von Montefeltro halten Urbino im Bergland der Marken und mussten sich Albornoz nominell unterwerfen. Graf Nolfo, alt und geschwächt, hält sich bedeckt. Die Malatesta sind ihre Erbfeinde."
+   },
+   "coa": {
+    "blazon": "Bendy Or and azure, a chief Or with an eagle sable",
+    "field": "or",
+    "division": "bendy",
+    "field2": "azure",
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "forli",
+   "name": {
+    "en": "Lordship of Forlì",
+    "de": "Herrschaft Forlì"
+   },
+   "short": {
+    "en": "Forlì",
+    "de": "Forlì"
+   },
+   "adjective": {
+    "en": "Forlivese",
+    "de": "forlivesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#2f6b2f",
+   "capital": {
+    "name": "Forlì",
+    "lat": 44.222,
+    "lon": 12.041
+   },
+   "holdings": [
+    {
+     "name": "Forlì",
+     "lat": 44.222,
+     "lon": 12.041
+    },
+    {
+     "name": "Cesena",
+     "lat": 44.139,
+     "lon": 12.243
+    },
+    {
+     "name": "Forlimpopoli",
+     "lat": 44.188,
+     "lon": 12.127
+    },
+    {
+     "name": "Bertinoro",
+     "lat": 44.149,
+     "lon": 12.134
+    }
+   ],
+   "ruler": {
+    "name": "Francesco II Ordelaffi",
+    "born": 1300,
+    "dynasty": "Ordelaffi",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "defiant",
+     "brave",
+     "impious"
+    ]
+   },
+   "heir": {
+    "name": "Giovanni Ordelaffi",
+    "born": 1335,
+    "dynasty": "Ordelaffi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Cia degli Ubaldini",
+    "born": 1317,
+    "dynasty": "Ubaldini",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave",
+     "stubborn"
+    ]
+   },
+   "dynasty_note": "House of Ordelaffi, Ghibelline lords of Forlì",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "faenza"
+   ],
+   "rivals": [
+    "papal_states",
+    "rimini"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "Francesco Ordelaffi, excommunicated and the target of a papal crusade, defies Albornoz from Forlì and Cesena. His wife Cia degli Ubaldini commands the defence of Cesena herself. Few believe they can hold out long against the legate's armies.",
+    "de": "Francesco Ordelaffi, gebannt und Ziel eines päpstlichen Kreuzzugs, trotzt Albornoz von Forlì und Cesena aus. Seine Frau Cia degli Ubaldini verteidigt Cesena selbst. Kaum jemand glaubt, dass sie den Heeren des Legaten lange standhalten."
+   },
+   "coa": {
+    "blazon": "Per fess vert and Or, a lion counterchanged",
+    "field": "vert",
+    "division": "per_fess",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "faenza",
+   "name": {
+    "en": "Lordship of Faenza",
+    "de": "Herrschaft Faenza"
+   },
+   "short": {
+    "en": "Faenza",
+    "de": "Faenza"
+   },
+   "adjective": {
+    "en": "Faentine",
+    "de": "faentinisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#7aa0d0",
+   "capital": {
+    "name": "Faenza",
+    "lat": 44.285,
+    "lon": 11.883
+   },
+   "holdings": [
+    {
+     "name": "Faenza",
+     "lat": 44.285,
+     "lon": 11.883
+    },
+    {
+     "name": "Bagnacavallo",
+     "lat": 44.415,
+     "lon": 11.977
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni Manfredi",
+    "born": 1300,
+    "dynasty": "Manfredi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "defiant"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Manfredi, lords of Faenza",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "forli"
+   ],
+   "rivals": [
+    "papal_states"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Giovanni Manfredi, lord of Faenza, has sided with the Ordelaffi against the papal legate. Excommunicated, he faces Albornoz's armies with few resources. Submission or exile seem the only outcomes.",
+    "de": "Giovanni Manfredi, Herr von Faenza, steht mit den Ordelaffi gegen den päpstlichen Legaten. Gebannt und mit wenig Mitteln sieht er sich den Heeren Albornoz' gegenüber. Unterwerfung oder Exil scheinen die einzigen Auswege."
+   },
+   "coa": {
+    "blazon": "Azure, three bendlets argent",
+    "field": "azure",
+    "division": "bendy",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ravenna",
+   "name": {
+    "en": "Lordship of Ravenna",
+    "de": "Herrschaft Ravenna"
+   },
+   "short": {
+    "en": "Ravenna",
+    "de": "Ravenna"
+   },
+   "adjective": {
+    "en": "Ravennate",
+    "de": "ravennatisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#c97ab0",
+   "capital": {
+    "name": "Ravenna",
+    "lat": 44.418,
+    "lon": 12.204
+   },
+   "holdings": [
+    {
+     "name": "Ravenna",
+     "lat": 44.418,
+     "lon": 12.204
+    },
+    {
+     "name": "Cervia",
+     "lat": 44.262,
+     "lon": 12.355
+    }
+   ],
+   "ruler": {
+    "name": "Bernardino I da Polenta",
+    "born": 1300,
+    "dynasty": "da Polenta",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "cruel"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of da Polenta, lords of Ravenna and Cervia",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice"
+   ],
+   "rivals": [
+    "forli"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The da Polenta, hosts of Dante in his exile, rule Ravenna and the salt pans of Cervia. Bernardino is in nominal obedience to the Church but leans on Venice for trade. His family's grip is weakened by fratricidal feuds.",
+    "de": "Die da Polenta, einst Gastgeber Dantes im Exil, herrschen über Ravenna und die Salinen von Cervia. Bernardino gehorcht nominell der Kirche, stützt sich aber im Handel auf Venedig. Brudermorde in der Familie schwächen ihre Macht."
+   },
+   "coa": {
+    "blazon": "Or, an eagle per fess gules and argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "aquileia",
+   "name": {
+    "en": "Patriarchate of Aquileia",
+    "de": "Patriarchat Aquileja"
+   },
+   "short": {
+    "en": "Aquileia",
+    "de": "Aquileja"
+   },
+   "adjective": {
+    "en": "Friulian",
+    "de": "friaulisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#d4b45a",
+   "capital": {
+    "name": "Udine",
+    "lat": 46.063,
+    "lon": 13.235
+   },
+   "holdings": [
+    {
+     "name": "Udine",
+     "lat": 46.063,
+     "lon": 13.235
+    },
+    {
+     "name": "Cividale",
+     "lat": 46.093,
+     "lon": 13.432
+    },
+    {
+     "name": "Aquileia",
+     "lat": 45.769,
+     "lon": 13.37
+    },
+    {
+     "name": "Gemona",
+     "lat": 46.28,
+     "lon": 13.139
+    },
+    {
+     "name": "Sacile",
+     "lat": 45.954,
+     "lon": 12.502
+    },
+    {
+     "name": "San Vito",
+     "lat": 45.914,
+     "lon": 12.857
+    }
+   ],
+   "ruler": {
+    "name": "Patriarch Nicholas of Luxembourg",
+    "born": 1322,
+    "dynasty": "Luxembourg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "stern"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ecclesiastical principality of Friuli; Nicholas is the illegitimate half-brother of Emperor Charles IV",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "holy_roman_empire"
+   ],
+   "rivals": [
+    "venice",
+    "gorizia"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 4,
+   "summary": {
+    "en": "Patriarch Nicholas, half-brother of the Emperor, governs Friuli from Udine and avenged the murder of his predecessor Bertrand with harsh reprisals. The patriarchate is surrounded by Venice, the Counts of Gorizia and the Habsburgs. Its nobles are unruly and its towns jealous of their privileges.",
+    "de": "Patriarch Nikolaus, Halbbruder des Kaisers, regiert Friaul von Udine aus und rächte die Ermordung seines Vorgängers Bertrand mit harten Strafen. Venedig, die Grafen von Görz und die Habsburger umgeben das Patriarchat. Sein Adel ist widerspenstig, seine Städte eifersüchtig auf ihre Privilegien."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "monaco",
+   "name": {
+    "en": "Lordship of Monaco",
+    "de": "Herrschaft Monaco"
+   },
+   "short": {
+    "en": "Monaco",
+    "de": "Monaco"
+   },
+   "adjective": {
+    "en": "Monegasque",
+    "de": "monegassisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#e05050",
+   "capital": {
+    "name": "Monaco",
+    "lat": 43.731,
+    "lon": 7.42
+   },
+   "holdings": [
+    {
+     "name": "Monaco",
+     "lat": 43.731,
+     "lon": 7.42
+    }
+   ],
+   "ruler": {
+    "name": "Carlo I Grimaldi",
+    "born": 1300,
+    "dynasty": "Grimaldi",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "seafarer",
+     "bold"
+    ]
+   },
+   "heir": {
+    "name": "Ranieri Grimaldi",
+    "born": 1320,
+    "dynasty": "Grimaldi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Guelf Genoese House of Grimaldi, holding the rock of Monaco since 1331",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "france"
+   ],
+   "rivals": [
+    "genoa"
+   ],
+   "claims_on": [
+    "genoa"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Carlo Grimaldi, a Guelf exile from Genoa and admiral in French service, holds the rock of Monaco and bought Menton. His fleet fought for France at Crécy. Genoa wants its fortress back.",
+    "de": "Carlo Grimaldi, guelfischer Exilant aus Genua und Admiral in französischen Diensten, hält den Felsen von Monaco und kaufte Menton. Seine Flotte kämpfte für Frankreich bei Crécy. Genua will seine Festung zurück."
+   },
+   "coa": {
+    "blazon": "Fusily argent and gules",
+    "field": "argent",
+    "division": "chequy",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hospitallers",
+   "name": {
+    "en": "Knights Hospitaller of Rhodes",
+    "de": "Johanniter auf Rhodos"
+   },
+   "short": {
+    "en": "Rhodes",
+    "de": "Rhodos"
+   },
+   "adjective": {
+    "en": "Hospitaller",
+    "de": "johannitisch"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#1a1a1a",
+   "capital": {
+    "name": "Rhodes",
+    "lat": 36.444,
+    "lon": 28.224
+   },
+   "holdings": [
+    {
+     "name": "Rhodes",
+     "lat": 36.444,
+     "lon": 28.224
+    },
+    {
+     "name": "Lindos",
+     "lat": 36.092,
+     "lon": 28.086
+    },
+    {
+     "name": "Kos",
+     "lat": 36.893,
+     "lon": 27.288
+    },
+    {
+     "name": "Leros",
+     "lat": 37.15,
+     "lon": 26.85
+    },
+    {
+     "name": "Smyrna (harbour castle)",
+     "lat": 38.42,
+     "lon": 27.13
+    }
+   ],
+   "ruler": {
+    "name": "Grand Master Roger de Pins",
+    "born": 1300,
+    "dynasty": "de Pins",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious",
+     "prudent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Grand Masters are elected by the chapter of the Order of St John; Roger de Pins was elected in 1355",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "cyprus",
+    "venice",
+    "papal_states"
+   ],
+   "rivals": [
+    "ottomans",
+    "aydin"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Order of St John has ruled Rhodes and the Dodecanese since 1309, a bastion against the Turkish emirates of Anatolia. The new Grand Master Roger de Pins inherits the defence of the harbour castle of Smyrna, taken by the crusading league in 1344. The papacy presses the Order to reform and to do more against the Turks.",
+    "de": "Der Johanniterorden beherrscht seit 1309 Rhodos und den Dodekanes, ein Bollwerk gegen die türkischen Emirate Anatoliens. Der neue Großmeister Roger de Pins übernimmt die Verteidigung der 1344 von der Kreuzzugsliga eroberten Hafenburg von Smyrna. Das Papsttum drängt den Orden zu Reformen und mehr Einsatz gegen die Türken."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "cyprus",
+   "name": {
+    "en": "Kingdom of Cyprus",
+    "de": "Königreich Zypern"
+   },
+   "short": {
+    "en": "Cyprus",
+    "de": "Zypern"
+   },
+   "adjective": {
+    "en": "Cypriot",
+    "de": "zyprisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#6a8fd0",
+   "capital": {
+    "name": "Nicosia",
+    "lat": 35.17,
+    "lon": 33.36
+   },
+   "holdings": [
+    {
+     "name": "Nicosia",
+     "lat": 35.17,
+     "lon": 33.36
+    },
+    {
+     "name": "Famagusta",
+     "lat": 35.12,
+     "lon": 33.94
+    },
+    {
+     "name": "Limassol",
+     "lat": 34.68,
+     "lon": 33.04
+    },
+    {
+     "name": "Kyrenia",
+     "lat": 35.34,
+     "lon": 33.32
+    },
+    {
+     "name": "Paphos",
+     "lat": 34.77,
+     "lon": 32.42
+    }
+   ],
+   "ruler": {
+    "name": "Hugh IV",
+    "born": 1295,
+    "dynasty": "Lusignan",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "learned",
+     "stern"
+    ]
+   },
+   "heir": {
+    "name": "Peter",
+    "born": 1328,
+    "dynasty": "Lusignan",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     5
+    ],
+    "traits": [
+     "zealous",
+     "brave",
+     "restless"
+    ]
+   },
+   "consort": {
+    "name": "Alice of Ibelin",
+    "born": 1304,
+    "dynasty": "Ibelin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of Lusignan, Latin kings of Cyprus and titular kings of Jerusalem",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hospitallers",
+    "venice",
+    "papal_states"
+   ],
+   "rivals": [
+    "genoa",
+    "mamluks"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Old King Hugh IV rules a wealthy island whose port of Famagusta is the great entrepôt of the Levant trade. A patron of learning, he prefers peace with the Mamluks to crusading. His son Peter burns to recover Jerusalem.",
+    "de": "Der alte König Hugo IV. herrscht über eine reiche Insel, deren Hafen Famagusta der große Umschlagplatz des Levantehandels ist. Als Förderer der Gelehrsamkeit zieht er den Frieden mit den Mamluken dem Kreuzzug vor. Sein Sohn Peter brennt darauf, Jerusalem zurückzugewinnen."
+   },
+   "coa": {
+    "blazon": "Quarterly: Jerusalem and Lusignan",
+    "field": "argent",
+    "division": "quarterly",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "achaea",
+   "name": {
+    "en": "Principality of Achaea",
+    "de": "Fürstentum Achaia"
+   },
+   "short": {
+    "en": "Achaea",
+    "de": "Achaia"
+   },
+   "adjective": {
+    "en": "Achaean",
+    "de": "achaiisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#8f6bc0",
+   "capital": {
+    "name": "Andravida",
+    "lat": 37.904,
+    "lon": 21.271
+   },
+   "holdings": [
+    {
+     "name": "Andravida",
+     "lat": 37.904,
+     "lon": 21.271
+    },
+    {
+     "name": "Patras",
+     "lat": 38.246,
+     "lon": 21.735
+    },
+    {
+     "name": "Vostitsa",
+     "lat": 38.25,
+     "lon": 22.081
+    },
+    {
+     "name": "Corinth",
+     "lat": 37.906,
+     "lon": 22.88
+    },
+    {
+     "name": "Karytaina",
+     "lat": 37.484,
+     "lon": 22.037
+    },
+    {
+     "name": "Arkadia",
+     "lat": 37.25,
+     "lon": 21.67
+    },
+    {
+     "name": "Kalamata",
+     "lat": 37.04,
+     "lon": 22.11
+    },
+    {
+     "name": "Corfu",
+     "lat": 39.624,
+     "lon": 19.921
+    }
+   ],
+   "ruler": {
+    "name": "Robert of Taranto",
+    "born": 1326,
+    "dynasty": "Anjou-Taranto",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "idle",
+     "proud"
+    ]
+   },
+   "heir": {
+    "name": "Philip of Taranto",
+    "born": 1329,
+    "dynasty": "Anjou-Taranto",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Marie de Bourbon",
+    "born": 1315,
+    "dynasty": "Bourbon",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "dynasty_note": "Angevin princes of Taranto; Robert, brother of King Louis of Naples, has been prince since 1332 (also lord of Corfu)",
+   "overlord": "naples",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "venice"
+   ],
+   "rivals": [
+    "morea",
+    "athens"
+   ],
+   "claims_on": [
+    "morea",
+    "athens"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The French principality founded after the Fourth Crusade is a shadow of its former self, governed by bailiffs for the absentee Prince Robert of Taranto. Its barons are quarrelsome and the Byzantine despots of Mistra encroach from the south. Corinth is entrusted to the Florentine Niccolò Acciaiuoli's agents.",
+    "de": "Das nach dem Vierten Kreuzzug gegründete französische Fürstentum ist nur noch ein Schatten, verwaltet von Bailli für den abwesenden Fürsten Robert von Tarent. Seine Barone sind streitsüchtig, und die byzantinischen Despoten von Mistra dringen von Süden vor. Korinth wird von Leuten des Florentiners Niccolò Acciaiuoli verwaltet."
+   },
+   "coa": {
+    "blazon": "Gules, a cross moline Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "athens",
+   "name": {
+    "en": "Duchy of Athens and Neopatras",
+    "de": "Herzogtum Athen und Neopatras"
+   },
+   "short": {
+    "en": "Athens",
+    "de": "Athen"
+   },
+   "adjective": {
+    "en": "Catalan",
+    "de": "katalanisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "catalan",
+   "faith": "latin",
+   "color": "#e3b23c",
+   "capital": {
+    "name": "Thebes",
+    "lat": 38.32,
+    "lon": 23.32
+   },
+   "holdings": [
+    {
+     "name": "Thebes",
+     "lat": 38.32,
+     "lon": 23.32
+    },
+    {
+     "name": "Athens",
+     "lat": 37.971,
+     "lon": 23.726
+    },
+    {
+     "name": "Livadeia",
+     "lat": 38.436,
+     "lon": 22.876
+    },
+    {
+     "name": "Salona",
+     "lat": 38.527,
+     "lon": 22.377
+    },
+    {
+     "name": "Neopatras",
+     "lat": 38.867,
+     "lon": 22.241
+    },
+    {
+     "name": "Megara",
+     "lat": 37.996,
+     "lon": 23.344
+    }
+   ],
+   "ruler": {
+    "name": "Frederick III of Sicily",
+    "born": 1341,
+    "dynasty": "Barcelona (Sicilian line)",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "sickly",
+     "gentle"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Catalan Company's duchy, held by the Sicilian kings since 1312 and governed by a vicar-general",
+   "overlord": "sicily",
+   "subject_type": "personal_union",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sicily"
+   ],
+   "rivals": [
+    "achaea",
+    "venice"
+   ],
+   "claims_on": [
+    "achaea"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Catalan Company seized the Frankish duchy in 1311 and offered it to the Kings of Sicily. Frederick III, a sickly boy in Catania, is duke in name; real power lies with the vicar-general and Catalan feudatories such as the Fadrique counts of Salona. Turkish raiders and Venetian Negroponte press on its coasts.",
+    "de": "Die Katalanische Kompanie eroberte 1311 das fränkische Herzogtum und trug es den Königen von Sizilien an. Friedrich III., ein kränklicher Knabe in Catania, ist Herzog dem Namen nach; die Macht liegt beim Generalvikar und katalanischen Lehnsherren wie den Fadrique von Salona. Türkische Plünderer und das venezianische Negroponte bedrängen seine Küsten."
+   },
+   "coa": {
+    "blazon": "Per saltire Or paly gules and argent with eagles sable (Aragon-Sicily)",
+    "field": "or",
+    "division": "per_saltire",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "archipelago",
+   "name": {
+    "en": "Duchy of the Archipelago",
+    "de": "Herzogtum Archipelagos"
+   },
+   "short": {
+    "en": "Naxos",
+    "de": "Naxos"
+   },
+   "adjective": {
+    "en": "Naxian",
+    "de": "naxisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#4ab0a0",
+   "capital": {
+    "name": "Naxos",
+    "lat": 37.105,
+    "lon": 25.376
+   },
+   "holdings": [
+    {
+     "name": "Naxos",
+     "lat": 37.105,
+     "lon": 25.376
+    },
+    {
+     "name": "Paros",
+     "lat": 37.085,
+     "lon": 25.15
+    },
+    {
+     "name": "Milos",
+     "lat": 36.725,
+     "lon": 24.43
+    },
+    {
+     "name": "Syros",
+     "lat": 37.444,
+     "lon": 24.942
+    },
+    {
+     "name": "Santorini",
+     "lat": 36.42,
+     "lon": 25.43
+    },
+    {
+     "name": "Ios",
+     "lat": 36.732,
+     "lon": 25.282
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni I Sanudo",
+    "born": 1310,
+    "dynasty": "Sanudo",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Fiorenza Sanudo",
+    "born": 1335,
+    "dynasty": "Sanudo",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "determined"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Venetian House of Sanudo, dukes of Naxos since 1207",
+   "overlord": "venice",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice",
+    "hospitallers"
+   ],
+   "rivals": [
+    "aydin"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Duke Giovanni Sanudo rules the Cyclades from the castle of Naxos as a client of Venice. Turkish corsairs from Aydın and Menteşe have ravaged the islands for decades. He spent years as a Genoese prisoner after their 1354 raid on Naxos.",
+    "de": "Herzog Giovanni Sanudo herrscht von der Burg von Naxos aus als Klient Venedigs über die Kykladen. Türkische Korsaren aus Aydın und Menteşe verwüsten die Inseln seit Jahrzehnten. Er geriet beim genuesischen Überfall auf Naxos 1354 in Gefangenschaft."
+   },
+   "coa": {
+    "blazon": "Argent, a fess azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "chios",
+   "name": {
+    "en": "Maona of Chios",
+    "de": "Maona von Chios"
+   },
+   "short": {
+    "en": "Chios",
+    "de": "Chios"
+   },
+   "adjective": {
+    "en": "Chiot",
+    "de": "chiotisch"
+   },
+   "rank": "lordship",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#b0b0ff",
+   "capital": {
+    "name": "Chios",
+    "lat": 38.37,
+    "lon": 26.136
+   },
+   "holdings": [
+    {
+     "name": "Chios",
+     "lat": 38.37,
+     "lon": 26.136
+    },
+    {
+     "name": "Old Phocaea",
+     "lat": 38.67,
+     "lon": 26.756
+    }
+   ],
+   "ruler": {
+    "name": "The Maona (Giustiniani partners)",
+    "born": null,
+    "dynasty": "Giustiniani",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Genoese chartered company (maona) that conquered Chios and the Phocaeas in 1346; its shareholders took the name Giustiniani",
+   "overlord": "genoa",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [
+    "byzantium",
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "A Genoese shareholding company seized Chios from Byzantium in 1346 and exploits its mastic monopoly and the alum of Phocaea. The Maona governs on behalf of Genoa through a podestà. Constantinople has never accepted the loss.",
+    "de": "Eine genuesische Anteilsgesellschaft entriss 1346 Byzanz die Insel Chios und beutet das Mastix-Monopol und den Alaun von Phokaia aus. Die Maona regiert im Namen Genuas durch einen Podestà. Konstantinopel hat den Verlust nie hingenommen."
+   },
+   "coa": {
+    "blazon": "Gules, a castle Or, a chief Or with an eagle sable",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "lesbos",
+   "name": {
+    "en": "Lordship of Lesbos",
+    "de": "Herrschaft Lesbos"
+   },
+   "short": {
+    "en": "Lesbos",
+    "de": "Lesbos"
+   },
+   "adjective": {
+    "en": "Lesbian",
+    "de": "lesbisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#7fc8c8",
+   "capital": {
+    "name": "Mytilene",
+    "lat": 39.107,
+    "lon": 26.555
+   },
+   "holdings": [
+    {
+     "name": "Mytilene",
+     "lat": 39.107,
+     "lon": 26.555
+    },
+    {
+     "name": "Methymna",
+     "lat": 39.368,
+     "lon": 26.175
+    }
+   ],
+   "ruler": {
+    "name": "Francesco I Gattilusio",
+    "born": 1320,
+    "dynasty": "Gattilusio",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "adventurer",
+     "loyal"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Maria Palaiologina",
+    "born": 1335,
+    "dynasty": "Palaiologos",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Genoese House of Gattilusio; Francesco received Lesbos in July 1355 as dowry of John V's sister Maria",
+   "overlord": "byzantium",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "byzantium",
+    "genoa"
+   ],
+   "rivals": [
+    "ottomans"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Genoese adventurer Francesco Gattilusio helped John V Palaiologos retake Constantinople in 1354. As reward he received the emperor's sister and the island of Lesbos as a Byzantine fief. He founds a Latin-Greek dynasty in the northern Aegean.",
+    "de": "Der genuesische Abenteurer Francesco Gattilusio half Johannes V. Palaiologos 1354, Konstantinopel zurückzuerobern. Zum Lohn erhielt er die Schwester des Kaisers und die Insel Lesbos als byzantinisches Lehen. Er gründet eine lateinisch-griechische Dynastie in der nördlichen Ägäis."
+   },
+   "coa": {
+    "blazon": "Per fess argent and sable, with the Palaiologan cross",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bodonitsa",
+   "name": {
+    "en": "Marquisate of Bodonitsa",
+    "de": "Markgrafschaft Bodonitsa"
+   },
+   "short": {
+    "en": "Bodonitsa",
+    "de": "Bodonitsa"
+   },
+   "adjective": {
+    "en": "Bodonitsan",
+    "de": "bodonitsanisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#c08a5a",
+   "capital": {
+    "name": "Bodonitsa",
+    "lat": 38.79,
+    "lon": 22.77
+   },
+   "holdings": [
+    {
+     "name": "Bodonitsa",
+     "lat": 38.79,
+     "lon": 22.77
+    }
+   ],
+   "ruler": {
+    "name": "Guglielma Pallavicini",
+    "born": 1300,
+    "dynasty": "Pallavicini",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "stubborn"
+    ]
+   },
+   "heir": {
+    "name": "Francesco Giorgi",
+    "born": 1330,
+    "dynasty": "Giorgi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Marchioness of the Pallavicini line; her late husband Niccolò Giorgi was a Venetian noble",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice"
+   ],
+   "rivals": [
+    "athens"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The tiny marquisate guarding the Thermopylae pass is the last fragment of the Frankish Lombard settlement in central Greece. Marchioness Guglielma Pallavicini holds it under Venetian protection. She pays tribute to the Catalans of Athens to be left alone.",
+    "de": "Die winzige Markgrafschaft am Thermopylenpass ist das letzte Bruchstück der fränkisch-lombardischen Besiedlung Mittelgriechenlands. Markgräfin Guglielma Pallavicini hält sie unter venezianischem Schutz. Sie zahlt den Katalanen von Athen Tribut, um in Ruhe gelassen zu werden."
+   },
+   "coa": {
+    "blazon": "Chequy argent and sable",
+    "field": "argent",
+    "division": "chequy",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "durazzo",
+   "name": {
+    "en": "Duchy of Durazzo",
+    "de": "Herzogtum Durazzo"
+   },
+   "short": {
+    "en": "Durazzo",
+    "de": "Durazzo"
+   },
+   "adjective": {
+    "en": "Durazzan",
+    "de": "durazzisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "albanian",
+   "faith": "latin",
+   "color": "#7a8fd8",
+   "capital": {
+    "name": "Durazzo",
+    "lat": 41.323,
+    "lon": 19.441
+   },
+   "holdings": [
+    {
+     "name": "Durazzo",
+     "lat": 41.323,
+     "lon": 19.441
+    }
+   ],
+   "ruler": {
+    "name": "Joanna of Durazzo",
+    "born": 1344,
+    "dynasty": "Anjou-Durazzo",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Angevin house of Durazzo; Joanna succeeded her father Charles, executed by Louis of Hungary at Aversa in 1348",
+   "overlord": "naples",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "venice"
+   ],
+   "rivals": [
+    "serbia"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Adriatic port of Durazzo is all that remains of the Angevin 'Kingdom of Albania', held in the name of the young duchess Joanna. Serbian-ruled Albanian lands surround it. Its garrison depends on supplies by sea from Apulia.",
+    "de": "Der Adriahafen Durazzo ist alles, was vom angevinischen 'Königreich Albanien' übrig ist, gehalten im Namen der jungen Herzogin Johanna. Serbisch beherrschte albanische Gebiete umgeben ihn. Die Besatzung hängt von Nachschub über See aus Apulien ab."
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or, a bordure gules",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 9,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "byzantium",
+   "name": {
+    "en": "Empire of the Romans",
+    "de": "Byzantinisches Reich"
+   },
+   "short": {
+    "en": "Byzantium",
+    "de": "Byzanz"
+   },
+   "adjective": {
+    "en": "Byzantine",
+    "de": "byzantinisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#8a1c5c",
+   "capital": {
+    "name": "Constantinople",
+    "lat": 41.008,
+    "lon": 28.978
+   },
+   "holdings": [
+    {
+     "name": "Constantinople",
+     "lat": 41.008,
+     "lon": 28.978
+    },
+    {
+     "name": "Selymbria",
+     "lat": 41.074,
+     "lon": 28.247
+    },
+    {
+     "name": "Heraclea",
+     "lat": 40.972,
+     "lon": 27.955
+    },
+    {
+     "name": "Bizye",
+     "lat": 41.573,
+     "lon": 27.761
+    },
+    {
+     "name": "Christoupolis",
+     "lat": 40.937,
+     "lon": 24.412
+    },
+    {
+     "name": "Thessalonica",
+     "lat": 40.64,
+     "lon": 22.944
+    },
+    {
+     "name": "Lemnos",
+     "lat": 39.875,
+     "lon": 25.062
+    },
+    {
+     "name": "Tenedos",
+     "lat": 39.82,
+     "lon": 26.05
+    },
+    {
+     "name": "Philadelphia",
+     "lat": 38.35,
+     "lon": 28.52
+    }
+   ],
+   "ruler": {
+    "name": "John V Palaiologos",
+    "born": 1332,
+    "dynasty": "Palaiologos",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "indecisive",
+     "lustful"
+    ]
+   },
+   "heir": {
+    "name": "Andronikos Palaiologos",
+    "born": 1348,
+    "dynasty": "Palaiologos",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "child",
+     "resentful"
+    ]
+   },
+   "consort": {
+    "name": "Helena Kantakouzene",
+    "born": 1333,
+    "dynasty": "Kantakouzenos",
+    "female": true,
+    "skills": [
+     4,
+     4,
+     0
+    ],
+    "traits": [
+     "shrewd"
+    ]
+   },
+   "dynasty_note": "House of Palaiologos; John V regained sole power when John VI Kantakouzenos abdicated in December 1354",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lesbos",
+    "morea",
+    "venice"
+   ],
+   "rivals": [
+    "kantakouzenos",
+    "ottomans",
+    "serbia",
+    "chios"
+   ],
+   "claims_on": [
+    "serbia",
+    "kantakouzenos",
+    "chios",
+    "epirus",
+    "serres"
+   ],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "A generation of civil war has reduced the Empire to Constantinople, a strip of Thrace, Thessalonica, a few islands and the Morea. John V took the capital in late 1354 and John VI Kantakouzenos withdrew to a monastery, but his son Matthew still claims the crown. Since 1354 the Ottomans hold Gallipoli on European soil.",
+    "de": "Eine Generation Bürgerkrieg hat das Reich auf Konstantinopel, einen Streifen Thrakiens, Thessalonike, einige Inseln und die Morea reduziert. Johannes V. nahm Ende 1354 die Hauptstadt, Johannes VI. Kantakuzenos zog sich ins Kloster zurück, doch sein Sohn Matthaios beansprucht weiter die Krone. Seit 1354 halten die Osmanen Gallipoli auf europäischem Boden."
+   },
+   "coa": {
+    "blazon": "Gules, a cross Or between four betas Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "letter",
+      "tincture": "or",
+      "count": 4,
+      "text": "B"
+     }
+    ]
+   }
+  },
+  {
+   "id": "kantakouzenos",
+   "name": {
+    "en": "Domain of Matthew Kantakouzenos",
+    "de": "Herrschaft des Matthaios Kantakuzenos"
+   },
+   "short": {
+    "en": "Kantakouzenos",
+    "de": "Kantakuzenos"
+   },
+   "adjective": {
+    "en": "Kantakouzenian",
+    "de": "kantakuzenisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#b06a3a",
+   "capital": {
+    "name": "Adrianople",
+    "lat": 41.677,
+    "lon": 26.556
+   },
+   "holdings": [
+    {
+     "name": "Adrianople",
+     "lat": 41.677,
+     "lon": 26.556
+    },
+    {
+     "name": "Didymoteicho",
+     "lat": 41.35,
+     "lon": 26.497
+    }
+   ],
+   "ruler": {
+    "name": "Matthew Kantakouzenos",
+    "born": 1325,
+    "dynasty": "Kantakouzenos",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "proud",
+     "unlucky"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Irene Palaiologina",
+    "born": 1327,
+    "dynasty": "Palaiologos",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Son of the abdicated emperor John VI; crowned co-emperor in 1354, holding his Thracian appanage",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ottomans"
+   ],
+   "rivals": [
+    "byzantium",
+    "serbia"
+   ],
+   "claims_on": [
+    "byzantium"
+   ],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Matthew Kantakouzenos, crowned co-emperor by his father in 1354, refuses to yield to John V. He holds Adrianople and his Thracian appanage, relying on Turkish mercenaries. Squeezed between Constantinople, the Serbs and the Ottomans, his position is precarious.",
+    "de": "Matthaios Kantakuzenos, 1354 von seinem Vater zum Mitkaiser gekrönt, weigert sich, Johannes V. zu weichen. Er hält Adrianopel und sein thrakisches Apanage und stützt sich auf türkische Söldner. Eingeklemmt zwischen Konstantinopel, Serben und Osmanen ist seine Lage prekär."
+   },
+   "coa": {
+    "blazon": "Azure, a double-headed eagle Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "morea",
+   "name": {
+    "en": "Despotate of the Morea",
+    "de": "Despotat Morea"
+   },
+   "short": {
+    "en": "Morea",
+    "de": "Morea"
+   },
+   "adjective": {
+    "en": "Moreote",
+    "de": "moreotisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#c25b8a",
+   "capital": {
+    "name": "Mistra",
+    "lat": 37.073,
+    "lon": 22.367
+   },
+   "holdings": [
+    {
+     "name": "Mistra",
+     "lat": 37.073,
+     "lon": 22.367
+    },
+    {
+     "name": "Monemvasia",
+     "lat": 36.687,
+     "lon": 23.056
+    },
+    {
+     "name": "Leontari",
+     "lat": 37.33,
+     "lon": 22.19
+    },
+    {
+     "name": "Maina",
+     "lat": 36.6,
+     "lon": 22.42
+    }
+   ],
+   "ruler": {
+    "name": "Manuel Kantakouzenos",
+    "born": 1326,
+    "dynasty": "Kantakouzenos",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "capable",
+     "just"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Isabelle de Lusignan",
+    "born": 1333,
+    "dynasty": "Lusignan",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Despot since 1349, son of John VI Kantakouzenos; he recognises John V",
+   "overlord": "byzantium",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "byzantium"
+   ],
+   "rivals": [
+    "achaea"
+   ],
+   "claims_on": [
+    "achaea"
+   ],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Manuel Kantakouzenos governs the Byzantine Morea from Mistra as despot and has made peace with John V despite his family's fall. He is restoring order among unruly archons and hires Albanian settlers. The weak Frankish principality of Achaea is his natural prey.",
+    "de": "Manuel Kantakuzenos regiert die byzantinische Morea als Despot von Mistra aus und hat trotz des Sturzes seiner Familie mit Johannes V. Frieden geschlossen. Er bringt die widerspenstigen Archonten zur Ordnung und siedelt Albaner an. Das schwache fränkische Achaia ist seine natürliche Beute."
+   },
+   "coa": {
+    "blazon": "Gules, a double-headed eagle Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "serbia",
+   "name": {
+    "en": "Serbian Empire",
+    "de": "Serbisches Kaiserreich"
+   },
+   "short": {
+    "en": "Serbia",
+    "de": "Serbien"
+   },
+   "adjective": {
+    "en": "Serbian",
+    "de": "serbisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "serbian",
+   "faith": "orthodox",
+   "color": "#b02020",
+   "capital": {
+    "name": "Skopje",
+    "lat": 41.996,
+    "lon": 21.431
+   },
+   "holdings": [
+    {
+     "name": "Skopje",
+     "lat": 41.996,
+     "lon": 21.431
+    },
+    {
+     "name": "Prizren",
+     "lat": 42.213,
+     "lon": 20.739
+    },
+    {
+     "name": "Novo Brdo",
+     "lat": 42.612,
+     "lon": 21.418
+    },
+    {
+     "name": "Priština",
+     "lat": 42.663,
+     "lon": 21.164
+    },
+    {
+     "name": "Ras",
+     "lat": 43.14,
+     "lon": 20.52
+    },
+    {
+     "name": "Braničevo",
+     "lat": 44.69,
+     "lon": 21.53
+    },
+    {
+     "name": "Kotor",
+     "lat": 42.424,
+     "lon": 18.771
+    },
+    {
+     "name": "Scutari",
+     "lat": 42.068,
+     "lon": 19.512
+    },
+    {
+     "name": "Ohrid",
+     "lat": 41.117,
+     "lon": 20.802
+    },
+    {
+     "name": "Prilep",
+     "lat": 41.345,
+     "lon": 21.555
+    },
+    {
+     "name": "Štip",
+     "lat": 41.74,
+     "lon": 22.194
+    },
+    {
+     "name": "Strumica",
+     "lat": 41.437,
+     "lon": 22.643
+    },
+    {
+     "name": "Vodena",
+     "lat": 40.802,
+     "lon": 22.047
+    },
+    {
+     "name": "Kruja",
+     "lat": 41.509,
+     "lon": 19.792
+    },
+    {
+     "name": "Kratovo",
+     "lat": 42.078,
+     "lon": 22.181
+    }
+   ],
+   "ruler": {
+    "name": "Stefan Uroš V",
+    "born": 1336,
+    "dynasty": "Nemanjić",
+    "female": false,
+    "skills": [
+     1,
+     2,
+     1
+    ],
+    "traits": [
+     "weak",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Nemanjić; Uroš succeeded his father Stefan Dušan, Emperor of the Serbs and Greeks, who died on 20 December 1355",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "bulgaria",
+    "venice"
+   ],
+   "rivals": [
+    "hungary",
+    "byzantium",
+    "kantakouzenos"
+   ],
+   "claims_on": [
+    "byzantium",
+    "bosnia"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Stefan Dušan, Emperor of the Serbs and Greeks, died suddenly on 20 December 1355, leaving his nineteen-year-old son Uroš V a realm stretching from the Danube to the Gulf of Corinth. The great lords who governed Dušan's conquests are already acting for themselves, and his half-brother Simeon covets the throne. Hungary waits to strike in the north.",
+    "de": "Stefan Dušan, Kaiser der Serben und Griechen, starb am 20. Dezember 1355 plötzlich und hinterließ seinem neunzehnjährigen Sohn Uroš V. ein Reich von der Donau bis zum Golf von Korinth. Die Großen, die Dušans Eroberungen verwalteten, handeln schon auf eigene Rechnung, und sein Halbbruder Simeon begehrt den Thron. Ungarn wartet im Norden auf seine Gelegenheit."
+   },
+   "coa": {
+    "blazon": "Gules, a double-headed eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "serres",
+   "name": {
+    "en": "Domain of Serres",
+    "de": "Herrschaft Serres"
+   },
+   "short": {
+    "en": "Serres",
+    "de": "Serres"
+   },
+   "adjective": {
+    "en": "Serrean",
+    "de": "serresisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#d06060",
+   "capital": {
+    "name": "Serres",
+    "lat": 41.09,
+    "lon": 23.548
+   },
+   "holdings": [
+    {
+     "name": "Serres",
+     "lat": 41.09,
+     "lon": 23.548
+    },
+    {
+     "name": "Drama",
+     "lat": 41.151,
+     "lon": 24.147
+    },
+    {
+     "name": "Melnik",
+     "lat": 41.523,
+     "lon": 23.391
+    },
+    {
+     "name": "Zichna",
+     "lat": 41.03,
+     "lon": 23.83
+    }
+   ],
+   "ruler": {
+    "name": "Empress Jelena",
+    "born": 1315,
+    "dynasty": "Sratsimir",
+    "female": true,
+    "skills": [
+     4,
+     4,
+     1
+    ],
+    "traits": [
+     "devout",
+     "capable"
+    ]
+   },
+   "heir": {
+    "name": "Jovan Uglješa",
+    "born": 1330,
+    "dynasty": "Mrnjavčević",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Dušan's widow, sister of Ivan Alexander of Bulgaria; she holds Serres and Dušan's Macedonian conquests as her dower",
+   "overlord": "serbia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "serbia",
+    "bulgaria"
+   ],
+   "rivals": [
+    "byzantium",
+    "kantakouzenos"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Dušan's widow Jelena, a Bulgarian princess, rules the region of Serres, the jewel of Serbian Macedonia. She acts as regent-like protector of her son Uroš, but increasingly governs on her own. Her ambitious officer Jovan Uglješa stands ready to take over.",
+    "de": "Dušans Witwe Jelena, eine bulgarische Prinzessin, regiert das Gebiet von Serres, das Juwel des serbischen Makedonien. Sie tritt als Schutzherrin ihres Sohnes Uroš auf, regiert aber zunehmend selbst. Ihr ehrgeiziger Gefolgsmann Jovan Uglješa steht bereit, die Herrschaft zu übernehmen."
+   },
+   "coa": {
+    "blazon": "Gules, a double-headed eagle argent, a bordure Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "epirus",
+   "name": {
+    "en": "Despotate of Epirus and Thessaly",
+    "de": "Despotat Epirus und Thessalien"
+   },
+   "short": {
+    "en": "Epirus",
+    "de": "Epirus"
+   },
+   "adjective": {
+    "en": "Epirote",
+    "de": "epirotisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#9c4ab0",
+   "capital": {
+    "name": "Kastoria",
+    "lat": 40.52,
+    "lon": 21.263
+   },
+   "holdings": [
+    {
+     "name": "Kastoria",
+     "lat": 40.52,
+     "lon": 21.263
+    },
+    {
+     "name": "Ioannina",
+     "lat": 39.665,
+     "lon": 20.853
+    },
+    {
+     "name": "Arta",
+     "lat": 39.16,
+     "lon": 20.985
+    },
+    {
+     "name": "Trikala",
+     "lat": 39.555,
+     "lon": 21.768
+    },
+    {
+     "name": "Larissa",
+     "lat": 39.639,
+     "lon": 22.419
+    },
+    {
+     "name": "Demetrias",
+     "lat": 39.36,
+     "lon": 22.94
+    },
+    {
+     "name": "Pharsala",
+     "lat": 39.296,
+     "lon": 22.383
+    }
+   ],
+   "ruler": {
+    "name": "Simeon Uroš Palaiologos",
+    "born": 1326,
+    "dynasty": "Nemanjić",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "cultured"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Thomais Orsini",
+    "born": 1330,
+    "dynasty": "Orsini",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Dušan's half-brother, despot governing Epirus; Thessaly was governed for Dušan by Caesar Preljub (d. 1355/56)",
+   "overlord": "serbia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "serbia",
+    "byzantium"
+   ],
+   "claims_on": [
+    "serbia"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Despot Simeon Uroš, Dušan's Greek-born half-brother, governs Epirus and Thessaly from Kastoria. At his brother's death he begins preparing to claim the imperial crown for himself. Meanwhile the exiled Nikephoros II Orsini is gathering forces to restore the old despotate.",
+    "de": "Despot Simeon Uroš, Dušans griechisch geprägter Halbbruder, regiert Epirus und Thessalien von Kastoria aus. Nach dem Tod des Bruders bereitet er seinen eigenen Anspruch auf die Kaiserkrone vor. Unterdessen sammelt der exilierte Nikephoros II. Orsini Kräfte, um das alte Despotat wiederherzustellen."
+   },
+   "coa": {
+    "blazon": "Azure, a double-headed eagle argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "valona",
+   "name": {
+    "en": "Principality of Valona",
+    "de": "Fürstentum Valona"
+   },
+   "short": {
+    "en": "Valona",
+    "de": "Valona"
+   },
+   "adjective": {
+    "en": "Valonan",
+    "de": "valonisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "albanian",
+   "faith": "orthodox",
+   "color": "#6a9a5a",
+   "capital": {
+    "name": "Valona",
+    "lat": 40.466,
+    "lon": 19.49
+   },
+   "holdings": [
+    {
+     "name": "Valona",
+     "lat": 40.466,
+     "lon": 19.49
+    },
+    {
+     "name": "Berat",
+     "lat": 40.705,
+     "lon": 19.952
+    },
+    {
+     "name": "Himara",
+     "lat": 40.1,
+     "lon": 19.745
+    }
+   ],
+   "ruler": {
+    "name": "John Komnenos Asen",
+    "born": 1310,
+    "dynasty": "Asen",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pragmatic"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anna Palaiologina",
+    "born": 1320,
+    "dynasty": "Palaiologos",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "dynasty_note": "Bulgarian prince, brother of Empress Jelena; governor of Valona and Kanina for Dušan since 1345",
+   "overlord": "serbia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice",
+    "serres"
+   ],
+   "rivals": [
+    "durazzo"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "John Komnenos Asen, brother-in-law of Dušan, governs the Albanian coast around Valona, Kanina and Berat. He trades with Venice and Ragusa and styles himself despot. With Dušan dead he is effectively independent.",
+    "de": "Johannes Komnenos Asen, Schwager Dušans, regiert die albanische Küste um Valona, Kanina und Berat. Er handelt mit Venedig und Ragusa und nennt sich Despot. Nach Dušans Tod ist er faktisch unabhängig."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "vojinovic",
+   "name": {
+    "en": "Lands of Vojislav Vojinović",
+    "de": "Herrschaft des Vojislav Vojinović"
+   },
+   "short": {
+    "en": "Vojinović",
+    "de": "Vojinović"
+   },
+   "adjective": {
+    "en": "Vojinović",
+    "de": "vojinovićsch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "serbian",
+   "faith": "orthodox",
+   "color": "#c47a3a",
+   "capital": {
+    "name": "Užice",
+    "lat": 43.858,
+    "lon": 19.848
+   },
+   "holdings": [
+    {
+     "name": "Užice",
+     "lat": 43.858,
+     "lon": 19.848
+    },
+    {
+     "name": "Rudnik",
+     "lat": 44.137,
+     "lon": 20.507
+    },
+    {
+     "name": "Gacko",
+     "lat": 43.168,
+     "lon": 18.535
+    },
+    {
+     "name": "Trebinje",
+     "lat": 42.712,
+     "lon": 18.343
+    }
+   ],
+   "ruler": {
+    "name": "Knez Vojislav Vojinović",
+    "born": 1318,
+    "dynasty": "Vojinović",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "aggressive"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Serbian magnate family; Vojislav served Dušan as stavilac and holds lands from Rudnik to the Adriatic hinterland",
+   "overlord": "serbia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ragusa",
+    "bosnia"
+   ],
+   "claims_on": [
+    "ragusa"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Knez Vojislav Vojinović is the greatest magnate of western Serbia, ruling from Rudnik and Užice to Trebinje. After Dušan's death he behaves as an independent prince. He eyes the territory of Ragusa and quarrels with Bosnia over Hum.",
+    "de": "Knez Vojislav Vojinović ist der mächtigste Magnat Westserbiens und herrscht von Rudnik und Užice bis Trebinje. Nach Dušans Tod tritt er wie ein unabhängiger Fürst auf. Er begehrt Gebiete Ragusas und streitet mit Bosnien um Hum."
+   },
+   "coa": {
+    "blazon": "Argent, a fess gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "bosnia",
+   "name": {
+    "en": "Banate of Bosnia",
+    "de": "Banat Bosnien"
+   },
+   "short": {
+    "en": "Bosnia",
+    "de": "Bosnien"
+   },
+   "adjective": {
+    "en": "Bosnian",
+    "de": "bosnisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "bosnian",
+   "faith": "latin",
+   "color": "#3a5aa8",
+   "capital": {
+    "name": "Bobovac",
+    "lat": 44.11,
+    "lon": 18.19
+   },
+   "holdings": [
+    {
+     "name": "Bobovac",
+     "lat": 44.11,
+     "lon": 18.19
+    },
+    {
+     "name": "Srebrenica",
+     "lat": 44.104,
+     "lon": 19.297
+    },
+    {
+     "name": "Jajce",
+     "lat": 44.341,
+     "lon": 17.27
+    },
+    {
+     "name": "Doboj",
+     "lat": 44.733,
+     "lon": 18.084
+    },
+    {
+     "name": "Blagaj",
+     "lat": 43.256,
+     "lon": 17.886
+    },
+    {
+     "name": "Livno",
+     "lat": 43.827,
+     "lon": 17.008
+    },
+    {
+     "name": "Kreševo",
+     "lat": 43.873,
+     "lon": 18.05
+    }
+   ],
+   "ruler": {
+    "name": "Ban Tvrtko I Kotromanić",
+    "born": 1338,
+    "dynasty": "Kotromanić",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     3
+    ],
+    "traits": [
+     "young",
+     "ambitious",
+     "shrewd"
+    ]
+   },
+   "heir": {
+    "name": "Vuk Kotromanić",
+    "born": 1345,
+    "dynasty": "Kotromanić",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "House of Kotromanić; Tvrtko succeeded his uncle Stjepan II in 1353 under his mother Jelena's guidance",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hungary"
+   ],
+   "rivals": [
+    "serbia",
+    "vojinovic"
+   ],
+   "claims_on": [
+    "serbia"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Ban Tvrtko inherited from his uncle Stjepan II a Bosnia enlarged by Hum and the western lands. He is a vassal of Louis of Hungary, who married Tvrtko's cousin Elizabeth and covets Hum as her dowry. Silver from Srebrenica funds the realm; Catholic, Orthodox and the Bosnian Church coexist uneasily.",
+    "de": "Der junge Ban Tvrtko erbte von seinem Onkel Stjepan II. ein um Hum und die Westgebiete vergrößertes Bosnien. Er ist Vasall Ludwigs von Ungarn, der Tvrtkos Cousine Elisabeth heiratete und Hum als ihre Mitgift begehrt. Silber aus Srebrenica finanziert das Land; Katholiken, Orthodoxe und die Bosnische Kirche leben spannungsvoll nebeneinander."
+   },
+   "coa": {
+    "blazon": "Azure, a bend argent between fleurs-de-lis Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "or",
+      "count": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "ragusa",
+   "name": {
+    "en": "Republic of Ragusa",
+    "de": "Republik Ragusa"
+   },
+   "short": {
+    "en": "Ragusa",
+    "de": "Ragusa"
+   },
+   "adjective": {
+    "en": "Ragusan",
+    "de": "ragusanisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "croatian",
+   "faith": "latin",
+   "color": "#5f9fd0",
+   "capital": {
+    "name": "Ragusa",
+    "lat": 42.641,
+    "lon": 18.108
+   },
+   "holdings": [
+    {
+     "name": "Ragusa",
+     "lat": 42.641,
+     "lon": 18.108
+    },
+    {
+     "name": "Ston",
+     "lat": 42.838,
+     "lon": 17.697
+    },
+    {
+     "name": "Lastovo",
+     "lat": 42.765,
+     "lon": 16.9
+    }
+   ],
+   "ruler": {
+    "name": "Venetian Count and Great Council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     4,
+     1
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Patrician commune governed by its Great Council under a count sent from Venice (until 1358)",
+   "overlord": "venice",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice",
+    "serbia"
+   ],
+   "rivals": [
+    "vojinovic"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Ragusa is a patrician commune living from Balkan silver and Adriatic shipping, under Venetian suzerainty since 1205. A Venetian count presides, but the Great Council of local nobles governs. Trade privileges in Serbia and Bosnia are its lifeblood.",
+    "de": "Ragusa ist eine Patrizierkommune, die vom Balkansilber und der Adriaschifffahrt lebt und seit 1205 unter venezianischer Oberhoheit steht. Ein venezianischer Graf führt den Vorsitz, doch der Große Rat des einheimischen Adels regiert. Handelsprivilegien in Serbien und Bosnien sind ihr Lebenselixier."
+   },
+   "coa": {
+    "blazon": "Barry gules and argent",
+    "field": "gules",
+    "division": "barry",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bulgaria",
+   "name": {
+    "en": "Tsardom of Bulgaria (Tarnovo)",
+    "de": "Zarentum Bulgarien (Tarnowo)"
+   },
+   "short": {
+    "en": "Bulgaria",
+    "de": "Bulgarien"
+   },
+   "adjective": {
+    "en": "Bulgarian",
+    "de": "bulgarisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "bulgarian",
+   "faith": "orthodox",
+   "color": "#2f8f3f",
+   "capital": {
+    "name": "Tarnovo",
+    "lat": 43.081,
+    "lon": 25.629
+   },
+   "holdings": [
+    {
+     "name": "Tarnovo",
+     "lat": 43.081,
+     "lon": 25.629
+    },
+    {
+     "name": "Preslav",
+     "lat": 43.16,
+     "lon": 26.815
+    },
+    {
+     "name": "Cherven",
+     "lat": 43.613,
+     "lon": 26.025
+    },
+    {
+     "name": "Silistra",
+     "lat": 44.117,
+     "lon": 27.261
+    },
+    {
+     "name": "Nikopol",
+     "lat": 43.705,
+     "lon": 24.895
+    },
+    {
+     "name": "Lovech",
+     "lat": 43.137,
+     "lon": 24.717
+    },
+    {
+     "name": "Sredets",
+     "lat": 42.698,
+     "lon": 23.322
+    },
+    {
+     "name": "Philippopolis",
+     "lat": 42.15,
+     "lon": 24.75
+    },
+    {
+     "name": "Yambol",
+     "lat": 42.484,
+     "lon": 26.51
+    },
+    {
+     "name": "Mesembria",
+     "lat": 42.659,
+     "lon": 27.734
+    },
+    {
+     "name": "Sozopol",
+     "lat": 42.418,
+     "lon": 27.696
+    }
+   ],
+   "ruler": {
+    "name": "Ivan Alexander",
+    "born": 1301,
+    "dynasty": "Sratsimir (Asen)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "patron"
+    ]
+   },
+   "heir": {
+    "name": "Ivan Shishman",
+    "born": 1350,
+    "dynasty": "Sratsimir (Asen)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": {
+    "name": "Sarah-Theodora",
+    "born": 1320,
+    "dynasty": null,
+    "female": true,
+    "skills": [
+     3,
+     4,
+     0
+    ],
+    "traits": [
+     "convert",
+     "influential"
+    ]
+   },
+   "dynasty_note": "Sratsimir dynasty claiming Asen descent; Ivan Alexander has reigned since 1331",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "serbia",
+    "serres"
+   ],
+   "rivals": [
+    "hungary",
+    "ottomans",
+    "byzantium"
+   ],
+   "claims_on": [
+    "vidin"
+   ],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Tsar Ivan Alexander presides over a cultural flowering at Tarnovo, but his realm is splitting. His eldest surviving son Ivan Sratsimir rules Vidin as a rival tsar, while Ivan Shishman, son of his second, Jewish-born wife Sarah-Theodora, is designated heir. His son Michael Asen fell fighting the Ottomans in 1355.",
+    "de": "Zar Iwan Alexander steht einer kulturellen Blüte in Tarnowo vor, doch sein Reich zerfällt. Sein ältester lebender Sohn Iwan Srazimir regiert Widin als Gegenzar, während Iwan Schischman, Sohn seiner zweiten, jüdischstämmigen Frau Sara-Theodora, zum Erben bestimmt ist. Sein Sohn Michael Asen fiel 1355 im Kampf gegen die Osmanen."
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant Or crowned",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "vidin",
+   "name": {
+    "en": "Tsardom of Vidin",
+    "de": "Zarentum Widin"
+   },
+   "short": {
+    "en": "Vidin",
+    "de": "Widin"
+   },
+   "adjective": {
+    "en": "Vidinian",
+    "de": "widinisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "bulgarian",
+   "faith": "orthodox",
+   "color": "#6fb05f",
+   "capital": {
+    "name": "Vidin",
+    "lat": 43.99,
+    "lon": 22.873
+   },
+   "holdings": [
+    {
+     "name": "Vidin",
+     "lat": 43.99,
+     "lon": 22.873
+    },
+    {
+     "name": "Lom",
+     "lat": 43.824,
+     "lon": 23.236
+    },
+    {
+     "name": "Belogradchik",
+     "lat": 43.627,
+     "lon": 22.683
+    },
+    {
+     "name": "Oryahovo",
+     "lat": 43.735,
+     "lon": 23.96
+    }
+   ],
+   "ruler": {
+    "name": "Ivan Sratsimir",
+    "born": 1324,
+    "dynasty": "Sratsimir (Asen)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "resentful",
+     "stubborn"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anna of Wallachia",
+    "born": 1330,
+    "dynasty": "Basarab",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Eldest son of Ivan Alexander, crowned co-tsar and established at Vidin, ruling in growing independence",
+   "overlord": "bulgaria",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "wallachia"
+   ],
+   "rivals": [
+    "hungary",
+    "bulgaria"
+   ],
+   "claims_on": [
+    "bulgaria"
+   ],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Ivan Sratsimir, passed over as heir in favour of his half-brother Ivan Shishman, rules Vidin and the north-west of Bulgaria. He is formally his father's co-tsar but increasingly independent. His Danube lands lie open to Hungary.",
+    "de": "Iwan Srazimir, als Erbe zugunsten seines Halbbruders Iwan Schischman übergangen, regiert Widin und den Nordwesten Bulgariens. Formal ist er Mitzar seines Vaters, doch zunehmend unabhängig. Seine Donaulande liegen Ungarn offen."
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "dobruja",
+   "name": {
+    "en": "Despotate of Dobruja",
+    "de": "Despotat Dobrudscha"
+   },
+   "short": {
+    "en": "Dobruja",
+    "de": "Dobrudscha"
+   },
+   "adjective": {
+    "en": "Dobrujan",
+    "de": "dobrudschanisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "bulgarian",
+   "faith": "orthodox",
+   "color": "#a0c050",
+   "capital": {
+    "name": "Kaliakra",
+    "lat": 43.362,
+    "lon": 28.465
+   },
+   "holdings": [
+    {
+     "name": "Kaliakra",
+     "lat": 43.362,
+     "lon": 28.465
+    },
+    {
+     "name": "Karvuna",
+     "lat": 43.41,
+     "lon": 28.16
+    },
+    {
+     "name": "Mangalia",
+     "lat": 43.814,
+     "lon": 28.582
+    }
+   ],
+   "ruler": {
+    "name": "Dobrotitsa",
+    "born": 1320,
+    "dynasty": "Terter (?)",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "bold",
+     "seafarer"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Successor of his brother Balik in the autonomous principality of Karvuna; despot by Byzantine grant",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "byzantium"
+   ],
+   "rivals": [
+    "genoa",
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Dobrotitsa, successor of Balik, rules the coastal principality of Karvuna from the cliff fortress of Kaliakra. He bears the Byzantine title of despot and builds a small fleet. Genoese traders and Tatars of the Golden Horde are his neighbours and rivals.",
+    "de": "Dobrotiza, Nachfolger Baliks, herrscht über das Küstenfürstentum Karwuna von der Felsenfestung Kaliakra aus. Er führt den byzantinischen Titel Despot und baut eine kleine Flotte auf. Genuesische Kaufleute und Tataren der Goldenen Horde sind seine Nachbarn und Rivalen."
+   },
+   "coa": {
+    "blazon": "Azure, a star Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "wallachia",
+   "name": {
+    "en": "Voivodeship of Wallachia",
+    "de": "Woiwodschaft Walachei"
+   },
+   "short": {
+    "en": "Wallachia",
+    "de": "Walachei"
+   },
+   "adjective": {
+    "en": "Wallachian",
+    "de": "walachisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "vlach",
+   "faith": "orthodox",
+   "color": "#d8c040",
+   "capital": {
+    "name": "Curtea de Argeș",
+    "lat": 45.14,
+    "lon": 24.68
+   },
+   "holdings": [
+    {
+     "name": "Curtea de Argeș",
+     "lat": 45.14,
+     "lon": 24.68
+    },
+    {
+     "name": "Câmpulung",
+     "lat": 45.27,
+     "lon": 25.05
+    },
+    {
+     "name": "Râmnic",
+     "lat": 45.1,
+     "lon": 24.37
+    },
+    {
+     "name": "Târgoviște",
+     "lat": 44.93,
+     "lon": 25.46
+    },
+    {
+     "name": "Craiova",
+     "lat": 44.32,
+     "lon": 23.8
+    },
+    {
+     "name": "Brăila",
+     "lat": 45.27,
+     "lon": 27.96
+    },
+    {
+     "name": "Giurgiu",
+     "lat": 43.903,
+     "lon": 25.97
+    }
+   ],
+   "ruler": {
+    "name": "Nicholas Alexander",
+    "born": 1320,
+    "dynasty": "Basarab",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "diplomatic"
+    ]
+   },
+   "heir": {
+    "name": "Vladislav Vlaicu",
+    "born": 1325,
+    "dynasty": "Basarab",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "capable"
+    ]
+   },
+   "consort": {
+    "name": "Clara Dobokai",
+    "born": 1325,
+    "dynasty": "Dobokai",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "catholic"
+    ]
+   },
+   "dynasty_note": "House of Basarab; Nicholas Alexander succeeded his father Basarab I in 1352",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "vidin",
+    "hungary"
+   ],
+   "rivals": [
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Voivode Nicholas Alexander, son of the founder Basarab, has accepted the suzerainty of Louis of Hungary. He is negotiating with Constantinople for a metropolitan of his own for Wallachia. His Catholic wife and Hungarian ties balance the Orthodox faith of his people.",
+    "de": "Woiwode Nikolaus Alexander, Sohn des Gründers Basarab, hat die Oberhoheit Ludwigs von Ungarn anerkannt. Er verhandelt mit Konstantinopel über einen eigenen Metropoliten für die Walachei. Seine katholische Frau und die ungarischen Bindungen gleichen den orthodoxen Glauben seines Volkes aus."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or holding a cross",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "moldavia",
+   "name": {
+    "en": "March of Moldavia",
+    "de": "Mark Moldau"
+   },
+   "short": {
+    "en": "Moldavia",
+    "de": "Moldau"
+   },
+   "adjective": {
+    "en": "Moldavian",
+    "de": "moldauisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "vlach",
+   "faith": "orthodox",
+   "color": "#c87a2a",
+   "capital": {
+    "name": "Baia",
+    "lat": 47.421,
+    "lon": 26.221
+   },
+   "holdings": [
+    {
+     "name": "Baia",
+     "lat": 47.421,
+     "lon": 26.221
+    },
+    {
+     "name": "Siret",
+     "lat": 47.953,
+     "lon": 26.067
+    }
+   ],
+   "ruler": {
+    "name": "Voivode Sas",
+    "born": 1320,
+    "dynasty": "Dragoș",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "loyal"
+    ]
+   },
+   "heir": {
+    "name": "Balc",
+    "born": 1340,
+    "dynasty": "Dragoș",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "House of Dragoș, Maramureș Vlach nobles installed by the Hungarian crown as voivodes of the march (Dragoș d. c. 1354)",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hungary"
+   ],
+   "rivals": [
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The young march on the Moldova river was founded by Dragoș of Maramureș as a Hungarian bulwark against the Tatars. His son Sas now governs it from Baia as Louis's vassal. Rival Maramureș nobles under Bogdan resent the arrangement.",
+    "de": "Die junge Mark an der Moldau wurde von Dragoș aus der Maramuresch als ungarisches Bollwerk gegen die Tataren gegründet. Sein Sohn Sas regiert sie nun von Baia aus als Vasall Ludwigs. Rivalisierende Adlige der Maramuresch unter Bogdan lehnen diese Ordnung ab."
+   },
+   "coa": {
+    "blazon": "Gules, an aurochs head Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bull_head",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "hungary",
+   "name": {
+    "en": "Kingdom of Hungary",
+    "de": "Königreich Ungarn"
+   },
+   "short": {
+    "en": "Hungary",
+    "de": "Ungarn"
+   },
+   "adjective": {
+    "en": "Hungarian",
+    "de": "ungarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "hungarian",
+   "faith": "latin",
+   "color": "#5a8a3a",
+   "capital": {
+    "name": "Visegrád",
+    "lat": 47.785,
+    "lon": 18.97
+   },
+   "holdings": [
+    {
+     "name": "Visegrád",
+     "lat": 47.785,
+     "lon": 18.97
+    },
+    {
+     "name": "Buda",
+     "lat": 47.497,
+     "lon": 19.04
+    },
+    {
+     "name": "Esztergom",
+     "lat": 47.786,
+     "lon": 18.74
+    },
+    {
+     "name": "Székesfehérvár",
+     "lat": 47.19,
+     "lon": 18.41
+    },
+    {
+     "name": "Pressburg",
+     "lat": 48.144,
+     "lon": 17.107
+    },
+    {
+     "name": "Nyitra",
+     "lat": 48.31,
+     "lon": 18.09
+    },
+    {
+     "name": "Trencsén",
+     "lat": 48.894,
+     "lon": 18.04
+    },
+    {
+     "name": "Zólyom",
+     "lat": 48.578,
+     "lon": 19.126
+    },
+    {
+     "name": "Lőcse",
+     "lat": 49.022,
+     "lon": 20.59
+    },
+    {
+     "name": "Kassa",
+     "lat": 48.72,
+     "lon": 21.258
+    },
+    {
+     "name": "Eger",
+     "lat": 47.902,
+     "lon": 20.377
+    },
+    {
+     "name": "Munkács",
+     "lat": 48.44,
+     "lon": 22.718
+    },
+    {
+     "name": "Szatmár",
+     "lat": 47.792,
+     "lon": 22.885
+    },
+    {
+     "name": "Máramarossziget",
+     "lat": 47.928,
+     "lon": 23.89
+    },
+    {
+     "name": "Várad",
+     "lat": 47.072,
+     "lon": 21.921
+    },
+    {
+     "name": "Szeged",
+     "lat": 46.253,
+     "lon": 20.148
+    },
+    {
+     "name": "Kalocsa",
+     "lat": 46.528,
+     "lon": 18.985
+    },
+    {
+     "name": "Temesvár",
+     "lat": 45.754,
+     "lon": 21.226
+    },
+    {
+     "name": "Szörény",
+     "lat": 44.632,
+     "lon": 22.656
+    },
+    {
+     "name": "Kolozsvár",
+     "lat": 46.77,
+     "lon": 23.59
+    },
+    {
+     "name": "Gyulafehérvár",
+     "lat": 46.07,
+     "lon": 23.58
+    },
+    {
+     "name": "Bistritz",
+     "lat": 47.133,
+     "lon": 24.5
+    },
+    {
+     "name": "Hermannstadt",
+     "lat": 45.793,
+     "lon": 24.152
+    },
+    {
+     "name": "Kronstadt",
+     "lat": 45.65,
+     "lon": 25.606
+    },
+    {
+     "name": "Győr",
+     "lat": 47.687,
+     "lon": 17.635
+    },
+    {
+     "name": "Sopron",
+     "lat": 47.685,
+     "lon": 16.59
+    },
+    {
+     "name": "Pécs",
+     "lat": 46.073,
+     "lon": 18.233
+    },
+    {
+     "name": "Pozsega",
+     "lat": 45.34,
+     "lon": 17.685
+    },
+    {
+     "name": "Zagreb",
+     "lat": 45.815,
+     "lon": 15.982
+    },
+    {
+     "name": "Varaždin",
+     "lat": 46.305,
+     "lon": 16.336
+    },
+    {
+     "name": "Bihać",
+     "lat": 44.817,
+     "lon": 15.87
+    },
+    {
+     "name": "Knin",
+     "lat": 44.041,
+     "lon": 16.199
+    },
+    {
+     "name": "Senj",
+     "lat": 44.99,
+     "lon": 14.905
+    },
+    {
+     "name": "Macsó",
+     "lat": 44.75,
+     "lon": 19.69
+    }
+   ],
+   "ruler": {
+    "name": "Louis I",
+    "born": 1326,
+    "dynasty": "Anjou",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     5
+    ],
+    "traits": [
+     "chivalrous",
+     "pious",
+     "ambitious"
+    ]
+   },
+   "heir": {
+    "name": "John, Duke of Slavonia",
+    "born": 1354,
+    "dynasty": "Anjou",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "infant"
+    ]
+   },
+   "consort": {
+    "name": "Elizabeth of Bosnia",
+    "born": 1339,
+    "dynasty": "Kotromanić",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Capetian House of Anjou; Louis has reigned since 1342; heir presumptive is his nephew John, son of the late Duke Stephen",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "poland",
+    "bosnia",
+    "wallachia",
+    "padua",
+    "papal_states"
+   ],
+   "rivals": [
+    "venice",
+    "serbia",
+    "naples"
+   ],
+   "claims_on": [
+    "venice",
+    "naples",
+    "serbia",
+    "vidin"
+   ],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Louis the Great rules Hungary with Croatia and Slavonia at the height of its power, with Bosnia, Wallachia and Moldavia as vassals. He has twice invaded Naples to avenge his brother Andrew and is now preparing to take Dalmatia from Venice. Dušan's death opens the prospect of Hungarian supremacy over the Balkans.",
+    "de": "Ludwig der Große regiert Ungarn mit Kroatien und Slawonien auf dem Höhepunkt seiner Macht; Bosnien, die Walachei und die Moldau sind Vasallen. Zweimal ist er in Neapel eingefallen, um seinen Bruder Andreas zu rächen, nun rüstet er, um Venedig Dalmatien zu entreißen. Dušans Tod eröffnet die Aussicht auf ungarische Vorherrschaft über den Balkan."
+   },
+   "coa": {
+    "blazon": "Per pale: barry gules and argent; azure semé-de-lis Or",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 6,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Albornoz's Reconquest of Romagna",
+    "de": "Albornoz' Rückeroberung der Romagna"
+   },
+   "attackers": [
+    "papal_states",
+    "rimini"
+   ],
+   "defenders": [
+    "forli",
+    "faenza"
+   ],
+   "since": 1355,
+   "goal": "subjugation"
+  },
+  {
+   "name": {
+    "en": "War of the League against the Visconti",
+    "de": "Krieg der Liga gegen die Visconti"
+   },
+   "attackers": [
+    "montferrat",
+    "mantua",
+    "ferrara",
+    "padua"
+   ],
+   "defenders": [
+    "milan",
+    "genoa"
+   ],
+   "since": 1354,
+   "goal": "conquest"
+  },
+  {
+   "name": {
+    "en": "Angevin War for Sicily",
+    "de": "Angevinischer Krieg um Sizilien"
+   },
+   "attackers": [
+    "naples"
+   ],
+   "defenders": [
+    "sicily"
+   ],
+   "since": 1354,
+   "goal": "throne_claim"
+  },
+  {
+   "name": {
+    "en": "Byzantine Civil War",
+    "de": "Byzantinischer Bürgerkrieg"
+   },
+   "attackers": [
+    "byzantium"
+   ],
+   "defenders": [
+    "kantakouzenos"
+   ],
+   "since": 1352,
+   "goal": "throne_claim"
+  }
+ ]
+}

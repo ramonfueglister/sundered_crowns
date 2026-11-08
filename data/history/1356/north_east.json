@@ -1,0 +1,5699 @@
+{
+ "region": "north_east",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "Cambridge Medieval History vol. VII",
+  "New Cambridge Medieval History vol. VI",
+  "Oxford Atlas of World History",
+  "Putzger Historischer Weltatlas",
+  "S.C. Rowell, Lithuania Ascending (1994)",
+  "J. Fennell, The Emergence of Moscow 1304-1359 (1968)",
+  "W. Urban, The Teutonic Knights",
+  "P. Jackson, The Mongols and the West",
+  "Wikipedia articles on the respective states and rulers"
+ ],
+ "new_ids": [],
+ "external_refs": [
+  "chobanids",
+  "genoa",
+  "hungary",
+  "venice"
+ ],
+ "states": [
+  {
+   "id": "denmark",
+   "name": {
+    "en": "Kingdom of Denmark",
+    "de": "Königreich Dänemark"
+   },
+   "short": {
+    "en": "Denmark",
+    "de": "Dänemark"
+   },
+   "adjective": {
+    "en": "Danish",
+    "de": "dänisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "danish",
+   "faith": "latin",
+   "color": "#c8102e",
+   "capital": {
+    "name": "Vordingborg",
+    "lat": 55.01,
+    "lon": 11.91
+   },
+   "holdings": [
+    {
+     "name": "Vordingborg",
+     "lat": 55.01,
+     "lon": 11.91
+    },
+    {
+     "name": "Roskilde",
+     "lat": 55.64,
+     "lon": 12.08
+    },
+    {
+     "name": "Copenhagen",
+     "lat": 55.68,
+     "lon": 12.57
+    },
+    {
+     "name": "Kalundborg",
+     "lat": 55.68,
+     "lon": 11.09
+    },
+    {
+     "name": "Nykøbing",
+     "lat": 54.77,
+     "lon": 11.88
+    },
+    {
+     "name": "Odense",
+     "lat": 55.4,
+     "lon": 10.39
+    },
+    {
+     "name": "Nyborg",
+     "lat": 55.31,
+     "lon": 10.79
+    },
+    {
+     "name": "Svendborg",
+     "lat": 55.06,
+     "lon": 10.61
+    },
+    {
+     "name": "Aarhus",
+     "lat": 56.16,
+     "lon": 10.2
+    },
+    {
+     "name": "Horsens",
+     "lat": 55.86,
+     "lon": 9.85
+    },
+    {
+     "name": "Viborg",
+     "lat": 56.45,
+     "lon": 9.4
+    },
+    {
+     "name": "Aalborg",
+     "lat": 57.05,
+     "lon": 9.92
+    },
+    {
+     "name": "Thisted",
+     "lat": 56.96,
+     "lon": 8.69
+    },
+    {
+     "name": "Ringkøbing",
+     "lat": 56.09,
+     "lon": 8.24
+    },
+    {
+     "name": "Ribe",
+     "lat": 55.33,
+     "lon": 8.76
+    }
+   ],
+   "ruler": {
+    "name": "Valdemar IV Atterdag",
+    "born": 1320,
+    "dynasty": "Estridsen",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     3
+    ],
+    "traits": [
+     "shrewd",
+     "ruthless",
+     "tenacious"
+    ]
+   },
+   "heir": {
+    "name": "Christopher of Lolland",
+    "born": 1341,
+    "dynasty": "Estridsen",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Helvig of Schleswig",
+    "born": 1320,
+    "dynasty": "Estridsen (Abel line)",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of Estridsen; Valdemar has spent fifteen years redeeming a kingdom pawned to the Holstein counts.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "schleswig"
+   ],
+   "rivals": [
+    "sweden"
+   ],
+   "claims_on": [
+    "sweden"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Valdemar IV is reassembling a Denmark that had been pawned piece by piece to German creditors, buying back Zealand, Funen and Jutland castle by castle. Scania, Halland and Blekinge remain in Swedish hands, and Valdemar is waiting for the moment to take them back. Estonia was sold to the Teutonic Order in 1346 to fund the recovery.",
+    "de": "Valdemar IV. setzt ein an deutsche Gläubiger verpfändetes Dänemark Burg um Burg wieder zusammen. Schonen, Halland und Blekinge sind noch schwedisch, und Valdemar wartet auf die Gelegenheit zur Rückeroberung. Estland wurde 1346 an den Deutschen Orden verkauft, um den Rückkauf zu finanzieren."
+   },
+   "coa": {
+    "blazon": "Or semé of hearts gules, three lions passant azure crowned or",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "azure",
+      "count": 3,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "schleswig",
+   "name": {
+    "en": "Duchy of Schleswig",
+    "de": "Herzogtum Schleswig"
+   },
+   "short": {
+    "en": "Schleswig",
+    "de": "Schleswig"
+   },
+   "adjective": {
+    "en": "Schleswig",
+    "de": "schleswigsch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "danish",
+   "faith": "latin",
+   "color": "#e8b83a",
+   "capital": {
+    "name": "Gottorf",
+    "lat": 54.52,
+    "lon": 9.57
+   },
+   "holdings": [
+    {
+     "name": "Gottorf",
+     "lat": 54.52,
+     "lon": 9.57
+    },
+    {
+     "name": "Flensburg",
+     "lat": 54.78,
+     "lon": 9.43
+    },
+    {
+     "name": "Haderslev",
+     "lat": 55.25,
+     "lon": 9.49
+    },
+    {
+     "name": "Tønder",
+     "lat": 54.93,
+     "lon": 8.86
+    },
+    {
+     "name": "Sønderborg",
+     "lat": 54.91,
+     "lon": 9.79
+    },
+    {
+     "name": "Husum",
+     "lat": 54.48,
+     "lon": 9.05
+    }
+   ],
+   "ruler": {
+    "name": "Valdemar V",
+    "born": 1314,
+    "dynasty": "Estridsen (Abel line)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Henrik",
+    "born": 1342,
+    "dynasty": "Estridsen (Abel line)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Abel line of the House of Estridsen, closely tied to the Counts of Holstein.",
+   "overlord": "denmark",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "denmark"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Duke Valdemar V, once briefly king of Denmark as a Holstein puppet, holds Schleswig as a Danish fief. His sister is married to King Valdemar IV, but Holstein knights hold many of the duchy's castles in pledge. The duchy is a hinge between the Danish crown and the German counts to the south.",
+    "de": "Herzog Valdemar V., einst kurz Marionettenkönig Dänemarks, hält Schleswig als dänisches Lehen. Seine Schwester ist mit König Valdemar IV. verheiratet, doch holsteinische Ritter haben viele Burgen als Pfand. Das Herzogtum ist das Scharnier zwischen dänischer Krone und den Grafen im Süden."
+   },
+   "coa": {
+    "blazon": "Or, two lions passant azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "azure",
+      "count": 2,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sweden",
+   "name": {
+    "en": "Kingdom of Sweden",
+    "de": "Königreich Schweden"
+   },
+   "short": {
+    "en": "Sweden",
+    "de": "Schweden"
+   },
+   "adjective": {
+    "en": "Swedish",
+    "de": "schwedisch"
+   },
+   "rank": "kingdom",
+   "government": "elective_monarchy",
+   "culture": "swedish",
+   "faith": "latin",
+   "color": "#1f5fa8",
+   "capital": {
+    "name": "Stockholm",
+    "lat": 59.33,
+    "lon": 18.07
+   },
+   "holdings": [
+    {
+     "name": "Stockholm",
+     "lat": 59.33,
+     "lon": 18.07
+    },
+    {
+     "name": "Uppsala",
+     "lat": 59.86,
+     "lon": 17.64
+    },
+    {
+     "name": "Västerås",
+     "lat": 59.61,
+     "lon": 16.55
+    },
+    {
+     "name": "Nyköping",
+     "lat": 58.75,
+     "lon": 17.01
+    },
+    {
+     "name": "Linköping",
+     "lat": 58.41,
+     "lon": 15.62
+    },
+    {
+     "name": "Kalmar",
+     "lat": 56.66,
+     "lon": 16.36
+    },
+    {
+     "name": "Jönköping",
+     "lat": 57.78,
+     "lon": 14.16
+    },
+    {
+     "name": "Skara",
+     "lat": 58.39,
+     "lon": 13.44
+    },
+    {
+     "name": "Örebro",
+     "lat": 59.27,
+     "lon": 15.21
+    },
+    {
+     "name": "Tingvalla",
+     "lat": 59.38,
+     "lon": 13.5
+    },
+    {
+     "name": "Kopparberg",
+     "lat": 60.61,
+     "lon": 15.63
+    },
+    {
+     "name": "Gävle",
+     "lat": 60.67,
+     "lon": 17.14
+    },
+    {
+     "name": "Hudiksvall",
+     "lat": 61.73,
+     "lon": 17.1
+    },
+    {
+     "name": "Sundsvall",
+     "lat": 62.39,
+     "lon": 17.31
+    },
+    {
+     "name": "Umeå",
+     "lat": 63.83,
+     "lon": 20.26
+    },
+    {
+     "name": "Växjö",
+     "lat": 56.88,
+     "lon": 14.81
+    },
+    {
+     "name": "Lödöse",
+     "lat": 58.03,
+     "lon": 12.15
+    },
+    {
+     "name": "Lund",
+     "lat": 55.7,
+     "lon": 13.19
+    },
+    {
+     "name": "Malmö",
+     "lat": 55.6,
+     "lon": 13.0
+    },
+    {
+     "name": "Helsingborg",
+     "lat": 56.05,
+     "lon": 12.69
+    },
+    {
+     "name": "Halmstad",
+     "lat": 56.67,
+     "lon": 12.86
+    },
+    {
+     "name": "Varberg",
+     "lat": 57.11,
+     "lon": 12.25
+    },
+    {
+     "name": "Ronneby",
+     "lat": 56.21,
+     "lon": 15.28
+    },
+    {
+     "name": "Borgholm",
+     "lat": 56.88,
+     "lon": 16.65
+    },
+    {
+     "name": "Hemse",
+     "lat": 57.24,
+     "lon": 18.37
+    },
+    {
+     "name": "Slite",
+     "lat": 57.7,
+     "lon": 18.8
+    },
+    {
+     "name": "Åbo",
+     "lat": 60.45,
+     "lon": 22.27
+    },
+    {
+     "name": "Raseborg",
+     "lat": 59.97,
+     "lon": 23.43
+    },
+    {
+     "name": "Borgå",
+     "lat": 60.39,
+     "lon": 25.66
+    },
+    {
+     "name": "Tavastehus",
+     "lat": 61.0,
+     "lon": 24.46
+    },
+    {
+     "name": "Viborg",
+     "lat": 60.71,
+     "lon": 28.75
+    },
+    {
+     "name": "Ulvsby",
+     "lat": 61.43,
+     "lon": 21.87
+    },
+    {
+     "name": "Korsholm",
+     "lat": 63.09,
+     "lon": 21.71
+    }
+   ],
+   "ruler": {
+    "name": "Magnus Eriksson",
+    "born": 1316,
+    "dynasty": "Bjälbo",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "generous",
+     "indecisive",
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Eric Magnusson",
+    "born": 1339,
+    "dynasty": "Bjälbo",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "impatient"
+    ]
+   },
+   "consort": {
+    "name": "Blanche of Namur",
+    "born": 1320,
+    "dynasty": "Dampierre",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "cultured"
+    ]
+   },
+   "dynasty_note": "House of Bjälbo (Folkunga). Magnus ruled Norway too until 1355 and has held Scania since 1332.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "norway"
+   ],
+   "rivals": [
+    "denmark",
+    "novgorod"
+   ],
+   "claims_on": [
+    "novgorod"
+   ],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Magnus Eriksson rules the largest Swedish realm yet, from Scania to Finland, but his crusade against Novgorod failed and the crown is deep in debt to the Church and the Hanse. Magnates resent his favourite Bengt Algotsson, and his son Eric, passed over for Norway, is about to rise against him (autumn 1356). Denmark's Valdemar covets the rich Scanian provinces bought in 1332.",
+    "de": "Magnus Eriksson herrscht über das bisher größte schwedische Reich von Schonen bis Finnland, doch sein Kreuzzug gegen Nowgorod scheiterte und die Krone ist tief verschuldet. Die Großen grollen seinem Günstling Bengt Algotsson, und sein Sohn Erik steht kurz vor dem Aufstand (Herbst 1356). Valdemar von Dänemark begehrt die 1332 erworbenen schonischen Lande."
+   },
+   "coa": {
+    "blazon": "Azure, three crowns or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "two_and_one"
+     }
+    ]
+   }
+  },
+  {
+   "id": "visby",
+   "name": {
+    "en": "City of Visby",
+    "de": "Stadt Visby"
+   },
+   "short": {
+    "en": "Visby",
+    "de": "Visby"
+   },
+   "adjective": {
+    "en": "Visby",
+    "de": "visbyer"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#6fa8dc",
+   "capital": {
+    "name": "Visby",
+    "lat": 57.64,
+    "lon": 18.3
+   },
+   "holdings": [
+    {
+     "name": "Visby",
+     "lat": 57.64,
+     "lon": 18.3
+    }
+   ],
+   "ruler": {
+    "name": "Council of Visby",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hanseatic city governed by its German and Gotlandic council; Gotland owes the Swedish crown tribute.",
+   "overlord": "sweden",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "denmark"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "Visby is the walled Hanseatic hub of the Baltic, its German merchants dominating the trade with Novgorod. Gotland acknowledges the Swedish king only through a yearly tribute and runs its own affairs. Its wealth makes it a tempting prize for the Danish king.",
+    "de": "Visby ist das ummauerte hansische Zentrum der Ostsee, dessen deutsche Kaufleute den Nowgorodhandel beherrschen. Gotland erkennt den schwedischen König nur durch einen Jahrestribut an. Sein Reichtum lockt den dänischen König."
+   },
+   "coa": {
+    "blazon": "Azure, a lily argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "norway",
+   "name": {
+    "en": "Kingdom of Norway",
+    "de": "Königreich Norwegen"
+   },
+   "short": {
+    "en": "Norway",
+    "de": "Norwegen"
+   },
+   "adjective": {
+    "en": "Norwegian",
+    "de": "norwegisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "norwegian",
+   "faith": "latin",
+   "color": "#a33a2c",
+   "capital": {
+    "name": "Bergen",
+    "lat": 60.39,
+    "lon": 5.32
+   },
+   "holdings": [
+    {
+     "name": "Bergen",
+     "lat": 60.39,
+     "lon": 5.32
+    },
+    {
+     "name": "Oslo",
+     "lat": 59.91,
+     "lon": 10.75
+    },
+    {
+     "name": "Tønsberg",
+     "lat": 59.27,
+     "lon": 10.41
+    },
+    {
+     "name": "Konghelle",
+     "lat": 57.87,
+     "lon": 11.98
+    },
+    {
+     "name": "Skien",
+     "lat": 59.21,
+     "lon": 9.61
+    },
+    {
+     "name": "Stavanger",
+     "lat": 58.97,
+     "lon": 5.73
+    },
+    {
+     "name": "Hamar",
+     "lat": 60.79,
+     "lon": 11.07
+    },
+    {
+     "name": "Borgund",
+     "lat": 62.47,
+     "lon": 6.25
+    },
+    {
+     "name": "Nidaros",
+     "lat": 63.43,
+     "lon": 10.39
+    },
+    {
+     "name": "Frösön",
+     "lat": 63.18,
+     "lon": 14.55
+    },
+    {
+     "name": "Vågan",
+     "lat": 68.21,
+     "lon": 14.48
+    },
+    {
+     "name": "Tromsø",
+     "lat": 69.65,
+     "lon": 18.96
+    },
+    {
+     "name": "Vardøhus",
+     "lat": 70.37,
+     "lon": 31.1
+    },
+    {
+     "name": "Tingwall",
+     "lat": 60.2,
+     "lon": -1.25
+    },
+    {
+     "name": "Tórshavn",
+     "lat": 62.01,
+     "lon": -6.77
+    },
+    {
+     "name": "Skálholt",
+     "lat": 64.13,
+     "lon": -20.52
+    },
+    {
+     "name": "Hólar",
+     "lat": 65.73,
+     "lon": -19.11
+    },
+    {
+     "name": "Bessastaðir",
+     "lat": 64.1,
+     "lon": -21.99
+    },
+    {
+     "name": "Garðar",
+     "lat": 60.99,
+     "lon": -45.42
+    }
+   ],
+   "ruler": {
+    "name": "Haakon VI Magnusson",
+    "born": 1340,
+    "dynasty": "Bjälbo",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "dutiful",
+     "patient"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Bjälbo; Haakon was proclaimed king in 1343 and took personal rule in August 1355, though his father keeps some Norwegian revenues.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sweden"
+   ],
+   "rivals": [
+    "denmark"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "The fifteen-year-old Haakon VI has just taken personal rule of Norway from his father Magnus, who still holds some Norwegian revenues. The Black Death of 1349 has gutted the country and the Hanse controls Bergen's trade. The realm stretches over the sea to Shetland, the Faroes, Iceland and the dwindling Greenland settlements.",
+    "de": "Der fünfzehnjährige Haakon VI. hat gerade die Herrschaft über Norwegen von seinem Vater Magnus übernommen. Der Schwarze Tod von 1349 hat das Land verheert, und die Hanse beherrscht den Handel Bergens. Das Reich reicht übers Meer bis Shetland, zu den Färöern, nach Island und zu den schwindenden Siedlungen Grönlands."
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant or crowned, holding an axe argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "poland",
+   "name": {
+    "en": "Kingdom of Poland",
+    "de": "Königreich Polen"
+   },
+   "short": {
+    "en": "Poland",
+    "de": "Polen"
+   },
+   "adjective": {
+    "en": "Polish",
+    "de": "polnisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "polish",
+   "faith": "latin",
+   "color": "#d9534f",
+   "capital": {
+    "name": "Kraków",
+    "lat": 50.06,
+    "lon": 19.94
+   },
+   "holdings": [
+    {
+     "name": "Kraków",
+     "lat": 50.06,
+     "lon": 19.94
+    },
+    {
+     "name": "Sandomierz",
+     "lat": 50.68,
+     "lon": 21.75
+    },
+    {
+     "name": "Lublin",
+     "lat": 51.25,
+     "lon": 22.57
+    },
+    {
+     "name": "Radom",
+     "lat": 51.4,
+     "lon": 21.15
+    },
+    {
+     "name": "Nowy Sącz",
+     "lat": 49.62,
+     "lon": 20.7
+    },
+    {
+     "name": "Wieluń",
+     "lat": 51.22,
+     "lon": 18.57
+    },
+    {
+     "name": "Sieradz",
+     "lat": 51.6,
+     "lon": 18.73
+    },
+    {
+     "name": "Łęczyca",
+     "lat": 52.06,
+     "lon": 19.2
+    },
+    {
+     "name": "Kalisz",
+     "lat": 51.76,
+     "lon": 18.09
+    },
+    {
+     "name": "Poznań",
+     "lat": 52.41,
+     "lon": 16.93
+    },
+    {
+     "name": "Międzyrzecz",
+     "lat": 52.44,
+     "lon": 15.58
+    },
+    {
+     "name": "Gniezno",
+     "lat": 52.53,
+     "lon": 17.6
+    },
+    {
+     "name": "Inowrocław",
+     "lat": 52.8,
+     "lon": 18.26
+    },
+    {
+     "name": "Brześć Kujawski",
+     "lat": 52.6,
+     "lon": 18.9
+    },
+    {
+     "name": "Dobrzyń",
+     "lat": 52.64,
+     "lon": 19.32
+    },
+    {
+     "name": "Płock",
+     "lat": 52.55,
+     "lon": 19.7
+    },
+    {
+     "name": "Lemberg",
+     "lat": 49.84,
+     "lon": 24.03
+    },
+    {
+     "name": "Przemyśl",
+     "lat": 49.78,
+     "lon": 22.77
+    },
+    {
+     "name": "Sanok",
+     "lat": 49.56,
+     "lon": 22.21
+    },
+    {
+     "name": "Halicz",
+     "lat": 49.12,
+     "lon": 24.73
+    },
+    {
+     "name": "Kolomyja",
+     "lat": 48.53,
+     "lon": 25.04
+    }
+   ],
+   "ruler": {
+    "name": "Casimir III the Great",
+    "born": 1310,
+    "dynasty": "Piast",
+    "female": false,
+    "skills": [
+     6,
+     5,
+     3
+    ],
+    "traits": [
+     "builder",
+     "shrewd",
+     "lustful"
+    ]
+   },
+   "heir": {
+    "name": "Louis of Hungary",
+    "born": 1326,
+    "dynasty": "Anjou",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "pious"
+    ]
+   },
+   "consort": {
+    "name": "Adelaide of Hesse",
+    "born": 1324,
+    "dynasty": "Brabant (Hesse)",
+    "female": true,
+    "skills": [
+     1,
+     1,
+     0
+    ],
+    "traits": [
+     "neglected"
+    ]
+   },
+   "dynasty_note": "House of Piast. Casimir has no legitimate son; his nephew Louis of Hungary is designated heir (1339, confirmed 1355).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hungary",
+    "masovia"
+   ],
+   "rivals": [
+    "lithuania",
+    "teutonic_order"
+   ],
+   "claims_on": [
+    "teutonic_order",
+    "volhynia"
+   ],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Casimir the Great is turning a kingdom of wood into one of stone: codifying law, founding towns and fortifying the frontier. Since 1349 he has conquered Red Ruthenia with Lemberg, though Volhynia remains with Lubart and the Lithuanians. Lacking a son, he has promised the crown to his nephew Louis of Hungary, while keeping peace with the Teutonic Order since 1343.",
+    "de": "Kasimir der Große verwandelt ein Reich aus Holz in eines aus Stein: er kodifiziert das Recht, gründet Städte und befestigt die Grenzen. Seit 1349 hat er Rotreußen mit Lemberg erobert, Wolhynien bleibt jedoch bei Lubart und den Litauern. Ohne Sohn hat er die Krone seinem Neffen Ludwig von Ungarn versprochen."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle argent crowned or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1,
+      "crowned": true
+     }
+    ]
+   }
+  },
+  {
+   "id": "masovia",
+   "name": {
+    "en": "Duchy of Masovia",
+    "de": "Herzogtum Masowien"
+   },
+   "short": {
+    "en": "Masovia",
+    "de": "Masowien"
+   },
+   "adjective": {
+    "en": "Masovian",
+    "de": "masowisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "polish",
+   "faith": "latin",
+   "color": "#b5651d",
+   "capital": {
+    "name": "Czersk",
+    "lat": 51.96,
+    "lon": 21.23
+   },
+   "holdings": [
+    {
+     "name": "Czersk",
+     "lat": 51.96,
+     "lon": 21.23
+    },
+    {
+     "name": "Warsaw",
+     "lat": 52.25,
+     "lon": 21.01
+    },
+    {
+     "name": "Rawa",
+     "lat": 51.76,
+     "lon": 20.25
+    },
+    {
+     "name": "Liw",
+     "lat": 52.4,
+     "lon": 21.97
+    }
+   ],
+   "ruler": {
+    "name": "Siemowit III",
+    "born": 1320,
+    "dynasty": "Piast (Masovian line)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "stern",
+     "patient"
+    ]
+   },
+   "heir": {
+    "name": "Janusz",
+    "born": 1346,
+    "dynasty": "Piast (Masovian line)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "consort": {
+    "name": "Euphemia of Opava",
+    "born": 1320,
+    "dynasty": "Přemyslid (Opava line)",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Masovian Piasts. Siemowit's brother Casimir I of Warsaw died in November 1355, reuniting Czersk and Warsaw; Płock has been held by the Polish king since 1351.",
+   "overlord": "poland",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "poland"
+   ],
+   "rivals": [
+    "teutonic_order",
+    "lithuania"
+   ],
+   "claims_on": [
+    "poland"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "With the death of his brother Casimir in late 1355, Siemowit III now rules Czersk, Warsaw and Rawa alone. Since 1351 the Masovian dukes have been vassals of Casimir the Great, who also holds the old ducal seat of Płock. Wedged between the Order and Lithuania, Masovia must lean on Kraków.",
+    "de": "Nach dem Tod seines Bruders Kasimir Ende 1355 herrscht Siemowit III. allein über Czersk, Warschau und Rawa. Seit 1351 sind die masowischen Herzöge Vasallen Kasimirs des Großen, der auch Płock hält. Zwischen Orden und Litauen eingekeilt, muss Masowien sich an Krakau anlehnen."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "lithuania",
+   "name": {
+    "en": "Grand Duchy of Lithuania",
+    "de": "Großfürstentum Litauen"
+   },
+   "short": {
+    "en": "Lithuania",
+    "de": "Litauen"
+   },
+   "adjective": {
+    "en": "Lithuanian",
+    "de": "litauisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "lithuanian",
+   "faith": "baltic_old",
+   "color": "#4a7c3f",
+   "capital": {
+    "name": "Vilna",
+    "lat": 54.69,
+    "lon": 25.28
+   },
+   "holdings": [
+    {
+     "name": "Vilna",
+     "lat": 54.69,
+     "lon": 25.28
+    },
+    {
+     "name": "Kernavė",
+     "lat": 55.19,
+     "lon": 24.85
+    },
+    {
+     "name": "Vilkmergė",
+     "lat": 55.25,
+     "lon": 24.76
+    },
+    {
+     "name": "Utena",
+     "lat": 55.5,
+     "lon": 25.6
+    },
+    {
+     "name": "Braslaw",
+     "lat": 55.64,
+     "lon": 27.04
+    },
+    {
+     "name": "Kreva",
+     "lat": 54.31,
+     "lon": 26.29
+    },
+    {
+     "name": "Lida",
+     "lat": 53.89,
+     "lon": 25.3
+    },
+    {
+     "name": "Navahrudak",
+     "lat": 53.6,
+     "lon": 25.83
+    },
+    {
+     "name": "Slonim",
+     "lat": 53.09,
+     "lon": 25.32
+    },
+    {
+     "name": "Minsk",
+     "lat": 53.9,
+     "lon": 27.56
+    },
+    {
+     "name": "Pinsk",
+     "lat": 52.11,
+     "lon": 26.1
+    },
+    {
+     "name": "Turaŭ",
+     "lat": 52.07,
+     "lon": 27.74
+    },
+    {
+     "name": "Mazyr",
+     "lat": 52.04,
+     "lon": 29.25
+    },
+    {
+     "name": "Vitebsk",
+     "lat": 55.19,
+     "lon": 30.2
+    },
+    {
+     "name": "Orsha",
+     "lat": 54.51,
+     "lon": 30.42
+    },
+    {
+     "name": "Mstsislaw",
+     "lat": 54.02,
+     "lon": 31.72
+    }
+   ],
+   "ruler": {
+    "name": "Algirdas",
+    "born": 1296,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     5,
+     6,
+     5
+    ],
+    "traits": [
+     "cunning",
+     "temperate",
+     "secretive"
+    ]
+   },
+   "heir": {
+    "name": "Andrei of Polotsk",
+    "born": 1325,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Uliana of Tver",
+    "born": 1325,
+    "dynasty": "Rurikid (Tver)",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "Gediminid dynasty; Algirdas rules from Vilna in a diarchy with his brother Kęstutis of Trakai.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "trakai",
+    "tver",
+    "smolensk"
+   ],
+   "rivals": [
+    "teutonic_order",
+    "livonian_order",
+    "moscow",
+    "poland"
+   ],
+   "claims_on": [
+    "poland",
+    "moscow"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Algirdas rules the last pagan realm of Europe, a vast grand duchy where a Lithuanian core governs Orthodox Ruthenian lands stretching toward the Dnieper. In the west his brother Kęstutis bears the brunt of the Teutonic crusades, while Algirdas looks east to Moscow and south to the Horde's Ruthenian tributaries. Peace with Poland over Volhynia is only a truce.",
+    "de": "Algirdas herrscht über das letzte heidnische Reich Europas, in dem ein litauischer Kern weite orthodoxe ruthenische Lande bis zum Dnjepr regiert. Im Westen trägt sein Bruder Kęstutis die Last der Ordenskreuzzüge, während Algirdas nach Moskau und zu den Tributärländern der Horde blickt. Der Friede mit Polen um Wolhynien ist nur ein Waffenstillstand."
+   },
+   "coa": {
+    "blazon": "Gules, a mounted knight argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "trakai",
+   "name": {
+    "en": "Duchy of Trakai",
+    "de": "Herzogtum Trakai"
+   },
+   "short": {
+    "en": "Trakai",
+    "de": "Trakai"
+   },
+   "adjective": {
+    "en": "Trakai",
+    "de": "trakaisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "lithuanian",
+   "faith": "baltic_old",
+   "color": "#6b9e4f",
+   "capital": {
+    "name": "Trakai",
+    "lat": 54.64,
+    "lon": 24.93
+   },
+   "holdings": [
+    {
+     "name": "Trakai",
+     "lat": 54.64,
+     "lon": 24.93
+    },
+    {
+     "name": "Kaunas",
+     "lat": 54.9,
+     "lon": 23.89
+    },
+    {
+     "name": "Raseiniai",
+     "lat": 55.38,
+     "lon": 23.12
+    },
+    {
+     "name": "Medvėgalis",
+     "lat": 55.53,
+     "lon": 22.42
+    },
+    {
+     "name": "Telšiai",
+     "lat": 55.98,
+     "lon": 22.25
+    },
+    {
+     "name": "Grodno",
+     "lat": 53.68,
+     "lon": 23.83
+    },
+    {
+     "name": "Brest",
+     "lat": 52.1,
+     "lon": 23.69
+    },
+    {
+     "name": "Kamenets",
+     "lat": 52.4,
+     "lon": 23.82
+    },
+    {
+     "name": "Drohiczyn",
+     "lat": 52.4,
+     "lon": 22.66
+    },
+    {
+     "name": "Bielsk",
+     "lat": 52.77,
+     "lon": 23.19
+    }
+   ],
+   "ruler": {
+    "name": "Kęstutis",
+    "born": 1297,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "brave",
+     "honourable"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Birutė",
+    "born": 1320,
+    "dynasty": null,
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "devout"
+    ]
+   },
+   "dynasty_note": "Gediminid dynasty; Kęstutis is co-ruler of the grand duchy, responsible for the western front, Samogitia and Podlasie.",
+   "overlord": "lithuania",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania",
+    "masovia"
+   ],
+   "rivals": [
+    "teutonic_order",
+    "poland"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Kęstutis shares the grand duchy with his brother Algirdas and defends its western half, from Samogitia to Brest, against the Teutonic Knights. He is famed even among his enemies for keeping his word. Samogitia, coveted by the Order to link Prussia and Livonia, is the main battlefield.",
+    "de": "Kęstutis teilt das Großfürstentum mit seinem Bruder Algirdas und verteidigt dessen Westhälfte von Schamaiten bis Brest gegen den Deutschen Orden. Selbst seine Feinde rühmen seine Worttreue. Schamaiten, das der Orden zur Verbindung Preußens mit Livland begehrt, ist das Hauptschlachtfeld."
+   },
+   "coa": {
+    "blazon": "Gules, the Columns of Gediminas or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "polotsk",
+   "name": {
+    "en": "Principality of Polotsk",
+    "de": "Fürstentum Polozk"
+   },
+   "short": {
+    "en": "Polotsk",
+    "de": "Polozk"
+   },
+   "adjective": {
+    "en": "Polotsk",
+    "de": "polozker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#7fa35a",
+   "capital": {
+    "name": "Polotsk",
+    "lat": 55.49,
+    "lon": 28.78
+   },
+   "holdings": [
+    {
+     "name": "Polotsk",
+     "lat": 55.49,
+     "lon": 28.78
+    },
+    {
+     "name": "Drissa",
+     "lat": 55.78,
+     "lon": 27.94
+    }
+   ],
+   "ruler": {
+    "name": "Andrei Algirdaitis",
+    "born": 1325,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave",
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Gediminid prince, eldest son of Algirdas, baptised Orthodox.",
+   "overlord": "lithuania",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Andrei, Algirdas' eldest son and a former prince of Pskov, rules the ancient Ruthenian city of Polotsk on the Dvina. The principality guards Lithuania's river route to Riga and borders the Livonian Order. Andrei's position as heir is uncertain while his father's younger sons by Uliana grow up.",
+    "de": "Andrei, ältester Sohn des Algirdas und einstiger Fürst von Pskow, herrscht über das alte ruthenische Polozk an der Düna. Das Fürstentum bewacht den litauischen Flussweg nach Riga. Seine Stellung als Erbe ist unsicher, solange die Söhne Ulianas heranwachsen."
+   },
+   "coa": {
+    "blazon": "Azure, a mounted knight argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "volhynia",
+   "name": {
+    "en": "Principality of Volhynia",
+    "de": "Fürstentum Wolhynien"
+   },
+   "short": {
+    "en": "Volhynia",
+    "de": "Wolhynien"
+   },
+   "adjective": {
+    "en": "Volhynian",
+    "de": "wolhynisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#8e7cc3",
+   "capital": {
+    "name": "Lutsk",
+    "lat": 50.75,
+    "lon": 25.33
+   },
+   "holdings": [
+    {
+     "name": "Lutsk",
+     "lat": 50.75,
+     "lon": 25.33
+    },
+    {
+     "name": "Volodymyr",
+     "lat": 50.85,
+     "lon": 24.32
+    },
+    {
+     "name": "Bełz",
+     "lat": 50.38,
+     "lon": 24.01
+    },
+    {
+     "name": "Chełm",
+     "lat": 51.14,
+     "lon": 23.47
+    },
+    {
+     "name": "Kremenets",
+     "lat": 50.1,
+     "lon": 25.73
+    },
+    {
+     "name": "Ostroh",
+     "lat": 50.33,
+     "lon": 26.52
+    }
+   ],
+   "ruler": {
+    "name": "Lubart (Dmitry)",
+    "born": 1300,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "stubborn",
+     "brave"
+    ]
+   },
+   "heir": {
+    "name": "Fyodor",
+    "born": 1351,
+    "dynasty": "Gediminid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Gediminid prince, youngest son of Gediminas; heir of the Romanovichi through his first wife.",
+   "overlord": "lithuania",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania",
+    "trakai"
+   ],
+   "rivals": [
+    "poland"
+   ],
+   "claims_on": [
+    "poland"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Lubart, son of Gediminas and in-law of the extinct Romanovich dynasty, holds Volhynia as the last fragment of the old Kingdom of Galicia-Volhynia. Casimir of Poland took Lemberg and Galicia in 1349, and the truce of 1352 leaves the border contested. Lubart is Orthodox, popular with the boyars, and determined to win back Galicia.",
+    "de": "Lubart, Sohn Gediminas' und Schwiegersohn der erloschenen Romanowitschi, hält Wolhynien als letzten Rest des alten Königreichs Galizien-Wolhynien. Kasimir von Polen nahm 1349 Lemberg und Galizien, und der Waffenstillstand von 1352 lässt die Grenze umstritten. Lubart ist orthodox und will Galizien zurückgewinnen."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "kiev",
+   "name": {
+    "en": "Principality of Kiev",
+    "de": "Fürstentum Kiew"
+   },
+   "short": {
+    "en": "Kiev",
+    "de": "Kiew"
+   },
+   "adjective": {
+    "en": "Kievan",
+    "de": "kiewer"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#c9a227",
+   "capital": {
+    "name": "Kiev",
+    "lat": 50.45,
+    "lon": 30.52
+   },
+   "holdings": [
+    {
+     "name": "Kiev",
+     "lat": 50.45,
+     "lon": 30.52
+    },
+    {
+     "name": "Ovruch",
+     "lat": 51.32,
+     "lon": 28.81
+    },
+    {
+     "name": "Zhytomyr",
+     "lat": 50.25,
+     "lon": 28.66
+    },
+    {
+     "name": "Kaniv",
+     "lat": 49.75,
+     "lon": 31.46
+    },
+    {
+     "name": "Pereyaslav",
+     "lat": 50.07,
+     "lon": 31.45
+    }
+   ],
+   "ruler": {
+    "name": "Fyodor",
+    "born": 1300,
+    "dynasty": "Gediminid (disputed)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince Fyodor of Kiev, usually identified as a brother of Gediminas, rules under the eye of a Horde baskak.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The mother of Rus' cities is a shadow of its former self, ruled by Prince Fyodor, a Lithuanian kinsman, alongside a Tatar baskak. Kiev pays tribute to the Golden Horde while its prince looks to Vilna for protection. Whoever controls the steppe frontier will decide its fate.",
+    "de": "Die Mutter der Städte der Rus ist ein Schatten ihrer selbst, regiert von Fürst Fjodor, einem litauischen Verwandten, neben einem tatarischen Baskaken. Kiew zahlt der Goldenen Horde Tribut, während der Fürst nach Wilna blickt. Wer die Steppengrenze beherrscht, entscheidet sein Schicksal."
+   },
+   "coa": {
+    "blazon": "Azure, a sword argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "teutonic_order",
+   "name": {
+    "en": "State of the Teutonic Order",
+    "de": "Deutschordensstaat"
+   },
+   "short": {
+    "en": "Teutonic Order",
+    "de": "Deutscher Orden"
+   },
+   "adjective": {
+    "en": "Teutonic",
+    "de": "Ordens-"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#efefef",
+   "capital": {
+    "name": "Marienburg",
+    "lat": 54.04,
+    "lon": 19.03
+   },
+   "holdings": [
+    {
+     "name": "Marienburg",
+     "lat": 54.04,
+     "lon": 19.03
+    },
+    {
+     "name": "Danzig",
+     "lat": 54.35,
+     "lon": 18.65
+    },
+    {
+     "name": "Lauenburg",
+     "lat": 54.54,
+     "lon": 17.75
+    },
+    {
+     "name": "Konitz",
+     "lat": 53.7,
+     "lon": 17.57
+    },
+    {
+     "name": "Kulm",
+     "lat": 53.35,
+     "lon": 18.42
+    },
+    {
+     "name": "Thorn",
+     "lat": 53.01,
+     "lon": 18.6
+    },
+    {
+     "name": "Strasburg",
+     "lat": 53.24,
+     "lon": 19.4
+    },
+    {
+     "name": "Marienwerder",
+     "lat": 53.73,
+     "lon": 18.93
+    },
+    {
+     "name": "Elbing",
+     "lat": 54.16,
+     "lon": 19.4
+    },
+    {
+     "name": "Osterode",
+     "lat": 53.7,
+     "lon": 19.97
+    },
+    {
+     "name": "Neidenburg",
+     "lat": 53.36,
+     "lon": 20.43
+    },
+    {
+     "name": "Ortelsburg",
+     "lat": 53.56,
+     "lon": 20.99
+    },
+    {
+     "name": "Johannisburg",
+     "lat": 53.61,
+     "lon": 21.8
+    },
+    {
+     "name": "Rastenburg",
+     "lat": 54.08,
+     "lon": 21.38
+    },
+    {
+     "name": "Balga",
+     "lat": 54.55,
+     "lon": 19.98
+    },
+    {
+     "name": "Königsberg",
+     "lat": 54.71,
+     "lon": 20.51
+    },
+    {
+     "name": "Labiau",
+     "lat": 54.86,
+     "lon": 21.1
+    },
+    {
+     "name": "Insterburg",
+     "lat": 54.63,
+     "lon": 21.81
+    },
+    {
+     "name": "Ragnit",
+     "lat": 55.04,
+     "lon": 21.93
+    },
+    {
+     "name": "Memel",
+     "lat": 55.71,
+     "lon": 21.13
+    }
+   ],
+   "ruler": {
+    "name": "Winrich von Kniprode",
+    "born": 1310,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     6,
+     5,
+     4
+    ],
+    "traits": [
+     "able",
+     "zealous",
+     "builder"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Grand Masters are elected by the chapter of the Order; Winrich von Kniprode has led it since 1351/52.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "livonian_order",
+    "warmia",
+    "samland"
+   ],
+   "rivals": [
+    "lithuania",
+    "trakai",
+    "poland"
+   ],
+   "claims_on": [
+    "trakai"
+   ],
+   "personality": "zealot",
+   "difficulty": 2,
+   "summary": {
+    "en": "Under Grand Master Winrich von Kniprode the Order's Prussian state is at the height of its wealth, its castles and Hanseatic towns exporting grain and amber across the Baltic. Every winter and summer knights from all over Latin Christendom join its 'Reisen' into pagan Lithuania. Its great aim is Samogitia, the land bridge to its Livonian branch.",
+    "de": "Unter Hochmeister Winrich von Kniprode steht der preußische Ordensstaat auf dem Höhepunkt seines Reichtums; Burgen und Hansestädte exportieren Getreide und Bernstein. Jedes Jahr ziehen Ritter aus der ganzen lateinischen Christenheit auf 'Reisen' ins heidnische Litauen. Hauptziel ist Schamaiten, die Landbrücke nach Livland."
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "warmia",
+   "name": {
+    "en": "Prince-Bishopric of Ermland",
+    "de": "Fürstbistum Ermland"
+   },
+   "short": {
+    "en": "Ermland",
+    "de": "Ermland"
+   },
+   "adjective": {
+    "en": "Ermland",
+    "de": "ermländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#e6c9a8",
+   "capital": {
+    "name": "Heilsberg",
+    "lat": 54.13,
+    "lon": 20.58
+   },
+   "holdings": [
+    {
+     "name": "Heilsberg",
+     "lat": 54.13,
+     "lon": 20.58
+    },
+    {
+     "name": "Frauenburg",
+     "lat": 54.36,
+     "lon": 19.68
+    },
+    {
+     "name": "Wartenburg",
+     "lat": 53.87,
+     "lon": 20.73
+    },
+    {
+     "name": "Allenstein",
+     "lat": 53.78,
+     "lon": 20.49
+    }
+   ],
+   "ruler": {
+    "name": "Johann II Stryprock",
+    "born": 1300,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "learned"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop; Johann II Stryprock succeeded Johann I of Meissen in 1355.",
+   "overlord": "teutonic_order",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "teutonic_order"
+   ],
+   "rivals": [
+    "lithuania"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Ermland is the most independent of the Prussian bishoprics, its chapter not incorporated into the Teutonic Order. The new bishop rules from Heilsberg and is settling German and Prussian colonists in the southern wilderness around Allenstein. It shelters under the Order's military shield while guarding its own rights.",
+    "de": "Ermland ist das unabhängigste der preußischen Bistümer; sein Kapitel ist dem Orden nicht inkorporiert. Der neue Bischof regiert von Heilsberg aus und besiedelt die südliche Wildnis um Allenstein. Es steht unter dem militärischen Schild des Ordens, wacht aber über seine Rechte."
+   },
+   "coa": {
+    "blazon": "Gules, the Lamb of God argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "samland",
+   "name": {
+    "en": "Prince-Bishopric of Samland",
+    "de": "Fürstbistum Samland"
+   },
+   "short": {
+    "en": "Samland",
+    "de": "Samland"
+   },
+   "adjective": {
+    "en": "Samland",
+    "de": "samländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#d9d2b8",
+   "capital": {
+    "name": "Fischhausen",
+    "lat": 54.72,
+    "lon": 19.99
+   },
+   "holdings": [
+    {
+     "name": "Fischhausen",
+     "lat": 54.72,
+     "lon": 19.99
+    },
+    {
+     "name": "Germau",
+     "lat": 54.8,
+     "lon": 20.2
+    }
+   ],
+   "ruler": {
+    "name": "Jacob",
+    "born": 1300,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected bishop; the Samland chapter is incorporated into the Teutonic Order.",
+   "overlord": "teutonic_order",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "teutonic_order"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 1,
+   "summary": {
+    "en": "The small bishopric of Samland holds the western third of the amber coast from its seat at Fischhausen. Its cathedral chapter belongs to the Teutonic Order, making it a dependable ally of Marienburg. Its revenues come largely from amber and grain.",
+    "de": "Das kleine Bistum Samland hält von Fischhausen aus einen Teil der Bernsteinküste. Sein Domkapitel gehört dem Deutschen Orden, was es zu einem verlässlichen Verbündeten Marienburgs macht. Es lebt von Bernstein und Getreide."
+   },
+   "coa": {
+    "blazon": "Argent, crossed keys gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "livonian_order",
+   "name": {
+    "en": "Livonian Order",
+    "de": "Livländischer Orden"
+   },
+   "short": {
+    "en": "Livonia",
+    "de": "Livland"
+   },
+   "adjective": {
+    "en": "Livonian",
+    "de": "livländisch"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d4d4c8",
+   "capital": {
+    "name": "Wenden",
+    "lat": 57.31,
+    "lon": 25.27
+   },
+   "holdings": [
+    {
+     "name": "Wenden",
+     "lat": 57.31,
+     "lon": 25.27
+    },
+    {
+     "name": "Riga",
+     "lat": 56.95,
+     "lon": 24.11
+    },
+    {
+     "name": "Segewold",
+     "lat": 57.15,
+     "lon": 24.85
+    },
+    {
+     "name": "Tuckum",
+     "lat": 56.97,
+     "lon": 23.15
+    },
+    {
+     "name": "Mitau",
+     "lat": 56.65,
+     "lon": 23.72
+    },
+    {
+     "name": "Doblen",
+     "lat": 56.62,
+     "lon": 23.28
+    },
+    {
+     "name": "Bauske",
+     "lat": 56.41,
+     "lon": 24.19
+    },
+    {
+     "name": "Goldingen",
+     "lat": 56.97,
+     "lon": 21.97
+    },
+    {
+     "name": "Windau",
+     "lat": 57.39,
+     "lon": 21.57
+    },
+    {
+     "name": "Grobin",
+     "lat": 56.53,
+     "lon": 21.17
+    },
+    {
+     "name": "Dünaburg",
+     "lat": 55.87,
+     "lon": 26.51
+    },
+    {
+     "name": "Rositten",
+     "lat": 56.51,
+     "lon": 27.33
+    },
+    {
+     "name": "Marienburg",
+     "lat": 57.42,
+     "lon": 27.05
+    },
+    {
+     "name": "Fellin",
+     "lat": 58.36,
+     "lon": 25.59
+    },
+    {
+     "name": "Pernau",
+     "lat": 58.39,
+     "lon": 24.5
+    },
+    {
+     "name": "Weissenstein",
+     "lat": 58.88,
+     "lon": 25.56
+    },
+    {
+     "name": "Reval",
+     "lat": 59.44,
+     "lon": 24.75
+    },
+    {
+     "name": "Wesenberg",
+     "lat": 59.35,
+     "lon": 26.36
+    },
+    {
+     "name": "Narva",
+     "lat": 59.38,
+     "lon": 28.19
+    }
+   ],
+   "ruler": {
+    "name": "Goswin von Herike",
+    "born": 1300,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "stern",
+     "zealous"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Livonian branch of the Teutonic Order, led by a Landmeister; Goswin von Herike has held office since 1345. Northern Estonia (Harrien-Wierland) was bought from Denmark in 1346.",
+   "overlord": "teutonic_order",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "teutonic_order"
+   ],
+   "rivals": [
+    "lithuania",
+    "novgorod",
+    "pskov",
+    "riga"
+   ],
+   "claims_on": [
+    "riga"
+   ],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Livonian Order rules most of Livonia and Courland and, since Denmark's sale of 1346, northern Estonia with Reval and Narva. It has dominated the city of Riga since 1330 and is locked in a bitter dispute with the archbishop over lordship of the land. Raids against Lithuania and quarrels with Novgorod and Pskov keep its knights busy.",
+    "de": "Der Livländische Orden beherrscht den größten Teil Livlands und Kurlands und seit dem dänischen Verkauf von 1346 Nordestland mit Reval und Narva. Seit 1330 dominiert er die Stadt Riga und streitet erbittert mit dem Erzbischof um die Landesherrschaft. Kriegszüge gegen Litauen und Händel mit Nowgorod und Pskow beschäftigen seine Ritter."
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable, a sword gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "riga",
+   "name": {
+    "en": "Archbishopric of Riga",
+    "de": "Erzstift Riga"
+   },
+   "short": {
+    "en": "Riga",
+    "de": "Riga"
+   },
+   "adjective": {
+    "en": "Riga",
+    "de": "rigisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#8b1e3f",
+   "capital": {
+    "name": "Kokenhusen",
+    "lat": 56.64,
+    "lon": 25.42
+   },
+   "holdings": [
+    {
+     "name": "Kokenhusen",
+     "lat": 56.64,
+     "lon": 25.42
+    },
+    {
+     "name": "Lennewarden",
+     "lat": 56.79,
+     "lon": 25.06
+    },
+    {
+     "name": "Kreuzburg",
+     "lat": 56.51,
+     "lon": 25.86
+    },
+    {
+     "name": "Ronneburg",
+     "lat": 57.31,
+     "lon": 25.75
+    },
+    {
+     "name": "Smilten",
+     "lat": 57.42,
+     "lon": 25.9
+    },
+    {
+     "name": "Lemsal",
+     "lat": 57.51,
+     "lon": 24.71
+    },
+    {
+     "name": "Salis",
+     "lat": 57.75,
+     "lon": 24.38
+    }
+   ],
+   "ruler": {
+    "name": "Fromhold von Vifhusen",
+    "born": 1300,
+    "dynasty": "Vifhusen",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "litigious",
+     "stubborn"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected metropolitan of Livonia and Prussia; Fromhold von Vifhusen (archbishop 1348–1369) pursues his case against the Order at the papal curia.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "dorpat",
+    "osel_wiek"
+   ],
+   "rivals": [
+    "livonian_order"
+   ],
+   "claims_on": [
+    "livonian_order"
+   ],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "The archbishop of Riga is metropolitan of all Livonia and Prussia, yet the Order has held his cathedral city since 1330. Fromhold von Vifhusen spends much of his time at Avignon suing the knights for Riga's return. His own lands along the Daugava and in northern Livonia are scattered among Order castles.",
+    "de": "Der Erzbischof von Riga ist Metropolit Livlands und Preußens, doch der Orden hält seine Domstadt seit 1330. Fromhold von Vifhusen prozessiert in Avignon um ihre Rückgabe. Seine Länder an der Düna und im Norden Livlands liegen zwischen Ordensburgen verstreut."
+   },
+   "coa": {
+    "blazon": "Gules, a cross and a crozier in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "dorpat",
+   "name": {
+    "en": "Prince-Bishopric of Dorpat",
+    "de": "Fürstbistum Dorpat"
+   },
+   "short": {
+    "en": "Dorpat",
+    "de": "Dorpat"
+   },
+   "adjective": {
+    "en": "Dorpat",
+    "de": "dorpater"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "estonian",
+   "faith": "latin",
+   "color": "#a0522d",
+   "capital": {
+    "name": "Dorpat",
+    "lat": 58.38,
+    "lon": 26.72
+   },
+   "holdings": [
+    {
+     "name": "Dorpat",
+     "lat": 58.38,
+     "lon": 26.72
+    },
+    {
+     "name": "Odenpäh",
+     "lat": 58.06,
+     "lon": 26.5
+    },
+    {
+     "name": "Neuhausen",
+     "lat": 57.79,
+     "lon": 27.47
+    }
+   ],
+   "ruler": {
+    "name": "Johann I von Viffhusen",
+    "born": 1300,
+    "dynasty": "Vifhusen",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "prudent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop of the Empire; Johann von Viffhusen (1346–1373), kinsman of the archbishop.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "riga",
+    "osel_wiek"
+   ],
+   "rivals": [
+    "pskov",
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Dorpat is a rich Hanseatic bishopric astride the trade road from Reval and Riga to Pskov and Novgorod. Its bishop, a kinsman of the archbishop, tends to side with Riga against the Order. Its eastern border with Pskov is a constant scene of raids.",
+    "de": "Dorpat ist ein reiches hansisches Bistum am Handelsweg nach Pskow und Nowgorod. Sein Bischof, ein Verwandter des Erzbischofs, hält meist zu Riga gegen den Orden. Die Ostgrenze zu Pskow ist ständig Schauplatz von Überfällen."
+   },
+   "coa": {
+    "blazon": "Gules, a key and a sword in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "osel_wiek",
+   "name": {
+    "en": "Prince-Bishopric of Ösel-Wiek",
+    "de": "Fürstbistum Ösel-Wiek"
+   },
+   "short": {
+    "en": "Ösel-Wiek",
+    "de": "Ösel-Wiek"
+   },
+   "adjective": {
+    "en": "Ösel-Wiek",
+    "de": "ösel-wiekisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "estonian",
+   "faith": "latin",
+   "color": "#5e8c8c",
+   "capital": {
+    "name": "Hapsal",
+    "lat": 58.94,
+    "lon": 23.54
+   },
+   "holdings": [
+    {
+     "name": "Hapsal",
+     "lat": 58.94,
+     "lon": 23.54
+    },
+    {
+     "name": "Leal",
+     "lat": 58.71,
+     "lon": 23.82
+    },
+    {
+     "name": "Lode",
+     "lat": 58.92,
+     "lon": 23.98
+    },
+    {
+     "name": "Arensburg",
+     "lat": 58.25,
+     "lon": 22.48
+    }
+   ],
+   "ruler": {
+    "name": "Hermann II von Osnabrück",
+    "born": 1300,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop of the Empire; Hermann von Osnabrück has held the see since 1338.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "riga",
+    "dorpat"
+   ],
+   "rivals": [
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The bishopric of Ösel-Wiek holds the islands of Ösel and Dagö and the Wiek coast, with its seat at Hapsal. The fierce Estonian rising of St George's Night (1343) was crushed only a decade ago, and Order troops garrison parts of Ösel. The bishop balances between the Order and the archbishop.",
+    "de": "Das Bistum Ösel-Wiek umfasst Ösel, Dagö und die Wiek mit Sitz in Hapsal. Der Aufstand der Georgsnacht (1343) wurde erst vor einem Jahrzehnt niedergeschlagen, und Ordenstruppen stehen auf Ösel. Der Bischof laviert zwischen Orden und Erzbischof."
+   },
+   "coa": {
+    "blazon": "Argent, an eagle sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "courland",
+   "name": {
+    "en": "Prince-Bishopric of Courland",
+    "de": "Fürstbistum Kurland"
+   },
+   "short": {
+    "en": "Courland",
+    "de": "Kurland"
+   },
+   "adjective": {
+    "en": "Courland",
+    "de": "kurländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "latvian",
+   "faith": "latin",
+   "color": "#7b9eb8",
+   "capital": {
+    "name": "Pilten",
+    "lat": 57.22,
+    "lon": 21.67
+   },
+   "holdings": [
+    {
+     "name": "Pilten",
+     "lat": 57.22,
+     "lon": 21.67
+    },
+    {
+     "name": "Dondangen",
+     "lat": 57.51,
+     "lon": 22.06
+    },
+    {
+     "name": "Hasenpoth",
+     "lat": 56.72,
+     "lon": 21.6
+    }
+   ],
+   "ruler": {
+    "name": "Johann",
+    "born": 1300,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected bishop; the Courland chapter is incorporated into the Teutonic Order. The bishop's name for 1356 is poorly attested.",
+   "overlord": "livonian_order",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "livonian_order"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 1,
+   "summary": {
+    "en": "The bishopric of Courland is the weakest of the Livonian sees, a third of Courland scattered in three blocks around Pilten and Hasenpoth. Its chapter belongs to the Teutonic Order, so in practice it follows the Livonian master. Curonian peasants and Lithuanian raids from Samogitia are its daily worries.",
+    "de": "Das Bistum Kurland ist das schwächste der livländischen Stifte, ein Drittel Kurlands in drei Teilen um Pilten und Hasenpoth. Sein Kapitel gehört dem Orden, praktisch folgt es dem livländischen Meister. Kurische Bauern und litauische Einfälle aus Schamaiten sind seine Sorgen."
+   },
+   "coa": {
+    "blazon": "Azure, a cross argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "novgorod",
+   "name": {
+    "en": "Novgorod Republic",
+    "de": "Republik Nowgorod"
+   },
+   "short": {
+    "en": "Novgorod",
+    "de": "Nowgorod"
+   },
+   "adjective": {
+    "en": "Novgorodian",
+    "de": "nowgoroder"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "novgorodian",
+   "faith": "orthodox",
+   "color": "#4f8fbf",
+   "capital": {
+    "name": "Novgorod",
+    "lat": 58.52,
+    "lon": 31.27
+   },
+   "holdings": [
+    {
+     "name": "Novgorod",
+     "lat": 58.52,
+     "lon": 31.27
+    },
+    {
+     "name": "Staraya Russa",
+     "lat": 57.99,
+     "lon": 31.35
+    },
+    {
+     "name": "Velikiye Luki",
+     "lat": 56.34,
+     "lon": 30.53
+    },
+    {
+     "name": "Torzhok",
+     "lat": 57.04,
+     "lon": 34.96
+    },
+    {
+     "name": "Bezhetsky Verkh",
+     "lat": 57.78,
+     "lon": 36.69
+    },
+    {
+     "name": "Ladoga",
+     "lat": 60.0,
+     "lon": 32.3
+    },
+    {
+     "name": "Oreshek",
+     "lat": 59.95,
+     "lon": 31.04
+    },
+    {
+     "name": "Koporye",
+     "lat": 59.71,
+     "lon": 29.03
+    },
+    {
+     "name": "Korela",
+     "lat": 61.03,
+     "lon": 30.12
+    },
+    {
+     "name": "Olonets",
+     "lat": 60.98,
+     "lon": 32.97
+    },
+    {
+     "name": "Vytegra",
+     "lat": 61.0,
+     "lon": 36.45
+    },
+    {
+     "name": "Kargopol",
+     "lat": 61.5,
+     "lon": 38.94
+    },
+    {
+     "name": "Vologda",
+     "lat": 59.22,
+     "lon": 39.89
+    },
+    {
+     "name": "Kholmogory",
+     "lat": 64.22,
+     "lon": 41.65
+    },
+    {
+     "name": "Varzuga",
+     "lat": 66.4,
+     "lon": 36.6
+    }
+   ],
+   "ruler": {
+    "name": "Archbishop Moisei",
+    "born": 1290,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     4,
+     0
+    ],
+    "traits": [
+     "pious",
+     "learned"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Republic governed by the veche, posadniks and the archbishop as head of the council of lords; princes are invited, currently the Grand Prince of Vladimir.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "pskov"
+   ],
+   "rivals": [
+    "sweden",
+    "livonian_order",
+    "moscow"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Lord Novgorod the Great rules a fur and silver empire stretching from the Gulf of Finland to the White Sea, its Hanseatic court of St Peter one of the Baltic's great markets. The veche invites princes but keeps them outside the city; Archbishop Moisei presides over its council of lords. It pays the Horde's tribute via the Grand Prince of Vladimir and beat off Magnus of Sweden's crusade in 1348–51.",
+    "de": "Herr Groß-Nowgorod beherrscht ein Pelz- und Silberreich vom Finnischen Meerbusen bis zum Weißen Meer; sein hansischer Peterhof ist einer der großen Märkte der Ostsee. Das Wetsche beruft Fürsten, hält sie aber aus der Stadt; Erzbischof Moisei leitet den Herrenrat. Den Tribut der Horde zahlt es über den Großfürsten von Wladimir."
+   },
+   "coa": {
+    "blazon": "Argent, two bears sable supporting a throne",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "pskov",
+   "name": {
+    "en": "Pskov Republic",
+    "de": "Republik Pskow"
+   },
+   "short": {
+    "en": "Pskov",
+    "de": "Pskow"
+   },
+   "adjective": {
+    "en": "Pskovian",
+    "de": "pskower"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#6cb4a8",
+   "capital": {
+    "name": "Pskov",
+    "lat": 57.82,
+    "lon": 28.33
+   },
+   "holdings": [
+    {
+     "name": "Pskov",
+     "lat": 57.82,
+     "lon": 28.33
+    },
+    {
+     "name": "Izborsk",
+     "lat": 57.71,
+     "lon": 27.86
+    },
+    {
+     "name": "Ostrov",
+     "lat": 57.34,
+     "lon": 28.35
+    },
+    {
+     "name": "Gdov",
+     "lat": 58.74,
+     "lon": 27.82
+    }
+   ],
+   "ruler": {
+    "name": "Veche of Pskov",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "vigilant"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "City republic governed by its veche and posadniks; independent of Novgorod since the Treaty of Bolotovo (1348).",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "novgorod",
+    "lithuania"
+   ],
+   "rivals": [
+    "livonian_order",
+    "dorpat"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Pskov, 'the younger brother' of Novgorod, gained full self-government at Bolotovo in 1348. Its stone kremlin and the forts of Izborsk and Ostrov face the Livonian Order and the bishop of Dorpat across a constantly raided border. The veche invites princes, often Lithuanian ones, to lead its militia.",
+    "de": "Pskow, der 'jüngere Bruder' Nowgorods, erhielt 1348 in Bolotowo volle Selbstverwaltung. Sein steinerner Kreml und die Festungen Isborsk und Ostrow stehen dem Livländischen Orden und dem Bischof von Dorpat gegenüber. Das Wetsche beruft Fürsten, oft Litauer, als Heerführer."
+   },
+   "coa": {
+    "blazon": "Azure, a leopard passant or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "vyatka",
+   "name": {
+    "en": "Vyatka Land",
+    "de": "Wjatkaland"
+   },
+   "short": {
+    "en": "Vyatka",
+    "de": "Wjatka"
+   },
+   "adjective": {
+    "en": "Vyatkan",
+    "de": "wjatkaer"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#9fb06a",
+   "capital": {
+    "name": "Khlynov",
+    "lat": 58.6,
+    "lon": 49.66
+   },
+   "holdings": [
+    {
+     "name": "Khlynov",
+     "lat": 58.6,
+     "lon": 49.66
+    },
+    {
+     "name": "Kotelnich",
+     "lat": 58.31,
+     "lon": 48.35
+    }
+   ],
+   "ruler": {
+    "name": "Veche of Khlynov",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "unruly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free settlement of Novgorodian colonists governed by its own veche and elders.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Vyatka is a frontier land of Novgorodian colonists and river freebooters on the Vyatka river, beyond the reach of any prince. Its people trade and fight with the Udmurt and Mari tribes and raid down the Kama toward Bulgar. It has no prince and recognises no master.",
+    "de": "Wjatka ist ein Grenzland nowgoroder Siedler und Flusspiraten an der Wjatka, außer Reichweite jedes Fürsten. Seine Leute handeln und kämpfen mit Udmurten und Mari und plündern die Kama hinab bis Bolgar. Es hat keinen Fürsten und erkennt keinen Herrn an."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "great_perm",
+   "name": {
+    "en": "Land of Perm",
+    "de": "Land Perm"
+   },
+   "short": {
+    "en": "Perm",
+    "de": "Perm"
+   },
+   "adjective": {
+    "en": "Permian",
+    "de": "permisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "komi",
+   "faith": "finnic_old",
+   "color": "#a7c4a0",
+   "capital": {
+    "name": "Ust-Vym",
+    "lat": 62.23,
+    "lon": 50.4
+   },
+   "holdings": [
+    {
+     "name": "Ust-Vym",
+     "lat": 62.23,
+     "lon": 50.4
+    },
+    {
+     "name": "Ust-Sysolsk",
+     "lat": 61.67,
+     "lon": 50.84
+    }
+   ],
+   "ruler": {
+    "name": "Komi elders",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     1,
+     1
+    ],
+    "traits": [
+     "traditional"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Komi (Zyrian) clans of the Vychegda, paying fur tribute to Novgorod; not yet Christianised (Stephen of Perm's mission begins c.1379).",
+   "overlord": "novgorod",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Komi of the Vychegda and Sysola live by hunting and fur trade, paying tribute in sable to Novgorod. They keep their old gods and sacred groves. Moscow's merchants and missionaries are beginning to take an interest in their lands.",
+    "de": "Die Komi an Wytschegda und Syssola leben von Jagd und Pelzhandel und zahlen Nowgorod Zobeltribut. Sie halten an ihren alten Göttern und heiligen Hainen fest. Moskauer Kaufleute und Missionare beginnen sich für ihr Land zu interessieren."
+   },
+   "coa": {
+    "blazon": "Gules, a bear argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "moscow",
+   "name": {
+    "en": "Grand Principality of Moscow",
+    "de": "Großfürstentum Moskau"
+   },
+   "short": {
+    "en": "Moscow",
+    "de": "Moskau"
+   },
+   "adjective": {
+    "en": "Muscovite",
+    "de": "moskowitisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#b22234",
+   "capital": {
+    "name": "Moscow",
+    "lat": 55.75,
+    "lon": 37.62
+   },
+   "holdings": [
+    {
+     "name": "Moscow",
+     "lat": 55.75,
+     "lon": 37.62
+    },
+    {
+     "name": "Zvenigorod",
+     "lat": 55.73,
+     "lon": 36.85
+    },
+    {
+     "name": "Mozhaysk",
+     "lat": 55.5,
+     "lon": 36.03
+    },
+    {
+     "name": "Volok Lamsky",
+     "lat": 56.04,
+     "lon": 35.96
+    },
+    {
+     "name": "Serpukhov",
+     "lat": 54.92,
+     "lon": 37.41
+    },
+    {
+     "name": "Kolomna",
+     "lat": 55.1,
+     "lon": 38.77
+    },
+    {
+     "name": "Vladimir",
+     "lat": 56.13,
+     "lon": 40.41
+    },
+    {
+     "name": "Yuryev-Polsky",
+     "lat": 56.5,
+     "lon": 39.68
+    },
+    {
+     "name": "Pereslavl-Zalessky",
+     "lat": 56.74,
+     "lon": 38.85
+    },
+    {
+     "name": "Uglich",
+     "lat": 57.53,
+     "lon": 38.33
+    },
+    {
+     "name": "Kostroma",
+     "lat": 57.77,
+     "lon": 40.93
+    }
+   ],
+   "ruler": {
+    "name": "Ivan II the Fair",
+    "born": 1326,
+    "dynasty": "Rurikid (Daniilovichi)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "gentle",
+     "meek",
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Dmitry Ivanovich",
+    "born": 1350,
+    "dynasty": "Rurikid (Daniilovichi)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Alexandra Velyaminova",
+    "born": 1330,
+    "dynasty": "Velyaminov",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "Daniilovichi line of the Rurikids; Ivan II holds the Horde's patent for the Grand Principality of Vladimir since 1354.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "nizhny_novgorod",
+    "rostov"
+   ],
+   "rivals": [
+    "tver",
+    "lithuania",
+    "ryazan"
+   ],
+   "claims_on": [
+    "tver",
+    "ryazan"
+   ],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Ivan II, 'the Fair and Meek', inherited from his brother Simeon the Proud both Moscow and the Horde's patent as Grand Prince of Vladimir. The real power lies with Metropolitan Alexius, who has made Moscow the seat of the Russian Church, and with the old boyar families. Ryazan has just seized Lopasnya, and Tver and Lithuania watch for any weakness.",
+    "de": "Iwan II., 'der Schöne und Sanftmütige', erbte von seinem Bruder Simeon Moskau und das Großfürstenpatent der Horde für Wladimir. Die eigentliche Macht liegt bei Metropolit Alexius, der Moskau zum Sitz der russischen Kirche gemacht hat, und bei den Bojaren. Rjasan hat gerade Lopasnja genommen, und Twer und Litauen lauern auf Schwächen."
+   },
+   "coa": {
+    "blazon": "Gules, Saint George on horseback argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "tver",
+   "name": {
+    "en": "Grand Principality of Tver",
+    "de": "Großfürstentum Twer"
+   },
+   "short": {
+    "en": "Tver",
+    "de": "Twer"
+   },
+   "adjective": {
+    "en": "Tverian",
+    "de": "twerisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#3c6e47",
+   "capital": {
+    "name": "Tver",
+    "lat": 56.86,
+    "lon": 35.9
+   },
+   "holdings": [
+    {
+     "name": "Tver",
+     "lat": 56.86,
+     "lon": 35.9
+    },
+    {
+     "name": "Kashin",
+     "lat": 57.36,
+     "lon": 37.61
+    },
+    {
+     "name": "Staritsa",
+     "lat": 56.51,
+     "lon": 34.93
+    },
+    {
+     "name": "Zubtsov",
+     "lat": 56.18,
+     "lon": 34.58
+    }
+   ],
+   "ruler": {
+    "name": "Vasily Mikhailovich of Kashin",
+    "born": 1304,
+    "dynasty": "Rurikid (Tver)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "quarrelsome",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tver line of the Rurikids; Vasily of Kashin, youngest son of St Mikhail, has been Grand Prince since 1349 and feuds with his nephews.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [
+    "moscow",
+    "mikulin"
+   ],
+   "claims_on": [
+    "moscow"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Tver, once Moscow's equal in the race for the grand princely throne, is weakened by feuds between old Vasily of Kashin and his nephews, the sons of the martyred Alexander. Its princes look to their in-law Algirdas of Lithuania for support. Moscow's growing power hems it in from the east.",
+    "de": "Twer, einst Moskaus ebenbürtiger Rivale um den Großfürstenthron, ist durch Fehden zwischen dem alten Wassili von Kaschin und seinen Neffen geschwächt. Seine Fürsten suchen Rückhalt bei ihrem Schwager Algirdas von Litauen. Moskaus wachsende Macht engt es ein."
+   },
+   "coa": {
+    "blazon": "Gules, a throne with a crown or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mikulin",
+   "name": {
+    "en": "Principality of Mikulin",
+    "de": "Fürstentum Mikulin"
+   },
+   "short": {
+    "en": "Mikulin",
+    "de": "Mikulin"
+   },
+   "adjective": {
+    "en": "Mikulin",
+    "de": "mikuliner"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#5b8c5a",
+   "capital": {
+    "name": "Mikulin",
+    "lat": 56.44,
+    "lon": 35.6
+   },
+   "holdings": [
+    {
+     "name": "Mikulin",
+     "lat": 56.44,
+     "lon": 35.6
+    }
+   ],
+   "ruler": {
+    "name": "Mikhail Alexandrovich",
+    "born": 1333,
+    "dynasty": "Rurikid (Tver)",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "energetic"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Evdokia of Suzdal",
+    "born": 1335,
+    "dynasty": "Rurikid (Suzdal)",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Tver line of the Rurikids; Mikhail is the son of Alexander of Tver, executed at the Horde in 1339.",
+   "overlord": "tver",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [
+    "tver",
+    "moscow"
+   ],
+   "claims_on": [
+    "tver"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Mikhail Alexandrovich holds the small appanage of Mikulin, but as son of the martyred Alexander he has the stronger claim to Tver itself. His sister Uliana is the wife of Algirdas of Lithuania. Energetic and ambitious, he is the man to watch in Tver politics.",
+    "de": "Der junge Michail Alexandrowitsch hält das kleine Teilfürstentum Mikulin, hat aber als Sohn des hingerichteten Alexander den besseren Anspruch auf Twer. Seine Schwester Uliana ist Gemahlin des Algirdas. Tatkräftig und ehrgeizig, ist er der Mann der Zukunft in Twer."
+   },
+   "coa": {
+    "blazon": "Argent, a tower gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "galich_mersky",
+   "name": {
+    "en": "Principality of Galich-Dmitrov",
+    "de": "Fürstentum Galitsch-Dmitrow"
+   },
+   "short": {
+    "en": "Galich",
+    "de": "Galitsch"
+   },
+   "adjective": {
+    "en": "Galich",
+    "de": "galitscher"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#a67c52",
+   "capital": {
+    "name": "Galich",
+    "lat": 58.38,
+    "lon": 42.35
+   },
+   "holdings": [
+    {
+     "name": "Galich",
+     "lat": 58.38,
+     "lon": 42.35
+    },
+    {
+     "name": "Chukhloma",
+     "lat": 58.75,
+     "lon": 42.69
+    },
+    {
+     "name": "Dmitrov",
+     "lat": 56.34,
+     "lon": 37.52
+    }
+   ],
+   "ruler": {
+    "name": "Dmitry Ivanovich of Galich",
+    "born": 1320,
+    "dynasty": "Rurikid (Galich)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Galich-Dmitrov line of the Rurikids, descended from Konstantin, brother of Alexander Nevsky.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "moscow"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The princes of Galich in the forested north-east and Dmitrov near Moscow are among the last old lines of Vladimir's princes not yet swallowed by Moscow. Their salt-rich lands are encircled by Muscovite territory. Prince Dmitry's independence depends on the Horde's favour.",
+    "de": "Die Fürsten von Galitsch im waldigen Nordosten und von Dmitrow bei Moskau gehören zu den letzten alten Linien, die Moskau noch nicht geschluckt hat. Ihre salzreichen Lande sind von Moskauer Gebiet umschlossen. Fürst Dmitris Unabhängigkeit hängt von der Gunst der Horde ab."
+   },
+   "coa": {
+    "blazon": "Or, a castle gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nizhny_novgorod",
+   "name": {
+    "en": "Grand Principality of Nizhny Novgorod-Suzdal",
+    "de": "Großfürstentum Nischni Nowgorod-Susdal"
+   },
+   "short": {
+    "en": "Nizhny Novgorod",
+    "de": "Nischni Nowgorod"
+   },
+   "adjective": {
+    "en": "Nizhny Novgorod",
+    "de": "nischegoroder"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#c46a2b",
+   "capital": {
+    "name": "Nizhny Novgorod",
+    "lat": 56.33,
+    "lon": 44.0
+   },
+   "holdings": [
+    {
+     "name": "Nizhny Novgorod",
+     "lat": 56.33,
+     "lon": 44.0
+    },
+    {
+     "name": "Gorodets",
+     "lat": 56.65,
+     "lon": 43.47
+    }
+   ],
+   "ruler": {
+    "name": "Andrei Konstantinovich",
+    "born": 1323,
+    "dynasty": "Rurikid (Suzdal)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious",
+     "peaceable"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Suzdal line of the Rurikids; Konstantin Vasilyevich died in late 1355 and the Horde confirmed his son Andrei in Nizhny Novgorod.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "suzdal",
+    "moscow"
+   ],
+   "rivals": [
+    "mordva"
+   ],
+   "claims_on": [
+    "moscow"
+   ],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Nizhny Novgorod at the confluence of the Oka and Volga is a booming river port on the road to the Horde and the Caspian. Prince Konstantin, who raised it to a grand principality, has just died, and his sons Andrei, Dmitry and Boris have divided his lands. The city faces the Mordvin forests and the Tatar Volga.",
+    "de": "Nischni Nowgorod am Zusammenfluss von Oka und Wolga ist ein blühender Flusshafen am Weg zur Horde und zum Kaspischen Meer. Fürst Konstantin, der es zum Großfürstentum erhob, ist eben gestorben, und seine Söhne Andrei, Dmitri und Boris haben geteilt. Die Stadt grenzt an die Wälder der Mordwinen und die tatarische Wolga."
+   },
+   "coa": {
+    "blazon": "Argent, a stag gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "stag_head",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "suzdal",
+   "name": {
+    "en": "Principality of Suzdal",
+    "de": "Fürstentum Susdal"
+   },
+   "short": {
+    "en": "Suzdal",
+    "de": "Susdal"
+   },
+   "adjective": {
+    "en": "Suzdalian",
+    "de": "susdalisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#d98c4a",
+   "capital": {
+    "name": "Suzdal",
+    "lat": 56.42,
+    "lon": 40.44
+   },
+   "holdings": [
+    {
+     "name": "Suzdal",
+     "lat": 56.42,
+     "lon": 40.44
+    },
+    {
+     "name": "Shuya",
+     "lat": 56.85,
+     "lon": 41.39
+    }
+   ],
+   "ruler": {
+    "name": "Dmitry Konstantinovich",
+    "born": 1324,
+    "dynasty": "Rurikid (Suzdal)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Suzdal line of the Rurikids; Dmitry received Suzdal on his father's death in 1355.",
+   "overlord": "nizhny_novgorod",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "nizhny_novgorod"
+   ],
+   "rivals": [
+    "moscow"
+   ],
+   "claims_on": [
+    "moscow"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Dmitry Konstantinovich holds the old princely city of Suzdal under his elder brother Andrei. Ambitious and well connected at the Horde, he dreams of the grand princely patent of Vladimir itself. Suzdal's monasteries and its position between Vladimir and Nizhny give it weight beyond its size.",
+    "de": "Dmitri Konstantinowitsch hält die alte Fürstenstadt Susdal unter seinem älteren Bruder Andrei. Ehrgeizig und gut vernetzt bei der Horde, träumt er vom Großfürstenpatent für Wladimir. Klöster und Lage verleihen Susdal mehr Gewicht als seine Größe."
+   },
+   "coa": {
+    "blazon": "Azure, a falcon or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "rostov",
+   "name": {
+    "en": "Principality of Rostov",
+    "de": "Fürstentum Rostow"
+   },
+   "short": {
+    "en": "Rostov",
+    "de": "Rostow"
+   },
+   "adjective": {
+    "en": "Rostovian",
+    "de": "rostower"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#7a5195",
+   "capital": {
+    "name": "Rostov",
+    "lat": 57.19,
+    "lon": 39.41
+   },
+   "holdings": [
+    {
+     "name": "Rostov",
+     "lat": 57.19,
+     "lon": 39.41
+    },
+    {
+     "name": "Ustyug",
+     "lat": 60.76,
+     "lon": 46.3
+    }
+   ],
+   "ruler": {
+    "name": "Konstantin Vasilyevich",
+    "born": 1309,
+    "dynasty": "Rurikid (Rostov)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "pliant"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Rostov line of the Rurikids; the city is split between the Borisoglebsk half (Konstantin) and the Sretensk half (Andrei Fyodorovich).",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "moscow"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Rostov the Great, ancient seat of the north-eastern bishops, is divided between two princely branches and has been heavily under Muscovite influence since Ivan Kalita's days. Its northern dependency of Ustyug controls the fur roads toward Perm. Prince Konstantin is married into the Moscow house and follows its lead.",
+    "de": "Rostow der Große, alter Bischofssitz des Nordostens, ist zwischen zwei Fürstenlinien geteilt und steht seit Iwan Kalita unter Moskauer Einfluss. Seine nördliche Besitzung Ustjug beherrscht die Pelzwege nach Perm. Fürst Konstantin ist in das Moskauer Haus eingeheiratet und folgt dessen Führung."
+   },
+   "coa": {
+    "blazon": "Gules, a stag argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "stag_head",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "yaroslavl",
+   "name": {
+    "en": "Principality of Yaroslavl",
+    "de": "Fürstentum Jaroslawl"
+   },
+   "short": {
+    "en": "Yaroslavl",
+    "de": "Jaroslawl"
+   },
+   "adjective": {
+    "en": "Yaroslavl",
+    "de": "jaroslawler"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#5c7fa3",
+   "capital": {
+    "name": "Yaroslavl",
+    "lat": 57.63,
+    "lon": 39.87
+   },
+   "holdings": [
+    {
+     "name": "Yaroslavl",
+     "lat": 57.63,
+     "lon": 39.87
+    },
+    {
+     "name": "Romanov",
+     "lat": 57.88,
+     "lon": 39.53
+    },
+    {
+     "name": "Mologa",
+     "lat": 58.09,
+     "lon": 38.43
+    }
+   ],
+   "ruler": {
+    "name": "Vasily Vasilyevich",
+    "born": 1330,
+    "dynasty": "Rurikid (Yaroslavl)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "steady"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Yaroslavl line of the Rurikids (Smolensk-derived branch); Vasily succeeded his father Vasily Davydovich in 1345.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "moscow"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Yaroslavl on the Volga is a prosperous principality with appanages at Romanov and Mologa. Prince Vasily keeps a careful independence between Moscow and Tver. The Volga trade passes beneath its walls.",
+    "de": "Jaroslawl an der Wolga ist ein wohlhabendes Fürstentum mit Teilfürstentümern in Romanow und Mologa. Fürst Wassili wahrt vorsichtig seine Unabhängigkeit zwischen Moskau und Twer. Der Wolgahandel zieht an seinen Mauern vorbei."
+   },
+   "coa": {
+    "blazon": "Argent, a bear sable holding an axe",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "belozersk",
+   "name": {
+    "en": "Principality of Beloozero",
+    "de": "Fürstentum Beloosero"
+   },
+   "short": {
+    "en": "Beloozero",
+    "de": "Beloosero"
+   },
+   "adjective": {
+    "en": "Beloozero",
+    "de": "beloosero"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#8fb3c7",
+   "capital": {
+    "name": "Beloozero",
+    "lat": 60.03,
+    "lon": 37.79
+   },
+   "holdings": [
+    {
+     "name": "Beloozero",
+     "lat": 60.03,
+     "lon": 37.79
+    }
+   ],
+   "ruler": {
+    "name": "Fyodor Romanovich",
+    "born": 1320,
+    "dynasty": "Rurikid (Beloozero)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "loyal"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Beloozero line of the Rurikids, an offshoot of the Rostov house; Fyodor is tied by marriage to Moscow.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "moscow"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Beloozero, the 'White Lake' principality, sits on the northern trade and pilgrimage routes between Novgorod and the Volga. Its prince Fyodor Romanovich is a loyal ally of the house of Moscow. Its forests and fisheries are rich but thinly peopled.",
+    "de": "Beloosero, das Fürstentum am 'Weißen See', liegt an den nördlichen Handels- und Pilgerwegen zwischen Nowgorod und Wolga. Fürst Fjodor Romanowitsch ist ein treuer Verbündeter Moskaus. Wälder und Fischgründe sind reich, aber dünn besiedelt."
+   },
+   "coa": {
+    "blazon": "Azure, two fish in saltire argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "argent",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "murom",
+   "name": {
+    "en": "Principality of Murom",
+    "de": "Fürstentum Murom"
+   },
+   "short": {
+    "en": "Murom",
+    "de": "Murom"
+   },
+   "adjective": {
+    "en": "Murom",
+    "de": "muromer"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#b07aa1",
+   "capital": {
+    "name": "Murom",
+    "lat": 55.58,
+    "lon": 42.05
+   },
+   "holdings": [
+    {
+     "name": "Murom",
+     "lat": 55.58,
+     "lon": 42.05
+    }
+   ],
+   "ruler": {
+    "name": "Fyodor Glebovich",
+    "born": 1320,
+    "dynasty": "Rurikid (Murom)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "grasping"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Murom line of the Rurikids (Yaroslav Svyatoslavich branch); Fyodor Glebovich ousted his kinsman Yuri Yaroslavich with Muscovite support around 1355.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "moscow"
+   ],
+   "rivals": [
+    "ryazan"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Murom on the lower Oka, rebuilt only in 1351, is contested between rival princes of its own dynasty. Fyodor Glebovich holds it now with Moscow's backing and the Horde's patent. It is a buffer between Moscow, Nizhny Novgorod and Ryazan.",
+    "de": "Murom an der unteren Oka, erst 1351 wieder aufgebaut, ist zwischen rivalisierenden Fürsten seines Hauses umstritten. Fjodor Glebowitsch hält es mit Moskauer Rückhalt und dem Patent der Horde. Es ist Puffer zwischen Moskau, Nischni Nowgorod und Rjasan."
+   },
+   "coa": {
+    "blazon": "Gules, a sword or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "ryazan",
+   "name": {
+    "en": "Grand Principality of Ryazan",
+    "de": "Großfürstentum Rjasan"
+   },
+   "short": {
+    "en": "Ryazan",
+    "de": "Rjasan"
+   },
+   "adjective": {
+    "en": "Ryazanian",
+    "de": "rjasanisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#e0a526",
+   "capital": {
+    "name": "Pereyaslavl-Ryazansky",
+    "lat": 54.63,
+    "lon": 39.74
+   },
+   "holdings": [
+    {
+     "name": "Pereyaslavl-Ryazansky",
+     "lat": 54.63,
+     "lon": 39.74
+    },
+    {
+     "name": "Staraya Ryazan",
+     "lat": 54.26,
+     "lon": 40.04
+    },
+    {
+     "name": "Lopasnya",
+     "lat": 55.14,
+     "lon": 37.47
+    },
+    {
+     "name": "Gorodets Meshchersky",
+     "lat": 54.94,
+     "lon": 41.39
+    }
+   ],
+   "ruler": {
+    "name": "Oleg Ivanovich",
+    "born": 1338,
+    "dynasty": "Rurikid (Ryazan)",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     4
+    ],
+    "traits": [
+     "cunning",
+     "resilient"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ryazan line of the Rurikids (Svyatoslavichi of Chernigov descent); Oleg has ruled since 1350/51.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "pronsk"
+   ],
+   "rivals": [
+    "moscow",
+    "murom"
+   ],
+   "claims_on": [
+    "moscow"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Oleg Ivanovich rules the steppe-border principality of Ryazan, first in line for every Tatar raid. In 1353 his men seized Lopasnya from Moscow, and he contests Kolomna, which Moscow took a generation ago. Oleg is a master of survival, balancing Moscow, Lithuania and the Horde.",
+    "de": "Der junge Oleg Iwanowitsch herrscht über das Steppengrenzfürstentum Rjasan, das jeden Tatarenzug zuerst trifft. 1353 nahmen seine Leute Moskau Lopasnja ab, und er beansprucht Kolomna. Oleg ist ein Meister des Überlebens zwischen Moskau, Litauen und Horde."
+   },
+   "coa": {
+    "blazon": "Or, a prince with a sword gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "pronsk",
+   "name": {
+    "en": "Principality of Pronsk",
+    "de": "Fürstentum Pronsk"
+   },
+   "short": {
+    "en": "Pronsk",
+    "de": "Pronsk"
+   },
+   "adjective": {
+    "en": "Pronsk",
+    "de": "pronsker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#c9b458",
+   "capital": {
+    "name": "Pronsk",
+    "lat": 54.12,
+    "lon": 39.62
+   },
+   "holdings": [
+    {
+     "name": "Pronsk",
+     "lat": 54.12,
+     "lon": 39.62
+    }
+   ],
+   "ruler": {
+    "name": "Vladimir Yaroslavich",
+    "born": 1320,
+    "dynasty": "Rurikid (Ryazan)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "restless"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Pronsk branch of the Ryazan Rurikids, rivals of the senior line in Pereyaslavl.",
+   "overlord": "ryazan",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ryazan"
+   ],
+   "claims_on": [
+    "ryazan"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The princes of Pronsk are a junior Ryazan line who have repeatedly contested the grand princely title with Tatar help. Vladimir Yaroslavich currently accepts Oleg's seniority. His small principality guards the southern approaches toward the steppe.",
+    "de": "Die Fürsten von Pronsk sind eine jüngere Rjasaner Linie, die mehrfach mit tatarischer Hilfe um den Großfürstentitel stritt. Wladimir Jaroslawitsch erkennt derzeit Olegs Vorrang an. Sein kleines Fürstentum sichert die südlichen Zugänge zur Steppe."
+   },
+   "coa": {
+    "blazon": "Azure, a sword argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "smolensk",
+   "name": {
+    "en": "Grand Principality of Smolensk",
+    "de": "Großfürstentum Smolensk"
+   },
+   "short": {
+    "en": "Smolensk",
+    "de": "Smolensk"
+   },
+   "adjective": {
+    "en": "Smolensk",
+    "de": "smolensker"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#3d7a7a",
+   "capital": {
+    "name": "Smolensk",
+    "lat": 54.78,
+    "lon": 32.05
+   },
+   "holdings": [
+    {
+     "name": "Smolensk",
+     "lat": 54.78,
+     "lon": 32.05
+    },
+    {
+     "name": "Dorogobuzh",
+     "lat": 54.92,
+     "lon": 33.3
+    },
+    {
+     "name": "Vyazma",
+     "lat": 55.21,
+     "lon": 34.29
+    },
+    {
+     "name": "Bely",
+     "lat": 55.83,
+     "lon": 32.94
+    }
+   ],
+   "ruler": {
+    "name": "Ivan Alexandrovich",
+    "born": 1295,
+    "dynasty": "Rurikid (Smolensk)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "old",
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Svyatoslav Ivanovich",
+    "born": 1325,
+    "dynasty": "Rurikid (Smolensk)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Smolensk line of the Rurikids (Rostislavichi); Ivan has ruled since 1313.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [
+    "moscow"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Old Ivan Alexandrovich has ruled Smolensk for over forty years, steering between Lithuania, Moscow and the Horde. The city on the upper Dnieper is the gateway between the Baltic-Dnieper trade and the Volga lands. Lithuanian pressure grows each year.",
+    "de": "Der alte Iwan Alexandrowitsch regiert Smolensk seit über vierzig Jahren und laviert zwischen Litauen, Moskau und Horde. Die Stadt am oberen Dnjepr ist das Tor zwischen Ostsee-Dnjepr-Handel und Wolgaland. Der litauische Druck wächst jedes Jahr."
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bryansk",
+   "name": {
+    "en": "Principality of Bryansk",
+    "de": "Fürstentum Brjansk"
+   },
+   "short": {
+    "en": "Bryansk",
+    "de": "Brjansk"
+   },
+   "adjective": {
+    "en": "Bryansk",
+    "de": "brjansker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#8c6d46",
+   "capital": {
+    "name": "Bryansk",
+    "lat": 53.25,
+    "lon": 34.37
+   },
+   "holdings": [
+    {
+     "name": "Bryansk",
+     "lat": 53.25,
+     "lon": 34.37
+    },
+    {
+     "name": "Trubchevsk",
+     "lat": 52.58,
+     "lon": 33.77
+    },
+    {
+     "name": "Starodub",
+     "lat": 52.58,
+     "lon": 32.76
+    },
+    {
+     "name": "Novgorod-Seversky",
+     "lat": 52.0,
+     "lon": 33.26
+    },
+    {
+     "name": "Chernigov",
+     "lat": 51.49,
+     "lon": 31.29
+    }
+   ],
+   "ruler": {
+    "name": "Vasily Ivanovich",
+    "born": 1325,
+    "dynasty": "Rurikid (Smolensk)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "harsh"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Smolensk Rurikid installed by Khan Jani Beg in 1352; Bryansk is the leading seat of the old Chernigov lands.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "smolensk"
+   ],
+   "rivals": [
+    "lithuania"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bryansk is the chief city of the ruined Chernigov-Seversk lands, its throne granted by Khan Jani Beg to Vasily, son of the prince of Smolensk. Its townsmen are restless and its boyars divided between Lithuanian and Muscovite parties. Algirdas regards the whole Desna basin as his next target.",
+    "de": "Brjansk ist die Hauptstadt der verwüsteten Tschernigow-Sewersker Lande; Khan Dschani Beg verlieh den Thron Wassili, dem Sohn des Fürsten von Smolensk. Die Bürger sind unruhig, die Bojaren zwischen litauischer und Moskauer Partei gespalten. Algirdas betrachtet das Desna-Becken als nächstes Ziel."
+   },
+   "coa": {
+    "blazon": "Or, a star azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kozelsk",
+   "name": {
+    "en": "Principality of Kozelsk",
+    "de": "Fürstentum Koselsk"
+   },
+   "short": {
+    "en": "Kozelsk",
+    "de": "Koselsk"
+   },
+   "adjective": {
+    "en": "Kozelsk",
+    "de": "koselsker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#a3a35a",
+   "capital": {
+    "name": "Kozelsk",
+    "lat": 54.03,
+    "lon": 35.78
+   },
+   "holdings": [
+    {
+     "name": "Kozelsk",
+     "lat": 54.03,
+     "lon": 35.78
+    },
+    {
+     "name": "Karachev",
+     "lat": 53.12,
+     "lon": 34.98
+    }
+   ],
+   "ruler": {
+    "name": "Tit Mstislavich",
+    "born": 1320,
+    "dynasty": "Rurikid (Chernigov)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chernigov Rurikids of the Upper Oka (Kozelsk-Karachev line); one of several 'Upper Oka principalities' (also Novosil, Tarusa, Obolensk) folded together here.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "lithuania"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Kozelsk and Karachev are among the small Upper Oka principalities ruled by descendants of the princes of Chernigov. Too weak to stand alone, they swing between Moscow, Lithuania and the Horde. Kozelsk is still remembered as the 'evil city' that held out against Batu for seven weeks.",
+    "de": "Koselsk und Karatschew gehören zu den kleinen Fürstentümern an der oberen Oka, regiert von Nachfahren der Fürsten von Tschernigow. Zu schwach, um allein zu bestehen, schwanken sie zwischen Moskau, Litauen und Horde. Koselsk ist als 'böse Stadt' erinnert, die Batu sieben Wochen trotzte."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "golden_horde",
+   "name": {
+    "en": "Golden Horde",
+    "de": "Goldene Horde"
+   },
+   "short": {
+    "en": "Golden Horde",
+    "de": "Goldene Horde"
+   },
+   "adjective": {
+    "en": "Horde",
+    "de": "Horden-"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "tatar",
+   "faith": "sunni",
+   "color": "#d4a017",
+   "capital": {
+    "name": "New Sarai",
+    "lat": 48.56,
+    "lon": 45.69
+   },
+   "holdings": [
+    {
+     "name": "New Sarai",
+     "lat": 48.56,
+     "lon": 45.69
+    },
+    {
+     "name": "Sarai Batu",
+     "lat": 47.17,
+     "lon": 47.43
+    },
+    {
+     "name": "Hajji Tarkhan",
+     "lat": 46.35,
+     "lon": 48.04
+    },
+    {
+     "name": "Ukek",
+     "lat": 51.45,
+     "lon": 46.05
+    },
+    {
+     "name": "Bolghar",
+     "lat": 54.98,
+     "lon": 49.06
+    },
+    {
+     "name": "Kazan",
+     "lat": 55.79,
+     "lon": 49.12
+    },
+    {
+     "name": "Mokhshi",
+     "lat": 53.88,
+     "lon": 43.69
+    },
+    {
+     "name": "Ufa",
+     "lat": 54.73,
+     "lon": 55.95
+    },
+    {
+     "name": "Saraychik",
+     "lat": 47.51,
+     "lon": 51.73
+    },
+    {
+     "name": "Urgench",
+     "lat": 42.33,
+     "lon": 59.15
+    },
+    {
+     "name": "Chimgi-Tura",
+     "lat": 57.15,
+     "lon": 65.53
+    },
+    {
+     "name": "Majar",
+     "lat": 44.8,
+     "lon": 44.17
+    },
+    {
+     "name": "Kerch",
+     "lat": 45.36,
+     "lon": 36.47
+    },
+    {
+     "name": "Qırım",
+     "lat": 45.06,
+     "lon": 35.09
+    },
+    {
+     "name": "Kara-Kerman",
+     "lat": 46.62,
+     "lon": 31.54
+    },
+    {
+     "name": "Akkerman",
+     "lat": 46.2,
+     "lon": 30.35
+    },
+    {
+     "name": "Shehr al-Jedid",
+     "lat": 47.3,
+     "lon": 28.97
+    },
+    {
+     "name": "Tula",
+     "lat": 54.19,
+     "lon": 37.62
+    },
+    {
+     "name": "Beldzhamen",
+     "lat": 48.71,
+     "lon": 44.51
+    }
+   ],
+   "ruler": {
+    "name": "Jani Beg",
+    "born": 1310,
+    "dynasty": "Jochid (Borjigin)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "devout",
+     "just",
+     "ambitious"
+    ]
+   },
+   "heir": {
+    "name": "Berdi Beg",
+    "born": 1330,
+    "dynasty": "Jochid (Borjigin)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "cruel",
+     "impatient"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Jochid branch of the house of Chinggis Khan (line of Batu); Jani Beg succeeded his father Özbeg in 1342.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "moscow"
+   ],
+   "rivals": [
+    "lithuania",
+    "chobanids"
+   ],
+   "claims_on": [
+    "chobanids"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Khan Jani Beg rules the Ulus of Jochi from New Sarai, a Muslim steppe empire stretching from the Danube to Khwarazm and western Siberia. The Black Death of 1346–47 has hit its cities hard, yet the Rus' princes still seek their patents at Sarai and pay its tribute. Jani Beg now eyes the collapse of the Ilkhanate and the rich city of Tabriz.",
+    "de": "Khan Dschani Beg herrscht von Neu-Sarai aus über den Ulus Dschötschis, ein muslimisches Steppenreich von der Donau bis Choresmien und Westsibirien. Der Schwarze Tod hat seine Städte schwer getroffen, doch die Fürsten der Rus holen sich weiterhin ihre Patente in Sarai und zahlen Tribut. Nun blickt Dschani Beg auf den Zerfall des Ilchanats und das reiche Täbris."
+   },
+   "coa": {
+    "blazon": "Gules, a tamga or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mordva",
+   "name": {
+    "en": "Mordvin Lands",
+    "de": "Mordwinenland"
+   },
+   "short": {
+    "en": "Mordva",
+    "de": "Mordwinen"
+   },
+   "adjective": {
+    "en": "Mordvin",
+    "de": "mordwinisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "mordvin",
+   "faith": "finnic_old",
+   "color": "#9c8f5a",
+   "capital": {
+    "name": "Temnikov",
+    "lat": 54.63,
+    "lon": 43.22
+   },
+   "holdings": [
+    {
+     "name": "Temnikov",
+     "lat": 54.63,
+     "lon": 43.22
+    },
+    {
+     "name": "Saransk",
+     "lat": 54.18,
+     "lon": 45.18
+    }
+   ],
+   "ruler": {
+    "name": "Mordvin elders",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     1,
+     2
+    ],
+    "traits": [
+     "traditional"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Erzya and Moksha clans under their own chiefs, paying tribute to the Horde's governors at Mokhshi.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "nizhny_novgorod"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Mordvin Erzya and Moksha peoples live in the forests between the Oka and the Volga, under their own chiefs and old gods. They pay tribute to the Horde, whose governor sits at Mokhshi, and clash with Russian colonists from Nizhny Novgorod. Some Moksha princes have taken service with the khans.",
+    "de": "Die mordwinischen Ersjanen und Mokschanen leben in den Wäldern zwischen Oka und Wolga unter eigenen Häuptlingen und alten Göttern. Sie zahlen der Horde Tribut und stoßen mit russischen Siedlern aus Nischni Nowgorod zusammen. Manche mokschanische Fürsten dienen den Khanen."
+   },
+   "coa": {
+    "blazon": "Vert, a tamga argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "caffa",
+   "name": {
+    "en": "Genoese Caffa",
+    "de": "Genuesisches Caffa"
+   },
+   "short": {
+    "en": "Caffa",
+    "de": "Caffa"
+   },
+   "adjective": {
+    "en": "Caffan",
+    "de": "caffesisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#e9e9e9",
+   "capital": {
+    "name": "Caffa",
+    "lat": 45.03,
+    "lon": 35.38
+   },
+   "holdings": [
+    {
+     "name": "Caffa",
+     "lat": 45.03,
+     "lon": 35.38
+    }
+   ],
+   "ruler": {
+    "name": "Consul of Caffa",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Genoese colony governed by a consul sent from Genoa each year, with the Officium Gazarie overseeing Black Sea affairs.",
+   "overlord": "genoa",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [
+    "golden_horde",
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Caffa is the capital of Genoa's Black Sea empire, a walled emporium of slaves, grain, furs and silk at the end of the steppe routes. It survived Jani Beg's siege of 1346, during which the plague reached the West. Relations with the Horde, its nominal landlord, swing between trade and war.",
+    "de": "Caffa ist die Hauptstadt des genuesischen Schwarzmeerreichs, ein ummauerter Umschlagplatz für Sklaven, Getreide, Pelze und Seide am Ende der Steppenwege. Es überstand 1346 die Belagerung Dschani Begs, bei der die Pest in den Westen gelangte. Das Verhältnis zur Horde schwankt zwischen Handel und Krieg."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "tana",
+   "name": {
+    "en": "Venetian Tana",
+    "de": "Venezianisches Tana"
+   },
+   "short": {
+    "en": "Tana",
+    "de": "Tana"
+   },
+   "adjective": {
+    "en": "Tanan",
+    "de": "tanaer"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#b8860b",
+   "capital": {
+    "name": "Tana",
+    "lat": 47.11,
+    "lon": 39.42
+   },
+   "holdings": [
+    {
+     "name": "Tana",
+     "lat": 47.11,
+     "lon": 39.42
+    }
+   ],
+   "ruler": {
+    "name": "Consul of Tana",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Venetian trading quarter in the Horde city of Azaq at the Don mouth, under a Venetian consul (Genoa also keeps a quarter here).",
+   "overlord": "venice",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice"
+   ],
+   "rivals": [
+    "caffa"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "At the mouth of the Don, inside the Horde's city of Azaq, Venice keeps its trading station of Tana, the starting point of the overland silk road to China. Its consul depends on the khan's goodwill. Rivalry with the Genoese of Caffa is as fierce as the trade is lucrative.",
+    "de": "An der Donmündung, in der Hordenstadt Asaq, unterhält Venedig die Handelsstation Tana, Ausgangspunkt der Landroute nach China. Ihr Konsul hängt vom Wohlwollen des Khans ab. Die Rivalität mit den Genuesen in Caffa ist so heftig wie der Handel einträglich."
+   },
+   "coa": {
+    "blazon": "Gules, a winged lion or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "theodoro",
+   "name": {
+    "en": "Principality of Theodoro",
+    "de": "Fürstentum Theodoro"
+   },
+   "short": {
+    "en": "Theodoro",
+    "de": "Theodoro"
+   },
+   "adjective": {
+    "en": "Theodorite",
+    "de": "theodoritisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#7d3c98",
+   "capital": {
+    "name": "Mangup",
+    "lat": 44.59,
+    "lon": 33.81
+   },
+   "holdings": [
+    {
+     "name": "Mangup",
+     "lat": 44.59,
+     "lon": 33.81
+    },
+    {
+     "name": "Aluston",
+     "lat": 44.67,
+     "lon": 34.41
+    }
+   ],
+   "ruler": {
+    "name": "Demetrios",
+    "born": 1320,
+    "dynasty": "Gabras (attributed)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Greek-Gothic princes of Gothia ruling from Mangup; their early genealogy is uncertain (later the Gavras dynasty).",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "trebizond"
+   ],
+   "rivals": [
+    "caffa"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "In the Crimean mountains the Orthodox Goths and Greeks of Gothia keep a small principality centred on the cave-fortress of Mangup (Theodoro). It pays tribute to the Horde and eyes the Genoese advance along the southern coast with suspicion. Its ties to Trebizond and Byzantium keep Greek culture alive here.",
+    "de": "In den Krimbergen bewahren orthodoxe Goten und Griechen Gothias ein kleines Fürstentum um die Höhlenfestung Mangup (Theodoro). Es zahlt der Horde Tribut und beobachtet das genuesische Vordringen an der Südküste argwöhnisch. Verbindungen zu Trapezunt und Byzanz halten die griechische Kultur lebendig."
+   },
+   "coa": {
+    "blazon": "Gules, a double-headed eagle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "circassia",
+   "name": {
+    "en": "Circassian Princedoms",
+    "de": "Tscherkessische Fürstentümer"
+   },
+   "short": {
+    "en": "Circassia",
+    "de": "Tscherkessien"
+   },
+   "adjective": {
+    "en": "Circassian",
+    "de": "tscherkessisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "circassian",
+   "faith": "orthodox",
+   "color": "#2e8b57",
+   "capital": {
+    "name": "Mapa",
+    "lat": 44.89,
+    "lon": 37.32
+   },
+   "holdings": [
+    {
+     "name": "Mapa",
+     "lat": 44.89,
+     "lon": 37.32
+    },
+    {
+     "name": "Matrega",
+     "lat": 45.21,
+     "lon": 36.71
+    },
+    {
+     "name": "Kuban crossing",
+     "lat": 45.03,
+     "lon": 38.98
+    }
+   ],
+   "ruler": {
+    "name": "Circassian princes",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Adyghe princely clans of Zichia, nominally Christian with strong traditional customs; Genoese merchants trade at their coastal havens.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Circassian (Adyghe) princes of Zichia rule the coast and foothills between the Kuban and the Caucasus. Nominally Orthodox Christians, they keep their warrior code and old customs, and supply the slave markets of Caffa with captives. They acknowledge the Horde when its armies are near.",
+    "de": "Die tscherkessischen (adygeischen) Fürsten Zichiens beherrschen Küste und Vorland zwischen Kuban und Kaukasus. Nominell orthodoxe Christen, halten sie an ihrem Kriegerkodex fest und beliefern Caffas Sklavenmärkte. Die Horde erkennen sie an, wenn deren Heere nahe sind."
+   },
+   "coa": {
+    "blazon": "Vert, a tamga or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "georgia",
+   "name": {
+    "en": "Kingdom of Georgia",
+    "de": "Königreich Georgien"
+   },
+   "short": {
+    "en": "Georgia",
+    "de": "Georgien"
+   },
+   "adjective": {
+    "en": "Georgian",
+    "de": "georgisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#b03a2e",
+   "capital": {
+    "name": "Tiflis",
+    "lat": 41.69,
+    "lon": 44.8
+   },
+   "holdings": [
+    {
+     "name": "Tiflis",
+     "lat": 41.69,
+     "lon": 44.8
+    },
+    {
+     "name": "Gori",
+     "lat": 41.98,
+     "lon": 44.11
+    },
+    {
+     "name": "Dmanisi",
+     "lat": 41.33,
+     "lon": 44.2
+    },
+    {
+     "name": "Telavi",
+     "lat": 41.92,
+     "lon": 45.47
+    },
+    {
+     "name": "Oni",
+     "lat": 42.58,
+     "lon": 43.44
+    },
+    {
+     "name": "Kutaisi",
+     "lat": 42.27,
+     "lon": 42.7
+    },
+    {
+     "name": "Mestia",
+     "lat": 43.05,
+     "lon": 42.73
+    },
+    {
+     "name": "Sukhumi",
+     "lat": 43.0,
+     "lon": 41.02
+    }
+   ],
+   "ruler": {
+    "name": "Davit IX",
+    "born": 1310,
+    "dynasty": "Bagrationi",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious",
+     "worn"
+    ]
+   },
+   "heir": {
+    "name": "Bagrat",
+    "born": 1325,
+    "dynasty": "Bagrationi",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "brave",
+     "energetic"
+    ]
+   },
+   "consort": {
+    "name": "Sindukhtar Jaqeli",
+    "born": 1315,
+    "dynasty": "Jaqeli",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Bagrationi dynasty; Davit IX has reigned since 1346 (his son Bagrat V succeeds in 1360).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "trebizond",
+    "samtskhe"
+   ],
+   "rivals": [
+    "golden_horde",
+    "chobanids"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Davit IX holds the kingdom reunited by his father George V the Brilliant, but the Black Death and the Mongol collapse have left it exhausted. The atabegs of Samtskhe and the Dadiani of Mingrelia are powerful vassals. Tiflis' trade suffers as Chobanid and Horde armies fight over Azerbaijan to the south-east.",
+    "de": "Davit IX. hält das von seinem Vater Georg V. dem Glänzenden wiedervereinte Königreich, doch Pest und Zerfall der Mongolenherrschaft haben es erschöpft. Die Atabege von Samzche und die Dadiani von Mingrelien sind mächtige Vasallen. Der Handel von Tiflis leidet unter den Kämpfen um Aserbaidschan."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules between four crosses gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 4,
+      "arrangement": "quarters"
+     }
+    ]
+   }
+  },
+  {
+   "id": "samtskhe",
+   "name": {
+    "en": "Atabegate of Samtskhe",
+    "de": "Atabegat Samzche"
+   },
+   "short": {
+    "en": "Samtskhe",
+    "de": "Samzche"
+   },
+   "adjective": {
+    "en": "Meskhian",
+    "de": "meschisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#c76b4f",
+   "capital": {
+    "name": "Akhaltsikhe",
+    "lat": 41.64,
+    "lon": 42.98
+   },
+   "holdings": [
+    {
+     "name": "Akhaltsikhe",
+     "lat": 41.64,
+     "lon": 42.98
+    },
+    {
+     "name": "Akhalkalaki",
+     "lat": 41.41,
+     "lon": 43.48
+    },
+    {
+     "name": "Ardahan",
+     "lat": 41.11,
+     "lon": 42.7
+    }
+   ],
+   "ruler": {
+    "name": "Qvarqvare I Jaqeli",
+    "born": 1300,
+    "dynasty": "Jaqeli",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "proud",
+     "shrewd"
+    ]
+   },
+   "heir": {
+    "name": "Beka",
+    "born": 1330,
+    "dynasty": "Jaqeli",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Jaqeli dynasty of atabegs, hereditary lords of Samtskhe-Saatabago and father-in-law of the king.",
+   "overlord": "georgia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "georgia",
+    "trebizond"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Jaqeli atabegs rule the south-western Georgian highlands, bordering Trebizond and the Turkmen frontier. Qvarqvare I is the king's father-in-law and the most powerful noble of the realm. His loyalty to Tiflis is a matter of interest rather than obedience.",
+    "de": "Die Jaqeli-Atabege beherrschen das südwestgeorgische Hochland an der Grenze zu Trapezunt und den Turkmenen. Qvarqvare I. ist Schwiegervater des Königs und mächtigster Adliger des Reichs. Seine Treue zu Tiflis ist eine Frage des Interesses."
+   },
+   "coa": {
+    "blazon": "Or, a tower gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "odishi",
+   "name": {
+    "en": "Principality of Odishi",
+    "de": "Fürstentum Odischi"
+   },
+   "short": {
+    "en": "Mingrelia",
+    "de": "Mingrelien"
+   },
+   "adjective": {
+    "en": "Mingrelian",
+    "de": "mingrelisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#d98880",
+   "capital": {
+    "name": "Zugdidi",
+    "lat": 42.51,
+    "lon": 41.87
+   },
+   "holdings": [
+    {
+     "name": "Zugdidi",
+     "lat": 42.51,
+     "lon": 41.87
+    },
+    {
+     "name": "Poti",
+     "lat": 42.15,
+     "lon": 41.67
+    }
+   ],
+   "ruler": {
+    "name": "Giorgi II Dadiani",
+    "born": 1320,
+    "dynasty": "Dadiani",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Dadiani dynasty, hereditary eristavis of Odishi (Mingrelia) under the Georgian crown.",
+   "overlord": "georgia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "georgia"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Dadiani rule Mingrelia on the Black Sea coast, with the old port of Phasis at Poti trading with Genoese ships. They serve the Georgian king but behave more and more like independent princes. Their lands are fertile and their warriors numerous.",
+    "de": "Die Dadiani beherrschen Mingrelien an der Schwarzmeerküste; der alte Hafen Phasis bei Poti handelt mit genuesischen Schiffen. Sie dienen dem georgischen König, treten aber zunehmend wie unabhängige Fürsten auf. Ihr Land ist fruchtbar, ihre Krieger zahlreich."
+   },
+   "coa": {
+    "blazon": "Azure, a horse argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "trebizond",
+   "name": {
+    "en": "Empire of Trebizond",
+    "de": "Kaiserreich Trapezunt"
+   },
+   "short": {
+    "en": "Trebizond",
+    "de": "Trapezunt"
+   },
+   "adjective": {
+    "en": "Trapezuntine",
+    "de": "trapezuntisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#8b0000",
+   "capital": {
+    "name": "Trebizond",
+    "lat": 41.0,
+    "lon": 39.72
+   },
+   "holdings": [
+    {
+     "name": "Trebizond",
+     "lat": 41.0,
+     "lon": 39.72
+    },
+    {
+     "name": "Rizaion",
+     "lat": 41.02,
+     "lon": 40.52
+    },
+    {
+     "name": "Atina",
+     "lat": 41.18,
+     "lon": 40.88
+    },
+    {
+     "name": "Tripolis",
+     "lat": 41.0,
+     "lon": 38.82
+    },
+    {
+     "name": "Kerasous",
+     "lat": 40.91,
+     "lon": 38.39
+    },
+    {
+     "name": "Oinaion",
+     "lat": 41.13,
+     "lon": 37.29
+    }
+   ],
+   "ruler": {
+    "name": "Alexios III Megas Komnenos",
+    "born": 1338,
+    "dynasty": "Grand Komnenos",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "shrewd",
+     "pleasure-loving"
+    ]
+   },
+   "heir": {
+    "name": "Andronikos",
+    "born": 1355,
+    "dynasty": "Grand Komnenos",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "infant"
+    ]
+   },
+   "consort": {
+    "name": "Theodora Kantakouzene",
+    "born": 1340,
+    "dynasty": "Kantakouzenos",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "Grand Komnenoi, descendants of the Byzantine emperor Andronikos I; Alexios III reigns since December 1349.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "georgia",
+    "theodoro",
+    "samtskhe"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Alexios III has restored order in Trebizond after a decade of civil war between Byzantine-backed factions and the local nobility. His tiny empire lives off the trade from Tabriz to the Black Sea and pays off Turkmen tribes with dynastic marriages of its famously beautiful princesses. Genoese and Venetian merchants compete in its harbour.",
+    "de": "Der junge Alexios III. hat in Trapezunt nach einem Jahrzehnt Bürgerkrieg die Ordnung wiederhergestellt. Sein kleines Kaiserreich lebt vom Handel zwischen Täbris und dem Schwarzen Meer und besänftigt Turkmenenstämme durch Heiraten seiner berühmten Prinzessinnen. Genuesen und Venezianer wetteifern in seinem Hafen."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Lithuanian Crusade",
+    "de": "Litauerkreuzzug"
+   },
+   "attackers": [
+    "teutonic_order",
+    "livonian_order"
+   ],
+   "defenders": [
+    "lithuania",
+    "trakai"
+   ],
+   "since": 1283,
+   "goal": "crusade"
+  }
+ ]
+}
