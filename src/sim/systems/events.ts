@@ -130,7 +130,7 @@ export function interpolate(s: GameState, w: World, n: Nation, ctx: Record<strin
   const rep = (str: string, lang: 'en' | 'de') => str
     .replace(/\{nation\}/g, n.short[lang]).replace(/\{adj\}/g, n.adj[lang])
     .replace(/\{ruler\}/g, r ? r.name : '—')
-    .replace(/\{loc\}/g, ctx.loc !== undefined && ctx.loc >= 0 ? w.names[ctx.loc] : '—')
+    .replace(/\{loc\}/g, ctx.loc !== undefined && ctx.loc >= 0 ? (lang === 'de' ? w.namesDe : w.names)[ctx.loc] : '—')
     .replace(/\{other\}/g, ctx.other !== undefined && s.nations[ctx.other] ? s.nations[ctx.other].short[lang] : '—')
     .replace(/\{year\}/g, String(dayToDate(s.day, s.startYear).y))
     .replace(/\{amount\}/g, String(Math.round(ctx.amount ?? 0)));
@@ -174,7 +174,7 @@ function eventsMonth(s: GameState, w: World, m: number, y: number) {
   for (const n of s.nations) {
     if (!n.alive || n.capital < 0) continue;
     if ((n.id + m) % 3 !== 0) continue; // each realm checked every three months
-    if (s.pending.filter((p) => p.nation === n.id).length >= 4) continue;
+    if (s.pending.filter((p) => p.nation === n.id && !p.event.startsWith('diplo_')).length >= 4) continue;
     const e = api(s, w, n, {});
     const order = defs.length; const off = Math.floor(rand(s.rng) * order);
     for (let k = 0; k < order; k++) {

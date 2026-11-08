@@ -131,6 +131,11 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
   return 'unknown action';
 }
 
+const PROPOSAL: Record<string, { en: string; de: string }> = {
+  alliance: { en: 'an alliance', de: 'ein Bündnis' }, marriage: { en: 'a royal marriage', de: 'eine königliche Heirat' },
+  access: { en: 'military access', de: 'Durchmarschrecht' }, trade: { en: 'a trade agreement', de: 'ein Handelsabkommen' },
+  vassalize: { en: 'that we become their vassal', de: 'dass wir ihr Vasall werden' }, demand: { en: 'a demand for tribute', de: 'eine Tributforderung' },
+};
 function envoyArrives(s: GameState, w: World, e: Envoy) {
   const A = s.nations[e.from], Bn = s.nations[e.to];
   A.envoysBusy = Math.max(0, A.envoysBusy - 1);
@@ -138,9 +143,12 @@ function envoyArrives(s: GameState, w: World, e: Envoy) {
   const human = s.playerNations.includes(e.to);
   if (human && !A.ai === false) { /* player-to-player offers are handled online */ }
   if (human && ['alliance', 'marriage', 'access', 'trade', 'vassalize', 'demand'].includes(e.action)) {
-    // humans answer offers through a pending diplomatic event
+    // humans answer offers through a pending diplomatic event (one per proposer and kind, at most six waiting)
+    const waiting = s.pending.filter((p) => p.nation === e.to && p.event.startsWith('diplo_'));
+    if (waiting.some((p) => p.ctx.from === e.from && p.event === `diplo_${e.action}`) || waiting.length >= 6) return;
     s.pending.push({ id: s.nextId++, event: `diplo_${e.action}`, nation: e.to, day: s.day, expires: s.day + 60, ctx: { from: e.from } });
-    notice(s, e.to, 'diplo_offer', { en: `${A.short.en} proposes: ${e.action}.`, de: `${A.short.de} schlägt vor: ${e.action}.` });
+    const what = PROPOSAL[e.action] ?? { en: e.action, de: e.action };
+    notice(s, e.to, 'diplo_offer', { en: `${A.short.en} proposes ${what.en}.`, de: `${A.short.de} schlägt ${what.de} vor.` });
     return;
   }
   if (e.action === 'improve') { addOpinion(s, e.to, e.from, 'improved_relations', 25, 365 * 3, true); rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100); return; }

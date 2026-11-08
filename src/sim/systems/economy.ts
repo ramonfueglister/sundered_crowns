@@ -362,7 +362,8 @@ function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolea
   if (blocked >= 1) return;
   for (let g = 0; g < G; g++) {
     const pa = a.price[g], pb = b.price[g];
-    const tc = cost * WEIGHT[g] * 4 + 0.03 * Math.min(pa, pb);
+    // carriage per unit: bulk goods pay by weight but move in barges and hulls, fine goods pay for risk and handling
+    const tc = cost * WEIGHT[g] * (0.5 + 3.5 * (1 - WEIGHT[g])) + 0.03 * Math.min(pa, pb);
     const tariff = (s.nations[b.owner]?.tariff ?? 0) * 0.5;
     let from = a, to = b, diff = pb - pa * (1 + tariff) - tc;
     if (diff < 0) { from = b; to = a; diff = pa - pb * (1 + (s.nations[a.owner]?.tariff ?? 0) * 0.5) - tc; }
