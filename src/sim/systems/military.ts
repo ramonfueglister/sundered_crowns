@@ -11,7 +11,7 @@ import { lawEffect, ageOf } from './politics';
 import { MinHeap } from '../setup';
 import { warScoreEvent } from './war';
 
-export const UPKEEP_SCALE = 600, COST_SCALE = 600;
+export const UPKEEP_SCALE = 1500, COST_SCALE = 900;
 export const BASE_SPEED_KM = 20; // medieval army ~15–25 km/day
 
 export function armyMen(a: Army): number { let m = 0; for (const r of a.regs) m += r.men; return m; }
@@ -668,7 +668,7 @@ function upkeepMonth(s: GameState, w: World) {
       mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]);
       if (w.coastal[i]) sail += s.loc.pop[base + CL.labourers] * 0.02 * (1 + s.loc.buildings[i * B + BI.port]);
     }
-    if (forts) addExpense(n, 'fortresses', forts * 6 * s.priceLevel);
+    if (forts) addExpense(n, 'fortresses', forts * 2.5 * s.priceLevel);
     const mpMult = 1 + lawEffect(n, 'manpower') + mod(n, 'manpower');
     n.maxManpower = mp * mpMult;
     n.manpower = Math.min(n.maxManpower, n.manpower + n.maxManpower / 120);

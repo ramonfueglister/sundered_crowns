@@ -6,7 +6,7 @@ import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsO
 import { UNITS, B, BI, BUILDINGS, C, CL } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand } from '../commands';
-import { armyMen, armyStrength, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy } from './military';
+import { armyMen, armyStrength, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE } from './military';
 import { nationDev, nationLocs, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
@@ -71,7 +71,8 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   let avgUnrest = 0, cnt = 0;
   for (let i = 0; i < w.L; i += 7) if (s.loc.owner[i] === n.id) { avgUnrest += s.loc.unrest[i]; cnt++; }
   avgUnrest = cnt ? avgUnrest / cnt : 0;
-  const rich = !atWarNow && n.treasury > inc * 18;
+  // only cut taxes for a chest that the army and the building sites cannot use up
+  const rich = !atWarNow && n.treasury > inc * 36;
   const delta = exp > inc * 1.05 && avgUnrest < 40 && !rich ? 0.005 : avgUnrest > 45 || rich ? -0.006 : 0;
   if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), 0.02, 0.25));
   if (!atWarNow && exp > inc && n.treasury < inc * 2) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
@@ -86,10 +87,17 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   let men = 0; for (const a of armiesOf(s, n.id)) if (!a.fleet && !a.rebels) men += armyMen(a);
   for (const r of s.recruits) if (r.nation === n.id) men += r.men;
   const inc = (n.income.tax || 0) + (n.income.trade || 0) + (n.income.tariffs || 0);
-  const affordable = inc * 0.45 / Math.max(0.1, 1.0 * 600 * 0.1 * s.priceLevel / 1000); // men affordable at ~1 upkeep/1000
+  // men affordable at ~1 upkeep/1000: 45% of income plus the war chest spread over five years
+  const affordable = (inc * 0.45 + Math.max(0, n.treasury) / 60) / Math.max(0.1, 1.0 * UPKEEP_SCALE * 0.1 * s.priceLevel / 1000);
   const persMult = P(n, 'conqueror') ? 1.3 : P(n, 'trader') || P(n, 'builder') ? 0.8 : P(n, 'isolationist') ? 0.9 : 1;
   const target = Math.min(n.maxManpower * 0.8 + men * 0.2, affordable * persMult) * (atWarNow ? 1.25 : 1);
-  if (men >= target || n.manpower < 1000) return;
+  if (men >= target) return;
+  // short of levies but rich: hire a company (at war readily, in peace only from a large chest)
+  if (n.manpower < 1000 || target - men > n.manpower) {
+    const chestOk = atWarNow ? n.treasury > inc * 4 : n.treasury > inc * 24;
+    if (chestOk && men < target * (atWarNow ? 0.8 : 0.6) && (s.day + n.id) % 90 < 30) applyCommand(s, w, { t: 'mercs', n: n.id, loc: n.capital, company: atWarNow ? 3000 : 2000 });
+    if (n.manpower < 1000) return;
+  }
   const units = availableUnits(s, n, false);
   if (!units.length) return;
   const want = Math.min(target - men, n.manpower * 0.6, 8000);
@@ -110,8 +118,6 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
     if (n.treasury < unitCost(s, n, u, m) * 1.2) continue;
     applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: u, men: Math.round(m) });
   }
-  // emergency mercenaries
-  if (atWarNow && n.treasury > inc * 6 && men < target * 0.5) applyCommand(s, w, { t: 'mercs', n: n.id, loc: n.capital, company: 3000 });
   // fleets for coastal trade powers
   if ((P(n, 'trader') || n.gov === 'merchant_republic') && w.coastal[n.capital] && n.treasury > inc * 5) {
     const ships = availableUnits(s, n, true);
@@ -120,9 +126,11 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   }
 }
 
-function construction(s: GameState, w: World, n: Nation) {
-  if (s.constructions.filter((c) => c.nation === n.id).length >= 2 + Math.floor(nationDev(s, n.id) / 150)) return;
+function construction(s: GameState, w: World, n: Nation, depth = 0) {
   const inc = Object.values(n.income).reduce((p, v) => p + v, 0);
+  // a full war chest pays for more building sites at once
+  const chest = inc > 0 ? Math.floor(clamp(n.treasury / (inc * 12), 0, 6)) : 0;
+  if (s.constructions.filter((c) => c.nation === n.id).length >= 2 + Math.floor(nationDev(s, n.id) / 150) + chest) return;
   if (n.treasury < inc * 2) return;
   const locs = nationLocs(s, n.id);
   if (!locs.length) return;
@@ -141,6 +149,8 @@ function construction(s: GameState, w: World, n: Nation) {
     }
   }
   if (best >= 0) applyCommand(s, w, { t: 'build', n: n.id, loc: best, building: bb });
+  // a large chest starts several sites a month
+  if (best >= 0 && chest > 1 && depth < chest) construction(s, w, n, depth + 1);
 }
 function borderLoc(s: GameState, w: World, l: number, n: number) {
   for (let e = w.adjStart[l]; e < w.adjStart[l + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] !== n && s.loc.owner[v] >= 0) return true; }

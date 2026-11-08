@@ -235,7 +235,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       if (cmd.slot >= 1 + s.loc.buildings[l * B + BI.workshop]) return err('build more workshops first');
       if (cmd.recipe >= 0 && !workshopOptions(w, l).includes(cmd.recipe) && !RECIPES[cmd.recipe]) return err('unknown recipe');
       if (cmd.recipe >= 0 && (RECIPES[cmd.recipe].minEra ?? 0) > n.era) return err('not yet known');
-      s.loc.workshop[l * 3 + cmd.slot] = cmd.recipe + 1; return OK;
+      s.loc.workshop[l * 3 + cmd.slot] = cmd.recipe + 1; s.flags['wsl_' + l] = 1; return OK;
     }
     case 'embark': {
       const a = myArmy(s, cmd.n, cmd.army), f = myArmy(s, cmd.n, cmd.fleet);
