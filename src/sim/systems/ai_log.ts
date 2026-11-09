@@ -131,7 +131,9 @@ export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
     }
     case 'office': {
       const off = OFFICES.find((o) => o.id === c.office)?.name ?? T(c.office, c.office);
-      const p = s.chars[c.char]; const who = T(p ? localName(p.name, 'en') + (p.dynasty && !p.name.includes(p.dynasty) ? ` ${p.dynasty}` : '') : '?', p ? localName(p.name, 'de', p.female) + (p.dynasty && !p.name.includes(p.dynasty) ? ` ${p.dynasty}` : '') : '?');
+      const p = s.chars[c.char];
+      const house = p && p.dynasty && !/,| of /.test(p.name) && !p.name.includes(p.dynasty.slice(0, 5)) ? ` ${p.dynasty}` : '';
+      const who = T(p ? p.name + house : '?', p ? localName(p.name, 'de', p.female) + house : '?');
       out = fill(T('Appointed {C} as {O}', 'Ernennung: {C} als {O}'), { C: who, O: off });
       break;
     }

@@ -476,7 +476,7 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .cmd-pick td { vertical-align: top; }
 .dyn-tbl { width: 100%; }
 .dyn-tbl td { vertical-align: top; padding: 2px 4px; }
-.skills.inline { display: inline-flex; gap: 5px; margin: 0; }
+.skills.inline { display: inline-flex; gap: 5px; margin: 0; flex-wrap: nowrap; white-space: nowrap; }
 .dyn-claimants { margin-top: 6px; line-height: 1.6; }
 .ailog { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.45; }
 .ailog li { margin: 1px 0; }

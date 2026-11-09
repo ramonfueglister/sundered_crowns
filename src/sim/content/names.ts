@@ -218,6 +218,12 @@ export const EPITHET_DE: Record<string, string> = {
   Tall: 'der Lange', Hunchback: 'der Bucklige', Learned: 'der Gelehrte', Valiant: 'der Tapfere', Generous: 'der Freigebige', Severe: 'der Strenge', Gentle: 'der Sanfte',
   Unlucky: 'der Unglückliche', Fortunate: 'der Glückliche', Builder: 'der Erbauer', Father: 'der Vater', Hammer: 'der Hammer', Terrible: 'der Schreckliche',
 };
+/** Titles after the name ("Maurice FitzGerald, 4th Earl of Kildare") in German. */
+const TITLE_DE: Record<string, string> = {
+  Earl: 'Graf', Count: 'Graf', Countess: 'Gräfin', Duke: 'Herzog', Duchess: 'Herzogin', Bishop: 'Bischof', 'Prince-Bishop': 'Fürstbischof', Archbishop: 'Erzbischof',
+  Guardian: 'Hüter', King: 'König', Queen: 'Königin', Prince: 'Prinz', Princess: 'Prinzessin', Margrave: 'Markgraf', Lord: 'Herr', Lady: 'Herrin', Emperor: 'Kaiser',
+  Empress: 'Kaiserin', Marshal: 'Marschall', Constable: 'Konnetabel', Abbot: 'Abt', Master: 'Meister', Grand: 'Groß', and: 'und',
+};
 const NOUN = new Set(['Roman', 'Monk', 'Mathematician', 'Babymaker', 'Conqueror', 'Lion', 'Navigator', 'Lawgiver', 'Thunderbolt', 'Builder', 'Father', 'Hammer']);
 
 /** A name as shown in a language: in German, regnal numbers take a full stop ("Pedro I."), English epithets are
@@ -234,6 +240,9 @@ export function localName(name: string | undefined | null, lang: 'en' | 'de', fe
   s = s.replace(/ of Iron$/, ' der Eiserne');
   // regnal numbers: "Pedro I" → "Pedro I."
   s = s.replace(/(\p{Lu}[\p{L}'’-]*) ([IVXL]+)(?=$|[\s,])/gu, (_m, a: string, num: string) => `${a} ${num}.`);
+  // titles after a comma: "Dauphin and Duke" → "Dauphin und Herzog", "4th Earl" → "4. Graf"
+  const k = s.indexOf(', ');
+  if (k > 0) s = s.slice(0, k) + s.slice(k).replace(/\b(\d+)(?:st|nd|rd|th)\b/g, '$1.').replace(/[A-Za-z-]+/g, (wd) => TITLE_DE[wd] ?? wd);
   // "William of Namur" → "William von Namur" (not "of the …")
   s = s.replace(/ of (?!the )(\p{Lu})/gu, ' von $1');
   return s;

@@ -160,7 +160,8 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
   n.generals = keep;
 }
 
-/** Drop the records of people long dead whom nothing refers to (no living child or spouse, no office, no army). */
+/** Drop the records of people dead ten years or more whom nothing refers to (no living child or spouse, no office,
+ *  no army). */
 export function pruneCharacters(s: GameState) {
   const keep = new Set<number>();
   for (const n of s.nations) { for (const id of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council), ...(n.candidates ?? []), ...(n.generals ?? [])]) keep.add(id); }
@@ -177,7 +178,7 @@ export function pruneCharacters(s: GameState) {
   let gone = 0;
   for (const k in s.chars) {
     const c = s.chars[k];
-    if (c.alive || keep.has(c.id) || s.day - (c.died ?? 0) < 30 * YEAR) continue;
+    if (c.alive || keep.has(c.id) || s.day - (c.died ?? 0) < 10 * YEAR) continue;
     delete s.chars[k]; gone++;
   }
   if (gone) for (const k in s.chars) { const c = s.chars[k]; if (c.children.length) c.children = c.children.filter((x) => !!s.chars[x]); }

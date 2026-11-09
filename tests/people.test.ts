@@ -66,6 +66,8 @@ describe('German regnal numbers and epithets', () => {
     expect(localName('Louis II the Roman', 'de')).toBe('Louis II. der Römer');
     expect(localName('Margaret the Great', 'de', true)).toBe('Margaret die Große');
     expect(localName('Otto of Hesse', 'de')).toBe('Otto von Hesse');
+    expect(localName('Charles, Dauphin and Duke of Normandy', 'de')).toBe('Charles, Dauphin und Herzog von Normandy');
+    expect(localName('Maurice FitzGerald, 4th Earl of Kildare', 'de')).toBe('Maurice FitzGerald, 4. Graf von Kildare');
     expect(localName('Pedro I the Cruel', 'en')).toBe('Pedro I the Cruel');
   });
   it('writes the ruler of an event in German', () => {
@@ -198,7 +200,7 @@ describe('commanders', () => {
     for (let m = 0; m < 12 * 40 && g.alive; m++) { s.day += 30; commanders.monthly!({ s, w } as any); if (m === 60 && g.alive) expect(g.role).toBe('courtier'); }
     expect(g.alive).toBe(false);
     expect(n.generals).not.toContain(g.id);
-    const old = newChar(s, n, { name: 'Forgotten', born: s.day - 120 * 365 }); old.alive = false; old.died = s.day - 40 * 365;
+    const old = newChar(s, n, { name: 'Forgotten', born: s.day - 120 * 365 }); old.alive = false; old.died = s.day - 12 * 365;
     pruneCharacters(s);
     expect(s.chars[old.id]).toBeUndefined();
   });
