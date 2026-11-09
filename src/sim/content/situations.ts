@@ -7,7 +7,7 @@ import type { SituationDef } from '../systems/situations';
 import { endSituation } from '../systems/situations';
 import { seedPlague } from '../systems/society';
 import { nearestLoc } from '../setup';
-import { declareWar, nationLocsRO, nationDev, startCivilWar } from '../systems/war';
+import { declareWar, nationLocsRO, nationDev, startCivilWar, require_military } from '../systems/war';
 import { lawEffect } from '../systems/politics';
 import { nationPower } from '../systems/ai';
 import { chronicle, notice, addOpinion, clamp, atWar, hasTreaty, opinion, allies } from '../ctx';
@@ -511,6 +511,67 @@ const DEFS: SituationDef[] = [
     involved: (s, sit) => [sit.data.ott, s.loc.owner[sit.data.city]].filter((x) => x >= 0),
   },
 
+  // ------------------------------------------------------------------------------------------------
+  {
+    id: 'horde_breaking', name: { en: 'The Breaking of the Horde', de: 'Das Zerbrechen der Horde' },
+    desc: { en: 'Since the murder of Khan Berdibeg the throne of Sarai changes hands almost every year. The emirs of the western steppe, of the Volga towns and of the lands beyond the Yaik raise khans of their own, and the tributaries of the Rus watch to see who will collect the tribute.', de: 'Seit der Ermordung Khan Berdibegs wechselt der Thron von Sarai fast jedes Jahr. Die Emire der westlichen Steppe, der Wolgastädte und der Länder jenseits des Jaik erheben eigene Khane, und die Zinspflichtigen der Rus warten ab, wer den Tribut eintreiben wird.' },
+    stages: [{ en: 'Khans of a season', de: 'Khane einer Saison' }, { en: 'A divided steppe', de: 'Eine geteilte Steppe' }],
+    canStart: (s, w, y) => y >= 1356 && y < 1400 && !!nat(s, 'golden_horde') && nationLocsRO(s, nat(s, 'golden_horde')!.id).length >= 400,
+    start: (s, w, sit) => { sit.data.h = nat(s, 'golden_horde')!.id; sit.data.split = 0; },
+    monthly: (s, w, sit, y, m) => {
+      const h = alive(s, sit.data.h);
+      if (!h) { endSituation(s, sit, 'gone'); return; }
+      if (sit.stage === 0) {
+        setMod(s, h, 'great_troubles', 1, { en: 'Khans of a season', de: 'Khane einer Saison' }, { unrest: 2, tax: -0.1, morale: -0.05 });
+        sit.progress = Math.round(clamp((y - 1359) * 8, 0, 100));
+        // a player khan holds the realm together by his own wars; the AI horde breaks apart once
+        if (m !== 6 || y < 1361 || human(s, h.id) || !chance(s.rng, 0.3)) return;
+        const cap = h.capital; if (cap < 0) return;
+        const cl = w.lon[cap], ca = w.lat[cap];
+        const groups: { key: string; name: I18n; adj: I18n; locs: number[] }[] = [
+          { key: 'horde_west', name: { en: 'Western Horde', de: 'Westliche Horde' }, adj: { en: 'Western Horde', de: 'Westhorden-' }, locs: [] },
+          { key: 'horde_bolghar', name: { en: 'Khanate of Bolghar', de: 'Khanat Bolgar' }, adj: { en: 'Bolghar', de: 'Bolgar-' }, locs: [] },
+          { key: 'horde_east', name: { en: 'Horde beyond the Yaik', de: 'Horde jenseits des Jaik' }, adj: { en: 'Eastern Horde', de: 'Osthorden-' }, locs: [] },
+        ];
+        for (const l of nationLocsRO(s, h.id)) {
+          if (l === cap || w.distKm(l, cap) < 350) continue;
+          if (w.lon[l] < cl - 6) groups[0].locs.push(l);
+          else if (w.lon[l] > cl + 7) groups[2].locs.push(l);
+          else if (w.lat[l] > ca + 5) groups[1].locs.push(l);
+        }
+        const { releaseNation, newArmy, availableUnits } = require_military();
+        const made: number[] = [];
+        for (const g of groups) {
+          if (g.locs.length < 15) continue;
+          g.locs.sort((a, b) => s.loc.dev[b] - s.loc.dev[a] || a - b);
+          for (const a of s.armies) if (a.owner === h.id && g.locs.includes(a.loc)) { a.path = []; a.siege = -1; }
+          const nn = releaseNation(s, w, h, g.locs, h.culture) as Nation;
+          nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.faith = h.faith; nn.gov = h.gov;
+          nn.rivals = [h.id]; nn.treasury = 100; nn.flags.horde_successor = 1;
+          let pop = 0; for (const l of g.locs) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
+          nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;
+          const u = availableUnits(s, nn, false);
+          newArmy(s, nn.id, g.locs[0], [{ type: u[u.length - 1], men: Math.max(4000, nn.maxManpower * 0.2) }]);
+          if (!h.rivals.includes(nn.id)) h.rivals.push(nn.id);
+          giveClaim(s, h.id, nn.id, 40);
+          made.push(nn.id);
+        }
+        if (!made.length) return;
+        for (const a of made) for (const b of made) if (a < b && !s.nations[a].rivals.includes(b)) { s.nations[a].rivals.push(b); s.nations[b].rivals.push(a); }
+        sit.stage = 1; sit.data.split = y; sit.progress = 100;
+        dropMod(h, 'great_troubles');
+        world(s, { en: `The Horde has broken apart: rival khans now rule ${made.map((x) => s.nations[x].short.en).join(', ')}.`, de: `Die Horde ist zerbrochen: Rivalisierende Khane herrschen nun über ${made.map((x) => s.nations[x].short.de).join(', ')}.` }, h.id, s.nations[made[0]].capital);
+        for (const p of s.playerNations) notice(s, p, 'situation', { en: 'The Horde has broken apart into rival khanates.', de: 'Die Horde ist in rivalisierende Khanate zerfallen.' }, { loc: h.capital });
+        s.flags.ownershipDirty = s.day;
+      }
+      if (y >= 1440 || (sit.stage === 0 && y >= 1400)) endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures');
+    },
+    outcomeText: (s, sit) => sit.outcome === 'broken'
+      ? { en: 'The age of the united Horde is over; the steppe belongs to rival khanates.', de: 'Die Zeit der geeinten Horde ist vorbei; die Steppe gehört rivalisierenden Khanaten.' }
+      : sit.outcome === 'gone' ? { en: 'The Horde is no more.', de: 'Die Horde ist nicht mehr.' }
+      : { en: 'The khans of Sarai have mastered the troubles; the Horde endures.', de: 'Die Khane von Sarai haben die Unruhen gemeistert; die Horde besteht fort.' },
+    involved: (s, sit) => [sit.data.h, ...s.nations.filter((n) => n.alive && n.flags.horde_successor).map((n) => n.id)].filter((x) => x >= 0),
+  },
   // ------------------------------------------------------------------------------------------------
   {
     id: 'reconquista', name: { en: 'The Last Emirate of Iberia', de: 'Das letzte Emirat Iberiens' },

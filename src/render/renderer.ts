@@ -357,6 +357,15 @@ export class MapRenderer {
     this.locDirty = true;
   }
 
+  /** Terra incognita: known[i] = 0 marks a location or sea zone the player has not explored (drawn as parchment). */
+  setExplored(known: Uint8Array | null) {
+    for (let i = 0; i < this.N; i++) {
+      const w = i * LOC_WORDS + 4;
+      if (known && i < known.length && known[i] === 0) this.locU32[w] |= 2; else this.locU32[w] &= ~2;
+    }
+    this.locDirty = true;
+  }
+
   setSnow(snow: Float32Array) {
     for (let i = 0; i < this.L; i++) this.locF32[i * LOC_WORDS + 6] = i < snow.length ? clamp(snow[i], 0, 1) : 0;
     this.locDirty = true;

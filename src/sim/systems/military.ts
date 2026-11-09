@@ -444,25 +444,28 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
     if (dest >= 0) { const p = findPath(s, w, a, a.loc, dest, 4000); if (p) { a.path = p; a.retreating = true; } }
   }
   for (const a of W) a.morale = Math.min(maxMorale(s, a), a.morale + 0.1);
-  const civil = wn === ln; // a realm against its own rebels: no prestige, no war score
-  const wnN = s.nations[wn], lnN = s.nations[ln];
-  if (wnN && !civil) { wnN.stats.battlesWon++; wnN.prestige = clamp(wnN.prestige + 2 + lossL / 2000, -100, 100); }
-  if (lnN && !civil) { lnN.stats.battlesLost++; lnN.prestige = clamp(lnN.prestige - 2, -100, 100); lnN.warExhaustion = clamp(lnN.warExhaustion + lossL / 3000 + 1, 0, 100); }
-  if (wnN && !civil) wnN.warExhaustion = clamp(wnN.warExhaustion + lossW / 5000, 0, 100);
+  // rebels are told apart by their armies (a rebel stack carries its realm's id): the rebel side earns or loses no
+  // prestige, war exhaustion or war score
+  const rebW = W.some((a) => a.rebels), rebL = Lz.some((a) => a.rebels);
+  const wnN = rebW ? undefined : s.nations[wn], lnN = rebL ? undefined : s.nations[ln];
+  if (wnN) { wnN.stats.battlesWon++; wnN.prestige = clamp(wnN.prestige + 2 + lossL / 2000, -100, 100); }
+  if (lnN) { lnN.stats.battlesLost++; lnN.prestige = clamp(lnN.prestige - 2, -100, 100); lnN.warExhaustion = clamp(lnN.warExhaustion + lossL / 3000 + 1, 0, 100); }
+  if (wnN) wnN.warExhaustion = clamp(wnN.warExhaustion + lossW / 5000, 0, 100);
   // manpower lost permanently comes out of population (peasants/labourers)
   const big = lossW + lossL > 1500;
   const kind = b.naval ? 'naval battle' : 'battle';
   const text = {
     en: `${wnN?.short.en ?? 'Rebels'} defeated ${lnN?.short.en ?? 'rebels'} in the ${kind} of ${w.names[b.loc]} (${Math.round(lossW)} vs ${Math.round(lossL)} lost).`,
-    de: `${wnN?.short.de ?? 'Rebellen'} besiegte ${lnN?.short.de ?? 'Rebellen'} in der ${b.naval ? 'Seeschlacht' : 'Schlacht'} bei ${w.namesDe[b.loc]} (${Math.round(lossW)} gegen ${Math.round(lossL)} Verluste).`,
+    de: `${wnN ? wnN.short.de + ' besiegte' : 'Rebellen besiegten'} ${lnN?.short.de ?? 'Rebellen'} in der ${b.naval ? 'Seeschlacht' : 'Schlacht'} bei ${w.namesDe[b.loc]} (${Math.round(lossW)} gegen ${Math.round(lossL)} Verluste).`,
   };
-  if (big) chronicle(s, wn, 'battle', text, b.loc);
+  if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc);
   s.flags[`last_battle_${b.loc}`] = s.day;
-  for (const p of [wn, ln]) if (s.playerNations.includes(p)) notice(s, p, p === wn ? 'battle_won' : 'battle_lost', text, { loc: b.loc });
-  if (!civil) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
+  // one notice per player realm: won when its own (non-rebel) armies are among the winners
+  for (const p of new Set([wn, ln])) if (s.playerNations.includes(p)) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc });
+  if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
   s.battles.splice(s.battles.indexOf(b), 1);
   s.flags.lastBattleResult = s.day;
-  (s as any).lastBattle = { loc: b.loc, winner: wn, loser: ln, lossW, lossL, days: b.days, naval: b.naval, day: s.day, reasons: battleReasons(s, w, b, winner) };
+  (s as any).lastBattle = { loc: b.loc, winner: wn, loser: ln, winnerRebels: rebW, loserRebels: rebL, lossW, lossL, days: b.days, naval: b.naval, day: s.day, reasons: battleReasons(s, w, b, winner) };
 }
 function battleReasons(s: GameState, w: World, b: Battle, winner: string): string[] {
   const r: string[] = [];

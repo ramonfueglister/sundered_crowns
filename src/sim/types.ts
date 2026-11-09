@@ -101,6 +101,7 @@ export interface Army {
   supplyDeficit: number;
   retreating: boolean;
   lastMoveDay: number;
+  orderDay?: number;  // day of the last AI march order (keeps a long march from being re-ordered)
   hostile?: boolean;  // natives / brigands attacking anyone
   mission?: string;   // AI hint
 }

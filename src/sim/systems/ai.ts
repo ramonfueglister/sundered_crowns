@@ -295,7 +295,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
   if (n.warExhaustion > 30 || n.concord < -30 || n.treasury < 0 || n.dread > 60) return;
-  const myBloc = [n.id, ...allies(s, n.id), ...subjectsOf(s, n.id)];
+  const myBloc = [n.id, ...allies(s, n.id), ...subjectsOf(s, n.id).filter((x) => !atWar(s, x, n.id))];
   const myPower = blocPower(s, myBloc);
   if (myPower <= 0) return;
   const myDev = Math.max(1, nationDev(s, n.id));
@@ -386,8 +386,9 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
       if (spent + c > score * 0.95) continue;
       spent += c; (isCap(l) ? caps : pick).push(l);
     }
-    for (const c of caps) terms.push({ type: 'cede', locs: [c], to: n.id });
+    // the bundle first, then at most six capitals (a peace holds at most eight terms)
     if (pick.length) terms.push({ type: 'cede', locs: pick, to: n.id });
+    for (const c of caps.slice(0, 6)) terms.push({ type: 'cede', locs: [c], to: n.id });
     // early in a war a win on the field is no reason to settle for gold: take the forts first
     const besiegingGoal = s.armies.some((a) => a.owner === n.id && a.siege >= 0 && goal.has(a.siege));
     if (!terms.length && score > 30 && (dur > 1.5 || n.warExhaustion > 40) && !(besiegingGoal && dur < 6 && n.warExhaustion < 50))
@@ -459,8 +460,11 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   const gone = new Set<number>(); // armies merged into another this turn
   // AI marches keep the army's memory of unreachable places (a player's order clears it)
   const aiMove = (a: Army, to: number) => {
+    // already on the way there: re-ordering would only reset the progress on the current road
+    if (a.path.length && a.path[a.path.length - 1] === to) { a.orderDay = s.day; return { ok: true } as ReturnType<typeof applyCommand>; }
     const keep = a.mission?.startsWith('blk:') ? a.mission : undefined;
     const r = applyCommand(s, w, { t: 'move', n: n.id, army: a.id, to });
+    if (r.ok) a.orderDay = s.day;
     if (r.ok && keep) a.mission = keep;
     return r;
   };
@@ -479,10 +483,10 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   };
   for (const a of myArmies) {
     if (gone.has(a.id)) continue;
-    if (a.path.length && s.day - a.lastMoveDay < 40) continue; // keep marching
+    if (a.path.length && s.day - Math.max(a.lastMoveDay, a.orderDay ?? -1e9) < 40) continue; // keep marching
     const myStr = armyStrength(s, a);
-    // merge small armies at the same place
-    const same = myArmies.filter((x) => x !== a && !gone.has(x.id) && x.loc === a.loc && !x.path.length);
+    // merge small armies at the same place (an army on the march never takes back the half it left behind)
+    const same = a.path.length ? [] : myArmies.filter((x) => x !== a && !gone.has(x.id) && x.loc === a.loc && !x.path.length);
     if (same.length) { applyCommand(s, w, { t: 'merge', n: n.id, armies: [a.id, ...same.map((x) => x.id)] }); for (const x of same) gone.add(x.id); continue; }
     // nearest beatable enemy army within reach
     let tgt = -1, td = Infinity;

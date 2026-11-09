@@ -201,7 +201,7 @@ export function succession(s: GameState, w: World, n: Nation) {
           if (flip) {
             other.overlord = n.id; other.subjectType = 'personal_union'; other.subjectSince = s.day;
             n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.regent = other.regent || 0; n.dynasty = other.dynasty;
-            for (const x of s.nations) if (x.alive && x.overlord === n.id && x.subjectType === 'personal_union') { x.ruler = n.ruler; x.heir = n.heir; }
+            // juniors still share the dead ruler: the caller gives each its chance to leave, else they follow the new ruler
             chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${s.chars[other.ruler]?.name} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
             notice(s, other.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
             notice(s, n.id, 'union', { en: `${dead?.name ?? '?'} died without heirs: ${s.chars[other.ruler]?.name} of ${other.short.en} inherits our crown and rules both realms.`, de: `${dead?.name ?? '?'} starb ohne Erben: ${s.chars[other.ruler]?.name} von ${other.short.de} erbt unsere Krone und regiert beide Reiche.` }, { loc: n.capital });

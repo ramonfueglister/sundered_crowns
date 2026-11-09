@@ -351,7 +351,7 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
   // ---------------- region classification ----------------
   let closeBlend = U0.misc2.y;
   var cid: u32 = 0u;
-  var dIsoN = 1e3; var dIsoP = 1e3; var dIsoL = 1e3; var dIsoS = 1e3; var dIsoH = 1e3;
+  var dIsoN = 1e3; var dIsoP = 1e3; var dIsoL = 1e3; var dIsoS = 1e3; var dIsoH = 1e3; var dIsoU = 1e3;
   if (closeBlend > 0.5) {
     let f = p - 0.5;
     let b = floor(f);
@@ -381,14 +381,15 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
       }
       dIsoN = isoDist(aN, fr) / mppCss; dIsoP = isoDist(aP, fr) / mppCss; dIsoL = isoDist(aL, fr) / mppCss;
     }
-    let cs = selKey(cid); let ch = (flagsOf(cid) & 1u) != 0u;
-    var aS = vec4f(1.0); var aH = vec4f(1.0);
+    let cs = selKey(cid); let ch = (flagsOf(cid) & 1u) != 0u; let cu = (flagsOf(cid) & 2u) != 0u;
+    var aS = vec4f(1.0); var aH = vec4f(1.0); var aU = vec4f(1.0);
     for (var k = 0; k < 4; k++) {
       let tk = ts[k];
       aS[k] = select(0.0, 1.0, selKey(tk) == cs);
       aH[k] = select(0.0, 1.0, ((flagsOf(tk) & 1u) != 0u) == ch);
+      aU[k] = select(0.0, 1.0, ((flagsOf(tk) & 2u) != 0u) == cu);
     }
-    dIsoS = isoDist(aS, fr) / mppCss; dIsoH = isoDist(aH, fr) / mppCss;
+    dIsoS = isoDist(aS, fr) / mppCss; dIsoH = isoDist(aH, fr) / mppCss; dIsoU = isoDist(aU, fr) / mppCss;
   } else {
     cid = idAt(p);
     if (!isLand(cid) && landMask > 0.5) { cid = nearestLand(p, max(mpp, 1.0)); }
@@ -397,10 +398,10 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
   // smoothed coast says land but no land id nearby (narrow water channels): trust the id raster
   if (!cLand && landMask > 0.5) { landMask = 0.0; }
   let cOwner = ownerKey(cid); let cProv = provKey(cid);
-  let cSel = selKey(cid); let cHi = (flagsOf(cid) & 1u) != 0u;
+  let cSel = selKey(cid); let cHi = (flagsOf(cid) & 1u) != 0u; let cUnk = (flagsOf(cid) & 2u) != 0u;
 
   // ---------------- ring samples (soft bands, far-zoom lines) ----------------
-  var rN = 1e3; var rP = 1e3; var rL = 1e3; var rS = 1e3; var rH = 1e3;
+  var rN = 1e3; var rP = 1e3; var rL = 1e3; var rS = 1e3; var rH = 1e3; var rU = 1e3;
   var prevR = 0.0;
   let ringCount = i32(U0.misc2.w);
   for (var ri = 0; ri < ringCount; ri++) {
@@ -420,6 +421,7 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
       }
       if (selKey(sid) != cSel) { rS = min(rS, est); }
       if (((flagsOf(sid) & 1u) != 0u) != cHi) { rH = min(rH, est); }
+      if (sid != 0u && ((flagsOf(sid) & 2u) != 0u) != cUnk) { rU = min(rU, est); }
     }
     prevR = r;
   }
@@ -429,6 +431,7 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
   let dL = select(rL, dIsoL, useIso);
   let dS = select(rS, min(dIsoS, rS + 0.5), useIso);
   let dH = select(rH, dIsoH, useIso);
+  let dU = select(rU, min(dIsoU, rU + 0.5), useIso);
 
   // ---------------- terrain ----------------
   var col = T.rgb;
@@ -601,6 +604,19 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
       let coreF = select(1.0 - smoothstep(hwN * 0.6 - 0.5, hwN * 0.6 + 0.5, dN), core, pol);
       col = mix(col, bc, coreF * select(0.6, 0.92, pol));
     }
+  }
+  // terra incognita: lands and seas the player's people have not yet explored lie under blank parchment
+  let fogIn = select(0.0, 1.0, cUnk);
+  let fogEdge = 1.0 - smoothstep(0.0, 10.0, dU);
+  let fog = select(fogEdge * 0.5, 1.0 - fogEdge * 0.5, cUnk);
+  if (fog > 0.001) {
+    let fogN = fbm3(p * 0.012 + vec2f(time * 0.004, 0.0));
+    let swirl = vnoise(p * 0.05 + vec2f(fogN * 3.0, -time * 0.01));
+    var parch = vec3f(0.80, 0.73, 0.58) * (0.9 + 0.18 * fogN) - vec3f(0.05, 0.05, 0.04) * swirl * fogIn;
+    // faint engraved hatching, as on old charts
+    let hatch = 1.0 - smoothstep(0.0, 0.18, abs(fract((p.x - p.y) * 0.08) - 0.5) - 0.32);
+    parch = mix(parch, parch * 0.9, hatch * 0.35 * smoothstep(0.4, 1.5, zoom));
+    col = mix(col, parch * vign, fog * 0.96);
   }
   // highlight set
   if (cHi) {

@@ -10,6 +10,8 @@ import { sfx } from './audio';
 export const rendererRef: { r: any | null; assets: any | null } = { r: null, assets: null };
 export const mapError = signal<string | null>(null);
 export const mapReady = signal(false);
+/** The player's explored map (null: everything known, as in observer mode or online). */
+let knownLocs: Uint8Array | null = null;
 let labelOwner: Int16Array | null = null; // owners the labels were last computed from (for relabelling on a language switch)
 
 /**
@@ -22,7 +24,7 @@ export function computeLabels(owner: Int16Array, assets: any, ns: { short: any; 
   const geo = assets.geo; const L0 = geo.L;
   const X = geo.loc.x, Y = geo.loc.y, A = geo.loc.area;
   const locs: number[][] = ns.map(() => []);
-  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length) locs[o].push(i); }
+  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length && (!knownLocs || knownLocs[i] !== 0)) locs[o].push(i); }
   const CELL = 40;
   const out: any[] = [];
   for (let n = 0; n < ns.length; n++) {
@@ -77,8 +79,13 @@ export function MapView() {
     let disposed = false;
     let labelTimer: any = null;
     let lastOwner: Int16Array | null = null;
+    knownLocs = null; let knownApplied = false;
     const feed = (v: TickView, force = false) => {
-      const r = rendererRef.r; if (!r) return;
+      // the player's explored map arrives monthly; keep it even while the renderer is still loading
+      let exploredChanged = false;
+      if (v.explored) { exploredChanged = !knownLocs || v.explored.length !== knownLocs.length || v.explored.some((x, i) => x !== knownLocs![i]); knownLocs = v.explored; }
+      const r = rendererRef.r; if (!r) { if (exploredChanged) knownApplied = false; return; }
+      if (exploredChanged || force || !knownApplied) { r.setExplored(knownLocs); knownApplied = true; if (exploredChanged && lastOwner && !force) r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value)); }
       const ns = nations.value;
       if (v.owner && v.ctrl) {
         const cols = new Uint8Array(ns.length * 3);
@@ -101,7 +108,7 @@ export function MapView() {
       const units: any[] = [];
       const groups = new Map<string, any>();
       for (const a of v.armies) {
-        if (a.embarked) continue;
+        if (a.embarked || (knownLocs && knownLocs[a.loc] === 0 && a.owner !== playerId.value)) continue;
         const key = `${a.loc}:${a.owner}:${a.fleet ? 1 : 0}`;
         let u = groups.get(key);
         const n = ns[a.owner];

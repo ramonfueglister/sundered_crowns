@@ -113,9 +113,10 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const target = topOverlord(s, b);
   // never a war inside one's own realm of subjects (independence and civil wars are fought from within on purpose)
   if (goalType !== 'independence' && goalType !== 'civil_war' && (target === a || target === topOverlord(s, a))) return 'invalid';
-  const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a)];
+  // subjects already at war with their own overlord (fighting for independence) are not called to its side
+  const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a && !atWar(s, x, target))];
   if (!def.includes(b)) def.push(b);
-  const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary')];
+  const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary' && !atWar(s, x, a))];
   const war: War = {
     id: newId(s), name: warName(s, w, a, b, goalType), att, def, attLead: a, defLead: target,
     goal: { type: goalType, target: b, locs }, start: s.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [],
@@ -245,7 +246,7 @@ export function evaluatePeace(s: GameState, war: War, from: number, to: number, 
   const sum = score - cost + ex + dur + (nTo.treasury < 0 ? 10 : 0) + (capLost ? 10 : 0) + (white ? 5 : 0);
   if (!white && score < cost * 0.8) reasons.push(['not_enough_war_score', -20]);
   // a subject fighting for its freedom does not give up for nothing while the war still goes its way
-  const holdOut = white && war.goal.type === 'independence' && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && !s.playerNations.includes(to);
+  const holdOut = white && war.goal.type === 'independence' && from === war.defLead && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && !s.playerNations.includes(to);
   if (holdOut) reasons.push(['fighting_for_freedom', -30]);
   return { accept: !holdOut && sum >= 0 && (white || score >= cost * 0.8), score: holdOut ? sum - 30 : sum, reasons };
 }
@@ -299,7 +300,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
   s.flags.lastPeaceDay = s.day; (s as any).lastPeace = { day: s.day, winner, loser, origin: waveOrigin };
 }
 let _mil: any = null;
-function require_military() { return _mil; }
+export function require_military() { return _mil; }
 export function _setMilitary(m: any) { _mil = m; }
 
 export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0) {

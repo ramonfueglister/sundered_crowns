@@ -59,11 +59,20 @@ function sendTick(full = false) {
     sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
     battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
     chronicle: chron, snow: monthly ? new Float32Array(s.loc.snow) : undefined, ranking: s.ranking, msPerDay,
+    explored: monthly ? exploredView() : undefined,
   };
-  const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer);
+  const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer); if (view.explored) tr.push(view.explored.buffer);
   post({ type: 'tick', view }, tr);
   if (monthly && mapMode !== 'political' && mapMode !== 'terrain') mapDirty = true;
   if (mapDirty) sendColors();
+}
+/** The player's explored map (all known in observer mode or once everything is revealed). */
+function exploredView(): Uint8Array {
+  const out = new Uint8Array(w.N).fill(1);
+  const n = player !== null ? s.nations[player] : null;
+  const e = n && !s.flags.revealAll ? s.explored[n.knows] : null;
+  if (e) for (let i = 0; i < w.N && i < e.length; i++) out[i] = e[i] ? 1 : 0;
+  return out;
 }
 function sendColors() {
   mapDirty = false;

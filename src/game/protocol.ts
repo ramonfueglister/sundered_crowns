@@ -76,6 +76,7 @@ export interface TickView {
   battles: { id: number; loc: number; att: number; def: number; lossA: number; lossD: number; startA: number; startD: number; phase: number }[];
   chronicle: ChronEntry[];                         // new entries
   snow?: Float32Array;                             // monthly
+  explored?: Uint8Array;                           // monthly: 1 = known to the player's people (absent in observer mode)
   ranking: number[];
   msPerDay: number;
 }
