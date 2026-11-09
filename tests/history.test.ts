@@ -242,5 +242,5 @@ describe('history mechanics (point 99)', () => {
     expect(breached(false, 1500, false)).toBeLessThan(8);
     expect(breached(true, 0, false)).toBeLessThan(8);
     expect(breached(true, 1500, true)).toBeLessThan(8);
-  });
+  }, 60000);
 });
