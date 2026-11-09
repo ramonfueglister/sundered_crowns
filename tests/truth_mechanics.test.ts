@@ -11,7 +11,7 @@ import { researchRate, adoptionDelayed } from '../src/sim/systems/progress';
 import { maintMorale, techMult } from '../src/sim/systems/military';
 import { envoyDays, opinionBreakdown, diploSkill } from '../src/sim/systems/diplomacy';
 import { transferLoc, dreadGain } from '../src/sim/systems/war';
-import { computeAdmin, capacityShare, adminInfo, setMethod, methodBlock, migrationMonth, budgetForecast } from '../src/sim/systems/administration';
+import { computeAdmin, capacityShare, adminInfo, setMethod, methodBlock, migrationMonth, budgetForecast, aiDuties, administration } from '../src/sim/systems/administration';
 import { setDuty, dutyDiscontent, dutyUnrest } from '../src/sim/systems/duties';
 import { colonyCost, colonyProgress } from '../src/sim/systems/colonial';
 import { curiaGain } from '../src/sim/systems/realm';
@@ -154,6 +154,15 @@ describe('D: integration, administration, methods, migration', () => {
     expect(r.ok).toBe(false);
     n.tech[1] = oldTech;
   });
+  it('the AI reorganises its great workshop towns once it can afford it', () => {
+    const { s: s4, w: w4 } = newGame(1356);
+    const n = s4.nations.find((x) => x.key === 'france')!;
+    n.tech[1] = 8; n.treasury = 1e6; n.income = { tax: 100 };
+    const towns = ownedLocs(s4, n.id).filter((i) => s4.loc.pop[i * C + CL.artisans] + s4.loc.pop[i * C + CL.wage_workers] >= 1500 && s4.loc.workshop[i * 3] > 0);
+    administration.yearly!({ s: s4, w: w4, date: { y: 1357, m: 0, d: 1 } } as any);
+    const switched = ownedLocs(s4, n.id).filter((i) => s4.loc.method[i] > 0).length;
+    expect(switched).toBe(Math.min(2, towns.length));
+  });
   it('people drift toward better living, and none are lost', () => {
     const l = ownedLocs(s, fr.id).find((i) => s.loc.pop[i * C + CL.peasants] > 2000 && w.adjStart[i + 1] > w.adjStart[i])!;
     let j = -1; for (let e = w.adjStart[l]; e < w.adjStart[l + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === fr.id) { j = v; break; } }
@@ -180,6 +189,18 @@ describe('E: tax instruments and the forecast', () => {
     expect(fr.duties!.excise).toBeCloseTo(0.025, 9);
     expect(dutyDiscontent(fr, 'magnates')).toBeCloseTo(15, 6);
     expect(dutyUnrest(fr)).toBeCloseTo(0.1 * 20 + 0.025 * 30, 6);
+  });
+  it('the AI raises a duty when short of money and lowers it when rich', () => {
+    const { s: s5, w: w5 } = newGame(1356);
+    const n = s5.nations.find((x) => x.key === 'france')!;
+    n.income = { tax: 50 }; n.expense = { army: 80 }; n.treasury = 10;
+    for (const e of n.estates) e.contentment = 60;
+    aiDuties(s5, w5, n, false);
+    const raised = n.duties!.land + n.duties!.hearth + n.duties!.excise;
+    expect(raised).toBeGreaterThan(0);
+    n.income = { tax: 100 }; n.expense = { army: 20 }; n.treasury = 5000;
+    for (let k = 0; k < 5; k++) aiDuties(s5, w5, n, false);
+    expect(n.duties!.land + n.duties!.hearth + n.duties!.excise).toBeCloseTo(0, 9);
   });
   it('they bring money in the next month', () => {
     fr.duties = { land: 0.05, hearth: 0.2, excise: 0.03 };
