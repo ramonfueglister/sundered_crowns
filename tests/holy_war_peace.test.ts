@@ -14,7 +14,7 @@ const w = loadWorld();
 const YEARS = +(process.env.HOLY_YEARS ?? 25);
 
 describe('holy wars over the first 25 years (seed 1356)', () => {
-  it('no realm changes its family of faiths by a peace', () => {
+  it('no realm of the great faiths changes its family of faiths by a peace', () => {
     const s = createGame(w, loadSetup(1356), loadHubs(), 1356, { player: [] });
     const fam = s.nations.map((n) => FAITHS[n.faith]?.family);
     const byPeace: string[] = [];
@@ -25,7 +25,9 @@ describe('holy wars over the first 25 years (seed 1356)', () => {
       const faithPeace = news.filter((c) => c.kind === 'peace' && c.text.en.includes('change of faith'));
       for (const n of s.nations) {
         const f = FAITHS[n.faith]?.family;
-        if (fam[n.id] !== undefined && f !== fam[n.id] && faithPeace.some((c) => c.text.en.includes(n.short.en))) byPeace.push(`${1356 + Math.floor(s.day / 365)} ${n.key}: ${fam[n.id]} -> ${f}`);
+        // the old faiths of the land ('traditional') may take the winner's faith by treaty (faithTermFits 'old_faith'): only
+        // a realm of one of the great faiths must keep its family
+        if (fam[n.id] !== undefined && fam[n.id] !== 'traditional' && f !== fam[n.id] && faithPeace.some((c) => c.text.en.includes(n.short.en))) byPeace.push(`${1356 + Math.floor(s.day / 365)} ${n.key}: ${fam[n.id]} -> ${f}`);
         fam[n.id] = f;
       }
     }
