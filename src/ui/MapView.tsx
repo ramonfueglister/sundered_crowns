@@ -6,6 +6,7 @@ import type { TickView } from '../game/protocol';
 import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast } from './store';
 import { t, L, lang } from './i18n';
 import { sfx } from './audio';
+import { abortTimelapse, timelapseRunning } from './timelapse';
 
 export const rendererRef: { r: any | null; assets: any | null } = { r: null, assets: null };
 export const mapError = signal<string | null>(null);
@@ -92,8 +93,10 @@ export function MapView() {
         ns.forEach((n, k) => { cols[k * 3] = n.color[0]; cols[k * 3 + 1] = n.color[1]; cols[k * 3 + 2] = n.color[2]; });
         let changed = force || !lastOwner;
         if (!changed && lastOwner) for (let i = 0; i < v.owner.length; i += 1) if (lastOwner[i] !== v.owner[i]) { changed = true; break; }
-        r.setPolitical(v.owner, v.ctrl, cols);
-        if (v.ownerChanges && !force) {
+        // a timelapse is showing a past year: keep the present for when it ends
+        const past = timelapseRunning();
+        if (!past) r.setPolitical(v.owner, v.ctrl, cols);
+        if (v.ownerChanges && !force && !past) {
           const o = v.changeOrigin ?? v.ownerChanges[0]?.loc; const g = rendererRef.assets.geo;
           r.animateOwnerChange(v.ownerChanges, g.loc.x[o] ?? 0, g.loc.y[o] ?? 0);
         }
@@ -151,6 +154,7 @@ export function MapView() {
     sim().onTick.push(onTick); sim().onColors.push(onColors);
     return () => {
       disposed = true;
+      abortTimelapse();
       sim().onTick = sim().onTick.filter((f) => f !== onTick); sim().onColors = sim().onColors.filter((f) => f !== onColors);
       rendererRef.r?.destroy?.(); rendererRef.r = null; mapReady.value = false;
     };

@@ -7,12 +7,22 @@ import { showToast } from './store';
 import { t } from './i18n';
 
 export const timelapse = signal<{ i: number; n: number; year: number; recording: boolean } | null>(null);
-let stop = false;
+let stop = false, aborted = false, running = false;
 
+/** Ends the timelapse after the current year; a recording is still saved. */
 export function stopTimelapse() { stop = true; }
+/** Ends it at once without saving anything (the map is going away). */
+export function abortTimelapse() { if (running) aborted = stop = true; }
+/** True from the moment a timelapse is asked for until the present map is back: live ticks must not draw over it. */
+export const timelapseRunning = () => running;
 
 export async function playTimelapse(record = false) {
-  if (timelapse.value) return;
+  if (running) return;
+  running = true; stop = false; aborted = false;
+  try { await play(record); } finally { running = false; timelapse.value = null; }
+}
+
+async function play(record: boolean) {
   const frames: { day: number; owners: Uint16Array }[] = await sim().query({ q: 'timelapse' });
   const r = rendererRef.r; if (!r || !frames?.length) { showToast(t('timelapse_unavailable'), 'err'); return; }
   const v = view.value; const ns = nations.value;
@@ -51,17 +61,17 @@ export async function playTimelapse(record = false) {
     // drawn right after the map's own frame, while its picture is still current
     ticker = setInterval(() => requestAnimationFrame(compose), 100);
   }
-  stop = false;
   const startYear = v?.startYear ?? 1356;
   await new Promise<void>((done) => {
     let i = 0;
     const step = () => {
+      if (rendererRef.r !== r) aborted = stop = true;
       if (stop || i >= frames.length) {
-        if (!rec || stop) { done(); return; }
+        if (!rec || aborted) { done(); return; }
         // a video holds the last year a moment: at least 15 more frames (slow machines draw fewer per second)
         // and until the encoder has handed over data written after the last year (it can lag behind on a busy machine)
         const until = filmed + 15, t0 = performance.now();
-        const hold = () => ((filmed >= until && lastData > t0) || performance.now() - t0 > 30_000 ? done() : setTimeout(hold, 100));
+        const hold = () => (aborted || (filmed >= until && lastData > t0) || performance.now() - t0 > 30_000 ? done() : setTimeout(hold, 100));
         hold(); return;
       }
       const o = new Int16Array(frames[i].owners.length); for (let k = 0; k < o.length; k++) o[k] = frames[i].owners[k] - 1;
@@ -70,18 +80,22 @@ export async function playTimelapse(record = false) {
       timelapse.value = { i, n: frames.length, year, recording: !!rec };
       i++;
       const shown = filmed;
-      const next = () => (!rec || filmed >= shown + 2 ? step() : setTimeout(next, 50));
+      const next = () => (!rec || aborted || filmed >= shown + 2 ? step() : setTimeout(next, 50));
       setTimeout(next, 250);
     };
     step();
   });
   // back to the present
-  const now = view.value ?? v;
-  if (now?.owner && now.ctrl) r.setPolitical(now.owner, now.ctrl, cols);
-  timelapse.value = null;
   if (ticker) clearInterval(ticker);
+  timelapse.value = null;
+  const now = view.value ?? v;
+  if (!aborted && rendererRef.r === r && now?.owner && now.ctrl) {
+    const nc = new Uint8Array(nations.value.length * 3); nations.value.forEach((n, k) => nc.set(n.color, k * 3));
+    r.setPolitical(now.owner, now.ctrl, nc);
+  }
   if (rec) {
     await new Promise<void>((done) => { rec!.onstop = () => done(); rec!.stop(); });
+    if (aborted) return;
     const blob = new Blob(chunks, { type: 'video/webm' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sundered-crowns-${startYear}-${timelapseEndYear(frames, startYear)}.webm`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60_000);

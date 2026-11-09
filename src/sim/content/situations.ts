@@ -14,7 +14,7 @@ import { chronicle, notice, addOpinion, clamp, atWar, hasTreaty, opinion, allies
 import { FAITH_INDEX, FAITHS, faithFamily, GROUP_OF, ALL_CULTURES } from './peoples';
 import { INNOVATIONS } from './innovations';
 import { rand, chance } from '../rng';
-import { B, BI, C } from '../defs';
+import { B, BI, C, UNITS } from '../defs';
 
 // ---------------- helpers ----------------
 const LATIN = FAITH_INDEX.latin;
@@ -521,11 +521,14 @@ const DEFS: SituationDef[] = [
     monthly: (s, w, sit, y, m) => {
       const h = alive(s, sit.data.h);
       if (!h) { endSituation(s, sit, 'gone'); return; }
+      if (y >= 1440 || (sit.stage === 0 && y >= 1400)) { dropMod(h, 'great_troubles'); endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures'); return; }
       if (sit.stage === 0) {
         setMod(s, h, 'great_troubles', 1, { en: 'Khans of a season', de: 'Khane einer Saison' }, { unrest: 2, tax: -0.1, morale: -0.05 });
         sit.progress = Math.round(clamp((y - 1359) * 8, 0, 100));
         // a player khan holds the realm together by his own wars; the AI horde breaks apart once
         if (m !== 6 || y < 1361 || human(s, h.id) || !chance(s.rng, 0.3)) return;
+        // the emirs wait for peace: a split in the middle of a war would hand occupied land to an uninvolved realm
+        if (s.wars.some((x) => x.att.includes(h.id) || x.def.includes(h.id))) return;
         const cap = h.capital; if (cap < 0) return;
         const cl = w.lon[cap], ca = w.lat[cap];
         const groups: { key: string; name: I18n; adj: I18n; locs: number[] }[] = [
@@ -534,7 +537,7 @@ const DEFS: SituationDef[] = [
           { key: 'horde_east', name: { en: 'Horde beyond the Yaik', de: 'Horde jenseits des Jaik' }, adj: { en: 'Eastern Horde', de: 'Osthorden-' }, locs: [] },
         ];
         for (const l of nationLocsRO(s, h.id)) {
-          if (l === cap || w.distKm(l, cap) < 350) continue;
+          if (l === cap || s.loc.ctrl[l] !== h.id || w.distKm(l, cap) < 350) continue;
           if (w.lon[l] < cl - 6) groups[0].locs.push(l);
           else if (w.lon[l] > cl + 7) groups[2].locs.push(l);
           else if (w.lat[l] > ca + 5) groups[1].locs.push(l);
@@ -544,14 +547,23 @@ const DEFS: SituationDef[] = [
         for (const g of groups) {
           if (g.locs.length < 15) continue;
           g.locs.sort((a, b) => s.loc.dev[b] - s.loc.dev[a] || a - b);
-          for (const a of s.armies) if (a.owner === h.id && g.locs.includes(a.loc)) { a.path = []; a.siege = -1; }
+          // the Horde's troops in the breakaway lands fall back to Sarai
+          for (const a of s.armies) if (a.owner === h.id && g.locs.includes(a.loc)) {
+            a.path = []; a.siege = -1;
+            if (!a.fleet && !a.battle && !a.embarkedOn) { a.loc = cap; a.retreating = false; }
+          }
           const nn = releaseNation(s, w, h, g.locs, h.culture) as Nation;
           nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.faith = h.faith; nn.gov = h.gov;
           nn.rivals = [h.id]; nn.treasury = 100; nn.flags.horde_successor = 1;
           let pop = 0; for (const l of g.locs) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
           nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;
-          const u = availableUnits(s, nn, false);
-          newArmy(s, nn.id, g.locs[0], [{ type: u[u.length - 1], men: Math.max(4000, nn.maxManpower * 0.2) }]);
+          // a steppe host: horse archers with a levy of the towns (never the last unit of the list, which is the artillery)
+          const u: number[] = availableUnits(s, nn, false);
+          const ha = UNITS.findIndex((x) => x.id === 'horse_archers'), lv = UNITS.findIndex((x) => x.id === 'levy');
+          const cav = u.includes(ha) ? ha : u.find((i) => UNITS[i].kind === 'cav') ?? u[0];
+          const foot = u.includes(lv) ? lv : u.find((i) => UNITS[i].kind === 'inf') ?? u[0];
+          const men = Math.min(Math.max(4000, nn.maxManpower * 0.2), Math.max(2000, nn.maxManpower));
+          newArmy(s, nn.id, g.locs[0], [{ type: cav, men: Math.round(men * 0.6) }, { type: foot, men: Math.round(men * 0.4) }]);
           if (!h.rivals.includes(nn.id)) h.rivals.push(nn.id);
           giveClaim(s, h.id, nn.id, 40);
           made.push(nn.id);
@@ -564,7 +576,6 @@ const DEFS: SituationDef[] = [
         for (const p of s.playerNations) notice(s, p, 'situation', { en: 'The Horde has broken apart into rival khanates.', de: 'Die Horde ist in rivalisierende Khanate zerfallen.' }, { loc: h.capital });
         s.flags.ownershipDirty = s.day;
       }
-      if (y >= 1440 || (sit.stage === 0 && y >= 1400)) endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures');
     },
     outcomeText: (s, sit) => sit.outcome === 'broken'
       ? { en: 'The age of the united Horde is over; the steppe belongs to rival khanates.', de: 'Die Zeit der geeinten Horde ist vorbei; die Steppe gehört rivalisierenden Khanaten.' }

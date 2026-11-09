@@ -5,7 +5,7 @@ import { screen, panel, settings, saveSettings, selectedLoc, selectedNation, pla
 import { listSaves, loadSave, deleteSave, saveNow, importSave, type SaveMeta } from '../saves';
 import { setLang } from '../i18n';
 import { rendererRef } from '../MapView';
-import { timelapse, playTimelapse } from '../timelapse';
+import { timelapse, playTimelapse, abortTimelapse } from '../timelapse';
 import { Panel, Section, Row, Btn, Empty, NLink, act, t, L, lang, num, pct, Coa } from './common';
 import { sfx } from '../audio';
 import { CHARGE_TYPES } from './coa';
@@ -97,7 +97,7 @@ export function PausePanel() {
     <button class="btn big" onClick={() => openPanel('settings')}>{t('settings')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(false); }}>{t('timelapse')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(true); }}>{t('timelapse_video')}</button>
-    <button class="btn big" onClick={() => { panel.value = 'none'; sim().speed(0); screen.value = 'menu'; }}>{t('quit')}</button>
+    <button class="btn big" onClick={() => { abortTimelapse(); panel.value = 'none'; sim().speed(0); screen.value = 'menu'; }}>{t('quit')}</button>
   </div>;
 }
 
@@ -176,7 +176,7 @@ export function EndScreen() {
           })()}</tbody></table>}
         </Section>
         {tl && <div class="tl-bar"><b>{tl.year}</b><span class="bar"><i class="bar-fill" style={{ width: `${(tl.i / Math.max(1, tl.n - 1)) * 100}%` }} /></span></div>}
-        <div class="act-row"><Btn small={false} onClick={() => playTimelapse(false)}>{t('timelapse')}</Btn><Btn small={false} onClick={() => playTimelapse(true)}>{t('timelapse_video')}</Btn><span class="spacer" /><Btn small={false} cls="gold" onClick={() => { screen.value = 'menu'; }}>{t('quit')}</Btn></div>
+        <div class="act-row"><Btn small={false} onClick={() => playTimelapse(false)}>{t('timelapse')}</Btn><Btn small={false} onClick={() => playTimelapse(true)}>{t('timelapse_video')}</Btn><span class="spacer" /><Btn small={false} cls="gold" onClick={() => { abortTimelapse(); screen.value = 'menu'; }}>{t('quit')}</Btn></div>
       </div>
     </div>
   </div>;
