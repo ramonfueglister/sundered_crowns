@@ -698,7 +698,8 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     let wnF = normalize(vec3f(-gsum * 0.22, 1.0));
     let sun = normalize(vec3f(-0.45, -0.6, 0.66));
     let hv = normalize(sun + V);
-    let spec = pow(max(dot(wn, hv), 0.0), mix(60.0, 260.0, tilt)) * mix(0.10, 0.32, tilt);
+    // a sun glitter on the ripples, kept faint: with the camera tilted the mirror lobe would light whole swells
+    let spec = pow(max(dot(wn, hv), 0.0), mix(80.0, 320.0, tilt)) * mix(0.08, 0.12, tilt) * (0.4 + 0.9 * vnoise(p * 2.3 + time * 0.4));
     let diffW = 0.93 + 0.07 * dot(wn, sun) / sun.z;
     // the sky mirrored in the sea, stronger at grazing angles
     let fres = 0.02 + 0.98 * pow(1.0 - max(dot(wnF, V), 0.0), 5.0);
