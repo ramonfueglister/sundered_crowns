@@ -65,6 +65,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
   'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
+  // ---- people pass: commanders ----
+  'cannot lead an army': 'Kann kein Heer führen',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

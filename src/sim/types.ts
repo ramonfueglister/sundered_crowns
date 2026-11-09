@@ -15,6 +15,7 @@ export interface Character {
   loyalty?: number; corruption?: number; ambition?: number; // for officials
   role?: 'ruler' | 'heir' | 'consort' | 'official' | 'general' | 'admiral' | 'explorer' | 'courtier' | 'clergy';
   claims?: number[]; // nations this character has a throne claim on
+  xp?: number;       // a commander's experience of battle (systems/commanders.ts)
 }
 
 export interface LedgerEntry { [key: string]: number }
@@ -57,6 +58,8 @@ export interface Nation {
   estates: Estate[];
   council: Record<string, number>;  // office -> character id
   candidates?: number[];           // character ids at court who could be appointed to an office (missing in older saves)
+  generals?: number[];             // the realm's generals and admirals, leading an army or not (systems/commanders.ts)
+  aiLog?: AiLogEntry[];            // the AI's last decisions, newest last (systems/ai_log.ts; missing in older saves)
   // diplomacy
   overlord: number; subjectType: string | null; subjectSince: number; libertyDesire: number; integration: number;
   envoys: number; envoysBusy: number;
@@ -83,6 +86,8 @@ export interface Nation {
   stats: { battlesWon: number; battlesLost: number; locsGained: number; locsLost: number; warsWon: number };
   planned?: PlannedAction[]; // online: queued moves/constructions
 }
+/** One decision of the AI: the day, the command it gave (trimmed) and why, as a key of systems/ai_log.ts. */
+export interface AiLogEntry { d: number; c: Partial<Command> & { t: Command['t'] }; y?: string }
 export interface StandingOrders { defendOnly: boolean; balanceBudget: boolean; acceptPeaceBelow: number; autoBuild: boolean; autoRecruit: boolean }
 export interface PlannedAction { day: number; cmd: Command }
 export interface Modifier { id: string; until: number; label: I18n; effects: Record<string, number> }

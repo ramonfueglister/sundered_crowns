@@ -102,6 +102,11 @@ function migrate(s: GameState): GameState {
     for (const n of s.nations) { n.duties ??= { land: 0, hearth: 0, excise: 0 }; n.adminLoad ??= 0; }
     s.v = 2;
   }
+  // people pass (idempotent, whatever the version): generals, the AI's log, candidates at every court
+  for (const n of s.nations) {
+    n.aiLog ??= []; n.candidates ??= [];
+    if (!n.generals) { n.generals = []; for (const a of s.armies) if (a.owner === n.id && a.general && a.general !== n.ruler && a.general !== n.heir && s.chars[a.general]) n.generals.push(a.general); }
+  }
   return s;
 }
 export function saveBinary(s: GameState): Uint8Array { return gzipSync(strToU8(serialize(s)), { level: 6 }); }
