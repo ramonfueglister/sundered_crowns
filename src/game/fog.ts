@@ -1,6 +1,7 @@
 // Fog of war (spec point 104): what one realm knows. The world server sends each player only this, and the
-// single-player worker applies the same filter, so both behave alike. The observer, an admin and a game with
-// everything revealed (dev tools) see all.
+// single-player worker applies the same filter, so both behave alike. In single player the observer and a game with
+// everything revealed (dev tools) see all; online the fog is decided per session (only admins see all), so a world-wide
+// flag never lifts it for the players.
 //
 // Known land: the explored map of the realm's knowledge group (unknown land stays terra incognita, without owners).
 // Sight (armies, fleets, battles, sieges): our own land and that of our subjects, overlord and allies; every place
@@ -26,7 +27,8 @@ export const ARMY_SIGHT = 2;
 /** The radius our spies see around their target's capital. */
 export const SPY_SIGHT = 2;
 
-/** Whether the fog applies to a viewer at all (observer mode and "reveal all" see everything). */
+/** Single player: whether the fog applies to a viewer at all (observer mode and "reveal all" see everything).
+ *  The world server does not use it: there these flags are world-wide state. */
 export function fogActive(s: GameState, nation: number | null): boolean {
   return nation !== null && nation >= 0 && !!s.nations[nation] && !s.observer && !s.flags.revealAll;
 }
@@ -40,9 +42,10 @@ export function friendsOf(s: GameState, nation: number): Set<number> {
   return out;
 }
 
-/** Known locations of a realm (its knowledge group's explored map), or null when everything is known. */
-export function knownOf(s: GameState, w: World, nation: number): Uint8Array | null {
-  const n = s.nations[nation]; if (!n || s.flags.revealAll) return null;
+/** Known locations of a realm (its knowledge group's explored map), or null when everything is known.
+ *  `honourReveal` false ignores the world-wide "reveal all" flag (the world server decides the fog per session). */
+export function knownOf(s: GameState, w: World, nation: number, honourReveal = true): Uint8Array | null {
+  const n = s.nations[nation]; if (!n || (honourReveal && s.flags.revealAll)) return null;
   const e = s.explored[n.knows]; if (!e) return null;
   const out = new Uint8Array(w.N); for (let i = 0; i < w.N && i < e.length; i++) out[i] = e[i] ? 1 : 0;
   return out;
@@ -59,7 +62,7 @@ function spread(w: World, see: Uint8Array, from: number, steps: number) {
   }
 }
 
-export function sightOf(s: GameState, w: World, nation: number): Sight {
+export function sightOf(s: GameState, w: World, nation: number, honourReveal = true): Sight {
   const friends = friendsOf(s, nation);
   const see = new Uint8Array(w.N);
   const own = s.loc.owner, ctrl = s.loc.ctrl;
@@ -70,7 +73,7 @@ export function sightOf(s: GameState, w: World, nation: number): Sight {
   }
   for (const a of s.armies) if (friends.has(a.owner) && !a.rebels) spread(w, see, a.loc, ARMY_SIGHT);
   for (const sp of s.spies) if (sp.nation === nation) { const t = s.nations[sp.target]; if (t?.alive && t.capital >= 0) spread(w, see, t.capital, SPY_SIGHT); }
-  return { nation, friends, see, known: knownOf(s, w, nation) };
+  return { nation, friends, see, known: knownOf(s, w, nation, honourReveal) };
 }
 
 /** An army is visible when it belongs to a friend or stands where we can see. */
@@ -115,21 +118,53 @@ export function fogTick<T extends Pick<TickView, 'armies' | 'battles' | 'sieges'
   return v;
 }
 
-/** Query answers under the fog: no details of unknown land, no armies out of sight, no paths of other realms' hosts. */
+/** Query answers under the fog (single-player worker): the observer and "reveal all" (dev tools) see everything. */
 export function fogAnswer(s: GameState, w: World, nation: number, q: { q: string; [k: string]: any }, data: any): any {
-  if (!fogActive(s, nation) || data === null || data === undefined) return data;
+  if (!fogActive(s, nation)) return data;
+  return fogAnswerWith(s, w, () => sightOf(s, w, nation), q, data);
+}
+
+/** Query answers under a given sight: no details of unknown land, no armies, sieges or foreign agents out of sight, no
+ *  paths of other realms' hosts, no owners of unknown land in the timelapse. 'none' is a viewer without a realm (online:
+ *  a connection that has not taken a seat): it knows the land (to pick a realm) but sees no armies at all. The sight is
+ *  asked for only by the queries that need it. */
+export function fogAnswerWith(s: GameState, w: World, getSight: () => Sight | 'none', q: { q: string; [k: string]: any }, data: any): any {
+  if (data === null || data === undefined) return data;
   switch (q.q) {
     case 'loc': {
-      const sight = sightOf(s, w, nation); const l = Number(q.loc);
+      const sight = getSight(); const l = Number(q.loc);
+      if (sight === 'none') {
+        const out = { ...data };
+        if ('armies' in out) out.armies = []; if ('fleets' in out) out.fleets = [];
+        if ('siege' in out) out.siege = null; if ('agents' in out) out.agents = [];
+        return out;
+      }
       if (sight.known && !sight.known[l]) return { unknown: true, id: l, sea: l >= w.L, name: w.names[l] };
       const vis = (a: any) => armyVisible(sight, { owner: a.owner, loc: l, rebels: a.rebels });
-      if (Array.isArray(data.armies)) data = { ...data, armies: data.armies.filter(vis) };
-      if (Array.isArray(data.fleets)) data = { ...data, fleets: data.fleets.filter(vis) };
-      return data;
+      const out = { ...data };
+      if (Array.isArray(out.armies)) out.armies = out.armies.filter(vis);
+      if (Array.isArray(out.fleets)) out.fleets = out.fleets.filter(vis);
+      // a siege tells who besieges: shown in sight, or when a friend besieges or is besieged (as in the tick)
+      if (out.siege) out.siege = fogSieges(s, [out.siege], sight).length ? out.siege : null;
+      // conversion agents out of sight: only our own
+      if (Array.isArray(out.agents) && sight.see[l] !== 1) out.agents = out.agents.filter((a: any) => a.nation === sight.nation);
+      return out;
     }
     case 'path': {
+      const sight = getSight(); if (sight === 'none') return null;
       const a = s.armies.find((x) => x.id === q.army);
-      return a && a.owner === nation ? data : null;
+      return a && a.owner === sight.nation ? data : null;
+    }
+    case 'timelapse': {
+      // the frames store owner + 1 (0 = nobody): unknown land shows as nobody's; once the game has ended all is shown
+      if (s.ended) return data;
+      const sight = getSight(); if (sight === 'none' || !sight.known) return data;
+      const known = sight.known;
+      return (data as { day: number; owners: Uint16Array }[]).map((f) => {
+        const o = new Uint16Array(f.owners);
+        for (let i = 0; i < o.length; i++) if (i >= known.length || !known[i]) o[i] = 0;
+        return { day: f.day, owners: o };
+      });
     }
   }
   return data;

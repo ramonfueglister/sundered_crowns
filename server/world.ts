@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import type { GameState, Command, CmdResult } from '../src/sim/types';
 import type { World } from '../src/sim/world';
 import type { ArmyLite, MapMode, NationLite, Query, TickView } from '../src/game/protocol';
-import { type Sight, fogActive, sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogColors, fogAnswer } from '../src/game/fog';
+import { type Sight, sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogColors, fogAnswerWith } from '../src/game/fog';
 import { createGame } from '../src/sim/setup';
 import { advanceDay, saveBinary, loadBinary, hashState, END_YEAR } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
@@ -256,6 +256,14 @@ interface Meta {
 }
 interface Queued { e: LogEntry; session: Session | null; id: number }
 
+/** The longest uid a player can have (Supabase ids have 36 characters, dev ids at most 28). */
+const MAX_UID = 64;
+/** How soon a moderation change (mute, block, report) is written to meta.json. */
+const META_SAVE_DELAY_MS = 5000;
+/** Developer actions that change what everyone sees (the fog is per session online; admins already see all). */
+const WORLD_WIDE_DEV = new Set(['reveal', 'observer']);
+const WORLD_WIDE_DEV_ERR = 'not available online: it would lift the fog for every player (admins already see everything)';
+
 class Bucket {
   t: number; last = Date.now();
   constructor(private cap: number, private perSec: number) { this.t = cap; }
@@ -289,7 +297,7 @@ export class WorldCore {
   private sessions = new Set<Session>();
   private buckets = new Map<string, Bucket>();
   private chatBuckets = new Map<string, Bucket>();
-  private offerBuckets = new Map<string, Bucket>(); private reportBuckets = new Map<string, Bucket>();
+  private offerBuckets = new Map<string, Bucket>(); private reportBuckets = new Map<string, Bucket>(); private markBuckets = new Map<string, Bucket>();
   readonly filter: WordFilter;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
@@ -308,6 +316,8 @@ export class WorldCore {
   constructor(cfg: WorldConfig, store: WorldStore = new NullStore()) {
     this.cfg = cfg; this.store = store; this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
     this.filter = new WordFilter([], cfg.wordFilterFile);
+    if (cfg.wordFilterFile && !this.filter.size)
+      this.log(`warning: the word filter is empty (${existsSync(cfg.wordFilterFile) ? 'no entries in' : 'file not found:'} ${cfg.wordFilterFile}); chat and offer texts go out unfiltered. Set WORLD_WORD_FILTER.`);
   }
   get root() { return join(this.cfg.dataDir, this.cfg.id); }
   get seasonEndDay() { return this.cfg.seasonEndDay ?? dateToDay(END_YEAR + 1, 0, 1, this.s?.startYear ?? this.cfg.startYear); }
@@ -357,6 +367,7 @@ export class WorldCore {
     return { uid, name, nation, key: n.key, joinedDay: this.s.day, joinedAt: Date.now(), lastSeen: Date.now(), join: { locs, battlesWon: n.stats.battlesWon, warsWon: n.stats.warsWon }, lastWarDay: this.s.day };
   }
   private saveMeta() {
+    if (this.metaTimer) { clearTimeout(this.metaTimer); this.metaTimer = null; }
     const p = join(this.root, 'meta.json');
     writeFileSync(p + '.tmp', JSON.stringify(this.meta)); renameSync(p + '.tmp', p);
   }
@@ -375,6 +386,15 @@ export class WorldCore {
   }
   stop() {
     this.running = false; if (this.timer) clearTimeout(this.timer); this.timer = null;
+    if (this.metaTimer) this.saveMeta(); // a pending moderation change is written now
+  }
+  private metaTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Mutes, blocks and reports: meta.json is written within a few seconds (or with the day's save, whichever comes
+   *  first), not on every toggle. */
+  private metaChanged() {
+    if (this.metaTimer) return;
+    this.metaTimer = setTimeout(() => { this.metaTimer = null; try { this.saveMeta(); } catch (e: any) { this.log(`meta save failed: ${e?.message || e}`); } }, META_SAVE_DELAY_MS);
+    (this.metaTimer as any).unref?.();
   }
   shutdown() {
     this.stop();
@@ -550,7 +570,11 @@ export class WorldCore {
       case 'cmd': return this.queueCmd(ss, m.id, m.cmd);
       case 'query': {
         const q = m.q as Query; let data: any = null;
-        try { data = answer(this.s, this.w, seat?.nation ?? -1, q); if (!ss.user.admin) data = fogAnswer(this.s, this.w, seat?.nation ?? -1, q, data); } catch (e: any) { data = null; }
+        try {
+          data = answer(this.s, this.w, seat?.nation ?? -1, q);
+          // the fog per session: admins see all; a connection without a realm sees no armies ('none')
+          if (!ss.user.admin) data = fogAnswerWith(this.s, this.w, () => this.sightFor(ss) ?? 'none', q, data);
+        } catch (e: any) { data = null; }
         ss.send({ type: 'reply', id: m.id, data: stripTyped(data) }); return;
       }
       case 'mapmode': {
@@ -595,6 +619,7 @@ export class WorldCore {
     if (JSON.stringify(cmd).length > (cmd.t === 'batch' || cmd.t === 'peace' ? 32768 : 4096)) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'command too large' } });
     if (cmd.t === 'dev') {
       if (!ss.user.admin) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'developer commands are for admins only' } });
+      if (WORLD_WIDE_DEV.has(String((cmd as any).action))) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: WORLD_WIDE_DEV_ERR } });
       this.queue.push({ e: { k: 'dev', uid: ss.user.uid, cmd }, session: ss, id });
       return ss.send({ type: 'queued', id, day: this.s.day });
     }
@@ -656,20 +681,30 @@ export class WorldCore {
     return { type: 'moderation', mutes: names(this.meta.mod.mutes[uid] ?? []), blocks: names(this.meta.mod.blocks[uid] ?? []) };
   }
   private nameOf(uid: string): string { return this.meta.seats[uid]?.name ?? [...this.sessions].find((x) => x.user.uid === uid)?.user.name ?? this.meta.chat.find((c) => c.from === uid)?.fromName ?? uid; }
+  /** Whether a uid belongs to a player this world knows: a ruler, someone connected now, or the writer of a kept chat line. */
+  private knownPlayer(uid: string): boolean {
+    if (!uid || uid.length > MAX_UID || uid === 'server') return false;
+    return !!this.meta.seats[uid] || [...this.sessions].some((x) => x.user.uid === uid) || this.meta.chat.some((c) => c.from === uid);
+  }
   private mark(ss: Session, kind: 'mute' | 'block', uid: string, on: boolean) {
-    if (!uid || uid === ss.user.uid || uid === 'server') return ss.send({ type: 'error', code: kind, message: 'Not possible.' });
-    setList(kind === 'mute' ? this.meta.mod.mutes : this.meta.mod.blocks, ss.user.uid, uid, on);
-    this.saveMeta();
+    const lists = kind === 'mute' ? this.meta.mod.mutes : this.meta.mod.blocks;
+    // only known players can be put on a list (an entry already there can always be taken off)
+    const listed = !on && uid.length <= MAX_UID && !!lists[ss.user.uid]?.includes(uid);
+    if (!uid || uid === ss.user.uid || (!listed && !this.knownPlayer(uid))) return ss.send({ type: 'error', code: kind, message: 'Not possible.' });
+    let mb = this.markBuckets.get(ss.user.uid); if (!mb) this.markBuckets.set(ss.user.uid, (mb = new Bucket(10, 0.5)));
+    if (!mb.take()) return ss.send({ type: 'error', code: 'mod_rate', message: 'Too many changes at once; please wait a moment.' });
+    setList(lists, ss.user.uid, uid, on);
+    this.metaChanged();
     for (const x of this.sessions) if (x.user.uid === ss.user.uid) { x.send(this.moderationMsg(ss.user.uid)); x.send({ type: 'chat', msgs: this.chatFor(x), replace: true }); }
   }
   private report(ss: Session, uid: string, msgId: number | undefined, reason: string) {
-    if (!uid || uid === ss.user.uid) return ss.send({ type: 'error', code: 'report', message: 'Not possible.' });
+    if (!uid || uid === ss.user.uid || !this.knownPlayer(uid)) return ss.send({ type: 'error', code: 'report', message: 'Not possible.' });
     let rb = this.reportBuckets.get(ss.user.uid); if (!rb) this.reportBuckets.set(ss.user.uid, (rb = new Bucket(3, 1 / 300)));
     if (!rb.take()) return ss.send({ type: 'error', code: 'report_rate', message: 'You have sent several reports just now; please wait a few minutes.' });
     const m = typeof msgId === 'number' ? this.meta.chat.find((c) => c.id === msgId && c.from === uid) : undefined;
     const r: Report = { id: this.meta.mod.nextReport++, at: Date.now(), day: this.s.day, by: ss.user.uid, byName: ss.user.name, uid, name: this.nameOf(uid), msg: m?.id, text: m?.text ?? '', reason: cleanText(reason, 300), status: 'open' };
     this.meta.mod.reports.push(r); if (this.meta.mod.reports.length > 500) this.meta.mod.reports.splice(0, this.meta.mod.reports.length - 500);
-    this.saveMeta();
+    this.metaChanged();
     this.store.event(this.meta.id, this.meta.season, 'admin', this.s.day, { report: r }).catch(() => {});
     ss.send({ type: 'reported', id: r.id });
     for (const x of this.sessions) if (x.user.admin) x.send({ type: 'reports', reports: this.reports(true) });
@@ -710,7 +745,9 @@ export class WorldCore {
         break;
       }
       case 'release': { const seat = Object.values(this.meta.seats).find((x) => x.nation === m.nation || x.uid === m.uid); if (seat) this.releaseSeat(seat, 'admin'); break; }
-      case 'dev': if (m.cmd) { const r = this.apply({ k: 'dev', uid: ss.user.uid, cmd: m.cmd }); if (!r.ok) ss.send({ type: 'error', code: 'dev', message: r.err ?? 'failed' }); this.nationsDirty = true; } break;
+      case 'dev': if (m.cmd) {
+        if (WORLD_WIDE_DEV.has(String((m.cmd as any).action))) { ss.send({ type: 'error', code: 'dev', message: WORLD_WIDE_DEV_ERR }); break; }
+        const r = this.apply({ k: 'dev', uid: ss.user.uid, cmd: m.cmd }); if (!r.ok) ss.send({ type: 'error', code: 'dev', message: r.err ?? 'failed' }); this.nationsDirty = true; } break;
       case 'snapshot': this.snapshot(true); break;
       case 'end_season': this.apply({ k: 'end_season' }); break;
       case 'reports': break; // the list goes out below
@@ -837,10 +874,10 @@ export class WorldCore {
     if (ss.user.admin) return null;
     const nat = ss.seat?.nation ?? -1;
     if (nat < 0 || !this.s.nations[nat]) return 'none';
-    if (!fogActive(this.s, nat)) return null;
+    // decided per session: the world-wide observer and "reveal all" flags never lift the fog for a player
     const p = this.dayPool(); let sg = p.sight.get(nat);
     if (!sg) {
-      sg = sightOf(this.s, this.w, nat);
+      sg = sightOf(this.s, this.w, nat, false);
       // one explored map per knowledge group (the same array object lets sessions of a group share their tick head)
       const g = this.s.nations[nat].knows;
       if (!p.known.has(g)) p.known.set(g, sg.known);

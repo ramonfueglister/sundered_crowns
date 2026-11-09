@@ -590,6 +590,10 @@ const S: Record<string, [string, string]> = {
   x_chron_export_md: ['Save as text (Markdown)', 'Als Text speichern (Markdown)'], x_chron_export_md_hint: ['A readable document in the language chosen now, one section per year.', 'Ein lesbares Dokument in der gerade gewählten Sprache, ein Abschnitt pro Jahr.'],
   x_chron_export_json: ['Save as data (JSON)', 'Als Daten speichern (JSON)'], x_chron_export_json_hint: ['Every entry with its day, kind, realm and place, in both languages.', 'Jeder Eintrag mit Tag, Art, Reich und Ort, in beiden Sprachen.'],
   x_chron_export_own: ['Only the entries of our realm, as the list shows them.', 'Nur die Einträge unseres Reiches, wie die Liste sie zeigt.'],
+  // ---- polish pass review fixes: unexplored places ----
+  terra_incognita: ['Terra incognita', 'Terra incognita'],
+  terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
+  x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

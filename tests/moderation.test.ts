@@ -1,7 +1,7 @@
 // Moderation and fairness online (spec points 105, 106): the word filter from a config file, mute and block, reports
 // for admins and bans, rate limits, and the catch-up summary a returning ruler receives.
 import { describe, it, expect, afterAll, vi } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WorldCore, type WorldConfig, type Conn, type Session } from '../server/world';
@@ -106,6 +106,71 @@ describe('moderation on the world server', () => {
     // too many reports in a row are refused
     for (let i = 0; i < 4; i++) cleo.send({ type: 'report', uid: 'dev-alice', reason: `r${i}` });
     expect(cleo.last('error')?.code).toBe('report_rate');
+  });
+
+  it('mute, block and report take only known players, a few at a time, and write meta.json lazily', () => {
+    const before = JSON.stringify(core.meta.mod);
+    cleo.send({ type: 'mute', uid: 'x'.repeat(50_000), on: true });
+    expect(cleo.last('error')?.code).toBe('mute');
+    cleo.send({ type: 'block', uid: 'dev-nobody', on: true });
+    expect(cleo.last('error')?.code).toBe('block');
+    (core as any).reportBuckets.clear();
+    cleo.send({ type: 'report', uid: 'dev-nobody', reason: 'x' });
+    expect(cleo.last('error')?.code).toBe('report');
+    expect(JSON.stringify(core.meta.mod)).toBe(before);
+    // a known player: listed at once, written to disk within a few seconds (or by the day's save)
+    const disk = () => JSON.parse(readFileSync(join(dir, cfg.id, 'meta.json'), 'utf8')).mod.mutes['dev-cleo'] ?? [];
+    cleo.send({ type: 'mute', uid: 'dev-alice', on: true });
+    expect(cleo.last('moderation')?.mutes.map((x) => x.uid)).toEqual(['dev-alice']);
+    expect(disk()).toEqual([]);
+    expect((core as any).metaTimer).not.toBeNull();
+    (core as any).saveMeta();
+    expect(disk()).toEqual(['dev-alice']);
+    // toggling in a loop is slowed down
+    (core as any).markBuckets.clear(); cleo.msgs = [];
+    for (let i = 0; i < 14; i++) cleo.send({ type: 'mute', uid: 'dev-alice', on: i % 2 === 1 });
+    expect(cleo.msgs.some((m) => m.type === 'error' && m.code === 'mod_rate')).toBe(true);
+    cleo.send({ type: 'mute', uid: 'dev-alice', on: false }); (core as any).markBuckets.clear();
+    cleo.send({ type: 'mute', uid: 'dev-alice', on: false });
+    expect(core.meta.mod.mutes['dev-cleo']).toBeUndefined();
+  });
+
+  it('the fog holds per session: no realm sees no armies, and an admin cannot lift it for everyone', () => {
+    const dora = new Client('dev-dora', 'Dora').connect(core);
+    const q = (c: Client, query: any) => {
+      (core as any).buckets.clear(); // the general request limit is not under test here
+      const id = c.seq++; c.send({ type: 'query', id, q: query });
+      const r = c.msgs.find((m) => m.type === 'reply' && (m as any).id === id) as any; expect(r, `reply to ${query.q}`).toBeTruthy(); return r.data;
+    };
+    // places with foreign hosts on them: a viewer without a realm learns nothing about them
+    const withArmies = [...new Set(core.s.armies.filter((a) => !a.fleet).map((a) => a.loc))].slice(0, 30);
+    expect(withArmies.length).toBeGreaterThan(5);
+    for (const l of withArmies) { const d = q(dora, { q: 'loc', loc: l }); expect(d.armies, `place ${l}`).toEqual([]); expect(d.siege ?? null).toBeNull(); expect(d.agents ?? []).toEqual([]); }
+    const far = core.s.armies.find((a) => a.owner !== A)!;
+    expect(q(dora, { q: 'path', army: far.id, to: core.s.nations[A].capital })).toBeNull();
+    // an admin's world-wide "reveal" and "observer" are refused
+    const warden = new Client('dev-warden', 'Warden').connect(core);
+    for (const action of ['reveal', 'observer']) {
+      warden.send({ type: 'admin', action: 'dev', cmd: { t: 'dev', n: A, action } });
+      expect(warden.last('error')?.code).toBe('dev');
+    }
+    expect(core.s.flags.revealAll).toBeUndefined(); expect(core.s.observer).toBeFalsy();
+    // and if such a flag is set all the same (an old log), a player still sees only what the realm sees
+    const seen = (c: Client) => { let n = 0; for (const l of withArmies) n += (q(c, { q: 'loc', loc: l })?.armies ?? []).length; return n; };
+    const plain = seen(alice);
+    expect(plain).toBeLessThan(core.s.armies.filter((a) => withArmies.includes(a.loc)).length);
+    core.s.flags.revealAll = 1; core.s.observer = true; (core as any).poolDirty = true;
+    expect(seen(alice)).toBe(plain);
+    const o = new Uint16Array(core.w.L); for (let i = 0; i < core.w.L; i++) o[i] = core.s.loc.owner[i] + 1;
+    core.s.timelapse.push({ day: core.s.day, owners: o });
+    const tl = q(alice, { q: 'timelapse' }) as { owners: number[] }[];
+    const known = core.s.explored[core.s.nations[A].knows]; let hidden = 0;
+    expect(tl.length).toBeGreaterThan(0);
+    for (const f of tl) for (let i = 0; i < core.w.L; i++) if (!known[i]) { expect(f.owners[i]).toBe(0); hidden++; }
+    expect(hidden).toBeGreaterThan(1000);
+    core.s.timelapse.pop();
+    delete core.s.flags.revealAll; core.s.observer = false;
+    dora.conn.close(1000, ''); warden.conn.close(1000, '');
   });
 
   it('a ruler who comes back after days gets a catch-up summary', () => {

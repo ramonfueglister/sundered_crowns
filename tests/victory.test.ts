@@ -17,12 +17,14 @@ const fresh = (seed = 5) => createGame(w, loadSetup(1356), loadHubs(), seed, { p
 const nid = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!.id;
 const yearly = (s: GameState) => victory.yearly!({ s, w } as any);
 
-/** Hands Europe's land to `to` until it holds `share` of Europe's development. */
-function grow(s: GameState, to: number, share: number) {
+/** Hands Europe's land to `to` until it holds `share` of Europe's development (sparing `spare` and its subjects). */
+function grow(s: GameState, to: number, share: number, spare = -1) {
   const eu = europeMask(w);
   for (let i = 0; i < w.L; i++) {
     const m = hegemonyMeasure(s, w); if ((m.values.get(to) ?? 0) / m.total >= share) return;
-    if (eu[i] && s.loc.owner[i] >= 0 && s.loc.owner[i] !== to) s.loc.owner[i] = to;
+    const o = s.loc.owner[i];
+    if (spare >= 0 && (o === spare || s.nations[o]?.overlord === spare)) continue;
+    if (eu[i] && o >= 0 && o !== to) s.loc.owner[i] = to;
   }
 }
 
@@ -112,6 +114,30 @@ describe('victory conditions', () => {
     t.loc.owner.set(owners); // the land goes back to its old lords
     t.day += 365; yearly(t);
     expect(t.victoryHold!.hegemony).toBeUndefined(); expect(t.ended).toBe(false);
+  });
+
+  it('a holder keeps its count when another realm that also meets the condition pulls ahead', () => {
+    const s = fresh(); s.victoryKinds = ['score', 'hegemony']; const F = nid(s, 'france'), E = nid(s, 'england');
+    s.playerNations = [F];
+    grow(s, F, VICTORY_RULES.hegemony.share + 0.03);
+    yearly(s);
+    expect(s.victoryHold!.hegemony).toEqual({ nation: F, since: s.day });
+    const since = s.day;
+    for (let y = 1; y < VICTORY_YEARS - 1; y++) { s.day += 365; yearly(s); }
+    // England rises above France, which still holds more than the bar
+    const fShare = () => (hegemonyMeasure(s, w).values.get(F) ?? 0) / hegemonyMeasure(s, w).total;
+    const before = fShare();
+    grow(s, E, before + 0.02, F);
+    const m = hegemonyMeasure(s, w);
+    expect((m.values.get(E) ?? 0) / m.total).toBeGreaterThan(fShare());
+    expect(fShare()).toBeGreaterThanOrEqual(VICTORY_RULES.hegemony.share);
+    expect(victoryCheck(s, w, 'hegemony', E).meets).toBe(true);
+    s.day += 365; yearly(s);
+    expect(s.victoryHold!.hegemony).toEqual({ nation: F, since });
+    expect(s.ended).toBe(false);
+    s.day += 366; yearly(s);
+    expect(s.ended).toBe(true);
+    expect(s.victory).toMatchObject({ nation: F, kind: 'hegemony' });
   });
 
   it('the score alone never ends the game early', () => {

@@ -15,6 +15,7 @@ import { DevTools } from './devtools';
 import { HistoryCharts, ChronicleExport, endingText, victoryName, victoryDesc } from './victory';
 import { TipHead } from './explain';
 import { dayToDate } from '../../sim/calendar';
+import { isOnline } from '../../online/worldClient';
 
 // ---------------------------------------------------------------- settings
 export function SettingsPanel() {
@@ -122,8 +123,8 @@ export function DevPanel() {
       <Btn onClick={() => dev('tech')}>+1 {t('technology')}</Btn>
       <Btn disabled={loc < 0 ? 'select a location' : null} onClick={() => dev('annex', { loc })}>{t('dev_annex')} {loc >= 0 ? `#${loc}` : ''}</Btn>
       <Btn onClick={() => dev('army', { loc: loc >= 0 ? loc : undefined, men: 10000 })}>+10k {t('army')}</Btn>
-      <Btn onClick={() => dev('reveal')}>{t('dev_reveal')}</Btn>
-      <Btn onClick={() => dev('observer')}>{t('dev_observer')}</Btn>
+      <Btn disabled={isOnline.value ? t('x_dev_world_wide') : null} onClick={() => dev('reveal')}>{t('dev_reveal')}</Btn>
+      <Btn disabled={isOnline.value ? t('x_dev_world_wide') : null} onClick={() => dev('observer')}>{t('dev_observer')}</Btn>
       <Btn disabled={nat < 0 ? 'select a realm' : null} onClick={() => dev('switch', { nation: nat }).then((r) => { if (r.ok) sim().setPlayer(nat); })}>{t('dev_switch')} {nat >= 0 ? L(nations.value[nat]?.short) : ''}</Btn>
     </div>
     <Section title={t('speed')} id="dev-speed">

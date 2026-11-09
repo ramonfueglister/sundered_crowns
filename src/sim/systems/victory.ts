@@ -182,26 +182,28 @@ function victoryYear(s: GameState, w: World) {
   const cache: Record<string, any> = {};
   const year = dayToDate(s.day, s.startYear).y;
   for (const kind of kinds) {
-    const best = bestFor(s, w, kind, cache);
     const cur = hold[kind];
+    // the holder keeps its count for as long as it meets the condition, even when another realm that meets it too pulls ahead
+    if (cur && s.nations[cur.nation]?.alive && victoryCheck(s, w, kind, cur.nation, cache).meets) {
+      if ((s.day - cur.since) / 365.25 >= VICTORY_YEARS - 0.01) {
+        const N = s.nations[cur.nation];
+        s.ended = true; s.victory = { nation: cur.nation, kind, day: s.day };
+        chronicle(s, cur.nation, 'victory', { en: `${N.short.en} won the game in ${year} (${VICTORY_NAME[kind].en}), after holding the condition for ${VICTORY_YEARS} years.`, de: `${N.short.de} gewann das Spiel im Jahr ${year} (${VICTORY_NAME[kind].de}), nachdem es die Bedingung ${VICTORY_YEARS} Jahre gehalten hatte.` }, N.capital >= 0 ? N.capital : undefined);
+        return;
+      }
+      continue;
+    }
+    // the holder lost it (or nobody held it): the realm that meets it best starts a count of its own
+    const best = bestFor(s, w, kind, cache);
     if (!best.meets) {
       if (cur) { delete hold[kind]; const N = s.nations[cur.nation]; for (const p of s.playerNations) notice(s, p, 'victory_lost', { en: `${N?.short.en} no longer meets the victory condition "${VICTORY_NAME[kind].en}".`, de: `${N?.short.de} erfüllt die Siegbedingung „${VICTORY_NAME[kind].de}“ nicht mehr.` }); }
       continue;
     }
-    if (!cur || cur.nation !== best.nation) {
-      hold[kind] = { nation: best.nation, since: s.day };
-      const N = s.nations[best.nation];
-      for (const p of s.playerNations) notice(s, p, 'victory_watch', p === best.nation
-        ? { en: `We meet the victory condition "${VICTORY_NAME[kind].en}". If we hold it for ${VICTORY_YEARS} years, we win.`, de: `Wir erfüllen die Siegbedingung „${VICTORY_NAME[kind].de}“. Halten wir sie ${VICTORY_YEARS} Jahre, gewinnen wir.` }
-        : { en: `${N.short.en} meets the victory condition "${VICTORY_NAME[kind].en}". If it holds it for ${VICTORY_YEARS} years, it wins the game.`, de: `${N.short.de} erfüllt die Siegbedingung „${VICTORY_NAME[kind].de}“. Hält es sie ${VICTORY_YEARS} Jahre, gewinnt es das Spiel.` }, N.capital >= 0 ? { loc: N.capital } : {});
-      continue;
-    }
-    if ((s.day - cur.since) / 365.25 >= VICTORY_YEARS - 0.01) {
-      const N = s.nations[cur.nation];
-      s.ended = true; s.victory = { nation: cur.nation, kind, day: s.day };
-      chronicle(s, cur.nation, 'victory', { en: `${N.short.en} won the game in ${year} (${VICTORY_NAME[kind].en}), after holding the condition for ${VICTORY_YEARS} years.`, de: `${N.short.de} gewann das Spiel im Jahr ${year} (${VICTORY_NAME[kind].de}), nachdem es die Bedingung ${VICTORY_YEARS} Jahre gehalten hatte.` }, N.capital >= 0 ? N.capital : undefined);
-      return;
-    }
+    hold[kind] = { nation: best.nation, since: s.day };
+    const N = s.nations[best.nation];
+    for (const p of s.playerNations) notice(s, p, 'victory_watch', p === best.nation
+      ? { en: `We meet the victory condition "${VICTORY_NAME[kind].en}". If we hold it for ${VICTORY_YEARS} years, we win.`, de: `Wir erfüllen die Siegbedingung „${VICTORY_NAME[kind].de}“. Halten wir sie ${VICTORY_YEARS} Jahre, gewinnen wir.` }
+      : { en: `${N.short.en} meets the victory condition "${VICTORY_NAME[kind].en}". If it holds it for ${VICTORY_YEARS} years, it wins the game.`, de: `${N.short.de} erfüllt die Siegbedingung „${VICTORY_NAME[kind].de}“. Hält es sie ${VICTORY_YEARS} Jahre, gewinnt es das Spiel.` }, N.capital >= 0 ? { loc: N.capital } : {});
   }
 }
 

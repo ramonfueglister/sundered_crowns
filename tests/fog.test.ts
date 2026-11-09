@@ -5,7 +5,7 @@ import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { advanceDay } from '../src/sim/engine';
 import { armyLites, answer } from '../src/game/view';
-import { sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogAnswer, fogActive, armyVisible, friendsOf, ARMY_SIGHT } from '../src/game/fog';
+import { sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogAnswer, fogAnswerWith, fogActive, armyVisible, friendsOf, ARMY_SIGHT } from '../src/game/fog';
 import { newArmy } from '../src/sim/systems/military';
 import type { GameState } from '../src/sim/types';
 
@@ -87,5 +87,56 @@ describe('fog of war', () => {
     // the observer and "reveal all" see everything
     expect(fogActive(s, null)).toBe(false);
     s.flags.revealAll = 1; expect(fogActive(s, P)).toBe(false); delete s.flags.revealAll;
+  });
+
+  it('the timelapse shows no owner of land we do not know', () => {
+    const o = new Uint16Array(w.L); for (let i = 0; i < w.L; i++) o[i] = s.loc.owner[i] + 1;
+    s.timelapse.push({ day: s.day, owners: o });
+    const q = { q: 'timelapse' as const };
+    const check = (frames: { owners: ArrayLike<number> }[], known: Uint8Array) => {
+      expect(frames.length).toBeGreaterThan(0);
+      let hidden = 0, shown = 0;
+      for (const f of frames) for (let i = 0; i < w.L; i++) {
+        if (!known[i]) { expect(f.owners[i], `unknown place ${i}`).toBe(0); if (s.loc.owner[i] >= 0) hidden++; }
+        else if (f.owners[i] > 0) shown++;
+      }
+      expect(hidden).toBeGreaterThan(0); expect(shown).toBeGreaterThan(0);
+    };
+    const known = sightOf(s, w, P).known!;
+    check(fogAnswer(s, w, P, q, answer(s, w, P, q)), known);
+    // the recorded frames themselves stay whole
+    expect(s.timelapse[s.timelapse.length - 1].owners).toBe(o);
+    // online the sight ignores the world-wide "reveal all" flag
+    s.flags.revealAll = 1;
+    check(fogAnswerWith(s, w, () => sightOf(s, w, P, false), q, answer(s, w, P, q)), known);
+    delete s.flags.revealAll;
+    s.timelapse.pop();
+  });
+
+  it('a known place out of sight shows no foreign siege or agents; a viewer without a realm sees no armies', () => {
+    const sight = sightOf(s, w, P);
+    const friends = friendsOf(s, P);
+    const l = Array.from({ length: w.L }, (_, i) => i).find((i) => sight.known![i] && !sight.see[i] && s.loc.owner[i] >= 0 && !friends.has(s.loc.owner[i]))!;
+    expect(l).toBeGreaterThanOrEqual(0);
+    const X = s.nations.find((n) => n.alive && !friends.has(n.id) && n.id !== s.loc.owner[l])!.id;
+    const q = { q: 'loc' as const, loc: l };
+    const data = { ...answer(s, w, P, q), siege: { loc: l, nation: X, progress: 10, garrison: 100 }, agents: [{ nation: X, loc: l }, { nation: P, loc: l }],
+      armies: [{ id: 1, owner: X, men: 5000 }, { id: 2, owner: P, men: 1000 }] };
+    const out = fogAnswer(s, w, P, q, data);
+    expect(out.siege).toBeNull();
+    expect(out.agents).toEqual([{ nation: P, loc: l }]);
+    expect(out.armies.map((a: any) => a.id)).toEqual([2]);
+    // in sight, all of it shows
+    const cap = s.nations[P].capital, qc = { q: 'loc' as const, loc: cap };
+    const near = fogAnswer(s, w, P, qc, { ...answer(s, w, P, qc), siege: { loc: cap, nation: X, progress: 1, garrison: 1 }, agents: [{ nation: X, loc: cap }] });
+    expect(near.siege).not.toBeNull(); expect(near.agents).toHaveLength(1);
+    // no realm: the place is described, but nothing that moves
+    const none = fogAnswerWith(s, w, () => 'none', q, data);
+    expect(none.armies).toEqual([]); expect(none.siege).toBeNull(); expect(none.agents).toEqual([]);
+    expect(none.name).toBe(data.name);
+    const sea = w.L + 3, qs = { q: 'loc' as const, loc: sea };
+    expect(fogAnswerWith(s, w, () => 'none', qs, { sea: true, id: sea, name: 'x', fleets: [{ id: 9, owner: X }] }).fleets).toEqual([]);
+    const other = s.armies.find((a) => a.owner !== P)!;
+    expect(fogAnswerWith(s, w, () => 'none', { q: 'path', army: other.id, to: cap }, { path: [1], days: 1 })).toBeNull();
   });
 });

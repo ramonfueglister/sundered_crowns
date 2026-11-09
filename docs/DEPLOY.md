@@ -77,6 +77,8 @@ replays the log after it, so a crash loses nothing that was logged. `SIGTERM` (e
 6. **Admins**: sign in once in the game, then in the SQL editor
    `insert into public.admin_roles (user_id, role) select id, 'admin' from auth.users where email = 'you@example.org';`
    Admins get the *Admin* tab in a world (pause, speed, broadcast, kick, release seats, snapshot, developer commands).
+   The developer actions "reveal" and "observer" are refused online: they would lift the fog of war for every
+   player, and admins already see the whole map.
 7. The `worlds` row is created and kept up to date by the world server itself (status, day, players, projected end).
 
 ---
@@ -136,6 +138,15 @@ fly logs --app sundered-crowns-world
   mounted at `/data`, set the variables, expose port 8787 (Railway sets `PORT`).
 - Any VPS: `docker build -f server/Dockerfile -t sc-world . && docker run -d --restart unless-stopped -p 8787:8787 -v /srv/sc-world:/data --env-file .env sc-world`
   behind a TLS proxy (Caddy/nginx) that upgrades WebSockets.
+
+### Moderation and returning players (environment)
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `WORLD_WORD_FILTER` | `server/config/wordfilter.txt` (relative to the working directory, `/app` in the image) | The word filter list for chat lines and offer texts: one entry per line, `word*` for prefixes, `#` for comments. The image ships the starter list from `server/config/`. To edit it without a rebuild, copy it to the volume (`/data/wordfilter.txt`) and set `WORLD_WORD_FILTER=/data/wordfilter.txt`; the server re-reads it within 30 s, admins can reload it at once. An empty or missing list is logged as a warning at start. |
+| `ADMIN_TOKEN` | empty (endpoints off) | Enables `GET /admin/reports` (`?all=1` also lists handled ones), `POST /admin/ban?uid=…&reason=…&hours=…&release=1` and `POST /admin/unban?uid=…`, each with the header `Authorization: Bearer <ADMIN_TOKEN>`. Set it as a secret (`fly secrets set ADMIN_TOKEN=…`). |
+| `ADMIN_USERS` | empty | Extra admins by uid (or by display name with the development login), besides the `admin_roles` table. |
+| `CATCHUP_MIN_DAYS` | 7 | In-game days a ruler must have been away before the catch-up summary is shown on return (at 36 s per day: about 4 minutes). |
 
 ### Endpoints
 

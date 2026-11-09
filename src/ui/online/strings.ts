@@ -59,6 +59,10 @@ const S: Record<string, [string, string]> = {
   cu_pending: ['decisions are still waiting for you', 'Entscheidungen warten noch auf dich'], cu_ours: ['In our realm', 'In unserem Reich'], cu_news: ['News of the world', 'Nachrichten aus der Welt'],
   cu_nothing: ['Nothing of note.', 'Nichts von Belang.'], cu_more: ['more', 'weitere'], cu_close: ['To the realm', 'Zum Reich'], cu_from_to: ['Before', 'Vorher'], cu_to: ['Now', 'Jetzt'],
   cu_show: ['Show on the map', 'Auf der Karte zeigen'], cu_open: ['Show the summary of my absence again', 'Zusammenfassung meiner Abwesenheit erneut zeigen'],
+  // polish pass review fixes
+  err_mod_rate: ['Too many mutes or blocks at once. Wait a moment.', 'Zu viele Stummschaltungen oder Blockaden auf einmal. Warte einen Moment.'],
+  err_mute: ['This player cannot be muted.', 'Diese Person kann nicht stummgeschaltet werden.'], err_block: ['This player cannot be blocked.', 'Diese Person kann nicht blockiert werden.'],
+  err_report: ['This player cannot be reported.', 'Diese Person kann nicht gemeldet werden.'],
 };
 export function tt(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 export function fmtDuration(ms: number): string {
