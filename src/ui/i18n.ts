@@ -83,7 +83,7 @@ const S: Record<string, [string, string]> = {
   spy_sent: ['Agents dispatched', 'Agenten entsandt'], spy_risk: ['Agents may be discovered: opinion and trust will suffer.', 'Agenten können entdeckt werden: Meinung und Vertrauen leiden.'],
   skill_gov: ['Governance', 'Verwaltung'], skill_dip: ['Statecraft', 'Diplomatie'], skill_mil: ['Generalship', 'Feldherrnkunst'],
   armies: ['Armies', 'Heere'], mercenary: ['mercenaries', 'Söldner'], in_battle: ['in battle', 'in der Schlacht'], besieging: ['besieging', 'belagert'], embarked: ['embarked', 'eingeschifft'],
-  no_route: ['No route to', 'Kein Weg nach'], rightclick_hint: ['Right-click a location to march.', 'Rechtsklick auf einen Ort zum Marschieren.'], assign_general: ['Commander', 'Befehlshaber'],
+  no_route: ['No route to', 'Kein Weg nach'], rightclick_hint: ['Right-click a location to march. Shift + drag selects several hosts.', 'Rechtsklick auf einen Ort zum Marschieren. Umschalt + Ziehen wählt mehrere Heere.'], assign_general: ['Commander', 'Befehlshaber'],
   auto_general_hint: ['Appoint the best available commander.', 'Den besten verfügbaren Befehlshaber ernennen.'], stop: ['Halt', 'Halt'], stop_hint: ['Stop marching and stay here.', 'Marsch anhalten und hier bleiben.'],
   confirm_disband: ['Really disband?', 'Wirklich auflösen?'], outliner: ['Overview', 'Übersicht'], war_score_hint: ['From −100 to +100: battles, occupied land and the enemy capital.', 'Von −100 bis +100: Schlachten, besetztes Land und die feindliche Hauptstadt.'],
   no_armies: ['No armies', 'Keine Heere'], works: ['Works & recruits', 'Bauten & Aushebungen'], ledger_hint: ['All armies and fleets', 'Alle Heere und Flotten'],

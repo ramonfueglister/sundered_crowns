@@ -37,6 +37,8 @@ export class MapRenderer {
   onClick?: (loc: number, ev: MouseEvent) => void;
   onHover?: (loc: number) => void;
   onRightClick?: (loc: number, ev: MouseEvent) => void;
+  /** Shift + drag: the armies and fleets whose counter or figures lie in the box */
+  onBoxSelect?: (units: MapUnit[], ev: MouseEvent) => void;
   /** pan when the mouse rests near the canvas edge */
   edgePan = false;
   minZoom = 0.15;
@@ -817,8 +819,16 @@ export class MapRenderer {
     const pointers = new Map<number, [number, number]>();
     let pinch: { d: number; z: number } | null = null;
     const local = (e: MouseEvent): [number, number] => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    // Shift + drag draws a box: the hosts inside it are handed to onBoxSelect
+    let box: { x0: number; y0: number; id: number } | null = null;
     const onDown = (e: PointerEvent) => {
       pointers.set(e.pointerId, [e.clientX, e.clientY]);
+      if (e.button === 0 && e.shiftKey && this.onBoxSelect && pointers.size === 1) {
+        canvas.setPointerCapture?.(e.pointerId);
+        const [lx, ly] = local(e);
+        box = { x0: lx, y0: ly, id: e.pointerId }; this.overlay.box = [lx, ly, lx, ly];
+        return;
+      }
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: this.camera.zoom };
@@ -833,6 +843,7 @@ export class MapRenderer {
     };
     const onMove = (e: PointerEvent) => {
       this.mouse = local(e);
+      if (box && box.id === e.pointerId) { const [lx, ly] = local(e); this.overlay.box = [box.x0, box.y0, lx, ly]; return; }
       if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [e.clientX, e.clientY]);
       if (pinch && pointers.size === 2) {
         const [a, b] = [...pointers.values()];
@@ -859,6 +870,14 @@ export class MapRenderer {
     };
     const onUp = (e: PointerEvent) => {
       pointers.delete(e.pointerId);
+      if (box && box.id === e.pointerId) {
+        const [lx, ly] = local(e);
+        const x0 = Math.min(box.x0, lx), x1 = Math.max(box.x0, lx), y0 = Math.min(box.y0, ly), y1 = Math.max(box.y0, ly);
+        box = null; this.overlay.box = null;
+        if (x1 - x0 < 5 && y1 - y0 < 5) { this.onClick?.(this.pick(e.clientX, e.clientY), e); return; }
+        this.onBoxSelect?.(this.unitsInBox(x0, y0, x1, y1), e);
+        return;
+      }
       if (pointers.size < 2) pinch = null;
       if (down && down.id === e.pointerId) {
         if (!down.moved && e.button === 0) this.onClick?.(this.pick(e.clientX, e.clientY), e);
@@ -1009,6 +1028,13 @@ export class MapRenderer {
     }
   }
 
+  /** armies and fleets whose counter or figures stand inside a screen box (css px, canvas-local) */
+  private unitsInBox(x0: number, y0: number, x1: number, y1: number): MapUnit[] {
+    const v = this.overlayView();
+    const inBox = (p: [number, number]) => p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
+    return this.overlay.units.filter((u) => (u.kind === 'army' || u.kind === 'fleet') &&
+      (inBox(v.toScreen(u.ax ?? u.x, u.ay ?? u.y)) || (u.fx !== undefined && u.fy !== undefined && inBox(v.toScreenH ? v.toScreenH(u.fx, u.fy, 1) : v.toScreen(u.fx, u.fy)))));
+  }
   private overlayView() {
     return {
       toScreen: (x: number, y: number) => this.mapToScreen(x, y), scaleAt: (x: number, y: number) => this.scaleAt(x, y),

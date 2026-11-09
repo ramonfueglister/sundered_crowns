@@ -97,6 +97,8 @@ export class Overlay {
   labels: MapLabel[] = [];
   units: MapUnit[] = [];
   landmarks: MapLandmark[] = [];
+  /** the selection box being drawn (css px), or null */
+  box: [number, number, number, number] | null = null;
   /** shown on the trade map only */
   flows: MapFlow[] = [];
   markets: MapMarket[] = [];
@@ -135,6 +137,12 @@ export class Overlay {
     this.drawLabels(v);
     this.drawLandmarks(v);
     this.drawUnits(v);
+    if (this.box) {
+      const [ax, ay, bx, by] = this.box;
+      const x = Math.min(ax, bx), y = Math.min(ay, by), w = Math.abs(bx - ax), h = Math.abs(by - ay);
+      ctx.fillStyle = 'rgba(240, 210, 122, 0.12)'; ctx.fillRect(x, y, w, h);
+      ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(240, 210, 122, 0.95)'; ctx.strokeRect(x + 0.5, y + 0.5, w, h); ctx.setLineDash([]);
+    }
   }
 
   /** draw onto a foreign context (for screenshots) */

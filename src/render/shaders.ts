@@ -885,8 +885,10 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     let lum2 = dot(col, vec3f(0.3, 0.55, 0.15));
     col = mix(col, vec3f(lum2) * vec3f(0.92, 0.95, 1.0), rain * 0.25);
     if (waterMask > 0.5 && rain > 0.0) {
-      let cap = smoothstep(0.78, 0.92, vnoise(p * 1.6 + vec2f(time * 0.7, time * 0.3)) * (0.6 + 0.6 * vnoise(p * 0.2 - time * 0.05)));
-      col = mix(col * 0.86, vec3f(0.9, 0.93, 0.95), cap * rain * 0.6 * smoothstep(1.0, 3.0, zoom));
+      // small, short-lived crests drawn out along the wind, not blotches
+      let cq = p * vec2f(2.6, 7.5) + vec2f(time * 1.4, time * 0.2);
+      let cap = smoothstep(0.86, 0.97, vnoise(cq) * (0.55 + 0.6 * vnoise(p * 0.2 - time * 0.05)));
+      col = mix(col * (1.0 - 0.1 * rain), vec3f(0.86, 0.9, 0.93), cap * rain * 0.4 * smoothstep(2.0, 5.0, zoom));
     }
     // rain or snow falling, close in
     let fallFade = rain * smoothstep(2.5, 6.0, zoom);

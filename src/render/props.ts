@@ -17,6 +17,8 @@ const TREE_STEP = 1.5; // map px between tree slots
 const S_TREE = 0.95, S_HOUSE = 1.15, S_SOLDIER = 2.0, S_SHIP = 1.7;
 /** css px per map px from which each kind is drawn */
 export const SHOW_TREES = 4.2, SHOW_TOWNS = 3.6, SHOW_UNITS = 2.6;
+/** turn for a model (front +y, north) to face south, toward the camera that looks north */
+const FACE_SOUTH = Math.PI;
 /** figures grow from nothing at SHOW_x to full size at SHOW_x * GROW */
 const GROW = 1.4;
 
@@ -104,11 +106,12 @@ fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
     let lat = ia.y / U0.map.y;
     let k = h1(ia.x * 0.13 + ia.y * 0.71);
     let autumn = smoothstep(0.7 + k * 0.04, 0.78 + k * 0.04, ph) * (1.0 - smoothstep(0.88, 0.93, ph));
-    let bare = (1.0 - smoothstep(0.22, 0.3, ph) + smoothstep(0.9, 0.96, ph)) * (1.0 - smoothstep(0.6, 0.7, lat));
+    // (south of about 43 degrees, map y > 0.4, the woods are mostly evergreen: little bare and little autumn colour)
+    let bare = (1.0 - smoothstep(0.22, 0.3, ph) + smoothstep(0.9, 0.96, ph)) * (1.0 - smoothstep(0.385, 0.42, lat));
     let spring = smoothstep(0.26, 0.32, ph) * (1.0 - smoothstep(0.42, 0.5, ph));
     let fall = mix(vec3f(0.72, 0.36, 0.12), vec3f(0.80, 0.62, 0.16), k);
     colr = mix(colr, colr * vec3f(1.1, 1.18, 0.9), spring);
-    colr = mix(colr, fall * (0.8 + 0.3 * vcol.g / 0.4), autumn * (1.0 - smoothstep(0.62, 0.72, lat)));
+    colr = mix(colr, fall * (0.8 + 0.3 * vcol.g / 0.4), autumn * (1.0 - 0.7 * smoothstep(0.39, 0.44, lat)));
     colr = mix(colr, vec3f(0.36, 0.31, 0.27), bare * 0.85);
   }
   // a burning town: the dark smoke glows with flame where it is born
@@ -123,7 +126,10 @@ fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
   return o;
 }
 @fragment fn fs(i: VO) -> @location(0) vec4f {
-  let n = normalize(i.n);
+  // lit from both sides: a face the camera sees from behind (an inward wall of a model) turns its normal to us
+  let tv = U0.eye.xyz - i.w;
+  var n = normalize(i.n);
+  if (dot(n, vec3f(tv.x, tv.y, -tv.z)) < 0.0) { n = -n; }
   let sun = normalize(SUN);
   let dif = max(dot(n, sun), 0.0);
   let sky = 0.5 + 0.5 * n.z;
@@ -580,7 +586,7 @@ export class Props {
         const n = u.men >= 30 ? 3 : u.men >= 10 ? 2 : 1;
         const mesh = u.men >= 20 ? 'ship_carrack' : 'ship_cog';
         // under way the ships turn their bows to the course (models point the bow to +y, north)
-        const r = u.heading !== undefined ? u.heading : 0.6;
+        const r = u.heading !== undefined ? u.heading : 1.9; // at anchor: broadside to the camera, bow to the west
         for (let i = 0; i < n; i++) parts.push({ dx: (i - (n - 1) / 2) * 3.2 * (S_SHIP / 1.7), dy: (i % 2) * 1.6, s: S_SHIP, r, c, mesh });
       } else {
         const n = clamp(Math.round(2 + Math.log2(Math.max(1, u.men / 1000)) * 1.5), 2, 12);
@@ -588,16 +594,18 @@ export class Props {
         const cols = Math.min(4, n);
         for (let i = 0; i < n; i++) {
           const row = Math.floor(i / cols), col = i % cols;
-          const x = (col - (cols - 1) / 2) * sp + row * sp * 0.5, y = row * sp * 0.8;
+          const x = (col - (cols - 1) / 2) * sp + row * sp * 0.5, y = -row * sp * 0.8; // rows behind the front (north)
           const mesh = n >= 5 && (i === n - 1 || (n >= 9 && i === n - 2)) ? 'soldier_cavalry' : row === 0 ? (i % 2 ? 'soldier_infantry' : 'soldier_pikeman') : i % 3 === 0 ? 'soldier_archer' : 'soldier_pikeman';
-          parts.push({ dx: mesh === 'soldier_cavalry' ? x + sp * 1.2 : x, dy: y, s: S_SOLDIER * (mesh === 'soldier_cavalry' ? 0.95 : 1), r: 0, c, mesh });
+          parts.push({ dx: mesh === 'soldier_cavalry' ? x + sp * 1.2 : x, dy: y, s: S_SOLDIER * (mesh === 'soldier_cavalry' ? 0.95 : 1), r: FACE_SOUTH, c, mesh });
         }
-        if (u.men >= 15000) parts.push({ dx: -sp * (cols / 2 + 1.2), dy: sp, s: S_SOLDIER, r: 0.4, c, mesh: 'cannon' });
-        parts.push({ dx: -sp * (cols / 2 + 0.6), dy: -sp * 0.3, s: S_SOLDIER, r: 0, c, mesh: 'banner_standard' });
-        // in battle the block turns to face the enemy (the formation is laid out facing north)
+        if (u.men >= 15000) parts.push({ dx: -sp * (cols / 2 + 1.2), dy: sp, s: S_SOLDIER, r: FACE_SOUTH + 0.4, c, mesh: 'cannon' });
+        parts.push({ dx: -sp * (cols / 2 + 0.6), dy: -sp * 0.3, s: S_SOLDIER, r: FACE_SOUTH, c, mesh: 'banner_standard' });
+        // in battle the block turns to face the enemy (the formation is laid out facing south, toward the camera;
+        // facing is the heading of the model's front, +y)
         if (u.facing !== undefined) {
-          const cr = Math.cos(u.facing), sr = Math.sin(u.facing);
-          for (const p of parts) { const mx = p.dx, my = -p.dy; p.dx = mx * cr - my * sr; p.dy = -(mx * sr + my * cr); p.r += u.facing; }
+          const turn = u.facing - FACE_SOUTH;
+          const cr = Math.cos(turn), sr = Math.sin(turn);
+          for (const p of parts) { const mx = p.dx, my = -p.dy; p.dx = mx * cr - my * sr; p.dy = -(mx * sr + my * cr); p.r += turn; }
         }
       }
       out.push({ id: u.id, ax: u.x, ay: u.y, fleet: u.fleet, march: !!u.marching, parts });

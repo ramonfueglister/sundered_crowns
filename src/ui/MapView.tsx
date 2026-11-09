@@ -118,6 +118,13 @@ export function MapView() {
         r.attachControls?.(canvas.current!);
         r.onClick = (loc: number, ev: MouseEvent) => onClick(loc, ev);
         r.onRightClick = (loc: number, ev: MouseEvent) => onRightClick(loc, ev);
+        r.onBoxSelect = (us: any[], ev: MouseEvent) => {
+          if (screen.value !== 'game') return;
+          // only our own hosts (not rebels); Ctrl adds to the selection
+          const ids = us.filter((u) => u.mine && !u.rebels).flatMap((u) => u.ids ?? [u.id]);
+          selectedArmies.value = ev.ctrlKey || ev.metaKey ? [...new Set([...selectedArmies.value, ...ids])] : ids;
+          if (ids.length) { sfx('click'); selectedLoc.value = -1; }
+        };
         r.onHover = (loc: number) => { hoverLoc.value = loc; };
         r.start();
         mapReady.value = true;
