@@ -7,7 +7,7 @@ import { type Ctx, type System, clamp, chronicle, notice, newId, addExpense, ene
 import { UNITS, U, TERRAIN_DEF, TERRAINS, B, BI, C, CL, GI } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { dayToDate } from '../calendar';
-import { lawEffect, ageOf } from './politics';
+import { lawEffect, ageOf, characterDies } from './politics';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
 
@@ -375,7 +375,7 @@ function sideStats(s: GameState, w: World, armies: Army[], loc: number, defendin
       if (u.sea) { fire += r.men * u.sea.cannons * 8 * tm; def += r.men * u.sea.hull * 3; }
     }
   }
-  const gen = armies.map((a) => s.chars[a.general]).filter(Boolean).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
+  const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
   const genSkill = gen ? gen.skills[2] : 0;
   return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: defending ? t.defence : 0 };
 }
@@ -435,7 +435,16 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   const wn = winner === 'att' ? b.attNation : b.defNation, ln = winner === 'att' ? b.defNation : b.attNation;
   const lossW = winner === 'att' ? b.lossA : b.lossD, lossL = winner === 'att' ? b.lossD : b.lossA;
   // generals may die
-  for (const a of Lz) if (a.general && chance(s.rng, 0.08)) { const g = s.chars[a.general]; if (g) { g.alive = false; g.died = s.day; notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc }); a.general = 0; } }
+  // (a ruler or heir leading the host dies like any other: the crown passes on)
+  for (const a of Lz) if (a.general && chance(s.rng, 0.08)) {
+    const g = s.chars[a.general];
+    if (g) {
+      notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc });
+      a.general = 0;
+      const owner = s.nations[a.owner];
+      if (owner) characterDies(s, w, owner, g.id); else { g.alive = false; g.died = s.day; }
+    }
+  }
   // losers retreat to the nearest friendly location
   for (const a of Lz) {
     if (armyMen(a) < (a.fleet ? 1 : 50)) { removeArmy(s, a); continue; } // fleets count hulls, armies men
@@ -860,6 +869,6 @@ export const military: System = {
     upkeepMonth(s, w);
     rebelsMonth(s, w);
     // generals for armies without one
-    for (const a of s.armies) if (!a.general && !a.rebels && !a.fleet && armyMen(a) > 3000 && s.nations[a.owner]) appointGeneral(s, s.nations[a.owner], a);
+    for (const a of s.armies) if ((!a.general || !s.chars[a.general]?.alive) && !a.rebels && !a.fleet && armyMen(a) > 3000 && s.nations[a.owner]) appointGeneral(s, s.nations[a.owner], a);
   },
 };

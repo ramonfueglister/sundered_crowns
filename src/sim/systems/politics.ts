@@ -267,6 +267,32 @@ export function pickNewHeir(s: GameState, n: Nation) {
   if (h) h.role = 'heir';
 }
 
+/** A character of nation n dies (of age, in battle, ...): a ruler's crown passes by succession (and with it any
+ *  crown held in personal union), an heir is replaced, consort, regent and council seats fall vacant. */
+export function characterDies(s: GameState, w: World, n: Nation, cid: number) {
+  const c = s.chars[cid]; if (!c || !c.alive) return;
+  c.alive = false; c.died = s.day;
+  if (cid === n.ruler && s.nations[n.id].ruler === cid) {
+    // only the true ruler of this nation (personal unions share the ruler)
+    succession(s, w, n);
+    for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid) {
+      // a junior crown in personal union may choose its own ruler when the shared one dies
+      if (other.overlord === n.id && other.subjectType === 'personal_union' && chance(s.rng, unionBreakChance(s, other, n))) {
+        other.overlord = -1; other.subjectType = null; other.libertyDesire = 0;
+        const c = newChar(s, other, { born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false, dynasty: other.dynasty });
+        other.ruler = c.id; other.heir = 0; other.consort = 0; other.regent = 0; pickNewHeir(s, other);
+        chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${c0name(s, cid)} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` });
+        notice(s, n.id, 'union_ended', { en: `${other.short.en} has chosen its own ruler and left our union.`, de: `${other.short.de} hat einen eigenen Herrscher gewählt und unsere Union verlassen.` }, { loc: other.capital });
+        continue;
+      }
+      other.ruler = n.ruler; other.heir = n.heir;
+    }
+  } else if (cid === n.heir) { n.heir = 0; pickNewHeir(s, n); notice(s, n.id, 'heir_death', { en: `The heir ${c.name} has died.`, de: `Der Thronfolger ${c.name} ist gestorben.` }); }
+  else if (cid === n.consort) { n.consort = 0; }
+  else if (cid === n.regent) { n.regent = 0; }
+  else { for (const off in n.council) if (n.council[off] === cid) delete n.council[off]; }
+}
+
 function characterMonth(s: GameState, w: World, n: Nation) {
   // ruler, heir, consort, officials age and may die; births to the ruling couple
   for (const cid of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)]) {
@@ -275,28 +301,7 @@ function characterMonth(s: GameState, w: World, n: Nation) {
     if (cid === n.ruler && n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === cid) continue;
     const age = ageOf(s, c);
     if (age > 50) c.health = Math.max(0.2, c.health - 0.002);
-    if (chance(s.rng, monthlyDeathChance(age, c))) {
-      c.alive = false; c.died = s.day;
-      if (cid === n.ruler && s.nations[n.id].ruler === cid) {
-        // only the true ruler of this nation (personal unions share the ruler)
-        succession(s, w, n);
-        for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid) {
-          // a junior crown in personal union may choose its own ruler when the shared one dies
-          if (other.overlord === n.id && other.subjectType === 'personal_union' && chance(s.rng, unionBreakChance(s, other, n))) {
-            other.overlord = -1; other.subjectType = null; other.libertyDesire = 0;
-            const c = newChar(s, other, { born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false, dynasty: other.dynasty });
-            other.ruler = c.id; other.heir = 0; other.consort = 0; other.regent = 0; pickNewHeir(s, other);
-            chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${c0name(s, cid)} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` });
-            notice(s, n.id, 'union_ended', { en: `${other.short.en} has chosen its own ruler and left our union.`, de: `${other.short.de} hat einen eigenen Herrscher gewählt und unsere Union verlassen.` }, { loc: other.capital });
-            continue;
-          }
-          other.ruler = n.ruler; other.heir = n.heir;
-        }
-      } else if (cid === n.heir) { n.heir = 0; pickNewHeir(s, n); notice(s, n.id, 'heir_death', { en: `The heir ${c.name} has died.`, de: `Der Thronfolger ${c.name} ist gestorben.` }); }
-      else if (cid === n.consort) { n.consort = 0; }
-      else if (cid === n.regent) { n.regent = 0; }
-      else { for (const off in n.council) if (n.council[off] === cid) delete n.council[off]; }
-    }
+    if (chance(s.rng, monthlyDeathChance(age, c))) characterDies(s, w, n, cid);
   }
   const r = s.chars[n.ruler];
   if (n.regent && r && ageOf(s, r) >= 16) { n.regent = 0; notice(s, n.id, 'majority', { en: `${r.name} has come of age and rules in person.`, de: `${r.name} ist volljährig und regiert selbst.` }); n.mandate = clamp(n.mandate + 10, 0, 100); }
