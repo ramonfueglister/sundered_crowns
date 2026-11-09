@@ -89,6 +89,11 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   // debt: repay loans when rich
   if (n.loans.length && n.treasury > n.loans[0].amount * 1.5) applyCommand(s, w, { t: 'loan', n: n.id, take: false, amount: n.loans[0].amount });
   if (so?.balanceBudget && exp > inc) n.armyMaint = 0.5;
+  // a fleet that eats more than half the revenue in peacetime is laid up, the largest squadron first
+  if (!n.playerId && !atWarNow && (n.expense.navy || 0) > inc * 0.5 && n.treasury < inc * 6) {
+    const fleets = armiesOf(s, n.id).filter((a) => a.fleet && !a.battle && !a.carrying.length).sort((a, b) => armyMen(b) - armyMen(a) || a.id - b.id);
+    if (fleets.length) applyCommand(s, w, { t: 'disband', n: n.id, army: fleets[0].id });
+  }
 }
 
 function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {

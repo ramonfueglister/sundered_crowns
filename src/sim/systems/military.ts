@@ -520,7 +520,7 @@ function siegesDay(s: GameState, w: World) {
     }
     let sg = s.sieges.find((x) => x.loc === l);
     if (!sg) {
-      sg = { loc: l, nation: a.owner, progress: 0, days: 0, garrison: s.loc.garrison[l] || fort * 1000, breach: 0, blockade: false, log: [] };
+      sg = { loc: l, nation: a.owner, progress: 0, days: 0, garrison: (s.loc.garrison[l] || fort * 1000) * (0.4 + 0.6 * (s.nations[s.loc.owner[l]]?.flags.fort_pay ?? 1)), breach: 0, blockade: false, log: [] };
       s.sieges.push(sg);
       a.siege = l;
       if (s.playerNations.includes(ctrl)) notice(s, ctrl, 'siege', { en: `${w.names[l]} is under siege!`, de: `${w.namesDe[l]} wird belagert!` }, { loc: l });
@@ -711,7 +711,14 @@ function upkeepMonth(s: GameState, w: World) {
       mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]);
       if (w.coastal[i]) sail += s.loc.pop[base + CL.labourers] * 0.02 * (1 + s.loc.buildings[i * B + BI.port]);
     }
-    if (forts) addExpense(n, 'fortresses', forts * 2.5 * s.priceLevel);
+    if (forts) {
+      // a realm pays its garrisons only what it can bear: beyond a third of its revenue the walls are left to the militia
+      const full = forts * 2.5 * s.priceLevel;
+      const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
+      const pay = Math.min(full, gross * 0.33);
+      addExpense(n, 'fortresses', pay);
+      n.flags.fort_pay = Math.round((pay / full) * 100) / 100;
+    } else delete n.flags.fort_pay;
     const mpMult = 1 + lawEffect(n, 'manpower') + mod(n, 'manpower');
     n.maxManpower = mp * mpMult;
     n.manpower = Math.min(n.maxManpower, n.manpower + n.maxManpower / 120);

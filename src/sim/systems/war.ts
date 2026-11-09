@@ -395,9 +395,11 @@ function dreadMonth(s: GameState, w: World) {
       const strengthF = members.reduce((p, m) => p + nationDev(s, m), 0);
       const strengthA = nationDev(s, agg.id) + allies(s, agg.id).reduce((p, m) => p + nationDev(s, m) * 0.5, 0);
       if (strengthF > strengthA * 0.9) {
-        const lead = members.sort((a, b) => nationDev(s, b) - nationDev(s, a))[0];
-        const err = declareWar(s, w, lead, agg.id, 'coalition');
-        if (!err) {
+        // the strongest member leads; if it cannot (a truce, a family tie), the next one does
+        const order = members.sort((a, b) => nationDev(s, b) - nationDev(s, a) || a - b);
+        let lead = -1, err: string | null = 'none';
+        for (const m of order.slice(0, 6)) { err = declareWar(s, w, m, agg.id, 'coalition'); if (!err) { lead = m; break; } }
+        if (!err && lead >= 0) {
           const war = s.wars[s.wars.length - 1];
           for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) war.att.push(m);
           chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` });

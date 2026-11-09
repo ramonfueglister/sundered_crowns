@@ -482,7 +482,8 @@ export function monthlyLedger(s: GameState, w: World) {
     locs = last ? last.locs : 10;
     // a court costs what the realm can bear: a small base, its seats, and a share of last month's revenue
     const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
-    addExpense(n, 'court', (4 + locs * 1.2 + gross * 0.12) * (1 + n.corruption));
+    // (a petty lordship keeps a petty court: the fixed part never takes more than about half of what it earns)
+    addExpense(n, 'court', (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption));
     // a chest beyond a year's revenue draws courtiers, feasts and building at court: it melts away, but the realm is admired
     const hoard = n.treasury - gross * 12;
     if (hoard > 0 && gross > 0) { addExpense(n, 'splendour', hoard * 0.03); n.prestige = Math.min(100, n.prestige + Math.min(0.5, hoard / (gross * 200))); }
