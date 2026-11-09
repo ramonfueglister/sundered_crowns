@@ -6,7 +6,7 @@ import { SYSTEMS } from './systems';
 import { applyCommand } from './commands';
 import { gzipSync, gunzipSync, strToU8, strFromU8 } from 'fflate';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 2;
 export const END_YEAR = 1815;
 
 export interface TickProfile { [system: string]: number }
@@ -102,13 +102,8 @@ function migrate(s: GameState): GameState {
     for (const n of s.nations) { n.duties ??= { land: 0, hearth: 0, excise: 0 }; n.adminLoad ??= 0; }
     s.v = 2;
   }
-  if (s.v < 3) {
-    // version 3 (realm pass): the Empire's election, calls, orders and favours; the great powers; demands of the Powers
-    const E = s.empire; E.calls ??= []; E.orders ??= []; E.election ??= null; E.favour ??= {};
-    s.powers ??= { scores: {}, petitions: [], log: [] };
-    for (const n of s.nations) n.demand ??= null;
-    s.v = 3;
-  }
+  // (realm pass: the Empire's election, calls, orders and favours, the great powers and the demands of the Powers are
+  // optional fields that the systems create when first needed, so older saves load without a new version)
   return s;
 }
 export function saveBinary(s: GameState): Uint8Array { return gzipSync(strToU8(serialize(s)), { level: 6 }); }

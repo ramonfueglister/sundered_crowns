@@ -194,7 +194,7 @@ export interface Empire {
   /** a session of the diet: the reform proposed, the members' votes (cast by the player; the AI votes at the close) and the closing day */
   diet: { proposal: string; votesFor: number[]; votesAgainst: number[]; ends: number; by?: number } | null;
   lastElection: number; members: number[];
-  // ---- realm pass (systems/empire.ts); optional so that older saves load (migrate fills them in)
+  // ---- realm pass (systems/empire.ts); optional so that older saves load (created when first needed)
   /** an open imperial election: candidates (realms), the votes cast so far (elector → candidate realm), closing day */
   election?: { opened: number; closes: number; candidates: number[]; votes: Record<number, number>; late: number } | null;
   /** favour bought with electors and diet members: `${candidate}>${voter}` → points (fades yearly) */
