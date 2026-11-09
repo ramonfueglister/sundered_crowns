@@ -85,13 +85,14 @@ const shownHints = new Set<string>();
 function Hints() {
   const [cur, setCur] = useState<string | null>(null);
   const v = view.value; const lastDay = useRef(-99);
-  const enabled = (() => { try { return localStorage.getItem('sc.tutorial') === 'done'; } catch { return false; } })();
+  // hints run whenever no tour is (Tutorial renders Hints only then): for tour graduates and for players who skipped the tour
+  // look again when the day changes and when the player's view or realm data arrive (time stands still at the start);
+  // at most one new hint a week
   useEffect(() => {
-    if (!enabled || cur || !v || v.day - lastDay.current < 7) return;
-    lastDay.current = v.day;
+    if (cur || !v?.player || v.day - lastDay.current < 7) return;
     const h = HINTS.find((x) => !shownHints.has(x.id) && x.when());
-    if (h) { shownHints.add(h.id); setCur(h.id); }
-  }, [v?.day]);
+    if (h) { lastDay.current = v.day; shownHints.add(h.id); setCur(h.id); }
+  }, [v?.day, !!v?.player, realm.value]);
   const h = cur ? HINTS.find((x) => x.id === cur) : undefined;
   // a hint whose reason is gone (time runs, debt paid, focus chosen) closes by itself
   useEffect(() => { if (h && (!h.when() || (h.open && panel.value === h.open))) setCur(null); }, [v?.day, v?.speed, realm.value, panel.value]);

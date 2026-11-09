@@ -262,7 +262,7 @@ function Ambitions({ goals }: { goals: any[] }) {
   const done = goals.filter((g) => g.done), open = goals.filter((g) => g.open), later = goals.filter((g) => !g.done && !g.open);
   const card = (g: any, state: 'open' | 'later' | 'done') => { const d = splitGoal(L(g.desc));
     return <div class={`goal-card ${state}`}>
-      <div class="gc-h"><b>{L(g.name)}</b>{state === 'done' ? <span class="pos small">✔ {t('x_goal_done')}</span> : state === 'open' ? <span class="gc-tag">{t('x_goal_open')}</span> : null}</div>
+      <div class="gc-h"><b>{L(g.name)}</b>{state === 'done' ? (g.inherited ? <Tip content={<div><TipHead name={t('x_goal_inherited')} hint={t('x_goal_inherited_hint')} /></div>}><span class="muted small has-tip">✔ {t('x_goal_inherited')}</span></Tip> : <span class="pos small">✔ {t('x_goal_done')}</span>) : state === 'open' ? <span class="gc-tag">{t('x_goal_open')}</span> : null}</div>
       {d.flav && state !== 'done' && <div class="gc-flav">{d.flav}</div>}
       {state !== 'done' && d.req.length > 0 && <Tip tag="div" content={<div><TipHead name={L(g.name)} hint={t('x_goal_conds_hint')} /></div>}><ul class="gc-req">{d.req.map((x) => <li>{x}</li>)}</ul></Tip>}
       {d.rew && state !== 'done' && <Tip tag="div" content={<div><TipHead name={t('x_reward')} hint={t('x_reward_hint')} /></div>}><div class="gc-rew"><span class="muted">{t('x_reward')}:</span> {d.rew}</div></Tip>}
