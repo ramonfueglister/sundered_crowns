@@ -44,6 +44,8 @@ fn snowAt(x: f32, y: f32) -> f32 {
   return bitcast<f32>(locw[(id - 1u) * 12u + 6u]);
 }
 fn h1(x: f32) -> f32 { return fract(sin(x * 12.9898) * 43758.5453); }
+// the beat of a smoke puff (0 = just born, 1 = gone)
+fn puffT(ia: vec4f) -> f32 { return fract(U0.cam.z * 0.28 + h1(ia.x * 0.71 + ia.y * 1.37)); }
 // light from the north-west, as on the terrain (east, south, up)
 const SUN = vec3f(-0.62, -0.78, 0.95);
 
@@ -64,8 +66,16 @@ fn grow(ia: vec4f, ib: vec4f) -> f32 {
 fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
   let c = cos(ib.x); let s = sin(ib.x);
   var mp = pos * ia.w * grow(ia, ib);
-  // on the march: a steady bob (soldiers step, ships ride the swell)
-  if (ib.z < -0.5) { mp.z += abs(sin(U0.cam.z * 6.0 + ia.x * 3.1 + ia.y * 1.7)) * 0.06 * ia.w; }
+  if (ib.z < -1.5) {
+    // smoke over a battle or a burning town: each puff swells, rises and drifts off on its own beat
+    let t = puffT(ia);
+    mp *= (0.35 + 1.1 * t) * (1.0 - smoothstep(0.62, 1.0, t));
+    mp.z += t * 2.6 * ia.w;
+    mp.x += t * 1.1 * ia.w;
+  } else if (ib.z < -0.5) {
+    // on the march: a steady bob (soldiers step, ships ride the swell)
+    mp.z += abs(sin(U0.cam.z * 6.0 + ia.x * 3.1 + ia.y * 1.7)) * 0.06 * ia.w;
+  }
   // trees lean a little in the wind (more at the top)
   let sway = sin(U0.cam.z * 1.3 + ia.x * 0.37 + ia.y * 0.21) * 0.035 * step(1.0, ib.z) * pos.z;
   mp.x += sway * ia.w;
@@ -101,12 +111,15 @@ fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
     colr = mix(colr, fall * (0.8 + 0.3 * vcol.g / 0.4), autumn * (1.0 - smoothstep(0.62, 0.72, lat)));
     colr = mix(colr, vec3f(0.36, 0.31, 0.27), bare * 0.85);
   }
+  // a burning town: the dark smoke glows with flame where it is born
+  if (ib.z < -1.5 && vcol.r < 0.5) { colr = mix(vec3f(1.6, 0.62, 0.16), colr, smoothstep(0.04, 0.22, puffT(ia))); }
   o.col = colr;
   // snow on roofs and branches where the location lies under snow
-  o.snow = clamp(snowAt(ia.x, ia.y) * 1.4 - 0.15, 0.0, 1.0) * smoothstep(0.25, 0.65, nrm.z) * step(0.15, pos.z);
+  let smoke = ib.z < -1.5;
+  o.snow = select(clamp(snowAt(ia.x, ia.y) * 1.4 - 0.15, 0.0, 1.0) * smoothstep(0.25, 0.65, nrm.z) * step(0.15, pos.z), 0.0, smoke);
   o.n = vec3f(nx, -ny, nrm.z); // east, south, up
   o.w = world;
-  o.h = pos.z / max(1e-3, ib.w);
+  o.h = select(pos.z / max(1e-3, ib.w), 1.0, smoke);
   return o;
 }
 @fragment fn fs(i: VO) -> @location(0) vec4f {
@@ -132,10 +145,12 @@ fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
 struct SO { @builtin(position) pos: vec4f };
 @vertex fn vs_shadow(@location(0) pos: vec3f, @location(1) nrm: vec3f, @location(2) vcol: vec3f, @location(3) tint: f32,
                      @location(4) ia: vec4f, @location(5) ib: vec4f) -> SO {
+  var o: SO;
+  // smoke casts no shadow
+  if (ib.z < -1.5) { o.pos = vec4f(0.0, 0.0, 2.0, 1.0); return o; }
   let p = place(pos, ia, ib);
   let up = max(0.0, p.z - ia.z);
   let sh = vec2f(-SUN.x, -SUN.y) / SUN.z * up;
-  var o: SO;
   o.pos = U0.vp * vec4f(p.x + sh.x, p.y + sh.y, -(ia.z + 0.04), 1.0);
   return o;
 }
@@ -230,6 +245,35 @@ export function builtinModels(): ModelSet {
   end('soldier_cavalry', 1.52, 0.8);
   begin(); box(-0.06, -0.6, 0.25, 0.06, 0.6, 0.37, [0.3, 0.3, 0.32]); box(-0.25, -0.3, 0, 0.25, 0.3, 0.3, [0.4, 0.28, 0.18]); end('cannon', 0.4, 0.6);
   begin(); box(-0.025, -0.025, 0, 0.025, 0.025, 2.0, trunk); box(0.03, -0.01, 1.35, 0.75, 0.01, 1.95, [0.8, 0.8, 0.8], 1); end('banner_standard', 2.0, 0.75);
+  // a round pavilion: canvas wall, striped roof in the owner's colour, a pole with a pennant
+  begin();
+  { const n = 8, r = 0.42, zw = 0.42, cream = [0.88, 0.85, 0.76];
+    for (let k = 0; k < n; k++) {
+      const a0 = (k / n) * Math.PI * 2, a1 = ((k + 1) / n) * Math.PI * 2;
+      const p0 = [Math.cos(a0) * r, Math.sin(a0) * r], p1 = [Math.cos(a1) * r, Math.sin(a1) * r];
+      tri([p0[0], p0[1], 0], [p1[0], p1[1], 0], [p1[0], p1[1], zw], cream); tri([p0[0], p0[1], 0], [p1[0], p1[1], zw], [p0[0], p0[1], zw], cream);
+      const q0 = [Math.cos(a0) * r * 1.12, Math.sin(a0) * r * 1.12], q1 = [Math.cos(a1) * r * 1.12, Math.sin(a1) * r * 1.12];
+      tri([q0[0], q0[1], zw - 0.04], [q1[0], q1[1], zw - 0.04], [0, 0, 0.98], k % 2 ? [0.8, 0.8, 0.8] : cream, k % 2);
+    }
+    box(-0.015, -0.015, 0.95, 0.015, 0.015, 1.22, trunk); tri([0, 0, 1.22], [0, 0, 1.1], [0.26, 0, 1.17], [0.8, 0.8, 0.8], 1); tri([0, 0, 1.1], [0, 0, 1.22], [0.26, 0, 1.17], [0.8, 0.8, 0.8], 1);
+  }
+  end('tent', 1.22, 0.48);
+  // a puff of smoke (a rounded blob; the shader makes it swell and rise)
+  const puff = (name: string, col: number[]) => {
+    begin();
+    const P = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+    const F = [[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]];
+    const nz = (v: number[]) => { const l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
+    const at = (v: number[]) => [v[0] * 0.5, v[1] * 0.5, v[2] * 0.42 + 0.42];
+    let f = 0;
+    for (const [i, j, k] of F) {
+      const a = P[i], b = P[j], c = P[k];
+      const ab = nz([a[0] + b[0], a[1] + b[1], a[2] + b[2]]), bc = nz([b[0] + c[0], b[1] + c[1], b[2] + c[2]]), ca = nz([c[0] + a[0], c[1] + a[1], c[2] + a[2]]);
+      for (const t of [[a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]]) { const s = 0.94 + 0.06 * (f++ % 3); tri(at(t[0]), at(t[1]), at(t[2]), [col[0] * s, col[1] * s, col[2] * s]); }
+    }
+    end(name, 0.84, 0.5);
+  };
+  puff('smoke', [0.84, 0.82, 0.77]); puff('smoke_dark', [0.34, 0.32, 0.31]);
   const hull = [0.42, 0.3, 0.2];
   const ship = (name: string, masts: number, len: number) => {
     begin(); box(-0.35, -len / 2, -0.15, 0.35, len / 2, 0.3, hull); box(-0.3, len / 2 - 0.45, 0.3, 0.3, len / 2, 0.55, hull); box(-0.3, -len / 2, 0.3, 0.3, -len / 2 + 0.45, 0.6, hull);
@@ -260,7 +304,9 @@ export type TownStyle = 'north' | 'stone' | 'south' | 'steppe' | 'muslim';
 export interface Settlement { x: number; y: number; size: number; capital?: boolean; style: TownStyle; loc: number }
 /** x, y: where the figures stand (figureSpot); heading: course of ships under way (radians, see setUnits); marching: on the move */
 export interface UnitProp { id: number; x: number; y: number; men: number; fleet: boolean; color: [number, number, number]; heading?: number; marching?: boolean }
-interface UnitGroup { id: number; ax: number; ay: number; fleet: boolean; march: boolean; parts: { dx: number; dy: number; s: number; r: number; c: number; mesh: string }[] }
+/** a siege camp around a town or the smoke of a battle; x, y: the location's centre; progress: of a siege, 0..100 */
+export interface SceneProp { id: number; x: number; y: number; kind: 'siege' | 'battle'; color: [number, number, number]; progress?: number }
+interface UnitGroup { id: number; ax: number; ay: number; fleet: boolean; march: boolean; parts: { dx: number; dy: number; s: number; r: number; c: number; mesh: string; w?: number }[] }
 
 /** where the figures of an army stand: a little in front (south-east) of the town at the location's centre */
 export function figureSpot(x: number, y: number, fleet: boolean, slot = 0): [number, number] {
@@ -283,6 +329,7 @@ export class Props {
   private townBuf: GPUBuffer | null = null; private townRuns = new Map<number, Run[]>();
   private townCircles = new Map<number, number[]>();
   private units: UnitGroup[] = [];
+  private scenes: UnitGroup[] = [];
   /** the animated place of moving hosts (set by the renderer each frame) */
   unitSpot?: (id: number) => [number, number] | undefined;
   private dynRuns: Run[] = [];
@@ -553,18 +600,56 @@ export class Props {
     this.units = out;
   }
 
+  /** siege camps (tents in a ring, guns trained on the walls, smoke over the town once it burns) and battle smoke */
+  setScenes(list: SceneProp[]) {
+    const out: UnitGroup[] = [];
+    for (const sc of list) {
+      const c = ((sc.color[0] & 255) << 16) | ((sc.color[1] & 255) << 8) | (sc.color[2] & 255);
+      const parts: UnitGroup['parts'] = [];
+      const h = (i: number, k: number) => hash(Math.round(sc.x * 7), Math.round(sc.y * 5) + i, k);
+      if (sc.kind === 'siege') {
+        // the camp rings the town, leaving the side where the besieging host stands (see figureSpot)
+        const n = 7;
+        for (let i = 0; i < n; i++) {
+          const a = 1.95 + i * 0.6 + (h(i, 1) - 0.5) * 0.25, r = 8.2 + (h(i, 2) - 0.5) * 1.6;
+          parts.push({ dx: Math.cos(a) * r, dy: Math.sin(a) * r, s: S_SOLDIER * (0.85 + 0.25 * h(i, 3)), r: h(i, 4) * 6.283, c, mesh: 'tent' });
+        }
+        for (const a of [3.3, 4.5]) {
+          const dx = Math.cos(a) * 6.2, dy = Math.sin(a) * 6.2;
+          parts.push({ dx, dy, s: S_SOLDIER, r: Math.atan2(dx, dy), c, mesh: 'cannon' });
+        }
+        parts.push({ dx: Math.cos(3.9) * 9.6, dy: Math.sin(3.9) * 9.6, s: S_SOLDIER, r: 0, c, mesh: 'banner_standard' });
+        // the longer the siege, the more of the town burns
+        const fires = (sc.progress ?? 0) >= 30 ? Math.min(4, 1 + Math.floor(((sc.progress ?? 0) - 30) / 20)) : 0;
+        for (let i = 0; i < fires * 2; i++) {
+          const a = h(i, 5) * 6.283, r = 1 + h(i, 6) * 2.5;
+          parts.push({ dx: Math.cos(a) * r, dy: Math.sin(a) * r, s: S_SOLDIER * (1.1 + 0.4 * h(i, 10)), r: 0, c: -1, mesh: 'smoke_dark', w: -2 });
+        }
+      } else {
+        // the two hosts stand side by side (figureSpot slots 0 and 1); the dust and smoke rise between them
+        const mx = Math.cos(1.525) * 4.9, my = Math.sin(1.525) * 4.9;
+        for (let i = 0; i < 10; i++) {
+          const a = h(i, 7) * 6.283, r = Math.sqrt(h(i, 8)) * 3.6;
+          parts.push({ dx: mx + Math.cos(a) * r, dy: my + Math.sin(a) * r * 0.7, s: S_SOLDIER * (0.8 + 0.5 * h(i, 9)), r: 0, c: -1, mesh: 'smoke', w: -2 });
+        }
+      }
+      out.push({ id: sc.id, ax: sc.x, ay: sc.y, fleet: false, march: false, parts });
+    }
+    this.scenes = out;
+  }
+
   /** upload the units near enough to draw this frame (spot(id) gives the animated place of a host, if it is moving) */
   private prepareUnits(scaleAt: (x: number, y: number, z: number) => number, spot?: (id: number) => [number, number] | undefined) {
     const groups = new Map<string, Inst[]>();
     let total = 0;
-    for (const u of this.units) {
+    for (const u of this.units.length && this.scenes.length ? [...this.units, ...this.scenes] : this.units.length ? this.units : this.scenes) {
       const at = spot?.(u.id);
       const ax = at ? at[0] : u.ax, ay = at ? at[1] : u.ay;
       if (scaleAt(ax, ay, u.fleet ? 0 : this.zAt(ax, ay)) < SHOW_UNITS * 0.9) continue;
       for (const p of u.parts) {
         const x = ax + p.dx, y = ay + p.dy;
         let g = groups.get(p.mesh); if (!g) groups.set(p.mesh, (g = []));
-        g.push({ x, y, z: u.fleet ? 0.05 : this.zAt(x, y), s: p.s, r: p.r, c: p.c, wind: u.march ? -1 : 0 }); total++;
+        g.push({ x, y, z: u.fleet ? 0.05 : this.zAt(x, y), s: p.s, r: p.r, c: p.c, wind: p.w ?? (u.march ? -1 : 0) }); total++;
       }
     }
     this.dynRuns = [];

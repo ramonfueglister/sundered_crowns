@@ -44,6 +44,8 @@ export interface MapUnit {
   toX?: number; toY?: number;
   /** where the counter stands now while the host glides to x, y (set by the renderer) */
   ax?: number; ay?: number;
+  /** sieges and battles: the location's centre (for the camp and the smoke) and the siege's progress */
+  lx?: number; ly?: number; progress?: number;
 }
 
 export interface OverlayView {

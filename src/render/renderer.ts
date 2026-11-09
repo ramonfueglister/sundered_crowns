@@ -4,7 +4,7 @@ import { buildCoastSdf } from './coast';
 import { Overlay, type MapLabel, type MapUnit, type MapLandmark } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
 import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
-import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp } from './props';
+import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp, type SceneProp } from './props';
 
 export type Quality = 'low' | 'medium' | 'high' | 'ultra';
 export type MapMode = 'political' | 'terrain' | 'flat';
@@ -555,6 +555,9 @@ export class MapRenderer {
     }
     for (const id of [...this.unitAnim.keys()]) if (!seen.has(id)) this.unitAnim.delete(id);
     this.props?.setUnits(figs);
+    const scenes: SceneProp[] = [];
+    for (const u of units) if ((u.kind === 'siege' || u.kind === 'battle') && u.lx !== undefined && u.ly !== undefined) scenes.push({ id: u.id, x: u.lx, y: u.ly, kind: u.kind, color: u.color, progress: u.progress });
+    this.props?.setScenes(scenes);
     this.overlay.units = units;
     this.stepUnits(0);
   }
