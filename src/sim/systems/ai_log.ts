@@ -107,6 +107,9 @@ const SPY: Record<string, I18n> = {
   steal_tech: T('Agents steal knowledge from {T}', 'Agenten stehlen Wissen aus {T}'), fabricate: T('Agents forge a claim on {T}', 'Agenten fälschen einen Anspruch auf {T}'),
 };
 
+/** Secret work that other realms do not see in the log: agents abroad (spy actions) and claims forged by clerks
+ *  (diplomacy fabricate). Such work comes to light only when it is discovered (diplomacy.ts spiesDay). */
+export const aiLogSecret = (e: AiLogEntry) => e.c.t === 'spy' || (e.c.t === 'diplo' && (e.c as any).action === 'fabricate');
 /** One entry of the log in both languages. */
 export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
   const c: any = e.c;

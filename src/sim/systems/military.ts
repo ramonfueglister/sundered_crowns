@@ -829,8 +829,7 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   const locs: number[] = []; for (let i = 0; i < w.L; i++) if (s.loc.ctrl[i] === -2 && s.loc.owner[i] === n.id) locs.push(i);
   if (f === 'separatist' && locs.length >= 3) {
     // break away as a new nation
-    const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]]);
-    const lf = landFaith(s, locs); if (lf >= 0) nn.faith = lf;
+    const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]], landFaith(s, locs));
     chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
   } else {
     for (const l of locs) s.loc.ctrl[l] = n.id as any;
@@ -861,7 +860,10 @@ export function khanFaith(s: GameState, from: Nation, locs: readonly number[]): 
   const lf = landFaith(s, locs);
   return lf >= 0 && lf !== from.faith && FAITHS[lf]?.family === 'traditional' ? FAITH_INDEX.tengri : from.faith;
 }
-export function releaseNation(s: GameState, w: World, from: Nation, locs: number[], culture: number): Nation {
+/** A realm released from `from` on the land `locs`, of the people `culture`; `faith` (when given and not -1) is the
+ *  new realm's own faith, set before its arms are drawn (a people set free keeps its faith: landFaith, khanFaith);
+ *  otherwise it keeps the faith of the realm it came from. */
+export function releaseNation(s: GameState, w: World, from: Nation, locs: number[], culture: number, faith = -1): Nation {
   // reuse a dead nation with a capital among these locations if possible
   let nn = s.nations.find((x) => !x.alive && locs.includes(x.capital));
   if (!nn) {
@@ -879,6 +881,7 @@ export function releaseNation(s: GameState, w: World, from: Nation, locs: number
     s.nations.push(nn!);
     nn!.ruler = 0;
   }
+  if (faith >= 0) nn!.faith = faith;
   // a ruler of the land's own people and a house of its nobility, arms of its own (content/names.ts, heraldry.ts)
   if (!s.chars[nn!.ruler]?.alive || s.chars[nn!.ruler]?.nation !== nn!.id) releasedRuler(s, nn!, culture);
   if (!nn!.coa) nn!.coa = genCoa(nn!.id * 7919 + s.seed, GROUP_OF[ALL_CULTURES[culture]] ?? 'other', FAITHS[nn!.faith]?.family === 'muslim', w.names[locs[0]]);

@@ -30,7 +30,7 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
-import { aiLogText } from '../sim/systems/ai_log';
+import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 
@@ -313,8 +313,9 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),
     personality: n.personality, summary: n.summary, difficulty: n.difficulty, dread: n.dread, scoreParts: scorePartsAll(s, w)[id], front: (s as any).fronts?.[id] ?? [], rel, alive: n.alive,
     wars: s.wars.filter((x) => x.att.includes(id) || x.def.includes(id)).map((x) => x.id), isHRE: n.isHRE, elector: n.elector, emperor: s.empire.emperor === id,
-    // what an AI realm did lately (systems/ai_log.ts), newest first
-    aiLog: !s.playerNations.includes(id) && !n.playerId ? (n.aiLog ?? []).slice().reverse().map((e) => ({ day: e.d, text: aiLogText(s, w, e) })) : null,
+    // what an AI realm did lately (systems/ai_log.ts), newest first; its secret work (agents abroad, forged claims) only
+    // for the realm itself and an observer without a realm
+    aiLog: !s.playerNations.includes(id) && !n.playerId ? (n.aiLog ?? []).filter((e) => player < 0 || player === id || !aiLogSecret(e)).reverse().map((e) => ({ day: e.d, text: aiLogText(s, w, e) })) : null,
     subject: n.overlord >= 0 && s.nations[n.overlord] ? {
       type: n.subjectType, since: n.subjectSince, libertyDesire: n.libertyDesire, target: libertyTarget(s, w, n, s.nations[n.overlord]),
       parts: libertyParts(s, w, n, s.nations[n.overlord]).filter(([, v]) => Math.abs(v) >= 0.5), integration: n.integration, integrating: !!n.flags.integrating,

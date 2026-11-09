@@ -4,7 +4,8 @@ import type { GameState, Nation, Character } from '../types';
 import type { World } from '../world';
 import { chronicle, notice } from '../ctx';
 import { rand } from '../rng';
-import { newChar, ageOf } from './politics';
+import { newChar, ageOf, nextInLine } from './politics';
+import { LAWS, LAW_INDEX } from '../content/laws';
 import { givenName, localName } from '../content/names';
 import { FAITHS } from '../content/peoples';
 
@@ -30,17 +31,24 @@ export function siblingsOf(s: GameState, c: Character): Character[] {
 }
 
 /** A member of realm B's ruling house to marry a person born about `born`: an unwed son or daughter, brother or
- *  sister of B's ruler of marriageable age, else one born into the house (a younger child of the ruler, or a younger
- *  brother or sister). Never the ruler or the heir of B. */
+ *  sister of B's ruler of marriageable age, else one born into the house (a child of the ruler younger than the heir,
+ *  or a brother or sister). Never the ruler, the heir or whoever would inherit today (the eldest daughter when male
+ *  primogeniture finds no son), never a person in office or at the head of a host of B, and never a child of the
+ *  ruler born before the heir (who would stand ahead of the heir in line). */
 export function houseMember(s: GameState, B: Nation, female: boolean, born: number): Character | null {
   const r = alive(s, B.ruler); if (!r) return null;
-  const fits = (c: Character | undefined) => !!c && c.alive && c.female === female && c.id !== B.ruler && c.id !== B.heir && unwed(s, c) && c.nation === B.id && ageOf(s, c) >= 14 && ageOf(s, c) <= 45 && Math.abs(c.born - born) < 15 * YEAR;
+  const next = nextInLine(s, B);
+  const busy = (c: Character) => Object.values(B.council).includes(c.id) || s.armies.some((a) => a.owner === B.id && a.general === c.id);
+  const fits = (c: Character | undefined) => !!c && c.alive && c.female === female && c.id !== B.ruler && c.id !== B.heir && c.id !== next && !busy(c) && unwed(s, c) && c.nation === B.id && ageOf(s, c) >= 14 && ageOf(s, c) <= 45 && Math.abs(c.born - born) < 15 * YEAR;
   const kin = [...r.children.map((k) => s.chars[k]), ...siblingsOf(s, r)].filter(fits) as Character[];
   kin.sort((a, b) => Math.abs(a.born - born) - Math.abs(b.born - born) || a.id - b.id);
   if (kin.length) return kin[0];
-  // born into the house: a child of the ruler when the ruler is old enough, otherwise a younger sibling
+  // born into the house: a child of the ruler when the ruler is old enough and the child comes after the heir in line
+  // (younger than a child heir, and no son behind a daughter under male primogeniture), otherwise a sibling
   const target = Math.min(s.day - 15 * YEAR, Math.max(born - 6 * YEAR, s.day - 32 * YEAR));
-  const asChild = target - r.born > 17 * YEAR;
+  const h = alive(s, B.heir);
+  const law = LAWS[LAW_INDEX.succession].options[B.laws.succession ?? 0]?.id;
+  const asChild = target - r.born > 17 * YEAR && !!h && r.children.includes(h.id) && h.born < target && (law !== 'primogeniture' || female || !h.female);
   const parent = asChild ? r : ensureFather(s, B, r);
   const other = asChild ? alive(s, r.spouse) : undefined;
   const c = newChar(s, B, {

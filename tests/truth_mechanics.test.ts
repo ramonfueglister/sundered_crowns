@@ -85,7 +85,8 @@ describe('B: effects of laws and modifiers apply once', () => {
 });
 
 describe('C: the council', () => {
-  const tr = () => s.chars[fr.council.treasurer];
+  // (a treasurer who died by chance leaves the seat empty until it is filled: another official serves for the test)
+  const tr = () => { if (!s.chars[fr.council.treasurer]?.alive) fr.council.treasurer = Object.values(fr.council).find((id) => s.chars[id]?.alive)!; return s.chars[fr.council.treasurer]; };
   it('the treasurer raises the tax yield and takes less the abler he is', () => {
     const c = tr(); const old = c.skills[0];
     c.skills[0] = 0; const low = taxCommon(fr, s.chars); const gLow = treasurerGraft(c, 100);
