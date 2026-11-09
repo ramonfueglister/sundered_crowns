@@ -8,6 +8,7 @@ import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, M
 import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
 import { dutyUnrest } from './duties';
+import { secondFaith } from './faith';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -97,8 +98,9 @@ const SLOTS = new Int32Array(3);
 // Per-nation numbers read by locationStep, gathered once per pass over the locations (economy.daily / init).
 // Reading them from one typed table keeps locationStep away from the many shapes nation objects take on,
 // which otherwise keep throwing its optimised code away. Values are exactly what the step read before.
-const NK = 14 + C + 9 + C; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C], then (NX) growth, literacy, quality, over-extension, land, hearth, excise, duty unrest, nobles' hearth exemption, exemption[C]
 const NX = 14 + C;
+const NSF = NX + 9 + C; // a Tengri realm's second faith
+const NK = NSF + 1; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C], then (NX) growth, literacy, quality, over-extension, land, hearth, excise, duty unrest, nobles' hearth exemption, exemption[C], then (NSF) second faith
 let NS = new Float64Array(0), NST = new Int32Array(0), PASS = 0;
 function nationRow(n: Nation): number {
   const o = n.id;
@@ -125,6 +127,7 @@ function nationRow(n: Nation): number {
   NS[r + NX + 7] = dutyUnrest(n);
   NS[r + NX + 8] = clamp(lawEffect(n, 'hearth_exempt_nobles'), 0, 1);
   for (let c = 0; c < C; c++) NS[r + NX + 9 + c] = clamp(lawEffect(n, EXEMPT_KEYS[c]), 0, 1);
+  NS[r + NSF] = secondFaith(n); // a Tengri realm's second faith is not foreign (-1: none)
   return r;
 }
 
@@ -394,7 +397,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
       let u = (0.55 - avgSol) * 40;
       const taxBurden = ns[nr + 4] * 60;
       u += taxBurden;
-      if (lc.faith[i] !== ns[nr + 12]) u += 8 * (1 - ns[nr + 5]);
+      if (lc.faith[i] !== ns[nr + 12] && lc.faith[i] !== ns[nr + NSF]) u += 8 * (1 - ns[nr + 5]);
       if (lc.culture[i] !== ns[nr + 11]) u += 4;
       u += ns[nr + 6] * 0.12 + devast * 12 + (1 - lc.control[i]) * 6 - ns[nr + 7] * 0.08 - 2;
       u += ns[nr + 9];

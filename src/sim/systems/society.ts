@@ -8,8 +8,9 @@ import { lawEffect, councilBonus } from './politics';
 import { computeAdmin, integrationShare } from './administration';
 import { overextension } from './economy';
 import { ownedLocs } from './war';
-import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
+import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS, FAITH_INDEX } from '../content/peoples';
 import { chance } from '../rng';
+import { SLOW_CONVERSION, ownFaith } from './faith';
 
 // ---------------- control ----------------
 /** Distance-based control from the capital and administrative seats (roads extend reach). */
@@ -76,7 +77,7 @@ export function integrationMonth(s: GameState, w: World) {
     const n = s.nations[own];
     if (s.loc.integ[i] >= 1) { if (s.loc.core[i] !== own) s.loc.core[i] = own; continue; }
     const sameC = s.loc.culture[i] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
-    const sameF = s.loc.faith[i] === n.faith ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
+    const sameF = ownFaith(n, s.loc.faith[i]) ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
     // the administration's capacity is shared out over all land being integrated at once (never below a quarter of
     // the normal speed); the loss of control from over-extension is not counted a second time
     const rate = 1 / 120 * integrationControl(s, n, i) * sameC * sameF * Math.max(0, 1 + lawEffect(n, 'integration')) * integrationShare(n);
@@ -99,7 +100,7 @@ export function startAgent(s: GameState, w: World, n: Nation, loc: number, kind:
   s.agents.push({ nation: n.id, loc, kind, progress: 0 });
   return null;
 }
-function agentsMonth(s: GameState, w: World) {
+export function agentsMonth(s: GameState, w: World) {
   for (const a of s.agents.slice()) {
     const n = s.nations[a.nation];
     if (!n?.alive || s.loc.owner[a.loc] !== a.nation) { s.agents.splice(s.agents.indexOf(a), 1); continue; }
@@ -109,6 +110,7 @@ function agentsMonth(s: GameState, w: World) {
       rate *= Math.max(0.1, 1 + councilBonus(s, n, 'chaplain') * 3 + lawEffect(n, 'conversion'));
       const fam = faithFamily(s.loc.faith[a.loc]) === faithFamily(n.faith);
       rate *= fam ? 1.2 : 0.7;
+      rate *= SLOW_CONVERSION[s.loc.faith[a.loc]] ?? 1; // Coptic and Syriac communities endure under foreign rule
     } else rate *= 0.6 * (GROUP_OF[ALL_CULTURES[s.loc.culture[a.loc]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.6 : 1) * (1 + lawEffect(n, 'assimilation'));
     a.progress += rate;
     s.loc.unrest[a.loc] = Math.min(100, s.loc.unrest[a.loc] + (a.kind === 'faith' ? 1.2 : 0.6) * (1 - lawEffect(n, 'tolerance')));
@@ -125,11 +127,13 @@ function assimilationYear(s: GameState, w: World) {
   for (let i = 0; i < w.L; i++) {
     const own = s.loc.owner[i]; if (own < 0) continue;
     const n = s.nations[own];
-    // minorities shrink slowly where tolerated, quickly where persecuted
-    if (s.loc.minShare[i] > 0) s.loc.minShare[i] = Math.max(0, s.loc.minShare[i] - 0.004 - Math.max(0, -lawEffect(n, 'tolerance')) * 0.02);
+    // minorities shrink slowly where tolerated, quickly where persecuted; a tolerated Jewish community keeps its faith
+    // for generations (it leaves a realm that persecutes it instead, see faith.ts migrationYear)
+    const keeps = s.loc.minFaith[i] === FAITH_INDEX.jewish && (n.faith === FAITH_INDEX.jewish || lawEffect(n, 'tolerance') >= 0.2);
+    if (s.loc.minShare[i] > 0 && !keeps) s.loc.minShare[i] = Math.max(0, s.loc.minShare[i] - 0.004 - Math.max(0, -lawEffect(n, 'tolerance')) * 0.02);
     // long integrated land of a sister culture slowly takes the ruling culture
     if (s.loc.culture[i] !== n.culture && s.loc.integ[i] >= 1 && GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]]) {
-      if (((i * 7919 + s.day) >>> 0) % 1000 < 3 * s.loc.control[i]) { s.loc.minCulture[i] = s.loc.culture[i]; s.loc.minShare[i] = 0.3; s.loc.culture[i] = n.culture; }
+      if (((i * 7919 + s.day) >>> 0) % 1000 < 3 * s.loc.control[i]) { s.loc.minCulture[i] = s.loc.culture[i]; s.loc.minFaith[i] = s.loc.faith[i]; s.loc.minShare[i] = 0.3; s.loc.culture[i] = n.culture; }
     }
   }
 }

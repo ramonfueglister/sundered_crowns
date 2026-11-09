@@ -60,6 +60,11 @@ export const REFUSAL_DE: Record<string, string> = {
   // ---- truth pass (claude/truth-pass): production methods and tax instruments
   'unknown method': 'Unbekannte Produktionsweise', 'already in use': 'Bereits in Gebrauch', 'needs Commerce & Learning 6': 'Braucht Handel & Gelehrsamkeit 6', 'needs a manufactory': 'Braucht eine Manufaktur',
   'the workshops were reorganised recently': 'Die Werkstätten wurden erst kürzlich umgestellt',
+  // ---- depth pass (claude/depth-pass): faith mechanics, AI budget and history, review fixes
+  'already excommunicated': 'Schon gebannt', 'the pope cannot be excommunicated': 'Der Papst kann nicht gebannt werden', 'we are excommunicated ourselves': 'Wir sind selbst gebannt',
+  'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
+  'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
+  'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

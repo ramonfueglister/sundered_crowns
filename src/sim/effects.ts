@@ -17,6 +17,7 @@ const S = 'src/sim/systems/';
 export const EFFECTS: Record<string, EffectDef> = {
   // ---- economy
   tax: { unit: 'pct', reader: S + 'economy.ts' },
+  build_time: { unit: 'pct', bad: true, reader: 'src/sim/commands.ts' },
   trade: { unit: 'pct', reader: S + 'economy.ts' },
   production: { unit: 'pct', reader: S + 'economy.ts' },
   quality: { unit: 'pct', reader: S + 'economy.ts' },
@@ -75,6 +76,10 @@ export const EFFECTS: Record<string, EffectDef> = {
   defence: { unit: 'pct', reader: S + 'military.ts' },
   speed: { unit: 'pct', reader: S + 'military.ts' },
   attrition: { unit: 'pct', bad: true, reader: S + 'military.ts' },
+  // ---- homeland faiths (systems/faith.ts): on the realm's own land only
+  home_defence: { unit: 'pct', reader: S + 'military.ts' },
+  home_attrition: { unit: 'pct', bad: true, reader: S + 'military.ts' },
+  home_morale: { unit: 'pct', reader: S + 'military.ts' },
   siege: { unit: 'pts', reader: S + 'military.ts' },
   fort_strength: { unit: 'pct', reader: S + 'military.ts' },
   fort_cost: { unit: 'pct', bad: true, reader: S + 'military.ts' },

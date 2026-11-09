@@ -212,7 +212,10 @@ export function succession(s: GameState, w: World, n: Nation) {
     next = findHeir(s, n, dead);
     if (!next) {
       // extinction: a foreign dynasty with a marriage tie may claim; otherwise a magnate takes the crown
-      const claimants = s.treaties.filter((t) => t.type === 'marriage' && (t.a === n.id || t.b === n.id)).map((t) => (t.a === n.id ? t.b : t.a)).filter((k) => s.nations[k].alive);
+      // (crowns pass through marriage between Christian realms; a sultanate or khanate whose house dies out raises a
+      // new house of its own, so no beylik inherits the Ottoman throne through a bride)
+      const christian = (x: Nation) => FAITHS[x.faith]?.family === 'christian';
+      const claimants = !christian(n) ? [] : s.treaties.filter((t) => t.type === 'marriage' && (t.a === n.id || t.b === n.id)).map((t) => (t.a === n.id ? t.b : t.a)).filter((k) => s.nations[k].alive && christian(s.nations[k]));
       if (claimants.length) {
         const k = claimants[0];
         const other = s.nations[k];
@@ -480,21 +483,41 @@ export function authorityGain(s: GameState, n: Nation): number {
   return (1 + sk * 0.4 + n.mandate / 50) * (1 + lawEffect(n, 'authority_gain')) + lawEffect(n, 'authority');
 }
 
-function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
-  n.authority = clamp(n.authority + authorityGain(s, n), 0, 300);
-  // Concord drifts toward a target from contentment of powers, unrest and war exhaustion
+/** What Concord drifts toward, by cause: the contentment of the Powers of the Realm, war exhaustion, laws and
+ *  values, excommunication and each modifier with a Concord effect (faith mechanics, pilgrimages, situations...). */
+export function concordParts(s: GameState, n: Nation): [string | I18n, number][] {
   let content = 0, infl = 0;
   for (const e of n.estates) { content += e.contentment * e.influence; infl += e.influence; }
   const avgContent = infl > 0 ? content / infl : 50;
-  // a strong assembly (estate_power) makes the mood of the Powers weigh more on Concord, for better or worse
-  const target = (avgContent - 50) * 1.2 * (1 + lawEffect(n, 'estate_power')) - n.warExhaustion * 0.3 + lawEffect(n, 'concord_gain') * 50 + (n.excommunicated ? -20 : 0) + lawEffect(n, 'concord');
+  const out: [string | I18n, number][] = [['powers_content', (avgContent - 50) * 1.2 * (1 + lawEffect(n, 'estate_power'))], ['war_exhaustion', -n.warExhaustion * 0.3],
+    ['laws_values', lawEffect(n, 'concord_gain') * 50 + lawEffect(n, 'concord')]];
+  if (n.excommunicated) out.push(['excommunicated', -20]);
+  return out;
+}
+/** What Mandate drifts toward, by cause: the ruler's statecraft, prestige, laws, values, traditions and modifiers
+ *  (faith mechanics among them; lawEffect sums them all), a regency and excommunication. */
+export function mandateParts(s: GameState, n: Nation): [string | I18n, number][] {
+  const r = s.chars[n.ruler];
+  const out: [string | I18n, number][] = [['base', 45], ['ruler_statecraft', r ? r.skills[1] * 5 : 10], ['prestige', n.prestige * 0.1],
+    ['laws_values', lawEffect(n, 'mandate_gain') * 100 + lawEffect(n, 'mandate')]];
+  if (n.regent) out.push(['regency', -15]);
+  if (n.excommunicated) out.push(['excommunicated', -25]);
+  return out;
+}
+export const sumParts = (p: [unknown, number][]) => { let v = 0; for (const x of p) v += x[1]; return v; };
+
+function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
+  n.authority = clamp(n.authority + authorityGain(s, n), 0, 300);
+  // Concord drifts toward a target from contentment of powers (weighed by a strong assembly, estate_power), war exhaustion and effects
+  const target = sumParts(concordParts(s, n));
   n.concord = clamp(n.concord + (target - n.concord) * 0.04, -100, 100);
   // Mandate drifts with the ruler's statecraft, prestige and faith unity
-  const r = s.chars[n.ruler];
-  const mTarget = 45 + (r ? r.skills[1] * 5 : 10) + n.prestige * 0.1 + lawEffect(n, 'mandate_gain') * 100 + (n.regent ? -15 : 0) + (n.excommunicated ? -25 : 0) + lawEffect(n, 'mandate');
+  const mTarget = sumParts(mandateParts(s, n));
   n.mandate = clamp(n.mandate + (mTarget - n.mandate) * 0.03, 0, 100);
   n.prestige = clamp(n.prestige * 0.995 + lawEffect(n, 'prestige'), -100, 100);
-  n.warExhaustion = Math.max(0, n.warExhaustion - (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0 : 1.5));
+  // weariness fades only in peace (an ally called into a war tires more slowly than its leader, see warsMonth)
+  const inWar = s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id));
+  if (!inWar) n.warExhaustion = Math.max(0, n.warExhaustion - 1.5);
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {

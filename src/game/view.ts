@@ -28,6 +28,7 @@ import { buildCost, merchantCap } from '../sim/commands';
 import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
 import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
 import { METHODS } from '../sim/defs';
+import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
@@ -102,6 +103,7 @@ export const ACT_NAME: Record<string, I18n> = {
   gift: { en: 'Send a gift', de: 'Geschenk senden' }, insult: { en: 'Insult', de: 'Beleidigen' }, demand: { en: 'Demand tribute', de: 'Tribut fordern' }, break_alliance: { en: 'Break alliance', de: 'Bündnis lösen' },
   fabricate: { en: 'Fabricate a claim', de: 'Anspruch fabrizieren' }, rival: { en: 'Declare rival', de: 'Zum Rivalen erklären' }, unrival: { en: 'End rivalry', de: 'Rivalität beenden' },
   cancel_access: { en: 'Cancel access', de: 'Durchmarsch kündigen' }, improve: { en: 'Improve relations', de: 'Beziehungen verbessern' },
+  excommunicate: { en: 'Ask the Curia to excommunicate', de: 'Bei der Kurie den Bann erwirken' },
 };
 
 export function landmarksView(s: GameState, w: World): LandmarkLite[] {
@@ -252,7 +254,7 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
   if (n) {
     const avgSol = pops.reduce((p, x) => p + x.sol * x.pop, 0) / Math.max(1, pops.reduce((p, x) => p + x.pop, 0));
     unrestWhy.push(['living_standard', (0.55 - avgSol) * 40], ['taxes', n.taxRate[CL.peasants] * 60]);
-    if (lc.faith[l] !== n.faith) unrestWhy.push(['foreign_faith', 8 * (1 - lawEffect(n, 'tolerance'))]);
+    if (!ownFaith(n, lc.faith[l])) unrestWhy.push(['foreign_faith', 8 * (1 - lawEffect(n, 'tolerance'))]);
     if (lc.culture[l] !== n.culture) unrestWhy.push(['foreign_culture', 4]);
     unrestWhy.push(['war_exhaustion', n.warExhaustion * 0.12], ['low_control', (1 - lc.control[l]) * 6], ['concord', -n.concord * 0.08], ['x_base', -2]);
     if (lc.devast[l] > 0) unrestWhy.push(['devastation', lc.devast[l] * 12]);
@@ -292,12 +294,16 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     treaties: (['alliance', 'marriage', 'access', 'guarantee', 'trade', 'truce'] as const).filter((t) => hasTreaty(s, id, player, t)),
     atWar: atWar(s, id, player), rival: s.nations[player].rivals.includes(id),
     // justifications for war: ours against them, theirs against us, a claim being fabricated by our clerks
-    cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player),
+    cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player), sameFaith: s.nations[player].faith === n.faith,
     fabricating: s.spies.find((x) => x.nation === player && x.target === id && x.action === 'fabricate') ?? null,
     actions: DIPLO_ACTIONS.map((a) => ({ id: a, name: ACT_NAME[a] ?? { en: a, de: a } })),
+    // Favour of the Curia: a Latin ruler can have another Latin ruler banned (realm.ts excommunicate)
+    canExcommunicate: FAITHS[s.nations[player].faith]?.id === 'latin' && FAITHS[n.faith]?.id === 'latin' && !n.excommunicated && s.papacy.holder !== id, curiaFavour: s.papacy.curiaFavour[player] ?? 0,
   } : null;
   return {
     id, key: n.key, name: n.name, short: n.short, adj: n.adj, color: n.color, coa: n.coa, rank: n.rank, gov: n.gov, faith: FAITHS[n.faith]?.name, culture: cultureName(ALL_CULTURES[n.culture] || 'unknown'),
+    // the faith's own mechanic and what it (and communities of other faiths in the realm) does for this realm now
+    faithMechanic: { name: FAITHS[n.faith]?.mechanic, desc: FAITHS[n.faith]?.mechanicDesc, active: n.modifiers.filter((m) => m.id.startsWith('faith_')).map((m) => ({ id: m.id, label: m.label, effects: m.effects })) },
     capital: n.capital, capitalName: n.capital >= 0 ? w.names[n.capital] : '—', ruler: r ? { name: r.name, dynasty: r.dynasty, age: Math.floor(ageOf(s, r)), skills: r.skills, traits: r.traits } : null,
     heir: h && h.alive ? { name: h.name, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id), score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),

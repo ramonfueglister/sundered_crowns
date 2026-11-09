@@ -5,10 +5,11 @@ import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, opinion, rel, hasTreaty, allies, atWar, subjectsOf, treatiesOf, addExpense } from '../ctx';
 import { rand, chance } from '../rng';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
-import { nationDev, declareWar, hasCasusBelli } from './war';
+import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
+import { excommunicate, steppeFade } from './realm';
 
-export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve'] as const;
+export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve', 'excommunicate'] as const;
 
 /** Static opinion reasons computed on demand (plus stored timed modifiers). */
 /** Diplomatic standing of a realm: diplomacy effects of laws, values and modifiers plus the chancellor's bonus. It
@@ -28,13 +29,15 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   if (hasTreaty(s, a, b, 'marriage')) out.push(['royal_marriage', 20]);
   if (hasTreaty(s, a, b, 'trade')) out.push(['trade_agreement', 10]);
   if (A.overlord === b) out.push(['overlord', -10 + Math.round(-A.libertyDesire * 0.3)]);
-  if (hasTreaty(s, b, a, 'claim')) out.push(['claims_on_us', -25]);
+  if (hasTreaty(s, b, a, 'claim') || (s.flags[`gather_${b}_${a}`] ?? 0) > s.day) out.push(['claims_on_us', -25]);
   // shared rival
   if (A.rivals.some((r) => Bn.rivals.includes(r))) out.push(['shared_rival', 25]);
   if (atWar(s, a, b)) out.push(['at_war', -100]);
   const d = Bn.dread; if (d > 10) out.push(['dread', -Math.round(Math.min(60, d))]);
   if (Bn.excommunicated && FAITHS[A.faith]?.id === 'latin') out.push(['excommunicated', -30]);
   const ds = Math.round(diploSkill(s, Bn) * 40); if (ds) out.push(['their_diplomacy', ds]);
+  // the loose Bosnian Church has no outside protector: the great churches distrust it
+  if (FAITHS[Bn.faith]?.id === 'bosnian_church' && (FAITHS[A.faith]?.id === 'latin' || FAITHS[A.faith]?.id === 'orthodox')) out.push(['heretic_church', -15]);
   const r = s.rel[`${a}>${b}`];
   if (r) for (const m of r.mods) out.push([m.id, Math.round(m.v)]);
   return out;
@@ -87,6 +90,8 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
     R.push(['relative_strength', Math.round(clamp((pa / Math.max(1, pb) - 5) * 4, -60, 40))]);
     if (allies(s, b).length) R.push(['has_allies', -30]);
     if (A.faith !== Bn.faith) R.push(['heathen', -30]);
+    // the leading crown of our own people gathering the lands (see gatheringYear): submission keeps the house its seat
+    if (gatherClaim(s, a, b)) R.push(['senior_prince', 30]);
     if (dist > 600) R.push(['too_far', -30]);
   } else if (action === 'demand') {
     const pa = power(s, a), pb = power(s, b);
@@ -104,7 +109,7 @@ export function envoyDays(s: GameState, w: World, A: Nation, b: number): number 
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
   if (!s.nations[b]?.alive || a === b) return 'invalid target';
-  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate'].includes(action)) return immediateAction(s, w, a, b, action, payload);
+  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate'].includes(action)) return immediateAction(s, w, a, b, action, payload);
   if (A.envoysBusy >= A.envoys) return 'all envoys are busy';
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
   if (action === 'marriage' && hasTreaty(s, a, b, 'marriage')) return 'already married';
@@ -130,6 +135,14 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
     case 'cancel_access': s.treaties = s.treaties.filter((t) => !(t.type === 'access' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); return null;
     case 'rival': if (A.rivals.length >= 3) return 'at most three rivals'; if (!A.rivals.includes(b)) A.rivals.push(b); addOpinion(s, b, a, 'rivalry', -30, 365 * 50); return null;
     case 'unrival': A.rivals = A.rivals.filter((x) => x !== b); return null;
+    case 'excommunicate': {
+      // Favour of the Curia (Latin faith): a ruler in good standing asks the pope to ban another Latin ruler
+      if (FAITHS[A.faith]?.id !== 'latin') return 'not of the Latin church';
+      if (Bn.excommunicated) return 'already excommunicated';
+      if (s.papacy.holder === b) return 'the pope cannot be excommunicated';
+      if (A.excommunicated) return 'we are excommunicated ourselves';
+      return excommunicate(s, a, b);
+    }
     case 'fabricate': {
       // fabricating a justification takes time and can be discovered
       if (s.spies.some((x) => x.nation === a && x.target === b && x.action === 'fabricate')) return 'already fabricating';
@@ -195,6 +208,12 @@ export function libertyParts(s: GameState, w: World, n: Nation, ov: Nation): [st
   return [
     ['subject_strength', rs * 120], ['opinion_of_overlord', -totalOpinion(s, w, n.id, ov.id) * 0.3], ['overlord_concord', ov.concord < 0 ? 15 : 0],
     ['overlord_war_exhaustion', ov.warExhaustion > 40 ? 10 : 0], ['tributary', n.subjectType === 'tributary' ? 10 : 0],
+    // a banned overlord frees his vassals' consciences (Latin faith: excommunication)
+    ['overlord_excommunicated', ov.excommunicated && n.faith === ov.faith ? 20 : 0],
+    // a crown of another people does not merge easily into the senior crown of a personal union
+    ['foreign_crown', n.subjectType === 'personal_union' && n.culture !== ov.culture ? 20 : 0],
+    // the tributaries of a horde whose steppe order is fading (see steppeFade)
+    ['steppe_fading', Math.round(25 * steppeFade(ov))],
     // colonial realms drift apart from the crown over generations
     ['colonial_distance', n.subjectType === 'colonial' ? 5 + Math.min(45, (s.day - n.subjectSince) / 365 * 0.35) : 0],
   ];

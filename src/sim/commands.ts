@@ -146,7 +146,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const cost = buildCost(s, n, b, lvl + queued);
       if (n.treasury < cost) return err('not enough gold');
       n.treasury -= cost; n.expenseAcc.construction = (n.expenseAcc.construction || 0) + cost;
-      s.constructions.push({ loc: l, building: b, left: def.months * 30, nation: cmd.n, cost });
+      s.constructions.push({ loc: l, building: b, left: Math.max(30, Math.round(def.months * 30 * clamp(1 + lawEffect(n, 'build_time'), 0.3, 2))), nation: cmd.n, cost }); // build_time: e.g. the Andean labour duty
       return OK;
     }
     case 'declare': {
@@ -374,6 +374,11 @@ function sanitizeTerms(s: GameState, w: World, war: any, from: number, to: numbe
 function acceptsConcession(s: GameState, war: any, from: number, to: number, terms: PeaceTerm[]) {
   const score = computeScore(s, war) * (war.att.includes(to) ? 1 : -1); // from the receiver's perspective
   const gain = terms.reduce((p, t) => p + termCost(s, war, t, to, from), 0);
+  // a host before the walls of a town the war was declared for holds out for that town (see evaluatePeace)
+  const goal: number[] = war.goal?.locs ?? [];
+  const offered = new Set(terms.flatMap((t) => (t.type === 'cede' ? t.locs ?? [] : [])));
+  if (to === war.attLead && !s.playerNations.includes(to) && s.nations[to].warExhaustion < 60
+    && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc) && !offered.has(x.loc))) return false;
   return score < 10 || gain >= score * 0.5 || s.nations[to].warExhaustion > 40;
 }
 

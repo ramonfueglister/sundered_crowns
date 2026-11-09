@@ -5524,7 +5524,8 @@
    "rank": "principality",
    "government": "feudal_monarchy",
    "culture": "bosnian",
-   "faith": "latin",
+   "faith": "bosnian_church",
+   "faith_note": "The Bosnian Church (krstjani) was the church of the nobility and of most of the land; Ban Tvrtko I was nominally Catholic but ruled with its elders, so the realm starts in the Bosnian Church",
    "color": "#3a5aa8",
    "capital": {
     "name": "Bobovac",

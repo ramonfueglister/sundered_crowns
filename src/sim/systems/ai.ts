@@ -3,17 +3,19 @@
 import type { GameState, Nation, Army, PeaceTerm, War } from '../types';
 import type { World } from '../world';
 import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf, topOverlord } from '../ctx';
-import { UNITS, B, BI, BUILDINGS, C, CL } from '../defs';
+import { UNITS, B, BI, BUILDINGS, C, CL, GOODS, RAW_FROM_MINE } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand, buildRefusal } from '../commands';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue, gatherClaim, tributaryPeace } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
+import { FAITH_INDEX } from '../content/peoples';
+import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
 
 const P = (n: Nation, k: string) => n.personality === k;
 function isAI(s: GameState, n: Nation) { return n.alive && !s.playerNations.includes(n.id) && !s.aiDisabled.includes(n.id) && !n.playerId; }
@@ -66,8 +68,10 @@ function strategic(s: GameState, w: World, n: Nation) {
   recruitment(s, w, n, wars.length > 0);
   transports(s, w, n);
   seekAccess(s, w, n);
+  if (!wars.length) spendSurplus(s, w, n);
   if (n.treasury > 0) { const inc = Object.values(n.income).reduce((p, v) => p + v, 0); const k = n.treasury > inc * 12 ? 3 : 1; for (let j = 0; j < k; j++) construction(s, w, n); }
   reforms(s, w, n);
+  churchPolitics(s, w, n);
   diplomacy(s, w, n);
   // a realm only called into an ally's war (or answering a subject's revolt) may still start its own, if fresh
   if (!wars.length || (!wars.some((x) => x.attLead === n.id || (x.defLead === n.id && x.goal.type !== 'independence')) && n.warExhaustion < 20)) considerWar(s, w, n);
@@ -83,10 +87,13 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   let avgUnrest = 0, cnt = 0;
   for (const i of ownedLocs(s, n.id)) if (i % 7 === 0 && i < w.L) { avgUnrest += s.loc.unrest[i]; cnt++; }
   avgUnrest = cnt ? avgUnrest / cnt : 0;
-  // only cut taxes for a chest that the army and the building sites cannot use up
-  const rich = !atWarNow && n.treasury > inc * 12;
+  // only cut taxes for a chest that the army and the building sites cannot use up: a full chest is first spent on
+  // buildings, landmarks, fleets and the estates (spendSurplus); what is left over after a year and a half lowers the
+  // taxes, but a rich crown does not give up its revenue altogether
+  const rich = !atWarNow && n.treasury > inc * 18;
   const delta = exp > inc * 1.05 && avgUnrest < 40 && !rich ? 0.005 : avgUnrest > 45 || rich ? -0.006 : 0;
-  if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), 0.02, 0.25));
+  const floor = avgUnrest > 45 ? 0.02 : 0.05;
+  if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), Math.min(t, floor), 0.25));
   if (!atWarNow && exp > inc && n.treasury < inc * 2) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
   else n.armyMaint = clamp(n.armyMaint + 0.1, 0.5, 1);
   // debt: repay loans when rich
@@ -119,7 +126,8 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const units = availableUnits(s, n, false);
   if (!units.length) return;
   const want = Math.min(target - men, n.manpower * 0.6, 8000);
-  if (want < 800) return;
+  // (a small principality raises its few hundred men too: a fixed floor of 800 left many without any army at all)
+  if (want < Math.min(800, Math.max(250, target * 0.25))) return;
   // composition: infantry core, ranged, cavalry, artillery later
   const inf = units.filter((u) => UNITS[u].kind === 'inf').sort((a, b) => UNITS[b].era - UNITS[a].era || UNITS[b].shock - UNITS[a].shock);
   const rng = units.filter((u) => UNITS[u].kind === 'ranged').sort((a, b) => UNITS[b].fire - UNITS[a].fire);
@@ -203,11 +211,13 @@ function provinceFort(s: GameState, w: World, l: number) {
   for (const x of w.provinces[w.provOf[l]]?.locs ?? []) if (x !== l && s.loc.buildings[x * B + BI.fort] > 0) return true;
   return false;
 }
-function construction(s: GameState, w: World, n: Nation, depth = 0) {
+export function construction(s: GameState, w: World, n: Nation, depth = 0) {
   const inc = Object.values(n.income).reduce((p, v) => p + v, 0);
   // a full war chest pays for more building sites at once
   const chest = inc > 0 ? Math.floor(clamp(n.treasury / (inc * 12), 0, 6)) : 0;
-  if (s.constructions.filter((c) => c.nation === n.id).length >= 2 + Math.floor(nationDev(s, n.id) / 150) + chest) return;
+  // beyond a year's revenue, one more site for every two months of revenue still in the chest
+  const surplusSites = inc > 0 ? Math.floor(clamp((n.treasury - inc * 12) / (inc * 2), 0, 30)) : 0;
+  if (s.constructions.filter((c) => c.nation === n.id).length >= 2 + Math.floor(nationDev(s, n.id) / 150) + chest + surplusSites) return;
   if (n.treasury < inc * 2) return;
   const locs = nationLocsRO(s, n.id);
   if (!locs.length) return;
@@ -223,14 +233,24 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
   // buildings the realm's open goals ask for come first (systems/goals.ts goalWants)
   const wanted = goalWants(s, w, n).buildings.filter((b) => !order.includes(BUILDINGS[b].id));
   if (wanted.length) order.unshift(...wanted.map((b) => BUILDINGS[b].id));
+  if (n.faith === FAITH_INDEX.hindu) { const k = order.indexOf('church'); if (k >= 0) order.splice(k, 1); order.unshift('church'); } // temple patronage
+  // a rich realm also sinks its shafts, founds schools and seats of government and, later, manufactories
+  if (chest >= 1) for (const x of ['mine', 'university', 'admin', 'port', 'manufactory', 'canal']) if (!order.includes(x)) order.push(x);
+  // works already under way: a place takes two at a time, and a queued level counts as built
+  const busy = new Map<number, number>();
+  for (const c of s.constructions) if (c.nation === n.id) { busy.set(c.loc, (busy.get(c.loc) ?? 0) + 1); busy.set(-1 - (c.loc * B + c.building), (busy.get(-1 - (c.loc * B + c.building)) ?? 0) + 1); }
   for (let k = 0; k < Math.min(locs.length, 60); k++) {
-    const l = locs[Math.floor(hash01(s.day, n.id, k) * locs.length)];
-    if (s.loc.ctrl[l] !== n.id) continue;
+    const l = locs[Math.floor(hash01(s.day, n.id, k + depth * 61) * locs.length)];
+    if (s.loc.ctrl[l] !== n.id || (busy.get(l) ?? 0) >= 2) continue;
     for (const bid of order) {
-      const b = BI[bid]; const lv = s.loc.buildings[l * B + b];
+      const b = BI[bid]; const lv = s.loc.buildings[l * B + b] + (busy.get(-1 - (l * B + b)) ?? 0);
       if (lv >= BUILDINGS[b].max || (BUILDINGS[b].needsCoast && !w.coastal[l])) continue;
       if (bid === 'fort' && (!borderLoc(s, w, l, n.id) || (lv === 0 && provinceFort(s, w, l)))) continue; // one fortress per province
       if (wanted.includes(b) && buildRefusal(s, w, n.id, l, b)) continue; // a goal building only where it can stand
+      if (bid === 'mine' && !MINEABLE[w.resource[l]]) continue;
+      if (bid === 'university' && s.loc.dev[l] < 25) continue;
+      if (bid === 'admin' && (l === n.capital || s.loc.dev[l] < 20 || w.distKm(l, n.capital) < 400)) continue;
+      if ((BUILDINGS[b].era ?? 0) > n.era) continue;
       const v = s.loc.dev[l] * (1 + order.length - order.indexOf(bid)) / (1 + lv);
       if (v > bv) { bv = v; best = l; bb = b; }
     }
@@ -239,6 +259,53 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
   // a large chest starts several sites a month
   if (best >= 0 && chest > 1 && depth < chest) construction(s, w, n, depth + 1);
 }
+const MINEABLE = Uint8Array.from(GOODS, (g) => (RAW_FROM_MINE.has(g.id) ? 1 : 0));
+
+/** Peacetime use of a chest beyond a year's revenue: debts first, then the estates, landmarks and a fleet for a
+ *  coastal power (buildings and lower taxes take the rest, see construction and budget; colonial ventures are a
+ *  decision). The realm keeps a year of revenue in reserve. */
+export function spendSurplus(s: GameState, w: World, n: Nation) {
+  const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
+  if (gross <= 0 || n.capital < 0) return;
+  const reserve = gross * 12;
+  const surplus = () => n.treasury - reserve;
+  if (surplus() <= 0) return;
+  // pay off the dearest loan
+  if (n.loans.length) {
+    const l = n.loans.slice().sort((a, b) => b.rate - a.rate)[0];
+    if (n.treasury - l.amount > reserve * 0.5) applyCommand(s, w, { t: 'loan', n: n.id, take: false, amount: l.amount });
+  }
+  // gifts and favours for a discontented estate
+  for (const e of n.estates) {
+    if (e.contentment >= 45 || surplus() <= 0) continue;
+    applyCommand(s, w, { t: 'estate', n: n.id, estate: e.id, action: 'appease' });
+  }
+  // the next stage of a landmark we hold
+  for (const x of landmarksOf(s, w)) {
+    if (s.loc.owner[x.loc] !== n.id || x.work || x.tier >= landmarkDef(x.id).max || s.loc.ctrl[x.loc] !== n.id) continue;
+    if (surplus() > landmarkPrice(s, n, x.id, x.tier)) startLandmark(s, w, n, x.id);
+  }
+  // a coastal power keeps a fleet of war in proportion to its coast, at no more than a fifth of its revenue
+  if (surplus() > gross * 3 && (s.day + n.id) % 90 < 30) {
+    const port = homePort(s, w, n);
+    let coast = 0; for (const l of nationLocsRO(s, n.id)) if (w.coastal[l]) coast++;
+    if (port >= 0 && coast >= 6) {
+      let fleet = 0; for (const a of armiesOf(s, n.id)) if (a.fleet) fleet += armyMen(a);
+      for (const r of s.recruits) if (r.nation === n.id && UNITS[r.type].kind === 'ship') fleet += r.men;
+      const ships = availableUnits(s, n, true).filter((u) => UNITS[u].id !== 'transport');
+      const want = Math.min(40, 4 + Math.floor(coast / 5));
+      const unit = ships[ships.length - 1];
+      // at most half the surplus goes on hulls at a time
+      const k = unit === undefined ? 0 : Math.min(4, want - fleet, Math.floor(surplus() * 0.5 / unitCost(s, n, unit, 1)));
+      if (k >= 1 && (n.expense.navy || 0) < gross * 0.2) applyCommand(s, w, { t: 'recruit', n: n.id, loc: port, unit, men: k });
+    }
+  }
+  // a small realm with nothing left to build: beyond two years of revenue the court spends more freely (feasts,
+  // patronage, gifts to churches), on top of the splendour every full chest draws (see monthlyLedger)
+  const over = n.treasury - gross * 24;
+  if (over > 0) { const g = over * 0.08; n.treasury -= g; n.expenseAcc.splendour = (n.expenseAcc.splendour || 0) + g; }
+}
+
 function borderLoc(s: GameState, w: World, l: number, n: number) {
   for (let e = w.adjStart[l]; e < w.adjStart[l + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] !== n && s.loc.owner[v] >= 0) return true; }
   return false;
@@ -257,6 +324,14 @@ function reforms(s: GameState, w: World, n: Nation) {
     const r = applyCommand(s, w, { t: 'law', n: n.id, law, option: o });
     if (r.ok) return;
   }
+}
+
+/** Favour of the Curia (Latin faith): a realm in good standing has the pope ban a Latin enemy or rival, which turns
+ *  the Latin world against it and frees its vassals' consciences. */
+function churchPolitics(s: GameState, w: World, n: Nation) {
+  if (n.faith !== FAITH_INDEX.latin || n.excommunicated || (s.papacy.curiaFavour[n.id] ?? 0) < 60 || !chance(s.rng, 0.15)) return;
+  const foes = [...enemiesOf(s, n.id), ...n.rivals].filter((x) => s.nations[x]?.alive && s.nations[x].faith === n.faith && !s.nations[x].excommunicated && s.papacy.holder !== x);
+  if (foes.length) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'excommunicate', target: foes[0] });
 }
 
 function diplomacy(s: GameState, w: World, n: Nation) {
@@ -299,6 +374,11 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     const t = [...neigh].find((x) => nationDev(s, x) * 8 < nationDev(s, n.id) && s.nations[x].overlord < 0 && s.nations[x].faith === n.faith);
     if (t !== undefined) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
   }
+  // the leading crown of a people asks the small principalities it gathers to submit (Moscow and the Rus princes)
+  {
+    const t = [...neigh].sort((a, b) => a - b).find((x) => gatherClaim(s, n.id, x) && !atWar(s, n.id, x) && (s.nations[x].overlord < 0 || (s.nations[x].subjectType === 'tributary' && s.nations[x].overlord === n.overlord)));
+    if (t !== undefined && chance(s.rng, 0.1)) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
+  }
   // integrate long-standing vassals
   for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
 }
@@ -330,6 +410,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
     if (top === n.id || top === topOverlord(s, n.id)) continue; // our own realm of subjects
     if (s.playerNations.includes(t) && s.day < 180) continue; // grace period for the player at start
     if (tn.flags.protected_until && tn.flags.protected_until > s.day) continue;
+    if (tributaryPeace(s, n.id, t)) continue; // our common overlord keeps the peace
     // no pile-ons: a realm already defending gets fewer separate attackers; a human player faces one war at a time (on hard: one aggressor at a time)
     const defending = s.wars.filter((x) => x.def.includes(t) && !x.att.includes(n.id)).length;
     if (s.playerNations.includes(t) && (defending || (s.difficulty <= 2 && s.wars.some((x) => x.att.includes(t) || x.def.includes(t))))) continue;
@@ -382,8 +463,8 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
   const score = computeScore(s, war) * (war.att.includes(n.id) ? 1 : -1);
   const dur = (s.day - war.start) / 365;
   if (!lead) {
-    // junior participant: separate peace if exhausted
-    if (n.warExhaustion > 50 && score < 0 && chance(s.rng, 0.2)) applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: [] });
+    // junior participant: separate peace if exhausted (a worn-out ally goes home even from a war going well)
+    if (((n.warExhaustion > 50 && score < 0) || n.warExhaustion > 75) && chance(s.rng, 0.2)) applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: [] });
     return;
   }
   if (s.playerNations.includes(other) && war.offers.some((o) => o.from === n.id)) return;
@@ -408,8 +489,13 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
     // the bundle first, then at most six capitals (a peace holds at most eight terms)
     if (pick.length) terms.push({ type: 'cede', locs: pick, to: n.id });
     for (const c of caps.slice(0, 6)) terms.push({ type: 'cede', locs: [c], to: n.id });
-    // early in a war a win on the field is no reason to settle for gold: take the forts first
     const besiegingGoal = s.armies.some((a) => a.owner === n.id && a.siege >= 0 && goal.has(a.siege));
+    // an attacker does not settle for less than the towns it declared the war for while the war is young, nor while
+    // its host lies before their walls
+    const won = new Set([...pick, ...caps.slice(0, 6)]);
+    const goalLeft = war.goal.locs.some((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]));
+    if (war.attLead === n.id && goalLeft && n.warExhaustion < 50 && dur < (besiegingGoal ? 6 : 1.5)) return;
+    // early in a war a win on the field is no reason to settle for gold: take the forts first
     if (!terms.length && score > 30 && (dur > 1.5 || n.warExhaustion > 40) && !(besiegingGoal && dur < 6 && n.warExhaustion < 50))
       terms.push({ type: 'gold', amount: Math.max(50, (s.nations[enemyLeader].income.tax || 10) * 8) });
     if (terms.length || dur > 4) {
@@ -476,6 +562,14 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   const claimed = new Set<number>();
   for (const x of own) { if (x.siege >= 0) claimed.add(x.siege); if (x.path.length) claimed.add(x.path[x.path.length - 1]); }
   const goal = new Set(s.wars.filter((x) => x.att.includes(n.id) || x.def.includes(n.id)).flatMap((x) => x.goal.locs));
+  // a town the whole host is called to (a situation's great siege) draws every army, not only the first
+  // (only while we lead a war for that town; the call to its walls ignores only the field armies of that war's
+  // enemies, never an enemy of another war that invades our land)
+  const focusWar = typeof n.flags.siege_focus === 'number' ? s.wars.find((x) => x.attLead === n.id && x.goal.locs.includes(n.flags.siege_focus)) : undefined;
+  const focusLoc = focusWar && enemies.has(s.loc.ctrl[n.flags.siege_focus]) ? n.flags.siege_focus : -1;
+  const focusFoes = new Set(focusWar?.def ?? []);
+  // the towns of the wars we lead that the enemy still holds
+  const myGoals = s.wars.filter((x) => x.attLead === n.id).flatMap((x) => x.goal.locs).filter((l) => enemies.has(s.loc.ctrl[l]));
   const gone = new Set<number>(); // armies merged into another this turn
   // AI marches keep the army's memory of unreachable places (a player's order clears it)
   const aiMove = (a: Army, to: number) => {
@@ -507,18 +601,21 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     // merge small armies at the same place (an army on the march never takes back the half it left behind)
     const same = a.path.length ? [] : myArmies.filter((x) => x !== a && !gone.has(x.id) && x.loc === a.loc && !x.path.length);
     if (same.length) { applyCommand(s, w, { t: 'merge', n: n.id, armies: [a.id, ...same.map((x) => x.id)] }); for (const x of same) gone.add(x.id); continue; }
-    // nearest beatable enemy army within reach
+    // nearest beatable enemy army within reach (a host besieging a town it went to war for, or near one it declared a
+    // war for, only meets a relief army)
     let tgt = -1, td = Infinity;
+    const reach = (a.siege >= 0 && goal.has(a.siege)) || myGoals.some((l) => w.distKm(a.loc, l) < 300) ? 150 : 600;
     for (let j = 0; j < E; j++) {
       const e = enemyArmies[j];
       const d = w.distKm(a.loc, e.loc);
-      if (d > 600) continue;
+      if (d > reach) continue;
+      if (focusLoc >= 0 && focusFoes.has(e.owner) && w.distKm(e.loc, focusLoc) > 150 && w.distKm(a.loc, focusLoc) < 800) continue; // only armies coming to relieve the great siege
       const near = nearOf(j);
       if (myStr > near * 1.15 && d < td) { td = d; tgt = e.loc; }
     }
     // threatened by a much stronger enemy: fall back toward capital / friendly fort
     let threat = 0; for (let j = 0; j < E; j++) if (w.distKm(enemyArmies[j].loc, a.loc) < 150) threat += eStr[j];
-    if (threat > myStr * 1.6 && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
+    if (threat > myStr * (a.siege >= 0 && a.siege === focusLoc ? 2.5 : 1.6) && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
     if (tgt >= 0) { aiMove(a, tgt); continue; }
     if (a.siege >= 0) continue; // keep sieging
     // places this army found no road to (kept on the army for 90 days, so saves and replays agree)
@@ -538,13 +635,14 @@ function militaryAI(s: GameState, w: World, n: Nation) {
       targets.sort((p, q) => p - q);
     }
     const k = reachOf(a);
-    const open = (i: number) => w.distKm(a.loc, i) <= 1500 && !claimed.has(i) && !blocked?.has(i) && comp[i] === k;
+    const open = (i: number) => w.distKm(a.loc, i) <= 1500 && (!claimed.has(i) || i === focusLoc) && !blocked?.has(i) && comp[i] === k;
     for (const i of targets) {
       if (!open(i)) continue;
       const dk = w.distKm(a.loc, i);
       const fort = s.loc.buildings[i * B + BI.fort];
       let d = dk * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
-      if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
+      if (i === focusLoc) d *= 0.15;
+      else if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
       if (d < bd) { bd = d; best = i; }
     }
     if (best >= 0) claimed.add(best);

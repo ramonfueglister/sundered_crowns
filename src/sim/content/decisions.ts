@@ -59,6 +59,13 @@ function turnFaith(e: EvApi, faith: number, convertLand: (l: number) => boolean 
   n.flags.faith_changed = s.day;
 }
 function faithShare(e: EvApi, faith: number) { let a = 0, t = 0; for (const l of H.locs(e.s, e.n.id)) { const d = Math.max(1, e.s.loc.dev[l]); t += d; if (e.s.loc.faith[l] === faith) a += d; } return t ? a / t : 0; }
+/** Tengri: the faith (other than our own) held by most of our land, or -1. */
+function secondFaithChoice(e: EvApi): number {
+  const by = new Map<number, number>();
+  for (const l of H.locs(e.s, e.n.id)) { const f = e.s.loc.faith[l]; if (f !== e.n.faith) by.set(f, (by.get(f) ?? 0) + Math.max(1, e.s.loc.dev[l])); }
+  let best = -1, bv = 0; for (const [f, v] of by) if (v > bv || (v === bv && f < best)) { bv = v; best = f; }
+  return best;
+}
 /** The reform faith that is strongest in or around our realm, or -1. */
 function nearbyReform(e: EvApi): number {
   let best = -1, bv = 0;
@@ -236,6 +243,49 @@ export const DECISIONS: DecisionDef[] = [
       permanent(e, 'crown_over_church', { en: 'Crown over church', de: 'Krone über Kirche' }, { mandate_gain: 0.05, authority_gain: 0.1 });
     },
     ai: (e) => (e.s.papacy.curiaFavour[e.n.id] ?? 0) < 15 && e.n.mandate > 55 && e.s.day - (e.s.flags.reformation_start ?? e.s.day) > 365 * 10 && !e.n.isHRE && chance(e.s.rng, 0.3),
+  },
+  // ---------------- faith mechanics (see systems/faith.ts) ----------------
+  {
+    id: 'pilgrim_caravan', name: { en: 'Send the Pilgrim Caravan', de: 'Die Pilgerkarawane aussenden' },
+    desc: { en: 'Pilgrimage and the Caliph’s shadow: the realm fits out a caravan to the holy cities. Costs three months of taxes; raises Concord for ten years (more under a pious ruler) and brings prestige. Once in ten years.', de: 'Pilgerfahrt und Schatten des Kalifen: Das Reich rüstet eine Karawane zu den heiligen Städten aus. Kostet drei Monate Steuern; stärkt die Eintracht für zehn Jahre (mehr unter einem frommen Herrscher) und bringt Ansehen. Einmal in zehn Jahren.' },
+    visible: (e) => e.n.faith === FAITH_INDEX.sunni && settled(e.n),
+    can: (e) => (e.n.flags.pilgrimage_until || 0) > e.s.day ? 'too soon' : e.n.treasury < months(e, 3) ? 'not enough gold' : null,
+    effect: (e) => {
+      const pious = (e.s.chars[e.n.ruler]?.traits ?? []).includes('pious');
+      e.fx.gold(-3); e.fx.prestige(5);
+      e.fx.modifier('pilgrimage', 10, { en: 'Pilgrim caravan', de: 'Pilgerkarawane' }, { concord: pious ? 12 : 8 });
+      e.n.flags.pilgrimage_until = e.s.day + 365 * 10;
+    },
+    ai: (e) => e.n.concord < 40 && e.n.treasury > months(e, 9) && chance(e.s.rng, 0.5),
+  },
+  {
+    id: 'embrace_second_faith', name: { en: 'Embrace a Second Faith', de: 'Einen zweiten Glauben annehmen' }, once: true,
+    desc: { en: 'Syncretic steppe: the khan honours the faith most of his subjects follow beside the Eternal Sky. Its land no longer counts as foreign (no unrest from faith, faster integration).', de: 'Synkretische Steppe: Der Khan ehrt neben dem Ewigen Himmel den Glauben, dem die meisten seiner Untertanen folgen. Dessen Land gilt nicht mehr als fremd (keine Glaubensunruhe, schnellere Eingliederung).' },
+    visible: (e) => e.n.faith === FAITH_INDEX.tengri,
+    can: (e) => secondFaithChoice(e) < 0 ? 'no other faith in our land' : e.n.authority < 20 ? 'need 20 Authority' : null,
+    effect: (e) => { const f = secondFaithChoice(e); e.n.flags.second_faith = f + 1; e.fx.authority(-20); e.fx.concord(5); },
+  },
+  {
+    id: 'secularise_church_lands', name: { en: 'Secularise Church Lands', de: 'Kirchengut einziehen' },
+    desc: { en: 'Secularised church lands: the prince takes monasteries and chapter estates into the crown’s hands. Gold worth six months of taxes and 40 Authority, but the prelates are angered and lose influence. Once in twenty-five years.', de: 'Säkularisiertes Kirchengut: Der Fürst nimmt Klöster und Stiftsgüter in die Hand der Krone. Gold im Wert von sechs Monaten Steuern und 40 Autorität, doch die Prälaten sind erzürnt und verlieren an Einfluss. Einmal in fünfundzwanzig Jahren.' },
+    visible: (e) => e.n.faith === FAITH_INDEX.evangelical,
+    can: (e) => (e.n.flags.secularised_until || 0) > e.s.day ? 'too soon' : (e.n.estates.find((x) => x.id === 'prelates')?.influence ?? 0) < 8 ? 'little church land is left' : null,
+    effect: (e) => { e.fx.gold(6); e.fx.authority(40); e.fx.estate('prelates', -25, -10); e.fx.concord(-5); e.n.flags.secularised_until = e.s.day + 365 * 25; },
+    ai: (e) => (e.n.treasury < months(e, 12) || e.n.authority < 60) && chance(e.s.rng, 0.5),
+  },
+  // ---------------- uses of a full treasury (see spendSurplus in systems/ai.ts) ----------------
+  {
+    id: 'colonial_venture', name: { en: 'Fund a Colonial Venture', de: 'Ein Kolonialunternehmen finanzieren' },
+    desc: { en: 'The crown gives merchants, ship-owners and younger sons money to settle land beyond the sea. Costs twelve months of taxes; for fifteen years one more group of settlers can be under way at a time, and they sail further. Once in fifteen years.', de: 'Die Krone gibt Kaufleuten, Reedern und nachgeborenen Söhnen Geld, um Land jenseits des Meeres zu besiedeln. Kostet zwölf Monate Steuern; fünfzehn Jahre lang kann ein Siedlerzug mehr zugleich unterwegs sein, und die Siedler segeln weiter. Einmal in fünfzehn Jahren.' },
+    visible: (e) => !!e.n.flags.atlantic && e.n.overlord < 0 && e.n.tech[1] >= 9,
+    can: (e) => (e.n.flags.venture_until || 0) > e.s.day ? 'too soon' : e.n.treasury < months(e, 12) ? 'not enough gold' : null,
+    effect: (e) => {
+      e.fx.gold(-12);
+      e.fx.modifier('colonial_venture', 15, { en: 'Colonial venture', de: 'Kolonialunternehmen' }, { colonists: 1, colonial_range: 0.15 });
+      e.n.flags.venture_until = e.s.day + 365 * 15;
+    },
+    // a crown with more than a year and a half of revenue in the chest
+    ai: (e) => e.n.treasury > Object.values(e.n.income).reduce((p, v) => p + Math.max(0, v), 0) * 18 && chance(e.s.rng, 0.5),
   },
   {
     id: 'obedience_rome', name: { en: 'Obedience to the Roman Pope', de: 'Obödienz zum römischen Papst' },

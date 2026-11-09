@@ -504,6 +504,21 @@ const S: Record<string, [string, string]> = {
   x_duty_exempt: ['Exempt by law', 'Befreit per Gesetz'],
   x_duty_exempt_hint: ['Exempt classes pay that share less and their estate does not resent the duty. The crown forgoes their hearth tax and excise; their land tax falls on the peasants.', 'Befreite Schichten zahlen diesen Anteil weniger, und ihr Stand nimmt die Abgabe nicht übel. Herdsteuer und Akzise der Befreiten entgehen der Krone; ihre Grundsteuer tragen die Bauern.'],
   fx_hearth_exempt_nobles: ['Nobility free of the hearth tax', 'Adel frei von der Herdsteuer'],
+  // ---- depth track: faith mechanics (src/sim/systems/faith.ts) ----
+  faith_mechanic: ['Faith mechanic', 'Glaubensmechanik'], faith_mechanic_idle: ['No effect on this realm at the moment.', 'Derzeit ohne Wirkung auf dieses Reich.'],
+  acthint_excommunicate: ['Costs 50 favour with the Curia. The banned ruler loses Mandate and Concord, Latin realms think less of him, his Latin vassals strain to be free and his fellow Latins gain a cause for war.', 'Kostet 50 Gunst bei der Kurie. Der gebannte Herrscher verliert Mandat und Eintracht, lateinische Reiche denken schlechter von ihm, seine lateinischen Vasallen streben nach Freiheit und seine Glaubensbrüder erhalten einen Kriegsgrund.'],
+  r_heretic_church: ['Heretic church', 'Ketzerkirche'], r_overlord_excommunicated: ['Overlord excommunicated', 'Lehnsherr gebannt'], r_foreign_crown: ['A crown of another people', 'Krone eines anderen Volkes'],
+  r_brethren: ['Brethren in faith', 'Glaubensbrüder'], r_apostasy: ['Apostasy', 'Abfall vom Glauben'], r_baptism: ['Baptism', 'Taufe'],
+  fx_home_defence: ['Defence on home ground', 'Verteidigung auf eigenem Boden'], fx_home_morale: ['Morale on home ground', 'Moral auf eigenem Boden'], fx_home_attrition: ['Attrition on home ground', 'Verschleiß auf eigenem Boden'],
+  fx_build_time: ['Building time', 'Bauzeit'],
+  drift_target: ['Drifting toward', 'Strebt zu'], drift_base: ['Base', 'Grundwert'], drift_ruler_statecraft: ['Ruler’s statecraft', 'Staatskunst des Herrschers'], drift_prestige: ['Prestige', 'Ansehen'],
+  drift_laws_values: ['Laws and values', 'Gesetze und Werte'], drift_regency: ['Regency', 'Regentschaft'], drift_excommunicated: ['Excommunicated', 'Gebannt'],
+  drift_powers_content: ['Contentment of the Powers', 'Zufriedenheit der Stände'], drift_war_exhaustion: ['War exhaustion', 'Kriegsmüdigkeit'],
+  // ---- depth track: AI budget and history ----
+  cb_gathering: ['Gathering of the lands', 'Sammlung der Länder'], r_steppe_fading: ['The steppe order fades', 'Die Ordnung der Steppe verblasst'],
+  r_senior_prince: ['The leading crown of our people', 'Die führende Krone unseres Volkes'],
+  r_siege_under_way: ['Our host lies before the walls', 'Unser Heer liegt vor den Mauern'],
+  r_war_aims_unmet: ['The war aims are not yet won', 'Die Kriegsziele sind noch nicht erreicht'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

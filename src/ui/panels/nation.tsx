@@ -4,10 +4,10 @@ import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
-import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
+import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
-const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access'];
+const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'excommunicate'];
 export const GOALS: WarGoal['type'][] = ['conquest', 'throne', 'faith', 'trade', 'subjugate', 'reconquest', 'independence'];
 const SPY = ['fabricate', 'slander', 'support_rebels', 'steal_tech'];
 
@@ -43,7 +43,7 @@ export function NationPanel({ nation }: { nation: number }) {
     </div>
     <div class="loc-id">
       <Tip content={<div><TipHead name={placeName(d.capitalName)} hint={t('x_click_capital')} /></div>}><span class="chip" onClick={() => flyToLoc(d.capital)}><small>{t('capital')}</small><a class="lk">{placeName(d.capitalName)}</a></span></Tip>
-      <Tip content={<div><TipHead name={L(d.faith)} hint={t('x_nat_faith_hint')} /></div>}><span class="chip"><small>{t('faith')}</small>{L(d.faith)}</span></Tip>
+      <Tip content={() => <div><TipHead name={L(d.faith)} hint={t('x_nat_faith_hint')} /><FaithTip m={d.faithMechanic} /></div>}><span class="chip"><small>{t('faith')}</small>{L(d.faith)}</span></Tip>
       <Tip content={<div><TipHead name={L(d.culture)} hint={t('x_nat_culture_hint')} /></div>}><span class="chip"><small>{t('culture')}</small>{L(d.culture)}</span></Tip>
     </div>
     <div class="grid2">
@@ -93,7 +93,7 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   const [gift, setGift] = useState(0);
   const allied = rel.treaties.includes('alliance'), married = rel.treaties.includes('marriage'), access = rel.treaties.includes('access');
   const proposals = PROPOSALS.filter((a) => !(a === 'alliance' && allied) && !(a === 'marriage' && married) && !(a === 'access' && access) && !(a === 'trade' && rel.treaties.includes('trade')) && !(a === 'guarantee' && rel.treaties.includes('guarantee')) && !(a !== 'improve' && rel.atWar));
-  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'fabricate' && rel.atWar));
+  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'fabricate' && rel.atWar) && !(a === 'excommunicate' && !rel.canExcommunicate));
   const key = proposals.join(',') + d.id;
   useEffect(() => {
     let live = true;
@@ -142,7 +142,8 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
   const cbs = cbList(d); const fabricating = !!d.rel?.fabricating;
   const truce = d.rel.treaties.includes('truce'), allied = d.rel.treaties.includes('alliance');
   const me = nations.value[playerId.value];
-  const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : true) && (g === 'subjugate' ? true : true));
+  // a war of reconquest needs our own land in their hands, a holy war another faith (the simulation refuses the rest)
+  const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : g === 'reconquest' ? cbs.includes('reconquest') : g === 'faith' ? !d.rel?.sameFaith : true));
   return <Section title={t('declare_war')} id="nat-war" open={false}>
     {!open ? <div class="act-row"><Tip content={() => <CbTip d={d} />}><span class="muted">{cbs.length ? <>{t('casus_belli')}: <b>{cbs.map((c) => t(`cb_${c}`)).join(', ')}</b></> : t('no_cb_short')}</span></Tip><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
       : <div class="war-form">
@@ -174,3 +175,13 @@ function Espionage({ d }: { d: any }) {
   </Section>;
 }
 void lang; void pct; void reasonLabel;
+
+/** The faith's own mechanic (src/sim/systems/faith.ts) and what it does for this realm at the moment. */
+function FaithTip({ m }: { m: any }) {
+  if (!m?.name) return null;
+  return <div class="faith-tip">
+    <div class="bd-title">{t('faith_mechanic')}: {L(m.name)}</div>
+    <div class="muted small">{L(m.desc)}</div>
+    {m.active?.length ? m.active.map((x: any) => <Effects title={L(x.label)} fx={x.effects} />) : <div class="muted small">{t('faith_mechanic_idle')}</div>}
+  </div>;
+}

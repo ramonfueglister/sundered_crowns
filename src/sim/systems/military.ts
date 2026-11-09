@@ -41,7 +41,7 @@ export function availableUnits(s: GameState, n: Nation, naval: boolean): number[
   }
   return out;
 }
-import { ALL_CULTURES } from '../content/peoples';
+import { ALL_CULTURES, FAITHS, FAITH_INDEX } from '../content/peoples';
 function cultureId(i: number) { return ALL_CULTURES[i] || 'unknown'; }
 
 export function unitCost(s: GameState, n: Nation, unit: number, men: number) {
@@ -278,7 +278,7 @@ function dockedAtHome(s: GameState, w: World, a: Army): boolean {
   for (let e = w.adjStart[a.loc]; e < w.adjStart[a.loc + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === a.owner && s.loc.buildings[v * B + BI.port] > 0) return true; }
   return false;
 }
-function attritionMonth(s: GameState, w: World) {
+export function attritionMonth(s: GameState, w: World) {
   // stack men per location
   const perLoc = new Map<number, number>();
   for (const a of s.armies) if (!a.fleet && !a.embarkedOn) perLoc.set(a.loc * 1000 + a.owner, (perLoc.get(a.loc * 1000 + a.owner) || 0) + armyMen(a));
@@ -303,6 +303,8 @@ function attritionMonth(s: GameState, w: World) {
     att += s.loc.snow[a.loc] * 0.02;
     const n = s.nations[a.owner];
     if (n) att *= Math.max(0, 1 + lawEffect(n, 'attrition'));
+    // faiths of the forest and the tundra know their own land (finnic_old, sami_old)
+    if (n && s.loc.owner[a.loc] === a.owner) att *= clamp(1 + lawEffect(n, 'home_attrition'), 0.2, 2);
     if (s.loc.owner[a.loc] !== a.owner && atWar(s, a.owner, s.loc.owner[a.loc])) att += 0.005;
     a.supplyDeficit = men > lim ? men / lim - 1 : 0;
     for (const r of a.regs) r.men = Math.max(0, r.men * (1 - att));
@@ -370,7 +372,7 @@ export function hostile(s: GameState, a: Army, b: Army): boolean {
   return atWar(s, a.owner, b.owner);
 }
 
-function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemyKinds: number[]) {
+export function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemyKinds: number[]) {
   let shock = 0, fire = 0, def = 0, men = 0, morale = 0, cav = 0, inf = 0;
   const n = s.nations[armies[0]?.owner];
   const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(loc, w.L - 1)]] ?? 'plains'];
@@ -390,9 +392,12 @@ function sideStats(s: GameState, w: World, armies: Army[], loc: number, defendin
   }
   const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
   const genSkill = gen ? gen.skills[2] : 0;
-  // defending their own land, militias and highlanders hold better (defence)
-  const home = defending && n && loc < w.L && s.loc.owner[loc] === n.id && !armies[0]?.rebels ? Math.max(0, lawEffect(n, 'defence')) : 0;
-  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: defending ? t.defence + home : 0 };
+  // on their own land: militias and highlanders hold better when defending (defence); homeland faiths (baltic_old,
+  // american_traditional, hussite) add defence and morale whether they attack or defend there
+  const home = !!n && loc < w.L && s.loc.owner[loc] === n.id && !armies[0]?.rebels;
+  const homeDef = home ? Math.max(0, lawEffect(n!, 'home_defence')) + (defending ? Math.max(0, lawEffect(n!, 'defence')) : 0) : 0;
+  const homeMorale = home ? Math.max(0, lawEffect(n!, 'home_morale')) : 0;
+  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: (defending ? t.defence : 0) + homeDef, homeMorale };
 }
 
 function battleDay(s: GameState, w: World, b: Battle) {
@@ -417,12 +422,12 @@ function battleDay(s: GameState, w: World, b: Battle) {
     dmgToD = (sa.shock * 0.02 + sa.fire * 0.006) * ra * genA * riverPen * winterPen; dmgToA = (sd.shock * 0.02 + sd.fire * 0.006) * rd * genD * winterPen;
   }
   dmgToD /= 1 + sd.terrainDef + sd.def / Math.max(1, sd.men) * 0.25;
-  dmgToA /= 1 + sa.def / Math.max(1, sa.men) * 0.25;
+  dmgToA /= 1 + sa.terrainDef + sa.def / Math.max(1, sa.men) * 0.25; // an attacker's terrainDef is only its homeland defence
   // casualties & morale
   const lossD = Math.min(sd.men, dmgToD) * (b.naval ? 1 / 120 : 1), lossA = Math.min(sa.men, dmgToA) * (b.naval ? 1 / 120 : 1);
   applyLosses(D, lossD); applyLosses(A, lossA);
   b.lossA += lossA; b.lossD += lossD;
-  const mA = (dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03, mD = (dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03;
+  const mA = ((dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03) / (1 + sa.homeMorale), mD = ((dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03) / (1 + sd.homeMorale);
   for (const a of A) a.morale = Math.max(0, a.morale - mA);
   for (const d of D) d.morale = Math.max(0, d.morale - mD);
   const moA = A.reduce((p, x) => p + x.morale, 0) / A.length, moD = D.reduce((p, x) => p + x.morale, 0) / D.length;
@@ -522,6 +527,13 @@ export function removeArmy(s: GameState, a: Army) {
 }
 
 // ---------------- sieges & occupation ----------------
+/** Whether a realm casts great guns that batter town walls: it has adopted the bombards, or its warfare (level 7)
+ *  lets it cast them on its own. */
+export function greatGuns(n: Nation | undefined): boolean { return !!n && (n.tech[2] >= 7 || n.modifiers.some((m) => m.id === 'inv_bombards')); }
+/** Whether a realm builds bastion fortresses, whose low earthen walls do not crumble under cannon. */
+export function bastions(n: Nation | undefined): boolean { return !!n && n.modifiers.some((m) => m.id === 'inv_trace_italienne'); }
+/** Artillery (men in the guns) a host needs to batter the walls of a fort of this level. */
+export const GUNS_PER_FORT = 250;
 function siegesDay(s: GameState, w: World) {
   const L = w.L;
   for (const a of s.armies) {
@@ -554,7 +566,11 @@ function siegesDay(s: GameState, w: World) {
   }
   for (const sg of s.sieges.slice()) {
     const besiegers = s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length);
-    if (!besiegers.length) { s.sieges.splice(s.sieges.indexOf(sg), 1); continue; }
+    if (!besiegers.length) {
+      // a sortie or a relief army is fought before the walls: the siege works stand until the battle is decided
+      if (s.battles.some((b) => b.loc === sg.loc)) continue;
+      s.sieges.splice(s.sieges.indexOf(sg), 1); continue;
+    }
     sg.days++;
     const l = sg.loc;
     const fort = s.loc.buildings[l * B + BI.fort];
@@ -567,13 +583,26 @@ function siegesDay(s: GameState, w: World) {
     if (sg.days % 30 === 0) {
       // monthly siege roll: 1d14 + bonuses vs fort level
       const roll = 1 + Math.floor(rand(s.rng) * 14);
-      const lead = besiegers[0], bes = s.nations[lead.owner];
-      // siege craft of the besieger (great guns, engineers) and the weight of numbers against the garrison
-      const craft = bes && !lead.rebels ? lawEffect(bes, 'siege') : 0;
+      // siege craft of the besiegers (great guns, engineers: the best of the allied camps directs the works) and the
+      // weight of numbers against the garrison
+      // A realm whose whole host is called to a great siege (siege_focus, set by a situation such as the siege of the
+      // City) brings the great guns cast for it: +2 there, and only with artillery in the camp.
+      let craft = 0, guns = false;
+      for (const a of besiegers) {
+        const bes = s.nations[a.owner]; if (!bes || a.rebels) continue;
+        craft = Math.max(craft, lawEffect(bes, 'siege') + (art > 0 && bes.flags.siege_focus === l ? 2 : 0));
+        if (greatGuns(bes)) guns = true;
+      }
       const bonus = (art > 0 ? 2 + Math.min(3, art / 500) : 0) + (sg.blockade ? 2 : 0) + sg.breach + Math.min(3, Math.floor(men / Math.max(1, sg.garrison * 2))) + Math.floor(sg.days / 120) + craft;
       const need = 10 + fortStr * 2;
       if (roll === 14 || roll + bonus >= need) sg.progress += 1;
       if (roll + bonus >= need + 4) { sg.breach = Math.min(3, sg.breach + 1); sg.log.push('breach'); }
+      // great guns batter the old high walls (enough artillery for the fort's level, and a realm that casts such guns):
+      // each month the breach widens, and once it is wide open the bombardment bleeds the garrison. Bastion fortresses
+      // (trace_italienne) do not crumble this way.
+      else if (guns && art >= GUNS_PER_FORT * fort && !bastions(defN)) {
+        if (sg.breach < 3) { sg.breach++; sg.log.push('breach'); } else sg.garrison = Math.max(300, sg.garrison * 0.9);
+      }
       if (roll <= 2) {
         // disease in the camp
         for (const a of besiegers) for (const r of a.regs) r.men *= 0.93;
@@ -795,6 +824,7 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   if (f === 'separatist' && locs.length >= 3) {
     // break away as a new nation
     const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]]);
+    const lf = landFaith(s, locs); if (lf >= 0) nn.faith = lf;
     chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
   } else {
     for (const l of locs) s.loc.ctrl[l] = n.id as any;
@@ -809,6 +839,22 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   s.flags.ownershipDirty = s.day;
 }
 
+/** The faith most of these places hold (weighted by development), if it holds more than half of them; else -1.
+ *  A people that wins its own realm keeps its own faith (see the release of land in a peace, separatist rebels and the
+ *  khanates that break from a horde). */
+export function landFaith(s: GameState, locs: readonly number[]): number {
+  const by = new Map<number, number>(); let tot = 0;
+  for (const l of locs) { const d = Math.max(1, s.loc.dev[l]); tot += d; by.set(s.loc.faith[l], (by.get(s.loc.faith[l]) ?? 0) + d); }
+  let best = -1, bv = 0;
+  for (const [f, v] of by) if (v > bv || (v === bv && f < best)) { bv = v; best = f; }
+  return bv > tot * 0.5 ? best : -1;
+}
+/** The faith of a khanate that breaks from a horde: the horde's own, unless its new lands mostly keep the old faiths of
+ *  the steppe and the forest; then the khan returns to the steppe faith (Tengri), which may embrace theirs beside it. */
+export function khanFaith(s: GameState, from: Nation, locs: readonly number[]): number {
+  const lf = landFaith(s, locs);
+  return lf >= 0 && lf !== from.faith && FAITHS[lf]?.family === 'traditional' ? FAITH_INDEX.tengri : from.faith;
+}
 export function releaseNation(s: GameState, w: World, from: Nation, locs: number[], culture: number): Nation {
   // reuse a dead nation with a capital among these locations if possible
   let nn = s.nations.find((x) => !x.alive && locs.includes(x.capital));
