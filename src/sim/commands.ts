@@ -28,7 +28,7 @@ export function merchantCap(n: { tech: number[]; gov: string }): number { return
 
 function myArmy(s: GameState, n: number, id: number): Army | null {
   const a = s.armies.find((x) => x.id === id);
-  return a && a.owner === n ? a : null;
+  return a && a.owner === n && !a.rebels ? a : null; // rebels carry the realm's id but obey no one
 }
 
 export function applyCommand(s: GameState, w: World, cmd: Command): CmdResult {

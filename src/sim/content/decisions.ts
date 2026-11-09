@@ -291,7 +291,7 @@ export const DECISIONS: DecisionDef[] = [
       e.n.flags.capital_moved = e.s.day; e.s.flags.ownershipDirty = e.s.day;
       e.fx.chronicle({ en: `The court moved from ${e.w.names[old]} to ${e.w.names[b]}.`, de: `Der Hof zog von ${e.w.namesDe[old]} nach ${e.w.namesDe[b]}.` }, b);
     },
-    ai: (e) => { const b = H.biggestLoc(e); return b >= 0 && H.locs(e.s, e.n.id).length >= 8 && e.s.loc.dev[e.n.capital] < e.s.loc.dev[b] * 0.35 && chance(e.s.rng, 0.15); },
+    ai: (e) => { const b = H.biggestLoc(e, (l) => e.w.distKm(l, e.n.capital) < 900); return b >= 0 && b !== e.n.capital && H.locs(e.s, e.n.id).length >= 8 && e.s.loc.dev[e.n.capital] < e.s.loc.dev[b] * 0.35 && chance(e.s.rng, 0.15); },
   },
   {
     id: 'codify_laws', name: { en: 'Codify the Laws', de: 'Die Gesetze kodifizieren' }, once: true,

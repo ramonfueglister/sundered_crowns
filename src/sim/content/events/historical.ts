@@ -319,7 +319,7 @@ export const HISTORICAL_EVENTS: EventDef[] = [
     trigger: (e) => isKey(e, 'ottoman') && ownerOf(e, 'Constantinople') !== e.n.id && ownerOf(e, 'Constantinople') >= 0,
     setup: (e) => { e.ctx.other = ownerOf(e, 'Constantinople'); return true; },
     options: [
-      { label: { en: 'Pay him four times what he asks', de: 'Ihm das Vierfache seiner Forderung zahlen' }, effect: (e) => { e.fx.gold(-3); e.fx.tech(2, 0.15); e.fx.modifier('great_bombard', 30, { en: 'The great bombard', de: 'Die große Steinbüchse' }, { fire: 0.1, fort_strength: 0.05 }); e.fx.flag('great_bombard'); }, ai: 0.9 },
+      { label: { en: 'Pay him four times what he asks', de: 'Ihm das Vierfache seiner Forderung zahlen' }, effect: (e) => { e.fx.gold(-3); e.fx.tech(2, 0.15); e.fx.modifier('great_bombard', 30, { en: 'The great bombard', de: 'Die große Steinbüchse' }, { fire: 0.1, fort_strength: 0.05, siege: 3 }); e.fx.flag('great_bombard'); }, ai: 0.9 },
       { label: { en: 'Send him away', de: 'Ihn fortschicken' }, effect: (e) => { e.fx.gold(0.5); e.fx.estate('magnates', 2); }, ai: 0.1 },
     ],
   },

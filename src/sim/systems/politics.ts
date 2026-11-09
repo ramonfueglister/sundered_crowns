@@ -194,14 +194,17 @@ export function succession(s: GameState, w: World, n: Nation) {
         const k = claimants[0];
         const other = s.nations[k];
         // personal union: the claimant's ruler inherits; nation becomes junior partner
+        const ownJuniors = s.nations.some((x) => x.alive && x.overlord === n.id && x.subjectType === 'personal_union');
         if (other.overlord < 0 && n.overlord < 0 && !s.wars.some((wr) => wr.att.includes(k) && wr.def.includes(n.id))) {
           // the greater crown is the seat of the union: a small claimant's realm joins it as the junior partner
-          const flip = !s.playerNations.includes(k) && !s.nations.some((x) => x.overlord === k) && (s.playerNations.includes(n.id) || nationDevOf(s, n.id) > nationDevOf(s, k) * 1.5);
+          const flip = !s.playerNations.includes(k) && !s.nations.some((x) => x.alive && x.overlord === k) && (s.playerNations.includes(n.id) || ownJuniors || nationDevOf(s, n.id) > nationDevOf(s, k) * 1.5);
           if (flip) {
             other.overlord = n.id; other.subjectType = 'personal_union'; other.subjectSince = s.day;
-            n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.dynasty = other.dynasty;
+            n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.regent = other.regent || 0; n.dynasty = other.dynasty;
+            for (const x of s.nations) if (x.alive && x.overlord === n.id && x.subjectType === 'personal_union') { x.ruler = n.ruler; x.heir = n.heir; }
             chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${s.chars[other.ruler]?.name} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
             notice(s, other.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
+            notice(s, n.id, 'union', { en: `${dead?.name ?? '?'} died without heirs: ${s.chars[other.ruler]?.name} of ${other.short.en} inherits our crown and rules both realms.`, de: `${dead?.name ?? '?'} starb ohne Erben: ${s.chars[other.ruler]?.name} von ${other.short.de} erbt unsere Krone und regiert beide Reiche.` }, { loc: n.capital });
             return;
           }
           n.overlord = k; n.subjectType = 'personal_union'; n.subjectSince = s.day; n.dynasty = other.dynasty;

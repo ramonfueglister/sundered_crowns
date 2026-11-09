@@ -156,7 +156,7 @@ export function MapView() {
 
 function armiesAt(loc: number) {
   const v = view.value; if (!v) return [];
-  return v.armies.filter((a) => a.loc === loc && a.owner === playerId.value && !a.embarked);
+  return v.armies.filter((a) => a.loc === loc && a.owner === playerId.value && !a.embarked && !a.rebels);
 }
 
 function onClick(loc: number, ev: MouseEvent) {

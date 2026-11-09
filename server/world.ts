@@ -751,11 +751,14 @@ export class WorldCore {
     const N = this.w.N, buf = new Int16Array(N * 2); buf.set(this.s.loc.owner.subarray(0, N), 0); buf.set(this.s.loc.ctrl.subarray(0, N), N);
     return encodeBinary(BIN_OWNERS, buf);
   }
-  private sendFullView(ss: Session) {
+  private sendFullView(ss: Session, inTick = false) {
     const shared = { ...this.sharedViewNoAdvance(), nations: nationLites(this.s, this.w) };
     ss.sendBin(this.ownersBin()); ss.sendBin(encodeBinary(BIN_SNOW, this.s.loc.snow));
     ss.send({ type: 'tick', view: this.personal(ss, shared as any) });
-    ss.needFull = false; this.sendColors(ss);
+    // a full view sent between days shows the live state, which the daily deltas' baselines may not hold yet:
+    // such a session gets another full view with the next day, when the baselines move to the same state
+    ss.needFull = inTick ? false : true; if (!inTick) this.nationsDirty = true;
+    this.sendColors(ss);
   }
   private sharedViewNoAdvance() {
     const s = this.s; const lp = (s as any).lastPeace;
@@ -786,7 +789,7 @@ export class WorldCore {
     const wi = JSON.stringify({ type: 'world', world: this.worldInfo() });
     const head = `{"type":"tick",${!full && delta.length ? `"ownerDelta":${JSON.stringify(delta)},` : ''}"view":${JSON.stringify(shared).slice(0, -1)},`;
     for (const ss of this.sessions) {
-      if (ss.needFull) { this.sendFullView(ss); continue; }
+      if (ss.needFull) { this.sendFullView(ss, true); continue; }
       if (full) ss.sendBin(full);
       if (snow) ss.sendBin(snow);
       ss.sendJson(wi);

@@ -218,6 +218,7 @@ export function computeFortZones(s: GameState, w: World) {
 // ---------------- daily army update ----------------
 function armyDay(s: GameState, w: World, a: Army) {
   if (a.battle) return;
+  if (a.retreating && !a.path.length) a.retreating = false; // a retreat ends when the road ends, however it ended
   if (a.embarkedOn) { const f = s.armies.find((x) => x.id === a.embarkedOn); if (f) a.loc = f.loc; else a.embarkedOn = 0; return; }
   if (!a.fleet && a.loc >= w.L) {
     // ferried army caught at sea by an enemy fleet: heavy losses, forced back toward land
@@ -270,6 +271,11 @@ export function supplyLimit(s: GameState, w: World, l: number, owner: number): n
   return Math.max(800, lim);
 }
 
+/** A fleet lying idle in a sea zone next to one of its realm's ports is in harbour: no storms, no wear. */
+function dockedAtHome(s: GameState, w: World, a: Army): boolean {
+  for (let e = w.adjStart[a.loc]; e < w.adjStart[a.loc + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === a.owner && s.loc.buildings[v * B + BI.port] > 0) return true; }
+  return false;
+}
 function attritionMonth(s: GameState, w: World) {
   // stack men per location
   const perLoc = new Map<number, number>();
@@ -277,7 +283,7 @@ function attritionMonth(s: GameState, w: World) {
   for (const a of s.armies) {
     if (a.fleet) {
       // storms and scurvy at sea; ships wear out
-      if (a.loc >= w.L) {
+      if (a.loc >= w.L && !(a.path.length === 0 && dockedAtHome(s, w, a))) {
         const storm = stormRisk(s, w, a.loc);
         for (const r of a.regs) r.men = Math.max(0, r.men * (1 - 0.01 - storm * 0.05));
       }
@@ -299,7 +305,7 @@ function attritionMonth(s: GameState, w: World) {
     a.supplyDeficit = men > lim ? men / lim - 1 : 0;
     for (const r of a.regs) r.men = Math.max(0, r.men * (1 - att));
     // foraging devastates the land
-    if (men > lim * 0.5) s.loc.devast[a.loc] = clamp(s.loc.devast[a.loc] + Math.min(0.15, men / lim * 0.03), 0, 1);
+    if (!quartered && men > lim * 0.5) s.loc.devast[a.loc] = clamp(s.loc.devast[a.loc] + Math.min(0.15, men / lim * 0.03), 0, 1);
     // morale recovers in supply
     a.morale = clamp(a.morale + (a.supplyDeficit > 0 ? 0.03 : 0.12), 0, maxMorale(s, a));
   }
@@ -343,7 +349,7 @@ function startBattles(s: GameState, w: World) {
 }
 function riverCrossing(w: World, a: Army, loc: number): boolean { return false; }
 export function hostile(s: GameState, a: Army, b: Army): boolean {
-  if (a.owner === b.owner) return false;
+  if (a.owner === b.owner && !a.rebels && !b.rebels) return false; // rebels carry the owner they rise against
   if (a.rebels || b.rebels || a.hostile || b.hostile) {
     if (a.rebels && b.rebels) return false;
     const r = a.rebels ? a : b, o = a.rebels ? b : a;
@@ -432,16 +438,17 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   for (const a of Lz) if (a.general && chance(s.rng, 0.08)) { const g = s.chars[a.general]; if (g) { g.alive = false; g.died = s.day; notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc }); a.general = 0; } }
   // losers retreat to the nearest friendly location
   for (const a of Lz) {
-    if (armyMen(a) < 50) { removeArmy(s, a); continue; }
+    if (armyMen(a) < (a.fleet ? 1 : 50)) { removeArmy(s, a); continue; } // fleets count hulls, armies men
     a.morale = Math.min(a.morale, 0.15);
     const dest = retreatTarget(s, w, a);
     if (dest >= 0) { const p = findPath(s, w, a, a.loc, dest, 4000); if (p) { a.path = p; a.retreating = true; } }
   }
   for (const a of W) a.morale = Math.min(maxMorale(s, a), a.morale + 0.1);
+  const civil = wn === ln; // a realm against its own rebels: no prestige, no war score
   const wnN = s.nations[wn], lnN = s.nations[ln];
-  if (wnN) { wnN.stats.battlesWon++; wnN.prestige = clamp(wnN.prestige + 2 + lossL / 2000, -100, 100); }
-  if (lnN) { lnN.stats.battlesLost++; lnN.prestige = clamp(lnN.prestige - 2, -100, 100); lnN.warExhaustion = clamp(lnN.warExhaustion + lossL / 3000 + 1, 0, 100); }
-  if (wnN) wnN.warExhaustion = clamp(wnN.warExhaustion + lossW / 5000, 0, 100);
+  if (wnN && !civil) { wnN.stats.battlesWon++; wnN.prestige = clamp(wnN.prestige + 2 + lossL / 2000, -100, 100); }
+  if (lnN && !civil) { lnN.stats.battlesLost++; lnN.prestige = clamp(lnN.prestige - 2, -100, 100); lnN.warExhaustion = clamp(lnN.warExhaustion + lossL / 3000 + 1, 0, 100); }
+  if (wnN && !civil) wnN.warExhaustion = clamp(wnN.warExhaustion + lossW / 5000, 0, 100);
   // manpower lost permanently comes out of population (peasants/labourers)
   const big = lossW + lossL > 1500;
   const kind = b.naval ? 'naval battle' : 'battle';
@@ -452,7 +459,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   if (big) chronicle(s, wn, 'battle', text, b.loc);
   s.flags[`last_battle_${b.loc}`] = s.day;
   for (const p of [wn, ln]) if (s.playerNations.includes(p)) notice(s, p, p === wn ? 'battle_won' : 'battle_lost', text, { loc: b.loc });
-  warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
+  if (!civil) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
   s.battles.splice(s.battles.indexOf(b), 1);
   s.flags.lastBattleResult = s.day;
   (s as any).lastBattle = { loc: b.loc, winner: wn, loser: ln, lossW, lossL, days: b.days, naval: b.naval, day: s.day, reasons: battleReasons(s, w, b, winner) };
@@ -497,7 +504,7 @@ function siegesDay(s: GameState, w: World) {
     if (ctrl === a.owner) { a.siege = -1; continue; }
     const target = a.rebels ? a.rebels.target : -1;
     const hostileCtrl = a.rebels ? (ctrl === target || (ctrl >= 0 && s.nations[ctrl]?.overlord === target)) : (ctrl >= 0 && atWar(s, a.owner, ctrl));
-    const ownerBack = ctrl >= 0 && s.loc.owner[l] === a.owner && ctrl !== a.owner && atWar(s, a.owner, ctrl); // liberating own land
+    const ownerBack = s.loc.owner[l] === a.owner && ctrl !== a.owner && ((ctrl === -2 && !a.rebels) || (ctrl >= 0 && atWar(s, a.owner, ctrl))); // liberating own land, also from rebels
     if (!hostileCtrl && !ownerBack && !(ctrl < 0 && a.hostile)) continue;
     // enemy army present? no siege
     if (s.armies.some((x) => x !== a && x.loc === l && !x.fleet && hostile(s, x, a))) continue;
@@ -533,7 +540,10 @@ function siegesDay(s: GameState, w: World) {
     if (sg.days % 30 === 0) {
       // monthly siege roll: 1d14 + bonuses vs fort level
       const roll = 1 + Math.floor(rand(s.rng) * 14);
-      const bonus = (art > 0 ? 2 + Math.min(3, art / 500) : 0) + (sg.blockade ? 2 : 0) + sg.breach + (men > sg.garrison * 4 ? 1 : 0) + Math.floor(sg.days / 120);
+      const lead = besiegers[0], bes = s.nations[lead.owner];
+      // siege craft of the besieger (great guns, engineers) and the weight of numbers against the garrison
+      const craft = bes && !lead.rebels ? lawEffect(bes, 'siege') : 0;
+      const bonus = (art > 0 ? 2 + Math.min(3, art / 500) : 0) + (sg.blockade ? 2 : 0) + sg.breach + Math.min(3, Math.floor(men / Math.max(1, sg.garrison * 2))) + Math.floor(sg.days / 120) + craft;
       const need = 10 + fortStr * 2;
       if (roll === 14 || roll + bonus >= need) sg.progress += 1;
       if (roll + bonus >= need + 4) { sg.breach = Math.min(3, sg.breach + 1); sg.log.push('breach'); }
@@ -626,7 +636,7 @@ function recruitsDay(s: GameState, w: World) {
     s.recruits.splice(s.recruits.indexOf(r), 1);
     const n = s.nations[r.nation]; if (!n?.alive || s.loc.owner[r.loc] !== r.nation) continue;
     const isShip = UNITS[r.type].kind === 'ship';
-    let target = s.armies.find((a) => a.owner === r.nation && a.loc === (isShip ? seaNear(w, r.loc) : r.loc) && a.fleet === isShip && !a.path.length && !a.battle);
+    let target = s.armies.find((a) => a.owner === r.nation && !a.rebels && a.loc === (isShip ? seaNear(w, r.loc) : r.loc) && a.fleet === isShip && !a.path.length && !a.battle);
     if (isShip) {
       const sea = seaNear(w, r.loc);
       if (!target) target = newArmy(s, r.nation, sea >= 0 ? sea : r.loc, [], true);
@@ -678,7 +688,7 @@ function upkeepMonth(s: GameState, w: World) {
     for (const r of a.regs) {
       const u = UNITS[r.type];
       const k = u.kind === 'ship' ? r.men : r.men / 1000;
-      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * (1 + lawEffect(n, 'army_cost') + mod(n, 'army_cost'));
+      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * clamp(1 + lawEffect(n, 'army_cost'), 0.3, 2); // lawEffect already holds the modifiers
       if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
       if (u.kind === 'ship') navy[a.owner] += c * n.navyMaint; else army[a.owner] += c * n.armyMaint;
     }

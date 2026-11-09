@@ -9,6 +9,7 @@ import { seedPlague } from '../systems/society';
 import { nearestLoc } from '../setup';
 import { declareWar, nationLocsRO, nationDev, startCivilWar } from '../systems/war';
 import { lawEffect } from '../systems/politics';
+import { nationPower } from '../systems/ai';
 import { chronicle, notice, addOpinion, clamp, atWar, hasTreaty, opinion, allies } from '../ctx';
 import { FAITH_INDEX, FAITHS, faithFamily, GROUP_OF, ALL_CULTURES } from './peoples';
 import { INNOVATIONS } from './innovations';
@@ -463,18 +464,24 @@ const DEFS: SituationDef[] = [
       o.manpower = Math.min(o.maxManpower, o.manpower + o.maxManpower * 0.015);
       if (cityOwner && cityOwner.faith !== o.faith) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
       // a campaign season every quarter: the sultan only waits while he is already on the offensive somewhere
-      const attacking = s.wars.some((x) => x.att.includes(o.id));
-      // the siege of the City outranks any other campaign
-      const cityWar = sit.stage === 2 && !!cityOwner && cityOwner.id !== o.id && !atWar(s, o.id, cityOwner.id);
-      if (m % 3 === 1 && (y >= sit.data.nextWar || cityWar) && (!attacking || cityWar) && o.warExhaustion < 60 && !human(s, o.id)) {
+      const attacking = s.wars.some((x) => x.attLead === o.id); // wars he leads; being called in by an ally does not hold back his own campaign
+      if (m % 3 === 1 && o.warExhaustion < 60 && !human(s, o.id)) {
+        // the sultan picks fights he can win: his host and allies against the target and the allies likely to come
+        // (far-away allies count half, allies of both sides not at all)
+        const mine = allies(s, o.id);
+        const myPow = nationPower(s, o.id) + mine.reduce((p, a) => p + nationPower(s, a), 0);
+        const bloc = (x: number) => nationPower(s, x) + allies(s, x).filter((a) => a !== o.id && !mine.includes(a))
+          .reduce((p, a) => p + nationPower(s, a) * (s.nations[a].capital >= 0 && s.nations[x].capital >= 0 && w.distKm(s.nations[a].capital, s.nations[x].capital) > 1200 ? 0.5 : 1), 0);
+        // the siege of the City outranks any other campaign, once it can be won
+        const cityWar = sit.stage === 2 && !!cityOwner && cityOwner.id !== o.id && !atWar(s, o.id, cityOwner.id) && !hasTreaty(s, o.id, cityOwner.id, 'truce') && bloc(cityOwner.id) < myPow * 1.1;
         const tries: [number, number[]][] = [];
-        if (sit.stage === 2 && cityOwner && cityOwner.id !== o.id && !hasTreaty(s, o.id, cityOwner.id, 'truce')) tries.push([cityOwner.id, [city]]);
-        else {
+        if (cityWar) tries.push([cityOwner!.id, [city]]);
+        else if (y >= sit.data.nextWar && !attacking) {
           const myDev = nationDev(s, o.id);
           const balkan = (x: Nation) => x.capital >= 0 && w.lat[x.capital] >= 40.3 && w.lon[x.capital] <= 29.5 && w.lon[x.capital] > 15;
           const cands = [...neighboursOf(s, w, o.id)].map((x) => s.nations[x]).filter((x) => x.alive && x.overlord < 0 && !atWar(s, o.id, x.id) && !hasTreaty(s, o.id, x.id, 'truce') && !hasTreaty(s, o.id, x.id, 'alliance')
             && (faithFamily(x.faith) === 'christian' || GROUP_OF[ALL_CULTURES[x.culture]] === 'turkic') && x.key !== 'mamluk'
-            && nationDev(s, x.id) < myDev * (balkan(x) && faithFamily(x.faith) === 'christian' ? 1.8 : 1.2));
+            && nationDev(s, x.id) < myDev * (balkan(x) && faithFamily(x.faith) === 'christian' ? 1.8 : 1.2) && bloc(x.id) < myPow * 0.9);
           // the Balkans first: divided Christian crowns of Europe; the City itself only late; Anatolian rivals when nothing else is open
           const score = (x: Nation) => nationDev(s, x.id) * 0.2 - (faithFamily(x.faith) === 'christian' ? 40 : 0) - (balkan(x) ? 150 : 0);
           cands.sort((a, b) => score(a) - score(b));

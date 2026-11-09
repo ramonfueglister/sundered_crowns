@@ -111,6 +111,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     const e = estate(na, 'burghers'); if (e && e.contentment < 35) return 'the assembly refused to fund the war';
   }
   const target = topOverlord(s, b);
+  // never a war inside one's own realm of subjects (independence and civil wars are fought from within on purpose)
+  if (goalType !== 'independence' && goalType !== 'civil_war' && (target === a || target === topOverlord(s, a))) return 'invalid';
   const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a)];
   if (!def.includes(b)) def.push(b);
   const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary')];
@@ -242,7 +244,10 @@ export function evaluatePeace(s: GameState, war: War, from: number, to: number, 
   const capLost = nTo.capital >= 0 && s.loc.ctrl[nTo.capital] !== to; if (capLost) reasons.push(['capital_occupied', 10]);
   const sum = score - cost + ex + dur + (nTo.treasury < 0 ? 10 : 0) + (capLost ? 10 : 0) + (white ? 5 : 0);
   if (!white && score < cost * 0.8) reasons.push(['not_enough_war_score', -20]);
-  return { accept: sum >= 0 && (white || score >= cost * 0.8), score: sum, reasons };
+  // a subject fighting for its freedom does not give up for nothing while the war still goes its way
+  const holdOut = white && war.goal.type === 'independence' && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && !s.playerNations.includes(to);
+  if (holdOut) reasons.push(['fighting_for_freedom', -30]);
+  return { accept: !holdOut && sum >= 0 && (white || score >= cost * 0.8), score: holdOut ? sum - 30 : sum, reasons };
 }
 
 export function applyPeace(s: GameState, w: World, war: War, winner: number, loser: number, terms: PeaceTerm[]) {
@@ -403,11 +408,16 @@ function dreadMonth(s: GameState, w: World) {
 
 function warsMonth(s: GameState, w: World) {
   for (const war of s.wars.slice()) {
-    if (!s.nations[war.attLead]?.alive || !s.nations[war.defLead]?.alive) { s.wars.splice(s.wars.indexOf(war), 1); continue; }
+    if (!s.nations[war.attLead]?.alive || !s.nations[war.defLead]?.alive || war.attLead === war.defLead) { s.wars.splice(s.wars.indexOf(war), 1); continue; }
+    // nobody fights on both sides (a realm that changed overlord mid-war leaves the side it no longer belongs to)
+    const both = war.att.filter((x) => war.def.includes(x));
+    if (both.length) { war.att = war.att.filter((x) => !both.includes(x) || x === war.attLead); war.def = war.def.filter((x) => !both.includes(x) || x === war.defLead); }
     // ticking score: attacker holds the war-goal target or the defender's capital
     const goalLocs = war.goal.locs.length ? war.goal.locs : [];
     let held = 0; for (const l of goalLocs) if (war.att.includes(s.loc.ctrl[l])) held++;
-    if (goalLocs.length) war.tickScore = clamp(war.tickScore + (held / goalLocs.length > 0.5 ? 1 : -0.5), -25, 25);
+    // the attackers' hold on the goal ticks up; it only ebbs while they are not even besieging it
+    const besieging = goalLocs.length > 0 && s.sieges.some((sg) => goalLocs.includes(sg.loc) && war.att.includes(sg.nation));
+    if (goalLocs.length) war.tickScore = clamp(war.tickScore + (held / goalLocs.length > 0.5 ? 1 : besieging ? 0 : -0.5), -25, 25);
     else war.tickScore = clamp(war.tickScore + (war.battleScore > 5 ? 0.3 : war.battleScore < -5 ? -0.3 : 0), -15, 15);
     war.score = computeScore(s, war);
     for (const n of [...war.att, ...war.def]) { const nn = s.nations[n]; if (nn) nn.warExhaustion = clamp(nn.warExhaustion + 0.35, 0, 100); }
