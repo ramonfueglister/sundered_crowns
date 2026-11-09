@@ -81,12 +81,12 @@ function Companies() {
       {d.mine.length ? d.mine.map((c: any) => <div class="company">
         <div class="kv"><span class="k"><b>{L(c.name)}</b></span><span class="v muted">{t('since')} {Math.floor(startYear + c.since / 365.25)}</span></div>
         <div class="grid2">
-          <Row k={t('market')} v={c.marketName} tip={<div><TipHead name={t('market')} value={c.marketName} hint={t('ex_co_market_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_value')}</span><span>{num(c.tv, 1)}</span></div></div></div>} />
+          <Row k={t('market')} v={placeName(c.marketName)} tip={<div><TipHead name={t('market')} value={placeName(c.marketName)} hint={t('ex_co_market_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_value')}</span><span>{num(c.tv, 1)}</span></div></div></div>} />
           <Row k={t('ex_co_holdings')} v={`${c.holdings} · ${num(c.dev)}`} tip={<div><TipHead name={t('ex_co_holdings')} value={c.holdings} hint={t('ex_co_holdings_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('development')}</span><span>{num(c.dev, 1)}</span></div></div></div>} />
           <Row k={t('ex_co_income')} v={<span class="pos">+{num(c.income, 1)}</span>} tip={<div><TipHead name={keyName('company')} value={num(c.income, 2)} hint={t('ex_co_income_hint')} /></div>} />
           <Row k={t('ex_co_ships')} v={num(c.ships, 1)} tip={<div><TipHead name={t('ex_co_ships')} value={num(c.ships, 1)} hint={t('ex_co_ships_hint')} /></div>} />
           <Row k={t('tr_share')} v={pct(c.share, 1)} tip={() => <div><TipHead name={t('tr_power')} value={num(c.power, 0)} hint={t('tr_power_hint')} /><Parts rows={c.parts} digits={0} /><div class="breakdown"><div class="bd-row"><span>{t('tr_trade_effects')}</span><span>× {num(c.mult, 2)}</span></div><div class="bd-row bd-total"><span>{t('tr_share')}</span><span>{pct(c.share, 1)}</span></div></div></div>} />
-          <Row k={t('ex_co_home_trade')} v={num(c.withHome, 1)} tip={<div><TipHead name={t('ex_co_home_trade')} value={num(c.withHome, 1)} hint={t('ex_co_home_trade_hint')} /><div class="muted">{c.marketName} ⇄ {c.homeName}</div></div>} />
+          <Row k={t('ex_co_home_trade')} v={num(c.withHome, 1)} tip={<div><TipHead name={t('ex_co_home_trade')} value={num(c.withHome, 1)} hint={t('ex_co_home_trade_hint')} /><div class="muted">{placeName(c.marketName)} ⇄ {placeName(c.homeName)}</div></div>} />
         </div>
       </div>) : <div class="muted small">{t('ex_no_companies')}</div>}
     </Section>
@@ -96,7 +96,7 @@ function Companies() {
         <Tip content={<div><TipHead name={t('ex_charters')} value={`${d.mine.length}/${d.slots}`} hint={t('ex_slots_hint')} /></div>}><span class={free > 0 ? 'ok' : 'no'}>{free > 0 ? '✔' : '✘'} {t('ex_charters')} {d.mine.length}/{d.slots}</span></Tip>
         <Tip content={<div><TipHead name={t('ex_cost')} value={num(d.cost)} hint={t('ex_charter_cost_hint')} /></div>}><span class={d.treasury >= d.cost ? 'ok' : 'no'}>{d.treasury >= d.cost ? '✔' : '✘'} {t('ex_cost')} {num(d.cost)}</span></Tip>
       </div>
-      {d.options.length ? d.options.map((o: any) => <div class="kv"><span class="k">{o.name}</span><span class="v"><Tip content={<div><TipHead name={o.name} hint={t('ex_charter_option_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_value')}</span><span>{num(o.tv, 1)}</span></div></div></div>}><span class="muted has-tip">{num(o.tv, 0)}</span></Tip>
+      {d.options.length ? d.options.map((o: any) => <div class="kv"><span class="k">{placeName(o.name)}</span><span class="v"><Tip content={<div><TipHead name={placeName(o.name)} hint={t('ex_charter_option_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_value')}</span><span>{num(o.tv, 1)}</span></div></div></div>}><span class="muted has-tip">{num(o.tv, 0)}</span></Tip>
         <Btn disabled={d.commerce < d.need ? 'our merchants are not ready (Commerce 12)' : free <= 0 ? 'no charter available' : d.treasury < d.cost ? 'not enough gold' : null} onClick={() => act({ t: 'charter', market: o.market }, 'coins').then(refresh)}>{t('ex_charter_do')}</Btn></span></div>)
         : <div class="muted small">{t('ex_no_charter_options')}</div>}
     </Section>

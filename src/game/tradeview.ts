@@ -15,6 +15,7 @@ import { hasTreaty, treatiesOf } from '../sim/ctx';
 import { expeditionTargets, expeditionPlan, MAX_EXPEDITIONS, regionOf, harbours } from '../sim/systems/explore';
 import { charterOptions, companySlots } from '../sim/systems/colonial';
 import { ownedLocs } from '../sim/systems/war';
+import { deName } from '../sim/content/names_de';
 
 const placeI18n = (w: World, l: number): I18n => ({ en: w.names[l] ?? `#${l}`, de: w.namesDe[l] ?? w.names[l] ?? `#${l}` });
 const known = (s: GameState, n: Nation | undefined, l: number) => { if (!n || s.flags.revealAll) return true; const e = s.explored[n.knows]; return !e || e[l] === 1; };
@@ -199,6 +200,8 @@ const hex = (c: RGB) => '#' + c.map((x) => x.toString(16).padStart(2, '0')).join
 /** The goods a map mode can show (all of them; grain first). */
 export const MAP_GOODS = GOODS.map((g, k) => ({ k, name: g.name }));
 
+/** A whole number with the language's thousands separator, for legend labels. */
+const fmt = (v: number, lang: 'en' | 'de') => Math.round(v).toLocaleString(lang === 'de' ? 'de-DE' : 'en-GB');
 export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'production' | 'markets', focus: number, good: number): { rgba: Uint8Array; legend: Legend } {
   const out = new Uint8Array(w.N * 4);
   const put = (i: number, c: RGB) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = 255; };
@@ -216,24 +219,25 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
       { color: hex(ramp(0.5, CHEAP_DEAR)), label: { en: 'base price', de: 'Grundpreis' } },
       { color: hex(ramp(1, CHEAP_DEAR)), label: { en: 'dear (three times the base price)', de: 'teuer (dreifacher Grundpreis)' } },
     ];
-    for (const x of order.slice(0, 2)) items.push({ color: hex(ramp(0.5 + Math.log(x.r) / Math.log(9), CHEAP_DEAR)), label: { en: `cheapest: ${x.m.name} ${pct(x.r)}`, de: `am billigsten: ${x.m.name} ${pct(x.r)}` } });
-    for (const x of order.slice(-2).reverse()) items.push({ color: hex(ramp(0.5 + Math.log(x.r) / Math.log(9), CHEAP_DEAR)), label: { en: `dearest: ${x.m.name} ${pct(x.r)}`, de: `am teuersten: ${x.m.name} ${pct(x.r)}` } });
+    for (const x of order.slice(0, 2)) items.push({ color: hex(ramp(0.5 + Math.log(x.r) / Math.log(9), CHEAP_DEAR)), label: { en: `cheapest: ${x.m.name} ${pct(x.r)}`, de: `am billigsten: ${deName(x.m.name)} ${pct(x.r)}` } });
+    for (const x of order.slice(-2).reverse()) items.push({ color: hex(ramp(0.5 + Math.log(x.r) / Math.log(9), CHEAP_DEAR)), label: { en: `dearest: ${x.m.name} ${pct(x.r)}`, de: `am teuersten: ${deName(x.m.name)} ${pct(x.r)}` } });
     return { rgba: out, legend: { title: { en: `Prices: ${gname.en}`, de: `Preise: ${gname.de}` }, items, good: g } };
   }
   if (mode === 'production') {
-    // how much of the good each place made last month (log scale against the largest producer)
+    // how much of the good each place made last month (square-root scale against the largest producer)
     const q = new Float64Array(w.L); let max = 0;
     const realms = new Map<number, number>();
     if (LOC_ECON && LOC_ECON.grain.length === w.L) for (let i = 0; i < w.L; i++) {
       const v = locGoods(lc, w, i, null).made.get(g) ?? 0; q[i] = v; if (v > max) max = v;
       if (v > 0 && lc.owner[i] >= 0) realms.set(lc.owner[i], (realms.get(lc.owner[i]) ?? 0) + v);
     }
-    for (let i = 0; i < w.L; i++) if (q[i] > 0 && max > 0) put(i, ramp(Math.log1p(q[i]) / Math.log1p(max), VOLUME)); else if (lc.owner[i] >= 0 || lc.pop[i * C] > 0) put(i, [225, 222, 210]);
+    for (let i = 0; i < w.L; i++) if (q[i] > 0 && max > 0) put(i, ramp(Math.sqrt(q[i] / max), VOLUME)); else if (lc.owner[i] >= 0 || lc.pop[i * C] > 0) put(i, [225, 222, 210]);
     const items: Legend['items'] = [
-      { color: hex(VOLUME[0]), label: { en: 'a little', de: 'wenig' } }, { color: hex(VOLUME[3]), label: { en: `much (${Math.round(max)} a month in the largest place)`, de: `viel (${Math.round(max)} im Monat am größten Ort)` } },
+      { color: hex(VOLUME[0]), label: { en: 'a little', de: 'wenig' } }, { color: hex(ramp(0.5, VOLUME)), label: { en: `a quarter of the largest place (${fmt(max / 4, 'en')})`, de: `ein Viertel des größten Orts (${fmt(max / 4, 'de')})` } },
+      { color: hex(VOLUME[3]), label: { en: `much (${fmt(max, 'en')} a month in the largest place)`, de: `viel (${fmt(max, 'de')} im Monat am größten Ort)` } },
       { color: '#e1ded2', label: { en: 'none', de: 'nichts' } },
     ];
-    for (const [o, v] of [...realms.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 4)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `${N.short.en}: ${Math.round(v)}`, de: `${N.short.de}: ${Math.round(v)}` } }); }
+    for (const [o, v] of [...realms.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 4)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `made in ${N.short.en}: ${fmt(v, 'en')}`, de: `erzeugt in ${N.short.de}: ${fmt(v, 'de')}` } }); }
     return { rgba: out, legend: { title: { en: `Production: ${gname.en} (a month)`, de: `Erzeugung: ${gname.de} (im Monat)` }, items, good: g } };
   }
   // markets: each market area in the colour of the realm with the most trade power there, lighter where little trade
@@ -257,7 +261,7 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
     put(i, N.color.map((c) => Math.round(235 + (c - 235) * f)) as RGB);
   }
   for (const m of s.markets) put(m.hub, [255, 245, 215]);
-  for (const [o, v] of [...count.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `${N.short.en}: leads trade worth ${Math.round(v)}`, de: `${N.short.de}: führt Handel im Wert von ${Math.round(v)}` } }); }
+  for (const [o, v] of [...count.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `${N.short.en}: leads trade worth ${fmt(v, 'en')}`, de: `${N.short.de}: führt Handel im Wert von ${fmt(v, 'de')}` } }); }
   items.push({ color: '#fff5d7', label: { en: 'market hub', de: 'Marktort' } });
   void focus;
   return { rgba: out, legend: { title: { en: 'Markets: leading trade power (paler: less trade)', de: 'Märkte: stärkste Handelsmacht (blasser: weniger Handel)' }, items, good: -1, goodOptional: true } };

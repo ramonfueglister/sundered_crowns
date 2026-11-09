@@ -24,7 +24,7 @@ export function TradeTab() {
     {tab !== 'policy' && <div class="act-row">
       <span class="k">{t('market')}</span>
       <select value={mid} onChange={(e) => setSel(Number((e.target as HTMLSelectElement).value))}>
-        {(list ?? []).map((m: any) => <option value={m.id}>{m.name}{m.home ? ` (${t('home')})` : ''}{m.merchants ? ` · ${m.merchants} ${t('tr_merchants_short')}${m.steer ? ' ➜' : ''}` : ''}{m.share >= 0.005 ? ` · ${pct(m.share, 0)}` : ''}</option>)}
+        {(list ?? []).map((m: any) => <option value={m.id}>{placeName(m.name)}{m.home ? ` (${t('home')})` : ''}{m.merchants ? ` · ${m.merchants} ${t('tr_merchants_short')}${m.steer ? ' ➜' : ''}` : ''}{m.share >= 0.005 ? ` · ${pct(m.share, 0)}` : ''}</option>)}
       </select>
       {sel >= 0 && sel !== home && home >= 0 && <Btn onClick={() => setSel(-1)}>{t('tr_home_market')}</Btn>}
     </div>}
@@ -57,7 +57,7 @@ function MarketView({ mid }: { mid: number }) {
   const rest = d.rows.slice(12).filter((r: any) => r.n !== pid);
   const restSum = rest.reduce((p: number, r: any) => p + r.total, 0);
   return <>
-    <Section title={<>{t('market')}: {d.name}</>} id="tr-mkt" right={<a class="lk" onClick={() => flyToLoc(d.hub)}>{placeName(L(d.hubName))}</a>}>
+    <Section title={<>{t('market')}: {placeName(d.name)}</>} id="tr-mkt" right={<a class="lk" onClick={() => flyToLoc(d.hub)}>{placeName(L(d.hubName))}</a>}>
       <div class="grid2">
         <Row k={t('tr_value')} v={num(d.tv, 1)} tip={<div><TipHead name={t('tr_value')} value={num(d.tv, 1)} hint={t('tr_value_hint')} /></div>} />
         <Row k={t('tr_steered_in')} v={num(d.tin, 1)} tip={<div><TipHead name={t('tr_steered_in')} value={num(d.tin, 1)} hint={t('tr_steered_in_hint')} /></div>} />
@@ -79,7 +79,7 @@ function MarketView({ mid }: { mid: number }) {
     </Section>
     {d.our && <Merchants d={d} refresh={refresh} />}
     <Section title={t('trade_links')} id="tr-links" open={false}>
-      <div class="chips">{d.links.map((l: any) => <span class="chip">{l.name}{l.sea ? ' ⚓' : ''}{l.ocean ? ' 🌊' : ''}</span>)}</div>
+      <div class="chips">{d.links.map((l: any) => <span class="chip">{placeName(l.name)}{l.sea ? ' ⚓' : ''}{l.ocean ? ' 🌊' : ''}</span>)}</div>
     </Section>
   </>;
 }
@@ -125,7 +125,7 @@ function Merchants({ d, refresh }: { d: any; refresh: () => void }) {
     </div>
     {!home && (o.route
       ? <Tip content={<div><TipHead name={t('tr_route_home')} value={`× ${num(o.route.factor, 2)}`} hint={t('tr_route_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_links')}</span><span>{o.route.hops}</span></div><div class="bd-row"><span>{t('tr_bonus')}</span><span>× 1.20</span></div><div class="bd-row"><span>{t('tr_loss_per_link')}</span><span>× {num(Math.pow(0.95, Math.max(0, o.route.hops - 1)), 2)}</span></div></div></div>}>
-        <div class="muted small has-tip">{t('tr_route_home')}: {d.name} → {o.route.via.join(' → ')} (× {num(o.route.factor, 2)})</div></Tip>
+        <div class="muted small has-tip">{t('tr_route_home')}: {placeName(d.name)} → {o.route.via.map(placeName).join(' → ')} (× {num(o.route.factor, 2)})</div></Tip>
       : <div class="muted small">{t('tr_no_route_home')}</div>)}
     {home && <div class="muted small">{t('tr_home_note')}</div>}
   </Section>;
@@ -139,7 +139,7 @@ function GoodsView({ mid }: { mid: number }) {
   const goods = d.goods.filter((x: any) => x.supply > 0.01 || x.demand > 0.01).sort((a: any, b: any) => b.demand * b.price - a.demand * a.price);
   const cur = g >= 0 ? g : goods[0]?.k ?? 0;
   return <>
-    <Section title={<>{t('goods')}: {d.name}</>} id="tr-goods">
+    <Section title={<>{t('goods')}: {placeName(d.name)}</>} id="tr-goods">
       <div class="tbl-wrap"><table class="tbl market tr-goods">
         <thead><tr><th>{t('goods')}</th><th class="r">{t('price')}</th><th class="r">{t('vs_base')}</th><th class="r">{t('supply')}</th><th class="r">{t('demand')}</th><th class="r">{t('tr_net_exports')}</th><th>{t('tr_two_years')}</th></tr></thead>
         <tbody>{goods.map((x: any) => { const rel = x.price / Math.max(1e-6, x.base) - 1; return <tr class={`click ${x.k === cur ? 'mine' : ''}`} onClick={() => setG(x.k)}>
@@ -177,7 +177,7 @@ function GoodDetail({ mid, g }: { mid: number; g: number }) {
   if (!d) return <Empty>{t('loading')}…</Empty>;
   const cons = d.people + d.crafts + d.house;
   const drivers: [string, number][] = [['tr_d_base', d.base], ['tr_d_level', d.priceLevel], ['tr_d_debase', d.debase]];
-  return <Section title={<>{L(d.name)} · {d.marketName}</>} id="tr-good">
+  return <Section title={<>{L(d.name)} · {placeName(d.marketName)}</>} id="tr-good">
     <PriceChart hist={d.hist} base={d.anchor} anchor={d.anchor} />
     <div class="grid2">
       <Row k={t('price')} v={num(d.price, 2)} tip={() => <div><TipHead name={t('tr_price_drivers')} value={num(d.price, 2)} hint={t('tr_price_drivers_hint')} />
@@ -207,7 +207,7 @@ function GoodDetail({ mid, g }: { mid: number; g: number }) {
       </div>
     </div>
     {d.partners.length > 0 && <><div class="bd-title">{t('tr_partners_good')}</div>
-      {d.partners.map((p: any) => <div class="kv"><span class="k">{p.out ? '→' : '←'} {p.name}</span><span class="v"><Tip content={<div><TipHead name={p.out ? t('tr_export') : t('tr_import')} value={num(p.value, 1)} hint={t('tr_flow_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_quantity')}</span><span>{num(p.qty, 1)}</span></div></div></div>}>{num(p.qty, 1)} · {num(p.value, 0)}</Tip></span></div>)}</>}
+      {d.partners.map((p: any) => <div class="kv"><span class="k">{p.out ? '→' : '←'} {placeName(p.name)}</span><span class="v"><Tip content={<div><TipHead name={p.out ? t('tr_export') : t('tr_import')} value={num(p.value, 1)} hint={t('tr_flow_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_quantity')}</span><span>{num(p.qty, 1)}</span></div></div></div>}>{num(p.qty, 1)} · {num(p.value, 0)}</Tip></span></div>)}</>}
   </Section>;
 }
 
@@ -222,7 +222,7 @@ function PolicyView() {
       <div class="grid2">
         <Row k={t('tr_tariff_max')} v={pct(d.max)} tip={() => <div><TipHead name={t('tr_tariff_max')} value={pct(d.max)} hint={t('tr_tariff_max_hint')} /><Parts rows={d.maxParts} fmt={(v) => pct(v)} total={d.max} /></div>} />
         <Row k={t('tr_tariff_earned')} v={<span class="pos">+{num(d.earned, 1)}</span>} tip={() => <TariffTip d={d} />} />
-        <Row k={t('tr_kept_out')} v={<span class={d.deter > 0 ? 'neg' : ''}>{num(d.deter, 1)}</span>} tip={() => <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />{d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: m.name }, m.deter])} digits={1} />}</div>} />
+        <Row k={t('tr_kept_out')} v={<span class={d.deter > 0 ? 'neg' : ''}>{num(d.deter, 1)}</span>} tip={() => <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />{d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: placeName(m.name) }, m.deter])} digits={1} />}</div>} />
         <Row k={keyName('trade')} v={<span class="pos">+{num(d.trade + d.company, 1)}</span>} tip={<div><TipHead name={keyName('trade')} value={num(d.trade + d.company, 1)} hint={t('kh_trade')} /><div class="breakdown"><div class="bd-row"><span>{keyName('trade')}</span><span>{num(d.trade, 1)}</span></div><div class="bd-row"><span>{keyName('company')}</span><span>{num(d.company, 1)}</span></div></div></div>} />
       </div>
     </Section>

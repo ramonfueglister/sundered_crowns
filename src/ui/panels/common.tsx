@@ -50,8 +50,15 @@ export function useQuery<T = any>(q: Query | null, deps: any[], every = 500): [T
   useEffect(() => {
     setData(null); if (!q) return;
     run();
-    const unsub = view.subscribe(() => { if (performance.now() - last.current >= every) run(); });
-    return unsub;
+    // throttled to one query per `every` ms; a tick inside the window schedules one trailing query, so the panel still
+    // shows the last state when the game pauses right after it
+    let trail: ReturnType<typeof setTimeout> | null = null;
+    const unsub = view.subscribe(() => {
+      const wait = every - (performance.now() - last.current);
+      if (wait <= 0) { run(); return; }
+      if (!trail) trail = setTimeout(() => { trail = null; run(); }, wait);
+    });
+    return () => { unsub(); if (trail) clearTimeout(trail); };
   }, deps);
   return [data, run];
 }
