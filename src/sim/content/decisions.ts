@@ -34,7 +34,7 @@ function rename(n: Nation, name: I18n, short: I18n, adj: I18n, rank?: string) { 
 /** Peacefully absorb another (AI) realm: all its land, treasury and subjects pass to us. */
 function annex(e: EvApi, other: Nation) {
   const s = e.s;
-  for (let i = 0; i < e.w.L; i++) if (s.loc.owner[i] === other.id) { transferLoc(s, e.w, i, e.n.id); s.loc.integ[i] = 0.5; s.loc.unrest[i] = Math.min(s.loc.unrest[i], 10); s.loc.core[i] = e.n.id; }
+  for (let i = 0; i < e.w.L; i++) if (s.loc.owner[i] === other.id) { transferLoc(s, e.w, i, e.n.id, 0, { conquest: false }); s.loc.integ[i] = 0.5; s.loc.unrest[i] = Math.min(s.loc.unrest[i], 10); s.loc.core[i] = e.n.id; }
   e.n.treasury += Math.max(0, other.treasury); other.treasury = 0;
   for (const x of s.nations) if (x.alive && x.overlord === other.id) x.overlord = e.n.id;
   other.overlord = -1; // the realm ranking retires the empty realm (armies, treaties, wars) at the next month

@@ -306,11 +306,16 @@ export function _setMilitary(m: any) { _mil = m; }
 
 /** How strongly conquest and unjust wars frighten others: 1 plus the dread effects (a warlike reputation). */
 export function dreadGain(n: Nation): number { return Math.max(0.2, 1 + lawEffect(n, 'dread')); }
-export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0) {
+/** Hand a location to another realm. A conquest (the default) starts unintegrated under weak control; land that
+ *  returns to its own crown (the end of a war of succession, crown land passed to the crown's colonial realm) or that
+ *  callers integrate themselves (annexation, union) passes with conquest: false and keeps its integration and control. */
+export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0, opts?: { conquest?: boolean }) {
   const from = s.loc.owner[l];
   s.loc.owner[l] = to; s.loc.ctrl[l] = to; EPOCH.v++;
-  s.loc.integ[l] = 0; // conquered land starts unintegrated
-  s.loc.control[l] = Math.min(s.loc.control[l], 0.3); // and the new lord's officials have yet to take hold
+  if (opts?.conquest !== false) {
+    s.loc.integ[l] = 0; // conquered land starts unintegrated
+    s.loc.control[l] = Math.min(s.loc.control[l], 0.3); // and the new lord's officials have yet to take hold
+  }
   s.loc.unrest[l] = Math.max(s.loc.unrest[l], 20);
   s.flags.ownershipDirty = s.day;
   (s as any).ownerChanges = (s as any).ownerChanges || [];
@@ -441,7 +446,7 @@ function warsMonth(s: GameState, w: World) {
 /** A war of succession ends with one realm again: the pretender's lands return, and if the pretender prevailed,
  *  the pretender wears the crown. */
 function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Nation, pretenderWon: boolean) {
-  for (const l of nationLocs(s, pre.id)) { transferLoc(s, w, l, legit.id); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
+  for (const l of nationLocs(s, pre.id)) { transferLoc(s, w, l, legit.id, 0, { conquest: false }); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
   for (const a of s.armies) if (a.owner === pre.id) { a.owner = legit.id; a.path = []; a.siege = -1; }
   const sides = new Set([...war.att, ...war.def]);
   for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (sides.has(o) && s.loc.ctrl[i] !== o && s.loc.ctrl[i] !== -2) s.loc.ctrl[i] = o; }

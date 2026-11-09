@@ -27,6 +27,7 @@ export const EFFECTS: Record<string, EffectDef> = {
   tolerance: { unit: 'share', reader: S + 'economy.ts' },
   tax_farming: { unit: 'flag', reader: S + 'economy.ts' },
   exempt_: { unit: 'share', prefix: true, reader: S + 'economy.ts' },
+  hearth_exempt_nobles: { unit: 'share', reader: S + 'economy.ts' },
   interest: { unit: 'pp', bad: true, reader: S + 'economy.ts' },
   inflation_resist: { unit: 'pct', reader: S + 'economy.ts' },
   tariff_max: { unit: 'pp', reader: S + 'economy.ts' },

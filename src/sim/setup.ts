@@ -36,7 +36,7 @@ export function newLocState(L: number): LocState {
     devast: new Float32Array(L), harvest: new Float32Array(L).fill(1), buildings: new Uint8Array(L * B), workshop: new Uint8Array(L * 3), method: new Uint8Array(L),
     garrison: new Float32Array(L), occTimer: new Float32Array(L), plague: new Float32Array(L), market: new Uint8Array(L),
     fortZone: new Int16Array(L).fill(-1), income: new Float32Array(L), snow: new Float32Array(L), colonist: new Int16Array(L).fill(-1),
-    migr: new Float32Array(L),
+    migr: new Float32Array(L), migrBal: new Float32Array(L),
   };
 }
 

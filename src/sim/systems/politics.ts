@@ -15,6 +15,9 @@ import { dutyDiscontent } from './duties';
 // Effect keys get a slot in a numeric table; law options and value axes are resolved to [slot, value, ...] once.
 const EK = new Map<string, number>();
 function ekey(k: string): number { let i = EK.get(k); if (i === undefined) { i = EK.size; EK.set(k, i); } return i; }
+/** Every effect key the table has met so far: laws, value axes, traditions and every modifier any realm has held
+ *  (tests/effects_wired.test.ts checks each against the registry src/sim/effects.ts). */
+export function effectKeysSeen(): string[] { if (!LAW_FX) resolveFx(); return [...EK.keys()]; }
 function flatFx(fx: Record<string, number>): number[] { const a: number[] = []; for (const k in fx) a.push(ekey(k), fx[k]); return a; }
 let LAW_FX: number[][][] | null = null, VAL_LO: number[][] = [], VAL_HI: number[][] = [], TRAD_FX: Record<string, number[]> = {};
 function resolveFx() {
@@ -22,6 +25,8 @@ function resolveFx() {
   VAL_LO = VALUES.map((v) => flatFx(v.effectsLow)); VAL_HI = VALUES.map((v) => flatFx(v.effectsHigh));
   TRAD_FX = Object.fromEntries(Object.entries(GROUP_TRADITIONS).map(([g, t]) => [g, flatFx(t.effects)]));
 }
+/** Legal exemption of class c from the crown's taxes and duties, 0..1 (exempt_<class> effects; systems/economy.ts). */
+export function classExempt(n: Nation, c: number): number { return clamp(lawEffect(n, `exempt_${c}`), 0, 1); }
 /** Culture group of a realm's ruling culture, whose tradition it follows. */
 export function traditionGroup(n: Nation): string { return GROUP_OF[ALL_CULTURES[n.culture]] ?? 'other'; }
 /** The tradition of a realm's culture group (always part of lawEffect). */
@@ -85,7 +90,7 @@ export const ESTATES: { id: string; name: { en: string; de: string }; desc: { en
 ];
 export const PRIVILEGES: { id: string; estate: string; name: { en: string; de: string }; grant: Record<string, number>; effects: Record<string, number> }[] = [
   { id: 'magnate_command', estate: 'magnates', name: { en: 'Hereditary commands', de: 'Erbliche Befehlsgewalt' }, grant: { authority: 25 }, effects: { manpower: 0.15, control: -0.05 } },
-  { id: 'magnate_tax', estate: 'magnates', name: { en: 'Exemption from the hearth tax', de: 'Befreiung von der Herdsteuer' }, grant: { treasury_months: 3 }, effects: { tax: -0.08 } },
+  { id: 'magnate_tax', estate: 'magnates', name: { en: 'Exemption from the hearth tax', de: 'Befreiung von der Herdsteuer' }, grant: { treasury_months: 3 }, effects: { hearth_exempt_nobles: 1, tax: -0.08 } },
   { id: 'magnate_council', estate: 'magnates', name: { en: 'Seats in the royal council', de: 'Sitze im Kronrat' }, grant: { concord: 15 }, effects: { authority_gain: -0.2 } },
   { id: 'prelate_tithe', estate: 'prelates', name: { en: 'Untouchable tithes', de: 'Unantastbarer Zehnt' }, grant: { mandate: 10 }, effects: { tax: -0.05, conversion: 0.2 } },
   { id: 'prelate_schools', estate: 'prelates', name: { en: 'Church control of schools', de: 'Kirchliche Schulaufsicht' }, grant: { concord: 10 }, effects: { research: -0.05, literacy: 0.01 } },
@@ -494,7 +499,7 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {
     const priv = e.privileges.length * 6;
-    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id) - e.contentment) * 0.03, 0, 100);
+    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id, (c) => classExempt(n, c)) - e.contentment) * 0.03, 0, 100);
     e.influence = clamp(e.influence + (priv * 0.05) - 0.03 + (e.id === 'burghers' ? lawEffect(n, 'trade') * 0.5 : 0), 5, 100);
   }
   // normalise influence to 100

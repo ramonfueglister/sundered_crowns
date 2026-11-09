@@ -3,7 +3,10 @@
 //    landmarks) and from every effect literal in src/sim by a static scan (privileges, events' and decisions'
 //    modifiers, goal rewards, situations, bankruptcy, excommunication...).
 // 2. Each key must be in the registry src/sim/effects.ts.
-// 3. Each registry entry must really be read: the file it names contains lawEffect(…, 'key').
+// 3. Each registry entry must really be read: the file it names contains lawEffect(…, 'key') in its code (comments
+//    are stripped first, so a call left in a comment does not count).
+// 4. At run time (a new game and two simulated years): every key the effect table met (laws, value axes, traditions
+//    and every modifier any realm held) and every key of every modifier still held is in the registry.
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -13,6 +16,9 @@ import { DOCTRINES } from '../src/sim/content/doctrines';
 import { INNOVATIONS } from '../src/sim/content/innovations';
 import { LANDMARKS } from '../src/sim/content/landmarks';
 import { GROUP_TRADITIONS } from '../src/sim/content/peoples';
+import { effectKeysSeen } from '../src/sim/systems/politics';
+import { newGame } from '../tools/sim/load';
+import { advanceDay } from '../src/sim/engine';
 
 const ROOT = join(__dirname, '..');
 function files(dir: string): string[] {
@@ -26,7 +32,8 @@ function braced(t: string, i: number): string {
   for (let k = i; k < t.length; k++) { const c = t[k]; if (c === '{') d++; else if (c === '}') { d--; if (!d) return t.slice(i, k + 1); } }
   return '';
 }
-/** Keys of an object literal of numbers, e.g. "{ tax: 0.05, 'unrest': -1, ...x }" → ['tax', 'unrest']. */
+/** Keys of an object literal, whatever their values, e.g. "{ tax: 0.05, 'unrest': -x, mandate_gain: a > 3 ? 1 : 0, ...y }"
+ *  → ['tax', 'unrest', 'mandate_gain']. */
 function keysOf(obj: string): string[] {
   const body = obj.slice(1, -1); const out: string[] = []; let d = 0, start = 0;
   const parts: string[] = [];
@@ -36,18 +43,49 @@ function keysOf(obj: string): string[] {
     else if ((c === ',' || k === body.length) && d === 0) { parts.push(body.slice(start, k)); start = k + 1; }
   }
   for (const p of parts) {
-    const m = /^\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?\s*:\s*(-?[0-9.]+|[a-z]\w*\s*\*)/.exec(p);
+    const m = /^\s*['"]?([A-Za-z_]\w*)['"]?\s*:/.exec(p);
     if (m) out.push(m[1]);
   }
   return out;
+}
+/** The source without its comments (strings, template strings and regular expression literals are kept as they are). */
+export function stripComments(src: string): string {
+  let out = '', i = 0, prev = '';
+  const n = src.length;
+  while (i < n) {
+    const c = src[i], d = src[i + 1];
+    if (c === '/' && d === '/') { while (i < n && src[i] !== '\n') i++; continue; }
+    if (c === '/' && d === '*') { const e = src.indexOf('*/', i + 2); i = e < 0 ? n : e + 2; out += ' '; continue; }
+    if (c === '"' || c === "'" || c === '`') {
+      let j = i + 1;
+      while (j < n && src[j] !== c) { if (src[j] === '\\') j++; j++; }
+      out += src.slice(i, j + 1); i = j + 1; prev = c; continue;
+    }
+    if (c === '/' && (prev === '' || '(,=:[!&|?{};'.includes(prev))) {
+      // a regular expression literal: copy it to its closing slash (outside a character class)
+      let j = i + 1, cls = false;
+      while (j < n && src[j] !== '\n' && (cls || src[j] !== '/')) { if (src[j] === '\\') j++; else if (src[j] === '[') cls = true; else if (src[j] === ']') cls = false; j++; }
+      out += src.slice(i, j + 1); i = j + 1; prev = '/'; continue;
+    }
+    out += c; if (!/\s/.test(c)) prev = c; i++;
+  }
+  return out;
+}
+/** administration.ts without adminInfo, whose return object (effects: { unrest, control, integration }) is a view of
+ *  the over-extension, not effect content. */
+function withoutAdminInfo(t: string): string {
+  const at = t.indexOf('export function adminInfo('); if (at < 0) return t;
+  const open = t.indexOf(') {', at) + 2;
+  return t.slice(0, at) + t.slice(open + braced(t, open).length);
 }
 /** Static scan: effect literals ("effects: {", "fx: {", ...) and the effect argument of the modifier helpers. */
 function scanSource(): Map<string, string[]> {
   const found = new Map<string, string[]>();
   const add = (k: string, where: string) => { const a = found.get(k) ?? []; a.push(where); found.set(k, a); };
   for (const f of files(join(ROOT, 'src/sim'))) {
-    if (f.endsWith('effects.ts') || f.endsWith('administration.ts')) continue; // the registry; adminInfo's view object
-    const t = readFileSync(f, 'utf8'); const rel = f.slice(ROOT.length + 1);
+    if (f.endsWith('/effects.ts')) continue; // the registry itself
+    let t = stripComments(readFileSync(f, 'utf8')); const rel = f.slice(ROOT.length + 1);
+    if (f.endsWith('/administration.ts')) t = withoutAdminInfo(t);
     for (const m of t.matchAll(/\b(effects|effectsLow|effectsHigh|complete|fx)\s*:\s*\{/g)) {
       const obj = braced(t, m.index! + m[0].length - 1);
       for (const k of keysOf(obj)) add(k, rel);
@@ -96,7 +134,7 @@ describe('effect keys are wired', () => {
   it('every registry entry is read by the simulation where the registry says', () => {
     const unread: string[] = [];
     for (const [k, d] of Object.entries(EFFECTS)) {
-      const src = readFileSync(join(ROOT, d.reader), 'utf8');
+      const src = stripComments(readFileSync(join(ROOT, d.reader), 'utf8'));
       // a call whose arguments name the key (a ternary between two keys counts for both); prefix keys: the call takes
       // the key from a table of `${prefix}${n}` names
       const ok = d.prefix ? src.includes(`\`${k}\${`) && /lawEffect\(\w+, [A-Z_]+_KEYS\[/.test(src)
@@ -113,6 +151,23 @@ describe('effect keys are wired', () => {
     }
     expect(offenders).toEqual([]);
   });
+  it('the source scan sees computed values and ignores readers left in comments', () => {
+    expect(keysOf("{ mandate_gian: sit.progress > 30 ? 0.05 : -0.03, tax: -x, 'unrest': Math.min(a, b), ...rest }")).toEqual(['mandate_gian', 'tax', 'unrest']);
+    const code = stripComments("const a = 1 + 0; // was lawEffect(n, 'curia')\n/* lawEffect(n, 'curia') */ const r = /'x'/; const u = 'http://x';");
+    expect(code).not.toContain('curia');
+    expect(code).toContain("/'x'/"); expect(code).toContain("'http://x'");
+    // administration.ts is scanned (only adminInfo's view object is left out)
+    expect(st.get('trade_raid') ?? rt.get('trade_raid')).toBeTruthy();
+  });
+  it('every effect key met at run time is in the registry', () => {
+    const { s, w } = newGame(1356);
+    for (let d = 0; d < 365 * 2; d++) advanceDay(s, w);
+    const bad = new Set<string>();
+    for (const n of s.nations) for (const m of n.modifiers) for (const k in m.effects) if (!effectDef(k)) bad.add(`${k} (${m.id})`);
+    for (const k of effectKeysSeen()) if (!effectDef(k)) bad.add(k);
+    expect(effectKeysSeen().length).toBeGreaterThan(40);
+    expect([...bad]).toEqual([]);
+  }, 300_000);
   it('the effects tooltip shows only working effects at their real size', () => {
     const w = workingEffects({ tax: 0.05, concord_gain: 0.1, nonsense: 3, burghers: 0.1, exempt_4: 1 });
     expect(w.map((x) => x[0])).toEqual(['tax', 'concord_gain', 'exempt_4']);

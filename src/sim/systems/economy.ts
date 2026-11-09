@@ -97,7 +97,7 @@ const SLOTS = new Int32Array(3);
 // Per-nation numbers read by locationStep, gathered once per pass over the locations (economy.daily / init).
 // Reading them from one typed table keeps locationStep away from the many shapes nation objects take on,
 // which otherwise keep throwing its optimised code away. Values are exactly what the step read before.
-const NK = 14 + C + 8; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C], then (NX) growth, literacy, quality, over-extension, land, hearth, excise, duty unrest
+const NK = 14 + C + 9 + C; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C], then (NX) growth, literacy, quality, over-extension, land, hearth, excise, duty unrest, nobles' hearth exemption, exemption[C]
 const NX = 14 + C;
 let NS = new Float64Array(0), NST = new Int32Array(0), PASS = 0;
 function nationRow(n: Nation): number {
@@ -123,7 +123,42 @@ function nationRow(n: Nation): number {
   NS[r + NX + 3] = overextension(n);
   NS[r + NX + 4] = n.duties?.land ?? 0; NS[r + NX + 5] = n.duties?.hearth ?? 0; NS[r + NX + 6] = n.duties?.excise ?? 0;
   NS[r + NX + 7] = dutyUnrest(n);
+  NS[r + NX + 8] = clamp(lawEffect(n, 'hearth_exempt_nobles'), 0, 1);
+  for (let c = 0; c < C; c++) NS[r + NX + 9 + c] = clamp(lawEffect(n, EXEMPT_KEYS[c]), 0, 1);
   return r;
+}
+
+/** What the tax instruments took last call: [land, hearth, excise] in total, and per class (DUTY_BY[d * C + c]). */
+export const DUTY_PAID = new Float64Array(3), DUTY_BY = new Float64Array(3 * C);
+/** The tax instruments in one location (systems/duties.ts), taken from the class incomes inc (changed in place).
+ *  ex[eo] is the nobles' exemption from the hearth tax and ex[eo + 1 + c] the legal exemption of class c (0..1): an
+ *  exempt class pays that share less of every duty.
+ *  - land tax: a share of the value of harvests and raw goods; lords and church pay first, up to half their income,
+ *    the peasants the rest (up to half of theirs). What exempt lords do not pay falls on the peasants.
+ *  - hearth tax: a flat sum per hundred people, never more than a third of a class's income; the crown forgoes the
+ *    share of exempt classes
+ *  - excise: a share of the value of crafts and raw goods brought to market, paid by those who make and sell them;
+ *    the crown forgoes the share of exempt classes */
+export function collectDuties(inc: Float64Array, P: Float32Array, base: number, ex: Float64Array, eo: number, landR: number, hearthR: number, exciseR: number, agriValue: number, marketValue: number, tf: number, pl: number): number {
+  DUTY_PAID.fill(0); DUTY_BY.fill(0);
+  if (landR > 0) {
+    let due = agriValue * landR * tf;
+    for (const c of LANDLORDS) { const t = Math.min(due, inc[c] * 0.5) * (1 - ex[eo + 1 + c]); inc[c] -= t; due -= t; DUTY_BY[c] = t; DUTY_PAID[0] += t; }
+    const c = CL.peasants, t = Math.min(due, inc[c] * 0.5) * (1 - ex[eo + 1 + c]); inc[c] -= t; DUTY_BY[c] += t; DUTY_PAID[0] += t;
+  }
+  if (hearthR > 0) {
+    for (let c = 0; c < C; c++) {
+      const free = c === CL.nobles ? Math.max(ex[eo + 1 + c], ex[eo]) : ex[eo + 1 + c];
+      const t = Math.min(P[base + c] / 100 * hearthR * pl * tf, inc[c] / 3) * (1 - free);
+      inc[c] -= t; DUTY_BY[C + c] = t; DUTY_PAID[1] += t;
+    }
+  }
+  if (exciseR > 0) {
+    const due = marketValue * exciseR * tf;
+    const pay3 = inc[CL.artisans] + inc[CL.burghers] + inc[CL.labourers] + inc[CL.wage_workers];
+    if (pay3 > 0) for (const c of SELLERS) { const t = Math.min(inc[c] * 0.5, due * inc[c] / pay3) * (1 - ex[eo + 1 + c]); inc[c] -= t; DUTY_BY[2 * C + c] = t; DUTY_PAID[2] += t; }
+  }
+  return DUTY_PAID[0] + DUTY_PAID[1] + DUTY_PAID[2];
 }
 
 /** One location's month of production, income, consumption and growth (see stepLocations). */
@@ -273,21 +308,9 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
       // tax instruments (systems/duties.ts): land tax, hearth tax, excise
       const landR = ns[nr + NX + 4], hearthR = ns[nr + NX + 5], exciseR = ns[nr + NX + 6];
       let land = 0, hearth = 0, excise = 0;
-      if (landR > 0) {
-        // on the value of harvests and raw goods: the lords and the church pay up to half their income, the peasants the rest
-        let due = agriValue * landR * tf;
-        for (const c of LANDLORDS) { const t = Math.min(due, inc[c] * 0.5); inc[c] -= t; due -= t; land += t; }
-        const t = Math.min(due, inc[CL.peasants] * 0.5); inc[CL.peasants] -= t; land += t;
-      }
-      if (hearthR > 0) {
-        // a flat sum per hundred people, whatever they earn (never more than a third of a class's income)
-        for (let c = 0; c < C; c++) { const t = Math.min(P[base + c] / 100 * hearthR * pl * tf, inc[c] / 3); inc[c] -= t; hearth += t; }
-      }
-      if (exciseR > 0) {
-        // on crafts and raw goods brought to market, paid by those who make and sell them
-        const due = (craftValue + rgoQ * pR) * exciseR * tf;
-        const pay3 = inc[CL.artisans] + inc[CL.burghers] + inc[CL.labourers] + inc[CL.wage_workers];
-        if (pay3 > 0) for (const c of SELLERS) { const t = Math.min(inc[c] * 0.5, due * inc[c] / pay3); inc[c] -= t; excise += t; }
+      if (landR > 0 || hearthR > 0 || exciseR > 0) {
+        collectDuties(inc, P, base, ns, nr + NX + 8, landR, hearthR, exciseR, agriValue, craftValue + rgoQ * pR, tf, pl);
+        land = DUTY_PAID[0]; hearth = DUTY_PAID[1]; excise = DUTY_PAID[2];
       }
       // most of what the people pay stays with lords, towns and collectors; the crown receives its share
       taxTotal *= CROWN_SHARE; land *= CROWN_SHARE; hearth *= CROWN_SHARE; excise *= CROWN_SHARE;

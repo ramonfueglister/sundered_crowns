@@ -8,9 +8,9 @@ import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, RECIPES, TERRAI
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
-import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf } from '../sim/systems/politics';
-import { adminInfo, budgetForecast, methodBlock, methodCost, capacityShare } from '../sim/systems/administration';
-import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent } from '../sim/systems/duties';
+import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
+import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
+import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
 import { LAWS, VALUES } from '../sim/content/laws';
 import { FAITHS, ALL_CULTURES, cultureLabel as cultureName, GROUP_OF, faithFamily } from '../sim/content/peoples';
 import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrineSlots, RESEARCH_OFFICE } from '../sim/systems/progress';
@@ -22,7 +22,7 @@ import { goalsFor } from '../sim/systems/goals';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
-import { agentSlots } from '../sim/systems/society';
+import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
 import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
 import { METHODS } from '../sim/defs';
 import { SITUATIONS } from '../sim/content/situations';
@@ -301,7 +301,12 @@ function realmDetail(s: GameState, w: World, player: number) {
     colonies: s.colonies.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc] })), colonySlots: colonySlots(n),
     colonyCost: colonyCost(s, n), colonyProgress: colonyProgress(n), colonise: effectSources(n, 'colonise'),
     admin: adminInfo(s, w, n), forecast: budgetForecast(s, n),
-    duties: DUTIES.map((d) => ({ id: d.id, ledger: d.ledger, rate: dutyRate(n, d.id), max: d.max, step: d.step, income: n.income[d.ledger] ?? 0, estates: d.estates, unrest: d.unrest })),
+    duties: DUTIES.map((d) => ({
+      id: d.id, ledger: d.ledger, rate: dutyRate(n, d.id), max: d.max, step: d.step, income: n.income[d.ledger] ?? 0, unrest: d.unrest,
+      estates: Object.fromEntries(dutyEstates(d, (c) => classExempt(n, c))),
+      // classes free of it by law (and the nobles' hearth privilege): they pay that share less, the crown forgoes it
+      exempt: d.classes.map((c) => [c, d.id === 'hearth' && c === CL.nobles ? Math.max(classExempt(n, c), Math.min(1, Math.max(0, lawEffect(n, 'hearth_exempt_nobles')))) : classExempt(n, c)] as [number, number]).filter(([, v]) => v > 0),
+    })),
     dutyUnrest: dutyUnrest(n), tariffMax: tariffMax(n), tariffMaxParts: [['x_base', 0.05], ...effectSources(n, 'tariff_max')] as BdRow[], loanRate: loanRate(s, n),
     diplomacy: { value: diploSkill(s, n), parts: [...effectSources(n, 'diplomacy'), ['x_chancellor', councilBonus(s, n, 'chancellor')]] as BdRow[] },
     tradition: traditionOf(n),
@@ -465,7 +470,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods)) * (1 + trB)) };
   });
   // ---- estates: contentment drifts 3 % a month toward 50 + 6 per privilege
-  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id); const tgt = 50 + e.privileges.length * 6 - duty; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, appeaseUntil: n.flags[`appease_${e.id}`] || 0 }; });
+  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const tgt = 50 + e.privileges.length * 6 - duty; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, appeaseUntil: n.flags[`appease_${e.id}`] || 0 }; });
   return {
     concord: { value: n.concord, target: concordTarget, monthly: (concordTarget - n.concord) * 0.04, parts: concordParts },
     mandate: { value: n.mandate, target: mandateTarget, monthly: (mandateTarget - n.mandate) * 0.03, parts: mandateParts },
@@ -509,7 +514,7 @@ function locExplain(s: GameState, w: World, l: number) {
   if (n) {
     const sameC = lc.culture[l] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[lc.culture[l]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
     const sameF = lc.faith[l] === n.faith ? 1 : faithFamily(lc.faith[l]) === faithFamily(n.faith) ? 0.75 : 0.5;
-    integ = [['x_base_rate', 100 / 120], ['x_control', lc.control[l]], ['x_culture', sameC], ['x_faith', sameF], ['x_integration_mods', Math.max(0, 1 + lawEffect(n, 'integration'))], ['x_admin_capacity', capacityShare(n)]];
+    integ = [['x_base_rate', 100 / 120], [overextControl(n) > 0 ? 'x_control_unstrained' : 'x_control', integrationControl(s, n, l)], ['x_culture', sameC], ['x_faith', sameF], ['x_integration_mods', Math.max(0, 1 + lawEffect(n, 'integration'))], ['x_admin_capacity', integrationShare(n)]];
     reach = [['x_base_km', 520], ['x_admin', 520 * lawEffect(n, 'admin')], ['x_control_mods', 520 * lawEffect(n, 'control')], ['x_governance', 520 * n.tech[0] * 0.015]];
     taxes = CLASSES.map((_, c) => ({ cls: c, rate: effectiveTax(s, n, l, c) }));
   }

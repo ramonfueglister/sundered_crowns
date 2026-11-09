@@ -5,11 +5,11 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, addIncome, addExpense, atWar, hasTreaty } from '../ctx';
 import { B, BI, C, CL, METHODS } from '../defs';
-import { lawEffect, OFFICES } from './politics';
+import { lawEffect, OFFICES, classExempt } from './politics';
 import { overextension } from './economy';
 import { ownedLocs } from './war';
 import { chance } from '../rng';
-import { DUTIES, dutyRate, setDuty } from './duties';
+import { DUTIES, dutyRate, setDuty, dutyWeight } from './duties';
 
 type Row = [string, number];
 
@@ -44,6 +44,11 @@ export function computeAdmin(s: GameState, w: World) {
 }
 /** Share of the normal integration speed each location gets: 1 while the load fits the capacity. */
 export function capacityShare(n: Nation) { const l = n.adminLoad ?? 0; return l <= n.adminCapacity ? 1 : n.adminCapacity / l; }
+/** Lowest share of the normal integration speed an over-extended realm keeps, so that any conquest is integrated
+ *  in bounded time (at most four times as slowly as within capacity). */
+export const MIN_INTEG_SHARE = 0.25;
+/** The share of the capacity that integration really runs at (systems/society.ts integrationMonth). */
+export function integrationShare(n: Nation) { return Math.max(MIN_INTEG_SHARE, capacityShare(n)); }
 /** Everything the realm panel shows about the administration (recomputed for one realm). */
 export function adminInfo(s: GameState, w: World, n: Nation) {
   let core = 0, seats = 0, load = 0, pending = 0;
@@ -55,10 +60,11 @@ export function adminInfo(s: GameState, w: World, n: Nation) {
   const parts = capacityParts(s, n, core, seats);
   const capacity = Math.max(5, parts.reduce((p, r) => p + r[1], 0));
   const ox = Math.max(0, load / capacity - 1);
+  const share = load <= capacity ? 1 : Math.max(MIN_INTEG_SHARE, capacity / load);
   top.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
   return {
-    capacity, parts, load, pending, share: load <= capacity ? 1 : capacity / load, overext: ox,
-    effects: { unrest: Math.min(15, ox * 10), control: -Math.min(0.3, ox * 0.15), integration: load <= capacity ? 0 : capacity / load - 1 },
+    capacity, parts, load, pending, share, overext: ox,
+    effects: { unrest: Math.min(15, ox * 10), control: -Math.min(0.3, ox * 0.15), integration: share - 1 },
     loadTop: top.slice(0, 8).map(([i, l]) => ({ loc: i, name: { en: w.names[i], de: w.namesDe[i] }, load: l, integ: s.loc.integ[i] })),
   };
 }
@@ -114,15 +120,22 @@ function aiMethodsYear(s: GameState, w: World) {
 }
 
 // ---------------- migration ----------------
+/** Pull a place loses for each unit of its peasants and labourers that came as newcomers (and gains for each that
+ *  left): the newcomers take up the free farms and work, the leavers leave theirs empty. */
+export const MIGR_CROWD = 2.5;
+/** Monthly fading of that memory (about half of it is gone after a century: the land the newcomers took stays taken). */
+export const MIGR_FADE = 0.9995;
 /** Monthly: peasants and labourers drift toward neighbouring land where the common people live better, within the
  *  realm readily, across borders less and never across a front. Slow (at most 0.4 % of them a month) and cheap: one
- *  pass over the map comparing each place with its best neighbour. */
+ *  pass over the map comparing each place with its best neighbour. Arrivals crowd a place: its pull falls with the
+ *  share of newcomers it took in lately (lc.migrBal), so a lasting gap in living standards moves a few percent of the
+ *  people and then the flow dies down instead of draining the poorer land. */
 export function migrationMonth(s: GameState, w: World) {
-  const L = w.L, lc = s.loc, P = lc.pop, sol = lc.sol;
-  const avg = new Float32Array(L), dp = new Float32Array(L), dl = new Float32Array(L);
+  const L = w.L, lc = s.loc, P = lc.pop, sol = lc.sol, bal = lc.migrBal;
+  const pull = new Float32Array(L), dp = new Float32Array(L), dl = new Float32Array(L);
   for (let i = 0; i < L; i++) {
     const a = P[i * C + CL.peasants], b = P[i * C + CL.labourers], p = a + b;
-    avg[i] = p > 0 ? (sol[i * C + CL.peasants] * a + sol[i * C + CL.labourers] * b) / p : 0;
+    pull[i] = (p > 0 ? (sol[i * C + CL.peasants] * a + sol[i * C + CL.labourers] * b) / p : 0) - MIGR_CROWD * bal[i];
   }
   for (let i = 0; i < L; i++) {
     const o = lc.owner[i]; if (o < 0) continue;
@@ -132,7 +145,7 @@ export function migrationMonth(s: GameState, w: World) {
     for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
       const j = w.adj[e]; if (j >= L) continue;
       const oj = lc.owner[j]; if (oj < 0 || P[j * C + CL.peasants] + P[j * C + CL.labourers] < 50) continue;
-      let gain = avg[j] - avg[i] - lc.devast[j] * 0.5 - lc.plague[j] * (lc.plague[j] > 0 ? 1 : 0);
+      let gain = pull[j] - pull[i] - lc.devast[j] * 0.5 - lc.plague[j] * (lc.plague[j] > 0 ? 1 : 0);
       if (oj !== o) { if (atWar(s, o, oj)) continue; gain *= 0.35; }
       if (gain > bv) { bv = gain; best = j; }
     }
@@ -144,6 +157,8 @@ export function migrationMonth(s: GameState, w: World) {
   for (let i = 0; i < L; i++) {
     const v = dp[i] + dl[i];
     lc.migr[i] = v;
+    const p0 = P[i * C + CL.peasants] + P[i * C + CL.labourers];
+    bal[i] = Math.max(-1, Math.min(1, bal[i] * MIGR_FADE + (p0 > 0 ? v / p0 : 0)));
     if (v === 0) continue;
     P[i * C + CL.peasants] = Math.max(0, P[i * C + CL.peasants] + dp[i]);
     P[i * C + CL.labourers] = Math.max(0, P[i * C + CL.labourers] + dl[i]);
@@ -196,7 +211,9 @@ export function aiDuties(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const rich = n.treasury > inc * 10 && exp < inc;
   for (const d of DUTIES) {
     const r = dutyRate(n, d.id);
-    const willing = d.id === 'excise' ? est('burghers') > 40 : d.id === 'land' ? est('magnates') > 45 && est('prelates') > 40 : est('commons') > 45 && un < 15;
+    // the estates that would pay and resent it must be content enough (exempt lords' land tax falls on the commons)
+    const commonsPay = d.id === 'hearth' || dutyWeight(d, 'commons', (c) => classExempt(n, c)) > 0;
+    const willing = d.id === 'excise' ? est('burghers') > 40 : d.id === 'land' ? est('magnates') > 45 && est('prelates') > 40 && (!commonsPay || (est('commons') > 45 && un < 15)) : est('commons') > 45 && un < 15;
     const cap = d.max * (d.id === 'hearth' ? 0.3 : 0.4);
     if (short && willing && un < 30 && r < cap) { setDuty(n, d.id, r + d.step); return; }
     if ((rich || un > 35 || !willing) && r > 0) setDuty(n, d.id, r - d.step);

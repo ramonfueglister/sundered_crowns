@@ -5,6 +5,7 @@
 import { Section, Row, Bar, Btn, Slider, act, t, L, num, signed, pct, Tip, Effects, Spark } from './common';
 import { TipHead, Parts, type Row as BdRow } from './explain';
 import { keyName } from '../TopBar';
+import { CLASSES, CLASS_NAME } from '../../sim/defs';
 
 const ESTATE_KEY: Record<string, string> = { magnates: 'est_magnates', prelates: 'est_prelates', burghers: 'est_burghers', commons: 'est_commons' };
 const estLabel = (id: string) => { const v = t(ESTATE_KEY[id] ?? id); return v === (ESTATE_KEY[id] ?? id) ? id : v; };
@@ -18,6 +19,8 @@ function DutyTip({ d, p }: { d: any; p: any }) {
     <Parts title={t('x_duty_resented')} keepZero rows={Object.entries(d.estates).map(([e, k]) => [estLabel(e), -(k as number) * d.rate] as BdRow)} digits={1} />
     <div class="muted small">{t('x_duty_per_step')}: {Object.entries(d.estates).map(([e, k]) => `${estLabel(e)} ${signed(-(k as number) * d.step, 1)}`).join(', ')} · {t('unrest')} +{num(d.unrest * d.step, 2)}</div>
     <div class="muted small">{t('x_duty_resented_hint')}</div>
+    {d.exempt?.length > 0 && <Parts title={t('x_duty_exempt')} rows={d.exempt.map(([c, v]: [number, number]) => [L(CLASS_NAME[CLASSES[c]]), v] as BdRow)} fmt={(v) => pct(v, 0)} />}
+    {d.exempt?.length > 0 && <div class="muted small">{t('x_duty_exempt_hint')}</div>}
     <div class="tip-drift"><span>{t('unrest')}</span><span class={d.rate > 0 ? 'neg' : 'muted'}>+{num(d.rate * d.unrest, 1)} {t('x_in_each_loc')}</span></div>
     <div class="muted small">{t('x_duty_max')}: {d.id === 'hearth' ? num(d.max, 2) : pct(d.max, 0)}</div>
   </div>;

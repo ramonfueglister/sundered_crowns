@@ -5,7 +5,7 @@ import { type System, clamp, chronicle, notice } from '../ctx';
 import { B, BI, C } from '../defs';
 import { MinHeap } from '../setup';
 import { lawEffect, councilBonus } from './politics';
-import { computeAdmin, capacityShare } from './administration';
+import { computeAdmin, integrationShare } from './administration';
 import { overextension } from './economy';
 import { ownedLocs } from './war';
 import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
@@ -63,9 +63,12 @@ export function computeControl(s: GameState, w: World, n: Nation) {
 export function controlReach(n: Nation) { return 520 * Math.max(0.2, 1 + lawEffect(n, 'admin') + lawEffect(n, 'control') + n.tech[0] * 0.015); }
 /** Share of control an over-extended realm loses everywhere (at most 30 %). */
 export function overextControl(n: Nation) { return Math.min(0.3, overextension(n) * 0.15); }
+/** The control that drives integration: the location's control before the strain of over-extension, which slows
+ *  integration once already, through the share of the capacity (integrationShare). */
+export function integrationControl(s: GameState, n: Nation, i: number) { return Math.min(1, s.loc.control[i] / (1 - overextControl(n))); }
 
 // ---------------- integration ----------------
-function integrationMonth(s: GameState, w: World) {
+export function integrationMonth(s: GameState, w: World) {
   const o = s.loc.owner;
   computeAdmin(s, w); // load and capacity of every realm, shared out below
   for (let i = 0; i < w.L; i++) {
@@ -74,8 +77,9 @@ function integrationMonth(s: GameState, w: World) {
     if (s.loc.integ[i] >= 1) { if (s.loc.core[i] !== own) s.loc.core[i] = own; continue; }
     const sameC = s.loc.culture[i] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
     const sameF = s.loc.faith[i] === n.faith ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
-    // the administration's capacity is shared out over all land being integrated at once
-    const rate = 1 / 120 * s.loc.control[i] * sameC * sameF * Math.max(0, 1 + lawEffect(n, 'integration')) * capacityShare(n);
+    // the administration's capacity is shared out over all land being integrated at once (never below a quarter of
+    // the normal speed); the loss of control from over-extension is not counted a second time
+    const rate = 1 / 120 * integrationControl(s, n, i) * sameC * sameF * Math.max(0, 1 + lawEffect(n, 'integration')) * integrationShare(n);
     s.loc.integ[i] = Math.min(1, s.loc.integ[i] + rate);
     if (s.loc.core[i] >= 0 && s.loc.core[i] !== own && !s.nations[s.loc.core[i]]?.alive && s.loc.integ[i] > 0.5) s.loc.core[i] = own;
   }

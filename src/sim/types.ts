@@ -181,6 +181,7 @@ export interface LocState {
   snow: Float32Array;   // current snow cover 0..1 (climate model)
   colonist: Int16Array; // nation colonising this location, -1
   migr: Float32Array;   // people who moved in (+) or out (−) last month (systems/administration.ts)
+  migrBal: Float32Array; // newcomers (+) or leavers (−) of the last decades as a share of the peasants and labourers, fading (crowding)
 }
 
 export interface Empire { emperor: number; electors: number[]; authority: number; reforms: string[]; diet: { proposal: string; votesFor: number[]; votesAgainst: number[]; ends: number } | null; lastElection: number; members: number[] }

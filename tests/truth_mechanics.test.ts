@@ -5,14 +5,17 @@ import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { DAY_EPOCH, EPOCH } from '../src/sim/ctx';
-import { lawEffect, councilBonus, treasurerGraft, succession, ablestOfficial, traditionOf } from '../src/sim/systems/politics';
-import { taxCommon, integrationYield, effectiveTax, importPrice, tariffMax, loanRate } from '../src/sim/systems/economy';
+import { lawEffect, councilBonus, treasurerGraft, succession, ablestOfficial, traditionOf, classExempt } from '../src/sim/systems/politics';
+import { taxCommon, integrationYield, effectiveTax, importPrice, tariffMax, loanRate, overextension, collectDuties, DUTY_BY, DUTY_PAID } from '../src/sim/systems/economy';
 import { researchRate, adoptionDelayed } from '../src/sim/systems/progress';
 import { maintMorale, techMult } from '../src/sim/systems/military';
 import { envoyDays, opinionBreakdown, diploSkill } from '../src/sim/systems/diplomacy';
-import { transferLoc, dreadGain } from '../src/sim/systems/war';
-import { computeAdmin, capacityShare, adminInfo, setMethod, methodBlock, migrationMonth, budgetForecast, aiDuties, administration } from '../src/sim/systems/administration';
-import { setDuty, dutyDiscontent, dutyUnrest } from '../src/sim/systems/duties';
+import { transferLoc, dreadGain, startCivilWar, concludePeace } from '../src/sim/systems/war';
+import { computeAdmin, capacityShare, adminInfo, setMethod, methodBlock, migrationMonth, budgetForecast, aiDuties, administration, integrationShare, MIN_INTEG_SHARE } from '../src/sim/systems/administration';
+import { integrationMonth, integrationControl, overextControl } from '../src/sim/systems/society';
+import { serialize, deserialize } from '../src/sim/engine';
+import { answer } from '../src/game/view';
+import { setDuty, dutyDiscontent, dutyUnrest, DUTY_INDEX, dutyEstates } from '../src/sim/systems/duties';
 import { colonyCost, colonyProgress } from '../src/sim/systems/colonial';
 import { curiaGain } from '../src/sim/systems/realm';
 import { applyCommand, buildCost } from '../src/sim/commands';
@@ -263,5 +266,117 @@ describe('A: keys that did nothing now act', () => {
     expect(n.ruler).toBe(best.id);
     expect(Object.values(n.council)).not.toContain(best.id);
   });
+});
+
+describe('review fixes', () => {
+  it('a war of succession that ends returns the land as it was: integrated, under the same control, not over-extended', () => {
+    const { s: s6, w: w6 } = newGame(1356);
+    const n = s6.nations.find((x) => x.key === 'france')!;
+    computeAdmin(s6, w6);
+    expect(overextension(n)).toBe(0);
+    startCivilWar(s6, w6, n);
+    const war = s6.wars.find((x) => x.goal.type === 'civil_war' && x.def.includes(n.id))!;
+    const pre = s6.nations[war.attLead];
+    const taken = ownedLocs(s6, pre.id).slice();
+    expect(taken.length).toBeGreaterThan(20);
+    for (const l of taken) expect(s6.loc.integ[l]).toBe(1);
+    const ctl = taken.map((l) => s6.loc.control[l]);
+    concludePeace(s6, w6, war, war.attLead, war.defLead, []);
+    expect(pre.alive).toBe(false);
+    taken.forEach((l, k) => { expect(s6.loc.owner[l]).toBe(n.id); expect(s6.loc.integ[l]).toBe(1); expect(s6.loc.control[l]).toBeCloseTo(ctl[k], 9); });
+    computeAdmin(s6, w6);
+    expect(overextension(n)).toBe(0);
+    // a conquest still starts unintegrated under weak control; land handed on otherwise keeps both
+    const en = s6.nations.find((x) => x.key === 'england')!;
+    const [a, b] = taken; s6.loc.control[a] = 0.7; s6.loc.control[b] = 0.7;
+    transferLoc(s6, w6, a, en.id); transferLoc(s6, w6, b, en.id, 0, { conquest: false });
+    expect(s6.loc.integ[a]).toBe(0); expect(s6.loc.control[a]).toBeCloseTo(0.3, 6);
+    expect(s6.loc.integ[b]).toBe(1); expect(s6.loc.control[b]).toBeCloseTo(0.7, 6);
+  }, 120_000);
+  it('over-extension slows integration once, never below a quarter, and the tooltip shows the real monthly step', () => {
+    const { s: s2, w: w2 } = newGame(1356);
+    const en = s2.nations.find((n) => n.key === 'england')!, fr2 = s2.nations.find((n) => n.key === 'france')!;
+    const take = ownedLocs(s2, fr2.id).slice(0, 120);
+    for (const l of take) transferLoc(s2, w2, l, en.id);
+    computeAdmin(s2, w2);
+    expect(capacityShare(en)).toBeLessThan(MIN_INTEG_SHARE);
+    expect(integrationShare(en)).toBe(MIN_INTEG_SHARE);
+    expect(adminInfo(s2, w2, en).share).toBe(MIN_INTEG_SHARE);
+    // the control the strain took away is given back for integration (it already slows it through the share)
+    const strain = overextControl(en); expect(strain).toBeGreaterThan(0);
+    const l = take[0]; s2.loc.control[l] = 0.5 * (1 - strain);
+    expect(integrationControl(s2, en, l)).toBeCloseTo(0.5, 6); // control is stored as a 32-bit float
+    // the location tooltip's monthly step is the step the month really takes
+    const before = take.map((i) => s2.loc.integ[i]);
+    const tips = take.slice(0, 5).map((i) => answer(s2, w2, en.id, { q: 'loc', loc: i } as any).why.integMonthly as number);
+    integrationMonth(s2, w2);
+    take.slice(0, 5).forEach((i, k) => expect(s2.loc.integ[i] - before[k]).toBeCloseTo(tips[k], 9));
+    expect(tips[0]).toBeGreaterThan(0);
+  }, 120_000);
+  it('a save from before the truth pass loads and runs', () => {
+    const { s: s7, w: w7 } = newGame(1356);
+    const o = JSON.parse(serialize(s7));
+    delete o.loc.migr; delete o.loc.migrBal; o.v = 1;
+    for (const n of o.nations) { delete n.duties; delete n.adminLoad; }
+    const s8 = deserialize(JSON.stringify(o));
+    expect(s8.v).toBe(2);
+    expect(s8.loc.migr.length).toBe(s8.loc.owner.length);
+    for (let d = 0; d < 40; d++) advanceDay(s8, w7);
+    expect(s8.nations.find((n) => n.key === 'france')!.duties).toEqual({ land: 0, hearth: 0, excise: 0 });
+    expect(s8.day).toBe(s7.day + 40);
+  }, 120_000);
+  it('legal exemptions free a class of the duties too, and the hearth privilege frees the nobles of the hearth tax', () => {
+    const inc = new Float64Array(C);
+    inc[CL.peasants] = 400; inc[CL.labourers] = 60; inc[CL.artisans] = 80; inc[CL.burghers] = 100; inc[CL.clergy] = 50; inc[CL.nobles] = 120;
+    const P = new Float32Array(C).fill(2000);
+    const run = (ex: Record<number, number>, nobleHearth = 0, hearthR = 0.3) => {
+      const e = new Float64Array(1 + C); e[0] = nobleHearth; for (const c in ex) e[1 + +c] = ex[c];
+      collectDuties(Float64Array.from(inc), P, 0, e, 0, 0.05, hearthR, 0.05, 2000, 800, 1, 1);
+      return { by: DUTY_BY.slice(), paid: DUTY_PAID.slice() };
+    };
+    const free = run({}), full = run({ [CL.nobles]: 1, [CL.clergy]: 1, [CL.burghers]: 0.4 });
+    expect(free.by[CL.nobles]).toBeGreaterThan(0); expect(free.by[C + CL.nobles]).toBeGreaterThan(0);
+    // full exemption: nothing of the land or hearth tax from nobles and clergy; their land tax falls on the peasants
+    expect(full.by[CL.nobles]).toBe(0); expect(full.by[C + CL.nobles]).toBe(0);
+    expect(full.by[CL.clergy]).toBe(0); expect(full.by[C + CL.clergy]).toBe(0);
+    expect(full.by[CL.peasants]).toBeGreaterThan(free.by[CL.peasants]);
+    // hearth tax and excise of exempt classes are forgone
+    expect(full.paid[1]).toBeLessThan(free.paid[1]);
+    const exc = (ex: Record<number, number>) => run(ex, 0, 0).by[2 * C + CL.burghers];
+    expect(exc({ [CL.burghers]: 0.4 })).toBeCloseTo(exc({}) * 0.6, 9);
+    // the privilege frees the nobles of the hearth tax only
+    const priv = run({}, 1);
+    expect(priv.by[C + CL.nobles]).toBe(0); expect(priv.by[CL.nobles]).toBeCloseTo(free.by[CL.nobles], 9);
+    // the laws and the privilege reach the realm's own collection
+    withLaw(fr, 'nobility', 'full', () => withLaw(fr, 'clergy_tax', 'immune', () => {
+      expect(classExempt(fr, CL.nobles)).toBe(1); expect(classExempt(fr, CL.clergy)).toBe(1);
+      fr.duties = { land: 0.1, hearth: 0, excise: 0 };
+      // exempt lords do not resent the land tax; the commons who pay it instead do
+      expect(dutyDiscontent(fr, 'magnates', (c) => classExempt(fr, c))).toBe(0);
+      expect(dutyDiscontent(fr, 'commons', (c) => classExempt(fr, c))).toBeCloseTo(0.1 * 250, 6);
+      expect(dutyEstates(DUTY_INDEX.land, (c) => classExempt(fr, c)).map((x) => x[0])).toContain('commons');
+      fr.duties = { land: 0, hearth: 0, excise: 0 };
+    }));
+    withMod(fr, { hearth_exempt_nobles: 1 }, () => expect(lawEffect(fr, 'hearth_exempt_nobles')).toBe(1));
+  }, 120_000);
+  it('migration evens out: newcomers crowd a place, so a lasting gap moves a few percent and then dies down', () => {
+    const { s: s9, w: w9 } = newGame(1356);
+    const n = s9.nations.find((x) => x.key === 'france')!;
+    const l = ownedLocs(s9, n.id).find((i) => s9.loc.pop[i * C + CL.peasants] > 3000 && w9.adjStart[i + 1] - w9.adjStart[i] >= 3)!;
+    const pl = (i: number) => s9.loc.pop[i * C + CL.peasants] + s9.loc.pop[i * C + CL.labourers];
+    const p0 = pl(l), out: number[] = [];
+    for (let m = 0; m < 240; m++) {
+      // a lasting gap: this place stays poorer than every neighbour
+      s9.loc.sol[l * C + CL.peasants] = 0.3; s9.loc.sol[l * C + CL.labourers] = 0.3;
+      for (let e = w9.adjStart[l]; e < w9.adjStart[l + 1]; e++) { const j = w9.adj[e]; if (j < w9.L) { s9.loc.sol[j * C + CL.peasants] = 0.5; s9.loc.sol[j * C + CL.labourers] = 0.5; } }
+      migrationMonth(s9, w9);
+      out.push(-s9.loc.migr[l] / pl(l));
+    }
+    expect(out[0]).toBeGreaterThan(0.001); // people leave at first
+    expect(out[239]).toBeLessThan(out[0] * 0.2); // and the flow dies down
+    const lost = 1 - pl(l) / p0;
+    expect(lost).toBeGreaterThan(0.02); expect(lost).toBeLessThan(0.15); // a few percent, not the whole place
+    expect(s9.loc.migrBal[l]).toBeLessThan(0);
+  }, 120_000);
 });
 void B;

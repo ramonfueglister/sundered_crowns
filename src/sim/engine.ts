@@ -6,7 +6,7 @@ import { SYSTEMS } from './systems';
 import { applyCommand } from './commands';
 import { gzipSync, gunzipSync, strToU8, strFromU8 } from 'fflate';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const END_YEAR = 1815;
 
 export interface TickProfile { [system: string]: number }
@@ -94,7 +94,14 @@ export function deserialize(json: string): GameState {
 }
 function migrate(s: GameState): GameState {
   if (!s.v) s.v = 1;
-  // future versions: transform older saves here
+  if (s.v < 2) {
+    // version 2 (truth pass): migration, administrative load and the tax instruments
+    const L = s.loc.owner.length;
+    if (!s.loc.migr) s.loc.migr = new Float32Array(L);
+    if (!s.loc.migrBal) s.loc.migrBal = new Float32Array(L);
+    for (const n of s.nations) { n.duties ??= { land: 0, hearth: 0, excise: 0 }; n.adminLoad ??= 0; }
+    s.v = 2;
+  }
   return s;
 }
 export function saveBinary(s: GameState): Uint8Array { return gzipSync(strToU8(serialize(s)), { level: 6 }); }

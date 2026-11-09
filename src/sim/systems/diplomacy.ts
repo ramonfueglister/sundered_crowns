@@ -230,7 +230,7 @@ function subjectsMonth(s: GameState, w: World) {
 }
 export function integrateSubject(s: GameState, w: World, ov: Nation, n: Nation) {
   const { transferLoc } = require_war();
-  for (let i = 0; i < s.loc.owner.length; i++) if (s.loc.owner[i] === n.id) { transferLoc(s, w, i, ov.id); s.loc.integ[i] = 0.5; }
+  for (let i = 0; i < s.loc.owner.length; i++) if (s.loc.owner[i] === n.id) { transferLoc(s, w, i, ov.id, 0, { conquest: false }); s.loc.integ[i] = 0.5; }
   n.alive = false;
   chronicle(s, ov.id, 'integration', { en: `${ov.short.en} absorbed ${n.short.en} into the realm.`, de: `${ov.short.de} gliederte ${n.short.de} in das Reich ein.` });
 }
