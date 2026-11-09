@@ -29,6 +29,10 @@ class Path2 {
     return [ax + tx * u, ay + ty * u, tx, ty];
   }
 }
+/** a trade route on the trade map: goods go from a to b; value sets the width; color of the main good */
+export interface MapFlow { ax: number; ay: number; bx: number; by: number; value: number; color: string; good: string }
+/** a market hub on the trade map */
+export interface MapMarket { x: number; y: number; name: string; value: number }
 export interface MapLandmark { x: number; y: number; name: string; kind: string; tier: number; max: number; building: boolean }
 export type UnitKind = 'army' | 'fleet' | 'siege' | 'battle';
 export interface MapUnit {
@@ -63,6 +67,7 @@ export interface OverlayView {
   zoom: number; cssW: number; cssH: number; time: number;
 }
 
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const fmtMen = (u: MapUnit, men: number) => (u.kind === 'fleet' ? String(Math.round(men)) : men >= 1000 ? (men / 1000).toFixed(1) + 'k' : String(Math.round(men)));
 
 const LABEL_FONT = `"Cormorant Garamond", "EB Garamond", Garamond, Georgia, "Times New Roman", serif`;
@@ -92,6 +97,9 @@ export class Overlay {
   labels: MapLabel[] = [];
   units: MapUnit[] = [];
   landmarks: MapLandmark[] = [];
+  /** shown on the trade map only */
+  flows: MapFlow[] = [];
+  markets: MapMarket[] = [];
   private dpr = 1;
   private fade = new Map<number | string, number>(); // current opacity per label, eased toward its target
   private shift = new Map<number | string, number>(); // offset (map px, across the text) a label last moved to, tried first
@@ -123,6 +131,7 @@ export class Overlay {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.drawFlows(v);
     this.drawLabels(v);
     this.drawLandmarks(v);
     this.drawUnits(v);
@@ -133,7 +142,7 @@ export class Overlay {
     const saved = this.ctx; const savedDpr = this.dpr;
     this.ctx = ctx; this.dpr = scale;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.drawLabels(v, true); this.drawLandmarks(v); this.drawUnits(v);
+    this.drawFlows(v); this.drawLabels(v, true); this.drawLandmarks(v); this.drawUnits(v);
     this.ctx = saved; this.dpr = savedDpr;
   }
 
@@ -303,6 +312,78 @@ export class Overlay {
     for (const g of lay.glyphs) { ctx.setTransform(g[0] * dpr, g[1] * dpr, g[2] * dpr, g[3] * dpr, g[4] * dpr, g[5] * dpr); ctx.fillText(g[6], 0, 0); }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalAlpha = 1;
+  }
+
+  /** Trade routes as arcs from hub to hub (each direction bends to its right), goods moving along as dots, the
+   *  width by value; market hubs as coins with their names. */
+  private drawFlows(v: OverlayView) {
+    if (!this.flows.length) return;
+    const ctx = this.ctx;
+    const maxV = Math.max(1, ...this.flows.map((f) => f.value));
+    const H = (x: number, y: number) => Math.max(0, v.heightAt?.(x, y) ?? 0);
+    const P = (x: number, y: number, h: number) => (v.toScreenZ ? v.toScreenZ(x, y, h) : v.toScreen(x, y));
+    const zk = clamp(Math.pow(v.zoom, 0.35), 0.6, 1.8);
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // the smallest first, so the great routes lie on top
+    for (let i = this.flows.length - 1; i >= 0; i--) {
+      const f = this.flows[i];
+      const dx = f.bx - f.ax, dy = f.by - f.ay, dist = Math.hypot(dx, dy);
+      if (dist < 1) continue;
+      const px = -dy / dist, py = dx / dist; // to the right of the way (map y points south)
+      // the route lies on the land and sea, bowed a little to its right so both directions show
+      const lift = 2, side = dist * 0.1;
+      const ha = H(f.ax, f.ay), hb = H(f.bx, f.by);
+      const pts: [number, number][] = [];
+      let on = false;
+      for (let k = 0; k <= 24; k++) {
+        const t = k / 24, bump = 4 * t * (1 - t);
+        const x = f.ax + dx * t + px * side * bump, y = f.ay + dy * t + py * side * bump;
+        const p = P(x, y, ha + (hb - ha) * t + lift * bump);
+        pts.push(p);
+        if (p[0] > -80 && p[1] > -80 && p[0] < v.cssW + 80 && p[1] < v.cssH + 80) on = true;
+      }
+      if (!on) continue;
+      const k = Math.sqrt(f.value / maxV);
+      const w = (1.6 + 6 * k) * zk;
+      this.polyline(pts);
+      ctx.strokeStyle = 'rgba(28, 20, 10, 0.55)'; ctx.lineWidth = w + 2.2; ctx.stroke();
+      ctx.strokeStyle = f.color; ctx.globalAlpha = 0.6 + 0.35 * k; ctx.lineWidth = w; ctx.stroke();
+      // goods on the way
+      ctx.globalAlpha = 0.9;
+      ctx.setLineDash([0.1, 9 + 6 * k]); ctx.lineDashOffset = -v.time * (14 + 10 * k);
+      ctx.strokeStyle = 'rgba(255, 248, 225, 0.95)'; ctx.lineWidth = Math.max(1.6, w * 0.65); ctx.stroke();
+      ctx.setLineDash([]);
+      // an arrow head near the importing end
+      const [x1, y1] = pts[19], [x2, y2] = pts[21];
+      const ang = Math.atan2(y2 - y1, x2 - x1), ah = 4 + w * 1.1;
+      ctx.globalAlpha = 0.95; ctx.fillStyle = f.color; ctx.strokeStyle = 'rgba(28, 20, 10, 0.7)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x2 + Math.cos(ang) * ah, y2 + Math.sin(ang) * ah);
+      ctx.lineTo(x2 + Math.cos(ang + 2.5) * ah, y2 + Math.sin(ang + 2.5) * ah); ctx.lineTo(x2 + Math.cos(ang - 2.5) * ah, y2 + Math.sin(ang - 2.5) * ah);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    // market hubs: a coin, the name below (the busiest ones first when names would crowd)
+    const maxM = Math.max(1, ...this.markets.map((m) => m.value));
+    const taken: [number, number, number, number][] = [];
+    for (const m of [...this.markets].sort((a, b) => b.value - a.value)) {
+      const [x, y] = P(m.x, m.y, H(m.x, m.y));
+      if (x < -40 || y < -40 || x > v.cssW + 40 || y > v.cssH + 40) continue;
+      const r = (3.5 + 4 * Math.sqrt(m.value / maxM)) * zk;
+      const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.2, x, y, r);
+      g.addColorStop(0, '#fbe9a6'); g.addColorStop(1, '#b3832a');
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      ctx.lineWidth = 1.3; ctx.strokeStyle = '#3a2a14'; ctx.stroke();
+      if (v.zoom < 0.8 && m.value < maxM * 0.25) continue;
+      ctx.font = `600 italic ${Math.round(11 + 3 * Math.sqrt(m.value / maxM))}px ${LABEL_FONT}`;
+      const tw = ctx.measureText(m.name).width, bx = x - tw / 2, by = y + r + 2;
+      if (taken.some(([a, b, c, d]) => bx < c && bx + tw > a && by < d && by + 14 > b)) continue;
+      taken.push([bx, by, bx + tw, by + 14]);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(245, 236, 214, 0.9)'; ctx.strokeText(m.name, x, by);
+      ctx.fillStyle = '#3a2410'; ctx.fillText(m.name, x, by);
+    }
+    ctx.restore();
   }
 
   /** Landmarks: a gilded badge with the building's sign and its stages, the name at close zoom. */

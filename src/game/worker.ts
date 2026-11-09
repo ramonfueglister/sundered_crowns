@@ -6,7 +6,7 @@ import { advanceDay, saveBinary, loadBinary } from '../sim/engine';
 import { startRecorded, recordCommand } from '../sim/replay';
 import type { GameState, Notice } from '../sim/types';
 import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
-import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels } from './view';
+import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from './view';
 import { dayToDate } from '../sim/calendar';
 
 const post = (m: FromWorker, tr: Transferable[] = []) => (self as any).postMessage(m, tr);
@@ -61,6 +61,7 @@ function sendTick(full = false) {
     chronicle: chron, snow: monthly ? new Float32Array(s.loc.snow) : undefined, roads: monthly ? roadLevels(s) : undefined, ranking: s.ranking, msPerDay,
     explored: monthly ? exploredView() : undefined,
     landmarks: monthly ? landmarksView(s, w) : undefined,
+    trade: monthly ? tradeView(s, w) : undefined,
   };
   const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer); if (view.roads) tr.push(view.roads.buffer); if (view.explored) tr.push(view.explored.buffer);
   post({ type: 'tick', view }, tr);

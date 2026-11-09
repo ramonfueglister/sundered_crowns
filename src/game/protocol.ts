@@ -64,6 +64,10 @@ export interface PlayerView {
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */
 export interface WarScoreParts { battles: number; occupation: number; capital: number; ticking: number }
 
+/** a trade route between two market hubs last month: the goods go from a to b; value in gold, the main good */
+export interface TradeFlowLite { a: number; b: number; value: number; good: number }
+/** a market hub with the value of the goods that passed through it last month */
+export interface TradeHubLite { hub: number; name: I18n; value: number }
 export interface LandmarkLite { id: string; loc: number; name: I18n; kind: string; tier: number; max: number; holder: number; work: number }
 
 export interface TickView {
@@ -82,6 +86,7 @@ export interface TickView {
   snow?: Float32Array;                             // monthly
   roads?: Uint8Array;                              // monthly: road level per location (0..3)
   landmarks?: LandmarkLite[];                      // monthly
+  trade?: { flows: TradeFlowLite[]; hubs: TradeHubLite[] }; // monthly: the largest trade routes and the markets
   explored?: Uint8Array;                           // monthly: 1 = known to the player's people (absent in observer mode)
   ranking: number[];
   msPerDay: number;

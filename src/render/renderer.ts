@@ -1,7 +1,7 @@
 // WebGPU map renderer.
 import type { MapAssets } from './assets';
 import { buildCoastSdf } from './coast';
-import { Overlay, type MapLabel, type MapUnit, type MapLandmark } from './overlay';
+import { Overlay, type MapLabel, type MapUnit, type MapLandmark, type MapFlow, type MapMarket } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
 import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
 import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp, type SceneProp } from './props';
@@ -680,6 +680,8 @@ export class MapRenderer {
   /** the layer with realm names and counters */
   get overlayElement(): HTMLCanvasElement { return this.overlay.canvas; }
   setLandmarks(l: MapLandmark[]) { this.overlay.landmarks = l; }
+  /** trade routes and market hubs (shown on the trade map; empty lists hide them) */
+  setTrade(flows: MapFlow[], markets: MapMarket[]) { this.overlay.flows = flows; this.overlay.markets = markets; }
 
   animateOwnerChange(changes: { loc: number; order: number }[], originX: number, originY: number) {
     if (!changes.length) return;

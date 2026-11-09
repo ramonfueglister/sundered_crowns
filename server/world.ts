@@ -16,7 +16,7 @@ import { applyCommand } from '../src/sim/commands';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import { answerEvent } from '../src/sim/systems/events';
 import { notice, chronicle, hasTreaty, atWar } from '../src/sim/ctx';
-import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels } from '../src/game/view';
+import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from '../src/game/view';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { nationDev } from '../src/sim/systems/war';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
@@ -708,7 +708,7 @@ export class WorldCore {
       nationUpd: monthly || this.nationsDirty ? this.nationDelta() : undefined, ...this.armyDelta(), wars: warsView(s),
       sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
       battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
-      chronicle: chron, ranking: s.ranking, msPerDay: this.msPerDay, landmarks: monthly ? landmarksView(s, w) : undefined,
+      chronicle: chron, ranking: s.ranking, msPerDay: this.msPerDay, landmarks: monthly ? landmarksView(s, w) : undefined, trade: monthly ? tradeView(s, w) : undefined,
     };
   }
   private prevNations: Record<string, string>[] = [];
@@ -766,7 +766,7 @@ export class WorldCore {
     return { day: s.day, startYear: s.startYear, speed: this.meta.paused ? 0 : 1, ended: s.ended, victory: s.victory, ownerChanges: undefined, changeOrigin: lp && lp.day === s.day ? lp.origin : undefined,
       armies: armyLites(s, this.w), wars: warsView(s), sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
       battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
-      chronicle: [], ranking: s.ranking, msPerDay: this.msPerDay, landmarks: landmarksView(s, this.w) };
+      chronicle: [], ranking: s.ranking, msPerDay: this.msPerDay, landmarks: landmarksView(s, this.w), trade: tradeView(s, this.w) };
   }
   private sendColors(ss: Session) {
     if (ss.mapMode === 'political' || ss.mapMode === 'terrain' || ss.mapMode === 'explored') {

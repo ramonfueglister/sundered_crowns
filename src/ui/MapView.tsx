@@ -9,6 +9,7 @@ import { sfx } from './audio';
 import { abortTimelapse, timelapseRunning } from './timelapse';
 import { labelsFor, computeSettlements } from './mapdata';
 import { dayToDate } from '../sim/calendar';
+import { GOODS } from '../sim/defs';
 
 const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
@@ -23,13 +24,28 @@ let labelOwner: Int16Array | null = null; // owners the labels were last compute
 export const computeLabels = (owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[]) => labelsFor(owner, assets, ns, knownLocs);
 export { computeSettlements };
 
+/** last month's trade routes and markets (drawn on the trade map) */
+let lastTrade: TickView['trade'] | null = null;
+function applyTrade() {
+  const r = rendererRef.r, g = rendererRef.assets?.geo;
+  if (!r?.setTrade || !g) return;
+  if (mapMode.value !== 'trade' || !lastTrade) { r.setTrade([], []); return; }
+  const known = (l: number) => !knownLocs || knownLocs[l] !== 0;
+  const de = lang.value === 'de';
+  const flows = lastTrade.flows.filter((f) => known(f.a) && known(f.b)).map((f) => ({
+    ax: g.loc.x[f.a], ay: g.loc.y[f.a], bx: g.loc.x[f.b], by: g.loc.y[f.b], value: f.value, color: GOODS[f.good]?.color ?? '#c8a050', good: L(GOODS[f.good]?.name) ?? '',
+  }));
+  const markets = lastTrade.hubs.filter((h) => known(h.hub)).map((h) => ({ x: g.loc.x[h.hub], y: g.loc.y[h.hub], name: de ? h.name.de : h.name.en, value: h.value }));
+  r.setTrade(flows, markets);
+}
+
 export function MapView() {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     let disposed = false;
     let labelTimer: any = null;
     let lastOwner: Int16Array | null = null;
-    knownLocs = null; let knownApplied = false;
+    knownLocs = null; lastTrade = null; let knownApplied = false;
     const feed = (v: TickView, force = false) => {
       // the player's explored map arrives monthly; keep it even while the renderer is still loading
       let exploredChanged = false;
@@ -61,6 +77,7 @@ export function MapView() {
       }
       if (v.snow) r.setSnow(v.snow);
       if (v.roads) r.setRoads?.(v.roads);
+      if (v.trade) { lastTrade = v.trade; applyTrade(); }
       { const dt = dayToDate(v.day, v.startYear); r.setDate?.(v.day, (MONTH_START[dt.m] + dt.d - 0.5) / 365); }
       if (v.landmarks || force || exploredChanged) {
         const g0 = rendererRef.assets.geo; const de = lang.value === 'de';
@@ -122,7 +139,7 @@ export function MapView() {
   }, []);
   useEffect(() => { rendererRef.r?.setQuality?.(settings.value.quality); }, [settings.value.quality]);
   useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); }, [lang.value]);
-  useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value); }, [mapMode.value, selectedNation.value]);
+  useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
   useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
   return <div class="mapwrap">
     <canvas ref={canvas} class="map" onContextMenu={(e) => e.preventDefault()} />

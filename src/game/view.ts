@@ -1,7 +1,7 @@
 // Worker-side: builds compact views of the game state for the UI and answers queries.
 import type { GameState, Nation, I18n } from '../sim/types';
 import type { World } from '../sim/world';
-import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite } from './protocol';
+import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite, TradeFlowLite, TradeHubLite } from './protocol';
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
@@ -126,7 +126,12 @@ export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: numb
       legend = { title: { en: 'Faith', de: 'Glaube' }, items: [...seen].map((f) => ({ color: FAITHS[f]?.color ?? '#888', label: FAITHS[f]?.name ?? '?' })) }; break; }
     case 'trade': for (let i = 0; i < w.L; i++) { const m = lc.market[i]; const k = hashColor(m * 13 + 1); put(i, k); }
       for (const m of s.markets) put(m.hub, [255, 240, 200]);
-      legend = { title: { en: 'Trade regions', de: 'Handelsräume' }, items: s.markets.slice().sort((a, b) => b.priceIndex - a.priceIndex).slice(0, 0).map((m) => ({ color: '#fff', label: m.name })) }; break;
+      { // the busiest markets (goods passing through last month), in their region's colour
+        const through = new Map<number, number>();
+        for (const f of s.flows ?? []) { through.set(f.from, (through.get(f.from) ?? 0) + f.value); through.set(f.to, (through.get(f.to) ?? 0) + f.value); }
+        legend = { title: { en: 'Trade regions (busiest markets)', de: 'Handelsräume (lebhafteste Märkte)' }, items: s.markets.slice().sort((a, b) => (through.get(b.id) ?? 0) - (through.get(a.id) ?? 0)).slice(0, 10).map((m) => ({ color: `rgb(${hashColor(m.id * 13 + 1).join(',')})`, label: { en: w.names[m.hub] ?? m.name, de: w.namesDe[m.hub] ?? m.name } })) };
+      }
+      break;
     case 'goods': for (let i = 0; i < w.L; i++) put(i, hexToRgb(GOODS[w.resource[i]].color || '#888888'));
       legend = { title: { en: 'Local goods', de: 'Lokale Güter' }, items: GOODS.filter((g) => g.kind === 'raw').slice(0, 16).map((g) => ({ color: g.color, label: g.name })) }; break;
     case 'diplomatic': {
@@ -296,4 +301,26 @@ export function roadLevels(s: GameState): Uint8Array {
   const bld = s.loc.buildings, L = bld.length / B, out = new Uint8Array(L);
   for (let i = 0; i < L; i++) out[i] = bld[i * B + BI.road];
   return out;
+}
+
+/** the largest trade routes of last month, between market hubs (a route sums its goods in each direction), and
+ *  the markets with the value of the goods that passed through them */
+export function tradeView(s: GameState, w: World, max = 140): { flows: TradeFlowLite[]; hubs: TradeHubLite[] } {
+  const through = new Map<number, number>();
+  for (const f of s.flows ?? []) { through.set(f.from, (through.get(f.from) ?? 0) + f.value); through.set(f.to, (through.get(f.to) ?? 0) + f.value); }
+  const hubs = s.markets.map((m) => ({ hub: m.hub, name: { en: w.names[m.hub] ?? m.name, de: w.namesDe[m.hub] ?? m.name }, value: Math.round(through.get(m.id) ?? 0) }));
+  return { flows: tradeFlows(s, max), hubs };
+}
+function tradeFlows(s: GameState, max: number): TradeFlowLite[] {
+  const byPair = new Map<number, { a: number; b: number; value: number; best: number; good: number }>();
+  for (const f of s.flows ?? []) {
+    const ma = s.markets[f.from], mb = s.markets[f.to];
+    if (!ma || !mb || ma.hub === mb.hub) continue;
+    const key = f.from * 4096 + f.to;
+    let e = byPair.get(key);
+    if (!e) byPair.set(key, (e = { a: ma.hub, b: mb.hub, value: 0, best: -1, good: f.good }));
+    e.value += f.value;
+    if (f.value > e.best) { e.best = f.value; e.good = f.good; }
+  }
+  return [...byPair.values()].sort((p, q) => q.value - p.value).slice(0, max).map((e) => ({ a: e.a, b: e.b, value: Math.round(e.value), good: e.good }));
 }
