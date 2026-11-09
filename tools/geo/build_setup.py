@@ -97,7 +97,14 @@ def main():
         w = rank_w.get(s.get('rank'), 1.0)
         if s.get('government') in ('nomadic_horde',): w *= 0.7
         weights.append(w)
-        cl = loc_at(s['capital']['lon'], s['capital']['lat'])
+        # the land location named after the seat, when there is one nearby (a lagoon city such as Venice lies on the
+        # water, and the nearest land would be a neighbour's)
+        cn = s['capital'].get('name'); cl = 0
+        if cn:
+            cx, cy = lonlat_to_px(s['capital']['lon'], s['capital']['lat'])
+            same = [i + 1 for i in range(L) if loc['name'][i] == cn and (lx[i] - cx) ** 2 + (ly[i] - cy) ** 2 < 40 ** 2]
+            if same: cl = min(same, key=lambda v: (lx[v - 1] - cx) ** 2 + (ly[v - 1] - cy) ** 2)
+        if not cl: cl = loc_at(s['capital']['lon'], s['capital']['lat'])
         if not cl:  # seat outside the land raster window: take the nearest land location centre
             cx, cy = lonlat_to_px(s['capital']['lon'], s['capital']['lat'])
             cl = int(np.argmin((lx[:L] - cx) ** 2 + (ly[:L] - cy) ** 2)) + 1

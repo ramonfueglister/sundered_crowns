@@ -5,7 +5,7 @@ import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { step, hashState, serialize, deserialize } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
-import { hasCasusBelli, nationLocs } from '../src/sim/systems/war';
+import { hasCasusBelli, nationLocs, computeScore } from '../src/sim/systems/war';
 import { nationPower, neighboursCached } from '../src/sim/systems/ai';
 import { findPath, seaNear, newArmy, availableUnits } from '../src/sim/systems/military';
 import { allies, hasTreaty, atWar } from '../src/sim/ctx';
@@ -44,7 +44,7 @@ describe('acceptance (point 119)', () => {
       for (const t of neighboursCached(probe, w, id)) {
         const tn = probe.nations[t];
         if (!tn.alive || tn.overlord >= 0 || allies(probe, t).length || hasTreaty(probe, id, t, 'alliance') || hasTreaty(probe, id, t, 'truce')) continue;
-        if (nationPower(probe, id) > nationPower(probe, t) * 1.6 && nationLocs(probe, t).length >= 2) { pick = { p: id, t }; break; }
+        if (nationPower(probe, id) > nationPower(probe, t) * 1.6 && nationLocs(probe, t).length >= 3) { pick = { p: id, t }; break; }
       }
       if (pick) break;
     }
@@ -61,13 +61,21 @@ describe('acceptance (point 119)', () => {
       if (!war && !hasCasusBelli(s, P.id, T.id) && day % 30 === 0 && !s.spies.some((x) => x.nation === P.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: P.id, action: 'fabricate', target: T.id });
       if (!war && hasCasusBelli(s, P.id, T.id) && !atWar(s, P.id, T.id)) cmds.push({ t: 'declare', n: P.id, target: T.id, goal: 'conquest', locs: nationLocs(s, T.id).slice(0, 3) });
       if (war) {
-        const targets = nationLocs(s, T.id).filter((l) => s.loc.ctrl[l] !== P.id);
-        for (const a of s.armies) if (a.owner === P.id && !a.fleet && !a.path.length && !a.battle && s.loc.owner[a.loc] !== T.id && targets.length) {
-          const to = targets.sort((x, y) => w.distKm(a.loc, x) - w.distKm(a.loc, y))[0];
-          if (findPath(s, w, a, a.loc, to, 20000)) cmds.push({ t: 'move', n: P.id, army: a.id, to });
+        // any town of the enemy side that can be reached (the target first, then its allies' land on the way)
+        const enemyLocs = war.def.flatMap((e) => nationLocs(s, e));
+        const targets = enemyLocs.filter((l) => s.loc.ctrl[l] !== P.id).sort((x, y) => (s.loc.owner[x] === T.id ? 0 : 1) - (s.loc.owner[y] === T.id ? 0 : 1));
+        for (const a of s.armies) if (a.owner === P.id && !a.fleet && !a.path.length && !a.battle && a.siege < 0 && targets.length) {
+          const near = targets.slice().sort((x, y) => (s.loc.owner[x] === T.id ? 0 : 400) + w.distKm(a.loc, x) - (s.loc.owner[y] === T.id ? 0 : 400) - w.distKm(a.loc, y));
+          const to = near.slice(0, 6).find((l) => l !== a.loc && findPath(s, w, a, a.loc, l, 20000));
+          if (to !== undefined) cmds.push({ t: 'move', n: P.id, army: a.id, to });
         }
-        const occ = nationLocs(s, T.id).filter((l) => s.loc.ctrl[l] === P.id);
+        const occ = enemyLocs.filter((l) => s.loc.ctrl[l] === P.id && s.nations[s.loc.owner[l]].capital !== l);
         if (occ.length && day % 30 === 0) cmds.push({ t: 'peace', n: P.id, war: war.id, to: war.defLead, terms: [{ type: 'cede', locs: occ.slice(0, 1), to: P.id }] });
+        // a war won on points (allies' sieges, battles): demand the nearest town of the target even if we hold none
+        else if (day % 30 === 0 && computeScore(s, war) > 30) {
+          const near = nationLocs(s, T.id).filter((l) => T.capital !== l).sort((x, y) => w.distKm(P.capital, x) - w.distKm(P.capital, y));
+          if (near.length) cmds.push({ t: 'peace', n: P.id, war: war.id, to: war.defLead, terms: [{ type: 'cede', locs: near.slice(0, 1), to: P.id }] });
+        }
       }
       // spend like a player: levies from the capital while men last, sell-swords in wartime, white peace offers to other attackers
       if (day % 30 === 0 && P.capital >= 0) {

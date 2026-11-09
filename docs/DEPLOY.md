@@ -164,9 +164,10 @@ achievements, archives the season (`season-<n>/results.json`) and starts season 
 - **Vercel Hobby**: free for personal, non-commercial projects; the game is a static build of ≈ 30 MB (mostly map data).
   Commercial use needs Pro (US$20/month per member).
 - **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month (the simulation needs ≈ 350 MB; one day takes ≈ 60 ms CPU,
-  i.e. under 0.2 % of a core at 36 s/day), volume US$0.15/GB/month. Traffic: a per-player tick is ≈ 120 KB JSON,
-  ≈ 25 KB with WebSocket compression, sent every 36 s → ≈ 60 MB per player per day online. 100 players online all day
-  ≈ 6 GB/day; outbound traffic in Europe/North America costs about US$0.02/GB.
+  i.e. under 0.2 % of a core at 36 s/day), volume US$0.15/GB/month. Traffic: the daily tick sends only what changed (armies, realms,
+  owners); measured with 100 bots ≈ 30 KB per player per in-game day before WebSocket compression
+  (`tools/load_test.ts`), sent every 36 s → ≈ 70 MB per player per day online, less with compression. 100 players online all day
+  ≈ 7 GB/day; outbound traffic in Europe/North America costs about US$0.02/GB.
 - Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 orders per player per in-game day), a request
   rate limit of 10/s (burst 40) per account, 5 chat lines per 10 s, 3 sessions per account, 12 connections per IP,
   64 KB per WebSocket message.

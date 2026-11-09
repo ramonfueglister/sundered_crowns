@@ -5,6 +5,7 @@ import { screen, panel, settings, saveSettings, selectedLoc, selectedNation, pla
 import { listSaves, loadSave, deleteSave, saveNow, importSave, type SaveMeta } from '../saves';
 import { setLang } from '../i18n';
 import { rendererRef } from '../MapView';
+import { timelapse, playTimelapse } from '../timelapse';
 import { Panel, Section, Row, Btn, Empty, NLink, act, t, L, lang, num, pct, Coa } from './common';
 import { sfx } from '../audio';
 import { CHARGE_TYPES } from './coa';
@@ -94,6 +95,8 @@ export function PausePanel() {
     <button class="btn big" onClick={() => saveNow().then(() => { showToast(t('saved')); sfx('page'); })}>{t('save')}</button>
     <button class="btn big" onClick={() => openPanel('saves')}>{t('load')}</button>
     <button class="btn big" onClick={() => openPanel('settings')}>{t('settings')}</button>
+    <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(false); }}>{t('timelapse')}</button>
+    <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(true); }}>{t('timelapse_video')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; sim().speed(0); screen.value = 'menu'; }}>{t('quit')}</button>
   </div>;
 }
@@ -148,21 +151,9 @@ export function OnlineButton() {
 // ---------------------------------------------------------------- end screen
 export function EndScreen() {
   const [d, setD] = useState<any>(null);
-  const [tl, setTl] = useState<{ i: number; n: number; year: number } | null>(null);
   useEffect(() => { sim().query({ q: 'endstats' }).then(setD); sfx('victory'); }, []);
   const v = view.value; const pid = playerId.value; const p = v?.player;
-  const play = async () => {
-    const frames: { day: number; owners: Uint16Array }[] = await sim().query({ q: 'timelapse' });
-    const r = rendererRef.r; if (!r || !frames?.length) { showToast(t('timelapse_unavailable'), 'err'); return; }
-    const ns = nations.value; const cols = new Uint8Array(ns.length * 3); ns.forEach((n, k) => cols.set(n.color, k * 3));
-    let i = 0;
-    const step = () => {
-      if (i >= frames.length) { setTl(null); if (v?.owner && v.ctrl) r.setPolitical(v.owner, v.ctrl, cols); return; }
-      const o = new Int16Array(frames[i].owners.length); for (let k = 0; k < o.length; k++) o[k] = frames[i].owners[k] - 1;
-      r.setPolitical(o, o, cols); setTl({ i, n: frames.length, year: (v?.startYear ?? 1356) + Math.round(frames[i].day / 365.25) }); i++; setTimeout(step, 180);
-    };
-    step();
-  };
+  const tl = timelapse.value;
   const win = d?.victory ?? v?.victory;
   return <div class="end-screen">
     <div class="end-box pnl">
@@ -185,7 +176,7 @@ export function EndScreen() {
           })()}</tbody></table>}
         </Section>
         {tl && <div class="tl-bar"><b>{tl.year}</b><span class="bar"><i class="bar-fill" style={{ width: `${(tl.i / Math.max(1, tl.n - 1)) * 100}%` }} /></span></div>}
-        <div class="act-row"><Btn small={false} onClick={play}>{t('timelapse')}</Btn><span class="spacer" /><Btn small={false} cls="gold" onClick={() => { screen.value = 'menu'; }}>{t('quit')}</Btn></div>
+        <div class="act-row"><Btn small={false} onClick={() => playTimelapse(false)}>{t('timelapse')}</Btn><Btn small={false} onClick={() => playTimelapse(true)}>{t('timelapse_video')}</Btn><span class="spacer" /><Btn small={false} cls="gold" onClick={() => { screen.value = 'menu'; }}>{t('quit')}</Btn></div>
       </div>
     </div>
   </div>;

@@ -12,6 +12,7 @@ import { takeLoan } from './systems/economy';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
 import { startColony, startExplorer, charterCompany } from './systems/colonial';
+import { startLandmark } from './systems/landmarks';
 import { answerEvent, takeDecision } from './systems/events';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
@@ -97,6 +98,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       for (const o of s.armies) if (o.general === c.id) o.general = 0;
       a.general = c.id; return OK;
     }
+    case 'landmark': { const e = startLandmark(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
     case 'build': {
       const b = cmd.building, l = cmd.loc;
       const def = BUILDINGS[b]; if (!def) return err('unknown building');

@@ -4,6 +4,8 @@ import { sim, view, nations, ready, workerError } from '../game/client';
 import { screen, startYear, selectedNation, selectedLoc, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
 import { t, L, lang, setLang } from './i18n';
 import { MapView, mapReady, rendererRef } from './MapView';
+import { timelapse, stopTimelapse } from './timelapse';
+import { MenuMap, menuMapReady } from './MenuMap';
 import { TopBar } from './TopBar';
 import { TooltipLayer } from './Tip';
 import { MAP_MODES, type MapMode } from '../game/protocol';
@@ -44,6 +46,7 @@ export function App() {
     {s === 'game' && !uiHidden.value && <GameUI />}
     {s === 'game' && uiHidden.value && <div class="photo-hint">{t('photo')} — H</div>}
     {s === 'end' && <P.EndScreen />}
+    {timelapse.value && s === 'game' && <div class="tl-banner pnl"><b>{timelapse.value.year}</b><span class="bar"><i class="bar-fill" style={{ width: `${(timelapse.value.i / Math.max(1, timelapse.value.n - 1)) * 100}%` }} /></span>{timelapse.value.recording && <span class="rec">● {t('timelapse_recording')}</span>}<button class="btn" onClick={stopTimelapse}>{t('timelapse_stop')}</button></div>}
     {workerError.value && <div class="fatal">{workerError.value.slice(0, 400)}</div>}
     {toast.value && <div class={`toast ${toast.value.kind}`}>{toast.value.text}</div>}
     <TooltipLayer />
@@ -61,7 +64,8 @@ function MainMenu() {
   };
   const cont = async (id: string) => { screen.value = 'loading'; const data = await loadSave(id); if (!data) { screen.value = 'menu'; return; } await sim().init({ seed: 0, year: 1356, player: null, save: data, devtools: true }); screen.value = 'game'; };
   return <div class="menu">
-    <div class="menu-bg" />
+    <MenuMap />
+    <div class={`menu-bg ${menuMapReady.value ? 'over-map' : ''}`} />
     <div class="menu-box">
       <h1 class="title">Sundered Crowns</h1>
       <div class="subtitle">{lang.value === 'de' ? 'Europa 1356 – 1815' : 'Europe 1356 – 1815'}</div>

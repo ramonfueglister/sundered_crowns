@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { nations, view } from '../../game/client';
 import { selectedLoc, playerId } from '../store';
 import { RECIPES, UNITS } from '../../sim/defs';
-import { Panel, Section, Row, Bar, NLink, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName } from './common';
+import { Panel, Section, Row, Bar, NLink, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
 import { sfx } from '../audio';
 
 const TERRAIN: Record<string, [string, string]> = {
@@ -54,6 +54,7 @@ export function LocationPanel({ loc }: { loc: number }) {
       {d.devast > 0.01 && <Row k={t('devastation')} v={<span class="neg">{pct(d.devast)}</span>} />}
       <Row k={t('resource')} v={L(d.resource)} tip={d.market ? <div>{t('market')}: {d.market.name}<br />{t('price')}: {num(d.market.price, 2)}</div> : undefined} />
     </div>
+    {d.landmark && <Landmark d={d} own={own} refresh={refresh} />}
     {d.siege && <div class="siege-box"><b>{t('siege')}</b> · <NLink id={d.siege.nation} size={14} /> · {num(d.siege.progress)} % <Bar value={d.siege.progress} max={100} color="#9b2a20" /></div>}
 
     <Section title={t('population')} id="loc-pop">
@@ -91,6 +92,28 @@ function SeaPanel({ d, close }: { d: any; close: () => void }) {
       {d.fleets.length ? d.fleets.map((f: any) => <div class="kv army-here"><span class="k"><NLink id={f.owner} size={16} name={false} /> {f.owner === pid ? <a class="lk" onClick={() => selectArmy(f.id)}>{L(f.name)}</a> : <span>{L(f.name)}</span>}</span><span class="v">{num(f.ships)} {t('ships')}</span></div>) : <Empty>{t('no_fleets')}</Empty>}
     </Section>
   </Panel>;
+}
+
+function Landmark({ d, own, refresh }: { d: any; own: boolean; refresh: () => void }) {
+  const m = d.landmark; const treasury = view.value?.player?.treasury ?? 0;
+  const why = m.tier >= m.max ? 'fully built' : m.work ? 'already building' : d.ctrl !== d.owner ? 'occupied' : treasury < m.cost ? 'not enough gold' : null;
+  return <Section title={t('landmark')} id="loc-landmark">
+    <div class="landmark">
+      <div class="lm-head"><b>{L(m.name)}</b><span class="pips">{Array.from({ length: m.max }, (_, i) => <i class={i < m.tier ? 'on' : i === m.tier && m.work ? 'q' : ''} />)}</span></div>
+      <div class="muted small">{L(m.desc)}</div>
+      <div class="grid2">
+        <Row k={t('landmark_stage')} v={`${m.tier} / ${m.max}`} />
+        <Row k={t('prestige')} v={`+${num(m.prestige, 2)} / ${t('month')}`} />
+      </div>
+      <Effects fx={m.fx} title={t('landmark_holder_gets')} />
+      {m.work > 0 && <div class="muted small">{t('landmark_building')}: {daysText(m.work - (view.value?.day ?? 0))}</div>}
+      {own && m.next && !m.work && <div class="act-row">
+        <Tip content={<Effects fx={m.next} title={t('landmark_next')} />}><span class="muted small">{t('landmark_next')} · {m.months} {t('months')}</span></Tip>
+        <span class="spacer" />
+        <Btn disabled={why} onClick={() => act({ t: 'landmark', id: m.id }, 'build').then(refresh)}>{num(m.cost)} <i class="ic gold sm" /></Btn>
+      </div>}
+    </div>
+  </Section>;
 }
 
 function Buildings({ d, refresh }: { d: any; refresh: () => void }) {

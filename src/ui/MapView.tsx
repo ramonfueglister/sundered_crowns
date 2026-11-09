@@ -1,7 +1,7 @@
 // The map: owns the WebGPU renderer, feeds it the simulation view, turns clicks into selections and orders.
 import { useEffect, useRef } from 'preact/hooks';
 import { signal } from '@preact/signals';
-import { sim, view, nations } from '../game/client';
+import { sim, view, nations, landmarks } from '../game/client';
 import type { TickView } from '../game/protocol';
 import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast } from './store';
 import { t, L, lang } from './i18n';
@@ -104,6 +104,10 @@ export function MapView() {
         }
       }
       if (v.snow) r.setSnow(v.snow);
+      if (v.landmarks || force || exploredChanged) {
+        const g0 = rendererRef.assets.geo; const de = lang.value === 'de';
+        r.setLandmarks((v.landmarks ?? landmarks.value).filter((m) => !knownLocs || knownLocs[m.loc] !== 0).map((m) => ({ x: g0.loc.x[m.loc], y: g0.loc.y[m.loc], name: de ? m.name.de : m.name.en, kind: m.kind, tier: m.tier, max: m.max, building: m.work > 0 })));
+      }
       const g = rendererRef.assets.geo; const sel = new Set(selectedArmies.value);
       const units: any[] = [];
       const groups = new Map<string, any>();

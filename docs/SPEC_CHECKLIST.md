@@ -11,7 +11,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 3 | Performance: 60 fps at 1440p on High on a current mid-to-upper-range desktop GPU, and 60 fps on Medium on a mi… | ◐ | Real-GPU-Messung offen; CPU-Zeit pro Frame ~4 ms, Software-Rendering 1–4 s/Frame |
 | 4 | Quality presets Low / Medium / High / Ultra that all actually render (test each one; Low must still look good … | ✓ | Low/Medium/High/Ultra im Browser gerendert und angeschaut (screens/render-*.png) |
 | 5 | Use WebGPU properly: province picking and colouring through a province-ID texture and storage buffers on the G… | ✓ | Picking über ID-Raster-Textur, Farben über Storage-Buffer pro Ort |
-| 6 | A single command to start locally, a README with controls, architecture overview, and step-by-step deploy inst… | ◐ | README + docs/DEPLOY.md; `npm run dev` startet lokal; echte Deploy-URL fehlt |
+| 6 | A single command to start locally, a README with controls, architecture overview, and step-by-step deploy inst… | ◐ | README mit Start, Steuerung, Architektur, Tests; docs/DEPLOY.md Schritt für Schritt; `npm run dev` startet lokal. Es fehlt nur die echte Deploy-URL (Zugangsdaten) |
 | 7 | Supabase schema as versioned migrations in the repo (`supabase/migrations`). Row Level Security on every table… | ✓ | 4 Migrationen mit RLS, PGlite-Testsuite (19 Tests) grün |
 | 8 | Single player must be fully playable without login and without Supabase configured (guest mode). Online featur… | ✓ | Einzelspieler ohne Login und ohne Supabase voll spielbar |
 | 9 | No runtime requests to third-party hosts other than your own Vercel deployment, your own Supabase project and … | ✓ | alle Daten gebündelt unter public/ |
@@ -28,8 +28,8 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 20 | Each state's starting situation lives in data files and is historically researched, with sources listed in eac… | ✓ | data/history/1356 mit Quellen |
 | 21 | Historical cultures in culture groups (at least 40 cultures) and the historical faiths of the period (Latin Ch… | ✓ | >40 Kulturen, alle Glaubensrichtungen |
 | 22 | Hierarchical historical regions (province → area → region, for example Champagne → France → Western Europe) us… | ✓ | Ort → Provinz → Gebiet → Region |
-| 23 | The Atlantic islands, the African coast and the Americas are hidden under unexplored territory at the start an… | ◐ | Wissensgruppen + Erkundung in Sim; Kartenanzeige offen |
-| 24 | At least 15 real landmarks (for example Hagia Sophia, the Alhambra, Notre-Dame de Paris, the Kremlin, St Mark'… | ◐ | 29 Landmarken in Daten, Wirkung/Anzeige offen |
+| 23 | The Atlantic islands, the African coast and the Americas are hidden under unexplored territory at the start an… | ✓ | Wissensgruppen und Erkundung in der Sim; unentdeckte Länder und Meere liegen auf der Karte unter Pergament, Namen und fremde Heere dort sind verborgen (Einzelspieler; online noch ohne Verbergen) |
+| 24 | At least 15 real landmarks (for example Hagia Sophia, the Alhambra, Notre-Dame de Paris, the Kremlin, St Mark'… | ✓ | 22 Wahrzeichen (Hagia Sophia, Alhambra, Notre-Dame, Kreml, Markusdom, Kölner Dom als Baustelle …) mit 3 Ausbaustufen, Boni und Ansehen für den Besitzer, höherer Wert in Krieg und Frieden; Abzeichen auf der Karte, Ausbau im Ortsfenster, KI baut aus |
 | 25 | The map is the main screen. Smooth pan (drag, WASD, screen edge) and zoom (mouse wheel) from the whole world d… | ✓ | Ziehen, WASD/Pfeile, Bildschirmrand, Mausrad zum Cursor, Pinch |
 | 26 | Realistic world rendering: terrain from real elevation data with physically based materials, displacement or v… | ◐ | Relief aus Höhendaten, Mehrskalen-Schattierung, AO, Fels/Schnee; keine echte Displacement-Geometrie |
 | 27 | At least 8 map modes with hotkeys and a legend: political, terrain, diplomatic (relative to the selected natio… | ✓ | 11 Kartenmodi mit Hotkeys und Legende |
@@ -40,7 +40,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 32 | Realistic sea: simulated ocean waves (for example FFT-based), reflections, shoreline foam and depth colour; pe… | ◐ | Tiefenfarbe, animierte Wellen, Gischt, Küstenlinien; keine FFT-Ozeansimulation |
 | 33 | Seasons and weather: snow accumulating and melting, autumn colours, rain and snow, storms over sea zones, mist… | ◐ | Schnee nach Monat/Breite; Herbstfarben, Regen, Nebel offen |
 | 34 | Developer panel (key F2, single player only; in the persistent world only for admins): change province owner, … | ✓ | Dev-Panel (F2), nur Einzelspieler bzw. Admins online |
-| 35 | Timelapse and photo mode: hide the UI, play back the political history of the map from the start date to now, … | ◐ | UI ausblendbar (H), Zeitraffer-Daten vorhanden; Wiedergabe in Arbeit |
+| 35 | Timelapse and photo mode: hide the UI, play back the political history of the map from the start date to now, … | ✓ | Fotomodus (H); Zeitraffer der Grenzen seit Spielbeginn im Pausenmenü und am Spielende; Export als WebM-Video mit Jahreszahl (im Testbrowser geprüft) |
 | 36 | Historical government forms: feudal monarchy, elective monarchy, merchant republic, theocracy (for example the… | ✓ | Sim + Regierungs-Panel |
 | 37 | A full character system: rulers, consorts, heirs, courtiers, officials, generals, admirals, clergy and explore… | ✓ | Sim + Panels |
 | 38 | Dynasties: royal marriages connect dynasties; when a ruler dies without an heir, a foreign dynasty can claim t… | ✓ | Sim + Panels |
@@ -115,7 +115,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 107 | Top bar with date, speed controls in single player (pause on spacebar plus 5 speeds) or the world clock with a… | ◐ | Topbar mit Datum und 5 Tempi bzw. Weltuhr; Platzproblem bei 1280–1440 px wird behoben |
 | 108 | Province panel, nation panel, ledger with sortable tables and graphs, and an outliner listing armies, fleets, … | ✓ | Orts-, Reichs-, Haushalts-Panel, Outliner |
 | 109 | An interactive tutorial for the first 30 minutes with a recommended small nation, plus contextual hints. A new… | ✓ | 15-Schritte-Tutorial + Kontexthinweise |
-| 110 | Main menu with a living map in the background, pause menu, loading screen with lore lines and tips, and settin… | ◐ | Hauptmenü, Pause, Ladebildschirm mit Lore, Einstellungen; lebende Karte im Menühintergrund offen |
+| 110 | Main menu with a living map in the background, pause menu, loading screen with lore lines and tips, and settin… | ✓ | Hauptmenü über einer lebenden Karte (Europa am 1. Januar 1356, die Kamera zieht von Hof zu Hof), Pausenmenü, Ladebildschirm mit Lore und Tipps, Einstellungen |
 | 111 | Music generated by you for peace, war, crisis and each era, changing smoothly with the situation. Distinct sou… | ⏸ | Zurückgestellt (Ramon, 2026-11-08): vorerst keine Musik und keine Soundeffekte; Musik kommt später mit Suno AI. `src/ui/audio.ts` bleibt als stumme Schnittstelle (`setMood` als Einstieg für spätere Stücke aus `public/audio/music/`). |
 | 112 | Make sure sound does not drop out after settings changes, after many sounds at once or after a long session (t… | ⏸ | Zurückgestellt (Ramon, 2026-11-08): vorerst keine Musik und keine Soundeffekte; Musik kommt später mit Suno AI. `src/ui/audio.ts` bleibt als stumme Schnittstelle (`setMood` als Einstieg für spätere Stücke aus `public/audio/music/`). |
 | 113 | Priority order if time runs out: accurate map of Europe + historical 1356 setup + time + provinces + war + bas… | ✓ | wird befolgt |

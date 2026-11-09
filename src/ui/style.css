@@ -114,3 +114,7 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .parch { background: linear-gradient(var(--parch), var(--parch2)); color: var(--ink); border: 2px solid var(--gilt); box-shadow: var(--shadow); }
 .parch h2, .parch h3 { font-variant: small-caps; margin: 0 0 6px; color: #4a2f12; }
 .wood { background: rgba(36,24,15,.95); border: 1px solid var(--gilt); box-shadow: var(--shadow); }
+/* the living map behind the main menu: the painted backdrop becomes a soft vignette over it */
+canvas.menu-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.menu-bg.over-map { background: radial-gradient(ellipse at 50% 50%, rgba(18, 12, 8, 0.15) 0%, rgba(13, 10, 7, 0.75) 80%); pointer-events: none; }
+.menu-bg.over-map::after { opacity: 0; }

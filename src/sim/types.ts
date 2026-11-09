@@ -221,6 +221,8 @@ export interface GameState {
   aiDisabled: number[];
   difficulty: number;
   timelapse: { day: number; owners: Uint16Array }[]; // yearly snapshots of location owners for timelapse
+  /** landmarks: stage reached, building work (finish day or 0) and the realm that last held each */
+  landmarks?: { id: string; loc: number; tier: number; work: number; holder: number }[];
 }
 
 export type Command =
@@ -232,6 +234,7 @@ export type Command =
   | { t: 'disband'; n: number; army: number }
   | { t: 'general'; n: number; army: number; char: number }
   | { t: 'build'; n: number; loc: number; building: number }
+  | { t: 'landmark'; n: number; id: string }
   | { t: 'declare'; n: number; target: number; goal: WarGoal['type']; locs?: number[] }
   | { t: 'peace'; n: number; war: number; to: number; terms: PeaceTerm[]; concede?: boolean }
   | { t: 'peace_answer'; n: number; war: number; offer: number; accept: boolean }

@@ -6,6 +6,7 @@
  * direction, still inside the realm, to make way for a name that would otherwise hide it.
  */
 export interface MapLabel { text: string; x: number; y: number; angle: number; size: number; color?: string; weight?: number; id?: number; room?: number }
+export interface MapLandmark { x: number; y: number; name: string; kind: string; tier: number; max: number; building: boolean }
 export type UnitKind = 'army' | 'fleet' | 'siege' | 'battle';
 export interface MapUnit {
   id: number; x: number; y: number; color: [number, number, number]; label: string; kind: UnitKind;
@@ -41,6 +42,7 @@ export class Overlay {
   private ctx: CanvasRenderingContext2D;
   labels: MapLabel[] = [];
   units: MapUnit[] = [];
+  landmarks: MapLandmark[] = [];
   private dpr = 1;
   private fade = new Map<number | string, number>(); // current opacity per label, eased toward its target
   private shift = new Map<number | string, number>(); // offset (map px, across the text) a label last moved to, tried first
@@ -73,6 +75,7 @@ export class Overlay {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.drawLabels(v);
+    this.drawLandmarks(v);
     this.drawUnits(v);
   }
 
@@ -81,7 +84,7 @@ export class Overlay {
     const saved = this.ctx; const savedDpr = this.dpr;
     this.ctx = ctx; this.dpr = scale;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.drawLabels(v, true); this.drawUnits(v);
+    this.drawLabels(v, true); this.drawLandmarks(v); this.drawUnits(v);
     this.ctx = saved; this.dpr = savedDpr;
   }
 
@@ -176,6 +179,42 @@ export class Overlay {
     }
     if (!instant) for (const key of [...this.fade.keys()]) if (!seen.has(key)) { this.fade.delete(key); this.shift.delete(key); }
     (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+  }
+
+  /** Landmarks: a gilded badge with the building's sign and its stages, the name at close zoom. */
+  private drawLandmarks(v: OverlayView) {
+    if (v.zoom < 1.3 || !this.landmarks.length) return;
+    const ctx = this.ctx;
+    const a = Math.min(1, (v.zoom - 1.3) / 0.5);
+    const r = Math.max(7, Math.min(11, 6 + v.zoom * 1.2));
+    const glyph: Record<string, string> = { church: '✝', mosque: '☪', palace: '♛', fortress: '♜' };
+    for (const m of this.landmarks) {
+      const [x, y0] = v.toScreen(m.x, m.y); const y = y0 + r * 1.9; // below the place: army counters stand above it
+      if (x < -60 || y < -40 || x > v.cssW + 60 || y > v.cssH + 40) continue;
+      ctx.save(); ctx.globalAlpha = a;
+      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+      const g = ctx.createLinearGradient(x, y - r, x, y + r); g.addColorStop(0, '#f3dc8e'); g.addColorStop(1, '#b8892f');
+      ctx.fillStyle = m.tier > 0 ? g : '#cfc4aa'; ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.lineWidth = 1.5; ctx.strokeStyle = '#3a2a14'; ctx.stroke();
+      ctx.fillStyle = '#2b1d0c'; ctx.font = `${Math.round(r * 1.2)}px "Segoe UI Symbol", "Noto Sans Symbols", serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(glyph[m.kind] ?? '★', x, y + 0.5);
+      // stages as pips under the badge (hollow while still to build, pulsing while under way)
+      for (let i = 0; i < m.max; i++) {
+        const px = x + (i - (m.max - 1) / 2) * 5.5, py = y + r + 4;
+        ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2);
+        const on = i < m.tier, next = i === m.tier && m.building;
+        ctx.fillStyle = on ? '#f0d27a' : next ? `rgba(240, 210, 122, ${0.35 + 0.35 * Math.sin(v.time * 3)})` : 'rgba(30, 22, 12, 0.55)';
+        ctx.fill(); ctx.lineWidth = 0.8; ctx.strokeStyle = '#2b1d0c'; ctx.stroke();
+      }
+      if (v.zoom >= 2.2) {
+        ctx.font = `600 italic 12px ${LABEL_FONT}`; ctx.textAlign = 'left';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(245, 236, 214, 0.85)'; ctx.strokeText(m.name, x + r + 4, y);
+        ctx.fillStyle = '#3a2410'; ctx.fillText(m.name, x + r + 4, y);
+      }
+      ctx.restore();
+    }
   }
 
   private drawUnits(v: OverlayView) {

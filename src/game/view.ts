@@ -1,7 +1,9 @@
 // Worker-side: builds compact views of the game state for the UI and answers queries.
 import type { GameState, Nation, I18n } from '../sim/types';
 import type { World } from '../sim/world';
-import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query } from './protocol';
+import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite } from './protocol';
+import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
+import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
@@ -79,6 +81,17 @@ export const ACT_NAME: Record<string, I18n> = {
   fabricate: { en: 'Fabricate a claim', de: 'Anspruch fabrizieren' }, rival: { en: 'Declare rival', de: 'Zum Rivalen erklären' }, unrival: { en: 'End rivalry', de: 'Rivalität beenden' },
   cancel_access: { en: 'Cancel access', de: 'Durchmarsch kündigen' }, improve: { en: 'Improve relations', de: 'Beziehungen verbessern' },
 };
+
+export function landmarksView(s: GameState, w: World): LandmarkLite[] {
+  return landmarksOf(s, w).map((x) => { const d = landmarkDef(x.id); return { id: x.id, loc: x.loc, name: d.name, kind: d.kind, tier: x.tier, max: d.max, holder: x.holder, work: x.work }; });
+}
+function landmarkDetail(s: GameState, w: World, l: number, player: number) {
+  const x = landmarksOf(s, w).find((q) => q.loc === l); if (!x) return null;
+  const d = landmarkDef(x.id); const n = s.nations[player];
+  const fx = (tier: number) => Object.fromEntries(Object.entries(d.fx).map(([k, v]) => [k, v * tier]));
+  return { id: x.id, name: d.name, desc: d.desc, kind: d.kind, tier: x.tier, max: d.max, work: x.work, prestige: d.prestige * x.tier, fx: fx(x.tier), next: x.tier < d.max ? fx(x.tier + 1) : null,
+    cost: n && x.tier < d.max ? landmarkPrice(s, n, x.id, x.tier) : 0, months: LANDMARK_MONTHS };
+}
 
 // ---------------- map modes ----------------
 function hexToRgb(h: string): [number, number, number] { const v = parseInt(h.replace('#', ''), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
@@ -195,6 +208,7 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     pops, buildings, workshops, dev: lc.dev[l], control: lc.control[l], integ: lc.integ[l], unrest: lc.unrest[l], unrestWhy, literacy: lc.literacy[l], devast: lc.devast[l], harvest: lc.harvest[l],
     plague: lc.plague[l], snow: lc.snow[l], garrison: lc.garrison[l], resource: GOODS[w.resource[l]].name, resourceId: w.resource[l], market: m ? { id: m.id, name: m.name, price: m.price[w.resource[l]] } : null,
     tax: lc.income[l], econ: ec ? { grain: ec.grain[l], rgo: ec.rgo[l], craft: ec.craft[l], income: ec.income[l] } : null, elev: w.elev[l], lat: w.lat[l], lon: w.lon[l],
+    landmark: landmarkDetail(s, w, l, player),
     canColonize: o < 0 && player >= 0 ? canColonize(s, w, s.nations[player], l) : 'owned', colony: s.colonies.find((c) => c.loc === l) ?? null,
     agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null,
     armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet, name: a.name, mercenary: !!a.mercenary, rebels: !!a.rebels })),

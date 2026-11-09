@@ -1,7 +1,7 @@
 // WebGPU map renderer.
 import type { MapAssets } from './assets';
 import { buildCoastSdf } from './coast';
-import { Overlay, type MapLabel, type MapUnit } from './overlay';
+import { Overlay, type MapLabel, type MapUnit, type MapLandmark } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL } from './shaders';
 
 export type Quality = 'low' | 'medium' | 'high' | 'ultra';
@@ -373,6 +373,11 @@ export class MapRenderer {
 
   setLabels(labels: MapLabel[]) { this.overlay.labels = labels; }
   setUnits(units: MapUnit[]) { this.overlay.units = units; }
+  /** the map canvas (for recording) */
+  get element(): HTMLCanvasElement { return this.canvas; }
+  /** the layer with realm names and counters */
+  get overlayElement(): HTMLCanvasElement { return this.overlay.canvas; }
+  setLandmarks(l: MapLandmark[]) { this.overlay.landmarks = l; }
 
   animateOwnerChange(changes: { loc: number; order: number }[], originX: number, originY: number) {
     if (!changes.length) return;
@@ -672,6 +677,12 @@ export class MapRenderer {
   async idle() { await this.device.queue.onSubmittedWorkDone(); }
 
   async screenshot(): Promise<Blob> {
+    const cv = await this.captureCanvas();
+    return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('toBlob failed'))), 'image/png'));
+  }
+
+  /** The current view (map and overlay) rendered into a 2D canvas, for screenshots and videos. */
+  async captureCanvas(maxScale = 2): Promise<HTMLCanvasElement> {
     const d = this.device;
     const w = this.canvas.width, h = this.canvas.height;
     this.writeUniforms();
@@ -695,7 +706,7 @@ export class MapRenderer {
       }
     }
     buf.unmap(); buf.destroy(); tex.destroy();
-    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    const scale = Math.min(window.devicePixelRatio || 1, maxScale);
     const cv = document.createElement('canvas');
     cv.width = Math.round(this.cssW * scale); cv.height = Math.round(this.cssH * scale);
     const c2 = cv.getContext('2d')!;
@@ -704,7 +715,7 @@ export class MapRenderer {
     c2.imageSmoothingQuality = 'high';
     c2.drawImage(tmp, 0, 0, cv.width, cv.height);
     this.overlay.drawTo(c2, this.overlayView(), scale);
-    return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('toBlob failed'))), 'image/png'));
+    return cv;
   }
 
   destroy() {

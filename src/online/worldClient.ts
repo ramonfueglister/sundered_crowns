@@ -2,7 +2,7 @@
 // (src/game/client.ts), so the existing UI works unchanged when the game runs in an online world.
 // The server is authoritative: the client never simulates, it only renders TickViews and sends Commands.
 import { signal, batch, computed } from '@preact/signals';
-import { view, nations, notices, chronicle, legend, workerError, ready } from '../game/client';
+import { view, nations, notices, chronicle, legend, workerError, ready, landmarks } from '../game/client';
 import type { Command, CmdResult } from '../sim/types';
 import type { ArmyLite, MapMode, Query, TickView } from '../game/protocol';
 import {
@@ -177,6 +177,7 @@ export class OnlineClient implements GameClient {
     this.snow = null; this.ownersFresh = false;
     batch(() => {
       if (v.nations) nations.value = v.nations;
+      if (v.landmarks) landmarks.value = v.landmarks;
       if (v.notices.length) notices.value = [...notices.value, ...v.notices].slice(-120);
       if (v.chronicle.length) chronicle.value = [...chronicle.value, ...v.chronicle].slice(-600);
       view.value = v;

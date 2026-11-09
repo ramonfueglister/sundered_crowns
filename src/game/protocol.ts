@@ -62,6 +62,8 @@ export interface PlayerView {
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */
 export interface WarScoreParts { battles: number; occupation: number; capital: number; ticking: number }
 
+export interface LandmarkLite { id: string; loc: number; name: I18n; kind: string; tier: number; max: number; holder: number; work: number }
+
 export interface TickView {
   day: number; startYear: number; speed: number; ended: boolean; victory?: { nation: number; kind: string };
   owner?: Int16Array; ctrl?: Int16Array;          // sent only when changed
@@ -76,6 +78,7 @@ export interface TickView {
   battles: { id: number; loc: number; att: number; def: number; lossA: number; lossD: number; startA: number; startD: number; phase: number }[];
   chronicle: ChronEntry[];                         // new entries
   snow?: Float32Array;                             // monthly
+  landmarks?: LandmarkLite[];                      // monthly
   explored?: Uint8Array;                           // monthly: 1 = known to the player's people (absent in observer mode)
   ranking: number[];
   msPerDay: number;

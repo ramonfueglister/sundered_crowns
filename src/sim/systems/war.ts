@@ -5,6 +5,7 @@ import type { GameState, War, PeaceTerm, Nation, WarGoal } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
+import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
 import { lawEffect, estate } from './politics';
@@ -72,7 +73,7 @@ function ctrlCache(s: GameState) {
 export function ctrlLocs(s: GameState, c: number): readonly number[] { return ctrlCache(s).locs[c + 2] ?? []; }
 /** All of ctrlLocs at once, indexed by controller + 2 (one check of the cache for several lookups). Do not mutate. */
 export function ctrlTable(s: GameState): readonly (readonly number[])[] { return ctrlCache(s).locs; }
-export function locValue(s: GameState, l: number) { return Math.max(1, s.loc.dev[l]); }
+export function locValue(s: GameState, l: number) { return Math.max(1, s.loc.dev[l]) + landmarkValue(s, l); }
 export function nationDev(s: GameState, n: number) { return devCache(s).dev[n] ?? 0; }
 
 export function hasCasusBelli(s: GameState, a: number, b: number): string | null {

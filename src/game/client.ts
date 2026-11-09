@@ -1,10 +1,12 @@
 // Main-thread side of the simulation: a typed wrapper around the worker with reactive signals for the UI.
 import { signal, batch } from '@preact/signals';
-import type { ToWorker, FromWorker, TickView, NationLite, MapMode, Legend, Query } from './protocol';
+import type { ToWorker, FromWorker, TickView, NationLite, MapMode, Legend, Query, LandmarkLite } from './protocol';
 import type { Command, CmdResult, Notice, ChronEntry } from '../sim/types';
 
 export const view = signal<TickView | null>(null);
 export const nations = signal<NationLite[]>([]);
+/** Landmarks and their stages (refreshed monthly). */
+export const landmarks = signal<LandmarkLite[]>([]);
 export const notices = signal<(Notice & { seen?: boolean })[]>([]);
 export const chronicle = signal<ChronEntry[]>([]);
 export const legend = signal<Legend | null>(null);
@@ -34,6 +36,7 @@ export class SimClient {
         const v = m.view;
         batch(() => {
           if (v.nations) nations.value = v.nations;
+          if (v.landmarks) landmarks.value = v.landmarks;
           if (v.notices.length) notices.value = [...notices.value, ...v.notices].slice(-120);
           if (v.chronicle.length) chronicle.value = [...chronicle.value, ...v.chronicle].slice(-600);
           view.value = v;
