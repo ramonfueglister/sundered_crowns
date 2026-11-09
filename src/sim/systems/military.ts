@@ -866,12 +866,12 @@ export function releaseNation(s: GameState, w: World, from: Nation, locs: number
   let nn = s.nations.find((x) => !x.alive && locs.includes(x.capital));
   if (!nn) {
     const id = s.nations.length;
-    const nm = w.names[locs[0]];
+    const nm = w.names[locs[0]], nmDe = w.namesDe?.[locs[0]] ?? nm;
     const hue = hash01(id, 5);
     const col: [number, number, number] = [Math.floor(80 + hue * 150), Math.floor(80 + hash01(id, 6) * 150), Math.floor(80 + hash01(id, 7) * 150)];
     nn = JSON.parse(JSON.stringify({ ...from, loans: [], history: [], modifiers: [], wars: [] }));
     Object.assign(nn!, {
-      id, key: `released_${id}`, name: { en: `${nm}`, de: `${nm}` }, short: { en: nm, de: nm }, adj: { en: nm, de: nm }, color: col, color2: col.map((v) => v - 50),
+      id, key: `released_${id}`, name: { en: `${nm}`, de: `${nmDe}` }, short: { en: nm, de: nmDe }, adj: { en: nm, de: nmDe }, color: col, color2: col.map((v) => v - 50),
       rank: 'duchy', culture, capital: locs[0], treasury: 50, debt: 0, manpower: 1000, overlord: -1, subjectType: null, rivals: [from.id], dread: 0, isHRE: false, elector: false,
       playerId: null, ai: true, stats: { battlesWon: 0, battlesLost: 0, locsGained: 0, locsLost: 0, warsWon: 0 }, goalsDone: [], flags: {}, coa: null, alive: true,
       candidates: [], generals: [], aiLog: [],

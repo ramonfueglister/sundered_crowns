@@ -76,7 +76,7 @@ export function CommanderPicker({ army }: { army: number }) {
     <div class="army-btns">
       <Btn disabled={d.treasury < d.cost ? 'not enough gold' : null} onClick={() => pick(-1)}
         tip={() => <div><TipHead name={t('recruit_general')} value={num(d.cost)} hint={t('x_recruit_general_hint')} /><Parts rows={d.costParts} total={d.cost} digits={0} bad /></div>}>{t('recruit_general')} ({num(d.cost)})</Btn>
-      <Btn tip={t('auto_general_hint')} onClick={() => pick(0)}>{t('assign_general')}</Btn>
+      <Btn tip={t('auto_general_hint')} onClick={() => pick(0)}>{t('appoint_ablest')}</Btn>
     </div>
   </div>;
 }

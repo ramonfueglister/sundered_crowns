@@ -553,7 +553,8 @@ const S: Record<string, [string, string]> = {
   x_claim_descent_hint: ['A descendant of our house through a marriage (rank 2, one more when they rule or will rule there).', 'Ein Nachkomme unseres Hauses durch eine Heirat (Rang 2, einer mehr, wenn er dort herrscht oder herrschen wird).'],
   x_claim_marriage_hint: ['A marriage treaty without a wedding binds the houses (rank 1).', 'Ein Heiratsvertrag ohne Hochzeit verbindet die Häuser (Rang 1).'],
   no_claimants: ['nobody has a claim', 'niemand hat einen Anspruch'],
-  recent_decisions: ['Recent decisions', 'Jüngste Entscheidungen'],
+  recent_decisions: ['Recent decisions', 'Jüngste Entscheidungen'], appoint_ablest: ['Appoint the ablest', 'Den Fähigsten ernennen'],
+  trait_charming: ['charming', 'charmant'], trait_craven: ['craven', 'feige'], trait_weak_willed: ['weak-willed', 'willensschwach'], trait_profligate: ['profligate', 'verschwenderisch'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
