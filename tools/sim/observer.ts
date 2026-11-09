@@ -7,6 +7,7 @@ import { newGame } from './load';
 import { step, hashState, serialize } from '../../src/sim/engine';
 import { dayToDate } from '../../src/sim/calendar';
 import { C } from '../../src/sim/defs';
+import { FAITHS } from '../../src/sim/content/peoples';
 
 const toYear = +(process.argv[2] ?? 1600), seed = +(process.argv[3] ?? 1356), start = +(process.argv[4] ?? 1356), every = +(process.argv[5] ?? 25);
 const out = process.env.OBSERVER_OUT ?? 'build/observer';
@@ -46,6 +47,8 @@ function snapshot(year: number) {
   // faith mechanics at work: realms per faith_* modifier (spec point 78), and the hordes' fading order
   const faithMods: Record<string, number> = {};
   for (const n of alive) for (const m of n.modifiers) if (m.id.startsWith('faith_')) faithMods[m.id.slice(6)] = (faithMods[m.id.slice(6)] ?? 0) + 1;
+  const realmFaiths: Record<string, number> = {};
+  for (const n of alive) { const f = FAITHS[n.faith]?.id ?? String(n.faith); realmFaiths[f] = (realmFaiths[f] ?? 0) + 1; }
   const hordes = alive.filter((n) => n.gov === 'nomadic_horde').sort((a, b) => (locs.get(b.id) ?? 0) - (locs.get(a.id) ?? 0)).slice(0, 4).map((n) => `${n.short.en}:${locs.get(n.id) ?? 0}/fade${n.flags.steppe_fade ?? 0}`);
   const kinds: Record<string, number> = {}; for (const c of (s.chronicle ?? []).slice(lastChron)) kinds[c.kind] = (kinds[c.kind] ?? 0) + 1; lastChron = s.chronicle?.length ?? 0;
   const row = {
@@ -57,7 +60,7 @@ function snapshot(year: number) {
     top, colonial, companies: (s.companies ?? []).map((c) => c.name.en),
     watch: ['france', 'england', 'castile', 'aragon', 'portugal', 'ottoman', 'byzantium', 'hungary', 'poland', 'lithuania', 'moscow', 'golden_horde', 'venice', 'milan', 'bohemia', 'austria', 'burgundy'].map(ruler),
     situations: (s.situations ?? []).filter((x: any) => x.active || x.ended).map((x: any) => `${x.id}${x.active ? '*' : ''}${x.outcome ? '=' + x.outcome : ''}`),
-    faiths, faithMods, hordes, tech: { median: techs[techs.length >> 1], max: techs[techs.length - 1] }, colonies: s.colonies.length, explorers: s.explorers.length, ocean: s.flags.ocean_open ? dayToDate(s.flags.ocean_open, s.startYear).y : null,
+    faiths, faithMods, realmFaiths, hordes, tech: { median: techs[techs.length >> 1], max: techs[techs.length - 1] }, colonies: s.colonies.length, explorers: s.explorers.length, ocean: s.flags.ocean_open ? dayToDate(s.flags.ocean_open, s.startYear).y : null,
     hash: hashState(s),
   };
   report.push(row);

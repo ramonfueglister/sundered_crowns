@@ -9,6 +9,7 @@ import { war, casusBelliAll, declareWar, evaluatePeace, concludePeace, nationLoc
 import { politics } from '../src/sim/systems/politics';
 import { military, newArmy } from '../src/sim/systems/military';
 import { SITUATIONS } from '../src/sim/content/situations';
+import { siegeTrain } from '../src/sim/systems/ai';
 import { UNITS, B, BI } from '../src/sim/defs';
 import { bump, DAY_EPOCH } from '../src/sim/ctx';
 import { realm } from '../src/sim/systems/realm';
@@ -197,6 +198,22 @@ describe('history mechanics (point 99)', () => {
     expect(sit.active).toBe(false);
     expect(champ.flags.siege_focus).toBeUndefined();
     expect(champ.modifiers.some((x) => x.id === 'war_for_granada')).toBe(false);
+  });
+
+  it('a realm that leads a war for fortified towns raises a siege train', () => {
+    const s = fresh();
+    const o = nat(s, 'ottoman'), b = nat(s, 'byzantium');
+    const city = w.names.indexOf('Constantinople');
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce');
+    const guns = () => s.recruits.filter((r) => r.nation === o.id && UNITS[r.type].kind === 'art').reduce((p, r) => p + r.men, 0);
+    o.treasury = 20000; o.manpower = 20000;
+    siegeTrain(s, w, o);
+    expect(guns()).toBe(0); // no war, no guns
+    expect(declareWar(s, w, o.id, b.id, 'conquest', [city])).toBe(null);
+    siegeTrain(s, w, o);
+    expect(guns()).toBeGreaterThanOrEqual(250 * s.loc.buildings[city * B + BI.fort]);
+    const before = guns(); siegeTrain(s, w, o);
+    expect(guns()).toBe(before); // enough guns for those walls: no more
   });
 
   it('great guns breach the walls of any fort, but only with artillery in the camp and without bastions', () => {

@@ -6,7 +6,7 @@ import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsO
 import { UNITS, B, BI, BUILDINGS, C, CL, GOODS, RAW_FROM_MINE } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand } from '../commands';
-import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE } from './military';
+import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT } from './military';
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue, gatherClaim, tributaryPeace } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
@@ -112,6 +112,7 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const affordable = (inc * 0.45 + Math.max(0, n.treasury) / 60) / Math.max(0.1, 1.0 * UPKEEP_SCALE * 0.1 * s.priceLevel / 1000 * clamp(1 + lawEffect(n, 'army_cost'), 0.3, 2));
   const persMult = P(n, 'conqueror') ? 1.3 : P(n, 'trader') || P(n, 'builder') ? 0.8 : P(n, 'isolationist') ? 0.9 : 1;
   const target = Math.min(n.maxManpower * 0.8 + men * 0.2, affordable * persMult) * (atWarNow ? 1.25 : 1);
+  if (atWarNow) siegeTrain(s, w, n);
   if (men >= target) return;
   // short of levies but rich: hire a company (at war readily, in peace only from a large chest)
   if (n.manpower < 1000 || target - men > n.manpower) {
@@ -146,6 +147,25 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
     let fleet = 0; for (const a of armiesOf(s, n.id)) if (a.fleet) fleet += armyMen(a);
     if (ships.length && fleet < 25 && s.loc.buildings[n.capital * B + BI.port] > 0) applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: ships[ships.length - 1], men: 4 });
   }
+}
+
+/** A realm that leads a war for fortified towns brings a siege train: guns enough to batter the strongest walls among
+ *  the towns it went to war for (see GUNS_PER_FORT in military.ts), within its purse and manpower, even when its army
+ *  is otherwise at full strength. */
+export function siegeTrain(s: GameState, w: World, n: Nation) {
+  let fort = 0;
+  for (const war of s.wars) if (war.attLead === n.id) for (const l of war.goal.locs) if (war.def.includes(s.loc.ctrl[l])) fort = Math.max(fort, s.loc.buildings[l * B + BI.fort]);
+  if (!fort) return;
+  const guns = availableUnits(s, n, false).filter((u) => UNITS[u].kind === 'art');
+  if (!guns.length) return;
+  let art = 0;
+  for (const a of armiesOf(s, n.id)) if (!a.fleet && !a.rebels) for (const r of a.regs) if (UNITS[r.type].kind === 'art') art += r.men;
+  for (const r of s.recruits) if (r.nation === n.id && UNITS[r.type].kind === 'art') art += r.men;
+  const want = Math.min(3000, GUNS_PER_FORT * fort * 1.25) - art;
+  if (want < 250 || n.manpower < want) return;
+  const u = guns[guns.length - 1];
+  if (n.treasury < unitCost(s, n, u, want) * 1.5) return;
+  applyCommand(s, w, { t: 'recruit', n: n.id, loc: n.capital, unit: u, men: Math.round(want) });
 }
 
 /** The realm's best harbour: the capital if it has one, else the largest port, nearest to the capital. */
@@ -372,7 +392,8 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     if (t !== undefined && chance(s.rng, 0.1)) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
   }
   // integrate long-standing vassals
-  for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
+  // (a vassal of another church is kept as a vassal rather than absorbed: its people would be heretics or infidels)
+  for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && sn.faith === n.faith && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
 }
 
 function considerWar(s: GameState, w: World, n: Nation) {
@@ -604,6 +625,13 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     if (threat > myStr * (a.siege >= 0 && a.siege === focusLoc ? 2.5 : 1.6) && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
     if (tgt >= 0) { aiMove(a, tgt); continue; }
     if (a.siege >= 0) continue; // keep sieging
+    // a siege train (an army mostly of guns) joins our greatest siege of a fortified town instead of besieging alone
+    let gunMen = 0; for (const r of a.regs) if (UNITS[r.type].kind === 'art') gunMen += r.men;
+    if (gunMen > armyMen(a) * 0.5) {
+      let join = -1, jm = 0;
+      for (const x of myArmies) if (x !== a && !gone.has(x.id) && x.siege >= 0 && s.loc.buildings[x.siege * B + BI.fort] > 0 && w.distKm(a.loc, x.siege) < 1500 && armyMen(x) > jm) { jm = armyMen(x); join = x.siege; }
+      if (join >= 0 && join !== a.loc && aiMove(a, join).ok) continue;
+    }
     // places this army found no road to (kept on the army for 90 days, so saves and replays agree)
     let blocked: Set<number> | null = null;
     if (a.mission?.startsWith('blk:')) {
