@@ -10,8 +10,9 @@ export type ToWorker =
   | { type: 'save'; id: number }
   | { type: 'mapmode'; mode: MapMode; focus: number };
 
-export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored';
-export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods'];
+export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored'
+  | 'army_supply'; // war pass: men each place feeds for the selected realm's armies
+export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'army_supply'];
 
 export type Query =
   | { q: 'loc'; loc: number }
@@ -30,7 +31,13 @@ export type Query =
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
-  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
+  | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
+  // war pass (src/game/warview.ts)
+  | { q: 'declare'; target: number }                          // our justifications, and per war goal its cost and towns
+  | { q: 'army'; army: number }                               // regiments, refill, supply, attrition and siege of an army of ours
+  | { q: 'battle'; id: number }                               // one battle report
+  | { q: 'battles'; war?: number }                            // the greatest battles of a war, or our latest
+  | { q: 'war'; war: number };                                // the terms our side may demand in a war, and its battles
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
@@ -68,7 +75,7 @@ export interface PlayerView {
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */
-export interface WarScoreParts { battles: number; occupation: number; capital: number; ticking: number }
+export interface WarScoreParts { battles: number; occupation: number; capital: number; ticking: number; blockade: number }
 
 /** a trade route between two market hubs last month: the goods go from a to b; value in gold, the main good */
 export interface TradeFlowLite { a: number; b: number; value: number; good: number }

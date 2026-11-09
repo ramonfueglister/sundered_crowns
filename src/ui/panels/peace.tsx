@@ -3,18 +3,24 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, panelArg, openPanel } from '../store';
 import type { PeaceTerm } from '../../sim/types';
-import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
+import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, pct, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
 import { WarCard, WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
+import { BattleList } from './war';
 
 export function termText(x: PeaceTerm): string {
   switch (x.type) {
     case 'cede': return `${t('term_cede')}: ${(x.locs || []).map(locName).join(', ')}`;
     case 'release': return `${t('term_release')}: ${(x.locs || []).map(locName).join(', ')}`;
     case 'gold': return `${t('term_gold')}: ${num(x.amount || 0)}`;
+    case 'convert': return `${t('term_convert')}: ${(x.locs || []).map(locName).join(', ')}`;
+    case 'throne': return t(x.mode === 'claimant' ? 'term_throne_claimant' : 'term_throne_union');
     default: return t(`term_${x.type}`);
   }
 }
+
+/** Terms without towns that a war's goal may allow (systems/war.ts GOAL_TERMS); throne and towns are chosen apart. */
+const FLAG_TERMS = ['vassal', 'faith', 'independence', 'humiliate', 'break_alliance', 'reparations', 'end_rivalry', 'trade_rights', 'end_embargo', 'tariff_cut', 'expel_merchants'];
 
 /** What each term weighs: the price in war score (systems/war.ts termCost). */
 function TermCosts({ terms, costs, total, title, hint }: { terms: PeaceTerm[]; costs?: number[]; total: number; title: string; hint: string }) {
@@ -89,24 +95,32 @@ function PeaceInner({ w }: { w: any }) {
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [white, setWhite] = useState(false);
   const [ev, setEv] = useState<any>(null);
+  const [convert, setConvert] = useState(false);
+  const [throne, setThrone] = useState<'' | 'union' | 'claimant'>('');
   const seq = useRef(0);
+  // what this war's goal lets our side demand, the occupied towns that fit it, and its battles (src/game/warview.ts warView)
+  const [wv] = useQuery<any>({ q: 'war', war: w.id }, [w.id], 2500);
+  const allowed = new Set<string>(wv?.allowed ?? []);
+  const fits = useMemo(() => new Set<number>(wv?.fits ?? []), [wv?.fits?.join(',')]);
+  const takeLand = concede || !wv || ['cede', 'release', 'convert'].some((k) => allowed.has(k));
   // candidate locations: for demands, the enemy side's land we occupy; for concessions, our land they occupy
   const cands = useMemo(() => {
     const o = v.owner, c = v.ctrl; if (!o || !c) return [] as number[];
     const owners = new Set(concede ? ourSide : theirSide);
     const holders = new Set(concede ? theirSide : ourSide);
-    const out: number[] = []; for (let i = 0; i < o.length; i++) if (owners.has(o[i]) && holders.has(c[i])) out.push(i);
+    const out: number[] = []; for (let i = 0; i < o.length; i++) if (owners.has(o[i]) && holders.has(c[i]) && (concede || !wv || fits.has(i))) out.push(i);
     return out;
-  }, [v.day, concede, to]);
+  }, [v.day, concede, to, fits]);
   useEffect(() => { setSel((s) => s.filter((x) => cands.includes(x))); }, [cands.join(',')]);
   const terms: PeaceTerm[] = useMemo(() => {
     if (white) return [{ type: 'white_peace' }];
     const out: PeaceTerm[] = [];
-    if (sel.length) out.push(release && !concede ? { type: 'release', locs: sel } : { type: 'cede', locs: sel, to: concede ? to : pid });
+    if (sel.length && takeLand) out.push(convert && !concede ? { type: 'convert', locs: sel } : release && !concede ? { type: 'release', locs: sel } : { type: 'cede', locs: sel, to: concede ? to : pid });
     if (gold > 0) out.push({ type: 'gold', amount: gold });
-    for (const k of ['vassal', 'humiliate', 'break_alliance']) if (flags[k]) out.push({ type: k as any });
+    for (const k of FLAG_TERMS) if (flags[k]) out.push({ type: k as any });
+    if (throne && !concede) out.push({ type: 'throne', mode: throne });
     return out;
-  }, [white, sel.join(','), release, gold, flags, concede, to]);
+  }, [white, sel.join(','), release, convert, throne, gold, flags, concede, to, takeLand]);
   const key = JSON.stringify([to, concede, terms]);
   useEffect(() => {
     let alive = true; const my = ++seq.current;
@@ -120,6 +134,9 @@ function PeaceInner({ w }: { w: any }) {
   const golds = [0, 25, 50, 100, 200, 400, 800, 1500];
   return <div class="tab-peace">
     <WarCard w={w} inPeace />
+    {wv && <div class="xw-goal small"><Tip content={<div><TipHead name={t(`goal_${wv.goal}`)} hint={t(`goalhint_${wv.goal}`)} /><div class="muted small">{t('xw_terms_allowed')}: {wv.allowed.filter((x: string) => x !== 'concession').map((x: string) => t(`term_${x}`)).join(', ')}</div></div>}>
+      <span class="has-tip"><span class="k">{t('war_goal')}:</span> <b>{t(`goal_${wv.goal}`)}</b></span></Tip>{wv.cb && <span class="muted"> · {t('casus_belli')}: {t(`cb_${wv.cb}`)}</span>}
+      {wv.goalLocs.length > 0 && <span class="muted"> · {t('xw_fought_for')}: {wv.goalLocs.slice(0, 6).map(locName).join(', ')}{wv.goalLocs.length > 6 ? ` +${wv.goalLocs.length - 6}` : ''}</span>}</div>}
     {offers.length > 0 && <Section title={t('incoming_offers')} id="pc-offers">
       {offers.map((o: any) => <div class="offer">
         <div><NLink id={o.from} /> {o.concede ? t('offers_concession') : t('demands')}:</div>
@@ -137,19 +154,25 @@ function PeaceInner({ w }: { w: any }) {
       <div class="terms">
         <div class="term-block">
           <div class="sub-h">{concede ? t('give_locations') : t('take_locations')} <Tip content={<div><TipHead name={concede ? t('give_locations') : t('take_locations')} value={cands.length} hint={concede ? t('x_cands_concede_hint') : t('x_cands_demand_hint')} /></div>}><span class="muted small">({cands.length})</span></Tip></div>
-          {cands.length ? <LocPicks cands={cands} sel={sel} owner={v.owner} onChange={(x) => { setWhite(false); setSel(x); }} />
+          {!takeLand ? <div class="muted small">{t('xw_no_land_terms')}</div> : cands.length ? <LocPicks cands={cands} sel={sel} owner={v.owner} onChange={(x) => { setWhite(false); setSel(x); }} />
             : <div class="muted small">{concede ? t('no_lost_locations') : t('no_occupied')}</div>}
-          {!concede && sel.length > 0 && <label class="chk"><input type="checkbox" checked={release} onChange={(e) => setRelease((e.target as HTMLInputElement).checked)} /> {t('release_instead')}</label>}
+          {!concede && sel.length > 0 && allowed.has('release') && <label class="chk"><input type="checkbox" checked={release} onChange={(e) => { setRelease((e.target as HTMLInputElement).checked); setConvert(false); }} /> {t('release_instead')}</label>}
+          {!concede && sel.length > 0 && allowed.has('convert') && <Tip content={<div><TipHead name={t('term_convert')} hint={t('xw_convert_hint')} /></div>}><label class="chk"><input type="checkbox" checked={convert} onChange={(e) => { setConvert((e.target as HTMLInputElement).checked); setRelease(false); }} /> {t('xw_convert_instead')}</label></Tip>}
         </div>
         <div class="term-block">
           <div class="sub-h">{t('other_terms')}</div>
           <div class="act-row"><span class="k">{concede ? t('pay_gold') : t('term_gold')}</span><select value={gold} onChange={(e) => { setWhite(false); setGold(Number((e.target as HTMLSelectElement).value)); }}>{golds.map((g) => <option value={g}>{g ? num(g) : '—'}</option>)}</select></div>
           {!concede && <>
-            <label class="chk"><input type="checkbox" checked={!!flags.vassal} onChange={() => toggle('vassal')} /> {t('term_vassal')}</label>
-            <label class="chk"><input type="checkbox" checked={!!flags.humiliate} onChange={() => toggle('humiliate')} /> {t('term_humiliate')}</label>
-            <label class="chk"><input type="checkbox" checked={!!flags.break_alliance} onChange={() => toggle('break_alliance')} /> {t('term_break_alliance')}</label>
+            {FLAG_TERMS.filter((k) => allowed.has(k) && !(k === 'faith' && wv?.sameFaith)).map((k) => {
+              // a whole realm takes our faith only where faithTermFits allows it: the box stays, greyed, with the reason
+              const off = k === 'faith' && !wv?.faith?.fit;
+              return <Tip tag="div" content={<div><TipHead name={t(`term_${k}`)} hint={t(`xw_termhint_${k}`)} />{k === 'faith' && wv?.faith && <FaithFitTip f={wv.faith} />}</div>}>
+                <label class={`chk${off ? ' muted' : ''}`}><input type="checkbox" disabled={off} checked={!off && !!flags[k]} onChange={() => toggle(k)} /> {t(`term_${k}`)}</label></Tip>;
+            })}
+            {allowed.has('throne') && wv?.throne && <Tip tag="div" content={<div><TipHead name={t('term_throne')} hint={t('xw_termhint_throne')} /></div>}><div class="act-row"><span class="k">{t('term_throne')}</span><select value={throne} onChange={(e) => { setWhite(false); setThrone((e.target as HTMLSelectElement).value as any); }}>
+              <option value="">—</option><option value="union">{t('term_throne_union')}</option><option value="claimant">{t('term_throne_claimant')}</option></select></div></Tip>}
           </>}
-          <label class="chk"><input type="checkbox" checked={white} onChange={(e) => { const x = (e.target as HTMLInputElement).checked; setWhite(x); if (x) { setSel([]); setGold(0); setFlags({}); } }} /> {t('term_white_peace')}</label>
+          <label class="chk"><input type="checkbox" checked={white} onChange={(e) => { const x = (e.target as HTMLInputElement).checked; setWhite(x); if (x) { setSel([]); setGold(0); setFlags({}); setThrone(''); } }} /> {t('term_white_peace')}</label>
         </div>
       </div>
       <div class={`peace-eval ${ev ? (ev.accept ? 'yes' : 'no') : ''}`}>
@@ -167,6 +190,18 @@ function PeaceInner({ w }: { w: any }) {
         <Btn small={false} cls={concede ? 'danger' : 'gold'} disabled={!terms.length && !concede ? 'no terms' : null} onClick={send}>{concede ? t('offer_concession') : t('send_offer')}</Btn></div>
     </Section>
     <div class="muted small">{t('allies_in_war')}: <NList ids={ourSide.filter((x) => x !== pid)} size={14} /></div>
+    <Section title={t('xw_great_battles')} id="pc-battles" open={false}><BattleList rows={wv?.battles ?? null} /></Section>
     {void nations.value}
+  </div>;
+}
+
+/** The rule for a whole realm's change of faith (faithTermFits) with the numbers it weighs. */
+function FaithFitTip({ f }: { f: { fit: string | null; weight: number; people: number; oldFaith: boolean } }) {
+  const mark = (ok: boolean) => <span class={ok ? 'pos' : 'muted'}>{ok ? '✔' : '✘'}</span>;
+  return <div class="breakdown">
+    <div class="bd-row"><span>{t('xw_faith_weight')} <span class="muted">({t('xw_faith_weight_need')})</span></span><span>{pct(f.weight)} {mark(f.weight <= 1 / 3)}</span></div>
+    <div class="bd-row"><span>{t('xw_faith_people')} <span class="muted">({t('xw_faith_people_need')})</span></span><span>{pct(f.people)} {mark(f.people > 0.5)}</span></div>
+    <div class="bd-row"><span>{t('xw_faith_old')}</span><span>{mark(f.oldFaith)}</span></div>
+    <div class={`bd-row bd-total ${f.fit ? 'pos' : 'neg'}`}><span>{f.fit ? t(`xw_faith_fit_${f.fit}`) : t('xw_faith_unfit')}</span><span /></div>
   </div>;
 }

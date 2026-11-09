@@ -185,6 +185,8 @@ function envoyArrives(s: GameState, w: World, e: Envoy) {
 export function acceptProposal(s: GameState, w: World, a: number, b: number, action: string, payload?: any) {
   const A = s.nations[a], Bn = s.nations[b];
   const lo = Math.min(a, b), hi = Math.max(a, b);
+  // two envoys may cross on the road (each side proposing the same treaty): a treaty already in force is not made twice
+  if ((action === 'alliance' || action === 'marriage' || action === 'trade' || action === 'access' || action === 'guarantee') && hasTreaty(s, a, b, action)) return;
   switch (action) {
     case 'alliance': s.treaties.push({ a: lo, b: hi, type: 'alliance', since: s.day, until: 1e9 }); chronicle(s, a, 'alliance', { en: `${A.short.en} and ${Bn.short.en} concluded an alliance.`, de: `${A.short.de} und ${Bn.short.de} schlossen ein Bündnis.` }); break;
     case 'marriage': {

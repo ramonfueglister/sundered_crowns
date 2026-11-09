@@ -194,7 +194,7 @@ export const DECISIONS: DecisionDef[] = [
       const pl = nat(e, 'poland')!, lt = nat(e, 'lithuania')!;
       lt.overlord = pl.id; lt.subjectType = 'personal_union'; lt.subjectSince = e.s.day; lt.libertyDesire = 10;
       if (lt.faith !== LATIN) { const old = lt.faith; lt.faith = LATIN; if (lt.capital >= 0) e.s.loc.faith[lt.capital] = LATIN; e.s.papacy.curiaFavour[lt.id] = 30; void old; }
-      e.s.treaties.push({ a: Math.min(pl.id, lt.id), b: Math.max(pl.id, lt.id), type: 'alliance', since: e.s.day, until: e.s.day + 365 * 200 });
+      if (!hasTreaty(e.s, pl.id, lt.id, 'alliance')) e.s.treaties.push({ a: Math.min(pl.id, lt.id), b: Math.max(pl.id, lt.id), type: 'alliance', since: e.s.day, until: e.s.day + 365 * 200 });
       pl.prestige = clamp(pl.prestige + 15, -100, 100); lt.mandate = clamp(lt.mandate + 10, 0, 100);
       lt.flags.dec_union_of_krewo = e.s.day; pl.flags.dec_union_of_krewo = e.s.day; e.fx.worldFlag('union_of_krewo', e.s.day);
       for (const o of e.s.nations) if (o.alive && o.faith === LATIN && o.key !== 'teutonic_order') addOpinion(e.s, o.id, lt.id, 'baptism', 20, 365 * 20);

@@ -1,20 +1,20 @@
 // AI nations: same rules and commands as players. Strategic decisions monthly (staggered), military moves every few days.
 // Personalities: conqueror, trader, isolationist, zealot, opportunist, diplomat, builder.
-import type { GameState, Nation, Army, PeaceTerm, War } from '../types';
+import type { GameState, Nation, Army, PeaceTerm, War, WarGoal } from '../types';
 import type { World } from '../world';
 import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf, topOverlord } from '../ctx';
 import { UNITS, B, BI, BUILDINGS, C, CL, GOODS, RAW_FROM_MINE } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { applyCommand, buildRefusal } from '../commands';
 import { goalWants } from './goals';
-import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue, gatherClaim, tributaryPeace } from './war';
+import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
-import { FAITH_INDEX } from '../content/peoples';
+import { FAITH_INDEX, FAITHS } from '../content/peoples';
 import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
 
 const P = (n: Nation, k: string) => n.personality === k;
@@ -440,9 +440,11 @@ function considerWar(s: GameState, w: World, n: Nation) {
     for (const al of allies(s, top)) if (!hasTreaty(s, n.id, al, 'alliance') && !myBloc.includes(al)) theirPower += nationPower(s, al) * allyWeight(al, top);
     const ratio = myPower / Math.max(1, theirPower);
     if (ratio < 1.25) continue;
-    const cb = hasCasusBelli(s, n.id, t);
+    // a justification for a real war counts fully; a rivalry (a war to humble them, never to conquer) a little
+    const cbs = casusBelliAll(s, n.id, t, w);
+    const real = cbs.some((c) => c !== 'rivalry');
     // the size of the prize counts, not only how easy the fight is
-    let score = Math.min(ratio, 3) * 10 + Math.min(30, 120 * nationDev(s, t) / myDev) + (cb ? 25 : -40) + (n.rivals.includes(t) ? 20 : 0) - totalOpinion(s, w, n.id, t) * 0.2 + (tn.faith !== n.faith && P(n, 'zealot') ? 25 : 0);
+    let score = Math.min(ratio, 3) * 10 + Math.min(30, 120 * nationDev(s, t) / myDev) + (real ? 25 : cbs.length ? -15 : -40) + (n.rivals.includes(t) ? 20 : 0) - totalOpinion(s, w, n.id, t) * 0.2 + (tn.faith !== n.faith && P(n, 'zealot') ? 25 : 0);
     if (s.playerNations.includes(t)) score -= 10 + (s.difficulty < 2 ? 20 : 0);
     score -= defending * 15;
     let held = 0; for (const l of goalPlaces) if (s.loc.owner[l] === t) held++;
@@ -450,32 +452,35 @@ function considerWar(s: GameState, w: World, n: Nation) {
     if (score > bestScore || (score === bestScore && t < best)) { bestScore = score; best = t; }
   }
   if (best < 0) return;
-  const cb = hasCasusBelli(s, n.id, best);
-  if (!cb) {
-    // prepare a justification against the most tempting target (an envoy's errand, more often than a declaration)
+  const goal = aiWarGoal(s, w, n, best);
+  if (!goal || goal === 'humiliate') {
+    // prepare a justification for a real war against the most tempting target (an envoy's errand, more often than a
+    // declaration); a rival may meanwhile be humbled in a limited war
     if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && !s.spies.some((x) => x.nation === n.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
-    return;
-  }
-  if (bestScore < 30 || !chance(s.rng, aggr)) return;
-  // war goal: border locations of the target, more for a greater realm
-  const k = clamp(Math.round(nationLocsRO(s, n.id).length / 40), 6, 15);
-  const goal = [...new Set([...goalPlaces.filter((l) => s.loc.owner[l] === best), ...targetLocs(s, w, n.id, best, k)])].slice(0, k + 2);
-  applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal: s.nations[best].faith !== n.faith && P(n, 'zealot') ? 'faith' : 'conquest', locs: goal });
+    if (!goal || bestScore < 30 || !chance(s.rng, aggr * 0.4)) return;
+  } else if (bestScore < 30 || !chance(s.rng, aggr)) return;
+  // the war goal's towns are chosen by the declaration itself (systems/war.ts warGoalLocs), exactly as for a player
+  applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal });
 }
 
-export function targetLocs(s: GameState, w: World, a: number, b: number, k: number): number[] {
-  const out: [number, number][] = [];
-  for (let i = 0; i < w.L; i++) {
-    if (s.loc.owner[i] !== b) continue;
-    let border = 0;
-    for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === a) border++; }
-    if (border) out.push([i, s.loc.dev[i] + border * 3]);
-  }
-  out.sort((p, q) => q[1] - p[1]);
-  // grow along the province of the best border location
-  const res = new Set<number>();
-  for (const [l] of out.slice(0, 3)) { const p = w.provOf[l]; for (const x of w.provinces[p]?.locs ?? [l]) if (s.loc.owner[x] === b && res.size < k * 2) res.add(x); }
-  return [...res].slice(0, Math.max(k, 3));
+/** The war the AI would fight against b with the justifications it holds (null without any): its own land back first,
+ *  then a holy war for a zealous realm, a crown its blood entitles it to, a trade war for a trading realm, conquest
+ *  under a claim, and with nothing but a rivalry a war to humble the rival. */
+export function aiWarGoal(s: GameState, w: World, n: Nation, b: number): WarGoal['type'] | null {
+  const cbs = casusBelliAll(s, n.id, b, w);
+  if (!cbs.length) return null;
+  const has = (c: string) => cbs.includes(c as any);
+  const bn = s.nations[b];
+  if (has('reconquest')) return 'reconquest';
+  if (has('holy_war') && (P(n, 'zealot') || !cbs.some((c) => c === 'claim' || c === 'fabricated' || c === 'gathering'))) return 'faith';
+  if (has('succession') && bn.overlord < 0) return 'throne';
+  if (has('trade') && (P(n, 'trader') || n.gov === 'merchant_republic') && !has('claim') && !has('fabricated')) return 'trade';
+  if (has('gathering') && nationDev(s, b) * 4 < nationDev(s, n.id) && chance(s.rng, 0.5)) return 'subjugate';
+  if (has('claim') || has('fabricated') || has('gathering') || has('excommunicated')) return 'conquest';
+  if (has('succession')) return 'throne';
+  if (has('trade')) return 'trade';
+  if (has('rivalry')) return 'humiliate';
+  return null;
 }
 
 function considerPeace(s: GameState, w: World, n: Nation, war: War) {
@@ -490,32 +495,14 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
   }
   if (s.playerNations.includes(other) && war.offers.some((o) => o.from === n.id)) return;
   if (score > 15) {
-    // demand what we occupy of the whole enemy side (prefer the war goal), up to what the score allows;
-    // capitals go in terms of their own (a capital is never ceded as part of a bundle)
-    const terms: PeaceTerm[] = [];
     const enemyLeader = other;
     const enemySide = war.att.includes(n.id) ? war.def : war.att;
-    const occ: number[] = [];
-    for (const e of enemySide) for (const i of ownedLocs(s, e)) if (i < w.L && s.loc.ctrl[i] === n.id) occ.push(i);
+    const { terms, goalMet } = aiDemands(s, w, war, n, enemyLeader, enemySide, score);
     const goal = new Set(war.goal.locs);
-    occ.sort((a, b) => (goal.has(b) ? 1 : 0) - (goal.has(a) ? 1 : 0) || locValue(s, b) - locValue(s, a) || a - b);
-    const isCap = (l: number) => s.nations[s.loc.owner[l]]?.capital === l;
-    const pick: number[] = [], caps: number[] = [];
-    let spent = 0;
-    for (const l of occ) {
-      const c = termCost(s, war, { type: 'cede', locs: [l], to: n.id }, n.id, enemyLeader);
-      if (spent + c > score * 0.95) continue;
-      spent += c; (isCap(l) ? caps : pick).push(l);
-    }
-    // the bundle first, then at most six capitals (a peace holds at most eight terms)
-    if (pick.length) terms.push({ type: 'cede', locs: pick, to: n.id });
-    for (const c of caps.slice(0, 6)) terms.push({ type: 'cede', locs: [c], to: n.id });
     const besiegingGoal = s.armies.some((a) => a.owner === n.id && a.siege >= 0 && goal.has(a.siege));
-    // an attacker does not settle for less than the towns it declared the war for while the war is young, nor while
-    // its host lies before their walls
-    const won = new Set([...pick, ...caps.slice(0, 6)]);
-    const goalLeft = war.goal.locs.some((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]));
-    if (war.attLead === n.id && goalLeft && n.warExhaustion < 50 && dur < (besiegingGoal ? 6 : 1.5)) return;
+    // an attacker does not settle for less than it declared the war for while the war is young, nor while its host
+    // lies before the walls of the towns it went to war for
+    if (war.attLead === n.id && !goalMet && n.warExhaustion < 50 && dur < (besiegingGoal ? 6 : 1.5)) return;
     // early in a war a win on the field is no reason to settle for gold: take the forts first
     if (!terms.length && score > 30 && (dur > 1.5 || n.warExhaustion > 40) && !(besiegingGoal && dur < 6 && n.warExhaustion < 50))
       terms.push({ type: 'gold', amount: Math.max(50, (s.nations[enemyLeader].income.tax || 10) * 8) });
@@ -531,12 +518,96 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
       return;
     }
     if (score < -25) {
+      // what the enemy may take in this war (its war goal's terms when it is the attacker)
+      const theyAtt = war.att.includes(other), allowed = allowedTerms(war, theyAtt);
       const sides = war.att.concat(war.def);
-      const mine = nationLocs(s, n.id).filter((l) => sides.includes(s.loc.ctrl[l]) && s.loc.ctrl[l] !== n.id && l !== n.capital);
-      if (mine.length) terms.push({ type: 'cede', locs: mine.slice(0, 4), to: other });
+      if (allowed.has('cede')) {
+        const mine = nationLocs(s, n.id).filter((l) => sides.includes(s.loc.ctrl[l]) && s.loc.ctrl[l] !== n.id && l !== n.capital && cedeFits(s, w, war, theyAtt, other, l));
+        if (mine.length) terms.push({ type: 'cede', locs: mine.slice(0, 4), to: other });
+      }
+      if (!terms.length) {
+        // a war without land at stake: yield what it was fought over, the least of it first
+        const g = war.goal.type;
+        if (theyAtt && g === 'humiliate') terms.push({ type: 'humiliate' });
+        else if (theyAtt && g === 'trade') terms.push({ type: 'trade_rights' });
+        else if (allowed.has('humiliate')) terms.push({ type: 'humiliate' });
+      }
     }
     applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: terms.length ? terms.map((t) => ({ ...t })) : [], ...(terms.length ? { concede: true } : {}) } as any);
   }
+}
+
+/**
+ * What a winning AI demands, within its war score: first what its war goal is about (a holy war the conversion of the
+ * ruler, a war for a throne the crown, a trade war privileges and lower tolls, a war to humble a rival its prestige
+ * and reparations), then the towns it occupies that the goal lets it take (the goal's towns first, capitals in terms
+ * of their own). goalMet: what the war was declared for is in the demands (or not to be had anymore).
+ */
+export function aiDemands(s: GameState, w: World, war: War, n: Nation, enemyLeader: number, enemySide: number[], score: number): { terms: PeaceTerm[]; goalMet: boolean } {
+  const attWins = war.att.includes(n.id);
+  const allowed = allowedTerms(war, attWins);
+  const terms: PeaceTerm[] = [];
+  const budget = score * 0.95; let spent = 0;
+  const add = (t: PeaceTerm): boolean => {
+    if (!allowed.has(t.type)) return false;
+    const c = termCost(s, war, t, n.id, enemyLeader);
+    if (spent + c > budget) return false;
+    spent += c; terms.push(t); return true;
+  };
+  const E = s.nations[enemyLeader];
+  const g = war.goal.type;
+  let main = true; // conquest, reconquest and the defenders' wars have no term of their own beyond the towns
+  if (attWins) {
+    // a holy war is fought for its holy land (the goal towns, ceded or converted below); a whole realm is made to take
+    // our faith only where that fits (faithTermFits), after the land
+    if (g === 'throne') main = add({ type: 'throne', mode: 'union' }) || add({ type: 'throne', mode: 'claimant' });
+    else if (g === 'subjugate') main = E.overlord === n.id || add({ type: 'vassal' });
+    else if (g === 'independence') main = add({ type: 'independence', nation: n.id });
+    else if (g === 'trade') {
+      main = add({ type: 'trade_rights' });
+      if (s.flags[`embargo_${enemyLeader}_${n.id}`]) add({ type: 'end_embargo' });
+      if (E.tariff > 0.06) add({ type: 'tariff_cut' });
+      if (s.markets.some((m) => m.owner === n.id && (m.merchants[enemyLeader] || 0) > 0)) add({ type: 'expel_merchants' });
+    } else if (g === 'humiliate') {
+      main = add({ type: 'humiliate' });
+      add({ type: 'reparations' });
+      if (E.rivals.includes(n.id)) add({ type: 'end_rivalry' });
+      if (allies(s, enemyLeader).length) add({ type: 'break_alliance' });
+    }
+  }
+  // towns we occupy of the whole enemy side (the war goal's first), as far as the goal lets us take them
+  const won = new Set<number>();
+  if (allowed.has('cede')) {
+    const occ: number[] = [];
+    for (const e of enemySide) for (const i of ownedLocs(s, e)) if (i < w.L && s.loc.ctrl[i] === n.id && cedeFits(s, w, war, attWins, n.id, i)) occ.push(i);
+    const goal = new Set(war.goal.locs);
+    occ.sort((a, b) => (goal.has(b) ? 1 : 0) - (goal.has(a) ? 1 : 0) || locValue(s, b) - locValue(s, a) || a - b);
+    const isCap = (l: number) => s.nations[s.loc.owner[l]]?.capital === l;
+    const pick: number[] = [], caps: number[] = [];
+    for (const l of occ) {
+      const c = termCost(s, war, { type: 'cede', locs: [l], to: n.id }, n.id, enemyLeader);
+      if (spent + c > budget) continue;
+      spent += c; (isCap(l) ? caps : pick).push(l);
+    }
+    // the bundle first, then capitals (a peace holds at most eight terms)
+    if (pick.length) terms.push({ type: 'cede', locs: pick, to: n.id });
+    for (const c of caps.slice(0, Math.max(0, 8 - terms.length))) terms.push({ type: 'cede', locs: [c], to: n.id });
+    for (const l of [...pick, ...caps]) won.add(l);
+  }
+  if (attWins && g === 'faith') {
+    // the goal towns we could not take are made to take our faith, then (where it fits) the whole realm
+    const conv = war.goal.locs.filter((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]) && s.loc.faith[l] !== n.faith);
+    if (conv.length && terms.length < 8 && add({ type: 'convert', locs: conv })) for (const l of conv) won.add(l);
+    // a ruler forced into a faith his people do not hold makes a weak neighbour, not a converted one: across the great
+    // families of faith the AI asks for it only from the old faiths or where the people already hold ours
+    const fit = E.faith !== n.faith ? faithTermFits(s, n.id, enemyLeader) : null;
+    const wants = fit === 'old_faith' || fit === 'majority' || (fit === 'small' && FAITHS[E.faith]?.family === FAITHS[n.faith]?.family);
+    if (terms.length < 8 && wants && add({ type: 'faith' })) for (const l of war.goal.locs) won.add(l);
+  }
+  // a war fought for towns is won when we demand every goal town the enemy still holds (a holy war: or its conversion)
+  const landGoal = g === 'conquest' || g === 'reconquest' || g === 'coalition' || g === 'faith';
+  const goalLeft = attWins && landGoal && war.goal.locs.some((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]));
+  return { terms, goalMet: main && !goalLeft };
 }
 
 // ---------------- military AI ----------------
@@ -573,6 +644,8 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   // strengths of the enemy armies and of the enemy concentration around each (our moves and merges do not change them)
   const E = enemyArmies.length;
   const eStr = new Float64Array(E); for (let j = 0; j < E; j++) eStr[j] = armyStrength(s, enemyArmies[j]);
+  // an invader far stronger than all our hosts: burn the land in front of it (systems/military.ts aiScorch)
+  if (enemies.size) { let mine = 0; for (const a of myArmies) mine += armyStrength(s, a); aiScorch(s, w, n, enemyArmies, eStr, mine); }
   const eNear = new Float64Array(E).fill(-1);
   const nearOf = (j: number) => {
     if (eNear[j] < 0) { const l = enemyArmies[j].loc; let p = 0; for (let q = 0; q < E; q++) if (w.distKm(enemyArmies[q].loc, l) < 60) p += eStr[q]; eNear[j] = p; }
@@ -638,7 +711,15 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     let threat = 0; for (let j = 0; j < E; j++) if (w.distKm(enemyArmies[j].loc, a.loc) < 150) threat += eStr[j];
     if (threat > myStr * (a.siege >= 0 && a.siege === focusLoc ? 2.5 : 1.6) && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
     if (tgt >= 0) { aiMove(a, tgt); continue; }
-    if (a.siege >= 0) continue; // keep sieging
+    if (a.siege >= 0) {
+      // keep sieging; storm the walls when it is clearly worth it (a breach or overwhelming numbers, few losses)
+      const sg = a.siege === a.loc ? s.sieges.find((x) => x.loc === a.loc) : undefined;
+      if (sg && sg.days >= 30 && (sg.lastAssault === undefined || s.day - sg.lastAssault >= 30)) {
+        const o = assaultOdds(s, w, sg, besiegersOf(s, sg).filter((x) => x.owner === n.id && !x.rebels));
+        if (o.p >= 0.6 && o.men >= sg.garrison * 4 && (sg.breach >= 1 || o.p >= 0.75) && o.loss < o.men * 0.25) applyCommand(s, w, { t: 'assault', n: n.id, army: a.id });
+      }
+      continue;
+    }
     // a siege train (an army mostly of guns) joins our greatest siege of a fortified town instead of besieging alone
     let gunMen = 0; for (const r of a.regs) if (UNITS[r.type].kind === 'art') gunMen += r.men;
     if (gunMen > armyMen(a) * 0.5) {
@@ -685,10 +766,30 @@ function militaryAI(s: GameState, w: World, n: Nation) {
       }
     }
   }
-  // fleets: blockade enemy coastal forts under siege, else hunt weaker enemy fleets near home
+  // fleets: blockade enemy coastal forts under siege, else shut the ports of the enemy's capital and markets
+  let ports: number[] | null = null;
   for (const f of own.filter((a) => a.fleet && !a.battle && !a.path.length)) {
     const sg = s.sieges.find((x) => x.nation === n.id && w.coastal[x.loc]);
-    if (sg) { const sea = seaNear(w, sg.loc); if (sea >= 0 && sea !== f.loc) applyCommand(s, w, { t: 'move', n: n.id, army: f.id, to: sea }); }
+    if (sg) { const sea = seaNear(w, sg.loc); if (sea >= 0 && sea !== f.loc) applyCommand(s, w, { t: 'move', n: n.id, army: f.id, to: sea }); continue; }
+    if (!enemies.size || armyMen(f) < 3) continue;
+    if (!ports) {
+      ports = [];
+      for (const e of enemies) {
+        const en = s.nations[e]; if (!en?.alive) continue;
+        if (en.capital >= 0 && w.coastal[en.capital] && s.loc.owner[en.capital] === e) ports.push(en.capital);
+        for (const m of s.markets) if (m.owner === e && w.coastal[m.hub] && s.loc.owner[m.hub] === e && !ports.includes(m.hub)) ports.push(m.hub);
+      }
+      ports.sort((x, y) => x - y);
+    }
+    // already off an enemy port: stay; else the nearest port within reach, unless a stronger enemy fleet lies there
+    let near = false; for (let e = w.adjStart[f.loc]; e < w.adjStart[f.loc + 1]; e++) { const v = w.adj[e]; if (v < w.L && enemies.has(s.loc.owner[v])) { near = true; break; } }
+    if (near || f.loc < w.L) continue;
+    let best = -1, bd = 1500;
+    for (const p of ports) { const d = w.distKm(f.loc, p); if (d < bd) { bd = d; best = p; } }
+    if (best < 0) continue;
+    const sea = seaNear(w, best);
+    const fs = armyStrength(s, f);
+    if (sea >= 0 && sea !== f.loc && !s.armies.some((x) => x.fleet && x.loc === sea && enemies.has(x.owner) && armyStrength(s, x) > fs)) applyCommand(s, w, { t: 'move', n: n.id, army: f.id, to: sea });
   }
 }
 

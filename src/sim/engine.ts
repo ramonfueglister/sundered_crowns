@@ -4,6 +4,8 @@ import type { World } from './world';
 import { mkCtx, bump, DAY_EPOCH } from './ctx';
 import { SYSTEMS } from './systems';
 import { applyCommand } from './commands';
+import { setFullStrength } from './systems/military';
+import type { Treaty } from './types';
 import { gzipSync, gunzipSync, strToU8, strFromU8 } from 'fflate';
 
 export const SAVE_VERSION = 2;
@@ -102,7 +104,23 @@ function migrate(s: GameState): GameState {
     for (const n of s.nations) { n.duties ??= { land: 0, hearth: 0, excise: 0 }; n.adminLoad ??= 0; }
     s.v = 2;
   }
+  if (s.battleReports === undefined) {
+    // a save from before the war pass (it has no battle reports yet): the full strength regiments refill to, and one
+    // treaty of a kind per pair (the version number is left to the other passes of this release)
+    s.battleReports = [];
+    for (const a of s.armies) setFullStrength(a);
+    s.treaties = dedupeTreaties(s.treaties);
+  }
   return s;
+}
+/** One treaty of each kind per pair (two envoys that crossed on the road once made the same alliance twice). */
+export function dedupeTreaties(list: Treaty[]): Treaty[] {
+  const seen = new Set<string>();
+  return list.filter((t) => {
+    if (t.type === 'truce' || t.type === 'claim') return true;
+    const k = `${t.type}:${Math.min(t.a, t.b)}:${Math.max(t.a, t.b)}${t.type === 'access' || t.type === 'guarantee' ? `:${t.a}` : ''}`;
+    if (seen.has(k)) return false; seen.add(k); return true;
+  });
 }
 export function saveBinary(s: GameState): Uint8Array { return gzipSync(strToU8(serialize(s)), { level: 6 }); }
 export function loadBinary(b: Uint8Array): GameState { return deserialize(strFromU8(gunzipSync(b))); }

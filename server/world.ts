@@ -50,7 +50,7 @@ const OK: CmdResult = { ok: true };
 const err = (e: string): CmdResult => ({ ok: false, err: e });
 const PLAYER_CMDS = new Set<Command['t']>(['move', 'merge', 'split', 'recruit', 'mercs', 'disband', 'general', 'build', 'declare', 'peace', 'peace_answer', 'diplo', 'law', 'estate', 'tax', 'budget',
   'event', 'tech', 'doctrine', 'agent', 'colonize', 'explore', 'spy', 'office', 'loan', 'merchant', 'integrate', 'orders', 'decision', 'workshop', 'embark', 'landmark',
-  'goal', 'cancel', 'batch']); // batch: build / recruit / agent / cancel orders only, each validated as if sent singly (src/sim/commands.ts)
+  'goal', 'cancel', 'batch', 'assault', 'scorch']); // batch: build / recruit / agent / cancel orders only, each validated as if sent singly (src/sim/commands.ts)
 
 function offerAllowed(s: GameState, from: number, to: number, action: OfferAction): string | null {
   const A = s.nations[from], B = s.nations[to];

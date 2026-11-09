@@ -65,6 +65,15 @@ export const REFUSAL_DE: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
   'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
+  // ---- war pass (claude/war-pass): war goals, peace terms, assaults and scorched earth
+  'they are not our overlord': 'Sie sind nicht unser Oberherr', 'they hold no market': 'Sie halten keinen Markt',
+  'that term does not fit the war goal': 'Diese Bedingung passt nicht zum Kriegsziel', 'that town does not fit the war goal': 'Dieser Ort passt nicht zum Kriegsziel',
+  'they have no throne to give': 'Sie haben keinen Thron zu vergeben', 'our merchants were expelled from this market': 'Unsere Kaufleute wurden aus diesem Markt ausgewiesen',
+  'no siege here': 'Hier gibt es keine Belagerung', 'the siege works are not ready': 'Die Belagerungswerke sind noch nicht bereit',
+  'the troops need time before another assault': 'Die Truppen brauchen Zeit vor dem nächsten Sturm', 'already scorched': 'Schon verbrannt',
+  'no enemy army near': 'Kein feindliches Heer in der Nähe',
+  'invalid war goal': 'Ungültiges Kriegsziel', 'the freed realm is not their subject': 'Das befreite Reich ist nicht ihr Untertan',
+  'their realm is too great to change its faith': 'Ihr Reich ist zu groß, um seinen Glauben zu wechseln',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

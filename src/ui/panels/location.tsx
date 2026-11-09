@@ -8,6 +8,7 @@ import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang,
 import { sfx } from '../audio';
 import { ScopeOrders } from './works';
 import { Methods, Migration } from './statecraft';
+import { LocWar } from './war';
 
 const TERRAIN: Record<string, [string, string]> = {
   plains: ['Plains', 'Ebene'], farmland: ['Farmland', 'Ackerland'], forest: ['Forest', 'Wald'], hills: ['Hills', 'Hügelland'], mountains: ['Mountains', 'Gebirge'],
@@ -60,7 +61,7 @@ export function LocationPanel({ loc }: { loc: number }) {
       {d.devast > 0.01 && <Row k={t('devastation')} v={<span class="neg">{pct(d.devast)}</span>} tip={<div><TipHead name={t('devastation')} value={pct(d.devast)} hint={t('x_devast_hint')} /></div>} />}
     </div>
     {d.landmark && <Landmark d={d} own={own} refresh={refresh} />}
-    {d.siege && <div class="siege-box"><b>{t('siege')}</b> · <NLink id={d.siege.nation} size={14} /> · {d.siege.progress}/4 <Bar value={d.siege.progress} max={4} color="#9b2a20" tip={<div><TipHead name={t('siege')} value={`${d.siege.progress}/4`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(d.siege.garrison)}</span></div>{d.siege.breach > 0 && <div class="bd-row"><span>{t('x_breaches')}</span><span>{d.siege.breach}</span></div>}{d.siege.blockade && <div class="bd-row"><span>{t('x_blockade')}</span><span>✓</span></div>}<div class="bd-row"><span>{t('x_days')}</span><span>{d.siege.days}</span></div></div></div>} /></div>}
+    <LocWar d={d} refresh={refresh} />
 
     <Section title={t('population')} id="loc-pop">
       <table class="tbl pops">

@@ -465,3 +465,17 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .panel-wrap ~ .hint-card, .panel-wrap ~ .tutorial { right: 8px; bottom: 96px; width: min(360px, calc(100% - 800px)); min-width: 260px; }
 /* council: names and bonuses wrap instead of being cut off at narrow widths */
 .council-row > span:nth-child(2) { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
+/* ---- war pass (claude/war-pass): siege panel, army detail, battle report, declaration ---- */
+.xw-siege .grid2 { margin: 3px 0; }
+.xw-sg-h { margin-bottom: 2px; }
+.xw-assault { display: flex; align-items: center; gap: 6px; margin: 4px 0 2px; padding-top: 4px; border-top: 1px dotted var(--p-line); }
+.xw-log { margin-top: 3px; } .xw-log summary { cursor: pointer; font-variant: small-caps; color: #5a3410; }
+.xw-army { margin: 4px 0; } .xw-sup { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0 4px; font-size: .92em; }
+.xw-regs td, .xw-regs th { padding: 1px 4px; } .xw-army .siege-box { margin-top: 6px; }
+.xw-report .xw-rep-h { margin-bottom: 4px; } .xw-ground { margin: 4px 0 6px; }
+.xw-side { border: 1px solid #c2a675; padding: 4px 6px; background: rgba(255, 250, 235, .35); } .xw-side.won { border-color: #4d7a3a; box-shadow: inset 3px 0 0 #4d7a3a; }
+.xw-side .chip { margin: 1px 3px 1px 0; } .xw-sides { gap: 8px; }
+.xw-days td .bar { min-width: 40px; } .xw-why { margin: 2px 0 2px 16px; padding: 0; }
+.xw-cbs .kv { margin: 1px 0; } .xw-goal-locs { margin: 3px 0; } .xw-goal { margin: 2px 0 4px; }
+.xw-blist td { white-space: nowrap; }
+.xw-ground .chip small { margin-right: 4px; }

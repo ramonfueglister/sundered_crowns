@@ -1,11 +1,11 @@
 // Every action a player or the AI can take goes through applyCommand. It validates and mutates the state
 // deterministically, so the same command list replays to the same game (single player, replays, world server).
-import type { GameState, Command, CmdResult, Army, PeaceTerm, I18n, Nation } from './types';
+import type { GameState, Command, CmdResult, Army, PeaceTerm, I18n, Nation, War } from './types';
 import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
-import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost } from './systems/military';
-import { declareWar, evaluatePeace, concludePeace, computeScore, termCost } from './systems/war';
+import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost, assault, scorchEarth } from './systems/military';
+import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
 import { takeLoan, tariffMax } from './systems/economy';
@@ -102,7 +102,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const host = list[0];
       for (const a of list.slice(1)) {
         if (a.loc !== host.loc || a.fleet !== host.fleet) continue;
-        for (const r of a.regs) { const ex = host.regs.find((x) => x.type === r.type); if (ex) ex.men += r.men; else host.regs.push({ ...r }); }
+        for (const r of a.regs) { const ex = host.regs.find((x) => x.type === r.type); if (ex) { ex.max = (ex.max ?? ex.men) + (r.max ?? r.men); ex.men += r.men; } else host.regs.push({ ...r }); }
         host.morale = Math.min(host.morale, a.morale);
         if (!host.general && a.general) host.general = a.general;
         if (a.fleet) host.carrying.push(...a.carrying);
@@ -114,7 +114,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const a = myArmy(s, cmd.n, cmd.army); if (!a) return err('not your army');
       if (a.battle) return err('in battle');
       if (armyMen(a) < 2) return err('too small');
-      const regs = a.regs.map((r) => { const h = a.fleet ? Math.floor(r.men / 2) : r.men / 2; r.men -= h; return { type: r.type, men: h }; }).filter((r) => r.men > 0);
+      const regs = a.regs.map((r) => { const h = a.fleet ? Math.floor(r.men / 2) : r.men / 2; const hm = (r.max ?? r.men) * (h / Math.max(1e-9, r.men)); r.men -= h; r.max = Math.max(r.men, (r.max ?? r.men + h) - hm); return { type: r.type, men: h, max: hm }; }).filter((r) => r.men > 0);
       const b = newArmy(s, cmd.n, a.loc, regs, a.fleet);
       b.morale = a.morale;
       return OK;
@@ -151,6 +151,9 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     }
     case 'declare': {
       if (s.flags.peaceful_start && s.day < s.flags.peaceful_start && s.playerNations.includes(cmd.n)) return err('the realm is still settling');
+      // only the goals a realm may choose: a Common Front, a disputed crown and rebels are justified by their situation,
+      // so a declaration naming them would be a free war with no cause and no cost
+      if (!DECLARE_GOALS.includes(cmd.goal)) return err('invalid war goal');
       const e = declareWar(s, w, cmd.n, cmd.target, cmd.goal, cmd.locs ?? []); return e ? err(e) : OK;
     }
     case 'peace': {
@@ -162,7 +165,9 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const lead = cmd.n === war.attLead || cmd.n === war.defLead;
       if (!lead && cmd.to !== war.attLead && cmd.to !== war.defLead) return err('negotiate with the war leader');
       if (war.offers.some((o) => o.from === cmd.n && s.day - o.day < 30)) return err('wait before sending another offer');
-      const terms = sanitizeTerms(s, w, war, cmd.n, cmd.to, cmd.terms, !!cmd.concede);
+      const st = sanitizeTerms(s, w, war, cmd.n, cmd.to, cmd.terms, !!cmd.concede);
+      if (st.refused) return err(st.refused);
+      const terms = st.terms;
       const humanTo = s.playerNations.includes(cmd.to) || !!other.playerId;
       if (humanTo) {
         war.offers.push({ from: cmd.n, to: cmd.to, terms, day: s.day, expires: s.day + 30, concede: !!cmd.concede });
@@ -216,7 +221,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'budget': {
       if (cmd.key === 'army') n.armyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'navy') n.navyMaint = clamp(cmd.value, 0.25, 1);
-      else if (cmd.key === 'tariff') n.tariff = clamp(cmd.value, 0, tariffMax(n));
+      else if (cmd.key === 'tariff') n.tariff = clamp(cmd.value, 0, (s.flags[`tariffcap_${cmd.n}`] ?? 0) > s.day ? Math.min(TARIFF_CAP, tariffMax(n)) : tariffMax(n)); // a peace may have capped our tolls
       else if (DUTY_INDEX[cmd.key]) { const e = setDuty(n, cmd.key, cmd.value); if (e) return err(e); }
       else if (cmd.key === 'coinage') {
         const nv = clamp(cmd.value, 0, 0.5);
@@ -246,6 +251,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     }
     case 'merchant': {
       const m = s.markets[cmd.market]; if (!m) return err('no such market');
+      if (cmd.amount > 0 && m.owner >= 0 && (s.flags[`nomerch_${cmd.n}_${m.owner}`] ?? 0) > s.day) return err('our merchants were expelled from this market'); // a lost trade war
       const cur = Object.values(n.flags).length ? 0 : 0; void cur;
       const used = s.markets.reduce((p, x) => p + (x.merchants[cmd.n] || 0), 0) - (m.merchants[cmd.n] || 0);
       const cap = merchantCap(n);
@@ -282,6 +288,11 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       a.embarkedOn = f.id; a.path = []; a.siege = -1; f.carrying.push(a.id); a.loc = f.loc;
       return OK;
     }
+    case 'assault': {
+      const a = myArmy(s, cmd.n, cmd.army); if (!a) return err('not your army');
+      const e = assault(s, w, a); return e ? err(e) : OK;
+    }
+    case 'scorch': { const e = scorchEarth(s, w, n, cmd.loc); return e ? err(e) : OK; }
     case 'goal': { const e = claimGoal(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
     case 'cancel': return cancelOrder(s, w, cmd.n, cmd.kind, cmd.loc, cmd.item, cmd.nth);
     case 'batch': return batchOrders(s, w, cmd.n, cmd.cmds);
@@ -359,17 +370,49 @@ function batchOrders(s: GameState, w: World, nid: number, cmds: Command[]): CmdR
   return first ? { ok: true, done, err: first.err, ...(first.msg ? { msg: first.msg } : {}) } : { ok: true, done };
 }
 
-function sanitizeTerms(s: GameState, w: World, war: any, from: number, to: number, terms: PeaceTerm[], concede: boolean): PeaceTerm[] {
+/**
+ * The terms of an offer, checked against the war: each war goal allows its own terms (systems/war.ts GOAL_TERMS), towns
+ * must belong to the losing side (and fit the goal: own land in a reconquest, land of our faith in a holy war). Terms
+ * the goal does not allow are dropped and named in `refused`. The player and the AI send their offers through here.
+ */
+export function sanitizeTerms(s: GameState, w: World, war: War, from: number, to: number, terms: PeaceTerm[], concede: boolean): { terms: PeaceTerm[]; refused: string | null } {
   const out: PeaceTerm[] = [];
+  let refused: string | null = null;
   const loserSide: number[] = concede ? (war.att.includes(from) ? war.att : war.def) : (war.att.includes(to) ? war.att : war.def);
-  for (const t of terms.slice(0, 8)) {
+  const winner = concede ? to : from, loser = concede ? from : to;
+  const attWins = war.att.includes(winner);
+  const allowed = allowedTerms(war, attWins);
+  for (const t of (Array.isArray(terms) ? terms : []).slice(0, 8)) {
+    if (!t || !allowed.has(t.type)) { refused = 'that term does not fit the war goal'; continue; }
     if (t.type === 'cede') {
-      const locs = (t.locs || []).filter((l) => l >= 0 && l < w.L && loserSide.includes(s.loc.owner[l]) && s.nations[s.loc.owner[l]].capital !== l || (t.locs!.length === 1 && loserSide.includes(s.loc.owner[l])));
+      const recv = concede ? to : (t.to ?? from);
+      const all = t.locs || [];
+      if (all.some((l) => l >= 0 && l < w.L && !cedeFits(s, w, war, attWins, recv, l))) refused = 'that town does not fit the war goal';
+      const locs = all.filter((l) => l >= 0 && l < w.L && loserSide.includes(s.loc.owner[l]) && (s.nations[s.loc.owner[l]].capital !== l || all.length === 1) && cedeFits(s, w, war, attWins, recv, l));
       if (locs.length) out.push({ type: 'cede', locs: [...new Set(locs)], to: concede ? to : (t.to ?? from) });
+    } else if (t.type === 'convert' || t.type === 'release') {
+      const f = s.nations[winner].faith;
+      const locs = (t.locs || []).filter((l) => l >= 0 && l < w.L && loserSide.includes(s.loc.owner[l]) && (t.type !== 'convert' || s.loc.faith[l] !== f));
+      if (locs.length) out.push({ type: t.type, locs: [...new Set(locs)] });
     } else if (t.type === 'gold') out.push({ type: 'gold', amount: clamp(t.amount || 0, 0, 1e6) });
-    else out.push({ ...t });
+    else if (t.type === 'throne') {
+      const L = s.nations[loser];
+      if (L.gov.includes('republic') || L.gov === 'theocracy' || L.gov === 'military_order' || loser !== (war.att.includes(loser) ? war.attLead : war.defLead)) { refused = 'they have no throne to give'; continue; }
+      out.push({ type: 'throne', mode: t.mode === 'claimant' ? 'claimant' : 'union' });
+    } else if (t.type === 'faith') {
+      if (s.nations[loser].faith === s.nations[winner].faith) { refused = 'they share our faith'; continue; }
+      if (!faithTermFits(s, winner, loser)) { refused = 'their realm is too great to change its faith'; continue; }
+      out.push({ type: 'faith' });
+    } else if (t.type === 'independence') {
+      // only the subject that declared the war for its freedom is set free, and only from the overlord that lost (the
+      // defeated leader, or the overlord the war was declared on): a nation named by the sender is ignored (it could
+      // otherwise free any third realm's subjects)
+      const sub = s.nations[war.attLead];
+      if (!sub || sub.overlord < 0 || (sub.overlord !== loser && sub.overlord !== war.goal.target)) { refused = 'the freed realm is not their subject'; continue; }
+      out.push({ type: 'independence', nation: war.attLead });
+    } else out.push({ type: t.type, ...(t.nation !== undefined ? { nation: t.nation } : {}) });
   }
-  return out;
+  return { terms: out, refused };
 }
 function acceptsConcession(s: GameState, war: any, from: number, to: number, terms: PeaceTerm[]) {
   const score = computeScore(s, war) * (war.att.includes(to) ? 1 : -1); // from the receiver's perspective

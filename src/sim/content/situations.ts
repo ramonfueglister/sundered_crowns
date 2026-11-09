@@ -55,7 +55,7 @@ function aiWar(s: GameState, w: World, a: number, b: number, goal: 'conquest' | 
   if (!A || !Bn || a === b || human(s, a) || A.overlord >= 0) return -1;
   if (Bn.overlord === a || s.nations[topOver(s, b)]?.id === a) return -1; // never against our own subject
   if (atWar(s, a, b) || (hasTreaty(s, a, b, 'truce') && !(breakTruce && truceAge(s, a, b) >= 2))) return -1;
-  const err = declareWar(s, w, a, b, goal, locs);
+  const err = declareWar(s, w, a, b, goal, locs, { situation: true }); // the situation is the cause
   if (err) return -1;
   return s.wars[s.wars.length - 1].id;
 }

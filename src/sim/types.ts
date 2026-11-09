@@ -88,7 +88,7 @@ export interface PlannedAction { day: number; cmd: Command }
 export interface Modifier { id: string; until: number; label: I18n; effects: Record<string, number> }
 export interface Loan { amount: number; rate: number; due: number; lender: string }
 
-export interface Regiment { type: number; men: number }  // ships: men = number of ships
+export interface Regiment { type: number; men: number; max?: number }  // ships: men = number of ships; max: full strength the regiment refills to (systems/military.ts reinforceMonth)
 export interface Army {
   id: number; owner: number; loc: number; name: I18n | string; // bilingual; older saves hold a plain English string
   regs: Regiment[];
@@ -106,6 +106,7 @@ export interface Army {
   orderDay?: number;  // day of the last AI march order (keeps a long march from being re-ordered)
   hostile?: boolean;  // natives / brigands attacking anyone
   mission?: string;   // AI hint
+  prevLoc?: number;   // where the army came from on its last step (a river between the two makes an attack a river crossing)
 }
 
 export interface Battle {
@@ -114,18 +115,40 @@ export interface Battle {
   attNation: number; defNation: number;
   lossA: number; lossD: number; startA: number; startD: number;
   log: string[]; naval: boolean; river: boolean;
+  rep?: BattleRep;    // the report being written while the battle lasts (systems/military.ts)
+}
+/** One side of a battle report: commanders, troops by type at the start and end, the strength and its parts. */
+export interface BattleSideRep {
+  nation: number; rebels: boolean; armies: number[];
+  generals: { name: string; skill: number }[];
+  troops: { type: number; start: number; end: number }[];
+  morale0: number; morale: number;          // average morale at the start and at the end
+  parts: [string, number][];                // what made the side strong or weak on the first day (factors, product)
+  mods: [string, number][];                 // unit-mix effects (cavalry in the open, pikes against horse, guns against walls)
+  broke?: boolean; routed?: boolean;        // its morale broke (it retreated), and it was routed (extra losses in pursuit)
+}
+export interface BattleRep {
+  id: number; loc: number; day0: number; day1: number; naval: boolean; river: boolean; terrain: string; snow: number; fort: number;
+  att: BattleSideRep; def: BattleSideRep;
+  days: { day: number; phase: number; lossA: number; lossD: number; moraleA: number; moraleD: number }[];
+  lossA: number; lossD: number; pursuit: number; winner: 'att' | 'def' | ''; reasons: string[]; wars: number[];
 }
 
-export interface Siege { loc: number; nation: number; progress: number; days: number; garrison: number; breach: number; blockade: boolean; log: string[] }
+export interface Siege { loc: number; nation: number; progress: number; days: number; garrison: number; breach: number; blockade: boolean; log: string[]; garrison0?: number; lastAssault?: number } // log: 'day:kind' entries (older saves: 'kind')
 
-export interface WarGoal { type: 'conquest' | 'throne' | 'faith' | 'independence' | 'coalition' | 'rebels' | 'trade' | 'reconquest' | 'subjugate' | 'civil_war'; target: number; locs: number[] }
+export interface WarGoal { type: 'conquest' | 'throne' | 'faith' | 'independence' | 'coalition' | 'rebels' | 'trade' | 'reconquest' | 'subjugate' | 'civil_war' | 'humiliate'; target: number; locs: number[]; cb?: string }
 export interface War {
   id: number; name: I18n; att: number[]; def: number[]; attLead: number; defLead: number;
   goal: WarGoal; start: number; score: number; // + favours attackers, -100..100
   battleScore: number; tickScore: number; battles: number; lossesA: number; lossesD: number;
   offers: PeaceOffer[];
+  blockScore?: number; // war score from blockaded ports (systems/war.ts blockadeMonth)
 }
-export interface PeaceTerm { type: 'cede' | 'gold' | 'release' | 'vassal' | 'break_alliance' | 'faith' | 'humiliate' | 'white_peace' | 'independence' | 'concession'; locs?: number[]; amount?: number; nation?: number; from?: number; to?: number }
+export interface PeaceTerm {
+  type: 'cede' | 'gold' | 'release' | 'vassal' | 'break_alliance' | 'faith' | 'humiliate' | 'white_peace' | 'independence' | 'concession'
+    | 'convert' | 'throne' | 'trade_rights' | 'end_embargo' | 'tariff_cut' | 'expel_merchants' | 'reparations' | 'end_rivalry';
+  locs?: number[]; amount?: number; nation?: number; from?: number; to?: number; mode?: 'union' | 'claimant';
+}
 export interface PeaceOffer { from: number; to: number; terms: PeaceTerm[]; day: number; expires: number; concede?: boolean }
 
 export interface Relation {
@@ -154,7 +177,7 @@ export interface TradeFlow { from: number; to: number; good: number; qty: number
 
 export interface PendingEvent { id: number; event: string; nation: number; day: number; expires: number; ctx: Record<string, number> }
 export interface ChronEntry { day: number; text: I18n; nation: number; kind: string; loc?: number }
-export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number }
+export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number }
 
 export interface Construction { loc: number; building: number; left: number; nation: number; cost: number }
 export interface Recruit { loc: number; nation: number; type: number; men: number; left: number; army: number }
@@ -227,6 +250,8 @@ export interface GameState {
   timelapse: { day: number; owners: Uint16Array }[]; // yearly snapshots of location owners for timelapse
   /** landmarks: stage reached, building work (finish day or 0) and the realm that last held each */
   landmarks?: { id: string; loc: number; tier: number; work: number; holder: number }[];
+  /** reports of the last battles (every battle a human realm fought in, and the great ones), newest last */
+  battleReports?: BattleRep[];
 }
 
 export type Command =
@@ -264,6 +289,8 @@ export type Command =
   | { t: 'workshop'; n: number; loc: number; slot: number; recipe: number }
   | { t: 'method'; n: number; loc: number; method: number }
   | { t: 'embark'; n: number; army: number; fleet: number }
+  | { t: 'assault'; n: number; army: number }                 // storm the walls of the place the army besieges (systems/military.ts assault)
+  | { t: 'scorch'; n: number; loc: number }                   // scorched earth in our own land before an invader (systems/military.ts scorchEarth)
   | { t: 'goal'; n: number; id: string }                       // claim a goal whose conditions hold now
   | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number; nth?: number } // stop a construction or a levy (item: building or unit; nth: which of the realm's orders for that place and item, in queue order from 0; without it the newest)
   | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)

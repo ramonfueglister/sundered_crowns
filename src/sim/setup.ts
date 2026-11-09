@@ -45,7 +45,7 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
   const startYear = setup.year;
   const s: GameState = {
     v: 1, seed, startYear, day: 0, rng: seedRng(seed), nextId: 1,
-    loc: newLocState(L), nations: [], chars: {}, armies: [], battles: [], sieges: [], wars: [], rel: {}, treaties: [], envoys: [],
+    loc: newLocState(L), nations: [], chars: {}, armies: [], battles: [], battleReports: [], sieges: [], wars: [], rel: {}, treaties: [], envoys: [],
     markets: [], flows: [], constructions: [], recruits: [], agents: [], colonies: [], explorers: [], spies: [], explored: {},
     empire: { emperor: -1, electors: [], authority: 30, reforms: [], diet: null, lastElection: 0, members: [] },
     papacy: { holder: -1, seat: -1, antipope: -1, curiaFavour: {}, schism: false, reformPressure: 0, corruption: 30 },
