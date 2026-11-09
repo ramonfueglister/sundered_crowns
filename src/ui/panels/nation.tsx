@@ -4,11 +4,12 @@ import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
-import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
+import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName, LocName, namesVersion } from './common';
+import { errText } from '../i18n';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
 const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'excommunicate'];
-export const GOALS: WarGoal['type'][] = ['conquest', 'throne', 'faith', 'trade', 'subjugate', 'reconquest', 'independence'];
+export const GOALS: WarGoal['type'][] = ['conquest', 'throne', 'faith', 'trade', 'subjugate', 'reconquest', 'independence', 'humiliate'];
 const SPY = ['fabricate', 'slander', 'support_rebels', 'steal_tech'];
 
 export const govName = (g: string) => { const v = t(`gov_${g}`); return v === `gov_${g}` ? g.replace(/_/g, ' ') : v; };
@@ -138,24 +139,52 @@ function CbTip({ d }: { d: any }) {
 
 function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
   const [open, setOpen] = useState(false);
-  const [goal, setGoal] = useState<WarGoal['type']>('conquest');
+  const [pick, setGoal] = useState<WarGoal['type'] | null>(null);
+  // our justifications and, per war goal, its price and the towns it is fought for (src/game/warview.ts declareView)
+  const [dv] = useQuery<any>(open ? { q: 'declare', target: d.id } : null, [open, d.id], 1500);
   const cbs = cbList(d); const fabricating = !!d.rel?.fabricating;
-  const truce = d.rel.treaties.includes('truce'), allied = d.rel.treaties.includes('alliance');
-  const me = nations.value[playerId.value];
-  // a war of reconquest needs our own land in their hands, a holy war another faith (the simulation refuses the rest)
-  const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : g === 'reconquest' ? cbs.includes('reconquest') : g === 'faith' ? !d.rel?.sameFaith : true));
+  const goals: any[] = dv?.goals ?? [];
+  const first = goals.find((g) => !g.refusal && !g.unjust) ?? goals.find((g) => !g.refusal);
+  const goal = pick ?? first?.goal ?? 'conquest';
+  const g = goals.find((x) => x.goal === goal);
+  void namesVersion.value;
   return <Section title={t('declare_war')} id="nat-war" open={false}>
     {!open ? <div class="act-row"><Tip content={() => <CbTip d={d} />}><span class="muted">{cbs.length ? <>{t('casus_belli')}: <b>{cbs.map((c) => t(`cb_${c}`)).join(', ')}</b></> : t('no_cb_short')}</span></Tip><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
-      : <div class="war-form">
+      : !dv ? <div class="muted">{t('loading')}…</div> : <div class="war-form">
+        <label class="k">{t('xw_our_cbs')}</label>
+        {dv.cbs.length ? <div class="xw-cbs">{dv.cbs.map((c: any) => <Tip content={<div><TipHead name={t(`cb_${c.kind}`)} hint={t(`xw_cbhint_${c.kind}`)} /><div class="bd-title">{t('xw_cb_allows')}</div>{c.goals.map((x: string) => <div>✔ {t(`goal_${x}`)}</div>)}</div>}>
+          <div class="kv"><span class="k">✔ {t(`cb_${c.kind}`)}</span><span class="v muted small">{c.goals.map((x: string) => t(`goal_${x}`)).join(', ')}</span></div></Tip>)}</div>
+          : <div class="muted small">{t('no_cb_short')}{fabricating && <> · {t('cb_fabricating')}</>}</div>}
         <label class="k">{t('war_goal')}</label>
-        <div class="goal-grid">{goals.map((g) => <label class={`goal ${goal === g ? 'on' : ''}`}><input type="radio" name="goal" checked={goal === g} onChange={() => setGoal(g)} />{t(`goal_${g}`)}</label>)}</div>
+        <div class="goal-grid">{goals.map((x) => <Tip tag="div" content={() => <GoalTip g={x} />}>
+          <label class={`goal ${goal === x.goal ? 'on' : ''} ${x.refusal ? 'muted' : ''}`}><input type="radio" name="goal" checked={goal === x.goal} disabled={!!x.refusal} onChange={() => setGoal(x.goal)} />
+            {t(`goal_${x.goal}`)} {x.refusal ? <small class="neg">✘</small> : x.unjust ? <small class="neg">⚠</small> : <small class="pos">✔</small>}</label></Tip>)}</div>
         <div class="muted small">{t(`goalhint_${goal}`)}</div>
-        {!cbs.length && goal !== 'independence' && <div class="warn-box"><b>⚠ {t('no_cb')}</b><div>{t('no_cb_hint')}</div>{fabricating && <div class="muted">{t('cb_fabricating')}</div>}</div>}
-        {truce && <div class="warn-box"><b>⚠ {t('truce_break')}</b><div>{t('truce_break_hint')}</div></div>}
-        {allied && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
-        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" onClick={() => act({ t: 'declare', target: d.id, goal }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+        {g && <>
+          {g.cb && !g.unjust && <div class="pos small">✔ {t('xw_justified_by')}: {t(`cb_${g.cb}`)}</div>}
+          {g.locs.length > 0 && <div class="small xw-goal-locs"><span class="k">{t('xw_fought_for')}:</span> {g.locs.slice(0, 8).map((l: number, k: number) => <>{k > 0 && ', '}<LocName id={l} /></>)}{g.locs.length > 8 && <span class="muted"> +{g.locs.length - 8}</span>}</div>}
+          <div class="small"><span class="k">{t('xw_terms_allowed')}:</span> <span class="muted">{g.terms.map((x: string) => t(`term_${x}`)).join(', ')}</span></div>
+          {g.rows.length > 0 ? <div class="warn-box"><Tip content={() => <div><TipHead name={t('xw_decl_cost')} hint={t('xw_decl_cost_hint')} /><CostRows rows={g.rows} />{g.opinionYears > 0 && <div class="muted small">{t('xw_opinion_years').replace('{n}', String(g.opinionYears))}</div>}</div>}>
+            <div><b>⚠ {g.unjust ? t('no_cb') : t('xw_decl_cost')}</b>{g.unjust && <div>{t('no_cb_hint')}</div>}<CostRows rows={g.rows} /></div></Tip></div>
+            : <div class="pos small">{t('xw_no_decl_cost')}</div>}
+          {g.truce && <div class="warn-box"><b>⚠ {t('truce_break')}</b><div>{t('truce_break_hint')}</div></div>}
+          {g.ally && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
+          {g.refusal && <div class="neg small">{errText(g.refusal)}</div>}
+        </>}
+        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" disabled={g?.refusal ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
       </div>}
   </Section>;
+}
+/** The price of a declaration, every row a loss (Dread grows, the rest falls). */
+function CostRows({ rows }: { rows: [string, number][] }) {
+  return <div class="breakdown">{rows.map(([k, v]) => <div class="bd-row"><span>{t(k)}</span><span class="neg">{signed(v, 0)}</span></div>)}</div>;
+}
+/** One war goal in the declaration: the justification that covers it or what declaring it without one costs. */
+function GoalTip({ g }: { g: any }) {
+  return <div><TipHead name={t(`goal_${g.goal}`)} hint={t(`goalhint_${g.goal}`)} />
+    {g.refusal ? <div class="neg">{errText(g.refusal)}</div> : g.cb && !g.unjust ? <div class="pos">✔ {t('xw_justified_by')}: {t(`cb_${g.cb}`)}</div> : null}
+    {!g.refusal && g.rows.length > 0 && <><div class="bd-title">{t('xw_decl_cost')}</div><CostRows rows={g.rows} /></>}
+    <div class="muted small">{t('xw_terms_allowed')}: {g.terms.map((x: string) => t(`term_${x}`)).join(', ')}</div></div>;
 }
 
 function Espionage({ d }: { d: any }) {

@@ -22,7 +22,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 14 | The game starts on 1 January 1356, a few years after the Black Death, in the middle of the war between England… | ✓ | Start 1.1.1356 und 1.1.1492 (296 Staaten, 6 Kriege) |
 | 15 | A geographically accurate map of Europe, North Africa, the Near East and the western steppe at two levels: 10,… | ◐ | 15.220 Orte, 1.518 Provinzen (Ziel ~1.000), 1.118 Seezonen |
 | 16 | Terrain types (plains, forest, hills, mountains, marsh, steppe, desert, jungle, coast) that affect movement, c… | ✓ | 11 Terrains wirken auf Bewegung, Kampf, Versorgung, Ertrag |
-| 17 | Real strategic geography: the Alps and Pyrenees with their passes, the Rhine, Danube and Vistula as river barr… | ◐ | Pässe, Meerengen, Flüsse im Graph; Feinschliff offen |
+| 17 | Real strategic geography: the Alps and Pyrenees with their passes, the Rhine, Danube and Vistula as river barr… | ◐ | Pässe, Meerengen, Flüsse im Graph; Flüsse wirken als Barriere: wer über einen Fluss angreift, schlägt 20 % schwächer zu (im Schlachtbericht gezeigt, War-Pass). Feinschliff der Pässe offen |
 | 18 | Climate and seasons by real latitude: harsh winters in the north and east reduce supply and slow movement, Atl… | ◐ | Monats-Klima, Schnee, Stürme in der Sim; Darstellung offen |
 | 19 | 300+ historical states as of 1356, including the many counties, bishoprics and free cities of the Empire, with… | ✓ | 342 Staaten |
 | 20 | Each state's starting situation lives in data files and is historically researched, with sources listed in eac… | ✓ | data/history/1356 mit Quellen |
@@ -62,20 +62,20 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 54 | Diplomatic actions: alliance, royal marriage, guarantee of independence, military access, trade agreement, vas… | ✓ | Sim fertig, UI offen |
 | 55 | A limited number of envoys who travel to the target and take time, so diplomacy has to be prioritised. | ✓ | Sim fertig, UI offen |
 | 56 | Every AI answer comes with a breakdown of reasons (for example "+25 shared rival", "−40 you are too far away",… | ✓ | Sim fertig, UI offen |
-| 57 | War justifications: declaring war without one carries heavy penalties. Fabricating one takes time and can be d… | ✓ | Sim fertig, UI offen |
-| 58 | War score from battles, occupations and blockades. Peace treaties with selectable terms (provinces, gold, rele… | ✓ | Kriegspunkte + Friedenspanel mit Bedingungen; geforderte Orte nach Provinz geordnet, ganze Provinz per Haken, ohne Obergrenze |
+| 57 | War justifications: declaring war without one carries heavy penalties. Fabricating one takes time and can be d… | ✓ | Kriegsgründe (Anspruch, Sammlung, gefälscht, Rückeroberung zu Lebzeiten, Glaubenskrieg mit Bedingungen, Erbfolge, Handelskonflikt, Bann, Unabhängigkeit, Rivalität nur für Demütigung); Krieg ohne Grund kostet Eintracht, Mandat, Ansehen, Schrecken und Meinung aller, Waffenstillstandsbruch mehr. Erklärungsdialog zeigt Gründe, erlaubte Ziele, Preis mit Aufschlüsselung und umkämpfte Orte; Spieler und KI erklären über denselben Weg (War-Pass) |
+| 58 | War score from battles, occupations and blockades. Peace treaties with selectable terms (provinces, gold, rele… | ✓ | Kriegspunkte aus Schlachten, Besetzung, Hauptstadt, Kriegsziel und Blockaden; jedes Kriegsziel hat eigene Friedensbedingungen mit Kriegspunktpreis (Land, Bekehrung, Thron als Personalunion oder Prinz, Handelsprivilegien, Embargo, Zollsenkung, Kaufleute, Unabhängigkeit, Demütigung, Kriegsentschädigung, Rivalität beenden); Friedenspanel bietet nur die passenden an, die KI fordert und prüft nach denselben Regeln (War-Pass) |
 | 59 | Expansion backlash: fast conquest raises fear in neighbouring nations; when fear is high enough, they form a c… | ✓ | Sim fertig, UI offen |
 | 60 | Subjects: vassals, junior partners in personal unions, tributaries. They can be integrated over time, and they… | ✓ | Sim fertig, UI offen |
-| 61 | Rivalries that give bonuses for competing with the chosen rival and penalties for allying with them. | ✓ | Sim fertig, UI offen |
+| 61 | Rivalries that give bonuses for competing with the chosen rival and penalties for allying with them. | ✓ | Rivalität rechtfertigt nur einen Demütigungskrieg, nie Eroberung; Friedensbedingung „Rivalität beenden“ (War-Pass); Wirkungen der Rivalität in der Sim |
 | 62 | Espionage: fabricate justifications, damage a rival's reputation, support rebels in their lands, steal technol… | ✓ | Sim fertig, UI offen |
 | 63 | Historical land unit types that change over the centuries (levies, men-at-arms, knights, crossbowmen and longb… | ✓ | Sim fertig, UI offen |
 | 64 | Recruitment costs gold and manpower and takes time. Mercenary companies can be hired instantly at a high price… | ✓ | Rekrutierung, Söldner, Panels |
-| 65 | Movement on the province graph with A* pathfinding and realistic travel times depending on terrain, roads and … | ✓ | A* mit Gelände, Straßen, Seetransport |
-| 66 | Supply and attrition: armies larger than a province can feed lose soldiers, winter makes it worse; scorched ea… | ✓ | Sim fertig, UI offen |
-| 67 | Battles resolved over several in-game days in phases (ranged, melee, pursuit), influenced by terrain, river cr… | ✓ | Sim fertig, UI offen |
+| 65 | Movement on the province graph with A* pathfinding and realistic travel times depending on terrain, roads and … | ✓ | A* mit Gelände, Straßen, Seetransport; der Herkunftsort eines Heeres zählt für Flussübergänge (War-Pass) |
+| 66 | Supply and attrition: armies larger than a province can feed lose soldiers, winter makes it worse; scorched ea… | ✓ | Versorgung und Verschleiß mit Aufschlüsselung im Heeresfenster (Gelände, Schnee, Verwüstung, verbrannte Erde, eigenes Land, Höfe, Straßen, Gesetze), Kartenmodus „Versorgung“; verbrannte Erde als Befehl, die KI nutzt sie gegen übermächtige Eindringlinge; Regimenter füllen sich langsam aus Mannstärke und Gold auf (War-Pass) |
+| 67 | Battles resolved over several in-game days in phases (ranged, melee, pursuit), influenced by terrain, river cr… | ✓ | Schlachten über mehrere Tage in Phasen; Moral bricht bei 15 %, Flucht mit Verlusten in der Verfolgung; Truppenmischung (Reiterei im offenen Feld, Piken, Geschütze gegen Mauern), Gelände, Fluss, Winter, Feldherr; Schlachtbericht für jede Schlacht des Spielers und Liste großer Schlachten je Krieg (War-Pass) |
 | 68 | Commanders with skill values and traits, recruited from the ruler, heirs or nobility; they can be killed in ba… | ✓ | Sim fertig, UI offen |
-| 69 | Forts with levels and garrisons. Sieges progress over time with random events (breach, disease, supplies run o… | ✓ | Sim fertig, UI offen |
-| 70 | Naval warfare: sea battles, blockades that speed up sieges and cut trade, transporting armies across water. | ✓ | Seeschlachten, Blockaden, Transport |
+| 69 | Forts with levels and garrisons. Sieges progress over time with random events (breach, disease, supplies run o… | ✓ | Festungen mit Besatzung; Belagerungsfenster mit Fortschritt, Bresche, Blockade, Vorräten, Monatswurf, erwarteter Dauer und Verlauf; Sturm mit Aussicht und erwarteten Verlusten, auch durch die KI (War-Pass) |
+| 70 | Naval warfare: sea battles, blockades that speed up sieges and cut trade, transporting armies across water. | ✓ | Seeschlachten, Transport; Flotten vor feindlichen Häfen sperren Märkte (Handel bricht ein) und bringen Kriegspunkte, im Ortsfenster sichtbar (War-Pass) |
 | 71 | War exhaustion that grows over time and with losses, pushing both sides towards peace. | ✓ | Sim fertig, UI offen |
 | 72 | Rebels: high unrest spawns rebel armies with demands. If they win, they force concessions, change the governme… | ✓ | Sim fertig, UI offen |
 | 73 | Civil wars and independence wars of subjects. | ✓ | Sim fertig, UI offen |
@@ -95,7 +95,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 87 | Four historical eras (for example late Middle Ages, Renaissance and discoveries, Reformation and religious war… | ✓ | 4 Zeitalter |
 | 88 | A doctrine system: at least 10 groups of national doctrines with 7 picks each, chosen as the nation progresses… | ✓ | 10 Doktringruppen mit je 7 Wahlen, Einsicht als Währung |
 | 89 | Historical innovations (for example printing, double-entry bookkeeping, the bastion fortress, standing armies;… | ✓ | 31 historische Innovationen mit Ursprung, Jahr und Ausbreitung über Nachbarn |
-| 90 | Military technology changes unit stats and their look on the map and in the battle panel. | ◐ | Einheiten nach Ära, Optik offen |
+| 90 | Military technology changes unit stats and their look on the map and in the battle panel. | ◐ | Einheiten nach Ära; der Schlachtbericht zeigt die Truppentypen jeder Seite zu Beginn und Ende; eigene Optik je Ära auf der Karte offen |
 | 91 | Explorers and expeditions that reveal unexplored territory along the African coast, across the Atlantic and to… | ✓ | Sim + Panels |
 | 92 | Colonies: send settlers, the colony grows over years, the native peoples of the Americas and Africa are repres… | ✓ | Sim + Panels |
 | 93 | Large colonial regions become semi-independent colonial subjects that can declare independence later. | ✓ | Kolonialreiche ab 10 Orten pro Überseeregion (nur europäische Kronen), Tribut, wachsender Freiheitsdrang, Unabhängigkeitskrieg |

@@ -7,9 +7,12 @@ import { EventArt } from './art';
 import { useOptionFx, OptionEffects, OptionEffectsHead } from './eventfx';
 import { sfx } from '../audio';
 
-const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency']);
-const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform']);
-const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉' };
+const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency',
+  'battle_lost', 'assault_failed']); // war pass
+const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform',
+  'battle_won', 'siege_won']); // war pass
+const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉',
+  battle_won: '⚔', battle_lost: '⚔', siege_won: '♜', assault_failed: '♜', scorched: '♨' }; // war pass
 const LIFE = 12000;
 
 export function Notices() {
@@ -31,14 +34,15 @@ export function Notices() {
   const shown = mine.filter((n) => !gone.has(n.id) && (hover || now - (born.current.get(n.id) ?? now) < LIFE)).slice(-6).reverse();
   if (!shown.length) return null;
   const click = (n: any) => {
-    if (n.war !== undefined) openPanel('peace', { war: n.war });
+    if (n.report !== undefined) openPanel('battle', { id: n.report });
+    else if (n.war !== undefined) openPanel('peace', { war: n.war });
     else if (n.army !== undefined) selectArmy(n.army);
     else if (n.loc !== undefined) selectLoc(n.loc);
     setGone(new Set([...gone, n.id]));
   };
   return <div class="notices" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onPointerDown={(e) => e.stopPropagation()}>
     {shown.map((n) => { const age = now - (born.current.get(n.id) ?? now); const fading = !hover && age > LIFE - 2500;
-      return <div class={`notice ${BAD.has(n.kind) ? 'bad' : GOOD.has(n.kind) ? 'good' : ''} ${fading ? 'fading' : ''} ${n.loc !== undefined || n.war !== undefined || n.army !== undefined ? 'click' : ''}`} onClick={() => click(n)}>
+      return <div class={`notice ${BAD.has(n.kind) ? 'bad' : GOOD.has(n.kind) ? 'good' : ''} ${fading ? 'fading' : ''} ${n.loc !== undefined || n.war !== undefined || n.army !== undefined || n.report !== undefined ? 'click' : ''}`} onClick={() => click(n)}>
         <span class="nt-ic">{ICON[n.kind] ?? '•'}</span>
         <span class="nt-t">{L(n.text)}</span>
         <span class="nt-d">{v ? fmtDateShort(n.day, v.startYear) : ''}</span>

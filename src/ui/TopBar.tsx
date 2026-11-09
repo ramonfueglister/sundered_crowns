@@ -19,6 +19,8 @@ const KEY_NAMES: Record<string, [string, string]> = {
   refunds: ['Refunds of cancelled orders', 'Erstattungen abgebrochener Aufträge'],
   // ---- truth pass: tax instruments, privateering, production methods
   land_tax: ['Land tax', 'Grundsteuer'], hearth_tax: ['Hearth tax', 'Herdsteuer'], excise: ['Excise', 'Akzise'], privateers: ['Privateering', 'Kaperei'], methods: ['Reorganised workshops', 'Umgestellte Werkstätten'],
+  // ---- war pass: obligations of a peace and the refill of regiments
+  reparations: ['War reparations', 'Kriegsentschädigung'], trade_privileges: ['Trade privileges', 'Handelsprivilegien'], reinforcements: ['Reinforcements', 'Verstärkungen'],
 };
 export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 

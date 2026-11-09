@@ -8,6 +8,7 @@ import { sfx } from '../audio';
 import { EnvoysTip, PrestigeTip, DreadTip, ManpowerTip, WarExhaustionTip, ResearchTip, DoctrineTip, AgentsTip, ColoniesTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
 import { errText } from '../i18n';
+import { RecentBattles } from './war';
 
 // ---------------------------------------------------------------- wars (shared)
 /** Tooltip body: war score and its parts from the player's side. */
@@ -16,9 +17,9 @@ export function WarScoreTip({ w, pid }: { w: any; pid: number }) {
   const total = w.score * sign;
   return <div>
     {p ? <Breakdown title={`${t('war_score')} · ${t('ws_us')}`} digits={1} total={total}
-      rows={[[t('ws_battles'), p.battles * sign], [t('ws_occupation'), p.occupation * sign], [t('ws_capital'), p.capital * sign], [t('ws_ticking'), p.ticking * sign]]} />
+      rows={[[t('ws_battles'), p.battles * sign], [t('ws_occupation'), p.occupation * sign], [t('ws_capital'), p.capital * sign], [t('ws_ticking'), p.ticking * sign], [t('xw_ws_blockade'), (p.blockade ?? 0) * sign]]} />
       : <div><b>{t('war_score')}</b> {signed(total)}</div>}
-    {p && Math.abs(p.battles + p.occupation + p.capital + p.ticking) > 100 && <div class="muted">{t('ws_capped')}</div>}
+    {p && Math.abs(p.battles + p.occupation + p.capital + p.ticking + (p.blockade ?? 0)) > 100 && <div class="muted">{t('ws_capped')}</div>}
     <div class="muted">{t('war_score_hint')}</div>
   </div>;
 }
@@ -126,6 +127,7 @@ export function MilitaryTab() {
       </Section>
     </div>
     <Section title={t('wars')} id="mil-wars">{wars.length ? wars.map((w) => <WarCard w={w} />) : <div class="muted small">{t('at_peace')}</div>}</Section>
+    <RecentBattles />
   </div>;
 }
 

@@ -6,6 +6,7 @@ import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, 
 import { sfx } from '../audio';
 import { WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
+import { ArmyDetail } from './war';
 
 export function ArmyPanel() {
   const ids = selectedArmies.value; const v = view.value; const pid = playerId.value;
@@ -45,6 +46,7 @@ export function ArmyPanel() {
         <span class="astate muted">{a.battle ? <span class="neg">{t('in_battle')}</span> : a.siege >= 0 ? <>{t('besieging')} <LocName id={a.siege} /></> : dest >= 0 ? <>→ <LocName id={dest} /></> : a.embarked ? t('embarked') : t('idle')}</span>
       </div>;
     })}</div>
+    {armies.length === 1 && <ArmyDetail id={first.id} />}
     <div class="army-meta">
       <Tip content={<div><TipHead name={t('general')} hint={t('auto_general_hint')} /></div>}><span>{t('general')}: <b>{armies.map((a) => a.general).filter(Boolean).join(', ') || t('none')}</b></span></Tip>
       {path && <span class="path-prev">{path.days >= 0 ? <Tip content={<div><TipHead name={locName(path.to)} value={daysText(path.days)} hint={t('x_march_hint')} /></div>}><span>→ {locName(path.to)}: <b>{daysText(path.days)}</b></span></Tip> : <span class="neg">{t('no_route')} {locName(path.to)}</span>}</span>}

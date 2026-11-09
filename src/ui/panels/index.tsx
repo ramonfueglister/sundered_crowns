@@ -11,6 +11,7 @@ import { DiplomacyTab, MilitaryTab, KnowledgeTab, SocietyTab, DecisionsTab } fro
 import { LedgerTab, ChronicleTab } from './records';
 import { PeaceTab } from './peace';
 import { WorksTab } from './works';
+import { BattleTab } from './war';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 
@@ -29,8 +30,9 @@ export async function quickSave() { await saveNow(); }
 const TABS: Record<string, () => any> = {
   economy: EconomyTab, government: GovernmentTab, diplomacy: DiplomacyTab, military: MilitaryTab, knowledge: KnowledgeTab,
   society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
+  battle: BattleTab,
 };
-const TITLES: Record<string, string> = { peace: 'offer_peace' };
+const TITLES: Record<string, string> = { peace: 'offer_peace', battle: 'xw_battle_report' };
 
 /** The big left panel; switches on the `panel` signal. */
 export function MainPanel() {

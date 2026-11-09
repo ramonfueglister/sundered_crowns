@@ -30,6 +30,7 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
+import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
 
@@ -172,6 +173,7 @@ export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: numb
         { color: '#d23228', label: { en: 'At war', de: 'Im Krieg' } }, { color: '#e68c28', label: { en: 'Rivals', de: 'Rivalen' } }, { color: '#969696', label: { en: 'Truce', de: 'Waffenstillstand' } }] };
       break;
     }
+    case 'army_supply': legend = armySupplyColors(s, w, focus, put, ramp); break;
     case 'terrain': case 'political': case 'explored': default: break;
   }
   return { rgba: out, legend };
@@ -205,6 +207,11 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
     case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
     case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;
+    case 'declare': return player >= 0 ? declareView(s, w, player, q.target) : null;
+    case 'army': return player >= 0 ? armyView(s, w, player, q.army) : null;
+    case 'battle': return battleView(s, w, q.id);
+    case 'battles': return battleList(s, q.war, player);
+    case 'war': return warView(s, w, player, q.war);
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
@@ -277,7 +284,7 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     method: lc.method[l], migration: lc.migr[l], employed: lc.employed ? lc.employed[l * C + CL.artisans] : 0,
     methods: n && player === o ? METHODS.map((m, k) => ({ id: k, key: m.id, name: m.name, mult: m.mult, input: m.input, jobs: m.jobs, cost: methodCost(s, n, k), block: methodBlock(s, w, n, l, k) })) : [],
     canColonize: o < 0 && player >= 0 ? canColonize(s, w, s.nations[player], l) : 'owned', colony: s.colonies.find((c) => c.loc === l) ?? null,
-    agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null,
+    agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null, war: locWar(s, w, l, player),
     armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet, name: a.name, mercenary: !!a.mercenary, rebels: !!a.rebels })),
     mercenaries: n && player === o ? MERC_SIZES.map((men) => ({ men, ...mercenaryCostParts(s, n, men) })) : [],
     units: n && player === o ? availableUnits(s, n, false).concat(w.coastal[l] ? availableUnits(s, n, true) : []).map((u) => ({ id: u, name: UNITS[u].name, kind: UNITS[u].kind, cost1000: unitCost(s, n, u, UNITS[u].kind === 'ship' ? 1 : 1000) })) : [],

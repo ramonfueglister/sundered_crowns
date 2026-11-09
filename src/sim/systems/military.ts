@@ -1,6 +1,6 @@
 // Armies and fleets: recruitment, movement on the location graph (A*), supply & attrition, zone of control,
 // battles in phases over several days, sieges with random events, occupation, naval blockades, transport.
-import type { GameState, Army, Battle, Siege, Nation, Regiment, I18n } from '../types';
+import type { GameState, Army, Battle, Siege, Nation, Regiment, I18n, BattleSideRep } from '../types';
 import type { World } from '../world';
 import { EDGE_RIVER, EDGE_STRAIT } from '../world';
 import { type Ctx, type System, clamp, chronicle, notice, newId, addExpense, enemiesOf, atWar, hasTreaty, allies, bump } from '../ctx';
@@ -69,6 +69,7 @@ export function newArmy(s: GameState, owner: number, loc: number, regs: Regiment
     id: newId(s), owner, loc, name: name ?? armyName(n, fleet), regs, morale: 1, general: 0, path: [], progress: 0,
     fleet, carrying: [], embarkedOn: 0, siege: -1, battle: 0, supplyDeficit: 0, retreating: false, lastMoveDay: s.day,
   };
+  setFullStrength(a);
   s.armies.push(a);
   return a;
 }
@@ -240,7 +241,7 @@ function armyDay(s: GameState, w: World, a: Army) {
     const dist = w.distKm(a.loc, next);
     if (a.progress >= dist) {
       const from = a.loc;
-      a.loc = next; a.path.shift(); a.progress = 0; a.lastMoveDay = s.day;
+      a.prevLoc = from; a.loc = next; a.path.shift(); a.progress = 0; a.lastMoveDay = s.day;
       if (a.fleet) for (const cid of a.carrying) { const c = s.armies.find((x) => x.id === cid); if (c) c.loc = a.loc; }
       // zone of control: entering hostile fort zone stops the march unless heading to the fort itself
       if (!a.fleet && a.path.length) {
@@ -263,25 +264,68 @@ function armyDay(s: GameState, w: World, a: Army) {
 }
 
 // ---------------- supply & attrition (monthly) ----------------
-export function supplyLimit(s: GameState, w: World, l: number, owner: number): number {
-  if (l >= w.L) return 1e9;
+/**
+ * How many men a place feeds for a realm's armies, as factors: the people (one soldier per six), the land, devastation,
+ * snow, the harvest, fields and roads, our own land, scorched earth. The product (at least 800) is the supply limit.
+ */
+export function supplyParts(s: GameState, w: World, l: number, owner: number): { rows: [string, number][]; total: number } {
+  if (l >= w.L) return { rows: [], total: 1e9 };
   const t = TERRAIN_DEF[TERRAINS[w.terrain[l]]];
   let pop = 0; for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
-  let lim = (pop / 6) * t.supply * (1 - s.loc.devast[l]) * (1 - 0.5 * s.loc.snow[l]) * (0.6 + 0.4 * s.loc.harvest[l]);
-  if (s.loc.owner[l] === owner) lim *= 1.25;
-  if (s.flags[`scorched_${l}`] > s.day) lim *= 0.2;
-  return Math.max(800, lim);
+  const rows: [string, number][] = [
+    ['x_sp_people', pop / 6], ['x_sp_terrain', t.supply], ['x_sp_devastation', 1 - s.loc.devast[l]], ['x_sp_snow', 1 - 0.5 * s.loc.snow[l]],
+    ['x_sp_harvest', 0.6 + 0.4 * s.loc.harvest[l]], ['x_sp_farms', 1 + 0.1 * s.loc.buildings[l * B + BI.farm]], ['x_sp_roads', 1 + 0.05 * s.loc.buildings[l * B + BI.road]],
+  ];
+  if (s.loc.owner[l] === owner) rows.push(['x_sp_own', 1.25]);
+  if (scorched(s, l)) rows.push(['x_sp_scorched', SCORCH_SUPPLY]);
+  let lim = 1; for (const [, v] of rows) lim *= v;
+  return { rows, total: Math.max(800, lim) };
 }
+export function supplyLimit(s: GameState, w: World, l: number, owner: number): number { return supplyParts(s, w, l, owner).total; }
+/** Scorched earth: the supply of a place is cut to a fifth until the day stored in the flag. */
+export const SCORCH_SUPPLY = 0.2;
+export function scorched(s: GameState, l: number): boolean { return (s.flags[`scorched_${l}`] ?? 0) > s.day; }
 
 /** A fleet lying idle in a sea zone next to one of its realm's ports is in harbour: no storms, no wear. */
 function dockedAtHome(s: GameState, w: World, a: Army): boolean {
   for (let e = w.adjStart[a.loc]; e < w.adjStart[a.loc + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === a.owner && s.loc.buildings[v * B + BI.port] > 0) return true; }
   return false;
 }
-export function attritionMonth(s: GameState, w: World) {
-  // stack men per location
+/** Men of a realm standing at each place (they share its supply). */
+function menByPlace(s: GameState): Map<number, number> {
   const perLoc = new Map<number, number>();
   for (const a of s.armies) if (!a.fleet && !a.embarkedOn) perLoc.set(a.loc * 1000 + a.owner, (perLoc.get(a.loc * 1000 + a.owner) || 0) + armyMen(a));
+  return perLoc;
+}
+/**
+ * The share of an army lost to attrition this month, by cause (each row already multiplied by the laws and the
+ * home-ground factor, so the rows add up to the total), plus the supply limit and the men sharing it. The monthly
+ * attrition (attritionMonth) applies exactly this.
+ */
+export function attritionParts(s: GameState, w: World, a: Army, menHere?: number) {
+  const rows: [string, number][] = [], mult: [string, number][] = [];
+  if (a.loc >= w.L) return { rows: [['x_at_at_sea', 0.01]] as [string, number][], mult, total: 0.01, men: armyMen(a), limit: 1e9, quartered: false };
+  const men = menHere ?? (menByPlace(s).get(a.loc * 1000 + a.owner) || armyMen(a));
+  const lim = supplyLimit(s, w, a.loc, a.owner);
+  const t = TERRAIN_DEF[TERRAINS[w.terrain[a.loc]]];
+  // in peace at home the regiments lie in winter quarters spread over the country: little is lost
+  const quartered = s.loc.owner[a.loc] === a.owner && !a.rebels && !s.wars.some((x) => x.att.includes(a.owner) || x.def.includes(a.owner));
+  const pre: [string, number][] = [['x_at_base', quartered ? 0.001 : 0.002], ['x_at_terrain', quartered ? t.attrition * 0.002 : t.attrition * 0.01]];
+  if (men > lim) pre.push(['x_at_oversupply', quartered ? Math.min(0.01, (men / lim - 1) * 0.005) : Math.min(0.12, (men / lim - 1) * 0.05)]);
+  if (s.loc.snow[a.loc] > 0) pre.push(['x_at_winter', s.loc.snow[a.loc] * 0.02]);
+  const n = s.nations[a.owner];
+  let M = 1;
+  if (n) { const k = Math.max(0, 1 + lawEffect(n, 'attrition')); M *= k; if (k !== 1) mult.push(['x_at_laws', k]); }
+  // faiths of the forest and the tundra know their own land (finnic_old, sami_old)
+  if (n && s.loc.owner[a.loc] === a.owner) { const k = clamp(1 + lawEffect(n, 'home_attrition'), 0.2, 2); M *= k; if (k !== 1) mult.push(['x_at_home', k]); }
+  for (const [k, v] of pre) rows.push([k, v * M]);
+  if (s.loc.owner[a.loc] !== a.owner && atWar(s, a.owner, s.loc.owner[a.loc])) rows.push(['x_at_enemy_land', 0.005]);
+  const total = rows.reduce((p, x) => p + x[1], 0);
+  return { rows, mult, total, men, limit: lim, quartered };
+}
+export function attritionMonth(s: GameState, w: World) {
+  // stack men per location
+  const perLoc = menByPlace(s);
   for (const a of s.armies) {
     if (a.fleet) {
       // storms and scurvy at sea; ships wear out
@@ -293,27 +337,151 @@ export function attritionMonth(s: GameState, w: World) {
     }
     if (a.embarkedOn) continue;
     if (a.loc >= w.L) { for (const r of a.regs) r.men *= 0.99; continue; } // ferried: seasickness, little else
-    const men = perLoc.get(a.loc * 1000 + a.owner) || armyMen(a);
-    const lim = supplyLimit(s, w, a.loc, a.owner);
-    const t = TERRAIN_DEF[TERRAINS[w.terrain[a.loc]]];
-    // in peace at home the regiments lie in winter quarters spread over the country: little is lost
-    const quartered = s.loc.owner[a.loc] === a.owner && !a.rebels && !s.wars.some((x) => x.att.includes(a.owner) || x.def.includes(a.owner));
-    let att = quartered ? 0.001 + t.attrition * 0.002 : 0.002 + t.attrition * 0.01;
-    if (men > lim) att += quartered ? Math.min(0.01, (men / lim - 1) * 0.005) : Math.min(0.12, (men / lim - 1) * 0.05);
-    att += s.loc.snow[a.loc] * 0.02;
-    const n = s.nations[a.owner];
-    if (n) att *= Math.max(0, 1 + lawEffect(n, 'attrition'));
-    // faiths of the forest and the tundra know their own land (finnic_old, sami_old)
-    if (n && s.loc.owner[a.loc] === a.owner) att *= clamp(1 + lawEffect(n, 'home_attrition'), 0.2, 2);
-    if (s.loc.owner[a.loc] !== a.owner && atWar(s, a.owner, s.loc.owner[a.loc])) att += 0.005;
+    const at = attritionParts(s, w, a, perLoc.get(a.loc * 1000 + a.owner) || armyMen(a));
+    const men = at.men, lim = at.limit;
     a.supplyDeficit = men > lim ? men / lim - 1 : 0;
-    for (const r of a.regs) r.men = Math.max(0, r.men * (1 - att));
+    for (const r of a.regs) r.men = Math.max(0, r.men * (1 - at.total));
     // foraging devastates the land
-    if (!quartered && men > lim * 0.5) s.loc.devast[a.loc] = clamp(s.loc.devast[a.loc] + Math.min(0.15, men / lim * 0.03), 0, 1);
+    if (!at.quartered && men > lim * 0.5) s.loc.devast[a.loc] = clamp(s.loc.devast[a.loc] + Math.min(0.15, men / lim * 0.03), 0, 1);
     // morale recovers in supply
     a.morale = clamp(a.morale + (a.supplyDeficit > 0 ? 0.03 : 0.12) * maintMorale(s, a), 0, maxMorale(s, a));
   }
 }
+
+// ---------------- scorched earth ----------------
+/** Days scorched land feeds no army. */
+export const SCORCH_DAYS = 180;
+/** Enemy armies (of a war, not rebels) in or next to a place or about to march into it. */
+function invadersNear(s: GameState, w: World, n: number, l: number): Army[] {
+  const en = enemiesOf(s, n); if (!en.size) return [];
+  const out: Army[] = [];
+  for (const a of s.armies) {
+    if (a.fleet || a.rebels || !en.has(a.owner) || a.embarkedOn) continue;
+    if (a.loc === l || a.path.slice(0, 3).includes(l) || (a.loc < w.L && isNeighbour(w, a.loc, l))) out.push(a);
+  }
+  return out;
+}
+function isNeighbour(w: World, a: number, b: number): boolean { for (let e = w.adjStart[a]; e < w.adjStart[a + 1]; e++) if (w.adj[e] === b) return true; return false; }
+/** Why a realm cannot scorch this place now (null = it can): its own held land, at war, with an invader in or next to
+ *  it or marching into it, and not already burnt. */
+export function scorchRefusal(s: GameState, w: World, n: number, l: number): string | null {
+  if (l < 0 || l >= w.L || s.loc.owner[l] !== n || s.loc.ctrl[l] !== n) return 'not your location';
+  if (scorched(s, l)) return 'already scorched';
+  if (!invadersNear(s, w, n, l).length) return 'no enemy army near';
+  return null;
+}
+/** Scorched earth: burn the fields and stores before the invader. The place is devastated (its yields fall), its people
+ *  are restless, and for half a year it feeds a fifth of the men it would (supplyParts) - the enemy's as well as ours. */
+export function scorchEarth(s: GameState, w: World, n: Nation, l: number): string | null {
+  const why = scorchRefusal(s, w, n.id, l); if (why) return why;
+  s.loc.devast[l] = clamp(s.loc.devast[l] + 0.5, 0, 1);
+  s.loc.unrest[l] = Math.min(100, s.loc.unrest[l] + 15);
+  s.flags[`scorched_${l}`] = s.day + SCORCH_DAYS;
+  if (s.playerNations.includes(n.id)) notice(s, n.id, 'scorched', { en: `The fields of ${w.names[l]} were burnt before the enemy.`, de: `Die Felder von ${w.namesDe[l]} wurden vor dem Feind verbrannt.` }, { loc: l });
+  return null;
+}
+/** The AI burns the land in front of an invader much stronger than its own hosts (at most two places a month). */
+export function aiScorch(s: GameState, w: World, n: Nation, enemyArmies: Army[], eStr: Float64Array, myStr: number) {
+  if ((n.flags.scorch_day ?? -1e9) > s.day - 30) return;
+  let invading = 0; const cand: number[] = [];
+  enemyArmies.forEach((e, j) => {
+    if (e.rebels || e.loc >= w.L || s.loc.owner[e.loc] !== n.id) return;
+    invading += eStr[j];
+    for (const l of e.path.slice(0, 3)) if (l < w.L && !cand.includes(l)) cand.push(l);
+  });
+  if (!invading || invading < Math.max(1, myStr) * 2.5) return;
+  let k = 0;
+  for (const l of cand.sort((x, y) => x - y)) {
+    if (k >= 2) break;
+    if (!scorchRefusal(s, w, n.id, l) && l !== n.capital) { scorchEarth(s, w, n, l); k++; }
+  }
+  if (k) n.flags.scorch_day = s.day;
+}
+
+// ---------------- reinforcements (monthly) ----------------
+/** Share of a regiment's full strength that comes back in a month at most. */
+export const REFILL_RATE = 0.06;
+/** Where an army can take in new men: our own or an ally's or subject's land that we or they hold, not fighting or
+ *  besieging, within the place's supply. Returns the reason it cannot, or null. */
+export function refillBlock(s: GameState, w: World, a: Army): string | null {
+  if (a.fleet || a.rebels || a.hostile) return 'x_rf_no';
+  if (a.battle) return 'x_rf_battle';
+  if (a.siege >= 0) return 'x_rf_siege';
+  if (a.loc >= w.L || a.embarkedOn) return 'x_rf_sea';
+  const o = s.loc.owner[a.loc], c = s.loc.ctrl[a.loc];
+  const friend = (x: number) => x === a.owner || (x >= 0 && (hasTreaty(s, a.owner, x, 'alliance') || s.nations[x]?.overlord === a.owner || s.nations[a.owner]?.overlord === x));
+  if (!friend(o) || !friend(c)) return 'x_rf_foreign';
+  if (a.supplyDeficit > 0) return 'x_rf_supply';
+  return null;
+}
+/** Men and gold the regiments of an army would take in this month (the realm's manpower and treasury permitting). */
+export function refillPlan(s: GameState, w: World, a: Army) {
+  const n = s.nations[a.owner];
+  const block = refillBlock(s, w, a);
+  const regs = a.regs.map((r) => {
+    const max = r.max ?? r.men;
+    const want = block || UNITS[r.type].kind === 'ship' ? 0 : Math.min(Math.max(0, max - r.men), max * REFILL_RATE * (n ? 0.5 + 0.5 * n.armyMaint : 1));
+    return { type: r.type, men: r.men, max, want };
+  });
+  const men = regs.reduce((p, r) => p + r.want, 0);
+  const gold = n ? regs.reduce((p, r) => p + unitCost(s, n, r.type, r.want) * (a.mercenary ? 0.75 : 0.5), 0) : 0;
+  return { block, regs, men, gold };
+}
+/** Regiments refill slowly from the realm's manpower (mercenaries from gold alone) while resting in friendly land. */
+export function reinforceMonth(s: GameState, w: World) {
+  for (const a of s.armies) {
+    const n = s.nations[a.owner];
+    if (!n?.alive || a.fleet || a.rebels || a.hostile || n.treasury <= 0) continue;
+    const plan = refillPlan(s, w, a);
+    if (plan.men < 1) continue;
+    // scale down to what the realm can pay and spare (mercenaries need no levies)
+    const k = Math.min(1, n.treasury / Math.max(1e-9, plan.gold), a.mercenary ? 1 : n.manpower / plan.men);
+    if (k <= 0) continue;
+    plan.regs.forEach((p, i) => { if (p.want > 0) a.regs[i].men += p.want * k; });
+    if (!a.mercenary) n.manpower -= plan.men * k;
+    const gold = plan.gold * k;
+    n.treasury -= gold; n.expenseAcc.reinforcements = (n.expenseAcc.reinforcements || 0) + gold;
+  }
+}
+/** Full strength of every regiment: what it was raised or merged to (set for old saves and new regiments). */
+export function setFullStrength(a: Army) { for (const r of a.regs) if (r.max === undefined || r.max < r.men) r.max = r.men; }
+
+// ---------------- blockades (monthly) ----------------
+/** Coastal places shut off by an enemy fleet in a neighbouring sea zone: place -> the blockading realm. */
+export function blockadedPorts(s: GameState, w: World): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const f of s.armies) {
+    if (!f.fleet || f.loc < w.L || f.battle || armyMen(f) < 1) continue;
+    const en = enemiesOf(s, f.owner); if (!en.size) continue;
+    for (let e = w.adjStart[f.loc]; e < w.adjStart[f.loc + 1]; e++) {
+      const v = w.adj[e]; if (v >= w.L || !w.coastal[v]) continue;
+      const o = s.loc.owner[v];
+      if (o >= 0 && en.has(o) && !out.has(v)) out.set(v, f.owner);
+    }
+  }
+  return out;
+}
+/** Monthly: fleets off enemy ports cut their sea trade (the economy reads blockade_<market>, economy.ts tradeBlocked)
+ *  and win war score by the share of the enemy's coast they shut (warScoreEvent 'blockade'). */
+export function blockadeMonth(s: GameState, w: World) {
+  const blk = blockadedPorts(s, w);
+  // the war score from blockades fades unless the ships stay on station
+  for (const war of s.wars) if (war.blockScore) war.blockScore = Math.abs(war.blockScore) < 0.05 ? 0 : war.blockScore * 0.85;
+  if (!blk.size) return;
+  // markets: shut when their hub or half of their harboured coast is blockaded
+  const portDev = new Float64Array(s.markets.length), shut = new Float64Array(s.markets.length);
+  for (let i = 0; i < w.L; i++) if (w.coastal[i] && s.loc.buildings[i * B + BI.port] > 0) { const m = s.loc.market[i]; portDev[m] += s.loc.dev[i]; if (blk.has(i)) shut[m] += s.loc.dev[i]; }
+  for (const m of s.markets) if (blk.has(m.hub) || (portDev[m.id] > 0 && shut[m.id] >= portDev[m.id] * 0.5)) s.flags[`blockade_${m.id}`] = s.day + 35;
+  // war score: by blockading realm and blockaded realm, the share of the blockaded realm's coast shut
+  const coast = new Map<number, number>(), pair = new Map<string, number>();
+  for (const [l, by] of blk) { const k = `${by}_${s.loc.owner[l]}`; pair.set(k, (pair.get(k) ?? 0) + Math.max(1, s.loc.dev[l])); coast.set(s.loc.owner[l], 0); }
+  for (const o of coast.keys()) { let d = 0; for (const i of ownedLocs(s, o)) if (w.coastal[i]) d += Math.max(1, s.loc.dev[i]); coast.set(o, d); }
+  for (const [k, d] of [...pair].sort((x, y) => (x[0] < y[0] ? -1 : 1))) {
+    const [by, o] = k.split('_').map(Number);
+    warScoreEvent(s, by, o, 'blockade', 3 * Math.min(1, d / Math.max(1, coast.get(o) ?? 1)));
+  }
+}
+
 /** Maximum morale: morale effects and half the marshal's bonus, times what the realm spends on upkeep. */
 export function maxMorale(s: GameState, a: Army) {
   const n = s.nations[a.owner];
@@ -352,7 +520,7 @@ function startBattles(s: GameState, w: World) {
       const b: Battle = {
         id: newId(s), loc, day0: s.day, phase: 0, days: 0, att: attSide.map((x) => x.id), def: defSide.map((x) => x.id),
         attNation: att.owner, defNation: def.owner, lossA: 0, lossD: 0, startA: attSide.reduce((p, x) => p + armyMen(x), 0), startD: defSide.reduce((p, x) => p + armyMen(x), 0),
-        log: [], naval: att.fleet, river: riverCrossing(w, att, loc),
+        log: [], naval: att.fleet, river: !att.fleet && riverCrossing(s, w, att, loc),
       };
       for (const x of [...attSide, ...defSide]) { x.battle = b.id; x.path = []; x.siege = -1; }
       s.battles.push(b);
@@ -360,7 +528,18 @@ function startBattles(s: GameState, w: World) {
     }
   }
 }
-function riverCrossing(w: World, a: Army, loc: number): boolean { return false; }
+/** The edge flags between two neighbouring places (0 when they are not neighbours). */
+export function edgeFlag(w: World, a: number, b: number): number {
+  for (let e = w.adjStart[a]; e < w.adjStart[a + 1]; e++) if (w.adj[e] === b) return w.adjFlag[e];
+  return 0;
+}
+/** An attack across a river: the attacker reached the field in the last two days over a river between the two places
+ *  (the rivers of the map, world.ts EDGE_RIVER). The crossing costs the attacker a fifth of its blows (battleDay). */
+export function riverCrossing(s: GameState, w: World, a: Army, loc: number): boolean {
+  if (a.fleet || a.prevLoc === undefined || a.prevLoc === loc || a.prevLoc >= w.L || loc >= w.L || s.day - a.lastMoveDay > 1) return false;
+  return (edgeFlag(w, a.prevLoc, loc) & EDGE_RIVER) !== 0;
+}
+export const RIVER_PENALTY = 0.8;
 export function hostile(s: GameState, a: Army, b: Army): boolean {
   if (a.owner === b.owner && !a.rebels && !b.rebels) return false; // rebels carry the owner they rise against
   if (a.rebels || b.rebels || a.hostile || b.hostile) {
@@ -372,24 +551,58 @@ export function hostile(s: GameState, a: Army, b: Army): boolean {
   return atWar(s, a.owner, b.owner);
 }
 
-export function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemyKinds: number[]) {
-  let shock = 0, fire = 0, def = 0, men = 0, morale = 0, cav = 0, inf = 0;
+/** Men of a side by kind: horse, foot, shot, guns, and the pikes and close-order foot that stand against horse. */
+export function unitMix(armies: Army[]) {
+  let men = 0, cav = 0, inf = 0, ranged = 0, art = 0, pikes = 0;
+  for (const a of armies) for (const r of a.regs) {
+    const u = UNITS[r.type]; if (u.kind === 'ship') continue;
+    men += r.men;
+    if (u.kind === 'cav') cav += r.men; else if (u.kind === 'ranged') ranged += r.men; else if (u.kind === 'art') art += r.men; else inf += r.men;
+    if (u.kind === 'inf' && u.def >= 1.4) pikes += r.men;
+  }
+  return { men, cav, inf, ranged, art, pikes };
+}
+const OPEN = new Set(['plains', 'farmland', 'steppe', 'desert']);
+/**
+ * Strength of one side of a battle at loc. enemy: the armies it faces (their unit mix shapes the fight: horse rides
+ * down foot without pikes in the open, pikes and close-order foot blunt the horse, guns breach the walls a defender
+ * stands behind). mods lists these effects for the battle report.
+ */
+export function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemy: Army[]) {
+  let shock = 0, fire = 0, def = 0, men = 0, morale = 0, cav = 0, inf = 0, cavShock = 0, disc = 0;
   const n = s.nations[armies[0]?.owner];
-  const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(loc, w.L - 1)]] ?? 'plains'];
+  const terr = TERRAINS[w.terrain[Math.min(loc, w.L - 1)]] ?? 'plains';
+  const t = TERRAIN_DEF[terr];
+  const mods: [string, number][] = [];
+  // horse in the open against foot without pikes, and with no horse of its own to screen it
+  const mine = unitMix(armies), foe = unitMix(enemy);
+  const naval = loc >= w.L || armies.some((a) => a.fleet);
+  let cavOpen = 1;
+  if (!naval && OPEN.has(terr) && mine.cav > 0 && foe.men > 0) {
+    const pk = foe.pikes / foe.men, screen = foe.cav / foe.men < mine.cav / Math.max(1, mine.men) ? 1 : 0.5;
+    cavOpen = 1 + 0.3 * (1 - Math.min(1, pk / 0.3)) * screen;
+    if (cavOpen > 1.005) mods.push(['x_bm_cav_open', cavOpen - 1]);
+  }
   for (const a of armies) {
     const tm = techMult(s.nations[a.owner], s);
     for (const r of a.regs) {
       const u = UNITS[r.type];
       const k = u.kind === 'ship' ? r.men * 120 : r.men;
-      const cavMult = u.kind === 'cav' ? (t.cav * (1 + (n ? lawEffect(n, 'cavalry') : 0))) : 1;
+      const cavMult = u.kind === 'cav' ? (t.cav * (1 + (n ? lawEffect(n, 'cavalry') : 0)) * cavOpen) : 1;
       // ships: naval strength (arsenals, admiralties, seafaring peoples) adds to guns and hulls alike
       const sea = u.sea && n ? 1 + lawEffect(n, 'naval') : 1;
-      shock += k * u.shock * tm * cavMult * (1 + (n ? lawEffect(n, 'shock') : 0)); fire += k * u.fire * tm * (1 + (n ? lawEffect(n, 'fire') : 0)) * sea; def += k * u.def * tm * sea;
-      men += k; morale += a.morale * k;
+      const sh = k * u.shock * tm * cavMult * (1 + (n ? lawEffect(n, 'shock') : 0));
+      shock += sh; if (u.kind === 'cav') cavShock += sh;
+      fire += k * u.fire * tm * (1 + (n ? lawEffect(n, 'fire') : 0)) * sea; def += k * u.def * tm * sea;
+      men += k; morale += a.morale * k; disc += k * u.morale;
       if (u.kind === 'cav') cav += k; else inf += k;
       if (u.sea) { fire += r.men * u.sea.cannons * 8 * tm * sea; def += r.men * u.sea.hull * 3 * sea; }
     }
   }
+  // pikes and close-order foot blunt the enemy's horse (less so in broken country, where squares cannot form)
+  const rough = t.defence >= 0.15;
+  const pikeCut = !naval && mine.men > 0 ? 0.35 * Math.min(1, mine.pikes / mine.men / 0.3) * (rough ? 0.7 : 1) : 0;
+  if (pikeCut > 0.005 && foe.cav > 0) mods.push(['x_bm_pikes', pikeCut]);
   const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
   const genSkill = gen ? gen.skills[2] : 0;
   // on their own land: militias and highlanders hold better when defending (defence); homeland faiths (baltic_old,
@@ -397,7 +610,46 @@ export function sideStats(s: GameState, w: World, armies: Army[], loc: number, d
   const home = !!n && loc < w.L && s.loc.owner[loc] === n.id && !armies[0]?.rebels;
   const homeDef = home ? Math.max(0, lawEffect(n!, 'home_defence')) + (defending ? Math.max(0, lawEffect(n!, 'defence')) : 0) : 0;
   const homeMorale = home ? Math.max(0, lawEffect(n!, 'home_morale')) : 0;
-  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: (defending ? t.defence : 0) + homeDef, homeMorale };
+  // walls: a defender standing at its own fort holds better, unless the attackers bring guns to batter them
+  let walls = 0;
+  if (defending && !naval && loc < w.L && n && s.loc.ctrl[loc] === n.id) {
+    const f = s.loc.buildings[loc * B + BI.fort];
+    if (f > 0) {
+      walls = 0.08 * f;
+      const guns = foe.men > 0 ? Math.min(1, foe.art / foe.men / 0.05) : 0;
+      if (guns > 0) mods.push(['x_bm_guns_walls', -walls * guns]);
+      walls *= 1 - guns;
+      if (walls > 0.001) mods.push(['x_bm_walls', walls]);
+    }
+  }
+  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, cavShock, pikeCut, gen: genSkill, genName: gen?.name ?? '', terrainDef: (defending ? t.defence : 0) + homeDef + walls, homeMorale, disc: men > 0 ? disc / men : 1, mods };
+}
+type SideStats = ReturnType<typeof sideStats>;
+
+/** Average morale of a side. */
+function sideMorale(l: Army[]) { return l.length ? l.reduce((p, x) => p + x.morale, 0) / l.length : 0; }
+/** Morale at which a side breaks and leaves the field. */
+export const MORALE_BREAK = 0.15;
+/** Troops of a side by unit type. */
+function troopsOf(l: Army[]): Map<number, number> { const m = new Map<number, number>(); for (const a of l) for (const r of a.regs) m.set(r.type, (m.get(r.type) ?? 0) + r.men); return m; }
+/** A side of the report as the battle opens: commanders, troops, morale and the factors of its strength. */
+function openSide(s: GameState, w: World, b: Battle, list: Army[], st: SideStats, attacker: boolean): BattleSideRep {
+  const gens = list.map((a) => s.chars[a.general]).filter((c) => c && c.alive).map((c) => ({ name: c!.name, skill: c!.skills[2] }));
+  const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(b.loc, w.L - 1)]] ?? 'plains'];
+  const n = s.nations[list[0]?.owner];
+  const parts: [string, number][] = [
+    ['x_bp_men', st.men * (b.naval ? 1 / 120 : 1)], ['x_bp_quality', st.men > 0 ? (st.shock + st.fire + st.def) / 3 / st.men / Math.max(0.01, techMult(n, s)) : 0],
+    ['x_bp_discipline', techMult(n, s)], ['x_bp_general', 1 + st.gen * 0.06], ['x_bp_morale', 0.6 + 0.4 * st.morale],
+  ];
+  if (!attacker && st.terrainDef) parts.push(['x_bp_defence', 1 + st.terrainDef]);
+  if (attacker && st.terrainDef) parts.push(['x_bp_home', 1 + st.terrainDef]);
+  if (attacker && b.river) parts.push(['x_bp_river', RIVER_PENALTY]);
+  const snow = s.loc.snow[Math.min(b.loc, w.L - 1)];
+  if (!b.naval && snow > 0.05) parts.push(['x_bp_winter', 1 - 0.2 * snow]);
+  if (!b.naval && t.cav !== 1 && st.cav > 0) parts.push(['x_bp_terrain_cav', t.cav]);
+  const tr = troopsOf(list);
+  return { nation: list[0]?.owner ?? -1, rebels: list.some((a) => !!a.rebels), armies: list.map((a) => a.id), generals: gens,
+    troops: [...tr].sort((x, y) => x[0] - y[0]).map(([type, men]) => ({ type, start: men, end: men })), morale0: sideMorale(list), morale: sideMorale(list), parts, mods: st.mods };
 }
 
 function battleDay(s: GameState, w: World, b: Battle) {
@@ -405,21 +657,31 @@ function battleDay(s: GameState, w: World, b: Battle) {
   const D = b.def.map((id) => s.armies.find((x) => x.id === id)!).filter((x) => x && armyMen(x) > 0);
   if (!A.length || !D.length) return endBattle(s, w, b, A.length ? 'att' : 'def');
   b.days++;
-  const sa = sideStats(s, w, A, b.loc, false, []), sd = sideStats(s, w, D, b.loc, true, []);
+  const sa = sideStats(s, w, A, b.loc, false, D), sd = sideStats(s, w, D, b.loc, true, A);
+  if (!b.rep) {
+    const terr = TERRAINS[w.terrain[Math.min(b.loc, w.L - 1)]] ?? 'plains';
+    b.rep = { id: b.id, loc: b.loc, day0: b.day0, day1: s.day, naval: b.naval, river: b.river, terrain: b.loc < w.L ? terr : 'sea', snow: s.loc.snow[Math.min(b.loc, w.L - 1)],
+      fort: b.loc < w.L ? s.loc.buildings[b.loc * B + BI.fort] : 0, att: openSide(s, w, b, A, sa, true), def: openSide(s, w, b, D, sd, false), days: [], lossA: 0, lossD: 0, pursuit: 0, winner: '', reasons: [], wars: [] };
+  }
   // phases: 0 ranged (2 days), 1 melee, 2 pursuit
   const phase = b.days <= 2 ? 0 : 1;
   b.phase = phase;
   const ra = 0.85 + rand(s.rng) * 0.3, rd = 0.85 + rand(s.rng) * 0.3;
-  const riverPen = b.river ? 0.8 : 1;
+  const riverPen = b.river ? RIVER_PENALTY : 1;
   const winterPen = 1 - 0.2 * s.loc.snow[Math.min(b.loc, w.L - 1)];
   const genA = 1 + sa.gen * 0.06, genD = 1 + sd.gen * 0.06;
+  // a shaken side strikes weaker blows
+  const moA = sideMorale(A), moD = sideMorale(D);
+  const heartA = 0.6 + 0.4 * Math.min(1, moA), heartD = 0.6 + 0.4 * Math.min(1, moD);
+  // pikes blunt the horse of the other side
+  const shockA = sa.shock - sa.cavShock * sd.pikeCut, shockD = sd.shock - sd.cavShock * sa.pikeCut;
   let dmgToD: number, dmgToA: number;
   if (b.naval) {
-    dmgToD = sa.fire * 0.004 * ra * genA; dmgToA = sd.fire * 0.004 * rd * genD;
+    dmgToD = sa.fire * 0.004 * ra * genA * heartA; dmgToA = sd.fire * 0.004 * rd * genD * heartD;
   } else if (phase === 0) {
-    dmgToD = sa.fire * 0.012 * ra * genA * riverPen; dmgToA = sd.fire * 0.012 * rd * genD;
+    dmgToD = sa.fire * 0.012 * ra * genA * riverPen * heartA; dmgToA = sd.fire * 0.012 * rd * genD * heartD;
   } else {
-    dmgToD = (sa.shock * 0.02 + sa.fire * 0.006) * ra * genA * riverPen * winterPen; dmgToA = (sd.shock * 0.02 + sd.fire * 0.006) * rd * genD * winterPen;
+    dmgToD = (shockA * 0.02 + sa.fire * 0.006) * ra * genA * riverPen * winterPen * heartA; dmgToA = (shockD * 0.02 + sd.fire * 0.006) * rd * genD * winterPen * heartD;
   }
   dmgToD /= 1 + sd.terrainDef + sd.def / Math.max(1, sd.men) * 0.25;
   dmgToA /= 1 + sa.terrainDef + sa.def / Math.max(1, sa.men) * 0.25; // an attacker's terrainDef is only its homeland defence
@@ -427,18 +689,27 @@ function battleDay(s: GameState, w: World, b: Battle) {
   const lossD = Math.min(sd.men, dmgToD) * (b.naval ? 1 / 120 : 1), lossA = Math.min(sa.men, dmgToA) * (b.naval ? 1 / 120 : 1);
   applyLosses(D, lossD); applyLosses(A, lossA);
   b.lossA += lossA; b.lossD += lossD;
-  const mA = ((dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03) / (1 + sa.homeMorale), mD = ((dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03) / (1 + sd.homeMorale);
+  // morale falls with the blows taken, slower for steady troops (the units' own morale) and on home ground
+  const mA = ((dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03) / (1 + sa.homeMorale) / Math.max(0.5, sa.disc);
+  const mD = ((dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03) / (1 + sd.homeMorale) / Math.max(0.5, sd.disc);
   for (const a of A) a.morale = Math.max(0, a.morale - mA);
   for (const d of D) d.morale = Math.max(0, d.morale - mD);
-  const moA = A.reduce((p, x) => p + x.morale, 0) / A.length, moD = D.reduce((p, x) => p + x.morale, 0) / D.length;
+  const nmA = sideMorale(A), nmD = sideMorale(D);
+  b.rep.days.push({ day: b.days, phase, lossA, lossD, moraleA: nmA, moraleD: nmD });
   if (b.days === 1) b.log.push(`${sa.men | 0} vs ${sd.men | 0}`);
-  if (moA <= 0.05 || moD <= 0.05 || b.days > 12) {
-    const winner = moA > moD ? 'att' : 'def';
-    // pursuit: cavalry of the winner cuts down the fleeing side
+  if (nmA <= MORALE_BREAK || nmD <= MORALE_BREAK || b.days > 12) {
+    const winner = nmA > nmD ? 'att' : 'def';
+    // the beaten side breaks and flees; the winner's horse cuts down the fleeing, more so in a rout (the side broke
+    // early or while the winners still stood firm)
     const win = winner === 'att' ? sa : sd; const lose = winner === 'att' ? D : A;
-    const pursuit = Math.min(armyMenList(lose) * 0.3, win.cav * 0.15 + armyMenList(lose) * 0.05);
+    const loseMo = winner === 'att' ? nmD : nmA, winMo = winner === 'att' ? nmA : nmD;
+    const broke = loseMo <= MORALE_BREAK;
+    const routed = broke && (winMo >= 0.45 || b.days <= 3);
+    const pursuit = Math.min(armyMenList(lose) * (routed ? 0.45 : 0.3), (win.cav * 0.15 + armyMenList(lose) * 0.05) * (routed ? 1.75 : 1) * (b.naval ? 0 : 1));
     applyLosses(lose, pursuit);
     if (winner === 'att') b.lossD += pursuit; else b.lossA += pursuit;
+    const side = winner === 'att' ? b.rep.def : b.rep.att;
+    side.broke = broke; side.routed = routed; b.rep.pursuit = pursuit;
     endBattle(s, w, b, winner);
   }
 }
@@ -448,12 +719,27 @@ function applyLosses(list: Army[], loss: number) {
   for (const a of list) for (const r of a.regs) r.men = Math.max(0, r.men - loss * r.men / tot);
 }
 
+/** Battle reports kept: every battle a human realm fought in and the great ones, newest last. */
+const REPORTS_KEPT = 80;
 function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   const W = (winner === 'att' ? b.att : b.def).map((id) => s.armies.find((x) => x.id === id)).filter(Boolean) as Army[];
   const Lz = (winner === 'att' ? b.def : b.att).map((id) => s.armies.find((x) => x.id === id)).filter(Boolean) as Army[];
   for (const a of [...W, ...Lz]) a.battle = 0;
   const wn = winner === 'att' ? b.attNation : b.defNation, ln = winner === 'att' ? b.defNation : b.attNation;
   const lossW = winner === 'att' ? b.lossA : b.lossD, lossL = winner === 'att' ? b.lossD : b.lossA;
+  // the report: troops and morale at the end, the outcome and why
+  const rep = b.rep;
+  if (rep) {
+    const close = (side: BattleSideRep, list: Army[]) => {
+      const tr = troopsOf(list);
+      for (const x of side.troops) x.end = tr.get(x.type) ?? 0;
+      side.morale = sideMorale(list);
+    };
+    close(rep.att, (winner === 'att' ? W : Lz)); close(rep.def, (winner === 'att' ? Lz : W));
+    rep.lossA = b.lossA; rep.lossD = b.lossD; rep.winner = winner; rep.day1 = s.day;
+    rep.reasons = battleReasons(s, w, b, winner);
+    rep.wars = s.wars.filter((x) => (x.att.includes(b.attNation) && x.def.includes(b.defNation)) || (x.def.includes(b.attNation) && x.att.includes(b.defNation))).map((x) => x.id);
+  }
   // generals may die
   // (a ruler or heir leading the host dies like any other: the crown passes on)
   for (const a of Lz) if (a.general && chance(s.rng, 0.08)) {
@@ -489,20 +775,41 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   };
   if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc);
   s.flags[`last_battle_${b.loc}`] = s.day;
-  // one notice per player realm: won when its own (non-rebel) armies are among the winners
-  for (const p of new Set([wn, ln])) if (s.playerNations.includes(p)) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc });
+  const human = s.playerNations.includes(wn) || s.playerNations.includes(ln);
+  if (rep && (human || lossW + lossL > 3000)) {
+    const list = (s.battleReports ??= []);
+    list.push(rep);
+    if (list.length > REPORTS_KEPT) {
+      // drop the oldest report no human realm fought in, else the oldest
+      const k = list.findIndex((r) => !s.playerNations.includes(r.att.nation) && !s.playerNations.includes(r.def.nation));
+      list.splice(k >= 0 && k < list.length - 1 ? k : 0, 1);
+    }
+  }
+  // one notice per player realm: won when its own (non-rebel) armies are among the winners; it opens the report
+  for (const p of new Set([wn, ln])) if (s.playerNations.includes(p)) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc, ...(rep ? { report: rep.id } : {}) });
   if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
+  delete b.rep;
   s.battles.splice(s.battles.indexOf(b), 1);
   s.flags.lastBattleResult = s.day;
-  (s as any).lastBattle = { loc: b.loc, winner: wn, loser: ln, winnerRebels: rebW, loserRebels: rebL, lossW, lossL, days: b.days, naval: b.naval, day: s.day, reasons: battleReasons(s, w, b, winner) };
+  (s as any).lastBattle = { loc: b.loc, winner: wn, loser: ln, winnerRebels: rebW, loserRebels: rebL, lossW, lossL, days: b.days, naval: b.naval, day: s.day, reasons: rep?.reasons ?? battleReasons(s, w, b, winner), report: rep?.id };
 }
+/** Why the battle went as it did: terrain, a river crossing, winter, numbers, generals, the unit mix and a rout. */
 function battleReasons(s: GameState, w: World, b: Battle, winner: string): string[] {
   const r: string[] = [];
   const t = TERRAINS[w.terrain[Math.min(b.loc, w.L - 1)]];
-  if (TERRAIN_DEF[t].defence > 0.2) r.push(`terrain:${t}`);
+  if (!b.naval && TERRAIN_DEF[t].defence > 0.2) r.push(`terrain:${t}`);
   if (b.river) r.push('river');
-  if (s.loc.snow[Math.min(b.loc, w.L - 1)] > 0.3) r.push('winter');
+  if (!b.naval && s.loc.snow[Math.min(b.loc, w.L - 1)] > 0.3) r.push('winter');
   r.push(b.startA > b.startD * 1.3 ? 'numbers_att' : b.startD > b.startA * 1.3 ? 'numbers_def' : 'even');
+  const rep = b.rep;
+  if (rep) {
+    const ga = Math.max(0, ...rep.att.generals.map((g) => g.skill)), gd = Math.max(0, ...rep.def.generals.map((g) => g.skill));
+    if (Math.abs(ga - gd) >= 2) r.push(ga > gd ? 'general_att' : 'general_def');
+    for (const [side, x] of [['att', rep.att], ['def', rep.def]] as const) for (const [k] of x.mods) r.push(`${k}:${side}`);
+    if (rep.att.routed || rep.def.routed) r.push('rout');
+    else if (rep.att.broke || rep.def.broke) r.push('morale_broke');
+  }
+  void winner;
   return r;
 }
 function retreatTarget(s: GameState, w: World, a: Army): number {
@@ -512,14 +819,21 @@ function retreatTarget(s: GameState, w: World, a: Army): number {
     for (let i = 0; i < w.L; i++) if (w.coastal[i] && s.loc.owner[i] === a.owner) { const d = w.distKm(a.loc, i); if (d < bd) { bd = d; best = i; } }
     return best;
   }
+  // a beaten host does not fall back into an enemy army (a besieged capital would only bring it back to battle the
+  // next day): it seeks a place it holds that no enemy stands in, and only when there is none the nearest it holds
   const en = enemiesOf(s, a.owner);
+  const held = new Set<number>(); for (const x of s.armies) if (!x.fleet && en.has(x.owner)) held.add(x.loc);
   for (let e = w.adjStart[a.loc]; e < w.adjStart[a.loc + 1]; e++) {
     const v = w.adj[e]; if (v >= w.L) continue;
-    if (s.loc.ctrl[v] === a.owner && !s.armies.some((x) => x.loc === v && en.has(x.owner))) return v;
+    if (s.loc.ctrl[v] === a.owner && !held.has(v)) return v;
   }
-  if (n && n.capital >= 0 && s.loc.ctrl[n.capital] === a.owner) return n.capital;
-  for (let i = 0; i < w.L; i++) if (s.loc.ctrl[i] === a.owner) { const d = w.distKm(a.loc, i); if (d < bd) { bd = d; best = i; } }
-  return best;
+  if (n && n.capital >= 0 && s.loc.ctrl[n.capital] === a.owner && !held.has(n.capital)) return n.capital;
+  let any = -1, ad = Infinity;
+  for (let i = 0; i < w.L; i++) if (s.loc.ctrl[i] === a.owner) {
+    const d = w.distKm(a.loc, i);
+    if (!held.has(i)) { if (d < bd) { bd = d; best = i; } } else if (d < ad) { ad = d; any = i; }
+  }
+  return best >= 0 ? best : any;
 }
 export function removeArmy(s: GameState, a: Army) {
   const k = s.armies.indexOf(a); if (k >= 0) s.armies.splice(k, 1);
@@ -534,6 +848,58 @@ export function greatGuns(n: Nation | undefined): boolean { return !!n && (n.tec
 export function bastions(n: Nation | undefined): boolean { return !!n && n.modifiers.some((m) => m.id === 'inv_trace_italienne'); }
 /** Artillery (men in the guns) a host needs to batter the walls of a fort of this level. */
 export const GUNS_PER_FORT = 250;
+/** The armies working a siege: those besieging the place, standing there, not marching or fighting. */
+export function besiegersOf(s: GameState, sg: Siege): Army[] { return s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length); }
+/** A fleet of the besiegers' side (or not hostile to them) in a sea zone next to the town shuts it off from the sea. */
+function siegeBlockade(s: GameState, w: World, l: number, besiegers: Army[]): boolean {
+  return w.coastal[l] === 1 && s.armies.some((f) => f.fleet && f.loc >= w.L && besiegers.some((b) => b.owner === f.owner || !hostile(s, f, b)) && w.distKm(f.loc, l) < 150);
+}
+/** Strength of the walls: fort level, fortress laws and the defenders' warfare. */
+function fortStrength(s: GameState, l: number): number {
+  const fort = s.loc.buildings[l * B + BI.fort];
+  const defN = s.nations[s.loc.ctrl[l]];
+  return fort * (1 + (defN ? lawEffect(defN, 'fort_strength') : 0)) * (defN ? 1 + (defN.tech[2] - 1) * 0.03 : 1);
+}
+/**
+ * The monthly siege roll and what it depends on: 1d14 + the besiegers' bonus against 10 + twice the walls' strength.
+ * parts: the bonus by cause; p: chance a month brings the siege one step on; breach: chance it opens a breach; days:
+ * the expected days until the town falls (4 steps, 3 under blockade). The siege itself (siegesDay) rolls exactly this.
+ */
+export function siegeOdds(s: GameState, w: World, sg: Siege) {
+  const besiegers = besiegersOf(s, sg);
+  const l = sg.loc;
+  const fort = s.loc.buildings[l * B + BI.fort];
+  const defN = s.nations[s.loc.ctrl[l]];
+  let men = 0, art = 0;
+  for (const a of besiegers) for (const r of a.regs) { men += r.men; if (UNITS[r.type].kind === 'art') art += r.men; }
+  // siege craft of the besiegers (great guns, engineers: the best of the allied camps directs the works) and the
+  // weight of numbers against the garrison. A realm whose whole host is called to a great siege (siege_focus, set by
+  // a situation such as the siege of the City) brings the great guns cast for it: +2 there, and only with artillery.
+  let craft = 0, guns = false;
+  for (const a of besiegers) {
+    const bes = s.nations[a.owner]; if (!bes || a.rebels) continue;
+    craft = Math.max(craft, lawEffect(bes, 'siege') + (art > 0 && bes.flags.siege_focus === l ? 2 : 0));
+    if (greatGuns(bes)) guns = true;
+  }
+  const parts: [string, number][] = [
+    ['x_sg_artillery', art > 0 ? 2 + Math.min(3, art / 500) : 0], ['x_sg_blockade', sg.blockade ? 2 : 0], ['x_sg_breach', sg.breach],
+    ['x_sg_numbers', Math.min(3, Math.floor(men / Math.max(1, sg.garrison * 2)))], ['x_sg_time', Math.floor(sg.days / 120)], ['x_sg_craft', craft],
+  ];
+  const bonus = parts.reduce((p, x) => p + x[1], 0);
+  const need = 10 + fortStrength(s, l) * 2;
+  // chance of a step: a natural 14, or roll + bonus reaches the walls' strength (rolls 1..14)
+  let pStep = 0, pBreach = 0;
+  for (let r = 1; r <= 14; r++) { if (r === 14 || r + bonus >= need) pStep += 1 / 14; if (r + bonus >= need + 4) pBreach += 1 / 14; }
+  const battering = guns && art >= GUNS_PER_FORT * fort && !bastions(defN);
+  if (battering) pBreach = 1; // great guns widen the breach every month
+  // a coastal town not blockaded may be resupplied from the sea (a roll of 3 sets the siege back a step)
+  const pResupply = !sg.blockade && w.coastal[l] ? 1 / 14 : 0;
+  const steps = Math.max(0, (sg.blockade ? 3 : 4) - sg.progress);
+  const net = Math.max(0.01, pStep - pResupply);
+  const days = steps <= 0 ? 0 : Math.round(steps / net * 30 - (sg.days % 30));
+  return { parts, bonus, need, pStep, pBreach, battering, pResupply, steps, days: Math.max(0, days), men, art, garrison: sg.garrison, besiegers };
+}
+function siegeLog(s: GameState, sg: Siege, kind: string) { sg.log.push(`${s.day}:${kind}`); if (sg.log.length > 30) sg.log.splice(0, sg.log.length - 30); }
 function siegesDay(s: GameState, w: World) {
   const L = w.L;
   for (const a of s.armies) {
@@ -556,8 +922,10 @@ function siegesDay(s: GameState, w: World) {
     }
     let sg = s.sieges.find((x) => x.loc === l);
     if (!sg) {
-      sg = { loc: l, nation: a.owner, progress: 0, days: 0, garrison: (s.loc.garrison[l] || fort * 1000) * (0.4 + 0.6 * (s.nations[s.loc.owner[l]]?.flags.fort_pay ?? 1)), breach: 0, blockade: false, log: [] };
+      const g = (s.loc.garrison[l] || fort * 1000) * (0.4 + 0.6 * (s.nations[s.loc.owner[l]]?.flags.fort_pay ?? 1));
+      sg = { loc: l, nation: a.owner, progress: 0, days: 0, garrison: g, garrison0: g, breach: 0, blockade: false, log: [] };
       s.sieges.push(sg);
+      siegeLog(s, sg, 'begun');
       a.siege = l;
       if (s.playerNations.includes(ctrl)) notice(s, ctrl, 'siege', { en: `${w.names[l]} is under siege!`, de: `${w.namesDe[l]} wird belagert!` }, { loc: l });
     }
@@ -565,7 +933,7 @@ function siegesDay(s: GameState, w: World) {
     a.siege = l;
   }
   for (const sg of s.sieges.slice()) {
-    const besiegers = s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length);
+    const besiegers = besiegersOf(s, sg);
     if (!besiegers.length) {
       // a sortie or a relief army is fought before the walls: the siege works stand until the battle is decided
       if (s.battles.some((b) => b.loc === sg.loc)) continue;
@@ -573,43 +941,30 @@ function siegesDay(s: GameState, w: World) {
     }
     sg.days++;
     const l = sg.loc;
-    const fort = s.loc.buildings[l * B + BI.fort];
-    const defN = s.nations[s.loc.ctrl[l]];
-    const fortStr = fort * (1 + (defN ? lawEffect(defN, 'fort_strength') : 0)) * (defN ? 1 + (defN.tech[2] - 1) * 0.03 : 1);
-    let men = 0, art = 0;
-    for (const a of besiegers) for (const r of a.regs) { men += r.men; if (UNITS[r.type].kind === 'art') art += r.men; }
-    // blockade: an enemy fleet in an adjacent sea zone
-    sg.blockade = w.coastal[l] === 1 && s.armies.some((f) => f.fleet && besiegers.some((b) => b.owner === f.owner || !hostile(s, f, b)) && w.distKm(f.loc, l) < 150 && f.loc >= w.L);
+    // blockade: a fleet of the besiegers' side in an adjacent sea zone
+    const blk = siegeBlockade(s, w, l, besiegers);
+    if (blk && !sg.blockade) siegeLog(s, sg, 'blockade');
+    sg.blockade = blk;
     if (sg.days % 30 === 0) {
-      // monthly siege roll: 1d14 + bonuses vs fort level
+      // monthly siege roll: 1d14 + bonuses vs fort level (siegeOdds lists the same numbers for the siege panel)
       const roll = 1 + Math.floor(rand(s.rng) * 14);
-      // siege craft of the besiegers (great guns, engineers: the best of the allied camps directs the works) and the
-      // weight of numbers against the garrison
-      // A realm whose whole host is called to a great siege (siege_focus, set by a situation such as the siege of the
-      // City) brings the great guns cast for it: +2 there, and only with artillery in the camp.
-      let craft = 0, guns = false;
-      for (const a of besiegers) {
-        const bes = s.nations[a.owner]; if (!bes || a.rebels) continue;
-        craft = Math.max(craft, lawEffect(bes, 'siege') + (art > 0 && bes.flags.siege_focus === l ? 2 : 0));
-        if (greatGuns(bes)) guns = true;
-      }
-      const bonus = (art > 0 ? 2 + Math.min(3, art / 500) : 0) + (sg.blockade ? 2 : 0) + sg.breach + Math.min(3, Math.floor(men / Math.max(1, sg.garrison * 2))) + Math.floor(sg.days / 120) + craft;
-      const need = 10 + fortStr * 2;
-      if (roll === 14 || roll + bonus >= need) sg.progress += 1;
-      if (roll + bonus >= need + 4) { sg.breach = Math.min(3, sg.breach + 1); sg.log.push('breach'); }
+      const o = siegeOdds(s, w, sg);
+      if (roll === 14 || roll + o.bonus >= o.need) { sg.progress += 1; siegeLog(s, sg, 'progress'); }
+      if (roll + o.bonus >= o.need + 4) { sg.breach = Math.min(3, sg.breach + 1); siegeLog(s, sg, 'breach'); }
       // great guns batter the old high walls (enough artillery for the fort's level, and a realm that casts such guns):
       // each month the breach widens, and once it is wide open the bombardment bleeds the garrison. Bastion fortresses
       // (trace_italienne) do not crumble this way.
-      else if (guns && art >= GUNS_PER_FORT * fort && !bastions(defN)) {
-        if (sg.breach < 3) { sg.breach++; sg.log.push('breach'); } else sg.garrison = Math.max(300, sg.garrison * 0.9);
+      else if (o.battering) {
+        if (sg.breach < 3) { sg.breach++; siegeLog(s, sg, 'breach'); } else { sg.garrison = Math.max(300, sg.garrison * 0.9); siegeLog(s, sg, 'bombarded'); }
       }
       if (roll <= 2) {
         // disease in the camp
         for (const a of besiegers) for (const r of a.regs) r.men *= 0.93;
-        sg.log.push('disease');
+        siegeLog(s, sg, 'disease');
       }
-      if (roll === 3 && !sg.blockade && w.coastal[l]) { sg.progress = Math.max(0, sg.progress - 1); sg.log.push('resupplied'); }
+      if (roll === 3 && !sg.blockade && w.coastal[l]) { sg.progress = Math.max(0, sg.progress - 1); siegeLog(s, sg, 'resupplied'); }
       if (sg.progress >= 4 || (sg.blockade && sg.progress >= 3)) {
+        siegeLog(s, sg, 'fallen');
         occupy(s, w, l, besiegers[0].rebels ? -2 : besiegers[0].owner, besiegers[0]);
         s.sieges.splice(s.sieges.indexOf(sg), 1);
         for (const a of besiegers) a.siege = -1;
@@ -621,18 +976,56 @@ function siegesDay(s: GameState, w: World) {
   }
 }
 
-/** Assault: storm the walls now at heavy cost. */
+/**
+ * Storming the walls now instead of waiting: the chance the assault carries the town and the men it costs. The odds
+ * grow with numbers against the garrison, the breach, guns and the besiegers' morale, and fall with the walls. The
+ * assault itself (assault) uses exactly these numbers.
+ */
+export function assaultOdds(s: GameState, w: World, sg: Siege, armies: Army[]) {
+  let men = 0, art = 0, mo = 0;
+  for (const a of armies) for (const r of a.regs) { men += r.men; mo += r.men * a.morale; if (UNITS[r.type].kind === 'art') art += r.men; }
+  const morale = men > 0 ? mo / men : 0;
+  const fort = s.loc.buildings[sg.loc * B + BI.fort];
+  const walls = Math.max(1, fortStrength(s, sg.loc));
+  const parts: [string, number][] = [
+    ['x_as_numbers', clamp(men / Math.max(1, sg.garrison * (2 + walls)) * 0.35, 0, 0.6)],
+    ['x_as_breach', sg.breach * 0.15], ['x_as_guns', men > 0 ? Math.min(0.1, art / men) : 0], ['x_as_morale', (morale - 0.7) * 0.2],
+  ];
+  const p = clamp(parts.reduce((q, x) => q + x[1], 0), 0.03, 0.9);
+  // the attackers lose more against higher walls and a stronger garrison, fewer through a breach
+  const loss = Math.min(men * 0.4, sg.garrison * (1.5 + fort * 0.5) * (1 - sg.breach * 0.15));
+  return { p, loss, men, parts, garrison: sg.garrison, wait: sg.lastAssault !== undefined ? Math.max(0, sg.lastAssault + 30 - s.day) : 0 };
+}
+/** Assault: storm the walls now at heavy cost (all our armies besieging the place go in together). */
+/** Why this army cannot storm the walls it besieges now (null = it can); the siege panel shows the same reason. */
+export function assaultRefusal(s: GameState, a: Army): string | null {
+  const sg = s.sieges.find((x) => x.loc === a.loc); if (!sg || a.siege !== a.loc) return 'no siege here';
+  if (a.battle) return 'in battle';
+  if (sg.days < 10) return 'the siege works are not ready';
+  if (sg.lastAssault !== undefined && s.day - sg.lastAssault < 30) return 'the troops need time before another assault';
+  if (!besiegersOf(s, sg).some((x) => x.owner === a.owner && !x.rebels && armyMen(x) > 0)) return 'no siege here';
+  return null;
+}
 export function assault(s: GameState, w: World, a: Army): string | null {
-  const sg = s.sieges.find((x) => x.loc === a.loc); if (!sg) return 'no siege';
-  const men = armyMen(a);
-  const fort = s.loc.buildings[a.loc * B + BI.fort];
-  const chanceWin = clamp(men / (sg.garrison * (2 + fort)) * 0.35 + sg.breach * 0.15, 0.03, 0.9);
-  const loss = Math.min(men * 0.4, sg.garrison * (1.5 + fort * 0.5));
-  for (const r of a.regs) r.men = Math.max(0, r.men - loss * r.men / men);
-  if (chance(s.rng, chanceWin)) { occupy(s, w, a.loc, a.owner, a); s.sieges.splice(s.sieges.indexOf(sg), 1); return null; }
+  const why = assaultRefusal(s, a); if (why) return why;
+  const sg = s.sieges.find((x) => x.loc === a.loc)!;
+  const armies = besiegersOf(s, sg).filter((x) => x.owner === a.owner && !x.rebels);
+  const o = assaultOdds(s, w, sg, armies);
+  if (o.men <= 0) return 'no siege here';
+  sg.lastAssault = s.day;
+  for (const x of armies) for (const r of x.regs) r.men = Math.max(0, r.men - o.loss * r.men / o.men);
+  if (chance(s.rng, o.p)) {
+    siegeLog(s, sg, 'stormed');
+    occupy(s, w, a.loc, a.owner, a); s.sieges.splice(s.sieges.indexOf(sg), 1);
+    for (const x of armies) x.siege = -1;
+    if (s.playerNations.includes(a.owner)) notice(s, a.owner, 'siege_won', { en: `Our troops stormed ${w.names[a.loc]} (${Math.round(o.loss)} men lost).`, de: `Unsere Truppen haben ${w.namesDe[a.loc]} gestürmt (${Math.round(o.loss)} Mann verloren).` }, { loc: a.loc });
+    return null;
+  }
   sg.garrison *= 0.8;
-  a.morale *= 0.6;
-  return 'assault repulsed';
+  for (const x of armies) x.morale *= 0.6;
+  siegeLog(s, sg, 'assault_failed');
+  if (s.playerNations.includes(a.owner)) notice(s, a.owner, 'assault_failed', { en: `The assault on ${w.names[a.loc]} was repulsed (${Math.round(o.loss)} men lost).`, de: `Der Sturm auf ${w.namesDe[a.loc]} wurde abgeschlagen (${Math.round(o.loss)} Mann verloren).` }, { loc: a.loc });
+  return null; // the assault was made (the outcome is told in a notice and the siege log)
 }
 
 export function occupy(s: GameState, w: World, l: number, by: number, army?: Army) {
@@ -700,7 +1093,7 @@ function recruitsDay(s: GameState, w: World) {
       if (!target) target = newArmy(s, r.nation, sea >= 0 ? sea : r.loc, [], true);
     } else if (!target) target = newArmy(s, r.nation, r.loc, []);
     const reg = target.regs.find((x) => x.type === r.type);
-    if (reg) reg.men += r.men; else target.regs.push({ type: r.type, men: r.men });
+    if (reg) { reg.men += r.men; reg.max = (reg.max ?? reg.men - r.men) + r.men; } else target.regs.push({ type: r.type, men: r.men, max: r.men });
     if (s.playerNations.includes(r.nation)) notice(s, r.nation, 'recruited', { en: `${UNITS[r.type].name.en} ready at ${w.names[r.loc]}.`, de: `${UNITS[r.type].name.de} bereit in ${w.namesDe[r.loc]}.` }, { loc: r.loc });
   }
 }
@@ -932,6 +1325,8 @@ export const military: System = {
   },
   monthly({ s, w }) {
     attritionMonth(s, w);
+    reinforceMonth(s, w);
+    blockadeMonth(s, w);
     upkeepMonth(s, w);
     rebelsMonth(s, w);
     // generals for armies without one
