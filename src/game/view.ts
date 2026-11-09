@@ -32,6 +32,8 @@ import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
 import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
+import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
+import { realmAnswer } from './realmview';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
 
@@ -64,6 +66,8 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     armyMaint: n.armyMaint, navyMaint: n.navyMaint, tariff: n.tariff, coinage: n.coinage, loans: n.loans.reduce((p, l) => p + l.amount, 0), debt: n.debt, stats: { ...n.stats },
     homeMarket: n.capital >= 0 ? s.loc.market[n.capital] ?? -1 : -1,
     merchants: { used: s.markets.reduce((p, m) => p + (m.merchants[n.id] || 0), 0), cap: merchantCap(n) },
+    electionCloses: s.empire.election && s.empire.electors.includes(n.id) && s.empire.election.votes[n.id] === undefined ? s.empire.election.closes : 0,
+    asks: (s.powers?.offers ?? []).filter((o) => o.to === n.id).length + s.leagues.reduce((p, l) => p + (l.calls ?? []).filter((c) => c.to === n.id).length, 0),
   };
 }
 
@@ -223,6 +227,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'battle': return battleView(s, w, q.id);
     case 'battles': return battleList(s, q.war, player);
     case 'war': return warView(s, w, player, q.war);
+    case 'empire': case 'powers': case 'assembly': case 'govern': case 'situation': return player >= 0 ? realmAnswer(s, w, player, q) : null;
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
@@ -371,7 +376,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     situations: s.situations.map((x) => { const d = SITUATIONS.find((y) => y.id === x.id); return { ...x, name: d?.name, desc: d?.desc, stageName: d?.stages?.[x.stage] }; }),
     constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc], building: BUILDINGS[c.building].name })),
     recruits: s.recruits.filter((r) => r.nation === player).map((r) => ({ ...r, name: w.names[r.loc], unit: UNITS[r.type].name })),
-    spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors },
+    spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors, election: !!s.empire.election, diet: !!s.empire.diet },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,
     priceLevel: s.priceLevel, markets: s.markets.map((m) => ({ id: m.id, name: m.name, mine: m.merchants[player] || 0 })),
     explain: explainRealm(s, w, n), goals: goalsView(s, w, n),
@@ -446,6 +451,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   if (n.regent) mandateParts.push(['x_regency', -15]);
   if (n.excommunicated) mandateParts.push(['x_excommunicated', -25]);
   mandateParts.push(...effectSources(n, 'mandate'));
+  mandateParts.push(...govMandateParts(s, n));
   const mandateTarget = sumRows(mandateParts);
   // ---- Authority: (1 + skills·0.4 + Mandate/50) × (1 + authority_gain) + authority (authorityGain)
   const sk = r ? r.skills[0] + r.skills[1] * 0.5 : 2;
@@ -527,7 +533,10 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods)) * (1 + trB)) };
   });
   // ---- estates: contentment drifts 3 % a month toward 50 + 6 per privilege
-  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const tgt = 50 + e.privileges.length * 6 - duty; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, appeaseUntil: n.flags[`appease_${e.id}`] || 0 }; });
+  // influence drifts 5 % a month toward the Power's share of all weights (systems/government.ts influenceFactors)
+  const inflF = influenceFactors(s, n); const inflT = influenceTargets(s, n);
+  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const resent = resentment(n, e.id); const tgt = 50 + e.privileges.length * 6 - duty + resent; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, resent, appeaseUntil: n.flags[`appease_${e.id}`] || 0,
+    influence: { value: e.influence, target: inflT[e.id] ?? e.influence, monthly: ((inflT[e.id] ?? e.influence) - e.influence) * INFLUENCE_DRIFT, factors: inflF[e.id] ?? [], weight: (inflF[e.id] ?? []).reduce((p, r) => p * r[1], 1) } }; });
   return {
     concord: { value: n.concord, target: concordTarget, monthly: (concordTarget - n.concord) * 0.04, parts: concordParts },
     mandate: { value: n.mandate, target: mandateTarget, monthly: (mandateTarget - n.mandate) * 0.03, parts: mandateParts },

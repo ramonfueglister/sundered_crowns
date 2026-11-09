@@ -7,6 +7,7 @@ import { rand, chance, hash01, pick, seedRng } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
 import { FAITHS, GROUP_TRADITIONS } from '../content/peoples';
 import { dutyDiscontent } from './duties';
+import { classSums, influenceTargets, resentment, INFLUENCE_DRIFT, govSuccessor, govMandateParts, estateName, type ClassSums } from './government';
 
 // Every effect key is read through lawEffect(): laws, value axes, the tradition of the realm's culture group and all
 // timed and permanent modifiers (privileges, doctrines, innovations, landmarks, events) are summed into one table.
@@ -88,15 +89,24 @@ export const ESTATES: { id: string; name: { en: string; de: string }; desc: { en
   { id: 'burghers', name: { en: 'Burghers', de: 'Bürger' }, desc: { en: 'Merchants and guilds of the towns: they hold the money.', de: 'Kaufleute und Zünfte der Städte: sie halten das Geld.' } },
   { id: 'commons', name: { en: 'Commons', de: 'Gemeine' }, desc: { en: 'Peasants and labourers: they pay, fight and revolt.', de: 'Bauern und Tagelöhner: sie zahlen, kämpfen und rebellieren.' } },
 ];
-export const PRIVILEGES: { id: string; estate: string; name: { en: string; de: string }; grant: Record<string, number>; effects: Record<string, number> }[] = [
-  { id: 'magnate_command', estate: 'magnates', name: { en: 'Hereditary commands', de: 'Erbliche Befehlsgewalt' }, grant: { authority: 25 }, effects: { manpower: 0.15, control: -0.05 } },
-  { id: 'magnate_tax', estate: 'magnates', name: { en: 'Exemption from the hearth tax', de: 'Befreiung von der Herdsteuer' }, grant: { treasury_months: 3 }, effects: { hearth_exempt_nobles: 1, tax: -0.08 } },
-  { id: 'magnate_council', estate: 'magnates', name: { en: 'Seats in the royal council', de: 'Sitze im Kronrat' }, grant: { concord: 15 }, effects: { authority_gain: -0.2 } },
-  { id: 'prelate_tithe', estate: 'prelates', name: { en: 'Untouchable tithes', de: 'Unantastbarer Zehnt' }, grant: { mandate: 10 }, effects: { tax: -0.05, conversion: 0.2 } },
-  { id: 'prelate_schools', estate: 'prelates', name: { en: 'Church control of schools', de: 'Kirchliche Schulaufsicht' }, grant: { concord: 10 }, effects: { research: -0.05, literacy: 0.01 } },
-  { id: 'burgher_monopoly', estate: 'burghers', name: { en: 'Trade monopolies', de: 'Handelsmonopole' }, grant: { treasury_months: 4 }, effects: { trade: -0.06, tax: 0.03 } },
-  { id: 'burgher_loans', estate: 'burghers', name: { en: 'Crown loans on easy terms', de: 'Kronkredite zu leichten Bedingungen' }, grant: { authority: 10 }, effects: { interest: -0.02 } },
-  { id: 'commons_charters', estate: 'commons', name: { en: 'Village charters', de: 'Dorfbriefe' }, grant: { concord: 10 }, effects: { unrest: -3, tax: -0.03 } },
+export const PRIVILEGES: { id: string; estate: string; name: { en: string; de: string }; grant: Record<string, number>; effects: Record<string, number>; resent?: Record<string, number> }[] = [
+  { id: 'magnate_command', estate: 'magnates', name: { en: 'Hereditary commands', de: 'Erbliche Befehlsgewalt' }, grant: { authority: 25 }, effects: { manpower: 0.15, control: -0.05 }, resent: { commons: -5 } },
+  { id: 'magnate_tax', estate: 'magnates', name: { en: 'Exemption from the hearth tax', de: 'Befreiung von der Herdsteuer' }, grant: { treasury_months: 3 }, effects: { hearth_exempt_nobles: 1, tax: -0.08 }, resent: { burghers: -6, commons: -6 } },
+  { id: 'magnate_council', estate: 'magnates', name: { en: 'Seats in the royal council', de: 'Sitze im Kronrat' }, grant: { concord: 15 }, effects: { authority_gain: -0.2 }, resent: { burghers: -5 } },
+  { id: 'prelate_tithe', estate: 'prelates', name: { en: 'Untouchable tithes', de: 'Unantastbarer Zehnt' }, grant: { mandate: 10 }, effects: { tax: -0.05, conversion: 0.2 }, resent: { commons: -5, burghers: -3 } },
+  { id: 'prelate_schools', estate: 'prelates', name: { en: 'Church control of schools', de: 'Kirchliche Schulaufsicht' }, grant: { concord: 10 }, effects: { research: -0.05, literacy: 0.01 }, resent: { burghers: -3 } },
+  { id: 'burgher_monopoly', estate: 'burghers', name: { en: 'Trade monopolies', de: 'Handelsmonopole' }, grant: { treasury_months: 4 }, effects: { trade: -0.06, tax: 0.03 }, resent: { commons: -4, magnates: -3 } },
+  { id: 'burgher_loans', estate: 'burghers', name: { en: 'Crown loans on easy terms', de: 'Kronkredite zu leichten Bedingungen' }, grant: { authority: 10 }, effects: { interest: -0.02 }, resent: { magnates: -3 } },
+  { id: 'commons_charters', estate: 'commons', name: { en: 'Village charters', de: 'Dorfbriefe' }, grant: { concord: 10 }, effects: { unrest: -3, tax: -0.03 }, resent: { magnates: -8 } },
+  // eight more, so that each Power has four (systems/government.ts: demands, assembly concessions, resentment)
+  { id: 'magnate_serfs', estate: 'magnates', name: { en: 'Lordship over the villages', de: 'Herrschaft über die Dörfer' }, grant: { authority: 15 }, effects: { serfdom: 0.2, manpower: 0.05, growth: -0.02 }, resent: { commons: -15 } },
+  { id: 'prelate_courts', estate: 'prelates', name: { en: 'Church courts', de: 'Geistliche Gerichtsbarkeit' }, grant: { mandate: 8 }, effects: { unrest: -1, control: -0.03, tolerance: -0.1 }, resent: { burghers: -5, magnates: -5 } },
+  { id: 'prelate_lands', estate: 'prelates', name: { en: 'Lands in mortmain', de: 'Güter der Toten Hand' }, grant: { concord: 8 }, effects: { exempt_4: 0.5, conversion: 0.1 }, resent: { commons: -5, magnates: -3 } },
+  { id: 'burgher_charters', estate: 'burghers', name: { en: 'Town liberties', de: 'Stadtfreiheiten' }, grant: { treasury_months: 3 }, effects: { trade: 0.04, production: 0.02, control: -0.03 }, resent: { magnates: -8 } },
+  { id: 'burgher_seats', estate: 'burghers', name: { en: 'Burghers in the council', de: 'Bürger im Rat' }, grant: { authority: 15 }, effects: { tax: 0.03, estate_power: 0.05, authority_gain: -0.1 }, resent: { magnates: -10 } },
+  { id: 'commons_arms', estate: 'commons', name: { en: 'Right to bear arms', de: 'Waffenrecht der Bauern' }, grant: { concord: 5 }, effects: { home_defence: 0.1, manpower: 0.05, control: -0.03 }, resent: { magnates: -12 } },
+  { id: 'commons_pastures', estate: 'commons', name: { en: 'Common pastures', de: 'Allmende' }, grant: { concord: 8 }, effects: { growth: 0.03, unrest: -2, production: -0.02 }, resent: { magnates: -6 } },
+  { id: 'commons_tribunes', estate: 'commons', name: { en: 'Tribunes of the people', de: 'Volkstribune' }, grant: { mandate: 5 }, effects: { unrest: -2, corruption: -0.3, authority_gain: -0.1 }, resent: { magnates: -8, burghers: -4 } },
 ];
 
 function estateDefaults(n: Nation): Estate[] {
@@ -193,8 +203,10 @@ export function succession(s: GameState, w: World, n: Nation) {
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
   let next = 0;
   let contested = false;
-  const elected = law === 'office' ? ablestOfficial(s, n) : null;
-  if (elected) {
+  // every form but the hereditary monarchy lets the Powers choose (systems/government.ts)
+  const chosen = govSuccessor(s, w, n);
+  const elected = chosen || law !== 'office' ? null : ablestOfficial(s, n);
+  if (chosen) { next = chosen; contested = !!n.flags.elect_contested && n.flags.elect_contested === s.day; } else if (elected) {
     // election to office: the council and court choose the ablest of their own; no regency, no claim of blood
     next = elected.id;
     for (const off in n.council) if (n.council[off] === next) delete n.council[off];
@@ -502,11 +514,12 @@ export function mandateParts(s: GameState, n: Nation): [string | I18n, number][]
     ['laws_values', lawEffect(n, 'mandate_gain') * 100 + lawEffect(n, 'mandate')]];
   if (n.regent) out.push(['regency', -15]);
   if (n.excommunicated) out.push(['excommunicated', -25]);
+  out.push(...govMandateParts(s, n));
   return out;
 }
 export const sumParts = (p: [unknown, number][]) => { let v = 0; for (const x of p) v += x[1]; return v; };
 
-function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
+function nationPoliticsMonth(s: GameState, w: World, n: Nation, cs: ClassSums) {
   n.authority = clamp(n.authority + authorityGain(s, n), 0, 300);
   // Concord drifts toward a target from contentment of powers (weighed by a strong assembly, estate_power), war exhaustion and effects
   const target = sumParts(concordParts(s, n));
@@ -519,11 +532,13 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   const inWar = s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id));
   if (!inWar) n.warExhaustion = Math.max(0, n.warExhaustion - 1.5);
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
-  // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
+  // estates: contentment drifts to 50 + privileges effect - duties - the other Powers' privileges they resent;
+  // influence drifts toward the Power's share of the people and the wealth, weighed by standing, laws and privileges
+  const tgt = influenceTargets(s, n, cs);
   for (const e of n.estates) {
     const priv = e.privileges.length * 6;
-    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id, (c) => classExempt(n, c)) - e.contentment) * 0.03, 0, 100);
-    e.influence = clamp(e.influence + (priv * 0.05) - 0.03 + (e.id === 'burghers' ? lawEffect(n, 'trade') * 0.5 : 0), 5, 100);
+    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id, (c) => classExempt(n, c)) + resentment(n, e.id) - e.contentment) * 0.03, 0, 100);
+    e.influence = clamp(e.influence + ((tgt[e.id] ?? e.influence) - e.influence) * INFLUENCE_DRIFT, 5, 100);
   }
   // normalise influence to 100
   let tot = 0; for (const e of n.estates) tot += e.influence;
@@ -533,9 +548,10 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
     if (e.influence > 60 && e.contentment < 40 && !n.flags[`estate_crisis_${e.id}`]) {
       n.flags[`estate_crisis_${e.id}`] = s.day;
       n.concord = clamp(n.concord - 25, -100, 100);
-      n.modifiers.push({ id: `estate_crisis_${e.id}`, until: s.day + 365 * 2, label: { en: `Overmighty ${e.id}`, de: `Übermächtige ${e.id}` }, effects: { tax: -0.15, unrest: 4, authority_gain: -0.3 } });
-      notice(s, n.id, 'estate_crisis', { en: `The ${e.id} have grown overmighty and defy the crown!`, de: `Die ${e.id} sind übermächtig geworden und trotzen der Krone!` });
-      chronicle(s, n.id, 'crisis', { en: `In ${n.short.en} the ${e.id} defied the crown.`, de: `In ${n.short.de} trotzten die ${e.id} der Krone.` });
+      const nm = estateName(e.id);
+      n.modifiers.push({ id: `estate_crisis_${e.id}`, until: s.day + 365 * 2, label: { en: `Overmighty ${nm.en}`, de: `Übermächtige ${nm.de}` }, effects: { tax: -0.15, unrest: 4, authority_gain: -0.3 } });
+      notice(s, n.id, 'estate_crisis', { en: `The ${nm.en} have grown overmighty and defy the crown!`, de: `Die ${nm.de} sind übermächtig geworden und trotzen der Krone!` });
+      chronicle(s, n.id, 'crisis', { en: `In ${n.short.en} the ${nm.en} defied the crown.`, de: `In ${n.short.de} trotzten die ${nm.de} der Krone.` });
     } else if (e.influence < 50 && n.flags[`estate_crisis_${e.id}`] && s.day - n.flags[`estate_crisis_${e.id}`] > 730) delete n.flags[`estate_crisis_${e.id}`];
   }
   // reforms in progress
@@ -604,6 +620,7 @@ export function grantPrivilege(s: GameState, n: Nation, pid: string): string | n
   const e = estate(n, p.estate); if (e.privileges.includes(pid)) return 'already granted';
   e.privileges.push(pid);
   e.contentment = clamp(e.contentment + 20, 0, 100); e.influence = clamp(e.influence + 8, 5, 100);
+  for (const [eid, dv] of Object.entries(p.resent ?? {})) { const o = n.estates.find((x) => x.id === eid); if (o) o.contentment = clamp(o.contentment + dv, 0, 100); }
   if (p.grant.authority) n.authority += p.grant.authority;
   if (p.grant.concord) n.concord = clamp(n.concord + p.grant.concord, -100, 100);
   if (p.grant.mandate) n.mandate = clamp(n.mandate + p.grant.mandate, 0, 100);
@@ -636,10 +653,11 @@ export const politics: System = {
     }
   },
   monthly({ s, w }) {
+    const cs = classSums(s);
     for (const n of s.nations) {
       if (!n.alive) continue;
       characterMonth(s, w, n);
-      nationPoliticsMonth(s, w, n);
+      nationPoliticsMonth(s, w, n, cs);
       officialsMonth(s, n);
       if (s.day % 365 < 31) fillCouncil(s, n);
       if (s.playerNations.includes(n.id)) refreshCandidates(s, n, s.day % 365 < 31);

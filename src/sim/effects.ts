@@ -48,10 +48,12 @@ export const EFFECTS: Record<string, EffectDef> = {
   estate_power: { unit: 'pct', reader: S + 'politics.ts' },
   succession_strife: { unit: 'pp', scale: 0.3, bad: true, reader: S + 'politics.ts' },
   regency_strife: { unit: 'pts', scale: 20, bad: true, reader: S + 'politics.ts' },
-  war_vote: { unit: 'flag', reader: S + 'war.ts' },
+  war_vote: { unit: 'flag', reader: S + 'government.ts' },
+  tax_vote: { unit: 'flag', reader: S + 'government.ts' },
   research: { unit: 'pct', reader: S + 'progress.ts' },
   // ---- faith
   conversion: { unit: 'pct', reader: S + 'society.ts' },
+  plague_guard: { unit: 'pct', reader: S + 'society.ts' },
   assimilation: { unit: 'pct', reader: S + 'society.ts' },
   agents: { unit: 'count', reader: S + 'society.ts' },
   reform_pressure: { unit: 'pct', bad: true, reader: 'src/sim/content/situations.ts' },

@@ -20,7 +20,13 @@ import { B, BI, C, UNITS } from '../defs';
 // ---------------- helpers ----------------
 const LATIN = FAITH_INDEX.latin;
 const REFORM_FAITHS = [FAITH_INDEX.hussite, FAITH_INDEX.evangelical, FAITH_INDEX.reformed, FAITH_INDEX.anglican_type];
-const isReform = (f: number) => REFORM_FAITHS.includes(f);
+export const isReform = (f: number) => REFORM_FAITHS.includes(f);
+/** The troubles of the Horde before the bar's bounds: eight a year since 1359, less the emirs purged and the tribute
+ *  paid (unity), plus the rival khans backed from outside (strife). The situation and its actions both use it. */
+export const hordeRaw = (y: number, unity: number, strife: number) => (y - 1359) * 8 - unity + strife;
+export const hordeProgress = (y: number, unity: number, strife: number) => Math.round(clamp(hordeRaw(y, unity, strife), 0, 100));
+/** Purges and tribute (unity) and backed rivals (strife) each count up to this much. */
+export const HORDE_CAP = 45;
 
 function nat(s: GameState, key: string): Nation | undefined {
   for (const n of s.nations) if (n.key === key && n.alive) return n;
@@ -135,7 +141,7 @@ function counterSpread(s: GameState, w: World, faith: number, rate: number) {
 function faithShare(s: GameState, id: number, faith: number) {
   let a = 0, t = 0; for (const l of nationLocsRO(s, id)) { const d = Math.max(1, s.loc.dev[l]); t += d; if (s.loc.faith[l] === faith) a += d; } return t ? a / t : 0;
 }
-function faithLocs(s: GameState, w: World, faith: number) { let k = 0; for (let i = 0; i < w.L; i++) if (s.loc.faith[i] === faith) k++; return k; }
+export function faithLocs(s: GameState, w: World, faith: number) { let k = 0; for (let i = 0; i < w.L; i++) if (s.loc.faith[i] === faith) k++; return k; }
 /** A realm turns to a new faith: Powers of the Realm, the Curia and the neighbours react. */
 export function convertRealm(s: GameState, w: World, n: Nation, faith: number) {
   const old = n.faith; if (old === faith) return;
@@ -498,7 +504,7 @@ const DEFS: SituationDef[] = [
           const myDev = nationDev(s, o.id);
           const balkan = (x: Nation) => x.capital >= 0 && w.lat[x.capital] >= 40.3 && w.lon[x.capital] <= 29.5 && w.lon[x.capital] > 15;
           const cands = [...neighboursOf(s, w, o.id)].map((x) => s.nations[x]).filter((x) => x.alive && x.overlord < 0 && !atWar(s, o.id, x.id) && !hasTreaty(s, o.id, x.id, 'truce') && !hasTreaty(s, o.id, x.id, 'alliance')
-            && (faithFamily(x.faith) === 'christian' || GROUP_OF[ALL_CULTURES[x.culture]] === 'turkic') && x.key !== 'mamluk'
+            && (faithFamily(x.faith) === 'christian' || GROUP_OF[ALL_CULTURES[x.culture]] === 'turkic') && x.key !== 'mamluk' && !((x.flags.tribute_osman ?? 0) > s.day)
             && nationDev(s, x.id) < myDev * (balkan(x) && faithFamily(x.faith) === 'christian' ? 1.8 : 1.2) && bloc(x.id) < myPow * 0.9);
           // the Balkans first: divided Christian crowns of Europe; the City itself only late; Anatolian rivals when nothing else is open
           const score = (x: Nation) => nationDev(s, x.id) * 0.2 - (faithFamily(x.faith) === 'christian' ? 40 : 0) - (balkan(x) ? 150 : 0);
@@ -543,9 +549,12 @@ const DEFS: SituationDef[] = [
       if (y >= 1440 || (sit.stage === 0 && y >= 1430)) { dropMod(h, 'great_troubles'); endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures'); return; }
       if (sit.stage === 0) {
         setMod(s, h, 'great_troubles', 1, { en: 'Khans of a season', de: 'Khane einer Saison' }, { unrest: 2, tax: -0.1, morale: -0.05 });
-        sit.progress = Math.round(clamp((y - 1359) * 8, 0, 100));
+        // purges of the emirs (unity) and rival khans backed from outside (strife) move the troubles (situation actions);
+        // both fade each January, before the bar is drawn, so that the window's rows always add up to it
+        if (m === 0) { sit.data.unity = Math.max(0, (sit.data.unity || 0) - 3); sit.data.strife = Math.max(0, (sit.data.strife || 0) - 3); }
+        sit.progress = hordeProgress(y, sit.data.unity || 0, sit.data.strife || 0);
         // a player khan holds the realm together by his own wars; the AI horde breaks apart once
-        if (m !== 6 || y < 1361 || human(s, h.id) || !chance(s.rng, 0.3)) return;
+        if (m !== 6 || y < 1361 || human(s, h.id) || !chance(s.rng, 0.3 * clamp(sit.progress / 60, 0.3, 1.5))) return;
         // the emirs wait for peace: a split in the middle of a war would hand occupied land to an uninvolved realm
         if (s.wars.some((x) => x.att.includes(h.id) || x.def.includes(h.id))) return;
         const cap = h.capital; if (cap < 0) return;
@@ -641,12 +650,13 @@ const DEFS: SituationDef[] = [
       if (m !== 5) return;
       if (y >= 1520) { delete c.flags.siege_focus; dropMod(c, 'war_for_granada'); endSituation(s, sit, 'endures'); return; }
       giveClaim(s, c.id, g.id, 30);
-      const strong = nationDev(s, c.id) > nationDev(s, g.id) * 6 && c.era >= 1;
+      const crusade = (sit.data.crusade_until ?? 0) > s.day, parias = (sit.data.parias_until ?? 0) > s.day;
+      const strong = nationDev(s, c.id) > nationDev(s, g.id) * (crusade ? 4 : 6) && (c.era >= 1 || crusade) && !parias;
       if (sit.stage === 0) {
         // tribute from the emirate to its overlord
         if (g.overlord === c.id && g.treasury > 0) { const t = Math.max(5, g.income.tax || 5) * 1.5; g.treasury -= t; c.treasury += t; }
         // (a champion fighting only defensive wars elsewhere may still begin, if the war has not worn him out)
-        if ((y >= 1440 || strong) && !s.wars.some((x) => x.attLead === c!.id) && c.warExhaustion < 40 && c.concord > -30) {
+        if (((y >= 1440 && !parias) || strong) && !s.wars.some((x) => x.attLead === c!.id) && c.warExhaustion < 40 && c.concord > -30) {
           sit.stage = 1;
           if (g.overlord === c.id) { g.overlord = -1; g.subjectType = null; }
           world(s, { en: `${g.short.en} refused its tribute; ${c.short.en} prepared the war for Granada.`, de: `${g.short.de} verweigerte den Tribut; ${c.short.de} rüstete zum Krieg um Granada.` }, c.id, g.capital);
@@ -697,7 +707,7 @@ const DEFS: SituationDef[] = [
       // the year's great voyage: the best-equipped Atlantic realm charts new waters
       let best: Nation | undefined, bv = -Infinity;
       for (const n of parts) {
-        const v = n.tech[1] + (n.doctrines.seafaring || 0) * 1.5 + (n.doctrines.colonial || 0) + (n.innovations.length ? 0.5 : 0) + rand(s.rng) * 4;
+        const v = n.tech[1] + (n.doctrines.seafaring || 0) * 1.5 + (n.doctrines.colonial || 0) + (n.innovations.length ? 0.5 : 0) + rand(s.rng) * 4 + (sit.data.fund?.[n.id] ?? 0);
         if (v > bv) { bv = v; best = n; }
       }
       if (best) {
@@ -705,6 +715,7 @@ const DEFS: SituationDef[] = [
         const k = best.era < 1 ? 1 : clamp(2 + Math.floor((best.tech[1] - 6) / 3), 2, 6);
         const got = chartVoyage(s, w, best, k, y);
         if (got > 0) credit[best.id] = (credit[best.id] || 0) + got;
+        if (sit.data.fund) delete sit.data.fund[best.id]; // a funded voyage sails once
       }
       // milestones
       const E = s.explored[0]; const ms: Record<string, number> = sit.data.milestones;
@@ -1008,7 +1019,7 @@ function atlanticCoast(w: World): number[] {
   }
   ATL_CACHE.set(w, a); return a;
 }
-function atlanticRealms(s: GameState, w: World): Nation[] {
+export function atlanticRealms(s: GameState, w: World): Nation[] {
   const ids = new Set<number>();
   for (const l of atlanticCoast(w)) { const o = s.loc.owner[l]; if (o >= 0) ids.add(o); }
   return [...ids].map((i) => s.nations[i]).filter((n) => n.alive && n.overlord < 0 && n.flags.pretender_of === undefined && n.tech[1] >= 6 && faithFamily(n.faith) === 'christian');
@@ -1043,7 +1054,7 @@ function milestone(s: GameState, n: Nation | undefined, what: I18n) {
   world(s, t, n.id); tell(s, t);
 }
 
-function confessionalSplit(s: GameState): { cath: number; prot: number; cathMembers: number[]; protMembers: number[] } | null {
+export function confessionalSplit(s: GameState): { cath: number; prot: number; cathMembers: number[]; protMembers: number[] } | null {
   const mem = s.nations.filter((n) => n.alive && n.isHRE && n.overlord < 0);
   const cath = mem.filter((n) => n.faith === LATIN), prot = mem.filter((n) => isReform(n.faith));
   if (cath.length < 3 || prot.length < 3) return null;
@@ -1076,7 +1087,7 @@ function finishConfessional(s: GameState, sit: Situation, outcome: string) {
   endSituation(s, sit, outcome);
 }
 
-function monarchy(n: Nation) { return !n.gov.includes('republic') && n.gov !== 'theocracy' && n.gov !== 'military_order' && n.gov !== 'nomadic_horde' && n.gov !== 'tribal_federation'; }
+export function monarchy(n: Nation) { return !n.gov.includes('republic') && n.gov !== 'theocracy' && n.gov !== 'military_order' && n.gov !== 'nomadic_horde' && n.gov !== 'tribal_federation'; }
 function revolution(s: GameState, w: World, sit: Situation, n: Nation) {
   const oldName = n.short.en;
   n.gov = 'revolutionary_republic';

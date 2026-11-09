@@ -111,6 +111,8 @@ function migrate(s: GameState): GameState {
     for (const a of s.armies) setFullStrength(a);
     s.treaties = dedupeTreaties(s.treaties);
   }
+  // (realm pass: the Empire's election, calls, orders and favours, the great powers and the demands of the Powers are
+  // optional fields that the systems create when first needed, so older saves load without a new version)
   return s;
 }
 /** One treaty of each kind per pair (two envoys that crossed on the road once made the same alliance twice). */

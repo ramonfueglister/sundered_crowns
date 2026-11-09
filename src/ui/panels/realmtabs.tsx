@@ -2,7 +2,7 @@
 import { GoalTree } from './goals';
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
-import { playerId, openPanel } from '../store';
+import { playerId, openPanel, realmDialog } from '../store';
 import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, LocName, useQuery, act, t, L, num, signed, pct, Tip, Breakdown, Reasons, realm, daysText, locName, namesVersion, selectArmy, selectLoc, fmtDateShort, Coa, placeName } from './common';
 import { sfx } from '../audio';
 import { EnvoysTip, PrestigeTip, DreadTip, ManpowerTip, WarExhaustionTip, ResearchTip, DoctrineTip, AgentsTip, ColoniesTip, TipHead, Parts } from './explain';
@@ -203,7 +203,7 @@ export function SocietyTab() {
     </div>
     <Section title={t('situations')} id="soc-sit">
       {r.situations.filter((s: any) => s.active).length ? r.situations.filter((s: any) => s.active).map((s: any) => <div class="situation">
-        <div class="sit-h"><b>{L(s.name)}</b>{s.stageName && <span class="tag">{L(s.stageName)}</span>}<span class="muted small">{t('since')} {fmtDateShort(s.started, v.startYear)}</span></div>
+        <div class="sit-h"><b>{L(s.name)}</b>{s.stageName && <span class="tag">{L(s.stageName)}</span>}<span class="muted small">{t('since')} {fmtDateShort(s.started, v.startYear)}</span><Btn tip={t('x_sit_open_hint')} onClick={() => { realmDialog.value = { kind: 'situation', id: s.id }; }}>{t('x_sit_open')}</Btn></div>
         <div class="muted small">{L(s.desc)}</div>
         <Bar value={s.progress} max={100} color="#7a4e1c" tip={<div>{t('progress')}: {num(s.progress)}</div>} />
       </div>) : <div class="muted small">{t('no_situations')}</div>}
@@ -215,6 +215,7 @@ export function SocietyTab() {
         <Bar value={r.empire.authority} max={100} color="#c9a24a" />
         <Row k={t('electors')} v={<NList ids={r.empire.electors} size={14} />} />
         {me && <div class="muted small">{nations.value[pid] && (r.empire.electors.includes(pid) ? t('you_elector') : '')}</div>}
+        <Btn onClick={() => openPanel('empire')}>{t('x_emp_open')}</Btn>
       </Section>
       <Section title={t('papacy')} id="soc-pap">
         <Row k={t('holy_see')} v={r.papacy.holder >= 0 ? <NLink id={r.papacy.holder} /> : '—'} />

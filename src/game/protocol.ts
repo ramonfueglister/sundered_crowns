@@ -49,7 +49,13 @@ export type Query =
   | { q: 'tpolicy' }                                         // tariff, agreements, embargoes and partners of our realm
   | { q: 'trel'; target: number }                            // trade between us and another realm
   | { q: 'expedition'; to?: number; fleet?: number }         // expedition targets and the plan for one
-  | { q: 'companies' };                                      // our chartered companies and the charters open to us
+  | { q: 'companies' }                                      // our chartered companies and the charters open to us
+  // ---- realm pass (src/game/realmview.ts): the Empire and the league, the great powers, the assembly, the government, a situation
+  | { q: 'empire' }
+  | { q: 'powers' }
+  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
+  | { q: 'govern' }
+  | { q: 'situation'; id: string };
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
@@ -84,6 +90,8 @@ export interface PlayerView {
   stats: Record<string, number>;
   homeMarket: number;                              // market of the capital (-1 without a capital)
   merchants: { used: number; cap: number };
+  electionCloses?: number;                         // an imperial election this realm must still vote in closes that day (realm pass)
+  asks?: number;                                   // offers of mediation and calls of the league awaiting this realm's answer (realm pass)
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

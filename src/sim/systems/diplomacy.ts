@@ -9,6 +9,7 @@ import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
 import { excommunicate, steppeFade } from './realm';
 import { embargoedBy, embargoBetween, embargoStakes } from './trade';
+import { isGreatPower, GP_REGARD } from './powers';
 
 /** How much less a realm thinks of the one that keeps an embargo on it. */
 export const EMBARGO_OPINION = 40;
@@ -43,6 +44,8 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   const ds = Math.round(diploSkill(s, Bn) * 40); if (ds) out.push(['their_diplomacy', ds]);
   // the loose Bosnian Church has no outside protector: the great churches distrust it
   if (FAITHS[Bn.faith]?.id === 'bosnian_church' && (FAITHS[A.faith]?.id === 'latin' || FAITHS[A.faith]?.id === 'orthodox')) out.push(['heretic_church', -15]);
+  // a great power carries weight with the lesser realms (systems/powers.ts)
+  if (isGreatPower(s, b) && !isGreatPower(s, a)) out.push(['great_power', GP_REGARD]);
   const r = s.rel[`${a}>${b}`];
   if (r) for (const m of r.mods) out.push([m.id, Math.round(m.v)]);
   return out;

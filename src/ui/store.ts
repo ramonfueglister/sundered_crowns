@@ -13,9 +13,12 @@ export const selectedNation = signal(-1);
 export const selectedArmies = signal<number[]>([]);
 export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'military' | 'knowledge' | 'society' | 'ledger' | 'chronicle' | 'decisions' | 'settings' | 'pause' | 'dev' | 'saves' | 'peace' | 'works'
   | 'battle' // war pass: a battle report (panelArg { id })
-  | 'trade' | 'explore'; // trade pass
+  | 'trade' | 'explore' // trade pass
+  | 'empire'; // realm pass
 export const panel = signal<PanelId>('none');
 export const panelArg = signal<any>(null);
+/** The open dialog of the realm pass (panels/realmdialogs.tsx): the assembly's vote or a situation's window. */
+export const realmDialog = signal<{ kind: 'assembly'; cmd: any } | { kind: 'situation'; id: string } | null>(null);
 export const mapMode = signal<MapMode>('political');
 export const hoverLoc = signal(-1);
 export const uiHidden = signal(false);

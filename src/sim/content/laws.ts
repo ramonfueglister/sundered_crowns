@@ -132,8 +132,8 @@ export const LAWS: LawDef[] = [
   ] },
   { id: 'diet', name: { en: 'Assembly of estates', de: 'Ständeversammlung' }, group: 'estates', default: (g) => (g.includes('republic') ? 2 : 1), options: [
     o('none', 'Rule without assembly', 'Herrschaft ohne Stände', { authority: 1, unrest: 1.5 }, { magnates: -6, burghers: -6 }),
-    o('occasional', 'Occasional estates', 'Gelegentliche Ständetage', { estate_power: 0.05 }, {}),
-    o('regular', 'Regular parliament', 'Regelmäßiges Parlament', { tax: 0.06, unrest: -2, estate_power: 0.2, war_vote: 1 }, { burghers: 6, magnates: 4 }),
+    o('occasional', 'Occasional estates', 'Gelegentliche Ständetage', { estate_power: 0.05, tax_vote: 1 }, {}),
+    o('regular', 'Regular parliament', 'Regelmäßiges Parlament', { tax: 0.06, unrest: -2, estate_power: 0.2, war_vote: 1, tax_vote: 1 }, { burghers: 6, magnates: 4 }),
   ] },
   { id: 'colonies', name: { en: 'Overseas ventures', de: 'Überseeunternehmen' }, group: 'economy', default: fix(0), options: [
     o('none', 'No ventures', 'Keine Unternehmungen', {}, {}),

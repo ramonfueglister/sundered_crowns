@@ -8,7 +8,7 @@ import { rand, chance, hash01 } from '../rng';
 import { applyCommand, buildRefusal } from '../commands';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
@@ -406,7 +406,7 @@ function diplomacy(s: GameState, w: World, n: Nation) {
   for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && sn.faith === n.faith && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
 }
 
-function considerWar(s: GameState, w: World, n: Nation) {
+export function considerWar(s: GameState, w: World, n: Nation) {
   if ((n.overlord >= 0 && n.subjectType !== 'tributary') || n.capital < 0) return;
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
@@ -442,6 +442,8 @@ function considerWar(s: GameState, w: World, n: Nation) {
     for (const al of allies(s, top)) if (!hasTreaty(s, n.id, al, 'alliance') && !myBloc.includes(al)) theirPower += nationPower(s, al) * allyWeight(al, top);
     const ratio = myPower / Math.max(1, theirPower);
     if (ratio < 1.25) continue;
+    // a war the Empire's peace or our assembly would refuse is no target (nor worth a fabricated claim)
+    if (warHooks.check?.(s, w, n.id, t, 'conquest')) continue;
     // a justification for a real war counts fully; a rivalry (a war to humble them, never to conquer) a little
     const cbs = casusBelliAll(s, n.id, t, w);
     const real = cbs.some((c) => c !== 'rivalry');
@@ -461,6 +463,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
     if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && !s.spies.some((x) => x.nation === n.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
     if (!goal || bestScore < 30 || !chance(s.rng, aggr * 0.4)) return;
   } else if (bestScore < 30 || !chance(s.rng, aggr)) return;
+  if (warHooks.check?.(s, w, n.id, best, goal)) return; // the Empire's peace or our assembly forbids this war
   // the war goal's towns are chosen by the declaration itself (systems/war.ts warGoalLocs), exactly as for a player
   applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal });
 }

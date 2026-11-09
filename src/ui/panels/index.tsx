@@ -14,6 +14,7 @@ import { WorksTab } from './works';
 import { BattleTab } from './war';
 import { TradeTab } from './trade';
 import { ExploreTab } from './explore';
+import { EmpireTab } from './empire';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 
@@ -24,6 +25,7 @@ export { ArmyPanel, Outliner } from './army';
 export { Notices, EventModal, Legend } from './overlay';
 export { Tutorial } from './tutorial';
 export { GoalTracker } from './goals';
+export { RealmDialogs } from './realmdialogs';
 export { SettingsPanel, SavesPanel, EndScreen };
 export { OnlineButton } from '../online/OnlineButton';
 
@@ -34,6 +36,7 @@ const TABS: Record<string, () => any> = {
   society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
   battle: BattleTab,
   trade: TradeTab, explore: ExploreTab,
+  empire: EmpireTab,
 };
 const TITLES: Record<string, string> = { peace: 'offer_peace', battle: 'xw_battle_report' };
 

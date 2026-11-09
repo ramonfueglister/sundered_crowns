@@ -5,7 +5,7 @@ import type { ComponentChildren } from 'preact';
 import { sim, view, nations } from '../../game/client';
 import type { Query } from '../../game/protocol';
 import type { Command, CmdResult, I18n } from '../../sim/types';
-import { playerId, selectedLoc, selectedNation, selectedArmies, panel, showToast } from '../store';
+import { playerId, selectedLoc, selectedNation, selectedArmies, panel, showToast, realmDialog } from '../store';
 import { t, L, lang, errText, reason } from '../i18n';
 import { deName } from '../../sim/content/names_de';
 import { Tip, Breakdown, hideTip } from '../Tip';
@@ -28,7 +28,11 @@ export const lastCmd = signal<{ cmd: Cmd; at: number } | null>(null);
 export async function act(c: Cmd, ok: Sfx | null = 'click', okText?: string): Promise<CmdResult> {
   const r = await sim().cmd({ ...c, n: playerId.value } as Command);
   if (r.ok) { if (ok) sfx(ok); if (okText) showToast(okText); lastCmd.value = { cmd: c, at: Date.now() }; }
-  else { sfx('error'); showToast(errText(r.msg ?? r.err ?? 'failed'), 'err'); }
+  else {
+    sfx('error'); showToast(errText(r.msg ?? r.err ?? 'failed'), 'err');
+    // the assembly refused a tax rise or a war: show its vote, with bribes and concessions (panels/realmdialogs.tsx)
+    if (/^the assembly refused/i.test(r.err ?? '') && c.t !== 'assembly') realmDialog.value = { kind: 'assembly', cmd: c };
+  }
   return r;
 }
 

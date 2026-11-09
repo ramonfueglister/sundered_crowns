@@ -250,6 +250,16 @@ export function targetLocs(s: GameState, w: World, a: number, b: number, k: numb
 
 /** Why a cannot declare this war on b now (null = it can). The declaration dialog shows it per goal; declareWar
  *  refuses with exactly this. */
+/** The bodies of the realm that weigh in on a war: the Empire's peace and the assemblies before it is declared, the
+ *  emperor's defence and the league after. Set by systems/empire.ts, so that this module does not import it (the
+ *  Empire reaches the setup through diplomacy and the military, and war.ts must load before them). */
+export const warHooks: {
+  veto?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
+  /** The same refusal without side effects (no assembly is held): the AI drops the targets it would be refused. */
+  check?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
+  declared?: (s: GameState, w: World, war: War) => void;
+} = {};
+
 export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = []): string | null {
   const na = s.nations[a], nb = s.nations[b];
   if (!na?.alive || !nb?.alive || a === b) return 'invalid';
@@ -266,9 +276,10 @@ export function declareRefusal(s: GameState, w: World, a: number, b: number, goa
   }
   if (goalType === 'faith' && na.faith === nb.faith) return 'they share our faith';
   if (goalType === 'trade' && !s.markets.some((m) => m.owner === b) && !tradeConflict(s, a, b)) return 'they hold no market';
-  // assemblies must approve wars where the law requires it
-  if (lawEffect(na, 'war_vote') > 0 && !s.playerNations.includes(a)) {
-    const e = estate(na, 'burghers'); if (e && e.contentment < 35) return 'the assembly refused to fund the war';
+  // the Perpetual Peace of the Empire, and assemblies that must approve wars where the law requires it (player and AI);
+  // here without side effects (no assembly is held): declareWar then asks warHooks.veto
+  if (warHooks.check) {
+    const chk = warHooks.check(s, w, a, b, goalType); if (chk) return chk;
   }
   const target = topOverlord(s, b);
   // never a war inside one's own realm of subjects (independence and civil wars are fought from within on purpose)
@@ -278,6 +289,8 @@ export function declareRefusal(s: GameState, w: World, a: number, b: number, goa
 export function declareWar(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'] = 'conquest', locs: number[] = [], opts?: { situation?: boolean }): string | null {
   locs = [...new Set((locs ?? []).filter((l) => Number.isInteger(l) && l >= 0 && l < w.L))];
   const why = declareRefusal(s, w, a, b, goalType, locs); if (why) return why;
+  // the assembly votes now (the AI may buy the missing votes), the Empire's peace is enforced (systems/empire.ts warVeto)
+  const veto = warHooks.veto?.(s, w, a, b, goalType); if (veto) return veto;
   const na = s.nations[a], nb = s.nations[b];
   const target = topOverlord(s, b);
   // the towns the war is fought for are the goal's own (warGoalLocs, the same for the player and the AI). Only a war of
@@ -316,6 +329,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   addOpinion(s, b, a, 'war_declared', -60, 365 * 10);
   chronicle(s, a, 'war', { en: `${na.short.en} declared war on ${nb.short.en}${unjust ? ' without just cause' : ''}.`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg${unjust ? ' ohne gerechten Grund' : ''}.` });
   for (const p of s.playerNations) if (war.def.includes(p) || war.att.includes(p)) notice(s, p, 'war', { en: `${na.short.en} declared war on ${nb.short.en}!`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg!` }, { war: war.id, loc: nb.capital });
+  // the Empire's members expect the emperor to defend them; the league defends its towns
+  warHooks.declared?.(s, w, war);
   return null;
 }
 function willJoin(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean): boolean {

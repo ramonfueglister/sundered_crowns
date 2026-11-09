@@ -166,8 +166,13 @@ export function plagueMonth(s: GameState, w: World, month: number) {
   const P = s.loc.plague, L = w.L, dev = s.loc.dev, day = s.day;
   const season = month >= 4 && month <= 9 ? 1 : month === 3 || month === 10 ? 0.6 : 0.3; // fleas need warmth
   const add: number[] = []; // pairs (target, intensity)
+  // quarantines and pest houses (situation actions) shield a realm's places: plague_guard is the share of
+  // infections they stop
+  const guard = s.nations.map((n) => (n.alive ? clamp(lawEffect(n, 'plague_guard'), -0.5, 0.9) : 0));
+  const anyGuard = guard.some((g) => g !== 0);
   const tryInfect = (v: number, src: number, p: number, prob: number, salt: number) => {
     if (P[v] > 0.02) return;
+    if (anyGuard) { const o = s.loc.owner[v]; if (o >= 0) prob *= 1 - guard[o]; }
     const sus = P[v] >= 0 ? 1 : (1 + P[v]) * (1 + P[v]);
     if (sus <= 0.01 || plagueHash(v, src * 8 + salt, day) >= prob * sus) return;
     add.push(v, Math.min(plagueCap(s, w, v), p + 0.15) * (0.55 + 0.45 * sus));
