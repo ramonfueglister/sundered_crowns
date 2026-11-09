@@ -52,6 +52,7 @@ export interface GameClient {
   speed(v: number): void;
   setPlayer(p: number | null): void;
   mapMode(mode: MapMode, focus: number): void;
+  mapGood(good: number): void;
 }
 
 type WS = WebSocket;
@@ -71,6 +72,7 @@ export class OnlineClient implements GameClient {
   private auth: OnlineAuth = {};
   private retry = 0; private stopRetry = false; private pingTimer: any = null;
   private lastMode: { mode: MapMode; focus: number } = { mode: 'political', focus: -1 };
+  private lastGood = -1;
 
   constructor(readonly url: string = DEFAULT_WORLD_URL, private WSImpl: { new (url: string): WS } = (globalThis as any).WebSocket) {
     if (!this.WSImpl) throw new Error('WebSocket is not available in this environment');
@@ -136,6 +138,7 @@ export class OnlineClient implements GameClient {
       case 'welcome':
         this.L = m.L; this.S = m.S; this.gotWelcome = true; this.gotTick = false;
         batch(() => { me.value = m.user; worldInfo.value = m.world; seat.value = m.seat; nations.value = m.nations; connState.value = 'open'; notices.value = []; chronicle.value = []; });
+        if (this.lastGood !== -1) this.send({ type: 'mapgood', good: this.lastGood });
         if (this.lastMode.mode !== 'political') this.send({ type: 'mapmode', mode: this.lastMode.mode, focus: this.lastMode.focus });
         break;
       case 'world': worldInfo.value = m.world; break;
@@ -214,6 +217,7 @@ export class OnlineClient implements GameClient {
   speed(_v: number) { /* the world clock runs on the server */ }
   setPlayer(_p: number | null) { /* seats are taken with join() */ }
   mapMode(mode: MapMode, focus: number) { this.lastMode = { mode, focus }; this.send({ type: 'mapmode', mode, focus }); }
+  mapGood(good: number) { this.lastGood = good; this.send({ type: 'mapgood', good }); }
 
   // ---------------- online actions ----------------
   requestFree() { this.send({ type: 'free' }); }

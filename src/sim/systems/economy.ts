@@ -9,6 +9,8 @@ import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
 import { dutyUnrest } from './duties';
 import { secondFaith } from './faith';
+import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT_VOLUME, embargoBetween } from './trade';
+import { hasTreaty } from '../ctx';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -20,9 +22,49 @@ for (let g = 0; g < G; g++) { const b = GOODS[g].base; WEIGHT[g] = b < 2 ? 1 : b
 const SILVER = GI.silver, GOLD = GI.gold;
 
 /** Per-location derived economy numbers from the last processed month (for tooltips & map modes). */
-export interface LocEcon { grain: Float32Array; rgo: Float32Array; craft: Float32Array; tax: Float32Array; income: Float32Array }
+export interface LocEcon {
+  grain: Float32Array; rgo: Float32Array; craft: Float32Array; tax: Float32Array; income: Float32Array;
+  /** quantities produced, GQ_SLOTS per location (see GQ_*): grain, the resource (net of rural processing), its rural
+   *  product, six household goods and up to three workshop products (in the order of the filled workshop slots) */
+  gq: Float32Array;
+  /** scale of each filled workshop slot (inputs used = recipe inputs × method input × scale) */
+  ck: Float32Array;
+  /** demand units of the people per need tier (4 per location) */
+  gd: Float32Array;
+}
+export const GQ_SLOTS = 12, GQ_GRAIN = 0, GQ_RES = 1, GQ_RURAL = 2, GQ_HOUSE = 3, GQ_CRAFT = 9;
 export let LOC_ECON: LocEcon | null = null;
-function locEcon(L: number) { if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L) }; return LOC_ECON; }
+function locEcon(L: number) {
+  if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L), gq: new Float32Array(L * GQ_SLOTS), ck: new Float32Array(L * 3), gd: new Float32Array(L * 4) };
+  return LOC_ECON;
+}
+/** The household goods in the order of their GQ slots. */
+export const HOUSE_GOODS = ['timber', 'clothing', 'bread', 'beer', 'linen', 'leather'];
+/** What a location made and used of each good last month (from LOC_ECON; empty before its first month), by who uses
+ *  it: the people's needs (needs: per-tier weights of its market, needWeights), its workshops, and households baking
+ *  and brewing. Display only. */
+export function locGoods(lc: GameState['loc'], w: World, i: number, needs: { good: number; tier: number; q: number }[] | null): { made: Map<number, number>; people: Map<number, number>; crafts: Map<number, number>; house: Map<number, number> } {
+  const made = new Map<number, number>(), people = new Map<number, number>(), crafts = new Map<number, number>(), house = new Map<number, number>();
+  const ec = LOC_ECON; if (!ec || ec.grain.length !== w.L) return { made, people, crafts, house };
+  const add = (mp: Map<number, number>, g: number, q: number) => { if (q > 1e-6) mp.set(g, (mp.get(g) ?? 0) + q); };
+  const b = i * GQ_SLOTS, gq = ec.gq;
+  add(made, G_GRAIN, gq[b + GQ_GRAIN]);
+  const r = w.resource[i]; add(made, r, gq[b + GQ_RES]);
+  const rp = RURAL[r]; if (rp) add(made, rp[0], gq[b + GQ_RURAL]);
+  HOUSE_GOODS.forEach((id, k) => add(made, GI[id], gq[b + GQ_HOUSE + k]));
+  const md = METHODS[lc.method[i]] ?? METHODS[0];
+  let si = 0;
+  for (let k = 0; k < 3; k++) {
+    const v = lc.workshop[i * 3 + k]; if (v <= 0) continue;
+    add(made, REC_OUT[v - 1], gq[b + GQ_CRAFT + si]);
+    const sc = ec.ck[i * 3 + si], ins = REC_IN[v - 1], qs = REC_Q[v - 1];
+    for (let j = 0; j < ins.length; j++) add(crafts, ins[j], qs[j] * md.mult * md.input * sc);
+    si++;
+  }
+  add(house, G_GRAIN, gq[b + GQ_HOUSE + 2] * 0.8 + gq[b + GQ_HOUSE + 3] * 0.5);
+  if (needs) for (const nw of needs) add(people, nw.good, ec.gd[i * 4 + nw.tier] * nw.q);
+  return { made, people, crafts, house };
+}
 
 /** Per-tier price of the basket (per person) and how well the market can fill it; recomputed when prices change. */
 const TC = new WeakMap<Market, { pos: number; cost: Float64Array; fill: Float64Array; wq: Float64Array }>();
@@ -41,6 +83,13 @@ function tierCache(m: Market, pl: number) {
   TC.set(m, c); return c;
 }
 export function invalidateTierCache(m: Market) { TC.delete(m); }
+/** The needs (good, tier) and how much of each a demand unit of its tier buys in this market at its prices. */
+export function needWeights(m: Market, pl: number): { good: number; tier: number; q: number }[] {
+  // (the same weights as tierCache, computed without touching its cache or the market)
+  const qs = new Float64Array(4), qa = new Float64Array(4);
+  const wq = NEED_IDX.map(([g, q, tier]) => { const rel = clamp(GOODS[g].base * pl / Math.max(1e-9, m.price[g]), 0.25, 4); const x = q * Math.pow(rel, 0.8); qs[tier] += q; qa[tier] += x; return x; });
+  return NEED_IDX.map(([g, , tier], k) => ({ good: g, tier, q: wq[k] * (qa[tier] > 0 ? qs[tier] / qa[tier] : 1) }));
+}
 export function marketFill(m: Market, g: number): number {
   const d = m.demand[g]; if (d <= 1e-9) return 1;
   return clamp(m.supply[g] / d, 0, 1);
@@ -235,11 +284,14 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     // rural processing: villages press their own grapes and olives, ret their flax, card their wool
     const rp = RURAL[r];
     let ruralValue = 0;
+    const gq = ec.gq, gb = i * GQ_SLOTS;
+    gq[gb + GQ_GRAIN] = grainQ;
     if (rp) {
       const raw = rgoQ * rp[2], out = raw * rp[1];
       m.sAcc[r] += rgoQ - raw; m.sAcc[rp[0]] += out;
       ruralValue = out * m.price[rp[0]] - raw * m.price[r];
-    } else m.sAcc[r] += rgoQ;
+      gq[gb + GQ_RES] = rgoQ - raw; gq[gb + GQ_RURAL] = out;
+    } else { m.sAcc[r] += rgoQ; gq[gb + GQ_RES] = rgoQ; gq[gb + GQ_RURAL] = 0; }
     const pGrain = m.price[G_GRAIN], pR = m.price[r];
     // ---- household production: firewood, homespun cloth, baking and brewing (most of what common folk use) ----
     let ptotH = 0; for (let c = 0; c < C; c++) ptotH += P[base + c];
@@ -250,6 +302,8 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     const linenQ = hh * (arid > 0.6 ? 0.05 : 0.15), leatherQ = hh * 0.1; // a flax patch and the hides of the household's own beasts
     m.sAcc[G_TIMBER] += woodQ; m.sAcc[G_CLOTHING] += clothQ; m.sAcc[G_BREAD] += breadQ; m.sAcc[G_BEER] += beerQ;
     m.sAcc[G_LINEN] += linenQ; m.sAcc[G_LEATHER] += leatherQ;
+    gq[gb + GQ_HOUSE] = woodQ; gq[gb + GQ_HOUSE + 1] = clothQ; gq[gb + GQ_HOUSE + 2] = breadQ; gq[gb + GQ_HOUSE + 3] = beerQ; gq[gb + GQ_HOUSE + 4] = linenQ; gq[gb + GQ_HOUSE + 5] = leatherQ;
+    gq[gb + GQ_CRAFT] = 0; gq[gb + GQ_CRAFT + 1] = 0; gq[gb + GQ_CRAFT + 2] = 0; ec.ck[i * 3] = 0; ec.ck[i * 3 + 1] = 0; ec.ck[i * 3 + 2] = 0;
     m.dAcc[G_GRAIN] += breadQ * 0.8 + beerQ * 0.5; // baking and brewing use grain
     const hhValue = woodQ * m.price[G_TIMBER] + clothQ * m.price[G_CLOTHING] * 0.5 + (breadQ * (m.price[G_BREAD] - pGrain * 0.8) + beerQ * (m.price[G_BEER] - pGrain * 0.5))
       + (linenQ * m.price[G_LINEN] + leatherQ * m.price[G_LEATHER]) * 0.5 + Math.max(0, ruralValue);
@@ -279,6 +333,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         const outQ = rc.outQty * k * meth * prodMod;
         const og = REC_OUT[sl - 1];
         m.sAcc[og] += outQ;
+        gq[gb + GQ_CRAFT + si] = outQ; ec.ck[i * 3 + si] = k;
         const val = outQ * m.price[og] * quality;
         craftValue += val; craftProfit += val - inCost;
       }
@@ -334,6 +389,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     // ---- consumption of needs ----
     let unrestSol = 0, popTot = 0;
     let tc: ReturnType<typeof tierCache> | null = null;
+    const gd = ec.gd; gd[i * 4] = 0; gd[i * 4 + 1] = 0; gd[i * 4 + 2] = 0; gd[i * 4 + 3] = 0;
     for (let c = 0; c < C; c++) {
       const pc = P[base + c];
       if (pc < 1) { lc.sol[base + c] = 0.5; continue; }
@@ -352,6 +408,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         const subsidy = t === 0 && (c === CL.peasants) ? Math.min(cost * 0.6, grainQ * pGrain * 0.6) : 0;
         const f = clamp((budget + subsidy) / cost, 0, 1);
         m.tierAcc![t] += mult * pc * f; // demand units, distributed over the tier's goods at month end
+        gd[i * 4 + t] += mult * pc * f;
         const ful = f * tc.fill[t];
         sol += TIER_W[t] * ful;
         const sp = Math.max(0, cost * f - subsidy);
@@ -429,48 +486,73 @@ function computeShares(s: GameState, w: World) {
   for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (o < 0) continue; const mm = acc[s.loc.market[i]]; if (mm) mm.set(o, (mm.get(o) || 0) + s.loc.dev[i]); }
   s.markets.forEach((m, k) => { const tot = [...acc[k].values()].reduce((a, b) => a + b, 0); SHARES.set(m, tot > 0 ? [...acc[k].entries()].sort((a, b) => a[0] - b[0]).map(([o, v]) => [o, v / tot]) : []); });
 }
-/** Trade margins and tolls of a market: the hub's ruler takes a third, the rest goes to the realms of the area by their weight in it. */
-function shareOut(s: GameState, m: Market, kind: 'trade' | 'tariffs', amount: number) {
+/** Tolls of a market: the hub's ruler takes a third, the rest goes to the realms of the area by their weight in it.
+ *  (Trade margins are shared by trade power, see systems/trade.ts.) */
+function shareTolls(s: GameState, m: Market, amount: number) {
   if (amount <= 0) return;
   const hub = s.nations[m.owner];
-  if (hub?.alive) addIncome(hub, kind, amount * 0.34 * (1 + (kind === 'trade' ? lawEffect(hub, 'trade') : 0)));
-  for (const [o, sh] of SHARES.get(m) || []) { const n = s.nations[o]; if (n?.alive && sh > 0.002) addIncome(n, kind, amount * 0.66 * sh * (1 + (kind === 'trade' ? lawEffect(n, 'trade') : 0))); }
+  if (hub?.alive) addIncome(hub, 'tariffs', amount * 0.34);
+  for (const [o, sh] of SHARES.get(m) || []) { const n = s.nations[o]; if (n?.alive && sh > 0.002) addIncome(n, 'tariffs', amount * 0.66 * sh); }
 }
 
-/** Arbitrage between two linked markets for every good (one direction per good), with margins and tolls. */
+/** Trade margins earned this month per market (shared out by trade power at the end of the clearing). */
+let TV = new Float64Array(0);
+/** Steering of the goods: per pair of markets (from * M + to) the share of the exporting market's trade power that
+ *  steers its trade toward `to` (the next market on the way to the steering realms' home markets). */
+let STQ = new Float64Array(0), STM = 0;
+/** Arbitrage between two linked markets for every good (one direction per good), with margins and tolls. A trade
+ *  agreement between the rulers of the two hubs halves the tariffs and lets a quarter more goods pass. */
 function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolean, flows: GameState['flows'], company: Nation | null) {
   const blocked = tradeBlocked(s, a, b, sea);
   if (blocked >= 1) return;
+  const ta = tariffBetween(s, a.owner, b.owner), tb = tariffBetween(s, b.owner, a.owner); // what a's / b's ruler takes on imports
+  const agree = a.owner >= 0 && b.owner >= 0 && a.owner !== b.owner && hasTreaty(s, a.owner, b.owner, 'trade') ? AGREEMENT_VOLUME : 1;
   for (let g = 0; g < G; g++) {
     const pa = a.price[g], pb = b.price[g];
     // carriage per unit: bulk goods pay by weight but move in barges and hulls, fine goods pay for risk and handling
     const tc = cost * WEIGHT[g] * (0.5 + 3.5 * (1 - WEIGHT[g])) + 0.03 * Math.min(pa, pb);
-    const tariff = (s.nations[b.owner]?.tariff ?? 0) * 0.5;
-    let from = a, to = b, diff = pb - pa * (1 + tariff) - tc;
-    if (diff < 0) { from = b; to = a; diff = pa - pb * (1 + (s.nations[a.owner]?.tariff ?? 0) * 0.5) - tc; }
-    if (diff <= 0) continue;
+    // the direction goods would take without tariffs; the tariff of the importing ruler may keep them out
+    let from = a, to = b, diff0 = pb - pa - tc, tr = tb;
+    if (diff0 <= 0) { from = b; to = a; diff0 = pa - pb - tc; tr = ta; }
+    if (diff0 <= 0) continue;
+    const diff = diff0 - from.price[g] * tr * 0.5;
     const surplus = Math.max(0, from.sAcc[g] - from.dAcc[g] * 0.7);
     if (surplus <= 0) continue;
-    const steer = 1 + (to.merchants[to.owner] || 0) * 0.02;
-    const qty = Math.min(surplus * 0.35, surplus * clamp(diff / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked);
+    const steer = 1 + 0.5 * (STQ[from.id * STM + to.id] || 0);
+    const qtyOf = (d: number) => d <= 0 ? 0 : Math.min(surplus * 0.35, surplus * clamp(d / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked) * agree;
+    const qty = qtyOf(diff);
+    if (tr > 0) to.deter = (to.deter ?? 0) + Math.max(0, qtyOf(diff0) - qty) * from.price[g];
     if (qty <= 1e-6) continue;
     from.sAcc[g] -= qty; to.sAcc[g] += qty;
     from.flowOut[g] += qty; to.flowOut[g] -= qty;
     const value = qty * from.price[g];
     flows.push({ from: from.id, to: to.id, good: g, qty, value });
-    // merchants of the exporting hub earn the margin (a company keeps most of it on its own route);
-    // tolls go to the importing hub's ruler
-    if (company) { addIncome(company, 'company', qty * diff * 0.03 * (1 + lawEffect(company, 'trade'))); shareOut(s, from, 'trade', qty * diff * 0.015); }
-    else shareOut(s, from, 'trade', qty * diff * 0.04);
-    const tr = s.nations[to.owner]?.tariff ?? 0;
-    if (tr > 0) shareOut(s, to, 'tariffs', value * tr * 0.35);
+    // the margin is the exporting market's trade value (shared by trade power at the end of the month; on a company's
+    // route the company's power in its market takes most of it); tolls go to the importing hub's ruler
+    TV[from.id] += qty * diff * 0.04;
+    if (tr > 0) shareTolls(s, to, value * tr * 0.35);
   }
+  void company;
 }
 
 export function clearMarkets(s: GameState, w: World) {
   const ms = s.markets;
   computeShares(s, w);
   const flows: GameState['flows'] = [];
+  // trade power as it stands now: who steers where, and later who takes the margins
+  const M = ms.length;
+  const mp = ms.map((_, m) => marketPower(s, w, m));
+  if (TV.length !== M) TV = new Float64Array(M); TV.fill(0);
+  if (STM !== M) { STQ = new Float64Array(M * M); STM = M; } STQ.fill(0);
+  for (const p of mp) {
+    if (p.total <= 0) continue;
+    for (const r of p.rows) {
+      if (!r.steer || r.total <= 0) continue;
+      const home = homeMarket(s, s.nations[r.n]); const path = home >= 0 ? marketPath(s, p.m, home) : null;
+      if (path?.length) STQ[p.m * M + path[0]] += r.total / p.total;
+    }
+  }
+  for (const m of ms) m.deter = 0;
   // 0. turn per-tier demand units into demand for each good
   for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
   // 1. inter-market trade on last month's prices
@@ -490,6 +572,8 @@ export function clearMarkets(s: GameState, w: World) {
   }
   flows.sort((p, q) => q.value - p.value);
   s.flows = flows.slice(0, 400);
+  // the month's margins go to the realms by their trade power there (steered shares to their home markets)
+  payTrade(s, w, TV, mp);
   // 2. clearing and price formation
   const pl = s.priceLevel;
   for (const m of ms) {
@@ -551,7 +635,7 @@ function tradeBlocked(s: GameState, a: Market, b: Market, sea: boolean): number 
   // occupation of a hub cuts its trade heavily
   if (s.loc.ctrl[a.hub] !== a.owner || s.loc.ctrl[b.hub] !== b.owner) blk = Math.max(blk, 0.6);
   if (sea) blk = Math.max(blk, (s.flags[`blockade_${a.id}`] || 0) > s.day ? 0.9 : 0, (s.flags[`blockade_${b.id}`] || 0) > s.day ? 0.9 : 0);
-  if (s.flags[`embargo_${oa}_${ob}`] || s.flags[`embargo_${ob}_${oa}`]) blk = Math.max(blk, 0.95);
+  if (embargoBetween(s, oa, ob)) blk = Math.max(blk, 0.95);
   return blk;
 }
 

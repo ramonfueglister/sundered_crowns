@@ -169,9 +169,16 @@ export interface Market {
   owner: number; // nation controlling the hub
   links: { to: number; cost: number; sea: boolean; ocean?: boolean }[];  // ocean: crosses an ocean, closed until the New World is reached
   flowOut: Float64Array; // per good, last month's net exports
-  merchants: Record<number, number>; // nation -> steering strength
+  merchants: Record<number, number>; // nation -> merchants placed here (systems/trade.ts)
   priceIndex: number;
   tierAcc?: Float64Array; // demand units per need tier (current month)
+  // trade pass (systems/trade.ts): steering, and last month's trade for the panels and the AI
+  steer?: Record<number, number>;   // nation -> 1 when its merchants here steer the trade to its home market
+  tv?: number;                      // trade value earned here last month (margins of the goods exported from here)
+  tin?: number;                     // trade steered in from other markets last month
+  paid?: Record<number, number>;    // what each realm took here last month (own share and share of the trade steered in)
+  steered?: Record<number, number>; // what each steering realm sent home from here last month
+  deter?: number;                   // value of imports the ruler's tariff kept out last month
 }
 export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
 
@@ -183,7 +190,11 @@ export interface Construction { loc: number; building: number; left: number; nat
 export interface Recruit { loc: number; nation: number; type: number; men: number; left: number; army: number }
 export interface ConversionAgent { nation: number; loc: number; kind: 'faith' | 'culture'; progress: number }
 export interface Colony { loc: number; nation: number; settlers: number; progress: number; started: number }
-export interface Explorer { id: number; nation: number; loc: number; path: number[]; progress: number; fleet: boolean; char: number }
+export interface Explorer {
+  id: number; nation: number; loc: number; path: number[]; progress: number; fleet: boolean; char: number;
+  // expeditions (systems/colonial.ts): target sea zone, start day, places charted, of them on land, realms met and goods seen
+  to?: number; since?: number; found?: number; lands?: number; met?: number[]; goods?: number[];
+}
 export interface Spy { nation: number; target: number; action: string; progress: number; days: number }
 
 export interface LocState {
@@ -240,7 +251,7 @@ export interface GameState {
   ended: boolean; victory?: { nation: number; kind: string };
   flags: Record<string, number>;
   /** chartered overseas trade companies: a direct route between an overseas market and the home market */
-  companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string } }[];
+  companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string }; income?: number }[];
   /** Single player: how the game was started and every command with the day it was given, so it can be replayed. */
   replay?: ReplayLog;
   playerNations: number[]; // nations controlled by humans
@@ -278,11 +289,11 @@ export type Command =
   | { t: 'agent'; n: number; loc: number; kind: 'faith' | 'culture' }
   | { t: 'colonize'; n: number; loc: number }
   | { t: 'charter'; n: number; market: number }
-  | { t: 'explore'; n: number; fleet: number; to: number }
+  | { t: 'explore'; n: number; fleet: number; to: number }  // fleet 0: fit out a new squadron in our best harbour
   | { t: 'spy'; n: number; target: number; action: string }
   | { t: 'office'; n: number; office: string; char: number }
   | { t: 'loan'; n: number; take: boolean; amount: number }
-  | { t: 'merchant'; n: number; market: number; amount: number }
+  | { t: 'merchant'; n: number; market: number; amount: number; steer?: boolean } // merchants kept in a market; steer: send its trade home
   | { t: 'integrate'; n: number; subject: number }
   | { t: 'orders'; n: number; orders: StandingOrders }
   | { t: 'decision'; n: number; id: string }

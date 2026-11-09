@@ -12,7 +12,8 @@ export const selectedLoc = signal(-1);
 export const selectedNation = signal(-1);
 export const selectedArmies = signal<number[]>([]);
 export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'military' | 'knowledge' | 'society' | 'ledger' | 'chronicle' | 'decisions' | 'settings' | 'pause' | 'dev' | 'saves' | 'peace' | 'works'
-  | 'battle'; // war pass: a battle report (panelArg { id })
+  | 'battle' // war pass: a battle report (panelArg { id })
+  | 'trade' | 'explore'; // trade pass
 export const panel = signal<PanelId>('none');
 export const panelArg = signal<any>(null);
 export const mapMode = signal<MapMode>('political');

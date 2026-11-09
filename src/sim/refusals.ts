@@ -74,6 +74,15 @@ export const REFUSAL_DE: Record<string, string> = {
   'no enemy army near': 'Kein feindliches Heer in der Nähe',
   'invalid war goal': 'Ungültiges Kriegsziel', 'the freed realm is not their subject': 'Das befreite Reich ist nicht ihr Untertan',
   'their realm is too great to change its faith': 'Ihr Reich ist zu groß, um seinen Glauben zu wechseln',
+  // ---- trade pass (claude/trade-pass): merchants, embargoes, expeditions and companies
+  'we do not know this market': 'Diesen Markt kennen wir nicht', 'an embargo shuts our merchants out': 'Eine Handelssperre hält unsere Kaufleute fern',
+  'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
+  'no trade route home': 'Kein Handelsweg nach Hause', 'already under embargo': 'Schon mit einer Handelssperre belegt', 'not against an ally': 'Nicht gegen einen Verbündeten',
+  'not within our realm': 'Nicht innerhalb unseres Reiches', 'no embargo to lift': 'Keine Handelssperre aufzuheben',
+  'an ocean voyage needs Commerce 10': 'Eine Ozeanfahrt braucht Handel & Gelehrsamkeit 10', 'an ocean voyage needs the Age of Print and Horizons': 'Eine Ozeanfahrt braucht das Zeitalter von Druck und Horizonten',
+  'two expeditions are already at sea': 'Schon zwei Expeditionen sind auf See',
+  // ---- integration of the war and trade passes
+  'a peace treaty forbids it': 'Ein Friedensvertrag verbietet es',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

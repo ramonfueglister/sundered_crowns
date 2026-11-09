@@ -6,13 +6,11 @@ import { act, t, L, Tip, selectLoc, selectArmy, fmtDateShort } from './common';
 import { EventArt } from './art';
 import { useOptionFx, OptionEffects, OptionEffectsHead } from './eventfx';
 import { sfx } from '../audio';
+import { GOODS } from '../../sim/defs';
 
-const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency',
-  'battle_lost', 'assault_failed']); // war pass
-const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform',
-  'battle_won', 'siege_won']); // war pass
-const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉',
-  battle_won: '⚔', battle_lost: '⚔', siege_won: '♜', assault_failed: '♜', scorched: '♨' }; // war pass
+const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency', 'battle_lost', 'assault_failed', 'expedition_lost', 'embargo']);
+const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform', 'battle_won', 'siege_won', 'expedition']);
+const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉', battle_won: '⚔', battle_lost: '⚔', siege_won: '♜', assault_failed: '♜', scorched: '♨', expedition: '⚓', expedition_lost: '⚓', embargo: '⛔' };
 const LIFE = 12000;
 
 export function Notices() {
@@ -92,7 +90,16 @@ export function Legend() {
   const lg = legend.value; const m = mapMode.value;
   if (!lg || m === 'political' || m === 'terrain' || !lg.items.length) return null;
   return <div class="legend" onPointerDown={(e) => e.stopPropagation()}>
-    <div class="lg-t">{L(lg.title)}</div>
+    <div class="lg-t">{L(lg.title)}{lg.good !== undefined && <GoodPicker good={lg.good} optional={!!lg.goodOptional} />}</div>
     <div class="lg-items">{lg.items.slice(0, 16).map((it) => <span class="lg-i"><span class="sw" style={{ background: it.color }} />{L(it.label)}</span>)}</div>
   </div>;
+}
+
+/** The good the prices, production and markets map modes show (sent to the simulation, which recolours the map). */
+function GoodPicker({ good, optional }: { good: number; optional: boolean }) {
+  const goods = GOODS.map((g, k) => ({ k, name: L(g.name) })).sort((a, b) => a.name.localeCompare(b.name));
+  return <select class="lg-good" value={good} title={t('tr_map_good')} onChange={(e) => { sim().mapGood(Number((e.target as HTMLSelectElement).value)); sfx('click'); }}>
+    {optional && <option value={-1}>{t('tr_map_no_good')}</option>}
+    {goods.map((g) => <option value={g.k}>{g.name}</option>)}
+  </select>;
 }

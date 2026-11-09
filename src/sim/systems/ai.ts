@@ -16,6 +16,7 @@ import { overextension } from './economy';
 import { aiDuties } from './administration';
 import { FAITH_INDEX, FAITHS } from '../content/peoples';
 import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
+import { aiTrade } from './tradeai';
 
 const P = (n: Nation, k: string) => n.personality === k;
 function isAI(s: GameState, n: Nation) { return n.alive && !s.playerNations.includes(n.id) && !s.aiDisabled.includes(n.id) && !n.playerId; }
@@ -73,6 +74,7 @@ function strategic(s: GameState, w: World, n: Nation) {
   reforms(s, w, n);
   churchPolitics(s, w, n);
   diplomacy(s, w, n);
+  aiTrade(s, w, n); // merchants, tariffs, trade agreements and embargoes (systems/tradeai.ts)
   // a realm only called into an ally's war (or answering a subject's revolt) may still start its own, if fresh
   if (!wars.length || (!wars.some((x) => x.attLead === n.id || (x.defLead === n.id && x.goal.type !== 'independence')) && n.warExhaustion < 20)) considerWar(s, w, n);
   for (const war of wars) considerPeace(s, w, n, war);

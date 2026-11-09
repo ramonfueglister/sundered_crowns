@@ -12,6 +12,8 @@ import { LedgerTab, ChronicleTab } from './records';
 import { PeaceTab } from './peace';
 import { WorksTab } from './works';
 import { BattleTab } from './war';
+import { TradeTab } from './trade';
+import { ExploreTab } from './explore';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 
@@ -31,6 +33,7 @@ const TABS: Record<string, () => any> = {
   economy: EconomyTab, government: GovernmentTab, diplomacy: DiplomacyTab, military: MilitaryTab, knowledge: KnowledgeTab,
   society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
   battle: BattleTab,
+  trade: TradeTab, explore: ExploreTab,
 };
 const TITLES: Record<string, string> = { peace: 'offer_peace', battle: 'xw_battle_report' };
 

@@ -13,8 +13,10 @@ import { setMethod } from './systems/administration';
 import { setDuty, DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
-import { startColony, startExplorer, charterCompany } from './systems/colonial';
+import { startColony, charterCompany } from './systems/colonial';
+import { launchExpedition } from './systems/explore';
 import { startLandmark } from './systems/landmarks';
+import { setMerchants, merchantCap } from './systems/trade';
 import { answerEvent, takeDecision } from './systems/events';
 import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
@@ -62,8 +64,8 @@ export function buildCost(s: GameState, n: Nation, b: number, level: number) {
   return BUILDINGS[b].cost * (1 + level * 0.5) * s.priceLevel * (1 + n.inflation) * 6 * fort;
 }
 
-/** How many merchants a realm can place in markets. */
-export function merchantCap(n: { tech: number[]; gov: string }): number { return 2 + Math.floor(n.tech[0] / 4) + (n.gov === 'merchant_republic' ? 2 : 0); }
+/** How many merchants a realm can place in markets (systems/trade.ts). */
+export { merchantCap };
 
 function myArmy(s: GameState, n: number, id: number): Army | null {
   const a = s.armies.find((x) => x.id === id);
@@ -237,7 +239,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'colonize': { const e = startColony(s, w, n, cmd.loc); return e ? err(e) : OK; }
     case 'method': { const e = setMethod(s, w, n, cmd.loc, cmd.method); return e ? err(e) : OK; }
     case 'charter': { const e = charterCompany(s, w, n, cmd.market); return e ? err(e) : OK; }
-    case 'explore': { const e = startExplorer(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
+    case 'explore': { const e = launchExpedition(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
     case 'spy': { const e = startSpy(s, cmd.n, cmd.target, cmd.action); return e ? err(e) : OK; }
     case 'office': { const e = appointOfficial(s, n, cmd.office, cmd.char); return e ? err(e) : OK; }
     case 'loan': {
@@ -249,17 +251,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       if (n.treasury < l.amount) return err('not enough gold');
       n.treasury -= l.amount; n.loans.shift(); return OK;
     }
-    case 'merchant': {
-      const m = s.markets[cmd.market]; if (!m) return err('no such market');
-      if (cmd.amount > 0 && m.owner >= 0 && (s.flags[`nomerch_${cmd.n}_${m.owner}`] ?? 0) > s.day) return err('our merchants were expelled from this market'); // a lost trade war
-      const cur = Object.values(n.flags).length ? 0 : 0; void cur;
-      const used = s.markets.reduce((p, x) => p + (x.merchants[cmd.n] || 0), 0) - (m.merchants[cmd.n] || 0);
-      const cap = merchantCap(n);
-      const v = clamp(Math.round(cmd.amount), 0, cap - used);
-      if (v <= 0 && cmd.amount > 0) return err('no merchants left');
-      if (v) m.merchants[cmd.n] = v; else delete m.merchants[cmd.n];
-      return OK;
-    }
+    case 'merchant': { const e = setMerchants(s, w, n, cmd.market, cmd.amount, cmd.steer); return e ? err(e) : OK; }
     case 'integrate': {
       const sub = s.nations[cmd.subject]; if (!sub || sub.overlord !== cmd.n) return err('not your subject');
       if (sub.subjectType === 'tributary') return err('tributaries cannot be integrated');

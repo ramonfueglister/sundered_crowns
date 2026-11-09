@@ -3,24 +3,26 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, bump } from '../ctx';
 import { B, BI, C, CL } from '../defs';
-import { findPath, armyMen, newArmy, availableUnits, releaseNation, recruit } from './military';
+import { armyMen, newArmy, availableUnits, releaseNation } from './military';
 import * as warmod from './war';
 const require_war = () => warmod;
 import { lawEffect } from './politics';
 import { chance, rand } from '../rng';
+import { expeditionSaw, expeditionArrived, expeditionLost, CHART_KM } from './explore';
+export { startExplorer } from './explore';
 
 export function knows(s: GameState, n: Nation, l: number): boolean {
   if (s.flags.revealAll) return true;
   const e = s.explored[n.knows]; return !e || e[l] === 1;
 }
-function reveal(s: GameState, w: World, n: Nation, center: number, km: number) {
+function reveal(s: GameState, w: World, n: Nation, center: number, km: number, onNew?: (l: number) => void) {
   const e = s.explored[n.knows]; if (!e) return 0;
   let k = 0;
   // cheap radius reveal: BFS limited by distance
   const seen = new Set<number>([center]); const q = [center];
   while (q.length) {
     const u = q.pop()!;
-    if (!e[u]) { e[u] = 1; k++; }
+    if (!e[u]) { e[u] = 1; k++; onNew?.(u); }
     for (let j = w.adjStart[u]; j < w.adjStart[u + 1]; j++) { const v = w.adj[j]; if (!seen.has(v) && w.distKm(center, v) < km) { seen.add(v); q.push(v); } }
   }
   return k;
@@ -34,17 +36,6 @@ export function colonialRange(n: Nation, s?: GameState, w?: World) {
 }
 export function colonySlots(n: Nation) { return n.tech[1] >= 9 ? 1 + Math.floor((n.tech[1] - 9) / 5) + (lawEffect(n, 'colonists') | 0) : 0; }
 
-/** Send a fleet beyond the known world toward a sea zone; it reveals coasts as it sails. */
-export function startExplorer(s: GameState, w: World, n: Nation, fleet: number, to: number): string | null {
-  const f = s.armies.find((a) => a.id === fleet && a.owner === n.id && a.fleet); if (!f) return 'need a fleet';
-  if (n.tech[1] < 6) return 'our navigators lack the knowledge (Commerce 6)';
-  if (to < w.L) return 'choose a sea zone';
-  // explorers may sail into unknown waters: temporary knowledge override for the pathfinder
-  const p = findPath(s, w, f, f.loc, to, 60000); if (!p) return 'no route';
-  f.path = p; f.progress = 0; f.mission = 'explore';
-  if (!s.explorers.some((x) => x.id === f.id)) s.explorers.push({ id: f.id, nation: n.id, loc: f.loc, path: p, progress: 0, fleet: true, char: f.general });
-  return null;
-}
 
 export function canColonize(s: GameState, w: World, n: Nation, loc: number): string | null {
   if (loc < 0 || loc >= w.L) return 'not land';
@@ -114,10 +105,10 @@ function explorersDay(s: GameState, w: World) {
   for (const ex of s.explorers.slice()) {
     const f = s.armies.find((a) => a.id === ex.id);
     const n = s.nations[ex.nation];
-    if (!f || !n?.alive) { s.explorers.splice(s.explorers.indexOf(ex), 1); continue; }
+    if (!f || !n?.alive) { s.explorers.splice(s.explorers.indexOf(ex), 1); if (n?.alive && ex.since !== undefined) expeditionLost(s, w, n, ex); continue; }
     if (f.loc !== ex.loc) {
       ex.loc = f.loc;
-      const k = reveal(s, w, n, f.loc, 260);
+      const k = reveal(s, w, n, f.loc, ex.since !== undefined ? CHART_KM : 260, ex.since !== undefined ? (l) => expeditionSaw(s, w, ex, l) : undefined);
       if (k > 0 && s.playerNations.includes(n.id) && chance(s.rng, 0.1)) notice(s, n.id, 'discovery', { en: `Our navigators charted new waters near ${w.names[f.loc]}.`, de: `Unsere Seefahrer kartierten neue Gewässer bei ${w.namesDe[f.loc]}.` }, { loc: f.loc });
       // first sighting of a new continent
       if (w.lon[f.loc] < -40 && !s.flags[`newworld_${n.id}`]) {
@@ -128,7 +119,7 @@ function explorersDay(s: GameState, w: World) {
       // long voyages cost ships
       if (w.distKm(f.loc, n.capital) > 3000 && chance(s.rng, 0.01)) for (const r of f.regs) r.men = Math.max(0, r.men - 1);
     }
-    if (!f.path.length) s.explorers.splice(s.explorers.indexOf(ex), 1);
+    if (!f.path.length) { s.explorers.splice(s.explorers.indexOf(ex), 1); if (ex.since !== undefined) expeditionArrived(s, w, n, ex, f); }
   }
 }
 
@@ -148,41 +139,6 @@ function aiColonize(s: GameState, w: World) {
     }
     if (best >= 0) startColony(s, w, n, best);
   }
-}
-
-/** AI exploration: Atlantic crowns fit out ships once their navigators are able and send them west. */
-function aiExplore(s: GameState, w: World, year: number) {
-  for (const n of s.nations) {
-    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 10 || n.capital < 0 || n.overlord >= 0) continue;
-    if (!europeanCrown(w, n) || !n.flags.atlantic) continue;
-    if (s.explorers.some((x) => x.nation === n.id) || !chance(s.rng, 0.35)) continue;
-    const f = s.armies.find((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length && !s.explorers.some((x) => x.id === a.id));
-    if (!f) { fitOutExpedition(s, w, n); continue; }
-    // pick an unknown sea zone in the Atlantic: westward, a voyage of a few weeks
-    const e = s.explored[n.knows];
-    let tgt = -1, bd = Infinity;
-    for (let i = w.L; i < w.N; i++) {
-      if (e && e[i]) continue;
-      if (w.lon[i] > -5) continue;
-      const d = w.distKm(f.loc, i);
-      if (d > 6000) continue;
-      const v = w.lon[i] * 40 + Math.abs(d - 2500) * 0.4 + rand(s.rng) * 600;
-      if (v < bd) { bd = v; tgt = i; }
-    }
-    if (tgt >= 0) startExplorer(s, w, n, f.id, tgt);
-    void year;
-  }
-}
-/** A small squadron in an Atlantic harbour, paid from the treasury, for exploration. */
-function fitOutExpedition(s: GameState, w: World, n: Nation) {
-  const ships = availableUnits(s, n, true); if (!ships.length) return;
-  const inc = Object.values(n.income).reduce((a, b) => a + b, 0);
-  if (n.treasury < Math.max(150 * s.priceLevel, inc * 2)) return;
-  if (s.recruits.some((r) => r.nation === n.id && ships.includes(r.type))) return;
-  let port = -1, west = Infinity;
-  for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === n.id && s.loc.ctrl[i] === n.id && w.coastal[i] && s.loc.buildings[i * B + BI.port] > 0 && w.lon[i] < west) { west = w.lon[i]; port = i; }
-  if (port < 0) return;
-  recruit(s, w, n, port, ships[0], 3);
 }
 
 // ---------------- colonial subjects and chartered companies ----------------
@@ -277,14 +233,7 @@ export function charterCompany(s: GameState, w: World, n: Nation, market: number
 function companiesYear(s: GameState, w: World) {
   // companies lapse when their realm falls or no longer holds a harbour in the market
   if (s.companies?.length) s.companies = s.companies.filter((c) => { const n = s.nations[c.nation]; return n?.alive && charterOptions(s, w, n).includes(c.market); });
-  for (const n of s.nations) {
-    if (!n.alive || s.playerNations.includes(n.id) || n.playerId || n.tech[1] < 12 || !europeanCrown(w, n)) continue;
-    const inc = Object.values(n.income).reduce((a, b) => a + b, 0);
-    if (n.treasury < Math.max(1200 * s.priceLevel, inc * 3)) continue;
-    const have = new Set((s.companies ?? []).filter((c) => c.nation === n.id).map((c) => c.market));
-    const opt = charterOptions(s, w, n).find((m) => !have.has(m));
-    if (opt !== undefined) charterCompany(s, w, n, opt);
-  }
+  // (the AI charters through the same command as the player: systems/tradeai.ts)
 }
 
 export const colonial: System = {
@@ -294,7 +243,6 @@ export const colonial: System = {
   monthly({ s, w, date }) {
     coloniesMonth(s, w);
     if (date.m % 3 === 1) aiColonize(s, w);
-    if (date.m % 3 === 1) aiExplore(s, w, date.y);
   },
   yearly({ s, w }) {
     for (const n of s.nations) if (n.alive) n.flags.atlantic = atlantic(s, w, n) ? 1 : 0;

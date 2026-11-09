@@ -60,6 +60,8 @@ export class SimClient {
   speed(v: number) { this.send({ type: 'speed', speed: v }); }
   setPlayer(p: number | null) { this.send({ type: 'player', player: p }); }
   mapMode(mode: MapMode, focus: number) { this.send({ type: 'mapmode', mode, focus }); }
+  /** The good the prices, production and markets map modes show (-1: none, for the markets mode). */
+  mapGood(good: number) { this.send({ type: 'mapgood', good }); }
 }
 
 let _client: SimClient | null = null;
