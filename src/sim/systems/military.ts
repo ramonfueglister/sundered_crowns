@@ -11,6 +11,7 @@ import { lawEffect, ageOf, characterDies, councilBonus } from './politics';
 import { integrationYield } from './economy';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
+import { forgetTrade } from './trade';
 
 export const UPKEEP_SCALE = 1500, COST_SCALE = 900;
 export const BASE_SPEED_KM = 20; // medieval army ~15–25 km/day
@@ -873,6 +874,7 @@ export function releaseNation(s: GameState, w: World, from: Nation, locs: number
     const r = { id: newId(s), name: 'Lord of ' + nm, dynasty: nm, female: false, born: s.day - 35 * 365, skills: [2, 2, 3] as [number, number, number], traits: ['ambitious'], nation: id, alive: true, children: [], health: 1, role: 'ruler' as const };
     s.chars[r.id] = r; nn!.ruler = r.id; nn!.heir = 0; nn!.consort = 0; nn!.regent = 0; nn!.council = {};
   }
+  if (!nn!.alive) forgetTrade(s, nn!.id); // a realm brought back starts without its old merchants and embargoes
   nn!.alive = true;
   for (const l of locs) { s.loc.owner[l] = nn!.id; s.loc.ctrl[l] = nn!.id; s.loc.core[l] = nn!.id; }
   s.flags.ownershipDirty = s.day; bump();

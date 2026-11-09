@@ -114,8 +114,8 @@ function Merchants({ d, refresh }: { d: any; refresh: () => void }) {
         <span class={`muted has-tip ${isFinite(o.cost) && o.cost > o.reach ? 'neg' : ''}`}>{t('tr_range')}: {isFinite(o.cost) ? num(o.cost, 2) : '—'} / {num(o.reach, 2)}</span></Tip>
     </div>
     <div class="tr-merch-btns">
-      <Btn disabled={why} tip={() => <GainTip name={t('tr_send_collect')} v={g.add} hint={t('tr_send_collect_hint')} d={d} />} onClick={() => send(o.have + 1, o.steer && !!o.route)}>
-        {t('tr_send_collect')} {g.add !== null && <span class={g.add >= 0 ? 'pos' : 'neg'}>{gainText(g.add)}</span>}</Btn>
+      <Btn disabled={why} tip={() => <GainTip name={t('tr_send_collect')} v={g.addCollect} hint={o.have > 0 && o.steer ? t('tr_send_collect_switch_hint') : t('tr_send_collect_hint')} d={d} />} onClick={() => send(o.have + 1, false)}>
+        {t('tr_send_collect')} {g.addCollect !== null && <span class={g.addCollect >= 0 ? 'pos' : 'neg'}>{gainText(g.addCollect)}</span>}</Btn>
       {!home && <Btn disabled={why ?? (!o.route ? 'no trade route home' : null)} tip={() => <GainTip name={t('tr_send_steer')} v={g.addSteer ?? (o.steer ? g.add : null)} hint={t('tr_send_steer_hint')} d={d} />} onClick={() => send(o.have + 1, true)}>
         {t('tr_send_steer')} {(g.addSteer ?? (o.steer ? g.add : null)) !== null && <span class={(g.addSteer ?? g.add) >= 0 ? 'pos' : 'neg'}>{gainText(g.addSteer ?? g.add)}</span>}</Btn>}
       <Btn disabled={o.have <= 0 ? 'none' : null} tip={() => <GainTip name={t('tr_recall')} v={g.recall} hint={t('tr_recall_hint')} d={d} />} onClick={() => send(o.have - 1)}>

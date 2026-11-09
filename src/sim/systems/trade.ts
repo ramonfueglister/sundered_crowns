@@ -54,6 +54,26 @@ function embargoIndex(s: GameState): Set<number> {
 export function embargoedBy(s: GameState, a: number, b: number): boolean { return a !== b && a >= 0 && b >= 0 && embargoIndex(s).has(a * 65536 + b); }
 /** An embargo in either direction between a and b. */
 export function embargoBetween(s: GameState, a: number, b: number): boolean { return embargoedBy(s, a, b) || embargoedBy(s, b, a); }
+/** Drop the merchants, their steering and the embargoes of every realm `gone` says (by either party); the embargo index
+ *  is rebuilt on its next use. */
+function dropTrade(s: GameState, gone: (n: number) => boolean): void {
+  for (const m of s.markets) {
+    for (const k of Object.keys(m.merchants)) if (gone(+k)) delete m.merchants[k as any];
+    if (m.steer) for (const k of Object.keys(m.steer)) if (gone(+k)) delete m.steer[k as any];
+  }
+  let changed = false;
+  for (const k of Object.keys(s.flags)) {
+    if (k.charCodeAt(0) !== 101 || !k.startsWith('embargo_')) continue;
+    const [, a, b] = k.split('_');
+    if (gone(+a) || gone(+b)) { delete s.flags[k]; changed = true; }
+  }
+  if (changed) EI.e = -1;
+}
+/** A realm that falls (or is brought back) keeps no merchants, steering or embargoes of before. */
+export function forgetTrade(s: GameState, id: number): void { dropTrade(s, (n) => n === id); }
+/** Monthly: clear what fallen realms left in the markets and their embargoes (so merchant slots and the embargo's
+ *  opinion and cause for war do not outlive them). */
+export function clearFallenTrade(s: GameState): void { dropTrade(s, (n) => !s.nations[n]?.alive); }
 /** Tariff the importing market's ruler takes on goods from the exporting market's ruler: his tariff, halved for a
  *  partner of a trade agreement. */
 export function tariffBetween(s: GameState, importer: number, exporter: number): number {
@@ -300,6 +320,7 @@ export function splitTrade(s: GameState, mp: MarketPower[], tv: ArrayLike<number
  *  what each market earned and paid for the panels. */
 export function payTrade(s: GameState, w: World, tv: Float64Array, mp0?: MarketPower[]) {
   const mp = mp0 ?? s.markets.map((_, m) => marketPower(s, w, m)); // fresh: merchants, ships and land as they are now
+  clearFallenTrade(s); // (fallen realms have no power rows: the powers above stay as they are)
   const sp = splitTrade(s, mp, tv);
   for (let m = 0; m < s.markets.length; m++) {
     const mk = s.markets[m];
@@ -369,9 +390,10 @@ export function tradeIncomeWith(s: GameState, w: World, nid: number, change?: { 
   if (!change || !s.markets[change.m]) return v;
   return v + incomeDelta(s, b, nid, change.m, marketPower(s, w, change.m, { n: nid, merchants: change.merchants, steer: change.steer }));
 }
-export interface MerchantGains { now: number; add: number | null; addSteer: number | null; recall: number | null; toggle: number | null }
-/** What one more merchant (collecting or steering), one merchant fewer or switching the mode would change in our
- *  monthly trade income (null: not possible). */
+export interface MerchantGains { now: number; add: number | null; addCollect: number | null; addSteer: number | null; recall: number | null; toggle: number | null }
+/** What one more merchant, one merchant fewer or switching the mode would change in our monthly trade income (null: not
+ *  possible). Steering is one setting for all our merchants in a market: `add` keeps it as it is, `addCollect` sends
+ *  one more and lets all of them collect here, `addSteer` (only while they collect) lets all of them steer home. */
 export function merchantGains(s: GameState, w: World, nid: number, m: number): MerchantGains {
   const n = s.nations[nid]; const mk = s.markets[m];
   const now = tradeIncomeWith(s, w, nid);
@@ -383,6 +405,7 @@ export function merchantGains(s: GameState, w: World, nid: number, m: number): M
   return {
     now,
     add: ok && free > 0 ? est(have + 1, steer && canSteer) : null,
+    addCollect: ok && free > 0 ? est(have + 1, false) : null,
     addSteer: ok && free > 0 && canSteer && !steer ? est(have + 1, true) : null,
     recall: have > 0 ? est(have - 1, steer && have > 1) : null,
     toggle: have > 0 && canSteer ? est(have, !steer) : null,

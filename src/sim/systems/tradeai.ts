@@ -11,7 +11,7 @@ import { tariffMax } from './economy';
 import { europeanCrown, charterOptions } from './colonial';
 import { OCEAN_TECH, harbours } from './explore';
 import {
-  tradeIncomeWith, merchantRefusal, merchantsFree, steerRoute, homeMarket, embargoedBy, embargoStakes, routeCost, merchantReach,
+  tradeIncomeWith, merchantRefusal, merchantsFree, steerRoute, homeMarket, embargoedBy, embargoBetween, embargoStakes, routeCost, merchantReach,
 } from './trade';
 
 /** Quarterly, staggered by realm (called from the AI's monthly strategy). */
@@ -25,15 +25,24 @@ export function aiTrade(s: GameState, w: World, n: Nation) {
   aiCharter(s, w, n);
 }
 
-/** Markets worth a look: home, where we already trade, and the richest markets within reach. */
+/** Markets worth a look: home, where we already trade (even where no more merchants may go: those still earn and can
+ *  be moved away), and the richest markets within reach. */
 function candidates(s: GameState, w: World, n: Nation): number[] {
   const home = homeMarket(s, n); if (home < 0) return [];
-  const out = new Set<number>([home]);
-  for (const m of s.markets) if (m.merchants[n.id]) out.add(m.id);
+  const out = new Set<number>();
   const k = merchantReach(n);
   const reach = s.markets.filter((m) => routeCost(s, home, m.id) <= k && (m.tv ?? 0) > 0).sort((a, b) => (b.tv ?? 0) - (a.tv ?? 0) || a.id - b.id);
-  for (const m of reach.slice(0, 8)) out.add(m.id);
-  return [...out].filter((m) => !merchantRefusal(s, w, n, m)).sort((a, b) => a - b);
+  for (const m of [s.markets[home], ...reach.slice(0, 8)]) if (!merchantRefusal(s, w, n, m.id)) out.add(m.id);
+  for (const m of s.markets) if (m.merchants[n.id]) out.add(m.id);
+  return [...out].sort((a, b) => a - b);
+}
+/** Our merchants in markets whose ruler and we keep an embargo earn nothing there: call them home. */
+function recallShutOut(s: GameState, w: World, n: Nation) {
+  for (const mk of s.markets) {
+    if (!mk.merchants[n.id]) continue;
+    const owner = s.loc.owner[mk.hub];
+    if (owner >= 0 && owner !== n.id && embargoBetween(s, owner, n.id)) applyCommand(s, w, { t: 'merchant', n: n.id, market: mk.id, amount: 0 });
+  }
 }
 
 /** What a change must bring a month to be worth a merchant's journey: a hundredth of the realm's income, at least 0.5. */
@@ -43,6 +52,7 @@ function worth(n: Nation): number {
 }
 
 function aiMerchants(s: GameState, w: World, n: Nation) {
+  recallShutOut(s, w, n);
   const cands = candidates(s, w, n); if (!cands.length) return;
   const now = tradeIncomeWith(s, w, n.id);
   const est = (m: number, k: number, st: boolean) => tradeIncomeWith(s, w, n.id, { m, merchants: k, steer: st }) - now;
@@ -57,6 +67,7 @@ function aiMerchants(s: GameState, w: World, n: Nation) {
   const now2 = tradeIncomeWith(s, w, n.id);
   let best = -1, bestSteer = false, bv = 0;
   for (const m of cands) {
+    if (merchantRefusal(s, w, n, m)) continue; // (we keep the merchants there, but send no more)
     const mk = s.markets[m]; const have = mk.merchants[n.id] || 0; const st = !!mk.steer?.[n.id];
     const g1 = tradeIncomeWith(s, w, n.id, { m, merchants: have + 1, steer: st }) - now2;
     if (g1 > bv) { bv = g1; best = m; bestSteer = st; }

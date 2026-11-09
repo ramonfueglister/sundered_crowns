@@ -79,7 +79,7 @@ function exploredView(): Uint8Array {
 }
 function sendColors() {
   mapDirty = false;
-  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1, mapGood);
+  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1, mapGood, player ?? -1);
   post({ type: 'colors', mode: mapMode, rgba, legend }, [rgba.buffer]);
 }
 

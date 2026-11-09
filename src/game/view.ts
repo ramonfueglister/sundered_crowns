@@ -134,8 +134,9 @@ function ramp(t: number, stops: [number, number, number][]): [number, number, nu
 const HEAT: [number, number, number][] = [[40, 60, 120], [60, 140, 160], [120, 190, 100], [240, 210, 80], [220, 80, 50]];
 const GOOD: [number, number, number][] = [[200, 60, 50], [230, 190, 70], [70, 170, 80]];
 
-export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number, good = -1): { rgba: Uint8Array; legend: Legend } {
-  if (mode === 'prices' || mode === 'production' || mode === 'markets') return tradeMapColors(s, w, mode, focus, mode === 'markets' ? good : good < 0 ? GI.grain : good);
+/** `viewer`: the realm whose explored map the trade modes respect (-1: everything known). */
+export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number, good = -1, viewer = -1): { rgba: Uint8Array; legend: Legend } {
+  if (mode === 'prices' || mode === 'production' || mode === 'markets') return tradeMapColors(s, w, mode, mode === 'markets' ? good : good < 0 ? GI.grain : good, viewer);
   const N = w.N, out = new Uint8Array(N * 4);
   const put = (i: number, c: [number, number, number], a = 255) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = a; };
   const lc = s.loc;

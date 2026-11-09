@@ -628,6 +628,8 @@ const S: Record<string, [string, string]> = {
   ex_charter_commerce_hint: ['Our merchants need Commerce & Learning 12.', 'Unsere Kaufleute brauchen Handel & Gelehrsamkeit 12.'], ex_charter_cost_hint: ['600 marks times the price level.', '600 Mark mal Preisniveau.'],
   ex_charter_option_hint: ['An overseas market where we hold a harbour, far from home (trade value last month).', 'Ein Überseemarkt mit einem Hafen von uns, fern der Heimat (Handelswert im letzten Monat).'], ex_charter_do: ['Charter', 'Gründen'],
   ex_no_charter_options: ['A company needs a harbour of ours in an overseas market (2500 km and more from the capital).', 'Eine Kompanie braucht einen Hafen von uns in einem Überseemarkt (2500 km und mehr von der Hauptstadt).'],
+  // ---- trade pass review fixes (claude/trade-pass)
+  tr_send_collect_switch_hint: ['One more merchant, and all our merchants here collect our share in this market instead of steering it home (steering is one setting for all our merchants in a market).', 'Ein weiterer Kaufmann, und alle unsere Kaufleute hier sammeln unseren Anteil in diesem Markt, statt ihn heimzulenken (Lenken gilt für alle unsere Kaufleute in einem Markt).'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

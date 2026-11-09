@@ -779,7 +779,7 @@ export class WorldCore {
       ss.sendBin(encodeBinary(BIN_COLORS, new Uint8Array(this.w.N * 4), MAP_MODE_LIST.indexOf(ss.mapMode)));
       return;
     }
-    const { rgba, legend } = mapModeColors(this.s, this.w, ss.mapMode, ss.mapFocus >= 0 ? ss.mapFocus : ss.seat?.nation ?? -1, ss.mapGood);
+    const { rgba, legend } = mapModeColors(this.s, this.w, ss.mapMode, ss.mapFocus >= 0 ? ss.mapFocus : ss.seat?.nation ?? -1, ss.mapGood, ss.seat?.nation ?? -1);
     ss.send({ type: 'legend', mode: ss.mapMode, legend });
     ss.sendBin(encodeBinary(BIN_COLORS, rgba, MAP_MODE_LIST.indexOf(ss.mapMode)));
   }

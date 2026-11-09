@@ -9,8 +9,11 @@ import { applyCommand } from '../src/sim/commands';
 import { bump } from '../src/sim/ctx';
 import { hasRefusalText } from '../src/sim/refusals';
 import {
-  marketPowers, tradeIncomeWith, merchantGains, merchantRefusal, embargoedBy, tariffBetween, homeMarket, merchantsFree, routeCost, merchantReach,
+  marketPowers, tradeIncomeWith, merchantGains, merchantRefusal, embargoedBy, tariffBetween, homeMarket, merchantsFree, routeCost, merchantReach, clearFallenTrade,
 } from '../src/sim/systems/trade';
+import { aiTrade } from '../src/sim/systems/tradeai';
+import { releaseNation } from '../src/sim/systems/military';
+import { ownedLocs } from '../src/sim/systems/war';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import { hasCasusBelli } from '../src/sim/systems/war';
 import { expeditionTargets, expeditionPlan } from '../src/sim/systems/explore';
@@ -91,6 +94,70 @@ describe('trade power and merchants', () => {
     expect(g.producers.length).toBeGreaterThan(0);
     expect(g.consumers.length).toBeGreaterThan(0);
     expect(g.hist.length).toBeGreaterThan(0);
+  });
+
+  it('sending a collecting merchant where ours steer lets them all collect, as the gain shown says', () => {
+    const m = s.markets.find((x) => x.steer?.[pt.id] && (x.merchants[pt.id] || 0) > 0)!;
+    expect(m).toBeTruthy();
+    expect(merchantsFree(s, pt)).toBeGreaterThan(0);
+    const have = m.merchants[pt.id];
+    const g = merchantGains(s, w, pt.id, m.id);
+    expect(g.addCollect).not.toBeNull();
+    // `add` keeps them steering; `addCollect` is one more merchant with all of them collecting
+    expect(g.add!).toBeCloseTo(tradeIncomeWith(s, w, pt.id, { m: m.id, merchants: have + 1, steer: true }) - g.now, 9);
+    expect(g.addCollect!).toBeCloseTo(tradeIncomeWith(s, w, pt.id, { m: m.id, merchants: have + 1, steer: false }) - g.now, 9);
+    expect(applyCommand(s, w, { t: 'merchant', n: pt.id, market: m.id, amount: have + 1, steer: false }).ok).toBe(true);
+    expect(m.merchants[pt.id]).toBe(have + 1);
+    expect(m.steer?.[pt.id]).toBeUndefined();
+    expect(tradeIncomeWith(s, w, pt.id)).toBeCloseTo(g.now + g.addCollect!, 6);
+  });
+});
+
+describe('merchants and embargoes of fallen realms, and the AI\'s merchants under an embargo', () => {
+  const s = newGame();
+  days(s, 35);
+  const pt = byKey(s, 'portugal');
+  const home = homeMarket(s, pt);
+  // a foreign market in reach whose ruler is neither ally, overlord nor subject of Portugal
+  const m = s.markets.filter((x) => { const o = s.loc.owner[x.hub]; return x.id !== home && o >= 0 && o !== pt.id && !merchantRefusal(s, w, pt, x.id) && (x.tv ?? 0) > 0
+    && !s.treaties.some((t) => t.type === 'alliance' && ((t.a === o && t.b === pt.id) || (t.a === pt.id && t.b === o))) && s.nations[o].overlord !== pt.id && pt.overlord !== o; })
+    .sort((a, b) => (b.tv ?? 0) - (a.tv ?? 0) || a.id - b.id)[0];
+  const B = s.loc.owner[m.hub];
+
+  it('the AI calls its merchants home from a market an embargo shuts it out of', () => {
+    for (const x of s.markets) if (x.merchants[pt.id]) applyCommand(s, w, { t: 'merchant', n: pt.id, market: x.id, amount: 0 });
+    expect(applyCommand(s, w, { t: 'merchant', n: pt.id, market: m.id, amount: 1 }).ok).toBe(true);
+    expect(applyCommand(s, w, { t: 'diplo', n: B, target: pt.id, action: 'embargo' }).ok).toBe(true);
+    expect(marketPowers(s, w)[m.id].rows.find((r) => r.n === pt.id)?.blocked ?? true).toBe(true);
+    // the next day on which Portugal reviews its trade
+    while ((Math.floor(s.day / 30) + pt.id) % 3 !== 0) days(s, 1);
+    aiTrade(s, w, pt);
+    expect(m.merchants[pt.id]).toBeUndefined();
+    expect(merchantsFree(s, pt)).toBeGreaterThanOrEqual(0);
+  });
+
+  it('a fallen realm leaves no merchants, steering or embargoes behind, and comes back without them', () => {
+    // B keeps a merchant (steering where it can) in some market, an embargo on Portugal, and suffers one from a third realm
+    const bm = s.markets.find((x) => !merchantRefusal(s, w, s.nations[B], x.id) && x.id !== homeMarket(s, s.nations[B]))!;
+    expect(applyCommand(s, w, { t: 'merchant', n: B, market: bm.id, amount: 1 }).ok).toBe(true);
+    s.markets[bm.id].steer = { ...(s.markets[bm.id].steer ?? {}), [B]: 1 };
+    const C = s.nations.find((o) => o.alive && o.id !== B && o.id !== pt.id && !s.treaties.some((t) => t.type === 'alliance' && ((t.a === o.id && t.b === B) || (t.a === B && t.b === o.id))) && o.overlord !== B && s.nations[B].overlord !== o.id)!;
+    expect(applyCommand(s, w, { t: 'diplo', n: C.id, target: B, action: 'embargo' }).ok).toBe(true);
+    expect(embargoedBy(s, B, pt.id)).toBe(true);
+    // B falls
+    const NB = s.nations[B]; const cap = NB.capital, culture = NB.culture;
+    NB.alive = false;
+    clearFallenTrade(s);
+    expect(s.markets.some((x) => x.merchants[B] || x.steer?.[B])).toBe(false);
+    expect(Object.keys(s.flags).filter((k) => k.startsWith('embargo_') && k.split('_').slice(1).map(Number).includes(B))).toEqual([]);
+    expect(embargoedBy(s, B, pt.id)).toBe(false);
+    expect(embargoedBy(s, C.id, B)).toBe(false);
+    // brought back (a realm that fell without a monthly sweep after it still starts clean)
+    s.markets[bm.id].merchants[B] = 2; s.flags[`embargo_${B}_${pt.id}`] = s.day;
+    const back = releaseNation(s, w, pt, [cap], culture);
+    expect(back.id).toBe(B);
+    expect(s.markets.some((x) => x.merchants[B])).toBe(false);
+    expect(embargoedBy(s, B, pt.id)).toBe(false);
   });
 });
 
@@ -226,6 +293,38 @@ describe('trade map modes', () => {
     const { legend } = mapModeColors(s, w, 'markets', -1, -1);
     expect(legend.good).toBe(-1);
     expect(legend.items.length).toBeGreaterThan(2);
+  });
+
+  it('a player sees no places, markets or realms in them that it has not discovered', () => {
+    const pt = byKey(s, 'portugal');
+    const e = s.explored[pt.knows];
+    const knownRealm = (o: number) => { const N = s.nations[o]; return o === pt.id || (N.capital >= 0 && e[N.capital] === 1) || ownedLocs(s, o).some((l) => e[l] === 1); };
+    const marketNames = new Set(s.markets.filter((m) => e[m.hub] === 1).map((m) => m.name)), realmNames = new Set(s.nations.filter((n) => knownRealm(n.id)).map((n) => n.short.en));
+    const allMarkets = new Set(s.markets.map((m) => m.name)), allRealms = new Set(s.nations.map((n) => n.short.en));
+    let hidden = 0;
+    for (const [mode, g] of [['prices', GI.spices], ['production', GI.sugar], ['markets', -1], ['markets', GI.sugar]] as const) {
+      const all = mapModeColors(s, w, mode, -1, g);
+      const { rgba, legend } = mapModeColors(s, w, mode, -1, g, pt.id);
+      let coloured = 0;
+      for (let i = 0; i < w.L; i++) { if (rgba[i * 4 + 3] > 0) { coloured++; expect(e[i]).toBe(1); } }
+      expect(coloured).toBeGreaterThan(0);
+      const named = (items: typeof legend.items) => items.map((x) => (typeof x.label === 'string' ? x.label : x.label.en)).map((l) => {
+        const p = /^(?:cheapest|dearest): (.*) [+-]?\d+ %$/.exec(l); if (p) return { kind: 'market', name: p[1] };
+        const q = /^made in (.*): /.exec(l) ?? /^(.*): leads trade worth /.exec(l); if (q) return { kind: 'realm', name: q[1] };
+        return null;
+      }).filter((x) => x !== null);
+      for (const x of named(legend.items)) {
+        expect(x!.kind === 'market' ? allMarkets.has(x!.name) : allRealms.has(x!.name)).toBe(true);
+        expect(x!.kind === 'market' ? marketNames.has(x!.name) : realmNames.has(x!.name)).toBe(true);
+      }
+      for (const x of named(all.legend.items)) if (!(x!.kind === 'market' ? marketNames.has(x!.name) : realmNames.has(x!.name))) hidden++;
+    }
+    expect(hidden).toBeGreaterThan(0); // (the observer's legends do name places Portugal has not found yet)
+    // nor among its trading partners in the trade panel
+    const p = answer(s, w, pt.id, { q: 'tpolicy' });
+    for (const x of p.traders) expect(knownRealm(x.n)).toBe(true);
+    const far = s.nations.find((o) => o.alive && o.capital >= 0 && !knownRealm(o.id))!;
+    expect(answer(s, w, pt.id, { q: 'trel', target: far.id })).toBeNull();
   });
 });
 

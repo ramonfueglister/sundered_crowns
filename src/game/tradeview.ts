@@ -19,6 +19,14 @@ import { deName } from '../sim/content/names_de';
 
 const placeI18n = (w: World, l: number): I18n => ({ en: w.names[l] ?? `#${l}`, de: w.namesDe[l] ?? w.names[l] ?? `#${l}` });
 const known = (s: GameState, n: Nation | undefined, l: number) => { if (!n || s.flags.revealAll) return true; const e = s.explored[n.knows]; return !e || e[l] === 1; };
+/** The viewer knows a realm once it has seen its capital or any place it holds (everything without a viewer). */
+function knowsRealm(s: GameState, n: Nation | undefined, o: number): boolean {
+  if (!n || s.flags.revealAll || o === n.id) return true;
+  const N = s.nations[o]; if (!N) return false;
+  if (N.capital >= 0 && known(s, n, N.capital)) return true;
+  for (const l of ownedLocs(s, o)) if (known(s, n, l)) return true;
+  return false;
+}
 /** The last `k` months of a good's price in a market, oldest first. */
 function priceHist(s: GameState, m: number, g: number, k: number): number[] {
   const mk = s.markets[m]; const out: number[] = [];
@@ -54,7 +62,7 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
     id: mid, name: mk.name, hub: mk.hub, hubName: placeI18n(w, mk.hub), owner: mk.owner, priceIndex: mk.priceIndex,
     tv: mk.tv ?? 0, tin: mk.tin ?? 0, deter: mk.deter ?? 0, base: mp.base, total: mp.total, crowdCap: MERCHANT_CROWD,
     rows, our, goods, waters: wat.length, seaRoutes: mk.links.filter((l) => l.sea).length,
-    links: mk.links.map((l) => ({ to: l.to, name: s.markets[l.to].name, sea: l.sea, ocean: !!l.ocean })),
+    links: mk.links.filter((l) => known(s, n, s.markets[l.to].hub)).map((l) => ({ to: l.to, name: s.markets[l.to].name, sea: l.sea, ocean: !!l.ocean })),
   };
 }
 
@@ -92,7 +100,8 @@ export function goodDetail(s: GameState, w: World, pid: number, mid: number, g: 
   const S = mk.supply[g], D = mk.demand[g];
   const ratio = (D + 0.02 * anchor) / (S + 0.02 * anchor);
   const step = Math.min(1.22, Math.max(0.82, Math.pow(ratio, 0.3)));
-  const partners = (s.flows ?? []).filter((f) => f.good === g && (f.from === mid || f.to === mid)).slice(0, 8)
+  const viewer = s.nations[pid];
+  const partners = (s.flows ?? []).filter((f) => f.good === g && (f.from === mid || f.to === mid) && known(s, viewer, s.markets[f.from === mid ? f.to : f.from].hub)).slice(0, 8)
     .map((f) => ({ market: f.from === mid ? f.to : f.from, name: s.markets[f.from === mid ? f.to : f.from].name, out: f.from === mid, qty: f.qty, value: f.value }));
   return {
     good: g, name: GOODS[g].name, market: mid, marketName: mk.name, price: mk.price[g], base: GOODS[g].base, priceLevel: s.priceLevel, debase, anchor,
@@ -123,7 +132,7 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
     if (a === pid && b >= 0 && b !== pid) goodsWith.set(b, (goodsWith.get(b) ?? 0) + f.value);
     else if (b === pid && a >= 0 && a !== pid) goodsWith.set(a, (goodsWith.get(a) ?? 0) + f.value);
   }
-  const traders = [...goodsWith.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)
+  const traders = [...goodsWith.entries()].filter(([o]) => knowsRealm(s, n, o)).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)
     .map(([o, v]) => ({ n: o, goods: v, agreement: hasTreaty(s, pid, o, 'trade'), embargo: embargoedBy(s, pid, o) || embargoedBy(s, o, pid), theirTariff: s.nations[o]?.tariff ?? 0 }));
   return {
     tariff: n.tariff, max: tariffMax(n), maxParts: [['x_base', 0.05], ['x_trade_law', law]] as [string, number][],
@@ -136,6 +145,8 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
  *  embargo would cost each side. */
 export function tradeRelation(s: GameState, w: World, pid: number, o: number) {
   const n = s.nations[pid], N = s.nations[o]; if (!n || !N || pid === o) return null;
+  // a realm we have never seen: nothing to trade with (unless it keeps an embargo or a treaty with us)
+  if (!knowsRealm(s, n, o) && !embargoedBy(s, pid, o) && !embargoedBy(s, o, pid) && !hasTreaty(s, pid, o, 'trade')) return null;
   let goods = 0; const items = new Map<number, number>();
   for (const f of s.flows ?? []) {
     const a = s.loc.owner[s.markets[f.from].hub], b = s.loc.owner[s.markets[f.to].hub];
@@ -202,9 +213,16 @@ export const MAP_GOODS = GOODS.map((g, k) => ({ k, name: g.name }));
 
 /** A whole number with the language's thousands separator, for legend labels. */
 const fmt = (v: number, lang: 'en' | 'de') => Math.round(v).toLocaleString(lang === 'de' ? 'de-DE' : 'en-GB');
-export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'production' | 'markets', focus: number, good: number): { rgba: Uint8Array; legend: Legend } {
+/** Colours and legend of a trade map mode as `viewer` sees it: places, markets and realms it has not discovered stay
+ *  blank and out of the legend (viewer -1: everything, as in observer mode). */
+export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'production' | 'markets', good: number, viewer = -1): { rgba: Uint8Array; legend: Legend } {
   const out = new Uint8Array(w.N * 4);
-  const put = (i: number, c: RGB) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = 255; };
+  const V = viewer >= 0 ? s.nations[viewer] : undefined;
+  const seen = (l: number) => known(s, V, l);
+  const seenM = s.markets.map((m) => seen(m.hub));
+  const realmSeen = new Map<number, boolean>();
+  const seenR = (o: number) => { let v = realmSeen.get(o); if (v === undefined) { v = knowsRealm(s, V, o); realmSeen.set(o, v); } return v; };
+  const put = (i: number, c: RGB) => { if (!seen(i)) return; out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = 255; };
   const g = good >= 0 && good < G ? good : GI.grain;
   const gname = GOODS[g].name;
   const lc = s.loc;
@@ -212,7 +230,7 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
     // price against the good's base price in each place's market: cheap green, dear red (log scale, ×1/3 to ×3)
     const rel = s.markets.map((m) => m.price[g] / Math.max(1e-9, GOODS[g].base * s.priceLevel));
     for (let i = 0; i < w.L; i++) { const r = rel[lc.market[i]]; if (r > 0) put(i, ramp(0.5 + Math.log(r) / Math.log(9), CHEAP_DEAR)); }
-    const order = s.markets.map((m, k) => ({ m, r: rel[k] })).filter((x) => x.r > 0).sort((a, b) => a.r - b.r || a.m.id - b.m.id);
+    const order = s.markets.map((m, k) => ({ m, r: rel[k] })).filter((x) => x.r > 0 && seenM[x.m.id]).sort((a, b) => a.r - b.r || a.m.id - b.m.id);
     const pct = (r: number) => `${r >= 1 ? '+' : ''}${Math.round((r - 1) * 100)} %`;
     const items: Legend['items'] = [
       { color: hex(ramp(0, CHEAP_DEAR)), label: { en: 'cheap (a third of the base price)', de: 'billig (ein Drittel des Grundpreises)' } },
@@ -228,6 +246,7 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
     const q = new Float64Array(w.L); let max = 0;
     const realms = new Map<number, number>();
     if (LOC_ECON && LOC_ECON.grain.length === w.L) for (let i = 0; i < w.L; i++) {
+      if (!seen(i)) continue;
       const v = locGoods(lc, w, i, null).made.get(g) ?? 0; q[i] = v; if (v > max) max = v;
       if (v > 0 && lc.owner[i] >= 0) realms.set(lc.owner[i], (realms.get(lc.owner[i]) ?? 0) + v);
     }
@@ -237,7 +256,7 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
       { color: hex(VOLUME[3]), label: { en: `much (${fmt(max, 'en')} a month in the largest place)`, de: `viel (${fmt(max, 'de')} im Monat am größten Ort)` } },
       { color: '#e1ded2', label: { en: 'none', de: 'nichts' } },
     ];
-    for (const [o, v] of [...realms.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 4)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `made in ${N.short.en}: ${fmt(v, 'en')}`, de: `erzeugt in ${N.short.de}: ${fmt(v, 'de')}` } }); }
+    for (const [o, v] of [...realms.entries()].filter(([o]) => seenR(o)).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 4)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `made in ${N.short.en}: ${fmt(v, 'en')}`, de: `erzeugt in ${N.short.de}: ${fmt(v, 'de')}` } }); }
     return { rgba: out, legend: { title: { en: `Production: ${gname.en} (a month)`, de: `Erzeugung: ${gname.de} (im Monat)` }, items, good: g } };
   }
   // markets: each market area in the colour of the realm with the most trade power there, lighter where little trade
@@ -245,25 +264,24 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
   const mps = marketPowers(s, w);
   const items: Legend['items'] = [];
   if (good >= 0) {
-    const net = s.markets.map((m) => m.flowOut[g]); const mx = Math.max(1e-6, ...net.map(Math.abs));
+    const net = s.markets.map((m) => m.flowOut[g]); const mx = Math.max(1e-6, ...net.filter((_, k) => seenM[k]).map(Math.abs));
     for (let i = 0; i < w.L; i++) { const v = net[lc.market[i]] / mx; put(i, ramp(0.5 + 0.5 * Math.sign(v) * Math.sqrt(Math.abs(v)), [[190, 50, 40], [235, 225, 160], [46, 125, 70]])); }
     for (const m of s.markets) put(m.hub, [255, 245, 215]);
     items.push({ color: '#2e7d46', label: { en: 'exports', de: 'führt aus' } }, { color: '#ebe1a0', label: { en: 'balanced', de: 'ausgeglichen' } }, { color: '#be3228', label: { en: 'imports', de: 'führt ein' } });
     return { rgba: out, legend: { title: { en: `Markets: trade in ${gname.en}`, de: `Märkte: Handel mit ${gname.de}` }, items, good: g, goodOptional: true } };
   }
   const lead = mps.map((p) => { let best = -1, bv = 0; for (const r of p.rows) if (r.total > bv) { bv = r.total; best = r.n; } return { n: best, share: p.total > 0 ? bv / p.total : 0 }; });
-  const tvMax = Math.max(1, ...s.markets.map((m) => m.tv ?? 0));
+  const tvMax = Math.max(1, ...s.markets.filter((m) => seenM[m.id]).map((m) => m.tv ?? 0));
   const count = new Map<number, number>();
-  for (const [k, l] of lead.entries()) if (l.n >= 0) count.set(l.n, (count.get(l.n) ?? 0) + (s.markets[k].tv ?? 0));
+  for (const [k, l] of lead.entries()) if (l.n >= 0 && seenM[k]) count.set(l.n, (count.get(l.n) ?? 0) + (s.markets[k].tv ?? 0));
   for (let i = 0; i < w.L; i++) {
     const m = lc.market[i]; const l = lead[m]; const N = s.nations[l.n]; if (!N) continue;
     const f = 0.35 + 0.65 * Math.sqrt((s.markets[m].tv ?? 0) / tvMax);
     put(i, N.color.map((c) => Math.round(235 + (c - 235) * f)) as RGB);
   }
   for (const m of s.markets) put(m.hub, [255, 245, 215]);
-  for (const [o, v] of [...count.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `${N.short.en}: leads trade worth ${fmt(v, 'en')}`, de: `${N.short.de}: führt Handel im Wert von ${fmt(v, 'de')}` } }); }
+  for (const [o, v] of [...count.entries()].filter(([o]) => seenR(o)).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8)) { const N = s.nations[o]; if (N) items.push({ color: `rgb(${N.color.join(',')})`, label: { en: `${N.short.en}: leads trade worth ${fmt(v, 'en')}`, de: `${N.short.de}: führt Handel im Wert von ${fmt(v, 'de')}` } }); }
   items.push({ color: '#fff5d7', label: { en: 'market hub', de: 'Marktort' } });
-  void focus;
   return { rgba: out, legend: { title: { en: 'Markets: leading trade power (paler: less trade)', de: 'Märkte: stärkste Handelsmacht (blasser: weniger Handel)' }, items, good: -1, goodOptional: true } };
 }
 void MAX_HOPS;
