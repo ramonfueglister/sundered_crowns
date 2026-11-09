@@ -5,6 +5,7 @@ import { selectedArmies, playerId, hoverLoc, openPanel, panel } from '../store';
 import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, Tip, useRealm, selectArmy, flyToLoc, daysText, locName, namesVersion, selectLoc, placeName } from './common';
 import { sfx } from '../audio';
 import { WarScoreTip } from './realmtabs';
+import { TipHead } from './explain';
 
 export function ArmyPanel() {
   const ids = selectedArmies.value; const v = view.value; const pid = playerId.value;
@@ -31,7 +32,7 @@ export function ArmyPanel() {
   const all = (f: (id: number) => Promise<any>) => Promise.all(armies.map((a) => f(a.id)));
   return <div class="army-wrap"><Panel cls="army-pnl" onClose={close}
     title={armies.length === 1 ? (L(first.name) || (first.fleet ? t('fleet') : t('army'))) : `${armies.length} ${fleet ? t('fleets') : t('armies')}`}
-    sub={<>{num(men)} {fleet ? t('ships') : t('men')} · <LocName id={first.loc} /></>}>
+    sub={<><Tip content={<div><TipHead name={fleet ? t('fleets') : t('armies')} value={`${num(men)} ${fleet ? t('ships') : t('men')}`} hint={fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}><span>{num(men)} {fleet ? t('ships') : t('men')}</span></Tip> · <LocName id={first.loc} /></>}>
     <div class="army-list">{armies.map((a) => {
       const dest = a.path.length ? a.path[a.path.length - 1] : -1;
       return <div class="army-row">
@@ -39,14 +40,14 @@ export function ArmyPanel() {
           <span class={`unit-ic ${a.fleet ? 'ship' : 'land'}`}>{a.fleet ? '⚓' : '⚔'}</span>
         </Tip>
         <span class="aname">{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span>
-        <span class="amen">{num(a.men)}</span>
-        <span class="amorale"><Bar value={a.morale} color="#4d7a3a" tip={<div><b>{t('morale')}</b> {pct(a.morale)}</div>} /></span>
+        <Tip content={<div><TipHead name={L(a.name)} value={`${num(a.men)} ${a.fleet ? t('ships') : t('men')}`} hint={a.fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}><span class="amen has-tip">{num(a.men)}</span></Tip>
+        <span class="amorale"><Bar value={a.morale} color="#4d7a3a" tip={<div><TipHead name={t('morale')} value={pct(a.morale)} hint={t('x_morale_hint')} /></div>} /></span>
         <span class="astate muted">{a.battle ? <span class="neg">{t('in_battle')}</span> : a.siege >= 0 ? <>{t('besieging')} <LocName id={a.siege} /></> : dest >= 0 ? <>→ <LocName id={dest} /></> : a.embarked ? t('embarked') : t('idle')}</span>
       </div>;
     })}</div>
     <div class="army-meta">
-      <span>{t('general')}: <b>{armies.map((a) => a.general).filter(Boolean).join(', ') || t('none')}</b></span>
-      {path && <span class="path-prev">{path.days >= 0 ? <>→ {locName(path.to)}: <b>{daysText(path.days)}</b></> : <span class="neg">{t('no_route')} {locName(path.to)}</span>}</span>}
+      <Tip content={<div><TipHead name={t('general')} hint={t('auto_general_hint')} /></div>}><span>{t('general')}: <b>{armies.map((a) => a.general).filter(Boolean).join(', ') || t('none')}</b></span></Tip>
+      {path && <span class="path-prev">{path.days >= 0 ? <Tip content={<div><TipHead name={locName(path.to)} value={daysText(path.days)} hint={t('x_march_hint')} /></div>}><span>→ {locName(path.to)}: <b>{daysText(path.days)}</b></span></Tip> : <span class="neg">{t('no_route')} {locName(path.to)}</span>}</span>}
       {!path && <span class="muted small">{t('rightclick_hint')}</span>}
     </div>
     <div class="army-btns">
@@ -79,20 +80,20 @@ export function Outliner() {
   return <div class={`outliner ${open ? '' : 'shut'}`} onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
     <div class="ol-head" onClick={toggle}><span>{t('outliner')}</span><span>{open ? '▾' : '◂'}</span></div>
     {open && <div class="ol-body">
-      {wars.length > 0 && <Section title={<>{t('wars')} <small>({wars.length})</small></>} id="ol-wars">
+      {wars.length > 0 && <Section title={<>{t('wars')} <Tip content={<div><TipHead name={t('wars')} value={wars.length} hint={t('x_ol_wars_hint')} /></div>}><small>({wars.length})</small></Tip></>} id="ol-wars">
         {wars.map((w) => { const sc = w.att.includes(pid) ? w.score : -w.score; const foe = w.att.includes(pid) ? w.defLead : w.attLead; const offers = w.offers.filter((o) => o.to === pid).length;
           return <div class="ol-row click" onClick={() => { sfx('open'); openPanel('peace', { war: w.id }); }}>
             <NLink id={foe} size={14} name={false} /><span class="ol-name">{L(w.name)}</span>
-            {offers > 0 && <span class="badge">{offers}</span>}
+            {offers > 0 && <Tip content={<div><TipHead name={t('incoming_offers')} value={offers} hint={t('x_offers_hint')} /></div>}><span class="badge">{offers}</span></Tip>}
             <Tip content={() => <WarScoreTip w={w} pid={pid} />}><span class={`ol-v ${sc >= 0 ? 'pos' : 'neg'}`}>{signed(sc)}</span></Tip>
           </div>; })}
       </Section>}
-      <Section title={<>{t('armies')} <small>({land.length} · {num(total)})</small></>} id="ol-armies">
+      <Section title={<>{t('armies')} <Tip content={() => <div><TipHead name={t('armies')} value={`${land.length} · ${num(total)} ${t('men')}`} hint={t('x_nat_army_hint')} /></div>}><small>({land.length} · {num(total)})</small></Tip></>} id="ol-armies">
         {land.length === 0 && <div class="muted small">{t('no_armies')}</div>}
         {land.map((a) => <div class={`ol-row click ${sel.has(a.id) ? 'sel' : ''}`} onClick={(e) => { if ((e as MouseEvent).shiftKey) { selectedArmies.value = [...new Set([...selectedArmies.value, a.id])]; return; } selectArmy(a.id); }}>
           <span class={`dot ${a.battle ? 'bat' : a.siege >= 0 ? 'sie' : a.path.length ? 'mov' : ''}`} />
-          <span class="ol-name">{L(a.name)}</span><span class="ol-sub">{locName(a.loc)}</span><span class="ol-v">{num(a.men)}</span>
-          <span class="ol-bar"><i style={{ width: `${Math.round(a.morale * 100)}%` }} /></span>
+          <span class="ol-name">{L(a.name)}</span><span class="ol-sub">{locName(a.loc)}</span><Tip content={<div><TipHead name={L(a.name)} value={`${num(a.men)} ${t('men')}`} hint={t('x_army_men_hint')} /></div>}><span class="ol-v">{num(a.men)}</span></Tip>
+          <Tip content={<div><TipHead name={t('morale')} value={pct(a.morale)} hint={t('x_morale_hint')} /></div>}><span class="ol-bar"><i style={{ width: `${Math.round(Math.min(1, a.morale) * 100)}%` }} /></span></Tip>
         </div>)}
       </Section>
       {fleets.length > 0 && <Section title={<>{t('fleets')} <small>({fleets.length})</small></>} id="ol-fleets">
@@ -103,7 +104,7 @@ export function Outliner() {
       {sieges.length > 0 && <Section title={t('sieges')} id="ol-sieges">
         {sieges.map((s) => <div class="ol-row click" onClick={() => selectLoc(s.loc)}>
           <NLink id={s.nation} size={14} name={false} /><span class="ol-name">{locName(s.loc)}</span>
-          <span class="ol-bar wide"><i class={s.nation === pid ? '' : 'neg'} style={{ width: `${Math.round(s.progress)}%` }} /></span><span class="ol-v">{num(s.progress)}%</span>
+          <Tip content={<div><TipHead name={t('siege')} value={`${s.progress}/4`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(s.garrison)}</span></div></div></div>}><span class="ol-bar wide"><i class={s.nation === pid ? '' : 'neg'} style={{ width: `${Math.round(s.progress * 25)}%` }} /></span></Tip><span class="ol-v">{s.progress}/4</span>
         </div>)}
       </Section>}
       {r && (r.constructions.length > 0 || r.recruits.length > 0) && <Section title={t('works')} id="ol-works">

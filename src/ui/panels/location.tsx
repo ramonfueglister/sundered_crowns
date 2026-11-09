@@ -2,8 +2,9 @@
 import { useState } from 'preact/hooks';
 import { nations, view } from '../../game/client';
 import { selectedLoc, playerId } from '../store';
-import { RECIPES, UNITS } from '../../sim/defs';
-import { Panel, Section, Row, Bar, NLink, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
+import { RECIPES, UNITS, BUILDINGS } from '../../sim/defs';
+import { Parts, TipHead, Drift, AgentsTip } from './explain';
+import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
 import { sfx } from '../audio';
 
 const TERRAIN: Record<string, [string, string]> = {
@@ -35,33 +36,34 @@ export function LocationPanel({ loc }: { loc: number }) {
       {ctrlN && <span class="tag neg">{t('occupied_by')} <NLink id={d.ctrl} size={14} /></span>}
       {d.core >= 0 && d.core !== d.owner && <span class="tag">{t('core_of')} <NLink id={d.core} size={14} /></span>}
     </div>
+    <div class="loc-id">
+      <Tip content={<div><TipHead name={terrainName(d.terrain)} value={`${num(d.elev)} m`} hint={<>{d.coastal ? t('coastal') + ' · ' : ''}{num(d.lat, 1)}° {num(d.lon, 1)}°</>} /></div>}><span class="chip"><small>{t('terrain')}</small>{terrainName(d.terrain)}{d.coastal && ' ≈'}</span></Tip>
+      <Tip content={<div><TipHead name={L(d.culture)} hint={<>{t('culture_group')}: {d.cultureGroup ?? '—'}</>} />{d.minority && <div class="muted">{t('minority')}: {L(d.minority.culture)} / {L(d.minority.faith)} · {pct(d.minority.share)} {t('of_population')}</div>}</div>}><span class="chip"><small>{t('culture')}</small>{L(d.culture)}</span></Tip>
+      <Tip content={<div><TipHead name={L(d.faith)} hint={t('x_loc_faith_hint')} /></div>}><span class="chip"><small>{t('faith')}</small>{L(d.faith)}</span></Tip>
+      <Tip content={<div><TipHead name={L(d.resource)} hint={t('x_loc_resource_hint')} />{d.market && <div class="breakdown"><div class="bd-row"><span>{t('market')}</span><span>{d.market.name}</span></div><div class="bd-row"><span>{t('price')}</span><span>{num(d.market.price, 2)}</span></div></div>}</div>}><span class="chip"><small>{t('resource')}</small>{L(d.resource)}</span></Tip>
+    </div>
     <div class="grid2">
-      <Row k={t('terrain')} v={<>{terrainName(d.terrain)}{d.coastal && <span class="muted"> · {t('coastal')}</span>}</>} tip={<div>{t('elevation')}: {num(d.elev)} m · {num(d.lat, 1)}° {num(d.lon, 1)}°</div>} />
-      <Row k={t('development')} v={num(d.dev, 1)} tip={d.econ ? <div class="breakdown"><div class="bd-title">{t('development')}</div><div class="bd-row"><span>{t('grain')}</span><span>{num(d.econ.grain, 1)}</span></div><div class="bd-row"><span>{t('raw_output')}</span><span>{num(d.econ.rgo, 1)}</span></div><div class="bd-row"><span>{t('crafts')}</span><span>{num(d.econ.craft, 1)}</span></div><div class="muted">{t('dev_hint')}</div></div> : t('dev_hint')} />
-      <Row k={t('culture')} v={L(d.culture)} tip={<div>{t('culture_group')}: {d.cultureGroup ?? '—'}</div>} />
-      <Row k={t('faith')} v={L(d.faith)} />
-      {d.minority && <Row k={t('minority')} v={<>{L(d.minority.culture)} / {L(d.minority.faith)}</>} tip={<div>{pct(d.minority.share)} {t('of_population')}</div>} cls="span2" />}
-      <Row k={t('population')} v={num(pop)} tip={<div class="breakdown">{d.pops.map((p: any) => <div class="bd-row"><span>{L(p.name)}</span><span>{num(p.pop)}</span></div>)}</div>} />
-      <Row k={t('tax')} v={<>{num(d.tax, 1)} <i class="ic gold sm" /></>} tip={d.econ ? <div><b>{t('tax_income')}</b><div>{num(d.tax, 2)} / {t('month')}</div><div class="muted">{t('local_income')}: {num(d.econ.income, 1)}</div></div> : t('tax_income')} />
-      <Row k={t('control')} v={pct(d.control)} tip={<div><b>{t('control')}</b><div class="muted">{t('control_hint')}</div></div>} />
-      <Row k={t('integration')} v={pct(d.integ)} tip={<div><b>{t('integration')}</b><div class="muted">{t('integration_hint')}</div></div>} />
-      <Row k={t('unrest')} v={<span class={d.unrest > 10 ? 'neg' : d.unrest > 4 ? 'warn' : ''}>{num(d.unrest, 1)}</span>} tip={() => <><Reasons title={t('unrest')} rows={d.unrestWhy} total={unrestTotal} /><div class="muted">{t('unrest_hint')}</div></>} />
-      <Row k={t('literacy')} v={pct(d.literacy)} />
-      <Row k={t('harvest')} v={<span class={d.harvest < 0.8 ? 'neg' : d.harvest > 1.1 ? 'pos' : ''}>{pct(d.harvest)}</span>} tip={t('harvest_hint')} />
-      <Row k={t('garrison')} v={num(d.garrison)} />
+      <Row k={t('development')} v={num(d.dev, 1)} tip={() => <DevTip d={d} />} />
+      <Row k={t('population')} v={num(pop)} tip={<div><TipHead name={t('population')} value={num(pop)} /><div class="breakdown">{d.pops.filter((p: any) => p.pop > 0.5).map((p: any) => <div class="bd-row"><span>{L(p.name)}</span><span>{num(p.pop)}</span></div>)}</div></div>} />
+      <Row k={t('tax')} v={<>{num(d.tax, 1)} <i class="ic gold sm" /></>} tip={() => <TaxTip d={d} />} />
+      <Row k={t('control')} v={pct(d.control)} tip={() => <ControlTip d={d} />} />
+      <Row k={t('integration')} v={pct(d.integ)} tip={() => <IntegTip d={d} />} />
+      <Row k={t('unrest')} v={<span class={d.unrest > 10 ? 'neg' : d.unrest > 4 ? 'warn' : ''}>{num(d.unrest, 1)}</span>} tip={() => <div><TipHead name={t('unrest')} value={num(d.unrest, 1)} hint={t('unrest_hint')} /><Parts title={t('x_target_from')} rows={d.unrestWhy} total={unrestTotal} totalLabel={t('x_target')} bad /><Drift target={Math.max(0, unrestTotal)} monthly={Math.min(100, Math.max(0, d.unrest * 0.7 + unrestTotal * 0.3)) - d.unrest} bad /><div class="muted small">{t('x_unrest_drift')}</div></div>} />
+      <Row k={t('literacy')} v={pct(d.literacy)} tip={() => <div><TipHead name={t('literacy')} value={pct(d.literacy, 1)} /><Parts title={t('x_target_from')} rows={d.why.litParts} total={d.why.litTarget} totalLabel={t('x_target')} fmt={(v) => `${v >= 0 ? '+' : ''}${num(v * 100, 1)} %`} /><Drift monthly={(d.why.litTarget - d.literacy) * 0.01 * 100} digits={2} fmt={(v) => `${v >= 0 ? '+' : ''}${num(v, 2)} %`} /><div class="muted small">{t('x_lit_drift')}</div></div>} />
+      <Row k={t('harvest')} v={<span class={d.harvest < 0.8 ? 'neg' : d.harvest > 1.1 ? 'pos' : ''}>{pct(d.harvest)}</span>} tip={<div><TipHead name={t('harvest')} value={pct(d.harvest)} hint={t('harvest_hint')} /></div>} />
+      <Row k={t('garrison')} v={num(d.garrison)} tip={<div><TipHead name={t('garrison')} value={num(d.garrison)} hint={t('x_garrison_hint')} /></div>} />
       {d.plague > 0.01 && <Row k={t('plague')} v={<span class="neg">{pct(d.plague)}</span>} tip={t('plague_hint')} />}
       {d.snow > 0.05 && <Row k={t('snow')} v={pct(d.snow)} tip={t('snow_hint')} />}
-      {d.devast > 0.01 && <Row k={t('devastation')} v={<span class="neg">{pct(d.devast)}</span>} />}
-      <Row k={t('resource')} v={L(d.resource)} tip={d.market ? <div>{t('market')}: {d.market.name}<br />{t('price')}: {num(d.market.price, 2)}</div> : undefined} />
+      {d.devast > 0.01 && <Row k={t('devastation')} v={<span class="neg">{pct(d.devast)}</span>} tip={<div><TipHead name={t('devastation')} value={pct(d.devast)} hint={t('x_devast_hint')} /></div>} />}
     </div>
     {d.landmark && <Landmark d={d} own={own} refresh={refresh} />}
-    {d.siege && <div class="siege-box"><b>{t('siege')}</b> · <NLink id={d.siege.nation} size={14} /> · {num(d.siege.progress)} % <Bar value={d.siege.progress} max={100} color="#9b2a20" /></div>}
+    {d.siege && <div class="siege-box"><b>{t('siege')}</b> · <NLink id={d.siege.nation} size={14} /> · {d.siege.progress}/4 <Bar value={d.siege.progress} max={4} color="#9b2a20" tip={<div><TipHead name={t('siege')} value={`${d.siege.progress}/4`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(d.siege.garrison)}</span></div>{d.siege.breach > 0 && <div class="bd-row"><span>{t('x_breaches')}</span><span>{d.siege.breach}</span></div>}{d.siege.blockade && <div class="bd-row"><span>{t('x_blockade')}</span><span>✓</span></div>}<div class="bd-row"><span>{t('x_days')}</span><span>{d.siege.days}</span></div></div></div>} /></div>}
 
     <Section title={t('population')} id="loc-pop">
       <table class="tbl pops">
         <thead><tr><th>{t('class')}</th><th class="r">{t('people')}</th><th>{t('standard_of_living')}</th><th class="r">{t('wealth')}</th></tr></thead>
         <tbody>{d.pops.filter((p: any) => p.pop > 0.5).map((p: any) => <tr>
-          <td>{L(p.name)}</td><td class="r">{num(p.pop)}</td>
+          <td>{L(p.name)}</td><td class="r"><Tip content={<div><TipHead name={L(p.name)} value={num(p.pop)} /><div class="breakdown"><div class="bd-row"><span>{t('x_share_here')}</span><span>{pct(p.pop / Math.max(1, pop), 1)}</span></div></div></div>}>{num(p.pop)}</Tip></td>
           <td><Bar value={p.sol} color={solColor(p.sol)} tip={<div><b>{t('standard_of_living')}</b> {pct(p.sol)}<div class="muted">{t('sol_hint')}</div></div>} /></td>
           <td class="r"><Tip content={<div>{t('wealth_hint')}<br />{num(p.wealth, 2)} × {num(p.pop)} = {num(p.wealth * p.pop)}</div>}>{num(p.wealth, 1)}</Tip></td>
         </tr>)}</tbody>
@@ -80,7 +82,7 @@ export function LocationPanel({ loc }: { loc: number }) {
         : <div class="act-row"><span class="muted">{d.canColonize ? t('cannot_colonize') : t('colonize_hint')}</span><Btn disabled={d.canColonize} onClick={() => act({ t: 'colonize', loc: d.id }, 'build', t('colony_started')).then(refresh)}>{t('colonize')}</Btn></div>}
     </Section>}
     {d.armies.length > 0 && <Section title={t('armies_here')} id="loc-armies">
-      {d.armies.map((a: any) => <div class="kv army-here"><span class="k"><NLink id={a.owner} size={14} name={false} /> {a.owner === pid ? <a class="lk" onClick={() => selectArmy(a.id)}>{L(a.name)}</a> : <span>{L(a.name)}</span>}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span><span class="v">{num(a.men)} {a.fleet ? t('ships') : t('men')}</span></div>)}
+      {d.armies.map((a: any) => <div class="kv army-here"><span class="k"><NLink id={a.owner} size={14} name={false} /> {a.owner === pid ? <a class="lk" onClick={() => selectArmy(a.id)}>{L(a.name)}</a> : <span>{L(a.name)}</span>}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span><Tip content={<div><TipHead name={L(a.name)} value={`${num(a.men)} ${a.fleet ? t('ships') : t('men')}`} hint={a.fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}><span class="v">{num(a.men)} {a.fleet ? t('ships') : t('men')}</span></Tip></div>)}
     </Section>}
   </Panel>;
 }
@@ -102,10 +104,10 @@ function Landmark({ d, own, refresh }: { d: any; own: boolean; refresh: () => vo
       <div class="lm-head"><b>{L(m.name)}</b><span class="pips">{Array.from({ length: m.max }, (_, i) => <i class={i < m.tier ? 'on' : i === m.tier && m.work ? 'q' : ''} />)}</span></div>
       <div class="muted small">{L(m.desc)}</div>
       <div class="grid2">
-        <Row k={t('landmark_stage')} v={`${m.tier} / ${m.max}`} />
-        <Row k={t('prestige')} v={`+${num(m.prestige, 2)} / ${t('month')}`} />
+        <Row k={t('landmark_stage')} v={`${m.tier} / ${m.max}`} tip={<div><TipHead name={t('landmark_stage')} value={`${m.tier} / ${m.max}`} hint={t('x_landmark_stage_hint')} /></div>} />
+        <Row k={t('prestige')} v={`+${num(m.prestige, 2)} / ${t('month')}`} tip={<div><TipHead name={t('prestige')} value={`+${num(m.prestige, 2)}`} hint={t('x_landmark_prestige_hint')} /></div>} />
       </div>
-      <Effects fx={m.fx} title={t('landmark_holder_gets')} />
+      <Tip tag="div" content={<div><TipHead name={t('landmark_holder_gets')} hint={t('x_landmark_fx_hint')} /></div>}><Effects fx={m.fx} title={t('landmark_holder_gets')} /></Tip>
       {m.work > 0 && <div class="muted small">{t('landmark_building')}: {daysText(m.work - (view.value?.day ?? 0))}</div>}
       {own && m.next && !m.work && <div class="act-row">
         <Tip content={<Effects fx={m.next} title={t('landmark_next')} />}><span class="muted small">{t('landmark_next')} · {m.months} {t('months')}</span></Tip>
@@ -124,12 +126,12 @@ function Buildings({ d, refresh }: { d: any; refresh: () => void }) {
       const full = b.level + b.queued.length >= b.max;
       const why = full ? 'fully built' : under >= 2 ? 'two works already under way here' : treasury < b.cost ? 'not enough gold' : null;
       return <div class={`bitem ${b.level ? 'has' : ''}`}>
-        <Tip content={<div><b>{L(b.name)}</b><div>{L(b.desc)}</div><div class="muted">{t('level')} {b.level}/{b.max} · {t('cost')} {num(b.cost)} · {b.months} {t('months')}</div></div>}>
+        <Tip content={() => <div><TipHead name={L(b.name)} value={`${b.level}/${b.max}`} hint={L(b.desc)} /><BuildCost b={b} /></div>}>
           <span class="bname">{L(b.name)}</span>
         </Tip>
         <span class="pips">{Array.from({ length: b.max }, (_, i) => <i class={i < b.level ? 'on' : i < b.level + b.queued.length ? 'q' : ''} />)}</span>
         {b.queued.length > 0 && <span class="muted small">{daysText(b.queued[0])}</span>}
-        {!full && <Btn disabled={why} tip={<div>{t('cost')}: {num(b.cost)} · {b.months} {t('months')}</div>} onClick={() => act({ t: 'build', loc: d.id, building: b.id }, 'build').then(refresh)}>{num(b.cost)}</Btn>}
+        {!full && <Btn disabled={why} tip={() => <div><TipHead name={L(b.name)} value={`${t('level')} ${b.level + b.queued.length + 1}`} /><BuildCost b={b} /></div>} onClick={() => act({ t: 'build', loc: d.id, building: b.id }, 'build').then(refresh)}>{num(b.cost)}</Btn>}
       </div>;
     })}</div>
   </Section>;
@@ -143,7 +145,7 @@ function Workshops({ d, refresh }: { d: any; refresh: () => void }) {
     {[0, 1, 2].map((slot) => {
       const open = slot < 1 + lvl; const cur = d.workshops[slot];
       return <div class="act-row">
-        <span class="k">{t('slot')} {slot + 1}</span>
+        <Tip content={<div><TipHead name={`${t('slot')} ${slot + 1}`} hint={t('x_workshop_slot_hint')} /></div>}><span class="k">{t('slot')} {slot + 1}</span></Tip>
         {open ? <select value={cur ? cur.recipe : -1} onChange={(e) => act({ t: 'workshop', loc: d.id, slot, recipe: Number((e.target as HTMLSelectElement).value) }).then(refresh)}>
           <option value={-1}>— {t('idle')} —</option>
           {opts.map((o) => <option value={o.k}>{L(o.r.name)}</option>)}
@@ -207,15 +209,69 @@ function Agents({ d, refresh }: { d: any; refresh: () => void }) {
     return <div class="act-row">
       <span class="k">{kind === 'faith' ? t('convert') : t('assimilate')}</span>
       {a ? <><Bar value={a.progress} max={100} color="#3a5a80" /><span class="muted small">{num(a.progress)} %</span></>
-        : <Btn disabled={busy ? 'no free preachers or officials' : null} tip={<div>{kind === 'faith' ? t('convert_hint') : t('assimilate_hint')}<br />{t('cost')}: {num(cost)}</div>}
+        : <Btn disabled={busy ? 'no free preachers or officials' : null} tip={<div><TipHead name={kind === 'faith' ? t('convert') : t('assimilate')} value={num(cost)} hint={kind === 'faith' ? t('convert_hint') : t('assimilate_hint')} /><Parts rows={[['x_agent_base', 15], ['x_price_level', r?.priceLevel ?? 1], ['x_agent_dev', 1 + d.dev / 20]]} product base={(v) => num(v, 0)} total={cost} totalLabel={t('cost')} /></div>}
           onClick={() => act({ t: 'agent', loc: d.id, kind }, 'click', t('agent_sent')).then(refresh)}>{num(cost)}</Btn>}
     </div>;
   };
-  return <Section title={t('agents')} id="loc-ag" open={false} right={r ? <span class="muted">{r.agents.length}/{r.agentSlots}</span> : undefined}>
+  return <Section title={t('agents')} id="loc-ag" open={false} right={r ? <Tip content={() => <AgentsTip />}><span class="muted has-tip">{r.agents.length}/{r.agentSlots}</span></Tip> : undefined}>
     {row('faith')}{row('culture')}
     <div class="muted small">{t('agents_hint')}</div>
   </Section>;
 }
 void signed; void sfx;
+
+// ---------------------------------------------------------------- explained numbers of a location (data from view.ts locExplain)
+function DevTip({ d }: { d: any }) {
+  const w = d.why;
+  return <div>
+    <TipHead name={t('development')} value={num(d.dev, 1)} hint={t('dev_hint')} />
+    <Parts title={t('x_target_from')} rows={w.devF} product base={(v) => num(v, 2)} total={w.devTarget} totalLabel={t('x_target')} />
+    <Drift target={w.devTarget} monthly={(w.devTarget - d.dev) * 0.02} digits={2} />
+    <div class="muted small">{t('x_dev_drift')}</div>
+    {d.econ && <Parts title={t('x_output_now')} rows={[['grain', d.econ.grain], ['raw_output', d.econ.rgo], ['crafts', d.econ.craft]]} fmt={(v) => num(v, 1)} />}
+  </div>;
+}
+function TaxTip({ d }: { d: any }) {
+  const w = d.why;
+  if (!w.taxes.length) return <div><TipHead name={t('tax_income')} value={num(d.tax, 2)} /></div>;
+  const pops = d.pops as any[];
+  return <div>
+    <TipHead name={t('tax_income')} value={`${num(d.tax, 2)} / ${t('month')}`} hint={t('x_loc_tax_hint')} />
+    <Parts title={t('x_rate')} rows={w.taxes.filter((x: any) => pops[x.cls]?.pop > 0.5).map((x: any) => [L(pops[x.cls].name), x.rate] as [string, number])} fmt={(v) => `${num(v * 100, 1)} %`} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('x_control')}</span><span>× {num(d.control, 2)}</span></div>
+      <div class="bd-row"><span>{t('x_crown_share')}</span><span>× {num(w.crownShare * 100, 0)} %</span></div>
+      {d.econ && <div class="bd-row"><span>{t('local_income')}</span><span>{num(d.econ.income, 1)}</span></div>}
+    </div>
+    {w.occupied && <div class="neg small">{t('x_occupied_tax')}</div>}
+  </div>;
+}
+function ControlTip({ d }: { d: any }) {
+  const w = d.why;
+  const reach = w.reach.reduce((p: number, r: any) => p + r[1], 0);
+  return <div>
+    <TipHead name={t('control')} value={pct(d.control, 1)} hint={t('control_hint')} />
+    {w.reach.length > 0 && <Parts title={t('x_reach')} rows={w.reach} total={reach} totalLabel="km" fmt={(v) => `${v >= 0 ? '+' : ''}${num(v, 0)}`} />}
+    <div class="muted small">{t('x_control_formula')}</div>
+    {w.occupied && <div class="neg small">{t('x_occupied_control')}</div>}
+  </div>;
+}
+function IntegTip({ d }: { d: any }) {
+  const w = d.why;
+  const m = w.integMonthly; const left = 1 - d.integ;
+  return <div>
+    <TipHead name={t('integration')} value={pct(d.integ, 1)} hint={t('integration_hint')} />
+    {w.integ.length > 0 && d.integ < 1 && <><Parts title={t('x_gain_per_month')} rows={w.integ} product base={(v) => `${num(v, 2)} %`} total={m * 100} totalLabel="%" />
+      {m > 0 && <div class="tip-drift"><span>{t('x_full_in')} <b>{Math.ceil(left / m)}</b> {t('months')}</span></div>}</>}
+  </div>;
+}
+function BuildCost({ b }: { b: any }) {
+  const r = realm.value; const inf = view.value?.player?.inflation ?? 0;
+  const base = (BUILDINGS[b.id]?.cost ?? 0) * 6;
+  return <div>
+    <Parts rows={[['x_build_base', base], ['x_build_level', 1 + b.level * 0.5], ['x_price_level', r?.priceLevel ?? 1], ['inflation', 1 + inf]]} product base={(v) => num(v, 0)} total={b.cost} totalLabel={t('cost')} />
+    <div class="muted small">{b.months} {t('months')} · {t('x_two_works')}</div>
+  </div>;
+}
 
 export function regionName(id: string): string { const v = t('reg_' + id); return v.startsWith('reg_') ? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : v; }

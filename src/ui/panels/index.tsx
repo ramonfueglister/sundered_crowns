@@ -10,6 +10,7 @@ import { GovernmentTab } from './government';
 import { DiplomacyTab, MilitaryTab, KnowledgeTab, SocietyTab, DecisionsTab } from './realmtabs';
 import { LedgerTab, ChronicleTab } from './records';
 import { PeaceTab } from './peace';
+import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 
 export { Coa } from './coa';
@@ -41,7 +42,7 @@ export function MainPanel() {
   if (p === 'dev') return <DevPanel />;
   const Tab = TABS[p];
   if (!Tab) return null;
-  return <Panel title={t(TITLES[p] ?? p)} cls={`main-pnl tab-${p}`} onClose={close}><Tab /></Panel>;
+  return <Panel title={TITLES[p] ? t(TITLES[p]) : panelName(p)} cls={`main-pnl tab-${p}`} onClose={close}><Tab /></Panel>;
 }
 
 // test hook for browser automation in development builds

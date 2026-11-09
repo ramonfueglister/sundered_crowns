@@ -1,9 +1,9 @@
 // Guided tour for the first half hour (15 steps) and contextual hints afterwards.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { I18n } from '../../sim/types';
-import { view } from '../../game/client';
-import { tutorialStep, selectedLoc, selectedNation, selectedArmies, panel, playerId } from '../store';
-import { t, L, lastCmd, realm } from './common';
+import { view, nations } from '../../game/client';
+import { tutorialStep, selectedLoc, selectedNation, selectedArmies, panel, playerId, openPanel, type PanelId } from '../store';
+import { t, L, lastCmd, realm, selectLoc } from './common';
 import { sfx } from '../audio';
 
 interface Step { title: I18n; text: I18n; target?: string; check?: (ctx: { since: number; wheel: number; start: Snap }) => boolean }
@@ -25,17 +25,22 @@ const STEPS: Step[] = [
   { title: { en: 'A just war', de: 'Ein gerechter Krieg' }, text: { en: 'Wars without a justification cost Concord, Mandate and make everyone fear you (Dread). Declare a rival or let your clerks fabricate a claim (Espionage), then declare war with a war goal. Press Next if you prefer peace for now.', de: 'Kriege ohne Rechtfertigung kosten Eintracht und Mandat und lassen alle dich fürchten (Furcht). Erkläre einen Rivalen oder lass deine Schreiber einen Anspruch fabrizieren (Spionage) und erkläre dann mit einem Kriegsziel den Krieg. Klicke auf Weiter, wenn du vorerst Frieden willst.' }, check: (c) => cmdSince(c.since, (x) => x.t === 'declare' || (x.t === 'spy' && x.action === 'fabricate') || (x.t === 'diplo' && (x.action === 'fabricate' || x.action === 'rival'))) },
   { title: { en: 'Sieges', de: 'Belagerungen' }, text: { en: 'March an army into an enemy location with walls to besiege it. Progress is shown on the map and in the outliner; occupied land raises your war score. Hunger and disease thin the besiegers too.', de: 'Marschiere mit einem Heer in einen befestigten Feindort, um ihn zu belagern. Der Fortschritt steht auf der Karte und in der Übersicht; besetztes Land erhöht deine Kriegspunkte. Hunger und Seuchen zehren auch an den Belagerern.' }, check: (c) => snap().sieges > c.start.sieges },
   { title: { en: 'Making peace', de: 'Frieden schließen' }, target: '.outliner', text: { en: 'Click a war in the outliner (or Diplomacy → Wars) to negotiate. Pick occupied locations, gold or vassalage; the panel tells you live whether the enemy would sign. Press Next if you are not at war.', de: 'Klicke einen Krieg in der Übersicht (oder Diplomatie → Kriege) an, um zu verhandeln. Wähle besetzte Orte, Gold oder Vasallität; das Fenster zeigt sofort, ob der Feind unterschreiben würde. Klicke auf Weiter, wenn du keinen Krieg führst.' }, check: () => panel.value === 'peace' },
-  { title: { en: 'Laws and the Powers of the Realm', de: 'Gesetze und die Mächte des Reiches' }, target: '.tb-menu > :nth-child(2)', text: { en: 'Open Government (G). Reforms cost Authority and please some Powers of the Realm while angering others. Keep magnates, prelates, burghers and commons content enough – or grant them privileges.', de: 'Öffne die Regierung (G). Reformen kosten Autorität und erfreuen einige Mächte des Reiches, während sie andere verärgern. Halte Magnaten, Prälaten, Bürger und Gemeine zufrieden genug – oder gewähre Privilegien.' }, check: () => panel.value === 'government' },
+  { title: { en: 'Laws and the Powers of the Realm', de: 'Gesetze und die Mächte des Reiches' }, target: '.tb-menu > :nth-child(2)', text: { en: 'Open Government (G). Reforms cost Authority and please some Powers of the Realm while angering others. Keep magnates, prelates, burghers and commons content enough – or grant them privileges.', de: 'Öffne die Herrschaft (G). Reformen kosten Autorität und erfreuen einige Mächte des Reiches, während sie andere verärgern. Halte Magnaten, Prälaten, Bürger und Gemeine zufrieden genug oder gewähre ihnen Privilegien.' }, check: () => panel.value === 'government' },
   { title: { en: 'Knowledge', de: 'Wissen' }, target: '.tb-menu > :nth-child(5)', text: { en: 'Open Knowledge (K). Choose a focus among Governance, Commerce & Learning and Warfare. Insight buys doctrines – seven picks in each of ten groups. New ideas spread from city to city across the map.', de: 'Öffne Wissen (K). Wähle einen Schwerpunkt zwischen Staatskunst, Handel & Gelehrsamkeit und Kriegswesen. Mit Einsicht erwirbst du Doktrinen – sieben Stufen in zehn Gruppen. Neue Ideen breiten sich von Stadt zu Stadt aus.' }, check: () => panel.value === 'knowledge' },
   { title: { en: 'Your reign begins', de: 'Deine Herrschaft beginnt' }, text: { en: 'Unpause with Space, speed up with + and −. Events will ask for your judgement, the Chronicle records your deeds. Good fortune – and beware of the plague.', de: 'Mit der Leertaste geht es weiter, mit + und − änderst du das Tempo. Ereignisse verlangen dein Urteil, die Chronik hält deine Taten fest. Viel Glück – und hüte dich vor der Pest.' } },
 ];
 
-const HINTS: { id: string; when: () => boolean; text: I18n }[] = [
-  { id: 'debt', when: () => (view.value?.player?.treasury ?? 0) < 0, text: { en: 'Your treasury is empty. Raise taxes, lower the army budget or take a loan in the Economy panel before the bankers lose patience.', de: 'Deine Kasse ist leer. Erhöhe die Steuern, senke das Heeresbudget oder nimm in der Wirtschaft einen Kredit auf, bevor die Bankiers die Geduld verlieren.' } },
-  { id: 'concord', when: () => (view.value?.player?.concord ?? 0) < -20, text: { en: 'Concord is falling. Lower taxes on the commons, appease a Power of the Realm or make peace – revolts are near.', de: 'Die Eintracht sinkt. Senke die Steuern der Gemeinen, besänftige eine Macht des Reiches oder schließe Frieden – Aufstände drohen.' } },
+const HINTS: { id: string; when: () => boolean; text: I18n; open?: PanelId; loc?: () => number }[] = [
+  { id: 'debt', when: () => (view.value?.player?.treasury ?? 0) < 0, text: { en: 'Your treasury is empty. Raise taxes, lower the army budget or take a loan in the Economy panel before the bankers lose patience.', de: 'Deine Kasse ist leer. Erhöhe die Steuern, senke das Heeresbudget oder nimm in der Wirtschaft einen Kredit auf, bevor die Bankiers die Geduld verlieren.' }, open: 'economy' },
+  { id: 'concord', when: () => (view.value?.player?.concord ?? 0) < -20, text: { en: 'Concord is falling. Lower taxes on the commons, appease a Power of the Realm or make peace – revolts are near.', de: 'Die Eintracht sinkt. Senke die Steuern der Gemeinen, besänftige eine Macht des Reiches oder schließe Frieden, sonst drohen Aufstände.' }, open: 'government' },
   { id: 'manpower', when: () => { const p = view.value?.player; return !!p && p.atWar && p.manpower < p.maxManpower * 0.1; }, text: { en: 'Manpower is nearly exhausted. Hire mercenaries in a location panel or seek peace.', de: 'Die Wehrkraft ist fast erschöpft. Wirb in einem Ortsfenster Söldner an oder suche den Frieden.' } },
-  { id: 'doctrine', when: () => { const r = realm.value; return !!r && r.insight >= r.doctrineCost; }, text: { en: 'You have enough Insight for a new doctrine. Open Knowledge to choose one.', de: 'Du hast genug Einsicht für eine neue Doktrin. Öffne Wissen, um eine zu wählen.' } },
-  { id: 'decision', when: () => { const r = realm.value; return !!r && r.decisions.some((d: any) => !d.why); }, text: { en: 'A decision is available to your realm. Open Decisions to see it.', de: 'Deinem Reich steht eine Entscheidung offen. Öffne Entscheidungen, um sie anzusehen.' } },
+  { id: 'doctrine', when: () => { const r = realm.value; return !!r && r.insight >= r.doctrineCost; }, text: { en: 'You have enough Insight for a new doctrine. Open Knowledge to choose one.', de: 'Du hast genug Einsicht für eine neue Doktrin. Öffne Wissen, um eine zu wählen.' }, open: 'knowledge' },
+  { id: 'decision', when: () => { const r = realm.value; return !!r && r.decisions.some((d: any) => !d.why); }, text: { en: 'A decision is available to your realm. Open Goals & decisions to see it.', de: 'Deinem Reich steht ein Beschluss offen. Öffne Ziele & Beschlüsse, um ihn anzusehen.' }, open: 'decisions' },
+  // the first minutes: point to the next sensible step
+  { id: 'paused', when: () => { const v = view.value; return !!v && v.day < 3 && v.speed === 0; }, text: { en: 'Time stands still until you start it: press Space or a speed button at the top right. Hover over any number to see where it comes from.', de: 'Die Zeit steht, bis du sie startest: Leertaste oder ein Tempoknopf oben rechts. Fahre über eine Zahl, um zu sehen, woher sie kommt.' } },
+  { id: 'goals', when: () => { const r = realm.value; return !!r && (r.goals ?? []).some((g: any) => g.open); }, text: { en: 'Your realm has ambitions with rewards. Open Goals & decisions to see what to aim for first.', de: 'Dein Reich hat Ziele mit Belohnungen. Öffne Ziele & Beschlüsse, um zu sehen, was du zuerst anstreben solltest.' }, open: 'decisions' },
+  { id: 'focus', when: () => { const r = realm.value; return !!r && r.focus < 0; }, text: { en: 'No research focus yet. In Knowledge a focus gives +35 % research in one branch.', de: 'Noch kein Forschungsschwerpunkt. In Wissen bringt ein Schwerpunkt +35 % Forschung in einem Zweig.' }, open: 'knowledge' },
+  { id: 'build', when: () => { const r = realm.value; const p = view.value?.player; return !!r && !!p && (view.value?.day ?? 0) > 20 && !r.constructions.length && p.treasury > 150; }, text: { en: 'Gold lies idle in the treasury. Open your capital and order a building: farms and markets pay back over the years.', de: 'Gold liegt ungenutzt im Schatz. Öffne deine Hauptstadt und gib einen Bau in Auftrag: Höfe und Märkte zahlen sich über die Jahre aus.' }, loc: () => nations.value[playerId.value]?.capital ?? -1 },
   { id: 'exhaustion', when: () => (view.value?.player?.warExhaustion ?? 0) > 40, text: { en: 'War exhaustion is high: the people want peace. Even a modest peace now may be better than a ruined realm.', de: 'Die Kriegsmüdigkeit ist hoch: das Volk will Frieden. Selbst ein bescheidener Frieden kann besser sein als ein ruiniertes Reich.' } },
 ];
 
@@ -87,10 +92,13 @@ function Hints() {
     const h = HINTS.find((x) => !shownHints.has(x.id) && x.when());
     if (h) { shownHints.add(h.id); setCur(h.id); }
   }, [v?.day]);
-  if (!cur) return null;
-  const h = HINTS.find((x) => x.id === cur)!;
+  const h = cur ? HINTS.find((x) => x.id === cur) : undefined;
+  // a hint whose reason is gone (time runs, debt paid, focus chosen) closes by itself
+  useEffect(() => { if (h && (!h.when() || (h.open && panel.value === h.open))) setCur(null); }, [v?.day, v?.speed, realm.value, panel.value]);
+  if (!h) return null;
+  const go = () => { setCur(null); if (h.open) openPanel(h.open); else if (h.loc) { const l = h.loc(); if (l >= 0) selectLoc(l); } };
   return <div class="hint-card pnl" onPointerDown={(e) => e.stopPropagation()}>
     <span class="hint-ic">ℹ</span><span class="tut-t">{L(h.text)}</span>
-    <button class="btn small" onClick={() => setCur(null)}>{t('got_it')}</button>
+    <div class="act-row"><span class="spacer" />{(h.open || h.loc) && <button class="btn small gold" onClick={go}>{t('x_hint_go')}</button>}<button class="btn small" onClick={() => setCur(null)}>{t('got_it')}</button></div>
   </div>;
 }

@@ -4,35 +4,52 @@ import { view } from '../../game/client';
 import { playerId } from '../store';
 import { VALUES } from '../../sim/content/laws';
 import { Section, Row, Bar, Btn, Empty, Effects, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm, daysText } from './common';
+import { ConcordTip, MandateTip, AuthorityTip, PrestigeTip, CorruptionTip, DreadTip, EstateTip, TipHead, Parts } from './explain';
+import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
+
+/** Arrow with the monthly change of a value (green when it moves the good way). */
+function Trend({ d, bad = false, digits = 1 }: { d?: number; bad?: boolean; digits?: number }) {
+  if (d === undefined || Math.abs(d) < 0.05) return null;
+  const good = bad ? d < 0 : d > 0;
+  return <span class={`trend ${good ? 'pos' : 'neg'}`}>{d > 0 ? '▲' : '▼'}{num(Math.abs(d), digits)}</span>;
+}
+/** A standing value: name, value, monthly trend and an optional bar, all explained by one tooltip. */
+function Standing({ k, v, d, tip, cls = '', bad = false, children }: { k: string; v: any; d?: number; tip: () => any; cls?: string; bad?: boolean; children?: any }) {
+  return <Tip tag="div" content={tip} class="standing has-tip">
+    <div class="kv"><span class="k">{k}</span><span class={`v ${cls}`}>{v} <Trend d={d} bad={bad} /></span></div>
+    {children}
+  </Tip>;
+}
 const estColor = (c: number) => (c < 30 ? '#a8331f' : c < 50 ? '#c08a2a' : '#4d8a3a');
 
 export function GovernmentTab() {
   const r = realm.value; const p = view.value?.player; const pid = playerId.value;
   const [me] = useQuery<any>(pid >= 0 ? { q: 'nation', nation: pid } : null, [pid], 5000);
   if (!r || !p) return <Empty>{t('loading')}…</Empty>;
+  const ex = r.explain;
   return <div class="tab-gov">
     <div class="cols2">
       <Section title={t('ruler')} id="gov-ruler">
         <div class="ruler-big">
           <div class="ruler-name">{p.ruler}</div>
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
-          {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={t(SK[k])}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
+          {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
           {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <span class="chip">{traitName(x)}</span>)}</div>}
-          <Row k={t('heir')} v={p.heir} />
+          <Row k={t('heir')} v={<>{p.heir}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
         </div>
       </Section>
       <Section title={t('standing')} id="gov-standing">
-        <Row k={t('concord')} v={<span class={p.concord < 0 ? 'neg' : ''}>{signed(p.concord)}</span>} tip={<div><b>{t('concord')}</b><div class="muted">{t('concord_hint')}</div></div>} />
-        <Bar value={p.concord} min={-100} max={100} mid color={p.concord < 0 ? '#a8331f' : '#4d8a3a'} />
-        <Row k={t('mandate')} v={num(p.mandate)} tip={<div><b>{t('mandate')}</b><div class="muted">{t('mandate_hint')}</div></div>} />
-        <Bar value={p.mandate} max={100} color="#7a2a7a" />
-        <Row k={t('authority')} v={num(p.authority)} tip={<div><b>{t('authority')}</b><div class="muted">{t('authority_hint')}</div></div>} />
-        <Row k={t('prestige')} v={num(p.prestige)} />
-        <Row k={t('corruption')} v={pct(p.corruption, 1)} />
-        <Row k={t('dread')} v={num(p.dread)} tip={t('dread_hint')} />
+        <Standing k={t('concord')} v={signed(p.concord)} cls={p.concord < 0 ? 'neg' : ''} d={ex?.concord.monthly} tip={() => <ConcordTip />}>
+          <Bar value={p.concord} min={-100} max={100} mid color={p.concord < 0 ? '#a8331f' : '#4d8a3a'} />
+        </Standing>
+        <Standing k={t('mandate')} v={num(p.mandate)} d={ex?.mandate.monthly} tip={() => <MandateTip />}><Bar value={p.mandate} max={100} color="#7a2a7a" /></Standing>
+        <Standing k={t('authority')} v={num(p.authority)} d={ex?.authority.monthly} tip={() => <AuthorityTip />} />
+        <Standing k={t('prestige')} v={num(p.prestige)} d={ex?.prestige.monthly} tip={() => <PrestigeTip />} />
+        <Standing k={t('corruption')} v={pct(p.corruption, 1)} cls={p.corruption > 0.1 ? 'neg' : ''} d={ex ? ex.corruption.monthly * 100 : undefined} bad tip={() => <CorruptionTip />} />
+        <Standing k={t('dread')} v={num(p.dread)} cls={p.dread > 20 ? 'neg' : ''} d={ex?.dread.monthly} bad tip={() => <DreadTip />} />
       </Section>
     </div>
     <Laws r={r} authority={p.authority} />
@@ -63,9 +80,9 @@ function Council({ r, authority }: { r: any; authority: number }) {
     {c.traits?.length > 0 && <div class="muted">{c.traits.map((x: string) => traitName(x)).join(', ')}</div>}
     {c.loyalty !== undefined && <div>{t('loyalty')}: {num(c.loyalty)}</div>}
     {c.corruption !== undefined && <div>{t('corruption')}: {pct(c.corruption)}</div>}
-    <div class="muted">{t('council_bonus')} ({L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}): {signed(bonus * 100, 1)} %</div>
+    <Parts title={`${t('council_bonus')}: ${L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}`} rows={[['x_office_skill', (c.skills[office.skill] / 6) * 10], ['x_corruption', -(c.skills[office.skill] / 6) * 10 * (c.corruption ?? 0)]]} total={bonus * 100} fmt={(v) => `${signed(v, 1)} %`} />
   </div>;
-  return <Section title={t('council')} id="gov-council" right={<span class="muted">{t('authority')}: <b>{num(authority)}</b></span>}>
+  return <Section title={t('council')} id="gov-council" right={<Tip content={() => <AuthorityTip />}><span class="muted has-tip">{t('authority')}: <b>{num(authority)}</b></span></Tip>}>
     {r.council.map((o: any) => { const open = openOff === o.id;
       return <div class={`council-office ${open ? 'open' : ''}`}>
         <div class="council-row">
@@ -102,7 +119,7 @@ function Laws({ r, authority }: { r: any; authority: number }) {
   for (const l of r.laws) (groups[l.group] ||= []).push(l);
   const reform = r.reform;
   const rlaw = reform ? r.laws.find((l: any) => l.id === reform.law) : null;
-  return <Section title={t('laws')} id="gov-laws" right={<span class="muted">{t('authority')}: <b>{num(authority)}</b></span>}>
+  return <Section title={t('laws')} id="gov-laws" right={<Tip content={() => <AuthorityTip />}><span class="muted has-tip">{t('authority')}: <b>{num(authority)}</b></span></Tip>}>
     {reform && rlaw && <div class="reform-box"><b>{t('reform_under_way')}:</b> {L(rlaw.name)} → {L(rlaw.options[reform.option]?.name)} · {daysText(reform.left)}</div>}
     <div class="law-groups">{Object.entries(groups).map(([g, laws]) => <div class="law-group">
       <div class="lg-h">{t(`lawgroup_${g}`)}</div>
@@ -119,7 +136,7 @@ function Laws({ r, authority }: { r: any; authority: number }) {
             return <div class={`law-opt ${isCur ? 'cur' : ''} ${o.locked ? 'locked' : ''}`}>
               <Tip content={() => <div><Effects title={L(o.name)} fx={o.effects} />{o.desc && <div class="muted">{L(o.desc)}</div>}<EstReact e={o.estates} /></div>}><span class="lo-n">{isCur ? '● ' : ''}{L(o.name)}</span></Tip>
               <span class="lo-est"><EstIcons e={o.estates} /></span>
-              {!isCur && <Btn disabled={why} tip={<div>{t('reform_cost')}: {num(o.cost)} {t('authority')}</div>} onClick={() => act({ t: 'law', law: l.id, option: k }, 'bell', t('reform_started'))}>{num(o.cost)}</Btn>}
+              {!isCur && <Btn disabled={why} tip={<div><TipHead name={t('reform_cost')} value={`${num(o.cost)} ${t('authority')}`} /><Parts rows={[['x_base', 40], ['x_reform_steps', o.cost - 40]]} total={o.cost} digits={0} bad /><div class="muted">{t('x_reform_time')}</div></div>} onClick={() => act({ t: 'law', law: l.id, option: k }, 'bell', t('reform_started'))}>{num(o.cost)}</Btn>}
             </div>;
           })}</div>}
         </div>; })}
@@ -139,20 +156,23 @@ function EstReact({ e }: { e: Record<string, number> }) {
 }
 
 function Estates({ r }: { r: any }) {
-  const p = view.value?.player;
-  const appeaseCost = Math.max(20, (p?.incomeBreak?.tax || 10) * 1.5);
+  const p = view.value?.player; const ex = r.explain; const day = view.value?.day ?? 0;
+  const appeaseCost = ex?.appeaseCost ?? Math.max(20, (p?.incomeBreak?.tax || 10) * 1.5);
+  const appUntil = (id: string) => ex?.estates?.find((q: any) => q.id === id)?.appeaseUntil ?? 0;
   return <Section title={t('estates')} id="gov-estates">
     <div class="estates">{r.estates.map((e: any) => <div class="estate">
       <div class="est-h"><span class="est-sym">{EST_ABBR[e.id]}</span><Tip content={<div><b>{L(e.name)}</b><div class="muted">{L(e.desc)}</div></div>}><b>{L(e.name)}</b></Tip></div>
-      <Bar label={<>{t('influence')} <b>{num(e.influence)}</b></>} value={e.influence} max={100} color="#7a4e1c" tip={<div><b>{t('influence')}</b><div class="muted">{t('influence_hint')}</div></div>} />
-      <Bar label={<>{t('contentment')} <b>{num(e.contentment)}</b></>} value={e.contentment} max={100} color={estColor(e.contentment)} tip={<div><b>{t('contentment')}</b><div class="muted">{t('contentment_hint')}</div></div>} />
+      <Bar label={<>{t('influence')} <b>{num(e.influence)}</b></>} value={e.influence} max={100} color="#7a4e1c" tip={() => <EstateTip e={e} kind="influence" />} />
+      <Bar label={<>{t('contentment')} <b>{num(e.contentment)} <Trend d={ex?.estates?.find((q: any) => q.id === e.id)?.contentMonthly} /></b></>} value={e.contentment} max={100} color={estColor(e.contentment)} tip={() => <EstateTip e={e} kind="contentment" />} />
       <div class="privs">{e.privileges.map((pr: any) => <div class={`priv ${pr.granted ? 'on' : ''}`}>
         <Tip content={() => <div><Effects title={L(pr.name)} fx={pr.effects} /><div class="muted">{pr.granted ? t('revoke_hint') : t('grant_hint')}</div></div>}><span class="pv-n">{pr.granted ? '✔ ' : ''}{L(pr.name)}</span></Tip>
         <Btn onClick={() => act({ t: 'estate', estate: e.id, action: pr.granted ? 'revoke' : 'grant', privilege: pr.id }, 'page')}>{pr.granted ? t('revoke') : t('grant')}</Btn>
       </div>)}</div>
       <div class="est-btns">
-        <Btn tip={<div>{t('appease_hint')}<br />{t('cost')}: {num(appeaseCost)}</div>} disabled={(p?.treasury ?? 0) < appeaseCost ? 'not enough gold' : null} onClick={() => act({ t: 'estate', estate: e.id, action: 'appease' }, 'coins')}>{t('appease')}</Btn>
-        <Btn tip={<div>{t('summon_hint')}<br />+{num(25 + e.influence * 0.3)} {t('authority')}</div>} onClick={() => act({ t: 'estate', estate: e.id, action: 'summon' }, 'bell')}>{t('summon')}</Btn>
+        <Btn tip={<div>{t('appease_hint')}<div class="breakdown"><div class="bd-row"><span>{t('cost')}</span><span>{num(appeaseCost)} = max(20, 1,5 × {keyName('tax')})</span></div><div class="bd-row"><span>{t('contentment')}</span><span class="pos">+12</span></div></div>{appUntil(e.id) > day && <div class="neg">{t('x_again_from')} {fmtDateShort(appUntil(e.id), view.value?.startYear ?? 1356)}</div>}</div>}
+          disabled={appUntil(e.id) > day ? 'too soon' : (p?.treasury ?? 0) < appeaseCost ? 'not enough gold' : null} onClick={() => act({ t: 'estate', estate: e.id, action: 'appease' }, 'coins')}>{t('appease')}</Btn>
+        <Btn tip={<div>{t('summon_hint')}<div class="breakdown"><div class="bd-row"><span>{t('authority')}</span><span class="pos">+{num(25 + e.influence * 0.3)} = 25 + 0,3 × {t('influence')}</span></div><div class="bd-row"><span>{t('contentment')}</span><span class="neg">−8</span></div><div class="bd-row"><span>{t('influence')}</span><span>+4</span></div></div>{(ex?.assemblyUntil ?? 0) > day && <div class="neg">{t('x_again_from')} {fmtDateShort(ex.assemblyUntil, view.value?.startYear ?? 1356)}</div>}</div>}
+          disabled={(ex?.assemblyUntil ?? 0) > day ? 'the assembly met recently' : null} onClick={() => act({ t: 'estate', estate: e.id, action: 'summon' }, 'bell')}>{t('summon')}</Btn>
       </div>
     </div>)}</div>
   </Section>;

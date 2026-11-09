@@ -424,3 +424,44 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .tl-banner .bar { flex: 1; height: 8px; }
 .tl-banner .rec { color: #b3261e; font-size: 12px; animation: tlrec 1s steps(2) infinite; }
 @keyframes tlrec { 50% { opacity: 0.3; } }
+
+/* ---------------------------------------------------------------- UI pass (claude/ui-pass): explained numbers */
+.pnl .has-tip { cursor: help; }
+.pnl span.has-tip:not(.v) { border-bottom: 1px dashed rgba(110, 78, 36, .45); }
+.pnl .bd-title { color: #5a3410; }
+.trend { font-size: .76em; font-weight: normal; margin-left: 3px; letter-spacing: 0; white-space: nowrap; }
+.standing { border-radius: 2px; }
+.standing:hover { background: rgba(160, 120, 50, .1); }
+.standing .kv .v { white-space: nowrap; }
+.stat-cards > span:hover > .card, .stat-cards > .card:hover { border-color: #7a5520; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35), 0 1px 3px rgba(60, 35, 10, .25); }
+.stat-cards > span > .card { cursor: help; }
+.subj-head { font-variant: small-caps; color: var(--p-mut); font-size: .86em; border-bottom: 1px solid var(--p-rule); }
+.subj-head > span:first-child { flex: 1; }
+.br-meta.has-tip { display: inline-block; }
+.loc-id { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 6px; }
+.loc-id > span { display: inline-flex; max-width: 100%; }
+.loc-id .chip { cursor: help; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: .86em; padding: 1px 8px; }
+.loc-id .chip small { font-variant: small-caps; color: var(--p-mut); margin-right: 5px; font-size: .9em; letter-spacing: .02em; }
+.hint-card { flex-wrap: wrap; }
+.hint-card .tut-t { flex: 1 1 280px; min-width: 0; }
+.hint-card .act-row { flex: 1 0 100%; display: flex; gap: 6px; margin-top: 2px; }
+/* ambitions (goals & decisions) */
+.goal-prog { margin: 2px 0 6px; }
+.goal-card { border: 1px solid #c2a675; padding: 6px 10px 7px; margin: 6px 0; background: rgba(255, 250, 235, .4); }
+.goal-card.open { border-color: #b8913f; box-shadow: inset 3px 0 0 #b8913f; background: linear-gradient(90deg, rgba(232, 200, 117, .18), rgba(255, 250, 235, .4) 60%); }
+.goal-card.later { opacity: .8; }
+.goal-card.done { padding: 3px 10px; opacity: .85; }
+.gc-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 1.03em; }
+.gc-tag { font-size: .78em; font-variant: small-caps; color: #6b4316; border: 1px solid #b8913f; border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+.gc-flav { font-style: italic; color: var(--p-ink2); font-size: .92em; margin: 2px 0 3px; }
+.gc-req { margin: 2px 0 3px 0; padding-left: 18px; font-size: .92em; }
+.gc-req li { margin: 1px 0; }
+.gc-rew { font-size: .92em; }
+.gc-rew .muted { font-variant: small-caps; }
+.tip-contents { display: contents; }
+.hint-card { flex-direction: row; align-items: flex-start; }
+.hint-card .hint-ic { margin-top: 1px; }
+/* with a main panel open, hints and the tour move to the right so they never cover the panel */
+.panel-wrap ~ .hint-card, .panel-wrap ~ .tutorial { right: 8px; bottom: 96px; width: min(360px, calc(100% - 800px)); min-width: 260px; }
+/* council: names and bonuses wrap instead of being cut off at narrow widths */
+.council-row > span:nth-child(2) { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
