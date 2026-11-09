@@ -2,21 +2,27 @@
 import type { MapAssets } from './assets';
 import { buildCoastSdf } from './coast';
 import { Overlay, type MapLabel, type MapUnit, type MapLandmark } from './overlay';
-import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL } from './shaders';
+import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
+import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
+import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement } from './props';
 
 export type Quality = 'low' | 'medium' | 'high' | 'ultra';
 export type MapMode = 'political' | 'terrain' | 'flat';
 
-interface QualityDef { scale: number; dprCap: number; waves: number; rings: number[]; aoTaps: number; q: number }
+interface QualityDef { scale: number; dprCap: number; waves: number; rings: number[]; aoTaps: number; q: number; meshPx: number; trees: number; shadows: boolean }
 const QUALITY: Record<Quality, QualityDef> = {
-  low: { scale: 0.75, dprCap: 1, waves: 1, rings: [1.2, 5], aoTaps: 1, q: 0 },
-  medium: { scale: 0.9, dprCap: 1.25, waves: 2, rings: [1, 3.5, 7], aoTaps: 4, q: 1 },
-  high: { scale: 1, dprCap: 1.5, waves: 3, rings: [1, 3, 6, 10], aoTaps: 4, q: 2 },
-  ultra: { scale: 1, dprCap: 2, waves: 3, rings: [1, 2.5, 5.5, 10], aoTaps: 4, q: 3 },
+  low: { scale: 0.75, dprCap: 1, waves: 1, rings: [1.2, 5], aoTaps: 1, q: 0, meshPx: 10, trees: 0, shadows: false },
+  medium: { scale: 0.9, dprCap: 1.25, waves: 2, rings: [1, 3.5, 7], aoTaps: 4, q: 1, meshPx: 6, trees: 40000, shadows: false },
+  high: { scale: 1, dprCap: 1.5, waves: 3, rings: [1, 3, 6, 10], aoTaps: 4, q: 2, meshPx: 4, trees: 120000, shadows: true },
+  ultra: { scale: 1, dprCap: 2, waves: 3, rings: [1, 2.5, 5.5, 10], aoTaps: 4, q: 3, meshPx: 3, trees: 250000, shadows: true },
 };
 
 const LOC_WORDS = 12; // Loc struct in MAIN_WGSL
-const UNIFORM_FLOATS = 24;
+const UNIFORM_FLOATS = 52;
+/** height-field mesh: chunks of CH x CH height samples, LOD levels 0..MAX_LOD (vertex step 2^lod samples) */
+const CH = 64, MAX_LOD = 6;
+/** world px (map px) of relief per km of height: about nine times true scale, so mountains read at a glance */
+export const H_SCALE = 4.5;
 const RIVER_W = [0, 2.4, 1.9, 1.5, 1.15, 0.9, 0.7];
 
 function pack(r: number, g: number, b: number, a: number): number {
@@ -74,6 +80,20 @@ export class MapRenderer {
   private mipPipes = new Map<GPUTextureFormat, GPURenderPipeline>();
   private mainBG: GPUBindGroup | null = null; private riverBG!: GPUBindGroup;
   private bakedAo = -1;
+  // 3D terrain
+  private cam3!: Cam3;
+  private gbufTex: GPUTexture | null = null; private depthTex: GPUTexture | null = null;
+  private terrainPipe!: GPURenderPipeline; private terrainBG!: GPUBindGroup;
+  private terrainUB!: GPUBuffer;
+  private lodVB: GPUBuffer[] = []; private lodIB: GPUBuffer[] = []; private lodIdx: number[] = [];
+  private instBuf!: GPUBuffer; private instData!: Float32Array;
+  private chunkNX = 0; private chunkNY = 0; private chunkZ!: Float32Array; // per chunk: min, max height (world px)
+  private maxTerrain = 0;
+  private lodCounts: number[] = [];
+  /** trees, towns, armies and fleets as 3D figures */
+  props: Props | null = null;
+  /** time of year (0 = 1 January) and game day, for seasons and weather */
+  private season = 0.5; private gameDay = 0; private dayAt = 0;
 
   // camera animation
   private fly: { x0: number; y0: number; z0: number; x1: number; y1: number; z1: number; t: number; dur: number } | null = null;
@@ -142,7 +162,7 @@ export class MapRenderer {
     this.heightInt = device.createTexture({ size: [a.hw, a.hh], format: 'r16sint', usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST });
     device.queue.writeTexture({ texture: this.heightInt }, a.height, { bytesPerRow: a.hw * 2 }, [a.hw, a.hh]);
     const bw = a.biome.width, bh = a.biome.height;
-    this.biomeTex = device.createTexture({ size: [bw, bh], format: 'rgba8unorm', usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
+    this.biomeTex = device.createTexture({ size: [bw, bh], format: 'rgba8unorm', usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
     device.queue.copyExternalImageToTexture({ source: a.biome }, { texture: this.biomeTex, premultipliedAlpha: false }, [bw, bh]);
     // coast signed distance field at full resolution (worker) while the GPU prepares the bake inputs
     const sdfP = buildCoastSdf(a.ids, a.W, a.H, this.L);
@@ -169,13 +189,19 @@ export class MapRenderer {
       layout: 'auto',
       vertex: {
         module: rivMod, entryPoint: 'vs',
-        buffers: [{ arrayStride: 24, stepMode: 'instance', attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x4' }, { shaderLocation: 1, offset: 16, format: 'float32x2' }] }],
+        buffers: [{ arrayStride: 32, stepMode: 'instance', attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x4' }, { shaderLocation: 1, offset: 16, format: 'float32x2' }, { shaderLocation: 2, offset: 24, format: 'float32x2' }] }],
       },
       fragment: { module: rivMod, entryPoint: 'fs', targets: [{ format: 'r8unorm', blend: { color: { operation: 'max', srcFactor: 'one', dstFactor: 'one' }, alpha: { operation: 'max', srcFactor: 'one', dstFactor: 'one' } } }] },
       primitive: { topology: 'triangle-list' },
+      depthStencil: { format: 'depth32float', depthWriteEnabled: false, depthCompare: 'less-equal' },
     });
     this.riverBG = device.createBindGroup({ layout: this.riverPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: this.uniformBuf } }] });
-    for (const m of [mainMod, rivMod]) {
+    const terMod = this.initTerrain();
+    const props = (this.props = new Props(device, a, this.uniformBuf, this.format, (x, y) => this.terrainZ(x, y), this.locBuf, this.idTex));
+    props.treeBudget = this.qd.trees; props.shadows = this.qd.shadows;
+    void props.loadBiome(this.biomeTex);
+    void loadModelSet('/').then((m) => { if (m && !this.destroyed) props.setModels(m); });
+    for (const m of [mainMod, rivMod, terMod, props.mod]) {
       const info = await m.getCompilationInfo();
       for (const msg of info.messages) if (msg.type === 'error') throw new Error('WGSL: ' + msg.message + ' @' + msg.lineNum);
     }
@@ -261,6 +287,124 @@ export class MapRenderer {
     this.mainBG = null;
   }
 
+  /** terrain height in world px (>= 0, sea level 0) at a map position, bilinear like the GPU mesh */
+  terrainZ(x: number, y: number): number {
+    const a = this.assets;
+    const sx = clamp(x / 2 - 0.5, 0, a.hw - 1.001), sy = clamp(y / 2 - 0.5, 0, a.hh - 1.001);
+    const ix = Math.floor(sx), iy = Math.floor(sy), fx = sx - ix, fy = sy - iy;
+    const o = iy * a.hw + ix, h = a.height;
+    const v = (h[o] * (1 - fx) + h[o + 1] * fx) * (1 - fy) + (h[o + a.hw] * (1 - fx) + h[o + a.hw + 1] * fx) * fy;
+    return Math.max(0, v) / 1000 * H_SCALE;
+  }
+
+  private initTerrain(): GPUShaderModule {
+    const d = this.device, a = this.assets;
+    // per-LOD grid with a skirt ring (outer ring repeats the border position, flagged to drop down and hide cracks)
+    for (let l = 0; l <= MAX_LOD; l++) {
+      const n = CH >> l, side = n + 3;
+      const v = new Float32Array(side * side * 3);
+      let k = 0;
+      for (let j = -1; j <= n + 1; j++) for (let i = -1; i <= n + 1; i++) {
+        v[k++] = clamp(i, 0, n); v[k++] = clamp(j, 0, n); v[k++] = i < 0 || j < 0 || i > n || j > n ? 1 : 0;
+      }
+      const idx = new Uint32Array((side - 1) * (side - 1) * 6);
+      k = 0;
+      for (let j = 0; j < side - 1; j++) for (let i = 0; i < side - 1; i++) {
+        const q = j * side + i;
+        idx[k++] = q; idx[k++] = q + side; idx[k++] = q + 1;
+        idx[k++] = q + 1; idx[k++] = q + side; idx[k++] = q + side + 1;
+      }
+      const vb = d.createBuffer({ size: v.byteLength, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
+      d.queue.writeBuffer(vb, 0, v);
+      const ib = d.createBuffer({ size: idx.byteLength, usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST });
+      d.queue.writeBuffer(ib, 0, idx);
+      this.lodVB.push(vb); this.lodIB.push(ib); this.lodIdx.push(idx.length);
+    }
+    // chunk height bounds for culling and LOD
+    this.chunkNX = Math.ceil(a.hw / CH); this.chunkNY = Math.ceil(a.hh / CH);
+    const nc = this.chunkNX * this.chunkNY;
+    this.chunkZ = new Float32Array(nc * 2);
+    for (let c = 0; c < nc; c++) { this.chunkZ[c * 2] = 1e9; this.chunkZ[c * 2 + 1] = 0; }
+    for (let y = 0; y < a.hh; y++) {
+      const cy = Math.floor(y / CH) * this.chunkNX;
+      for (let x = 0; x < a.hw; x++) {
+        const z = Math.max(0, a.height[y * a.hw + x]) / 1000 * H_SCALE;
+        const c = (cy + Math.floor(x / CH)) * 2;
+        if (z < this.chunkZ[c]) this.chunkZ[c] = z;
+        if (z > this.chunkZ[c + 1]) this.chunkZ[c + 1] = z;
+      }
+    }
+    for (let c = 0; c < nc; c++) this.maxTerrain = Math.max(this.maxTerrain, this.chunkZ[c * 2 + 1]);
+    this.instData = new Float32Array(nc * 4);
+    this.instBuf = d.createBuffer({ size: this.instData.byteLength, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
+    this.terrainUB = d.createBuffer({ size: 80, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    const mod = d.createShaderModule({ code: TERRAIN_WGSL });
+    this.terrainPipe = d.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: mod, entryPoint: 'vs',
+        buffers: [
+          { arrayStride: 12, stepMode: 'vertex', attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x3' }] },
+          { arrayStride: 16, stepMode: 'instance', attributes: [{ shaderLocation: 1, offset: 0, format: 'float32x4' }] },
+        ],
+      },
+      fragment: { module: mod, entryPoint: 'fs', targets: [{ format: 'rgba32float' }] },
+      primitive: { topology: 'triangle-list', cullMode: 'none' },
+      depthStencil: { format: 'depth32float', depthWriteEnabled: true, depthCompare: 'less' },
+    });
+    this.terrainBG = d.createBindGroup({
+      layout: this.terrainPipe.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: { buffer: this.terrainUB } }, { binding: 1, resource: this.heightF.createView() }, { binding: 2, resource: this.sampler }],
+    });
+    return mod;
+  }
+
+  /** choose a level of detail for every visible chunk and upload the instance list (grouped by level) */
+  private updateChunks(c: Cam3) {
+    const a = this.assets, m = c.vp, inst = this.instData;
+    const byLod: number[][] = Array.from({ length: MAX_LOD + 1 }, () => []);
+    const px = this.qd.meshPx;
+    for (let cy = 0; cy < this.chunkNY; cy++) for (let cx = 0; cx < this.chunkNX; cx++) {
+      const ci = cy * this.chunkNX + cx;
+      const x0 = cx * CH * 2, y0 = cy * CH * 2;
+      const x1 = Math.min(a.hw, (cx + 1) * CH) * 2, y1 = Math.min(a.hh, (cy + 1) * CH) * 2;
+      const z0 = -this.chunkZ[ci * 2 + 1] - 1, z1 = -this.chunkZ[ci * 2] + 1;
+      // frustum test: all 8 corners outside one clip plane -> invisible
+      let o0 = 0, o1 = 0, o2 = 0, o3 = 0, o4 = 0, o5 = 0;
+      for (let k = 0; k < 8; k++) {
+        const x = k & 1 ? x1 : x0, y = k & 2 ? y1 : y0, z = k & 4 ? z1 : z0;
+        const X = m[0] * x + m[4] * y + m[8] * z + m[12], Y = m[1] * x + m[5] * y + m[9] * z + m[13];
+        const Z = m[2] * x + m[6] * y + m[10] * z + m[14], Wc = m[3] * x + m[7] * y + m[11] * z + m[15];
+        if (X < -Wc) o0++; if (X > Wc) o1++; if (Y < -Wc) o2++; if (Y > Wc) o3++; if (Z < 0) o4++; if (Z > Wc) o5++;
+      }
+      if (o0 === 8 || o1 === 8 || o2 === 8 || o3 === 8 || o4 === 8 || o5 === 8) continue;
+      // distance from the eye to the chunk box
+      const e = c.eye;
+      const dx = Math.max(x0 - e[0], 0, e[0] - x1), dy = Math.max(y0 - e[1], 0, e[1] - y1), dz = Math.max(z0 - e[2], 0, e[2] - z1);
+      const dist = Math.max(1, Math.hypot(dx, dy, dz));
+      // one quad (2 * step map px) should cover about meshPx css px
+      const lod = clamp(Math.floor(Math.log2((px * dist) / (2 * c.focal))), 0, MAX_LOD);
+      byLod[lod].push(cx * CH, cy * CH);
+    }
+    let k = 0;
+    this.lodCounts = [];
+    for (let l = 0; l <= MAX_LOD; l++) {
+      const list = byLod[l];
+      for (let i = 0; i < list.length; i += 2) { inst[k++] = list[i]; inst[k++] = list[i + 1]; inst[k++] = 1 << l; inst[k++] = 0; }
+      this.lodCounts.push(list.length / 2);
+    }
+    if (k) this.device.queue.writeBuffer(this.instBuf, 0, inst, 0, k);
+    const tu = new Float32Array(20);
+    tu.set(c.vp, 0);
+    tu[16] = a.hw; tu[17] = a.hh; tu[18] = H_SCALE; tu[19] = 1.2;
+    this.device.queue.writeBuffer(this.terrainUB, 0, tu);
+  }
+
+  /** the camera for the current view */
+  private camNow(): Cam3 {
+    return makeCamera(this.camera.x, this.camera.y, this.camera.zoom, this.cssW, this.cssH, undefined, this.maxTerrain);
+  }
+
   private buildRivers() {
     const a = this.assets, W = a.W, H = a.H;
     const segs: number[] = [];
@@ -283,11 +427,11 @@ export class MapRenderer {
         const len = Math.hypot(x1 - x0, y1 - y0);
         if (len > 60) { acc += len; continue; } // gaps where the polyline leaves the map
         const t0 = total > 0 ? acc / total : 1; acc += len; const t1 = total > 0 ? acc / total : 1;
-        segs.push(x0, y0, x1, y1, base * (0.4 + 0.6 * Math.sqrt(t0)), base * (0.4 + 0.6 * Math.sqrt(t1)));
+        segs.push(x0, y0, x1, y1, base * (0.4 + 0.6 * Math.sqrt(t0)), base * (0.4 + 0.6 * Math.sqrt(t1)), this.terrainZ(x0, y0), this.terrainZ(x1, y1));
       }
     }
-    this.riverCount = segs.length / 6;
-    this.riverBuf = this.device.createBuffer({ size: Math.max(24, segs.length * 4), usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
+    this.riverCount = segs.length / 8;
+    this.riverBuf = this.device.createBuffer({ size: Math.max(32, segs.length * 4), usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
     if (segs.length) this.device.queue.writeBuffer(this.riverBuf, 0, new Float32Array(segs));
   }
 
@@ -295,6 +439,7 @@ export class MapRenderer {
   setQuality(q: Quality) {
     if (q === this.quality) return;
     this.quality = q; this.qd = QUALITY[q];
+    if (this.props) { this.props.treeBudget = this.qd.trees; this.props.shadows = this.qd.shadows; }
     this.bake();
     this.resize();
   }
@@ -364,6 +509,7 @@ export class MapRenderer {
       if (known && i < known.length && known[i] === 0) this.locU32[w] |= 2; else this.locU32[w] &= ~2;
     }
     this.locDirty = true;
+    this.props?.setExplored(known);
   }
 
   setSnow(snow: Float32Array) {
@@ -371,8 +517,30 @@ export class MapRenderer {
     this.locDirty = true;
   }
 
+  /** the game date: day number and time of year (0 = 1 January, 0.5 = early July) */
+  setDate(day: number, yearPhase: number) {
+    if (day !== this.gameDay) { this.gameDay = day; this.dayAt = this.time; }
+    this.season = yearPhase;
+  }
+
   setLabels(labels: MapLabel[]) { this.overlay.labels = labels; }
-  setUnits(units: MapUnit[]) { this.overlay.units = units; }
+  setUnits(units: MapUnit[]) {
+    // armies and fleets stand as figures a little beside the town; the counter floats above them when they show
+    const slots = new Map<string, number>();
+    const figs: { x: number; y: number; men: number; fleet: boolean; color: [number, number, number] }[] = [];
+    for (const u of units) {
+      if (u.kind !== 'army' && u.kind !== 'fleet') continue;
+      const key = `${Math.round(u.x)}:${Math.round(u.y)}:${u.kind}`;
+      const slot = slots.get(key) ?? 0; slots.set(key, slot + 1);
+      const [fx, fy] = figureSpot(u.x, u.y, u.kind === 'fleet', slot);
+      u.fx = fx; u.fy = fy;
+      figs.push({ x: fx, y: fy, men: u.men ?? 1000, fleet: u.kind === 'fleet', color: u.color });
+    }
+    this.props?.setUnits(figs);
+    this.overlay.units = units;
+  }
+  /** towns and villages drawn as houses (see Props.setSettlements) */
+  setSettlements(list: Settlement[]) { this.props?.setSettlements(list); }
   /** the map canvas (for recording) */
   get element(): HTMLCanvasElement { return this.canvas; }
   /** the layer with realm names and counters */
@@ -402,18 +570,32 @@ export class MapRenderer {
 
   // ------------------------------------------------------------------ camera
 
+  /** the point of the sea-level plane under a canvas-local css point */
   screenToMap(x: number, y: number): [number, number] {
-    const z = this.camera.zoom;
-    return [this.camera.x + (x - this.cssW / 2) / z, this.camera.y + (y - this.cssH / 2) / z];
+    return screenToPlane(this.camNow(), x, y);
   }
+  /** map point (on the terrain surface) -> canvas-local css point; far off screen when behind the camera */
   mapToScreen(x: number, y: number): [number, number] {
-    const z = this.camera.zoom;
-    return [(x - this.camera.x) * z + this.cssW / 2, (y - this.camera.y) * z + this.cssH / 2];
+    const c = this.cam3 ?? this.camNow();
+    const [sx, sy, w] = project(c, x, y, -this.terrainZ(x, y));
+    return w > 0 ? [sx, sy] : [-1e5, -1e5];
+  }
+  /** a point h map px above the terrain -> canvas-local css point */
+  mapToScreenH(x: number, y: number, h: number): [number, number] {
+    const c = this.cam3 ?? this.camNow();
+    const [sx, sy, w] = project(c, x, y, -this.terrainZ(x, y) - h);
+    return w > 0 ? [sx, sy] : [-1e5, -1e5];
+  }
+  /** css px per map px at a map point (perspective makes distant land smaller) */
+  scaleAt(x: number, y: number): number {
+    const c = this.cam3 ?? this.camNow();
+    const [, , w] = project(c, x, y, -this.terrainZ(x, y));
+    return w > 0 ? c.focal / w : this.camera.zoom;
   }
 
   pick(clientX: number, clientY: number): number {
     const r = this.canvas.getBoundingClientRect();
-    const [mx, my] = this.screenToMap(clientX - r.left, clientY - r.top);
+    const [mx, my] = screenToTerrain(this.camNow(), clientX - r.left, clientY - r.top, (x, y) => this.terrainZ(x, y), this.maxTerrain);
     const x = Math.floor(mx), y = Math.floor(my);
     if (x < 0 || y < 0 || x >= this.W || y >= this.H) return -1;
     const id = this.assets.ids[y * this.W + x];
@@ -468,7 +650,9 @@ export class MapRenderer {
       const lz = Math.log(c.zoom) + (Math.log(this.zoomTarget) - Math.log(c.zoom)) * k;
       c.zoom = Math.exp(lz);
       if (Math.abs(lz - Math.log(this.zoomTarget)) < 0.002) { c.zoom = this.zoomTarget; this.zoomTarget = null; }
-      c.x = mx - (ax - this.cssW / 2) / c.zoom; c.y = my - (ay - this.cssH / 2) / c.zoom;
+      // keep the point under the cursor in place (the camera tilts as it zooms, so measure again)
+      const [nx, ny] = this.screenToMap(ax, ay);
+      c.x += mx - nx; c.y += my - ny;
     }
     let vx = 0, vy = 0;
     const k = this.keys;
@@ -506,7 +690,9 @@ export class MapRenderer {
       }
       if (e.button !== 0) return;
       canvas.setPointerCapture?.(e.pointerId);
-      down = { x: e.clientX, y: e.clientY, cx: this.camera.x, cy: this.camera.y, moved: false, id: e.pointerId };
+      const [lx, ly] = local(e);
+      const [ax, ay] = this.screenToMap(lx, ly);
+      down = { x: e.clientX, y: e.clientY, cx: ax, cy: ay, moved: false, id: e.pointerId };
       this.fly = null; this.dragging = true;
     };
     const onMove = (e: PointerEvent) => {
@@ -524,7 +710,10 @@ export class MapRenderer {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
         if (!down.moved && Math.hypot(dx, dy) > 4) down.moved = true;
         if (down.moved) {
-          this.camera.x = down.cx - dx / this.camera.zoom; this.camera.y = down.cy - dy / this.camera.zoom;
+          // the map point grabbed at pointer-down stays under the pointer
+          const [lx, ly] = local(e);
+          const [nx, ny] = this.screenToMap(lx, ly);
+          this.camera.x += down.cx - nx; this.camera.y += down.cy - ny;
           this.zoomTarget = null;
           return;
         }
@@ -596,6 +785,12 @@ export class MapRenderer {
       this.riverTex = this.device.createTexture({ size: [w, h], format: 'r8unorm', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
       this.mainBG = null;
     }
+    if (!this.gbufTex || this.gbufTex.width !== w || this.gbufTex.height !== h) {
+      this.gbufTex?.destroy(); this.depthTex?.destroy();
+      this.gbufTex = this.device.createTexture({ size: [w, h], format: 'rgba32float', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
+      this.depthTex = this.device.createTexture({ size: [w, h], format: 'depth32float', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
+      this.mainBG = null;
+    }
     this.minZoom = Math.min(0.5, Math.max(cssW / this.W, cssH / this.H) * 0.9);
     this.overlay.layout(this.canvas, cssW, cssH);
   }
@@ -607,12 +802,21 @@ export class MapRenderer {
     u[0] = W; u[1] = H; u[2] = 1 / (z * pr); u[3] = z;
     u[4] = c.x; u[5] = c.y; u[6] = this.time; u[7] = pr;
     const lz = clamp((Math.log2(z) + 1.5) / 4.5, 0, 1); // 0 at zoom ~0.35, 1 at zoom ~8
-    const polA = 0.8 - 0.36 * smooth(lz), flatA = 0.9 - 0.3 * smooth(lz);
+    // close in, the land itself shows through: the realm's colour becomes a wash with a strong band at the border
+    const polA = 0.82 - 0.56 * smooth(lz), flatA = 0.9 - 0.35 * smooth(lz);
     u[8] = this.W; u[9] = this.H; u[10] = this.L; u[11] = this.mode === 'flat' ? flatA : polA;
     u[12] = this.mode === 'political' ? 0 : this.mode === 'terrain' ? 1 : 2; u[13] = this.selected; u[14] = this.hover; u[15] = q.q;
     u[16] = this.inkSpeed; u[17] = z >= 1.5 ? 1 : 0; u[18] = q.waves; u[19] = q.rings.length;
     for (let i = 0; i < 4; i++) u[20 + i] = q.rings[i] ?? 0;
+    const cam = (this.cam3 = this.camNow());
+    u[24] = cam.eye[0]; u[25] = cam.eye[1]; u[26] = cam.eye[2]; u[27] = cam.dist;
+    u[28] = H_SCALE; u[29] = cam.focal; u[30] = cam.pitch; u[31] = this.props?.enabled && this.qd.trees > 0 ? 1 : 0;
+    u.set(cam.vp, 32);
+    // weather drifts on smoothly between the daily updates
+    const dayF = this.gameDay + clamp((this.time - this.dayAt) / 1.2, 0, 1) - 1;
+    u[48] = this.season; u[49] = dayF; u[50] = this.qd.q >= 1 ? 1 : 0; u[51] = 0;
     this.device.queue.writeBuffer(this.uniformBuf, 0, u);
+    this.updateChunks(cam);
   }
 
   private encodeFrame(enc: GPUCommandEncoder, target: GPUTexture) {
@@ -628,18 +832,55 @@ export class MapRenderer {
           { binding: 5, resource: this.riverTex!.createView() },
           { binding: 6, resource: this.sampler },
           { binding: 7, resource: this.coastTex.createView() },
+          { binding: 8, resource: this.gbufTex!.createView() },
+          { binding: 9, resource: this.biomeTex.createView() },
+          { binding: 10, resource: this.heightF.createView() },
         ],
       });
     }
-    const rp = enc.beginRenderPass({ colorAttachments: [{ view: this.riverTex!.createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 0] }] });
+    // 1) terrain mesh -> map position per pixel + depth
+    const tp = enc.beginRenderPass({
+      colorAttachments: [{ view: this.gbufTex!.createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 0] }],
+      depthStencilAttachment: { view: this.depthTex!.createView(), depthClearValue: 1, depthLoadOp: 'clear', depthStoreOp: 'store' },
+    });
+    tp.setPipeline(this.terrainPipe); tp.setBindGroup(0, this.terrainBG); tp.setVertexBuffer(1, this.instBuf);
+    let first = 0;
+    for (let l = 0; l <= MAX_LOD; l++) {
+      const n = this.lodCounts[l] ?? 0;
+      if (n) { tp.setVertexBuffer(0, this.lodVB[l]); tp.setIndexBuffer(this.lodIB[l], 'uint32'); tp.drawIndexed(this.lodIdx[l], n, 0, 0, first); }
+      first += n;
+    }
+    tp.end();
+    // 2) rivers draped on the terrain (hidden behind mountains)
+    const rp = enc.beginRenderPass({
+      colorAttachments: [{ view: this.riverTex!.createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 0] }],
+      depthStencilAttachment: { view: this.depthTex!.createView(), depthLoadOp: 'load', depthStoreOp: 'store', depthReadOnly: false },
+    });
     if (this.riverCount) { rp.setPipeline(this.riverPipe); rp.setBindGroup(0, this.riverBG); rp.setVertexBuffer(0, this.riverBuf); rp.draw(6, this.riverCount); }
     rp.end();
     const mp = enc.beginRenderPass({ colorAttachments: [{ view: target.createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 1] }] });
     mp.setPipeline(this.mainPipe); mp.setBindGroup(0, this.mainBG); mp.draw(3); mp.end();
+    // 4) trees, towns, armies and fleets standing on the terrain
+    if (this.props?.enabled) {
+      const cam = this.cam3;
+      const pp = enc.beginRenderPass({
+        colorAttachments: [{ view: target.createView(), loadOp: 'load', storeOp: 'store' }],
+        depthStencilAttachment: { view: this.depthTex!.createView(), depthLoadOp: 'load', depthStoreOp: 'store' },
+      });
+      this.props.draw(pp, cam, (x, y, z) => { const w = project(cam, x, y, -z)[2]; return w > 0 ? cam.focal / w : 0; });
+      pp.end();
+    }
   }
 
   private overlayView() {
-    return { toScreen: (x: number, y: number) => this.mapToScreen(x, y), zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time };
+    return {
+      toScreen: (x: number, y: number) => this.mapToScreen(x, y), scaleAt: (x: number, y: number) => this.scaleAt(x, y),
+      toScreenH: (x: number, y: number, h: number) => this.mapToScreenH(x, y, h),
+      toScreenZ: (x: number, y: number, z: number) => { const c = this.cam3 ?? this.camNow(); const [sx, sy, w] = project(c, x, y, -z); return (w > 0 ? [sx, sy] : [-1e5, -1e5]) as [number, number]; },
+      heightAt: (x: number, y: number) => this.terrainZ(x, y),
+      figuresFrom: this.props?.enabled ? SHOW_UNITS * 1.25 : Infinity,
+      zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time,
+    };
   }
 
   render(dtMs: number) {
@@ -724,8 +965,10 @@ export class MapRenderer {
     this.destroyed = true;
     for (const f of this.detachFns) f();
     this.overlay.destroy();
-    for (const t of [this.idTex, this.heightInt, this.heightF, this.biomeTex, this.albedoTex, this.coastTex, this.terrainTex, this.auxTex, this.riverTex]) t?.destroy();
-    this.uniformBuf?.destroy(); this.locBuf?.destroy(); this.riverBuf?.destroy();
+    this.props?.destroy();
+    for (const t of [this.idTex, this.heightInt, this.heightF, this.biomeTex, this.albedoTex, this.coastTex, this.terrainTex, this.auxTex, this.riverTex, this.gbufTex, this.depthTex]) t?.destroy();
+    this.uniformBuf?.destroy(); this.locBuf?.destroy(); this.riverBuf?.destroy(); this.instBuf?.destroy(); this.terrainUB?.destroy();
+    for (const b of [...this.lodVB, ...this.lodIB]) b.destroy();
     this.ctx?.unconfigure();
     this.device?.destroy();
   }

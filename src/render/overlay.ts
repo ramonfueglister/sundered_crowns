@@ -5,19 +5,59 @@
  * id: stable key for fading in and out (e.g. the nation id). room: how far (map px) the name may move across its own
  * direction, still inside the realm, to make way for a name that would otherwise hide it.
  */
-export interface MapLabel { text: string; x: number; y: number; angle: number; size: number; color?: string; weight?: number; id?: number; room?: number }
+export interface MapLabel {
+  text: string; x: number; y: number; angle: number; size: number; color?: string; weight?: number; id?: number; room?: number;
+  /** the baseline through the realm (map px, at least two points, centred on the name); the letters follow it on the ground */
+  curve?: [number, number][];
+}
+
+/** a polyline with its arc length, to walk along */
+class Path2 {
+  len: number[] = [0]; total = 0;
+  constructor(public pts: [number, number][]) {
+    for (let i = 1; i < pts.length; i++) { this.total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); this.len.push(this.total); }
+  }
+  /** point and unit tangent at arc length s (straight on beyond the ends) */
+  at(s: number): [number, number, number, number] {
+    const p = this.pts, L = this.len;
+    let i = 1;
+    while (i < p.length - 1 && L[i] < s) i++;
+    const ax = p[i - 1][0], ay = p[i - 1][1], bx = p[i][0], by = p[i][1];
+    const seg = Math.max(1e-6, L[i] - L[i - 1]);
+    const tx = (bx - ax) / seg, ty = (by - ay) / seg;
+    const u = s - L[i - 1];
+    return [ax + tx * u, ay + ty * u, tx, ty];
+  }
+}
 export interface MapLandmark { x: number; y: number; name: string; kind: string; tier: number; max: number; building: boolean }
 export type UnitKind = 'army' | 'fleet' | 'siege' | 'battle';
 export interface MapUnit {
   id: number; x: number; y: number; color: [number, number, number]; label: string; kind: UnitKind;
   selected?: boolean; moving?: boolean; path?: [number, number][];
+  /** soldiers or ships (for merging counters when zoomed out), owner nation */
+  men?: number; owner?: number; mine?: boolean;
+  /** at war or on the march: shown in full even when zoomed out */
+  hot?: boolean;
+  /** where the 3D figures stand (set by the renderer) */
+  fx?: number; fy?: number;
 }
 
 export interface OverlayView {
   /** map px -> css px (canvas-local) */
   toScreen(x: number, y: number): [number, number];
+  /** a point h map px above the ground */
+  toScreenH?(x: number, y: number, h: number): [number, number];
+  /** a point at height z (world px above sea level) */
+  toScreenZ?(x: number, y: number, z: number): [number, number];
+  /** terrain height (world px above sea level) */
+  heightAt?(x: number, y: number): number;
+  scaleAt?(x: number, y: number): number;
+  /** css px per map px from which armies and fleets show as figures */
+  figuresFrom?: number;
   zoom: number; cssW: number; cssH: number; time: number;
 }
+
+const fmtMen = (u: MapUnit, men: number) => (u.kind === 'fleet' ? String(Math.round(men)) : men >= 1000 ? (men / 1000).toFixed(1) + 'k' : String(Math.round(men)));
 
 const LABEL_FONT = `"Cormorant Garamond", "EB Garamond", Garamond, Georgia, "Times New Roman", serif`;
 const UNIT_FONT = `600 11px system-ui, "Segoe UI", Roboto, sans-serif`;
@@ -25,6 +65,9 @@ const UNIT_FONT = `600 11px system-ui, "Segoe UI", Roboto, sans-serif`;
 const LABEL_MIN = 7, LABEL_FULL = 10, LABEL_MAX = 64, LABEL_FADE_FROM = 70, LABEL_FADE_TO = 150, LABEL_FLOOR = 0.22;
 
 interface Placed { cx: number; cy: number; ux: number; uy: number; hw: number; hh: number }
+/** a letter on screen: the affine transform (screen px per font px) and the letter */
+type Glyph = [number, number, number, number, number, number, string];
+interface LabelLayout { glyphs: Glyph[]; boxes: Placed[] }
 /** Separating-axis test for two rotated rectangles. */
 function obbOverlap(a: Placed, b: Placed): boolean {
   const dx = b.cx - a.cx, dy = b.cy - a.cy;
@@ -109,11 +152,13 @@ export class Overlay {
     const ctx = this.ctx;
     const dt = instant || this.lastTime < 0 ? 1 : Math.max(0, Math.min(0.25, v.time - this.lastTime));
     if (!instant) this.lastTime = v.time;
-    type Cand = { l: MapLabel; key: number | string; fs: number; ds: number; spacing: number; alpha: number; tier: number; box: Placed; sx: number; sy: number };
+    type Cand = { l: MapLabel; key: number | string; fs: number; ds: number; spacing: number; alpha: number; tier: number; lay: LabelLayout; sc: number };
     const cands: Cand[] = [];
     for (let i = 0; i < this.labels.length; i++) {
       const l = this.labels[i];
-      const fs = l.size * v.zoom;
+      // perspective: the scale where the name lies, not the scale at the screen centre
+      const sc = v.scaleAt ? v.scaleAt(l.x, l.y) : v.zoom;
+      const fs = l.size * sc;
       const key = l.id ?? `${l.text}@${i}`;
       if (fs < LABEL_MIN) { if (!instant) this.fade.delete(key); continue; }
       const ds = Math.min(fs, LABEL_MAX);
@@ -127,8 +172,9 @@ export class Overlay {
       if (sx < -reach || sy < -reach || sx > v.cssW + reach || sy > v.cssH + reach) continue;
       let alpha = Math.min(1, (fs - LABEL_MIN) / (LABEL_FULL - LABEL_MIN));
       if (fs > LABEL_FADE_FROM) alpha *= Math.max(LABEL_FLOOR, 1 - (1 - LABEL_FLOOR) * (fs - LABEL_FADE_FROM) / (LABEL_FADE_TO - LABEL_FADE_FROM));
-      const c = Math.cos(l.angle), s = Math.sin(l.angle);
-      cands.push({ l, key, fs, ds, spacing, alpha, tier: fs > LABEL_FADE_FROM ? 1 : 0, box: { cx: sx, cy: sy, ux: c, uy: s, hw, hh }, sx, sy });
+      const lay = this.layoutLabel(v, l, ds, spacing, sc, 0);
+      if (!lay.glyphs.length) continue;
+      cands.push({ l, key, fs, ds, spacing, alpha, tier: fs > LABEL_FADE_FROM ? 1 : 0, lay, sc });
     }
     // legible names first (larger realms first), then oversized ones (least oversized first);
     // a name is shown only where it does not cover one already placed
@@ -138,8 +184,8 @@ export class Overlay {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
     const seen = new Set<number | string>();
-    const fits = (b: Placed) => {
-      for (const p of placed) {
+    const fits = (bs: Placed[]) => {
+      for (const b of bs) for (const p of placed) {
         if (Math.abs(p.cx - b.cx) > p.hw + p.hh + b.hw + b.hh || Math.abs(p.cy - b.cy) > p.hw + p.hh + b.hw + b.hh) continue;
         if (obbOverlap(p, b)) return false;
       }
@@ -149,36 +195,108 @@ export class Overlay {
       // a name that is covered tries a few places across its direction (within its realm), the last one used first
       const l0 = cd.l, room = l0.room ?? 0;
       const tries = [this.shift.get(cd.key) ?? 0, 0];
-      if (room > 0) { const step = cd.box.hh * 1.1 / v.zoom; for (let j = 1; j <= 6 && j * step <= room; j++) tries.push(j * step, -j * step); }
-      let b = cd.box, free = false, used = 0;
+      if (room > 0) { const step = cd.ds * 0.55 / cd.sc; for (let j = 1; j <= 6 && j * step <= room; j++) tries.push(j * step, -j * step); }
+      let lay = cd.lay, free = false, used = 0;
       for (const d of tries) {
         if (Math.abs(d) > room) continue;
-        let tb = cd.box;
-        if (d) { const [tx, ty] = v.toScreen(l0.x - Math.sin(l0.angle) * d, l0.y + Math.cos(l0.angle) * d); tb = { ...cd.box, cx: tx, cy: ty }; }
-        if (fits(tb)) { b = tb; free = true; used = d; break; }
+        const tl = d ? this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d) : cd.lay;
+        if (fits(tl.boxes)) { lay = tl; free = true; used = d; break; }
       }
-      if (free) { placed.push(b); cd.sx = b.cx; cd.sy = b.cy; if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
+      if (free) { placed.push(...lay.boxes); if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
+      else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
       const target = free ? cd.alpha : 0;
       const cur = instant ? target : (this.fade.get(cd.key) ?? 0);
       const a = instant ? target : cur + (target - cur) * k;
       seen.add(cd.key);
       if (!instant) this.fade.set(cd.key, a);
       if (a <= 0.02) continue;
-      const { l, ds, spacing } = cd;
-      ctx.save();
-      ctx.translate(cd.sx, cd.sy); ctx.rotate(l.angle);
-      ctx.globalAlpha = a * 0.92;
-      ctx.font = `600 ${ds.toFixed(1)}px ${LABEL_FONT}`;
-      (ctx as unknown as { letterSpacing: string }).letterSpacing = spacing.toFixed(1) + 'px';
-      ctx.lineWidth = Math.max(2, ds * 0.16);
-      ctx.strokeStyle = 'rgba(250, 242, 222, 0.55)';
-      ctx.strokeText(l.text, 0, 0);
-      ctx.fillStyle = l.color ?? 'rgba(38, 28, 18, 0.95)';
-      ctx.fillText(l.text, 0, 0);
-      ctx.restore();
+      this.drawLayout(cd.l, lay, cd.ds, a);
     }
     if (!instant) for (const key of [...this.fade.keys()]) if (!seen.has(key)) { this.fade.delete(key); this.shift.delete(key); }
     (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+  }
+
+  private charW = new Map<string, number>();
+  private charWidth100(ch: string): number {
+    let w = this.charW.get(ch);
+    if (w === undefined) {
+      const ctx = this.ctx;
+      (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+      ctx.font = `600 100px ${LABEL_FONT}`;
+      w = ctx.measureText(ch).width;
+      this.charW.set(ch, w);
+    }
+    return w;
+  }
+
+  /**
+   * A realm's name painted on the land: every letter stands on the curve through the realm, turned with it and seen in
+   * perspective (each letter lies in a level plane at about the height of the land under the name, so names further away are
+   * smaller and foreshortened, and mountains do not shear the letters).
+   */
+  private layoutLabel(v: OverlayView, l: MapLabel, ds: number, spacing: number, sc: number, shift: number): LabelLayout {
+    const nxs = -Math.sin(l.angle) * shift, nys = Math.cos(l.angle) * shift;
+    let pts: [number, number][] = l.curve && l.curve.length >= 2 ? l.curve.map(([x, y]) => [x + nxs, y + nys]) : [];
+    if (!pts.length) { const c = Math.cos(l.angle), s = Math.sin(l.angle), h = l.size * l.text.length; pts = [[l.x - c * h + nxs, l.y - s * h + nys], [l.x + c * h + nxs, l.y + s * h + nys]]; }
+    // the plane of the letters: the mean height of the land along the name
+    let hz = 0;
+    if (v.heightAt) { for (const [x, y] of pts) hz += v.heightAt(x, y); hz /= pts.length; }
+    const P = (x: number, y: number) => (v.toScreenZ ? v.toScreenZ(x, y, hz) : v.toScreen(x, y));
+    // read from left to right on screen
+    const [x0] = P(pts[0][0], pts[0][1]), [x1] = P(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+    if (x1 < x0) pts = pts.slice().reverse();
+    const path = new Path2(pts);
+    const chars = [...l.text];
+    const k = ds / 100;
+    const widths = chars.map((ch) => this.charWidth100(ch) * k);
+    const total = widths.reduce((a, b) => a + b, 0) + spacing * (chars.length - 1);
+    // map px per font px: the font size ds stands for ds / sc map px on the ground
+    const m = 1 / sc;
+    let s = path.total / 2 - (total * m) / 2;
+    const e = 0.5;
+    const glyphs: Glyph[] = [];
+    const centres: [number, number, number, number, number][] = []; // x, y, half width and height on screen, angle
+    for (let i = 0; i < chars.length; i++) {
+      const w = widths[i] * m;
+      const [px, py, tx, ty] = path.at(s + w / 2);
+      s += w + spacing * m;
+      const [sx, sy] = P(px, py);
+      if (sx < -300 || sy < -300 || sx > v.cssW + 300 || sy > v.cssH + 300) continue;
+      const [ax, ay] = P(px + tx * e, py + ty * e);
+      const [bx, by] = P(px - ty * e, py + tx * e);
+      // screen px per font px along the letter's width and height
+      const a = ((ax - sx) / e) * m, b = ((ay - sy) / e) * m, c = ((bx - sx) / e) * m, d = ((by - sy) / e) * m;
+      centres.push([sx, sy, (widths[i] + spacing) * Math.hypot(a, b) * 0.5, ds * 0.5 * Math.hypot(c, d), Math.atan2(b, a)]);
+      if (chars[i] !== ' ') glyphs.push([a, b, c, d, sx, sy, chars[i]]);
+    }
+    // collision boxes: the name in pieces of three letters, so that a bent name keeps its shape
+    const boxes: Placed[] = [];
+    for (let i = 0; i < centres.length; i += 3) {
+      const g = centres.slice(i, i + 3);
+      const f = g[0], z = g[g.length - 1];
+      let ux = z[0] - f[0], uy = z[1] - f[1];
+      let len = Math.hypot(ux, uy);
+      if (len < 1e-3) { ux = Math.cos(f[4]); uy = Math.sin(f[4]); len = 0; } else { ux /= len; uy /= len; }
+      const hh = Math.max(...g.map((q) => q[3])) + 2;
+      boxes.push({ cx: (f[0] + z[0]) / 2, cy: (f[1] + z[1]) / 2, ux, uy, hw: len / 2 + f[2] + 2, hh });
+    }
+    return { glyphs, boxes };
+  }
+
+  private drawLayout(l: MapLabel, lay: LabelLayout, ds: number, alpha: number) {
+    const ctx = this.ctx;
+    ctx.font = `600 ${ds.toFixed(1)}px ${LABEL_FONT}`;
+    (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+    ctx.globalAlpha = alpha * 0.92;
+    ctx.lineWidth = Math.max(2, ds * 0.16);
+    ctx.strokeStyle = 'rgba(250, 242, 222, 0.55)';
+    ctx.fillStyle = l.color ?? 'rgba(38, 28, 18, 0.95)';
+    const dpr = this.dpr;
+    for (const g of lay.glyphs) { ctx.setTransform(g[0] * dpr, g[1] * dpr, g[2] * dpr, g[3] * dpr, g[4] * dpr, g[5] * dpr); ctx.strokeText(g[6], 0, 0); }
+    for (const g of lay.glyphs) { ctx.setTransform(g[0] * dpr, g[1] * dpr, g[2] * dpr, g[3] * dpr, g[4] * dpr, g[5] * dpr); ctx.fillText(g[6], 0, 0); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalAlpha = 1;
   }
 
   /** Landmarks: a gilded badge with the building's sign and its stages, the name at close zoom. */
@@ -247,14 +365,55 @@ export class Overlay {
     }
     ctx.font = UNIT_FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const u of this.units) {
-      const [sx, sy] = v.toScreen(u.x, u.y);
+    // zoomed out, counters of one realm that crowd each other merge into one (the larger host keeps its place)
+    const merge = v.zoom < 2.4 ? 30 * s : 0;
+    // the player's own and selected hosts, battles and sieges claim their place first, then the larger hosts
+    const prio = (u: MapUnit) => (u.selected ? 4e9 : 0) + (u.mine ? 2e9 : 0) + (u.kind === 'battle' || u.kind === 'siege' ? 1e9 : 0) + (u.men ?? 0);
+    const order = this.units.map((u, i) => i).sort((a, b) => prio(this.units[b]) - prio(this.units[a]));
+    const shown: { u: MapUnit; sx: number; sy: number; men: number; n: number; pip: boolean }[] = [];
+    for (const i of order) {
+      const u = this.units[i];
+      let [sx, sy] = v.toScreen(u.x, u.y);
+      // figures on the map: the counter floats above them
+      if (u.fx !== undefined && u.fy !== undefined && v.toScreenH && v.scaleAt && (u.kind === 'army' || u.kind === 'fleet') && v.scaleAt(u.fx, u.fy) >= (v.figuresFrom ?? Infinity)) {
+        [sx, sy] = v.toScreenH(u.fx, u.fy, u.kind === 'fleet' ? 4.2 : 4.6);
+      }
       if (sx < -60 || sy < -60 || sx > v.cssW + 60 || sy > v.cssH + 60) continue;
+      if (merge && !u.selected && (u.kind === 'army' || u.kind === 'fleet') && u.owner !== undefined) {
+        const near = shown.find((p) => p.u.kind === u.kind && p.u.owner === u.owner && !p.u.selected && Math.abs(p.sx - sx) < merge && Math.abs(p.sy - sy) < merge * 0.8);
+        if (near) { near.men += u.men ?? 0; near.n++; continue; }
+      }
+      // a counter that would cover another one shrinks to a small flag
+      // so does a small host of a realm at peace, idle at home, unless the map is close
+      const idle = (u.kind === 'army' || u.kind === 'fleet') && !u.hot && (u.men ?? 0) < (u.kind === 'fleet' ? 15 : 5000) && v.zoom < 5;
+      const pip = !u.selected && !u.mine && (idle || (v.zoom < 6 && shown.some((p) => !p.pip && Math.abs(p.sx - sx) < 54 * s && Math.abs(p.sy - sy) < 22 * s)));
+      shown.push({ u, sx, sy, men: u.men ?? 0, n: 1, pip });
+    }
+    // draw from the back (top of the screen) to the front
+    shown.sort((a, b) => a.sy - b.sy);
+    for (const p of shown) if (p.pip) this.pip(p.u, p.sx, p.sy, s);
+    for (const p of shown) {
+      if (p.pip) continue;
+      const u = p.n > 1 ? { ...p.u, label: fmtMen(p.u, p.men) + (p.n > 1 ? ` ·${p.n}` : '') } : p.u;
       ctx.save();
-      ctx.translate(sx, sy); ctx.scale(s, s);
+      ctx.translate(p.sx, p.sy); ctx.scale(s, s);
       this.counter(u, v.time);
       ctx.restore();
     }
+  }
+
+  /** a small flag in the realm's colour on a pin, for a host whose counter would cover another */
+  private pip(u: MapUnit, x: number, y: number, s: number) {
+    const ctx = this.ctx;
+    const [r, g, b] = u.color;
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(s, s);
+    ctx.strokeStyle = 'rgba(25,20,14,0.8)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -12); ctx.stroke();
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(9, -9.5); ctx.lineTo(0, -6.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (u.kind === 'battle') { ctx.fillStyle = 'rgba(255,150,40,0.9)'; ctx.beginPath(); ctx.arc(0, -3, 3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
   }
 
   private polyline(pts: [number, number][]) {

@@ -7,6 +7,10 @@ import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, setting
 import { t, L, lang } from './i18n';
 import { sfx } from './audio';
 import { abortTimelapse, timelapseRunning } from './timelapse';
+import { labelsFor, computeSettlements } from './mapdata';
+import { dayToDate } from '../sim/calendar';
+
+const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
 export const rendererRef: { r: any | null; assets: any | null } = { r: null, assets: null };
 export const mapError = signal<string | null>(null);
@@ -15,64 +19,9 @@ export const mapReady = signal(false);
 let knownLocs: Uint8Array | null = null;
 let labelOwner: Int16Array | null = null; // owners the labels were last computed from (for relabelling on a language switch)
 
-/**
- * Nation names placed along the main axis of their land (recomputed when borders change). Only the realm's main body is used
- * (the connected cluster around the capital, unless that is a small exclave), so overseas holdings do not drag the name into
- * the sea. The size follows the extent along the text (in map px); the overlay keeps it within a readable range on screen and
- * resolves overlaps by `weight` (the area of that body).
- */
-export function computeLabels(owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[]) {
-  const geo = assets.geo; const L0 = geo.L;
-  const X = geo.loc.x, Y = geo.loc.y, A = geo.loc.area;
-  const locs: number[][] = ns.map(() => []);
-  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length && (!knownLocs || knownLocs[i] !== 0)) locs[o].push(i); }
-  const CELL = 40;
-  const out: any[] = [];
-  for (let n = 0; n < ns.length; n++) {
-    const all = locs[n]; if (!all.length || !ns[n]?.alive) continue;
-    // connected clusters on a coarse grid (gaps up to about one cell, e.g. narrow straits, are bridged)
-    const cells = new Map<number, number[]>();
-    for (const i of all) { const k = Math.floor(X[i] / CELL) * 65536 + Math.floor(Y[i] / CELL); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(i); }
-    const comp = new Map<number, number>(); const comps: { locs: number[]; area: number }[] = [];
-    for (const k0 of cells.keys()) {
-      if (comp.has(k0)) continue;
-      const id = comps.length; const cur = { locs: [] as number[], area: 0 }; comps.push(cur);
-      const stack = [k0]; comp.set(k0, id);
-      while (stack.length) {
-        const k = stack.pop()!; for (const i of cells.get(k)!) { cur.locs.push(i); cur.area += Math.max(1, A[i]); }
-        const cx = Math.floor(k / 65536), cy = k - cx * 65536;
-        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { const kk = (cx + dx) * 65536 + (cy + dy); if (cells.has(kk) && !comp.has(kk)) { comp.set(kk, id); stack.push(kk); } }
-      }
-    }
-    let body = comps[0];
-    for (const c of comps) if (c.area > body.area) body = c;
-    const cap = ns[n].capital ?? -1;
-    if (cap >= 0 && owner[cap] === n) { const ck = Math.floor(X[cap] / CELL) * 65536 + Math.floor(Y[cap] / CELL); const cc = comps[comp.get(ck) ?? -1]; if (cc && cc.area >= body.area * 0.3) body = cc; }
-    let sx = 0, sy = 0, cnt = 0;
-    for (const i of body.locs) { const a = Math.max(1, A[i]); sx += X[i] * a; sy += Y[i] * a; cnt += a; }
-    const cx = sx / cnt, cy = sy / cnt;
-    let xx = 0, yy = 0, xy = 0;
-    for (const i of body.locs) {
-      // each location counts as a small disc, so one-location realms get an extent too
-      const a = Math.max(1, A[i]), inner = a / (4 * Math.PI), dx = X[i] - cx, dy = Y[i] - cy;
-      xx += (dx * dx + inner) * a; yy += (dy * dy + inner) * a; xy += dx * dy * a;
-    }
-    const a = xx / cnt, b = xy / cnt, c = yy / cnt;
-    // text follows the main axis, but steep realms get level text (sized by their width) and the slant stays moderate
-    let ang = 0.5 * Math.atan2(2 * b, a - c);
-    if (Math.abs(ang) > 1.1) ang = 0; else ang = Math.max(-0.75, Math.min(0.75, ang));
-    const co = Math.cos(ang), si = Math.sin(ang);
-    const along = Math.sqrt(Math.max(0, a * co * co + 2 * b * si * co + c * si * si));
-    const across = Math.sqrt(Math.max(0, a * si * si - 2 * b * si * co + c * co * co));
-    const text = L(ns[n].short).toUpperCase();
-    // the name spans about the realm's length along the text and is never much taller than the realm is wide
-    const size = Math.max(1, Math.min(along * 3.84 / Math.max(3, text.length), across * 2.2));
-    // a covered name may slide across its direction while it stays well inside the realm (about 1.2 standard deviations)
-    const room = Math.max(0, across * 1.2 - size * 0.45);
-    out.push({ text, x: cx, y: cy, angle: ang, size, nation: n, id: n, weight: body.area, room });
-  }
-  return out;
-}
+/** realm names for the current borders (the player's unexplored land carries none) */
+export const computeLabels = (owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[]) => labelsFor(owner, assets, ns, knownLocs);
+export { computeSettlements };
 
 export function MapView() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -103,15 +52,21 @@ export function MapView() {
         if (changed) {
           lastOwner = v.owner; labelOwner = v.owner;
           clearTimeout(labelTimer);
-          labelTimer = setTimeout(() => { if (rendererRef.r && lastOwner) rendererRef.r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value)); }, force ? 0 : 400);
+          labelTimer = setTimeout(() => {
+            if (!rendererRef.r || !lastOwner) return;
+            rendererRef.r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value));
+            rendererRef.r.setSettlements?.(computeSettlements(lastOwner, rendererRef.assets, nations.value as any));
+          }, force ? 0 : 400);
         }
       }
       if (v.snow) r.setSnow(v.snow);
+      { const dt = dayToDate(v.day, v.startYear); r.setDate?.(v.day, (MONTH_START[dt.m] + dt.d - 0.5) / 365); }
       if (v.landmarks || force || exploredChanged) {
         const g0 = rendererRef.assets.geo; const de = lang.value === 'de';
         r.setLandmarks((v.landmarks ?? landmarks.value).filter((m) => !knownLocs || knownLocs[m.loc] !== 0).map((m) => ({ x: g0.loc.x[m.loc], y: g0.loc.y[m.loc], name: de ? m.name.de : m.name.en, kind: m.kind, tier: m.tier, max: m.max, building: m.work > 0 })));
       }
       const g = rendererRef.assets.geo; const sel = new Set(selectedArmies.value);
+      const atWar = new Set<number>(); for (const w of v.wars ?? []) { for (const n of w.att) atWar.add(n); for (const n of w.def) atWar.add(n); }
       const units: any[] = [];
       const groups = new Map<string, any>();
       for (const a of v.armies) {
@@ -119,10 +74,10 @@ export function MapView() {
         const key = `${a.loc}:${a.owner}:${a.fleet ? 1 : 0}`;
         let u = groups.get(key);
         const n = ns[a.owner];
-        if (!u) { u = { id: a.id, ids: [], x: g.loc.x[a.loc], y: g.loc.y[a.loc], color: n ? n.color : [120, 120, 120], label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels }; groups.set(key, u); units.push(u); }
+        if (!u) { u = { id: a.id, ids: [], x: g.loc.x[a.loc], y: g.loc.y[a.loc], color: n ? n.color : [120, 120, 120], label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels, mine: a.owner === playerId.value, hot: atWar.has(a.owner) || !!a.rebels }; groups.set(key, u); units.push(u); }
         u.ids.push(a.id); u.men += a.men;
         if (sel.has(a.id)) { u.selected = true; if (a.path.length) u.path = [[g.loc.x[a.loc], g.loc.y[a.loc]], ...a.path.map((p: number) => [g.loc.x[p], g.loc.y[p]])]; }
-        if (a.path.length) u.moving = true;
+        if (a.path.length) { u.moving = true; u.hot = true; }
       }
       for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : u.men >= 1000 ? (u.men / 1000).toFixed(1) + 'k' : String(Math.round(u.men));
       for (const sgi of v.sieges) units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, color: ns[sgi.nation]?.color ?? [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' });
@@ -137,6 +92,7 @@ export function MapView() {
         if (disposed) return;
         const r = await R.MapRenderer.create(canvas.current!, assets, settings.value.quality);
         rendererRef.r = r;
+        if (import.meta.env.DEV) (window as any).__map = r; // for browser tests
         r.attachControls?.(canvas.current!);
         r.onClick = (loc: number, ev: MouseEvent) => onClick(loc, ev);
         r.onRightClick = (loc: number, ev: MouseEvent) => onRightClick(loc, ev);

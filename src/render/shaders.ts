@@ -210,9 +210,9 @@ fn hAt(uv: vec2f, lod: f32, land: bool) -> f32 {
 }
 `;
 
-/** rivers: instanced round-capped segments into a screen-sized r8 mask (max blend) */
+/** rivers: instanced round-capped segments into a screen-sized r8 mask (max blend), draped on the 3D terrain */
 export const RIVER_WGSL = /* wgsl */ `
-struct U { view: vec4f, cam: vec4f, map: vec4f, misc: vec4f, misc2: vec4f, rings: vec4f };
+struct U { view: vec4f, cam: vec4f, map: vec4f, misc: vec4f, misc2: vec4f, rings: vec4f, eye: vec4f, ex: vec4f, vp: mat4x4f, env: vec4f };
 @group(0) @binding(0) var<uniform> U0: U;
 struct VO {
   @builtin(position) pos: vec4f,
@@ -220,13 +220,20 @@ struct VO {
   @location(1) @interpolate(flat) sb: vec2f,
   @location(2) @interpolate(flat) hw: vec3f,
 };
-@vertex fn vs(@builtin(vertex_index) vi: u32, @location(0) ab: vec4f, @location(1) w: vec2f) -> VO {
-  let mpp = U0.view.z; let zoom = U0.view.w; let pr = U0.cam.w;
-  let half = U0.view.xy * 0.5;
-  let sa = (ab.xy - U0.cam.xy) / mpp + half;
-  let sb = (ab.zw - U0.cam.xy) / mpp + half;
-  let wa = w.x * zoom; let wb = w.y * zoom; // css px
+@vertex fn vs(@builtin(vertex_index) vi: u32, @location(0) ab: vec4f, @location(1) w: vec2f, @location(2) zz: vec2f) -> VO {
+  let pr = U0.cam.w;
+  let viewSize = U0.view.xy;
+  let lift = 0.6 + U0.eye.w * 0.0015;
+  let ca = U0.vp * vec4f(ab.xy, -(zz.x + lift), 1.0);
+  let cb = U0.vp * vec4f(ab.zw, -(zz.y + lift), 1.0);
+  var o: VO;
+  if (ca.w < 0.01 || cb.w < 0.01) { o.pos = vec4f(2.0, 2.0, 2.0, 1.0); o.sa = vec2f(0.0); o.sb = vec2f(0.0); o.hw = vec3f(0.0); return o; }
+  let sa = (ca.xy / ca.w * vec2f(0.5, -0.5) + 0.5) * viewSize;
+  let sb = (cb.xy / cb.w * vec2f(0.5, -0.5) + 0.5) * viewSize;
+  let za = U0.ex.y / ca.w; let zb = U0.ex.y / cb.w; // css px per map px at each end
+  let wa = w.x * za; let wb = w.y * zb; // css px
   let minW = 1.0;
+  let zoom = max(za, zb);
   let alpha = pow(clamp(max(wa, wb) / minW, 0.0, 1.0), 0.6) * clamp((zoom - 0.12) / 0.2, 0.0, 1.0);
   let hwa = max(wa, minW) * 0.5 * pr; let hwb = max(wb, minW) * 0.5 * pr;
   var d = sb - sa; let len = length(d);
@@ -235,10 +242,11 @@ struct VO {
   let pad = max(hwa, hwb) + 1.5;
   var cx = array<f32, 6>(0.0, 1.0, 0.0, 0.0, 1.0, 1.0);
   var cy = array<f32, 6>(-1.0, -1.0, 1.0, 1.0, -1.0, 1.0);
-  let base = select(sa - d * pad, sb + d * pad, cx[vi] > 0.5);
+  let useB = cx[vi] > 0.5;
+  let base = select(sa - d * pad, sb + d * pad, useB);
   let p = base + nrm * cy[vi] * pad;
-  var o: VO;
-  o.pos = vec4f(p.x / U0.view.x * 2.0 - 1.0, 1.0 - p.y / U0.view.y * 2.0, 0.0, 1.0);
+  let depth = select(ca.z / ca.w, cb.z / cb.w, useB);
+  o.pos = vec4f(p.x / viewSize.x * 2.0 - 1.0, 1.0 - p.y / viewSize.y * 2.0, clamp(depth, 0.0, 1.0), 1.0);
   o.sa = sa; o.sb = sb; o.hw = vec3f(hwa, hwb, alpha);
   return o;
 }
@@ -253,6 +261,29 @@ struct VO {
 }
 `;
 
+/** 3D terrain: a chunked height-field mesh that writes the map position under every pixel (G-buffer) and depth */
+export const TERRAIN_WGSL = /* wgsl */ `
+struct TU { vp: mat4x4f, a: vec4f };  // a: hw, hh, hScale (world px per km), skirt depth per step
+@group(0) @binding(0) var<uniform> T: TU;
+@group(0) @binding(1) var hgt: texture_2d<f32>;
+@group(0) @binding(2) var smp: sampler;
+struct VO { @builtin(position) pos: vec4f, @location(0) w: vec3f };
+@vertex fn vs(@location(0) g: vec3f, @location(1) inst: vec4f) -> VO {
+  let hs = vec2f(T.a.x, T.a.y);
+  let s = min(inst.xy + g.xy * inst.z, hs);
+  let lod = log2(max(inst.z, 1.0)) * 0.75;
+  let h = textureSampleLevel(hgt, smp, s / hs, lod).r;
+  var z = max(h, 0.0) * T.a.z;
+  if (g.z > 0.5) { z = z - T.a.w * inst.z; }
+  let mp = s * 2.0;
+  var o: VO;
+  o.pos = T.vp * vec4f(mp.x, mp.y, -z, 1.0);
+  o.w = vec3f(mp, z);
+  return o;
+}
+@fragment fn fs(i: VO) -> @location(0) vec4f { return vec4f(i.w, 1.0); }
+`;
+
 /** main composition pass */
 export const MAIN_WGSL = FULLSCREEN_VS + NOISE + /* wgsl */ `
 // view: viewW, viewH (render px), mapPerPx (map px per render px), zoom (css px per map px)
@@ -261,7 +292,7 @@ export const MAIN_WGSL = FULLSCREEN_VS + NOISE + /* wgsl */ `
 // misc: mode (0 political, 1 terrain, 2 flat), selected (0-based, -1), hover, quality (0..3)
 // misc2: inkSpeed (map px/s), closeBlend, waveOctaves, ringCount
 // rings: ring radii in css px
-struct U { view: vec4f, cam: vec4f, map: vec4f, misc: vec4f, misc2: vec4f, rings: vec4f };
+struct U { view: vec4f, cam: vec4f, map: vec4f, misc: vec4f, misc2: vec4f, rings: vec4f, eye: vec4f, ex: vec4f, vp: mat4x4f, env: vec4f };
 struct Loc { color: u32, prev: u32, ctrl: u32, owner: i32, flags: u32, animStart: f32, snow: f32, origin: u32, prov: i32, p1: u32, p2: u32, p3: u32 };
 @group(0) @binding(0) var<uniform> U0: U;
 @group(0) @binding(1) var<storage, read> locs: array<Loc>;
@@ -271,6 +302,126 @@ struct Loc { color: u32, prev: u32, ctrl: u32, owner: i32, flags: u32, animStart
 @group(0) @binding(5) var riverTex: texture_2d<f32>;
 @group(0) @binding(6) var smp: sampler;
 @group(0) @binding(7) var coastTex: texture_2d<f32>;
+@group(0) @binding(8) var gbuf: texture_2d<f32>;
+@group(0) @binding(9) var biomeT: texture_2d<f32>;
+@group(0) @binding(10) var hgtT: texture_2d<f32>;
+
+// ---------------- seasons ----------------
+// U0.env.x: time of year (0 = 1 January, 0.5 = early July)
+/** a tilled strip through the year (k in 0..1 shifts it by a few weeks): winter crop, green, ripe, stubble, ploughed */
+fn cropCol(ph0: f32, k: f32) -> vec3f {
+  let ph = fract(ph0 + (k - 0.5) * 0.07 + 1.0);
+  // winter grain shows green through the cold months, the land for spring sowing lies ploughed and brown
+  let w = select(vec3f(0.50, 0.39, 0.28), vec3f(0.39, 0.49, 0.28), k < 0.55);
+  var keys = array<vec3f, 6>(w, vec3f(0.42, 0.56, 0.27), vec3f(0.80, 0.68, 0.36), vec3f(0.73, 0.65, 0.46), vec3f(0.50, 0.40, 0.29), w);
+  var at = array<f32, 6>(0.0, 0.30, 0.54, 0.69, 0.86, 1.0);
+  var c = keys[5];
+  for (var i = 0; i < 5; i++) {
+    if (ph >= at[i] && ph < at[i + 1]) { c = mix(keys[i], keys[i + 1], smoothstep(at[i], at[i + 1], ph)); }
+  }
+  return c;
+}
+/** grassland through the year: dull in winter, fresh in spring, deep in summer, straw in a dry south */
+fn meadowCol(ph: f32, dry: f32) -> vec3f {
+  let spring = smoothstep(0.2, 0.33, ph) * (1.0 - smoothstep(0.5, 0.62, ph));
+  let summer = smoothstep(0.42, 0.55, ph) * (1.0 - smoothstep(0.7, 0.8, ph));
+  var c = vec3f(0.45, 0.48, 0.32);
+  c = mix(c, vec3f(0.42, 0.58, 0.28), spring);
+  c = mix(c, mix(vec3f(0.38, 0.52, 0.26), vec3f(0.70, 0.63, 0.40), dry), summer);
+  return c;
+}
+
+/** close-zoom ground: field patchwork, meadow, scree and rock, dunes; base is the baked albedo */
+fn groundDetail(base: vec3f, p: vec2f, zoom: f32, light: f32) -> vec3f {
+  let bt = textureLoad(biomeT, vec2i(clamp(p * 0.5, vec2f(0.0), vec2f(textureDimensions(biomeT)) - 1.0)), 0);
+  let cls = i32(round(bt.r * 255.0));
+  let forest = bt.g; let cult = bt.b;
+  // slope from the height field (km per map px), for rock on steep ground
+  let e = 1.0;
+  let hx = textureSampleLevel(hgtT, smp, (p + vec2f(e, 0.0)) / U0.map.xy, 0.0).r - textureSampleLevel(hgtT, smp, (p - vec2f(e, 0.0)) / U0.map.xy, 0.0).r;
+  let hy = textureSampleLevel(hgtT, smp, (p + vec2f(0.0, e)) / U0.map.xy, 0.0).r - textureSampleLevel(hgtT, smp, (p - vec2f(0.0, e)) / U0.map.xy, 0.0).r;
+  let slope = length(vec2f(hx, hy)) / (2.0 * e) * 4.5;
+  var c = base;
+  let f1 = fbm3(p * 0.6); let f2 = vnoise(p * 2.7); let f3 = vnoise(p * 9.0);
+  // meadow and scrub: patches of lighter and darker growth
+  c *= 0.92 + 0.16 * f1 + 0.06 * (f2 - 0.5) + 0.04 * (f3 - 0.5) * smoothstep(4.0, 9.0, zoom);
+  // fields: open-field strips in irregular furlongs, each furlong with its own direction; more of them where the land is
+  // well tilled, meadow and fallow between them, hedges and tracks along the furlong edges
+  let ph = U0.env.x;
+  let dry = smoothstep(0.62, 0.78, p.y / U0.map.y);
+  let fieldW = smoothstep(0.1, 0.5, cult) * (1.0 - smoothstep(0.25, 0.6, forest)) * (1.0 - smoothstep(0.25, 0.6, slope));
+  if (fieldW > 0.01) {
+    let fs = 4.5;
+    let gp = p / fs;
+    let gi = floor(gp); let gf = gp - gi;
+    var d1 = 9.0; var d2 = 9.0; var bid = vec2f(0.0); var bid2 = vec2f(0.0);
+    for (var j = -1; j <= 1; j++) {
+      for (var i = -1; i <= 1; i++) {
+        let o = vec2f(f32(i), f32(j));
+        let pt = o + 0.12 + hash22(gi + o) * 0.76;
+        let d = length(gf - pt);
+        if (d < d1) { d2 = d1; bid2 = bid; d1 = d; bid = gi + o; } else if (d < d2) { d2 = d; bid2 = gi + o; }
+      }
+    }
+    let edge = (d2 - d1) * 0.5 * fs;          // map px to the furlong edge
+    let hf = hash21(bid * 1.37 + 5.1);
+    let tilled = hf < cult * 0.95 + 0.05;
+    var fc = meadowCol(ph, dry) * (0.9 + 0.2 * hash21(bid + 9.3));
+    if (tilled) {
+      let ang = hash21(bid + 2.7) * 3.14159;
+      let ca = cos(ang); let sa = sin(ang);
+      let q = vec2f(ca * p.x - sa * p.y, sa * p.x + ca * p.y);
+      let sw = 0.32 + 0.3 * hash21(bid + 4.4);  // strip width, map px
+      let si = floor(q.y / sw);
+      let sf = fract(q.y / sw);
+      let hs = hash21(vec2f(si, 0.0) + bid * 3.1);
+      let kind = hash21(vec2f(si, 1.0) + bid * 1.9);
+      var crop = cropCol(ph, hs);
+      if (kind > 0.82) { crop = mix(meadowCol(ph, dry), crop, 0.25) * 0.95; }          // fallow
+      else if (kind > 0.68) { crop = mix(cropCol(ph + 0.05, hs), vec3f(0.42, 0.52, 0.26), 0.35); } // peas, beans, flax
+      crop *= (0.88 + 0.24 * hash21(vec2f(si, 7.0) + bid)) * (0.95 + 0.1 * vnoise(q * vec2f(0.6, 3.0)));
+      // furrows along the strip, a darker balk between strips
+      crop *= 0.97 + 0.04 * sin(q.y * 40.0) * smoothstep(6.0, 12.0, zoom);
+      let balk = 1.0 - smoothstep(0.0, 0.03 + 0.4 / max(zoom, 1.0), min(sf, 1.0 - sf) * sw);
+      crop = mix(crop, crop * 0.8, balk * 0.5 * smoothstep(2.5, 6.0, zoom));
+      fc = crop;
+    }
+    // hedgerows and tracks along some of the furlong edges
+    let lo = min(bid, bid2); let hi = max(bid, bid2);
+    let hasHedge = step(hash21(lo * 1.7 + hi * 0.37), 0.55);
+    let hedge = (1.0 - smoothstep(0.03, 0.07 + 0.25 / max(zoom, 1.0), edge)) * hasHedge;
+    let track = (1.0 - smoothstep(0.02, 0.05 + 0.2 / max(zoom, 1.0), edge)) * (1.0 - hasHedge);
+    fc = mix(fc, vec3f(0.30, 0.38, 0.21), hedge * 0.5);
+    fc = mix(fc, vec3f(0.66, 0.6, 0.48), track * 0.3);
+    c = mix(c, fc, fieldW * 0.85);
+  } else {
+    c = mix(c, c * meadowCol(ph, dry) / vec3f(0.42, 0.54, 0.28), 0.35 * (1.0 - forest));
+  }
+  // steep ground: scree and bare rock with strata
+  let rockW = smoothstep(0.35, 0.9, slope) * (1.0 - forest * 0.6);
+  if (rockW > 0.01) {
+    let strata = 0.5 + 0.5 * sin((p.x * 0.3 + p.y * 0.7) * 2.0 + f1 * 6.0);
+    let rock = mix(vec3f(0.48, 0.45, 0.41), vec3f(0.62, 0.59, 0.54), strata * 0.6 + f2 * 0.4);
+    c = mix(c, rock, rockW * 0.8);
+  }
+  // sand seas: wind ripples
+  if (cls == 8) {
+    let dune = 0.5 + 0.5 * sin(p.x * 0.55 + p.y * 0.25 + f1 * 5.0);
+    c *= 0.93 + 0.12 * dune;
+  }
+  return c;
+}
+
+/** map position under a render pixel from the terrain G-buffer (w = 0: no terrain) */
+fn gAt(q: vec2i) -> vec4f {
+  let d = vec2i(textureDimensions(gbuf));
+  return textureLoad(gbuf, clamp(q, vec2i(0), d - 1), 0);
+}
+fn gStep(c: vec2f, a: vec4f, b: vec4f) -> f32 {
+  let da = select(1e9, length(a.xy - c), a.w > 0.5);
+  let db = select(1e9, length(b.xy - c), b.w > 0.5);
+  return min(da, db);
+}
 
 fn idAt(q: vec2f) -> u32 {
   let c = clamp(vec2i(floor(q)), vec2i(0), vec2i(i32(U0.map.x) - 1, i32(U0.map.y) - 1));
@@ -321,19 +472,37 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
 
 @fragment fn fs(@builtin(position) fc: vec4f) -> @location(0) vec4f {
   let viewSize = U0.view.xy;
-  let mpp = U0.view.z;          // map px per render px
-  let zoom = U0.view.w;         // css px per map px
   let pr = U0.cam.w;
-  let mppCss = mpp * pr;        // map px per css px
   let time = U0.cam.z;
   let mapSize = U0.map.xy;
   let mode = i32(U0.misc.x);
   let quality = i32(U0.misc.w);
-  let p = U0.cam.xy + (fc.xy - viewSize * 0.5) * mpp;
-
   // vignette factor (screen space)
   let sv = fc.xy / viewSize - 0.5;
   let vign = 1.0 - dot(sv, sv) * 0.38;
+
+  let ip = vec2i(fc.xy);
+  let G = gAt(ip);
+  let tilt = sin(U0.ex.z);
+  if (G.w < 0.5) {
+    // beyond the edge of the known world: a hazy sky towards the horizon
+    let g = vnoise(fc.xy * 0.5) * 0.03;
+    let sky = mix(vec3f(0.55, 0.62, 0.68), vec3f(0.11, 0.115, 0.125), smoothstep(0.0, 0.9, fc.y / viewSize.y + 0.25 * (1.0 - tilt)));
+    return vec4f(mix(vec3f(0.11, 0.115, 0.125), sky, tilt) + g, 1.0);
+  }
+  let p = G.xy;
+  // local scale: map px per render px from the neighbouring pixels (min of both sides, robust at silhouettes)
+  let mx = gStep(p, gAt(ip + vec2i(1, 0)), gAt(ip - vec2i(1, 0)));
+  let my = gStep(p, gAt(ip + vec2i(0, 1)), gAt(ip - vec2i(0, 1)));
+  var mpp = max(min(mx, 1e8), min(my, 1e8));
+  if (mpp > 1e7) { mpp = U0.view.z; }
+  mpp = clamp(mpp, U0.view.z * 0.2, U0.view.z * 12.0);
+  let zoom = 1.0 / (mpp * pr);  // css px per map px here
+  let mppCss = mpp * pr;        // map px per css px
+  let world = vec3f(p, -G.z);
+  let toEye = U0.eye.xyz - world;
+  let eyeDist = length(toEye);
+  let V = vec3f(toEye.x, toEye.y, -toEye.z) / max(eyeDist, 1e-3); // to the eye, z up
 
   if (p.x < 0.0 || p.y < 0.0 || p.x >= mapSize.x || p.y >= mapSize.y) {
     let g = vnoise(fc.xy * 0.5) * 0.03;
@@ -437,12 +606,16 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
   var col = T.rgb;
   // close-zoom painterly detail
   let detailFade = smoothstep(1.2, 4.0, zoom);
+  if (detailFade > 0.0 && landMask > 0.5) {
+    col = mix(col, groundDetail(col, p, zoom, light), detailFade);
+  }
   if (detailFade > 0.0) {
     let nd = fbm3(p * 0.9) - 0.5;
     col *= 1.0 + nd * 0.10 * detailFade;
     // forest canopy: small shaded tree crowns on a staggered grid, clustered by noise
     let forest = A.a;
-    let treeFade = smoothstep(2.6, 5.0, zoom);
+    // with 3D trees standing on the map the painted crowns stay only as the forest floor
+    let treeFade = smoothstep(2.6, 5.0, zoom) * (1.0 - 0.6 * U0.ex.w * smoothstep(5.0, 9.0, zoom));
     if (quality >= 1 && forest > 0.15 && landMask > 0.5 && treeFade > 0.0) {
       let cs = 1.35;
       let q = p / cs;
@@ -465,19 +638,36 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
       }
     }
   }
-  // dynamic snow
+  // the year on the land: autumn woods, a dull winter, a parched southern summer
+  if (landMask > 0.0 && U0.env.z > 0.5) {
+    let ph = U0.env.x;
+    let lat = p.y / mapSize.y;
+    let temperate = smoothstep(0.12, 0.3, lat) * (1.0 - smoothstep(0.62, 0.72, lat));
+    let autumn = smoothstep(0.7, 0.77, ph) * (1.0 - smoothstep(0.86, 0.92, ph)) * temperate;
+    let winter = (1.0 - smoothstep(0.14, 0.26, ph) + smoothstep(0.9, 0.98, ph)) * smoothstep(0.08, 0.3, lat + 0.1) * (1.0 - smoothstep(0.66, 0.78, lat));
+    let summer = smoothstep(0.45, 0.55, ph) * (1.0 - smoothstep(0.68, 0.76, ph)) * smoothstep(0.6, 0.75, lat);
+    let fo = A.a;
+    let leafy = vec3f(0.62, 0.40, 0.17) * (0.85 + 0.3 * vnoise(p * 0.4));
+    col = mix(col, leafy * mix(1.0, light, 0.5), autumn * smoothstep(0.15, 0.7, fo) * 0.45 * landMask);
+    let lum = dot(col, vec3f(0.3, 0.55, 0.15));
+    col = mix(col, vec3f(lum) * vec3f(1.02, 0.98, 0.9), winter * 0.14 * landMask);
+    col = mix(col, vec3f(0.70, 0.62, 0.43) * mix(1.0, light, 0.6), summer * (1.0 - fo) * 0.22 * landMask);
+  }
+  // dynamic snow: lies longer on high ground and on slopes turned from the sun; thin snow is a dusting
   if (cLand) {
     let s = locs[cid - 1u].snow;
     if (s > 0.001) {
       // noise octaves fade out before they alias on screen
-      let n1 = (vnoise(p * 0.03) - 0.5) * 0.3;
-      let n2 = (vnoise(p * 0.12) - 0.5) * 0.3 * smoothstep(0.35, 1.2, zoom);
-      let n3 = (vnoise(p * 0.6) - 0.5) * 0.12 * smoothstep(1.8, 5.0, zoom);
-      let v = A.g * 0.75 + n1 + n2 + n3 + 0.12;
-      let soft = 0.1 + 0.12 * (1.0 - smoothstep(0.3, 2.0, zoom));
+      let n1 = (vnoise(p * 0.05) - 0.5) * 0.16;
+      let n2 = (vnoise(p * 0.18) - 0.5) * 0.2 * smoothstep(0.35, 1.2, zoom);
+      let n3 = (vnoise(p * 0.8) - 0.5) * 0.14 * smoothstep(1.8, 5.0, zoom);
+      let v = A.g * 0.8 + (1.0 - light) * 0.4 + n1 + n2 + n3 + 0.1;
+      let soft = 0.08 + 0.1 * (1.0 - smoothstep(0.3, 2.0, zoom));
       let cover = smoothstep(1.0 - s - soft, 1.0 - s + soft, v);
-      let snowLit = vec3f(0.93, 0.95, 0.99) * mix(vec3f(0.78, 0.84, 0.96), vec3f(1.04, 1.03, 1.0), clamp(light - 0.4, 0.0, 1.0));
-      col = mix(col, snowLit, cover * 0.88 * landMask);
+      // a dusting: speckles in furrows and hollows, not a veil over everything
+      let dust = smoothstep(0.2, 0.7, s) * smoothstep(0.58, 0.85, vnoise(p * 0.45) * 0.75 + vnoise(p * 2.0) * 0.25 + s * 0.15) * 0.6;
+      let snowLit = vec3f(0.93, 0.95, 0.99) * mix(vec3f(0.74, 0.8, 0.94), vec3f(1.04, 1.03, 1.0), clamp(light - 0.35, 0.0, 1.0));
+      col = mix(col, snowLit, clamp(cover * 0.9 + dust * (1.0 - cover), 0.0, 1.0) * landMask);
     }
   }
 
@@ -503,12 +693,17 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     // broad swell visible at all zooms
     let sw = vnoised(p * 0.012 + vec2f(time * 0.05, time * 0.02));
     gsum = gsum * 1.4 + sw.yz * 0.012 * 2.0;
-    let wn = normalize(vec3f(-gsum * 2.0, 1.0));
+    let wn = normalize(vec3f(-gsum * 0.9, 1.0));
+    // the mirrored sky follows only the long swell, or every wave crest turns into a white blotch
+    let wnF = normalize(vec3f(-gsum * 0.22, 1.0));
     let sun = normalize(vec3f(-0.45, -0.6, 0.66));
-    let hv = normalize(sun + vec3f(0.0, 0.0, 1.0));
-    let spec = pow(max(dot(wn, hv), 0.0), 48.0) * 0.12;
+    let hv = normalize(sun + V);
+    let spec = pow(max(dot(wn, hv), 0.0), mix(60.0, 260.0, tilt)) * mix(0.10, 0.32, tilt);
     let diffW = 0.93 + 0.07 * dot(wn, sun) / sun.z;
-    wc = wc * diffW + vec3f(1.0, 0.97, 0.88) * spec;
+    // the sky mirrored in the sea, stronger at grazing angles
+    let fres = 0.02 + 0.98 * pow(1.0 - max(dot(wnF, V), 0.0), 5.0);
+    let skyC = mix(vec3f(0.70, 0.78, 0.84), vec3f(0.46, 0.58, 0.70), clamp(V.z, 0.0, 1.0));
+    wc = mix(wc * diffW, skyC, fres * 0.55 * tilt) + vec3f(1.0, 0.97, 0.88) * spec;
     // painted waterlines parallel to the coast
     let lineW = mpp * 0.9;
     var wl = 0.0;
@@ -584,7 +779,7 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     // location borders (close zoom)
     let fadeL = smoothstep(1.6, 3.2, zoom);
     if (fadeL > 0.0 && dL < 2.0) {
-      col = mix(col, col * 0.45, (1.0 - smoothstep(0.25, 0.95, dL)) * 0.55 * fadeL);
+      col = mix(col, col * 0.7, (1.0 - smoothstep(0.15, 0.8, dL)) * 0.24 * fadeL);
     }
     // province borders (mid zoom)
     let fadeP = smoothstep(0.55, 1.2, zoom);
@@ -640,6 +835,61 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     col = mix(col, vec3f(1.0, 0.93, 0.62), ol * pulse);
   }
 
+  // ---------------- weather ----------------
+  // fronts drift across the map with the days (the same for every player); wetter in autumn and winter
+  if (U0.env.z > 0.5) {
+    let day = U0.env.y;
+    let ph = U0.env.x;
+    let wet = 0.5 + 0.5 * cos((ph - 0.9) * 6.2832);
+    let wp = p * 0.0065 + vec2f(day * 0.55, day * 0.12);
+    let front = fbm3(wp) + (vnoise(p * 0.03 + vec2f(day * 2.0, 0.0)) - 0.5) * 0.18;
+    let southDry = smoothstep(0.62, 0.8, p.y / mapSize.y) * (1.0 - wet * 0.6);
+    let cloud = smoothstep(0.52 - wet * 0.08 + southDry * 0.2, 0.74, front);
+    let rain = smoothstep(0.66, 0.8, front) * (1.0 - southDry);
+    // cloud shadows
+    col *= 1.0 - cloud * 0.16;
+    // rain darkens and greys the ground, storms whip the sea white
+    let lum2 = dot(col, vec3f(0.3, 0.55, 0.15));
+    col = mix(col, vec3f(lum2) * vec3f(0.92, 0.95, 1.0), rain * 0.25);
+    if (waterMask > 0.5 && rain > 0.0) {
+      let cap = smoothstep(0.78, 0.92, vnoise(p * 1.6 + vec2f(time * 0.7, time * 0.3)) * (0.6 + 0.6 * vnoise(p * 0.2 - time * 0.05)));
+      col = mix(col * 0.86, vec3f(0.9, 0.93, 0.95), cap * rain * 0.6 * smoothstep(1.0, 3.0, zoom));
+    }
+    // rain or snow falling, close in
+    let fallFade = rain * smoothstep(2.5, 6.0, zoom);
+    if (fallFade > 0.01) {
+      let snowing = cLand && locs[cid - 1u].snow > 0.25;
+      if (snowing) {
+        let sp = fc.xy / pr * vec2f(1.0, 1.0) + vec2f(sin(time * 0.7) * 20.0, -time * 40.0);
+        let cell = floor(sp / 9.0);
+        let o = hash22(cell) * 7.0 + 1.0;
+        let flake = 1.0 - smoothstep(0.6, 1.4, length(sp - cell * 9.0 - o));
+        col = mix(col, vec3f(0.96, 0.97, 1.0), flake * step(0.55, hash21(cell + 3.3)) * fallFade * 0.8);
+      } else {
+        let sp = fc.xy / pr + vec2f(-time * 60.0, -time * 520.0);
+        let k = vec2f(sp.x + sp.y * 0.18, sp.y);
+        let cell = floor(k / vec2f(5.0, 26.0));
+        let fy = fract(k.y / 26.0);
+        let fx = fract(k.x / 5.0);
+        let streak = (1.0 - smoothstep(0.0, 0.12, abs(fx - 0.5))) * smoothstep(0.0, 0.3, fy) * (1.0 - smoothstep(0.55, 0.85, fy));
+        col = mix(col, vec3f(0.78, 0.82, 0.88), streak * step(0.8, hash21(cell)) * fallFade * smoothstep(0.3, 0.8, rain) * 0.28);
+      }
+    }
+    // morning mist in autumn over low, wet land
+    let autumnW = smoothstep(0.7, 0.78, ph) * (1.0 - smoothstep(0.9, 0.97, ph));
+    let mist = autumnW * (1.0 - smoothstep(0.0, 1.2, G.z)) * smoothstep(0.45, 0.75, fbm3(p * 0.02 + vec2f(time * 0.01, day * 0.3))) * landMask;
+    col = mix(col, vec3f(0.86, 0.88, 0.9), mist * 0.35 * smoothstep(0.8, 2.5, zoom));
+    // seen from high up, the clouds themselves
+    let high = 1.0 - smoothstep(0.55, 1.3, zoom);
+    if (high > 0.0) {
+      let puff = smoothstep(0.58 - wet * 0.06, 0.82, front + (fbm3(p * 0.025 + vec2f(day * 0.8, 0.0)) - 0.5) * 0.25);
+      col = mix(col, vec3f(0.94, 0.95, 0.97), puff * high * 0.42);
+    }
+  }
+
+  // aerial perspective: distant land fades into a blue haze when the camera leans in
+  let haze = smoothstep(U0.eye.w * 1.05, U0.eye.w * 2.6, eyeDist) * tilt;
+  col = mix(col, vec3f(0.62, 0.69, 0.75), haze * 0.55);
   // paper grain + vignette
   let grain = (hash21(floor(p * 2.0)) - 0.5) * 0.025 * (1.0 - smoothstep(4.0, 10.0, zoom));
   col = (col + grain) * vign;
