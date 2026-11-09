@@ -29,33 +29,33 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 C = dict(
     # trees
     bark=(0.33, 0.23, 0.15), bark_dark=(0.25, 0.18, 0.12), bark_pine=(0.55, 0.33, 0.20), bark_grey=(0.45, 0.41, 0.36),
-    spruce0=(0.08, 0.21, 0.13), spruce1=(0.10, 0.26, 0.15), spruce2=(0.13, 0.31, 0.17), spruce3=(0.16, 0.36, 0.19),
-    spruce_under=(0.06, 0.15, 0.10),
-    pine_lo=(0.08, 0.19, 0.14), pine=(0.13, 0.29, 0.21), pine_hi=(0.18, 0.36, 0.25),
+    spruce=(0.10, 0.22, 0.14), spruce_tip=(0.16, 0.31, 0.18), spruce_under=(0.07, 0.16, 0.11),
+    scots_lo=(0.12, 0.20, 0.16), scots=(0.18, 0.31, 0.22), scots_hi=(0.25, 0.39, 0.27),
     oak_lo=(0.16, 0.29, 0.10), oak=(0.23, 0.40, 0.13), oak_hi=(0.31, 0.49, 0.16),
     lime_lo=(0.22, 0.34, 0.11), lime=(0.31, 0.47, 0.15), lime_hi=(0.40, 0.56, 0.19),
     bush_lo=(0.18, 0.28, 0.11), bush=(0.26, 0.39, 0.14), bush_hi=(0.34, 0.47, 0.17),
     palm_trunk=(0.52, 0.41, 0.28), palm_trunk2=(0.44, 0.34, 0.23), frond=(0.27, 0.47, 0.17), frond_hi=(0.35, 0.55, 0.20),
     coconut=(0.42, 0.30, 0.16),
     # building materials
-    plaster=(0.90, 0.85, 0.72), plaster2=(0.93, 0.88, 0.76), timber=(0.27, 0.18, 0.12), whitewash=(0.94, 0.92, 0.86),
+    plaster=(0.90, 0.85, 0.72), plaster2=(0.93, 0.88, 0.76), timber=(0.27, 0.18, 0.12), whitewash=(0.84, 0.82, 0.76),
     stone=(0.66, 0.63, 0.57), stone_light=(0.80, 0.77, 0.70), stone_dark=(0.48, 0.46, 0.43), limestone=(0.80, 0.76, 0.66),
-    sandstone=(0.86, 0.80, 0.66), brick=(0.56, 0.32, 0.23),
+    sandstone=(0.80, 0.74, 0.61), brick=(0.56, 0.32, 0.23),
     roof_red=(0.62, 0.27, 0.18), roof_red2=(0.55, 0.23, 0.16), terracotta=(0.74, 0.38, 0.23), terracotta2=(0.68, 0.33, 0.20),
     slate=(0.33, 0.35, 0.41), slate2=(0.29, 0.31, 0.37), thatch=(0.72, 0.59, 0.35), thatch2=(0.64, 0.51, 0.30),
-    lead=(0.56, 0.60, 0.65), lead2=(0.50, 0.54, 0.60), felt=(0.88, 0.84, 0.73), felt2=(0.80, 0.76, 0.65),
+    lead=(0.56, 0.60, 0.65), lead2=(0.50, 0.54, 0.60), felt=(0.80, 0.76, 0.66), felt2=(0.72, 0.68, 0.58),
     glass=(0.17, 0.18, 0.22), glass_blue=(0.20, 0.24, 0.33), opening=(0.10, 0.09, 0.09), door=(0.36, 0.23, 0.14),
-    shutter=(0.25, 0.43, 0.47), ornament=(0.62, 0.24, 0.17), gold=(0.88, 0.70, 0.30),
+    shutter=(0.25, 0.43, 0.47), ornament=(0.62, 0.24, 0.17), gold=(0.78, 0.60, 0.25),
     wood=(0.46, 0.32, 0.20), wood_light=(0.62, 0.47, 0.30), wood_dark=(0.30, 0.21, 0.14), hay=(0.80, 0.68, 0.38),
     # people
-    skin=(0.86, 0.65, 0.50), steel=(0.66, 0.68, 0.72), steel_dark=(0.42, 0.44, 0.48), gambeson=(0.70, 0.67, 0.56),
+    skin=(0.80, 0.60, 0.46), steel=(0.66, 0.68, 0.72), steel_dark=(0.42, 0.44, 0.48), gambeson=(0.70, 0.67, 0.56),
     hose=(0.36, 0.31, 0.27), hose_light=(0.78, 0.74, 0.64), boot=(0.24, 0.17, 0.12), leather=(0.46, 0.31, 0.18),
-    hood=(0.36, 0.38, 0.25), felt_hat=(0.20, 0.18, 0.17), feather=(0.92, 0.90, 0.85), bronze=(0.74, 0.54, 0.26),
-    horse=(0.44, 0.29, 0.18), horse_dark=(0.17, 0.12, 0.09), hoof=(0.20, 0.19, 0.18), canvas=(0.88, 0.85, 0.76),
+    hood=(0.36, 0.38, 0.25), felt_hat=(0.20, 0.18, 0.17), feather=(0.82, 0.80, 0.75), bronze=(0.74, 0.54, 0.26),
+    horse=(0.52, 0.33, 0.19), horse_dark=(0.17, 0.12, 0.09), hoof=(0.20, 0.19, 0.18), canvas=(0.80, 0.77, 0.68),
+    tack=(0.19, 0.12, 0.08),
     # ships
     hull=(0.44, 0.30, 0.18), hull2=(0.38, 0.26, 0.16), hull_wet=(0.26, 0.22, 0.17), deck=(0.66, 0.52, 0.34),
-    tar=(0.14, 0.13, 0.12), ochre=(0.82, 0.62, 0.30), copper=(0.66, 0.42, 0.28), rope=(0.30, 0.24, 0.17),
-    rail=(0.34, 0.24, 0.15), lamp=(0.90, 0.78, 0.45),
+    tar=(0.14, 0.13, 0.12), ochre=(0.74, 0.55, 0.26), copper=(0.66, 0.42, 0.28), rope=(0.30, 0.24, 0.17),
+    rail=(0.34, 0.24, 0.15), lamp=(0.80, 0.68, 0.38),
 )
 TINT = (0.82, 0.82, 0.82)  # neutral base of recoloured parts (the shader multiplies it with the owner's colour)
 TINT_DARK = (0.56, 0.56, 0.56)
@@ -225,11 +225,12 @@ class Model:
                 f.normal_flip()
 
     # ---- primitives
-    def box(self, a, b, col, tint=0, bottom=False, bevel=0.0, edges='v', paint=None, jit=None):
+    def box(self, a, b, col, tint=0, bottom=False, bevel=0.0, edges='v', paint=None, jit=None, top=True):
+        """an axis box; the bottom is left out unless asked for, the top can be left out where a roof covers it"""
         x0, y0, z0 = a
         x1, y1, z1 = b
         P = [(x1 if i & 1 else x0, y1 if i & 2 else y0, z1 if i & 4 else z0) for i in range(8)]
-        F = [(4, 5, 7, 6), (0, 1, 5, 4), (2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5)] + ([(0, 2, 3, 1)] if bottom else [])
+        F = ([(4, 5, 7, 6)] if top else []) + [(0, 1, 5, 4), (2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5)] + ([(0, 2, 3, 1)] if bottom else [])
         fs = [f for f in self.mesh(P, F, paint or (col, tint), jit) if f is not None]
         if bevel > 0:
             self.bevel(fs, bevel, edges)
@@ -289,14 +290,21 @@ class Model:
             if is_closed:
                 self.fix_closed(fs)
             elif orient == 'auto':
+                # a loft is consistently wound by construction (every inner edge is used once in each direction), so
+                # it is only ever flipped as a whole: the band faces vote, weighted by area, on whether they face away
+                # from the line through the ring centres. Flipping faces one by one would turn the inner faces of a
+                # non-convex section (a hull's bulwarks and deck) the wrong way and break the winding at their edges.
                 M = self.stack[-1]
+                vote = 0.0
                 for f, r in zip(fs, refs):
                     if f is None or r is None:
                         continue
-                    rw = M @ r
                     c = f.calc_center_median()
-                    if newell([v.co for v in f.verts]).dot(c - rw) < 0:
-                        f.normal_flip()
+                    vote += newell([v.co for v in f.verts]).dot(c - M @ r)
+                if vote < 0:
+                    for f in fs:
+                        if f is not None:
+                            f.normal_flip()
         return [f for f in fs if f is not None]
 
     def lathe(self, prof, n, paint, phase=None, a0=None, a1=None, sx=1.0, sy=1.0, deform=None, cap0=False, cap1=False,
@@ -433,9 +441,10 @@ class Model:
         o, u, v, n = V(o) + V(n) * eps, V(u), V(v), V(n)
         return self.poly([o + u * a + v * b for a, b in uv], col, tint, n, jit)
 
-    def gable_roof(self, x0, x1, D, ztop, over, zr, t, col, col2=None, rows=3, edge=None, under=None, xo=0.06):
+    def gable_roof(self, x0, x1, D, ztop, over, zr, t, col, col2=None, rows=3, edge=None, under=None, xo=0.06, ends=(True, True)):
         """a gable roof along x over a wall of half-depth D whose top is at ztop: the underside rests on the wall
-        top edge; eaves overhang by 'over', the gables by xo. Returns the eave height of the top surface."""
+        top edge; eaves overhang by 'over', the gables by xo. ends=(west, east) leaves out the end strips where
+        another roof covers them. Returns the eave height of the top surface."""
         ze = (ztop + t) * (D + over) / D - zr * over / D
         Y = D + over
         X0, X1 = x0 - xo, x1 + xo
@@ -451,8 +460,9 @@ class Model:
                 self.poly([(X0, ya, za), (X1, ya, za), (X1, yb, zb), (X0, yb, zb)], c, hint=(0, side * (zr - ze), Y))
             self.poly([(X0, ye, ze - t), (X1, ye, ze - t), (X1, 0, zr - t), (X0, 0, zr - t)], under, hint=(0, -side * (zr - ze), -Y))
             self.poly([(X0, ye, ze), (X1, ye, ze), (X1, ye, ze - t), (X0, ye, ze - t)], edge, hint=(0, side, 0))
-            for xe, sx in ((X0, -1), (X1, 1)):
-                self.poly([(xe, ye, ze), (xe, 0, zr), (xe, 0, zr - t), (xe, ye, ze - t)], edge, hint=(sx, 0, 0))
+            for xe, sx, keep in ((X0, -1, ends[0]), (X1, 1, ends[1])):
+                if keep:
+                    self.poly([(xe, ye, ze), (xe, 0, zr), (xe, 0, zr - t), (xe, ye, ze - t)], edge, hint=(sx, 0, 0))
         return ze
 
     def gable_wall(self, x, D, ztop, zr, t, col, sx):
@@ -513,6 +523,9 @@ class Model:
             for v in bm.verts:
                 v.co.x -= cx
                 v.co.y -= cy
+        # faces made with bm.faces.new carry no normal yet; the triangulator projects each n-gon along its normal,
+        # so without this a concave outline (stepped gables, gun carriage cheeks) comes out folded over itself
+        bm.normal_update()
         bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')
         tris = []
         for f in bm.faces:
@@ -695,13 +708,14 @@ def rope(m, a, b, r=0.006):
 # trees and bushes (kept to 60..110 triangles: the map draws up to a quarter of a million of them)
 # ----------------------------------------------------------------------------------------------------------------
 def tree_conifer_a():
-    """a spruce: four drooping star-shaped tiers on a short trunk"""
+    """a Norway spruce: four drooping star-shaped tiers on a short trunk; a lighter rim of new growth on every tier"""
     m = Model('tree_conifer_a')
     m.lathe([(0.075, 0.0), (0.045, 0.52)], 5, (C['bark_dark'], 0))
-    tiers = [(0.26, 1.02, 0.57, C['spruce0']), (0.60, 1.36, 0.47, C['spruce1']), (0.94, 1.70, 0.36, C['spruce2']),
-             (1.28, 2.06, 0.23, C['spruce3'])]
+    tiers = [(0.26, 1.02, 0.57), (0.60, 1.36, 0.47), (0.94, 1.70, 0.36), (1.28, 2.06, 0.23)]
     k = 5
-    for i, (z0, z1, r, col) in enumerate(tiers):
+    for i, (z0, z1, r) in enumerate(tiers):
+        lift = 1.0 + 0.06 * i  # the upper tiers catch more light
+        base, tipc = mulc(C['spruce'], lift), mulc(C['spruce_tip'], lift)
         ph = i * 0.73 + 0.2
         pts = []
         for s in range(2 * k):
@@ -713,33 +727,36 @@ def tree_conifer_a():
         under = V((0, 0, z0 + 0.16))
         for s in range(2 * k):
             a, b = pts[s], pts[(s + 1) % (2 * k)]
-            mid = (a + b) / 2
-            m.poly([a, b, top], mulc(col, 1.06 if s % 2 == 0 else 0.94), hint=(mid.x, mid.y, r * 0.8), jit=0.05)
+            hint = ((a + b) / 2).x, ((a + b) / 2).y, r * 0.8
+            # split the face from the branch tip T to the notch N along N -> Q (Q on the edge T-apex, shared with the
+            # face on the other side of the tip, so no T-junctions): the outer triangle is the light new growth
+            t, n = (a, b) if s % 2 == 0 else (b, a)
+            q = t + (top - t) * 0.42
+            shade = 1.05 if s % 2 == 0 else 0.95
+            if s % 2 == 0:
+                m.poly([t, n, q], mulc(tipc, shade), hint=hint, jit=0.05)
+                m.poly([q, n, top], mulc(base, shade), hint=hint, jit=0.05)
+            else:
+                m.poly([n, t, q], mulc(tipc, shade), hint=hint, jit=0.05)
+                m.poly([n, q, top], mulc(base, shade), hint=hint, jit=0.05)
             m.poly([b, a, under], C['spruce_under'], hint=(0, 0, -1), jit=0.04)
     return m
 
 
 def tree_conifer_b():
-    """a silver fir: slender, five narrow drooping tiers, bluer and darker than the spruce"""
+    """a Scots pine: a tall, slightly leaning trunk, grey-brown at the foot and fox-red above, two bare limbs and a
+    flat, irregular umbrella crown of blue-green pads (reads apart from the spruce's cone at any distance)"""
     m = Model('tree_conifer_b')
-    m.lathe([(0.06, 0.0), (0.04, 0.40)], 5, (C['bark_dark'], 0))
-    tiers = [(0.24, 0.86, 0.40), (0.52, 1.12, 0.34), (0.80, 1.38, 0.27), (1.07, 1.62, 0.20), (1.32, 1.92, 0.13)]
-    k = 4
-    for i, (z0, z1, r) in enumerate(tiers):
-        col = mixc(C['pine_lo'], C['pine'], i / 4)
-        ph = i * 0.9 + 0.4
-        pts = []
-        for s_ in range(2 * k):
-            a = ph + TAU * s_ / (2 * k)
-            tip = s_ % 2 == 0
-            rr = r * (1.0 if tip else 0.66) * m.rand(0.94, 1.06)
-            pts.append(V((rr * math.cos(a), rr * math.sin(a), z0 - (0.04 if tip else -0.03))))
-        top, under = V((0, 0, z1)), V((0, 0, z0 + 0.12))
-        for s_ in range(2 * k):
-            a, b = pts[s_], pts[(s_ + 1) % (2 * k)]
-            mid = (a + b) / 2
-            m.poly([a, b, top], mulc(col, 1.07 if s_ % 2 == 0 else 0.93), hint=(mid.x, mid.y, r * 0.8), jit=0.05)
-            m.poly([b, a, under], C['spruce_under'], hint=(0, 0, -1), jit=0.04)
+    trunk = [(0, 0, 0), (0.02, 0.01, 0.42), (0.055, 0.02, 0.92), (0.08, 0.02, 1.50)]
+    m.tube(trunk, [0.072, 0.056, 0.044, 0.03], 5, lambda i, j: ((C['bark_grey'] if i == 0 else C['bark_pine']), 0), cap0=False,
+           cap1=False)
+    m.limb((0.05, 0.02, 0.98), (-0.27, 0.05, 1.30), 0.026, 0.012, 4, C['bark_pine'], cap0=False, cap1=False)
+    m.limb((0.07, 0.02, 1.18), (0.33, -0.07, 1.42), 0.022, 0.011, 4, C['bark_pine'], cap0=False, cap1=False)
+    lo, mid, hi = C['scots_lo'], C['scots'], C['scots_hi']
+    for c, r in (((0.08, 0.02, 1.64), (0.42, 0.38, 0.17)), ((-0.30, 0.06, 1.34), (0.27, 0.24, 0.11)),
+                 ((0.36, -0.08, 1.46), (0.25, 0.23, 0.11)), ((0.02, 0.06, 1.88), (0.25, 0.23, 0.12)),
+                 ((0.10, 0.24, 1.50), (0.21, 0.19, 0.10))):
+        m.blob(c, r, lo, mid, hi, jitter=0.12)
     return m
 
 
@@ -807,9 +824,9 @@ def house_timber():
     W0, D0, W1, D1 = 0.40, 0.28, 0.44, 0.32
     z1, z2, z3, zr, t = 0.42, 0.46, 0.80, 1.30, 0.04
     m.box((-W0 - 0.012, -D0 - 0.012, 0), (W0 + 0.012, D0 + 0.012, 0.07), C['stone_dark'])
-    m.box((-W0, -D0, 0.07), (W0, D0, z1), C['plaster'])
+    m.box((-W0, -D0, 0.07), (W0, D0, z1), C['plaster'], top=False)  # (under the jetty)
     m.box((-W1 + 0.01, -D1 + 0.01, z1), (W1 - 0.01, D1 - 0.01, z2), C['timber'], bottom=True)
-    m.box((-W1, -D1, z2), (W1, D1, z3), C['plaster2'])
+    m.box((-W1, -D1, z2), (W1, D1, z3), C['plaster2'], top=False)  # (under the roof)
     m.gable_roof(-W1, W1, D1, z3, 0.09, zr, t, C['roof_red'], C['roof_red2'], rows=3, xo=0.07)
     m.ridge(-W1 - 0.07, W1 + 0.07, zr + 0.005, 0.03, mulc(C['roof_red'], 0.8))
     tb, gl = C['timber'], C['glass']
@@ -1062,7 +1079,8 @@ def church_gothic():
     # chancel and apse
     CX0, CX1, CD, CH, CR = NX1, 1.15, 0.27, 0.90, 1.42
     m.box((CX0 - 0.02, -CD, 0), (CX1, CD, CH), st)
-    ze = m.gable_roof(CX0, CX1, CD, CH, 0.05, CR, 0.035, sl, C['slate2'], rows=2, xo=0.0)
+    # (its east end lies under the apse roof, which starts on the same edge)
+    ze = m.gable_roof(CX0, CX1, CD, CH, 0.05, CR, 0.035, sl, C['slate2'], rows=2, xo=0.0, ends=(True, False))
     ring = [V((CX1 + CD * math.cos(a), CD * math.sin(a), 0)) for a in [-PI / 2 + k * PI / 4 for k in range(5)]]
     for k in range(4):
         a, b = ring[k], ring[k + 1]
@@ -1222,7 +1240,7 @@ def castle():
                     pennant(m, (0, 0, 2.24), 0.30, 0.10, direction=(1, 0.2, 0), droop=0.03)
     # gatehouse
     GX, GY0, GY1, GH = 0.45, -A - 0.20, -A + Wt + 0.12, 1.30
-    m.box((-GX, GY0, 0), (GX, GY1, GH), st, bevel=0.02)
+    m.box((-GX, GY0, 0), (GX, GY1, GH), st, bevel=0.02, top=False)  # (the parapet band's top closes it)
     m.box((-GX - 0.04, GY0 - 0.04, GH - 0.10), (GX + 0.04, GY1 + 0.04, GH), mulc(st, 0.9), bottom=True)
     ge = 0.035
     m.merlons((-GX - 0.04, GY0 - 0.04 + ge), (GX + 0.04, GY0 - 0.04 + ge), GH, 4, st)
@@ -1236,7 +1254,7 @@ def castle():
         m.decal(o, u, v, n, (uc, 0.80, uc + 0.04, 1.02), C['opening'])
     # keep
     KX, KY0, KY1, KH = 0.62, 0.05, 1.15, 2.15
-    m.box((-KX, KY0, 0), (KX, KY1, KH), mulc(st, 1.04), bevel=0.03)
+    m.box((-KX, KY0, 0), (KX, KY1, KH), mulc(st, 1.04), bevel=0.03, top=False)  # (the parapet band's top closes it)
     m.box((-KX - 0.045, KY0 - 0.045, KH - 0.12), (KX + 0.045, KY1 + 0.045, KH), mulc(st, 0.9), bottom=True)
     ke = 0.03
     m.merlons((-KX + 0.10, KY0 - 0.045 + ke), (KX - 0.10, KY0 - 0.045 + ke), KH, 4, st)
@@ -1262,7 +1280,7 @@ def castle():
     flag(m, 0.015, KH + 0.66, KH + 1.08, 0.64, cols=4, rows=2, wave=0.05, plane_y=(KY0 + KY1) / 2)
     # hall in the bailey
     with m.xf(T(1.00, -0.25, 0) @ Rz(PI / 2)):
-        m.box((-0.62, -0.18, 0), (0.62, 0.18, 0.62), C['plaster'])
+        m.box((-0.62, -0.18, 0), (0.62, 0.18, 0.62), C['plaster'], top=False)
         m.gable_roof(-0.62, 0.62, 0.18, 0.62, 0.05, 0.95, 0.03, C['roof_red'], C['roof_red2'], rows=2, xo=0.04)
         m.gable_wall(0.62, 0.18, 0.62, 0.95, 0.03, C['plaster'], 1)
         m.gable_wall(-0.62, 0.18, 0.62, 0.95, 0.03, C['plaster'], -1)
@@ -1287,9 +1305,9 @@ def town_wall_tower():
     m.box((TW, 0.10, 0.95), (1.25, 0.14, 1.0), mulc(st, 0.9))
     m.merlons((-1.20, -0.105), (-TW - 0.04, -0.105), 0.95, 4, st)
     m.merlons((TW + 0.04, -0.105), (1.20, -0.105), 0.95, 4, st)
-    m.box((-TW, -TW, 0), (TW, TW, TH), mulc(st, 1.03), bevel=0.02)
+    m.box((-TW, -TW, 0), (TW, TW, TH), mulc(st, 1.03), bevel=0.02, top=False)  # (under the band and the roof)
     m.box((-TW - 0.03, -TW - 0.03, 0.0), (TW + 0.03, TW + 0.03, 0.18), mulc(st, 0.86))
-    m.box((-TW - 0.04, -TW - 0.04, TH - 0.14), (TW + 0.04, TW + 0.04, TH), mulc(st, 0.9), bottom=True)
+    m.box((-TW - 0.04, -TW - 0.04, TH - 0.14), (TW + 0.04, TW + 0.04, TH), mulc(st, 0.9), bottom=True, top=False)
     m.hip_roof(-TW - 0.10, TW + 0.10, -TW - 0.10, TW + 0.10, TH - 0.02, TH + 0.62, 0.03, C['roof_red'], C['roof_red2'], rows=3)
     m.lathe([(0.0, TH + 0.60), (0.02, TH + 0.64), (0.0, TH + 0.72)], 4, (C['gold'], 0))
     for side, (o, u, v, n, w) in wall_frames(-TW, -TW, TW, TW).items():
@@ -1352,15 +1370,20 @@ def legs(m, col_l=C['hose'], col_r=C['hose'], boots=C['boot'], top=0.42, spread=
     for sx, col, tn in ((-1, col_l, tint_l), (1, col_r, tint_r)):
         x = sx * spread
         m.tube([(x, 0.0, 0.05), (x * 1.04, 0.0, 0.22), (x * 1.08, -0.005, top)], [0.035, 0.04, 0.05], 5, (col, tn), cap0=False, cap1=False)
-        m.box((x - 0.036, -0.045, 0), (x + 0.036, 0.085, 0.065), boots)
+        # an ankle boot, a little longer than the leg is thick, with a lower toe
+        m.box((x - 0.031, -0.036, 0), (x + 0.031, 0.040, 0.055), boots)
+        m.box((x - 0.029, 0.040, 0), (x + 0.029, 0.066, 0.034), mulc(boots, 0.9))
 
 
-def arm(m, sx, shoulder, elbow, wrist, sleeve, hand=C['skin'], r=0.046, tint=0):
-    m.tube([shoulder, elbow, wrist], [r, r * 0.88, r * 0.75], 5, (sleeve, tint), cap0=True, cap1=False)
-    w = V(wrist)
-    d = (w - V(elbow)).normalized()
-    c = w + d * 0.035
-    m.blob((c.x, c.y, c.z), (0.03, 0.03, 0.034), hand, hand, hand, jitter=0.0, spin=0.3)
+def arm(m, sx, shoulder, elbow, hand, sleeve, skin=C['skin'], r=0.046, tint=0, fist=0.032):
+    """an arm from the shoulder through the elbow to a fist centred on 'hand': weapons are placed so that their
+    shaft runs through that point, so the fist closes round them. Returns the wrist (for cuffs)."""
+    h, e = V(hand), V(elbow)
+    d = (h - e).normalized()
+    wrist = h - d * (fist * 0.85)
+    m.tube([shoulder, elbow, wrist], [r, r * 0.88, r * 0.75], 5, (sleeve, tint))  # the cap at the wrist is the cuff
+    m.blob((h.x, h.y, h.z), (fist, fist, fist * 1.15), skin, skin, skin, jitter=0.0, spin=0.3)
+    return wrist
 
 
 def head(m, z=0.80, skin=C['skin']):
@@ -1388,36 +1411,43 @@ def sword_at_hip(m, side=-1):
 
 
 def soldier_infantry():
-    """a man-at-arms on foot: kettle hat, gambeson under a tinted tabard, spear and heater shield"""
+    """a man-at-arms on foot: kettle hat, gambeson under a tinted tabard, a spear gripped in the right fist and a
+    heater shield on the left arm"""
     m = Model('soldier_infantry')
     legs(m)
     body(m, pattern='tabard')
     head(m)
     kettle_hat(m)
-    # right arm: spear upright; left arm: shield in front
-    arm(m, 1, (0.165, 0.0, 0.735), (0.20, 0.03, 0.57), (0.205, 0.10, 0.50), C['gambeson'])
-    spear(m, 0.205, 0.135, 0.02, 1.36)
-    arm(m, -1, (-0.165, 0.0, 0.735), (-0.205, 0.05, 0.57), (-0.16, 0.14, 0.52), C['gambeson'])
+    sx, sy = 0.205, 0.135  # the spear's line
+    arm(m, 1, (0.165, 0.0, 0.735), (0.215, 0.02, 0.58), (sx, sy, 0.53), C['gambeson'])
+    spear(m, sx, sy, 0.02, 1.36)
+    arm(m, -1, (-0.165, 0.0, 0.735), (-0.205, 0.05, 0.57), (-0.165, 0.15, 0.53), C['gambeson'])
     shield(m, (-0.19, 0.19, 0.52), (-0.38, 0.92, 0.0), 0.27, 0.36)
     sword_at_hip(m, 1)
     return m
 
 
 def morion(m, z=0.875):
+    """a combed morion: the brim sweeps up into points at front and back, a tall comb runs over the crown"""
     def dfm(p):
         r = math.hypot(p.x, p.y)
         if r > 0.10:
-            p.z += 0.045 * (p.y / r) ** 2 - 0.006
+            k = (p.y / r) ** 2
+            p.y *= 1.0 + 0.16 * k
+            p.z += 0.085 * k ** 1.5 - 0.008
         return p
-    m.lathe([(0.072, z + 0.012), (0.145, z - 0.004), (0.145, z + 0.008), (0.078, z + 0.026), (0.074, z + 0.075), (0.045, z + 0.115),
-             (0.0, z + 0.124)], 8, lambda i, j: ((mulc(C['steel'], 0.85) if i == 0 else C['steel']), 0), deform=dfm)
-    pts = [(0, -0.075, z + 0.06), (0, -0.05, z + 0.135), (0, 0.0, z + 0.17), (0, 0.05, z + 0.135), (0, 0.075, z + 0.06)]
-    verts = [V(p) for p in pts] + [V((0, 0, z + 0.06))]
-    m.slab(verts, [(5, 0, 1), (5, 1, 2), (5, 2, 3), (5, 3, 4)], 0.012, (1, 0, 0), (C['steel'], 0), (C['steel'], 0), (C['steel_dark'], 0))
+    m.lathe([(0.072, z + 0.012), (0.152, z - 0.004), (0.152, z + 0.008), (0.078, z + 0.026), (0.074, z + 0.075), (0.045, z + 0.115),
+             (0.0, z + 0.124)], 8, lambda i, j: ((mulc(C['steel'], 0.85) if i == 0 else C['steel']), 0), deform=dfm, phase=0.0)
+    pts = [(0, -0.088, z + 0.05), (0, -0.07, z + 0.15), (0, -0.03, z + 0.205), (0, 0.02, z + 0.215), (0, 0.06, z + 0.18),
+           (0, 0.088, z + 0.05)]
+    verts = [V(p) for p in pts] + [V((0, 0, z + 0.05))]
+    k = len(pts)
+    m.slab(verts, [(k, i, i + 1) for i in range(k - 1)], 0.016, (1, 0, 0), (C['steel'], 0), (C['steel'], 0), (C['steel_dark'], 0))
 
 
 def soldier_pikeman():
-    """a pikeman: crested morion, steel breastplate over a tinted doublet, parti-coloured hose, a long pike"""
+    """a pikeman: combed morion, steel breastplate, pauldrons and tassets over a tinted doublet, parti-coloured
+    hose, a pike of 2.8 figure heights (about 5 m) gripped upright in the right fist, a sword at the left hip"""
     m = Model('soldier_pikeman')
     legs(m, col_l=TINT, col_r=C['hose_light'], tint_l=1)
     body(m, pattern='full')
@@ -1427,17 +1457,29 @@ def soldier_pikeman():
         rings.append([V((rx * math.cos(a), ry * math.sin(a), z)) for a in [PI * 0.12 + k * PI * 0.76 / 4 for k in range(5)]])
     m.loft(rings, (C['steel'], 0), closed=False, orient='auto')
     m.lathe([(0.10, 0.75), (0.085, 0.80)], 8, (C['steel'], 0), sy=0.8)
+    # tassets: two plates hanging from the breastplate over the thighs
+    for sx in (-1, 1):
+        x = sx * 0.068
+        verts = [V((x - 0.058, 0.095, 0.475)), V((x + 0.058, 0.095, 0.475)), V((x + sx * 0.012 + 0.052, 0.085, 0.36)),
+                 V((x + sx * 0.012 - 0.052, 0.085, 0.36))]
+        m.slab(verts, [(0, 1, 2, 3)], 0.016, (0, 1, 0.1), (C['steel'], 0), (C['steel_dark'], 0), (C['steel_dark'], 0))
+    # pauldrons: steel caps over the shoulders
+    for sx in (-1, 1):
+        with m.xf(T(sx * 0.158, 0.0, 0.705) @ Ry(sx * 0.55)):
+            m.lathe([(0.066, -0.035), (0.068, 0.0), (0.05, 0.04), (0.0, 0.055)], 6, (C['steel'], 0), sy=0.95)
     head(m)
     morion(m)
-    arm(m, 1, (0.165, 0.0, 0.735), (0.205, 0.04, 0.58), (0.20, 0.10, 0.56), TINT_DARK, tint=1)
-    spear(m, 0.20, 0.135, 0.0, 2.02, r=0.011, head_len=0.13, head_w=0.018)
-    arm(m, -1, (-0.165, 0.0, 0.735), (-0.20, 0.03, 0.58), (-0.15, 0.06, 0.48), TINT_DARK, tint=1)
+    px, py = 0.20, 0.135  # the pike's line
+    arm(m, 1, (0.165, 0.0, 0.735), (0.222, 0.04, 0.55), (px, py, 0.64), TINT_DARK, tint=1)
+    spear(m, px, py, 0.0, 2.68, r=0.011, head_len=0.13, head_w=0.018)
     sword_at_hip(m, -1)
+    arm(m, -1, (-0.165, 0.0, 0.735), (-0.205, 0.0, 0.58), (-0.14, 0.04, 0.58), TINT_DARK, tint=1)  # resting on the hilt
     return m
 
 
 def soldier_archer():
-    """a longbowman: hood, tinted livery coat, a longbow held at his left side and a quiver of arrows"""
+    """a longbowman: hood, tinted livery coat, a strung longbow as tall as he is gripped in his left fist, a quiver
+    of arrows on the right hip"""
     m = Model('soldier_archer')
     legs(m)
     body(m, pattern='full')
@@ -1448,19 +1490,26 @@ def soldier_archer():
     m.lathe([(0.088, 0.80), (0.08, 0.93)], 6, (hc, 0), a0=PI / 2 + 0.55, a1=PI / 2 + TAU - 0.55)
     m.lathe([(0.08, 0.93), (0.05, 0.99), (0.0, 1.0)], 8, (hc, 0))
     m.tube([(0, -0.06, 0.96), (0, -0.12, 0.92), (0, -0.15, 0.82)], [0.03, 0.02, 0.0], 4, (hc, 0), cap1=False)
-    # arms: right hand at the quiver, left hand holds the bow
+    # arms: the right hand rests by the quiver, the left fist holds the bow at its grip
     arm(m, 1, (0.165, 0.0, 0.735), (0.21, -0.02, 0.57), (0.20, 0.06, 0.47), TINT_DARK, tint=1)
-    arm(m, -1, (-0.165, 0.0, 0.735), (-0.21, 0.04, 0.58), (-0.22, 0.12, 0.52), TINT_DARK, tint=1)
-    grip = V((-0.225, 0.165, 0.535))
+    grip = V((-0.215, 0.115, 0.51))
+    arm(m, -1, (-0.165, 0.0, 0.735), (-0.22, 0.03, 0.58), grip, TINT_DARK, tint=1)
     ang = math.radians(35)
-    bulge = V((-math.sin(ang), math.cos(ang), 0))  # the bow's back points forward and a little outward
+    back = V((-math.sin(ang), math.cos(ang), 0))  # the bow's back faces forward and a little outward
+    half, brace = 0.49, 0.075
     pts, radii = [], []
     for k in range(7):
         s = -1 + 2 * k / 6
-        pts.append(grip + V((0, 0, 0.47 * s)) + bulge * (0.075 * (1 - s * s)))
-        radii.append(0.013 - 0.006 * abs(s))
+        # the grip sits in the fist; the limbs bend back towards the string, which runs behind the grip
+        pts.append(grip + V((0, 0, half * s)) + back * (brace * (1 - s * s) - brace))
+        radii.append(0.014 - 0.007 * abs(s))
     m.tube(pts, radii, 4, (C['wood_light'], 0))
-    m.limb(pts[0] + V((0, 0, 0.01)), pts[-1] - V((0, 0, 0.01)), 0.003, 0.003, 3, C['canvas'], cap0=False, cap1=False)
+    # the string: a thin plate from nock to nock, broad side across the bow so it shows from the front and back
+    side = back.cross(V((0, 0, 1))).normalized()
+    a, b = pts[0] + V((0, 0, 0.012)), pts[-1] - V((0, 0, 0.012))
+    w = 0.0045
+    m.slab([a - side * w, a + side * w, b + side * w, b - side * w], [(0, 1, 2, 3)], 0.003, back, (C['canvas'], 0), (C['canvas'], 0),
+           (C['canvas'], 0))
     # quiver on the right hip, arrows sticking out
     q0, q1 = V((0.15, -0.08, 0.34)), V((0.19, -0.13, 0.70))
     m.limb(q0, q1, 0.035, 0.04, 6, C['leather'])
@@ -1472,8 +1521,9 @@ def soldier_archer():
 
 
 def soldier_musketeer():
-    """a musketeer: broad-brimmed hat with a tinted plume, long tinted coat with dark cuffs, bandolier,
-    matchlock on the shoulder and a forked rest"""
+    """a musketeer: broad-brimmed hat with a tinted plume, long tinted coat with dark cuffs, bandolier, a matchlock
+    shouldered at about 35 degrees (butt in the left fist in front, barrel over the left shoulder) and a forked rest
+    in the right fist"""
     m = Model('soldier_musketeer')
     legs(m, col_l=(0.40, 0.36, 0.32), col_r=(0.40, 0.36, 0.32), top=0.34)
     body(m, z0=0.25, hem=0.165, pattern='coat')
@@ -1489,12 +1539,19 @@ def soldier_musketeer():
         verts += [p + V((0, 0, w)), p - V((0, 0, w * 0.4))]
     polys = [(2 * k, 2 * k + 1, 2 * k + 3, 2 * k + 2) for k in range(3)]
     m.slab(verts, polys, 0.014, (1, 1, 0.5), (TINT_LIGHT, 1), (TINT, 1), (TINT, 1))
-    # arms: left hand holds the musket butt, right hand the rest
-    arm(m, -1, (-0.165, 0.0, 0.735), (-0.20, 0.06, 0.58), (-0.15, 0.13, 0.55), TINT, tint=1)
-    arm(m, 1, (0.165, 0.0, 0.735), (0.205, 0.03, 0.57), (0.195, 0.09, 0.53), TINT, tint=1)
-    # cuffs
-    for c in (V((-0.155, 0.12, 0.555)), V((0.197, 0.08, 0.535))):
-        m.blob((c.x, c.y, c.z + 0.01), (0.04, 0.04, 0.03), C['tar'], C['felt_hat'], C['felt_hat'], jitter=0.0, spin=0.0)
+    # the musket: it rests on the left shoulder and slopes up behind him at about 35 degrees
+    rest = V((-0.178, 0.0, 0.795))
+    d = V((-0.08, -math.cos(math.radians(35)), math.sin(math.radians(35)))).normalized()
+    butt = rest - d * 0.31
+    lh = rest - d * 0.235  # the left fist round the wrist of the stock
+    rx, ry = 0.195, 0.13   # the rest's line
+    rh = V((rx, ry, 0.56))
+    wl = arm(m, -1, (-0.165, 0.0, 0.735), (-0.215, 0.07, 0.585), lh, TINT, tint=1)
+    wr = arm(m, 1, (0.165, 0.0, 0.735), (0.215, 0.03, 0.58), rh, TINT, tint=1)
+    for c in (wl, wr):  # dark turned-back cuffs
+        m.blob((c.x, c.y, c.z), (0.04, 0.04, 0.03), C['tar'], C['felt_hat'], C['felt_hat'], jitter=0.0, spin=0.0)
+    m.tube([butt, butt + d * 0.13, butt + d * 0.36], [0.03, 0.022, 0.016], 4, (C['wood'], 0), up=(1, 0, 0), aspect=1.35)
+    m.limb(butt + d * 0.32, butt + d * 0.98, 0.011, 0.010, 5, C['steel_dark'])
     # bandolier with powder flasks
     a, b = V((-0.14, 0.0, 0.78)), V((0.15, 0.0, 0.46))
     m.tube([a + V((0, 0.105, 0)), (a + b) / 2 + V((0, 0.115, 0)), b + V((0, 0.10, 0))], 0.014, 4, (C['leather'], 0), up=(0, 1, 0),
@@ -1504,13 +1561,7 @@ def soldier_musketeer():
     for k in range(4):
         p = a + (b - a) * (0.25 + k * 0.17) + V((0, 0.12, -0.03))
         m.box((p.x - 0.014, p.y - 0.012, p.z - 0.04), (p.x + 0.014, p.y + 0.012, p.z + 0.02), C['wood_dark'], bottom=True)
-    # musket over the left shoulder
-    butt = V((-0.153, 0.168, 0.48))
-    d = (V((-0.14, 0.0, 0.79)) - V((-0.15, 0.13, 0.55))).normalized()
-    m.tube([butt, butt + d * 0.14, butt + d * 0.34], [0.028, 0.022, 0.016], 4, (C['wood'], 0), up=(1, 0, 0), aspect=1.3)
-    m.limb(butt + d * 0.30, butt + d * 0.95, 0.011, 0.010, 5, C['steel_dark'])
     # forked rest
-    rx, ry = 0.195, 0.13
     m.limb((rx, ry, 0.0), (rx, ry, 0.84), 0.008, 0.008, 4, C['wood_dark'], cap0=False)
     m.limb((rx, ry, 0.84), (rx - 0.03, ry, 0.90), 0.007, 0.006, 3, C['steel_dark'], cap0=False)
     m.limb((rx, ry, 0.84), (rx + 0.03, ry, 0.90), 0.007, 0.006, 3, C['steel_dark'], cap0=False)
@@ -1519,95 +1570,127 @@ def soldier_musketeer():
 
 
 def soldier_cavalry():
-    """a knight: a bay horse walking forward (+y) under a tinted trapper with a light hem, head turned a little to
-    the right; the rider in a tinted surcoat and great helm with a tinted crest, an upright lance with a pennon,
-    shield on his left side"""
+    """a knight on a bay destrier walking forward (+y). The neck is arched and the head carried high, well forward
+    of the rider and turned a little to his right, so that it clears his silhouette both from behind and from the
+    front. A tinted caparison with a dagged hem covers the back and upper flanks but leaves the legs, the belly, the
+    chest and the rump free. Saddle, bridle and breast strap are dark leather against the bay coat. The rider wears a
+    tinted surcoat and a great helm with a tinted crest, holds an upright lance with a pennon and carries his shield
+    on the left."""
     m = Model('soldier_cavalry')
-    hc, hd = C['horse'], C['horse_dark']
+    hc, hd, tk = C['horse'], C['horse_dark'], C['tack']
+    # body barrel: (y, centre z, half width, half height), rump at -y, chest at +y
+    spec = [(-0.61, 0.79, 0.06, 0.07), (-0.56, 0.79, 0.15, 0.16), (-0.42, 0.77, 0.20, 0.19), (-0.16, 0.73, 0.19, 0.18),
+            (0.10, 0.74, 0.185, 0.185), (0.29, 0.78, 0.155, 0.17), (0.40, 0.83, 0.075, 0.10)]
+
+    def at(y):
+        for (y0, *a), (y1, *b) in zip(spec, spec[1:]):
+            if y0 <= y <= y1:
+                t = (y - y0) / (y1 - y0)
+                return [a[k] + (b[k] - a[k]) * t for k in range(3)]
+        return spec[0][1:] if y < spec[0][0] else spec[-1][1:]
+
+    rings = [[V((rx * math.cos(a), y, cz + rz * math.sin(a))) for a in [PI / 8 + k * TAU / 8 for k in range(8)]] for y, cz, rx, rz in spec]
+    m.loft(rings, (hc, 0), cap0=True, cap1=True)
 
     def leg(pts, radii):
         m.tube(pts, radii, 5, lambda i, j: ((hc if i < len(pts) - 2 else hd), 0), cap0=False, cap1=False)
         b = V(pts[-1])
-        m.box((b.x - 0.032, b.y - 0.035, max(0.0, b.z - 0.05)), (b.x + 0.032, b.y + 0.045, b.z + 0.012), C['hoof'])
+        m.box((b.x - 0.036, b.y - 0.04, max(0.0, b.z - 0.05)), (b.x + 0.036, b.y + 0.05, b.z + 0.012), C['hoof'])
     for sx in (-1, 1):
-        x = sx * 0.088
-        if sx < 0:  # front left lifted in the walk
-            leg([(x, 0.24, 0.60), (x, 0.31, 0.36), (x, 0.28, 0.22), (x, 0.32, 0.13)], [0.062, 0.036, 0.03, 0.028])
+        x = sx * 0.10
+        if sx < 0:  # the near fore lifted in the walk
+            leg([(x, 0.27, 0.68), (x, 0.34, 0.40), (x, 0.31, 0.25), (x, 0.36, 0.15)], [0.072, 0.042, 0.034, 0.031])
         else:
-            leg([(x, 0.24, 0.60), (x, 0.25, 0.34), (x, 0.25, 0.14), (x, 0.26, 0.05)], [0.062, 0.036, 0.03, 0.028])
-        hx = x * 1.05
-        leg([(hx, -0.36, 0.66), (hx, -0.29, 0.45), (hx, -0.40, 0.26), (hx, -0.37, 0.05)], [0.075, 0.052, 0.032, 0.028])
-    # body
-    spec = [(-0.53, 0.73, 0.06, 0.06), (-0.47, 0.72, 0.13, 0.14), (-0.31, 0.70, 0.165, 0.17), (-0.05, 0.67, 0.16, 0.165),
-            (0.20, 0.69, 0.155, 0.17), (0.34, 0.73, 0.12, 0.15), (0.41, 0.78, 0.06, 0.08)]
-    rings = [[V((rx * math.cos(a), y, cz + rz * math.sin(a))) for a in [PI / 8 + k * TAU / 8 for k in range(8)]] for y, cz, rx, rz in spec]
-    m.loft(rings, (hc, 0), cap0=True, cap1=True)
-    # trapper: a cloth over the back and flanks, shorter towards the ends, with a light hem band
+            leg([(x, 0.27, 0.68), (x, 0.28, 0.38), (x, 0.28, 0.16), (x, 0.29, 0.05)], [0.072, 0.042, 0.034, 0.031])
+        hx = sx * 0.115
+        dy = 0.04 if sx > 0 else 0.0
+        leg([(hx, -0.40 + dy, 0.74), (hx, -0.31 + dy, 0.48), (hx, -0.43 + dy, 0.28), (hx, -0.40 + dy, 0.05)], [0.088, 0.058, 0.036, 0.031])
+    # caparison: a cloth over the back and upper flanks, shorter at both ends, its hem cut into deep points (every
+    # other ring hangs lower), a light border above the hem. It stops short of the rump and the chest.
     cap_rings = []
-    for (y, cz, rx, rz, hem) in [(-0.38, 0.715, 0.17, 0.165, 0.56), (-0.26, 0.70, 0.19, 0.19, 0.47), (-0.06, 0.675, 0.185, 0.185, 0.43),
-                                 (0.12, 0.685, 0.18, 0.19, 0.45), (0.27, 0.71, 0.155, 0.17, 0.55)]:
-        R = rx + 0.02
-        pts = [(R + 0.01, hem), (R + 0.008, hem + 0.045), (R + 0.004, cz - 0.05), (R * 0.88, cz + rz * 0.62), (R * 0.48, cz + rz + 0.02),
-               (0.0, cz + rz + 0.035)]
+    ys = [-0.45, -0.35, -0.25, -0.14, -0.03, 0.08, 0.18, 0.27]
+    for k, y in enumerate(ys):
+        cz, rx, rz = at(y)
+        R = rx + 0.022
+        end = 1.0 if k in (0, len(ys) - 1) else 0.0
+        hem = 0.585 + (0.0 if k % 2 == 0 else 0.085) + 0.07 * end
+        z2 = hem + 0.045
+        z3 = max(z2 + 0.03, cz - 0.02)
+        pts = [(R + 0.012, hem), (R + 0.010, z2), (R + 0.004, z3), (R * 0.88, cz + rz * 0.62), (R * 0.48, cz + rz + 0.022),
+               (0.0, cz + rz + 0.032)]
         pts = pts + [(-x, z) for x, z in reversed(pts[:-1])]
         cap_rings.append([V((x, y, z)) for x, z in pts])
     nr = len(cap_rings[0])
-    m.loft(cap_rings, lambda i, j: ((C['canvas'], 0) if j in (0, nr - 2) else ((TINT, 1) if j != nr - 1 else (TINT_DARK, 1))),
-           cap0=True, cap1=True)
-    # neck and head, turned a little to the right; ears, mane, tail
-    m.tube([(0, 0.30, 0.80), (0.02, 0.44, 0.98), (0.05, 0.54, 1.12)], [0.11, 0.082, 0.062], 6, (hc, 0), up=(1, 0, 0), aspect=1.35,
+    m.loft(cap_rings, lambda i, j: ((C['canvas'], 0) if j in (0, nr - 2) else ((TINT, 1) if j != nr - 1 else (TINT_DARK, 1))), cap0=True, cap1=True)
+    # neck: rising steeply from the withers and arched at the crest, turned to the rider's right
+    m.tube([(0, 0.30, 0.86), (0.035, 0.45, 1.08), (0.10, 0.56, 1.27)], [0.125, 0.10, 0.074], 6, (hc, 0), up=(1, 0, 0), aspect=1.35,
            cap0=False, cap1=False)
-    m.tube([(0.05, 0.53, 1.17), (0.07, 0.64, 1.07), (0.09, 0.77, 0.94)], [0.058, 0.062, 0.042], 6,
-           lambda i, j: ((hc if i < 1 else mulc(hc, 0.85)), 0), up=(1, 0, 0), aspect=1.25)
-    m.limb((0.07, 0.66, 1.06), (0.09, 0.76, 0.97), 0.04, 0.034, 4, C['steel'], cap0=False, up=(1, 0, 0))
+    # head: poll at about z 1.36, muzzle well forward at y 0.88
+    poll, muzzle = V((0.115, 0.585, 1.335)), V((0.175, 0.875, 1.065))
+    hm = poll + (muzzle - poll) * 0.45 + V((0, 0.012, 0.02))
+    m.tube([poll, hm, muzzle], [0.064, 0.064, 0.044], 6, lambda i, j: ((hc if i < 1 else mulc(hc, 0.84)), 0), up=(1, 0, 0), aspect=1.25)
+    # steel chanfron down the face, ears, mane, forelock, tail
+    m.limb(poll + (muzzle - poll) * 0.30 + V((0, 0.03, 0.045)), muzzle + V((0, 0.02, 0.03)), 0.044, 0.032, 4, C['steel'], cap0=False,
+           up=(1, 0, 0))
     for sx in (-1, 1):
-        m.limb((0.05 + sx * 0.03, 0.53, 1.20), (0.05 + sx * 0.04, 0.50, 1.27), 0.02, 0.0, 3, hc, cap0=False)
-    mane = [V((0.0, 0.22, 0.92)), V((0.015, 0.34, 1.04)), V((0.035, 0.45, 1.15)), V((0.05, 0.52, 1.24))]
-    verts = [p + V((0, -0.025, 0.02)) for p in mane] + [p + V((0, 0.02, -0.04)) for p in mane]
-    m.slab(verts, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6)], 0.035, (1, 0, 0), (hd, 0), (hd, 0), (hd, 0))
-    m.tube([(0, -0.52, 0.76), (0, -0.62, 0.66), (0, -0.66, 0.46), (0.02, -0.64, 0.24)], [0.04, 0.052, 0.042, 0.0], 5, (hd, 0))
-    # saddle
-    m.box((-0.12, -0.20, 0.855), (0.12, 0.12, 0.89), C['leather'])
-    m.box((-0.10, -0.21, 0.89), (0.10, -0.17, 0.98), C['leather'])
-    m.box((-0.07, 0.09, 0.89), (0.07, 0.12, 0.95), C['leather'])
-    # rider: legs in plate, surcoat, arms, great helm
+        e0 = poll + V((sx * 0.032, -0.01, 0.03))
+        m.limb(e0, e0 + V((sx * 0.014, -0.035, 0.095)), 0.022, 0.0, 3, hc, cap0=False)
+    mane = [V((0.0, 0.22, 0.95)), V((0.025, 0.36, 1.12)), V((0.07, 0.47, 1.27)), V((0.105, 0.55, 1.37))]
+    verts = [p + V((0, -0.03, 0.02)) for p in mane] + [p + V((0, 0.025, -0.05)) for p in mane]
+    m.slab(verts, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6)], 0.04, (1, 0, 0), (hd, 0), (hd, 0), (hd, 0))
+    m.tube([(0, -0.59, 0.86), (0, -0.67, 0.76), (0.0, -0.71, 0.54), (0.02, -0.69, 0.30)], [0.042, 0.062, 0.055, 0.0], 5, (hd, 0),
+           up=(1, 0, 0), aspect=0.65)
+    # tack in dark leather: saddle with a high cantle and pommel, breast strap, browband and noseband, reins
+    m.box((-0.13, -0.21, 0.93), (0.13, 0.12, 0.965), tk)
+    m.box((-0.11, -0.22, 0.965), (0.11, -0.18, 1.07), tk)
+    m.box((-0.075, 0.09, 0.965), (0.075, 0.12, 1.03), tk)
+    m.tube([(-0.17, 0.20, 0.86), (-0.12, 0.37, 0.76), (0.0, 0.42, 0.73), (0.12, 0.37, 0.76), (0.17, 0.20, 0.86)], 0.016, 4, (tk, 0),
+           up=(0, 0, 1), aspect=1.6)
+    hd_dir = (muzzle - poll).normalized()
+    for f, r in ((0.12, 0.069), (0.78, 0.052)):
+        c = poll + (muzzle - poll) * f
+        with m.xf(T(c.x, c.y, c.z) @ hd_dir.to_track_quat('Z', 'X').to_matrix().to_4x4()):
+            m.lathe([(r, -0.012), (r, 0.012)], 6, (tk, 0), sy=1.25, cap0=True, cap1=True)
+    lh = V((-0.09, 0.20, 1.165))
+    bit = poll + (muzzle - poll) * 0.82
     for sx in (-1, 1):
-        m.tube([(sx * 0.09, -0.05, 0.92), (sx * 0.23, 0.08, 0.82), (sx * 0.245, 0.04, 0.58)], [0.052, 0.042, 0.035], 5,
-               (C['steel'], 0), cap0=False)
-        m.box((sx * 0.245 - 0.03, 0.0, 0.52), (sx * 0.245 + 0.03, 0.12, 0.57), C['steel_dark'])
-    with m.xf(T(0, -0.04, 0.60)):
-        body(m, z0=0.28, hem=0.20, pattern='full', belt=C['leather'])
-    m.tube([(0.165, -0.04, 1.33), (0.215, 0.0, 1.17), (0.225, 0.11, 1.10)], [0.05, 0.044, 0.038], 5, (C['steel'], 0), cap1=False)
-    m.tube([(-0.165, -0.04, 1.33), (-0.21, 0.02, 1.17), (-0.11, 0.17, 1.08)], [0.05, 0.044, 0.038], 5, (C['steel'], 0), cap1=False)
-    m.blob((0.226, 0.15, 1.10), (0.03, 0.03, 0.035), C['steel_dark'], C['steel_dark'], C['steel_dark'], jitter=0, spin=0)
-    m.blob((-0.09, 0.20, 1.08), (0.03, 0.03, 0.035), C['steel_dark'], C['steel_dark'], C['steel_dark'], jitter=0, spin=0)
-    # reins
-    m.limb((-0.09, 0.20, 1.07), (0.04, 0.72, 1.0), 0.005, 0.005, 3, C['leather'], cap0=False, cap1=False)
-    m.limb((-0.09, 0.20, 1.07), (0.12, 0.70, 1.0), 0.005, 0.005, 3, C['leather'], cap0=False, cap1=False)
-    # great helm with a slit and a tinted crest
-    with m.xf(T(0, -0.035, 0)):
-        z = 1.39
-        m.lathe([(0.078, z), (0.084, z + 0.06), (0.084, z + 0.075), (0.082, z + 0.10), (0.07, z + 0.135), (0.0, z + 0.15)], 8,
-                lambda i, j: ((C['opening'] if (i == 1 and j in (1, 2)) else C['steel']), 0), phase=PI / 8)
-        m.lathe([(0.06, z - 0.06), (0.078, z)], 8, (C['steel_dark'], 0), phase=PI / 8)
-        m.limb((0, 0.0, z + 0.14), (0, -0.04, z + 0.25), 0.03, 0.012, 4, TINT, tint=1)
-    # lance with a pennon
-    hand = V((0.226, 0.15, 1.10))
-    d = V((0, 0.16, 1)).normalized()
-    butt = hand - d * 0.45
-    tip = hand + d * 0.95
-    m.tube([butt, hand - d * 0.04, hand + d * 0.06, tip], [0.016, 0.02, 0.016, 0.009], 5, (C['wood_light'], 0))
-    with m.xf(T(hand.x, hand.y, hand.z) @ Rx(-math.atan2(d.y, d.z))):
-        m.lathe([(0.018, 0.04), (0.05, 0.10), (0.018, 0.10)], 6, (C['steel'], 0))
-    m.limb(tip, tip + d * 0.10, 0.012, 0.0, 4, C['steel'], cap0=False)
-    t0, b0 = tip - d * 0.03, tip - d * 0.19
-    back = V((0, -1, 0))
-    pen = [t0, b0, t0 + back * 0.15 + V((0.015, 0, -0.012)), b0 + back * 0.15 + V((0.015, 0, -0.012)),
-           t0 + back * 0.31 + V((0.0, 0, -0.035)), (t0 + b0) / 2 + back * 0.21 + V((0.01, 0, -0.025)), b0 + back * 0.31 + V((0.0, 0, -0.035))]
-    polys = [(0, 1, 3, 2), (2, 3, 5), (2, 5, 4), (3, 6, 5)]
-    m.slab(pen, polys, 0.008, (1, 0, 0), (TINT, 1), (TINT, 1), (TINT_DARK, 1))
-    # shield on the left side
-    shield(m, (-0.25, 0.0, 1.10), (-0.92, -0.38, 0.0), 0.24, 0.32)
+        m.limb(lh, bit + V((sx * 0.05, 0, -0.02)), 0.006, 0.006, 3, tk, cap0=False, cap1=False)
+    # rider: legs in plate, surcoat, arms, great helm (all raised to sit in the saddle)
+    with m.xf(T(0, 0, 0.09)):
+        for sx in (-1, 1):
+            m.tube([(sx * 0.09, -0.05, 0.92), (sx * 0.25, 0.08, 0.82), (sx * 0.265, 0.04, 0.58)], [0.052, 0.042, 0.035], 5,
+                   (C['steel'], 0), cap0=False)
+            m.box((sx * 0.265 - 0.03, 0.0, 0.52), (sx * 0.265 + 0.03, 0.12, 0.57), C['steel_dark'])
+            m.limb((sx * 0.20, -0.02, 0.84), (sx * 0.265, 0.05, 0.55), 0.008, 0.008, 3, tk)  # stirrup leather
+        with m.xf(T(0, -0.04, 0.60)):
+            body(m, z0=0.28, hem=0.20, pattern='full', belt=C['leather'])
+        m.tube([(0.165, -0.04, 1.33), (0.215, 0.0, 1.17), (0.225, 0.12, 1.10)], [0.05, 0.044, 0.036], 5, (C['steel'], 0))
+        m.tube([(-0.165, -0.04, 1.33), (-0.21, 0.02, 1.17), (-0.10, 0.18, 1.08)], [0.05, 0.044, 0.036], 5, (C['steel'], 0))
+        m.blob((0.226, 0.15, 1.10), (0.032, 0.032, 0.037), C['steel_dark'], C['steel_dark'], C['steel_dark'], jitter=0, spin=0)
+        m.blob((-0.09, 0.20, 1.075), (0.03, 0.03, 0.035), C['steel_dark'], C['steel_dark'], C['steel_dark'], jitter=0, spin=0)
+        with m.xf(T(0, -0.035, 0)):
+            z = 1.39
+            m.lathe([(0.078, z), (0.084, z + 0.06), (0.084, z + 0.075), (0.082, z + 0.10), (0.07, z + 0.135), (0.0, z + 0.15)], 8,
+                    lambda i, j: ((C['opening'] if (i == 1 and j in (1, 2)) else C['steel']), 0), phase=PI / 8)
+            m.lathe([(0.06, z - 0.06), (0.078, z)], 8, (C['steel_dark'], 0), phase=PI / 8)
+            m.limb((0, 0.0, z + 0.14), (0, -0.04, z + 0.25), 0.03, 0.012, 4, TINT, tint=1)
+        # lance with a pennon, its shaft running through the right fist
+        hand = V((0.226, 0.15, 1.10))
+        d = V((0, 0.16, 1)).normalized()
+        butt = hand - d * 0.45
+        tip = hand + d * 0.95
+        m.tube([butt, hand - d * 0.04, hand + d * 0.06, tip], [0.016, 0.02, 0.016, 0.009], 5, (C['wood_light'], 0))
+        with m.xf(T(hand.x, hand.y, hand.z) @ Rx(-math.atan2(d.y, d.z))):
+            m.lathe([(0.018, 0.04), (0.05, 0.10), (0.018, 0.10)], 6, (C['steel'], 0))
+        m.limb(tip, tip + d * 0.10, 0.012, 0.0, 4, C['steel'], cap0=False)
+        t0, b0 = tip - d * 0.03, tip - d * 0.19
+        back = V((0, -1, 0))
+        pen = [t0, b0, t0 + back * 0.15 + V((0.015, 0, -0.012)), b0 + back * 0.15 + V((0.015, 0, -0.012)),
+               t0 + back * 0.31 + V((0.0, 0, -0.035)), (t0 + b0) / 2 + back * 0.21 + V((0.01, 0, -0.025)),
+               b0 + back * 0.31 + V((0.0, 0, -0.035))]
+        polys = [(0, 1, 3, 2), (2, 3, 5), (2, 5, 4), (3, 6, 5)]
+        m.slab(pen, polys, 0.008, (1, 0, 0), (TINT, 1), (TINT, 1), (TINT_DARK, 1))
+        shield(m, (-0.27, 0.0, 1.10), (-0.92, -0.38, 0.0), 0.24, 0.32)
     return m
 
 
@@ -1620,8 +1703,8 @@ def cannon():
     prof = [(0.0, -0.46), (0.032, -0.445), (0.022, -0.41), (0.082, -0.39), (0.082, -0.34), (0.076, -0.33), (0.072, 0.06),
             (0.08, 0.065), (0.08, 0.10), (0.064, 0.11), (0.056, 0.47), (0.07, 0.50), (0.07, 0.56), (0.042, 0.56), (0.0, 0.53)]
     with m.xf(T(0, 0.0, 0.47) @ Rx(-PI / 2)):
-        m.lathe(prof, 8, lambda i, j: ((C['opening'] if i == 13 else (mulc(C['bronze'], 1.12) if i in (3, 7, 11) else C['bronze'])), 0))
-    m.limb((-0.12, 0.0, 0.47), (0.12, 0.0, 0.47), 0.025, 0.025, 6, mulc(C['bronze'], 0.9), up=(0, 0, 1))
+        m.lathe(prof, 8, lambda i, j: ((C['opening'] if i == 13 else (mulc(C['bronze'], 1.07) if i in (3, 7, 11) else C['bronze'])), 0))
+    m.limb((-0.128, 0.0, 0.47), (0.128, 0.0, 0.47), 0.025, 0.025, 6, mulc(C['bronze'], 0.9), up=(0, 0, 1))  # trunnions
     # carriage cheeks (split trail)
     side = [(0.14, 0.33), (0.14, 0.48), (0.02, 0.50), (-0.30, 0.38), (-0.86, 0.10), (-0.92, 0.0), (-0.80, 0.0), (-0.30, 0.22),
             (0.0, 0.30)]
@@ -1811,8 +1894,8 @@ def ship_galley():
     # outrigger frame and gangway
     for sx in (-1, 1):
         m.box((sx * 0.20 if sx > 0 else -0.34, -0.85, 0.17), (0.34 if sx > 0 else -0.20, 0.80, 0.21), C['wood'], bottom=True)
-    for yy in (-0.85, 0.80):
-        m.box((-0.34, yy - 0.02, 0.17), (0.34, yy + 0.02, 0.21), C['wood'], bottom=True)
+    for yy in (-0.85, 0.80):  # cross beams, a little lower than the side rails so their faces do not coincide
+        m.box((-0.335, yy - 0.02, 0.165), (0.335, yy + 0.02, 0.205), C['wood'], bottom=True)
     m.box((-0.05, -0.90, 0.18), (0.05, 0.95, 0.23), C['deck'])
     # oars
     for sx in (-1, 1):
@@ -2015,7 +2098,8 @@ def ship_ship_of_the_line():
         m.slab(verts, polys, 0.01, (1, 0, 0), (TINT, 1), (mulc(TINT, 0.86), 1), (mulc(TINT, 0.8), 1))
     # bowsprit, jib-boom and jibs
     m.limb((0, 1.18, 0.66), (0, 2.02, 1.12), 0.035, 0.015, 5, C['wood'])
-    for (top, foot_a, foot_b) in (((0, 0.88, 2.30), (0, 1.40, 0.82), (0, 1.98, 1.10)), ((0, 0.88, 1.85), (0, 1.25, 0.76), (0, 1.62, 0.92))):
+    # (the staysail is sheeted a little to the side so that it does not share a plane with the jib)
+    for (top, foot_a, foot_b) in (((0, 0.88, 2.30), (0, 1.40, 0.82), (0, 1.98, 1.10)), ((0.05, 0.88, 1.85), (0.05, 1.25, 0.76), (0.05, 1.62, 0.92))):
         verts, polys = tri_grid(V(foot_a), V(foot_b), V(top), 2, lambda wa, wb, wc: (0.05 * 27 * wa * wb * wc * 0.5, 0, 0))
         m.slab(verts, polys, 0.01, (1, 0, 0), (TINT_LIGHT, 1), (mulc(TINT, 0.86), 1), (mulc(TINT, 0.8), 1))
         rope(m, top, foot_b)
