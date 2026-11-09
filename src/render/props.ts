@@ -64,6 +64,8 @@ fn grow(ia: vec4f, ib: vec4f) -> f32 {
 fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
   let c = cos(ib.x); let s = sin(ib.x);
   var mp = pos * ia.w * grow(ia, ib);
+  // on the march: a steady bob (soldiers step, ships ride the swell)
+  if (ib.z < -0.5) { mp.z += abs(sin(U0.cam.z * 6.0 + ia.x * 3.1 + ia.y * 1.7)) * 0.06 * ia.w; }
   // trees lean a little in the wind (more at the top)
   let sway = sin(U0.cam.z * 1.3 + ia.x * 0.37 + ia.y * 0.21) * 0.035 * step(1.0, ib.z) * pos.z;
   mp.x += sway * ia.w;
@@ -113,7 +115,9 @@ fn place(pos: vec3f, ia: vec4f, ib: vec4f) -> vec3f {
   let dif = max(dot(n, sun), 0.0);
   let sky = 0.5 + 0.5 * n.z;
   let base = mix(i.col, vec3f(0.95, 0.96, 1.0), i.snow * 0.85);
-  var col = base * (0.36 * sky + 0.24 + 0.72 * dif);
+  // the camera looks north, so most visible walls face away from the north-west sun: a soft fill light from the south
+  let fill = max(dot(n, normalize(vec3f(0.3, 0.9, 0.5))), 0.0);
+  var col = base * (0.3 * sky + 0.34 + 0.62 * dif + 0.26 * fill);
   // darker where the figure meets the ground
   col *= mix(0.62, 1.0, smoothstep(0.0, 0.35, i.h));
   // the same blue haze as the land at a distance
@@ -254,8 +258,9 @@ interface Chunk { buf: GPUBuffer; runs: Run[]; used: number; n: number }
 
 export type TownStyle = 'north' | 'stone' | 'south' | 'steppe' | 'muslim';
 export interface Settlement { x: number; y: number; size: number; capital?: boolean; style: TownStyle; loc: number }
-/** x, y: where the figures stand (figureSpot) */
-export interface UnitProp { x: number; y: number; men: number; fleet: boolean; color: [number, number, number] }
+/** x, y: where the figures stand (figureSpot); heading: course of ships under way (radians, see setUnits); marching: on the move */
+export interface UnitProp { id: number; x: number; y: number; men: number; fleet: boolean; color: [number, number, number]; heading?: number; marching?: boolean }
+interface UnitGroup { id: number; ax: number; ay: number; fleet: boolean; march: boolean; parts: { dx: number; dy: number; s: number; r: number; c: number; mesh: string }[] }
 
 /** where the figures of an army stand: a little in front (south-east) of the town at the location's centre */
 export function figureSpot(x: number, y: number, fleet: boolean, slot = 0): [number, number] {
@@ -277,7 +282,9 @@ export class Props {
   private settlements: Settlement[] = [];
   private townBuf: GPUBuffer | null = null; private townRuns = new Map<number, Run[]>();
   private townCircles = new Map<number, number[]>();
-  private units: { inst: Inst; mesh: string }[] = [];
+  private units: UnitGroup[] = [];
+  /** the animated place of moving hosts (set by the renderer each frame) */
+  unitSpot?: (id: number) => [number, number] | undefined;
   private dynRuns: Run[] = [];
   private hidden: Uint8Array | null = null;
   private ncx: number; private ncy: number;
@@ -518,44 +525,47 @@ export class Props {
 
   /** armies (a block of soldiers with a standard, more for larger hosts) and fleets (one to three ships) */
   setUnits(list: UnitProp[]) {
-    const out: { inst: Inst; mesh: string }[] = [];
+    const out: UnitGroup[] = [];
     for (const u of list) {
       const c = ((u.color[0] & 255) << 16) | ((u.color[1] & 255) << 8) | (u.color[2] & 255);
-      const ax = u.x, ay = u.y; // the spot of the figures (see figureSpot)
+      const parts: UnitGroup['parts'] = [];
       if (u.fleet) {
         const n = u.men >= 30 ? 3 : u.men >= 10 ? 2 : 1;
         const mesh = u.men >= 20 ? 'ship_carrack' : 'ship_cog';
+        // under way the ships turn their bows to the course (models point the bow to +y, north)
+        const r = u.heading !== undefined ? u.heading : 0.6;
+        for (let i = 0; i < n; i++) parts.push({ dx: (i - (n - 1) / 2) * 3.2 * (S_SHIP / 1.7), dy: (i % 2) * 1.6, s: S_SHIP, r, c, mesh });
+      } else {
+        const n = clamp(Math.round(2 + Math.log2(Math.max(1, u.men / 1000)) * 1.5), 2, 12);
+        const sp = 0.5 * S_SOLDIER;
+        const cols = Math.min(4, n);
         for (let i = 0; i < n; i++) {
-          const x = ax + (i - (n - 1) / 2) * 3.2 * (S_SHIP / 1.7), y = ay + (i % 2) * 1.6;
-          out.push({ inst: { x, y, z: 0.05, s: S_SHIP, r: 0.6, c }, mesh });
+          const row = Math.floor(i / cols), col = i % cols;
+          const x = (col - (cols - 1) / 2) * sp + row * sp * 0.5, y = row * sp * 0.8;
+          const mesh = n >= 5 && (i === n - 1 || (n >= 9 && i === n - 2)) ? 'soldier_cavalry' : row === 0 ? (i % 2 ? 'soldier_infantry' : 'soldier_pikeman') : i % 3 === 0 ? 'soldier_archer' : 'soldier_pikeman';
+          parts.push({ dx: mesh === 'soldier_cavalry' ? x + sp * 1.2 : x, dy: y, s: S_SOLDIER * (mesh === 'soldier_cavalry' ? 0.95 : 1), r: 0, c, mesh });
         }
-        continue;
+        if (u.men >= 15000) parts.push({ dx: -sp * (cols / 2 + 1.2), dy: sp, s: S_SOLDIER, r: 0.4, c, mesh: 'cannon' });
+        parts.push({ dx: -sp * (cols / 2 + 0.6), dy: -sp * 0.3, s: S_SOLDIER, r: 0, c, mesh: 'banner_standard' });
       }
-      const n = clamp(Math.round(2 + Math.log2(Math.max(1, u.men / 1000)) * 1.5), 2, 12);
-      const sp = 0.5 * S_SOLDIER;
-      const cols = Math.min(4, n);
-      for (let i = 0; i < n; i++) {
-        const row = Math.floor(i / cols), col = i % cols;
-        const x = ax + (col - (cols - 1) / 2) * sp + row * sp * 0.5, y = ay + row * sp * 0.8;
-        const mesh = n >= 5 && (i === n - 1 || (n >= 9 && i === n - 2)) ? 'soldier_cavalry' : row === 0 ? (i % 2 ? 'soldier_infantry' : 'soldier_pikeman') : i % 3 === 0 ? 'soldier_archer' : 'soldier_pikeman';
-        const x2 = mesh === 'soldier_cavalry' ? x + sp * 1.2 : x;
-        out.push({ inst: { x: x2, y, z: this.zAt(x2, y), s: S_SOLDIER * (mesh === 'soldier_cavalry' ? 0.95 : 1), r: 0, c }, mesh });
-      }
-      if (u.men >= 15000) { const x = ax - sp * (cols / 2 + 1.2), y = ay + sp; out.push({ inst: { x, y, z: this.zAt(x, y), s: S_SOLDIER, r: 0.4, c }, mesh: 'cannon' }); }
-      const bx = ax - sp * (cols / 2 + 0.6), by = ay - sp * 0.3;
-      out.push({ inst: { x: bx, y: by, z: this.zAt(bx, by), s: S_SOLDIER, r: 0, c }, mesh: 'banner_standard' });
+      out.push({ id: u.id, ax: u.x, ay: u.y, fleet: u.fleet, march: !!u.marching, parts });
     }
     this.units = out;
   }
 
-  /** upload the units near enough to draw this frame */
-  private prepareUnits(scaleAt: (x: number, y: number, z: number) => number) {
+  /** upload the units near enough to draw this frame (spot(id) gives the animated place of a host, if it is moving) */
+  private prepareUnits(scaleAt: (x: number, y: number, z: number) => number, spot?: (id: number) => [number, number] | undefined) {
     const groups = new Map<string, Inst[]>();
     let total = 0;
     for (const u of this.units) {
-      if (scaleAt(u.inst.x, u.inst.y, u.inst.z) < SHOW_UNITS * 0.95) continue;
-      let g = groups.get(u.mesh); if (!g) groups.set(u.mesh, (g = []));
-      g.push(u.inst); total++;
+      const at = spot?.(u.id);
+      const ax = at ? at[0] : u.ax, ay = at ? at[1] : u.ay;
+      if (scaleAt(ax, ay, u.fleet ? 0 : this.zAt(ax, ay)) < SHOW_UNITS * 0.9) continue;
+      for (const p of u.parts) {
+        const x = ax + p.dx, y = ay + p.dy;
+        let g = groups.get(p.mesh); if (!g) groups.set(p.mesh, (g = []));
+        g.push({ x, y, z: u.fleet ? 0.05 : this.zAt(x, y), s: p.s, r: p.r, c: p.c, wind: u.march ? -1 : 0 }); total++;
+      }
     }
     this.dynRuns = [];
     this.stats.units = total;
@@ -570,7 +580,7 @@ export class Props {
       this.dynRuns.push({ mesh, first: k / STRIDE, count: g.length });
       for (const i of g) {
         data[k] = i.x; data[k + 1] = i.y; data[k + 2] = i.z; data[k + 3] = i.s; data[k + 4] = i.r;
-        u32[k + 5] = i.c < 0 ? 0xffffffff : i.c; data[k + 6] = 0; data[k + 7] = SHOW_UNITS; k += STRIDE;
+        u32[k + 5] = i.c < 0 ? 0xffffffff : i.c; data[k + 6] = i.wind ?? 0; data[k + 7] = SHOW_UNITS; k += STRIDE;
       }
     }
     this.device.queue.writeBuffer(this.dyn, 0, data);
@@ -602,7 +612,7 @@ export class Props {
     const M = this.models.meshes;
     const chunks = this.visibleChunks(cam, this.zAt);
     this.stats.chunks = chunks.length;
-    this.prepareUnits(scaleAt);
+    this.prepareUnits(scaleAt, this.unitSpot);
     // gather the draws once, run them for the shadows and then for the figures
     const draws: { buf: GPUBuffer; mesh: ModelMesh; first: number; count: number; shadow: boolean }[] = [];
     let budget = this.treeBudget;

@@ -366,9 +366,11 @@ fn groundDetail(base: vec3f, p: vec2f, zoom: f32, light: f32) -> vec3f {
     let edge = (d2 - d1) * 0.5 * fs;          // map px to the furlong edge
     let hf = hash21(bid * 1.37 + 5.1);
     let tilled = hf < cult * 0.95 + 0.05;
-    var fc = meadowCol(ph, dry) * (0.9 + 0.2 * hash21(bid + 9.3));
+    var fc = meadowCol(ph, dry) * (0.9 + 0.2 * hash21(bid + 9.3)) * (0.92 + 0.16 * vnoise(p * 1.3));
     if (tilled) {
-      let ang = hash21(bid + 2.7) * 3.14159;
+      // neighbouring furlongs run in about the same direction (it turns slowly across the land), some at right angles
+      let flow = vnoise((bid * fs) * 0.025 + 3.0) * 3.14159 * 1.5;
+      let ang = flow + (hash21(bid + 2.7) - 0.5) * 0.5 + select(0.0, 1.5708, hash21(bid + 8.1) < 0.3);
       let ca = cos(ang); let sa = sin(ang);
       let q = vec2f(ca * p.x - sa * p.y, sa * p.x + ca * p.y);
       let sw = 0.32 + 0.3 * hash21(bid + 4.4);  // strip width, map px

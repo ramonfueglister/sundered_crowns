@@ -40,6 +40,10 @@ export interface MapUnit {
   hot?: boolean;
   /** where the 3D figures stand (set by the renderer) */
   fx?: number; fy?: number;
+  /** on the march: the next place */
+  toX?: number; toY?: number;
+  /** where the counter stands now while the host glides to x, y (set by the renderer) */
+  ax?: number; ay?: number;
 }
 
 export interface OverlayView {
@@ -373,7 +377,7 @@ export class Overlay {
     const shown: { u: MapUnit; sx: number; sy: number; men: number; n: number; pip: boolean }[] = [];
     for (const i of order) {
       const u = this.units[i];
-      let [sx, sy] = v.toScreen(u.x, u.y);
+      let [sx, sy] = v.toScreen(u.ax ?? u.x, u.ay ?? u.y);
       // figures on the map: the counter floats above them
       if (u.fx !== undefined && u.fy !== undefined && v.toScreenH && v.scaleAt && (u.kind === 'army' || u.kind === 'fleet') && v.scaleAt(u.fx, u.fy) >= (v.figuresFrom ?? Infinity)) {
         [sx, sy] = v.toScreenH(u.fx, u.fy, u.kind === 'fleet' ? 4.2 : 4.6);

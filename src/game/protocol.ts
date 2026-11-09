@@ -46,6 +46,8 @@ export interface NationLite {
 export interface ArmyLite {
   id: number; owner: number; loc: number; x: number; y: number; men: number; fleet: boolean; morale: number; path: number[];
   siege: number; battle: number; rebels: boolean; name: I18n | string; general: string; embarked: boolean; mercenary: boolean;
+  /** share of the way to path[0] already marched (0..1) */
+  prog?: number;
 }
 
 export interface PlayerView {

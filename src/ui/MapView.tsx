@@ -74,10 +74,13 @@ export function MapView() {
         const key = `${a.loc}:${a.owner}:${a.fleet ? 1 : 0}`;
         let u = groups.get(key);
         const n = ns[a.owner];
-        if (!u) { u = { id: a.id, ids: [], x: g.loc.x[a.loc], y: g.loc.y[a.loc], color: n ? n.color : [120, 120, 120], label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels, mine: a.owner === playerId.value, hot: atWar.has(a.owner) || !!a.rebels }; groups.set(key, u); units.push(u); }
+        // a host on the march stands part of the way to the next place
+        let ax = g.loc.x[a.loc], ay = g.loc.y[a.loc];
+        if (a.path.length && a.prog) { const t = a.prog; ax += (g.loc.x[a.path[0]] - ax) * t; ay += (g.loc.y[a.path[0]] - ay) * t; }
+        if (!u) { u = { id: a.id, ids: [], x: ax, y: ay, color: n ? n.color : [120, 120, 120], label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels, mine: a.owner === playerId.value, hot: atWar.has(a.owner) || !!a.rebels }; groups.set(key, u); units.push(u); }
         u.ids.push(a.id); u.men += a.men;
-        if (sel.has(a.id)) { u.selected = true; if (a.path.length) u.path = [[g.loc.x[a.loc], g.loc.y[a.loc]], ...a.path.map((p: number) => [g.loc.x[p], g.loc.y[p]])]; }
-        if (a.path.length) { u.moving = true; u.hot = true; }
+        if (sel.has(a.id)) { u.selected = true; if (a.path.length) u.path = [[ax, ay], ...a.path.map((p: number) => [g.loc.x[p], g.loc.y[p]])]; }
+        if (a.path.length) { u.moving = true; u.hot = true; u.toX = g.loc.x[a.path[0]]; u.toY = g.loc.y[a.path[0]]; }
       }
       for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : u.men >= 1000 ? (u.men / 1000).toFixed(1) + 'k' : String(Math.round(u.men));
       for (const sgi of v.sieges) units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, color: ns[sgi.nation]?.color ?? [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' });

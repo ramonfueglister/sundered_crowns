@@ -38,6 +38,7 @@ export function armyLites(s: GameState, w: World): ArmyLite[] {
   return s.armies.map((a) => ({
     id: a.id, owner: a.owner, loc: a.loc, x: w.x[a.loc], y: w.y[a.loc], men: armyMen(a), fleet: a.fleet, morale: a.morale, path: a.path.slice(0, 60),
     siege: a.siege, battle: a.battle, rebels: !!a.rebels, name: a.name, general: s.chars[a.general]?.name ?? '', embarked: !!a.embarkedOn, mercenary: !!a.mercenary,
+    prog: a.path.length ? Math.min(1, a.progress / Math.max(1, w.distKm(a.loc, a.path[0]))) : 0,
   }));
 }
 

@@ -4,7 +4,7 @@ import { buildCoastSdf } from './coast';
 import { Overlay, type MapLabel, type MapUnit, type MapLandmark } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
 import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
-import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement } from './props';
+import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp } from './props';
 
 export type Quality = 'low' | 'medium' | 'high' | 'ultra';
 export type MapMode = 'political' | 'terrain' | 'flat';
@@ -92,6 +92,8 @@ export class MapRenderer {
   private lodCounts: number[] = [];
   /** trees, towns, armies and fleets as 3D figures */
   props: Props | null = null;
+  /** hosts gliding to their new place: current and target spot of the figures, offset of the figures from the counter */
+  private unitAnim = new Map<number, { x: number; y: number; tx: number; ty: number; ox: number; oy: number; vx: number; vy: number; t0: number; dur: number }>();
   /** time of year (0 = 1 January) and game day, for seasons and weather */
   private season = 0.5; private gameDay = 0; private dayAt = 0;
 
@@ -199,6 +201,7 @@ export class MapRenderer {
     const terMod = this.initTerrain();
     const props = (this.props = new Props(device, a, this.uniformBuf, this.format, (x, y) => this.terrainZ(x, y), this.locBuf, this.idTex));
     props.treeBudget = this.qd.trees; props.shadows = this.qd.shadows;
+    props.unitSpot = (id) => { const an = this.unitAnim.get(id); return an ? [an.x, an.y] : undefined; };
     void props.loadBiome(this.biomeTex);
     void loadModelSet('/').then((m) => { if (m && !this.destroyed) props.setModels(m); });
     for (const m of [mainMod, rivMod, terMod, props.mod]) {
@@ -525,19 +528,49 @@ export class MapRenderer {
 
   setLabels(labels: MapLabel[]) { this.overlay.labels = labels; }
   setUnits(units: MapUnit[]) {
-    // armies and fleets stand as figures a little beside the town; the counter floats above them when they show
+    // armies and fleets stand as figures a little beside the town; the counter floats above them when they show.
+    // Each host glides to its new place instead of jumping (see stepUnits).
     const slots = new Map<string, number>();
-    const figs: { x: number; y: number; men: number; fleet: boolean; color: [number, number, number] }[] = [];
+    const figs: UnitProp[] = [];
+    const seen = new Set<number>();
     for (const u of units) {
       if (u.kind !== 'army' && u.kind !== 'fleet') continue;
       const key = `${Math.round(u.x)}:${Math.round(u.y)}:${u.kind}`;
       const slot = slots.get(key) ?? 0; slots.set(key, slot + 1);
-      const [fx, fy] = figureSpot(u.x, u.y, u.kind === 'fleet', slot);
-      u.fx = fx; u.fy = fy;
-      figs.push({ x: fx, y: fy, men: u.men ?? 1000, fleet: u.kind === 'fleet', color: u.color });
+      const fleet = u.kind === 'fleet';
+      const [fx, fy] = u.moving ? [u.x, u.y] : figureSpot(u.x, u.y, fleet, slot);
+      let an = this.unitAnim.get(u.id);
+      if (!an || Math.hypot(an.tx - fx, an.ty - fy) > 160) an = { x: fx, y: fy, tx: fx, ty: fy, ox: fx - u.x, oy: fy - u.y, vx: 0, vy: 0, t0: this.time, dur: 1 };
+      if (an.tx !== fx || an.ty !== fy) {
+        // marching: keep walking at the pace of the last day until the next report comes in
+        const dur = clamp(this.time - an.t0, 0.15, 60);
+        if (u.moving) { an.vx = (fx - an.tx) / dur; an.vy = (fy - an.ty) / dur; } else { an.vx = 0; an.vy = 0; }
+        an.t0 = this.time; an.dur = dur;
+      }
+      if (!u.moving) { an.vx = 0; an.vy = 0; }
+      an.tx = fx; an.ty = fy; an.ox = fx - u.x; an.oy = fy - u.y;
+      this.unitAnim.set(u.id, an); seen.add(u.id);
+      const heading = fleet && u.moving && u.toX !== undefined && u.toY !== undefined ? Math.atan2(-(u.toX - u.x), -(u.toY - u.y)) : undefined;
+      figs.push({ id: u.id, x: fx, y: fy, men: u.men ?? 1000, fleet, color: u.color, heading, marching: !!u.moving });
     }
+    for (const id of [...this.unitAnim.keys()]) if (!seen.has(id)) this.unitAnim.delete(id);
     this.props?.setUnits(figs);
     this.overlay.units = units;
+    this.stepUnits(0);
+  }
+  /** move every host a little towards its place; the counters follow */
+  private stepUnits(dt: number) {
+    const k = 1 - Math.exp(-dt * 2.5);
+    for (const an of this.unitAnim.values()) {
+      const e = Math.min(this.time - an.t0, an.dur);
+      const gx = an.tx + an.vx * e, gy = an.ty + an.vy * e;
+      an.x += (gx - an.x) * k; an.y += (gy - an.y) * k;
+    }
+    for (const u of this.overlay.units) {
+      const an = this.unitAnim.get(u.id);
+      if (!an) continue;
+      u.fx = an.x; u.fy = an.y; u.ax = an.x - an.ox; u.ay = an.y - an.oy;
+    }
   }
   /** towns and villages drawn as houses (see Props.setSettlements) */
   setSettlements(list: Settlement[]) { this.props?.setSettlements(list); }
@@ -891,6 +924,7 @@ export class MapRenderer {
     const cw = this.canvas.clientWidth, ch = this.canvas.clientHeight;
     if ((cw && cw !== this.cssW) || (ch && ch !== this.cssH)) this.resize();
     this.updateCamera(dt);
+    this.stepUnits(dt);
     this.writeUniforms();
     if (this.locDirty) { this.device.queue.writeBuffer(this.locBuf, 0, this.locData); this.locDirty = false; }
     const enc = this.device.createCommandEncoder();
