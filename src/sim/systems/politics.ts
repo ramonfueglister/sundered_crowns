@@ -228,8 +228,11 @@ export function succession(s: GameState, w: World, n: Nation) {
         const ownJuniors = s.nations.some((x) => x.alive && x.overlord === n.id && x.subjectType === 'personal_union');
         if (other.overlord < 0 && n.overlord < 0 && !s.wars.some((wr) => wr.att.includes(k) && wr.def.includes(n.id))) {
           // the greater crown is the seat of the union: a small claimant's realm joins it as the junior partner
-          const flip = !s.playerNations.includes(k) && !s.nations.some((x) => x.alive && x.overlord === k) && (s.playerNations.includes(n.id) || ownJuniors || nationDevOf(s, n.id) > nationDevOf(s, k) * 1.5);
+          // (a claimant that already shares its ruler with juniors of its own stays the seat; its vassals and tributaries
+          // follow it into the greater crown's union, so a county never holds a kingdom as its junior partner)
+          const flip = !s.playerNations.includes(k) && !s.nations.some((x) => x.alive && x.overlord === k && x.subjectType === 'personal_union') && (s.playerNations.includes(n.id) || ownJuniors || nationDevOf(s, n.id) > nationDevOf(s, k) * 1.5);
           if (flip) {
+            for (const x of s.nations) if (x.alive && x.overlord === k && x.id !== n.id) x.overlord = n.id;
             other.overlord = n.id; other.subjectType = 'personal_union'; other.subjectSince = s.day;
             n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.regent = other.regent || 0; n.dynasty = other.dynasty;
             // the court moves to the seat of the union: ruler, consort, heir and the ruler's children
