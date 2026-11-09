@@ -8,6 +8,7 @@ import { lawEffect, councilBonus } from './politics';
 import { ownedLocs } from './war';
 import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
 import { chance } from '../rng';
+import { SLOW_CONVERSION, ownFaith } from './faith';
 
 // ---------------- control ----------------
 /** Distance-based control from the capital and administrative seats (roads extend reach). */
@@ -64,7 +65,7 @@ function integrationMonth(s: GameState, w: World) {
     const n = s.nations[own];
     if (s.loc.integ[i] >= 1) { if (s.loc.core[i] !== own) s.loc.core[i] = own; continue; }
     const sameC = s.loc.culture[i] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
-    const sameF = s.loc.faith[i] === n.faith ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
+    const sameF = ownFaith(n, s.loc.faith[i]) ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
     const rate = 1 / 120 * s.loc.control[i] * sameC * sameF * (1 + lawEffect(n, 'integration'));
     s.loc.integ[i] = Math.min(1, s.loc.integ[i] + rate);
     if (s.loc.core[i] >= 0 && s.loc.core[i] !== own && !s.nations[s.loc.core[i]]?.alive && s.loc.integ[i] > 0.5) s.loc.core[i] = own;
@@ -85,7 +86,7 @@ export function startAgent(s: GameState, w: World, n: Nation, loc: number, kind:
   s.agents.push({ nation: n.id, loc, kind, progress: 0 });
   return null;
 }
-function agentsMonth(s: GameState, w: World) {
+export function agentsMonth(s: GameState, w: World) {
   for (const a of s.agents.slice()) {
     const n = s.nations[a.nation];
     if (!n?.alive || s.loc.owner[a.loc] !== a.nation) { s.agents.splice(s.agents.indexOf(a), 1); continue; }
@@ -95,6 +96,7 @@ function agentsMonth(s: GameState, w: World) {
       rate *= 1 + councilBonus(s, n, 'chaplain') * 3 + lawEffect(n, 'conversion') + mod(n, 'conversion');
       const fam = faithFamily(s.loc.faith[a.loc]) === faithFamily(n.faith);
       rate *= fam ? 1.2 : 0.7;
+      rate *= SLOW_CONVERSION[s.loc.faith[a.loc]] ?? 1; // Coptic and Syriac communities endure under foreign rule
     } else rate *= 0.6 * (GROUP_OF[ALL_CULTURES[s.loc.culture[a.loc]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.6 : 1) * (1 + lawEffect(n, 'assimilation'));
     a.progress += rate;
     s.loc.unrest[a.loc] = Math.min(100, s.loc.unrest[a.loc] + (a.kind === 'faith' ? 1.2 : 0.6) * (1 - lawEffect(n, 'tolerance')));

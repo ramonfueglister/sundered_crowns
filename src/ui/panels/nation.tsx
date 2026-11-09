@@ -3,10 +3,10 @@ import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
-import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
+import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
-const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access'];
+const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'excommunicate'];
 export const GOALS: WarGoal['type'][] = ['conquest', 'throne', 'faith', 'trade', 'subjugate', 'reconquest', 'independence'];
 const SPY = ['fabricate', 'slander', 'support_rebels', 'steal_tech'];
 
@@ -39,7 +39,7 @@ export function NationPanel({ nation }: { nation: number }) {
     </div>
     <div class="grid2">
       <Row k={t('capital')} v={<a class="lk" onClick={() => flyToLoc(d.capital)}>{placeName(d.capitalName)}</a>} />
-      <Row k={t('faith')} v={L(d.faith)} />
+      <Row k={t('faith')} v={L(d.faith)} tip={() => <FaithTip m={d.faithMechanic} />} />
       <Row k={t('culture')} v={L(d.culture)} />
       <Row k={t('development')} v={num(d.dev)} />
       <Row k={t('army')} v={`${num(d.men)} ${t('men')}`} />
@@ -80,7 +80,7 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   const [gift, setGift] = useState(0);
   const allied = rel.treaties.includes('alliance'), married = rel.treaties.includes('marriage'), access = rel.treaties.includes('access');
   const proposals = PROPOSALS.filter((a) => !(a === 'alliance' && allied) && !(a === 'marriage' && married) && !(a === 'access' && access) && !(a === 'trade' && rel.treaties.includes('trade')) && !(a === 'guarantee' && rel.treaties.includes('guarantee')) && !(a !== 'improve' && rel.atWar));
-  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'fabricate' && rel.atWar));
+  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'fabricate' && rel.atWar) && !(a === 'excommunicate' && !rel.canExcommunicate));
   const key = proposals.join(',') + d.id;
   useEffect(() => {
     let live = true;
@@ -161,3 +161,13 @@ function Espionage({ d }: { d: any }) {
   </Section>;
 }
 void lang; void pct; void reasonLabel;
+
+/** The faith's own mechanic (src/sim/systems/faith.ts) and what it does for this realm at the moment. */
+function FaithTip({ m }: { m: any }) {
+  if (!m?.name) return null;
+  return <div class="faith-tip">
+    <div class="bd-title">{t('faith_mechanic')}: {L(m.name)}</div>
+    <div class="muted small">{L(m.desc)}</div>
+    {m.active?.length ? m.active.map((x: any) => <Effects title={L(x.label)} fx={x.effects} />) : <div class="muted small">{t('faith_mechanic_idle')}</div>}
+  </div>;
+}

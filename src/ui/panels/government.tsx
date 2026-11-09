@@ -47,7 +47,7 @@ export function GovernmentTab() {
       </Section>
     </div>
     <Section title={t('modifiers')} id="gov-mods">
-      {r.modifiers.length ? <div class="chips">{r.modifiers.map((m: any) => <Tip content={() => <div><Effects title={L(m.label)} fx={m.effects} />{m.until < 1e9 && <div class="muted">{t('until')} {fmtDateShort(m.until, view.value?.startYear ?? 1356)}</div>}</div>}><span class={`chip mod ${m.id.startsWith('doc_') ? 'doc' : m.id.startsWith('priv_') ? 'priv' : ''}`}>{L(m.label)}</span></Tip>)}</div> : <div class="muted small">{t('none')}</div>}
+      {r.modifiers.length ? <div class="chips">{r.modifiers.map((m: any) => <Tip content={() => <div><Effects title={L(m.label)} fx={m.effects} />{m.until < 1e9 && !m.id.startsWith('faith_') && <div class="muted">{t('until')} {fmtDateShort(m.until, view.value?.startYear ?? 1356)}</div>}{m.id.startsWith('faith_') && <div class="muted">{t('faith_mechanic')}</div>}</div>}><span class={`chip mod ${m.id.startsWith('doc_') ? 'doc' : m.id.startsWith('priv_') ? 'priv' : m.id.startsWith('faith_') ? 'faith' : ''}`}>{L(m.label)}</span></Tip>)}</div> : <div class="muted small">{t('none')}</div>}
     </Section>
   </div>;
 }

@@ -276,7 +276,7 @@ function dockedAtHome(s: GameState, w: World, a: Army): boolean {
   for (let e = w.adjStart[a.loc]; e < w.adjStart[a.loc + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] === a.owner && s.loc.buildings[v * B + BI.port] > 0) return true; }
   return false;
 }
-function attritionMonth(s: GameState, w: World) {
+export function attritionMonth(s: GameState, w: World) {
   // stack men per location
   const perLoc = new Map<number, number>();
   for (const a of s.armies) if (!a.fleet && !a.embarkedOn) perLoc.set(a.loc * 1000 + a.owner, (perLoc.get(a.loc * 1000 + a.owner) || 0) + armyMen(a));
@@ -301,6 +301,8 @@ function attritionMonth(s: GameState, w: World) {
     att += s.loc.snow[a.loc] * 0.02;
     const n = s.nations[a.owner];
     if (n) att *= 1 + mod(n, 'attrition');
+    // faiths of the forest and the tundra know their own land (finnic_old, sami_old)
+    if (n && s.loc.owner[a.loc] === a.owner) att *= clamp(1 + lawEffect(n, 'home_attrition'), 0.2, 2);
     if (s.loc.owner[a.loc] !== a.owner && atWar(s, a.owner, s.loc.owner[a.loc])) att += 0.005;
     a.supplyDeficit = men > lim ? men / lim - 1 : 0;
     for (const r of a.regs) r.men = Math.max(0, r.men * (1 - att));
@@ -359,7 +361,7 @@ export function hostile(s: GameState, a: Army, b: Army): boolean {
   return atWar(s, a.owner, b.owner);
 }
 
-function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemyKinds: number[]) {
+export function sideStats(s: GameState, w: World, armies: Army[], loc: number, defending: boolean, enemyKinds: number[]) {
   let shock = 0, fire = 0, def = 0, men = 0, morale = 0, cav = 0, inf = 0;
   const n = s.nations[armies[0]?.owner];
   const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(loc, w.L - 1)]] ?? 'plains'];
@@ -377,7 +379,10 @@ function sideStats(s: GameState, w: World, armies: Army[], loc: number, defendin
   }
   const gen = armies.map((a) => s.chars[a.general]).filter(Boolean).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
   const genSkill = gen ? gen.skills[2] : 0;
-  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: defending ? t.defence : 0 };
+  // defenders of their own homeland (faith mechanics: baltic_old, american_traditional, hussite)
+  const home = n && loc < w.L && s.loc.owner[loc] === n.id;
+  const homeDef = home ? Math.max(0, lawEffect(n, 'home_defence')) : 0, homeMorale = home ? Math.max(0, lawEffect(n, 'home_morale')) : 0;
+  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: (defending ? t.defence : 0) + homeDef, homeMorale };
 }
 
 function battleDay(s: GameState, w: World, b: Battle) {
@@ -402,12 +407,12 @@ function battleDay(s: GameState, w: World, b: Battle) {
     dmgToD = (sa.shock * 0.02 + sa.fire * 0.006) * ra * genA * riverPen * winterPen; dmgToA = (sd.shock * 0.02 + sd.fire * 0.006) * rd * genD * winterPen;
   }
   dmgToD /= 1 + sd.terrainDef + sd.def / Math.max(1, sd.men) * 0.25;
-  dmgToA /= 1 + sa.def / Math.max(1, sa.men) * 0.25;
+  dmgToA /= 1 + sa.terrainDef + sa.def / Math.max(1, sa.men) * 0.25; // an attacker's terrainDef is only its homeland defence
   // casualties & morale
   const lossD = Math.min(sd.men, dmgToD) * (b.naval ? 1 / 120 : 1), lossA = Math.min(sa.men, dmgToA) * (b.naval ? 1 / 120 : 1);
   applyLosses(D, lossD); applyLosses(A, lossA);
   b.lossA += lossA; b.lossD += lossD;
-  const mA = (dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03, mD = (dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03;
+  const mA = ((dmgToA / Math.max(1, sa.men)) * 3.2 + 0.03) / (1 + sa.homeMorale), mD = ((dmgToD / Math.max(1, sd.men)) * 3.2 + 0.03) / (1 + sd.homeMorale);
   for (const a of A) a.morale = Math.max(0, a.morale - mA);
   for (const d of D) d.morale = Math.max(0, d.morale - mD);
   const moA = A.reduce((p, x) => p + x.morale, 0) / A.length, moD = D.reduce((p, x) => p + x.morale, 0) / D.length;

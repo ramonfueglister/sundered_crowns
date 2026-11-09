@@ -7,7 +7,7 @@ import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost } from './systems/military';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
-import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial } from './systems/politics';
+import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
 import { takeLoan } from './systems/economy';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
@@ -115,7 +115,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const cost = buildCost(s, n, b, lvl + queued);
       if (n.treasury < cost) return err('not enough gold');
       n.treasury -= cost; n.expenseAcc.construction = (n.expenseAcc.construction || 0) + cost;
-      s.constructions.push({ loc: l, building: b, left: def.months * 30, nation: cmd.n, cost });
+      s.constructions.push({ loc: l, building: b, left: Math.max(30, Math.round(def.months * 30 * clamp(1 + lawEffect(n, 'build_time'), 0.3, 2))), nation: cmd.n, cost }); // build_time: e.g. the Andean labour duty
       return OK;
     }
     case 'declare': {

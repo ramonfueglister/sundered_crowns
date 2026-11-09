@@ -194,6 +194,16 @@ const S: Record<string, [string, string]> = {
   r_base: ['Base attitude', 'Grundhaltung'], r_common_threat: ['Common threat', 'Gemeinsame Bedrohung'], r_diplomat: ['Diplomatic nature', 'Diplomatisches Wesen'], r_enough_allies: ['Enough allies already', 'Schon genug Verbündete'], r_has_allies: ['Has allies', 'Hat Verbündete'],
   r_heathen: ['Heathen', 'Andersgläubig'], r_isolationist: ['Inward-looking', 'Zurückgezogen'], r_no_dynasty: ['No ruling dynasty', 'Keine Herrscherdynastie'], r_opinion: ['Opinion of us', 'Meinung über uns'], r_relative_strength: ['Relative strength', 'Kräfteverhältnis'], r_too_far: ['Too far away', 'Zu weit entfernt'],
   r_trader: ['Trading nature', 'Händlerwesen'], r_trust: ['Trust', 'Vertrauen'], r_you_are_at_war: ['We are at war', 'Wir führen Krieg'],
+  // ---- depth track: faith mechanics (src/sim/systems/faith.ts) ----
+  faith_mechanic: ['Faith mechanic', 'Glaubensmechanik'], faith_mechanic_idle: ['No effect on this realm at the moment.', 'Derzeit ohne Wirkung auf dieses Reich.'],
+  acthint_excommunicate: ['Costs 50 favour with the Curia. The banned ruler loses Mandate and Concord, Latin realms think less of him, his Latin vassals strain to be free and his fellow Latins gain a cause for war.', 'Kostet 50 Gunst bei der Kurie. Der gebannte Herrscher verliert Mandat und Eintracht, lateinische Reiche denken schlechter von ihm, seine lateinischen Vasallen streben nach Freiheit und seine Glaubensbrüder erhalten einen Kriegsgrund.'],
+  r_heretic_church: ['Heretic church', 'Ketzerkirche'], r_overlord_excommunicated: ['Overlord excommunicated', 'Lehnsherr gebannt'], r_foreign_crown: ['A crown of another people', 'Krone eines anderen Volkes'],
+  r_brethren: ['Brethren in faith', 'Glaubensbrüder'], r_apostasy: ['Apostasy', 'Abfall vom Glauben'], r_baptism: ['Baptism', 'Taufe'],
+  fx_home_defence: ['Defence on home ground', 'Verteidigung auf eigenem Boden'], fx_home_morale: ['Morale on home ground', 'Moral auf eigenem Boden'], fx_home_attrition: ['Attrition on home ground', 'Verschleiß auf eigenem Boden'],
+  fx_build_time: ['Building time', 'Bauzeit'], fx_mandate: ['Mandate', 'Mandat'], fx_concord: ['Concord', 'Eintracht'], fx_authority: ['Authority per month', 'Autorität pro Monat'],
+  drift_target: ['Drifting toward', 'Strebt zu'], drift_base: ['Base', 'Grundwert'], drift_ruler_statecraft: ['Ruler’s statecraft', 'Staatskunst des Herrschers'], drift_prestige: ['Prestige', 'Ansehen'],
+  drift_laws_values: ['Laws and values', 'Gesetze und Werte'], drift_regency: ['Regency', 'Regentschaft'], drift_excommunicated: ['Excommunicated', 'Gebannt'],
+  drift_powers_content: ['Contentment of the Powers', 'Zufriedenheit der Stände'], drift_war_exhaustion: ['War exhaustion', 'Kriegsmüdigkeit'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
@@ -229,6 +239,9 @@ const ERRORS: Record<string, string> = {
   'not of the Latin church': 'Nicht der lateinischen Kirche zugehörig', 'not in the same place': 'Nicht am selben Ort', 'select one army': 'Ein Heer wählen', 'select a location': 'Einen Ort wählen', 'select a realm': 'Ein Reich wählen', 'already under way': 'Bereits im Gange',
   'unknown office': 'Unbekanntes Amt', 'the ruler cannot hold an office': 'Der Herrscher kann kein Amt bekleiden', 'too young for office': 'Zu jung für ein Amt', 'already holds this office': 'Bekleidet dieses Amt bereits',
   'no terms': 'Keine Bedingungen', 'none': 'Keine', 'no such realm': 'Kein solches Reich', 'failed': 'Fehlgeschlagen', 'unknown': 'Unbekannt', 'invalid': 'Ungültig',
+  // ---- depth track: faith mechanics ----
+  'already excommunicated': 'Schon gebannt', 'the pope cannot be excommunicated': 'Der Papst kann nicht gebannt werden', 'we are excommunicated ourselves': 'Wir sind selbst gebannt',
+  'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig', 'need 20 Authority': '20 Autorität nötig',
 };
 /** Translate an error/refusal text from the simulation. */
 export function errText(e: string): string { if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1); return ERRORS[e] ?? e; }

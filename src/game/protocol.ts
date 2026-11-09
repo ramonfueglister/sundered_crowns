@@ -57,6 +57,8 @@ export interface PlayerView {
   stats: Record<string, number>;
   homeMarket: number;                              // market of the capital (-1 without a capital)
   merchants: { used: number; cap: number };
+  /** what Concord and Mandate drift toward, by cause (src/sim/systems/politics.ts concordParts / mandateParts) */
+  concordWhy?: [string | I18n, number][]; mandateWhy?: [string | I18n, number][];
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

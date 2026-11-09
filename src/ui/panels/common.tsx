@@ -179,7 +179,8 @@ export function Empty({ children }: { children: ComponentChildren }) { return <d
 // ---------------------------------------------------------------- effects & reasons
 const PCT_KEYS = new Set(['tax', 'trade', 'production', 'morale', 'discipline', 'fire', 'shock', 'cavalry', 'speed', 'manpower', 'army_cost', 'mercenary_cost', 'fort_strength', 'attrition',
   'concord_gain', 'mandate_gain', 'authority_gain', 'corruption', 'dread_decay', 'tolerance', 'admin', 'control', 'integration', 'research', 'conversion', 'assimilation', 'colonial_growth',
-  'growth', 'defence', 'naval', 'colonise', 'diplomacy', 'prestige', 'dread', 'estate_power', 'succession_strife', 'foreign_claims', 'serfdom', 'literacy', 'interest']);
+  'growth', 'defence', 'naval', 'colonise', 'diplomacy', 'prestige', 'dread', 'estate_power', 'succession_strife', 'foreign_claims', 'serfdom', 'literacy', 'interest',
+  'home_defence', 'home_morale', 'home_attrition', 'build_time']);
 export function fxLabel(k: string): string {
   const v = t(`fx_${k}`);
   return v === `fx_${k}` ? k.replace(/^values\./, '').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : v;
@@ -190,7 +191,7 @@ export function fxValue(k: string, v: number): string {
   return signed(v, Math.abs(v) < 1 ? 2 : 0);
 }
 /** Effects that are bad when positive. */
-const BAD_UP = new Set(['unrest', 'army_cost', 'mercenary_cost', 'corruption', 'attrition', 'interest', 'succession_strife', 'dread', 'serfdom']);
+const BAD_UP = new Set(['unrest', 'army_cost', 'mercenary_cost', 'corruption', 'attrition', 'interest', 'succession_strife', 'dread', 'serfdom', 'home_attrition', 'build_time']);
 export function Effects({ fx, title }: { fx: Record<string, number> | null | undefined; title?: ComponentChildren }) {
   const e = Object.entries(fx || {}).filter(([, v]) => typeof v === 'number' && Math.abs(v) > 1e-9);
   if (!e.length) return title ? <div><div class="bd-title">{title}</div><div class="muted">{t('no_effects')}</div></div> : null;

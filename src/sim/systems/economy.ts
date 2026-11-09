@@ -7,6 +7,7 @@ import { type Ctx, type System, addIncome, addExpense, clamp, mod, EPOCH } from 
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
 import { lawEffect } from './politics';
+import { secondFaith } from './faith';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -86,7 +87,7 @@ const SLOTS = new Int32Array(3);
 // Per-nation numbers read by locationStep, gathered once per pass over the locations (economy.daily / init).
 // Reading them from one typed table keeps locationStep away from the many shapes nation objects take on,
 // which otherwise keep throwing its optimised code away. Values are exactly what the step read before.
-const NK = 14 + C; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C]
+const NK = 15 + C; // techA, serfdom, prodX, trade, taxP, tolerance, warEx, concord, inflation, unrest, lit0, culture, faith, farm, rate[C], second faith
 let NS = new Float64Array(0), NST = new Int32Array(0), PASS = 0;
 function nationRow(n: Nation): number {
   const o = n.id;
@@ -107,6 +108,7 @@ function nationRow(n: Nation): number {
   NS[r + 11] = n.culture; NS[r + 12] = n.faith;
   const tt = taxTable(n); NS[r + 13] = tt.farm ? 1 : 0;
   for (let c = 0; c < C; c++) NS[r + 14 + c] = tt.rate[c];
+  NS[r + 14 + C] = secondFaith(n); // a Tengri realm's second faith is not foreign (-1: none)
   return r;
 }
 
@@ -319,7 +321,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
       let u = (0.55 - avgSol) * 40;
       const taxBurden = ns[nr + 4] * 60;
       u += taxBurden;
-      if (lc.faith[i] !== ns[nr + 12]) u += 8 * (1 - ns[nr + 5]);
+      if (lc.faith[i] !== ns[nr + 12] && lc.faith[i] !== ns[nr + 14 + C]) u += 8 * (1 - ns[nr + 5]);
       if (lc.culture[i] !== ns[nr + 11]) u += 4;
       u += ns[nr + 6] * 0.12 + devast * 12 + (1 - lc.control[i]) * 6 - ns[nr + 7] * 0.08 - 2;
       u += ns[nr + 9];
@@ -519,7 +521,7 @@ export function monthlyLedger(s: GameState, w: World) {
 }
 
 export function takeLoan(s: GameState, n: Nation, amount: number) {
-  const base = 0.05 + n.loans.length * 0.012 + (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day - 3650 ? 0.06 : 0) - mod(n, 'interest');
+  const base = 0.05 + n.loans.length * 0.012 + (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day - 3650 ? 0.06 : 0) + lawEffect(n, 'interest'); // interest > 0: dearer credit
   const lenders = ['Bardi', 'Peruzzi', 'Medici', 'Fugger', 'Welser', 'Grimaldi', 'Lombard bankers', 'Hanseatic merchants', 'Jewish moneylenders', 'Genoese Casa di San Giorgio'];
   const year = s.startYear + Math.floor(s.day / 365);
   const avail = lenders.filter((l, k) => year >= [1300, 1300, 1397, 1480, 1490, 1300, 1300, 1300, 1300, 1407][k] && year <= [1345, 1343, 1494, 1650, 1650, 1815, 1815, 1815, 1815, 1805][k]);

@@ -7,8 +7,9 @@ import { rand, chance } from '../rng';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 import { nationDev, declareWar, hasCasusBelli } from './war';
 import { lawEffect, councilBonus } from './politics';
+import { excommunicate } from './realm';
 
-export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve'] as const;
+export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve', 'excommunicate'] as const;
 
 /** Static opinion reasons computed on demand (plus stored timed modifiers). */
 export function opinionBreakdown(s: GameState, w: World, a: number, b: number): [string, number][] {
@@ -31,6 +32,8 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   if (atWar(s, a, b)) out.push(['at_war', -100]);
   const d = Bn.dread; if (d > 10) out.push(['dread', -Math.round(Math.min(60, d))]);
   if (Bn.excommunicated && FAITHS[A.faith]?.id === 'latin') out.push(['excommunicated', -30]);
+  // the loose Bosnian Church has no outside protector: the great churches distrust it
+  if (FAITHS[Bn.faith]?.id === 'bosnian_church' && (FAITHS[A.faith]?.id === 'latin' || FAITHS[A.faith]?.id === 'orthodox')) out.push(['heretic_church', -15]);
   const r = s.rel[`${a}>${b}`];
   if (r) for (const m of r.mods) out.push([m.id, Math.round(m.v)]);
   return out;
@@ -95,7 +98,7 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
   if (!s.nations[b]?.alive || a === b) return 'invalid target';
-  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate'].includes(action)) return immediateAction(s, w, a, b, action, payload);
+  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate'].includes(action)) return immediateAction(s, w, a, b, action, payload);
   if (A.envoysBusy >= A.envoys) return 'all envoys are busy';
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
   if (action === 'marriage' && hasTreaty(s, a, b, 'marriage')) return 'already married';
@@ -121,6 +124,14 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
     case 'cancel_access': s.treaties = s.treaties.filter((t) => !(t.type === 'access' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); return null;
     case 'rival': if (A.rivals.length >= 3) return 'at most three rivals'; if (!A.rivals.includes(b)) A.rivals.push(b); addOpinion(s, b, a, 'rivalry', -30, 365 * 50); return null;
     case 'unrival': A.rivals = A.rivals.filter((x) => x !== b); return null;
+    case 'excommunicate': {
+      // Favour of the Curia (Latin faith): a ruler in good standing asks the pope to ban another Latin ruler
+      if (FAITHS[A.faith]?.id !== 'latin') return 'not of the Latin church';
+      if (Bn.excommunicated) return 'already excommunicated';
+      if (s.papacy.holder === b) return 'the pope cannot be excommunicated';
+      if (A.excommunicated) return 'we are excommunicated ourselves';
+      return excommunicate(s, a, b);
+    }
     case 'fabricate': {
       // fabricating a justification takes time and can be discovered
       if (s.spies.some((x) => x.nation === a && x.target === b && x.action === 'fabricate')) return 'already fabricating';
@@ -186,6 +197,10 @@ export function libertyParts(s: GameState, w: World, n: Nation, ov: Nation): [st
   return [
     ['subject_strength', rs * 120], ['opinion_of_overlord', -totalOpinion(s, w, n.id, ov.id) * 0.3], ['overlord_concord', ov.concord < 0 ? 15 : 0],
     ['overlord_war_exhaustion', ov.warExhaustion > 40 ? 10 : 0], ['tributary', n.subjectType === 'tributary' ? 10 : 0],
+    // a banned overlord frees his vassals' consciences (Latin faith: excommunication)
+    ['overlord_excommunicated', ov.excommunicated && n.faith === ov.faith ? 20 : 0],
+    // a crown of another people does not merge easily into the senior crown of a personal union
+    ['foreign_crown', n.subjectType === 'personal_union' && n.culture !== ov.culture ? 20 : 0],
     // colonial realms drift apart from the crown over generations
     ['colonial_distance', n.subjectType === 'colonial' ? 5 + Math.min(45, (s.day - n.subjectSince) / 365 * 0.35) : 0],
   ];

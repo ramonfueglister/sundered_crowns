@@ -11,6 +11,7 @@ import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, 
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
+import { FAITH_INDEX } from '../content/peoples';
 
 const P = (n: Nation, k: string) => n.personality === k;
 function isAI(s: GameState, n: Nation) { return n.alive && !s.playerNations.includes(n.id) && !s.aiDisabled.includes(n.id) && !n.playerId; }
@@ -65,6 +66,7 @@ function strategic(s: GameState, w: World, n: Nation) {
   seekAccess(s, w, n);
   if (n.treasury > 0) { const inc = Object.values(n.income).reduce((p, v) => p + v, 0); const k = n.treasury > inc * 12 ? 3 : 1; for (let j = 0; j < k; j++) construction(s, w, n); }
   reforms(s, w, n);
+  churchPolitics(s, w, n);
   diplomacy(s, w, n);
   // a realm only called into an ally's war (or answering a subject's revolt) may still start its own, if fresh
   if (!wars.length || (!wars.some((x) => x.attLead === n.id || (x.defLead === n.id && x.goal.type !== 'independence')) && n.warExhaustion < 20)) considerWar(s, w, n);
@@ -216,6 +218,7 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
     if (c >= 0 && applyCommand(s, w, { t: 'build', n: n.id, loc: c, building: BI.port }).ok) return;
   }
   const order = P(n, 'trader') ? ['market', 'port', 'workshop', 'road', 'farm'] : P(n, 'conqueror') ? ['fort', 'farm', 'workshop', 'market', 'road'] : ['farm', 'workshop', 'market', 'road', 'church', 'fort'];
+  if (n.faith === FAITH_INDEX.hindu) { const k = order.indexOf('church'); if (k >= 0) order.splice(k, 1); order.unshift('church'); } // temple patronage
   for (let k = 0; k < Math.min(locs.length, 60); k++) {
     const l = locs[Math.floor(hash01(s.day, n.id, k) * locs.length)];
     if (s.loc.ctrl[l] !== n.id) continue;
@@ -249,6 +252,14 @@ function reforms(s: GameState, w: World, n: Nation) {
     const r = applyCommand(s, w, { t: 'law', n: n.id, law, option: o });
     if (r.ok) return;
   }
+}
+
+/** Favour of the Curia (Latin faith): a realm in good standing has the pope ban a Latin enemy or rival, which turns
+ *  the Latin world against it and frees its vassals' consciences. */
+function churchPolitics(s: GameState, w: World, n: Nation) {
+  if (n.faith !== FAITH_INDEX.latin || n.excommunicated || (s.papacy.curiaFavour[n.id] ?? 0) < 60 || !chance(s.rng, 0.15)) return;
+  const foes = [...enemiesOf(s, n.id), ...n.rivals].filter((x) => s.nations[x]?.alive && s.nations[x].faith === n.faith && !s.nations[x].excommunicated && s.papacy.holder !== x);
+  if (foes.length) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'excommunicate', target: foes[0] });
 }
 
 function diplomacy(s: GameState, w: World, n: Nation) {

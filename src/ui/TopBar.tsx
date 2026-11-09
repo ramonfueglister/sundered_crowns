@@ -67,10 +67,10 @@ export function TopBar() {
       <Tip content={<div><b>{t('manpower')}</b><div>{num(p.manpower)} / {num(p.maxManpower)}</div><div class="muted">{lang.value === 'de' ? 'Wehrfähige Bauern und Tagelöhner; erholt sich monatlich je nach Kontrolle.' : 'Able-bodied peasants and labourers; recovers monthly depending on control.'}</div><div>{t('sailors')}: {num(p.sailors)}</div></div>}>
         <div class="stat" onClick={() => openPanel('military')}><i class="ic men" />{num(p.manpower)}</div>
       </Tip>
-      <Tip content={<div><b>{t('concord')}</b> {num(p.concord)}<div class="muted">{lang.value === 'de' ? 'Innerer Friede des Reiches. Niedrig: Unruhe, weniger Steuern, Aufstände.' : 'Internal peace of the realm. Low: unrest, lower taxes, revolts.'}</div></div>}>
+      <Tip content={<div><b>{t('concord')}</b> {num(p.concord)}<div class="muted">{lang.value === 'de' ? 'Innerer Friede des Reiches. Niedrig: Unruhe, weniger Steuern, Aufstände.' : 'Internal peace of the realm. Low: unrest, lower taxes, revolts.'}</div>{p.concordWhy && <DriftParts rows={p.concordWhy} />}</div>}>
         <div class={`stat ${p.concord < 0 ? 'neg' : ''}`} onClick={() => openPanel('government')}><i class="ic concord" />{num(p.concord)}</div>
       </Tip>
-      <Tip content={<div><b>{t('mandate')}</b> {num(p.mandate)}<div class="muted">{lang.value === 'de' ? 'Wie rechtmäßig die Herrschaft erscheint. Wirkt auf Diplomatie, Eintracht und Thronfolge.' : 'How rightful the rule appears. Affects diplomacy, concord and succession.'}</div></div>}>
+      <Tip content={<div><b>{t('mandate')}</b> {num(p.mandate)}<div class="muted">{lang.value === 'de' ? 'Wie rechtmäßig die Herrschaft erscheint. Wirkt auf Diplomatie, Eintracht und Thronfolge.' : 'How rightful the rule appears. Affects diplomacy, concord and succession.'}</div>{p.mandateWhy && <DriftParts rows={p.mandateWhy} />}</div>}>
         <div class="stat" onClick={() => openPanel('government')}><i class="ic mandate" />{num(p.mandate)}</div>
       </Tip>
       <Tip content={<div><b>{t('authority')}</b> {num(p.authority)}<div class="muted">{lang.value === 'de' ? 'Politisches Kapital für Reformen, Ämter und Privilegien.' : 'Political capital for reforms, offices and privileges.'}</div></div>}>
@@ -102,3 +102,9 @@ export function TopBar() {
   </div>;
 }
 void rgb;
+
+/** Where Concord or Mandate is drifting, by cause (laws, Powers of the Realm, faith mechanics and other modifiers). */
+function DriftParts({ rows }: { rows: [string | { en: string; de: string }, number][] }) {
+  const r = rows.map(([k, v]) => [typeof k === 'string' ? t(`drift_${k}`) : L(k), v] as [string, number]);
+  return <Breakdown title={t('drift_target')} rows={r} total={r.reduce((p, x) => p + x[1], 0)} digits={0} />;
+}
