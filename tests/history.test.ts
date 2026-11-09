@@ -5,8 +5,12 @@ import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx } from '../src/sim/ctx';
-import { dateToDay } from '../src/sim/calendar';
-import { war, casusBelliAll, declareWar, evaluatePeace } from '../src/sim/systems/war';
+import { war, casusBelliAll, declareWar, evaluatePeace, concludePeace, nationLocs } from '../src/sim/systems/war';
+import { politics } from '../src/sim/systems/politics';
+import { military, newArmy } from '../src/sim/systems/military';
+import { SITUATIONS } from '../src/sim/content/situations';
+import { UNITS, B, BI } from '../src/sim/defs';
+import { bump, DAY_EPOCH } from '../src/sim/ctx';
 import { realm } from '../src/sim/systems/realm';
 import { libertyParts, evaluateProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
@@ -16,6 +20,8 @@ let BASE = '';
 beforeAll(() => { BASE = serialize(createGame(w, loadSetup(1356), loadHubs(), 1356, { player: [] })); });
 const fresh = () => deserialize(BASE) as GameState;
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
+/** Caches of owners and law effects are kept per day: start a new "day" after changing the world by hand. */
+const touch = () => { DAY_EPOCH.v++; bump(); };
 
 describe('history mechanics (point 99)', () => {
   it('only a leading crown gathers its people, and the claim runs one way', () => {
@@ -70,32 +76,151 @@ describe('history mechanics (point 99)', () => {
     expect(evaluatePeace(s, wr, b.id, o.id, []).reasons.some(([k]) => k === 'siege_under_way')).toBe(false);
   });
 
-  it('the steppe order fades from 1420: the horde weakens and its tributaries strain to be free', () => {
-    const run = (year: number) => {
-      const s = fresh(); s.day = dateToDay(year, 0, 1, s.startYear);
-      realm.yearly!(mkCtx(s, w));
-      const h = nat(s, 'golden_horde'), m = nat(s, 'moscow');
-      expect(m.overlord).toBe(h.id);
-      return { mod: h.modifiers.find((x) => x.id === 'steppe_fading'), liberty: libertyParts(s, w, m, h).find(([k]) => k === 'steppe_fading')![1] };
-    };
-    const early = run(1400), late = run(1470);
+  it('the steppe order fades as the settled neighbours cast great guns: the horde weakens, its tributaries strain', () => {
+    const s = fresh(); const ctx = mkCtx(s, w);
+    const h = nat(s, 'golden_horde'), m = nat(s, 'moscow');
+    const look = () => ({ mod: h.modifiers.find((x) => x.id === 'steppe_fading'), liberty: libertyParts(s, w, m, h).find(([k]) => k === 'steppe_fading')![1] });
+    realm.yearly!(ctx);
+    const early = look();
     expect(early.mod).toBeUndefined();
     expect(early.liberty).toBe(0);
+    // every settled realm casts great guns now (its warfare has advanced far enough): the horde's riders are outmatched
+    for (const n of s.nations) if (n.gov !== 'nomadic_horde') n.tech[2] = 7;
+    realm.yearly!(ctx);
+    const late = look();
+    expect(m.overlord).toBe(h.id);
     expect(late.mod!.effects.tax).toBeLessThan(0);
     expect(late.liberty).toBeGreaterThan(20);
+    expect(h.flags.steppe_fade).toBeCloseTo(1, 5);
   });
 
-  it('a great horde at peace late in the age sheds its far lands as a khanate of their own', () => {
-    const s = fresh(); s.day = dateToDay(1470, 0, 1, s.startYear);
-    const h = nat(s, 'golden_horde');
-    s.wars = s.wars.filter((x) => !x.att.includes(h.id) && !x.def.includes(h.id));
-    const count = () => { let k = 0; for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === h.id) k++; return k; };
-    const n0 = s.nations.length, l0 = count();
-    for (let k = 0; k < 60 && s.nations.length === n0; k++) realm.yearly!(mkCtx(s, w));
-    const nn = s.nations.find((x) => x.flags.horde_successor && x.alive)!;
-    expect(nn).toBeDefined();
-    expect(nn.gov).toBe('nomadic_horde');
-    expect(count()).toBeLessThanOrEqual(l0 - 15);
-    expect(nn.rivals).toContain(h.id);
+  it('a great horde whose order has faded sheds its far lands as a khanate when they are restless, not when quiet', () => {
+    const run = (unrest: number, years: number) => {
+      const s = fresh(); const ctx = mkCtx(s, w);
+      const h = nat(s, 'golden_horde');
+      s.wars = s.wars.filter((x) => !x.att.includes(h.id) && !x.def.includes(h.id));
+      for (const n of s.nations) if (n.gov !== 'nomadic_horde') n.tech[2] = 7;
+      const count = () => { let k = 0; for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === h.id) k++; return k; };
+      const n0 = s.nations.length, l0 = count();
+      for (let k = 0; k < years && s.nations.length === n0; k++) {
+        for (let i = 0; i < w.L; i++) if (s.loc.owner[i] === h.id) s.loc.unrest[i] = unrest;
+        realm.yearly!(ctx);
+      }
+      return { s, h, nn: s.nations.find((x) => x.flags.horde_successor && x.alive), lost: l0 - count() };
+    };
+    const quiet = run(5, 30);
+    expect(quiet.nn).toBeUndefined();
+    const restless = run(40, 60);
+    expect(restless.nn).toBeDefined();
+    expect(restless.nn!.gov).toBe('nomadic_horde');
+    expect(restless.lost).toBeGreaterThanOrEqual(15);
+    expect(restless.nn!.rivals).toContain(restless.h.id);
+  });
+
+  it('a war goal must fit its cause; the short truce follows the land fought for, not the name of the war', () => {
+    const s = fresh();
+    const c = nat(s, 'castile'), a = nat(s, 'aragon'), gr = nat(s, 'granada');
+    const clear = () => { s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce' && t.type !== 'alliance'); };
+    clear();
+    for (const l of nationLocs(s, a.id)) expect(s.loc.core[l]).not.toBe(c.id);
+    expect(declareWar(s, w, c.id, a.id, 'reconquest')).toBe('no land of ours to win back');
+    expect(declareWar(s, w, c.id, a.id, 'faith')).toBe('they share our faith');
+    expect(declareWar(s, w, c.id, a.id, 'reconquest', [nationLocs(s, a.id)[0]])).toBe('no land of ours to win back');
+    // one of Aragon's towns is Castilian land: a war of reconquest for it is allowed, and the town is its goal
+    const town = nationLocs(s, a.id).find((l) => l !== a.capital)!;
+    s.loc.core[town] = c.id;
+    expect(declareWar(s, w, c.id, a.id, 'reconquest')).toBe(null);
+    let wr = s.wars[s.wars.length - 1];
+    expect(wr.goal.locs).toEqual([town]);
+    concludePeace(s, w, wr, a.id, c.id, []);
+    const truce = (x: number, y: number) => s.treaties.find((t) => t.type === 'truce' && t.a === Math.min(x, y) && t.b === Math.max(x, y))!;
+    expect(Math.round((truce(c.id, a.id).until - s.day) / 365)).toBe(2);
+    // a holy war against the emirate is allowed (another faith), but its truce is the usual five years
+    clear();
+    expect(declareWar(s, w, c.id, gr.id, 'faith', [gr.capital])).toBe(null);
+    wr = s.wars[s.wars.length - 1];
+    concludePeace(s, w, wr, gr.id, c.id, []);
+    expect(Math.round((truce(c.id, gr.id).until - s.day) / 365)).toBe(5);
+  });
+
+  it('an ally tires slowly in a long war without battles, and recovers only in peace', () => {
+    const s = fresh(); const ctx = mkCtx(s, w);
+    const o = nat(s, 'ottoman'), b = nat(s, 'byzantium'), x = nat(s, 'karaman');
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce');
+    expect(declareWar(s, w, o.id, b.id, 'conquest')).toBe(null);
+    const wr = s.wars[s.wars.length - 1];
+    if (!wr.att.includes(x.id)) wr.att.push(x.id);
+    wr.def = wr.def.filter((y) => y !== x.id);
+    s.armies = s.armies.filter((a) => a.owner !== o.id && a.owner !== b.id && a.owner !== x.id);
+    o.warExhaustion = 30; x.warExhaustion = 30;
+    const calm = nat(s, 'portugal'); s.wars = s.wars.filter((y) => y === wr || (!y.att.includes(calm.id) && !y.def.includes(calm.id))); calm.warExhaustion = 30;
+    for (let k = 0; k < 24; k++) { war.monthly!(ctx); politics.monthly!(ctx); }
+    expect(s.wars).toContain(wr);
+    expect(x.warExhaustion).toBeGreaterThan(30); // the ally, called in, tires more slowly than the leader ...
+    expect(x.warExhaustion).toBeLessThan(o.warExhaustion); // ... but it does tire
+    expect(calm.warExhaustion).toBeLessThan(30); // a realm at peace recovers
+  });
+
+  it('the war for Granada leaves the emirate\'s treaties alone; its far allies refuse only the call to that war', () => {
+    const s = fresh();
+    const c = nat(s, 'castile'), mar = nat(s, 'marinid');
+    const city = w.names.indexOf('Granada');
+    s.loc.owner[city] = mar.id; s.loc.ctrl[city] = mar.id; touch();
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce');
+    for (const e of c.estates) e.contentment = 80;
+    c.warExhaustion = 0;
+    const far = ['mali', 'hafsid_tunis', 'aragon', 'mamluk'].map((k) => nat(s, k).id);
+    for (const f of far) if (!s.treaties.some((t) => t.type === 'alliance' && ((t.a === f && t.b === mar.id) || (t.b === f && t.a === mar.id)))) s.treaties.push({ a: Math.min(f, mar.id), b: Math.max(f, mar.id), type: 'alliance', since: s.day, until: s.day + 365 * 20 });
+    const sit = s.situations.find((x) => x.id === 'reconquista')!;
+    const def = SITUATIONS.find((d) => d.id === 'reconquista')!;
+    sit.stage = 1;
+    def.monthly(s, w, sit, 1445, 5);
+    expect(sit.data.err).toBeUndefined();
+    expect(sit.data.g).toBe(mar.id);
+    for (const f of far) expect(s.treaties.some((t) => t.type === 'alliance' && ((t.a === f && t.b === mar.id) || (t.b === f && t.a === mar.id))), s.nations[f].key).toBe(true);
+    const wr = s.wars.find((x) => x.attLead === sit.data.champion && x.defLead === mar.id)!;
+    expect(wr).toBeDefined();
+    expect(wr.goal.type).toBe('faith');
+    expect(wr.goal.locs).toContain(city);
+    for (const f of far) expect(wr.def).not.toContain(f);
+    // the champion's host is called to the walls of the city while the war for it lasts, and released after
+    const champ = s.nations[sit.data.champion];
+    def.monthly(s, w, sit, 1445, 6);
+    expect(champ.flags.siege_focus).toBe(city);
+    s.wars = s.wars.filter((x) => x !== wr);
+    def.monthly(s, w, sit, 1445, 7);
+    expect(champ.flags.siege_focus).toBeUndefined();
+    // the situation runs out: no call to the walls is left behind
+    s.wars.push(wr); def.monthly(s, w, sit, 1445, 8);
+    expect(champ.flags.siege_focus).toBe(city);
+    def.monthly(s, w, sit, 1520, 5);
+    expect(sit.active).toBe(false);
+    expect(champ.flags.siege_focus).toBeUndefined();
+    expect(champ.modifiers.some((x) => x.id === 'war_for_granada')).toBe(false);
+  });
+
+  it('great guns breach the walls of any fort, but only with artillery in the camp and without bastions', () => {
+    const run = (guns: boolean, art: number, bastion: boolean) => {
+      const s = fresh(); const ctx = mkCtx(s, w);
+      const a = nat(s, 'castile'), b = nat(s, 'aragon');
+      s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce' && t.type !== 'alliance');
+      expect(declareWar(s, w, a.id, b.id, 'conquest')).toBe(null);
+      const loc = b.capital;
+      expect(s.loc.buildings[loc * B + BI.fort]).toBeGreaterThan(0);
+      s.armies = s.armies.filter((x) => x.loc !== loc && x.owner !== b.id);
+      a.tech[2] = guns ? 7 : 1; a.modifiers = a.modifiers.filter((m) => m.id !== 'inv_bombards');
+      if (bastion) b.modifiers.push({ id: 'inv_trace_italienne', until: 1e9, label: { en: '', de: '' }, effects: {} });
+      const inf = UNITS.findIndex((u) => u.id === 'levy'), gun = UNITS.findIndex((u) => u.id === 'bombards');
+      newArmy(s, a.id, loc, art ? [{ type: inf, men: 12000 }, { type: gun, men: art }] : [{ type: inf, men: 12000 }]);
+      touch();
+      for (let d = 0; d < 31; d++) military.daily!(ctx);
+      const sg = s.sieges.find((x) => x.loc === loc);
+      expect(sg).toBeDefined();
+      return sg!.breach;
+    };
+    expect(run(true, 1500, false)).toBeGreaterThanOrEqual(1);
+    expect(run(false, 1500, false)).toBe(0);
+    expect(run(true, 0, false)).toBe(0);
+    expect(run(true, 1500, true)).toBe(0);
   });
 });

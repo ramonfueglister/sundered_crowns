@@ -549,7 +549,11 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   for (const x of own) { if (x.siege >= 0) claimed.add(x.siege); if (x.path.length) claimed.add(x.path[x.path.length - 1]); }
   const goal = new Set(s.wars.filter((x) => x.att.includes(n.id) || x.def.includes(n.id)).flatMap((x) => x.goal.locs));
   // a town the whole host is called to (a situation's great siege) draws every army, not only the first
-  const focusLoc = typeof n.flags.siege_focus === 'number' && enemies.has(s.loc.ctrl[n.flags.siege_focus]) ? n.flags.siege_focus : -1;
+  // (only while we lead a war for that town; the call to its walls ignores only the field armies of that war's
+  // enemies, never an enemy of another war that invades our land)
+  const focusWar = typeof n.flags.siege_focus === 'number' ? s.wars.find((x) => x.attLead === n.id && x.goal.locs.includes(n.flags.siege_focus)) : undefined;
+  const focusLoc = focusWar && enemies.has(s.loc.ctrl[n.flags.siege_focus]) ? n.flags.siege_focus : -1;
+  const focusFoes = new Set(focusWar?.def ?? []);
   // the towns of the wars we lead that the enemy still holds
   const myGoals = s.wars.filter((x) => x.attLead === n.id).flatMap((x) => x.goal.locs).filter((l) => enemies.has(s.loc.ctrl[l]));
   const gone = new Set<number>(); // armies merged into another this turn
@@ -591,7 +595,7 @@ function militaryAI(s: GameState, w: World, n: Nation) {
       const e = enemyArmies[j];
       const d = w.distKm(a.loc, e.loc);
       if (d > reach) continue;
-      if (focusLoc >= 0 && w.distKm(e.loc, focusLoc) > 150 && w.distKm(a.loc, focusLoc) < 800) continue; // only armies coming to relieve the great siege
+      if (focusLoc >= 0 && focusFoes.has(e.owner) && w.distKm(e.loc, focusLoc) > 150 && w.distKm(a.loc, focusLoc) < 800) continue; // only armies coming to relieve the great siege
       const near = nearOf(j);
       if (myStr > near * 1.15 && d < td) { td = d; tgt = e.loc; }
     }

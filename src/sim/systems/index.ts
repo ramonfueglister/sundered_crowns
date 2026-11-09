@@ -2,7 +2,7 @@
 import type { System } from '../ctx';
 import { economy } from './economy';
 import { politics } from './politics';
-import { military, releaseNation, newArmy, availableUnits } from './military';
+import { military, releaseNation, newArmy, availableUnits, landFaith, khanFaith } from './military';
 import { war, _setMilitary } from './war';
 import { diplomacy } from './diplomacy';
 import { society } from './society';
@@ -16,6 +16,6 @@ import { events } from './events';
 import { ai } from './ai';
 import { faith } from './faith';
 
-_setMilitary({ releaseNation, newArmy, availableUnits });
+_setMilitary({ releaseNation, newArmy, availableUnits, landFaith, khanFaith });
 
 export const SYSTEMS: System[] = [politics, faith, progress, society, economy, military, war, diplomacy, colonial, realm, landmarks, situations, goals, events, ai];

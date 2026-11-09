@@ -249,6 +249,8 @@ const ERRORS: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig', 'need 20 Authority': '20 Autorität nötig',
   // ---- depth track: AI budget and history ----
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
+  // ---- depth track: review fixes ----
+  'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
 };
 /** Translate an error/refusal text from the simulation. */
 export function errText(e: string): string { if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1); return ERRORS[e] ?? e; }

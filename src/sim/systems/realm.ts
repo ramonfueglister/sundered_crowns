@@ -3,8 +3,8 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion } from '../ctx';
 import { B, BI, BUILDINGS, C, UNITS } from '../defs';
-import { armyStrength, releaseNation, newArmy, availableUnits } from './military';
-import { nationLocsRO } from './war';
+import { armyStrength, releaseNation, newArmy, availableUnits, greatGuns, khanFaith } from './military';
+import { nationLocsRO, nationDev } from './war';
 import { FAITH_INDEX } from '../content/peoples';
 import { chance, rand } from '../rng';
 
@@ -139,30 +139,43 @@ export function excommunicate(s: GameState, by: number, target: number): string 
   return null;
 }
 
-/** How far the steppe order has faded (0 before 1420, 1 by 1460, at most 1.5): the settled realms around the
- *  hordes grow, guns spread and the caravan trade turns to the sea. */
-export function steppeFade(s: GameState): number { return clamp((s.startYear + s.day / 365.25 - 1420) / 40, 0, 1.5); }
-/** A horde's grip loosens a little more every decade (its tributaries strain harder to be free, see libertyParts).
- *  Nothing is decided by it: a horde that keeps winning its wars can still hold together. */
-function steppeYear(s: GameState) {
-  const k = Math.round(steppeFade(s) * 10) / 10;
+/** How far the steppe order of a horde has faded (0 to 1.5, kept on the horde by steppeYear). */
+export function steppeFade(h: Nation): number { return h.gov === 'nomadic_horde' ? h.flags.steppe_fade ?? 0 : 0; }
+/** The steppe order fades as the settled realms around a horde cast great guns that its riders cannot match (the share
+ *  of its settled neighbours, by development, that have them), and further once the ocean routes are open and
+ *  the caravan trade turns to the sea (+0.5). A horde's grip loosens: less tax and morale, more unrest, and its
+ *  tributaries strain harder to be free (see libertyParts). Nothing is decided by it: a horde that keeps winning its
+ *  wars can still hold together. */
+function steppeYear(s: GameState, w: World) {
+  const own = s.loc.owner;
   for (const n of s.nations) {
     if (!n.alive) continue;
     n.modifiers = n.modifiers.filter((m) => m.id !== 'steppe_fading');
-    if (n.gov !== 'nomadic_horde' || k <= 0) continue;
+    if (n.gov !== 'nomadic_horde') { delete n.flags.steppe_fade; continue; }
+    const seen = new Set<number>(); let tot = 0, armed = 0;
+    for (const l of nationLocsRO(s, n.id)) for (let e = w.adjStart[l]; e < w.adjStart[l + 1]; e++) {
+      const v = w.adj[e]; if (v >= w.L) continue;
+      const o = own[v]; if (o < 0 || o === n.id || seen.has(o)) continue;
+      seen.add(o);
+      const x = s.nations[o]; if (!x.alive || x.gov === 'nomadic_horde') continue;
+      const d = nationDev(s, o); tot += d; if (greatGuns(x)) armed += d;
+    }
+    const k = Math.round(((tot > 0 ? armed / tot : 0) + (s.flags.ocean_open || s.flags.west_route_found ? 0.5 : 0)) * 10) / 10;
+    n.flags.steppe_fade = k;
+    if (k <= 0) continue;
     n.modifiers.push({ id: 'steppe_fading', until: s.day + 400, label: { en: 'The steppe order fades', de: 'Die Ordnung der Steppe verblasst' }, effects: { tax: -0.08 * k, morale: -0.08 * k, unrest: 2 * k } });
   }
 }
 
-/** Late in the age a great horde sheds its far lands as khanates of their own (as Kazan, Crimea and Astrakhan broke
- *  from the Great Horde): a horde of 200 or more places that is at peace may lose the largest block of land far from
- *  its seat in any year, the more likely the further its order has faded. */
+/** A great horde sheds its far lands as khanates of their own (as Kazan, Crimea and Astrakhan broke from the Great
+ *  Horde) once its order has faded (see steppeYear): a horde of 200 or more places at peace may lose the largest block
+ *  of land far from its seat, the likelier the more restless that land is. */
 function steppeSplitYear(s: GameState, w: World) {
-  const k = steppeFade(s); if (k < 0.3) return;
   for (const h of s.nations.slice()) {
     if (!h.alive || h.gov !== 'nomadic_horde' || h.capital < 0 || h.overlord >= 0 || s.playerNations.includes(h.id) || h.playerId) continue;
+    if (steppeFade(h) < 0.3) continue;
     const locs = nationLocsRO(s, h.id); if (locs.length < 200) continue;
-    if (s.wars.some((x) => x.att.includes(h.id) || x.def.includes(h.id)) || !chance(s.rng, 0.1 * k)) continue;
+    if (s.wars.some((x) => x.att.includes(h.id) || x.def.includes(h.id))) continue;
     // the far lands in four quarters around the seat: the fullest quarter breaks away
     const cap = h.capital; const q: number[][] = [[], [], [], []];
     for (const l of locs) {
@@ -172,13 +185,16 @@ function steppeSplitYear(s: GameState, w: World) {
     }
     let g = q[0]; for (const x of q) if (x.length > g.length) g = x;
     if (g.length < 15) continue;
+    // the far land breaks away the more readily the more restless it is (about one year in ten at an unrest of 20)
+    let unrest = 0; for (const l of g) unrest += s.loc.unrest[l];
+    if (!chance(s.rng, clamp((unrest / g.length - 15) / 50, 0, 0.3))) continue;
     g = g.slice().sort((a, b) => s.loc.dev[b] - s.loc.dev[a] || a - b);
     // the horde's troops in the breakaway lands fall back to its seat
     for (const a of s.armies) if (a.owner === h.id && g.includes(a.loc)) { a.path = []; a.siege = -1; if (!a.fleet && !a.battle && !a.embarkedOn) { a.loc = cap; a.retreating = false; } }
     const nn = releaseNation(s, w, h, g, h.culture);
     const town = w.names[g[0]], townDe = w.namesDe[g[0]];
     nn.name = { en: `Khanate of ${town}`, de: `Khanat ${townDe}` }; nn.short = { en: town, de: townDe }; nn.adj = { en: town, de: townDe };
-    nn.rank = 'kingdom'; nn.gov = h.gov; nn.faith = h.faith; nn.treasury = 100; nn.flags.horde_successor = 1;
+    nn.rank = 'kingdom'; nn.gov = h.gov; nn.faith = khanFaith(s, h, g); nn.treasury = 100; nn.flags.horde_successor = 1;
     nn.rivals = [h.id]; if (!h.rivals.includes(nn.id)) h.rivals.push(nn.id);
     let pop = 0; for (const l of g) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
     nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;
@@ -198,6 +214,6 @@ export const realm: System = {
   init(s, w) { empireInit(s); papacyInit(s, w); rankingMonth(s, w); timelapseYear(s, w); },
   daily({ s, w }) { constructionsDay(s, w); },
   monthly({ s, w }) { rankingMonth(s, w); },
-  yearly({ s, w }) { timelapseYear(s, w); empireYear(s, w); papacyYear(s); steppeYear(s); steppeSplitYear(s, w); },
+  yearly({ s, w }) { timelapseYear(s, w); empireYear(s, w); papacyYear(s); steppeYear(s, w); steppeSplitYear(s, w); },
 };
 void BI;

@@ -230,7 +230,7 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     treaties: (['alliance', 'marriage', 'access', 'guarantee', 'trade', 'truce'] as const).filter((t) => hasTreaty(s, id, player, t)),
     atWar: atWar(s, id, player), rival: s.nations[player].rivals.includes(id),
     // justifications for war: ours against them, theirs against us, a claim being fabricated by our clerks
-    cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player),
+    cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player), sameFaith: s.nations[player].faith === n.faith,
     fabricating: s.spies.find((x) => x.nation === player && x.target === id && x.action === 'fabricate') ?? null,
     actions: DIPLO_ACTIONS.map((a) => ({ id: a, name: ACT_NAME[a] ?? { en: a, de: a } })),
     // Favour of the Curia: a Latin ruler can have another Latin ruler banned (realm.ts excommunicate)

@@ -10,6 +10,7 @@ import { nearestLoc } from '../setup';
 import { declareWar, nationLocsRO, nationDev, startCivilWar, require_military } from '../systems/war';
 import { lawEffect } from '../systems/politics';
 import { nationPower } from '../systems/ai';
+import { greatGuns } from '../systems/military';
 import { chronicle, notice, addOpinion, clamp, atWar, hasTreaty, opinion, allies } from '../ctx';
 import { FAITH_INDEX, FAITHS, faithFamily, GROUP_OF, ALL_CULTURES } from './peoples';
 import { INNOVATIONS } from './innovations';
@@ -65,15 +66,6 @@ function truceAge(s: GameState, a: number, b: number): number {
   let since = -Infinity;
   for (const t of s.treaties) if (t.type === 'truce' && t.until > s.day && ((t.a === a && t.b === b) || (t.a === b && t.b === a))) since = Math.max(since, t.since);
   return since === -Infinity ? Infinity : (s.day - since) / 365;
-}
-/** Great guns before the walls of a city that a situation's war is fought for: each month they widen the breach, and
- *  once the walls are breached the bombardment and the assaults bleed the garrison (a host of 6000 at least). */
-function batter(s: GameState, city: number, by: number, enemy: number) {
-  const sg = s.sieges.find((x) => x.loc === city && s.wars.some((v) => v.attLead === by && v.att.includes(x.nation) && v.def.includes(enemy)));
-  if (!sg) return;
-  const host = s.armies.filter((a) => a.owner === by && a.siege === city && !a.fleet).reduce((p, a) => p + a.regs.reduce((q, r) => q + r.men, 0), 0);
-  if (host < 6000) return;
-  if (sg.breach < 3) { sg.breach++; sg.log.push('breach'); } else sg.garrison = Math.max(300, sg.garrison * 0.85);
 }
 function topOver(s: GameState, n: number): number { let k = n, g = 0; while (s.nations[k].overlord >= 0 && g++ < 10) k = s.nations[k].overlord; return k; }
 function tell(s: GameState, text: I18n, who?: number[], loc?: number) {
@@ -477,18 +469,18 @@ const DEFS: SituationDef[] = [
       // the City is besieged in earnest from the turn of the century (the first great sieges came in the 1390s)
       sit.stage = y >= 1400 && nearCity ? 2 : europe > 0 ? 1 : 0;
       sit.progress = Math.round(clamp(europe * 2.5 + (sit.stage === 2 ? 40 : 0), 0, 100));
-      // the frontier lords serve for land grants rather than pay; before the walls of the City the sultan brings great guns
-      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.1, manpower: 0.6, cavalry: 0.1, army_cost: -0.3, ...(sit.stage === 2 ? { siege: 3 } : {}) });
+      // the frontier lords serve for land grants rather than pay
+      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.1, manpower: 0.6, cavalry: 0.1, army_cost: -0.3 });
       // fighters from all over Anatolia flock to a victorious banner
       o.manpower = Math.min(o.maxManpower, o.manpower + o.maxManpower * 0.015);
-      // the land walls that held for a thousand years do not withstand the great bombards of the new age
-      if (cityOwner && cityOwner.faith !== o.faith && y < 1440) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
+      // the land walls that held for a thousand years do not withstand the great guns of the new age: they hold only
+      // while the sultan cannot cast such guns (see greatGuns)
+      if (cityOwner && cityOwner.faith !== o.faith && !greatGuns(o)) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
       else if (cityOwner) dropMod(cityOwner, 'land_walls');
-      // in a war for the City the sultan calls his whole host to its walls (see militaryAI), and his great bombards
-      // batter the land walls while it lies before them
+      // in a war for the City the sultan calls his whole host to its walls and brings the great guns cast for it
+      // (siege_focus: see militaryAI and the sieges in military.ts)
       if (sit.stage === 2 && s.wars.some((x) => x.attLead === o.id && x.goal.locs.includes(city))) o.flags.siege_focus = city;
       else delete o.flags.siege_focus;
-      if (sit.stage === 2 && cityOwner) batter(s, city, o.id, cityOwner.id);
       // a campaign season every quarter: the sultan only waits while he is already on the offensive somewhere
       const attacking = s.wars.some((x) => x.attLead === o.id); // wars he leads; being called in by an ally does not hold back his own campaign
       if (m % 3 === 1 && o.warExhaustion < 60 && !human(s, o.id)) {
@@ -569,7 +561,7 @@ const DEFS: SituationDef[] = [
           else if (w.lon[l] > cl + 7) groups[2].locs.push(l);
           else if (w.lat[l] > ca + 5) groups[1].locs.push(l);
         }
-        const { releaseNation, newArmy, availableUnits } = require_military();
+        const { releaseNation, newArmy, availableUnits, khanFaith } = require_military();
         const made: number[] = [];
         for (const g of groups) {
           if (g.locs.length < 15) continue;
@@ -580,7 +572,7 @@ const DEFS: SituationDef[] = [
             if (!a.fleet && !a.battle && !a.embarkedOn) { a.loc = cap; a.retreating = false; }
           }
           const nn = releaseNation(s, w, h, g.locs, h.culture) as Nation;
-          nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.faith = h.faith; nn.gov = h.gov;
+          nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.faith = khanFaith(s, h, g.locs); nn.gov = h.gov;
           nn.rivals = [h.id]; nn.treasury = 100; nn.flags.horde_successor = 1;
           let pop = 0; for (const l of g.locs) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
           nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;
@@ -623,6 +615,9 @@ const DEFS: SituationDef[] = [
       const holder = sit.data.city >= 0 ? alive(s, s.loc.owner[sit.data.city]) : undefined;
       if (holder && faithFamily(holder.faith) !== 'christian' && holder.id !== sit.data.g) sit.data.g = holder.id;
       const g = alive(s, sit.data.g);
+      // the champion's call to the walls of Granada lasts only while it leads a war for the city (set again below)
+      const prev = s.nations[sit.data.champion ?? -1];
+      if (prev) delete prev.flags.siege_focus;
       // the emirate's lands in Iberia (towns it won or settled beyond the sea are not part of this war)
       const iberia = g ? nationLocsRO(s, g.id).filter((l) => w.lat[l] >= 36 && (sit.data.city < 0 || w.distKm(l, sit.data.city) < 450)) : [];
       const now = iberia.length;
@@ -637,10 +632,14 @@ const DEFS: SituationDef[] = [
         c = ns[0] ?? c;
       }
       if (!c) return;
+      if (sit.data.champion !== undefined && sit.data.champion !== c.id) dropMod(s.nations[sit.data.champion], 'war_for_granada');
       sit.data.champion = c.id;
-      // the crown's siege train before the city (the war for Granada was won by its great guns)
-      if (sit.stage === 1 && sit.data.city >= 0) batter(s, sit.data.city, c.id, g.id);
+      // in the war for Granada the crown calls its whole host to the walls of the city and brings its siege train
+      // (siege_focus: see militaryAI and the sieges in military.ts), while it leads a war against the emirate for it
+      const city: number = sit.data.city;
+      if (sit.stage === 1 && city >= 0 && s.loc.owner[city] === g.id && s.wars.some((x) => x.attLead === c!.id && x.def.includes(g.id) && x.goal.locs.includes(city))) c.flags.siege_focus = city;
       if (m !== 5) return;
+      if (y >= 1520) { delete c.flags.siege_focus; dropMod(c, 'war_for_granada'); endSituation(s, sit, 'endures'); return; }
       giveClaim(s, c.id, g.id, 30);
       const strong = nationDev(s, c.id) > nationDev(s, g.id) * 6 && c.era >= 1;
       if (sit.stage === 0) {
@@ -654,21 +653,26 @@ const DEFS: SituationDef[] = [
         }
         return;
       }
-      // the crown raises a crusading host with a train of siege guns for the fortress towns of the emirate
-      setMod(s, c, 'war_for_granada', 1, { en: 'War for Granada', de: 'Krieg um Granada' }, { morale: 0.05, manpower: 0.1, siege: 2 });
-      // the emirate stands alone: the sultans beyond the strait send no host, and Christian crowns break their pacts with it
-      const far = (x: number) => { const n = s.nations[x]; return !n || n.capital < 0 || w.lat[n.capital] < 36 || w.distKm(n.capital, g.capital >= 0 ? g.capital : sit.data.city) > 600 || faithFamily(n.faith) === 'christian'; };
-      s.treaties = s.treaties.filter((t) => !((t.type === 'alliance' || t.type === 'guarantee') && ((t.a === g.id && far(t.b)) || (t.b === g.id && far(t.a)))));
+      // the crown raises a crusading host for the fortress towns of the emirate
+      setMod(s, c, 'war_for_granada', 1, { en: 'War for Granada', de: 'Krieg um Granada' }, { morale: 0.05, manpower: 0.1 });
       if (g.overlord === c.id) { g.overlord = -1; g.subjectType = null; } // tribute refused: the emirate stands alone
       if (g.overlord >= 0) return; // under another protector: wait
-      // in the war for Granada the crown calls its whole host to the walls of the city (see militaryAI)
-      if (sit.data.city >= 0 && s.loc.owner[sit.data.city] === g.id) c.flags.siege_focus = sit.data.city;
       if (!atWar(s, c.id, g.id) && c.warExhaustion < 50) {
-        // the last towns of a small emirate are all at stake
+        // the last towns of a small emirate are all at stake, the city of Granada first
         const goal = iberia.slice().sort((a, b) => s.loc.dev[b] - s.loc.dev[a]).slice(0, now <= 12 ? now : 10);
-        if (aiWar(s, w, c.id, g.id, 'reconquest', goal, true) >= 0) { sit.data.wars = (sit.data.wars || 0) + 1; world(s, { en: `${c.short.en} marched on the emirate of ${g.short.en}.`, de: `${c.short.de} zog gegen das Emirat ${g.short.de}.` }, c.id, g.capital); }
+        if (city >= 0 && s.loc.owner[city] === g.id && !goal.includes(city)) goal.unshift(city);
+        // a holy war (Castile holds no cores there, so it is no war of reconquest in the sense of declareWar)
+        const wid = aiWar(s, w, c.id, g.id, 'faith', goal, true);
+        if (wid >= 0) {
+          // the emirate fights alone: allies beyond the strait, far away or Christian refuse the call to this war (a
+          // player's realm is called as usual and decides for itself); their treaties with it stand
+          const war = s.wars.find((x) => x.id === wid);
+          const far = (x: number) => { const n = s.nations[x]; return !n || n.capital < 0 || w.lat[n.capital] < 36 || (city >= 0 && w.distKm(n.capital, city) > 600) || faithFamily(n.faith) === 'christian'; };
+          if (war) war.def = war.def.filter((x) => x === war.defLead || s.nations[x]?.overlord === g.id || human(s, x) || !far(x));
+          sit.data.wars = (sit.data.wars || 0) + 1;
+          world(s, { en: `${c.short.en} marched on the emirate of ${g.short.en}.`, de: `${c.short.de} zog gegen das Emirat ${g.short.de}.` }, c.id, g.capital);
+        }
       }
-      if (y >= 1520) endSituation(s, sit, 'endures');
     },
     outcomeText: (s, sit) => {
       if (sit.outcome === 'endures') return { en: 'The emirate of Granada endures, a Muslim realm at the tip of Europe.', de: 'Das Emirat Granada besteht fort, ein muslimisches Reich an der Spitze Europas.' };
@@ -985,7 +989,7 @@ function finishReconquista(s: GameState, w: World, sit: Situation) {
     dropMod(v, 'war_for_granada');
   }
   const champ = s.nations[sit.data.champion ?? -1];
-  if (champ) delete champ.flags.siege_focus;
+  if (champ) { delete champ.flags.siege_focus; dropMod(champ, 'war_for_granada'); }
   s.flags.reconquista_done = s.day;
   endSituation(s, sit, 'completed');
   void w;

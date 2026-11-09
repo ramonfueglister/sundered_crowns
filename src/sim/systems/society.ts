@@ -6,7 +6,7 @@ import { B, BI, C } from '../defs';
 import { MinHeap } from '../setup';
 import { lawEffect, councilBonus } from './politics';
 import { ownedLocs } from './war';
-import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
+import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS, FAITH_INDEX } from '../content/peoples';
 import { chance } from '../rng';
 import { SLOW_CONVERSION, ownFaith } from './faith';
 
@@ -113,11 +113,13 @@ function assimilationYear(s: GameState, w: World) {
   for (let i = 0; i < w.L; i++) {
     const own = s.loc.owner[i]; if (own < 0) continue;
     const n = s.nations[own];
-    // minorities shrink slowly where tolerated, quickly where persecuted
-    if (s.loc.minShare[i] > 0) s.loc.minShare[i] = Math.max(0, s.loc.minShare[i] - 0.004 - Math.max(0, -lawEffect(n, 'tolerance')) * 0.02);
+    // minorities shrink slowly where tolerated, quickly where persecuted; a tolerated Jewish community keeps its faith
+    // for generations (it leaves a realm that persecutes it instead, see faith.ts migrationYear)
+    const keeps = s.loc.minFaith[i] === FAITH_INDEX.jewish && (n.faith === FAITH_INDEX.jewish || lawEffect(n, 'tolerance') >= 0.2);
+    if (s.loc.minShare[i] > 0 && !keeps) s.loc.minShare[i] = Math.max(0, s.loc.minShare[i] - 0.004 - Math.max(0, -lawEffect(n, 'tolerance')) * 0.02);
     // long integrated land of a sister culture slowly takes the ruling culture
     if (s.loc.culture[i] !== n.culture && s.loc.integ[i] >= 1 && GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]]) {
-      if (((i * 7919 + s.day) >>> 0) % 1000 < 3 * s.loc.control[i]) { s.loc.minCulture[i] = s.loc.culture[i]; s.loc.minShare[i] = 0.3; s.loc.culture[i] = n.culture; }
+      if (((i * 7919 + s.day) >>> 0) % 1000 < 3 * s.loc.control[i]) { s.loc.minCulture[i] = s.loc.culture[i]; s.loc.minFaith[i] = s.loc.faith[i]; s.loc.minShare[i] = 0.3; s.loc.culture[i] = n.culture; }
     }
   }
 }

@@ -129,7 +129,8 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
   const cbs = cbList(d); const fabricating = !!d.rel?.fabricating;
   const truce = d.rel.treaties.includes('truce'), allied = d.rel.treaties.includes('alliance');
   const me = nations.value[playerId.value];
-  const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : true) && (g === 'subjugate' ? true : true));
+  // a war of reconquest needs our own land in their hands, a holy war another faith (the simulation refuses the rest)
+  const goals = GOALS.filter((g) => (g === 'independence' ? me?.overlord === d.id : g === 'reconquest' ? cbs.includes('reconquest') : g === 'faith' ? !d.rel?.sameFaith : true));
   return <Section title={t('declare_war')} id="nat-war" open={false}>
     {!open ? <div class="act-row"><Tip content={() => <CbTip d={d} />}><span class="muted">{cbs.length ? <>{t('casus_belli')}: <b>{cbs.map((c) => t(`cb_${c}`)).join(', ')}</b></> : t('no_cb_short')}</span></Tip><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
       : <div class="war-form">

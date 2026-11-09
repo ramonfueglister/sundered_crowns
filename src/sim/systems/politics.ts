@@ -469,10 +469,9 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   const mTarget = sumParts(mandateParts(s, n));
   n.mandate = clamp(n.mandate + (mTarget - n.mandate) * 0.03, 0, 100);
   n.prestige = clamp(n.prestige * 0.995, -100, 100);
-  // weariness fades in peace, and slowly too for a realm that only stands by its allies (it leads no war of its own)
+  // weariness fades only in peace (an ally called into a war tires more slowly than its leader, see warsMonth)
   const inWar = s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id));
-  const leads = inWar && s.wars.some((x) => x.attLead === n.id || x.defLead === n.id);
-  n.warExhaustion = Math.max(0, n.warExhaustion - (!inWar ? 1.5 : leads ? 0 : 0.3));
+  if (!inWar) n.warExhaustion = Math.max(0, n.warExhaustion - 1.5);
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {

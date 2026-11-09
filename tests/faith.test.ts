@@ -13,12 +13,12 @@ import { B, BI, BUILDINGS } from '../src/sim/defs';
 import { faith, locByName, patriarchProtector } from '../src/sim/systems/faith';
 import { mandateParts, concordParts, sumParts, authorityGain } from '../src/sim/systems/politics';
 import { takeDecision } from '../src/sim/systems/events';
-import { sideStats, attritionMonth, newArmy, availableUnits, armyMen } from '../src/sim/systems/military';
-import { agentsMonth } from '../src/sim/systems/society';
+import { sideStats, attritionMonth, newArmy, availableUnits, armyMen, khanFaith } from '../src/sim/systems/military';
+import { agentsMonth, society } from '../src/sim/systems/society';
 import { locationStep, effectiveTax, takeLoan } from '../src/sim/systems/economy';
 import { researchRate } from '../src/sim/systems/progress';
 import { opinionBreakdown, libertyParts } from '../src/sim/systems/diplomacy';
-import { casusBelliAll, nationLocs } from '../src/sim/systems/war';
+import { casusBelliAll, nationLocs, applyPeace } from '../src/sim/systems/war';
 import type { GameState, Nation } from '../src/sim/types';
 
 const w = loadWorld();
@@ -271,4 +271,51 @@ describe('faith mechanics (point 78)', () => {
       else expect(r.mech, `${f.id}: ${r.mech} vs control ${r.ctrl}`).toBeLessThan(r.ctrl);
     });
   }
+});
+
+// The faith mechanics must be able to fire in a game, not only when a test sets a realm's faith by hand.
+describe('faiths in play (point 78)', () => {
+  it('Bosnia starts in the Bosnian Church, and its mechanic is at work from the first month', () => {
+    const s = fresh(); const b = nat(s, 'bosnia');
+    expect(b.faith).toBe(F.bosnian_church);
+    faithMonth(s);
+    expect(b.modifiers.some((m) => m.id === 'faith_bosnian_church')).toBe(true);
+  });
+
+  it('tolerated Jewish communities keep their faith for generations; other minorities fade', () => {
+    const s = fresh(); const ctx = mkCtx(s, w);
+    faithMonth(s);
+    const count = () => s.nations.filter((n) => n.alive && n.modifiers.some((m) => m.id === 'faith_jewish')).length;
+    const before = count();
+    expect(before).toBeGreaterThan(5);
+    const jew = [...Array(w.L).keys()].find((l) => s.loc.owner[l] >= 0 && s.loc.minFaith[l] === F.jewish && s.loc.minShare[l] > 0.02)!;
+    const other = [...Array(w.L).keys()].find((l) => s.loc.owner[l] >= 0 && s.loc.minFaith[l] !== F.jewish && s.loc.minShare[l] > 0.1)!;
+    const j0 = s.loc.minShare[jew], o0 = s.loc.minShare[other];
+    for (let k = 0; k < 10; k++) society.yearly!(ctx);
+    expect(s.loc.minShare[jew]).toBeCloseTo(j0, 6);
+    expect(s.loc.minShare[other]).toBeLessThan(o0);
+    faithMonth(s);
+    expect(count()).toBe(before);
+  });
+
+  it('a people set free keeps its own faith; a khan over the forest peoples returns to the steppe faith', () => {
+    // Norway releases its Sámi land in a peace: the new realm follows the Sámi faith
+    const s = fresh(); const no = nat(s, 'norway'), sw = nat(s, 'sweden');
+    const sami = nationLocs(s, no.id).filter((l) => s.loc.faith[l] === F.sami_old).slice(0, 8);
+    expect(sami.length).toBe(8);
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce' && t.type !== 'alliance');
+    expect(applyCommand(s, w, { t: 'declare', n: sw.id, target: no.id, goal: 'conquest' }).ok).toBe(true);
+    const wr = s.wars[s.wars.length - 1];
+    const n0 = s.nations.length;
+    applyPeace(s, w, wr, sw.id, no.id, [{ type: 'release', locs: sami }]);
+    const freed = s.nations.find((n) => n.alive && n.id !== no.id && s.loc.owner[sami[0]] === n.id)!;
+    expect(s.nations.length).toBeGreaterThanOrEqual(n0);
+    expect(freed.faith).toBe(F.sami_old);
+    // a khanate breaking from the (Sunni) Horde over Finnic and Chuvash land takes the Tengri faith; over Muslim land not
+    const h = nat(s, 'golden_horde');
+    const forest = nationLocs(s, h.id).filter((l) => FAITHS[s.loc.faith[l]].family === 'traditional').slice(0, 20);
+    const steppe = nationLocs(s, h.id).filter((l) => s.loc.faith[l] === F.sunni).slice(0, 20);
+    expect(khanFaith(s, h, forest)).toBe(F.tengri);
+    expect(khanFaith(s, h, steppe)).toBe(F.sunni);
+  });
 });

@@ -204,7 +204,7 @@ export function libertyParts(s: GameState, w: World, n: Nation, ov: Nation): [st
     // a crown of another people does not merge easily into the senior crown of a personal union
     ['foreign_crown', n.subjectType === 'personal_union' && n.culture !== ov.culture ? 20 : 0],
     // the tributaries of a horde whose steppe order is fading (see steppeFade)
-    ['steppe_fading', ov.gov === 'nomadic_horde' ? Math.round(25 * steppeFade(s)) : 0],
+    ['steppe_fading', Math.round(25 * steppeFade(ov))],
     // colonial realms drift apart from the crown over generations
     ['colonial_distance', n.subjectType === 'colonial' ? 5 + Math.min(45, (s.day - n.subjectSince) / 365 * 0.35) : 0],
   ];

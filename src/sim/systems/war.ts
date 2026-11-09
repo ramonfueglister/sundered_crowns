@@ -106,6 +106,14 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   if (na.overlord >= 0 && na.subjectType !== 'tributary' && goalType !== 'independence') return 'subjects cannot declare wars';
   if (goalType !== 'independence' && tributaryPeace(s, a, b)) return 'the overlord forbids war among his tributaries';
   if (na.overlord === b && goalType !== 'independence') return 'we pay tribute to them';
+  // the war goal must fit the cause: a war of reconquest is fought for our own land that they hold, a holy war against
+  // another faith (both change who comes to the defence and how long the truce runs, see below and concludePeace)
+  if (goalType === 'reconquest') {
+    if (!casusBelliAll(s, a, b).includes('reconquest') || locs.some((l) => s.loc.core[l] !== a)) return 'no land of ours to win back';
+    // without named towns, our lands that they hold (the richest first) are the goal of the war
+    if (!locs.length) locs = reconquestLocs(s, a, b);
+  }
+  if (goalType === 'faith' && na.faith === nb.faith) return 'they share our faith';
   const brokenTruce = hasTreaty(s, a, b, 'truce');
   if (hasTreaty(s, a, b, 'alliance')) { s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); na.prestige -= 10; }
   const cb = hasCasusBelli(s, a, b);
@@ -177,6 +185,12 @@ export function warScoreEvent(s: GameState, winner: number, loser: number, kind:
   }
 }
 
+/** a's own land (cores) that b holds, the richest first: the goal of a war of reconquest (at most 12 towns). */
+export function reconquestLocs(s: GameState, a: number, b: number): number[] {
+  const out: number[] = [];
+  for (const l of nationLocsRO(s, b)) if (s.loc.core[l] === a) out.push(l);
+  return out.sort((x, y) => s.loc.dev[y] - s.loc.dev[x] || x - y).slice(0, 12);
+}
 /** Every justification a has against b (hasCasusBelli returns the first of these). */
 export function casusBelliAll(s: GameState, a: number, b: number): string[] {
   const out: string[] = [];
@@ -306,8 +320,9 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
     if (t.type === 'independence') { Ln.overlord === winner ? null : null; const sub = s.nations[t.nation ?? winner]; sub.overlord = -1; sub.subjectType = null; parts.push('independence'); partsDe.push('Unabhängigkeit'); }
     if (t.type === 'release' && t.locs?.length) {
       // release a nation from the loser's land
-      const { releaseNation } = require_military();
+      const { releaseNation, landFaith } = require_military();
       const nn = releaseNation(s, w, Ln, t.locs, s.loc.culture[t.locs[0]]);
+      const lf = landFaith(s, t.locs); if (lf >= 0) nn.faith = lf; // a people set free keeps its own faith
       parts.push(`release of ${nn.short.en}`); partsDe.push(`Freilassung von ${nn.short.de}`);
     }
   }
@@ -373,8 +388,10 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
   // if the offer was between the war leaders, the whole war ends; otherwise only the separate peace
   const leaders = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
   const ending = leaders ? [...war.att, ...war.def] : [from === war.attLead || from === war.defLead ? to : from];
-  // a war to win back one's own land resumes sooner (the reconquest of Granada went on campaign after campaign)
-  const truceYears = war.goal.type === 'reconquest' ? 2 : 5;
+  // a war fought for one's own land resumes sooner: the truce runs two years when every town the war was declared for
+  // is a core of the attacker (whatever the war was called), otherwise five
+  const ownLand = war.goal.locs.length > 0 && war.goal.locs.every((l) => s.loc.core[l] === war.attLead);
+  const truceYears = ownLand ? 2 : 5;
   // the truce binds the war leaders to every enemy, not the allies to each other: otherwise every alliance war renewed
   // truces between bystanders for good (the City and Granada were kept safe that way for a century)
   const lead = (x: number) => x === war.attLead || x === war.defLead;
