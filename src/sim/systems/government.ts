@@ -10,9 +10,10 @@ import type { GameState, Nation, WarGoal, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addExpense } from '../ctx';
 import { CL, CLASS_NEED_MULT } from '../defs';
-import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir } from './politics';
+import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir, consortOf } from './politics';
 import { nationDev, hasCasusBelli } from './war';
 import { chance, rand, hash01 } from '../rng';
+import { houseName as cultureHouse } from '../content/names';
 
 type Row = [string | I18n, number];
 const T = (en: string, de: string): I18n => ({ en, de });
@@ -306,7 +307,8 @@ function validCand(s: GameState, n: Nation, id: number, minAge = 25) {
 function houseName(s: GameState, w: World, n: Nation): string {
   const own: number[] = []; for (let l = 0; l < s.loc.owner.length && own.length < 40; l++) if (s.loc.owner[l] === n.id) own.push(l);
   const l = own.length ? own[Math.floor(rand(s.rng) * own.length)] : n.capital;
-  return w.names[l] ?? n.dynasty;
+  // a house of the realm's own people (content/names.ts pools), else one named after a place of the realm
+  return cultureHouse(s.rng, n.culture) || (w.names[l] ?? n.dynasty);
 }
 /** Fill the candidate list of a realm whose head is chosen (vacant places get a new candidate from the court). */
 export function ensureCandidates(s: GameState, w: World, n: Nation): number[] {
@@ -320,7 +322,7 @@ export function ensureCandidates(s: GameState, w: World, n: Nation): number[] {
     if (p === 'crown' && i === 0 && n.heir && validCand(s, n, n.heir, 16) && !out.includes(n.heir)) { out.push(n.heir); continue; }
     const kin = p === 'crown';
     const c = newChar(s, n, {
-      born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), female: proc === 'clergy' || proc === 'acclaim' ? false : chance(s.rng, 0.1),
+      born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), female: kin && proc === 'elective' ? chance(s.rng, 0.1) : false, // only an elective crown passes, rarely, to a woman; chapters, hordes and towns choose men
       role: proc === 'clergy' ? 'clergy' : 'courtier', dynasty: kin ? n.dynasty : houseName(s, w, n),
       skills: [Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6)] as [number, number, number],
     });
@@ -397,6 +399,7 @@ function termElection(s: GameState, w: World, n: Nation) {
   if (oc) oc.role = 'courtier';
   const c = s.chars[id]; c.role = 'ruler';
   n.ruler = id; n.flags.term = 1; n.flags.ruler_changed = s.day; n.regent = 0;
+  n.consort = consortOf(s, n, c); // the new head's own spouse, never the predecessor's
   for (const off in n.council) if (n.council[off] === id) delete n.council[off];
   if (n.heir === id) n.heir = 0;
   pickNewHeir(s, n);

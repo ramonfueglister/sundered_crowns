@@ -5,13 +5,15 @@ import type { World } from '../world';
 import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf, topOverlord } from '../ctx';
 import { UNITS, B, BI, BUILDINGS, C, CL, GOODS, RAW_FROM_MINE } from '../defs';
 import { rand, chance, hash01 } from '../rng';
-import { applyCommand, buildRefusal } from '../commands';
+import { buildRefusal } from '../commands';
+// every AI command goes through applyCommand like a player's, counted and logged (systems/ai_log.ts)
+import { aiApply as applyCommand } from './ai_log';
+import { statecraft, aiReforms } from './ai_statecraft';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
-import { LAWS, LAW_INDEX } from '../content/laws';
-import { reformCost, lawEffect } from './politics';
+import { lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
 import { FAITH_INDEX, FAITHS } from '../content/peoples';
@@ -71,7 +73,8 @@ function strategic(s: GameState, w: World, n: Nation) {
   seekAccess(s, w, n);
   if (!wars.length) spendSurplus(s, w, n);
   if (n.treasury > 0) { const inc = Object.values(n.income).reduce((p, v) => p + v, 0); const k = n.treasury > inc * 12 ? 3 : 1; for (let j = 0; j < k; j++) construction(s, w, n); }
-  reforms(s, w, n);
+  aiReforms(s, w, n, wars.length > 0);
+  statecraft(s, w, n, wars.length > 0);
   churchPolitics(s, w, n);
   diplomacy(s, w, n);
   aiTrade(s, w, n); // merchants, tariffs, trade agreements and embargoes (systems/tradeai.ts)
@@ -300,7 +303,7 @@ export function spendSurplus(s: GameState, w: World, n: Nation) {
   // gifts and favours for a discontented estate
   for (const e of n.estates) {
     if (e.contentment >= 45 || surplus() <= 0) continue;
-    applyCommand(s, w, { t: 'estate', n: n.id, estate: e.id, action: 'appease' });
+    applyCommand(s, w, { t: 'estate', n: n.id, estate: e.id, action: 'appease' }, 'estate_restless');
   }
   // the next stage of a landmark we hold
   for (const x of landmarksOf(s, w)) {
@@ -331,21 +334,6 @@ export function spendSurplus(s: GameState, w: World, n: Nation) {
 function borderLoc(s: GameState, w: World, l: number, n: number) {
   for (let e = w.adjStart[l]; e < w.adjStart[l + 1]; e++) { const v = w.adj[e]; if (v < w.L && s.loc.owner[v] !== n && s.loc.owner[v] >= 0) return true; }
   return false;
-}
-
-function reforms(s: GameState, w: World, n: Nation) {
-  if (n.reform || n.authority < 90) return;
-  // choose a law change that fits the personality and keeps powers content
-  const prefs: [string, number][] = P(n, 'conqueror') ? [['army', 3], ['administration', 2], ['taxation', 2]] : P(n, 'trader') ? [['trade', 1], ['towns', 2], ['mint', 2]] : P(n, 'zealot') ? [['tolerance', 0], ['inquisition', 2]] : P(n, 'builder') ? [['administration', 2], ['education', 2], ['roads', 2]] : [['justice', 1], ['administration', 1], ['taxation', 2]];
-  for (const [law, opt] of prefs) {
-    const L = LAWS[LAW_INDEX[law]]; if (!L) continue;
-    const o = Math.min(opt, L.options.length - 1);
-    if ((n.laws[law] ?? 0) === o) continue;
-    if ((L.options[o].minEra ?? 0) > n.era) continue;
-    if (n.authority < reformCost(n, law, o) + 20) continue;
-    const r = applyCommand(s, w, { t: 'law', n: n.id, law, option: o });
-    if (r.ok) return;
-  }
 }
 
 /** Favour of the Curia (Latin faith): a realm in good standing has the pope ban a Latin enemy or rival, which turns

@@ -9,6 +9,7 @@ import { EnvoysTip, PrestigeTip, DreadTip, ManpowerTip, WarExhaustionTip, Resear
 import { keyName } from '../TopBar';
 import { errText } from '../i18n';
 import { RecentBattles } from './war';
+import { charName } from './people';
 
 // ---------------------------------------------------------------- wars (shared)
 /** Tooltip body: war score and its parts from the player's side. */
@@ -110,7 +111,7 @@ export function MilitaryTab() {
     </div>
     <Section title={t('armies')} id="mil-armies">
       {land.length ? <table class="tbl"><thead><tr><th>{t('name')}</th><th>{t('location')}</th><th class="r">{t('men')}</th><th>{t('morale')}</th><th>{t('general')}</th><th>{t('status')}</th></tr></thead>
-        <tbody>{land.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</td><td>{locName(a.loc)}</td><td class="r"><Tip content={<div><TipHead name={L(a.name)} value={`${num(a.men)} ${a.fleet ? t('ships') : t('men')}`} hint={a.fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}>{num(a.men)}</Tip></td><td><Bar value={a.morale} color="#4d7a3a" tip={<div><TipHead name={t('morale')} value={pct(a.morale)} hint={t('x_morale_hint')} /></div>} /></td><td>{a.general || <span class="muted">—</span>}</td>
+        <tbody>{land.map((a) => <tr class="click" onClick={() => selectArmy(a.id)}><td>{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</td><td>{locName(a.loc)}</td><td class="r"><Tip content={<div><TipHead name={L(a.name)} value={`${num(a.men)} ${a.fleet ? t('ships') : t('men')}`} hint={a.fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}>{num(a.men)}</Tip></td><td><Bar value={a.morale} color="#4d7a3a" tip={<div><TipHead name={t('morale')} value={pct(a.morale)} hint={t('x_morale_hint')} /></div>} /></td><td>{charName(a.general) || <span class="muted">—</span>}</td>
           <td class="muted">{a.battle ? <span class="neg">{t('in_battle')}</span> : a.siege >= 0 ? t('besieging') : a.path.length ? <>→ {locName(a.path[a.path.length - 1])}</> : a.embarked ? t('embarked') : t('idle')}</td></tr>)}</tbody></table> : <div class="muted small">{t('no_armies')}</div>}
     </Section>
     <Section title={t('fleets')} id="mil-fleets">

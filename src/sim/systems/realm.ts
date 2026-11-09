@@ -171,10 +171,10 @@ function steppeSplitYear(s: GameState, w: World) {
     g = g.slice().sort((a, b) => s.loc.dev[b] - s.loc.dev[a] || a - b);
     // the horde's troops in the breakaway lands fall back to its seat
     for (const a of s.armies) if (a.owner === h.id && g.includes(a.loc)) { a.path = []; a.siege = -1; if (!a.fleet && !a.battle && !a.embarkedOn) { a.loc = cap; a.retreating = false; } }
-    const nn = releaseNation(s, w, h, g, h.culture);
+    const nn = releaseNation(s, w, h, g, h.culture, khanFaith(s, h, g)); // the khanate's own faith, set before its arms are drawn
     const town = w.names[g[0]], townDe = w.namesDe[g[0]];
     nn.name = { en: `Khanate of ${town}`, de: `Khanat ${townDe}` }; nn.short = { en: town, de: townDe }; nn.adj = { en: town, de: townDe };
-    nn.rank = 'kingdom'; nn.gov = h.gov; nn.faith = khanFaith(s, h, g); nn.treasury = 100; nn.flags.horde_successor = 1;
+    nn.rank = 'kingdom'; nn.gov = h.gov; nn.treasury = 100; nn.flags.horde_successor = 1;
     nn.rivals = [h.id]; if (!h.rivals.includes(nn.id)) h.rivals.push(nn.id);
     let pop = 0; for (const l of g) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
     nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;

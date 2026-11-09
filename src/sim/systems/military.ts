@@ -8,6 +8,10 @@ import { UNITS, U, TERRAIN_DEF, TERRAINS, B, BI, C, CL, GI } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { dayToDate } from '../calendar';
 import { lawEffect, ageOf, characterDies, councilBonus } from './politics';
+import { commanderSkill, commanderMorale, battleLessons, appointBest } from './commanders';
+import { personName } from '../content/names';
+import { genCoa } from '../content/heraldry';
+import { GROUP_OF } from '../content/peoples';
 import { integrationYield } from './economy';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
@@ -604,8 +608,9 @@ export function sideStats(s: GameState, w: World, armies: Army[], loc: number, d
   const rough = t.defence >= 0.15;
   const pikeCut = !naval && mine.men > 0 ? 0.35 * Math.min(1, mine.pikes / mine.men / 0.3) * (rough ? 0.7 : 1) : 0;
   if (pikeCut > 0.005 && foe.cav > 0) mods.push(['x_bm_pikes', pikeCut]);
-  const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
-  const genSkill = gen ? gen.skills[2] : 0;
+  // the ablest commander present leads; traits add to or take from his generalship and steady the men (commanders.ts)
+  const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => commanderSkill(b) - commanderSkill(a) || a!.id - b!.id)[0];
+  const genSkill = commanderSkill(gen);
   // on their own land: militias and highlanders hold better when defending (defence); homeland faiths (baltic_old,
   // american_traditional, hussite) add defence and morale whether they attack or defend there
   const home = !!n && loc < w.L && s.loc.owner[loc] === n.id && !armies[0]?.rebels;
@@ -623,7 +628,7 @@ export function sideStats(s: GameState, w: World, armies: Army[], loc: number, d
       if (walls > 0.001) mods.push(['x_bm_walls', walls]);
     }
   }
-  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, cavShock, pikeCut, gen: genSkill, genName: gen?.name ?? '', terrainDef: (defending ? t.defence : 0) + homeDef + walls, homeMorale, disc: men > 0 ? disc / men : 1, mods };
+  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, cavShock, pikeCut, gen: genSkill, genName: gen?.name ?? '', terrainDef: (defending ? t.defence : 0) + homeDef + walls, homeMorale: Math.max(-0.5, homeMorale + commanderMorale(gen)), disc: men > 0 ? disc / men : 1, mods };
 }
 type SideStats = ReturnType<typeof sideStats>;
 
@@ -635,7 +640,7 @@ export const MORALE_BREAK = 0.15;
 function troopsOf(l: Army[]): Map<number, number> { const m = new Map<number, number>(); for (const a of l) for (const r of a.regs) m.set(r.type, (m.get(r.type) ?? 0) + r.men); return m; }
 /** A side of the report as the battle opens: commanders, troops, morale and the factors of its strength. */
 function openSide(s: GameState, w: World, b: Battle, list: Army[], st: SideStats, attacker: boolean): BattleSideRep {
-  const gens = list.map((a) => s.chars[a.general]).filter((c) => c && c.alive).map((c) => ({ name: c!.name, skill: c!.skills[2] }));
+  const gens = list.map((a) => s.chars[a.general]).filter((c) => c && c.alive).map((c) => ({ name: c!.name, skill: commanderSkill(c) }));
   const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(b.loc, w.L - 1)]] ?? 'plains'];
   const n = s.nations[list[0]?.owner];
   const parts: [string, number][] = [
@@ -760,6 +765,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
     if (dest >= 0) { const p = findPath(s, w, a, a.loc, dest, 4000); if (p) { a.path = p; a.retreating = true; } }
   }
   for (const a of W) a.morale = Math.min(maxMorale(s, a), a.morale + 0.1);
+  battleLessons(s, W, Lz); // experience, new traits and wounds for the commanders (commanders.ts)
   // rebels are told apart by their armies (a rebel stack carries its realm's id): the rebel side earns or loses no
   // prestige, war exhaustion or war score
   const rebW = W.some((a) => a.rebels), rebL = Lz.some((a) => a.rebels);
@@ -1217,8 +1223,7 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   const locs: number[] = []; for (let i = 0; i < w.L; i++) if (s.loc.ctrl[i] === -2 && s.loc.owner[i] === n.id) locs.push(i);
   if (f === 'separatist' && locs.length >= 3) {
     // break away as a new nation
-    const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]]);
-    const lf = landFaith(s, locs); if (lf >= 0) nn.faith = lf;
+    const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]], landFaith(s, locs));
     chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
   } else {
     for (const l of locs) s.loc.ctrl[l] = n.id as any;
@@ -1249,25 +1254,32 @@ export function khanFaith(s: GameState, from: Nation, locs: readonly number[]): 
   const lf = landFaith(s, locs);
   return lf >= 0 && lf !== from.faith && FAITHS[lf]?.family === 'traditional' ? FAITH_INDEX.tengri : from.faith;
 }
-export function releaseNation(s: GameState, w: World, from: Nation, locs: number[], culture: number): Nation {
+/** A realm released from `from` on the land `locs`, of the people `culture`; `faith` (when given and not -1) is the
+ *  new realm's own faith, set before its arms are drawn (a people set free keeps its faith: landFaith, khanFaith);
+ *  otherwise it keeps the faith of the realm it came from. */
+export function releaseNation(s: GameState, w: World, from: Nation, locs: number[], culture: number, faith = -1): Nation {
   // reuse a dead nation with a capital among these locations if possible
   let nn = s.nations.find((x) => !x.alive && locs.includes(x.capital));
   if (!nn) {
     const id = s.nations.length;
-    const nm = w.names[locs[0]];
+    const nm = w.names[locs[0]], nmDe = w.namesDe?.[locs[0]] ?? nm;
     const hue = hash01(id, 5);
     const col: [number, number, number] = [Math.floor(80 + hue * 150), Math.floor(80 + hash01(id, 6) * 150), Math.floor(80 + hash01(id, 7) * 150)];
     nn = JSON.parse(JSON.stringify({ ...from, loans: [], history: [], modifiers: [], wars: [] }));
     Object.assign(nn!, {
-      id, key: `released_${id}`, name: { en: `${nm}`, de: `${nm}` }, short: { en: nm, de: nm }, adj: { en: nm, de: nm }, color: col, color2: col.map((v) => v - 50),
+      id, key: `released_${id}`, name: { en: `${nm}`, de: `${nmDe}` }, short: { en: nm, de: nmDe }, adj: { en: nm, de: nmDe }, color: col, color2: col.map((v) => v - 50),
       rank: 'duchy', culture, capital: locs[0], treasury: 50, debt: 0, manpower: 1000, overlord: -1, subjectType: null, rivals: [from.id], dread: 0, isHRE: false, elector: false,
       playerId: null, ai: true, stats: { battlesWon: 0, battlesLost: 0, locsGained: 0, locsLost: 0, warsWon: 0 }, goalsDone: [], flags: {}, coa: null, alive: true,
+      candidates: [], generals: [], aiLog: [],
     });
     s.nations.push(nn!);
-    const r = { id: newId(s), name: 'Lord of ' + nm, dynasty: nm, female: false, born: s.day - 35 * 365, skills: [2, 2, 3] as [number, number, number], traits: ['ambitious'], nation: id, alive: true, children: [], health: 1, role: 'ruler' as const };
-    s.chars[r.id] = r; nn!.ruler = r.id; nn!.heir = 0; nn!.consort = 0; nn!.regent = 0; nn!.council = {};
+    nn!.ruler = 0;
   }
   if (!nn!.alive) forgetTrade(s, nn!.id); // a realm brought back starts without its old merchants and embargoes
+  if (faith >= 0) nn!.faith = faith;
+  // a ruler of the land's own people and a house of its nobility, arms of its own (content/names.ts, heraldry.ts)
+  if (!s.chars[nn!.ruler]?.alive || s.chars[nn!.ruler]?.nation !== nn!.id) releasedRuler(s, nn!, culture);
+  if (!nn!.coa) nn!.coa = genCoa(nn!.id * 7919 + s.seed, GROUP_OF[ALL_CULTURES[culture]] ?? 'other', FAITHS[nn!.faith]?.family === 'muslim', w.names[locs[0]]);
   nn!.alive = true;
   for (const l of locs) { s.loc.owner[l] = nn!.id; s.loc.ctrl[l] = nn!.id; s.loc.core[l] = nn!.id; }
   s.flags.ownershipDirty = s.day; bump();
@@ -1275,14 +1287,17 @@ export function releaseNation(s: GameState, w: World, from: Nation, locs: number
 }
 
 // ---------------- generals ----------------
-export function appointGeneral(s: GameState, n: Nation, a: Army): number {
-  const r = s.chars[n.ruler];
-  // ruler leads in person if a good general and not already commanding
-  const used = new Set(s.armies.filter((x) => x.owner === n.id).map((x) => x.general));
-  if (r && r.alive && r.skills[2] >= 4 && !used.has(r.id) && ageOf(s, r) > 16 && ageOf(s, r) < 60) { a.general = r.id; return r.id; }
-  const c = { id: newId(s), name: `${['Sir', 'Lord', 'Count', 'Captain'][Math.floor(rand(s.rng) * 4)]} ${['Hugh', 'Bertrand', 'Konrad', 'Pedro', 'Giovanni', 'Jan', 'Mikhail', 'Osman', 'Arnaud', 'Ulrich'][Math.floor(rand(s.rng) * 10)]}`, dynasty: '', female: false, born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), skills: [1, 1, 1 + Math.floor(rand(s.rng) * 5)] as [number, number, number], traits: chance(s.rng, 0.3) ? [['brave', 'cautious', 'energetic', 'rash'][Math.floor(rand(s.rng) * 4)]] : [], nation: n.id, alive: true, children: [], health: 1, role: 'general' as const };
-  s.chars[c.id] = c; a.general = c.id; return c.id;
+/** The ablest free commander takes the army (commanders.ts appointBest): a fine general among the ruler, heir, kin,
+ *  nobles at court and the realm's generals, else a new lord of the levy of the realm's own people. */
+export function appointGeneral(s: GameState, n: Nation, a: Army): number { return appointBest(s, n, a); }
+/** The first ruler of a realm the game creates: a grown lord of the land's people, of one of its noble houses. */
+function releasedRuler(s: GameState, nn: Nation, culture: number) {
+  const p = personName(s.rng, culture, false);
+  const given = p.name.replace(p.dynasty, '').trim() || p.name;
+  const r = { id: newId(s), name: given, dynasty: p.dynasty || w0name(nn), female: false, born: s.day - Math.floor((28 + rand(s.rng) * 20) * 365), skills: [1 + Math.floor(rand(s.rng) * 4), 1 + Math.floor(rand(s.rng) * 4), 1 + Math.floor(rand(s.rng) * 4)] as [number, number, number], traits: chance(s.rng, 0.5) ? ['ambitious'] : [], nation: nn.id, alive: true, children: [], health: 1, role: 'ruler' as const };
+  s.chars[r.id] = r; nn.ruler = r.id; nn.heir = 0; nn.consort = 0; nn.regent = 0; nn.council = {}; nn.dynasty = r.dynasty;
 }
+const w0name = (nn: Nation) => nn.short.en;
 
 export const military: System = {
   id: 'military',

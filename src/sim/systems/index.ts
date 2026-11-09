@@ -19,9 +19,10 @@ import { faith } from './faith';
 import { empire } from './empire';
 import { government } from './government';
 import { powers } from './powers';
+import { commanders } from './commanders';
 
 _setMilitary({ releaseNation, newArmy, availableUnits, landFaith, khanFaith });
 // the towns a war of conquest is fought for include the places the realm's own goals name (systems/war.ts warGoalLocs)
 GOAL_PLACES.f = (s, w, n) => goalWants(s, w, n).places;
 
-export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai];
+export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai];

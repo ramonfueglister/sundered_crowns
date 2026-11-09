@@ -5,6 +5,7 @@ import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost, assault, scorchEarth } from './systems/military';
+import { availableCommanders, setCommander, raiseGeneral, generalCost } from './systems/commanders';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
@@ -134,11 +135,19 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       return OK;
     }
     case 'general': {
+      // char 0: the ablest free commander; -1: raise a seasoned general for gold; else a person who may command
+      // (systems/commanders.ts availableCommanders)
       const a = myArmy(s, cmd.n, cmd.army); if (!a) return err('not your army');
+      if (a.rebels) return err('not your army');
       if (cmd.char === 0) { appointGeneral(s, n, a); return OK; }
+      if (cmd.char === -1) {
+        const cost = generalCost(s, n); if (n.treasury < cost) return err('not enough gold');
+        n.treasury -= cost; n.expenseAcc.generals = (n.expenseAcc.generals || 0) + cost;
+        setCommander(s, n, a, raiseGeneral(s, n, true, a.fleet)); return OK;
+      }
       const c = s.chars[cmd.char]; if (!c || !c.alive || c.nation !== cmd.n) return err('no such person');
-      for (const o of s.armies) if (o.general === c.id) o.general = 0;
-      a.general = c.id; return OK;
+      if (!availableCommanders(s, n).some((x) => x.id === c.id)) return err('cannot lead an army');
+      setCommander(s, n, a, c); return OK;
     }
     case 'landmark': { const e = startLandmark(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
     case 'build': {

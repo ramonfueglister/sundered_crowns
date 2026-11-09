@@ -113,6 +113,11 @@ function migrate(s: GameState): GameState {
   }
   // (realm pass: the Empire's election, calls, orders and favours, the great powers and the demands of the Powers are
   // optional fields that the systems create when first needed, so older saves load without a new version)
+  // people pass (idempotent, whatever the version): generals, the AI's log, candidates at every court
+  for (const n of s.nations) {
+    n.aiLog ??= []; n.candidates ??= [];
+    if (!n.generals) { n.generals = []; for (const a of s.armies) if (a.owner === n.id && a.general && a.general !== n.ruler && a.general !== n.heir && s.chars[a.general]) n.generals.push(a.general); }
+  }
   return s;
 }
 /** One treaty of each kind per pair (two envoys that crossed on the road once made the same alliance twice). */

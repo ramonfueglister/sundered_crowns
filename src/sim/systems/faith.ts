@@ -187,7 +187,7 @@ export function imamElection(s: GameState, w: World, n: Nation) {
   const old = s.chars[n.ruler];
   if (old) { old.role = 'courtier'; }
   const c = newChar(s, n, { born: s.day - Math.floor(45 * 365), role: 'ruler', female: false, skills: [3, 4, 2], traits: ['pious'], dynasty: n.dynasty });
-  n.ruler = c.id; n.regent = 0; pickNewHeir(s, n);
+  n.ruler = c.id; n.consort = 0; n.regent = 0; pickNewHeir(s, n);
   n.mandate = 60; n.concord = clamp(n.concord + 10, -100, 100);
   n.flags.imam_elected = s.day;
   chronicle(s, n.id, 'succession', { en: `The community of ${n.short.en} deposed its ruler and elected ${c.name} as imam.`, de: `Die Gemeinde von ${n.short.de} setzte ihren Herrscher ab und wählte ${c.name} zum Imam.` });

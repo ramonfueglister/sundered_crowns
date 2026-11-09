@@ -564,7 +564,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
         const old = s.chars[Ln.ruler];
         if (old) old.role = 'courtier';
         const c = newChar(s, Ln, { born: s.day - Math.floor(28 * 365), role: 'ruler', female: false, dynasty: W.dynasty, skills: [2, 2, 2] });
-        Ln.ruler = c.id; Ln.heir = 0; Ln.regent = 0; Ln.dynasty = W.dynasty; Ln.mandate = clamp(Ln.mandate - 20, 0, 100);
+        Ln.ruler = c.id; Ln.heir = 0; Ln.consort = 0; Ln.regent = 0; Ln.dynasty = W.dynasty; Ln.mandate = clamp(Ln.mandate - 20, 0, 100);
         pickNewHeir(s, Ln);
         const lo = Math.min(winner, loser), hi = Math.max(winner, loser);
         s.treaties = s.treaties.filter((x) => !((x.type === 'alliance' || x.type === 'marriage') && x.a === lo && x.b === hi));
@@ -596,8 +596,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
     if (t.type === 'release' && t.locs?.length) {
       // release a nation from the loser's land
       const { releaseNation, landFaith } = require_military();
-      const nn = releaseNation(s, w, Ln, t.locs, s.loc.culture[t.locs[0]]);
-      const lf = landFaith(s, t.locs); if (lf >= 0) nn.faith = lf; // a people set free keeps its own faith
+      const nn = releaseNation(s, w, Ln, t.locs, s.loc.culture[t.locs[0]], landFaith(s, t.locs)); // a people set free keeps its own faith (and arms to match)
       parts.push(`release of ${nn.short.en}`); partsDe.push(`Freilassung von ${nn.short.de}`);
     }
   }
@@ -810,6 +809,8 @@ function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Natio
   if (pretenderWon && s.chars[pre.ruler]?.alive) {
     legit.ruler = pre.ruler; legit.heir = pre.heir; legit.consort = pre.consort; legit.regent = 0;
     if (s.chars[pre.ruler]) s.chars[pre.ruler].role = 'ruler';
+    // the pretender's court (consort, children, kin) moves to the reunited realm
+    for (const k in s.chars) { const c = s.chars[k]; if (c.alive && c.nation === pre.id) c.nation = legit.id; }
     legit.dynasty = pre.dynasty || legit.dynasty; legit.mandate = 40;
   } else legit.mandate = clamp(legit.mandate + 15, 0, 100);
   pre.alive = false; pre.overlord = -1;

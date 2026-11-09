@@ -108,6 +108,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'no effect now': 'Zurzeit ohne Wirkung', 'a Horde held by a player does not break apart': 'Eine Horde in Spielerhand zerbricht nicht',
   'no mediation is offered': 'Keine Vermittlung angeboten', 'no call of the league is pending': 'Kein Ruf des Bundes offen',
   'the war is over': 'Der Krieg ist vorbei', 'too exhausted by war': 'Zu kriegsmüde',
+  // ---- people pass: commanders ----
+  'cannot lead an army': 'Kann kein Heer führen',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

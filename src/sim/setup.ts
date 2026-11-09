@@ -80,7 +80,7 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
       concord: 20, mandate: 60, authority: 30, prestige: 0, warExhaustion: 0, inflation: 0, corruption: 0.05, adminCapacity: 1, adminLoad: 0, duties: { land: 0, hearth: 0, excise: 0 },
       taxRate: [0.06, 0.06, 0.08, 0.08, 0.02, 0.02, 0.08], tariff: 0.05, coinage: 0,
       income: {}, expense: {}, incomeAcc: {}, expenseAcc: {}, history: [], armyMaint: 1, navyMaint: 1,
-      laws: {}, values: [], estates: [], council: {},
+      laws: {}, values: [], estates: [], council: {}, generals: [], aiLog: [],
       overlord: -1, subjectType: null, subjectSince: 0, libertyDesire: 0, integration: 0,
       envoys: 2, envoysBusy: 0, rivals: [], dread: 0,
       personality: st.personality || 'opportunist', difficulty: st.difficulty || 3, summary: st.summary || { en: '', de: '' },

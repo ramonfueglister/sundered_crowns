@@ -226,7 +226,9 @@ export function acceptProposal(s: GameState, w: World, a: number, b: number, act
     case 'marriage': {
       s.treaties.push({ a: lo, b: hi, type: 'marriage', since: s.day, until: s.day + 365 * 40 });
       addOpinion(s, b, a, 'royal_marriage_bond', 15, 365 * 20); addOpinion(s, a, b, 'royal_marriage_bond', 15, 365 * 20);
-      chronicle(s, a, 'marriage', { en: `A royal marriage joined the houses of ${A.short.en} and ${Bn.short.en}.`, de: `Eine königliche Heirat verband die Häuser von ${A.short.de} und ${Bn.short.de}.` });
+      // a wedding between the houses when either has an unwed ruler or heir (systems/dynasty.ts); otherwise the
+      // treaty binds the houses until one has someone to marry
+      if (!royalMatch(s, w, a, b)) chronicle(s, a, 'marriage', { en: `A royal marriage joined the houses of ${A.short.en} and ${Bn.short.en}.`, de: `Eine königliche Heirat verband die Häuser von ${A.short.de} und ${Bn.short.de}.` });
       break;
     }
     case 'access': s.treaties.push({ a, b, type: 'access', since: s.day, until: s.day + 365 * 10 }); break;
@@ -290,6 +292,7 @@ export function integrateSubject(s: GameState, w: World, ov: Nation, n: Nation) 
   chronicle(s, ov.id, 'integration', { en: `${ov.short.en} absorbed ${n.short.en} into the realm.`, de: `${ov.short.de} gliederte ${n.short.de} in das Reich ein.` });
 }
 import * as warmod from './war';
+import { royalMatch } from './dynasty';
 function require_war() { return warmod; }
 
 // ---------------- espionage ----------------

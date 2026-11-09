@@ -5,6 +5,7 @@ import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
 import { TradeRelations } from './tradediplo';
+import { charName, charFull, AiLogSection } from './people';
 import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName, LocName, namesVersion } from './common';
 import { errText } from '../i18n';
 
@@ -36,12 +37,13 @@ export function NationPanel({ nation }: { nation: number }) {
     {!d.alive && <div class="neg">{t('fallen_realm')}</div>}
     <div class="ruler-box">
       <div>
-        <div class="ruler-name">{d.ruler ? <>{d.ruler.name} {d.ruler.dynasty}</> : '—'}</div>
-        <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={`${d.ruler.name} ${d.ruler.dynasty ?? ''}`} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
+        <div class="ruler-name">{d.ruler ? charName(d.ruler.name, d.ruler.female) : '—'}</div>
+        {d.ruler?.dynasty && !d.ruler.name.includes(d.ruler.dynasty.slice(0, 5)) && <div class="muted small">{t('house_of')} {d.ruler.dynasty}</div>}
+        <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={charFull(d.ruler.name, d.ruler.dynasty, d.ruler.female)} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
         {d.ruler && <div class="skills">{d.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SKILLS[k])} value={s} hint={t(`x_skill${k}_fx`)} /></div>}><span class="skill"><i class={`sk sk${k}`} />{s}</span></Tip>)}</div>}
         {d.ruler?.traits?.length > 0 && <div class="chips">{d.ruler.traits.map((tr: string) => <span class="chip">{traitName(tr)}</span>)}</div>}
       </div>
-      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <Tip content={<div><TipHead name={d.heir.name} value={`${d.heir.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.heir.name} <span class="muted">({d.heir.age})</span></span></Tip> : <span class="muted">{t('none')}</span>}</div></div>
+      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <Tip content={<div><TipHead name={charName(d.heir.name, d.heir.female)} value={`${d.heir.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{charName(d.heir.name, d.heir.female)} <span class="muted">({d.heir.age})</span></span></Tip> : <span class="muted">{t('none')}</span>}</div></div>
     </div>
     <div class="loc-id">
       <Tip content={<div><TipHead name={placeName(d.capitalName)} hint={t('x_click_capital')} /></div>}><span class="chip" onClick={() => flyToLoc(d.capital)}><small>{t('capital')}</small><a class="lk">{placeName(d.capitalName)}</a></span></Tip>
@@ -78,6 +80,7 @@ export function NationPanel({ nation }: { nation: number }) {
       {pid >= 0 && d.alive && !rel.atWar && <DeclareWar d={d} refresh={refresh} />}
       {pid >= 0 && d.alive && <Espionage d={d} />}
     </>}
+    {d.alive && <AiLogSection d={d} />}
   </Panel>;
 }
 

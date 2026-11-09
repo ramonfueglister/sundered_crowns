@@ -11,6 +11,8 @@ import { declareWar, nationLocs, nationDev } from './war';
 import { estate } from './politics';
 import { dayToDate } from '../calendar';
 import { EVENTS } from '../content/events';
+import { aiRecord } from './ai_log';
+import { localName } from '../content/names';
 import { DECISIONS } from '../content/decisions';
 
 export interface EvApi {
@@ -129,7 +131,7 @@ export function interpolate(s: GameState, w: World, n: Nation, ctx: Record<strin
   const r = s.chars[n.ruler];
   const rep = (str: string, lang: 'en' | 'de') => str
     .replace(/\{nation\}/g, n.short[lang]).replace(/\{adj\}/g, n.adj[lang])
-    .replace(/\{ruler\}/g, r ? r.name : '—')
+    .replace(/\{ruler\}/g, r ? localName(r.name, lang, r.female) : '—')
     .replace(/\{loc\}/g, ctx.loc !== undefined && ctx.loc >= 0 ? (lang === 'de' ? w.namesDe : w.names)[ctx.loc] : '—')
     .replace(/\{other\}/g, ctx.other !== undefined && s.nations[ctx.other] ? s.nations[ctx.other].short[lang] : '—')
     .replace(/\{year\}/g, String(dayToDate(s.day, s.startYear).y))
@@ -235,7 +237,7 @@ function aiDecisions(s: GameState, w: World, m: number) {
     const e = api(s, w, n, {});
     for (const d of DECISIONS) {
       if (d.once && n.flags[`dec_${d.id}`] !== undefined) continue;
-      try { if (d.visible(e) && !d.can(e) && (d.ai ? d.ai(e) : true)) takeDecision(s, w, n, d.id); } catch { /* content error: skip */ }
+      try { if (d.visible(e) && !d.can(e) && (d.ai ? d.ai(e) : true) && !takeDecision(s, w, n, d.id)) aiRecord(s, { t: 'decision', n: n.id, id: d.id }); } catch { /* content error: skip */ }
     }
   }
 }

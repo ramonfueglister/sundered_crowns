@@ -580,8 +580,8 @@ const DEFS: SituationDef[] = [
             a.path = []; a.siege = -1;
             if (!a.fleet && !a.battle && !a.embarkedOn) { a.loc = cap; a.retreating = false; }
           }
-          const nn = releaseNation(s, w, h, g.locs, h.culture) as Nation;
-          nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.faith = khanFaith(s, h, g.locs); nn.gov = h.gov;
+          const nn = releaseNation(s, w, h, g.locs, h.culture, khanFaith(s, h, g.locs)) as Nation; // its own faith before its arms are drawn
+          nn.name = g.name; nn.short = g.name; nn.adj = g.adj; nn.rank = 'kingdom'; nn.gov = h.gov;
           nn.rivals = [h.id]; nn.treasury = 100; nn.flags.horde_successor = 1;
           let pop = 0; for (const l of g.locs) for (let c = 0; c < C; c++) pop += s.loc.pop[l * C + c];
           nn.maxManpower = pop * 0.012; nn.manpower = nn.maxManpower * 0.4;

@@ -121,36 +121,15 @@ function estateDefaults(n: Nation): Estate[] {
 export function estate(n: Nation, id: string) { return n.estates.find((e) => e.id === id)!; }
 
 // ---------------- characters ----------------
-const MALE_NAMES: Record<string, string[]> = {
-  gallic: ['Jean', 'Charles', 'Louis', 'Philippe', 'Pierre', 'Guillaume', 'Robert', 'Henri'],
-  british: ['Edward', 'Henry', 'Richard', 'John', 'Thomas', 'William', 'Robert', 'David'],
-  german: ['Heinrich', 'Friedrich', 'Otto', 'Ludwig', 'Albrecht', 'Johann', 'Konrad', 'Rudolf', 'Wilhelm'],
-  italian: ['Giovanni', 'Francesco', 'Galeazzo', 'Niccolò', 'Pietro', 'Lorenzo', 'Matteo', 'Luchino'],
-  iberian: ['Pedro', 'Juan', 'Alfonso', 'Enrique', 'Fernando', 'Jaime', 'Duarte', 'Sancho'],
-  west_slavic: ['Kazimierz', 'Władysław', 'Bolesław', 'Václav', 'Jan', 'Siemowit', 'Přemysl'],
-  east_slavic: ['Ivan', 'Dmitry', 'Vasily', 'Mikhail', 'Yury', 'Semyon', 'Andrei', 'Oleg'],
-  south_slavic: ['Stefan', 'Lazar', 'Tvrtko', 'Ivan', 'Vukašin', 'Đurađ', 'Marko'],
-  hellenic: ['Ioannes', 'Manuel', 'Andronikos', 'Theodoros', 'Michael', 'Konstantinos', 'Demetrios'],
-  turkic: ['Orhan', 'Murad', 'Bayezid', 'Mehmed', 'Süleyman', 'Ahmed', 'Mahmud', 'Ali'],
-  arab: ['Muhammad', 'Ahmad', 'Hasan', 'Ali', 'Yusuf', 'Ibrahim', 'Abu Bakr', 'Umar'],
-  norse: ['Magnus', 'Haakon', 'Valdemar', 'Erik', 'Olaf', 'Christopher', 'Knut'],
-  carpathian: ['Lajos', 'Mircea', 'Vlad', 'Stephen', 'Dan', 'János', 'Mátyás'],
-  baltic: ['Algirdas', 'Kęstutis', 'Jogaila', 'Vytautas', 'Skirgaila', 'Kaributas'],
-};
-const FEMALE_NAMES: Record<string, string[]> = {
-  gallic: ['Jeanne', 'Isabelle', 'Marie', 'Blanche', 'Marguerite', 'Catherine'],
-  british: ['Isabella', 'Joan', 'Philippa', 'Margaret', 'Eleanor', 'Mary'],
-  german: ['Elisabeth', 'Margarethe', 'Anna', 'Katharina', 'Agnes', 'Mechthild'],
-  italian: ['Caterina', 'Beatrice', 'Bianca', 'Giovanna', 'Lucia', 'Costanza'],
-  iberian: ['Leonor', 'Juana', 'María', 'Isabel', 'Constanza', 'Blanca'],
-  default: ['Anna', 'Maria', 'Helena', 'Sophia', 'Elena', 'Fatima', 'Aisha', 'Zeynep'],
-};
+// Names come from the realm's people (content/names.ts): given names and noble families of its culture.
 import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
+import { givenName, personName, houseName, localName, familyForm } from '../content/names';
+import { christianClaimants, pressLater, houseMember, inheritClaims, unwed } from './dynasty';
 function nameFor(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): string {
-  const grp = GROUP_OF[ALL_CULTURES[n.culture]] || 'default';
-  const pool = female ? (FEMALE_NAMES[grp] || FEMALE_NAMES.default) : (MALE_NAMES[grp] || MALE_NAMES.german);
-  return pick(rng, pool);
+  return givenName(rng, n.culture, female);
 }
+/** A name in German, for the German half of a notice or chronicle line (content/names.ts localName). */
+const de = (c: Character | undefined | null) => localName(c?.name ?? '?', 'de', !!c?.female);
 const TRAITS_GOOD = ['just', 'wise', 'brave', 'diligent', 'charming', 'pious', 'shrewd', 'patient', 'learned', 'energetic'];
 const TRAITS_BAD = ['cruel', 'lazy', 'craven', 'greedy', 'rash', 'sickly', 'paranoid', 'weak_willed', 'profligate'];
 
@@ -181,20 +160,33 @@ export function monthlyDeathChance(age: number, c: Character): number {
 
 export function rulerAge(s: GameState, n: Nation) { const r = s.chars[n.ruler]; return r ? ageOf(s, r) : 40; }
 
+/** True when c lives at the court of n (or of its ruler r, for a crown shared in personal union). A son or daughter
+ *  married abroad keeps the claim on the house's throne (systems/dynasty.ts wed) but is no longer in line here: the
+ *  claim passes the crown only when the house dies out, through successionClaims and a personal union. */
+const atCourt = (n: Nation, r: Character, c: Character) => c.nation === n.id || c.nation === r.nation;
 function findHeir(s: GameState, n: Nation, dead: Character): number {
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
-  const kids = dead.children.map((k) => s.chars[k]).filter((c) => c && c.alive);
+  const kids = dead.children.map((k) => s.chars[k]).filter((c) => c && c.alive && atCourt(n, dead, c));
   kids.sort((a, b) => a.born - b.born);
   if (law === 'primogeniture') { const m = kids.find((c) => !c.female); if (m) return m.id; }
   if (law === 'cognatic' && kids.length) return kids[0].id;
   if (law === 'seniority') {
     // eldest living dynast: brothers first
-    const sib = Object.values(s.chars).filter((c) => c.alive && c.nation === n.id && c.dynasty === dead.dynasty && c.id !== dead.id && !c.female && ageOf(s, c) > 16).sort((a, b) => a.born - b.born);
+    const sib = Object.values(s.chars).filter((c) => c.alive && atCourt(n, dead, c) && c.dynasty === dead.dynasty && c.id !== dead.id && !c.female && ageOf(s, c) > 16).sort((a, b) => a.born - b.born);
     if (sib.length) return sib[0].id;
   }
-  if (n.heir && s.chars[n.heir]?.alive) return n.heir;
+  const h = s.chars[n.heir];
+  if (h && h.alive && h.id !== dead.id && atCourt(n, dead, h)) return h.id;
   const m = kids.find((c) => !c.female) || kids[0];
   return m ? m.id : 0;
+}
+/** Who would take n's crown if the ruler died today: under a crown by blood the person findHeir names (the heir, or
+ *  the eldest daughter when male primogeniture finds no son), under an elected crown the heir presumptive; 0 when the
+ *  house would die out. Never married away (systems/dynasty.ts houseMember). */
+export function nextInLine(s: GameState, n: Nation): number {
+  const r = s.chars[n.ruler]; if (!r || !r.alive) return 0;
+  const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
+  return law === 'elective' || law === 'office' ? n.heir : findHeir(s, n, r);
 }
 
 export function succession(s: GameState, w: World, n: Nation) {
@@ -213,21 +205,22 @@ export function succession(s: GameState, w: World, n: Nation) {
     n.candidates = (n.candidates ?? []).filter((id) => id !== next);
   } else if (law === 'elective' || law === 'office') {
     // electors (Magnates or Burghers) choose: heir if any and capable, else a new noble
-    const cand = n.heir && s.chars[n.heir]?.alive ? s.chars[n.heir] : null;
+    const cand = n.heir && s.chars[n.heir]?.alive && (!dead || atCourt(n, dead, s.chars[n.heir])) ? s.chars[n.heir] : null;
     const strength = cand ? cand.skills[0] + cand.skills[1] + cand.skills[2] : 0;
     if (cand && strength >= 6 && chance(s.rng, 0.6)) next = cand.id;
     else {
-      const c = newChar(s, n, { born: s.day - Math.floor((35 + rand(s.rng) * 20) * 365), role: 'ruler', female: false, dynasty: law === 'office' ? '' : pick(s.rng, ['', n.dynasty]) || n.dynasty });
+      // (an elective crown may pass to a lord of another native house)
+      const c = newChar(s, n, { born: s.day - Math.floor((35 + rand(s.rng) * 20) * 365), role: 'ruler', female: false, dynasty: law === 'office' ? '' : chance(s.rng, 0.5) ? n.dynasty : houseName(s.rng, n.culture) || n.dynasty });
       next = c.id; if (c.dynasty) n.dynasty = c.dynasty;
     }
   } else {
     next = findHeir(s, n, dead);
     if (!next) {
-      // extinction: a foreign dynasty with a marriage tie may claim; otherwise a magnate takes the crown
-      // (crowns pass through marriage between Christian realms; a sultanate or khanate whose house dies out raises a
-      // new house of its own, so no beylik inherits the Ottoman throne through a bride)
-      const christian = (x: Nation) => FAITHS[x.faith]?.family === 'christian';
-      const claimants = !christian(n) ? [] : s.treaties.filter((t) => t.type === 'marriage' && (t.a === n.id || t.b === n.id)).map((t) => (t.a === n.id ? t.b : t.a)).filter((k) => s.nations[k].alive && christian(s.nations[k]));
+      // extinction: the foreign house with the closest claim by blood (a daughter or son of this house married
+      // abroad, or their children; else a realm bound by a marriage treaty) may inherit; otherwise a magnate takes the
+      // crown (crowns pass through marriage between Christian realms; a sultanate or khanate whose house dies out
+      // raises a new house of its own, so no beylik inherits the Ottoman throne through a bride; systems/dynasty.ts)
+      const claimants = christianClaimants(s, n).map((c) => c.nation);
       if (claimants.length) {
         const k = claimants[0];
         const other = s.nations[k];
@@ -239,20 +232,26 @@ export function succession(s: GameState, w: World, n: Nation) {
           if (flip) {
             other.overlord = n.id; other.subjectType = 'personal_union'; other.subjectSince = s.day;
             n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort; n.regent = other.regent || 0; n.dynasty = other.dynasty;
+            // the court moves to the seat of the union: ruler, consort, heir and the ruler's children
+            const r0 = s.chars[other.ruler];
+            for (const id of [other.ruler, other.consort, other.heir, ...(r0?.children ?? [])]) { const c = s.chars[id]; if (c && c.alive && c.nation === other.id) c.nation = n.id; }
             // juniors still share the dead ruler: the caller gives each its chance to leave, else they follow the new ruler
-            chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${s.chars[other.ruler]?.name} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
+            chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${de(s.chars[other.ruler])} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
             notice(s, other.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
-            notice(s, n.id, 'union', { en: `${dead?.name ?? '?'} died without heirs: ${s.chars[other.ruler]?.name} of ${other.short.en} inherits our crown and rules both realms.`, de: `${dead?.name ?? '?'} starb ohne Erben: ${s.chars[other.ruler]?.name} von ${other.short.de} erbt unsere Krone und regiert beide Reiche.` }, { loc: n.capital });
+            notice(s, n.id, 'union', { en: `${dead?.name ?? '?'} died without heirs: ${s.chars[other.ruler]?.name} of ${other.short.en} inherits our crown and rules both realms.`, de: `${de(dead)} starb ohne Erben: ${de(s.chars[other.ruler])} von ${other.short.de} erbt unsere Krone und regiert beide Reiche.` }, { loc: n.capital });
             return;
           }
           n.overlord = k; n.subjectType = 'personal_union'; n.subjectSince = s.day; n.dynasty = other.dynasty;
           n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort;
-          chronicle(s, n.id, 'union', { en: `${n.short.en} passed by inheritance to ${other.short.en}: a personal union under ${s.chars[other.ruler]?.name}.`, de: `${n.short.de} fiel durch Erbschaft an ${other.short.de}: Personalunion unter ${s.chars[other.ruler]?.name}.` });
+          chronicle(s, n.id, 'union', { en: `${n.short.en} passed by inheritance to ${other.short.en}: a personal union under ${s.chars[other.ruler]?.name}.`, de: `${n.short.de} fiel durch Erbschaft an ${other.short.de}: Personalunion unter ${de(s.chars[other.ruler])}.` });
           notice(s, n.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
           return;
         }
+        // the claimant cannot take the crown now (at war with us, or itself a subject): it keeps a claim to press
+        pressLater(s, k, n);
       }
-      const c = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 20) * 365), role: 'ruler', female: false, dynasty: `${w.names[n.capital] ?? 'House'}` });
+      // a lord of a native house takes the crown
+      const c = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 20) * 365), role: 'ruler', female: false, dynasty: houseName(s.rng, n.culture) || `${w.names[n.capital] ?? 'House'}` });
       next = c.id; n.dynasty = c.dynasty; contested = true;
     }
   }
@@ -261,8 +260,7 @@ export function succession(s: GameState, w: World, n: Nation) {
   const oldName = dead?.name ?? '?';
   n.ruler = next; heir.role = 'ruler';
   if (n.heir === next) n.heir = 0;
-  // new consort if spouse alive
-  n.consort = heir.spouse && s.chars[heir.spouse]?.alive ? heir.spouse : 0;
+  n.consort = consortOf(s, n, heir);
   const age = ageOf(s, heir);
   // Mandate of a new ruler
   const strife = lawEffect(n, 'succession_strife') + (n.gov === 'nomadic_horde' ? 0.3 : 0);
@@ -271,16 +269,16 @@ export function succession(s: GameState, w: World, n: Nation) {
   if (age < 16) {
     n.regent = newChar(s, n, { born: s.day - 40 * 365, role: 'courtier', female: chance(s.rng, 0.4) }).id;
     n.mandate = clamp(n.mandate - 10 - lawEffect(n, 'regency_strife') * 20, 0, 100);
-    notice(s, n.id, 'regency', { en: `A regency council rules for the child ${heir.name}.`, de: `Ein Regentschaftsrat regiert für das Kind ${heir.name}.` });
+    notice(s, n.id, 'regency', { en: `A regency council rules for the child ${heir.name}.`, de: `Ein Regentschaftsrat regiert für das Kind ${de(heir)}.` });
   } else n.regent = 0;
-  chronicle(s, n.id, 'succession', { en: `${oldName} of ${n.short.en} died; ${heir.name} ${heir.dynasty ? '(' + heir.dynasty + ') ' : ''}succeeded at age ${Math.floor(age)}.`, de: `${oldName} von ${n.short.de} starb; ${heir.name} ${heir.dynasty ? '(' + heir.dynasty + ') ' : ''}folgte im Alter von ${Math.floor(age)} Jahren.` });
-  notice(s, n.id, 'ruler_death', { en: `${oldName} has died. Long live ${heir.name}!`, de: `${oldName} ist gestorben. Es lebe ${heir.name}!` }, { loc: n.capital });
+  chronicle(s, n.id, 'succession', { en: `${oldName} of ${n.short.en} died; ${heir.name} ${heir.dynasty ? '(' + heir.dynasty + ') ' : ''}succeeded at age ${Math.floor(age)}.`, de: `${de(dead)} von ${n.short.de} starb; ${de(heir)} ${heir.dynasty ? '(' + heir.dynasty + ') ' : ''}folgte im Alter von ${Math.floor(age)} Jahren.` });
+  notice(s, n.id, 'ruler_death', { en: `${oldName} has died. Long live ${heir.name}!`, de: `${de(dead)} ist gestorben. Es lebe ${de(heir)}!` }, { loc: n.capital });
   s.flags[`ruler_death_${n.id}`] = s.day;
   // disputed succession → civil war
   const strifeChance = clamp(0.04 + strife * 0.3 + (contested ? 0.25 : 0) + (n.mandate < 25 ? 0.15 : 0) + (estate(n, 'magnates').influence > 65 ? 0.1 : 0) + (age < 16 ? 0.08 : 0), 0, 0.8);
   if (chance(s.rng, strifeChance) && n.capital >= 0) {
     s.flags[`civil_war_pending_${n.id}`] = s.day + 30;
-    notice(s, n.id, 'succession_crisis', { en: `The succession of ${heir.name} is disputed! A pretender is gathering the discontented lords.`, de: `Die Nachfolge von ${heir.name} ist umstritten! Ein Thronprätendent sammelt die unzufriedenen Herren.` }, { loc: n.capital });
+    notice(s, n.id, 'succession_crisis', { en: `The succession of ${heir.name} is disputed! A pretender is gathering the discontented lords.`, de: `Die Nachfolge von ${de(heir)} ist umstritten! Ein Thronprätendent sammelt die unzufriedenen Herren.` }, { loc: n.capital });
   }
   // new heir: eldest child
   pickNewHeir(s, n);
@@ -296,72 +294,151 @@ export function unionBreakChance(s: GameState, junior: Nation, senior: Nation): 
 }
 function nationDevOf(s: GameState, id: number) { let d = 0; const o = s.loc.owner; for (let i = 0; i < o.length; i++) if (o[i] === id) d += s.loc.dev[i]; return d; }
 
-/** Election to office: the ablest grown official or candidate at court (skills, then loyalty; never kin by right). */
+/** Election to office: the ablest grown official or candidate at court (skills, then loyalty; never kin by right).
+ *  A theocracy, a military order or a republic chooses among its men only (the custom of the age; the AI keeps to it
+ *  in its appointments too, ai_statecraft.ts offices). */
 export function ablestOfficial(s: GameState, n: Nation): Character | null {
   let best: Character | null = null, bv = -1;
+  const menOnly = n.gov === 'theocracy' || n.gov === 'military_order' || n.gov.includes('republic');
   const ids = [...Object.values(n.council), ...(n.candidates ?? [])];
   for (const id of ids) {
     const c = s.chars[id];
-    if (!c || !c.alive || c.nation !== n.id || c.id === n.ruler) continue;
+    if (!c || !c.alive || c.nation !== n.id || c.id === n.ruler || (menOnly && c.female)) continue;
     const age = ageOf(s, c); if (age < 25 || age > 72) continue;
     const v = c.skills[0] + c.skills[1] + c.skills[2] + (c.loyalty ?? 50) / 100;
     if (v > bv || (v === bv && best && c.id < best.id)) { bv = v; best = c; }
   }
   return best;
 }
+/** The consort of a new ruler: the living spouse at this court (never a person who rules or lives at another court); 0 if none. */
+export function consortOf(s: GameState, n: Nation, ruler: Character): number {
+  const sp = ruler.spouse ? s.chars[ruler.spouse] : undefined;
+  return sp && sp.alive && (sp.nation === n.id || sp.nation === ruler.nation) && !s.nations.some((x) => x.alive && x.id !== n.id && x.ruler === sp.id) ? sp.id : 0;
+}
 export function pickNewHeir(s: GameState, n: Nation) {
   const r = s.chars[n.ruler]; if (!r) return;
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
   // elected to office: the presumptive successor is whoever the council would choose today
   if (law === 'office') { const b = ablestOfficial(s, n); n.heir = b ? b.id : 0; return; }
-  const kids = r.children.map((k) => s.chars[k]).filter((c) => c && c.alive).sort((a, b) => a.born - b.born);
+  const kids = r.children.map((k) => s.chars[k]).filter((c) => c && c.alive && atCourt(n, r, c)).sort((a, b) => a.born - b.born);
   const h = law === 'primogeniture' ? kids.find((c) => !c.female) : kids[0];
   n.heir = h ? h.id : 0;
   if (h) h.role = 'heir';
 }
 
+/** True when realm x is bound to `top` in personal union (directly or through another junior crown). */
+function inUnionUnder(s: GameState, x: Nation, top: Nation): boolean {
+  let y = x;
+  for (let k = 0; k < 8 && y.overlord >= 0 && y.subjectType === 'personal_union'; k++) { y = s.nations[y.overlord]; if (!y) return false; if (y.id === top.id) return true; }
+  return false;
+}
+/** The crown of n passes on at the death of its ruler cid, and with it every crown held in personal union under n
+ *  (a junior crown may choose its own ruler instead). */
+function crownPasses(s: GameState, w: World, n: Nation, cid: number) {
+  succession(s, w, n);
+  for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid && inUnionUnder(s, other, n)) {
+    // a junior crown in personal union may choose its own ruler when the shared one dies
+    if (other.overlord === n.id && other.subjectType === 'personal_union' && chance(s.rng, unionBreakChance(s, other, n))) {
+      other.overlord = -1; other.subjectType = null; other.libertyDesire = 0;
+      const c = newChar(s, other, { born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false, dynasty: other.dynasty });
+      other.ruler = c.id; other.heir = 0; other.consort = 0; other.regent = 0; pickNewHeir(s, other);
+      chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${de(s.chars[cid])} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` });
+      notice(s, n.id, 'union_ended', { en: `${other.short.en} has chosen its own ruler and left our union.`, de: `${other.short.de} hat einen eigenen Herrscher gewählt und unsere Union verlassen.` }, { loc: other.capital });
+      continue;
+    }
+    // the union holds: the junior crown shares the new ruler, heir, consort and regency
+    other.ruler = n.ruler; other.heir = n.heir; other.consort = n.consort; other.regent = n.regent;
+  }
+}
+
 /** A character of nation n dies (of age, in battle, ...): a ruler's crown passes by succession (and with it any
- *  crown held in personal union), an heir is replaced, consort, regent and council seats fall vacant. */
+ *  crown held in personal union), an heir is replaced, consort, regent and council seats fall vacant. The person's
+ *  places at every other court are cleared too (a son or daughter married abroad, a crown shared in a union), so that
+ *  no realm keeps a dead ruler, heir or consort. */
 export function characterDies(s: GameState, w: World, n: Nation, cid: number) {
   const c = s.chars[cid]; if (!c || !c.alive) return;
   c.alive = false; c.died = s.day;
-  if (cid === n.ruler && s.nations[n.id].ruler === cid) {
-    // only the true ruler of this nation (personal unions share the ruler)
-    succession(s, w, n);
-    for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid) {
-      // a junior crown in personal union may choose its own ruler when the shared one dies
-      if (other.overlord === n.id && other.subjectType === 'personal_union' && chance(s.rng, unionBreakChance(s, other, n))) {
-        other.overlord = -1; other.subjectType = null; other.libertyDesire = 0;
-        const c = newChar(s, other, { born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false, dynasty: other.dynasty });
-        other.ruler = c.id; other.heir = 0; other.consort = 0; other.regent = 0; pickNewHeir(s, other);
-        chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${c0name(s, cid)} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` });
-        notice(s, n.id, 'union_ended', { en: `${other.short.en} has chosen its own ruler and left our union.`, de: `${other.short.de} hat einen eigenen Herrscher gewählt und unsere Union verlassen.` }, { loc: other.capital });
-        continue;
-      }
-      other.ruler = n.ruler; other.heir = n.heir;
+  for (const X of [n, ...s.nations]) {
+    if (X !== n && (X.id === n.id || !X.alive)) continue;
+    if (X.ruler === cid) {
+      // the senior crown of a union passes the crown on; its junior crowns follow it or choose their own ruler
+      let top = X;
+      for (let k = 0; k < 8 && top.overlord >= 0 && top.subjectType === 'personal_union' && s.nations[top.overlord]?.ruler === cid; k++) top = s.nations[top.overlord];
+      crownPasses(s, w, top, cid);
     }
-  } else if (cid === n.heir) { n.heir = 0; pickNewHeir(s, n); notice(s, n.id, 'heir_death', { en: `The heir ${c.name} has died.`, de: `Der Thronfolger ${c.name} ist gestorben.` }); }
-  else if (cid === n.consort) { n.consort = 0; }
-  else if (cid === n.regent) { n.regent = 0; }
-  else { for (const off in n.council) if (n.council[off] === cid) delete n.council[off]; }
+    if (X.heir === cid) { X.heir = 0; pickNewHeir(s, X); notice(s, X.id, 'heir_death', { en: `The heir ${c.name} has died.`, de: `${c.female ? 'Die Thronfolgerin' : 'Der Thronfolger'} ${de(c)} ist gestorben.` }); }
+    if (X.consort === cid) X.consort = 0;
+    if (X.regent === cid) X.regent = 0;
+    for (const off in X.council) if (X.council[off] === cid) delete X.council[off];
+  }
+}
+
+/** The senior crown at the head of the personal unions x belongs to (x itself when it is in none). */
+function unionTop(s: GameState, x: Nation): Nation {
+  let y = x;
+  for (let k = 0; k < 8 && y.overlord >= 0 && y.subjectType === 'personal_union' && s.nations[y.overlord]; k++) y = s.nations[y.overlord];
+  return y;
+}
+/** Every court keeps its own people. A crown that shares its ruler with a realm it is no longer bound to by personal
+ *  union (it won its independence in a war, became another's vassal, or its overlord was annexed) has its estates
+ *  choose a ruler of their own; a ruler whose own realm is gone (a pretender who won the crown) brings that court
+ *  along; an heir or consort who lives at another court is replaced. Runs daily, before the other systems. */
+export function settleCourts(s: GameState, w: World) {
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    let r = s.chars[n.ruler];
+    if (r && r.alive && r.nation !== n.id) {
+      const R = s.nations[r.nation];
+      if (!R || !R.alive) {
+        // the ruler's realm is gone: its court joins this one
+        for (const k in s.chars) { const c = s.chars[k]; if (c.alive && c.nation === r.nation) c.nation = n.id; }
+      } else if (unionTop(s, n).id !== unionTop(s, R).id) {
+        if (R.ruler === r.id) {
+          // the union is over, but the crown still sat on the other ruler's head: the estates choose their own ruler
+          const c = newChar(s, n, { ...courtPerson(s, n, false), born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false });
+          if (c.dynasty) n.dynasty = c.dynasty;
+          n.ruler = c.id; n.heir = 0; n.consort = 0; n.regent = 0; pickNewHeir(s, n);
+          chronicle(s, n.id, 'union', { en: `The crowns of ${n.short.en} and ${R.short.en} parted: the estates of ${n.short.en} chose ${c.name} as their own ruler.`, de: `Die Kronen von ${n.short.de} und ${R.short.de} trennten sich: die Stände von ${n.short.de} wählten ${de(c)} zum eigenen Herrscher.` });
+          notice(s, n.id, 'union', { en: `Our estates have chosen ${c.name} to rule us.`, de: `Unsere Stände haben ${de(c)} zum Herrscher gewählt.` }, { loc: n.capital });
+        } else r.nation = n.id; // a member of another house who wears this crown lives here
+      }
+    }
+    r = s.chars[n.ruler];
+    if (!r) continue;
+    const here = (id: number) => { const c = s.chars[id]; return !!c && c.alive && (c.nation === n.id || c.nation === r!.nation || (!!s.nations[c.nation]?.alive && unionTop(s, s.nations[c.nation]).id === unionTop(s, n).id)); };
+    if (n.consort && !here(n.consort)) n.consort = 0;
+    if (n.heir && s.chars[n.heir]?.alive && !here(n.heir)) { n.heir = 0; pickNewHeir(s, n); }
+  }
 }
 
 function characterMonth(s: GameState, w: World, n: Nation) {
+  // a crown shared in personal union: the senior crown's court lives, weds and bears children, and this one follows it
+  const O = n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === n.ruler ? s.nations[n.overlord] : null;
   // ruler, heir, consort, officials age and may die; births to the ruling couple
   for (const cid of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)]) {
     const c = s.chars[cid]; if (!c || !c.alive) continue;
-    // a ruler shared in personal union lives and dies with the senior crown's turn
-    if (cid === n.ruler && n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === cid) continue;
+    // the shared ruler, heir, consort and regent live and die with the senior crown's turn
+    if (O && (cid === O.ruler || cid === O.heir || cid === O.consort || cid === O.regent)) continue;
     const age = ageOf(s, c);
     if (age > 50) c.health = Math.max(0.2, c.health - 0.002);
     if (chance(s.rng, monthlyDeathChance(age, c))) characterDies(s, w, n, cid);
   }
+  if (O && O.ruler === n.ruler) { n.heir = O.heir; n.consort = O.consort; n.regent = O.regent; return; }
   const r = s.chars[n.ruler];
-  if (n.regent && r && ageOf(s, r) >= 16) { n.regent = 0; notice(s, n.id, 'majority', { en: `${r.name} has come of age and rules in person.`, de: `${r.name} ist volljährig und regiert selbst.` }); n.mandate = clamp(n.mandate + 10, 0, 100); }
-  // marriage of an unmarried adult ruler
-  if (r && r.alive && !n.consort && ageOf(s, r) > 16 && ageOf(s, r) < 55 && chance(s.rng, 0.04)) {
-    const sp = newChar(s, n, { female: !r.female, born: r.born + Math.floor((rand(s.rng) * 12 - 4) * 365), role: 'consort', dynasty: 'noble house' });
-    sp.spouse = r.id; r.spouse = sp.id; n.consort = sp.id;
+  if (n.regent && r && ageOf(s, r) >= 16) { n.regent = 0; notice(s, n.id, 'majority', { en: `${r.name} has come of age and rules in person.`, de: `${de(r)} ist volljährig und regiert selbst.` }); n.mandate = clamp(n.mandate + 10, 0, 100); }
+  // marriage of an unmarried adult ruler: a member of a house bound to ours by a marriage treaty, else the daughter
+  // or son of a noble family of our own people (systems/dynasty.ts)
+  if (r && r.alive && !n.consort && unwed(s, r) && ageOf(s, r) > 16 && ageOf(s, r) < 55 && chance(s.rng, 0.04)) {
+    const born = r.born + Math.floor((rand(s.rng) * 12 - 4) * 365);
+    let sp: Character | null = null;
+    for (const t of s.treaties) {
+      if (t.type !== 'marriage' || (t.a !== n.id && t.b !== n.id) || t.until <= s.day) continue;
+      const B = s.nations[t.a === n.id ? t.b : t.a]; if (!B?.alive) continue;
+      sp = houseMember(s, B, !r.female, r.born);
+      if (sp) { sp.nation = n.id; sp.claims = [...new Set([...(sp.claims ?? []), B.id])]; break; }
+    }
+    if (!sp) { const g = nameFor(s, n, !r.female), h = houseName(s.rng, n.culture); sp = newChar(s, n, { name: g, female: !r.female, born, role: 'consort', dynasty: h ? familyForm(h, n.culture, !r.female) : n.dynasty }); }
+    sp.role = 'consort'; sp.spouse = r.id; r.spouse = sp.id; n.consort = sp.id;
   }
   // births
   const cons = s.chars[n.consort];
@@ -371,9 +448,10 @@ function characterMonth(s: GameState, w: World, n: Nation) {
     if (ma > 16 && ma < 42 && r.children.length < 9 && chance(s.rng, 0.022)) {
       const child = newChar(s, n, { born: s.day, role: 'courtier', dynasty: r.female ? cons.dynasty : r.dynasty, father: r.female ? cons.id : r.id, mother: mother.id, skills: [Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6)] });
       r.children.push(child.id); cons.children.push(child.id);
+      inheritClaims(child, r, cons); // a foreign-born parent's claim on the throne of their house
       if (!n.heir || (!s.chars[n.heir]?.alive)) pickNewHeir(s, n);
       else { const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id; if (law === 'primogeniture' && s.chars[n.heir]?.female && !child.female) pickNewHeir(s, n); }
-      if (n.heir === child.id) notice(s, n.id, 'heir_born', { en: `An heir is born: ${child.name}!`, de: `Ein Thronfolger ist geboren: ${child.name}!` }, { loc: n.capital });
+      if (n.heir === child.id) notice(s, n.id, 'heir_born', { en: `An heir is born: ${child.name}!`, de: `${child.female ? 'Eine Thronfolgerin' : 'Ein Thronfolger'} ist geboren: ${de(child)}!` }, { loc: n.capital });
     }
   }
   // children grow up: if no heir, check
@@ -397,12 +475,16 @@ export function officeBonusOf(c: Character, office: string): number {
   const off = OFFICES.find((o) => o.id === office); if (!off) return 0;
   return (c.skills[off.skill] / 6) * 0.1 * (1 - (c.corruption ?? 0));
 }
-const COURT_HOUSES = ['de Vere', 'von Stein', 'Orsini', 'Colonna', 'Lannoy', 'Rožmberk', 'Tęczyński', 'Hunyadi', 'Strozzi', 'Mendoza', 'Percy', 'Neville', 'Wittelsbach', 'Gonzaga'];
+/** A person of the realm's own people and nobility, named as that people names them (content/names.ts). */
+export function courtPerson(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): { name: string; dynasty: string } {
+  const p = personName(rng, n.culture, female);
+  return { name: p.name, dynasty: p.dynasty };
+}
 function fillCouncil(s: GameState, n: Nation) {
   for (const off of OFFICES) {
     const c = s.chars[n.council[off.id]];
     if (c && c.alive) continue;
-    const nc = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false, dynasty: pick(s.rng, COURT_HOUSES) });
+    const nc = newChar(s, n, { ...courtPerson(s, n, false), born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false });
     nc.loyalty = 40 + rand(s.rng) * 50; nc.corruption = rand(s.rng) * 0.3; nc.ambition = rand(s.rng);
     n.council[off.id] = nc.id;
   }
@@ -411,6 +493,8 @@ function fillCouncil(s: GameState, n: Nation) {
 export const OFFICE_COST = 10; // Authority per appointment
 const CANDIDATES = 3;
 const holdsOffice = (n: Nation, id: number) => { for (const o of OFFICES) if (n.council[o.id] === id) return o.id; return null; };
+/** True while the person leads one of the realm's armies or fleets. */
+const commanding = (s: GameState, id: number) => s.armies.some((a) => a.general === id);
 /** Who could be appointed: the court's candidates plus adult kin of the ruler (never the ruler or the regent). */
 export function officeCandidates(s: GameState, n: Nation): Character[] {
   const out: Character[] = []; const seen = new Set<number>();
@@ -426,8 +510,9 @@ export function officeCandidates(s: GameState, n: Nation): Character[] {
 }
 /** Keep a few candidates at court. Uses its own random stream so the main sequence of the game is not shifted. */
 function refreshCandidates(s: GameState, n: Nation, yearly: boolean) {
-  const pool = (n.candidates ?? []).filter((id) => { const c = s.chars[id]; return c && c.alive && c.nation === n.id && ageOf(s, c) < 70 && !holdsOffice(n, id); });
-  if (yearly && pool.length >= CANDIDATES) pool.shift(); // the longest-waiting candidate leaves court
+  const pool = (n.candidates ?? []).filter((id) => { const c = s.chars[id]; return c && c.alive && c.nation === n.id && ageOf(s, c) < 70 && !holdsOffice(n, id) && !commanding(s, id); });
+  // the longest-waiting candidate leaves court (and the game: nobody refers to them any more)
+  if (yearly && pool.length >= CANDIDATES) { const gone = pool.shift()!; const c = s.chars[gone]; if (c && c.role === 'courtier' && !c.spouse && !c.children.length) delete s.chars[gone]; }
   if (pool.length >= CANDIDATES) { n.candidates = pool; return; }
   // keyed by the game's seed too, so each new game has its own court (still independent of the main random sequence)
   const rng = seedRng(Math.floor(hash01(n.id, s.day, (0x0ff1ce ^ (s.seed | 0)) | 0) * 4294967296));
@@ -436,8 +521,8 @@ function refreshCandidates(s: GameState, n: Nation, yearly: boolean) {
     skills[Math.floor(rand(rng) * 3)] += 1 + Math.floor(rand(rng) * 3); // each candidate is good at one thing
     const female = rand(rng) < 0.15;
     const c = newChar(s, n, {
-      name: nameFor(s, n, female, rng), female, born: s.day - Math.floor((24 + rand(rng) * 30) * 365), skills, role: 'courtier',
-      dynasty: COURT_HOUSES[Math.floor(rand(rng) * COURT_HOUSES.length)], traits: rand(rng) < 0.5 ? [TRAITS_GOOD[Math.floor(rand(rng) * TRAITS_GOOD.length)]] : [],
+      ...courtPerson(s, n, female, rng), female, born: s.day - Math.floor((24 + rand(rng) * 30) * 365), skills, role: 'courtier',
+      traits: rand(rng) < 0.5 ? [TRAITS_GOOD[Math.floor(rand(rng) * TRAITS_GOOD.length)]] : [],
     });
     c.loyalty = 40 + rand(rng) * 50; c.corruption = rand(rng) * 0.3; c.ambition = rand(rng);
     pool.push(c.id);
@@ -480,7 +565,7 @@ export function officialsMonth(s: GameState, n: Nation) {
       // fall from grace: dismissed in disgrace; a faction is angered
       delete n.council[off.id];
       estate(n, 'magnates').contentment -= 5; n.concord = clamp(n.concord - 5, -100, 100);
-      notice(s, n.id, 'intrigue', { en: `${off.name.en} ${c.name} was caught intriguing and has fallen from grace.`, de: `${off.name.de} ${c.name} wurde bei Intrigen ertappt und ist in Ungnade gefallen.` });
+      notice(s, n.id, 'intrigue', { en: `${off.name.en} ${c.name} was caught intriguing and has fallen from grace.`, de: `${off.name.de} ${de(c)} wurde bei Intrigen ertappt und ist in Ungnade gefallen.` });
     }
   }
 }
@@ -652,6 +737,7 @@ export const politics: System = {
       if (n.ruler && s.chars[n.ruler] && ageOf(s, s.chars[n.ruler]) < 16) n.regent = newChar(s, n, { born: s.day - 40 * 365, role: 'courtier' }).id;
     }
   },
+  daily({ s, w }) { settleCourts(s, w); },
   monthly({ s, w }) {
     const cs = classSums(s);
     for (const n of s.nations) {
@@ -660,7 +746,8 @@ export const politics: System = {
       nationPoliticsMonth(s, w, n, cs);
       officialsMonth(s, n);
       if (s.day % 365 < 31) fillCouncil(s, n);
-      if (s.playerNations.includes(n.id)) refreshCandidates(s, n, s.day % 365 < 31);
+      // every court has candidates for office, the AI's as the player's (the AI appoints the ablest, ai_statecraft.ts)
+      refreshCandidates(s, n, s.day % 365 < 31);
       n.modifiers = n.modifiers.filter((m) => m.until > s.day);
     }
   },

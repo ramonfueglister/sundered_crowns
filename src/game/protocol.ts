@@ -55,7 +55,9 @@ export type Query =
   | { q: 'powers' }
   | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
   | { q: 'govern' }
-  | { q: 'situation'; id: string };
+  | { q: 'situation'; id: string }
+  // people pass (src/game/view.ts commandersView)
+  | { q: 'commanders'; army: number };                        // who could lead one of our armies, and the price of a new general
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
