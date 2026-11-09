@@ -34,7 +34,7 @@ export interface EventDef {
 export interface DecisionDef {
   id: string; name: I18n; desc: I18n;
   visible: (e: EvApi) => boolean;
-  can: (e: EvApi) => string | null;  // null = allowed, otherwise the reason (English key / text)
+  can: (e: EvApi) => string | I18n | null;  // null = allowed, otherwise the reason (English key of src/sim/refusals.ts, or I18n when it names a realm)
   effect: (e: EvApi) => void;
   ai?: (e: EvApi) => boolean;        // AI takes it when allowed and this returns true
   once?: boolean;                    // once per realm
@@ -216,9 +216,9 @@ export function answerEvent(s: GameState, w: World, nation: number, pendingId: n
 export function decisionsFor(s: GameState, w: World, n: Nation) {
   const e = api(s, w, n, {});
   return DECISIONS.filter((d) => !(d.once && n.flags[`dec_${d.id}`] !== undefined)).filter((d) => { try { return d.visible(e); } catch { return false; } })
-    .map((d) => ({ d, why: (() => { try { return d.can(e); } catch (x) { return 'error'; } })() }));
+    .map((d) => ({ d, why: (() => { try { return d.can(e); } catch (x) { return 'error' as string | I18n | null; } })() }));
 }
-export function takeDecision(s: GameState, w: World, n: Nation, id: string): string | null {
+export function takeDecision(s: GameState, w: World, n: Nation, id: string): string | I18n | null {
   const d = DECISIONS.find((x) => x.id === id); if (!d) return 'unknown decision';
   if (d.once && n.flags[`dec_${d.id}`] !== undefined) return 'already taken';
   const e = api(s, w, n, {});

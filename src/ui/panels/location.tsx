@@ -6,6 +6,7 @@ import { RECIPES, UNITS, BUILDINGS } from '../../sim/defs';
 import { Parts, TipHead, Drift, AgentsTip } from './explain';
 import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
 import { sfx } from '../audio';
+import { ScopeOrders } from './works';
 
 const TERRAIN: Record<string, [string, string]> = {
   plains: ['Plains', 'Ebene'], farmland: ['Farmland', 'Ackerland'], forest: ['Forest', 'Wald'], hills: ['Hills', 'Hügelland'], mountains: ['Mountains', 'Gebirge'],
@@ -71,6 +72,7 @@ export function LocationPanel({ loc }: { loc: number }) {
     </Section>
 
     {own && <Buildings d={d} refresh={refresh} />}
+    {own && <ScopeOrders loc={d.id} />}
     {!own && d.owner >= 0 && <Section title={t('buildings')} id="loc-bld-other" open={false}>
       <div class="chips">{d.buildings.filter((b: any) => b.level > 0).map((b: any) => <Tip content={L(b.desc)}><span class="chip">{L(b.name)} {b.level > 1 ? b.level : ''}</span></Tip>)}{!d.buildings.some((b: any) => b.level > 0) && <span class="muted">{t('none')}</span>}</div>
     </Section>}

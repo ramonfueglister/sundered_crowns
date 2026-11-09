@@ -1,6 +1,7 @@
 // UI strings (EN/DE). Content text from the simulation is already bilingual (I18n objects).
 import { signal } from '@preact/signals';
 import type { I18n } from '../sim/types';
+import { refusal } from '../sim/refusals';
 
 const saved = (() => { try { return localStorage.getItem('sc.lang'); } catch { return null; } })();
 export const lang = signal<'en' | 'de'>(saved === 'de' || saved === 'en' ? saved : (navigator.language || 'en').startsWith('de') ? 'de' : 'en');
@@ -354,6 +355,103 @@ const S: Record<string, [string, string]> = {
   x_nat_faith_hint: ['Faith of the realm. Locations of another faith are restless and integrate more slowly; realms of another faith are less willing to accept its proposals.', 'Glaube des Reiches. Orte anderen Glaubens sind unruhiger und werden langsamer eingegliedert; Reiche anderen Glaubens nehmen seine Vorschläge seltener an.'],
   x_nat_culture_hint: ['Culture of the realm. Locations of another culture are restless and integrate more slowly.', 'Kultur des Reiches. Orte anderer Kultur sind unruhiger und werden langsamer eingegliedert.'],
   x_goal_inherited: ['Held from the start', 'Von Beginn an erfüllt'], x_goal_inherited_hint: ['Already true when the reign began: counted as achieved, without a reward.', 'Schon zu Beginn der Herrschaft erfüllt: zählt als erreicht, ohne Belohnung.'],
+  // ---------------------------------------------------------------- direction pass (claude/direction-pass): goal tree and tracker
+  x_goal_ready: ['Achievable now', 'Jetzt erreichbar'],
+  x_goal_ready_hint: ['Every condition holds. The goal is granted at the next review (every three months), or claim it now.', 'Alle Bedingungen sind erfüllt. Das Ziel wird bei der nächsten Prüfung (alle drei Monate) gewährt, oder du löst es jetzt ein.'],
+  x_goal_open_hint: ['The earlier goals are done; this goal counts once all its conditions hold at the same time.', 'Die vorherigen Ziele sind erreicht; dieses Ziel zählt, sobald alle Bedingungen zugleich erfüllt sind.'],
+  x_goal_done_hint: ['Achieved; its reward was granted once.', 'Erreicht; die Belohnung wurde einmal gewährt.'],
+  x_goal_locked: ['Later', 'Später'],
+  x_goal_locked_hint: ['Opens once the goals it needs first are achieved. Its conditions are shown so you can work towards it already.', 'Öffnet sich, sobald die vorher nötigen Ziele erreicht sind. Die Bedingungen stehen schon da, damit du darauf hinarbeiten kannst.'],
+  x_goal_claim: ['Claim', 'Einlösen'],
+  x_goal_claimed: ['Goal achieved', 'Ziel erreicht'],
+  x_goal_now_ready: ['Goal achievable', 'Ziel erreichbar'],
+  x_goal_unlocks: ['Unlocks', 'Schaltet frei'],
+  x_goal_needs: ['Needs first', 'Braucht zuerst'],
+  x_goal_tier: ['Step', 'Stufe'],
+  x_goal_tree_hint: ['Each step needs goals of the step before. Hover a goal to mark what it needs (brown) and what it unlocks (blue); pin up to three to the tracker under the outliner.', 'Jede Stufe braucht Ziele der Stufe davor. Fahre über ein Ziel, um zu sehen, was es braucht (braun) und was es freischaltet (blau); bis zu drei lassen sich an die Zielleiste unter der Übersicht heften.'],
+  x_goals_show_done: ['show achieved', 'erreichte zeigen'],
+  x_goal_progress_hint: ['Share of the conditions met; counted conditions add the part already reached.', 'Anteil der erfüllten Bedingungen; zählbare Bedingungen tragen den schon erreichten Teil bei.'],
+  x_cond_now: ['Now', 'Jetzt'],
+  x_cond_need: ['Required', 'Benötigt'],
+  x_cond_progress: ['Progress', 'Fortschritt'],
+  x_held_ours: ['ours', 'unser'],
+  x_unowned: ['no one', 'niemand'],
+  x_pin: ['Pin to the goal tracker', 'An die Zielleiste heften'],
+  x_unpin: ['Unpin', 'Lösen'],
+  x_pin_full: ['At most three goals can be pinned.', 'Höchstens drei Ziele lassen sich anheften.'],
+  x_tracker: ['Goals', 'Ziele'],
+  x_tracker_hint: ['Pinned goals with their progress and the next missing condition. Pin up to three in Goals & decisions; without pins the open goals nearest to completion are shown.', 'Angeheftete Ziele mit Fortschritt und der nächsten fehlenden Bedingung. Bis zu drei lassen sich unter Ziele & Beschlüsse anheften; ohne Anheften stehen hier die offenen Ziele, die am nächsten am Abschluss sind.'],
+  x_tracker_suggested: ['Nearest open goals', 'Nächste offene Ziele'],
+  // ---- direction pass: effects of event options (src/game/eventfx.ts)
+  x_fx_head: ['What each answer does', 'Was jede Antwort bewirkt'],
+  x_fx_head_hint: ['Found by trying each answer on a copy of the game; the game itself is not touched. Answers that depend on chance are tried three times with different luck.', 'Ermittelt, indem jede Antwort auf einer Kopie des Spiels erprobt wird; das Spiel selbst bleibt unberührt. Antworten, bei denen der Zufall mitspielt, werden dreimal mit verschiedenem Glück erprobt.'],
+  x_fx_trying: ['Trying the answer', 'Antwort wird erprobt'],
+  x_fx_none: ['No visible effect.', 'Keine sichtbare Wirkung.'],
+  x_fx_to: ['to', 'bis'],
+  x_fx_possible: ['possible', 'möglich'],
+  x_fx_possible_hint: ['Happened in some of the trials only: it depends on chance.', 'Trat nur in einem Teil der Versuche ein: es hängt vom Zufall ab.'],
+  x_fx_line_hint: ['The change this answer makes, from the trial.', 'Die Änderung, die diese Antwort bewirkt, aus dem Probelauf.'],
+  x_fx_before: ['Now', 'Jetzt'],
+  x_fx_change: ['Change', 'Änderung'],
+  x_fx_after: ['After', 'Danach'],
+  x_fx_trial: ['Trial', 'Versuch'],
+  x_fx_lasts: ['Lasts', 'Dauer'],
+  x_fx_share: ['Trials where it happened', 'Versuche, in denen es eintrat'],
+  x_fx_random: ['Chance decides part of the outcome', 'Der Zufall entscheidet mit'],
+  x_fx_random_hint: ['The trials gave different results; ranges show the lowest and highest value seen.', 'Die Versuche ergaben verschiedene Ergebnisse; Spannen zeigen den niedrigsten und den höchsten Wert.'],
+  // ---- direction pass: building and levy overview, province and area orders (src/ui/panels/works.tsx)
+  x_w_tab_build: ['Buildings', 'Bauten'], x_w_tab_levy: ['Levies', 'Aushebung'],
+  x_w_all_provs: ['All provinces', 'Alle Provinzen'], x_w_all_areas: ['All areas', 'Alle Gebiete'], x_w_all_types: ['All buildings', 'Alle Gebäude'],
+  x_w_sort: ['Sort', 'Ordnen'], x_w_sort_payback: ['by payback', 'nach Amortisation'], x_w_sort_gain: ['by yield', 'nach Ertrag'], x_w_sort_cost: ['by price', 'nach Preis'], x_w_sort_name: ['by name', 'nach Name'],
+  x_w_building: ['Building', 'Gebäude'],
+  x_w_built: ['Built', 'Gebaut'], x_w_built_hint: ['Levels of it standing in our land.', 'Stehende Stufen davon in unserem Land.'],
+  x_w_places: ['Places', 'Orte'], x_w_places_hint: ['Places of ours (in the filter) where a level can be started now, gold aside.', 'Orte von uns (im Filter), an denen jetzt eine Stufe begonnen werden kann, Gold außer Acht.'],
+  x_w_price_hint: ['Price of the next level at the cheapest and the dearest of these places.', 'Preis der nächsten Stufe am günstigsten und am teuersten dieser Orte.'],
+  x_w_yield: ['Yield / month', 'Ertrag / Monat'],
+  x_w_yield_hint: ['Estimated extra crown income per month from one more level at the best place, from last month\'s harvest, output and prices.', 'Geschätzte zusätzliche Kroneinnahme pro Monat durch eine weitere Stufe am besten Ort, aus Ernte, Erzeugung und Preisen des Vormonats.'],
+  x_w_payback: ['Payback', 'Amortisation'], x_w_payback_hint: ['Months until the yield has paid the price (price ÷ yield per month).', 'Monate, bis der Ertrag den Preis eingespielt hat (Preis ÷ Ertrag pro Monat).'],
+  x_w_mo: ['mo.', 'Mon.'],
+  x_w_best: ['Best {n}', 'Beste {n}'], x_w_all: ['All ({k})', 'Alle ({k})'],
+  x_w_best_hint: ['Builds one level at the {n} places with the shortest payback (else the cheapest), as far as the treasury goes.', 'Baut je eine Stufe an den {n} Orten mit der kürzesten Amortisation (sonst den günstigsten), soweit der Schatz reicht.'],
+  x_w_all_hint: ['Builds one level at every place listed, shortest payback first, as far as the treasury goes.', 'Baut je eine Stufe an jedem aufgeführten Ort, kürzeste Amortisation zuerst, soweit der Schatz reicht.'],
+  x_w_count: ['Best', 'Beste'], x_w_count_hint: ['How many places the "Best" buttons build at.', 'An wie vielen Orten die Schaltflächen „Beste“ bauen.'],
+  x_w_affordable: ['{k} of {m} affordable', '{k} von {m} bezahlbar'],
+  x_w_total_cost: ['Total price', 'Gesamtpreis'], x_w_total_gain: ['Total yield / month', 'Gesamtertrag / Monat'], x_w_time: ['Time to build', 'Bauzeit'],
+  x_w_left_over: ['Treasury afterwards', 'Schatz danach'], x_w_not_paid: ['Not affordable now', 'Jetzt nicht bezahlbar'],
+  x_w_no_spots: ['Nowhere to build this now.', 'Derzeit nirgends baubar.'], x_w_unknown: ['Not yet known in our era.', 'In unserem Zeitalter noch unbekannt.'],
+  x_w_queue: ['Under construction', 'Im Bau'], x_w_queue_empty: ['Nothing under construction.', 'Nichts im Bau.'],
+  x_w_cancel_build_hint: ['Stops the work and returns half the price of the part not yet built.', 'Bricht den Bau ab und erstattet die Hälfte des Preises für den noch nicht gebauten Teil.'],
+  x_w_refund: ['Refund', 'Erstattung'], x_w_paid: ['Paid', 'Bezahlt'], x_w_progress: ['Progress', 'Fortschritt'], x_w_share_left: ['Share not yet built', 'Noch nicht gebauter Anteil'],
+  x_w_gain_head: ['Estimated yield', 'Geschätzter Ertrag'],
+  x_w_gain_hint: ['Extra income of each class from one more level, times the crown\'s share of the taxes on it. From last month\'s numbers; prices and harvests change.', 'Zusätzliches Einkommen jeder Schicht durch eine weitere Stufe, mal dem Anteil der Krone an den Steuern darauf. Aus den Zahlen des Vormonats; Preise und Ernten ändern sich.'],
+  x_w_gain_none: ['No gold to expect from one more level here.', 'Von einer weiteren Stufe ist hier kein Gold zu erwarten.'], x_w_use: ['Use', 'Nutzen'],
+  x_w_refill: ['Refill / month', 'Auffüllung / Monat'], x_w_refill_hint: ['Each month a 120th of the manpower limit comes back.', 'Jeden Monat kommt ein 120stel der Wehrkraftgrenze zurück.'],
+  x_w_limit: ['Limit', 'Grenze'],
+  x_w_raise: ['Raise troops', 'Truppen ausheben'], x_w_unit: ['Unit', 'Einheit'],
+  x_w_regiments: ['Regiments of 1000', 'Regimenter zu 1000'], x_w_squadrons: ['Squadrons of 2 ships', 'Geschwader zu 2 Schiffen'],
+  x_w_spread: ['Spread over', 'Verteilt auf'], x_w_spread_hint: ['The places that add the most men (ships: the harbours), taking turns.', 'Die Orte, die am meisten Männer stellen (Schiffe: die Häfen), reihum.'],
+  x_w_raise_btn: ['Raise {n}', '{n} ausheben'], x_w_men_needed: ['Men needed', 'Benötigte Männer'], x_w_training: ['Training', 'Ausbildung'],
+  x_w_per_unit: ['Price of one', 'Preis von einer'], x_w_where: ['Where', 'Wo'],
+  x_w_levy_head: ['Where the men come from', 'Woher die Männer kommen'],
+  x_w_levy_hint: ['Men each location adds to the manpower limit: peasants and labourers × 1.2 % × (0.4 + 0.6 × control). Occupied or besieged places are left out.', 'Männer, die jeder Ort zur Wehrkraftgrenze beiträgt: Bauern und Tagelöhner × 1,2 % × (0,4 + 0,6 × Kontrolle). Besetzte oder belagerte Orte fehlen.'],
+  x_w_harbour: ['Harbour', 'Hafen'], x_w_no_harbour: ['no harbour', 'kein Hafen'], x_w_inland: ['inland', 'Binnenland'],
+  x_w_recruits: ['In training', 'In Ausbildung'], x_w_recruits_empty: ['No troops in training.', 'Keine Truppen in Ausbildung.'],
+  x_w_cancel_recruit_hint: ['Sends them home: half the price back, the men or sailors return.', 'Schickt sie heim: der halbe Preis kommt zurück, ebenso die Männer oder Seeleute.'],
+  x_w_scope: ['Orders for province or area', 'Befehle für Provinz oder Gebiet'],
+  x_w_scope_ours: ['{mine} of {total} places are ours', '{mine} von {total} Orten gehören uns'],
+  x_w_scope_build: ['Build everywhere ({k})', 'Überall bauen ({k})'],
+  x_w_scope_build_hint: ['Builds one level at every place of ours here where it can stand, shortest payback first, as far as the treasury goes.', 'Baut je eine Stufe an jedem unserer Orte hier, an dem es stehen kann, kürzeste Amortisation zuerst, soweit der Schatz reicht.'],
+  x_w_scope_none: ['Nothing to build here now.', 'Hier ist derzeit nichts zu bauen.'],
+  x_w_scope_send: ['Send ({k})', 'Entsenden ({k})'],
+  x_w_scope_send_hint: ['Sends preachers or officials to the places of another faith or culture, the largest first, as many as are free and the treasury pays.', 'Entsendet Prediger oder Beamte in die Orte anderen Glaubens oder anderer Kultur, die größten zuerst, so viele frei sind und der Schatz bezahlt.'],
+  x_w_other_faith: ['Of another faith', 'Anderen Glaubens'], x_w_other_culture: ['Of another culture', 'Anderer Kultur'],
+  x_w_free_agents: ['Free preachers and officials', 'Freie Prediger und Beamte'], x_w_all_ours: ['all of ours', 'alle wie wir'],
+  x_w_overview: ['All works of the realm', 'Alle Bauten des Reiches'],
+  x_w_batch_done: ['{k} orders given', '{k} Befehle erteilt'], x_w_batch_rest: ['the rest', 'der Rest'],
+  x_w_half: ['Half of it', 'Davon die Hälfte'],
+  x_pc_all: ['All', 'Alle'], x_pc_none: ['None', 'Keine'], x_pc_other: ['Other places', 'Weitere Orte'],
+  x_pc_groups: ['Places chosen', 'Gewählte Orte'],
+  x_pc_groups_hint: ['Grouped by province, the largest first. A province\'s box takes or drops all of its places listed here; its name opens the list. Double-click a place to look at it.', 'Nach Provinz geordnet, die größte zuerst. Der Haken einer Provinz nimmt alle ihre hier genannten Orte oder lässt sie fallen; ihr Name öffnet die Liste. Doppelklick auf einen Ort zeigt ihn auf der Karte.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
@@ -368,62 +466,5 @@ export function reason(k: string): string {
   return k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
-// Error and refusal texts from the simulation (src/sim/commands.ts and systems) in German; unknown texts pass through.
-const ERRORS: Record<string, string> = {
-  'not enough gold': 'Nicht genug Gold', 'not enough manpower': 'Nicht genug Wehrkraft', 'not enough sailors': 'Nicht genug Seeleute', 'not enough Authority': 'Nicht genug Autorität', 'not enough insight': 'Nicht genug Einsicht',
-  'not your army': 'Nicht dein Heer', 'not your location': 'Nicht dein Ort', 'occupied': 'Besetzt', 'in battle': 'In der Schlacht', 'no route': 'Kein Weg', 'embarked': 'Eingeschifft', 'retreating': 'Auf dem Rückzug',
-  'need two armies': 'Zwei Heere nötig', 'too small': 'Zu klein', 'fully built': 'Voll ausgebaut', 'two works already under way here': 'Hier sind schon zwei Bauten im Gange', 'needs a larger town': 'Braucht eine größere Stadt',
-  'one seat at a time': 'Nur ein Verwaltungssitz zugleich', 'not yet known': 'Noch unbekannt', 'needs a coast': 'Braucht eine Küste', 'needs a harbour': 'Braucht einen Hafen', 'unit not available': 'Truppe nicht verfügbar',
-  'the realm is still settling': 'Das Reich ordnet sich noch', 'already at war': 'Schon im Krieg', 'subjects cannot declare wars': 'Untertanen können keinen Krieg erklären', 'the assembly refused to fund the war': 'Die Versammlung verweigert die Kriegsgelder',
-  'no such war': 'Kein solcher Krieg', 'not in this war': 'Nicht in diesem Krieg', 'not an enemy': 'Kein Feind', 'negotiate with the war leader': 'Mit dem Kriegsführer verhandeln', 'wait before sending another offer': 'Warte, bevor du ein weiteres Angebot sendest',
-  'refused': 'Abgelehnt', 'no such offer': 'Kein solches Angebot', 'all envoys are busy': 'Alle Gesandten sind unterwegs', 'already allied': 'Schon verbündet', 'already married': 'Schon verheiratet', 'at war': 'Im Krieg', 'invalid target': 'Ungültiges Ziel',
-  'at most three rivals': 'Höchstens drei Rivalen', 'already fabricating': 'Wird schon fabriziert', 'all agents are busy': 'Alle Agenten sind beschäftigt', 'unknown action': 'Unbekannte Handlung', 'a reform is already under way': 'Eine Reform ist schon im Gange',
-  'already in force': 'Bereits in Kraft', 'not yet possible in this era': 'In diesem Zeitalter noch nicht möglich', 'not possible for this government': 'Für diese Regierungsform nicht möglich', 'already granted': 'Bereits gewährt', 'not granted': 'Nicht gewährt',
-  'too soon': 'Zu früh', 'the assembly met recently': 'Die Versammlung tagte erst kürzlich', 'bad class': 'Ungültiger Stand', 'doctrine complete': 'Doktrin vollendet', 'not yet in this era': 'Noch nicht in diesem Zeitalter', 'no free doctrine slot': 'Kein freier Doktrinplatz',
-  'nothing left to learn': 'Nichts mehr zu lernen', 'already of our faith': 'Schon unseres Glaubens', 'already of our culture': 'Schon unserer Kultur', 'already working there': 'Dort ist schon jemand tätig', 'no free preachers or officials': 'Keine freien Prediger oder Beamten',
-  'not land': 'Kein Land', 'already claimed': 'Schon beansprucht', 'unknown land': 'Unbekanntes Land', 'someone is already settling here': 'Hier siedelt schon jemand', 'no colonists available': 'Keine Kolonisten verfügbar', 'out of colonial range': 'Außerhalb der Kolonialreichweite',
-  'no such person': 'Keine solche Person', 'no lender will extend more credit': 'Kein Geldgeber gewährt mehr Kredit', 'no loans': 'Keine Kredite', 'no such market': 'Kein solcher Markt', 'no merchants left': 'Keine Kaufleute mehr frei',
-  'not your subject': 'Nicht dein Untertan', 'tributaries cannot be integrated': 'Tributpflichtige können nicht eingegliedert werden', 'colonial realms cannot be integrated': 'Kolonialreiche können nicht eingegliedert werden', 'our merchants are not ready (Commerce 12)': 'Unsere Kaufleute sind noch nicht so weit (Handel 12)', 'no charter available': 'Kein Freibrief verfügbar', 'already chartered': 'Bereits gegründet', 'we hold no harbour there': 'Wir besitzen dort keinen Hafen', 'must be a subject for ten years': 'Muss zehn Jahre Untertan sein', 'too restless': 'Zu unruhig',
-  'bad slot': 'Ungültiger Platz', 'build more workshops first': 'Erst mehr Werkstätten bauen', 'unknown recipe': 'Unbekanntes Verfahren', 'need an army and a fleet': 'Heer und Flotte nötig', 'fleet must lie off the coast': 'Die Flotte muss vor der Küste liegen',
-  'not enough ships': 'Nicht genug Schiffe', 'developer tools are disabled': 'Entwicklerwerkzeuge sind abgeschaltet', 'already taken': 'Bereits getroffen', 'unknown decision': 'Unbekannte Entscheidung', 'not enough favour with the Curia': 'Zu wenig Gunst bei der Kurie',
-  'not of the Latin church': 'Nicht der lateinischen Kirche zugehörig', 'not in the same place': 'Nicht am selben Ort', 'select one army': 'Ein Heer wählen', 'select a location': 'Einen Ort wählen', 'select a realm': 'Ein Reich wählen', 'already under way': 'Bereits im Gange',
-  'unknown office': 'Unbekanntes Amt', 'the ruler cannot hold an office': 'Der Herrscher kann kein Amt bekleiden', 'too young for office': 'Zu jung für ein Amt', 'already holds this office': 'Bekleidet dieses Amt bereits',
-  'no terms': 'Keine Bedingungen', 'none': 'Keine', 'no such realm': 'Kein solches Reich', 'failed': 'Fehlgeschlagen', 'unknown': 'Unbekannt', 'invalid': 'Ungültig',
-  // ---- UI pass (claude/ui-pass): reasons a decision is not yet possible (src/sim/content/decisions.ts)
-  'only in the Age of Reason': 'Erst im Zeitalter der Vernunft', 'we are not sovereign': 'Wir sind nicht souverän', 'only from the Age of Print and Horizons': 'Erst ab dem Zeitalter von Druck und Horizonten',
-  'need 20 Authority': 'Braucht 20 Autorität', 'need 30 Authority': 'Braucht 30 Autorität', 'need 50 Authority': 'Braucht 50 Autorität', 'need 60 Authority': 'Braucht 60 Autorität', 'need 80 Authority': 'Braucht 80 Autorität', 'need 100 Authority': 'Braucht 100 Autorität', 'need 50 Mandate': 'Braucht 50 Mandat',
-  'need Governance 10': 'Braucht Staatskunst 10', 'need Commerce & Learning 3': 'Braucht Handel & Gelehrsamkeit 3', 'need Commerce & Learning 10': 'Braucht Handel & Gelehrsamkeit 10', 'need Commerce & Learning 14': 'Braucht Handel & Gelehrsamkeit 14', 'need a harbour': 'Braucht einen Hafen',
-  'we must know bills of exchange and double-entry bookkeeping': 'Wir müssen Wechselbriefe und doppelte Buchführung kennen', 'we are still in good standing with the Curia': 'Wir stehen noch in gutem Ansehen bei der Kurie',
-  'too soon after the last foundation': 'Zu kurz nach der letzten Gründung', 'throw off the overlord first': 'Erst den Oberherrn abschütteln', 'the estates met recently': 'Die Stände tagten erst kürzlich',
-  'our realm is too small for estates general': 'Unser Reich ist zu klein für Generalstände', 'our realm is too small for an admiralty': 'Unser Reich ist zu klein für eine Admiralität', 'our realm is too small for a trading company': 'Unser Reich ist zu klein für eine Handelskompanie',
-  'our realm is too small for a progress': 'Unser Reich ist zu klein für eine Rundreise', 'our realm is too small for a code of laws': 'Unser Reich ist zu klein für ein Gesetzbuch',
-  'our realm already has as many universities as it can sustain (one, and one more per 30 locations)': 'Unser Reich hat schon so viele Universitäten, wie es tragen kann (eine, und eine weitere je 30 Orte)',
-  'our capital must reach development 15': 'Unsere Hauptstadt muss Entwicklung 15 erreichen', 'only from the Age of Confessions': 'Erst ab dem Zeitalter der Konfessionen', 'not while at war': 'Nicht während eines Krieges',
-  'not enough gold (12 months of taxes)': 'Nicht genug Gold (12 Monatssteuern)', 'not before the Age of Print': 'Nicht vor dem Zeitalter des Drucks', 'no town large enough without a university': 'Keine ausreichend große Stadt ohne Universität',
-  'no reformed church in or near our lands': 'Keine reformierte Kirche in oder nahe unserem Land', 'no need: the realm is calm and solvent': 'Nicht nötig: das Reich ist ruhig und zahlungsfähig',
-  'most of our land must be of the Latin rite': 'Der Großteil unseres Landes muss dem lateinischen Ritus folgen', 'hold Moscow and Novgorod': 'Moskau und Nowgorod besitzen',
-  'hold six of Cologne, Nuremberg, Hamburg, Berlin, Leipzig, Augsburg, Vienna, Munich, Mainz and Dresden': 'Sechs von Köln, Nürnberg, Hamburg, Berlin, Leipzig, Augsburg, Wien, München, Mainz und Dresden besitzen',
-  'hold four of Rome, Milan, Naples, Florence, Venice and Turin': 'Vier von Rom, Mailand, Neapel, Florenz, Venedig und Turin besitzen',
-  'only from the Age of Confessions and Absolutism': 'Erst ab dem Zeitalter der Konfessionen und des Absolutismus', 'need 150 Authority': 'Braucht 150 Autorität', 'need 60 Mandate': 'Braucht 60 Mandat',
-  'the magnates are too powerful': 'Die Magnaten sind zu mächtig', 'the capital was moved recently': 'Die Hauptstadt wurde erst kürzlich verlegt',
-  'the capital is already our greatest town': 'Die Hauptstadt ist schon unsere größte Stadt', 'the capital is still great enough': 'Die Hauptstadt ist noch bedeutend genug',
-  'both crowns must exist': 'Beide Kronen müssen bestehen', 'not before 1380': 'Nicht vor 1380', 'both crowns must be sovereign': 'Beide Kronen müssen souverän sein',
-  'not while they are at war': 'Nicht, solange sie Krieg gegeneinander führen', 'the other crown must agree': 'Die andere Krone muss zustimmen', 'relations are too poor': 'Die Beziehungen sind zu schlecht',
-  'hold three of Toledo, Zaragoza, Barcelona and Seville': 'Drei von Toledo, Saragossa, Barcelona und Sevilla besitzen', 'cannot absorb another ruler': 'Kann keinen anderen Herrscher einverleiben',
-  'hold London and Edinburgh': 'London und Edinburgh besitzen', 'error': 'Fehler', 'not available': 'Nicht verfügbar',
-};
-/** Refusals that name a realm (decisions.ts builds them with the realm's English short name). */
-const ERROR_PATTERNS: [RegExp, (m: RegExpMatchArray) => string][] = [
-  [/^(.+) must be our subject or a friendly marriage partner$/, (m) => `${realmDe(m[1])} muss unser Untertan oder ein wohlgesinnter Ehepartner sein`],
-  [/^(.+) must be our subject$/, (m) => `${realmDe(m[1])} muss unser Untertan sein`],
-];
-let realmDe: (en: string) => string = (x) => x;
-/** The UI registers how to turn a realm's English short name into its German one (the nation list lives in game/client). */
-export function setRealmNameDe(f: (en: string) => string) { realmDe = f; }
-/** Translate an error/refusal text from the simulation. */
-export function errText(e: string): string {
-  if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1);
-  const hit = ERRORS[e]; if (hit) return hit;
-  for (const [re, f] of ERROR_PATTERNS) { const m = e.match(re); if (m) return f(m); }
-  return e;
-}
+/** Translate an error/refusal text from the simulation (the texts live with the simulation: src/sim/refusals.ts). */
+export function errText(e: string | I18n): string { return L(refusal(e)); }

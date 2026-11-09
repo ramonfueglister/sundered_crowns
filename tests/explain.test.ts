@@ -123,17 +123,20 @@ describe('peace dialog: the rows of their answer add up to the shown sum', () =>
 });
 
 describe('ambitions that already hold at the start are not advertised as open', () => {
-  it('goals view before the first check matches what the first check inherits', () => {
-    const fresh = s.nations.filter((x) => x.alive && x.flags.goals_init === undefined).slice(0, 25);
-    expect(fresh.length).toBeGreaterThan(0);
+  it('the first look at game start inherits what is already true, and the view marks it inherited', () => {
+    // systems/goals.ts init: every realm's tree gets its first look when the game is created
+    const realms = s.nations.filter((x) => x.alive && (x.goalsDone ?? []).length > 0).slice(0, 25);
+    expect(realms.length).toBeGreaterThan(0);
     const d = dayToDate(s.day, s.startYear);
-    for (const x of fresh) {
+    for (const x of realms) {
+      expect(x.flags.goals_init).toBeDefined();
       const before = answer(s, w, x.id, { q: 'goals', nation: x.id }) as any[];
+      expect(before.filter((g) => g.done).map((g) => g.id).sort()).toEqual([...x.goalsDone].sort());
+      // nothing achieved yet at the start: every goal held is one inherited without reward
+      if (s.day === 0) expect(before.filter((g) => g.done && !g.inherited)).toEqual([]);
       checkGoals(s, w, x, d.y, d.m);
       const after = answer(s, w, x.id, { q: 'goals', nation: x.id }) as any[];
-      expect(before.filter((g) => g.done).map((g) => g.id).sort()).toEqual([...x.goalsDone].sort());
-      expect(after.map((g) => [g.id, g.done, g.open, g.inherited])).toEqual(before.map((g) => [g.id, g.done, g.open, g.inherited]));
-      expect(before.filter((g) => g.done && !g.inherited)).toEqual([]);
+      expect(after.filter((g) => g.inherited).map((g) => g.id)).toEqual(before.filter((g) => g.inherited).map((g) => g.id));
       expect(goalsFor(x).length).toBe(before.length);
     }
   });
@@ -141,21 +144,23 @@ describe('ambitions that already hold at the start are not advertised as open', 
 
 describe('German texts for every refusal of a decision', () => {
   const prev = lang.value;
-  const missing = (why: string) => { lang.value = 'de'; const de = errText(why); lang.value = prev; return de === why; };
+  // a refusal the simulation gives as I18n carries its German text itself
+  const missing = (why: string | { en: string; de: string }) => { if (typeof why !== 'string') return !why.de; lang.value = 'de'; const de = errText(why); lang.value = prev; return de === why; };
   it('every literal reason in decisions.ts has a German text', () => {
     const src = readFileSync(new URL('../src/sim/content/decisions.ts', import.meta.url), 'utf8');
     const reasons = new Set<string>();
     for (let at = src.indexOf('can: ('); at >= 0; at = src.indexOf('can: (', at + 1)) {
       const body = src.slice(at, src.indexOf('effect:', at));
       for (const m of body.matchAll(/(?:\?|:|return)\s*'([^']*\s[^']*)'/g)) reasons.add(m[1]);
-      for (const m of body.matchAll(/(?:\?|:|return)\s*`\$\{[^}]+\}([^`]*)`/g)) reasons.add(`Castile${m[1]}`);
+      // template refusals given as { en, de } carry their own German text
+      for (const m of body.matchAll(/(?:\?|(?<!\b(?:en|de)):|return)\s*`\$\{[^}]+\}([^`]*)`/g)) reasons.add(`Castile${m[1]}`);
     }
     expect(reasons.size).toBeGreaterThan(40);
     expect([...reasons].filter(missing)).toEqual([]);
   });
   it('every reason the decisions give any realm right now has a German text', () => {
     const d = dayToDate(s.day, s.startYear);
-    const seen = new Set<string>();
+    const seen = new Set<string | { en: string; de: string }>();
     for (const n2 of s.nations) {
       if (!n2.alive) continue;
       for (const x of decisionsFor(s, w, n2)) if (typeof x.why === 'string') seen.add(x.why);

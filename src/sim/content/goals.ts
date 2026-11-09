@@ -18,10 +18,17 @@ export interface GoalDef {
   req?: string[];  // prerequisite goal ids
   check(e: EvApi): boolean;
   reward(e: EvApi): void;
+  /** the conditions one by one (text, test, progress) and the reward texts, for the goal tree and the tracker */
+  conds: GoalCond[]; rews: I18n[]; flav?: I18n;
 }
 
 // ---------------- condition and reward builders ----------------
-interface Cond { t: I18n; f: (e: EvApi) => boolean }
+/**
+ * A condition: text, test and (for counted conditions) progress as [current, required]; place conditions name their
+ * places so the goal tree can show which are held.
+ */
+export interface GoalCond { t: I18n; f: (e: EvApi) => boolean; p?: (e: EvApi) => [number, number]; places?: string[]; building?: number }
+type Cond = GoalCond;
 interface Rew { t: I18n; f: (e: EvApi) => void }
 const NAMES = new WeakMap<World, Map<string, number>>();
 function loc(w: World, name: string): number {
@@ -38,48 +45,54 @@ const nat = (e: EvApi, key: string): Nation | undefined => e.s.nations.find((x) 
 const BRANCH: I18n[] = [{ en: 'Governance', de: 'Staatskunst' }, { en: 'Commerce', de: 'Handel' }, { en: 'Warfare', de: 'Kriegswesen' }];
 function countLocs(e: EvApi, f: (l: number) => boolean) { let k = 0; for (const l of nationLocsRO(e.s, e.n.id)) if (f(l)) k++; return k; }
 function buildings(e: EvApi, b: number) { let k = 0; for (const l of nationLocsRO(e.s, e.n.id)) k += e.s.loc.buildings[l * B + b]; return k; }
+const inBox = (e: EvApi, box: [number, number, number, number]) => countLocs(e, (l) => e.w.lat[l] >= box[0] && e.w.lat[l] <= box[1] && e.w.lon[l] >= box[2] && e.w.lon[l] <= box[3]);
+const overseasLocs = (e: EvApi) => countLocs(e, (l) => e.w.lon[l] < -25 || (e.w.lat[l] < 15 && e.w.lon[l] < 55));
+/** The progress nearer to its mark (for “a or b”); a side without progress counts as nothing done. */
+const better = (a?: [number, number], b?: [number, number]): [number, number] => { const f = (x?: [number, number]) => (x ? x[0] / Math.max(1e-9, x[1]) : -1); return (f(a) >= f(b) ? a : b) ?? [0, 1]; };
+/** Location index of a goal place name (first location with that name), -1 when the map has none. */
+export function goalPlace(w: World, name: string): number { return loc(w, name); }
 
 const C = {
-  own: (...names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${list(names, 'en')}`, de: `${list(names, 'de')} besitzen` }, f: (e) => names.every((x) => owns(e, x)) }; },
-  control: (...names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${list(names, 'en')} directly or through a subject`, de: `${list(names, 'de')} selbst oder durch einen Untertan besitzen` }, f: (e) => names.every((x) => ownsOrSubject(e, x)) }; },
-  ownK: (k: number, names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${k} of ${list(names, 'en')}`, de: `${k} von ${list(names, 'de')} besitzen` }, f: (e) => names.filter((x) => owns(e, x)).length >= k }; },
+  own: (...names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${list(names, 'en')}`, de: `${list(names, 'de')} besitzen` }, f: (e) => names.every((x) => owns(e, x)), p: (e) => [names.filter((x) => owns(e, x)).length, names.length], places: names }; },
+  control: (...names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${list(names, 'en')} directly or through a subject`, de: `${list(names, 'de')} selbst oder durch einen Untertan besitzen` }, f: (e) => names.every((x) => ownsOrSubject(e, x)), p: (e) => [names.filter((x) => ownsOrSubject(e, x)).length, names.length], places: names }; },
+  ownK: (k: number, names: string[]): Cond => { names.forEach((x) => GOAL_PLACES.add(x)); return { t: { en: `hold ${k} of ${list(names, 'en')}`, de: `${k} von ${list(names, 'de')} besitzen` }, f: (e) => names.filter((x) => owns(e, x)).length >= k, p: (e) => [names.filter((x) => owns(e, x)).length, k], places: names }; },
   /** `t` is the place with its preposition: “in the Canary Islands” / “auf den Kanarischen Inseln”. */
-  region: (k: number, t: I18n, box: [number, number, number, number]): Cond => ({ t: { en: `hold ${k} location${k > 1 ? 's' : ''} ${t.en}`, de: `${k} Ort${k > 1 ? 'e' : ''} ${t.de} besitzen` }, f: (e) => countLocs(e, (l) => e.w.lat[l] >= box[0] && e.w.lat[l] <= box[1] && e.w.lon[l] >= box[2] && e.w.lon[l] <= box[3]) >= k }),
-  locs: (k: number): Cond => ({ t: { en: `rule ${k} locations`, de: `${k} Orte beherrschen` }, f: (e) => nationLocsRO(e.s, e.n.id).length >= k }),
-  dev: (k: number): Cond => ({ t: { en: `reach a total development of ${k}`, de: `eine Gesamtentwicklung von ${k} erreichen` }, f: (e) => nationDev(e.s, e.n.id) >= k }),
-  tech: (b: number, k: number): Cond => ({ t: { en: `reach ${BRANCH[b].en} ${k}`, de: `${BRANCH[b].de} ${k} erreichen` }, f: (e) => e.n.tech[b] >= k }),
-  techAll: (k: number): Cond => ({ t: { en: `reach level ${k} in all branches of knowledge`, de: `Stufe ${k} in allen Wissenszweigen erreichen` }, f: (e) => e.n.tech.every((x) => x >= k) }),
-  era: (k: number, t: I18n): Cond => ({ t: { en: `enter the ${t.en}`, de: `das ${t.de} erreichen` }, f: (e) => e.n.era >= k }),
-  prestige: (k: number): Cond => ({ t: { en: `have ${k} prestige`, de: `${k} Ansehen haben` }, f: (e) => e.n.prestige >= k }),
-  mandate: (k: number): Cond => ({ t: { en: `have ${k} Mandate`, de: `${k} Mandat haben` }, f: (e) => e.n.mandate >= k }),
-  concord: (k: number): Cond => ({ t: { en: `have ${k} Concord`, de: `${k} Eintracht haben` }, f: (e) => e.n.concord >= k }),
-  treasury: (m: number): Cond => ({ t: { en: `hold ${m} months of taxes in the treasury`, de: `${m} Monatssteuern im Schatz halten` }, f: (e) => e.n.treasury >= Math.max(10, e.n.income.tax || 10) * m && e.n.debt <= 0 }),
-  subjects: (k: number): Cond => ({ t: { en: `have ${k} subject realm${k > 1 ? 's' : ''}`, de: `${k} Untertanenreich${k > 1 ? 'e' : ''} haben` }, f: (e) => e.s.nations.filter((x) => x.alive && x.overlord === e.n.id).length >= k }),
+  region: (k: number, t: I18n, box: [number, number, number, number]): Cond => ({ t: { en: `hold ${k} location${k > 1 ? 's' : ''} ${t.en}`, de: `${k} Ort${k > 1 ? 'e' : ''} ${t.de} besitzen` }, f: (e) => inBox(e, box) >= k, p: (e) => [inBox(e, box), k] }),
+  locs: (k: number): Cond => ({ t: { en: `rule ${k} locations`, de: `${k} Orte beherrschen` }, f: (e) => nationLocsRO(e.s, e.n.id).length >= k, p: (e) => [nationLocsRO(e.s, e.n.id).length, k] }),
+  dev: (k: number): Cond => ({ t: { en: `reach a total development of ${k}`, de: `eine Gesamtentwicklung von ${k} erreichen` }, f: (e) => nationDev(e.s, e.n.id) >= k, p: (e) => [nationDev(e.s, e.n.id), k] }),
+  tech: (b: number, k: number): Cond => ({ t: { en: `reach ${BRANCH[b].en} ${k}`, de: `${BRANCH[b].de} ${k} erreichen` }, f: (e) => e.n.tech[b] >= k, p: (e) => [e.n.tech[b], k] }),
+  techAll: (k: number): Cond => ({ t: { en: `reach level ${k} in all branches of knowledge`, de: `Stufe ${k} in allen Wissenszweigen erreichen` }, f: (e) => e.n.tech.every((x) => x >= k), p: (e) => [Math.min(...e.n.tech), k] }),
+  era: (k: number, t: I18n): Cond => ({ t: { en: `enter the ${t.en}`, de: `das ${t.de} erreichen` }, f: (e) => e.n.era >= k, p: (e) => [e.n.era, k] }),
+  prestige: (k: number): Cond => ({ t: { en: `have ${k} prestige`, de: `${k} Ansehen haben` }, f: (e) => e.n.prestige >= k, p: (e) => [e.n.prestige, k] }),
+  mandate: (k: number): Cond => ({ t: { en: `have ${k} Mandate`, de: `${k} Mandat haben` }, f: (e) => e.n.mandate >= k, p: (e) => [e.n.mandate, k] }),
+  concord: (k: number): Cond => ({ t: { en: `have ${k} Concord`, de: `${k} Eintracht haben` }, f: (e) => e.n.concord >= k, p: (e) => [e.n.concord, k] }),
+  treasury: (m: number): Cond => ({ t: { en: `hold ${m} months of taxes in the treasury`, de: `${m} Monatssteuern im Schatz halten` }, f: (e) => e.n.treasury >= Math.max(10, e.n.income.tax || 10) * m && e.n.debt <= 0, p: (e) => [e.n.debt > 0 ? 0 : e.n.treasury, Math.max(10, e.n.income.tax || 10) * m] }),
+  subjects: (k: number): Cond => ({ t: { en: `have ${k} subject realm${k > 1 ? 's' : ''}`, de: `${k} Untertanenreich${k > 1 ? 'e' : ''} haben` }, f: (e) => e.s.nations.filter((x) => x.alive && x.overlord === e.n.id).length >= k, p: (e) => [e.s.nations.filter((x) => x.alive && x.overlord === e.n.id).length, k] }),
   subject: (key: string, t: I18n): Cond => ({ t: { en: `make ${t.en} our subject or annex it`, de: `${t.de} zum Untertan machen oder einverleiben` }, f: (e) => { const o = e.s.nations.find((x) => x.key === key); return !!o && (!o.alive || o.overlord === e.n.id); } }),
   gone: (key: string, t: I18n): Cond => ({ t: { en: `${t.en} no longer exists`, de: `${t.de} besteht nicht mehr` }, f: (e) => { const o = e.s.nations.find((x) => x.key === key); return !o || !o.alive; } }),
   ally: (key: string, t: I18n): Cond => ({ t: { en: `be allied with ${t.en}`, de: `mit ${t.de} verbündet sein` }, f: (e) => { const o = nat(e, key); return !!o && hasTreaty(e.s, e.n.id, o.id, 'alliance'); } }),
   sovereign: (): Cond => ({ t: { en: 'owe allegiance to no overlord', de: 'keinem Oberherrn untertan sein' }, f: (e) => e.n.overlord < 0 }),
-  warsWon: (k: number): Cond => ({ t: { en: `win ${k} war${k > 1 ? 's' : ''}`, de: `${k} Krieg${k > 1 ? 'e' : ''} gewinnen` }, f: (e) => e.n.stats.warsWon >= k }),
-  battles: (k: number): Cond => ({ t: { en: `win ${k} battles`, de: `${k} Schlachten gewinnen` }, f: (e) => e.n.stats.battlesWon >= k }),
-  doctrine: (g: string, k: number): Cond => { const d = DOCTRINES[DOCTRINE_INDEX[g]]; return { t: { en: `take ${k} picks of the doctrine “${d.name.en}”`, de: `${k} Lehrsätze der Doktrin „${d.name.de}“ annehmen` }, f: (e) => (e.n.doctrines[g] || 0) >= k }; },
-  doctrines: (k: number): Cond => ({ t: { en: `take ${k} doctrine picks in all`, de: `insgesamt ${k} Lehrsätze annehmen` }, f: (e) => Object.values(e.n.doctrines).reduce((p, x) => p + x, 0) >= k }),
+  warsWon: (k: number): Cond => ({ t: { en: `win ${k} war${k > 1 ? 's' : ''}`, de: `${k} Krieg${k > 1 ? 'e' : ''} gewinnen` }, f: (e) => e.n.stats.warsWon >= k, p: (e) => [e.n.stats.warsWon, k] }),
+  battles: (k: number): Cond => ({ t: { en: `win ${k} battles`, de: `${k} Schlachten gewinnen` }, f: (e) => e.n.stats.battlesWon >= k, p: (e) => [e.n.stats.battlesWon, k] }),
+  doctrine: (g: string, k: number): Cond => { const d = DOCTRINES[DOCTRINE_INDEX[g]]; return { t: { en: `take ${k} picks of the doctrine “${d.name.en}”`, de: `${k} Lehrsätze der Doktrin „${d.name.de}“ annehmen` }, f: (e) => (e.n.doctrines[g] || 0) >= k, p: (e) => [e.n.doctrines[g] || 0, k] }; },
+  doctrines: (k: number): Cond => ({ t: { en: `take ${k} doctrine picks in all`, de: `insgesamt ${k} Lehrsätze annehmen` }, f: (e) => Object.values(e.n.doctrines).reduce((p, x) => p + x, 0) >= k, p: (e) => [Object.values(e.n.doctrines).reduce((p, x) => p + x, 0), k] }),
   innovation: (id: string): Cond => { const k = INNOVATIONS.findIndex((x) => x.id === id); const iv = INNOVATIONS[k]; return { t: { en: `adopt ${iv.name.en}`, de: `${iv.name.de} übernehmen` }, f: (e) => e.n.innovations.includes(k) }; },
-  innovations: (k: number): Cond => ({ t: { en: `adopt ${k} innovations`, de: `${k} Neuerungen übernehmen` }, f: (e) => e.n.innovations.length >= k }),
+  innovations: (k: number): Cond => ({ t: { en: `adopt ${k} innovations`, de: `${k} Neuerungen übernehmen` }, f: (e) => e.n.innovations.length >= k, p: (e) => [e.n.innovations.length, k] }),
   decision: (id: string, t: I18n): Cond => ({ t: { en: `take the decision “${t.en}”`, de: `die Entscheidung „${t.de}“ treffen` }, f: (e) => e.n.flags[`dec_${id}`] !== undefined }),
-  building: (b: string, k: number, t: I18n): Cond => ({ t: { en: `have ${k} ${t.en}`, de: `${k} ${t.de} haben` }, f: (e) => buildings(e, BI[b]) >= k }),
+  building: (b: string, k: number, t: I18n): Cond => ({ t: { en: `have ${k} ${t.en}`, de: `${k} ${t.de} haben` }, f: (e) => buildings(e, BI[b]) >= k, p: (e) => [buildings(e, BI[b]), k], building: BI[b] }),
   law: (law: string, min: number, t: I18n): Cond => ({ t: { en: `enact “${t.en}”`, de: `„${t.de}“ einführen` }, f: (e) => (e.n.laws[law] ?? 0) >= min }),
   lawIs: (law: string, opt: number, t: I18n): Cond => ({ t: { en: `enact “${t.en}”`, de: `„${t.de}“ einführen` }, f: (e) => e.n.laws[law] === opt }),
   gov: (gov: string, t: I18n): Cond => ({ t: { en: `rule as ${t.en}`, de: `als ${t.de} herrschen` }, f: (e) => e.n.gov === gov }),
   faith: (f: string, t: I18n): Cond => ({ t: { en: `follow the ${t.en}`, de: `der ${t.de} folgen` }, f: (e) => e.n.faith === FAITH_INDEX[f] }),
-  faithUnity: (k: number): Cond => ({ t: { en: `have ${Math.round(k * 100)}% of our land share our faith`, de: `${Math.round(k * 100)} % unseres Landes teilen unseren Glauben` }, f: (e) => { const ls = nationLocsRO(e.s, e.n.id); return ls.length > 0 && ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length >= k; } }),
+  faithUnity: (k: number): Cond => ({ t: { en: `have ${Math.round(k * 100)}% of our land share our faith`, de: `${Math.round(k * 100)} % unseres Landes teilen unseren Glauben` }, f: (e) => { const ls = nationLocsRO(e.s, e.n.id); return ls.length > 0 && ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length >= k; }, p: (e) => { const ls = nationLocsRO(e.s, e.n.id); return [ls.length ? Math.round(ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length * 100) : 0, Math.round(k * 100)]; } }),
   greatPower: (): Cond => ({ t: { en: 'be counted among the great powers', de: 'zu den Großmächten zählen' }, f: (e) => e.s.ranking.includes(e.n.id) }),
   topPower: (): Cond => ({ t: { en: 'be the foremost power of the world', de: 'die erste Macht der Welt sein' }, f: (e) => e.s.ranking[0] === e.n.id }),
   emperor: (): Cond => ({ t: { en: 'hold the imperial crown', de: 'die Kaiserkrone tragen' }, f: (e) => e.s.empire.emperor === e.n.id }),
-  overseas: (k: number): Cond => ({ t: { en: `hold ${k} locations beyond the Ocean Sea`, de: `${k} Orte jenseits des Ozeanmeers besitzen` }, f: (e) => countLocs(e, (l) => e.w.lon[l] < -25 || (e.w.lat[l] < 15 && e.w.lon[l] < 55)) >= k }),
+  overseas: (k: number): Cond => ({ t: { en: `hold ${k} locations beyond the Ocean Sea`, de: `${k} Orte jenseits des Ozeanmeers besitzen` }, f: (e) => overseasLocs(e) >= k, p: (e) => [overseasLocs(e), k] }),
   situation: (id: string, outcomes: string[], t: I18n): Cond => ({ t, f: (e) => e.s.situations.some((x) => x.id === id && !x.active && outcomes.includes(x.outcome || '')) }),
   worldFlag: (k: string, t: I18n): Cond => ({ t, f: (e) => e.s.flags[k] !== undefined }),
-  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e) }),
-  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e) }),
+  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e), p: a.p || b.p ? (e) => better(a.p?.(e), b.p?.(e)) : undefined, places: a.places || b.places ? [...(a.places ?? []), ...(b.places ?? [])] : undefined, building: a.building ?? b.building }),
+  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e), p: c.p, places: c.places, building: c.building }),
   capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${name} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
 };
 
@@ -110,6 +123,7 @@ function G(nation: string | undefined, id: string, en: string, de: string, req: 
     nation, id: full, name: { en, de }, desc, req: req.map((r) => (r.includes('.') ? r : nation ? `${nation}.${r}` : `any.${r}`)),
     check: (e) => conds.every((c) => c.f(e)),
     reward: (e) => { for (const r of rews) r.f(e); },
+    conds, rews: rews.map((r) => r.t), flav,
   };
 }
 
@@ -367,9 +381,9 @@ const GENERIC: GoalDef[] = [
   G(undefined, 'doctrine', 'A Guiding Doctrine', 'Eine leitende Doktrin', [], [C.doctrines(3)], [R.insight(25)]),
   G(undefined, 'victory', 'Victorious Arms', 'Siegreiche Waffen', [], [C.warsWon(1)], [R.prestige(10), R.manpower(0.2)]),
   G(undefined, 'growth', 'A Growing Realm', 'Ein wachsendes Reich', ['sovereign'], [C.dev(150)], [R.authority(30), R.concord(5)]),
-  G(undefined, 'alliances', 'Friends Abroad', 'Freunde in der Fremde', [], [{ t: T('have 2 allies', '2 Verbündete haben'), f: (e) => e.s.treaties.filter((t) => t.type === 'alliance' && t.until > e.s.day && (t.a === e.n.id || t.b === e.n.id)).length >= 2 }], [R.mod('friends', 20, T('Trusted friends', 'Vertraute Freunde'), { dread_decay: 0.05 })]),
+  G(undefined, 'alliances', 'Friends Abroad', 'Freunde in der Fremde', [], [{ t: T('have 2 allies', '2 Verbündete haben'), f: (e) => e.s.treaties.filter((t) => t.type === 'alliance' && t.until > e.s.day && (t.a === e.n.id || t.b === e.n.id)).length >= 2, p: (e) => [e.s.treaties.filter((t) => t.type === 'alliance' && t.until > e.s.day && (t.a === e.n.id || t.b === e.n.id)).length, 2] }], [R.mod('friends', 20, T('Trusted friends', 'Vertraute Freunde'), { dread_decay: 0.05 })]),
   G(undefined, 'knowledge', 'New Knowledge', 'Neues Wissen', ['learning'], [C.innovations(4)], [R.tech(1, 0.5), R.insight(20)]),
-  G(undefined, 'harmony', 'Harmony of the Estates', 'Eintracht der Stände', [], [C.concord(25), { t: T('keep every Power of the Realm content (≥ 40)', 'alle Mächte des Reiches zufrieden halten (≥ 40)'), f: (e) => e.n.estates.length > 0 && e.n.estates.every((x) => x.contentment >= 40) }], [R.mod('harmony', 20, T('Harmony of the estates', 'Eintracht der Stände'), { concord_gain: 0.05 })]),
+  G(undefined, 'harmony', 'Harmony of the Estates', 'Eintracht der Stände', [], [C.concord(25), { t: T('keep every Power of the Realm content (≥ 40)', 'alle Mächte des Reiches zufrieden halten (≥ 40)'), f: (e) => e.n.estates.length > 0 && e.n.estates.every((x) => x.contentment >= 40), p: (e) => [e.n.estates.filter((x) => x.contentment >= 40).length, Math.max(1, e.n.estates.length)] }], [R.mod('harmony', 20, T('Harmony of the estates', 'Eintracht der Stände'), { concord_gain: 0.05 })]),
   G(undefined, 'unity', 'One Faith', 'Ein Glaube', [], [C.faithUnity(0.95), C.locs(5)], [R.mandate(10)]),
   G(undefined, 'new_age', 'A New Age', 'Ein neues Zeitalter', ['knowledge'], [C.era(1, ERA1)], [R.insight(40), R.prestige(5)]),
   G(undefined, 'regional', 'Regional Power', 'Regionalmacht', ['growth', 'victory'], [C.dev(400), C.subjects(1)], [R.prestige(20)]),

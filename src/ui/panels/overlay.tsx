@@ -4,6 +4,7 @@ import { sim, view, notices, legend } from '../../game/client';
 import { playerId, openPanel, settings, mapMode, lastSpeed } from '../store';
 import { act, t, L, Tip, selectLoc, selectArmy, fmtDateShort } from './common';
 import { EventArt } from './art';
+import { useOptionFx, OptionEffects, OptionEffectsHead } from './eventfx';
 import { sfx } from '../audio';
 
 const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency']);
@@ -51,6 +52,7 @@ export function EventModal() {
   const opened = useRef(-1);
   const resumeTo = useRef(0);
   const [busy, setBusy] = useState(false);
+  const fx = useOptionFx(ev?.id, v?.day);
   useEffect(() => {
     if (!ev || opened.current === ev.id) return;
     opened.current = ev.id; sfx('event');
@@ -71,9 +73,10 @@ export function EventModal() {
         <h2>{L(ev.title)}</h2>
         <div class="ev-date muted">{v ? fmtDateShort(ev.day, v.startYear) : ''}{v && ev.expires > v.day && <> · {t('answer_by')} {fmtDateShort(ev.expires, v.startYear)}</>}</div>
         <div class="ev-text">{paras.map((p) => <p>{p}</p>)}</div>
+        <OptionEffectsHead />
         <div class="ev-opts">{ev.options.map((o, k) => {
           const b = <button class="btn ev-opt" disabled={busy} onClick={() => answer(k)}><span class="ev-n">{['I', 'II', 'III', 'IV', 'V'][k] ?? k + 1}</span>{L(o.label)}</button>;
-          return o.hint ? <Tip tag="div" content={<div class="ev-hint">{L(o.hint)}</div>}>{b}</Tip> : b;
+          return <div class="ev-choice">{o.hint ? <Tip tag="div" content={<div class="ev-hint">{L(o.hint)}</div>}>{b}</Tip> : b}<OptionEffects fx={fx ? fx[k] : null} /></div>;
         })}</div>
         {(v?.pending?.length ?? 0) > 1 && <div class="muted small ev-more">+{v!.pending.length - 1} {t('more_events')}</div>}
       </div>

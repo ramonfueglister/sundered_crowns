@@ -25,7 +25,12 @@ export type Query =
   | { q: 'chronicle'; from?: number }
   | { q: 'timelapse' }
   | { q: 'endstats' }
-  | { q: 'goals'; nation: number };  // goal tree of any realm with done/open state (nation selection, ambitions)
+  | { q: 'goals'; nation: number }  // goal tree of any realm with done/open state (nation selection, ambitions)
+  | { q: 'eventFx'; pending: number } // what each option of a pending event of ours does (src/game/eventfx.ts)
+  | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
+  | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
+  | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
+  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }

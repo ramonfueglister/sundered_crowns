@@ -16,8 +16,10 @@ import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate, type EvApi } from '../sim/systems/events';
 import { LOC_ECON, CROWN_SHARE, effectiveTax } from '../sim/systems/economy';
-import { goalsFor } from '../sim/systems/goals';
-import { dayToDate } from '../sim/calendar';
+import { goalsFor, goalConditions } from '../sim/systems/goals';
+import { goalPlace } from '../sim/content/goals';
+import { eventOptionFxCached } from './eventfx';
+import { worksView, scopeView, gainDetail, placesOf } from './worksview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf, mod } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
@@ -193,6 +195,11 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'chronicle': return s.chronicle.slice(q.from ?? 0);
     case 'timelapse': return s.timelapse.map((t) => ({ day: t.day, owners: t.owners }));
     case 'goals': { const n = s.nations[q.nation]; return n ? goalsView(s, w, n) : null; }
+    case 'eventFx': return player >= 0 ? eventOptionFxCached(s, w, player, q.pending) : null;
+    case 'works': return player >= 0 ? worksView(s, w, player) : null;
+    case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
+    case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
+    case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
@@ -500,25 +507,36 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
 }
 
 /** The goals of a realm's tree with their state: done, open (prerequisites met) or locked. */
+/**
+ * The realm's goal tree: every goal with its state (done, open = earlier goals done, ready = open and every condition
+ * holds now), each condition with live progress and the places it names, the rewards, which goals it unlocks and its
+ * depth in the tree (0 = no earlier goals).
+ */
 export function goalsView(s: GameState, w: World, n: Nation) {
   const done = new Set(n.goalsDone ?? []);
-  // the first check of a realm's tree (systems/goals.ts checkGoals) inherits, without reward, what is already true
+  const tree = goalsFor(n);
+  const looked = n.flags.goals_init !== undefined;
+  // goals already true at the first look were inherited without reward (systems/goals.ts firstLook)
   const inherited = new Set((n.goalsDone ?? []).slice(0, n.flags.goals_inherited ?? 0));
-  if (n.flags.goals_init === undefined) {
-    // that check has not run yet (nation selection, the first weeks): show now what it will inherit. Read only: no effects.
-    const d = dayToDate(s.day, s.startYear);
-    const e = { s, w, n, ctx: {}, year: d.y, month: d.m, fx: null } as unknown as EvApi;
-    for (let changed = true; changed;) {
-      changed = false;
-      for (const g of goalsFor(n)) {
-        if (done.has(g.id) || (g.req && g.req.some((r) => !done.has(r)))) continue;
-        let ok = false; try { ok = g.check(e); } catch { ok = false; }
-        if (ok) { done.add(g.id); inherited.add(g.id); changed = true; }
-      }
-    }
-  }
-  return goalsFor(n).map((g) => ({ id: g.id, name: g.name, desc: g.desc, req: g.req ?? [], done: done.has(g.id), inherited: inherited.has(g.id), open: !done.has(g.id) && (g.req ?? []).every((x) => done.has(x)) }));
+  const depth = new Map<string, number>();
+  const depthOf = (id: string, guard = 0): number => {
+    const k = depth.get(id); if (k !== undefined) return k;
+    const g = tree.find((x) => x.id === id); const v = !g || guard > 20 || !g.req?.length ? 0 : 1 + Math.max(...g.req.map((r) => depthOf(r, guard + 1)));
+    depth.set(id, v); return v;
+  };
+  return tree.map((g) => {
+    const isDone = done.has(g.id), open = !isDone && (g.req ?? []).every((x) => done.has(x));
+    // conditions are evaluated for open goals and the next ones (done goals keep their texts only)
+    const conds = isDone ? g.conds.map((c) => ({ t: c.t, ok: true, places: c.places })) : goalConditions(s, w, n, g);
+    const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max,
+      places: c.places?.map((nm: string) => { const l = goalPlace(w, nm); return { name: nm, loc: l, owner: l >= 0 ? s.loc.owner[l] : -1 }; }) }));
+    const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + (c.ok ? 1 : c.max ? clamp01(c.cur / c.max) : 0), 0) / condsOut.length : 0;
+    // ready only after the realm's first look (src/sim/systems/goals.ts firstLook): before it a claim would inherit the goal without reward
+    return { id: g.id, name: g.name, desc: g.desc, flav: g.flav ?? null, req: g.req ?? [], done: isDone, inherited: inherited.has(g.id), open, ready: open && looked && conds.every((c) => c.ok),
+      conds: condsOut, rews: g.rews, unlocks: tree.filter((x) => x.req?.includes(g.id)).map((x) => x.id), depth: depthOf(g.id), progress: isDone ? 1 : frac };
+  });
 }
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 /** Location numbers: targets the values drift toward and the factors behind them (systems/economy.ts, society.ts). */
 function locExplain(s: GameState, w: World, l: number) {
