@@ -433,55 +433,69 @@ export class MapRenderer {
   }
   /** country tracks link every place to the network (a spanning tree, cheapest ways first), towns are linked to each
    *  other, and built roads show wider and paler; each way winds a little across the land */
+  private roadNet: { p: number; q: number; tree: boolean; towns: boolean }[] | null = null;
+  private roadGeo = new Map<number, Float32Array>();
   private buildRoads() {
     const a = this.assets, g = a.geo, L = g.L, sz = g.loc.size as number[], elev = g.loc.elev as number[];
-    const lv = this.roadLevels;
-    const edges: [number, number, number, number][] = []; // a, b, weight, river factor
-    for (const [a1, b1, kind, , rf] of g.edges as [number, number, number, number, number][]) {
-      if (kind !== 0) continue;
-      const p = a1 - 1, q = b1 - 1;
-      if (p >= L || q >= L) continue;
-      const len = Math.hypot(g.loc.x[p] - g.loc.x[q], g.loc.y[p] - g.loc.y[q]);
-      if (len > 90) continue;
-      const w = len * (1 + 0.8 * (rf || 0)) * (1 + Math.abs((elev[p] || 0) - (elev[q] || 0)) / 350) / (1 + 0.35 * ((sz[p] || 0) + (sz[q] || 0)));
-      edges.push([p, q, w, rf || 0]);
+    if (!this.roadNet) {
+      const edges: { p: number; q: number; w: number; tree: boolean; towns: boolean }[] = [];
+      for (const [a1, b1, kind, , rf] of g.edges as [number, number, number, number, number][]) {
+        if (kind !== 0) continue;
+        const p = a1 - 1, q = b1 - 1;
+        if (p >= L || q >= L) continue;
+        const len = Math.hypot(g.loc.x[p] - g.loc.x[q], g.loc.y[p] - g.loc.y[q]);
+        if (len > 90) continue;
+        const w = len * (1 + 0.8 * (rf || 0)) * (1 + Math.abs((elev[p] || 0) - (elev[q] || 0)) / 350) / (1 + 0.35 * ((sz[p] || 0) + (sz[q] || 0)));
+        edges.push({ p, q, w, tree: false, towns: Math.min(sz[p] || 0, sz[q] || 0) >= 1 });
+      }
+      // the spanning tree (Kruskal)
+      const parent = new Int32Array(L).map((_, i) => i);
+      const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+      for (const e of [...edges].sort((x, y) => x.w - y.w)) { const r1 = find(e.p), r2 = find(e.q); if (r1 !== r2) { parent[r1] = r2; e.tree = true; } }
+      this.roadNet = edges.map(({ p, q, tree, towns }) => ({ p, q, tree, towns }));
     }
-    // the spanning tree (Kruskal)
-    const parent = new Int32Array(L).map((_, i) => i);
-    const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
-    const order = edges.map((_, i) => i).sort((i, j) => edges[i][2] - edges[j][2]);
-    const keep = new Uint8Array(edges.length);
-    for (const i of order) { const r1 = find(edges[i][0]), r2 = find(edges[i][1]); if (r1 !== r2) { parent[r1] = r2; keep[i] = 1; } }
-    const segs: number[] = [];
-    const hz = (x: number, y: number) => this.terrainZ(x, y);
-    for (let i = 0; i < edges.length; i++) {
-      const [p, q] = edges[i];
+    const lv = this.roadLevels;
+    const parts: Float32Array[] = [];
+    let total = 0;
+    for (let i = 0; i < this.roadNet.length; i++) {
+      const { p, q, tree, towns } = this.roadNet[i];
       const built = lv ? Math.min(lv[p], lv[q]) : 0;
-      const towns = Math.min(sz[p] || 0, sz[q] || 0) >= 1;
-      if (!keep[i] && !towns && !built) continue;
+      if (!tree && !towns && !built) continue;
       // kind: track 0.35, town road 0.5, built 0.72 / paved 1
       const kindV = built >= 2 ? 1 : built >= 1 ? 0.72 : towns ? 0.5 : 0.35;
       const width = built >= 2 ? 0.62 : built >= 1 ? 0.52 : towns ? 0.42 : 0.34;
-      const x0 = g.loc.x[p], y0 = g.loc.y[p], x1 = g.loc.x[q], y1 = g.loc.y[q];
-      const len = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / len, ny = (x1 - x0) / len;
-      const n = Math.max(2, Math.ceil(len / 5));
-      // a gentle bend and a little wander, the same from either end
-      const s0 = Math.min(p, q) * 0.618 + Math.max(p, q) * 0.382;
-      const bend = (Math.sin(s0 * 12.9898) * 0.5) * Math.min(0.16 * len, 4) * (p < q ? 1 : -1);
-      const wob = Math.min(0.05 * len, 1.4);
-      let px = x0, py = y0, pz = hz(x0, y0);
-      for (let k = 1; k <= n; k++) {
-        const t = k / n;
-        const off = bend * Math.sin(Math.PI * t) + wob * Math.sin(Math.PI * 3 * t + s0) * Math.sin(Math.PI * t);
-        const x = x0 + (x1 - x0) * t + nx * off, y = y0 + (y1 - y0) * t + ny * off, z = hz(x, y);
-        segs.push(px, py, x, y, width, kindV, pz, z);
-        px = x; py = y; pz = z;
+      let geo = this.roadGeo.get(i);
+      if (!geo) {
+        // the way's shape: a gentle bend and a little wander, the same from either end
+        const x0 = g.loc.x[p], y0 = g.loc.y[p], x1 = g.loc.x[q], y1 = g.loc.y[q];
+        const len = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / len, ny = (x1 - x0) / len;
+        const n = Math.max(2, Math.ceil(len / 5));
+        const s0 = Math.min(p, q) * 0.618 + Math.max(p, q) * 0.382;
+        const bend = (Math.sin(s0 * 12.9898) * 0.5) * Math.min(0.16 * len, 4) * (p < q ? 1 : -1);
+        const wob = Math.min(0.05 * len, 1.4);
+        geo = new Float32Array(n * 8);
+        let px = x0, py = y0, pz = this.terrainZ(x0, y0);
+        for (let k = 1; k <= n; k++) {
+          const t = k / n;
+          const off = bend * Math.sin(Math.PI * t) + wob * Math.sin(Math.PI * 3 * t + s0) * Math.sin(Math.PI * t);
+          const x = x0 + (x1 - x0) * t + nx * off, y = y0 + (y1 - y0) * t + ny * off, z = this.terrainZ(x, y);
+          geo.set([px, py, x, y, 0, 0, pz, z], (k - 1) * 8);
+          px = x; py = y; pz = z;
+        }
+        this.roadGeo.set(i, geo);
       }
+      for (let o = 0; o < geo.length; o += 8) { geo[o + 4] = width; geo[o + 5] = kindV; }
+      parts.push(geo); total += geo.length;
     }
-    this.roadCount = segs.length / 8;
-    this.roadBuf?.destroy();
-    this.roadBuf = this.device.createBuffer({ size: Math.max(32, segs.length * 4), usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
-    if (segs.length) this.device.queue.writeBuffer(this.roadBuf, 0, new Float32Array(segs));
+    const segs = new Float32Array(Math.max(8, total));
+    let o = 0;
+    for (const f of parts) { segs.set(f, o); o += f.length; }
+    this.roadCount = total / 8;
+    if (!this.roadBuf || this.roadBuf.size < segs.byteLength) {
+      this.roadBuf?.destroy();
+      this.roadBuf = this.device.createBuffer({ size: Math.ceil(segs.byteLength * 1.25 / 4) * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
+    }
+    this.device.queue.writeBuffer(this.roadBuf, 0, segs);
   }
 
   private buildRivers() {
