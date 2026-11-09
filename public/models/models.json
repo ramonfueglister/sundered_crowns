@@ -1,0 +1,232 @@
+{
+ "version": 1,
+ "stride": 40,
+ "totalVertices": 29427,
+ "totalIndices": 38418,
+ "meshes": {
+  "tree_conifer_a": {
+   "vertexOffset": 0,
+   "vertexCount": 260,
+   "indexOffset": 0,
+   "indexCount": 270,
+   "height": 2.06,
+   "radius": 0.5944
+  },
+  "tree_conifer_b": {
+   "vertexOffset": 260,
+   "vertexCount": 260,
+   "indexOffset": 270,
+   "indexCount": 270,
+   "height": 1.92,
+   "radius": 0.4234
+  },
+  "tree_broadleaf_a": {
+   "vertexOffset": 520,
+   "vertexCount": 278,
+   "indexOffset": 540,
+   "indexCount": 300,
+   "height": 1.6904,
+   "radius": 0.6706
+  },
+  "tree_broadleaf_b": {
+   "vertexOffset": 798,
+   "vertexCount": 260,
+   "indexOffset": 840,
+   "indexCount": 270,
+   "height": 1.7542,
+   "radius": 0.5012
+  },
+  "tree_palm": {
+   "vertexOffset": 1058,
+   "vertexCount": 313,
+   "indexOffset": 1110,
+   "indexCount": 327,
+   "height": 1.72,
+   "radius": 0.794
+  },
+  "bush": {
+   "vertexOffset": 1371,
+   "vertexCount": 180,
+   "indexOffset": 1437,
+   "indexCount": 180,
+   "height": 0.4553,
+   "radius": 0.53
+  },
+  "house_timber": {
+   "vertexOffset": 1551,
+   "vertexCount": 384,
+   "indexOffset": 1617,
+   "indexCount": 594,
+   "height": 1.48,
+   "radius": 0.6151
+  },
+  "house_stone": {
+   "vertexOffset": 1935,
+   "vertexCount": 497,
+   "indexOffset": 2211,
+   "indexCount": 795,
+   "height": 1.45,
+   "radius": 0.4982
+  },
+  "house_mediterranean": {
+   "vertexOffset": 2432,
+   "vertexCount": 339,
+   "indexOffset": 3006,
+   "indexCount": 513,
+   "height": 1.01,
+   "radius": 0.6252
+  },
+  "house_steppe_yurt": {
+   "vertexOffset": 2771,
+   "vertexCount": 384,
+   "indexOffset": 3519,
+   "indexCount": 558,
+   "height": 0.72,
+   "radius": 0.54
+  },
+  "farm_barn": {
+   "vertexOffset": 3155,
+   "vertexCount": 464,
+   "indexOffset": 4077,
+   "indexCount": 678,
+   "height": 1.201,
+   "radius": 1.2267
+  },
+  "windmill": {
+   "vertexOffset": 3619,
+   "vertexCount": 639,
+   "indexOffset": 4755,
+   "indexCount": 975,
+   "height": 2.3685,
+   "radius": 0.9441
+  },
+  "church_gothic": {
+   "vertexOffset": 4258,
+   "vertexCount": 1390,
+   "indexOffset": 5730,
+   "indexCount": 2046,
+   "height": 3.2,
+   "radius": 1.0992
+  },
+  "mosque": {
+   "vertexOffset": 5648,
+   "vertexCount": 2163,
+   "indexOffset": 7776,
+   "indexCount": 3081,
+   "height": 3.0,
+   "radius": 1.0701
+  },
+  "castle": {
+   "vertexOffset": 7811,
+   "vertexCount": 2719,
+   "indexOffset": 10857,
+   "indexCount": 3915,
+   "height": 3.33,
+   "radius": 2.6672
+  },
+  "town_wall_tower": {
+   "vertexOffset": 10530,
+   "vertexCount": 455,
+   "indexOffset": 14772,
+   "indexCount": 681,
+   "height": 2.27,
+   "radius": 1.2578
+  },
+  "tent": {
+   "vertexOffset": 10985,
+   "vertexCount": 244,
+   "indexOffset": 15453,
+   "indexCount": 342,
+   "height": 1.22,
+   "radius": 0.5507
+  },
+  "soldier_infantry": {
+   "vertexOffset": 11229,
+   "vertexCount": 1124,
+   "indexOffset": 15795,
+   "indexCount": 1362,
+   "height": 1.52,
+   "radius": 0.3531
+  },
+  "soldier_pikeman": {
+   "vertexOffset": 12353,
+   "vertexCount": 1138,
+   "indexOffset": 17157,
+   "indexCount": 1386,
+   "height": 2.15,
+   "radius": 0.2625
+  },
+  "soldier_archer": {
+   "vertexOffset": 13491,
+   "vertexCount": 1186,
+   "indexOffset": 18543,
+   "indexCount": 1425,
+   "height": 1.0065,
+   "radius": 0.3607
+  },
+  "soldier_musketeer": {
+   "vertexOffset": 14677,
+   "vertexCount": 1522,
+   "indexOffset": 19968,
+   "indexCount": 1872,
+   "height": 1.3195,
+   "radius": 0.3168
+  },
+  "soldier_cavalry": {
+   "vertexOffset": 16199,
+   "vertexCount": 2562,
+   "indexOffset": 21840,
+   "indexCount": 3066,
+   "height": 2.1368,
+   "radius": 0.8081
+  },
+  "cannon": {
+   "vertexOffset": 18761,
+   "vertexCount": 1172,
+   "indexOffset": 24906,
+   "indexCount": 1734,
+   "height": 0.62,
+   "radius": 0.9278
+  },
+  "banner_standard": {
+   "vertexOffset": 19933,
+   "vertexCount": 642,
+   "indexOffset": 26640,
+   "indexCount": 738,
+   "height": 2.18,
+   "radius": 0.6587
+  },
+  "ship_cog": {
+   "vertexOffset": 20575,
+   "vertexCount": 1904,
+   "indexOffset": 27378,
+   "indexCount": 2400,
+   "height": 2.5511,
+   "radius": 1.6269
+  },
+  "ship_galley": {
+   "vertexOffset": 22479,
+   "vertexCount": 1548,
+   "indexOffset": 29778,
+   "indexCount": 1992,
+   "height": 2.4213,
+   "radius": 1.6164
+  },
+  "ship_carrack": {
+   "vertexOffset": 24027,
+   "vertexCount": 2054,
+   "indexOffset": 31770,
+   "indexCount": 2580,
+   "height": 2.7511,
+   "radius": 1.8649
+  },
+  "ship_ship_of_the_line": {
+   "vertexOffset": 26081,
+   "vertexCount": 3346,
+   "indexOffset": 34350,
+   "indexCount": 4068,
+   "height": 2.95,
+   "radius": 2.0258
+  }
+ }
+}
