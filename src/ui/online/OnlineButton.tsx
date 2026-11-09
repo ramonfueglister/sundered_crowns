@@ -4,7 +4,8 @@ import { t } from '../i18n';
 import { screen, showToast } from '../store';
 import { L } from '../i18n';
 import { ACHIEVEMENT_INDEX } from '../../online/achievements';
-import { isOnline, heraldMsg, freshAchievements, offers, seat } from '../../online/worldClient';
+import { isOnline, heraldMsg, freshAchievements, offers, seat, catchUp } from '../../online/worldClient';
+import { CatchUpWindow, catchUpOpen } from './CatchUpWindow';
 import { OnlinePanel } from './OnlinePanel';
 import { onlineOpen, openOnline } from './state';
 import { WorldClock } from './WorldClock';
@@ -30,7 +31,9 @@ export function OnlineHud() {
       <button class="btn small" onClick={() => openOnline('messages')}>{tt('messages')}{incoming ? <b class="sc-badge">{incoming}</b> : null}</button>
       <button class="btn small" onClick={() => openOnline('orders')}>{tt('orders')}</button>
       <button class="btn small" onClick={() => openOnline('world')}>{tt('open_online')}</button>
+      {catchUp.value && <button class="btn small" title={tt('cu_open')} aria-label={tt('cu_open')} onClick={() => { catchUpOpen.value = true; }}>⟲</button>}
     </div>
+    <CatchUpWindow />
     {onlineOpen.value && <div class="modal-wrap" onClick={(e) => { if (e.target === e.currentTarget) onlineOpen.value = false; }}><OnlinePanel /></div>}
   </>;
 }

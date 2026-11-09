@@ -182,7 +182,7 @@ export function SocietyTab() {
     Promise.all(locs.slice(0, 400).map((l) => sim().query<any>({ q: 'loc', loc: l }))).then((ds) => {
       if (!live) return;
       const f = new Map<string, number>(), c = new Map<string, number>(); let tot = 0;
-      for (const d of ds) { if (!d || d.sea) continue; const pop = d.pops.reduce((p: number, x: any) => p + x.pop, 0); tot += pop; const fk = L(d.faith), ck = L(d.culture); f.set(fk, (f.get(fk) || 0) + pop); c.set(ck, (c.get(ck) || 0) + pop); }
+      for (const d of ds) { if (!d || d.sea || d.unknown) continue; const pop = d.pops.reduce((p: number, x: any) => p + x.pop, 0); tot += pop; const fk = L(d.faith), ck = L(d.culture); f.set(fk, (f.get(fk) || 0) + pop); c.set(ck, (c.get(ck) || 0) + pop); }
       setMix({ faith: [...f.entries()].sort((a, b) => b[1] - a[1]), culture: [...c.entries()].sort((a, b) => b[1] - a[1]), total: tot });
     });
     return () => { live = false; };

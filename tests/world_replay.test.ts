@@ -12,6 +12,7 @@ import type { ArmyLite, NationLite } from '../src/game/protocol';
 import { armyLites, nationLites } from '../src/game/view';
 import type { Command } from '../src/sim/types';
 import { hasTreaty } from '../src/sim/ctx';
+import { sightOf, fogArmies, armyVisible } from '../src/game/fog';
 
 const dir = mkdtempSync(join(tmpdir(), 'sc-world-'));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
@@ -68,6 +69,10 @@ describe('world server core', () => {
     const ids: Record<string, number> = {};
     await runDays(core, 60, (day) => {
       const capA = core.s.nations[A].capital, capB = core.s.nations[B].capital;
+      // fog of war: Alice's copy of the armies never holds a foreign host out of her realm's sight
+      { const sight = sightOf(core.s, core.w, A); const seen = alice.last('tick')!.view.armies ?? [];
+        for (const a of seen) expect(armyVisible(sight, a), `army ${a.id} of ${a.owner} at ${a.loc} on day ${day}`).toBe(true);
+        expect(seen.length).toBeLessThan(core.s.armies.length); }
       if (day === 1) {
         ids.tax = alice.cmd({ t: 'tax', n: A, cls: 0, rate: 0.12 });
         ids.build = alice.cmd({ t: 'build', n: A, loc: capA, building: 0 });
@@ -136,8 +141,9 @@ describe('world server core', () => {
     const tick = alice.last('tick')!;
     expect(tick.view.day).toBe(60);
     expect(tick.view.player?.id).toBe(A);
-    // the client's copy built from daily changes equals the server's whole lists (realms as of the last month start)
-    expect(JSON.parse(JSON.stringify(tick.view.armies))).toEqual(JSON.parse(JSON.stringify(armyLites(core.s, core.w))));
+    // the client's copy built from daily changes equals the server's lists under her fog of war (realms as of the last month start)
+    const byId = (l: any[]) => JSON.parse(JSON.stringify(l)).sort((a: any, b: any) => a.id - b.id);
+    expect(byId(tick.view.armies!)).toEqual(byId(fogArmies(armyLites(core.s, core.w), sightOf(core.s, core.w, A))));
     expect(alice.nations.length).toBe(core.s.nations.length);
     expect(alice.nations.map((n) => n.name)).toEqual(nationLites(core.s, core.w).map((n) => n.name));
     expect(core.snapshotDays()).toEqual([0, 20, 40, 60]);

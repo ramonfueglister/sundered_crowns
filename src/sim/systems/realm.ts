@@ -39,14 +39,17 @@ export function nationStats(s: GameState, w: World): NationStats[] {
 /** Score: weighted dev, military, prestige, wealth, subjects. Drives the great-power ranking and leaderboards. */
 function rankingMonth(s: GameState, w: World) {
   const st = nationStats(s, w);
+  // men under arms per realm, for the history graphs (sampled with the history below)
+  const sample = s.day % 90 < 31; let men: Float64Array | null = null;
+  if (sample) { men = new Float64Array(s.nations.length); for (const a of s.armies) if (!a.rebels && !a.fleet && a.owner >= 0 && a.owner < men.length) for (const r of a.regs) men[a.owner] += r.men; }
   for (const n of s.nations) {
     if (!n.alive) { n.score = 0; continue; }
     const x = st[n.id];
     let sub = 0; for (const o of s.nations) if (o.alive && o.overlord === n.id) sub += st[o.id].dev * 0.5;
     n.score = x.dev + sub + x.army / 4000 + x.navy / 400 + Math.max(0, n.prestige) * 2 + Math.min(100, Math.max(0, n.treasury) / (500 * s.priceLevel));
     // monthly history (for graphs)
-    if (s.day % 90 < 31) {
-      n.history.push({ day: s.day, treasury: n.treasury, income: Object.values(n.income).reduce((p, v) => p + v, 0), expense: Object.values(n.expense).reduce((p, v) => p + v, 0), manpower: n.manpower, locs: x.locs, pop: x.pop, dev: x.dev });
+    if (sample) {
+      n.history.push({ day: s.day, treasury: n.treasury, income: Object.values(n.income).reduce((p, v) => p + v, 0), expense: Object.values(n.expense).reduce((p, v) => p + v, 0), manpower: n.manpower, locs: x.locs, pop: x.pop, dev: x.dev, army: Math.round(men![n.id]), score: Math.round(n.score * 10) / 10 });
       if (n.history.length > 1900) n.history.splice(0, n.history.length - 1900);
     }
     if (x.locs === 0 && n.alive) {

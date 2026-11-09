@@ -814,23 +814,24 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     if (fadeL > 0.0 && dL < 2.0) {
       col = mix(col, col * 0.7, (1.0 - smoothstep(0.15, 0.8, dL)) * 0.24 * fadeL);
     }
-    // province borders (mid zoom)
-    let fadeP = smoothstep(0.55, 1.2, zoom);
+    // province borders (mid zoom); high contrast (U0.env.w, settings): stronger and from further out
+    let hc = U0.env.w;
+    let fadeP = max(smoothstep(0.55, 1.2, zoom), hc * smoothstep(0.3, 0.6, zoom));
     if (fadeP > 0.0 && dP < 3.0) {
-      col = mix(col, col * 0.38, (1.0 - smoothstep(0.35, 1.05, dP)) * 0.6 * fadeP);
+      col = mix(col, col * mix(0.38, 0.12, hc), (1.0 - smoothstep(0.35, 1.05, dP)) * mix(0.6, 0.85, hc) * fadeP);
     }
-    // nation borders: dark core + soft inner band in owner colour
+    // nation borders: dark core + soft inner band in owner colour (high contrast: wider, near-black core)
     if (cOwner != -100) {
-      let hwN = clamp(0.9 + 0.45 * log2(max(zoom, 0.25) + 1.0), 0.8, 2.4);
+      let hwN = clamp(0.9 + 0.45 * log2(max(zoom, 0.25) + 1.0), 0.8, 2.4) * (1.0 + 0.6 * hc);
       let core = 1.0 - smoothstep(hwN - 0.6, hwN + 0.6, dN);
       if (mode == 0 && cOwner >= 0 && overlayA > 0.0) {
         let band = (1.0 - smoothstep(0.0, U0.rings[ringCount - 1] + 1.0, rN)) * 0.45;
         col = mix(col, ownerCol * mix(1.0, light, 0.6) * 1.12, band);
       }
       let pol = cOwner >= 0 && mode == 0;
-      let bc = select(vec3f(0.12, 0.10, 0.09), ownerCol * 0.42, pol);
+      let bc = mix(select(vec3f(0.12, 0.10, 0.09), ownerCol * 0.42, pol), vec3f(0.02, 0.02, 0.03), hc);
       let coreF = select(1.0 - smoothstep(hwN * 0.6 - 0.5, hwN * 0.6 + 0.5, dN), core, pol);
-      col = mix(col, bc, coreF * select(0.6, 0.92, pol));
+      col = mix(col, bc, min(1.0, coreF * select(0.6, 0.92, pol) * (1.0 + 0.3 * hc)));
     }
   }
   // terra incognita: lands and seas the player's people have not yet explored lie under blank parchment

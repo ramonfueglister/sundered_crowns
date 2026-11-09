@@ -14,7 +14,8 @@ export const selectedArmies = signal<number[]>([]);
 export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'military' | 'knowledge' | 'society' | 'ledger' | 'chronicle' | 'decisions' | 'settings' | 'pause' | 'dev' | 'saves' | 'peace' | 'works'
   | 'battle' // war pass: a battle report (panelArg { id })
   | 'trade' | 'explore' // trade pass
-  | 'empire'; // realm pass
+  | 'empire' // realm pass
+  | 'victory'; // polish pass
 export const panel = signal<PanelId>('none');
 export const panelArg = signal<any>(null);
 /** The open dialog of the realm pass (panels/realmdialogs.tsx): the assembly's vote or a situation's window. */
@@ -26,8 +27,12 @@ export const toast = signal<{ text: string; kind?: 'ok' | 'err'; t: number } | n
 export const tutorialStep = signal(-1);
 export const lastSpeed = signal(2);
 
-export interface Settings { quality: 'low' | 'medium' | 'high' | 'ultra'; music: number; sfx: number; autosaveMonths: number; edgePan: boolean; uiScale: number; pauseOnEvents: boolean }
-const DEF: Settings = { quality: 'high', music: 0.5, sfx: 0.7, autosaveMonths: 6, edgePan: false, uiScale: 1, pauseOnEvents: true };
+export interface Settings {
+  quality: 'low' | 'medium' | 'high' | 'ultra'; music: number; sfx: number; autosaveMonths: number; edgePan: boolean; uiScale: number; pauseOnEvents: boolean;
+  // ---- polish pass: colour-blind palette, high-contrast borders, resolution scale (0.5..1), browser notifications (opt-in)
+  palette: 'normal' | 'cvd'; highContrast: boolean; resScale: number; notify: boolean;
+}
+const DEF: Settings = { quality: 'high', music: 0.5, sfx: 0.7, autosaveMonths: 6, edgePan: false, uiScale: 1, pauseOnEvents: true, palette: 'normal', highContrast: false, resScale: 1, notify: false };
 function loadSettings(): Settings { try { return { ...DEF, ...JSON.parse(localStorage.getItem('sc.settings') || '{}') }; } catch { return DEF; } }
 export const settings = signal<Settings>(loadSettings());
 export function saveSettings(p: Partial<Settings>) { settings.value = { ...settings.value, ...p }; try { localStorage.setItem('sc.settings', JSON.stringify(settings.value)); } catch { /* ignore */ } }

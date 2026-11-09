@@ -50,7 +50,7 @@ export class SimClient {
       case 'error': console.error(m.message); workerError.value = m.message; break;
     }
   }
-  init(opts: { seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number }): Promise<boolean> {
+  init(opts: { seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number; victory?: string[] }): Promise<boolean> {
     ready.value = false; notices.value = []; chronicle.value = [];
     return new Promise((res) => { this.waits.set(0, res); this.send({ type: 'init', ...opts }); });
   }
@@ -58,8 +58,10 @@ export class SimClient {
   query<T = any>(q: Query): Promise<T> { const id = this.seq++; return new Promise((res) => { this.waits.set(id, res); this.send({ type: 'query', id, q }); }); }
   save(): Promise<Uint8Array> { const id = this.seq++; return new Promise((res) => { this.waits.set(id, res); this.send({ type: 'save', id }); }); }
   speed(v: number) { this.send({ type: 'speed', speed: v }); }
+  /** Developer tools: simulate this many days at once. */
+  skip(days: number) { this.send({ type: 'skip', days }); }
   setPlayer(p: number | null) { this.send({ type: 'player', player: p }); }
-  mapMode(mode: MapMode, focus: number) { this.send({ type: 'mapmode', mode, focus }); }
+  mapMode(mode: MapMode, focus: number, palette: 'normal' | 'cvd' = 'normal') { this.send({ type: 'mapmode', mode, focus, palette }); }
   /** The good the prices, production and markets map modes show (-1: none, for the markets mode). */
   mapGood(good: number) { this.send({ type: 'mapgood', good }); }
 }

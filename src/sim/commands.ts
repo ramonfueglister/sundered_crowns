@@ -18,7 +18,7 @@ import { startColony, charterCompany } from './systems/colonial';
 import { launchExpedition } from './systems/explore';
 import { startLandmark } from './systems/landmarks';
 import { setMerchants, merchantCap } from './systems/trade';
-import { answerEvent, takeDecision } from './systems/events';
+import { answerEvent, takeDecision, eventDef, fireEvent } from './systems/events';
 import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
@@ -445,6 +445,18 @@ function devCommand(s: GameState, w: World, n: number, action: string, p: any): 
     case 'switch': if (s.nations[p?.nation]?.alive) { s.playerNations = [p.nation]; } return OK;
     // the emperor's line ends: the electors meet at the start of the next month (to try the election dialog)
     case 'imperial_election': { const em = s.nations[s.empire.emperor]; if (em) { s.empire.lastElection = s.day; em.flags.ruler_changed = s.day + 1; } return OK; }
+    // ---- polish pass: trigger any event for a realm (its trigger is skipped, its setup must hold), switch a realm's AI off and on
+    case 'event': {
+      const d = eventDef(String(p?.id ?? '')); if (!d) return err('unknown event');
+      const T = s.nations[p?.nation ?? n]; if (!T?.alive) return err('no such realm');
+      return fireEvent(s, w, T, d, {}) ? OK : err('the event cannot happen now');
+    }
+    case 'ai': {
+      const id = Number(p?.nation); if (!s.nations[id]?.alive) return err('no such realm');
+      const on = p?.on ?? s.aiDisabled.includes(id);
+      s.aiDisabled = on ? s.aiDisabled.filter((x) => x !== id) : [...s.aiDisabled, id];
+      return OK;
+    }
   }
   return err('unknown dev action');
 }

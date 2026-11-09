@@ -110,6 +110,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'the war is over': 'Der Krieg ist vorbei', 'too exhausted by war': 'Zu kriegsmüde',
   // ---- people pass: commanders ----
   'cannot lead an army': 'Kann kein Heer führen',
+  // ---- polish pass (claude/polish-pass): developer tools
+  'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

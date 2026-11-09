@@ -539,6 +539,18 @@ export class MapRenderer {
     this.resize();
   }
 
+  /** Resolution scale (settings): the map renders at this share (0.5..1) of its normal resolution and the browser
+   *  scales the picture up to the canvas size. */
+  private resScale = 1;
+  setResolutionScale(x: number) {
+    const v = clamp(Number.isFinite(x) ? x : 1, 0.5, 1);
+    if (v === this.resScale) return;
+    this.resScale = v; this.resize();
+  }
+  /** High-contrast borders (colour-blind settings): darker, wider realm borders and stronger province lines. */
+  private contrast = 0;
+  setHighContrast(on: boolean) { this.contrast = on ? 1 : 0; }
+
   setMode(mode: MapMode) {
     if (mode === this.mode) return;
     this.mode = mode;
@@ -931,7 +943,7 @@ export class MapRenderer {
     const cssH = Math.max(1, this.canvas.clientHeight || this.canvas.height);
     this.cssW = cssW; this.cssH = cssH;
     const dpr = window.devicePixelRatio || 1;
-    const pr = Math.min(dpr, this.qd.dprCap) * this.qd.scale;
+    const pr = Math.min(dpr, this.qd.dprCap) * this.qd.scale * this.resScale;
     const w = Math.max(1, Math.round(cssW * pr)), h = Math.max(1, Math.round(cssH * pr));
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     this.pxRatio = w / cssW;
@@ -969,7 +981,7 @@ export class MapRenderer {
     u.set(cam.vp, 32);
     // weather drifts on smoothly between the daily updates
     const dayF = this.gameDay + clamp((this.time - this.dayAt) / 1.2, 0, 1) - 1;
-    u[48] = this.season; u[49] = dayF; u[50] = this.qd.q >= 1 ? 1 : 0; u[51] = 0;
+    u[48] = this.season; u[49] = dayF; u[50] = this.qd.q >= 1 ? 1 : 0; u[51] = this.contrast;
     this.device.queue.writeBuffer(this.uniformBuf, 0, u);
     this.updateChunks(cam);
   }

@@ -118,6 +118,10 @@ function migrate(s: GameState): GameState {
     n.aiLog ??= []; n.candidates ??= [];
     if (!n.generals) { n.generals = []; for (const a of s.armies) if (a.owner === n.id && a.general && a.general !== n.ruler && a.general !== n.heir && s.chars[a.general]) n.generals.push(a.general); }
   }
+  // polish pass (no version bump: these defaults are idempotent): victory conditions and auto-decided events
+  s.victoryKinds ??= ['score'];
+  s.victoryHold ??= {};
+  s.autoEvents ??= [];
   return s;
 }
 /** One treaty of each kind per pair (two envoys that crossed on the road once made the same alliance twice). */

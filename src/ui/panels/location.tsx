@@ -22,6 +22,8 @@ export function LocationPanel({ loc }: { loc: number }) {
   const [d, refresh] = useQuery<any>({ q: 'loc', loc }, [loc], 500);
   const close = () => { selectedLoc.value = -1; };
   if (!d) return <Panel title={t('location')} onClose={close} cls="loc-pnl"><Empty>{t('loading')}…</Empty></Panel>;
+  // fog of war (src/game/fog.ts): an unexplored place answers with its name only
+  if (d.unknown) return <Panel title={placeName(d.name)} sub={d.sea ? t('sea_zone') : undefined} onClose={close} cls="loc-pnl"><Empty>{t('terra_incognita')}</Empty><div class="muted small">{t('terra_incognita_hint')}</div></Panel>;
   if (d.sea) return <SeaPanel d={d} close={close} />;
   const pid = playerId.value;
   const own = d.owner === pid && pid >= 0;

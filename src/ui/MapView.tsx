@@ -10,6 +10,7 @@ import { abortTimelapse, timelapseRunning } from './timelapse';
 import { labelsFor, computeSettlements } from './mapdata';
 import { dayToDate } from '../sim/calendar';
 import { GOODS } from '../sim/defs';
+import { cvdRealmColors, cvdColorOf } from './palette';
 
 const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
@@ -23,6 +24,16 @@ let labelOwner: Int16Array | null = null; // owners the labels were last compute
 /** realm names for the current borders (the player's unexplored land carries none) */
 export const computeLabels = (owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[]) => labelsFor(owner, assets, ns, knownLocs);
 export { computeSettlements };
+
+const cvd = () => settings.value.palette === 'cvd';
+/** Realm colours for the political map: their own, or the colour-blind palette (src/ui/palette.ts). */
+function realmColors(owner: Int16Array, ns: { color: [number, number, number] }[]): Uint8Array {
+  const geo = rendererRef.assets?.geo;
+  if (cvd() && geo) return cvdRealmColors(owner, geo, ns.length);
+  const cols = new Uint8Array(ns.length * 3);
+  ns.forEach((n, k) => { cols[k * 3] = n.color[0]; cols[k * 3 + 1] = n.color[1]; cols[k * 3 + 2] = n.color[2]; });
+  return cols;
+}
 
 /** last month's trade routes and markets (drawn on the trade map) */
 let lastTrade: TickView['trade'] | null = null;
@@ -54,8 +65,7 @@ export function MapView() {
       if (exploredChanged || force || !knownApplied) { r.setExplored(knownLocs); knownApplied = true; if (exploredChanged && lastOwner && !force) r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value)); }
       const ns = nations.value;
       if (v.owner && v.ctrl) {
-        const cols = new Uint8Array(ns.length * 3);
-        ns.forEach((n, k) => { cols[k * 3] = n.color[0]; cols[k * 3 + 1] = n.color[1]; cols[k * 3 + 2] = n.color[2]; });
+        const cols = realmColors(v.owner, ns);
         let changed = force || !lastOwner;
         if (!changed && lastOwner) for (let i = 0; i < v.owner.length; i += 1) if (lastOwner[i] !== v.owner[i]) { changed = true; break; }
         // a timelapse is showing a past year: keep the present for when it ends
@@ -91,18 +101,18 @@ export function MapView() {
         if (a.embarked || (knownLocs && knownLocs[a.loc] === 0 && a.owner !== playerId.value)) continue;
         const key = `${a.loc}:${a.owner}:${a.fleet ? 1 : 0}`;
         let u = groups.get(key);
-        const n = ns[a.owner];
+        const n = ns[a.owner]; const ncol = n ? (cvd() ? cvdColorOf(a.owner) : n.color) : [120, 120, 120];
         // a host on the march stands part of the way to the next place
         let ax = g.loc.x[a.loc], ay = g.loc.y[a.loc];
         if (a.path.length && a.prog) { const t = a.prog; ax += (g.loc.x[a.path[0]] - ax) * t; ay += (g.loc.y[a.path[0]] - ay) * t; }
-        if (!u) { u = { id: a.id, ids: [], x: ax, y: ay, color: n ? n.color : [120, 120, 120], label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels, mine: a.owner === playerId.value, hot: atWar.has(a.owner) || !!a.rebels }; groups.set(key, u); units.push(u); }
+        if (!u) { u = { id: a.id, ids: [], x: ax, y: ay, color: ncol, label: '', men: 0, kind: a.fleet ? 'fleet' : 'army', selected: false, moving: false, path: undefined as any, owner: a.owner, rebels: a.rebels, mine: a.owner === playerId.value, hot: atWar.has(a.owner) || !!a.rebels }; groups.set(key, u); units.push(u); }
         u.ids.push(a.id); u.men += a.men;
         if (sel.has(a.id)) { u.selected = true; if (a.path.length) u.path = [[ax, ay], ...a.path.map((p: number) => [g.loc.x[p], g.loc.y[p]])]; }
         if (a.path.length) { u.moving = true; u.hot = true; u.toX = g.loc.x[a.path[0]]; u.toY = g.loc.y[a.path[0]]; }
       }
       const kMen = (m: number) => (m >= 1000 ? (m / 1000).toFixed(1) + 'k' : String(Math.max(0, Math.round(m))));
       for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : kMen(u.men);
-      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: sgi.progress, color: ns[sgi.nation]?.color ?? [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' }); }
+      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: sgi.progress, color: ns[sgi.nation] ? (cvd() ? cvdColorOf(sgi.nation) : ns[sgi.nation].color) : [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' }); }
       for (const b of v.battles) { if (knownLocs && knownLocs[b.loc] === 0) continue; units.push({ id: -100000 - b.id, x: g.loc.x[b.loc], y: g.loc.y[b.loc] - 12, lx: g.loc.x[b.loc], ly: g.loc.y[b.loc], color: [200, 40, 30], label: `${kMen(b.startA - b.lossA)} : ${kMen(b.startD - b.lossD)}`, kind: 'battle' }); }
       r.setUnits(units);
     };
@@ -113,7 +123,11 @@ export function MapView() {
         const assets = rendererRef.assets || (rendererRef.assets = await R.loadMapAssets('/'));
         if (disposed) return;
         const r = await R.MapRenderer.create(canvas.current!, assets, settings.value.quality);
+        // the map was taken down while the renderer started (a game re-created with other victory conditions or
+        // difficulty): drop this renderer instead of handing out one bound to a detached canvas
+        if (disposed || !canvas.current) { r.destroy?.(); return; }
         rendererRef.r = r;
+        r.setResolutionScale?.(settings.value.resScale); r.setHighContrast?.(settings.value.highContrast);
         if (import.meta.env.DEV) (window as any).__map = r; // for browser tests
         r.attachControls?.(canvas.current!);
         r.onClick = (loc: number, ev: MouseEvent) => onClick(loc, ev);
@@ -145,8 +159,12 @@ export function MapView() {
     };
   }, []);
   useEffect(() => { rendererRef.r?.setQuality?.(settings.value.quality); }, [settings.value.quality]);
+  // accessibility and performance settings (polish pass): resolution scale, high-contrast borders, colour-blind palette
+  useEffect(() => { rendererRef.r?.setResolutionScale?.(settings.value.resScale); }, [settings.value.resScale]);
+  useEffect(() => { rendererRef.r?.setHighContrast?.(settings.value.highContrast); }, [settings.value.highContrast]);
+  useEffect(() => { const v = view.value; const r = rendererRef.r; if (r && v?.owner && v.ctrl) r.setPolitical(v.owner, v.ctrl, realmColors(v.owner, nations.value)); sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); }, [settings.value.palette]);
   useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); }, [lang.value]);
-  useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
+  useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
   useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
   return <div class="mapwrap">
     <canvas ref={canvas} class="map" onContextMenu={(e) => e.preventDefault()} />

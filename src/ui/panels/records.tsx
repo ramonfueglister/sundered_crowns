@@ -5,6 +5,7 @@ import { playerId, openPanel } from '../store';
 import { Btn, Empty, NLink, NList, Tabs, useQuery, t, L, num, signed, fmtDateShort, selectLoc, Tip, realm, useRealm } from './common';
 import { Parts, TipHead } from './explain';
 import { keyName } from '../TopBar';
+import { ChronicleExport } from './victory';
 
 type LKind = 'nations' | 'markets' | 'wars';
 export function LedgerTab() {
@@ -60,7 +61,7 @@ export function ChronicleTab() {
   const all = chronicle.value;
   const list = all.filter((e) => !own || pid < 0 || e.nation === pid).slice().reverse();
   return <div class="tab-chron">
-    <div class="act-row"><label class="chk"><input type="checkbox" checked={own} onChange={(e) => setOwn((e.target as HTMLInputElement).checked)} /> {t('own_realm_only')}</label><span class="spacer" /><span class="muted small">{list.length} {t('entries')}</span></div>
+    <div class="act-row"><label class="chk"><input type="checkbox" checked={own} onChange={(e) => setOwn((e.target as HTMLInputElement).checked)} /> {t('own_realm_only')}</label><span class="spacer" /><span class="muted small">{list.length} {t('entries')}</span><ChronicleExport own={own} /></div>
     {!list.length && <Empty>{t('chronicle_empty')}</Empty>}
     <div class="chron">{list.slice(0, lim).map((e) => <div class={`chron-e ${e.loc !== undefined ? 'click' : ''}`} onClick={() => e.loc !== undefined && selectLoc(e.loc)}>
       <span class="ch-date">{v ? fmtDateShort(e.day, v.startYear) : ''}</span>

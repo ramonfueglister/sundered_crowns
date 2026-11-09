@@ -2,8 +2,9 @@
 // JSON text frames for everything except bulky typed arrays, which travel as binary frames (see BIN_*).
 import type { Command, CmdResult, I18n, StandingOrders } from '../sim/types';
 import type { ArmyLite, Legend, MapMode, NationLite, Query, TickView } from '../game/protocol';
+import type { CatchUp } from './catchup';
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /** A tick on the wire: armies come whole only in a full view; daily ticks carry the armies that changed and the ids that are gone. */
 export type WireTickView = Omit<TickView, 'owner' | 'ctrl' | 'snow' | 'armies'> & {
@@ -36,7 +37,8 @@ export const BIN_OWNERS = 1; // payload: Int16Array owner (N) followed by Int16A
 export const BIN_COLORS = 2; // payload: Uint8Array rgba (4*N); mode index in byte 1
 export const BIN_SNOW = 3;   // payload: Float32Array snow (L)
 export const BIN_ROADS = 4;  // payload: Uint8Array road level per location (L)
-export const MAP_MODE_LIST: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'explored', 'prices', 'production', 'markets'];
+export const BIN_EXPLORED = 5; // payload: Uint8Array 1 = known to the player's people (N); fog of war, src/game/fog.ts
+export const MAP_MODE_LIST: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'explored', 'prices', 'production', 'markets', 'army_supply'];
 
 export function encodeBinary(kind: number, payload: ArrayBufferView, extra = 0): Uint8Array {
   const out = new Uint8Array(8 + payload.byteLength);
@@ -80,15 +82,21 @@ export type ClientMsg =
   | { type: 'leave' }
   | { type: 'cmd'; id: number; cmd: Command }
   | { type: 'query'; id: number; q: Query }
-  | { type: 'mapmode'; mode: MapMode; focus: number }
+  | { type: 'mapmode'; mode: MapMode; focus: number; palette?: 'normal' | 'cvd' }
   | { type: 'mapgood'; good: number }
   | { type: 'chat'; text: string; to?: number }
   | { type: 'offer'; to: number; action: OfferAction; text?: string }
   | { type: 'offer_answer'; offer: number; accept: boolean }
   | { type: 'leaderboard' }
-  | { type: 'admin'; action: AdminAction; uid?: string; nation?: number; text?: string; secondsPerDay?: number; cmd?: Command; release?: boolean }
-  | { type: 'ping'; t: number };
-export type AdminAction = 'kick' | 'pause' | 'resume' | 'speed' | 'broadcast' | 'dev' | 'release' | 'snapshot' | 'end_season';
+  | { type: 'admin'; action: AdminAction; uid?: string; nation?: number; text?: string; secondsPerDay?: number; cmd?: Command; release?: boolean; hours?: number; report?: number }
+  | { type: 'ping'; t: number }
+  // ---- polish pass: moderation (server/moderation.ts)
+  | { type: 'mute'; uid: string; on: boolean }   // hide a player's public chat lines
+  | { type: 'block'; uid: string; on: boolean }  // hide everything they write, refuse their offers
+  | { type: 'report'; uid: string; msg?: number; reason: string };
+export type AdminAction = 'kick' | 'pause' | 'resume' | 'speed' | 'broadcast' | 'dev' | 'release' | 'snapshot' | 'end_season' | 'reports' | 'ban' | 'unban' | 'dismiss' | 'reload_filter';
+export interface ModReport { id: number; at: number; day: number; by: string; byName: string; uid: string; name: string; msg?: number; text: string; reason: string; status: 'open' | 'dismissed' | 'actioned' }
+export interface ModBan { uid: string; name: string; at: number; by: string; reason: string; until: number }
 
 // ---------------- server → client ----------------
 export type ServerMsg =
@@ -101,7 +109,7 @@ export type ServerMsg =
   | { type: 'cmdResult'; id: number; res: CmdResult }
   | { type: 'reply'; id: number; data: any }
   | { type: 'legend'; mode: MapMode; legend: Legend }
-  | { type: 'chat'; msgs: ChatMsg[] }
+  | { type: 'chat'; msgs: ChatMsg[]; replace?: boolean }
   | { type: 'offers'; offers: PlayerOffer[] }
   | { type: 'roster'; roster: RosterEntry[] }
   | { type: 'achievements'; earned: EarnedAchievement[]; fresh: string[] }
@@ -110,7 +118,12 @@ export type ServerMsg =
   | { type: 'broadcast'; text: string; at: number }
   | { type: 'error'; code: string; message: string; id?: number }
   | { type: 'kicked'; reason: string }
-  | { type: 'pong'; t: number; server: number };
+  | { type: 'pong'; t: number; server: number }
+  // ---- polish pass
+  | { type: 'moderation'; mutes: { uid: string; name: string }[]; blocks: { uid: string; name: string }[] }
+  | { type: 'reported'; id: number }
+  | { type: 'reports'; reports: ModReport[]; bans?: ModBan[] }
+  | { type: 'catchup'; summary: CatchUp };
 
 export const DEFAULT_ORDERS: StandingOrders = { defendOnly: true, balanceBudget: true, acceptPeaceBelow: 25, autoBuild: true, autoRecruit: true };
 export function sanitizeOrders(o: any): StandingOrders {

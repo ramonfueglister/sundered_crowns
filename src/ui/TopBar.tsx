@@ -9,6 +9,7 @@ import { openPanel, panel, lastSpeed, settings } from './store';
 import { Coa } from './panels';
 import { TreasuryTip, ManpowerTip, ConcordTip, MandateTip, AuthorityTip, PrestigeTip, InsightTip, EnvoysTip, WarExhaustionTip, InflationTip } from './panels/explain';
 import { sfx } from './audio';
+import { keyFor, keyLabel } from './keys';
 
 const KEY_NAMES: Record<string, [string, string]> = {
   tax: ['Taxes', 'Steuern'], trade: ['Trade profits', 'Handelsgewinne'], tariffs: ['Tariffs', 'Zölle'], tribute: ['Tribute', 'Tribut'], contributions: ['War contributions', 'Kriegskontributionen'],
@@ -32,9 +33,10 @@ const MENU = [
   { k: 'economy', icon: '⚖', key: 'E', main: true }, { k: 'government', icon: '♛', key: 'G', main: true }, { k: 'diplomacy', icon: '✉', key: 'Shift+D', main: true },
   { k: 'military', icon: '⚔', key: 'M', main: true }, { k: 'trade', icon: '⚓', key: '', main: false }, { k: 'explore', icon: '🧭', key: '', main: false }, { k: 'works', icon: '⚒', key: 'B', main: false }, { k: 'knowledge', icon: '⚗', key: 'K', main: false }, { k: 'society', icon: '✝', key: '', main: false },
   { k: 'empire', icon: '♚', key: '', main: false }, { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
+  { k: 'victory', icon: '♕', key: 'V', main: false },
 ] as const;
 const MAX_LEVEL = 4;
-const SHORT: Record<string, [string, string]> = { empire: ['Empire', 'Reich'], trade: ['Trade', 'Handel'], explore: ['Discovery', 'Entdeckung'], works: ['Works', 'Bauten'], government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
+const SHORT: Record<string, [string, string]> = { victory: ['Victory', 'Sieg'], empire: ['Empire', 'Reich'], trade: ['Trade', 'Handel'], explore: ['Discovery', 'Entdeckung'], works: ['Works', 'Bauten'], government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
 const short = (k: string) => SHORT[k]?.[lang.value === 'de' ? 1 : 0] ?? t(k);
 /** Full names of the panels (some differ from the generic word: "Herrschaft", "Goals & decisions"). */
 export const panelName = (k: string) => { const v = t(`nav_${k}`); return v === `nav_${k}` ? t(k) : v; };
@@ -95,20 +97,20 @@ export function TopBar() {
     </>}
     <div class="tb-spacer" />
     <div class="tb-menu">
-      {MENU.map(({ k, icon, key, main }) => <Tip content={<div><b>{panelName(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
+      {MENU.map(({ k, icon, main }) => { const key = keyLabel(keyFor(`panel_${k}`), lang.value === 'de'); return <Tip content={<div><b>{panelName(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
         <button class={`${panel.value === k ? 'on' : ''} ${main ? 'main' : ''}`} aria-label={panelName(k)} onClick={() => { sfx('open'); openPanel(k); }}>
           <span class="tb-ic" aria-hidden="true">{icon}</span><span class="tb-lbl tb-full">{panelName(k)}</span><span class="tb-lbl tb-short">{short(k)}</span>
         </button>
-      </Tip>)}
+      </Tip>; })}
     </div>
     <div class="tb-date">
       <div class="date">{date}</div>
       <div class="speeds">
-        <button class={sp === 0 ? 'on' : ''} onClick={() => setSp(0)} title={t('paused')}>⏸</button>
-        {[1, 2, 3, 4, 5].map((x) => <button class={sp === x ? 'on' : ''} onClick={() => setSp(x)}>{'›'.repeat(x)}</button>)}
+        <button class={sp === 0 ? 'on' : ''} onClick={() => setSp(0)} title={`${t('paused')} (${keyLabel(keyFor('pause'), lang.value === 'de')})`}>⏸</button>
+        {[1, 2, 3, 4, 5].map((x) => <button class={sp === x ? 'on' : ''} onClick={() => setSp(x)} title={`${t('speed')} ${x} (${keyLabel(keyFor('faster'), lang.value === 'de')} / ${keyLabel(keyFor('slower'), lang.value === 'de')})`}>{'›'.repeat(x)}</button>)}
       </div>
     </div>
-    <button class="tb-gear" onClick={() => openPanel('pause')}>☰</button>
+    <button class="tb-gear" onClick={() => openPanel('pause')} title={`${t('paused')} (${keyLabel(keyFor('back'), lang.value === 'de')})`}>☰</button>
   </div>;
 }
 void rgb;

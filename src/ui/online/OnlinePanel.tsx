@@ -6,9 +6,10 @@ import { nations, view } from '../../game/client';
 import { online, session, profile, isAdmin, signInWithEmail, signInWithOAuth, signOut, setDisplayName, accessToken, listWorlds, seasonLeaderboard, myAchievements, type WorldRow, type LeaderboardRow } from '../../online/supabase';
 import {
   onlineClient, currentOnlineClient, connState, onlineError, me, worldInfo, seat, freeNations, chat, offers, roster, earned, leaderboard, DEFAULT_WORLD_URL, type OnlineClient,
+  onlineErrorCode, muted, blocked, modReports, reportAck,
 } from '../../online/worldClient';
 import { ACHIEVEMENTS } from '../../online/achievements';
-import { OFFER_ACTIONS, type OfferAction, type FreeNation } from '../../online/protocol';
+import { OFFER_ACTIONS, type OfferAction, type FreeNation, type ChatMsg } from '../../online/protocol';
 import type { StandingOrders } from '../../sim/types';
 import { screen, selectedNation, showToast } from '../store';
 import { L, lang } from '../i18n';
@@ -46,6 +47,12 @@ export function leaveWorld() {
   screen.value = 'menu';
 }
 
+/** The last server error in the chosen language when its code is known. */
+function errorText(): string {
+  const c = onlineErrorCode.value; const v = c ? tt(`err_${c}`) : '';
+  return v && v !== `err_${c}` ? v : onlineError.value ?? '';
+}
+
 export function OnlinePanel() {
   const connected = connState.value === 'open' || connState.value === 'reconnecting';
   const inGame = screen.value === 'game' && connected;
@@ -58,7 +65,7 @@ export function OnlinePanel() {
       <button class="btn small" onClick={() => (onlineOpen.value = false)} aria-label={tt('close')}>✕</button>
     </div>
     {!online.available && <div class="sc-note">{tt('not_configured')}</div>}
-    {onlineError.value && <div class="sc-note err">{onlineError.value}</div>}
+    {onlineError.value && <div class="sc-note err">{errorText()}</div>}
     <div class="sc-tabs">{tabs.map((k) => <button class={k === tab ? 'on' : ''} onClick={() => (onlineTab.value = k)}>{tt(k === 'saves' ? 'cloud_saves' : k)}</button>)}</div>
     <div class="sc-online-body">
       {tab === 'account' && <AccountTab />}
@@ -218,17 +225,23 @@ function MessagesTab() {
   const inc = offers.value.filter((x) => x.to === s?.nation), out = offers.value.filter((x) => x.from === s?.nation);
   const name = (n: number) => L(nations.value[n]?.short) || '?';
   const msgs = chat.value.filter((m) => to === null ? m.to === null : (m.to === to || (m.to === s?.nation && m.fromNation === to)));
+  const [reporting, setReporting] = useState<ChatMsg | null>(null);
+  useEffect(() => { if (reportAck.value) showToast(tt('report_sent')); }, [reportAck.value]);
   return <div class="sc-msgs">
     <div class="sc-chat">
       <div class="sc-chat-to">{tt('to')}: <select value={to === null ? '' : String(to)} onChange={(e) => { const v = (e.target as HTMLSelectElement).value; setTo(v === '' ? null : Number(v)); }}>
         <option value="">{tt('chat_world')}</option>{others.map((r) => <option value={r.nation}>{r.name} ({name(r.nation)}){r.online ? ' ●' : ''}</option>)}
       </select></div>
-      <div class="sc-chat-log">{msgs.slice(-80).map((m) => <div class={`sc-chat-line ${m.system ? 'sys' : ''}`}>
+      <div class="sc-chat-log">{msgs.slice(-80).map((m) => <div class={`sc-chat-line chat-line ${m.system ? 'sys' : ''}`}>
         <span class="muted">{w ? fmtDate(m.day, w.startYear, lang.value) : ''}</span> <b>{m.system ? tt('herald') : m.fromName}</b>{m.fromNation >= 0 ? <span class="muted"> ({name(m.fromNation)})</span> : null}: {m.text}
+        {!m.system && m.from !== me.value?.id && <ChatModButtons m={m} onReport={() => setReporting(m)} />}
       </div>)}</div>
+      {reporting && <ReportForm m={reporting} onDone={() => setReporting(null)} />}
       <form class="sc-form row" onSubmit={(e) => { e.preventDefault(); if (text.trim()) { oc?.say(text, to ?? undefined); setText(''); } }}>
         <input value={text} maxLength={500} onInput={(e) => setText((e.target as HTMLInputElement).value)} /><button class="btn small" type="submit">{tt('say')}</button>
       </form>
+      <div class="muted small">{tt('filter_note')}</div>
+      <ModLists />
     </div>
     <div class="sc-offers">
       <h3>{tt('offers')}</h3>
@@ -246,6 +259,59 @@ function MessagesTab() {
         <button class="btn small gold" disabled={target < 0} onClick={() => oc?.offer(target, action)}>{tt('send')}</button>
       </div>}
     </div>
+  </div>;
+}
+
+// ------------------------------------------------------------------ moderation (spec point 105)
+function ChatModButtons({ m, onReport }: { m: ChatMsg; onReport: () => void }) {
+  const oc = currentOnlineClient(); if (!oc) return null;
+  const isMuted = muted.value.some((x) => x.uid === m.from), isBlocked = blocked.value.some((x) => x.uid === m.from);
+  return <span class="chat-mod">
+    <button title={`${tt(isMuted ? 'unmute' : 'mute')}: ${tt('mute_hint')}`} aria-label={tt(isMuted ? 'unmute' : 'mute')} onClick={() => oc.mute(m.from, !isMuted)}>🔇</button>
+    <button title={`${tt(isBlocked ? 'unblock' : 'block')}: ${tt('block_hint')}`} aria-label={tt(isBlocked ? 'unblock' : 'block')} onClick={() => oc.block(m.from, !isBlocked)}>⛔</button>
+    <button title={`${tt('report')}: ${tt('report_hint')}`} aria-label={tt('report')} onClick={onReport}>⚑</button>
+  </span>;
+}
+const REPORT_REASONS = ['insult', 'spam', 'cheat', 'other'] as const;
+function ReportForm({ m, onDone }: { m: ChatMsg; onDone: () => void }) {
+  const oc = currentOnlineClient(); const [reason, setReason] = useState<string>('insult'); const [text, setText] = useState('');
+  return <div class="mod-report open">
+    <b>{tt('report')}: {m.fromName}</b><q>{m.text}</q>
+    <div class="sc-form row"><label>{tt('report_reason')} <select value={reason} onChange={(e) => setReason((e.target as HTMLSelectElement).value)}>{REPORT_REASONS.map((r) => <option value={r}>{tt(`r_${r}`)}</option>)}</select></label></div>
+    <div class="sc-form row"><input placeholder={tt('report_details')} maxLength={300} value={text} onInput={(e) => setText((e.target as HTMLInputElement).value)} />
+      <button class="btn small gold" onClick={() => { oc?.report(m.from, `${tt(`r_${reason}`)}${text.trim() ? `: ${text.trim()}` : ''}`, m.id); onDone(); }}>{tt('send')}</button>
+      <button class="btn small" onClick={onDone}>{tt('cancel')}</button></div>
+  </div>;
+}
+function ModLists() {
+  const oc = currentOnlineClient(); if (!oc || (!muted.value.length && !blocked.value.length)) return null;
+  return <div class="sc-mod-lists">
+    {muted.value.length > 0 && <div class="mod-list"><b>{tt('muted_list')}:</b>{muted.value.map((x) => <span>{x.name} <button class="btn small" onClick={() => oc.mute(x.uid, false)}>{tt('unmute')}</button></span>)}</div>}
+    {blocked.value.length > 0 && <div class="mod-list"><b>{tt('blocked_list')}:</b>{blocked.value.map((x) => <span>{x.name} <button class="btn small" onClick={() => oc.block(x.uid, false)}>{tt('unblock')}</button></span>)}</div>}
+  </div>;
+}
+/** Reports and bans for the admins of the world (the same as the admin HTTP endpoints of server/main.ts). */
+function AdminReports({ oc }: { oc: OnlineClient }) {
+  const [all, setAll] = useState(false); const [hours, setHours] = useState('24'); const [release, setRelease] = useState(false);
+  useEffect(() => { oc.admin('reports'); }, []);
+  const reports = modReports.value.reports.filter((r) => all || r.status === 'open'); const bans = modReports.value.bans; const w = worldInfo.value;
+  const when = (at: number) => new Date(at).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
+  return <div class="sc-admin-reports">
+    <h3>{tt('reports')}</h3>
+    <label class="chk"><input type="checkbox" checked={all} onChange={(e) => setAll((e.target as HTMLInputElement).checked)} /> {tt('show_all')}</label>
+    {reports.length === 0 && <p class="muted">{tt('no_reports')}</p>}
+    {reports.map((r) => <div class={`mod-report ${r.status}`}>
+      <b>{r.name}</b> <span class="muted">{tt('reported_by')} {r.byName} · {w ? fmtDate(r.day, w.startYear, lang.value) : ''} · {when(r.at)} · {tt(`st_${r.status}`)}</span>
+      <q>{r.text}</q><div class="muted">{tt('report_reason')}: {r.reason}</div>
+      {r.status === 'open' && <div class="sc-form row">
+        <button class="btn small" onClick={() => oc.admin('dismiss', { report: r.id })}>{tt('dismiss')}</button>
+        <button class="btn small danger" onClick={() => oc.admin('ban', { uid: r.uid, hours: Number(hours) || 0, text: r.reason, release })}>{tt('ban')}</button>
+        <input type="number" min={0} step={1} value={hours} style={{ width: '5em' }} onInput={(e) => setHours((e.target as HTMLInputElement).value)} /> <span class="muted">{tt('ban_hours')}</span>
+        <label class="chk"><input type="checkbox" checked={release} onChange={(e) => setRelease((e.target as HTMLInputElement).checked)} /> {tt('ban_release')}</label>
+      </div>}
+    </div>)}
+    {bans.length > 0 && <><h3>{tt('bans')}</h3><table class="sc-table"><tbody>{bans.map((b) => <tr><td>{b.name ?? b.uid}</td><td class="muted">{b.reason}</td><td>{b.until ? `${tt('ban_until')} ${when(b.until)}` : tt('ban_forever')}</td><td><button class="btn small" onClick={() => oc.admin('unban', { uid: b.uid })}>{tt('unban')}</button></td></tr>)}</tbody></table></>}
+    <button class="btn small" onClick={() => oc.admin('reload_filter')}>{tt('reload_filter')}</button>
   </div>;
 }
 
@@ -293,5 +359,6 @@ function AdminTab() {
     <table class="sc-table"><tbody>{roster.value.map((r) => <tr><td>{r.name}{r.online ? ' ●' : ''}</td><td>{L(nations.value[r.nation]?.short)}</td>
       <td><button class="btn small" onClick={() => oc.admin('kick', { nation: r.nation })}>{tt('kick')}</button> <button class="btn small danger" onClick={() => oc.admin('release', { nation: r.nation })}>{tt('release')}</button></td></tr>)}</tbody></table>
     {seat.value && <button class="btn small" onClick={() => oc.admin('dev', { cmd: { t: 'dev', n: seat.value!.nation, action: 'gold', payload: { amount: 1000 } } })}>{tt('dev_gold')}</button>}
+    <AdminReports oc={oc} />
   </div>;
 }

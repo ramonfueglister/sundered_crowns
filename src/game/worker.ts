@@ -9,6 +9,8 @@ import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
 import { GOOD_MAP_MODES } from './protocol';
 import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from './view';
 import { dayToDate } from '../sim/calendar';
+import { fogActive, sightOf, fogTick, fogAnswer } from './fog';
+import { VICTORY_KINDS } from '../sim/victoryRules';
 
 const post = (m: FromWorker, tr: Transferable[] = []) => (self as any).postMessage(m, tr);
 let w: World, s: GameState;
@@ -16,6 +18,7 @@ let player: number | null = null;
 let speed = 0;
 let lastNotice = 0, lastChron = 0, lastOwnerChange = 0, lastMonth = -1;
 let mapMode: MapMode = 'political', mapFocus = -1, mapDirty = true, mapGood = -1;
+let mapPalette: 'normal' | 'cvd' = 'normal';
 let msPerDay = 0;
 const DAYS_PER_SEC = [0, 1, 3, 8, 20, 1000];
 
@@ -64,6 +67,8 @@ function sendTick(full = false) {
     landmarks: monthly ? landmarksView(s, w) : undefined,
     trade: monthly ? tradeView(s, w) : undefined,
   };
+  // fog of war: the same filter as the world server applies to each player (src/game/fog.ts)
+  if (fogActive(s, player)) fogTick(s, view, sightOf(s, w, player!));
   const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer); if (view.roads) tr.push(view.roads.buffer); if (view.explored) tr.push(view.explored.buffer);
   post({ type: 'tick', view }, tr);
   if (monthly && mapMode !== 'political' && mapMode !== 'terrain') mapDirty = true;
@@ -79,7 +84,7 @@ function exploredView(): Uint8Array {
 }
 function sendColors() {
   mapDirty = false;
-  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1, mapGood, player ?? -1);
+  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1, mapGood, player ?? -1, mapPalette);
   post({ type: 'colors', mode: mapMode, rgba, legend }, [rgba.buffer]);
 }
 
@@ -115,7 +120,7 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       case 'init': {
         const b = await loadBase(m.year);
         if (m.save) s = loadBinary(m.save);
-        else s = startRecorded(w, b.setups[m.year], b.hubs, { seed: m.seed, year: m.year, player: m.player, difficulty: m.difficulty, devtools: !!m.devtools });
+        else s = startRecorded(w, b.setups[m.year], b.hubs, { seed: m.seed, year: m.year, player: m.player, difficulty: m.difficulty, devtools: !!m.devtools, ...(m.victory?.length ? { victory: m.victory.filter((k) => (VICTORY_KINDS as readonly string[]).includes(k)) } : {}) });
         player = m.save ? (s.playerNations[0] ?? null) : m.player;
         if (m.save && m.devtools) s.flags.devtools = 1;
         if (m.save && m.difficulty !== undefined) s.difficulty = m.difficulty;
@@ -133,9 +138,18 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
         sendTick();
         break;
       }
-      case 'query': post({ type: 'reply', id: m.id, data: answer(s, w, player ?? -1, m.q) }); break;
+      case 'query': post({ type: 'reply', id: m.id, data: fogAnswer(s, w, player ?? -1, m.q, answer(s, w, player ?? -1, m.q)) }); break;
       case 'save': { const data = saveBinary(s); post({ type: 'saved', id: m.id, data }, [data.buffer]); break; }
-      case 'mapmode': mapMode = m.mode; mapFocus = m.focus; sendColors(); break;
+      case 'skip': {
+        // developer tools: fast-forward (the days are simulated as usual, so a replay reaches the same state)
+        if (!s.flags.devtools || !(m.days > 0)) break;
+        const t0 = performance.now();
+        for (let i = 0; i < Math.min(3660, m.days) && !s.ended; i++) { const a = performance.now(); advanceDay(s, w); msPerDay = msPerDay * 0.9 + (performance.now() - a) * 0.1; }
+        post({ type: 'reply', id: -1, data: { skipped: m.days, ms: performance.now() - t0 } });
+        sendTick(true);
+        break;
+      }
+      case 'mapmode': mapMode = m.mode; mapFocus = m.focus; mapPalette = m.palette === 'cvd' ? 'cvd' : 'normal'; sendColors(); break;
       case 'mapgood': mapGood = Number.isInteger(m.good) ? m.good : -1; if (GOOD_MAP_MODES.includes(mapMode)) sendColors(); break;
     }
   } catch (e: any) {
