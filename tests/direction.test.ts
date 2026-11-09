@@ -170,6 +170,10 @@ describe('building and levy overview', () => {
     const g = buildingGain(s, w, n, best[0], BI.farm);
     expect(g.parts.reduce((p, [, x]) => p + x, 0)).toBeCloseTo(g.gold, 9);
     expect(answer(s, w, pid, { q: 'gain', loc: best[0], building: BI.farm }).cost).toBeGreaterThan(0);
+    // provinces and areas of any places (the grouped peace demands); bad ids are skipped
+    const pl = answer(s, w, pid, { q: 'places', locs: [n.capital, -5, w.L + 3] });
+    expect(pl.rows).toEqual([[n.capital, w.provOf[n.capital], expect.any(Number)]]);
+    expect(typeof pl.provs[w.provOf[n.capital]]).toBe('string');
   });
 
   it('gives the orders for a province and an area', () => {
@@ -227,6 +231,8 @@ describe('refusals', () => {
       const t = readFileSync(f, 'utf8');
       for (const m of t.matchAll(/return '([^']+ [^']+)'/g)) found.set(m[1], f);
     }
+    // and the world server's
+    for (const m of readFileSync('server/world.ts', 'utf8').matchAll(/res: \{ ok: false, err: '([^']+)' \}/g)) found.set(m[1], 'server/world.ts');
     const missing = [...found].filter(([k]) => !hasRefusalText(k));
     expect(missing).toEqual([]);
     expect(refusal('not enough gold').de).toBe('Nicht genug Gold');

@@ -77,3 +77,12 @@
 .w-scope .tabs { margin: 2px 0 4px; }
 .w-scope .act-row select { flex: 1 1 auto; min-width: 0; }
 .w-scope .act-row .k { flex: 1 1 auto; }
+
+/* ---- peace demands grouped by province (peace.tsx LocPicks) */
+.lp-all { gap: 10px; margin: 2px 0; }
+.loc-picks .lp-prov { font-weight: 600; border-top: 1px dotted var(--p-line); }
+.loc-picks .lp-group:first-child .lp-prov { border-top: none; }
+.loc-picks .lp-prov > span:nth-of-type(1) { flex: 1; cursor: pointer; }
+.loc-picks .lp-loc { padding-left: 18px; }
+.tab-peace .loc-picks { max-height: 280px; }
+.loc-picks .lp-prov > span.small { flex: 0 0 auto; }

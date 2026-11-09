@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, panelArg, openPanel } from '../store';
 import type { PeaceTerm } from '../../sim/types';
-import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, Tip, locName, namesVersion, flyToLoc } from './common';
+import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
 import { WarCard, WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
 
@@ -24,6 +24,41 @@ function TermCosts({ terms, costs, total, title, hint }: { terms: PeaceTerm[]; c
       <div class="bd-row bd-total"><span>Σ</span><span>{num(total)}</span></div></div>
     <div class="muted small">{t('x_term_costs')}</div>
   </div>;
+}
+
+/**
+ * The places to demand or give, grouped by province (largest first): a province's box takes or drops all of its
+ * places listed here, its name opens the list. Small lists stay open.
+ */
+function LocPicks({ cands, sel, owner, onChange }: { cands: number[]; sel: number[]; owner?: ArrayLike<number>; onChange: (s: number[]) => void }) {
+  const key = cands.join(',');
+  const [pl] = useQuery<any>({ q: 'places', locs: cands }, [key], 600000);
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  const groups = useMemo(() => {
+    const prov = new Map<number, number>((pl?.rows ?? []).map((r: number[]) => [r[0], r[1]]));
+    const m = new Map<number, number[]>();
+    for (const l of cands) { const p = prov.get(l) ?? -1; if (!m.has(p)) m.set(p, []); m.get(p)!.push(l); }
+    return [...m].sort((a, b) => b[1].length - a[1].length || a[0] - b[0]);
+  }, [pl, key]);
+  const set = new Set(sel);
+  const few = cands.length <= 40;
+  const flip = (p: number) => { const o = new Set(open); if (o.has(p)) o.delete(p); else o.add(p); setOpen(o); };
+  const all = (ls: number[], on: boolean) => onChange(on ? [...new Set([...sel, ...ls])] : sel.filter((x) => !ls.includes(x)));
+  return <>
+    <div class="act-row small lp-all"><a class="lk" onClick={() => onChange([...cands])}>{t('x_pc_all')}</a><a class="lk" onClick={() => onChange([])}>{t('x_pc_none')}</a>
+      <Tip content={<div><TipHead name={t('x_pc_groups')} value={`${sel.length} / ${cands.length}`} hint={t('x_pc_groups_hint')} /></div>}><span class="muted has-tip">{sel.length} / {cands.length}</span></Tip></div>
+    <div class="loc-picks">{groups.map(([p, ls]) => {
+      const k = ls.filter((l) => set.has(l)).length; const shown = few || open.has(p);
+      return <div class="lp-group">
+        <div class={`lp lp-prov ${k ? 'on' : ''}`}>
+          <input type="checkbox" checked={k === ls.length} ref={(el) => { if (el) el.indeterminate = k > 0 && k < ls.length; }} onChange={() => all(ls, k < ls.length)} />
+          <span onClick={() => flip(p)}>{few ? '' : shown ? '▾ ' : '▸ '}{p >= 0 && pl ? placeName(pl.provs[p]) : pl ? t('x_pc_other') : `${t('loading')}…`}</span>
+          <span class="muted small">{k}/{ls.length}</span>
+        </div>
+        {shown && ls.map((l) => <label class={`lp lp-loc ${set.has(l) ? 'on' : ''}`}><input type="checkbox" checked={set.has(l)} onChange={() => onChange(set.has(l) ? sel.filter((x) => x !== l) : [...sel, l])} /><span onDblClick={() => flyToLoc(l)}>{locName(l)}</span><NLink id={owner?.[l] ?? -1} size={12} name={false} /></label>)}
+      </div>;
+    })}</div>
+  </>;
 }
 
 export function PeaceTab() {
@@ -102,7 +137,7 @@ function PeaceInner({ w }: { w: any }) {
       <div class="terms">
         <div class="term-block">
           <div class="sub-h">{concede ? t('give_locations') : t('take_locations')} <Tip content={<div><TipHead name={concede ? t('give_locations') : t('take_locations')} value={cands.length} hint={concede ? t('x_cands_concede_hint') : t('x_cands_demand_hint')} /></div>}><span class="muted small">({cands.length})</span></Tip></div>
-          {cands.length ? <div class="loc-picks">{cands.slice(0, 120).map((l) => <label class={`lp ${sel.includes(l) ? 'on' : ''}`}><input type="checkbox" checked={sel.includes(l)} onChange={() => { setWhite(false); setSel(sel.includes(l) ? sel.filter((x) => x !== l) : [...sel, l]); }} /><span onDblClick={() => flyToLoc(l)}>{locName(l)}</span><NLink id={v.owner?.[l] ?? -1} size={12} name={false} /></label>)}</div>
+          {cands.length ? <LocPicks cands={cands} sel={sel} owner={v.owner} onChange={(x) => { setWhite(false); setSel(x); }} />
             : <div class="muted small">{concede ? t('no_lost_locations') : t('no_occupied')}</div>}
           {!concede && sel.length > 0 && <label class="chk"><input type="checkbox" checked={release} onChange={(e) => setRelease((e.target as HTMLInputElement).checked)} /> {t('release_instead')}</label>}
         </div>

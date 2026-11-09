@@ -17,14 +17,15 @@ type Spot = [number, number, number, number];
 const RECRUIT_DAYS = (type: number) => (UNITS[type].kind === 'ship' ? 120 : UNITS[type].kind === 'cav' ? 60 : 30);
 const round = (v: number, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
 
-/** Names and places of the realm's land: province and area of every location (for the filters). */
-function realmPlaces(s: GameState, w: World, locs: readonly number[]) {
+/** Province and area of each location, with their names (for the filters here and the grouped peace demands). */
+export function placesOf(w: World, locs: readonly number[]) {
   const provs: Record<number, string> = {}, areas: Record<number, string> = {};
   const areaOfProv = new Map<number, number>();
   w.areas.forEach((a) => a.provinces.forEach((p) => areaOfProv.set(p, a.id)));
   const rows: [number, number, number][] = [];
   const names: Record<number, I18n> = {};
   for (const l of locs) {
+    if (!(l >= 0 && l < w.L)) continue;
     const p = w.provOf[l], a = p >= 0 ? areaOfProv.get(p) ?? -1 : -1;
     if (p >= 0) provs[p] = w.provinces[p].name; if (a >= 0) areas[a] = w.areas[a].name;
     rows.push([l, p, a]); names[l] = { en: w.names[l], de: w.namesDe[l] };
@@ -36,7 +37,7 @@ function realmPlaces(s: GameState, w: World, locs: readonly number[]) {
 export function worksView(s: GameState, w: World, player: number) {
   const n = s.nations[player]; if (!n) return null;
   const locs = nationLocsRO(s, n.id);
-  const places = realmPlaces(s, w, locs);
+  const places = placesOf(w, locs);
   const q = buildQueue(s);
   const types = BUILDINGS.map((b, k) => {
     const spots = buildSpots(s, w, n, k, locs, q);

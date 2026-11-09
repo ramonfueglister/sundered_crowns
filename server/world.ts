@@ -558,7 +558,7 @@ export class WorldCore {
     const seat = ss.seat;
     if (!seat) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'You do not rule a realm here.' } });
     if (!cmd || typeof cmd !== 'object' || typeof cmd.t !== 'string') return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'bad command' } });
-    if (JSON.stringify(cmd).length > (cmd.t === 'batch' ? 32768 : 4096)) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'command too large' } });
+    if (JSON.stringify(cmd).length > (cmd.t === 'batch' || cmd.t === 'peace' ? 32768 : 4096)) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'command too large' } });
     if (cmd.t === 'dev') {
       if (!ss.user.admin) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'developer commands are for admins only' } });
       this.queue.push({ e: { k: 'dev', uid: ss.user.uid, cmd }, session: ss, id });

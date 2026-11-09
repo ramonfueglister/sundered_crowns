@@ -445,6 +445,9 @@ const S: Record<string, [string, string]> = {
   x_w_overview: ['All works of the realm', 'Alle Bauten des Reiches'],
   x_w_batch_done: ['{k} orders given', '{k} Befehle erteilt'], x_w_batch_rest: ['the rest', 'der Rest'],
   x_w_half: ['Half of it', 'Davon die Hälfte'],
+  x_pc_all: ['All', 'Alle'], x_pc_none: ['None', 'Keine'], x_pc_other: ['Other places', 'Weitere Orte'],
+  x_pc_groups: ['Places chosen', 'Gewählte Orte'],
+  x_pc_groups_hint: ['Grouped by province, the largest first. A province\'s box takes or drops all of its places listed here; its name opens the list. Double-click a place to look at it.', 'Nach Provinz geordnet, die größte zuerst. Der Haken einer Provinz nimmt alle ihre hier genannten Orte oder lässt sie fallen; ihr Name öffnet die Liste. Doppelklick auf einen Ort zeigt ihn auf der Karte.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

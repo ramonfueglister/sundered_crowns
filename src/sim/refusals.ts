@@ -6,6 +6,10 @@
 import type { I18n } from './types';
 
 export const REFUSAL_DE: Record<string, string> = {
+  // the world server's refusals (server/world.ts)
+  'You do not rule a realm here.': 'Du regierst hier kein Reich.', 'bad command': 'Ungültiger Befehl', 'command not allowed online': 'Dieser Befehl ist online nicht erlaubt',
+  'command too large': 'Befehl zu groß', 'developer commands are for admins only': 'Entwicklerbefehle sind nur für Admins', 'no seat': 'Kein Sitz', 'not your realm': 'Nicht dein Reich',
+  'too many orders for one day': 'Zu viele Befehle für einen Tag',
   'not enough gold': 'Nicht genug Gold', 'not enough manpower': 'Nicht genug Wehrkraft', 'not enough sailors': 'Nicht genug Seeleute', 'not enough Authority': 'Nicht genug Autorität', 'not enough insight': 'Nicht genug Einsicht',
   'not your army': 'Nicht dein Heer', 'not your location': 'Nicht dein Ort', 'occupied': 'Besetzt', 'in battle': 'In der Schlacht', 'no route': 'Kein Weg', 'embarked': 'Eingeschifft', 'retreating': 'Auf dem Rückzug',
   'need two armies': 'Zwei Heere nötig', 'too small': 'Zu klein', 'fully built': 'Voll ausgebaut', 'two works already under way here': 'Hier sind schon zwei Bauten im Gange', 'needs a larger town': 'Braucht eine größere Stadt',
