@@ -107,7 +107,7 @@ Eine unabhängige Prüfung der letzten Änderungen fand fünf Fehler, alle behob
 | Welt läuft ohne Spieler weiter und setzt nach Neustart genau fort | ✓ `tests/world_replay.test.ts` |
 | RLS: ein Nutzer kann fremde Spielstände weder lesen noch ändern | ✓ `tests/supabase_rls.test.ts` (alle Migrationen gegen Postgres) |
 | Zwei Clients und 100 Bots in einer Welt, Angebot austauschen, Krieg führen | ✓ `npm run smoke:online`, `tools/load_test.ts` |
-| Beobachterlauf 1356–1600 plausibel und abwechslungsreich (Punkt 99) | ✓ zwei Seeds, siehe unten |
+| Beobachterlauf 1356–1600 plausibel und abwechslungsreich (Punkt 99) | ◐ zwei Seeds; Granada fällt nicht wie erwartet, siehe unten |
 
 **Lasttest mit 100 Bots** (0,5 s pro Spieltag, also 72-fache Geschwindigkeit):
 - Alle Bots in 8,5 s gesetzt.
@@ -181,6 +181,51 @@ Nach den Arbeiten an Haushalt, Kriegsführung und Lagen liefen beide Seeds noch 
 - **Portugal** überlebt in beiden Läufen. In Seed 7 verliert es um 1430 Lissabon an die Meriniden und schrumpft bis 1600 auf 26 Orte.
 - **Die Rus.** In beiden Läufen sammelt Moskau die Rus: 451 bzw. 396 Orte im Jahr 1600.
 - **Die Steppe.** Die Goldene Horde schrumpft von 1480 Orten auf 69 bzw. 80.
+
+#### Nachtrag 2: Läufe nach der Durchsicht
+
+Eine Durchsicht fand Abkürzungen in den Lagen: einen Belagerungsbonus für die Osmanen und Kastilien in jeder Belagerung, automatische Breschen nur vor Konstantinopel und Granada, ein Datum für den Fall der Landmauern, ein Kalender für den Niedergang der Steppe und gelöschte Bündnisse des Emirats. Diese Abkürzungen sind ersetzt (siehe unten). Dazu kamen Prüfungen der Kriegsziele, Kriegsmüdigkeit nur noch im Frieden abbauen und Glauben, die im Spiel tatsächlich vorkommen. Danach liefen beide Seeds noch einmal bis 1600.
+
+| Prüfung (Punkt 99) | Seed 1356 | Seed 7 |
+|---|---|---|
+| Größter Anteil an Europa, höchster Wert im Lauf | 8,2 % (England) | 8,0 % (Schweden) |
+| Staaten im Jahr 1600 (Start: 342) | 207 | 220 |
+| Längster laufender Krieg ab 1381 | 4,9 Jahre | 5,1 Jahre |
+| Gleichzeitig bankrotte Reiche | 0 bis 3 | 0 bis 3 |
+| Größte Kasse unter den fünf reichsten, gemessen am Jahresertrag | höchstens 2,3 Jahre | höchstens 2,2 Jahre |
+| Konstantinopel | Osmanen, zwischen 1406 und 1431 | Osmanen, zwischen 1431 und 1456 |
+| Granada | Kastilien nimmt die Stadt zwischen 1456 und 1481 | fällt nicht |
+| Portugal im Jahr 1600 | 105 Orte, mit Lissabon | 63 Orte, Lissabon seit vor 1381 bei den Meriniden |
+| Moskau im Jahr 1600 | 393 Orte | 217 Orte |
+| Goldene Horde (Start: 1480 Orte) | 57 Orte im Jahr 1600 | 188 Orte im Jahr 1600 |
+
+- **Konstantinopel** fällt jetzt in beiden Läufen an die Osmanen. Entscheidend ist der Belagerungstrain: Die KI stellt für einen Krieg um befestigte Orte genug Artillerie auf, und Großgeschütze schlagen Breschen.
+- **Granada** fällt in Seed 7 nicht, und in Seed 1356 endet die Lage 1520 trotzdem mit „Das Emirat besteht fort“: Das Emirat hält nach dem Verlust der Stadt noch mehr als drei Orte in Iberien. Das Ziel „Granada fällt um 1500“ ist damit nicht erreicht.
+- **Glauben im Spiel.** Bosnien bleibt in beiden Läufen bis 1600 bei der Bosnischen Kirche. Jüdische Gemeinden wirken in 12 bis 20 Reichen (vorher ab 1362 nur in 3). Ein Tengri-Khanat entsteht in Seed 1356 bis 1456 und in Seed 7 bis 1506. Kein Reich folgt dem samischen oder hinduistischen Glauben.
+- **Gold.** Über drei Jahreserträgen liegen nur Kleinstaaten fast ohne Einnahmen (Lanzarote, Makurien) und vereinzelt kleine Reiche wie Dorpat, Dulkadir oder Eichstätt.
+
+#### Was die Lagen vorgeben
+
+Der größte Teil dieser Geschichte folgt aus allgemeinen Regeln, die für jedes Reich gelten. Einige Lagen geben aber Jahreszahlen oder einen bestimmten Ort vor. Diese Vorgaben sind hier vollständig aufgezählt:
+
+- **Aufstieg des Hauses Osman** (`ottoman_rise` in `src/sim/content/situations.ts`):
+  - Die Belagerung der Stadt (Stufe 2) beginnt frühestens 1400, sobald die Osmanen Land im Umkreis von 160 km um Konstantinopel halten.
+  - Die Krieger der Grenze kosten 30 % weniger Unterhalt und bringen mehr Wehrkraft.
+  - In einem Krieg um die Stadt ruft der Sultan sein ganzes Heer vor ihre Mauern. Dort bringt er gegossene Großgeschütze mit: +2 auf den monatlichen Belagerungswurf, nur mit Artillerie im Lager.
+  - Die Landmauern geben dem Besitzer der Stadt +25 % Festungsstärke, bis die Osmanen selbst Großgeschütze gießen (Steinbüchsen übernommen oder Kriegskunst auf Stufe 7).
+  - Die Lage endet 1500.
+- **Krieg um Granada** (`reconquista`):
+  - Der Krieg beginnt 1440, oder früher, wenn der Vorkämpfer sechsmal so stark ist wie das Emirat.
+  - Der Vorkämpfer führt einen Glaubenskrieg mit der Stadt Granada als Ziel. Ferne Verbündete des Emirats, solche jenseits der Meerenge und christliche folgen dem Ruf in diesen einen Krieg nicht. Die Bündnisse selbst bleiben bestehen, und Spieler werden wie üblich gerufen.
+  - Auch der Vorkämpfer ruft sein Heer vor die Stadt und erhält dort +2, nur mit Artillerie.
+  - Die Lage endet 1520.
+- **Beide Lagen** dürfen einen Waffenstillstand brechen, der mindestens zwei Jahre alt ist. Das kostet wie sonst auch 30 Eintracht und 20 Ansehen.
+
+Nicht mehr vorgegeben, sondern allgemeine Regel:
+
+- **Großgeschütze** schlagen in jeder Belagerung Breschen. Dafür braucht der Belagerer 250 Mann Artillerie je Festungsstufe, und ein Reich im Lager muss Großgeschütze gießen. Gegen Bastionsfestungen wirkt das nicht. Die KI stellt für Kriege um befestigte Orte einen Belagerungstrain auf.
+- **Die Steppe** verblasst, wenn die sesshaften Nachbarn einer Horde Großgeschütze haben und die Ozeanrouten offen sind. Wie weit, steht bei jeder Horde. Ferne Länder einer großen Horde fallen ab, je eher, desto unruhiger sie sind.
+- **Der kurze Waffenstillstand** von zwei Jahren gilt für jeden Krieg um eigenes Kernland, unabhängig vom Namen des Krieges.
 
 ## Was vereinfacht wurde, und wie
 
