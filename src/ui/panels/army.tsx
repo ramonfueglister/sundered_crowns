@@ -32,7 +32,7 @@ export function ArmyPanel() {
   void namesVersion.value;
   const close = () => { selectedArmies.value = []; };
   const all = (f: (id: number) => Promise<any>) => Promise.all(armies.map((a) => f(a.id)));
-  return <div class="army-wrap"><Panel cls="army-pnl" onClose={close}
+  return <div class={`army-wrap ${picking && armies.length === 1 ? 'picking' : ''}`}><Panel cls="army-pnl" onClose={close}
     title={armies.length === 1 ? (L(first.name) || (first.fleet ? t('fleet') : t('army'))) : `${armies.length} ${fleet ? t('fleets') : t('armies')}`}
     sub={<><Tip content={<div><TipHead name={fleet ? t('fleets') : t('armies')} value={`${num(men)} ${fleet ? t('ships') : t('men')}`} hint={fleet ? t('x_fleet_men_hint') : t('x_army_men_hint')} /></div>}><span>{num(men)} {fleet ? t('ships') : t('men')}</span></Tip> · <LocName id={first.loc} /></>}>
     <div class="army-list">{armies.map((a) => {

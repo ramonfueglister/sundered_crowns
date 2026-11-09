@@ -8,7 +8,7 @@ import { ConcordTip, MandateTip, AuthorityTip, PrestigeTip, CorruptionTip, Dread
 import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
 import { Administration } from './statecraft';
-import { charName, charFull, DynastySection } from './people';
+import { charName, DynastySection } from './people';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
 
@@ -36,7 +36,8 @@ export function GovernmentTab() {
     <div class="cols2">
       <Section title={t('ruler')} id="gov-ruler">
         <div class="ruler-big">
-          <div class="ruler-name">{me?.ruler ? charFull(me.ruler.name, me.ruler.dynasty, me.ruler.female) : charName(p.ruler)}</div>
+          <div class="ruler-name">{charName(p.ruler, me?.ruler?.female)}</div>
+          {me?.ruler?.dynasty && !p.ruler.includes(me.ruler.dynasty.slice(0, 5)) && <div class="muted">{t('house_of')} {me.ruler.dynasty}</div>}
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
           {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
           {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <span class="chip">{traitName(x)}</span>)}</div>}

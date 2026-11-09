@@ -228,7 +228,7 @@ export function espionage(s: GameState, w: World, n: Nation, sit: Situation) {
     if (best >= 0 && go(best, 'steal_tech', 'behind', 5)) return;
   }
   // slander a rival
-  for (const r of n.rivals) if (ok(r, 'slander') && !enemiesOf(s, n.id).has(r) && go(r, 'slander', 'rival', 5)) return;
+  for (const r of n.rivals) if (ok(r, 'slander') && !enemiesOf(s, n.id).has(r) && go(r, 'slander', 'rival', 8)) return;
   // a claim forged before a war a scheming or conquering crown is planning (a rival without a cause for war)
   if (!sit.atWar && (P(n, 'opportunist') || P(n, 'conqueror'))) {
     for (const r of n.rivals) {

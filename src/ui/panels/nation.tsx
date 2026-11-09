@@ -35,7 +35,8 @@ export function NationPanel({ nation }: { nation: number }) {
     {!d.alive && <div class="neg">{t('fallen_realm')}</div>}
     <div class="ruler-box">
       <div>
-        <div class="ruler-name">{d.ruler ? charFull(d.ruler.name, d.ruler.dynasty, d.ruler.female) : '—'}</div>
+        <div class="ruler-name">{d.ruler ? charName(d.ruler.name, d.ruler.female) : '—'}</div>
+        {d.ruler?.dynasty && !d.ruler.name.includes(d.ruler.dynasty.slice(0, 5)) && <div class="muted small">{t('house_of')} {d.ruler.dynasty}</div>}
         <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={charFull(d.ruler.name, d.ruler.dynasty, d.ruler.female)} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
         {d.ruler && <div class="skills">{d.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SKILLS[k])} value={s} hint={t(`x_skill${k}_fx`)} /></div>}><span class="skill"><i class={`sk sk${k}`} />{s}</span></Tip>)}</div>}
         {d.ruler?.traits?.length > 0 && <div class="chips">{d.ruler.traits.map((tr: string) => <span class="chip">{traitName(tr)}</span>)}</div>}

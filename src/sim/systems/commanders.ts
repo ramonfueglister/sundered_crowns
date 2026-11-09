@@ -104,7 +104,9 @@ export function appointBest(s: GameState, n: Nation, a: Army): number {
     if (c.female && c.id !== n.ruler) continue; // (the player may choose a woman to lead; the AI keeps to the custom of the age)
     if (v > bv || (v === bv && best && c.id < best.id)) { bv = v; best = c; }
   }
-  if (!best || bv < 2) best = raiseGeneral(s, n, false, a.fleet);
+  // a poor leader is replaced by a new lord of the levy, unless the realm already keeps more generals than hosts
+  const hosts = s.armies.filter((x) => x.owner === n.id && !x.rebels).length;
+  if (!best || (bv < 2 && (n.generals ?? []).length < hosts + 2)) best = raiseGeneral(s, n, false, a.fleet);
   setCommander(s, n, a, best);
   return best.id;
 }
@@ -145,6 +147,15 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
       c.role = 'courtier';
     }
     keep.push(id);
+  }
+  // in peace a realm keeps no more idle generals than it has hosts and three more: the least able goes home
+  const hosts = s.armies.filter((x) => x.owner === n.id && !x.rebels).length;
+  const idle = keep.filter((id) => !commandOf(s, id) && s.chars[id].role !== 'courtier');
+  if (idle.length > hosts + 3) {
+    const worst = idle.sort((x, y) => commanderSkill(s.chars[x]) - commanderSkill(s.chars[y]) || y - x)[0];
+    const c = s.chars[worst]; c.role = 'courtier';
+    keep.splice(keep.indexOf(worst), 1);
+    if (!c.spouse && !c.children.length) delete s.chars[worst];
   }
   n.generals = keep;
 }

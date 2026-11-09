@@ -40,7 +40,7 @@ export function DynastySection({ r }: { r: any }) {
         <td class="r"><Tip content={<div><TipHead name={charName(m.name, m.female)} value={`${m.age} ${t('years_old')}`} hint={t('x_member_age_hint')} /></div>}><span>{m.age}</span></Tip></td>
         <td><Skills s={m.skills} /></td>
         <td class="small">
-          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{m.spouse.dynasty && !m.spouse.name.includes(m.spouse.dynasty.slice(0, 5)) ? ` ${m.spouse.dynasty}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
+          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{m.spouse.dynasty && m.spouse.dynasty !== d.house && !m.spouse.name.includes(m.spouse.dynasty.slice(0, 5)) ? ` ${m.spouse.dynasty}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
           {m.abroad >= 0 && <span> · {t('at_court_of')} <NLink id={m.abroad} size={14} /></span>}
           {m.claims.length > 0 && <Tip content={<div><TipHead name={t('claims')} hint={t('x_claims_hint')} /></div>}><span> · {t('claim_on')} {m.claims.map((k: number) => <NLink id={k} size={14} />)}</span></Tip>}
           {m.traits.length > 0 && <span> · {m.traits.map((x: string) => traitName(x)).join(', ')}</span>}

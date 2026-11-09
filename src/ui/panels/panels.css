@@ -467,7 +467,10 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .council-row > span:nth-child(2) { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
 
 /* ---- people track: commander picker, ruling house, AI decisions ---- */
-.cmd-pick { margin-top: 6px; max-height: 300px; overflow-y: auto; border-top: 1px solid var(--p-line); padding-top: 4px; }
+.cmd-pick { margin-top: 6px; border-top: 1px solid var(--p-line); padding-top: 4px; }
+.army-wrap.picking { width: 660px; max-width: calc(100% - 400px); }
+.army-wrap.picking .army-pnl { max-height: min(640px, 72vh); }
+.cmd-pick .chip { display: inline-block; margin: 1px 2px 1px 0; }
 .cmd-pick table { width: 100%; }
 .cmd-pick tr.sel td, .dyn-tbl tr.sel td { background: rgba(160, 120, 40, 0.12); }
 .cmd-pick td { vertical-align: top; }
