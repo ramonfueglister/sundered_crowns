@@ -305,7 +305,10 @@ const S: Record<string, [string, string]> = {
   x_demands_cost_hint: ['Each term has a price in war score; they accept only when our war score covers at least 80 % of the total and the sum below is not negative.', 'Jede Bedingung hat einen Preis in Kriegspunkten; angenommen wird nur, wenn unsere Kriegspunkte mindestens 80 % der Summe decken und die Summe unten nicht negativ ist.'],
   x_concession_hint: ['What we give, valued like demands.', 'Was wir geben, bewertet wie Forderungen.'],
   x_term_costs: ['Land: its value against the losing side\'s development (× 1.6, +3); gold: against a year of their taxes; vassal 60, release 25, humiliation 15, alliances 10.', 'Land: sein Wert im Verhältnis zur Entwicklung der Verliererseite (× 1,6, +3); Gold: im Verhältnis zu einem Jahr ihrer Steuern; Vasall 60, Freilassung 25, Demütigung 15, Bündnisse 10.'],
-  x_their_answer: ['Their answer', 'Ihre Antwort'], x_peace_accept_hint: ['They accept at a sum of 0 or more.', 'Ab einer Summe von 0 wird angenommen.'],
+  x_their_answer: ['Their answer', 'Ihre Antwort'], x_peace_accept_hint: ['They accept at a sum of 0 or more, and only if our war score covers 80 % of the demands.', 'Angenommen wird ab einer Summe von 0, und nur wenn unsere Kriegspunkte 80 % der Forderungen decken.'],
+  x_peace_accept_hint_white: ['They accept at a sum of 0 or more.', 'Ab einer Summe von 0 wird angenommen.'],
+  x_peace_cond: ['Our war score covers 80 % of the demands', 'Unsere Kriegspunkte decken 80 % der Forderungen'], r_white_peace: ['No demands (white peace)', 'Keine Forderungen (Frieden ohne Bedingungen)'],
+  r_demands: ['Our demands', 'Unsere Forderungen'], r_their_war_exhaustion: ['Their war exhaustion', 'Ihre Kriegsmüdigkeit'],
   r_fighting_for_freedom: ['Fighting for their freedom', 'Sie kämpfen um ihre Freiheit'],
   x_tech_sum_hint: ['Sum of the levels in the three branches.', 'Summe der Stufen in den drei Zweigen.'],
   x_col_nations_score: ['Ranking value: development, subjects, army, fleet, prestige and treasury. Hover a value for its parts.', 'Ranglistenwert: Entwicklung, Untertanen, Heer, Flotte, Ansehen und Schatz. Für die Teile über einen Wert fahren.'],
@@ -350,6 +353,7 @@ const S: Record<string, [string, string]> = {
   x_click_capital: ['Click to look at the capital.', 'Klicken zeigt die Hauptstadt.'],
   x_nat_faith_hint: ['Faith of the realm. Locations of another faith are restless and integrate more slowly; realms of another faith are less willing to accept its proposals.', 'Glaube des Reiches. Orte anderen Glaubens sind unruhiger und werden langsamer eingegliedert; Reiche anderen Glaubens nehmen seine Vorschläge seltener an.'],
   x_nat_culture_hint: ['Culture of the realm. Locations of another culture are restless and integrate more slowly.', 'Kultur des Reiches. Orte anderer Kultur sind unruhiger und werden langsamer eingegliedert.'],
+  x_goal_inherited: ['Held from the start', 'Von Beginn an erfüllt'], x_goal_inherited_hint: ['Already true when the reign began: counted as achieved, without a reward.', 'Schon zu Beginn der Herrschaft erfüllt: zählt als erreicht, ohne Belohnung.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
@@ -400,6 +404,26 @@ const ERRORS: Record<string, string> = {
   'most of our land must be of the Latin rite': 'Der Großteil unseres Landes muss dem lateinischen Ritus folgen', 'hold Moscow and Novgorod': 'Moskau und Nowgorod besitzen',
   'hold six of Cologne, Nuremberg, Hamburg, Berlin, Leipzig, Augsburg, Vienna, Munich, Mainz and Dresden': 'Sechs von Köln, Nürnberg, Hamburg, Berlin, Leipzig, Augsburg, Wien, München, Mainz und Dresden besitzen',
   'hold four of Rome, Milan, Naples, Florence, Venice and Turin': 'Vier von Rom, Mailand, Neapel, Florenz, Venedig und Turin besitzen',
+  'only from the Age of Confessions and Absolutism': 'Erst ab dem Zeitalter der Konfessionen und des Absolutismus', 'need 150 Authority': 'Braucht 150 Autorität', 'need 60 Mandate': 'Braucht 60 Mandat',
+  'the magnates are too powerful': 'Die Magnaten sind zu mächtig', 'the capital was moved recently': 'Die Hauptstadt wurde erst kürzlich verlegt',
+  'the capital is already our greatest town': 'Die Hauptstadt ist schon unsere größte Stadt', 'the capital is still great enough': 'Die Hauptstadt ist noch bedeutend genug',
+  'both crowns must exist': 'Beide Kronen müssen bestehen', 'not before 1380': 'Nicht vor 1380', 'both crowns must be sovereign': 'Beide Kronen müssen souverän sein',
+  'not while they are at war': 'Nicht, solange sie Krieg gegeneinander führen', 'the other crown must agree': 'Die andere Krone muss zustimmen', 'relations are too poor': 'Die Beziehungen sind zu schlecht',
+  'hold three of Toledo, Zaragoza, Barcelona and Seville': 'Drei von Toledo, Saragossa, Barcelona und Sevilla besitzen', 'cannot absorb another ruler': 'Kann keinen anderen Herrscher einverleiben',
+  'hold London and Edinburgh': 'London und Edinburgh besitzen', 'error': 'Fehler', 'not available': 'Nicht verfügbar',
 };
+/** Refusals that name a realm (decisions.ts builds them with the realm's English short name). */
+const ERROR_PATTERNS: [RegExp, (m: RegExpMatchArray) => string][] = [
+  [/^(.+) must be our subject or a friendly marriage partner$/, (m) => `${realmDe(m[1])} muss unser Untertan oder ein wohlgesinnter Ehepartner sein`],
+  [/^(.+) must be our subject$/, (m) => `${realmDe(m[1])} muss unser Untertan sein`],
+];
+let realmDe: (en: string) => string = (x) => x;
+/** The UI registers how to turn a realm's English short name into its German one (the nation list lives in game/client). */
+export function setRealmNameDe(f: (en: string) => string) { realmDe = f; }
 /** Translate an error/refusal text from the simulation. */
-export function errText(e: string): string { if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1); return ERRORS[e] ?? e; }
+export function errText(e: string): string {
+  if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1);
+  const hit = ERRORS[e]; if (hit) return hit;
+  for (const [re, f] of ERROR_PATTERNS) { const m = e.match(re); if (m) return f(m); }
+  return e;
+}

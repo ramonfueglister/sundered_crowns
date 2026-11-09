@@ -6,13 +6,16 @@ import { sim, view, nations } from '../../game/client';
 import type { Query } from '../../game/protocol';
 import type { Command, CmdResult, I18n } from '../../sim/types';
 import { playerId, selectedLoc, selectedNation, selectedArmies, panel, showToast } from '../store';
-import { t, L, lang, errText, reason } from '../i18n';
+import { t, L, lang, errText, reason, setRealmNameDe } from '../i18n';
 import { deName } from '../../sim/content/names_de';
 import { Tip, Breakdown, hideTip } from '../Tip';
 import { num, signed, pct, rgb } from '../format';
 import { sfx, type Sfx } from '../audio';
 import { rendererRef } from '../MapView';
 import { Coa } from './coa';
+
+// refusals that name a realm (decisions.ts) show its German name in the German UI
+setRealmNameDe((en) => nations.value.find((x) => x?.short?.en === en)?.short.de ?? en);
 
 // ---------------------------------------------------------------- commands
 type DistOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;

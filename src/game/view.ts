@@ -1,5 +1,5 @@
 // Worker-side: builds compact views of the game state for the UI and answers queries.
-import type { GameState, Nation, I18n } from '../sim/types';
+import type { GameState, Nation, I18n, PeaceTerm } from '../sim/types';
 import type { World } from '../sim/world';
 import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite } from './protocol';
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
@@ -14,9 +14,10 @@ import { FAITHS, ALL_CULTURES, cultureLabel as cultureName, GROUP_OF, faithFamil
 import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrineSlots } from '../sim/systems/progress';
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
-import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
+import { decisionsFor, eventDef, interpolate, type EvApi } from '../sim/systems/events';
 import { LOC_ECON, CROWN_SHARE, effectiveTax } from '../sim/systems/economy';
 import { goalsFor } from '../sim/systems/goals';
+import { dayToDate } from '../sim/calendar';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf, mod } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
@@ -178,15 +179,40 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       if (q.concede) { const costs = terms.map((t) => termCost(s, war, t, q.to, player)); return { accept: true, score: 0, reasons: [], cost: costs.reduce((p, x) => p + x, 0), costs }; }
       const ev = evaluatePeace(s, war, player, q.to, terms);
       const costs = terms.map((t) => termCost(s, war, t, player, q.to));
-      return { ...ev, cost: costs.reduce((p, x) => p + x, 0), costs, warScore: computeScore(s, war) * (war.att.includes(player) ? 1 : -1) };
+      const cost = costs.reduce((p, x) => p + x, 0);
+      const warScore = computeScore(s, war) * (war.att.includes(player) ? 1 : -1);
+      return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore };
     }
     case 'path': { const a = s.armies.find((x) => x.id === q.army); if (!a) return null; const p = findPath(s, w, a, a.loc, q.to); return p ? { path: p, days: Math.ceil(travelDays(s, w, a, p)) } : null; }
     case 'chronicle': return s.chronicle.slice(q.from ?? 0);
     case 'timelapse': return s.timelapse.map((t) => ({ day: t.day, owners: t.owners }));
-    case 'goals': { const n = s.nations[q.nation]; return n ? goalsView(s, n) : null; }
+    case 'goals': { const n = s.nations[q.nation]; return n ? goalsView(s, w, n) : null; }
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
+}
+
+/** The peace evaluation as the dialog shows it (systems/war.ts evaluatePeace): rows that add up exactly to the shown sum,
+ *  and apart from them the condition that our war score must cover 80 % of the demands (not part of the sum). */
+export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [string, number][] }, terms: PeaceTerm[], warScore: number, cost: number) {
+  const white = terms.length === 0 || terms.every((t) => t.type === 'white_peace');
+  // (their war exhaustion gets its own key: 'war_exhaustion' alone reads as ours elsewhere, e.g. in unrest)
+  const rows: [string, number][] = ev.reasons.filter(([k]) => k !== 'not_enough_war_score').map(([k, v]) => [k === 'war_exhaustion' ? 'their_war_exhaustion' : k, v]);
+  // evaluatePeace adds +5 to the sum for a white peace without listing it
+  if (white) { const at = rows.findIndex((r) => r[0] === 'fighting_for_freedom'); rows.splice(at < 0 ? rows.length : at, 0, ['white_peace', 5]); }
+  // the rows are rounded: keep the shown sum on the same side of zero as the real one, so that Σ and the verdict agree
+  let total = rows.reduce((p, r) => p + r[1], 0);
+  const want = ev.score >= 0 ? Math.max(0, total) : Math.min(-1, total);
+  const ws = rows.find((r) => r[0] === 'war_score');
+  if (want !== total && ws) { ws[1] += want - total; total = want; }
+  let cond: { ok: boolean; have: number; need: number } | null = null;
+  if (!white) {
+    const ok = !ev.reasons.some((r) => r[0] === 'not_enough_war_score');
+    const have = Math.round(warScore); let need = Math.round(cost * 0.8);
+    if (ok && have < need) need = have; else if (!ok && have >= need) need = have + 1;
+    cond = { ok, have, need };
+  }
+  return { accept: ev.accept, score: total, reasons: rows, cond };
 }
 
 /** Company sizes offered in the location panel. */
@@ -293,7 +319,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,
     priceLevel: s.priceLevel, markets: s.markets.map((m) => ({ id: m.id, name: m.name, mine: m.merchants[player] || 0 })),
-    explain: explainRealm(s, w, n), goals: goalsView(s, n),
+    explain: explainRealm(s, w, n), goals: goalsView(s, w, n),
   };
 }
 
@@ -468,9 +494,24 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
 }
 
 /** The goals of a realm's tree with their state: done, open (prerequisites met) or locked. */
-export function goalsView(s: GameState, n: Nation) {
+export function goalsView(s: GameState, w: World, n: Nation) {
   const done = new Set(n.goalsDone ?? []);
-  return goalsFor(n).map((g) => ({ id: g.id, name: g.name, desc: g.desc, req: g.req ?? [], done: done.has(g.id), open: !done.has(g.id) && (g.req ?? []).every((x) => done.has(x)) }));
+  // the first check of a realm's tree (systems/goals.ts checkGoals) inherits, without reward, what is already true
+  const inherited = new Set((n.goalsDone ?? []).slice(0, n.flags.goals_inherited ?? 0));
+  if (n.flags.goals_init === undefined) {
+    // that check has not run yet (nation selection, the first weeks): show now what it will inherit. Read only: no effects.
+    const d = dayToDate(s.day, s.startYear);
+    const e = { s, w, n, ctx: {}, year: d.y, month: d.m, fx: null } as unknown as EvApi;
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const g of goalsFor(n)) {
+        if (done.has(g.id) || (g.req && g.req.some((r) => !done.has(r)))) continue;
+        let ok = false; try { ok = g.check(e); } catch { ok = false; }
+        if (ok) { done.add(g.id); inherited.add(g.id); changed = true; }
+      }
+    }
+  }
+  return goalsFor(n).map((g) => ({ id: g.id, name: g.name, desc: g.desc, req: g.req ?? [], done: done.has(g.id), inherited: inherited.has(g.id), open: !done.has(g.id) && (g.req ?? []).every((x) => done.has(x)) }));
 }
 
 /** Location numbers: targets the values drift toward and the factors behind them (systems/economy.ts, society.ts). */

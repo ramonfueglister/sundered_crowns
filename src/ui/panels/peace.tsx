@@ -124,7 +124,8 @@ function PeaceInner({ w }: { w: any }) {
             {concede && <Tip content={() => <TermCosts terms={terms} costs={ev.costs} total={ev.cost} title={t('concession_value')} hint={t('x_concession_hint')} />}><span class="muted has-tip">{t('concession_value')} {num(ev.cost)}</span></Tip>}
           </div>
           {ev.reasons?.length > 0 && <Reasons title={t('x_their_answer')} rows={ev.reasons} total={ev.score} />}
-          {ev.reasons?.length > 0 && <div class="muted small">{t('x_peace_accept_hint')}</div>}
+          {ev.cond && <div class={`pe-cond small ${ev.cond.ok ? 'pos' : 'neg'}`}>{ev.cond.ok ? '✔' : '✘'} {t('x_peace_cond')}: {signed(ev.cond.have, 0)} / {signed(ev.cond.need, 0)}</div>}
+          {ev.reasons?.length > 0 && <div class="muted small">{t(ev.cond ? 'x_peace_accept_hint' : 'x_peace_accept_hint_white')}</div>}
         </> : <span class="muted">…</span>}
       </div>
       <div class="act-row"><span class="muted small">{terms.map(termText).join(' · ') || t('no_terms')}</span><span class="spacer" />
