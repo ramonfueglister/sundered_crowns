@@ -537,7 +537,7 @@ const S: Record<string, [string, string]> = {
   term_throne_claimant: ['A prince of our house on their throne', 'Ein Prinz unseres Hauses auf ihrem Thron'], term_reparations: ['War reparations (5 years)', 'Kriegsentschädigung (5 Jahre)'],
   term_end_rivalry: ['End their rivalry with us', 'Ihre Rivalität mit uns beenden'], term_trade_rights: ['Trade privileges (20 years)', 'Handelsprivilegien (20 Jahre)'], term_end_embargo: ['End their embargo', 'Ihr Embargo aufheben'],
   term_tariff_cut: ['Cut their tariffs (10 years)', 'Ihre Zölle senken (10 Jahre)'], term_expel_merchants: ['Their merchants leave our markets', 'Ihre Kaufleute verlassen unsere Märkte'],
-  xw_termhint_vassal: ['They become our vassal.', 'Sie werden unser Vasall.'], xw_termhint_faith: ['Their realm takes our faith; their Concord falls.', 'Ihr Reich nimmt unseren Glauben an; ihre Eintracht sinkt.'],
+  xw_termhint_vassal: ['They become our vassal.', 'Sie werden unser Vasall.'], xw_termhint_faith: ['Their realm takes our faith; their Concord falls. Only a realm a third of ours or smaller, one of the old faiths, or one whose people mostly share our faith already.', 'Ihr Reich nimmt unseren Glauben an; ihre Eintracht sinkt. Nur ein Reich, das höchstens ein Drittel so groß ist wie unseres, einem der alten Glauben anhängt oder dessen Leute mehrheitlich schon unseren Glauben teilen.'],
   xw_termhint_independence: ['We are free of their overlordship.', 'Wir sind frei von ihrer Oberherrschaft.'],
   xw_termhint_humiliate: ['They lose 30 prestige and 10 Mandate, we gain 20 prestige.', 'Sie verlieren 30 Ansehen und 10 Mandat, wir gewinnen 20 Ansehen.'],
   xw_termhint_break_alliance: ['Their alliances are dissolved.', 'Ihre Bündnisse werden gelöst.'],
@@ -632,6 +632,14 @@ const S: Record<string, [string, string]> = {
   xw_scorch_hint: ['Only with an enemy army in or next to the place. Devastation +50 %, unrest +15, lost income; for half a year the place feeds a fifth of the men, so the invader starves.', 'Nur mit einem feindlichen Heer im Ort oder daneben. Verwüstung +50 %, Unruhe +15, Einnahmen gehen verloren; ein halbes Jahr ernährt der Ort ein Fünftel der Männer, sodass der Eindringling hungert.'],
   xw_port_blockaded: ['Port blockaded by', 'Hafen blockiert von'], xw_port_blockaded_hint: ['An enemy fleet lies off this coast: its sea trade is cut and the enemy gains war score.', 'Eine feindliche Flotte liegt vor dieser Küste: ihr Seehandel ist abgeschnitten, und der Feind gewinnt Kriegspunkte.'],
   xw_market_blockaded: ['Market blockaded', 'Markt blockiert'], xw_market_blockaded_hint: ['The hub or half the ports of this market are blockaded: trade by sea through it nearly stops.', 'Der Umschlagplatz oder die Hälfte der Häfen dieses Marktes ist blockiert: der Seehandel darüber kommt fast zum Erliegen.'],
+  // ---- war pass review fixes (claude/war-pass): a whole realm's change of faith
+  xw_faith_weight: ['Their development against ours', 'Ihre Entwicklung im Vergleich zu unserer'], xw_faith_weight_need: ['at most 33 %', 'höchstens 33 %'],
+  xw_faith_people: ['Their people of our faith', 'Ihre Leute unseres Glaubens'], xw_faith_people_need: ['more than 50 %', 'mehr als 50 %'],
+  xw_faith_old: ['They hold one of the old faiths', 'Sie hängen einem der alten Glauben an'],
+  xw_faith_fit_small: ['Possible: their realm is a third of ours or smaller.', 'Möglich: Ihr Reich ist höchstens ein Drittel so groß wie unseres.'],
+  xw_faith_fit_old_faith: ['Possible: they hold one of the old faiths.', 'Möglich: Sie hängen einem der alten Glauben an.'],
+  xw_faith_fit_majority: ['Possible: most of their people already hold our faith.', 'Möglich: Die meisten ihrer Leute teilen schon unseren Glauben.'],
+  xw_faith_unfit: ['Not possible: a realm this great does not give up its faith by treaty. Take the holy land or convert the towns we hold instead.', 'Nicht möglich: Ein so großes Reich gibt seinen Glauben nicht per Vertrag auf. Stattdessen das heilige Land nehmen oder die besetzten Orte bekehren.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

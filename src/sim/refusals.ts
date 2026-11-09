@@ -72,6 +72,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'no siege here': 'Hier gibt es keine Belagerung', 'the siege works are not ready': 'Die Belagerungswerke sind noch nicht bereit',
   'the troops need time before another assault': 'Die Truppen brauchen Zeit vor dem nächsten Sturm', 'already scorched': 'Schon verbrannt',
   'no enemy army near': 'Kein feindliches Heer in der Nähe',
+  'invalid war goal': 'Ungültiges Kriegsziel', 'the freed realm is not their subject': 'Das befreite Reich ist nicht ihr Untertan',
+  'their realm is too great to change its faith': 'Ihr Reich ist zu groß, um seinen Glauben zu wechseln',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

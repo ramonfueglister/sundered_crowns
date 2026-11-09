@@ -8,13 +8,13 @@ import { rand, chance, hash01 } from '../rng';
 import { applyCommand, buildRefusal } from '../commands';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, assaultOdds, besiegersOf, aiScorch } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
-import { FAITH_INDEX } from '../content/peoples';
+import { FAITH_INDEX, FAITHS } from '../content/peoples';
 import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
 
 const P = (n: Nation, k: string) => n.personality === k;
@@ -537,8 +537,9 @@ export function aiDemands(s: GameState, w: World, war: War, n: Nation, enemyLead
   const g = war.goal.type;
   let main = true; // conquest, reconquest and the defenders' wars have no term of their own beyond the towns
   if (attWins) {
-    if (g === 'faith') main = E.faith === n.faith || add({ type: 'faith' });
-    else if (g === 'throne') main = add({ type: 'throne', mode: 'union' }) || add({ type: 'throne', mode: 'claimant' });
+    // a holy war is fought for its holy land (the goal towns, ceded or converted below); a whole realm is made to take
+    // our faith only where that fits (faithTermFits), after the land
+    if (g === 'throne') main = add({ type: 'throne', mode: 'union' }) || add({ type: 'throne', mode: 'claimant' });
     else if (g === 'subjugate') main = E.overlord === n.id || add({ type: 'vassal' });
     else if (g === 'independence') main = add({ type: 'independence', nation: n.id });
     else if (g === 'trade') {
@@ -572,8 +573,18 @@ export function aiDemands(s: GameState, w: World, war: War, n: Nation, enemyLead
     for (const c of caps.slice(0, Math.max(0, 8 - terms.length))) terms.push({ type: 'cede', locs: [c], to: n.id });
     for (const l of [...pick, ...caps]) won.add(l);
   }
-  // a war fought for towns is won when we demand every goal town the enemy still holds
-  const landGoal = g === 'conquest' || g === 'reconquest' || g === 'coalition' || (g === 'faith' && main);
+  if (attWins && g === 'faith') {
+    // the goal towns we could not take are made to take our faith, then (where it fits) the whole realm
+    const conv = war.goal.locs.filter((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]) && s.loc.faith[l] !== n.faith);
+    if (conv.length && terms.length < 8 && add({ type: 'convert', locs: conv })) for (const l of conv) won.add(l);
+    // a ruler forced into a faith his people do not hold makes a weak neighbour, not a converted one: across the great
+    // families of faith the AI asks for it only from the old faiths or where the people already hold ours
+    const fit = E.faith !== n.faith ? faithTermFits(s, n.id, enemyLeader) : null;
+    const wants = fit === 'old_faith' || fit === 'majority' || (fit === 'small' && FAITHS[E.faith]?.family === FAITHS[n.faith]?.family);
+    if (terms.length < 8 && wants && add({ type: 'faith' })) for (const l of war.goal.locs) won.add(l);
+  }
+  // a war fought for towns is won when we demand every goal town the enemy still holds (a holy war: or its conversion)
+  const landGoal = g === 'conquest' || g === 'reconquest' || g === 'coalition' || g === 'faith';
   const goalLeft = attWins && landGoal && war.goal.locs.some((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]));
   return { terms, goalMet: main && !goalLeft };
 }

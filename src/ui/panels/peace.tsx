@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, panelArg, openPanel } from '../store';
 import type { PeaceTerm } from '../../sim/types';
-import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
+import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, pct, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
 import { WarCard, WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
 import { BattleList } from './war';
@@ -163,7 +163,12 @@ function PeaceInner({ w }: { w: any }) {
           <div class="sub-h">{t('other_terms')}</div>
           <div class="act-row"><span class="k">{concede ? t('pay_gold') : t('term_gold')}</span><select value={gold} onChange={(e) => { setWhite(false); setGold(Number((e.target as HTMLSelectElement).value)); }}>{golds.map((g) => <option value={g}>{g ? num(g) : '—'}</option>)}</select></div>
           {!concede && <>
-            {FLAG_TERMS.filter((k) => allowed.has(k) && !(k === 'faith' && wv?.sameFaith)).map((k) => <Tip tag="div" content={<div><TipHead name={t(`term_${k}`)} hint={t(`xw_termhint_${k}`)} /></div>}><label class="chk"><input type="checkbox" checked={!!flags[k]} onChange={() => toggle(k)} /> {t(`term_${k}`)}</label></Tip>)}
+            {FLAG_TERMS.filter((k) => allowed.has(k) && !(k === 'faith' && wv?.sameFaith)).map((k) => {
+              // a whole realm takes our faith only where faithTermFits allows it: the box stays, greyed, with the reason
+              const off = k === 'faith' && !wv?.faith?.fit;
+              return <Tip tag="div" content={<div><TipHead name={t(`term_${k}`)} hint={t(`xw_termhint_${k}`)} />{k === 'faith' && wv?.faith && <FaithFitTip f={wv.faith} />}</div>}>
+                <label class={`chk${off ? ' muted' : ''}`}><input type="checkbox" disabled={off} checked={!off && !!flags[k]} onChange={() => toggle(k)} /> {t(`term_${k}`)}</label></Tip>;
+            })}
             {allowed.has('throne') && wv?.throne && <Tip tag="div" content={<div><TipHead name={t('term_throne')} hint={t('xw_termhint_throne')} /></div>}><div class="act-row"><span class="k">{t('term_throne')}</span><select value={throne} onChange={(e) => { setWhite(false); setThrone((e.target as HTMLSelectElement).value as any); }}>
               <option value="">—</option><option value="union">{t('term_throne_union')}</option><option value="claimant">{t('term_throne_claimant')}</option></select></div></Tip>}
           </>}
@@ -187,5 +192,16 @@ function PeaceInner({ w }: { w: any }) {
     <div class="muted small">{t('allies_in_war')}: <NList ids={ourSide.filter((x) => x !== pid)} size={14} /></div>
     <Section title={t('xw_great_battles')} id="pc-battles" open={false}><BattleList rows={wv?.battles ?? null} /></Section>
     {void nations.value}
+  </div>;
+}
+
+/** The rule for a whole realm's change of faith (faithTermFits) with the numbers it weighs. */
+function FaithFitTip({ f }: { f: { fit: string | null; weight: number; people: number; oldFaith: boolean } }) {
+  const mark = (ok: boolean) => <span class={ok ? 'pos' : 'muted'}>{ok ? '✔' : '✘'}</span>;
+  return <div class="breakdown">
+    <div class="bd-row"><span>{t('xw_faith_weight')} <span class="muted">({t('xw_faith_weight_need')})</span></span><span>{pct(f.weight)} {mark(f.weight <= 1 / 3)}</span></div>
+    <div class="bd-row"><span>{t('xw_faith_people')} <span class="muted">({t('xw_faith_people_need')})</span></span><span>{pct(f.people)} {mark(f.people > 0.5)}</span></div>
+    <div class="bd-row"><span>{t('xw_faith_old')}</span><span>{mark(f.oldFaith)}</span></div>
+    <div class={`bd-row bd-total ${f.fit ? 'pos' : 'neg'}`}><span>{f.fit ? t(`xw_faith_fit_${f.fit}`) : t('xw_faith_unfit')}</span><span /></div>
   </div>;
 }

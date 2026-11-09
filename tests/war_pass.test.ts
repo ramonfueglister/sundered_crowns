@@ -12,6 +12,7 @@ import { EDGE_RIVER } from '../src/sim/world';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import {
   casusBelliAll, hasCasusBelli, declarationCost, declareWar, warGoalLocs, allowedTerms, applyPeace, peaceObligations, scoreParts, TARIFF_CAP, DECLARE_GOALS,
+  cedeFits, termCost, faithTermFits,
 } from '../src/sim/systems/war';
 import {
   military, newArmy, armyMen, assaultOdds, besiegersOf, blockadedPorts, blockadeMonth, refillPlan, reinforceMonth, scorchEarth, supplyParts, MORALE_BREAK, RIVER_PENALTY, availableUnits, sideStats,
@@ -430,3 +431,114 @@ describe('supply, blockades, scorched earth, refill (gap 11, points 69, 70, 90, 
   });
 });
 
+describe('review fixes: no free wars, holy wars for the holy land, independence for the subject alone', () => {
+  it('a declaration naming a goal only a situation may use is refused and costs nothing', () => {
+    const s = fresh();
+    const a = nat(s, 'portugal'), b = plainTarget(s, a.id);
+    a.rivals.push(b);
+    const c0 = a.concord, p0 = a.prestige, m0 = a.mandate, wars = s.wars.length;
+    for (const goal of ['coalition', 'civil_war', 'rebels'] as const) {
+      const r = applyCommand(s, w, { t: 'declare', n: a.id, target: b, goal });
+      expect(r.ok).toBe(false); expect(r.err).toBe('invalid war goal');
+    }
+    expect(s.wars.length).toBe(wars);
+    expect([a.concord, a.prestige, a.mandate]).toEqual([c0, p0, m0]);
+    // a conquest is still possible with only a rivalry, at the full price of an unjust war
+    expect(applyCommand(s, w, { t: 'declare', n: a.id, target: b, goal: 'conquest' }).ok).toBe(true);
+    expect(a.concord).toBeLessThan(c0); expect(a.prestige).toBeLessThan(p0);
+    expect(s.wars.at(-1)!.goal.cb).toBeUndefined();
+  });
+
+  it('a declaration cannot name towns beyond its goal: a holy war is fought for the holy land, a conquest for the border', () => {
+    const s = fresh();
+    const c = nat(s, 'castile'), g = nat(s, 'granada');
+    s.playerNations = [c.id];
+    const holy = warGoalLocs(s, w, c.id, g.id, 'faith');
+    const far = owned(s, g.id).find((l) => !holy.includes(l) && s.loc.faith[l] !== c.faith && l !== g.capital)!;
+    expect(far).toBeDefined();
+    expect(applyCommand(s, w, { t: 'declare', n: c.id, target: g.id, goal: 'faith', locs: [far, ...holy.slice(0, 1)] }).ok).toBe(true);
+    const wr = s.wars.at(-1)!;
+    expect(wr.goal.locs).not.toContain(far);
+    expect(wr.goal.locs).toEqual(holy);
+    expect(cedeFits(s, w, wr, true, c.id, far)).toBe(false);
+    expect(sanitizeTerms(s, w, wr, c.id, g.id, [{ type: 'cede', locs: [far], to: c.id }], false).terms).toEqual([]);
+    // a conquest: a town deep in their land is no goal of a border war
+    const s2 = fresh();
+    const a = nat(s2, 'portugal').id, b = plainTarget(s2, a);
+    const border = warGoalLocs(s2, w, a, b, 'conquest');
+    const deep = owned(s2, b).find((l) => !border.includes(l));
+    expect(applyCommand(s2, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: deep !== undefined ? [deep] : [] }).ok).toBe(true);
+    expect(s2.wars.at(-1)!.goal.locs).toEqual(border);
+  });
+
+  it('the independence term frees only the subject that fought for it, from an overlord among the losers', () => {
+    const s = fresh();
+    const sub = nat(s, 'moravia'), ov = nat(s, 'bohemia'), third = nat(s, 'stralsund');
+    expect(sub.overlord).toBe(ov.id);
+    const tOv = third.overlord; expect(tOv).toBeGreaterThanOrEqual(0); expect(tOv).not.toBe(ov.id);
+    const wr = war2(s, sub.id, ov.id, 'independence');
+    // whatever realm the sender names, the term is the war leader's freedom
+    const st = sanitizeTerms(s, w, wr, sub.id, ov.id, [{ type: 'independence', nation: third.id }], false);
+    expect(st.terms).toEqual([{ type: 'independence', nation: sub.id }]);
+    const cs = sanitizeTerms(s, w, wr, ov.id, sub.id, [{ type: 'independence', nation: third.id }], true);
+    expect(cs.terms).toEqual([{ type: 'independence', nation: sub.id }]);
+    // even a term naming another realm (an offer kept in an older save) frees the war's leader and nobody else
+    applyPeace(s, w, wr, sub.id, ov.id, [{ type: 'independence', nation: third.id }]);
+    expect(third.overlord).toBe(tOv);
+    expect(sub.overlord).toBe(-1); expect(sub.subjectType).toBeNull();
+    // and a subject whose overlord was not beaten is not set free by a peace with another realm
+    const s2 = fresh(), sub2 = nat(s2, 'moravia'), ov2 = nat(s2, 'bohemia');
+    const w2 = war2(s2, sub2.id, ov2.id, 'independence');
+    sub2.overlord = nat(s2, 'pomerania_wolgast').id;
+    expect(sanitizeTerms(s2, w, w2, sub2.id, ov2.id, [{ type: 'independence' }], false).refused).toBe('the freed realm is not their subject');
+    applyPeace(s2, w, w2, sub2.id, ov2.id, [{ type: 'independence' }]);
+    expect(sub2.overlord).toBe(nat(s2, 'pomerania_wolgast').id);
+  });
+
+  it('a holy war converts a whole realm only when it is much smaller, of the old faiths, or mostly of our faith already', () => {
+    const s = fresh();
+    const ay = nat(s, 'aydin'), by = nat(s, 'byzantium'), c = nat(s, 'castile'), g = nat(s, 'granada');
+    expect(faithTermFits(s, ay.id, by.id)).toBeNull();
+    expect(faithTermFits(s, c.id, g.id)).toBe('small');
+    expect(faithTermFits(s, nat(s, 'teutonic_order').id, nat(s, 'lithuania').id)).toBe('old_faith');
+    expect(faithTermFits(s, nat(s, 'golden_horde').id, nat(s, 'hungary').id)).toBeNull();
+    const wr = war2(s, ay.id, by.id, 'faith');
+    // a won war: the AI asks for the holy land (here the towns it converts), never the empire's faith
+    const d = aiDemands(s, w, wr, ay, by.id, wr.def, 100);
+    expect(d.terms.map((t) => t.type)).not.toContain('faith');
+    for (const t of d.terms) expect(allowedTerms(wr, true).has(t.type)).toBe(true);
+    // its goal is the holy land, which it has not taken: the war is not won yet
+    expect(wr.goal.locs.length).toBeGreaterThan(0); expect(d.goalMet).toBe(false);
+    // where the goal towns hold another faith, a won war converts them instead
+    const s3 = fresh(), A3 = nat(s3, 'aydin'), B3 = nat(s3, 'byzantium');
+    for (const l of owned(s3, B3.id)) if (s3.loc.faith[l] === A3.faith) s3.loc.faith[l] = B3.faith;
+    const w3 = war2(s3, A3.id, B3.id, 'faith');
+    const d3 = aiDemands(s3, w, w3, A3, B3.id, w3.def, 100);
+    expect(d3.terms.map((t) => t.type)).toEqual(['convert']);
+    expect(d3.terms[0].locs).toEqual(w3.goal.locs); expect(d3.goalMet).toBe(true);
+    // against a much smaller realm of another family of faiths the AI takes the holy land (the player may ask for the
+    // faith, see above); a realm of the old faiths is made to take ours after its holy land
+    const s4 = fresh(), C4 = nat(s4, 'castile'), G4 = nat(s4, 'granada');
+    const w4 = war2(s4, C4.id, G4.id, 'faith');
+    for (const l of w4.goal.locs) s4.loc.ctrl[l] = C4.id;
+    const d4 = aiDemands(s4, w, w4, C4, G4.id, w4.def, 100);
+    expect(d4.terms.map((t) => t.type)).toEqual(['cede']); expect(d4.goalMet).toBe(true);
+    const s5 = fresh(), M5 = nat(s5, 'mali'), K5 = nat(s5, 'katsina');
+    expect(faithTermFits(s5, M5.id, K5.id)).toBe('old_faith');
+    const w5 = war2(s5, M5.id, K5.id, 'faith');
+    const d5 = aiDemands(s5, w, w5, M5, K5.id, w5.def, 100);
+    expect(d5.terms.map((t) => t.type)).toContain('faith'); expect(d5.goalMet).toBe(true);
+    // the player cannot ask for it either
+    const st = sanitizeTerms(s, w, wr, ay.id, by.id, [{ type: 'faith' }], false);
+    expect(st.terms).toEqual([]); expect(st.refused).toBe('their realm is too great to change its faith');
+    // a realm's whole faith costs most of a won war against a peer, less against a much smaller realm
+    expect(termCost(s, wr, { type: 'faith' }, ay.id, by.id)).toBeGreaterThanOrEqual(90);
+    const wg = war2(s, c.id, g.id, 'faith');
+    const cg = termCost(s, wg, { type: 'faith' }, c.id, g.id);
+    expect(cg).toBeGreaterThanOrEqual(30); expect(cg).toBeLessThan(60);
+    expect(sanitizeTerms(s, w, wg, c.id, g.id, [{ type: 'faith' }], false).terms).toEqual([{ type: 'faith' }]);
+    // where most of their people hold our faith already, the realm may follow them
+    for (const l of owned(s, by.id)) s.loc.faith[l] = ay.faith;
+    expect(faithTermFits(s, ay.id, by.id)).toBe('majority');
+  });
+});

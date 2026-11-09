@@ -5,7 +5,7 @@ import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost, assault, scorchEarth } from './systems/military';
-import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP } from './systems/war';
+import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
 import { takeLoan, tariffMax } from './systems/economy';
@@ -151,6 +151,9 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     }
     case 'declare': {
       if (s.flags.peaceful_start && s.day < s.flags.peaceful_start && s.playerNations.includes(cmd.n)) return err('the realm is still settling');
+      // only the goals a realm may choose: a Common Front, a disputed crown and rebels are justified by their situation,
+      // so a declaration naming them would be a free war with no cause and no cost
+      if (!DECLARE_GOALS.includes(cmd.goal)) return err('invalid war goal');
       const e = declareWar(s, w, cmd.n, cmd.target, cmd.goal, cmd.locs ?? []); return e ? err(e) : OK;
     }
     case 'peace': {
@@ -398,7 +401,15 @@ export function sanitizeTerms(s: GameState, w: World, war: War, from: number, to
       out.push({ type: 'throne', mode: t.mode === 'claimant' ? 'claimant' : 'union' });
     } else if (t.type === 'faith') {
       if (s.nations[loser].faith === s.nations[winner].faith) { refused = 'they share our faith'; continue; }
+      if (!faithTermFits(s, winner, loser)) { refused = 'their realm is too great to change its faith'; continue; }
       out.push({ type: 'faith' });
+    } else if (t.type === 'independence') {
+      // only the subject that declared the war for its freedom is set free, and only from the overlord that lost (the
+      // defeated leader, or the overlord the war was declared on): a nation named by the sender is ignored (it could
+      // otherwise free any third realm's subjects)
+      const sub = s.nations[war.attLead];
+      if (!sub || sub.overlord < 0 || (sub.overlord !== loser && sub.overlord !== war.goal.target)) { refused = 'the freed realm is not their subject'; continue; }
+      out.push({ type: 'independence', nation: war.attLead });
     } else out.push({ type: t.type, ...(t.nation !== undefined ? { nation: t.nation } : {}) });
   }
   return { terms: out, refused };

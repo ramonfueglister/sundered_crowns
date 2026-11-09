@@ -6,8 +6,9 @@ import type { World } from '../sim/world';
 import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
 import { armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
-import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS } from '../sim/systems/war';
+import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
+import { FAITHS } from '../sim/content/peoples';
 
 // ---------------------------------------------------------------- declaring war
 /** Our justifications against a realm and, for every war goal, whether we may declare it, what it costs and which towns
@@ -113,8 +114,11 @@ export function warView(s: GameState, w: World, player: number, id: number) {
   // towns of the enemy side we hold that do not share our faith (a holy war may convert them)
   const f = s.nations[player]?.faith;
   const convert = fits.filter((l) => s.loc.faith[l] !== f);
+  // whether their whole realm may be made to take our faith (faithTermFits), with the two numbers the rule weighs
+  const faith = L && L.faith !== f ? { fit: att ? faithTermFits(s, player, enemyLead) : null, weight: nationDev(s, enemyLead) / Math.max(1, nationDev(s, player)),
+    people: faithShare(s, enemyLead, f), oldFaith: FAITHS[L.faith]?.family === 'traditional' } : null;
   return { id, goal: war.goal.type, cb: war.goal.cb ?? null, goalLocs: war.goal.locs, attacker: att, allowed, fits, convert, throne,
-    sameFaith: !!L && L.faith === f, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player) };
+    sameFaith: !!L && L.faith === f, faith, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player) };
 }
 export type WarTermType = PeaceTerm['type'];
 

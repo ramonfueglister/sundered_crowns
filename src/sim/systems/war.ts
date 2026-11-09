@@ -280,11 +280,12 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const why = declareRefusal(s, w, a, b, goalType, locs); if (why) return why;
   const na = s.nations[a], nb = s.nations[b];
   const target = topOverlord(s, b);
-  // the towns the war is fought for: those named, if they belong to the other side (a conquest) or are our own land (a
-  // reconquest), else the goal's own (warGoalLocs, the same for the player and the AI)
+  // the towns the war is fought for are the goal's own (warGoalLocs, the same for the player and the AI). Only a war of
+  // reconquest may name some of our own land they hold, and a situation's war (the war for a great city, a crusade for
+  // a holy site) the towns the situation is about: a declaration naming the enemy's richest towns, or towns far from the
+  // land a holy war is about, would otherwise make them goals (and cessions) the justification never covered.
   const theirs = new Set([b, target, ...subjectsOf(s, target)]);
-  if (goalType === 'reconquest') locs = locs.filter((l) => theirs.has(s.loc.owner[l]));
-  else if (goalType === 'conquest' || goalType === 'faith') locs = locs.filter((l) => theirs.has(s.loc.owner[l]));
+  if (goalType === 'reconquest' || (opts?.situation && (goalType === 'conquest' || goalType === 'faith'))) locs = locs.filter((l) => theirs.has(s.loc.owner[l]));
   else locs = [];
   if (!locs.length) locs = warGoalLocs(s, w, a, b, goalType);
   // the price of the declaration (an unjust war, a broken truce, a betrayed ally), paid once it stands; a situation's
@@ -420,6 +421,28 @@ export function cedeFits(s: GameState, w: World, war: War, attWins: boolean, rec
   if (war.goal.type === 'faith') return s.loc.faith[l] === s.nations[recv].faith || holySites(w, s.nations[recv].faith).includes(l) || war.goal.locs.includes(l);
   return true;
 }
+/** Why a holy war may end with the loser's whole realm taking the winner's faith (null = it may not): the loser is a
+ *  much smaller realm (a third of the winner's weight or less), holds one of the old faiths, or most of its people
+ *  already hold the winner's faith. Otherwise a holy war wins its holy land (cede) and converts towns (convert). The
+ *  peace panel, sanitizeTerms and the AI's demands all ask this. */
+export type FaithFit = 'small' | 'old_faith' | 'majority';
+export function faithTermFits(s: GameState, winner: number, loser: number): FaithFit | null {
+  const W = s.nations[winner], Ln = s.nations[loser];
+  if (!W || !Ln || W.faith === Ln.faith) return null;
+  // the reasons the people would follow come first (the AI weighs them above mere size, see aiDemands)
+  if (FAITHS[Ln.faith]?.family === 'traditional') return 'old_faith';
+  if (faithShare(s, loser, W.faith) > 0.5) return 'majority';
+  return nationDev(s, winner) >= 3 * Math.max(1, nationDev(s, loser)) ? 'small' : null;
+}
+/** The share of a realm's people who hold this faith. */
+export function faithShare(s: GameState, n: number, faith: number): number {
+  let all = 0, ours = 0;
+  for (const l of ownedLocs(s, n)) {
+    let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[l * C + c];
+    all += p; if (s.loc.faith[l] === faith) ours += p;
+  }
+  return all > 0 ? ours / all : 0;
+}
 /** Price of a peace term in war score (what the side giving it weighs it at). */
 export function termCost(s: GameState, war: War, t: PeaceTerm, from: number, to: number): number {
   const loserDev = Math.max(10, [...(war.att.includes(to) ? war.att : war.def)].reduce((p, n) => p + nationDev(s, n), 0));
@@ -431,7 +454,8 @@ export function termCost(s: GameState, war: War, t: PeaceTerm, from: number, to:
     case 'release': return 25;
     case 'vassal': return 60 * share;
     case 'break_alliance': return 10;
-    case 'faith': return 40 * share;
+    // a realm's whole faith: most of a won war against a peer, less against a much smaller realm
+    case 'faith': return clamp(30 + 65 * clamp(nationDev(s, to) / Math.max(10, nationDev(s, from)) * 1.5, 0, 1), 30, 95);
     case 'throne': return (t.mode === 'claimant' ? 45 : 80) * share;
     case 'humiliate': return 15;
     case 'reparations': return 20;
@@ -503,7 +527,12 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
     if (t.type === 'break_alliance') { s.treaties = s.treaties.filter((x) => !(x.type === 'alliance' && (x.a === loser || x.b === loser) && (t.nation === undefined || x.a === t.nation || x.b === t.nation))); parts.push('alliances broken'); partsDe.push('Bündnisse gelöst'); }
     if (t.type === 'faith') { Ln.faith = W.faith; Ln.concord = clamp(Ln.concord - 30, -100, 100); parts.push('change of faith'); partsDe.push('Glaubenswechsel'); }
     if (t.type === 'humiliate') { Ln.prestige -= 30; W.prestige += 20; Ln.mandate = clamp(Ln.mandate - 10, 0, 100); parts.push('humiliation'); partsDe.push('Demütigung'); }
-    if (t.type === 'independence') { Ln.overlord === winner ? null : null; const sub = s.nations[t.nation ?? winner]; sub.overlord = -1; sub.subjectType = null; parts.push('independence'); partsDe.push('Unabhängigkeit'); }
+    if (t.type === 'independence') {
+      // only the subject that fought for its freedom (the war's leader) leaves its overlord, and only when that overlord
+      // lost (the defeated leader, or the overlord the war was declared on); a nation the term names is not trusted
+      const sub = s.nations[war.attLead];
+      if (sub && sub.overlord >= 0 && (sub.overlord === loser || sub.overlord === war.goal.target)) { sub.overlord = -1; sub.subjectType = null; parts.push('independence'); partsDe.push('Unabhängigkeit'); }
+    }
     if (t.type === 'convert' && t.locs?.length) {
       // the towns are made to take our faith: the old faith lives on as a minority, and the people resent it
       let k = 0;
