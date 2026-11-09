@@ -212,7 +212,7 @@ const VENICE: GoalDef[] = [
   G('venice', 'morea', 'The Eyes of the Republic', 'Die Augen der Republik', ['crete'], [C.own('Modon', 'Coron')], [R.gold(6)]),
   G('venice', 'cyprus', 'The Cypriot Crown', 'Die zyprische Krone', ['crete'], [C.ownK(1, ['Famagusta', 'Nicosia'])], [R.prestige(15), R.mod('cyprus', 30, T('Levant trade', 'Levantehandel'), { trade: 0.05 })]),
   G('venice', 'arsenal', 'The Great Arsenal', 'Das große Arsenal', [], [C.building('port', 5, T('harbour levels', 'Hafenstufen'))], [R.mod('arsenal', 100, T('The Arsenal', 'Das Arsenal'), { attrition: -0.05 })]),
-  G('venice', 'bank', 'Bank of the Rialto', 'Bank am Rialto', [], [C.decision('charter_public_bank', T('Charter a Public Bank', 'Eine öffentliche Bank gründen'))], [R.mod('rialto', 100, T('Rialto bankers', 'Bankiers am Rialto'), { interest: 0.01 })]),
+  G('venice', 'bank', 'Bank of the Rialto', 'Bank am Rialto', [], [C.decision('charter_public_bank', T('Charter a Public Bank', 'Eine öffentliche Bank gründen'))], [R.mod('rialto', 100, T('Rialto bankers', 'Bankiers am Rialto'), { interest: -0.01 })]),
   G('venice', 'commerce', 'Queen of the Adriatic', 'Königin der Adria', ['arsenal'], [C.doctrine('commerce', 7)], [R.prestige(20)]),
   G('venice', 'treasury', 'The Golden Republic', 'Die goldene Republik', ['commerce'], [C.treasury(24)], [R.prestige(20), R.mandate(10)]),
 ];
@@ -362,7 +362,7 @@ const LITHUANIA: GoalDef[] = [
 // ---------------- generic tree ----------------
 const GENERIC: GoalDef[] = [
   G(undefined, 'sovereign', 'Sovereign Crown', 'Souveräne Krone', [], [C.sovereign(), C.mandate(55)], [R.prestige(5), R.mandate(5)]),
-  G(undefined, 'treasury', 'A Full Treasury', 'Ein voller Schatz', [], [C.treasury(12)], [R.mod('treasury', 20, T('Sound finances', 'Gesunde Finanzen'), { interest: 0.005, corruption: -0.01 })]),
+  G(undefined, 'treasury', 'A Full Treasury', 'Ein voller Schatz', [], [C.treasury(12)], [R.mod('treasury', 20, T('Sound finances', 'Gesunde Finanzen'), { interest: -0.005, corruption: -0.01 })]),
   G(undefined, 'learning', 'Seat of Learning', 'Sitz der Gelehrsamkeit', [], [C.building('university', 1, T('university', 'Universität'))], [R.insight(30)]),
   G(undefined, 'doctrine', 'A Guiding Doctrine', 'Eine leitende Doktrin', [], [C.doctrines(3)], [R.insight(25)]),
   G(undefined, 'victory', 'Victorious Arms', 'Siegreiche Waffen', [], [C.warsWon(1)], [R.prestige(10), R.manpower(0.2)]),

@@ -36,6 +36,7 @@ export function newLocState(L: number): LocState {
     devast: new Float32Array(L), harvest: new Float32Array(L).fill(1), buildings: new Uint8Array(L * B), workshop: new Uint8Array(L * 3), method: new Uint8Array(L),
     garrison: new Float32Array(L), occTimer: new Float32Array(L), plague: new Float32Array(L), market: new Uint8Array(L),
     fortZone: new Int16Array(L).fill(-1), income: new Float32Array(L), snow: new Float32Array(L), colonist: new Int16Array(L).fill(-1),
+    migr: new Float32Array(L),
   };
 }
 
@@ -76,7 +77,7 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
       capital: capLoc, coa: st.coa || null,
       ruler: 0, heir: 0, consort: 0, regent: 0, dynasty: st.ruler?.dynasty || '',
       treasury: 0, debt: 0, loans: [], manpower: 0, maxManpower: 0, sailors: 0,
-      concord: 20, mandate: 60, authority: 30, prestige: 0, warExhaustion: 0, inflation: 0, corruption: 0.05, adminCapacity: 1,
+      concord: 20, mandate: 60, authority: 30, prestige: 0, warExhaustion: 0, inflation: 0, corruption: 0.05, adminCapacity: 1, adminLoad: 0, duties: { land: 0, hearth: 0, excise: 0 },
       taxRate: [0.06, 0.06, 0.08, 0.08, 0.02, 0.02, 0.08], tariff: 0.05, coinage: 0,
       income: {}, expense: {}, incomeAcc: {}, expenseAcc: {}, history: [], armyMaint: 1, navyMaint: 1,
       laws: {}, values: [], estates: [], council: {},

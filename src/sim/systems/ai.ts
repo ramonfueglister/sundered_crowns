@@ -11,6 +11,8 @@ import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, 
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
+import { overextension } from './economy';
+import { aiDuties } from './administration';
 
 const P = (n: Nation, k: string) => n.personality === k;
 function isAI(s: GameState, n: Nation) { return n.alive && !s.playerNations.includes(n.id) && !s.aiDisabled.includes(n.id) && !n.playerId; }
@@ -94,6 +96,7 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
     const fleets = armiesOf(s, n.id).filter((a) => a.fleet && !a.battle && !a.carrying.length).sort((a, b) => armyMen(b) - armyMen(a) || a.id - b.id);
     if (fleets.length) applyCommand(s, w, { t: 'disband', n: n.id, army: fleets[0].id });
   }
+  aiDuties(s, w, n, atWarNow); // land tax, hearth tax and excise when short of money
 }
 
 function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
@@ -300,6 +303,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
   if (n.warExhaustion > 30 || n.concord < -30 || n.treasury < 0 || n.dread > 60) return;
+  if (overextension(n) > 0.5) return; // still digesting the last conquests
   const myBloc = [n.id, ...allies(s, n.id), ...subjectsOf(s, n.id).filter((x) => !atWar(s, x, n.id))];
   const myPower = blocPower(s, myBloc);
   if (myPower <= 0) return;

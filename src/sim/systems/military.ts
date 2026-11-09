@@ -3,11 +3,12 @@
 import type { GameState, Army, Battle, Siege, Nation, Regiment, I18n } from '../types';
 import type { World } from '../world';
 import { EDGE_RIVER, EDGE_STRAIT } from '../world';
-import { type Ctx, type System, clamp, chronicle, notice, newId, addExpense, enemiesOf, atWar, mod, hasTreaty, allies, bump } from '../ctx';
+import { type Ctx, type System, clamp, chronicle, notice, newId, addExpense, enemiesOf, atWar, hasTreaty, allies, bump } from '../ctx';
 import { UNITS, U, TERRAIN_DEF, TERRAINS, B, BI, C, CL, GI } from '../defs';
 import { rand, chance, hash01 } from '../rng';
 import { dayToDate } from '../calendar';
-import { lawEffect, ageOf, characterDies } from './politics';
+import { lawEffect, ageOf, characterDies, councilBonus } from './politics';
+import { integrationYield } from './economy';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
 
@@ -20,9 +21,10 @@ export function armyStrength(s: GameState, a: Army): number {
   const n = s.nations[a.owner];
   let v = 0;
   for (const r of a.regs) { const u = UNITS[r.type]; v += r.men * (u.shock + u.fire + u.def) / 3 * (u.kind === 'ship' ? 100 : 1); }
-  return v * (0.5 + a.morale * 0.5) * techMult(n);
+  return v * (0.5 + a.morale * 0.5) * techMult(n, s);
 }
-export function techMult(n: Nation | undefined) { return n ? 1 + (n.tech[2] - 1) * 0.06 + lawEffect(n, 'discipline') : 1; }
+/** Discipline: warfare knowledge, discipline effects and the marshal (systems/politics.ts councilBonus). */
+export function techMult(n: Nation | undefined, s?: GameState) { return n ? 1 + (n.tech[2] - 1) * 0.06 + lawEffect(n, 'discipline') + (s ? councilBonus(s, n, 'marshal') : 0) : 1; }
 
 /** Units available to a nation now (era, culture, government). */
 export function availableUnits(s: GameState, n: Nation, naval: boolean): number[] {
@@ -300,17 +302,26 @@ function attritionMonth(s: GameState, w: World) {
     if (men > lim) att += quartered ? Math.min(0.01, (men / lim - 1) * 0.005) : Math.min(0.12, (men / lim - 1) * 0.05);
     att += s.loc.snow[a.loc] * 0.02;
     const n = s.nations[a.owner];
-    if (n) att *= 1 + mod(n, 'attrition');
+    if (n) att *= Math.max(0, 1 + lawEffect(n, 'attrition'));
     if (s.loc.owner[a.loc] !== a.owner && atWar(s, a.owner, s.loc.owner[a.loc])) att += 0.005;
     a.supplyDeficit = men > lim ? men / lim - 1 : 0;
     for (const r of a.regs) r.men = Math.max(0, r.men * (1 - att));
     // foraging devastates the land
     if (!quartered && men > lim * 0.5) s.loc.devast[a.loc] = clamp(s.loc.devast[a.loc] + Math.min(0.15, men / lim * 0.03), 0, 1);
     // morale recovers in supply
-    a.morale = clamp(a.morale + (a.supplyDeficit > 0 ? 0.03 : 0.12), 0, maxMorale(s, a));
+    a.morale = clamp(a.morale + (a.supplyDeficit > 0 ? 0.03 : 0.12) * maintMorale(s, a), 0, maxMorale(s, a));
   }
 }
-export function maxMorale(s: GameState, a: Army) { const n = s.nations[a.owner]; return 1 + (n ? lawEffect(n, 'morale') + mod(n, 'morale') : 0); }
+/** Maximum morale: morale effects and half the marshal's bonus, times what the realm spends on upkeep. */
+export function maxMorale(s: GameState, a: Army) {
+  const n = s.nations[a.owner];
+  return (1 + (n ? lawEffect(n, 'morale') + councilBonus(s, n, 'marshal') * 0.5 : 0)) * maintMorale(s, a);
+}
+/** Ill-paid soldiers fight without heart: at full upkeep 1, at the lowest (25 %) 0.625 of maximum morale and of its recovery. */
+export function maintMorale(s: GameState, a: Army) {
+  const n = s.nations[a.owner]; if (!n || a.rebels || a.hostile) return 1;
+  return 0.5 + 0.5 * clamp(a.fleet ? n.navyMaint : n.armyMaint, 0.25, 1);
+}
 export function stormRisk(s: GameState, w: World, sea: number): number {
   const d = dayToDate(s.day, s.startYear);
   const winter = d.m >= 9 || d.m <= 2 ? 1 : 0;
@@ -364,20 +375,24 @@ function sideStats(s: GameState, w: World, armies: Army[], loc: number, defendin
   const n = s.nations[armies[0]?.owner];
   const t = TERRAIN_DEF[TERRAINS[w.terrain[Math.min(loc, w.L - 1)]] ?? 'plains'];
   for (const a of armies) {
-    const tm = techMult(s.nations[a.owner]);
+    const tm = techMult(s.nations[a.owner], s);
     for (const r of a.regs) {
       const u = UNITS[r.type];
       const k = u.kind === 'ship' ? r.men * 120 : r.men;
       const cavMult = u.kind === 'cav' ? (t.cav * (1 + (n ? lawEffect(n, 'cavalry') : 0))) : 1;
-      shock += k * u.shock * tm * cavMult; fire += k * u.fire * tm * (1 + (n ? lawEffect(n, 'fire') : 0)); def += k * u.def * tm;
+      // ships: naval strength (arsenals, admiralties, seafaring peoples) adds to guns and hulls alike
+      const sea = u.sea && n ? 1 + lawEffect(n, 'naval') : 1;
+      shock += k * u.shock * tm * cavMult * (1 + (n ? lawEffect(n, 'shock') : 0)); fire += k * u.fire * tm * (1 + (n ? lawEffect(n, 'fire') : 0)) * sea; def += k * u.def * tm * sea;
       men += k; morale += a.morale * k;
       if (u.kind === 'cav') cav += k; else inf += k;
-      if (u.sea) { fire += r.men * u.sea.cannons * 8 * tm; def += r.men * u.sea.hull * 3; }
+      if (u.sea) { fire += r.men * u.sea.cannons * 8 * tm * sea; def += r.men * u.sea.hull * 3 * sea; }
     }
   }
   const gen = armies.map((a) => s.chars[a.general]).filter((c) => c && c.alive).sort((a, b) => b!.skills[2] - a!.skills[2])[0];
   const genSkill = gen ? gen.skills[2] : 0;
-  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: defending ? t.defence : 0 };
+  // defending their own land, militias and highlanders hold better (defence)
+  const home = defending && n && loc < w.L && s.loc.owner[loc] === n.id && !armies[0]?.rebels ? Math.max(0, lawEffect(n, 'defence')) : 0;
+  return { shock, fire, def, men, morale: men > 0 ? morale / men : 0, cav, inf, gen: genSkill, terrainDef: defending ? t.defence + home : 0 };
 }
 
 function battleDay(s: GameState, w: World, b: Battle) {
@@ -638,7 +653,9 @@ export function recruit(s: GameState, w: World, n: Nation, loc: number, unit: nu
   const base = loc * C;
   const take = Math.min(mp * 0.5, s.loc.pop[base + CL.peasants] * 0.05);
   s.loc.pop[base + CL.peasants] -= take;
-  s.recruits.push({ loc, nation: n.id, type: unit, men, left: u.kind === 'ship' ? 120 : u.kind === 'cav' ? 60 : 30, army: 0 });
+  // a capable marshal drills recruits faster (up to a fifth)
+  const drill = u.kind === 'ship' ? 1 : 1 - 2 * councilBonus(s, n, 'marshal');
+  s.recruits.push({ loc, nation: n.id, type: unit, men, left: Math.max(1, Math.round((u.kind === 'ship' ? 120 : u.kind === 'cav' ? 60 : 30) * drill)), army: 0 });
   return null;
 }
 function recruitsDay(s: GameState, w: World) {
@@ -700,7 +717,8 @@ function upkeepMonth(s: GameState, w: World) {
     for (const r of a.regs) {
       const u = UNITS[r.type];
       const k = u.kind === 'ship' ? r.men : r.men / 1000;
-      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * clamp(1 + lawEffect(n, 'army_cost'), 0.3, 2); // lawEffect already holds the modifiers
+      // (lawEffect holds laws, values, tradition and modifiers alike; ships pay naval_cost instead of army_cost)
+      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * clamp(1 + lawEffect(n, u.kind === 'ship' ? 'naval_cost' : 'army_cost'), 0.3, 2);
       if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
       if (u.kind === 'ship') navy[a.owner] += c * n.navyMaint; else army[a.owner] += c * n.armyMaint;
     }
@@ -717,18 +735,20 @@ function upkeepMonth(s: GameState, w: World) {
       forts += s.loc.buildings[i * B + BI.fort];
       if (s.loc.ctrl[i] !== n.id) continue;
       const base = i * C;
-      mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]);
+      // land still being integrated sends fewer levies (integrationYield, systems/economy.ts)
+      mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]) * integrationYield(s.loc.integ[i]);
       if (w.coastal[i]) sail += s.loc.pop[base + CL.labourers] * 0.02 * (1 + s.loc.buildings[i * B + BI.port]);
     }
+    sail *= Math.max(0.1, 1 + lawEffect(n, 'sailors'));
     if (forts) {
       // a realm pays its garrisons only what it can bear: beyond a third of its revenue the walls are left to the militia
-      const full = forts * 2.5 * s.priceLevel;
+      const full = forts * 2.5 * s.priceLevel * Math.max(0.2, 1 + lawEffect(n, 'fort_cost'));
       const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
       const pay = Math.min(full, gross * 0.33);
       addExpense(n, 'fortresses', pay);
       n.flags.fort_pay = Math.round((pay / full) * 100) / 100;
     } else delete n.flags.fort_pay;
-    const mpMult = 1 + lawEffect(n, 'manpower') + mod(n, 'manpower');
+    const mpMult = Math.max(0.1, 1 + lawEffect(n, 'manpower'));
     n.maxManpower = mp * mpMult;
     n.manpower = Math.min(n.maxManpower, n.manpower + n.maxManpower / 120);
     n.sailors = Math.min(sail * 4, n.sailors + sail / 10);

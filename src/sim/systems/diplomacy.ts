@@ -11,6 +11,9 @@ import { lawEffect, councilBonus } from './politics';
 export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve'] as const;
 
 /** Static opinion reasons computed on demand (plus stored timed modifiers). */
+/** Diplomatic standing of a realm: diplomacy effects of laws, values and modifiers plus the chancellor's bonus. It
+ *  speeds envoys, makes others think better of the realm and its proposals and deepens improved relations. */
+export function diploSkill(s: GameState, n: Nation): number { return lawEffect(n, 'diplomacy') + councilBonus(s, n, 'chancellor'); }
 export function opinionBreakdown(s: GameState, w: World, a: number, b: number): [string, number][] {
   const A = s.nations[a], Bn = s.nations[b];
   const out: [string, number][] = [];
@@ -31,6 +34,7 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   if (atWar(s, a, b)) out.push(['at_war', -100]);
   const d = Bn.dread; if (d > 10) out.push(['dread', -Math.round(Math.min(60, d))]);
   if (Bn.excommunicated && FAITHS[A.faith]?.id === 'latin') out.push(['excommunicated', -30]);
+  const ds = Math.round(diploSkill(s, Bn) * 40); if (ds) out.push(['their_diplomacy', ds]);
   const r = s.rel[`${a}>${b}`];
   if (r) for (const m of r.mods) out.push([m.id, Math.round(m.v)]);
   return out;
@@ -49,6 +53,7 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
   const tr = trust(s, b, a); R.push(['trust', Math.round((tr - 50) * 0.4)]);
   const dist = distance(s, w, a, b);
   const pers = Bn.personality;
+  if (action !== 'demand') { const ds = Math.round(diploSkill(s, A) * 40); if (ds) R.push(['envoy_skill', ds]); }
   if (action === 'alliance') {
     R.push(['base', -20]);
     if (dist > 1500) R.push(['too_far', -Math.round((dist - 1500) / 40)]);
@@ -91,6 +96,10 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
   return { accept: sum > 0, reasons: R };
 }
 
+/** Days an envoy travels: couriers on horseback ~45 km/day, faster with a skilled chancery. */
+export function envoyDays(s: GameState, w: World, A: Nation, b: number): number {
+  return Math.max(3, Math.round(distance(s, w, A.id, b) / 45 / Math.max(0.5, 1 + diploSkill(s, A))));
+}
 /** Send an envoy. The answer arrives after travel time. */
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
@@ -100,7 +109,7 @@ export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: 
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
   if (action === 'marriage' && hasTreaty(s, a, b, 'marriage')) return 'already married';
   if (atWar(s, a, b) && action !== 'improve') return 'at war';
-  const days = Math.max(3, Math.round(distance(s, w, a, b) / 45)); // couriers on horseback ~45 km/day
+  const days = envoyDays(s, w, A, b);
   A.envoysBusy++;
   s.envoys.push({ from: a, to: b, action, arrive: s.day + days, payload });
   return null;
@@ -151,7 +160,7 @@ function envoyArrives(s: GameState, w: World, e: Envoy) {
     notice(s, e.to, 'diplo_offer', { en: `${A.short.en} proposes ${what.en}.`, de: `${A.short.de} schlägt ${what.de} vor.` });
     return;
   }
-  if (e.action === 'improve') { addOpinion(s, e.to, e.from, 'improved_relations', 25, 365 * 3, true); rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100); return; }
+  if (e.action === 'improve') { addOpinion(s, e.to, e.from, 'improved_relations', 25 * Math.max(0.5, 1 + diploSkill(s, A)), 365 * 3, true); rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100); return; }
   const ev = evaluateProposal(s, w, e.from, e.to, e.action);
   (s as any).lastAnswer = (s as any).lastAnswer || {};
   (s as any).lastAnswer[e.from] = { to: e.to, action: e.action, accept: ev.accept, reasons: ev.reasons, day: s.day };

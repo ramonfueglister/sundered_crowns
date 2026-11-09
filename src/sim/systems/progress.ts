@@ -1,11 +1,11 @@
 // Knowledge: three branches (Governance, Commerce, Warfare), four eras, doctrines and spreading innovations.
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, mod, DAY_EPOCH } from '../ctx';
+import { type System, clamp, chronicle, notice, DAY_EPOCH } from '../ctx';
 import { B, BI, C, CL } from '../defs';
 import { DOCTRINES, DOCTRINE_INDEX } from '../content/doctrines';
 import { INNOVATIONS } from '../content/innovations';
-import { lawEffect } from './politics';
+import { lawEffect, councilBonus } from './politics';
 import { dateToDay } from '../calendar';
 
 export const BRANCHES = [
@@ -50,17 +50,21 @@ function aggregates(s: GameState, w: World) {
   }
   AG = { e: DAY_EPOCH.v, s, a }; return a;
 }
+/** The council office that furthers each branch of knowledge. */
+export const RESEARCH_OFFICE = ['chancellor', 'treasurer', 'marshal'] as const;
 export function researchRate(s: GameState, w: World, n: Nation): [number, number, number] {
   const A = aggregates(s, w), q = n.id * AGK;
   const pop = A[q], lit = A[q + 1], dev = A[q + 2], uni = A[q + 3], burghers = A[q + 4], nobles = A[q + 5], clergy = A[q + 6];
   const litAvg = pop > 0 ? lit / pop : 0;
   const r = s.chars[n.ruler];
   const scale = Math.pow(Math.max(1, dev), 0.3) * 0.9; // large realms learn more, but not in proportion to their size
-  const base = (1.2 + scale) * (0.5 + litAvg * 3) * (1 + uni * 0.12) * (1 + lawEffect(n, 'research') + mod(n, 'research'));
+  const base = (1.2 + scale) * (0.5 + litAvg * 3) * (1 + uni * 0.12) * Math.max(0.1, 1 + lawEffect(n, 'research'));
   const burgherShare = pop > 0 ? burghers / pop : 0;
-  const g = base * (1 + (r ? r.skills[0] * 0.04 : 0));
-  const c = base * (1 + burgherShare * 6 + (n.gov === 'merchant_republic' ? 0.2 : 0)) * (1 + (clergy / Math.max(1, pop)) * 3);
-  const m = base * (1 + (r ? r.skills[2] * 0.04 : 0) + (nobles / Math.max(1, pop)) * 10);
+  // each branch has its office on the council: the chancellor's chancery for Governance, the treasurer's counting
+  // house for Commerce & Learning, the marshal for Warfare (twice the office bonus, so up to +20 %)
+  const g = base * (1 + (r ? r.skills[0] * 0.04 : 0)) * (1 + 2 * councilBonus(s, n, RESEARCH_OFFICE[0]));
+  const c = base * (1 + burgherShare * 6 + (n.gov === 'merchant_republic' ? 0.2 : 0)) * (1 + (clergy / Math.max(1, pop)) * 3) * (1 + 2 * councilBonus(s, n, RESEARCH_OFFICE[1]));
+  const m = base * (1 + (r ? r.skills[2] * 0.04 : 0) + (nobles / Math.max(1, pop)) * 10) * (1 + 2 * councilBonus(s, n, RESEARCH_OFFICE[2]));
   const pr = n.flags.research_focus ?? -1;
   const out: [number, number, number] = [g, c, m];
   if (pr >= 0 && pr < 3) { out[pr] *= 1.35; for (let k = 0; k < 3; k++) if (k !== pr) out[k] *= 0.85; }
@@ -158,11 +162,21 @@ function innovationsYear(s: GameState, w: World, year: number) {
       const inv = INNOVATIONS[st.id];
       if (!st.reached[n.capital] || n.tech[inv.branch] < inv.tech) continue;
       if (inv.faith && inv.faith.length && !inv.faith.includes(n.faith)) continue;
+      if (inv.branch === 1 && adoptionDelayed(n, st.id, year)) continue;
       n.innovations.push(st.id);
       n.modifiers.push({ id: `inv_${inv.id}`, until: 1e9, label: inv.name, effects: { ...inv.effects } });
       if (s.playerNations.includes(n.id)) notice(s, n.id, 'innovation', { en: `We adopted ${inv.name.en}.`, de: `Wir haben ${inv.name.de} übernommen.` });
     }
   }
+}
+
+/** Closed guilds (innovation_block) keep new crafts out of the workshops: each year a Commerce innovation that has
+ *  reached the capital is taken up only with the chance 1 / (1 + 4 block), on average a delay of 4 × block years. Decided
+ *  by a hash of realm, innovation and year so it costs no random draws. */
+export function adoptionDelayed(n: Nation, inv: number, year: number): boolean {
+  const block = lawEffect(n, 'innovation_block'); if (block <= 0) return false;
+  const h = ((n.id * 2654435761 + inv * 40503 + year * 9973) >>> 0) % 1000;
+  return h >= 1000 / (1 + 4 * block);
 }
 
 function techSpreadCache(s: GameState, w: World) {

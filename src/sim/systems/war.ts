@@ -104,7 +104,7 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const cb = hasCasusBelli(s, a, b);
   if (!cb && goalType !== 'coalition' && goalType !== 'civil_war' && goalType !== 'independence') {
     // war without justification: heavy penalties
-    na.concord = clamp(na.concord - 35, -100, 100); na.mandate = clamp(na.mandate - 15, 0, 100); na.dread += 15;
+    na.concord = clamp(na.concord - 35, -100, 100); na.mandate = clamp(na.mandate - 15, 0, 100); na.dread += 15 * dreadGain(na);
     for (const o of s.nations) if (o.alive && o.id !== a) addOpinion(s, o.id, a, 'unjust_war', -25, 365 * 5);
   }
   // assemblies must approve wars where the law requires it
@@ -268,7 +268,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       s.nations[recv].stats.locsGained += t.locs.length; Ln.stats.locsLost += t.locs.length;
       // Dread grows with the value taken
       const val = t.locs.reduce((p, l) => p + locValue(s, l), 0);
-      s.nations[recv].dread += val * 0.35;
+      s.nations[recv].dread += val * 0.35 * dreadGain(s.nations[recv]);
       parts.push(`${t.locs.length} locations (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
       partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
@@ -304,10 +304,13 @@ let _mil: any = null;
 export function require_military() { return _mil; }
 export function _setMilitary(m: any) { _mil = m; }
 
+/** How strongly conquest and unjust wars frighten others: 1 plus the dread effects (a warlike reputation). */
+export function dreadGain(n: Nation): number { return Math.max(0.2, 1 + lawEffect(n, 'dread')); }
 export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0) {
   const from = s.loc.owner[l];
   s.loc.owner[l] = to; s.loc.ctrl[l] = to; EPOCH.v++;
   s.loc.integ[l] = 0; // conquered land starts unintegrated
+  s.loc.control[l] = Math.min(s.loc.control[l], 0.3); // and the new lord's officials have yet to take hold
   s.loc.unrest[l] = Math.max(s.loc.unrest[l], 20);
   s.flags.ownershipDirty = s.day;
   (s as any).ownerChanges = (s as any).ownerChanges || [];

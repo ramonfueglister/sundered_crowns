@@ -356,7 +356,7 @@ export const DECISIONS: DecisionDef[] = [
     desc: { en: 'A bank of deposit under public guarantee lends to the crown at low interest.', de: 'Eine Depositenbank unter öffentlicher Bürgschaft leiht der Krone zu niedrigem Zins.' },
     visible: (e) => (e.n.estates.find((x) => x.id === 'burghers')?.influence ?? 0) >= 15,
     can: (e) => e.n.era < 1 ? 'only from the Age of Print and Horizons' : e.n.tech[1] < 10 ? 'need Commerce & Learning 10' : !e.n.innovations.includes(BANKING[0]) || !e.n.innovations.includes(BANKING[1]) ? 'we must know bills of exchange and double-entry bookkeeping' : e.n.treasury < months(e, 8) ? 'not enough gold' : null,
-    effect: (e) => { e.fx.gold(-8); e.fx.estate('burghers', 10, 3); permanent(e, 'public_bank', { en: 'Public bank', de: 'Öffentliche Bank' }, { interest: 0.01, trade: 0.03 }); },
+    effect: (e) => { e.fx.gold(-8); e.fx.estate('burghers', 10, 3); permanent(e, 'public_bank', { en: 'Public bank', de: 'Öffentliche Bank' }, { interest: -0.01, trade: 0.03 }); },
     ai: (e) => e.n.treasury > months(e, 14) && (e.n.estates.find((x) => x.id === 'burghers')?.influence ?? 0) >= 25 && H.locs(e.s, e.n.id).length >= 15 && chance(e.s.rng, 0.02),
   },
   {

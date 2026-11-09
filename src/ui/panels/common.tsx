@@ -13,6 +13,8 @@ import { num, signed, pct, rgb } from '../format';
 import { sfx, type Sfx } from '../audio';
 import { rendererRef } from '../MapView';
 import { Coa } from './coa';
+import { effectDef, workingEffects } from '../../sim/effects';
+import { CLASSES, CLASS_NAME } from '../../sim/defs';
 
 // ---------------------------------------------------------------- commands
 type DistOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
@@ -177,26 +179,35 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: [T, Co
 export function Empty({ children }: { children: ComponentChildren }) { return <div class="empty">{children}</div>; }
 
 // ---------------------------------------------------------------- effects & reasons
-const PCT_KEYS = new Set(['tax', 'trade', 'production', 'morale', 'discipline', 'fire', 'shock', 'cavalry', 'speed', 'manpower', 'army_cost', 'mercenary_cost', 'fort_strength', 'attrition',
-  'concord_gain', 'mandate_gain', 'authority_gain', 'corruption', 'dread_decay', 'tolerance', 'admin', 'control', 'integration', 'research', 'conversion', 'assimilation', 'colonial_growth',
-  'growth', 'defence', 'naval', 'colonise', 'diplomacy', 'prestige', 'dread', 'estate_power', 'succession_strife', 'foreign_claims', 'serfdom', 'literacy', 'interest']);
 export function fxLabel(k: string): string {
+  if (k.startsWith('exempt_')) { const c = CLASSES[Number(k.slice(7))]; return `${t('fx_exempt')}: ${c ? L(CLASS_NAME[c]) : k}`; }
   const v = t(`fx_${k}`);
   return v === `fx_${k}` ? k.replace(/^values\./, '').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : v;
 }
+/** An effect as the simulation applies it (src/sim/effects.ts): v is the raw value of the content, shown at its real
+ *  size in its unit (percent, percentage points, points per month, a count, on/off, kilometres). */
 export function fxValue(k: string, v: number): string {
-  if (k === 'interest') return signed(v * 100, 1) + ' pp';
-  if (PCT_KEYS.has(k) && Math.abs(v) < 5) return signed(v * 100, Math.abs(v) < 0.1 ? 1 : 0) + ' %';
-  return signed(v, Math.abs(v) < 1 ? 2 : 0);
+  const d = effectDef(k);
+  if (!d) return signed(v, Math.abs(v) < 1 ? 2 : 0);
+  const x = v * (d.scale ?? 1), dg = (a: number) => (Math.abs(a) < 0.1 ? 2 : Math.abs(a) < 10 ? 1 : 0);
+  let s: string;
+  switch (d.unit) {
+    case 'pct': case 'share': s = signed(x * 100, dg(x * 100)) + ' %'; break;
+    case 'pp': s = signed(x * 100, dg(x * 100)) + ' ' + t('unit_pp'); break;
+    case 'count': s = signed(x, 0); break;
+    case 'flag': s = x > 0 ? t('fx_on') : t('fx_off'); break;
+    case 'km': s = signed(x, 0) + ' km'; break;
+    default: s = signed(x, dg(x));
+  }
+  return d.per ? `${s} ${t(d.per === 'month' ? 'unit_per_month' : 'unit_per_year')}` : s;
 }
-/** Effects that are bad when positive. */
-const BAD_UP = new Set(['unrest', 'army_cost', 'mercenary_cost', 'corruption', 'attrition', 'interest', 'succession_strife', 'dread', 'serfdom']);
+/** Only the effects the simulation reads, each at its real size; green when it helps the realm. */
 export function Effects({ fx, title }: { fx: Record<string, number> | null | undefined; title?: ComponentChildren }) {
-  const e = Object.entries(fx || {}).filter(([, v]) => typeof v === 'number' && Math.abs(v) > 1e-9);
+  const e = workingEffects(fx);
   if (!e.length) return title ? <div><div class="bd-title">{title}</div><div class="muted">{t('no_effects')}</div></div> : null;
   return <div class="fx">
     {title && <div class="bd-title">{title}</div>}
-    {e.map(([k, v]) => { const good = BAD_UP.has(k) ? v < 0 : v > 0; return <div class="bd-row"><span>{fxLabel(k)}</span><span class={good ? 'pos' : 'neg'}>{fxValue(k, v)}</span></div>; })}
+    {e.map(([k, x, d]) => { const good = d.unit === 'flag' ? true : d.bad ? x < 0 : x > 0; return <div class="bd-row"><span>{fxLabel(k)}</span><span class={good ? 'pos' : 'neg'}>{fxValue(k, fx![k])}</span></div>; })}
   </div>;
 }
 

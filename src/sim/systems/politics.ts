@@ -1,22 +1,31 @@
 // Internal politics: laws & reforms, Powers of the Realm, value axes, council, rulers, succession, Concord & Mandate.
 import type { GameState, Nation, Character, Estate } from '../types';
 import type { World } from '../world';
-import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, mod, addExpense, addOpinion } from '../ctx';
+import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, addExpense, addOpinion } from '../ctx';
 import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
 import { rand, chance, hash01, pick, seedRng } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
-import { FAITHS } from '../content/peoples';
+import { FAITHS, GROUP_TRADITIONS } from '../content/peoples';
+import { dutyDiscontent } from './duties';
 
-const MOD_ONLY = new Set(['tax', 'trade', 'production', 'unrest']); // read through mod() instead
+// Every effect key is read through lawEffect(): laws, value axes, the tradition of the realm's culture group and all
+// timed and permanent modifiers (privileges, doctrines, innovations, landmarks, events) are summed into one table.
+// mod() (ctx.ts) sums the modifiers alone and is no longer used to read effects, so nothing is counted twice and no
+// source is left out. The keys and their meaning are listed in src/sim/effects.ts.
 // Effect keys get a slot in a numeric table; law options and value axes are resolved to [slot, value, ...] once.
 const EK = new Map<string, number>();
 function ekey(k: string): number { let i = EK.get(k); if (i === undefined) { i = EK.size; EK.set(k, i); } return i; }
 function flatFx(fx: Record<string, number>): number[] { const a: number[] = []; for (const k in fx) a.push(ekey(k), fx[k]); return a; }
-let LAW_FX: number[][][] | null = null, VAL_LO: number[][] = [], VAL_HI: number[][] = [];
+let LAW_FX: number[][][] | null = null, VAL_LO: number[][] = [], VAL_HI: number[][] = [], TRAD_FX: Record<string, number[]> = {};
 function resolveFx() {
   LAW_FX = LAWS.map((L) => L.options.map((o) => flatFx(o.effects)));
   VAL_LO = VALUES.map((v) => flatFx(v.effectsLow)); VAL_HI = VALUES.map((v) => flatFx(v.effectsHigh));
+  TRAD_FX = Object.fromEntries(Object.entries(GROUP_TRADITIONS).map(([g, t]) => [g, flatFx(t.effects)]));
 }
+/** Culture group of a realm's ruling culture, whose tradition it follows. */
+export function traditionGroup(n: Nation): string { return GROUP_OF[ALL_CULTURES[n.culture]] ?? 'other'; }
+/** The tradition of a realm's culture group (always part of lawEffect). */
+export function traditionOf(n: Nation) { const g = traditionGroup(n); return { group: g, ...(GROUP_TRADITIONS[g] ?? GROUP_TRADITIONS.other) }; }
 const LE_CACHE = new WeakMap<Nation, { e: number; m: Float64Array }>();
 /** Sum of an effect over laws, value axes and modifiers. Whole table built once per nation per day. */
 export function lawEffect(n: Nation, key: string): number {
@@ -47,10 +56,11 @@ function lawPart(n: Nation): Float64Array {
   LAW_PART.set(n, { ids, opts, m });
   return m;
 }
-/** Same sums, in the same order, as adding each law option's, value axis' and modifier's effects into a map. */
+/** Same sums, in the same order, as adding each law option's, value axis', the tradition's and every modifier's
+ *  effects into a map. */
 function buildEffects(n: Nation, reuse: Float64Array | null): Float64Array {
   if (!LAW_FX) resolveFx();
-  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) ekey(k);
+  for (const md of n.modifiers) for (const k in md.effects) ekey(k);
   // the previous day's table is overwritten when it still has the right size
   const m = reuse && reuse.length === EK.size ? reuse : new Float64Array(EK.size);
   const lp = lawPart(n);
@@ -60,7 +70,9 @@ function buildEffects(n: Nation, reuse: Float64Array | null): Float64Array {
     const fx = val < 0 ? VAL_LO[a] : VAL_HI[a];
     for (let j = 0; j < fx.length; j += 2) { const v = fx[j + 1] * Math.abs(val) / 100; if (v) m[fx[j]] += v; }
   }
-  for (const md of n.modifiers) for (const k in md.effects) if (!MOD_ONLY.has(k)) { const v = md.effects[k]; if (v) m[EK.get(k)!] += v; }
+  const tr = TRAD_FX[traditionGroup(n)];
+  if (tr) for (let j = 0; j < tr.length; j += 2) m[tr[j]] += tr[j + 1];
+  for (const md of n.modifiers) for (const k in md.effects) { const v = md.effects[k]; if (v) m[EK.get(k)!] += v; }
   return m;
 }
 
@@ -176,7 +188,13 @@ export function succession(s: GameState, w: World, n: Nation) {
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
   let next = 0;
   let contested = false;
-  if (law === 'elective' || law === 'office') {
+  const elected = law === 'office' ? ablestOfficial(s, n) : null;
+  if (elected) {
+    // election to office: the council and court choose the ablest of their own; no regency, no claim of blood
+    next = elected.id;
+    for (const off in n.council) if (n.council[off] === next) delete n.council[off];
+    n.candidates = (n.candidates ?? []).filter((id) => id !== next);
+  } else if (law === 'elective' || law === 'office') {
     // electors (Magnates or Burghers) choose: heir if any and capable, else a new noble
     const cand = n.heir && s.chars[n.heir]?.alive ? s.chars[n.heir] : null;
     const strength = cand ? cand.skills[0] + cand.skills[1] + cand.skills[2] : 0;
@@ -258,10 +276,25 @@ export function unionBreakChance(s: GameState, junior: Nation, senior: Nation): 
 }
 function nationDevOf(s: GameState, id: number) { let d = 0; const o = s.loc.owner; for (let i = 0; i < o.length; i++) if (o[i] === id) d += s.loc.dev[i]; return d; }
 
+/** Election to office: the ablest grown official or candidate at court (skills, then loyalty; never kin by right). */
+export function ablestOfficial(s: GameState, n: Nation): Character | null {
+  let best: Character | null = null, bv = -1;
+  const ids = [...Object.values(n.council), ...(n.candidates ?? [])];
+  for (const id of ids) {
+    const c = s.chars[id];
+    if (!c || !c.alive || c.nation !== n.id || c.id === n.ruler) continue;
+    const age = ageOf(s, c); if (age < 25 || age > 72) continue;
+    const v = c.skills[0] + c.skills[1] + c.skills[2] + (c.loyalty ?? 50) / 100;
+    if (v > bv || (v === bv && best && c.id < best.id)) { bv = v; best = c; }
+  }
+  return best;
+}
 export function pickNewHeir(s: GameState, n: Nation) {
   const r = s.chars[n.ruler]; if (!r) return;
-  const kids = r.children.map((k) => s.chars[k]).filter((c) => c && c.alive).sort((a, b) => a.born - b.born);
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
+  // elected to office: the presumptive successor is whoever the council would choose today
+  if (law === 'office') { const b = ablestOfficial(s, n); n.heir = b ? b.id : 0; return; }
+  const kids = r.children.map((k) => s.chars[k]).filter((c) => c && c.alive).sort((a, b) => a.born - b.born);
   const h = law === 'primogeniture' ? kids.find((c) => !c.female) : kids[0];
   n.heir = h ? h.id : 0;
   if (h) h.role = 'heir';
@@ -422,7 +455,7 @@ export function officialsMonth(s: GameState, n: Nation) {
     // corruption creeps up; ambitious officials intrigue when loyalty is low
     c.corruption = clamp((c.corruption ?? 0) + (c.ambition ?? 0.5) * 0.002 - (n.laws.administration ? 0.001 : 0), 0, 1);
     c.loyalty = clamp((c.loyalty ?? 50) + (n.mandate - 50) * 0.01 - (c.ambition ?? 0.5) * 0.05, 0, 100);
-    if (off.id === 'treasurer') { const graft = (c.corruption ?? 0) * (n.income.tax || 0) * 0.04; if (graft > 0) addExpense(n, 'graft', graft); }
+    if (off.id === 'treasurer') { const graft = treasurerGraft(c, n.income.tax || 0); if (graft > 0) addExpense(n, 'graft', graft); }
     if ((c.loyalty ?? 50) < 15 && chance(s.rng, 0.05)) {
       // fall from grace: dismissed in disgrace; a faction is angered
       delete n.council[off.id];
@@ -431,6 +464,9 @@ export function officialsMonth(s: GameState, n: Nation) {
     }
   }
 }
+
+/** What a treasurer skims off the taxes each month: his corruption, less the more able he is at governance. */
+export function treasurerGraft(c: Character, tax: number): number { return (c.corruption ?? 0) * tax * 0.04 * (1 - c.skills[0] / 12); }
 
 // ---------------- Authority, Concord, Mandate, estates ----------------
 export function authorityGain(s: GameState, n: Nation): number {
@@ -445,19 +481,20 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   let content = 0, infl = 0;
   for (const e of n.estates) { content += e.contentment * e.influence; infl += e.influence; }
   const avgContent = infl > 0 ? content / infl : 50;
-  const target = (avgContent - 50) * 1.2 - n.warExhaustion * 0.3 + lawEffect(n, 'concord_gain') * 50 + (n.excommunicated ? -20 : 0) + mod(n, 'concord');
+  // a strong assembly (estate_power) makes the mood of the Powers weigh more on Concord, for better or worse
+  const target = (avgContent - 50) * 1.2 * (1 + lawEffect(n, 'estate_power')) - n.warExhaustion * 0.3 + lawEffect(n, 'concord_gain') * 50 + (n.excommunicated ? -20 : 0) + lawEffect(n, 'concord');
   n.concord = clamp(n.concord + (target - n.concord) * 0.04, -100, 100);
   // Mandate drifts with the ruler's statecraft, prestige and faith unity
   const r = s.chars[n.ruler];
-  const mTarget = 45 + (r ? r.skills[1] * 5 : 10) + n.prestige * 0.1 + lawEffect(n, 'mandate_gain') * 100 + (n.regent ? -15 : 0) + (n.excommunicated ? -25 : 0) + mod(n, 'mandate');
+  const mTarget = 45 + (r ? r.skills[1] * 5 : 10) + n.prestige * 0.1 + lawEffect(n, 'mandate_gain') * 100 + (n.regent ? -15 : 0) + (n.excommunicated ? -25 : 0) + lawEffect(n, 'mandate');
   n.mandate = clamp(n.mandate + (mTarget - n.mandate) * 0.03, 0, 100);
-  n.prestige = clamp(n.prestige * 0.995, -100, 100);
+  n.prestige = clamp(n.prestige * 0.995 + lawEffect(n, 'prestige'), -100, 100);
   n.warExhaustion = Math.max(0, n.warExhaustion - (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0 : 1.5));
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {
     const priv = e.privileges.length * 6;
-    e.contentment = clamp(e.contentment + (50 + priv - e.contentment) * 0.03, 0, 100);
+    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id) - e.contentment) * 0.03, 0, 100);
     e.influence = clamp(e.influence + (priv * 0.05) - 0.03 + (e.id === 'burghers' ? lawEffect(n, 'trade') * 0.5 : 0), 5, 100);
   }
   // normalise influence to 100
