@@ -92,6 +92,7 @@ export function hasCasusBelli(s: GameState, a: number, b: number): string | null
   if (na.faith !== nb.faith && (na.flags.holy_war || 0) > 0) return 'holy_war';
   if (s.flags[`cb_${a}_${b}`] && s.flags[`cb_${a}_${b}`] > s.day) return 'fabricated';
   if (nb.excommunicated && na.faith === nb.faith) return 'excommunicated';
+  if (s.flags[`embargo_${b}_${a}`]) return 'embargo'; // they keep an embargo on us: a cause for a trade war (systems/trade.ts embargoedBy)
   if (na.overlord === b) return 'independence';
   // reconquest of own core land held by b
   const o = s.loc.owner, core = s.loc.core;
@@ -201,6 +202,7 @@ export function casusBelliAll(s: GameState, a: number, b: number): string[] {
   if (na.faith !== nb.faith && (na.flags.holy_war || 0) > 0) out.push('holy_war');
   if (s.flags[`cb_${a}_${b}`] && s.flags[`cb_${a}_${b}`] > s.day) out.push('fabricated');
   if (nb.excommunicated && na.faith === nb.faith) out.push('excommunicated');
+  if (s.flags[`embargo_${b}_${a}`]) out.push('embargo');
   if (na.overlord === b) out.push('independence');
   const o = s.loc.owner, core = s.loc.core;
   for (let i = 0; i < o.length; i++) if (o[i] === b && core[i] === a) { out.push('reconquest'); break; }

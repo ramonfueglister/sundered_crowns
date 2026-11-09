@@ -8,8 +8,12 @@ import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
 import { excommunicate, steppeFade } from './realm';
+import { embargoedBy, embargoBetween, embargoStakes } from './trade';
 
-export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve', 'excommunicate'] as const;
+/** How much less a realm thinks of the one that keeps an embargo on it. */
+export const EMBARGO_OPINION = 40;
+
+export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve', 'excommunicate', 'embargo', 'lift_embargo'] as const;
 
 /** Static opinion reasons computed on demand (plus stored timed modifiers). */
 /** Diplomatic standing of a realm: diplomacy effects of laws, values and modifiers plus the chancellor's bonus. It
@@ -28,6 +32,7 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   if (hasTreaty(s, a, b, 'alliance')) out.push(['allied', 40]);
   if (hasTreaty(s, a, b, 'marriage')) out.push(['royal_marriage', 20]);
   if (hasTreaty(s, a, b, 'trade')) out.push(['trade_agreement', 10]);
+  if (embargoedBy(s, b, a)) out.push(['embargoes_us', -EMBARGO_OPINION]); // (systems/trade.ts)
   if (A.overlord === b) out.push(['overlord', -10 + Math.round(-A.libertyDesire * 0.3)]);
   if (hasTreaty(s, b, a, 'claim') || (s.flags[`gather_${b}_${a}`] ?? 0) > s.day) out.push(['claims_on_us', -25]);
   // shared rival
@@ -82,6 +87,11 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
   } else if (action === 'trade') {
     R.push(['base', 5]);
     if (pers === 'trader') R.push(['trader', 20]);
+    // goods that already pass between our markets make an agreement worth having; a rival does not want one
+    const goods = embargoStakes(s, a, b).goods;
+    if (goods > 0) R.push(['mutual_trade', Math.round(Math.min(20, Math.sqrt(goods) * 0.4))]);
+    if (Bn.rivals.includes(a)) R.push(['rival', -40]);
+    if (embargoBetween(s, a, b)) R.push(['embargo', -60]);
   } else if (action === 'guarantee') {
     R.push(['base', 30]); // being guaranteed is welcome
   } else if (action === 'vassalize') {
@@ -109,7 +119,7 @@ export function envoyDays(s: GameState, w: World, A: Nation, b: number): number 
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
   if (!s.nations[b]?.alive || a === b) return 'invalid target';
-  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate'].includes(action)) return immediateAction(s, w, a, b, action, payload);
+  if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate', 'embargo', 'lift_embargo'].includes(action)) return immediateAction(s, w, a, b, action, payload);
   if (A.envoysBusy >= A.envoys) return 'all envoys are busy';
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
   if (action === 'marriage' && hasTreaty(s, a, b, 'marriage')) return 'already married';
@@ -142,6 +152,26 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
       if (s.papacy.holder === b) return 'the pope cannot be excommunicated';
       if (A.excommunicated) return 'we are excommunicated ourselves';
       return excommunicate(s, a, b);
+    }
+    case 'embargo': {
+      // no trade between the markets whose hubs we hold and theirs (systems/economy.ts tradeBlocked), and our markets
+      // shut their merchants out and theirs ours (systems/trade.ts); they resent it while it lasts
+      if (embargoedBy(s, a, b)) return 'already under embargo';
+      if (hasTreaty(s, a, b, 'alliance')) return 'not against an ally';
+      if (Bn.overlord === a || A.overlord === b) return 'not within our realm';
+      s.flags[`embargo_${a}_${b}`] = s.day + 1;
+      rel(s, b, a).trust = clamp(rel(s, b, a).trust - 10, 0, 100);
+      s.treaties = s.treaties.filter((t) => !(t.type === 'trade' && ((t.a === a && t.b === b) || (t.a === b && t.b === a))));
+      chronicle(s, a, 'embargo', { en: `${A.short.en} closed its markets to ${Bn.short.en}.`, de: `${A.short.de} sperrte seine Märkte für ${Bn.short.de}.` });
+      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has declared an embargo on us: no trade between their markets and ours.`, de: `${A.short.de} hat ein Embargo gegen uns verhängt: kein Handel mehr zwischen ihren Märkten und unseren.` });
+      return null;
+    }
+    case 'lift_embargo': {
+      if (!embargoedBy(s, a, b)) return 'no embargo to lift';
+      delete s.flags[`embargo_${a}_${b}`];
+      addOpinion(s, b, a, 'embargo_lifted', 10, 365 * 2);
+      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has lifted its embargo on us.`, de: `${A.short.de} hat das Embargo gegen uns aufgehoben.` });
+      return null;
     }
     case 'fabricate': {
       // fabricating a justification takes time and can be discovered

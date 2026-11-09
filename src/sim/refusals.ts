@@ -65,6 +65,11 @@ export const REFUSAL_DE: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
   'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
+  // ---- trade pass (claude/trade-pass): merchants, embargoes, expeditions and companies
+  'we do not know this market': 'Diesen Markt kennen wir nicht', 'an embargo shuts our merchants out': 'Eine Handelssperre hält unsere Kaufleute fern',
+  'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
+  'no trade route home': 'Kein Handelsweg nach Hause', 'already under embargo': 'Schon mit einer Handelssperre belegt', 'not against an ally': 'Nicht gegen einen Verbündeten',
+  'not within our realm': 'Nicht innerhalb unseres Reiches', 'no embargo to lift': 'Keine Handelssperre aufzuheben',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

@@ -9,6 +9,8 @@ import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
 import { dutyUnrest } from './duties';
 import { secondFaith } from './faith';
+import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT_VOLUME, embargoBetween } from './trade';
+import { hasTreaty } from '../ctx';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -429,48 +431,73 @@ function computeShares(s: GameState, w: World) {
   for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (o < 0) continue; const mm = acc[s.loc.market[i]]; if (mm) mm.set(o, (mm.get(o) || 0) + s.loc.dev[i]); }
   s.markets.forEach((m, k) => { const tot = [...acc[k].values()].reduce((a, b) => a + b, 0); SHARES.set(m, tot > 0 ? [...acc[k].entries()].sort((a, b) => a[0] - b[0]).map(([o, v]) => [o, v / tot]) : []); });
 }
-/** Trade margins and tolls of a market: the hub's ruler takes a third, the rest goes to the realms of the area by their weight in it. */
-function shareOut(s: GameState, m: Market, kind: 'trade' | 'tariffs', amount: number) {
+/** Tolls of a market: the hub's ruler takes a third, the rest goes to the realms of the area by their weight in it.
+ *  (Trade margins are shared by trade power, see systems/trade.ts.) */
+function shareTolls(s: GameState, m: Market, amount: number) {
   if (amount <= 0) return;
   const hub = s.nations[m.owner];
-  if (hub?.alive) addIncome(hub, kind, amount * 0.34 * (1 + (kind === 'trade' ? lawEffect(hub, 'trade') : 0)));
-  for (const [o, sh] of SHARES.get(m) || []) { const n = s.nations[o]; if (n?.alive && sh > 0.002) addIncome(n, kind, amount * 0.66 * sh * (1 + (kind === 'trade' ? lawEffect(n, 'trade') : 0))); }
+  if (hub?.alive) addIncome(hub, 'tariffs', amount * 0.34);
+  for (const [o, sh] of SHARES.get(m) || []) { const n = s.nations[o]; if (n?.alive && sh > 0.002) addIncome(n, 'tariffs', amount * 0.66 * sh); }
 }
 
-/** Arbitrage between two linked markets for every good (one direction per good), with margins and tolls. */
+/** Trade margins earned this month per market (shared out by trade power at the end of the clearing). */
+let TV = new Float64Array(0);
+/** Steering of the goods: per pair of markets (from * M + to) the share of the exporting market's trade power that
+ *  steers its trade toward `to` (the next market on the way to the steering realms' home markets). */
+let STQ = new Float64Array(0), STM = 0;
+/** Arbitrage between two linked markets for every good (one direction per good), with margins and tolls. A trade
+ *  agreement between the rulers of the two hubs halves the tariffs and lets a quarter more goods pass. */
 function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolean, flows: GameState['flows'], company: Nation | null) {
   const blocked = tradeBlocked(s, a, b, sea);
   if (blocked >= 1) return;
+  const ta = tariffBetween(s, a.owner, b.owner), tb = tariffBetween(s, b.owner, a.owner); // what a's / b's ruler takes on imports
+  const agree = a.owner >= 0 && b.owner >= 0 && a.owner !== b.owner && hasTreaty(s, a.owner, b.owner, 'trade') ? AGREEMENT_VOLUME : 1;
   for (let g = 0; g < G; g++) {
     const pa = a.price[g], pb = b.price[g];
     // carriage per unit: bulk goods pay by weight but move in barges and hulls, fine goods pay for risk and handling
     const tc = cost * WEIGHT[g] * (0.5 + 3.5 * (1 - WEIGHT[g])) + 0.03 * Math.min(pa, pb);
-    const tariff = (s.nations[b.owner]?.tariff ?? 0) * 0.5;
-    let from = a, to = b, diff = pb - pa * (1 + tariff) - tc;
-    if (diff < 0) { from = b; to = a; diff = pa - pb * (1 + (s.nations[a.owner]?.tariff ?? 0) * 0.5) - tc; }
-    if (diff <= 0) continue;
+    // the direction goods would take without tariffs; the tariff of the importing ruler may keep them out
+    let from = a, to = b, diff0 = pb - pa - tc, tr = tb;
+    if (diff0 <= 0) { from = b; to = a; diff0 = pa - pb - tc; tr = ta; }
+    if (diff0 <= 0) continue;
+    const diff = diff0 - from.price[g] * tr * 0.5;
     const surplus = Math.max(0, from.sAcc[g] - from.dAcc[g] * 0.7);
     if (surplus <= 0) continue;
-    const steer = 1 + (to.merchants[to.owner] || 0) * 0.02;
-    const qty = Math.min(surplus * 0.35, surplus * clamp(diff / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked);
+    const steer = 1 + 0.5 * (STQ[from.id * STM + to.id] || 0);
+    const qtyOf = (d: number) => d <= 0 ? 0 : Math.min(surplus * 0.35, surplus * clamp(d / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked) * agree;
+    const qty = qtyOf(diff);
+    if (tr > 0) to.deter = (to.deter ?? 0) + Math.max(0, qtyOf(diff0) - qty) * from.price[g];
     if (qty <= 1e-6) continue;
     from.sAcc[g] -= qty; to.sAcc[g] += qty;
     from.flowOut[g] += qty; to.flowOut[g] -= qty;
     const value = qty * from.price[g];
     flows.push({ from: from.id, to: to.id, good: g, qty, value });
-    // merchants of the exporting hub earn the margin (a company keeps most of it on its own route);
-    // tolls go to the importing hub's ruler
-    if (company) { addIncome(company, 'company', qty * diff * 0.03 * (1 + lawEffect(company, 'trade'))); shareOut(s, from, 'trade', qty * diff * 0.015); }
-    else shareOut(s, from, 'trade', qty * diff * 0.04);
-    const tr = s.nations[to.owner]?.tariff ?? 0;
-    if (tr > 0) shareOut(s, to, 'tariffs', value * tr * 0.35);
+    // the margin is the exporting market's trade value (shared by trade power at the end of the month; on a company's
+    // route the company's power in its market takes most of it); tolls go to the importing hub's ruler
+    TV[from.id] += qty * diff * 0.04;
+    if (tr > 0) shareTolls(s, to, value * tr * 0.35);
   }
+  void company;
 }
 
 export function clearMarkets(s: GameState, w: World) {
   const ms = s.markets;
   computeShares(s, w);
   const flows: GameState['flows'] = [];
+  // trade power as it stands now: who steers where, and later who takes the margins
+  const M = ms.length;
+  const mp = ms.map((_, m) => marketPower(s, w, m));
+  if (TV.length !== M) TV = new Float64Array(M); TV.fill(0);
+  if (STM !== M) { STQ = new Float64Array(M * M); STM = M; } STQ.fill(0);
+  for (const p of mp) {
+    if (p.total <= 0) continue;
+    for (const r of p.rows) {
+      if (!r.steer || r.total <= 0) continue;
+      const home = homeMarket(s, s.nations[r.n]); const path = home >= 0 ? marketPath(s, p.m, home) : null;
+      if (path?.length) STQ[p.m * M + path[0]] += r.total / p.total;
+    }
+  }
+  for (const m of ms) m.deter = 0;
   // 0. turn per-tier demand units into demand for each good
   for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
   // 1. inter-market trade on last month's prices
@@ -490,6 +517,8 @@ export function clearMarkets(s: GameState, w: World) {
   }
   flows.sort((p, q) => q.value - p.value);
   s.flows = flows.slice(0, 400);
+  // the month's margins go to the realms by their trade power there (steered shares to their home markets)
+  payTrade(s, w, TV, mp);
   // 2. clearing and price formation
   const pl = s.priceLevel;
   for (const m of ms) {
@@ -551,7 +580,7 @@ function tradeBlocked(s: GameState, a: Market, b: Market, sea: boolean): number 
   // occupation of a hub cuts its trade heavily
   if (s.loc.ctrl[a.hub] !== a.owner || s.loc.ctrl[b.hub] !== b.owner) blk = Math.max(blk, 0.6);
   if (sea) blk = Math.max(blk, (s.flags[`blockade_${a.id}`] || 0) > s.day ? 0.9 : 0, (s.flags[`blockade_${b.id}`] || 0) > s.day ? 0.9 : 0);
-  if (s.flags[`embargo_${oa}_${ob}`] || s.flags[`embargo_${ob}_${oa}`]) blk = Math.max(blk, 0.95);
+  if (embargoBetween(s, oa, ob)) blk = Math.max(blk, 0.95);
   return blk;
 }
 
