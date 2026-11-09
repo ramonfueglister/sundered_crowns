@@ -13,6 +13,8 @@ import { overextension } from './economy';
 import { nationLocsRO, hasCasusBelli } from './war';
 import { LAWS } from '../content/laws';
 import { faithFamily, GROUP_OF, ALL_CULTURES, FAITH_INDEX } from '../content/peoples';
+import { armyMen } from './military';
+import { availableCommanders, commanderSkill, commandOf, generalCost } from './commanders';
 
 const YEAR = 365;
 const P = (n: Nation, k: string) => n.personality === k;
@@ -62,6 +64,7 @@ export function statecraft(s: GameState, w: World, n: Nation, atWar: boolean) {
   coinage(s, w, n, sit);
   agents(s, w, n, sit);
   espionage(s, w, n, sit);
+  generals(s, w, n, sit);
 }
 
 // ---------------- the council ----------------
@@ -242,6 +245,24 @@ export function espionage(s: GameState, w: World, n: Nation, sit: Situation) {
 
 // ---------------- laws ----------------
 /** How much the realm values one unit of each effect a law gives, by its situation and personality. */
+// ---------------- the commanders ----------------
+/** At war, a realm with gold to spare whose largest host has only a middling commander (generalship below 3) gives
+ *  it a better free person, or, when nobody free is better than a hired captain is likely to be, hires a seasoned
+ *  general for gold (the player's "Recruit a general"). At most once every two years. */
+export function generals(s: GameState, w: World, n: Nation, sit: Situation) {
+  if (!sit.atWar || flag(n, 'ai_general') > s.day) return;
+  const cost = generalCost(s, n);
+  if (n.treasury < cost * (sit.deficit ? 6 : 3)) return;
+  let big = null as (typeof s.armies)[number] | null, men = 0;
+  for (const a of s.armies) if (a.owner === n.id && !a.fleet && !a.rebels) { const m = armyMen(a); if (m > men) { men = m; big = a; } }
+  if (!big || men < 5000) return;
+  const cur = big.general ? s.chars[big.general] : undefined;
+  if (cur && cur.alive && commanderSkill(cur) >= 3) return;
+  n.flags.ai_general = s.day + 2 * YEAR;
+  const free = availableCommanders(s, n).some((c) => !commandOf(s, c.id) && !c.female && c.id !== n.ruler && c.id !== n.heir && commanderSkill(c) >= 4);
+  aiApply(s, w, { t: 'general', n: n.id, army: big.id, char: free ? 0 : -1 }, 'poor_general');
+}
+
 export function lawWeights(n: Nation, sit: Situation): Record<string, number> {
   const war = sit.atWar ? 1 : 0, debt = sit.loans >= 3 || n.treasury < 0 ? 1 : 0;
   const big = sit.locs > 40 ? 1 : 0;
@@ -306,6 +327,8 @@ const DRIVER: Record<string, string> = {
 };
 /** Laws the AI leaves as they are (the succession and the regency are matters of the house, not of policy). */
 const AI_KEEPS = new Set(['succession', 'regency']);
+/** The least Authority an assembly brings (commands.ts, estate summon: 25 and a share of the estate's influence). */
+const ASSEMBLY_GAIN = 25;
 /** Score of changing law to option: the gain in valued effects, less the estates' displeasure and the Authority. */
 export function reformScore(n: Nation, law: string, option: number, wts: Record<string, number>): { v: number; driver: string } {
   const L = LAWS.find((x) => x.id === law); if (!L) return { v: -1, driver: '' };
@@ -328,7 +351,13 @@ export function reformScore(n: Nation, law: string, option: number, wts: Record<
 /** Choose and begin the most valuable reform for the realm's situation (with Authority to spare, at most one every
  *  three years; a law changed recently is left alone for 25 years). Returns true when a reform began. */
 export function aiReforms(s: GameState, w: World, n: Nation, atWar: boolean, sit?: Situation): boolean {
-  if (n.reform || n.authority < 90 || flag(n, 'ai_reform') > s.day) return false;
+  if (n.reform || flag(n, 'ai_reform') > s.day) return false;
+  // a little short of Authority for a reform worth having: the crown summons the estates to pay for it (below)
+  const short = n.authority < 90;
+  const willing = short && n.authority + ASSEMBLY_GAIN >= 90 && flag(n, 'assembly') <= s.day && (n.laws.diet ?? 1) > 0
+    ? (n.estates ?? []).filter((x) => x.contentment >= 58 && x.influence < 55).sort((a, b) => b.influence - a.influence)[0] : undefined;
+  if (short && !willing) return false;
+  const auth = short ? n.authority + ASSEMBLY_GAIN : n.authority;
   const st = sit ?? situation(s, w, n, atWar);
   const wts = lawWeights(n, st);
   const opts: { law: string; o: number; v: number; driver: string }[] = [];
@@ -339,7 +368,7 @@ export function aiReforms(s: GameState, w: World, n: Nation, atWar: boolean, sit
       if (o === cur) continue;
       const opt = L.options[o];
       if ((opt.minEra ?? 0) > n.era || (opt.gov && !opt.gov.includes(n.gov))) continue;
-      if (n.authority < reformCost(n, L.id, o) + 20) continue;
+      if (auth < reformCost(n, L.id, o) + 20) continue;
       // the estates would block it in the assembly
       if (Object.entries(opt.estates).some(([eid, dv]) => { const e = n.estates.find((x) => x.id === eid); return e && dv < -5 && e.influence > 55 && e.contentment < 45; })) continue;
       const r = reformScore(n, L.id, o, wts);
@@ -347,6 +376,11 @@ export function aiReforms(s: GameState, w: World, n: Nation, atWar: boolean, sit
     }
   }
   opts.sort((a, b) => b.v - a.v || (a.law < b.law ? -1 : a.law > b.law ? 1 : a.o - b.o));
+  if (short) {
+    // not at once: a crown that can wait a few months for its Authority often does; the reform follows next month
+    if (willing && opts.length && chance(s.rng, 0.1)) aiApply(s, w, { t: 'estate', n: n.id, estate: willing.id, action: 'summon' }, 'for_reform');
+    return false;
+  }
   for (const x of opts.slice(0, 3)) {
     if (aiApply(s, w, { t: 'law', n: n.id, law: x.law, option: x.o }, x.driver).ok) { n.flags[`law_${x.law}`] = s.day + 25 * YEAR; n.flags.ai_reform = s.day + 3 * YEAR; return true; }
   }

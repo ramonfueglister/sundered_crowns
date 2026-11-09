@@ -44,7 +44,7 @@ export function aiRecord(s: GameState, cmd: Command, why?: string) {
   AI_USAGE[k] = (AI_USAGE[k] ?? 0) + 1;
   (AI_USAGE_REALMS[k] ??= new Set()).add(cmd.n);
   if (why) AI_WHY[`${k}|${why}`] = (AI_WHY[`${k}|${why}`] ?? 0) + 1;
-  if (QUIET.has(cmd.t) || (cmd.t === 'budget' && cmd.key !== 'coinage')) return;
+  if ((QUIET.has(cmd.t) && k !== 'general:recruit') || (cmd.t === 'budget' && cmd.key !== 'coinage')) return;
   const n = s.nations[cmd.n]; if (!n) return;
   const log = (n.aiLog ??= []);
   const c = compact(cmd);
@@ -66,6 +66,8 @@ const T = (en: string, de: string): I18n => ({ en, de });
 /** Why the AI did it. */
 export const WHY: Record<string, I18n> = {
   need_authority: T('to gain Authority', 'um Autorität zu gewinnen'),
+  for_reform: T('to pay for a reform', 'um eine Reform zu bezahlen'),
+  poor_general: T('our largest host lacked an able commander', 'unserem größten Heer fehlte ein fähiger Befehlshaber'),
   need_gold: T('to fill the treasury', 'um die Kasse zu füllen'),
   need_concord: T('to restore Concord', 'um die Eintracht wiederherzustellen'),
   need_mandate: T('to strengthen the Mandate', 'um das Mandat zu stärken'),
@@ -153,6 +155,7 @@ export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
     case 'mercs': out = fill(T('Hired a company of {M} mercenaries', 'Söldnerkompanie mit {M} Mann angeworben'), { M: T(String(c.company), String(c.company)) }); break;
     case 'loan': out = c.take ? fill(T('Took a loan of {A}', 'Kredit über {A} aufgenommen'), { A: T(String(Math.round(c.amount)), String(Math.round(c.amount))) }) : T('Repaid a loan', 'Einen Kredit getilgt'); break;
     case 'landmark': out = T('Began work on a great building', 'Arbeit an einem großen Bauwerk begonnen'); break;
+    case 'general': out = T('Hired a seasoned general for gold', 'Erfahrenen Feldherrn gegen Gold angeworben'); break;
     case 'colonize': out = fill(T('Sent settlers to {L}', 'Siedler nach {L} entsandt')); break;
     case 'charter': out = T('Chartered a trading company', 'Eine Handelskompanie gegründet'); break;
     case 'explore': out = T('Sent out an expedition', 'Eine Expedition ausgesandt'); break;

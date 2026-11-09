@@ -1,6 +1,6 @@
 // The AI uses every system the player has (spec points 95, 99): spies, preachers and officials, the estates'
-// privileges, gifts and assembly, the council, the mint and its laws, all through the player's commands, chosen by
-// the realm's situation; and what it did is kept in a log per realm.
+// privileges, gifts and assembly (also to pay for a reform), the council, the mint, its laws and hired generals, all
+// through the player's commands, chosen by the realm's situation; and what it did is kept in a log per realm.
 // The long run is AI_YEARS years (default 10, which takes a few minutes; AI_YEARS=50 for the full check).
 // Run: npx vitest run tests/ai_statecraft.test.ts
 import { describe, it, expect } from 'vitest';
@@ -8,7 +8,9 @@ import { writeFileSync } from 'node:fs';
 import { newGame } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { AI_USAGE, AI_USAGE_REALMS, resetAiUsage, aiLogText } from '../src/sim/systems/ai_log';
-import { situation, coinage, estates, offices, espionage, lawWeights, reformScore, aiReforms } from '../src/sim/systems/ai_statecraft';
+import { situation, coinage, estates, offices, espionage, lawWeights, reformScore, aiReforms, generals } from '../src/sim/systems/ai_statecraft';
+import { commanderSkill, generalCost } from '../src/sim/systems/commanders';
+import { armyMen } from '../src/sim/systems/military';
 import { declareWar } from '../src/sim/systems/war';
 import { answer } from '../src/game/view';
 import type { GameState, Nation } from '../src/sim/types';
@@ -87,6 +89,39 @@ describe('statecraft rules', () => {
     expect(n.reform).toBeTruthy();
     expect(last(n).y).toMatch(/^rf:/);
   });
+  it('summons the estates to pay for a reform when a little short of Authority', () => {
+    const { s, w } = newGame(1356);
+    const n = nat(s, 'castile');
+    n.reform = undefined as any; n.flags.ai_reform = 0; n.flags.assembly = 0; n.authority = 86;
+    for (const e of n.estates) { e.contentment = 70; e.influence = Math.min(e.influence, 50); }
+    for (let k = 0; k < 200 && n.authority < 90; k++) expect(aiReforms(s, w, n, false)).toBe(false);
+    expect(last(n)).toMatchObject({ y: 'for_reform', c: { t: 'estate', action: 'summon' } });
+    expect(n.authority).toBeGreaterThanOrEqual(105);
+    expect(aiReforms(s, w, n, false)).toBe(true);
+    expect(aiLogText(s, w, n.aiLog![n.aiLog!.length - 2]).de).toMatch(/^Ständeversammlung einberufen, die .* voran \(um eine Reform zu bezahlen\)$/);
+  });
+  it('hires a seasoned general for gold when its largest host at war lacks an able commander', () => {
+    const { s, w } = newGame(1356);
+    const a = nat(s, 'hungary'), b = nat(s, 'serbia');
+    s.wars = s.wars.filter((x) => !x.att.includes(a.id) && !x.def.includes(a.id));
+    declareWar(s, w, a.id, b.id, 'conquest');
+    const host = s.armies.filter((x) => x.owner === a.id && !x.fleet && !x.rebels).sort((x, y) => armyMen(y) - armyMen(x))[0];
+    for (const r of host.regs) r.men = Math.max(r.men, 2500);
+    expect(armyMen(host)).toBeGreaterThanOrEqual(5000);
+    // nobody able to spare: every other person who could lead is busy or poor
+    s.chars[host.general!].skills[2] = 0; s.chars[host.general!].traits = [];
+    for (const id of a.generals ?? []) if (id !== host.general) { const c = s.chars[id]; if (c) { c.skills[2] = 0; c.traits = []; } }
+    for (const c of Object.values(s.chars)) if (c.nation === a.id && c.role === 'courtier') { c.skills[2] = 0; c.traits = []; }
+    const cost = generalCost(s, a); a.treasury = cost * 10; const before = a.treasury;
+    generals(s, w, a, { ...situation(s, w, a, true), deficit: false });
+    expect(last(a)).toMatchObject({ y: 'poor_general', c: { t: 'general', char: -1 } });
+    expect(a.treasury).toBeCloseTo(before - cost, 5);
+    expect(commanderSkill(s.chars[host.general!])).toBeGreaterThanOrEqual(2);
+    expect(aiLogText(s, w, last(a)).de).toBe('Erfahrenen Feldherrn gegen Gold angeworben (unserem größten Heer fehlte ein fähiger Befehlshaber)');
+    // not again for two years
+    generals(s, w, a, { ...situation(s, w, a, true), deficit: false });
+    expect(a.treasury).toBeCloseTo(before - cost, 5);
+  });
 });
 
 describe('the AI uses every system in a long run', () => {
@@ -106,7 +141,7 @@ describe('the AI uses every system in a long run', () => {
       ['spy:slander', ['monarchy', 'republic']], ['spy:support_rebels', ['monarchy']], ['spy:steal_tech', ['monarchy', 'republic']], ['spy:fabricate', ['monarchy']],
       ['diplo:fabricate', ['monarchy']], ['decision', []],
     ];
-    if (years >= 50) need.push(['estate:revoke', ['monarchy']], ['coinage:restore', ['monarchy']]);
+    if (years >= 50) need.push(['estate:revoke', ['monarchy']], ['coinage:restore', ['monarchy']], ['general:recruit', ['monarchy']]);
     for (const [k, kinds] of need) {
       expect([k, (AI_USAGE[k] ?? 0) > 0]).toEqual([k, true]);
       for (const kd of kinds) expect([k, kd, kindsOf(k).has(kd)]).toEqual([k, kd, true]);
