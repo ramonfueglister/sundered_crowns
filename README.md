@@ -24,10 +24,15 @@ game stays fully playable.
 | Space | Pause and resume (single player) |
 | Numpad + / − | Speed 1–5 (single player) |
 | 1 … 0 | Map modes: political, terrain, diplomatic, development, population, culture, faith, trade, unrest, control |
-| E / G / Shift+D / M / K / L / C | Economy, government, diplomacy, military, knowledge, ledger, chronicle |
+| E / G / Shift+D / M / B / K / U / J / L / C / V | Economy, government, diplomacy, military, works, knowledge, society, decisions, ledger, chronicle, victory |
 | H | Hide the interface (photo mode) |
 | F5 | Quick save (the autosave interval is set in the settings: 1 to 24 months) |
+| F2 | Developer panel (trigger events, switch a realm's AI, fast-forward, performance) |
 | Esc | Close the panel, then the selection, then open the pause menu |
+
+Every key except the map's camera keys can be rebound under Settings → Key bindings (conflicts are marked, defaults
+can be restored); the tooltips show the keys as set. The settings also hold the colour-blind palette, high-contrast
+borders, the resolution scale and opt-in browser notifications.
 
 Hover over a number in the top bar or the panels to see where it comes from.
 

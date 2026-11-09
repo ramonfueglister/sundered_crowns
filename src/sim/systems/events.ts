@@ -148,9 +148,11 @@ export function fireEvent(s: GameState, w: World, n: Nation, d: EventDef, ctx: R
   if (d.setup && !d.setup(e)) return false;
   if (d.once) s.flags[`ev_${d.id}`] = s.day;
   n.flags[`ev_${d.id}`] = s.day;
-  const human = s.playerNations.includes(n.id) || (!!n.playerId && !(s.flags[`offline_${n.id}`] > 0));
+  // an online player who is away gets the event too, with a shorter deadline; after it the court decides (polish pass)
+  const away = !!n.playerId && s.flags[`offline_${n.id}`] > 0;
+  const human = s.playerNations.includes(n.id) || !!n.playerId;
   if (human) {
-    s.pending.push({ id: s.nextId++, event: d.id, nation: n.id, day: s.day, expires: s.day + 90, ctx: { ...ctx } });
+    s.pending.push({ id: s.nextId++, event: d.id, nation: n.id, day: s.day, expires: s.day + (away ? AWAY_EVENT_DAYS : 90), ctx: { ...ctx } });
     return true;
   }
   const k = aiChoice(e, d);
@@ -188,16 +190,26 @@ function eventsMonth(s: GameState, w: World, m: number, y: number) {
     }
   }
   // expire unanswered events (the court decides)
-  for (const p of s.pending.slice()) if (p.expires <= s.day) answerEvent(s, w, p.nation, p.id, -1);
+  for (const p of s.pending.slice()) if (p.expires <= s.day) answerEvent(s, w, p.nation, p.id, -1, true);
 }
 
-/** choice -1 = automatic (AI preference). Returns error or null. */
-export function answerEvent(s: GameState, w: World, nation: number, pendingId: number, choice: number): string | null {
+/** Days an event waits for an online player who is away before the court decides it (and lists it for their return). */
+export const AWAY_EVENT_DAYS = 30;
+/** Events decided for online players after their deadline, for the summary when they come back (src/online/catchup.ts). */
+function recordAuto(s: GameState, nation: number, event: string, title: I18n, option: I18n, loc?: number) {
+  const list = (s.autoEvents ??= []);
+  list.push({ nation, day: s.day, event, title, option, loc });
+  if (list.length > 300) list.splice(0, list.length - 300);
+}
+
+/** choice -1 = automatic (AI preference). auto: the deadline passed (an online player's choice is then recorded). Returns error or null. */
+export function answerEvent(s: GameState, w: World, nation: number, pendingId: number, choice: number, auto = false): string | null {
   const p = s.pending.find((x) => x.id === pendingId && x.nation === nation); if (!p) return 'no such event';
   const n = s.nations[nation];
   s.pending.splice(s.pending.indexOf(p), 1);
   if (p.event.startsWith('diplo_')) {
     const action = p.event.slice(6);
+    if (auto && n.playerId) { const from = s.nations[p.ctx.from]; recordAuto(s, nation, p.event, { en: `Proposal of ${from?.short.en ?? '?'} (${action})`, de: `Vorschlag von ${from?.short.de ?? '?'} (${action})` }, { en: 'Declined', de: 'Abgelehnt' }); }
     if (choice === 0 && s.nations[p.ctx.from]?.alive) {
       acceptProposal(s, w, p.ctx.from, nation, action);
       notice(s, p.ctx.from, 'diplo_accept', { en: `${n.short.en} accepted our proposal (${action}).`, de: `${n.short.de} hat unseren Vorschlag angenommen (${action}).` });
@@ -207,6 +219,7 @@ export function answerEvent(s: GameState, w: World, nation: number, pendingId: n
   const d = eventDef(p.event); if (!d) return 'unknown event';
   const e = api(s, w, n, p.ctx);
   const k = choice < 0 || choice >= d.options.length ? aiChoice(e, d) : choice;
+  if (auto && n.playerId) recordAuto(s, nation, p.event, interpolate(s, w, n, p.ctx, d.title), interpolate(s, w, n, p.ctx, d.options[k].label), p.ctx.loc);
   d.options[k].effect(e);
   if (d.major) chronicle(s, nation, 'event', interpolate(s, w, n, p.ctx, d.title), p.ctx.loc);
   return null;

@@ -65,6 +65,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
   'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
+  // ---- polish pass (claude/polish-pass): developer tools
+  'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

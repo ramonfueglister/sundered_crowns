@@ -30,6 +30,8 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
+import { victoryView, historyView } from './endview';
+import { EVENTS } from '../sim/content/events';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
 
@@ -129,20 +131,30 @@ function ramp(t: number, stops: [number, number, number][]): [number, number, nu
   t = Math.max(0, Math.min(1, t)) * (stops.length - 1); const i = Math.min(stops.length - 2, Math.floor(t)), f = t - i;
   const a = stops[i], b = stops[i + 1]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f].map(Math.round) as any;
 }
-const HEAT: [number, number, number][] = [[40, 60, 120], [60, 140, 160], [120, 190, 100], [240, 210, 80], [220, 80, 50]];
-const GOOD: [number, number, number][] = [[200, 60, 50], [230, 190, 70], [70, 170, 80]];
+const HEAT_N: [number, number, number][] = [[40, 60, 120], [60, 140, 160], [120, 190, 100], [240, 210, 80], [220, 80, 50]];
+const GOOD_N: [number, number, number][] = [[200, 60, 50], [230, 190, 70], [70, 170, 80]];
+// colour-blind palette (settings): no red against green; a viridis-like ramp and a blue/orange scale (polish pass)
+const HEAT_CVD: [number, number, number][] = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+const GOOD_CVD: [number, number, number][] = [[213, 94, 0], [240, 228, 66], [0, 114, 178]];
+export type MapPalette = 'normal' | 'cvd';
+const hex = (c: [number, number, number]) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+/** Diplomatic map colours: self, subjects, allies, enemies, rivals, truce, overlord, others. */
+const DIPLO_N = { self: [60, 170, 70], sub: [120, 200, 120], ally: [70, 120, 210], enemy: [210, 50, 40], rival: [230, 140, 40], truce: [150, 150, 150], lord: [160, 120, 200], other: [205, 195, 175] } as const;
+const DIPLO_CVD = { self: [0, 114, 178], sub: [86, 180, 233], ally: [0, 158, 115], enemy: [213, 94, 0], rival: [240, 228, 66], truce: [150, 150, 150], lord: [204, 121, 167], other: [215, 210, 200] } as const;
 
-export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number): { rgba: Uint8Array; legend: Legend } {
+export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number, palette: MapPalette = 'normal'): { rgba: Uint8Array; legend: Legend } {
   const N = w.N, out = new Uint8Array(N * 4);
+  const cvd = palette === 'cvd'; const HEAT = cvd ? HEAT_CVD : HEAT_N, GOOD = cvd ? GOOD_CVD : GOOD_N, DI = cvd ? DIPLO_CVD : DIPLO_N;
+  const lo = hex(HEAT[0]), hi = hex(HEAT[HEAT.length - 1]), bad = hex(GOOD[0]), good = hex(GOOD[GOOD.length - 1]);
   const put = (i: number, c: [number, number, number], a = 255) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = a; };
   const lc = s.loc;
   let legend: Legend = { title: { en: mode, de: mode }, items: [] };
   const pop = (i: number) => { let p = 0; for (let c = 0; c < C; c++) p += lc.pop[i * C + c]; return p; };
   switch (mode) {
-    case 'development': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log1p(lc.dev[i]) / Math.log(80), HEAT)); legend = { title: { en: 'Development', de: 'Entwicklung' }, items: [{ color: '#283c78', label: { en: 'low', de: 'niedrig' } }, { color: '#dc5032', label: { en: 'high', de: 'hoch' } }] }; break;
-    case 'population': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log10(1 + pop(i) / Math.max(1, w.area[i])) / 2.6, HEAT)); legend = { title: { en: 'Population density', de: 'Bevölkerungsdichte' }, items: [{ color: '#283c78', label: { en: 'sparse', de: 'dünn' } }, { color: '#dc5032', label: { en: 'dense', de: 'dicht' } }] }; break;
-    case 'unrest': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(1 - lc.unrest[i] / 40, GOOD)); legend = { title: { en: 'Unrest', de: 'Unruhe' }, items: [{ color: '#46aa50', label: { en: 'calm', de: 'ruhig' } }, { color: '#c83c32', label: { en: 'restless', de: 'unruhig' } }] }; break;
-    case 'control': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(lc.control[i], GOOD)); legend = { title: { en: 'Control', de: 'Kontrolle' }, items: [{ color: '#c83c32', label: { en: 'weak', de: 'schwach' } }, { color: '#46aa50', label: { en: 'firm', de: 'fest' } }] }; break;
+    case 'development': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log1p(lc.dev[i]) / Math.log(80), HEAT)); legend = { title: { en: 'Development', de: 'Entwicklung' }, items: [{ color: lo, label: { en: 'low', de: 'niedrig' } }, { color: hi, label: { en: 'high', de: 'hoch' } }] }; break;
+    case 'population': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log10(1 + pop(i) / Math.max(1, w.area[i])) / 2.6, HEAT)); legend = { title: { en: 'Population density', de: 'Bevölkerungsdichte' }, items: [{ color: lo, label: { en: 'sparse', de: 'dünn' } }, { color: hi, label: { en: 'dense', de: 'dicht' } }] }; break;
+    case 'unrest': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(1 - lc.unrest[i] / 40, GOOD)); legend = { title: { en: 'Unrest', de: 'Unruhe' }, items: [{ color: good, label: { en: 'calm', de: 'ruhig' } }, { color: bad, label: { en: 'restless', de: 'unruhig' } }] }; break;
+    case 'control': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(lc.control[i], GOOD)); legend = { title: { en: 'Control', de: 'Kontrolle' }, items: [{ color: bad, label: { en: 'weak', de: 'schwach' } }, { color: good, label: { en: 'firm', de: 'fest' } }] }; break;
     case 'culture': { const seen = new Map<number, number>(); for (let i = 0; i < w.L; i++) { const c = lc.culture[i]; put(i, hashColor(c * 7 + 3)); seen.set(c, (seen.get(c) || 0) + 1); }
       legend = { title: { en: 'Culture', de: 'Kultur' }, items: [...seen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(([c]) => { const k = hashColor(c * 7 + 3); return { color: `rgb(${k})`, label: cultureName(ALL_CULTURES[c] || 'unknown') }; }) }; break; }
     case 'faith': { const seen = new Set<number>(); for (let i = 0; i < w.L; i++) { const f = lc.faith[i]; put(i, hexToRgb(FAITHS[f]?.color ?? '#888888')); seen.add(f); }
@@ -164,12 +176,13 @@ export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: numb
       const truce = new Set(F ? treatiesOf(s, focus, 'truce') : []), riv = new Set(F?.rivals ?? []);
       for (let i = 0; i < w.L; i++) {
         const o = lc.owner[i]; if (o < 0) continue;
-        const c: [number, number, number] = o === focus ? [60, 170, 70] : sub.has(o) || s.nations[o].overlord === focus ? [120, 200, 120] : al.has(o) ? [70, 120, 210] : en.has(o) ? [210, 50, 40] : riv.has(o) ? [230, 140, 40] : truce.has(o) ? [150, 150, 150] : F && F.overlord === o ? [160, 120, 200] : [205, 195, 175];
-        put(i, c);
+        const c = o === focus ? DI.self : sub.has(o) || s.nations[o].overlord === focus ? DI.sub : al.has(o) ? DI.ally : en.has(o) ? DI.enemy : riv.has(o) ? DI.rival : truce.has(o) ? DI.truce : F && F.overlord === o ? DI.lord : DI.other;
+        put(i, c as unknown as [number, number, number]);
       }
+      const hx = (c: readonly number[]) => hex(c as [number, number, number]);
       legend = { title: { en: 'Diplomacy', de: 'Diplomatie' }, items: [
-        { color: '#3caa46', label: { en: 'Selected realm', de: 'Gewähltes Reich' } }, { color: '#78c878', label: { en: 'Subjects', de: 'Untertanen' } }, { color: '#4678d2', label: { en: 'Allies', de: 'Verbündete' } },
-        { color: '#d23228', label: { en: 'At war', de: 'Im Krieg' } }, { color: '#e68c28', label: { en: 'Rivals', de: 'Rivalen' } }, { color: '#969696', label: { en: 'Truce', de: 'Waffenstillstand' } }] };
+        { color: hx(DI.self), label: { en: 'Selected realm', de: 'Gewähltes Reich' } }, { color: hx(DI.sub), label: { en: 'Subjects', de: 'Untertanen' } }, { color: hx(DI.ally), label: { en: 'Allies', de: 'Verbündete' } },
+        { color: hx(DI.enemy), label: { en: 'At war', de: 'Im Krieg' } }, { color: hx(DI.rival), label: { en: 'Rivals', de: 'Rivalen' } }, { color: hx(DI.truce), label: { en: 'Truce', de: 'Waffenstillstand' } }, { color: hx(DI.lord), label: { en: 'Overlord', de: 'Lehnsherr' } }] };
       break;
     }
     case 'terrain': case 'political': case 'explored': default: break;
@@ -205,6 +218,9 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
     case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
     case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;
+    case 'victory': return victoryView(s, w, player);
+    case 'devEvents': return s.flags.devtools ? { events: EVENTS.map((d) => ({ id: d.id, title: d.title, major: !!d.major })), aiDisabled: s.aiDisabled.slice() } : null;
+    case 'history': return historyView(s, player, Array.isArray(q.nations) ? q.nations.slice(0, 8) : []);
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;

@@ -10,6 +10,7 @@ export function startRecorded(w: World, setup: any, hubs: any, header: Omit<Repl
   const s = createGame(w, setup, hubs, header.seed, { player: header.player !== null ? [header.player] : [] });
   if (header.devtools) s.flags.devtools = 1;
   if (header.difficulty !== undefined) s.difficulty = header.difficulty;
+  if (header.victory?.length) s.victoryKinds = [...new Set(['score', ...header.victory])];
   if (header.player !== null) s.flags.peaceful_start = 30;
   s.replay = { ...header, log: [] };
   return s;

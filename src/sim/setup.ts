@@ -51,6 +51,7 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
     papacy: { holder: -1, seat: -1, antipope: -1, curiaFavour: {}, schism: false, reformPressure: 0, corruption: 30 },
     leagues: [], situations: [], innovations: [], pending: [], chronicle: [], notices: [], ranking: [],
     priceLevel: 1, silverStock: 1, ended: false, flags: {}, playerNations: opts.player ?? [], observer: false, aiDisabled: [], difficulty: 2, timelapse: [],
+    victoryKinds: ['score'], victoryHold: {}, autoEvents: [], // polish pass (the save migration gives older saves the same)
   };
   const id = () => s.nextId++;
   // ---------- nations & characters ----------

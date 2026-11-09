@@ -6,10 +6,15 @@ import { listSaves, loadSave, deleteSave, saveNow, importSave, type SaveMeta } f
 import { setLang } from '../i18n';
 import { rendererRef } from '../MapView';
 import { timelapse, playTimelapse, abortTimelapse } from '../timelapse';
-import { Panel, Section, Row, Btn, Empty, NLink, act, t, L, lang, num, pct, Coa } from './common';
+import { Panel, Section, Row, Btn, Empty, NLink, act, t, L, lang, num, pct, Coa, Tip } from './common';
 import { sfx } from '../audio';
 import { CHARGE_TYPES } from './coa';
 import { EventArt, ART_LIST } from './art';
+import { KeyBindings, AccessSettings, DisplaySettings } from './settings';
+import { DevTools } from './devtools';
+import { HistoryCharts, ChronicleExport, endingText, victoryName, victoryDesc } from './victory';
+import { TipHead } from './explain';
+import { dayToDate } from '../../sim/calendar';
 
 // ---------------------------------------------------------------- settings
 export function SettingsPanel() {
@@ -21,7 +26,10 @@ export function SettingsPanel() {
       <div class="seg wide">{(['low', 'medium', 'high', 'ultra'] as const).map((q) => <button class={s.quality === q ? 'on' : ''} onClick={() => { sfx('click'); set({ quality: q }); }}>{t(`q_${q}`)}</button>)}</div>
       <div class="muted small">{t(`qhint_${s.quality}`)}</div>
       <div class="slider-row"><span class="k">{t('ui_scale')}</span><span class="slider"><input type="range" min={0.75} max={1.5} step={0.05} value={s.uiScale} onChange={(e) => set({ uiScale: Number((e.target as HTMLInputElement).value) })} /><span class="slider-v">{pct(s.uiScale)}</span></span></div>
+      <DisplaySettings />
     </Section>
+    <AccessSettings />
+    <KeyBindings />
     <Section title={t('volume')} id="set-vol">
       <div class="slider-row"><span class="k">{t('music')}</span><span class="slider"><input type="range" min={0} max={1} step={0.05} value={s.music} onInput={(e) => set({ music: Number((e.target as HTMLInputElement).value) })} /><span class="slider-v">{pct(s.music)}</span></span></div>
       <div class="slider-row"><span class="k">{t('effects')}</span><span class="slider"><input type="range" min={0} max={1} step={0.05} value={s.sfx} onInput={(e) => set({ sfx: Number((e.target as HTMLInputElement).value) })} onChange={() => sfx('click')} /><span class="slider-v">{pct(s.sfx)}</span></span></div>
@@ -126,6 +134,7 @@ export function DevPanel() {
       <Row k={t('wars')} v={v?.wars.length ?? 0} />
       <Row k={t('dev_renderer')} v={rendererRef.r ? 'WebGPU' : '—'} />
     </Section>
+    <DevTools />
     <Section title={t('dev_gallery')} id="dev-gal" open={false}>
       <div class="seg gal-seg"><button class={gal === 'coa' ? 'on' : ''} onClick={() => setGal(gal === 'coa' ? '' : 'coa')}>{t('heraldry')}</button><button class={gal === 'art' ? 'on' : ''} onClick={() => setGal(gal === 'art' ? '' : 'art')}>{t('illustrations')}</button></div>
       {gal === 'coa' && <><div class="coa-gallery">{nations.value.filter((n) => n.alive).map((n) => <span title={`${L(n.short)} – ${n.coa?.blazon ?? ''}`} onClick={() => { selectedNation.value = n.id; }}><Coa coa={n.coa} color={n.color} size={44} /></span>)}</div>
@@ -155,28 +164,36 @@ export function EndScreen() {
   const v = view.value; const pid = playerId.value; const p = v?.player;
   const tl = timelapse.value;
   const win = d?.victory ?? v?.victory;
+  const endYear = v ? dayToDate(v.day, v.startYear).y : 0;
+  const alive = nations.value.filter((n) => n.alive).sort((a, b) => b.score - a.score);
+  const rank = alive.findIndex((n) => n.id === pid);
+  const ending = win ? endingText(win, pid) : '';
   return <div class="end-screen">
-    <div class="end-box pnl">
-      <div class="pnl-head"><div class="pnl-titles"><h2>{t('end_title')}</h2><div class="pnl-sub">{v ? `${v.startYear} – ${v.startYear + Math.floor(v.day / 365.25)}` : ''}</div></div></div>
+    <div class="end-box wide pnl">
+      <div class="pnl-head"><div class="pnl-titles"><h2>{t('end_title')}</h2><div class="pnl-sub">{v ? `${v.startYear} – ${endYear}` : ''}</div></div></div>
       <div class="pnl-body">
-        {win && <div class="victory"><NLink id={win.nation} size={56} full /><div>{t(`victory_${win.kind}`) !== `victory_${win.kind}` ? t(`victory_${win.kind}`) : win.kind}</div></div>}
-        {p && <Section title={t('your_reign')} id="end-me">
-          <div class="grid2">
-            <Row k={t('battles_won')} v={p.stats.battlesWon ?? 0} /><Row k={t('battles_lost')} v={p.stats.battlesLost ?? 0} />
-            <Row k={t('wars_won')} v={p.stats.warsWon ?? 0} /><Row k={t('locs_gained')} v={p.stats.locsGained ?? 0} />
-            <Row k={t('locs_lost')} v={p.stats.locsLost ?? 0} /><Row k={t('treasury')} v={num(p.treasury)} />
-          </div>
-        </Section>}
-        <Section title={t('final_ranking')} id="end-rank">
-          {!d ? <Empty>{t('loading')}…</Empty> : <table class="tbl"><tbody>{d.ranking.map((r: any, i: number) => <tr class={r.id === pid ? 'me' : ''}><td class="r muted">{i + 1}</td><td><NLink id={r.id} size={18} /></td><td class="r">{num(r.score)}</td></tr>)}{(() => {
-            if (d.ranking.some((r: any) => r.id === pid)) return null;
-            const alive = nations.value.filter((n) => n.alive).sort((a, b) => b.score - a.score);
-            const i = alive.findIndex((n) => n.id === pid); if (i < 0) return null;
-            return <><tr><td /><td class="muted">…</td><td /></tr><tr class="me"><td class="r muted">{i + 1}</td><td><NLink id={pid} size={18} /></td><td class="r">{num(alive[i].score)}</td></tr></>;
-          })()}</tbody></table>}
-        </Section>
+        {win && <Tip content={<div><TipHead name={victoryName(win.kind)} hint={victoryDesc(win.kind)} /></div>} tag="div"><div class="victory"><NLink id={win.nation} size={56} full /><div>{ending}</div></div></Tip>}
+        {pid >= 0 && <div class="end-rank-line">{rank >= 0 ? t('x_end_rank').replace('{rank}', String(rank + 1)).replace('{n}', String(alive.length)) : t('x_end_fallen')}</div>}
+        <Section title={t('x_hist_title')} id="end-hist"><HistoryCharts /></Section>
+        <div class="end-cols">
+          {p && <Section title={t('your_reign')} id="end-me">
+            <div class="grid2">
+              <Row k={t('battles_won')} v={p.stats.battlesWon ?? 0} /><Row k={t('battles_lost')} v={p.stats.battlesLost ?? 0} />
+              <Row k={t('wars_won')} v={p.stats.warsWon ?? 0} /><Row k={t('locs_gained')} v={p.stats.locsGained ?? 0} />
+              <Row k={t('locs_lost')} v={p.stats.locsLost ?? 0} /><Row k={t('treasury')} v={num(p.treasury)} />
+            </div>
+          </Section>}
+          <Section title={t('final_ranking')} id="end-rank">
+            {!d ? <Empty>{t('loading')}…</Empty> : <table class="tbl"><tbody>{d.ranking.slice(0, 10).map((r: any, i: number) => <tr class={r.id === pid ? 'me' : ''}><td class="r muted">{i + 1}</td><td><NLink id={r.id} size={18} /></td><td class="r">{num(r.score)}</td></tr>)}{(() => {
+              if (d.ranking.slice(0, 10).some((r: any) => r.id === pid) || rank < 0) return null;
+              return <><tr><td /><td class="muted">…</td><td /></tr><tr class="me"><td class="r muted">{rank + 1}</td><td><NLink id={pid} size={18} /></td><td class="r">{num(alive[rank].score)}</td></tr></>;
+            })()}</tbody></table>}
+          </Section>
+        </div>
         {tl && <div class="tl-bar"><b>{tl.year}</b><span class="bar"><i class="bar-fill" style={{ width: `${(tl.i / Math.max(1, tl.n - 1)) * 100}%` }} /></span></div>}
-        <div class="act-row"><Btn small={false} onClick={() => playTimelapse(false)}>{t('timelapse')}</Btn><Btn small={false} onClick={() => playTimelapse(true)}>{t('timelapse_video')}</Btn><span class="spacer" /><Btn small={false} cls="gold" onClick={() => { abortTimelapse(); screen.value = 'menu'; }}>{t('quit')}</Btn></div>
+        <div class="act-row"><Btn small={false} onClick={() => playTimelapse(false)}>{t('timelapse')}</Btn><Btn small={false} onClick={() => playTimelapse(true)}>{t('timelapse_video')}</Btn>
+          <span class="muted small">{t('x_chron_export')}</span><ChronicleExport ending={ending} />
+          <span class="spacer" /><Btn small={false} cls="gold" onClick={() => { abortTimelapse(); screen.value = 'menu'; }}>{t('quit')}</Btn></div>
       </div>
     </div>
   </div>;

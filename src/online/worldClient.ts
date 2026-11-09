@@ -6,10 +6,11 @@ import { view, nations, notices, chronicle, legend, workerError, ready, landmark
 import type { Command, CmdResult } from '../sim/types';
 import type { ArmyLite, MapMode, Query, TickView } from '../game/protocol';
 import {
-  PROTOCOL_VERSION, BIN_OWNERS, applyArmies, applyNations, BIN_COLORS, BIN_SNOW, BIN_ROADS, MAP_MODE_LIST, decodeBinary,
+  PROTOCOL_VERSION, BIN_OWNERS, applyArmies, applyNations, BIN_COLORS, BIN_SNOW, BIN_ROADS, BIN_EXPLORED, MAP_MODE_LIST, decodeBinary,
   type ClientMsg, type ServerMsg, type WorldInfo, type SeatInfo, type FreeNation, type ChatMsg, type PlayerOffer, type RosterEntry,
-  type EarnedAchievement, type LeaderRow, type OfferAction, type AdminAction,
+  type EarnedAchievement, type LeaderRow, type OfferAction, type AdminAction, type ModReport, type ModBan,
 } from './protocol';
+import type { CatchUp } from './catchup';
 
 const ENV: Record<string, string | undefined> = ((import.meta as any).env ?? {}) as any;
 export const DEFAULT_WORLD_URL = ENV.VITE_WORLD_URL || 'ws://localhost:8787';
@@ -18,6 +19,8 @@ export const DEFAULT_WORLD_URL = ENV.VITE_WORLD_URL || 'ws://localhost:8787';
 export type ConnState = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed';
 export const connState = signal<ConnState>('idle');
 export const onlineError = signal<string | null>(null);
+/** The code of the last error from the server (the interface shows its own text for known codes). */
+export const onlineErrorCode = signal<string | null>(null);
 export const me = signal<{ id: string; name: string; admin: boolean } | null>(null);
 export const worldInfo = signal<WorldInfo | null>(null);
 export const seat = signal<SeatInfo | null>(null);
@@ -32,6 +35,13 @@ export const heraldMsg = signal<{ text: string; at: number } | null>(null);
 export const queuedCmds = signal(0);
 export const clockOffset = signal(0); // server time − local time (ms)
 export const isOnline = computed(() => connState.value === 'open' || connState.value === 'reconnecting');
+// ---- polish pass: moderation and the catch-up summary
+export const muted = signal<{ uid: string; name: string }[]>([]);
+export const blocked = signal<{ uid: string; name: string }[]>([]);
+export const modReports = signal<{ reports: ModReport[]; bans: ModBan[] }>({ reports: [], bans: [] });
+export const catchUp = signal<CatchUp | null>(null);
+/** time of the server's last confirmation of a report (the UI thanks the player) */
+export const reportAck = signal(0);
 /** Milliseconds until the next in-game day on the world clock (null while paused or disconnected). */
 export function msToNextDay(now = Date.now()): number | null {
   const w = worldInfo.value; if (!w || w.paused || !w.nextDayAt) return null;
@@ -51,7 +61,7 @@ export interface GameClient {
   save(): Promise<Uint8Array>;
   speed(v: number): void;
   setPlayer(p: number | null): void;
-  mapMode(mode: MapMode, focus: number): void;
+  mapMode(mode: MapMode, focus: number, palette?: 'normal' | 'cvd'): void;
 }
 
 type WS = WebSocket;
@@ -65,12 +75,14 @@ export class OnlineClient implements GameClient {
   private waits = new Map<number, (v: any) => void>();
   private cmdIds = new Set<number>();
   private owner: Int16Array | null = null; private ctrl: Int16Array | null = null; private snow: Float32Array | null = null; private roads: Uint8Array | null = null;
+  /** fog of war: the explored map from the server, handed to the next tick (null after that, like snow) */
+  private explored: Uint8Array | null = null;
   private ownersFresh = false;
   private readyWaiters: ((ok: boolean) => void)[] = [];
   private gotWelcome = false; private gotTick = false;
   private auth: OnlineAuth = {};
   private retry = 0; private stopRetry = false; private pingTimer: any = null;
-  private lastMode: { mode: MapMode; focus: number } = { mode: 'political', focus: -1 };
+  private lastMode: { mode: MapMode; focus: number; palette?: 'normal' | 'cvd' } = { mode: 'political', focus: -1 };
 
   constructor(readonly url: string = DEFAULT_WORLD_URL, private WSImpl: { new (url: string): WS } = (globalThis as any).WebSocket) {
     if (!this.WSImpl) throw new Error('WebSocket is not available in this environment');
@@ -136,7 +148,7 @@ export class OnlineClient implements GameClient {
       case 'welcome':
         this.L = m.L; this.S = m.S; this.gotWelcome = true; this.gotTick = false;
         batch(() => { me.value = m.user; worldInfo.value = m.world; seat.value = m.seat; nations.value = m.nations; connState.value = 'open'; notices.value = []; chronicle.value = []; });
-        if (this.lastMode.mode !== 'political') this.send({ type: 'mapmode', mode: this.lastMode.mode, focus: this.lastMode.focus });
+        if (this.lastMode.mode !== 'political') this.send({ type: 'mapmode', ...this.lastMode });
         break;
       case 'world': worldInfo.value = m.world; break;
       case 'free': freeNations.value = m.nations; break;
@@ -146,7 +158,11 @@ export class OnlineClient implements GameClient {
       case 'cmdResult': { const f = this.waits.get(m.id); this.waits.delete(m.id); this.cmdIds.delete(m.id); queuedCmds.value = this.cmdIds.size; f?.(m.res); break; }
       case 'reply': { const f = this.waits.get(m.id); this.waits.delete(m.id); f?.(m.data); break; }
       case 'legend': legend.value = m.legend; break;
-      case 'chat': chat.value = [...chat.value, ...m.msgs].slice(-200); break;
+      case 'chat': chat.value = m.replace ? m.msgs.slice(-200) : [...chat.value, ...m.msgs].slice(-200); break;
+      case 'moderation': muted.value = m.mutes; blocked.value = m.blocks; break;
+      case 'reports': modReports.value = { reports: m.reports, bans: m.bans ?? modReports.value.bans }; break;
+      case 'reported': reportAck.value = Date.now(); break;
+      case 'catchup': catchUp.value = m.summary; break;
       case 'offers': offers.value = m.offers; break;
       case 'roster': roster.value = m.roster; break;
       case 'achievements': earned.value = m.earned; if (m.fresh.length) freshAchievements.value = [...freshAchievements.value, ...m.fresh]; break;
@@ -157,7 +173,7 @@ export class OnlineClient implements GameClient {
       case 'kicked': this.stopRetry = true; onlineError.value = m.reason; break;
       case 'error': {
         if (m.id !== undefined && this.waits.has(m.id)) { const f = this.waits.get(m.id)!; this.waits.delete(m.id); const wasCmd = this.cmdIds.delete(m.id); f(wasCmd ? { ok: false, err: m.message } : null); queuedCmds.value = this.cmdIds.size; }
-        else onlineError.value = m.message;
+        else { onlineErrorCode.value = (m as any).code ?? null; onlineError.value = m.message; }
         break;
       }
     }
@@ -171,10 +187,10 @@ export class OnlineClient implements GameClient {
       this.owner = o; this.ctrl = c; this.ownersFresh = true;
     }
     const armies = applyArmies(this.armies, m.view);
-    const v: TickView = { ...(m.view as any), armies, owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined, roads: this.roads ?? undefined };
+    const v: TickView = { ...(m.view as any), armies, owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined, roads: this.roads ?? undefined, explored: this.explored ?? undefined };
     const nl = applyNations(nations.value, m.view); v.nations = nl;
     delete (v as any).armyUpd; delete (v as any).armyDel; delete (v as any).nationUpd;
-    this.snow = null; this.roads = null; this.ownersFresh = false;
+    this.snow = null; this.roads = null; this.explored = null; this.ownersFresh = false;
     batch(() => {
       if (v.nations) nations.value = v.nations;
       if (v.landmarks) landmarks.value = v.landmarks;
@@ -191,6 +207,7 @@ export class OnlineClient implements GameClient {
     if (kind === BIN_OWNERS) { const all = new Int16Array(data); const N = all.length / 2; this.owner = all.slice(0, N); this.ctrl = all.slice(N); this.ownersFresh = true; }
     else if (kind === BIN_SNOW) this.snow = new Float32Array(data);
     else if (kind === BIN_ROADS) this.roads = new Uint8Array(data);
+    else if (kind === BIN_EXPLORED) this.explored = new Uint8Array(data);
     else if (kind === BIN_COLORS) { const rgba = new Uint8Array(data); const mode = MAP_MODE_LIST[extra] ?? 'political'; for (const f of this.onColors) f(mode, rgba); }
   }
 
@@ -213,7 +230,7 @@ export class OnlineClient implements GameClient {
   save(): Promise<Uint8Array> { return Promise.reject(new Error('Online worlds are saved by the world server.')); }
   speed(_v: number) { /* the world clock runs on the server */ }
   setPlayer(_p: number | null) { /* seats are taken with join() */ }
-  mapMode(mode: MapMode, focus: number) { this.lastMode = { mode, focus }; this.send({ type: 'mapmode', mode, focus }); }
+  mapMode(mode: MapMode, focus: number, palette: 'normal' | 'cvd' = 'normal') { this.lastMode = { mode, focus, palette }; this.send({ type: 'mapmode', mode, focus, palette }); }
 
   // ---------------- online actions ----------------
   requestFree() { this.send({ type: 'free' }); }
@@ -223,7 +240,10 @@ export class OnlineClient implements GameClient {
   offer(to: number, action: OfferAction, text?: string) { this.send({ type: 'offer', to, action, text }); }
   answerOffer(offer: number, accept: boolean) { this.send({ type: 'offer_answer', offer, accept }); }
   requestLeaderboard() { this.send({ type: 'leaderboard' }); }
-  admin(action: AdminAction, extra: { uid?: string; nation?: number; text?: string; secondsPerDay?: number; cmd?: Command; release?: boolean } = {}) { this.send({ type: 'admin', action, ...extra }); }
+  admin(action: AdminAction, extra: { uid?: string; nation?: number; text?: string; secondsPerDay?: number; cmd?: Command; release?: boolean; hours?: number; report?: number } = {}) { this.send({ type: 'admin', action, ...extra }); }
+  mute(uid: string, on: boolean) { this.send({ type: 'mute', uid, on }); }
+  block(uid: string, on: boolean) { this.send({ type: 'block', uid, on }); }
+  report(uid: string, reason: string, msg?: number) { this.send({ type: 'report', uid, reason, msg }); }
 }
 
 let _online: OnlineClient | null = null;

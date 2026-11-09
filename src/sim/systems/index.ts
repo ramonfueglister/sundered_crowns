@@ -16,7 +16,8 @@ import { goals } from './goals';
 import { events } from './events';
 import { ai } from './ai';
 import { faith } from './faith';
+import { victory } from './victory';
 
 _setMilitary({ releaseNation, newArmy, availableUnits, landFaith, khanFaith });
 
-export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, war, diplomacy, colonial, realm, landmarks, situations, goals, events, ai];
+export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, war, diplomacy, colonial, realm, landmarks, situations, goals, events, ai, victory];

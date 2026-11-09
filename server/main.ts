@@ -15,6 +15,7 @@ const env = process.env;
 const PORT = Number(env.PORT || env.WORLD_PORT || 8787);
 const ORIGINS = (env.ALLOWED_ORIGINS || '').split(',').map((x) => x.trim()).filter(Boolean);
 const MAX_PER_USER = Number(env.MAX_CONN_PER_USER || 3), MAX_PER_IP = Number(env.MAX_CONN_PER_IP || 12); // raised only for local load tests
+const ADMIN_TOKEN = env.ADMIN_TOKEN || ''; // enables the /admin/* endpoints (reports, bans)
 
 const cfg = configFromEnv(env);
 const store = SupabaseStore.fromEnv(env) ?? new NullStore();
@@ -33,6 +34,15 @@ const http = createServer((req, res) => {
   if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day, players: core.seats().length, stepMs: core.stepMs })); return; }
   if (req.url === '/world') { res.writeHead(200, h); res.end(JSON.stringify(core.worldInfo())); return; }
   if (req.url === '/leaderboard') { res.writeHead(200, h); res.end(JSON.stringify({ season: core.meta.season, rows: core.leaderRows(50) })); return; }
+  // moderation for operators (ADMIN_TOKEN): reports, bans (the same as the admin tab in the game)
+  if (req.url?.startsWith('/admin/') && ADMIN_TOKEN) {
+    const auth = String(req.headers.authorization || '');
+    if (auth !== `Bearer ${ADMIN_TOKEN}`) { res.writeHead(401, h); res.end('{"error":"unauthorized"}'); return; }
+    const u = new URL(req.url, 'http://x'); const q = (k: string) => u.searchParams.get(k) ?? '';
+    if (u.pathname === '/admin/reports' && req.method === 'GET') { res.writeHead(200, h); res.end(JSON.stringify({ reports: core.reports(q('all') === '1'), bans: core.bans(), filter: core.filter.size })); return; }
+    if (u.pathname === '/admin/ban' && req.method === 'POST' && q('uid')) { core.ban(q('uid'), 'http', q('reason'), Number(q('hours')) || 0, q('release') === '1'); res.writeHead(200, h); res.end('{"ok":true}'); return; }
+    if (u.pathname === '/admin/unban' && req.method === 'POST' && q('uid')) { core.unban(q('uid')); res.writeHead(200, h); res.end('{"ok":true}'); return; }
+  }
   res.writeHead(404, h); res.end('{"error":"not found"}');
 });
 

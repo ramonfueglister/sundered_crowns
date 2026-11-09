@@ -14,6 +14,11 @@ import { initAudio, setMood, setVolumes, sfx } from './audio';
 import { autosaveTick, listSaves, loadSave } from './saves';
 import { rgb, num } from './format';
 import { OnlineHud } from './online/OnlineButton';
+import { actionFor, keyFor, keyLabel } from './keys';
+import { keyCapture } from './panels/settings';
+import { VictoryChooser } from './panels/victory';
+import type { VictoryKind } from '../sim/victoryRules';
+import { startNotifications } from './notify';
 
 const LORE = [
   { en: 'The Great Mortality has passed, but it will return.', de: 'Das große Sterben ist vorüber, doch es wird wiederkehren.' },
@@ -44,7 +49,7 @@ export function App() {
     {s === 'loading' && <Loading />}
     {s === 'select' && <SelectScreen />}
     {s === 'game' && !uiHidden.value && <GameUI />}
-    {s === 'game' && uiHidden.value && <div class="photo-hint">{t('photo')} — H</div>}
+    {s === 'game' && uiHidden.value && <div class="photo-hint">{t('photo')} — {keyLabel(keyFor('hide_ui'), lang.value === 'de')}</div>}
     {s === 'end' && <P.EndScreen />}
     {timelapse.value && s === 'game' && <div class="tl-banner pnl"><b>{timelapse.value.year}</b><span class="bar"><i class="bar-fill" style={{ width: `${(timelapse.value.i / Math.max(1, timelapse.value.n - 1)) * 100}%` }} /></span>{timelapse.value.recording && <span class="rec">● {t('timelapse_recording')}</span>}<button class="btn" onClick={stopTimelapse}>{t('timelapse_stop')}</button></div>}
     {workerError.value && <div class="fatal">{workerError.value.slice(0, 400)}</div>}
@@ -102,12 +107,14 @@ const DIFF_KEY: Record<number, string> = { 1: 'easy', 2: 'normal', 3: 'hard' };
 function SelectScreen() {
   const ns = nations.value; const sel = ns[selectedNation.value];
   const [diff, setDiff] = useState(2);
+  const [kinds, setKinds] = useState<VictoryKind[]>([]);
   const [goals, setGoals] = useState<any[] | null>(null);
   useEffect(() => { setGoals(null); if (!sel) return; let alive = true; sim().query<any[]>({ q: 'goals', nation: sel.id }).then((g) => { if (alive) setGoals(g ?? []); }).catch(() => {}); return () => { alive = false; }; }, [sel?.id]);
   const play = async () => {
     if (!sel) return;
     const id = sel.id;
-    if (diff !== 2 && lastStart) { screen.value = 'loading'; await sim().init({ ...lastStart, player: null, devtools: true, difficulty: diff }); }
+    // a different difficulty or chosen victory conditions re-create the same world with them
+    if ((diff !== 2 || kinds.length) && lastStart) { screen.value = 'loading'; await sim().init({ ...lastStart, player: null, devtools: true, difficulty: diff, victory: kinds }); }
     sim().setPlayer(id); sfx('bell');
     const n = nations.value[id] ?? sel;
     const cap = n.capital; const g = rendererRef.assets?.geo;
@@ -139,6 +146,8 @@ function SelectScreen() {
       <div class="sc-sec">{t('x_game_difficulty')}</div>
       <div class="diff">{GAME_DIFF.map((d) => <Tip content={<div><b>{t(DIFF_KEY[d])}</b><div class="tip-hint">{t(`x_diff_${d}`)}</div></div>}><button class={diff === d ? 'on' : ''} onClick={() => setDiff(d)}>{t(DIFF_KEY[d])}</button></Tip>)}</div>
       <div class="muted small diff-note">{t(`x_diff_${diff}`)}</div>
+      <div class="sc-sec">{t('x_vic_choose')}</div>
+      <VictoryChooser value={kinds} onChange={setKinds} />
       <button class="btn big gold" onClick={play}>{t('play_as')} {L(sel.short)}</button>
     </div>}
     <button class="btn back" onClick={() => { screen.value = 'menu'; }}>←</button>
@@ -152,6 +161,7 @@ function goalReq(desc: string): string {
 
 function GameUI() {
   useEffect(() => { const h = setInterval(autosaveTick, 5000); return () => clearInterval(h); }, []);
+  useEffect(() => { startNotifications(); }, []);
   const v = view.value;
   useEffect(() => { if (v?.ended) screen.value = 'end'; }, [v?.ended]);
   const pid = playerId.value;
@@ -178,33 +188,30 @@ function MapModes() {
     culture: ['Culture', 'Kultur'], faith: ['Faith', 'Glaube'], trade: ['Trade', 'Handel'], unrest: ['Unrest', 'Unruhe'], control: ['Control', 'Kontrolle'], goods: ['Goods', 'Güter'], explored: ['Explored', 'Erkundet'],
   };
   return <div class="mapmodes">
-    {MAP_MODES.map((m, k) => <button class={mapMode.value === m ? 'on' : ''} title={`${names[m][lang.value === 'de' ? 1 : 0]} (${k < 9 ? k + 1 : k === 9 ? 0 : '-'})`} onClick={() => { mapMode.value = m; sfx('click'); }}>{names[m][lang.value === 'de' ? 1 : 0]}</button>)}
+    {MAP_MODES.map((m) => { const k = keyLabel(keyFor(`map_${m}`), lang.value === 'de'); return <button class={mapMode.value === m ? 'on' : ''} title={`${names[m][lang.value === 'de' ? 1 : 0]}${k ? ` (${k})` : ''}`} onClick={() => { mapMode.value = m; sfx('click'); }}>{names[m][lang.value === 'de' ? 1 : 0]}</button>; })}
     <P.Legend />
   </div>;
 }
 
 function useKeys() {
   useEffect(() => {
+    // every shortcut comes from the key table (src/ui/keys.ts), which the settings let the player rebind
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || keyCapture.value) return;
       if (screen.value !== 'game') return;
+      const id = actionFor(e); if (!id) return;
       const v = view.value; const sp = v?.speed ?? 0;
-      if (e.code === 'Space') { e.preventDefault(); if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } else sim().speed(lastSpeed.value || 2); }
-      else if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') sim().speed(Math.min(5, Math.max(1, sp + 1)));
-      else if (e.key === '-' || e.code === 'NumpadSubtract') sim().speed(Math.max(1, sp - 1));
-      else if (e.key === 'Escape') { if (panel.value !== 'none') panel.value = 'none'; else if (selectedLoc.value >= 0) selectedLoc.value = -1; else openPanel('pause'); }
-      else if (e.key === 'F2') { e.preventDefault(); openPanel('dev'); }
-      else if (e.key === 'h' || e.key === 'H') uiHidden.value = !uiHidden.value;
-      else if (e.key === 'F5') { e.preventDefault(); P.quickSave().then(() => showToast(t('saved'))); }
-      else if (/^[0-9]$/.test(e.key) && !e.ctrlKey) { const k = e.key === '0' ? 9 : Number(e.key) - 1; if (MAP_MODES[k]) mapMode.value = MAP_MODES[k]; }
-      else if (e.key === 'e' && !e.ctrlKey) openPanel('economy');
-      else if (e.key === 'g') openPanel('government');
-      else if (e.key === 'd' && e.shiftKey) openPanel('diplomacy');
-      else if (e.key === 'm' && !e.ctrlKey) openPanel('military');
-      else if (e.key === 'b' && !e.ctrlKey) openPanel('works');
-      else if (e.key === 'k') openPanel('knowledge');
-      else if (e.key === 'l') openPanel('ledger');
-      else if (e.key === 'c') openPanel('chronicle');
+      if (id === 'pause' || id === 'quick_save' || id === 'dev') e.preventDefault();
+      if (id === 'pause') { if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } else sim().speed(lastSpeed.value || 2); }
+      else if (id === 'faster') sim().speed(Math.min(5, Math.max(1, sp + 1)));
+      else if (id === 'slower') sim().speed(Math.max(1, sp - 1));
+      else if (id === 'back') { if (panel.value !== 'none') panel.value = 'none'; else if (selectedLoc.value >= 0) selectedLoc.value = -1; else openPanel('pause'); }
+      else if (id === 'dev') openPanel('dev');
+      else if (id === 'hide_ui') uiHidden.value = !uiHidden.value;
+      else if (id === 'quick_save') P.quickSave().then(() => showToast(t('saved')));
+      else if (id.startsWith('map_')) { const m = id.slice(4) as MapMode; if (MAP_MODES.includes(m)) mapMode.value = m; }
+      else if (id.startsWith('panel_')) openPanel(id.slice(6) as any);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

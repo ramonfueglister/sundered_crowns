@@ -204,6 +204,20 @@ Eine Durchsicht fand Abkürzungen in den Lagen: einen Belagerungsbonus für die 
 - **Glauben im Spiel.** Bosnien bleibt in beiden Läufen bis 1600 bei der Bosnischen Kirche. Jüdische Gemeinden wirken in 12 bis 20 Reichen (vorher ab 1362 nur in 3). Ein Tengri-Khanat entsteht in Seed 1356 bis 1456 und in Seed 7 bis 1506. Kein Reich folgt dem samischen oder hinduistischen Glauben.
 - **Gold.** Über drei Jahreserträgen liegen nur Kleinstaaten fast ohne Einnahmen (Lanzarote, Makurien) und vereinzelt kleine Reiche wie Dorpat, Dulkadir oder Eichstätt.
 
+#### Nachtrag 3: Polish-Pass (claude/polish-pass), Läufe bis 1500
+
+Der Polish-Pass ändert an der KI nichts. Neu in der Simulation sind die Siegbedingungen (nur aktiv, wenn sie beim Spielstart gewählt werden; der Beobachter spielt mit der Wertung allein), die Heeresstärke und Wertung in den Verlaufsdaten und für abwesende Online-Herrscher eine Frist von 30 Tagen vor der automatischen Entscheidung. Beide Seeds liefen bis 1500 (`tools/sim/observer.ts 1500 <seed> 1356 25`).
+
+| Prüfung (Punkt 99) | Seed 1356 | Seed 7 |
+|---|---|---|
+| Größter Anteil an Europa, höchster Wert im Lauf | 9,2 % (Schweden, 1431) | 7,4 % (Frankreich, 1500) |
+| Staaten im Jahr 1500 (Start: 342) | 239 | 227 |
+| Längster laufender Krieg ab 1381 | 4,5 Jahre | 4,5 Jahre |
+| Gleichzeitig bankrotte Reiche | 0 bis 3 | 0 bis 1 |
+| Laufzeit | 29,6 Minuten | 26,1 Minuten |
+
+Eine Probe mit allen Siegarten (`tools/sim/victory_probe.ts`, Seed 1356 bis 1496) zeigt, dass keine KI eine Bedingung von selbst erreicht: Frankreich hält höchstens 14,9 % der Entwicklung Europas (nötig 25 %), der größte Handelsanteil einer Großmacht liegt bei 9 % (nötig 20 %; kleine Reiche in Übersee kommen kurz auf bis zu 13 %, zählen aber nicht), der lateinische Glaube bei 66 % (nötig 80 %), und beim Wissen führt kein Reich mit dem 1,25-fachen und sechs neuen Wahrzeichenstufen. Die Bedingungen sind Ziele für einen Spieler, der sie verfolgt.
+
 #### Was die Lagen vorgeben
 
 Der größte Teil dieser Geschichte folgt aus allgemeinen Regeln, die für jedes Reich gelten. Einige Lagen geben aber Jahreszahlen oder einen bestimmten Ort vor. Diese Vorgaben sind hier vollständig aufgezählt:

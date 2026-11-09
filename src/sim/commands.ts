@@ -15,7 +15,7 @@ import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
 import { startColony, startExplorer, charterCompany } from './systems/colonial';
 import { startLandmark } from './systems/landmarks';
-import { answerEvent, takeDecision } from './systems/events';
+import { answerEvent, takeDecision, eventDef, fireEvent } from './systems/events';
 import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
@@ -395,6 +395,18 @@ function devCommand(s: GameState, w: World, n: number, action: string, p: any): 
     case 'observer': s.observer = !s.observer; return OK;
     case 'army': newArmy(s, n, p?.loc ?? N.capital, [{ type: 0, men: p?.men ?? 10000 }]); return OK;
     case 'switch': if (s.nations[p?.nation]?.alive) { s.playerNations = [p.nation]; } return OK;
+    // ---- polish pass: trigger any event for a realm (its trigger is skipped, its setup must hold), switch a realm's AI off and on
+    case 'event': {
+      const d = eventDef(String(p?.id ?? '')); if (!d) return err('unknown event');
+      const T = s.nations[p?.nation ?? n]; if (!T?.alive) return err('no such realm');
+      return fireEvent(s, w, T, d, {}) ? OK : err('the event cannot happen now');
+    }
+    case 'ai': {
+      const id = Number(p?.nation); if (!s.nations[id]?.alive) return err('no such realm');
+      const on = p?.on ?? s.aiDisabled.includes(id);
+      s.aiDisabled = on ? s.aiDisabled.filter((x) => x !== id) : [...s.aiDisabled, id];
+      return OK;
+    }
   }
   return err('unknown dev action');
 }

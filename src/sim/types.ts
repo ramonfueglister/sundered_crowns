@@ -48,7 +48,7 @@ export interface Nation {
   coinage: number;       // debasement 0..0.5
   income: LedgerEntry; expense: LedgerEntry; // last month
   incomeAcc: LedgerEntry; expenseAcc: LedgerEntry; // current month accumulators
-  history: { day: number; treasury: number; income: number; expense: number; manpower: number; locs: number; pop: number; dev: number }[];
+  history: { day: number; treasury: number; income: number; expense: number; manpower: number; locs: number; pop: number; dev: number; army?: number; score?: number }[];
   armyMaint: number; navyMaint: number; // 0.25..1 spending sliders
   // politics
   laws: Record<string, number>;     // law id -> option index
@@ -190,7 +190,7 @@ export interface League { id: string; name: I18n; members: number[]; leader: num
 
 export interface Situation { id: string; active: boolean; progress: number; stage: number; started: number; ended?: number; outcome?: string; data: Record<string, any> }
 
-export interface ReplayLog { seed: number; year: number; player: number | null; difficulty?: number; devtools?: boolean; log: [number, Command | { t: '__player'; player: number | null }][] }
+export interface ReplayLog { seed: number; year: number; player: number | null; difficulty?: number; devtools?: boolean; victory?: string[]; log: [number, Command | { t: '__player'; player: number | null }][] }
 export interface GameState {
   v: number; seed: number; startYear: number; day: number; rng: number[];
   nextId: number;
@@ -214,7 +214,12 @@ export interface GameState {
   ranking: number[];      // great power ranking (top nations)
   priceLevel: number;     // global price index (money supply)
   silverStock: number;    // money in circulation (abstract)
-  ended: boolean; victory?: { nation: number; kind: string };
+  ended: boolean; victory?: { nation: number; kind: string; day?: number };
+  /** polish pass: the kinds of victory chosen at the start (systems/victory.ts; absent: score only) and who holds each condition since when */
+  victoryKinds?: string[];
+  victoryHold?: Record<string, { nation: number; since: number }>;
+  /** polish pass: events of absent online players that the court decided after the deadline (newest last, capped) */
+  autoEvents?: { nation: number; day: number; event: string; title: I18n; option: I18n; loc?: number }[];
   flags: Record<string, number>;
   /** chartered overseas trade companies: a direct route between an overseas market and the home market */
   companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string } }[];

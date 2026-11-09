@@ -102,6 +102,10 @@ function migrate(s: GameState): GameState {
     for (const n of s.nations) { n.duties ??= { land: 0, hearth: 0, excise: 0 }; n.adminLoad ??= 0; }
     s.v = 2;
   }
+  // polish pass (no version bump: these defaults are idempotent): victory conditions and auto-decided events
+  s.victoryKinds ??= ['score'];
+  s.victoryHold ??= {};
+  s.autoEvents ??= [];
   return s;
 }
 export function saveBinary(s: GameState): Uint8Array { return gzipSync(strToU8(serialize(s)), { level: 6 }); }

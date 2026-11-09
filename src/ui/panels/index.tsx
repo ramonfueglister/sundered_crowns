@@ -13,6 +13,7 @@ import { PeaceTab } from './peace';
 import { WorksTab } from './works';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
+import { VictoryTab } from './victory';
 
 export { Coa } from './coa';
 export { LocationPanel } from './location';
@@ -29,6 +30,7 @@ export async function quickSave() { await saveNow(); }
 const TABS: Record<string, () => any> = {
   economy: EconomyTab, government: GovernmentTab, diplomacy: DiplomacyTab, military: MilitaryTab, knowledge: KnowledgeTab,
   society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
+  victory: VictoryTab, // polish pass
 };
 const TITLES: Record<string, string> = { peace: 'offer_peace' };
 

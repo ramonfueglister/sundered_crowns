@@ -2,13 +2,14 @@
 import type { Command, CmdResult, I18n, Notice, PendingEvent, ChronEntry } from '../sim/types';
 
 export type ToWorker =
-  | { type: 'init'; seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number }
+  | { type: 'init'; seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number; victory?: string[] }
   | { type: 'cmd'; id: number; cmd: Command }
   | { type: 'speed'; speed: number }            // 0 = paused, 1..5
   | { type: 'player'; player: number | null }   // choose / change the played realm
   | { type: 'query'; id: number; q: Query }
   | { type: 'save'; id: number }
-  | { type: 'mapmode'; mode: MapMode; focus: number };
+  | { type: 'mapmode'; mode: MapMode; focus: number; palette?: 'normal' | 'cvd' }
+  | { type: 'skip'; days: number };             // developer tools: run this many days at once (single player)
 
 export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored';
 export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods'];
@@ -30,7 +31,11 @@ export type Query =
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
-  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
+  | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
+  // ---- polish pass
+  | { q: 'victory' }                                          // chosen victory conditions with our progress (src/game/endview.ts)
+  | { q: 'history'; nations?: number[] }                      // yearly history of the player and the top realms (end screen graphs)
+  | { q: 'devEvents' };                                       // every event id with its title (developer panel)
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
