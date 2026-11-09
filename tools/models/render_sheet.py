@@ -1,15 +1,23 @@
 # Renders every mesh of public/models/models.{json,bin} with Cycles (CPU) into a labelled contact sheet.
-# It reads the exported binary (not the generator), so the sheet shows exactly what the game loads,
-# with the stored per-face normals as custom normals (a flipped normal shows as a wrongly lit face).
+# It reads the exported binary (not the generator), so the sheet shows exactly what the game loads, with the
+# stored per-face normals as custom normals.
 #
 #   blender -b --python tools/models/render_sheet.py -- [--models public/models]
 #           [--out /mnt/project-files/sundered-crowns/screens/models/contact_sheet.png] [--only a,b] [--tile 380]
-#           [--samples 16] [--threads 2]
+#           [--samples 16] [--threads 2] [--backfaces]
 #
 # Each tile shows the mesh twice from the game's camera direction (looking north, tilted 52 degrees from the
-# vertical, a little from the west for a 3/4 view): left as placed (rotation 0), right turned by 180 degrees.
-# Tinted parts are shown in a sample red mixed exactly like the game's shader does it. A last row lines the
-# main figures up at their true relative scale. Labels and the montage come from ImageMagick.
+# vertical, a little from the west for a 3/4 view): left as placed (rotation 0), right turned by 180 degrees (the
+# way the game turns figures to face the camera). Tinted parts are shown in a sample red mixed exactly like the
+# game's shader does it. A last row lines the main figures up at their true relative scale. Labels and the montage
+# come from ImageMagick.
+#
+# What the normal sheet cannot show: a face wound the wrong way. Cycles shades a ray that hits the back of a
+# face with the normal turned towards the viewer (and the game's props shader does the same), so an inward face
+# looks just like an outward one. --backfaces paints every surface seen from behind in magenta (Geometry >
+# Backfacing, which follows the winding): on a closed, correctly wound model nothing magenta shows from outside.
+# Open single-sided parts seen from below (roof undersides, leaves) are the only expected exceptions. The test
+# tests/models.test.ts checks the winding without a render (no edge is used twice in the same direction).
 import sys, os, json, math, struct, subprocess, shutil
 import bpy
 import numpy as np
@@ -38,6 +46,7 @@ def args():
     ap.add_argument('--threads', type=int, default=2)
     ap.add_argument('--tiles-dir', default=None, help='keep the single tiles here')
     ap.add_argument('--no-lineup', action='store_true')
+    ap.add_argument('--backfaces', action='store_true', help='paint faces seen from behind in magenta (winding check)')
     return ap.parse_args(argv)
 
 
@@ -89,7 +98,7 @@ def setup_scene(a):
     return sc, cam
 
 
-def material(name, rgb=None, attr=None, rough=0.85):
+def material(name, rgb=None, attr=None, rough=0.85, backfaces=False):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -101,7 +110,34 @@ def material(name, rgb=None, attr=None, rough=0.85):
     if attr:
         at = nt.nodes.new('ShaderNodeVertexColor')
         at.layer_name = attr
-        nt.links.new(at.outputs['Color'], p.inputs['Base Color'])
+        if backfaces:
+            # magenta wherever a camera ray meets the back of a face (by its winding, not by the stored normal).
+            # Only camera rays: bounce rays leaving one of two coplanar faces may graze the other from behind,
+            # which would scatter magenta speckles over correct surfaces.
+            geo = nt.nodes.new('ShaderNodeNewGeometry')
+            lp = nt.nodes.new('ShaderNodeLightPath')
+            fac = nt.nodes.new('ShaderNodeMath')
+            fac.operation = 'MULTIPLY'
+            nt.links.new(geo.outputs['Backfacing'], fac.inputs[0])
+            nt.links.new(lp.outputs['Is Camera Ray'], fac.inputs[1])
+            mix = nt.nodes.new('ShaderNodeMixRGB')
+            mix.blend_type = 'MIX'
+            mix.inputs['Color2'].default_value = (1.0, 0.0, 1.0, 1.0)
+            nt.links.new(fac.outputs[0], mix.inputs['Fac'])
+            nt.links.new(at.outputs['Color'], mix.inputs['Color1'])
+            nt.links.new(mix.outputs['Color'], p.inputs['Base Color'])
+            em = nt.nodes.new('ShaderNodeMixRGB')  # let the magenta glow a little so it shows in shadow too
+            em.inputs['Color1'].default_value = (0.0, 0.0, 0.0, 1.0)
+            em.inputs['Color2'].default_value = (1.0, 0.0, 1.0, 1.0)
+            nt.links.new(fac.outputs[0], em.inputs['Fac'])
+            for key in ('Emission Color', 'Emission'):
+                if key in p.inputs:
+                    nt.links.new(em.outputs['Color'], p.inputs[key])
+                    break
+            if 'Emission Strength' in p.inputs:
+                p.inputs['Emission Strength'].default_value = 0.6
+        else:
+            nt.links.new(at.outputs['Color'], p.inputs['Base Color'])
     else:
         p.inputs['Base Color'].default_value = (*[srgb_to_lin(c) for c in rgb], 1)
     return m
@@ -185,7 +221,7 @@ def main():
     if a.only:
         names = [n for n in names if n in a.only.split(',')]
     sc, cam = setup_scene(a)
-    mat = material('vc', attr='col')
+    mat = material('vc', attr='col', backfaces=a.backfaces)
     ground = material('ground', (0.58, 0.56, 0.50))
     water = material('water', (0.24, 0.36, 0.44), rough=0.4)
     tiles = a.tiles_dir or os.path.join(os.path.dirname(os.path.abspath(a.out)), '_tiles')
@@ -210,10 +246,11 @@ def main():
         files.append((path, '%s  %d tris  h %.2f r %.2f' % (name, tris, mm['height'], mm['radius'])))
         print('rendered', name, flush=True)
     lineup = None
-    if not a.no_lineup and not a.only:
+    row = ['tree_conifer_a', 'tree_conifer_b', 'tree_broadleaf_a', 'bush', 'house_timber', 'house_steppe_yurt', 'tent',
+           'soldier_infantry', 'soldier_pikeman', 'soldier_archer', 'soldier_musketeer', 'soldier_cavalry', 'cannon',
+           'banner_standard', 'church_gothic', 'ship_cog']
+    if not a.no_lineup and not a.only and all(n in meta['meshes'] for n in row):
         clear_props()
-        row = ['tree_conifer_a', 'tree_broadleaf_a', 'bush', 'house_timber', 'house_steppe_yurt', 'tent', 'soldier_infantry',
-               'soldier_pikeman', 'soldier_cavalry', 'cannon', 'banner_standard', 'church_gothic', 'ship_cog']
         x, obs = 0.0, []
         for n in row:
             r = meta['meshes'][n]['radius']
@@ -251,4 +288,5 @@ def main():
     print('wrote', out)
 
 
-main()
+if __name__ == '__main__':
+    main()

@@ -102,6 +102,110 @@ describe('models.json / models.bin', () => {
     }
   });
 
+  it('is consistently wound and has no folded faces: shared edges run opposite ways, neighbours do not fold over', () => {
+    // The props shader lights a face seen from behind as if it faced the viewer, so a face wound the wrong way does
+    // not show in the game or in a normal render; this keeps the export from relying on that. Vertices are
+    // duplicated per face, so they are welded by position first (0.1 mm grid). An edge used by more than two
+    // triangles (parts that only touch) says nothing about the winding and is left out.
+    // A fold is two neighbours in one plane with opposite normals, lying on top of each other: what a concave
+    // outline turns into when it is triangulated without its normal. Its edges still run opposite ways.
+    for (const n of Object.keys(set.meshes)) {
+      const { v, tris } = mesh(n);
+      const ids = new Map<string, number>();
+      const weld = (k: number) => {
+        const key = `${Math.round(v(k, 0) * 1e4)},${Math.round(v(k, 1) * 1e4)},${Math.round(v(k, 2) * 1e4)}`;
+        let id = ids.get(key);
+        if (id === undefined) { id = ids.size; ids.set(key, id); }
+        return id;
+      };
+      const uses = new Map<string, [number, number][]>(); // undirected edge -> [start vertex, triangle] of each use
+      tris.forEach((t, ti) => {
+        const w = t.map(weld);
+        for (let e = 0; e < 3; e++) {
+          const a = w[e], b = w[(e + 1) % 3];
+          if (a === b) continue;
+          const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+          const u = uses.get(key);
+          if (u) u.push([a, ti]); else uses.set(key, [[a, ti]]);
+        }
+      });
+      let same = 0, folds = 0;
+      for (const u of uses.values()) {
+        if (u.length !== 2) continue;
+        if (u[0][0] === u[1][0]) { same++; continue; }
+        const [p, q] = [tris[u[0][1]], tris[u[1][1]]];
+        const dot = v(p[0], 3) * v(q[0], 3) + v(p[0], 4) * v(q[0], 4) + v(p[0], 5) * v(q[0], 5);
+        if (dot > -0.999) continue;
+        const off = Math.max(...q.map((k) => Math.abs((v(k, 0) - v(p[0], 0)) * v(p[0], 3) + (v(k, 1) - v(p[0], 1)) * v(p[0], 4) + (v(k, 2) - v(p[0], 2)) * v(p[0], 5))));
+        if (off < 1e-4) folds++;
+      }
+      expect(same, `${n}: ${same} edges used twice in the same direction`).toBe(0);
+      expect(folds, `${n}: ${folds} folded edges`).toBe(0);
+    }
+  });
+
+  it('has no coplanar faces lying on top of each other (they would flicker in the depth test)', () => {
+    for (const n of Object.keys(set.meshes)) {
+      const { v, tris } = mesh(n);
+      const P = (k: number) => [v(k, 0), v(k, 1), v(k, 2)];
+      const sub = (a: number[], b: number[]) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      const cross = (a: number[], b: number[]) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const planes = new Map<string, { t: number[][]; nrm: number[] }[]>();
+      for (const t of tris) {
+        const [a, b, c] = t.map(P);
+        const cr = cross(sub(b, a), sub(c, a)), l = Math.hypot(...cr);
+        if (l < 1e-9) continue;
+        const nrm = cr.map((x) => x / l);
+        const key = [...nrm.map((x) => Math.round(x * 1e3)), Math.round(dot(nrm, a) * 1e3)].join(',');
+        (planes.get(key) ?? planes.set(key, []).get(key)!).push({ t: [a, b, c], nrm });
+      }
+      const inside = (p: number[], t: number[][], nrm: number[]) =>
+        [0, 1, 2].every((i) => dot(cross(sub(t[(i + 1) % 3], t[i]), sub(p, t[i])), nrm) > 1e-7);
+      const sample = (t: number[][], w: number[]) => [0, 1, 2].map((k) => w[0] * t[0][k] + w[1] * t[1][k] + w[2] * t[2][k]);
+      const ws = [[1 / 3, 1 / 3, 1 / 3], [0.6, 0.2, 0.2], [0.2, 0.6, 0.2], [0.2, 0.2, 0.6]];
+      let overlaps = 0;
+      for (const fs of planes.values()) {
+        for (let i = 0; i < fs.length; i++) for (let j = i + 1; j < fs.length; j++) {
+          const A = fs[i], B = fs[j];
+          if (ws.some((w) => inside(sample(A.t, w), B.t, B.nrm) || inside(sample(B.t, w), A.t, A.nrm))) overlaps++;
+        }
+      }
+      expect(overlaps, `${n}: ${overlaps} pairs of overlapping coplanar faces`).toBe(0);
+    }
+  });
+
+  it('keeps colours below the point where the props shader clips them to white', () => {
+    // The light factor of the props shader (src/render/props.ts, fs): 0.3 sky + 0.34 + 0.62 sun + 0.26 fill, which
+    // reaches about 1.21 on a face turned to the sun. Models are placed at any rotation, so each face is tried at 36
+    // headings. Recoloured (tint) parts depend on the nation's colour and are left out. Tiny faces (fists, plumes)
+    // may touch the limit; the clipped area must stay a negligible share of the mesh.
+    const norm = (x: number, y: number, z: number) => { const l = Math.hypot(x, y, z); return [x / l, y / l, z / l]; };
+    const sun = norm(-0.62, 0.78, 0.95), fill = norm(0.3, -0.9, 0.5); // model space: x east, y north, z up
+    for (const n of Object.keys(set.meshes)) {
+      const { v, tris } = mesh(n);
+      let total = 0, clipped = 0, worst = 0;
+      for (const [a, b, c] of tris) {
+        const ux = v(b, 0) - v(a, 0), uy = v(b, 1) - v(a, 1), uz = v(b, 2) - v(a, 2);
+        const wx = v(c, 0) - v(a, 0), wy = v(c, 1) - v(a, 1), wz = v(c, 2) - v(a, 2);
+        const area = Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx) / 2;
+        total += area;
+        if (v(a, 9) > 0.5) continue;
+        const nx = v(a, 3), ny = v(a, 4), nz = v(a, 5);
+        let f = 0;
+        for (let k = 0; k < 36; k++) {
+          const t = (k / 36) * Math.PI * 2, rx = nx * Math.cos(t) - ny * Math.sin(t), ry = nx * Math.sin(t) + ny * Math.cos(t);
+          const dif = Math.max(rx * sun[0] + ry * sun[1] + nz * sun[2], 0), fl = Math.max(rx * fill[0] + ry * fill[1] + nz * fill[2], 0);
+          f = Math.max(f, 0.3 * (0.5 + 0.5 * nz) + 0.34 + 0.62 * dif + 0.26 * fl);
+        }
+        const lit = Math.max(v(a, 6), v(a, 7), v(a, 8)) * f;
+        if (lit > 1.02) { clipped += area; worst = Math.max(worst, area); }
+      }
+      expect(clipped / total, `${n}: ${(100 * clipped / total).toFixed(2)} % of the surface clips`).toBeLessThan(0.002);
+      expect(worst, `${n}: a clipped face of ${worst.toFixed(4)}`).toBeLessThan(0.002);
+    }
+  });
+
   it('reports height (max z) and radius (max horizontal distance) that match the geometry', () => {
     for (const n of Object.keys(set.meshes)) {
       const { m, v } = mesh(n);
