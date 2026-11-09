@@ -6,12 +6,14 @@ import { Panel, Section, Bar, NLink, Btn, LocName, act, t, L, num, signed, pct, 
 import { sfx } from '../audio';
 import { WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
+import { charName, CommanderPicker } from './people';
 
 export function ArmyPanel() {
   const ids = selectedArmies.value; const v = view.value; const pid = playerId.value;
   const armies = (v?.armies ?? []).filter((a) => ids.includes(a.id) && a.owner === pid);
   const [path, setPath] = useState<{ to: number; days: number } | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [picking, setPicking] = useState(false);
   const timer = useRef<any>(null);
   const first = armies[0];
   const hov = hoverLoc.value;
@@ -21,7 +23,7 @@ export function ArmyPanel() {
     timer.current = setTimeout(() => { sim().query<any>({ q: 'path', army: first.id, to: hov }).then((r) => setPath(r ? { to: hov, days: r.days } : { to: hov, days: -1 })); }, 160);
     return () => clearTimeout(timer.current);
   }, [first?.id, hov]);
-  useEffect(() => setConfirm(false), [ids.join(',')]);
+  useEffect(() => { setConfirm(false); setPicking(false); }, [ids.join(',')]);
   if (!armies.length) return null;
   const men = armies.reduce((p, a) => p + a.men, 0);
   const fleet = armies.every((a) => a.fleet);
@@ -36,7 +38,7 @@ export function ArmyPanel() {
     <div class="army-list">{armies.map((a) => {
       const dest = a.path.length ? a.path[a.path.length - 1] : -1;
       return <div class="army-row">
-        <Tip content={<div><b>{L(a.name)}</b><div>{t('general')}: {a.general || t('none')}</div>{a.mercenary && <div>{t('mercenary')}</div>}</div>}>
+        <Tip content={<div><b>{L(a.name)}</b><div>{t(a.fleet ? 'admiral' : 'general')}: {charName(a.general) || t('none')}</div>{a.mercenary && <div>{t('mercenary')}</div>}</div>}>
           <span class={`unit-ic ${a.fleet ? 'ship' : 'land'}`}>{a.fleet ? '⚓' : '⚔'}</span>
         </Tip>
         <span class="aname">{L(a.name)}{a.mercenary && <small class="muted"> ({t('mercenary')})</small>}</span>
@@ -46,20 +48,22 @@ export function ArmyPanel() {
       </div>;
     })}</div>
     <div class="army-meta">
-      <Tip content={<div><TipHead name={t('general')} hint={t('auto_general_hint')} /></div>}><span>{t('general')}: <b>{armies.map((a) => a.general).filter(Boolean).join(', ') || t('none')}</b></span></Tip>
+      <Tip content={<div><TipHead name={t('general')} hint={t('auto_general_hint')} /></div>}><span>{t(fleet ? 'admiral' : 'general')}: <b>{armies.map((a) => charName(a.general)).filter(Boolean).join(', ') || t('none')}</b></span></Tip>
       {path && <span class="path-prev">{path.days >= 0 ? <Tip content={<div><TipHead name={locName(path.to)} value={daysText(path.days)} hint={t('x_march_hint')} /></div>}><span>→ {locName(path.to)}: <b>{daysText(path.days)}</b></span></Tip> : <span class="neg">{t('no_route')} {locName(path.to)}</span>}</span>}
       {!path && <span class="muted small">{t('rightclick_hint')}</span>}
     </div>
     <div class="army-btns">
       <Btn disabled={armies.length < 2 ? 'need two armies' : !sameLoc ? 'not in the same place' : null} onClick={() => act({ t: 'merge', armies: armies.map((a) => a.id) }).then((r) => { if (r.ok) selectedArmies.value = [armies[0].id]; })}>{t('merge')}</Btn>
       <Btn disabled={armies.length !== 1 ? 'select one army' : first.men < 2 ? 'too small' : null} onClick={() => act({ t: 'split', army: first.id })}>{t('split')}</Btn>
-      {!fleet && <Btn tip={t('auto_general_hint')} onClick={() => all((id) => act({ t: 'general', army: id, char: 0 }))}>{t('assign_general')}</Btn>}
+      {armies.length === 1 && <Btn cls={picking ? 'on' : ''} tip={t('choose_commander_hint')} onClick={() => setPicking(!picking)}>{t('choose_commander')}</Btn>}
+      {!fleet && armies.length > 1 && <Btn tip={t('auto_general_hint')} onClick={() => all((id) => act({ t: 'general', army: id, char: 0 }))}>{t('assign_general')}</Btn>}
       {!fleet && myFleets.length > 0 && <select class="embark-sel" value="" onChange={(e) => { const f = Number((e.target as HTMLSelectElement).value); if (f) all((id) => act({ t: 'embark', army: id, fleet: f }, 'march')); }}>
         <option value="">{t('embark')}…</option>{myFleets.map((f) => <option value={f.id}>{L(f.name)} ({num(f.men)} {t('ships')}) · {locName(f.loc)}</option>)}
       </select>}
       {!fleet && armies.length === 1 && <Btn tip={t('stop_hint')} onClick={() => act({ t: 'move', army: first.id, to: first.loc })}>{t('stop')}</Btn>}
       <Btn cls="danger" onClick={() => { if (!confirm) { setConfirm(true); sfx('click'); return; } all((id) => act({ t: 'disband', army: id })).then(() => { selectedArmies.value = []; }); }}>{confirm ? t('confirm_disband') : t('disband')}</Btn>
     </div>
+    {picking && armies.length === 1 && <CommanderPicker army={first.id} />}
   </Panel></div>;
 }
 

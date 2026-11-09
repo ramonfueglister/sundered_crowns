@@ -69,6 +69,7 @@ export function royalMatch(s: GameState, w: World, a: number, b: number): { real
   for (const role of ['ruler', 'heir'] as const) {
     for (const [X, Y] of [[A, Bn], [Bn, A]] as const) {
       const p = alive(s, role === 'ruler' ? X.ruler : X.heir); if (!p) continue;
+      if (role === 'ruler' && alive(s, X.consort)) continue;
       if (role === 'ruler' && X.overlord >= 0 && X.subjectType === 'personal_union' && s.nations[X.overlord]?.ruler === p.id) continue;
       const age = ageOf(s, p);
       if (!unwed(s, p) || age < (role === 'ruler' ? 16 : 14) || age > 60) continue;

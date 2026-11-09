@@ -30,6 +30,9 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
+import { aiLogText } from '../sim/systems/ai_log';
+import { dynastyView } from '../sim/systems/dynasty';
+import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
 
@@ -57,7 +60,7 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     id: n.id, treasury: n.treasury, income: sumObj(n.income), expense: sumObj(n.expense), manpower: n.manpower, maxManpower: n.maxManpower, sailors: n.sailors,
     concord: n.concord, mandate: n.mandate, authority: n.authority, prestige: n.prestige, warExhaustion: n.warExhaustion, inflation: n.inflation, corruption: n.corruption,
     dread: n.dread, envoys: n.envoys, envoysBusy: n.envoysBusy, insight: n.flags.doctrine_pts || 0, tech: [...n.tech], techProgress: [...n.techProgress], era: n.era,
-    incomeBreak: { ...n.income }, expenseBreak: { ...n.expense }, ruler: r ? `${r.name}${r.dynasty ? ' ' + r.dynasty : ''}` : '—', rulerAge: r ? Math.floor(ageOf(s, r)) : 0,
+    incomeBreak: { ...n.income }, expenseBreak: { ...n.expense }, ruler: r ? r.name : '—', rulerAge: r ? Math.floor(ageOf(s, r)) : 0,
     heir: h && h.alive ? h.name : '—', atWar: s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)), taxRate: [...n.taxRate],
     armyMaint: n.armyMaint, navyMaint: n.navyMaint, tariff: n.tariff, coinage: n.coinage, loans: n.loans.reduce((p, l) => p + l.amount, 0), debt: n.debt, stats: { ...n.stats },
     homeMarket: n.capital >= 0 ? s.loc.market[n.capital] ?? -1 : -1,
@@ -205,6 +208,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
     case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
     case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;
+    case 'commanders': return player >= 0 ? commandersView(s, player, q.army) : null;
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
@@ -304,11 +308,13 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     id, key: n.key, name: n.name, short: n.short, adj: n.adj, color: n.color, coa: n.coa, rank: n.rank, gov: n.gov, faith: FAITHS[n.faith]?.name, culture: cultureName(ALL_CULTURES[n.culture] || 'unknown'),
     // the faith's own mechanic and what it (and communities of other faiths in the realm) does for this realm now
     faithMechanic: { name: FAITHS[n.faith]?.mechanic, desc: FAITHS[n.faith]?.mechanicDesc, active: n.modifiers.filter((m) => m.id.startsWith('faith_')).map((m) => ({ id: m.id, label: m.label, effects: m.effects })) },
-    capital: n.capital, capitalName: n.capital >= 0 ? w.names[n.capital] : '—', ruler: r ? { name: r.name, dynasty: r.dynasty, age: Math.floor(ageOf(s, r)), skills: r.skills, traits: r.traits } : null,
-    heir: h && h.alive ? { name: h.name, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id), score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
+    capital: n.capital, capitalName: n.capital >= 0 ? w.names[n.capital] : '—', ruler: r ? { name: r.name, dynasty: r.dynasty, female: r.female, age: Math.floor(ageOf(s, r)), skills: r.skills, traits: r.traits } : null,
+    heir: h && h.alive ? { name: h.name, female: h.female, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id), score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),
     personality: n.personality, summary: n.summary, difficulty: n.difficulty, dread: n.dread, scoreParts: scorePartsAll(s, w)[id], front: (s as any).fronts?.[id] ?? [], rel, alive: n.alive,
     wars: s.wars.filter((x) => x.att.includes(id) || x.def.includes(id)).map((x) => x.id), isHRE: n.isHRE, elector: n.elector, emperor: s.empire.emperor === id,
+    // what an AI realm did lately (systems/ai_log.ts), newest first
+    aiLog: !s.playerNations.includes(id) && !n.playerId ? (n.aiLog ?? []).slice().reverse().map((e) => ({ day: e.d, text: aiLogText(s, w, e) })) : null,
     subject: n.overlord >= 0 && s.nations[n.overlord] ? {
       type: n.subjectType, since: n.subjectSince, libertyDesire: n.libertyDesire, target: libertyTarget(s, w, n, s.nations[n.overlord]),
       parts: libertyParts(s, w, n, s.nations[n.overlord]).filter(([, v]) => Math.abs(v) >= 0.5), integration: n.integration, integrating: !!n.flags.integrating,
@@ -317,7 +323,7 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
 }
 
 /** Name with house for the council lists; names that already carry a title ("Pedro, Infante of Portugal") stay as they are. */
-const courtName = (c: { name: string; dynasty?: string }) => (c.dynasty && !/,| of | von /.test(c.name) ? `${c.name} ${c.dynasty}` : c.name);
+const courtName = (c: { name: string; dynasty?: string }) => (c.dynasty && !/,| of | von /.test(c.name) && !c.name.includes(c.dynasty.slice(0, 5)) ? `${c.name} ${c.dynasty}` : c.name);
 
 function realmDetail(s: GameState, w: World, player: number) {
   const n = s.nations[player]; if (!n) return null;
@@ -330,6 +336,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     candidates: officeCandidates(s, n).map((c) => ({ id: c.id, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits, female: c.female,
       kin: c.id === n.consort || (s.chars[n.ruler]?.children ?? []).includes(c.id), bonus: Object.fromEntries(OFFICES.map((o) => [o.id, officeBonusOf(c, o.id)])) })),
     officeCost: OFFICE_COST,
+    dynasty: dynastyView(s, n),
     values: n.values,
     tech: BRANCHES.map((b, k) => ({ name: b.name, level: n.tech[k], progress: n.techProgress[k], cost: techCost(s, n, k), rate: rr[k] })), focus: n.flags.research_focus ?? -1,
     era: ERAS[n.era], eras: ERAS,
@@ -627,4 +634,22 @@ function tradeFlows(s: GameState, max: number): TradeFlowLite[] {
     if (f.value > e.best) { e.best = f.value; e.good = f.good; }
   }
   return [...byPair.values()].sort((p, q) => q.value - p.value).slice(0, max).map((e) => ({ a: e.a, b: e.b, value: Math.round(e.value), good: e.good }));
+}
+
+/** Who could lead an army of ours: generalship with its parts, morale from traits, who already commands which host,
+ *  and the price of raising a new general (systems/commanders.ts). */
+export function commandersView(s: GameState, player: number, army: number) {
+  const n = s.nations[player]; const a = s.armies.find((x) => x.id === army && x.owner === player); if (!n || !a) return null;
+  const r = s.chars[n.ruler];
+  const rel = (id: number) => (id === n.ruler ? 'ruler' : id === n.heir ? 'heir' : r?.children.includes(id) ? 'child' : (n.generals ?? []).includes(id) ? 'general' : (n.candidates ?? []).includes(id) ? 'court' : 'kin');
+  const list = availableCommanders(s, n).map((c) => {
+    const busy = commandOf(s, c.id);
+    return { id: c.id, name: c.name, dynasty: c.dynasty, female: c.female, age: Math.floor(ageOf(s, c)), skills: c.skills, traits: c.traits, xp: c.xp ?? 0, rel: rel(c.id),
+      skill: commanderSkill(c), morale: commanderMorale(c), parts: commanderParts(c), busy: busy ? { id: busy.id, name: busy.name, here: busy.id === a.id } : null };
+  }).sort((x, y) => y.skill - x.skill || x.id - y.id);
+  const cur = s.chars[a.general];
+  return { army: a.id, fleet: a.fleet, current: cur ? { id: cur.id, name: cur.name, female: cur.female, skill: commanderSkill(cur), parts: commanderParts(cur), morale: commanderMorale(cur), traits: cur.traits, xp: cur.xp ?? 0, age: Math.floor(ageOf(s, cur)) } : null,
+    list, cost: generalCost(s, n), treasury: n.treasury,
+    // the price: two months of taxes, at least 25 marks at the prices of the day
+    costParts: (n.income.tax || 10) * 2 >= 25 * s.priceLevel ? [['x_gen_cost_taxes', (n.income.tax || 10) * 2]] : [['x_gen_cost_min', 25 * s.priceLevel]] };
 }

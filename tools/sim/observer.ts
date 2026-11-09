@@ -10,6 +10,7 @@ import { dayToDate } from '../../src/sim/calendar';
 import { C } from '../../src/sim/defs';
 import { administration } from '../../src/sim/systems/administration';
 import { FAITHS } from '../../src/sim/content/peoples';
+import { AI_USAGE, AI_USAGE_REALMS, resetAiUsage } from '../../src/sim/systems/ai_log';
 
 const toYear = +(process.argv[2] ?? 1600), seed = +(process.argv[3] ?? 1356), start = +(process.argv[4] ?? 1356), every = +(process.argv[5] ?? 25);
 const out = process.env.OBSERVER_OUT ?? 'build/observer';
@@ -67,6 +68,7 @@ function snapshot(year: number) {
     watch: ['france', 'england', 'castile', 'aragon', 'portugal', 'ottoman', 'byzantium', 'hungary', 'poland', 'lithuania', 'moscow', 'golden_horde', 'venice', 'milan', 'bohemia', 'austria', 'burgundy'].map(ruler),
     situations: (s.situations ?? []).filter((x: any) => x.active || x.ended).map((x: any) => `${x.id}${x.active ? '*' : ''}${x.outcome ? '=' + x.outcome : ''}`),
     faiths, faithMods, realmFaiths, hordes, tech: { median: techs[techs.length >> 1], max: techs[techs.length - 1] }, colonies: s.colonies.length, explorers: s.explorers.length, ocean: s.flags.ocean_open ? dayToDate(s.flags.ocean_open, s.startYear).y : null,
+    chars: Object.keys(s.chars).length,
     hash: hashState(s),
   };
   report.push(row);
@@ -75,14 +77,33 @@ function snapshot(year: number) {
   writeFileSync(`${out}/owner_${year}.json`, JSON.stringify({ year, owner: Array.from(s.loc.owner.slice(0, w.L)), colors: s.nations.map((n) => n.color), names: s.nations.map((n) => n.short.en) }));
 }
 
+// how often AI realms used each system, per decade (systems/ai_log.ts): uses and the number of realms using it
+const aiDecades: { from: number; to: number; uses: Record<string, number>; realms: Record<string, number> }[] = [];
+let decadeFrom = start;
+function aiDecade(year: number) {
+  const uses: Record<string, number> = {}, realms: Record<string, number> = {};
+  for (const k of Object.keys(AI_USAGE).sort()) { uses[k] = AI_USAGE[k]; realms[k] = AI_USAGE_REALMS[k]?.size ?? 0; }
+  aiDecades.push({ from: decadeFrom, to: year, uses, realms });
+  console.log('AI_DECADE ' + JSON.stringify({ from: decadeFrom, to: year, uses }));
+  resetAiUsage(); decadeFrom = year;
+}
+resetAiUsage();
 snapshot(start);
-let nextYear = start + every;
+let nextYear = start + every, nextDecade = start + 10;
 for (;;) {
   step(s, w, []);
   const d = dayToDate(s.day, s.startYear);
+  if (d.y >= nextDecade && d.m === 0 && d.d === 1) { aiDecade(d.y); nextDecade += 10; }
   if (d.y >= nextYear && d.m === 0 && d.d === 1) { snapshot(d.y); nextYear += every; }
   if (d.y >= toYear || (s as any).ended) break;
 }
 snapshot(dayToDate(s.day, s.startYear).y);
+if (dayToDate(s.day, s.startYear).y > decadeFrom) aiDecade(dayToDate(s.day, s.startYear).y);
 writeFileSync(`${out}/report.json`, JSON.stringify(report, null, 1));
+writeFileSync(`${out}/ai_usage.json`, JSON.stringify(aiDecades, null, 1));
+// the statecraft systems per decade as a table: uses (realms)
+const SYS = ['office', 'estate:appease', 'estate:summon', 'estate:grant', 'estate:revoke', 'coinage:debase', 'coinage:restore', 'agent:faith', 'agent:culture', 'spy:fabricate', 'spy:slander', 'spy:support_rebels', 'spy:steal_tech', 'law', 'diplo:fabricate', 'decision', 'general:recruit'];
+console.log('AI use per decade, uses (realms):');
+console.log(['decade'.padEnd(10), ...SYS.map((k) => k.replace(/^(estate|coinage|agent|spy|diplo|general):/, '').slice(0, 9).padStart(10))].join(''));
+for (const d of aiDecades) console.log([`${d.from}-${String(d.to).slice(2)}`.padEnd(10), ...SYS.map((k) => `${d.uses[k] ?? 0}(${d.realms[k] ?? 0})`.padStart(10))].join(''));
 console.log('chronicle entries', s.chronicle?.length ?? 0, 'total minutes', ((Date.now() - t0) / 60000).toFixed(1));

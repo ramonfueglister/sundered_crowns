@@ -139,11 +139,10 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
       if (a) a.general = 0;
       continue;
     }
-    if (age >= 70) {
-      // retirement: the old commander leaves the field
+    if (age >= 70 && c.role !== 'courtier') {
+      // retirement: the old commander leaves the field (and goes on ageing here until death)
       const a = commandOf(s, c.id); if (a) a.general = 0;
       c.role = 'courtier';
-      continue;
     }
     keep.push(id);
   }

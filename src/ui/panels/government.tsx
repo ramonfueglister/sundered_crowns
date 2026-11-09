@@ -8,6 +8,7 @@ import { ConcordTip, MandateTip, AuthorityTip, PrestigeTip, CorruptionTip, Dread
 import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
 import { Administration } from './statecraft';
+import { charName, charFull, DynastySection } from './people';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
 
@@ -35,11 +36,11 @@ export function GovernmentTab() {
     <div class="cols2">
       <Section title={t('ruler')} id="gov-ruler">
         <div class="ruler-big">
-          <div class="ruler-name">{p.ruler}</div>
+          <div class="ruler-name">{me?.ruler ? charFull(me.ruler.name, me.ruler.dynasty, me.ruler.female) : charName(p.ruler)}</div>
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
           {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
           {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <span class="chip">{traitName(x)}</span>)}</div>}
-          <Row k={t('heir')} v={<>{p.heir}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
+          <Row k={t('heir')} v={<>{charName(p.heir, me?.heir?.female)}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
         </div>
       </Section>
       <Section title={t('standing')} id="gov-standing">
@@ -53,6 +54,7 @@ export function GovernmentTab() {
         <Standing k={t('dread')} v={num(p.dread)} cls={p.dread > 20 ? 'neg' : ''} d={ex?.dread.monthly} bad tip={() => <DreadTip />} />
       </Section>
     </div>
+    <DynastySection r={r} />
     <Laws r={r} authority={p.authority} />
     <Estates r={r} />
     <Administration r={r} />

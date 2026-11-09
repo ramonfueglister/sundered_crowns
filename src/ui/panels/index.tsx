@@ -21,6 +21,7 @@ export { ArmyPanel, Outliner } from './army';
 export { Notices, EventModal, Legend } from './overlay';
 export { Tutorial } from './tutorial';
 export { GoalTracker } from './goals';
+export { charName } from './people';
 export { SettingsPanel, SavesPanel, EndScreen };
 export { OnlineButton } from '../online/OnlineButton';
 

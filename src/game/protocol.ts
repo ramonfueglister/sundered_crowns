@@ -30,7 +30,8 @@ export type Query =
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
-  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
+  | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
+  | { q: 'commanders'; army: number };                        // who could lead one of our armies, and the price of a new general
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
