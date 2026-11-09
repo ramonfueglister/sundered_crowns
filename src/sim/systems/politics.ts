@@ -189,7 +189,10 @@ export function succession(s: GameState, w: World, n: Nation) {
     next = findHeir(s, n, dead);
     if (!next) {
       // extinction: a foreign dynasty with a marriage tie may claim; otherwise a magnate takes the crown
-      const claimants = s.treaties.filter((t) => t.type === 'marriage' && (t.a === n.id || t.b === n.id)).map((t) => (t.a === n.id ? t.b : t.a)).filter((k) => s.nations[k].alive);
+      // (crowns pass through marriage between Christian realms; a sultanate or khanate whose house dies out raises a
+      // new house of its own, so no beylik inherits the Ottoman throne through a bride)
+      const christian = (x: Nation) => FAITHS[x.faith]?.family === 'christian';
+      const claimants = !christian(n) ? [] : s.treaties.filter((t) => t.type === 'marriage' && (t.a === n.id || t.b === n.id)).map((t) => (t.a === n.id ? t.b : t.a)).filter((k) => s.nations[k].alive && christian(s.nations[k]));
       if (claimants.length) {
         const k = claimants[0];
         const other = s.nations[k];
@@ -466,7 +469,10 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation) {
   const mTarget = sumParts(mandateParts(s, n));
   n.mandate = clamp(n.mandate + (mTarget - n.mandate) * 0.03, 0, 100);
   n.prestige = clamp(n.prestige * 0.995, -100, 100);
-  n.warExhaustion = Math.max(0, n.warExhaustion - (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0 : 1.5));
+  // weariness fades in peace, and slowly too for a realm that only stands by its allies (it leads no war of its own)
+  const inWar = s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id));
+  const leads = inWar && s.wars.some((x) => x.attLead === n.id || x.defLead === n.id);
+  n.warExhaustion = Math.max(0, n.warExhaustion - (!inWar ? 1.5 : leads ? 0 : 0.3));
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
   // estates: contentment drifts to 50 + privileges effect; influence from privileges, laws and economy
   for (const e of n.estates) {

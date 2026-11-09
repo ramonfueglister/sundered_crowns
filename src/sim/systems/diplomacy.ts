@@ -5,9 +5,9 @@ import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, opinion, rel, hasTreaty, allies, atWar, subjectsOf, treatiesOf, addExpense } from '../ctx';
 import { rand, chance } from '../rng';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
-import { nationDev, declareWar, hasCasusBelli } from './war';
+import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
-import { excommunicate } from './realm';
+import { excommunicate, steppeFade } from './realm';
 
 export const DIPLO_ACTIONS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'gift', 'insult', 'demand', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'improve', 'excommunicate'] as const;
 
@@ -26,7 +26,7 @@ export function opinionBreakdown(s: GameState, w: World, a: number, b: number): 
   if (hasTreaty(s, a, b, 'marriage')) out.push(['royal_marriage', 20]);
   if (hasTreaty(s, a, b, 'trade')) out.push(['trade_agreement', 10]);
   if (A.overlord === b) out.push(['overlord', -10 + Math.round(-A.libertyDesire * 0.3)]);
-  if (hasTreaty(s, b, a, 'claim')) out.push(['claims_on_us', -25]);
+  if (hasTreaty(s, b, a, 'claim') || (s.flags[`gather_${b}_${a}`] ?? 0) > s.day) out.push(['claims_on_us', -25]);
   // shared rival
   if (A.rivals.some((r) => Bn.rivals.includes(r))) out.push(['shared_rival', 25]);
   if (atWar(s, a, b)) out.push(['at_war', -100]);
@@ -85,6 +85,8 @@ export function evaluateProposal(s: GameState, w: World, a: number, b: number, a
     R.push(['relative_strength', Math.round(clamp((pa / Math.max(1, pb) - 5) * 4, -60, 40))]);
     if (allies(s, b).length) R.push(['has_allies', -30]);
     if (A.faith !== Bn.faith) R.push(['heathen', -30]);
+    // the leading crown of our own people gathering the lands (see gatheringYear): submission keeps the house its seat
+    if (gatherClaim(s, a, b)) R.push(['senior_prince', 30]);
     if (dist > 600) R.push(['too_far', -30]);
   } else if (action === 'demand') {
     const pa = power(s, a), pb = power(s, b);
@@ -201,6 +203,8 @@ export function libertyParts(s: GameState, w: World, n: Nation, ov: Nation): [st
     ['overlord_excommunicated', ov.excommunicated && n.faith === ov.faith ? 20 : 0],
     // a crown of another people does not merge easily into the senior crown of a personal union
     ['foreign_crown', n.subjectType === 'personal_union' && n.culture !== ov.culture ? 20 : 0],
+    // the tributaries of a horde whose steppe order is fading (see steppeFade)
+    ['steppe_fading', ov.gov === 'nomadic_horde' ? Math.round(25 * steppeFade(s)) : 0],
     // colonial realms drift apart from the crown over generations
     ['colonial_distance', n.subjectType === 'colonial' ? 5 + Math.min(45, (s.day - n.subjectSince) / 365 * 0.35) : 0],
   ];

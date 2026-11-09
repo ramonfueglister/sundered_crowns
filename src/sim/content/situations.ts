@@ -457,9 +457,11 @@ const DEFS: SituationDef[] = [
         if (w.lat[l] >= 40.3 && w.lon[l] <= 29.0 && w.lon[l] > 19) europe++;
         if (w.distKm(l, city) < 160) nearCity = true;
       }
-      sit.stage = y >= 1440 && nearCity ? 2 : europe > 0 ? 1 : 0;
+      // the City is besieged in earnest from the turn of the century (the first great sieges came in the 1390s)
+      sit.stage = y >= 1400 && nearCity ? 2 : europe > 0 ? 1 : 0;
       sit.progress = Math.round(clamp(europe * 2.5 + (sit.stage === 2 ? 40 : 0), 0, 100));
-      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.1, manpower: 0.6, cavalry: 0.1, army_cost: -0.15 });
+      // the frontier lords serve for land grants rather than pay; before the walls of the City the sultan brings great guns
+      setMod(s, o, 'frontier_warriors', 1, { en: 'Warriors of the frontier', de: 'Krieger der Grenze' }, { morale: 0.1, manpower: 0.6, cavalry: 0.1, army_cost: -0.3, ...(sit.stage === 2 ? { siege: 3 } : {}) });
       // fighters from all over Anatolia flock to a victorious banner
       o.manpower = Math.min(o.maxManpower, o.manpower + o.maxManpower * 0.015);
       if (cityOwner && cityOwner.faith !== o.faith) setMod(s, cityOwner, 'land_walls', 1, { en: 'The great land walls', de: 'Die großen Landmauern' }, { fort_strength: 0.25 });
@@ -473,7 +475,7 @@ const DEFS: SituationDef[] = [
         const bloc = (x: number) => nationPower(s, x) + allies(s, x).filter((a) => a !== o.id && !mine.includes(a))
           .reduce((p, a) => p + nationPower(s, a) * (s.nations[a].capital >= 0 && s.nations[x].capital >= 0 && w.distKm(s.nations[a].capital, s.nations[x].capital) > 1200 ? 0.5 : 1), 0);
         // the siege of the City outranks any other campaign, once it can be won
-        const cityWar = sit.stage === 2 && !!cityOwner && cityOwner.id !== o.id && !atWar(s, o.id, cityOwner.id) && !hasTreaty(s, o.id, cityOwner.id, 'truce') && bloc(cityOwner.id) < myPow * 1.1;
+        const cityWar = sit.stage === 2 && !!cityOwner && cityOwner.id !== o.id && !atWar(s, o.id, cityOwner.id) && !hasTreaty(s, o.id, cityOwner.id, 'truce') && bloc(cityOwner.id) < myPow * 1.25;
         const tries: [number, number[]][] = [];
         if (cityWar) tries.push([cityOwner!.id, [city]]);
         else if (y >= sit.data.nextWar && !attacking) {
@@ -486,7 +488,7 @@ const DEFS: SituationDef[] = [
           const score = (x: Nation) => nationDev(s, x.id) * 0.2 - (faithFamily(x.faith) === 'christian' ? 40 : 0) - (balkan(x) ? 150 : 0);
           cands.sort((a, b) => score(a) - score(b));
           for (const x of cands.slice(0, 3)) {
-            const near = nationLocsRO(s, x.id).filter((l) => l !== city || y >= 1440).sort((a, b) => w.distKm(a, o.capital) - w.distKm(b, o.capital)).slice(0, 4);
+            const near = nationLocsRO(s, x.id).filter((l) => l !== city || y >= 1400).sort((a, b) => w.distKm(a, o.capital) - w.distKm(b, o.capital)).slice(0, 4);
             if (near.length) tries.push([x.id, near]);
           }
         }
@@ -521,7 +523,8 @@ const DEFS: SituationDef[] = [
     monthly: (s, w, sit, y, m) => {
       const h = alive(s, sit.data.h);
       if (!h) { endSituation(s, sit, 'gone'); return; }
-      if (y >= 1440 || (sit.stage === 0 && y >= 1400)) { dropMod(h, 'great_troubles'); endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures'); return; }
+      // (a horde that holds together through its troubles may still break later, until 1430)
+      if (y >= 1440 || (sit.stage === 0 && y >= 1430)) { dropMod(h, 'great_troubles'); endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures'); return; }
       if (sit.stage === 0) {
         setMod(s, h, 'great_troubles', 1, { en: 'Khans of a season', de: 'Khane einer Saison' }, { unrest: 2, tax: -0.1, morale: -0.05 });
         sit.progress = Math.round(clamp((y - 1359) * 8, 0, 100));
@@ -609,7 +612,8 @@ const DEFS: SituationDef[] = [
       if (sit.stage === 0) {
         // tribute from the emirate to its overlord
         if (g.overlord === c.id && g.treasury > 0) { const t = Math.max(5, g.income.tax || 5) * 1.5; g.treasury -= t; c.treasury += t; }
-        if ((y >= 1470 || strong) && !inAnyWar(s, c.id) && c.concord > -30) {
+        // (a champion fighting only defensive wars elsewhere may still begin, if the war has not worn him out)
+        if ((y >= 1450 || strong) && !s.wars.some((x) => x.attLead === c!.id) && c.warExhaustion < 40 && c.concord > -30) {
           sit.stage = 1;
           if (g.overlord === c.id) { g.overlord = -1; g.subjectType = null; }
           world(s, { en: `${g.short.en} refused its tribute; ${c.short.en} prepared the war for Granada.`, de: `${g.short.de} verweigerte den Tribut; ${c.short.de} rüstete zum Krieg um Granada.` }, c.id, g.capital);
@@ -620,7 +624,8 @@ const DEFS: SituationDef[] = [
       if (g.overlord === c.id) { g.overlord = -1; g.subjectType = null; } // tribute refused: the emirate stands alone
       if (g.overlord >= 0) return; // under another protector: wait
       if (!atWar(s, c.id, g.id)) {
-        const goal = nationLocsRO(s, g.id).slice().sort((a, b) => s.loc.dev[b] - s.loc.dev[a]).slice(0, 5);
+        // the last towns of a small emirate are all at stake
+        const goal = nationLocsRO(s, g.id).slice().sort((a, b) => s.loc.dev[b] - s.loc.dev[a]).slice(0, now <= 10 ? now : 8);
         if (aiWar(s, w, c.id, g.id, 'reconquest', goal) >= 0) { sit.data.wars = (sit.data.wars || 0) + 1; world(s, { en: `${c.short.en} marched on the emirate of ${g.short.en}.`, de: `${c.short.de} zog gegen das Emirat ${g.short.de}.` }, c.id, g.capital); }
       }
       if (y >= 1520) endSituation(s, sit, 'endures');

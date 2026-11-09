@@ -273,6 +273,20 @@ export const DECISIONS: DecisionDef[] = [
     effect: (e) => { e.fx.gold(6); e.fx.authority(40); e.fx.estate('prelates', -25, -10); e.fx.concord(-5); e.n.flags.secularised_until = e.s.day + 365 * 25; },
     ai: (e) => (e.n.treasury < months(e, 12) || e.n.authority < 60) && chance(e.s.rng, 0.5),
   },
+  // ---------------- uses of a full treasury (see spendSurplus in systems/ai.ts) ----------------
+  {
+    id: 'colonial_venture', name: { en: 'Fund a Colonial Venture', de: 'Ein Kolonialunternehmen finanzieren' },
+    desc: { en: 'The crown gives merchants, ship-owners and younger sons money to settle land beyond the sea. Costs twelve months of taxes; for fifteen years one more group of settlers can be under way at a time, and they sail further. Once in fifteen years.', de: 'Die Krone gibt Kaufleuten, Reedern und nachgeborenen Söhnen Geld, um Land jenseits des Meeres zu besiedeln. Kostet zwölf Monate Steuern; fünfzehn Jahre lang kann ein Siedlerzug mehr zugleich unterwegs sein, und die Siedler segeln weiter. Einmal in fünfzehn Jahren.' },
+    visible: (e) => !!e.n.flags.atlantic && e.n.overlord < 0 && e.n.tech[1] >= 9,
+    can: (e) => (e.n.flags.venture_until || 0) > e.s.day ? 'too soon' : e.n.treasury < months(e, 12) ? 'not enough gold' : null,
+    effect: (e) => {
+      e.fx.gold(-12);
+      e.fx.modifier('colonial_venture', 15, { en: 'Colonial venture', de: 'Kolonialunternehmen' }, { colonists: 1, colonial_range: 0.15 });
+      e.n.flags.venture_until = e.s.day + 365 * 15;
+    },
+    // a crown with more than a year and a half of revenue in the chest
+    ai: (e) => e.n.treasury > Object.values(e.n.income).reduce((p, v) => p + Math.max(0, v), 0) * 18 && chance(e.s.rng, 0.5),
+  },
   {
     id: 'obedience_rome', name: { en: 'Obedience to the Roman Pope', de: 'Obödienz zum römischen Papst' },
     desc: { en: 'Recognise the pope in Rome during the division of the Church.', de: 'Während der Kirchenspaltung den Papst in Rom anerkennen.' },

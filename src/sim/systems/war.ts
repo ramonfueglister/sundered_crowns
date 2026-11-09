@@ -76,8 +76,17 @@ export function ctrlTable(s: GameState): readonly (readonly number[])[] { return
 export function locValue(s: GameState, l: number) { return Math.max(1, s.loc.dev[l]) + landmarkValue(s, l); }
 export function nationDev(s: GameState, n: number) { return devCache(s).dev[n] ?? 0; }
 
+/** An overlord keeps the peace among those who pay him tribute (the khan among the Rus princes): his tributaries do
+ *  not war on each other, except the leading crown of a people gathering its kin (see gatheringYear). */
+export function tributaryPeace(s: GameState, a: number, b: number): boolean {
+  const na = s.nations[a], nb = s.nations[b];
+  return na.subjectType === 'tributary' && nb.subjectType === 'tributary' && na.overlord >= 0 && na.overlord === nb.overlord && !gatherClaim(s, a, b);
+}
+/** A gathering claim of a on b (see gatheringYear): unlike a claim treaty it runs one way only. */
+export const gatherClaim = (s: GameState, a: number, b: number) => (s.flags[`gather_${a}_${b}`] ?? 0) > s.day;
 export function hasCasusBelli(s: GameState, a: number, b: number): string | null {
   if (hasTreaty(s, a, b, 'claim')) return 'claim';
+  if (gatherClaim(s, a, b)) return 'gathering';
   const na = s.nations[a], nb = s.nations[b];
   if (na.rivals.includes(b)) return 'rivalry';
   if (na.faith !== nb.faith && (na.flags.holy_war || 0) > 0) return 'holy_war';
@@ -99,6 +108,7 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     na.concord = clamp(na.concord - 30, -100, 100); na.prestige -= 20;
   }
   if (na.overlord >= 0 && na.subjectType !== 'tributary' && goalType !== 'independence') return 'subjects cannot declare wars';
+  if (goalType !== 'independence' && tributaryPeace(s, a, b)) return 'the overlord forbids war among his tributaries';
   if (na.overlord === b && goalType !== 'independence') return 'we pay tribute to them';
   if (hasTreaty(s, a, b, 'alliance')) { s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); na.prestige -= 10; }
   const cb = hasCasusBelli(s, a, b);
@@ -166,6 +176,7 @@ export function casusBelliAll(s: GameState, a: number, b: number): string[] {
   const out: string[] = [];
   const na = s.nations[a], nb = s.nations[b]; if (!na || !nb) return out;
   if (hasTreaty(s, a, b, 'claim')) out.push('claim');
+  if (gatherClaim(s, a, b)) out.push('gathering');
   if (na.rivals.includes(b)) out.push('rivalry');
   if (na.faith !== nb.faith && (na.flags.holy_war || 0) > 0) out.push('holy_war');
   if (s.flags[`cb_${a}_${b}`] && s.flags[`cb_${a}_${b}`] > s.day) out.push('fabricated');
@@ -347,9 +358,11 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
   // if the offer was between the war leaders, the whole war ends; otherwise only the separate peace
   const leaders = (from === war.attLead || from === war.defLead) && (to === war.attLead || to === war.defLead);
   const ending = leaders ? [...war.att, ...war.def] : [from === war.attLead || from === war.defLead ? to : from];
+  // a war to win back one's own land resumes sooner (the reconquest of Granada went on campaign after campaign)
+  const truceYears = war.goal.type === 'reconquest' ? 2 : 5;
   for (const n of ending) {
     for (const other of (war.att.includes(n) ? war.def : war.att)) {
-      s.treaties.push({ a: Math.min(n, other), b: Math.max(n, other), type: 'truce', since: s.day, until: s.day + 365 * 5 });
+      s.treaties.push({ a: Math.min(n, other), b: Math.max(n, other), type: 'truce', since: s.day, until: s.day + 365 * truceYears });
     }
   }
   if (leaders) s.wars.splice(s.wars.indexOf(war), 1);
@@ -411,6 +424,10 @@ function dreadMonth(s: GameState, w: World) {
 }
 
 function warsMonth(s: GameState, w: World) {
+  // weariness of the war months: the leaders of a war tire of it fastest, an ally called in less, and several wars at
+  // once tire a realm no more than half again as fast as one (summing every war ground a realm that its allies kept
+  // calling in, such as the early Ottomans, to permanent exhaustion)
+  const tire = new Map<number, number>();
   for (const war of s.wars.slice()) {
     if (!s.nations[war.attLead]?.alive || !s.nations[war.defLead]?.alive || war.attLead === war.defLead) { s.wars.splice(s.wars.indexOf(war), 1); continue; }
     // nobody fights on both sides (a realm that changed overlord mid-war leaves the side it no longer belongs to)
@@ -424,10 +441,11 @@ function warsMonth(s: GameState, w: World) {
     if (goalLocs.length) war.tickScore = clamp(war.tickScore + (held / goalLocs.length > 0.5 ? 1 : besieging ? 0 : -0.5), -25, 25);
     else war.tickScore = clamp(war.tickScore + (war.battleScore > 5 ? 0.3 : war.battleScore < -5 ? -0.3 : 0), -15, 15);
     war.score = computeScore(s, war);
-    for (const n of [...war.att, ...war.def]) { const nn = s.nations[n]; if (nn) nn.warExhaustion = clamp(nn.warExhaustion + 0.35, 0, 100); }
+    for (const n of [...war.att, ...war.def]) tire.set(n, (tire.get(n) ?? 0) + (n === war.attLead || n === war.defLead ? 0.35 : 0.15));
     // offers expire
     war.offers = war.offers.filter((o) => o.expires > s.day);
   }
+  for (const [n, v] of tire) { const nn = s.nations[n]; if (nn) nn.warExhaustion = clamp(nn.warExhaustion + Math.min(0.5, v), 0, 100); }
   // civil wars pending from disputed successions
   for (const n of s.nations) {
     const t = s.flags[`civil_war_pending_${n.id}`];
@@ -480,8 +498,12 @@ export function startCivilWar(s: GameState, w: World, n: Nation) {
   void err;
 }
 
-/** Gathering the lands: the strongest crown of a people lays claim to small neighbours of the same people
- *  (Moscow and the Rus principalities, the French crown and its great fiefs, and so on). */
+/** Gathering the lands: the leading crown of a people lays claim to small neighbours of the same people, that is of
+ *  the same culture (Moscow and the Rus principalities, the Ottomans and the Turkish beyliks, and so on; Castile does
+ *  not gather Portugal, nor Mali the Yoruba). Only a crown gathers: a city republic, an order or a horde does not,
+ *  and of several crowns of one people the greatest in the neighbourhood leads. The claim runs one way: the small
+ *  neighbour gains no cause against the gatherer from it. */
+const isCrown = (n: Nation) => !n.gov.includes('republic') && n.gov !== 'theocracy' && n.gov !== 'military_order' && n.gov !== 'nomadic_horde' && n.gov !== 'tribal_federation';
 function gatheringYear(s: GameState, w: World) {
   const neigh = new Map<number, Set<number>>();
   const o = s.loc.owner;
@@ -489,15 +511,19 @@ function gatheringYear(s: GameState, w: World) {
     const a = o[i]; if (a < 0) continue;
     for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) { const v = w.adj[e]; if (v >= w.L) continue; const b = o[v]; if (b >= 0 && b !== a) { let st = neigh.get(a); if (!st) neigh.set(a, (st = new Set())); st.add(b); } }
   }
+  for (const k of Object.keys(s.flags)) if (k.startsWith('gather_') && s.flags[k] <= s.day) delete s.flags[k];
   for (const n of s.nations) {
-    if (!n.alive || (n.overlord >= 0 && n.subjectType !== 'tributary') || !chance(s.rng, 0.2)) continue;
+    if (!n.alive || (n.overlord >= 0 && n.subjectType !== 'tributary') || !isCrown(n) || !chance(s.rng, 0.2)) continue;
     const grp = GROUP_OF[ALL_CULTURES[n.culture]]; if (!grp || grp === 'other') continue;
     const dev = nationDev(s, n.id); if (dev < 80) continue;
-    for (const b of [...(neigh.get(n.id) ?? [])].sort((x, y) => x - y)) {
+    const kin = [...(neigh.get(n.id) ?? [])].filter((b) => s.nations[b].alive && s.nations[b].culture === n.culture).sort((x, y) => x - y);
+    if (kin.some((b) => isCrown(s.nations[b]) && s.nations[b].overlord < 0 && nationDev(s, b) > dev)) continue;
+    for (const b of kin) {
       const bn = s.nations[b];
-      if (!bn.alive || bn.overlord === n.id || GROUP_OF[ALL_CULTURES[bn.culture]] !== grp || nationDev(s, b) > dev * 0.5) continue;
-      if (hasTreaty(s, n.id, b, 'claim') || hasTreaty(s, n.id, b, 'alliance')) continue;
-      s.treaties.push({ a: Math.min(n.id, b), b: Math.max(n.id, b), type: 'claim', since: s.day, until: s.day + 365 * 25 });
+      if (bn.overlord === n.id || nationDev(s, b) > dev * 0.5) continue;
+      // (an ally is claimed too: it is not attacked, but it may be asked to submit, see the AI's diplomacy)
+      if (gatherClaim(s, n.id, b) || hasTreaty(s, n.id, b, 'claim')) continue;
+      s.flags[`gather_${n.id}_${b}`] = s.day + 365 * 25;
       break;
     }
   }

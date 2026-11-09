@@ -204,6 +204,9 @@ const S: Record<string, [string, string]> = {
   drift_target: ['Drifting toward', 'Strebt zu'], drift_base: ['Base', 'Grundwert'], drift_ruler_statecraft: ['Ruler’s statecraft', 'Staatskunst des Herrschers'], drift_prestige: ['Prestige', 'Ansehen'],
   drift_laws_values: ['Laws and values', 'Gesetze und Werte'], drift_regency: ['Regency', 'Regentschaft'], drift_excommunicated: ['Excommunicated', 'Gebannt'],
   drift_powers_content: ['Contentment of the Powers', 'Zufriedenheit der Stände'], drift_war_exhaustion: ['War exhaustion', 'Kriegsmüdigkeit'],
+  // ---- depth track: AI budget and history ----
+  cb_gathering: ['Gathering of the lands', 'Sammlung der Länder'], r_steppe_fading: ['The steppe order fades', 'Die Ordnung der Steppe verblasst'],
+  r_senior_prince: ['The leading crown of our people', 'Die führende Krone unseres Volkes'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
@@ -242,6 +245,8 @@ const ERRORS: Record<string, string> = {
   // ---- depth track: faith mechanics ----
   'already excommunicated': 'Schon gebannt', 'the pope cannot be excommunicated': 'Der Papst kann nicht gebannt werden', 'we are excommunicated ourselves': 'Wir sind selbst gebannt',
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig', 'need 20 Authority': '20 Autorität nötig',
+  // ---- depth track: AI budget and history ----
+  'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
 };
 /** Translate an error/refusal text from the simulation. */
 export function errText(e: string): string { if (lang.value !== 'de') return e.charAt(0).toUpperCase() + e.slice(1); return ERRORS[e] ?? e; }
