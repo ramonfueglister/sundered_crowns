@@ -156,12 +156,31 @@ Berichte, Besitzkarten und Kartenbilder liegen im Projektordner unter `sundered-
   - Das Schisma endet mit einem Konzil, der Kelchstreit mit einem Vergleich.
   - Die Horde zerbricht.
   - Entdeckungen und Reformation beginnen.
-- **Was abweicht.**
+- **Was abweicht.** (Stand dieser ersten Läufe; die Läufe danach stehen im Nachtrag unten.)
   - In beiden Läufen hält Konstantinopel stand, und Granada überlebt.
   - Moskau geht in den Nachbarn auf.
   - Große KI-Reiche horten Gold: Frankreich hat 1600 über eine Million.
   - Das Preisniveau steigt bis 1600 auf das 2,8-Fache. Das passt zur Preisrevolution des 16. Jahrhunderts.
 - **Gefunden und behoben.** Ein erster Lauf zeigte 8 bis 15 Kleinstaaten, die ein Jahrhundert lang immer wieder bankrott gingen. Ihre Festungen, ihr Hof und ihre Flotten kosteten mehr, als sie einnahmen. Jetzt zahlt ein Reich seine Garnisonen nur bis zu einem Drittel seiner Einnahmen, und der Hof richtet sich nach den Einnahmen. Die Zahlen oben stammen aus den Läufen danach.
+
+#### Nachtrag: Läufe nach den Änderungen an KI und Geschichte
+
+Nach den Arbeiten an Haushalt, Kriegsführung und Lagen liefen beide Seeds noch einmal bis 1600. Die Berichte unter `observer/` stammen noch aus den ersten Läufen.
+
+| Prüfung (Punkt 99) | Seed 1356 | Seed 7 |
+|---|---|---|
+| Größter Anteil an Europa, höchster Wert im Lauf | 8,3 % (Ungarn) | 9,2 % (Frankreich) |
+| Staaten im Jahr 1600 (Start: 342) | 213 | 193 |
+| Längster laufender Krieg ab 1381 | 4,9 Jahre | 6,8 Jahre |
+| Gleichzeitig bankrotte Reiche | 0 bis 5 | 0 bis 5 |
+| Größte Kasse, gemessen am Jahresertrag | höchstens 2,4 Jahre | höchstens 2,4 Jahre |
+
+- **Gold.** Die KI gibt einen vollen Schatz im Frieden aus: für Tilgung, Stände, Bauten, Wahrzeichen, Flotten und Kolonialunternehmen. Über drei Jahreserträgen liegen nur Kleinstaaten fast ohne Einnahmen und vereinzelt Städte mit bis zu 3,4 Jahren.
+- **Konstantinopel.** In Seed 7 nehmen die Osmanen die Stadt zwischen 1406 und 1431. In Seed 1356 nimmt das griechische Haus Kantakuzenos die Stadt 1364. Die Osmanen belagern sie mehrmals, nehmen sie aber bis 1600 nicht.
+- **Granada.** In Seed 7 erobert Kastilien das Emirat zwischen 1456 und 1481. In Seed 1356 nehmen die Meriniden die Stadt vor 1381, und Kastilien erobert sie zwischen 1481 und 1506. Die Lage endet 1520 trotzdem mit „Das Emirat besteht fort“: Sie zählt die Orte, die die Meriniden in Iberien noch halten, und das sind mehr als drei.
+- **Portugal** überlebt in beiden Läufen. In Seed 7 verliert es um 1430 Lissabon an die Meriniden und schrumpft bis 1600 auf 26 Orte.
+- **Die Rus.** In beiden Läufen sammelt Moskau die Rus: 451 bzw. 396 Orte im Jahr 1600.
+- **Die Steppe.** Die Goldene Horde schrumpft von 1480 Orten auf 69 bzw. 80.
 
 ## Was vereinfacht wurde, und wie
 
