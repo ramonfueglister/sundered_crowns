@@ -7,7 +7,7 @@ import { MapView, mapReady, rendererRef } from './MapView';
 import { timelapse, stopTimelapse } from './timelapse';
 import { MenuMap, menuMapReady } from './MenuMap';
 import { TopBar } from './TopBar';
-import { TooltipLayer } from './Tip';
+import { TooltipLayer, Tip } from './Tip';
 import { MAP_MODES, type MapMode } from '../game/protocol';
 import * as P from './panels';
 import { initAudio, setMood, setVolumes, sfx } from './audio';
@@ -58,7 +58,8 @@ function MainMenu() {
   useEffect(() => { listSaves().then(setSaves).catch(() => setSaves([])); }, []);
   const start = async (year: number, observer = false) => {
     sfx('open'); startYear.value = year; screen.value = 'loading';
-    await sim().init({ seed: (Date.now() & 0xffff) ^ year, year, player: null, devtools: true });
+    const seed = (Date.now() & 0xffff) ^ year; lastStart = { seed, year };
+    await sim().init({ seed, year, player: null, devtools: true });
     if (observer) { screen.value = 'game'; sim().speed(3); return; }
     screen.value = 'select';
   };
@@ -70,13 +71,15 @@ function MainMenu() {
       <h1 class="title">Sundered Crowns</h1>
       <div class="subtitle">{lang.value === 'de' ? 'Europa 1356 – 1815' : 'Europe 1356 – 1815'}</div>
       {saves[0] && <button class="btn big" onClick={() => cont(saves[0].id)}>{t('continue')} <small>{saves[0].label}</small></button>}
-      <button class="btn big" onClick={() => start(1356)}>{t('new_game')} — {t('start_1356')}</button>
-      <button class="btn big" onClick={() => start(1492)}>{t('new_game')} — {t('start_1492')}</button>
-      <button class="btn" onClick={() => { tutorialStep.value = 0; start(1356); }}>{t('tutorial')}</button>
-      <button class="btn" onClick={() => start(1356, true)}>{t('observer')}</button>
-      <button class="btn" onClick={() => openPanel('saves')}>{t('load')}</button>
-      <button class="btn" onClick={() => openPanel('settings')}>{t('settings')}</button>
-      <P.OnlineButton />
+      <button class="btn big start" onClick={() => start(1356)}><span>{t('new_game')} · {t('start_1356')}</span><small class="sub">{t('x_start_1356_sub')}</small></button>
+      <button class="btn big start" onClick={() => start(1492)}><span>{t('new_game')} · {t('start_1492')}</span><small class="sub">{t('x_start_1492_sub')}</small></button>
+      <div class="menu-sec">
+        <Tip content={<div><b>{t('tutorial')}</b><div class="tip-hint">{t('x_tutorial_hint')}</div></div>}><button class="btn" onClick={() => { tutorialStep.value = 0; start(1356); }}>{t('tutorial')}</button></Tip>
+        <Tip content={<div><b>{t('observer')}</b><div class="tip-hint">{t('x_observer_hint')}</div></div>}><button class="btn" onClick={() => start(1356, true)}>{t('observer')}</button></Tip>
+        <button class="btn" onClick={() => openPanel('saves')}>{t('load')}</button>
+        <button class="btn" onClick={() => openPanel('settings')}>{t('settings')}</button>
+        <P.OnlineButton />
+      </div>
       <div class="lang"><button class={lang.value === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button><button class={lang.value === 'de' ? 'on' : ''} onClick={() => setLang('de')}>Deutsch</button></div>
     </div>
     {panel.value === 'settings' && <div class="modal-wrap"><P.SettingsPanel /></div>}
@@ -91,38 +94,60 @@ function Loading() {
 }
 
 const RECOMMENDED = ['portugal', 'scotland', 'brandenburg', 'venice', 'bavaria_upper', 'hungary', 'denmark', 'navarre'];
+/** Seed and year of the world on the select screen: a different game difficulty re-creates the same world with it. */
+let lastStart: { seed: number; year: number } | null = null;
+/** Game difficulty as the simulation reads it (s.difficulty, systems/ai.ts): 1 easy, 2 normal (the default), 3 hard. */
+const GAME_DIFF = [1, 2, 3] as const;
+const DIFF_KEY: Record<number, string> = { 1: 'easy', 2: 'normal', 3: 'hard' };
 function SelectScreen() {
   const ns = nations.value; const sel = ns[selectedNation.value];
-  const [diff, setDiff] = useState(1);
+  const [diff, setDiff] = useState(2);
+  const [goals, setGoals] = useState<any[] | null>(null);
+  useEffect(() => { setGoals(null); if (!sel) return; let alive = true; sim().query<any[]>({ q: 'goals', nation: sel.id }).then((g) => { if (alive) setGoals(g ?? []); }).catch(() => {}); return () => { alive = false; }; }, [sel?.id]);
   const play = async () => {
     if (!sel) return;
-    sim().setPlayer(sel.id); sfx('bell');
-    const cap = sel.capital; const g = rendererRef.assets?.geo;
+    const id = sel.id;
+    if (diff !== 2 && lastStart) { screen.value = 'loading'; await sim().init({ ...lastStart, player: null, devtools: true, difficulty: diff }); }
+    sim().setPlayer(id); sfx('bell');
+    const n = nations.value[id] ?? sel;
+    const cap = n.capital; const g = rendererRef.assets?.geo;
     if (cap >= 0 && rendererRef.r && g) rendererRef.r.flyTo(g.loc.x[cap], g.loc.y[cap], 3);
     screen.value = 'game';
     if (tutorialStep.value >= 0) tutorialStep.value = 0;
-    void diff;
   };
   const rec = RECOMMENDED.map((k) => ns.find((n) => n.key === k && n.alive)).filter(Boolean) as typeof ns;
+  const pick = (n: (typeof ns)[number]) => { selectedNation.value = n.id; const g = rendererRef.assets?.geo; if (g && n.capital >= 0) rendererRef.r?.flyTo(g.loc.x[n.capital], g.loc.y[n.capital], 2.5); };
+  const stars = sel ? Math.max(1, Math.min(5, sel.difficulty || 3)) : 3;
+  const open = (goals ?? []).filter((g) => g.open).slice(0, 3);
   return <div class="select">
     <div class="select-top">{t('choose_realm')}</div>
     <div class="select-side">
-      <div class="rec"><h3>{t('recommended')}</h3>{rec.map((n) => <button class="nation-chip" onClick={() => { selectedNation.value = n.id; const g = rendererRef.assets?.geo; if (g && n.capital >= 0) rendererRef.r?.flyTo(g.loc.x[n.capital], g.loc.y[n.capital], 2.5); }}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}</button>)}</div>
-      <div class="rec"><h3>{lang.value === 'de' ? 'Großmächte' : 'Great powers'}</h3>{[...ns].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 10).map((n) => <button class="nation-chip" onClick={() => { selectedNation.value = n.id; }}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}</button>)}</div>
+      <div class="rec"><h3>{t('recommended')}</h3>{rec.map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>
+      <div class="rec"><h3>{lang.value === 'de' ? 'Großmächte' : 'Great powers'}</h3>{[...ns].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 10).map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>
     </div>
     {sel && <div class="select-card">
-      <P.Coa coa={sel.coa} color={sel.color} size={72} />
-      <h2>{L(sel.name)}</h2>
-      <div class="muted">{t('ruler')}: {sel.ruler}</div>
-      <div class="row"><span>{t('development')}</span><b>{num(sel.dev)}</b></div>
-      <div class="row"><span>{lang.value === 'de' ? 'Orte' : 'Locations'}</span><b>{sel.locs}</b></div>
-      <div class="row"><span>{t('difficulty')}</span><b>{'★'.repeat(Math.max(1, Math.min(5, sel.difficulty || 3)))}</b></div>
+      <div class="sc-head"><P.Coa coa={sel.coa} color={sel.color} size={64} /><div><h2>{L(sel.name)}</h2><div class="muted">{t('ruler')}: {sel.ruler}</div></div></div>
+      <div class="sc-facts">
+        <Tip content={<div><b>{t('development')}</b><div class="tip-hint">{t('x_nat_dev_hint')}</div></div>}><div class="row"><span>{t('development')}</span><b>{num(sel.dev)}</b></div></Tip>
+        <div class="row"><span>{lang.value === 'de' ? 'Orte' : 'Locations'}</span><b>{sel.locs}</b></div>
+        <Tip content={<div><b>{t('x_start_position')}</b><div class="tip-hint">{t('x_start_position_hint')}</div></div>}><div class="row"><span>{t('x_start_position')}</span><b class="stars" title={t(`x_stars_${stars}`)}>{'★'.repeat(stars)}<span class="off">{'★'.repeat(5 - stars)}</span> <small>{t(`x_stars_${stars}`)}</small></b></div></Tip>
+      </div>
+      <div class="sc-sec">{t('x_situation')}</div>
       <p class="summary">{L(sel.summary)}</p>
-      <div class="diff">{['easy', 'normal', 'hard', 'very_hard'].map((d, k) => <button class={diff === k ? 'on' : ''} onClick={() => setDiff(k)}>{t(d)}</button>)}</div>
+      {goals && open.length > 0 && <><div class="sc-sec">{t('x_first_goals')}</div>
+        <ul class="sc-goals">{open.map((g) => <li><Tip content={<div><b>{L(g.name)}</b><div class="tip-hint">{L(g.desc)}</div></div>}><span><b>{L(g.name)}</b><span class="muted"> · {goalReq(L(g.desc))}</span></span></Tip></li>)}</ul></>}
+      <div class="sc-sec">{t('x_game_difficulty')}</div>
+      <div class="diff">{GAME_DIFF.map((d) => <Tip content={<div><b>{t(DIFF_KEY[d])}</b><div class="tip-hint">{t(`x_diff_${d}`)}</div></div>}><button class={diff === d ? 'on' : ''} onClick={() => setDiff(d)}>{t(DIFF_KEY[d])}</button></Tip>)}</div>
+      <div class="muted small diff-note">{t(`x_diff_${diff}`)}</div>
       <button class="btn big gold" onClick={play}>{t('play_as')} {L(sel.short)}</button>
     </div>}
     <button class="btn back" onClick={() => { screen.value = 'menu'; }}>←</button>
   </div>;
+}
+/** The conditions of a goal text ("… Requires: a; b. Reward: …"), shortened for the select screen. */
+function goalReq(desc: string): string {
+  const m = /(?:Requires|Bedingung):\s*(.*?)\.\s*(?:Reward|Belohnung)/s.exec(desc);
+  return m ? m[1].replace(/;\s*/g, ', ') : '';
 }
 
 function GameUI() {

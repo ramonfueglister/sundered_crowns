@@ -4,7 +4,8 @@ import { sim, view, nations } from '../../game/client';
 import { playerId, panelArg, openPanel } from '../store';
 import type { PeaceTerm } from '../../sim/types';
 import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, Tip, locName, namesVersion, flyToLoc } from './common';
-import { WarCard } from './realmtabs';
+import { WarCard, WarScoreTip } from './realmtabs';
+import { TipHead } from './explain';
 
 export function termText(x: PeaceTerm): string {
   switch (x.type) {
@@ -13,6 +14,16 @@ export function termText(x: PeaceTerm): string {
     case 'gold': return `${t('term_gold')}: ${num(x.amount || 0)}`;
     default: return t(`term_${x.type}`);
   }
+}
+
+/** What each term weighs: the price in war score (systems/war.ts termCost). */
+function TermCosts({ terms, costs, total, title, hint }: { terms: PeaceTerm[]; costs?: number[]; total: number; title: string; hint: string }) {
+  return <div><TipHead name={title} value={num(total)} hint={hint} />
+    <div class="breakdown">{terms.map((x, i) => <div class="bd-row"><span>{termText(x)}</span><span>{num(costs?.[i] ?? 0)}</span></div>)}
+      {!terms.length && <div class="bd-row muted"><span>{t('no_terms')}</span><span /></div>}
+      <div class="bd-row bd-total"><span>Σ</span><span>{num(total)}</span></div></div>
+    <div class="muted small">{t('x_term_costs')}</div>
+  </div>;
 }
 
 export function PeaceTab() {
@@ -90,7 +101,7 @@ function PeaceInner({ w }: { w: any }) {
       <div class="seg wide"><button class={!concede ? 'on' : ''} onClick={() => { setConcede(false); setSel([]); }}>{t('we_demand')}</button><button class={concede ? 'on' : ''} onClick={() => { setConcede(true); setSel([]); setFlags({}); }}>{t('we_concede')}</button></div>
       <div class="terms">
         <div class="term-block">
-          <div class="sub-h">{concede ? t('give_locations') : t('take_locations')} <span class="muted small">({cands.length})</span></div>
+          <div class="sub-h">{concede ? t('give_locations') : t('take_locations')} <Tip content={<div><TipHead name={concede ? t('give_locations') : t('take_locations')} value={cands.length} hint={concede ? t('x_cands_concede_hint') : t('x_cands_demand_hint')} /></div>}><span class="muted small">({cands.length})</span></Tip></div>
           {cands.length ? <div class="loc-picks">{cands.slice(0, 120).map((l) => <label class={`lp ${sel.includes(l) ? 'on' : ''}`}><input type="checkbox" checked={sel.includes(l)} onChange={() => { setWhite(false); setSel(sel.includes(l) ? sel.filter((x) => x !== l) : [...sel, l]); }} /><span onDblClick={() => flyToLoc(l)}>{locName(l)}</span><NLink id={v.owner?.[l] ?? -1} size={12} name={false} /></label>)}</div>
             : <div class="muted small">{concede ? t('no_lost_locations') : t('no_occupied')}</div>}
           {!concede && sel.length > 0 && <label class="chk"><input type="checkbox" checked={release} onChange={(e) => setRelease((e.target as HTMLInputElement).checked)} /> {t('release_instead')}</label>}
@@ -109,10 +120,11 @@ function PeaceInner({ w }: { w: any }) {
       <div class={`peace-eval ${ev ? (ev.accept ? 'yes' : 'no') : ''}`}>
         {ev ? <>
           <div class="pe-h">{ev.accept ? <b class="pos">✔ {t('would_accept')}</b> : <b class="neg">✘ {t('would_refuse')}</b>}
-            {!concede && ev.warScore !== undefined && <Tip content={<div><b>{t('war_score')}</b> {signed(ev.warScore)}<br />{t('demands_cost')}: {num(ev.cost)}</div>}><span class="muted">{t('war_score')} {signed(ev.warScore)} · {t('demands_cost')} {num(ev.cost)}</span></Tip>}
-            {concede && <span class="muted">{t('concession_value')} {num(ev.cost)}</span>}
+            {!concede && ev.warScore !== undefined && <span class="muted"><Tip content={() => <WarScoreTip w={w} pid={pid} />}><span class="has-tip">{t('war_score')} {signed(ev.warScore)}</span></Tip> · <Tip content={() => <TermCosts terms={terms} costs={ev.costs} total={ev.cost} title={t('demands_cost')} hint={t('x_demands_cost_hint')} />}><span class="has-tip">{t('demands_cost')} {num(ev.cost)}</span></Tip></span>}
+            {concede && <Tip content={() => <TermCosts terms={terms} costs={ev.costs} total={ev.cost} title={t('concession_value')} hint={t('x_concession_hint')} />}><span class="muted has-tip">{t('concession_value')} {num(ev.cost)}</span></Tip>}
           </div>
-          {ev.reasons?.length > 0 && <Reasons rows={ev.reasons} total={ev.score} />}
+          {ev.reasons?.length > 0 && <Reasons title={t('x_their_answer')} rows={ev.reasons} total={ev.score} />}
+          {ev.reasons?.length > 0 && <div class="muted small">{t('x_peace_accept_hint')}</div>}
         </> : <span class="muted">…</span>}
       </div>
       <div class="act-row"><span class="muted small">{terms.map(termText).join(' · ') || t('no_terms')}</span><span class="spacer" />

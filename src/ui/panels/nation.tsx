@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
+import { Parts, TipHead } from './explain';
 import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
@@ -25,33 +26,38 @@ export function NationPanel({ nation }: { nation: number }) {
   const rel = d.rel;
   const their = rel ? rel.theirOpinion.reduce((p: number, x: [string, number]) => p + x[1], 0) : 0;
   const ours = rel ? rel.ourOpinion.reduce((p: number, x: [string, number]) => p + x[1], 0) : 0;
+  const me = pid >= 0 && pid !== nation ? nations.value[pid] : undefined;
+  const ourMen = me ? (view.value?.armies ?? []).filter((a) => a.owner === pid && !a.fleet).reduce((p, a) => p + a.men, 0) : undefined;
+  const ourShips = me ? (view.value?.armies ?? []).filter((a) => a.owner === pid && a.fleet).reduce((p, a) => p + a.men, 0) : undefined;
   return <Panel cls="nat-pnl" onClose={close} coa={<Coa coa={d.coa} color={d.color} size={52} />}
     title={L(d.name)} sub={<>{rankName(d.rank)} · {govName(d.gov)}{d.emperor && <> · <b>{t('emperor')}</b></>}{d.elector && <> · {t('elector')}</>}</>}>
     {!d.alive && <div class="neg">{t('fallen_realm')}</div>}
     <div class="ruler-box">
       <div>
         <div class="ruler-name">{d.ruler ? <>{d.ruler.name} {d.ruler.dynasty}</> : '—'}</div>
-        <div class="muted">{t('ruler')}{d.ruler && <> · {d.ruler.age} {t('years_old')}</>}</div>
-        {d.ruler && <div class="skills">{d.ruler.skills.map((s: number, k: number) => <Tip content={t(SKILLS[k])}><span class="skill"><i class={`sk sk${k}`} />{s}</span></Tip>)}</div>}
+        <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={`${d.ruler.name} ${d.ruler.dynasty ?? ''}`} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
+        {d.ruler && <div class="skills">{d.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SKILLS[k])} value={s} hint={t(`x_skill${k}_fx`)} /></div>}><span class="skill"><i class={`sk sk${k}`} />{s}</span></Tip>)}</div>}
         {d.ruler?.traits?.length > 0 && <div class="chips">{d.ruler.traits.map((tr: string) => <span class="chip">{traitName(tr)}</span>)}</div>}
       </div>
-      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <>{d.heir.name} <span class="muted">({d.heir.age})</span></> : <span class="muted">{t('none')}</span>}</div></div>
+      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <Tip content={<div><TipHead name={d.heir.name} value={`${d.heir.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.heir.name} <span class="muted">({d.heir.age})</span></span></Tip> : <span class="muted">{t('none')}</span>}</div></div>
+    </div>
+    <div class="loc-id">
+      <Tip content={<div><TipHead name={placeName(d.capitalName)} hint={t('x_click_capital')} /></div>}><span class="chip" onClick={() => flyToLoc(d.capital)}><small>{t('capital')}</small><a class="lk">{placeName(d.capitalName)}</a></span></Tip>
+      <Tip content={<div><TipHead name={L(d.faith)} hint={t('x_nat_faith_hint')} /></div>}><span class="chip"><small>{t('faith')}</small>{L(d.faith)}</span></Tip>
+      <Tip content={<div><TipHead name={L(d.culture)} hint={t('x_nat_culture_hint')} /></div>}><span class="chip"><small>{t('culture')}</small>{L(d.culture)}</span></Tip>
     </div>
     <div class="grid2">
-      <Row k={t('capital')} v={<a class="lk" onClick={() => flyToLoc(d.capital)}>{placeName(d.capitalName)}</a>} />
-      <Row k={t('faith')} v={L(d.faith)} />
-      <Row k={t('culture')} v={L(d.culture)} />
-      <Row k={t('development')} v={num(d.dev)} />
-      <Row k={t('army')} v={`${num(d.men)} ${t('men')}`} />
-      <Row k={t('fleet')} v={`${num(d.ships)} ${t('ships')}`} />
-      <Row k={t('prestige')} v={num(d.prestige)} />
-      <Row k={t('score')} v={num(d.score)} />
-      <Row k={t('dread')} v={<span class={d.dread > 20 ? 'neg' : ''}>{num(d.dread)}</span>} tip={t('dread_hint')} />
-      <Row k={t('personality')} v={t(`pers_${d.personality}`)} />
+      <Row k={t('development')} v={num(d.dev)} tip={() => <Compare name={t('development')} theirs={d.dev} ours={me?.dev} hint={t('x_nat_dev_hint')} />} />
+      <Row k={t('army')} v={`${num(d.men)} ${t('men')}`} tip={() => <Compare name={t('army')} theirs={d.men} ours={ourMen} hint={t('x_nat_army_hint')} />} />
+      <Row k={t('fleet')} v={`${num(d.ships)} ${t('ships')}`} tip={() => <Compare name={t('fleet')} theirs={d.ships} ours={ourShips} hint={t('x_nat_fleet_hint')} />} />
+      <Row k={t('prestige')} v={num(d.prestige)} tip={<div><TipHead name={t('prestige')} value={num(d.prestige)} hint={t('x_prestige_hint')} /><div class="muted">{t('x_prestige_events')}</div></div>} />
+      <Row k={t('score')} v={num(d.score)} tip={() => <div><TipHead name={t('score')} value={num(d.score)} hint={t('x_score_hint')} /><Parts rows={d.scoreParts ?? []} total={(d.scoreParts ?? []).reduce((p: number, r: [string, number]) => p + r[1], 0)} fmt={(v) => num(v, 1)} /></div>} />
+      <Row k={t('dread')} v={<span class={d.dread > 20 ? 'neg' : ''}>{num(d.dread)}</span>} tip={<div><TipHead name={t('dread')} value={num(d.dread, 1)} hint={t('dread_hint')} /><div class="muted">{t('x_dread_sources')}</div></div>} />
+      <Row k={t('personality')} v={t(`pers_${d.personality}`)} tip={<div><TipHead name={t('personality')} value={t(`pers_${d.personality}`)} hint={t('x_personality_hint')} /></div>} />
     </div>
     {d.summary && <p class="summary small">{L(d.summary)}</p>}
     <Section title={t('relations')} id="nat-rel">
-      <Row k={t('allies')} v={<NList ids={d.allies} />} />
+      <Row k={t('allies')} v={<NList ids={[...new Set(d.allies as number[])]} />} />
       <Row k={t('rivals')} v={<NList ids={d.rivals} />} />
       {d.overlord >= 0 && <Row k={t('overlord')} v={<NLink id={d.overlord} />} />}
       {d.subjects.length > 0 && <Row k={t('subjects')} v={<NList ids={d.subjects} />} />}
@@ -62,7 +68,7 @@ export function NationPanel({ nation }: { nation: number }) {
       <Section title={t('opinion')} id="nat-op">
         <Row k={t('their_opinion')} v={<span class={their >= 0 ? 'pos' : 'neg'}>{signed(their)}</span>} tip={() => <Reasons title={t('their_opinion')} rows={rel.theirOpinion} />} />
         <Row k={t('our_opinion')} v={<span class={ours >= 0 ? 'pos' : 'neg'}>{signed(ours)}</span>} tip={() => <Reasons title={t('our_opinion')} rows={rel.ourOpinion} />} />
-        <Row k={t('trust')} v={num(rel.trust)} tip={t('trust_hint')} />
+        <Row k={t('trust')} v={num(rel.trust)} tip={<div><TipHead name={t('trust')} value={num(rel.trust)} hint={t('trust_hint')} /></div>} />
         <Row k={t('treaties')} v={rel.treaties.length ? rel.treaties.map((x: string) => t(`treaty_${x}`)).join(', ') : t('none')} />
       </Section>
       {pid >= 0 && d.alive && <Diplomacy d={d} refresh={refresh} />}
@@ -70,6 +76,13 @@ export function NationPanel({ nation }: { nation: number }) {
       {pid >= 0 && d.alive && <Espionage d={d} />}
     </>}
   </Panel>;
+}
+
+/** Their value next to ours, for the numbers of a foreign realm. */
+function Compare({ name, theirs, ours, hint }: { name: string; theirs: number; ours?: number; hint: string }) {
+  return <div><TipHead name={name} value={num(theirs)} hint={hint} />
+    {ours !== undefined && <div class="breakdown"><div class="bd-row"><span>{t('x_ours')}</span><span>{num(ours)}</span></div><div class="bd-row bd-total"><span>{t('x_ratio')}</span><span class={theirs > ours ? 'neg' : 'pos'}>{ours > 0 ? `${num(theirs / ours, 2)} ×` : '—'}</span></div></div>}
+  </div>;
 }
 
 export function traitName(k: string) { const v = t(`trait_${k}`); return v === `trait_${k}` ? k.replace(/_/g, ' ') : v; }
@@ -150,7 +163,7 @@ function Espionage({ d }: { d: any }) {
   const busy = mine.length >= 2;
   const cost = 30 * (r?.priceLevel ?? 1);
   const here = mine.filter((s) => s.target === d.id);
-  return <Section title={t('espionage')} id="nat-spy" open={false} right={<span class="muted">{mine.length}/2</span>}>
+  return <Section title={t('espionage')} id="nat-spy" open={false} right={<Tip content={<div><TipHead name={t('espionage')} value={`${mine.length}/2`} hint={t('x_spies_hint')} /></div>}><span class="muted has-tip">{mine.length}/2</span></Tip>}>
     {here.map((s) => <div class="kv"><span class="k">{t(`spy_${s.action}`)}</span><span class="v">{num((s.progress / Math.max(1, s.days)) * 100)} %</span></div>)}
     <div class="dip-list">{SPY.map((a) => <div class="dip-row">
       <Tip content={t(`spyhint_${a}`)}><span class="dname">{t(`spy_${a}`)}</span></Tip>

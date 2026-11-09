@@ -24,7 +24,8 @@ export type Query =
   | { q: 'realm' }           // full data for the player's realm panels (laws, estates, council, tech, doctrines, decisions)
   | { q: 'chronicle'; from?: number }
   | { q: 'timelapse' }
-  | { q: 'endstats' };
+  | { q: 'endstats' }
+  | { q: 'goals'; nation: number };  // goal tree of any realm with done/open state (nation selection, ambitions)
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }

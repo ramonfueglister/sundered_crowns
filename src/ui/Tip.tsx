@@ -1,22 +1,46 @@
 // Global tooltip with breakdowns: every number in the UI can explain where it comes from.
 import { signal } from '@preact/signals';
+import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { num, signed } from './format';
 
-const tip = signal<{ x: number; y: number; content: ComponentChildren } | null>(null);
+type Content = ComponentChildren | (() => ComponentChildren);
+const tip = signal<{ x: number; y: number; content: Content; owner: object } | null>(null);
 
-export function Tip({ content, children, tag = 'span', ...rest }: { content: ComponentChildren | (() => ComponentChildren); children: ComponentChildren; tag?: 'span' | 'div' } & Record<string, any>) {
+/**
+ * Wraps an element with a tooltip. A function as content is evaluated while the tooltip is shown, so the numbers in it
+ * stay live (they follow the simulation while the mouse rests on the value).
+ */
+export function Tip({ content, children, tag = 'span', ...rest }: { content: Content; children: ComponentChildren; tag?: 'span' | 'div' | 'th' | 'td' | 'tr' } & Record<string, any>) {
   const Tag: any = tag;
-  return <Tag {...rest}
-    onMouseEnter={(e: MouseEvent) => { tip.value = { x: e.clientX, y: e.clientY, content: typeof content === 'function' ? (content as any)() : content }; }}
-    onMouseMove={(e: MouseEvent) => { if (tip.value) tip.value = { ...tip.value, x: e.clientX, y: e.clientY }; }}
-    onMouseLeave={() => { tip.value = null; }}>{children}</Tag>;
+  const me = useRef<object>({});
+  const cur = useRef<Content>(content); cur.current = content;
+  // the element may vanish under the mouse (panel switched, event answered): then mouseleave never fires
+  useEffect(() => () => { if (tip.value?.owner === me.current) tip.value = null; }, []);
+  // keep the shown content in step with re-renders of the owner (static content that changed)
+  useEffect(() => { const v = tip.value; if (v && v.owner === me.current && v.content !== content && typeof content !== 'function') tip.value = { ...v, content }; });
+  return <Tag {...rest} data-tip=""
+    onMouseEnter={(e: MouseEvent) => { tip.value = { x: e.clientX, y: e.clientY, content: cur.current, owner: me.current }; }}
+    onMouseMove={(e: MouseEvent) => { const v = tip.value; if (v && v.owner === me.current) tip.value = { ...v, x: e.clientX, y: e.clientY }; }}
+    onMouseLeave={() => { if (tip.value?.owner === me.current) tip.value = null; }}>{children}</Tag>;
 }
 
 export function TooltipLayer() {
-  const v = tip.value; if (!v) return null;
-  const left = Math.min(v.x + 16, window.innerWidth - 340), top = Math.min(v.y + 18, window.innerHeight - 40);
-  return <div class="tooltip" style={{ left, top }}>{v.content}</div>;
+  const v = tip.value;
+  const ref = useRef<HTMLDivElement>(null);
+  // place the tooltip next to the cursor, flipped left or above when it would leave the window
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el || !v) return;
+    const w = el.offsetWidth, h = el.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+    let left = v.x + 16, top = v.y + 18;
+    if (left + w > W - 6) left = Math.max(6, v.x - 12 - w);
+    if (top + h > H - 6) top = Math.max(6, v.y - 12 - h);
+    el.style.left = `${left}px`; el.style.top = `${top}px`; el.style.visibility = 'visible';
+  });
+  if (!v) return null;
+  const content = typeof v.content === 'function' ? (v.content as () => ComponentChildren)() : v.content;
+  if (content === null || content === undefined || content === false || content === '') return null;
+  return <div ref={ref} class="tooltip" style={{ left: v.x + 16, top: v.y + 18, visibility: 'hidden' }}>{content}</div>;
 }
 export function hideTip() { tip.value = null; }
 

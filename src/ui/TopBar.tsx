@@ -2,11 +2,12 @@ import { useLayoutEffect, useRef, useEffect } from 'preact/hooks';
 import { view, nations } from '../game/client';
 import { sim } from '../game/client';
 import { t, L, lang } from './i18n';
-import { Tip, Breakdown } from './Tip';
+import { Tip } from './Tip';
 import { num, signed, pct, rgb } from './format';
 import { fmtDate } from '../sim/calendar';
 import { openPanel, panel, lastSpeed, settings } from './store';
 import { Coa } from './panels';
+import { TreasuryTip, ManpowerTip, ConcordTip, MandateTip, AuthorityTip, PrestigeTip, InsightTip, EnvoysTip, WarExhaustionTip, InflationTip } from './panels/explain';
 import { sfx } from './audio';
 
 const KEY_NAMES: Record<string, [string, string]> = {
@@ -25,8 +26,10 @@ const MENU = [
   { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
 ] as const;
 const MAX_LEVEL = 4;
-const SHORT: Record<string, [string, string]> = { government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Decisions', 'Beschlüsse'], knowledge: ['Learning', 'Wissen'] };
+const SHORT: Record<string, [string, string]> = { government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
 const short = (k: string) => SHORT[k]?.[lang.value === 'de' ? 1 : 0] ?? t(k);
+/** Full names of the panels (some differ from the generic word: "Herrschaft", "Goals & decisions"). */
+export const panelName = (k: string) => { const v = t(`nav_${k}`); return v === `nav_${k}` ? t(k) : v; };
 
 /**
  * The bar compacts itself until nothing overflows: 0 full labels, 1 short labels, 2 short labels only for the four main
@@ -61,32 +64,32 @@ export function TopBar() {
   return <div class="topbar" ref={ref}>
     {n && p && <button class="tb-flag" title={L(n.name)} onClick={() => openPanel('government')}><Coa coa={n.coa} color={n.color} size={34} /><span class="tb-name">{L(n.short)}</span></button>}
     {p && <>
-      <Tip content={() => <><Breakdown title={t('income')} rows={Object.entries(p.incomeBreak).map(([k, x]) => [keyName(k), x])} total={p.income} /><Breakdown title={t('expenses')} rows={Object.entries(p.expenseBreak).map(([k, x]) => [keyName(k), -x])} total={-p.expense} /></>}>
+      <Tip content={() => <TreasuryTip />}>
         <div class="stat" onClick={() => openPanel('economy')}><i class="ic gold" />{num(p.treasury)}<small class={net >= 0 ? 'pos' : 'neg'}>{signed(net)}</small></div>
       </Tip>
-      <Tip content={<div><b>{t('manpower')}</b><div>{num(p.manpower)} / {num(p.maxManpower)}</div><div class="muted">{lang.value === 'de' ? 'Wehrfähige Bauern und Tagelöhner; erholt sich monatlich je nach Kontrolle.' : 'Able-bodied peasants and labourers; recovers monthly depending on control.'}</div><div>{t('sailors')}: {num(p.sailors)}</div></div>}>
+      <Tip content={() => <ManpowerTip />}>
         <div class="stat" onClick={() => openPanel('military')}><i class="ic men" />{num(p.manpower)}</div>
       </Tip>
-      <Tip content={<div><b>{t('concord')}</b> {num(p.concord)}<div class="muted">{lang.value === 'de' ? 'Innerer Friede des Reiches. Niedrig: Unruhe, weniger Steuern, Aufstände.' : 'Internal peace of the realm. Low: unrest, lower taxes, revolts.'}</div></div>}>
+      <Tip content={() => <ConcordTip />}>
         <div class={`stat ${p.concord < 0 ? 'neg' : ''}`} onClick={() => openPanel('government')}><i class="ic concord" />{num(p.concord)}</div>
       </Tip>
-      <Tip content={<div><b>{t('mandate')}</b> {num(p.mandate)}<div class="muted">{lang.value === 'de' ? 'Wie rechtmäßig die Herrschaft erscheint. Wirkt auf Diplomatie, Eintracht und Thronfolge.' : 'How rightful the rule appears. Affects diplomacy, concord and succession.'}</div></div>}>
+      <Tip content={() => <MandateTip />}>
         <div class="stat" onClick={() => openPanel('government')}><i class="ic mandate" />{num(p.mandate)}</div>
       </Tip>
-      <Tip content={<div><b>{t('authority')}</b> {num(p.authority)}<div class="muted">{lang.value === 'de' ? 'Politisches Kapital für Reformen, Ämter und Privilegien.' : 'Political capital for reforms, offices and privileges.'}</div></div>}>
+      <Tip content={() => <AuthorityTip />}>
         <div class="stat" onClick={() => openPanel('government')}><i class="ic authority" />{num(p.authority)}</div>
       </Tip>
-      <Tip content={<div><b>{t('prestige')}</b> {num(p.prestige)}</div>}><div class="stat"><i class="ic prestige" />{num(p.prestige)}</div></Tip>
-      <Tip content={<div><b>{t('insight')}</b> {num(p.insight)}<div class="muted">{lang.value === 'de' ? 'Wird für Doktrinen ausgegeben.' : 'Spent on doctrines.'}</div></div>}><div class="stat" onClick={() => openPanel('knowledge')}><i class="ic insight" />{num(p.insight)}</div></Tip>
-      <Tip content={<div><b>{t('envoys')}</b> {p.envoys - p.envoysBusy} / {p.envoys}</div>}><div class="stat" onClick={() => openPanel('diplomacy')}><i class="ic envoy" />{p.envoys - p.envoysBusy}/{p.envoys}</div></Tip>
-      {p.warExhaustion > 1 && <Tip content={<div><b>{t('war_exhaustion')}</b> {num(p.warExhaustion)}</div>}><div class="stat neg"><i class="ic exhaust" />{num(p.warExhaustion)}</div></Tip>}
-      {p.inflation > 0.005 && <Tip content={<div><b>{t('inflation')}</b> {pct(p.inflation, 1)}</div>}><div class="stat neg">⚖ {pct(p.inflation, 1)}</div></Tip>}
+      <Tip content={() => <PrestigeTip />}><div class="stat" onClick={() => openPanel('diplomacy')}><i class="ic prestige" />{num(p.prestige)}</div></Tip>
+      <Tip content={() => <InsightTip />}><div class="stat" onClick={() => openPanel('knowledge')}><i class="ic insight" />{num(p.insight)}</div></Tip>
+      <Tip content={() => <EnvoysTip />}><div class="stat" onClick={() => openPanel('diplomacy')}><i class="ic envoy" />{p.envoys - p.envoysBusy}/{p.envoys}</div></Tip>
+      {p.warExhaustion > 1 && <Tip content={() => <WarExhaustionTip />}><div class="stat neg" onClick={() => openPanel('military')}><i class="ic exhaust" />{num(p.warExhaustion)}</div></Tip>}
+      {p.inflation > 0.005 && <Tip content={() => <InflationTip />}><div class="stat neg" onClick={() => openPanel('economy')}><i class="ic inflation" />{pct(p.inflation, 1)}</div></Tip>}
     </>}
     <div class="tb-spacer" />
     <div class="tb-menu">
-      {MENU.map(({ k, icon, key, main }) => <Tip content={<div><b>{t(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
-        <button class={`${panel.value === k ? 'on' : ''} ${main ? 'main' : ''}`} aria-label={t(k)} onClick={() => { sfx('open'); openPanel(k); }}>
-          <span class="tb-ic" aria-hidden="true">{icon}</span><span class="tb-lbl tb-full">{t(k)}</span><span class="tb-lbl tb-short">{short(k)}</span>
+      {MENU.map(({ k, icon, key, main }) => <Tip content={<div><b>{panelName(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
+        <button class={`${panel.value === k ? 'on' : ''} ${main ? 'main' : ''}`} aria-label={panelName(k)} onClick={() => { sfx('open'); openPanel(k); }}>
+          <span class="tb-ic" aria-hidden="true">{icon}</span><span class="tb-lbl tb-full">{panelName(k)}</span><span class="tb-lbl tb-short">{short(k)}</span>
         </button>
       </Tip>)}
     </div>
@@ -96,7 +99,6 @@ export function TopBar() {
         <button class={sp === 0 ? 'on' : ''} onClick={() => setSp(0)} title={t('paused')}>⏸</button>
         {[1, 2, 3, 4, 5].map((x) => <button class={sp === x ? 'on' : ''} onClick={() => setSp(x)}>{'›'.repeat(x)}</button>)}
       </div>
-      <Tip content={`${num(v.msPerDay, 1)} ms/day`}><div class="perf" /></Tip>
     </div>
     <button class="tb-gear" onClick={() => openPanel('pause')}>☰</button>
   </div>;
