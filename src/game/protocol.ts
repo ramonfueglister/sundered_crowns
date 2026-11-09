@@ -72,6 +72,7 @@ export interface PlayerView {
   homeMarket: number;                              // market of the capital (-1 without a capital)
   merchants: { used: number; cap: number };
   electionCloses?: number;                         // an imperial election this realm must still vote in closes that day (realm pass)
+  asks?: number;                                   // offers of mediation and calls of the league awaiting this realm's answer (realm pass)
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

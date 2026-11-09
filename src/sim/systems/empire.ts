@@ -9,7 +9,7 @@ import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies, opinion, addIncome, addExpense } from '../ctx';
 import { nationDev, nationLocsRO, concludePeace, warHooks } from './war';
 import { totalOpinion } from './diplomacy';
-import { assemblyWarVeto } from './government';
+import { assemblyWarVeto, assemblyWarRefusal } from './government';
 import { hash01, chance } from '../rng';
 
 type Row = [string | I18n, number];
@@ -36,7 +36,7 @@ export const IMPERIAL_REFORMS: ImperialReform[] = [
     desc: T('Every member sends a quota of men to the emperor: the emperor gains 15 % manpower, members lose 3 %.', 'Jedes Glied stellt dem Kaiser ein Kontingent: Der Kaiser gewinnt 15 % Wehrkraft, die Glieder verlieren 3 %.'),
     interest: (s, n) => [[T('Our men serve the emperor', 'Unsere Männer dienen dem Kaiser'), -10 - Math.min(15, nationDev(s, n.id) / 40)]] },
   { id: 'common_penny', cost: 50, name: T('The Common Penny', 'Der Gemeine Pfennig'),
-    desc: T('An imperial tax: every member pays 3 % of its tax income to the emperor each month.', 'Eine Reichssteuer: Jedes Glied zahlt dem Kaiser jeden Monat 3 % seiner Steuereinnahmen.'),
+    desc: T('An imperial tax: every free member pays the emperor each month up to 3 % of its tax income, as much as imperial authority allows (3 % at 100). The emperor receives at most a quarter of his own tax income; beyond that the members pay less.', 'Eine Reichssteuer: Jedes freie Glied zahlt dem Kaiser jeden Monat bis zu 3 % seiner Steuereinnahmen, so viel die Reichsautorität erlaubt (3 % bei 100). Der Kaiser erhält höchstens ein Viertel seiner eigenen Steuereinnahmen; darüber zahlen die Glieder weniger.'),
     interest: (s, n) => [[T('Our gold goes to the emperor', 'Unser Gold geht an den Kaiser'), -15 - Math.min(15, nationDev(s, n.id) / 40)]] },
   { id: 'perpetual_diet', cost: 55, name: T('The Perpetual Diet', 'Der Immerwährende Reichstag'),
     desc: T('The diet sits without end: it can meet every year instead of every two, and every member is a little more willing to vote for reform (+10).', 'Der Reichstag tagt ohne Ende: Er kann jedes Jahr statt alle zwei Jahre zusammentreten, und jedes Glied stimmt Reformen etwas eher zu (+10).'),
@@ -101,6 +101,23 @@ export function memberEffects(s: GameState): Record<string, number> {
   if (hasReform(s, 'imperial_levy')) fx.manpower = -0.03;
   return fx;
 }
+/** The Common Penny: the rate at full imperial authority, and the most the emperor receives as a share of his own
+ *  tax income (the members pay less in proportion when the cap holds). */
+export const PENNY_RATE = 0.03, PENNY_CAP = 0.25;
+/** The Common Penny this month: the rate at the present authority, the members' tax it is levied on, what that would
+ *  raise, the cap, and what is paid (each member pays its tax x rate x factor). */
+export function pennyParts(s: GameState): { rate: number; base: number; uncapped: number; cap: number; paid: number; factor: number; payers: number[] } {
+  const E = s.empire; const em = alive(s, E.emperor);
+  const rate = PENNY_RATE * clamp(E.authority, 0, 100) / 100;
+  const payers: number[] = []; let base = 0;
+  if (em) for (const id of E.members) {
+    const n = s.nations[id]; if (id === em.id || !n?.alive || n.overlord >= 0 || (n.income.tax || 0) <= 0) continue;
+    payers.push(id); base += n.income.tax;
+  }
+  const uncapped = base * rate, cap = em ? Math.max(0, em.income.tax || 0) * PENNY_CAP : 0;
+  const paid = Math.min(uncapped, cap);
+  return { rate, base, uncapped, cap, paid, factor: uncapped > 0 ? paid / uncapped : 0, payers };
+}
 function setMod(s: GameState, n: Nation, id: string, label: I18n, effects: Record<string, number>, days = 40) {
   n.modifiers = n.modifiers.filter((m) => m.id !== id);
   if (Object.keys(effects).length) n.modifiers.push({ id, until: s.day + days, label, effects });
@@ -111,9 +128,16 @@ const dropMod = (n: Nation, id: string) => { n.modifiers = n.modifiers.filter((m
 /** Before a war is declared: the Perpetual Peace forbids wars of conquest between members, and an assembly that must
  *  approve wars votes on it (systems/government.ts). Returns the refusal or null. */
 export function warVeto(s: GameState, w: World, a: number, b: number, goal: WarGoal['type']): string | null {
+  return peaceRefusal(s, a, b, goal) ?? assemblyWarVeto(s, w, s.nations[a], b, goal);
+}
+/** The same as warVeto without side effects (no assembly is held): the AI drops the targets it would be refused. */
+export function warVetoCheck(s: GameState, w: World, a: number, b: number, goal: WarGoal['type']): string | null {
+  return peaceRefusal(s, a, b, goal) ?? assemblyWarRefusal(s, s.nations[a], b, goal);
+}
+function peaceRefusal(s: GameState, a: number, b: number, goal: WarGoal['type']): string | null {
   const A = s.nations[a], Bn = s.nations[b];
   if (hasReform(s, 'public_peace') && A.isHRE && Bn.isHRE && s.empire.emperor !== a && (goal === 'conquest' || goal === 'reconquest' || goal === 'trade' || goal === 'subjugate')) return 'the Perpetual Peace forbids war between members';
-  return assemblyWarVeto(s, w, A, b, goal);
+  return null;
 }
 /** After a war was declared: the emperor is called to defend a member attacked by an outsider, a war between members
  *  costs authority, and the league defends its towns. */
@@ -183,8 +207,12 @@ export function obeyScore(s: GameState, war: War): Row[] {
   rows.push(['x_emp_threshold', -40]);
   return rows;
 }
-const ORDER_COST = 20;
-/** The emperor orders the aggressor in a war between members to make peace (costs the emperor 20 Authority). */
+/** The emperor's order to make peace: what it costs him, what obedience and defiance do to imperial authority, and
+ *  the ban on a realm that defies it (the Empire panel's hint is built from these). */
+export const ORDER_COST = 20;
+export const ORDER_OBEYED = 1, ORDER_DEFIED = -3;
+export const BAN_EFFECTS = { concord: -10, mandate: -8 }, BAN_YEARS = 5;
+/** The emperor orders the aggressor in a war between members to make peace (costs the emperor ORDER_COST Authority). */
 export function orderPeace(s: GameState, w: World, em: Nation, warId: number): string | null {
   const E = s.empire; const war = s.wars.find((x) => x.id === warId);
   if (E.emperor !== em.id) return 'only the emperor can do this';
@@ -207,15 +235,15 @@ export function answerOrder(s: GameState, w: World, order: { war: number; to: nu
     order.answer = 1;
     const d = war.defLead;
     concludePeace(s, w, war, war.attLead, d, [{ type: 'white_peace' }]);
-    moveAuth(s, 'x_emp_obeyed', 1);
+    moveAuth(s, 'x_emp_obeyed', ORDER_OBEYED);
     chronicle(s, a.id, 'empire', T(`At the emperor's command ${a.short.en} made peace with ${s.nations[d].short.en}.`, `Auf Befehl des Kaisers schloss ${a.short.de} Frieden mit ${s.nations[d].short.de}.`));
   } else {
     order.answer = -1;
-    moveAuth(s, 'x_emp_defied', -3);
+    moveAuth(s, 'x_emp_defied', ORDER_DEFIED);
     a.modifiers = a.modifiers.filter((m) => m.id !== 'imperial_ban');
-    a.modifiers.push({ id: 'imperial_ban', until: s.day + 365 * 5, label: T('Defied the emperor', 'Dem Kaiser getrotzt'), effects: { concord: -10, mandate: -8 } });
+    a.modifiers.push({ id: 'imperial_ban', until: s.day + 365 * BAN_YEARS, label: T('Defied the emperor', 'Dem Kaiser getrotzt'), effects: { ...BAN_EFFECTS } });
     for (const id of E.members) if (id !== a.id && s.nations[id]?.alive) addOpinion(s, id, a.id, 'defied_emperor', -20, 365 * 5);
-    if (em?.alive && !hasTreaty(s, em.id, a.id, 'claim')) s.treaties.push({ a: Math.min(em.id, a.id), b: Math.max(em.id, a.id), type: 'claim', since: s.day, until: s.day + 365 * 5 });
+    if (em?.alive && !hasTreaty(s, em.id, a.id, 'claim')) s.treaties.push({ a: Math.min(em.id, a.id), b: Math.max(em.id, a.id), type: 'claim', since: s.day, until: s.day + 365 * BAN_YEARS });
     chronicle(s, a.id, 'empire', T(`${a.short.en} defied the emperor's order to make peace.`, `${a.short.de} trotzte dem Friedensgebot des Kaisers.`));
     if (em && isHuman(s, em.id)) notice(s, em.id, 'empire', T(`${a.short.en} defies our order to make peace.`, `${a.short.de} trotzt unserem Friedensgebot.`), { war: war.id });
   }
@@ -464,11 +492,22 @@ export function joinLeague(s: GameState, w: World, n: Nation): string | null {
 export function leaveLeague(s: GameState, n: Nation): string | null {
   const lg = league(s); if (!lg || !lg.members.includes(n.id)) return 'not a member';
   lg.members = lg.members.filter((x) => x !== n.id); n.leagueMember = n.leagueMember.filter((x) => x !== LEAGUE);
+  if (lg.calls) lg.calls = lg.calls.filter((c) => c.to !== n.id);
   dropMod(n, 'league');
   for (const m of lg.members) addOpinion(s, m, n.id, 'left_league', -20, 365 * 10);
   chronicle(s, n.id, 'league', T(`${n.short.en} left the ${LEAGUE_NAME.en}.`, `${n.short.de} verließ den ${LEAGUE_NAME.de}.`));
   return null;
 }
+/** Members worn out by war are not called to the league's defence. */
+export const LEAGUE_CALL_EXHAUSTION = 40;
+/** Days a human member has to answer the league's call to arms (unanswered, it stays out). */
+export const LEAGUE_CALL_DAYS = 30;
+/** What staying out of a member town's defence costs: that town thinks less of us (AI and human members alike). */
+export const LEAGUE_STAYED_OUT = -15;
+/** When a member town is attacked, the other members within reach are called to its defence. AI members join with a
+ *  chance of 70 %; a human member is asked and answers within LEAGUE_CALL_DAYS (league command answer_call). Members
+ *  allied to or at truce with the attacker, too far away, or worn out by war (exhaustion LEAGUE_CALL_EXHAUSTION or
+ *  more) are not called. */
 function leagueOnWar(s: GameState, w: World, war: War) {
   const lg = league(s); if (!lg) return;
   const victim = s.nations[war.goal.target]; const att = war.attLead;
@@ -476,11 +515,49 @@ function leagueOnWar(s: GameState, w: World, war: War) {
   if (war.goal.type === 'independence' || war.goal.type === 'civil_war' || war.goal.type === 'rebels') return;
   for (const id of lg.members) {
     const m = s.nations[id];
-    if (!m?.alive || id === victim.id || war.att.includes(id) || war.def.includes(id) || m.capital < 0) continue;
-    if (hasTreaty(s, id, att, 'alliance') || hasTreaty(s, id, att, 'truce') || w.distKm(m.capital, victim.capital) > 1200) continue;
-    if (isHuman(s, id)) { war.def.push(id); notice(s, id, 'league', T(`The league calls us to defend ${victim.short.en}.`, `Der Bund ruft uns zur Verteidigung von ${victim.short.de}.`), { war: war.id }); continue; }
-    if (m.warExhaustion < 40 && chance(s.rng, 0.7)) war.def.push(id);
+    if (!m?.alive || !leagueCallable(s, w, war, id, victim.id, att) || m.warExhaustion >= LEAGUE_CALL_EXHAUSTION) continue;
+    if (isHuman(s, id)) {
+      (lg.calls ??= []).push({ war: war.id, member: victim.id, attacker: att, to: id, until: s.day + LEAGUE_CALL_DAYS });
+      notice(s, id, 'league', T(`${s.nations[att].short.en} has attacked ${victim.short.en}: the league calls us to its defence. Join or stay out within ${LEAGUE_CALL_DAYS} days (Empire panel).`, `${s.nations[att].short.de} hat ${victim.short.de} angegriffen: Der Bund ruft uns zu seiner Verteidigung. Beitreten oder fernbleiben binnen ${LEAGUE_CALL_DAYS} Tagen (Reich).`));
+      continue;
+    }
+    if (chance(s.rng, 0.7)) war.def.push(id);
+    else stayedOut(s, id, victim.id);
   }
+}
+function leagueCallable(s: GameState, w: World, war: War, id: number, victim: number, att: number): boolean {
+  const m = s.nations[id], v = s.nations[victim];
+  if (!m?.alive || !v?.alive || id === victim || war.att.includes(id) || war.def.includes(id) || m.capital < 0 || v.capital < 0) return false;
+  return !hasTreaty(s, id, att, 'alliance') && !hasTreaty(s, id, att, 'truce') && w.distKm(m.capital, v.capital) <= 1200;
+}
+function stayedOut(s: GameState, id: number, victim: number) { addOpinion(s, victim, id, 'league_stayed_out', LEAGUE_STAYED_OUT, 365 * 5); }
+/** A human member answers the league's call to arms. */
+export function answerLeagueCall(s: GameState, w: World, n: Nation, warId: number, yes: boolean): string | null {
+  const lg = league(s); const calls = lg?.calls ?? [];
+  const k = calls.findIndex((c) => c.war === warId && c.to === n.id);
+  if (!lg || k < 0) return 'no call of the league is pending';
+  const c = calls[k];
+  if (yes && n.warExhaustion >= LEAGUE_CALL_EXHAUSTION) return 'too exhausted by war';
+  calls.splice(k, 1);
+  const war = s.wars.find((x) => x.id === warId);
+  if (!war) return 'the war is over';
+  if (!lg.members.includes(n.id) || !leagueCallable(s, w, war, n.id, c.member, c.attacker)) return 'no call of the league is pending';
+  if (!yes) { stayedOut(s, n.id, c.member); return null; }
+  war.def.push(n.id);
+  chronicle(s, n.id, 'league', T(`${n.short.en} answered the league's call and took up arms for ${s.nations[c.member].short.en}.`, `${n.short.de} folgte dem Ruf des Bundes und griff für ${s.nations[c.member].short.de} zu den Waffen.`));
+  return null;
+}
+/** Calls left unanswered: the member stays out. Calls for wars that ended lapse. */
+function leagueCallsMonth(s: GameState, w: World) {
+  const lg = league(s); if (!lg?.calls?.length) return;
+  const keep: NonNullable<typeof lg.calls> = [];
+  for (const c of lg.calls) {
+    const war = s.wars.find((x) => x.id === c.war);
+    if (!war || !lg.members.includes(c.to) || !leagueCallable(s, w, war, c.to, c.member, c.attacker)) continue;
+    if (s.day >= c.until) { stayedOut(s, c.to, c.member); notice(s, c.to, 'league', T(`We did not answer the league's call for ${s.nations[c.member].short.en}; it counts us as staying out.`, `Wir antworteten nicht auf den Ruf des Bundes für ${s.nations[c.member].short.de}; er wertet es als Fernbleiben.`)); continue; }
+    keep.push(c);
+  }
+  lg.calls = keep;
 }
 function leagueYear(s: GameState, w: World) {
   const lg = league(s); if (!lg) return;
@@ -514,10 +591,12 @@ function empireMonth(s: GameState, w: World) {
   if (em) setMod(s, em, 'imperial_crown', T('Imperial crown', 'Kaiserkrone'), crownEffects(s));
   const mfx = memberEffects(s);
   for (const id of E.members) { const n = s.nations[id]; if (id !== E.emperor) setMod(s, n, 'imperial_member', T('Member of the Empire', 'Glied des Reiches'), mfx); }
-  if (em && hasReform(s, 'common_penny')) for (const id of E.members) {
-    const n = s.nations[id]; if (id === em.id || !n.alive || n.overlord >= 0) continue;
-    const t = Math.max(0, n.income.tax || 0) * 0.03; if (t <= 0) continue;
-    addExpense(n, 'imperial_tax', t); addIncome(em, 'imperial_tax', t);
+  if (em && hasReform(s, 'common_penny')) {
+    const pp = pennyParts(s);
+    if (pp.paid > 0) for (const id of pp.payers) {
+      const n = s.nations[id]; const t = n.income.tax * pp.rate * pp.factor; if (t <= 0) continue;
+      addExpense(n, 'imperial_tax', t); addIncome(em, 'imperial_tax', t);
+    }
   }
   // calls and orders: open ones lapse at their deadline (a human emperor who says nothing has refused)
   for (const c of E.calls ?? []) {
@@ -583,6 +662,7 @@ function empireMonth(s: GameState, w: World) {
   const lg = league(s);
   if (!lg) foundLeague(s, w);
   else for (const id of lg.members) { const n = s.nations[id]; if (n?.alive) setMod(s, n, 'league', LEAGUE_NAME, leagueEffects(s, n)); }
+  leagueCallsMonth(s, w);
 }
 function empireYear(s: GameState, w: World) {
   const E = s.empire;
@@ -596,6 +676,7 @@ function empireYear(s: GameState, w: World) {
 }
 
 warHooks.veto = warVeto;
+warHooks.check = warVetoCheck;
 warHooks.declared = realmBodiesOnWar;
 
 export const empire: System = {

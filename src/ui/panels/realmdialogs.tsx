@@ -7,6 +7,7 @@ import { view } from '../../game/client';
 import { Panel, Section, Row, Bar, Btn, Empty, NLink, NList, Tip, useQuery, act, t, L, num, signed, pct, fmtDateShort, Slider } from './common';
 import { Parts, TipHead } from './explain';
 import { errText } from '../i18n';
+import { MediationOffers, LeagueCalls } from './empire';
 
 type Row2 = [any, number];
 const sum = (r: Row2[]) => r.reduce((p, x) => p + x[1], 0);
@@ -17,6 +18,7 @@ export function RealmDialogs() {
   const d = realmDialog.value;
   return <>
     <ElectionModal />
+    <AsksModal />
     {d?.kind === 'assembly' && <AssemblyDialog cmd={d.cmd} />}
     {d?.kind === 'situation' && <SituationWindow id={d.id} />}
   </>;
@@ -96,6 +98,29 @@ function ElectionModal() {
         </span></div>; })}
       {me && <div class="muted small">{t('x_el_own_hint')}</div>}
       <div class="btn-row"><Btn small={false} onClick={() => setHidden(e.election.closes)}>{t('x_el_later')}</Btn></div>
+    </Panel></div>
+  </div>;
+}
+
+// ---------------------------------------------------------------- requests that await our answer
+/** Offers of mediation in a war we lead and calls of the league to defend a member town: they lapse (as a refusal)
+ *  at their date, so they open a dialog from every tick, like the election. */
+function AsksModal() {
+  const pid = playerId.value;
+  const n = view.value?.player?.asks ?? 0;
+  const [hidden, setHidden] = useState(-1);
+  const [g, refreshG] = useQuery<any>(n > 0 ? { q: 'powers' } : null, [pid, n], 1500);
+  const [e, refreshE] = useQuery<any>(n > 0 ? { q: 'empire' } : null, [pid, n], 1500);
+  useEffect(() => { if (!n) setHidden(-1); }, [n]);
+  if (!n || hidden === n || realmDialog.value || (view.value?.player?.electionCloses ?? 0) > 0) return null;
+  const offers = g?.offers ?? [], calls = e?.league?.calls ?? [];
+  if (!offers.length && !calls.length) return null;
+  const done = () => { refreshG(); refreshE(); };
+  return <div class="modal-fixed" onPointerDown={(ev) => ev.stopPropagation()} onWheel={(ev) => ev.stopPropagation()}>
+    <div class="realm-dialog"><Panel title={t('x_asks_title')} onClose={() => setHidden(n)} cls="realm-dlg">
+      {offers.length > 0 && <MediationOffers offers={offers} spurned={g.spurned} onDone={done} />}
+      {calls.length > 0 && <Section title={L(e.league.name)} id="asks-league"><LeagueCalls calls={calls} terms={e.league} onDone={done} /></Section>}
+      <div class="btn-row"><Btn small={false} onClick={() => setHidden(n)}>{t('x_el_later')}</Btn></div>
     </Panel></div>
   </div>;
 }

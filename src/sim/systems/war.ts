@@ -102,7 +102,12 @@ export function hasCasusBelli(s: GameState, a: number, b: number): string | null
 /** The bodies of the realm that weigh in on a war: the Empire's peace and the assemblies before it is declared, the
  *  emperor's defence and the league after. Set by systems/empire.ts, so that this module does not import it (the
  *  Empire reaches the setup through diplomacy and the military, and war.ts must load before them). */
-export const warHooks: { veto?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null; declared?: (s: GameState, w: World, war: War) => void } = {};
+export const warHooks: {
+  veto?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
+  /** The same refusal without side effects (no assembly is held): the AI drops the targets it would be refused. */
+  check?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
+  declared?: (s: GameState, w: World, war: War) => void;
+} = {};
 
 export function declareWar(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'] = 'conquest', locs: number[] = []): string | null {
   const na = s.nations[a], nb = s.nations[b];

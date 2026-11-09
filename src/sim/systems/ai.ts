@@ -8,7 +8,7 @@ import { rand, chance, hash01 } from '../rng';
 import { applyCommand, buildRefusal } from '../commands';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue, gatherClaim, tributaryPeace } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue, gatherClaim, tributaryPeace, warHooks } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { LAWS, LAW_INDEX } from '../content/laws';
 import { reformCost, lawEffect } from './politics';
@@ -404,7 +404,7 @@ function diplomacy(s: GameState, w: World, n: Nation) {
   for (const sub of subjectsOf(s, n.id)) { const sn = s.nations[sub]; if (!sn.flags.integrating && sn.faith === n.faith && (sn.subjectType === 'vassal' && s.day - sn.subjectSince > 365 * 10 || sn.subjectType === 'personal_union' && s.day - sn.subjectSince > 365 * 50) && sn.libertyDesire < 30 && chance(s.rng, 0.05)) applyCommand(s, w, { t: 'integrate', n: n.id, subject: sub }); }
 }
 
-function considerWar(s: GameState, w: World, n: Nation) {
+export function considerWar(s: GameState, w: World, n: Nation) {
   if ((n.overlord >= 0 && n.subjectType !== 'tributary') || n.capital < 0) return;
   if (n.standingOrders?.defendOnly) return;
   const aggr = P(n, 'conqueror') ? 0.18 : P(n, 'zealot') ? 0.12 : P(n, 'opportunist') ? 0.1 : P(n, 'isolationist') ? 0.02 : 0.06;
@@ -424,6 +424,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
   let best = -1, bestScore = -Infinity;
   // places named by the realm's open goals make their holders more tempting targets (systems/goals.ts goalWants)
   const goalPlaces = goalWants(s, w, n).places;
+  const goalOf = (t: number) => (s.nations[t].faith !== n.faith && P(n, 'zealot') ? 'faith' : 'conquest');
   for (const t of neighboursCached(s, w, n.id)) {
     const tn = s.nations[t];
     if (!tn.alive || hasTreaty(s, n.id, t, 'truce') || hasTreaty(s, n.id, t, 'alliance') || tn.overlord === n.id || t === n.overlord) continue;
@@ -440,6 +441,8 @@ function considerWar(s: GameState, w: World, n: Nation) {
     for (const al of allies(s, top)) if (!hasTreaty(s, n.id, al, 'alliance') && !myBloc.includes(al)) theirPower += nationPower(s, al) * allyWeight(al, top);
     const ratio = myPower / Math.max(1, theirPower);
     if (ratio < 1.25) continue;
+    // a war the Empire's peace or our assembly would refuse is no target (nor worth a fabricated claim)
+    if (warHooks.check?.(s, w, n.id, t, goalOf(t))) continue;
     const cb = hasCasusBelli(s, n.id, t);
     // the size of the prize counts, not only how easy the fight is
     let score = Math.min(ratio, 3) * 10 + Math.min(30, 120 * nationDev(s, t) / myDev) + (cb ? 25 : -40) + (n.rivals.includes(t) ? 20 : 0) - totalOpinion(s, w, n.id, t) * 0.2 + (tn.faith !== n.faith && P(n, 'zealot') ? 25 : 0);
@@ -460,7 +463,7 @@ function considerWar(s: GameState, w: World, n: Nation) {
   // war goal: border locations of the target, more for a greater realm
   const k = clamp(Math.round(nationLocsRO(s, n.id).length / 40), 6, 15);
   const goal = [...new Set([...goalPlaces.filter((l) => s.loc.owner[l] === best), ...targetLocs(s, w, n.id, best, k)])].slice(0, k + 2);
-  applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal: s.nations[best].faith !== n.faith && P(n, 'zealot') ? 'faith' : 'conquest', locs: goal });
+  applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal: goalOf(best), locs: goal });
 }
 
 export function targetLocs(s: GameState, w: World, a: number, b: number, k: number): number[] {

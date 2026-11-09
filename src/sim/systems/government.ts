@@ -232,6 +232,14 @@ function aiBribes(s: GameState, n: Nation, ask: AssemblyAsk): string[] | null {
   }
   return null;
 }
+/** Whether the assembly would refuse a war, without holding it (the AI weighs its targets with it): the player's
+ *  assembly by its vote, an AI's by whether it can buy the missing votes. */
+export function assemblyWarRefusal(s: GameState, A: Nation, b: number, goal: WarGoal['type']): string | null {
+  if (!needsWarVote(s, A, b, goal)) return null;
+  const ask: AssemblyAsk = { kind: 'war', target: b, goal };
+  if (isHuman(s, A.id)) return assemblyVote(s, A, ask).passes ? null : 'the assembly refused to fund the war';
+  return aiBribes(s, A, ask) ? null : 'the assembly refused to fund the war';
+}
 /** Before a war is declared (systems/empire.ts warVeto): an assembly that must approve wars votes on it. The AI buys
  *  missing votes when rich; the player is refused and may ask again with bribes or a concession. */
 export function assemblyWarVeto(s: GameState, _w: World, A: Nation, b: number, goal: WarGoal['type']): string | null {

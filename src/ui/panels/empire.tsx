@@ -10,6 +10,9 @@ import { Parts, TipHead } from './explain';
 type Row2 = [any, number];
 const sum = (r: Row2[]) => r.reduce((p, x) => p + x[1], 0);
 const date = (d: number) => fmtDateShort(d, view.value?.startYear ?? 1356);
+/** A text with {name} places filled from the numbers the simulation uses. */
+export const fill = (k: string, v: Record<string, string | number>) => Object.entries(v).reduce((p, [a, b]) => p.split(`{${a}}`).join(String(b)), t(k));
+const orderHint = (o: any) => fill('x_emp_order_hint', { cost: o.cost, obeyed: signed(o.obeyed, 0), defied: signed(o.defied, 0), concord: signed(o.concord, 0), mandate: signed(o.mandate, 0), years: o.years });
 
 export function EmpireTab() {
   const [tab, setTab] = useState<'empire' | 'powers'>('empire');
@@ -43,6 +46,7 @@ function EmpireView() {
         <Bar value={e.authority} max={100} color="#c9a24a" />
         <Tip content={<Effects title={t('x_emp_crown_gives')} fx={e.crown} />}><div class="muted small has-tip">{t('x_emp_crown_gives')} ⓘ</div></Tip>
         {Object.keys(e.member).length > 0 && <Tip content={<Effects title={t('x_emp_member_gets')} fx={e.member} />}><div class="muted small has-tip">{t('x_emp_member_gets')} ⓘ</div></Tip>}
+        {e.penny && <Row k={t('x_emp_penny')} v={`${num(e.penny.paid, 1)} ${t('x_per_month')}`} tip={() => <Parts title={t('x_emp_penny')} rows={e.penny.rows} total={e.penny.paid} digits={1} />} />}
         <Row k={t('x_emp_members')} v={e.members.length} tip={<NList ids={e.members} size={14} />} />
         <div class="muted small">{e.isEmperor ? t('x_emp_you_emperor') : e.elector ? t('you_elector') : e.isMember ? t('x_emp_you_member') : t('x_emp_not_member')}</div>
       </Section>
@@ -82,7 +86,7 @@ function EmpireView() {
         <Tip content={() => <Reasons2 title={t('x_emp_obey_why')} rows={o.rows} />}><span class="has-tip muted">{date(o.until)}</span></Tip>
         {o.to === pid && <><Btn onClick={() => doAct({ t: 'empire', action: 'comply', war: o.war, yes: true })}>{t('x_emp_obey')}</Btn><Btn onClick={() => doAct({ t: 'empire', action: 'comply', war: o.war, yes: false })}>{t('x_emp_defy')}</Btn></>}
       </span></div>)}
-      {e.internalWars.map((x: any) => <div class="kv"><span class="k">{L(x.name)}</span><span class="v">{e.isEmperor && <Btn disabled={x.ordered ? t('x_emp_ordered') : null} tip={t('x_emp_order_hint')} onClick={() => doAct({ t: 'empire', action: 'order_peace', war: x.id })}>{t('x_emp_order_peace')}</Btn>}</span></div>)}
+      {e.internalWars.map((x: any) => <div class="kv"><span class="k">{L(x.name)}</span><span class="v">{e.isEmperor && <Btn disabled={x.ordered ? t('x_emp_ordered') : null} tip={orderHint(e.orderTerms)} onClick={() => doAct({ t: 'empire', action: 'order_peace', war: x.id })}>{t('x_emp_order_peace')}</Btn>}</span></div>)}
     </Section>}
     {e.league && <Section title={L(e.league.name)} id="emp-league">
       <div class="muted small">{t('x_league_hint')}</div>
@@ -90,6 +94,7 @@ function EmpireView() {
       <Row k={t('x_emp_members')} v={e.league.members.length} tip={<NList ids={e.league.members} size={14} />} />
       <NList ids={e.league.members.slice(0, 16)} size={14} />
       <Tip content={<Effects title={t('x_league_gives')} fx={e.league.effects} />}><div class="muted small has-tip">{t('x_league_gives')} ⓘ</div></Tip>
+      {e.league.calls.length > 0 && <LeagueCalls calls={e.league.calls} terms={e.league} onDone={refresh} />}
       <div class="btn-row">
         {e.league.member ? <Btn onClick={() => doAct({ t: 'league', action: 'leave' })}>{t('x_league_leave')}</Btn>
           : <Btn disabled={e.league.eligible ? null : t('x_league_not_eligible')} onClick={() => doAct({ t: 'league', action: 'join' })}>{t('x_league_join')}</Btn>}
@@ -130,6 +135,7 @@ function PowersView() {
         </span></div>)}
       </Section>
     </div>
+    {g.offers.length > 0 && <MediationOffers offers={g.offers} spurned={g.spurned} onDone={refresh} />}
     <Section title={t('x_gp_wars')} id="gp-wars">
       {g.wars.length ? g.wars.map((x: any) => <div class="kv"><span class="k"><NLink id={x.att} size={14} /> ⚔ <NLink id={x.def} size={14} /></span><span class="v">
         <Tip content={() => <Reasons2 title={t('x_gp_threat')} rows={x.threat} />}><span class={`has-tip ${sum(x.threat) > 0 ? 'neg' : 'muted'}`}>{sum(x.threat) > 0 ? t('x_gp_threatened') : t('x_gp_balanced')}</span></Tip>
@@ -141,4 +147,29 @@ function PowersView() {
       {g.log.map((l: any) => <div class="kv small"><span class="k">{date(l.day)} <NLink id={l.gp} size={12} /></span><span class="v">{t(`x_gp_log_${l.kind}`)} <NLink id={l.side} size={12} /></span></div>)}
     </Section>}
   </div>;
+}
+
+/** Calls of the league to join the defence of a member town (shown in the league section and the requests dialog). */
+export function LeagueCalls({ calls, terms, onDone }: { calls: any[]; terms: { callExhaustion: number; stayedOut: number }; onDone?: () => void }) {
+  const answer = async (war: number, yes: boolean) => { await act({ t: 'league', action: 'answer_call', war, yes }); onDone?.(); };
+  return <div class="league-calls">
+    <div class="sub-h">{t('x_league_calls')}</div>
+    {calls.map((c: any) => <div class="kv"><span class="k"><NLink id={c.attacker} size={14} /> ⚔ <NLink id={c.member} size={14} /></span><span class="v">
+      <Tip content={<div>{fill('x_league_call_hint', { cost: Math.abs(terms.stayedOut), ex: terms.callExhaustion })}</div>}><span class="has-tip muted">{date(c.until)}</span></Tip>
+      <Btn disabled={c.exhausted ? t('x_league_exhausted') : null} onClick={() => answer(c.war, true)}>{t('x_league_join_war')}</Btn>
+      <Btn onClick={() => answer(c.war, false)}>{t('x_league_stay_out')}</Btn>
+    </span></div>)}
+  </div>;
+}
+/** Offers of a great power to mediate a white peace in a war we lead (shown in the powers tab and the requests dialog). */
+export function MediationOffers({ offers, spurned, onDone }: { offers: any[]; spurned: number; onDone?: () => void }) {
+  const answer = async (war: number, yes: boolean) => { await act({ t: 'powers', action: yes ? 'accept_mediation' : 'refuse_mediation', war }); onDone?.(); };
+  return <Section title={t('x_gp_offers')} id="gp-offers">
+    <div class="muted small">{fill('x_gp_offer_hint', { cost: Math.abs(spurned) })}</div>
+    {offers.map((o: any) => <div class="kv"><span class="k"><NLink id={o.gp} size={14} /> → <NLink id={o.def} size={14} />{o.warName ? <span class="muted small"> {L(o.warName)}</span> : null}</span><span class="v">
+      <Tip content={() => <Reasons2 title={t('x_gp_offer_weigh')} rows={o.rows} />}><span class="has-tip muted">{date(o.until)}</span></Tip>
+      <Btn onClick={() => answer(o.war, true)}>{t('x_gp_accept')}</Btn>
+      <Btn onClick={() => answer(o.war, false)}>{t('x_gp_refuse')}</Btn>
+    </span></div>)}
+  </Section>;
 }

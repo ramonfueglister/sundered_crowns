@@ -7,8 +7,9 @@ import type { Query } from './protocol';
 import {
   IMPERIAL_REFORMS, nextReform, authorityDrift, crownEffects, memberEffects, internalWars, electionCandidates, voteScore, electorChoice, tally,
   campaignCost, dietStance, dietTally, dietPasses, dietCooldown, dietWeight, dietVoters, league, leagueEligible, leagueEffects, LEAGUE_NAME, defendScore, obeyScore,
+  ORDER_COST, ORDER_OBEYED, ORDER_DEFIED, BAN_EFFECTS, BAN_YEARS, LEAGUE_CALL_EXHAUSTION, LEAGUE_STAYED_OUT, pennyParts, PENNY_CAP, hasReform,
 } from '../sim/systems/empire';
-import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT } from '../sim/systems/powers';
+import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT, SPURNED } from '../sim/systems/powers';
 import { assemblyVote, askRates, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, type AssemblyAsk } from '../sim/systems/government';
 import { PRIVILEGES, ageOf, lawEffect } from '../sim/systems/politics';
 import { SITUATIONS } from '../sim/content/situations';
@@ -61,7 +62,20 @@ function empireView(s: GameState, w: World, me: number) {
     voters: dietVoters(s).length,
     calls: (E.calls ?? []).filter((c) => c.answer === 0).map((c) => ({ ...c, rows: s.nations[E.emperor]?.alive ? defendScore(s, w, s.nations[E.emperor], c) : [] })),
     orders: (E.orders ?? []).filter((o) => o.answer === 0).map((o) => { const war = s.wars.find((x) => x.id === o.war); return { ...o, rows: war ? obeyScore(s, war) : [] }; }),
-    league: lg ? { name: LEAGUE_NAME, members: lg.members, leader: lg.leader, strength: lg.strength, member: lg.members.includes(me), eligible: n ? leagueEligible(s, w, n) : false, effects: n ? leagueEffects(s, n) : {} } : null,
+    league: lg ? {
+      name: LEAGUE_NAME, members: lg.members, leader: lg.leader, strength: lg.strength, member: lg.members.includes(me), eligible: n ? leagueEligible(s, w, n) : false, effects: n ? leagueEffects(s, n) : {},
+      calls: (lg.calls ?? []).filter((c) => c.to === me).map((c) => ({ ...c, warName: s.wars.find((x) => x.id === c.war)?.name ?? null, exhausted: !!n && n.warExhaustion >= LEAGUE_CALL_EXHAUSTION })),
+      callExhaustion: LEAGUE_CALL_EXHAUSTION, stayedOut: LEAGUE_STAYED_OUT,
+    } : null,
+    // the Common Penny this month (systems/empire.ts pennyParts): what the members' taxes would raise at this
+    // authority, less what the cap holds back
+    penny: hasReform(s, 'common_penny') ? (() => { const pp = pennyParts(s); const r = (pp.rate * 100).toFixed(2);
+      return { paid: pp.paid, rows: [
+        [{ en: `Members' taxes ${Math.round(pp.base)} x ${r} % (3 % at authority 100)`, de: `Steuern der Glieder ${Math.round(pp.base)} x ${r} % (3 % bei Autorität 100)` }, pp.uncapped],
+        [{ en: `At most ${PENNY_CAP * 100} % of the emperor's taxes (${Math.round(pp.cap)})`, de: `Höchstens ${PENNY_CAP * 100} % der Steuern des Kaisers (${Math.round(pp.cap)})` }, pp.paid - pp.uncapped],
+      ] as Row[] }; })() : null,
+    // the emperor's order to make peace, in the numbers the simulation uses (systems/empire.ts answerOrder)
+    orderTerms: { cost: ORDER_COST, obeyed: ORDER_OBEYED, defied: ORDER_DEFIED, concord: BAN_EFFECTS.concord, mandate: BAN_EFFECTS.mandate, years: BAN_YEARS },
   };
 }
 
@@ -80,6 +94,10 @@ function powersView(s: GameState, w: World, me: number) {
     })),
     protectors: n && !isGreatPower(s, me) ? gps.filter((g) => s.nations[g]?.alive).map((g) => ({ id: g, rows: protectScore(s, w, s.nations[g], n), has: hasTreaty(s, g, me, 'guarantee'), asked: (n.flags[`petition_${g}`] ?? 0) > s.day })) : [],
     petitions: P.petitions.filter((p) => p.to === me).map((p) => ({ ...p, rows: n ? protectScore(s, w, n, s.nations[p.from]) : [] })),
+    // mediation offered to us as a war leader: what an AI leader would weigh, and what refusing costs
+    offers: (P.offers ?? []).filter((o) => o.to === me).map((o) => { const war = s.wars.find((x) => x.id === o.war); const gp = s.nations[o.gp];
+      return { ...o, warName: war?.name ?? null, def: war?.defLead ?? -1, rows: war && gp?.alive ? mediationScore(s, gp, war) : [] }; }),
+    spurned: SPURNED,
     protecting: s.treaties.filter((t) => t.type === 'guarantee' && t.a === me && t.until > s.day).map((t) => t.b),
     log: P.log.slice(-12).reverse(),
   };
@@ -132,7 +150,7 @@ function situationView(s: GameState, w: World, me: number, id: string) {
     actions: ex && n ? ex.actions.map((a) => {
       const targets = a.targets ? a.targets(s, w, n, sit) : null;
       const refusal = targets ? (targets.length ? (targets.map((t) => sitActionRefusal(s, w, n, sit, a, t)).find((x) => !x) === undefined ? sitActionRefusal(s, w, n, sit, a, targets[0]) : null) : 'invalid target') : sitActionRefusal(s, w, n, sit, a);
-      return { id: a.id, name: a.name, desc: a.desc, cost: a.cost(s, n), cooldown: a.cooldown, targets, refusal, ready: n.flags[`sit_${id}_${a.id}`] ?? 0 };
+      return { id: a.id, name: a.name, desc: typeof a.desc === 'function' ? a.desc(s, w, n, sit) : a.desc, cost: a.cost(s, n), cooldown: a.cooldown, targets, refusal, ready: n.flags[`sit_${id}_${a.id}`] ?? 0 };
     }) : [],
   };
 }

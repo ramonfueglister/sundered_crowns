@@ -21,6 +21,12 @@ import { B, BI, C, UNITS } from '../defs';
 const LATIN = FAITH_INDEX.latin;
 const REFORM_FAITHS = [FAITH_INDEX.hussite, FAITH_INDEX.evangelical, FAITH_INDEX.reformed, FAITH_INDEX.anglican_type];
 export const isReform = (f: number) => REFORM_FAITHS.includes(f);
+/** The troubles of the Horde before the bar's bounds: eight a year since 1359, less the emirs purged and the tribute
+ *  paid (unity), plus the rival khans backed from outside (strife). The situation and its actions both use it. */
+export const hordeRaw = (y: number, unity: number, strife: number) => (y - 1359) * 8 - unity + strife;
+export const hordeProgress = (y: number, unity: number, strife: number) => Math.round(clamp(hordeRaw(y, unity, strife), 0, 100));
+/** Purges and tribute (unity) and backed rivals (strife) each count up to this much. */
+export const HORDE_CAP = 45;
 
 function nat(s: GameState, key: string): Nation | undefined {
   for (const n of s.nations) if (n.key === key && n.alive) return n;
@@ -543,9 +549,10 @@ const DEFS: SituationDef[] = [
       if (y >= 1440 || (sit.stage === 0 && y >= 1430)) { dropMod(h, 'great_troubles'); endSituation(s, sit, sit.stage === 1 ? 'broken' : 'endures'); return; }
       if (sit.stage === 0) {
         setMod(s, h, 'great_troubles', 1, { en: 'Khans of a season', de: 'Khane einer Saison' }, { unrest: 2, tax: -0.1, morale: -0.05 });
-        // purges of the emirs (unity) and rival khans backed from outside (strife) move the troubles (situation actions)
-        sit.progress = Math.round(clamp((y - 1359) * 8 - (sit.data.unity || 0) + (sit.data.strife || 0), 0, 100));
+        // purges of the emirs (unity) and rival khans backed from outside (strife) move the troubles (situation actions);
+        // both fade each January, before the bar is drawn, so that the window's rows always add up to it
         if (m === 0) { sit.data.unity = Math.max(0, (sit.data.unity || 0) - 3); sit.data.strife = Math.max(0, (sit.data.strife || 0) - 3); }
+        sit.progress = hordeProgress(y, sit.data.unity || 0, sit.data.strife || 0);
         // a player khan holds the realm together by his own wars; the AI horde breaks apart once
         if (m !== 6 || y < 1361 || human(s, h.id) || !chance(s.rng, 0.3 * clamp(sit.progress / 60, 0.3, 1.5))) return;
         // the emirs wait for peace: a split in the middle of a war would hand occupied land to an uninvolved realm

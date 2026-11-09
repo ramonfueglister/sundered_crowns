@@ -4,9 +4,10 @@
 import type { GameState, Nation, Situation, I18n, War } from '../types';
 import type { World } from '../world';
 import { FAITH_INDEX, faithFamily } from './peoples';
-import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform } from './situations';
+import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP } from './situations';
 import { nationDev, nationLocsRO } from '../systems/war';
 import { clamp, addOpinion, hasTreaty, atWar, chronicle, opinion } from '../ctx';
+import { dayToDate } from '../calendar';
 
 type Row = [string | I18n, number];
 const T = (en: string, de: string): I18n => ({ en, de });
@@ -22,7 +23,9 @@ const inWar = (war: War, id: number) => war.att.includes(id) || war.def.includes
 export interface SitSide { name: I18n; members: number[] }
 export interface SitCost { gold?: number; authority?: number; prestige?: number }
 export interface SitAction {
-  id: string; name: I18n; desc: I18n;
+  id: string; name: I18n;
+  /** What the action does; computed where its effect depends on the moment (the window shows the real number). */
+  desc: I18n | ((s: GameState, w: World, n: Nation, sit: Situation) => I18n);
   cost: (s: GameState, n: Nation) => SitCost;
   cooldown: number; // days
   /** Who may take it now (null) or why not (a refusal). */
@@ -104,6 +107,18 @@ function boon(id: string, name: I18n, desc: I18n, years: number, effects: Record
 const latinOnly = (s: GameState, w: World, n: Nation) => (n.faith === LATIN ? null : 'only realms of the Latin Church can do this');
 const christian = (n: Nation) => faithFamily(n.faith) === 'christian';
 const rich = (n: Nation, months: number) => n.treasury > goldOf(n, months) * 4;
+// ---- the Horde: its bar follows content/situations.ts hordeProgress, which the actions read as well
+const hordeYear = (s: GameState) => dayToDate(s.day, s.startYear).y;
+const hordeHuman = (s: GameState, sit: Situation) => { const h = s.nations[sit.data.h]; return !!h && (s.playerNations.includes(h.id) || !!h.playerId); };
+/** How far an action adding unity or strife would move the Horde's bar now (0 while the bar is held at its bounds). */
+function hordeDelta(s: GameState, sit: Situation, dUnity: number, dStrife: number): number {
+  if (sit.stage !== 0) return 0;
+  const y = hordeYear(s), u = sit.data.unity || 0, st = sit.data.strife || 0;
+  return hordeProgress(y, Math.min(HORDE_CAP, u + dUnity), Math.min(HORDE_CAP, st + dStrife)) - hordeProgress(y, u, st);
+}
+/** Redraw the bar with the same formula the monthly update uses. */
+const hordeRedraw = (s: GameState, sit: Situation) => { sit.progress = hordeProgress(hordeYear(s), sit.data.unity || 0, sit.data.strife || 0); };
+const signed = (v: number) => (v > 0 ? `+${v}` : `${v}`);
 /** Convert up to k of our places of the given faiths back to ours (with unrest). */
 function reclaim(s: GameState, n: Nation, faiths: number[], k: number) {
   let done = 0;
@@ -295,33 +310,42 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
   horde_breaking: {
     sides: (s, w, sit) => [{ name: T('The Horde', 'Die Horde'), members: alive(s, sit.data.h) ? [sit.data.h] : [] }, { name: T('Tributaries of the Horde', 'Tributpflichtige der Horde'), members: s.nations.filter((x) => x.alive && x.overlord === sit.data.h).map((x) => x.id) }, { name: T('Rival khanates', 'Rivalisierende Khanate'), members: s.nations.filter((x) => x.alive && x.flags.horde_successor).map((x) => x.id) }],
     drivers: (s, w, sit) => {
-      const y = Math.floor(s.startYear + s.day / 365.25);
-      const rows: Row[] = [[T(`Years of troubles since 1359 x 8`, `Jahre der Wirren seit 1359 x 8`), Math.max(0, (y - 1359) * 8)]];
-      if (sit.data.unity) rows.push(['x_sit_horde_unity', -sit.data.unity]);
-      if (sit.data.strife) rows.push(['x_sit_horde_strife', sit.data.strife]);
-      return { kind: 'level', rows, note: T('Each June after 1361, in peace, the emirs may break away; the higher the progress, the likelier (purges and backed rivals change it; both fade by 3 a year).', 'Jeden Juni nach 1361 können sich die Emire im Frieden lösen; je höher der Fortschritt, desto wahrscheinlicher (Säuberungen und unterstützte Rivalen ändern ihn; beide schwinden um 3 im Jahr).') };
+      if (sit.stage > 0) return { kind: 'level', rows: [[T('The Horde has broken apart', 'Die Horde ist zerbrochen'), sit.progress]] };
+      // the same formula as the situation (content/situations.ts hordeProgress), so that the rows add up to the bar
+      const y = hordeYear(s), unity = sit.data.unity || 0, strife = sit.data.strife || 0;
+      const rows: Row[] = [[T('Years of troubles since 1359 x 8', 'Jahre der Wirren seit 1359 x 8'), (y - 1359) * 8]];
+      if (unity) rows.push(['x_sit_horde_unity', -unity]);
+      if (strife) rows.push(['x_sit_horde_strife', strife]);
+      const raw = hordeRaw(y, unity, strife), bar = hordeProgress(y, unity, strife);
+      if (bar !== raw) rows.push([T('The bar runs from 0 to 100', 'Der Balken reicht von 0 bis 100'), bar - raw]);
+      return { kind: 'level', rows, note: hordeHuman(s, sit)
+        ? T('A Horde held by a player does not break apart: its khan holds it together by his own wars. The troubles weigh on it until 1430.', 'Eine Horde in der Hand eines Spielers zerbricht nicht: Ihr Khan hält sie durch seine eigenen Kriege zusammen. Die Wirren lasten bis 1430 auf ihr.')
+        : T(`Each June after 1361, in peace, the emirs may break away; the higher the progress, the likelier. Purges, tribute and backed rivals each count up to ${HORDE_CAP} and fade by 3 a year.`, `Jeden Juni nach 1361 können sich die Emire im Frieden lösen; je höher der Fortschritt, desto wahrscheinlicher. Säuberungen, Tribut und unterstützte Rivalen zählen jeweils bis ${HORDE_CAP} und schwinden um 3 im Jahr.`) };
     },
     stageInfo: [T('Khans of a season: unrest +2, tax -10 %, morale -5 % for the Horde.', 'Khane einer Saison: Unruhe +2, Steuern -10 %, Moral -5 % für die Horde.'), T('A divided steppe: rival khanates rule the west, the Volga and the lands beyond the Yaik.', 'Eine geteilte Steppe: Rivalisierende Khanate herrschen im Westen, an der Wolga und jenseits des Jaik.')],
     actions: [
       {
         id: 'purge_emirs', name: T('Purge the emirs', 'Die Emire säubern'), cooldown: 365 * 3,
-        desc: T('The khan strikes at the overmighty emirs: progress -15 (fades by 3 a year).', 'Der Khan schlägt gegen die übermächtigen Emire zu: Fortschritt -15 (schwindet um 3 im Jahr).'),
-        cost: () => ({ authority: 50 }), check: (s, w, n, sit) => (n.id === sit.data.h ? (sit.stage === 0 ? null : 'not possible at this stage') : 'only the Horde can do this'),
-        apply: (s, w, n, sit) => { sit.data.unity = Math.min(45, (sit.data.unity || 0) + 15); sit.progress = Math.max(0, sit.progress - 15); },
+        desc: (s, w, n, sit) => { const d = hordeDelta(s, sit, 15, 0); return T(`The khan strikes at the overmighty emirs: unity +15 (at most ${HORDE_CAP}, fades by 3 a year). Progress now: ${signed(d)}.`, `Der Khan schlägt gegen die übermächtigen Emire zu: Einheit +15 (höchstens ${HORDE_CAP}, schwindet um 3 im Jahr). Fortschritt jetzt: ${signed(d)}.`); },
+        cost: () => ({ authority: 50 }),
+        check: (s, w, n, sit) => (n.id !== sit.data.h ? 'only the Horde can do this' : sit.stage !== 0 ? 'not possible at this stage' : hordeHuman(s, sit) ? 'a Horde held by a player does not break apart' : hordeDelta(s, sit, 15, 0) === 0 ? 'no effect now' : null),
+        apply: (s, w, n, sit) => { sit.data.unity = Math.min(HORDE_CAP, (sit.data.unity || 0) + 15); hordeRedraw(s, sit); },
         ai: (s, w, n, sit) => (sit.progress > 30 && n.authority > 80 ? -1 : null),
       },
       {
         id: 'back_rival_khan', name: T('Back a rival khan', 'Einen rivalisierenden Khan unterstützen'), cooldown: 365 * 3,
-        desc: T('Gold for a pretender of the steppe: progress +10 (fades by 3 a year), the Horde resents us (-30).', 'Gold für einen Thronanwärter der Steppe: Fortschritt +10 (schwindet um 3 im Jahr), die Horde grollt uns (-30).'),
-        cost: (s, n) => ({ gold: goldOf(n, 4) }), check: (s, w, n, sit) => (n.id === sit.data.h ? 'invalid target' : sit.stage === 0 ? null : 'not possible at this stage'),
-        apply: (s, w, n, sit) => { sit.data.strife = Math.min(45, (sit.data.strife || 0) + 10); sit.progress = Math.min(100, sit.progress + 10); addOpinion(s, sit.data.h, n.id, 'backed_pretender', -30, 365 * 10); },
+        desc: (s, w, n, sit) => { const d = hordeDelta(s, sit, 0, 10); return T(`Gold for a pretender of the steppe: strife +10 (at most ${HORDE_CAP}, fades by 3 a year), the Horde resents us (-30). Progress now: ${signed(d)}.`, `Gold für einen Thronanwärter der Steppe: Zwietracht +10 (höchstens ${HORDE_CAP}, schwindet um 3 im Jahr), die Horde grollt uns (-30). Fortschritt jetzt: ${signed(d)}.`); },
+        cost: (s, n) => ({ gold: goldOf(n, 4) }),
+        check: (s, w, n, sit) => (n.id === sit.data.h || !alive(s, sit.data.h) ? 'invalid target' : sit.stage !== 0 ? 'not possible at this stage' : hordeHuman(s, sit) ? 'a Horde held by a player does not break apart' : hordeDelta(s, sit, 0, 10) === 0 ? 'no effect now' : null),
+        apply: (s, w, n, sit) => { sit.data.strife = Math.min(HORDE_CAP, (sit.data.strife || 0) + 10); hordeRedraw(s, sit); addOpinion(s, sit.data.h, n.id, 'backed_pretender', -30, 365 * 10); },
         ai: (s, w, n, sit) => ((n.overlord === sit.data.h && n.libertyDesire > 40) || n.rivals.includes(sit.data.h) ? (rich(n, 4) ? -1 : null) : null),
       },
       {
+        // (the gold and the khan's favour are real whatever the bar does; the window says what it does to the bar now)
         id: 'pay_tribute', name: T('Send rich tribute to Sarai', 'Reichen Tribut nach Sarai senden'), cooldown: 365 * 3,
-        desc: T('Gold for the khan: progress -5, the Horde thinks better of us (+20).', 'Gold für den Khan: Fortschritt -5, die Horde denkt besser von uns (+20).'),
+        desc: (s, w, n, sit) => { const d = hordeDelta(s, sit, 5, 0); return T(`Gold for the khan: the Horde thinks better of us (+20) and its unity grows (+5, at most ${HORDE_CAP}). Progress now: ${signed(d)}.`, `Gold für den Khan: Die Horde denkt besser von uns (+20) und ihre Einheit wächst (+5, höchstens ${HORDE_CAP}). Fortschritt jetzt: ${signed(d)}.`); },
         cost: (s, n) => ({ gold: goldOf(n, 3) }), check: (s, w, n, sit) => (n.id === sit.data.h || !alive(s, sit.data.h) ? 'invalid target' : null),
-        apply: (s, w, n, sit) => { s.nations[sit.data.h].treasury += goldOf(n, 3); sit.data.unity = Math.min(45, (sit.data.unity || 0) + 5); sit.progress = Math.max(0, sit.progress - 5); addOpinion(s, sit.data.h, n.id, 'tribute', 20, 365 * 5, true); },
+        apply: (s, w, n, sit) => { s.nations[sit.data.h].treasury += goldOf(n, 3); if (sit.stage === 0) { sit.data.unity = Math.min(HORDE_CAP, (sit.data.unity || 0) + 5); hordeRedraw(s, sit); } addOpinion(s, sit.data.h, n.id, 'tribute', 20, 365 * 5, true); },
         ai: (s, w, n, sit) => (n.overlord === sit.data.h && n.libertyDesire < 20 && rich(n, 3) ? -1 : null),
       },
     ],

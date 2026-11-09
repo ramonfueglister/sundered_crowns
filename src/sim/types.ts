@@ -210,7 +210,11 @@ export interface Empire {
   lastDiet?: number;
 }
 export interface Papacy { holder: number; seat: number; antipope: number; curiaFavour: Record<number, number>; schism: boolean; reformPressure: number; corruption: number }
-export interface League { id: string; name: I18n; members: number[]; leader: number; strength: number; markets: number[] }
+export interface League {
+  id: string; name: I18n; members: number[]; leader: number; strength: number; markets: number[];
+  /** Calls to arms to human members (an AI member answers at once): join the defence of a member town, or stay out. */
+  calls?: { war: number; member: number; attacker: number; to: number; until: number }[];
+}
 
 export interface Situation { id: string; active: boolean; progress: number; stage: number; started: number; ended?: number; outcome?: string; data: Record<string, any> }
 
@@ -252,7 +256,11 @@ export interface GameState {
   /** landmarks: stage reached, building work (finish day or 0) and the realm that last held each */
   landmarks?: { id: string; loc: number; tier: number; work: number; holder: number }[];
   /** great powers (systems/powers.ts): yearly scores of the last 11 years, requests for protection, interventions */
-  powers?: { scores: Record<number, number[]>; petitions: { from: number; to: number; until: number }[]; log: { day: number; gp: number; war: number; kind: string; side: number }[] };
+  powers?: {
+    scores: Record<number, number[]>; petitions: { from: number; to: number; until: number }[]; log: { day: number; gp: number; war: number; kind: string; side: number }[];
+    /** Mediation offered to a human war leader (an AI leader answers at once): accept for a white peace, or refuse. */
+    offers?: { gp: number; war: number; to: number; until: number }[];
+  };
 }
 
 export type Command =
@@ -296,8 +304,8 @@ export type Command =
   | { t: 'dev'; n: number; action: string; payload?: any } // developer tools (single player / admin only)
   // ---- realm pass: the Empire, the league, great powers, assemblies, elections, situations
   | { t: 'empire'; n: number; action: 'vote' | 'campaign' | 'defend' | 'refuse' | 'order_peace' | 'comply' | 'summon_diet' | 'diet_vote'; target?: number; war?: number; yes?: boolean }
-  | { t: 'league'; n: number; action: 'join' | 'leave' }
-  | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline'; target?: number; war?: number }
+  | { t: 'league'; n: number; action: 'join' | 'leave' | 'answer_call'; war?: number; yes?: boolean }
+  | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline' | 'accept_mediation' | 'refuse_mediation'; target?: number; war?: number }
   | { t: 'assembly'; n: number; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: WarGoal['type']; bribe?: string[]; concede?: string }
   | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand'; char?: number }
   | { t: 'situation'; n: number; id: string; action: string; target?: number };

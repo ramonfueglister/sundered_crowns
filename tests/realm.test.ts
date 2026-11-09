@@ -5,22 +5,26 @@ import { describe, it, expect } from 'vitest';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { advanceDay } from '../src/sim/engine';
-import { mkCtx, DAY_EPOCH } from '../src/sim/ctx';
+import { mkCtx, DAY_EPOCH, rel, hasTreaty } from '../src/sim/ctx';
 import { applyCommand } from '../src/sim/commands';
-import { declareWar, nationDev, hasCasusBelli } from '../src/sim/systems/war';
+import { declareWar, nationDev, hasCasusBelli, warHooks } from '../src/sim/systems/war';
+import { serialize, deserialize } from '../src/sim/engine';
+import { dateToDay } from '../src/sim/calendar';
+import { considerWar } from '../src/sim/systems/ai';
 import { lawEffect, estate, PRIVILEGES, grantPrivilege } from '../src/sim/systems/politics';
 import {
   empire, crownEffects, authorityDrift, internalWars, tally, electorChoice, dietVoters, dietTally, dietPasses, dietWeight,
-  nextReform, league, leagueEffects, LEAGUE, leaveLeague, joinLeague, answerCall,
+  nextReform, league, leagueEffects, LEAGUE, leaveLeague, joinLeague, answerCall, pennyParts, PENNY_CAP, PENNY_RATE, LEAGUE_STAYED_OUT, LEAGUE_CALL_EXHAUSTION,
 } from '../src/sim/systems/empire';
-import { powers, intervene, balanceThreat, greatPowers } from '../src/sim/systems/powers';
+import { powers, intervene, balanceThreat, greatPowers, mediate, SPURNED } from '../src/sim/systems/powers';
 import {
   government, govProcess, termYears, TERM_LIMIT, ensureCandidates, electionTally, classSums, influenceTargets, setTaxRate,
   taxLevel, assemblyVote, resentment, askRates,
 } from '../src/sim/systems/government';
 import { situationAction } from '../src/sim/systems/situations';
-import { SITUATIONS } from '../src/sim/content/situations';
-import type { GameState, Nation } from '../src/sim/types';
+import { SITUATIONS, HORDE_CAP } from '../src/sim/content/situations';
+import { SIT_EXTRA } from '../src/sim/content/situation_actions';
+import type { GameState, Nation, War } from '../src/sim/types';
 
 const w = loadWorld();
 const s: GameState = createGame(w, loadSetup(1356), loadHubs(), 4242, { player: [] });
@@ -31,6 +35,19 @@ const sumRows = (r: [unknown, number][]) => r.reduce((p, x) => p + x[1], 0);
 const free = (n: Nation) => n.alive && n.overlord < 0;
 // law and modifier effects are cached for the day: a new day after changing them by hand
 const fresh = () => { DAY_EPOCH.v++; };
+const busy = (id: number) => s.wars.some((x) => x.att.includes(id) || x.def.includes(id));
+/** A new war between two free, idle realms near each other, none of them in `not`. */
+function newWar(not: number[]): War {
+  for (const a of s.nations) {
+    if (!free(a) || busy(a.id) || not.includes(a.id) || a.capital < 0) continue;
+    for (const b of s.nations) {
+      if (!free(b) || busy(b.id) || b.id === a.id || not.includes(b.id) || b.capital < 0 || w.distKm(a.capital, b.capital) > 700) continue;
+      a.laws.diet = 0;
+      if (declareWar(s, w, a.id, b.id) === null) return s.wars.find((x) => x.attLead === a.id && x.goal.target === b.id)!;
+    }
+  }
+  throw new Error('no war could be started');
+}
 
 describe('imperial authority', () => {
   it('the crown gives more the higher the authority, and the emperor wears it', () => {
@@ -190,6 +207,128 @@ describe('the great powers', () => {
   });
 });
 
+describe('mediation of a great power in the war of a human realm', () => {
+  it('asks the human war leader: peace only if accepted, the slight only if refused or left unanswered', () => {
+    month(powers);
+    const gps = greatPowers(s);
+    const offer = (war: War) => { for (const id of gps) { if (war.att.includes(id) || war.def.includes(id)) continue; if (mediate(s, w, s.nations[id], war) === null) return s.nations[id]; } return undefined; };
+    const offers = () => s.powers!.offers ?? [];
+    const spurned = (gp: Nation, lead: number) => rel(s, gp.id, lead).mods.find((m) => m.id === 'spurned_mediation')?.v;
+    const used: number[] = [...gps];
+    // accepted: a white peace
+    const war1 = newWar(used); used.push(...war1.att, ...war1.def);
+    s.playerNations = [war1.attLead];
+    const gp1 = offer(war1)!;
+    expect(gp1).toBeTruthy();
+    expect(s.wars).toContain(war1);
+    expect(offers().some((o) => o.war === war1.id && o.to === war1.attLead && o.gp === gp1.id)).toBe(true);
+    expect(spurned(gp1, war1.attLead)).toBeUndefined();
+    expect(applyCommand(s, w, { t: 'powers', n: war1.attLead, action: 'accept_mediation', war: war1.id } as any).ok).toBe(true);
+    expect(s.wars.some((x) => x.id === war1.id)).toBe(false);
+    expect(offers().some((o) => o.war === war1.id)).toBe(false);
+    expect(spurned(gp1, war1.attLead)).toBeUndefined();
+    // refused: the war goes on and the mediator remembers
+    const war2 = newWar(used); used.push(...war2.att, ...war2.def);
+    s.playerNations = [war2.attLead];
+    const gp2 = offer(war2)!;
+    expect(applyCommand(s, w, { t: 'powers', n: war2.attLead, action: 'refuse_mediation', war: war2.id } as any).ok).toBe(true);
+    expect(s.wars).toContain(war2);
+    expect(spurned(gp2, war2.attLead)).toBe(SPURNED);
+    expect(applyCommand(s, w, { t: 'powers', n: war2.attLead, action: 'accept_mediation', war: war2.id } as any).err).toBe('no mediation is offered');
+    // left unanswered: it lapses as a refusal at its date
+    const war3 = newWar(used);
+    s.playerNations = [war3.attLead];
+    const gp3 = offer(war3)!;
+    offers().find((o) => o.war === war3.id)!.until = s.day;
+    month(powers);
+    expect(offers().some((o) => o.war === war3.id)).toBe(false);
+    expect(s.wars).toContain(war3);
+    expect(spurned(gp3, war3.attLead)).toBe(SPURNED);
+    s.playerNations = [];
+  });
+});
+
+describe('the league calls its towns to arms', () => {
+  it('a human town is asked and chooses, an exhausted one is not called, and AI towns that stay out pay the same', () => {
+    month(empire);
+    const lg = league(s)!;
+    const towns = lg.members.map((id) => s.nations[id]).filter((n) => n.alive && n.capital >= 0 && !busy(n.id));
+    const attackerFor = (victim: Nation, me: Nation, not: number[]) => s.nations.find((n) => free(n) && !lg.members.includes(n.id) && !busy(n.id) && !not.includes(n.id) && n.capital >= 0
+      && w.distKm(n.capital, victim.capital) < 900 && !hasTreaty(s, n.id, me.id, 'alliance') && !hasTreaty(s, n.id, me.id, 'truce') && !hasTreaty(s, n.id, victim.id, 'truce'));
+    let me: Nation | undefined, victims: Nation[] = [];
+    for (const m of towns) {
+      victims = towns.filter((v) => v.id !== m.id && w.distKm(m.capital, v.capital) <= 1200 && !hasTreaty(s, m.id, v.id, 'alliance') && !hasTreaty(s, m.id, v.id, 'guarantee'));
+      if (victims.length >= 2) { me = m; break; }
+    }
+    expect(me).toBeTruthy();
+    s.playerNations = [me!.id]; me!.warExhaustion = 0;
+    const attack = (victim: Nation, not: number[]) => {
+      const att = attackerFor(victim, me!, not)!; expect(att).toBeTruthy(); att.laws.diet = 0;
+      expect(declareWar(s, w, att.id, victim.id)).toBeNull();
+      return s.wars.find((x) => x.attLead === att.id && x.goal.target === victim.id)!;
+    };
+    // asked, not drafted; joining puts us among the defenders
+    const war1 = attack(victims[0], []);
+    expect(war1.def).not.toContain(me!.id);
+    expect(lg.calls!.some((c) => c.war === war1.id && c.to === me!.id)).toBe(true);
+    expect(applyCommand(s, w, { t: 'league', n: me!.id, action: 'answer_call', war: war1.id, yes: true } as any).ok).toBe(true);
+    expect(war1.def).toContain(me!.id);
+    // the AI towns that were called either joined or stay out at the same price
+    for (const id of lg.members) {
+      const m = s.nations[id]; const v = victims[0];
+      if (id === me!.id || id === v.id || !m.alive || m.capital < 0 || war1.att.includes(id) || war1.def.includes(id)) continue;
+      if (w.distKm(m.capital, v.capital) > 1200 || m.warExhaustion >= LEAGUE_CALL_EXHAUSTION || hasTreaty(s, id, war1.attLead, 'alliance') || hasTreaty(s, id, war1.attLead, 'truce')) continue;
+      if (s.wars.some((x) => x !== war1 && (x.att.includes(id) || x.def.includes(id)))) continue;
+      expect(rel(s, v.id, id).mods.find((x) => x.id === 'league_stayed_out')?.v).toBe(LEAGUE_STAYED_OUT);
+    }
+    // worn out by war: not called at all
+    me!.warExhaustion = LEAGUE_CALL_EXHAUSTION + 5;
+    const war2 = attack(victims[1], [war1.attLead]);
+    expect(lg.calls!.some((c) => c.war === war2.id && c.to === me!.id)).toBe(false);
+    expect(war2.def).not.toContain(me!.id);
+    // called again and staying out: the town remembers
+    me!.warExhaustion = 0;
+    const war3 = attack(victims[1], [war1.attLead, war2.attLead]);
+    expect(lg.calls!.some((c) => c.war === war3.id && c.to === me!.id)).toBe(true);
+    expect(applyCommand(s, w, { t: 'league', n: me!.id, action: 'answer_call', war: war3.id, yes: false } as any).ok).toBe(true);
+    expect(war3.def).not.toContain(me!.id);
+    expect(rel(s, victims[1].id, me!.id).mods.find((x) => x.id === 'league_stayed_out')?.v).toBe(LEAGUE_STAYED_OUT);
+    s.playerNations = [];
+  });
+});
+
+describe('the Common Penny', () => {
+  it('pays the emperor at most a quarter of his own taxes in 1356, scaled by imperial authority', () => {
+    const E = s.empire; const em = s.nations[E.emperor];
+    const had = E.reforms.slice(), auth = E.authority;
+    if (!E.reforms.includes('common_penny')) E.reforms.push('common_penny');
+    try {
+      expect(em.income.tax).toBeGreaterThan(0);
+      E.authority = 40;
+      const low = pennyParts(s);
+      expect(low.rate).toBeCloseTo(PENNY_RATE * 0.4, 6);
+      expect(low.paid).toBeGreaterThan(0);
+      expect(low.paid).toBeLessThanOrEqual(PENNY_CAP * em.income.tax + 1e-6);
+      E.authority = 100;
+      const high = pennyParts(s);
+      expect(high.uncapped).toBeGreaterThan(low.uncapped);
+      expect(high.paid).toBeLessThanOrEqual(PENNY_CAP * em.income.tax + 1e-6);
+      // what the month books: the emperor receives what the members pay, and no member pays more than 3 % of its taxes
+      E.authority = 40;
+      const pp = pennyParts(s);
+      const got0 = em.incomeAcc.imperial_tax ?? 0;
+      const paid0 = new Map(pp.payers.map((id) => [id, s.nations[id].expenseAcc.imperial_tax ?? 0]));
+      month(empire);
+      const got = (em.incomeAcc.imperial_tax ?? 0) - got0;
+      let paid = 0;
+      for (const id of pp.payers) { const d = (s.nations[id].expenseAcc.imperial_tax ?? 0) - paid0.get(id)!; paid += d; expect(d).toBeLessThanOrEqual(s.nations[id].income.tax * PENNY_RATE + 1e-6); }
+      expect(got).toBeCloseTo(paid, 6);
+      expect(got).toBeLessThanOrEqual(PENNY_CAP * em.income.tax + 1e-6);
+      expect(got).toBeGreaterThan(0);
+    } finally { E.reforms = had; E.authority = auth; }
+  });
+});
+
 describe('forms of government', () => {
   it('a republic elects its head every few years and the term limit applies', () => {
     const v = nat('venice');
@@ -296,22 +435,56 @@ describe('the assembly', () => {
 });
 
 describe('situations', () => {
-  it('an action changes the progress of a situation, now and in its drivers', () => {
+  it('an action moves the bar by what its window says, the rows add up to the bar, and an action that would do nothing is refused', () => {
     const sit = s.situations.find((x) => x.id === 'horde_breaking' && x.active)!;
     expect(sit).toBeTruthy();
     const def = SITUATIONS.find((d) => d.id === 'horde_breaking')!;
+    const ex = SIT_EXTRA.horde_breaking;
     const horde = s.nations[sit.data.h];
     const lit = nat('lithuania'); lit.treasury = 100000;
-    const recompute = () => { def.monthly!(s, w, sit, 1366, 3); return sit.progress; };
-    const base = recompute();
-    expect(situationAction(s, w, lit, 'horde_breaking', 'back_rival_khan')).toBeNull();
-    expect(recompute()).toBe(Math.min(100, base + 10));
-    expect(situationAction(s, w, lit, 'horde_breaking', 'back_rival_khan')).toBe('too soon');
-    horde.authority = 100;
-    expect(situationAction(s, w, horde, 'horde_breaking', 'purge_emirs')).toBeNull();
-    expect(horde.authority).toBe(50);
-    expect(recompute()).toBe(Math.max(0, base + 10 - 15));
-    expect(situationAction(s, w, lit, 'horde_breaking', 'purge_emirs')).toBe('only the Horde can do this');
+    const desc = (id: string, n: Nation) => { const a = ex.actions.find((x) => x.id === id)!; return typeof a.desc === 'function' ? a.desc(s, w, n, sit) : a.desc; };
+    const rowsSum = () => sumRows(ex.drivers(s, w, sit, lit.id).rows as [unknown, number][]);
+    // in 1356 the troubles lie below the bar's floor: backing a rival khan would change nothing and is refused
+    sit.data.unity = 0; sit.data.strife = 0;
+    def.monthly!(s, w, sit, 1356, 3);
+    expect(sit.progress).toBe(0);
+    expect(rowsSum()).toBe(0);
+    expect(desc('back_rival_khan', lit).en).toContain('Progress now: 0');
+    expect(situationAction(s, w, lit, 'horde_breaking', 'back_rival_khan')).toBe('no effect now');
+    const day0 = s.day;
+    try {
+      s.day = dateToDay(1366, 3, 1, s.startYear);
+      const recompute = () => { def.monthly!(s, w, sit, 1366, 3); return sit.progress; };
+      const base = recompute();
+      expect(base).toBe(56);
+      expect(desc('back_rival_khan', lit).en).toContain('Progress now: +10');
+      expect(situationAction(s, w, lit, 'horde_breaking', 'back_rival_khan')).toBeNull();
+      expect(sit.progress).toBe(base + 10);            // at once
+      expect(recompute()).toBe(base + 10);             // and kept by the monthly update
+      expect(rowsSum()).toBe(sit.progress);
+      expect(situationAction(s, w, lit, 'horde_breaking', 'back_rival_khan')).toBe('too soon');
+      horde.authority = 100;
+      expect(desc('purge_emirs', horde).en).toContain('Progress now: -15');
+      expect(situationAction(s, w, horde, 'horde_breaking', 'purge_emirs')).toBeNull();
+      expect(horde.authority).toBe(50);
+      expect(recompute()).toBe(base + 10 - 15);
+      expect(rowsSum()).toBe(sit.progress);
+      expect(situationAction(s, w, lit, 'horde_breaking', 'purge_emirs')).toBe('only the Horde can do this');
+      // purges count up to the cap: once it is reached, a further purge would do nothing
+      sit.data.unity = HORDE_CAP; delete horde.flags.sit_horde_breaking_purge_emirs; horde.authority = 100;
+      expect(situationAction(s, w, horde, 'horde_breaking', 'purge_emirs')).toBe('no effect now');
+      // above the ceiling (1385: 208 - 45) the bar is held at 100 and the clamp row says so
+      s.day = dateToDay(1385, 3, 1, s.startYear);
+      def.monthly!(s, w, sit, 1385, 3);
+      expect(sit.progress).toBe(100);
+      expect(rowsSum()).toBe(100);
+      sit.data.unity = 0;
+      expect(situationAction(s, w, horde, 'horde_breaking', 'purge_emirs')).toBe('no effect now');
+      // a Horde held by a player does not break apart: no purges to offer it, no rivals to back against it
+      s.playerNations = [horde.id];
+      s.day = dateToDay(1366, 3, 1, s.startYear);
+      expect(situationAction(s, w, horde, 'horde_breaking', 'purge_emirs')).toBe('a Horde held by a player does not break apart');
+    } finally { s.day = day0; s.playerNations = []; sit.data.unity = 0; sit.data.strife = 0; }
     // and by command, with the refusal returned to the player
     expect(applyCommand(s, w, { t: 'situation', n: lit.id, id: 'horde_breaking', action: 'nonsense' } as any).ok).toBe(false);
   });
@@ -342,4 +515,35 @@ describe('estate privileges and demands', () => {
     expect(assemblyVote(s, f, { kind: 'tax', level: 0.2 }).estates.find((x) => x.id === 'magnates')!.rows.some((r) => r[0] === 'x_asm_snubbed')).toBe(true);
     expect(applyCommand(s, w, { t: 'govern', n: f.id, action: 'grant_demand' } as any).ok).toBe(false);
   });
+});
+
+describe('the AI and the Perpetual Peace', () => {
+  it('drops the targets the Empire forbids before it chooses one or fabricates a claim', () => {
+    const run = (filter: boolean) => {
+      const c = deserialize(serialize(s));
+      c.playerNations = [];
+      if (!c.empire.reforms.includes('public_peace')) c.empire.reforms.push('public_peace');
+      const members = c.nations.filter((n) => n.alive && n.isHRE && n.overlord < 0 && n.id !== c.empire.emperor);
+      for (const n of members) { n.personality = 'conqueror'; n.laws.diet = 0; }
+      const fabricating = (x: { action: string; nation: number; target: number }) => x.action === 'fabricate' && c.nations[x.nation].isHRE && c.nations[x.target].isHRE && x.nation !== c.empire.emperor;
+      const before = new Set(c.spies.filter(fabricating).map((x) => `${x.nation}>${x.target}`));
+      const check = warHooks.check, veto = warHooks.veto!;
+      let refused = 0;
+      warHooks.veto = (st, ww, a, b, g) => { const r = veto(st, ww, a, b, g); if (r === 'the Perpetual Peace forbids war between members') refused++; return r; };
+      if (!filter) warHooks.check = undefined;
+      try {
+        for (let round = 0; round < 12; round++) for (const n of members) {
+          if (!n.alive) continue;
+          n.warExhaustion = 0; n.dread = 0; n.treasury = Math.max(n.treasury, 500);
+          considerWar(c, w, n);
+        }
+      } finally { warHooks.veto = veto; warHooks.check = check; }
+      const forbidden = c.spies.filter((x) => fabricating(x) && !before.has(`${x.nation}>${x.target}`)).length;
+      return { refused, forbidden };
+    };
+    const without = run(false);
+    expect(without.refused + without.forbidden).toBeGreaterThan(0);
+    const withCheck = run(true);
+    expect(withCheck).toEqual({ refused: 0, forbidden: 0 });
+  }, 120_000);
 });

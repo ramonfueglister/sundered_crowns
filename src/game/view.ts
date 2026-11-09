@@ -65,6 +65,7 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     homeMarket: n.capital >= 0 ? s.loc.market[n.capital] ?? -1 : -1,
     merchants: { used: s.markets.reduce((p, m) => p + (m.merchants[n.id] || 0), 0), cap: merchantCap(n) },
     electionCloses: s.empire.election && s.empire.electors.includes(n.id) && s.empire.election.votes[n.id] === undefined ? s.empire.election.closes : 0,
+    asks: (s.powers?.offers ?? []).filter((o) => o.to === n.id).length + s.leagues.reduce((p, l) => p + (l.calls ?? []).filter((c) => c.to === n.id).length, 0),
   };
 }
 

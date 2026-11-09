@@ -95,25 +95,71 @@ export function mediationScore(s: GameState, gp: Nation, war: War): Row[] {
   rows.push(['x_gp_threshold', -10]);
   return rows;
 }
-/** A great power offers to mediate: if the attacker accepts, a white peace; either way the attempt is remembered. */
+/** Days a human war leader has to answer an offer of mediation (unanswered, it counts as refused). */
+export const OFFER_DAYS = 30;
+/** What a spurned mediator thinks of the war leader who turned it down, for five years. */
+export const SPURNED = -20;
+/** A great power offers to mediate: if the attacker accepts, a white peace; refused, the power is spurned. An AI
+ *  leader decides at once by mediationScore; a human leader is asked (powersCommand accept_mediation /
+ *  refuse_mediation) and has OFFER_DAYS to answer. */
 export function mediate(s: GameState, w: World, gp: Nation, war: War): string | I18n | null {
   const e = canIntervene(s, gp, war); if (e) return e;
   if ((gp.flags[`mediated_${war.id}`] ?? 0) > s.day) return 'we offered mediation recently';
   gp.flags[`mediated_${war.id}`] = s.day + 365;
   const lead = s.nations[war.attLead], def = s.nations[war.defLead];
-  const yes = isHuman(s, lead.id) ? false : sumRows(mediationScore(s, gp, war)) > 0;
-  powersState(s).log.push({ day: s.day, gp: gp.id, war: war.id, kind: yes ? 'mediated' : 'mediation_refused', side: war.defLead });
-  if (!yes) {
-    if (isHuman(s, lead.id)) notice(s, lead.id, 'great_power', T(`${gp.short.en} urges us to make peace with ${def.short.en}. Refusing angers them.`, `${gp.short.de} drängt uns zum Frieden mit ${def.short.de}. Eine Weigerung verärgert sie.`), { war: war.id });
-    addOpinion(s, gp.id, lead.id, 'spurned_mediation', -20, 365 * 5);
-    return isHuman(s, gp.id) ? T(`${lead.short.en} rejected our mediation.`, `${lead.short.de} wies unsere Vermittlung zurück.`) : null;
+  const P = powersState(s);
+  if (isHuman(s, lead.id)) {
+    (P.offers ??= []).push({ gp: gp.id, war: war.id, to: lead.id, until: s.day + OFFER_DAYS });
+    P.log.push({ day: s.day, gp: gp.id, war: war.id, kind: 'mediation_offered', side: war.defLead });
+    notice(s, lead.id, 'great_power', T(`${gp.short.en} offers to mediate a white peace with ${def.short.en}. Accept or refuse within ${OFFER_DAYS} days (great powers); refusing angers them.`, `${gp.short.de} bietet an, einen weißen Frieden mit ${def.short.de} zu vermitteln. Annehmen oder ablehnen binnen ${OFFER_DAYS} Tagen (Großmächte); eine Ablehnung verärgert sie.`));
+    if (isHuman(s, gp.id)) notice(s, gp.id, 'great_power', T(`We offered ${lead.short.en} our mediation; they have ${OFFER_DAYS} days to answer.`, `Wir boten ${lead.short.de} unsere Vermittlung an; sie haben ${OFFER_DAYS} Tage für die Antwort.`));
+    return null;
   }
+  if (sumRows(mediationScore(s, gp, war)) > 0) { mediatedPeace(s, w, gp, war); return null; }
+  spurned(s, gp, war);
+  return isHuman(s, gp.id) ? T(`${lead.short.en} rejected our mediation.`, `${lead.short.de} wies unsere Vermittlung zurück.`) : null;
+}
+function mediatedPeace(s: GameState, w: World, gp: Nation, war: War) {
+  const lead = s.nations[war.attLead], def = s.nations[war.defLead];
+  powersState(s).log.push({ day: s.day, gp: gp.id, war: war.id, kind: 'mediated', side: war.defLead });
   concludePeace(s, w, war, war.attLead, war.defLead, [{ type: 'white_peace' }]);
   gp.prestige = clamp(gp.prestige + 5, -100, 100);
   addOpinion(s, def.id, gp.id, 'mediated_peace', 15, 365 * 10);
   addOpinion(s, lead.id, gp.id, 'mediated_peace', 5, 365 * 5);
   chronicle(s, gp.id, 'great_power', T(`Through the mediation of ${gp.short.en}, ${lead.short.en} and ${def.short.en} made peace.`, `Durch Vermittlung von ${gp.short.de} schlossen ${lead.short.de} und ${def.short.de} Frieden.`));
+}
+/** The war leader turned the mediation down (by answer, by silence, or by the AI's weighing): the power remembers. */
+function spurned(s: GameState, gp: Nation, war: War) {
+  const lead = s.nations[war.attLead];
+  powersState(s).log.push({ day: s.day, gp: gp.id, war: war.id, kind: 'mediation_refused', side: war.defLead });
+  addOpinion(s, gp.id, lead.id, 'spurned_mediation', SPURNED, 365 * 5);
+}
+/** A human war leader answers an offer of mediation. */
+export function answerMediation(s: GameState, w: World, n: Nation, warId: number, yes: boolean): string | null {
+  const P = powersState(s); const offers = P.offers ?? [];
+  const k = offers.findIndex((o) => o.war === warId && o.to === n.id);
+  if (k < 0) return 'no mediation is offered';
+  const o = offers[k]; offers.splice(k, 1);
+  const war = s.wars.find((x) => x.id === warId); const gp = s.nations[o.gp];
+  if (!war || war.attLead !== n.id) return 'the war is over';
+  if (!gp?.alive) return 'no mediation is offered';
+  if (yes) mediatedPeace(s, w, gp, war); else spurned(s, gp, war);
+  if (isHuman(s, gp.id)) notice(s, gp.id, 'great_power', yes
+    ? T(`${n.short.en} accepted our mediation and made peace.`, `${n.short.de} nahm unsere Vermittlung an und schloss Frieden.`)
+    : T(`${n.short.en} rejected our mediation.`, `${n.short.de} wies unsere Vermittlung zurück.`));
   return null;
+}
+/** Offers whose time ran out count as refused; offers for wars that ended lapse. */
+function expireOffers(s: GameState) {
+  const P = powersState(s); if (!P.offers?.length) return;
+  const keep: NonNullable<typeof P.offers> = [];
+  for (const o of P.offers) {
+    const war = s.wars.find((x) => x.id === o.war); const gp = s.nations[o.gp];
+    if (!war || war.attLead !== o.to || !gp?.alive) continue;
+    if (s.day >= o.until) { spurned(s, gp, war); notice(s, o.to, 'great_power', T(`We left the mediation of ${gp.short.en} unanswered; they take it as a refusal.`, `Wir ließen die Vermittlung von ${gp.short.de} unbeantwortet; sie werten es als Ablehnung.`)); continue; }
+    keep.push(o);
+  }
+  P.offers = keep;
 }
 
 // ---------------------------------------------------------------- protection of lesser realms
@@ -183,6 +229,8 @@ export function powersCommand(s: GameState, w: World, n: Nation, action: string,
     case 'seek_protection': return seekProtection(s, w, n, target ?? -1);
     case 'protect': return answerPetition(s, n, target ?? -1, true);
     case 'decline': return answerPetition(s, n, target ?? -1, false);
+    case 'accept_mediation': return answerMediation(s, w, n, warId ?? -1, true);
+    case 'refuse_mediation': return answerMediation(s, w, n, warId ?? -1, false);
   }
   return 'unknown action';
 }
@@ -198,6 +246,7 @@ function powersMonth(s: GameState, w: World) {
     else if (has) n.modifiers = n.modifiers.filter((m) => m.id !== 'great_power');
   }
   P.petitions = P.petitions.filter((p) => p.until > s.day && s.nations[p.from]?.alive && s.nations[p.to]?.alive);
+  expireOffers(s);
   if (P.log.length > 60) P.log.splice(0, P.log.length - 60);
   // AI great powers step into wars that upset the balance (at most one move a month)
   // (only wars that matter to the balance: a sizeable aggressor, and a victim within the power's reach)

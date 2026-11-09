@@ -86,6 +86,10 @@ export const REFUSAL_DE: Record<string, string> = {
   'too far from the frontier': 'Zu weit von der Grenze', 'unknown privilege': 'Unbekanntes Privileg', 'we asked them recently': 'Wir haben sie erst kürzlich gefragt',
   'we have a treaty with their enemies': 'Wir haben einen Vertrag mit ihren Feinden', 'we have a truce with the attackers': 'Wir haben einen Waffenstillstand mit den Angreifern',
   'we offered mediation recently': 'Wir boten erst kürzlich Vermittlung an',
+  // ---- realm pass, review fixes: the Horde's actions, mediation offers and the league's calls to arms
+  'no effect now': 'Zurzeit ohne Wirkung', 'a Horde held by a player does not break apart': 'Eine Horde in Spielerhand zerbricht nicht',
+  'no mediation is offered': 'Keine Vermittlung angeboten', 'no call of the league is pending': 'Kein Ruf des Bundes offen',
+  'the war is over': 'Der Krieg ist vorbei', 'too exhausted by war': 'Zu kriegsmüde',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;
