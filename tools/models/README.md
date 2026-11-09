@@ -96,7 +96,28 @@ Done: all 28 meshes (the 27 of the task plus `tent`), within budget; exporter, l
 The church, mosque and houses are narrowed (horizontal `footprint` factor) so that they fit the renderer's town
 spiral (neighbouring houses about 1.2 house units apart, the church scaled 0.75 in the centre).
 
-Known weaknesses: figures are stylised and blocky up close (no hands or faces to speak of); the lateen and fore-and-aft
-sails are still thin when seen exactly from bow or stern; the castle's diagonal radius (2.67) is larger than the old
-stand-in's, so at capitals it may touch the outermost houses; farm_barn, windmill and town_wall_tower are not placed
-by the renderer yet; galley and ship of the line are not used by the renderer yet (it picks cog and carrack).
+Verified at commit time: `npx vitest run tests/models.test.ts` 10/10 passed, `npx tsc --noEmit -p .` clean. The contact
+sheet at `/mnt/project-files/sundered-crowns/screens/models/contact_sheet.png` was rendered before the `footprint`
+squeeze of church, mosque and houses, so those tiles are slightly wider than the current export.
+
+Known weaknesses:
+- **Some faces are wound inwards** (a Cycles render with back faces shown in magenta found them). Their stored
+  normals agree with their winding (the test only checks that), so they point inwards and are lit as if facing
+  away. The renderer does not cull back faces, so there are no holes, but the faces shade too dark. Worst first:
+  - castle: the top faces of the parapet bands on the keep and the gatehouse (large, seen from above);
+  - house_stone: the inner side strips of the stepped gables (`prism`), and the thin side edges of the quoin and
+    window decals;
+  - house_timber: thin side faces of the beams and window frames around the jetty;
+  - carrack (and less so galley, ship of the line, cog): the stern of the aftcastle and parts of the inner bulwark;
+  - a few slivers on the figures, mosque, windmill and church.
+  Suspected causes (not confirmed): `prism`/`slab` side faces built with the wrong orientation for a mirrored
+  outline, and open boxes whose orientation `fix_closed` guesses from a signed volume. Fix in the generator, then
+  re-check with a back-face render.
+- Figures are stylised and blocky up close (no hands or faces to speak of).
+- Everything faces +Y, so with rotation 0 the game's north-looking camera sees soldiers from behind. Turn land
+  figures by about pi.
+- The lateen and fore-and-aft sails are still thin when seen exactly from bow or stern.
+- The castle's diagonal radius (2.67) is larger than the old stand-in's, so at capitals it may touch the outermost
+  houses.
+- farm_barn, windmill and town_wall_tower are not placed by the renderer yet. galley and ship of the line are not
+  used yet either (the renderer picks cog and carrack).
