@@ -35,6 +35,7 @@ export function applyArmies(have: Map<number, ArmyLite>, v: WireTickView): ArmyL
 export const BIN_OWNERS = 1; // payload: Int16Array owner (N) followed by Int16Array ctrl (N)
 export const BIN_COLORS = 2; // payload: Uint8Array rgba (4*N); mode index in byte 1
 export const BIN_SNOW = 3;   // payload: Float32Array snow (L)
+export const BIN_ROADS = 4;  // payload: Uint8Array road level per location (L)
 export const MAP_MODE_LIST: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'explored'];
 
 export function encodeBinary(kind: number, payload: ArrayBufferView, extra = 0): Uint8Array {

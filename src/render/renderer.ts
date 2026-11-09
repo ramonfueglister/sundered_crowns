@@ -75,6 +75,7 @@ export class MapRenderer {
   private terrainTex!: GPUTexture; private auxTex!: GPUTexture;
   private riverTex: GPUTexture | null = null;
   private riverBuf!: GPUBuffer; private riverCount = 0;
+  private roadBuf: GPUBuffer | null = null; private roadCount = 0; private roadPipe!: GPURenderPipeline; private roadLevels: Uint8Array | null = null;
   private sampler!: GPUSampler;
   private mainPipe!: GPURenderPipeline; private riverPipe!: GPURenderPipeline;
   private mipPipes = new Map<GPUTextureFormat, GPURenderPipeline>();
@@ -180,6 +181,7 @@ export class MapRenderer {
     device.queue.submit([menc.finish()]);
     this.bake();
     this.buildRivers();
+    this.buildRoads();
 
     // per-frame resources
     this.uniformBuf = device.createBuffer({ size: UNIFORM_FLOATS * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
@@ -187,17 +189,31 @@ export class MapRenderer {
     const mainMod = device.createShaderModule({ code: MAIN_WGSL });
     this.mainPipe = device.createRenderPipeline({ layout: 'auto', vertex: { module: mainMod, entryPoint: 'vs' }, fragment: { module: mainMod, entryPoint: 'fs', targets: [{ format: this.format }] }, primitive: { topology: 'triangle-list' } });
     const rivMod = device.createShaderModule({ code: RIVER_WGSL });
+    // rivers and roads share one layout (and one bind group)
+    const ribbonBGL = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: 'uniform' } }] });
+    const ribbonLayout = device.createPipelineLayout({ bindGroupLayouts: [ribbonBGL] });
     this.riverPipe = device.createRenderPipeline({
-      layout: 'auto',
+      layout: ribbonLayout,
       vertex: {
         module: rivMod, entryPoint: 'vs',
         buffers: [{ arrayStride: 32, stepMode: 'instance', attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x4' }, { shaderLocation: 1, offset: 16, format: 'float32x2' }, { shaderLocation: 2, offset: 24, format: 'float32x2' }] }],
       },
-      fragment: { module: rivMod, entryPoint: 'fs', targets: [{ format: 'r8unorm', blend: { color: { operation: 'max', srcFactor: 'one', dstFactor: 'one' }, alpha: { operation: 'max', srcFactor: 'one', dstFactor: 'one' } } }] },
+      fragment: { module: rivMod, entryPoint: 'fs', targets: [{ format: 'rgba8unorm', blend: { color: { operation: 'max', srcFactor: 'one', dstFactor: 'one' }, alpha: { operation: 'max', srcFactor: 'one', dstFactor: 'one' } } }] },
       primitive: { topology: 'triangle-list' },
       depthStencil: { format: 'depth32float', depthWriteEnabled: false, depthCompare: 'less-equal' },
     });
-    this.riverBG = device.createBindGroup({ layout: this.riverPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: this.uniformBuf } }] });
+    // roads share the ribbon shader and the target (green channel)
+    this.roadPipe = device.createRenderPipeline({
+      layout: ribbonLayout,
+      vertex: {
+        module: rivMod, entryPoint: 'vs_road',
+        buffers: [{ arrayStride: 32, stepMode: 'instance', attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x4' }, { shaderLocation: 1, offset: 16, format: 'float32x2' }, { shaderLocation: 2, offset: 24, format: 'float32x2' }] }],
+      },
+      fragment: { module: rivMod, entryPoint: 'fs_road', targets: [{ format: 'rgba8unorm', blend: { color: { operation: 'max', srcFactor: 'one', dstFactor: 'one' }, alpha: { operation: 'max', srcFactor: 'one', dstFactor: 'one' } } }] },
+      primitive: { topology: 'triangle-list' },
+      depthStencil: { format: 'depth32float', depthWriteEnabled: false, depthCompare: 'less-equal' },
+    });
+    this.riverBG = device.createBindGroup({ layout: ribbonBGL, entries: [{ binding: 0, resource: { buffer: this.uniformBuf } }] });
     const terMod = this.initTerrain();
     const props = (this.props = new Props(device, a, this.uniformBuf, this.format, (x, y) => this.terrainZ(x, y), this.locBuf, this.idTex));
     props.treeBudget = this.qd.trees; props.shadows = this.qd.shadows;
@@ -406,6 +422,66 @@ export class MapRenderer {
   /** the camera for the current view */
   private camNow(): Cam3 {
     return makeCamera(this.camera.x, this.camera.y, this.camera.zoom, this.cssW, this.cssH, undefined, this.maxTerrain);
+  }
+
+  /** road levels per location (the road building, 0..3); the map draws them between neighbouring locations */
+  setRoads(levels: Uint8Array) {
+    const old = this.roadLevels;
+    if (old && old.length === levels.length && old.every((v, i) => v === levels[i])) return;
+    this.roadLevels = new Uint8Array(levels);
+    this.buildRoads();
+  }
+  /** country tracks link every place to the network (a spanning tree, cheapest ways first), towns are linked to each
+   *  other, and built roads show wider and paler; each way winds a little across the land */
+  private buildRoads() {
+    const a = this.assets, g = a.geo, L = g.L, sz = g.loc.size as number[], elev = g.loc.elev as number[];
+    const lv = this.roadLevels;
+    const edges: [number, number, number, number][] = []; // a, b, weight, river factor
+    for (const [a1, b1, kind, , rf] of g.edges as [number, number, number, number, number][]) {
+      if (kind !== 0) continue;
+      const p = a1 - 1, q = b1 - 1;
+      if (p >= L || q >= L) continue;
+      const len = Math.hypot(g.loc.x[p] - g.loc.x[q], g.loc.y[p] - g.loc.y[q]);
+      if (len > 90) continue;
+      const w = len * (1 + 0.8 * (rf || 0)) * (1 + Math.abs((elev[p] || 0) - (elev[q] || 0)) / 350) / (1 + 0.35 * ((sz[p] || 0) + (sz[q] || 0)));
+      edges.push([p, q, w, rf || 0]);
+    }
+    // the spanning tree (Kruskal)
+    const parent = new Int32Array(L).map((_, i) => i);
+    const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+    const order = edges.map((_, i) => i).sort((i, j) => edges[i][2] - edges[j][2]);
+    const keep = new Uint8Array(edges.length);
+    for (const i of order) { const r1 = find(edges[i][0]), r2 = find(edges[i][1]); if (r1 !== r2) { parent[r1] = r2; keep[i] = 1; } }
+    const segs: number[] = [];
+    const hz = (x: number, y: number) => this.terrainZ(x, y);
+    for (let i = 0; i < edges.length; i++) {
+      const [p, q] = edges[i];
+      const built = lv ? Math.min(lv[p], lv[q]) : 0;
+      const towns = Math.min(sz[p] || 0, sz[q] || 0) >= 1;
+      if (!keep[i] && !towns && !built) continue;
+      // kind: track 0.35, town road 0.5, built 0.72 / paved 1
+      const kindV = built >= 2 ? 1 : built >= 1 ? 0.72 : towns ? 0.5 : 0.35;
+      const width = built >= 2 ? 0.62 : built >= 1 ? 0.52 : towns ? 0.42 : 0.34;
+      const x0 = g.loc.x[p], y0 = g.loc.y[p], x1 = g.loc.x[q], y1 = g.loc.y[q];
+      const len = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / len, ny = (x1 - x0) / len;
+      const n = Math.max(2, Math.ceil(len / 5));
+      // a gentle bend and a little wander, the same from either end
+      const s0 = Math.min(p, q) * 0.618 + Math.max(p, q) * 0.382;
+      const bend = (Math.sin(s0 * 12.9898) * 0.5) * Math.min(0.16 * len, 4) * (p < q ? 1 : -1);
+      const wob = Math.min(0.05 * len, 1.4);
+      let px = x0, py = y0, pz = hz(x0, y0);
+      for (let k = 1; k <= n; k++) {
+        const t = k / n;
+        const off = bend * Math.sin(Math.PI * t) + wob * Math.sin(Math.PI * 3 * t + s0) * Math.sin(Math.PI * t);
+        const x = x0 + (x1 - x0) * t + nx * off, y = y0 + (y1 - y0) * t + ny * off, z = hz(x, y);
+        segs.push(px, py, x, y, width, kindV, pz, z);
+        px = x; py = y; pz = z;
+      }
+    }
+    this.roadCount = segs.length / 8;
+    this.roadBuf?.destroy();
+    this.roadBuf = this.device.createBuffer({ size: Math.max(32, segs.length * 4), usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
+    if (segs.length) this.device.queue.writeBuffer(this.roadBuf, 0, new Float32Array(segs));
   }
 
   private buildRivers() {
@@ -826,7 +902,7 @@ export class MapRenderer {
     this.pxRatio = w / cssW;
     if (!this.riverTex || this.riverTex.width !== w || this.riverTex.height !== h) {
       this.riverTex?.destroy();
-      this.riverTex = this.device.createTexture({ size: [w, h], format: 'r8unorm', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
+      this.riverTex = this.device.createTexture({ size: [w, h], format: 'rgba8unorm', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
       this.mainBG = null;
     }
     if (!this.gbufTex || this.gbufTex.width !== w || this.gbufTex.height !== h) {
@@ -901,6 +977,7 @@ export class MapRenderer {
       depthStencilAttachment: { view: this.depthTex!.createView(), depthLoadOp: 'load', depthStoreOp: 'store', depthReadOnly: false },
     });
     if (this.riverCount) { rp.setPipeline(this.riverPipe); rp.setBindGroup(0, this.riverBG); rp.setVertexBuffer(0, this.riverBuf); rp.draw(6, this.riverCount); }
+    if (this.roadCount && this.roadBuf && this.camera.zoom > 1.2) { rp.setPipeline(this.roadPipe); rp.setBindGroup(0, this.riverBG); rp.setVertexBuffer(0, this.roadBuf); rp.draw(6, this.roadCount); }
     rp.end();
     const mp = enc.beginRenderPass({ colorAttachments: [{ view: target.createView(), loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 1] }] });
     mp.setPipeline(this.mainPipe); mp.setBindGroup(0, this.mainBG); mp.draw(3); mp.end();
@@ -1012,7 +1089,7 @@ export class MapRenderer {
     this.overlay.destroy();
     this.props?.destroy();
     for (const t of [this.idTex, this.heightInt, this.heightF, this.biomeTex, this.albedoTex, this.coastTex, this.terrainTex, this.auxTex, this.riverTex, this.gbufTex, this.depthTex]) t?.destroy();
-    this.uniformBuf?.destroy(); this.locBuf?.destroy(); this.riverBuf?.destroy(); this.instBuf?.destroy(); this.terrainUB?.destroy();
+    this.uniformBuf?.destroy(); this.locBuf?.destroy(); this.riverBuf?.destroy(); this.roadBuf?.destroy(); this.instBuf?.destroy(); this.terrainUB?.destroy();
     for (const b of [...this.lodVB, ...this.lodIB]) b.destroy();
     this.ctx?.unconfigure();
     this.device?.destroy();

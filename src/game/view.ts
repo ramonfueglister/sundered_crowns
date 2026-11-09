@@ -4,7 +4,7 @@ import type { World } from '../sim/world';
 import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite } from './protocol';
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
-import { C, CL, CLASSES, CLASS_NAME, B, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
+import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget } from '../sim/systems/diplomacy';
@@ -289,4 +289,11 @@ function ledger(s: GameState, w: World, kind: string) {
   if (kind === 'markets') return s.markets.map((m) => ({ id: m.id, name: m.name, owner: m.owner, priceIndex: m.priceIndex, top: Array.from({ length: G }, (_, k) => k).sort((a, b) => m.supply[b] * m.price[b] - m.supply[a] * m.price[a]).slice(0, 4).map((k) => GOODS[k].name) }));
   if (kind === 'wars') return warsView(s);
   return null;
+}
+
+/** road level per location (0..3), for the map */
+export function roadLevels(s: GameState): Uint8Array {
+  const bld = s.loc.buildings, L = bld.length / B, out = new Uint8Array(L);
+  for (let i = 0; i < L; i++) out[i] = bld[i * B + BI.road];
+  return out;
 }

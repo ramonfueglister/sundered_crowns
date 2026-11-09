@@ -16,14 +16,14 @@ import { applyCommand } from '../src/sim/commands';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import { answerEvent } from '../src/sim/systems/events';
 import { notice, chronicle, hasTreaty, atWar } from '../src/sim/ctx';
-import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView } from '../src/game/view';
+import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels } from '../src/game/view';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { nationDev } from '../src/sim/systems/war';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { checkAchievements, type AchievementCtx } from '../src/online/achievements';
 import {
   type ServerMsg, type ClientMsg, type WorldInfo, type FreeNation, type SeatInfo, type ChatMsg, type PlayerOffer, type OfferAction, type LeaderRow,
-  type EarnedAchievement, type RosterEntry, OFFER_ACTIONS, DEFAULT_ORDERS, sanitizeOrders, encodeBinary, BIN_OWNERS, BIN_COLORS, BIN_SNOW, MAP_MODE_LIST, PROTOCOL_VERSION,
+  type EarnedAchievement, type RosterEntry, OFFER_ACTIONS, DEFAULT_ORDERS, sanitizeOrders, encodeBinary, BIN_OWNERS, BIN_COLORS, BIN_SNOW, BIN_ROADS, MAP_MODE_LIST, PROTOCOL_VERSION,
   type WireTickView,
 } from '../src/online/protocol';
 import { NullStore, type WorldStore } from './store';
@@ -754,7 +754,7 @@ export class WorldCore {
   /** daily: the day's chronicle and owner changes, when the full view replaces that day's tick. */
   private sendFullView(ss: Session, inTick = false, daily?: { chronicle: any; ownerChanges: any; changeOrigin: any }) {
     const shared = { ...this.sharedViewNoAdvance(), ...(daily ?? {}), nations: nationLites(this.s, this.w) };
-    ss.sendBin(this.ownersBin()); ss.sendBin(encodeBinary(BIN_SNOW, this.s.loc.snow));
+    ss.sendBin(this.ownersBin()); ss.sendBin(encodeBinary(BIN_SNOW, this.s.loc.snow)); ss.sendBin(encodeBinary(BIN_ROADS, roadLevels(this.s)));
     ss.send({ type: 'tick', view: this.personal(ss, shared as any) });
     // a full view sent between days shows the live state, which the daily deltas' baselines may not hold yet:
     // such a session gets another full view with the next day, when the baselines move to the same state
@@ -787,6 +787,7 @@ export class WorldCore {
     for (let i = 0; i < N; i++) if (o[i] !== this.prevOwner[i] || c[i] !== this.prevCtrl[i]) { delta.push(i, o[i], c[i]); this.prevOwner[i] = o[i]; this.prevCtrl[i] = c[i]; }
     const big = delta.length > 3 * 1500; const full = big ? this.ownersBin() : null;
     const snow = monthly ? encodeBinary(BIN_SNOW, s.loc.snow) : null;
+    const roads = monthly ? encodeBinary(BIN_ROADS, roadLevels(s)) : null;
     const wi = JSON.stringify({ type: 'world', world: this.worldInfo() });
     const head = `{"type":"tick",${!full && delta.length ? `"ownerDelta":${JSON.stringify(delta)},` : ''}"view":${JSON.stringify(shared).slice(0, -1)},`;
     for (const ss of this.sessions) {
@@ -794,6 +795,7 @@ export class WorldCore {
       if (ss.needFull) { this.sendFullView(ss, true, { chronicle: shared.chronicle, ownerChanges: shared.ownerChanges, changeOrigin: shared.changeOrigin }); continue; }
       if (full) ss.sendBin(full);
       if (snow) ss.sendBin(snow);
+      if (roads) ss.sendBin(roads);
       ss.sendJson(head + this.personalJson(ss) + '}}');
       if (monthly && ss.mapMode !== 'political' && ss.mapMode !== 'terrain') this.sendColors(ss);
     }

@@ -60,6 +60,7 @@ export function MapView() {
         }
       }
       if (v.snow) r.setSnow(v.snow);
+      if (v.roads) r.setRoads?.(v.roads);
       { const dt = dayToDate(v.day, v.startYear); r.setDate?.(v.day, (MONTH_START[dt.m] + dt.d - 0.5) / 365); }
       if (v.landmarks || force || exploredChanged) {
         const g0 = rendererRef.assets.geo; const de = lang.value === 'de';

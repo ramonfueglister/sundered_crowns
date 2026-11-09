@@ -6,7 +6,7 @@ import { advanceDay, saveBinary, loadBinary } from '../sim/engine';
 import { startRecorded, recordCommand } from '../sim/replay';
 import type { GameState, Notice } from '../sim/types';
 import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
-import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView } from './view';
+import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels } from './view';
 import { dayToDate } from '../sim/calendar';
 
 const post = (m: FromWorker, tr: Transferable[] = []) => (self as any).postMessage(m, tr);
@@ -58,11 +58,11 @@ function sendTick(full = false) {
     wars: warsView(s),
     sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
     battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
-    chronicle: chron, snow: monthly ? new Float32Array(s.loc.snow) : undefined, ranking: s.ranking, msPerDay,
+    chronicle: chron, snow: monthly ? new Float32Array(s.loc.snow) : undefined, roads: monthly ? roadLevels(s) : undefined, ranking: s.ranking, msPerDay,
     explored: monthly ? exploredView() : undefined,
     landmarks: monthly ? landmarksView(s, w) : undefined,
   };
-  const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer); if (view.explored) tr.push(view.explored.buffer);
+  const tr: Transferable[] = [view.owner!.buffer, view.ctrl!.buffer]; if (view.snow) tr.push(view.snow.buffer); if (view.roads) tr.push(view.roads.buffer); if (view.explored) tr.push(view.explored.buffer);
   post({ type: 'tick', view }, tr);
   if (monthly && mapMode !== 'political' && mapMode !== 'terrain') mapDirty = true;
   if (mapDirty) sendColors();

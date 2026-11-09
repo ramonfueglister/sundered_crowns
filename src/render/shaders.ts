@@ -220,7 +220,8 @@ struct VO {
   @location(1) @interpolate(flat) sb: vec2f,
   @location(2) @interpolate(flat) hw: vec3f,
 };
-@vertex fn vs(@builtin(vertex_index) vi: u32, @location(0) ab: vec4f, @location(1) w: vec2f, @location(2) zz: vec2f) -> VO {
+// a ribbon from a to b draped on the terrain; it fades in between zoom z0 and z0 + zr (css px per map px)
+fn ribbon(vi: u32, ab: vec4f, w: vec2f, zz: vec2f, z0: f32, zr: f32) -> VO {
   let pr = U0.cam.w;
   let viewSize = U0.view.xy;
   let lift = 0.6 + U0.eye.w * 0.0015;
@@ -234,7 +235,7 @@ struct VO {
   let wa = w.x * za; let wb = w.y * zb; // css px
   let minW = 1.0;
   let zoom = max(za, zb);
-  let alpha = pow(clamp(max(wa, wb) / minW, 0.0, 1.0), 0.6) * clamp((zoom - 0.12) / 0.2, 0.0, 1.0);
+  let alpha = pow(clamp(max(wa, wb) / minW, 0.0, 1.0), 0.6) * clamp((zoom - z0) / zr, 0.0, 1.0);
   let hwa = max(wa, minW) * 0.5 * pr; let hwb = max(wb, minW) * 0.5 * pr;
   var d = sb - sa; let len = length(d);
   d = select(vec2f(1.0, 0.0), d / max(len, 1e-5), len > 1e-4);
@@ -249,6 +250,26 @@ struct VO {
   o.pos = vec4f(p.x / viewSize.x * 2.0 - 1.0, 1.0 - p.y / viewSize.y * 2.0, clamp(depth, 0.0, 1.0), 1.0);
   o.sa = sa; o.sb = sb; o.hw = vec3f(hwa, hwb, alpha);
   return o;
+}
+@vertex fn vs(@builtin(vertex_index) vi: u32, @location(0) ab: vec4f, @location(1) w: vec2f, @location(2) zz: vec2f) -> VO {
+  return ribbon(vi, ab, w, zz, 0.12, 0.2);
+}
+// roads: w.x carries the width, w.y the kind (0.35 track ... 1 paved); they show from the regional zoom on
+@vertex fn vs_road(@builtin(vertex_index) vi: u32, @location(0) ab: vec4f, @location(1) w: vec2f, @location(2) zz: vec2f) -> VO {
+  var o = ribbon(vi, ab, vec2f(w.x, w.x), zz, 1.7, 1.6);
+  o.hw.z *= w.y; // tracks are fainter than built roads
+  return o;
+}
+fn cover(i: VO) -> f32 {
+  let p = i.pos.xy;
+  let ab = i.sb - i.sa;
+  let t = clamp(dot(p - i.sa, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
+  let hw = mix(i.hw.x, i.hw.y, t);
+  let dd = length(p - (i.sa + ab * t));
+  return clamp(hw + 0.5 - dd, 0.0, 1.0);
+}
+@fragment fn fs_road(i: VO) -> @location(0) vec4f {
+  return vec4f(0.0, cover(i) * i.hw.z, 0.0, 1.0);
 }
 @fragment fn fs(i: VO) -> @location(0) vec4f {
   let p = i.pos.xy;
@@ -770,8 +791,17 @@ fn waterColor(depthEnc: f32, coastD: f32, seabed: f32) -> vec3f {
     col = mix(col, lit, overlayA);
   }
 
+  // ---------------- roads (under the rivers: the bridges are implied) ----------------
+  let rw = textureLoad(riverTex, vec2i(fc.xy), 0);
+  let rd = rw.g * landMask;
+  if (rd > 0.0) {
+    // tracks and roads are beaten earth; the best roads are paved with pale stone
+    let paved = smoothstep(0.78, 0.98, rd);
+    let earth = mix(vec3f(0.54, 0.45, 0.33), vec3f(0.6, 0.57, 0.51), paved) * mix(1.0, light, 0.55);
+    col = mix(col, earth, min(1.0, rd * 1.05) * 0.85 * (1.0 - 0.5 * overlayA));
+  }
   // ---------------- rivers ----------------
-  let rv = textureLoad(riverTex, vec2i(fc.xy), 0).r * landMask;
+  let rv = rw.r * landMask;
   if (rv > 0.0) {
     let rc = vec3f(0.22, 0.42, 0.56) * mix(1.0, light, 0.3);
     col = mix(col, rc, rv * 0.92);

@@ -6,7 +6,7 @@ import { view, nations, notices, chronicle, legend, workerError, ready, landmark
 import type { Command, CmdResult } from '../sim/types';
 import type { ArmyLite, MapMode, Query, TickView } from '../game/protocol';
 import {
-  PROTOCOL_VERSION, BIN_OWNERS, applyArmies, applyNations, BIN_COLORS, BIN_SNOW, MAP_MODE_LIST, decodeBinary,
+  PROTOCOL_VERSION, BIN_OWNERS, applyArmies, applyNations, BIN_COLORS, BIN_SNOW, BIN_ROADS, MAP_MODE_LIST, decodeBinary,
   type ClientMsg, type ServerMsg, type WorldInfo, type SeatInfo, type FreeNation, type ChatMsg, type PlayerOffer, type RosterEntry,
   type EarnedAchievement, type LeaderRow, type OfferAction, type AdminAction,
 } from './protocol';
@@ -64,7 +64,7 @@ export class OnlineClient implements GameClient {
   private seq = 1;
   private waits = new Map<number, (v: any) => void>();
   private cmdIds = new Set<number>();
-  private owner: Int16Array | null = null; private ctrl: Int16Array | null = null; private snow: Float32Array | null = null;
+  private owner: Int16Array | null = null; private ctrl: Int16Array | null = null; private snow: Float32Array | null = null; private roads: Uint8Array | null = null;
   private ownersFresh = false;
   private readyWaiters: ((ok: boolean) => void)[] = [];
   private gotWelcome = false; private gotTick = false;
@@ -171,10 +171,10 @@ export class OnlineClient implements GameClient {
       this.owner = o; this.ctrl = c; this.ownersFresh = true;
     }
     const armies = applyArmies(this.armies, m.view);
-    const v: TickView = { ...(m.view as any), armies, owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined };
+    const v: TickView = { ...(m.view as any), armies, owner: this.owner ?? undefined, ctrl: this.ctrl ?? undefined, snow: this.snow ?? undefined, roads: this.roads ?? undefined };
     const nl = applyNations(nations.value, m.view); v.nations = nl;
     delete (v as any).armyUpd; delete (v as any).armyDel; delete (v as any).nationUpd;
-    this.snow = null; this.ownersFresh = false;
+    this.snow = null; this.roads = null; this.ownersFresh = false;
     batch(() => {
       if (v.nations) nations.value = v.nations;
       if (v.landmarks) landmarks.value = v.landmarks;
@@ -190,6 +190,7 @@ export class OnlineClient implements GameClient {
     const { kind, extra, data } = decodeBinary(buf);
     if (kind === BIN_OWNERS) { const all = new Int16Array(data); const N = all.length / 2; this.owner = all.slice(0, N); this.ctrl = all.slice(N); this.ownersFresh = true; }
     else if (kind === BIN_SNOW) this.snow = new Float32Array(data);
+    else if (kind === BIN_ROADS) this.roads = new Uint8Array(data);
     else if (kind === BIN_COLORS) { const rgba = new Uint8Array(data); const mode = MAP_MODE_LIST[extra] ?? 'political'; for (const f of this.onColors) f(mode, rgba); }
   }
 
