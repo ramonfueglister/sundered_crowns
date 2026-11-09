@@ -30,30 +30,36 @@ const nid = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!
 describe('event option effects (dry run)', () => {
   const s = newGame(); days(s, 40);
   it('leaves state and rng untouched and describes nearly every option', () => {
+    // the same events are fired on a copy without dry runs: in the end both states must be the same
+    const ref = copy(s);
+    expect(hashState(ref)).toBe(hashState(s));
     const keys = ['france', 'castile', 'ottomans', 'england'];
     let opts = 0, empty = 0, fired = 0;
     for (const d of EVENTS) {
       for (const key of keys) {
         const n = s.nations.find((x) => x.key === key); if (!n) continue;
-        s.playerNations = [n.id];
+        s.playerNations = [n.id]; ref.playerNations = [n.id];
         let ok = false; try { ok = fireEvent(s, w, n, d, {}); } catch { ok = false; }
+        let okRef = false; try { okRef = fireEvent(ref, w, ref.nations[n.id], d, {}); } catch { okRef = false; }
+        expect(okRef).toBe(ok);
         if (!ok) continue;
         const p = s.pending[s.pending.length - 1];
-        const h = hashState(s), rng = JSON.stringify(s.rng);
+        const rng = JSON.stringify(s.rng), pending = JSON.stringify(s.pending);
         const fx = eventOptionFx(s, w, n.id, p.id)!;
-        expect(hashState(s)).toBe(h);
         expect(JSON.stringify(s.rng)).toBe(rng);
+        expect(JSON.stringify(s.pending)).toBe(pending);
         expect(fx.length).toBe(d.options.length);
         for (const o of fx) { opts++; if (!o.lines.length) empty++; }
         // cached per pending event and day: the same answer without another dry run
         expect(eventOptionFxCached(s, w, n.id, p.id)).toBe(eventOptionFxCached(s, w, n.id, p.id));
-        s.pending.pop(); fired++;
+        s.pending.pop(); ref.pending.pop(); fired++;
         break;
       }
     }
+    expect(hashState(s)).toBe(hashState(ref));
     expect(fired).toBeGreaterThan(EVENTS.length * 0.8);
     expect(empty).toBeLessThanOrEqual(opts * 0.05);
-  }, 120_000);
+  }, 600_000);
 });
 
 describe('batch orders', () => {

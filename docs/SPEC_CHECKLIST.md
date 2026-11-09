@@ -63,7 +63,7 @@ Quelle: `/mnt/project-files/prompts/SUNDERED-CROWNS-Prompt-120-Punkte.md`. Wird 
 | 55 | A limited number of envoys who travel to the target and take time, so diplomacy has to be prioritised. | ✓ | Sim fertig, UI offen |
 | 56 | Every AI answer comes with a breakdown of reasons (for example "+25 shared rival", "−40 you are too far away",… | ✓ | Sim fertig, UI offen |
 | 57 | War justifications: declaring war without one carries heavy penalties. Fabricating one takes time and can be d… | ✓ | Sim fertig, UI offen |
-| 58 | War score from battles, occupations and blockades. Peace treaties with selectable terms (provinces, gold, rele… | ✓ | Kriegspunkte + Friedenspanel mit Bedingungen |
+| 58 | War score from battles, occupations and blockades. Peace treaties with selectable terms (provinces, gold, rele… | ✓ | Kriegspunkte + Friedenspanel mit Bedingungen; geforderte Orte nach Provinz geordnet, ganze Provinz per Haken, ohne Obergrenze |
 | 59 | Expansion backlash: fast conquest raises fear in neighbouring nations; when fear is high enough, they form a c… | ✓ | Sim fertig, UI offen |
 | 60 | Subjects: vassals, junior partners in personal unions, tributaries. They can be integrated over time, and they… | ✓ | Sim fertig, UI offen |
 | 61 | Rivalries that give bonuses for competing with the chosen rival and penalties for allying with them. | ✓ | Sim fertig, UI offen |
