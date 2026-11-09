@@ -24,24 +24,31 @@ function mkApi(s: GameState, w: World, n: Nation, y: number, m: number): EvApi {
 }
 const isHuman = (s: GameState, n: Nation) => s.playerNations.includes(n.id) || !!n.playerId;
 
-export function checkGoals(s: GameState, w: World, n: Nation, y: number, m: number): number {
+/**
+ * The first look at a realm's tree: what is already true is inherited, without reward, and goals_init is set, so that
+ * anything achieved later is rewarded. Done for every realm at game start (the system's init); a realm that appears
+ * later gets its look at its first review, or when its player claims a goal before that.
+ */
+function firstLook(s: GameState, w: World, n: Nation, e: EvApi) {
   if (!n.goalsDone) n.goalsDone = [];
   const done = new Set(n.goalsDone);
-  const e = mkApi(s, w, n, y, m);
-  // the first look at a realm's tree: what is already true is inherited, without reward
-  if (n.flags.goals_init === undefined) {
-    n.flags.goals_init = s.day;
-    for (let changed = true; changed;) {
-      changed = false;
-      for (const g of goalsFor(n)) {
-        if (done.has(g.id) || (g.req && g.req.some((r) => !done.has(r)))) continue;
-        let ok = false; try { ok = g.check(e); } catch { ok = false; }
-        if (ok) { n.goalsDone.push(g.id); done.add(g.id); changed = true; }
-      }
+  n.flags.goals_init = s.day;
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const g of goalsFor(n)) {
+      if (done.has(g.id) || (g.req && g.req.some((r) => !done.has(r)))) continue;
+      let ok = false; try { ok = g.check(e); } catch { ok = false; }
+      if (ok) { n.goalsDone.push(g.id); done.add(g.id); changed = true; }
     }
-    n.flags.goals_inherited = n.goalsDone.length;
-    return 0;
   }
+  n.flags.goals_inherited = n.goalsDone.length;
+}
+
+export function checkGoals(s: GameState, w: World, n: Nation, y: number, m: number): number {
+  if (!n.goalsDone) n.goalsDone = [];
+  const e = mkApi(s, w, n, y, m);
+  if (n.flags.goals_init === undefined) { firstLook(s, w, n, e); return 0; }
+  const done = new Set(n.goalsDone);
   let k = 0;
   for (const g of goalsFor(n)) {
     if (done.has(g.id)) continue;
@@ -68,11 +75,13 @@ function grantGoal(s: GameState, n: Nation, g: GoalDef, e: EvApi) {
 export function claimGoal(s: GameState, w: World, n: Nation, id: string): string | null {
   const g = goalsFor(n).find((x) => x.id === id); if (!g) return 'no such goal';
   if (!n.goalsDone) n.goalsDone = [];
-  if (n.goalsDone.includes(id)) return 'already achieved';
-  if (n.flags.goals_init === undefined) return 'too soon';
-  if (g.req && g.req.some((r) => !n.goalsDone.includes(r))) return 'earlier goals come first';
   const d = dayToDate(s.day, s.startYear);
   const e = mkApi(s, w, n, d.y, d.m);
+  // a realm that has not had its first look yet (one that appeared during the game) gets it now: what it already had
+  // is inherited without reward, as at its first review (the goal view offers no claim before the look)
+  if (n.flags.goals_init === undefined) firstLook(s, w, n, e);
+  if (n.goalsDone.includes(id)) return 'already achieved';
+  if (g.req && g.req.some((r) => !n.goalsDone.includes(r))) return 'earlier goals come first';
   let ok = false; try { ok = g.check(e); } catch { ok = false; }
   if (!ok) return 'the conditions are not met';
   grantGoal(s, n, g, e);
@@ -151,6 +160,11 @@ export function aiDoctrines(s: GameState, w: World, n: Nation) {
 
 export const goals: System = {
   id: 'goals',
+  // the first look at game start, so a goal reached in the first months is rewarded like any later one
+  init(s, w) {
+    const d = dayToDate(s.day, s.startYear);
+    for (const n of s.nations) if (n.alive) firstLook(s, w, n, mkApi(s, w, n, d.y, d.m));
+  },
   monthly({ s, w, date }) {
     for (const n of s.nations) {
       if (!n.alive) continue;

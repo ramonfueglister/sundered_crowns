@@ -21,10 +21,10 @@ interface WorksV {
   treasury: number; inflation: number; priceLevel: number; manpower: number; maxManpower: number; sailors: number;
   provs: Record<number, string>; areas: Record<number, string>; rows: [number, number, number][]; names: Record<number, I18n>;
   types: TypeV[];
-  queue: { loc: number; building: number; left: number; total: number; cost: number; refund: number }[];
+  queue: { loc: number; building: number; nth: number; left: number; total: number; cost: number; refund: number }[];
   levy: [number, number, number][];
   units: { id: number; name: I18n; kind: string; cost: number; per: number; days: number; upkeep: number }[];
-  recruits: { loc: number; type: number; men: number; left: number; total: number; refund: number }[];
+  recruits: { loc: number; type: number; nth: number; men: number; left: number; total: number; refund: number }[];
 }
 type Filter = { prov: number; area: number; type: number };
 
@@ -231,7 +231,7 @@ function BuildQueue({ d, refresh }: { d: WorksV; refresh: () => void }) {
         <td><Place d={d} l={c.loc} /></td><td>{L(x.name)}</td>
         <td class="w-prog"><Bar value={done} max={1} color="#7a5a2a" tip={<div><TipHead name={t('x_w_progress')} value={`${num(done * 100)} %`} /><div class="muted small">{daysText(c.left)}</div></div>} /></td>
         <td class="r muted small">{daysText(c.left)}</td>
-        <td class="r"><Btn tip={() => <RefundTip paid={c.cost} label="x_w_paid" share={c.left / Math.max(1, c.total)} refund={c.refund} hint={t('x_w_cancel_build_hint')} />} onClick={() => sendOrders([{ t: 'cancel', kind: 'build', loc: c.loc, item: c.building } as Cmd], 'click').then(refresh)}>{t('cancel')} · +{num(c.refund)}</Btn></td>
+        <td class="r"><Btn tip={() => <RefundTip paid={c.cost} label="x_w_paid" share={c.left / Math.max(1, c.total)} refund={c.refund} hint={t('x_w_cancel_build_hint')} />} onClick={() => sendOrders([{ t: 'cancel', kind: 'build', loc: c.loc, item: c.building, nth: c.nth } as Cmd], 'click').then(refresh)}>{t('cancel')} · +{num(c.refund)}</Btn></td>
       </tr>;
     })}</tbody></table>}
   </Section>;
@@ -291,7 +291,7 @@ function LevyTab({ d, inFilter, refresh }: { d: WorksV; inFilter: (l: number) =>
           <td><Place d={d} l={r.loc} /></td><td>{L(U.name)}</td><td class="r">{num(r.men)} {U.kind === 'ship' ? t('ships') : t('men')}</td>
           <td class="w-prog"><Bar value={done} max={1} color="#3a5a80" tip={<div><TipHead name={t('x_w_progress')} value={`${num(done * 100)} %`} /><div class="muted small">{daysText(r.left)}</div></div>} /></td>
           <td class="r muted small">{daysText(r.left)}</td>
-          <td class="r"><Btn tip={() => <RefundTip paid={r.refund * 2} label="price" refund={r.refund} hint={t('x_w_cancel_recruit_hint')} />} onClick={() => sendOrders([{ t: 'cancel', kind: 'recruit', loc: r.loc, item: r.type } as Cmd], 'click').then(refresh)}>{t('cancel')} · +{num(r.refund)}</Btn></td>
+          <td class="r"><Btn tip={() => <RefundTip paid={r.refund * 2} label="price" refund={r.refund} hint={t('x_w_cancel_recruit_hint')} />} onClick={() => sendOrders([{ t: 'cancel', kind: 'recruit', loc: r.loc, item: r.type, nth: r.nth } as Cmd], 'click').then(refresh)}>{t('cancel')} · +{num(r.refund)}</Btn></td>
         </tr>;
       })}</tbody></table>}
     </Section>

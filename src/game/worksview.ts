@@ -46,13 +46,17 @@ export function worksView(s: GameState, w: World, player: number) {
       other: buildingGain(s, w, n, spots[0]?.loc ?? n.capital, k).other,
       spots: spots.map((x): Spot => [x.loc, x.level, round(x.cost, 1), round(x.gain, 3)]) };
   });
-  const queue = s.constructions.filter((c) => c.nation === player).map((c) => ({ loc: c.loc, building: c.building, left: c.left, total: BUILDINGS[c.building].months * 30, cost: c.cost, refund: constructionRefund(c) }));
+  // nth: the row's place among the realm's orders for the same place and item, which the cancel command names
+  const seen = new Map<string, number>();
+  const nthOf = (loc: number, item: number) => { const key = `${loc}:${item}`; const v = seen.get(key) ?? 0; seen.set(key, v + 1); return v; };
+  const queue = s.constructions.filter((c) => c.nation === player).map((c) => ({ loc: c.loc, building: c.building, nth: nthOf(c.loc, c.building), left: c.left, total: BUILDINGS[c.building].months * 30, cost: c.cost, refund: constructionRefund(c) }));
   // levies: every controlled location with the men it adds to the manpower limit, and its harbour
   const levy: [number, number, number][] = [];
   for (const l of locs) if (s.loc.ctrl[l] === player && !s.sieges.some((x) => x.loc === l)) levy.push([l, round(manpowerOf(s, l), 1), w.coastal[l] ? s.loc.buildings[l * B + BI.port] : -1]);
   levy.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
   const units = availableUnits(s, n, false).concat(availableUnits(s, n, true)).map((u) => ({ id: u, name: UNITS[u].name, kind: UNITS[u].kind, cost: unitCost(s, n, u, UNITS[u].kind === 'ship' ? 2 : 1000), per: UNITS[u].kind === 'ship' ? 2 : 1000, days: RECRUIT_DAYS(u), upkeep: UNITS[u].upkeep }));
-  const recruits = s.recruits.filter((r) => r.nation === player).map((r) => ({ loc: r.loc, type: r.type, men: r.men, left: r.left, total: RECRUIT_DAYS(r.type), refund: recruitRefund(s, n, r) }));
+  seen.clear();
+  const recruits = s.recruits.filter((r) => r.nation === player).map((r) => ({ loc: r.loc, type: r.type, nth: nthOf(r.loc, r.type), men: r.men, left: r.left, total: RECRUIT_DAYS(r.type), refund: recruitRefund(s, n, r) }));
   return { treasury: n.treasury, inflation: n.inflation, priceLevel: s.priceLevel, manpower: n.manpower, maxManpower: n.maxManpower, sailors: n.sailors,
     ...places, types, queue, levy, units, recruits };
 }

@@ -260,7 +260,7 @@ export type Command =
   | { t: 'workshop'; n: number; loc: number; slot: number; recipe: number }
   | { t: 'embark'; n: number; army: number; fleet: number }
   | { t: 'goal'; n: number; id: string }                       // claim a goal whose conditions hold now
-  | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number } // stop a construction or a levy (item: building or unit)
+  | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number; nth?: number } // stop a construction or a levy (item: building or unit; nth: which of the realm's orders for that place and item, in queue order from 0; without it the newest)
   | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)
   | { t: 'dev'; n: number; action: string; payload?: any }; // developer tools (single player / admin only)
 

@@ -13,6 +13,7 @@ import { EVENTS } from '../src/sim/content/events';
 import { eventOptionFx, eventOptionFxCached } from '../src/game/eventfx';
 import { buildSpots, buildingGain } from '../src/sim/systems/planning';
 import { claimGoal, goalsFor } from '../src/sim/systems/goals';
+import { goalPlace } from '../src/sim/content/goals';
 import { worksView, scopeView } from '../src/game/worksview';
 import { answer } from '../src/game/view';
 import { hasRefusalText, refusal } from '../src/sim/refusals';
@@ -135,6 +136,40 @@ describe('batch orders', () => {
     expect(n.manpower).toBe(Math.min(n.maxManpower, m1 + 1000));
   });
 
+  it('a queue row cancels its own order and pays the refund it shows', () => {
+    const s = copy(base); const n = s.nations[pid]; s.playerNations = [pid];
+    n.treasury = 1e5; n.manpower = 9000;
+    // a quiet place at home: nothing else under way there, room for two more levels
+    const sp = buildSpots(s, w, n, BI.farm).find((x) => s.loc.buildings[x.loc * B + BI.farm] <= 1 && !s.constructions.some((c) => c.loc === x.loc))!;
+    const rowsAt = () => worksView(s, w, pid)!.queue.filter((c) => c.loc === sp.loc && c.building === BI.farm);
+    expect(applyCommand(s, w, { t: 'build', n: pid, loc: sp.loc, building: BI.farm }).ok).toBe(true);
+    days(s, 60); n.treasury = 1e5;
+    expect(applyCommand(s, w, { t: 'build', n: pid, loc: sp.loc, building: BI.farm })).toEqual({ ok: true });
+    const rows = rowsAt();
+    expect(rows.map((c) => c.nth)).toEqual([0, 1]);
+    expect(Math.abs(rows[0].refund - rows[1].refund)).toBeGreaterThan(1);
+    // the first (older, cheaper, further along) row: that order goes, the newer one stays
+    const t0 = n.treasury;
+    expect(applyCommand(s, w, { t: 'cancel', n: pid, kind: 'build', loc: sp.loc, item: BI.farm, nth: rows[0].nth }).ok).toBe(true);
+    expect(n.treasury - t0).toBeCloseTo(rows[0].refund, 6);
+    const after = rowsAt();
+    expect(after.length).toBe(1);
+    expect([after[0].left, after[0].cost]).toEqual([rows[1].left, rows[1].cost]);
+    expect(applyCommand(s, w, { t: 'cancel', n: pid, kind: 'build', loc: sp.loc, item: BI.farm, nth: 1 })).toEqual({ ok: false, err: 'nothing under way' });
+    expect(applyCommand(s, w, { t: 'cancel', n: pid, kind: 'build', loc: sp.loc, item: BI.farm, nth: -1 })).toEqual({ ok: false, err: 'nothing under way' });
+
+    // levies the same: the older levy is stopped, the newer one keeps training
+    const unit = UNITS.findIndex((u) => u.kind !== 'ship');
+    expect(applyCommand(s, w, { t: 'recruit', n: pid, loc: n.capital, unit, men: 1000 }).ok).toBe(true);
+    days(s, 10);
+    expect(applyCommand(s, w, { t: 'recruit', n: pid, loc: n.capital, unit, men: 1000 }).ok).toBe(true);
+    const lv = worksView(s, w, pid)!.recruits.filter((r) => r.loc === n.capital && r.type === unit);
+    expect(lv.map((r) => r.nth)).toEqual([0, 1]);
+    expect(lv[0].left).toBeLessThan(lv[1].left);
+    expect(applyCommand(s, w, { t: 'cancel', n: pid, kind: 'recruit', loc: n.capital, item: unit, nth: lv[0].nth }).ok).toBe(true);
+    expect(worksView(s, w, pid)!.recruits.filter((r) => r.loc === n.capital && r.type === unit).map((r) => r.left)).toEqual([lv[1].left]);
+  });
+
   it('replay the same with batch, recruit and cancel orders after a save', () => {
     const a = copy(base), b = copy(base);
     const run = (s: GameState) => {
@@ -220,6 +255,39 @@ describe('goals', () => {
     const view = answer(s, w, pid, { q: 'goals', nation: pid });
     expect(view.length).toBe(gs.length);
     expect(view.some((g: any) => g.conds.some((c: any) => c.max !== undefined))).toBe(true);
+  });
+});
+
+describe('goals at game start', () => {
+  it('every realm has its first look at the start, so a goal reached in the first days is offered, claimed and rewarded', () => {
+    const s = newGame();
+    for (const n of s.nations) if (n.alive) expect(n.flags.goals_init).toBe(0);
+    const pid = nid(s, 'portugal'); const n = s.nations[pid]; s.playerNations = [pid];
+    expect(n.goalsDone).not.toContain('portugal.ceuta');
+    days(s, 2);
+    const ceuta = goalPlace(w, 'Ceuta'); s.loc.owner[ceuta] = pid; s.loc.ctrl[ceuta] = pid;
+    const view = () => answer(s, w, pid, { q: 'goals', nation: pid }).find((g: any) => g.id === 'portugal.ceuta');
+    expect(view().ready).toBe(true);
+    const p0 = n.prestige, m0 = n.modifiers.length;
+    expect(claimGoal(s, w, n, 'portugal.ceuta')).toBe(null);
+    expect(n.goalsDone).toContain('portugal.ceuta');
+    expect(n.prestige).toBeGreaterThan(p0);
+    expect(n.modifiers.length).toBe(m0 + 1);
+    expect(view().done).toBe(true);
+  });
+
+  it('a realm without its first look yet is offered no claim; a claim gives it the look', () => {
+    const s = newGame(); days(s, 2);
+    const pid = nid(s, 'portugal'); const n = s.nations[pid];
+    const ceuta = goalPlace(w, 'Ceuta'); s.loc.owner[ceuta] = pid; s.loc.ctrl[ceuta] = pid;
+    delete n.flags.goals_init; n.goalsDone = [];
+    expect(answer(s, w, pid, { q: 'goals', nation: pid }).some((g: any) => g.ready)).toBe(false);
+    const p0 = n.prestige;
+    // what holds at the look is inherited without reward, as at a first review
+    expect(claimGoal(s, w, n, 'portugal.ceuta')).toBe('already achieved');
+    expect(n.flags.goals_init).toBe(s.day);
+    expect(n.goalsDone).toContain('portugal.ceuta');
+    expect(n.prestige).toBe(p0);
   });
 });
 

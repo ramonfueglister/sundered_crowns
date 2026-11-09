@@ -277,7 +277,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       return OK;
     }
     case 'goal': { const e = claimGoal(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
-    case 'cancel': return cancelOrder(s, w, cmd.n, cmd.kind, cmd.loc, cmd.item);
+    case 'cancel': return cancelOrder(s, w, cmd.n, cmd.kind, cmd.loc, cmd.item, cmd.nth);
     case 'batch': return batchOrders(s, w, cmd.n, cmd.cmds);
     case 'dev': return devCommand(s, w, cmd.n, cmd.action, cmd.payload);
   }
@@ -294,12 +294,25 @@ export function constructionRefund(c: { building: number; left: number; cost: nu
 export function recruitRefund(s: GameState, n: Nation, r: { type: number; men: number }): number {
   return unitCost(s, n, r.type, r.men) * 0.5;
 }
-function cancelOrder(s: GameState, w: World, nid: number, kind: string, loc: number, item: number): CmdResult {
+/**
+ * Index in list of the realm's order for this place and item: the nth of them in queue order (0 = the oldest), as the
+ * queue rows list them, or without nth the newest (-1 when there is none). Several levels of one building at one place
+ * are built side by side, each adding a level, so any of them can be stopped; each pays back its own share.
+ */
+function orderAt<T extends { nation: number; loc: number }>(list: T[], nid: number, loc: number, same: (x: T) => boolean, nth?: number): number {
+  let k = -1, seen = 0;
+  for (let i = 0; i < list.length; i++) {
+    const x = list[i]; if (x.nation !== nid || x.loc !== loc || !same(x)) continue;
+    if (nth === undefined) k = i;
+    else if (seen++ === nth) return i;
+  }
+  return k;
+}
+function cancelOrder(s: GameState, w: World, nid: number, kind: string, loc: number, item: number, nth?: number): CmdResult {
   const n = s.nations[nid];
+  if (nth !== undefined && (!Number.isInteger(nth) || nth < 0)) return err('nothing under way');
   if (kind === 'build') {
-    // the last order placed there for this building (higher levels are queued later and cost more)
-    let k = -1;
-    for (let i = s.constructions.length - 1; i >= 0; i--) { const c = s.constructions[i]; if (c.nation === nid && c.loc === loc && c.building === item) { k = i; break; } }
+    const k = orderAt(s.constructions, nid, loc, (c) => c.building === item, nth);
     if (k < 0) return err('nothing under way');
     const c = s.constructions[k];
     s.constructions.splice(k, 1);
@@ -308,8 +321,7 @@ function cancelOrder(s: GameState, w: World, nid: number, kind: string, loc: num
     return OK;
   }
   if (kind === 'recruit') {
-    let k = -1;
-    for (let i = 0; i < s.recruits.length; i++) { const r = s.recruits[i]; if (r.nation === nid && r.loc === loc && r.type === item && (k < 0 || r.left > s.recruits[k].left)) k = i; }
+    const k = orderAt(s.recruits, nid, loc, (r) => r.type === item, nth);
     if (k < 0) return err('nothing under way');
     const r = s.recruits[k];
     s.recruits.splice(k, 1);

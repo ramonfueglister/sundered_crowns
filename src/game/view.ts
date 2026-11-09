@@ -490,6 +490,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
 export function goalsView(s: GameState, w: World, n: Nation) {
   const done = new Set(n.goalsDone ?? []);
   const tree = goalsFor(n);
+  const looked = n.flags.goals_init !== undefined;
   const depth = new Map<string, number>();
   const depthOf = (id: string, guard = 0): number => {
     const k = depth.get(id); if (k !== undefined) return k;
@@ -503,7 +504,8 @@ export function goalsView(s: GameState, w: World, n: Nation) {
     const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max,
       places: c.places?.map((nm: string) => { const l = goalPlace(w, nm); return { name: nm, loc: l, owner: l >= 0 ? s.loc.owner[l] : -1 }; }) }));
     const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + (c.ok ? 1 : c.max ? clamp01(c.cur / c.max) : 0), 0) / condsOut.length : 0;
-    return { id: g.id, name: g.name, desc: g.desc, flav: g.flav ?? null, req: g.req ?? [], done: isDone, open, ready: open && conds.every((c) => c.ok),
+    // ready only after the realm's first look (src/sim/systems/goals.ts firstLook): before it a claim would inherit the goal without reward
+    return { id: g.id, name: g.name, desc: g.desc, flav: g.flav ?? null, req: g.req ?? [], done: isDone, open, ready: open && looked && conds.every((c) => c.ok),
       conds: condsOut, rews: g.rews, unlocks: tree.filter((x) => x.req?.includes(g.id)).map((x) => x.id), depth: depthOf(g.id), progress: isDone ? 1 : frac };
   });
 }
