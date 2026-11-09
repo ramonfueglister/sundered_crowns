@@ -15,7 +15,8 @@ function DutyTip({ d, p }: { d: any; p: any }) {
   return <div>
     <TipHead name={t(`duty_${d.id}`)} value={rateTxt} hint={t(`duty_${d.id}_hint`)} />
     <div class="tip-drift"><span>{keyName(d.ledger)}</span><span class="pos">+{num(p.incomeBreak?.[d.ledger] ?? 0, 1)} {t('x_per_month')}</span></div>
-    <Parts title={t('x_duty_resented')} rows={Object.entries(d.estates).map(([e, k]) => [estLabel(e), -(k as number) * d.rate] as BdRow)} digits={1} />
+    <Parts title={t('x_duty_resented')} keepZero rows={Object.entries(d.estates).map(([e, k]) => [estLabel(e), -(k as number) * d.rate] as BdRow)} digits={1} />
+    <div class="muted small">{t('x_duty_per_step')}: {Object.entries(d.estates).map(([e, k]) => `${estLabel(e)} ${signed(-(k as number) * d.step, 1)}`).join(', ')} · {t('unrest')} +{num(d.unrest * d.step, 2)}</div>
     <div class="muted small">{t('x_duty_resented_hint')}</div>
     <div class="tip-drift"><span>{t('unrest')}</span><span class={d.rate > 0 ? 'neg' : 'muted'}>+{num(d.rate * d.unrest, 1)} {t('x_in_each_loc')}</span></div>
     <div class="muted small">{t('x_duty_max')}: {d.id === 'hearth' ? num(d.max, 2) : pct(d.max, 0)}</div>
@@ -51,6 +52,7 @@ export function Forecast({ r }: { r: any }) {
   const f = r?.forecast; if (!f) return null;
   const net = f.end - f.start;
   return <Section title={t('forecast')} id="eco-forecast">
+    {!f.expenseLines.length && <div class="muted small">{t('first_month_hint')}</div>}
     <Tip tag="div" content={() => <ForecastTip f={f} />}>
       <div class="kv"><span class="k">{t('x_in_12_months')}</span><span class={`v ${f.end < 0 ? 'neg' : ''}`}>{num(f.end)} <small class={net >= 0 ? 'pos' : 'neg'}>({signed(net, 0)})</small></span></div>
       <Spark data={[f.start, ...f.months.map((m: any) => m.treasury)]} w={220} h={34} base={0} color={f.end < 0 ? '#a8331f' : '#4d8a3a'} />
