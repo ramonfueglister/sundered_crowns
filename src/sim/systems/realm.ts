@@ -80,33 +80,7 @@ function empireInit(s: GameState) {
   const boh = s.nations.find((n) => n.key === 'bohemia');
   E.emperor = s.startYear < 1400 && boh ? boh.id : (s.nations.find((n) => n.key === 'austria')?.id ?? E.electors[0] ?? -1);
 }
-function empireYear(s: GameState, w: World) {
-  const E = s.empire;
-  E.members = s.nations.filter((n) => n.alive && n.isHRE).map((n) => n.id);
-  E.electors = E.electors.filter((id) => s.nations[id]?.alive);
-  const em = s.nations[E.emperor];
-  if (!em?.alive || (em.flags.ruler_changed && em.flags.ruler_changed > E.lastElection)) {
-    // election: electors vote by opinion, size and faith
-    const cands = s.nations.filter((n) => n.alive && n.isHRE && n.overlord < 0).sort((a, b) => b.score - a.score).slice(0, 6);
-    const votes = new Map<number, number>();
-    for (const el of E.electors) {
-      let best = -1, bv = -Infinity;
-      for (const c of cands) { const v = c.score * 0.05 + (c.id === E.emperor ? 25 : 0) + (s.nations[el].faith === c.faith ? 10 : -30) + (c.id === el ? 40 : 0) + rand(s.rng) * 15; if (v > bv) { bv = v; best = c.id; } }
-      if (best >= 0) votes.set(best, (votes.get(best) || 0) + 1);
-    }
-    const winner = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (winner !== undefined && winner !== E.emperor) {
-      E.emperor = winner;
-      chronicle(s, winner, 'emperor', { en: `The electors chose the ruler of ${s.nations[winner].short.en} as Emperor.`, de: `Die Kurfürsten wählten den Herrscher von ${s.nations[winner].short.de} zum Kaiser.` });
-    }
-    E.lastElection = s.day;
-  }
-  // imperial authority: peace inside the Empire raises it, wars between members lower it
-  let internal = 0;
-  for (const war of s.wars) if (war.att.some((x) => s.nations[x]?.isHRE) && war.def.some((x) => s.nations[x]?.isHRE)) internal++;
-  E.authority = clamp(E.authority + 2 - internal * 3, 0, 100);
-  if (em?.alive) em.prestige = clamp(em.prestige + 1, -100, 100);
-}
+// the election, imperial authority, the diet and the league: systems/empire.ts
 
 // ---------------- the Papacy ----------------
 function papacyInit(s: GameState, w: World) {
@@ -220,6 +194,6 @@ export const realm: System = {
   init(s, w) { empireInit(s); papacyInit(s, w); rankingMonth(s, w); timelapseYear(s, w); },
   daily({ s, w }) { constructionsDay(s, w); },
   monthly({ s, w }) { rankingMonth(s, w); },
-  yearly({ s, w }) { timelapseYear(s, w); empireYear(s, w); papacyYear(s); steppeYear(s, w); steppeSplitYear(s, w); },
+  yearly({ s, w }) { timelapseYear(s, w); papacyYear(s); steppeYear(s, w); steppeSplitYear(s, w); },
 };
 void BI;

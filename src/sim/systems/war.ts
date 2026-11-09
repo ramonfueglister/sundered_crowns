@@ -8,7 +8,7 @@ import { EPOCH } from '../ctx';
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
-import { lawEffect, estate } from './politics';
+import { lawEffect } from './politics';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 
 // Per-nation location lists (OC) and development sums (DC), both refreshed lazily after an EPOCH bump.
@@ -99,6 +99,11 @@ export function hasCasusBelli(s: GameState, a: number, b: number): string | null
   return null;
 }
 
+/** The bodies of the realm that weigh in on a war: the Empire's peace and the assemblies before it is declared, the
+ *  emperor's defence and the league after. Set by systems/empire.ts, so that this module does not import it (the
+ *  Empire reaches the setup through diplomacy and the military, and war.ts must load before them). */
+export const warHooks: { veto?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null; declared?: (s: GameState, w: World, war: War) => void } = {};
+
 export function declareWar(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'] = 'conquest', locs: number[] = []): string | null {
   const na = s.nations[a], nb = s.nations[b];
   if (!na?.alive || !nb?.alive || a === b) return 'invalid';
@@ -114,6 +119,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     if (!locs.length) locs = reconquestLocs(s, a, b);
   }
   if (goalType === 'faith' && na.faith === nb.faith) return 'they share our faith';
+  // the Perpetual Peace of the Empire, and assemblies that must approve wars where the law requires it (player and AI)
+  const veto = warHooks.veto?.(s, w, a, b, goalType); if (veto) return veto;
   const brokenTruce = hasTreaty(s, a, b, 'truce');
   if (hasTreaty(s, a, b, 'alliance')) { s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); na.prestige -= 10; }
   const cb = hasCasusBelli(s, a, b);
@@ -121,10 +128,6 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     // war without justification: heavy penalties
     na.concord = clamp(na.concord - 35, -100, 100); na.mandate = clamp(na.mandate - 15, 0, 100); na.dread += 15 * dreadGain(na);
     for (const o of s.nations) if (o.alive && o.id !== a) addOpinion(s, o.id, a, 'unjust_war', -25, 365 * 5);
-  }
-  // assemblies must approve wars where the law requires it
-  if (lawEffect(na, 'war_vote') > 0 && !s.playerNations.includes(a)) {
-    const e = estate(na, 'burghers'); if (e && e.contentment < 35) return 'the assembly refused to fund the war';
   }
   const target = topOverlord(s, b);
   // never a war inside one's own realm of subjects (independence and civil wars are fought from within on purpose)
@@ -153,7 +156,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   addOpinion(s, b, a, 'war_declared', -60, 365 * 10);
   chronicle(s, a, 'war', { en: `${na.short.en} declared war on ${nb.short.en}${cb ? '' : ' without just cause'}.`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg${cb ? '' : ' ohne gerechten Grund'}.` });
   for (const p of s.playerNations) if (war.def.includes(p) || war.att.includes(p)) notice(s, p, 'war', { en: `${na.short.en} declared war on ${nb.short.en}!`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg!` }, { war: war.id, loc: nb.capital });
-  // the Empire's members expect the emperor to defend them
+  // the Empire's members expect the emperor to defend them; the league defends its towns
+  warHooks.declared?.(s, w, war);
   return null;
 }
 function willJoin(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean): boolean {

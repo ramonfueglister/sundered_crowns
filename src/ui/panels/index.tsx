@@ -11,6 +11,7 @@ import { DiplomacyTab, MilitaryTab, KnowledgeTab, SocietyTab, DecisionsTab } fro
 import { LedgerTab, ChronicleTab } from './records';
 import { PeaceTab } from './peace';
 import { WorksTab } from './works';
+import { EmpireTab } from './empire';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 
@@ -21,6 +22,7 @@ export { ArmyPanel, Outliner } from './army';
 export { Notices, EventModal, Legend } from './overlay';
 export { Tutorial } from './tutorial';
 export { GoalTracker } from './goals';
+export { RealmDialogs } from './realmdialogs';
 export { SettingsPanel, SavesPanel, EndScreen };
 export { OnlineButton } from '../online/OnlineButton';
 
@@ -28,7 +30,7 @@ export async function quickSave() { await saveNow(); }
 
 const TABS: Record<string, () => any> = {
   economy: EconomyTab, government: GovernmentTab, diplomacy: DiplomacyTab, military: MilitaryTab, knowledge: KnowledgeTab,
-  society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
+  society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab, empire: EmpireTab,
 };
 const TITLES: Record<string, string> = { peace: 'offer_peace' };
 

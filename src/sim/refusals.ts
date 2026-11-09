@@ -65,6 +65,27 @@ export const REFUSAL_DE: Record<string, string> = {
   'no other faith in our land': 'Kein anderer Glaube in unserem Land', 'little church land is left': 'Es ist kaum noch Kirchengut übrig',
   'the overlord forbids war among his tributaries': 'Der Oberherr duldet keinen Krieg unter seinen Tributpflichtigen',
   'no land of ours to win back': 'Sie halten kein Land von uns', 'they share our faith': 'Sie teilen unseren Glauben',
+  // ---- realm pass (claude/realm-pass): the Empire and the league, great powers, assembly and government, situations
+  'allied with the attackers': 'Mit den Angreifern verbündet', 'already a member': 'Schon Mitglied', 'already asked': 'Schon angefragt', 'already backed': 'Schon unterstützt',
+  'already in this war': 'Schon in diesem Krieg', 'already ordered': 'Schon befohlen', 'already under their protection': 'Schon unter ihrem Schutz', 'at war with a member': 'Im Krieg mit einem Mitglied',
+  'at war with them': 'Im Krieg mit ihnen', 'every reform has passed': 'Alle Reformen sind beschlossen', 'great powers protect themselves': 'Großmächte schützen sich selbst',
+  'no call is pending': 'Kein Hilferuf offen', 'no demand is pending': 'Keine Forderung offen', 'no election is under way': 'Es findet keine Wahl statt', 'no order is pending': 'Kein Befehl offen',
+  'no such league': 'Kein solcher Bund', 'no such request': 'Keine solche Bitte', 'no such situation': 'Keine solche Lage', 'no such target': 'Kein solches Ziel',
+  'none of our places hold this faith': 'Keiner unserer Orte hängt diesem Glauben an', 'not a candidate': 'Kein Kandidat', 'not a great power': 'Keine Großmacht',
+  'not a member of the Empire': 'Kein Glied des Reiches', 'not a member': 'Kein Mitglied', 'not a war between members': 'Kein Krieg zwischen Gliedern', 'not a war between realms': 'Kein Krieg zwischen Reichen',
+  'not an elector': 'Kein Kurfürst', 'not enough imperial authority': 'Nicht genug Reichsautorität', 'not enough prestige': 'Nicht genug Ansehen', 'not possible at this stage': 'In dieser Phase nicht möglich',
+  'not while the war is fought': 'Nicht während des Krieges', 'only Atlantic realms can do this': 'Nur atlantische Reiche können das', 'only Christian realms can do this': 'Nur christliche Reiche können das',
+  'only a great power can do this': 'Nur eine Großmacht kann das', 'only free towns of the northern coasts may join': 'Nur freie Städte der nördlichen Küsten dürfen beitreten',
+  'only kings and the emperor can do this': 'Nur Könige und der Kaiser können das', 'only monarchies can do this': 'Nur Monarchien können das', 'only realms of the Latin Church can do this': 'Nur Reiche der lateinischen Kirche können das',
+  'only the French crown can do this': 'Nur die französische Krone kann das', 'only the Horde can do this': 'Nur die Horde kann das', 'only the emirate can do this': 'Nur das Emirat kann das',
+  'only the emperor can do this': 'Nur der Kaiser kann das', 'only the two crowns can do this': 'Nur die beiden Kronen können das', 'subjects cannot do this': 'Untertanen können das nicht', 'subjects cannot join': 'Untertanen können nicht beitreten',
+  'the Perpetual Peace forbids war between members': 'Der Ewige Landfriede verbietet Krieg zwischen Gliedern', 'the assembly refused the new taxes': 'Die Versammlung verweigerte die neuen Steuern',
+  'the crown is hereditary': 'Die Krone ist erblich', 'the crown passes by inheritance': 'Die Krone geht durch Erbfolge über', 'the diet is already in session': 'Der Reichstag tagt bereits',
+  'the diet is not in session': 'Der Reichstag tagt nicht', 'the diet met recently': 'Der Reichstag tagte erst kürzlich', 'the emperor is a party to this war': 'Der Kaiser ist Partei in diesem Krieg',
+  'the situation has ended': 'Die Lage ist beendet', 'they cannot be swayed further': 'Sie lassen sich nicht weiter umstimmen', 'they declined to protect us': 'Sie lehnten ab, uns zu schützen',
+  'too far from the frontier': 'Zu weit von der Grenze', 'unknown privilege': 'Unbekanntes Privileg', 'we asked them recently': 'Wir haben sie erst kürzlich gefragt',
+  'we have a treaty with their enemies': 'Wir haben einen Vertrag mit ihren Feinden', 'we have a truce with the attackers': 'Wir haben einen Waffenstillstand mit den Angreifern',
+  'we offered mediation recently': 'Wir boten erst kürzlich Vermittlung an',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

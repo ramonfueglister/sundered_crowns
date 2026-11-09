@@ -246,11 +246,14 @@ export function TaxClassTip({ c }: { c: number }) {
 /** An estate's contentment and influence with where they drift. */
 export function EstateTip({ e, kind }: { e: any; kind: 'influence' | 'contentment' }) {
   const x = ex()?.estates?.find((q: any) => q.id === e.id);
-  if (kind === 'influence') return <div><TipHead name={t('influence')} value={num(e.influence)} hint={t('influence_hint')} /><div class="muted">{t('x_influence_from')}</div></div>;
+  if (kind === 'influence') return <div><TipHead name={t('influence')} value={num(e.influence)} hint={t('influence_hint')} />
+    {x?.influence ? <><Drift target={x.influence.target} monthly={x.influence.monthly} />
+      <Parts title={t('x_inf_weight_from')} rows={x.influence.factors} product base={(v) => num(v, 1)} total={x.influence.weight} digits={2} />
+      <div class="muted small">{t('x_inf_share_hint')}</div></> : <div class="muted">{t('x_influence_from')}</div>}</div>;
   return <div>
     <TipHead name={t('contentment')} value={num(e.contentment)} hint={t('contentment_hint')} />
     {x && <><Drift target={x.contentTarget} monthly={x.contentMonthly} />
-      <Parts title={t('x_target_from')} rows={[['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)]]} total={x.contentTarget} digits={0} /></>}
+      <Parts title={t('x_target_from')} rows={[['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)], ['x_resented_privileges', x.resent ?? 0]]} total={x.contentTarget} digits={0} /></>}
     <div class="muted">{t('x_content_events')}</div>
   </div>;
 }

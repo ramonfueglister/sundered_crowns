@@ -19,6 +19,8 @@ import { answerEvent, takeDecision } from './systems/events';
 import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
+import { realmCommand } from './realmcmds';
+import { setTaxRate } from './systems/government';
 
 const OK: CmdResult = { ok: true };
 const err = (e: string | I18n): CmdResult => (typeof e === 'string' ? { ok: false, err: e } : { ok: false, err: e.en, msg: e });
@@ -211,8 +213,10 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     }
     case 'tax': {
       if (cmd.cls < 0 || cmd.cls >= n.taxRate.length) return err('bad class');
-      n.taxRate[cmd.cls] = clamp(cmd.rate, 0, 0.5); return OK;
+      // raising taxes beyond what the assembly granted needs its vote (systems/government.ts)
+      const e = setTaxRate(s, n, cmd.cls, cmd.rate); return e ? err(e) : OK;
     }
+    case 'empire': case 'league': case 'powers': case 'assembly': case 'govern': case 'situation': { const e = realmCommand(s, w, n, cmd); return e ? err(e) : OK; }
     case 'budget': {
       if (cmd.key === 'army') n.armyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'navy') n.navyMaint = clamp(cmd.value, 0.25, 1);

@@ -30,7 +30,13 @@ export type Query =
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
-  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
+  | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
+  // ---- realm pass (src/game/realmview.ts): the Empire and the league, the great powers, the assembly, the government, a situation
+  | { q: 'empire' }
+  | { q: 'powers' }
+  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
+  | { q: 'govern' }
+  | { q: 'situation'; id: string };
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }

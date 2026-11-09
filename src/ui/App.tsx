@@ -168,6 +168,7 @@ function GameUI() {
     <div class="right-col"><P.Outliner /><P.GoalTracker /></div>
     <MapModes />
     <P.EventModal />
+    <P.RealmDialogs />
     <P.Tutorial />
   </>;
 }

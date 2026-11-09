@@ -82,6 +82,11 @@ export interface Nation {
   score: number;
   stats: { battlesWon: number; battlesLost: number; locsGained: number; locsLost: number; warsWon: number };
   planned?: PlannedAction[]; // online: queued moves/constructions
+  // ---- realm pass (systems/government.ts): optional so that older saves load
+  /** a privilege an estate demands, until a day (granted or refused by the ruler; refused when it lapses) */
+  demand?: { estate: string; privilege: string; until: number } | null;
+  /** candidates for the next election of the head of the realm (character ids), and whom the crown backs */
+  electCands?: number[]; backed?: number;
 }
 export interface StandingOrders { defendOnly: boolean; balanceBudget: boolean; acceptPeaceBelow: number; autoBuild: boolean; autoRecruit: boolean }
 export interface PlannedAction { day: number; cmd: Command }
@@ -184,7 +189,26 @@ export interface LocState {
   migrBal: Float32Array; // newcomers (+) or leavers (−) of the last decades as a share of the peasants and labourers, fading (crowding)
 }
 
-export interface Empire { emperor: number; electors: number[]; authority: number; reforms: string[]; diet: { proposal: string; votesFor: number[]; votesAgainst: number[]; ends: number } | null; lastElection: number; members: number[] }
+export interface Empire {
+  emperor: number; electors: number[]; authority: number; reforms: string[];
+  /** a session of the diet: the reform proposed, the members' votes (cast by the player; the AI votes at the close) and the closing day */
+  diet: { proposal: string; votesFor: number[]; votesAgainst: number[]; ends: number; by?: number } | null;
+  lastElection: number; members: number[];
+  // ---- realm pass (systems/empire.ts); optional so that older saves load (migrate fills them in)
+  /** an open imperial election: candidates (realms), the votes cast so far (elector → candidate realm), closing day */
+  election?: { opened: number; closes: number; candidates: number[]; votes: Record<number, number>; late: number } | null;
+  /** favour bought with electors and diet members: `${candidate}>${voter}` → points (fades yearly) */
+  favour?: Record<string, number>;
+  /** what moved imperial authority this year and last, by cause (for the breakdown) */
+  authLog?: Record<string, number>; authLast?: Record<string, number>;
+  /** calls to the emperor to defend a member (war id, member, attacker, deadline, answer: 1 joined, -1 refused, 0 open) */
+  calls?: { war: number; member: number; attacker: number; until: number; answer: number }[];
+  /** the emperor's orders to make peace between members (war id, deadline, answer as above) */
+  orders?: { war: number; to: number; until: number; answer: number }[];
+  /** member land last month (1 = held by a member): land lost to outsiders lowers authority */
+  land?: Uint8Array;
+  lastDiet?: number;
+}
 export interface Papacy { holder: number; seat: number; antipope: number; curiaFavour: Record<number, number>; schism: boolean; reformPressure: number; corruption: number }
 export interface League { id: string; name: I18n; members: number[]; leader: number; strength: number; markets: number[] }
 
@@ -227,6 +251,8 @@ export interface GameState {
   timelapse: { day: number; owners: Uint16Array }[]; // yearly snapshots of location owners for timelapse
   /** landmarks: stage reached, building work (finish day or 0) and the realm that last held each */
   landmarks?: { id: string; loc: number; tier: number; work: number; holder: number }[];
+  /** great powers (systems/powers.ts): yearly scores of the last 11 years, requests for protection, interventions */
+  powers?: { scores: Record<number, number[]>; petitions: { from: number; to: number; until: number }[]; log: { day: number; gp: number; war: number; kind: string; side: number }[] };
 }
 
 export type Command =
@@ -267,7 +293,14 @@ export type Command =
   | { t: 'goal'; n: number; id: string }                       // claim a goal whose conditions hold now
   | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number; nth?: number } // stop a construction or a levy (item: building or unit; nth: which of the realm's orders for that place and item, in queue order from 0; without it the newest)
   | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)
-  | { t: 'dev'; n: number; action: string; payload?: any }; // developer tools (single player / admin only)
+  | { t: 'dev'; n: number; action: string; payload?: any } // developer tools (single player / admin only)
+  // ---- realm pass: the Empire, the league, great powers, assemblies, elections, situations
+  | { t: 'empire'; n: number; action: 'vote' | 'campaign' | 'defend' | 'refuse' | 'order_peace' | 'comply' | 'summon_diet' | 'diet_vote'; target?: number; war?: number; yes?: boolean }
+  | { t: 'league'; n: number; action: 'join' | 'leave' }
+  | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline'; target?: number; war?: number }
+  | { t: 'assembly'; n: number; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: WarGoal['type']; bribe?: string[]; concede?: string }
+  | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand'; char?: number }
+  | { t: 'situation'; n: number; id: string; action: string; target?: number };
 
 /** err: the refusal as an English key (src/sim/refusals.ts gives both languages); msg: set when the refusal names a realm or an estate. */
 export interface CmdResult { ok: boolean; err?: string; msg?: I18n; done?: number }

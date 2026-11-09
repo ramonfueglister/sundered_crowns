@@ -7,6 +7,7 @@ import { Section, Row, Bar, Btn, Empty, Effects, useQuery, act, t, L, num, signe
 import { ConcordTip, MandateTip, AuthorityTip, PrestigeTip, CorruptionTip, DreadTip, EstateTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
+import { RealmGovernment } from './realmgov';
 import { Administration } from './statecraft';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
@@ -55,6 +56,7 @@ export function GovernmentTab() {
     </div>
     <Laws r={r} authority={p.authority} />
     <Estates r={r} />
+    <RealmGovernment />
     <Administration r={r} />
     <div class="cols2">
       <Council r={r} authority={p.authority} />
