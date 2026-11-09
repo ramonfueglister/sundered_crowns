@@ -6,7 +6,6 @@ import type { World } from '../world';
 import { B, BI, BUILDINGS, C, CL, CLASSES, CLASS_NAME, GI, GOODS, RAW_FROM_MINE } from '../defs';
 import { LOC_ECON, CROWN_SHARE, effectiveTax } from './economy';
 import { lawEffect } from './politics';
-import { mod } from '../ctx';
 import { buildCost, buildRefusal, buildQueue, type BuildQueue } from '../commands';
 import { nationLocsRO } from './war';
 
@@ -53,7 +52,7 @@ export function buildingGain(s: GameState, w: World, n: Nation, l: number, b: nu
   const rgoW = Math.max(1, lab * 0.55 + peas * 0.22);
   const serf = lawEffect(n, 'serfdom');
   const rent = 0.12 + 0.2 * serf, tithe = 0.08;
-  const mb = 1 + 0.25 * lvl(BI.market), trade = 1 + mod(n, 'trade');
+  const mb = 1 + 0.25 * lvl(BI.market), trade = 1 + lawEffect(n, 'trade');
   const inc = INC; inc.fill(0);
   const agri = (dGrain: number, dRgo: number) => {
     const v = dGrain * pG + dRgo * pR;

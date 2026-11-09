@@ -39,7 +39,9 @@ export interface Nation {
   warExhaustion: number; // 0..100
   inflation: number;     // fraction
   corruption: number;    // 0..1
-  adminCapacity: number;
+  adminCapacity: number; // land development the administration can integrate at full speed (systems/administration.ts)
+  adminLoad?: number;    // development of land still being integrated, weighted by what is left to do
+  duties?: { land: number; hearth: number; excise: number }; // tax instruments beside the class taxes (systems/duties.ts)
   // economy
   taxRate: number[];     // per class 0..0.5
   tariff: number;        // 0..0.5
@@ -178,6 +180,8 @@ export interface LocState {
   income: Float32Array; // tax income last month per location
   snow: Float32Array;   // current snow cover 0..1 (climate model)
   colonist: Int16Array; // nation colonising this location, -1
+  migr: Float32Array;   // people who moved in (+) or out (−) last month (systems/administration.ts)
+  migrBal: Float32Array; // newcomers (+) or leavers (−) of the last decades as a share of the peasants and labourers, fading (crowding)
 }
 
 export interface Empire { emperor: number; electors: number[]; authority: number; reforms: string[]; diet: { proposal: string; votesFor: number[]; votesAgainst: number[]; ends: number } | null; lastElection: number; members: number[] }
@@ -258,6 +262,7 @@ export type Command =
   | { t: 'orders'; n: number; orders: StandingOrders }
   | { t: 'decision'; n: number; id: string }
   | { t: 'workshop'; n: number; loc: number; slot: number; recipe: number }
+  | { t: 'method'; n: number; loc: number; method: number }
   | { t: 'embark'; n: number; army: number; fleet: number }
   | { t: 'goal'; n: number; id: string }                       // claim a goal whose conditions hold now
   | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number; nth?: number } // stop a construction or a levy (item: building or unit; nth: which of the realm's orders for that place and item, in queue order from 0; without it the newest)

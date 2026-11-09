@@ -1,17 +1,23 @@
 // Observer test (spec point 99): the AI plays alone from the start date to a target year.
 // Prints a plausibility report every N years and writes owner snapshots for map previews.
 // usage: npx tsx tools/sim/observer.ts [toYear=1600] [seed=1356] [startYear=1356] [every=25]
-// env: OBSERVER_OUT (report dir), OBSERVER_SAVES (dir for full save states at each report year)
+// env: OBSERVER_OUT (report dir), OBSERVER_SAVES (dir for full save states at each report year),
+//      OBSERVER_NO_MIGRATION=1 (A/B check: every month's migration is undone, nothing else changes)
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { newGame } from './load';
 import { step, hashState, serialize } from '../../src/sim/engine';
 import { dayToDate } from '../../src/sim/calendar';
 import { C } from '../../src/sim/defs';
+import { administration } from '../../src/sim/systems/administration';
 
 const toYear = +(process.argv[2] ?? 1600), seed = +(process.argv[3] ?? 1356), start = +(process.argv[4] ?? 1356), every = +(process.argv[5] ?? 25);
 const out = process.env.OBSERVER_OUT ?? 'build/observer';
 mkdirSync(out, { recursive: true });
 const { s, w } = newGame(seed, start, []);
+if (process.env.OBSERVER_NO_MIGRATION) {
+  const monthly = administration.monthly!;
+  administration.monthly = (c) => { const pop = c.s.loc.pop.slice(); monthly(c); c.s.loc.pop.set(pop); c.s.loc.migr.fill(0); c.s.loc.migrBal.fill(0); };
+}
 const t0 = Date.now();
 const report: any[] = [];
 let lastChron = 0;

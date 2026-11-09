@@ -1,7 +1,7 @@
 // Exploration (shared knowledge per cultural sphere) and colonisation of unclaimed land.
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, mod, bump } from '../ctx';
+import { type System, clamp, chronicle, notice, bump } from '../ctx';
 import { B, BI, C, CL } from '../defs';
 import { findPath, armyMen, newArmy, availableUnits, releaseNation, recruit } from './military';
 import * as warmod from './war';
@@ -64,9 +64,14 @@ export function canColonize(s: GameState, w: World, n: Nation, loc: number): str
   }
   return null;
 }
+/** Price of sending out settlers: 40 marks (times the price level), less with colonising effects (crown
+ *  expeditions, chartered companies, frontier societies). */
+export function colonyCost(s: GameState, n: Nation): number { return 40 * s.priceLevel / Math.max(0.5, 1 + lawEffect(n, 'colonise')); }
+/** Progress of a settlement a month in percent: 100/36 (three years), faster with colonising effects. */
+export function colonyProgress(n: Nation): number { return 100 / 36 * Math.max(0.3, 1 + lawEffect(n, 'colonise')); }
 export function startColony(s: GameState, w: World, n: Nation, loc: number): string | null {
   const e = canColonize(s, w, n, loc); if (e) return e;
-  const cost = 40 * s.priceLevel;
+  const cost = colonyCost(s, n);
   if (n.treasury < cost) return 'not enough gold';
   n.treasury -= cost; n.expenseAcc.colonists = (n.expenseAcc.colonists || 0) + cost;
   s.colonies.push({ loc, nation: n.id, settlers: 200, progress: 0, started: s.day });
@@ -81,8 +86,8 @@ function coloniesMonth(s: GameState, w: World) {
     const upkeep = 3 * s.priceLevel;
     n.treasury -= upkeep; n.expenseAcc.colonists = (n.expenseAcc.colonists || 0) + upkeep;
     let native = 0; for (let k = 0; k < C; k++) native += s.loc.pop[c.loc * C + k];
-    c.settlers += 25 * (1 + lawEffect(n, 'colonial_growth') + mod(n, 'colonial_growth'));
-    c.progress += 100 / 36 * (1 + lawEffect(n, 'colonial_growth'));
+    c.settlers += 25 * Math.max(0.2, 1 + lawEffect(n, 'colonial_growth'));
+    c.progress += colonyProgress(n);
     // natives may resist
     if (native > 2000 && chance(s.rng, Math.min(0.12, native / 200000))) {
       c.settlers *= 0.7; c.progress = Math.max(0, c.progress - 10);
@@ -219,7 +224,7 @@ function colonialSubjectsYear(s: GameState, w: World) {
     const [os, reg] = k.split(':'); const ov = s.nations[+os];
     // an existing colonial realm of this crown in the region takes the new land instead
     const existing = s.nations.find((x) => x.alive && x.overlord === ov.id && x.subjectType === 'colonial' && x.flags.colonial_region === regionCode(reg));
-    if (existing) { const { transferLoc } = require_war(); for (const l of locs) transferLoc(s, w, l, existing.id); continue; }
+    if (existing) { const { transferLoc } = require_war(); for (const l of locs) transferLoc(s, w, l, existing.id, 0, { conquest: false }); continue; }
     // the most populous settlement becomes the seat
     let seat = locs[0], best = -1;
     for (const l of locs) { let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[l * C + c]; if (p > best) { best = p; seat = l; } }

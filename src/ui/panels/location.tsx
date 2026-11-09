@@ -7,6 +7,7 @@ import { Parts, TipHead, Drift, AgentsTip } from './explain';
 import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
 import { sfx } from '../audio';
 import { ScopeOrders } from './works';
+import { Methods, Migration } from './statecraft';
 
 const TERRAIN: Record<string, [string, string]> = {
   plains: ['Plains', 'Ebene'], farmland: ['Farmland', 'Ackerland'], forest: ['Forest', 'Wald'], hills: ['Hills', 'Hügelland'], mountains: ['Mountains', 'Gebirge'],
@@ -49,6 +50,7 @@ export function LocationPanel({ loc }: { loc: number }) {
       <Row k={t('tax')} v={<>{num(d.tax, 1)} <i class="ic gold sm" /></>} tip={() => <TaxTip d={d} />} />
       <Row k={t('control')} v={pct(d.control)} tip={() => <ControlTip d={d} />} />
       <Row k={t('integration')} v={pct(d.integ)} tip={() => <IntegTip d={d} />} />
+      <Migration d={d} />
       <Row k={t('unrest')} v={<span class={d.unrest > 10 ? 'neg' : d.unrest > 4 ? 'warn' : ''}>{num(d.unrest, 1)}</span>} tip={() => <div><TipHead name={t('unrest')} value={num(d.unrest, 1)} hint={t('unrest_hint')} /><Parts title={t('x_target_from')} rows={d.unrestWhy} total={unrestTotal} totalLabel={t('x_target')} bad /><Drift target={Math.max(0, unrestTotal)} monthly={Math.min(100, Math.max(0, d.unrest * 0.7 + unrestTotal * 0.3)) - d.unrest} bad /><div class="muted small">{t('x_unrest_drift')}</div></div>} />
       <Row k={t('literacy')} v={pct(d.literacy)} tip={() => <div><TipHead name={t('literacy')} value={pct(d.literacy, 1)} /><Parts title={t('x_target_from')} rows={d.why.litParts} total={d.why.litTarget} totalLabel={t('x_target')} fmt={(v) => `${v >= 0 ? '+' : ''}${num(v * 100, 1)} %`} /><Drift monthly={(d.why.litTarget - d.literacy) * 0.01 * 100} digits={2} fmt={(v) => `${v >= 0 ? '+' : ''}${num(v, 2)} %`} /><div class="muted small">{t('x_lit_drift')}</div></div>} />
       <Row k={t('harvest')} v={<span class={d.harvest < 0.8 ? 'neg' : d.harvest > 1.1 ? 'pos' : ''}>{pct(d.harvest)}</span>} tip={<div><TipHead name={t('harvest')} value={pct(d.harvest)} hint={t('harvest_hint')} /></div>} />
@@ -144,6 +146,7 @@ function Workshops({ d, refresh }: { d: any; refresh: () => void }) {
   const lvl = d.buildings.find((b: any) => b.key === 'workshop')?.level ?? 0;
   const opts = RECIPES.map((r, k) => ({ k, r })).filter((x) => (x.r.minEra ?? 0) <= era);
   return <Section title={t('workshops')} id="loc-ws" open={false}>
+    <Methods d={d} refresh={refresh} />
     {[0, 1, 2].map((slot) => {
       const open = slot < 1 + lvl; const cur = d.workshops[slot];
       return <div class="act-row">
@@ -265,13 +268,15 @@ function IntegTip({ d }: { d: any }) {
     <TipHead name={t('integration')} value={pct(d.integ, 1)} hint={t('integration_hint')} />
     {w.integ.length > 0 && d.integ < 1 && <><Parts title={t('x_gain_per_month')} rows={w.integ} product base={(v) => `${num(v, 2)} %`} total={m * 100} totalLabel="%" />
       {m > 0 && <div class="tip-drift"><span>{t('x_full_in')} <b>{Math.ceil(left / m)}</b> {t('months')}</span></div>}</>}
+    {d.integ < 1 && w.integYield !== undefined && <div class="tip-drift"><span>{t('x_integ_yield')}</span><span class="neg">× {num(w.integYield, 2)}</span></div>}
   </div>;
 }
 function BuildCost({ b }: { b: any }) {
   const r = realm.value; const inf = view.value?.player?.inflation ?? 0;
   const base = (BUILDINGS[b.id]?.cost ?? 0) * 6;
+  const rest = base * (1 + b.level * 0.5) * (r?.priceLevel ?? 1) * (1 + inf);
   return <div>
-    <Parts rows={[['x_build_base', base], ['x_build_level', 1 + b.level * 0.5], ['x_price_level', r?.priceLevel ?? 1], ['inflation', 1 + inf]]} product base={(v) => num(v, 0)} total={b.cost} totalLabel={t('cost')} />
+    <Parts rows={[['x_build_base', base], ['x_build_level', 1 + b.level * 0.5], ['x_price_level', r?.priceLevel ?? 1], ['inflation', 1 + inf], ['x_fort_law', rest > 0 ? b.cost / rest : 1]]} product base={(v) => num(v, 0)} total={b.cost} totalLabel={t('cost')} />
     <div class="muted small">{b.months} {t('months')} · {t('x_two_works')}</div>
   </div>;
 }

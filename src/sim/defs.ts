@@ -122,11 +122,16 @@ export const RECIPES: Recipe[] = [
 ];
 export const RI: Record<string, number> = Object.fromEntries(RECIPES.map((x, i) => [x.id, i]));
 
-// Production methods by era / innovation: multiply output per worker
-export const METHODS = [
-  { id: 'guild', name: { en: 'Guild workshop', de: 'Zunftwerkstatt' }, mult: 1.0 },
-  { id: 'putting_out', name: { en: 'Putting-out system', de: 'Verlagssystem' }, mult: 1.35 },
-  { id: 'manufactory', name: { en: 'Manufactory', de: 'Manufaktur' }, mult: 1.9 },
+// Production methods of a town's workshops (command 'method', systems/administration.ts). mult: output per worker;
+// input: raw materials needed per unit of output; jobs: places of work per workshop slot; cost: marks × price level
+// to switch to it; commerce / building: what it needs.
+export interface MethodDef { id: string; name: { en: string; de: string }; mult: number; input: number; jobs: number; cost: number; commerce?: number; building?: string }
+export const METHODS: MethodDef[] = [
+  { id: 'guild', name: { en: 'Guild workshop', de: 'Zunftwerkstatt' }, mult: 1.0, input: 1.0, jobs: 1.0, cost: 0 },
+  // merchants put out raw wool and flax to cottage spinners and weavers: more hands at work, a little more waste
+  { id: 'putting_out', name: { en: 'Putting-out system', de: 'Verlagssystem' }, mult: 1.3, input: 1.05, jobs: 1.25, cost: 60, commerce: 6 },
+  // one great hall, division of labour, wage workers: far more output from fewer hands and less waste
+  { id: 'manufactory', name: { en: 'Manufactory', de: 'Manufaktur' }, mult: 1.8, input: 0.9, jobs: 0.75, cost: 150, building: 'manufactory' },
 ];
 
 // ---------------- social classes ----------------

@@ -104,7 +104,7 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const cb = hasCasusBelli(s, a, b);
   if (!cb && goalType !== 'coalition' && goalType !== 'civil_war' && goalType !== 'independence') {
     // war without justification: heavy penalties
-    na.concord = clamp(na.concord - 35, -100, 100); na.mandate = clamp(na.mandate - 15, 0, 100); na.dread += 15;
+    na.concord = clamp(na.concord - 35, -100, 100); na.mandate = clamp(na.mandate - 15, 0, 100); na.dread += 15 * dreadGain(na);
     for (const o of s.nations) if (o.alive && o.id !== a) addOpinion(s, o.id, a, 'unjust_war', -25, 365 * 5);
   }
   // assemblies must approve wars where the law requires it
@@ -268,7 +268,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       s.nations[recv].stats.locsGained += t.locs.length; Ln.stats.locsLost += t.locs.length;
       // Dread grows with the value taken
       const val = t.locs.reduce((p, l) => p + locValue(s, l), 0);
-      s.nations[recv].dread += val * 0.35;
+      s.nations[recv].dread += val * 0.35 * dreadGain(s.nations[recv]);
       parts.push(`${t.locs.length} locations (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
       partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
@@ -304,10 +304,18 @@ let _mil: any = null;
 export function require_military() { return _mil; }
 export function _setMilitary(m: any) { _mil = m; }
 
-export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0) {
+/** How strongly conquest and unjust wars frighten others: 1 plus the dread effects (a warlike reputation). */
+export function dreadGain(n: Nation): number { return Math.max(0.2, 1 + lawEffect(n, 'dread')); }
+/** Hand a location to another realm. A conquest (the default) starts unintegrated under weak control; land that
+ *  returns to its own crown (the end of a war of succession, crown land passed to the crown's colonial realm) or that
+ *  callers integrate themselves (annexation, union) passes with conquest: false and keeps its integration and control. */
+export function transferLoc(s: GameState, w: World, l: number, to: number, order = 0, opts?: { conquest?: boolean }) {
   const from = s.loc.owner[l];
   s.loc.owner[l] = to; s.loc.ctrl[l] = to; EPOCH.v++;
-  s.loc.integ[l] = 0; // conquered land starts unintegrated
+  if (opts?.conquest !== false) {
+    s.loc.integ[l] = 0; // conquered land starts unintegrated
+    s.loc.control[l] = Math.min(s.loc.control[l], 0.3); // and the new lord's officials have yet to take hold
+  }
   s.loc.unrest[l] = Math.max(s.loc.unrest[l], 20);
   s.flags.ownershipDirty = s.day;
   (s as any).ownerChanges = (s as any).ownerChanges || [];
@@ -438,7 +446,7 @@ function warsMonth(s: GameState, w: World) {
 /** A war of succession ends with one realm again: the pretender's lands return, and if the pretender prevailed,
  *  the pretender wears the crown. */
 function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Nation, pretenderWon: boolean) {
-  for (const l of nationLocs(s, pre.id)) { transferLoc(s, w, l, legit.id); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
+  for (const l of nationLocs(s, pre.id)) { transferLoc(s, w, l, legit.id, 0, { conquest: false }); s.loc.ctrl[l] = legit.id; s.loc.core[l] = legit.id; }
   for (const a of s.armies) if (a.owner === pre.id) { a.owner = legit.id; a.path = []; a.siege = -1; }
   const sides = new Set([...war.att, ...war.def]);
   for (let i = 0; i < w.L; i++) { const o = s.loc.owner[i]; if (sides.has(o) && s.loc.ctrl[i] !== o && s.loc.ctrl[i] !== -2) s.loc.ctrl[i] = o; }

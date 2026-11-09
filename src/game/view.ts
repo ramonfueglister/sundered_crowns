@@ -7,24 +7,27 @@ import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget } from '../sim/systems/diplomacy';
-import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect } from '../sim/systems/politics';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
+import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
+import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
+import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
 import { LAWS, VALUES } from '../sim/content/laws';
 import { FAITHS, ALL_CULTURES, cultureLabel as cultureName, GROUP_OF, faithFamily } from '../sim/content/peoples';
-import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrineSlots } from '../sim/systems/progress';
+import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrineSlots, RESEARCH_OFFICE } from '../sim/systems/progress';
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
-import { decisionsFor, eventDef, interpolate, type EvApi } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax } from '../sim/systems/economy';
+import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
 import { nationStats } from '../sim/systems/realm';
-import { allies, hasTreaty, treatiesOf, atWar, subjectsOf, mod } from '../sim/ctx';
+import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
-import { agentSlots } from '../sim/systems/society';
-import { colonySlots, canColonize } from '../sim/systems/colonial';
+import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
+import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
+import { METHODS } from '../sim/defs';
 import { SITUATIONS } from '../sim/content/situations';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
@@ -255,7 +258,9 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     if (lc.devast[l] > 0) unrestWhy.push(['devastation', lc.devast[l] * 12]);
     if (n.inflation > 0) unrestWhy.push(['inflation', n.inflation * 20]);
     if (lc.core[l] !== o) unrestWhy.push(['not_integrated', 6]);
-    unrestWhy.push(...effectSources(n, 'unrest', 'mod'));
+    unrestWhy.push(...effectSources(n, 'unrest'));
+    for (const d of DUTIES) { const v = dutyRate(n, d.id) * d.unrest; if (v) unrestWhy.push([`x_${d.ledger}`, v]); }
+    const ox = overextension(n); if (lc.integ[l] < 1 && ox > 0) unrestWhy.push(['x_overextension', Math.min(15, ox * 10)]);
   }
   const m = s.markets[lc.market[l]];
   const ec = LOC_ECON;
@@ -267,6 +272,8 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     plague: lc.plague[l], snow: lc.snow[l], garrison: lc.garrison[l], resource: GOODS[w.resource[l]].name, resourceId: w.resource[l], market: m ? { id: m.id, name: m.name, price: m.price[w.resource[l]] } : null,
     tax: lc.income[l], econ: ec ? { grain: ec.grain[l], rgo: ec.rgo[l], craft: ec.craft[l], income: ec.income[l] } : null, elev: w.elev[l], lat: w.lat[l], lon: w.lon[l],
     landmark: landmarkDetail(s, w, l, player), why: locExplain(s, w, l),
+    method: lc.method[l], migration: lc.migr[l], employed: lc.employed ? lc.employed[l * C + CL.artisans] : 0,
+    methods: n && player === o ? METHODS.map((m, k) => ({ id: k, key: m.id, name: m.name, mult: m.mult, input: m.input, jobs: m.jobs, cost: methodCost(s, n, k), block: methodBlock(s, w, n, l, k) })) : [],
     canColonize: o < 0 && player >= 0 ? canColonize(s, w, s.nations[player], l) : 'owned', colony: s.colonies.find((c) => c.loc === l) ?? null,
     agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null,
     armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet, name: a.name, mercenary: !!a.mercenary, rebels: !!a.rebels })),
@@ -325,6 +332,17 @@ function realmDetail(s: GameState, w: World, player: number) {
     decisions: decisionsFor(s, w, n).map(({ d, why }) => ({ id: d.id, name: d.name, desc: d.desc, why })),
     agents: s.agents.filter((a) => a.nation === player).map((a) => ({ ...a, name: w.names[a.loc] })), agentSlots: agentSlots(n),
     colonies: s.colonies.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc] })), colonySlots: colonySlots(n),
+    colonyCost: colonyCost(s, n), colonyProgress: colonyProgress(n), colonise: effectSources(n, 'colonise'),
+    admin: adminInfo(s, w, n), forecast: budgetForecast(s, n),
+    duties: DUTIES.map((d) => ({
+      id: d.id, ledger: d.ledger, rate: dutyRate(n, d.id), max: d.max, step: d.step, income: n.income[d.ledger] ?? 0, unrest: d.unrest,
+      estates: Object.fromEntries(dutyEstates(d, (c) => classExempt(n, c))),
+      // classes free of it by law (and the nobles' hearth privilege): they pay that share less, the crown forgoes it
+      exempt: d.classes.map((c) => [c, d.id === 'hearth' && c === CL.nobles ? Math.max(classExempt(n, c), Math.min(1, Math.max(0, lawEffect(n, 'hearth_exempt_nobles')))) : classExempt(n, c)] as [number, number]).filter(([, v]) => v > 0),
+    })),
+    dutyUnrest: dutyUnrest(n), tariffMax: tariffMax(n), tariffMaxParts: [['x_base', 0.05], ...effectSources(n, 'tariff_max')] as BdRow[], loanRate: loanRate(s, n),
+    diplomacy: { value: diploSkill(s, n), parts: [...effectSources(n, 'diplomacy'), ['x_chancellor', councilBonus(s, n, 'chancellor')]] as BdRow[] },
+    tradition: traditionOf(n),
     loans: n.loans, history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
     situations: s.situations.map((x) => { const d = SITUATIONS.find((y) => y.id === x.id); return { ...x, name: d?.name, desc: d?.desc, stageName: d?.stages?.[x.stage] }; }),
     constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc], building: BUILDINGS[c.building].name })),
@@ -354,27 +372,24 @@ function ledger(s: GameState, w: World, kind: string) {
 // These mirror the formulas of the simulation term by term; tests/explain.test.ts checks the totals against the
 // simulation's own functions where it exports them. Rows are [key of the UI text table, or bilingual name, value].
 type BdRow = [string | I18n, number];
-const MOD_ONLY_KEYS = new Set(['tax', 'trade', 'production', 'unrest']); // as in systems/politics.ts: read through mod() only
 const lawLabel = (law: { name: I18n }, opt: { name: I18n }): I18n => ({ en: `${law.name.en}: ${opt.name.en}`, de: `${law.name.de}: ${opt.name.de}` });
-/**
- * Every source of an effect: scope 'law' lists what lawEffect(n, key) sums (law options, value axes and, except for the
- * keys read through mod(), timed modifiers); scope 'mod' lists what mod(n, key) sums (timed modifiers only).
- */
-export function effectSources(n: Nation, key: string, scope: 'law' | 'mod' = 'law'): BdRow[] {
+/** Every source of an effect, as lawEffect(n, key) sums them (systems/politics.ts): law options, value axes, the
+ *  tradition of the realm's culture group and every timed or permanent modifier. Their sum is lawEffect(n, key). */
+export function effectSources(n: Nation, key: string): BdRow[] {
   const out: BdRow[] = [];
-  if (scope === 'law') {
-    for (const L of LAWS) {
-      const cur = n.laws[L.id]; if (cur === undefined) continue;
-      const o = L.options[cur]; const v = o?.effects[key];
-      if (v) out.push([lawLabel(L, o), v]);
-    }
-    VALUES.forEach((a, k) => {
-      const val = n.values[k] || 0; if (!val) return;
-      const v = (val < 0 ? a.effectsLow : a.effectsHigh)[key];
-      if (v) out.push([val < 0 ? a.low : a.high, v * Math.abs(val) / 100]);
-    });
+  for (const L of LAWS) {
+    const cur = n.laws[L.id]; if (cur === undefined) continue;
+    const o = L.options[cur]; const v = o?.effects[key];
+    if (v) out.push([lawLabel(L, o), v]);
   }
-  if (scope === 'mod' || !MOD_ONLY_KEYS.has(key)) for (const m of n.modifiers) { const v = m.effects[key]; if (v) out.push([m.label, v]); }
+  VALUES.forEach((a, k) => {
+    const val = n.values[k] || 0; if (!val) return;
+    const v = (val < 0 ? a.effectsLow : a.effectsHigh)[key];
+    if (v) out.push([val < 0 ? a.low : a.high, v * Math.abs(val) / 100]);
+  });
+  const tr = traditionOf(n); const tv = tr.effects[key];
+  if (tv) out.push([tr.name, tv]);
+  for (const m of n.modifiers) { const v = m.effects[key]; if (v) out.push([m.label, v]); }
   return out;
 }
 const scaleRows = (rows: BdRow[], f: number): BdRow[] => rows.map(([k, v]) => [k, v * f]);
@@ -394,18 +409,19 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   // ---- Concord drifts 4 % a month toward its target (systems/politics.ts nationPoliticsMonth)
   let infl = 0; for (const e of n.estates) infl += e.influence;
   const concordParts: BdRow[] = [];
-  if (infl > 0) for (const e of n.estates) concordParts.push([estName(e.id), (e.contentment - 50) * 1.2 * e.influence / infl]);
+  const ep = 1 + lawEffect(n, 'estate_power'); // a strong assembly makes the Powers' mood weigh more
+  if (infl > 0) for (const e of n.estates) concordParts.push([estName(e.id), (e.contentment - 50) * 1.2 * ep * e.influence / infl]);
   concordParts.push(['x_war_exhaustion', -n.warExhaustion * 0.3]);
   concordParts.push(...scaleRows(effectSources(n, 'concord_gain'), 50));
   if (n.excommunicated) concordParts.push(['x_excommunicated', -20]);
-  concordParts.push(...effectSources(n, 'concord', 'mod'));
+  concordParts.push(...effectSources(n, 'concord'));
   const concordTarget = sumRows(concordParts);
   // ---- Mandate drifts 3 % a month toward its target
   const mandateParts: BdRow[] = [['x_base', 45], ['x_ruler_dip', r ? r.skills[1] * 5 : 10], ['x_prestige', n.prestige * 0.1]];
   mandateParts.push(...scaleRows(effectSources(n, 'mandate_gain'), 100));
   if (n.regent) mandateParts.push(['x_regency', -15]);
   if (n.excommunicated) mandateParts.push(['x_excommunicated', -25]);
-  mandateParts.push(...effectSources(n, 'mandate', 'mod'));
+  mandateParts.push(...effectSources(n, 'mandate'));
   const mandateTarget = sumRows(mandateParts);
   // ---- Authority: (1 + skills·0.4 + Mandate/50) × (1 + authority_gain) + authority (authorityGain)
   const sk = r ? r.skills[0] + r.skills[1] * 0.5 : 2;
@@ -414,7 +430,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     ...scaleRows(effectSources(n, 'authority_gain'), aBase), ...effectSources(n, 'authority')];
   // ---- Prestige: decays by 0.5 % a month; landmarks and a full chest add to it
   const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
-  const prestigeParts: BdRow[] = [['x_decay', -n.prestige * 0.005]];
+  const prestigeParts: BdRow[] = [['x_decay', -n.prestige * 0.005], ...effectSources(n, 'prestige')];
   for (const x of landmarksOf(s, w)) if (x.tier > 0 && s.loc.owner[x.loc] === n.id) { const d = landmarkDef(x.id); if (d.prestige) prestigeParts.push([d.name, d.prestige * x.tier]); }
   const hoard = n.treasury - gross * 12;
   if (hoard > 0 && gross > 0) prestigeParts.push(['x_splendour', Math.min(0.5, hoard / (gross * 200))]);
@@ -424,17 +440,21 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   // ---- Envoys (systems/diplomacy.ts)
   const envoyParts: BdRow[] = [['x_base', 2], ['x_ruler_dip', r ? Math.floor(r.skills[1] / 3) : 0], ['x_chancellor', n.council.chancellor ? 1 : 0]];
   // ---- Manpower and sailors (systems/military.ts monthly)
-  let pl = 0, mp = 0, sail = 0, occupied = 0;
+  let pl = 0, mp0 = 0, mp = 0, sail = 0, occupied = 0;
   const lc = s.loc;
   for (let i = 0; i < w.L; i++) {
     if (lc.owner[i] !== n.id) continue;
     if (lc.ctrl[i] !== n.id) { occupied++; continue; }
     const base = i * C; const people = lc.pop[base + CL.peasants] + lc.pop[base + CL.labourers];
-    pl += people * 0.012; mp += people * 0.012 * (0.4 + 0.6 * lc.control[i]);
+    const c = people * 0.012 * (0.4 + 0.6 * lc.control[i]);
+    pl += people * 0.012; mp0 += c; mp += c * integrationYield(lc.integ[i]);
     if (w.coastal[i]) sail += lc.pop[base + CL.labourers] * 0.02 * (1 + lc.buildings[i * B + BI.port]);
   }
-  const mpSources = mergeRows([...effectSources(n, 'manpower'), ...effectSources(n, 'manpower', 'mod')]);
-  const manpowerParts: BdRow[] = [['x_peasants_labourers', pl], ['x_weak_control', mp - pl], ...scaleRows(mpSources, mp)];
+  const mpSources = effectSources(n, 'manpower');
+  const mpMult = Math.max(0.1, 1 + sumRows(mpSources));
+  const manpowerParts: BdRow[] = [['x_peasants_labourers', pl], ['x_weak_control', mp0 - pl], ['x_unintegrated', mp - mp0], ...scaleRows(mpSources, mp)];
+  const sailSources = effectSources(n, 'sailors');
+  const sailMult = Math.max(0.1, 1 + sumRows(sailSources));
   // ---- War exhaustion, inflation, corruption, dread: their monthly change
   const weParts: BdRow[] = atWarCount ? [['x_wars', 0.35 * atWarCount]] : [['x_peace_recovery', -Math.min(1.5, n.warExhaustion)]];
   const inflParts: BdRow[] = n.coinage > 0 ? [['x_coinage', n.coinage * 0.01]] : [['x_recovery', -Math.min(0.0015, n.inflation)]];
@@ -456,14 +476,15 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     burg += lc.pop[base + CL.burghers]; nob += lc.pop[base + CL.nobles]; cler += lc.pop[base + CL.clergy];
   }
   const litAvg = pop > 0 ? lit / pop : 0;
-  const resSources = mergeRows([...effectSources(n, 'research'), ...effectSources(n, 'research', 'mod')]);
-  const common: BdRow[] = [['x_realm_size', 1.2 + Math.pow(Math.max(1, dev), 0.3) * 0.9], ['x_literacy', 0.5 + litAvg * 3], ['x_universities', 1 + uni * 0.12], ['x_research_mods', 1 + sumRows(resSources)]];
+  const resSources = effectSources(n, 'research');
+  const common: BdRow[] = [['x_realm_size', 1.2 + Math.pow(Math.max(1, dev), 0.3) * 0.9], ['x_literacy', 0.5 + litAvg * 3], ['x_universities', 1 + uni * 0.12], ['x_research_mods', Math.max(0.1, 1 + sumRows(resSources))]];
+  const officeF = (k: number): BdRow[] => { const id = RESEARCH_OFFICE[k]; const b = councilBonus(s, n, id); return b ? [[OFFICES.find((o) => o.id === id)!.name, 1 + 2 * b]] : []; };
   const focus = n.flags.research_focus ?? -1;
   const focusF = (k: number): BdRow[] => (focus >= 0 && focus < 3 ? [[focus === k ? 'x_focus' : 'x_other_focus', focus === k ? 1.35 : 0.85]] : []);
   const research = [
-    [...common, ['x_ruler_gov', 1 + (r ? r.skills[0] * 0.04 : 0)], ...focusF(0)],
-    [...common, ['x_burghers', 1 + (pop > 0 ? burg / pop : 0) * 6 + (n.gov === 'merchant_republic' ? 0.2 : 0)], ['x_clergy', 1 + (cler / Math.max(1, pop)) * 3], ...focusF(1)],
-    [...common, ['x_nobles_ruler_mil', 1 + (r ? r.skills[2] * 0.04 : 0) + (nob / Math.max(1, pop)) * 10], ...focusF(2)],
+    [...common, ['x_ruler_gov', 1 + (r ? r.skills[0] * 0.04 : 0)], ...officeF(0), ...focusF(0)],
+    [...common, ['x_burghers', 1 + (pop > 0 ? burg / pop : 0) * 6 + (n.gov === 'merchant_republic' ? 0.2 : 0)], ['x_clergy', 1 + (cler / Math.max(1, pop)) * 3], ...officeF(1), ...focusF(1)],
+    [...common, ['x_nobles_ruler_mil', 1 + (r ? r.skills[2] * 0.04 : 0) + (nob / Math.max(1, pop)) * 10], ...officeF(2), ...focusF(2)],
   ] as BdRow[][];
   // ---- cost of the next level: base × pace of the age × neighbours' knowledge (techCost)
   const year = s.startYear + s.day / 365.25, expected = (year - 1342) / 14.5;
@@ -473,15 +494,16 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     return [['x_tech_base', techBase(n, k)], [ahead > 0 ? 'x_ahead_of_age' : 'x_pace_of_age', pace], ['x_neighbours', 1 - Math.min(0.3, nb)]] as BdRow[];
   });
   // ---- taxes per class: nominal × (1 − exemption) × (1 − corruption) × (1 + tax modifiers) (systems/economy.ts taxTable)
-  const taxMods = effectSources(n, 'tax', 'mod');
-  const taxCommon: BdRow[] = [['x_corruption', 1 - n.corruption], ['x_tax_mods', 1 + sumRows(taxMods)]];
+  const taxMods = effectSources(n, 'tax');
+  const trB = councilBonus(s, n, 'treasurer');
+  const taxCommon: BdRow[] = [['x_corruption', 1 - n.corruption], ['x_tax_mods', 1 + sumRows(taxMods)], ['x_treasurer', 1 + trB]];
   const tax = CLASSES.map((_, c) => {
     const exParts = effectSources(n, `exempt_${c}`);
     const ex = Math.max(0, Math.min(1, sumRows(exParts)));
-    return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods))) };
+    return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods)) * (1 + trB)) };
   });
   // ---- estates: contentment drifts 3 % a month toward 50 + 6 per privilege
-  const estates = n.estates.map((e) => ({ id: e.id, contentTarget: 50 + e.privileges.length * 6, contentMonthly: (50 + e.privileges.length * 6 - e.contentment) * 0.03, privileges: e.privileges.length, appeaseUntil: n.flags[`appease_${e.id}`] || 0 }));
+  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const tgt = 50 + e.privileges.length * 6 - duty; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, appeaseUntil: n.flags[`appease_${e.id}`] || 0 }; });
   return {
     concord: { value: n.concord, target: concordTarget, monthly: (concordTarget - n.concord) * 0.04, parts: concordParts },
     mandate: { value: n.mandate, target: mandateTarget, monthly: (mandateTarget - n.mandate) * 0.03, parts: mandateParts },
@@ -489,8 +511,8 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     prestige: { value: n.prestige, monthly: sumRows(prestigeParts), parts: prestigeParts },
     insight: { value: n.flags.doctrine_pts || 0, monthly: sumRows(insightParts), parts: insightParts },
     envoys: { value: n.envoys, parts: envoyParts },
-    manpower: { max: mp * (1 + sumRows(mpSources)), parts: manpowerParts, monthly: mp * (1 + sumRows(mpSources)) / 120, occupied },
-    sailors: { max: sail * 4, monthly: sail / 10 },
+    manpower: { max: mp * mpMult, parts: manpowerParts, monthly: mp * mpMult / 120, occupied },
+    sailors: { max: sail * sailMult * 4, monthly: sail * sailMult / 10, mods: sailSources },
     warExhaustion: { value: n.warExhaustion, monthly: sumRows(weParts), parts: weParts, wars: atWarCount },
     inflation: { value: n.inflation, monthly: sumRows(inflParts), parts: inflParts },
     corruption: { value: n.corruption, monthly: sumRows(corrParts), parts: corrParts, graft: n.expense.graft ?? 0 },
@@ -551,11 +573,11 @@ function locExplain(s: GameState, w: World, l: number) {
   if (n) {
     const sameC = lc.culture[l] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[lc.culture[l]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
     const sameF = lc.faith[l] === n.faith ? 1 : faithFamily(lc.faith[l]) === faithFamily(n.faith) ? 0.75 : 0.5;
-    integ = [['x_base_rate', 100 / 120], ['x_control', lc.control[l]], ['x_culture', sameC], ['x_faith', sameF], ['x_integration_mods', 1 + lawEffect(n, 'integration')]];
-    reach = [['x_base_km', 520], ['x_admin', 520 * lawEffect(n, 'admin')], ['x_control_mods', 520 * mod(n, 'control')], ['x_governance', 520 * n.tech[0] * 0.015]];
+    integ = [['x_base_rate', 100 / 120], [overextControl(n) > 0 ? 'x_control_unstrained' : 'x_control', integrationControl(s, n, l)], ['x_culture', sameC], ['x_faith', sameF], ['x_integration_mods', Math.max(0, 1 + lawEffect(n, 'integration'))], ['x_admin_capacity', integrationShare(n)]];
+    reach = [['x_base_km', 520], ['x_admin', 520 * lawEffect(n, 'admin')], ['x_control_mods', 520 * lawEffect(n, 'control')], ['x_governance', 520 * n.tech[0] * 0.015]];
     taxes = CLASSES.map((_, c) => ({ cls: c, rate: effectiveTax(s, n, l, c) }));
   }
-  return { devTarget: devF.reduce((p, r) => p * r[1], 1), devF, litTarget: sumRows(litParts), litParts, integ, integMonthly: integ.reduce((p, r) => p * r[1], 1) / 100, reach, occupied: n ? lc.ctrl[l] !== o : false, taxes, crownShare: CROWN_SHARE };
+  return { devTarget: devF.reduce((p, r) => p * r[1], 1), devF, litTarget: sumRows(litParts), litParts, integ, integMonthly: integ.reduce((p, r) => p * r[1], 1) / 100, reach, occupied: n ? lc.ctrl[l] !== o : false, taxes, crownShare: CROWN_SHARE, integYield: integrationYield(lc.integ[l]) };
 }
 
 /** Score of every realm in parts (systems/realm.ts rankingMonth): development, half of the subjects' development,

@@ -7,8 +7,10 @@ import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost } from './systems/military';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
-import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial } from './systems/politics';
-import { takeLoan } from './systems/economy';
+import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
+import { takeLoan, tariffMax } from './systems/economy';
+import { setMethod } from './systems/administration';
+import { setDuty, DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
 import { startColony, startExplorer, charterCompany } from './systems/colonial';
@@ -54,8 +56,10 @@ export function buildQueue(s: GameState): BuildQueue {
   return q;
 }
 
-export function buildCost(s: GameState, n: { inflation: number }, b: number, level: number) {
-  return BUILDINGS[b].cost * (1 + level * 0.5) * s.priceLevel * (1 + n.inflation) * 6;
+export function buildCost(s: GameState, n: Nation, b: number, level: number) {
+  // fortress laws make walls cheaper (lords' castles) or dearer (bastions) to raise as well as to keep
+  const fort = b === BI.fort ? Math.max(0.2, 1 + lawEffect(n, 'fort_cost')) : 1;
+  return BUILDINGS[b].cost * (1 + level * 0.5) * s.priceLevel * (1 + n.inflation) * 6 * fort;
 }
 
 /** How many merchants a realm can place in markets. */
@@ -212,7 +216,8 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'budget': {
       if (cmd.key === 'army') n.armyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'navy') n.navyMaint = clamp(cmd.value, 0.25, 1);
-      else if (cmd.key === 'tariff') n.tariff = clamp(cmd.value, 0, 0.5);
+      else if (cmd.key === 'tariff') n.tariff = clamp(cmd.value, 0, tariffMax(n));
+      else if (DUTY_INDEX[cmd.key]) { const e = setDuty(n, cmd.key, cmd.value); if (e) return err(e); }
       else if (cmd.key === 'coinage') {
         const nv = clamp(cmd.value, 0, 0.5);
         if (nv > n.coinage + 0.001) n.mandate = clamp(n.mandate - (nv - n.coinage) * 20, 0, 100);
@@ -225,6 +230,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'doctrine': { const e = takeDoctrine(s, w, n, cmd.group); return e ? err(e) : OK; }
     case 'agent': { const e = startAgent(s, w, n, cmd.loc, cmd.kind); return e ? err(e) : OK; }
     case 'colonize': { const e = startColony(s, w, n, cmd.loc); return e ? err(e) : OK; }
+    case 'method': { const e = setMethod(s, w, n, cmd.loc, cmd.method); return e ? err(e) : OK; }
     case 'charter': { const e = charterCompany(s, w, n, cmd.market); return e ? err(e) : OK; }
     case 'explore': { const e = startExplorer(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
     case 'spy': { const e = startSpy(s, cmd.n, cmd.target, cmd.action); return e ? err(e) : OK; }

@@ -6,6 +6,7 @@ import { B, BI, BUILDINGS, C } from '../defs';
 import { armyStrength } from './military';
 import { FAITH_INDEX } from '../content/peoples';
 import { chance, rand } from '../rng';
+import { lawEffect } from './politics';
 
 function constructionsDay(s: GameState, w: World) {
   for (const c of s.constructions.slice()) {
@@ -117,11 +118,16 @@ function papacyInit(s: GameState, w: World) {
   P.seat = s.startYear < 1377 && avignon >= 0 ? avignon : rome;
   for (const n of s.nations) if (n.faith === FAITH_INDEX.latin) P.curiaFavour[n.id] = 10;
 }
+/** Favour with the Curia a Latin realm gains a year: 1, plus up to 2 from content prelates, plus curia effects
+ *  (clerical immunity pleases Rome, taxing the clergy angers it). */
+export function curiaGain(n: Nation): number {
+  return 1 + (n.estates.find((e) => e.id === 'prelates')?.contentment ?? 50) / 50 + lawEffect(n, 'curia');
+}
 function papacyYear(s: GameState) {
   const P = s.papacy;
   for (const n of s.nations) {
     if (!n.alive || n.faith !== FAITH_INDEX.latin) { delete P.curiaFavour[n.id]; continue; }
-    P.curiaFavour[n.id] = clamp((P.curiaFavour[n.id] || 0) + 1 + (n.estates.find((e) => e.id === 'prelates')?.contentment ?? 50) / 50, 0, 100);
+    P.curiaFavour[n.id] = clamp((P.curiaFavour[n.id] || 0) + curiaGain(n), 0, 100);
     if (n.excommunicated && chance(s.rng, 0.15)) { n.excommunicated = false; n.modifiers = n.modifiers.filter((m) => m.id !== 'excommunicated'); }
   }
   P.corruption = clamp(P.corruption + 0.3, 0, 100);

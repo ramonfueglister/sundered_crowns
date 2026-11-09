@@ -7,6 +7,7 @@ import { Section, Row, Bar, Btn, Empty, Effects, useQuery, act, t, L, num, signe
 import { ConcordTip, MandateTip, AuthorityTip, PrestigeTip, CorruptionTip, DreadTip, EstateTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
+import { Administration } from './statecraft';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
 
@@ -54,6 +55,7 @@ export function GovernmentTab() {
     </div>
     <Laws r={r} authority={p.authority} />
     <Estates r={r} />
+    <Administration r={r} />
     <div class="cols2">
       <Council r={r} authority={p.authority} />
       <Section title={t('values')} id="gov-values">
@@ -81,6 +83,7 @@ function Council({ r, authority }: { r: any; authority: number }) {
     {c.loyalty !== undefined && <div>{t('loyalty')}: {num(c.loyalty)}</div>}
     {c.corruption !== undefined && <div>{t('corruption')}: {pct(c.corruption)}</div>}
     <Parts title={`${t('council_bonus')}: ${L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}`} rows={[['x_office_skill', (c.skills[office.skill] / 6) * 10], ['x_corruption', -(c.skills[office.skill] / 6) * 10 * (c.corruption ?? 0)]]} total={bonus * 100} fmt={(v) => `${signed(v, 1)} %`} />
+    <div class="muted small office-does">{t(`x_office_${office.id}_does`).replace('{b}', signed(bonus * 100, 1)).replace('{b2}', signed(bonus * 200, 1))}</div>
   </div>;
   return <Section title={t('council')} id="gov-council" right={<Tip content={() => <AuthorityTip />}><span class="muted has-tip">{t('authority')}: <b>{num(authority)}</b></span></Tip>}>
     {r.council.map((o: any) => { const open = openOff === o.id;

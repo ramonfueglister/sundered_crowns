@@ -17,7 +17,7 @@ export const LAWS: LawDef[] = [
     o('cognatic', 'Cognatic primogeniture', 'Kognatische Primogenitur', { mandate_gain: 0.05, succession_strife: -0.2, foreign_claims: 0.3 }, { magnates: -3 }),
     o('elective', 'Elective crown', 'Wahlkönigtum', { mandate_gain: -0.1, succession_strife: 0.1, estate_power: 0.15 }, { magnates: 8, prelates: 3 }),
     o('seniority', 'Seniority among kin', 'Seniorat', { succession_strife: 0.4, mandate_gain: -0.05 }, { magnates: 3 }),
-    o('office', 'Election to office', 'Wahl ins Amt', { mandate_gain: 0, succession_strife: 0 }, { burghers: 5 }),
+    o('office', 'Election to office', 'Wahl ins Amt', { mandate_gain: -0.05, succession_strife: -0.25 }, { burghers: 5 }, { desc: { en: 'On the ruler\'s death the ablest grown official or candidate at court is chosen. There is never a regency, and the succession is rarely disputed, but no dynasty lends its lustre.', de: 'Stirbt der Herrscher, wird der fähigste erwachsene Amtsträger oder Anwärter am Hof gewählt. Es gibt nie eine Regentschaft, die Nachfolge ist selten umstritten, doch keine Dynastie verleiht Glanz.' } }),
   ] },
   { id: 'serfdom', name: { en: 'Bondage of the peasantry', de: 'Bindung der Bauern' }, group: 'society', default: (g, r) => (g === 'nomadic_horde' ? 1 : 2), options: [
     o('free', 'Free peasantry', 'Freie Bauern', { serfdom: 0, growth: 0.05, unrest: -2, manpower: -0.05 }, { commons: 10, magnates: -12 }),
@@ -153,7 +153,7 @@ export const LAWS: LawDef[] = [
   { id: 'marriage', name: { en: 'Dynastic marriage policy', de: 'Heiratspolitik' }, group: 'crown', default: fix(1), options: [
     o('native', 'Marry at home', 'Heirat im Land', { mandate_gain: 0.05 }, { magnates: 3 }),
     o('alliances', 'Marriage alliances', 'Heiratsbündnisse', { diplomacy: 0.1, foreign_claims: 0.2 }, {}),
-    o('imperial', 'Imperial marriages', 'Kaiserliche Heiraten', { diplomacy: 0.15, foreign_claims: 0.4, prestige: 0.3 }, { magnates: -2 }),
+    o('imperial', 'Imperial marriages', 'Kaiserliche Heiraten', { diplomacy: 0.15, foreign_claims: 0.4, prestige: 0.05 }, { magnates: -2 }),
   ] },
   { id: 'jewry', name: { en: 'Status of Jewish communities', de: 'Stellung der jüdischen Gemeinden' }, group: 'faith', default: fix(1), options: [
     o('expelled', 'Expulsion', 'Vertreibung', { trade: -0.06, interest: 0.02, unrest: -0.5 }, { prelates: 4 }),
@@ -207,5 +207,5 @@ export const VALUES: { id: string; low: I18n; high: I18n; effectsLow: Record<str
   { id: 'sea', low: { en: 'Land', de: 'Land' }, high: { en: 'Sea', de: 'See' }, effectsLow: { manpower: 0.1, defence: 0.05 }, effectsHigh: { naval: 0.15, trade: 0.08, colonise: 0.15 } },
   { id: 'quality', low: { en: 'The Many', de: 'Die Masse' }, high: { en: 'The Few', de: 'Die Auslese' }, effectsLow: { manpower: 0.15, army_cost: -0.08 }, effectsHigh: { discipline: 0.08, morale: 0.08 } },
   { id: 'purse', low: { en: 'Plough', de: 'Pflug' }, high: { en: 'Purse', de: 'Geldbeutel' }, effectsLow: { growth: 0.03, unrest: -1 }, effectsHigh: { trade: 0.12, production: 0.04 } },
-  { id: 'sword', low: { en: 'Pen', de: 'Feder' }, high: { en: 'Sword', de: 'Schwert' }, effectsLow: { diplomacy: 0.1, dread_decay: 0.2 }, effectsHigh: { shock: 0.08, prestige: 0.3, dread: 0.2 } },
+  { id: 'sword', low: { en: 'Pen', de: 'Feder' }, high: { en: 'Sword', de: 'Schwert' }, effectsLow: { diplomacy: 0.1, dread_decay: 0.2 }, effectsHigh: { shock: 0.08, prestige: 0.05, dread: 0.2 } },
 ];

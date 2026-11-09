@@ -1,10 +1,12 @@
 // Control & integration of land, conversion and assimilation, plague, climate (seasons & snow).
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, mod } from '../ctx';
+import { type System, clamp, chronicle, notice } from '../ctx';
 import { B, BI, C } from '../defs';
 import { MinHeap } from '../setup';
 import { lawEffect, councilBonus } from './politics';
+import { computeAdmin, integrationShare } from './administration';
+import { overextension } from './economy';
 import { ownedLocs } from './war';
 import { GROUP_OF, ALL_CULTURES, faithFamily, FAITHS } from '../content/peoples';
 import { chance } from '../rng';
@@ -23,7 +25,7 @@ export function computeControl(s: GameState, w: World, n: Nation) {
   const srcs = own.filter((i) => i === n.capital || s.loc.buildings[i * B + BI.admin] > 0);
   if (!srcs.length) srcs.push(own[0]);
   for (const i of srcs) { const d0 = i === n.capital ? 0 : 60; stamp[i] = sv; dist[i] = d0; heap.push(d0, i); }
-  const reach = 520 * (1 + lawEffect(n, 'admin') + mod(n, 'control') + n.tech[0] * 0.015);
+  const reach = controlReach(n);
   // beyond 0.88/0.75 of the reach the target is at its 0.12 floor, the same as for land the search never
   // reaches, so it can stop there (distances inside the limit are unaffected)
   const lim = reach * 1.18;
@@ -49,23 +51,35 @@ export function computeControl(s: GameState, w: World, n: Nation) {
     }
   }
   const far = reach * 2;
+  const strain = 1 - overextControl(n); // an over-extended administration loses its grip everywhere
   for (const i of own) {
     const d = stamp[i] === sv ? dist[i] : far;
-    const target = clamp(1 - d / reach * 0.75, 0.12, 1) * (s.loc.ctrl[i] === n.id ? 1 : 0.4);
+    const target = clamp(1 - d / reach * 0.75, 0.12, 1) * (s.loc.ctrl[i] === n.id ? 1 : 0.4) * strain;
     s.loc.control[i] += (target - s.loc.control[i]) * 0.25;
   }
 }
 
+/** How far the capital and seats of administration project control (km): administration and control effects, Governance. */
+export function controlReach(n: Nation) { return 520 * Math.max(0.2, 1 + lawEffect(n, 'admin') + lawEffect(n, 'control') + n.tech[0] * 0.015); }
+/** Share of control an over-extended realm loses everywhere (at most 30 %). */
+export function overextControl(n: Nation) { return Math.min(0.3, overextension(n) * 0.15); }
+/** The control that drives integration: the location's control before the strain of over-extension, which slows
+ *  integration once already, through the share of the capacity (integrationShare). */
+export function integrationControl(s: GameState, n: Nation, i: number) { return Math.min(1, s.loc.control[i] / (1 - overextControl(n))); }
+
 // ---------------- integration ----------------
-function integrationMonth(s: GameState, w: World) {
+export function integrationMonth(s: GameState, w: World) {
   const o = s.loc.owner;
+  computeAdmin(s, w); // load and capacity of every realm, shared out below
   for (let i = 0; i < w.L; i++) {
     const own = o[i]; if (own < 0) continue;
     const n = s.nations[own];
     if (s.loc.integ[i] >= 1) { if (s.loc.core[i] !== own) s.loc.core[i] = own; continue; }
     const sameC = s.loc.culture[i] === n.culture ? 1.5 : GROUP_OF[ALL_CULTURES[s.loc.culture[i]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.15 : 0.8;
     const sameF = s.loc.faith[i] === n.faith ? 1 : faithFamily(s.loc.faith[i]) === faithFamily(n.faith) ? 0.75 : 0.5;
-    const rate = 1 / 120 * s.loc.control[i] * sameC * sameF * (1 + lawEffect(n, 'integration'));
+    // the administration's capacity is shared out over all land being integrated at once (never below a quarter of
+    // the normal speed); the loss of control from over-extension is not counted a second time
+    const rate = 1 / 120 * integrationControl(s, n, i) * sameC * sameF * Math.max(0, 1 + lawEffect(n, 'integration')) * integrationShare(n);
     s.loc.integ[i] = Math.min(1, s.loc.integ[i] + rate);
     if (s.loc.core[i] >= 0 && s.loc.core[i] !== own && !s.nations[s.loc.core[i]]?.alive && s.loc.integ[i] > 0.5) s.loc.core[i] = own;
   }
@@ -92,7 +106,7 @@ function agentsMonth(s: GameState, w: World) {
     const dev = s.loc.dev[a.loc];
     let rate = 100 / (18 + dev * 0.4) * s.loc.control[a.loc];
     if (a.kind === 'faith') {
-      rate *= 1 + councilBonus(s, n, 'chaplain') * 3 + lawEffect(n, 'conversion') + mod(n, 'conversion');
+      rate *= Math.max(0.1, 1 + councilBonus(s, n, 'chaplain') * 3 + lawEffect(n, 'conversion'));
       const fam = faithFamily(s.loc.faith[a.loc]) === faithFamily(n.faith);
       rate *= fam ? 1.2 : 0.7;
     } else rate *= 0.6 * (GROUP_OF[ALL_CULTURES[s.loc.culture[a.loc]]] === GROUP_OF[ALL_CULTURES[n.culture]] ? 1.6 : 1) * (1 + lawEffect(n, 'assimilation'));

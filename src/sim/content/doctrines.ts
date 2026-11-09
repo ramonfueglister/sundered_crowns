@@ -13,7 +13,7 @@ export const DOCTRINES: DoctrineGroup[] = [
     { name: { en: 'Audited Ledgers', de: 'Geprüfte Rechnungsbücher' }, effects: { corruption: -0.05 } },
     { name: { en: 'Crown Domains', de: 'Krondomänen' }, effects: { tax: 0.05 } },
     { name: { en: 'Fair Weights', de: 'Gerechte Gewichte' }, effects: { trade: 0.05 } },
-    { name: { en: 'Royal Mint', de: 'Königliche Münze' }, effects: { interest: 0.01 } },
+    { name: { en: 'Royal Mint', de: 'Königliche Münze' }, effects: { interest: -0.01 } },
     { name: { en: 'Granaries', de: 'Kornspeicher' }, effects: { unrest: -2 } },
     { name: { en: 'Clerks of the Exchequer', de: 'Schreiber der Schatzkammer' }, effects: { tax: 0.05, authority_gain: 0.1 } },
     { name: { en: 'Sound Coin', de: 'Gutes Geld' }, effects: { mandate_gain: 0.1 } },
@@ -52,12 +52,12 @@ export const DOCTRINES: DoctrineGroup[] = [
   // ---------------- Age of Print and Horizons (era 1) ----------------
   { id: 'commerce', name: { en: 'Trade & Banking', de: 'Handel & Bankwesen' }, desc: { en: 'Fairs, exchange banks and merchant law make the realm rich.', de: 'Messen, Wechselbanken und Kaufmannsrecht machen das Reich reich.' }, era: 1, picks: [
     p('Chartered Fairs', 'Privilegierte Messen', { trade: 0.05 }),
-    p('Bills of Exchange', 'Wechselbriefe', { interest: 0.01 }),
+    p('Bills of Exchange', 'Wechselbriefe', { interest: -0.01 }),
     p('Merchant Courts', 'Kaufmannsgerichte', { trade: 0.04, corruption: -0.02 }),
     p('Craft Privileges', 'Handwerksprivilegien', { production: 0.05 }),
-    p('Exchange Banks', 'Wechselbanken', { interest: 0.01, tax: 0.03 }),
+    p('Exchange Banks', 'Wechselbanken', { interest: -0.01, tax: 0.03 }),
     p('Staple Towns', 'Stapelstädte', { trade: 0.06 }),
-    p('Crown Credit', 'Kronkredit', { interest: 0.015, mercenary_cost: -0.05 }),
+    p('Crown Credit', 'Kronkredit', { interest: -0.015, mercenary_cost: -0.05 }),
   ], complete: { trade: 0.08, production: 0.04 } },
 
   { id: 'seafaring', name: { en: 'Seafaring & Colonial Enterprise', de: 'Seefahrt & Kolonialunternehmen' }, desc: { en: 'Charts, pilots and hardy crews open the seas; settlers and charters follow.', de: 'Seekarten, Lotsen und zähe Mannschaften erschließen die Meere; Siedler und Freibriefe folgen.' }, era: 1, picks: [

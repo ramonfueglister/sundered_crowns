@@ -6,6 +6,7 @@ import { military, releaseNation, newArmy, availableUnits } from './military';
 import { war, _setMilitary } from './war';
 import { diplomacy } from './diplomacy';
 import { society } from './society';
+import { administration } from './administration';
 import { progress } from './progress';
 import { colonial } from './colonial';
 import { realm } from './realm';
@@ -17,4 +18,4 @@ import { ai } from './ai';
 
 _setMilitary({ releaseNation, newArmy, availableUnits });
 
-export const SYSTEMS: System[] = [politics, progress, society, economy, military, war, diplomacy, colonial, realm, landmarks, situations, goals, events, ai];
+export const SYSTEMS: System[] = [politics, progress, society, administration, economy, military, war, diplomacy, colonial, realm, landmarks, situations, goals, events, ai];

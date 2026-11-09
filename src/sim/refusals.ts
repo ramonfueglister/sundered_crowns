@@ -57,6 +57,9 @@ export const REFUSAL_DE: Record<string, string> = {
   'the magnates are too powerful': 'Die Magnaten sind zu mächtig', 'hold three of Toledo, Zaragoza, Barcelona and Seville': 'Drei von Toledo, Saragossa, Barcelona und Sevilla besitzen',
   'nothing to do': 'Nichts zu tun', 'too many orders at once': 'Zu viele Befehle auf einmal', 'nothing under way': 'Nichts im Gange', 'not this kind of order': 'Nicht diese Art von Befehl',
   'no such goal': 'Kein solches Ziel', 'already achieved': 'Bereits erreicht', 'earlier goals come first': 'Erst die vorherigen Ziele', 'the conditions are not met': 'Die Bedingungen sind nicht erfüllt',
+  // ---- truth pass (claude/truth-pass): production methods and tax instruments
+  'unknown method': 'Unbekannte Produktionsweise', 'already in use': 'Bereits in Gebrauch', 'needs Commerce & Learning 6': 'Braucht Handel & Gelehrsamkeit 6', 'needs a manufactory': 'Braucht eine Manufaktur',
+  'the workshops were reorganised recently': 'Die Werkstätten wurden erst kürzlich umgestellt',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

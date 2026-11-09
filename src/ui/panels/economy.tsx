@@ -6,6 +6,7 @@ import { CLASSES, CLASS_NAME } from '../../sim/defs';
 import { Section, Row, Bar, Btn, Empty, Spark, Slider, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm } from './common';
 import { TreasuryTip, IncomeTip, ExpenseTip, InflationTip, CorruptionTip, TaxClassTip, MerchantsTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
+import { Duties, Forecast, TariffCap } from './statecraft';
 
 
 export function EconomyTab() {
@@ -48,12 +49,16 @@ export function EconomyTab() {
           <Slider value={p.armyMaint} min={0.25} max={1} step={0.05} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'budget', key: 'army', value: x })} /></Tip></div>
         <div class="slider-row"><Tip tag="div" class="tip-contents" content={() => <MaintTip kind="navy" />}><span class="k has-tip">{t('navy_maint')}</span>
           <Slider value={p.navyMaint} min={0.25} max={1} step={0.05} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'budget', key: 'navy', value: x })} /></Tip></div>
-        <div class="slider-row"><Tip tag="div" class="tip-contents" content={() => <div><TipHead name={t('tariff')} value={pct(p.tariff)} hint={t('x_tariff_effect')} /><div class="tip-drift"><span>{keyName('tariffs')}</span><span class="pos">+{num(p.incomeBreak.tariffs ?? 0, 1)} {t('x_per_month')}</span></div><div class="muted">{t('kh_tariffs')}</div></div>}><span class="k has-tip">{t('tariff')}</span>
-          <Slider value={p.tariff} min={0} max={0.5} step={0.01} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'budget', key: 'tariff', value: x })} /></Tip></div>
+        <div class="slider-row"><Tip tag="div" class="tip-contents" content={() => <div><TipHead name={t('tariff')} value={pct(p.tariff)} hint={t('x_tariff_effect')} /><div class="tip-drift"><span>{keyName('tariffs')}</span><span class="pos">+{num(p.incomeBreak.tariffs ?? 0, 1)} {t('x_per_month')}</span></div><div class="muted">{t('kh_tariffs')}</div><TariffCap r={r} /></div>}><span class="k has-tip">{t('tariff')}</span>
+          <Slider value={p.tariff} min={0} max={r?.tariffMax ?? 0.5} step={0.01} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'budget', key: 'tariff', value: x })} /></Tip></div>
         <div class="slider-row"><Tip tag="div" class="tip-contents" content={() => <div><TipHead name={t('coinage')} value={pct(p.coinage)} hint={t('x_coinage_effect')} /><div class="tip-drift"><span>{keyName('minting')}</span><span class="pos">+{num(p.incomeBreak.minting ?? 0, 1)} {t('x_per_month')}</span></div><div class="tip-drift"><span>{t('inflation')}</span><span class={p.coinage > 0 ? 'neg' : 'muted'}>+{num(p.coinage, 2)} % {t('x_per_month')}</span></div></div>}><span class="k has-tip">{t('coinage')}</span>
           <Slider value={p.coinage} min={0} max={0.5} step={0.01} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'budget', key: 'coinage', value: x })} /></Tip></div>
         <Loans />
       </Section>
+    </div>
+    <div class="cols2">
+      <Duties r={r} p={p} />
+      <Forecast r={r} />
     </div>
     <Markets />
     <History hist={r?.history ?? []} />
@@ -157,6 +162,7 @@ function MaintTip({ kind }: { kind: 'army' | 'navy' }) {
     <TipHead name={t(kind === 'army' ? 'army_maint' : 'navy_maint')} value={pct(kind === 'army' ? p.armyMaint : p.navyMaint)} hint={t('x_maint_effect')} />
     <div class="tip-drift"><span>{t('x_upkeep_now')}</span><span class="neg">−{num(p.expenseBreak[kind] ?? 0, 1)} {t('x_per_month')}</span></div>
     <div class="muted">{t(`kh_${kind}`)}</div>
+    <div class="tip-drift"><span>{t('x_maint_morale')}</span><span class={(kind === 'army' ? p.armyMaint : p.navyMaint) < 1 ? 'neg' : 'muted'}>× {num(0.5 + 0.5 * Math.max(0.25, Math.min(1, kind === 'army' ? p.armyMaint : p.navyMaint)), 2)}</span></div>
     {kind === 'army' && e?.armyCost?.length > 0 && <Parts title={t('x_army_cost_mods')} rows={e.armyCost} fmt={(x) => `${signed(x * 100, 0)} %`} bad />}
   </div>;
 }

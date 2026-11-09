@@ -17,6 +17,8 @@ const KEY_NAMES: Record<string, [string, string]> = {
   colonists: ['Colonists', 'Kolonisten'], coinage: ['Coinage', 'Münzgewinn'], loans: ['Loans', 'Kredite'], subsidies: ['Subsidies', 'Subsidien'], gifts: ['Gifts', 'Geschenke'],
   company: ['Company profits', 'Kompaniegewinne'], charter: ['Company charters', 'Kompaniegründungen'], minting: ['Minting', 'Münzprägung'], loan_repay: ['Loan repayment', 'Kredittilgung'],
   refunds: ['Refunds of cancelled orders', 'Erstattungen abgebrochener Aufträge'],
+  // ---- truth pass: tax instruments, privateering, production methods
+  land_tax: ['Land tax', 'Grundsteuer'], hearth_tax: ['Hearth tax', 'Herdsteuer'], excise: ['Excise', 'Akzise'], privateers: ['Privateering', 'Kaperei'], methods: ['Reorganised workshops', 'Umgestellte Werkstätten'],
 };
 export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 
