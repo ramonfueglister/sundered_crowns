@@ -12,10 +12,14 @@ export function charName(name: string | null | undefined, female = false): strin
   if (!name) return '';
   return lang.value === 'de' ? localName(name, 'de', female) : name;
 }
+/** The house to show after a name: none when the name already carries it or a title ("Pedro, Infante of Portugal"). */
+function houseOf(name: string, dynasty: string | undefined, own?: string): string {
+  return dynasty && dynasty !== own && !/,| of | von /.test(name) && !name.includes(dynasty.slice(0, 5)) ? dynasty : '';
+}
 /** Name with the house when the name does not already carry it. */
 export function charFull(name: string, dynasty: string | undefined, female = false): string {
-  const n = charName(name, female);
-  return dynasty && !/,| of | von /.test(name) && !name.includes(dynasty.slice(0, 5)) ? `${n} (${dynasty})` : n;
+  const n = charName(name, female), h = houseOf(name, dynasty);
+  return h ? `${n} (${h})` : n;
 }
 /** How a member is related to the ruler, as a man or a woman. */
 export function relName(rel: string, female: boolean): string {
@@ -34,13 +38,13 @@ export function DynastySection({ r }: { r: any }) {
   return <Section title={<>{t('house_of')} {d.house}</>} id="gov-dynasty">
     <table class="tbl dyn-tbl"><tbody>
       {d.members.map((m: any) => <tr class={m.rel === 'ruler' ? 'sel' : ''}>
-        <td><b>{charName(m.name, m.female)}</b>{m.dynasty && m.dynasty !== d.house && !m.name.includes(m.dynasty.slice(0, 5)) && <small class="muted"> {m.dynasty}</small>}
+        <td><b>{charName(m.name, m.female)}</b>{houseOf(m.name, m.dynasty, d.house) && <small class="muted"> {houseOf(m.name, m.dynasty, d.house)}</small>}
           {m.heir && m.rel !== 'heir' && <small class="pos"> · {relName('heir', m.female)}</small>}</td>
         <td class="muted">{relName(m.rel, m.female)}</td>
         <td class="r"><Tip content={<div><TipHead name={charName(m.name, m.female)} value={`${m.age} ${t('years_old')}`} hint={t('x_member_age_hint')} /></div>}><span>{m.age}</span></Tip></td>
         <td><Skills s={m.skills} /></td>
         <td class="small">
-          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{m.spouse.dynasty && m.spouse.dynasty !== d.house && !m.spouse.name.includes(m.spouse.dynasty.slice(0, 5)) ? ` ${m.spouse.dynasty}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
+          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{houseOf(m.spouse.name, m.spouse.dynasty, d.house) ? ` ${houseOf(m.spouse.name, m.spouse.dynasty, d.house)}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
           {m.abroad >= 0 && <span> · {t('at_court_of')} <NLink id={m.abroad} size={14} /></span>}
           {m.claims.length > 0 && <Tip content={<div><TipHead name={t('claims')} hint={t('x_claims_hint')} /></div>}><span> · {t('claim_on')} {m.claims.map((k: number) => <NLink id={k} size={14} />)}</span></Tip>}
           {m.traits.length > 0 && <span> · {m.traits.map((x: string) => traitName(x)).join(', ')}</span>}
