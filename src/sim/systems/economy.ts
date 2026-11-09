@@ -347,13 +347,16 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     const food = clamp(0.55 * Math.min(1, grainQ / grainNeed) + 0.45 * marketFill(m, G_GRAIN) * Math.min(1, lc.harvest[i] + 0.2) + 0.1, 0, 1);
     const plague = Math.max(0, lc.plague[i]); // below 0 only marks the survivors' resistance after an outbreak (society.ts)
     const growthMod = terr.growth;
-    const growthFx = 1 + (n ? ns[nr + NX] : 0);
+    const growthFx = Math.max(0, 1 + (n ? ns[nr + NX] : 0));
     for (let c = 0; c < C; c++) {
       const pc = P[base + c]; if (pc <= 0) continue;
       const fs = c === CL.peasants || c === CL.labourers ? food : Math.max(food, 0.8);
-      const birth = 0.0034 * (0.7 + 0.3 * growthMod) * (0.85 + 0.3 * lc.sol[base + c]) * growthFx;
+      const birth = 0.0034 * (0.7 + 0.3 * growthMod) * (0.85 + 0.3 * lc.sol[base + c]);
       const death = 0.0028 + Math.max(0, 0.6 - fs) * 0.035 + plague * 0.035 + devast * 0.003;
-      P[base + c] = Math.max(0, pc * (1 + birth - death));
+      // growth effects (laws, values, innovations) speed the natural increase by their share, as the tooltip says;
+      // they do not soften famine or plague
+      const net = birth - death;
+      P[base + c] = Math.max(0, pc * (1 + (net > 0 ? net * growthFx : net)));
     }
     // social mobility: profitable crafts draw peasants into towns, failing crafts push artisans back
     const urbanPull = clamp((lc.sol[base + CL.artisans] - lc.sol[base + CL.peasants]) * 0.002, -0.002, 0.002);

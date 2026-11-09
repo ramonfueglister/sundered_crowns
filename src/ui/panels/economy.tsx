@@ -162,6 +162,7 @@ function MaintTip({ kind }: { kind: 'army' | 'navy' }) {
     <TipHead name={t(kind === 'army' ? 'army_maint' : 'navy_maint')} value={pct(kind === 'army' ? p.armyMaint : p.navyMaint)} hint={t('x_maint_effect')} />
     <div class="tip-drift"><span>{t('x_upkeep_now')}</span><span class="neg">−{num(p.expenseBreak[kind] ?? 0, 1)} {t('x_per_month')}</span></div>
     <div class="muted">{t(`kh_${kind}`)}</div>
+    <div class="tip-drift"><span>{t('x_maint_morale')}</span><span class={(kind === 'army' ? p.armyMaint : p.navyMaint) < 1 ? 'neg' : 'muted'}>× {num(0.5 + 0.5 * Math.max(0.25, Math.min(1, kind === 'army' ? p.armyMaint : p.navyMaint)), 2)}</span></div>
     {kind === 'army' && e?.armyCost?.length > 0 && <Parts title={t('x_army_cost_mods')} rows={e.armyCost} fmt={(x) => `${signed(x * 100, 0)} %`} bad />}
   </div>;
 }
