@@ -70,6 +70,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
   'no trade route home': 'Kein Handelsweg nach Hause', 'already under embargo': 'Schon mit einer Handelssperre belegt', 'not against an ally': 'Nicht gegen einen Verbündeten',
   'not within our realm': 'Nicht innerhalb unseres Reiches', 'no embargo to lift': 'Keine Handelssperre aufzuheben',
+  'an ocean voyage needs Commerce 10': 'Eine Ozeanfahrt braucht Handel & Gelehrsamkeit 10', 'an ocean voyage needs the Age of Print and Horizons': 'Eine Ozeanfahrt braucht das Zeitalter von Druck und Horizonten',
+  'two expeditions are already at sea': 'Schon zwei Expeditionen sind auf See',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

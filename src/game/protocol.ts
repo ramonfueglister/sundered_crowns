@@ -8,10 +8,14 @@ export type ToWorker =
   | { type: 'player'; player: number | null }   // choose / change the played realm
   | { type: 'query'; id: number; q: Query }
   | { type: 'save'; id: number }
-  | { type: 'mapmode'; mode: MapMode; focus: number };
+  | { type: 'mapmode'; mode: MapMode; focus: number }
+  | { type: 'mapgood'; good: number };          // the good shown by the prices, production and markets map modes (-1: none)
 
-export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored';
-export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods'];
+export type MapMode = 'political' | 'terrain' | 'diplomatic' | 'development' | 'population' | 'culture' | 'faith' | 'trade' | 'unrest' | 'control' | 'goods' | 'explored'
+  | 'prices' | 'production' | 'markets'; // trade pass
+export const MAP_MODES: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'prices', 'production', 'markets'];
+/** Map modes that show one good (chosen in the legend); for 'markets' the good is optional. */
+export const GOOD_MAP_MODES: MapMode[] = ['prices', 'production', 'markets'];
 
 export type Query =
   | { q: 'loc'; loc: number }
@@ -30,7 +34,15 @@ export type Query =
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
-  | { q: 'places'; locs: number[] };                          // province and area of locations (grouped peace demands)
+  | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
+  // trade pass (src/game/tradeview.ts)
+  | { q: 'tmarket'; market: number }                         // trade power, our merchants and goods of a market
+  | { q: 'tmarkets' }                                        // the markets we know with our share and income
+  | { q: 'tgood'; market: number; good: number }             // producers, consumers, price and its drivers of one good
+  | { q: 'tpolicy' }                                         // tariff, agreements, embargoes and partners of our realm
+  | { q: 'trel'; target: number }                            // trade between us and another realm
+  | { q: 'expedition'; to?: number; fleet?: number }         // expedition targets and the plan for one
+  | { q: 'companies' };                                      // our chartered companies and the charters open to us
 
 export type FromWorker =
   | { type: 'ready'; L: number; S: number; nations: NationLite[] }
@@ -41,7 +53,7 @@ export type FromWorker =
   | { type: 'colors'; mode: MapMode; rgba: Uint8Array; legend: Legend }
   | { type: 'error'; message: string };
 
-export interface Legend { title: I18n; items: { color: string; label: I18n | string }[] }
+export interface Legend { title: I18n; items: { color: string; label: I18n | string }[]; good?: number; goodOptional?: boolean }
 
 export interface NationLite {
   id: number; key: string; alive: boolean; name: I18n; short: I18n; adj: I18n; color: [number, number, number];

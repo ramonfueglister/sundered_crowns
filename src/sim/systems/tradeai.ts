@@ -1,13 +1,15 @@
 // The AI's trade policy, by the same commands and rules as the player: merchants where they pay most (collecting or
 // steering home), tariffs that suit the realm, trade agreements with its partners and embargoes on rivals that depend
-// on its markets (lifted again after a peace or when the rivalry ends).
+// on its markets (lifted again after a peace or when the rivalry ends); expeditions and company charters.
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { atWar, hasTreaty } from '../ctx';
-import { chance } from '../rng';
+import { chance, rand } from '../rng';
 import { applyCommand } from '../commands';
 import { lawEffect } from './politics';
 import { tariffMax } from './economy';
+import { europeanCrown, charterOptions } from './colonial';
+import { OCEAN_TECH, harbours } from './explore';
 import {
   tradeIncomeWith, merchantRefusal, merchantsFree, steerRoute, homeMarket, embargoedBy, embargoStakes, routeCost, merchantReach,
 } from './trade';
@@ -19,6 +21,8 @@ export function aiTrade(s: GameState, w: World, n: Nation) {
   aiTariff(s, w, n);
   aiEmbargo(s, w, n);
   aiAgreement(s, w, n);
+  aiExpedition(s, w, n);
+  aiCharter(s, w, n);
 }
 
 /** Markets worth a look: home, where we already trade, and the richest markets within reach. */
@@ -115,4 +119,38 @@ function aiAgreement(s: GameState, w: World, n: Nation) {
   const best = [...by.entries()].filter(([o]) => s.nations[o]?.alive && !hasTreaty(s, n.id, o, 'trade') && !atWar(s, n.id, o) && !n.rivals.includes(o) && !embargoedBy(s, n.id, o) && !embargoedBy(s, o, n.id))
     .sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
   if (best) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'trade', target: best[0] });
+}
+
+const incomeOf = (n: Nation) => { let v = 0; for (const k in n.income) v += n.income[k]; return v; };
+
+/** Atlantic crowns send expeditions west once their navigators are able: an unknown sea zone in the Atlantic, a voyage
+ *  of a few weeks, with an idle fleet of theirs or a squadron fitted out for it. */
+function aiExpedition(s: GameState, w: World, n: Nation) {
+  if (n.tech[1] < OCEAN_TECH || n.overlord >= 0 || !europeanCrown(w, n) || !n.flags.atlantic) return;
+  if (s.explorers.some((x) => x.nation === n.id) || !chance(s.rng, 0.35)) return;
+  if (n.treasury < Math.max(150 * s.priceLevel, incomeOf(n) * 2)) return;
+  const f = s.armies.find((a) => a.owner === n.id && a.fleet && !a.battle && !a.path.length && !a.carrying.length && !s.explorers.some((x) => x.id === a.id));
+  let from = f?.loc ?? -1;
+  if (from < 0) { let west = Infinity; for (const p of harbours(s, w, n)) if (w.lon[p] < west) { west = w.lon[p]; from = p; } }
+  if (from < 0) return;
+  const e = s.explored[n.knows];
+  let tgt = -1, bd = Infinity;
+  for (let i = w.L; i < w.N; i++) {
+    if (e && e[i]) continue;
+    if (w.lon[i] > -5) continue;
+    const d = w.distKm(from, i);
+    if (d > 6000) continue;
+    const v = w.lon[i] * 40 + Math.abs(d - 2500) * 0.4 + rand(s.rng) * 600;
+    if (v < bd) { bd = v; tgt = i; }
+  }
+  if (tgt >= 0) applyCommand(s, w, { t: 'explore', n: n.id, fleet: f?.id ?? 0, to: tgt });
+}
+
+/** About once a year a rich crown with Commerce 12 charters a company for an overseas market where it holds a harbour. */
+function aiCharter(s: GameState, w: World, n: Nation) {
+  if (n.tech[1] < 12 || !europeanCrown(w, n) || (Math.floor(s.day / 90) + n.id) % 4 !== 0) return;
+  if (n.treasury < Math.max(1200 * s.priceLevel, incomeOf(n) * 3)) return;
+  const have = new Set((s.companies ?? []).filter((c) => c.nation === n.id).map((c) => c.market));
+  const opt = charterOptions(s, w, n).find((m) => !have.has(m));
+  if (opt !== undefined) applyCommand(s, w, { t: 'charter', n: n.id, market: opt });
 }

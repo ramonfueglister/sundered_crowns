@@ -36,7 +36,7 @@ export const BIN_OWNERS = 1; // payload: Int16Array owner (N) followed by Int16A
 export const BIN_COLORS = 2; // payload: Uint8Array rgba (4*N); mode index in byte 1
 export const BIN_SNOW = 3;   // payload: Float32Array snow (L)
 export const BIN_ROADS = 4;  // payload: Uint8Array road level per location (L)
-export const MAP_MODE_LIST: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'explored'];
+export const MAP_MODE_LIST: MapMode[] = ['political', 'terrain', 'diplomatic', 'development', 'population', 'culture', 'faith', 'trade', 'unrest', 'control', 'goods', 'explored', 'prices', 'production', 'markets'];
 
 export function encodeBinary(kind: number, payload: ArrayBufferView, extra = 0): Uint8Array {
   const out = new Uint8Array(8 + payload.byteLength);
@@ -81,6 +81,7 @@ export type ClientMsg =
   | { type: 'cmd'; id: number; cmd: Command }
   | { type: 'query'; id: number; q: Query }
   | { type: 'mapmode'; mode: MapMode; focus: number }
+  | { type: 'mapgood'; good: number }
   | { type: 'chat'; text: string; to?: number }
   | { type: 'offer'; to: number; action: OfferAction; text?: string }
   | { type: 'offer_answer'; offer: number; accept: boolean }

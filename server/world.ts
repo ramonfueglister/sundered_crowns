@@ -253,7 +253,7 @@ class Bucket {
 }
 
 export class Session {
-  lastNotice: number; needFull = true; mapMode: MapMode = 'political'; mapFocus = -1; closed = false;
+  lastNotice: number; needFull = true; mapMode: MapMode = 'political'; mapFocus = -1; mapGood = -1; closed = false;
   strikes = 0;
   constructor(readonly core: WorldCore, readonly conn: Conn, readonly user: UserAuth) { this.lastNotice = core.lastNoticeId(); }
   get seat(): Seat | null { return this.core.meta.seats[this.user.uid] ?? null; }
@@ -525,6 +525,10 @@ export class WorldCore {
         if (!MAP_MODE_LIST.includes(m.mode)) return;
         ss.mapMode = m.mode; ss.mapFocus = Number.isInteger(m.focus) ? m.focus : -1; this.sendColors(ss); return;
       }
+      case 'mapgood': {
+        ss.mapGood = Number.isInteger(m.good) && m.good >= -1 && m.good < 256 ? m.good : -1;
+        if (ss.mapMode === 'prices' || ss.mapMode === 'production' || ss.mapMode === 'markets') this.sendColors(ss); return;
+      }
       case 'chat': return this.chat(ss, m.text, m.to);
       case 'offer': return this.offer(ss, m.to, m.action, m.text);
       case 'offer_answer': {
@@ -775,7 +779,7 @@ export class WorldCore {
       ss.sendBin(encodeBinary(BIN_COLORS, new Uint8Array(this.w.N * 4), MAP_MODE_LIST.indexOf(ss.mapMode)));
       return;
     }
-    const { rgba, legend } = mapModeColors(this.s, this.w, ss.mapMode, ss.mapFocus >= 0 ? ss.mapFocus : ss.seat?.nation ?? -1);
+    const { rgba, legend } = mapModeColors(this.s, this.w, ss.mapMode, ss.mapFocus >= 0 ? ss.mapFocus : ss.seat?.nation ?? -1, ss.mapGood);
     ss.send({ type: 'legend', mode: ss.mapMode, legend });
     ss.sendBin(encodeBinary(BIN_COLORS, rgba, MAP_MODE_LIST.indexOf(ss.mapMode)));
   }

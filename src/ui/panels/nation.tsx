@@ -4,6 +4,7 @@ import { sim, view, nations } from '../../game/client';
 import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
+import { TradeRelations } from './tradediplo';
 import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName } from './common';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
@@ -72,6 +73,7 @@ export function NationPanel({ nation }: { nation: number }) {
         <Row k={t('treaties')} v={rel.treaties.length ? rel.treaties.map((x: string) => t(`treaty_${x}`)).join(', ') : t('none')} />
       </Section>
       {pid >= 0 && d.alive && <Diplomacy d={d} refresh={refresh} />}
+      {pid >= 0 && d.alive && <TradeRelations target={d.id} refresh={refresh} />}
       {pid >= 0 && d.alive && !rel.atWar && <DeclareWar d={d} refresh={refresh} />}
       {pid >= 0 && d.alive && <Espionage d={d} />}
     </>}

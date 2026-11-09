@@ -4,7 +4,7 @@ import type { World } from '../sim/world';
 import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query, LandmarkLite, TradeFlowLite, TradeHubLite } from './protocol';
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
-import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, RECIPES, TERRAINS, UNITS } from '../sim/defs';
+import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
@@ -21,6 +21,7 @@ import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, t
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
+import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView } from './tradeview';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
@@ -90,7 +91,7 @@ function proposalHint(act: string, from: I18n, n: Nation): I18n {
     case 'alliance': return { en: `An alliance with ${from.en}: when one of us goes to war, the other is asked to join.`, de: `Ein Bündnis mit ${from.de}: zieht einer von uns in den Krieg, wird der andere zur Hilfe gerufen.` };
     case 'marriage': return { en: `A royal marriage for 40 years: +15 opinion both ways for 20 years.`, de: `Eine königliche Heirat für 40 Jahre: +15 Meinung in beide Richtungen für 20 Jahre.` };
     case 'access': return { en: `${from.en}'s armies may march through our land for 10 years.`, de: `Die Heere von ${from.de} dürfen 10 Jahre lang durch unser Land ziehen.` };
-    case 'trade': return { en: `A trade agreement with ${from.en} for 15 years.`, de: `Ein Handelsabkommen mit ${from.de} für 15 Jahre.` };
+    case 'trade': return { en: `A trade agreement with ${from.en} for 15 years: tariffs between us halved, a quarter more goods between our markets, our merchants weigh more in each other's markets.`, de: `Ein Handelsabkommen mit ${from.de} für 15 Jahre: Zölle zwischen uns halbiert, ein Viertel mehr Waren zwischen unseren Märkten, unsere Kaufleute wiegen in den Märkten des anderen mehr.` };
     case 'vassalize': return { en: `We become the vassal of ${from.en} and can no longer declare wars of our own.`, de: `Wir werden Vasall von ${from.de} und können keine eigenen Kriege mehr erklären.` };
     case 'demand': { const amt = Math.round(Math.max(20, (n.income.tax || 10) * 3)); return { en: `We pay ${amt} marks (three months of taxes).`, de: `Wir zahlen ${amt} Mark (drei Monatssteuern).` }; }
   }
@@ -104,6 +105,7 @@ export const ACT_NAME: Record<string, I18n> = {
   fabricate: { en: 'Fabricate a claim', de: 'Anspruch fabrizieren' }, rival: { en: 'Declare rival', de: 'Zum Rivalen erklären' }, unrival: { en: 'End rivalry', de: 'Rivalität beenden' },
   cancel_access: { en: 'Cancel access', de: 'Durchmarsch kündigen' }, improve: { en: 'Improve relations', de: 'Beziehungen verbessern' },
   excommunicate: { en: 'Ask the Curia to excommunicate', de: 'Bei der Kurie den Bann erwirken' },
+  embargo: { en: 'Embargo', de: 'Handelssperre' }, lift_embargo: { en: 'Lift embargo', de: 'Handelssperre aufheben' },
 };
 
 export function landmarksView(s: GameState, w: World): LandmarkLite[] {
@@ -132,7 +134,8 @@ function ramp(t: number, stops: [number, number, number][]): [number, number, nu
 const HEAT: [number, number, number][] = [[40, 60, 120], [60, 140, 160], [120, 190, 100], [240, 210, 80], [220, 80, 50]];
 const GOOD: [number, number, number][] = [[200, 60, 50], [230, 190, 70], [70, 170, 80]];
 
-export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number): { rgba: Uint8Array; legend: Legend } {
+export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number, good = -1): { rgba: Uint8Array; legend: Legend } {
+  if (mode === 'prices' || mode === 'production' || mode === 'markets') return tradeMapColors(s, w, mode, focus, mode === 'markets' ? good : good < 0 ? GI.grain : good);
   const N = w.N, out = new Uint8Array(N * 4);
   const put = (i: number, c: [number, number, number], a = 255) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = a; };
   const lc = s.loc;
@@ -186,6 +189,13 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'ledger': return ledger(s, w, q.kind);
     case 'market': { const m = s.markets[q.market]; if (!m) return null; return { name: m.name, hub: m.hub, owner: m.owner, priceIndex: m.priceIndex, goods: GOODS.map((g, k) => ({ id: g.id, name: g.name, price: m.price[k], supply: m.supply[k], demand: m.demand[k], base: g.base * s.priceLevel, hist: Array.from({ length: 120 }, (_, j) => m.hist[k * 120 + ((m.histPos + j) % 120)]) })), merchants: m.merchants, links: m.links.map((l) => ({ to: s.markets[l.to].name, sea: l.sea })) }; }
     case 'diplo': return evaluateProposal(s, w, player, q.target, q.action);
+    case 'tmarket': return marketDetail(s, w, player, q.market);
+    case 'tmarkets': return marketList(s, w, player);
+    case 'tgood': return goodDetail(s, w, player, q.market, q.good);
+    case 'tpolicy': return tradePolicy(s, w, player);
+    case 'trel': return tradeRelation(s, w, player, q.target);
+    case 'expedition': return expeditionView(s, w, player, q.to, q.fleet);
+    case 'companies': return companiesView(s, w, player);
     case 'peace': {
       const war = s.wars.find((x) => x.id === q.war); if (!war) return null;
       const terms = q.terms as any[];

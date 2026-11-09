@@ -13,7 +13,8 @@ import { setMethod } from './systems/administration';
 import { setDuty, DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
-import { startColony, startExplorer, charterCompany } from './systems/colonial';
+import { startColony, charterCompany } from './systems/colonial';
+import { launchExpedition } from './systems/explore';
 import { startLandmark } from './systems/landmarks';
 import { setMerchants, merchantCap } from './systems/trade';
 import { answerEvent, takeDecision } from './systems/events';
@@ -233,7 +234,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'colonize': { const e = startColony(s, w, n, cmd.loc); return e ? err(e) : OK; }
     case 'method': { const e = setMethod(s, w, n, cmd.loc, cmd.method); return e ? err(e) : OK; }
     case 'charter': { const e = charterCompany(s, w, n, cmd.market); return e ? err(e) : OK; }
-    case 'explore': { const e = startExplorer(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
+    case 'explore': { const e = launchExpedition(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
     case 'spy': { const e = startSpy(s, cmd.n, cmd.target, cmd.action); return e ? err(e) : OK; }
     case 'office': { const e = appointOfficial(s, n, cmd.office, cmd.char); return e ? err(e) : OK; }
     case 'loan': {

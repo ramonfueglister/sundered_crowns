@@ -163,14 +163,14 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
       rel(s, b, a).trust = clamp(rel(s, b, a).trust - 10, 0, 100);
       s.treaties = s.treaties.filter((t) => !(t.type === 'trade' && ((t.a === a && t.b === b) || (t.a === b && t.b === a))));
       chronicle(s, a, 'embargo', { en: `${A.short.en} closed its markets to ${Bn.short.en}.`, de: `${A.short.de} sperrte seine Märkte für ${Bn.short.de}.` });
-      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has declared an embargo on us: no trade between their markets and ours.`, de: `${A.short.de} hat ein Embargo gegen uns verhängt: kein Handel mehr zwischen ihren Märkten und unseren.` });
+      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has declared an embargo on us: no trade between their markets and ours.`, de: `${A.short.de} hat eine Handelssperre gegen uns verhängt: kein Handel mehr zwischen ihren Märkten und unseren.` });
       return null;
     }
     case 'lift_embargo': {
       if (!embargoedBy(s, a, b)) return 'no embargo to lift';
       delete s.flags[`embargo_${a}_${b}`];
       addOpinion(s, b, a, 'embargo_lifted', 10, 365 * 2);
-      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has lifted its embargo on us.`, de: `${A.short.de} hat das Embargo gegen uns aufgehoben.` });
+      if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has lifted its embargo on us.`, de: `${A.short.de} hat die Handelssperre gegen uns aufgehoben.` });
       return null;
     }
     case 'fabricate': {

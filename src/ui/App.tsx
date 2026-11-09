@@ -176,6 +176,7 @@ function MapModes() {
   const names: Record<MapMode, [string, string]> = {
     political: ['Political', 'Politisch'], terrain: ['Terrain', 'Gelände'], diplomatic: ['Diplomatic', 'Diplomatisch'], development: ['Development', 'Entwicklung'], population: ['Population', 'Bevölkerung'],
     culture: ['Culture', 'Kultur'], faith: ['Faith', 'Glaube'], trade: ['Trade', 'Handel'], unrest: ['Unrest', 'Unruhe'], control: ['Control', 'Kontrolle'], goods: ['Goods', 'Güter'], explored: ['Explored', 'Erkundet'],
+    prices: ['Prices', 'Preise'], production: ['Production', 'Erzeugung'], markets: ['Markets', 'Märkte'],
   };
   return <div class="mapmodes">
     {MAP_MODES.map((m, k) => <button class={mapMode.value === m ? 'on' : ''} title={`${names[m][lang.value === 'de' ? 1 : 0]} (${k < 9 ? k + 1 : k === 9 ? 0 : '-'})`} onClick={() => { mapMode.value = m; sfx('click'); }}>{names[m][lang.value === 'de' ? 1 : 0]}</button>)}

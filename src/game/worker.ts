@@ -6,6 +6,7 @@ import { advanceDay, saveBinary, loadBinary } from '../sim/engine';
 import { startRecorded, recordCommand } from '../sim/replay';
 import type { GameState, Notice } from '../sim/types';
 import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
+import { GOOD_MAP_MODES } from './protocol';
 import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from './view';
 import { dayToDate } from '../sim/calendar';
 
@@ -14,7 +15,7 @@ let w: World, s: GameState;
 let player: number | null = null;
 let speed = 0;
 let lastNotice = 0, lastChron = 0, lastOwnerChange = 0, lastMonth = -1;
-let mapMode: MapMode = 'political', mapFocus = -1, mapDirty = true;
+let mapMode: MapMode = 'political', mapFocus = -1, mapDirty = true, mapGood = -1;
 let msPerDay = 0;
 const DAYS_PER_SEC = [0, 1, 3, 8, 20, 1000];
 
@@ -78,7 +79,7 @@ function exploredView(): Uint8Array {
 }
 function sendColors() {
   mapDirty = false;
-  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1);
+  const { rgba, legend } = mapModeColors(s, w, mapMode, mapFocus >= 0 ? mapFocus : player ?? -1, mapGood);
   post({ type: 'colors', mode: mapMode, rgba, legend }, [rgba.buffer]);
 }
 
@@ -135,6 +136,7 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
       case 'query': post({ type: 'reply', id: m.id, data: answer(s, w, player ?? -1, m.q) }); break;
       case 'save': { const data = saveBinary(s); post({ type: 'saved', id: m.id, data }, [data.buffer]); break; }
       case 'mapmode': mapMode = m.mode; mapFocus = m.focus; sendColors(); break;
+      case 'mapgood': mapGood = Number.isInteger(m.good) ? m.good : -1; if (GOOD_MAP_MODES.includes(mapMode)) sendColors(); break;
     }
   } catch (e: any) {
     post({ type: 'error', message: String(e?.stack || e) });

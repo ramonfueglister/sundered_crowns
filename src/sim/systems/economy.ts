@@ -22,9 +22,49 @@ for (let g = 0; g < G; g++) { const b = GOODS[g].base; WEIGHT[g] = b < 2 ? 1 : b
 const SILVER = GI.silver, GOLD = GI.gold;
 
 /** Per-location derived economy numbers from the last processed month (for tooltips & map modes). */
-export interface LocEcon { grain: Float32Array; rgo: Float32Array; craft: Float32Array; tax: Float32Array; income: Float32Array }
+export interface LocEcon {
+  grain: Float32Array; rgo: Float32Array; craft: Float32Array; tax: Float32Array; income: Float32Array;
+  /** quantities produced, GQ_SLOTS per location (see GQ_*): grain, the resource (net of rural processing), its rural
+   *  product, six household goods and up to three workshop products (in the order of the filled workshop slots) */
+  gq: Float32Array;
+  /** scale of each filled workshop slot (inputs used = recipe inputs × method input × scale) */
+  ck: Float32Array;
+  /** demand units of the people per need tier (4 per location) */
+  gd: Float32Array;
+}
+export const GQ_SLOTS = 12, GQ_GRAIN = 0, GQ_RES = 1, GQ_RURAL = 2, GQ_HOUSE = 3, GQ_CRAFT = 9;
 export let LOC_ECON: LocEcon | null = null;
-function locEcon(L: number) { if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L) }; return LOC_ECON; }
+function locEcon(L: number) {
+  if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L), gq: new Float32Array(L * GQ_SLOTS), ck: new Float32Array(L * 3), gd: new Float32Array(L * 4) };
+  return LOC_ECON;
+}
+/** The household goods in the order of their GQ slots. */
+export const HOUSE_GOODS = ['timber', 'clothing', 'bread', 'beer', 'linen', 'leather'];
+/** What a location made and used of each good last month (from LOC_ECON; empty before its first month), by who uses
+ *  it: the people's needs (needs: per-tier weights of its market, needWeights), its workshops, and households baking
+ *  and brewing. Display only. */
+export function locGoods(lc: GameState['loc'], w: World, i: number, needs: { good: number; tier: number; q: number }[] | null): { made: Map<number, number>; people: Map<number, number>; crafts: Map<number, number>; house: Map<number, number> } {
+  const made = new Map<number, number>(), people = new Map<number, number>(), crafts = new Map<number, number>(), house = new Map<number, number>();
+  const ec = LOC_ECON; if (!ec || ec.grain.length !== w.L) return { made, people, crafts, house };
+  const add = (mp: Map<number, number>, g: number, q: number) => { if (q > 1e-6) mp.set(g, (mp.get(g) ?? 0) + q); };
+  const b = i * GQ_SLOTS, gq = ec.gq;
+  add(made, G_GRAIN, gq[b + GQ_GRAIN]);
+  const r = w.resource[i]; add(made, r, gq[b + GQ_RES]);
+  const rp = RURAL[r]; if (rp) add(made, rp[0], gq[b + GQ_RURAL]);
+  HOUSE_GOODS.forEach((id, k) => add(made, GI[id], gq[b + GQ_HOUSE + k]));
+  const md = METHODS[lc.method[i]] ?? METHODS[0];
+  let si = 0;
+  for (let k = 0; k < 3; k++) {
+    const v = lc.workshop[i * 3 + k]; if (v <= 0) continue;
+    add(made, REC_OUT[v - 1], gq[b + GQ_CRAFT + si]);
+    const sc = ec.ck[i * 3 + si], ins = REC_IN[v - 1], qs = REC_Q[v - 1];
+    for (let j = 0; j < ins.length; j++) add(crafts, ins[j], qs[j] * md.mult * md.input * sc);
+    si++;
+  }
+  add(house, G_GRAIN, gq[b + GQ_HOUSE + 2] * 0.8 + gq[b + GQ_HOUSE + 3] * 0.5);
+  if (needs) for (const nw of needs) add(people, nw.good, ec.gd[i * 4 + nw.tier] * nw.q);
+  return { made, people, crafts, house };
+}
 
 /** Per-tier price of the basket (per person) and how well the market can fill it; recomputed when prices change. */
 const TC = new WeakMap<Market, { pos: number; cost: Float64Array; fill: Float64Array; wq: Float64Array }>();
@@ -43,6 +83,13 @@ function tierCache(m: Market, pl: number) {
   TC.set(m, c); return c;
 }
 export function invalidateTierCache(m: Market) { TC.delete(m); }
+/** The needs (good, tier) and how much of each a demand unit of its tier buys in this market at its prices. */
+export function needWeights(m: Market, pl: number): { good: number; tier: number; q: number }[] {
+  // (the same weights as tierCache, computed without touching its cache or the market)
+  const qs = new Float64Array(4), qa = new Float64Array(4);
+  const wq = NEED_IDX.map(([g, q, tier]) => { const rel = clamp(GOODS[g].base * pl / Math.max(1e-9, m.price[g]), 0.25, 4); const x = q * Math.pow(rel, 0.8); qs[tier] += q; qa[tier] += x; return x; });
+  return NEED_IDX.map(([g, , tier], k) => ({ good: g, tier, q: wq[k] * (qa[tier] > 0 ? qs[tier] / qa[tier] : 1) }));
+}
 export function marketFill(m: Market, g: number): number {
   const d = m.demand[g]; if (d <= 1e-9) return 1;
   return clamp(m.supply[g] / d, 0, 1);
@@ -237,11 +284,14 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     // rural processing: villages press their own grapes and olives, ret their flax, card their wool
     const rp = RURAL[r];
     let ruralValue = 0;
+    const gq = ec.gq, gb = i * GQ_SLOTS;
+    gq[gb + GQ_GRAIN] = grainQ;
     if (rp) {
       const raw = rgoQ * rp[2], out = raw * rp[1];
       m.sAcc[r] += rgoQ - raw; m.sAcc[rp[0]] += out;
       ruralValue = out * m.price[rp[0]] - raw * m.price[r];
-    } else m.sAcc[r] += rgoQ;
+      gq[gb + GQ_RES] = rgoQ - raw; gq[gb + GQ_RURAL] = out;
+    } else { m.sAcc[r] += rgoQ; gq[gb + GQ_RES] = rgoQ; gq[gb + GQ_RURAL] = 0; }
     const pGrain = m.price[G_GRAIN], pR = m.price[r];
     // ---- household production: firewood, homespun cloth, baking and brewing (most of what common folk use) ----
     let ptotH = 0; for (let c = 0; c < C; c++) ptotH += P[base + c];
@@ -252,6 +302,8 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     const linenQ = hh * (arid > 0.6 ? 0.05 : 0.15), leatherQ = hh * 0.1; // a flax patch and the hides of the household's own beasts
     m.sAcc[G_TIMBER] += woodQ; m.sAcc[G_CLOTHING] += clothQ; m.sAcc[G_BREAD] += breadQ; m.sAcc[G_BEER] += beerQ;
     m.sAcc[G_LINEN] += linenQ; m.sAcc[G_LEATHER] += leatherQ;
+    gq[gb + GQ_HOUSE] = woodQ; gq[gb + GQ_HOUSE + 1] = clothQ; gq[gb + GQ_HOUSE + 2] = breadQ; gq[gb + GQ_HOUSE + 3] = beerQ; gq[gb + GQ_HOUSE + 4] = linenQ; gq[gb + GQ_HOUSE + 5] = leatherQ;
+    gq[gb + GQ_CRAFT] = 0; gq[gb + GQ_CRAFT + 1] = 0; gq[gb + GQ_CRAFT + 2] = 0; ec.ck[i * 3] = 0; ec.ck[i * 3 + 1] = 0; ec.ck[i * 3 + 2] = 0;
     m.dAcc[G_GRAIN] += breadQ * 0.8 + beerQ * 0.5; // baking and brewing use grain
     const hhValue = woodQ * m.price[G_TIMBER] + clothQ * m.price[G_CLOTHING] * 0.5 + (breadQ * (m.price[G_BREAD] - pGrain * 0.8) + beerQ * (m.price[G_BEER] - pGrain * 0.5))
       + (linenQ * m.price[G_LINEN] + leatherQ * m.price[G_LEATHER]) * 0.5 + Math.max(0, ruralValue);
@@ -281,6 +333,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         const outQ = rc.outQty * k * meth * prodMod;
         const og = REC_OUT[sl - 1];
         m.sAcc[og] += outQ;
+        gq[gb + GQ_CRAFT + si] = outQ; ec.ck[i * 3 + si] = k;
         const val = outQ * m.price[og] * quality;
         craftValue += val; craftProfit += val - inCost;
       }
@@ -336,6 +389,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     // ---- consumption of needs ----
     let unrestSol = 0, popTot = 0;
     let tc: ReturnType<typeof tierCache> | null = null;
+    const gd = ec.gd; gd[i * 4] = 0; gd[i * 4 + 1] = 0; gd[i * 4 + 2] = 0; gd[i * 4 + 3] = 0;
     for (let c = 0; c < C; c++) {
       const pc = P[base + c];
       if (pc < 1) { lc.sol[base + c] = 0.5; continue; }
@@ -354,6 +408,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         const subsidy = t === 0 && (c === CL.peasants) ? Math.min(cost * 0.6, grainQ * pGrain * 0.6) : 0;
         const f = clamp((budget + subsidy) / cost, 0, 1);
         m.tierAcc![t] += mult * pc * f; // demand units, distributed over the tier's goods at month end
+        gd[i * 4 + t] += mult * pc * f;
         const ful = f * tc.fill[t];
         sol += TIER_W[t] * ful;
         const sp = Math.max(0, cost * f - subsidy);
