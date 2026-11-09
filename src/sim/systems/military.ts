@@ -535,7 +535,11 @@ function siegesDay(s: GameState, w: World) {
   }
   for (const sg of s.sieges.slice()) {
     const besiegers = s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length);
-    if (!besiegers.length) { s.sieges.splice(s.sieges.indexOf(sg), 1); continue; }
+    if (!besiegers.length) {
+      // a sortie or a relief army is fought before the walls: the siege works stand until the battle is decided
+      if (s.battles.some((b) => b.loc === sg.loc)) continue;
+      s.sieges.splice(s.sieges.indexOf(sg), 1); continue;
+    }
     sg.days++;
     const l = sg.loc;
     const fort = s.loc.buildings[l * B + BI.fort];
@@ -548,9 +552,10 @@ function siegesDay(s: GameState, w: World) {
     if (sg.days % 30 === 0) {
       // monthly siege roll: 1d14 + bonuses vs fort level
       const roll = 1 + Math.floor(rand(s.rng) * 14);
-      const lead = besiegers[0], bes = s.nations[lead.owner];
-      // siege craft of the besieger (great guns, engineers) and the weight of numbers against the garrison
-      const craft = bes && !lead.rebels ? lawEffect(bes, 'siege') : 0;
+      // siege craft of the besiegers (great guns, engineers: the best of the allied camps directs the works) and the
+      // weight of numbers against the garrison
+      let craft = 0;
+      for (const a of besiegers) { const bes = s.nations[a.owner]; if (bes && !a.rebels) craft = Math.max(craft, lawEffect(bes, 'siege')); }
       const bonus = (art > 0 ? 2 + Math.min(3, art / 500) : 0) + (sg.blockade ? 2 : 0) + sg.breach + Math.min(3, Math.floor(men / Math.max(1, sg.garrison * 2))) + Math.floor(sg.days / 120) + craft;
       const need = 10 + fortStr * 2;
       if (roll === 14 || roll + bonus >= need) sg.progress += 1;

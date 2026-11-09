@@ -269,6 +269,11 @@ function sanitizeTerms(s: GameState, w: World, war: any, from: number, to: numbe
 function acceptsConcession(s: GameState, war: any, from: number, to: number, terms: PeaceTerm[]) {
   const score = computeScore(s, war) * (war.att.includes(to) ? 1 : -1); // from the receiver's perspective
   const gain = terms.reduce((p, t) => p + termCost(s, war, t, to, from), 0);
+  // a host before the walls of a town the war was declared for holds out for that town (see evaluatePeace)
+  const goal: number[] = war.goal?.locs ?? [];
+  const offered = new Set(terms.flatMap((t) => (t.type === 'cede' ? t.locs ?? [] : [])));
+  if (to === war.attLead && !s.playerNations.includes(to) && s.nations[to].warExhaustion < 60
+    && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc) && !offered.has(x.loc))) return false;
   return score < 10 || gain >= score * 0.5 || s.nations[to].warExhaustion > 40;
 }
 

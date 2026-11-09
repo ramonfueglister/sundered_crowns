@@ -6,7 +6,7 @@ import { createGame } from '../src/sim/setup';
 import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx } from '../src/sim/ctx';
 import { dateToDay } from '../src/sim/calendar';
-import { war, casusBelliAll, declareWar } from '../src/sim/systems/war';
+import { war, casusBelliAll, declareWar, evaluatePeace } from '../src/sim/systems/war';
 import { realm } from '../src/sim/systems/realm';
 import { libertyParts, evaluateProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
@@ -46,6 +46,28 @@ describe('history mechanics (point 99)', () => {
     expect(declareWar(s, w, tv.id, m.id, 'conquest')).toBe('the overlord forbids war among his tributaries');
     s.flags[`gather_${m.id}_${tv.id}`] = s.day + 365;
     expect(declareWar(s, w, m.id, tv.id, 'conquest')).toBe(null);
+  });
+
+  it('a host before the walls of the town it went to war for refuses a white peace; a worn-out ally stays home', () => {
+    const s = fresh();
+    const o = nat(s, 'ottoman'), b = nat(s, 'byzantium'), x = nat(s, 'karaman');
+    const city = w.names.indexOf('Constantinople');
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce' && !(t.type === 'alliance' && (t.a === x.id || t.b === x.id)));
+    s.treaties.push({ a: Math.min(o.id, x.id), b: Math.max(o.id, x.id), type: 'alliance', since: s.day, until: s.day + 365 * 20 });
+    x.warExhaustion = 80;
+    expect(declareWar(s, w, o.id, b.id, 'conquest', [city])).toBe(null);
+    const wr = s.wars[s.wars.length - 1];
+    expect(wr.att).not.toContain(x.id); // the exhausted ally does not answer the call
+    o.warExhaustion = 20;
+    const before = evaluatePeace(s, wr, b.id, o.id, []);
+    expect(before.reasons.some(([k]) => k === 'siege_under_way')).toBe(false);
+    s.sieges.push({ loc: city, nation: o.id, progress: 1, days: 60, garrison: 1000, breach: 0, blockade: false, log: [] });
+    const during = evaluatePeace(s, wr, b.id, o.id, []);
+    expect(during.reasons.some(([k]) => k === 'siege_under_way')).toBe(true);
+    expect(during.accept).toBe(false);
+    // worn out, the sultan takes the white peace after all
+    o.warExhaustion = 70;
+    expect(evaluatePeace(s, wr, b.id, o.id, []).reasons.some(([k]) => k === 'siege_under_way')).toBe(false);
   });
 
   it('the steppe order fades from 1420: the horde weakens and its tributaries strain to be free', () => {

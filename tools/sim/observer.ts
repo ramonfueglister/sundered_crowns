@@ -39,7 +39,7 @@ function snapshot(year: number) {
   const gross = (n: (typeof s.nations)[number]) => Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0) * 12;
   const chests = alive.filter((n) => gross(n) > 0).map((n) => [n, n.treasury / gross(n)] as const).sort((a, b) => b[1] - a[1]);
   const richest = alive.slice().sort((a, b) => b.treasury - a.treasury).slice(0, 5).map((n) => `${n.short.en} ${Math.round(n.treasury / 1000)}k/${(n.treasury / Math.max(1, gross(n))).toFixed(1)}y`);
-  const hoarders = chests.filter(([n, r]) => r > 3 && !s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id))).map(([n, r]) => `${n.short.en} ${r.toFixed(1)}y`);
+  const hoarders = chests.filter(([n, r]) => r > 3 && !s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id))).map(([n, r]) => `${n.short.en} ${r.toFixed(1)}y of ${Math.round(gross(n))}/y`);
   const holder = (place: string) => { const l = w.names.indexOf(place); const o = l >= 0 ? s.loc.owner[l] : -1; return o >= 0 ? s.nations[o].short.en : '-'; };
   const realm = (key: string) => { const n = s.nations.find((x) => x.key === key); return !n ? '?' : !n.alive ? 'gone' : `${locs.get(n.id) ?? 0}${n.overlord >= 0 ? ` (${n.subjectType} of ${s.nations[n.overlord].short.en})` : ''}`; };
   const outcomes = { constantinople: holder('Constantinople'), granada: holder('Granada'), lisbon: holder('Lisbon'), moscow: holder('Moscow'), portugal: realm('portugal'), moscowRealm: realm('moscow'), golden_horde: realm('golden_horde'), ottoman: realm('ottoman') };

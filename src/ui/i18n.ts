@@ -207,6 +207,8 @@ const S: Record<string, [string, string]> = {
   // ---- depth track: AI budget and history ----
   cb_gathering: ['Gathering of the lands', 'Sammlung der Länder'], r_steppe_fading: ['The steppe order fades', 'Die Ordnung der Steppe verblasst'],
   r_senior_prince: ['The leading crown of our people', 'Die führende Krone unseres Volkes'],
+  r_siege_under_way: ['Our host lies before the walls', 'Unser Heer liegt vor den Mauern'],
+  r_war_aims_unmet: ['The war aims are not yet won', 'Die Kriegsziele sind noch nicht erreicht'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

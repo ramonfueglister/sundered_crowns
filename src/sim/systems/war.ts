@@ -9,7 +9,7 @@ import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
 import { lawEffect, estate } from './politics';
-import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
+import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 
 // Per-nation location lists (OC) and development sums (DC), both refreshed lazily after an EPOCH bump.
 // Owner and dev are written in many places, so instead of rebuilding on every bump each cache compares
@@ -103,13 +103,10 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const na = s.nations[a], nb = s.nations[b];
   if (!na?.alive || !nb?.alive || a === b) return 'invalid';
   if (atWar(s, a, b)) return 'already at war';
-  if (hasTreaty(s, a, b, 'truce')) {
-    // breaking a truce is possible but costly
-    na.concord = clamp(na.concord - 30, -100, 100); na.prestige -= 20;
-  }
   if (na.overlord >= 0 && na.subjectType !== 'tributary' && goalType !== 'independence') return 'subjects cannot declare wars';
   if (goalType !== 'independence' && tributaryPeace(s, a, b)) return 'the overlord forbids war among his tributaries';
   if (na.overlord === b && goalType !== 'independence') return 'we pay tribute to them';
+  const brokenTruce = hasTreaty(s, a, b, 'truce');
   if (hasTreaty(s, a, b, 'alliance')) { s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === a && t.b === b) || (t.a === b && t.b === a)))); na.prestige -= 10; }
   const cb = hasCasusBelli(s, a, b);
   if (!cb && goalType !== 'coalition' && goalType !== 'civil_war' && goalType !== 'independence') {
@@ -128,13 +125,20 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a && !atWar(s, x, target))];
   if (!def.includes(b)) def.push(b);
   const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary' && !atWar(s, x, a))];
+  if (brokenTruce) {
+    // breaking a truce is possible but costly (paid once the declaration stands)
+    na.concord = clamp(na.concord - 30, -100, 100); na.prestige -= 20;
+    s.treaties = s.treaties.filter((t) => !(t.type === 'truce' && ((t.a === a && t.b === b) || (t.a === b && t.b === a))));
+  }
   const war: War = {
     id: newId(s), name: warName(s, w, a, b, goalType), att, def, attLead: a, defLead: target,
     goal: { type: goalType, target: b, locs }, start: s.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [],
   };
   s.wars.push(war);
   // call allies
-  for (const al of allies(s, target)) if (!war.att.includes(al) && !war.def.includes(al) && willJoin(s, al, target, a, true)) { war.def.push(al); }
+  // in a war of reconquest or of faith the attacker's brethren in faith do not defend the other faith
+  const holy = goalType === 'reconquest' || goalType === 'faith';
+  for (const al of allies(s, target)) if (!war.att.includes(al) && !war.def.includes(al) && !(holy && FAITHS[s.nations[al].faith]?.family === FAITHS[na.faith]?.family && FAITHS[nb.faith]?.family !== FAITHS[na.faith]?.family) && willJoin(s, al, target, a, true)) { war.def.push(al); }
   for (const al of allies(s, a)) if (!war.att.includes(al) && !war.def.includes(al) && willJoin(s, al, a, target, false)) { war.att.push(al); }
   // guarantees
   for (const t of s.treaties) if (t.type === 'guarantee' && t.b === b && t.until > s.day && !war.att.includes(t.a) && !war.def.includes(t.a) && s.nations[t.a].alive) war.def.push(t.a);
@@ -149,6 +153,8 @@ function willJoin(s: GameState, ally: number, friend: number, enemy: number, def
   if (!n.alive || n.overlord >= 0 && n.overlord !== friend) return false;
   if (hasTreaty(s, ally, enemy, 'alliance')) return false;
   if (s.playerNations.includes(ally)) return true; // players are called; they can make separate peace
+  // a realm worn out by war stays home from an ally's campaign, and once spent even from its defence
+  if (n.warExhaustion > (defensive ? 75 : 40)) return false;
   const op = opinion(s, ally, friend) - opinion(s, ally, enemy) * 0.5 + (defensive ? 30 : 0) + (n.rivals.includes(enemy) ? 40 : 0);
   return op > 0 || chance(s.rng, 0.5);
 }
@@ -260,7 +266,16 @@ export function evaluatePeace(s: GameState, war: War, from: number, to: number, 
   // a subject fighting for its freedom does not give up for nothing while the war still goes its way
   const holdOut = white && war.goal.type === 'independence' && from === war.defLead && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && !s.playerNations.includes(to);
   if (holdOut) reasons.push(['fighting_for_freedom', -30]);
-  return { accept: !holdOut && sum >= 0 && (white || score >= cost * 0.8), score: holdOut ? sum - 30 : sum, reasons };
+  // an attacker whose host lies before the walls of a town it went to war for does not give it up for nothing, nor
+  // does one that is winning a young war before the towns it declared it for are taken
+  const goal = war.goal.locs;
+  const keen = white && !holdOut && to === war.attLead && goal.length > 0 && nTo.warExhaustion < 60 && !s.playerNations.includes(to);
+  const sieging = keen && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc));
+  const unmet = keen && !sieging && score < 0 && (s.day - war.start) / 365 < 1.5 && goal.some((l) => war.def.includes(s.loc.owner[l]));
+  if (sieging) reasons.push(['siege_under_way', -30]);
+  if (unmet) reasons.push(['war_aims_unmet', -30]);
+  const pen = (holdOut || sieging || unmet) ? 30 : 0;
+  return { accept: !holdOut && !sieging && !unmet && sum >= 0 && (white || score >= cost * 0.8), score: sum - pen, reasons };
 }
 
 export function applyPeace(s: GameState, w: World, war: War, winner: number, loser: number, terms: PeaceTerm[]) {
@@ -360,8 +375,12 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
   const ending = leaders ? [...war.att, ...war.def] : [from === war.attLead || from === war.defLead ? to : from];
   // a war to win back one's own land resumes sooner (the reconquest of Granada went on campaign after campaign)
   const truceYears = war.goal.type === 'reconquest' ? 2 : 5;
+  // the truce binds the war leaders to every enemy, not the allies to each other: otherwise every alliance war renewed
+  // truces between bystanders for good (the City and Granada were kept safe that way for a century)
+  const lead = (x: number) => x === war.attLead || x === war.defLead;
   for (const n of ending) {
     for (const other of (war.att.includes(n) ? war.def : war.att)) {
+      if (!lead(n) && !lead(other)) continue;
       s.treaties.push({ a: Math.min(n, other), b: Math.max(n, other), type: 'truce', since: s.day, until: s.day + 365 * truceYears });
     }
   }

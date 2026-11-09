@@ -295,7 +295,7 @@ export function spendSurplus(s: GameState, w: World, n: Nation) {
   // a small realm with nothing left to build: beyond two years of revenue the court spends more freely (feasts,
   // patronage, gifts to churches), on top of the splendour every full chest draws (see monthlyLedger)
   const over = n.treasury - gross * 24;
-  if (over > 0) { const g = over * 0.05; n.treasury -= g; n.expenseAcc.splendour = (n.expenseAcc.splendour || 0) + g; }
+  if (over > 0) { const g = over * 0.08; n.treasury -= g; n.expenseAcc.splendour = (n.expenseAcc.splendour || 0) + g; }
 }
 
 function borderLoc(s: GameState, w: World, l: number, n: number) {
@@ -449,8 +449,8 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
   const score = computeScore(s, war) * (war.att.includes(n.id) ? 1 : -1);
   const dur = (s.day - war.start) / 365;
   if (!lead) {
-    // junior participant: separate peace if exhausted
-    if (n.warExhaustion > 50 && score < 0 && chance(s.rng, 0.2)) applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: [] });
+    // junior participant: separate peace if exhausted (a worn-out ally goes home even from a war going well)
+    if (((n.warExhaustion > 50 && score < 0) || n.warExhaustion > 75) && chance(s.rng, 0.2)) applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: [] });
     return;
   }
   if (s.playerNations.includes(other) && war.offers.some((o) => o.from === n.id)) return;
@@ -475,8 +475,13 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
     // the bundle first, then at most six capitals (a peace holds at most eight terms)
     if (pick.length) terms.push({ type: 'cede', locs: pick, to: n.id });
     for (const c of caps.slice(0, 6)) terms.push({ type: 'cede', locs: [c], to: n.id });
-    // early in a war a win on the field is no reason to settle for gold: take the forts first
     const besiegingGoal = s.armies.some((a) => a.owner === n.id && a.siege >= 0 && goal.has(a.siege));
+    // an attacker does not settle for less than the towns it declared the war for while the war is young, nor while
+    // its host lies before their walls
+    const won = new Set([...pick, ...caps.slice(0, 6)]);
+    const goalLeft = war.goal.locs.some((l) => !won.has(l) && enemySide.includes(s.loc.owner[l]));
+    if (war.attLead === n.id && goalLeft && n.warExhaustion < 50 && dur < (besiegingGoal ? 6 : 1.5)) return;
+    // early in a war a win on the field is no reason to settle for gold: take the forts first
     if (!terms.length && score > 30 && (dur > 1.5 || n.warExhaustion > 40) && !(besiegingGoal && dur < 6 && n.warExhaustion < 50))
       terms.push({ type: 'gold', amount: Math.max(50, (s.nations[enemyLeader].income.tax || 10) * 8) });
     if (terms.length || dur > 4) {
@@ -543,6 +548,10 @@ function militaryAI(s: GameState, w: World, n: Nation) {
   const claimed = new Set<number>();
   for (const x of own) { if (x.siege >= 0) claimed.add(x.siege); if (x.path.length) claimed.add(x.path[x.path.length - 1]); }
   const goal = new Set(s.wars.filter((x) => x.att.includes(n.id) || x.def.includes(n.id)).flatMap((x) => x.goal.locs));
+  // a town the whole host is called to (a situation's great siege) draws every army, not only the first
+  const focusLoc = typeof n.flags.siege_focus === 'number' && enemies.has(s.loc.ctrl[n.flags.siege_focus]) ? n.flags.siege_focus : -1;
+  // the towns of the wars we lead that the enemy still holds
+  const myGoals = s.wars.filter((x) => x.attLead === n.id).flatMap((x) => x.goal.locs).filter((l) => enemies.has(s.loc.ctrl[l]));
   const gone = new Set<number>(); // armies merged into another this turn
   // AI marches keep the army's memory of unreachable places (a player's order clears it)
   const aiMove = (a: Army, to: number) => {
@@ -574,18 +583,21 @@ function militaryAI(s: GameState, w: World, n: Nation) {
     // merge small armies at the same place (an army on the march never takes back the half it left behind)
     const same = a.path.length ? [] : myArmies.filter((x) => x !== a && !gone.has(x.id) && x.loc === a.loc && !x.path.length);
     if (same.length) { applyCommand(s, w, { t: 'merge', n: n.id, armies: [a.id, ...same.map((x) => x.id)] }); for (const x of same) gone.add(x.id); continue; }
-    // nearest beatable enemy army within reach
+    // nearest beatable enemy army within reach (a host besieging a town it went to war for, or near one it declared a
+    // war for, only meets a relief army)
     let tgt = -1, td = Infinity;
+    const reach = (a.siege >= 0 && goal.has(a.siege)) || myGoals.some((l) => w.distKm(a.loc, l) < 300) ? 150 : 600;
     for (let j = 0; j < E; j++) {
       const e = enemyArmies[j];
       const d = w.distKm(a.loc, e.loc);
-      if (d > 600) continue;
+      if (d > reach) continue;
+      if (focusLoc >= 0 && w.distKm(e.loc, focusLoc) > 150 && w.distKm(a.loc, focusLoc) < 800) continue; // only armies coming to relieve the great siege
       const near = nearOf(j);
       if (myStr > near * 1.15 && d < td) { td = d; tgt = e.loc; }
     }
     // threatened by a much stronger enemy: fall back toward capital / friendly fort
     let threat = 0; for (let j = 0; j < E; j++) if (w.distKm(enemyArmies[j].loc, a.loc) < 150) threat += eStr[j];
-    if (threat > myStr * 1.6 && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
+    if (threat > myStr * (a.siege >= 0 && a.siege === focusLoc ? 2.5 : 1.6) && n.capital >= 0 && a.loc !== n.capital) { aiMove(a, n.capital); continue; }
     if (tgt >= 0) { aiMove(a, tgt); continue; }
     if (a.siege >= 0) continue; // keep sieging
     // places this army found no road to (kept on the army for 90 days, so saves and replays agree)
@@ -605,13 +617,14 @@ function militaryAI(s: GameState, w: World, n: Nation) {
       targets.sort((p, q) => p - q);
     }
     const k = reachOf(a);
-    const open = (i: number) => w.distKm(a.loc, i) <= 1500 && !claimed.has(i) && !blocked?.has(i) && comp[i] === k;
+    const open = (i: number) => w.distKm(a.loc, i) <= 1500 && (!claimed.has(i) || i === focusLoc) && !blocked?.has(i) && comp[i] === k;
     for (const i of targets) {
       if (!open(i)) continue;
       const dk = w.distKm(a.loc, i);
       const fort = s.loc.buildings[i * B + BI.fort];
       let d = dk * (fort ? 0.8 : 1) * (goal.has(i) ? 0.6 : 1) * (s.loc.owner[i] === n.id ? 0.5 : 1);
-      if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
+      if (i === focusLoc) d *= 0.15;
+      else if (fort && armyMen(a) < (s.loc.garrison[i] || 1000) * 2) d *= 3;
       if (d < bd) { bd = d; best = i; }
     }
     if (best >= 0) claimed.add(best);
