@@ -24,7 +24,7 @@ export const lastCmd = signal<{ cmd: Cmd; at: number } | null>(null);
 export async function act(c: Cmd, ok: Sfx | null = 'click', okText?: string): Promise<CmdResult> {
   const r = await sim().cmd({ ...c, n: playerId.value } as Command);
   if (r.ok) { if (ok) sfx(ok); if (okText) showToast(okText); lastCmd.value = { cmd: c, at: Date.now() }; }
-  else { sfx('error'); showToast(errText(r.err || 'failed'), 'err'); }
+  else { sfx('error'); showToast(errText(r.msg ?? r.err ?? 'failed'), 'err'); }
   return r;
 }
 

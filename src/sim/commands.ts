@@ -1,6 +1,6 @@
 // Every action a player or the AI can take goes through applyCommand. It validates and mutates the state
 // deterministically, so the same command list replays to the same game (single player, replays, world server).
-import type { GameState, Command, CmdResult, Army, PeaceTerm } from './types';
+import type { GameState, Command, CmdResult, Army, PeaceTerm, I18n, Nation } from './types';
 import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
@@ -14,11 +14,45 @@ import { startAgent } from './systems/society';
 import { startColony, startExplorer, charterCompany } from './systems/colonial';
 import { startLandmark } from './systems/landmarks';
 import { answerEvent, takeDecision } from './systems/events';
+import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
 
 const OK: CmdResult = { ok: true };
-const err = (e: string): CmdResult => ({ ok: false, err: e });
+const err = (e: string | I18n): CmdResult => (typeof e === 'string' ? { ok: false, err: e } : { ok: false, err: e.en, msg: e });
+
+/**
+ * Why a realm cannot start this building here now, gold aside (null = it can). The build command, the AI and the
+ * building overview use the same rules.
+ */
+export function buildRefusal(s: GameState, w: World, nid: number, l: number, b: number, q?: BuildQueue): string | null {
+  const def = BUILDINGS[b]; if (!def) return 'unknown building';
+  const n = s.nations[nid];
+  if (l < 0 || l >= w.L || s.loc.owner[l] !== nid) return 'not your location';
+  if (s.loc.ctrl[l] !== nid) return 'occupied';
+  if ((def.era ?? 0) > n.era) return 'not yet known';
+  if (def.needsCoast && !w.coastal[l]) return 'needs a coast';
+  const lvl = s.loc.buildings[l * B + b];
+  let queued = 0, here = 0;
+  if (q) { here = q.here.get(l) ?? 0; queued = q.same.get(l * B + b) ?? 0; }
+  else for (const c of s.constructions) if (c.loc === l) { here++; if (c.building === b) queued++; }
+  if (lvl + queued >= def.max) return 'fully built';
+  if (here >= 2) return 'two works already under way here';
+  if (b === BI.university && s.loc.dev[l] < 25) return 'needs a larger town';
+  if (b === BI.admin && (q ? q.admin.has(nid) : s.constructions.some((c) => c.nation === nid && c.building === BI.admin))) return 'one seat at a time';
+  return null;
+}
+/** The construction queue counted once (works per location, per location and building, realms raising a seat), for checking many places. */
+export interface BuildQueue { here: Map<number, number>; same: Map<number, number>; admin: Set<number> }
+export function buildQueue(s: GameState): BuildQueue {
+  const q: BuildQueue = { here: new Map(), same: new Map(), admin: new Set() };
+  for (const c of s.constructions) {
+    q.here.set(c.loc, (q.here.get(c.loc) ?? 0) + 1);
+    q.same.set(c.loc * B + c.building, (q.same.get(c.loc * B + c.building) ?? 0) + 1);
+    if (c.building === BI.admin) q.admin.add(c.nation);
+  }
+  return q;
+}
 
 export function buildCost(s: GameState, n: { inflation: number }, b: number, level: number) {
   return BUILDINGS[b].cost * (1 + level * 0.5) * s.priceLevel * (1 + n.inflation) * 6;
@@ -101,17 +135,10 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'landmark': { const e = startLandmark(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
     case 'build': {
       const b = cmd.building, l = cmd.loc;
-      const def = BUILDINGS[b]; if (!def) return err('unknown building');
-      if (l < 0 || l >= w.L || s.loc.owner[l] !== cmd.n) return err('not your location');
-      if (s.loc.ctrl[l] !== cmd.n) return err('occupied');
-      if ((def.era ?? 0) > n.era) return err('not yet known');
-      if (def.needsCoast && !w.coastal[l]) return err('needs a coast');
+      const why = buildRefusal(s, w, cmd.n, l, b); if (why) return err(why);
+      const def = BUILDINGS[b];
       const lvl = s.loc.buildings[l * B + b];
       const queued = s.constructions.filter((c) => c.loc === l && c.building === b).length;
-      if (lvl + queued >= def.max) return err('fully built');
-      if (s.constructions.filter((c) => c.loc === l).length >= 2) return err('two works already under way here');
-      if (b === BI.university && s.loc.dev[l] < 25) return err('needs a larger town');
-      if (b === BI.admin && s.constructions.some((c) => c.nation === cmd.n && c.building === BI.admin)) return err('one seat at a time');
       const cost = buildCost(s, n, b, lvl + queued);
       if (n.treasury < cost) return err('not enough gold');
       n.treasury -= cost; n.expenseAcc.construction = (n.expenseAcc.construction || 0) + cost;
@@ -249,9 +276,69 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       a.embarkedOn = f.id; a.path = []; a.siege = -1; f.carrying.push(a.id); a.loc = f.loc;
       return OK;
     }
+    case 'goal': { const e = claimGoal(s, w, n, String(cmd.id)); return e ? err(e) : OK; }
+    case 'cancel': return cancelOrder(s, w, cmd.n, cmd.kind, cmd.loc, cmd.item);
+    case 'batch': return batchOrders(s, w, cmd.n, cmd.cmds);
     case 'dev': return devCommand(s, w, cmd.n, cmd.action, cmd.payload);
   }
   return err('unknown command');
+}
+
+// ---------------- orders at scale: cancel, batch ----------------
+/** Gold back when a construction is stopped: half of what the unbuilt part cost. */
+export function constructionRefund(c: { building: number; left: number; cost: number }): number {
+  const total = BUILDINGS[c.building].months * 30;
+  return c.cost * 0.5 * clamp(c.left / Math.max(1, total), 0, 1);
+}
+/** Gold back when a levy is stopped before it is ready: half its price now; the men go back to the manpower pool. */
+export function recruitRefund(s: GameState, n: Nation, r: { type: number; men: number }): number {
+  return unitCost(s, n, r.type, r.men) * 0.5;
+}
+function cancelOrder(s: GameState, w: World, nid: number, kind: string, loc: number, item: number): CmdResult {
+  const n = s.nations[nid];
+  if (kind === 'build') {
+    // the last order placed there for this building (higher levels are queued later and cost more)
+    let k = -1;
+    for (let i = s.constructions.length - 1; i >= 0; i--) { const c = s.constructions[i]; if (c.nation === nid && c.loc === loc && c.building === item) { k = i; break; } }
+    if (k < 0) return err('nothing under way');
+    const c = s.constructions[k];
+    s.constructions.splice(k, 1);
+    const back = constructionRefund(c);
+    n.treasury += back; n.incomeAcc.refunds = (n.incomeAcc.refunds || 0) + back;
+    return OK;
+  }
+  if (kind === 'recruit') {
+    let k = -1;
+    for (let i = 0; i < s.recruits.length; i++) { const r = s.recruits[i]; if (r.nation === nid && r.loc === loc && r.type === item && (k < 0 || r.left > s.recruits[k].left)) k = i; }
+    if (k < 0) return err('nothing under way');
+    const r = s.recruits[k];
+    s.recruits.splice(k, 1);
+    const back = recruitRefund(s, n, r);
+    n.treasury += back; n.incomeAcc.refunds = (n.incomeAcc.refunds || 0) + back;
+    if (UNITS[r.type].kind === 'ship') n.sailors += r.men * 50; else n.manpower = Math.min(n.maxManpower, n.manpower + r.men);
+    return OK;
+  }
+  void w;
+  return err('not this kind of order');
+}
+/** Orders a batch may carry: the province, area and realm actions of the building and levy overviews. */
+const BATCH_KINDS = new Set<Command['t']>(['build', 'recruit', 'agent', 'cancel']);
+export const BATCH_MAX = 400;
+/**
+ * Many orders at once, applied one after the other exactly as if sent singly (each validated and paid on its own, so
+ * a batch costs what the single orders cost and stops paying when the gold runs out). ok when at least one went
+ * through; done counts them; err names the first refusal.
+ */
+function batchOrders(s: GameState, w: World, nid: number, cmds: Command[]): CmdResult {
+  if (!Array.isArray(cmds) || !cmds.length) return err('nothing to do');
+  if (cmds.length > BATCH_MAX) return err('too many orders at once');
+  let done = 0, first: CmdResult | null = null;
+  for (const c of cmds) {
+    const r = c && BATCH_KINDS.has(c.t) ? applyCommandInner(s, w, { ...c, n: nid } as Command) : err('not this kind of order');
+    if (r.ok) done++; else if (!first) first = r;
+  }
+  if (!done) return first ?? err('nothing to do');
+  return first ? { ok: true, done, err: first.err, ...(first.msg ? { msg: first.msg } : {}) } : { ok: true, done };
 }
 
 function sanitizeTerms(s: GameState, w: World, war: any, from: number, to: number, terms: PeaceTerm[], concede: boolean): PeaceTerm[] {
@@ -288,4 +375,4 @@ function devCommand(s: GameState, w: World, n: number, action: string, p: any): 
   }
   return err('unknown dev action');
 }
-void atWar; void hasTreaty; void unitCost;
+void atWar; void hasTreaty;

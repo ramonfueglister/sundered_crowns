@@ -49,7 +49,8 @@ export function onlineState(s: GameState): OnlineState {
 const OK: CmdResult = { ok: true };
 const err = (e: string): CmdResult => ({ ok: false, err: e });
 const PLAYER_CMDS = new Set<Command['t']>(['move', 'merge', 'split', 'recruit', 'mercs', 'disband', 'general', 'build', 'declare', 'peace', 'peace_answer', 'diplo', 'law', 'estate', 'tax', 'budget',
-  'event', 'tech', 'doctrine', 'agent', 'colonize', 'explore', 'spy', 'office', 'loan', 'merchant', 'integrate', 'orders', 'decision', 'workshop', 'embark', 'landmark']);
+  'event', 'tech', 'doctrine', 'agent', 'colonize', 'explore', 'spy', 'office', 'loan', 'merchant', 'integrate', 'orders', 'decision', 'workshop', 'embark', 'landmark',
+  'goal', 'cancel', 'batch']); // batch: build / recruit / agent / cancel orders only, each validated as if sent singly (src/sim/commands.ts)
 
 function offerAllowed(s: GameState, from: number, to: number, action: OfferAction): string | null {
   const A = s.nations[from], B = s.nations[to];
@@ -557,7 +558,7 @@ export class WorldCore {
     const seat = ss.seat;
     if (!seat) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'You do not rule a realm here.' } });
     if (!cmd || typeof cmd !== 'object' || typeof cmd.t !== 'string') return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'bad command' } });
-    if (JSON.stringify(cmd).length > 4096) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'command too large' } });
+    if (JSON.stringify(cmd).length > (cmd.t === 'batch' ? 32768 : 4096)) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'command too large' } });
     if (cmd.t === 'dev') {
       if (!ss.user.admin) return ss.send({ type: 'cmdResult', id, res: { ok: false, err: 'developer commands are for admins only' } });
       this.queue.push({ e: { k: 'dev', uid: ss.user.uid, cmd }, session: ss, id });

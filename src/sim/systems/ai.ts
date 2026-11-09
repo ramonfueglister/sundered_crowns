@@ -5,7 +5,8 @@ import type { World } from '../world';
 import { type System, clamp, allies, atWar, hasTreaty, enemiesOf, opinion, warsOf, subjectsOf, topOverlord } from '../ctx';
 import { UNITS, B, BI, BUILDINGS, C, CL } from '../defs';
 import { rand, chance, hash01 } from '../rng';
-import { applyCommand } from '../commands';
+import { applyCommand, buildRefusal } from '../commands';
+import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE } from './military';
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, hasCasusBelli, locValue } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
@@ -216,6 +217,9 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
     if (c >= 0 && applyCommand(s, w, { t: 'build', n: n.id, loc: c, building: BI.port }).ok) return;
   }
   const order = P(n, 'trader') ? ['market', 'port', 'workshop', 'road', 'farm'] : P(n, 'conqueror') ? ['fort', 'farm', 'workshop', 'market', 'road'] : ['farm', 'workshop', 'market', 'road', 'church', 'fort'];
+  // buildings the realm's open goals ask for come first (systems/goals.ts goalWants)
+  const wanted = goalWants(s, w, n).buildings.filter((b) => !order.includes(BUILDINGS[b].id));
+  if (wanted.length) order.unshift(...wanted.map((b) => BUILDINGS[b].id));
   for (let k = 0; k < Math.min(locs.length, 60); k++) {
     const l = locs[Math.floor(hash01(s.day, n.id, k) * locs.length)];
     if (s.loc.ctrl[l] !== n.id) continue;
@@ -223,6 +227,7 @@ function construction(s: GameState, w: World, n: Nation, depth = 0) {
       const b = BI[bid]; const lv = s.loc.buildings[l * B + b];
       if (lv >= BUILDINGS[b].max || (BUILDINGS[b].needsCoast && !w.coastal[l])) continue;
       if (bid === 'fort' && (!borderLoc(s, w, l, n.id) || (lv === 0 && provinceFort(s, w, l)))) continue; // one fortress per province
+      if (wanted.includes(b) && buildRefusal(s, w, n.id, l, b)) continue; // a goal building only where it can stand
       const v = s.loc.dev[l] * (1 + order.length - order.indexOf(bid)) / (1 + lv);
       if (v > bv) { bv = v; best = l; bb = b; }
     }
@@ -312,6 +317,8 @@ function considerWar(s: GameState, w: World, n: Nation) {
     return (d < 600 ? 0.8 : d < 1200 ? 0.5 : 0.25) * (busy ? 0.5 : 1);
   };
   let best = -1, bestScore = -Infinity;
+  // places named by the realm's open goals make their holders more tempting targets (systems/goals.ts goalWants)
+  const goalPlaces = goalWants(s, w, n).places;
   for (const t of neighboursCached(s, w, n.id)) {
     const tn = s.nations[t];
     if (!tn.alive || hasTreaty(s, n.id, t, 'truce') || hasTreaty(s, n.id, t, 'alliance') || tn.overlord === n.id || t === n.overlord) continue;
@@ -332,6 +339,8 @@ function considerWar(s: GameState, w: World, n: Nation) {
     let score = Math.min(ratio, 3) * 10 + Math.min(30, 120 * nationDev(s, t) / myDev) + (cb ? 25 : -40) + (n.rivals.includes(t) ? 20 : 0) - totalOpinion(s, w, n.id, t) * 0.2 + (tn.faith !== n.faith && P(n, 'zealot') ? 25 : 0);
     if (s.playerNations.includes(t)) score -= 10 + (s.difficulty < 2 ? 20 : 0);
     score -= defending * 15;
+    let held = 0; for (const l of goalPlaces) if (s.loc.owner[l] === t) held++;
+    score += Math.min(20, held * 8);
     if (score > bestScore || (score === bestScore && t < best)) { bestScore = score; best = t; }
   }
   if (best < 0) return;
@@ -343,7 +352,8 @@ function considerWar(s: GameState, w: World, n: Nation) {
   }
   if (bestScore < 30 || !chance(s.rng, aggr)) return;
   // war goal: border locations of the target, more for a greater realm
-  const goal = targetLocs(s, w, n.id, best, clamp(Math.round(nationLocsRO(s, n.id).length / 40), 6, 15));
+  const k = clamp(Math.round(nationLocsRO(s, n.id).length / 40), 6, 15);
+  const goal = [...new Set([...goalPlaces.filter((l) => s.loc.owner[l] === best), ...targetLocs(s, w, n.id, best, k)])].slice(0, k + 2);
   applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal: s.nations[best].faith !== n.faith && P(n, 'zealot') ? 'faith' : 'conquest', locs: goal });
 }
 

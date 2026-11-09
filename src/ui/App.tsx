@@ -165,7 +165,7 @@ function GameUI() {
     </div>
     <P.ArmyPanel />
     {panel.value !== 'none' && <div class="panel-wrap"><P.MainPanel /></div>}
-    <P.Outliner />
+    <div class="right-col"><P.Outliner /><P.GoalTracker /></div>
     <MapModes />
     <P.EventModal />
     <P.Tutorial />
@@ -201,6 +201,7 @@ function useKeys() {
       else if (e.key === 'g') openPanel('government');
       else if (e.key === 'd' && e.shiftKey) openPanel('diplomacy');
       else if (e.key === 'm' && !e.ctrlKey) openPanel('military');
+      else if (e.key === 'b' && !e.ctrlKey) openPanel('works');
       else if (e.key === 'k') openPanel('knowledge');
       else if (e.key === 'l') openPanel('ledger');
       else if (e.key === 'c') openPanel('chronicle');

@@ -1,5 +1,5 @@
 // Internal politics: laws & reforms, Powers of the Realm, value axes, council, rulers, succession, Concord & Mandate.
-import type { GameState, Nation, Character, Estate } from '../types';
+import type { GameState, Nation, Character, Estate, I18n } from '../types';
 import type { World } from '../world';
 import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, mod, addExpense, addOpinion } from '../ctx';
 import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
@@ -513,7 +513,7 @@ function valueDrift(s: GameState, w: World, n: Nation) {
   v[7] = clamp(v[7] * 0.998 + (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id)) ? 0.3 : -0.1), -100, 100);
 }
 
-export function enactReform(s: GameState, n: Nation, law: string, option: number): string | null {
+export function enactReform(s: GameState, n: Nation, law: string, option: number): string | I18n | null {
   const L = LAWS[LAW_INDEX[law]]; if (!L) return 'unknown law';
   const opt = L.options[option]; if (!opt) return 'unknown option';
   if ((n.laws[law] ?? 0) === option) return 'already in force';
@@ -525,7 +525,7 @@ export function enactReform(s: GameState, n: Nation, law: string, option: number
   // assembly may block reforms against powerful estates
   for (const [eid, dv] of Object.entries(opt.estates)) {
     const e = n.estates.find((x) => x.id === eid);
-    if (e && dv < -5 && e.influence > 55 && e.contentment < 45) return `${eid} block the reform`;
+    if (e && dv < -5 && e.influence > 55 && e.contentment < 45) { const nm = ESTATES.find((x) => x.id === eid)?.name ?? { en: eid, de: eid }; return { en: `The ${nm.en} block the reform`, de: `Die ${nm.de} blockieren die Reform` }; }
   }
   n.authority -= cost;
   n.reform = { law, option, left: 120 + Math.abs(option - (n.laws[law] ?? 0)) * 90 };

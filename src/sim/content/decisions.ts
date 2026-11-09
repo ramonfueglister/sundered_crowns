@@ -100,7 +100,7 @@ export const DECISIONS: DecisionDef[] = [
       const other = nat(e, e.n.key === 'castile' ? 'aragon' : 'castile');
       if (other) {
         const bound = other.overlord === e.n.id || (hasTreaty(e.s, e.n.id, other.id, 'marriage') && opinion(e.s, other.id, e.n.id) >= 30 && e.n.score >= other.score);
-        if (!bound || human(e, other)) return `${other.short.en} must be our subject or a friendly marriage partner`;
+        if (!bound || human(e, other)) return { en: `${other.short.en} must be our subject or a friendly marriage partner`, de: `${other.short.de} muss unser Untertan oder ein befreundeter Ehepartner sein` };
         return null;
       }
       return ownsCount(e, ['Toledo', 'Zaragoza', 'Barcelona', 'Seville']) >= 3 ? null : 'hold three of Toledo, Zaragoza, Barcelona and Seville';
@@ -120,7 +120,7 @@ export const DECISIONS: DecisionDef[] = [
     can: (e) => {
       if (e.n.era < 2) return 'only from the Age of Confessions';
       const other = nat(e, e.n.key === 'england' ? 'scotland' : 'england');
-      if (other && other.overlord !== e.n.id) return `${other.short.en} must be our subject`;
+      if (other && other.overlord !== e.n.id) return { en: `${other.short.en} must be our subject`, de: `${other.short.de} muss unser Untertan sein` };
       if (other && human(e, other)) return 'cannot absorb another ruler';
       if (!other && !(owns(e, 'London') && owns(e, 'Edinburgh'))) return 'hold London and Edinburgh';
       return null;

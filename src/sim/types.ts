@@ -259,6 +259,10 @@ export type Command =
   | { t: 'decision'; n: number; id: string }
   | { t: 'workshop'; n: number; loc: number; slot: number; recipe: number }
   | { t: 'embark'; n: number; army: number; fleet: number }
+  | { t: 'goal'; n: number; id: string }                       // claim a goal whose conditions hold now
+  | { t: 'cancel'; n: number; kind: 'build' | 'recruit'; loc: number; item: number } // stop a construction or a levy (item: building or unit)
+  | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)
   | { t: 'dev'; n: number; action: string; payload?: any }; // developer tools (single player / admin only)
 
-export interface CmdResult { ok: boolean; err?: string }
+/** err: the refusal as an English key (src/sim/refusals.ts gives both languages); msg: set when the refusal names a realm or an estate. */
+export interface CmdResult { ok: boolean; err?: string; msg?: I18n; done?: number }

@@ -1,4 +1,5 @@
 // Diplomacy, military, knowledge, society and decisions tabs of the main panel.
+import { GoalTree } from './goals';
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, openPanel } from '../store';
@@ -237,11 +238,11 @@ export function DecisionsTab() {
   const ds = r.decisions as any[];
   const ok = ds.filter((d) => !d.why), no = ds.filter((d) => d.why);
   const card = (d: any) => <div class={`decision ${d.why ? 'blocked' : 'ready'}`}>
-    <div class="dec-h"><b>{L(d.name)}</b>{d.why ? <span class="neg small">✘ {typeof d.why === 'string' ? errText(d.why) : L(d.why)}</span> : <span class="pos small">✔ {t('possible')}</span>}</div>
+    <div class="dec-h"><b>{L(d.name)}</b>{d.why ? <span class="neg small">✘ {errText(d.why)}</span> : <span class="pos small">✔ {t('possible')}</span>}</div>
     <div class="dec-b"><div class="dec-d">{L(d.desc)}</div><Btn small={false} disabled={d.why} cls={d.why ? '' : 'gold'} onClick={() => act({ t: 'decision', id: d.id }, 'bell', t('decision_taken'))}>{t('enact')}</Btn></div>
   </div>;
   return <div class="tab-dec">
-    <Ambitions goals={r.goals ?? []} />
+    <GoalTree goals={r.goals ?? []} />
     <Section title={<>{t('x_decisions')} <Tip content={<div><TipHead name={t('x_decisions')} value={`${ok.length} / ${ds.length}`} hint={t('x_decisions_hint')} /></div>}><small>({ok.length} {t('possible')})</small></Tip></>} id="dec-list">
       {!ds.length && <Empty>{t('no_decisions')}</Empty>}
       {ok.map(card)}{no.map(card)}
@@ -249,34 +250,6 @@ export function DecisionsTab() {
   </div>;
 }
 
-/** Goal text from the simulation: "flavour. Requires: a; b. Reward: c." split into its parts. */
-function splitGoal(desc: string): { flav: string; req: string[]; rew: string } {
-  const m = /^(.*?)\s*(?:Requires|Bedingung):\s*(.*?)\.\s*(?:Reward|Belohnung):\s*(.*?)\.?$/s.exec(desc);
-  if (!m) return { flav: desc, req: [], rew: '' };
-  return { flav: m[1].trim(), req: m[2].split(/;\s*/).filter(Boolean), rew: m[3] };
-}
-/** The realm's ambitions (goal tree of systems/goals.ts): what to aim for next, with conditions and rewards. */
-function Ambitions({ goals }: { goals: any[] }) {
-  if (!goals.length) return null;
-  const name = (id: string) => { const g = goals.find((x) => x.id === id); return g ? L(g.name) : id; };
-  const done = goals.filter((g) => g.done), open = goals.filter((g) => g.open), later = goals.filter((g) => !g.done && !g.open);
-  const card = (g: any, state: 'open' | 'later' | 'done') => { const d = splitGoal(L(g.desc));
-    return <div class={`goal-card ${state}`}>
-      <div class="gc-h"><b>{L(g.name)}</b>{state === 'done' ? <span class="pos small">✔ {t('x_goal_done')}</span> : state === 'open' ? <span class="gc-tag">{t('x_goal_open')}</span> : null}</div>
-      {d.flav && state !== 'done' && <div class="gc-flav">{d.flav}</div>}
-      {state !== 'done' && d.req.length > 0 && <Tip tag="div" content={<div><TipHead name={L(g.name)} hint={t('x_goal_conds_hint')} /></div>}><ul class="gc-req">{d.req.map((x) => <li>{x}</li>)}</ul></Tip>}
-      {d.rew && state !== 'done' && <Tip tag="div" content={<div><TipHead name={t('x_reward')} hint={t('x_reward_hint')} /></div>}><div class="gc-rew"><span class="muted">{t('x_reward')}:</span> {d.rew}</div></Tip>}
-      {state === 'later' && g.req.length > 0 && <div class="muted small">{t('x_goal_after')}: {g.req.map(name).join(', ')}</div>}
-    </div>; };
-  return <>
-    <Section title={<>{t('x_ambitions')} <Tip content={<div><TipHead name={t('x_ambitions')} value={`${done.length} / ${goals.length}`} hint={t('x_ambitions_hint')} /></div>}><small>({done.length} / {goals.length})</small></Tip></>} id="dec-goals">
-      <div class="goal-prog"><Bar value={done.length} max={goals.length} color="#b8913f" /></div>
-      {open.length ? open.map((g) => card(g, 'open')) : <div class="muted small">{t('x_no_open_goals')}</div>}
-    </Section>
-    {later.length > 0 && <Section title={<>{t('x_goals_later')} <small>({later.length})</small></>} id="dec-goals-later" open={false}>{later.map((g) => card(g, 'later'))}</Section>}
-    {done.length > 0 && <Section title={<>{t('x_goals_done')} <small>({done.length})</small></>} id="dec-goals-done" open={false}>{done.map((g) => card(g, 'done'))}</Section>}
-  </>;
-}
 void Coa; void signed;
 
 /** Sailors: from labourers of coastal locations, harbours raise them. */

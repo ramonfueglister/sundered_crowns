@@ -2,6 +2,8 @@
 import { signal, computed } from '@preact/signals';
 import type { MapMode } from '../game/protocol';
 import { view, nations } from '../game/client';
+import { L } from './i18n';
+import { refusal } from '../sim/refusals';
 
 export type Screen = 'menu' | 'loading' | 'select' | 'game' | 'end';
 export const screen = signal<Screen>('menu');
@@ -9,7 +11,7 @@ export const startYear = signal(1356);
 export const selectedLoc = signal(-1);
 export const selectedNation = signal(-1);
 export const selectedArmies = signal<number[]>([]);
-export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'military' | 'knowledge' | 'society' | 'ledger' | 'chronicle' | 'decisions' | 'settings' | 'pause' | 'dev' | 'saves' | 'peace';
+export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'military' | 'knowledge' | 'society' | 'ledger' | 'chronicle' | 'decisions' | 'settings' | 'pause' | 'dev' | 'saves' | 'peace' | 'works';
 export const panel = signal<PanelId>('none');
 export const panelArg = signal<any>(null);
 export const mapMode = signal<MapMode>('political');
@@ -27,5 +29,6 @@ export function saveSettings(p: Partial<Settings>) { settings.value = { ...setti
 
 export const playerId = computed(() => view.value?.player?.id ?? -1);
 export const playerNation = computed(() => nations.value[playerId.value]);
-export function showToast(text: string, kind: 'ok' | 'err' = 'ok') { toast.value = { text, kind, t: Date.now() }; setTimeout(() => { if (toast.value && Date.now() - toast.value.t > 2900) toast.value = null; }, 3000); }
+/** A short message at the bottom; error texts that come straight from the simulation (English keys) are translated. */
+export function showToast(text: string, kind: 'ok' | 'err' = 'ok') { if (kind === 'err') text = L(refusal(text)); toast.value = { text, kind, t: Date.now() }; setTimeout(() => { if (toast.value && Date.now() - toast.value.t > 2900) toast.value = null; }, 3000); }
 export function openPanel(p: PanelId, arg: any = null) { panelArg.value = arg; panel.value = panel.value === p && arg === null ? 'none' : p; }
