@@ -303,7 +303,7 @@ interface Chunk { buf: GPUBuffer; runs: Run[]; used: number; n: number }
 export type TownStyle = 'north' | 'stone' | 'south' | 'steppe' | 'muslim';
 export interface Settlement { x: number; y: number; size: number; capital?: boolean; style: TownStyle; loc: number }
 /** x, y: where the figures stand (figureSpot); heading: course of ships under way (radians, see setUnits); marching: on the move */
-export interface UnitProp { id: number; x: number; y: number; men: number; fleet: boolean; color: [number, number, number]; heading?: number; marching?: boolean }
+export interface UnitProp { id: number; x: number; y: number; men: number; fleet: boolean; color: [number, number, number]; heading?: number; marching?: boolean; facing?: number }
 /** a siege camp around a town or the smoke of a battle; x, y: the location's centre; progress: of a siege, 0..100 */
 export interface SceneProp { id: number; x: number; y: number; kind: 'siege' | 'battle'; color: [number, number, number]; progress?: number }
 interface UnitGroup { id: number; ax: number; ay: number; fleet: boolean; march: boolean; parts: { dx: number; dy: number; s: number; r: number; c: number; mesh: string; w?: number }[] }
@@ -594,6 +594,11 @@ export class Props {
         }
         if (u.men >= 15000) parts.push({ dx: -sp * (cols / 2 + 1.2), dy: sp, s: S_SOLDIER, r: 0.4, c, mesh: 'cannon' });
         parts.push({ dx: -sp * (cols / 2 + 0.6), dy: -sp * 0.3, s: S_SOLDIER, r: 0, c, mesh: 'banner_standard' });
+        // in battle the block turns to face the enemy (the formation is laid out facing north)
+        if (u.facing !== undefined) {
+          const cr = Math.cos(u.facing), sr = Math.sin(u.facing);
+          for (const p of parts) { const mx = p.dx, my = -p.dy; p.dx = mx * cr - my * sr; p.dy = -(mx * sr + my * cr); p.r += u.facing; }
+        }
       }
       out.push({ id: u.id, ax: u.x, ay: u.y, fleet: u.fleet, march: !!u.marching, parts });
     }

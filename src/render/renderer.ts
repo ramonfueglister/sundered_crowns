@@ -533,6 +533,8 @@ export class MapRenderer {
     const slots = new Map<string, number>();
     const figs: UnitProp[] = [];
     const seen = new Set<number>();
+    const battles = new Set<string>();
+    for (const u of units) if (u.kind === 'battle' && u.lx !== undefined && u.ly !== undefined) battles.add(`${Math.round(u.lx)}:${Math.round(u.ly)}`);
     for (const u of units) {
       if (u.kind !== 'army' && u.kind !== 'fleet') continue;
       const key = `${Math.round(u.x)}:${Math.round(u.y)}:${u.kind}`;
@@ -551,7 +553,13 @@ export class MapRenderer {
       an.tx = fx; an.ty = fy; an.ox = fx - u.x; an.oy = fy - u.y;
       this.unitAnim.set(u.id, an); seen.add(u.id);
       const heading = fleet && u.moving && u.toX !== undefined && u.toY !== undefined ? Math.atan2(-(u.toX - u.x), -(u.toY - u.y)) : undefined;
-      figs.push({ id: u.id, x: fx, y: fy, men: u.men ?? 1000, fleet, color: u.color, heading, marching: !!u.moving });
+      // two hosts in battle face each other
+      let facing: number | undefined;
+      if (!fleet && !u.moving && slot < 2 && battles.has(`${Math.round(u.x)}:${Math.round(u.y)}`)) {
+        const [ox, oy] = figureSpot(u.x, u.y, false, 1 - slot);
+        facing = Math.atan2(-(ox - fx), -(oy - fy));
+      }
+      figs.push({ id: u.id, x: fx, y: fy, men: u.men ?? 1000, fleet, color: u.color, heading, marching: !!u.moving, facing });
     }
     for (const id of [...this.unitAnim.keys()]) if (!seen.has(id)) this.unitAnim.delete(id);
     this.props?.setUnits(figs);

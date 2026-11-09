@@ -82,9 +82,10 @@ export function MapView() {
         if (sel.has(a.id)) { u.selected = true; if (a.path.length) u.path = [[ax, ay], ...a.path.map((p: number) => [g.loc.x[p], g.loc.y[p]])]; }
         if (a.path.length) { u.moving = true; u.hot = true; u.toX = g.loc.x[a.path[0]]; u.toY = g.loc.y[a.path[0]]; }
       }
-      for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : u.men >= 1000 ? (u.men / 1000).toFixed(1) + 'k' : String(Math.round(u.men));
+      const kMen = (m: number) => (m >= 1000 ? (m / 1000).toFixed(1) + 'k' : String(Math.max(0, Math.round(m))));
+      for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : kMen(u.men);
       for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: sgi.progress, color: ns[sgi.nation]?.color ?? [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' }); }
-      for (const b of v.battles) { if (knownLocs && knownLocs[b.loc] === 0) continue; units.push({ id: -100000 - b.id, x: g.loc.x[b.loc], y: g.loc.y[b.loc] - 12, lx: g.loc.x[b.loc], ly: g.loc.y[b.loc], color: [200, 40, 30], label: '⚔', kind: 'battle' }); }
+      for (const b of v.battles) { if (knownLocs && knownLocs[b.loc] === 0) continue; units.push({ id: -100000 - b.id, x: g.loc.x[b.loc], y: g.loc.y[b.loc] - 12, lx: g.loc.x[b.loc], ly: g.loc.y[b.loc], color: [200, 40, 30], label: `${kMen(b.startA - b.lossA)} : ${kMen(b.startD - b.lossD)}`, kind: 'battle' }); }
       r.setUnits(units);
     };
     (async () => {
