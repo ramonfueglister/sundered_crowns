@@ -16,7 +16,7 @@ import {
 import { powers, intervene, balanceThreat, greatPowers } from '../src/sim/systems/powers';
 import {
   government, govProcess, termYears, TERM_LIMIT, ensureCandidates, electionTally, classSums, influenceTargets, setTaxRate,
-  taxLevel, assemblyVote, resentment,
+  taxLevel, assemblyVote, resentment, askRates,
 } from '../src/sim/systems/government';
 import { situationAction } from '../src/sim/systems/situations';
 import { SITUATIONS } from '../src/sim/content/situations';
@@ -55,16 +55,19 @@ describe('imperial authority', () => {
     const victim = s.nations.find((n) => free(n) && n.isHRE && n.id !== att.id && n.id !== E.emperor && declareWar(s, w, att.id, n.id) === null)!;
     expect(victim).toBeTruthy();
     expect(internalWars(s).some((x) => x.attLead === att.id)).toBe(true);
-    expect(E.authLog?.x_emp_internal_wars ?? 0).toBeLessThan(0);
     const drift = authorityDrift(s);
     expect(drift.find((r) => r[0] === 'x_emp_internal_wars')![1]).toBeLessThan(0);
     expect(drift.find((r) => r[0] === 'x_emp_peace')).toBeUndefined();
     // a call the emperor leaves unanswered
     const war = s.wars.find((x) => x.attLead === att.id)!;
-    const a2 = E.authority;
+    E.authority = 50;
     answerCall(s, w, { war: war.id, member: victim.id, attacker: att.id, answer: 0 }, false);
-    expect(E.authority).toBeCloseTo(a2 - 4, 5);
-    expect(E.authority).toBeLessThan(before);
+    expect([47, 48.5]).toContain(+E.authority.toFixed(2));
+    expect(E.authLog?.x_emp_ignored).toBeLessThan(0);
+    // a fallen authority recovers through the old dignity of the crown
+    E.authority = 5;
+    expect(authorityDrift(s).find((r) => r[0] === 'x_emp_dignity')![1]).toBeCloseTo(0.5, 3);
+    E.authority = before;
   });
 });
 
@@ -276,6 +279,10 @@ describe('the assembly', () => {
     expect(setTaxRate(s, f, 0, 0.25)).toBeNull();
     expect(f.taxRate[0]).toBe(0.25);
     expect(f.flags.tax_grant).toBeCloseTo(taxLevel(rates) + 0.02, 4);
+    // a request for every class moves all rates alike to the mean asked
+    const all = askRates([0.05, 0.1, 0.15], -1, 0.2);
+    expect(taxLevel(all)).toBeCloseTo(0.2, 4);
+    expect(all[2] - all[0]).toBeCloseTo(0.1, 4);
     s.playerNations = [];
     // the AI: refused, it lowers its rates to what was granted
     const ai = nat('aragon');

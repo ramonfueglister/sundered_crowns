@@ -40,7 +40,7 @@ export function RealmGovernment() {
       <Row k={t('x_asm_tax_level')} v={pct(g.taxLevel, 1)} tip={t('x_asm_tax_level_hint')} />
       <Row k={t('x_asm_tax_ceiling')} v={g.taxVote ? pct(g.taxCeiling, 1) : t('x_asm_no_vote')} tip={t('x_asm_ceiling_hint')} />
       <Row k={t('x_asm_war_vote')} v={g.warVote ? t('yes') : t('no')} tip={t('x_asm_war_vote_hint')} />
-      {g.taxVote && <Btn onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'tax', cls: 0, rate: Math.min(0.5, (g.taxCeiling ?? 0.1) + 0.03) } }; }}>{t('x_asm_ask_taxes')}</Btn>}
+      {g.taxVote && <Btn onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'tax', cls: -1, rate: Math.min(0.5, Math.round(((g.taxCeiling ?? 0.1) + 0.02) * 200) / 200) } }; }}>{t('x_asm_ask_taxes')}</Btn>}
       {g.snubs.length > 0 && <div class="warn-box small">{t('x_asm_snubbed_hint')}</div>}
       {g.demand && <div class="warn-box">
         <TipHead name={t('x_dem_title')} value={date(g.demand.until)} hint={`${L(g.demand.estateName)}: ${L(g.demand.privName)}`} />

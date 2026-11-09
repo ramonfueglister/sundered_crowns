@@ -9,7 +9,7 @@ import {
   campaignCost, dietStance, dietTally, dietPasses, dietCooldown, dietWeight, dietVoters, league, leagueEligible, leagueEffects, LEAGUE_NAME, defendScore, obeyScore,
 } from '../sim/systems/empire';
 import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT } from '../sim/systems/powers';
-import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, type AssemblyAsk } from '../sim/systems/government';
+import { assemblyVote, askRates, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, type AssemblyAsk } from '../sim/systems/government';
 import { PRIVILEGES, ageOf, lawEffect } from '../sim/systems/politics';
 import { SITUATIONS } from '../sim/content/situations';
 import { SIT_EXTRA } from '../sim/content/situation_actions';
@@ -89,7 +89,7 @@ function assemblyView(s: GameState, me: number, q: Extract<Query, { q: 'assembly
   const n = s.nations[me]; if (!n) return null;
   let ask: AssemblyAsk;
   if (q.kind === 'tax') {
-    const rates = n.taxRate.slice(); if (q.cls !== undefined && q.cls >= 0 && q.cls < rates.length) rates[q.cls] = Math.max(0, Math.min(0.5, q.rate ?? rates[q.cls]));
+    const rates = q.cls === undefined ? n.taxRate.slice() : askRates(n.taxRate, q.cls, q.rate ?? taxLevel(n.taxRate));
     ask = { kind: 'tax', level: taxLevel(rates), rates };
   } else ask = { kind: 'war', target: q.target ?? -1, goal: (q.goal ?? 'conquest') as WarGoal['type'] };
   const r = assemblyVote(s, n, ask, q.bribe ?? [], q.concede);
@@ -113,7 +113,7 @@ function governView(s: GameState, w: World, me: number) {
     winner: t?.winner ?? 0, total: t?.total ?? 0,
     heir: n.heir, heirName: s.chars[n.heir]?.name,
     demand: n.demand ? { ...n.demand, estateName: estateName(n.demand.estate), privName: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.name, effects: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.effects, resent: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.resent } : null,
-    taxLevel: taxLevel(n.taxRate), taxCeiling: taxCeiling(n), taxVote: lawEffect(n, 'tax_vote') > 0, warVote: lawEffect(n, 'war_vote') > 0,
+    taxLevel: taxLevel(n.taxRate), taxRates: n.taxRate, taxCeiling: taxCeiling(n), taxVote: lawEffect(n, 'tax_vote') > 0, warVote: lawEffect(n, 'war_vote') > 0,
     privileges: PRIVILEGES.map((p) => ({ id: p.id, estate: p.estate, name: p.name, effects: p.effects, resent: p.resent ?? {}, grant: p.grant })),
     snubs: n.estates.filter((e) => (n.flags[`snub_${e.id}`] ?? 0) > s.day).map((e) => e.id),
   };

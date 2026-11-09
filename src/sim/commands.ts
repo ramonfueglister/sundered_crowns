@@ -399,6 +399,8 @@ function devCommand(s: GameState, w: World, n: number, action: string, p: any): 
     case 'observer': s.observer = !s.observer; return OK;
     case 'army': newArmy(s, n, p?.loc ?? N.capital, [{ type: 0, men: p?.men ?? 10000 }]); return OK;
     case 'switch': if (s.nations[p?.nation]?.alive) { s.playerNations = [p.nation]; } return OK;
+    // the emperor's line ends: the electors meet at the start of the next month (to try the election dialog)
+    case 'imperial_election': { const em = s.nations[s.empire.emperor]; if (em) { s.empire.lastElection = s.day; em.flags.ruler_changed = s.day + 1; } return OK; }
   }
   return err('unknown dev action');
 }

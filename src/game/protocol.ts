@@ -71,6 +71,7 @@ export interface PlayerView {
   stats: Record<string, number>;
   homeMarket: number;                              // market of the capital (-1 without a capital)
   merchants: { used: number; cap: number };
+  electionCloses?: number;                         // an imperial election this realm must still vote in closes that day (realm pass)
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

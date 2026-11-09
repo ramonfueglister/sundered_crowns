@@ -74,7 +74,7 @@ export function influenceFactors(s: GameState, n: Nation, cs: ClassSums = classS
     if (e.id === 'burghers') law *= (1 + Math.min(0.5, trade)) * (parliament ? 1.15 : 1);
     if (e.id === 'prelates') law *= 1 - 0.2 * tol;
     out[e.id] = [
-      [T(`Share of the people ${(ps * 100).toFixed(1)} % (x 0.3), of the means ${(ws * 100).toFixed(1)} % (x 0.7)`, `Anteil am Volk ${(ps * 100).toFixed(1)} % (x 0,3), an den Mitteln ${(ws * 100).toFixed(1)} % (x 0,7)`), +(30 * ps + 70 * ws).toFixed(2)],
+      [T(`Share of the people ${(ps * 100).toFixed(1)} % (x 0.3), of the means ${(ws * 100).toFixed(1)} % (x 0.7)`, `Anteil am Volk ${(ps * 100).toFixed(1).replace('.', ',')} % (x 0,3), an den Mitteln ${(ws * 100).toFixed(1).replace('.', ',')} % (x 0,7)`), +(30 * ps + 70 * ws).toFixed(2)],
       ['x_inf_standing', STANDING[e.id] ?? 1],
       ['x_inf_gov', GOV_WEIGHT[n.gov]?.[e.id] ?? 1],
       ['x_inf_laws', +law.toFixed(3)],
@@ -146,6 +146,14 @@ export function answerDemand(s: GameState, n: Nation, grant: boolean): string | 
 export type AssemblyAsk = { kind: 'tax'; level: number; rates?: number[] } | { kind: 'war'; target: number; goal: WarGoal['type'] };
 /** The tax level the assembly weighs: the mean rate over all classes. */
 export const taxLevel = (rates: number[]) => rates.reduce((p, x) => p + x, 0) / Math.max(1, rates.length);
+/** The rates a request to the assembly would set: one class's rate, or (cls -1) every class moved alike so that the
+ *  mean is the rate asked. */
+export function askRates(rates: number[], cls: number, rate: number): number[] {
+  const out = rates.slice(); const r = clamp(rate, 0, 0.5);
+  if (cls >= 0 && cls < out.length) out[cls] = r;
+  else if (cls === -1) { const d = r - taxLevel(rates); for (let i = 0; i < out.length; i++) out[i] = +clamp(out[i] + d, 0, 0.5).toFixed(4); }
+  return out;
+}
 /** The highest tax level the assembly has granted (new realms: 10 %, or what they already levy). */
 export const taxCeiling = (n: Nation) => n.flags.tax_grant ?? Math.max(0.1, taxLevel(n.taxRate));
 export const needsTaxVote = (n: Nation, level: number) => lawEffect(n, 'tax_vote') > 0 && level > taxCeiling(n) + 1e-6;

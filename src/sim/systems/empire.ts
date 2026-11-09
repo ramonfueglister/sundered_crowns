@@ -43,7 +43,7 @@ export const IMPERIAL_REFORMS: ImperialReform[] = [
     interest: (s, n) => [[T('A voice at court', 'Eine Stimme am Hof'), isTown(n) || isChurch(n) ? 10 : 0]] },
   { id: 'hereditary_crown', cost: 70, name: T('The Hereditary Imperial Crown', 'Die Erbliche Kaiserkrone'),
     desc: T('The imperial crown passes with the emperor\'s own crown: no more elections while his realm lasts. The electors lose their vote and resent it.', 'Die Kaiserkrone geht mit der Krone des Kaisers über: keine Wahlen mehr, solange sein Reich besteht. Die Kurfürsten verlieren ihre Stimme und grollen.'),
-    interest: (s, n) => [[T('The electors lose their vote', 'Die Kurfürsten verlieren ihre Stimme'), n.elector ? -60 : -5]] },
+    interest: (s, n) => [[T('The electors lose their vote, the princes fear a hereditary master', 'Die Kurfürsten verlieren ihre Stimme, die Fürsten fürchten einen erblichen Herrn'), n.elector ? -60 : -20]] },
 ];
 export const reformDef = (id: string) => IMPERIAL_REFORMS.find((r) => r.id === id);
 export const hasReform = (s: GameState, id: string) => s.empire.reforms.includes(id);
@@ -63,7 +63,11 @@ export function authorityDrift(s: GameState): Row[] {
   const rows: Row[] = [];
   rows.push(['x_emp_base', 0.25]);
   if (!internal) rows.push(['x_emp_peace', 0.1]);
-  else rows.push(['x_emp_internal_wars', -Math.min(0.6, 0.08 * internal)]);
+  else rows.push(['x_emp_internal_wars', -Math.min(0.25, 0.03 * internal)]);
+  // the old dignity of the crown: a fallen authority slowly recovers (the members still look to the emperor)
+  if (E.authority < 30) rows.push(['x_emp_dignity', +((30 - E.authority) * 0.02).toFixed(3)]);
+  // and the princes guard their liberties against a strong crown
+  if (E.authority > 50) rows.push(['x_emp_jealousy', -+((E.authority - 50) * 0.03).toFixed(3)]);
   if (em) {
     let tot = 0; for (const id of E.members) if (s.nations[id]?.alive) tot += nationDev(s, id);
     const share = tot > 0 ? nationDev(s, em.id) / tot : 0;
@@ -116,7 +120,6 @@ export function warVeto(s: GameState, w: World, a: number, b: number, goal: WarG
 export function realmBodiesOnWar(s: GameState, w: World, war: War) {
   const E = s.empire; const victim = s.nations[war.goal.target], att = s.nations[war.attLead];
   if (!victim || !att || war.goal.type === 'independence' || war.goal.type === 'civil_war' || war.goal.type === 'rebels') { leagueOnWar(s, w, war); return; }
-  if (victim.isHRE && att.isHRE) moveAuth(s, 'x_emp_internal_wars', -1);
   const em = alive(s, E.emperor);
   if (em && victim.isHRE && !att.isHRE && em.id !== victim.id && em.id !== att.id && !war.att.includes(em.id) && !war.def.includes(em.id) && !atWar(s, em.id, victim.id)) {
     const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
@@ -154,13 +157,15 @@ export function answerCall(s: GameState, w: World, call: { war: number; member: 
   if (yes) {
     call.answer = 1;
     if (!war.def.includes(em.id) && !war.att.includes(em.id)) war.def.push(em.id);
-    moveAuth(s, 'x_emp_defended', 4); em.prestige = clamp(em.prestige + 5, -100, 100);
+    moveAuth(s, 'x_emp_defended', 2); em.prestige = clamp(em.prestige + 5, -100, 100);
     addOpinion(s, m.id, em.id, 'imperial_defence', 25, 365 * 10);
     chronicle(s, em.id, 'empire', T(`The emperor took up arms for ${m.short.en} against ${a.short.en}.`, `Der Kaiser griff für ${m.short.de} gegen ${a.short.de} zu den Waffen.`));
     for (const p of s.playerNations) if (p === m.id || p === a.id) notice(s, p, 'empire', T(`The emperor has come to the defence of ${m.short.en}.`, `Der Kaiser ist ${m.short.de} zu Hilfe gekommen.`), { war: war.id });
   } else {
     call.answer = -1;
-    moveAuth(s, 'x_emp_ignored', -4); em.prestige = clamp(em.prestige - 5, -100, 100);
+    // the members blame him less for a small or distant member left alone
+    const far = em.capital >= 0 && m.capital >= 0 && w.distKm(em.capital, m.capital) > 1000;
+    moveAuth(s, 'x_emp_ignored', far || nationDev(s, m.id) < 100 ? -1.5 : -3); em.prestige = clamp(em.prestige - 5, -100, 100);
     addOpinion(s, m.id, em.id, 'abandoned_by_emperor', -30, 365 * 10);
     for (const id of E.members) if (id !== m.id && id !== em.id && s.nations[id]?.alive) addOpinion(s, id, em.id, 'emperor_failed_member', -10, 365 * 5);
     chronicle(s, em.id, 'empire', T(`The emperor left ${m.short.en} to fight ${a.short.en} alone.`, `Der Kaiser ließ ${m.short.de} allein gegen ${a.short.de} kämpfen.`));
@@ -202,11 +207,11 @@ export function answerOrder(s: GameState, w: World, order: { war: number; to: nu
     order.answer = 1;
     const d = war.defLead;
     concludePeace(s, w, war, war.attLead, d, [{ type: 'white_peace' }]);
-    moveAuth(s, 'x_emp_obeyed', 3);
+    moveAuth(s, 'x_emp_obeyed', 1);
     chronicle(s, a.id, 'empire', T(`At the emperor's command ${a.short.en} made peace with ${s.nations[d].short.en}.`, `Auf Befehl des Kaisers schloss ${a.short.de} Frieden mit ${s.nations[d].short.de}.`));
   } else {
     order.answer = -1;
-    moveAuth(s, 'x_emp_defied', -4);
+    moveAuth(s, 'x_emp_defied', -3);
     a.modifiers = a.modifiers.filter((m) => m.id !== 'imperial_ban');
     a.modifiers.push({ id: 'imperial_ban', until: s.day + 365 * 5, label: T('Defied the emperor', 'Dem Kaiser getrotzt'), effects: { concord: -10, mandate: -8 } });
     for (const id of E.members) if (id !== a.id && s.nations[id]?.alive) addOpinion(s, id, a.id, 'defied_emperor', -20, 365 * 5);
@@ -517,7 +522,7 @@ function empireMonth(s: GameState, w: World) {
   // calls and orders: open ones lapse at their deadline (a human emperor who says nothing has refused)
   for (const c of E.calls ?? []) {
     if (c.answer === 0 && (s.day >= c.until || !s.wars.some((x) => x.id === c.war))) answerCall(s, w, c, false);
-    if (c.answer === 1 && !s.wars.some((x) => x.id === c.war)) { c.answer = 2; if (s.nations[c.member]?.alive) moveAuth(s, 'x_emp_defence_won', 3); }
+    if (c.answer === 1 && !s.wars.some((x) => x.id === c.war)) { c.answer = 2; if (s.nations[c.member]?.alive) moveAuth(s, 'x_emp_defence_won', 1); }
   }
   E.calls = (E.calls ?? []).filter((c) => c.answer === 0 || c.answer === 1 || s.day - c.until < 365);
   for (const o of E.orders ?? []) if (o.answer === 0 && (s.day >= o.until || !s.wars.some((x) => x.id === o.war))) answerOrder(s, w, o, false);
@@ -526,7 +531,7 @@ function empireMonth(s: GameState, w: World) {
   if (em && !isHuman(s, em.id) && em.authority >= ORDER_COST + 20 && E.authority >= 25) {
     for (const war of internalWars(s)) {
       if (war.att.includes(em.id) || war.def.includes(em.id) || (E.orders ?? []).some((o) => o.war === war.id) || s.day - war.start < 90) continue;
-      if (chance(s.rng, 0.15)) { orderPeace(s, w, em, war.id); break; }
+      if (chance(s.rng, 0.08)) { orderPeace(s, w, em, war.id); break; }
     }
   }
   // the election

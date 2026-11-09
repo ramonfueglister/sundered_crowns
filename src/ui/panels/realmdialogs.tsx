@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { playerId, realmDialog } from '../store';
 import { view } from '../../game/client';
-import { Panel, Section, Row, Bar, Btn, Empty, NLink, NList, Tip, useQuery, act, realm, t, L, num, signed, pct, fmtDateShort, Slider } from './common';
+import { Panel, Section, Row, Bar, Btn, Empty, NLink, NList, Tip, useQuery, act, t, L, num, signed, pct, fmtDateShort, Slider } from './common';
 import { Parts, TipHead } from './explain';
 import { errText } from '../i18n';
 
@@ -53,8 +53,8 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
   return <Modal title={t('x_asm_title')}>
     <div class="small">{war ? <>{t('x_asm_war_q')} <NLink id={cmd.target} /></> : t('x_asm_tax_q')}</div>
     {!war && <div class="asm-tax">
-      <div class="chips">{CLASS_KEYS.map((k, i) => <span class={`chip ${i === cls ? 'on' : ''}`} onClick={() => setCls(i)}>{t(k)}</span>)}</div>
-      <Row k={t(CLASS_KEYS[cls])} v={pct(rate, 1)} />
+      <div class="chips"><span class={`chip ${cls === -1 ? 'on' : ''}`} onClick={() => setCls(-1)}>{t('x_asm_all_classes')}</span>{CLASS_KEYS.map((k, i) => <span class={`chip ${i === cls ? 'on' : ''}`} onClick={() => setCls(i)}>{t(k)}</span>)}</div>
+      <Row k={cls === -1 ? t('x_asm_all_classes') : t(CLASS_KEYS[cls])} v={pct(rate, 1)} />
       <Slider value={rate} min={0} max={0.5} step={0.005} onCommit={setRate} fmt={(v) => pct(v, 1)} />
       <Row k={t('x_asm_tax_level')} v={`${pct(a.level, 1)} (${t('x_asm_tax_ceiling')} ${pct(a.ceiling, 1)})`} tip={t('x_asm_ceiling_hint')} />
       {!a.needed && <div class="muted small">{t('x_asm_not_needed')}</div>}
@@ -78,9 +78,10 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
 
 // ---------------------------------------------------------------- the imperial election
 function ElectionModal() {
-  const pid = playerId.value; const r = realm.value;
+  const pid = playerId.value;
   const [hidden, setHidden] = useState(-1);
-  const open = !!r?.empire?.election && (r.empire.electors ?? []).includes(pid);
+  // (from every tick, so that the dialog opens whichever panel is shown)
+  const open = (view.value?.player?.electionCloses ?? 0) > 0;
   const [e, refresh] = useQuery<any>(open ? { q: 'empire' } : null, [pid, open], 1500);
   useEffect(() => { if (!open) setHidden(-1); }, [open]);
   if (!open || !e?.election || e.election.myVote >= 0 || hidden === e.election.closes || realmDialog.value) return null;

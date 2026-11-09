@@ -3,10 +3,9 @@
 import type { GameState, Command, Nation, I18n } from './types';
 import type { World } from './world';
 import { castVote, campaign, answerCall, orderPeace, answerOrder, summonDiet, dietVote, joinLeague, leaveLeague } from './systems/empire';
-import { holdAssembly, taxLevel, backCandidate, answerDemand } from './systems/government';
+import { holdAssembly, taxLevel, askRates, needsTaxVote, backCandidate, answerDemand } from './systems/government';
 import { powersCommand } from './systems/powers';
 import { situationAction } from './systems/situations';
-import { clamp } from './ctx';
 
 type RealmCmd = Extract<Command, { t: 'empire' | 'league' | 'powers' | 'assembly' | 'govern' | 'situation' }>;
 export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd): string | I18n | null {
@@ -36,8 +35,10 @@ export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd): 
     case 'powers': return powersCommand(s, w, n, cmd.action, cmd.target, cmd.war);
     case 'assembly': {
       if (cmd.kind === 'tax') {
-        const cls = cmd.cls ?? -1; if (cls < 0 || cls >= n.taxRate.length) return 'bad class';
-        const rates = n.taxRate.slice(); rates[cls] = clamp(cmd.rate ?? 0, 0, 0.5);
+        const cls = cmd.cls ?? -1; if (cls < -1 || cls >= n.taxRate.length) return 'bad class';
+        const rates = askRates(n.taxRate, cls, cmd.rate ?? 0);
+        // within the granted level no vote is needed: the rates apply at once
+        if (!needsTaxVote(n, taxLevel(rates))) { n.taxRate = rates; return null; }
         const e = holdAssembly(s, n, { kind: 'tax', level: taxLevel(rates), rates }, cmd.bribe ?? [], cmd.concede);
         if (!e) n.taxRate = rates;
         return e;
