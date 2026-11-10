@@ -51,7 +51,7 @@ function cultureId(i: number) { return ALL_CULTURES[i] || 'unknown'; }
 
 export function unitCost(s: GameState, n: Nation, unit: number, men: number) {
   const u = UNITS[unit];
-  const k = u.kind === 'ship' ? men : men / 1000;
+  const k = u.kind === 'ship' ? men * SHIP_SCALE : men / 1000;
   return u.cost * k * COST_SCALE * 0.1 * s.priceLevel * (1 + n.inflation);
 }
 
@@ -1135,17 +1135,24 @@ export function hireMercenaries(s: GameState, w: World, n: Nation, loc: number, 
 }
 
 // ---------------- upkeep & manpower (monthly) ----------------
-/** Ships pay the gold part of their kind's upkeep (listed per thousand men like the regiments') as if each ship were
- *  this many thousand men. */
-export const SHIP_UPKEEP_SCALE = 1;
+/** Ships are priced on the regiments' scale (price and upkeep per thousand men) as if each ship were this many thousand
+ *  men: a war galley of 1356 costs about what 150 to 250 men-at-arms do (the pay of its rowers and marines), not what
+ *  1,000 of them do. Their goods (grain for the crew, timber and pitch) are listed per ship already. */
+export const SHIP_SCALE = 0.06;
 /** What a regiment of army `a` costs its realm a month: the gold of its upkeep and the goods it eats at the prices of
  *  market m (half of their value is paid from the chest); `book` also puts the goods on the market's demand. */
+/** The gold part of a unit's monthly upkeep for `men` men (ships: `men` ships) at full maintenance, without the goods
+ *  they eat: its upkeep per thousand men (ships: × SHIP_SCALE each) × price level × its cost effects. */
+export function unitUpkeep(s: GameState, n: Nation, unit: number, men: number): number {
+  const u = UNITS[unit]; const ship = u.kind === 'ship';
+  // (lawEffect holds laws, values, tradition and modifiers alike; ships pay naval_cost instead of army_cost)
+  return u.upkeep * (ship ? men * SHIP_SCALE : men / 1000) * UPKEEP_SCALE * 0.1 * s.priceLevel * clamp(1 + lawEffect(n, ship ? 'naval_cost' : 'army_cost'), 0.3, 2);
+}
 function regimentUpkeep(s: GameState, n: Nation, a: Army, r: Regiment, m: GameState['markets'][number] | undefined, book: boolean): number {
   const u = UNITS[r.type];
   const ship = u.kind === 'ship';
-  const k = ship ? r.men : r.men / 1000;
-  // (lawEffect holds laws, values, tradition and modifiers alike; ships pay naval_cost instead of army_cost)
-  let c = u.upkeep * k * (ship ? SHIP_UPKEEP_SCALE : 1) * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * clamp(1 + lawEffect(n, ship ? 'naval_cost' : 'army_cost'), 0.3, 2);
+  const k = ship ? r.men : r.men / 1000; // the goods are listed per ship and per thousand men
+  let c = unitUpkeep(s, n, r.type, r.men) * (a.mercenary ? 2.2 : 1);
   if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; if (book) m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
   return c * (ship ? n.navyMaint : n.armyMaint);
 }

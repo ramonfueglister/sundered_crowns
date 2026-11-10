@@ -971,6 +971,8 @@ const S: Record<string, [string, string]> = {
   x_credit_moves: ['Loans and other movements', 'Kredite und sonstige Bewegungen'],
   x_credit_hint: ['Money that moved through the chest without being income or spending: loans taken and repaid, debts written off, and gold that changed hands without a line of its own (gifts, treaties, agents).', 'Geld, das durch die Kasse ging, ohne Einnahme oder Ausgabe zu sein: aufgenommene und getilgte Kredite, abgeschriebene Schulden und Gold, das ohne eigene Zeile den Besitzer wechselte (Geschenke, Verträge, Agenten).'],
   x_treasury_change: ['Change of the treasury', 'Veränderung des Schatzes'],
+  x_upkeep_per1000: ['Upkeep: {v} gold a month per 1,000 men, and their provisions at the prices of the market they stand in.', 'Unterhalt: {v} Gold im Monat je 1.000 Mann, dazu ihre Verpflegung zu den Preisen des Marktes, in dem sie stehen.'],
+  x_upkeep_per_ship: ['Upkeep: {v} gold a month per ship, and the crew\'s provisions at the prices of the home market.', 'Unterhalt: {v} Gold im Monat je Schiff, dazu die Verpflegung der Mannschaft zu den Preisen des Heimatmarkts.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

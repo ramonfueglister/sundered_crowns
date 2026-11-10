@@ -180,13 +180,13 @@ function Recruit({ d, refresh }: { d: any; refresh: () => void }) {
       const why = occupied ? 'occupied' : (p?.treasury ?? 0) < u.cost1000 ? 'not enough gold' : (p?.manpower ?? 0) < 1000 ? 'not enough manpower' : null;
       const U = UNITS[u.id];
       return <div class="uitem">
-        <Tip content={<div><b>{L(u.name)}</b><div class="muted">{t('shock')} {U.shock} · {t('fire')} {U.fire} · {t('defence')} {U.def} · {t('morale')} {U.morale}</div><div>{t('upkeep')}: {num(U.upkeep, 2)} / 1000 / {t('month')}</div></div>}><span class="uname">{L(u.name)}</span></Tip>
+        <Tip content={<div><b>{L(u.name)}</b><div class="muted">{t('shock')} {U.shock} · {t('fire')} {U.fire} · {t('defence')} {U.def} · {t('morale')} {U.morale}</div><div>{t('x_upkeep_per1000').replace('{v}', num(u.upkeep ?? 0, 1))}</div></div>}><span class="uname">{L(u.name)}</span></Tip>
         <Btn disabled={why} tip={<div>1000 {t('men')} · {num(u.cost1000)} <i class="ic gold sm" /></div>} onClick={() => act({ t: 'recruit', loc: d.id, unit: u.id, men: 1000 }, 'coins', t('recruiting')).then(refresh)}>+1000 · {num(u.cost1000)}</Btn>
       </div>;
     })}</div>
     {ships.length > 0 && <div class="ulist">{ships.map((u: any) => {
       const why = !hasPort ? 'needs a harbour' : occupied ? 'occupied' : (p?.treasury ?? 0) < u.cost1000 * 2 ? 'not enough gold' : (p?.sailors ?? 0) < 100 ? 'not enough sailors' : null;
-      return <div class="uitem"><span class="uname">⚓ {L(u.name)}</span><Btn disabled={why} tip={<div>2 {t('ships')} · {num(u.cost1000 * 2)}</div>} onClick={() => act({ t: 'recruit', loc: d.id, unit: u.id, men: 2 }, 'coins', t('recruiting')).then(refresh)}>+2 · {num(u.cost1000 * 2)}</Btn></div>;
+      return <div class="uitem"><Tip content={<div><b>{L(u.name)}</b><div>{t('x_upkeep_per_ship').replace('{v}', num(u.upkeep ?? 0, 1))}</div></div>}><span class="uname">⚓ {L(u.name)}</span></Tip><Btn disabled={why} tip={<div>2 {t('ships')} · {num(u.cost1000 * 2)}</div>} onClick={() => act({ t: 'recruit', loc: d.id, unit: u.id, men: 2 }, 'coins', t('recruiting')).then(refresh)}>+2 · {num(u.cost1000 * 2)}</Btn></div>;
     })}</div>}
     <div class="act-row merc">
       <span class="k">{t('mercenaries')}</span>

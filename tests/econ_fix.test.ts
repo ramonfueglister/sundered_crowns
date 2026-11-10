@@ -11,6 +11,8 @@ import { closeLedger } from '../src/sim/systems/economy';
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
+import { unitCost, unitUpkeep } from '../src/sim/systems/military';
+import { UNITS } from '../src/sim/defs';
 import type { GameState, Nation } from '../src/sim/types';
 
 const w = loadWorld();
@@ -97,5 +99,24 @@ describe('top bar totals equal their breakdowns', () => {
     expect(n.envoys).not.toBe(env0);
     expect(n.maxManpower).toBeLessThan(mp0);
     check(s, n);
+  });
+});
+
+describe('ships are priced like their crews', () => {
+  const unit = (id: string) => UNITS.findIndex((u) => u.id === id);
+  it('a war galley costs and eats what a crew of a few hundred does, not what 1,000 soldiers do', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice');
+    const g = unit('galley'), maa = unit('men_at_arms');
+    expect(unitUpkeep(s, n, g, 1)).toBeLessThan(unitUpkeep(s, n, maa, 1000) * 0.25);
+    expect(unitCost(s, n, g, 1)).toBeLessThan(unitCost(s, n, maa, 1000) * 0.4);
+  });
+  it('Venice\'s fleet of 1356 takes a fifth to a third of its revenue, not three times it', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice');
+    const ships = s.armies.filter((a) => a.owner === n.id && a.fleet).reduce((p, a) => p + a.regs.reduce((q, r) => q + r.men, 0), 0);
+    expect(ships).toBeGreaterThanOrEqual(20);
+    toNextClose(s);
+    const share = (n.expense.navy ?? 0) / sum(n.income);
+    expect(share).toBeGreaterThan(0.15); expect(share).toBeLessThan(0.35);
+    expect(n.loans.length).toBe(0);
   });
 });
