@@ -966,6 +966,16 @@ const S: Record<string, [string, string]> = {
   terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
   // ---- fix-war
+  xfw_war_battles: ['Battles of this war', 'Schlachten dieses Krieges'], xfw_winner: ['Winner', 'Sieger'], xfw_loser: ['Loser', 'Verlierer'],
+  xfw_losses_hint: ['Men lost by the winner and by the loser, the pursuit included.', 'Verluste des Siegers und des Verlierers, die Verfolgung eingerechnet.'],
+  xfw_battle_worth: ['War score of the battle', 'Kriegspunkte der Schlacht'],
+  xfw_battle_worth_hint: ['A point for every 1,500 dead of the loser, and up to 2 more by how hard the battle hit the losing side of this war: 2 when the dead were a quarter or more of all the men that side had in the field. At most 25 for one battle. A skirmish against a great alliance moves the war by a fraction of a point. A battle counts in every war in which the two realms stand on opposite sides, also when allies fought it.', 'Ein Punkt je 1.500 Gefallene des Verlierers und bis zu 2 weitere danach, wie hart die Schlacht die unterlegene Seite dieses Krieges traf: 2, wenn die Gefallenen ein Viertel oder mehr aller Männer waren, die diese Seite im Feld hatte. Höchstens 25 für eine Schlacht. Ein Scharmützel gegen ein großes Bündnis bewegt den Krieg nur um Bruchteile eines Punktes. Eine Schlacht zählt in jedem Krieg, in dem die beiden Reiche auf verschiedenen Seiten stehen, auch wenn Verbündete sie geschlagen haben.'],
+  xfw_bw_dead: ['Dead of the loser ({n} ÷ 1,500)', 'Gefallene des Verlierers ({n} ÷ 1.500)'], xfw_bw_blow: ['Blow to the losing side ({n} of {m} men)', 'Schlag gegen die unterlegene Seite ({n} von {m} Mann)'],
+  xfw_bw_one: ['At most 25 for one battle', 'Höchstens 25 für eine Schlacht'],
+  xfw_battle_capped: ['Beyond the limit of ±{cap} for all battles', 'Über der Grenze von ±{cap} für alle Schlachten'],
+  xfw_earlier_battles: ['{n} earlier battles', '{n} frühere Schlachten'], xfw_unlogged_battles: ['Battles before this record was kept', 'Schlachten vor Beginn dieser Aufzeichnung'],
+  xfw_cap_note: ['at most ±{cap}', 'höchstens ±{cap}'],
+  xfw_capped_hint: ['Battles count only until the battles reach ±{cap} war score; in brackets what the battle would have been worth.', 'Schlachten zählen nur, bis sie zusammen ±{cap} Kriegspunkte erreichen; in Klammern steht, was die Schlacht sonst wert gewesen wäre.'],
   xfw_siege_blockade: ['Steps needed (the sea is closed)', 'Nötige Schritte (Seeweg gesperrt)'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }

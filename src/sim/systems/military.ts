@@ -782,8 +782,12 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   };
   if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc);
   s.flags[`last_battle_${b.loc}`] = s.day;
-  const human = s.playerNations.includes(wn) || s.playerNations.includes(ln);
-  if (rep && (human || lossW + lossL > 3000)) {
+  // a player realm fought when any of its armies stood in the battle, also under an ally's lead
+  const players = new Set([...W, ...Lz].filter((a) => !a.rebels && s.playerNations.includes(a.owner)).map((a) => a.owner));
+  for (const p of [wn, ln]) if (s.playerNations.includes(p)) players.add(p);
+  const human = players.size > 0;
+  const keep = !!rep && (human || lossW + lossL > 3000);
+  if (rep && keep) {
     const list = (s.battleReports ??= []);
     list.push(rep);
     if (list.length > REPORTS_KEPT) {
@@ -793,8 +797,9 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
     }
   }
   // one notice per player realm: won when its own (non-rebel) armies are among the winners; it opens the report
-  for (const p of new Set([wn, ln])) if (s.playerNations.includes(p)) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc, ...(rep ? { report: rep.id } : {}) });
-  if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
+  for (const p of players) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc, ...(rep ? { report: rep.id } : {}) });
+  // every war between the two sides logs the battle with the war score it moved, also when no full report is kept
+  if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', 0, b.loc, { naval: b.naval, lossW, lossL, ...(keep && rep ? { report: rep.id } : {}) });
   delete b.rep;
   s.battles.splice(s.battles.indexOf(b), 1);
   s.flags.lastBattleResult = s.day;

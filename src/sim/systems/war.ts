@@ -352,13 +352,47 @@ function warName(s: GameState, w: World, a: number, b: number, goal: string) {
   return { en: `${A.adj.en}–${Bn.adj.en} War`, de: `${A.short.de}isch-${Bn.short.de}ischer Krieg`.replace('isch-', '–').replace('ischer Krieg', ' Krieg') };
 }
 
-/** Battles, occupations: adjust war score of every war between the two sides. */
-export function warScoreEvent(s: GameState, winner: number, loser: number, kind: 'battle' | 'occupy' | 'blockade', amount: number, loc?: number) {
+/** The most war score battles can bring a war, either way. */
+export const BATTLE_CAP = 40;
+/** Battles kept one by one in a war's log; older ones are summed (War.battleLogRest). */
+export const BATTLE_LOG_KEPT = 60;
+/** What a battle is worth in war score for one war: a point for every 1,500 of the loser's dead, and up to 2 more by
+ *  how hard it hit the losing side of that war (2 when the dead were a quarter or more of all the men that side had in
+ *  the field before the battle), at most 25. A skirmish of a few hundred men against a great alliance moves the war by a
+ *  fraction of a point; the rout of a small realm's whole army counts fully. side: the losing side's men before the
+ *  battle (hulls in a sea battle). */
+export function battleWorth(lossL: number, side: number): { dead: number; blow: number; total: number } {
+  const dead = lossL / 1500, blow = 2 * Math.min(1, 4 * lossL / Math.max(1, side));
+  return { dead, blow, total: Math.min(25, dead + blow) };
+}
+/** The men (hulls at sea) the realms of one side of a war have under arms now. */
+function sideMen(s: GameState, side: number[], naval: boolean): number {
+  let m = 0;
+  for (const a of s.armies) if (!a.rebels && a.fleet === naval && side.includes(a.owner)) for (const r of a.regs) m += r.men;
+  return m;
+}
+/** Battles, occupations: adjust war score of every war between the two sides. A battle is written into the log of
+ *  every war it counts for (info: the battle's place, losses and report), so the war's battle score can be traced. */
+export function warScoreEvent(s: GameState, winner: number, loser: number, kind: 'battle' | 'occupy' | 'blockade', amount: number, loc?: number,
+  info?: { naval: boolean; lossW: number; lossL: number; report?: number }) {
   for (const war of s.wars) {
     const wa = war.att.includes(winner) && war.def.includes(loser);
     const wd = war.def.includes(winner) && war.att.includes(loser);
     if (!wa && !wd) continue;
-    if (kind === 'battle') { war.battleScore = clamp(war.battleScore + (wa ? amount : -amount), -40, 40); war.battles++; }
+    if (kind === 'battle') {
+      // a battle is weighed against the losing side of each war it counts for (amount: used only without info)
+      const lossL = info?.lossL ?? 0, side = info ? sideMen(s, wa ? war.def : war.att, info.naval) + lossL : 0;
+      const worth = info ? battleWorth(lossL, side).total : amount;
+      const raw = wa ? worth : -worth, before = war.battleScore;
+      war.battleScore = clamp(before + raw, -BATTLE_CAP, BATTLE_CAP); war.battles++;
+      const log = (war.battleLog ??= []);
+      log.push({ day: s.day, loc: loc ?? -1, naval: !!info?.naval, win: winner, lose: loser, lossW: Math.round(info?.lossW ?? 0), lossL: Math.round(lossL), side: Math.round(side),
+        score: war.battleScore - before, raw, ...(info?.report !== undefined ? { report: info.report } : {}) });
+      if (log.length > BATTLE_LOG_KEPT) {
+        const old = log.shift()!; const rest = (war.battleLogRest ??= { n: 0, score: 0 });
+        rest.n++; rest.score += old.score;
+      }
+    }
     // ports shut by enemy fleets (blockadeMonth): the score builds up month by month to at most 15
     if (kind === 'blockade') war.blockScore = clamp((war.blockScore ?? 0) + (wa ? amount : -amount), -15, 15);
   }

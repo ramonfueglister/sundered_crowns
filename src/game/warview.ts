@@ -1,12 +1,12 @@
 // Worker-side views of war (claude/war-pass): the declaration dialog, the army and siege panels, battle reports, the
 // peace terms a war allows, and the army supply map mode. Every number comes from the same simulation function that
 // applies it, so what the panels show is what happens.
-import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm } from '../sim/types';
+import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm, War } from '../sim/types';
 import type { World } from '../sim/world';
 import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
 import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
-import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev } from '../sim/systems/war';
+import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
 
@@ -123,7 +123,26 @@ export function warView(s: GameState, w: World, player: number, id: number) {
   const faith = L && L.faith !== f ? { fit: att ? faithTermFits(s, player, enemyLead) : null, weight: nationDev(s, enemyLead) / Math.max(1, nationDev(s, player)),
     people: faithShare(s, enemyLead, f), oldFaith: FAITHS[L.faith]?.family === 'traditional' } : null;
   return { id, goal: war.goal.type, cb: war.goal.cb ?? null, goalLocs: war.goal.locs, attacker: att, allowed, fits, convert, throne,
-    sameFaith: !!L && L.faith === f, faith, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player) };
+    sameFaith: !!L && L.faith === f, faith, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player), log: warBattleLog(s, war, att) };
+}
+/** Every battle behind a war's battle score, from our side (att: we are among the attackers): the battles logged one by
+ *  one (newest first), the older ones summed, and what older saves scored before the log existed, so that the rows add
+ *  up to the battle score exactly. A row links to its full report while that is kept. */
+export function warBattleLog(s: GameState, war: War, att: boolean) {
+  const sign = att ? 1 : -1;
+  const kept = new Set((s.battleReports ?? []).map((r) => r.id));
+  const rows = (war.battleLog ?? []).map((b) => {
+    // what the battle was worth and why (battleWorth): the loser's dead, and the blow to the losing side of this war
+    const v = battleWorth(b.lossL, b.side ?? 0), k = b.raw < 0 ? -sign : sign;
+    return { day: b.day, loc: b.loc, naval: b.naval, win: b.win, lose: b.lose, lossW: b.lossW, lossL: b.lossL, side: b.side ?? 0,
+      dead: v.dead * k, blow: v.blow * k, score: b.score * sign, raw: b.raw * sign, report: b.report !== undefined && kept.has(b.report) ? b.report : null };
+  }).reverse();
+  const rest = war.battleLogRest ? { n: war.battleLogRest.n, score: war.battleLogRest.score * sign } : null;
+  const total = war.battleScore * sign;
+  const listed = rows.reduce((p, r) => p + r.score, 0) + (rest?.score ?? 0);
+  // a war from an older save scored battles before they were logged
+  const unlogged = Math.abs(total - listed) > 1e-6 ? total - listed : 0;
+  return { rows, rest, unlogged, total, cap: BATTLE_CAP, count: war.battles };
 }
 export type WarTermType = PeaceTerm['type'];
 

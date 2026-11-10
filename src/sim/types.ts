@@ -153,7 +153,14 @@ export interface War {
   battleScore: number; tickScore: number; battles: number; lossesA: number; lossesD: number;
   offers: PeaceOffer[];
   blockScore?: number; // war score from blockaded ports (systems/war.ts blockadeMonth)
+  /** Every battle that moved this war's battle score (systems/war.ts warScoreEvent), newest last, at most BATTLE_LOG_KEPT;
+   *  older ones are summed in battleLogRest, so the log and the rest always add up to battleScore. */
+  battleLog?: WarBattle[]; battleLogRest?: { n: number; score: number };
 }
+/** One battle in a war's log: winner and loser realms, losses, the war score it moved (from the attackers' side, after
+ *  the ±40 cap) and what it would have moved without the cap (systems/war.ts battleWorth); report: the full report,
+ *  when one was kept. */
+export interface WarBattle { day: number; loc: number; naval: boolean; win: number; lose: number; lossW: number; lossL: number; side: number; score: number; raw: number; report?: number } // side: the losing side's men before the battle
 export interface PeaceTerm {
   type: 'cede' | 'gold' | 'release' | 'vassal' | 'break_alliance' | 'faith' | 'humiliate' | 'white_peace' | 'independence' | 'concession'
     | 'convert' | 'throne' | 'trade_rights' | 'end_embargo' | 'tariff_cut' | 'expel_merchants' | 'reparations' | 'end_rivalry';
