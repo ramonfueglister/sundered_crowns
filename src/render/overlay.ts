@@ -431,8 +431,8 @@ export class Overlay {
   /**
    * Counters, landmarks and place names without covering each other: the counters claim their boxes first, then the
    * landmark badges, then the landmarks' names (to the right of the badge, else to the left, else below, else left out),
-   * then the place names (capitals and larger towns first; a name that would cover anything is left out). They are
-   * drawn from the bottom up: place names, landmarks, counters.
+   * then the place names (capitals and larger towns first; a capital tries a few spots around its place, any other name
+   * that would cover anything is left out). They are drawn from the bottom up: place names, landmarks, counters.
    */
   private drawMarks(v: OverlayView) {
     const taken = new Taken();
@@ -479,11 +479,17 @@ export class Overlay {
       ctx.font = `${p.capital ? 700 : 600} italic ${Math.round(fs * big)}px ${LABEL_FONT}`;
       const hw = ctx.measureText(p.name).width / 2 + 3, hh = fs * big * 0.6;
       const y = sy + fs * 0.9; // under the place's centre, where its town stands
-      if (!taken.free(sx - hw, y - hh, sx + hw, y + hh)) continue;
-      taken.add(sx - hw, y - hh, sx + hw, y + hh);
+      // a capital whose spot is taken (most often by its own host's counter, whose box reaches just below the centre)
+      // tries a little lower, clear of the counter, then to the right and to the left of a landmark badge under the
+      // place, before it is left out
+      const tries: [number, number][] = p.capital ? [[sx, y], [sx, y + hh * 1.2], [sx + hw + 14, y + hh * 0.6], [sx - hw - 14, y + hh * 0.6]] : [[sx, y]];
+      const at = tries.find(([x, yy]) => taken.free(x - hw, yy - hh, x + hw, yy + hh));
+      if (!at) continue;
+      const [x, yy] = at;
+      taken.add(x - hw, yy - hh, x + hw, yy + hh);
       ctx.globalAlpha = a;
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(246, 238, 216, 0.82)'; ctx.strokeText(p.name, sx, y);
-      ctx.fillStyle = p.capital ? '#3a1a08' : '#2e2414'; ctx.fillText(p.name, sx, y);
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(246, 238, 216, 0.82)'; ctx.strokeText(p.name, x, yy);
+      ctx.fillStyle = p.capital ? '#3a1a08' : '#2e2414'; ctx.fillText(p.name, x, yy);
     }
     ctx.restore();
   }
