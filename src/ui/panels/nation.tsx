@@ -10,7 +10,8 @@ import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQue
 import { errText } from '../i18n';
 
 const PROPOSALS = ['alliance', 'marriage', 'guarantee', 'access', 'trade', 'vassalize', 'demand', 'improve'];
-const UNILATERAL = ['gift', 'insult', 'break_alliance', 'fabricate', 'rival', 'unrival', 'cancel_access', 'excommunicate'];
+// (fabricating a claim is an agent's work: it is listed once, under espionage)
+const UNILATERAL = ['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'excommunicate'];
 export const GOALS: WarGoal['type'][] = ['conquest', 'throne', 'faith', 'trade', 'subjugate', 'reconquest', 'independence', 'humiliate'];
 const SPY = ['fabricate', 'slander', 'support_rebels', 'steal_tech'];
 
@@ -95,11 +96,11 @@ export function traitName(k: string) { const v = t(`trait_${k}`); return v === `
 
 function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   const rel = d.rel; const p = view.value?.player;
-  const [pred, setPred] = useState<Record<string, { accept: boolean; reasons: [string, number][] }>>({});
+  const [pred, setPred] = useState<Record<string, any>>({});
   const [gift, setGift] = useState(0);
   const allied = rel.treaties.includes('alliance'), married = rel.treaties.includes('marriage'), access = rel.treaties.includes('access');
   const proposals = PROPOSALS.filter((a) => !(a === 'alliance' && allied) && !(a === 'marriage' && married) && !(a === 'access' && access) && !(a === 'trade' && rel.treaties.includes('trade')) && !(a === 'guarantee' && rel.treaties.includes('guarantee')) && !(a !== 'improve' && rel.atWar));
-  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'fabricate' && rel.atWar) && !(a === 'excommunicate' && !rel.canExcommunicate));
+  const unilateral = UNILATERAL.filter((a) => !(a === 'break_alliance' && !allied) && !(a === 'rival' && rel.rival) && !(a === 'unrival' && !rel.rival) && !(a === 'cancel_access' && !access) && !(a === 'excommunicate' && !rel.canExcommunicate));
   const key = proposals.join(',') + d.id;
   useEffect(() => {
     let live = true;
@@ -112,14 +113,19 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   return <Section title={t('diplomacy')} id="nat-dip" right={<Tip content={t('envoys_hint')}><span class={free ? 'muted' : 'neg'}><i class="ic envoy sm" /> {free}/{p?.envoys ?? 0}</span></Tip>}>
     <div class="dip-list">{proposals.map((a) => {
       const pr = pred[a];
-      const sum = pr ? pr.reasons.reduce((s, x) => s + x[1], 0) : 0;
-      return <div class="dip-row">
+      const sum = pr ? (pr.reasons as [string, number][]).reduce((q, x) => q + x[1], 0) : 0;
+      const row = <div class="dip-row">
         <span class="dname">{actName(a)}</span>
-        {pr ? <Tip content={() => <><Reasons title={t('they_say')} rows={pr.reasons} total={sum} /><div class={pr.accept ? 'pos' : 'neg'}>{pr.accept ? t('would_accept') : t('would_refuse')}</div></>}>
+        {pr?.kind === 'gain' ? <Tip content={() => <><Reasons title={t('xp_improve_title')} rows={pr.reasons} total={pr.gain} />
+            <div class="muted small">{t('xp_improve_hint').replace('{now}', signed(pr.now, 0)).replace('{cap}', String(pr.cap))}</div></>}>
+          <span class="pred yes">{signed(pr.gain, 0)} {t('xp_opinion_short')}</span></Tip>
+        : pr ? <Tip content={() => <><Reasons title={t('they_say')} rows={pr.reasons} total={sum} /><div class={pr.accept ? 'pos' : 'neg'}>{pr.accept ? t('would_accept') : t('would_refuse')}</div>
+            {pr.again > 0 && <div class="muted small">{t('xp_refused_lately')}</div>}</>}>
           <span class={`pred ${pr.accept ? 'yes' : 'no'}`}>{pr.accept ? '✔' : '✘'} {pr.accept ? t('would_accept') : t('would_refuse')} <small>({signed(sum)})</small></span>
         </Tip> : <span class="pred">…</span>}
         <Btn disabled={free <= 0 ? 'all envoys are busy' : null} tip={t('envoy_travel')} onClick={() => act({ t: 'diplo', target: d.id, action: a }, 'page', t('envoy_sent')).then(refresh)}>{t('send')}</Btn>
       </div>;
+      return row;
     })}</div>
     <div class="dip-list uni">{unilateral.map((a) => <div class="dip-row">
       <span class="dname">{actName(a)}</span>
@@ -129,6 +135,7 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
     </div>)}</div>
   </Section>;
 }
+
 
 /** Our justifications against this realm, as the simulation sees them (src/sim/systems/war.ts casusBelliAll). */
 const cbList = (d: any): string[] => d.rel?.cb ?? [];

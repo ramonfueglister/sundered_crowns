@@ -7,7 +7,7 @@ import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
@@ -86,8 +86,9 @@ export function pendingView(s: GameState, w: World, player: number): TickView['p
     const n = s.nations[player];
     if (p.event.startsWith('diplo_')) {
       const from = s.nations[p.ctx.from]; const act = p.event.slice(6);
-      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.`, de: `${from?.short.de} schlägt vor: ${ACT_NAME[act]?.de ?? act}.` },
-        options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10.` } }], art: 'court' };
+      const yrs = REFUSAL_COOLDOWN[act] ?? 0;
+      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.`, de: `${from?.short.de} ${from && pluralDe(from) ? 'schlagen' : 'schlägt'} vor: ${ACT_NAME[act]?.de ?? act}.` },
+        options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year${yrs ? `, and they will not ask again for ${yrs} years` : ''}.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10${yrs ? `, und ${from?.short.de} ${from && pluralDe(from) ? 'fragen' : 'fragt'} ${yrs} Jahre lang nicht wieder` : ''}.` } }], art: 'court' };
     }
     const d = eventDef(p.event);
     if (!d) return { ...p, title: { en: p.event, de: p.event }, text: { en: '', de: '' }, options: [{ label: { en: 'OK', de: 'OK' } }] };
@@ -211,7 +212,13 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'realm': return realmDetail(s, w, player);
     case 'ledger': return ledger(s, w, q.kind);
     case 'market': { const m = s.markets[q.market]; if (!m) return null; return { name: m.name, hub: m.hub, owner: m.owner, priceIndex: m.priceIndex, goods: GOODS.map((g, k) => ({ id: g.id, name: g.name, price: m.price[k], supply: m.supply[k], demand: m.demand[k], base: g.base * s.priceLevel, hist: Array.from({ length: 120 }, (_, j) => m.hist[k * 120 + ((m.histPos + j) % 120)]) })), merchants: m.merchants, links: m.links.map((l) => ({ to: s.markets[l.to].name, sea: l.sea })) }; }
-    case 'diplo': return evaluateProposal(s, w, player, q.target, q.action);
+    case 'diplo': {
+      // improving relations is never refused: the row shows the opinion it will bring (systems/diplomacy.ts improveGain)
+      if (q.action === 'improve') { const g = improveGain(s, player, q.target); return { kind: 'gain', accept: true, gain: g.gain, now: g.now, cap: IMPROVE_CAP, reasons: g.parts }; }
+      const ev = evaluateProposal(s, w, player, q.target, q.action);
+      const again = refusedRecently(s, player, q.target, q.action) ? s.flags[`deny_${player}_${q.target}_${q.action}`] : 0;
+      return { ...ev, again };
+    }
     case 'tmarket': return marketDetail(s, w, player, q.market);
     case 'tmarkets': return marketList(s, w, player);
     case 'tgood': return goodDetail(s, w, player, q.market, q.good);

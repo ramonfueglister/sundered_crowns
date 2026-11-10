@@ -194,7 +194,7 @@ export interface TradeFlow { from: number; to: number; good: number; qty: number
 
 export interface PendingEvent { id: number; event: string; nation: number; day: number; expires: number; ctx: Record<string, number> }
 export interface ChronEntry { day: number; text: I18n; nation: number; kind: string; loc?: number }
-export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number }
+export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number; reasons?: [string, number][] }
 
 export interface Construction { loc: number; building: number; left: number; nation: number; cost: number }
 export interface Recruit { loc: number; nation: number; type: number; men: number; left: number; army: number }

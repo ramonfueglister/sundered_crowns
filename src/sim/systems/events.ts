@@ -6,7 +6,7 @@ import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies } from '../ctx';
 import { B, C, CL } from '../defs';
 import { chance, rand, pick } from '../rng';
-import { acceptProposal } from './diplomacy';
+import { acceptProposal, PROPOSAL_OURS, noteRefusal, pluralDe } from './diplomacy';
 import { declareWar, nationLocs, nationDev } from './war';
 import { estate } from './politics';
 import { dayToDate } from '../calendar';
@@ -14,6 +14,8 @@ import { EVENTS } from '../content/events';
 import { aiRecord } from './ai_log';
 import { localName } from '../content/names';
 import { DECISIONS } from '../content/decisions';
+/** The name of a proposal as a heading (an offer recorded for an online player who was away). */
+const ACT_TITLE: Record<string, I18n> = { alliance: { en: 'Alliance', de: 'Bündnis' }, marriage: { en: 'Royal marriage', de: 'Königliche Heirat' }, access: { en: 'Military access', de: 'Durchmarschrecht' }, trade: { en: 'Trade agreement', de: 'Handelsabkommen' }, vassalize: { en: 'Vassalage', de: 'Vasallität' }, demand: { en: 'Tribute', de: 'Tribut' } };
 
 export interface EvApi {
   s: GameState; w: World; n: Nation; ctx: Record<string, number>; year: number; month: number;
@@ -211,11 +213,12 @@ export function answerEvent(s: GameState, w: World, nation: number, pendingId: n
   s.pending.splice(s.pending.indexOf(p), 1);
   if (p.event.startsWith('diplo_')) {
     const action = p.event.slice(6);
-    if (auto && n.playerId) { const from = s.nations[p.ctx.from]; recordAuto(s, nation, p.event, { en: `Proposal of ${from?.short.en ?? '?'} (${action})`, de: `Vorschlag von ${from?.short.de ?? '?'} (${action})` }, { en: 'Declined', de: 'Abgelehnt' }); }
+    const what = PROPOSAL_OURS[action] ?? { en: `our proposal (${action})`, de: `unseren Vorschlag (${action})` };
+    if (auto && n.playerId) { const from = s.nations[p.ctx.from]; recordAuto(s, nation, p.event, { en: `Proposal of ${from?.short.en ?? '?'}: ${ACT_TITLE[action]?.en ?? action}`, de: `Vorschlag von ${from?.short.de ?? '?'}: ${ACT_TITLE[action]?.de ?? action}` }, { en: 'Declined', de: 'Abgelehnt' }); }
     if (choice === 0 && s.nations[p.ctx.from]?.alive) {
       acceptProposal(s, w, p.ctx.from, nation, action);
-      notice(s, p.ctx.from, 'diplo_accept', { en: `${n.short.en} accepted our proposal (${action}).`, de: `${n.short.de} hat unseren Vorschlag angenommen (${action}).` });
-    } else addOpinion(s, p.ctx.from, nation, 'refused_us', -10, 365);
+      notice(s, p.ctx.from, 'diplo_accept', { en: `${n.short.en} accepted ${what.en}.`, de: `${n.short.de} ${pluralDe(n) ? 'haben' : 'hat'} ${what.de} angenommen.` });
+    } else { addOpinion(s, p.ctx.from, nation, 'refused_us', -10, 365); noteRefusal(s, p.ctx.from, nation, action); }
     return null;
   }
   const d = eventDef(p.event); if (!d) return 'unknown event';

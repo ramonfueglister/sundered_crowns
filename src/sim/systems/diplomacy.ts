@@ -127,6 +127,8 @@ export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: 
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
   if (action === 'marriage' && hasTreaty(s, a, b, 'marriage')) return 'already married';
   if (atWar(s, a, b) && action !== 'improve') return 'at war';
+  // a computer realm does not repeat a refused proposal before its time (noteRefusal; every AI path, trade included)
+  if (!s.playerNations.includes(a) && refusedRecently(s, a, b, action)) return 'they refused us recently';
   const days = envoyDays(s, w, A, b);
   A.envoysBusy++;
   s.envoys.push({ from: a, to: b, action, arrive: s.day + days, payload });
@@ -192,28 +194,67 @@ const PROPOSAL: Record<string, { en: string; de: string }> = {
   access: { en: 'military access', de: 'Durchmarschrecht' }, trade: { en: 'a trade agreement', de: 'ein Handelsabkommen' },
   vassalize: { en: 'that we become their vassal', de: 'dass wir ihr Vasall werden' }, demand: { en: 'a demand for tribute', de: 'eine Tributforderung' },
 };
+// ---- fix-people: answers name the proposal in words and carry the reasons; a refused proposal is not repeated soon
+/** A proposal as the realm that sent it names it in a notice ("Castile refused our proposal of an alliance"). */
+export const PROPOSAL_OURS: Record<string, { en: string; de: string }> = {
+  alliance: { en: 'our proposal of an alliance', de: 'unseren Bündnisvorschlag' }, marriage: { en: 'our proposal of a royal marriage', de: 'unseren Vorschlag einer königlichen Heirat' },
+  access: { en: 'our request for military access', de: 'unsere Bitte um Durchmarschrecht' }, trade: { en: 'our proposal of a trade agreement', de: 'unseren Vorschlag eines Handelsabkommens' },
+  guarantee: { en: 'our guarantee of their independence', de: 'unsere Garantie ihrer Unabhängigkeit' },
+  vassalize: { en: 'our demand that they become our vassal', de: 'unsere Forderung, unser Vasall zu werden' }, demand: { en: 'our demand for tribute', de: 'unsere Tributforderung' },
+};
+/** German verbs agree with a realm name in the plural ("Die Inseln schlagen vor"). */
+export const pluralDe = (n: Nation) => /^Die /.test(n.short.de);
+const verbDe = (n: Nation, sg: string, pl: string) => (pluralDe(n) ? pl : sg);
+/** Years before a realm asks again for what was refused: the same proposal to the same realm is not repeated. */
+export const REFUSAL_COOLDOWN: Record<string, number> = { alliance: 3, marriage: 10, access: 2, trade: 3, guarantee: 3, vassalize: 5, demand: 3 };
+/** Note that b refused a's proposal (an AI's answer, a player's refusal or an offer left to expire). */
+export function noteRefusal(s: GameState, a: number, b: number, action: string) {
+  const y = REFUSAL_COOLDOWN[action]; if (y) s.flags[`deny_${a}_${b}_${action}`] = s.day + Math.round(y * 365);
+}
+/** True while a refused proposal of a to b may not be repeated. */
+export function refusedRecently(s: GameState, a: number, b: number, action: string): boolean { return (s.flags[`deny_${a}_${b}_${action}`] ?? 0) > s.day; }
+/** Improved relations: 25 opinion, more with a better envoy (diploSkill), lasting three years, at most +100 in all. */
+export const IMPROVE_CAP = 100;
+export function improveGain(s: GameState, a: number, b: number): { gain: number; now: number; parts: [string, number][] } {
+  const mult = Math.max(0.5, 1 + diploSkill(s, s.nations[a]));
+  const now = s.rel[`${b}>${a}`]?.mods.find((m) => m.id === 'improved_relations')?.v ?? 0;
+  const raw = 25 * mult;
+  const parts: [string, number][] = [['xp_improve_base', 25], ['envoy_skill', raw - 25]];
+  const gain = Math.max(0, Math.min(raw, IMPROVE_CAP - now));
+  if (gain < raw) parts.push(['xp_improve_cap', gain - raw]);
+  return { gain, now, parts };
+}
 function envoyArrives(s: GameState, w: World, e: Envoy) {
   const A = s.nations[e.from], Bn = s.nations[e.to];
   A.envoysBusy = Math.max(0, A.envoysBusy - 1);
   if (!A.alive || !Bn.alive) return;
   const human = s.playerNations.includes(e.to);
-  if (human && !A.ai === false) { /* player-to-player offers are handled online */ }
   if (human && ['alliance', 'marriage', 'access', 'trade', 'vassalize', 'demand'].includes(e.action)) {
     // humans answer offers through a pending diplomatic event (one per proposer and kind, at most six waiting)
     const waiting = s.pending.filter((p) => p.nation === e.to && p.event.startsWith('diplo_'));
     if (waiting.some((p) => p.ctx.from === e.from && p.event === `diplo_${e.action}`) || waiting.length >= 6) return;
     s.pending.push({ id: s.nextId++, event: `diplo_${e.action}`, nation: e.to, day: s.day, expires: s.day + 60, ctx: { from: e.from } });
     const what = PROPOSAL[e.action] ?? { en: e.action, de: e.action };
-    notice(s, e.to, 'diplo_offer', { en: `${A.short.en} proposes ${what.en}.`, de: `${A.short.de} schlägt ${what.de} vor.` });
+    notice(s, e.to, 'diplo_offer', { en: `${A.short.en} proposes ${what.en}.`, de: `${A.short.de} ${verbDe(A, 'schlägt', 'schlagen')} ${what.de} vor.` });
     return;
   }
-  if (e.action === 'improve') { addOpinion(s, e.to, e.from, 'improved_relations', 25 * Math.max(0.5, 1 + diploSkill(s, A)), 365 * 3, true); rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100); return; }
+  if (e.action === 'improve') {
+    const g = improveGain(s, e.from, e.to);
+    if (g.gain > 0) addOpinion(s, e.to, e.from, 'improved_relations', g.gain, 365 * 3, true);
+    rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100);
+    if (s.playerNations.includes(e.from)) notice(s, e.from, 'diplo_accept', { en: `Our envoy improved relations with ${Bn.short.en}: their opinion of us +${Math.round(g.gain)} for three years, trust +5.`, de: `Unser Gesandter hat die Beziehungen zu ${Bn.short.de} verbessert: ihre Meinung über uns +${Math.round(g.gain)} für drei Jahre, Vertrauen +5.` }, { reasons: g.parts });
+    return;
+  }
   const ev = evaluateProposal(s, w, e.from, e.to, e.action);
   (s as any).lastAnswer = (s as any).lastAnswer || {};
   (s as any).lastAnswer[e.from] = { to: e.to, action: e.action, accept: ev.accept, reasons: ev.reasons, day: s.day };
   if (ev.accept) acceptProposal(s, w, e.from, e.to, e.action, e.payload);
-  else addOpinion(s, e.from, e.to, 'refused_us', -10, 365, false);
-  if (s.playerNations.includes(e.from)) notice(s, e.from, ev.accept ? 'diplo_accept' : 'diplo_refuse', { en: `${Bn.short.en} ${ev.accept ? 'accepted' : 'refused'} our ${e.action} proposal.`, de: `${Bn.short.de} hat unseren Vorschlag (${e.action}) ${ev.accept ? 'angenommen' : 'abgelehnt'}.` });
+  else { addOpinion(s, e.from, e.to, 'refused_us', -10, 365, false); noteRefusal(s, e.from, e.to, e.action); }
+  if (s.playerNations.includes(e.from)) {
+    const what = PROPOSAL_OURS[e.action] ?? { en: `our proposal (${e.action})`, de: `unseren Vorschlag (${e.action})` };
+    const sum = Math.round(ev.reasons.reduce((p, x) => p + x[1], 0)); const sg = `${sum >= 0 ? '+' : '−'}${Math.abs(sum)}`;
+    notice(s, e.from, ev.accept ? 'diplo_accept' : 'diplo_refuse', { en: `${Bn.short.en} ${ev.accept ? 'accepted' : 'refused'} ${what.en} (${sg}).`, de: `${Bn.short.de} ${verbDe(Bn, 'hat', 'haben')} ${what.de} ${ev.accept ? 'angenommen' : 'abgelehnt'} (${sg}).` }, { reasons: ev.reasons });
+  }
 }
 
 export function acceptProposal(s: GameState, w: World, a: number, b: number, action: string, payload?: any) {
@@ -344,6 +385,7 @@ export const diplomacy: System = {
     for (const k in s.rel) { const r = s.rel[k]; r.mods = r.mods.filter((m) => m.until > s.day); r.trust += (50 - r.trust) * 0.01; if (!r.mods.length && Math.abs(r.trust - 50) < 1) delete s.rel[k]; }
     for (const t of s.treaties) if (t.type === 'alliance') { const r = rel(s, t.a, t.b); r.trust = Math.min(100, r.trust + 0.1); const r2 = rel(s, t.b, t.a); r2.trust = Math.min(100, r2.trust + 0.1); }
     s.treaties = s.treaties.filter((t) => t.until > s.day && s.nations[t.a]?.alive && s.nations[t.b]?.alive);
+    for (const k in s.flags) if (k.startsWith('deny_') && s.flags[k] <= s.day) delete s.flags[k]; // refusals forgotten (noteRefusal)
     // envoys: number by statecraft
     for (const n of s.nations) if (n.alive) { const r = s.chars[n.ruler]; n.envoys = 2 + (r ? Math.floor(r.skills[1] / 3) : 0) + (n.council.chancellor ? 1 : 0); }
   },

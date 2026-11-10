@@ -8,6 +8,11 @@ import { newGame } from '../tools/sim/load';
 import { characterDies, lineOfSuccession, ageOf, politics } from '../src/sim/systems/politics';
 import { dynastyView, successionClaims } from '../src/sim/systems/dynasty';
 import type { GameState } from '../src/sim/types';
+import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP } from '../src/sim/systems/diplomacy';
+import { answerEvent } from '../src/sim/systems/events';
+import { answer } from '../src/game/view';
+import { advanceDay } from '../src/sim/engine';
+import { atWar } from '../src/sim/ctx';
 
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
 const named = (s: GameState, name: string) => Object.values(s.chars).find((c) => c.name === name)!;
@@ -85,4 +90,62 @@ describe('royal houses of 1356 and the succession', () => {
     const P = nat(s, 'portugal');
     expect(Math.floor(ageOf(s, s.chars[P.ruler]))).toBeGreaterThanOrEqual(64); // Afonso IV, born 1291
   });
+});
+
+describe('diplomatic answers', () => {
+  const sendable = (s: GameState, _w: any, a: number, b: number) => !atWar(s, a, b) && s.nations[b].overlord < 0;
+  const arrive = (s: GameState, w: any) => { for (const e of s.envoys) e.arrive = s.day; diplomacy.daily!({ s, w } as any); };
+
+  it('improving relations is never refused: the query shows the gain the envoy brings, and it stops at +100', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), F = nat(s, 'france'); s.playerNations = [E.id];
+    const q = answer(s, w, E.id, { q: 'diplo', target: F.id, action: 'improve' } as any);
+    expect(q.accept).toBe(true);
+    expect(q.gain).toBeGreaterThan(0);
+    // the parts add up to the gain shown
+    expect(q.reasons.reduce((a: number, x: [string, number]) => a + x[1], 0)).toBeCloseTo(q.gain, 6);
+    expect(sendEnvoy(s, w, E.id, F.id, 'improve')).toBeNull(); arrive(s, w);
+    const mod = () => s.rel[`${F.id}>${E.id}`].mods.find((m) => m.id === 'improved_relations')!.v;
+    expect(mod()).toBeCloseTo(q.gain, 6);
+    expect(s.notices.some((n) => n.nation === E.id && n.kind === 'diplo_accept' && /Gesandter/.test(n.text.de))).toBe(true);
+    for (let i = 0; i < 6; i++) { E.envoysBusy = 0; sendEnvoy(s, w, E.id, F.id, 'improve'); arrive(s, w); }
+    expect(mod()).toBe(IMPROVE_CAP);
+    expect(answer(s, w, E.id, { q: 'diplo', target: F.id, action: 'improve' } as any).gain).toBe(0);
+  });
+
+  it('a refusal names the proposal in words and carries the reasons, and is remembered', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); s.playerNations = [E.id];
+    // the first realm at peace with England that would refuse an alliance (France is at war with England in 1356)
+    const F = s.nations.find((o) => o.alive && o.id !== E.id && !o.short.de.startsWith('Die ') && sendable(s, w, E.id, o.id) && !answer(s, w, E.id, { q: 'diplo', target: o.id, action: 'alliance' } as any).accept)!;
+    expect(sendEnvoy(s, w, E.id, F.id, 'alliance')).toBeNull(); arrive(s, w);
+    const n = s.notices.find((x) => x.nation === E.id && x.kind === 'diplo_refuse')!;
+    expect(n.text.de).toMatch(new RegExp(`^${F.short.de} hat unseren Bündnisvorschlag abgelehnt \\(−\\d+\\)\\.$`));
+    expect(n.text.en).not.toMatch(/alliance proposal/);
+    expect(n.reasons!.length).toBeGreaterThan(1);
+    const sum = Math.round(n.reasons!.reduce((a, x) => a + x[1], 0));
+    expect(n.text.de).toContain(`(−${Math.abs(sum)})`);
+    expect(refusedRecently(s, E.id, F.id, 'alliance')).toBe(true);
+    // the diplomacy row says so
+    expect(answer(s, w, E.id, { q: 'diplo', target: F.id, action: 'alliance' } as any).again).toBeGreaterThan(s.day);
+  });
+
+  it('a declined offer is not repeated for years, and subjects do not offer alliances', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); s.playerNations = [E.id];
+    const seen = new Map<string, number>(); const repeats: string[] = []; const fromSubjects: string[] = [];
+    const cool: Record<string, number> = { alliance: 3, marriage: 10, access: 2, trade: 3, vassalize: 5, demand: 3 };
+    for (let d = 0; d < 365 * 3; d++) {
+      for (const p of s.pending.filter((x) => x.nation === E.id && x.event.startsWith('diplo_'))) {
+        const key = `${p.ctx.from}_${p.event}`; const act = p.event.slice(6);
+        if (seen.has(key) && s.day - seen.get(key)! < cool[act] * 365 - 1) repeats.push(`${key}@${s.day}`);
+        if (act === 'alliance' && s.nations[p.ctx.from].overlord >= 0) fromSubjects.push(key);
+        seen.set(key, s.day);
+        answerEvent(s, w, E.id, p.id, 1);
+      }
+      advanceDay(s, w);
+    }
+    expect(repeats).toEqual([]);
+    expect(fromSubjects).toEqual([]);
+  }, 600000);
 });

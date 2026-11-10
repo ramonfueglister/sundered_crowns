@@ -973,6 +973,12 @@ const S: Record<string, [string, string]> = {
   xp_house_secure: ['A marriage of the ruler or the heir, and children, secure the line.', 'Eine Heirat des Herrschers oder des Erben und Kinder sichern die Linie.'],
   xp_line: ['Line of succession', 'Thronfolge'],
   xp_line_hint: ['Who inherits after the ruler, first in line first: the ruler\'s children and their children, then brothers, sisters and their children. Under male primogeniture the men of the male line come first. People married abroad are not in the line; they pass a claim instead.', 'Wer nach dem Herrscher erbt, der Erste zuerst: die Kinder des Herrschers und deren Kinder, dann Brüder, Schwestern und ihre Kinder. Bei männlicher Primogenitur kommen die Männer der männlichen Linie zuerst. Wer ins Ausland geheiratet hat, steht nicht in der Linie, sondern vererbt einen Anspruch.'],
+  xp_improve_title: ['Improved relations', 'Verbesserte Beziehungen'], xp_improve_base: ['An envoy at their court', 'Ein Gesandter an ihrem Hof'],
+  xp_improve_cap: ['Limit of +100 from improved relations', 'Grenze von +100 durch verbesserte Beziehungen'], xp_opinion_short: ['opinion', 'Meinung'],
+  xp_improve_hint: ['Never refused: their opinion of us rises for three years, and their trust by 5. From improved relations so far: {now}, at most +{cap}.', 'Wird nie abgelehnt: Ihre Meinung über uns steigt für drei Jahre, ihr Vertrauen um 5. Bisher durch verbesserte Beziehungen: {now}, höchstens +{cap}.'],
+  xp_refused_lately: ['They refused this proposal of ours lately.', 'Sie haben diesen Vorschlag von uns kürzlich abgelehnt.'],
+  xp_pause_on_offers: ['Pause on offers of other realms', 'Bei Angeboten anderer Reiche anhalten'],
+  xp_pause_on_offers_hint: ['Offers (alliance, marriage, passage, trade) wait 60 days for an answer; the game runs on unless this is ticked. Answering resumes only a pause that an event window made.', 'Angebote (Bündnis, Heirat, Durchmarsch, Handel) warten 60 Tage auf eine Antwort; das Spiel läuft weiter, außer dies ist angehakt. Eine Antwort setzt nur eine Pause fort, die ein Ereignisfenster ausgelöst hat.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -10,7 +10,7 @@ import { Panel, Section, Row, Btn, Empty, NLink, act, t, L, lang, num, pct, Coa,
 import { sfx } from '../audio';
 import { CHARGE_TYPES } from './coa';
 import { EventArt, ART_LIST } from './art';
-import { KeyBindings, AccessSettings, DisplaySettings } from './settings';
+import { KeyBindings, AccessSettings, DisplaySettings, PauseSettings } from './settings';
 import { DevTools } from './devtools';
 import { HistoryCharts, ChronicleExport, endingText, victoryName, victoryDesc } from './victory';
 import { TipHead } from './explain';
@@ -38,7 +38,7 @@ export function SettingsPanel() {
     <Section title={t('gameplay')} id="set-play">
       <div class="slider-row"><span class="k">{t('autosave')}</span><select value={s.autosaveMonths} onChange={(e) => set({ autosaveMonths: Number((e.target as HTMLSelectElement).value) })}>{[1, 3, 6, 12, 24].map((m) => <option value={m}>{m} {t('months')}</option>)}</select></div>
       <label class="chk"><input type="checkbox" checked={s.edgePan} onChange={(e) => set({ edgePan: (e.target as HTMLInputElement).checked })} /> {t('edge_pan')}</label>
-      <label class="chk"><input type="checkbox" checked={s.pauseOnEvents} onChange={(e) => set({ pauseOnEvents: (e.target as HTMLInputElement).checked })} /> {t('pause_on_events')}</label>
+      <PauseSettings />
     </Section>
     <Section title={t('language')} id="set-lang">
       <div class="seg wide"><button class={lang.value === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button><button class={lang.value === 'de' ? 'on' : ''} onClick={() => setLang('de')}>Deutsch</button></div>
