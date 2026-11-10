@@ -43,7 +43,7 @@ export function Notices() {
     {shown.map((n) => { const age = now - (born.current.get(n.id) ?? now); const fading = !hover && age > LIFE - 2500;
       return <div class={`notice ${BAD.has(n.kind) ? 'bad' : GOOD.has(n.kind) ? 'good' : ''} ${fading ? 'fading' : ''} ${n.loc !== undefined || n.war !== undefined || n.army !== undefined || n.report !== undefined ? 'click' : ''}`} onClick={() => click(n)}>
         <span class="nt-ic">{ICON[n.kind] ?? '•'}</span>
-        {n.reasons?.length ? <Tip content={() => <Reasons title={t('they_say')} rows={n.reasons!} />}><span class="nt-t has-tip">{L(n.text)}</span></Tip> : <span class="nt-t">{L(n.text)}</span>}
+        {n.reasons?.length ? <Tip content={() => <Reasons title={t(n.reasonsTitle ?? 'they_say')} rows={n.reasons!} />}><span class="nt-t has-tip">{L(n.text)}</span></Tip> : <span class="nt-t">{L(n.text)}</span>}
         <span class="nt-d">{v ? fmtDateShort(n.day, v.startYear) : ''}</span>
         <button class="nt-x" onClick={(e) => { e.stopPropagation(); setGone(new Set([...gone, n.id])); }}>✕</button>
       </div>; })}

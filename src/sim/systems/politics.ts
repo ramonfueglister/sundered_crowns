@@ -551,7 +551,16 @@ function characterMonth(s: GameState, w: World, n: Nation) {
   if (h && h.alive && h.nation === n.id && h.id !== n.ruler && unwed(s, h) && ageOf(s, h) > 16 && ageOf(s, h) < 45 && chance(s.rng, 0.03)) {
     const sp = spouseFor(s, n, h, 'courtier');
     sp.spouse = h.id; h.spouse = sp.id;
-    if (s.playerNations.includes(n.id)) notice(s, n.id, 'marriage', { en: `The heir ${h.name} has married ${sp.name}.`, de: `${h.female ? 'Die Thronfolgerin' : 'Der Thronfolger'} ${deR(h)} hat ${deR(sp)} geheiratet.` });
+    if (s.playerNations.includes(n.id)) {
+      // fix-people: the bride or groom is named with the family, as the given name alone says nothing: a member of a
+      // ruling house by the house ("Anna aus dem Haus Luxemburg"), a daughter of the nobility by her family name
+      // ("Matilda Percy", "Anna von Stolberg"); a name that already carries a house or a style stays as it is
+      const fam = sp.dynasty && sp.dynasty !== h.dynasty && sp.dynasty !== n.dynasty && !/,| of | von | de | d'|\(/.test(sp.name) && !sp.name.includes(sp.dynasty.slice(0, 5)) ? sp.dynasty : '';
+      const royal = !!fam && s.nations.some((x) => x.dynasty === fam);
+      const en = !fam ? sp.name : royal ? `${sp.name} of the house of ${fam}` : `${sp.name} ${fam}`;
+      const deSp = !fam ? deR(sp) : royal ? `${deR(sp)} aus dem Haus ${localHouse(fam, 'de')}` : localName(`${sp.name} ${fam}`, 'de', !!sp.female, true);
+      notice(s, n.id, 'marriage', { en: `The heir ${h.name} has married ${en}.`, de: `${h.female ? 'Die Thronfolgerin' : 'Der Thronfolger'} ${deR(h)} hat ${deSp} geheiratet.` });
+    }
   }
   const hs = h && h.alive && h.nation === n.id && h.id !== n.ruler ? s.chars[h.spouse ?? 0] : undefined;
   if (h && hs?.alive && hs.spouse === h.id) bear(s, n, h, hs);

@@ -587,3 +587,36 @@ describe('event windows and the clock (review fixes)', () => {
     expect(arrivedPausing(null, [offer], pausesWith({ pauseOnEvents: true, pauseOnOffers: true })).length).toBe(1);
   });
 });
+
+describe('German wording of notices (review fixes)', () => {
+  it('the heir\'s marriage names the bride with her house or family, not by her given name alone', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), F = nat(s, 'france'), H = nat(s, 'hesse');
+    s.treaties.push({ a: Math.min(E.id, F.id), b: Math.max(E.id, F.id), type: 'marriage', since: 0, until: 40 * 365 });
+    s.playerNations = [E.id, H.id, nat(s, 'austria').id, nat(s, 'meissen').id];
+    const wed = (id: number) => s.notices.find((x) => x.kind === 'marriage' && x.nation === id);
+    for (let m = 0; m < 240 && !(wed(E.id) && s.notices.some((x) => x.kind === 'marriage' && x.nation !== E.id)); m++) { s.day += 30; politics.monthly!({ s, w } as any); }
+    // a bride of a ruling house (by the marriage treaty with France): by the house
+    const e = wed(E.id)!;
+    expect(e.text.de).toMatch(/^Der Thronfolger Eduard von Woodstock \(der Schwarze Prinz\) hat \p{Lu}\p{L}+ aus dem Haus Valois geheiratet\.$/u);
+    expect(e.text.en).toContain('of the house of Valois');
+    // a daughter of the nobility: by her family name ("Agnes von Sayn")
+    const o = s.notices.find((x) => x.kind === 'marriage' && x.nation !== E.id)!;
+    expect(o.text.de).toMatch(/ hat \p{Lu}\p{L}+ von \p{Lu}\p{L}+ geheiratet\.$/u);
+  });
+
+  it('the tooltip of an improved relation is headed by what it shows, not by "their answer"', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), P = nat(s, 'portugal');
+    s.playerNations = [E.id];
+    expect(sendEnvoy(s, w, E.id, P.id, 'improve')).toBeNull();
+    for (const e of s.envoys) e.arrive = s.day;
+    diplomacy.daily!({ s, w } as any);
+    const nt = s.notices.find((x) => x.nation === E.id && x.kind === 'diplo_accept')!;
+    expect(nt.reasons?.length).toBeGreaterThan(0);
+    expect(nt.reasonsTitle).toBe('xp_improve_title');
+    const ui = readFileSync('src/ui/i18n.ts', 'utf8');
+    expect(ui).toContain("xp_improve_title: ['Improved relations', 'Verbesserte Beziehungen']");
+    expect(readFileSync('src/ui/panels/overlay.tsx', 'utf8')).toContain("t(n.reasonsTitle ?? 'they_say')");
+  });
+});

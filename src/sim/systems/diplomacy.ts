@@ -238,7 +238,7 @@ function envoyArrives(s: GameState, w: World, e: Envoy) {
     const g = improveGain(s, e.from, e.to);
     if (g.gain > 0) addOpinion(s, e.to, e.from, 'improved_relations', g.gain, 365 * 3, true);
     rel(s, e.to, e.from).trust = clamp(rel(s, e.to, e.from).trust + 5, 0, 100);
-    if (s.playerNations.includes(e.from)) notice(s, e.from, 'diplo_accept', { en: `Our envoy improved relations with ${Bn.short.en}: their opinion of us +${Math.round(g.gain)} for three years, trust +5.`, de: `Unser Gesandter hat die Beziehungen zu ${Bn.short.de} verbessert: ihre Meinung über uns +${Math.round(g.gain)} für drei Jahre, Vertrauen +5.` }, { reasons: g.parts });
+    if (s.playerNations.includes(e.from)) notice(s, e.from, 'diplo_accept', { en: `Our envoy improved relations with ${Bn.short.en}: their opinion of us +${Math.round(g.gain)} for three years, trust +5.`, de: `Unser Gesandter hat die Beziehungen zu ${Bn.short.de} verbessert: ihre Meinung über uns +${Math.round(g.gain)} für drei Jahre, Vertrauen +5.` }, { reasons: g.parts, reasonsTitle: 'xp_improve_title' });
     return;
   }
   const ev = evaluateProposal(s, w, e.from, e.to, e.action);

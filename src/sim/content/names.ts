@@ -247,7 +247,7 @@ const GIVEN_DE_F: Record<string, string> = {
   Joan: 'Johanna', Joanna: 'Johanna', Jeanne: 'Johanna', Juana: 'Johanna', Mary: 'Maria', Marie: 'Maria', Margaret: 'Margarete', Marguerite: 'Margarete',
   Elizabeth: 'Elisabeth', Isabelle: 'Isabella', Isabel: 'Isabella', Catherine: 'Katharina', Blanche: 'Blanka', Eleanor: 'Eleonore', Beatrice: 'Beatrix',
   Constance: 'Konstanze', Anne: 'Anna', Matilda: 'Mathilde', Bonne: 'Bona', Helvig: 'Hedwig',
-  Agnes: 'Agnes', Anna: 'Anna', Philippa: 'Philippa', Isabella: 'Isabella', Elisabeth: 'Elisabeth',
+  Agnes: 'Agnes', Anna: 'Anna', Philippa: 'Philippa', Isabella: 'Isabella', Elisabeth: 'Elisabeth', 'Béatrice': 'Beatrix', 'Agnès': 'Agnes',
 };
 /** The French forms among them: "Charles de Blois" of a royal house is "Karl von Blois" in German, while an English
  *  noble's "Elizabeth de Burgh" keeps the family name. */
