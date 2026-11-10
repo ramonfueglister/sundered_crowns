@@ -1098,7 +1098,8 @@ function dreadMonth(s: GameState, w: World) {
         if (!err && lead >= 0) {
           delete agg.flags.front_months;
           const war = s.wars[s.wars.length - 1];
-          for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) { if (s.playerNations.includes(m)) callToArms(s, war, m, lead, false, 'front'); else war.att.push(m); }
+          // every member joins (an AI emperor pays for attacking a member of the Empire as a player does, warHooks.joined)
+          for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) { if (s.playerNations.includes(m)) callToArms(s, war, m, lead, false, 'front'); else { war.att.push(m); warHooks.joined?.(s, w, war, m); } }
           chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` });
           notice(s, agg.id, 'coalition', { en: `A Common Front of ${members.length} realms has declared war on us!`, de: `Eine Gemeinsame Front von ${members.length} Reichen hat uns den Krieg erklärt!` }, { war: war.id });
         }

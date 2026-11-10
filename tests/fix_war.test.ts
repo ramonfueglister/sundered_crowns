@@ -488,6 +488,14 @@ describe('calls to arms by a realm we guarantee and by a Common Front (review: t
     expect(s.notices.slice(n0).some((x) => x.nation === p && x.text.de.includes('Bündnis'))).toBe(false);
     expect(s.nations[p].flags[`refused_call_${war.attLead}`]).toBeUndefined(); // no alliance to count a refusal against
   });
+  it('an AI emperor in a Common Front against a member of the Empire pays authority, as a player emperor does', () => {
+    const s = fresh(); clearField(s);
+    let em = -1, auth0 = 0;
+    const war = front(s, (members) => { em = loner(s, members); s.empire.emperor = em; s.empire.authority = auth0 = 50; });
+    expect(s.nations[war.attLead].isHRE).toBe(true); // a member leads: the emperor is not called to the defence
+    expect(war.att).toContain(em);
+    expect(s.empire.authority).toBe(auth0 - EMPEROR_JOIN_ATTACK);
+  });
 });
 
 describe('the sides of a declaration (major: the dialog did not say who joins; a subject allied with the target fought it)', () => {
