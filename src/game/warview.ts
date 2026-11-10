@@ -7,7 +7,7 @@ import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
 import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
 import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth,
-  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember, predictSides, type SideGuess,
+  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember, predictSides, type SideGuess, callKind, tiesAcross, TIE_BROKEN,
   goalTowns, cedeWorth, CEDE_FIXED } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
@@ -45,18 +45,22 @@ function sidesView(p: { att: SideGuess[]; def: SideGuess[] }) {
 }
 
 // ---------------------------------------------------------------- calls to arms
-/** A call to arms as the event card shows it: who calls, against whom, and what each answer does (systems/war.ts
- *  answerCallToArms with its numbers; the price for the emperor of joining an attack on a member). */
+/** A change as the cards print it, with a real minus sign. */
+const sgn = (v: number) => (v < 0 ? `−${-v}` : `+${v}`);
+/** A call to arms as the event card shows it: who calls and why (an ally, a realm we guarantee, the Common Front), against
+ *  whom, and what each answer does (systems/war.ts answerCallToArms with its numbers: the ties to the other side that
+ *  joining cuts, the alliance or guarantee that refusing ends, the price for the emperor of joining an attack on a member). */
 export function callToArmsView(s: GameState, p: PendingEvent) {
   const war = s.wars.find((x) => x.id === p.ctx.war);
   const F = s.nations[p.ctx.from];
-  const def = !!p.ctx.def;
+  const def = !!p.ctx.def, kind = callKind(p);
   const foe = war ? s.nations[def ? war.attLead : war.defLead] : undefined;
   const fe = F?.short ?? { en: '?', de: '?' }, ee = foe?.short ?? { en: '?', de: '?' };
   const wn = war?.name ?? { en: 'the war', de: 'den Krieg' };
   const side = war && war.att.includes(F?.id ?? -1) ? 'att' : 'def';
   const k = def ? CALL_REFUSED.defend : CALL_REFUSED.attack;
-  const breaks = !!F && callRefusalBreaks(s, p.nation, F.id) && hasTreaty(s, p.nation, F.id, 'alliance');
+  const allied = !!F && hasTreaty(s, p.nation, F.id, 'alliance');
+  const breaks = kind === 'ally' && allied && callRefusalBreaks(s, p.nation, F.id);
   const emp = !!war && side === 'att' && emperorAttacksMember(s, war, p.nation);
   const sideMen = (ids: number[]) => s.armies.reduce((m, a) => m + (!a.fleet && !a.rebels && ids.includes(a.owner) ? armyMen(a) : 0), 0);
   const ours = war ? (side === 'att' ? war.att : war.def) : [], theirs = war ? (side === 'att' ? war.def : war.att) : [];
@@ -64,16 +68,44 @@ export function callToArmsView(s: GameState, p: PendingEvent) {
   const ro = realms(ours.length), rt = realms(theirs.length);
   const strength = { en: `The other side: ${rt.en} with ${Math.round(sideMen(theirs)).toLocaleString('en')} men in the field; the side of ${fe.en}: ${ro.en} with ${Math.round(sideMen(ours)).toLocaleString('en')} men.`,
     de: `Gegenseite: ${rt.de} mit ${Math.round(sideMen(theirs)).toLocaleString('de')} Mann im Feld; Seite von ${fe.de}: ${ro.de} mit ${Math.round(sideMen(ours)).toLocaleString('de')} Mann.` };
-  const text = def
-    ? { en: `${ee.en} has attacked ${fe.en}, and our ally calls us to its defence in the ${wn.en}. ${strength.en} If we give no answer within ${CALL_DAYS} days, the court honours the call.`,
-        de: `${ee.de} hat ${fe.de} angegriffen, und unser Verbündeter ruft uns zu seiner Verteidigung (${wn.de}). ${strength.de} Antworten wir nicht binnen ${CALL_DAYS} Tagen, folgt der Hof dem Ruf.` }
-    : { en: `${fe.en} has gone to war against ${ee.en} and calls us to arms in the ${wn.en}. ${strength.en} If we give no answer within ${CALL_DAYS} days, the court stays out of this attack.`,
-        de: `${fe.de} zieht gegen ${ee.de} in den Krieg und ruft uns zu den Waffen (${wn.de}). ${strength.de} Antworten wir nicht binnen ${CALL_DAYS} Tagen, hält sich der Hof aus diesem Angriff heraus.` };
-  const joinHint = { en: `We join the war on the side of ${fe.en} against ${ee.en}. ${fe.en}'s opinion of us +${CALL_ANSWERED.opinion} for five years, their trust +${CALL_ANSWERED.trust}.${emp ? ` As emperor we attack a member of the Empire: imperial authority −${EMPEROR_JOIN_ATTACK}.` : ''}`,
-    de: `Wir treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein. Meinung von ${fe.de} über uns +${CALL_ANSWERED.opinion} für fünf Jahre, ihr Vertrauen +${CALL_ANSWERED.trust}.${emp ? ` Als Kaiser greifen wir ein Glied des Reiches an: Reichsautorität −${EMPEROR_JOIN_ATTACK}.` : ''}` };
-  const stayHint = { en: `${fe.en}'s opinion of us ${k.opinion} for five years, their trust ${k.trust}.${breaks ? ' We refused them once already: they end our alliance.' : ` Refusing them again within ${CALL_REFUSED.years} years ends the alliance.`}`,
-    de: `Meinung von ${fe.de} über uns ${k.opinion} für fünf Jahre, ihr Vertrauen ${k.trust}.${breaks ? ' Wir haben sie schon einmal abgewiesen: Sie lösen unser Bündnis.' : ` Weisen wir sie binnen ${CALL_REFUSED.years} Jahren erneut ab, endet das Bündnis.`}` };
-  return { ...p, title: def ? { en: 'An ally calls for help', de: 'Ein Verbündeter ruft um Hilfe' } : { en: 'A call to arms', de: 'Ein Ruf zu den Waffen' }, text,
+  const wait = def ? { en: `If we give no answer within ${CALL_DAYS} days, the court honours the call.`, de: `Antworten wir nicht binnen ${CALL_DAYS} Tagen, folgt der Hof dem Ruf.` }
+    : { en: `If we give no answer within ${CALL_DAYS} days, the court stays out of this attack.`, de: `Antworten wir nicht binnen ${CALL_DAYS} Tagen, hält sich der Hof aus diesem Angriff heraus.` };
+  const text = kind === 'guarantee'
+    ? { en: `${ee.en} has attacked ${fe.en}, a realm whose independence we guarantee, and it calls on us to keep our word in the ${wn.en}. ${strength.en} ${wait.en}`,
+        de: `${ee.de} hat ${fe.de} angegriffen, ein Reich, für dessen Unabhängigkeit wir bürgen, und es ruft uns auf, unser Wort zu halten (${wn.de}). ${strength.de} ${wait.de}` }
+    : kind === 'front'
+      ? { en: `A Common Front of the realms that fear ${ee.en} has risen, led by ${fe.en}, and calls us to arms as one of its members in the ${wn.en}. ${strength.en} ${wait.en}`,
+          de: `Die Reiche, die ${ee.de} fürchten, haben sich zu einer Gemeinsamen Front unter ${fe.de} erhoben und rufen uns als eines ihrer Glieder zu den Waffen (${wn.de}). ${strength.de} ${wait.de}` }
+      : def
+        ? { en: `${ee.en} has attacked ${fe.en}, and our ally calls us to its defence in the ${wn.en}. ${strength.en} ${wait.en}`,
+            de: `${ee.de} hat ${fe.de} angegriffen, und unser Verbündeter ruft uns zu seiner Verteidigung (${wn.de}). ${strength.de} ${wait.de}` }
+        : { en: `${fe.en} has gone to war against ${ee.en} and calls us to arms in the ${wn.en}. ${strength.en} ${wait.en}`,
+            de: `${fe.de} zieht gegen ${ee.de} in den Krieg und ruft uns zu den Waffen (${wn.de}). ${strength.de} ${wait.de}` };
+  // joining cuts our ties to the realms on the other side (answerCallToArms)
+  const ties = war ? tiesAcross(s, p.nation, theirs) : { alliances: [], guarantees: [] };
+  const sh = (y: number) => s.nations[y]?.short ?? { en: '?', de: '?' };
+  const cut = {
+    en: ties.alliances.map((y) => ` We take the field against ${sh(y).en}: our alliance ends, ${sh(y).en}'s opinion of us ${sgn(TIE_BROKEN.opinion)} for five years.`).join('')
+      + ties.guarantees.map((y) => ` We take the field against ${sh(y).en}: our guarantee of it lapses, ${sh(y).en}'s opinion of us ${sgn(TIE_BROKEN.opinion)} for five years.`).join(''),
+    de: ties.alliances.map((y) => ` Wir ziehen gegen ${sh(y).de} ins Feld: Unser Bündnis endet, Meinung von ${sh(y).de} über uns ${sgn(TIE_BROKEN.opinion)} für fünf Jahre.`).join('')
+      + ties.guarantees.map((y) => ` Wir ziehen gegen ${sh(y).de} ins Feld: Unsere Garantie erlischt, Meinung von ${sh(y).de} über uns ${sgn(TIE_BROKEN.opinion)} für fünf Jahre.`).join(''),
+  };
+  const joinWhat = kind === 'guarantee' ? { en: `We keep our word and join the war on the side of ${fe.en} against ${ee.en}.`, de: `Wir halten unser Wort und treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein.` }
+    : kind === 'front' ? { en: `We join the Common Front of ${fe.en} against ${ee.en}.`, de: `Wir treten der Gemeinsamen Front von ${fe.de} gegen ${ee.de} bei.` }
+    : { en: `We join the war on the side of ${fe.en} against ${ee.en}.`, de: `Wir treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein.` };
+  const joinHint = { en: `${joinWhat.en} ${fe.en}'s opinion of us +${CALL_ANSWERED.opinion} for five years, their trust +${CALL_ANSWERED.trust}.${emp ? ` As emperor we attack a member of the Empire: imperial authority −${EMPEROR_JOIN_ATTACK}.` : ''}${cut.en}`,
+    de: `${joinWhat.de} Meinung von ${fe.de} über uns +${CALL_ANSWERED.opinion} für fünf Jahre, Vertrauen +${CALL_ANSWERED.trust}.${emp ? ` Als Kaiser greifen wir ein Glied des Reiches an: Reichsautorität −${EMPEROR_JOIN_ATTACK}.` : ''}${cut.de}` };
+  // what refusing ends: an ally's alliance at the second refusal, a guarantee at once, nothing for a front
+  const ends = kind === 'guarantee' ? { en: ` Our guarantee of ${fe.en} lapses.`, de: ` Unsere Garantie für ${fe.de} erlischt.` }
+    : kind === 'ally' && allied ? (breaks ? { en: ` We refused ${fe.en} once already: the alliance ends.`, de: ` Wir haben ${fe.de} schon einmal abgewiesen: Das Bündnis endet.` }
+      : { en: ` Refusing them again within ${CALL_REFUSED.years} years ends the alliance.`, de: ` Weisen wir ${fe.de} binnen ${CALL_REFUSED.years} Jahren erneut ab, endet das Bündnis.` })
+    : { en: '', de: '' };
+  const stayHint = { en: `${fe.en}'s opinion of us ${sgn(k.opinion)} for five years, their trust ${sgn(k.trust)}.${ends.en}`,
+    de: `Meinung von ${fe.de} über uns ${sgn(k.opinion)} für fünf Jahre, Vertrauen ${sgn(k.trust)}.${ends.de}` };
+  const title = kind === 'guarantee' ? { en: 'A realm we guarantee calls for help', de: 'Ein Schützling ruft um Hilfe' }
+    : kind === 'front' ? { en: 'The Common Front calls us', de: 'Die Gemeinsame Front ruft uns' }
+    : def ? { en: 'An ally calls for help', de: 'Ein Verbündeter ruft um Hilfe' } : { en: 'A call to arms', de: 'Ein Ruf zu den Waffen' };
+  return { ...p, title, text, kind,
     options: [{ label: { en: 'To arms', de: 'Zu den Waffen' }, hint: joinHint }, { label: { en: 'Stay out', de: 'Fernbleiben' }, hint: stayHint }], art: 'battle' };
 }
 

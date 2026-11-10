@@ -9,7 +9,7 @@ import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord, rel } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore,
-  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal, scoreCaps, applyPeace, war as warSystem } from '../src/sim/systems/war';
+  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, TIE_BROKEN, callLapsed, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal, scoreCaps, applyPeace, war as warSystem } from '../src/sim/systems/war';
 import { answerEvent } from '../src/sim/systems/events';
 import { considerPeace } from '../src/sim/systems/ai';
 import { step } from '../src/sim/engine';
@@ -329,7 +329,7 @@ describe('calls to arms (major: the player was pulled into allies’ wars withou
     const card = pendingView(s, w, p).find((x) => x.id === c[0].id)!;
     expect(card.options).toHaveLength(2);
     expect(card.options[0].hint!.en).toContain(`+${CALL_ANSWERED.opinion}`);
-    expect(card.options[1].hint!.de).toContain(`${CALL_REFUSED.attack.opinion}`);
+    expect(card.options[1].hint!.de).toContain(`−${-CALL_REFUSED.attack.opinion}`);
     const trust0 = rel(s, a, p).trust;
     expect(reply(s, p, c[0].id, 0).ok).toBe(true);
     expect(war.att).toContain(p);
@@ -397,6 +397,96 @@ describe('calls to arms (major: the player was pulled into allies’ wars withou
     expect(reply(s, p, c.id, 0).ok).toBe(true);
     expect(war.att).toContain(p);
     expect(s.empire.authority).toBe(auth0 - EMPEROR_JOIN_ATTACK);
+  });
+});
+
+describe('calls to arms by a realm we guarantee and by a Common Front (review: they spoke of an alliance that did not exist)', () => {
+  const calls = (s: GameState, n: number) => s.pending.filter((p) => p.event === 'call_to_arms' && p.nation === n);
+  const reply = (s: GameState, n: number, id: number, choice: number) => applyCommand(s, w, { t: 'event', n, pending: id, choice } as any);
+  const mod = (s: GameState, a: number, b: number, id: string) => rel(s, a, b).mods.find((m) => m.id === id)?.v;
+  const guarantee = (s: GameState, a: number, b: number) => s.treaties.push({ type: 'guarantee', a, b, since: s.day, until: s.day + 365 * 50 });
+  it('a guarantor is called as one: refusing lets the guarantee lapse at once and speaks of no alliance', () => {
+    const s = fresh(); clearField(s);
+    const g = nat(s, 'poland').id, b = nat(s, 'navarre').id, a = nat(s, 'aragon').id;
+    expect(hasTreaty(s, g, b, 'alliance')).toBe(false);
+    guarantee(s, g, b); s.playerNations = [g];
+    const war = war2(s, a, b, 'humiliate');
+    const c = calls(s, g); expect(c).toHaveLength(1);
+    expect(c[0].ctx).toMatchObject({ war: war.id, from: b, def: 1, kind: 1 });
+    const card = pendingView(s, w, g).find((x) => x.id === c[0].id)! as any;
+    expect(card.title.de).toBe('Ein Schützling ruft um Hilfe');
+    expect(card.text.de).toContain('für dessen Unabhängigkeit wir bürgen');
+    for (const o of card.options) { expect(o.hint.de).not.toContain('Bündnis'); expect(o.hint.en).not.toContain('alliance'); }
+    expect(card.text.de).not.toContain('Verbündete');
+    expect(card.options[1].hint.de).toContain('Unsere Garantie für Navarra erlischt');
+    const n0 = s.notices.length;
+    expect(reply(s, g, c[0].id, 1).ok).toBe(true);
+    expect(war.def).not.toContain(g);
+    expect(hasTreaty(s, g, b, 'guarantee')).toBe(false); // the guarantee lapsed
+    expect(mod(s, b, g, 'refused_call')).toBe(CALL_REFUSED.defend.opinion);
+    const told = s.notices.slice(n0).filter((x) => x.nation === g).map((x) => x.text.de);
+    expect(told.some((x) => x.includes('Garantie für Navarra ist erloschen'))).toBe(true);
+    expect(told.some((x) => x.includes('Bündnis'))).toBe(false);
+    // no guarantee, no second call
+    s.wars = []; s.treaties = s.treaties.filter((t) => t.type !== 'truce'); s.day += 200;
+    war2(s, a, b, 'humiliate');
+    expect(calls(s, g).filter((x) => callLapsed(s, x) === null)).toHaveLength(0);
+  });
+  it('a guarantor allied with the attacker is asked by both sides; standing by its word ends the alliance', () => {
+    const s = fresh(); clearField(s);
+    const g = nat(s, 'portugal').id, b = nat(s, 'navarre').id, a = nat(s, 'castile').id;
+    expect(hasTreaty(s, g, a, 'alliance')).toBe(true);
+    guarantee(s, g, b); s.playerNations = [g];
+    // the dialog lists it on both sides as asked
+    const ps = predictSides(s, w, a, b, 'humiliate');
+    expect(ps.att.find((x) => x.id === g)).toMatchObject({ role: 'ally', odds: null });
+    expect(ps.def.find((x) => x.id === g)).toMatchObject({ role: 'guarantor', odds: null });
+    const war = war2(s, a, b, 'humiliate');
+    const cs = calls(s, g);
+    expect(cs.map((x) => [x.ctx.from, x.ctx.def, x.ctx.kind]).sort()).toEqual([[a, 0, 0], [b, 1, 1]].sort());
+    const cards = pendingView(s, w, g).filter((x) => x.event === 'call_to_arms') as any[];
+    const defend = cards.find((x) => x.ctx.def === 1)!;
+    expect(defend.options[0].hint.de).toContain('Wir ziehen gegen Kastilien ins Feld: Unser Bündnis endet');
+    expect(reply(s, g, defend.id, 0).ok).toBe(true);
+    expect(war.def).toContain(g); expect(war.att).not.toContain(g);
+    expect(hasTreaty(s, g, a, 'alliance')).toBe(false);
+    expect(mod(s, a, g, 'broke_alliance')).toBe(TIE_BROKEN.opinion);
+    expect(hasTreaty(s, g, b, 'guarantee')).toBe(true);
+    // the attacker's call has lapsed: it is no longer shown
+    expect(pendingView(s, w, g).some((x) => x.event === 'call_to_arms')).toBe(false);
+  });
+  /** A Common Front of members of the Empire against Milan: every realm outside the Empire keeps a truce with it. */
+  function front(s: GameState, setup: (members: number[]) => void): War {
+    const agg = nat(s, 'milan');
+    for (const o of s.nations) if (o.alive && o.id !== agg.id && !o.isHRE) s.treaties.push({ type: 'truce', a: Math.min(o.id, agg.id), b: Math.max(o.id, agg.id), since: s.day, until: s.day + 3650 });
+    agg.dread = 95;
+    warSystem.monthly!(mkCtx(s, w));
+    let war = s.wars.find((x) => x.goal.type === 'coalition' && x.goal.target === agg.id);
+    expect(war).toBeUndefined(); // (the first month only gathers the front)
+    setup((s as any).fronts[agg.id]);
+    for (let k = 0; k < 24 && !war; k++) { s.day += 30; agg.dread = 95; warSystem.monthly!(mkCtx(s, w)); war = s.wars.find((x) => x.goal.type === 'coalition' && x.goal.target === agg.id); }
+    expect(war).toBeTruthy();
+    return war!;
+  }
+  /** A small member of the front without allies (so that only the front calls it). */
+  const loner = (s: GameState, members: number[]) => members.find((m) => s.nations[m].isHRE && !s.treaties.some((t) => t.type === 'alliance' && (t.a === m || t.b === m)) && nationDev(s, m) < 15)!;
+  it('a player in a Common Front is called by the front, not as an ally, and refusing ends no alliance', () => {
+    const s = fresh(); clearField(s);
+    let p = -1;
+    const war = front(s, (members) => { p = loner(s, members); s.playerNations = [p]; });
+    expect(war.att).not.toContain(p);
+    const c = calls(s, p); expect(c).toHaveLength(1);
+    expect(c[0].ctx).toMatchObject({ war: war.id, from: war.attLead, def: 0, kind: 2 });
+    expect(hasTreaty(s, p, war.attLead, 'alliance')).toBe(false);
+    const card = pendingView(s, w, p).find((x) => x.id === c[0].id)! as any;
+    expect(card.title.de).toBe('Die Gemeinsame Front ruft uns');
+    expect(card.text.de).toContain('Gemeinsamen Front');
+    for (const o of card.options) expect(o.hint.de).not.toContain('Bündnis');
+    const n0 = s.notices.length;
+    expect(reply(s, p, c[0].id, 1).ok).toBe(true);
+    expect(mod(s, war.attLead, p, 'refused_call')).toBe(CALL_REFUSED.attack.opinion);
+    expect(s.notices.slice(n0).some((x) => x.nation === p && x.text.de.includes('Bündnis'))).toBe(false);
+    expect(s.nations[p].flags[`refused_call_${war.attLead}`]).toBeUndefined(); // no alliance to count a refusal against
   });
 });
 
