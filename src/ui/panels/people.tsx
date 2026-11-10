@@ -2,7 +2,8 @@
 // (government tab), the choice of an army's commander (army panel) and what an AI realm did lately (nation panel).
 import { localName, localHouse } from '../../sim/content/names';
 import { view } from '../../game/client';
-import { Section, Btn, NLink, act, t, L, num, signed, Tip, useQuery, fmtDateShort } from './common';
+import { Section, Btn, NLink, act, t, L, num, signed, Tip, useQuery, fmtDateShort, Effects } from './common';
+import { RULER_TRAIT_FX, TRAITS_HEALTH } from '../../sim/content/traits';
 import { lang } from '../i18n';
 import { TipHead, Parts } from './explain';
 import { traitName } from './nation';
@@ -14,6 +15,26 @@ export function charName(name: string | null | undefined, female = false): strin
 }
 /** A house as the reader's language writes it ("Haus Luxemburg"). */
 export function houseName(h: string | null | undefined): string { return localHouse(h ?? '', lang.value); }
+/** What a trait does: its effects on the realm while its bearer rules (content/traits.ts, the modifier "The ruler's
+ *  traits"), its effect on the bearer's life or in battle, or that it only describes the person. */
+export function TraitTip({ k, ruler }: { k: string; ruler?: boolean }) {
+  const fx = RULER_TRAIT_FX[k]; const h = TRAITS_HEALTH[k]; const c = t(`ctrait_${k}_fx`); const cmd = c !== `ctrait_${k}_fx`;
+  return <div>
+    <TipHead name={traitName(k)} />
+    {fx ? <Effects fx={fx} title={t('xp_trait_ruling')} /> : !h && !cmd && <div class="muted">{t('xp_trait_descriptive')}</div>}
+    {fx && ruler && <div class="muted small">{t('xp_trait_ruler_now')}</div>}
+    {h && <div class={h === 'bad' ? 'neg' : 'pos'}>{t(h === 'bad' ? 'xp_trait_health_bad' : 'xp_trait_health_good')}</div>}
+    {cmd && <div class="muted">{c}</div>}
+  </div>;
+}
+/** A trait as a chip with its tooltip (ruler: the bearer rules now, so the effects apply). */
+export function TraitChip({ k, ruler }: { k: string; ruler?: boolean }) {
+  return <Tip content={() => <TraitTip k={k} ruler={ruler} />}><span class="chip has-tip">{traitName(k)}</span></Tip>;
+}
+/** Traits in a line of text, each with its tooltip. */
+export function TraitList({ traits }: { traits: string[] }) {
+  return <>{traits.map((x, i) => <>{i > 0 && ', '}<Tip content={() => <TraitTip k={x} />}><span class="has-tip">{traitName(x)}</span></Tip></>)}</>;
+}
 /** The house to show after a name: none when the name already carries it or a title ("Pedro, Infante of Portugal"). */
 function houseOf(name: string, dynasty: string | undefined, own?: string): string {
   return dynasty && dynasty !== own && !/,| of | von /.test(name) && !name.includes(dynasty.slice(0, 5)) ? dynasty : '';
@@ -56,7 +77,7 @@ export function DynastySection({ r }: { r: any }) {
           {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{houseOf(m.spouse.name, m.spouse.dynasty, d.house) ? ` ${houseName(houseOf(m.spouse.name, m.spouse.dynasty, d.house))}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
           {m.abroad >= 0 && <span> · {t('at_court_of')} <NLink id={m.abroad} size={14} /></span>}
           {m.claims.length > 0 && <Tip content={<div><TipHead name={t('claims')} hint={t('x_claims_hint')} /></div>}><span> · {t('claim_on')} {m.claims.map((k: number) => <NLink id={k} size={14} />)}</span></Tip>}
-          {m.traits.length > 0 && <span> · {m.traits.map((x: string) => traitName(x)).join(', ')}</span>}
+          {m.traits.length > 0 && <span> · <TraitList traits={m.traits} /></span>}
         </td>
       </tr>)}
     </tbody></table>

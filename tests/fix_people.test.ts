@@ -5,7 +5,9 @@
 // Run: npx vitest run tests/fix_people.test.ts
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
-import { characterDies, lineOfSuccession, ageOf, politics, houseKin } from '../src/sim/systems/politics';
+import { characterDies, lineOfSuccession, ageOf, politics, houseKin, syncRulerTraits, lawEffect } from '../src/sim/systems/politics';
+import { RULER_TRAIT_FX, TRAITS_DESCRIPTIVE, TRAITS_HEALTH } from '../src/sim/content/traits';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dynastyView, successionClaims, marriagePreview, freshGivenName } from '../src/sim/systems/dynasty';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
@@ -13,7 +15,7 @@ import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP } from '../src/sim/s
 import { answerEvent } from '../src/sim/systems/events';
 import { answer } from '../src/game/view';
 import { advanceDay } from '../src/sim/engine';
-import { atWar } from '../src/sim/ctx';
+import { atWar, DAY_EPOCH } from '../src/sim/ctx';
 
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
 const named = (s: GameState, name: string) => Object.values(s.chars).find((c) => c.name === name)!;
@@ -201,5 +203,53 @@ describe('houses that live', () => {
     const r = s.chars[nat(s, 'england').ruler];
     const taken = new Set(r.children.map((k) => s.chars[k]).filter((c) => c.alive).map((c) => c.name.split(' ')[0]));
     for (let i = 0; i < 30; i++) expect(taken.has(freshGivenName(s, nat(s, 'england').culture, true, r))).toBe(false);
+  });
+});
+
+describe('traits', () => {
+  it('every trait a person can bear has a name in both languages and a rule (an effect, a health effect or none by design)', () => {
+    const ids = new Set<string>();
+    const walk = (o: any) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) { if (k === 'traits' && Array.isArray(v)) v.forEach((x) => typeof x === 'string' && ids.add(x)); else walk(v); } };
+    walk(JSON.parse(readFileSync('public/data/setup_1356.json', 'utf8')));
+    for (const f of readdirSync('data/history/1356')) walk(JSON.parse(readFileSync(`data/history/1356/${f}`, 'utf8')));
+    const files = (d: string): string[] => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(`${d}/${e.name}`) : e.name.endsWith('.ts') ? [`${d}/${e.name}`] : []));
+    for (const f of files('src/sim')) {
+      if (f.endsWith('content/traits.ts')) continue;
+      const src = readFileSync(f, 'utf8');
+      for (const m of src.matchAll(/TRAITS_\w+\s*=\s*\[([^\]]*)\]/g)) for (const x of m[1].matchAll(/'([a-z_]+)'/g)) ids.add(x[1]);
+      for (const m of src.matchAll(/traits(?:\.includes|\.push)\('([a-z_]+)'\)/g)) ids.add(m[1]);
+      for (const m of src.matchAll(/traits:\s*\[([^\]]*)\]/g)) for (const x of m[1].matchAll(/'([a-z_]+)'/g)) ids.add(x[1]);
+    }
+    expect(ids.size).toBeGreaterThan(100);
+    const i18n = readFileSync('src/ui/i18n.ts', 'utf8');
+    const COMMANDER = new Set(['tactician', 'veteran', 'wounded']);
+    const untranslated = [...ids].filter((k) => !new RegExp(`['\\s{,]trait_${k.replace('-', '\\-')}'?: \\['[^']+', '[^']+'\\]`).test(i18n));
+    const unruled = [...ids].filter((k) => !RULER_TRAIT_FX[k] && !TRAITS_DESCRIPTIVE.has(k) && !TRAITS_HEALTH[k] && !COMMANDER.has(k));
+    expect(untranslated).toEqual([]);
+    expect(unruled).toEqual([]);
+  });
+
+  it("the ruler's traits act on the realm, not under a regent, and pass with the crown", () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); const r = s.chars[E.ruler];
+    const fx = (k: string) => { DAY_EPOCH.v++; return lawEffect(E, k); }; // lawEffect keeps one table per day
+    r.traits = []; syncRulerTraits(s, E);
+    expect(E.modifiers.some((m) => m.id === 'ruler_traits')).toBe(false);
+    const unrest0 = fx('unrest'), admin0 = fx('admin'), tax0 = fx('tax');
+    r.traits = ['just', 'diligent']; syncRulerTraits(s, E);
+    expect(fx('unrest')).toBeCloseTo(unrest0 - 1, 9);
+    expect(fx('admin')).toBeCloseTo(admin0 + 0.05, 9);
+    expect(fx('tax')).toBeCloseTo(tax0 + 0.02, 9);
+    expect(E.modifiers.find((m) => m.id === 'ruler_traits')!.label.de).toBe('Eigenschaften des Herrschers');
+    // a regent governs for a child: the child's traits wait
+    E.regent = s.chars[E.heir].id; syncRulerTraits(s, E);
+    expect(fx('unrest')).toBeCloseTo(unrest0, 9);
+    E.regent = 0;
+    // the Black Prince inherits: his traits, not his father's
+    const bp = s.chars[E.heir]; bp.traits = ['greedy'];
+    characterDies(s, w, E, r.id);
+    expect(E.ruler).toBe(bp.id);
+    expect(fx('unrest')).toBeCloseTo(unrest0 + 1, 9);
+    expect(fx('tax')).toBeCloseTo(tax0 + 0.05, 9);
   });
 });

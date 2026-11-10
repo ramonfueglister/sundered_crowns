@@ -124,6 +124,7 @@ export function estate(n: Nation, id: string) { return n.estates.find((e) => e.i
 // Names come from the realm's people (content/names.ts): given names and noble families of its culture.
 import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
 import { givenName, personName, houseName, localName, familyForm, localHouse } from '../content/names';
+import { rulerTraitEffects } from '../content/traits';
 import { christianClaimants, pressLater, houseMember, inheritClaims, unwed, houseWarning, freshGivenName } from './dynasty';
 function nameFor(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): string {
   return givenName(rng, n.culture, female);
@@ -378,8 +379,19 @@ function inUnionUnder(s: GameState, x: Nation, top: Nation): boolean {
 }
 /** The crown of n passes on at the death of its ruler cid, and with it every crown held in personal union under n
  *  (a junior crown may choose its own ruler instead). */
+/** The ruler's traits act on the realm as one modifier, which every breakdown names as its source (content/traits.ts).
+ *  A child under a regent does not yet govern: the traits wait for the majority. Synced monthly and on succession. */
+export function syncRulerTraits(s: GameState, n: Nation) {
+  const r = s.chars[n.ruler];
+  const fx = r?.alive && !n.regent ? rulerTraitEffects(r.traits) : {};
+  const i = n.modifiers.findIndex((m) => m.id === 'ruler_traits');
+  if (!Object.keys(fx).length) { if (i >= 0) n.modifiers.splice(i, 1); return; }
+  const md = { id: 'ruler_traits', until: 1e9, label: { en: "The ruler's traits", de: 'Eigenschaften des Herrschers' }, effects: fx };
+  if (i >= 0) n.modifiers[i] = md; else n.modifiers.push(md);
+}
 function crownPasses(s: GameState, w: World, n: Nation, cid: number) {
   succession(s, w, n);
+  syncRulerTraits(s, n);
   for (const other of s.nations) if (other.alive && other.id !== n.id && other.ruler === cid && inUnionUnder(s, other, n)) {
     // a junior crown in personal union may choose its own ruler when the shared one dies
     if (other.overlord === n.id && other.subjectType === 'personal_union' && chance(s.rng, unionBreakChance(s, other, n))) {
@@ -505,6 +517,7 @@ function bear(s: GameState, n: Nation, a: Character, b: Character): Character | 
   return child;
 }
 function characterMonth(s: GameState, w: World, n: Nation) {
+  syncRulerTraits(s, n);
   // a crown shared in personal union: the senior crown's court lives, weds and bears children, and this one follows it
   const O = n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === n.ruler ? s.nations[n.overlord] : null;
   // ruler, heir, consort, officials age and may die; births to the ruling couple
@@ -834,6 +847,7 @@ export const politics: System = {
       refreshCandidates(s, n, false);
       if (!n.heir) pickNewHeir(s, n); // a house researched without a named heir (Castile: the king's daughters)
       if (n.ruler && s.chars[n.ruler] && ageOf(s, s.chars[n.ruler]) < 16) n.regent = newChar(s, n, { born: s.day - 40 * 365, role: 'courtier' }).id;
+      syncRulerTraits(s, n);
     }
   },
   daily({ s, w }) { settleCourts(s, w); },

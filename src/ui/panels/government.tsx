@@ -9,7 +9,7 @@ import { keyName } from '../TopBar';
 import { traitName, govName, rankName } from './nation';
 import { RealmGovernment } from './realmgov';
 import { Administration } from './statecraft';
-import { charName, DynastySection } from './people';
+import { charName, houseName, DynastySection, TraitChip, TraitList } from './people';
 
 const SK = ['skill_gov', 'skill_dip', 'skill_mil'];
 
@@ -41,7 +41,7 @@ export function GovernmentTab() {
           {me?.ruler?.dynasty && !p.ruler.includes(me.ruler.dynasty.slice(0, 5)) && <div class="muted">{t('house_of')} {me.ruler.dynasty}</div>}
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
           {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
-          {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <span class="chip">{traitName(x)}</span>)}</div>}
+          {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <TraitChip k={x} ruler />)}</div>}
           <Row k={t('heir')} v={<>{charName(p.heir, me?.heir?.female)}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
         </div>
       </Section>
@@ -84,7 +84,7 @@ function Council({ r, authority }: { r: any; authority: number }) {
   const person = (c: any, office: any, bonus: number) => <div>
     <b>{c.name}</b>{c.age !== undefined && <span class="muted"> · {c.age} {t('years_old')}</span>}
     <div>{SK.map((k, i) => <span class={i === office.skill ? 'hl' : ''}>{t(k)} {c.skills[i]}{i < 2 ? ' · ' : ''}</span>)}</div>
-    {c.traits?.length > 0 && <div class="muted">{c.traits.map((x: string) => traitName(x)).join(', ')}</div>}
+    {c.traits?.length > 0 && <div class="muted"><TraitList traits={c.traits} /></div>}
     {c.loyalty !== undefined && <div>{t('loyalty')}: {num(c.loyalty)}</div>}
     {c.corruption !== undefined && <div>{t('corruption')}: {pct(c.corruption)}</div>}
     <Parts title={`${t('council_bonus')}: ${L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}`} rows={[['x_office_skill', (c.skills[office.skill] / 6) * 10], ['x_corruption', -(c.skills[office.skill] / 6) * 10 * (c.corruption ?? 0)]]} total={bonus * 100} fmt={(v) => `${signed(v, 1)} %`} />
