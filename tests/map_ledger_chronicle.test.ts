@@ -290,3 +290,27 @@ describe('map tooltip: place, owner, controller and the value the map mode colou
     expect(d.name).toEqual({ en: 'Atlantic Ocean (North-East)', de: 'Atlantischer Ozean (Nordost)' });
   });
 });
+
+describe('victory panel from the first day', () => {
+  const s = createGame(w, loadSetup(1356), loadHubs(), 777, { player: [] });
+  const P = nid(s, 'portugal');
+  s.playerNations = [P];
+
+  it('on day 0: our place by score, a trend from the start, and the unchosen conditions measured for information', () => {
+    const v = answer(s, w, P, { q: 'victory' } as any);
+    expect(v.kinds).toEqual(['score']);
+    expect(v.others.map((r: any) => r.kind).sort()).toEqual(['commerce', 'faith', 'hegemony', 'learning']);
+    for (const r of v.others) { expect(typeof r.value).toBe('number'); expect(typeof r.target).toBe('number'); }
+    const better = s.nations.filter((n) => n.alive && n.score > s.nations[P].score).length;
+    expect(v.rank).toBe(better + 1); expect(v.ranked).toBe(s.nations.filter((n) => n.alive).length);
+    expect(v.trend).toEqual({ since: 0, from: s.nations[P].history[0].score, to: Math.round(s.nations[P].score * 10) / 10 });
+  });
+
+  it('the history chart has a course after the first week', () => {
+    for (let i = 0; i < 8; i++) advanceDay(s, w);
+    const h = answer(s, w, P, { q: 'history', nations: [] } as any);
+    const me = h.series.find((x: any) => x.id === P);
+    expect(me.points.length).toBe(2);
+    expect(me.points[0].y).toBe(1356); expect(me.points[1].y).toBeGreaterThan(1356);
+  });
+});

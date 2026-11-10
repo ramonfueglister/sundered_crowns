@@ -83,6 +83,7 @@
 .mod-report q { display: block; margin: 2px 0; font-style: italic; }
 .mod-report q { quotes: none; }
 .sc-admin-reports label.chk, .mod-report label.chk { display: inline-flex; flex-direction: row; align-items: center; gap: 4px; }
+
 /* fix-map: the map tooltip (src/ui/MapTip.tsx) */
 .map-tip { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; min-width: 170px; max-width: 300px; padding: 6px 9px 5px;
   background: rgba(36, 24, 15, .95); border: 1px solid var(--gilt); color: var(--parch2); font-size: .82em; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
@@ -92,6 +93,7 @@
 .map-tip .mt-row > span:first-child { color: #c9b994; }
 .map-tip .mt-row.neg > span:last-child { color: #f0a080; }
 .map-tip .mt-sw { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border: 1px solid rgba(0, 0, 0, .6); vertical-align: -1px; }
+
 /* fix-map: the top bar's last compaction level (TopBar.tsx): two rows, ☰ always in sight; what sits below the bar moves down */
 .tb-break { display: none; }
 .topbar.tb-l5 { flex-wrap: wrap; height: auto; min-height: 46px; padding: 2px 6px 3px; align-content: center; }
@@ -106,4 +108,7 @@
 .app:has(> .topbar.tb-l5) > .left-col { max-height: calc(100% - var(--tb-h, 80px) - 64px); }
 
 
-
+/* fix-map: the victory panel from the first day: our place and how the score moved, the unchosen conditions as information */
+.vic-rank { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 4px 0 2px; }
+.vic-row.info { border-style: dashed; background: rgba(255, 250, 235, .18); }
+.vic-row.info .bar-wrap { opacity: .75; }

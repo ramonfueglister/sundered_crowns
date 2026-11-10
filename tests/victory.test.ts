@@ -148,7 +148,7 @@ describe('victory conditions', () => {
 });
 
 describe('history of the game', () => {
-  it('is sampled the same way in two runs of the same seed, one point a year', () => {
+  it('is sampled the same way in two runs of the same seed; early on every sample at its date, later one point a year', () => {
     const run = () => { const s = fresh(42); for (let d = 0; d < 430; d++) advanceDay(s, w); return s; };
     const a = run(), b = run();
     const F = nid(a, 'france');
@@ -157,11 +157,22 @@ describe('history of the game', () => {
     expect(h.length).toBeGreaterThanOrEqual(4);
     expect(h.every((x) => typeof x.army === 'number' && typeof x.score === 'number')).toBe(true);
     expect(h.some((x) => (x.army ?? 0) > 0)).toBe(true);
-    const v = historyView(a, F);
-    expect(v).toEqual(historyView(b, F));
+    const v = historyView(a, w, F);
+    expect(v).toEqual(historyView(b, w, F));
     expect(v.series[0].id).toBe(F); expect(v.series[0].player).toBe(true);
-    const years = v.series[0].points.map((p) => p.y);
-    expect(years).toEqual([1356, 1357]); // one sample per calendar year
+    // fix-map: in the first five years every quarterly sample is a point at its date (1 April = .25), and today's
+    // figures close the line, so the chart has a course from the first weeks on (it said "no history yet" for months)
+    const ys = v.series[0].points.map((p) => p.y);
+    expect(ys.slice(0, 5)).toEqual([1356, 1356.25, 1356.5, 1356.75, 1357]);
+    expect(ys.length).toBe(h.length + 1);
+    expect(ys[ys.length - 1]).toBeGreaterThan(1357.1); expect(v.endYear).toBe(ys[ys.length - 1]);
+    for (let i = 1; i < ys.length; i++) expect(ys[i]).toBeGreaterThan(ys[i - 1]);
+    // today's point holds today's figures, the score as reckoned
+    const today = v.series[0].points[ys.length - 1];
+    expect(today.treasury).toBe(Math.round(a.nations[F].treasury)); expect(today.score).toBe(Math.round(a.nations[F].score * 10) / 10);
+    // a longer game keeps one point per calendar year
+    const long = historyView({ ...a, day: 6 * 366 } as typeof a, w, F);
+    expect(long.series[0].points.map((p) => p.y)).toEqual([1356, 1357]);
     expect(new Set(v.series.map((x) => x.id)).size).toBe(v.series.length);
   });
 });

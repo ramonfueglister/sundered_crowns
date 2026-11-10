@@ -949,8 +949,8 @@ const S: Record<string, [string, string]> = {
   x_end_by_score: ['The age has run its course: {realm} ends it with the highest score.', 'Das Zeitalter ist vorüber: {realm} beendet es mit der höchsten Wertung.'],
   x_end_by_condition: ['{realm} has won the game ({kind}), having held the condition for {years} years.', '{realm} hat das Spiel gewonnen ({kind}) und die Bedingung {years} Jahre gehalten.'],
   x_end_we_won: ['The victory is ours!', 'Der Sieg ist unser!'], x_end_rank: ['Our realm finished in place {rank} of {n}.', 'Unser Reich beendet das Spiel auf Platz {rank} von {n}.'], x_end_fallen: ['Our realm did not live to see the end.', 'Unser Reich hat das Ende nicht erlebt.'],
-  x_hist_title: ['The course of the game', 'Verlauf des Spiels'], x_hist_empty: ['No history yet: the realms are measured every three months.', 'Noch kein Verlauf: die Reiche werden alle drei Monate gemessen.'],
-  x_hist_hint: ['One value per year, our realm and the five highest scores. Point at the chart for every value of a year, at a name to bring its line forward.', 'Ein Wert pro Jahr, unser Reich und die fünf höchsten Wertungen. Zeige auf das Diagramm für alle Werte eines Jahres, auf einen Namen, um seine Linie hervorzuheben.'],
+  x_hist_title: ['The course of the game', 'Verlauf des Spiels'], x_hist_empty: ['No history yet: the lines begin after the first week.', 'Noch kein Verlauf: die Linien beginnen nach der ersten Woche.'],
+  x_hist_hint: ['One value per year (in the first five years one every three months, and today\'s), our realm and the five highest scores. Point at the chart for every value of that date, at a name to bring its line forward.', 'Ein Wert pro Jahr (in den ersten fünf Jahren einer alle drei Monate und der heutige), unser Reich und die fünf höchsten Wertungen. Zeige auf das Diagramm für alle Werte dieses Zeitpunkts, auf einen Namen, um seine Linie hervorzuheben.'],
   x_hist_dev: ['Development', 'Entwicklung'], x_hist_dev_hint: ['Sum of the development of all locations of the realm.', 'Summe der Entwicklung aller Orte des Reiches.'],
   x_hist_locs: ['Land', 'Land'], x_hist_locs_hint: ['Number of locations the realm owns.', 'Zahl der Orte, die das Reich besitzt.'],
   x_hist_treasury: ['Treasury', 'Schatzkammer'], x_hist_treasury_hint: ['Ducats in the treasury (negative: debts beyond the loans).', 'Dukaten in der Schatzkammer (negativ: Schulden über die Kredite hinaus).'],
@@ -973,6 +973,9 @@ const S: Record<string, [string, string]> = {
   x_quit_confirm: ['Leave for the main menu? Whatever happened since your last save will be lost.', 'Zum Hauptmenü? Ungespeicherter Fortschritt geht verloren.'],
   x_quit_online: ['Leave for the main menu? The world goes on; you can return to it from the main menu.', 'Zum Hauptmenü? Die Welt läuft weiter; über das Hauptmenü kehrst du zurück.'],
   x_quit_save: ['Save and leave', 'Speichern und beenden'], x_quit_nosave: ['Leave without saving', 'Ohne Speichern beenden'],
+  x_vic_info_only: ['not chosen: for information only', 'nicht gewählt: nur zur Information'],
+  x_vic_rank: ['Our place by score', 'Unser Platz nach Wertung'], x_vic_rank_hint: ['Among all realms, by the score reckoned on the first of the month (as in the ledger).', 'Unter allen Reichen, nach der am Monatsersten berechneten Wertung (wie im Register).'],
+  x_vic_trend: ['How our score moved', 'Wie sich unsere Wertung bewegt hat'], x_vic_trend_hint: ['Against the earliest measurement of the last twelve months (from the start of the game on).', 'Gegenüber der frühesten Messung der letzten zwölf Monate (vom Spielbeginn an).'], x_vic_since: ['since', 'seit'],
   x_ledger_score_month: ['The score is reckoned on the first of each month, and the ranking and the score victory use that figure. The parts above are today\'s.', 'Die Wertung wird am Monatsersten berechnet; Rang und Punktesieg rechnen mit diesem Stand. Die Teile oben zeigen den heutigen.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }

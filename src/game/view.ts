@@ -413,7 +413,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'commanders': return player >= 0 ? commandersView(s, player, q.army) : null;
     case 'victory': return victoryView(s, w, player);
     case 'devEvents': return s.flags.devtools ? { events: EVENTS.map((d) => ({ id: d.id, title: d.title, major: !!d.major })), aiDisabled: s.aiDisabled.slice() } : null;
-    case 'history': return historyView(s, player, Array.isArray(q.nations) ? q.nations.slice(0, 8) : []);
+    case 'history': return historyView(s, w, player, Array.isArray(q.nations) ? q.nations.slice(0, 8) : []);
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;

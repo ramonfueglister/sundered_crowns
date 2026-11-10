@@ -4,7 +4,8 @@ import './polish.css';
 import { useMemo, useState } from 'preact/hooks';
 import { nations, sim, view } from '../../game/client';
 import { settings, playerId, showToast } from '../store';
-import { Section, Empty, NLink, Bar, Btn, Tip, t, L, lang, num, pct, useQuery, rgb } from './common';
+import { Section, Empty, NLink, Bar, Btn, Tip, t, L, lang, num, pct, signed, useQuery, rgb, fmtDateShort } from './common';
+import { MONTHS_EN, MONTHS_DE } from '../../sim/calendar';
 import type { ChronEntry } from '../../sim/types';
 import { chronInvolves } from '../../sim/ctx';
 import { chronicleMarkdown, chronicleJson, exportName, downloadText, type ChronExport } from '../chronexport';
@@ -23,7 +24,9 @@ const fmtVal = (unit: string, v: number) => unit === 'share' ? pct(v, 1) : unit 
 
 // ---------------------------------------------------------------- the panel
 interface Row { kind: VictoryKind; value: number; target: number; unit: 'share' | 'points' | 'ratio'; meets: boolean; missing: string[]; leader: number; leaderValue: number; holder: number; years: number; detail?: Record<string, number> }
-interface Status { kinds: VictoryKind[]; years: number; rows: Row[]; endYear: number; ended: boolean; victory?: { nation: number; kind: string; day?: number } }
+interface Status { kinds: VictoryKind[]; years: number; rows: Row[]; endYear: number; ended: boolean; victory?: { nation: number; kind: string; day?: number };
+  /** the conditions not chosen for this game, measured for information (src/game/endview.ts) */
+  others?: Row[]; rank?: number; ranked?: number; trend?: { since: number; from: number; to: number } | null }
 
 function RowTip({ r }: { r: Row }) {
   const unitHint = r.unit === 'share' ? t('x_vic_share_hint') : r.unit === 'ratio' ? t('x_vic_ratio_hint') : t('x_vic_points_hint');
@@ -48,22 +51,22 @@ function conditionsOf(r: Row): [string, boolean][] {
   return parts[r.kind].map((k) => [`${r.kind}_${k}`, !r.missing.includes(k)]);
 }
 
-function VictoryRowView({ r, me }: { r: Row; me: number }) {
+function VictoryRowView({ r, me, info = false }: { r: Row; me: number; info?: boolean }) {
   const ours = r.holder === me && me >= 0;
   const left = r.holder >= 0 ? Math.max(0, VICTORY_YEARS - r.years) : VICTORY_YEARS;
   const max = r.kind === 'score' ? Math.max(1, r.target) : r.unit === 'ratio' ? Math.max(r.target * 1.2, r.value) : Math.max(r.target, r.value, 1e-9);
-  return <div class={`vic-row ${r.meets ? 'meets' : ''}`}>
-    <div class="vic-head"><b>{victoryName(r.kind)}</b>{r.meets && <span class="pos small">✓ {t('x_vic_met')}</span>}<span class="spacer" />
+  return <div class={`vic-row ${r.meets && !info ? 'meets' : ''} ${info ? 'info' : ''}`}>
+    <div class="vic-head"><b>{victoryName(r.kind)}</b>{info ? <span class="muted small">{t('x_vic_info_only')}</span> : r.meets && <span class="pos small">✓ {t('x_vic_met')}</span>}<span class="spacer" />
       <Tip content={<RowTip r={r} />}><span class="vic-val has-tip">{fmtVal(r.unit, r.value)} <span class="muted">/ {fmtVal(r.unit, r.target)}</span></span></Tip></div>
     <div class="muted small">{victoryDesc(r.kind)}</div>
-    <Bar value={r.value} max={max} h={9} color={r.meets ? 'var(--p-pos)' : undefined} tip={() => <RowTip r={r} />} />
-    <div class="vic-foot small">
+    <Bar value={r.value} max={max} h={9} color={r.meets && !info ? 'var(--p-pos)' : undefined} tip={() => <RowTip r={r} />} />
+    {!info && <div class="vic-foot small">
       {r.leader >= 0 && <span>{t('x_vic_leader')}: <NLink id={r.leader} size={14} /> <span class="muted">{fmtVal(r.unit, r.leaderValue)}</span></span>}
       {r.kind !== 'score' && (r.holder >= 0
         ? <Tip content={<div><TipHead name={t('x_vic_holding')} value={`${num(r.years, 1)} / ${VICTORY_YEARS}`} hint={t('x_vic_holding_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('x_vic_held')}</span><span>{num(r.years, 1)} {t('x_vic_years')}</span></div><div class="bd-row"><span>{t('x_vic_left')}</span><span>{num(left, 1)} {t('x_vic_years')}</span></div></div></div>}>
           <span class={`has-tip ${ours ? 'pos' : 'neg'}`}>{ours ? t('x_vic_we_hold') : <><NLink id={r.holder} size={14} /> {t('x_vic_holds')}</>} · {num(r.years, 1)} / {VICTORY_YEARS} {t('x_vic_years')}</span></Tip>
         : <span class="muted">{t('x_vic_nobody')}</span>)}
-    </div>
+    </div>}
   </div>;
 }
 
@@ -72,11 +75,18 @@ export function VictoryTab() {
   const me = playerId.value;
   if (!st) return <Empty>{t('loading')}…</Empty>;
   const others = VICTORY_KINDS.filter((k) => !st.kinds.includes(k));
+  const v = view.value; const tr = st.trend; const delta = tr ? tr.to - tr.from : 0;
   return <div class="tab-victory">
     {st.victory && st.ended && <div class="vic-ended"><NLink id={st.victory.nation} size={28} full /> <span>{endingText(st.victory, me)}</span></div>}
     <div class="muted small">{t('x_vic_intro').replace('{years}', String(VICTORY_YEARS)).replace('{end}', String(st.endYear))}</div>
+    {(st.rank ?? 0) > 0 && <div class="vic-rank">
+      <Tip content={<div><TipHead name={t('x_vic_rank')} value={`${st.rank} / ${st.ranked}`} hint={t('x_vic_rank_hint')} /></div>}><span class="has-tip">{t('x_vic_rank')}: <b>{st.rank}</b> <span class="muted">/ {st.ranked}</span></span></Tip>
+      {tr && v && <Tip content={<div><TipHead name={t('x_vic_trend')} hint={t('x_vic_trend_hint')} /><div class="breakdown"><div class="bd-row"><span>{fmtDateShort(tr.since, v.startYear)}</span><span>{num(tr.from, 1)}</span></div><div class="bd-row"><span>{t('x_ledger_today')}</span><span>{num(tr.to, 1)}</span></div><div class="bd-row bd-total"><span>=</span><span>{signed(delta, 1)}</span></div></div></div>}>
+        <span class={`has-tip ${delta > 0.05 ? 'pos' : delta < -0.05 ? 'neg' : 'muted'}`}>{delta > 0.05 ? '▲' : delta < -0.05 ? '▼' : '■'} {signed(delta, 1)} {t('x_vic_since')} {fmtDateShort(tr.since, v.startYear)}</span></Tip>}
+    </div>}
     {st.rows.map((r) => <VictoryRowView r={r} me={me} />)}
-    {others.length > 0 && <div class="muted small vic-off">{t('x_vic_not_chosen')}: {others.map(victoryName).join(', ')}</div>}
+    {st.others?.length ? <><div class="muted small vic-off">{t('x_vic_not_chosen')}:</div>{st.others.map((r) => <VictoryRowView r={r} me={me} info />)}</>
+      : others.length > 0 && <div class="muted small vic-off">{t('x_vic_not_chosen')}: {others.map(victoryName).join(', ')}</div>}
     <Section title={t('x_hist_title')} id="vic-hist" open={false}><HistoryCharts /></Section>
   </div>;
 }
@@ -128,8 +138,10 @@ export function HistoryChart({ data, metric }: { data: HData; metric: Metric }) 
     const x = (y: number) => PAD.l + ((y - y0) / (y1 - y0)) * (W - PAD.l - PAD.r);
     const yv = (v: number) => H - PAD.b - ((v - lo) / Math.max(1e-9, hi - lo)) * (H - PAD.t - PAD.b);
     const ticks: number[] = []; for (let v = lo; v <= hi + step / 2; v += step) ticks.push(v);
-    const ystep = niceStep(y1 - y0, 6); const years: number[] = []; for (let y = Math.ceil(y0 / ystep) * ystep; y <= y1; y += ystep) years.push(y);
-    return { y0, y1, x, yv, ticks, years };
+    const ystep = Math.max(1, niceStep(y1 - y0, 6)); const years: number[] = []; for (let y = Math.ceil(y0 / ystep) * ystep; y <= y1; y += ystep) years.push(y);
+    // every date a line has a point at (in a young game the samples fall within the year): the hover snaps to the nearest
+    const xs = [...new Set(data.series.flatMap((s) => s.points.map((p) => p.y)))].sort((a, b) => a - b);
+    return { y0, y1, x, yv, ticks, years, xs };
   }, [data, metric]);
   const paths = data.series.map((s) => {
     let d = ''; let pen = false;
@@ -141,10 +153,13 @@ export function HistoryChart({ data, metric }: { data: HData; metric: Metric }) 
   const onMove = (e: MouseEvent) => {
     const svg = e.currentTarget as SVGSVGElement; const r = svg.getBoundingClientRect();
     const px = ((e.clientX - r.left) / Math.max(1, r.width)) * W;
-    const y = Math.round(geo.y0 + ((px - PAD.l) / (W - PAD.l - PAD.r)) * (geo.y1 - geo.y0));
-    setHover(Math.max(geo.y0, Math.min(geo.y1, y)));
+    const y = geo.y0 + ((px - PAD.l) / (W - PAD.l - PAD.r)) * (geo.y1 - geo.y0);
+    let near = geo.xs[0] ?? Math.round(y); for (const x of geo.xs) if (Math.abs(x - y) < Math.abs(near - y)) near = x;
+    setHover(Math.max(geo.y0, Math.min(geo.y1, near)));
   };
-  const at = (s: HSeries, y: number) => { let best: HPoint | null = null; for (const p of s.points) { if (p.y > y) break; best = p; } return best && best.y >= y - 1 ? best[metric] : null; };
+  const at = (s: HSeries, y: number) => { let best: HPoint | null = null; for (const p of s.points) { if (p.y > y + 1e-9) break; best = p; } return best && best.y >= y - 1 ? best[metric] : null; };
+  // a point within a year by its month ("Apr 1356"), a yearly one by its year
+  const when = (y: number) => { if (Number.isInteger(y)) return String(y); const yr = Math.floor(y); const m = Math.min(11, Math.floor((y - yr) * 12 + 1e-6)); return `${(lang.value === 'de' ? MONTHS_DE : MONTHS_EN)[m].slice(0, 3)} ${yr}`; };
   const rows = hover === null ? [] : data.series.map((s) => ({ s, v: at(s, hover) })).filter((x) => x.v !== null).sort((a, b) => (b.v as number) - (a.v as number));
   const fmt = (v: number) => metric === 'income' ? num(v, 1) : num(v, 0);
   const tipLeft = hover !== null && geo.x(hover) > W * 0.6;
@@ -157,7 +172,7 @@ export function HistoryChart({ data, metric }: { data: HData; metric: Metric }) 
       {hover !== null && rows.map(({ s, v }) => <circle cx={geo.x(hover)} cy={geo.yv(v as number)} r={s.player ? 4 : 3} fill={rgb(seriesColor(s))} class="hc-dot" />)}
     </svg>
     {hover !== null && rows.length > 0 && <div class={`hc-tip ${tipLeft ? 'left' : ''}`} style={{ left: `${(geo.x(hover) / W) * 100}%` }}>
-      <div class="bd-title">{hover} · {t(`x_hist_${metric}`)}</div>
+      <div class="bd-title">{when(hover)} · {t(`x_hist_${metric}`)}</div>
       {rows.map(({ s, v }) => <div class={`bd-row ${s.player ? 'me' : ''}`}><span><span class="sw" style={{ background: rgb(seriesColor(s)) }} />{L(s.name)}</span><span>{fmt(v as number)}</span></div>)}
     </div>}
     <div class="hc-legend">{data.series.map((s) => { const last = [...s.points].reverse().find((p) => p[metric] !== null && p[metric] !== undefined); return <span class={`hc-key ${s.player ? 'me' : ''}`} onMouseEnter={() => setFocus(s.id)} onMouseLeave={() => setFocus(null)}>
