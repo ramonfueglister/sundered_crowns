@@ -241,8 +241,8 @@ function GoodDetail({ mid, g }: { mid: number; g: number }) {
           <div class="bd-row"><span>{t('tr_net_exports')}</span><span>{signed(d.net, 1)}</span></div>
           <div class="bd-row"><span>{t('tr_stock')}</span><span>{num(d.stock, 1)}</span></div></div></div>} />
       <Row k={t('tr_pressure')} v={<span class={d.step > 1.001 ? 'neg' : d.step < 0.999 ? 'pos' : ''}>{d.step > 1.001 ? t('tr_rising') : d.step < 0.999 ? t('tr_falling') : t('tr_steady')}</span>} tip={<div><TipHead name={t('tr_pressure')} value={`× ${num(d.step, 3)}`} hint={t('tr_pressure_hint')} /></div>} />
-      <Row k={t('tr_made_here')} v={num(d.made, 1)} tip={<div><TipHead name={t('tr_made_here')} value={num(d.made, 1)} hint={t('tr_made_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_ours')}</span><span>{num(d.ours.made, 1)}</span></div></div></div>} />
-      <Row k={t('tr_used_here')} v={num(cons, 1)} tip={() => <div><TipHead name={t('tr_used_here')} value={num(cons, 1)} hint={t('tr_used_hint')} /><Parts rows={[['tr_c_people', d.people], ['tr_c_crafts', d.crafts], ['tr_c_house', d.house]]} total={cons} /><div class="muted">{t('tr_ours')}: {num(d.ours.used, 1)}</div></div>} />
+      <Row k={t('x_made_now')} v={num(d.made, 1)} tip={<div><TipHead name={t('x_made_now')} value={num(d.made, 1)} hint={t('x_made_now_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_ours')}</span><span>{num(d.ours.made, 1)}</span></div></div></div>} />
+      <Row k={t('x_used_now')} v={num(cons, 1)} tip={() => <div><TipHead name={t('x_used_now')} value={num(cons, 1)} hint={t('x_used_now_hint')} /><Parts rows={[['tr_c_people', d.people], ['tr_c_crafts', d.crafts], ['tr_c_house', d.house]]} total={cons} /><div class="muted">{t('tr_ours')}: {num(d.ours.used, 1)}</div></div>} />
     </div>
     {d.books && <GoodBooks d={d} />}
     {!d.ready && <div class="muted small">{t('tr_after_month')}</div>}
@@ -338,6 +338,7 @@ function KeptOutTip({ d }: { d: any }) {
     {d.keptOut?.length > 0 && <div class="breakdown">
       <div class="bd-row bd-cols"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
       {d.keptOut.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.v, 1)} · {pct(x.margin, 1)}</span></div>)}
+      {d.keptRest?.n > 0 && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(d.keptRest.n))}</span><span>{num(d.keptRest.v, 1)} · {pct(d.keptRest.margin, 1)}</span></div>}
       <div class="bd-row bd-total"><span>{t('x_kept_margin')}</span><span>{num(d.keptMargin ?? 0, 1)} ({pct(share, 1)})</span></div>
     </div>}
     {d.deter > 0 && <div class="muted small">{t('x_kept_why').replace('{cut}', pct(d.tariff * 0.5, 1))}</div>}

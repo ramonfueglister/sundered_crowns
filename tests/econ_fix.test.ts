@@ -237,7 +237,9 @@ describe('what a tariff keeps out is told by good, with the margin it would have
     for (const m of s.markets) if (m.owner === n.id) for (const [x, y] of Object.values(m.deterBy ?? {})) { v += x; mg += y; }
     expect(v).toBeCloseTo(d.deter, 6);
     expect(d.keptMargin).toBeCloseTo(mg, 6);
-    expect(d.keptOut.reduce((p, x) => p + x.v, 0)).toBeLessThanOrEqual(d.deter + 1e-6);
+    // the goods listed and the rest add up to the value kept out, and their margins to the margin
+    expect(d.keptOut.reduce((p, x) => p + x.v, 0) + d.keptRest.v).toBeCloseTo(d.deter, 6);
+    expect(d.keptOut.reduce((p, x) => p + x.v * x.margin, 0) + d.keptRest.v * d.keptRest.margin).toBeCloseTo(d.keptMargin, 6);
     // the goods value is not lost income: the margin of what was kept out is a fraction of its value
     expect(d.keptMargin / d.deter).toBeLessThan(0.5);
     expect(d.keptOut[0].margin).toBeGreaterThan(0);

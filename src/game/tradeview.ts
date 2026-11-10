@@ -174,8 +174,10 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
     for (const [g, [v, mg]] of Object.entries(m.deterBy ?? {})) { const e = byGood.get(+g) ?? [0, 0]; e[0] += v; e[1] += mg; byGood.set(+g, e); margin += mg; }
   }
   // per good: the value kept out and the margin it would have made (as a share of that value)
-  const keptOut = [...byGood].sort((a, b) => b[1][0] - a[1][0] || a[0] - b[0]).slice(0, 8)
-    .map(([g, [v, mg]]) => ({ g, name: GOODS[g].name, v, margin: v > 0 ? mg / v : 0 }));
+  const keptAll = [...byGood].sort((a, b) => b[1][0] - a[1][0] || a[0] - b[0]);
+  const keptOut = keptAll.slice(0, 8).map(([g, [v, mg]]) => ({ g, name: GOODS[g].name, v, margin: v > 0 ? mg / v : 0 }));
+  // the goods past the eighth, so the list adds up to the value kept out
+  const keptRest = keptAll.slice(8).reduce((a, [, [v, mg]]) => ({ n: a.n + 1, v: a.v + v, mg: a.mg + mg }), { n: 0, v: 0, mg: 0 });
   const partners = treatiesOf(s, pid, 'trade').map((o) => {
     const tr = s.treaties.find((x) => x.type === 'trade' && ((x.a === pid && x.b === o) || (x.a === o && x.b === pid)));
     return { n: o, until: tr?.until ?? 0, theirs: tariffBetween(s, o, pid), ours: tariffBetween(s, pid, o) };
@@ -192,7 +194,7 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
     .map(([o, v]) => ({ n: o, goods: v, agreement: hasTreaty(s, pid, o, 'trade'), embargo: embargoedBy(s, pid, o) || embargoedBy(s, o, pid), theirTariff: s.nations[o]?.tariff ?? 0 }));
   return {
     tariff: n.tariff, max: tariffMax(n), maxParts: [['x_base', 0.05], ['x_trade_law', law]] as [string, number][],
-    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours, keptOut, keptMargin: margin,
+    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours, keptOut, keptRest: { n: keptRest.n, v: keptRest.v, margin: keptRest.v > 0 ? keptRest.mg / keptRest.v : 0 }, keptMargin: margin,
     agreementTariff: AGREEMENT_TARIFF, agreementVolume: AGREEMENT_VOLUME, partners, embargoes, traders,
   };
 }
