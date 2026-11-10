@@ -128,6 +128,7 @@ export function battleLessons(s: GameState, winners: Army[], losers: Army[]) {
 // ---------------- ageing, death, the register ----------------
 function generalsMonth(s: GameState, w: World, n: Nation) {
   const keep: number[] = [];
+  const bereft: { a: Army | undefined; c: Character }[] = [];
   for (const id of n.generals ?? []) {
     const c = s.chars[id];
     if (!c || !c.alive || c.nation !== n.id) continue;
@@ -136,9 +137,9 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
     if (age > 50) c.health = Math.max(0.2, c.health - 0.002);
     if (chance(s.rng, monthlyDeathChance(age, c))) {
       const a = commandOf(s, c.id);
-      if (s.playerNations.includes(n.id)) notice(s, n.id, 'general_death', { en: `${c.name} has died${a ? ', leaving the army without a commander' : ''}.`, de: `${localName(c.name, 'de')} ist gestorben${a ? '; das Heer ist ohne Befehlshaber' : ''}.` }, a ? { army: a.id } : {});
       characterDies(s, w, n, c.id);
       if (a) a.general = 0;
+      bereft.push({ a, c });
       continue;
     }
     if (age >= 70 && c.role !== 'courtier') {
@@ -158,6 +159,16 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
     if (!c.spouse && !c.children.length) delete s.chars[worst];
   }
   n.generals = keep;
+  // a great host (over 3000 men, as in military.ts monthly) whose commander died takes the ablest free one at once,
+  // instead of marching a month without a leader; the player is told who leads it now
+  for (const { a, c } of bereft) {
+    const men = a ? a.regs.reduce((m, r) => m + r.men, 0) : 0;
+    const next = a && !a.fleet && !a.rebels && s.armies.includes(a) && men > 3000 ? s.chars[appointBest(s, n, a)] : undefined;
+    if (!s.playerNations.includes(n.id)) continue;
+    const en = !a ? '' : next ? `; ${next.name} takes command of the army` : ', leaving the army without a commander';
+    const de = !a ? '' : next ? `; ${localName(next.name, 'de', next.female)} übernimmt den Befehl über das Heer` : '; das Heer ist ohne Befehlshaber';
+    notice(s, n.id, 'general_death', { en: `${c.name} has died${en}.`, de: `${localName(c.name, 'de', c.female)} ist gestorben${de}.` }, a ? { army: a.id } : {});
+  }
 }
 
 /** Drop the records of people dead ten years or more whom nothing refers to (no living child or spouse, no office,

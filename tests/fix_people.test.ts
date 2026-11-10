@@ -358,3 +358,24 @@ describe('German text', () => {
     expect(BRANCHES.find((b) => b.id === 'governance')!.name.de).toBe('Verwaltung');
   });
 });
+
+describe('commanders', () => {
+  it('a great host whose commander dies takes the ablest free one at once, and the player is told who leads it', () => {
+    const { s, w } = newGame(1356);
+    const a = s.armies.find((x) => !x.fleet && !x.rebels && s.nations[x.owner]?.alive && s.chars[x.general]?.alive && x.regs.reduce((m, r) => m + r.men, 0) > 3000)!;
+    const n = s.nations[a.owner];
+    s.playerNations = [n.id];
+    const old = s.chars[a.general];
+    expect(n.generals).toContain(old.id);
+    old.born = s.day - 45 * 365; old.health = -200; // (so that he surely dies at the next monthly ageing)
+    for (let d = 0; d < 40 && old.alive; d++) advanceDay(s, w);
+    expect(old.alive).toBe(false);
+    // the same day, not a month later
+    expect(a.general).toBeTruthy();
+    expect(a.general).not.toBe(old.id);
+    expect(s.chars[a.general].alive).toBe(true);
+    const nt = s.notices.find((x) => x.nation === n.id && x.kind === 'general_death')!;
+    expect(nt.text.de).toContain('übernimmt den Befehl über das Heer');
+    expect(nt.text.de).toContain(localName(s.chars[a.general].name, 'de'));
+  });
+});
