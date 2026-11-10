@@ -12,7 +12,7 @@ import { type System, clamp, chronicle, notice, addExpense } from '../ctx';
 import { CL, CLASS_NEED_MULT, CLASSES, CLASS_NAME } from '../defs';
 import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir, consortOf, classExempt } from './politics';
 import { DUTIES, DUTY_INDEX, dutyDiscontent, dutyDiscontentAt, dutyValue } from './duties';
-import { nationDev, hasCasusBelli } from './war';
+import { nationDev, hasCasusBelli, DECLARE_GOALS } from './war';
 import { taxCommon, TAX_YIELD_KEYS } from './economy';
 import { chance, rand, hash01 } from '../rng';
 import { houseName as cultureHouse } from '../content/names';
@@ -262,7 +262,19 @@ export const needsTaxVote = (n: Nation, level: number, now?: number) => lawEffec
 /** The level a yes grants: the level asked, with a little room. */
 export const grantFor = (level: number) => +(level + 0.02).toFixed(4);
 const NO_VOTE_GOALS = ['independence', 'civil_war', 'coalition', 'rebels'];
-export const needsWarVote = (s: GameState, n: Nation, target: number, goal: string) => lawEffect(n, 'war_vote') > 0 && !NO_VOTE_GOALS.includes(goal) && !((n.flags[`war_ok_${target}`] ?? 0) > s.day);
+/** While set (withoutWarVote), no war needs the assembly's vote. */
+let WAR_VOTE_OFF = false;
+export const needsWarVote = (s: GameState, n: Nation, target: number, goal: string) => !WAR_VOTE_OFF && lawEffect(n, 'war_vote') > 0 && !NO_VOTE_GOALS.includes(goal) && !warApproved(s, n, target, goal);
+/** The assembly approved this war for 90 days: against this realm, for the goal it voted on (war_okg_<target>, the
+ *  goal's index in DECLARE_GOALS; a yes on a humiliation licenses no conquest). */
+const warApproved = (s: GameState, n: Nation, target: number, goal: string) => (n.flags[`war_ok_${target}`] ?? 0) > s.day && [undefined, -1, DECLARE_GOALS.indexOf(goal as WarGoal['type'])].includes(n.flags[`war_okg_${target}`]);
+/** What f returns as if the assembly had approved every war (the declaration dialog asks a goal's own refusal this way
+ *  and puts the assembly's verdict beside it, so that a goal the assembly would refuse can still be chosen and put to
+ *  the vote). Nothing in the state changes. */
+export function withoutWarVote<T>(f: () => T): T {
+  const was = WAR_VOTE_OFF; WAR_VOTE_OFF = true;
+  try { return f(); } finally { WAR_VOTE_OFF = was; }
+}
 /** Gold it takes to buy one Power's vote. */
 export const bribeCost = (n: Nation) => Math.round(Math.max(25, (n.income.tax || 10) * 2));
 /** The privilege a Power would take as the price of its vote (the first it lacks). */
@@ -326,7 +338,7 @@ export function holdAssembly(s: GameState, n: Nation, ask: AssemblyAsk, bribe: s
   if (r.cost) addExpense(n, 'gifts', r.cost);
   if (concede) grantPrivilege(s, n, concede);
   if (ask.kind === 'tax') n.flags.tax_grant = grantFor(ask.level);
-  else n.flags[`war_ok_${ask.target}`] = s.day + 90;
+  else { n.flags[`war_ok_${ask.target}`] = s.day + 90; n.flags[`war_okg_${ask.target}`] = DECLARE_GOALS.indexOf(ask.goal); }
   if (isHuman(s, n.id)) notice(s, n.id, 'assembly', assemblyGranted(s, n, ask));
   return null;
 }

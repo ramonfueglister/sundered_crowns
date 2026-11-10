@@ -199,6 +199,40 @@ describe('the assembly and the taxes', () => {
   });
 });
 
+describe('a war put to the assembly keeps its goal', () => {
+  it('when the assembly refuses, every goal stays open; a humiliation is put to the vote and declared as one', async () => {
+    const { declareView } = await import('../src/game/warview');
+    const { lawEffect } = await import('../src/sim/systems/politics');
+    const c = deserialize(serialize(s)) as GameState;
+    const v = c.nations.find((n) => n.key === 'venice')!, p = c.nations.find((n) => n.key === 'padua')!;
+    c.playerNations = [v.id];
+    expect(lawEffect(v, 'war_vote')).toBeGreaterThan(0);
+    for (const e of v.estates) e.contentment = 20; // a sullen assembly: no war passes unbought
+    v.treasury = 1e6;
+    const dv = declareView(c, w, v.id, p.id)!;
+    const ASM = 'the assembly refused to fund the war';
+    // the assembly's verdict stands beside each goal; it is no goal's own refusal
+    expect(dv.goals.every((g) => g.refusal !== ASM)).toBe(true);
+    const hum = dv.goals.find((g) => g.goal === 'humiliate')!, con = dv.goals.find((g) => g.goal === 'conquest')!;
+    expect(hum.refusal).toBeNull(); expect(con.refusal).toBeNull();
+    expect(hum.assembly).toBe(ASM); expect(con.assembly).toBe(ASM);
+    expect(con.locs.length).toBeGreaterThan(0); // the towns of each goal are named for the vote
+    // declared straight away, the assembly refuses
+    expect(applyCommand(c, w, { t: 'declare', n: v.id, target: p.id, goal: 'humiliate', locs: [] } as any).err).toBe(ASM);
+    // the vote is on the goal asked (its stance rows differ by goal), bought and granted
+    const all = v.estates.map((e) => e.id);
+    const vh = assemblyVote(c, v, { kind: 'war', target: p.id, goal: 'humiliate' }, all), vc = assemblyVote(c, v, { kind: 'war', target: p.id, goal: 'conquest' }, all);
+    expect(vh.estates.map((e) => e.sum)).not.toEqual(vc.estates.map((e) => e.sum));
+    expect(vh.passes).toBe(true);
+    expect(applyCommand(c, w, { t: 'assembly', n: v.id, kind: 'war', target: p.id, goal: 'humiliate', bribe: all } as any).ok).toBe(true);
+    // a yes on a humiliation licenses no conquest
+    expect(applyCommand(c, w, { t: 'declare', n: v.id, target: p.id, goal: 'conquest', locs: [] } as any).err).toBe(ASM);
+    expect(applyCommand(c, w, { t: 'declare', n: v.id, target: p.id, goal: 'humiliate', locs: hum.locs } as any).ok).toBe(true);
+    const war = c.wars.find((x) => x.attLead === v.id && x.defLead === p.id)!;
+    expect(war.goal.type).toBe('humiliate');
+  });
+});
+
 describe('our own great-power standing', () => {
   it('the powers view names our rank, score and the points to the last great power, and the goal counts them', () => {
     // a realm well down the ranking: its row is shown below the fourteen

@@ -175,11 +175,12 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
           {g.truce && <div class="warn-box"><b>⚠ {t('truce_break')}</b><div>{t('truce_break_hint')}</div></div>}
           {g.ally && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
           {g.refusal && <div class="neg small">{errText(g.refusal)}</div>}
+          {!g.refusal && g.assembly && <div class="neg small">{errText(g.assembly)}</div>}
         </>}
         <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn>
           {/* a war the assembly would refuse can be put to it: the vote with bribes and concessions, then the declaration */}
-          {g?.refusal === 'the assembly refused to fund the war' && <Btn tip={t('x_asm_put_war_hint')} onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'declare', target: d.id, goal, locs: g?.locs ?? [] } }; }}>{t('x_asm_put_war')}</Btn>}
-          <Btn cls="danger" disabled={g?.refusal ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+          {g && !g.refusal && g.assembly && <Btn tip={t('x_asm_put_war_hint')} onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'declare', target: d.id, goal: g.goal, locs: g.locs } }; }}>{t('x_asm_put_war')}</Btn>}
+          <Btn cls="danger" disabled={g?.refusal ?? g?.assembly ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
       </div>}
   </Section>;
 }

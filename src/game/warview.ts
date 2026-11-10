@@ -8,6 +8,7 @@ import { UNITS } from '../sim/defs';
 import { armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
 import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
+import { withoutWarVote, assemblyWarRefusal } from '../sim/systems/government';
 import { FAITHS } from '../sim/content/peoples';
 
 // ---------------------------------------------------------------- declaring war
@@ -18,13 +19,15 @@ export function declareView(s: GameState, w: World, player: number, target: numb
   if (!n || !b || player === target) return null;
   const cbs = casusBelliAll(s, player, target, w).map((kind) => ({ kind, goals: CB_GOALS[kind] }));
   const goals = DECLARE_GOALS.map((goal) => {
-    const refusal = declareRefusal(s, w, player, target, goal);
+    const refusal = withoutWarVote(() => declareRefusal(s, w, player, target, goal));
     const c = declarationCost(s, w, player, target, goal);
     return {
       goal, refusal, cb: c.cb, unjust: c.unjust, truce: c.truce, ally: c.ally, rows: c.rows, opinionYears: c.opinionYears,
       locs: refusal ? [] : warGoalLocs(s, w, player, target, goal), terms: GOAL_TERMS[goal] ?? [],
     };
-  }).filter((g) => g.refusal !== 'they are not our overlord');
+  }).filter((g) => g.refusal !== 'they are not our overlord')
+    // the assembly's verdict on each goal apart from the goal's own refusal: it votes on the goal, and may be asked
+    .map((g) => ({ ...g, assembly: g.refusal ? null : assemblyWarRefusal(s, n, target, g.goal) }));
   return { cbs, goals, truce: hasTreaty(s, player, target, 'truce'), ally: hasTreaty(s, player, target, 'alliance') };
 }
 

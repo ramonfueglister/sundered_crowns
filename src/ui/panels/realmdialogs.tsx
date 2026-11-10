@@ -68,7 +68,7 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
   const fmtDuty = (v: number) => (dutyId === 'hearth' ? num(v, 2) : pct(v, 1));
   const why = busy ? '…' : a.cost > a.treasury ? errText('not enough gold') : a.needed !== false && !a.passes ? t('x_asm_would_fail') : null;
   return <Modal title={t('x_asm_title')}>
-    <div class="small">{war ? <>{t('x_asm_war_q')} <NLink id={cmd.target} /></> : dutyId ? fill('x_asm_duty_q', { duty: t(`duty_${dutyId}`) }) : t('x_asm_tax_q')}</div>
+    <div class="small">{war ? warQuestion(cmd) : dutyId ? fill('x_asm_duty_q', { duty: t(`duty_${dutyId}`) }) : t('x_asm_tax_q')}</div>
     {!war && <div class="asm-tax">
       {dutyId ? <>
         <Row k={t(`duty_${dutyId}`)} v={fmtDuty(value)} />
@@ -101,6 +101,12 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
       <Btn small={false} onClick={close}>{t('cancel')}</Btn>
     </div>
   </Modal>;
+}
+
+/** "The assembly votes on the war (humiliation) against Padua": the goal it votes on and the realm as a link. */
+function warQuestion(cmd: any) {
+  const [pre, post] = fill('x_asm_war_q', { goal: t(`goal_${cmd.goal ?? 'conquest'}`) }).split('{realm}');
+  return <>{pre}<NLink id={cmd.target} />{post ?? ''}</>;
 }
 
 // ---------------------------------------------------------------- the imperial election
