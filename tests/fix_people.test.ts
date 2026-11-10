@@ -5,7 +5,7 @@
 // Run: npx vitest run tests/fix_people.test.ts
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
-import { characterDies, lineOfSuccession, ageOf, politics, houseKin, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES } from '../src/sim/systems/politics';
+import { characterDies, lineOfSuccession, ageOf, politics, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES } from '../src/sim/systems/politics';
 import { applyCommand } from '../src/sim/commands';
 import { localName, declineDe } from '../src/sim/content/names';
 import { deName } from '../src/sim/content/names_de';
@@ -188,12 +188,45 @@ describe('houses that live', () => {
   it('brothers, sisters and nephews age and die, not only rulers, heirs and officials', () => {
     const { s, w } = newGame(1356);
     const E = nat(s, 'england');
-    const kin = houseKin(s, s.chars[E.ruler]).map((id) => s.chars[id]).filter((c) => c.role === 'courtier');
+    const r = s.chars[E.ruler];
+    const kin = [...r.children, ...r.children.flatMap((k) => s.chars[k].children)].map((id) => s.chars[id]).filter((c) => c.alive && c.role === 'courtier');
     expect(kin.length).toBeGreaterThanOrEqual(8);
     // the youngest son, made ninety years old: he no longer lives for ever as a courtier
     const old = kin.find((c) => c.name === 'Thomas of Woodstock')!; old.born = s.day - 90 * 365;
     months(s, w, 60);
     expect(old.alive).toBe(false);
+  });
+
+  it('mothers, widowed queens and the wives of princes age and die too; nobody lives past a hundred (review fix)', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england');
+    // the queen mother (Isabella of France, born 1295), Lionel's wife (Elizabeth de Burgh, born 1332), the queen mother
+    // of Hungary (Elizabeth of Poland): none of them rules, is heir, consort or official, and before none of them drew
+    const isabella = named(s, 'Isabella of France'), eliz = named(s, 'Elizabeth de Burgh'), hu = named(s, 'Elizabeth of Poland');
+    for (const c of [isabella, eliz, hu]) { expect(c.alive).toBe(true); expect(Object.values(E.council)).not.toContain(c.id); }
+    // the king dies: Philippa is a widowed queen, no longer anyone's consort; made ninety, she does not outlive the year
+    const philippa = s.chars[E.consort];
+    characterDies(s, w, E, E.ruler);
+    expect(E.consort).not.toBe(philippa.id);
+    philippa.born = s.day - 90 * 365;
+    months(s, w, 24);
+    expect(philippa.alive).toBe(false);
+    // seventy years on, the women of the start are dead at plausible ages, and nobody of any court is older than 100
+    months(s, w, 12 * 70 - 24);
+    for (const c of [isabella, eliz, hu]) { expect(c.alive).toBe(false); expect((c.died! - c.born) / 365.25).toBeLessThan(100); }
+    const ancient = Object.values(s.chars).filter((c) => c.alive && ageOf(s, c) > 100 && !s.nations.some((n) => n.alive && (n.generals ?? []).includes(c.id)));
+    expect(ancient.map((c) => c.name)).toEqual([]);
+  }, 180000);
+
+  it('a consort or heir who holds an office draws one death a month, not two', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england');
+    const cons = s.chars[E.consort];
+    E.council.chancellor = cons.id;
+    cons.born = s.day - 60 * 365; cons.health = 1;
+    s.day += 30; politics.monthly!({ s, w } as any);
+    // one month of ageing past fifty takes 0.002 of health once
+    expect(cons.health).toBeCloseTo(0.998, 9);
   });
 
   it('unwed heirs of age marry and have children, with names their brothers and sisters do not bear', () => {

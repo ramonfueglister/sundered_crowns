@@ -469,27 +469,28 @@ export function settleCourts(s: GameState, w: World) {
   }
 }
 
-/** Roles of house members whose death characterMonth draws with the house (rulers, heirs, consorts, officials and
- *  commanders have their own draw). */
-const KIN_ROLES = new Set(['courtier', 'clergy']);
-/** The living kin of a ruler's house, wherever they live: descendants, and the lines of the father and grandfather
- *  (parents included), as lineOfSuccession walks them. */
-export function houseKin(s: GameState, r: Character): number[] {
-  const out: number[] = []; const seen = new Set<number>([r.id]);
-  const visit = (c: Character | undefined, depth: number) => {
-    if (!c || depth > 5 || seen.has(c.id)) return; seen.add(c.id);
-    if (c.alive) out.push(c.id);
-    for (const k of c.children) visit(s.chars[k], depth + 1);
-  };
-  for (const k of r.children) visit(s.chars[k], 1);
-  const parentOf = (c: Character) => (c.father && s.chars[c.father]) || (c.mother && s.chars[c.mother]) || undefined;
-  let prev: Character = r, anc = parentOf(r);
-  for (let up = 0; up < 2 && anc; up++) {
-    if (!seen.has(anc.id)) { seen.add(anc.id); if (anc.alive) out.push(anc.id); }
-    for (const k of anc.children) if (k !== prev.id) visit(s.chars[k], 1);
-    prev = anc; anc = parentOf(anc);
+/** Everyone the other draws leave out ages and may die as well: the rest of a ruling house wherever they live
+ *  (children, brothers and sisters, nephews, a queen mother, a widowed queen, the wives and husbands of princes), the
+ *  candidates at court, a dismissed official, a retired commander, the court of a realm that is gone. Rulers, heirs,
+ *  consorts, regents and officials draw in characterMonth, commanders in commanders.ts (generalsMonth), so nobody
+ *  draws twice. The draw is a side stream of the game's seed (rng.ts hash01): the number of people alive does not
+ *  shift the main stream. (Before, only the ruler's descendants and the father's line drew, so a mother, a dowager or
+ *  the spouse of a prince lived for ever.) */
+function othersMonth(s: GameState, w: World) {
+  const own = new Set<number>();
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    for (const id of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)]) if (id) own.add(id);
+    for (const id of n.generals ?? []) if (s.chars[id]?.nation === n.id) own.add(id);
   }
-  return out;
+  for (const k in s.chars) {
+    const c = s.chars[k];
+    if (!c.alive || own.has(c.id) || c.born > s.day) continue;
+    if (hash01(s.seed, c.id, s.day) >= monthlyDeathChance(ageOf(s, c), c)) continue;
+    const home = s.nations[c.nation];
+    if (home?.alive) characterDies(s, w, home, c.id);
+    else { c.alive = false; c.died = s.day; } // of a realm that is gone: no crown or office of a living realm passes with them
+  }
 }
 /** A bride or groom for p (a ruler or an heir): a member of a house bound to ours by a marriage treaty, else the
  *  daughter or son of a noble family of our own people (systems/dynasty.ts houseMember). */
@@ -523,7 +524,8 @@ function characterMonth(s: GameState, w: World, n: Nation) {
   // a crown shared in personal union: the senior crown's court lives, weds and bears children, and this one follows it
   const O = n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === n.ruler ? s.nations[n.overlord] : null;
   // ruler, heir, consort, officials age and may die; births to the ruling couple
-  for (const cid of [n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)]) {
+  // (each person once: a consort or heir who holds an office draws one death and ages one month, not two)
+  for (const cid of new Set([n.ruler, n.heir, n.consort, n.regent, ...Object.values(n.council)])) {
     const c = s.chars[cid]; if (!c || !c.alive) continue;
     // the shared ruler, heir, consort and regent live and die with the senior crown's turn
     if (O && (cid === O.ruler || cid === O.heir || cid === O.consort || cid === O.regent)) continue;
@@ -533,13 +535,7 @@ function characterMonth(s: GameState, w: World, n: Nation) {
   }
   if (O && O.ruler === n.ruler) { n.heir = O.heir; n.consort = O.consort; n.regent = O.regent; return; }
   const r = s.chars[n.ruler];
-  // the rest of the house (children, brothers and sisters, nephews and nieces, wherever they live) ages and may die
-  // as the ruler does, so a house thins out as a real one did. The draw is a side stream of the game's seed
-  // (rng.ts hash01), so the size of a house does not shift the main stream.
-  if (r) for (const id of houseKin(s, r)) {
-    const c = s.chars[id]; if (!c.alive || (c.role && !KIN_ROLES.has(c.role))) continue;
-    if (hash01(s.seed, id, s.day) < monthlyDeathChance(ageOf(s, c), c)) characterDies(s, w, s.nations[c.nation] ?? n, id);
-  }
+  // (the rest of the house ages and may die in othersMonth, once a month for every court)
   if (n.regent && r && ageOf(s, r) >= 16) { n.regent = 0; notice(s, n.id, 'majority', { en: `${r.name} has come of age and rules in person.`, de: `${de(r)} ist volljährig und regiert selbst.` }); n.mandate = clamp(n.mandate + 10, 0, 100); }
   // marriage of an unmarried adult ruler: a member of a house bound to ours by a marriage treaty, else the daughter
   // or son of a noble family of our own people (systems/dynasty.ts)
@@ -903,5 +899,6 @@ export const politics: System = {
       refreshCandidates(s, n, s.day % 365 < 31);
       n.modifiers = n.modifiers.filter((m) => m.until > s.day);
     }
+    othersMonth(s, w);
   },
 };

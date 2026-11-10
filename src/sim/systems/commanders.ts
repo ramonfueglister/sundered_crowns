@@ -132,7 +132,7 @@ function generalsMonth(s: GameState, w: World, n: Nation) {
   for (const id of n.generals ?? []) {
     const c = s.chars[id];
     if (!c || !c.alive || c.nation !== n.id) continue;
-    if (c.id === n.ruler || c.id === n.heir || c.id === n.consort) continue; // they age with the court (politics.ts)
+    if (c.id === n.ruler || c.id === n.heir || c.id === n.consort || c.id === n.regent || Object.values(n.council).includes(c.id)) continue; // they age with the court (politics.ts)
     const age = ageOf(s, c);
     if (age > 50) c.health = Math.max(0.2, c.health - 0.002);
     if (chance(s.rng, monthlyDeathChance(age, c))) {
