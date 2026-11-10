@@ -14,6 +14,7 @@ import { techCost, BRANCHES } from '../sim/systems/progress';
 import { SITUATIONS } from '../sim/content/situations';
 import { dayToDate } from '../sim/calendar';
 import { hash01 } from '../sim/rng';
+import { REFUSAL_COOLDOWN } from '../sim/systems/diplomacy';
 
 /**
  * One line of an option's effects. `label` holds `{v}` where the value goes (the UI formats it in the player's
@@ -352,6 +353,10 @@ export function eventOptionFx(s: GameState, w: World, nid: number, pendingId: nu
     if (first.drew) for (let j = 1; j < TRIALS; j++) runs.push(trial(s, w, p, k, seeds[j]).facts);
     const lines = merge(runs);
     for (const f of newlyPossible(first.lz, w, p, base)) if (!lines.some((l) => l.key === f.key)) lines.push({ ...f, share: 1 });
+    // fix-people: a declined offer is not made again for some years (diplomacy.ts noteRefusal); the copy holds it in a
+    // flag the comparison does not show, so it is named here, in the visible lines and not only in the hint
+    const F = p.event.startsWith('diplo_') && k === 1 ? s.nations[p.ctx.from] : undefined; const yrs = REFUSAL_COOLDOWN[p.event.slice(6)];
+    if (F && yrs) lines.push({ key: 'o.cooldown', label: { en: `${F.short.en} will not ask again for ${yrs} years`, de: `${F.short.de} ${/^Die /.test(F.short.de) ? 'fragen' : 'fragt'} ${yrs} Jahre lang nicht wieder` }, tone: 0, share: 1 });
     res.push({ lines, random: first.drew && runs.length > 1 && lines.some((l) => l.share < 1 || (l.lo !== undefined && l.hi !== undefined && l.hi - l.lo > 1e-6)), trials: runs.length, ms: now() - t0 });
   }
   return res;

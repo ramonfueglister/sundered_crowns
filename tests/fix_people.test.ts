@@ -19,7 +19,8 @@ import { acceptProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
 import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP, spyCost, startSpy } from '../src/sim/systems/diplomacy';
 import { answerEvent } from '../src/sim/systems/events';
-import { answer } from '../src/game/view';
+import { answer, pendingView } from '../src/game/view';
+import { eventOptionFx } from '../src/game/eventfx';
 import { advanceDay } from '../src/sim/engine';
 import { atWar, DAY_EPOCH } from '../src/sim/ctx';
 import { nationDev } from '../src/sim/systems/war';
@@ -236,6 +237,29 @@ describe('marriage preview', () => {
     expect(s.chars[A.heir].spouse).toBe(m.spouse.id);
     // once wed, nobody is left to match on either side for a second treaty
     expect(marriagePreview(s, E.id, A.id).match?.spouse?.id).not.toBe(m.spouse.id);
+  });
+});
+
+describe('offer windows (review fix)', () => {
+  it('a marriage offer names the couple and the claim; declining shows that they will not ask again', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), A = nat(s, 'austria'); s.playerNations = [E.id];
+    expect(sendEnvoy(s, w, A.id, E.id, 'marriage')).toBeNull();
+    for (const e of s.envoys) e.arrive = s.day; diplomacy.daily!({ s, w } as any);
+    const p = s.pending.find((x) => x.nation === E.id && x.event === 'diplo_marriage')!;
+    expect(p).toBeTruthy();
+    const v = pendingView(s, w, E.id).find((x) => x.id === p.id)!;
+    // the same match the player's own diplomacy row would show: Austria's heir Rudolf and a daughter of Edward III
+    const m = marriagePreview(s, A.id, E.id).match!;
+    expect(m.spouse?.name).toBe('Isabella of England');
+    expect(v.text.de).toContain('Wenn wir annehmen, heiratet ihr Thronfolger');
+    expect(v.text.de).toContain('unsere Tochter Isabella von England (');
+    expect(v.text.de).toContain('Die Braut geht aus unserem Haus an den Hof von Österreich und behält einen Anspruch auf unseren Thron');
+    expect(v.text.en).toContain('their heir');
+    const fx = eventOptionFx(s, w, E.id, p.id)!;
+    const decline = fx[1].lines.map((l) => l.label.de);
+    expect(decline).toContain('Österreich fragt 10 Jahre lang nicht wieder');
+    expect(fx[0].lines.some((l) => l.key === 'o.cooldown')).toBe(false);
   });
 });
 

@@ -6,7 +6,7 @@ import { chronicle, notice } from '../ctx';
 import { rand } from '../rng';
 import { newChar, ageOf, nextInLine, lineOfSuccession } from './politics';
 import { LAWS, LAW_INDEX } from '../content/laws';
-import { givenName, localName } from '../content/names';
+import { givenName, localName, declineDe } from '../content/names';
 import { FAITHS } from '../content/peoples';
 
 const YEAR = 365;
@@ -113,6 +113,42 @@ export function marriagePreview(s: GameState, a: number, b: number) {
   const B = s.nations[b]; const v = dynastyView(s, B);
   const members = (v?.members ?? []).filter((x) => x.abroad < 0 && x.rel !== 'parent').slice(0, 8).map((x) => ({ name: x.name, female: x.female, age: x.age, rel: x.rel, wed: !!x.spouse?.alive }));
   return { match, members };
+}
+/** fix-people: what a royal marriage offered by realm `from` would bring the player (marriagePreview), for the text of
+ *  the offer window: who would wed whom, and the claim it creates on which throne. The same facts the player's own
+ *  diplomacy row shows before sending an envoy. */
+const REL_WORD: Record<string, { en: [string, string]; de: [string, string]; acc?: string }> = {
+  ruler: { en: ['ruler', 'ruler'], de: ['Herrscher', 'Herrscherin'] }, heir: { en: ['heir', 'heir'], de: ['Thronfolger', 'Thronfolgerin'] },
+  child: { en: ['son', 'daughter'], de: ['Sohn', 'Tochter'] }, sibling: { en: ['brother', 'sister'], de: ['Bruder', 'Schwester'] },
+  grandchild: { en: ['grandson', 'granddaughter'], de: ['Enkel', 'Enkelin'] }, nephew: { en: ['nephew', 'niece'], de: ['Neffe', 'Nichte'], acc: 'Neffen' },
+  kin: { en: ['kinsman', 'kinswoman'], de: ['Verwandter', 'Verwandte'], acc: 'Verwandten' },
+};
+export function marriageOfferText(s: GameState, from: number, player: number): I18n {
+  const pv = marriagePreview(s, from, player); const m = pv.match;
+  const F = s.nations[from]; const pl = /^Die /.test(F.short.de); // ("Die Niederlande schlagen vor")
+  if (!m) return { en: `Nobody of either house can wed now: the treaty binds the houses until someone comes of age. A treaty alone carries no blood: should our house die out, ${F.short.en} could press a claim by war, but not take the crown.`,
+    de: `Keines der beiden Häuser hat jetzt jemanden zu verheiraten: Der Vertrag bindet die Häuser, bis jemand ins heiratsfähige Alter kommt. Ein Vertrag allein stiftet keine Blutsverwandtschaft: Sollte unser Haus erlöschen, ${pl ? 'könnten' : 'könnte'} ${F.short.de} einen Anspruch mit Krieg durchsetzen, aber nicht die Krone erben.` };
+  type P = { name: string; female: boolean; age: number; rel: string };
+  const ours = (realm: number) => realm === player;
+  // "unser Thronfolger Eduard … (25)" as subject, "ihre Tochter Isabella … (0)" as object
+  const de = (c: P, realm: number, kase: 'nom' | 'acc') => {
+    const r = REL_WORD[c.rel] ?? REL_WORD.kin; const f = c.female ? 1 : 0;
+    const poss = ours(realm) ? (c.female ? 'unsere' : kase === 'acc' ? 'unseren' : 'unser') : (c.female ? 'ihre' : kase === 'acc' ? 'ihren' : 'ihr');
+    const noun = !c.female && kase === 'acc' && r.acc ? r.acc : r.de[f];
+    return `${poss} ${noun} ${declineDe(localName(c.name, 'de', c.female, true), c.female, kase)} (${c.age})`;
+  };
+  const en = (c: P, realm: number) => `${ours(realm) ? 'our' : 'their'} ${(REL_WORD[c.rel] ?? REL_WORD.kin).en[c.female ? 1 : 0]} ${c.name} (${c.age})`;
+  const houseDe = ours(m.house) ? 'unseres Hauses' : 'ihres Hauses', houseEn = ours(m.house) ? 'our house' : 'their house';
+  const spDe = m.spouse ? de(m.spouse, m.house, 'acc') : m.female ? `eine Tochter oder Schwester ${houseDe} im passenden Alter, die bei der Hochzeit bestimmt wird` : `einen Sohn oder Bruder ${houseDe} im passenden Alter, der bei der Hochzeit bestimmt wird`;
+  const spEn = m.spouse ? en(m.spouse, m.house) : `a ${m.female ? 'daughter or sister' : 'son or brother'} of ${houseEn} of fitting age, named at the wedding`;
+  const couple: I18n = { en: `If we accept, ${en(m.person, m.realm)} weds ${spEn}.`, de: `Wenn wir annehmen, heiratet ${de(m.person, m.realm, 'nom')} ${spDe}.` };
+  const bride = m.female ? { en: 'The bride', de: 'Die Braut' } : { en: 'The groom', de: 'Der Bräutigam' };
+  const claim: I18n = ours(m.realm)
+    ? { en: `${bride.en} comes to our court with a claim on the throne of ${F.short.en} and passes it to our children: should the house of ${F.short.en} die out, its crown may pass to us.`,
+      de: `${bride.de} kommt mit einem Anspruch auf den Thron von ${F.short.de} an unseren Hof und vererbt ihn an unsere Kinder: Sollte das Haus von ${F.short.de} erlöschen, könnte dessen Krone an uns fallen.` }
+    : { en: `${bride.en} goes from our house to the court of ${F.short.en} and keeps a claim on our throne: should our house die out, ${F.short.en} may inherit our crown by blood.`,
+      de: `${bride.de} geht aus unserem Haus an den Hof von ${F.short.de} und behält einen Anspruch auf unseren Thron: Sollte unser Haus erlöschen, ${pl ? 'könnten' : 'könnte'} ${F.short.de} unsere Krone durch Blut erben.` };
+  return { en: `${couple.en}\n${claim.en}`, de: `${couple.de}\n${claim.de}` };
 }
 /** How a member of Z's house is related to its ruler (for the preview). */
 function relTo(s: GameState, Z: Nation, c: Character): string {

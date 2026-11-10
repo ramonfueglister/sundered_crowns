@@ -35,7 +35,7 @@ import { declareView, armyView, battleView, battleList, warView, locWar, armySup
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
-import { dynastyView, marriagePreview } from '../sim/systems/dynasty';
+import { dynastyView, marriagePreview, marriageOfferText } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 import { victoryView, historyView } from './endview';
 import { EVENTS } from '../sim/content/events';
@@ -87,7 +87,9 @@ export function pendingView(s: GameState, w: World, player: number): TickView['p
     if (p.event.startsWith('diplo_')) {
       const from = s.nations[p.ctx.from]; const act = p.event.slice(6);
       const yrs = REFUSAL_COOLDOWN[act] ?? 0;
-      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.`, de: `${from?.short.de} ${from && pluralDe(from) ? 'schlagen' : 'schlägt'} vor: ${ACT_NAME[act]?.de ?? act}.` },
+      // a royal marriage names the couple and the claim it creates, as the player's own diplomacy row does (dynasty.ts)
+      const wed = act === 'marriage' && from ? marriageOfferText(s, from.id, player) : null;
+      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.${wed ? `\n${wed.en}` : ''}`, de: `${from?.short.de} ${from && pluralDe(from) ? 'schlagen' : 'schlägt'} vor: ${ACT_NAME[act]?.de ?? act}.${wed ? `\n${wed.de}` : ''}` },
         options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year${yrs ? `, and they will not ask again for ${yrs} years` : ''}.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10${yrs ? `, und ${from?.short.de} ${from && pluralDe(from) ? 'fragen' : 'fragt'} ${yrs} Jahre lang nicht wieder` : ''}.` } }], art: 'court' };
     }
     const d = eventDef(p.event);
