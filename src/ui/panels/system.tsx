@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { screen, panel, settings, saveSettings, selectedLoc, selectedNation, playerId, showToast, lastSpeed, openPanel, type Settings } from '../store';
-import { listSaves, loadSave, deleteSave, saveNow, importSave, type SaveMeta } from '../saves';
+import { listSaves, loadSave, deleteSave, saveNow, importSave, saveLabel, saveDate, type SaveMeta } from '../saves';
 import { setLang } from '../i18n';
 import { rendererRef } from '../MapView';
 import { timelapse, playTimelapse, abortTimelapse } from '../timelapse';
@@ -68,7 +68,7 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
   const exportSave = async (m: SaveMeta) => {
     const data = await loadSave(m.id); if (!data) return;
     const blob = new Blob([data as BlobPart], { type: 'application/octet-stream' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${m.label.replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'save'}.scsave`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${saveLabel(m).replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'save'}.scsave`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
   const onFile = async (e: Event) => {
@@ -83,7 +83,7 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
       <Btn small={false} cls="gold" onClick={() => saveNow(name.trim() || undefined).then(() => { showToast(t('saved')); sfx('page'); setName(''); reload(); }).catch((x) => showToast(String(x), 'err'))}>{t('save')}</Btn>
     </div>}
     {!saves ? <Empty>{t('loading')}…</Empty> : !saves.length ? <Empty>{t('no_saves')}</Empty> : <div class="save-list">{saves.map((m) => <div class="save-row">
-      <div class="sv-main"><div class="sv-label">{m.auto && <span class="tag">{t('auto')}</span>} {m.label}</div><div class="muted small">{m.date && <>{m.date} · </>}{new Date(m.real).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB')} · {num(m.size / 1024)} KB</div></div>
+      <div class="sv-main"><div class="sv-label">{m.auto && <span class="tag">{t('auto')}</span>} {saveLabel(m)}</div><div class="muted small">{saveDate(m) && <>{saveDate(m)} · </>}{new Date(m.real).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB')} · {num(m.size / 1024)} KB</div></div>
       <div class="sv-btns">
         <Btn cls="gold" onClick={() => load(m.id)}>{t('load_short')}</Btn>
         <Btn onClick={() => exportSave(m)}>{t('export')}</Btn>
@@ -98,6 +98,17 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
 export function PausePanel() {
   useEffect(() => { const sp = view.value?.speed ?? 0; if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } }, []);
   const resume = () => { panel.value = 'none'; sim().speed(lastSpeed.value || 2); sfx('click'); };
+  // leaving for the main menu asks first and offers to save (online, the world server keeps the game)
+  const [asking, setAsking] = useState(false); const [busy, setBusy] = useState(false);
+  const leave = () => { abortTimelapse(); panel.value = 'none'; sim().speed(0); screen.value = 'menu'; };
+  const online = isOnline.value;
+  if (asking) return <div class="pause-menu" onPointerDown={(e) => e.stopPropagation()}>
+    <h2>{t('quit')}</h2>
+    <p class="pm-ask">{online ? t('x_quit_online') : t('x_quit_confirm')}</p>
+    {!online && <button class="btn big gold" disabled={busy} onClick={() => { setBusy(true); saveNow().then(() => { showToast(t('saved')); leave(); }, () => setBusy(false)); }}>{t('x_quit_save')}</button>}
+    <button class={`btn big ${online ? 'gold' : ''}`} disabled={busy} onClick={leave}>{online ? t('quit') : t('x_quit_nosave')}</button>
+    <button class="btn big" disabled={busy} onClick={() => setAsking(false)}>{t('back')}</button>
+  </div>;
   return <div class="pause-menu" onPointerDown={(e) => e.stopPropagation()}>
     <h2>{t('paused')}</h2>
     <button class="btn big gold" onClick={resume}>{t('resume')}</button>
@@ -106,7 +117,7 @@ export function PausePanel() {
     <button class="btn big" onClick={() => openPanel('settings')}>{t('settings')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(false); }}>{t('timelapse')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(true); }}>{t('timelapse_video')}</button>
-    <button class="btn big" onClick={() => { abortTimelapse(); panel.value = 'none'; sim().speed(0); screen.value = 'menu'; }}>{t('quit')}</button>
+    <button class="btn big" onClick={() => setAsking(true)}>{t('quit')}</button>
   </div>;
 }
 

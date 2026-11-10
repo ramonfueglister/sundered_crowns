@@ -138,6 +138,10 @@ export function interpolate(s: GameState, w: World, n: Nation, ctx: Record<strin
     .replace(/\{amount\}/g, String(Math.round(ctx.amount ?? 0)));
   return { en: rep(t.en, 'en'), de: rep(t.de, 'de') };
 }
+/** The other realm a chronicle entry of an event concerns: the one its title names ({other}), if any. */
+function namedOther(d: { title: I18n }, ctx: Record<string, number>): number[] | undefined {
+  return d.title.en.includes('{other}') && ctx.other !== undefined && ctx.other >= 0 ? [ctx.other] : undefined;
+}
 
 function aiChoice(e: EvApi, d: EventDef): number {
   let best = 0, bv = -Infinity;
@@ -159,7 +163,7 @@ export function fireEvent(s: GameState, w: World, n: Nation, d: EventDef, ctx: R
   }
   const k = aiChoice(e, d);
   d.options[k].effect(e);
-  if (d.major) chronicle(s, n.id, 'event', interpolate(s, w, n, ctx, d.title), ctx.loc);
+  if (d.major) chronicle(s, n.id, 'event', interpolate(s, w, n, ctx, d.title), ctx.loc, namedOther(d, ctx));
   return true;
 }
 
@@ -223,7 +227,7 @@ export function answerEvent(s: GameState, w: World, nation: number, pendingId: n
   const k = choice < 0 || choice >= d.options.length ? aiChoice(e, d) : choice;
   if (auto && n.playerId) recordAuto(s, nation, p.event, interpolate(s, w, n, p.ctx, d.title), interpolate(s, w, n, p.ctx, d.options[k].label), p.ctx.loc);
   d.options[k].effect(e);
-  if (d.major) chronicle(s, nation, 'event', interpolate(s, w, n, p.ctx, d.title), p.ctx.loc);
+  if (d.major) chronicle(s, nation, 'event', interpolate(s, w, n, p.ctx, d.title), p.ctx.loc, namedOther(d, p.ctx));
   return null;
 }
 

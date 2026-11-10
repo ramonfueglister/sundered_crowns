@@ -79,7 +79,7 @@ export function intervene(s: GameState, gp: Nation, war: War): string | null {
   for (const x of war.att) addOpinion(s, x, gp.id, 'intervened_against_us', -30, 365 * 10);
   for (const x of war.def) if (x !== gp.id) addOpinion(s, x, gp.id, 'came_to_our_aid', 30, 365 * 10);
   powersState(s).log.push({ day: s.day, gp: gp.id, war: war.id, kind: 'intervene', side: war.defLead });
-  chronicle(s, gp.id, 'great_power', T(`${gp.short.en} intervened for ${s.nations[war.defLead].short.en} to keep the balance against ${s.nations[war.attLead].short.en}.`, `${gp.short.de} griff für ${s.nations[war.defLead].short.de} ein, um das Gleichgewicht gegen ${s.nations[war.attLead].short.de} zu wahren.`));
+  chronicle(s, gp.id, 'great_power', T(`${gp.short.en} intervened for ${s.nations[war.defLead].short.en} to keep the balance against ${s.nations[war.attLead].short.en}.`, `${gp.short.de} griff für ${s.nations[war.defLead].short.de} ein, um das Gleichgewicht gegen ${s.nations[war.attLead].short.de} zu wahren.`), undefined, [...war.att, ...war.def]);
   for (const p of s.playerNations) if (war.att.includes(p) || war.def.includes(p)) notice(s, p, 'great_power', T(`${gp.short.en} has entered the war on the side of ${s.nations[war.defLead].short.en}.`, `${gp.short.de} ist auf der Seite von ${s.nations[war.defLead].short.de} in den Krieg eingetreten.`), { war: war.id });
   return null;
 }
@@ -121,12 +121,13 @@ export function mediate(s: GameState, w: World, gp: Nation, war: War): string | 
 }
 function mediatedPeace(s: GameState, w: World, gp: Nation, war: War) {
   const lead = s.nations[war.attLead], def = s.nations[war.defLead];
+  const sides = [...war.att, ...war.def];
   powersState(s).log.push({ day: s.day, gp: gp.id, war: war.id, kind: 'mediated', side: war.defLead });
   concludePeace(s, w, war, war.attLead, war.defLead, [{ type: 'white_peace' }]);
   gp.prestige = clamp(gp.prestige + 5, -100, 100);
   addOpinion(s, def.id, gp.id, 'mediated_peace', 15, 365 * 10);
   addOpinion(s, lead.id, gp.id, 'mediated_peace', 5, 365 * 5);
-  chronicle(s, gp.id, 'great_power', T(`Through the mediation of ${gp.short.en}, ${lead.short.en} and ${def.short.en} made peace.`, `Durch Vermittlung von ${gp.short.de} schlossen ${lead.short.de} und ${def.short.de} Frieden.`));
+  chronicle(s, gp.id, 'great_power', T(`Through the mediation of ${gp.short.en}, ${lead.short.en} and ${def.short.en} made peace.`, `Durch Vermittlung von ${gp.short.de} schlossen ${lead.short.de} und ${def.short.de} Frieden.`), undefined, sides);
 }
 /** The war leader turned the mediation down (by answer, by silence, or by the AI's weighing): the power remembers. */
 function spurned(s: GameState, gp: Nation, war: War) {
@@ -186,7 +187,7 @@ function guarantee(s: GameState, gp: number, small: number) {
   s.treaties = s.treaties.filter((t) => !(t.type === 'guarantee' && t.a === gp && t.b === small));
   s.treaties.push({ a: gp, b: small, type: 'guarantee', since: s.day, until: s.day + 365 * PROTECT_YEARS });
   addOpinion(s, small, gp, 'protector', 25, 365 * PROTECT_YEARS);
-  chronicle(s, gp, 'great_power', T(`${s.nations[gp].short.en} took ${s.nations[small].short.en} under its protection.`, `${s.nations[gp].short.de} nahm ${s.nations[small].short.de} unter seinen Schutz.`));
+  chronicle(s, gp, 'great_power', T(`${s.nations[gp].short.en} took ${s.nations[small].short.en} under its protection.`, `${s.nations[gp].short.de} nahm ${s.nations[small].short.de} unter seinen Schutz.`), undefined, [small]);
 }
 /** A lesser realm asks a great power for protection. AI powers decide by protectScore; a human power is asked. */
 export function seekProtection(s: GameState, w: World, n: Nation, gpId: number): string | null {

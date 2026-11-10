@@ -1,7 +1,7 @@
 // WebGPU map renderer.
 import type { MapAssets } from './assets';
 import { buildCoastSdf } from './coast';
-import { Overlay, type MapLabel, type MapUnit, type MapLandmark, type MapFlow, type MapMarket } from './overlay';
+import { Overlay, type MapLabel, type MapUnit, type MapLandmark, type MapFlow, type MapMarket, type MapPlace } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
 import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
 import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp, type SceneProp } from './props';
@@ -617,7 +617,10 @@ export class MapRenderer {
     }
     this.locDirty = true;
     this.props?.setExplored(known);
+    this.overlay.known = known;
   }
+  /** place names shown at close zoom (index = location; null: none), in the player's language */
+  setPlaces(list: (MapPlace | null)[]) { this.overlay.places = list; }
 
   setSnow(snow: Float32Array) {
     for (let i = 0; i < this.L; i++) this.locF32[i * LOC_WORDS + 6] = i < snow.length ? clamp(snow[i], 0, 1) : 0;
@@ -759,6 +762,8 @@ export class MapRenderer {
     this.zoomTarget = null;
   }
 
+  /** zoom by factor around the centre of the view (the keyboard's zoom actions) */
+  zoomStep(factor: number) { this.zoomAt(factor, this.cssW / 2, this.cssH / 2); }
   /** zoom by factor around a canvas-local css point (smoothed) */
   zoomAt(factor: number, sx: number, sy: number) {
     const cur = this.zoomTarget ?? this.camera.zoom;
@@ -771,7 +776,10 @@ export class MapRenderer {
     const c = this.camera;
     c.zoom = clamp(c.zoom, this.minZoom, this.maxZoom);
     const hw = this.cssW / 2 / c.zoom, hh = this.cssH / 2 / c.zoom;
-    const fx = (lo: number, hi: number, half: number, v: number) => (hi - lo < 2 * half ? (lo + hi) / 2 : clamp(v, lo + half * 0.15, hi - half * 0.15));
+    // zoomed out, the view stays on the map (no hard edge of the world in sight); closer in, the camera may look a little
+    // past the edge (up to 85 % of half the view from four times the widest zoom on), so a coast at the edge can be centred
+    const beyond = 0.85 * clamp(Math.log(c.zoom / this.minZoom) / Math.log(4), 0, 1);
+    const fx = (lo: number, hi: number, half: number, v: number) => (hi - lo < 2 * half ? (lo + hi) / 2 : clamp(v, lo + half * (1 - beyond), hi - half * (1 - beyond)));
     c.x = fx(0, this.W, hw, c.x); c.y = fx(0, this.H, hh, c.y);
   }
 
@@ -909,9 +917,8 @@ export class MapRenderer {
     const onKey = (e: KeyboardEvent) => {
       if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
+      // zooming by keyboard is a rebindable action of the key table (src/ui/keys.ts zoom_in / zoom_out → zoomStep)
       if (PAN.has(k)) { this.keys.add(k); e.preventDefault(); }
-      else if (k === '+' || k === '=') this.zoomAt(1.4, this.cssW / 2, this.cssH / 2);
-      else if (k === '-') this.zoomAt(1 / 1.4, this.cssW / 2, this.cssH / 2);
     };
     const onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
     const onBlur = () => this.keys.clear();
@@ -958,7 +965,9 @@ export class MapRenderer {
       this.depthTex = this.device.createTexture({ size: [w, h], format: 'depth32float', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
       this.mainBG = null;
     }
-    this.minZoom = Math.min(0.5, Math.max(cssW / this.W, cssH / this.H) * 0.9);
+    // the widest zoom still fills the view with map, and clampCamera keeps it there: the world's edge never shows as a hard
+    // cut against the void (the far north and south are reached by scrolling, as in other map games)
+    this.minZoom = Math.max(cssW / this.W, cssH / this.H);
     this.overlay.layout(this.canvas, cssW, cssH);
   }
 
@@ -969,8 +978,9 @@ export class MapRenderer {
     u[0] = W; u[1] = H; u[2] = 1 / (z * pr); u[3] = z;
     u[4] = c.x; u[5] = c.y; u[6] = this.time; u[7] = pr;
     const lz = clamp((Math.log2(z) + 1.5) / 4.5, 0, 1); // 0 at zoom ~0.35, 1 at zoom ~8
-    // close in, the land itself shows through: the realm's colour becomes a wash with a strong band at the border
-    const polA = 0.82 - 0.56 * smooth(lz), flatA = 0.9 - 0.35 * smooth(lz);
+    // close in, the land itself shows through: the realm's colour becomes a wash with a strong band at the border, but
+    // stays strong enough at the closest zoom to tell whose land it is; a map mode's colours stay strong at every zoom
+    const polA = 0.82 - 0.4 * smooth(lz), flatA = 0.95 - 0.2 * smooth(lz);
     u[8] = this.W; u[9] = this.H; u[10] = this.L; u[11] = this.mode === 'flat' ? flatA : polA;
     u[12] = this.mode === 'political' ? 0 : this.mode === 'terrain' ? 1 : 2; u[13] = this.selected; u[14] = this.hover; u[15] = q.q;
     u[16] = this.inkSpeed; u[17] = z >= 1.5 ? 1 : 0; u[18] = q.waves; u[19] = q.rings.length;
@@ -1054,7 +1064,7 @@ export class MapRenderer {
       toScreenZ: (x: number, y: number, z: number) => { const c = this.cam3 ?? this.camNow(); const [sx, sy, w] = project(c, x, y, -z); return (w > 0 ? [sx, sy] : [-1e5, -1e5]) as [number, number]; },
       heightAt: (x: number, y: number) => this.terrainZ(x, y),
       figuresFrom: this.props?.enabled ? SHOW_UNITS * 1.25 : Infinity,
-      zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time,
+      zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time, cx: this.camera.x, cy: this.camera.y,
     };
   }
 

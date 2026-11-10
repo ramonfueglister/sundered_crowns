@@ -61,7 +61,7 @@ function landmarksMonth(s: GameState, w: World) {
       if (prev) prev.modifiers = prev.modifiers.filter((m) => m.id !== `landmark_${x.id}`);
       if (x.holder >= 0 && o >= 0 && prev) {
         const t = { en: `${d.name.en} passed from ${prev.short.en} to ${s.nations[o].short.en}.`, de: `${d.name.de} ging von ${prev.short.de} an ${s.nations[o].short.de} über.` };
-        chronicle(s, o, 'landmark', t, x.loc);
+        chronicle(s, o, 'landmark', t, x.loc, [x.holder]);
         for (const p of [o, x.holder]) if (s.playerNations.includes(p)) notice(s, p, 'landmark', t, { loc: x.loc });
       }
       x.holder = o;

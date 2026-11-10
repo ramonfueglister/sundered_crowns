@@ -166,7 +166,7 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
       s.flags[`embargo_${a}_${b}`] = s.day + 1;
       rel(s, b, a).trust = clamp(rel(s, b, a).trust - 10, 0, 100);
       s.treaties = s.treaties.filter((t) => !(t.type === 'trade' && ((t.a === a && t.b === b) || (t.a === b && t.b === a))));
-      chronicle(s, a, 'embargo', { en: `${A.short.en} closed its markets to ${Bn.short.en}.`, de: `${A.short.de} sperrte seine Märkte für ${Bn.short.de}.` });
+      chronicle(s, a, 'embargo', { en: `${A.short.en} closed its markets to ${Bn.short.en}.`, de: `${A.short.de} sperrte seine Märkte für ${Bn.short.de}.` }, undefined, [b]);
       if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has declared an embargo on us: no trade between their markets and ours.`, de: `${A.short.de} hat eine Handelssperre gegen uns verhängt: kein Handel mehr zwischen ihren Märkten und unseren.` });
       return null;
     }
@@ -222,19 +222,19 @@ export function acceptProposal(s: GameState, w: World, a: number, b: number, act
   // two envoys may cross on the road (each side proposing the same treaty): a treaty already in force is not made twice
   if ((action === 'alliance' || action === 'marriage' || action === 'trade' || action === 'access' || action === 'guarantee') && hasTreaty(s, a, b, action)) return;
   switch (action) {
-    case 'alliance': s.treaties.push({ a: lo, b: hi, type: 'alliance', since: s.day, until: 1e9 }); chronicle(s, a, 'alliance', { en: `${A.short.en} and ${Bn.short.en} concluded an alliance.`, de: `${A.short.de} und ${Bn.short.de} schlossen ein Bündnis.` }); break;
+    case 'alliance': s.treaties.push({ a: lo, b: hi, type: 'alliance', since: s.day, until: 1e9 }); chronicle(s, a, 'alliance', { en: `${A.short.en} and ${Bn.short.en} concluded an alliance.`, de: `${A.short.de} und ${Bn.short.de} schlossen ein Bündnis.` }, undefined, [b]); break;
     case 'marriage': {
       s.treaties.push({ a: lo, b: hi, type: 'marriage', since: s.day, until: s.day + 365 * 40 });
       addOpinion(s, b, a, 'royal_marriage_bond', 15, 365 * 20); addOpinion(s, a, b, 'royal_marriage_bond', 15, 365 * 20);
       // a wedding between the houses when either has an unwed ruler or heir (systems/dynasty.ts); otherwise the
       // treaty binds the houses until one has someone to marry
-      if (!royalMatch(s, w, a, b)) chronicle(s, a, 'marriage', { en: `A royal marriage joined the houses of ${A.short.en} and ${Bn.short.en}.`, de: `Eine königliche Heirat verband die Häuser von ${A.short.de} und ${Bn.short.de}.` });
+      if (!royalMatch(s, w, a, b)) chronicle(s, a, 'marriage', { en: `A royal marriage joined the houses of ${A.short.en} and ${Bn.short.en}.`, de: `Eine königliche Heirat verband die Häuser von ${A.short.de} und ${Bn.short.de}.` }, undefined, [b]);
       break;
     }
     case 'access': s.treaties.push({ a, b, type: 'access', since: s.day, until: s.day + 365 * 10 }); break;
     case 'trade': s.treaties.push({ a: lo, b: hi, type: 'trade', since: s.day, until: s.day + 365 * 15 }); break;
     case 'guarantee': s.treaties.push({ a, b, type: 'guarantee', since: s.day, until: 1e9 }); break;
-    case 'vassalize': Bn.overlord = a; Bn.subjectType = 'vassal'; Bn.subjectSince = s.day; Bn.libertyDesire = 20; chronicle(s, a, 'vassal', { en: `${Bn.short.en} became a vassal of ${A.short.en}.`, de: `${Bn.short.de} wurde Vasall von ${A.short.de}.` }); break;
+    case 'vassalize': Bn.overlord = a; Bn.subjectType = 'vassal'; Bn.subjectSince = s.day; Bn.libertyDesire = 20; chronicle(s, a, 'vassal', { en: `${Bn.short.en} became a vassal of ${A.short.en}.`, de: `${Bn.short.de} wurde Vasall von ${A.short.de}.` }, undefined, [b]); break;
     case 'demand': { const amt = Math.max(20, (Bn.income.tax || 10) * 3); Bn.treasury -= amt; A.treasury += amt; addOpinion(s, b, a, 'extorted', -30, 365 * 5); break; }
   }
 }
@@ -289,7 +289,7 @@ export function integrateSubject(s: GameState, w: World, ov: Nation, n: Nation) 
   const { transferLoc } = require_war();
   for (let i = 0; i < s.loc.owner.length; i++) if (s.loc.owner[i] === n.id) { transferLoc(s, w, i, ov.id, 0, { conquest: false }); s.loc.integ[i] = 0.5; }
   n.alive = false;
-  chronicle(s, ov.id, 'integration', { en: `${ov.short.en} absorbed ${n.short.en} into the realm.`, de: `${ov.short.de} gliederte ${n.short.de} in das Reich ein.` });
+  chronicle(s, ov.id, 'integration', { en: `${ov.short.en} absorbed ${n.short.en} into the realm.`, de: `${ov.short.de} gliederte ${n.short.de} in das Reich ein.` }, undefined, [n.id]);
 }
 import * as warmod from './war';
 import { royalMatch } from './dynasty';

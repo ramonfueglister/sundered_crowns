@@ -5,7 +5,7 @@ import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
-import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
+import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
@@ -17,7 +17,7 @@ import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrin
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate } from '../sim/systems/economy';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, locGoods } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
@@ -34,6 +34,9 @@ import { SITUATIONS } from '../sim/content/situations';
 import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
+import { knownOf, fogColors } from './fog';
+import { deName } from '../sim/content/names_de';
+import { regionOf } from '../sim/systems/explore';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
@@ -131,58 +134,157 @@ function landmarkDetail(s: GameState, w: World, l: number, player: number) {
 
 // ---------------- map modes ----------------
 function hexToRgb(h: string): [number, number, number] { const v = parseInt(h.replace('#', ''), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
-function hashColor(k: number): [number, number, number] {
-  let x = (k * 2654435761) >>> 0; const h = (x % 360) / 360; x = (x * 1103515245 + 12345) >>> 0;
-  const sat = 0.45 + (x % 100) / 400, l = 0.5;
-  const f = (n: number) => { const k2 = (n + h * 12) % 12; const a = sat * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k2 - 3, 9 - k2, 1)))); };
-  return [f(0), f(8), f(4)];
-}
 function ramp(t: number, stops: [number, number, number][]): [number, number, number] {
   t = Math.max(0, Math.min(1, t)) * (stops.length - 1); const i = Math.min(stops.length - 2, Math.floor(t)), f = t - i;
   const a = stops[i], b = stops[i + 1]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f].map(Math.round) as any;
 }
-const HEAT_N: [number, number, number][] = [[40, 60, 120], [60, 140, 160], [120, 190, 100], [240, 210, 80], [220, 80, 50]];
-const GOOD_N: [number, number, number][] = [[200, 60, 50], [230, 190, 70], [70, 170, 80]];
-// colour-blind palette (settings): no red against green; a viridis-like ramp and a blue/orange scale (polish pass)
+// Continuous modes: ramps that stand apart from the greens and browns of the land (a plasma-like ramp for amounts, red to
+// green through amber for good and bad); the colour-blind palette (settings) uses viridis and orange to blue.
+const HEAT_N: [number, number, number][] = [[35, 20, 110], [110, 30, 150], [190, 60, 110], [240, 130, 60], [250, 220, 70]];
+const GOOD_N: [number, number, number][] = [[200, 40, 35], [235, 140, 45], [245, 215, 80], [120, 185, 70], [25, 120, 60]];
 const HEAT_CVD: [number, number, number][] = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
-const GOOD_CVD: [number, number, number][] = [[213, 94, 0], [240, 228, 66], [0, 114, 178]];
+const GOOD_CVD: [number, number, number][] = [[213, 94, 0], [235, 160, 40], [240, 228, 66], [86, 180, 233], [0, 114, 178]];
 export type MapPalette = 'normal' | 'cvd';
 const hex = (c: [number, number, number]) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
 /** Diplomatic map colours: self, subjects, allies, enemies, rivals, truce, overlord, others. */
 const DIPLO_N = { self: [60, 170, 70], sub: [120, 200, 120], ally: [70, 120, 210], enemy: [210, 50, 40], rival: [230, 140, 40], truce: [150, 150, 150], lord: [160, 120, 200], other: [205, 195, 175] } as const;
 const DIPLO_CVD = { self: [0, 114, 178], sub: [86, 180, 233], ally: [0, 158, 115], enemy: [213, 94, 0], rival: [240, 228, 66], truce: [150, 150, 150], lord: [204, 121, 167], other: [215, 210, 200] } as const;
+/** Colours for categories that lie side by side on the map (cultures, trade regions): far apart from each other. */
+const CAT_N: [number, number, number][] = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#a9a9a9'].map(hexToRgb);
+const CAT_CVD: [number, number, number][] = ['#e69f00', '#56b4e9', '#009e73', '#f0e442', '#0072b2', '#d55e00', '#cc79a7', '#999999', '#ffd59a', '#a6dcf5', '#7fd8bf', '#000000'].map(hexToRgb);
 
-/** `viewer`: the realm whose explored map the trade modes respect (-1: everything known). `palette`: colour-blind ramps (settings). */
+/**
+ * A colour per category (culture, market) such that categories whose land borders each other never share one where the
+ * palette allows it: the largest categories choose first, each takes the first colour none of its coloured neighbours
+ * has (starting at a place set by its id, so that distant categories vary), else the one its neighbours use least.
+ */
+export function borderColors(w: World, keyOf: (loc: number) => number, keys: number, palette: [number, number, number][]): [number, number, number][] {
+  const P = palette.length;
+  const size = new Float64Array(keys); const nb: Set<number>[] = Array.from({ length: keys }, () => new Set<number>());
+  for (let i = 0; i < w.L; i++) {
+    const a = keyOf(i); if (a < 0 || a >= keys) continue; size[a]++;
+    for (const j of w.neighbours(i)) { if (j >= w.L) continue; const b = keyOf(j); if (b >= 0 && b < keys && b !== a) nb[a].add(b); }
+  }
+  const order = Array.from({ length: keys }, (_, k) => k).filter((k) => size[k] > 0).sort((x, y) => size[y] - size[x] || x - y);
+  const pick = new Int16Array(keys).fill(-1);
+  for (const k of order) {
+    const used = new Int32Array(P); for (const o of nb[k]) if (pick[o] >= 0) used[pick[o]]++;
+    let best = -1; const start = (k * 7) % P;
+    for (let d = 0; d < P && best < 0; d++) { const c = (start + d) % P; if (!used[c]) best = c; }
+    if (best < 0) { best = start; for (let c = 0; c < P; c++) if (used[c] < used[best]) best = c; }
+    pick[k] = best;
+  }
+  return Array.from(pick, (c, k) => (c >= 0 ? palette[c] : palette[k % P]));
+}
+
+type Scale = NonNullable<Legend['scale']>;
+/** A numeric scale for a continuous mode: the ramp's colours and ticks at the values the player reads. */
+function scaleOf(stops: [number, number, number][], ticks: [number, string][]): Scale { return { colors: stops.map(hex), ticks: ticks.map(([at, label]) => ({ at, label })) }; }
+const fmtN = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v * 10) / 10));
+/** How the continuous modes map a value to the ramp (0..1): shared by the colours, the scale and the map tooltip. */
+export const MODE_SCALE = {
+  development: (dev: number) => Math.log1p(dev) / Math.log1p(40),
+  population: (density: number) => Math.log10(1 + density) / Math.log10(101),
+  unrest: (u: number) => Math.sqrt(Math.max(0, u) / 60),
+  control: (c: number) => c,
+};
+/** Unrest from which revolts may break out (systems/military.ts rebelsMonth). */
+const REVOLT_UNREST = 55;
+
+/** `viewer`: the realm whose explored map the colours and legends respect (-1: everything known). `palette`: colour-blind ramps (settings). */
 export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: number, good = -1, viewer = -1, palette: MapPalette = 'normal'): { rgba: Uint8Array; legend: Legend } {
   if (mode === 'prices' || mode === 'production' || mode === 'markets') return tradeMapColors(s, w, mode, mode === 'markets' ? good : good < 0 ? GI.grain : good, viewer);
   const N = w.N, out = new Uint8Array(N * 4);
-  const cvd = palette === 'cvd'; const HEAT = cvd ? HEAT_CVD : HEAT_N, GOOD = cvd ? GOOD_CVD : GOOD_N, DI = cvd ? DIPLO_CVD : DIPLO_N;
-  const lo = hex(HEAT[0]), hi = hex(HEAT[HEAT.length - 1]), bad = hex(GOOD[0]), goodC = hex(GOOD[GOOD.length - 1]);
+  const cvd = palette === 'cvd'; const HEAT = cvd ? HEAT_CVD : HEAT_N, GOOD = cvd ? GOOD_CVD : GOOD_N, DI = cvd ? DIPLO_CVD : DIPLO_N, CAT = cvd ? CAT_CVD : CAT_N;
   const put = (i: number, c: [number, number, number], a = 255) => { out[i * 4] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2]; out[i * 4 + 3] = a; };
   const lc = s.loc;
+  // the viewer's explored map: legends name only what it knows, and unknown land stays blank (src/game/fog.ts)
+  const known = viewer >= 0 ? knownOf(s, w, viewer) : null;
+  const isKnown = (i: number) => !known || known[i] === 1;
   let legend: Legend = { title: { en: mode, de: mode }, items: [] };
   const pop = (i: number) => { let p = 0; for (let c = 0; c < C; c++) p += lc.pop[i * C + c]; return p; };
+  const hoverNote = { en: 'Point at a place for its exact value.', de: 'Zeige auf einen Ort für seinen genauen Wert.' };
+  const F = s.nations[focus];
   switch (mode) {
-    case 'development': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log1p(lc.dev[i]) / Math.log(80), HEAT)); legend = { title: { en: 'Development', de: 'Entwicklung' }, items: [{ color: lo, label: { en: 'low', de: 'niedrig' } }, { color: hi, label: { en: 'high', de: 'hoch' } }] }; break;
-    case 'population': for (let i = 0; i < w.L; i++) put(i, ramp(Math.log10(1 + pop(i) / Math.max(1, w.area[i])) / 2.6, HEAT)); legend = { title: { en: 'Population density', de: 'Bevölkerungsdichte' }, items: [{ color: lo, label: { en: 'sparse', de: 'dünn' } }, { color: hi, label: { en: 'dense', de: 'dicht' } }] }; break;
-    case 'unrest': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(1 - lc.unrest[i] / 40, GOOD)); legend = { title: { en: 'Unrest', de: 'Unruhe' }, items: [{ color: goodC, label: { en: 'calm', de: 'ruhig' } }, { color: bad, label: { en: 'restless', de: 'unruhig' } }] }; break;
-    case 'control': for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(lc.control[i], GOOD)); legend = { title: { en: 'Control', de: 'Kontrolle' }, items: [{ color: bad, label: { en: 'weak', de: 'schwach' } }, { color: goodC, label: { en: 'firm', de: 'fest' } }] }; break;
-    case 'culture': { const seen = new Map<number, number>(); for (let i = 0; i < w.L; i++) { const c = lc.culture[i]; put(i, hashColor(c * 7 + 3)); seen.set(c, (seen.get(c) || 0) + 1); }
-      legend = { title: { en: 'Culture', de: 'Kultur' }, items: [...seen.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(([c]) => { const k = hashColor(c * 7 + 3); return { color: `rgb(${k})`, label: cultureName(ALL_CULTURES[c] || 'unknown') }; }) }; break; }
-    case 'faith': { const seen = new Set<number>(); for (let i = 0; i < w.L; i++) { const f = lc.faith[i]; put(i, hexToRgb(FAITHS[f]?.color ?? '#888888')); seen.add(f); }
-      legend = { title: { en: 'Faith', de: 'Glaube' }, items: [...seen].map((f) => ({ color: FAITHS[f]?.color ?? '#888', label: FAITHS[f]?.name ?? '?' })) }; break; }
-    case 'trade': for (let i = 0; i < w.L; i++) { const m = lc.market[i]; const k = hashColor(m * 13 + 1); put(i, k); }
-      for (const m of s.markets) put(m.hub, [255, 240, 200]);
-      { // the busiest markets (goods passing through last month), in their region's colour
-        const through = new Map<number, number>();
-        for (const f of s.flows ?? []) { through.set(f.from, (through.get(f.from) ?? 0) + f.value); through.set(f.to, (through.get(f.to) ?? 0) + f.value); }
-        legend = { title: { en: 'Trade regions (busiest markets)', de: 'Handelsräume (lebhafteste Märkte)' }, items: s.markets.slice().sort((a, b) => (through.get(b.id) ?? 0) - (through.get(a.id) ?? 0)).slice(0, 10).map((m) => ({ color: `rgb(${hashColor(m.id * 13 + 1).join(',')})`, label: { en: w.names[m.hub] ?? m.name, de: w.namesDe[m.hub] ?? m.name } })) };
-      }
+    case 'development': {
+      for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0 || lc.dev[i] > 0) put(i, ramp(MODE_SCALE.development(lc.dev[i]), HEAT));
+      legend = { title: { en: 'Development of each place', de: 'Entwicklung je Ort' }, items: [], note: hoverNote,
+        scale: scaleOf(HEAT, [1, 2, 5, 10, 20, 40].map((v) => [MODE_SCALE.development(v), v === 40 ? '40+' : String(v)])) };
       break;
-    case 'goods': for (let i = 0; i < w.L; i++) put(i, hexToRgb(GOODS[w.resource[i]].color || '#888888'));
-      legend = { title: { en: 'Local goods', de: 'Lokale Güter' }, items: GOODS.filter((g) => g.kind === 'raw').slice(0, 16).map((g) => ({ color: g.color, label: g.name })) }; break;
+    }
+    case 'population': {
+      for (let i = 0; i < w.L; i++) { const p = pop(i); if (p > 0) put(i, ramp(MODE_SCALE.population(p / Math.max(1, w.area[i])), HEAT)); }
+      legend = { title: { en: 'Population: people per km²', de: 'Bevölkerung: Menschen je km²' }, items: [], note: hoverNote,
+        scale: scaleOf(HEAT, [0, 1, 3, 10, 30, 100].map((v) => [MODE_SCALE.population(v), v === 100 ? '100+' : String(v)])) };
+      break;
+    }
+    case 'unrest': {
+      for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(1 - MODE_SCALE.unrest(lc.unrest[i]), GOOD));
+      // drawn from calm (left) to restless (right): the ramp is reversed so that calm stays green
+      legend = { title: { en: 'Unrest of each place', de: 'Unruhe je Ort' }, items: [], note: { en: `Revolts can break out from ${REVOLT_UNREST}. Point at a place for its exact value.`, de: `Ab ${REVOLT_UNREST} kann es zu Aufständen kommen. Zeige auf einen Ort für seinen genauen Wert.` },
+        scale: scaleOf(GOOD.slice().reverse(), [0, 5, 15, 30, REVOLT_UNREST].map((v) => [MODE_SCALE.unrest(v), String(v)])) };
+      break;
+    }
+    case 'control': {
+      for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0) put(i, ramp(MODE_SCALE.control(lc.control[i]), GOOD));
+      legend = { title: { en: 'Control of each place', de: 'Kontrolle je Ort' }, items: [], note: hoverNote,
+        scale: scaleOf(GOOD, [0, 0.25, 0.5, 0.75, 1].map((v) => [v, `${Math.round(v * 100)} %`])) };
+      break;
+    }
+    case 'culture': {
+      const keys = ALL_CULTURES.length;
+      const col = borderColors(w, (i) => (lc.owner[i] >= 0 || pop(i) > 0 ? lc.culture[i] : -1), keys, CAT);
+      for (let i = 0; i < w.L; i++) if (lc.owner[i] >= 0 || pop(i) > 0) put(i, col[lc.culture[i]] ?? [128, 128, 128]);
+      // the cultures of the focus realm's part of the world (known land within 900 km of its capital), its own first
+      const near = new Map<number, number>();
+      const cap = F && F.capital >= 0 ? F.capital : -1;
+      if (cap >= 0) {
+        const la = w.lat[cap], lo = w.lon[cap], kx = Math.cos(la * Math.PI / 180) * 111;
+        for (let i = 0; i < w.L; i++) {
+          if (!isKnown(i) || (lc.owner[i] < 0 && pop(i) <= 0)) continue;
+          const dx = (w.lon[i] - lo) * kx, dy = (w.lat[i] - la) * 111;
+          if (dx * dx + dy * dy <= 900 * 900) near.set(lc.culture[i], (near.get(lc.culture[i]) ?? 0) + 1);
+        }
+      } else for (let i = 0; i < w.L; i++) if (isKnown(i) && lc.owner[i] >= 0) near.set(lc.culture[i], (near.get(lc.culture[i]) ?? 0) + 1);
+      const list = [...near.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([c]) => c);
+      if (F && F.culture >= 0) { const at = list.indexOf(F.culture); if (at > 0) list.splice(at, 1); if (at !== 0) list.unshift(F.culture); }
+      const shown = list.slice(0, 18);
+      legend = { title: F ? { en: `Cultures around ${F.short.en}`, de: `Kulturen um ${F.short.de}` } : { en: 'Cultures', de: 'Kulturen' },
+        items: shown.map((c) => ({ color: hex(col[c] ?? [128, 128, 128]), label: cultureName(ALL_CULTURES[c] || 'unknown') })),
+        note: list.length > shown.length ? { en: `${list.length - shown.length} more nearby. Point at a place to see its culture.`, de: `${list.length - shown.length} weitere in der Nähe. Zeige auf einen Ort, um seine Kultur zu sehen.` } : { en: 'Point at a place to see its culture.', de: 'Zeige auf einen Ort, um seine Kultur zu sehen.' } };
+      break;
+    }
+    case 'faith': {
+      const seen = new Map<number, number>();
+      for (let i = 0; i < w.L; i++) { if (lc.owner[i] < 0 && pop(i) <= 0) continue; const f = lc.faith[i]; put(i, hexToRgb(FAITHS[f]?.color ?? '#888888')); if (isKnown(i)) seen.set(f, (seen.get(f) || 0) + 1); }
+      const list = [...seen.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([f]) => f);
+      if (F) { const at = list.indexOf(F.faith); if (at > 0) { list.splice(at, 1); list.unshift(F.faith); } }
+      legend = { title: { en: 'Faiths of the known world', de: 'Glauben der bekannten Welt' }, items: list.map((f) => ({ color: FAITHS[f]?.color ?? '#888', label: FAITHS[f]?.name ?? '?' })) };
+      break;
+    }
+    case 'trade': {
+      const col = borderColors(w, (i) => lc.market[i], s.markets.length, CAT);
+      for (let i = 0; i < w.L; i++) { const m = lc.market[i]; if (m >= 0) put(i, col[m] ?? [128, 128, 128]); }
+      for (const m of s.markets) put(m.hub, [255, 240, 200]);
+      // the busiest known markets (goods passing through last month), our home market first, in their region's colour
+      const through = new Map<number, number>();
+      for (const f of s.flows ?? []) { through.set(f.from, (through.get(f.from) ?? 0) + f.value); through.set(f.to, (through.get(f.to) ?? 0) + f.value); }
+      const home = F && F.capital >= 0 ? lc.market[F.capital] ?? -1 : -1;
+      const list = s.markets.filter((m) => isKnown(m.hub)).sort((a, b) => Number(b.id === home) - Number(a.id === home) || (through.get(b.id) ?? 0) - (through.get(a.id) ?? 0) || a.id - b.id).slice(0, 12);
+      legend = { title: { en: 'Trade regions (busiest known markets)', de: 'Handelsräume (lebhafteste bekannte Märkte)' },
+        items: list.map((m) => ({ color: hex(col[m.id] ?? [128, 128, 128]), label: { en: w.names[m.hub] ?? m.name, de: w.namesDe[m.hub] ?? m.name } })),
+        note: { en: 'Point at a place to see its market.', de: 'Zeige auf einen Ort, um seinen Markt zu sehen.' } };
+      break;
+    }
+    case 'goods': {
+      for (let i = 0; i < w.L; i++) put(i, hexToRgb(GOODS[w.resource[i]].color || '#888888'));
+      // every raw good, those found on known land first (by how many places yield them)
+      const count = new Map<number, number>(); for (let i = 0; i < w.L; i++) if (isKnown(i)) count.set(w.resource[i], (count.get(w.resource[i]) ?? 0) + 1);
+      const raw = GOODS.map((g, k) => ({ g, k })).filter((x) => x.g.kind === 'raw').sort((a, b) => (count.get(b.k) ?? 0) - (count.get(a.k) ?? 0) || a.k - b.k);
+      legend = { title: { en: 'Goods each place yields', de: 'Güter, die jeder Ort liefert' }, items: raw.map(({ g }) => ({ color: g.color, label: g.name })) };
+      break;
+    }
     case 'diplomatic': {
-      const F = s.nations[focus];
       const al = new Set(F ? allies(s, focus) : []), en = new Set<number>(), sub = new Set(F ? subjectsOf(s, focus) : []);
       if (F) for (const war of s.wars) { if (war.att.includes(focus)) war.def.forEach((x) => en.add(x)); else if (war.def.includes(focus)) war.att.forEach((x) => en.add(x)); }
       const truce = new Set(F ? treatiesOf(s, focus, 'truce') : []), riv = new Set(F?.rivals ?? []);
@@ -200,7 +302,71 @@ export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: numb
     case 'army_supply': legend = armySupplyColors(s, w, focus, put, ramp); break;
     case 'terrain': case 'political': case 'explored': default: break;
   }
-  return { rgba: out, legend };
+  return { rgba: fogColors(out, known), legend };
+}
+
+/** A line of the map tooltip: a number (formatted by the UI: d digits, or a percentage) or a text. */
+export interface TipRow { k: I18n; v?: number; d?: number; pct?: boolean; text?: I18n | string; key?: string }
+/**
+ * The map tooltip (spec: hover shows place, owner, controller and the current mode's value): the same numbers the
+ * colours are made from. Unknown land is answered by the fog (src/game/fog.ts) with its name only.
+ */
+export function mapTip(s: GameState, w: World, l: number, mode: MapMode, good: number, focus: number) {
+  if (!(l >= 0 && l < w.N)) return null;
+  const name: I18n = { en: w.names[l] ?? '', de: w.namesDe[l] ?? w.names[l] ?? '' };
+  // a sea zone goes by its sea (and quarter of an ocean), in the player's language, without the zone number
+  if (l >= w.L) return { id: l, sea: true, name: regionOf(w, l)?.name ?? name, owner: -1, ctrl: -1, rows: [] as TipRow[] };
+  const lc = s.loc; const o = lc.owner[l], c = lc.ctrl[l];
+  const prov = w.provinces[w.provOf[l]];
+  let pop = 0; for (let k = 0; k < C; k++) pop += lc.pop[l * C + k];
+  const rows: TipRow[] = [];
+  const T = (en: string, de: string): I18n => ({ en, de });
+  const m = s.markets[lc.market[l]];
+  const mName = (mk: typeof m): I18n | string => (mk ? { en: w.names[mk.hub] ?? mk.name, de: w.namesDe[mk.hub] ?? mk.name } : '—');
+  const minority = () => (lc.minShare[l] > 0.02 ? lc.minShare[l] : 0);
+  switch (mode) {
+    case 'development': rows.push({ k: T('Development', 'Entwicklung'), v: lc.dev[l], d: 1 }); break;
+    case 'population': rows.push({ k: T('People', 'Menschen'), v: pop }, { k: T('People per km²', 'Menschen je km²'), v: pop / Math.max(1, w.area[l]), d: 1 }); break;
+    case 'unrest': if (o >= 0) rows.push({ k: T('Unrest', 'Unruhe'), v: lc.unrest[l], d: 1 }, { k: T('Revolts possible from', 'Aufstände möglich ab'), v: REVOLT_UNREST }); break;
+    case 'control': if (o >= 0) rows.push({ k: T('Control', 'Kontrolle'), v: lc.control[l], pct: true }); break;
+    case 'culture': {
+      rows.push({ k: T('Culture', 'Kultur'), text: cultureName(ALL_CULTURES[lc.culture[l]] || 'unknown') });
+      const sh = minority(); if (sh) rows.push({ k: T('Minority', 'Minderheit'), text: cultureName(ALL_CULTURES[lc.minCulture[l]] || 'unknown') }, { k: T('Its share', 'Ihr Anteil'), v: sh, pct: true });
+      break;
+    }
+    case 'faith': {
+      rows.push({ k: T('Faith', 'Glaube'), text: FAITHS[lc.faith[l]]?.name ?? '?' });
+      const sh = minority(); if (sh && lc.minFaith[l] !== lc.faith[l]) rows.push({ k: T('Minority', 'Minderheit'), text: FAITHS[lc.minFaith[l]]?.name ?? '?' }, { k: T('Its share', 'Ihr Anteil'), v: sh, pct: true });
+      break;
+    }
+    case 'trade': case 'markets': rows.push({ k: T('Market', 'Markt'), text: mName(m) }); if (mode === 'markets' && m && good >= 0) rows.push({ k: T('Net exports of the good last month', 'Nettoausfuhr der Ware im letzten Monat'), v: m.flowOut[good], d: 1 }); break;
+    case 'goods': rows.push({ k: T('Yields', 'Liefert'), text: GOODS[w.resource[l]].name }); break;
+    case 'terrain': rows.push({ k: T('Terrain', 'Gelände'), text: TERRAINS[w.terrain[l]], key: 'terrain' }, { k: T('Height', 'Höhe'), v: w.elev[l], text: 'm' }); break;
+    case 'prices': {
+      const g = good >= 0 && good < GOODS.length ? good : GI.grain;
+      if (m) { const base = GOODS[g].base * s.priceLevel; rows.push({ k: T('Market', 'Markt'), text: mName(m) }, { k: { en: `Price of ${GOODS[g].name.en}`, de: `Preis für ${GOODS[g].name.de}` }, v: m.price[g], d: 2 }, { k: T('Against the base price', 'Gegenüber dem Grundpreis'), v: m.price[g] / Math.max(1e-9, base) - 1, pct: true }); }
+      break;
+    }
+    case 'production': {
+      const g = good >= 0 && good < GOODS.length ? good : GI.grain;
+      const made = LOC_ECON && LOC_ECON.grain.length === w.L ? locGoods(lc, w, l, null).made.get(g) ?? 0 : 0;
+      rows.push({ k: { en: `${GOODS[g].name.en} made here a month`, de: `${GOODS[g].name.de}, hier im Monat erzeugt` }, v: made, d: 1 });
+      break;
+    }
+    case 'army_supply': rows.push({ k: T('Men fed here', 'Hier ernährte Männer'), v: supplyLimit(s, w, l, s.nations[focus] ? focus : -1) }); break;
+    case 'diplomatic': {
+      const F = s.nations[focus];
+      if (F && o >= 0) {
+        const en = s.wars.some((x) => (x.att.includes(focus) && x.def.includes(o)) || (x.def.includes(focus) && x.att.includes(o)));
+        const rel = o === focus ? T('The selected realm', 'Das gewählte Reich') : subjectsOf(s, focus).includes(o) || s.nations[o].overlord === focus ? T('Subject', 'Untertan') : allies(s, focus).includes(o) ? T('Ally', 'Verbündeter')
+          : en ? T('At war', 'Im Krieg') : F.rivals.includes(o) ? T('Rival', 'Rivale') : treatiesOf(s, focus, 'truce').includes(o) ? T('Truce', 'Waffenstillstand') : F.overlord === o ? T('Overlord', 'Lehnsherr') : T('No ties', 'Keine Bindung');
+        rows.push({ k: { en: `Towards ${F.short.en}`, de: `Gegenüber ${F.short.de}` }, text: rel });
+      }
+      break;
+    }
+    default: break;
+  }
+  return { id: l, sea: false, name, province: prov?.name ?? null, owner: o, ctrl: c, core: lc.core[l], rows };
 }
 
 // ---------------- queries ----------------
@@ -229,6 +395,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       const warScore = computeScore(s, war) * (war.att.includes(player) ? 1 : -1);
       return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore };
     }
+    case 'maptip': return mapTip(s, w, Number(q.loc), q.mode, Number.isInteger(q.good) ? q.good! : -1, Number.isInteger(q.focus) ? q.focus! : player);
     case 'path': { const a = s.armies.find((x) => x.id === q.army); if (!a) return null; const p = findPath(s, w, a, a.loc, q.to); return p ? { path: p, days: Math.ceil(travelDays(s, w, a, p)) } : null; }
     case 'chronicle': return s.chronicle.slice(q.from ?? 0);
     case 'timelapse': return s.timelapse.map((t) => ({ day: t.day, owners: t.owners }));
@@ -247,7 +414,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'commanders': return player >= 0 ? commandersView(s, player, q.army) : null;
     case 'victory': return victoryView(s, w, player);
     case 'devEvents': return s.flags.devtools ? { events: EVENTS.map((d) => ({ id: d.id, title: d.title, major: !!d.major })), aiDisabled: s.aiDisabled.slice() } : null;
-    case 'history': return historyView(s, player, Array.isArray(q.nations) ? q.nations.slice(0, 8) : []);
+    case 'history': return historyView(s, w, player, Array.isArray(q.nations) ? q.nations.slice(0, 8) : []);
     case 'endstats': return { ranking: [...s.nations].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 20).map((n) => ({ id: n.id, score: n.score })), chronicle: s.chronicle.length, victory: s.victory };
   }
   return null;
@@ -407,6 +574,12 @@ function realmDetail(s: GameState, w: World, player: number) {
   };
 }
 
+/** A market's name in both languages: the German form of its hub where the market bears the town's name, else its own. */
+const MARKET_DE: Record<string, string> = { 'Champagne Fairs (Troyes)': 'Champagnemessen (Troyes)', 'Hajji Tarkhan (Astrakhan)': 'Hadschi Tarchan (Astrachan)' };
+function marketName(w: World, m: { name: string; hub: number }): I18n {
+  return { en: m.name, de: MARKET_DE[m.name] ?? (m.name === w.names[m.hub] && w.namesDe[m.hub] ? w.namesDe[m.hub] : deName(m.name)) };
+}
+
 function ledger(s: GameState, w: World, kind: string) {
   if (kind === 'nations') {
     const pop = new Float64Array(s.nations.length), locs = new Int32Array(s.nations.length);
@@ -414,9 +587,14 @@ function ledger(s: GameState, w: World, kind: string) {
     const army = new Float64Array(s.nations.length), navy = new Float64Array(s.nations.length);
     for (const a of s.armies) if (!a.rebels) (a.fleet ? navy : army)[a.owner] += armyMen(a);
     const parts = scorePartsAll(s, w);
-    return s.nations.filter((n) => n.alive).map((n) => ({ id: n.id, name: n.short, score: n.score, scoreParts: parts[n.id], techs: n.tech, incomeTop: Object.entries(n.income).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 4), dev: nationDev(s, n.id), locs: locs[n.id], pop: pop[n.id], army: army[n.id], navy: navy[n.id], income: sumObj(n.income), tech: n.tech.reduce((p, x) => p + x, 0), prestige: n.prestige }));
+    // each realm's place by score among all living realms, as the victory panel counts it (endview.ts): the fog of war
+    // leaves out the rows of realms not met (fog.ts), and the places of the others stay those of the whole world
+    const alive = s.nations.filter((n) => n.alive);
+    const scores = alive.map((n) => n.score).sort((a, b) => b - a);
+    const rankOf = (sc: number) => { let lo = 0, hi = scores.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (scores[mid] > sc) lo = mid + 1; else hi = mid; } return lo + 1; };
+    return alive.map((n) => ({ id: n.id, name: n.short, score: n.score, rank: rankOf(n.score), of: alive.length, scoreParts: parts[n.id], techs: n.tech, incomeTop: Object.entries(n.income).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 4), dev: nationDev(s, n.id), locs: locs[n.id], pop: pop[n.id], army: army[n.id], navy: navy[n.id], income: sumObj(n.income), tech: n.tech.reduce((p, x) => p + x, 0), prestige: n.prestige }));
   }
-  if (kind === 'markets') return s.markets.map((m) => ({ id: m.id, name: m.name, owner: m.owner, priceIndex: m.priceIndex, top: Array.from({ length: G }, (_, k) => k).sort((a, b) => m.supply[b] * m.price[b] - m.supply[a] * m.price[a]).slice(0, 4).map((k) => GOODS[k].name) }));
+  if (kind === 'markets') return s.markets.map((m) => ({ id: m.id, name: marketName(w, m), owner: m.owner, priceIndex: m.priceIndex, top: Array.from({ length: G }, (_, k) => k).sort((a, b) => m.supply[b] * m.price[b] - m.supply[a] * m.price[a]).slice(0, 4).map((k) => GOODS[k].name) }));
   if (kind === 'wars') return warsView(s);
   return null;
 }

@@ -1,5 +1,5 @@
 // Shared helpers for systems: context, notices, chronicle, ledger, modifiers, relations.
-import type { GameState, I18n, Nation, Relation, Treaty, Notice } from './types';
+import type { GameState, I18n, Nation, Relation, Treaty, Notice, ChronEntry } from './types';
 import type { World } from './world';
 import { dayToDate, DateParts } from './calendar';
 
@@ -26,8 +26,16 @@ export function notice(s: GameState, nation: number, kind: string, text: I18n, e
   s.notices.push({ id: s.nextId++, day: s.day, nation, kind, text, ...extra });
   if (s.notices.length > 400) s.notices.splice(0, s.notices.length - 400);
 }
-export function chronicle(s: GameState, nation: number, kind: string, text: I18n, loc?: number) {
-  s.chronicle.push({ day: s.day, nation, kind, text, loc });
+/** A chronicle entry about `nation`; `also` names the other realms it concerns (each side of a war, both crowns of a
+ *  union), so that each of them finds it among its own entries. */
+export function chronicle(s: GameState, nation: number, kind: string, text: I18n, loc?: number, also?: readonly number[]) {
+  const e: ChronEntry = { day: s.day, nation, kind, text, loc };
+  if (also) { const o = [...new Set(also)].filter((x) => x >= 0 && x !== nation); if (o.length) e.also = o; }
+  s.chronicle.push(e);
+}
+/** Whether a chronicle entry concerns a realm (it is about it, or the realm is one of the others it names). */
+export function chronInvolves(e: { nation: number; also?: readonly number[] }, id: number): boolean {
+  return id >= 0 && (e.nation === id || !!e.also?.includes(id));
 }
 export function addIncome(n: Nation, key: string, v: number) { n.incomeAcc[key] = (n.incomeAcc[key] || 0) + v; n.treasury += v; }
 export function addExpense(n: Nation, key: string, v: number) { n.expenseAcc[key] = (n.expenseAcc[key] || 0) + v; n.treasury -= v; }

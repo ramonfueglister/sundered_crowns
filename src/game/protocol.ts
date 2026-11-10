@@ -27,6 +27,8 @@ export type Query =
   | { q: 'diplo'; target: number; action: string }
   | { q: 'peace'; war: number; to: number; terms: any[]; concede?: boolean }
   | { q: 'path'; army: number; to: number }
+  /** the map tooltip: a place, its owner and controller, and the value the current map mode shows there */
+  | { q: 'maptip'; loc: number; mode: MapMode; good?: number; focus?: number }
   | { q: 'realm' }           // full data for the player's realm panels (laws, estates, council, tech, doctrines, decisions)
   | { q: 'chronicle'; from?: number }
   | { q: 'timelapse' }
@@ -73,7 +75,13 @@ export type FromWorker =
   | { type: 'colors'; mode: MapMode; rgba: Uint8Array; legend: Legend }
   | { type: 'error'; message: string };
 
-export interface Legend { title: I18n; items: { color: string; label: I18n | string }[]; good?: number; goodOptional?: boolean }
+export interface Legend {
+  title: I18n; items: { color: string; label: I18n | string }[]; good?: number; goodOptional?: boolean;
+  /** continuous modes: the ramp's colours (low to high) and ticks at values the player reads (at: 0..1 along the ramp) */
+  scale?: { colors: string[]; ticks: { at: number; label: string }[] };
+  /** a line under the legend (what the colours leave out, where to find the exact value) */
+  note?: I18n;
+}
 
 export interface NationLite {
   id: number; key: string; alive: boolean; name: I18n; short: I18n; adj: I18n; color: [number, number, number];

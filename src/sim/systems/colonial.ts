@@ -193,7 +193,7 @@ function colonialSubjectsYear(s: GameState, w: World) {
     sub.overlord = ov.id; sub.subjectType = 'colonial'; sub.subjectSince = s.day; sub.libertyDesire = 5;
     sub.flags.colonial_region = regionCode(reg);
     for (const l of locs) s.loc.core[l] = sub.id;
-    chronicle(s, ov.id, 'colony', { en: `The overseas holdings of ${ov.short.en} were organised as ${sub.short.en}.`, de: `Die überseeischen Besitzungen von ${ov.short.de} wurden als ${sub.short.de} eingerichtet.` }, seat);
+    chronicle(s, ov.id, 'colony', { en: `The overseas holdings of ${ov.short.en} were organised as ${sub.short.en}.`, de: `Die überseeischen Besitzungen von ${ov.short.de} wurden als ${sub.short.de} eingerichtet.` }, seat, [sub.id]);
     if (s.playerNations.includes(ov.id)) notice(s, ov.id, 'colonial_realm', { en: `Our lands overseas now form ${sub.short.en}, a colonial realm under our crown.`, de: `Unsere Länder in Übersee bilden nun ${sub.short.de}, ein Kolonialreich unter unserer Krone.` }, { loc: seat });
   }
 }

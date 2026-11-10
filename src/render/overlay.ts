@@ -34,6 +34,8 @@ export interface MapFlow { ax: number; ay: number; bx: number; by: number; value
 /** a market hub on the trade map */
 export interface MapMarket { x: number; y: number; name: string; value: number }
 export interface MapLandmark { x: number; y: number; name: string; kind: string; tier: number; max: number; building: boolean }
+/** a place's name, shown at close zoom (rank: higher first when names would cover each other, e.g. capitals, towns) */
+export interface MapPlace { x: number; y: number; name: string; rank: number; capital?: boolean }
 export type UnitKind = 'army' | 'fleet' | 'siege' | 'battle';
 export interface MapUnit {
   id: number; x: number; y: number; color: [number, number, number]; label: string; kind: UnitKind;
@@ -65,7 +67,30 @@ export interface OverlayView {
   /** css px per map px from which armies and fleets show as figures */
   figuresFrom?: number;
   zoom: number; cssW: number; cssH: number; time: number;
+  /** the camera's centre (map px), to skip far places before projecting them */
+  cx?: number; cy?: number;
 }
+
+/** Screen boxes already taken this frame (counters, landmark badges and names, place names), in a coarse grid. */
+class Taken {
+  private cells = new Map<number, [number, number, number, number][]>();
+  private key(cx: number, cy: number) { return cx * 4096 + cy; }
+  add(x0: number, y0: number, x1: number, y1: number) {
+    const r: [number, number, number, number] = [x0, y0, x1, y1];
+    for (let cx = Math.floor(x0 / 64); cx <= Math.floor(x1 / 64); cx++) for (let cy = Math.floor(y0 / 64); cy <= Math.floor(y1 / 64); cy++) {
+      const k = this.key(cx + 64, cy + 64); let l = this.cells.get(k); if (!l) this.cells.set(k, (l = [])); l.push(r);
+    }
+  }
+  free(x0: number, y0: number, x1: number, y1: number): boolean {
+    for (let cx = Math.floor(x0 / 64); cx <= Math.floor(x1 / 64); cx++) for (let cy = Math.floor(y0 / 64); cy <= Math.floor(y1 / 64); cy++) {
+      const l = this.cells.get(this.key(cx + 64, cy + 64)); if (!l) continue;
+      for (const r of l) if (x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]) return false;
+    }
+    return true;
+  }
+}
+/** Zoom (css px per map px) from which place names show, and over which they fade in. */
+const PLACE_FROM = 1.9, PLACE_FULL = 2.6;
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const fmtMen = (u: MapUnit, men: number) => (u.kind === 'fleet' ? String(Math.round(men)) : men >= 1000 ? (men / 1000).toFixed(1) + 'k' : String(Math.round(men)));
@@ -95,6 +120,8 @@ export class Overlay {
   canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   labels: MapLabel[] = [];
+  /** the letters of the realm names drawn this frame (screen boxes), which place and landmark names keep clear of */
+  private realmBoxes: Placed[] = [];
   units: MapUnit[] = [];
   landmarks: MapLandmark[] = [];
   /** the selection box being drawn (css px), or null */
@@ -102,6 +129,9 @@ export class Overlay {
   /** shown on the trade map only */
   flows: MapFlow[] = [];
   markets: MapMarket[] = [];
+  /** place names (index = location), and which places the player knows (null: all) */
+  places: (MapPlace | null)[] = [];
+  known: Uint8Array | null = null;
   private dpr = 1;
   private fade = new Map<number | string, number>(); // current opacity per label, eased toward its target
   private shift = new Map<number | string, number>(); // offset (map px, across the text) a label last moved to, tried first
@@ -135,8 +165,7 @@ export class Overlay {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.drawFlows(v);
     this.drawLabels(v);
-    this.drawLandmarks(v);
-    this.drawUnits(v);
+    this.drawMarks(v);
     if (this.box) {
       const [ax, ay, bx, by] = this.box;
       const x = Math.min(ax, bx), y = Math.min(ay, by), w = Math.abs(bx - ax), h = Math.abs(by - ay);
@@ -150,7 +179,7 @@ export class Overlay {
     const saved = this.ctx; const savedDpr = this.dpr;
     this.ctx = ctx; this.dpr = scale;
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.drawFlows(v); this.drawLabels(v, true); this.drawLandmarks(v); this.drawUnits(v);
+    this.drawFlows(v); this.drawLabels(v, true); this.drawMarks(v);
     this.ctx = saved; this.dpr = savedDpr;
   }
 
@@ -207,6 +236,7 @@ export class Overlay {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
     const seen = new Set<number | string>();
+    this.realmBoxes = [];
     const fits = (bs: Placed[]) => {
       for (const b of bs) for (const p of placed) {
         if (Math.abs(p.cx - b.cx) > p.hw + p.hh + b.hw + b.hh || Math.abs(p.cy - b.cy) > p.hw + p.hh + b.hw + b.hh) continue;
@@ -225,8 +255,12 @@ export class Overlay {
         const tl = d ? this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d) : cd.lay;
         if (fits(tl.boxes)) { lay = tl; free = true; used = d; break; }
       }
-      if (free) { placed.push(...lay.boxes); if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
-      else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
+      if (free) {
+        placed.push(...lay.boxes);
+        // a legible realm name keeps its letters clear of place and landmark names (a faded watermark does not)
+        if (cd.alpha >= 0.45) this.realmBoxes.push(...lay.boxes);
+        if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); }
+      } else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
       const target = free ? cd.alpha : 0;
       const cur = instant ? target : (this.fade.get(cd.key) ?? 0);
       const a = instant ? target : cur + (target - cur) * k;
@@ -394,16 +428,106 @@ export class Overlay {
     ctx.restore();
   }
 
-  /** Landmarks: a gilded badge with the building's sign and its stages, the name at close zoom. */
-  private drawLandmarks(v: OverlayView) {
-    if (v.zoom < 1.3 || !this.landmarks.length) return;
+  /**
+   * Counters, landmarks and place names without covering each other: the counters claim their boxes first, then the
+   * landmark badges, then the landmarks' names (to the right of the badge, else to the left, else below, else left out),
+   * then the place names (capitals and larger towns first; a capital tries a few spots around its place, any other name
+   * that would cover anything is left out). They are drawn from the bottom up: place names, landmarks, counters.
+   */
+  private drawMarks(v: OverlayView) {
+    const taken = new Taken();
+    for (const b of this.realmBoxes) {
+      const ex = Math.abs(b.ux) * b.hw + Math.abs(b.uy) * b.hh, ey = Math.abs(b.uy) * b.hw + Math.abs(b.ux) * b.hh;
+      taken.add(b.cx - ex, b.cy - ey, b.cx + ex, b.cy + ey);
+    }
+    const shown = this.layoutUnits(v);
+    const s = this.unitScale(v);
+    for (const p of shown) {
+      if (p.pip) { taken.add(p.sx - 3 * s, p.sy - 14 * s, p.sx + 11 * s, p.sy + 2 * s); continue; }
+      const label = p.n > 1 ? fmtMen(p.u, p.men) + ` ·${p.n}` : p.u.label;
+      this.ctx.font = UNIT_FONT;
+      const w = (Math.max(18, this.ctx.measureText(label).width + 8) + 20) * s;
+      taken.add(p.sx - w / 2 - 2, p.sy - 28 * s, p.sx + w / 2 + 8 * s, p.sy + 3);
+    }
+    const marks = this.layoutLandmarks(v, taken);
+    this.drawPlaces(v, taken);
+    this.drawLandmarks(v, marks);
+    this.drawUnits(v, shown);
+  }
+
+  /** Place names at close zoom, in the style of a printed map: small italic letters with a pale halo. */
+  private drawPlaces(v: OverlayView, taken: Taken) {
+    if (v.zoom < PLACE_FROM || !this.places.length) return;
     const ctx = this.ctx;
-    const a = Math.min(1, (v.zoom - 1.3) / 0.5);
+    const a = Math.min(1, (v.zoom - PLACE_FROM) / (PLACE_FULL - PLACE_FROM));
+    const fs = Math.round(Math.max(11, Math.min(14, 9 + v.zoom * 0.8)));
+    const cx = v.cx, cy = v.cy, rx = v.cssW * 1.8 / v.zoom, ry = v.cssH * 2.6 / v.zoom;
+    const cand: { p: MapPlace; sx: number; sy: number }[] = [];
+    for (let i = 0; i < this.places.length; i++) {
+      const p = this.places[i]; if (!p || !p.name) continue;
+      if (this.known && i < this.known.length && !this.known[i]) continue;
+      if (cx !== undefined && cy !== undefined && (Math.abs(p.x - cx) > rx || Math.abs(p.y - cy) > ry)) continue;
+      const [sx, sy] = v.toScreen(p.x, p.y);
+      if (sx < -80 || sy < -20 || sx > v.cssW + 80 || sy > v.cssH + 20) continue;
+      cand.push({ p, sx, sy });
+    }
+    cand.sort((x, y) => y.p.rank - x.p.rank);
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+    for (const { p, sx, sy } of cand) {
+      const big = p.capital ? 1.15 : 1;
+      ctx.font = `${p.capital ? 700 : 600} italic ${Math.round(fs * big)}px ${LABEL_FONT}`;
+      const hw = ctx.measureText(p.name).width / 2 + 3, hh = fs * big * 0.6;
+      const y = sy + fs * 0.9; // under the place's centre, where its town stands
+      // a capital whose spot is taken (most often by its own host's counter, whose box reaches just below the centre)
+      // tries a little lower, clear of the counter, then to the right and to the left of a landmark badge under the
+      // place, before it is left out
+      const tries: [number, number][] = p.capital ? [[sx, y], [sx, y + hh * 1.2], [sx + hw + 14, y + hh * 0.6], [sx - hw - 14, y + hh * 0.6]] : [[sx, y]];
+      const at = tries.find(([x, yy]) => taken.free(x - hw, yy - hh, x + hw, yy + hh));
+      if (!at) continue;
+      const [x, yy] = at;
+      taken.add(x - hw, yy - hh, x + hw, yy + hh);
+      ctx.globalAlpha = a;
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(246, 238, 216, 0.82)'; ctx.strokeText(p.name, x, yy);
+      ctx.fillStyle = p.capital ? '#3a1a08' : '#2e2414'; ctx.fillText(p.name, x, yy);
+    }
+    ctx.restore();
+  }
+
+  /** Where each landmark's badge stands and where its name goes (null: no room for the name). */
+  private layoutLandmarks(v: OverlayView, taken: Taken): { m: MapLandmark; x: number; y: number; r: number; name: [number, number, CanvasTextAlign] | null }[] {
+    if (v.zoom < 1.3 || !this.landmarks.length) return [];
+    const ctx = this.ctx;
     const r = Math.max(7, Math.min(11, 6 + v.zoom * 1.2));
-    const glyph: Record<string, string> = { church: '✝', mosque: '☪', palace: '♛', fortress: '♜' };
+    const out: { m: MapLandmark; x: number; y: number; r: number; name: [number, number, CanvasTextAlign] | null }[] = [];
     for (const m of this.landmarks) {
       const [x, y0] = v.toScreen(m.x, m.y); const y = y0 + r * 1.9; // below the place: army counters stand above it
       if (x < -60 || y < -40 || x > v.cssW + 60 || y > v.cssH + 40) continue;
+      taken.add(x - r - 1, y - r - 1, x + r + 1, y + r + 7);
+      out.push({ m, x, y, r, name: null });
+    }
+    if (v.zoom >= 2.2) {
+      ctx.font = `600 italic 12px ${LABEL_FONT}`;
+      for (const o of out) {
+        const tw = ctx.measureText(o.m.name).width;
+        const tries: [number, number, CanvasTextAlign, number, number, number, number][] = [
+          [o.x + o.r + 4, o.y, 'left', o.x + o.r + 2, o.y - 8, o.x + o.r + 6 + tw, o.y + 8],
+          [o.x - o.r - 4, o.y, 'right', o.x - o.r - 6 - tw, o.y - 8, o.x - o.r - 2, o.y + 8],
+          [o.x, o.y + o.r + 14, 'center', o.x - tw / 2 - 2, o.y + o.r + 6, o.x + tw / 2 + 2, o.y + o.r + 22],
+        ];
+        for (const [tx, ty, al, x0, y0, x1, y1] of tries) if (taken.free(x0, y0, x1, y1)) { taken.add(x0, y0, x1, y1); o.name = [tx, ty, al]; break; }
+      }
+    }
+    return out;
+  }
+
+  /** Landmarks: a gilded badge with the building's sign and its stages, the name at close zoom where there is room. */
+  private drawLandmarks(v: OverlayView, marks: ReturnType<Overlay['layoutLandmarks']>) {
+    if (!marks.length) return;
+    const ctx = this.ctx;
+    const a = Math.min(1, (v.zoom - 1.3) / 0.5);
+    const glyph: Record<string, string> = { church: '✝', mosque: '☪', palace: '♛', fortress: '♜' };
+    for (const { m, x, y, r, name } of marks) {
       ctx.save(); ctx.globalAlpha = a;
       ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -421,18 +545,51 @@ export class Overlay {
         ctx.fillStyle = on ? '#f0d27a' : next ? `rgba(240, 210, 122, ${0.35 + 0.35 * Math.sin(v.time * 3)})` : 'rgba(30, 22, 12, 0.55)';
         ctx.fill(); ctx.lineWidth = 0.8; ctx.strokeStyle = '#2b1d0c'; ctx.stroke();
       }
-      if (v.zoom >= 2.2) {
-        ctx.font = `600 italic 12px ${LABEL_FONT}`; ctx.textAlign = 'left';
-        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(245, 236, 214, 0.85)'; ctx.strokeText(m.name, x + r + 4, y);
-        ctx.fillStyle = '#3a2410'; ctx.fillText(m.name, x + r + 4, y);
+      if (name) {
+        ctx.font = `600 italic 12px ${LABEL_FONT}`; ctx.textAlign = name[2]; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(245, 236, 214, 0.85)'; ctx.strokeText(m.name, name[0], name[1]);
+        ctx.fillStyle = '#3a2410'; ctx.fillText(m.name, name[0], name[1]);
       }
       ctx.restore();
     }
   }
 
-  private drawUnits(v: OverlayView) {
+  private unitScale(v: OverlayView) { return Math.max(0.75, Math.min(1.25, 0.85 + 0.15 * Math.log2(Math.max(v.zoom, 0.1)))); }
+  /** Which counters show where (merged, or shrunk to a flag where they would cover another). */
+  private layoutUnits(v: OverlayView) {
+    const s = this.unitScale(v);
+    // zoomed out, counters of one realm that crowd each other merge into one (the larger host keeps its place)
+    const merge = v.zoom < 2.4 ? 30 * s : 0;
+    // the player's own and selected hosts, battles and sieges claim their place first, then the larger hosts
+    const prio = (u: MapUnit) => (u.selected ? 4e9 : 0) + (u.mine ? 2e9 : 0) + (u.kind === 'battle' || u.kind === 'siege' ? 1e9 : 0) + (u.men ?? 0);
+    const order = this.units.map((u, i) => i).sort((a, b) => prio(this.units[b]) - prio(this.units[a]));
+    const shown: { u: MapUnit; sx: number; sy: number; men: number; n: number; pip: boolean }[] = [];
+    for (const i of order) {
+      const u = this.units[i];
+      let [sx, sy] = v.toScreen(u.ax ?? u.x, u.ay ?? u.y);
+      // figures on the map: the counter floats above them
+      if (u.fx !== undefined && u.fy !== undefined && v.toScreenH && v.scaleAt && (u.kind === 'army' || u.kind === 'fleet') && v.scaleAt(u.fx, u.fy) >= (v.figuresFrom ?? Infinity)) {
+        [sx, sy] = v.toScreenH(u.fx, u.fy, u.kind === 'fleet' ? 4.2 : 4.6);
+      }
+      if (sx < -60 || sy < -60 || sx > v.cssW + 60 || sy > v.cssH + 60) continue;
+      if (merge && !u.selected && (u.kind === 'army' || u.kind === 'fleet') && u.owner !== undefined) {
+        const near = shown.find((p) => p.u.kind === u.kind && p.u.owner === u.owner && !p.u.selected && Math.abs(p.sx - sx) < merge && Math.abs(p.sy - sy) < merge * 0.8);
+        if (near) { near.men += u.men ?? 0; near.n++; continue; }
+      }
+      // a counter that would cover another one shrinks to a small flag
+      // so does a small host of a realm at peace, idle at home, unless the map is close
+      const idle = (u.kind === 'army' || u.kind === 'fleet') && !u.hot && (u.men ?? 0) < (u.kind === 'fleet' ? 15 : 5000) && v.zoom < 5;
+      const pip = !u.selected && !u.mine && (idle || (v.zoom < 6 && shown.some((p) => !p.pip && Math.abs(p.sx - sx) < 54 * s && Math.abs(p.sy - sy) < 22 * s)));
+      shown.push({ u, sx, sy, men: u.men ?? 0, n: 1, pip });
+    }
+    // drawn from the back (top of the screen) to the front
+    shown.sort((a, b) => a.sy - b.sy);
+    return shown;
+  }
+
+  private drawUnits(v: OverlayView, shown: ReturnType<Overlay['layoutUnits']>) {
     const ctx = this.ctx;
-    const s = Math.max(0.75, Math.min(1.25, 0.85 + 0.15 * Math.log2(Math.max(v.zoom, 0.1))));
+    const s = this.unitScale(v);
     // paths first (under counters)
     for (const u of this.units) {
       if (!u.path || u.path.length === 0) continue;
@@ -460,32 +617,6 @@ export class Overlay {
     }
     ctx.font = UNIT_FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    // zoomed out, counters of one realm that crowd each other merge into one (the larger host keeps its place)
-    const merge = v.zoom < 2.4 ? 30 * s : 0;
-    // the player's own and selected hosts, battles and sieges claim their place first, then the larger hosts
-    const prio = (u: MapUnit) => (u.selected ? 4e9 : 0) + (u.mine ? 2e9 : 0) + (u.kind === 'battle' || u.kind === 'siege' ? 1e9 : 0) + (u.men ?? 0);
-    const order = this.units.map((u, i) => i).sort((a, b) => prio(this.units[b]) - prio(this.units[a]));
-    const shown: { u: MapUnit; sx: number; sy: number; men: number; n: number; pip: boolean }[] = [];
-    for (const i of order) {
-      const u = this.units[i];
-      let [sx, sy] = v.toScreen(u.ax ?? u.x, u.ay ?? u.y);
-      // figures on the map: the counter floats above them
-      if (u.fx !== undefined && u.fy !== undefined && v.toScreenH && v.scaleAt && (u.kind === 'army' || u.kind === 'fleet') && v.scaleAt(u.fx, u.fy) >= (v.figuresFrom ?? Infinity)) {
-        [sx, sy] = v.toScreenH(u.fx, u.fy, u.kind === 'fleet' ? 4.2 : 4.6);
-      }
-      if (sx < -60 || sy < -60 || sx > v.cssW + 60 || sy > v.cssH + 60) continue;
-      if (merge && !u.selected && (u.kind === 'army' || u.kind === 'fleet') && u.owner !== undefined) {
-        const near = shown.find((p) => p.u.kind === u.kind && p.u.owner === u.owner && !p.u.selected && Math.abs(p.sx - sx) < merge && Math.abs(p.sy - sy) < merge * 0.8);
-        if (near) { near.men += u.men ?? 0; near.n++; continue; }
-      }
-      // a counter that would cover another one shrinks to a small flag
-      // so does a small host of a realm at peace, idle at home, unless the map is close
-      const idle = (u.kind === 'army' || u.kind === 'fleet') && !u.hot && (u.men ?? 0) < (u.kind === 'fleet' ? 15 : 5000) && v.zoom < 5;
-      const pip = !u.selected && !u.mine && (idle || (v.zoom < 6 && shown.some((p) => !p.pip && Math.abs(p.sx - sx) < 54 * s && Math.abs(p.sy - sy) < 22 * s)));
-      shown.push({ u, sx, sy, men: u.men ?? 0, n: 1, pip });
-    }
-    // draw from the back (top of the screen) to the front
-    shown.sort((a, b) => a.sy - b.sy);
     for (const p of shown) if (p.pip) this.pip(p.u, p.sx, p.sy, s);
     for (const p of shown) {
       if (p.pip) continue;

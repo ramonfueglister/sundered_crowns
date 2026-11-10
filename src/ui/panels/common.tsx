@@ -42,17 +42,24 @@ export async function act(c: Cmd, ok: Sfx | null = 'click', okText?: string): Pr
  * Returns [data, refresh]. A null query disables it.
  */
 export function useQuery<T = any>(q: Query | null, deps: any[], every = 500): [T | null, () => void] {
-  const [data, setData] = useState<T | null>(null);
+  // An answer is kept together with the dependencies it was asked for, and only handed out while they are still the
+  // current ones. Clearing it in the effect is too late: the first render after a switch (the ledger's "Markets" tab)
+  // would otherwise draw the old answer (the realm rows) with the new columns.
+  const key = JSON.stringify(deps);
+  const [held, setHeld] = useState<{ key: string; data: T } | null>(null);
   const seq = useRef(0);
   const last = useRef(0);
   const qRef = useRef(q); qRef.current = q;
+  const keyRef = useRef(key); keyRef.current = key;
   const run = useCallback(() => {
     const cur = qRef.current; if (!cur) return;
+    const k = keyRef.current;
     const my = ++seq.current; last.current = performance.now();
-    sim().query<T>(cur).then((d) => { if (my === seq.current) setData(d); });
+    sim().query<T>(cur).then((d) => { if (my === seq.current) setHeld({ key: k, data: d }); });
   }, []);
+  const data = q && held && held.key === key ? held.data : null;
   useEffect(() => {
-    setData(null); if (!q) return;
+    if (!q) return;
     run();
     // throttled to one query per `every` ms; a tick inside the window schedules one trailing query, so the panel still
     // shows the last state when the game pauses right after it

@@ -3,6 +3,7 @@
 // downloadText touches the browser.
 import type { ChronEntry, I18n } from '../sim/types';
 import { dayToDate, fmtDate } from '../sim/calendar';
+import { chronInvolves } from '../sim/ctx';
 
 export interface ChronNation { id: number; name: I18n; short: I18n }
 export interface ChronExport {
@@ -29,7 +30,7 @@ const KIND: Record<string, [string, string]> = {
 export const kindLabel = (k: string, lang: 'en' | 'de') => KIND[k]?.[lang === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 
 function select(x: ChronExport): ChronEntry[] {
-  return x.entries.filter((e) => !x.own || x.player < 0 || e.nation === x.player);
+  return x.entries.filter((e) => !x.own || x.player < 0 || chronInvolves(e, x.player));
 }
 const nameOf = (x: ChronExport, id: number, full = false) => { const n = x.nations.find((m) => m.id === id); return n ? (full ? n.name : n.short)[x.lang] : ''; };
 /** Markdown special characters in running text (so a name like "*Lion*" stays plain text). */

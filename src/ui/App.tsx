@@ -1,9 +1,10 @@
 // Application shell: main menu, realm selection, game screen, end screen.
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations, ready, workerError } from '../game/client';
-import { screen, startYear, selectedNation, selectedLoc, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
+import { screen, startYear, selectedNation, selectedLoc, selectedArmies, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
 import { t, L, lang, setLang } from './i18n';
 import { MapView, mapReady, rendererRef } from './MapView';
+import { MapTip } from './MapTip';
 import { timelapse, stopTimelapse } from './timelapse';
 import { MenuMap, menuMapReady } from './MenuMap';
 import { TopBar } from './TopBar';
@@ -11,7 +12,7 @@ import { TooltipLayer, Tip } from './Tip';
 import { MAP_MODES, type MapMode } from '../game/protocol';
 import * as P from './panels';
 import { initAudio, setMood, setVolumes, sfx } from './audio';
-import { autosaveTick, listSaves, loadSave } from './saves';
+import { autosaveTick, listSaves, loadSave, saveLabel } from './saves';
 import { rgb, num } from './format';
 import { OnlineHud } from './online/OnlineButton';
 import { actionFor, keyFor, keyLabel } from './keys';
@@ -45,6 +46,7 @@ export function App() {
   const s = screen.value;
   return <div class={`app lang-${lang.value}`} style={{ fontSize: `${settings.value.uiScale * 100}%` }}>
     {(s === 'select' || s === 'game' || s === 'end') && <MapView />}
+    {(s === 'select' || s === 'game') && <MapTip />}
     {s === 'menu' && <MainMenu />}
     {s === 'loading' && <Loading />}
     {s === 'select' && <SelectScreen />}
@@ -75,7 +77,7 @@ function MainMenu() {
     <div class="menu-box">
       <h1 class="title">Sundered Crowns</h1>
       <div class="subtitle">{lang.value === 'de' ? 'Europa 1356 – 1815' : 'Europe 1356 – 1815'}</div>
-      {saves[0] && <button class="btn big" onClick={() => cont(saves[0].id)}>{t('continue')} <small>{saves[0].label}</small></button>}
+      {saves[0] && <button class="btn big" onClick={() => cont(saves[0].id)}>{t('continue')} <small>{saveLabel(saves[0])}</small></button>}
       <button class="btn big start" onClick={() => start(1356)}><span>{t('new_game')} · {t('start_1356')}</span><small class="sub">{t('x_start_1356_sub')}</small></button>
       <button class="btn big start" onClick={() => start(1492)}><span>{t('new_game')} · {t('start_1492')}</span><small class="sub">{t('x_start_1492_sub')}</small></button>
       <div class="menu-sec">
@@ -199,6 +201,7 @@ function MapModes() {
 function useKeys() {
   useEffect(() => {
     // every shortcut comes from the key table (src/ui/keys.ts), which the settings let the player rebind
+    let pointer: [number, number] | null = null; // where the pointer is, for the zoom keys
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || keyCapture.value) return;
@@ -209,15 +212,38 @@ function useKeys() {
       if (id === 'pause') { if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } else sim().speed(lastSpeed.value || 2); }
       else if (id === 'faster') sim().speed(Math.min(5, Math.max(1, sp + 1)));
       else if (id === 'slower') sim().speed(Math.max(1, sp - 1));
-      else if (id === 'back') { if (panel.value !== 'none') panel.value = 'none'; else if (selectedLoc.value >= 0) selectedLoc.value = -1; else openPanel('pause'); }
+      // Esc: close the panel, then drop the selection (place, the realm shown with it, armies), then the pause menu
+      else if (id === 'back') {
+        if (panel.value !== 'none') panel.value = 'none';
+        else if (selectedLoc.value >= 0 || (selectedNation.value >= 0 && selectedNation.value !== playerId.value) || selectedArmies.value.length) { selectedLoc.value = -1; selectedNation.value = -1; selectedArmies.value = []; }
+        else openPanel('pause');
+      }
       else if (id === 'dev') openPanel('dev');
+      else if (id === 'zoom_in' || id === 'zoom_out') {
+        // the keys zoom the map only while the pointer is over the map (or, without a pointer seen yet, while no panel is
+        // open); over a panel, the ledger or the chronicle, Page Up/Down page through it instead
+        const over = pointer ? document.elementFromPoint(pointer[0], pointer[1]) : null;
+        const onMap = over ? !!over.closest('.mapwrap') : panel.value === 'none';
+        if (onMap) { e.preventDefault(); rendererRef.r?.zoomStep?.(id === 'zoom_in' ? 1.4 : 1 / 1.4); }
+        else if (e.key === 'PageDown' || e.key === 'PageUp') { const sc = scrollerOf(over); if (sc) { e.preventDefault(); sc.scrollBy({ top: (e.key === 'PageDown' ? 1 : -1) * Math.max(40, sc.clientHeight * 0.9) }); } }
+      }
       else if (id === 'hide_ui') uiHidden.value = !uiHidden.value;
       else if (id === 'quick_save') P.quickSave().then(() => showToast(t('saved')));
       else if (id.startsWith('map_')) { const m = id.slice(4) as MapMode; if (MAP_MODES.includes(m)) mapMode.value = m; }
       else if (id.startsWith('panel_')) openPanel(id.slice(6) as any);
     };
+    const onMove = (e: PointerEvent) => { pointer = [e.clientX, e.clientY]; };
+    window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); };
   }, []);
+}
+/** The nearest element at or above `el` that scrolls vertically (a panel's table, the chronicle), or null. */
+function scrollerOf(el: Element | null): HTMLElement | null {
+  for (let x = el as HTMLElement | null; x && x !== document.body; x = x.parentElement) {
+    const oy = getComputedStyle(x).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && x.scrollHeight > x.clientHeight + 1) return x;
+  }
+  return null;
 }
 void ready; void mapReady;

@@ -2,7 +2,7 @@
 // (src/game/client.ts), so the existing UI works unchanged when the game runs in an online world.
 // The server is authoritative: the client never simulates, it only renders TickViews and sends Commands.
 import { signal, batch, computed } from '@preact/signals';
-import { view, nations, notices, chronicle, legend, workerError, ready, landmarks } from '../game/client';
+import { view, nations, notices, legend, workerError, ready, landmarks, addChronicle, setChronicle } from '../game/client';
 import type { Command, CmdResult } from '../sim/types';
 import type { ArmyLite, MapMode, Query, TickView } from '../game/protocol';
 import {
@@ -149,7 +149,7 @@ export class OnlineClient implements GameClient {
     switch (m.type) {
       case 'welcome':
         this.L = m.L; this.S = m.S; this.gotWelcome = true; this.gotTick = false;
-        batch(() => { me.value = m.user; worldInfo.value = m.world; seat.value = m.seat; nations.value = m.nations; connState.value = 'open'; notices.value = []; chronicle.value = []; });
+        batch(() => { me.value = m.user; worldInfo.value = m.world; seat.value = m.seat; nations.value = m.nations; connState.value = 'open'; notices.value = []; setChronicle([], -1); });
         if (this.lastGood !== -1) this.send({ type: 'mapgood', good: this.lastGood });
         if (this.lastMode.mode !== 'political') this.send({ type: 'mapmode', ...this.lastMode });
         break;
@@ -198,7 +198,7 @@ export class OnlineClient implements GameClient {
       if (v.nations) nations.value = v.nations;
       if (v.landmarks) landmarks.value = v.landmarks;
       if (v.notices.length) notices.value = [...notices.value, ...v.notices].slice(-120);
-      if (v.chronicle.length) chronicle.value = [...chronicle.value, ...v.chronicle].slice(-600);
+      addChronicle(v.chronicle, v.player?.id ?? -1);
       view.value = v;
       workerError.value = null;
     });

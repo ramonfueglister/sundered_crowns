@@ -11,6 +11,8 @@ import { labelsFor, computeSettlements } from './mapdata';
 import { dayToDate } from '../sim/calendar';
 import { GOODS } from '../sim/defs';
 import { cvdRealmColors, cvdColorOf } from './palette';
+import { deName } from '../sim/content/names_de';
+import type { MapPlace } from '../render/overlay';
 
 const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
@@ -33,6 +35,21 @@ function realmColors(owner: Int16Array, ns: { color: [number, number, number] }[
   const cols = new Uint8Array(ns.length * 3);
   ns.forEach((n, k) => { cols[k * 3] = n.color[0]; cols[k * 3 + 1] = n.color[1]; cols[k * 3 + 2] = n.color[2]; });
   return cols;
+}
+
+/** Place names for close zoom (src/render/overlay.ts drawPlaces), in the language of the interface: capitals first,
+ *  then the larger towns, then the larger places. */
+function placeList(): (MapPlace | null)[] {
+  const g = rendererRef.assets?.geo; if (!g) return [];
+  const de = lang.value === 'de';
+  const caps = new Set<number>(); for (const n of nations.value) if (n.alive && n.capital >= 0) caps.add(n.capital);
+  const out: (MapPlace | null)[] = new Array(g.L).fill(null);
+  for (let l = 0; l < g.L; l++) {
+    const nm: string | null = g.loc.name[l]; if (!nm) continue;
+    const cap = caps.has(l);
+    out[l] = { x: g.loc.x[l], y: g.loc.y[l], name: de ? deName(nm) : nm, rank: (cap ? 1e9 : 0) + (g.loc.size[l] ?? 0) * 1e6 + (g.loc.area[l] ?? 0), capital: cap };
+  }
+  return out;
 }
 
 /** last month's trade routes and markets (drawn on the trade map) */
@@ -82,6 +99,7 @@ export function MapView() {
             if (!rendererRef.r || !lastOwner) return;
             rendererRef.r.setLabels(computeLabels(lastOwner, rendererRef.assets, nations.value));
             rendererRef.r.setSettlements?.(computeSettlements(lastOwner, rendererRef.assets, nations.value as any));
+            rendererRef.r.setPlaces?.(placeList());
           }, force ? 0 : 400);
         }
       }
@@ -163,7 +181,7 @@ export function MapView() {
   useEffect(() => { rendererRef.r?.setResolutionScale?.(settings.value.resScale); }, [settings.value.resScale]);
   useEffect(() => { rendererRef.r?.setHighContrast?.(settings.value.highContrast); }, [settings.value.highContrast]);
   useEffect(() => { const v = view.value; const r = rendererRef.r; if (r && v?.owner && v.ctrl) r.setPolitical(v.owner, v.ctrl, realmColors(v.owner, nations.value)); sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); }, [settings.value.palette]);
-  useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); }, [lang.value]);
+  useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); rendererRef.r?.setPlaces?.(placeList()); }, [lang.value]);
   useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
   useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
   return <div class="mapwrap">

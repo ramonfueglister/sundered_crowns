@@ -80,7 +80,7 @@ function joinSide(sidesOf: (s: GameState, w: World, sit: Situation) => SitSide[]
     apply: (s, w, n, sit, t) => {
       const war = warOf(s, sit)!; (t === war.attLead ? war.att : war.def).push(n.id);
       for (const f of t === war.attLead ? war.def : war.att) addOpinion(s, f, n.id, 'war_declared', -40, 365 * 10);
-      chronicle(s, n.id, 'war', T(`${n.short.en} entered the ${war.name.en}.`, `${n.short.de} trat in den Krieg ein: ${war.name.de}.`));
+      chronicle(s, n.id, 'war', T(`${n.short.en} entered the ${war.name.en}.`, `${n.short.de} trat in den Krieg ein: ${war.name.de}.`), undefined, [...war.att, ...war.def]);
     },
     ai: (s, w, n, sit) => {
       const war = warOf(s, sit); if (!war || inWar(war, n.id) || n.warExhaustion > 30 || n.overlord >= 0 || s.wars.some((x) => inWar(x, n.id))) return null;

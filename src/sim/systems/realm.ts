@@ -118,7 +118,7 @@ export function excommunicate(s: GameState, by: number, target: number): string 
   P.curiaFavour[by] -= 50; t.excommunicated = true;
   t.modifiers.push({ id: 'excommunicated', until: s.day + 365 * 10, label: { en: 'Excommunicated', de: 'Exkommuniziert' }, effects: { mandate_gain: -0.5, concord_gain: -0.3 } });
   for (const o of s.nations) if (o.alive && o.faith === FAITH_INDEX.latin && o.id !== target) addOpinion(s, o.id, target, 'excommunicated', -25, 365 * 10);
-  chronicle(s, target, 'excommunication', { en: `The ruler of ${t.short.en} was excommunicated at the urging of ${n.short.en}.`, de: `Der Herrscher von ${t.short.de} wurde auf Betreiben von ${n.short.de} exkommuniziert.` });
+  chronicle(s, target, 'excommunication', { en: `The ruler of ${t.short.en} was excommunicated at the urging of ${n.short.en}.`, de: `Der Herrscher von ${t.short.de} wurde auf Betreiben von ${n.short.de} exkommuniziert.` }, undefined, [by]);
   return null;
 }
 
@@ -187,7 +187,7 @@ function steppeSplitYear(s: GameState, w: World) {
     const foot = u.includes(lv) ? lv : u.find((i) => UNITS[i].kind === 'inf') ?? u[0];
     const men = Math.min(Math.max(3000, nn.maxManpower * 0.2), Math.max(2000, nn.maxManpower));
     if (cav !== undefined && foot !== undefined) newArmy(s, nn.id, g[0], [{ type: cav, men: Math.round(men * 0.6) }, { type: foot, men: Math.round(men * 0.4) }]);
-    chronicle(s, nn.id, 'independence', { en: `${h.short.en} lost its far lands: a khan of their own now rules from ${town}.`, de: `${h.short.de} verlor seine fernen Länder: Ein eigener Khan herrscht nun von ${townDe} aus.` }, g[0]);
+    chronicle(s, nn.id, 'independence', { en: `${h.short.en} lost its far lands: a khan of their own now rules from ${town}.`, de: `${h.short.de} verlor seine fernen Länder: Ein eigener Khan herrscht nun von ${townDe} aus.` }, g[0], [h.id]);
     for (const p of s.playerNations) notice(s, p, 'independence', { en: `The ${nn.name.en} broke away from ${h.short.en}.`, de: `Das ${nn.name.de} hat sich von ${h.short.de} gelöst.` }, { loc: g[0] });
   }
 }

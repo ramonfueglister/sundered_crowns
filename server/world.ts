@@ -7,10 +7,10 @@
 // expiry in hours) are turned into log entries before they touch the state.
 import { mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, readdirSync, openSync, writeSync, closeSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import type { GameState, Command, CmdResult } from '../src/sim/types';
+import type { GameState, Command, CmdResult, ChronEntry } from '../src/sim/types';
 import type { World } from '../src/sim/world';
 import type { ArmyLite, MapMode, NationLite, Query, TickView } from '../src/game/protocol';
-import { type Sight, sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogColors, fogAnswerWith } from '../src/game/fog';
+import { type Sight, sightOf, fogArmies, fogBattles, fogSieges, fogOwners, fogColors, fogAnswerWith, fogChronicle, metRealms } from '../src/game/fog';
 import { createGame } from '../src/sim/setup';
 import { advanceDay, saveBinary, loadBinary, hashState, END_YEAR } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
@@ -921,13 +921,19 @@ export class WorldCore {
     const s = this.s; const nat = ss.seat?.nation ?? -1;
     const vis = this.visible(ss);
     ss.prevArmies.clear(); for (const a of vis.armies) ss.prevArmies.set(a.id, JSON.stringify(a));
-    return { ...shared, armies: vis.armies, battles: vis.battles, sieges: vis.sieges, player: nat >= 0 && s.nations[nat] ? playerView(s, s.nations[nat]) : null, notices: this.noticesFor(ss), pending: nat >= 0 ? pendingView(s, this.w, nat) : [] };
+    return { ...shared, chronicle: this.chronicleFor(ss, shared.chronicle ?? []), armies: vis.armies, battles: vis.battles, sieges: vis.sieges, player: nat >= 0 && s.nations[nat] ? playerView(s, s.nations[nat]) : null, notices: this.noticesFor(ss), pending: nat >= 0 ? pendingView(s, this.w, nat) : [] };
+  }
+  /** The day's chronicle entries a session hears of (src/game/fog.ts fogChronicle: realms it has met, land it knows). */
+  private chronicleFor(ss: Session, list: ChronEntry[]): ChronEntry[] {
+    if (!list.length) return list;
+    const sg = this.sightFor(ss); if (sg === null || sg === 'none') return list;
+    return fogChronicle(list, metRealms(this.s, sg), sg.known);
   }
   /** The personal part of a tick as JSON members, to append to the shared part serialized once per day. */
-  private personalJson(ss: Session): string {
+  private personalJson(ss: Session, chron: ChronEntry[] = []): string {
     const s = this.s; const nat = ss.seat?.nation ?? -1;
     const vis = this.visible(ss); const d = this.armyDeltaFor(ss, vis.armies);
-    return `${d.armyUpd ? `"armyUpd":${JSON.stringify(d.armyUpd)},` : ''}${d.armyDel ? `"armyDel":${JSON.stringify(d.armyDel)},` : ''}"battles":${JSON.stringify(vis.battles)},"sieges":${JSON.stringify(vis.sieges)},`
+    return `"chronicle":${JSON.stringify(this.chronicleFor(ss, chron))},${d.armyUpd ? `"armyUpd":${JSON.stringify(d.armyUpd)},` : ''}${d.armyDel ? `"armyDel":${JSON.stringify(d.armyDel)},` : ''}"battles":${JSON.stringify(vis.battles)},"sieges":${JSON.stringify(vis.sieges)},`
       + `"player":${JSON.stringify(nat >= 0 && s.nations[nat] ? playerView(s, s.nations[nat]) : null)},"notices":${JSON.stringify(this.noticesFor(ss))},"pending":${JSON.stringify(nat >= 0 ? pendingView(s, this.w, nat) : [])}`;
   }
   private ownersBin(known: Uint8Array | null = null) {
@@ -983,7 +989,9 @@ export class WorldCore {
     const snow = monthly ? encodeBinary(BIN_SNOW, s.loc.snow) : null;
     const roads = monthly ? encodeBinary(BIN_ROADS, roadLevels(s)) : null;
     const wi = JSON.stringify({ type: 'world', world: this.worldInfo() });
-    const body = JSON.stringify(shared).slice(0, -1);
+    // the day's chronicle goes into each session's own part, under its fog
+    const { chronicle: dayChron, ...sharedRest } = shared;
+    const body = JSON.stringify(sharedRest).slice(0, -1);
     const heads = new Map<Uint8Array | null, { head: string; full: Uint8Array | null }>();
     const headFor = (known: Uint8Array | null) => {
       let h = heads.get(known);
@@ -1004,7 +1012,7 @@ export class WorldCore {
       if (h.full) ss.sendBin(h.full);
       if (snow) ss.sendBin(snow);
       if (roads) ss.sendBin(roads);
-      ss.sendJson(h.head + this.personalJson(ss) + '}}');
+      ss.sendJson(h.head + this.personalJson(ss, dayChron) + '}}');
       if (monthly && ss.mapMode !== 'political' && ss.mapMode !== 'terrain') this.sendColors(ss);
     }
     if (monthly) this.sendOffers();

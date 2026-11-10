@@ -2,13 +2,34 @@
 import { signal, batch } from '@preact/signals';
 import type { ToWorker, FromWorker, TickView, NationLite, MapMode, Legend, Query, LandmarkLite } from './protocol';
 import type { Command, CmdResult, Notice, ChronEntry } from '../sim/types';
+import { chronInvolves } from '../sim/ctx';
 
 export const view = signal<TickView | null>(null);
 export const nations = signal<NationLite[]>([]);
 /** Landmarks and their stages (refreshed monthly). */
 export const landmarks = signal<LandmarkLite[]>([]);
 export const notices = signal<(Notice & { seen?: boolean })[]>([]);
+/** The latest entries of the whole chronicle (world-wide, the last CHRON_WORLD). */
 export const chronicle = signal<ChronEntry[]>([]);
+/** Every entry that concerns the player's realm (sim/ctx.ts chronInvolves), kept apart from the world-wide cap: a busy
+ *  world must not push the player's own history out of the chronicle panel. */
+export const ownChronicle = signal<ChronEntry[]>([]);
+const CHRON_WORLD = 600, CHRON_OWN = 6000;
+let chronPlayer = -2;
+/** Adds new chronicle entries (from a tick) for the player's realm `player`. */
+export function addChronicle(list: ChronEntry[], player: number) {
+  if (!list.length) return;
+  chronicle.value = [...chronicle.value, ...list].slice(-CHRON_WORLD);
+  const own = player >= 0 ? list.filter((e) => chronInvolves(e, player)) : [];
+  if (own.length) ownChronicle.value = [...ownChronicle.value, ...own].slice(-CHRON_OWN);
+}
+/** Replaces both lists with a whole chronicle (a loaded game, another realm taken over). */
+export function setChronicle(all: ChronEntry[], player: number) {
+  batch(() => {
+    chronicle.value = all.slice(-CHRON_WORLD);
+    ownChronicle.value = player >= 0 ? all.filter((e) => chronInvolves(e, player)).slice(-CHRON_OWN) : [];
+  });
+}
 export const legend = signal<Legend | null>(null);
 export const workerError = signal<string | null>(null);
 export const ready = signal(false);
@@ -34,13 +55,17 @@ export class SimClient {
       case 'ready': this.L = m.L; this.S = m.S; batch(() => { nations.value = m.nations; ready.value = true; }); this.waits.get(0)?.(true); this.waits.delete(0); break;
       case 'tick': {
         const v = m.view;
+        const pid = v.player?.id ?? -1;
         batch(() => {
           if (v.nations) nations.value = v.nations;
           if (v.landmarks) landmarks.value = v.landmarks;
           if (v.notices.length) notices.value = [...notices.value, ...v.notices].slice(-120);
-          if (v.chronicle.length) chronicle.value = [...chronicle.value, ...v.chronicle].slice(-600);
+          addChronicle(v.chronicle, pid);
           view.value = v;
         });
+        // a game just started or loaded, or another realm taken: fetch the whole chronicle once (the worker answers in
+        // order, so the answer holds every entry of the ticks before it, and later ticks bring only newer ones)
+        if (pid !== chronPlayer) { chronPlayer = pid; this.query<ChronEntry[]>({ q: 'chronicle', from: 0 }).then((all) => { if (chronPlayer === pid && Array.isArray(all)) setChronicle(all, pid); }); }
         for (const f of this.onTick) f(v);
         break;
       }
@@ -51,7 +76,7 @@ export class SimClient {
     }
   }
   init(opts: { seed: number; year: number; player: number | null; save?: Uint8Array; devtools?: boolean; difficulty?: number; victory?: string[] }): Promise<boolean> {
-    ready.value = false; notices.value = []; chronicle.value = [];
+    ready.value = false; notices.value = []; chronicle.value = []; ownChronicle.value = []; chronPlayer = -2;
     return new Promise((res) => { this.waits.set(0, res); this.send({ type: 'init', ...opts }); });
   }
   cmd(cmd: Command): Promise<CmdResult> { const id = this.seq++; return new Promise((res) => { this.waits.set(id, res); this.send({ type: 'cmd', id, cmd }); }); }
