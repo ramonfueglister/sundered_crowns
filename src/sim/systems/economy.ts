@@ -947,7 +947,9 @@ const TRADE_KEYS = ['trade', 'company', 'tariffs'];
 export function estimateTradeMonth(s: GameState, w: World): boolean {
   const ms = s.markets;
   if (!ms.length || !ms.every((m) => WARM.has(m))) return false;
-  const orig = ms.slice(), flows = s.flows, acc = s.nations.map((n) => n.incomeAcc);
+  // a dry run: clearing pays trade and tariffs into the treasuries (addIncome), and those are given back below
+  const orig = ms.slice(), flows = s.flows, acc = s.nations.map((n) => n.incomeAcc), gold = s.nations.map((n) => n.treasury);
+  const coIncome = (s.companies ?? []).map((c) => c.income);
   try {
     for (let k = 0; k < ms.length; k++) {
       const c = structuredClone(orig[k]), x = WARM.get(orig[k])!;
@@ -966,7 +968,8 @@ export function estimateTradeMonth(s: GameState, w: World): boolean {
     }
   } finally {
     for (let k = 0; k < ms.length; k++) ms[k] = orig[k];
-    s.flows = flows; s.nations.forEach((n, k) => { n.incomeAcc = acc[k]; });
+    s.flows = flows; s.nations.forEach((n, k) => { n.incomeAcc = acc[k]; n.treasury = gold[k]; });
+    (s.companies ?? []).forEach((c, k) => { c.income = coIncome[k]; });
   }
   return true;
 }

@@ -349,6 +349,14 @@ describe('review: the books close after the month, and the realms read them righ
     const vt = nat(s, 'venice').income.trade ?? 0;
     expect(day0[0].trade / vt).toBeGreaterThan(0.6); expect(day0[0].trade / vt).toBeLessThan(1.5);
   });
+  it('the day-0 trade estimate is a dry run: every chest starts at four months of tax, as the first history point says', () => {
+    const s = fresh();
+    for (const n of s.nations) {
+      if (!n.alive) continue;
+      expect(n.treasury).toBeCloseTo(Math.max(50, (n.income.tax || 0) * 4), 6);
+      expect(n.history[0]?.treasury).toBeCloseTo(n.treasury, 6);
+    }
+  });
   it('the history point of 1 April is the chest after the month\'s loan and the month just closed', () => {
     const s = fresh('venice'); const n = nat(s, 'venice');
     toNextClose(s); toNextClose(s); // 1 March
