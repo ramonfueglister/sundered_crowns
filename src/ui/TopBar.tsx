@@ -35,7 +35,7 @@ const MENU = [
   { k: 'empire', icon: '♚', key: '', main: false }, { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
   { k: 'victory', icon: '♕', key: 'V', main: false },
 ] as const;
-const MAX_LEVEL = 4;
+const MAX_LEVEL = 5;
 const SHORT: Record<string, [string, string]> = { victory: ['Victory', 'Sieg'], empire: ['Empire', 'Reich'], trade: ['Trade', 'Handel'], explore: ['Discovery', 'Entdeckung'], works: ['Works', 'Bauten'], government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
 const short = (k: string) => SHORT[k]?.[lang.value === 'de' ? 1 : 0] ?? t(k);
 /** Full names of the panels (some differ from the generic word: "Herrschaft", "Goals & decisions"). */
@@ -43,7 +43,8 @@ export const panelName = (k: string) => { const v = t(`nav_${k}`); return v === 
 
 /**
  * The bar compacts itself until nothing overflows: 0 full labels, 1 short labels, 2 short labels only for the four main
- * entries, 3 icons only, 4 also without the realm name. The level is a class set directly on the bar and tried synchronously
+ * entries, 3 icons only, 4 also without the realm name, 5 two rows (the realm's figures and ☰ above, the panels, the date
+ * and the speeds below; the panels below the bar move down by its height, --tb-h). The level is a class set directly on the bar and tried synchronously
  * (no re-render per step); it is re-checked after every render (numbers grow) and starts again from 0 when the window,
  * the language or the UI scale changes.
  */
@@ -57,6 +58,7 @@ function useCompaction(dep: string) {
     apply(l);
     while (el.scrollWidth > el.clientWidth + 1 && l < MAX_LEVEL) apply(++l);
     level.current = l;
+    document.documentElement.style.setProperty('--tb-h', `${el.offsetHeight}px`);
   };
   useEffect(() => { const f = () => fit(true); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
   useLayoutEffect(() => { const reset = lastDep.current !== dep; lastDep.current = dep; fit(reset); });
@@ -96,6 +98,7 @@ export function TopBar() {
       {p.inflation > 0.005 && <Tip content={() => <InflationTip />}><div class="stat neg" onClick={() => openPanel('economy')}><i class="ic inflation" />{pct(p.inflation, 1)}</div></Tip>}
     </>}
     <div class="tb-spacer" />
+    <div class="tb-break" />
     <div class="tb-menu">
       {MENU.map(({ k, icon, main }) => { const key = keyLabel(keyFor(`panel_${k}`), lang.value === 'de'); return <Tip content={<div><b>{panelName(k)}</b>{key && <span class="muted"> ({key})</span>}</div>}>
         <button class={`${panel.value === k ? 'on' : ''} ${main ? 'main' : ''}`} aria-label={panelName(k)} onClick={() => { sfx('open'); openPanel(k); }}>
