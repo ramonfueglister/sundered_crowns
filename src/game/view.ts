@@ -8,7 +8,7 @@ import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TE
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
-import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
+import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, ablestGain, ablestPlan, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
 import { LAWS, VALUES } from '../sim/content/laws';
@@ -380,7 +380,9 @@ function realmDetail(s: GameState, w: World, player: number) {
     laws: LAWS.map((L) => ({ id: L.id, name: L.name, group: L.group, current: n.laws[L.id] ?? 0, options: L.options.map((o, k) => ({ id: o.id, name: o.name, desc: o.desc, effects: o.effects, estates: o.estates, cost: reformCost(n, L.id, k), locked: (o.minEra ?? 0) > n.era || (o.gov ? !o.gov.includes(n.gov) : false) })) })),
     reform: n.reform ?? null,
     estates: n.estates.map((e) => ({ ...e, name: ESTATES.find((x) => x.id === e.id)?.name, desc: ESTATES.find((x) => x.id === e.id)?.desc, privileges: PRIVILEGES.filter((p) => p.estate === e.id).map((p) => ({ id: p.id, name: p.name, effects: p.effects, granted: e.privileges.includes(p.id) })) })),
-    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, skill: o.skill, effect: o.effect, char: c ? { id: c.id, name: courtName(c), female: c.female, skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits } : null, bonus: councilBonus(s, n, o.id) }; }),
+    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, skill: o.skill, effect: o.effect, char: c ? { id: c.id, name: courtName(c), female: c.female, skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits } : null, bonus: councilBonus(s, n, o.id), ablest: ablestGain(s, n, o.id)?.id ?? 0 }; }),
+    // the appointments 'fill the council with the ablest' makes, in order (politics.ts ablestPlan)
+    ablestPlan: ablestPlan(s, n).map((p) => ({ office: p.office, char: p.char, name: courtName(s.chars[p.char]), female: s.chars[p.char].female, gain: p.gain })),
     candidates: officeCandidates(s, n).map((c) => ({ id: c.id, heir: c.id === n.heir, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits, female: c.female,
       kin: c.id === n.consort || (s.chars[n.ruler]?.children ?? []).includes(c.id), bonus: Object.fromEntries(OFFICES.map((o) => [o.id, officeBonusOf(c, o.id)])) })),
     officeCost: OFFICE_COST,

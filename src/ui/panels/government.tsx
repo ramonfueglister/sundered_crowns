@@ -90,10 +90,12 @@ function Council({ r, authority }: { r: any; authority: number }) {
     <Parts title={`${t('council_bonus')}: ${L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}`} rows={[['x_office_skill', (c.skills[office.skill] / 6) * 10], ['x_corruption', -(c.skills[office.skill] / 6) * 10 * (c.corruption ?? 0)]]} total={bonus * 100} fmt={(v) => `${signed(v, 1)} %`} />
     <div class="muted small office-does">{t(`x_office_${office.id}_does`).replace('{b}', signed(bonus * 100, 1)).replace('{b2}', signed(bonus * 200, 1))}</div>
   </div>;
-  // the ablest candidate for each office (never the heir, as the simulation's appointAblest) and whether it beats the holder
-  const ablest = (o: any) => cands.filter((c) => !c.heir).sort((a, b) => (b.bonus?.[o.id] ?? 0) - (a.bonus?.[o.id] ?? 0) || a.id - b.id)[0];
-  const gain = (o: any) => { const c = ablest(o); return c && (!o.char || (c.bonus?.[o.id] ?? 0) > (o.bonus ?? 0) + 1e-9) ? c : null; };
-  const changes = r.council.filter((o: any) => gain(o));
+  // the ablest candidate for each office when that person beats the holder, and the plan for the whole council, both
+  // from the simulation (politics.ts ablestGain, ablestPlan): what the panel shows is what the buttons do
+  const gain = (o: any) => (o.ablest ? cands.find((c) => c.id === o.ablest) ?? null : null);
+  const plan: any[] = r.ablestPlan ?? [];
+  const afford = Math.min(plan.length, Math.floor(authority / cost));
+  const officeName = (id: string) => L(r.council.find((o: any) => o.id === id)?.name);
   return <Section title={t('council')} id="gov-council" right={<Tip content={() => <AuthorityTip />}><span class="muted has-tip">{t('authority')}: <b>{num(authority)}</b></span></Tip>}>
     {r.council.map((o: any) => { const open = openOff === o.id; const best = gain(o);
       return <div class={`council-office ${open ? 'open' : ''}`}>
@@ -124,10 +126,11 @@ function Council({ r, authority }: { r: any; authority: number }) {
         </div>}
       </div>; })}
     <div class="council-all">
-      <Btn disabled={!changes.length ? 'no abler candidate at court' : authority < cost ? 'not enough Authority' : null}
-        tip={<div>{t('xp_ablest_all_hint').replace('{k}', String(changes.length)).replace('{n}', String(changes.length * cost))}
-          {changes.map((o: any) => <div class="muted">{L(o.name)}: {charName(gain(o).name, gain(o).female)}</div>)}</div>}
-        onClick={() => act({ t: 'office', office: '*', char: -1 }, 'bell', t('xp_ablest_all_done'))}>{t('xp_ablest_all')}</Btn>
+      <Btn disabled={!plan.length ? 'no abler candidate at court' : afford < 1 ? 'not enough Authority' : null}
+        tip={<div>{t('xp_ablest_all_hint').replace('{k}', String(plan.length)).replace('{n}', String(plan.length * cost))}
+          {plan.map((p, i) => <div class={i < afford ? '' : 'muted'}>{i + 1}. {officeName(p.office)}: {charName(p.name, p.female)} <span class="pos">{signed(p.gain * 100, 1)} %</span></div>)}
+          {plan.length > 0 && afford < plan.length && <div class="neg">{t('xp_ablest_all_short').replace('{a}', num(authority)).replace('{k}', String(afford)).replace('{m}', String(plan.length))}</div>}</div>}
+        onClick={() => act({ t: 'office', office: '*', char: -1 }, 'bell', afford < plan.length ? t('xp_ablest_all_part').replace('{k}', String(afford)).replace('{m}', String(plan.length)) : t('xp_ablest_all_done').replace('{k}', String(afford)))}>{t('xp_ablest_all')}</Btn>
     </div>
     <div class="muted small">{t('council_hint')}</div>
   </Section>;

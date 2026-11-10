@@ -622,19 +622,57 @@ export function ablestFor(s: GameState, n: Nation, office: string): Character | 
   }
   return best;
 }
-/** Appoint the ablest candidate to an office ('*': to every office whose holder an abler candidate would beat), each
- *  appointment at the usual Authority cost (the 'office' command with char -1). */
-export function appointAblest(s: GameState, n: Nation, office: string): string | null {
-  const offices = office === '*' ? OFFICES.map((o) => o.id) : [office];
-  if (!offices.every((o) => OFFICES.some((x) => x.id === o))) return 'unknown office';
-  let done = 0, err: string | null = null;
-  for (const o of offices) {
-    const c = ablestFor(s, n, o); const cur = s.chars[n.council[o]];
-    if (!c || (cur?.alive && officeBonusOf(c, o) <= officeBonusOf(cur, o) + 1e-9)) continue;
-    err = appointOfficial(s, n, o, c.id); if (err) break;
-    done++;
+/** The ablest candidate for one office when that person would serve it better than its holder (any candidate for a
+ *  vacant seat), else null: the single-office "appoint the ablest" and the row the council panel shows. */
+export function ablestGain(s: GameState, n: Nation, office: string): Character | null {
+  const c = ablestFor(s, n, office); const cur = s.chars[n.council[office]];
+  return c && (!cur?.alive || officeBonusOf(c, office) > officeBonusOf(cur, office) + 1e-9) ? c : null;
+}
+/** fix-people: the appointments "fill the council with the ablest" makes, in the order it makes them. Each step gives
+ *  the office whose holder an abler candidate beats by the most to that candidate; nobody is picked twice, sitting
+ *  officials are not moved (they are not candidates, officeCandidates) and the heir is left out. Each entry is an
+ *  appointment at OFFICE_COST Authority; gain is how much the office's bonus rises. The council panel shows exactly
+ *  this plan and appointAblest('*') carries it out (before, the panel ranked each office on its own and could name one
+ *  person for four offices, while the command appointed office by office and re-seated officials it had just dismissed). */
+export function ablestPlan(s: GameState, n: Nation): { office: string; char: number; gain: number }[] {
+  const pool = officeCandidates(s, n).filter((c) => c.id !== n.heir);
+  const left = OFFICES.map((o) => o.id);
+  const plan: { office: string; char: number; gain: number }[] = [];
+  for (;;) {
+    let best: { office: string; char: number; gain: number } | null = null;
+    for (const o of left) {
+      const cur = s.chars[n.council[o]]; const base = cur?.alive ? officeBonusOf(cur, o) : 0;
+      for (const c of pool) {
+        const g = officeBonusOf(c, o) - base;
+        if (cur?.alive ? g <= 1e-9 : g < -1e-9) continue;
+        // the largest gain; on a tie the office named first, then the lower id
+        if (!best || g > best.gain + 1e-9 || (Math.abs(g - best.gain) <= 1e-9 && (left.indexOf(o) < left.indexOf(best.office) || (o === best.office && c.id < best.char)))) best = { office: o, char: c.id, gain: g };
+      }
+    }
+    if (!best) break;
+    plan.push(best);
+    left.splice(left.indexOf(best.office), 1);
+    pool.splice(pool.findIndex((c) => c.id === best!.char), 1);
   }
-  return done ? null : err ?? 'no abler candidate at court';
+  return plan;
+}
+/** Appoint the ablest candidate to an office (ablestGain), or ('*') carry out ablestPlan as far as the Authority goes,
+ *  each appointment at the usual cost (the 'office' command with char -1). */
+export function appointAblest(s: GameState, n: Nation, office: string): string | null {
+  if (office === '*') {
+    const plan = ablestPlan(s, n);
+    if (!plan.length) return 'no abler candidate at court';
+    let done = 0;
+    for (const p of plan) {
+      if (n.authority < OFFICE_COST) break;
+      const e = appointOfficial(s, n, p.office, p.char); if (e) return done ? null : e;
+      done++;
+    }
+    return done ? null : 'not enough Authority';
+  }
+  if (!OFFICES.some((x) => x.id === office)) return 'unknown office';
+  const c = ablestGain(s, n, office);
+  return c ? appointOfficial(s, n, office, c.id) : 'no abler candidate at court';
 }
 // ---------------- candidates for office ----------------
 export const OFFICE_COST = 10; // Authority per appointment

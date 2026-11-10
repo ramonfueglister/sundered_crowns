@@ -5,7 +5,7 @@
 // Run: npx vitest run tests/fix_people.test.ts
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
-import { characterDies, lineOfSuccession, ageOf, politics, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES } from '../src/sim/systems/politics';
+import { characterDies, lineOfSuccession, ageOf, politics, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES, ablestPlan } from '../src/sim/systems/politics';
 import { applyCommand } from '../src/sim/commands';
 import { localName, declineDe } from '../src/sim/content/names';
 import { deName } from '../src/sim/content/names_de';
@@ -333,6 +333,41 @@ describe('the council', () => {
     expect(after.every((v, i) => v >= before[i])).toBe(true);
     expect(after.reduce((a, b) => a + b, 0)).toBeGreaterThan(before.reduce((a, b) => a + b, 0));
     expect(E.authority).toBe(90 - 10 * after.filter((v, i) => v > before[i]).length);
+  });
+});
+
+describe('filling the council with the ablest (review fix)', () => {
+  it('the panel shows the plan the command carries out: nobody twice, no official moved, the cost of each step', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); s.playerNations = [E.id]; s.day = 40;
+    politics.monthly!({ s, w } as any);
+    // a weak council, as in the reviewer's game: one able candidate would be the ablest for several offices
+    for (const o of OFFICES) s.chars[E.council[o.id]].skills = [0, 0, 0];
+    const officials = new Set(Object.values(E.council));
+    const plan = ablestPlan(s, E);
+    expect(plan.length).toBeGreaterThan(1);
+    expect(new Set(plan.map((p) => p.char)).size).toBe(plan.length);
+    expect(new Set(plan.map((p) => p.office)).size).toBe(plan.length);
+    for (const p of plan) { expect(officials.has(p.char)).toBe(false); expect(p.char).not.toBe(E.heir); expect(p.gain).toBeGreaterThan(0); }
+    // the view hands the same plan to the panel
+    const v = answer(s, w, E.id, { q: 'realm' } as any);
+    expect(v.ablestPlan.map((p: any) => [p.office, p.char])).toEqual(plan.map((p) => [p.office, p.char]));
+    // Authority for two steps only: exactly the first two are appointed, at 10 each, and nobody dismissed is re-seated
+    E.authority = 25;
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: '*', char: -1 }).ok).toBe(true);
+    expect(E.authority).toBe(5);
+    for (const p of plan.slice(0, 2)) expect(E.council[p.office]).toBe(p.char);
+    for (const p of plan.slice(2)) expect(E.council[p.office]).not.toBe(p.char);
+    for (const id of Object.values(E.council)) expect(officials.has(id) || plan.slice(0, 2).some((p) => p.char === id)).toBe(true);
+    // the rest of the plan with more Authority: what is left is carried out as the panel now shows it
+    E.authority = 100;
+    const rest = ablestPlan(s, E);
+    expect(rest.map((p) => p.office)).toEqual(plan.slice(2).map((p) => p.office));
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: '*', char: -1 }).ok).toBe(true);
+    expect(E.authority).toBe(100 - 10 * rest.length);
+    for (const p of rest) expect(E.council[p.office]).toBe(p.char);
+    expect(ablestPlan(s, E)).toEqual([]);
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: '*', char: -1 }).ok).toBe(false);
   });
 });
 

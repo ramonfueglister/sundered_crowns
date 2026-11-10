@@ -251,6 +251,10 @@ svg.chart .ax { font-size: 10px; fill: #6b5236; font-family: var(--serif); }
 .cand-sk { white-space: nowrap; }
 .cand-n { cursor: help; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .cand-b { text-align: right; font-variant-numeric: tabular-nums; }
+/* fix-people: the ablest row has three cells (name, bonus, button) and its name may wrap */
+.cand-row.ablest { grid-template-columns: minmax(0, 1fr) auto auto; padding-bottom: 3px; margin-bottom: 2px; border-bottom: 1px dotted currentColor; }
+.cand-row.ablest .cand-n { white-space: normal; cursor: default; }
+.council-all { margin: 4px 0; }
 .tooltip .hl { color: var(--gilt2); font-weight: bold; }
 .army-here .k { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .axis { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 6px; align-items: center; padding: 2px 0; font-size: .88em; cursor: help; }

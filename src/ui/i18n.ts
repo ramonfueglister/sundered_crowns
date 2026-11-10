@@ -1011,8 +1011,8 @@ const S: Record<string, [string, string]> = {
   xp_ablest_is: ['Ablest at court:', 'Am fähigsten am Hof:'],
   xp_ablest_hint: ['The candidate at court whose skill and honesty give this office the greatest bonus (the heir is not chosen).', 'Die Person am Hof, deren Können und Redlichkeit diesem Amt den größten Bonus geben (der Thronfolger wird nicht gewählt).'],
   xp_ablest_all: ['Fill the council with the ablest', 'Rat mit den Fähigsten besetzen'],
-  xp_ablest_all_hint: ['Appoints the ablest candidate to every office an abler person would serve better: {k} changes, {n} Authority.', 'Besetzt jedes Amt, das eine fähigere Person besser führen würde, mit dem Fähigsten: {k} Wechsel, {n} Autorität.'],
-  xp_ablest_all_done: ['The council is filled with the ablest', 'Der Rat ist mit den Fähigsten besetzt'],
+  xp_ablest_all_hint: ['Gives each office that someone at court would serve better to the ablest person still free, the largest gain first. Nobody gets two offices, and officials keep their seats: {k} changes, {n} Authority.', 'Vergibt jedes Amt, das jemand am Hof besser führen würde, an die fähigste noch freie Person, den größten Gewinn zuerst. Niemand erhält zwei Ämter, und wer schon ein Amt hat, behält es: {k} Wechsel, {n} Autorität.'],
+  xp_ablest_all_done: ['Council filled with the ablest: {k} appointed', 'Rat mit den Fähigsten besetzt: {k} ernannt'],
   xp_spy_cost: ['Cost of the operation', 'Kosten des Unternehmens'],
   xp_spy_income: ['Share of our monthly income', 'Anteil unseres Monatseinkommens'],
   xp_spy_target: ["Size of the target realm", 'Größe des Zielreichs'],
@@ -1020,6 +1020,9 @@ const S: Record<string, [string, string]> = {
   xp_spy_floor: ['Least cost of an operation', 'Mindestkosten eines Unternehmens'],
   // review fixes (fix-people): the windows waiting behind the open one
   xp_next_waiting: ['Next ({n}):', 'Als Nächstes ({n}):'],
+  // review fixes (fix-people): filling the council when the Authority does not reach
+  xp_ablest_all_short: ['Our Authority ({a}) pays for {k} of the {m} changes: the first in this list.', 'Unsere Autorität ({a}) reicht für {k} der {m} Wechsel: die ersten dieser Liste.'],
+  xp_ablest_all_part: ['{k} of {m} appointed; the Authority did not reach further', '{k} von {m} ernannt; für mehr reichte die Autorität nicht'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
