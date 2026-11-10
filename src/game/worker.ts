@@ -9,6 +9,7 @@ import type { ToWorker, FromWorker, TickView, MapMode } from './protocol';
 import { GOOD_MAP_MODES } from './protocol';
 import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from './view';
 import { dayToDate } from '../sim/calendar';
+import { siegesView } from './warview';
 import { fogActive, sightOf, fogTick, fogAnswer } from './fog';
 import { VICTORY_KINDS } from '../sim/victoryRules';
 
@@ -60,7 +61,7 @@ function sendTick(full = false) {
     player: player !== null && s.nations[player] ? playerView(s, s.nations[player]) : null,
     notices, pending: player !== null ? pendingView(s, w, player) : [],
     wars: warsView(s),
-    sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })),
+    sieges: siegesView(s),
     battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
     chronicle: chron, snow: monthly ? new Float32Array(s.loc.snow) : undefined, roads: monthly ? roadLevels(s) : undefined, ranking: s.ranking, msPerDay,
     explored: monthly ? exploredView() : undefined,

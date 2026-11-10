@@ -1,12 +1,14 @@
 // Worker-side views of war (claude/war-pass): the declaration dialog, the army and siege panels, battle reports, the
 // peace terms a war allows, and the army supply map mode. Every number comes from the same simulation function that
 // applies it, so what the panels show is what happens.
-import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm } from '../sim/types';
+import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm, War, PendingEvent } from '../sim/types';
 import type { World } from '../sim/world';
 import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
-import { armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
-import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev } from '../sim/systems/war';
+import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
+import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth,
+  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember, predictSides, type SideGuess, callKind, tiesAcross, TIE_BROKEN,
+  goalTowns, cedeWorth, CEDE_FIXED } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
 
@@ -20,12 +22,91 @@ export function declareView(s: GameState, w: World, player: number, target: numb
   const goals = DECLARE_GOALS.map((goal) => {
     const refusal = declareRefusal(s, w, player, target, goal);
     const c = declarationCost(s, w, player, target, goal);
+    const sides = refusal ? null : predictSides(s, w, player, target, goal);
+    // the towns we may name, each with what its cession would cost in war score against the defenders certain to fight
+    // (termCost: every ally that joins them makes a town cheaper), the goal's own choice ticked
+    const loserDev = Math.max(10, (sides?.def ?? []).reduce((p, x) => p + (x.odds === 1 ? nationDev(s, x.id) : 0), 0));
+    const towns = refusal ? [] : goalTowns(s, w, player, target, goal).map((l) => ({ loc: l, price: cedeWorth(s, [l], loserDev), owner: s.loc.owner[l] }));
     return {
       goal, refusal, cb: c.cb, unjust: c.unjust, truce: c.truce, ally: c.ally, rows: c.rows, opinionYears: c.opinionYears,
-      locs: refusal ? [] : warGoalLocs(s, w, player, target, goal), terms: GOAL_TERMS[goal] ?? [],
+      locs: refusal ? [] : warGoalLocs(s, w, player, target, goal), towns, cedeFixed: CEDE_FIXED, pickable: PICK_GOALS.has(goal), terms: GOAL_TERMS[goal] ?? [],
+      sides: sides ? sidesView(sides) : null,
     };
   }).filter((g) => g.refusal !== 'they are not our overlord');
   return { cbs, goals, truce: hasTreaty(s, player, target, 'truce'), ally: hasTreaty(s, player, target, 'alliance') };
+}
+
+/** The goals whose towns the declaration may choose (a crown or a subject is fought for the capital). */
+const PICK_GOALS = new Set(['conquest', 'reconquest', 'faith', 'trade']);
+/** The sides a declaration would raise (systems/war.ts predictSides), with the men certain to fight and those who may. */
+function sidesView(p: { att: SideGuess[]; def: SideGuess[] }) {
+  const sum = (xs: SideGuess[]) => ({ sure: xs.reduce((m, x) => m + (x.odds === 1 ? x.men : 0), 0), maybe: xs.reduce((m, x) => m + (x.odds === null || (x.odds > 0 && x.odds < 1) ? x.men : 0), 0) });
+  return { att: p.att, def: p.def, attMen: sum(p.att), defMen: sum(p.def) };
+}
+
+// ---------------------------------------------------------------- calls to arms
+/** A change as the cards print it, with a real minus sign. */
+const sgn = (v: number) => (v < 0 ? `−${-v}` : `+${v}`);
+/** A call to arms as the event card shows it: who calls and why (an ally, a realm we guarantee, the Common Front), against
+ *  whom, and what each answer does (systems/war.ts answerCallToArms with its numbers: the ties to the other side that
+ *  joining cuts, the alliance or guarantee that refusing ends, the price for the emperor of joining an attack on a member). */
+export function callToArmsView(s: GameState, p: PendingEvent) {
+  const war = s.wars.find((x) => x.id === p.ctx.war);
+  const F = s.nations[p.ctx.from];
+  const def = !!p.ctx.def, kind = callKind(p);
+  const foe = war ? s.nations[def ? war.attLead : war.defLead] : undefined;
+  const fe = F?.short ?? { en: '?', de: '?' }, ee = foe?.short ?? { en: '?', de: '?' };
+  const wn = war?.name ?? { en: 'the war', de: 'den Krieg' };
+  const side = war && war.att.includes(F?.id ?? -1) ? 'att' : 'def';
+  const k = def ? CALL_REFUSED.defend : CALL_REFUSED.attack;
+  const allied = !!F && hasTreaty(s, p.nation, F.id, 'alliance');
+  const breaks = kind === 'ally' && allied && callRefusalBreaks(s, p.nation, F.id);
+  const emp = !!war && side === 'att' && emperorAttacksMember(s, war, p.nation);
+  const sideMen = (ids: number[]) => s.armies.reduce((m, a) => m + (!a.fleet && !a.rebels && ids.includes(a.owner) ? armyMen(a) : 0), 0);
+  const ours = war ? (side === 'att' ? war.att : war.def) : [], theirs = war ? (side === 'att' ? war.def : war.att) : [];
+  const realms = (k: number) => ({ en: `${k} realm${k === 1 ? '' : 's'}`, de: `${k} ${k === 1 ? 'Reich' : 'Reiche'}` });
+  const ro = realms(ours.length), rt = realms(theirs.length);
+  const strength = { en: `The other side: ${rt.en} with ${Math.round(sideMen(theirs)).toLocaleString('en')} men in the field; the side of ${fe.en}: ${ro.en} with ${Math.round(sideMen(ours)).toLocaleString('en')} men.`,
+    de: `Gegenseite: ${rt.de} mit ${Math.round(sideMen(theirs)).toLocaleString('de')} Mann im Feld; Seite von ${fe.de}: ${ro.de} mit ${Math.round(sideMen(ours)).toLocaleString('de')} Mann.` };
+  const wait = def ? { en: `If we give no answer within ${CALL_DAYS} days, the court honours the call.`, de: `Antworten wir nicht binnen ${CALL_DAYS} Tagen, folgt der Hof dem Ruf.` }
+    : { en: `If we give no answer within ${CALL_DAYS} days, the court stays out of this attack.`, de: `Antworten wir nicht binnen ${CALL_DAYS} Tagen, hält sich der Hof aus diesem Angriff heraus.` };
+  const text = kind === 'guarantee'
+    ? { en: `${ee.en} has attacked ${fe.en}, a realm whose independence we guarantee, and it calls on us to keep our word in the ${wn.en}. ${strength.en} ${wait.en}`,
+        de: `${ee.de} hat ${fe.de} angegriffen, ein Reich, für dessen Unabhängigkeit wir bürgen, und es ruft uns auf, unser Wort zu halten (${wn.de}). ${strength.de} ${wait.de}` }
+    : kind === 'front'
+      ? { en: `A Common Front of the realms that fear ${ee.en} has risen, led by ${fe.en}, and calls us to arms as one of its members in the ${wn.en}. ${strength.en} ${wait.en}`,
+          de: `Die Reiche, die ${ee.de} fürchten, haben sich zu einer Gemeinsamen Front unter ${fe.de} erhoben und rufen uns als eines ihrer Glieder zu den Waffen (${wn.de}). ${strength.de} ${wait.de}` }
+      : def
+        ? { en: `${ee.en} has attacked ${fe.en}, and our ally calls us to its defence in the ${wn.en}. ${strength.en} ${wait.en}`,
+            de: `${ee.de} hat ${fe.de} angegriffen, und unser Verbündeter ruft uns zu seiner Verteidigung (${wn.de}). ${strength.de} ${wait.de}` }
+        : { en: `${fe.en} has gone to war against ${ee.en} and calls us to arms in the ${wn.en}. ${strength.en} ${wait.en}`,
+            de: `${fe.de} zieht gegen ${ee.de} in den Krieg und ruft uns zu den Waffen (${wn.de}). ${strength.de} ${wait.de}` };
+  // joining cuts our ties to the realms on the other side (answerCallToArms)
+  const ties = war ? tiesAcross(s, p.nation, theirs) : { alliances: [], guarantees: [] };
+  const sh = (y: number) => s.nations[y]?.short ?? { en: '?', de: '?' };
+  const cut = {
+    en: ties.alliances.map((y) => ` We take the field against ${sh(y).en}: our alliance ends, ${sh(y).en}'s opinion of us ${sgn(TIE_BROKEN.opinion)} for five years.`).join('')
+      + ties.guarantees.map((y) => ` We take the field against ${sh(y).en}: our guarantee of it lapses, ${sh(y).en}'s opinion of us ${sgn(TIE_BROKEN.opinion)} for five years.`).join(''),
+    de: ties.alliances.map((y) => ` Wir ziehen gegen ${sh(y).de} ins Feld: Unser Bündnis endet, Meinung von ${sh(y).de} über uns ${sgn(TIE_BROKEN.opinion)} für fünf Jahre.`).join('')
+      + ties.guarantees.map((y) => ` Wir ziehen gegen ${sh(y).de} ins Feld: Unsere Garantie erlischt, Meinung von ${sh(y).de} über uns ${sgn(TIE_BROKEN.opinion)} für fünf Jahre.`).join(''),
+  };
+  const joinWhat = kind === 'guarantee' ? { en: `We keep our word and join the war on the side of ${fe.en} against ${ee.en}.`, de: `Wir halten unser Wort und treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein.` }
+    : kind === 'front' ? { en: `We join the Common Front of ${fe.en} against ${ee.en}.`, de: `Wir treten der Gemeinsamen Front von ${fe.de} gegen ${ee.de} bei.` }
+    : { en: `We join the war on the side of ${fe.en} against ${ee.en}.`, de: `Wir treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein.` };
+  const joinHint = { en: `${joinWhat.en} ${fe.en}'s opinion of us +${CALL_ANSWERED.opinion} for five years, their trust +${CALL_ANSWERED.trust}.${emp ? ` As emperor we attack a member of the Empire: imperial authority −${EMPEROR_JOIN_ATTACK}.` : ''}${cut.en}`,
+    de: `${joinWhat.de} Meinung von ${fe.de} über uns +${CALL_ANSWERED.opinion} für fünf Jahre, Vertrauen +${CALL_ANSWERED.trust}.${emp ? ` Als Kaiser greifen wir ein Glied des Reiches an: Reichsautorität −${EMPEROR_JOIN_ATTACK}.` : ''}${cut.de}` };
+  // what refusing ends: an ally's alliance at the second refusal, a guarantee at once, nothing for a front
+  const ends = kind === 'guarantee' ? { en: ` Our guarantee of ${fe.en} lapses.`, de: ` Unsere Garantie für ${fe.de} erlischt.` }
+    : kind === 'ally' && allied ? (breaks ? { en: ` We refused ${fe.en} once already: the alliance ends.`, de: ` Wir haben ${fe.de} schon einmal abgewiesen: Das Bündnis endet.` }
+      : { en: ` Refusing them again within ${CALL_REFUSED.years} years ends the alliance.`, de: ` Weisen wir ${fe.de} binnen ${CALL_REFUSED.years} Jahren erneut ab, endet das Bündnis.` })
+    : { en: '', de: '' };
+  const stayHint = { en: `${fe.en}'s opinion of us ${sgn(k.opinion)} for five years, their trust ${sgn(k.trust)}.${ends.en}`,
+    de: `Meinung von ${fe.de} über uns ${sgn(k.opinion)} für fünf Jahre, Vertrauen ${sgn(k.trust)}.${ends.de}` };
+  const title = kind === 'guarantee' ? { en: 'A realm we guarantee calls for help', de: 'Ein Schützling ruft um Hilfe' }
+    : kind === 'front' ? { en: 'The Common Front calls us', de: 'Die Gemeinsame Front ruft uns' }
+    : def ? { en: 'An ally calls for help', de: 'Ein Verbündeter ruft um Hilfe' } : { en: 'A call to arms', de: 'Ein Ruf zu den Waffen' };
+  return { ...p, title, text, kind,
+    options: [{ label: { en: 'To arms', de: 'Zu den Waffen' }, hint: joinHint }, { label: { en: 'Stay out', de: 'Fernbleiben' }, hint: stayHint }], art: 'battle' };
 }
 
 // ---------------------------------------------------------------- sieges
@@ -38,13 +119,18 @@ export function siegeView(s: GameState, w: World, sg: Siege, player: number) {
   // the garrison starves slowly: faster when the sea is closed (siegesDay)
   const starve = 1 - Math.pow(sg.blockade ? 0.997 : 0.999, 30);
   return {
-    loc: sg.loc, nation: sg.nation, defender: s.loc.ctrl[sg.loc], progress: sg.progress, need: sg.blockade ? 3 : 4, days: sg.days,
+    loc: sg.loc, nation: sg.nation, defender: s.loc.ctrl[sg.loc], progress: sg.progress, need: siegeSteps(sg), days: sg.days,
     garrison: sg.garrison, garrison0: sg.garrison0 ?? sg.garrison, breach: sg.breach, blockade: sg.blockade, coastal: !!w.coastal[sg.loc],
     starve, starveRows: [['x_sg_starve_base', 0.001 * 30], ...(sg.blockade ? [['x_sg_starve_blockade', 0.002 * 30]] : [])] as [string, number][],
     odds: { parts: o.parts, bonus: o.bonus, need: o.need, pStep: o.pStep, pBreach: o.pBreach, battering: o.battering, pResupply: o.pResupply, steps: o.steps, days: o.days, men: o.men, art: o.art },
     log: sg.log.map((e) => { const k = e.indexOf(':'); return k < 0 ? { day: -1, kind: e } : { day: Number(e.slice(0, k)), kind: e.slice(k + 1) }; }).reverse(),
     assault: as && mine.length ? { army: mine[0].id, p: as.p, loss: as.loss, men: as.men, parts: as.parts, garrison: as.garrison, wait: as.wait, refusal: assaultRefusal(s, mine[0]) } : null,
   };
+}
+
+/** The sieges of the tick view: who besieges, the steps made and the steps the town needs (the map badge, the overview). */
+export function siegesView(s: GameState): { loc: number; nation: number; progress: number; need: number; garrison: number }[] {
+  return s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, need: siegeSteps(x), garrison: x.garrison }));
 }
 
 // ---------------------------------------------------------------- armies
@@ -118,7 +204,26 @@ export function warView(s: GameState, w: World, player: number, id: number) {
   const faith = L && L.faith !== f ? { fit: att ? faithTermFits(s, player, enemyLead) : null, weight: nationDev(s, enemyLead) / Math.max(1, nationDev(s, player)),
     people: faithShare(s, enemyLead, f), oldFaith: FAITHS[L.faith]?.family === 'traditional' } : null;
   return { id, goal: war.goal.type, cb: war.goal.cb ?? null, goalLocs: war.goal.locs, attacker: att, allowed, fits, convert, throne,
-    sameFaith: !!L && L.faith === f, faith, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player) };
+    sameFaith: !!L && L.faith === f, faith, blockScore: war.blockScore ?? 0, battles: battleList(s, id, player), log: warBattleLog(s, war, att) };
+}
+/** Every battle behind a war's battle score, from our side (att: we are among the attackers): the battles logged one by
+ *  one (newest first), the older ones summed, and what older saves scored before the log existed, so that the rows add
+ *  up to the battle score exactly. A row links to its full report while that is kept. */
+export function warBattleLog(s: GameState, war: War, att: boolean) {
+  const sign = att ? 1 : -1;
+  const kept = new Set((s.battleReports ?? []).map((r) => r.id));
+  const rows = (war.battleLog ?? []).map((b) => {
+    // what the battle was worth and why (battleWorth): the loser's dead, and the blow to the losing side of this war
+    const v = battleWorth(b.lossL, b.side ?? 0), k = b.raw < 0 ? -sign : sign;
+    return { day: b.day, loc: b.loc, naval: b.naval, win: b.win, lose: b.lose, lossW: b.lossW, lossL: b.lossL, side: b.side ?? 0,
+      dead: v.dead * k, blow: v.blow * k, score: b.score * sign, raw: b.raw * sign, report: b.report !== undefined && kept.has(b.report) ? b.report : null };
+  }).reverse();
+  const rest = war.battleLogRest ? { n: war.battleLogRest.n, score: war.battleLogRest.score * sign } : null;
+  const total = war.battleScore * sign;
+  const listed = rows.reduce((p, r) => p + r.score, 0) + (rest?.score ?? 0);
+  // a war from an older save scored battles before they were logged
+  const unlogged = Math.abs(total - listed) > 1e-6 ? total - listed : 0;
+  return { rows, rest, unlogged, total, cap: BATTLE_CAP, count: war.battles };
 }
 export type WarTermType = PeaceTerm['type'];
 

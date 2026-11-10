@@ -7,7 +7,7 @@ import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, al
 import { B, C, CL } from '../defs';
 import { chance, rand, pick } from '../rng';
 import { acceptProposal, PROPOSAL_OURS, noteRefusal, pluralDe } from './diplomacy';
-import { declareWar, nationLocs, nationDev } from './war';
+import { declareWar, nationLocs, nationDev, answerCallToArms } from './war';
 import { estate } from './politics';
 import { dayToDate } from '../calendar';
 import { EVENTS } from '../content/events';
@@ -186,7 +186,7 @@ function eventsMonth(s: GameState, w: World, m: number, y: number) {
   for (const n of s.nations) {
     if (!n.alive || n.capital < 0) continue;
     if ((n.id + m) % 3 !== 0) continue; // each realm checked every three months
-    if (s.pending.filter((p) => p.nation === n.id && !p.event.startsWith('diplo_')).length >= 4) continue;
+    if (s.pending.filter((p) => p.nation === n.id && !p.event.startsWith('diplo_') && p.event !== 'call_to_arms').length >= 4) continue;
     const e = api(s, w, n, {});
     const order = defs.length; const off = Math.floor(rand(s.rng) * order);
     for (let k = 0; k < order; k++) {
@@ -226,6 +226,11 @@ export function answerEvent(s: GameState, w: World, nation: number, pendingId: n
       notice(s, p.ctx.from, 'diplo_accept', { en: `${n.short.en} accepted ${what.en}.`, de: `${n.short.de} ${pluralDe(n) ? 'haben' : 'hat'} ${what.de} angenommen.` });
     } else { addOpinion(s, p.ctx.from, nation, 'refused_us', -10, 365); noteRefusal(s, p.ctx.from, nation, action); }
     return null;
+  }
+  // an ally's call to arms (systems/war.ts): join (0) or stay out (1); unanswered, the court honours a call to defend
+  if (p.event === 'call_to_arms') {
+    if (auto && n.playerId) { const from = s.nations[p.ctx.from]; recordAuto(s, nation, p.event, { en: `Call to arms of ${from?.short.en ?? '?'}`, de: `Ruf zu den Waffen von ${from?.short.de ?? '?'}` }, p.ctx.def ? { en: 'Joined', de: 'Beigetreten' } : { en: 'Declined', de: 'Abgelehnt' }); }
+    return answerCallToArms(s, w, p, choice);
   }
   const d = eventDef(p.event); if (!d) return 'unknown event';
   const e = api(s, w, n, p.ctx);

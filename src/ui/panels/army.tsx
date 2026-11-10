@@ -110,7 +110,7 @@ export function Outliner() {
       {sieges.length > 0 && <Section title={t('sieges')} id="ol-sieges">
         {sieges.map((s) => <div class="ol-row click" onClick={() => selectLoc(s.loc)}>
           <NLink id={s.nation} size={14} name={false} /><span class="ol-name">{locName(s.loc)}</span>
-          <Tip content={<div><TipHead name={t('siege')} value={`${s.progress}/4`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(s.garrison)}</span></div></div></div>}><span class="ol-bar wide"><i class={s.nation === pid ? '' : 'neg'} style={{ width: `${Math.round(s.progress * 25)}%` }} /></span></Tip><span class="ol-v">{s.progress}/4</span>
+          <Tip content={<div><TipHead name={t('siege')} value={`${s.progress}/${s.need}`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(s.garrison)}</span></div>{s.need < 4 && <div class="bd-row"><span>{t('xfw_siege_blockade')}</span><span>{s.need}</span></div>}</div></div>}><span class="ol-bar wide"><i class={s.nation === pid ? '' : 'neg'} style={{ width: `${Math.round(Math.min(1, s.progress / Math.max(1, s.need)) * 100)}%` }} /></span></Tip><span class="ol-v">{s.progress}/{s.need}</span>
         </div>)}
       </Section>}
       {r && (r.constructions.length > 0 || r.recruits.length > 0) && <Section title={t('works')} id="ol-works">

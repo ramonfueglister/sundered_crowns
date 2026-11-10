@@ -6,7 +6,7 @@ import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmark
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit } from '../sim/systems/military';
-import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
+import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed, scoreCaps, warYears, fieldBalance, type PeaceVeto } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, ablestGain, ablestPlan, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
@@ -31,7 +31,7 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
-import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
+import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors, callToArmsView } from './warview';
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { knownOf, fogColors } from './fog';
@@ -80,12 +80,12 @@ export function playerView(s: GameState, n: Nation): PlayerView {
 }
 
 export function warsView(s: GameState): TickView['wars'] {
-  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x), parts: scoreParts(s, x),
+  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x), parts: scoreParts(s, x), caps: scoreCaps(x),
     offers: x.offers.map((o, idx) => ({ from: o.from, to: o.to, terms: o.terms, concede: o.concede, idx })) }));
 }
 
 export function pendingView(s: GameState, w: World, player: number): TickView['pending'] {
-  return s.pending.filter((p) => p.nation === player).map((p) => {
+  return s.pending.filter((p) => p.nation === player && !(p.event === 'call_to_arms' && callLapsed(s, p))).map((p) => {
     const n = s.nations[player];
     if (p.event.startsWith('diplo_')) {
       const from = s.nations[p.ctx.from]; const act = p.event.slice(6);
@@ -95,6 +95,7 @@ export function pendingView(s: GameState, w: World, player: number): TickView['p
       return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.${wed ? `\n${wed.en}` : ''}`, de: `${from?.short.de} ${from && pluralDe(from) ? 'schlagen' : 'schlägt'} vor: ${ACT_NAME[act]?.de ?? act}.${wed ? `\n${wed.de}` : ''}` },
         options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year${yrs ? `, and they will not ask again for ${yrs} years` : ''}.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10${yrs ? `, und ${from?.short.de} ${from && pluralDe(from) ? 'fragen' : 'fragt'} ${yrs} Jahre lang nicht wieder` : ''}.` } }], art: 'court' };
     }
+    if (p.event === 'call_to_arms') return callToArmsView(s, p); // an ally's call (game/warview.ts)
     const d = eventDef(p.event);
     if (!d) return { ...p, title: { en: p.event, de: p.event }, text: { en: '', de: '' }, options: [{ label: { en: 'OK', de: 'OK' } }] };
     return { ...p, title: interpolate(s, w, n, p.ctx, d.title), text: interpolate(s, w, n, p.ctx, d.text), options: d.options.map((o) => ({ label: interpolate(s, w, n, p.ctx, o.label), hint: o.hint })), art: d.art };
@@ -402,7 +403,9 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       const costs = terms.map((t) => termCost(s, war, t, player, q.to));
       const cost = costs.reduce((p, x) => p + x, 0);
       const warScore = computeScore(s, war) * (war.att.includes(player) ? 1 : -1);
-      return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore };
+      // what a veto hangs on, as it stands today (systems/war.ts evaluatePeace)
+      const vetoNow = ev.veto ? { exhaustion: Math.round(s.nations[q.to]?.warExhaustion ?? 0), years: warYears(s, war), share: fieldBalance(s, war, player, q.to).share } : null;
+      return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore, vetoNow };
     }
     case 'maptip': return mapTip(s, w, Number(q.loc), q.mode, Number.isInteger(q.good) ? q.good! : -1, Number.isInteger(q.focus) ? q.focus! : player);
     case 'path': { const a = s.armies.find((x) => x.id === q.army); if (!a) return null; const p = findPath(s, w, a, a.loc, q.to); return p ? { path: p, days: Math.ceil(travelDays(s, w, a, p)) } : null; }
@@ -430,13 +433,14 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
 }
 
 /** The peace evaluation as the dialog shows it (systems/war.ts evaluatePeace): rows that add up exactly to the shown sum,
- *  and apart from them the condition that our war score must cover 80 % of the demands (not part of the sum). */
-export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [string, number][] }, terms: PeaceTerm[], warScore: number, cost: number) {
+ *  and apart from them the conditions: our war score must cover 80 % of the demands, and no veto may stand (a realm that
+ *  holds out for its freedom, a siege, a young war or a claim to the throne refuses whatever the sum). Not part of the sum. */
+export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [string, number][]; veto?: PeaceVeto | null }, terms: PeaceTerm[], warScore: number, cost: number) {
   const white = terms.length === 0 || terms.every((t) => t.type === 'white_peace');
   // (their war exhaustion gets its own key: 'war_exhaustion' alone reads as ours elsewhere, e.g. in unrest)
   const rows: [string, number][] = ev.reasons.filter(([k]) => k !== 'not_enough_war_score').map(([k, v]) => [k === 'war_exhaustion' ? 'their_war_exhaustion' : k, v]);
   // evaluatePeace adds +5 to the sum for a white peace without listing it
-  if (white) { const at = rows.findIndex((r) => r[0] === 'fighting_for_freedom'); rows.splice(at < 0 ? rows.length : at, 0, ['white_peace', 5]); }
+  if (white) rows.push(['white_peace', 5]);
   // the rows are rounded: keep the shown sum on the same side of zero as the real one, so that Σ and the verdict agree
   let total = rows.reduce((p, r) => p + r[1], 0);
   const want = ev.score >= 0 ? Math.max(0, total) : Math.min(-1, total);
@@ -449,7 +453,7 @@ export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [stri
     if (ok && have < need) need = have; else if (!ok && have >= need) need = have + 1;
     cond = { ok, have, need };
   }
-  return { accept: ev.accept, score: total, reasons: rows, cond };
+  return { accept: ev.accept, score: total, reasons: rows, cond, veto: ev.veto ?? null };
 }
 
 /** Company sizes offered in the location panel. */
@@ -871,6 +875,8 @@ function tradeFlows(s: GameState, max: number): TradeFlowLite[] {
   return [...byPair.values()].sort((p, q) => q.value - p.value).slice(0, max).map((e) => ({ a: e.a, b: e.b, value: Math.round(e.value), good: e.good }));
 }
 
+/** The generalship of a raised general on average: 2 to 5 (systems/commanders.ts raiseGeneral). */
+const RAISE_MEAN = 3.5;
 /** Who could lead an army of ours: generalship with its parts, morale from traits, who already commands which host,
  *  and the price of raising a new general (systems/commanders.ts). */
 export function commandersView(s: GameState, player: number, army: number) {
@@ -883,7 +889,10 @@ export function commandersView(s: GameState, player: number, army: number) {
       skill: commanderSkill(c), morale: commanderMorale(c), parts: commanderParts(c), busy: busy ? { id: busy.id, name: busy.name, here: busy.id === a.id } : null };
   }).sort((x, y) => y.skill - x.skill || x.id - y.id);
   const cur = s.chars[a.general];
-  return { army: a.id, fleet: a.fleet, current: cur ? { id: cur.id, name: cur.name, female: cur.female, skill: commanderSkill(cur), parts: commanderParts(cur), morale: commanderMorale(cur), traits: cur.traits, xp: cur.xp ?? 0, age: Math.floor(ageOf(s, cur)) } : null,
+  // the ablest commander free to appoint at no cost, when he is worth a raised general on average and abler than the
+  // one in command: the raise box offers him before a third of the treasury goes on a new captain
+  const free = list.find((c) => !c.busy && c.skill >= RAISE_MEAN && c.skill > (cur ? commanderSkill(cur) : -1)) ?? null;
+  return { army: a.id, fleet: a.fleet, free: free ? { id: free.id, name: free.name, female: free.female, skill: free.skill, rel: free.rel } : null, current: cur ? { id: cur.id, name: cur.name, female: cur.female, skill: commanderSkill(cur), parts: commanderParts(cur), morale: commanderMorale(cur), traits: cur.traits, xp: cur.xp ?? 0, age: Math.floor(ageOf(s, cur)) } : null,
     list, cost: generalCost(s, n), treasury: n.treasury,
     // the price: two months of taxes, at least 25 marks at the prices of the day
     costParts: (n.income.tax || 10) * 2 >= 25 * s.priceLevel ? [['x_gen_cost_taxes', (n.income.tax || 10) * 2]] : [['x_gen_cost_min', 25 * s.priceLevel]] };

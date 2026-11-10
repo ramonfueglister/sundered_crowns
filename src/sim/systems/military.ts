@@ -782,8 +782,12 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   };
   if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc, [wnN ? wn : -1, lnN ? ln : -1]);
   s.flags[`last_battle_${b.loc}`] = s.day;
-  const human = s.playerNations.includes(wn) || s.playerNations.includes(ln);
-  if (rep && (human || lossW + lossL > 3000)) {
+  // a player realm fought when any of its armies stood in the battle, also under an ally's lead
+  const players = new Set([...W, ...Lz].filter((a) => !a.rebels && s.playerNations.includes(a.owner)).map((a) => a.owner));
+  for (const p of [wn, ln]) if (s.playerNations.includes(p)) players.add(p);
+  const human = players.size > 0;
+  const keep = !!rep && (human || lossW + lossL > 3000);
+  if (rep && keep) {
     const list = (s.battleReports ??= []);
     list.push(rep);
     if (list.length > REPORTS_KEPT) {
@@ -793,8 +797,9 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
     }
   }
   // one notice per player realm: won when its own (non-rebel) armies are among the winners; it opens the report
-  for (const p of new Set([wn, ln])) if (s.playerNations.includes(p)) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc, ...(rep ? { report: rep.id } : {}) });
-  if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', Math.min(25, 2 + (lossL + 1) / 1500), b.loc);
+  for (const p of players) notice(s, p, W.some((a) => a.owner === p && !a.rebels) ? 'battle_won' : 'battle_lost', text, { loc: b.loc, ...(rep ? { report: rep.id } : {}) });
+  // every war between the two sides logs the battle with the war score it moved, also when no full report is kept
+  if (!rebW && !rebL) warScoreEvent(s, wn, ln, 'battle', 0, b.loc, { naval: b.naval, lossW, lossL, ...(keep && rep ? { report: rep.id } : {}) });
   delete b.rep;
   s.battles.splice(s.battles.indexOf(b), 1);
   s.flags.lastBattleResult = s.day;
@@ -855,6 +860,22 @@ export function greatGuns(n: Nation | undefined): boolean { return !!n && (n.tec
 export function bastions(n: Nation | undefined): boolean { return !!n && n.modifiers.some((m) => m.id === 'inv_trace_italienne'); }
 /** Artillery (men in the guns) a host needs to batter the walls of a fort of this level. */
 export const GUNS_PER_FORT = 250;
+/** The steps of progress that take a town: four, three when the sea is closed too (the monthly siege roll adds them). */
+export function siegeSteps(sg: Siege): number { return sg.blockade ? 3 : 4; }
+/** Who takes a fallen town: the realm leading the siege while one of its armies still lies before the walls, otherwise
+ *  the realm (or the rebels) with the most men in the siege; not whichever army happens to come first in the list. */
+export function siegeCaptor(sg: Siege, besiegers: Army[]): Army {
+  const lead = besiegers.find((a) => a.owner === sg.nation && !a.rebels) ?? besiegers.find((a) => a.owner === sg.nation);
+  if (lead) return lead;
+  const men = new Map<string, { men: number; army: Army }>();
+  for (const a of besiegers) {
+    const k = `${a.owner}:${a.rebels ? 1 : 0}`; const e = men.get(k);
+    if (e) e.men += armyMen(a); else men.set(k, { men: armyMen(a), army: a });
+  }
+  let best: { men: number; army: Army } | null = null;
+  for (const e of men.values()) if (!best || e.men > best.men || (e.men === best.men && e.army.owner < best.army.owner)) best = e;
+  return best!.army;
+}
 /** The armies working a siege: those besieging the place, standing there, not marching or fighting. */
 export function besiegersOf(s: GameState, sg: Siege): Army[] { return s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length); }
 /** A fleet of the besiegers' side (or not hostile to them) in a sea zone next to the town shuts it off from the sea. */
@@ -901,7 +922,7 @@ export function siegeOdds(s: GameState, w: World, sg: Siege) {
   if (battering) pBreach = 1; // great guns widen the breach every month
   // a coastal town not blockaded may be resupplied from the sea (a roll of 3 sets the siege back a step)
   const pResupply = !sg.blockade && w.coastal[l] ? 1 / 14 : 0;
-  const steps = Math.max(0, (sg.blockade ? 3 : 4) - sg.progress);
+  const steps = Math.max(0, siegeSteps(sg) - sg.progress);
   const net = Math.max(0.01, pStep - pResupply);
   const days = steps <= 0 ? 0 : Math.round(steps / net * 30 - (sg.days % 30));
   return { parts, bonus, need, pStep, pBreach, battering, pResupply, steps, days: Math.max(0, days), men, art, garrison: sg.garrison, besiegers };
@@ -970,9 +991,10 @@ function siegesDay(s: GameState, w: World) {
         siegeLog(s, sg, 'disease');
       }
       if (roll === 3 && !sg.blockade && w.coastal[l]) { sg.progress = Math.max(0, sg.progress - 1); siegeLog(s, sg, 'resupplied'); }
-      if (sg.progress >= 4 || (sg.blockade && sg.progress >= 3)) {
+      if (sg.progress >= siegeSteps(sg)) {
         siegeLog(s, sg, 'fallen');
-        occupy(s, w, l, besiegers[0].rebels ? -2 : besiegers[0].owner, besiegers[0]);
+        const by = siegeCaptor(sg, besiegers);
+        occupy(s, w, l, by.rebels ? -2 : by.owner, by);
         s.sieges.splice(s.sieges.indexOf(sg), 1);
         for (const a of besiegers) a.siege = -1;
         continue;

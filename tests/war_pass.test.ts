@@ -11,7 +11,7 @@ import { mkCtx, hasTreaty, atWar, topOverlord, allies, rel } from '../src/sim/ct
 import { EDGE_RIVER } from '../src/sim/world';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import {
-  casusBelliAll, hasCasusBelli, declarationCost, declareWar, warGoalLocs, allowedTerms, applyPeace, peaceObligations, scoreParts, TARIFF_CAP, DECLARE_GOALS,
+  casusBelliAll, hasCasusBelli, declarationCost, declareWar, warGoalLocs, goalTowns, allowedTerms, applyPeace, peaceObligations, scoreParts, TARIFF_CAP, DECLARE_GOALS,
   cedeFits, termCost, faithTermFits,
 } from '../src/sim/systems/war';
 import {
@@ -456,18 +456,22 @@ describe('review fixes: no free wars, holy wars for the holy land, independence 
     const holy = warGoalLocs(s, w, c.id, g.id, 'faith');
     const far = owned(s, g.id).find((l) => !holy.includes(l) && s.loc.faith[l] !== c.faith && l !== g.capital)!;
     expect(far).toBeDefined();
-    expect(applyCommand(s, w, { t: 'declare', n: c.id, target: g.id, goal: 'faith', locs: [far, ...holy.slice(0, 1)] }).ok).toBe(true);
+    // (fix-war) a town outside the holy land is refused; the towns of the holy land we name are kept
+    const r0 = applyCommand(s, w, { t: 'declare', n: c.id, target: g.id, goal: 'faith', locs: [far, ...holy.slice(0, 1)] });
+    expect(r0.ok).toBe(false); expect(r0.err).toBe('a town beyond what this war is fought for');
+    expect(applyCommand(s, w, { t: 'declare', n: c.id, target: g.id, goal: 'faith', locs: holy.slice(0, 1) }).ok).toBe(true);
     const wr = s.wars.at(-1)!;
     expect(wr.goal.locs).not.toContain(far);
-    expect(wr.goal.locs).toEqual(holy);
+    expect(wr.goal.locs).toEqual(holy.slice(0, 1));
     expect(cedeFits(s, w, wr, true, c.id, far)).toBe(false);
     expect(sanitizeTerms(s, w, wr, c.id, g.id, [{ type: 'cede', locs: [far], to: c.id }], false).terms).toEqual([]);
     // a conquest: a town deep in their land is no goal of a border war
     const s2 = fresh();
     const a = nat(s2, 'portugal').id, b = plainTarget(s2, a);
     const border = warGoalLocs(s2, w, a, b, 'conquest');
-    const deep = owned(s2, b).find((l) => !border.includes(l));
-    expect(applyCommand(s2, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: deep !== undefined ? [deep] : [] }).ok).toBe(true);
+    const deep = owned(s2, b).find((l) => !goalTowns(s2, w, a, b, 'conquest').includes(l));
+    if (deep !== undefined) expect(applyCommand(s2, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: [deep] }).err).toBe('a town beyond what this war is fought for');
+    expect(applyCommand(s2, w, { t: 'declare', n: a, target: b, goal: 'conquest' }).ok).toBe(true);
     expect(s2.wars.at(-1)!.goal.locs).toEqual(border);
   });
 

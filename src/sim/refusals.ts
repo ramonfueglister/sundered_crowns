@@ -115,6 +115,8 @@ export const REFUSAL_DE: Record<string, string> = {
   // ---- fix-people
   'they refused us recently': 'Sie haben uns erst kürzlich abgewiesen',
   'no abler candidate at court': 'Niemand am Hof wäre fähiger',
+  // ---- fix-war
+  'a town beyond what this war is fought for': 'Ein Ort, um den dieser Krieg nicht geführt wird', 'too many towns named': 'Zu viele Orte genannt',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

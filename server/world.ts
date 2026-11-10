@@ -20,6 +20,7 @@ import { notice, chronicle, hasTreaty, atWar } from '../src/sim/ctx';
 import { nationLites, armyLites, playerView, warsView, pendingView, mapModeColors, answer, landmarksView, roadLevels, tradeView } from '../src/game/view';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { nationDev } from '../src/sim/systems/war';
+import { siegesView } from '../src/game/warview';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { checkAchievements, type AchievementCtx } from '../src/online/achievements';
 import {
@@ -868,7 +869,7 @@ export class WorldCore {
     for (const a of armies) { json.set(a.id, JSON.stringify(a)); byId.set(a.id, a); }
     this.pool = { day: s.day, armies, byId, json, known: new Map(),
       battles: s.battles.map((b) => ({ id: b.id, loc: b.loc, att: b.attNation, def: b.defNation, lossA: b.lossA, lossD: b.lossD, startA: b.startA, startD: b.startD, phase: b.phase })),
-      sieges: s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, garrison: x.garrison })), sight: new Map() };
+      sieges: siegesView(s), sight: new Map() };
     this.poolDirty = false;
     return this.pool;
   }

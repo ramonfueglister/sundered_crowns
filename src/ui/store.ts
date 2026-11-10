@@ -22,6 +22,8 @@ export const panelArg = signal<any>(null);
 export const realmDialog = signal<{ kind: 'assembly'; cmd: any } | { kind: 'situation'; id: string } | null>(null);
 export const mapMode = signal<MapMode>('political');
 export const hoverLoc = signal(-1);
+/** Places the map highlights besides the selection (the towns a declaration names, panels/nation.tsx). */
+export const mapHighlight = signal<number[]>([]);
 export const uiHidden = signal(false);
 export const toast = signal<{ text: string; kind?: 'ok' | 'err'; t: number } | null>(null);
 export const tutorialStep = signal(-1);

@@ -7,7 +7,7 @@
 import type { GameState, Nation, War, WarGoal, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies, opinion, addIncome, addExpense } from '../ctx';
-import { nationDev, nationLocsRO, concludePeace, warHooks } from './war';
+import { nationDev, nationLocsRO, concludePeace, warHooks, emperorAttacksMember, EMPEROR_JOIN_ATTACK } from './war';
 import { totalOpinion } from './diplomacy';
 import { assemblyWarVeto, assemblyWarRefusal } from './government';
 import { hash01, chance } from '../rng';
@@ -143,22 +143,57 @@ function peaceRefusal(s: GameState, a: number, b: number, goal: WarGoal['type'])
  *  costs authority, and the league defends its towns. */
 export function realmBodiesOnWar(s: GameState, w: World, war: War) {
   const E = s.empire; const victim = s.nations[war.goal.target], att = s.nations[war.attLead];
-  if (!victim || !att || war.goal.type === 'independence' || war.goal.type === 'civil_war' || war.goal.type === 'rebels') { leagueOnWar(s, w, war); return; }
-  const em = alive(s, E.emperor);
-  if (em && victim.isHRE && !att.isHRE && em.id !== victim.id && em.id !== att.id && !war.att.includes(em.id) && !war.def.includes(em.id) && !atWar(s, em.id, victim.id)) {
+  const em = emperorCalled(s, war.goal.target, war.attLead, war.goal.type, war);
+  if (em) {
     const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
     (E.calls ??= []).push(call);
     if (isHuman(s, em.id)) notice(s, em.id, 'imperial_call', T(`${att.short.en} has attacked ${victim.short.en}, a member of the Empire. The members expect their emperor to defend it.`, `${att.short.de} hat ${victim.short.de} angegriffen, ein Glied des Reiches. Die Glieder erwarten, dass ihr Kaiser es verteidigt.`), { war: war.id, loc: victim.capital });
     else answerCall(s, w, call, defendScore(s, w, em, call).reduce((p, r) => p + r[1], 0) > 0);
     // the circles of the Empire: neighbouring members march to the defence
-    if (hasReform(s, 'imperial_circles') && victim.capital >= 0) for (const id of E.members) {
-      const m = s.nations[id];
-      if (!m?.alive || m.id === victim.id || m.overlord >= 0 || isHuman(s, id) || war.att.includes(id) || war.def.includes(id) || m.capital < 0) continue;
-      if (w.distKm(m.capital, victim.capital) > 600 || hasTreaty(s, id, att.id, 'alliance') || hasTreaty(s, id, att.id, 'truce') || m.warExhaustion > 40) continue;
-      if (chance(s.rng, 0.5)) war.def.push(id);
-    }
+    for (const id of circleMembers(s, w, victim.id, att.id, war)) if (chance(s.rng, 0.5)) war.def.push(id);
   }
   leagueOnWar(s, w, war);
+}
+type Sides = { att: number[]; def: number[] };
+/** The emperor called to defend a member that an outsider attacks (null: no call). */
+function emperorCalled(s: GameState, victimId: number, attId: number, goal: WarGoal['type'], sides: Sides): Nation | null {
+  const victim = s.nations[victimId], att = s.nations[attId];
+  if (!victim || !att || goal === 'independence' || goal === 'civil_war' || goal === 'rebels') return null;
+  const em = alive(s, s.empire.emperor);
+  if (em && victim.isHRE && !att.isHRE && em.id !== victim.id && em.id !== att.id && !sides.att.includes(em.id) && !sides.def.includes(em.id) && !atWar(s, em.id, victim.id)) return em;
+  return null;
+}
+/** With the circles reformed, the AI members near an attacked member who march to its defence (one in two each). */
+function circleMembers(s: GameState, w: World, victimId: number, attId: number, sides: Sides): number[] {
+  const victim = s.nations[victimId];
+  if (!hasReform(s, 'imperial_circles') || victim.capital < 0) return [];
+  return s.empire.members.filter((id) => {
+    const m = s.nations[id];
+    if (!m?.alive || m.id === victim.id || m.overlord >= 0 || isHuman(s, id) || sides.att.includes(id) || sides.def.includes(id) || m.capital < 0) return false;
+    return !(w.distKm(m.capital, victim.capital) > 600 || hasTreaty(s, id, attId, 'alliance') || hasTreaty(s, id, attId, 'truce') || m.warExhaustion > 40);
+  });
+}
+/** Who the Empire's bodies would send to the defence of b if a declared this war (systems/war.ts predictSides): the
+ *  emperor as his duty weighs (defendScore, a player emperor is asked), the circles one in two, the league seven in ten
+ *  (a player member is asked). */
+function predictBodies(s: GameState, w: World, a: number, b: number, goal: WarGoal['type'], att: number[], def: number[]) {
+  const out: { id: number; role: 'emperor' | 'league' | 'circle'; odds: number | null }[] = [];
+  const sides = { att, def: [...def] };
+  const em = emperorCalled(s, b, a, goal, sides);
+  if (em) {
+    const yes = isHuman(s, em.id) ? null : defendScore(s, w, em, { war: -1, member: b, attacker: a }).reduce((p, r) => p + r[1], 0) > 0 ? 1 : 0;
+    if (yes !== 0) { out.push({ id: em.id, role: 'emperor', odds: yes }); sides.def.push(em.id); }
+    for (const id of circleMembers(s, w, b, a, sides)) { out.push({ id, role: 'circle', odds: 0.5 }); sides.def.push(id); }
+  }
+  const lg = league(s), victim = s.nations[b];
+  if (lg && victim && lg.members.includes(b) && !lg.members.includes(a) && victim.capital >= 0 && goal !== 'independence' && goal !== 'civil_war' && goal !== 'rebels') {
+    for (const id of lg.members) {
+      const m = s.nations[id];
+      if (!m?.alive || !leagueCallable(s, w, sides, id, b, a) || m.warExhaustion >= LEAGUE_CALL_EXHAUSTION) continue;
+      out.push({ id, role: 'league', odds: isHuman(s, id) ? null : 0.7 });
+    }
+  }
+  return out;
 }
 /** Why the emperor would or would not defend a member: authority, opinion, strength, other wars, distance. */
 export function defendScore(s: GameState, w: World, em: Nation, call: { war: number; member: number; attacker: number }): Row[] {
@@ -525,7 +560,7 @@ function leagueOnWar(s: GameState, w: World, war: War) {
     else stayedOut(s, id, victim.id);
   }
 }
-function leagueCallable(s: GameState, w: World, war: War, id: number, victim: number, att: number): boolean {
+function leagueCallable(s: GameState, w: World, war: Sides, id: number, victim: number, att: number): boolean {
   const m = s.nations[id], v = s.nations[victim];
   if (!m?.alive || !v?.alive || id === victim || war.att.includes(id) || war.def.includes(id) || m.capital < 0 || v.capital < 0) return false;
   return !hasTreaty(s, id, att, 'alliance') && !hasTreaty(s, id, att, 'truce') && w.distKm(m.capital, v.capital) <= 1200;
@@ -678,6 +713,9 @@ function empireYear(s: GameState, w: World) {
 warHooks.veto = warVeto;
 warHooks.check = warVetoCheck;
 warHooks.declared = realmBodiesOnWar;
+// the emperor who joins an ally's attack on a member of the Empire betrays his office (player and AI alike)
+warHooks.joined = (s, w, war, n) => { if (emperorAttacksMember(s, war, n)) moveAuth(s, 'x_emp_joined_attack', -EMPEROR_JOIN_ATTACK); };
+warHooks.predict = predictBodies;
 
 export const empire: System = {
   id: 'empire',

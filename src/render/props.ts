@@ -310,7 +310,7 @@ export type TownStyle = 'north' | 'stone' | 'south' | 'steppe' | 'muslim';
 export interface Settlement { x: number; y: number; size: number; capital?: boolean; style: TownStyle; loc: number }
 /** x, y: where the figures stand (figureSpot); heading: course of ships under way (radians, see setUnits); marching: on the move */
 export interface UnitProp { id: number; x: number; y: number; men: number; fleet: boolean; color: [number, number, number]; heading?: number; marching?: boolean; facing?: number }
-/** a siege camp around a town or the smoke of a battle; x, y: the location's centre; progress: of a siege, 0..100 */
+/** a siege camp around a town or the smoke of a battle; x, y: the location's centre; progress: of a siege, the share of the steps that take the town, 0..100 */
 export interface SceneProp { id: number; x: number; y: number; kind: 'siege' | 'battle'; color: [number, number, number]; progress?: number }
 interface UnitGroup { id: number; ax: number; ay: number; fleet: boolean; march: boolean; parts: { dx: number; dy: number; s: number; r: number; c: number; mesh: string; w?: number }[] }
 
@@ -632,8 +632,9 @@ export class Props {
           parts.push({ dx, dy, s: S_SOLDIER, r: Math.atan2(dx, dy), c, mesh: 'cannon' });
         }
         parts.push({ dx: Math.cos(3.9) * 9.6, dy: Math.sin(3.9) * 9.6, s: S_SOLDIER, r: 0, c, mesh: 'banner_standard' });
-        // the longer the siege, the more of the town burns
-        const fires = (sc.progress ?? 0) >= 30 ? Math.min(4, 1 + Math.floor(((sc.progress ?? 0) - 30) / 20)) : 0;
+        // the longer the siege, the more of the town burns: the first fire with the first step taken (a quarter of the
+        // way, a third under blockade), one more with each further quarter
+        const fires = (sc.progress ?? 0) >= 25 ? Math.min(4, 1 + Math.floor(((sc.progress ?? 0) - 25) / 25)) : 0;
         for (let i = 0; i < fires * 2; i++) {
           const a = h(i, 5) * 6.283, r = 1 + h(i, 6) * 2.5;
           parts.push({ dx: Math.cos(a) * r, dy: Math.sin(a) * r, s: S_SOLDIER * (1.1 + 0.4 * h(i, 10)), r: 0, c: -1, mesh: 'smoke_dark', w: -2 });

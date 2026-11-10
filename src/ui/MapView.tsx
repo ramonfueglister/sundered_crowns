@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { sim, view, nations, landmarks } from '../game/client';
 import type { TickView } from '../game/protocol';
-import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast } from './store';
+import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast, mapHighlight } from './store';
 import { t, L, lang } from './i18n';
 import { sfx } from './audio';
 import { abortTimelapse, timelapseRunning } from './timelapse';
@@ -130,7 +130,8 @@ export function MapView() {
       }
       const kMen = (m: number) => (m >= 1000 ? (m / 1000).toFixed(1) + 'k' : String(Math.max(0, Math.round(m))));
       for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : kMen(u.men);
-      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: sgi.progress, color: ns[sgi.nation] ? (cvd() ? cvdColorOf(sgi.nation) : ns[sgi.nation].color) : [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' }); }
+      // a siege counts steps (sgi.progress of sgi.need, 3 under blockade); the camp props take the share as 0..100
+      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: Math.min(100, sgi.progress * 100 / Math.max(1, sgi.need)), color: ns[sgi.nation] ? (cvd() ? cvdColorOf(sgi.nation) : ns[sgi.nation].color) : [90, 90, 90], label: `${sgi.progress}/${sgi.need}`, kind: 'siege' }); }
       for (const b of v.battles) { if (knownLocs && knownLocs[b.loc] === 0) continue; units.push({ id: -100000 - b.id, x: g.loc.x[b.loc], y: g.loc.y[b.loc] - 12, lx: g.loc.x[b.loc], ly: g.loc.y[b.loc], color: [200, 40, 30], label: `${kMen(b.startA - b.lossA)} : ${kMen(b.startD - b.lossD)}`, kind: 'battle' }); }
       r.setUnits(units);
     };
@@ -183,7 +184,7 @@ export function MapView() {
   useEffect(() => { const v = view.value; const r = rendererRef.r; if (r && v?.owner && v.ctrl) r.setPolitical(v.owner, v.ctrl, realmColors(v.owner, nations.value)); sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); }, [settings.value.palette]);
   useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); rendererRef.r?.setPlaces?.(placeList()); }, [lang.value]);
   useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
-  useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
+  useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, mapHighlight.value); }, [selectedLoc.value, mapHighlight.value]);
   return <div class="mapwrap">
     <canvas ref={canvas} class="map" onContextMenu={(e) => e.preventDefault()} />
     {mapError.value && <div class="maperror">{mapError.value}</div>}

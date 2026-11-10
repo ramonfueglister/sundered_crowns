@@ -3,10 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { playerId, panelArg, openPanel } from '../store';
 import type { PeaceTerm } from '../../sim/types';
-import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, pct, Tip, locName, namesVersion, flyToLoc, useQuery, placeName } from './common';
+import { Section, Btn, Empty, NLink, NList, Reasons, act, t, L, num, signed, pct, Tip, locName, namesVersion, flyToLoc, useQuery, placeName, fmtDateShort } from './common';
 import { WarCard, WarScoreTip } from './realmtabs';
 import { TipHead } from './explain';
-import { BattleList } from './war';
 
 export function termText(x: PeaceTerm): string {
   switch (x.type) {
@@ -23,6 +22,11 @@ export function termText(x: PeaceTerm): string {
 const FLAG_TERMS = ['vassal', 'faith', 'independence', 'humiliate', 'break_alliance', 'reparations', 'end_rivalry', 'trade_rights', 'end_embargo', 'tariff_cut', 'expel_merchants'];
 
 /** What each term weighs: the price in war score (systems/war.ts termCost). */
+/** When a veto of their answer lifts (systems/war.ts evaluatePeace), with the numbers it hangs on today. */
+function vetoHint(ev: any): string {
+  const n = ev.vetoNow ?? { exhaustion: 0, years: 0, share: 0 };
+  return t(`xfw_veto_${ev.veto}_hint`).replace('{ws}', signed(ev.warScore ?? 0, 0)).replace('{we}', num(n.exhaustion)).replace('{years}', num(n.years, 1)).replace('{share}', num(n.share * 100));
+}
 function TermCosts({ terms, costs, total, title, hint }: { terms: PeaceTerm[]; costs?: number[]; total: number; title: string; hint: string }) {
   return <div><TipHead name={title} value={num(total)} hint={hint} />
     <div class="breakdown">{terms.map((x, i) => <div class="bd-row"><span>{termText(x)}</span><span>{num(costs?.[i] ?? 0)}</span></div>)}
@@ -139,7 +143,7 @@ function PeaceInner({ w }: { w: any }) {
       {wv.goalLocs.length > 0 && <span class="muted"> · {t('xw_fought_for')}: {wv.goalLocs.slice(0, 6).map(locName).join(', ')}{wv.goalLocs.length > 6 ? ` +${wv.goalLocs.length - 6}` : ''}</span>}</div>}
     {offers.length > 0 && <Section title={t('incoming_offers')} id="pc-offers">
       {offers.map((o: any) => <div class="offer">
-        <div><NLink id={o.from} /> {o.concede ? t('offers_concession') : t('demands')}:</div>
+        <div><NLink id={o.from} /> {o.concede || o.terms.every((x: PeaceTerm) => x.type === 'white_peace') ? t('offers_concession') : t('demands')}:</div>
         <ul>{o.terms.length ? o.terms.map((x: PeaceTerm) => <li>{termText(x)}</li>) : <li>{t('term_white_peace')}</li>}</ul>
         <div class="act-row"><span class="spacer" /><Btn onClick={() => act({ t: 'peace_answer', war: w.id, offer: o.idx, accept: false }, 'click')}>{t('decline')}</Btn><Btn cls="gold" onClick={() => act({ t: 'peace_answer', war: w.id, offer: o.idx, accept: true }, 'peace', t('peace_made'))}>{t('accept')}</Btn></div>
       </div>)}
@@ -183,6 +187,7 @@ function PeaceInner({ w }: { w: any }) {
           </div>
           {ev.reasons?.length > 0 && <Reasons title={t('x_their_answer')} rows={ev.reasons} total={ev.score} />}
           {ev.cond && <div class={`pe-cond small ${ev.cond.ok ? 'pos' : 'neg'}`}>{ev.cond.ok ? '✔' : '✘'} {t('x_peace_cond')}: {signed(ev.cond.have, 0)} / {signed(ev.cond.need, 0)}</div>}
+          {ev.veto && <Tip tag="div" content={<div><TipHead name={t(`xfw_veto_${ev.veto}`)} hint={vetoHint(ev)} /></div>}><div class="pe-cond small neg has-tip">✘ {t(`xfw_veto_${ev.veto}`)}</div></Tip>}
           {ev.reasons?.length > 0 && <div class="muted small">{t(ev.cond ? 'x_peace_accept_hint' : 'x_peace_accept_hint_white')}</div>}
         </> : <span class="muted">…</span>}
       </div>
@@ -190,7 +195,7 @@ function PeaceInner({ w }: { w: any }) {
         <Btn small={false} cls={concede ? 'danger' : 'gold'} disabled={!terms.length && !concede ? 'no terms' : null} onClick={send}>{concede ? t('offer_concession') : t('send_offer')}</Btn></div>
     </Section>
     <div class="muted small">{t('allies_in_war')}: <NList ids={ourSide.filter((x) => x !== pid)} size={14} /></div>
-    <Section title={t('xw_great_battles')} id="pc-battles" open={false}><BattleList rows={wv?.battles ?? null} /></Section>
+    <Section title={<>{t('xfw_war_battles')}{wv?.log && <span class="muted small"> ({wv.log.count} · {signed(wv.log.total, 1)})</span>}</>} id="pc-battles" open={false}><WarBattles log={wv?.log ?? null} /></Section>
     {void nations.value}
   </div>;
 }
@@ -204,4 +209,44 @@ function FaithFitTip({ f }: { f: { fit: string | null; weight: number; people: n
     <div class="bd-row"><span>{t('xw_faith_old')}</span><span>{mark(f.oldFaith)}</span></div>
     <div class={`bd-row bd-total ${f.fit ? 'pos' : 'neg'}`}><span>{f.fit ? t(`xw_faith_fit_${f.fit}`) : t('xw_faith_unfit')}</span><span /></div>
   </div>;
+}
+
+/** Every battle behind this war's battle score, from our side: who won where, the losses, the war score each moved
+ *  (after the cap of ±40) and the sum, which is the battle score of the war score breakdown. A row with a full report
+ *  opens it. */
+function WarBattles({ log }: { log: any }) {
+  void namesVersion.value;
+  if (!log) return <div class="muted small">{t('loading')}…</div>;
+  const sy = view.value?.startYear ?? 1356;
+  const capped = log.rows.some((r: any) => Math.abs(r.raw - r.score) > 0.05);
+  return <div class="xfw-blog">
+    {!log.rows.length && !log.rest && !log.unlogged ? <div class="muted small">{t('xw_no_battles')}</div> : <table class="tbl xw-blist small"><thead><tr>
+      <th>{t('xw_date')}</th><th>{t('xw_battle_of')}</th><th>{t('xfw_winner')}</th><th>{t('xfw_loser')}</th><th class="r">{t('xw_losses')}</th><th class="r">{t('war_score')}</th></tr></thead>
+      <tbody>{log.rows.map((b: any) => <tr class={b.report !== null ? 'click' : ''} onClick={() => { if (b.report !== null) openPanel('battle', { id: b.report }); }}>
+        <td class="muted">{fmtDateShort(b.day, sy)}</td><td>{b.naval ? '⚓ ' : '⚔ '}{locName(b.loc)}{b.report !== null && <small class="muted"> ›</small>}</td>
+        <td><NLink id={b.win} size={14} /></td><td><NLink id={b.lose} size={14} /></td>
+        <td class="r"><Tip content={<div><TipHead name={t('xw_losses')} hint={t('xfw_losses_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('xfw_winner')}</span><span class="neg">−{num(b.lossW)}</span></div><div class="bd-row"><span>{t('xfw_loser')}</span><span class="neg">−{num(b.lossL)}</span></div></div></div>}><span>{num(b.lossW)} / {num(b.lossL)}</span></Tip></td>
+        <td class={`r ${b.score > 0 ? 'pos' : b.score < 0 ? 'neg' : 'muted'}`}><Tip content={() => <BattleWorthTip b={b} cap={log.cap} />}><span>{signed(b.score, wsDigits(b.score))}{Math.abs(b.raw - b.score) > 0.05 && <small class="muted"> ({signed(b.raw, wsDigits(b.raw))})</small>}</span></Tip></td>
+      </tr>)}
+      {log.rest && <tr class="muted"><td colSpan={5}>{t('xfw_earlier_battles').replace('{n}', String(log.rest.n))}</td><td class="r">{signed(log.rest.score, 1)}</td></tr>}
+      {log.unlogged !== 0 && <tr class="muted"><td colSpan={5}>{t('xfw_unlogged_battles')}</td><td class="r">{signed(log.unlogged, 1)}</td></tr>}
+      <tr class="bd-total"><td colSpan={5}><b>{t('ws_battles')}</b> <span class="muted small">({t('xfw_cap_note').replace('{cap}', String(log.cap))})</span></td><td class="r"><b>{signed(log.total, 1)}</b></td></tr>
+      </tbody></table>}
+    {capped && <div class="muted small">{t('xfw_capped_hint').replace('{cap}', String(log.cap))}</div>}
+  </div>;
+}
+
+/** Digits for a battle's war score: a skirmish worth a few hundredths shows them, so the cell matches its breakdown. */
+const wsDigits = (v: number) => (v !== 0 && Math.abs(v) < 0.095 ? 2 : 1);
+/** What one battle was worth to this war (systems/war.ts battleWorth), from our side, and what of it counted. */
+function BattleWorthTip({ b, cap }: { b: any; cap: number }) {
+  const sum = b.dead + b.blow, one = Math.abs(sum) > 25 + 1e-9;
+  return <div><TipHead name={t('xfw_battle_worth')} value={signed(b.score, wsDigits(b.score))} hint={t('xfw_battle_worth_hint')} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('xfw_bw_dead').replace('{n}', num(b.lossL))}</span><span>{signed(b.dead, 2)}</span></div>
+      <div class="bd-row"><span>{t('xfw_bw_blow').replace('{n}', num(b.lossL)).replace('{m}', num(b.side))}</span><span>{signed(b.blow, 2)}</span></div>
+      {one && <div class="bd-row"><span>{t('xfw_bw_one')}</span><span>{signed(b.raw - sum, 2)}</span></div>}
+      {Math.abs(b.raw - b.score) > 1e-6 && <div class="bd-row"><span>{t('xfw_battle_capped').replace('{cap}', String(cap))}</span><span>{signed(b.score - b.raw, 2)}</span></div>}
+      <div class="bd-row bd-total"><span>Σ</span><span>{signed(b.score, 2)}</span></div>
+    </div></div>;
 }

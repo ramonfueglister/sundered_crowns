@@ -1,7 +1,7 @@
 // Foreign realm panel: ruler, standing, relations both ways, diplomacy with predicted answers, war and espionage.
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
-import { selectedNation, playerId, openPanel } from '../store';
+import { selectedNation, playerId, openPanel, mapHighlight } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
 import { TradeRelations } from './tradediplo';
@@ -174,6 +174,13 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
   const first = goals.find((g) => !g.refusal && !g.unjust) ?? goals.find((g) => !g.refusal);
   const goal = pick ?? first?.goal ?? 'conquest';
   const g = goals.find((x) => x.goal === goal);
+  // the towns we name (the goal's own choice until we change it), highlighted on the map while the dialog is open
+  const [picks, setPicks] = useState<Record<string, number[]>>({});
+  const chosen: number[] = g ? picks[g.goal] ?? g.locs : [];
+  const pickable = !!g && g.pickable && g.towns.length > 0;
+  useEffect(() => { mapHighlight.value = open && g ? chosen : []; return () => { mapHighlight.value = []; }; }, [open, g?.goal, chosen.join(',')]);
+  useEffect(() => { if (!open) setPicks({}); }, [open, d.id]);
+  const toggle = (l: number) => g && setPicks({ ...picks, [g.goal]: chosen.includes(l) ? chosen.filter((x) => x !== l) : [...chosen, l] });
   void namesVersion.value;
   return <Section title={t('declare_war')} id="nat-war" open={false}>
     {!open ? <div class="act-row"><Tip content={() => <CbTip d={d} />}><span class="muted">{cbs.length ? <>{t('casus_belli')}: <b>{cbs.map((c) => t(`cb_${c}`)).join(', ')}</b></> : t('no_cb_short')}</span></Tip><Btn cls="danger" onClick={() => setOpen(true)}>{t('declare_war')}…</Btn></div>
@@ -189,8 +196,10 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
         <div class="muted small">{t(`goalhint_${goal}`)}</div>
         {g && <>
           {g.cb && !g.unjust && <div class="pos small">✔ {t('xw_justified_by')}: {t(`cb_${g.cb}`)}</div>}
-          {g.locs.length > 0 && <div class="small xw-goal-locs"><span class="k">{t('xw_fought_for')}:</span> {g.locs.slice(0, 8).map((l: number, k: number) => <>{k > 0 && ', '}<LocName id={l} /></>)}{g.locs.length > 8 && <span class="muted"> +{g.locs.length - 8}</span>}</div>}
+          {pickable ? <TownPicker g={g} chosen={chosen} toggle={toggle} target={d.id} />
+            : g.locs.length > 0 && <div class="small xw-goal-locs"><span class="k">{t('xw_fought_for')}:</span> {g.locs.slice(0, 8).map((l: number, k: number) => <>{k > 0 && ', '}<LocName id={l} /></>)}{g.locs.length > 8 && <span class="muted"> +{g.locs.length - 8}</span>}</div>}
           <div class="small"><span class="k">{t('xw_terms_allowed')}:</span> <span class="muted">{g.terms.map((x: string) => t(`term_${x}`)).join(', ')}</span></div>
+          {g.sides && <WarSides sides={g.sides} />}
           {g.rows.length > 0 ? <div class="warn-box"><Tip content={() => <div><TipHead name={t('xw_decl_cost')} hint={t('xw_decl_cost_hint')} /><CostRows rows={g.rows} />{g.opinionYears > 0 && <div class="muted small">{t('xw_opinion_years').replace('{n}', String(g.opinionYears))}</div>}</div>}>
             <div><b>⚠ {g.unjust ? t('no_cb') : t('xw_decl_cost')}</b>{g.unjust && <div>{t('no_cb_hint')}</div>}<CostRows rows={g.rows} /></div></Tip></div>
             : <div class="pos small">{t('xw_no_decl_cost')}</div>}
@@ -198,9 +207,49 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
           {g.ally && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
           {g.refusal && <div class="neg small">{errText(g.refusal)}</div>}
         </>}
-        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" disabled={g?.refusal ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+        {pickable && !chosen.length && <div class="neg small">{t('xfw_pick_one')}</div>}
+        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" disabled={g?.refusal ?? (pickable && !chosen.length ? t('xfw_pick_one') : null)} onClick={() => act({ t: 'declare', target: d.id, goal, locs: pickable ? chosen : g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
       </div>}
   </Section>;
+}
+/** The towns a declaration may name (src/game/warview.ts declareView: the land the goal covers), each with the war
+ *  score its cession would cost; the chosen ones are highlighted on the map. */
+function TownPicker({ g, chosen, toggle, target }: { g: any; chosen: number[]; toggle: (l: number) => void; target: number }) {
+  void namesVersion.value;
+  const sum = g.towns.filter((x: any) => chosen.includes(x.loc)).reduce((p: number, x: any) => p + x.price, 0);
+  return <div class="xfw-towns">
+    <Tip tag="div" content={<div><TipHead name={t('xfw_towns')} hint={t('xfw_towns_hint').replace('{fixed}', String(g.cedeFixed))} /></div>}>
+      <div class="k">{t('xfw_towns')} <span class="muted small">({chosen.length}/{g.towns.length})</span></div>
+    </Tip>
+    <div class="xfw-town-list">{g.towns.map((x: any) => <label class={`xfw-town ${chosen.includes(x.loc) ? 'on' : ''}`}>
+      <input type="checkbox" checked={chosen.includes(x.loc)} onChange={() => toggle(x.loc)} />
+      <span class="xfw-town-name"><LocName id={x.loc} />{x.owner !== target && <small class="muted"> · {L(nations.value[x.owner]?.short)}</small>}</span>
+      <Tip content={t('xfw_town_price_hint')}><span class="r muted">≈ {num(x.price, 1)}</span></Tip>
+    </label>)}</div>
+    {chosen.length > 0 && <div class="small muted">{t('xfw_towns_sum').replace('{n}', num(sum + g.cedeFixed, 1)).replace('{fixed}', String(g.cedeFixed))}</div>}
+  </div>;
+}
+/** Who would fight on each side (src/game/warview.ts declareView, by the rules of the declaration): subjects follow
+ *  their overlord, AI allies answer by their opinion (or one in two), players are asked; men in the field now. */
+function WarSides({ sides }: { sides: any }) {
+  void namesVersion.value;
+  const tag = (x: any) => x.odds === null ? <span class="muted">{t('xfw_odds_asked')}</span>
+    : x.odds === 0 ? <span class="neg">{t('xfw_odds_out')}{x.why && <> ({t(`xfw_why_${x.why}`)})</>}</span>
+    : x.odds < 1 ? <span class="muted">{t('xfw_odds_maybe').replace('{p}', num(x.odds * 100))}</span> : null;
+  const col = (xs: any[], m: any, title: string) => <div class="xfw-side">
+    <div class="bd-title">{title}</div>
+    {xs.map((x) => <div class={`xfw-side-row ${x.odds === 0 ? 'muted' : ''}`}>
+      <span class="xfw-side-name"><NLink id={x.id} size={14} /></span>
+      <span class="r">{num(x.men)}</span>
+      {/* the role and the odds on a line of their own, so that a long name is never cut off */}
+      <span class="xfw-side-note small"><span class="muted">{t(`xfw_role_${x.role}`)}</span>{tag(x) && <> · {tag(x)}</>}{x.breaks !== undefined && <> · <span class="neg">{t('xfw_breaks_with')} <NLink id={x.breaks} size={12} /></span></>}</span>
+    </div>)}
+    <div class="bd-row bd-total"><span>{t('xfw_side_sure')}</span><span>{num(m.sure)}</span></div>
+    {m.maybe > 0 && <div class="bd-row muted"><span>{t('xfw_side_maybe')}</span><span>+{num(m.maybe)}</span></div>}
+  </div>;
+  return <Tip tag="div" content={<div><TipHead name={t('xfw_sides')} hint={t('xfw_sides_hint')} /></div>}>
+    <div class="xfw-sides"><div class="k">{t('xfw_sides')}</div><div class="xfw-sides-cols">{col(sides.att, sides.attMen, t('xfw_side_us'))}{col(sides.def, sides.defMen, t('xfw_side_them'))}</div></div>
+  </Tip>;
 }
 /** The price of a declaration, every row a loss (Dread grows, the rest falls). */
 function CostRows({ rows }: { rows: [string, number][] }) {
