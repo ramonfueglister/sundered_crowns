@@ -98,6 +98,17 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
 export function PausePanel() {
   useEffect(() => { const sp = view.value?.speed ?? 0; if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } }, []);
   const resume = () => { panel.value = 'none'; sim().speed(lastSpeed.value || 2); sfx('click'); };
+  // leaving for the main menu asks first and offers to save (online, the world server keeps the game)
+  const [asking, setAsking] = useState(false); const [busy, setBusy] = useState(false);
+  const leave = () => { abortTimelapse(); panel.value = 'none'; sim().speed(0); screen.value = 'menu'; };
+  const online = isOnline.value;
+  if (asking) return <div class="pause-menu" onPointerDown={(e) => e.stopPropagation()}>
+    <h2>{t('quit')}</h2>
+    <p class="pm-ask">{online ? t('x_quit_online') : t('x_quit_confirm')}</p>
+    {!online && <button class="btn big gold" disabled={busy} onClick={() => { setBusy(true); saveNow().then(() => { showToast(t('saved')); leave(); }, () => setBusy(false)); }}>{t('x_quit_save')}</button>}
+    <button class={`btn big ${online ? 'gold' : ''}`} disabled={busy} onClick={leave}>{online ? t('quit') : t('x_quit_nosave')}</button>
+    <button class="btn big" disabled={busy} onClick={() => setAsking(false)}>{t('back')}</button>
+  </div>;
   return <div class="pause-menu" onPointerDown={(e) => e.stopPropagation()}>
     <h2>{t('paused')}</h2>
     <button class="btn big gold" onClick={resume}>{t('resume')}</button>
@@ -106,7 +117,7 @@ export function PausePanel() {
     <button class="btn big" onClick={() => openPanel('settings')}>{t('settings')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(false); }}>{t('timelapse')}</button>
     <button class="btn big" onClick={() => { panel.value = 'none'; void playTimelapse(true); }}>{t('timelapse_video')}</button>
-    <button class="btn big" onClick={() => { abortTimelapse(); panel.value = 'none'; sim().speed(0); screen.value = 'menu'; }}>{t('quit')}</button>
+    <button class="btn big" onClick={() => setAsking(true)}>{t('quit')}</button>
   </div>;
 }
 
