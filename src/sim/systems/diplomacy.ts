@@ -338,6 +338,14 @@ function spiesDay(s: GameState, w: World) {
   }
 }
 
+/** Where a realm's envoys come from: two, one more for every three points of the ruler's statecraft and one more with a
+ *  chancellor (the top bar's breakdown, src/game/view.ts explainRealm, shows these rows). */
+export function envoyParts(s: GameState, n: Nation): [string, number][] {
+  const r = s.chars[n.ruler];
+  return [['x_base', 2], ['x_ruler_dip', r ? Math.floor(r.skills[1] / 3) : 0], ['x_chancellor', n.council.chancellor ? 1 : 0]];
+}
+export function envoysOf(s: GameState, n: Nation): number { let v = 0; for (const [, x] of envoyParts(s, n)) v += x; return v; }
+
 export const diplomacy: System = {
   id: 'diplomacy',
   daily({ s, w }) {
@@ -351,6 +359,6 @@ export const diplomacy: System = {
     for (const t of s.treaties) if (t.type === 'alliance') { const r = rel(s, t.a, t.b); r.trust = Math.min(100, r.trust + 0.1); const r2 = rel(s, t.b, t.a); r2.trust = Math.min(100, r2.trust + 0.1); }
     s.treaties = s.treaties.filter((t) => t.until > s.day && s.nations[t.a]?.alive && s.nations[t.b]?.alive);
     // envoys: number by statecraft
-    for (const n of s.nations) if (n.alive) { const r = s.chars[n.ruler]; n.envoys = 2 + (r ? Math.floor(r.skills[1] / 3) : 0) + (n.council.chancellor ? 1 : 0); }
+    for (const n of s.nations) if (n.alive) n.envoys = envoysOf(s, n);
   },
 };

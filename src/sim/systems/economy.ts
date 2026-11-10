@@ -12,6 +12,8 @@ import { dutyUnrest } from './duties';
 import { secondFaith } from './faith';
 import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT_VOLUME, embargoBetween } from './trade';
 import { hasTreaty } from '../ctx';
+import { manpowerOf } from './military';
+import { envoysOf } from './diplomacy';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -895,5 +897,18 @@ export const economy: System = {
  *  the month's income and costs (systems/index.ts). */
 export const ledger: System = {
   id: 'ledger',
+  daily({ s, w }) { refreshLimits(s, w); },
   monthly({ s }) { closeLedger(s); },
 };
+
+/** The limits the top bar shows beside their breakdowns follow the state every day (and from the start of the game):
+ *  the manpower limit (military.ts manpowerOf; the pool never exceeds it) and the envoys (diplomacy.ts envoysOf). The
+ *  monthly refill of manpower and sailors stays with the military system. */
+export function refreshLimits(s: GameState, w: World) {
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    n.maxManpower = manpowerOf(s, w, n).max;
+    if (n.manpower > n.maxManpower) n.manpower = n.maxManpower;
+    n.envoys = envoysOf(s, n);
+  }
+}

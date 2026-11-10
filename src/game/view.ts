@@ -7,7 +7,7 @@ import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, envoyParts } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
@@ -493,7 +493,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   const rr = researchRate(s, w, n);
   const insightParts: BdRow[] = [['x_base', 1.5], ['x_learning', (rr[0] + rr[1] + rr[2]) * 0.13], ['x_ruler_skills', r ? (r.skills[0] + r.skills[1]) * 0.15 : 0], ['x_prestige', Math.max(0, n.prestige) * 0.01]];
   // ---- Envoys (systems/diplomacy.ts)
-  const envoyParts: BdRow[] = [['x_base', 2], ['x_ruler_dip', r ? Math.floor(r.skills[1] / 3) : 0], ['x_chancellor', n.council.chancellor ? 1 : 0]];
+  const envoyRows: BdRow[] = envoyParts(s, n);
   // ---- Manpower and sailors (systems/military.ts monthly)
   let pl = 0, mp0 = 0, mp = 0, sail = 0, occupied = 0;
   const lc = s.loc;
@@ -568,7 +568,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     authority: { value: n.authority, monthly: sumRows(authorityParts), parts: authorityParts },
     prestige: { value: n.prestige, monthly: sumRows(prestigeParts), parts: prestigeParts },
     insight: { value: n.flags.doctrine_pts || 0, monthly: sumRows(insightParts), parts: insightParts },
-    envoys: { value: n.envoys, parts: envoyParts },
+    envoys: { value: n.envoys, parts: envoyRows },
     manpower: { max: mp * mpMult, parts: manpowerParts, monthly: mp * mpMult / 120, occupied },
     sailors: { max: sail * sailMult * 4, monthly: sail * sailMult / 10, mods: sailSources },
     warExhaustion: { value: n.warExhaustion, monthly: sumRows(weParts), parts: weParts, wars: atWarCount },

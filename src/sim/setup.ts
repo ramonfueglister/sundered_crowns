@@ -6,8 +6,9 @@ import { ALL_CULTURES, FAITH_INDEX, GROUP_OF } from './content/peoples';
 import { seedRng, hash01 } from './rng';
 import { dateToDay } from './calendar';
 import { SYSTEMS } from './systems';
+import { DAY_EPOCH, bump } from './ctx';
 import { upkeepCosts, fortPay } from './systems/military';
-import { courtCost } from './systems/economy';
+import { courtCost, refreshLimits } from './systems/economy';
 import { treasurerGraft } from './systems/politics';
 import { subjectTribute } from './systems/diplomacy';
 
@@ -192,6 +193,9 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
     });
   }
   for (const sys of SYSTEMS) sys.init?.(s, w);
+  // the inits added laws and modifiers within one simulated day: effect tables cached before them are rebuilt now
+  DAY_EPOCH.v++; bump();
+  refreshLimits(s, w); // the manpower limit and envoys from the formulas the top bar's breakdowns show, not a seed value
   estimateFirstMonth(s, w);
   return s;
 }

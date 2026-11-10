@@ -8,6 +8,9 @@ import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
 import { closeLedger } from '../src/sim/systems/economy';
+import { answer, playerView } from '../src/game/view';
+import { authorityGain } from '../src/sim/systems/politics';
+import { ownedLocs } from '../src/sim/systems/war';
 import type { GameState, Nation } from '../src/sim/types';
 
 const w = loadWorld();
@@ -16,6 +19,7 @@ beforeAll(() => { BASE = serialize(createGame(w, loadSetup(1356), loadHubs(), 13
 const fresh = (player?: string) => { const s = deserialize(BASE) as GameState; if (player) s.playerNations = [nat(s, player).id]; return s; };
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
 const sum = (o: Record<string, number> | undefined) => Object.values(o ?? {}).reduce((p, v) => p + v, 0);
+const rows = (r: [unknown, number][]) => r.reduce((p, x) => p + x[1], 0);
 /** Advance to the end of the next first-of-month tick (the close of the books). */
 function toNextClose(s: GameState) { do advanceDay(s, w); while (dayToDate(s.day, s.startYear).d !== 1); }
 
@@ -62,5 +66,36 @@ describe('the month\'s books (ledger, balance, forecast)', () => {
     expect(note).toBeTruthy();
     expect(note!.text.de).toMatch(/Mark bei .+ zu \d+(,\d)? % im Jahr, fällig am \d+\.\d+\.\d{4}/);
     expect(note!.text.de).not.toMatch(/Lombard bankers|Hanseatic merchants|Jewish moneylenders/);
+  });
+});
+
+describe('top bar totals equal their breakdowns', () => {
+  const check = (s: GameState, n: Nation) => {
+    const e = (answer(s, w, n.id, { q: 'realm' }) as any).explain;
+    expect(rows(e.manpower.parts)).toBeCloseTo(n.maxManpower, 3);
+    expect(e.manpower.max).toBeCloseTo(n.maxManpower, 3);
+    expect(n.manpower).toBeLessThanOrEqual(n.maxManpower + 1e-9);
+    expect(rows(e.envoys.parts)).toBe(n.envoys);
+    expect(rows(e.authority.parts)).toBeCloseTo(authorityGain(s, n), 6);
+    const p = playerView(s, n);
+    expect(p.income).toBeCloseTo(sum(p.incomeBreak), 6);
+    expect(p.expense).toBeCloseTo(sum(p.expenseBreak), 6);
+  };
+  it('on day 0, for realms large and small', () => {
+    const s = fresh();
+    for (const key of ['portugal', 'england', 'venice', 'france', 'moscow']) { s.playerNations = [nat(s, key).id]; check(s, nat(s, key)); }
+  });
+  it('the day after the ruler\'s council or the realm\'s land changes, not a month later', () => {
+    const s = fresh('portugal'); const n = nat(s, 'portugal');
+    advanceDay(s, w); advanceDay(s, w);
+    const env0 = n.envoys, mp0 = n.maxManpower;
+    if (n.council.chancellor) delete n.council.chancellor; else n.council.chancellor = n.heir || n.ruler;
+    const lost = ownedLocs(s, n.id).filter((l) => l !== n.capital).slice(0, 3);
+    for (const l of lost) s.loc.ctrl[l] = -2; // held by rebels
+    advanceDay(s, w);
+    expect(dayToDate(s.day, s.startYear).d).not.toBe(1);
+    expect(n.envoys).not.toBe(env0);
+    expect(n.maxManpower).toBeLessThan(mp0);
+    check(s, n);
   });
 });
