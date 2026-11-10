@@ -328,6 +328,19 @@ describe('traits', () => {
   });
 });
 
+describe('traits under a regency (review fix)', () => {
+  it('a child ruler\'s traits do not act under a regent, and the nation view says so for the tooltip', () => {
+    const { s, w } = newGame(1356);
+    const N = nat(s, 'norway'); const r = s.chars[N.ruler];
+    expect(N.regent).toBeGreaterThan(0);
+    expect(r.traits.some((k) => RULER_TRAIT_FX[k])).toBe(true);
+    expect(N.modifiers.some((m) => m.id === 'ruler_traits')).toBe(false);
+    expect(answer(s, w, N.id, { q: 'nation', nation: N.id } as any).regency).toBe(true);
+    expect(answer(s, w, N.id, { q: 'nation', nation: nat(s, 'england').id } as any).regency).toBe(false);
+    expect(readFileSync('src/ui/panels/government.tsx', 'utf8')).toContain('<TraitChip k={x} ruler regency={!!me.regency} />');
+  });
+});
+
 describe('the council', () => {
   it('a dead official is replaced at once by the ablest at court, and the player is told who', () => {
     const { s, w } = newGame(1356);

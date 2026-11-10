@@ -19,19 +19,19 @@ export function charName(name: string | null | undefined, female = false, ofHous
 export function houseName(h: string | null | undefined): string { return localHouse(h ?? '', lang.value); }
 /** What a trait does: its effects on the realm while its bearer rules (content/traits.ts, the modifier "The ruler's
  *  traits"), its effect on the bearer's life or in battle, or that it only describes the person. */
-export function TraitTip({ k, ruler }: { k: string; ruler?: boolean }) {
+export function TraitTip({ k, ruler, regency }: { k: string; ruler?: boolean; regency?: boolean }) {
   const fx = RULER_TRAIT_FX[k]; const h = TRAITS_HEALTH[k]; const c = t(`ctrait_${k}_fx`); const cmd = c !== `ctrait_${k}_fx`;
   return <div>
     <TipHead name={traitName(k)} />
     {fx ? <Effects fx={fx} title={t('xp_trait_ruling')} /> : !h && !cmd && <div class="muted">{t('xp_trait_descriptive')}</div>}
-    {fx && ruler && <div class="muted small">{t('xp_trait_ruler_now')}</div>}
+    {fx && ruler && <div class="muted small">{t(regency ? 'xp_trait_ruler_later' : 'xp_trait_ruler_now')}</div>}
     {h && <div class={h === 'bad' ? 'neg' : 'pos'}>{t(h === 'bad' ? 'xp_trait_health_bad' : 'xp_trait_health_good')}</div>}
     {cmd && <div class="muted">{c}</div>}
   </div>;
 }
 /** A trait as a chip with its tooltip (ruler: the bearer rules now, so the effects apply). */
-export function TraitChip({ k, ruler }: { k: string; ruler?: boolean }) {
-  return <Tip content={() => <TraitTip k={k} ruler={ruler} />}><span class="chip has-tip">{traitName(k)}</span></Tip>;
+export function TraitChip({ k, ruler, regency }: { k: string; ruler?: boolean; regency?: boolean }) {
+  return <Tip content={() => <TraitTip k={k} ruler={ruler} regency={regency} />}><span class="chip has-tip">{traitName(k)}</span></Tip>;
 }
 /** Traits in a line of text, each with its tooltip. */
 export function TraitList({ traits }: { traits: string[] }) {

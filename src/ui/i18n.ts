@@ -1022,6 +1022,7 @@ const S: Record<string, [string, string]> = {
   xp_next_waiting: ['Next ({n}):', 'Als Nächstes ({n}):'],
   // review fixes (fix-people): filling the council when the Authority does not reach
   xp_ablest_all_short: ['Our Authority ({a}) pays for {k} of the {m} changes: the first in this list.', 'Unsere Autorität ({a}) reicht für {k} der {m} Wechsel: die ersten dieser Liste.'],
+  xp_trait_ruler_later: ['Acts on the realm once this person comes of age; until then a regency council governs.', 'Wirkt ab der Volljährigkeit auf das Reich; bis dahin regiert ein Regentschaftsrat.'],
   xp_house_none_here: ['No heir lives at our court', 'An unserem Hof lebt kein Erbe'],
   xp_house_then_kin_m: ['Should the line at our court end, the crown would pass to {p} of our house, who lives in', 'Sollte die Linie an unserem Hof erlöschen, ginge die Krone an {p} aus unserem Haus, der in'],
   xp_house_then_kin_f: ['Should the line at our court end, the crown would pass to {p} of our house, who lives in', 'Sollte die Linie an unserem Hof erlöschen, ginge die Krone an {p} aus unserem Haus, die in'],

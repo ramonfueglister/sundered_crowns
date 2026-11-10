@@ -356,7 +356,8 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     // the faith's own mechanic and what it (and communities of other faiths in the realm) does for this realm now
     faithMechanic: { name: FAITHS[n.faith]?.mechanic, desc: FAITHS[n.faith]?.mechanicDesc, active: n.modifiers.filter((m) => m.id.startsWith('faith_')).map((m) => ({ id: m.id, label: m.label, effects: m.effects })) },
     capital: n.capital, capitalName: n.capital >= 0 ? w.names[n.capital] : '—', ruler: r ? { name: r.name, dynasty: r.dynasty, female: r.female, age: Math.floor(ageOf(s, r)), skills: r.skills, traits: r.traits } : null,
-    heir: h && h.alive ? { name: h.name, female: h.female, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id), score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
+    heir: h && h.alive ? { name: h.name, female: h.female, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id),
+    regency: !!n.regent, // a child rules under a regent: the ruler's traits do not act yet (politics.ts syncRulerTraits) score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),
     personality: n.personality, summary: n.summary, difficulty: n.difficulty, dread: n.dread, scoreParts: scorePartsAll(s, w)[id], front: (s as any).fronts?.[id] ?? [], rel, alive: n.alive,
     wars: s.wars.filter((x) => x.att.includes(id) || x.def.includes(id)).map((x) => x.id), isHRE: n.isHRE, elector: n.elector, emperor: s.empire.emperor === id,
