@@ -161,3 +161,34 @@ describe('the assembly and the taxes', () => {
     } finally { b.taxRate = keep; fresh(); }
   });
 });
+
+describe('our own great-power standing', () => {
+  it('the powers view names our rank, score and the points to the last great power, and the goal counts them', () => {
+    // a realm well down the ranking: its row is shown below the fourteen
+    const all = s.nations.filter((x) => x.alive && x.overlord < 0).sort((a, b) => b.score - a.score);
+    const isGPCond = (c: { t: { en: string } }) => c.t.en === 'be counted among the great powers';
+    const idx = all.findIndex((x, i) => i >= 15 && goalsFor(x).some((gl) => gl.conds.some(isGPCond)));
+    const low = all[idx];
+    const g = answer(s, w, low.id, { q: 'powers' } as any) as any;
+    expect(g.mine.rank).toBe(idx + 1);
+    expect(g.mine.score).toBe(low.score);
+    expect(g.mine.isGP).toBe(false);
+    const last = s.nations[s.ranking[s.ranking.length - 1]];
+    expect(g.mine.lastGP.id).toBe(last.id);
+    expect(g.mine.gap).toBeCloseTo(last.score - low.score, 9);
+    expect(g.mine.parts.reduce((p: number, r: any) => p + r[1], 0)).toBeCloseTo(low.score, 6);
+    expect(g.ranking.length).toBe(15);
+    expect(g.ranking[14]).toMatchObject({ id: low.id, rank: idx + 1, mine: true });
+    // the goal "be counted among the great powers" counts our score against the eighth
+    const goal = goalsFor(low).find((x) => x.conds.some(isGPCond))!;
+    const c = goalConditions(s, w, low, goal).find(isGPCond)!;
+    expect(c.ok).toBe(false);
+    expect(c.cur).toBe(Math.round(low.score)); expect(c.max).toBe(Math.round(last.score));
+    expect(c.frac).toBeGreaterThan(0); expect(c.frac).toBeLessThan(1);
+    // a great power sees the points to the realm above
+    const gp = s.nations[s.ranking[3]];
+    const g2 = answer(s, w, gp.id, { q: 'powers' } as any) as any;
+    expect(g2.mine.isGP).toBe(true); expect(g2.mine.rank).toBe(4);
+    expect(g2.mine.next.id).toBe(s.ranking[2]);
+  });
+});

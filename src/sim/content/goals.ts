@@ -39,7 +39,9 @@ export function condProgress(c: GoalCond, e: EvApi): CondProg {
   let ok = false; try { ok = c.f(e); } catch { ok = false; }
   const p = c.p?.(e);
   if (!p) return { frac: ok ? 1 : 0 };
-  return { cur: p[0], max: p[1], frac: ok ? 1 : clamp01(p[0] / Math.max(1e-9, p[1])) };
+  // a condition not met never reads as done, even when its count is reached (a subject as strong as the last great
+  // power, a treasury full but in debt)
+  return { cur: p[0], max: p[1], frac: ok ? 1 : Math.min(0.99, clamp01(p[0] / Math.max(1e-9, p[1]))) };
 }
 type Cond = GoalCond;
 interface Rew { t: I18n; f: (e: EvApi) => void }
@@ -62,6 +64,8 @@ const inBox = (e: EvApi, box: [number, number, number, number]) => countLocs(e, 
 const overseasLocs = (e: EvApi) => countLocs(e, (l) => e.w.lon[l] < -25 || (e.w.lat[l] < 15 && e.w.lon[l] < 55));
 /** The progress nearer to its mark (for “a or b”); a side without progress counts as nothing done. */
 const better = (a?: [number, number], b?: [number, number]): [number, number] => { const f = (x?: [number, number]) => (x ? x[0] / Math.max(1e-9, x[1]) : -1); return (f(a) >= f(b) ? a : b) ?? [0, 1]; };
+/** The score of the realm at place i of the great-power ranking (our own when the ranking is still empty). */
+const rankScore = (e: EvApi, i: number) => { const id = e.s.ranking[i]; return id !== undefined && e.s.nations[id] ? Math.max(1, e.s.nations[id].score) : Math.max(1, e.n.score); };
 /** Location index of a goal place name (first location with that name), -1 when the map has none. */
 export function goalPlace(w: World, name: string): number { return loc(w, name); }
 
@@ -98,8 +102,10 @@ const C = {
   gov: (gov: string, t: I18n): Cond => ({ t: { en: `rule as ${t.en}`, de: `als ${t.de} herrschen` }, f: (e) => e.n.gov === gov }),
   faith: (f: string, t: I18n): Cond => ({ t: { en: `follow the ${t.en}`, de: `der ${t.de} folgen` }, f: (e) => e.n.faith === FAITH_INDEX[f] }),
   faithUnity: (k: number): Cond => ({ t: { en: `have ${Math.round(k * 100)}% of our land share our faith`, de: `${Math.round(k * 100)} % unseres Landes teilen unseren Glauben` }, f: (e) => { const ls = nationLocsRO(e.s, e.n.id); return ls.length > 0 && ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length >= k; }, p: (e) => { const ls = nationLocsRO(e.s, e.n.id); return [ls.length ? Math.round(ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length * 100) : 0, Math.round(k * 100)]; } }),
-  greatPower: (): Cond => ({ t: { en: 'be counted among the great powers', de: 'zu den Großmächten zählen' }, f: (e) => e.s.ranking.includes(e.n.id) }),
-  topPower: (): Cond => ({ t: { en: 'be the foremost power of the world', de: 'die erste Macht der Welt sein' }, f: (e) => e.s.ranking[0] === e.n.id }),
+  /** Progress: our score against the score of the last great power (the eighth of the ranking). */
+  greatPower: (): Cond => ({ t: { en: 'be counted among the great powers', de: 'zu den Großmächten zählen' }, f: (e) => e.s.ranking.includes(e.n.id), p: (e) => [Math.round(e.n.score), Math.round(rankScore(e, e.s.ranking.length - 1))] }),
+  /** Progress: our score against the foremost power's. */
+  topPower: (): Cond => ({ t: { en: 'be the foremost power of the world', de: 'die erste Macht der Welt sein' }, f: (e) => e.s.ranking[0] === e.n.id, p: (e) => [Math.round(e.n.score), Math.round(rankScore(e, 0))] }),
   emperor: (): Cond => ({ t: { en: 'hold the imperial crown', de: 'die Kaiserkrone tragen' }, f: (e) => e.s.empire.emperor === e.n.id }),
   overseas: (k: number): Cond => ({ t: { en: `hold ${k} locations beyond the Ocean Sea`, de: `${k} Orte jenseits des Ozeanmeers besitzen` }, f: (e) => overseasLocs(e) >= k, p: (e) => [overseasLocs(e), k] }),
   situation: (id: string, outcomes: string[], t: I18n): Cond => ({ t, f: (e) => e.s.situations.some((x) => x.id === id && !x.active && outcomes.includes(x.outcome || '')) }),

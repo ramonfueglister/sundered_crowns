@@ -85,10 +85,23 @@ function powersView(s: GameState, w: World, me: number) {
   const P = powersState(s);
   const gps = greatPowers(s);
   const n = s.nations[me];
-  const ranked = s.nations.filter((x) => x.alive && x.overlord < 0).sort((a, b) => b.score - a.score).slice(0, 14);
+  const all = s.nations.filter((x) => x.alive && x.overlord < 0).sort((a, b) => b.score - a.score);
+  // the score is reckoned at the start of each month (systems/realm.ts), the parts are today's: what changed since is
+  // shown as not yet counted, so the rows add up to the score the ranking uses
+  const parts = (x: Nation): Row[] => { const r = scoreParts(s, w, x, st); const d = x.score - r.reduce((p, q) => p + q[1], 0); return Math.abs(d) > 0.05 ? [...r, ['x_gp_unreckoned', d]] : r; };
+  const row = (x: Nation, i: number) => ({ id: x.id, rank: i + 1, score: x.score, parts: parts(x), gp: gps.includes(x.id), growth: growth(s, x.id), alarm: (x.flags.gp_alarm ?? -1e9) > s.day - 400, mine: x.id === me });
+  const ranking = all.slice(0, 14).map(row);
+  // our own standing, also below the fourteen shown: rank among the sovereign realms, score with its parts, and what
+  // the last great power holds (the gap to close; a subject is not ranked)
+  const myIdx = all.findIndex((x) => x.id === me);
+  if (myIdx >= 14) ranking.push(row(all[myIdx], myIdx));
+  const last = all[GP_COUNT - 1], next = myIdx > 0 ? all[myIdx - 1] : null;
+  const mine = n ? { rank: myIdx >= 0 ? myIdx + 1 : null, of: all.length, score: n.score, parts: parts(n), subject: n.overlord >= 0, isGP: isGreatPower(s, me),
+    lastGP: last ? { id: last.id, score: last.score } : null, gap: last && !isGreatPower(s, me) ? Math.max(0, last.score - n.score) : 0,
+    next: next ? { id: next.id, score: next.score, gap: Math.max(0, next.score - n.score) } : null, growth: growth(s, me) } : null;
   return {
-    count: GP_COUNT, effects: GP_EFFECTS, regard: GP_REGARD, rising: RISING, me, isGP: isGreatPower(s, me),
-    ranking: ranked.map((x, i) => ({ id: x.id, rank: i + 1, score: x.score, parts: scoreParts(s, w, x, st), gp: gps.includes(x.id), growth: growth(s, x.id), alarm: (x.flags.gp_alarm ?? -1e9) > s.day - 400 })),
+    count: GP_COUNT, effects: GP_EFFECTS, regard: GP_REGARD, rising: RISING, me, isGP: isGreatPower(s, me), mine,
+    ranking,
     wars: s.wars.filter((x) => !['civil_war', 'rebels', 'independence', 'coalition'].includes(x.goal.type)).map((x) => ({
       id: x.id, name: x.name, att: x.attLead, def: x.defLead, threat: balanceThreat(s, x), mine: x.att.includes(me) || x.def.includes(me),
       intervene: n && isGreatPower(s, me) ? interveneScore(s, w, n, x) : null, mediation: n && isGreatPower(s, me) ? mediationScore(s, n, x) : null,

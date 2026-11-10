@@ -984,6 +984,10 @@ const S: Record<string, [string, string]> = {
   x_asm_war_granted: ['The assembly approved the war against {realm}.', 'Die Versammlung billigte den Krieg gegen {realm}.'],
   x_asm_put_war: ['Put it to the assembly', 'Der Versammlung vorlegen'],
   x_asm_put_war_hint: ['Our assembly must approve this war. See how each Power would vote and why, buy votes or offer a privilege; on a yes the war is declared.', 'Unsere Versammlung muss diesen Krieg billigen. Seht, wie jede Macht stimmen würde und warum, kauft Stimmen oder bietet ein Privileg an; bei einem Ja wird der Krieg erklärt.'],
+  x_gp_mine: ['Our standing', 'Unsere Stellung'], x_gp_rank_of: ['Rank {r} of {n} sovereign realms', 'Rang {r} von {n} unabhängigen Reichen'], x_gp_subject: ['A subject realm: not ranked', 'Untertanenreich: nicht gewertet'],
+  x_gp_my_score: ['Our score', 'Unsere Wertung'], x_gp_gap: ['Points to place {k}', 'Punkte bis Platz {k}'], x_gp_last: ['last great power', 'letzte Großmacht'], x_gp_gap_next: ['Points to the realm above', 'Punkte bis zum Reich darüber'],
+  x_gp_gap_hint: ['The eight highest scores among the sovereign realms are the great powers. This is how far our score is below the eighth; the ranking is redone every month.', 'Die acht höchsten Wertungen unter den unabhängigen Reichen sind die Großmächte. So weit liegt unsere Wertung unter der achten; die Rangfolge wird jeden Monat neu bestimmt.'],
+  x_gp_us: ['us', 'wir'], x_gp_unreckoned: ['Not yet counted: changes since the monthly reckoning', 'Noch nicht gezählt: Änderungen seit der Monatswertung'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -103,6 +103,18 @@ function EmpireView() {
   </div>;
 }
 
+/** Our own place in the ranking: rank, score with its parts, and the points to the last great power (or, for a great
+ *  power, to the realm one place above). */
+function MyStanding({ m, count }: { m: any; count: number }) {
+  const scoreTip = () => <div><Parts title={t('x_gp_score_from')} rows={m.parts} total={m.score} digits={0} /><div class="muted">{t('x_gp_growth')}: {signed((m.growth - 1) * 100, 0)} %</div></div>;
+  return <div class="card small" style="margin:4px 0">
+    <Row k={t('x_gp_mine')} v={m.subject ? t('x_gp_subject') : fill('x_gp_rank_of', { r: m.rank ?? '—', n: m.of })} tip={scoreTip} />
+    <Row k={t('x_gp_my_score')} v={num(m.score)} tip={scoreTip} />
+    {!m.isGP && m.lastGP && <Row k={fill('x_gp_gap', { k: count })} v={<span>{num(m.gap)} <span class="muted">({t('x_gp_last')} <NLink id={m.lastGP.id} size={12} /> {num(m.lastGP.score)})</span></span>} tip={t('x_gp_gap_hint')} />}
+    {m.isGP && m.next && <Row k={t('x_gp_gap_next')} v={<span>{num(m.next.gap)} <span class="muted">(<NLink id={m.next.id} size={12} /> {num(m.next.score)})</span></span>} />}
+  </div>;
+}
+
 function PowersView() {
   const pid = playerId.value;
   const [g, refresh] = useQuery<any>({ q: 'powers' }, [pid], 1500);
@@ -111,7 +123,8 @@ function PowersView() {
   return <div>
     <Section title={t('x_gp_ranking')} id="gp-rank">
       <div class="muted small">{t('x_gp_hint')}</div>
-      {g.ranking.map((x: any) => <div class={`kv ${x.gp ? 'pos' : ''}`}><span class="k">{x.rank}. <NLink id={x.id} size={14} />{x.gp && <span class="tag">{t('x_gp_badge')}</span>}{x.alarm && <span class="tag warn">{t('x_gp_alarm')}</span>}</span>
+      {g.mine && <MyStanding m={g.mine} count={g.count} />}
+      {g.ranking.map((x: any, i: number) => <div class={`kv ${x.gp ? 'pos' : ''}`} style={x.mine ? 'font-weight:bold' : undefined}>{i > 0 && x.rank > g.ranking[i - 1].rank + 1 && <span class="muted">…</span>}<span class="k">{x.rank}. <NLink id={x.id} size={14} />{x.mine && <span class="tag">{t('x_gp_us')}</span>}{x.gp && <span class="tag">{t('x_gp_badge')}</span>}{x.alarm && <span class="tag warn">{t('x_gp_alarm')}</span>}</span>
         <span class="v"><Tip content={() => <div><Parts title={t('x_gp_score_from')} rows={x.parts} total={x.score} digits={0} /><div class="muted">{t('x_gp_growth')}: {signed((x.growth - 1) * 100, 0)} % {x.growth >= g.rising ? `(${t('x_gp_rising')})` : ''}</div></div>}><span class="has-tip">{num(x.score)}</span></Tip></span></div>)}
     </Section>
     <div class="cols2">
