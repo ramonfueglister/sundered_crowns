@@ -1,12 +1,13 @@
 // Economy tab: treasury, income & expenses, taxes per class, budget, loans, markets and merchants, history.
 import { useState } from 'preact/hooks';
 import { view, nations } from '../../game/client';
-import { playerId } from '../store';
+import { openPanel } from '../store';
 import { CLASSES, CLASS_NAME } from '../../sim/defs';
 import { Section, Row, Bar, Btn, Empty, Spark, Slider, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm, placeName } from './common';
 import { TreasuryTip, IncomeTip, ExpenseTip, InflationTip, CorruptionTip, TaxClassTip, MerchantsTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
 import { Duties, Forecast, TariffCap } from './statecraft';
+import { PriceIndexTip } from './trade';
 
 
 export function EconomyTab() {
@@ -89,39 +90,25 @@ function Loans() {
   </div>;
 }
 
+/** A short summary of our markets; prices, goods and merchants of every market we know are in the trade panel. */
 function Markets() {
-  const r = realm.value; const pid = playerId.value;
-  const pv = view.value?.player;
-  const [sel, setSel] = useState(-1);
+  const pv = view.value?.player; const r = realm.value;
   const home = pv?.homeMarket ?? -1;
-  const mid = sel >= 0 ? sel : home >= 0 ? home : r?.markets?.[0]?.id ?? -1;
-  const [m] = useQuery<any>(mid >= 0 ? { q: 'market', market: mid } : null, [mid], 3000);
-  const [sort, setSort] = useState<'name' | 'price' | 'supply' | 'demand' | 'dev'>('dev');
-  const used = pv?.merchants.used ?? 0;
-  const capM = pv?.merchants.cap ?? 0;
-  const mine = m?.merchants?.[pid] || 0;
-  const goods = (m?.goods ?? []).filter((g: any) => g.supply > 0.01 || g.demand > 0.01);
-  const sorted = [...goods].sort((a: any, b: any) => sort === 'name' ? L(a.name).localeCompare(L(b.name)) : sort === 'price' ? b.price - a.price : sort === 'supply' ? b.supply - a.supply : sort === 'demand' ? b.demand - a.demand : (b.price / Math.max(1e-6, b.base)) - (a.price / Math.max(1e-6, a.base)));
-  const th = (k: typeof sort, label: string, cls = '') => <th class={`sortable ${cls} ${sort === k ? 'on' : ''}`} onClick={() => setSort(k)}>{label}</th>;
+  const [m] = useQuery<any>(home >= 0 ? { q: 'tmarket', market: home } : null, [home], 5000);
+  const used = pv?.merchants.used ?? 0, capM = pv?.merchants.cap ?? 0;
+  const by = new Map<number, { name: string; v: number }>();
+  for (const x of (r?.tradeBy ?? []) as any[]) { const e = by.get(x.m) ?? { name: x.name, v: 0 }; e.v += x.v; by.set(x.m, e); }
+  const top = [...by].sort((a, b) => b[1].v - a[1].v || a[0] - b[0]).slice(0, 4);
+  const trade = (pv?.incomeBreak.trade ?? 0) + (pv?.incomeBreak.company ?? 0);
   return <Section title={t('markets')} id="eco-mkt" right={<Tip content={() => <MerchantsTip />}><span class="muted has-tip">{t('merchants')}: {used}/{capM}</span></Tip>}>
-    <div class="act-row">
-      <select value={mid} onChange={(e) => setSel(Number((e.target as HTMLSelectElement).value))}>
-        {[...(r?.markets ?? [])].sort((a: any, b: any) => a.name.localeCompare(b.name)).map((x: any) => <option value={x.id}>{x.name}{x.id === home ? ` (${t('home')})` : ''}{x.mine ? ` · ${x.mine}` : ''}</option>)}
-      </select>
-      {m && <Tip content={<div><b>{t('price_index')}</b> {num(m.priceIndex, 2)}<div class="muted">{t('price_index_hint')}</div></div>}><span class="muted">{t('price_index')} {num(m.priceIndex, 2)}</span></Tip>}
-      <span class="spacer" />
-      <Tip content={t('merchant_hint')}><span class="k">{t('our_merchants')}: <b>{mine}</b></span></Tip>
-      <Btn disabled={mine <= 0 ? 'none' : null} onClick={() => act({ t: 'merchant', market: mid, amount: mine - 1 })}>−</Btn>
-      <Btn disabled={used >= capM ? 'no merchants left' : null} onClick={() => act({ t: 'merchant', market: mid, amount: mine + 1 })}>+</Btn>
+    <div class="grid2">
+      <Row k={t('tr_home_market')} v={home >= 0 && m ? <a class="lk" onClick={() => openPanel('trade', { market: home })}>{placeName(m.name)}</a> : '—'} tip={t('x_markets_home_hint')} />
+      {m && <Row k={t('price_index')} v={<span class={m.priceIndex > 1.2 ? 'neg' : m.priceIndex < 0.85 ? 'pos' : ''}>{num(m.priceIndex, 2)}</span>} tip={() => <PriceIndexTip index={m.priceIndex} parts={m.index} />} />}
+      <Row k={(pv?.incomeBreak.company ?? 0) > 0 ? `${keyName('trade')} + ${keyName('company')}` : keyName('trade')} v={<span class={trade > 0 ? 'pos' : 'muted'}>{signed(trade, 1)}</span>}
+        tip={() => <div><TipHead name={t('tr_by_market')} value={num(trade, 1)} hint={t('tr_earned_hint')} /><Parts rows={[...by].sort((a, b) => b[1].v - a[1].v).slice(0, 12).map(([, x]) => [placeName(x.name), x.v] as [string, number])} total={trade} /></div>} />
     </div>
-    {m && <div class="muted small">{t('trade_links')}: {m.links.map((l: any) => `${l.to}${l.sea ? ' ⚓' : ''}`).join(', ') || '—'}</div>}
-    {m ? <div class="tbl-wrap"><table class="tbl market">
-      <thead><tr>{th('name', t('goods'))}{th('price', t('price'), 'r')}{th('dev', t('vs_base'), 'r')}{th('supply', t('supply'), 'r')}{th('demand', t('demand'), 'r')}<Tip tag="th" content={<div><TipHead name={t('ten_years')} hint={t('ten_years_hint')} /></div>}>{t('ten_years')}</Tip></tr></thead>
-      <tbody>{sorted.map((g: any) => { const rel = g.price / Math.max(1e-6, g.base) - 1; const hist = (g.hist as number[]).filter((x) => x > 0);
-        const ptip = () => <div><TipHead name={L(g.name)} value={num(g.price, 2)} hint={t('x_price_why')} /><div class="breakdown"><div class="bd-row"><span>{t('base_price')} × {t('x_price_level')}</span><span>{num(g.base, 2)}</span></div><div class="bd-row"><span>{t('demand')} : {t('supply')}</span><span>{num(g.demand, 1)} : {num(g.supply, 1)}</span></div><div class="bd-row bd-total"><span>{t('price')}</span><span class={rel > 0 ? 'neg' : 'pos'}>{signed(rel * 100)} %</span></div></div>{g.supply < 0.05 && <div class="neg">{t('x_no_supply')}</div>}</div>;
-        return <tr><td>{L(g.name)}</td><td class="r"><Tip content={ptip}>{num(g.price, 2)}</Tip></td><td class={`r ${rel > 0.15 ? 'neg' : rel < -0.15 ? 'pos' : ''}`}><Tip content={ptip}>{signed(rel * 100)} %</Tip></td><td class="r"><Tip content={t('x_supply_hint')}>{num(g.supply, g.supply < 10 ? 1 : 0)}</Tip></td><td class="r"><Tip content={t('x_demand_hint')}>{num(g.demand, g.demand < 10 ? 1 : 0)}</Tip></td>
-          <td><Tip content={<div><b>{L(g.name)}</b><div>{t('base_price')}: {num(g.base, 2)}</div><div>{t('ten_years_hint')}</div></div>}><Spark data={hist} base={g.base} w={90} h={18} /></Tip></td></tr>; })}</tbody>
-    </table></div> : <Empty>{t('loading')}…</Empty>}
+    {top.length > 0 && <div class="small eco-mkt-top">{top.map(([id, x]) => <a class="chip lk" onClick={() => openPanel('trade', { market: id })}>{placeName(x.name)} <span class="pos">+{num(x.v, 1)}</span></a>)}</div>}
+    <div class="act-row"><span class="muted small">{t('x_markets_moved')}</span><span class="spacer" /><Btn onClick={() => openPanel('trade', {})}>{t('x_open_trade')}</Btn></div>
   </Section>;
 }
 

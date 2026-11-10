@@ -592,7 +592,13 @@ export function clearMarkets(s: GameState, w: World) {
   }
   for (const m of ms) { m.deter = 0; m.deterBy = {}; }
   // 0. turn per-tier demand units into demand for each good
-  for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
+  for (const m of ms) {
+    if (!m.dPeople || m.dPeople.length !== G) m.dPeople = new Float32Array(G); else m.dPeople.fill(0);
+    if (!m.tierAcc) continue;
+    const wq = tierCache(m, s.priceLevel).wq, dp = m.dPeople;
+    NEED_IDX.forEach(([g, , tier], k) => { const q = wq[k] * m.tierAcc![tier]; m.dAcc[g] += q; dp[g] += q; });
+    m.tierAcc.fill(0);
+  }
   // 1. inter-market trade on last month's prices
   for (const a of ms) a.flowOut.fill(0);
   const oceanOpen = !!(s.flags.ocean_open || s.flags.west_route_found);
@@ -617,9 +623,11 @@ export function clearMarkets(s: GameState, w: World) {
   for (const m of ms) {
     const ownerN = s.nations[m.owner];
     const debase = ownerN ? 1 + ownerN.inflation : 1;
+    if (!m.held || m.held.length !== G) m.held = new Float32Array(G);
     let idx = 0, wsum = 0;
     for (let g = 0; g < G; g++) {
-      const S = m.sAcc[g] + m.stock[g] * 0.5;
+      m.held[g] = m.stock[g] * 0.5;
+      const S = m.sAcc[g] + m.held[g];
       const D = m.dAcc[g];
       const anchor = GOODS[g].base * pl * debase;
       let p = m.price[g];
@@ -640,14 +648,19 @@ export function clearMarkets(s: GameState, w: World) {
       m.stock[g] = Math.min((S - traded) * 0.85, D * 3 + 100);
       m.sAcc[g] = 0; m.dAcc[g] = 0;
       m.hist[g * 120 + m.histPos] = p;
-      const wt = GOODS[g].tier === 0 ? 3 : 1;
+      // the price index is a basket: each good weighs by what the market's people, workshops and armies bought of it
+      // (its demand at the age's prices), so a dear staple moves it and a good nobody here wants does not
+      const wt = priceIndexWeight(D, g, pl);
       idx += (p / (GOODS[g].base * pl)) * wt; wsum += wt;
     }
     m.histPos = (m.histPos + 1) % 120;
-    m.priceIndex = idx / wsum;
+    m.priceIndex = wsum > 0 ? idx / wsum : 1;
     m.owner = s.loc.owner[m.hub];
   }
 }
+
+/** Weight of a good in a market's price index: the value of its demand there at the age's prices (clearMarkets). */
+export function priceIndexWeight(demand: number, g: number, pl: number): number { return Math.max(0, demand) * GOODS[g].base * pl; }
 
 /** What a good costs where no one offers it: the cheapest linked market where it is on offer, plus carriage (a quarter
  *  more by land, a sixth by sea), between half and three times its anchor; two and a half times the anchor where no

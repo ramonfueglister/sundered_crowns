@@ -1,10 +1,10 @@
 // Trade panel (spec points 27, 47, 48, 54): a market's trade power with its breakdown, our merchants (send, recall,
 // collect or steer home, with the expected gain), the goods with their producers, consumers, prices and what drives
 // them, and our trade policy (tariff, agreements, embargoes). Numbers come from src/game/tradeview.ts.
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import './trade.css';
 import { view, nations } from '../../game/client';
-import { playerId } from '../store';
+import { playerId, panelArg } from '../store';
 import { Section, Row, NLink, Btn, Empty, Tabs, Slider, Spark, useQuery, act, t, L, num, signed, pct, Tip, placeName, flyToLoc } from './common';
 import { TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
@@ -15,6 +15,9 @@ export function TradeTab() {
   const pv = view.value?.player;
   const [tab, setTab] = useState<Tab>('market');
   const [sel, setSel] = useState(-1);
+  // another panel may open us on a market (the economy panel's market summary)
+  const askMarket = panelArg.value?.market;
+  useEffect(() => { if (typeof askMarket === 'number' && askMarket >= 0) { setSel(askMarket); setTab('market'); } }, [askMarket]);
   const home = pv?.homeMarket ?? -1;
   const mid = sel >= 0 ? sel : home;
   const [list] = useQuery<any[]>({ q: 'tmarkets' }, [], 3000);
@@ -64,6 +67,7 @@ function MarketView({ mid }: { mid: number }) {
         <Row k={t('tr_steered_in')} v={num(d.tin, 1)} tip={<div><TipHead name={t('tr_steered_in')} value={num(d.tin, 1)} hint={t('tr_steered_in_hint')} /></div>} />
         <Row k={t('tr_our_share')} v={pct(d.our?.share ?? 0, 1)} tip={() => mine ? <PowerTip r={mine} total={d.total} /> : <div>{t('tr_no_power')}</div>} />
         <Row k={t('tr_our_income')} v={<span class="pos">+{num(d.our?.paid ?? 0, 1)}</span>} tip={() => <OurIncomeTip d={d} />} />
+        <Row k={t('price_index')} v={<span class={d.priceIndex > 1.2 ? 'neg' : d.priceIndex < 0.85 ? 'pos' : ''}>{num(d.priceIndex, 2)}</span>} tip={() => <PriceIndexTip index={d.priceIndex} parts={d.index} />} />
       </div>
       <div class="tbl-wrap"><table class="tbl tr-power">
         <thead><tr><th>{t('realm')}</th><th class="r">{t('tr_power')}</th><th class="r">{t('tr_share')}</th><th class="r">{t('tr_income')}</th><th>{t('tr_mode')}</th></tr></thead>
@@ -80,6 +84,20 @@ function MarketView({ mid }: { mid: number }) {
       <div class="chips">{d.links.map((l: any) => <span class="chip">{placeName(l.name)}{l.sea ? ' ⚓' : ''}{l.ocean ? ' 🌊' : ''}</span>)}</div>
     </Section>
   </>;
+}
+
+/** The price index of a market and the goods that move it most (src/game/tradeview.ts priceIndexParts): each good's
+ *  price against its base, its weight in what the market bought, and its pull on the index. */
+export function PriceIndexTip({ index, parts }: { index: number; parts: any }) {
+  return <div><TipHead name={t('price_index')} value={num(index, 2)} hint={t('x_price_index_how')} />
+    {parts?.top?.length > 0 && <div class="breakdown">
+      <div class="bd-row muted small"><span>{t('x_price_index_good')}</span><span>{t('x_price_index_rel')} · {t('x_price_index_weight')} · {t('x_price_index_pull')}</span></div>
+      <div class="bd-row"><span>{t('x_price_index_base')}</span><span>{num(1, 2)}</span></div>
+      {parts.top.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>× {num(x.rel, 2)} · {pct(x.share, 0)} · <b class={x.pull > 0.005 ? 'neg' : x.pull < -0.005 ? 'pos' : ''}>{signed(x.pull, 2)}</b></span></div>)}
+      {parts.goods > parts.top.length && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(parts.goods - parts.top.length))}</span><span><b>{signed(parts.rest, 2)}</b></span></div>}
+      <div class="bd-row bd-total"><span>{t('price_index')}</span><span>{num(index, 2)}</span></div>
+    </div>}
+  </div>;
 }
 
 /** What we took in this market last month, exactly as paid: our share of its own trade and of the trade steered in
@@ -226,6 +244,7 @@ function GoodDetail({ mid, g }: { mid: number; g: number }) {
       <Row k={t('tr_made_here')} v={num(d.made, 1)} tip={<div><TipHead name={t('tr_made_here')} value={num(d.made, 1)} hint={t('tr_made_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_ours')}</span><span>{num(d.ours.made, 1)}</span></div></div></div>} />
       <Row k={t('tr_used_here')} v={num(cons, 1)} tip={() => <div><TipHead name={t('tr_used_here')} value={num(cons, 1)} hint={t('tr_used_hint')} /><Parts rows={[['tr_c_people', d.people], ['tr_c_crafts', d.crafts], ['tr_c_house', d.house]]} total={cons} /><div class="muted">{t('tr_ours')}: {num(d.ours.used, 1)}</div></div>} />
     </div>
+    {d.books && <GoodBooks d={d} />}
     {!d.ready && <div class="muted small">{t('tr_after_month')}</div>}
     <div class="tr-cols">
       <div>
@@ -244,6 +263,20 @@ function GoodDetail({ mid, g }: { mid: number; g: number }) {
     {d.partners.length > 0 && <><div class="bd-title">{t('tr_partners_good')}</div>
       {d.partners.map((p: any) => <div class="kv"><span class="k">{p.out ? '→' : '←'} {placeName(p.name)}</span><span class="v"><Tip content={<div><TipHead name={p.out ? t('tr_export') : t('tr_import')} value={num(p.value, 1)} hint={t('tr_flow_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_quantity')}</span><span>{num(p.qty, 1)}</span></div></div></div>}>{num(p.qty, 1)} · {num(p.value, 0)}</Tip></span></div>)}</>}
   </Section>;
+}
+
+/** Last month's supply and demand of a good as the market's clearing counted them, adding up to the goods table. */
+function GoodBooks({ d }: { d: any }) {
+  const b = d.books;
+  const dg = (v: number) => (Math.abs(v) < 10 ? 1 : 0);
+  return <div class="cols2 tr-books">
+    <Parts title={<Tip content={<div><TipHead name={t('supply')} value={num(d.supply, 1)} hint={t('x_books_supply_hint')} /></div>}><span class="has-tip">{t('supply')}</span></Tip>}
+      rows={[[t('x_books_made'), b.made], [t('x_books_net_in'), b.netIn], [t('x_books_held'), b.held]]} total={d.supply} digits={dg(d.supply)} totalLabel={t('supply')} />
+    <Parts title={<Tip content={<div><TipHead name={t('demand')} value={num(d.demand, 1)} hint={t('x_books_demand_hint')} /></div>}><span class="has-tip">{t('demand')}</span></Tip>}
+      rows={[[t('tr_c_people'), b.people], [t('x_books_rest'), b.rest]]} fmt={(v) => num(v, dg(d.demand))} total={d.demand} digits={dg(d.demand)} totalLabel={t('demand')} />
+    {b.unmet > 0.05 && <div class="neg small">{t('x_books_unmet')}: {num(b.unmet, dg(b.unmet))} ({pct(d.demand > 0 ? b.unmet / d.demand : 0, 0)})</div>}
+    {b.left > 0.05 && <div class="muted small">{t('x_books_left')}: {num(b.left, dg(b.left))} · {t('tr_stock')} {num(d.stock, dg(d.stock))}</div>}
+  </div>;
 }
 
 // ---------------------------------------------------------------- policy

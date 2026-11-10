@@ -405,7 +405,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     recruits: s.recruits.filter((r) => r.nation === player).map((r) => ({ ...r, name: w.names[r.loc], unit: UNITS[r.type].name })),
     spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors, election: !!s.empire.election, diet: !!s.empire.diet },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,
-    priceLevel: s.priceLevel, markets: s.markets.map((m) => ({ id: m.id, name: m.name, mine: m.merchants[player] || 0 })),
+    priceLevel: s.priceLevel, // fix-econ: the list of every market (undiscovered ones too) went with the economy panel's old market table
     tradeBy: tradeIncomeBy(s, player), // fix-econ: last month's trade income by market (the ledger line's breakdown)
     explain: explainRealm(s, w, n), goals: goalsView(s, w, n),
   };

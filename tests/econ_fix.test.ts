@@ -8,14 +8,14 @@ import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
 import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax } from '../src/sim/systems/economy';
-import { tradePolicy } from '../src/game/tradeview';
+import { tradePolicy, priceIndexParts, goodDetail } from '../src/game/tradeview';
 import { methodsView } from '../src/game/methodsview';
 import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } from '../src/sim/systems/explore';
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
 import { unitCost, unitUpkeep } from '../src/sim/systems/military';
-import { UNITS, C, CL } from '../src/sim/defs';
+import { UNITS, C, CL, GOODS, G, GI } from '../src/sim/defs';
 import { applyCommand } from '../src/sim/commands';
 import { homeMarket, merchantRefusal, steerRoute, tradeEarnings } from '../src/sim/systems/trade';
 import type { GameState, Nation } from '../src/sim/types';
@@ -239,5 +239,29 @@ describe('what a tariff keeps out is told by good, with the margin it would have
     // the goods value is not lost income: the margin of what was kept out is a fraction of its value
     expect(d.keptMargin / d.deter).toBeLessThan(0.5);
     expect(d.keptOut[0].margin).toBeGreaterThan(0);
+  });
+});
+
+describe('prices: the index weighs what the market buys, and a good\'s books add up to the goods table', () => {
+  it('the price index is the demand-weighted mean of prices against their base; its parts add up; supply and demand split exactly', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice'); const home = homeMarket(s, n);
+    toNextClose(s); toNextClose(s);
+    const mk = s.markets[home]; const pl = s.priceLevel;
+    let a = 0, b = 0;
+    GOODS.forEach((g, k) => { const wt = mk.demand[k] * g.base * pl; a += wt * mk.price[k] / (g.base * pl); b += wt; });
+    expect(mk.priceIndex).toBeCloseTo(a / b, 3); // (the price level moves a hair after the markets clear)
+    const parts = priceIndexParts(s, home)!;
+    expect(1 + parts.top.reduce((p, x) => p + x.pull, 0) + parts.rest).toBeCloseTo(mk.priceIndex, 6);
+    // the goods that pull it most are dear staples the market buys a lot of, not goods nobody here wants
+    expect(parts.top[0].share).toBeGreaterThan(0.01);
+    for (let g = 0; g < G; g++) {
+      const d = goodDetail(s, w, n.id, home, g)!;
+      if (d.supply + d.demand < 1) continue;
+      expect(d.books).toBeTruthy();
+      expect(d.books!.made + d.books!.netIn + d.books!.held).toBeCloseTo(d.supply, 3);
+      expect(d.books!.people + d.books!.rest).toBeCloseTo(d.demand, 3);
+      expect(d.books!.made).toBeGreaterThanOrEqual(-1e-6);
+    }
+    expect(goodDetail(s, w, n.id, home, GI.grain)!.books!.people).toBeGreaterThan(0);
   });
 });

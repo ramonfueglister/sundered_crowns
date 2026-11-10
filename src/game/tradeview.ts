@@ -10,7 +10,7 @@ import {
   marketPath, embargoedBy, embargoStakes, tariffBetween, marketWaters, shipTable, MAX_HOPS, AGREEMENT_TARIFF, AGREEMENT_VOLUME, MERCHANT_CROWD,
   tradeEarnings, STEER_BONUS, HOP_LOSS,
 } from '../sim/systems/trade';
-import { tariffMax, LOC_ECON, locGoods, needWeights } from '../sim/systems/economy';
+import { tariffMax, LOC_ECON, locGoods, needWeights, priceIndexWeight } from '../sim/systems/economy';
 import { lawEffect } from '../sim/systems/politics';
 import { hasTreaty, treatiesOf } from '../sim/ctx';
 import { expeditionTargets, expeditionPlan, MAX_EXPEDITIONS, regionOf, harbours } from '../sim/systems/explore';
@@ -65,11 +65,27 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
   const wat = marketWaters(s, w).byMarket[mid] ?? [];
   const goods = GOODS.map((g, k) => ({ id: g.id, k, name: g.name, price: mk.price[k], supply: mk.supply[k], demand: mk.demand[k], base: g.base * s.priceLevel, net: mk.flowOut[k], hist: priceHist(s, mid, k, 24) }));
   return {
-    id: mid, name: mk.name, hub: mk.hub, hubName: placeI18n(w, mk.hub), owner: mk.owner, priceIndex: mk.priceIndex,
+    id: mid, name: mk.name, hub: mk.hub, hubName: placeI18n(w, mk.hub), owner: mk.owner, priceIndex: mk.priceIndex, index: priceIndexParts(s, mid),
     tv: mk.tv ?? 0, tin: mk.tin ?? 0, deter: mk.deter ?? 0, base: mp.base, total: mp.total, crowdCap: MERCHANT_CROWD,
     rows, our, goods, waters: wat.length, seaRoutes: mk.links.filter((l) => l.sea).length,
     links: mk.links.filter((l) => known(s, n, s.markets[l.to].hub)).map((l) => ({ to: l.to, name: s.markets[l.to].name, sea: l.sea, ocean: !!l.ocean })),
   };
+}
+
+/** What moves a market's price index (economy.ts clearMarkets): each good's price against its base at the age's prices,
+ *  its weight (the value of last month's demand for it at those prices) and how far it pulls the index above or below
+ *  1. The goods that pull most come first; their pulls and the rest add up to index − 1. */
+export function priceIndexParts(s: GameState, mid: number) {
+  const mk = s.markets[mid]; if (!mk) return null;
+  const pl = s.priceLevel;
+  let wsum = 0; const wt = new Float64Array(G);
+  for (let g = 0; g < G; g++) { wt[g] = priceIndexWeight(mk.demand[g], g, pl); wsum += wt[g]; }
+  const goods = Array.from({ length: G }, (_, g) => { const rel = mk.price[g] / (GOODS[g].base * pl); const share = wsum > 0 ? wt[g] / wsum : 0; return { g, name: GOODS[g].name, rel, share, pull: share * (rel - 1) }; })
+    .filter((x) => x.share > 0).sort((a, b) => Math.abs(b.pull) - Math.abs(a.pull) || a.g - b.g);
+  const top = goods.slice(0, 6);
+  // the rest is what the other goods pull, taken against the index as it was set at the close (the price level moves
+  // a hair after the markets clear), so the rows add up to the index shown
+  return { goods: goods.length, top, rest: mk.priceIndex - 1 - top.reduce((p, x) => p + x.pull, 0) };
 }
 
 /** Our share of the trade steered into market m last month, by the market it was steered from. */
@@ -136,6 +152,9 @@ export function goodDetail(s: GameState, w: World, pid: number, mid: number, g: 
   return {
     good: g, name: GOODS[g].name, market: mid, marketName: mk.name, price: mk.price[g], base: GOODS[g].base, priceLevel: s.priceLevel, debase, anchor,
     supply: S, demand: D, net: mk.flowOut[g], stock: mk.stock[g], ratio, step, ready,
+    // what last month's clearing counted, so the detail adds up to the table: supply = made here + imports − exports +
+    // half the stock carried over; demand = the people's + the rest (workshops, households, armies' provisions)
+    books: mk.held && mk.dPeople ? { made: S - mk.held[g] + mk.flowOut[g], netIn: -mk.flowOut[g], held: mk.held[g], people: mk.dPeople[g], rest: D - mk.dPeople[g], unmet: Math.max(0, D - S), left: Math.max(0, S - D) } : null,
     hist: priceHist(s, mid, g, 24),
     made, people, crafts, house,
     producers: prod.slice(0, 8).map((x) => ({ ...x, name: placeI18n(w, x.loc), owner: s.loc.owner[x.loc] })), producerRealms: realms(byRealmP),
