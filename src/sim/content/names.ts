@@ -319,3 +319,26 @@ export function localHouse(house: string | undefined | null, lang: 'en' | 'de'):
     .replace(/^Council of the /, 'Rat der ').replace(/House of /g, 'Haus ').replace(/ of /g, ' von ')
     .replace(/\p{Lu}[\p{L}]+/gu, (w) => HOUSE_WORD_DE[w] ?? OF_DE[w] ?? (/sches$/.test(PLACE_DE[w] ?? '') ? w : PLACE_DE[w] ?? w));
 }
+
+// ---- fix-people: a German name in the accusative or dative (event texts: "fragt Peter I. den Grausamen")
+/** The epithet of a German royal name declined for the case: after the regnal number ("Peter I. der Grausame" →
+ *  "den Grausamen", "dem Grausamen"), in brackets ("(der Schwarze Prinz)" → "(den Schwarzen Prinzen)"), or after a
+ *  lone given name ("Margarete die Große" → dative "der Großen"). Titles ("Herzog der Normandie") stay as they are. */
+export function declineDe(name: string, female: boolean, kase: 'nom' | 'acc' | 'dat'): string {
+  if (kase === 'nom') return name;
+  const art = female ? (kase === 'dat' ? 'der' : 'die') : kase === 'dat' ? 'dem' : 'den';
+  const weak = !female || kase === 'dat'; // die Große (acc) keeps the ending; der Großen, den Großen, dem Großen
+  const ep = (s: string) => s.split(' ').map((w) => (weak && /e$/.test(w) ? `${w}n` : !female && w === 'Prinz' ? 'Prinzen' : w)).join(' ');
+  return name
+    .replace(/( [IVXLC]+\.) (der|die) ([A-ZÄÖÜ][^()]*)$/, (_m, num, _a, e) => `${num} ${art} ${ep(e)}`)
+    .replace(/\((der|die) ([^)]+)\)/, (_m, _a, e) => `(${art} ${ep(e)})`)
+    .replace(/^(\S+) (der|die) ([A-ZÄÖÜ][^(),]*)$/, (_m, g, _a, e) => `${g} ${art} ${ep(e)}`);
+}
+/** Which case a German event text asks of the name that follows this word ("bittet {ruler}" → accusative, "von
+ *  {ruler}" → dative); a word not listed leaves the nominative. */
+const DE_DAT = new Set(['von', 'vom', 'zu', 'mit', 'bei', 'nach', 'aus', 'seit', 'gegenüber', 'zeigt', 'bietet', 'bieten', 'trugen', 'seien', 'gehorcht', 'dient', 'dienen', 'schreibt']);
+const DE_ACC = new Set(['bitten', 'bittet', 'fragt', 'fragen', 'erinnern', 'erinnert', 'fleht', 'flehen', 'drängen', 'drängt', 'an', 'für', 'gegen', 'um', 'durch', 'ohne', 'verspricht', 'ehrt', 'ehren', 'grüßt', 'grüßen']);
+export function caseAfterDe(word: string): 'nom' | 'acc' | 'dat' {
+  const w = word.toLowerCase().replace(/[^a-zäöüß]/g, '');
+  return DE_DAT.has(w) ? 'dat' : DE_ACC.has(w) ? 'acc' : 'nom';
+}

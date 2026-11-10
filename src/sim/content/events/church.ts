@@ -89,7 +89,7 @@ export const CHURCH_EVENTS: EventDef[] = [
     title: { en: 'The Indulgence Preacher', de: 'Der Ablassprediger' },
     text: {
       en: 'A Dominican with a great iron-bound chest has set up in {loc}: "As soon as the coin in the coffer rings, the soul from purgatory springs." The money is for a new basilica in Rome; a third is promised to {ruler}.',
-      de: 'Ein Dominikaner mit einer großen eisenbeschlagenen Truhe hat sich in {loc} niedergelassen: „Sobald das Geld im Kasten klingt, die Seele aus dem Fegefeuer springt.“ Das Geld ist für eine neue Basilika in Rom bestimmt; ein Drittel ist {ruler} versprochen.',
+      de: 'Ein Dominikaner mit einer großen eisenbeschlagenen Truhe hat sich in {loc} niedergelassen: „Sobald das Geld im Kasten klingt, die Seele aus dem Fegefeuer springt.“ Das Geld ist für eine neue Basilika in Rom bestimmt; ein Drittel ist {ruler_dat} versprochen.',
     },
     mtth: 72, cooldown: 20, minYear: 1450, maxYear: 1540,
     trigger: (e) => latin(e) && settled(e),

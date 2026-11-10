@@ -1,6 +1,11 @@
 // Coat of arms drawn as SVG from our own `coa` spec (docs/DATA_SCHEMA.md): shield, tinctures, divisions,
 // ordinaries and charges. Charges are simple heraldic silhouettes in a 100×100 box, outlined in ink.
 import { memo } from 'preact/compat';
+import { lang } from '../i18n';
+
+/** Inscriptions on a shield (a 'letter' charge with a long text, the Mamluk sultan's blazon) as German readers read
+ *  them; the text is drawn into the arms and hidden from screen readers and from the text of tables. */
+const INSCRIPTION_DE: Record<string, string> = { 'Glory to our lord the Sultan': 'Ruhm unserem Herrn, dem Sultan' };
 
 export const TINCTURE: Record<string, string> = {
   or: '#e2b63c', argent: '#f2efe6', gules: '#b8261d', azure: '#1f4f9e', vert: '#2f7a3c', sable: '#1d1a17', purpure: '#76306f',
@@ -139,8 +144,9 @@ function ChargeG({ g, p, fill, ink, sw }: { g: Group; p: Pos; fill: string; ink:
   const [x, y, s, rot] = p; const k = s / 100;
   const tr = `translate(${(x - s / 2).toFixed(2)},${(y - s / 2).toFixed(2)}) scale(${k.toFixed(4)})${rot ? ` rotate(${rot},50,50)` : ''}`;
   if (g.type === 'letter') {
-    const txt = String(g.text || 'A'); const long = txt.length > 3;
-    return <g transform={tr}><text x={50} y={long ? 58 : 76} text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size={long ? 16 : 80}
+    const raw = String(g.text || 'A'); const long = raw.length > 3;
+    const txt = long && lang.value === 'de' ? INSCRIPTION_DE[raw] ?? raw : raw;
+    return <g transform={tr} aria-hidden="true"><text x={50} y={long ? 58 : 76} text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size={long ? 16 : 80}
       {...(long ? { textLength: 92, lengthAdjust: 'spacingAndGlyphs' } : {})} fill={fill} stroke={ink} stroke-width={long ? 0.6 : 2.5} paint-order="stroke">{long ? txt.slice(0, 40) : txt.slice(0, 2)}</text></g>;
   }
   const ch = (CHARGES[g.type] || CHARGES.roundel)();

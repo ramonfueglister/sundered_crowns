@@ -12,7 +12,7 @@ import { estate } from './politics';
 import { dayToDate } from '../calendar';
 import { EVENTS } from '../content/events';
 import { aiRecord } from './ai_log';
-import { localName } from '../content/names';
+import { localName, declineDe, caseAfterDe } from '../content/names';
 import { DECISIONS } from '../content/decisions';
 /** The name of a proposal as a heading (an offer recorded for an online player who was away). */
 const ACT_TITLE: Record<string, I18n> = { alliance: { en: 'Alliance', de: 'Bündnis' }, marriage: { en: 'Royal marriage', de: 'Königliche Heirat' }, access: { en: 'Military access', de: 'Durchmarschrecht' }, trade: { en: 'Trade agreement', de: 'Handelsabkommen' }, vassalize: { en: 'Vassalage', de: 'Vasallität' }, demand: { en: 'Tribute', de: 'Tribut' } };
@@ -133,7 +133,9 @@ export function interpolate(s: GameState, w: World, n: Nation, ctx: Record<strin
   const r = s.chars[n.ruler];
   const rep = (str: string, lang: 'en' | 'de') => str
     .replace(/\{nation\}/g, n.short[lang]).replace(/\{adj\}/g, n.adj[lang])
-    .replace(/\{ruler\}/g, r ? localName(r.name, lang, r.female) : '—')
+    // German declines the epithet by case: explicit {ruler_acc} / {ruler_dat}, else by the word before ("bittet {ruler}")
+    .replace(/\{ruler_(acc|dat)\}/g, (_m, k) => (r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female), r.female, k) : r.name) : '—'))
+    .replace(/(\S*)(\s*)\{ruler\}/g, (_m, prev, sp) => `${prev}${sp}${r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female), r.female, caseAfterDe(prev)) : r.name) : '—'}`)
     .replace(/\{loc\}/g, ctx.loc !== undefined && ctx.loc >= 0 ? (lang === 'de' ? w.namesDe : w.names)[ctx.loc] : '—')
     .replace(/\{other\}/g, ctx.other !== undefined && s.nations[ctx.other] ? s.nations[ctx.other].short[lang] : '—')
     .replace(/\{year\}/g, String(dayToDate(s.day, s.startYear).y))

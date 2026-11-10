@@ -9,7 +9,7 @@ import { rand, chance, hash01 } from '../rng';
 import { dayToDate } from '../calendar';
 import { lawEffect, ageOf, characterDies, councilBonus } from './politics';
 import { commanderSkill, commanderMorale, battleLessons, appointBest } from './commanders';
-import { personName } from '../content/names';
+import { personName, localName } from '../content/names';
 import { genCoa } from '../content/heraldry';
 import { GROUP_OF } from '../content/peoples';
 import { integrationYield } from './economy';
@@ -751,7 +751,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
   for (const a of Lz) if (a.general && chance(s.rng, 0.08)) {
     const g = s.chars[a.general];
     if (g) {
-      notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${g.name} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc });
+      notice(s, a.owner, 'general_death', { en: `${g.name} fell at ${w.names[b.loc]}.`, de: `${localName(g.name, 'de', g.female)} fiel bei ${w.namesDe[b.loc]}.` }, { loc: b.loc });
       a.general = 0;
       const owner = s.nations[a.owner];
       if (owner) characterDies(s, w, owner, g.id); else { g.alive = false; g.died = s.day; }

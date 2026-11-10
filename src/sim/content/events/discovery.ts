@@ -55,7 +55,7 @@ export const DISCOVERY_EVENTS: EventDef[] = [
     title: { en: 'The Mariner’s Enterprise', de: 'Das Unternehmen des Seefahrers' },
     text: {
       en: 'A Genoese mariner has laid before {ruler} a map, a copy of Ptolemy and a letter from a Florentine astronomer. The earth is smaller than the scholars say, he insists: sail west from the Canaries and in five weeks you reach Cipangu and the lands of the Great Khan. He asks for three ships, a title and a tenth of all he finds.',
-      de: 'Ein genuesischer Seefahrer hat {ruler} eine Karte, eine Ptolemäus-Ausgabe und einen Brief eines Florentiner Astronomen vorgelegt. Die Erde sei kleiner, als die Gelehrten sagen, beharrt er: Segle man von den Kanaren nach Westen, erreiche man in fünf Wochen Zipangu und die Länder des Großkhans. Er verlangt drei Schiffe, einen Titel und ein Zehntel von allem, was er findet.',
+      de: 'Ein genuesischer Seefahrer hat {ruler_dat} eine Karte, eine Ptolemäus-Ausgabe und einen Brief eines Florentiner Astronomen vorgelegt. Die Erde sei kleiner, als die Gelehrten sagen, beharrt er: Segle man von den Kanaren nach Westen, erreiche man in fünf Wochen Zipangu und die Länder des Großkhans. Er verlangt drei Schiffe, einen Titel und ein Zehntel von allem, was er findet.',
     },
     mtth: 36, oncePer: true, minYear: 1480, maxYear: 1530,
     trigger: (e) => !e.s.flags.west_route_found && (isKey(e, ...IBERIAN_ATLANTIC) || atlantic(e)) && settled(e) && christian(e),
@@ -111,7 +111,7 @@ export const DISCOVERY_EVENTS: EventDef[] = [
     title: { en: 'A Map of the Whole World', de: 'Eine Karte der ganzen Welt' },
     text: {
       en: 'A cartographer of {loc} has drawn a map of the whole world on a projection of his own, with lines of latitude and longitude and the newly found coasts. He offers it to {ruler}, with the dedication, for a modest pension.',
-      de: 'Ein Kartograf aus {loc} hat eine Karte der ganzen Welt in einer eigenen Projektion gezeichnet, mit Breiten- und Längengraden und den neu gefundenen Küsten. Er bietet sie {ruler} samt Widmung gegen eine bescheidene Pension an.',
+      de: 'Ein Kartograf aus {loc} hat eine Karte der ganzen Welt in einer eigenen Projektion gezeichnet, mit Breiten- und Längengraden und den neu gefundenen Küsten. Er bietet sie {ruler_dat} samt Widmung gegen eine bescheidene Pension an.',
     },
     mtth: 150, cooldown: 30, minYear: 1450,
     trigger: (e) => settled(e) && christian(e) && hasCoast(e),

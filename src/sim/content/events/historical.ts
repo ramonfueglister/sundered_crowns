@@ -117,7 +117,7 @@ export const HISTORICAL_EVENTS: EventDef[] = [
     title: { en: 'The Field of Snipes', de: 'Das Schnepfenfeld' },
     text: {
       en: 'The beklerbeg Mamai is marching on Moscow with Tatars, Genoese infantry from Caffa and the promise of Lithuanian help. The abbot Sergius of the Trinity monastery has blessed {ruler} and sent two monks to ride with the army. The princes of the Rus wait to see whether Moscow will dare to stand on the Don.',
-      de: 'Der Beklerbeg Mamai marschiert mit Tataren, genuesischem Fußvolk aus Kaffa und dem Versprechen litauischer Hilfe auf Moskau. Abt Sergius vom Dreifaltigkeitskloster hat {ruler} gesegnet und zwei Mönche mit dem Heer reiten lassen. Die Fürsten der Rus warten ab, ob Moskau es wagt, am Don standzuhalten.',
+      de: 'Der Beklerbeg Mamai marschiert mit Tataren, genuesischem Fußvolk aus Kaffa und dem Versprechen litauischer Hilfe auf Moskau. Abt Sergius vom Dreifaltigkeitskloster hat {ruler_acc} gesegnet und zwei Mönche mit dem Heer reiten lassen. Die Fürsten der Rus warten ab, ob Moskau es wagt, am Don standzuhalten.',
     },
     mtth: 12,
     trigger: (e) => isKey(e, 'moscow') && alive(e, 'golden_horde') && owns(e, 'Moscow'),
@@ -372,7 +372,7 @@ export const HISTORICAL_EVENTS: EventDef[] = [
     title: { en: 'The Keys of the Alhambra', de: 'Die Schlüssel der Alhambra' },
     text: {
       en: 'The last emir of Granada has handed the keys of the Alhambra to {ruler} and ridden south into the Alpujarras. Legend says he wept at the last pass and his mother told him to weep like a woman for what he could not defend like a man. The capitulations promise the Muslims of Granada their mosques, their laws and their property.',
-      de: 'Der letzte Emir von Granada hat {ruler} die Schlüssel der Alhambra übergeben und ist nach Süden in die Alpujarras geritten. Die Legende sagt, er habe am letzten Pass geweint, und seine Mutter habe ihm gesagt, er solle wie eine Frau beweinen, was er nicht wie ein Mann verteidigen konnte. Die Kapitulation verspricht den Muslimen Granadas ihre Moscheen, ihre Gesetze und ihren Besitz.',
+      de: 'Der letzte Emir von Granada hat {ruler_dat} die Schlüssel der Alhambra übergeben und ist nach Süden in die Alpujarras geritten. Die Legende sagt, er habe am letzten Pass geweint, und seine Mutter habe ihm gesagt, er solle wie eine Frau beweinen, was er nicht wie ein Mann verteidigen konnte. Die Kapitulation verspricht den Muslimen Granadas ihre Moscheen, ihre Gesetze und ihren Besitz.',
     },
     mtth: 2,
     trigger: (e) => latin(e) && isKey(e, 'castile', 'aragon', 'portugal') && owns(e, 'Granada'),

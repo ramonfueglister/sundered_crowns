@@ -7,7 +7,11 @@ import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
 import { characterDies, lineOfSuccession, ageOf, politics, houseKin, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES } from '../src/sim/systems/politics';
 import { applyCommand } from '../src/sim/commands';
-import { localName } from '../src/sim/content/names';
+import { localName, declineDe } from '../src/sim/content/names';
+import { deName } from '../src/sim/content/names_de';
+import { interpolate } from '../src/sim/systems/events';
+import { aiLogText } from '../src/sim/systems/ai_log';
+import { BRANCHES } from '../src/sim/systems/progress';
 import { RULER_TRAIT_FX, TRAITS_DESCRIPTIVE, TRAITS_HEALTH } from '../src/sim/content/traits';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dynastyView, successionClaims, marriagePreview, freshGivenName } from '../src/sim/systems/dynasty';
@@ -319,5 +323,35 @@ describe('espionage', () => {
     expect(before - E.treasury).toBe(cost);
     expect(s.spies.filter((x) => x.nation === E.id && x.action === 'fabricate').map((x) => x.days)).toEqual([240]);
     expect(applyCommand(s, w, { t: 'spy', n: E.id, action: 'fabricate', target: N.id }).ok).toBe(false);
+  });
+});
+
+describe('German text', () => {
+  it('seas, gulfs and the holdings of Venice and Genoa have German names', () => {
+    expect(deName('Atlantic Ocean (North) 3')).toBe('Atlantischer Ozean (Nord) 3');
+    expect(deName('Gulf of Bothnia (North-East) 2')).toBe('Bottnischer Meerbusen (Nordost) 2');
+    expect(deName('Eclipse Sound')).toBe('Eclipse-Sund');
+    expect(deName('Venetian Crete')).toBe('Venezianisches Kreta');
+    expect(deName('Genoese Corsica – Bonifacio')).toBe('Genuesisches Korsika – Bonifacio');
+    expect(deName('Despotate of the Morea')).toBe('Despotat Morea');
+  });
+
+  it('an event text declines the ruler\'s epithet after a verb or preposition', () => {
+    const { s, w } = newGame(1356);
+    const C = nat(s, 'castile');
+    const x = (de: string) => interpolate(s, w, C, {}, { en: 'x', de }).de;
+    expect(x('Der Befehlshaber fragt {ruler}, ob')).toBe('Der Befehlshaber fragt Peter I. den Grausamen, ob');
+    expect(x('Ein Gelehrter ist zu {ruler} gekommen.')).toBe('Ein Gelehrter ist zu Peter I. dem Grausamen gekommen.');
+    expect(x('Solange {ruler} lebt')).toBe('Solange Peter I. der Grausame lebt');
+    expect(x('Granada hat {ruler_dat} die Schlüssel')).toBe('Granada hat Peter I. dem Grausamen die Schlüssel');
+    expect(declineDe('Eduard von Woodstock (der Schwarze Prinz)', false, 'acc')).toBe('Eduard von Woodstock (den Schwarzen Prinzen)');
+    expect(declineDe('Margarete die Große', true, 'dat')).toBe('Margarete der Großen');
+    expect(declineDe('Karl, Dauphin und Herzog der Normandie', false, 'dat')).toBe('Karl, Dauphin und Herzog der Normandie');
+  });
+
+  it('the AI log names every command it shows, and Governance is one German word', () => {
+    const { s, w } = newGame(1356);
+    expect(aiLogText(s, w, { d: 0, c: { t: 'assault' } } as any).de).toBe('Sturmangriff auf eine belagerte Stadt');
+    expect(BRANCHES.find((b) => b.id === 'governance')!.name.de).toBe('Verwaltung');
   });
 });
