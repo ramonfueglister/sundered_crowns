@@ -17,7 +17,7 @@ import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrin
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, lenderName } from '../sim/systems/economy';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, lenderName, grossIncome } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
@@ -487,7 +487,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   const authorityParts: BdRow[] = [['x_base', 1], ['x_ruler_skills', sk * 0.4], ['x_mandate', n.mandate / 50],
     ...scaleRows(effectSources(n, 'authority_gain'), aBase), ...effectSources(n, 'authority')];
   // ---- Prestige: decays by 0.5 % a month; landmarks and a full chest add to it
-  const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
+  const gross = grossIncome(n); // (as the month's splendour reckons it: systems/economy.ts monthlyLedger)
   const prestigeParts: BdRow[] = [['x_decay', -n.prestige * 0.005], ...effectSources(n, 'prestige')];
   for (const x of landmarksOf(s, w)) if (x.tier > 0 && s.loc.owner[x.loc] === n.id) { const d = landmarkDef(x.id); if (d.prestige) prestigeParts.push([d.name, d.prestige * x.tier]); }
   const hoard = n.treasury - gross * 12;

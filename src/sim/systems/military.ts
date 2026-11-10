@@ -12,7 +12,7 @@ import { commanderSkill, commanderMorale, battleLessons, appointBest } from './c
 import { personName } from '../content/names';
 import { genCoa } from '../content/heraldry';
 import { GROUP_OF } from '../content/peoples';
-import { integrationYield } from './economy';
+import { integrationYield, grossIncome } from './economy';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
 import { forgetTrade } from './trade';
@@ -1175,7 +1175,7 @@ export function fortPay(s: GameState, n: Nation): { forts: number; full: number;
   let forts = 0;
   for (const i of ownedLocs(s, n.id)) forts += s.loc.buildings[i * B + BI.fort];
   const full = forts * 2.5 * s.priceLevel * Math.max(0.2, 1 + lawEffect(n, 'fort_cost'));
-  const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
+  const gross = grossIncome(n);
   return { forts, full, pay: Math.min(full, gross * 0.33) };
 }
 /** A realm's manpower limit and the sailors its coasts give a month (the limit of sailors is four times that): levies

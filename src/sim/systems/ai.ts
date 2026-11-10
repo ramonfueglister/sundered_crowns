@@ -14,7 +14,7 @@ import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, su
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { lawEffect } from './politics';
-import { overextension } from './economy';
+import { overextension, grossIncome } from './economy';
 import { aiDuties } from './administration';
 import { FAITH_INDEX, FAITHS } from '../content/peoples';
 import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
@@ -294,7 +294,7 @@ const MINEABLE = Uint8Array.from(GOODS, (g) => (RAW_FROM_MINE.has(g.id) ? 1 : 0)
  *  coastal power (buildings and lower taxes take the rest, see construction and budget; colonial ventures are a
  *  decision). The realm keeps a year of revenue in reserve. */
 export function spendSurplus(s: GameState, w: World, n: Nation) {
-  const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
+  const gross = grossIncome(n);
   if (gross <= 0 || n.capital < 0) return;
   const reserve = gross * 12;
   const surplus = () => n.treasury - reserve;

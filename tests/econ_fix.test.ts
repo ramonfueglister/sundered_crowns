@@ -7,7 +7,7 @@ import { createGame } from '../src/sim/setup';
 import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
-import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax } from '../src/sim/systems/economy';
+import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax, courtCost, grossIncome } from '../src/sim/systems/economy';
 import { landmarksOf, landmarkPrice } from '../src/sim/systems/landmarks';
 import { tradePolicy, priceIndexParts, goodDetail } from '../src/game/tradeview';
 import { methodsView } from '../src/game/methodsview';
@@ -15,7 +15,7 @@ import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } f
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
-import { unitCost, unitUpkeep } from '../src/sim/systems/military';
+import { unitCost, unitUpkeep, fortPay } from '../src/sim/systems/military';
 import { UNITS, C, CL, GOODS, G, GI } from '../src/sim/defs';
 import { applyCommand } from '../src/sim/commands';
 import { homeMarket, merchantRefusal, steerRoute, tradeEarnings, knowsRealm } from '../src/sim/systems/trade';
@@ -360,5 +360,13 @@ describe('review: the books close after the month, and the realms read them righ
     // and they are one-off payments: the forecast leaves them out
     const f = budgetForecast(s, n);
     for (const k of ['landmark', 'gifts', 'espionage', 'appease']) expect(f.expenseLines.some(([x]) => x === k)).toBe(false);
+  });
+  it('a windfall does not raise next month\'s court, fortresses\' pay or the splendour of the chest', () => {
+    const s = fresh(); const n = nat(s, 'france');
+    const court = courtCost(n), forts = fortPay(s, n).pay, gross = grossIncome(n);
+    n.income.events = gross * 3; n.income.peace_gold = gross; n.income.privileges = gross;
+    expect(grossIncome(n)).toBeCloseTo(gross, 6);
+    expect(courtCost(n)).toBeCloseTo(court, 6);
+    expect(fortPay(s, n).pay).toBeCloseTo(forts, 6);
   });
 });

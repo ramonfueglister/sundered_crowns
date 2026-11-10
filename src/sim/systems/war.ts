@@ -6,6 +6,7 @@ import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
 import { addIncome, addExpense } from '../ctx'; // fix-econ: the gold of a peace is booked on both sides
+import { grossIncome } from './economy'; // fix-econ
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
@@ -629,7 +630,7 @@ export function peaceObligations(s: GameState) {
     if (!x?.alive || (m[3] !== undefined && !y?.alive)) { delete s.flags[k]; continue; }
     if (m[1] === 'repar' && y) {
       // the payer x pays the winner y
-      const gross = Object.values(x.income).reduce((p, v) => p + Math.max(0, v), 0);
+      const gross = grossIncome(x);
       const amt = Math.max(0, gross * 0.1);
       if (amt > 0) { x.treasury -= amt; x.expenseAcc.reparations = (x.expenseAcc.reparations || 0) + amt; y.treasury += amt; y.incomeAcc.reparations = (y.incomeAcc.reparations || 0) + amt; }
     } else if (m[1] === 'tradepriv' && y) {

@@ -705,16 +705,24 @@ export function harvests(s: GameState, w: World, year: number) {
 }
 
 /** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
- *  out (administration.ts budgetForecast). */
+ *  out (administration.ts budgetForecast) and the court, the splendour of a full chest, the fortresses' pay and the
+ *  reserve the AI keeps are measured without them (grossIncome). */
 export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
   'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
+/** Last month's running revenue: every positive income line except one-off payments (an event's windfall, a gift, a
+ *  peace's gold, what an estate paid for a privilege), so a windfall does not raise next month's court. */
+export function grossIncome(n: Nation): number {
+  let g = 0; for (const k in n.income) if (!ONE_OFF.has(k)) g += Math.max(0, n.income[k]);
+  return g;
+}
 
-/** What the court costs a month: a small base, its seats and a share of last month's revenue (a petty lordship keeps
- *  a petty court: the fixed part never takes more than about half of what it earns), more with corruption. */
+/** What the court costs a month: a small base, its seats and a share of last month's running revenue (a petty
+ *  lordship keeps a petty court: the fixed part never takes more than about half of what it earns), more with
+ *  corruption. */
 export function courtCost(n: Nation): number {
   const last = n.history[n.history.length - 1];
   const locs = last ? last.locs : 10;
-  const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
+  const gross = grossIncome(n);
   return (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption);
 }
 export function monthlyLedger(s: GameState, w: World) {
@@ -723,7 +731,7 @@ export function monthlyLedger(s: GameState, w: World) {
   for (const n of s.nations) {
     if (!n.alive) continue;
     const tmax = tariffMax(n); if (n.tariff > tmax) n.tariff = tmax; // a new trade law lowers the ceiling
-    const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
+    const gross = grossIncome(n);
     addExpense(n, 'court', courtCost(n));
     // a chest beyond a year's revenue draws courtiers, feasts and building at court: it melts away, but the realm is admired
     const hoard = n.treasury - gross * 12;
