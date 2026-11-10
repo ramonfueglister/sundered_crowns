@@ -17,7 +17,7 @@ export function LedgerTab() {
   const cols: Record<LKind, [string, string, (r: any) => any][]> = {
     nations: [['name', t('realm'), (r) => L(r.name)], ['score', t('score'), (r) => r.score], ['dev', t('development'), (r) => r.dev], ['locs', t('locations'), (r) => r.locs], ['pop', t('population'), (r) => r.pop],
       ['army', t('army'), (r) => r.army], ['navy', t('fleet'), (r) => r.navy], ['income', t('income'), (r) => r.income], ['tech', t('technology'), (r) => r.tech], ['prestige', t('prestige'), (r) => r.prestige]],
-    markets: [['name', t('market'), (r) => r.name], ['owner', t('owner'), (r) => L(nations.value[r.owner]?.short) || '—'], ['priceIndex', t('price_index'), (r) => r.priceIndex], ['top', t('main_goods'), (r) => r.top.map((g: any) => L(g)).join(', ')]],
+    markets: [['name', t('market'), (r) => r.name], ['owner', t('owner'), (r) => L(nations.value[r.owner]?.short) || '—'], ['priceIndex', t('price_index'), (r) => r.priceIndex], ['top', t('main_goods'), (r) => (r.top ?? []).map((g: any) => L(g)).join(', ')]],
     wars: [['name', t('war'), (r) => L(r.name)], ['att', t('attackers'), (r) => r.att.length], ['def', t('defenders'), (r) => r.def.length], ['score', t('war_score'), (r) => r.score]],
   };
   const cs = cols[kind];
@@ -35,7 +35,7 @@ export function LedgerTab() {
         <td><NLink id={r.id} size={16} /></td><td class="r">{num(r.score)}</td><td class="r">{num(r.dev)}</td><td class="r">{r.locs}</td><td class="r">{num(r.pop)}</td><td class="r">{num(r.army)}</td><td class="r">{num(r.navy)}</td><td class="r">{num(r.income)}</td><td class="r">{r.tech}</td><td class="r">{num(r.prestige)}</td>
       </Tip> : <tr>
         <td class="r muted">{i + 1}</td>
-        {kind === 'markets' && <><td>{r.name}</td><td>{r.owner >= 0 ? <NLink id={r.owner} size={14} /> : '—'}</td><td class={`r ${r.priceIndex > 1.2 ? 'neg' : r.priceIndex < 0.85 ? 'pos' : ''}`}><Tip content={<div><TipHead name={t('price_index')} value={num(r.priceIndex, 2)} hint={t('x_col_markets_priceIndex')} /></div>}>{num(r.priceIndex, 2)}</Tip></td><td class="small">{r.top.map((g: any) => L(g)).join(', ')}</td></>}
+        {kind === 'markets' && <><td>{r.name}</td><td>{r.owner >= 0 ? <NLink id={r.owner} size={14} /> : '—'}</td><td class={`r ${r.priceIndex > 1.2 ? 'neg' : r.priceIndex < 0.85 ? 'pos' : ''}`}><Tip content={<div><TipHead name={t('price_index')} value={num(r.priceIndex, 2)} hint={t('x_col_markets_priceIndex')} /></div>}>{num(r.priceIndex, 2)}</Tip></td><td class="small">{(r.top ?? []).map((g: any) => L(g)).join(', ')}</td></>}
         {kind === 'wars' && <><td><a class="lk" onClick={() => (r.att.includes(pid) || r.def.includes(pid)) && openPanel('peace', { war: r.id })}>{L(r.name)}</a></td><td><NList ids={r.att.slice(0, 5)} size={14} /></td><td><NList ids={r.def.slice(0, 5)} size={14} /></td><td class={`r ${r.score >= 0 ? 'pos' : 'neg'}`}><Tip content={<div><TipHead name={t('war_score')} value={signed(r.score)} hint={t('x_col_wars_score')} />{r.parts && <Parts rows={Object.entries(r.parts).map(([k, v]) => [`ws_${k}`, v as number])} />}</div>}>{signed(r.score)}</Tip></td></>}
       </tr>)}</tbody>
     </table></div>}
