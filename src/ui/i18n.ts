@@ -1018,6 +1018,8 @@ const S: Record<string, [string, string]> = {
   xp_spy_target: ["Size of the target realm", 'Größe des Zielreichs'],
   xp_spy_spymaster: ['Our spymaster', 'Unser Meister der Geheimnisse'],
   xp_spy_floor: ['Least cost of an operation', 'Mindestkosten eines Unternehmens'],
+  // review fixes (fix-people): the windows waiting behind the open one
+  xp_next_waiting: ['Next ({n}):', 'Als Nächstes ({n}):'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -23,6 +23,7 @@ import { answer } from '../src/game/view';
 import { advanceDay } from '../src/sim/engine';
 import { atWar, DAY_EPOCH } from '../src/sim/ctx';
 import { nationDev } from '../src/sim/systems/war';
+import { arrivedPausing, mayResume, pausesWith } from '../src/ui/eventpause';
 
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
 const named = (s: GameState, name: string) => Object.values(s.chars).find((c) => c.name === name)!;
@@ -377,5 +378,25 @@ describe('commanders', () => {
     const nt = s.notices.find((x) => x.nation === n.id && x.kind === 'general_death')!;
     expect(nt.text.de).toContain('übernimmt den Befehl über das Heer');
     expect(nt.text.de).toContain(localName(s.chars[a.general].name, 'de'));
+  });
+});
+
+describe('event windows and the clock (review fixes)', () => {
+  it('an event that arrives behind an open offer window stops the clock; answering resumes only when no such window is left', () => {
+    const pauses = pausesWith({ pauseOnEvents: true, pauseOnOffers: false });
+    const offer = { id: 1, event: 'diplo_trade' }, feast = { id: 2, event: 'court_feast' };
+    // the offer alone: the game runs on
+    const known = new Set<number>();
+    expect(arrivedPausing(known, [offer], pauses)).toEqual([]);
+    known.add(offer.id);
+    // the event arrives behind it: it stops the clock although the offer stays in front
+    expect(arrivedPausing(known, [offer, feast], pauses).map((e) => e.id)).toEqual([2]);
+    known.add(feast.id);
+    expect(arrivedPausing(known, [offer, feast], pauses)).toEqual([]);
+    // answering the offer leaves the event: no resume; answering the event: resume
+    expect(mayResume([offer, feast], offer.id, pauses)).toBe(false);
+    expect(mayResume([feast], feast.id, pauses)).toBe(true);
+    // a player who asked to pause on offers too
+    expect(arrivedPausing(null, [offer], pausesWith({ pauseOnEvents: true, pauseOnOffers: true })).length).toBe(1);
   });
 });

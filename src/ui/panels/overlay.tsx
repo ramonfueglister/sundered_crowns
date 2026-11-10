@@ -7,6 +7,7 @@ import { EventArt } from './art';
 import { useOptionFx, OptionEffects, OptionEffectsHead } from './eventfx';
 import { sfx } from '../audio';
 import { GOODS } from '../../sim/defs';
+import { pausesWith, arrivedPausing, mayResume } from '../eventpause';
 
 const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency', 'battle_lost', 'assault_failed', 'expedition_lost', 'embargo', 'house_warning', 'house_extinct', 'diplo_refuse']);
 const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform', 'battle_won', 'siege_won', 'expedition']);
@@ -50,21 +51,30 @@ export function Notices() {
 }
 
 /** An offer of another realm (alliance, marriage, passage...) pauses only when the player asked for it (settings). */
-const isOffer = (e: { event: string }) => e.event.startsWith('diplo_');
-const pauses = (e: { event: string }) => (isOffer(e) ? settings.value.pauseOnOffers : settings.value.pauseOnEvents);
+const pauses = (e: { event: string }) => pausesWith(settings.value)(e);
 
 export function EventModal() {
   const v = view.value; const ev = v?.pending?.[0];
   const opened = useRef(-1);
+  // the ids of the queue seen so far: a new entry that stops the clock pauses the game even when it waits behind an
+  // offer window that is open (it would otherwise run out its 90 days unseen and be answered by itself)
+  const known = useRef<Set<number> | null>(null);
   // the pause this window made: the speed to return to, and whether the game has been seen paused since (a player who
   // starts the game again by hand takes the pause over, and answering no longer resumes it)
   const ours = useRef<{ speed: number; seen: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const fx = useOptionFx(ev?.id, v?.day);
+  const ids = (v?.pending ?? []).map((p) => p.id).join(',');
+  useEffect(() => {
+    const pending = view.value?.pending ?? [];
+    const fresh = arrivedPausing(known.current, pending, pauses);
+    known.current = new Set(pending.map((p) => p.id));
+    const speed = view.value?.speed ?? 0;
+    if (fresh.length && speed > 0) { ours.current = { speed, seen: false }; lastSpeed.value = speed; sim().speed(0); }
+  }, [ids]);
   useEffect(() => {
     if (!ev || opened.current === ev.id) return;
     opened.current = ev.id; sfx('event');
-    if (pauses(ev) && (v?.speed ?? 0) > 0) { ours.current = { speed: v!.speed, seen: false }; lastSpeed.value = v!.speed; sim().speed(0); }
   }, [ev?.id]);
   useEffect(() => {
     const p = ours.current; if (!p) return;
@@ -76,9 +86,8 @@ export function EventModal() {
     const r = await act({ t: 'event', pending: ev.id, choice: k }, 'click');
     setBusy(false);
     // resume only the pause an event window made, once no window that pauses is left
-    const rest = (view.value?.pending ?? []).filter((p) => p.id !== ev.id);
     const p = ours.current;
-    if (r.ok && p && (view.value?.speed ?? 0) === 0 && !rest.some(pauses)) { sim().speed(p.speed); ours.current = null; }
+    if (r.ok && p && (view.value?.speed ?? 0) === 0 && mayResume(view.value?.pending ?? [], ev.id, pauses)) { sim().speed(p.speed); ours.current = null; }
   };
   const paras = L(ev.text).split(/\n+/);
   return <div class="event-wrap" onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
@@ -93,7 +102,7 @@ export function EventModal() {
           const b = <button class="btn ev-opt" disabled={busy} onClick={() => answer(k)}><span class="ev-n">{['I', 'II', 'III', 'IV', 'V'][k] ?? k + 1}</span>{L(o.label)}</button>;
           return <div class="ev-choice">{o.hint ? <Tip tag="div" content={<div class="ev-hint">{L(o.hint)}</div>}>{b}</Tip> : b}<OptionEffects fx={fx ? fx[k] : null} /></div>;
         })}</div>
-        {(v?.pending?.length ?? 0) > 1 && <div class="muted small ev-more">+{v!.pending.length - 1} {t('more_events')}</div>}
+        {(v?.pending?.length ?? 0) > 1 && <div class="muted small ev-more">{t('xp_next_waiting').replace('{n}', String(v!.pending.length - 1))} {v!.pending.slice(1, 4).map((p) => L(p.title)).join(' · ')}{v!.pending.length > 4 ? ' …' : ''}</div>}
       </div>
     </div>
   </div>;
