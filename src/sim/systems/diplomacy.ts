@@ -3,6 +3,7 @@ import { techBase } from './progress';
 import type { GameState, Nation, Envoy } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, opinion, rel, hasTreaty, allies, atWar, subjectsOf, treatiesOf, addExpense } from '../ctx';
+import { addIncome } from '../ctx'; // fix-econ: gifts and exactions are booked on both sides
 import { rand, chance } from '../rng';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
@@ -140,7 +141,7 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
     case 'gift': {
       const amt = payload?.amount ?? Math.max(20, (A.income.tax || 10) * 2);
       if (A.treasury < amt) return 'not enough gold';
-      A.treasury -= amt; Bn.treasury += amt; addOpinion(s, b, a, 'gift', 10 + Math.min(40, amt / Math.max(1, (Bn.income.tax || 10)) * 5), 365 * 2, true);
+      addExpense(A, 'gifts', amt); addIncome(Bn, 'gifts', amt); addOpinion(s, b, a, 'gift', 10 + Math.min(40, amt / Math.max(1, (Bn.income.tax || 10)) * 5), 365 * 2, true);
       rel(s, b, a).trust = clamp(rel(s, b, a).trust + 3, 0, 100);
       return null;
     }
@@ -236,7 +237,7 @@ export function acceptProposal(s: GameState, w: World, a: number, b: number, act
     case 'trade': s.treaties.push({ a: lo, b: hi, type: 'trade', since: s.day, until: s.day + 365 * 15 }); break;
     case 'guarantee': s.treaties.push({ a, b, type: 'guarantee', since: s.day, until: 1e9 }); break;
     case 'vassalize': Bn.overlord = a; Bn.subjectType = 'vassal'; Bn.subjectSince = s.day; Bn.libertyDesire = 20; chronicle(s, a, 'vassal', { en: `${Bn.short.en} became a vassal of ${A.short.en}.`, de: `${Bn.short.de} wurde Vasall von ${A.short.de}.` }); break;
-    case 'demand': { const amt = Math.max(20, (Bn.income.tax || 10) * 3); Bn.treasury -= amt; A.treasury += amt; addOpinion(s, b, a, 'extorted', -30, 365 * 5); break; }
+    case 'demand': { const amt = Math.max(20, (Bn.income.tax || 10) * 3); addExpense(Bn, 'exactions', amt); addIncome(A, 'exactions', amt); addOpinion(s, b, a, 'extorted', -30, 365 * 5); break; }
   }
 }
 
@@ -309,7 +310,7 @@ export function startSpy(s: GameState, a: number, b: number, action: string): st
   if (s.spies.filter((x) => x.nation === a).length >= 2) return 'all agents are busy';
   const cost = 30 * s.priceLevel;
   const A = s.nations[a]; if (A.treasury < cost) return 'not enough gold';
-  A.treasury -= cost;
+  addExpense(A, 'espionage', cost);
   s.spies.push({ nation: a, target: b, action, progress: 0, days: action === 'fabricate' ? 240 : 120 });
   return null;
 }

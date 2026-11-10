@@ -27,7 +27,11 @@ const KEY_NAMES: Record<string, [string, string]> = {
   reparations: ['War reparations', 'Kriegsentschädigung'], trade_privileges: ['Trade privileges', 'Handelsprivilegien'], reinforcements: ['Reinforcements', 'Verstärkungen'],
   // ---- fix-econ: event gold, generals' pay, the movements of the credit ledger (systems/economy.ts closeLedger)
   events: ['Events', 'Ereignisse'], generals: ['Generals', 'Feldherren'], written_off: ['Deficit written off (bankrupt)', 'Abgeschriebenes Defizit (Bankrott)'],
-  other: ['Other movements (gifts, treaties, agents, decisions)', 'Sonstige Bewegungen (Geschenke, Verträge, Agenten, Beschlüsse)'],
+  other: ['Other movements', 'Sonstige Bewegungen'],
+  landmark: ['Landmarks', 'Wahrzeichen'], espionage: ['Espionage', 'Spionage'], exactions: ['Exacted payments', 'Erpresste Zahlungen'],
+  appease: ['Appeasing the estates', 'Beschwichtigung der Stände'], peace_gold: ['Gold from peace treaties', 'Gold aus Friedensverträgen'],
+  privileges: ['Paid for privileges', 'Zahlungen für Privilegien'], church_lands: ['Seized church lands', 'Eingezogene Kirchengüter'],
+  parias: ['Parias (yearly tribute)', 'Parias (Jahrestribut)'], inherited: ['Treasury taken over', 'Übernommener Staatsschatz'],
 };
 export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 

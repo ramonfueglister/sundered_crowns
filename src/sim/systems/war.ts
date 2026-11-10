@@ -5,6 +5,7 @@ import type { GameState, War, PeaceTerm, Nation, WarGoal } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
+import { addIncome, addExpense } from '../ctx'; // fix-econ: the gold of a peace is booked on both sides
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
@@ -537,7 +538,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       parts.push(`${t.locs.length} locations (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
       partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
-    if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); Ln.treasury -= amt; W.treasury += amt; parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
+    if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); addExpense(Ln, 'peace_gold', amt); addIncome(W, 'peace_gold', amt); parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
     if (t.type === 'vassal') { Ln.overlord = winner; Ln.subjectType = 'vassal'; Ln.subjectSince = s.day; Ln.libertyDesire = 30; parts.push('vassalage'); partsDe.push('Vasallität'); }
     if (t.type === 'break_alliance') { s.treaties = s.treaties.filter((x) => !(x.type === 'alliance' && (x.a === loser || x.b === loser) && (t.nation === undefined || x.a === t.nation || x.b === t.nation))); parts.push('alliances broken'); partsDe.push('Bündnisse gelöst'); }
     if (t.type === 'faith') { Ln.faith = W.faith; Ln.concord = clamp(Ln.concord - 30, -100, 100); parts.push('change of faith'); partsDe.push('Glaubenswechsel'); }

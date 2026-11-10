@@ -12,6 +12,7 @@ import { lawEffect } from '../systems/politics';
 import { nationPower } from '../systems/ai';
 import { greatGuns } from '../systems/military';
 import { chronicle, notice, addOpinion, clamp, atWar, hasTreaty, opinion, allies } from '../ctx';
+import { addIncome, addExpense } from '../ctx'; // fix-econ
 import { FAITH_INDEX, FAITHS, faithFamily, GROUP_OF, ALL_CULTURES } from './peoples';
 import { INNOVATIONS } from './innovations';
 import { rand, chance } from '../rng';
@@ -153,7 +154,7 @@ export function convertRealm(s: GameState, w: World, n: Nation, faith: number) {
     if (e.id === 'magnates') e.contentment = clamp(e.contentment + 4, 0, 100);
   }
   if (isReform(faith) && old === LATIN) {
-    n.treasury += Math.max(10, n.income.tax || 10) * 6; // church lands
+    addIncome(n, 'church_lands', Math.max(10, n.income.tax || 10) * 6); // church lands
     n.excommunicated = false; dropMod(n, 'excommunicated');
     delete s.papacy.curiaFavour[n.id];
   }
@@ -654,7 +655,7 @@ const DEFS: SituationDef[] = [
       const strong = nationDev(s, c.id) > nationDev(s, g.id) * (crusade ? 4 : 6) && (c.era >= 1 || crusade) && !parias;
       if (sit.stage === 0) {
         // tribute from the emirate to its overlord
-        if (g.overlord === c.id && g.treasury > 0) { const t = Math.max(5, g.income.tax || 5) * 1.5; g.treasury -= t; c.treasury += t; }
+        if (g.overlord === c.id && g.treasury > 0) { const t = Math.max(5, g.income.tax || 5) * 1.5; addExpense(g, 'parias', t); addIncome(c, 'parias', t); }
         // (a champion fighting only defensive wars elsewhere may still begin, if the war has not worn him out)
         if (((y >= 1440 && !parias) || strong) && !s.wars.some((x) => x.attLead === c!.id) && c.warExhaustion < 40 && c.concord > -30) {
           sit.stage = 1;

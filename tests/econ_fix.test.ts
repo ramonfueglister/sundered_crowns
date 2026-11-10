@@ -8,6 +8,7 @@ import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
 import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax } from '../src/sim/systems/economy';
+import { landmarksOf, landmarkPrice } from '../src/sim/systems/landmarks';
 import { tradePolicy, priceIndexParts, goodDetail } from '../src/game/tradeview';
 import { methodsView } from '../src/game/methodsview';
 import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } from '../src/sim/systems/explore';
@@ -45,8 +46,8 @@ describe('the month\'s books (ledger, balance, forecast)', () => {
         expect(n.expense.army ?? 0).toBeGreaterThan(0);
       });
       expect(nat(s, 'venice').expense.navy ?? 0).toBeGreaterThan(0);
-      // Venice's month leaves nothing unexplained: every movement has its own line
-      expect(Math.abs(nat(s, 'venice').credit?.other ?? 0)).toBeLessThan(0.01);
+      // (the change equals the ledger by construction: whatever moved without a line is booked as 'other' at the
+      // close; the tests below hold that 'other' to zero in every realm)
       t0 = realms.map((n) => n.treasury);
     }
   });
@@ -57,10 +58,10 @@ describe('the month\'s books (ledger, balance, forecast)', () => {
     expect(v.expense.navy ?? 0).toBeGreaterThan(0);
     const f = budgetForecast(s, v);
     expect(f.expenseLines.some(([k]) => k === 'navy')).toBe(true);
-    // the estimate is what the month will cost: the first close books army upkeep within a few percent of it
+    // the estimate is what the month will cost: the first close books army upkeep within a tenth of it
     const est = n.expense.army; toNextClose(s);
     expect(n.flags.ledger_estimate).toBeUndefined();
-    expect(Math.abs((n.expense.army ?? 0) - est) / est).toBeLessThan(0.6);
+    expect(Math.abs((n.expense.army ?? 0) - est) / est).toBeLessThan(0.1);
   });
   it('a crown whose chest is empty at the close borrows, books the loan and tells a human ruler', () => {
     const s = fresh('portugal'); const n: Nation = nat(s, 'portugal');
@@ -301,50 +302,6 @@ describe('review: the books close after the month, and the realms read them righ
     expect(cut).toBe(true);
     expect(broke.size).toBeLessThanOrEqual(4);
   });
-});
-
-// ---- review fixes (fix-econ review): the AI and the close of the books; day-0 income; history; one-off lines
-describe('review: the books close after the month, and the realms read them right', () => {
-  it('a petty realm that has to borrow cuts its army\'s pay; AI bankruptcies in 14 months stay at the old count (4)', () => {
-    const s = fresh(); const b = nat(s, 'breslau_bishopric');
-    const broke = new Set<string>(); let cut = false;
-    for (let m = 1; m <= 14; m++) {
-      toNextClose(s);
-      if (m <= 3 && b.armyMaint < 1) cut = true;
-      for (const n of s.nations) if (n.alive && n.flags.bankrupt_until) broke.add(n.key);
-    }
-    expect(cut).toBe(true);
-    expect(broke.size).toBeLessThanOrEqual(4);
-  });
-  it('day 0 shows the first month\'s income within 15 %, trade and tariffs included, and the trade rows add up to it', () => {
-    const s = fresh(); const keys = ['venice', 'genoa', 'england', 'france'];
-    const day0 = keys.map((k) => { s.playerNations = [nat(s, k).id]; const p = playerView(s, nat(s, k)); return { inc: sum(p.incomeBreak), trade: p.incomeBreak.trade ?? 0 }; });
-    s.playerNations = [];
-    // the Trade panel's rows by market are the same month as the ledger's trade line
-    for (const k of keys) { const n = nat(s, k); expect(tradeEarnings(s, n.id).reduce((p, r) => p + r.total, 0)).toBeCloseTo((n.income.trade ?? 0) + (n.income.company ?? 0), 6); }
-    toNextClose(s);
-    keys.forEach((k, j) => {
-      const booked = sum(nat(s, k).income);
-      expect(Math.abs(day0[j].inc - booked) / booked).toBeLessThan(0.15);
-    });
-    // Venice lives off trade: the day-0 trade line is what the first clearing paid, not a fraction of it
-    expect(Math.abs(day0[0].trade - (nat(s, 'venice').income.trade ?? 0)) / (nat(s, 'venice').income.trade ?? 1)).toBeLessThan(0.25);
-  });
-});
-
-// ---- review fixes (fix-econ review): the AI and the close of the books; day-0 income; history; one-off lines
-describe('review: the books close after the month, and the realms read them right', () => {
-  it('a petty realm that has to borrow cuts its army\'s pay; AI bankruptcies in 14 months stay at the old count (4)', () => {
-    const s = fresh(); const b = nat(s, 'breslau_bishopric');
-    const broke = new Set<string>(); let cut = false;
-    for (let m = 1; m <= 14; m++) {
-      toNextClose(s);
-      if (m <= 3 && b.armyMaint < 1) cut = true;
-      for (const n of s.nations) if (n.alive && n.flags.bankrupt_until) broke.add(n.key);
-    }
-    expect(cut).toBe(true);
-    expect(broke.size).toBeLessThanOrEqual(4);
-  });
   it('day 0 shows the first month\'s income within 15 %, trade and tariffs included, and the trade rows add up to it', () => {
     const s = fresh(); const keys = ['venice', 'genoa', 'england', 'france'];
     const day0 = keys.map((k) => { s.playerNations = [nat(s, k).id]; const p = playerView(s, nat(s, k)); return { inc: sum(p.incomeBreak), trade: p.incomeBreak.trade ?? 0 }; });
@@ -373,5 +330,35 @@ describe('review: the books close after the month, and the realms read them righ
     expect(h.treasury).toBeGreaterThan(0);
     expect(h.income).toBeCloseTo(sum(n.income), 6);
     expect(h.expense).toBeCloseTo(sum(n.expense), 6);
+  });
+  it('no realm\'s chest moves without a ledger line in the first three months (the AI gives, spies and demands too)', () => {
+    const s = fresh();
+    for (let m = 0; m < 3; m++) {
+      toNextClose(s);
+      for (const n of s.nations) if (n.alive) expect(Math.abs(n.credit?.other ?? 0), `${n.key} month ${m + 1}`).toBeLessThan(0.01);
+    }
+  });
+  it('a ruler\'s gifts, spies, landmarks and estate payments are expenses of their own, and the gift the other realm\'s income', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice'); const g = nat(s, 'genoa');
+    toNextClose(s);
+    n.treasury += 1e5; // (booked as 'other' this month; the movements tested below are the commands')
+    toNextClose(s);
+    const lm = landmarksOf(s, w).find((x) => s.loc.owner[x.loc] === n.id && !x.work)!;
+    expect(lm).toBeTruthy();
+    const price = landmarkPrice(s, n, lm.id, lm.tier);
+    expect(applyCommand(s, w, { t: 'landmark', n: n.id, id: lm.id } as any).ok).toBe(true);
+    expect(applyCommand(s, w, { t: 'diplo', n: n.id, target: g.id, action: 'gift', payload: { amount: 400 } } as any).ok).toBe(true);
+    expect(applyCommand(s, w, { t: 'spy', n: n.id, target: g.id, action: 'slander' } as any).ok).toBe(true);
+    expect(applyCommand(s, w, { t: 'estate', n: n.id, estate: n.estates[0].id, action: 'appease' } as any).ok).toBe(true);
+    toNextClose(s);
+    for (const x of [n, g]) expect(Math.abs(x.credit?.other ?? 0)).toBeLessThan(0.01);
+    expect(n.expense.landmark).toBeCloseTo(price, 6);
+    expect(n.expense.gifts ?? 0).toBeGreaterThanOrEqual(400);
+    expect(n.expense.espionage ?? 0).toBeGreaterThan(0);
+    expect(n.expense.appease ?? 0).toBeGreaterThan(0);
+    expect(g.income.gifts ?? 0).toBeGreaterThanOrEqual(400);
+    // and they are one-off payments: the forecast leaves them out
+    const f = budgetForecast(s, n);
+    for (const k of ['landmark', 'gifts', 'espionage', 'appease']) expect(f.expenseLines.some(([x]) => x === k)).toBe(false);
   });
 });

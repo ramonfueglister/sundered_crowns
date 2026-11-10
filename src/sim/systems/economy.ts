@@ -704,6 +704,11 @@ export function harvests(s: GameState, w: World, year: number) {
   }
 }
 
+/** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
+ *  out (administration.ts budgetForecast). */
+export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
+  'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
+
 /** What the court costs a month: a small base, its seats and a share of last month's revenue (a petty lordship keeps
  *  a petty court: the fixed part never takes more than about half of what it earns), more with corruption. */
 export function courtCost(n: Nation): number {

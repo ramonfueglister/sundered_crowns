@@ -7,6 +7,7 @@ import type { Nation, I18n } from '../types';
 import type { World } from '../world';
 import { transferLoc } from '../systems/war';
 import { addOpinion, clamp, hasTreaty, opinion } from '../ctx';
+import { addCredit } from '../systems/economy'; // fix-econ: a chest taken over is booked in the credit ledger
 import { FAITH_INDEX, GROUP_OF, ALL_CULTURES, FAITHS } from './peoples';
 import { B, BI } from '../defs';
 import { chance } from '../rng';
@@ -35,7 +36,7 @@ function rename(n: Nation, name: I18n, short: I18n, adj: I18n, rank?: string) { 
 function annex(e: EvApi, other: Nation) {
   const s = e.s;
   for (let i = 0; i < e.w.L; i++) if (s.loc.owner[i] === other.id) { transferLoc(s, e.w, i, e.n.id, 0, { conquest: false }); s.loc.integ[i] = 0.5; s.loc.unrest[i] = Math.min(s.loc.unrest[i], 10); s.loc.core[i] = e.n.id; }
-  e.n.treasury += Math.max(0, other.treasury); other.treasury = 0;
+  const chest = Math.max(0, other.treasury); addCredit(e.n, 'inherited', chest); addCredit(other, 'inherited', -other.treasury);
   for (const x of s.nations) if (x.alive && x.overlord === other.id) x.overlord = e.n.id;
   other.overlord = -1; // the realm ranking retires the empty realm (armies, treaties, wars) at the next month
   s.flags.ownershipDirty = s.day;

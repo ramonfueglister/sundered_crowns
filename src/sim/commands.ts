@@ -4,6 +4,7 @@ import type { GameState, Command, CmdResult, Army, PeaceTerm, I18n, Nation, War 
 import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
+import { addExpense } from './ctx'; // fix-econ
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost, assault, scorchEarth } from './systems/military';
 import { availableCommanders, setCommander, raiseGeneral, generalCost } from './systems/commanders';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
@@ -214,7 +215,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
         const cost = Math.max(20, (n.income.tax || 10) * 1.5);
         if (n.treasury < cost) return err('not enough gold');
         if ((n.flags[`appease_${cmd.estate}`] || 0) > s.day) return err('too soon');
-        n.treasury -= cost; e0.contentment = clamp(e0.contentment + 12, 0, 100); n.flags[`appease_${cmd.estate}`] = s.day + 365;
+        addExpense(n, 'appease', cost); e0.contentment = clamp(e0.contentment + 12, 0, 100); n.flags[`appease_${cmd.estate}`] = s.day + 365;
         return OK;
       }
       if (cmd.action === 'summon') {
