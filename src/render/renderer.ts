@@ -776,7 +776,10 @@ export class MapRenderer {
     const c = this.camera;
     c.zoom = clamp(c.zoom, this.minZoom, this.maxZoom);
     const hw = this.cssW / 2 / c.zoom, hh = this.cssH / 2 / c.zoom;
-    const fx = (lo: number, hi: number, half: number, v: number) => (hi - lo < 2 * half ? (lo + hi) / 2 : clamp(v, lo + half * 0.15, hi - half * 0.15));
+    // zoomed out, the view stays on the map (no hard edge of the world in sight); closer in, the camera may look a little
+    // past the edge (up to 85 % of half the view from four times the widest zoom on), so a coast at the edge can be centred
+    const beyond = 0.85 * clamp(Math.log(c.zoom / this.minZoom) / Math.log(4), 0, 1);
+    const fx = (lo: number, hi: number, half: number, v: number) => (hi - lo < 2 * half ? (lo + hi) / 2 : clamp(v, lo + half * (1 - beyond), hi - half * (1 - beyond)));
     c.x = fx(0, this.W, hw, c.x); c.y = fx(0, this.H, hh, c.y);
   }
 
@@ -962,7 +965,9 @@ export class MapRenderer {
       this.depthTex = this.device.createTexture({ size: [w, h], format: 'depth32float', usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
       this.mainBG = null;
     }
-    this.minZoom = Math.min(0.5, Math.max(cssW / this.W, cssH / this.H) * 0.9);
+    // the widest zoom still fills the view with map, and clampCamera keeps it there: the world's edge never shows as a hard
+    // cut against the void (the far north and south are reached by scrolling, as in other map games)
+    this.minZoom = Math.max(cssW / this.W, cssH / this.H);
     this.overlay.layout(this.canvas, cssW, cssH);
   }
 
