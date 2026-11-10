@@ -7,7 +7,7 @@ import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
 import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
 import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth,
-  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember } from '../sim/systems/war';
+  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember, predictSides, type SideGuess } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
 
@@ -24,9 +24,16 @@ export function declareView(s: GameState, w: World, player: number, target: numb
     return {
       goal, refusal, cb: c.cb, unjust: c.unjust, truce: c.truce, ally: c.ally, rows: c.rows, opinionYears: c.opinionYears,
       locs: refusal ? [] : warGoalLocs(s, w, player, target, goal), terms: GOAL_TERMS[goal] ?? [],
+      sides: refusal ? null : sidesView(predictSides(s, w, player, target, goal)),
     };
   }).filter((g) => g.refusal !== 'they are not our overlord');
   return { cbs, goals, truce: hasTreaty(s, player, target, 'truce'), ally: hasTreaty(s, player, target, 'alliance') };
+}
+
+/** The sides a declaration would raise (systems/war.ts predictSides), with the men certain to fight and those who may. */
+function sidesView(p: { att: SideGuess[]; def: SideGuess[] }) {
+  const sum = (xs: SideGuess[]) => ({ sure: xs.reduce((m, x) => m + (x.odds === 1 ? x.men : 0), 0), maybe: xs.reduce((m, x) => m + (x.odds === null || (x.odds > 0 && x.odds < 1) ? x.men : 0), 0) });
+  return { att: p.att, def: p.def, attMen: sum(p.att), defMen: sum(p.def) };
 }
 
 // ---------------------------------------------------------------- calls to arms

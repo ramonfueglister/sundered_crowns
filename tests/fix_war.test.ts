@@ -9,7 +9,7 @@ import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord, rel } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore,
-  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK } from '../src/sim/systems/war';
+  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides } from '../src/sim/systems/war';
 import { answerEvent } from '../src/sim/systems/events';
 import { considerPeace } from '../src/sim/systems/ai';
 import { step } from '../src/sim/engine';
@@ -346,5 +346,49 @@ describe('calls to arms (major: the player was pulled into allies’ wars withou
     expect(reply(s, p, c.id, 0).ok).toBe(true);
     expect(war.att).toContain(p);
     expect(s.empire.authority).toBe(auth0 - EMPEROR_JOIN_ATTACK);
+  });
+});
+
+describe('the sides of a declaration (major: the dialog did not say who joins; a subject allied with the target fought it)', () => {
+  it('France on Navarre: Foix-Béarn follows France and leaves its alliance with Navarre; the dialog said so beforehand', () => {
+    const s = fresh(); clearField(s);
+    const fr = nat(s, 'france').id, nv = nat(s, 'navarre').id, fb = nat(s, 'foix_bearn').id;
+    expect(s.nations[fb].overlord).toBe(fr);
+    expect(hasTreaty(s, fb, nv, 'alliance')).toBe(true);
+    s.playerNations = [nv];
+    const dv = answer(s, w, fr, { q: 'declare', target: nv } as any) as any;
+    const sides = dv.goals.find((g: any) => g.goal === 'conquest').sides;
+    expect(sides.att.find((x: any) => x.id === fb)).toMatchObject({ role: 'subject', odds: 1, breaks: nv });
+    expect(sides.def.find((x: any) => x.id === nv)).toMatchObject({ role: 'target', odds: 1 });
+    expect(sides.def.some((x: any) => x.id === fb)).toBe(false);
+    const war = war2(s, fr, nv, 'conquest');
+    expect(war.att).toContain(fb); expect(war.def).not.toContain(fb);
+    expect(hasTreaty(s, fb, nv, 'alliance')).toBe(false);
+    expect(s.notices.some((n) => n.nation === nv && n.text.en.includes('our alliance has ended'))).toBe(true);
+  });
+  it('what the dialog calls certain joins, what it calls out stays out, and a player ally it calls asked gets a call to arms', () => {
+    for (const [ak, seedOff] of [['france', 0], ['castile', 1], ['england', 2], ['poland', 3]] as const) {
+      const s = fresh(); clearField(s);
+      const a = nat(s, ak).id;
+      const b = plainTarget(s, a);
+      // one of a's allies is a player
+      const al = s.treaties.find((t) => t.type === 'alliance' && (t.a === a || t.b === a));
+      const pl = al ? (al.a === a ? al.b : al.a) : -1;
+      if (pl >= 0 && s.nations[pl].overlord < 0) s.playerNations = [pl];
+      const p = predictSides(s, w, a, b, 'humiliate');
+      const war = war2(s, a, b, 'humiliate');
+      void seedOff;
+      for (const x of p.att) {
+        if (x.odds === 1) expect(war.att, `${ak}: ${s.nations[x.id].key}`).toContain(x.id);
+        if (x.odds === 0) expect(war.att.includes(x.id) || war.def.includes(x.id)).toBe(false);
+        if (x.odds === null) expect(s.pending.some((q) => q.event === 'call_to_arms' && q.nation === x.id && q.ctx.war === war.id)).toBe(true);
+      }
+      for (const x of p.def) {
+        if (x.odds === 1) expect(war.def, `${ak}: ${s.nations[x.id].key}`).toContain(x.id);
+        if (x.odds === 0) expect(war.att.includes(x.id) || war.def.includes(x.id)).toBe(false);
+      }
+      // nobody is in the war whom the dialog did not list
+      for (const id of [...war.att, ...war.def]) expect([...p.att, ...p.def].some((x) => x.id === id), `${ak}: ${s.nations[id].key}`).toBe(true);
+    }
   });
 });

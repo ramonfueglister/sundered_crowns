@@ -987,6 +987,14 @@ const S: Record<string, [string, string]> = {
   r_pressing_claim: ['They press a claim to the throne', 'Sie verfolgen einen Thronanspruch'],
   r_answered_call: ['Answered our call to arms', 'Folgte unserem Ruf zu den Waffen'], r_refused_call: ['Refused our call to arms', 'Verweigerte uns den Waffenbeistand'],
   x_emp_joined_attack: ['The emperor joined an attack on a member', 'Der Kaiser schloss sich einem Angriff auf ein Glied an'],
+  xfw_sides: ['Who would fight (men in the field)', 'Wer kämpfen würde (Mann im Feld)'], xfw_side_us: ['Our side', 'Unsere Seite'], xfw_side_them: ['Their side', 'Gegenseite'],
+  xfw_sides_hint: ['By the rules of the declaration. Subjects follow their overlord; a subject allied with the other side leaves that alliance. A realm’s allies join when they think better of it than of the enemy (their opinion of it, less half their opinion of the enemy, +30 to defend, +40 against a rival), otherwise one in two; worn out by war (above 40, to defend above 75) they stay home. A player is asked and has 30 days. Guarantors defend; the emperor, the circles and the league may defend members of the Empire and of the league. The numbers are the men in the field today.', 'Nach den Regeln der Kriegserklärung. Untertanen folgen ihrem Oberherrn; ein Untertan, der mit der Gegenseite verbündet ist, verlässt dieses Bündnis. Verbündete treten bei, wenn sie von ihrem Verbündeten besser denken als vom Feind (ihre Meinung von ihm, abzüglich der Hälfte ihrer Meinung vom Feind, +30 zur Verteidigung, +40 gegen einen Rivalen), sonst jeder zweite; kriegsmüde (über 40, zur Verteidigung über 75) bleiben sie daheim. Ein Mitspieler wird gefragt und hat 30 Tage Zeit. Garanten verteidigen; Kaiser, Reichskreise und Bund können Glieder des Reiches und des Bundes verteidigen. Die Zahlen sind die Männer, die heute im Feld stehen.'],
+  xfw_role_lead: ['leads', 'führt'], xfw_role_target: ['attacked', 'angegriffen'], xfw_role_subject: ['subject', 'Untertan'], xfw_role_ally: ['ally', 'Verbündeter'], xfw_role_guarantor: ['guarantor', 'Garant'],
+  xfw_role_emperor: ['emperor', 'Kaiser'], xfw_role_league: ['league', 'Bund'], xfw_role_circle: ['imperial circle', 'Reichskreis'],
+  xfw_odds_asked: ['a player: is asked', 'Mitspieler: wird gefragt'], xfw_odds_out: ['stays out', 'bleibt fern'], xfw_odds_maybe: ['may join ({p} %)', 'tritt vielleicht bei ({p} %)'],
+  xfw_why_exhausted: ['worn out by war', 'kriegsmüde'], xfw_why_both: ['allied with both sides', 'mit beiden Seiten verbündet'], xfw_why_subject: ['subject of another realm', 'Untertan eines anderen Reiches'],
+  xfw_why_faith: ['will not defend another faith', 'verteidigt keinen fremden Glauben'], xfw_breaks_with: ['leaves its alliance with', 'verlässt sein Bündnis mit'],
+  xfw_side_sure: ['Certain', 'Sicher'], xfw_side_maybe: ['Possibly', 'Möglicherweise'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

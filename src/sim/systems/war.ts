@@ -260,6 +260,8 @@ export const warHooks: {
   declared?: (s: GameState, w: World, war: War) => void;
   /** A realm joined the attackers of a war (an ally's call): the emperor attacking a member pays in authority. */
   joined?: (s: GameState, w: World, war: War, n: number) => void;
+  /** Who the Empire's bodies would send to the defence of b (the emperor, the circles, the league), for predictSides. */
+  predict?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type'], att: number[], def: number[]) => { id: number; role: 'emperor' | 'league' | 'circle'; odds: number | null }[];
 } = {};
 
 export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = []): string | null {
@@ -316,6 +318,8 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a && !atWar(s, x, target))];
   if (!def.includes(b)) def.push(b);
   const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary' && !atWar(s, x, a))];
+  // a subject follows its overlord to war: its own alliance with a realm on the other side ends
+  for (const [x, y] of subjectAlliancesAcross(s, att, def)) breakSubjectAlliance(s, x, y);
   const war: War = {
     id: newId(s), name: warName(s, w, a, b, goalType), att, def, attLead: a, defLead: target,
     goal: { type: goalType, target: b, locs, ...(cb ? { cb } : {}) }, start: s.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [],
@@ -347,14 +351,85 @@ function mayJoin(s: GameState, ally: number, friend: number, enemy: number): boo
   if (!n.alive || n.overlord >= 0 && n.overlord !== friend) return false;
   return !hasTreaty(s, ally, enemy, 'alliance');
 }
+/** The chance that an AI ally answers a call to arms: 1 when it favours the friend, 1 in 2 otherwise, 0 when it may not
+ *  join or is worn out by war. opAdj: a change to its opinion of the friend about to happen (a declaration's price). */
+export function joinOdds(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean, opAdj = 0): number {
+  const n = s.nations[ally];
+  if (!mayJoin(s, ally, friend, enemy)) return 0;
+  // a realm worn out by war stays home from an ally's campaign, and once spent even from its defence
+  if (n.warExhaustion > (defensive ? 75 : 40)) return 0;
+  const op = opinion(s, ally, friend) + opAdj - opinion(s, ally, enemy) * 0.5 + (defensive ? 30 : 0) + (n.rivals.includes(enemy) ? 40 : 0);
+  return op > 0 ? 1 : 0.5;
+}
 /** Whether an AI ally answers a call to arms (players are asked instead, see callToArms). */
 function willJoin(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean): boolean {
-  const n = s.nations[ally];
-  if (!mayJoin(s, ally, friend, enemy)) return false;
-  // a realm worn out by war stays home from an ally's campaign, and once spent even from its defence
-  if (n.warExhaustion > (defensive ? 75 : 40)) return false;
-  const op = opinion(s, ally, friend) - opinion(s, ally, enemy) * 0.5 + (defensive ? 30 : 0) + (n.rivals.includes(enemy) ? 40 : 0);
-  return op > 0 || chance(s.rng, 0.5);
+  const p = joinOdds(s, ally, friend, enemy, defensive);
+  return p >= 1 || (p > 0 && chance(s.rng, p));
+}
+/** Subjects on one side allied with a realm on the other ([subject, other realm]). */
+function subjectAlliancesAcross(s: GameState, att: number[], def: number[]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [mine, other] of [[att, def], [def, att]] as const) for (const x of mine) {
+    if (s.nations[x].overlord < 0) continue;
+    for (const y of other) if (hasTreaty(s, x, y, 'alliance')) out.push([x, y]);
+  }
+  return out;
+}
+/** A subject follows its overlord to war against its own ally: the alliance ends, and players on either end are told. */
+function breakSubjectAlliance(s: GameState, x: number, y: number) {
+  s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === x && t.b === y) || (t.a === y && t.b === x))));
+  const X = s.nations[x], Y = s.nations[y], O = s.nations[X.overlord];
+  if (s.playerNations.includes(x)) notice(s, x, 'war', { en: `We follow ${O.short.en} to war: our alliance with ${Y.short.en} has ended.`, de: `Wir folgen ${O.short.de} in den Krieg: Unser Bündnis mit ${Y.short.de} ist beendet.` });
+  if (s.playerNations.includes(y)) notice(s, y, 'war', { en: `${X.short.en}, a subject of ${O.short.en}, follows its overlord to war against us: our alliance has ended.`, de: `${X.short.de}, Untertan von ${O.short.de}, folgt seinem Oberherrn in den Krieg gegen uns: Unser Bündnis ist beendet.` });
+}
+/** One realm as the declaration dialog expects it in the war: on which footing, with which chance (null = a player, who
+ *  is asked), its men in the field, why it stays out (odds 0), and the ally it leaves (a subject following its overlord). */
+export interface SideGuess { id: number; role: 'lead' | 'target' | 'subject' | 'ally' | 'guarantor' | 'emperor' | 'league' | 'circle'; odds: number | null; men: number; why?: 'exhausted' | 'both' | 'subject' | 'faith'; breaks?: number }
+/** Who would fight in a war a declares on b, by the rules of declareWar: the subjects on both sides, the allies as their
+ *  call to arms would go (joinOdds, without the dice), the guarantors, and what the Empire's bodies would add
+ *  (warHooks.predict). Allies that would stay out are listed with the reason. */
+export function predictSides(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type']): { att: SideGuess[]; def: SideGuess[] } {
+  const na = s.nations[a], nb = s.nations[b];
+  const target = topOverlord(s, b);
+  const men = (id: number) => Math.round(landMen(s, new Set([id])));
+  const cost = declarationCost(s, w, a, b, goalType);
+  const def = [target, ...subjectsOf(s, target).filter((x) => s.nations[x].subjectType !== 'tributary' && x !== a && !atWar(s, x, target))];
+  if (!def.includes(b)) def.push(b);
+  const att = [a, ...subjectsOf(s, a).filter((x) => s.nations[x].subjectType !== 'tributary' && !atWar(s, x, a))];
+  const across = subjectAlliancesAcross(s, att, def);
+  const core = (ids: number[], lead: number): SideGuess[] => ids.map((id) => ({ id, role: id === b ? 'target' : id === lead ? 'lead' : 'subject', odds: 1, men: men(id), ...(across.find((p) => p[0] === id) ? { breaks: across.find((p) => p[0] === id)![1] } : {}) }));
+  const A = core(att, a), D = core(def, target);
+  const on = (id: number) => A.some((x) => x.id === id && x.odds !== 0) || D.some((x) => x.id === id && x.odds !== 0);
+  const wasAllied = (x: number, y: number) => hasTreaty(s, x, y, 'alliance') && !(cost.ally && ((x === a && y === b) || (x === b && y === a))) && !across.some((p) => (p[0] === x && p[1] === y) || (p[0] === y && p[1] === x));
+  const alliesOf = (id: number) => allies(s, id).filter((x) => wasAllied(id, x));
+  const why = (al: number, friend: number, enemy: number, defensive: boolean): SideGuess['why'] => {
+    const n = s.nations[al];
+    if (n.overlord >= 0 && n.overlord !== friend) return 'subject';
+    if (wasAllied(al, enemy)) return 'both';
+    return n.warExhaustion > (defensive ? 75 : 40) ? 'exhausted' : undefined;
+  };
+  const holy = goalType === 'reconquest' || goalType === 'faith';
+  for (const al of alliesOf(target)) {
+    if (on(al)) continue;
+    if (holy && FAITHS[s.nations[al].faith]?.family === FAITHS[na.faith]?.family && FAITHS[nb.faith]?.family !== FAITHS[na.faith]?.family) { D.push({ id: al, role: 'ally', odds: 0, men: men(al), why: 'faith' }); continue; }
+    const odds = s.playerNations.includes(al) && mayJoin(s, al, target, a) ? null : joinOdds(s, al, target, a, true);
+    D.push({ id: al, role: 'ally', odds, men: men(al), ...(odds === 0 ? { why: why(al, target, a, true) } : {}) });
+  }
+  // the declaration's price (an unjust war, a broken truce) lowers our allies' opinion of us before they answer
+  const opAdj = (al: number) => {
+    if (!cost.opinionAll) return 0;
+    const id = cost.unjust ? 'unjust_war' : 'truce_breaker';
+    return cost.opinionAll - (rel(s, al, a).mods.find((m) => m.id === id)?.v ?? 0);
+  };
+  for (const al of alliesOf(a)) {
+    if (on(al) || al === b) continue;
+    const odds = s.playerNations.includes(al) && mayJoin(s, al, a, target) ? null : joinOdds(s, al, a, target, false, opAdj(al));
+    A.push({ id: al, role: 'ally', odds, men: men(al), ...(odds === 0 ? { why: why(al, a, target, false) } : {}) });
+  }
+  for (const t of s.treaties) if (t.type === 'guarantee' && t.b === b && t.until > s.day && s.nations[t.a].alive && !on(t.a) && !D.some((x) => x.id === t.a)) D.push({ id: t.a, role: 'guarantor', odds: s.playerNations.includes(t.a) ? null : 1, men: men(t.a) });
+  const extra = warHooks.predict?.(s, w, a, b, goalType, A.filter((x) => x.odds !== 0).map((x) => x.id), D.filter((x) => x.odds !== 0).map((x) => x.id)) ?? [];
+  for (const x of extra) if (!on(x.id)) D.push({ ...x, men: men(x.id) });
+  return { att: A, def: D };
 }
 // ---------------- calls to arms ----------------
 /** Days a player has to answer a call to arms; then the court decides (it honours a call to defend, declines one to attack). */

@@ -156,6 +156,12 @@ svg.spark { display: block; }
 .goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; margin: 4px 0; }
 .goal { display: flex; align-items: center; gap: 4px; padding: 2px 4px; border: 1px solid transparent; cursor: pointer; font-size: .92em; }
 .goal.on { border-color: #9b2a20; background: rgba(155, 42, 32, .08); }
+/* fix-war: the sides a declaration would raise */
+.xfw-sides { margin: 6px 0; }
+.xfw-sides-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.xfw-side-row { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; align-items: center; padding: 1px 0; border-bottom: 1px dotted var(--p-line); font-size: .9em; }
+.xfw-side-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xfw-side-note { grid-column: 1 / -1; padding-left: 18px; }
 
 /* ---------------------------------------------------------------- army panel & outliner */
 .army-wrap { position: absolute; left: 376px; bottom: 56px; width: 500px; max-width: calc(100% - 650px); min-width: 380px; z-index: 16; }
