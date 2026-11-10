@@ -223,6 +223,9 @@ function estimateFirstMonth(s: GameState, w: World) {
     put('fortresses', fortPay(s, n).pay);
     const tr = s.chars[n.council.treasurer]; if (tr?.alive) put('graft', treasurerGraft(tr, n.income.tax || 0));
     n.flags.ledger_estimate = 1; n.flags.ledger_t = n.treasury; n.flags.ledger_day = s.day;
+    // the history's first point (realm.init) shows the same month as the ledger
+    const h = n.history[n.history.length - 1];
+    if (h && h.day === s.day) { h.income = Object.values(n.income).reduce((a, b) => a + b, 0); h.expense = Object.values(e).reduce((a, b) => a + b, 0); }
   }
 }
 

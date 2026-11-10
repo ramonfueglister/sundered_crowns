@@ -331,3 +331,47 @@ describe('review: the books close after the month, and the realms read them righ
     expect(Math.abs(day0[0].trade - (nat(s, 'venice').income.trade ?? 0)) / (nat(s, 'venice').income.trade ?? 1)).toBeLessThan(0.25);
   });
 });
+
+// ---- review fixes (fix-econ review): the AI and the close of the books; day-0 income; history; one-off lines
+describe('review: the books close after the month, and the realms read them right', () => {
+  it('a petty realm that has to borrow cuts its army\'s pay; AI bankruptcies in 14 months stay at the old count (4)', () => {
+    const s = fresh(); const b = nat(s, 'breslau_bishopric');
+    const broke = new Set<string>(); let cut = false;
+    for (let m = 1; m <= 14; m++) {
+      toNextClose(s);
+      if (m <= 3 && b.armyMaint < 1) cut = true;
+      for (const n of s.nations) if (n.alive && n.flags.bankrupt_until) broke.add(n.key);
+    }
+    expect(cut).toBe(true);
+    expect(broke.size).toBeLessThanOrEqual(4);
+  });
+  it('day 0 shows the first month\'s income within 15 %, trade and tariffs included, and the trade rows add up to it', () => {
+    const s = fresh(); const keys = ['venice', 'genoa', 'england', 'france'];
+    const day0 = keys.map((k) => { s.playerNations = [nat(s, k).id]; const p = playerView(s, nat(s, k)); return { inc: sum(p.incomeBreak), trade: p.incomeBreak.trade ?? 0 }; });
+    s.playerNations = [];
+    // the Trade panel's rows by market are the same month as the ledger's trade line
+    for (const k of keys) { const n = nat(s, k); expect(tradeEarnings(s, n.id).reduce((p, r) => p + r.total, 0)).toBeCloseTo((n.income.trade ?? 0) + (n.income.company ?? 0), 6); }
+    toNextClose(s);
+    keys.forEach((k, j) => {
+      const booked = sum(nat(s, k).income);
+      expect(Math.abs(day0[j].inc - booked) / booked).toBeLessThan(0.15);
+    });
+    // Venice lives off trade: the day-0 trade line is what the first clearing paid, not a fraction of it
+    expect(Math.abs(day0[0].trade - (nat(s, 'venice').income.trade ?? 0)) / (nat(s, 'venice').income.trade ?? 1)).toBeLessThan(0.25);
+  });
+  it('the history point of 1 April is the chest after the month\'s loan and the month just closed', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice');
+    toNextClose(s); toNextClose(s); // 1 March
+    while (dayToDate(s.day + 1, s.startYear).d !== 1) advanceDay(s, w);
+    n.treasury -= n.treasury + 5000; // an empty chest on the last day of March
+    toNextClose(s);
+    const d = dayToDate(s.day, s.startYear); expect([d.m, d.d]).toEqual([3, 1]);
+    expect(n.loans.length).toBeGreaterThan(0);
+    const h = n.history[n.history.length - 1];
+    expect(h.day).toBe(s.day);
+    expect(h.treasury).toBeCloseTo(n.treasury, 6);
+    expect(h.treasury).toBeGreaterThan(0);
+    expect(h.income).toBeCloseTo(sum(n.income), 6);
+    expect(h.expense).toBeCloseTo(sum(n.expense), 6);
+  });
+});

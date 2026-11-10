@@ -14,6 +14,7 @@ import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT
 import { hasTreaty } from '../ctx';
 import { manpowerOf } from './military';
 import { envoysOf } from './diplomacy';
+import { historySample } from './realm';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -988,7 +989,7 @@ export const economy: System = {
 export const ledger: System = {
   id: 'ledger',
   daily({ s, w }) { refreshLimits(s, w); },
-  monthly({ s }) { closeLedger(s); },
+  monthly({ s, w }) { closeLedger(s); historySample(s, w); },
 };
 
 /** The limits the top bar shows beside their breakdowns follow the state every day (and from the start of the game):
