@@ -17,7 +17,9 @@ import { ownedLocs } from '../src/sim/systems/war';
 import { unitCost, unitUpkeep } from '../src/sim/systems/military';
 import { UNITS, C, CL, GOODS, G, GI } from '../src/sim/defs';
 import { applyCommand } from '../src/sim/commands';
-import { homeMarket, merchantRefusal, steerRoute, tradeEarnings } from '../src/sim/systems/trade';
+import { homeMarket, merchantRefusal, steerRoute, tradeEarnings, knowsRealm } from '../src/sim/systems/trade';
+import { refusal } from '../src/sim/refusals';
+import { hasTreaty } from '../src/sim/ctx';
 import type { GameState, Nation } from '../src/sim/types';
 
 const w = loadWorld();
@@ -263,5 +265,23 @@ describe('prices: the index weighs what the market buys, and a good\'s books add
       expect(d.books!.made).toBeGreaterThanOrEqual(-1e-6);
     }
     expect(goodDetail(s, w, n.id, home, GI.grain)!.books!.people).toBeGreaterThan(0);
+  });
+});
+
+describe('trade diplomacy needs to know the other realm', () => {
+  it('no trade agreement with or embargo on a realm our people have never heard of; a known one is fine', () => {
+    const s = fresh('portugal'); const n = nat(s, 'portugal');
+    const far = s.nations.find((o) => o.alive && o.id !== n.id && !knowsRealm(s, n, o.id))!;
+    expect(far).toBeTruthy();
+    for (const action of ['trade', 'embargo']) {
+      const r = applyCommand(s, w, { t: 'diplo', n: n.id, target: far.id, action } as any);
+      expect(r.ok).toBe(false);
+      expect(r.err).toBe('we know nothing of this realm');
+    }
+    expect(refusal('we know nothing of this realm').de).toBe('Von diesem Reich wissen wir nichts');
+    const near = s.nations.find((o) => o.alive && o.id !== n.id && knowsRealm(s, n, o.id) && !hasTreaty(s, n.id, o.id, 'alliance') && o.overlord !== n.id && n.overlord !== o.id)!;
+    expect(near).toBeTruthy();
+    expect(applyCommand(s, w, { t: 'diplo', n: n.id, target: near.id, action: 'embargo' } as any).ok).toBe(true);
+    expect(applyCommand(s, w, { t: 'diplo', n: n.id, target: near.id, action: 'lift_embargo' } as any).ok).toBe(true);
   });
 });

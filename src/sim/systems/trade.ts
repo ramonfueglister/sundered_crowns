@@ -455,6 +455,22 @@ export function merchantCap(n: { tech: number[]; gov: string }): number { return
 export function merchantsUsed(s: GameState, nid: number): number { let k = 0; for (const m of s.markets) k += m.merchants[nid] || 0; return k; }
 export function merchantsFree(s: GameState, n: Nation): number { return merchantCap(n) - merchantsUsed(s, n.id); }
 const knowsLoc = (s: GameState, n: Nation, l: number) => { if (s.flags.revealAll) return true; const e = s.explored[n.knows]; return !e || e[l] === 1; };
+/** Our people know realm o once they have seen its capital or any place it holds (the same rule as the trade views). */
+export function knowsRealm(s: GameState, n: Nation, o: number): boolean {
+  if (s.flags.revealAll || o === n.id) return true;
+  const N = s.nations[o]; if (!N) return false;
+  if (N.capital >= 0 && knowsLoc(s, n, N.capital)) return true;
+  for (let l = 0; l < s.loc.owner.length; l++) if (s.loc.owner[l] === o && knowsLoc(s, n, l)) return true;
+  return false;
+}
+/** Why realm a cannot make a trade agreement with, or lay an embargo on, realm b (null: it can): it must know b. An
+ *  embargo already laid can always be lifted, and a treaty already made always ended. */
+export function tradeDiploRefusal(s: GameState, a: number, b: number, action: string): string | null {
+  if (action !== 'trade' && action !== 'embargo') return null;
+  const A = s.nations[a]; if (!A) return 'invalid target';
+  return knowsRealm(s, A, b) ? null : 'we know nothing of this realm';
+}
+
 /** Why our merchants cannot go to this market (null: they can): we must know it and reach it from home (merchantReach
  *  market links), unless we hold land there or have a company there; never under an embargo with its ruler. */
 export function merchantRefusal(s: GameState, w: World, n: Nation, m: number): string | null {

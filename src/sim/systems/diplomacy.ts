@@ -8,7 +8,7 @@ import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
 import { excommunicate, steppeFade } from './realm';
-import { embargoedBy, embargoBetween, embargoStakes } from './trade';
+import { embargoedBy, embargoBetween, embargoStakes, tradeDiploRefusal } from './trade';
 import { isGreatPower, GP_REGARD } from './powers';
 
 /** How much less a realm thinks of the one that keeps an embargo on it. */
@@ -122,6 +122,7 @@ export function envoyDays(s: GameState, w: World, A: Nation, b: number): number 
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
   if (!s.nations[b]?.alive || a === b) return 'invalid target';
+  const unknown = tradeDiploRefusal(s, a, b, action); if (unknown) return unknown; // fix-econ: trade diplomacy needs to know them
   if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate', 'embargo', 'lift_embargo'].includes(action)) return immediateAction(s, w, a, b, action, payload);
   if (A.envoysBusy >= A.envoys) return 'all envoys are busy';
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';

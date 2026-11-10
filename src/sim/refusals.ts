@@ -112,6 +112,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'cannot lead an army': 'Kann kein Heer führen',
   // ---- polish pass (claude/polish-pass): developer tools
   'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
+  // ---- fix-econ
+  'we know nothing of this realm': 'Von diesem Reich wissen wir nichts',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;
