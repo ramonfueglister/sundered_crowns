@@ -201,6 +201,7 @@ function MapModes() {
 function useKeys() {
   useEffect(() => {
     // every shortcut comes from the key table (src/ui/keys.ts), which the settings let the player rebind
+    let pointer: [number, number] | null = null; // where the pointer is, for the zoom keys
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || keyCapture.value) return;
@@ -218,14 +219,31 @@ function useKeys() {
         else openPanel('pause');
       }
       else if (id === 'dev') openPanel('dev');
-      else if (id === 'zoom_in' || id === 'zoom_out') { e.preventDefault(); rendererRef.r?.zoomStep?.(id === 'zoom_in' ? 1.4 : 1 / 1.4); }
+      else if (id === 'zoom_in' || id === 'zoom_out') {
+        // the keys zoom the map only while the pointer is over the map (or, without a pointer seen yet, while no panel is
+        // open); over a panel, the ledger or the chronicle, Page Up/Down page through it instead
+        const over = pointer ? document.elementFromPoint(pointer[0], pointer[1]) : null;
+        const onMap = over ? !!over.closest('.mapwrap') : panel.value === 'none';
+        if (onMap) { e.preventDefault(); rendererRef.r?.zoomStep?.(id === 'zoom_in' ? 1.4 : 1 / 1.4); }
+        else if (e.key === 'PageDown' || e.key === 'PageUp') { const sc = scrollerOf(over); if (sc) { e.preventDefault(); sc.scrollBy({ top: (e.key === 'PageDown' ? 1 : -1) * Math.max(40, sc.clientHeight * 0.9) }); } }
+      }
       else if (id === 'hide_ui') uiHidden.value = !uiHidden.value;
       else if (id === 'quick_save') P.quickSave().then(() => showToast(t('saved')));
       else if (id.startsWith('map_')) { const m = id.slice(4) as MapMode; if (MAP_MODES.includes(m)) mapMode.value = m; }
       else if (id.startsWith('panel_')) openPanel(id.slice(6) as any);
     };
+    const onMove = (e: PointerEvent) => { pointer = [e.clientX, e.clientY]; };
+    window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); };
   }, []);
+}
+/** The nearest element at or above `el` that scrolls vertically (a panel's table, the chronicle), or null. */
+function scrollerOf(el: Element | null): HTMLElement | null {
+  for (let x = el as HTMLElement | null; x && x !== document.body; x = x.parentElement) {
+    const oy = getComputedStyle(x).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && x.scrollHeight > x.clientHeight + 1) return x;
+  }
+  return null;
 }
 void ready; void mapReady;
