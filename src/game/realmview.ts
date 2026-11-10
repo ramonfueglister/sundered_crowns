@@ -183,7 +183,7 @@ function situationView(s: GameState, w: World, me: number, id: string) {
     actions: ex && n ? ex.actions.map((a) => {
       const targets = a.targets ? a.targets(s, w, n, sit) : null;
       const refusal = targets ? (targets.length ? (targets.map((t) => sitActionRefusal(s, w, n, sit, a, t)).find((x) => !x) === undefined ? sitActionRefusal(s, w, n, sit, a, targets[0]) : null) : 'invalid target') : sitActionRefusal(s, w, n, sit, a);
-      return { id: a.id, name: a.name, desc: typeof a.desc === 'function' ? a.desc(s, w, n, sit) : a.desc, cost: a.cost(s, n), cooldown: a.cooldown, targets, refusal, ready: n.flags[`sit_${id}_${a.id}`] ?? 0 };
+      return { id: a.id, name: a.name, desc: typeof a.desc === 'function' ? a.desc(s, w, n, sit) : a.desc, cost: a.cost(s, n), cooldown: a.cooldown, targets, refusal, ready: n.flags[`sit_${id}_${a.id}`] ?? 0, final: a.final ?? null };
     }) : [],
   };
 }

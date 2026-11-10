@@ -4,7 +4,7 @@
 import type { GameState, Nation, Situation, I18n, War } from '../types';
 import type { World } from '../world';
 import { FAITH_INDEX, faithFamily } from './peoples';
-import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP, kingsCodeRows, kingsCodeLevel, finishCode, CODE_PROCLAIM, CODE_CAP } from './situations';
+import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP, kingsCodeRows, kingsCodeLevel, finishCode, CODE_PROCLAIM, CODE_LOW, CODE_CAP } from './situations';
 import { nationDev, nationLocsRO } from '../systems/war';
 import { clamp, addOpinion, hasTreaty, atWar, chronicle, opinion } from '../ctx';
 import { dayToDate } from '../calendar';
@@ -35,11 +35,14 @@ export interface SitAction {
   apply: (s: GameState, w: World, n: Nation, sit: Situation, target?: number) => void;
   /** An AI realm's choice: the target to use (-1 without a target), or null to pass. */
   ai: (s: GameState, w: World, n: Nation, sit: Situation) => number | null;
+  /** What the action closes for good (the window asks before it is taken, even when it costs nothing). */
+  final?: I18n;
 }
 export interface SitExtra {
   sides: (s: GameState, w: World, sit: Situation) => SitSide[];
   /** 'level': the rows add up to the progress; 'monthly': they add up to its change per month. */
-  drivers: (s: GameState, w: World, sit: Situation, viewer: number) => { kind: 'level' | 'monthly'; rows: Row[]; note?: I18n };
+  /** range: the levels at which the situation turns (the window draws its bar between them, from zero). */
+  drivers: (s: GameState, w: World, sit: Situation, viewer: number) => { kind: 'level' | 'monthly'; rows: Row[]; note?: I18n; range?: [number, number] };
   stageInfo: I18n[];
   actions: SitAction[];
 }
@@ -181,7 +184,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
   kings_code: {
     sides: (s, w, sit) => [{ name: T('The crown and its code', 'Die Krone und ihr Gesetzbuch'), members: alive(s, sit.data.b) ? [sit.data.b] : [] },
       { name: T('Foreign backers of the lords', 'Fremde Förderer der Herren'), members: (sit.data.backers ?? []).filter((x: number) => !!alive(s, x)) }],
-    drivers: (s, w, sit) => ({ kind: 'level', rows: kingsCodeRows(s, sit), note: T(`From ${CODE_PROCLAIM} the crown can proclaim its code; below -40 the lords band together, and after two years there the code must be withdrawn. The royal judges and the lords' foreign gold count up to ${CODE_CAP} each and fade by half a point a month.`, `Ab ${CODE_PROCLAIM} kann die Krone ihr Gesetzbuch verkünden; unter -40 schließen sich die Herren zusammen, und nach zwei Jahren dort muss das Gesetzbuch zurückgezogen werden. Die königlichen Richter und das fremde Gold der Herren zählen je bis ${CODE_CAP} und schwinden um einen halben Punkt im Monat.`) }),
+    drivers: (s, w, sit) => ({ kind: 'level', rows: kingsCodeRows(s, sit), range: [CODE_LOW, CODE_PROCLAIM], note: T(`From ${CODE_PROCLAIM} the crown can proclaim its code; below -40 the lords band together, and after two years there the code must be withdrawn. The royal judges and the lords' foreign gold count up to ${CODE_CAP} each and fade by half a point a month.`, `Ab ${CODE_PROCLAIM} kann die Krone ihr Gesetzbuch verkünden; unter -40 schließen sich die Herren zusammen, und nach zwei Jahren dort muss das Gesetzbuch zurückgezogen werden. Die königlichen Richter und das fremde Gold der Herren zählen je bis ${CODE_CAP} und schwinden um einen halben Punkt im Monat.`) }),
     stageInfo: [T('The crown works for its code; the lords watch.', 'Die Krone wirbt für ihr Gesetzbuch; die Herren warten ab.'), T('Below -40 the lords band together: two years of it and the king must withdraw the code.', 'Unter -40 verbünden sich die Herren: Nach zwei Jahren muss der König das Gesetzbuch zurückziehen.'), T(`From ${CODE_PROCLAIM} the crown can proclaim the code (50 Authority): +10 % Authority gain and +5 % control for good, the magnates lose 15 contentment.`, `Ab ${CODE_PROCLAIM} kann die Krone das Gesetzbuch verkünden (50 Autorität): dauerhaft +10 % Autoritätsgewinn und +5 % Kontrolle, die Magnaten verlieren 15 Zufriedenheit.`)],
     actions: [
       {
@@ -211,9 +214,11 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
       },
       {
         id: 'withdraw', name: T('Withdraw the code', 'Das Gesetzbuch zurückziehen'), cooldown: 0,
-        desc: T('Give up the code: the magnates are relieved (+15 contentment), the crown loses face (-5 prestige) and for thirty years gains Authority more slowly (-10 %).', 'Das Gesetzbuch aufgeben: Die Magnaten sind erleichtert (+15 Zufriedenheit), die Krone verliert das Gesicht (-5 Ansehen) und gewinnt dreißig Jahre lang langsamer Autorität (-10 %).'),
+        desc: T('Under the lords\' league, give up the code: the magnates are relieved (+15 contentment), the crown loses face (-5 prestige) and for thirty years gains Authority more slowly (-10 %).', 'Unter dem Herrenbund das Gesetzbuch aufgeben: Die Magnaten sind erleichtert (+15 Zufriedenheit), die Krone verliert das Gesicht (-5 Ansehen) und gewinnt dreißig Jahre lang langsamer Autorität (-10 %).'),
         cost: () => ({}),
-        check: (s, w, n, sit) => (n.id !== sit.data.b ? 'only the crown of Bohemia can do this' : null),
+        // only under the lords' league (as the AI does): a code still in the balance is not given up with one stroke
+        check: (s, w, n, sit) => (n.id !== sit.data.b ? 'only the crown of Bohemia can do this' : sit.stage !== 1 ? 'only once the lords have banded together against the code' : null),
+        final: T('The code can never be proclaimed again.', 'Das Gesetzbuch kann nie mehr verkündet werden.'),
         apply: (s, w, n, sit) => { finishCode(s, sit, 'withdrawn'); },
         ai: (s, w, n, sit) => (sit.stage === 1 && (sit.data.low || 0) >= 18 ? -1 : null),
       },

@@ -391,7 +391,9 @@ describe('situation actions that would do nothing are refused; the code of the B
       b.treasury = 1e6; b.authority = 200;
       sit.progress = kingsCodeLevel(s, sit);
       const rows = kingsCodeRows(s, sit);
-      expect(Math.round(rows.reduce((p, r) => p + r[1], 0))).toBe(sit.progress);
+      // the standing is the sum of its rows, to a tenth (the window's header and its breakdown agree)
+      expect(sit.progress).toBeCloseTo(rows.reduce((p, r) => p + r[1], 0), 6);
+      expect(Math.round(sit.progress * 10)).toBe(sit.progress * 10);
       const v = answer(s, w, b.id, { q: 'situation', id: 'kings_code' } as any) as any;
       expect(v.drivers.rows.length).toBe(rows.length);
       expect(v.actions.find((a: any) => a.id === 'back_lords').refusal).toBe('we cannot back the lords against ourselves');
@@ -403,7 +405,7 @@ describe('situation actions that would do nothing are refused; the code of the B
       const rival = s.nations.find((x) => x.alive && x.key === 'hungary')!; rival.treasury = 1e6;
       const p1 = sit.progress;
       expect(situationAction(s, w, rival, 'kings_code', 'back_lords')).toBeNull();
-      expect(sit.progress).toBe(p1 - 20);
+      expect(sit.progress).toBeCloseTo(p1 - 20, 6);
       expect(sit.data.backers).toContain(rival.id);
       expect(SIT_EXTRA.kings_code.sides(s, w, sit)[1].members).toContain(rival.id);
       // below 30 the code cannot be proclaimed; with the judges everywhere and the lords left alone it can
@@ -419,6 +421,30 @@ describe('situation actions that would do nothing are refused; the code of the B
     } finally {
       for (const k of Object.keys(sit)) delete (sit as any)[k]; Object.assign(sit, keep); b.authority = keepB.auth; b.treasury = keepB.tr; b.modifiers = keepB.mods; b.prestige = keepB.prestige; estate(b, 'magnates').contentment = keepB.mag; delete s.flags.kings_code_done;
     }
+  });
+  it('the code is withdrawn only under the lords\' league, and the window asks first: it can never be proclaimed again', async () => {
+    const { situationAction } = await import('../src/sim/systems/situations');
+    const { kingsCodeLevel, CODE_LOW, CODE_PROCLAIM } = await import('../src/sim/content/situations');
+    const b = nat('bohemia');
+    const sit = s.situations.find((x) => x.id === 'kings_code')!;
+    const keep = JSON.parse(JSON.stringify(sit)); const keepB = { mods: b.modifiers.slice(), prestige: b.prestige, mag: estate(b, 'magnates').contentment };
+    try {
+      sit.stage = 0; sit.progress = kingsCodeLevel(s, sit);
+      const v = answer(s, w, b.id, { q: 'situation', id: 'kings_code' } as any) as any;
+      const wd = v.actions.find((a: any) => a.id === 'withdraw');
+      expect(wd.refusal).toBe('only once the lords have banded together against the code');
+      expect(wd.final.de).toBe('Das Gesetzbuch kann nie mehr verkündet werden.');
+      expect(v.actions.find((a: any) => a.id === 'royal_judges').final).toBeNull();
+      // the bar runs between the two levels at which the code turns
+      expect(v.drivers.range).toEqual([CODE_LOW, CODE_PROCLAIM]);
+      expect(situationAction(s, w, b, 'kings_code', 'withdraw')).toBe('only once the lords have banded together against the code');
+      expect(sit.active).toBe(true);
+      // under the lords' league it may be given up, and that ends the code for good
+      sit.stage = 1;
+      expect(situationAction(s, w, b, 'kings_code', 'withdraw')).toBeNull();
+      expect(sit.active).toBe(false); expect(sit.outcome).toBe('withdrawn');
+      expect(s.flags.kings_code_done).toBe(s.day);
+    } finally { for (const k of Object.keys(sit)) delete (sit as any)[k]; Object.assign(sit, keep); b.modifiers = keepB.mods; b.prestige = keepB.prestige; estate(b, 'magnates').contentment = keepB.mag; delete s.flags.kings_code_done; delete b.flags.sit_kings_code_withdraw; }
   });
   it('two years with the lords below -40 force the code to be withdrawn', async () => {
     const { SITUATIONS } = await import('../src/sim/content/situations');

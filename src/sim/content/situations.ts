@@ -942,7 +942,8 @@ export function kingsCodeRows(s: GameState, sit: Situation): [string | I18n, num
   if (sit.data.league) rows.push([{ en: 'Foreign gold for the lords', de: 'Fremdes Gold für die Herren' }, -+sit.data.league.toFixed(1)]);
   return rows;
 }
-export const kingsCodeLevel = (s: GameState, sit: Situation) => Math.round(clamp(kingsCodeRows(s, sit).reduce((p, r) => p + r[1], 0), -100, 100));
+/** The code's standing: the sum of its rows, to a tenth as the rows are (the window's header, bar and breakdown agree). */
+export const kingsCodeLevel = (s: GameState, sit: Situation) => +clamp(kingsCodeRows(s, sit).reduce((p, r) => p + r[1], 0), -100, 100).toFixed(1);
 /** The end of the code: proclaimed (the crown's courts over the lords'), withdrawn (the lords keep their liberties) or
  *  lapsed. */
 export function finishCode(s: GameState, sit: Situation, outcome: 'proclaimed' | 'withdrawn' | 'lapsed') {

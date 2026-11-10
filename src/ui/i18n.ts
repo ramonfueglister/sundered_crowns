@@ -1003,6 +1003,7 @@ const S: Record<string, [string, string]> = {
   x_emp_help_yes: ['the emperor fights for us', 'der Kaiser kämpft für uns'], x_emp_help_no: ['the emperor refused', 'der Kaiser lehnte ab'], x_emp_help_open: ['awaiting the emperor', 'wartet auf den Kaiser'],
   r_backed_the_lords: ['Backed our lords against the crown', 'Unterstützte unsere Herren gegen die Krone'],
   x_sit_confirm: ['Pay {cost}? This cannot be undone.', '{cost} bezahlen? Das lässt sich nicht rückgängig machen.'], x_sit_confirm_share: ['({p} of our treasury)', '({p} unseres Schatzes)'],
+  x_sit_confirm_pay: ['Pay {cost}?', '{cost} bezahlen?'], x_sit_confirm_final: ['This cannot be undone: {what}', 'Das lässt sich nicht rückgängig machen: {what}'],
   x_sit_confirm_yes: ['Confirm', 'Bestätigen'], x_sit_done: ['Done: {a}.', 'Erledigt: {a}.'], x_sit_done_again: ['Done: {a}. Possible again from {d}.', 'Erledigt: {a}. Wieder möglich ab {d}.'],
   x_integ_load: ['Integration load / capacity', 'Eingliederungslast / Kapazität'], x_integ_load_free: ['nothing to integrate', 'nichts einzugliedern'],
   x_integ_load_none: ['All our land is integrated: the load counts only land still being integrated (conquered, inherited or newly settled), so it is 0 and the full capacity waits for new land.', 'Unser ganzes Land ist eingegliedert: Die Last zählt nur Land, das noch eingegliedert wird (erobert, geerbt oder neu besiedelt), daher ist sie 0 und die volle Kapazität wartet auf neues Land.'],

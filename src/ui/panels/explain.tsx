@@ -46,7 +46,7 @@ export function Drift({ target, monthly, digits = 1, fmt, bad = false }: { targe
   const f = fmt ?? ((v: number) => signed(v, digits));
   const good = bad ? monthly < 0 : monthly > 0;
   return <div class="tip-drift">
-    {target !== undefined && <span>{t('x_target')} <b>{fmt ? fmt(target).replace(/^\+/, '') : num(target, 0)}</b></span>}
+    {target !== undefined && <span>{t('x_target')} <b>{fmt ? fmt(target).replace(/^\+/, '') : num(target, digits)}</b></span>}
     <span class={Math.abs(monthly) < 1e-9 ? 'muted' : good ? 'pos' : 'neg'}>{f(monthly)} {t('x_per_month')}</span>
   </div>;
 }

@@ -109,6 +109,24 @@ function warQuestion(cmd: any) {
   return <>{pre}<NLink id={cmd.target} />{post ?? ''}</>;
 }
 
+/** A situation's standing between the two levels at which it turns (its drivers' range): filled from zero, green
+ *  toward the upper level and red toward the lower, with both levels and zero marked. */
+function LevelBar({ value, min, max }: { value: number; min: number; max: number }) {
+  const at = (v: number) => Math.max(0, Math.min(1, (v - min) / Math.max(1e-9, max - min))) * 100;
+  const z = at(0), p = at(value);
+  return <div class="bar-wrap">
+    <div class="bar" style={{ height: 10 }}>
+      <div class="bar-fill" style={{ left: `${Math.min(z, p)}%`, width: `${Math.abs(p - z)}%`, background: value >= 0 ? '#4d8a3a' : '#a8331f' }} />
+      <div style={{ position: 'absolute', left: `${z}%`, top: -1, bottom: -1, width: 2, background: '#4a3218' }} />
+    </div>
+    <div class="small muted" style={{ position: 'relative', height: '1.3em' }}>
+      <span style={{ position: 'absolute', left: 0 }}>{num(min)}</span>
+      <span style={{ position: 'absolute', left: `${z}%`, transform: 'translateX(-50%)' }}>0</span>
+      <span style={{ position: 'absolute', right: 0 }}>{num(max)}</span>
+    </div>
+  </div>;
+}
+
 // ---------------------------------------------------------------- the imperial election
 function ElectionModal() {
   const pid = playerId.value;
@@ -167,9 +185,10 @@ function SituationWindow({ id }: { id: string }) {
   const cost = (c: any) => [c.gold ? `${num(c.gold)} ${t('gold')}` : '', c.authority ? `${c.authority} ${t('authority')}` : '', c.prestige ? `${c.prestige} ${t('prestige')}` : ''].filter(Boolean).join(', ');
   return <Modal title={L(x.name)}>
     <div class="muted small">{L(x.desc)}</div>
-    <Row k={t('progress')} v={num(x.progress)} tip={() => dr ? <div><TipHead name={t('progress')} value={num(x.progress)} />
+    {/* the header shows the progress to a tenth, as its breakdown adds up */}
+    <Row k={t('progress')} v={num(x.progress, 1)} tip={() => dr ? <div><TipHead name={t('progress')} value={num(x.progress, 1)} />
       <Parts title={dr.kind === 'monthly' ? t('x_sit_monthly') : t('x_sit_level')} rows={dr.rows} total={sum(dr.rows)} digits={1} />{dr.note && <div class="muted">{L(dr.note)}</div>}</div> : null} />
-    <Bar value={Math.abs(x.progress)} max={100} color="#7a4e1c" />
+    {dr?.range ? <LevelBar value={x.progress} min={dr.range[0]} max={dr.range[1]} /> : <Bar value={Math.abs(x.progress)} max={100} color="#7a4e1c" />}
     {dr?.note && <div class="small">{L(dr.note)}</div>}
     <Section title={t('x_sit_sides')} id="sit-sides">
       {x.sides.map((s: any) => <div class="kv"><span class="k">{L(s.name)}</span><span class="v">{s.members.length ? <NList ids={s.members.slice(0, 10)} size={14} /> : <span class="muted">{t('none')}</span>}{s.members.includes(pid) && <span class="tag">{t('x_sit_we')}</span>}</span></div>)}
@@ -184,8 +203,8 @@ function SituationWindow({ id }: { id: string }) {
         <div class="btn-row">
           {a.targets && a.targets.length > 0 && <span class="chips">{a.targets.map((tg: number) => <span class={`chip ${(target[a.id] ?? a.targets[0]) === tg ? 'on' : ''}`} onClick={() => setTarget({ ...target, [a.id]: tg })}><NLink id={tg} size={12} /></span>)}</span>}
           <Btn disabled={a.refusal ? errText(a.refusal) : null} onClick={async () => {
-            // an action that costs something is confirmed first (it cannot be undone); every action says what it did
-            if (cost(a.cost) && confirm !== a.id) { setConfirm(a.id); return; }
+            // an action that costs something or closes something for good is confirmed first; every action says what it did
+            if ((cost(a.cost) || a.final) && confirm !== a.id) { setConfirm(a.id); return; }
             setConfirm(null);
             const day = view.value?.day ?? 0;
             const ok = a.cooldown > 0 ? fill('x_sit_done_again', { a: L(a.name), d: date(day + a.cooldown) }) : fill('x_sit_done', { a: L(a.name) });
@@ -194,7 +213,7 @@ function SituationWindow({ id }: { id: string }) {
           {confirm === a.id && <Btn onClick={() => setConfirm(null)}>{t('cancel')}</Btn>}
           {a.ready > (view.value?.day ?? 0) && <span class="muted small">{t('x_sit_again')} {date(a.ready)}</span>}
         </div>
-        {confirm === a.id && <div class="warn-box small">{fill('x_sit_confirm', { cost: cost(a.cost) })} {a.cost.gold && x.treasury > 0 ? fill('x_sit_confirm_share', { p: pct(a.cost.gold / x.treasury, 0) }) : ''}</div>}
+        {confirm === a.id && <div class="warn-box small">{a.final ? <>{cost(a.cost) ? `${fill('x_sit_confirm_pay', { cost: cost(a.cost) })} ` : ''}{fill('x_sit_confirm_final', { what: L(a.final) })}</> : fill('x_sit_confirm', { cost: cost(a.cost) })} {a.cost.gold && x.treasury > 0 ? fill('x_sit_confirm_share', { p: pct(a.cost.gold / x.treasury, 0) }) : ''}</div>}
       </div>) : <div class="muted small">{t('x_sit_no_actions')}</div>}
     </Section>
   </Modal>;

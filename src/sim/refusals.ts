@@ -121,6 +121,7 @@ export const REFUSAL_DE: Record<string, string> = {
   'the royal judges are everywhere already': 'Die königlichen Richter sind schon überall', 'the magnates are content already': 'Die Magnaten sind schon zufrieden',
   'the code is not yet strong enough to proclaim': 'Das Gesetzbuch ist noch nicht stark genug für die Verkündung', 'we cannot back the lords against ourselves': 'Wir können die Herren nicht gegen uns selbst unterstützen',
   'the lords have gold enough already': 'Die Herren haben schon Gold genug',
+  'only once the lords have banded together against the code': 'Erst wenn sich die Herren gegen das Gesetzbuch verbündet haben',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;
