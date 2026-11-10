@@ -12,7 +12,7 @@ import { statecraft, aiReforms } from './ai_statecraft';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
-import { totalOpinion, evaluateProposal, refusedRecently } from './diplomacy';
+import { totalOpinion, evaluateProposal, refusedRecently, spyCost } from './diplomacy';
 import { lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
@@ -450,7 +450,7 @@ export function considerWar(s: GameState, w: World, n: Nation) {
   if (!goal || goal === 'humiliate') {
     // prepare a justification for a real war against the most tempting target (an envoy's errand, more often than a
     // declaration); a rival may meanwhile be humbled in a limited war
-    if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && !s.spies.some((x) => x.nation === n.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
+    if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && aiMayFabricate(s, n, best)) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
     if (!goal || bestScore < 30 || !chance(s.rng, aggr * 0.4)) return;
   } else if (bestScore < 30 || !chance(s.rng, aggr)) return;
   if (warHooks.check?.(s, w, n.id, best, goal)) return; // the Empire's peace or our assembly forbids this war
@@ -458,6 +458,12 @@ export function considerWar(s: GameState, w: World, n: Nation) {
   applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal });
 }
 
+/** Fabricating a claim is an agent's operation (diplomacy.ts startSpy): the AI starts one only with a free agent, none
+ *  fabricating already, and three times its price in the treasury, as for every operation of the AI (ai_statecraft.ts). */
+export function aiMayFabricate(s: GameState, n: Nation, target: number): boolean {
+  const agents = s.spies.filter((x) => x.nation === n.id);
+  return agents.length < 2 && !agents.some((x) => x.action === 'fabricate') && n.treasury >= spyCost(s, n.id, target, 'fabricate').cost * 3;
+}
 /** The war the AI would fight against b with the justifications it holds (null without any): its own land back first,
  *  then a holy war for a zealous realm, a crown its blood entitles it to, a trade war for a trading realm, conquest
  *  under a claim, and with nothing but a rivalry a war to humble the rival. */

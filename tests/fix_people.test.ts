@@ -23,6 +23,8 @@ import { answer } from '../src/game/view';
 import { advanceDay } from '../src/sim/engine';
 import { atWar, DAY_EPOCH } from '../src/sim/ctx';
 import { nationDev } from '../src/sim/systems/war';
+import { aiTradePartner } from '../src/sim/systems/tradeai';
+import { aiMayFabricate } from '../src/sim/systems/ai';
 import { arrivedPausing, mayResume, pausesWith } from '../src/ui/eventpause';
 
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
@@ -192,6 +194,31 @@ describe('diplomatic answers', () => {
     expect(fromSubjects).toEqual([]);
     expect(tooSmall).toEqual([]);
   }, 600000);
+});
+
+describe('the AI and the refusal memory (review fix)', () => {
+  it('after a refusal the AI asks the next trade partner, not the same one again for three years', () => {
+    const { s, w } = newGame(1356);
+    for (let d = 0; d < 40; d++) advanceDay(s, w); // (trade flows between the markets)
+    const n = s.nations.find((x) => x.alive && aiTradePartner(s, x) >= 0)!;
+    const first = aiTradePartner(s, n);
+    s.flags[`deny_${n.id}_${first}_trade`] = s.day + 3 * 365;
+    expect(refusedRecently(s, n.id, first, 'trade')).toBe(true);
+    expect(aiTradePartner(s, n)).not.toBe(first);
+  }, 120000);
+
+  it('the AI fabricates a claim only with a free agent and three times the price in the treasury', () => {
+    const { s } = newGame(1356);
+    const F = nat(s, 'france'), N = nat(s, 'navarre');
+    const cost = spyCost(s, F.id, N.id, 'fabricate').cost;
+    F.treasury = cost * 3; s.spies = s.spies.filter((x) => x.nation !== F.id);
+    expect(aiMayFabricate(s, F, N.id)).toBe(true);
+    F.treasury = cost * 3 - 1;
+    expect(aiMayFabricate(s, F, N.id)).toBe(false);
+    F.treasury = cost * 10;
+    s.spies.push({ nation: F.id, target: N.id, action: 'slander', progress: 0, days: 120 }, { nation: F.id, target: N.id, action: 'steal_tech', progress: 0, days: 120 });
+    expect(aiMayFabricate(s, F, N.id)).toBe(false); // both agents busy
+  });
 });
 
 describe('marriage preview', () => {
