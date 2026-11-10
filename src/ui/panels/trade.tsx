@@ -91,7 +91,7 @@ function MarketView({ mid }: { mid: number }) {
 export function PriceIndexTip({ index, parts }: { index: number; parts: any }) {
   return <div><TipHead name={t('price_index')} value={num(index, 2)} hint={t('x_price_index_how')} />
     {parts?.top?.length > 0 && <div class="breakdown">
-      <div class="bd-row muted small"><span>{t('x_price_index_good')}</span><span>{t('x_price_index_rel')} · {t('x_price_index_weight')} · {t('x_price_index_pull')}</span></div>
+      <div class="bd-row bd-cols"><span>{t('x_price_index_good')}</span><span>{t('x_price_index_rel')} · {t('x_price_index_weight')} · {t('x_price_index_pull')}</span></div>
       <div class="bd-row"><span>{t('x_price_index_base')}</span><span>{num(1, 2)}</span></div>
       {parts.top.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>× {num(x.rel, 2)} · {pct(x.share, 0)} · <b class={x.pull > 0.005 ? 'neg' : x.pull < -0.005 ? 'pos' : ''}>{signed(x.pull, 2)}</b></span></div>)}
       {parts.goods > parts.top.length && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(parts.goods - parts.top.length))}</span><span><b>{signed(parts.rest, 2)}</b></span></div>}
@@ -336,7 +336,7 @@ function KeptOutTip({ d }: { d: any }) {
   return <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />
     {d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: placeName(m.name) }, m.deter])} digits={1} />}
     {d.keptOut?.length > 0 && <div class="breakdown">
-      <div class="bd-row muted small"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
+      <div class="bd-row bd-cols"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
       {d.keptOut.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.v, 1)} · {pct(x.margin, 1)}</span></div>)}
       <div class="bd-row bd-total"><span>{t('x_kept_margin')}</span><span>{num(d.keptMargin ?? 0, 1)} ({pct(share, 1)})</span></div>
     </div>}
