@@ -190,6 +190,32 @@ describe('raising a general (major: it put a worse general in command)', () => {
   });
 });
 
+describe('raising a general when an abler commander waits at court (review: the box did not say so)', () => {
+  it('the commanders view names the ablest free commander when he is worth a new captain and abler than the one in command', () => {
+    const s = fresh(); clearField(s);
+    const n = nat(s, 'france'); s.playerNations = [n.id];
+    const A = newArmy(s, n.id, n.capital, [{ type: unit('men_at_arms'), men: 5000 }]);
+    expect(applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: 0 }).ok).toBe(true);
+    const cur = s.chars[A.general]; cur.skills[2] = 2; cur.traits = [];
+    const ask = () => answer(s, w, n.id, { q: 'commanders', army: A.id } as any) as any;
+    // a courtier free to command, made a fine soldier
+    const d0 = ask();
+    const c = s.chars[d0.list.find((x: any) => !x.busy && x.id !== n.ruler && x.id !== n.heir).id];
+    for (const x of d0.list) if (!x.busy) { s.chars[x.id].skills[2] = 1; s.chars[x.id].traits = []; }
+    c.skills[2] = 5;
+    expect(ask().free).toMatchObject({ id: c.id, skill: 5 });
+    // appointing him costs nothing and he takes command
+    const t0 = n.treasury;
+    expect(applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: c.id }).ok).toBe(true);
+    expect(A.general).toBe(c.id); expect(n.treasury).toBe(t0);
+    expect(ask().free).toBeNull(); // the abler one now commands; nobody free is abler than him
+    // a free 3 is not offered: a new captain is worth 3.5 on average
+    applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: cur.id });
+    c.skills[2] = 3;
+    expect(ask().free).toBeNull();
+  });
+});
+
 describe('the AI’s peace in young and back-dated wars (major: a white peace in the Hundred Years’ War on day 1)', () => {
   const sumRows = (ev: { reasons: [string, number][] }, white: boolean) => ev.reasons.filter(([k]) => k !== 'not_enough_war_score').reduce((p, r) => p + r[1], 0) + (white ? 5 : 0);
   it('a war begun before the game counts from its first day; England, pressing its claim with armies in the field, refuses a white peace', () => {

@@ -70,7 +70,9 @@ export function CommanderPicker({ army }: { army: number }) {
   useEffect(() => setConfirm(false), [army]);
   if (!d) return <div class="cmd-pick muted">{t('loading')}…</div>;
   const pick = (char: number) => act({ t: 'general', army, char }, 'click').then(() => refresh());
-  // raising a general costs real money: the price, what he may be worth and who commands now are shown before paying
+  // raising a general costs real money: the price, what he may be worth and who commands now are shown before paying,
+  // and the ablest commander free to appoint at no cost when he is worth as much as a new captain on average (d.free)
+  const freeBest = d.free;
   const raise = () => act({ t: 'general', army, char: -1 }, null).then((r) => { if (r.ok && r.msg) showToast(L(r.msg)); setConfirm(false); refresh(); });
   return <div class="cmd-pick">
     <table class="tbl small"><thead><tr><th>{t('name')}</th><th class="r">{t('x_generalship')}</th><th class="r">{t('morale')}</th><th>{t('traits')}</th><th /></tr></thead>
@@ -92,6 +94,8 @@ export function CommanderPicker({ army }: { army: number }) {
       <div><b>{t('recruit_general')}</b>: {t('xfw_raise_cost').replace('{n}', num(d.cost)).replace('{p}', num(d.cost / Math.max(1, d.treasury) * 100))} <span class="muted">({t(d.costParts[0][0])})</span></div>
       <div>{t('xfw_raise_expect')}</div>
       <div>{d.current ? t('xfw_raise_vs').replace('{name}', charName(d.current.name, d.current.female)).replace('{n}', num(d.current.skill, 1)) : t('xfw_raise_none')}</div>
+      {freeBest && <div class="act-row xfw-raise-free"><span class="pos">{t('xfw_raise_free').replace('{name}', charName(freeBest.name, freeBest.female)).replace('{n}', num(freeBest.skill, 1))}</span><span class="spacer" />
+        <Btn onClick={() => { setConfirm(false); pick(freeBest.id); }}>{t('appoint')}</Btn></div>}
       <div class="act-row"><span class="spacer" /><Btn onClick={() => setConfirm(false)}>{t('cancel')}</Btn><Btn cls="gold" onClick={raise}>{t('xfw_raise_confirm').replace('{n}', num(d.cost))}</Btn></div>
     </div>}
   </div>;

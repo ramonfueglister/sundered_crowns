@@ -684,6 +684,8 @@ function tradeFlows(s: GameState, max: number): TradeFlowLite[] {
   return [...byPair.values()].sort((p, q) => q.value - p.value).slice(0, max).map((e) => ({ a: e.a, b: e.b, value: Math.round(e.value), good: e.good }));
 }
 
+/** The generalship of a raised general on average: 2 to 5 (systems/commanders.ts raiseGeneral). */
+const RAISE_MEAN = 3.5;
 /** Who could lead an army of ours: generalship with its parts, morale from traits, who already commands which host,
  *  and the price of raising a new general (systems/commanders.ts). */
 export function commandersView(s: GameState, player: number, army: number) {
@@ -696,7 +698,10 @@ export function commandersView(s: GameState, player: number, army: number) {
       skill: commanderSkill(c), morale: commanderMorale(c), parts: commanderParts(c), busy: busy ? { id: busy.id, name: busy.name, here: busy.id === a.id } : null };
   }).sort((x, y) => y.skill - x.skill || x.id - y.id);
   const cur = s.chars[a.general];
-  return { army: a.id, fleet: a.fleet, current: cur ? { id: cur.id, name: cur.name, female: cur.female, skill: commanderSkill(cur), parts: commanderParts(cur), morale: commanderMorale(cur), traits: cur.traits, xp: cur.xp ?? 0, age: Math.floor(ageOf(s, cur)) } : null,
+  // the ablest commander free to appoint at no cost, when he is worth a raised general on average and abler than the
+  // one in command: the raise box offers him before a third of the treasury goes on a new captain
+  const free = list.find((c) => !c.busy && c.skill >= RAISE_MEAN && c.skill > (cur ? commanderSkill(cur) : -1)) ?? null;
+  return { army: a.id, fleet: a.fleet, free: free ? { id: free.id, name: free.name, female: free.female, skill: free.skill, rel: free.rel } : null, current: cur ? { id: cur.id, name: cur.name, female: cur.female, skill: commanderSkill(cur), parts: commanderParts(cur), morale: commanderMorale(cur), traits: cur.traits, xp: cur.xp ?? 0, age: Math.floor(ageOf(s, cur)) } : null,
     list, cost: generalCost(s, n), treasury: n.treasury,
     // the price: two months of taxes, at least 25 marks at the prices of the day
     costParts: (n.income.tax || 10) * 2 >= 25 * s.priceLevel ? [['x_gen_cost_taxes', (n.income.tax || 10) * 2]] : [['x_gen_cost_min', 25 * s.priceLevel]] };

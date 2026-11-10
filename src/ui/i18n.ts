@@ -983,6 +983,7 @@ const S: Record<string, [string, string]> = {
   xfw_raise_vs: ['Now in command: {name} (generalship {n}). The new captain takes over only if he is abler.', 'Jetzt im Befehl: {name} (Feldherrnkunst {n}). Der neue Hauptmann übernimmt nur, wenn er fähiger ist.'],
   xfw_raise_none: ['This host has no commander: the new captain takes command.', 'Dieses Heer hat keinen Befehlshaber: Der neue Hauptmann übernimmt es.'],
   xfw_raise_confirm: ['Raise for {n} gold', 'Für {n} Gold anwerben'],
+  xfw_raise_free: ['Free to appoint, at no cost: {name} (generalship {n}), at least as able as a new captain on average.', 'Ohne Kosten verfügbar: {name} (Feldherrnkunst {n}), mindestens so fähig wie ein neuer Hauptmann im Mittel.'],
   r_field_armies: ['Their army against ours in the field', 'Ihr Heer gegen unseres im Feld'], r_allies_in_field: ['Their allies’ armies against our allies’', 'Heere ihrer Verbündeten gegen die unserer Verbündeten'],
   r_answered_call: ['Answered our call to arms', 'Folgte unserem Ruf zu den Waffen'], r_refused_call: ['Refused our call to arms', 'Verweigerte uns den Waffenbeistand'],
   r_broke_guarantee: ['Took the field against the realm it guaranteed', 'Zog gegen das Reich ins Feld, für das es bürgte'],
