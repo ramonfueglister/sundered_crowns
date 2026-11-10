@@ -4,7 +4,7 @@
 import type { GameState, Market, Nation, I18n } from '../types';
 import type { World } from '../world';
 import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH, notice } from '../ctx';
-import { dayToDate } from '../calendar';
+import { fmtDate } from '../calendar';
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
@@ -796,12 +796,19 @@ export function closeLedger(s: GameState) {
   }
 }
 
-/** Lenders by the years they lent to crowns (the English name is kept on the loan; lenderName gives both languages). */
-const LENDERS: { en: string; de: string; from: number; to: number }[] = [
-  { en: 'Bardi', de: 'Bardi', from: 1300, to: 1345 }, { en: 'Peruzzi', de: 'Peruzzi', from: 1300, to: 1343 }, { en: 'Medici', de: 'Medici', from: 1397, to: 1494 },
-  { en: 'Fugger', de: 'Fugger', from: 1480, to: 1650 }, { en: 'Welser', de: 'Welser', from: 1490, to: 1650 }, { en: 'Grimaldi', de: 'Grimaldi', from: 1300, to: 1815 },
-  { en: 'Lombard bankers', de: 'Lombardische Bankiers', from: 1300, to: 1815 }, { en: 'Hanseatic merchants', de: 'Hansekaufleute', from: 1300, to: 1815 },
-  { en: 'Jewish moneylenders', de: 'Jüdische Geldverleiher', from: 1300, to: 1815 }, { en: 'Genoese Casa di San Giorgio', de: 'Genueser Casa di San Giorgio', from: 1407, to: 1805 },
+/** Lenders by the years they lent to crowns (the English name is kept on the loan; lenderName gives both languages).
+ *  `by`: the name as a sentence uses it after 'from' (English, with its article) and after 'bei' (German dative). */
+const LENDERS: { en: string; de: string; by: I18n; from: number; to: number }[] = [
+  { en: 'Bardi', de: 'Bardi', by: { en: 'the Bardi', de: 'den Bardi' }, from: 1300, to: 1345 },
+  { en: 'Peruzzi', de: 'Peruzzi', by: { en: 'the Peruzzi', de: 'den Peruzzi' }, from: 1300, to: 1343 },
+  { en: 'Medici', de: 'Medici', by: { en: 'the Medici', de: 'den Medici' }, from: 1397, to: 1494 },
+  { en: 'Fugger', de: 'Fugger', by: { en: 'the Fugger', de: 'den Fuggern' }, from: 1480, to: 1650 },
+  { en: 'Welser', de: 'Welser', by: { en: 'the Welser', de: 'den Welsern' }, from: 1490, to: 1650 },
+  { en: 'Grimaldi', de: 'Grimaldi', by: { en: 'the Grimaldi', de: 'den Grimaldi' }, from: 1300, to: 1815 },
+  { en: 'Lombard bankers', de: 'Lombardische Bankiers', by: { en: 'Lombard bankers', de: 'lombardischen Bankiers' }, from: 1300, to: 1815 },
+  { en: 'Hanseatic merchants', de: 'Hansekaufleute', by: { en: 'Hanseatic merchants', de: 'Hansekaufleuten' }, from: 1300, to: 1815 },
+  { en: 'Jewish moneylenders', de: 'Jüdische Geldverleiher', by: { en: 'Jewish moneylenders', de: 'jüdischen Geldverleihern' }, from: 1300, to: 1815 },
+  { en: 'Genoese Casa di San Giorgio', de: 'Genueser Casa di San Giorgio', by: { en: 'the Genoese Casa di San Giorgio', de: 'der Genueser Casa di San Giorgio' }, from: 1407, to: 1805 },
 ];
 export function lenderName(en: string): I18n { const l = LENDERS.find((x) => x.en === en); return { en, de: l?.de ?? en }; }
 
@@ -816,11 +823,10 @@ export function takeLoan(s: GameState, n: Nation, amount: number, auto = false) 
   n.loans.push(loan);
   addCredit(n, 'loans', amount);
   if (auto && s.playerNations.includes(n.id)) {
-    const d = dayToDate(loan.due, s.startYear), due = `${d.d}.${d.m + 1}.${d.y}`;
     const r = Math.round(loan.rate * 1000) / 10;
     notice(s, n.id, 'loan', {
-      en: `The treasury ran dry: the crown borrowed ${groupDigits(amount, ',')} marks from ${lender.en} at ${r} % a year, due on ${due}.`,
-      de: `Die Kasse war leer: Die Krone lieh sich ${groupDigits(amount, '.')} Mark bei ${lender.de} zu ${String(r).replace('.', ',')} % im Jahr, fällig am ${due}.`,
+      en: `The treasury ran dry: the crown borrowed ${groupDigits(amount, ',')} marks from ${lender.by.en} at ${r} % a year, due on ${fmtDate(loan.due, s.startYear, 'en')}.`,
+      de: `Die Kasse war leer: Die Krone lieh sich ${groupDigits(amount, '.')} Mark bei ${lender.by.de} zu ${String(r).replace('.', ',')} % im Jahr, fällig am ${fmtDate(loan.due, s.startYear, 'de')}.`,
     });
   }
 }

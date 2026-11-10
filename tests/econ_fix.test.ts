@@ -74,8 +74,13 @@ describe('the month\'s books (ledger, balance, forecast)', () => {
     expect(n.treasury).toBeCloseTo(50, 6);
     const note = s.notices.find((x) => x.nation === n.id && x.kind === 'loan');
     expect(note).toBeTruthy();
-    expect(note!.text.de).toMatch(/Mark bei .+ zu \d+(,\d)? % im Jahr, fällig am \d+\.\d+\.\d{4}/);
+    expect(note!.text.de).toMatch(/Mark bei .+ zu \d+(,\d)? % im Jahr, fällig am \d+\. (Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember) \d{4}\.$/);
+    expect(note!.text.en).toMatch(/marks from .+ at \d+(\.\d)? % a year, due on \d+ (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}\.$/);
     expect(note!.text.de).not.toMatch(/Lombard bankers|Hanseatic merchants|Jewish moneylenders/);
+    // the lender after 'bei' in the dative, after 'from' with its article where it has one
+    const dat = ['den Bardi', 'den Peruzzi', 'den Medici', 'den Fuggern', 'den Welsern', 'den Grimaldi', 'lombardischen Bankiers', 'Hansekaufleuten', 'jüdischen Geldverleihern', 'der Genueser Casa di San Giorgio'];
+    expect(dat.some((x) => note!.text.de.includes(`bei ${x} zu`))).toBe(true);
+    expect(note!.text.de).not.toMatch(/bei (Hansekaufleute|Lombardische|Jüdische|Genueser) /);
   });
 });
 
