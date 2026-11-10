@@ -1014,7 +1014,7 @@ const S: Record<string, [string, string]> = {
   x_books_made: ['Made here', 'Hier hergestellt'], x_books_net_in: ['Imports less exports', 'Einfuhr abzüglich Ausfuhr'], x_books_held: ['From last month\'s stock (half)', 'Aus dem Vorrat des Vormonats (die Hälfte)'],
   x_books_demand_hint: ['What the market wanted last month: the people\'s needs at its prices, and what workshops, households (baking, brewing) and armies\' provisions took.', 'Was der Markt letzten Monat verlangte: den Bedarf der Leute zu seinen Preisen und was Werkstätten, Haushalte (Backen, Brauen) und die Verpflegung der Heere brauchten.'],
   x_books_rest: ['Workshops, households, armies', 'Werkstätten, Haushalte, Heere'],
-  x_books_unmet: ['Unmet demand: drives the price up', 'Ungedeckte Nachfrage: treibt den Preis in die Höhe'], x_books_left: ['Left unsold, kept in stock (less spoilage)', 'Unverkauft, bleibt im Vorrat (abzüglich Verderb)'],
+  x_books_unmet: ['Unmet demand (drives the price up)', 'Ungedeckte Nachfrage (treibt den Preis in die Höhe)'], x_books_left: ['Left unsold, kept in stock (less spoilage)', 'Unverkauft, bleibt im Vorrat (abzüglich Verderb)'],
   x_markets_home_hint: ['The market our capital trades in: steered trade is paid out here. Opens it in the trade panel.', 'Der Markt, in dem unsere Hauptstadt handelt: Gelenkter Handel wird hier ausgezahlt. Öffnet ihn im Handelsfenster.'],
   x_markets_moved: ['Prices, goods and merchants of every market we know are in the trade panel.', 'Preise, Waren und Kaufleute aller Märkte, die wir kennen, stehen im Handelsfenster.'],
   x_open_trade: ['Open the trade panel', 'Handelsfenster öffnen'],

@@ -92,12 +92,15 @@ function MarketView({ mid }: { mid: number }) {
 export function PriceIndexTip({ index, parts }: { index: number; parts: any }) {
   // index and price factors always with two decimals ("1,00", not "1"), as the text says 1,00 is normal
   const f2 = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // the rows are shown to two decimals; the rest row takes up their rounding, so that the column adds up as shown
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  const rest = parts?.top ? r2(index) - 1 - parts.top.reduce((p: number, x: any) => p + r2(x.pull), 0) : 0;
   return <div><TipHead name={t('price_index')} value={f2(index)} hint={t('x_price_index_how')} />
     {parts?.top?.length > 0 && <div class="breakdown">
       <div class="bd-row bd-cols"><span>{t('x_price_index_good')}</span><span>{t('x_price_index_rel')} · {t('x_price_index_weight')} · {t('x_price_index_pull')}</span></div>
       <div class="bd-row"><span>{t('x_price_index_base')}</span><span>{f2(1)}</span></div>
       {parts.top.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>× {f2(x.rel)} · {pct(x.share, 0)} · <b class={x.pull > 0.005 ? 'neg' : x.pull < -0.005 ? 'pos' : ''}>{signed(x.pull, 2)}</b></span></div>)}
-      {parts.goods > parts.top.length && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(parts.goods - parts.top.length))}</span><span><b>{signed(parts.rest, 2)}</b></span></div>}
+      {parts.goods > parts.top.length && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(parts.goods - parts.top.length))}</span><span><b>{signed(r2(rest) || 0, 2)}</b></span></div>}
       <div class="bd-row bd-total"><span>{t('price_index')}</span><span>{f2(index)}</span></div>
     </div>}
   </div>;
@@ -336,6 +339,9 @@ function TariffTip({ d }: { d: any }) {
  *  takes half its rate off the trader's margin, so it closes the thin-margin flows first. */
 function KeptOutTip({ d }: { d: any }) {
   const share = d.deter > 0 ? (d.keptMargin ?? 0) / d.deter : 0;
+  // values to one decimal; the rest row takes up the rounding of the goods above it, so the column adds up as shown
+  const r1 = (v: number) => Math.round(v * 10) / 10;
+  const restV = r1(d.deter) - (d.keptOut ?? []).reduce((p: number, x: any) => p + r1(x.v), 0);
   return <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />
     {/* goods kept out are not gains: plain values by market, no sign or colour */}
     {d.markets.length > 0 && <div class="breakdown">
@@ -343,9 +349,9 @@ function KeptOutTip({ d }: { d: any }) {
       {d.markets.map((m: any) => <div class="bd-row"><span>{placeName(m.name)}</span><span>{num(m.deter, 1)}</span></div>)}
     </div>}
     {d.keptOut?.length > 0 && <div class="breakdown">
-      <div class="bd-row bd-cols"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
+      <div class="bd-row bd-cols"><span>{t('x_price_index_good')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
       {d.keptOut.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.v, 1)} · {pct(x.margin, 1)}</span></div>)}
-      {d.keptRest?.n > 0 && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(d.keptRest.n))}</span><span>{num(d.keptRest.v, 1)} · {pct(d.keptRest.margin, 1)}</span></div>}
+      {d.keptRest?.n > 0 && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(d.keptRest.n))}</span><span>{num(Math.max(0, r1(restV)), 1)} · {pct(d.keptRest.margin, 1)}</span></div>}
       <div class="bd-row bd-total"><span>{t('x_kept_all')}</span><span>{num(d.deter, 1)} · {pct(share, 1)}</span></div>
     </div>}
     {d.deter > 0 && <div class="small"><span>{t('x_kept_margin_of').replace('{m}', num(d.keptMargin ?? 0, 1)).replace('{v}', num(d.deter, 1)).replace('{p}', pct(share, 1))}</span></div>}
