@@ -1,7 +1,8 @@
 // Key bindings (spec point 4): every keyboard shortcut of the game comes from this one table. The settings panel lets
 // the player rebind each action (conflicts are shown, defaults can be restored); the bindings live in localStorage
 // ('sc.keys'). The camera keys of the map (W A S D and the arrow keys, src/render/renderer.ts) are fixed and listed
-// here so that a binding that collides with them is reported too.
+// here so that a binding that collides with them is reported too. Zooming by keyboard is an action like any other, so a
+// clash with the game speed shows in the settings.
 import { signal } from '@preact/signals';
 import type { MapMode } from '../game/protocol';
 
@@ -12,7 +13,8 @@ const MODE_NAMES: [MapMode, string, string][] = [
   ['political', 'Political map', 'Politische Karte'], ['terrain', 'Terrain map', 'Geländekarte'], ['diplomatic', 'Diplomatic map', 'Diplomatische Karte'],
   ['development', 'Development map', 'Entwicklungskarte'], ['population', 'Population map', 'Bevölkerungskarte'], ['culture', 'Culture map', 'Kulturkarte'],
   ['faith', 'Faith map', 'Glaubenskarte'], ['trade', 'Trade map', 'Handelskarte'], ['unrest', 'Unrest map', 'Unruhekarte'], ['control', 'Control map', 'Kontrollkarte'],
-  ['goods', 'Goods map', 'Güterkarte'],
+  ['goods', 'Goods map', 'Güterkarte'], ['army_supply', 'Supply map', 'Versorgungskarte'], ['prices', 'Price map', 'Preiskarte'],
+  ['production', 'Production map', 'Erzeugungskarte'], ['markets', 'Market map', 'Marktkarte'],
 ];
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
@@ -28,14 +30,21 @@ export const KEY_ACTIONS: KeyAction[] = [
   { id: 'panel_knowledge', group: 'panels', name: ['Learning', 'Wissen'], def: 'K' },
   { id: 'panel_society', group: 'panels', name: ['Society and faith', 'Gesellschaft und Glaube'], def: 'U' },
   { id: 'panel_decisions', group: 'panels', name: ['Goals and decisions', 'Ziele und Beschlüsse'], def: 'J' },
-  { id: 'panel_ledger', group: 'panels', name: ['Ledger', 'Übersicht'], def: 'L' },
+  { id: 'panel_ledger', group: 'panels', name: ['Ledger', 'Register'], def: 'L' },
   { id: 'panel_chronicle', group: 'panels', name: ['Chronicle', 'Chronik'], def: 'C' },
   { id: 'panel_victory', group: 'panels', name: ['Victory', 'Sieg'], def: 'V' },
+  // panels of the menu without a key of their own by default (the player may bind one)
+  { id: 'panel_trade', group: 'panels', name: ['Trade', 'Handel'], def: '' },
+  { id: 'panel_explore', group: 'panels', name: ['Discovery', 'Entdeckung'], def: '' },
+  { id: 'panel_empire', group: 'panels', name: ['Empire', 'Reich'], def: '' },
   ...MODE_NAMES.map(([m, en, de], k): KeyAction => ({ id: `map_${m}`, group: 'map', name: [en, de], def: DIGITS[k] ?? '' })),
   { id: 'back', group: 'view', name: ['Close / back / menu', 'Schließen / zurück / Menü'], def: 'Escape' },
   { id: 'hide_ui', group: 'view', name: ['Hide the interface', 'Oberfläche ausblenden'], def: 'H' },
   { id: 'quick_save', group: 'view', name: ['Quick save', 'Schnellspeichern'], def: 'F5' },
   { id: 'dev', group: 'view', name: ['Developer tools', 'Entwicklerwerkzeuge'], def: 'F2' },
+  // zoom: Page Up / Page Down (and the mouse wheel); "+" and "-" belong to the game speed
+  { id: 'zoom_in', group: 'view', name: ['Zoom in', 'Hineinzoomen'], def: 'PageUp' },
+  { id: 'zoom_out', group: 'view', name: ['Zoom out', 'Herauszoomen'], def: 'PageDown' },
   // fixed: the map's camera keys (src/render/renderer.ts)
   { id: 'cam_up', group: 'view', name: ['Move the map up', 'Karte nach oben'], def: 'W', fixed: true },
   { id: 'cam_left', group: 'view', name: ['Move the map left', 'Karte nach links'], def: 'A', fixed: true },
@@ -112,5 +121,6 @@ export function actionFor(e: Parameters<typeof comboOf>[0], over = keyOverrides.
 /** Readable key name for tooltips ("Leertaste" for Space in German). */
 export function keyLabel(combo: string, de: boolean): string {
   if (!combo) return '';
-  return combo.split('+').map((p) => (de ? ({ Space: 'Leertaste', Escape: 'Esc', Ctrl: 'Strg', Shift: 'Umschalt' } as Record<string, string>)[p] ?? p : p === 'Escape' ? 'Esc' : p)).join('+').replace(/\+\+$/, '++');
+  return combo.split('+').map((p) => (de ? ({ Space: 'Leertaste', Escape: 'Esc', Ctrl: 'Strg', Shift: 'Umschalt', PageUp: 'Bild↑', PageDown: 'Bild↓' } as Record<string, string>)[p] ?? p
+    : ({ Escape: 'Esc', PageUp: 'Page Up', PageDown: 'Page Down' } as Record<string, string>)[p] ?? p)).join('+').replace(/\+\+$/, '++');
 }

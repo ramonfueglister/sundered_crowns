@@ -935,7 +935,7 @@ const S: Record<string, [string, string]> = {
   x_vic_met: ['met', 'erfüllt'], x_vic_conditions: ['Conditions', 'Bedingungen'],
   x_vic_share_hint: ['Shares are measured over Europe (12° W to 45° E, 35° N to 72° N) or over the whole world for trade.', 'Anteile werden über Europa gemessen (12° W bis 45° O, 35° N bis 72° N), beim Handel über die ganze Welt.'],
   x_vic_ratio_hint: ['Our learning points divided by those of the next independent realm.', 'Unsere Gelehrsamkeitspunkte geteilt durch die des nächsten unabhängigen Reiches.'],
-  x_vic_points_hint: ['Score as in the ledger: development, land, prestige, technology and wealth.', 'Wertung wie in der Übersicht: Entwicklung, Land, Ansehen, Technik und Reichtum.'],
+  x_vic_points_hint: ['Score as in the ledger: development, half the development of subjects, armies, fleets, prestige and treasury.', 'Wertung wie im Register: Entwicklung, die halbe Entwicklung der Untertanen, Heere, Flotten, Ansehen und Schatz.'],
   x_vic_learning_points: ['Learning points', 'Gelehrsamkeitspunkte'], x_vic_tech: ['Technology levels', 'Technikstufen'], x_vic_innovations: ['Innovations (2 each)', 'Neuerungen (je 2)'],
   x_vic_stages: ['Landmark stages since the start (3 each)', 'Wahrzeichenstufen seit Spielbeginn (je 3)'], x_vic_second: ['Next realm', 'Nächstes Reich'], x_vic_ratio: ['Lead', 'Vorsprung'],
   x_vic_trade_income: ['Our trade, tariffs and companies per month', 'Unser Handel, Zölle und Kompanien pro Monat'], x_vic_trade_world: ['The whole world per month', 'Die ganze Welt pro Monat'], x_vic_share: ['Share', 'Anteil'],

@@ -220,3 +220,26 @@ describe('map legends: what the viewer knows, every raw good, numbers on the con
     expect(dev.ticks.find((k) => k.label === '10')!.at).toBeCloseTo(MODE_SCALE.development(10), 6);
   });
 });
+
+describe('keys: zoom and speed apart, every map mode and menu panel in the table', () => {
+  it('"+" and "-" change the speed only; zoom has keys of its own that the conflict check covers', async () => {
+    const { actionFor, keyFor, keyConflicts, KEY_INDEX, bindKey, resetAllKeys } = await import('../src/ui/keys');
+    const { readFileSync } = await import('node:fs');
+    resetAllKeys();
+    expect(actionFor({ key: '+' })).toBe('faster');
+    expect(actionFor({ key: '-' })).toBe('slower');
+    expect(actionFor({ key: 'PageUp' })).toBe('zoom_in');
+    expect(actionFor({ key: 'PageDown' })).toBe('zoom_out');
+    expect(keyConflicts().size).toBe(0);
+    bindKey('zoom_in', '+');
+    expect(keyConflicts().get('+')).toEqual(['faster', 'zoom_in']);
+    resetAllKeys();
+    // the map no longer reads "+", "=" or "-" itself
+    const src = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
+    expect(src).not.toMatch(/k === '\+'|k === '='|k === '-'/);
+    for (const m of ['army_supply', 'prices', 'production', 'markets', 'goods']) expect(KEY_INDEX[`map_${m}`], m).toBeTruthy();
+    for (const p of ['trade', 'explore', 'empire']) expect(KEY_INDEX[`panel_${p}`], p).toBeTruthy();
+    expect(KEY_INDEX.panel_ledger.name[1]).toBe('Register');
+    expect(keyFor('panel_trade')).toBe('');
+  });
+});

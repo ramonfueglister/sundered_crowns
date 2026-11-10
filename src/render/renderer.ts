@@ -759,6 +759,8 @@ export class MapRenderer {
     this.zoomTarget = null;
   }
 
+  /** zoom by factor around the centre of the view (the keyboard's zoom actions) */
+  zoomStep(factor: number) { this.zoomAt(factor, this.cssW / 2, this.cssH / 2); }
   /** zoom by factor around a canvas-local css point (smoothed) */
   zoomAt(factor: number, sx: number, sy: number) {
     const cur = this.zoomTarget ?? this.camera.zoom;
@@ -909,9 +911,8 @@ export class MapRenderer {
     const onKey = (e: KeyboardEvent) => {
       if (typing(e) || e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
+      // zooming by keyboard is a rebindable action of the key table (src/ui/keys.ts zoom_in / zoom_out → zoomStep)
       if (PAN.has(k)) { this.keys.add(k); e.preventDefault(); }
-      else if (k === '+' || k === '=') this.zoomAt(1.4, this.cssW / 2, this.cssH / 2);
-      else if (k === '-') this.zoomAt(1 / 1.4, this.cssW / 2, this.cssH / 2);
     };
     const onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
     const onBlur = () => this.keys.clear();

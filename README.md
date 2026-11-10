@@ -20,9 +20,9 @@ game stays fully playable.
 | Left click | Select a location, army or fleet (Shift adds armies to the selection) |
 | Right click | Move the selected armies or fleets there |
 | Drag, WASD, arrow keys | Pan the map |
-| Mouse wheel, + / − | Zoom |
+| Mouse wheel, Page Up / Page Down | Zoom |
 | Space | Pause and resume (single player) |
-| Numpad + / − | Speed 1–5 (single player) |
+| + / − (also on the numpad) | Speed 1–5 (single player) |
 | 1 … 0 | Map modes: political, terrain, diplomatic, development, population, culture, faith, trade, unrest, control |
 | E / G / Shift+D / M / B / K / U / J / L / C / V | Economy, government, diplomacy, military, works, knowledge, society, decisions, ledger, chronicle, victory |
 | H | Hide the interface (photo mode) |

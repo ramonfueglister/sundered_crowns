@@ -1,7 +1,7 @@
 // Application shell: main menu, realm selection, game screen, end screen.
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations, ready, workerError } from '../game/client';
-import { screen, startYear, selectedNation, selectedLoc, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
+import { screen, startYear, selectedNation, selectedLoc, selectedArmies, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
 import { t, L, lang, setLang } from './i18n';
 import { MapView, mapReady, rendererRef } from './MapView';
 import { timelapse, stopTimelapse } from './timelapse';
@@ -209,8 +209,14 @@ function useKeys() {
       if (id === 'pause') { if (sp > 0) { lastSpeed.value = sp; sim().speed(0); } else sim().speed(lastSpeed.value || 2); }
       else if (id === 'faster') sim().speed(Math.min(5, Math.max(1, sp + 1)));
       else if (id === 'slower') sim().speed(Math.max(1, sp - 1));
-      else if (id === 'back') { if (panel.value !== 'none') panel.value = 'none'; else if (selectedLoc.value >= 0) selectedLoc.value = -1; else openPanel('pause'); }
+      // Esc: close the panel, then drop the selection (place, the realm shown with it, armies), then the pause menu
+      else if (id === 'back') {
+        if (panel.value !== 'none') panel.value = 'none';
+        else if (selectedLoc.value >= 0 || (selectedNation.value >= 0 && selectedNation.value !== playerId.value) || selectedArmies.value.length) { selectedLoc.value = -1; selectedNation.value = -1; selectedArmies.value = []; }
+        else openPanel('pause');
+      }
       else if (id === 'dev') openPanel('dev');
+      else if (id === 'zoom_in' || id === 'zoom_out') { e.preventDefault(); rendererRef.r?.zoomStep?.(id === 'zoom_in' ? 1.4 : 1 / 1.4); }
       else if (id === 'hide_ui') uiHidden.value = !uiHidden.value;
       else if (id === 'quick_save') P.quickSave().then(() => showToast(t('saved')));
       else if (id.startsWith('map_')) { const m = id.slice(4) as MapMode; if (MAP_MODES.includes(m)) mapMode.value = m; }
