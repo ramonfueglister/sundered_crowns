@@ -232,3 +232,46 @@ describe('the diet lobbied member by member', () => {
     } finally { E.diet = keepDiet; E.favour = keepFav; em.treasury = keepT; s.playerNations = keepP; }
   });
 });
+
+describe('a member asks the emperor for help', () => {
+  it('a human member attacked from outside asks once per war, under the rule of the call at a declaration; AI members ask too', async () => {
+    const { helpRefusal, empire, isHuman } = await import('../src/sim/systems/empire');
+    const { newId } = await import('../src/sim/ctx');
+    const E = s.empire; const em = s.nations[E.emperor];
+    const outsider = s.nations.find((x) => x.alive && !x.isHRE && x.overlord < 0 && x.key === 'hungary')!;
+    const members = s.nations.filter((x) => x.alive && x.isHRE && x.overlord < 0 && x.id !== em.id && !s.wars.some((q) => q.att.includes(x.id) || q.def.includes(x.id)));
+    const [m, m2] = members;
+    // a war from before the game (no call was made when it was declared)
+    const mk = (att: number, def: number) => ({ id: newId(s), name: { en: 'Test war', de: 'Testkrieg' }, att: [att], def: [def], attLead: att, defLead: def, goal: { type: 'conquest', target: def, locs: [] }, start: s.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [] } as any);
+    const war = mk(outsider.id, m.id), war2 = mk(outsider.id, m2.id), inner = mk(m2.id, m.id);
+    const keep = { wars: s.wars.slice(), calls: (E.calls ?? []).slice(), players: s.playerNations, auth: E.authority, prestige: em.prestige };
+    try {
+      s.wars.push(war, war2, inner); s.playerNations = [m.id];
+      expect(isHuman(s, m.id)).toBe(true);
+      // the view offers the request, with what the emperor weighs
+      const v = answer(s, w, m.id, { q: 'empire' } as any) as any;
+      const hw = v.helpWars.find((x: any) => x.war === war.id);
+      expect(hw.refusal).toBeNull(); expect(hw.answer).toBeNull(); expect(hw.rows.length).toBeGreaterThan(2);
+      expect(v.helpWars.find((x: any) => x.war === inner.id).refusal).toBe('the attacker is a member of the Empire');
+      // the AI emperor answers at once by the same score as for a declared war, and says so
+      const yes = hw.rows.reduce((p: number, r: any) => p + r[1], 0) > 0;
+      const r = applyCommand(s, w, { t: 'empire', n: m.id, action: 'ask_help', war: war.id } as any);
+      expect(r.ok).toBe(true);
+      expect(r.msg?.de).toMatch(yes ? /greift für uns/ : /lehnt es ab/);
+      const call = E.calls!.find((c) => c.war === war.id && c.member === m.id)!;
+      expect(call.answer).toBe(yes ? 1 : -1);
+      expect(war.def.includes(em.id)).toBe(yes);
+      // once per war
+      expect(applyCommand(s, w, { t: 'empire', n: m.id, action: 'ask_help', war: war.id } as any).err).toBe('the emperor was already called to this war');
+      expect(helpRefusal(s, m, inner)).toBe('the attacker is a member of the Empire');
+      // the emperor's own war: no one to ask
+      expect(helpRefusal(s, em, mk(outsider.id, em.id))).toBe('there is no emperor to ask');
+      // an AI member in the same place asks at the monthly reckoning
+      expect(helpRefusal(s, m2, war2)).toBeNull();
+      empire.monthly!(mkCtx(s, w));
+      expect(E.calls!.some((c) => c.war === war2.id && c.member === m2.id)).toBe(true);
+    } finally {
+      s.wars = keep.wars; E.calls = keep.calls; s.playerNations = keep.players; E.authority = keep.auth; em.prestige = keep.prestige;
+    }
+  });
+});

@@ -5,6 +5,8 @@ import { useState } from 'preact/hooks';
 import { playerId } from '../store';
 import { view } from '../../game/client';
 import { Section, Row, Bar, Btn, Empty, NLink, NList, Effects, Tip, Tabs, useQuery, act, t, L, num, signed, fmtDateShort } from './common';
+import { errText } from '../i18n';
+import { showToast } from '../store';
 import { Parts, TipHead } from './explain';
 
 type Row2 = [any, number];
@@ -31,7 +33,7 @@ function EmpireView() {
   const [e, refresh] = useQuery<any>({ q: 'empire' }, [pid], 800);
   if (!e) return <Empty>{t('loading')}…</Empty>;
   // every action says what it did (or why it was refused)
-  const doAct = async (c: any, ok?: string) => { await act(c, 'click', ok); refresh(); };
+  const doAct = async (c: any, ok?: string) => { const r = await act(c, 'click', ok); if (r.ok && r.msg) showToast(L(r.msg)); refresh(); };
   const gift = (id: number, fav: number) => doAct({ t: 'empire', action: 'campaign', target: id }, fill('x_ok_gift', { f: Math.min(60, fav + 15) }));
   const thisYear: Row2[] = Object.entries(e.thisYear).map(([k, v]) => [k, v as number]);
   const lastYear: Row2[] = Object.entries(e.lastYear).map(([k, v]) => [k, v as number]);
@@ -79,6 +81,14 @@ function EmpireView() {
         {e.dietMembers.length > 0 && <DietMembers e={e} pid={pid} gift={gift} />}
       </>}
     </Section>
+    {e.helpWars.length > 0 && <Section title={t('x_emp_help_title')} id="emp-help">
+      <div class="muted small">{t('x_emp_help_hint')}</div>
+      {e.helpWars.map((x: any) => <div class="kv"><span class="k"><NLink id={x.attacker} size={14} /> ⚔ {L(x.name)}</span><span class="v">
+        {x.rows.length > 0 && <Tip content={() => <Reasons2 title={t('x_emp_ai_would')} rows={x.rows} />}><span class={`has-tip ${sum(x.rows) > 0 ? 'pos' : 'neg'}`}>{signed(sum(x.rows), 0)}</span></Tip>}
+        {x.answer === 1 ? <span class="tag">{t('x_emp_help_yes')}</span> : x.answer === -1 ? <span class="tag warn">{t('x_emp_help_no')}</span> : x.answer === 0 ? <span class="tag">{t('x_emp_help_open')}</span>
+          : <Btn disabled={x.refusal ? errText(x.refusal) : null} tip={t('x_emp_help_btn_hint')} onClick={() => doAct({ t: 'empire', action: 'ask_help', war: x.war })}>{t('x_emp_help_ask')}</Btn>}
+      </span></div>)}
+    </Section>}
     {(e.calls.length > 0 || e.orders.length > 0 || e.internalWars.length > 0) && <Section title={t('x_emp_peace_title')} id="emp-peace">
       {e.calls.map((c: any) => <div class="kv"><span class="k">{t('x_emp_call')}: <NLink id={c.attacker} size={14} /> → <NLink id={c.member} size={14} /></span><span class="v">
         <Tip content={() => <Reasons2 title={t('x_emp_ai_would')} rows={c.rows} />}><span class="has-tip muted">{date(c.until)}</span></Tip>

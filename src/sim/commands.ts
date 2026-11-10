@@ -233,7 +233,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const out: { msg?: I18n } = {};
       const e = setTaxRate(s, n, cmd.cls, cmd.rate, out); return e ? err(e) : out.msg ? { ok: true, msg: out.msg } : OK;
     }
-    case 'empire': case 'league': case 'powers': case 'assembly': case 'govern': case 'situation': { const e = realmCommand(s, w, n, cmd); return e ? err(e) : OK; }
+    case 'empire': case 'league': case 'powers': case 'assembly': case 'govern': case 'situation': { const out: { msg?: I18n } = {}; const e = realmCommand(s, w, n, cmd, out); return e ? err(e) : out.msg ? { ok: true, msg: out.msg } : OK; }
     case 'budget': {
       if (cmd.key === 'army') n.armyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'navy') n.navyMaint = clamp(cmd.value, 0.25, 1);

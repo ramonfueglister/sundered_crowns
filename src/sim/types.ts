@@ -351,7 +351,7 @@ export type Command =
   | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)
   | { t: 'dev'; n: number; action: string; payload?: any } // developer tools (single player / admin only)
   // ---- realm pass: the Empire, the league, great powers, assemblies, elections, situations
-  | { t: 'empire'; n: number; action: 'vote' | 'campaign' | 'defend' | 'refuse' | 'order_peace' | 'comply' | 'summon_diet' | 'diet_vote'; target?: number; war?: number; yes?: boolean }
+  | { t: 'empire'; n: number; action: 'vote' | 'campaign' | 'defend' | 'refuse' | 'order_peace' | 'comply' | 'summon_diet' | 'diet_vote' | 'ask_help'; target?: number; war?: number; yes?: boolean }
   | { t: 'league'; n: number; action: 'join' | 'leave' | 'answer_call'; war?: number; yes?: boolean }
   | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline' | 'accept_mediation' | 'refuse_mediation'; target?: number; war?: number }
   | { t: 'assembly'; n: number; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: WarGoal['type']; bribe?: string[]; concede?: string }

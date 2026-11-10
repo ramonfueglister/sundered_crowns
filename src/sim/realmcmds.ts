@@ -2,13 +2,14 @@
 // the realm and the demands of the Powers, and the actions open in each situation.
 import type { GameState, Command, Nation, I18n } from './types';
 import type { World } from './world';
-import { castVote, campaign, answerCall, orderPeace, answerOrder, summonDiet, dietVote, joinLeague, leaveLeague, answerLeagueCall } from './systems/empire';
+import { castVote, campaign, answerCall, orderPeace, answerOrder, summonDiet, dietVote, joinLeague, leaveLeague, answerLeagueCall, askHelp } from './systems/empire';
 import { holdAssembly, taxAsk, needsTaxVote, backCandidate, answerDemand } from './systems/government';
 import { powersCommand } from './systems/powers';
 import { situationAction } from './systems/situations';
 
 type RealmCmd = Extract<Command, { t: 'empire' | 'league' | 'powers' | 'assembly' | 'govern' | 'situation' }>;
-export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd): string | I18n | null {
+/** out.msg carries what a command that succeeded has to tell (the emperor's answer to a plea for help). */
+export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd, out?: { msg?: I18n }): string | I18n | null {
   switch (cmd.t) {
     case 'empire': {
       const E = s.empire;
@@ -28,6 +29,7 @@ export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd): 
         }
         case 'summon_diet': return summonDiet(s, n);
         case 'diet_vote': return dietVote(s, n, !!cmd.yes);
+        case 'ask_help': return askHelp(s, w, n, cmd.war ?? -1, out);
       }
       return 'unknown action';
     }

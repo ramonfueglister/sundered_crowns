@@ -112,6 +112,10 @@ export const REFUSAL_DE: Record<string, string> = {
   'cannot lead an army': 'Kann kein Heer führen',
   // ---- polish pass (claude/polish-pass): developer tools
   'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
+  // ---- fix-realm
+  'there is no emperor to ask': 'Es gibt keinen Kaiser, den wir bitten könnten', 'we are not the realm attacked': 'Wir sind nicht das angegriffene Reich',
+  'the attacker is a member of the Empire': 'Der Angreifer ist ein Glied des Reiches', 'the emperor is already in this war': 'Der Kaiser ist schon in diesem Krieg',
+  'the emperor was already called to this war': 'Der Kaiser wurde zu diesem Krieg schon gerufen',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

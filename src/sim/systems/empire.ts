@@ -146,10 +146,7 @@ export function realmBodiesOnWar(s: GameState, w: World, war: War) {
   if (!victim || !att || war.goal.type === 'independence' || war.goal.type === 'civil_war' || war.goal.type === 'rebels') { leagueOnWar(s, w, war); return; }
   const em = alive(s, E.emperor);
   if (em && victim.isHRE && !att.isHRE && em.id !== victim.id && em.id !== att.id && !war.att.includes(em.id) && !war.def.includes(em.id) && !atWar(s, em.id, victim.id)) {
-    const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
-    (E.calls ??= []).push(call);
-    if (isHuman(s, em.id)) notice(s, em.id, 'imperial_call', T(`${att.short.en} has attacked ${victim.short.en}, a member of the Empire. The members expect their emperor to defend it.`, `${att.short.de} hat ${victim.short.de} angegriffen, ein Glied des Reiches. Die Glieder erwarten, dass ihr Kaiser es verteidigt.`), { war: war.id, loc: victim.capital });
-    else answerCall(s, w, call, defendScore(s, w, em, call).reduce((p, r) => p + r[1], 0) > 0);
+    callEmperor(s, w, war, victim, att);
     // the circles of the Empire: neighbouring members march to the defence
     if (hasReform(s, 'imperial_circles') && victim.capital >= 0) for (const id of E.members) {
       const m = s.nations[id];
@@ -159,6 +156,53 @@ export function realmBodiesOnWar(s: GameState, w: World, war: War) {
     }
   }
   leagueOnWar(s, w, war);
+}
+/** The emperor is called to defend a member: a human emperor has 45 days to answer, an AI emperor answers at once by
+ *  defendScore. Returns the call. */
+function callEmperor(s: GameState, w: World, war: War, victim: Nation, att: Nation) {
+  const E = s.empire; const em = s.nations[E.emperor];
+  const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
+  (E.calls ??= []).push(call);
+  victim.flags[`emp_call_${war.id}`] = s.day; // one call per war and member (the list of calls is pruned)
+  if (isHuman(s, em.id)) notice(s, em.id, 'imperial_call', T(`${att.short.en} has attacked ${victim.short.en}, a member of the Empire. The members expect their emperor to defend it.`, `${att.short.de} hat ${victim.short.de} angegriffen, ein Glied des Reiches. Die Glieder erwarten, dass ihr Kaiser es verteidigt.`), { war: war.id, loc: victim.capital });
+  else answerCall(s, w, call, defendScore(s, w, em, call).reduce((p, r) => p + r[1], 0) > 0);
+  return call;
+}
+const NO_CALL_GOALS = ['independence', 'civil_war', 'rebels'];
+/** Why a member cannot ask the emperor to defend it in a war (null: it can). The rule is the call made when a war is
+ *  declared on a member: a sovereign member attacked (the war's target or the leader of its defence) by a realm
+ *  outside the Empire, an emperor who is someone else and not yet in that war; one call per war and member, whether
+ *  made at the declaration or asked for later (a war from before the game, a new emperor, a call never made). */
+export function helpRefusal(s: GameState, n: Nation, war: War): string | null {
+  const E = s.empire; const em = alive(s, E.emperor); const att = s.nations[war.attLead];
+  if (!n.isHRE || n.overlord >= 0) return 'not a member of the Empire';
+  if (!war.def.includes(n.id) || (war.defLead !== n.id && war.goal.target !== n.id) || NO_CALL_GOALS.includes(war.goal.type)) return 'we are not the realm attacked';
+  if (!att?.alive || att.isHRE) return 'the attacker is a member of the Empire';
+  if (!em || em.id === n.id) return 'there is no emperor to ask';
+  if (em.id === att.id || war.att.includes(em.id) || war.def.includes(em.id) || atWar(s, em.id, n.id)) return 'the emperor is already in this war';
+  if (n.flags[`emp_call_${war.id}`] !== undefined || (E.calls ?? []).some((c) => c.war === war.id && c.member === n.id)) return 'the emperor was already called to this war';
+  return null;
+}
+/** A member asks the emperor to defend it (the same call as at a declaration; see helpRefusal). out.msg tells the
+ *  answer of an AI emperor, or that a human emperor has been asked. */
+export function askHelp(s: GameState, w: World, n: Nation, warId: number, out?: { msg?: I18n }): string | null {
+  const war = s.wars.find((x) => x.id === warId); if (!war) return 'no such war';
+  const r = helpRefusal(s, n, war); if (r) return r;
+  const em = s.nations[s.empire.emperor];
+  const c = callEmperor(s, w, war, n, s.nations[war.attLead]);
+  if (out) out.msg = c.answer === 1 ? T(`The emperor takes up arms for us: ${em.short.en} joins the war.`, `Der Kaiser greift für uns zu den Waffen: ${em.short.de} tritt in den Krieg ein.`)
+    : c.answer === -1 ? T(`The emperor refuses to come to our defence.`, `Der Kaiser lehnt es ab, uns zu Hilfe zu kommen.`)
+      : T(`Our plea has gone to the emperor; he has 45 days to answer.`, `Unsere Bitte ist an den Kaiser ergangen; er hat 45 Tage für die Antwort.`);
+  return null;
+}
+/** AI members ask for the emperor's help in the wars where no call was made for them (same rule as the player). */
+function aiAskHelp(s: GameState, w: World) {
+  for (const war of s.wars) {
+    for (const id of [war.defLead, war.goal.target]) {
+      const n = s.nations[id]; if (!n?.alive || isHuman(s, id)) continue;
+      if (!helpRefusal(s, n, war)) askHelp(s, w, n, war.id);
+    }
+  }
 }
 /** Why the emperor would or would not defend a member: authority, opinion, strength, other wars, distance. */
 export function defendScore(s: GameState, w: World, em: Nation, call: { war: number; member: number; attacker: number }): Row[] {
@@ -610,6 +654,8 @@ function empireMonth(s: GameState, w: World) {
       addExpense(n, 'imperial_tax', t); addIncome(em, 'imperial_tax', t);
     }
   }
+  // members asking for help in wars where no call was made for them (wars from before the game, a new emperor)
+  aiAskHelp(s, w);
   // calls and orders: open ones lapse at their deadline (a human emperor who says nothing has refused)
   for (const c of E.calls ?? []) {
     if (c.answer === 0 && (s.day >= c.until || !s.wars.some((x) => x.id === c.war))) answerCall(s, w, c, false);

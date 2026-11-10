@@ -8,7 +8,7 @@ import {
   IMPERIAL_REFORMS, nextReform, authorityDrift, crownEffects, memberEffects, internalWars, electionCandidates, voteScore, electorChoice, tally,
   campaignCost, dietStance, dietTally, dietPasses, dietCooldown, dietWeight, dietVoters, league, leagueEligible, leagueEffects, LEAGUE_NAME, defendScore, obeyScore,
   ORDER_COST, ORDER_OBEYED, ORDER_DEFIED, BAN_EFFECTS, BAN_YEARS, LEAGUE_CALL_EXHAUSTION, LEAGUE_STAYED_OUT, pennyParts, PENNY_CAP, hasReform,
-  lobbyCost, isLobby, isHuman, reformDef,
+  lobbyCost, isLobby, isHuman, reformDef, helpRefusal,
 } from '../sim/systems/empire';
 import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT, SPURNED } from '../sim/systems/powers';
 import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, grantFor, type AssemblyAsk } from '../sim/systems/government';
@@ -69,6 +69,13 @@ function empireView(s: GameState, w: World, me: number) {
     dietReady: s.day - (E.lastDiet ?? -1e9) >= dietCooldown(s) ? 0 : (E.lastDiet ?? 0) + dietCooldown(s),
     voters: dietVoters(s).length,
     calls: (E.calls ?? []).filter((c) => c.answer === 0).map((c) => ({ ...c, rows: s.nations[E.emperor]?.alive ? defendScore(s, w, s.nations[E.emperor], c) : [] })),
+    // our own defensive wars: whether we can ask the emperor for help (the rule of the call at a declaration), what he
+    // would weigh, and how an earlier call was answered (1 yes, -1 no, 0 open)
+    helpWars: n?.isHRE ? s.wars.filter((x) => x.def.includes(me) && (x.defLead === me || x.goal.target === me)).map((x) => {
+      const c = (E.calls ?? []).find((q) => q.war === x.id && q.member === me); const em = s.nations[E.emperor];
+      return { war: x.id, name: x.name, attacker: x.attLead, refusal: helpRefusal(s, n, x), answer: c ? c.answer : n.flags[`emp_call_${x.id}`] !== undefined ? -1 : null,
+        rows: em?.alive && em.id !== me ? defendScore(s, w, em, { war: x.id, member: me, attacker: x.attLead }) : [] };
+    }) : [],
     orders: (E.orders ?? []).filter((o) => o.answer === 0).map((o) => { const war = s.wars.find((x) => x.id === o.war); return { ...o, rows: war ? obeyScore(s, war) : [] }; }),
     league: lg ? {
       name: LEAGUE_NAME, members: lg.members, leader: lg.leader, strength: lg.strength, member: lg.members.includes(me), eligible: n ? leagueEligible(s, w, n) : false, effects: n ? leagueEffects(s, n) : {},
