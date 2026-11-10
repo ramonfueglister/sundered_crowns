@@ -246,9 +246,11 @@ export function dateOf(day: number) {
   return fmtDateShort(day, v.startYear);
 }
 import { dayToDate, MONTHS_EN, MONTHS_DE } from '../../sim/calendar';
+/** German short month names as German writes them: short names in full, the others cut with a full stop. */
+const MONTHS_DE_SHORT = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
 export function fmtDateShort(day: number, startYear: number) {
-  const d = dayToDate(day, startYear); const m = (lang.value === 'de' ? MONTHS_DE : MONTHS_EN)[d.m];
-  return lang.value === 'de' ? `${d.d}. ${m.slice(0, 3)}. ${d.y}` : `${d.d} ${m.slice(0, 3)} ${d.y}`;
+  const d = dayToDate(day, startYear);
+  return lang.value === 'de' ? `${d.d}. ${MONTHS_DE_SHORT[d.m]} ${d.y}` : `${d.d} ${MONTHS_EN[d.m].slice(0, 3)} ${d.y}`;
 }
 export function Swatch({ c }: { c: number[] }) { return <span class="sw" style={{ background: rgb(c) }} />; }
 export { num, signed, pct, rgb, Tip, Breakdown, t, L, lang, Coa };

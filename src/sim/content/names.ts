@@ -5,6 +5,7 @@
 // Grausame"): localName() is used for every name shown in German.
 import { ALL_CULTURES, GROUP_OF } from './peoples';
 import { rand } from '../rng';
+import { PLACE_DE } from './names_de';
 
 /** gf: given + family ("Rodrigo de Mendoza"); fg: family first ("Hunyadi János", "Evrenosoğlu Ali");
  *  ibn: given + ibn + father's name ("Yusuf ibn Ali"); pat: given + father's name ("Dawit Yeshaq"); g: given only. */
@@ -217,33 +218,104 @@ export const EPITHET_DE: Record<string, string> = {
   Mad: 'der Wahnsinnige', 'Well-Beloved': 'der Vielgeliebte', Lawgiver: 'der Gesetzgeber', Thunderbolt: 'der Blitz', Saint: 'der Heilige', Holy: 'der Heilige', Short: 'der Kurze',
   Tall: 'der Lange', Hunchback: 'der Bucklige', Learned: 'der Gelehrte', Valiant: 'der Tapfere', Generous: 'der Freigebige', Severe: 'der Strenge', Gentle: 'der Sanfte',
   Unlucky: 'der Unglückliche', Fortunate: 'der Glückliche', Builder: 'der Erbauer', Father: 'der Vater', Hammer: 'der Hammer', Terrible: 'der Schreckliche',
+  Avenger: 'der Rächer', Kind: 'der Gütige', Brandenburger: 'der Brandenburger',
 };
 /** Titles after the name ("Maurice FitzGerald, 4th Earl of Kildare") in German. */
 const TITLE_DE: Record<string, string> = {
   Earl: 'Graf', Count: 'Graf', Countess: 'Gräfin', Duke: 'Herzog', Duchess: 'Herzogin', Bishop: 'Bischof', 'Prince-Bishop': 'Fürstbischof', Archbishop: 'Erzbischof',
   Guardian: 'Hüter', King: 'König', Queen: 'Königin', Prince: 'Prinz', Princess: 'Prinzessin', Margrave: 'Markgraf', Lord: 'Herr', Lady: 'Herrin', Emperor: 'Kaiser',
   Empress: 'Kaiserin', Marshal: 'Marschall', Constable: 'Konnetabel', Abbot: 'Abt', Master: 'Meister', Grand: 'Groß', and: 'und',
+  Infante: 'Infant', Infanta: 'Infantin',
 };
-const NOUN = new Set(['Roman', 'Monk', 'Mathematician', 'Babymaker', 'Conqueror', 'Lion', 'Navigator', 'Lawgiver', 'Thunderbolt', 'Builder', 'Father', 'Hammer']);
+const NOUN = new Set(['Roman', 'Monk', 'Mathematician', 'Babymaker', 'Conqueror', 'Lion', 'Navigator', 'Lawgiver', 'Thunderbolt', 'Builder', 'Father', 'Hammer', 'Avenger', 'Brandenburger', 'Black Prince']);
+// ---- fix-people: the German forms German historians use for the given names of kings, queens and princes ("Eduard
+// III.", "Karl IV.", "Johann II. der Gute", "Peter I. der Grausame"), as the German summaries of the realms write them.
+// Only names written in the style of a royal person are changed (a regnal number, an epithet, a title after a comma or
+// "of" before a place): a courtier from the name pools ("John Percy") keeps the name of his people.
+const GIVEN_DE_M: Record<string, string> = {
+  Edward: 'Eduard', John: 'Johann', Jean: 'Johann', Juan: 'Johann', João: 'Johann', Joan: 'Johann', Charles: 'Karl', Carlos: 'Karl', Henry: 'Heinrich',
+  Henri: 'Heinrich', Enrique: 'Heinrich', Henrique: 'Heinrich', Pedro: 'Peter', Pere: 'Peter', Pierre: 'Peter', Louis: 'Ludwig', Lluís: 'Ludwig',
+  Casimir: 'Kasimir', Frederick: 'Friedrich', Philip: 'Philipp', Philippe: 'Philipp', Felipe: 'Philipp', William: 'Wilhelm', Guillaume: 'Wilhelm',
+  James: 'Jakob', Jaume: 'Jakob', Jacques: 'Jakob', Alfonso: 'Alfons', Afonso: 'Alfons', Fernando: 'Ferdinand', Ferran: 'Ferdinand',
+  Valdemar: 'Waldemar', Christopher: 'Christoph', Eric: 'Erich', Stephen: 'Stephan', Andrew: 'Andreas', Albert: 'Albrecht', Wenceslaus: 'Wenzel',
+  Amédée: 'Amadeus', Hugh: 'Hugo', Hugues: 'Hugo', Rupert: 'Ruprecht', Nicholas: 'Nikolaus', Conrad: 'Konrad', Geoffrey: 'Gottfried',
+  Godfrey: 'Gottfried', Constantine: 'Konstantin', George: 'Georg', Matthew: 'Matthias', Rudolph: 'Rudolf', Ivan: 'Iwan', Theobald: 'Theobald', Thibaut: 'Theobald',
+  Ernest: 'Ernst', Baldwin: 'Balduin', Reinald: 'Rainald', Innocent: 'Innozenz', Clement: 'Clemens', Gregory: 'Gregor', Benedict: 'Benedikt', Boniface: 'Bonifatius',
+};
+const GIVEN_DE_F: Record<string, string> = {
+  Joan: 'Johanna', Joanna: 'Johanna', Jeanne: 'Johanna', Juana: 'Johanna', Mary: 'Maria', Marie: 'Maria', Margaret: 'Margarete', Marguerite: 'Margarete',
+  Elizabeth: 'Elisabeth', Isabelle: 'Isabella', Isabel: 'Isabella', Catherine: 'Katharina', Blanche: 'Blanka', Eleanor: 'Eleonore', Beatrice: 'Beatrix',
+  Constance: 'Konstanze', Anne: 'Anna', Matilda: 'Mathilde', Bonne: 'Bona', Helvig: 'Hedwig',
+};
+/** Places after "of" in a name or title that are not in the list of place names, and the lands German writes with an
+ *  article ("Herzog der Normandie"). */
+const OF_DE: Record<string, string> = { France: 'Frankreich', Gaunt: 'Gent', Slavonia: 'Slawonien', Taranto: 'Tarent', Opava: 'Troppau', Antioch: 'Antiochia',
+  Saxe: 'Sachsen', Achaea: 'Achaia', Guelders: 'Geldern', Meissen: 'Meißen', Hormuz: 'Hormus' };
+const FEM_LAND = new Set(['Normandie', 'Bretagne', 'Champagne', 'Picardie', 'Gascogne', 'Provence', 'Lombardei', 'Toskana', 'Walachei', 'Moldau', 'Steiermark', 'Pfalz', 'Lausitz', 'Guyenne']);
+const TITLE_WORD = /(Herzog|Herzogin|Graf|Gräfin|König|Königin|Prinz|Prinzessin|Markgraf|Fürst|Hüter|Infant|Infantin|Dauphin|Bischof|Fürstbischof|Erzbischof) $/;
+/** French epithets ("Jean II le Bon"). */
+const EPITHET_FR: Record<string, string> = { Bon: 'der Gute', Mauvais: 'der Böse', Hardi: 'der Kühne', Sage: 'der Weise', Bel: 'der Schöne', Long: 'der Lange', Victorieux: 'der Siegreiche', Grand: 'der Große', Jeune: 'der Junge', Vieux: 'der Alte' };
+const placeWord = (w: string) => w.split('-').map((x) => OF_DE[x] ?? PLACE_DE[x] ?? x).join('-');
+/** "of Bohemia" → "von Böhmen"; a land German names with its article: "Herzog der Normandie", "Anna von der Walachei". */
+const placeDe = (w: string, afterTitle: boolean) => { const d = OF_DE[w] ?? PLACE_DE[w] ?? placeWord(w); return FEM_LAND.has(d) ? `${afterTitle ? '' : 'von '}der ${d}` : `von ${d}`; };
+/** Titles and offices that stand for a ruler whose name is not known, and a few set names. */
+const STYLE_DE: [RegExp, string][] = [
+  [/^Venetian Count and Great Council$/, 'Venezianischer Graf und Großer Rat'], [/^Council of sachems$/, 'Rat der Sachems'], [/\(patrician council\)/, '(Patrizierrat)'],
+  [/^Council of the /, 'Rat der '], [/^Council of /, 'Rat of '], [/^(.+) Council$/, 'Rat of $1'], [/^Veche of /, 'Wetsche of '], [/^Consul of /, 'Konsul of '], [/^King of /, 'König of '],
+  [/^Chief of the /, 'Häuptling der '], [/ of the Cocom/, ' der Cocom'], [/^Paramount chief/, 'Oberhäuptling'], [/^Priest-chief/, 'Priesterhäuptling'],
+  [/\(name unrecorded\)/, '(Name nicht überliefert)'], [/^The Signoria \(Priors and Gonfalonier of Justice\)$/, 'Die Signoria (Prioren und Gonfaloniere der Gerechtigkeit)'],
+  [/ of the Tower$/, ' vom Tower'],
+];
 
-/** A name as shown in a language: in German, regnal numbers take a full stop ("Pedro I."), English epithets are
- *  translated ("der Grausame", "die Große") and "of" before a place becomes "von". English is returned unchanged. */
+/** A name as shown in a language: in German, regnal numbers take a full stop ("Peter I."), English and French epithets
+ *  are translated ("der Grausame", "die Große", "der Gute"), the given names of royal persons take their German form
+ *  ("Eduard", "Karl", "Johanna") and "of" before a place becomes "von" (or "der" before a land German writes with an
+ *  article: "Herzog der Normandie"). English is returned unchanged. */
 export function localName(name: string | undefined | null, lang: 'en' | 'de', female = false): string {
   if (!name) return '';
   if (lang !== 'de') return name;
   let s = name;
-  // epithet at the end: "X the Cruel", "X, the Magnificent"
+  const royal = /\b[IVXL]+\b/.test(s) || / (of|the) \p{Lu}/u.test(s) || s.includes(', ') || s.includes('(the ');
+  for (const [re, de] of STYLE_DE) s = s.replace(re, de);
+  const fem = (de: string, ep: string) => (female && !NOUN.has(ep) ? de.replace(/^der /, 'die ') : de);
+  // an epithet in brackets: "Edward of Woodstock (the Black Prince)" → "(der Schwarze Prinz)"
+  s = s.replace(/\(the ([A-Z][a-z]+(?: [A-Z][a-z]+)?)\)/, (m, ep: string) => {
+    if (ep === 'Black Prince') return '(der Schwarze Prinz)';
+    const de = EPITHET_DE[ep] ?? (/er$/.test(ep) ? `der ${ep}` : ''); return de ? `(${fem(de, ep)})` : m;
+  });
+  // epithet at the end: "X the Cruel", "X, the Magnificent", "Jean II le Bon"
   s = s.replace(/(,?) the ([A-Z][a-z]+(?:-[A-Z][a-z]+)?)$/, (m, comma: string, ep: string) => {
     const de = EPITHET_DE[ep]; if (!de) return m;
-    return `${comma} ${female && !NOUN.has(ep) ? de.replace(/^der /, 'die ') : de}`;
+    return `${comma} ${fem(de, ep)}`;
   });
+  s = s.replace(/ le ([A-Z][a-z]+)$/, (m, ep: string) => { const de = EPITHET_FR[ep]; return de ? ` ${fem(de, ep)}` : m; });
   s = s.replace(/ of Iron$/, ' der Eiserne');
+  if (royal) {
+    // the given names before the first title, place or number: "John Henry, Margrave of Moravia" → "Johann Heinrich, …"
+    const table = female ? GIVEN_DE_F : GIVEN_DE_M;
+    s = s.replace(/^((?:\p{Lu}[\p{L}]+ ?)+?)(?=$| [IVXL]+\b| of | de | the | der | die | vom |[,(])/u, (head: string) => head.split(' ').map((w) => table[w] ?? w).join(' '));
+    // "Philippe de Navarre" → "Philipp von Navarra" (a royal style only; "Jean de Craon" keeps his family name)
+    s = s.replace(/ de (\p{Lu}[\p{L}-]+)/gu, (_m, w: string) => ` ${placeDe(w, false)}`);
+  }
   // regnal numbers: "Pedro I" → "Pedro I."
   s = s.replace(/(\p{Lu}[\p{L}'’-]*) ([IVXL]+)(?=$|[\s,])/gu, (_m, a: string, num: string) => `${a} ${num}.`);
   // titles after a comma: "Dauphin and Duke" → "Dauphin und Herzog", "4th Earl" → "4. Graf"
   const k = s.indexOf(', ');
   if (k > 0) s = s.slice(0, k) + s.slice(k).replace(/\b(\d+)(?:st|nd|rd|th)\b/g, '$1.').replace(/[A-Za-z-]+/g, (wd) => TITLE_DE[wd] ?? wd);
-  // "William of Namur" → "William von Namur" (not "of the …")
-  s = s.replace(/ of (?!the )(\p{Lu})/gu, ' von $1');
+  // "William of Namur" → "Wilhelm von Namur", "Duke of Normandy" → "Herzog der Normandie" (not "of the …")
+  s = s.replace(/ of (?!the )(\p{Lu}[\p{L}-]*)/gu, (_m, w: string, at: number, all: string) => ` ${placeDe(w, TITLE_WORD.test(all.slice(0, at + 1)))}`);
   return s;
+}
+
+/** A house as German writes it ("Luxembourg" → "Luxemburg", "Burgundy-Ivrea (Anscarid)" → "Burgund-Ivrea (Anskarier)"). */
+const HOUSE_NOTE_DE: Record<string, string> = { Anscarid: 'Anskarier', Portuguese: 'portugiesische Linie', 'patrician council': 'Patrizierrat' };
+const HOUSE_WORD_DE: Record<string, string> = { Griffins: 'Greifen', Capetian: 'Kapetingisches', Kings: 'Könige' };
+const LINE_DE: Record<string, string> = { Franconian: 'fränkische', Swabian: 'schwäbische', Ottonian: 'ottonische', Masovian: 'masowische', Palatine: 'pfälzische', Sicilian: 'sizilianische' };
+export function localHouse(house: string | undefined | null, lang: 'en' | 'de'): string {
+  if (!house) return '';
+  if (lang !== 'de') return house;
+  return house.replace(/\(([^)]+) line\)/, (_m, x: string) => (LINE_DE[x] ? `(${LINE_DE[x]} Linie)` : `(Linie ${x})`))
+    .replace(/\(([^)]+)\)/, (m, x: string) => `(${HOUSE_NOTE_DE[x] ?? x})`)
+    .replace(/^Council of the /, 'Rat der ').replace(/House of /g, 'Haus ').replace(/ of /g, ' von ')
+    .replace(/\p{Lu}[\p{L}]+/gu, (w) => HOUSE_WORD_DE[w] ?? OF_DE[w] ?? (/sches$/.test(PLACE_DE[w] ?? '') ? w : PLACE_DE[w] ?? w));
 }
