@@ -18,7 +18,7 @@ export function LedgerTab() {
   const cols: Record<LKind, [string, string, (r: any) => any][]> = {
     nations: [['name', t('realm'), (r) => L(r.name)], ['score', t('score'), (r) => r.score], ['dev', t('development'), (r) => r.dev], ['locs', t('locations'), (r) => r.locs], ['pop', t('population'), (r) => r.pop],
       ['army', t('army'), (r) => r.army], ['navy', t('fleet'), (r) => r.navy], ['income', t('income'), (r) => r.income], ['tech', t('technology'), (r) => r.tech], ['prestige', t('prestige'), (r) => r.prestige]],
-    markets: [['name', t('market'), (r) => r.name], ['owner', t('owner'), (r) => L(nations.value[r.owner]?.short) || '—'], ['priceIndex', t('price_index'), (r) => r.priceIndex], ['top', t('main_goods'), (r) => (r.top ?? []).map((g: any) => L(g)).join(', ')]],
+    markets: [['name', t('market'), (r) => L(r.name)], ['owner', t('owner'), (r) => L(nations.value[r.owner]?.short) || '—'], ['priceIndex', t('price_index'), (r) => r.priceIndex], ['top', t('main_goods'), (r) => (r.top ?? []).map((g: any) => L(g)).join(', ')]],
     wars: [['name', t('war'), (r) => L(r.name)], ['att', t('attackers'), (r) => r.att.length], ['def', t('defenders'), (r) => r.def.length], ['score', t('war_score'), (r) => r.score]],
   };
   const cs = cols[kind];
@@ -29,16 +29,21 @@ export function LedgerTab() {
   const brief: Record<string, string> = kind === 'nations' ? { dev: t('x_ledger_col_dev'), pop: t('x_ledger_col_pop'), income: t('x_ledger_col_income'), tech: t('x_ledger_col_tech') } : {};
   const head = (k: string, label: string) => { const h = hint(k); const shown = brief[k] ?? label; const th = <th title={shown !== label ? label : undefined} class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{shown}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</th>;
     return h ? <Tip tag="th" content={<div><TipHead name={label} hint={h} /></div>} class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{shown}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</Tip> : th; };
+  // the realms table numbers each realm by its place by score among all realms of the world (the victory panel's
+  // place), whatever the sort; realms we have not met leave gaps, and a note says how many are left out
+  const ranked = kind === 'nations' && !!rows?.length && rows[0].rank !== undefined;
+  const unmet = ranked ? Math.max(0, (rows![0].of ?? rows!.length) - rows!.length) : 0;
   return <div class="tab-ledger">
     <Tabs tabs={[['nations', t('realms')], ['markets', t('markets')], ['wars', t('wars')]]} value={kind} onChange={(k) => { setKind(k); setSort({ k: k === 'markets' ? 'priceIndex' : 'score', d: -1 }); }} />
+    {unmet > 0 && <div class="muted small ledger-unmet">{(unmet === 1 ? t('x_ledger_unmet_one') : t('x_ledger_unmet')).replace('{n}', num(unmet))}</div>}
     {!rows ? <Empty>{t('loading')}…</Empty> : <div class="tbl-wrap"><table class="tbl ledger">
-      <thead><tr><th class="r">#</th>{cs.map(([k, l]) => head(k, l))}</tr></thead>
-      <tbody>{data.slice(0, 250).map((r, i) => kind === 'nations' ? <Tip tag="tr" class={r.id === pid ? 'me' : ''} content={() => <LedgerRowTip r={r} rank={i + 1} />}>
-        <td class="r muted">{i + 1}</td>
+      <thead><tr>{ranked ? <Tip tag="th" class="r" content={<div><TipHead name={t('x_ledger_rank')} hint={t('x_ledger_rank_hint')} /></div>}>#</Tip> : <th class="r">#</th>}{cs.map(([k, l]) => head(k, l))}</tr></thead>
+      <tbody>{data.slice(0, 250).map((r, i) => kind === 'nations' ? <Tip tag="tr" class={r.id === pid ? 'me' : ''} content={() => <LedgerRowTip r={r} rank={r.rank ?? i + 1} />}>
+        <td class="r muted">{r.rank ?? i + 1}</td>
         <td><NLink id={r.id} size={16} /></td><td class="r">{num(r.score)}</td><td class="r">{num(r.dev)}</td><td class="r">{r.locs}</td><td class="r">{num(r.pop)}</td><td class="r">{num(r.army)}</td><td class="r">{num(r.navy)}</td><td class="r">{num(r.income)}</td><td class="r">{r.tech}</td><td class="r">{num(r.prestige)}</td>
       </Tip> : <tr>
         <td class="r muted">{i + 1}</td>
-        {kind === 'markets' && <><td>{r.name}</td><td>{r.owner >= 0 ? <NLink id={r.owner} size={14} /> : '—'}</td><td class={`r ${r.priceIndex > 1.2 ? 'neg' : r.priceIndex < 0.85 ? 'pos' : ''}`}><Tip content={<div><TipHead name={t('price_index')} value={num(r.priceIndex, 2)} hint={t('x_col_markets_priceIndex')} /></div>}>{num(r.priceIndex, 2)}</Tip></td><td class="small">{(r.top ?? []).map((g: any) => L(g)).join(', ')}</td></>}
+        {kind === 'markets' && <><td>{L(r.name)}</td><td>{r.owner >= 0 ? <NLink id={r.owner} size={14} /> : '—'}</td><td class={`r ${r.priceIndex > 1.2 ? 'neg' : r.priceIndex < 0.85 ? 'pos' : ''}`}><Tip content={<div><TipHead name={t('price_index')} value={num(r.priceIndex, 2)} hint={t('x_col_markets_priceIndex')} /></div>}>{num(r.priceIndex, 2)}</Tip></td><td class="small">{(r.top ?? []).map((g: any) => L(g)).join(', ')}</td></>}
         {kind === 'wars' && <><td><a class="lk" onClick={() => (r.att.includes(pid) || r.def.includes(pid)) && openPanel('peace', { war: r.id })}>{L(r.name)}</a></td><td><NList ids={r.att.slice(0, 5)} size={14} /></td><td><NList ids={r.def.slice(0, 5)} size={14} /></td><td class={`r ${r.score >= 0 ? 'pos' : 'neg'}`}><Tip content={<div><TipHead name={t('war_score')} value={signed(r.score)} hint={t('x_col_wars_score')} />{r.parts && <Parts rows={Object.entries(r.parts).map(([k, v]) => [`ws_${k}`, v as number])} />}</div>}>{signed(r.score)}</Tip></td></>}
       </tr>)}</tbody>
     </table></div>}

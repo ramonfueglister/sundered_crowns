@@ -174,6 +174,32 @@ describe('fog of war: ledger, chronicle and ranking speak only of realms met', (
     expect(fogAnswer(s, w, -1, q, all)).toBe(all);
   });
 
+  it('the ledger numbers Portugal by the same place as the victory panel, gaps for realms not met', () => {
+    const q = { q: 'ledger' as const, kind: 'nations' as const };
+    const shown: any[] = fogAnswer(s, w, P, q, answer(s, w, P, q));
+    const vq = { q: 'victory' as const };
+    const vic = fogAnswer(s, w, P, vq, answer(s, w, P, vq as any));
+    const me = shown.find((r) => r.id === P)!;
+    expect(me.rank).toBe(vic.rank);
+    expect(me.of).toBe(vic.ranked);
+    const alive = s.nations.filter((n) => n.alive);
+    for (const r of shown) expect(r.rank).toBe(1 + alive.filter((n) => n.score > r.score).length);
+    // the far realms above us are not listed, but they keep their places: our row number is not our place
+    const above = alive.filter((n) => n.score > s.nations[P].score && met[n.id] !== 1);
+    const row = [...shown].sort((a, b) => b.score - a.score).findIndex((r) => r.id === P) + 1;
+    expect(row + above.length).toBe(me.rank);
+    expect(above.length, 'no unmet realm stands above Portugal here, so the test shows nothing').toBeGreaterThan(0);
+  });
+
+  it('the ledger names the markets in both languages, in German as the map does', () => {
+    const qm = { q: 'ledger' as const, kind: 'markets' as const };
+    const mk: any[] = answer(s, w, P, qm);
+    const by = (en: string) => mk.find((r) => r.name.en === en)!.name.de;
+    expect(by('Cologne')).toBe('Köln'); expect(by('Seville')).toBe('Sevilla'); expect(by('Venice')).toBe('Venedig');
+    expect(by('Champagne Fairs (Troyes)')).toBe('Champagnemessen (Troyes)');
+    for (const r of mk) { const m = s.markets[r.id]; if (m.name === w.names[m.hub]) expect(r.name.de).toBe(w.namesDe[m.hub]); }
+  });
+
   it('the chronicle shows world news and realms met; a far realm\'s news only once it names a realm met', () => {
     const mali = nid(s, 'mali'), C = nid(s, 'castile');
     const list: ChronEntry[] = [

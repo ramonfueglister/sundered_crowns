@@ -968,15 +968,19 @@ const S: Record<string, [string, string]> = {
   // ---- fix-map
   entry_one: ['entry', 'Eintrag'],
   x_maptip_nobody: ['Nobody', 'Niemand'], x_maptip_held_by: ['Occupied by', 'Besetzt von'],
-  x_ledger_col_dev: ['Dev.', 'Entw.'], x_ledger_col_pop: ['Pop.', 'Bevölk.'], x_ledger_col_income: ['Income', 'Einn.'], x_ledger_col_tech: ['Tech', 'Wissen'],
-  x_ledger_reckoned: ['reckoned', 'gewertet am'], x_ledger_today: ['Today', 'Heute'],
+  x_ledger_col_dev: ['Dev.', 'Entw.'], x_ledger_col_pop: ['Pop.', 'Bevölk.'], x_ledger_col_income: ['Income', 'Einn.'], x_ledger_col_tech: ['Learn.', 'Gelehrs.'],
+  x_ledger_reckoned: ['reckoned on', 'gewertet am'], x_ledger_today: ['Today', 'Heute'],
   x_quit_confirm: ['Leave for the main menu? Whatever happened since your last save will be lost.', 'Zum Hauptmenü? Ungespeicherter Fortschritt geht verloren.'],
   x_quit_online: ['Leave for the main menu? The world goes on; you can return to it from the main menu.', 'Zum Hauptmenü? Die Welt läuft weiter; über das Hauptmenü kehrst du zurück.'],
   x_quit_save: ['Save and leave', 'Speichern und beenden'], x_quit_nosave: ['Leave without saving', 'Ohne Speichern beenden'],
   x_vic_info_only: ['not chosen: for information only', 'nicht gewählt: nur zur Information'],
-  x_vic_rank: ['Our place by score', 'Unser Platz nach Wertung'], x_vic_rank_hint: ['Among all realms, by the score reckoned on the first of the month (as in the ledger).', 'Unter allen Reichen, nach der am Monatsersten berechneten Wertung (wie im Register).'],
+  x_vic_rank: ['Our place by score', 'Unser Platz nach Wertung'], x_vic_rank_hint: ['Among all realms of the world, also those we have not met, by the score reckoned on the first of the month. The ledger numbers the realms the same way.', 'Unter allen Reichen der Welt, auch den uns unbekannten, nach der am Monatsersten berechneten Wertung. Das Register zählt die Plätze ebenso.'],
   x_vic_trend: ['How our score moved', 'Wie sich unsere Wertung bewegt hat'], x_vic_trend_hint: ['Against the earliest measurement of the last twelve months (from the start of the game on).', 'Gegenüber der frühesten Messung der letzten zwölf Monate (vom Spielbeginn an).'], x_vic_since: ['since', 'seit'],
   x_ledger_score_month: ['The score is reckoned on the first of each month, and the ranking and the score victory use that figure. The parts above are today\'s.', 'Die Wertung wird am Monatsersten berechnet; Rang und Punktesieg rechnen mit diesem Stand. Die Teile oben zeigen den heutigen.'],
+  x_ledger_rank: ['Place by score', 'Platz nach Wertung'],
+  x_ledger_rank_hint: ['Among all realms of the world, also those we have not met, as the victory panel counts it. Realms we have not met are not listed, so their places are missing.', 'Unter allen Reichen der Welt, auch den uns unbekannten, wie bei den Siegbedingungen gezählt. Uns unbekannte Reiche stehen nicht in der Liste; ihre Plätze fehlen deshalb.'],
+  x_ledger_unmet: ['{n} realms we have not met are not listed; the places count them too.', '{n} uns unbekannte Reiche stehen nicht in der Liste; die Plätze zählen sie mit.'],
+  x_ledger_unmet_one: ['1 realm we have not met is not listed; the places count it too.', '1 uns unbekanntes Reich steht nicht in der Liste; die Plätze zählen es mit.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

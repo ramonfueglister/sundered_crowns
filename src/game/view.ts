@@ -35,6 +35,7 @@ import { declareView, armyView, battleView, battleList, warView, locWar, armySup
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { knownOf, fogColors } from './fog';
+import { deName } from '../sim/content/names_de';
 import { regionOf } from '../sim/systems/explore';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView } from '../sim/systems/dynasty';
@@ -573,6 +574,12 @@ function realmDetail(s: GameState, w: World, player: number) {
   };
 }
 
+/** A market's name in both languages: the German form of its hub where the market bears the town's name, else its own. */
+const MARKET_DE: Record<string, string> = { 'Champagne Fairs (Troyes)': 'Champagnemessen (Troyes)', 'Hajji Tarkhan (Astrakhan)': 'Hadschi Tarchan (Astrachan)' };
+function marketName(w: World, m: { name: string; hub: number }): I18n {
+  return { en: m.name, de: MARKET_DE[m.name] ?? (m.name === w.names[m.hub] && w.namesDe[m.hub] ? w.namesDe[m.hub] : deName(m.name)) };
+}
+
 function ledger(s: GameState, w: World, kind: string) {
   if (kind === 'nations') {
     const pop = new Float64Array(s.nations.length), locs = new Int32Array(s.nations.length);
@@ -580,9 +587,14 @@ function ledger(s: GameState, w: World, kind: string) {
     const army = new Float64Array(s.nations.length), navy = new Float64Array(s.nations.length);
     for (const a of s.armies) if (!a.rebels) (a.fleet ? navy : army)[a.owner] += armyMen(a);
     const parts = scorePartsAll(s, w);
-    return s.nations.filter((n) => n.alive).map((n) => ({ id: n.id, name: n.short, score: n.score, scoreParts: parts[n.id], techs: n.tech, incomeTop: Object.entries(n.income).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 4), dev: nationDev(s, n.id), locs: locs[n.id], pop: pop[n.id], army: army[n.id], navy: navy[n.id], income: sumObj(n.income), tech: n.tech.reduce((p, x) => p + x, 0), prestige: n.prestige }));
+    // each realm's place by score among all living realms, as the victory panel counts it (endview.ts): the fog of war
+    // leaves out the rows of realms not met (fog.ts), and the places of the others stay those of the whole world
+    const alive = s.nations.filter((n) => n.alive);
+    const scores = alive.map((n) => n.score).sort((a, b) => b - a);
+    const rankOf = (sc: number) => { let lo = 0, hi = scores.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (scores[mid] > sc) lo = mid + 1; else hi = mid; } return lo + 1; };
+    return alive.map((n) => ({ id: n.id, name: n.short, score: n.score, rank: rankOf(n.score), of: alive.length, scoreParts: parts[n.id], techs: n.tech, incomeTop: Object.entries(n.income).filter(([, v]) => v > 0.05).sort((a, b) => b[1] - a[1]).slice(0, 4), dev: nationDev(s, n.id), locs: locs[n.id], pop: pop[n.id], army: army[n.id], navy: navy[n.id], income: sumObj(n.income), tech: n.tech.reduce((p, x) => p + x, 0), prestige: n.prestige }));
   }
-  if (kind === 'markets') return s.markets.map((m) => ({ id: m.id, name: m.name, owner: m.owner, priceIndex: m.priceIndex, top: Array.from({ length: G }, (_, k) => k).sort((a, b) => m.supply[b] * m.price[b] - m.supply[a] * m.price[a]).slice(0, 4).map((k) => GOODS[k].name) }));
+  if (kind === 'markets') return s.markets.map((m) => ({ id: m.id, name: marketName(w, m), owner: m.owner, priceIndex: m.priceIndex, top: Array.from({ length: G }, (_, k) => k).sort((a, b) => m.supply[b] * m.price[b] - m.supply[a] * m.price[a]).slice(0, 4).map((k) => GOODS[k].name) }));
   if (kind === 'wars') return warsView(s);
   return null;
 }

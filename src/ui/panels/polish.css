@@ -112,3 +112,5 @@
 .vic-rank { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 4px 0 2px; }
 .vic-row.info { border-style: dashed; background: rgba(255, 250, 235, .18); }
 .vic-row.info .bar-wrap { opacity: .75; }
+/* fix-map: the ledger's note on the realms it leaves out (records.tsx) */
+.ledger-unmet { margin: 2px 0 4px; }
