@@ -910,6 +910,46 @@ export function retoolWorkshops(s: GameState, w: World, full = false) {
   }
 }
 
+/** Per market, what the last month of the warm-up brought to market (economy.init): the supply, the demand and the
+ *  demand by need tier before that month's clearing. Read once, by estimateTradeMonth, when a game is set up. */
+const WARM = new WeakMap<Market, { s: Float64Array; d: Float64Array; t?: Float64Array }>();
+const TRADE_KEYS = ['trade', 'company', 'tariffs'];
+
+/** The first month's trade, estimated when a game is set up (setup.ts, after every system has set up its merchants,
+ *  fleets and treaties): the clearing of the markets is run once more on copies of the markets, with the goods the
+ *  warm-up's last month brought to market and the prices that month left. The warm-up's own trade was cleared on the
+ *  prices of the month before, when prices had hardly begun to differ between markets, and falls far short of what
+ *  the first month will pay. The realms' trade, company and tariff income are replaced by those of the dry run; each
+ *  market keeps the dry run's trade results (trade value, the shares paid out and steered, what the tariffs kept out),
+ *  so the Trade panel shows the month the ledger estimates. Prices, stocks, supply, demand and the flows of goods stay
+ *  as the warm-up left them (they are what the goods tables add up). Returns false when there is no warm-up to use. */
+export function estimateTradeMonth(s: GameState, w: World): boolean {
+  const ms = s.markets;
+  if (!ms.length || !ms.every((m) => WARM.has(m))) return false;
+  const orig = ms.slice(), flows = s.flows, acc = s.nations.map((n) => n.incomeAcc);
+  try {
+    for (let k = 0; k < ms.length; k++) {
+      const c = structuredClone(orig[k]), x = WARM.get(orig[k])!;
+      c.sAcc = x.s.slice(); c.dAcc = x.d.slice(); if (x.t) c.tierAcc = x.t.slice();
+      ms[k] = c;
+    }
+    for (const n of s.nations) n.incomeAcc = {};
+    clearMarkets(s, w);
+    for (const n of s.nations) {
+      if (!n.alive) continue;
+      for (const key of TRADE_KEYS) { const v = n.incomeAcc[key] ?? 0; if (v > 0) n.income[key] = v; else delete n.income[key]; }
+    }
+    for (let k = 0; k < ms.length; k++) {
+      const o = orig[k], c = ms[k];
+      o.tv = c.tv; o.tin = c.tin; o.paid = c.paid; o.steered = c.steered; o.own = c.own; o.tinFrom = c.tinFrom; o.deter = c.deter; o.deterBy = c.deterBy;
+    }
+  } finally {
+    for (let k = 0; k < ms.length; k++) { WARM.delete(orig[k]); ms[k] = orig[k]; }
+    s.flows = flows; s.nations.forEach((n, k) => { n.incomeAcc = acc[k]; });
+  }
+  return true;
+}
+
 export const economy: System = {
   id: 'economy',
   init(s, w) {
@@ -918,6 +958,8 @@ export const economy: System = {
     for (let k = 0; k < 2; k++) {
       PASS++;
       stepLocations(s, w, 0, w.L, 1, true);
+      // the goods the last warm-up month brought to market, kept for the estimate of the first month's trade
+      if (k === 1) for (const m of s.markets) WARM.set(m, { s: m.sAcc.slice(), d: m.dAcc.slice(), t: m.tierAcc?.slice() });
       clearMarkets(s, w);
       for (const n of s.nations) { n.treasury = 0; n.income = n.incomeAcc; n.incomeAcc = {}; n.expenseAcc = {}; }
       if (k === 0) retoolWorkshops(s, w, true);

@@ -8,7 +8,7 @@ import { dateToDay } from './calendar';
 import { SYSTEMS } from './systems';
 import { DAY_EPOCH, bump } from './ctx';
 import { upkeepCosts, fortPay } from './systems/military';
-import { courtCost, refreshLimits } from './systems/economy';
+import { courtCost, refreshLimits, estimateTradeMonth } from './systems/economy';
 import { treasurerGraft } from './systems/politics';
 import { subjectTribute } from './systems/diplomacy';
 
@@ -206,6 +206,8 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
  *  close (systems/economy.ts closeLedger), and the starting treasury is where those books start. */
 function estimateFirstMonth(s: GameState, w: World) {
   const live = s.nations.filter((n) => n.alive);
+  // trade, company profits and tariffs as the first month's clearing will pay them (the warm-up's fall far short)
+  estimateTradeMonth(s, w);
   for (const n of live) n.expense = {};
   // tribute first: it is part of the overlord's revenue, which the court's cost follows
   for (const n of live) {

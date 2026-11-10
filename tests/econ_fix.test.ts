@@ -302,3 +302,32 @@ describe('review: the books close after the month, and the realms read them righ
     expect(broke.size).toBeLessThanOrEqual(4);
   });
 });
+
+// ---- review fixes (fix-econ review): the AI and the close of the books; day-0 income; history; one-off lines
+describe('review: the books close after the month, and the realms read them right', () => {
+  it('a petty realm that has to borrow cuts its army\'s pay; AI bankruptcies in 14 months stay at the old count (4)', () => {
+    const s = fresh(); const b = nat(s, 'breslau_bishopric');
+    const broke = new Set<string>(); let cut = false;
+    for (let m = 1; m <= 14; m++) {
+      toNextClose(s);
+      if (m <= 3 && b.armyMaint < 1) cut = true;
+      for (const n of s.nations) if (n.alive && n.flags.bankrupt_until) broke.add(n.key);
+    }
+    expect(cut).toBe(true);
+    expect(broke.size).toBeLessThanOrEqual(4);
+  });
+  it('day 0 shows the first month\'s income within 15 %, trade and tariffs included, and the trade rows add up to it', () => {
+    const s = fresh(); const keys = ['venice', 'genoa', 'england', 'france'];
+    const day0 = keys.map((k) => { s.playerNations = [nat(s, k).id]; const p = playerView(s, nat(s, k)); return { inc: sum(p.incomeBreak), trade: p.incomeBreak.trade ?? 0 }; });
+    s.playerNations = [];
+    // the Trade panel's rows by market are the same month as the ledger's trade line
+    for (const k of keys) { const n = nat(s, k); expect(tradeEarnings(s, n.id).reduce((p, r) => p + r.total, 0)).toBeCloseTo((n.income.trade ?? 0) + (n.income.company ?? 0), 6); }
+    toNextClose(s);
+    keys.forEach((k, j) => {
+      const booked = sum(nat(s, k).income);
+      expect(Math.abs(day0[j].inc - booked) / booked).toBeLessThan(0.15);
+    });
+    // Venice lives off trade: the day-0 trade line is what the first clearing paid, not a fraction of it
+    expect(Math.abs(day0[0].trade - (nat(s, 'venice').income.trade ?? 0)) / (nat(s, 'venice').income.trade ?? 1)).toBeLessThan(0.25);
+  });
+});
