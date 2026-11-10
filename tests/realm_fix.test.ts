@@ -443,6 +443,23 @@ describe('situation actions that would do nothing are refused; the code of the B
       // the standing is the sum of its rows, to a tenth (the window's header and its breakdown agree)
       expect(sit.progress).toBeCloseTo(rows.reduce((p, r) => p + r[1], 0), 6);
       expect(Math.round(sit.progress * 10)).toBe(sit.progress * 10);
+      // each row is worked out from the whole number its label shows: Concord 19 x 0,3 = 5,7, not 5,8 from 19.4
+      {
+        const mag = estate(b, 'magnates'); const keepC = b.concord, keepI = mag.influence;
+        b.concord = 19.4; mag.influence = 40.4;
+        const r2 = kingsCodeRows(s, sit);
+        const de = (r: [any, number]) => (typeof r[0] === 'string' ? r[0] : r[0].de) as string;
+        const conc = r2.find((r) => de(r).startsWith('Eintracht'))!, inf = r2.find((r) => de(r).startsWith('Einfluss'))!;
+        expect(de(conc)).toContain('(19)'); expect(conc[1]).toBeCloseTo(5.7, 9);
+        expect(de(inf)).toContain('(40)'); expect(inf[1]).toBeCloseTo(-16, 9);
+        // mid-month the window's rows still add up to the standing that counts: the change waits for the next count
+        mag.influence = 60.4; expect(kingsCodeLevel(s, sit)).not.toBe(sit.progress);
+        const vm = answer(s, w, b.id, { q: 'situation', id: 'kings_code' } as any) as any;
+        const shown = vm.drivers.rows.reduce((p: number, r: [any, number]) => p + r[1], 0);
+        expect(shown).toBeCloseTo(vm.progress, 6);
+        expect(vm.drivers.rows.some((r: [any, number]) => /Noch nicht gezählt/.test(r[0].de))).toBe(true);
+        b.concord = keepC; mag.influence = keepI;
+      }
       const v = answer(s, w, b.id, { q: 'situation', id: 'kings_code' } as any) as any;
       expect(v.drivers.rows.length).toBe(rows.length);
       expect(v.actions.find((a: any) => a.id === 'back_lords').refusal).toBe('we cannot back the lords against ourselves');

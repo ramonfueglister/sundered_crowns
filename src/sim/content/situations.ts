@@ -929,13 +929,16 @@ export const CODE_CAP = 40;
 export function kingsCodeRows(s: GameState, sit: Situation): [string | I18n, number][] {
   const b = s.nations[sit.data.b]; if (!b) return [];
   const m = b.estates.find((e) => e.id === 'magnates');
+  // each row is worked out from the whole number its label shows, so the player can check it: Concord 19 x 0,3 = 5,7
+  const auth = Math.round(b.authority), conc = Math.round(b.concord);
   const rows: [string | I18n, number][] = [[{ en: 'The lords rejected the draft (1355)', de: 'Die Herren verwarfen den Entwurf (1355)' }, -5],
-    [{ en: `Authority of the crown (${Math.round(b.authority)}) / 10, at most 25`, de: `Autorität der Krone (${Math.round(b.authority)}) / 10, höchstens 25` }, +clamp(b.authority / 10, 0, 25).toFixed(1)],
-    [{ en: `Concord (${Math.round(b.concord)}) x 0.3`, de: `Eintracht (${Math.round(b.concord)}) x 0,3` }, +clamp(b.concord * 0.3, -15, 15).toFixed(1)]];
+    [{ en: `Authority of the crown (${auth}) / 10, at most 25`, de: `Autorität der Krone (${auth}) / 10, höchstens 25` }, +clamp(auth / 10, 0, 25).toFixed(1)],
+    [{ en: `Concord (${conc}) x 0.3`, de: `Eintracht (${conc}) x 0,3` }, +clamp(conc * 0.3, -15, 15).toFixed(1)]];
   if (s.empire.emperor === b.id) rows.push([{ en: 'The king wears the imperial crown', de: 'Der König trägt die Kaiserkrone' }, 10]);
   if (m) {
-    rows.push([{ en: `Influence of the magnates (${Math.round(m.influence)}) above 20, x 0.8`, de: `Einfluss der Magnaten (${Math.round(m.influence)}) über 20, x 0,8` }, -+(Math.max(0, m.influence - 20) * 0.8).toFixed(1)]);
-    rows.push([{ en: `Contentment of the magnates (${Math.round(m.contentment)}) against 50, x 0.5`, de: `Zufriedenheit der Magnaten (${Math.round(m.contentment)}) gegenüber 50, x 0,5` }, +((m.contentment - 50) * 0.5).toFixed(1)]);
+    const inf = Math.round(m.influence), cont = Math.round(m.contentment);
+    rows.push([{ en: `Influence of the magnates (${inf}) above 20, x 0.8`, de: `Einfluss der Magnaten (${inf}) über 20, x 0,8` }, -+(Math.max(0, inf - 20) * 0.8).toFixed(1)]);
+    rows.push([{ en: `Contentment of the magnates (${cont}) against 50, x 0.5`, de: `Zufriedenheit der Magnaten (${cont}) gegenüber 50, x 0,5` }, +((cont - 50) * 0.5).toFixed(1)]);
     if (m.privileges.length) rows.push([{ en: `Privileges of the magnates (${m.privileges.length}) x 10`, de: `Privilegien der Magnaten (${m.privileges.length}) x 10` }, -m.privileges.length * 10]);
   }
   if (sit.data.judges) rows.push([{ en: 'Royal judges in the land', de: 'Königliche Richter im Land' }, +sit.data.judges.toFixed(1)]);
@@ -944,6 +947,17 @@ export function kingsCodeRows(s: GameState, sit: Situation): [string | I18n, num
 }
 /** The code's standing: the sum of its rows, to a tenth as the rows are (the window's header, bar and breakdown agree). */
 export const kingsCodeLevel = (s: GameState, sit: Situation) => +clamp(kingsCodeRows(s, sit).reduce((p, r) => p + r[1], 0), -100, 100).toFixed(1);
+/** The rows the code's window shows, adding up to the standing that counts (sit.progress): today's rows, the cap at
+ *  -100/100 when they go past it, and what changed since the standing was last counted (on the first of the month or
+ *  at an action), which counts at the next count. */
+export function kingsCodeShownRows(s: GameState, sit: Situation): [string | I18n, number][] {
+  const rows = kingsCodeRows(s, sit);
+  const raw = +rows.reduce((p, r) => p + r[1], 0).toFixed(1), live = kingsCodeLevel(s, sit);
+  if (live !== raw) rows.push([{ en: 'Capped at -100 to 100', de: 'Begrenzt auf -100 bis 100' }, +(live - raw).toFixed(1)]);
+  const gap = +(sit.progress - live).toFixed(1);
+  if (gap) rows.push([{ en: 'Not yet counted: changes since the first of the month (they count at the next)', de: 'Noch nicht gezählt: Änderungen seit dem Monatsersten (sie zählen beim nächsten)' }, gap]);
+  return rows;
+}
 /** The end of the code: proclaimed (the crown's courts over the lords'), withdrawn (the lords keep their liberties) or
  *  lapsed. */
 export function finishCode(s: GameState, sit: Situation, outcome: 'proclaimed' | 'withdrawn' | 'lapsed') {
