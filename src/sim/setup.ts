@@ -7,8 +7,8 @@ import { seedRng, hash01 } from './rng';
 import { dateToDay } from './calendar';
 import { SYSTEMS } from './systems';
 import { DAY_EPOCH, bump } from './ctx';
-import { upkeepCosts, fortPay } from './systems/military';
-import { courtCost, refreshLimits, estimateTradeMonth } from './systems/economy';
+import { upkeepCosts, fortPay, sizeStartingFleets } from './systems/military';
+import { courtCost, refreshLimits, estimateTradeMonth, forgetWarmup } from './systems/economy';
 import { treasurerGraft } from './systems/politics';
 import { subjectTribute } from './systems/diplomacy';
 
@@ -206,8 +206,15 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
  *  close (systems/economy.ts closeLedger), and the starting treasury is where those books start. */
 function estimateFirstMonth(s: GameState, w: World) {
   const live = s.nations.filter((n) => n.alive);
-  // trade, company profits and tariffs as the first month's clearing will pay them (the warm-up's fall far short)
-  estimateTradeMonth(s, w);
+  // trade, company profits and tariffs as the first month's clearing will pay them (the warm-up's fall far short);
+  // merchant republics' fleets are sized to that revenue, and as their ships carried part of their trade power, the
+  // trade is estimated again with the fleets they keep, until no fleet is cut any more (twice or three times)
+  for (let k = 0; k < 4; k++) {
+    estimateTradeMonth(s, w);
+    if (k === 3 || !sizeStartingFleets(s, w)) break;
+    DAY_EPOCH.v++; bump(); // (the day's trade powers were taken with the fleets before)
+  }
+  forgetWarmup(s);
   for (const n of live) n.expense = {};
   // tribute first: it is part of the overlord's revenue, which the court's cost follows
   for (const n of live) {

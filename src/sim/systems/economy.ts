@@ -942,7 +942,8 @@ const TRADE_KEYS = ['trade', 'company', 'tariffs'];
  *  the first month will pay. The realms' trade, company and tariff income are replaced by those of the dry run; each
  *  market keeps the dry run's trade results (trade value, the shares paid out and steered, what the tariffs kept out),
  *  so the Trade panel shows the month the ledger estimates. Prices, stocks, supply, demand and the flows of goods stay
- *  as the warm-up left them (they are what the goods tables add up). Returns false when there is no warm-up to use. */
+ *  as the warm-up left them (they are what the goods tables add up). Returns false when there is no warm-up to use.
+ *  The set-up may estimate several times (the fleets are sized in between) and then calls forgetWarmup. */
 export function estimateTradeMonth(s: GameState, w: World): boolean {
   const ms = s.markets;
   if (!ms.length || !ms.every((m) => WARM.has(m))) return false;
@@ -964,11 +965,14 @@ export function estimateTradeMonth(s: GameState, w: World): boolean {
       o.tv = c.tv; o.tin = c.tin; o.paid = c.paid; o.steered = c.steered; o.own = c.own; o.tinFrom = c.tinFrom; o.deter = c.deter; o.deterBy = c.deterBy;
     }
   } finally {
-    for (let k = 0; k < ms.length; k++) { WARM.delete(orig[k]); ms[k] = orig[k]; }
+    for (let k = 0; k < ms.length; k++) ms[k] = orig[k];
     s.flows = flows; s.nations.forEach((n, k) => { n.incomeAcc = acc[k]; });
   }
   return true;
 }
+
+/** The warm-up's goods are of no use once the game is set up (setup.ts). */
+export function forgetWarmup(s: GameState) { for (const m of s.markets) WARM.delete(m); }
 
 export const economy: System = {
   id: 'economy',

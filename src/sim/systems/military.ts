@@ -1169,6 +1169,21 @@ export function upkeepCosts(s: GameState, w: World, book = false): { army: Float
   }
   return { army, navy };
 }
+/** The fleet a merchant republic starts with, sized to what it can pay: about a quarter of its revenue (the first
+ *  month's estimate, setup.ts), between 1 and 20 ships. Military init gives every coastal merchant republic 20, which
+ *  a small one (Ragusa, Chios, Caffa, Visby) pays several times its revenue for. Returns whether a fleet was cut (its
+ *  ships were part of the realm's trade power, so the revenue is estimated again: setup.ts). */
+export function sizeStartingFleets(s: GameState, w: World): boolean {
+  const { navy } = upkeepCosts(s, w); let cut = false;
+  for (const n of s.nations) {
+    if (!n.alive || n.gov !== 'merchant_republic' || navy[n.id] <= 0) continue;
+    const regs = s.armies.filter((a) => a.owner === n.id && a.fleet).flatMap((a) => a.regs);
+    const ships = regs.reduce((p, r) => p + r.men, 0); if (ships <= 0) continue;
+    const want = clamp(Math.round(0.25 * grossIncome(n) / (navy[n.id] / ships)), 1, 20);
+    if (want < ships) { cut = true; for (const r of regs) r.men = Math.max(1, Math.round(r.men * want / ships)); }
+  }
+  return cut;
+}
 /** Garrison pay of a realm's forts this month: the full pay, and what it pays — a realm pays its garrisons only what
  *  it can bear: beyond a third of last month's revenue the walls are left to the militia. */
 export function fortPay(s: GameState, n: Nation): { forts: number; full: number; pay: number } {

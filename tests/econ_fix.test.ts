@@ -124,6 +124,20 @@ describe('ships are priced like their crews', () => {
     expect(unitUpkeep(s, n, g, 1)).toBeLessThan(unitUpkeep(s, n, maa, 1000) * 0.25);
     expect(unitCost(s, n, g, 1)).toBeLessThan(unitCost(s, n, maa, 1000) * 0.4);
   });
+  it('a merchant republic starts with the fleet it can pay: about a quarter of its revenue, Venice\'s 20 ships the most', () => {
+    const s = fresh(); const ships = (n: Nation) => s.armies.filter((a) => a.owner === n.id && a.fleet).reduce((p, a) => p + a.regs.reduce((q, r) => q + r.men, 0), 0);
+    const keys = ['venice', 'genoa', 'ragusa', 'stralsund', 'chios', 'caffa', 'visby'];
+    const n0 = keys.map((k) => ships(nat(s, k)));
+    expect(n0[0]).toBe(20);
+    for (const k of n0) expect(k).toBeGreaterThanOrEqual(1);
+    expect(n0[1]).toBeLessThan(20); // Genoa earns less than Venice
+    toNextClose(s);
+    for (const k of ['venice', 'genoa', 'ragusa', 'stralsund']) {
+      const n = nat(s, k); const share = (n.expense.navy ?? 0) / grossIncome(n);
+      expect(share, k).toBeGreaterThan(0.15); expect(share, k).toBeLessThan(0.32);
+      expect(ships(n), k).toBeGreaterThan(0); // and the AI keeps it
+    }
+  });
   it('Venice\'s fleet of 1356 takes a fifth to a third of its revenue, not three times it', () => {
     const s = fresh('venice'); const n = nat(s, 'venice');
     const ships = s.armies.filter((a) => a.owner === n.id && a.fleet).reduce((p, a) => p + a.regs.reduce((q, r) => q + r.men, 0), 0);
@@ -319,8 +333,10 @@ describe('review: the books close after the month, and the realms read them righ
       const booked = sum(nat(s, k).income);
       expect(Math.abs(day0[j].inc - booked) / booked).toBeLessThan(0.15);
     });
-    // Venice lives off trade: the day-0 trade line is what the first clearing paid, not a fraction of it
-    expect(Math.abs(day0[0].trade - (nat(s, 'venice').income.trade ?? 0)) / (nat(s, 'venice').income.trade ?? 1)).toBeLessThan(0.25);
+    // Venice lives off trade: the day-0 trade line is the first clearing's, not a third of it as before (merchants the
+    // AI sends out during the month still move it)
+    const vt = nat(s, 'venice').income.trade ?? 0;
+    expect(day0[0].trade / vt).toBeGreaterThan(0.6); expect(day0[0].trade / vt).toBeLessThan(1.5);
   });
   it('the history point of 1 April is the chest after the month\'s loan and the month just closed', () => {
     const s = fresh('venice'); const n = nat(s, 'venice');
