@@ -14,53 +14,6 @@ import { chronicle, ownChronicle, addChronicle, setChronicle } from '../src/game
 import type { GameState, ChronEntry } from '../src/sim/types';
 
 vi.setConfig({ testTimeout: 180_000 });
-describe('map tooltip: place, owner, controller and the value the map mode colours by', () => {
-  const s = createGame(w, loadSetup(1356), loadHubs(), 777, { player: [] });
-  const P = nid(s, 'portugal');
-  s.playerNations = [P];
-  for (let i = 0; i < 3; i++) advanceDay(s, w);
-  const known = sightOf(s, w, P).known!;
-  const cap = s.nations[P].capital;
-  const tip = (loc: number, mode: string, good = -1) => { const q = { q: 'maptip', loc, mode, good, focus: P } as any; return fogAnswer(s, w, P, q, answer(s, w, P, q)); };
-
-  it('our capital: its name, its province, Portugal as owner and controller, the value of each mode', () => {
-    const d = tip(cap, 'development');
-    expect(d.id).toBe(cap); expect(d.name.en).toBe(w.names[cap]); expect(d.unknown).toBeFalsy();
-    expect(d.owner).toBe(P); expect(d.ctrl).toBe(P);
-    expect(d.province).toBe(w.provinces[w.provOf[cap]].name);
-    // the number shown is the number the mode colours by
-    expect(d.rows[0].v).toBe(s.loc.dev[cap]);
-    expect(tip(cap, 'control').rows[0].v).toBe(s.loc.control[cap]);
-    expect(tip(cap, 'unrest').rows[0].v).toBe(s.loc.unrest[cap]);
-    const trade = tip(cap, 'trade').rows[0].text;
-    expect(trade.en).toBe(w.names[s.markets[s.loc.market[cap]].hub] ?? s.markets[s.loc.market[cap]].name);
-    expect(tip(cap, 'diplomatic').rows[0].text.en).toBe('The selected realm');
-  });
-
-  it('an occupied place names its occupier apart from its owner', () => {
-    const C = nid(s, 'castile');
-    const l = Array.from({ length: w.L }, (_, i) => i).find((i) => s.loc.owner[i] === P && i !== cap)!;
-    const was = s.loc.ctrl[l]; s.loc.ctrl[l] = C;
-    try { const d = tip(l, 'development'); expect(d.owner).toBe(P); expect(d.ctrl).toBe(C); } finally { s.loc.ctrl[l] = was; }
-  });
-
-  it('unknown land tells its name and nothing else', () => {
-    const l = Array.from({ length: w.L }, (_, i) => i).find((i) => !known[i] && s.loc.owner[i] >= 0)!;
-    const d = tip(l, 'development');
-    expect(d.unknown).toBe(true); expect(d.name.en).toBe(w.names[l]);
-    expect(d.owner).toBe(-1); expect(d.ctrl).toBe(-1); expect(d.rows).toEqual([]);
-    // the observer (no realm) sees it whole
-    expect(answer(s, w, P, { q: 'maptip', loc: l, mode: 'development' } as any).owner).toBe(s.loc.owner[l]);
-  });
-
-  it('a sea zone is named by its sea in the player\'s language, without the zone number', () => {
-    const z = Array.from({ length: w.N - w.L }, (_, i) => w.L + i).find((j) => /^Atlantic Ocean \(North-East\) \d+$/.test(w.names[j] ?? ''))!;
-    const d = answer(s, w, P, { q: 'maptip', loc: z, mode: 'political' } as any);
-    expect(d.sea).toBe(true);
-    expect(d.name).toEqual({ en: 'Atlantic Ocean (North-East)', de: 'Atlantischer Ozean (Nordost)' });
-  });
-});
-
 const w = loadWorld();
 const nid = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!.id;
 
@@ -288,5 +241,52 @@ describe('keys: zoom and speed apart, every map mode and menu panel in the table
     for (const p of ['trade', 'explore', 'empire']) expect(KEY_INDEX[`panel_${p}`], p).toBeTruthy();
     expect(KEY_INDEX.panel_ledger.name[1]).toBe('Register');
     expect(keyFor('panel_trade')).toBe('');
+  });
+});
+
+describe('map tooltip: place, owner, controller and the value the map mode colours by', () => {
+  const s = createGame(w, loadSetup(1356), loadHubs(), 777, { player: [] });
+  const P = nid(s, 'portugal');
+  s.playerNations = [P];
+  for (let i = 0; i < 3; i++) advanceDay(s, w);
+  const known = sightOf(s, w, P).known!;
+  const cap = s.nations[P].capital;
+  const tip = (loc: number, mode: string, good = -1) => { const q = { q: 'maptip', loc, mode, good, focus: P } as any; return fogAnswer(s, w, P, q, answer(s, w, P, q)); };
+
+  it('our capital: its name, its province, Portugal as owner and controller, the value of each mode', () => {
+    const d = tip(cap, 'development');
+    expect(d.id).toBe(cap); expect(d.name.en).toBe(w.names[cap]); expect(d.unknown).toBeFalsy();
+    expect(d.owner).toBe(P); expect(d.ctrl).toBe(P);
+    expect(d.province).toBe(w.provinces[w.provOf[cap]].name);
+    // the number shown is the number the mode colours by
+    expect(d.rows[0].v).toBe(s.loc.dev[cap]);
+    expect(tip(cap, 'control').rows[0].v).toBe(s.loc.control[cap]);
+    expect(tip(cap, 'unrest').rows[0].v).toBe(s.loc.unrest[cap]);
+    const trade = tip(cap, 'trade').rows[0].text;
+    expect(trade.en).toBe(w.names[s.markets[s.loc.market[cap]].hub] ?? s.markets[s.loc.market[cap]].name);
+    expect(tip(cap, 'diplomatic').rows[0].text.en).toBe('The selected realm');
+  });
+
+  it('an occupied place names its occupier apart from its owner', () => {
+    const C = nid(s, 'castile');
+    const l = Array.from({ length: w.L }, (_, i) => i).find((i) => s.loc.owner[i] === P && i !== cap)!;
+    const was = s.loc.ctrl[l]; s.loc.ctrl[l] = C;
+    try { const d = tip(l, 'development'); expect(d.owner).toBe(P); expect(d.ctrl).toBe(C); } finally { s.loc.ctrl[l] = was; }
+  });
+
+  it('unknown land tells its name and nothing else', () => {
+    const l = Array.from({ length: w.L }, (_, i) => i).find((i) => !known[i] && s.loc.owner[i] >= 0)!;
+    const d = tip(l, 'development');
+    expect(d.unknown).toBe(true); expect(d.name.en).toBe(w.names[l]);
+    expect(d.owner).toBe(-1); expect(d.ctrl).toBe(-1); expect(d.rows).toEqual([]);
+    // the observer (no realm) sees it whole
+    expect(answer(s, w, P, { q: 'maptip', loc: l, mode: 'development' } as any).owner).toBe(s.loc.owner[l]);
+  });
+
+  it('a sea zone is named by its sea in the player\'s language, without the zone number', () => {
+    const z = Array.from({ length: w.N - w.L }, (_, i) => w.L + i).find((j) => /^Atlantic Ocean \(North-East\) \d+$/.test(w.names[j] ?? ''))!;
+    const d = answer(s, w, P, { q: 'maptip', loc: z, mode: 'political' } as any);
+    expect(d.sea).toBe(true);
+    expect(d.name).toEqual({ en: 'Atlantic Ocean (North-East)', de: 'Atlantischer Ozean (Nordost)' });
   });
 });
