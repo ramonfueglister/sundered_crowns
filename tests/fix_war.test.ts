@@ -9,7 +9,7 @@ import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord, rel } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore,
-  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal } from '../src/sim/systems/war';
+  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal, scoreCaps, applyPeace } from '../src/sim/systems/war';
 import { answerEvent } from '../src/sim/systems/events';
 import { considerPeace } from '../src/sim/systems/ai';
 import { step } from '../src/sim/engine';
@@ -428,5 +428,31 @@ describe('the towns of a conquest (major: the player could not choose them)', ()
       expect(declareWar(s, w, a, b, 'conquest', [deep], { situation: true })).toBeNull();
       expect(s.wars.at(-1)!.goal.locs).toEqual([deep]);
     }
+  });
+});
+
+describe('war texts and the war score hint (minors)', () => {
+  it('German war names join two adjectives; a town’s adjective or a stem names the realms instead', () => {
+    const s = fresh(); clearField(s);
+    const fr = nat(s, 'france').id, nv = nat(s, 'navarre').id;
+    const war = war2(s, fr, nv, 'conquest');
+    expect(war.name.de).toBe('Französisch-navarresischer Krieg');
+    expect(war.name.en).toBe('French–Navarrese War');
+    const cologne = s.nations.find((n) => n.alive && n.adj.de === 'Kölner');
+    expect(cologne).toBeTruthy();
+    const pt = nat(s, 'portugal');
+    const w2 = war2(s, pt.id, cologne!.id, 'humiliate');
+    expect(w2.name.de).toBe(`Krieg zwischen ${pt.short.de} und ${cologne!.short.de}`);
+  });
+  it('a peace that cedes one town says “1 Ort”, and the war score parts carry their caps', () => {
+    const s = fresh(); clearField(s);
+    const a = nat(s, 'portugal').id, b = plainTarget(s, a);
+    const war = war2(s, a, b, 'conquest');
+    expect(scoreCaps(war)).toEqual({ battles: BATTLE_CAP, occupation: 75, capital: 15, ticking: war.goal.locs.length ? 25 : 15, blockade: 15 });
+    const l = war.goal.locs[0] ?? owned(s, b).find((x) => x !== s.nations[b].capital)!;
+    applyPeace(s, w, war, a, b, [{ type: 'cede', locs: [l], to: a } as any]);
+    const c = s.chronicle[s.chronicle.length - 1];
+    expect(c.text.de).toMatch(/: 1 Ort \(/);
+    expect(c.text.en).toMatch(/: 1 location \(/);
   });
 });

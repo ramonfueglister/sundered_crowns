@@ -532,11 +532,26 @@ export function answerCallToArms(s: GameState, w: World, p: PendingEvent, choice
 
 function warName(s: GameState, w: World, a: number, b: number, goal: string) {
   const A = s.nations[a], Bn = s.nations[b];
-  if (goal === 'independence') return { en: `${A.adj.en} War of Independence`, de: `${A.adj.de}er Unabhängigkeitskrieg` };
+  if (goal === 'independence') return { en: `${A.adj.en} War of Independence`, de: deWarOf(A, 'Unabhängigkeitskrieg') };
   if (goal === 'coalition') return { en: `War of the Common Front against ${Bn.short.en}`, de: `Krieg der Gemeinsamen Front gegen ${Bn.short.de}` };
-  if (goal === 'civil_war') return { en: `${A.adj.en} War of Succession`, de: `${A.adj.de}er Erbfolgekrieg` };
+  if (goal === 'civil_war') return { en: `${A.adj.en} War of Succession`, de: deWarOf(A, 'Erbfolgekrieg') };
   if (goal === 'faith') return { en: `${A.adj.en} Holy War against ${Bn.short.en}`, de: `Heiliger Krieg von ${A.short.de} gegen ${Bn.short.de}` };
-  return { en: `${A.adj.en}–${Bn.adj.en} War`, de: `${A.short.de}isch-${Bn.short.de}ischer Krieg`.replace('isch-', '–').replace('ischer Krieg', ' Krieg') };
+  // German joins two adjectives into one: "Französisch-navarresischer Krieg"; a town's name ("Kölner") or a stem
+  // ("Ordens-") does not join that way, so such a war is named by its realms
+  const da = A.adj.de, db = Bn.adj.de;
+  const de = inflects(da) && inflects(db) ? `${capDe(da)}-${db}er Krieg` : `Krieg zwischen ${A.short.de} und ${Bn.short.de}`;
+  return { en: `${A.adj.en}–${Bn.adj.en} War`, de };
+}
+/** A German adjective that takes an ending (französisch, pommersch, päpstlich), unlike a town's (Kölner) or a stem (Horden-). */
+const inflects = (adj: string) => /(sch|lich)$/.test(adj);
+const capDe = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+/** "Französischer Unabhängigkeitskrieg", "Kölner Erbfolgekrieg", "Horden-Erbfolgekrieg", else "Erbfolgekrieg von X". */
+function deWarOf(n: Nation, noun: string): string {
+  const adj = n.adj.de;
+  if (inflects(adj)) return `${capDe(adj)}er ${noun}`;
+  if (adj.endsWith('-')) return `${capDe(adj)}${noun}`;
+  if (adj.endsWith('er')) return `${capDe(adj)} ${noun}`;
+  return `${noun} von ${n.short.de}`;
 }
 
 /** The most war score battles can bring a war, either way. */
@@ -608,6 +623,12 @@ function warLocs(s: GameState, war: War): Int32Array {
 export function computeScore(s: GameState, war: War): number {
   const p = scoreParts(s, war);
   return clamp(p.battles + p.occupation + p.capital + p.ticking + p.blockade, -100, 100);
+}
+/** How far each part of the war score can go either way (scoreParts): battles BATTLE_CAP, occupied land three
+ *  quarters of the whole, the enemy capital 15, holding the war goal 25 (a war without goal towns ticks 15 by the
+ *  battles), blockaded ports 15. The sum is capped at 100. */
+export function scoreCaps(war: War): { battles: number; occupation: number; capital: number; ticking: number; blockade: number } {
+  return { battles: BATTLE_CAP, occupation: 75, capital: 15, ticking: war.goal.locs.length ? 25 : 15, blockade: 15 };
 }
 /** The parts of the war score from the attackers' side (before the ±100 cap). */
 export function scoreParts(s: GameState, war: War): { battles: number; occupation: number; capital: number; ticking: number; blockade: number } {
@@ -793,8 +814,9 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       // Dread grows with the value taken
       const val = t.locs.reduce((p, l) => p + locValue(s, l), 0);
       s.nations[recv].dread += val * 0.35 * dreadGain(s.nations[recv]);
-      parts.push(`${t.locs.length} locations (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
-      partsDe.push(`${t.locs.length} Orte (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
+      const one = t.locs.length === 1;
+      parts.push(`${t.locs.length} ${one ? 'location' : 'locations'} (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
+      partsDe.push(`${t.locs.length} ${one ? 'Ort' : 'Orte'} (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
     if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); Ln.treasury -= amt; W.treasury += amt; parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
     if (t.type === 'vassal') { Ln.overlord = winner; Ln.subjectType = 'vassal'; Ln.subjectSince = s.day; Ln.libertyDesire = 30; parts.push('vassalage'); partsDe.push('Vasallität'); }
@@ -815,7 +837,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
         s.loc.minFaith[l] = s.loc.faith[l]; s.loc.minShare[l] = Math.max(s.loc.minShare[l], 0.3); s.loc.faith[l] = W.faith;
         s.loc.unrest[l] = Math.min(100, s.loc.unrest[l] + 15); k++;
       }
-      parts.push(`${k} towns converted`); partsDe.push(`${k} Orte bekehrt`);
+      parts.push(`${k} ${k === 1 ? 'town' : 'towns'} converted`); partsDe.push(`${k} ${k === 1 ? 'Ort' : 'Orte'} bekehrt`);
     }
     if (t.type === 'throne') {
       if (t.mode === 'claimant' || W.overlord >= 0) {

@@ -6,7 +6,7 @@ import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmark
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
-import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed } from '../sim/systems/war';
+import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed, scoreCaps } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
@@ -77,7 +77,7 @@ export function playerView(s: GameState, n: Nation): PlayerView {
 }
 
 export function warsView(s: GameState): TickView['wars'] {
-  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x), parts: scoreParts(s, x),
+  return s.wars.map((x) => ({ id: x.id, name: x.name, att: x.att, def: x.def, attLead: x.attLead, defLead: x.defLead, score: computeScore(s, x), parts: scoreParts(s, x), caps: scoreCaps(x),
     offers: x.offers.map((o, idx) => ({ from: o.from, to: o.to, terms: o.terms, concede: o.concede, idx })) }));
 }
 

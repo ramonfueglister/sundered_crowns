@@ -138,7 +138,7 @@ function PeaceInner({ w }: { w: any }) {
       {wv.goalLocs.length > 0 && <span class="muted"> · {t('xw_fought_for')}: {wv.goalLocs.slice(0, 6).map(locName).join(', ')}{wv.goalLocs.length > 6 ? ` +${wv.goalLocs.length - 6}` : ''}</span>}</div>}
     {offers.length > 0 && <Section title={t('incoming_offers')} id="pc-offers">
       {offers.map((o: any) => <div class="offer">
-        <div><NLink id={o.from} /> {o.concede ? t('offers_concession') : t('demands')}:</div>
+        <div><NLink id={o.from} /> {o.concede || o.terms.every((x: PeaceTerm) => x.type === 'white_peace') ? t('offers_concession') : t('demands')}:</div>
         <ul>{o.terms.length ? o.terms.map((x: PeaceTerm) => <li>{termText(x)}</li>) : <li>{t('term_white_peace')}</li>}</ul>
         <div class="act-row"><span class="spacer" /><Btn onClick={() => act({ t: 'peace_answer', war: w.id, offer: o.idx, accept: false }, 'click')}>{t('decline')}</Btn><Btn cls="gold" onClick={() => act({ t: 'peace_answer', war: w.id, offer: o.idx, accept: true }, 'peace', t('peace_made'))}>{t('accept')}</Btn></div>
       </div>)}

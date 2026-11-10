@@ -16,9 +16,11 @@ import { charName } from './people';
 export function WarScoreTip({ w, pid }: { w: any; pid: number }) {
   const sign = w.def.includes(pid) ? -1 : 1; const p = w.parts;
   const total = w.score * sign;
+  // each part with how far it can go (systems/war.ts scoreCaps)
+  const cap = (k: string, label: string) => w.caps?.[k] !== undefined ? `${label} (${t('xfw_cap_note').replace('{cap}', String(w.caps[k]))})` : label;
   return <div>
     {p ? <Breakdown title={`${t('war_score')} · ${t('ws_us')}`} digits={1} total={total}
-      rows={[[t('ws_battles'), p.battles * sign], [t('ws_occupation'), p.occupation * sign], [t('ws_capital'), p.capital * sign], [t('ws_ticking'), p.ticking * sign], [t('xw_ws_blockade'), (p.blockade ?? 0) * sign]]} />
+      rows={[[cap('battles', t('ws_battles')), p.battles * sign], [cap('occupation', t('ws_occupation')), p.occupation * sign], [cap('capital', t('ws_capital')), p.capital * sign], [cap('ticking', t('ws_ticking')), p.ticking * sign], [cap('blockade', t('xw_ws_blockade')), (p.blockade ?? 0) * sign]]} />
       : <div><b>{t('war_score')}</b> {signed(total)}</div>}
     {p && Math.abs(p.battles + p.occupation + p.capital + p.ticking + (p.blockade ?? 0)) > 100 && <div class="muted">{t('ws_capped')}</div>}
     <div class="muted">{t('war_score_hint')}</div>
