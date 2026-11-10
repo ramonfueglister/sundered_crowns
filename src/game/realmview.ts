@@ -129,7 +129,7 @@ function governView(s: GameState, w: World, me: number) {
     parties: partiesOf(n), backed: n.backed ?? 0, backCost: 25,
     candidates: t ? t.cands.map((c) => { const ch = s.chars[c.id]; return { id: c.id, name: ch?.name, dynasty: ch?.dynasty, age: ch ? Math.floor(ageOf(s, ch)) : 0, skills: ch?.skills, traits: ch?.traits, party: c.party, partyName: c.party === 'crown' || c.party === 'incumbent' ? null : estateName(c.party), votes: c.votes, share: t.total > 0 ? c.votes / t.total * 100 : 0, by: c.by.map((b) => ({ ...b, name: estateName(b.estate) })) }; }) : [],
     winner: t?.winner ?? 0, total: t?.total ?? 0,
-    heir: n.heir, heirName: s.chars[n.heir]?.name,
+    heir: n.heir, heirName: s.chars[n.heir]?.name, heirFemale: !!s.chars[n.heir]?.female,
     demand: n.demand ? { ...n.demand, estateName: estateName(n.demand.estate), privName: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.name, effects: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.effects, resent: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.resent } : null,
     taxLevel: taxLevel(n.taxRate), taxRates: n.taxRate, taxCeiling: taxCeiling(n), taxVote: lawEffect(n, 'tax_vote') > 0, warVote: lawEffect(n, 'war_vote') > 0,
     privileges: PRIVILEGES.map((p) => ({ id: p.id, estate: p.estate, name: p.name, effects: p.effects, resent: p.resent ?? {}, grant: p.grant })),

@@ -11,6 +11,7 @@ import { OFFICES, OFFICE_COST, PRIVILEGES, officeCandidates, officeBonusOf, lawE
 import { agentSlots } from './society';
 import { overextension } from './economy';
 import { nationLocsRO, hasCasusBelli } from './war';
+import { spyCost } from './diplomacy';
 import { LAWS } from '../content/laws';
 import { faithFamily, GROUP_OF, ALL_CULTURES, FAITH_INDEX } from '../content/peoples';
 import { armyMen } from './military';
@@ -209,6 +210,7 @@ export function espionage(s: GameState, w: World, n: Nation, sit: Situation) {
   const busy = (t: number, a: string) => s.spies.some((x) => x.nation === n.id && x.target === t && x.action === a);
   const ok = (t: number, a: string) => s.nations[t]?.alive && t !== n.id && !busy(t, a) && flag(n, `spy_${a}_${t}`) <= s.day;
   const go = (t: number, a: string, why: string, cool: number) => {
+    if (n.treasury < spyCost(s, n.id, t, a).cost * 3) return false; // an operation against a great realm costs more (diplomacy.ts spyCost)
     const r = aiApply(s, w, { t: 'spy', n: n.id, target: t, action: a }, why);
     if (r.ok) { n.flags[`spy_${a}_${t}`] = s.day + cool * YEAR; n.flags.ai_spy = s.day + YEAR; }
     return r.ok;

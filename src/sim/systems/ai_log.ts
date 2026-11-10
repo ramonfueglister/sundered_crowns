@@ -63,6 +63,14 @@ export function aiApply(s: GameState, w: World, cmd: Command, why?: string): Cmd
 
 // ---------------- the log in words ----------------
 const T = (en: string, de: string): I18n => ({ en, de });
+/** The logged commands without a text of their own (the log showed the raw word, e.g. 'assault'). */
+const CMD_TEXT: Record<string, I18n> = {
+  assault: T('Stormed the walls of a besieged town', 'Sturmangriff auf eine belagerte Stadt'), assembly: T('Called the assembly', 'Die Versammlung einberufen'),
+  doctrine: T('Adopted a doctrine of the faith', 'Eine Glaubenslehre angenommen'), empire: T('Acted in the affairs of the Empire', 'In Reichsangelegenheiten gehandelt'),
+  govern: T('Changed how the realm is governed', 'Die Regierungsweise geändert'), league: T('Acted in the affairs of the league', 'In Bundesangelegenheiten gehandelt'),
+  powers: T('Dealt with the great powers', 'Mit den Großmächten verhandelt'), scorch: T('Burned the land before the enemy', 'Verbrannte Erde vor dem Feind'),
+  situation: T('Acted in a situation of the realm', 'In einer Lage des Reiches gehandelt'),
+};
 /** Why the AI did it. */
 export const WHY: Record<string, I18n> = {
   need_authority: T('to gain Authority', 'um Autorität zu gewinnen'),
@@ -163,7 +171,7 @@ export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
     case 'charter': out = T('Chartered a trading company', 'Eine Handelskompanie gegründet'); break;
     case 'explore': out = T('Sent out an expedition', 'Eine Expedition ausgesandt'); break;
     case 'decision': out = fill(T('Took the decision: {I}', 'Entscheidung getroffen: {I}'), { I: (DECISIONS.find((d) => d.id === c.id)?.name ?? T(c.id, c.id)) }); break;
-    default: out = T(c.t, c.t);
+    default: out = CMD_TEXT[c.t] ?? T(c.t, c.t);
   }
   const y = e.y ? WHY[e.y] : undefined;
   return y ? { en: `${out.en} (${y.en})`, de: `${out.de} (${y.de})` } : out;

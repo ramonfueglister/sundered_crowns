@@ -9,7 +9,7 @@ import { lawEffect, councilBonus } from './politics';
 import { dateToDay } from '../calendar';
 
 export const BRANCHES = [
-  { id: 'governance', name: { en: 'Governance', de: 'Staatskunst' } },
+  { id: 'governance', name: { en: 'Governance', de: 'Verwaltung' } },
   { id: 'commerce', name: { en: 'Commerce & Learning', de: 'Handel & Gelehrsamkeit' } },
   { id: 'warfare', name: { en: 'Warfare', de: 'Kriegswesen' } },
 ];

@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
 import { applyCommand } from '../src/sim/commands';
-import { NAME_POOLS, poolIdOf, personName, localName } from '../src/sim/content/names';
+import { NAME_POOLS, poolIdOf, personName, localName, localHouse } from '../src/sim/content/names';
 import { interpolate } from '../src/sim/systems/events';
 import { royalMatch, inheritClaims, successionClaims, dynastyView, siblingsOf } from '../src/sim/systems/dynasty';
 import { availableCommanders, commanderSkill, raiseGeneral, appointBest, battleLessons, generalCost, setCommander, pruneCharacters } from '../src/sim/systems/commanders';
@@ -59,23 +59,56 @@ describe('names from the realm\'s own people', () => {
 
 describe('German regnal numbers and epithets', () => {
   it('translates the epithets of historic rulers', () => {
-    expect(localName('Pedro I the Cruel', 'de')).toBe('Pedro I. der Grausame');
-    expect(localName('Casimir III the Great', 'de')).toBe('Casimir III. der Große');
-    expect(localName('Henry VI the Elder', 'de')).toBe('Henry VI. der Ältere');
-    expect(localName('Henry V of Iron', 'de')).toBe('Henry V. der Eiserne');
-    expect(localName('Louis II the Roman', 'de')).toBe('Louis II. der Römer');
-    expect(localName('Margaret the Great', 'de', true)).toBe('Margaret die Große');
-    expect(localName('Otto of Hesse', 'de')).toBe('Otto von Hesse');
-    expect(localName('Charles, Dauphin and Duke of Normandy', 'de')).toBe('Charles, Dauphin und Herzog von Normandy');
+    expect(localName('Pedro I the Cruel', 'de')).toBe('Peter I. der Grausame');
+    expect(localName('Casimir III the Great', 'de')).toBe('Kasimir III. der Große');
+    expect(localName('Henry VI the Elder', 'de')).toBe('Heinrich VI. der Ältere');
+    expect(localName('Henry V of Iron', 'de')).toBe('Heinrich V. der Eiserne');
+    expect(localName('Louis II the Roman', 'de')).toBe('Ludwig II. der Römer');
+    expect(localName('Margaret the Great', 'de', true)).toBe('Margarete die Große');
+    expect(localName('Otto of Hesse', 'de')).toBe('Otto von Hessen');
+    expect(localName('Charles, Dauphin and Duke of Normandy', 'de')).toBe('Karl, Dauphin und Herzog der Normandie');
     expect(localName('Maurice FitzGerald, 4th Earl of Kildare', 'de')).toBe('Maurice FitzGerald, 4. Graf von Kildare');
     expect(localName('Pedro I the Cruel', 'en')).toBe('Pedro I the Cruel');
+    // fix-people: one German form per ruler, as German historians and the realm summaries write it
+    expect(localName('Jean II le Bon', 'de')).toBe('Johann II. der Gute');
+    expect(localName('Charles IV', 'de')).toBe('Karl IV.');
+    expect(localName('John Henry, Margrave of Moravia', 'de')).toBe('Johann Heinrich, Markgraf von Mähren');
+    expect(localName('Edward of Woodstock (the Black Prince)', 'de')).toBe('Eduard von Woodstock (der Schwarze Prinz)');
+    expect(localName('Philippa of Hainaut', 'de', true)).toBe('Philippa von Hennegau');
+    expect(localName('Joan the Lame', 'de', true)).toBe('Johanna die Lahme');
+    expect(localName('Anna of Wallachia', 'de', true)).toBe('Anna von der Walachei');
+    expect(localName('Council of Lübeck', 'de')).toBe('Rat von Lübeck');
+    // a courtier of the name pools keeps the name of his people
+    expect(localName('John Percy', 'de')).toBe('John Percy');
+    expect(localName('Jean de Craon', 'de')).toBe('Jean de Craon');
+    // fix-people review: people of a ruling house, marked so by the caller, take the German form of their given names
+    // even without a royal style; a family name after the given names stays as it is
+    expect(localName('John Henry', 'de', false, true)).toBe('Johann Heinrich');
+    expect(localName('John Henry', 'de')).toBe('John Henry'); // (a courtier of that name keeps it)
+    expect(localName('Henry', 'de', false, true)).toBe('Heinrich');
+    expect(localName('Frederick', 'de', false, true)).toBe('Friedrich');
+    expect(localName('John Sobieslav', 'de', false, true)).toBe('Johann Soběslav');
+    expect(localName('Charles de Blois', 'de', false, true)).toBe('Karl von Blois');
+    expect(localName('Louis de Bourbon', 'de', false, true)).toBe('Ludwig von Bourbon');
+    expect(localName("Pierre d'Alençon", 'de', false, true)).toBe('Peter von Alençon');
+    expect(localName('Jean de Craon', 'de', false, false)).toBe('Jean de Craon');
+    expect(localName('Elizabeth de Burgh', 'de', true, true)).toBe('Elizabeth de Burgh');
+    expect(localName('John Stewart', 'de', false, true)).toBe('John Stewart');
+    expect(localName('Adolf of the Mark', 'de')).toBe('Adolf von der Mark');
+    expect(localName('Council under the Ammeister and Stettmeister', 'de')).toBe('Rat unter dem Ammeister und den Stettmeistern');
+    expect(localName('Council under the Bürgermeister', 'de')).toBe('Rat unter dem Bürgermeister');
+    expect(localName('Diet of envoys of the eight places', 'de')).toBe('Tagsatzung der Gesandten der acht Orte');
+    expect(localName('Pisan Anziani and Podestà', 'de')).toBe('Pisanische Anziani und Podestà');
+    expect(localName('The Priors of the Arts', 'de')).toBe('Die Prioren der Zünfte');
+    expect(localHouse('Luxembourg', 'de')).toBe('Luxemburg');
+    expect(localHouse('Burgundy-Ivrea (Anscarid)', 'de')).toBe('Burgund-Ivrea (Anskarier)');
   });
   it('writes the ruler of an event in German', () => {
     const { s, w } = newGame(1356);
     const cas = nat(s, 'castile');
     expect(s.chars[cas.ruler].name).toMatch(/the Cruel/);
     const txt = interpolate(s, w, cas, {}, { en: '{ruler} rules.', de: '{ruler} herrscht.' });
-    expect(txt.de).toBe('Pedro I. der Grausame herrscht.');
+    expect(txt.de).toBe('Peter I. der Grausame herrscht.');
     expect(txt.en).toBe('Pedro I the Cruel rules.');
   });
 });
@@ -110,13 +143,17 @@ describe('royal marriages and claims', () => {
   });
   it('a marriage accepted through diplomacy weds real people', () => {
     const { s, w } = newGame(1356);
-    const A = nat(s, 'aragon'), B = nat(s, 'navarre');
+    // (Aragon and Navarre had nobody to wed once the houses of 1356 were complete: Philippe of Navarre married Yolande
+    // of Flanders in 1353; Austria's unwed heir Rudolf and Edward III's daughter Isabella are both living people)
+    const A = nat(s, 'austria'), B = nat(s, 'england');
+    const isabella = Object.values(s.chars).find((c) => c.name === 'Isabella of England')!;
     const r = applyCommand(s, w, { t: 'diplo', n: A.id, action: 'marriage', target: B.id });
     expect(r.ok).toBe(true);
     for (let d = 0; d < 60 && !s.treaties.some((t) => t.type === 'marriage' && ((t.a === A.id && t.b === B.id) || (t.a === B.id && t.b === A.id))); d++) advanceDay(s, w);
     const wed = s.chronicle.some((c) => c.kind === 'marriage' && /married/.test(c.text.en) && (c.text.en.includes(A.short.en) || c.text.en.includes(B.short.en)));
     const treaty = s.treaties.some((t) => t.type === 'marriage' && ((t.a === A.id && t.b === B.id) || (t.a === B.id && t.b === A.id)));
     if (treaty) expect(wed).toBe(true);
+    if (treaty) expect(s.chars[A.heir].spouse).toBe(isabella.id);
   });
   it('shows the ruling house with its members and claimants', () => {
     const { s, w } = newGame(1356);

@@ -7,6 +7,7 @@ import { atWar, hasTreaty } from '../ctx';
 import { chance, rand } from '../rng';
 import { applyCommand } from '../commands';
 import { lawEffect } from './politics';
+import { refusedRecently } from './diplomacy';
 import { tariffMax } from './economy';
 import { europeanCrown, charterOptions } from './colonial';
 import { OCEAN_TECH, harbours } from './explore';
@@ -121,15 +122,21 @@ function aiEmbargo(s: GameState, w: World, n: Nation) {
 /** Propose a trade agreement to the ruler whose markets exchange the most goods with ours. */
 function aiAgreement(s: GameState, w: World, n: Nation) {
   if (n.envoysBusy >= n.envoys || !chance(s.rng, n.personality === 'trader' || n.gov === 'merchant_republic' ? 0.4 : 0.15)) return;
+  const best = aiTradePartner(s, n);
+  if (best >= 0) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'trade', target: best });
+}
+/** The realm the AI would ask for a trade agreement: the one whose markets exchange the most goods with ours, -1 if none. */
+export function aiTradePartner(s: GameState, n: Nation): number {
   const by = new Map<number, number>();
   for (const f of s.flows ?? []) {
     const a = s.loc.owner[s.markets[f.from].hub], b = s.loc.owner[s.markets[f.to].hub];
     if (a < 0 || b < 0 || a === b) continue;
     if (a === n.id) by.set(b, (by.get(b) ?? 0) + f.value); else if (b === n.id) by.set(a, (by.get(a) ?? 0) + f.value);
   }
-  const best = [...by.entries()].filter(([o]) => s.nations[o]?.alive && !hasTreaty(s, n.id, o, 'trade') && !atWar(s, n.id, o) && !n.rivals.includes(o) && !embargoedBy(s, n.id, o) && !embargoedBy(s, o, n.id))
+  // (a realm that refused us lately is left alone, diplomacy.ts refusedRecently: the next partner is asked instead)
+  const best = [...by.entries()].filter(([o]) => s.nations[o]?.alive && !hasTreaty(s, n.id, o, 'trade') && !atWar(s, n.id, o) && !n.rivals.includes(o) && !embargoedBy(s, n.id, o) && !embargoedBy(s, o, n.id) && !refusedRecently(s, n.id, o, 'trade'))
     .sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
-  if (best) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'trade', target: best[0] });
+  return best ? best[0] : -1;
 }
 
 const incomeOf = (n: Nation) => { let v = 0; for (const k in n.income) v += n.income[k]; return v; };

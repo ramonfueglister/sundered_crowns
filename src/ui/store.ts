@@ -31,8 +31,10 @@ export interface Settings {
   quality: 'low' | 'medium' | 'high' | 'ultra'; music: number; sfx: number; autosaveMonths: number; edgePan: boolean; uiScale: number; pauseOnEvents: boolean;
   // ---- polish pass: colour-blind palette, high-contrast borders, resolution scale (0.5..1), browser notifications (opt-in)
   palette: 'normal' | 'cvd'; highContrast: boolean; resScale: number; notify: boolean;
+  // ---- fix-people: offers of other realms pause the game only when asked for
+  pauseOnOffers: boolean;
 }
-const DEF: Settings = { quality: 'high', music: 0.5, sfx: 0.7, autosaveMonths: 6, edgePan: false, uiScale: 1, pauseOnEvents: true, palette: 'normal', highContrast: false, resScale: 1, notify: false };
+const DEF: Settings = { quality: 'high', music: 0.5, sfx: 0.7, autosaveMonths: 6, edgePan: false, uiScale: 1, pauseOnEvents: true, palette: 'normal', highContrast: false, resScale: 1, notify: false, pauseOnOffers: false };
 function loadSettings(): Settings { try { return { ...DEF, ...JSON.parse(localStorage.getItem('sc.settings') || '{}') }; } catch { return DEF; } }
 export const settings = signal<Settings>(loadSettings());
 export function saveSettings(p: Partial<Settings>) { settings.value = { ...settings.value, ...p }; try { localStorage.setItem('sc.settings', JSON.stringify(settings.value)); } catch { /* ignore */ } }

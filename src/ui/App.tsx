@@ -135,7 +135,7 @@ function SelectScreen() {
       <div class="rec"><h3>{lang.value === 'de' ? 'Großmächte' : 'Great powers'}</h3>{[...ns].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 10).map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>
     </div>
     {sel && <div class="select-card">
-      <div class="sc-head"><P.Coa coa={sel.coa} color={sel.color} size={64} /><div><h2>{L(sel.name)}</h2><div class="muted">{t('ruler')}: {P.charName(sel.ruler)}</div></div></div>
+      <div class="sc-head"><P.Coa coa={sel.coa} color={sel.color} size={64} /><div><h2>{L(sel.name)}</h2><div class="muted">{t('ruler')}: {P.charName(sel.ruler, false, true)}</div></div></div>
       <div class="sc-facts">
         <Tip content={<div><b>{t('development')}</b><div class="tip-hint">{t('x_nat_dev_hint')}</div></div>}><div class="row"><span>{t('development')}</span><b>{num(sel.dev)}</b></div></Tip>
         <div class="row"><span>{lang.value === 'de' ? 'Orte' : 'Locations'}</span><b>{sel.locs}</b></div>

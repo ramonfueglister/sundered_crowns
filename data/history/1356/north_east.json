@@ -200,7 +200,39 @@
       "arrangement": "pale"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Christopher II",
+     "born": 1276,
+     "died": 1332,
+     "dynasty": "Estridsen"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Ingeborg of Denmark",
+     "born": 1347,
+     "dynasty": "Estridsen"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Margaret of Denmark",
+     "born": 1353,
+     "dynasty": "Estridsen",
+     "skills": [
+      5,
+      5,
+      2
+     ],
+     "traits": [
+      "wise"
+     ]
+    }
+   ]
   },
   {
    "id": "schleswig",
@@ -590,7 +622,17 @@
       "arrangement": "two_and_one"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "rel": "child",
+     "ref": "sweden.heir"
+    },
+    {
+     "rel": "child",
+     "ref": "norway.ruler"
+    }
+   ]
   },
   {
    "id": "visby",
@@ -841,7 +883,21 @@
       "count": 1
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "rel": "parent",
+     "ref": "sweden.ruler"
+    },
+    {
+     "rel": "parent",
+     "ref": "sweden.consort"
+    },
+    {
+     "rel": "sibling",
+     "ref": "sweden.heir"
+    }
+   ]
   },
   {
    "id": "poland",
@@ -1057,7 +1113,28 @@
       "crowned": true
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Elizabeth of Poland",
+     "born": 1326,
+     "dynasty": "Piast",
+     "of_consort": false,
+     "at": "pomerania_wolgast"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Kunigunde of Poland",
+     "born": 1335,
+     "dynasty": "Piast",
+     "of_consort": false,
+     "at": "brandenburg"
+    }
+   ],
+   "heir_rel": "nephew"
   },
   {
    "id": "masovia",

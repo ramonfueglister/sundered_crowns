@@ -2,15 +2,16 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sim, view, notices, legend } from '../../game/client';
 import { playerId, openPanel, settings, mapMode, lastSpeed } from '../store';
-import { act, t, L, Tip, selectLoc, selectArmy, fmtDateShort } from './common';
+import { act, t, L, Tip, selectLoc, selectArmy, fmtDateShort, Reasons } from './common';
 import { EventArt } from './art';
 import { useOptionFx, OptionEffects, OptionEffectsHead } from './eventfx';
 import { sfx } from '../audio';
 import { GOODS } from '../../sim/defs';
+import { pausesWith, arrivedPausing, mayResume } from '../eventpause';
 
-const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency', 'battle_lost', 'assault_failed', 'expedition_lost', 'embargo']);
+const BAD = new Set(['spy_caught', 'capital_lost', 'revolt', 'rebels_win', 'civil_war', 'coalition', 'heir_death', 'ruler_death', 'peace_refused', 'war', 'succession_crisis', 'estate_crisis', 'independence_war', 'fall', 'natives', 'general_death', 'regency', 'battle_lost', 'assault_failed', 'expedition_lost', 'embargo', 'house_warning', 'house_extinct', 'diplo_refuse']);
 const GOOD = new Set(['peace', 'built', 'recruited', 'colony', 'discovery', 'tech', 'era', 'innovation', 'heir_born', 'converted', 'cb', 'diplo_accept', 'union', 'majority', 'reform', 'battle_won', 'siege_won', 'expedition']);
-const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉', battle_won: '⚔', battle_lost: '⚔', siege_won: '♜', assault_failed: '♜', scorched: '♨', expedition: '⚓', expedition_lost: '⚓', embargo: '⛔' };
+const ICON: Record<string, string> = { war: '⚔', battle: '⚔', siege: '♜', peace: '☮', peace_offer: '✉', peace_refused: '✉', built: '⚒', recruited: '⚔', colony: '⚓', discovery: '⚓', tech: '✎', era: '⌛', innovation: '✎', heir_born: '♔', ruler_death: '✝', heir_death: '✝', general_death: '✝', revolt: '⚑', rebels_win: '⚑', civil_war: '⚑', spy_caught: '◉', cb: '§', coalition: '⚠', diplo_offer: '✉', diplo_accept: '✉', situation: '✦', converted: '✝', reform: '§', capital_lost: '♜', intrigue: '◉', battle_won: '⚔', battle_lost: '⚔', siege_won: '♜', assault_failed: '♜', scorched: '♨', expedition: '⚓', expedition_lost: '⚓', embargo: '⛔', house_warning: '♔', house_extinct: '♔', marriage: '⚭', diplo_refuse: '✉', council: '§' };
 const LIFE = 12000;
 
 export function Notices() {
@@ -42,30 +43,51 @@ export function Notices() {
     {shown.map((n) => { const age = now - (born.current.get(n.id) ?? now); const fading = !hover && age > LIFE - 2500;
       return <div class={`notice ${BAD.has(n.kind) ? 'bad' : GOOD.has(n.kind) ? 'good' : ''} ${fading ? 'fading' : ''} ${n.loc !== undefined || n.war !== undefined || n.army !== undefined || n.report !== undefined ? 'click' : ''}`} onClick={() => click(n)}>
         <span class="nt-ic">{ICON[n.kind] ?? '•'}</span>
-        <span class="nt-t">{L(n.text)}</span>
+        {n.reasons?.length ? <Tip content={() => <Reasons title={t(n.reasonsTitle ?? 'they_say')} rows={n.reasons!} />}><span class="nt-t has-tip">{L(n.text)}</span></Tip> : <span class="nt-t">{L(n.text)}</span>}
         <span class="nt-d">{v ? fmtDateShort(n.day, v.startYear) : ''}</span>
         <button class="nt-x" onClick={(e) => { e.stopPropagation(); setGone(new Set([...gone, n.id])); }}>✕</button>
       </div>; })}
   </div>;
 }
 
+/** An offer of another realm (alliance, marriage, passage...) pauses only when the player asked for it (settings). */
+const pauses = (e: { event: string }) => pausesWith(settings.value)(e);
+
 export function EventModal() {
   const v = view.value; const ev = v?.pending?.[0];
   const opened = useRef(-1);
-  const resumeTo = useRef(0);
+  // the ids of the queue seen so far: a new entry that stops the clock pauses the game even when it waits behind an
+  // offer window that is open (it would otherwise run out its 90 days unseen and be answered by itself)
+  const known = useRef<Set<number> | null>(null);
+  // the pause this window made: the speed to return to, and whether the game has been seen paused since (a player who
+  // starts the game again by hand takes the pause over, and answering no longer resumes it)
+  const ours = useRef<{ speed: number; seen: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const fx = useOptionFx(ev?.id, v?.day);
+  const ids = (v?.pending ?? []).map((p) => p.id).join(',');
+  useEffect(() => {
+    const pending = view.value?.pending ?? [];
+    const fresh = arrivedPausing(known.current, pending, pauses);
+    known.current = new Set(pending.map((p) => p.id));
+    const speed = view.value?.speed ?? 0;
+    if (fresh.length && speed > 0) { ours.current = { speed, seen: false }; lastSpeed.value = speed; sim().speed(0); }
+  }, [ids]);
   useEffect(() => {
     if (!ev || opened.current === ev.id) return;
     opened.current = ev.id; sfx('event');
-    if (settings.value.pauseOnEvents && (v?.speed ?? 0) > 0) { resumeTo.current = v!.speed; lastSpeed.value = v!.speed; sim().speed(0); }
   }, [ev?.id]);
+  useEffect(() => {
+    const p = ours.current; if (!p) return;
+    if ((v?.speed ?? 0) === 0) p.seen = true; else if (p.seen) ours.current = null;
+  }, [v?.speed]);
   if (!ev) return null;
   const answer = async (k: number) => {
     if (busy) return; setBusy(true);
     const r = await act({ t: 'event', pending: ev.id, choice: k }, 'click');
     setBusy(false);
-    if (r.ok && resumeTo.current && (view.value?.pending?.length ?? 0) <= 1) { sim().speed(resumeTo.current); resumeTo.current = 0; }
+    // resume only the pause an event window made, once no window that pauses is left
+    const p = ours.current;
+    if (r.ok && p && (view.value?.speed ?? 0) === 0 && mayResume(view.value?.pending ?? [], ev.id, pauses)) { sim().speed(p.speed); ours.current = null; }
   };
   const paras = L(ev.text).split(/\n+/);
   return <div class="event-wrap" onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
@@ -80,7 +102,7 @@ export function EventModal() {
           const b = <button class="btn ev-opt" disabled={busy} onClick={() => answer(k)}><span class="ev-n">{['I', 'II', 'III', 'IV', 'V'][k] ?? k + 1}</span>{L(o.label)}</button>;
           return <div class="ev-choice">{o.hint ? <Tip tag="div" content={<div class="ev-hint">{L(o.hint)}</div>}>{b}</Tip> : b}<OptionEffects fx={fx ? fx[k] : null} /></div>;
         })}</div>
-        {(v?.pending?.length ?? 0) > 1 && <div class="muted small ev-more">+{v!.pending.length - 1} {t('more_events')}</div>}
+        {(v?.pending?.length ?? 0) > 1 && <div class="muted small ev-more">{t('xp_next_waiting').replace('{n}', String(v!.pending.length - 1))} {v!.pending.slice(1, 4).map((p) => L(p.title)).join(' · ')}{v!.pending.length > 4 ? ' …' : ''}</div>}
       </div>
     </div>
   </div>;

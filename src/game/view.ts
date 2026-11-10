@@ -7,8 +7,8 @@ import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
-import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
+import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, ablestGain, ablestPlan, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
 import { LAWS, VALUES } from '../sim/content/laws';
@@ -38,7 +38,7 @@ import { knownOf, fogColors } from './fog';
 import { deName } from '../sim/content/names_de';
 import { regionOf } from '../sim/systems/explore';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
-import { dynastyView } from '../sim/systems/dynasty';
+import { dynastyView, marriagePreview, marriageOfferText } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 import { victoryView, historyView } from './endview';
 import { EVENTS } from '../sim/content/events';
@@ -89,8 +89,11 @@ export function pendingView(s: GameState, w: World, player: number): TickView['p
     const n = s.nations[player];
     if (p.event.startsWith('diplo_')) {
       const from = s.nations[p.ctx.from]; const act = p.event.slice(6);
-      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.`, de: `${from?.short.de} schlägt vor: ${ACT_NAME[act]?.de ?? act}.` },
-        options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10.` } }], art: 'court' };
+      const yrs = REFUSAL_COOLDOWN[act] ?? 0;
+      // a royal marriage names the couple and the claim it creates, as the player's own diplomacy row does (dynasty.ts)
+      const wed = act === 'marriage' && from ? marriageOfferText(s, from.id, player) : null;
+      return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.${wed ? `\n${wed.en}` : ''}`, de: `${from?.short.de} ${from && pluralDe(from) ? 'schlagen' : 'schlägt'} vor: ${ACT_NAME[act]?.de ?? act}.${wed ? `\n${wed.de}` : ''}` },
+        options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year${yrs ? `, and they will not ask again for ${yrs} years` : ''}.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10${yrs ? `, und ${from?.short.de} ${from && pluralDe(from) ? 'fragen' : 'fragt'} ${yrs} Jahre lang nicht wieder` : ''}.` } }], art: 'court' };
     }
     const d = eventDef(p.event);
     if (!d) return { ...p, title: { en: p.event, de: p.event }, text: { en: '', de: '' }, options: [{ label: { en: 'OK', de: 'OK' } }] };
@@ -377,7 +380,13 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'realm': return realmDetail(s, w, player);
     case 'ledger': return ledger(s, w, q.kind);
     case 'market': { const m = s.markets[q.market]; if (!m) return null; return { name: m.name, hub: m.hub, owner: m.owner, priceIndex: m.priceIndex, goods: GOODS.map((g, k) => ({ id: g.id, name: g.name, price: m.price[k], supply: m.supply[k], demand: m.demand[k], base: g.base * s.priceLevel, hist: Array.from({ length: 120 }, (_, j) => m.hist[k * 120 + ((m.histPos + j) % 120)]) })), merchants: m.merchants, links: m.links.map((l) => ({ to: s.markets[l.to].name, sea: l.sea })) }; }
-    case 'diplo': return evaluateProposal(s, w, player, q.target, q.action);
+    case 'diplo': {
+      // improving relations is never refused: the row shows the opinion it will bring (systems/diplomacy.ts improveGain)
+      if (q.action === 'improve') { const g = improveGain(s, player, q.target); return { kind: 'gain', accept: true, gain: g.gain, now: g.now, cap: IMPROVE_CAP, reasons: g.parts }; }
+      const ev = evaluateProposal(s, w, player, q.target, q.action);
+      const again = refusedRecently(s, player, q.target, q.action) ? s.flags[`deny_${player}_${q.target}_${q.action}`] : 0;
+      return q.action === 'marriage' ? { ...ev, again, preview: marriagePreview(s, player, q.target) } : { ...ev, again };
+    }
     case 'tmarket': return marketDetail(s, w, player, q.market);
     case 'tmarkets': return marketList(s, w, player);
     case 'tgood': return goodDetail(s, w, player, q.market, q.good);
@@ -506,6 +515,7 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     // justifications for war: ours against them, theirs against us, a claim being fabricated by our clerks
     cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player), sameFaith: s.nations[player].faith === n.faith,
     fabricating: s.spies.find((x) => x.nation === player && x.target === id && x.action === 'fabricate') ?? null,
+    spyCosts: Object.fromEntries(SPY_ACTIONS.map((a) => [a, spyCost(s, player, id, a)])), // espionage section (diplomacy.ts spyCost)
     actions: DIPLO_ACTIONS.map((a) => ({ id: a, name: ACT_NAME[a] ?? { en: a, de: a } })),
     // Favour of the Curia: a Latin ruler can have another Latin ruler banned (realm.ts excommunicate)
     canExcommunicate: FAITHS[s.nations[player].faith]?.id === 'latin' && FAITHS[n.faith]?.id === 'latin' && !n.excommunicated && s.papacy.holder !== id, curiaFavour: s.papacy.curiaFavour[player] ?? 0,
@@ -515,7 +525,8 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     // the faith's own mechanic and what it (and communities of other faiths in the realm) does for this realm now
     faithMechanic: { name: FAITHS[n.faith]?.mechanic, desc: FAITHS[n.faith]?.mechanicDesc, active: n.modifiers.filter((m) => m.id.startsWith('faith_')).map((m) => ({ id: m.id, label: m.label, effects: m.effects })) },
     capital: n.capital, capitalName: n.capital >= 0 ? w.names[n.capital] : '—', ruler: r ? { name: r.name, dynasty: r.dynasty, female: r.female, age: Math.floor(ageOf(s, r)), skills: r.skills, traits: r.traits } : null,
-    heir: h && h.alive ? { name: h.name, female: h.female, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id), score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
+    heir: h && h.alive ? { name: h.name, female: h.female, age: Math.floor(ageOf(s, h)) } : null, dev: nationDev(s, id),
+    regency: !!n.regent, // a child rules under a regent: the ruler's traits do not act yet (politics.ts syncRulerTraits) score: n.score, prestige: n.prestige, concord: n.concord, mandate: n.mandate,
     men, ships, treasury: id === player ? n.treasury : null, tech: n.tech, era: n.era, allies: allies(s, id), rivals: n.rivals, overlord: n.overlord, subjects: subjectsOf(s, id),
     personality: n.personality, summary: n.summary, difficulty: n.difficulty, dread: n.dread, scoreParts: scorePartsAll(s, w)[id], front: (s as any).fronts?.[id] ?? [], rel, alive: n.alive,
     wars: s.wars.filter((x) => x.att.includes(id) || x.def.includes(id)).map((x) => x.id), isHRE: n.isHRE, elector: n.elector, emperor: s.empire.emperor === id,
@@ -539,8 +550,10 @@ function realmDetail(s: GameState, w: World, player: number) {
     laws: LAWS.map((L) => ({ id: L.id, name: L.name, group: L.group, current: n.laws[L.id] ?? 0, options: L.options.map((o, k) => ({ id: o.id, name: o.name, desc: o.desc, effects: o.effects, estates: o.estates, cost: reformCost(n, L.id, k), locked: (o.minEra ?? 0) > n.era || (o.gov ? !o.gov.includes(n.gov) : false) })) })),
     reform: n.reform ?? null,
     estates: n.estates.map((e) => ({ ...e, name: ESTATES.find((x) => x.id === e.id)?.name, desc: ESTATES.find((x) => x.id === e.id)?.desc, privileges: PRIVILEGES.filter((p) => p.estate === e.id).map((p) => ({ id: p.id, name: p.name, effects: p.effects, granted: e.privileges.includes(p.id) })) })),
-    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, skill: o.skill, effect: o.effect, char: c ? { id: c.id, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits } : null, bonus: councilBonus(s, n, o.id) }; }),
-    candidates: officeCandidates(s, n).map((c) => ({ id: c.id, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits, female: c.female,
+    council: OFFICES.map((o) => { const c = s.chars[n.council[o.id]]; return { id: o.id, name: o.name, skill: o.skill, effect: o.effect, char: c ? { id: c.id, name: courtName(c), female: c.female, skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits } : null, bonus: councilBonus(s, n, o.id), ablest: ablestGain(s, n, o.id)?.id ?? 0 }; }),
+    // the appointments 'fill the council with the ablest' makes, in order (politics.ts ablestPlan)
+    ablestPlan: ablestPlan(s, n).map((p) => ({ office: p.office, char: p.char, name: courtName(s.chars[p.char]), female: s.chars[p.char].female, gain: p.gain })),
+    candidates: officeCandidates(s, n).map((c) => ({ id: c.id, heir: c.id === n.heir, name: courtName(c), skills: c.skills, loyalty: c.loyalty, corruption: c.corruption, age: Math.floor(ageOf(s, c)), traits: c.traits, female: c.female,
       kin: c.id === n.consort || (s.chars[n.ruler]?.children ?? []).includes(c.id), bonus: Object.fromEntries(OFFICES.map((o) => [o.id, officeBonusOf(c, o.id)])) })),
     officeCost: OFFICE_COST,
     dynasty: dynastyView(s, n),

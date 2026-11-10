@@ -389,7 +389,111 @@
       "arrangement": "in_pale"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Edward II",
+     "born": 1284,
+     "died": 1327,
+     "dynasty": "Plantagenet"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Isabella of France",
+     "born": 1295,
+     "dynasty": "Capet",
+     "traits": [
+      "ambitious"
+     ]
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Isabella of England",
+     "born": 1332,
+     "dynasty": "Plantagenet"
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Lionel of Antwerp",
+     "born": 1338,
+     "dynasty": "Plantagenet",
+     "skills": [
+      3,
+      2,
+      3
+     ],
+     "spouse": {
+      "female": true,
+      "name": "Elizabeth de Burgh",
+      "born": 1332,
+      "dynasty": "de Burgh"
+     }
+    },
+    {
+     "female": true,
+     "rel": "grandchild",
+     "parent": "Lionel of Antwerp",
+     "name": "Philippa of Clarence",
+     "born": 1355,
+     "dynasty": "Plantagenet"
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "John of Gaunt",
+     "born": 1340,
+     "dynasty": "Plantagenet",
+     "skills": [
+      3,
+      3,
+      3
+     ],
+     "traits": [
+      "ambitious"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Edmund of Langley",
+     "born": 1341,
+     "dynasty": "Plantagenet",
+     "skills": [
+      2,
+      2,
+      2
+     ],
+     "traits": [
+      "lazy"
+     ]
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Mary of Waltham",
+     "born": 1344,
+     "dynasty": "Plantagenet"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Margaret of Windsor",
+     "born": 1346,
+     "dynasty": "Plantagenet"
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Thomas of Woodstock",
+     "born": 1355,
+     "dynasty": "Plantagenet"
+    }
+   ]
   },
   {
    "id": "scotland",
@@ -585,7 +689,66 @@
       "count": 1
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Robert I",
+     "born": 1274,
+     "died": 1329,
+     "dynasty": "Bruce"
+    },
+    {
+     "female": true,
+     "rel": "sibling",
+     "name": "Marjorie Bruce",
+     "born": 1296,
+     "died": 1316,
+     "dynasty": "Bruce",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "John Stewart",
+     "born": 1337,
+     "dynasty": "Stewart"
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Walter Stewart",
+     "born": 1338,
+     "dynasty": "Stewart"
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Robert Stewart",
+     "born": 1340,
+     "dynasty": "Stewart",
+     "traits": [
+      "ambitious"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Alexander Stewart",
+     "born": 1343,
+     "dynasty": "Stewart",
+     "traits": [
+      "cruel"
+     ]
+    }
+   ],
+   "heir_rel": "nephew",
+   "heir_parent": "Marjorie Bruce"
   },
   {
    "id": "lordship_of_the_isles",
@@ -2286,6 +2449,107 @@
       "arrangement": "semee"
      }
     ]
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Philip VI",
+     "born": 1293,
+     "died": 1350,
+     "dynasty": "Valois"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Joan the Lame",
+     "born": 1293,
+     "died": 1349,
+     "dynasty": "Burgundy"
+    },
+    {
+     "female": false,
+     "rel": "sibling",
+     "name": "Philip of Orléans",
+     "born": 1336,
+     "dynasty": "Valois",
+     "spouse": {
+      "female": true,
+      "name": "Blanche of France",
+      "born": 1328,
+      "dynasty": "Capet"
+     }
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Louis of Anjou",
+     "born": 1339,
+     "dynasty": "Valois",
+     "of_consort": false,
+     "skills": [
+      3,
+      3,
+      3
+     ],
+     "traits": [
+      "ambitious"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "John of Berry",
+     "born": 1340,
+     "dynasty": "Valois",
+     "of_consort": false,
+     "skills": [
+      3,
+      2,
+      1
+     ],
+     "traits": [
+      "greedy"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Philip the Bold",
+     "born": 1342,
+     "dynasty": "Valois",
+     "of_consort": false,
+     "skills": [
+      3,
+      4,
+      3
+     ],
+     "traits": [
+      "brave"
+     ]
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Marie of France",
+     "born": 1344,
+     "dynasty": "Valois",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Isabelle of France",
+     "born": 1348,
+     "dynasty": "Valois",
+     "of_consort": false
+    }
+   ],
+   "heir_spouse": {
+    "female": true,
+    "name": "Jeanne de Bourbon",
+    "born": 1338,
+    "dynasty": "Bourbon"
    }
   },
   {
@@ -3306,6 +3570,38 @@
       "arrangement": "semee"
      }
     ]
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Philip III of Navarre",
+     "born": 1306,
+     "died": 1343,
+     "dynasty": "Évreux"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Joan II of Navarre",
+     "born": 1312,
+     "died": 1349,
+     "dynasty": "Capet"
+    },
+    {
+     "female": false,
+     "rel": "sibling",
+     "name": "Louis of Navarre",
+     "born": 1341,
+     "dynasty": "Évreux"
+    }
+   ],
+   "heir_rel": "sibling",
+   "heir_spouse": {
+    "female": true,
+    "name": "Yolande of Flanders",
+    "born": 1331,
+    "dynasty": "Dampierre"
    }
   },
   {
@@ -5657,7 +5953,48 @@
       "count": 2
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Alfonso XI the Avenger",
+     "born": 1311,
+     "died": 1350,
+     "dynasty": "Burgundy-Ivrea (Anscarid)"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Maria of Portugal",
+     "born": 1313,
+     "dynasty": "Burgundy (Portuguese)"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Beatrice of Castile",
+     "born": 1353,
+     "dynasty": "Burgundy-Ivrea (Anscarid)",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Constance of Castile",
+     "born": 1354,
+     "dynasty": "Burgundy-Ivrea (Anscarid)",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Isabella of Castile",
+     "born": 1355,
+     "dynasty": "Burgundy-Ivrea (Anscarid)",
+     "of_consort": false
+    }
+   ]
   },
   {
    "id": "aragon",
@@ -5837,7 +6174,7 @@
     ]
    },
    "heir": {
-    "name": "Joan, Duke of Girona",
+    "name": "John, Duke of Girona",
     "born": 1350,
     "dynasty": "Barcelona",
     "female": false,
@@ -5893,7 +6230,50 @@
     "ordinary": null,
     "ordinary_tincture": null,
     "charges": []
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Alfonso IV the Kind",
+     "born": 1299,
+     "died": 1336,
+     "dynasty": "Barcelona"
+    },
+    {
+     "female": false,
+     "rel": "sibling",
+     "name": "Ferdinand of Tortosa",
+     "born": 1329,
+     "dynasty": "Barcelona",
+     "traits": [
+      "ambitious"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "sibling",
+     "name": "John of Aragon",
+     "born": 1330,
+     "dynasty": "Barcelona"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Constance of Aragon",
+     "born": 1343,
+     "dynasty": "Barcelona",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Joanna of Aragon",
+     "born": 1344,
+     "dynasty": "Barcelona",
+     "of_consort": false
+    }
+   ]
   },
   {
    "id": "portugal",
@@ -6098,7 +6478,17 @@
       "arrangement": "in_orle"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Fernando of Portugal",
+     "born": 1345,
+     "dynasty": "Burgundy (Portuguese)"
+    }
+   ]
   },
   {
    "id": "granada",

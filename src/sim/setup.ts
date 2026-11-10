@@ -93,10 +93,14 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
     n.ruler = mkChar(st.ruler, i, 'ruler');
     n.heir = mkChar(st.heir, i, 'heir');
     n.consort = mkChar(st.consort, i, 'consort');
-    if (n.heir && n.ruler) { s.chars[n.heir].father = s.chars[n.ruler].female ? undefined : n.ruler; s.chars[n.ruler].children.push(n.heir); }
+    // (an heir who is the ruler's brother or nephew is placed in the house by addFamily below)
+    if (n.heir && n.ruler && (!st.heir_rel || st.heir_rel === 'child')) { s.chars[n.heir].father = s.chars[n.ruler].female ? undefined : n.ruler; s.chars[n.ruler].children.push(n.heir); }
     if (n.consort && n.ruler) { s.chars[n.consort].spouse = n.ruler; s.chars[n.ruler].spouse = n.consort; }
     if (!n.ruler) n.ruler = mkChar({ name: n.short.en + ' Council', dynasty: '', skills: [3, 3, 2], born: startYear - 45 }, i, 'ruler');
   });
+  // the historical members of the great houses (parents, brothers and sisters, children, grandchildren), after every
+  // realm's ruler, heir and consort so that those keep their numbers
+  setup.states.forEach((st, i) => { if (Array.isArray(st.family) || st.heir_spouse) addFamily(s, st, i, keyIndex, mkChar); });
   setup.states.forEach((st, i) => {
     const n = s.nations[i];
     if (st.overlord && keyIndex[st.overlord] !== undefined) { n.overlord = keyIndex[st.overlord]; n.subjectType = st.subject_type || 'vassal'; n.subjectSince = -3650; n.integration = 0; }
@@ -361,3 +365,64 @@ export class MinHeap {
 }
 export { TERRAIN_DEF };
 export type { I18n };
+
+/** The house of a realm as researched for the start (data/history/<year>/*.json "family"): the late or living parents
+ *  of the ruler, brothers and sisters, children (by the consort or an earlier wife) and grandchildren, nephews and
+ *  nieces, with their husbands and wives. An heir who is a brother ("heir_rel": "sibling") or a nephew is placed as
+ *  such; a member married abroad ("at") lives at that court with a claim on this throne. */
+function addFamily(s: GameState, st: any, i: number, keyIndex: Record<string, number>, mkChar: (c: any, nation: number, role: Character['role']) => number) {
+  const n = s.nations[i];
+  const r = s.chars[n.ruler]; if (!r) return;
+  const byName = new Map<string, Character>();
+  const year = (y: number, cid: number) => dateToDay(y, Math.floor(hash01(cid, 9) * 12), 1 + Math.floor(hash01(cid, 10) * 27), s.startYear);
+  const make = (e: any, nation: number): Character => {
+    const skills = Array.isArray(e.skills) ? e.skills : undefined;
+    const c = s.chars[mkChar({ ...e, skills }, nation, 'courtier')];
+    if (!skills) c.skills = [0, 1, 2].map((k) => 1 + Math.floor(hash01(c.id, 20 + k) * 4)) as [number, number, number];
+    if (typeof e.died === 'number') { c.alive = false; c.died = Math.min(-1, year(e.died, c.id)); }
+    return c;
+  };
+  const link = (child: Character, a: Character | undefined, b?: Character) => {
+    for (const p of [a, b]) {
+      if (!p) continue;
+      if (p.female) child.mother = p.id; else child.father = p.id;
+      if (!p.children.includes(child.id)) p.children.push(child.id);
+    }
+  };
+  const wed = (a: Character, b: Character) => { a.spouse = b.id; b.spouse = a.id; };
+  // a person who already rules, is heir or consort of a realm ("ref": "sweden.ruler"): Haakon VI of Norway is the son
+  // of Magnus Eriksson, king of Sweden, and the brother of Sweden's heir
+  const refChar = (ref: unknown): Character | undefined => {
+    if (typeof ref !== 'string') return undefined;
+    const [k, role] = ref.split('.'); const X = s.nations[keyIndex[k] ?? -1];
+    return X && (role === 'ruler' || role === 'heir' || role === 'consort') ? s.chars[X[role]] : undefined;
+  };
+  const fam: any[] = Array.isArray(st.family) ? st.family : [];
+  // parents first: the ruler (and an heir who is a brother) are their children
+  const parents = fam.filter((e) => e.rel === 'parent').map((e) => refChar(e.ref) ?? make(e, i)).filter((c) => { if (c) byName.set(c.name, c); return !!c; });
+  const father = parents.find((p) => !p.female), mother = parents.find((p) => p.female);
+  if (father && mother) wed(father, mother);
+  link(r, father, mother);
+  const h = s.chars[n.heir];
+  if (h) byName.set('heir', h);
+  if (h && st.heir_rel === 'sibling') link(h, father, mother);
+  if (h && st.heir_spouse) wed(h, make(st.heir_spouse, i));
+  for (const e of fam) {
+    if (e.rel === 'parent') continue;
+    const known = refChar(e.ref);
+    if (e.ref && !known) continue;
+    const at = known ? known.nation : typeof e.at === 'string' && keyIndex[e.at] !== undefined ? keyIndex[e.at] : i;
+    const c = known ?? make(e, at);
+    byName.set(c.name, c);
+    if (at !== i) c.claims = [...new Set([...(c.claims ?? []), i])]; // living at another court: a claim on this throne
+    if (e.rel === 'sibling') link(c, father, e.of_consort === false ? undefined : mother); // (a half-brother or -sister by the father)
+    else if (e.rel === 'child') link(c, r, e.of_consort === false ? undefined : s.chars[n.consort]);
+    else {
+      const p = byName.get(e.parent ?? '') ?? (e.parent === 'heir' ? h : undefined);
+      if (p) link(c, p, p.spouse ? s.chars[p.spouse] : undefined);
+    }
+    if (e.spouse) wed(c, make(e.spouse, at));
+  }
+  // an heir who is a nephew: the child of a brother or sister named in the family
+  if (h && st.heir_rel === 'nephew' && st.heir_parent) { const p = byName.get(st.heir_parent); if (p) link(h, p, p.spouse ? s.chars[p.spouse] : undefined); }
+}

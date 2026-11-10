@@ -4,6 +4,7 @@ import { playerId, realmDialog } from '../store';
 import { view } from '../../game/client';
 import { Section, Row, Btn, Empty, Effects, Tip, useQuery, act, t, L, num, pct, fmtDateShort } from './common';
 import { Parts, TipHead } from './explain';
+import { charName } from './people';
 
 type Row2 = [any, number];
 const sum = (r: Row2[]) => r.reduce((p, x) => p + x[1], 0);
@@ -24,7 +25,7 @@ export function RealmGovernment() {
         <Row k={t('x_gov_term')} v={`${g.term} / ${g.termLimit}`} />
       </>}
       {g.lastMargin !== undefined && g.process !== 'heredity' && <Row k={t('x_gov_last_margin')} v={`${g.lastMargin} %`} tip={t('x_gov_margin_hint')} />}
-      {g.process === 'heredity' ? <Row k={t('heir')} v={g.heirName ?? '—'} tip={t('x_gov_heredity_hint')} /> : <>
+      {g.process === 'heredity' ? <Row k={t('heir')} v={g.heirName ? charName(g.heirName, g.heirFemale, true) : '—'} tip={t('x_gov_heredity_hint')} /> : <>
         <div class="sub-h">{t('x_gov_candidates')}</div>
         {g.candidates.map((c: any) => <div class={`kv ${c.id === g.winner ? 'pos' : ''}`}>
           <span class="k"><Tip content={() => <div><TipHead name={c.name} value={`${c.age} ${t('years_old')}`} hint={c.dynasty} />{c.skills && <div>{c.skills.map((v: number, k: number) => <span class="chip">{t(SK[k])} {v}</span>)}</div>}<div class="muted">{partyName(c)}</div></div>}>

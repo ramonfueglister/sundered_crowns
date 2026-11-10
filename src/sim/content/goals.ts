@@ -42,7 +42,7 @@ const list = (xs: string[], lang: 'en' | 'de') => xs.length <= 1 ? xs.join('') :
 const owns = (e: EvApi, name: string) => { const l = loc(e.w, name); return l >= 0 && e.s.loc.owner[l] === e.n.id; };
 const ownsOrSubject = (e: EvApi, name: string) => { const l = loc(e.w, name); if (l < 0) return false; const o = e.s.loc.owner[l]; return o === e.n.id || (o >= 0 && e.s.nations[o].overlord === e.n.id); };
 const nat = (e: EvApi, key: string): Nation | undefined => e.s.nations.find((x) => x.key === key && x.alive);
-const BRANCH: I18n[] = [{ en: 'Governance', de: 'Staatskunst' }, { en: 'Commerce', de: 'Handel' }, { en: 'Warfare', de: 'Kriegswesen' }];
+const BRANCH: I18n[] = [{ en: 'Governance', de: 'Verwaltung' }, { en: 'Commerce', de: 'Handel' }, { en: 'Warfare', de: 'Kriegswesen' }];
 function countLocs(e: EvApi, f: (l: number) => boolean) { let k = 0; for (const l of nationLocsRO(e.s, e.n.id)) if (f(l)) k++; return k; }
 function buildings(e: EvApi, b: number) { let k = 0; for (const l of nationLocsRO(e.s, e.n.id)) k += e.s.loc.buildings[l * B + b]; return k; }
 const inBox = (e: EvApi, box: [number, number, number, number]) => countLocs(e, (l) => e.w.lat[l] >= box[0] && e.w.lat[l] <= box[1] && e.w.lon[l] >= box[2] && e.w.lon[l] <= box[3]);

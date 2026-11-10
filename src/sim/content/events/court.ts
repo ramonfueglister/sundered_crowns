@@ -259,7 +259,7 @@ export const COURT_EVENTS: EventDef[] = [
     title: { en: 'Thrown at the Hunt', de: 'Sturz bei der Jagd' },
     text: {
       en: 'During a boar hunt in the royal forest, the horse of {ruler} stumbled on a root and threw its rider into a ditch. The huntsmen carried {ruler} back on a litter of spears.',
-      de: 'Bei einer Wildschweinjagd im königlichen Forst strauchelte das Pferd von {ruler} über eine Wurzel und warf seinen Reiter in einen Graben. Die Jäger trugen {ruler} auf einer Trage aus Spießen zurück.',
+      de: 'Bei einer Wildschweinjagd im königlichen Forst strauchelte das Pferd von {ruler} über eine Wurzel und warf seinen Reiter in einen Graben. Die Jäger trugen {ruler_acc} auf einer Trage aus Spießen zurück.',
     },
     mtth: 400, cooldown: 20,
     trigger: (e) => settled(e) && monarchy(e) && rulerAge(e) > 16 && rulerAge(e) < 65,

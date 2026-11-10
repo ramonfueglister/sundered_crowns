@@ -12,7 +12,7 @@ import { statecraft, aiReforms } from './ai_statecraft';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
-import { totalOpinion, evaluateProposal } from './diplomacy';
+import { totalOpinion, evaluateProposal, refusedRecently, spyCost } from './diplomacy';
 import { lawEffect } from './politics';
 import { overextension } from './economy';
 import { aiDuties } from './administration';
@@ -225,7 +225,7 @@ function seekAccess(s: GameState, w: World, n: Nation) {
     if (u >= w.L) continue;
     for (let e = w.adjStart[u]; e < w.adjStart[u + 1]; e++) {
       const v = w.adj[e]; if (v >= w.L || seen[v]) continue;
-      const o = s.loc.owner[v]; if (o < 0 || o === n.id || enemies.has(o) || hasTreaty(s, n.id, o, 'access')) continue;
+      const o = s.loc.owner[v]; if (o < 0 || o === n.id || enemies.has(o) || hasTreaty(s, n.id, o, 'access') || refusedRecently(s, n.id, o, 'access')) continue;
       const d = w.distKm(v, nearest); if (d < ad || (d === ad && o < ask)) { ad = d; ask = o; }
     }
   }
@@ -352,8 +352,9 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     const cands = [...neigh].filter((x) => !n.rivals.includes(x) && !hasTreaty(s, n.id, x, 'alliance') && s.nations[x].overlord < 0).sort((a, b) => nationDev(s, b) - nationDev(s, a));
     if (cands.length && nationDev(s, cands[0]) > nationDev(s, n.id) * 0.5) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'rival', target: cands[0] });
   }
-  // alliances against threats / rivals
-  if (allies(s, n.id).length < (P(n, 'diplomat') ? 4 : P(n, 'isolationist') ? 1 : 3) && chance(s.rng, 0.35)) {
+  // alliances against threats / rivals (a subject leaves alliances to its overlord: a vassal of France does not court
+  // France's enemies; a realm that refused us is not asked again for some years, systems/diplomacy.ts noteRefusal)
+  if (n.overlord < 0 && allies(s, n.id).length < (P(n, 'diplomat') ? 4 : P(n, 'isolationist') ? 1 : 3) && chance(s.rng, 0.35)) {
     const cands: [number, number][] = [];
     const near: [number, number][] = [];
     for (const o of s.nations) {
@@ -364,7 +365,7 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     near.sort((a, b) => a[1] - b[1]);
     for (const [oid] of near.slice(0, 12)) {
       const o = s.nations[oid];
-      if (hasTreaty(s, n.id, o.id, 'alliance') || atWar(s, n.id, o.id)) continue;
+      if (hasTreaty(s, n.id, o.id, 'alliance') || atWar(s, n.id, o.id) || refusedRecently(s, n.id, o.id, 'alliance')) continue;
       const ev = evaluateProposal(s, w, n.id, o.id, 'alliance');
       const val = ev.reasons.reduce((p, x) => p + x[1], 0) + (n.rivals.some((r) => o.rivals.includes(r)) ? 30 : 0);
       if (val > 0) cands.push([o.id, val + nationDev(s, o.id) * 0.02]);
@@ -372,21 +373,22 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     cands.sort((a, b) => b[1] - a[1]);
     if (cands.length) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'alliance', target: cands[0][0] });
   }
-  // royal marriages with same-faith neighbours (monarchies)
-  if (!n.gov.includes('republic') && n.gov !== 'theocracy' && chance(s.rng, 0.08)) {
-    const c = [...neigh].find((x) => s.nations[x].faith === n.faith && !hasTreaty(s, n.id, x, 'marriage') && !s.nations[x].gov.includes('republic'));
+  // royal marriages with same-faith neighbours (monarchies). A subject leaves the great matches to its overlord, and a
+  // small lordship does not court a crown many times its size (Irish lords proposed to England every few months)
+  if (!n.gov.includes('republic') && n.gov !== 'theocracy' && n.overlord < 0 && chance(s.rng, 0.08)) {
+    const c = [...neigh].find((x) => s.nations[x].faith === n.faith && nationDev(s, x) <= nationDev(s, n.id) * 6 && !hasTreaty(s, n.id, x, 'marriage') && !s.nations[x].gov.includes('republic') && s.nations[x].gov !== 'theocracy' && s.nations[x].gov !== 'military_order' && !refusedRecently(s, n.id, x, 'marriage') && !atWar(s, n.id, x));
     if (c !== undefined) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'marriage', target: c });
   }
   // improve relations with a feared neighbour
   if (chance(s.rng, 0.1)) { const t = [...neigh].sort((a, b) => nationDev(s, b) - nationDev(s, a))[0]; if (t !== undefined && totalOpinion(s, w, t, n.id) < 0) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'improve', target: t }); }
   // vassalise small same-faith neighbours (diplomatically)
   if ((P(n, 'diplomat') || P(n, 'opportunist')) && chance(s.rng, 0.05)) {
-    const t = [...neigh].find((x) => nationDev(s, x) * 8 < nationDev(s, n.id) && s.nations[x].overlord < 0 && s.nations[x].faith === n.faith);
+    const t = [...neigh].find((x) => nationDev(s, x) * 8 < nationDev(s, n.id) && s.nations[x].overlord < 0 && s.nations[x].faith === n.faith && !refusedRecently(s, n.id, x, 'vassalize'));
     if (t !== undefined) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
   }
   // the leading crown of a people asks the small principalities it gathers to submit (Moscow and the Rus princes)
   {
-    const t = [...neigh].sort((a, b) => a - b).find((x) => gatherClaim(s, n.id, x) && !atWar(s, n.id, x) && (s.nations[x].overlord < 0 || (s.nations[x].subjectType === 'tributary' && s.nations[x].overlord === n.overlord)));
+    const t = [...neigh].sort((a, b) => a - b).find((x) => gatherClaim(s, n.id, x) && !atWar(s, n.id, x) && !refusedRecently(s, n.id, x, 'vassalize') && (s.nations[x].overlord < 0 || (s.nations[x].subjectType === 'tributary' && s.nations[x].overlord === n.overlord)));
     if (t !== undefined && chance(s.rng, 0.1)) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'vassalize', target: t });
   }
   // integrate long-standing vassals
@@ -448,7 +450,7 @@ export function considerWar(s: GameState, w: World, n: Nation) {
   if (!goal || goal === 'humiliate') {
     // prepare a justification for a real war against the most tempting target (an envoy's errand, more often than a
     // declaration); a rival may meanwhile be humbled in a limited war
-    if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && !s.spies.some((x) => x.nation === n.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
+    if (bestScore + 65 >= 30 && chance(s.rng, Math.min(1, aggr * 3)) && aiMayFabricate(s, n, best)) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'fabricate', target: best });
     if (!goal || bestScore < 30 || !chance(s.rng, aggr * 0.4)) return;
   } else if (bestScore < 30 || !chance(s.rng, aggr)) return;
   if (warHooks.check?.(s, w, n.id, best, goal)) return; // the Empire's peace or our assembly forbids this war
@@ -456,6 +458,12 @@ export function considerWar(s: GameState, w: World, n: Nation) {
   applyCommand(s, w, { t: 'declare', n: n.id, target: best, goal });
 }
 
+/** Fabricating a claim is an agent's operation (diplomacy.ts startSpy): the AI starts one only with a free agent, none
+ *  fabricating already, and three times its price in the treasury, as for every operation of the AI (ai_statecraft.ts). */
+export function aiMayFabricate(s: GameState, n: Nation, target: number): boolean {
+  const agents = s.spies.filter((x) => x.nation === n.id);
+  return agents.length < 2 && !agents.some((x) => x.action === 'fabricate') && n.treasury >= spyCost(s, n.id, target, 'fabricate').cost * 3;
+}
 /** The war the AI would fight against b with the justifications it holds (null without any): its own land back first,
  *  then a holy war for a zealous realm, a crown its blood entitles it to, a trade war for a trading realm, conquest
  *  under a claim, and with nothing but a rivalry a war to humble the rival. */

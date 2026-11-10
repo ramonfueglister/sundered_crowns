@@ -80,7 +80,7 @@ export const LANDMARKS: LandmarkDef[] = [
     name: { en: 'Krak des Chevaliers', de: 'Krak des Chevaliers' }, desc: { en: 'The crusaders’ mountain fortress over the Homs gap, in Mamluk hands since 1271.', de: 'Die Bergfestung der Kreuzfahrer über der Senke von Homs, seit 1271 in mamlukischer Hand.' },
     fx: { fort_strength: 0.1, manpower: 0.05 } },
   { id: 'alcazar_seville', place: 'Seville', kind: 'palace', built: 1, max: 3, prestige: 0.07,
-    name: { en: 'Alcázar of Seville', de: 'Alcázar von Sevilla' }, desc: { en: 'The royal palace of Seville, which King Pedro is rebuilding in the Moorish style.', de: 'Der Königspalast von Sevilla, den König Pedro im maurischen Stil neu errichten lässt.' },
+    name: { en: 'Alcázar of Seville', de: 'Alcázar von Sevilla' }, desc: { en: 'The royal palace of Seville, which King Pedro is rebuilding in the Moorish style.', de: 'Der Königspalast von Sevilla, den König Peter im maurischen Stil neu errichten lässt.' },
     fx: { trade: 0.04, tax: 0.02 } },
 ];
 

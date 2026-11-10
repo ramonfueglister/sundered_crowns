@@ -32,7 +32,7 @@ export const REFUSAL_DE: Record<string, string> = {
   // ---- UI pass (claude/ui-pass): reasons a decision is not yet possible (src/sim/content/decisions.ts)
   'only in the Age of Reason': 'Erst im Zeitalter der Vernunft', 'we are not sovereign': 'Wir sind nicht souverän', 'only from the Age of Print and Horizons': 'Erst ab dem Zeitalter von Druck und Horizonten',
   'need 20 Authority': 'Braucht 20 Autorität', 'need 30 Authority': 'Braucht 30 Autorität', 'need 50 Authority': 'Braucht 50 Autorität', 'need 60 Authority': 'Braucht 60 Autorität', 'need 80 Authority': 'Braucht 80 Autorität', 'need 100 Authority': 'Braucht 100 Autorität', 'need 50 Mandate': 'Braucht 50 Mandat', 'need 150 Authority': 'Braucht 150 Autorität', 'need 60 Mandate': 'Braucht 60 Mandat',
-  'need Governance 10': 'Braucht Staatskunst 10', 'need Commerce & Learning 3': 'Braucht Handel & Gelehrsamkeit 3', 'need Commerce & Learning 10': 'Braucht Handel & Gelehrsamkeit 10', 'need Commerce & Learning 14': 'Braucht Handel & Gelehrsamkeit 14', 'need a harbour': 'Braucht einen Hafen',
+  'need Governance 10': 'Braucht Verwaltung 10', 'need Commerce & Learning 3': 'Braucht Handel & Gelehrsamkeit 3', 'need Commerce & Learning 10': 'Braucht Handel & Gelehrsamkeit 10', 'need Commerce & Learning 14': 'Braucht Handel & Gelehrsamkeit 14', 'need a harbour': 'Braucht einen Hafen',
   'we must know bills of exchange and double-entry bookkeeping': 'Wir müssen Wechselbriefe und doppelte Buchführung kennen', 'we are still in good standing with the Curia': 'Wir stehen noch in gutem Ansehen bei der Kurie',
   'too soon after the last foundation': 'Zu kurz nach der letzten Gründung', 'throw off the overlord first': 'Erst den Oberherrn abschütteln', 'the estates met recently': 'Die Stände tagten erst kürzlich',
   'our realm is too small for estates general': 'Unser Reich ist zu klein für Generalstände', 'our realm is too small for an admiralty': 'Unser Reich ist zu klein für eine Admiralität', 'our realm is too small for a trading company': 'Unser Reich ist zu klein für eine Handelskompanie',
@@ -112,6 +112,9 @@ export const REFUSAL_DE: Record<string, string> = {
   'cannot lead an army': 'Kann kein Heer führen',
   // ---- polish pass (claude/polish-pass): developer tools
   'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
+  // ---- fix-people
+  'they refused us recently': 'Sie haben uns erst kürzlich abgewiesen',
+  'no abler candidate at court': 'Niemand am Hof wäre fähiger',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

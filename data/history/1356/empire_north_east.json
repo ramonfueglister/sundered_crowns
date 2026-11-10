@@ -159,7 +159,7 @@
     ]
    },
    "heir": {
-    "name": "John Henry",
+    "name": "John Henry, Margrave of Moravia",
     "born": 1322,
     "dynasty": "Luxembourg",
     "female": false,
@@ -226,6 +226,63 @@
       "arrangement": "single"
      }
     ]
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "John the Blind",
+     "born": 1296,
+     "died": 1346,
+     "dynasty": "Luxembourg"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Elizabeth of Bohemia",
+     "born": 1292,
+     "died": 1330,
+     "dynasty": "Přemyslid"
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Catherine of Bohemia",
+     "born": 1342,
+     "dynasty": "Luxembourg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Jobst of Moravia",
+     "born": 1351,
+     "dynasty": "Luxembourg"
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "John Sobieslav",
+     "born": 1352,
+     "dynasty": "Luxembourg"
+    },
+    {
+     "female": false,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Prokop of Moravia",
+     "born": 1354,
+     "dynasty": "Luxembourg"
+    }
+   ],
+   "heir_rel": "sibling",
+   "heir_spouse": {
+    "female": true,
+    "name": "Margaret of Opava",
+    "born": 1330,
+    "dynasty": "Přemyslid"
    }
   },
   {

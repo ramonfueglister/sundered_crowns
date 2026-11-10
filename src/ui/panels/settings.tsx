@@ -95,3 +95,13 @@ export function AccessSettings() {
     <div class="muted small">{t('x_notify_hint')}</div>
   </Section>;
 }
+
+/** fix-people: when the game pauses by itself, events and offers apart (an offer of another realm need not stop time). */
+export function PauseSettings() {
+  const s = settings.value;
+  return <>
+    <label class="chk"><input type="checkbox" checked={s.pauseOnEvents} onChange={(e) => saveSettings({ pauseOnEvents: (e.target as HTMLInputElement).checked })} /> {t('pause_on_events')}</label>
+    <label class="chk"><input type="checkbox" checked={s.pauseOnOffers} onChange={(e) => saveSettings({ pauseOnOffers: (e.target as HTMLInputElement).checked })} /> {t('xp_pause_on_offers')}</label>
+    <div class="muted small">{t('xp_pause_on_offers_hint')}</div>
+  </>;
+}

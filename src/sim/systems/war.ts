@@ -761,7 +761,7 @@ function dreadMonth(s: GameState, w: World) {
           delete agg.flags.front_months;
           const war = s.wars[s.wars.length - 1];
           for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) war.att.push(m);
-          chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` }, undefined, [agg.id, ...members]);
+          chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` }, undefined, [agg.id, ...war.att, ...war.def]); // every realm on either side, allies called in too
           notice(s, agg.id, 'coalition', { en: `A Common Front of ${members.length} realms has declared war on us!`, de: `Eine Gemeinsame Front von ${members.length} Reichen hat uns den Krieg erklärt!` }, { war: war.id });
         }
       }

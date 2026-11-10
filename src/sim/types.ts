@@ -198,7 +198,7 @@ export interface ChronEntry {
   /** the other realms the entry concerns (every side of a war, both crowns of a union, both parties of a treaty) */
   also?: number[];
 }
-export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number }
+export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number; reasons?: [string, number][]; reasonsTitle?: string /* UI text key heading the reasons (default: their answer) */ }
 
 export interface Construction { loc: number; building: number; left: number; nation: number; cost: number }
 export interface Recruit { loc: number; nation: number; type: number; men: number; left: number; army: number }
