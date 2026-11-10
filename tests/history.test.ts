@@ -139,7 +139,9 @@ describe('history mechanics (point 99)', () => {
     expect(Math.round((truce(c.id, a.id).until - s.day) / 365)).toBe(2);
     // a holy war against the emirate is allowed (another faith), but its truce is the usual five years
     clear();
-    expect(declareWar(s, w, c.id, gr.id, 'faith', [gr.capital])).toBe(null);
+    // (fix-war: named towns must lie in the land the goal covers; the capital of the emirate is no holy land of ours)
+    expect(declareWar(s, w, c.id, gr.id, 'faith', [gr.capital])).toBe('a town beyond what this war is fought for');
+    expect(declareWar(s, w, c.id, gr.id, 'faith')).toBe(null);
     wr = s.wars[s.wars.length - 1];
     concludePeace(s, w, wr, gr.id, c.id, []);
     expect(Math.round((truce(c.id, gr.id).until - s.day) / 365)).toBe(5);
