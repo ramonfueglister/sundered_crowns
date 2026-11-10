@@ -125,6 +125,7 @@ function SelectScreen() {
     if (tutorialStep.value >= 0) tutorialStep.value = 0;
   };
   const rec = RECOMMENDED.map((k) => ns.find((n) => n.key === k && n.alive)).filter(Boolean) as typeof ns;
+  const emp = ns.filter((n) => n.alive && (n.emperor || n.elector)).sort((a, b) => (b.emperor ? 1 : 0) - (a.emperor ? 1 : 0) || b.dev - a.dev);
   const pick = (n: (typeof ns)[number]) => { selectedNation.value = n.id; const g = rendererRef.assets?.geo; if (g && n.capital >= 0) rendererRef.r?.flyTo(g.loc.x[n.capital], g.loc.y[n.capital], 2.5); };
   const stars = sel ? Math.max(1, Math.min(5, sel.difficulty || 3)) : 3;
   const open = (goals ?? []).filter((g) => g.open).slice(0, 3);
@@ -132,6 +133,8 @@ function SelectScreen() {
     <div class="select-top">{t('choose_realm')}</div>
     <div class="select-side">
       <div class="rec"><h3>{t('recommended')}</h3>{rec.map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>
+      {/* the Empire: its emperor (the king of Bohemia in 1356) and the electors */}
+      {emp.length > 0 && <div class="rec"><h3>{t('x_sel_empire')}</h3>{emp.map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} title={n.emperor ? t('emperor') : t('elector')} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{n.emperor ? '♛ ' : ''}{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>}
       <div class="rec"><h3>{lang.value === 'de' ? 'Großmächte' : 'Great powers'}</h3>{[...ns].filter((n) => n.alive).sort((a, b) => b.score - a.score).slice(0, 10).map((n) => <button class={`nation-chip ${sel?.id === n.id ? 'on' : ''}`} onClick={() => pick(n)}><span class="sw" style={{ background: rgb(n.color) }} />{L(n.short)}<span class="st">{'★'.repeat(Math.max(1, Math.min(5, n.difficulty || 3)))}</span></button>)}</div>
     </div>
     {sel && <div class="select-card">

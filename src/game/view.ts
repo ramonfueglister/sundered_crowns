@@ -33,7 +33,8 @@ import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
 import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors, callToArmsView } from './warview';
-import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
+import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts, classSums, contentParts } from '../sim/systems/government';
+
 import { realmAnswer } from './realmview';
 import { knownOf, fogColors } from './fog';
 import { deName } from '../sim/content/names_de';
@@ -53,6 +54,7 @@ export function nationLites(s: GameState, w: World): NationLite[] {
     id: n.id, key: n.key, alive: n.alive, name: n.name, short: n.short, adj: n.adj, color: n.color, capital: n.capital, rank: n.rank, gov: n.gov,
     score: n.score, overlord: n.overlord, faith: n.faith, culture: n.culture, coa: n.coa, ruler: s.chars[n.ruler]?.name ?? '—', difficulty: n.difficulty,
     summary: n.summary, dev: nationDev(s, n.id), locs: locs[n.id], personality: n.personality, player: s.playerNations.includes(n.id),
+    emperor: s.empire.emperor === n.id, elector: s.empire.electors.includes(n.id),
   }));
 }
 
@@ -755,10 +757,12 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     const ex = Math.max(0, Math.min(1, sumRows(exParts)));
     return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods)) * (1 + trB)) };
   });
-  // ---- estates: contentment drifts 3 % a month toward 50 + 6 per privilege
-  // influence drifts 5 % a month toward the Power's share of all weights (systems/government.ts influenceFactors)
-  const inflF = influenceFactors(s, n); const inflT = influenceTargets(s, n);
-  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const resent = resentment(n, e.id); const tgt = 50 + e.privileges.length * 6 - duty + resent; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, resent, appeaseUntil: n.flags[`appease_${e.id}`] || 0,
+  // ---- estates: contentment drifts 3 % a month toward its target (systems/government.ts contentParts: 50, privileges,
+  // class taxes above the customary rates, duties, resented privileges); influence drifts 5 % a month toward the
+  // Power's share of all weights (systems/government.ts influenceFactors)
+  const csE = classSums(s);
+  const inflF = influenceFactors(s, n, csE); const inflT = influenceTargets(s, n, csE);
+  const estates = n.estates.map((e) => { const contentRows = contentParts(n, e.id, csE); const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const resent = resentment(n, e.id); const tgt = sumRows(contentRows); return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, contentParts: contentRows, privileges: e.privileges.length, duties: duty, resent, appeaseUntil: n.flags[`appease_${e.id}`] || 0,
     influence: { value: e.influence, target: inflT[e.id] ?? e.influence, monthly: ((inflT[e.id] ?? e.influence) - e.influence) * INFLUENCE_DRIFT, factors: inflF[e.id] ?? [], weight: (inflF[e.id] ?? []).reduce((p, r) => p * r[1], 1) } }; });
   return {
     concord: { value: n.concord, target: concordTarget, monthly: (concordTarget - n.concord) * 0.04, parts: concordParts },
@@ -806,9 +810,10 @@ export function goalsView(s: GameState, w: World, n: Nation) {
     const isDone = done.has(g.id), open = !isDone && (g.req ?? []).every((x) => done.has(x));
     // conditions are evaluated for open goals and the next ones (done goals keep their texts only)
     const conds = isDone ? g.conds.map((c) => ({ t: c.t, ok: true, places: c.places })) : goalConditions(s, w, n, g);
-    const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max,
+    // frac: the share of a condition done (systems/goals.ts goalConditions; a year gate holds it below full until then)
+    const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max, frac: c.ok ? 1 : clamp01(c.frac ?? 0), from: c.from, yearsLeft: c.yearsLeft, timeFrac: c.timeFrac,
       places: c.places?.map((nm: string) => { const l = goalPlace(w, nm); return { name: nm, loc: l, owner: l >= 0 ? s.loc.owner[l] : -1 }; }) }));
-    const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + (c.ok ? 1 : c.max ? clamp01(c.cur / c.max) : 0), 0) / condsOut.length : 0;
+    const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + c.frac, 0) / condsOut.length : 0;
     // ready only after the realm's first look (src/sim/systems/goals.ts firstLook): before it a claim would inherit the goal without reward
     return { id: g.id, name: g.name, desc: g.desc, flav: g.flav ?? null, req: g.req ?? [], done: isDone, inherited: inherited.has(g.id), open, ready: open && looked && conds.every((c) => c.ok),
       conds: condsOut, rews: g.rews, unlocks: tree.filter((x) => x.req?.includes(g.id)).map((x) => x.id), depth: depthOf(g.id), progress: isDone ? 1 : frac };

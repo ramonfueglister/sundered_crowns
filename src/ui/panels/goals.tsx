@@ -12,7 +12,7 @@ import { sfx } from '../audio';
 
 export interface GoalV {
   id: string; name: { en: string; de: string }; flav: { en: string; de: string } | null; req: string[]; done: boolean; inherited?: boolean; open: boolean; ready: boolean;
-  conds: { t: { en: string; de: string }; ok: boolean; cur?: number; max?: number; places?: { name: string; loc: number; owner: number }[] }[];
+  conds: { t: { en: string; de: string }; ok: boolean; cur?: number; max?: number; frac: number; from?: number; yearsLeft?: number; timeFrac?: number; places?: { name: string; loc: number; owner: number }[] }[];
   rews: { en: string; de: string }[]; unlocks: string[]; depth: number; progress: number;
 }
 
@@ -38,29 +38,36 @@ export function claim(g: GoalV) { act({ t: 'goal', id: g.id }, 'bell', `${t('x_g
 
 // ---------------------------------------------------------------- pieces
 const fmtCount = (v: number | undefined) => (v === undefined ? '' : Math.abs(v) >= 100 ? num(v) : num(v, Number.isInteger(v) ? 0 : 1));
+/** "from 1480: 124 years to go" for a condition that counts only from a year on. */
+const gateText = (c: GoalV['conds'][number]) => (c.from === undefined ? '' : t(c.yearsLeft === 1 ? 'x_cond_from_1' : 'x_cond_from').replace('{y}', String(c.from)).replace('{n}', String(c.yearsLeft ?? 0)));
 /** One condition: met or not, its text, and a progress bar for counted conditions; places are listed with their holders. */
 function Cond({ c, compact = false }: { c: GoalV['conds'][number]; compact?: boolean }) {
   const pid = playerId.value;
   const tip = () => <div>
     <TipHead name={L(c.t)} value={c.max !== undefined ? `${fmtCount(c.cur)} / ${fmtCount(c.max)}` : c.ok ? '✔' : '✘'} hint={t('x_goal_conds_hint')} />
     <div class="breakdown">
-      {c.max !== undefined && <><div class="bd-row"><span>{t('x_cond_now')}</span><span>{fmtCount(c.cur)}</span></div><div class="bd-row"><span>{t('x_cond_need')}</span><span>{fmtCount(c.max)}</span></div>
-        <div class="bd-row bd-total"><span>{t('x_cond_progress')}</span><span>{pct(Math.max(0, Math.min(1, (c.cur ?? 0) / Math.max(1e-9, c.max))))}</span></div></>}
+      {c.max !== undefined && <><div class="bd-row"><span>{t('x_cond_now')}</span><span>{fmtCount(c.cur)}</span></div><div class="bd-row"><span>{t('x_cond_need')}</span><span>{fmtCount(c.max)}</span></div></>}
+      {c.from !== undefined && <><div class="bd-row"><span>{gateText(c)}</span><span class="neg">✘</span></div>
+        <div class="bd-row"><span>{t('x_cond_time_to').replace('{y}', String(c.from))}</span><span>{pct(c.timeFrac ?? 0)}</span></div></>}
+      {(c.max !== undefined || c.from !== undefined) && <div class="bd-row bd-total"><span>{t('x_cond_progress')}</span><span>{pct(c.frac)}</span></div>}
+      {c.from !== undefined && <div class="muted small">{t('x_cond_gate_hint')}</div>}
       {c.places?.map((p) => <div class="bd-row"><span>{placeName(p.name)}</span><span class={p.owner === pid ? 'pos' : 'neg'}>{p.owner === pid ? t('x_held_ours') : p.owner >= 0 ? L(nations.value[p.owner]?.short) : t('x_unowned')}</span></div>)}
     </div>
   </div>;
   return <li class={`gcond ${c.ok ? 'ok' : ''}`}>
     <Tip content={tip} tag="div" class="gcond-h"><span class="gcond-ic">{c.ok ? '✔' : '○'}</span><span class="gcond-t">{L(c.t)}</span>
       {c.max !== undefined && <span class="gcond-n">{fmtCount(c.cur)} / {fmtCount(c.max)}</span>}</Tip>
-    {c.max !== undefined && !c.ok && <Bar value={c.cur ?? 0} max={c.max} h={4} color="#b8913f" />}
-    {!compact && c.places && c.places.length > 1 && <div class="gplaces">{c.places.map((p) => <a class={`gplace ${p.owner === pid ? 'held' : ''}`} onClick={() => p.loc >= 0 && selectLoc(p.loc)}>
-      {p.owner >= 0 && p.owner !== pid && <NLink id={p.owner} size={11} name={false} />}{placeName(p.name)}</a>)}</div>}
+    {c.from !== undefined && <div class="muted small">{gateText(c)}</div>}
+    {(c.max !== undefined || c.from !== undefined) && !c.ok && <Bar value={c.frac} max={1} h={4} color="#b8913f" />}
+    {/* a span, not a link: the holder's coat of arms inside is a link of its own */}
+    {!compact && c.places && c.places.length > 1 && <div class="gplaces">{c.places.map((p) => <span role="button" class={`gplace ${p.owner === pid ? 'held' : ''}`} onClick={() => p.loc >= 0 && selectLoc(p.loc)}>
+      {p.owner >= 0 && p.owner !== pid && <NLink id={p.owner} size={11} name={false} />}{placeName(p.name)}</span>)}</div>}
   </li>;
 }
 /** Overall progress with what makes it up (each condition's part). */
 function ProgressTip({ g }: { g: GoalV }) {
   return <div><TipHead name={L(g.name)} value={pct(g.progress)} hint={t('x_goal_progress_hint')} />
-    <div class="breakdown">{g.conds.map((c) => <div class="bd-row"><span>{L(c.t)}</span><span class={c.ok ? 'pos' : ''}>{c.ok ? '✔' : c.max ? pct(Math.max(0, Math.min(1, (c.cur ?? 0) / c.max))) : '✘'}</span></div>)}
+    <div class="breakdown">{g.conds.map((c) => <div class="bd-row"><span>{L(c.t)}</span><span class={c.ok ? 'pos' : ''}>{c.ok ? '✔' : c.max || c.from !== undefined ? pct(c.frac) : '✘'}</span></div>)}
       <div class="bd-row bd-total"><span>Σ / {g.conds.length}</span><span>{pct(g.progress)}</span></div></div></div>;
 }
 
@@ -141,8 +148,8 @@ export function GoalTracker() {
             {pinned.length > 0 && <button class="gt-x" title={t('x_unpin')} onClick={() => togglePin(g.id)}>✕</button>}</div>
           <Tip tag="div" content={() => <ProgressTip g={g} />}><span class="ol-bar wide gt-bar"><i style={{ width: `${Math.round(g.progress * 100)}%`, background: g.ready ? '#8fd07a' : '#e2c376' }} /></span></Tip>
           {g.ready ? <div class="gt-next"><span class="pos">{t('x_goal_ready')}</span> <button class="gt-claim" onClick={() => claim(g)}>{t('x_goal_claim')}</button></div>
-            : next && <Tip tag="div" content={<div><TipHead name={L(next.t)} value={next.max !== undefined ? `${fmtCount(next.cur)} / ${fmtCount(next.max)}` : '✘'} hint={t('x_goal_conds_hint')} /></div>}>
-              <div class="gt-next">○ {L(next.t)}{next.max !== undefined && <b> {fmtCount(next.cur)}/{fmtCount(next.max)}</b>}</div></Tip>}
+            : next && <Tip tag="div" content={<div><TipHead name={L(next.t)} value={next.max !== undefined ? `${fmtCount(next.cur)} / ${fmtCount(next.max)}` : '✘'} hint={t('x_goal_conds_hint')} />{next.from !== undefined && <div class="neg">{gateText(next)}</div>}</div>}>
+              <div class="gt-next">○ {L(next.t)}{next.max !== undefined && <b> {fmtCount(next.cur)}/{fmtCount(next.max)}</b>}{next.from !== undefined && <span class="muted"> · {gateText(next)}</span>}</div></Tip>}
         </div>; })}
       {!list.length && <div class="muted small">{t('x_no_open_goals')}</div>}
     </div>}

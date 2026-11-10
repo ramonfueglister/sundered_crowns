@@ -121,6 +121,16 @@ export const REFUSAL_DE: Record<string, string> = {
   'we know nothing of this realm': 'Von diesem Reich wissen wir nichts',
   'our navigators lack the knowledge (Commerce & Learning 6)': 'Unseren Seefahrern fehlt das Wissen (Handel & Gelehrsamkeit 6)',
   'an ocean voyage needs Commerce & Learning 10': 'Eine Ozeanfahrt braucht Handel & Gelehrsamkeit 10',
+  // ---- fix-realm
+  'there is no emperor to ask': 'Es gibt keinen Kaiser, den wir bitten könnten', 'we are not the realm attacked': 'Wir sind nicht das angegriffene Reich',
+  'the attacker is a member of the Empire': 'Der Angreifer ist ein Glied des Reiches', 'the emperor is already in this war': 'Der Kaiser ist schon in diesem Krieg',
+  'the emperor was already called to this war': 'Der Kaiser wurde zu diesem Krieg schon gerufen',
+  'no wave of plague is under way': 'Es geht gerade keine Pestwelle um', 'the plague is far from our realm': 'Die Pest ist fern von unserem Reich',
+  'none of our places hold the old faith': 'Keiner unserer Orte hält am alten Glauben fest', 'only the crown of Bohemia can do this': 'Das kann nur die Krone Böhmens',
+  'the royal judges are everywhere already': 'Die königlichen Richter sind schon überall', 'the magnates are content already': 'Die Magnaten sind schon zufrieden',
+  'the code is not yet strong enough to proclaim': 'Das Gesetzbuch ist noch nicht stark genug für die Verkündung', 'we cannot back the lords against ourselves': 'Wir können die Herren nicht gegen uns selbst unterstützen',
+  'the lords have gold enough already': 'Die Herren haben schon Gold genug',
+  'only once the lords have banded together against the code': 'Erst wenn sich die Herren gegen das Gesetzbuch verbündet haben',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

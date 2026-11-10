@@ -14,7 +14,7 @@ import { hash01, chance } from '../rng';
 
 type Row = [string | I18n, number];
 const T = (en: string, de: string): I18n => ({ en, de });
-const isHuman = (s: GameState, id: number) => s.playerNations.includes(id) || !!s.nations[id]?.playerId;
+export const isHuman = (s: GameState, id: number) => s.playerNations.includes(id) || !!s.nations[id]?.playerId;
 const alive = (s: GameState, id: number | undefined) => (id !== undefined && id >= 0 && s.nations[id]?.alive ? s.nations[id] : undefined);
 
 // ---------------------------------------------------------------- the reforms of the diet
@@ -145,10 +145,8 @@ export function realmBodiesOnWar(s: GameState, w: World, war: War) {
   const E = s.empire; const victim = s.nations[war.goal.target], att = s.nations[war.attLead];
   const em = emperorCalled(s, war.goal.target, war.attLead, war.goal.type, war);
   if (em) {
-    const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
-    (E.calls ??= []).push(call);
-    if (isHuman(s, em.id)) notice(s, em.id, 'imperial_call', T(`${att.short.en} has attacked ${victim.short.en}, a member of the Empire. The members expect their emperor to defend it.`, `${att.short.de} hat ${victim.short.de} angegriffen, ein Glied des Reiches. Die Glieder erwarten, dass ihr Kaiser es verteidigt.`), { war: war.id, loc: victim.capital });
-    else answerCall(s, w, call, defendScore(s, w, em, call).reduce((p, r) => p + r[1], 0) > 0);
+    callEmperor(s, w, war, victim, att);
+
     // the circles of the Empire: neighbouring members march to the defence
     for (const id of circleMembers(s, w, victim.id, att.id, war)) if (chance(s.rng, 0.5)) war.def.push(id);
   }
@@ -195,6 +193,54 @@ function predictBodies(s: GameState, w: World, a: number, b: number, goal: WarGo
   }
   return out;
 }
+
+/** The emperor is called to defend a member: a human emperor has 45 days to answer, an AI emperor answers at once by
+ *  defendScore. Returns the call. */
+function callEmperor(s: GameState, w: World, war: War, victim: Nation, att: Nation) {
+  const E = s.empire; const em = s.nations[E.emperor];
+  const call = { war: war.id, member: victim.id, attacker: att.id, until: s.day + 45, answer: 0 };
+  (E.calls ??= []).push(call);
+  victim.flags[`emp_call_${war.id}`] = s.day; // one call per war and member (the list of calls is pruned)
+  if (isHuman(s, em.id)) notice(s, em.id, 'imperial_call', T(`${att.short.en} has attacked ${victim.short.en}, a member of the Empire. The members expect their emperor to defend it.`, `${att.short.de} hat ${victim.short.de} angegriffen, ein Glied des Reiches. Die Glieder erwarten, dass ihr Kaiser es verteidigt.`), { war: war.id, loc: victim.capital });
+  else answerCall(s, w, call, defendScore(s, w, em, call).reduce((p, r) => p + r[1], 0) > 0);
+  return call;
+}
+const NO_CALL_GOALS = ['independence', 'civil_war', 'rebels'];
+/** Why a member cannot ask the emperor to defend it in a war (null: it can). The rule is the call made when a war is
+ *  declared on a member: a sovereign member attacked (the war's target or the leader of its defence) by a realm
+ *  outside the Empire, an emperor who is someone else and not yet in that war; one call per war and member, whether
+ *  made at the declaration or asked for later (a war from before the game, a new emperor, a call never made). */
+export function helpRefusal(s: GameState, n: Nation, war: War): string | null {
+  const E = s.empire; const em = alive(s, E.emperor); const att = s.nations[war.attLead];
+  if (!n.isHRE || n.overlord >= 0) return 'not a member of the Empire';
+  if (!war.def.includes(n.id) || (war.defLead !== n.id && war.goal.target !== n.id) || NO_CALL_GOALS.includes(war.goal.type)) return 'we are not the realm attacked';
+  if (!att?.alive || att.isHRE) return 'the attacker is a member of the Empire';
+  if (!em || em.id === n.id) return 'there is no emperor to ask';
+  if (em.id === att.id || war.att.includes(em.id) || war.def.includes(em.id) || atWar(s, em.id, n.id)) return 'the emperor is already in this war';
+  if (n.flags[`emp_call_${war.id}`] !== undefined || (E.calls ?? []).some((c) => c.war === war.id && c.member === n.id)) return 'the emperor was already called to this war';
+  return null;
+}
+/** A member asks the emperor to defend it (the same call as at a declaration; see helpRefusal). out.msg tells the
+ *  answer of an AI emperor, or that a human emperor has been asked. */
+export function askHelp(s: GameState, w: World, n: Nation, warId: number, out?: { msg?: I18n }): string | null {
+  const war = s.wars.find((x) => x.id === warId); if (!war) return 'no such war';
+  const r = helpRefusal(s, n, war); if (r) return r;
+  const em = s.nations[s.empire.emperor];
+  const c = callEmperor(s, w, war, n, s.nations[war.attLead]);
+  if (out) out.msg = c.answer === 1 ? T(`The emperor takes up arms for us: ${em.short.en} joins the war.`, `Der Kaiser greift für uns zu den Waffen: ${em.short.de} tritt in den Krieg ein.`)
+    : c.answer === -1 ? T(`The emperor refuses to come to our defence.`, `Der Kaiser lehnt es ab, uns zu Hilfe zu kommen.`)
+      : T(`Our plea has gone to the emperor; he has 45 days to answer.`, `Unsere Bitte ist an den Kaiser ergangen; er hat 45 Tage für die Antwort.`);
+  return null;
+}
+/** AI members ask for the emperor's help in the wars where no call was made for them (same rule as the player). */
+function aiAskHelp(s: GameState, w: World) {
+  for (const war of s.wars) {
+    for (const id of [war.defLead, war.goal.target]) {
+      const n = s.nations[id]; if (!n?.alive || isHuman(s, id)) continue;
+      if (!helpRefusal(s, n, war)) askHelp(s, w, n, war.id);
+    }
+  }
+}
 /** Why the emperor would or would not defend a member: authority, opinion, strength, other wars, distance. */
 export function defendScore(s: GameState, w: World, em: Nation, call: { war: number; member: number; attacker: number }): Row[] {
   const E = s.empire; const m = s.nations[call.member], a = s.nations[call.attacker];
@@ -203,15 +249,17 @@ export function defendScore(s: GameState, w: World, em: Nation, call: { war: num
   const rows: Row[] = [['x_emp_duty', (E.authority - 30) * 0.5], ['r_opinion', opinion(s, em.id, m.id) * 0.3], ['x_emp_strength', clamp((ratio - 0.8) * 30, -40, 30)]];
   if (em.rivals.includes(a.id)) rows.push(['r_rival', 30]);
   if (hasTreaty(s, em.id, a.id, 'alliance')) rows.push(['r_allied', -100]);
-  if (s.wars.some((x) => x.att.includes(em.id) || x.def.includes(em.id))) rows.push(['x_emp_busy', -30]);
+  // busy in another war (the war he is asked into, or has joined, does not count against it)
+  if (s.wars.some((x) => x.id !== call.war && (x.att.includes(em.id) || x.def.includes(em.id)))) rows.push(['x_emp_busy', -30]);
   if (em.warExhaustion > 10) rows.push(['r_war_exhaustion', -em.warExhaustion * 0.5]);
   if (em.capital >= 0 && m.capital >= 0 && w.distKm(em.capital, m.capital) > 1200) rows.push(['x_emp_far', -20]);
   return rows;
 }
 /** The emperor answers a call to defend a member. */
-export function answerCall(s: GameState, w: World, call: { war: number; member: number; attacker: number; answer: number }, yes: boolean) {
+export function answerCall(s: GameState, w: World, call: { war: number; member: number; attacker: number; answer: number; rows?: Row[] }, yes: boolean) {
   const E = s.empire; const em = s.nations[E.emperor]; const war = s.wars.find((x) => x.id === call.war);
   if (!war || !em?.alive) { call.answer = -1; return; }
+  call.rows = defendScore(s, w, em, call); // what he weighed when he answered (the help section shows it afterwards)
   const m = s.nations[call.member], a = s.nations[call.attacker];
   if (yes) {
     call.answer = 1;
@@ -248,7 +296,9 @@ export const ORDER_COST = 20;
 export const ORDER_OBEYED = 1, ORDER_DEFIED = -3;
 export const BAN_EFFECTS = { concord: -10, mandate: -8 }, BAN_YEARS = 5;
 /** The emperor orders the aggressor in a war between members to make peace (costs the emperor ORDER_COST Authority). */
-export function orderPeace(s: GameState, w: World, em: Nation, warId: number): string | null {
+/** The emperor orders the attacker of a war between members to make peace. A computer realm answers at once, a human
+ *  one has 60 days; out.msg tells the emperor which (obeyed, defied with its price, or waiting). */
+export function orderPeace(s: GameState, w: World, em: Nation, warId: number, out?: { msg?: I18n }): string | null {
   const E = s.empire; const war = s.wars.find((x) => x.id === warId);
   if (E.emperor !== em.id) return 'only the emperor can do this';
   if (!war || !internalWars(s).includes(war)) return 'not a war between members';
@@ -259,8 +309,18 @@ export function orderPeace(s: GameState, w: World, em: Nation, warId: number): s
   const to = war.attLead;
   const order = { war: warId, to, until: s.day + 60, answer: 0 };
   (E.orders ??= []).push(order);
-  if (isHuman(s, to)) { notice(s, to, 'imperial_order', T(`The emperor orders us to make peace with ${s.nations[war.defLead].short.en}.`, `Der Kaiser befiehlt uns, Frieden mit ${s.nations[war.defLead].short.de} zu schließen.`), { war: warId }); return null; }
+  const A = s.nations[to].short, wn = war.name;
+  if (isHuman(s, to)) {
+    notice(s, to, 'imperial_order', T(`The emperor orders us to make peace with ${s.nations[war.defLead].short.en}.`, `Der Kaiser befiehlt uns, Frieden mit ${s.nations[war.defLead].short.de} zu schließen.`), { war: warId });
+    if (out) out.msg = T(`The order to make peace is sent (${wn.en}): ${A.en} has 60 days to obey or defy it.`, `Der Befehl zum Frieden ist ergangen (${wn.de}): ${A.de} hat 60 Tage, um zu gehorchen oder sich zu widersetzen.`);
+    return null;
+  }
   answerOrder(s, w, order, obeyScore(s, war).reduce((p, r) => p + r[1], 0) > 0);
+  const ban = String(BAN_EFFECTS.concord).replace('-', '−'), man = String(BAN_EFFECTS.mandate).replace('-', '−');
+  if (out) out.msg = order.answer === 1
+    ? T(`${A.en} obeyed: peace is made (${wn.en}). The Empire's authority rises by ${ORDER_OBEYED}.`, `${A.de} gehorchte: Der Frieden ist geschlossen (${wn.de}). Die Autorität des Reiches steigt um ${ORDER_OBEYED}.`)
+    : T(`${A.en} defies the order (${wn.en}): the war goes on. The Empire's authority falls by ${-ORDER_DEFIED}; ${A.en} bears the ban for ${BAN_YEARS} years (Concord ${ban}, Mandate ${man}) and we hold a claim against it.`,
+      `${A.de} widersetzt sich dem Befehl (${wn.de}): Der Krieg geht weiter. Die Autorität des Reiches sinkt um ${-ORDER_DEFIED}; ${A.de} ist ${BAN_YEARS} Jahre lang geächtet (Eintracht ${ban}, Mandat ${man}), und wir haben einen Anspruch gegen ${A.de}.`);
   return null;
 }
 export function answerOrder(s: GameState, w: World, order: { war: number; to: number; answer: number }, obey: boolean) {
@@ -377,20 +437,33 @@ function closeElection(s: GameState, w: World) {
   if (best === E.electors.length && best > 0) moveAuth(s, 'x_emp_unanimous', 3);
   E.emperor = winner;
   const wn = s.nations[winner];
+  wn.flags.elected_emperor = (wn.flags.elected_emperor ?? 0) + 1; // elections won (a goal counts them)
   chronicle(s, winner, 'emperor', T(`The electors chose the ruler of ${wn.short.en} as emperor (${best} of ${E.electors.length} votes).`, `Die Kurfürsten wählten den Herrscher von ${wn.short.de} zum Kaiser (${best} von ${E.electors.length} Stimmen).`));
   for (const p of s.playerNations) if (s.nations[p]?.isHRE) notice(s, p, 'emperor', p === winner ? T('We have been elected emperor!', 'Wir wurden zum Kaiser gewählt!') : T(`The ruler of ${wn.short.en} is the new emperor.`, `Der Herrscher von ${wn.short.de} ist der neue Kaiser.`));
 }
-/** Gold a realm spends to win an elector's or a diet member's favour. */
+/** Gold a realm spends to win an elector's favour: two months of its taxes. */
 export function campaignCost(s: GameState, n: Nation): number { return Math.max(20, (n.income.tax || 10) * 2); }
-/** Campaign with an elector (for our own candidacy) or, as emperor during a diet, lobby a member. */
+/** Development at which lobbying a diet member costs as much as campaigning with an elector (a middling prince). */
+export const LOBBY_DEV = 150;
+/** Gold the emperor spends to lobby one member during a diet: the campaign cost scaled by the member's size, from a
+ *  tenth for a small imperial town to one and a half for the greatest princes. An elector, whose favour also counts
+ *  in the election, costs at least the full campaign cost. */
+export function lobbyCost(s: GameState, n: Nation, target: Nation): number {
+  const k = clamp(nationDev(s, target.id) / LOBBY_DEV, 0.1, 1.5);
+  return Math.max(10, Math.round(campaignCost(s, n) * (s.empire.electors.includes(target.id) ? Math.max(1, k) : k)));
+}
+/** Whether n would lobby target as emperor during a sitting diet (rather than campaign with an elector). */
+export const isLobby = (s: GameState, n: Nation, t: Nation) => !!s.empire.diet && s.empire.emperor === n.id && t.isHRE && dietVoters(s).includes(t.id);
+/** Campaign with an elector (for our own candidacy) or, as emperor during a diet, lobby any member at a cost scaled
+ *  by its size (lobbyCost). */
 export function campaign(s: GameState, n: Nation, target: number): string | null {
   const E = s.empire; const t = s.nations[target];
   if (!t?.alive || target === n.id) return 'invalid target';
   if (!n.isHRE || n.overlord >= 0) return 'not a member of the Empire';
-  const lobby = !!E.diet && E.emperor === n.id && t.isHRE;
+  const lobby = isLobby(s, n, t);
   if (!lobby && !E.electors.includes(target)) return 'not an elector';
   if (!lobby && hasReform(s, 'hereditary_crown') && alive(s, E.emperor)) return 'the crown is hereditary';
-  const cost = campaignCost(s, n);
+  const cost = lobby ? lobbyCost(s, n, t) : campaignCost(s, n);
   if (n.treasury < cost) return 'not enough gold';
   const k = `${n.id}>${target}`; const fav = (E.favour ??= {});
   if ((fav[k] ?? 0) >= 60) return 'they cannot be swayed further';
@@ -633,6 +706,8 @@ function empireMonth(s: GameState, w: World) {
       addExpense(n, 'imperial_tax', t); addIncome(em, 'imperial_tax', t);
     }
   }
+  // members asking for help in wars where no call was made for them (wars from before the game, a new emperor)
+  aiAskHelp(s, w);
   // calls and orders: open ones lapse at their deadline (a human emperor who says nothing has refused)
   for (const c of E.calls ?? []) {
     if (c.answer === 0 && (s.day >= c.until || !s.wars.some((x) => x.id === c.war))) answerCall(s, w, c, false);

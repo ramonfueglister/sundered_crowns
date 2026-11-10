@@ -46,7 +46,7 @@ export function Drift({ target, monthly, digits = 1, fmt, bad = false }: { targe
   const f = fmt ?? ((v: number) => signed(v, digits));
   const good = bad ? monthly < 0 : monthly > 0;
   return <div class="tip-drift">
-    {target !== undefined && <span>{t('x_target')} <b>{fmt ? fmt(target).replace(/^\+/, '') : num(target, 0)}</b></span>}
+    {target !== undefined && <span>{t('x_target')} <b>{fmt ? fmt(target).replace(/^\+/, '') : num(target, digits)}</b></span>}
     <span class={Math.abs(monthly) < 1e-9 ? 'muted' : good ? 'pos' : 'neg'}>{f(monthly)} {t('x_per_month')}</span>
   </div>;
 }
@@ -261,7 +261,7 @@ export function EstateTip({ e, kind }: { e: any; kind: 'influence' | 'contentmen
   return <div>
     <TipHead name={t('contentment')} value={num(e.contentment)} hint={t('contentment_hint')} />
     {x && <><Drift target={x.contentTarget} monthly={x.contentMonthly} />
-      <Parts title={t('x_target_from')} rows={[['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)], ['x_resented_privileges', x.resent ?? 0]]} total={x.contentTarget} digits={0} /></>}
+      <Parts title={t('x_target_from')} rows={x.contentParts ?? [['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)], ['x_resented_privileges', x.resent ?? 0]]} total={x.contentTarget} digits={1} /></>}
     <div class="muted">{t('x_content_events')}</div>
   </div>;
 }

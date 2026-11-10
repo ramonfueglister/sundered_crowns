@@ -887,8 +887,94 @@ const DEFS: SituationDef[] = [
     },
     involved: (s, sit) => (sit.data.revs || []).slice(),
   },
+
+  // ------------------------------------------------------------------------------------------------
+  {
+    id: 'kings_code', name: { en: 'The Code of the Bohemian Crown', de: 'Das Gesetzbuch der böhmischen Krone' },
+    desc: { en: 'The king has had a code of land law drawn up: royal courts over the lords’ courts, crown lands that may not be pawned, the peace of the roads kept by the king’s men. The great lords of Bohemia, who judge and pawn as they please, refused it at the diet. The bar shows how far the crown is from carrying it (above zero) or the lords from burying it (below).', de: 'Der König hat ein Landrecht aufschreiben lassen: königliche Gerichte über den Gerichten der Herren, Krongut, das nicht verpfändet werden darf, der Landfriede durch die Leute des Königs gewahrt. Die großen Herren Böhmens, die richten und verpfänden, wie es ihnen gefällt, verwarfen es auf dem Landtag. Der Balken zeigt, wie nah die Krone daran ist, es durchzusetzen (über null), oder die Herren, es zu begraben (unter null).' },
+    stages: [{ en: 'The draft before the diet', de: 'Der Entwurf vor dem Landtag' }, { en: 'The lords’ league', de: 'Der Herrenbund' }, { en: 'The code within reach', de: 'Das Gesetzbuch in Reichweite' }],
+    canStart: (s, w, y) => y >= 1350 && y < 1400 && !s.flags.kings_code_done && !!nat(s, 'bohemia') && nat(s, 'bohemia')!.overlord < 0,
+    start: (s, w, sit) => { const b = nat(s, 'bohemia')!; sit.data.b = b.id; sit.data.judges = 0; sit.data.league = 0; sit.data.low = 0; sit.data.backers = []; sit.progress = kingsCodeLevel(s, sit); },
+    monthly: (s, w, sit, y) => {
+      const b = alive(s, sit.data.b);
+      if (!b || b.overlord >= 0) { finishCode(s, sit, 'lapsed'); return; }
+      // the king's judges and the lords' foreign gold both fade by half a point a month
+      sit.data.judges = Math.max(0, (sit.data.judges || 0) - 0.5); sit.data.league = Math.max(0, (sit.data.league || 0) - 0.5);
+      sit.progress = kingsCodeLevel(s, sit);
+      sit.stage = sit.progress <= CODE_LOW ? 1 : sit.progress >= CODE_PROCLAIM ? 2 : 0;
+      // two years in the lords' hands: the crown must withdraw the code
+      sit.data.low = sit.stage === 1 ? (sit.data.low || 0) + 1 : 0;
+      if (sit.data.low >= 24) { finishCode(s, sit, 'withdrawn'); return; }
+      if (y >= 1420) finishCode(s, sit, 'lapsed');
+    },
+    outcomeText: (s, sit) => {
+      const b = s.nations[sit.data.b];
+      if (sit.outcome === 'proclaimed') return { en: `The king of ${b?.short.en} proclaimed his code of land law over the protests of the lords.`, de: `Der König von ${b?.short.de} verkündete sein Landrecht gegen den Widerspruch der Herren.` };
+      if (sit.outcome === 'withdrawn') return { en: `The lords of ${b?.short.en} forced their king to withdraw his code: they keep their courts and their pledges.`, de: `Die Herren von ${b?.short.de} zwangen ihren König, sein Gesetzbuch zurückzuziehen: Sie behalten ihre Gerichte und ihre Pfandschaften.` };
+      return { en: 'The code of the Bohemian crown was never proclaimed and is forgotten.', de: 'Das Gesetzbuch der böhmischen Krone wurde nie verkündet und gerät in Vergessenheit.' };
+    },
+    involved: (s, sit) => [sit.data.b, ...(sit.data.backers || [])].filter((x: number) => !!alive(s, x)),
+  },
 ];
 export const SITUATIONS: SituationDef[] = DEFS.map(guard);
+
+// ---------------- the code of the Bohemian crown ----------------
+/** The bar at which the crown may proclaim its code, and below which the lords' league forms (two years there and the
+ *  code must be withdrawn). */
+export const CODE_PROCLAIM = 30, CODE_LOW = -40;
+/** The king's judges and the lords' foreign backing each count up to this much. */
+export const CODE_CAP = 40;
+/** What carries the code or buries it, row by row (the situation and its window use the same rows): the crown's
+ *  Authority and Concord, the imperial crown, the lords' influence, contentment and privileges, the king's judges
+ *  and the gold of the lords' foreign backers. */
+export function kingsCodeRows(s: GameState, sit: Situation): [string | I18n, number][] {
+  const b = s.nations[sit.data.b]; if (!b) return [];
+  const m = b.estates.find((e) => e.id === 'magnates');
+  // each row is worked out from the whole number its label shows, so the player can check it: Concord 19 x 0,3 = 5,7
+  const auth = Math.round(b.authority), conc = Math.round(b.concord);
+  const rows: [string | I18n, number][] = [[{ en: 'The lords rejected the draft (1355)', de: 'Die Herren verwarfen den Entwurf (1355)' }, -5],
+    [{ en: `Authority of the crown (${auth}) / 10, at most 25`, de: `Autorität der Krone (${auth}) / 10, höchstens 25` }, +clamp(auth / 10, 0, 25).toFixed(1)],
+    [{ en: `Concord (${conc}) x 0.3`, de: `Eintracht (${conc}) x 0,3` }, +clamp(conc * 0.3, -15, 15).toFixed(1)]];
+  if (s.empire.emperor === b.id) rows.push([{ en: 'The king wears the imperial crown', de: 'Der König trägt die Kaiserkrone' }, 10]);
+  if (m) {
+    const inf = Math.round(m.influence), cont = Math.round(m.contentment);
+    rows.push([{ en: `Influence of the magnates (${inf}) above 20, x 0.8`, de: `Einfluss der Magnaten (${inf}) über 20, x 0,8` }, -+(Math.max(0, inf - 20) * 0.8).toFixed(1)]);
+    rows.push([{ en: `Contentment of the magnates (${cont}) against 50, x 0.5`, de: `Zufriedenheit der Magnaten (${cont}) gegenüber 50, x 0,5` }, +((cont - 50) * 0.5).toFixed(1)]);
+    if (m.privileges.length) rows.push([{ en: `Privileges of the magnates (${m.privileges.length}) x 10`, de: `Privilegien der Magnaten (${m.privileges.length}) x 10` }, -m.privileges.length * 10]);
+  }
+  if (sit.data.judges) rows.push([{ en: 'Royal judges in the land', de: 'Königliche Richter im Land' }, +sit.data.judges.toFixed(1)]);
+  if (sit.data.league) rows.push([{ en: 'Foreign gold for the lords', de: 'Fremdes Gold für die Herren' }, -+sit.data.league.toFixed(1)]);
+  return rows;
+}
+/** The code's standing: the sum of its rows, to a tenth as the rows are (the window's header, bar and breakdown agree). */
+export const kingsCodeLevel = (s: GameState, sit: Situation) => +clamp(kingsCodeRows(s, sit).reduce((p, r) => p + r[1], 0), -100, 100).toFixed(1);
+/** The rows the code's window shows, adding up to the standing that counts (sit.progress): today's rows, the cap at
+ *  -100/100 when they go past it, and what changed since the standing was last counted (on the first of the month or
+ *  at an action), which counts at the next count. */
+export function kingsCodeShownRows(s: GameState, sit: Situation): [string | I18n, number][] {
+  const rows = kingsCodeRows(s, sit);
+  const raw = +rows.reduce((p, r) => p + r[1], 0).toFixed(1), live = kingsCodeLevel(s, sit);
+  if (live !== raw) rows.push([{ en: 'Capped at -100 to 100', de: 'Begrenzt auf -100 bis 100' }, +(live - raw).toFixed(1)]);
+  const gap = +(sit.progress - live).toFixed(1);
+  if (gap) rows.push([{ en: 'Not yet counted: changes since the first of the month (they count at the next)', de: 'Noch nicht gezählt: Änderungen seit dem Monatsersten (sie zählen beim nächsten)' }, gap]);
+  return rows;
+}
+/** The end of the code: proclaimed (the crown's courts over the lords'), withdrawn (the lords keep their liberties) or
+ *  lapsed. */
+export function finishCode(s: GameState, sit: Situation, outcome: 'proclaimed' | 'withdrawn' | 'lapsed') {
+  const b = alive(s, sit.data.b); const m = b?.estates.find((e) => e.id === 'magnates');
+  if (b && outcome === 'proclaimed') {
+    setMod(s, b, 'kings_code', 1000, { en: 'The king’s land law', de: 'Das Landrecht des Königs' }, { authority_gain: 0.1, control: 0.05 });
+    if (m) m.contentment = clamp(m.contentment - 15, 0, 100);
+    b.prestige = clamp(b.prestige + 10, -100, 100);
+  } else if (b && outcome === 'withdrawn') {
+    setMod(s, b, 'lords_liberties', 30, { en: 'Liberties of the lords', de: 'Freiheiten der Herren' }, { authority_gain: -0.1 });
+    if (m) m.contentment = clamp(m.contentment + 15, 0, 100);
+    b.prestige = clamp(b.prestige - 5, -100, 100);
+  }
+  s.flags.kings_code_done = s.day;
+  endSituation(s, sit, outcome);
+}
 
 // ---------------- situation internals ----------------
 function finishCrown(s: GameState, sit: Situation, en: Nation, fr: Nation, outcome: string) {

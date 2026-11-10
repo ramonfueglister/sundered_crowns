@@ -5,7 +5,7 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, chronicle, notice } from '../ctx';
 import { Effects, type EvApi } from './events';
-import { GOALS, GOAL_NATIONS, type GoalDef, goalPlace } from '../content/goals';
+import { GOALS, GOAL_NATIONS, type GoalDef, type CondProg, goalPlace, condProgress } from '../content/goals';
 import { dayToDate } from '../calendar';
 import { DOCTRINES } from '../content/doctrines';
 import { takeDoctrine, doctrineCost, doctrinePoints, doctrineSlots } from './progress';
@@ -88,15 +88,19 @@ export function claimGoal(s: GameState, w: World, n: Nation, id: string): string
   return null;
 }
 
-/** Each condition of a goal as it stands now: met or not, progress [current, required] where it counts. */
-export interface CondState { t: GoalDef['conds'][number]['t']; ok: boolean; cur?: number; max?: number; places?: string[] }
+/** Each condition of a goal as it stands now: met or not, progress [current, required] where it counts, the share
+ *  done (frac) and, for a condition that holds only from a year on, that year, the years still to wait and the share
+ *  of the time to it that has passed (content/goals.ts condProgress). */
+export interface CondState { t: GoalDef['conds'][number]['t']; ok: boolean; cur?: number; max?: number; places?: string[]; frac: number; from?: number; yearsLeft?: number; timeFrac?: number }
 export function goalConditions(s: GameState, w: World, n: Nation, g: GoalDef): CondState[] {
   const d = dayToDate(s.day, s.startYear);
   const e = mkApi(s, w, n, d.y, d.m);
   return g.conds.map((c) => {
     let ok = false; try { ok = c.f(e); } catch { ok = false; }
-    let p: [number, number] | undefined; try { p = c.p?.(e); } catch { p = undefined; }
-    return { t: c.t, ok, cur: p?.[0], max: p?.[1], places: c.places };
+    let p: CondProg | undefined; try { p = condProgress(c, e); } catch { p = undefined; }
+    const out: CondState = { t: c.t, ok, cur: p?.cur, max: p?.max, places: c.places, frac: ok ? 1 : p?.frac ?? 0 };
+    if (!ok && p?.from !== undefined) { out.from = p.from; out.yearsLeft = p.from - d.y; out.timeFrac = p.timeFrac; }
+    return out;
   });
 }
 

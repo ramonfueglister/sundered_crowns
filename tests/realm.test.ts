@@ -19,7 +19,7 @@ import {
 import { powers, intervene, balanceThreat, greatPowers, mediate, SPURNED } from '../src/sim/systems/powers';
 import {
   government, govProcess, termYears, TERM_LIMIT, ensureCandidates, electionTally, classSums, influenceTargets, setTaxRate,
-  taxLevel, assemblyVote, resentment, askRates,
+  taxLevel, assemblyVote, resentment, askRates, taxWeights, realmTaxLevel,
 } from '../src/sim/systems/government';
 import { situationAction } from '../src/sim/systems/situations';
 import { SITUATIONS, HORDE_CAP } from '../src/sim/content/situations';
@@ -414,10 +414,11 @@ describe('the assembly', () => {
     // a moderate rise with content Powers: granted, and the new level (with a little room) is the ceiling
     setContent(f, 100);
     const rates = f.taxRate.slice(); rates[0] = 0.25;
-    expect(assemblyVote(s, f, { kind: 'tax', level: taxLevel(rates), rates }).passes).toBe(true);
+    // (the level the assembly weighs: class rates by each class's share of the means, and the duties)
+    expect(assemblyVote(s, f, { kind: 'tax', level: taxLevel(rates, taxWeights(f, classSums(s))), rates }).passes).toBe(true);
     expect(setTaxRate(s, f, 0, 0.25)).toBeNull();
     expect(f.taxRate[0]).toBe(0.25);
-    expect(f.flags.tax_grant).toBeCloseTo(taxLevel(rates) + 0.02, 4);
+    expect(f.flags.tax_grant).toBeCloseTo(realmTaxLevel(s, f) + 0.02, 4);
     // a request for every class moves all rates alike to the mean asked
     const all = askRates([0.05, 0.1, 0.15], -1, 0.2);
     expect(taxLevel(all)).toBeCloseTo(0.2, 4);
@@ -429,7 +430,7 @@ describe('the assembly', () => {
     ai.taxRate = ai.taxRate.map(() => 0.25);
     setContent(ai, 0);
     month(government);
-    expect(taxLevel(ai.taxRate)).toBeCloseTo(0.1, 3);
+    expect(realmTaxLevel(s, ai)).toBeCloseTo(0.1, 3);
     expect(ai.flags.tax_refused).toBeGreaterThan(s.day);
   });
 });

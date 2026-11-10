@@ -7,8 +7,7 @@ import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
 import { rand, chance, hash01, pick, seedRng } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
 import { FAITHS, GROUP_TRADITIONS } from '../content/peoples';
-import { dutyDiscontent } from './duties';
-import { classSums, influenceTargets, resentment, INFLUENCE_DRIFT, govSuccessor, govMandateParts, estateName, type ClassSums } from './government';
+import { classSums, influenceTargets, INFLUENCE_DRIFT, govSuccessor, govMandateParts, estateName, contentParts, type ClassSums } from './government';
 
 // Every effect key is read through lawEffect(): laws, value axes, the tradition of the realm's culture group and all
 // timed and permanent modifiers (privileges, doctrines, innovations, landmarks, events) are summed into one table.
@@ -814,12 +813,12 @@ function nationPoliticsMonth(s: GameState, w: World, n: Nation, cs: ClassSums) {
   const inWar = s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id));
   if (!inWar) n.warExhaustion = Math.max(0, n.warExhaustion - 1.5);
   n.corruption = clamp(n.corruption + lawEffect(n, 'corruption') * 0.01 - 0.0005, 0, 0.6);
-  // estates: contentment drifts to 50 + privileges effect - duties - the other Powers' privileges they resent;
-  // influence drifts toward the Power's share of the people and the wealth, weighed by standing, laws and privileges
+  // estates: contentment drifts to 50 + privileges - class taxes above the customary rates - duties - the other
+  // Powers' privileges they resent (government.ts contentParts); influence drifts toward the Power's share of the
+  // people and the wealth, weighed by standing, laws and privileges
   const tgt = influenceTargets(s, n, cs);
   for (const e of n.estates) {
-    const priv = e.privileges.length * 6;
-    e.contentment = clamp(e.contentment + (50 + priv - dutyDiscontent(n, e.id, (c) => classExempt(n, c)) + resentment(n, e.id) - e.contentment) * 0.03, 0, 100);
+    e.contentment = clamp(e.contentment + (sumParts(contentParts(n, e.id, cs)) - e.contentment) * 0.03, 0, 100);
     e.influence = clamp(e.influence + ((tgt[e.id] ?? e.influence) - e.influence) * INFLUENCE_DRIFT, 5, 100);
   }
   // normalise influence to 100

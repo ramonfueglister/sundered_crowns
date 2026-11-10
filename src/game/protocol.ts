@@ -57,7 +57,7 @@ export type Query =
   // ---- realm pass (src/game/realmview.ts): the Empire and the league, the great powers, the assembly, the government, a situation
   | { q: 'empire' }
   | { q: 'powers' }
-  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
+  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
   | { q: 'govern' }
   | { q: 'situation'; id: string }
   // people pass (src/game/view.ts commandersView)
@@ -88,6 +88,8 @@ export interface NationLite {
   id: number; key: string; alive: boolean; name: I18n; short: I18n; adj: I18n; color: [number, number, number];
   capital: number; rank: string; gov: string; score: number; overlord: number; faith: number; culture: number; coa: any;
   ruler: string; difficulty: number; summary: I18n; dev: number; locs: number; personality: string; player: boolean;
+  /** wears the imperial crown / is one of the electors (the select screen lists them) */
+  emperor?: boolean; elector?: boolean;
 }
 
 export interface ArmyLite {

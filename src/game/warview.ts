@@ -10,6 +10,7 @@ import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal
   CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember, predictSides, type SideGuess, callKind, tiesAcross, TIE_BROKEN,
   goalTowns, cedeWorth, CEDE_FIXED } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
+import { withoutWarVote, assemblyWarRefusal } from '../sim/systems/government';
 import { FAITHS } from '../sim/content/peoples';
 
 // ---------------------------------------------------------------- declaring war
@@ -20,7 +21,7 @@ export function declareView(s: GameState, w: World, player: number, target: numb
   if (!n || !b || player === target) return null;
   const cbs = casusBelliAll(s, player, target, w).map((kind) => ({ kind, goals: CB_GOALS[kind] }));
   const goals = DECLARE_GOALS.map((goal) => {
-    const refusal = declareRefusal(s, w, player, target, goal);
+    const refusal = withoutWarVote(() => declareRefusal(s, w, player, target, goal));
     const c = declarationCost(s, w, player, target, goal);
     const sides = refusal ? null : predictSides(s, w, player, target, goal);
     // the towns we may name, each with what its cession would cost in war score against the defenders certain to fight
@@ -32,7 +33,9 @@ export function declareView(s: GameState, w: World, player: number, target: numb
       locs: refusal ? [] : warGoalLocs(s, w, player, target, goal), towns, cedeFixed: CEDE_FIXED, pickable: PICK_GOALS.has(goal), terms: GOAL_TERMS[goal] ?? [],
       sides: sides ? sidesView(sides) : null,
     };
-  }).filter((g) => g.refusal !== 'they are not our overlord');
+  }).filter((g) => g.refusal !== 'they are not our overlord')
+    // the assembly's verdict on each goal apart from the goal's own refusal: it votes on the goal, and may be asked
+    .map((g) => ({ ...g, assembly: g.refusal ? null : assemblyWarRefusal(s, n, target, g.goal) }));
   return { cbs, goals, truce: hasTreaty(s, player, target, 'truce'), ally: hasTreaty(s, player, target, 'alliance') };
 }
 

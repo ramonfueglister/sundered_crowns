@@ -4,7 +4,7 @@
 import type { GameState, Nation, Situation, I18n, War } from '../types';
 import type { World } from '../world';
 import { FAITH_INDEX, faithFamily } from './peoples';
-import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP } from './situations';
+import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP, kingsCodeLevel, kingsCodeShownRows, finishCode, CODE_PROCLAIM, CODE_LOW, CODE_CAP } from './situations';
 import { nationDev, nationLocsRO } from '../systems/war';
 import { clamp, addOpinion, hasTreaty, atWar, chronicle, opinion } from '../ctx';
 import { addIncome } from '../ctx'; // fix-econ: what a situation's action pays another realm
@@ -36,11 +36,14 @@ export interface SitAction {
   apply: (s: GameState, w: World, n: Nation, sit: Situation, target?: number) => void;
   /** An AI realm's choice: the target to use (-1 without a target), or null to pass. */
   ai: (s: GameState, w: World, n: Nation, sit: Situation) => number | null;
+  /** What the action closes for good (the window asks before it is taken, even when it costs nothing). */
+  final?: I18n;
 }
 export interface SitExtra {
   sides: (s: GameState, w: World, sit: Situation) => SitSide[];
   /** 'level': the rows add up to the progress; 'monthly': they add up to its change per month. */
-  drivers: (s: GameState, w: World, sit: Situation, viewer: number) => { kind: 'level' | 'monthly'; rows: Row[]; note?: I18n };
+  /** range: the levels at which the situation turns (the window draws its bar between them, from zero). */
+  drivers: (s: GameState, w: World, sit: Situation, viewer: number) => { kind: 'level' | 'monthly'; rows: Row[]; note?: I18n; range?: [number, number] };
   stageInfo: I18n[];
   actions: SitAction[];
 }
@@ -108,6 +111,14 @@ function boon(id: string, name: I18n, desc: I18n, years: number, effects: Record
 const latinOnly = (s: GameState, w: World, n: Nation) => (n.faith === LATIN ? null : 'only realms of the Latin Church can do this');
 const christian = (n: Nation) => faithFamily(n.faith) === 'christian';
 const rich = (n: Nation, months: number) => n.treasury > goldOf(n, months) * 4;
+/** Whether the plague is in our land or within 800 km of our capital now (a quarantine or a procession does
+ *  nothing while it is far away). */
+function plagueNear(s: GameState, w: World, n: Nation): boolean {
+  const P = s.loc.plague, cap = n.capital;
+  for (let l = 0; l < w.L; l++) if (P[l] > 0.02 && (s.loc.owner[l] === n.id || (cap >= 0 && w.distKm(cap, l) < 800))) return true;
+  return false;
+}
+const plagueRefusal = (s: GameState, w: World, n: Nation, sit: Situation) => (sit.stage !== 1 ? 'no wave of plague is under way' : !plagueNear(s, w, n) ? 'the plague is far from our realm' : null);
 // ---- the Horde: its bar follows content/situations.ts hordeProgress, which the actions read as well
 const hordeYear = (s: GameState) => dayToDate(s.day, s.startYear).y;
 const hordeHuman = (s: GameState, sit: Situation) => { const h = s.nations[sit.data.h]; return !!h && (s.playerNations.includes(h.id) || !!h.playerId); };
@@ -164,11 +175,62 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
     stageInfo: [T('Between waves the land recovers; struck places are spared for some years.', 'Zwischen den Wellen erholt sich das Land; befallene Orte bleiben einige Jahre verschont.'), T('A wave spreads from a great port along roads and sea lanes; towns lose a large share of their people.', 'Eine Welle breitet sich von einem großen Hafen über Straßen und Seewege aus; Städte verlieren einen großen Teil ihrer Bewohner.')],
     actions: [
       boon('quarantine', T('Close the ports and gates', 'Häfen und Tore schließen'), T('For two years half of all infections in our realm are stopped, but trade suffers (-5 %).', 'Zwei Jahre lang wird die Hälfte aller Ansteckungen in unserem Reich verhindert, doch der Handel leidet (-5 %).'), 2, { plague_guard: 0.5, trade: -0.05 },
-        (s, n) => ({ gold: goldOf(n, 2) }), () => null, (s, w, n, sit) => sit.stage === 1 && rich(n, 2)),
+        (s, n) => ({ gold: goldOf(n, 2) }), plagueRefusal, (s, w, n, sit) => sit.stage === 1 && rich(n, 2) && plagueNear(s, w, n)),
       boon('pest_houses', T('Build pest houses', 'Pesthäuser bauen'), T('For fifteen years a fifth of all infections in our realm are stopped.', 'Fünfzehn Jahre lang wird ein Fünftel aller Ansteckungen in unserem Reich verhindert.'), 15, { plague_guard: 0.2 },
         (s, n) => ({ gold: goldOf(n, 6), authority: 20 }), (s, w, n) => (n.era < 1 ? 'not yet possible in this era' : null), (s, w, n) => rich(n, 6) && n.authority > 60),
       boon('processions', T('Hold penitential processions', 'Bußprozessionen abhalten'), T('The faithful are comforted (+5 Mandate for a year), but crowds spread the plague (10 % more infections).', 'Die Gläubigen werden getröstet (+5 Mandat für ein Jahr), doch Menschenmengen verbreiten die Pest (10 % mehr Ansteckungen).'), 1, { mandate: 5, plague_guard: -0.1 },
-        () => ({ authority: 10 }), () => null, (s, w, n, sit) => sit.stage === 1 && n.mandate < 35),
+        () => ({ authority: 10 }), plagueRefusal, (s, w, n, sit) => sit.stage === 1 && n.mandate < 35 && plagueNear(s, w, n)),
+    ],
+  },
+  kings_code: {
+    sides: (s, w, sit) => [{ name: T('The crown and its code', 'Die Krone und ihr Gesetzbuch'), members: alive(s, sit.data.b) ? [sit.data.b] : [] },
+      { name: T('Foreign backers of the lords', 'Fremde Förderer der Herren'), members: (sit.data.backers ?? []).filter((x: number) => !!alive(s, x)) }],
+    drivers: (s, w, sit) => ({ kind: 'level', rows: kingsCodeShownRows(s, sit), range: [CODE_LOW, CODE_PROCLAIM], note: T(`From ${CODE_PROCLAIM} the crown can proclaim its code; below -40 the lords band together, and after two years there the code must be withdrawn. The royal judges and the lords' foreign gold count up to ${CODE_CAP} each and fade by half a point a month.`, `Ab ${CODE_PROCLAIM} kann die Krone ihr Gesetzbuch verkünden; unter -40 schließen sich die Herren zusammen, und nach zwei Jahren dort muss das Gesetzbuch zurückgezogen werden. Die königlichen Richter und das fremde Gold der Herren zählen je bis ${CODE_CAP} und schwinden um einen halben Punkt im Monat.`) }),
+    stageInfo: [T('The crown works for its code; the lords watch.', 'Die Krone wirbt für ihr Gesetzbuch; die Herren warten ab.'), T('Below -40 the lords band together: two years of it and the king must withdraw the code.', 'Unter -40 verbünden sich die Herren: Nach zwei Jahren muss der König das Gesetzbuch zurückziehen.'), T(`From ${CODE_PROCLAIM} the crown can proclaim the code (50 Authority): +10 % Authority gain and +5 % control for good, the magnates lose 15 contentment.`, `Ab ${CODE_PROCLAIM} kann die Krone das Gesetzbuch verkünden (50 Autorität): dauerhaft +10 % Autoritätsgewinn und +5 % Kontrolle, die Magnaten verlieren 15 Zufriedenheit.`)],
+    actions: [
+      {
+        id: 'royal_judges', name: T('Send royal judges into the land', 'Königliche Richter ins Land senden'), cooldown: 365,
+        desc: T(`Royal judges ride the circuits and hear the lords' cases: the code gains 20 (at most ${CODE_CAP}, fading by half a point a month); the magnates resent it (-5 contentment).`, `Königliche Richter reisen über Land und hören die Fälle der Herren: Das Gesetzbuch gewinnt 20 (höchstens ${CODE_CAP}, schwindet um einen halben Punkt im Monat); die Magnaten verübeln es (-5 Zufriedenheit).`),
+        cost: (s, n) => ({ gold: goldOf(n, 3) }),
+        check: (s, w, n, sit) => (n.id !== sit.data.b ? 'only the crown of Bohemia can do this' : (sit.data.judges || 0) >= CODE_CAP - 1 ? 'the royal judges are everywhere already' : null),
+        apply: (s, w, n, sit) => { sit.data.judges = Math.min(CODE_CAP, (sit.data.judges || 0) + 20); const m = n.estates.find((e) => e.id === 'magnates'); if (m) m.contentment = clamp(m.contentment - 5, 0, 100); sit.progress = kingsCodeLevel(s, sit); },
+        // (the crown keeps its judges riding while it can spare six months of taxes)
+        ai: (s, w, n, sit) => (sit.progress < CODE_PROCLAIM && n.treasury > goldOf(n, 3) * 2 ? -1 : null),
+      },
+      {
+        id: 'win_lords', name: T('Win the lords with fiefs and offices', 'Die Herren mit Lehen und Ämtern gewinnen'), cooldown: 365 * 2,
+        desc: T('Fiefs, offices and pledges redeemed for the great lords: the magnates are pleased (+10 contentment), which counts half in the code.', 'Lehen, Ämter und ausgelöste Pfänder für die großen Herren: Die Magnaten sind erfreut (+10 Zufriedenheit), was zur Hälfte für das Gesetzbuch zählt.'),
+        cost: (s, n) => ({ gold: goldOf(n, 5) }),
+        check: (s, w, n, sit) => { if (n.id !== sit.data.b) return 'only the crown of Bohemia can do this'; const m = n.estates.find((e) => e.id === 'magnates'); return !m ? 'invalid target' : m.contentment >= 90 ? 'the magnates are content already' : null; },
+        apply: (s, w, n, sit) => { const m = n.estates.find((e) => e.id === 'magnates'); if (m) m.contentment = clamp(m.contentment + 10, 0, 100); sit.progress = kingsCodeLevel(s, sit); },
+        ai: (s, w, n, sit) => { const m = n.estates.find((e) => e.id === 'magnates'); return m && m.contentment < 40 && n.treasury > goldOf(n, 5) * 2 ? -1 : null; },
+      },
+      {
+        id: 'proclaim', name: T('Proclaim the code', 'Das Gesetzbuch verkünden'), cooldown: 0,
+        desc: T(`From a standing of ${CODE_PROCLAIM}: the code becomes the law of the land. For good: +10 % Authority gain, +5 % control, +10 prestige; the magnates lose 15 contentment.`, `Ab einem Stand von ${CODE_PROCLAIM}: Das Gesetzbuch wird Landrecht. Dauerhaft: +10 % Autoritätsgewinn, +5 % Kontrolle, +10 Ansehen; die Magnaten verlieren 15 Zufriedenheit.`),
+        cost: () => ({ authority: 50 }),
+        check: (s, w, n, sit) => (n.id !== sit.data.b ? 'only the crown of Bohemia can do this' : sit.progress < CODE_PROCLAIM ? 'the code is not yet strong enough to proclaim' : null),
+        apply: (s, w, n, sit) => { finishCode(s, sit, 'proclaimed'); },
+        ai: (s, w, n, sit) => (sit.progress >= CODE_PROCLAIM ? -1 : null),
+      },
+      {
+        id: 'withdraw', name: T('Withdraw the code', 'Das Gesetzbuch zurückziehen'), cooldown: 0,
+        desc: T('Under the lords\' league, give up the code: the magnates are relieved (+15 contentment), the crown loses face (-5 prestige) and for thirty years gains Authority more slowly (-10 %).', 'Unter dem Herrenbund das Gesetzbuch aufgeben: Die Magnaten sind erleichtert (+15 Zufriedenheit), die Krone verliert das Gesicht (-5 Ansehen) und gewinnt dreißig Jahre lang langsamer Autorität (-10 %).'),
+        cost: () => ({}),
+        // only under the lords' league (as the AI does): a code still in the balance is not given up with one stroke
+        check: (s, w, n, sit) => (n.id !== sit.data.b ? 'only the crown of Bohemia can do this' : sit.stage !== 1 ? 'only once the lords have banded together against the code' : null),
+        final: T('The code can never be proclaimed again.', 'Das Gesetzbuch kann nie mehr verkündet werden.'),
+        apply: (s, w, n, sit) => { finishCode(s, sit, 'withdrawn'); },
+        ai: (s, w, n, sit) => (sit.stage === 1 && (sit.data.low || 0) >= 18 ? -1 : null),
+      },
+      {
+        id: 'back_lords', name: T('Back the Bohemian lords', 'Die böhmischen Herren unterstützen'), cooldown: 365 * 2,
+        desc: T(`Gold for the lords' league: the code loses 20 (at most ${CODE_CAP}, fading by half a point a month); the Bohemian crown thinks far worse of us (-25).`, `Gold für den Herrenbund: Das Gesetzbuch verliert 20 (höchstens ${CODE_CAP}, schwindet um einen halben Punkt im Monat); die böhmische Krone denkt viel schlechter von uns (-25).`),
+        cost: (s, n) => ({ gold: goldOf(n, 4) }),
+        check: (s, w, n, sit) => (n.id === sit.data.b ? 'we cannot back the lords against ourselves' : !alive(s, sit.data.b) ? 'invalid target' : (sit.data.league || 0) >= CODE_CAP - 1 ? 'the lords have gold enough already' : null),
+        apply: (s, w, n, sit) => { sit.data.league = Math.min(CODE_CAP, (sit.data.league || 0) + 20); if (!(sit.data.backers ?? []).includes(n.id)) (sit.data.backers ??= []).push(n.id); addOpinion(s, sit.data.b, n.id, 'backed_the_lords', -25, 365 * 5); sit.progress = kingsCodeLevel(s, sit); },
+        ai: (s, w, n, sit) => (n.rivals.includes(sit.data.b) && rich(n, 4) && sit.progress > 0 ? -1 : null),
+      },
     ],
   },
   crown_of_france: {
@@ -266,7 +328,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
       boon('enforce', T('Enforce the old faith', 'Den alten Glauben durchsetzen'), T('For ten years the new teaching spreads far less in our land (reform pressure -40 %), with more unrest (+2); up to three of our reformed places return at once.', 'Zehn Jahre lang breitet sich die neue Lehre in unserem Land viel weniger aus (Reformdruck -40 %), bei mehr Unruhe (+2); bis zu drei unserer reformierten Orte kehren sofort zurück.'), 10, { reform_pressure: -0.4, unrest: 2 },
         () => ({ authority: 40 }), (s, w, n) => latinOnly(s, w, n), (s, w, n) => n.authority > 70 && ownsFaith(s, n, REFORMED), (s, w, n) => { reclaim(s, n, REFORMED, 3); }),
       boon('protect_preachers', T('Protect the preachers', 'Die Prediger schützen'), T('For ten years the new teaching spreads faster in our land (reform pressure +50 %).', 'Zehn Jahre lang breitet sich die neue Lehre in unserem Land schneller aus (Reformdruck +50 %).'), 10, { reform_pressure: 0.5 },
-        () => ({ authority: 20 }), () => null, (s, w, n) => n.faith === LATIN && n.isHRE && s.empire.emperor !== n.id && n.rivals.includes(s.empire.emperor) && n.authority > 50),
+        () => ({ authority: 20 }), (s, w, n) => (ownsFaith(s, n, [LATIN]) ? null : 'none of our places hold the old faith'), (s, w, n) => n.faith === LATIN && n.isHRE && s.empire.emperor !== n.id && n.rivals.includes(s.empire.emperor) && n.authority > 50),
       {
         id: 'fund_renewal', name: T('Fund the renewal of the Church', 'Die Erneuerung der Kirche finanzieren'), cooldown: 365 * 5,
         desc: T('Gold for reforming orders and seminaries: the corruption of the Curia falls by 3, which slows the spread; the curia favours us (+10).', 'Gold für Reformorden und Seminare: Die Verderbnis der Kurie sinkt um 3, was die Ausbreitung bremst; die Kurie begünstigt uns (+10).'),

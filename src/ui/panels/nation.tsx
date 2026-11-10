@@ -1,7 +1,8 @@
 // Foreign realm panel: ruler, standing, relations both ways, diplomacy with predicted answers, war and espionage.
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
-import { selectedNation, playerId, openPanel, mapHighlight } from '../store';
+import { selectedNation, playerId, openPanel, mapHighlight, realmDialog } from '../store';
+
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
 import { TradeRelations } from './tradediplo';
@@ -206,9 +207,14 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
           {g.truce && <div class="warn-box"><b>⚠ {t('truce_break')}</b><div>{t('truce_break_hint')}</div></div>}
           {g.ally && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
           {g.refusal && <div class="neg small">{errText(g.refusal)}</div>}
+          {!g.refusal && g.assembly && <div class="neg small">{errText(g.assembly)}</div>}
         </>}
         {pickable && !chosen.length && <div class="neg small">{t('xfw_pick_one')}</div>}
-        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" disabled={g?.refusal ?? (pickable && !chosen.length ? t('xfw_pick_one') : null)} onClick={() => act({ t: 'declare', target: d.id, goal, locs: pickable ? chosen : g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn>
+          {/* a war the assembly would refuse can be put to it: the vote with bribes and concessions, then the declaration */}
+          {g && !g.refusal && g.assembly && <Btn tip={t('x_asm_put_war_hint')} disabled={pickable && !chosen.length ? t('xfw_pick_one') : null} onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'declare', target: d.id, goal: g.goal, locs: pickable ? chosen : g.locs } }; }}>{t('x_asm_put_war')}</Btn>}
+          <Btn cls="danger" disabled={g?.refusal ?? g?.assembly ?? (pickable && !chosen.length ? t('xfw_pick_one') : null)} onClick={() => act({ t: 'declare', target: d.id, goal, locs: pickable ? chosen : g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+
       </div>}
   </Section>;
 }

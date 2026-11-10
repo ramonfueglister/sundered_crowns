@@ -11,6 +11,8 @@ import { FAITH_INDEX, GROUP_OF, ALL_CULTURES } from './peoples';
 import { DOCTRINES, DOCTRINE_INDEX } from './doctrines';
 import { INNOVATIONS } from './innovations';
 import { B, BI } from '../defs';
+import { deName } from './names_de';
+import { CODE_PROCLAIM } from './situations';
 
 export interface GoalDef {
   nation?: string; // nation key, or undefined = generic tree for realms without their own
@@ -27,7 +29,22 @@ export interface GoalDef {
  * A condition: text, test and (for counted conditions) progress as [current, required]; place conditions name their
  * places so the goal tree can show which are held.
  */
-export interface GoalCond { t: I18n; f: (e: EvApi) => boolean; p?: (e: EvApi) => [number, number]; places?: string[]; building?: number }
+export interface GoalCond { t: I18n; f: (e: EvApi) => boolean; p?: (e: EvApi) => [number, number]; places?: string[]; building?: number; prog?: (e: EvApi) => CondProg }
+/** How far a condition is: the count shown (cur of max, where it counts), the share done (0..1) and, for a condition
+ *  that holds only from a year on, that year and the share of the time to it that has passed. */
+export interface CondProg { cur?: number; max?: number; frac: number; from?: number; timeFrac?: number }
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+/** The progress of a condition: met is 1; a counted one cur / max; one with a year gate (C.after) never more than
+ *  the share of the time to that year that has passed, so it cannot look done while the year is still to come. */
+export function condProgress(c: GoalCond, e: EvApi): CondProg {
+  if (c.prog) return c.prog(e);
+  let ok = false; try { ok = c.f(e); } catch { ok = false; }
+  const p = c.p?.(e);
+  if (!p) return { frac: ok ? 1 : 0 };
+  // a condition not met never reads as done, even when its count is reached (a subject as strong as the last great
+  // power, a treasury full but in debt)
+  return { cur: p[0], max: p[1], frac: ok ? 1 : Math.min(0.99, clamp01(p[0] / Math.max(1e-9, p[1]))) };
+}
 type Cond = GoalCond;
 interface Rew { t: I18n; f: (e: EvApi) => void }
 const NAMES = new WeakMap<World, Map<string, number>>();
@@ -38,7 +55,8 @@ function loc(w: World, name: string): number {
 }
 /** All location names used by goals (checked by tools/sim/check_content.ts). */
 export const GOAL_PLACES = new Set<string>();
-const list = (xs: string[], lang: 'en' | 'de') => xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${lang === 'en' ? 'and' : 'und'} ${xs[xs.length - 1]}`;
+/** Place names joined for a goal text: the map's names in English, their German forms in German (Wien, Meißen). */
+const list = (names: string[], lang: 'en' | 'de') => { const xs = lang === 'de' ? names.map(deName) : names; return xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${lang === 'en' ? 'and' : 'und'} ${xs[xs.length - 1]}`; };
 const owns = (e: EvApi, name: string) => { const l = loc(e.w, name); return l >= 0 && e.s.loc.owner[l] === e.n.id; };
 const ownsOrSubject = (e: EvApi, name: string) => { const l = loc(e.w, name); if (l < 0) return false; const o = e.s.loc.owner[l]; return o === e.n.id || (o >= 0 && e.s.nations[o].overlord === e.n.id); };
 const nat = (e: EvApi, key: string): Nation | undefined => e.s.nations.find((x) => x.key === key && x.alive);
@@ -49,6 +67,8 @@ const inBox = (e: EvApi, box: [number, number, number, number]) => countLocs(e, 
 const overseasLocs = (e: EvApi) => countLocs(e, (l) => e.w.lon[l] < -25 || (e.w.lat[l] < 15 && e.w.lon[l] < 55));
 /** The progress nearer to its mark (for “a or b”); a side without progress counts as nothing done. */
 const better = (a?: [number, number], b?: [number, number]): [number, number] => { const f = (x?: [number, number]) => (x ? x[0] / Math.max(1e-9, x[1]) : -1); return (f(a) >= f(b) ? a : b) ?? [0, 1]; };
+/** The score of the realm at place i of the great-power ranking (our own when the ranking is still empty). */
+const rankScore = (e: EvApi, i: number) => { const id = e.s.ranking[i]; return id !== undefined && e.s.nations[id] ? Math.max(1, e.s.nations[id].score) : Math.max(1, e.n.score); };
 /** Location index of a goal place name (first location with that name), -1 when the map has none. */
 export function goalPlace(w: World, name: string): number { return loc(w, name); }
 
@@ -85,15 +105,40 @@ const C = {
   gov: (gov: string, t: I18n): Cond => ({ t: { en: `rule as ${t.en}`, de: `als ${t.de} herrschen` }, f: (e) => e.n.gov === gov }),
   faith: (f: string, t: I18n): Cond => ({ t: { en: `follow the ${t.en}`, de: `der ${t.de} folgen` }, f: (e) => e.n.faith === FAITH_INDEX[f] }),
   faithUnity: (k: number): Cond => ({ t: { en: `have ${Math.round(k * 100)}% of our land share our faith`, de: `${Math.round(k * 100)} % unseres Landes teilen unseren Glauben` }, f: (e) => { const ls = nationLocsRO(e.s, e.n.id); return ls.length > 0 && ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length >= k; }, p: (e) => { const ls = nationLocsRO(e.s, e.n.id); return [ls.length ? Math.round(ls.filter((l) => e.s.loc.faith[l] === e.n.faith).length / ls.length * 100) : 0, Math.round(k * 100)]; } }),
-  greatPower: (): Cond => ({ t: { en: 'be counted among the great powers', de: 'zu den Großmächten zählen' }, f: (e) => e.s.ranking.includes(e.n.id) }),
-  topPower: (): Cond => ({ t: { en: 'be the foremost power of the world', de: 'die erste Macht der Welt sein' }, f: (e) => e.s.ranking[0] === e.n.id }),
+  /** Progress: our score against the score of the last great power (the eighth of the ranking). */
+  greatPower: (): Cond => ({ t: { en: 'be counted among the great powers', de: 'zu den Großmächten zählen' }, f: (e) => e.s.ranking.includes(e.n.id), p: (e) => [Math.round(e.n.score), Math.round(rankScore(e, e.s.ranking.length - 1))] }),
+  /** Progress: our score against the foremost power's. */
+  topPower: (): Cond => ({ t: { en: 'be the foremost power of the world', de: 'die erste Macht der Welt sein' }, f: (e) => e.s.ranking[0] === e.n.id, p: (e) => [Math.round(e.n.score), Math.round(rankScore(e, 0))] }),
   emperor: (): Cond => ({ t: { en: 'hold the imperial crown', de: 'die Kaiserkrone tragen' }, f: (e) => e.s.empire.emperor === e.n.id }),
   overseas: (k: number): Cond => ({ t: { en: `hold ${k} locations beyond the Ocean Sea`, de: `${k} Orte jenseits des Ozeanmeers besitzen` }, f: (e) => overseasLocs(e) >= k, p: (e) => [overseasLocs(e), k] }),
   situation: (id: string, outcomes: string[], t: I18n): Cond => ({ t, f: (e) => e.s.situations.some((x) => x.id === id && !x.active && outcomes.includes(x.outcome || '')) }),
   worldFlag: (k: string, t: I18n): Cond => ({ t, f: (e) => e.s.flags[k] !== undefined }),
-  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e), p: a.p || b.p ? (e) => better(a.p?.(e), b.p?.(e)) : undefined, places: a.places || b.places ? [...(a.places ?? []), ...(b.places ?? [])] : undefined, building: a.building ?? b.building }),
-  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e), p: c.p, places: c.places, building: c.building }),
-  capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${name} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
+  /** The side further along counts (a side met makes the whole condition met). */
+  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e), p: a.p || b.p ? (e) => better(a.p?.(e), b.p?.(e)) : undefined, places: a.places || b.places ? [...(a.places ?? []), ...(b.places ?? [])] : undefined, building: a.building ?? b.building,
+    prog: (e) => {
+      const pa = condProgress(a, e), pb = condProgress(b, e);
+      // on a tie the side with a count or a year gate is shown (it says more than a plain "not yet")
+      if (pa.frac !== pb.frac) return pa.frac > pb.frac ? pa : pb;
+      return pa.max !== undefined || pa.from !== undefined ? pa : pb;
+    } }),
+  /** Holds only from year y: before it the progress is the smaller of the inner condition's and the share of the time
+   *  from the start of the game to y that has passed (both shown in the goal's tooltip). */
+  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e), p: c.p, places: c.places, building: c.building,
+    prog: (e) => {
+      const inner = condProgress(c, e);
+      if (e.year >= y) return inner;
+      const t0 = e.s.startYear, tf = clamp01((e.year - t0) / Math.max(1, y - t0));
+      return { ...inner, frac: Math.min(inner.frac, tf), from: y, timeFrac: tf };
+    } }),
+  capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${deName(name)} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
+  imperialReforms: (k: number): Cond => ({ t: { en: `see ${k} imperial reforms passed by the diet`, de: `${k} Reichsreformen vom Reichstag beschlossen sehen` }, f: (e) => e.s.empire.reforms.length >= k, p: (e) => [e.s.empire.reforms.length, k] }),
+  imperialAuthority: (k: number): Cond => ({ t: { en: `raise imperial authority to ${k} as emperor`, de: `als Kaiser die Reichsautorität auf ${k} heben` }, f: (e) => e.s.empire.emperor === e.n.id && e.s.empire.authority >= k, p: (e) => [e.s.empire.emperor === e.n.id ? Math.round(e.s.empire.authority) : 0, k] }),
+  electedEmperor: (k: number): Cond => ({ t: { en: k > 1 ? `win ${k} imperial elections` : 'win an imperial election', de: k > 1 ? `${k} Kaiserwahlen gewinnen` : 'eine Kaiserwahl gewinnen' }, f: (e) => (e.n.flags.elected_emperor ?? 0) >= k, p: (e) => [e.n.flags.elected_emperor ?? 0, k] }),
+  estateContent: (id: string, k: number, t: I18n): Cond => ({ t: { en: `keep ${t.en} at ${k} contentment`, de: `${t.de} bei ${k} Zufriedenheit halten` }, f: (e) => (e.n.estates.find((x) => x.id === id)?.contentment ?? 0) >= k, p: (e) => [Math.round(e.n.estates.find((x) => x.id === id)?.contentment ?? 0), k] }),
+  /** The code of the Bohemian crown proclaimed; progress: the situation's bar against the mark for proclaiming it. */
+  codeProclaimed: (): Cond => ({ t: { en: 'proclaim the code of the Bohemian crown', de: 'das Gesetzbuch der böhmischen Krone verkünden' },
+    f: (e) => e.s.situations.some((x) => x.id === 'kings_code' && !x.active && x.outcome === 'proclaimed' && x.data.b === e.n.id),
+    p: (e) => { const x = e.s.situations.find((q) => q.id === 'kings_code' && q.data.b === e.n.id); return [x ? (x.outcome === 'proclaimed' ? CODE_PROCLAIM : x.active ? Math.max(0, x.progress) : 0) : 0, CODE_PROCLAIM]; } }),
 };
 
 const R = {
@@ -312,6 +357,18 @@ const BOHEMIA: GoalDef[] = [
   G('bohemia', 'austria', 'Danube Lands', 'Donaulande', ['moravia'], [C.control('Vienna')], [R.prestige(20)]),
   G('bohemia', 'meissen', 'Meissen', 'Meißen', ['lusatia'], [C.control('Meissen')], [R.gold(6)]),
   G('bohemia', 'great_power', 'Heart of the Empire', 'Herz des Reiches', ['emperor', 'silesia'], [C.greatPower()], [R.prestige(25)]),
+  // the Empire: the diet's reforms, the majesty of the crown, an election won
+  G('bohemia', 'reform', 'Reform of the Empire', 'Reform des Reiches', ['emperor'], [C.imperialReforms(2)], [R.authority(30), R.mod('reform', 30, T('Reformer of the Empire', 'Erneuerer des Reiches'), { authority_gain: 0.05 })]),
+  G('bohemia', 'majesty', 'Majesty of the Crown', 'Majestät der Krone', ['emperor'], [C.imperialAuthority(70)], [R.prestige(15), R.mandate(10)]),
+  G('bohemia', 'election', 'The Crown Stays in Prague', 'Die Krone bleibt in Prag', ['emperor'], [C.electedEmperor(1)], [R.prestige(20), R.mod('election', 30, T('House of emperors', 'Kaiserhaus'), { diplomacy: 0.1 })]),
+  // the estates: the code of the crown against the lords, and Powers at peace with it
+  G('bohemia', 'code', 'Law of the Land', 'Landrecht', [], [C.codeProclaimed()], [R.authority(40)], T('The lords rejected the king’s code of land law; carry it, and the royal courts stand over theirs.', 'Die Herren verwarfen das Landrecht des Königs; setzt es durch, und die königlichen Gerichte stehen über den ihren.')),
+  G('bohemia', 'estates', 'Lords and Towns Content', 'Herren und Städte zufrieden', [], [C.estateContent('magnates', 60, T('the magnates', 'die Magnaten')), C.estateContent('burghers', 60, T('the burghers', 'die Bürger'))], [R.concord(10), R.estate('burghers', 10, T('Burghers', 'Bürger'))]),
+  // Silesia: Schweidnitz and Jauer, then the duchies under the crown itself
+  G('bohemia', 'schweidnitz', 'Schweidnitz and Jauer', 'Schweidnitz und Jauer', ['silesia'], [C.control('Świdnica', 'Jawor')], [R.prestige(10), R.gold(4)]),
+  G('bohemia', 'silesian_duchies', 'The Silesian Duchies', 'Die schlesischen Herzogtümer', ['schweidnitz'], [C.ownK(4, ['Legnica', 'Opole', 'Brzeg', 'Opava', 'Głogów', 'Racibórz'])], [R.authority(25), R.mod('silesian_duchies', 30, T('Crown lands of Silesia', 'Krongut in Schlesien'), { tax: 0.03 })]),
+  // the chalice: after the peace, one kingdom again
+  G('bohemia', 'one_kingdom', 'One Kingdom Again', 'Wieder ein Königreich', ['chalice'], [C.faithUnity(0.8), C.concord(40)], [R.concord(10), R.prestige(10)]),
 ];
 
 // ---------------- Austria ----------------
