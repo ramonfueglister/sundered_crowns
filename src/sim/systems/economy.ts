@@ -7,7 +7,7 @@ import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH } from '../c
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
-import { dutyUnrest } from './duties';
+import { dutyUnrest, DUTIES } from './duties';
 import { secondFaith } from './faith';
 import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT_VOLUME, embargoBetween } from './trade';
 import { hasTreaty } from '../ctx';
@@ -229,15 +229,44 @@ function pay(nation: number, kind: number, v: number) {
   }
   PAY_N[NPAY] = nation; PAY_K[NPAY] = kind; PAY_V[NPAY] = v; NPAY++;
 }
+/** What the taxes of a realm could raise, summed over its land in its flags (systems/government.ts dutyLevels turns
+ *  them into the duties' weight in the tax level the assembly grants): ty_cls what a rate of 1 on every class would
+ *  raise (before the common factor of collection, taxCommon), ty_land, ty_hearth and ty_excise what each duty alone
+ *  would raise at its highest rate; all the crown's share. The government halves them every month, so they follow
+ *  the realm's land and prices. */
+export const TAX_YIELD_KEYS = ['ty_cls', 'ty_land', 'ty_hearth', 'ty_excise'];
 const PAY_KEYS = ['tax', 'contributions', 'land_tax', 'hearth_tax', 'excise'];
 function flushPayments(s: GameState) {
   for (let k = 0; k < NPAY; k++) addIncome(s.nations[PAY_N[k]], PAY_KEYS[PAY_K[k]], PAY_V[k]);
   NPAY = 0;
+  // the yields of the pass, added to each realm's flags
+  for (let o = 0; o < s.nations.length && o * 4 < TY.length; o++) {
+    const r = o * 4; if (!TY[r]) continue;
+    const f = s.nations[o].flags;
+    for (let k = 0; k < 4; k++) f[TAX_YIELD_KEYS[k]] = (f[TAX_YIELD_KEYS[k]] ?? 0) + TY[r + k];
+  }
+}
+/** The yields of one pass, four per realm in the order of TAX_YIELD_KEYS (sized and cleared by stepLocations). */
+let TY = new Float64Array(0);
+const DUTY_MAX = DUTIES.map((d) => d.max), DRY = new Float64Array(C);
+/** The warm-up passes at the start (economy.init, before prices settle) count a quarter each: enough to weigh the
+ *  duties from the first day, soon outweighed by the months of play. */
+const WARM_YIELD = 0.25;
+/** Add what each duty alone would raise in a location at its highest rate (from the class incomes after the class
+ *  taxes; inc is left unchanged) to the realm's yields of the pass. The real collection follows and leaves DUTY_PAID
+ *  as before. */
+function dutyYields(o: number, inc: Float64Array, P: Float32Array, base: number, ex: Float64Array, eo: number, agri: number, market: number, tf: number, pl: number, k0: number) {
+  for (let k = 0; k < 3; k++) {
+    DRY.set(inc);
+    collectDuties(DRY, P, base, ex, eo, k === 0 ? DUTY_MAX[0] : 0, k === 1 ? DUTY_MAX[1] : 0, k === 2 ? DUTY_MAX[2] : 0, agri, market, tf, pl);
+    TY[o * 4 + 1 + k] += DUTY_PAID[k] * k0;
+  }
 }
 /** Over-extension of a realm: how far the land still to be integrated exceeds what its administration can handle. */
 export function overextension(n: Nation): number { return Math.max(0, (n.adminLoad ?? 0) / Math.max(1, n.adminCapacity) - 1); }
 function stepLocations(s: GameState, w: World, from: number, to: number, stride: number, settled: boolean) {
   NPAY = 0; CHARS = s.chars;
+  if (TY.length < s.nations.length * 4) TY = new Float64Array(s.nations.length * 4 + 256); else TY.fill(0);
   s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled);
   flushPayments(s);
 }
@@ -359,10 +388,14 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     if (n) {
       // land still being integrated yields only part of its taxes (integrationYield)
       const ctl = lc.control[i], tf = (ns[nr + 13] ? 0.75 + 0.25 * ctl : ctl) * (0.3 + 0.7 * lc.integ[i]);
+      const own = lc.ctrl[i] === o;
+      const yw = (settled ? WARM_YIELD : 1) * CROWN_SHARE; // the duties' due already counts tf
+      if (own) { let a = 0; for (let c = 0; c < C; c++) a += inc[c] * (1 - ns[nr + NX + 9 + c]); TY[o * 4] += a * tf * yw; }
       for (let c = 0; c < C; c++) {
         const t = inc[c] * (ns[nr + 14 + c] * tf);
         inc[c] -= t; taxTotal += t;
       }
+      if (own) dutyYields(o, inc, P, base, ns, nr + NX + 8, agriValue, craftValue + rgoQ * pR, tf, pl, yw);
       // tax instruments (systems/duties.ts): land tax, hearth tax, excise
       const landR = ns[nr + NX + 4], hearthR = ns[nr + NX + 5], exciseR = ns[nr + NX + 6];
       let land = 0, hearth = 0, excise = 0;

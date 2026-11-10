@@ -9,17 +9,18 @@ export interface DutyDef { id: 'land' | 'hearth' | 'excise'; ledger: string; max
  *  classes: the classes that pay it (systems/economy.ts collectDuties); payers: the class of each resentful estate,
  *  whose legal exemption (exempt_<class>) spares the estate both the duty and the resentment; shiftTo: the estate
  *  that pays, and resents, what the exempt ones do not (the land tax of exempt lords falls on the peasants).
- *  level: what one unit of the rate adds to the tax level the assembly grants (systems/government.ts taxLevelParts),
- *  in shares of the class taxes: measured on the great realms of 1356 (Bohemia, France, England, Hungary, Castile,
- *  Poland), the land tax at its highest rate raises about as much as 4 points more on every class, the hearth tax
- *  at 1 about 2.4 points and the excise at its highest about 1.6 points. */
+ *  level: what one unit of the rate adds to the tax level the assembly grants when a realm has no yields of its own
+ *  yet. Each realm's own weight follows what the duty raises there (systems/government.ts dutyLevels); these are the
+ *  averages of the great realms of 1356 (Bohemia, France, England, Hungary, Castile, Poland, a month of play): the
+ *  land tax at its highest rate raises as much as 5.4 to 6.9 points more on every class (0.63 per unit), the hearth
+ *  tax at 1 as much as 3.3 to 4.6 points (0.039) and the excise at its highest 1.7 to 2.6 points (0.22). */
 export const DUTIES: DutyDef[] = [
   // a share of the value of harvests and raw goods, paid first by the lords and the church who own the land
-  { id: 'land', ledger: 'land_tax', max: 0.1, step: 0.005, estates: { magnates: 150, prelates: 100 }, unrest: 20, classes: [CL.nobles, CL.clergy, CL.peasants], payers: { magnates: CL.nobles, prelates: CL.clergy }, shiftTo: 'commons', level: 0.4 },
+  { id: 'land', ledger: 'land_tax', max: 0.1, step: 0.005, estates: { magnates: 150, prelates: 100 }, unrest: 20, classes: [CL.nobles, CL.clergy, CL.peasants], payers: { magnates: CL.nobles, prelates: CL.clergy }, shiftTo: 'commons', level: 0.63 },
   // marks per hundred people a month (times the price level): falls on every household alike, so on the poor most
-  { id: 'hearth', ledger: 'hearth_tax', max: 1, step: 0.05, estates: { commons: 12 }, unrest: 6, classes: Array.from({ length: C }, (_, c) => c), payers: { commons: CL.peasants }, level: 0.024 },
+  { id: 'hearth', ledger: 'hearth_tax', max: 1, step: 0.05, estates: { commons: 12 }, unrest: 6, classes: Array.from({ length: C }, (_, c) => c), payers: { commons: CL.peasants }, level: 0.039 },
   // a share of the value of crafts and raw goods brought to market, paid by artisans, burghers and labourers
-  { id: 'excise', ledger: 'excise', max: 0.1, step: 0.005, estates: { burghers: 150 }, unrest: 30, classes: [CL.artisans, CL.burghers, CL.labourers, CL.wage_workers], payers: { burghers: CL.burghers }, level: 0.16 },
+  { id: 'excise', ledger: 'excise', max: 0.1, step: 0.005, estates: { burghers: 150 }, unrest: 30, classes: [CL.artisans, CL.burghers, CL.labourers, CL.wage_workers], payers: { burghers: CL.burghers }, level: 0.22 },
 ];
 export const DUTY_INDEX: Record<string, DutyDef> = Object.fromEntries(DUTIES.map((d) => [d.id, d]));
 

@@ -6,14 +6,15 @@
 import { describe, it, expect } from 'vitest';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
-import { advanceDay } from '../src/sim/engine';
+import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { DAY_EPOCH, mkCtx } from '../src/sim/ctx';
 import { applyCommand } from '../src/sim/commands';
 import { CL } from '../src/sim/defs';
-import { DUTY_INDEX } from '../src/sim/systems/duties';
+import { DUTIES } from '../src/sim/systems/duties';
 import { estate, politics } from '../src/sim/systems/politics';
 import {
   taxWeights, taxLevel, taxLevelParts, classSums, assemblyVote, taxAsk, realmTaxLevel, classTaxDiscontent, contentParts, CUSTOM_RATE,
+  dutyLevels, DUTY_LEVEL_FALLBACK,
 } from '../src/sim/systems/government';
 import { dateToDay } from '../src/sim/calendar';
 import { goalConditions, goalsFor } from '../src/sim/systems/goals';
@@ -107,16 +108,16 @@ describe('the assembly and the taxes', () => {
   it('the duties count in the level the assembly grants: a rise above it needs its vote', () => {
     const b = nat('bohemia');
     human(b, () => {
-      b.laws.diet = 1; b.flags.tax_grant = 0.1; b.duties = { land: 0, hearth: 0, excise: 0 }; b.treasury = 100000; fresh();
+      b.laws.diet = 1; b.duties = { land: 0, hearth: 0, excise: 0 }; b.treasury = 100000; fresh();
       setContent(b, 0);
-      const lv0 = realmTaxLevel(s, b);
-      expect(lv0).toBeLessThan(0.1);
+      const lv0 = realmTaxLevel(s, b), dl = dutyLevels(s, b);
+      b.flags.tax_grant = lv0 + 0.1 * dl.land + 0.001; // room for the land tax at its highest, not for more
       // within the grant: no vote
       expect(applyCommand(s, w, { t: 'budget', n: b.id, key: 'land', value: 0.02 } as any).ok).toBe(true);
       expect(b.duties!.land).toBeCloseTo(0.02, 9);
-      expect(realmTaxLevel(s, b)).toBeCloseTo(lv0 + 0.02 * DUTY_INDEX.land.level, 9);
+      expect(realmTaxLevel(s, b)).toBeCloseTo(lv0 + 0.02 * dl.land, 5);
       // all three at their highest pass the grant: the angry assembly refuses, and nothing changes
-      expect(applyCommand(s, w, { t: 'budget', n: b.id, key: 'land', value: 0.1 } as any).ok).toBe(true); // 0.1 x 0.4 = 4 points: still within
+      expect(applyCommand(s, w, { t: 'budget', n: b.id, key: 'land', value: 0.1 } as any).ok).toBe(true); // still within
       const r = applyCommand(s, w, { t: 'budget', n: b.id, key: 'hearth', value: 1 } as any);
       expect(r.ok).toBe(false); expect(r.err).toBe('the assembly refused the new taxes');
       expect(b.duties!.hearth).toBe(0);
@@ -136,6 +137,42 @@ describe('the assembly and the taxes', () => {
       expect(applyCommand(s, w, { t: 'budget', n: b.id, key: 'hearth', value: 0 } as any).ok).toBe(true);
       b.duties = { land: 0, hearth: 0, excise: 0 }; b.flags.tax_grant = 0.1;
     });
+  });
+  it('a duty counts in the level as many points on every class as it raises in a month of play, realm by realm', () => {
+    // the realm's own yields: what each duty takes at its highest rate against what four points more on every class
+    // rate bring, measured over the next month (the AI keeps its own duties; the rest of the world plays on)
+    const keys = ['bohemia', 'france', 'castile'];
+    const base = serialize(s);
+    const month = (mod: (n: Nation) => void) => {
+      const c = deserialize(base) as GameState;
+      for (const k of keys) mod(c.nations.find((n) => n.key === k)!);
+      for (let i = 0; i < 31; i++) advanceDay(c, w);
+      return c;
+    };
+    const s0 = deserialize(base) as GameState;
+    const b0 = month(() => {}), p4 = month((n) => { n.taxRate = n.taxRate.map((r) => r + 0.04); });
+    const at = DUTIES.map((d) => month((n) => { n.duties = { land: 0, hearth: 0, excise: 0, ...(n.duties ?? {}), [d.id]: d.max }; }));
+    for (const k of keys) {
+      const n0 = s0.nations.find((n) => n.key === k)!, id = n0.id;
+      const point = ((p4.nations[id].income.tax ?? 0) - (b0.nations[id].income.tax ?? 0)) / 4;
+      expect(point).toBeGreaterThan(0);
+      const dl = dutyLevels(s0, n0);
+      DUTIES.forEach((d, j) => {
+        const raised = (at[j].nations[id].income[d.ledger] ?? 0) / point; // in points on every class
+        const counted = dl[d.id] * d.max * 100;
+        expect(counted / raised).toBeGreaterThan(0.85);
+        expect(counted / raised).toBeLessThan(1.15);
+      });
+      // the breakdown names the realm's own weight, and its rows add up to the level
+      const du = { land: 0.1, hearth: 1, excise: 0.1 };
+      const wts = taxWeights(n0, classSums(s0));
+      const rows = taxLevelParts(n0.taxRate, wts, du, dl);
+      expect(rows.reduce((p, r) => p + r[1], 0)).toBeCloseTo(taxLevel(n0.taxRate, wts, du, dl), 12);
+      expect((rows[rows.length - 3][0] as any).de).toMatch(new RegExp(`^Grundsteuer 10,0 % x ${String(+dl.land.toPrecision(4)).replace('.', ',')}$`));
+    }
+    // a realm with no yields of its own yet takes the averages of the great realms
+    const bare = { ...s0.nations.find((n) => n.key === 'bohemia')!, flags: {} } as Nation;
+    expect(dutyLevels(s0, bare)).toEqual(DUTY_LEVEL_FALLBACK);
   });
   it('class taxes above the customary rates lower the contentment the Powers drift toward, and the rows add up', () => {
     const b = nat('bohemia');

@@ -11,7 +11,7 @@ import {
   lobbyCost, isLobby, isHuman, reformDef, helpRefusal,
 } from '../sim/systems/empire';
 import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT, SPURNED } from '../sim/systems/powers';
-import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, grantFor, type AssemblyAsk } from '../sim/systems/government';
+import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, dutyLevels, grantFor, type AssemblyAsk } from '../sim/systems/government';
 import { DUTIES } from '../sim/systems/duties';
 import { PRIVILEGES, ageOf, lawEffect } from '../sim/systems/politics';
 import { SITUATIONS } from '../sim/content/situations';
@@ -140,7 +140,7 @@ function assemblyView(s: GameState, me: number, q: Extract<Query, { q: 'assembly
   } else ask = { kind: 'war', target: q.target ?? -1, goal: (q.goal ?? 'conquest') as WarGoal['type'] };
   const r = assemblyVote(s, n, ask, q.bribe ?? [], q.concede, tax?.cs);
   // the tax level asked and now, row by row (the rows add up to each), and what a yes would grant
-  const tl = tax ? { now: tax.now, nowRows: taxLevelParts(n.taxRate, tax.wts, dutiesOf(n)), rows: taxLevelParts(tax.rates, tax.wts, tax.duties), grant: grantFor(tax.level), duties: tax.duties, rates: tax.rates } : null;
+  const tl = tax ? { now: tax.now, nowRows: taxLevelParts(n.taxRate, tax.wts, dutiesOf(n), tax.dl), rows: taxLevelParts(tax.rates, tax.wts, tax.duties, tax.dl), grant: grantFor(tax.level), duties: tax.duties, rates: tax.rates } : null;
   return {
     ...r, kind: q.kind, level: ask.kind === 'tax' ? ask.level : 0, ceiling: taxCeiling(n), needed: ask.kind === 'tax' ? ask.level > (tax?.now ?? 0) + 1e-9 && needsTaxVote(n, ask.level, tax?.now) : needsWarVote(s, n, (ask as any).target, (ask as any).goal),
     bribeCost: bribeCost(n), treasury: n.treasury, target: q.target, goal: q.goal, cls: q.cls, rate: q.rate, duty: q.duty, value: q.value, tax: tl,
@@ -162,7 +162,7 @@ function governView(s: GameState, w: World, me: number) {
     winner: t?.winner ?? 0, total: t?.total ?? 0,
     heir: n.heir, heirName: s.chars[n.heir]?.name,
     demand: n.demand ? { ...n.demand, estateName: estateName(n.demand.estate), privName: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.name, effects: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.effects, resent: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.resent } : null,
-    ...(() => { const cs = classSums(s); const wts = taxWeights(n, cs); const rows = taxLevelParts(n.taxRate, wts, dutiesOf(n)); const lv = taxLevel(n.taxRate, wts, dutiesOf(n));
+    ...(() => { const cs = classSums(s); const wts = taxWeights(n, cs); const dl = dutyLevels(s, n); const rows = taxLevelParts(n.taxRate, wts, dutiesOf(n), dl); const lv = taxLevel(n.taxRate, wts, dutiesOf(n), dl);
       return { taxLevel: lv, taxLevelRows: rows, taxRates: n.taxRate, taxCeiling: taxCeiling(n, lv) }; })(),
     taxVote: lawEffect(n, 'tax_vote') > 0, warVote: lawEffect(n, 'war_vote') > 0,
     privileges: PRIVILEGES.map((p) => ({ id: p.id, estate: p.estate, name: p.name, effects: p.effects, resent: p.resent ?? {}, grant: p.grant })),

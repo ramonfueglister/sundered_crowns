@@ -13,6 +13,7 @@ import { CL, CLASS_NEED_MULT, CLASSES, CLASS_NAME } from '../defs';
 import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir, consortOf, classExempt } from './politics';
 import { DUTIES, DUTY_INDEX, dutyDiscontent, dutyDiscontentAt, dutyValue } from './duties';
 import { nationDev, hasCasusBelli } from './war';
+import { taxCommon, TAX_YIELD_KEYS } from './economy';
 import { chance, rand, hash01 } from '../rng';
 import { houseName as cultureHouse } from '../content/names';
 
@@ -189,9 +190,26 @@ export function taxWeights(n: Nation, cs: ClassSums): number[] {
 }
 const pctTxt = (v: number, d = 1): I18n => ({ en: `${(v * 100).toFixed(d)} %`, de: `${(v * 100).toFixed(d).replace('.', ',')} %` });
 const DUTY_NAME: Record<string, I18n> = { land: T('Land tax', 'Grundsteuer'), hearth: T('Hearth tax', 'Herdsteuer'), excise: T('Excise', 'Akzise') };
-/** The tax level the assembly grants, row by row: each class's rate times its weight, and each duty at the share of
- *  the class taxes it raises as much as (systems/duties.ts level). The rows add up to the level. */
-export function taxLevelParts(rates: number[], wts: number[], duties?: Duties): Row[] {
+/** What one unit of each duty's rate adds to the tax level: as many points on every class rate as would raise the
+ *  same money in this realm. From the realm's own yields (systems/economy.ts TAX_YIELD_KEYS): what the duty alone
+ *  raises at its highest rate, per unit of the rate, against what a rate of 1 on every class raises (times the common
+ *  factor of collection: honesty, laws, treasurer). A realm without such yields yet takes the averages of the great
+ *  realms (systems/duties.ts level). */
+export type DutyLevels = Record<keyof Duties, number>;
+export const DUTY_LEVEL_FALLBACK: DutyLevels = { land: DUTY_INDEX.land.level, hearth: DUTY_INDEX.hearth.level, excise: DUTY_INDEX.excise.level };
+export function dutyLevels(s: GameState, n: Nation): DutyLevels {
+  const pt = (n.flags.ty_cls ?? 0) * taxCommon(n, s.chars);
+  if (!(pt > 1e-9)) return { ...DUTY_LEVEL_FALLBACK };
+  const out = { ...DUTY_LEVEL_FALLBACK };
+  for (const d of DUTIES) out[d.id] = (n.flags[`ty_${d.id}`] ?? 0) / d.max / pt;
+  return out;
+}
+/** The monthly halving of the summed yields (systems/economy.ts adds a month of them back). */
+function decayYields(n: Nation) { for (const k of TAX_YIELD_KEYS) if (n.flags[k]) n.flags[k] *= 0.5; }
+const fmtFactor = (v: number): I18n => { const x = String(+v.toPrecision(4)); return { en: x, de: x.replace('.', ',') }; };
+/** The tax level the assembly grants, row by row: each class's rate times its weight, and each duty times the points
+ *  on every class it raises as much as (dutyLevels). The rows add up to the level. */
+export function taxLevelParts(rates: number[], wts: number[], duties?: Duties, dl: DutyLevels = DUTY_LEVEL_FALLBACK): Row[] {
   const rows: Row[] = [];
   CLASSES.forEach((k, c) => {
     const r = rates[c] ?? 0, wt = wts[c] ?? 0; if (r <= 0 || wt <= 0) return;
@@ -201,19 +219,21 @@ export function taxLevelParts(rates: number[], wts: number[], duties?: Duties): 
   if (duties) for (const d of DUTIES) {
     const r = duties[d.id] ?? 0; if (r <= 0) continue;
     const nm = DUTY_NAME[d.id], a = d.id === 'hearth' ? { en: r.toFixed(2), de: r.toFixed(2).replace('.', ',') } : pctTxt(r);
-    rows.push([T(`${nm.en} ${a.en} x ${d.level}`, `${nm.de} ${a.de} x ${String(d.level).replace('.', ',')}`), r * d.level]);
+    const f = +dl[d.id].toPrecision(4), x = fmtFactor(f);
+    rows.push([T(`${nm.en} ${a.en} x ${x.en}`, `${nm.de} ${a.de} x ${x.de}`), r * f]);
   }
   return rows;
 }
-/** The tax level: the class rates by weight (without weights their plain mean) plus the duties. */
-export function taxLevel(rates: number[], wts?: number[], duties?: Duties): number {
+/** The tax level: the class rates by weight (without weights their plain mean) plus the duties (dutyLevels, rounded
+ *  as the breakdown shows them). */
+export function taxLevel(rates: number[], wts?: number[], duties?: Duties, dl: DutyLevels = DUTY_LEVEL_FALLBACK): number {
   const w = wts ?? rates.map(() => 1 / Math.max(1, rates.length));
   let v = 0; for (let c = 0; c < rates.length; c++) v += (rates[c] ?? 0) * (w[c] ?? 0);
-  if (duties) for (const d of DUTIES) v += (duties[d.id] ?? 0) * d.level;
+  if (duties) for (const d of DUTIES) v += (duties[d.id] ?? 0) * +dl[d.id].toPrecision(4);
   return v;
 }
 /** A realm's tax level now (class taxes and duties). */
-export const realmTaxLevel = (s: GameState, n: Nation, cs: ClassSums = classSums(s)) => taxLevel(n.taxRate, taxWeights(n, cs), dutiesOf(n));
+export const realmTaxLevel = (s: GameState, n: Nation, cs: ClassSums = classSums(s)) => taxLevel(n.taxRate, taxWeights(n, cs), dutiesOf(n), dutyLevels(s, n));
 /** The rates a request to the assembly would set: one class's rate, or (cls -1) every class moved alike so that the
  *  whole tax level (with the duties, dutyLevel) is the rate asked. */
 export function askRates(rates: number[], cls: number, rate: number, wts?: number[], dutyLevel = 0): number[] {
@@ -225,16 +245,16 @@ export function askRates(rates: number[], cls: number, rate: number, wts?: numbe
 /** What a request to the assembly would set, with the level it reaches and the level now: a class rate (cls, rate),
  *  every class moved alike to a whole level (cls -1, rate), or a duty (duty, value). The assembly command and the
  *  dialog's query build it the same way. */
-export function taxAsk(s: GameState, n: Nation, cls?: number, rate?: number, duty?: string, value?: number): { rates: number[]; duties: Duties; level: number; now: number; wts: number[]; cs: ClassSums } | string {
-  const cs = classSums(s); const wts = taxWeights(n, cs); const du = dutiesOf(n);
-  const now = taxLevel(n.taxRate, wts, du);
+export function taxAsk(s: GameState, n: Nation, cls?: number, rate?: number, duty?: string, value?: number): { rates: number[]; duties: Duties; level: number; now: number; wts: number[]; dl: DutyLevels; cs: ClassSums } | string {
+  const cs = classSums(s); const wts = taxWeights(n, cs); const du = dutiesOf(n); const dl = dutyLevels(s, n);
+  const now = taxLevel(n.taxRate, wts, du, dl);
   let rates = n.taxRate.slice(), duties = du;
   if (duty !== undefined) { const d = DUTY_INDEX[duty]; if (!d) return 'unknown budget item'; duties = { ...du, [d.id]: dutyValue(d, value ?? 0) }; }
   else if (cls !== undefined) {
     if (cls < -1 || cls >= n.taxRate.length || !Number.isInteger(cls)) return 'bad class';
-    rates = askRates(n.taxRate, cls, rate ?? now, wts, taxLevel(n.taxRate.map(() => 0), wts, du));
+    rates = askRates(n.taxRate, cls, rate ?? now, wts, taxLevel(n.taxRate.map(() => 0), wts, du, dl));
   }
-  return { rates, duties, level: taxLevel(rates, wts, duties), now, wts, cs };
+  return { rates, duties, level: taxLevel(rates, wts, duties, dl), now, wts, dl, cs };
 }
 /** The highest tax level the assembly has granted (new realms: 10 %, or what they already levy). */
 export const taxCeiling = (n: Nation, level?: number) => n.flags.tax_grant ?? Math.max(0.1, level ?? taxLevel(n.taxRate));
@@ -345,8 +365,8 @@ export function assemblyWarVeto(s: GameState, _w: World, A: Nation, b: number, g
 /** A change of the taxes (class rates, duties) as the player's command makes it: within the granted level it applies
  *  at once; above it the assembly votes first (refused, nothing changes). out.msg carries the assembly's yes. */
 function changeTaxes(s: GameState, n: Nation, rates: number[], duties: Duties, out?: { msg?: I18n }): string | null {
-  const cs = classSums(s); const wts = taxWeights(n, cs);
-  const level = taxLevel(rates, wts, duties), now = taxLevel(n.taxRate, wts, dutiesOf(n));
+  const cs = classSums(s); const wts = taxWeights(n, cs); const dl = dutyLevels(s, n);
+  const level = taxLevel(rates, wts, duties, dl), now = taxLevel(n.taxRate, wts, dutiesOf(n), dl);
   // lowering the level never needs a vote, nor does a change that keeps within the granted level
   if (level > now + 1e-9 && needsTaxVote(n, level, now)) {
     const ask: AssemblyAsk = { kind: 'tax', level, rates, duties };
@@ -371,7 +391,7 @@ export function setDutyRate(s: GameState, n: Nation, id: string, value: number, 
  *  duties again to that level. */
 function aiTaxMonth(s: GameState, n: Nation, cs: ClassSums) {
   const wts = taxWeights(n, cs), du = dutiesOf(n);
-  const level = taxLevel(n.taxRate, wts, du);
+  const level = taxLevel(n.taxRate, wts, du, dutyLevels(s, n));
   if (n.flags.tax_grant === undefined) n.flags.tax_grant = +Math.max(0.1, level).toFixed(4);
   if (!needsTaxVote(n, level)) return;
   const ask: AssemblyAsk = { kind: 'tax', level, rates: n.taxRate, duties: du };
@@ -550,6 +570,7 @@ function governmentMonth(s: GameState, w: World) {
   const cs = classSums(s);
   for (const n of s.nations) {
     if (!n.alive) continue;
+    decayYields(n);
     if (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id))) n.flags.gov_war = s.day;
     demandMonth(s, n);
     const human = isHuman(s, n.id);
