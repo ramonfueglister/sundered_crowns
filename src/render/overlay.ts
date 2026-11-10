@@ -120,6 +120,8 @@ export class Overlay {
   canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   labels: MapLabel[] = [];
+  /** the letters of the realm names drawn this frame (screen boxes), which place and landmark names keep clear of */
+  private realmBoxes: Placed[] = [];
   units: MapUnit[] = [];
   landmarks: MapLandmark[] = [];
   /** the selection box being drawn (css px), or null */
@@ -234,6 +236,7 @@ export class Overlay {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
     const seen = new Set<number | string>();
+    this.realmBoxes = [];
     const fits = (bs: Placed[]) => {
       for (const b of bs) for (const p of placed) {
         if (Math.abs(p.cx - b.cx) > p.hw + p.hh + b.hw + b.hh || Math.abs(p.cy - b.cy) > p.hw + p.hh + b.hw + b.hh) continue;
@@ -253,6 +256,8 @@ export class Overlay {
         if (fits(tl.boxes)) { lay = tl; free = true; used = d; break; }
       }
       if (free) { placed.push(...lay.boxes); if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
+      // a legible realm name keeps its letters clear of place and landmark names (a faded watermark does not)
+      if (free && cd.alpha >= 0.45) this.realmBoxes.push(...lay.boxes);
       else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
       const target = free ? cd.alpha : 0;
       const cur = instant ? target : (this.fade.get(cd.key) ?? 0);
@@ -429,6 +434,10 @@ export class Overlay {
    */
   private drawMarks(v: OverlayView) {
     const taken = new Taken();
+    for (const b of this.realmBoxes) {
+      const ex = Math.abs(b.ux) * b.hw + Math.abs(b.uy) * b.hh, ey = Math.abs(b.uy) * b.hw + Math.abs(b.ux) * b.hh;
+      taken.add(b.cx - ex, b.cy - ey, b.cx + ex, b.cy + ey);
+    }
     const shown = this.layoutUnits(v);
     const s = this.unitScale(v);
     for (const p of shown) {
