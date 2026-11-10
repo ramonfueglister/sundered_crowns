@@ -504,3 +504,17 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .ailog { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.45; }
 .ailog li { margin: 1px 0; }
 .btn.on { outline: 1px solid var(--p-gold, #b08a3a); }
+/* ---- fix-map: overlays keep clear of each other ---- */
+/* the pause menu, settings and saves open as panels: their dimming covers every map overlay (mode bar, army panel, hints) */
+.panel-wrap:has(> .modal-fixed) { z-index: 60; }
+/* an open panel (peace dialog, economy) is in front of the army panel */
+.app:has(> .panel-wrap) > .army-wrap { z-index: 13; }
+/* the mode bar and its legend move into the room right of an open panel instead of covering it */
+.panel-wrap ~ .mapmodes { max-width: calc(100% - 24px - min(760px, 100% - 300px)); }
+.panel-wrap ~ .mapmodes .legend { max-width: 100%; }
+.panel-wrap ~ .mapmodes .lg-scale { min-width: 0; }
+/* the tutorial, the hints and the goal tracker stay above the mode bar and its legend (--mm-h: overlay.tsx) */
+.tutorial, .hint-card, .panel-wrap ~ .hint-card, .panel-wrap ~ .tutorial { bottom: max(82px, calc(var(--mm-h, 74px) + 10px)); }
+.right-col { bottom: max(130px, calc(var(--mm-h, 74px) + 10px)); }
+.notices { max-height: calc(100% - 66px - var(--mm-h, 74px)); overflow: hidden; }
+

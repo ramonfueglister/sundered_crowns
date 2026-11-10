@@ -86,7 +86,21 @@ export function EventModal() {
   </div>;
 }
 
+/** The height of the map-mode bar with its legend, as --mm-h on the page: the tutorial, the hints and the goal tracker
+ *  keep above it (panels.css), so none of them covers the legend or its good picker. */
+function useModeBarHeight() {
+  useEffect(() => {
+    const el = document.querySelector('.mapmodes') as HTMLElement | null;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const root = document.documentElement;
+    const set = () => root.style.setProperty('--mm-h', `${Math.ceil(el.offsetHeight) + 8}px`);
+    const ro = new ResizeObserver(set); ro.observe(el); set();
+    return () => { ro.disconnect(); root.style.removeProperty('--mm-h'); };
+  }, []);
+}
+
 export function Legend() {
+  useModeBarHeight();
   const lg = legend.value; const m = mapMode.value;
   if (!lg || m === 'political' || m === 'terrain' || (!lg.items.length && !lg.scale)) return null;
   const sc = lg.scale;
