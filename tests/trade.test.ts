@@ -246,8 +246,8 @@ describe('expeditions and companies', () => {
     const far = expeditionTargets(s2, w, p2).find((x) => x.km > 3000)!;
     const plan = expeditionPlan(s2, w, p2, far.to, 0);
     expect(plan.ocean).toBe(true);
-    expect(plan.refusal).toBe('an ocean voyage needs Commerce 10');
-    expect(applyCommand(s2, w, { t: 'explore', n: p2.id, fleet: 0, to: far.to })).toEqual({ ok: false, err: 'an ocean voyage needs Commerce 10' });
+    expect(plan.refusal).toBe('an ocean voyage needs Commerce & Learning 10');
+    expect(applyCommand(s2, w, { t: 'explore', n: p2.id, fleet: 0, to: far.to })).toEqual({ ok: false, err: 'an ocean voyage needs Commerce & Learning 10' });
   });
 
   it('the player can charter a company and it adds trade power', () => {

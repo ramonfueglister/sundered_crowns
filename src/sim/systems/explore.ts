@@ -106,8 +106,8 @@ export function voyageOf(w: World, start: number, path: readonly number[]): { km
 }
 /** What our navigators lack for a coastal or an ocean voyage (the requirement that applies, not the first one). */
 export function voyageRefusal(n: Nation, ocean: boolean): string | null {
-  if (ocean && n.tech[1] < OCEAN_TECH) return 'an ocean voyage needs Commerce 10';
-  if (n.tech[1] < COAST_TECH) return 'our navigators lack the knowledge (Commerce 6)';
+  if (ocean && n.tech[1] < OCEAN_TECH) return 'an ocean voyage needs Commerce & Learning 10';
+  if (n.tech[1] < COAST_TECH) return 'our navigators lack the knowledge (Commerce & Learning 6)';
   if (ocean && n.era < OCEAN_ERA) return 'an ocean voyage needs the Age of Print and Horizons';
   return null;
 }

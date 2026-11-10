@@ -8,6 +8,7 @@ import { playerId, panelArg } from '../store';
 import { Section, Row, NLink, Btn, Empty, Tabs, Slider, Spark, useQuery, act, t, L, num, signed, pct, Tip, placeName, flyToLoc } from './common';
 import { TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
+import { lang } from '../i18n';
 
 type Tab = 'market' | 'goods' | 'policy';
 
@@ -89,13 +90,15 @@ function MarketView({ mid }: { mid: number }) {
 /** The price index of a market and the goods that move it most (src/game/tradeview.ts priceIndexParts): each good's
  *  price against its base, its weight in what the market bought, and its pull on the index. */
 export function PriceIndexTip({ index, parts }: { index: number; parts: any }) {
-  return <div><TipHead name={t('price_index')} value={num(index, 2)} hint={t('x_price_index_how')} />
+  // index and price factors always with two decimals ("1,00", not "1"), as the text says 1,00 is normal
+  const f2 = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return <div><TipHead name={t('price_index')} value={f2(index)} hint={t('x_price_index_how')} />
     {parts?.top?.length > 0 && <div class="breakdown">
       <div class="bd-row bd-cols"><span>{t('x_price_index_good')}</span><span>{t('x_price_index_rel')} · {t('x_price_index_weight')} · {t('x_price_index_pull')}</span></div>
-      <div class="bd-row"><span>{t('x_price_index_base')}</span><span>{num(1, 2)}</span></div>
-      {parts.top.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>× {num(x.rel, 2)} · {pct(x.share, 0)} · <b class={x.pull > 0.005 ? 'neg' : x.pull < -0.005 ? 'pos' : ''}>{signed(x.pull, 2)}</b></span></div>)}
+      <div class="bd-row"><span>{t('x_price_index_base')}</span><span>{f2(1)}</span></div>
+      {parts.top.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>× {f2(x.rel)} · {pct(x.share, 0)} · <b class={x.pull > 0.005 ? 'neg' : x.pull < -0.005 ? 'pos' : ''}>{signed(x.pull, 2)}</b></span></div>)}
       {parts.goods > parts.top.length && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(parts.goods - parts.top.length))}</span><span><b>{signed(parts.rest, 2)}</b></span></div>}
-      <div class="bd-row bd-total"><span>{t('price_index')}</span><span>{num(index, 2)}</span></div>
+      <div class="bd-row bd-total"><span>{t('price_index')}</span><span>{f2(index)}</span></div>
     </div>}
   </div>;
 }

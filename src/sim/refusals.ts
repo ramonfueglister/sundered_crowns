@@ -49,7 +49,7 @@ export const REFUSAL_DE: Record<string, string> = {
   'unknown command': 'Unbekannter Befehl', 'unknown dev action': 'Unbekannte Entwicklerhandlung', 'unknown option': 'Unbekannte Option', 'unknown branch': 'Unbekannter Wissenszweig', 'unknown doctrine': 'Unbekannte Doktrin',
   'unknown unit': 'Unbekannte Truppe', 'unknown landmark': 'Unbekanntes Wahrzeichen', 'already building': 'Wird schon gebaut', 'no such event': 'Kein solches Ereignis', 'unknown event': 'Unbekanntes Ereignis',
   'error': 'Fehler', 'not available': 'Nicht verfügbar', 'no siege': 'Keine Belagerung', 'assault repulsed': 'Sturm abgewehrt', 'we pay tribute to them': 'Wir zahlen ihnen Tribut',
-  'need a fleet': 'Braucht eine Flotte', 'our navigators lack the knowledge (Commerce 6)': 'Unseren Seefahrern fehlt das Wissen (Handel 6)', 'choose a sea zone': 'Ein Seegebiet wählen',
+  'need a fleet': 'Braucht eine Flotte', 'choose a sea zone': 'Ein Seegebiet wählen',
   'cannot absorb another ruler': 'Kann keinen anderen Herrscher einverleiben', 'hold London and Edinburgh': 'London und Edinburgh besitzen', 'both crowns must exist': 'Beide Kronen müssen bestehen',
   'not before 1380': 'Nicht vor 1380', 'both crowns must be sovereign': 'Beide Kronen müssen souverän sein', 'not while they are at war': 'Nicht während sie im Krieg sind', 'the other crown must agree': 'Die andere Krone muss zustimmen',
   'relations are too poor': 'Die Beziehungen sind zu schlecht', 'the capital was moved recently': 'Die Hauptstadt wurde erst kürzlich verlegt', 'the capital is already our greatest town': 'Die Hauptstadt ist schon unsere größte Stadt',
@@ -79,7 +79,7 @@ export const REFUSAL_DE: Record<string, string> = {
   'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
   'no trade route home': 'Kein Handelsweg nach Hause', 'already under embargo': 'Schon mit einer Handelssperre belegt', 'not against an ally': 'Nicht gegen einen Verbündeten',
   'not within our realm': 'Nicht innerhalb unseres Reiches', 'no embargo to lift': 'Keine Handelssperre aufzuheben',
-  'an ocean voyage needs Commerce 10': 'Eine Ozeanfahrt braucht Handel & Gelehrsamkeit 10', 'an ocean voyage needs the Age of Print and Horizons': 'Eine Ozeanfahrt braucht das Zeitalter von Druck und Horizonten',
+  'an ocean voyage needs the Age of Print and Horizons': 'Eine Ozeanfahrt braucht das Zeitalter von Druck und Horizonten',
   'two expeditions are already at sea': 'Schon zwei Expeditionen sind auf See',
   // ---- integration of the war and trade passes
   'a peace treaty forbids it': 'Ein Friedensvertrag verbietet es',
@@ -114,6 +114,8 @@ export const REFUSAL_DE: Record<string, string> = {
   'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
   // ---- fix-econ
   'we know nothing of this realm': 'Von diesem Reich wissen wir nichts',
+  'our navigators lack the knowledge (Commerce & Learning 6)': 'Unseren Seefahrern fehlt das Wissen (Handel & Gelehrsamkeit 6)',
+  'an ocean voyage needs Commerce & Learning 10': 'Eine Ozeanfahrt braucht Handel & Gelehrsamkeit 10',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

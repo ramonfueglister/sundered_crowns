@@ -217,11 +217,11 @@ describe('expeditions are measured along their route', () => {
     expect(p.km).toBeCloseTo(red.km, -2);
     expect(p.ocean).toBe(true);
     expect(p.open).toBeGreaterThan(OPEN_KM);
-    expect(p.refusal).toBe('an ocean voyage needs Commerce 10');
+    expect(p.refusal).toBe('an ocean voyage needs Commerce & Learning 10');
     expect(p.needs.find((x) => x.key === 'commerce')!.need).toBe(10);
     // without even the coastal knowledge, the refusal still names the voyage's own requirement
     n.tech[1] = 3;
-    expect(expeditionPlan(s, w, n, red.to, 0).refusal).toBe('an ocean voyage needs Commerce 10');
+    expect(expeditionPlan(s, w, n, red.to, 0).refusal).toBe('an ocean voyage needs Commerce & Learning 10');
     // a voyage along the coasts needs only Commerce 6, however long
     n.tech[1] = 7;
     const coast = tg.map((x) => expeditionPlan(s, w, n, x.to, 0)).find((x) => !x.ocean && x.path.length > 0)!;
@@ -229,7 +229,7 @@ describe('expeditions are measured along their route', () => {
     expect(coast.refusal).toBeNull();
     // and a fleet sent by startExplorer obeys the same rule
     const f = s.armies.find((a) => a.owner === n.id && a.fleet)!;
-    expect(startExplorer(s, w, n, f.id, red.to)).toBe('an ocean voyage needs Commerce 10');
+    expect(startExplorer(s, w, n, f.id, red.to)).toBe('an ocean voyage needs Commerce & Learning 10');
   });
 });
 
