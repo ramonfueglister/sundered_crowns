@@ -287,3 +287,18 @@ describe('trade diplomacy needs to know the other realm', () => {
     expect(applyCommand(s, w, { t: 'diplo', n: n.id, target: near.id, action: 'lift_embargo' } as any).ok).toBe(true);
   });
 });
+
+// ---- review fixes (fix-econ review): the AI and the close of the books; day-0 income; history; one-off lines
+describe('review: the books close after the month, and the realms read them right', () => {
+  it('a petty realm that has to borrow cuts its army\'s pay; AI bankruptcies in 14 months stay at the old count (4)', () => {
+    const s = fresh(); const b = nat(s, 'breslau_bishopric');
+    const broke = new Set<string>(); let cut = false;
+    for (let m = 1; m <= 14; m++) {
+      toNextClose(s);
+      if (m <= 3 && b.armyMaint < 1) cut = true;
+      for (const n of s.nations) if (n.alive && n.flags.bankrupt_until) broke.add(n.key);
+    }
+    expect(cut).toBe(true);
+    expect(broke.size).toBeLessThanOrEqual(4);
+  });
+});

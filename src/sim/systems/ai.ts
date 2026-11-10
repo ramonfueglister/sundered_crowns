@@ -99,7 +99,11 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const delta = exp > inc * 1.05 && avgUnrest < 40 && !rich ? 0.005 : avgUnrest > 45 || rich ? -0.006 : 0;
   const floor = avgUnrest > 45 ? 0.02 : 0.05;
   if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), Math.min(t, floor), 0.25));
-  if (!atWarNow && exp > inc && n.treasury < inc * 2) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
+  // in deficit and short of money, the army is put on half pay. The books close after the month's costs (economy.ts
+  // closeLedger), so a crown that had to borrow starts its month with a token chest: the loan it took last month says
+  // it is short of money, as does a chest below two months' revenue (or a hundred marks for a petty lordship)
+  const borrowed = (n.credit?.loans ?? 0) > 0;
+  if (!atWarNow && exp > inc && (borrowed || n.treasury < Math.max(inc * 2, 100 * s.priceLevel))) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
   else n.armyMaint = clamp(n.armyMaint + 0.1, 0.5, 1);
   // debt: repay loans when rich
   if (n.loans.length && n.treasury > n.loans[0].amount * 1.5) applyCommand(s, w, { t: 'loan', n: n.id, take: false, amount: n.loans[0].amount });
