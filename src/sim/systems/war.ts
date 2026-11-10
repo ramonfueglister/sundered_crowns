@@ -755,9 +755,15 @@ export function fieldBalance(s: GameState, war: War, from: number, to: number): 
   const lg = (x: number, y: number) => Math.log2((x + k) / (y + k));
   return { own: clamp(Math.round(-10 * lg(mT, mF)), -12, 12), allies: clamp(Math.round(-10 * lg(aT, aF)), -12, 12), share: (mT + aT) / Math.max(1, mT + aT + mF + aF) };
 }
+/** Why an AI realm refuses a white peace whatever the sum: it fights for its freedom and the war still goes its way, or
+ *  it attacked and lies before the walls of a town it went to war for, or its war is young with its aims unmet and its
+ *  armies in the field, or it presses a claim to the throne with its armies in the field. A condition like the war score
+ *  that must cover the demands, never a row of the sum (the peace panel shows it as a line of its own). */
+export type PeaceVeto = 'fighting_for_freedom' | 'siege_under_way' | 'war_aims_unmet' | 'pressing_claim';
 /** AI willingness: positive = accepts. Returns reasons for the UI; the rows (but 'not_enough_war_score', a condition) add
- *  up to the score, and a white peace adds its +5 unlisted (the peace panel lists it, see game/view.ts peaceAnswer). */
-export function evaluatePeace(s: GameState, war: War, from: number, to: number, terms: PeaceTerm[]): { accept: boolean; score: number; reasons: [string, number][] } {
+ *  up to the score, and a white peace adds its +5 unlisted (the peace panel lists it, see game/view.ts peaceAnswer).
+ *  It accepts when the sum is 0 or more, no veto stands, and our war score covers 80 % of the demands. */
+export function evaluatePeace(s: GameState, war: War, from: number, to: number, terms: PeaceTerm[]): { accept: boolean; score: number; reasons: [string, number][]; veto: PeaceVeto | null } {
   const reasons: [string, number][] = [];
   const fromAtt = war.att.includes(from);
   const score = computeScore(s, war) * (fromAtt ? 1 : -1); // war score from the offerer's perspective
@@ -780,7 +786,6 @@ export function evaluatePeace(s: GameState, war: War, from: number, to: number, 
   const ai = !s.playerNations.includes(to);
   // a subject fighting for its freedom does not give up for nothing while the war still goes its way
   const holdOut = white && war.goal.type === 'independence' && from === war.defLead && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && ai;
-  if (holdOut) sum += add('fighting_for_freedom', -30);
   // an attacker whose host lies before the walls of a town it went to war for does not give it up for nothing, nor
   // does one with armies in the field whose war is young (counted from the first day of the game) and its aims unmet;
   // one pressing a claim to the throne does not settle for the old order while its armies hold the field
@@ -790,11 +795,10 @@ export function evaluatePeace(s: GameState, war: War, from: number, to: number, 
   const sieging = keen && goal.length > 0 && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc));
   const unmet = keen && !sieging && inField && score <= 5 && years < 1.5 && (!goal.length || goal.some((l) => war.def.includes(s.loc.owner[l])));
   const claim = keen && !sieging && !unmet && war.goal.type === 'throne' && inField && score < 10 && nTo.warExhaustion < 40;
-  if (sieging) sum += add('siege_under_way', -30);
-  if (unmet) sum += add('war_aims_unmet', -30);
-  if (claim) sum += add('pressing_claim', -20);
+  // these refuse whatever the sum: conditions, not rows (a row of −20 or −30 left a refused offer with a sum above 0)
+  const veto: PeaceVeto | null = holdOut ? 'fighting_for_freedom' : sieging ? 'siege_under_way' : unmet ? 'war_aims_unmet' : claim ? 'pressing_claim' : null;
   if (!white && score < cost * 0.8) reasons.push(['not_enough_war_score', -20]);
-  return { accept: !holdOut && !sieging && !unmet && !claim && sum >= 0 && (white || score >= cost * 0.8), score: sum, reasons };
+  return { accept: !veto && sum >= 0 && (white || score >= cost * 0.8), score: sum, reasons, veto };
 }
 
 export function applyPeace(s: GameState, w: World, war: War, winner: number, loser: number, terms: PeaceTerm[]) {

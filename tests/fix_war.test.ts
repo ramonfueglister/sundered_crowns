@@ -197,7 +197,8 @@ describe('the AI’s peace in young and back-dated wars (major: a white peace in
     expect(warYears(s, hyw)).toBe(0);
     const ev = evaluatePeace(s, hyw, F.id, E.id, []);
     expect(ev.reasons.some(([k]) => k === 'war_length')).toBe(false);
-    expect(ev.reasons.some(([k]) => k === 'war_aims_unmet')).toBe(true);
+    expect(ev.veto).toBe('war_aims_unmet'); // a condition, not a row of the sum
+    expect(ev.reasons.some(([k]) => k === 'war_aims_unmet')).toBe(false);
     expect(ev.reasons.some(([k]) => k === 'field_armies')).toBe(true);
     expect(ev.accept).toBe(false);
     expect(sumRows(ev, true)).toBe(ev.score); // the rows add up to their answer
@@ -231,6 +232,56 @@ describe('the AI’s peace in young and back-dated wars (major: a white peace in
     W.s.nations[W.a].warExhaustion = 30;
     considerPeace(W.s, w, W.s.nations[W.a], W.war);
     expect(W.s.wars.includes(W.war)).toBe(false);
+  });
+});
+
+describe('the peace verdict follows its breakdown (review: “würde ablehnen” under a sum of 0 or more)', () => {
+  const VETOES = ['fighting_for_freedom', 'siege_under_way', 'war_aims_unmet', 'pressing_claim'];
+  const total = (rows: [string, number][]) => rows.reduce((p, r) => p + r[1], 0);
+  it('England pressing its claim refuses a white peace by a condition of its own, outside the sum, and lets it rest at 40 war exhaustion', () => {
+    const s = fresh();
+    const E = nat(s, 'england'), F = nat(s, 'france');
+    const hyw = s.wars.find((x) => x.attLead === E.id && x.def.includes(F.id))!;
+    // France +7: past the young war's unmet aims (+5 at most), short of the +10 that ends the claim
+    hyw.battleScore = 0; hyw.tickScore = 0; hyw.battleScore = -7 - computeScore(s, hyw);
+    expect(computeScore(s, hyw)).toBeCloseTo(-7, 6);
+    E.warExhaustion = 39;
+    const ev = evaluatePeace(s, hyw, F.id, E.id, []);
+    expect(ev.veto).toBe('pressing_claim');
+    expect(ev.accept).toBe(false);
+    expect(ev.score).toBeGreaterThanOrEqual(0); // the sum alone would accept: the claim refuses
+    expect(ev.reasons.some(([k]) => VETOES.includes(k))).toBe(false);
+    // the dialog: the rows add up to Σ ≥ 0, the verdict is “would refuse”, and the condition says why
+    const r = answer(s, w, F.id, { q: 'peace', war: hyw.id, to: E.id, terms: [] } as any) as any;
+    expect(r.accept).toBe(false);
+    expect(r.score).toBeGreaterThanOrEqual(0);
+    expect(total(r.reasons)).toBe(r.score);
+    expect(r.veto).toBe('pressing_claim');
+    expect(r.vetoNow.exhaustion).toBe(39);
+    // worn out at 40, England lets the claim rest and takes the white peace the sum already favoured
+    E.warExhaustion = 40;
+    const ev2 = evaluatePeace(s, hyw, F.id, E.id, []);
+    expect(ev2.veto).toBeNull();
+    expect(ev2.accept).toBe(true);
+  });
+  it('over a year of play, every answer the dialog gives refuses only by a sum below 0 or a condition it names', () => {
+    const s = createGame(w, loadSetup(1356), loadHubs(), 1356, { player: [] });
+    let vetoed = 0, checks = 0;
+    for (let d = 0; d <= 360; d++) {
+      if (d % 30 === 0) for (const war of s.wars) for (const [from, to] of [[war.defLead, war.attLead], [war.attLead, war.defLead]]) {
+        for (const terms of [[], [{ type: 'humiliate' }]]) {
+          const r = answer(s, w, from, { q: 'peace', war: war.id, to, terms } as any) as any; checks++;
+          expect(total(r.reasons)).toBe(r.score);
+          expect(r.reasons.some(([k]: [string, number]) => VETOES.includes(k))).toBe(false);
+          if (r.accept) { expect(r.score).toBeGreaterThanOrEqual(0); expect(r.veto).toBeNull(); expect(r.cond?.ok ?? true).toBe(true); }
+          else expect(r.score < 0 || r.cond?.ok === false || !!r.veto, `${war.name.en} ${s.nations[from].key}→${s.nations[to].key} day ${s.day}`).toBe(true);
+          if (r.veto && r.score >= 0) vetoed++;
+        }
+      }
+      step(s, w, []);
+    }
+    expect(checks).toBeGreaterThan(300);
+    expect(vetoed).toBeGreaterThan(0); // the case the review found: a refusal with Σ ≥ 0, now explained by its condition
   });
 });
 

@@ -68,14 +68,14 @@ describe('history mechanics (point 99)', () => {
     expect(wr.att).not.toContain(x.id); // the exhausted ally does not answer the call
     o.warExhaustion = 20;
     const before = evaluatePeace(s, wr, b.id, o.id, []);
-    expect(before.reasons.some(([k]) => k === 'siege_under_way')).toBe(false);
+    expect(before.veto).not.toBe('siege_under_way');
     s.sieges.push({ loc: city, nation: o.id, progress: 1, days: 60, garrison: 1000, breach: 0, blockade: false, log: [] });
     const during = evaluatePeace(s, wr, b.id, o.id, []);
-    expect(during.reasons.some(([k]) => k === 'siege_under_way')).toBe(true);
+    expect(during.veto).toBe('siege_under_way');
     expect(during.accept).toBe(false);
     // worn out, the sultan takes the white peace after all
     o.warExhaustion = 70;
-    expect(evaluatePeace(s, wr, b.id, o.id, []).reasons.some(([k]) => k === 'siege_under_way')).toBe(false);
+    expect(evaluatePeace(s, wr, b.id, o.id, []).veto).not.toBe('siege_under_way');
   });
 
   it('the steppe order fades as the settled neighbours cast great guns: the horde weakens, its tributaries strain', () => {

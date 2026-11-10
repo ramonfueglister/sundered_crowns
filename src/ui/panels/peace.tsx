@@ -22,6 +22,11 @@ export function termText(x: PeaceTerm): string {
 const FLAG_TERMS = ['vassal', 'faith', 'independence', 'humiliate', 'break_alliance', 'reparations', 'end_rivalry', 'trade_rights', 'end_embargo', 'tariff_cut', 'expel_merchants'];
 
 /** What each term weighs: the price in war score (systems/war.ts termCost). */
+/** When a veto of their answer lifts (systems/war.ts evaluatePeace), with the numbers it hangs on today. */
+function vetoHint(ev: any): string {
+  const n = ev.vetoNow ?? { exhaustion: 0, years: 0, share: 0 };
+  return t(`xfw_veto_${ev.veto}_hint`).replace('{ws}', signed(ev.warScore ?? 0, 0)).replace('{we}', num(n.exhaustion)).replace('{years}', num(n.years, 1)).replace('{share}', num(n.share * 100));
+}
 function TermCosts({ terms, costs, total, title, hint }: { terms: PeaceTerm[]; costs?: number[]; total: number; title: string; hint: string }) {
   return <div><TipHead name={title} value={num(total)} hint={hint} />
     <div class="breakdown">{terms.map((x, i) => <div class="bd-row"><span>{termText(x)}</span><span>{num(costs?.[i] ?? 0)}</span></div>)}
@@ -182,6 +187,7 @@ function PeaceInner({ w }: { w: any }) {
           </div>
           {ev.reasons?.length > 0 && <Reasons title={t('x_their_answer')} rows={ev.reasons} total={ev.score} />}
           {ev.cond && <div class={`pe-cond small ${ev.cond.ok ? 'pos' : 'neg'}`}>{ev.cond.ok ? '✔' : '✘'} {t('x_peace_cond')}: {signed(ev.cond.have, 0)} / {signed(ev.cond.need, 0)}</div>}
+          {ev.veto && <Tip tag="div" content={<div><TipHead name={t(`xfw_veto_${ev.veto}`)} hint={vetoHint(ev)} /></div>}><div class="pe-cond small neg has-tip">✘ {t(`xfw_veto_${ev.veto}`)}</div></Tip>}
           {ev.reasons?.length > 0 && <div class="muted small">{t(ev.cond ? 'x_peace_accept_hint' : 'x_peace_accept_hint_white')}</div>}
         </> : <span class="muted">…</span>}
       </div>

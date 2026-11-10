@@ -6,7 +6,7 @@ import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmark
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
-import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed, scoreCaps } from '../sim/systems/war';
+import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed, scoreCaps, warYears, fieldBalance, type PeaceVeto } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
@@ -228,7 +228,9 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       const costs = terms.map((t) => termCost(s, war, t, player, q.to));
       const cost = costs.reduce((p, x) => p + x, 0);
       const warScore = computeScore(s, war) * (war.att.includes(player) ? 1 : -1);
-      return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore };
+      // what a veto hangs on, as it stands today (systems/war.ts evaluatePeace)
+      const vetoNow = ev.veto ? { exhaustion: Math.round(s.nations[q.to]?.warExhaustion ?? 0), years: warYears(s, war), share: fieldBalance(s, war, player, q.to).share } : null;
+      return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore, vetoNow };
     }
     case 'path': { const a = s.armies.find((x) => x.id === q.army); if (!a) return null; const p = findPath(s, w, a, a.loc, q.to); return p ? { path: p, days: Math.ceil(travelDays(s, w, a, p)) } : null; }
     case 'chronicle': return s.chronicle.slice(q.from ?? 0);
@@ -255,13 +257,14 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
 }
 
 /** The peace evaluation as the dialog shows it (systems/war.ts evaluatePeace): rows that add up exactly to the shown sum,
- *  and apart from them the condition that our war score must cover 80 % of the demands (not part of the sum). */
-export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [string, number][] }, terms: PeaceTerm[], warScore: number, cost: number) {
+ *  and apart from them the conditions: our war score must cover 80 % of the demands, and no veto may stand (a realm that
+ *  holds out for its freedom, a siege, a young war or a claim to the throne refuses whatever the sum). Not part of the sum. */
+export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [string, number][]; veto?: PeaceVeto | null }, terms: PeaceTerm[], warScore: number, cost: number) {
   const white = terms.length === 0 || terms.every((t) => t.type === 'white_peace');
   // (their war exhaustion gets its own key: 'war_exhaustion' alone reads as ours elsewhere, e.g. in unrest)
   const rows: [string, number][] = ev.reasons.filter(([k]) => k !== 'not_enough_war_score').map(([k, v]) => [k === 'war_exhaustion' ? 'their_war_exhaustion' : k, v]);
   // evaluatePeace adds +5 to the sum for a white peace without listing it
-  if (white) { const at = rows.findIndex((r) => r[0] === 'fighting_for_freedom'); rows.splice(at < 0 ? rows.length : at, 0, ['white_peace', 5]); }
+  if (white) rows.push(['white_peace', 5]);
   // the rows are rounded: keep the shown sum on the same side of zero as the real one, so that Σ and the verdict agree
   let total = rows.reduce((p, r) => p + r[1], 0);
   const want = ev.score >= 0 ? Math.max(0, total) : Math.min(-1, total);
@@ -274,7 +277,7 @@ export function peaceAnswer(ev: { accept: boolean; score: number; reasons: [stri
     if (ok && have < need) need = have; else if (!ok && have >= need) need = have + 1;
     cond = { ok, have, need };
   }
-  return { accept: ev.accept, score: total, reasons: rows, cond };
+  return { accept: ev.accept, score: total, reasons: rows, cond, veto: ev.veto ?? null };
 }
 
 /** Company sizes offered in the location panel. */

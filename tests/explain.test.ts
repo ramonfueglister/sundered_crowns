@@ -96,8 +96,8 @@ describe('peace dialog: the rows of their answer add up to the shown sum', () =>
   const consistent = (ev: any) => {
     expect(sum(ev.reasons)).toBe(ev.score);
     expect(ev.reasons.some((r: any) => r[0] === 'not_enough_war_score')).toBe(false);
-    if (ev.accept) { expect(ev.score).toBeGreaterThanOrEqual(0); expect(ev.cond?.ok ?? true).toBe(true); }
-    else expect(ev.score < 0 || ev.cond?.ok === false || ev.reasons.some((r: any) => r[0] === 'fighting_for_freedom')).toBe(true);
+    if (ev.accept) { expect(ev.score).toBeGreaterThanOrEqual(0); expect(ev.cond?.ok ?? true).toBe(true); expect(ev.veto).toBeNull(); }
+    else expect(ev.score < 0 || ev.cond?.ok === false || !!ev.veto).toBe(true);
     if (ev.cond) expect(ev.cond.ok).toBe(ev.cond.have >= ev.cond.need);
   };
   it('a war to negotiate exists', () => { expect(war).toBeTruthy(); });
