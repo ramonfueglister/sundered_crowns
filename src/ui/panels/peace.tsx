@@ -220,7 +220,7 @@ function WarBattles({ log }: { log: any }) {
         <td class="muted">{fmtDateShort(b.day, sy)}</td><td>{b.naval ? '⚓ ' : '⚔ '}{locName(b.loc)}{b.report !== null && <small class="muted"> ›</small>}</td>
         <td><NLink id={b.win} size={14} /></td><td><NLink id={b.lose} size={14} /></td>
         <td class="r"><Tip content={<div><TipHead name={t('xw_losses')} hint={t('xfw_losses_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('xfw_winner')}</span><span class="neg">−{num(b.lossW)}</span></div><div class="bd-row"><span>{t('xfw_loser')}</span><span class="neg">−{num(b.lossL)}</span></div></div></div>}><span>{num(b.lossW)} / {num(b.lossL)}</span></Tip></td>
-        <td class={`r ${b.score > 0 ? 'pos' : b.score < 0 ? 'neg' : 'muted'}`}><Tip content={() => <BattleWorthTip b={b} cap={log.cap} />}><span>{signed(b.score, 1)}{Math.abs(b.raw - b.score) > 0.05 && <small class="muted"> ({signed(b.raw, 1)})</small>}</span></Tip></td>
+        <td class={`r ${b.score > 0 ? 'pos' : b.score < 0 ? 'neg' : 'muted'}`}><Tip content={() => <BattleWorthTip b={b} cap={log.cap} />}><span>{signed(b.score, wsDigits(b.score))}{Math.abs(b.raw - b.score) > 0.05 && <small class="muted"> ({signed(b.raw, wsDigits(b.raw))})</small>}</span></Tip></td>
       </tr>)}
       {log.rest && <tr class="muted"><td colSpan={5}>{t('xfw_earlier_battles').replace('{n}', String(log.rest.n))}</td><td class="r">{signed(log.rest.score, 1)}</td></tr>}
       {log.unlogged !== 0 && <tr class="muted"><td colSpan={5}>{t('xfw_unlogged_battles')}</td><td class="r">{signed(log.unlogged, 1)}</td></tr>}
@@ -230,10 +230,12 @@ function WarBattles({ log }: { log: any }) {
   </div>;
 }
 
+/** Digits for a battle's war score: a skirmish worth a few hundredths shows them, so the cell matches its breakdown. */
+const wsDigits = (v: number) => (v !== 0 && Math.abs(v) < 0.095 ? 2 : 1);
 /** What one battle was worth to this war (systems/war.ts battleWorth), from our side, and what of it counted. */
 function BattleWorthTip({ b, cap }: { b: any; cap: number }) {
   const sum = b.dead + b.blow, one = Math.abs(sum) > 25 + 1e-9;
-  return <div><TipHead name={t('xfw_battle_worth')} value={signed(b.score, 1)} hint={t('xfw_battle_worth_hint')} />
+  return <div><TipHead name={t('xfw_battle_worth')} value={signed(b.score, wsDigits(b.score))} hint={t('xfw_battle_worth_hint')} />
     <div class="breakdown">
       <div class="bd-row"><span>{t('xfw_bw_dead').replace('{n}', num(b.lossL))}</span><span>{signed(b.dead, 2)}</span></div>
       <div class="bd-row"><span>{t('xfw_bw_blow').replace('{n}', num(b.lossL)).replace('{m}', num(b.side))}</span><span>{signed(b.blow, 2)}</span></div>
