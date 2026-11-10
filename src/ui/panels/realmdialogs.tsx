@@ -50,7 +50,7 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
   const [a] = useQuery<any>(q, [pid, JSON.stringify(bribe), concede, cls, rate, value, dutyId], 1000);
   if (!a) return <Modal title={t('x_asm_title')}><Empty>{t('loading')}…</Empty></Modal>;
   const toggle = (id: string) => setBribe(bribe.includes(id) ? bribe.filter((x) => x !== id) : [...bribe, id]);
-  const okText = war ? fill('x_asm_war_granted', { realm: L(nations.value[cmd.target]?.short) ?? '' }) : a.needed ? fill('x_asm_tax_granted', { p: pct(a.tax?.grant ?? 0, 1) }) : t('x_asm_applied');
+  const okText = war ? fill('x_asm_war_granted', { goal: t(`goal_${cmd.goal ?? 'conquest'}`), realm: L(nations.value[cmd.target]?.short) ?? '' }) : a.needed ? fill('x_asm_tax_granted', { p: pct(a.tax?.grant ?? 0, 1) }) : t('x_asm_applied');
   const vote = async () => {
     if (busy) return; setBusy(true);
     // a war the assembly has already approved is simply declared

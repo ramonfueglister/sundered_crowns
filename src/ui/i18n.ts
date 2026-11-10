@@ -981,7 +981,7 @@ const S: Record<string, [string, string]> = {
   x_asm_rule2: ['Each Power votes by its stance and weighs with its influence; a majority of the influence decides. Bought votes are paid only when the assembly says yes.', 'Jede Macht stimmt nach ihrer Haltung und wiegt mit ihrem Einfluss; die Mehrheit des Einflusses entscheidet. Gekaufte Stimmen werden nur bezahlt, wenn die Versammlung zustimmt.'],
   x_asm_apply: ['Apply', 'Übernehmen'], x_asm_applied: ['The new rates apply.', 'Die neuen Sätze gelten.'],
   x_asm_tax_granted: ['The assembly granted taxes up to a level of {p}.', 'Die Versammlung bewilligte Steuern bis zu einer Steuerlast von {p}.'],
-  x_asm_war_granted: ['The assembly approved the war against {realm}.', 'Die Versammlung billigte den Krieg gegen {realm}.'],
+  x_asm_war_granted: ['The assembly approved the war ({goal}) against {realm}.', 'Die Versammlung billigte den Krieg ({goal}) gegen {realm}.'],
   x_asm_put_war: ['Put it to the assembly', 'Der Versammlung vorlegen'],
   x_asm_put_war_hint: ['Our assembly must approve this war. See how each Power would vote and why, buy votes or offer a privilege; on a yes the war is declared.', 'Unsere Versammlung muss diesen Krieg billigen. Seht, wie jede Macht stimmen würde und warum, kauft Stimmen oder bietet ein Privileg an; bei einem Ja wird der Krieg erklärt.'],
   x_gp_mine: ['Our standing', 'Unsere Stellung'], x_gp_rank_of: ['Rank {r} of {n} sovereign realms', 'Rang {r} von {n} unabhängigen Reichen'], x_gp_subject: ['A subject realm: not ranked', 'Untertanenreich: nicht gewertet'],

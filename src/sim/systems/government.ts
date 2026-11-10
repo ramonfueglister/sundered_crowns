@@ -321,10 +321,14 @@ export function assemblyVote(s: GameState, n: Nation, ask: AssemblyAsk, bribe: s
   const bribes = n.estates.filter((e) => bribe.includes(e.id)).length;
   return { passes: yes > no, yes, no, cost: bribes * bribeCost(n), estates };
 }
+/** The war goals a declaration can name, as the declaration dialog calls them (ui/i18n.ts goal_*). */
+const GOAL_NAME: Record<string, I18n> = { conquest: T('Conquest', 'Eroberung'), reconquest: T('Reconquest', 'Rückeroberung'), faith: T('Holy war', 'Glaubenskrieg'), throne: T('Claim the throne', 'Thronanspruch'),
+  trade: T('Trade dominance', 'Handelsvorherrschaft'), subjugate: T('Subjugation', 'Unterwerfung'), humiliate: T('Humble them', 'Demütigung'), independence: T('Independence', 'Unabhängigkeit') };
 /** What the realm's ruler is told of a yes (the same text as the notice). */
 export function assemblyGranted(s: GameState, n: Nation, ask: AssemblyAsk): I18n {
   if (ask.kind === 'tax') { const g = pctTxt(grantFor(ask.level), 1); return T(`The assembly granted taxes up to a level of ${g.en}.`, `Die Versammlung bewilligte Steuern bis zu einer Steuerlast von ${g.de}.`); }
-  return T(`The assembly approved the war against ${s.nations[ask.target]?.short.en}.`, `Die Versammlung billigte den Krieg gegen ${s.nations[ask.target]?.short.de}.`);
+  const g = GOAL_NAME[ask.goal] ?? T(ask.goal, ask.goal);
+  return T(`The assembly approved the war (${g.en}) against ${s.nations[ask.target]?.short.en}.`, `Die Versammlung billigte den Krieg (${g.de}) gegen ${s.nations[ask.target]?.short.de}.`);
 }
 /** Put a question to the assembly, granting the concession offered. The bribes are paid only for a yes: the Powers
  *  take no gold for a vote they do not give. On a yes, a tax level is granted (with a little room) or the war is
