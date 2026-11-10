@@ -23,6 +23,7 @@ import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
 import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView, tradeIncomeBy } from './tradeview';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
+import { methodsView } from './methodsview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
@@ -236,6 +237,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'goals': { const n = s.nations[q.nation]; return n ? goalsView(s, w, n) : null; }
     case 'eventFx': return player >= 0 ? eventOptionFxCached(s, w, player, q.pending) : null;
     case 'works': return player >= 0 ? worksView(s, w, player) : null;
+    case 'methods': return player >= 0 ? methodsView(s, w, player) : null;
     case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
     case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
     case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;

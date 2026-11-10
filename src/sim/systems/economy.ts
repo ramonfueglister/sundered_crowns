@@ -69,6 +69,33 @@ export function locGoods(lc: GameState['loc'], w: World, i: number, needs: { goo
   return { made, people, crafts, house };
 }
 
+/** What a town's workshops make and use in a month under production method m (default: the one it has), at its
+ *  market's present prices and supply: the crafts formula of stepLoop, read without changing anything. jobs: hands
+ *  at work; cap: places of work; out: value of the goods made (with the realm's craft quality); inp: price of the raw
+ *  materials used (marks per month). Display and planning (the methods overview, src/game/methodsview.ts). */
+export function craftOutcome(s: GameState, w: World, i: number, m = s.loc.method[i]): { jobs: number; cap: number; out: number; inp: number } {
+  const lc = s.loc, md = METHODS[m] ?? METHODS[0], mk = s.markets[lc.market[i]];
+  let nSlots = 0; for (let k = 0; k < 3; k++) if (lc.workshop[i * 3 + k] > 0) nSlots++;
+  const art = lc.pop[i * C + CL.artisans] + lc.pop[i * C + CL.wage_workers];
+  const cap = nSlots * (1 + lc.buildings[i * B + BI.workshop]) * 1600 * (1 + lc.buildings[i * B + BI.manufactory]) * md.jobs;
+  if (!mk || !nSlots || art <= 0) return { jobs: 0, cap, out: 0, inp: 0 };
+  const jobs = Math.min(art, cap), per = jobs / nSlots;
+  const n = lc.owner[i] >= 0 ? s.nations[lc.owner[i]] : null;
+  const prodMod = 1 + (n ? lawEffect(n, 'production') + (n.tech[1] - 1) * 0.03 : 0);
+  const quality = 1 + (n ? lawEffect(n, 'quality') : 0);
+  let out = 0, inp = 0;
+  for (let k = 0; k < 3; k++) {
+    const v = lc.workshop[i * 3 + k]; if (v <= 0) continue;
+    const ins = REC_IN[v - 1], qs = REC_Q[v - 1];
+    let scale = 1;
+    for (let j = 0; j < ins.length; j++) scale = Math.min(scale, 0.25 + 0.75 * marketFill(mk, ins[j]));
+    const kk = per / 100 * CRAFT_PROD * scale;
+    for (let j = 0; j < ins.length; j++) inp += qs[j] * md.mult * md.input * kk * mk.price[ins[j]];
+    out += RECIPES[v - 1].outQty * kk * md.mult * prodMod * mk.price[REC_OUT[v - 1]] * quality;
+  }
+  return { jobs, cap, out, inp };
+}
+
 /** Per-tier price of the basket (per person) and how well the market can fill it; recomputed when prices change. */
 const TC = new WeakMap<Market, { pos: number; cost: Float64Array; fill: Float64Array; wq: Float64Array }>();
 function tierCache(m: Market, pl: number) {

@@ -983,6 +983,22 @@ const S: Record<string, [string, string]> = {
   tr_from_here_home: ['What our merchants here brought home', 'Was unsere Kaufleute von hier heimbrachten'], tr_sent_short: ['sent', 'abgeschickt'],
   tr_from_here_home_hint: ['Our share of what arrived at home (a fifth more, less a little for every market on the way), booked there as trade profit.', 'Unser Anteil an dem, was zu Hause ankam (ein Fünftel mehr, abzüglich etwas für jeden Markt unterwegs), dort als Handelsgewinn verbucht.'],
   tr_gain_steer_note: ['Steering also draws more goods along the route home, which can raise this market\'s own trade value; that is not in the estimate and shows next month under Last month.', 'Lenkung zieht außerdem mehr Waren auf den Weg nach Hause, was den Handelswert dieses Marktes selbst erhöhen kann; das steckt nicht in der Schätzung und zeigt sich im nächsten Monat unter Letzter Monat.'],
+  x_w_tab_methods: ['Production methods', 'Produktionsweisen'], x_w_all_crafts: ['All workshops', 'Alle Werkstätten'],
+  x_w_methods_hint: ['The workshops of a town all work under one method. A switch is paid once per town, and the town cannot switch again for a year. All numbers are per month at the markets\' present prices and supply.', 'Die Werkstätten einer Stadt arbeiten alle nach einer Produktionsweise. Eine Umstellung wird je Stadt einmal bezahlt, danach kann die Stadt ein Jahr lang nicht wieder umstellen. Alle Zahlen gelten je Monat zu den jetzigen Preisen und Vorräten der Märkte.'],
+  x_w_towns: ['Towns', 'Städte'], x_w_towns_hint: ['Towns shown whose workshops use this method now.', 'Gezeigte Städte, deren Werkstätten jetzt nach dieser Produktionsweise arbeiten.'],
+  x_w_hands: ['Hands', 'Beschäftigte'], x_w_hands_hint: ['Artisans and wage workers at work in the workshops, and after the stroke the places of work the workshops offer.', 'Handwerker und Lohnarbeiter, die in den Werkstätten arbeiten, und nach dem Strich die Arbeitsplätze, die die Werkstätten bieten.'],
+  x_w_made: ['Made', 'Erzeugt'], x_w_made_hint: ['Value of the goods the workshops make in a month, at their market\'s present prices and with the realm\'s craft quality.', 'Wert der Waren, die die Werkstätten in einem Monat herstellen, zu den jetzigen Preisen ihres Marktes und mit der Handwerksgüte des Reiches.'],
+  x_w_raw: ['Raw goods', 'Rohwaren'], x_w_raw_hint: ['Price of the raw goods the workshops use in a month. Where the market runs short of them, the workshops make less.', 'Preis der Rohwaren, die die Werkstätten in einem Monat verbrauchen. Wo der Markt knapp daran ist, stellen die Werkstätten weniger her.'],
+  x_w_net: ['Value added', 'Wertschöpfung'], x_w_net_hint: ['Made less raw goods: what the workshops add. It goes to artisans, labourers and burghers, whose incomes the crown taxes.', 'Erzeugt abzüglich Rohwaren: was die Werkstätten hinzufügen. Es geht an Handwerker, Tagelöhner und Bürger, deren Einkommen die Krone besteuert.'],
+  x_w_total_towns: ['All towns shown', 'Alle gezeigten Städte'], x_w_total_towns_hint: ['Every town shown under the method it has now.', 'Jede gezeigte Stadt mit der Produktionsweise, die sie jetzt hat.'],
+  x_w_switch_all: ['Switch {k}', '{k} umstellen'], x_w_switch: ['Switch', 'Umstellen'], x_w_per_town: ['per town', 'je Stadt'],
+  x_w_switch_all_hint: ['Switches the towns shown that can take this method, those that gain most first, while the gold lasts. One order per town, sent together.', 'Stellt die gezeigten Städte um, die diese Produktionsweise übernehmen können, die mit dem größten Gewinn zuerst, solange das Gold reicht. Ein Befehl je Stadt, zusammen abgeschickt.'],
+  x_w_change_made: ['Change in goods made', 'Änderung der Erzeugung'], x_w_change_raw: ['Change in raw goods used', 'Änderung des Rohwarenverbrauchs'],
+  x_w_change_net: ['Change in value added', 'Änderung der Wertschöpfung'], x_w_change_hands: ['Change in hands at work', 'Änderung der Beschäftigten'],
+  x_w_cannot: ['Cannot switch now', 'Jetzt nicht umstellbar'], x_w_now: ['Now', 'Jetzt'],
+  x_w_no_towns: ['No towns with workshops at work here.', 'Hier gibt es keine Städte mit arbeitenden Werkstätten.'],
+  x_w_no_switch: ['No town shown can switch to this method now.', 'Keine der gezeigten Städte kann jetzt auf diese Produktionsweise umstellen.'],
+  x_w_methods_all: ['Methods of all towns', 'Produktionsweisen aller Städte'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -355,8 +355,8 @@ function cancelOrder(s: GameState, w: World, nid: number, kind: string, loc: num
   void w;
   return err('not this kind of order');
 }
-/** Orders a batch may carry: the province, area and realm actions of the building and levy overviews. */
-const BATCH_KINDS = new Set<Command['t']>(['build', 'recruit', 'agent', 'cancel']);
+/** Orders a batch may carry: the province, area and realm actions of the building, levy and methods overviews. */
+const BATCH_KINDS = new Set<Command['t']>(['build', 'recruit', 'agent', 'cancel', 'method']);
 export const BATCH_MAX = 400;
 /**
  * Many orders at once, applied one after the other exactly as if sent singly (each validated and paid on its own, so

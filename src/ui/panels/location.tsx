@@ -1,7 +1,7 @@
 // Location panel: everything about one land location or sea zone, with building, recruiting and agents.
 import { useState } from 'preact/hooks';
 import { nations, view } from '../../game/client';
-import { selectedLoc, playerId } from '../store';
+import { selectedLoc, playerId, openPanel } from '../store';
 import { RECIPES, UNITS, BUILDINGS } from '../../sim/defs';
 import { Parts, TipHead, Drift, AgentsTip } from './explain';
 import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
@@ -148,7 +148,8 @@ function Workshops({ d, refresh }: { d: any; refresh: () => void }) {
   const era = view.value?.player?.era ?? 0;
   const lvl = d.buildings.find((b: any) => b.key === 'workshop')?.level ?? 0;
   const opts = RECIPES.map((r, k) => ({ k, r })).filter((x) => (x.r.minEra ?? 0) <= era);
-  return <Section title={t('workshops')} id="loc-ws" open={false}>
+  return <Section title={t('workshops')} id="loc-ws" open={false}
+    right={d.methods?.length ? <a class="more" onClick={() => openPanel('works', { tab: 'methods' })}>{t('x_w_methods_all')}</a> : undefined}>
     <Methods d={d} refresh={refresh} />
     {[0, 1, 2].map((slot) => {
       const open = slot < 1 + lvl; const cur = d.workshops[slot];

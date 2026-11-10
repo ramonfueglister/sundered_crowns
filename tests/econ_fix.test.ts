@@ -7,12 +7,13 @@ import { createGame } from '../src/sim/setup';
 import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
-import { closeLedger } from '../src/sim/systems/economy';
+import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON } from '../src/sim/systems/economy';
+import { methodsView } from '../src/game/methodsview';
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
 import { unitCost, unitUpkeep } from '../src/sim/systems/military';
-import { UNITS } from '../src/sim/defs';
+import { UNITS, C, CL } from '../src/sim/defs';
 import { applyCommand } from '../src/sim/commands';
 import { homeMarket, merchantRefusal, steerRoute, tradeEarnings } from '../src/sim/systems/trade';
 import type { GameState, Nation } from '../src/sim/types';
@@ -148,5 +149,41 @@ describe('trade income can be traced to the markets it came from', () => {
     expect(dm.our.homeRows.reduce((p: number, x: any) => p + x.v, 0)).toBeCloseTo(src.steered.reduce((p, x) => p + x.v, 0), 6);
     const list = answer(s, w, n.id, { q: 'tmarkets' }) as any[];
     expect(list.reduce((p, x) => p + x.earned, 0)).toBeCloseTo(total, 6);
+  });
+});
+
+describe('production methods can be set for many towns at once', () => {
+  it('a town\'s outcome under its own method is what its workshops make, and the batch switches every town it names', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice');
+    for (let d = 0; d < 3; d++) advanceDay(s, w);
+    const v = methodsView(s, w, n.id)!;
+    expect(v.towns.length).toBeGreaterThan(3);
+    // the overview's numbers for the method a town has are the crafts step's own: value made, raw materials, hands
+    for (const t of v.towns.slice(0, 6)) {
+      const o = craftOutcome(s, w, t.loc);
+      const art = s.loc.pop[t.loc * C + CL.artisans] + s.loc.pop[t.loc * C + CL.wage_workers];
+      locationStep(s, w, t.loc);
+      expect(LOC_ECON!.craft[t.loc]).toBeCloseTo(o.out, 1);
+      const used = locGoods(s.loc, w, t.loc, null).crafts; const mk = s.markets[s.loc.market[t.loc]];
+      expect([...used].reduce((p, [g, q]) => p + q * mk.price[g], 0)).toBeCloseTo(o.inp, 1);
+      expect(s.loc.employed[t.loc * C + CL.artisans] * art).toBeCloseTo(o.jobs, 0);
+    }
+    // putting-out: more hands and more output than the guild, a little more raw material per piece
+    const g = v.towns.find((t) => t.method === 0 && t.alt[0][2] > 0)!;
+    expect(g.alt[1][2]).toBeGreaterThan(g.alt[0][2]);
+    expect(g.alt[1][1]).toBeGreaterThan(g.alt[0][1]);
+    // with Commerce 6 and gold, one batch of ordinary 'method' orders switches all guild towns
+    n.tech[1] = Math.max(n.tech[1], 6); n.treasury = 1e6;
+    const v2 = methodsView(s, w, n.id)!;
+    const go = v2.towns.filter((t) => t.method === 0 && t.alt[1][4] === null).map((t) => t.loc);
+    expect(go.length).toBeGreaterThan(3);
+    const t0 = n.treasury;
+    const r = applyCommand(s, w, { t: 'batch', n: n.id, cmds: go.map((loc) => ({ t: 'method', n: n.id, loc, method: 1 })) } as any);
+    expect(r.ok).toBe(true); expect(r.done).toBe(go.length);
+    for (const l of go) expect(s.loc.method[l]).toBe(1);
+    expect(t0 - n.treasury).toBeCloseTo(go.length * v2.methods[1].cost, 0);
+    // and the overview now says why they cannot switch again so soon
+    const v3 = methodsView(s, w, n.id)!;
+    expect(v3.towns.find((t) => t.loc === go[0])!.alt[0][4]).toBe('the workshops were reorganised recently');
   });
 });
