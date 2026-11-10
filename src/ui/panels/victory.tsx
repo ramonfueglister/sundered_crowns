@@ -6,6 +6,7 @@ import { nations, sim, view } from '../../game/client';
 import { settings, playerId, showToast } from '../store';
 import { Section, Empty, NLink, Bar, Btn, Tip, t, L, lang, num, pct, useQuery, rgb } from './common';
 import type { ChronEntry } from '../../sim/types';
+import { chronInvolves } from '../../sim/ctx';
 import { chronicleMarkdown, chronicleJson, exportName, downloadText, type ChronExport } from '../chronexport';
 import { TipHead, Parts } from './explain';
 import { VICTORY_KINDS, VICTORY_RULES, VICTORY_YEARS, type VictoryKind } from '../../sim/victoryRules';
@@ -191,7 +192,7 @@ export function ChronicleExport({ own = false, ending }: { own?: boolean; ending
       const x: ChronExport = { entries, startYear: v?.startYear ?? 1356, endDay: v?.day ?? 0, lang: lang.value === 'de' ? 'de' : 'en', player: playerId.value, own, ending,
         nations: nations.value.map((n) => ({ id: n.id, name: n.name, short: n.short })) };
       downloadText(exportName(x, kind), kind === 'md' ? chronicleMarkdown(x) : chronicleJson(x), kind === 'md' ? 'text/markdown' : 'application/json');
-      const n = own && x.player >= 0 ? entries.filter((e) => e.nation === x.player).length : entries.length;
+      const n = own && x.player >= 0 ? entries.filter((e) => chronInvolves(e, x.player)).length : entries.length;
       showToast(t('x_chron_exported').replace('{n}', String(n)));
     } catch { showToast(t('x_chron_export_failed'), 'err'); } finally { setBusy(false); }
   };

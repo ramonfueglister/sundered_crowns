@@ -1,6 +1,6 @@
 // Ledger (sortable comparison tables) and the Chronicle.
 import { useState } from 'preact/hooks';
-import { chronicle, view, nations } from '../../game/client';
+import { chronicle, ownChronicle, view, nations } from '../../game/client';
 import { playerId, openPanel } from '../store';
 import { Btn, Empty, NLink, NList, Tabs, useQuery, t, L, num, signed, fmtDateShort, selectLoc, Tip, realm, useRealm } from './common';
 import { Parts, TipHead } from './explain';
@@ -58,10 +58,10 @@ export function ChronicleTab() {
   const [own, setOwn] = useState(true);
   const [lim, setLim] = useState(150);
   const pid = playerId.value; const v = view.value;
-  const all = chronicle.value;
-  const list = all.filter((e) => !own || pid < 0 || e.nation === pid).slice().reverse();
+  // our own entries come from their own list (every entry that names our realm), so a busy world never crowds them out
+  const list = (own && pid >= 0 ? ownChronicle.value : chronicle.value).slice().reverse();
   return <div class="tab-chron">
-    <div class="act-row"><label class="chk"><input type="checkbox" checked={own} onChange={(e) => setOwn((e.target as HTMLInputElement).checked)} /> {t('own_realm_only')}</label><span class="spacer" /><span class="muted small">{list.length} {t('entries')}</span><ChronicleExport own={own} /></div>
+    <div class="act-row"><label class="chk"><input type="checkbox" checked={own} onChange={(e) => setOwn((e.target as HTMLInputElement).checked)} /> {t('own_realm_only')}</label><span class="spacer" /><span class="muted small">{num(list.length)} {list.length === 1 ? t('entry_one') : t('entries')}</span><ChronicleExport own={own} /></div>
     {!list.length && <Empty>{t('chronicle_empty')}</Empty>}
     <div class="chron">{list.slice(0, lim).map((e) => <div class={`chron-e ${e.loc !== undefined ? 'click' : ''}`} onClick={() => e.loc !== undefined && selectLoc(e.loc)}>
       <span class="ch-date">{v ? fmtDateShort(e.day, v.startYear) : ''}</span>

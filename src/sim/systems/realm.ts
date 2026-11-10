@@ -118,7 +118,7 @@ export function excommunicate(s: GameState, by: number, target: number): string 
   P.curiaFavour[by] -= 50; t.excommunicated = true;
   t.modifiers.push({ id: 'excommunicated', until: s.day + 365 * 10, label: { en: 'Excommunicated', de: 'Exkommuniziert' }, effects: { mandate_gain: -0.5, concord_gain: -0.3 } });
   for (const o of s.nations) if (o.alive && o.faith === FAITH_INDEX.latin && o.id !== target) addOpinion(s, o.id, target, 'excommunicated', -25, 365 * 10);
-  chronicle(s, target, 'excommunication', { en: `The ruler of ${t.short.en} was excommunicated at the urging of ${n.short.en}.`, de: `Der Herrscher von ${t.short.de} wurde auf Betreiben von ${n.short.de} exkommuniziert.` });
+  chronicle(s, target, 'excommunication', { en: `The ruler of ${t.short.en} was excommunicated at the urging of ${n.short.en}.`, de: `Der Herrscher von ${t.short.de} wurde auf Betreiben von ${n.short.de} exkommuniziert.` }, undefined, [by]);
   return null;
 }
 

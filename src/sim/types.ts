@@ -193,7 +193,11 @@ export interface Market {
 export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
 
 export interface PendingEvent { id: number; event: string; nation: number; day: number; expires: number; ctx: Record<string, number> }
-export interface ChronEntry { day: number; text: I18n; nation: number; kind: string; loc?: number }
+export interface ChronEntry {
+  day: number; text: I18n; nation: number; kind: string; loc?: number;
+  /** the other realms the entry concerns (every side of a war, both crowns of a union, both parties of a treaty) */
+  also?: number[];
+}
 export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number }
 
 export interface Construction { loc: number; building: number; left: number; nation: number; cost: number }

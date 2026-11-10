@@ -327,7 +327,7 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   // guarantees
   for (const t of s.treaties) if (t.type === 'guarantee' && t.b === b && t.until > s.day && !war.att.includes(t.a) && !war.def.includes(t.a) && s.nations[t.a].alive) war.def.push(t.a);
   addOpinion(s, b, a, 'war_declared', -60, 365 * 10);
-  chronicle(s, a, 'war', { en: `${na.short.en} declared war on ${nb.short.en}${unjust ? ' without just cause' : ''}.`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg${unjust ? ' ohne gerechten Grund' : ''}.` });
+  chronicle(s, a, 'war', { en: `${na.short.en} declared war on ${nb.short.en}${unjust ? ' without just cause' : ''}.`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg${unjust ? ' ohne gerechten Grund' : ''}.` }, undefined, [...war.att, ...war.def]);
   for (const p of s.playerNations) if (war.def.includes(p) || war.att.includes(p)) notice(s, p, 'war', { en: `${na.short.en} declared war on ${nb.short.en}!`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg!` }, { war: war.id, loc: nb.capital });
   // the Empire's members expect the emperor to defend them; the league defends its towns
   warHooks.declared?.(s, w, war);
@@ -611,7 +611,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
   const text = terms.length && !terms.every((t) => t.type === 'white_peace')
     ? { en: `Peace between ${W.short.en} and ${Ln.short.en}: ${parts.join(', ')}.`, de: `Frieden zwischen ${W.short.de} und ${Ln.short.de}: ${partsDe.join(', ')}.` }
     : { en: `White peace between ${W.short.en} and ${Ln.short.en}.`, de: `Frieden ohne Gebietsänderung zwischen ${W.short.de} und ${Ln.short.de}.` };
-  chronicle(s, winner, 'peace', text);
+  chronicle(s, winner, 'peace', text, undefined, [loser, ...sides]);
   for (const p of s.playerNations) if (sides.has(p)) notice(s, p, 'peace', text, { loc: Ln.capital });
   s.flags.lastPeaceDay = s.day; (s as any).lastPeace = { day: s.day, winner, loser, origin: waveOrigin };
 }

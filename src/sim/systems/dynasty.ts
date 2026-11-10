@@ -84,7 +84,7 @@ export function royalMatch(s: GameState, w: World, a: number, b: number): { real
       const m = houseMember(s, Y, !p.female, p.born); if (!m) continue;
       wed(s, X, p, m, Y);
       const nm = (c: Character, l: 'en' | 'de') => localName(c.name, l, c.female);
-      chronicle(s, X.id, 'marriage', { en: `${nm(p, 'en')} of ${X.short.en} married ${nm(m, 'en')} of the house of ${Y.short.en}.`, de: `${nm(p, 'de')} von ${X.short.de} heiratete ${nm(m, 'de')} aus dem Haus von ${Y.short.de}.` });
+      chronicle(s, X.id, 'marriage', { en: `${nm(p, 'en')} of ${X.short.en} married ${nm(m, 'en')} of the house of ${Y.short.en}.`, de: `${nm(p, 'de')} von ${X.short.de} heiratete ${nm(m, 'de')} aus dem Haus von ${Y.short.de}.` }, undefined, [Y.id]);
       for (const k of [X.id, Y.id]) if (s.playerNations.includes(k)) notice(s, k, 'marriage', { en: `${nm(p, 'en')} of ${X.short.en} weds ${nm(m, 'en')} of ${Y.short.en}. Their children will have a claim on the throne of ${Y.short.en}.`, de: `${nm(p, 'de')} von ${X.short.de} heiratet ${nm(m, 'de')} von ${Y.short.de}. Ihre Kinder haben einen Anspruch auf den Thron von ${Y.short.de}.` });
       return { realm: X.id, person: p.id, spouse: m.id };
     }
@@ -136,7 +136,7 @@ export function pressLater(s: GameState, claimant: number, n: Nation) {
   if (s.treaties.some((t) => t.type === 'claim' && t.a === claimant && t.b === n.id && t.until > s.day)) return;
   s.treaties.push({ a: claimant, b: n.id, type: 'claim', since: s.day, until: s.day + 25 * YEAR });
   const C = s.nations[claimant];
-  chronicle(s, claimant, 'claim', { en: `${C.short.en} claims the throne of ${n.short.en}, whose house has died out.`, de: `${C.short.de} erhebt Anspruch auf den Thron von ${n.short.de}, dessen Haus erloschen ist.` });
+  chronicle(s, claimant, 'claim', { en: `${C.short.en} claims the throne of ${n.short.en}, whose house has died out.`, de: `${C.short.de} erhebt Anspruch auf den Thron von ${n.short.de}, dessen Haus erloschen ist.` }, undefined, [n.id]);
   if (s.playerNations.includes(claimant)) notice(s, claimant, 'claim', { en: `The house of ${n.short.en} has died out. Our claim on its throne gives us a cause for war for 25 years.`, de: `Das Haus von ${n.short.de} ist erloschen. Unser Anspruch auf den Thron gibt uns 25 Jahre lang einen Kriegsgrund.` });
 }
 

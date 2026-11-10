@@ -780,7 +780,7 @@ function endBattle(s: GameState, w: World, b: Battle, winner: 'att' | 'def') {
     en: `${wnN?.short.en ?? 'Rebels'} defeated ${lnN?.short.en ?? 'rebels'} in the ${kind} of ${w.names[b.loc]} (${Math.round(lossW)} vs ${Math.round(lossL)} lost).`,
     de: `${wnN ? wnN.short.de + ' besiegte' : 'Rebellen besiegten'} ${lnN?.short.de ?? 'Rebellen'} in der ${b.naval ? 'Seeschlacht' : 'Schlacht'} bei ${w.namesDe[b.loc]} (${Math.round(lossW)} gegen ${Math.round(lossL)} Verluste).`,
   };
-  if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc);
+  if (big) chronicle(s, rebW ? ln : wn, 'battle', text, b.loc, [wnN ? wn : -1, lnN ? ln : -1]);
   s.flags[`last_battle_${b.loc}`] = s.day;
   const human = s.playerNations.includes(wn) || s.playerNations.includes(ln);
   if (rep && (human || lossW + lossL > 3000)) {
@@ -1060,7 +1060,7 @@ export function occupy(s: GameState, w: World, l: number, by: number, army?: Arm
     warScoreEvent(s, by, owner, 'occupy', 0, l);
     const cap = s.nations[owner]?.capital === l;
     if (cap) notice(s, owner, 'capital_lost', { en: `Our capital ${w.names[l]} has fallen to the enemy!`, de: `Unsere Hauptstadt ${w.namesDe[l]} ist in Feindeshand!` }, { loc: l });
-    if (s.loc.buildings[l * B + BI.fort] >= 2 || cap) chronicle(s, by, 'siege', { en: `${s.nations[by].short.en} took ${w.names[l]}${cap ? `, capital of ${s.nations[owner].short.en}` : ''}.`, de: `${s.nations[by].short.de} nahm ${w.namesDe[l]} ein${cap ? `, Hauptstadt von ${s.nations[owner].short.de}` : ''}.` }, l);
+    if (s.loc.buildings[l * B + BI.fort] >= 2 || cap) chronicle(s, by, 'siege', { en: `${s.nations[by].short.en} took ${w.names[l]}${cap ? `, capital of ${s.nations[owner].short.en}` : ''}.`, de: `${s.nations[by].short.de} nahm ${w.namesDe[l]} ein${cap ? `, Hauptstadt von ${s.nations[owner].short.de}` : ''}.` }, l, [owner]);
   }
   s.flags.ownershipDirty = s.day;
 }

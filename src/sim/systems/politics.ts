@@ -239,14 +239,14 @@ export function succession(s: GameState, w: World, n: Nation) {
             const r0 = s.chars[other.ruler];
             for (const id of [other.ruler, other.consort, other.heir, ...(r0?.children ?? [])]) { const c = s.chars[id]; if (c && c.alive && c.nation === other.id) c.nation = n.id; }
             // juniors still share the dead ruler: the caller gives each its chance to leave, else they follow the new ruler
-            chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${de(s.chars[other.ruler])} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` });
+            chronicle(s, n.id, 'union', { en: `The crown of ${n.short.en} passed to ${s.chars[other.ruler]?.name} of ${other.short.en}, who now rules both: ${other.short.en} is the junior partner.`, de: `Die Krone von ${n.short.de} ging an ${de(s.chars[other.ruler])} von ${other.short.de}, der nun beide regiert: ${other.short.de} ist der Juniorpartner.` }, undefined, [other.id]);
             notice(s, other.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
             notice(s, n.id, 'union', { en: `${dead?.name ?? '?'} died without heirs: ${s.chars[other.ruler]?.name} of ${other.short.en} inherits our crown and rules both realms.`, de: `${de(dead)} starb ohne Erben: ${de(s.chars[other.ruler])} von ${other.short.de} erbt unsere Krone und regiert beide Reiche.` }, { loc: n.capital });
             return;
           }
           n.overlord = k; n.subjectType = 'personal_union'; n.subjectSince = s.day; n.dynasty = other.dynasty;
           n.ruler = other.ruler; n.heir = other.heir; n.consort = other.consort;
-          chronicle(s, n.id, 'union', { en: `${n.short.en} passed by inheritance to ${other.short.en}: a personal union under ${s.chars[other.ruler]?.name}.`, de: `${n.short.de} fiel durch Erbschaft an ${other.short.de}: Personalunion unter ${de(s.chars[other.ruler])}.` });
+          chronicle(s, n.id, 'union', { en: `${n.short.en} passed by inheritance to ${other.short.en}: a personal union under ${s.chars[other.ruler]?.name}.`, de: `${n.short.de} fiel durch Erbschaft an ${other.short.de}: Personalunion unter ${de(s.chars[other.ruler])}.` }, undefined, [other.id]);
           notice(s, n.id, 'union', { en: 'Personal union formed', de: 'Personalunion entstanden' });
           return;
         }
@@ -345,7 +345,7 @@ function crownPasses(s: GameState, w: World, n: Nation, cid: number) {
       other.overlord = -1; other.subjectType = null; other.libertyDesire = 0;
       const c = newChar(s, other, { born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false, dynasty: other.dynasty });
       other.ruler = c.id; other.heir = 0; other.consort = 0; other.regent = 0; pickNewHeir(s, other);
-      chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${de(s.chars[cid])} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` });
+      chronicle(s, other.id, 'union', { en: `On the death of ${c0name(s, cid)} the estates of ${other.short.en} chose their own ruler: the union with ${n.short.en} is over.`, de: `Nach dem Tod von ${de(s.chars[cid])} wählten die Stände von ${other.short.de} einen eigenen Herrscher: die Union mit ${n.short.de} ist beendet.` }, undefined, [n.id]);
       notice(s, n.id, 'union_ended', { en: `${other.short.en} has chosen its own ruler and left our union.`, de: `${other.short.de} hat einen eigenen Herrscher gewählt und unsere Union verlassen.` }, { loc: other.capital });
       continue;
     }
@@ -401,7 +401,7 @@ export function settleCourts(s: GameState, w: World) {
           const c = newChar(s, n, { ...courtPerson(s, n, false), born: s.day - Math.floor((25 + rand(s.rng) * 25) * 365), role: 'ruler', female: false });
           if (c.dynasty) n.dynasty = c.dynasty;
           n.ruler = c.id; n.heir = 0; n.consort = 0; n.regent = 0; pickNewHeir(s, n);
-          chronicle(s, n.id, 'union', { en: `The crowns of ${n.short.en} and ${R.short.en} parted: the estates of ${n.short.en} chose ${c.name} as their own ruler.`, de: `Die Kronen von ${n.short.de} und ${R.short.de} trennten sich: die Stände von ${n.short.de} wählten ${de(c)} zum eigenen Herrscher.` });
+          chronicle(s, n.id, 'union', { en: `The crowns of ${n.short.en} and ${R.short.en} parted: the estates of ${n.short.en} chose ${c.name} as their own ruler.`, de: `Die Kronen von ${n.short.de} und ${R.short.de} trennten sich: die Stände von ${n.short.de} wählten ${de(c)} zum eigenen Herrscher.` }, undefined, [R.id]);
           notice(s, n.id, 'union', { en: `Our estates have chosen ${c.name} to rule us.`, de: `Unsere Stände haben ${de(c)} zum Herrscher gewählt.` }, { loc: n.capital });
         } else r.nation = n.id; // a member of another house who wears this crown lives here
       }
