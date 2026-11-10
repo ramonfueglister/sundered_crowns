@@ -507,8 +507,24 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 /* ---- fix-map: overlays keep clear of each other ---- */
 /* the pause menu, settings and saves open as panels: their dimming covers every map overlay (mode bar, army panel, hints) */
 .panel-wrap:has(> .modal-fixed) { z-index: 60; }
-/* an open panel (peace dialog, economy) is in front of the army panel */
-.app:has(> .panel-wrap) > .army-wrap { z-index: 13; }
+/* an army picked while a panel is open (from the military list, a notice, the outliner, or before the peace dialog
+   opened): the army panel stands beside the panel, above the mode bar, never under the panel nor over it. Where the
+   window leaves room it stays left of the outliner; in a narrower window it takes the room up to the right edge and the
+   outliner ends above it (--army-top: overlay.tsx); only below about 1160 px does the panel give up some width */
+.app:has(> .army-wrap) > .panel-wrap { width: min(760px, 100% - 300px, 100% - 404px); }
+.app:has(> .panel-wrap) > .army-wrap { left: calc(16px + min(760px, 100% - 300px, 100% - 404px)); right: 268px; width: auto; max-width: 500px; min-width: 380px; bottom: calc(var(--mm-h, 74px) + 2px); }
+.app:has(> .panel-wrap) > .army-wrap.picking { max-width: 660px; }
+.app:has(> .army-wrap) > .panel-wrap ~ .mapmodes { max-width: calc(100% - 24px - min(760px, 100% - 300px, 100% - 404px)); }
+@media (max-width: 1423px) {
+  .app:has(> .panel-wrap) > .army-wrap { right: 8px; }
+  .app:has(> .panel-wrap):has(> .army-wrap) > .right-col { bottom: max(130px, calc(var(--mm-h, 74px) + 10px), var(--army-top, 0px)); }
+  /* in the shorter column the goal tracker yields first, so the outliner keeps its armies in sight */
+  .app:has(> .panel-wrap):has(> .army-wrap) > .right-col > .goal-tracker { flex-shrink: 4; min-height: 0; overflow-y: auto; }
+}
+/* no panel open: the mode bar and its legend keep to the room right of the army panel (--army-r: overlay.tsx) */
+.app:has(> .army-wrap):not(:has(> .panel-wrap)) > .mapmodes { max-width: min(640px, calc(var(--army-r, 656px) - 16px)); }
+.app:has(> .army-wrap) > .mapmodes .legend { max-width: 100%; }
+.app:has(> .army-wrap) > .mapmodes .lg-scale { min-width: 0; }
 /* the mode bar and its legend move into the room right of an open panel instead of covering it */
 .panel-wrap ~ .mapmodes { max-width: calc(100% - 24px - min(760px, 100% - 300px)); }
 .panel-wrap ~ .mapmodes .legend { max-width: 100%; }
@@ -517,6 +533,8 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .tutorial, .hint-card, .panel-wrap ~ .hint-card, .panel-wrap ~ .tutorial { bottom: max(82px, calc(var(--mm-h, 74px) + 10px)); }
 .right-col { bottom: max(130px, calc(var(--mm-h, 74px) + 10px)); }
 .notices { max-height: calc(100% - 66px - var(--mm-h, 74px)); overflow: hidden; }
+/* the hints and the tour stand above the army panel where they would lie over it (--army-t: overlay.tsx) */
+.app:has(> .army-wrap) > :is(.hint-card, .tutorial) { bottom: max(82px, calc(var(--mm-h, 74px) + 10px), var(--army-t, 0px)); }
 
 /* the realms table fits its panel: brief column names (records.tsx), long realm names cut */
 .tbl.ledger td:nth-child(2) { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

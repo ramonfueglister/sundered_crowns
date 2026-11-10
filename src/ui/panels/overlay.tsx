@@ -86,21 +86,45 @@ export function EventModal() {
   </div>;
 }
 
-/** The height of the map-mode bar with its legend, as --mm-h on the page: the tutorial, the hints and the goal tracker
- *  keep above it (panels.css), so none of them covers the legend or its good picker. */
-function useModeBarHeight() {
+/** The room the map overlays leave each other, as variables on the page (panels.css):
+ *  --mm-h   the height of the map-mode bar with its legend: the tutorial, the hints and the goal tracker keep above it,
+ *           so none of them covers the legend or its good picker; an army panel beside an open panel stands above it;
+ *  --army-r the room right of the army panel, which the mode bar and its legend keep to;
+ *  --army-top how far above the bottom the army panel reaches (the outliner ends above it where they would meet);
+ *  --army-t the same where the hints and the tour would lie over the army panel, else 0.
+ *  They follow the army panel as it opens, closes, moves beside an open panel and changes size. */
+function useOverlayRoom() {
   useEffect(() => {
     const el = document.querySelector('.mapmodes') as HTMLElement | null;
-    if (!el || typeof ResizeObserver === 'undefined') return;
+    const app = el?.parentElement;
+    if (!el || !app || typeof ResizeObserver === 'undefined') return;
     const root = document.documentElement;
-    const set = () => root.style.setProperty('--mm-h', `${Math.ceil(el.offsetHeight) + 8}px`);
-    const ro = new ResizeObserver(set); ro.observe(el); set();
-    return () => { ro.disconnect(); root.style.removeProperty('--mm-h'); };
+    let army: Element | null = null;
+    const set = () => {
+      root.style.setProperty('--mm-h', `${Math.ceil(el.offsetHeight) + 8}px`);
+      const a = app.querySelector(':scope > .army-wrap');
+      if (a !== army) { if (army) ro.unobserve(army); army = a; if (a) ro.observe(a); }
+      if (!a) { for (const k of ['--army-r', '--army-top', '--army-t']) root.style.removeProperty(k); return; }
+      const box = app.getBoundingClientRect(), ar = a.getBoundingClientRect();
+      const top = `${Math.ceil(box.bottom - ar.top) + 8}px`;
+      root.style.setProperty('--army-r', `${Math.max(0, Math.floor(box.right - ar.right))}px`);
+      root.style.setProperty('--army-top', top);
+      const h = app.querySelector(':scope > .hint-card, :scope > .tutorial');
+      const hr = h?.getBoundingClientRect();
+      const over = !!hr && hr.width > 0 && hr.left < ar.right && hr.right > ar.left;
+      root.style.setProperty('--army-t', over ? top : '0px');
+    };
+    const ro = new ResizeObserver(set); ro.observe(el);
+    // the army panel, an open panel or a hint card come and go as children of the page
+    const mo = new MutationObserver(set); mo.observe(app, { childList: true });
+    window.addEventListener('resize', set);
+    set();
+    return () => { ro.disconnect(); mo.disconnect(); window.removeEventListener('resize', set); for (const k of ['--mm-h', '--army-r', '--army-top', '--army-t']) root.style.removeProperty(k); };
   }, []);
 }
 
 export function Legend() {
-  useModeBarHeight();
+  useOverlayRoom();
   const lg = legend.value; const m = mapMode.value;
   if (!lg || m === 'political' || m === 'terrain' || (!lg.items.length && !lg.scale)) return null;
   const sc = lg.scale;
