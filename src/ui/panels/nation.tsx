@@ -1,7 +1,7 @@
 // Foreign realm panel: ruler, standing, relations both ways, diplomacy with predicted answers, war and espionage.
 import { useEffect, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
-import { selectedNation, playerId, openPanel } from '../store';
+import { selectedNation, playerId, openPanel, realmDialog } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
 import { TradeRelations } from './tradediplo';
@@ -176,7 +176,10 @@ function DeclareWar({ d, refresh }: { d: any; refresh: () => void }) {
           {g.ally && <div class="warn-box"><b>⚠ {t('ally_break')}</b></div>}
           {g.refusal && <div class="neg small">{errText(g.refusal)}</div>}
         </>}
-        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn><Btn cls="danger" disabled={g?.refusal ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
+        <div class="act-row"><Btn onClick={() => setOpen(false)}>{t('cancel')}</Btn>
+          {/* a war the assembly would refuse can be put to it: the vote with bribes and concessions, then the declaration */}
+          {g?.refusal === 'the assembly refused to fund the war' && <Btn tip={t('x_asm_put_war_hint')} onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'declare', target: d.id, goal, locs: g?.locs ?? [] } }; }}>{t('x_asm_put_war')}</Btn>}
+          <Btn cls="danger" disabled={g?.refusal ?? null} onClick={() => act({ t: 'declare', target: d.id, goal, locs: g?.locs ?? [] }, 'war', t('war_declared')).then((r) => { if (r.ok) { setOpen(false); refresh(); } })}>{t('declare_war')}</Btn></div>
       </div>}
   </Section>;
 }

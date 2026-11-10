@@ -982,6 +982,8 @@ const S: Record<string, [string, string]> = {
   x_asm_apply: ['Apply', 'Übernehmen'], x_asm_applied: ['The new rates apply.', 'Die neuen Sätze gelten.'],
   x_asm_tax_granted: ['The assembly granted taxes up to a level of {p}.', 'Die Versammlung bewilligte Steuern bis zu einer Steuerlast von {p}.'],
   x_asm_war_granted: ['The assembly approved the war against {realm}.', 'Die Versammlung billigte den Krieg gegen {realm}.'],
+  x_asm_put_war: ['Put it to the assembly', 'Der Versammlung vorlegen'],
+  x_asm_put_war_hint: ['Our assembly must approve this war. See how each Power would vote and why, buy votes or offer a privilege; on a yes the war is declared.', 'Unsere Versammlung muss diesen Krieg billigen. Seht, wie jede Macht stimmen würde und warum, kauft Stimmen oder bietet ein Privileg an; bei einem Ja wird der Krieg erklärt.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
