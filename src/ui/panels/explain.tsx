@@ -58,13 +58,21 @@ export function TreasuryTip() {
   const p = view.value?.player; if (!p) return null;
   const inc = Object.entries(p.incomeBreak).filter(([, x]) => Math.abs(x) > 0.005).map(([k, x]) => [keyName(k), x] as Row);
   const exp = Object.entries(p.expenseBreak).filter(([, x]) => Math.abs(x) > 0.005).map(([k, x]) => [keyName(k), -x] as Row);
+  const cr = Object.entries(p.creditBreak ?? {}).filter(([, x]) => Math.abs(x) > 0.005).map(([k, x]) => [keyName(k), x] as Row);
+  const bal = p.income - p.expense, moved = cr.reduce((q, r) => q + r[1], 0);
   return <div>
     <TipHead name={t('treasury')} value={num(p.treasury)} hint={t('x_treasury_hint')} />
+    <div class="muted small">{p.ledgerEstimate ? t('x_ledger_estimate') : t('x_ledger_last')}</div>
     <div class="tip-cols">
       <Parts title={t('income')} rows={inc.sort((a, b) => b[1] - a[1])} total={p.income} />
       <Parts title={t('expenses')} rows={exp.sort((a, b) => a[1] - b[1])} total={-p.expense} />
     </div>
-    <div class="tip-drift"><span>{t('x_balance')}</span><span class={p.income - p.expense >= 0 ? 'pos' : 'neg'}>{signed(p.income - p.expense, 1)} {t('x_per_month')}</span></div>
+    <div class="tip-drift"><span>{t('x_balance')}</span><span class={bal >= 0 ? 'pos' : 'neg'}>{signed(bal, 1)} {t('x_per_month')}</span></div>
+    {cr.length > 0 && <>
+      <Parts title={t('x_credit_moves')} rows={cr.sort((a, b) => b[1] - a[1])} total={moved} />
+      <div class="tip-drift"><span>{t('x_treasury_change')}</span><span class={bal + moved >= 0 ? 'pos' : 'neg'}>{signed(bal + moved, 1)}</span></div>
+      <div class="muted small">{t('x_credit_hint')}</div>
+    </>}
     {p.loans > 0 && <div class="muted">{t('loans')}: {num(p.loans)}</div>}
   </div>;
 }

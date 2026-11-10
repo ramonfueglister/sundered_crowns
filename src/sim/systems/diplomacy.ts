@@ -260,6 +260,12 @@ export function libertyTarget(s: GameState, w: World, n: Nation, ov: Nation): nu
   let t = 0; for (const [, v] of libertyParts(s, w, n, ov)) t += v;
   return clamp(t, 0, 100);
 }
+/** What a subject pays its overlord a month: a colony a quarter of its taxes and trade, a tributary 15 % and a vassal
+ *  10 % of its taxes (of last month's ledger). */
+export function subjectTribute(n: Nation): number {
+  if (n.subjectType !== 'tributary' && n.subjectType !== 'vassal' && n.subjectType !== 'colonial') return 0;
+  return n.subjectType === 'colonial' ? (n.income.tax || 0) * 0.25 + (n.income.trade || 0) * 0.25 : (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1);
+}
 function subjectsMonth(s: GameState, w: World) {
   for (const n of s.nations) {
     if (!n.alive || n.overlord < 0) continue;
@@ -269,7 +275,7 @@ function subjectsMonth(s: GameState, w: World) {
     n.libertyDesire += (target - n.libertyDesire) * 0.05;
     // tribute
     if (n.subjectType === 'tributary' || n.subjectType === 'vassal' || n.subjectType === 'colonial') {
-      const t = (n.subjectType === 'colonial' ? (n.income.tax || 0) * 0.25 + (n.income.trade || 0) * 0.25 : (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1));
+      const t = subjectTribute(n);
       if (t > 0) { n.treasury -= t; n.expenseAcc.tribute = (n.expenseAcc.tribute || 0) + t; ov.treasury += t; ov.incomeAcc.tribute = (ov.incomeAcc.tribute || 0) + t; }
     }
     // integration in progress

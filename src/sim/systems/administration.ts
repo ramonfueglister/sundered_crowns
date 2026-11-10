@@ -221,7 +221,7 @@ export function aiDuties(s: GameState, w: World, n: Nation, atWarNow: boolean) {
 }
 
 // ---------------- budget forecast ----------------
-const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour']);
+const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events']);
 /** The next twelve months projected from the current state: last month's recurring income and expenses (one-off
  *  spending left out), interest on the loans now owed, and loans falling due (repaid if the chest allows, otherwise
  *  rolled over at two points more). Upkeep and taxes are held at last month's level. */

@@ -1,9 +1,10 @@
 // The simulated economy: population groups produce, earn, pay taxes and buy their needs in regional markets.
 // Prices form from accumulated buy and sell orders; goods flow between markets along land and sea links
 // when price differences exceed transport cost, tolls and risk.
-import type { GameState, Market, Nation } from '../types';
+import type { GameState, Market, Nation, I18n } from '../types';
 import type { World } from '../world';
-import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH } from '../ctx';
+import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH, notice } from '../ctx';
+import { dayToDate } from '../calendar';
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
@@ -652,19 +653,22 @@ export function harvests(s: GameState, w: World, year: number) {
   }
 }
 
+/** What the court costs a month: a small base, its seats and a share of last month's revenue (a petty lordship keeps
+ *  a petty court: the fixed part never takes more than about half of what it earns), more with corruption. */
+export function courtCost(n: Nation): number {
+  const last = n.history[n.history.length - 1];
+  const locs = last ? last.locs : 10;
+  const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
+  return (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption);
+}
 export function monthlyLedger(s: GameState, w: World) {
-  // per-nation monthly fixed items: court, interest, inflation & coinage, loans
+  // per-nation monthly fixed items: court, interest, inflation & coinage, loans falling due (the close of the books,
+  // with the loan a negative chest calls for, is closeLedger at the end of the monthly systems)
   for (const n of s.nations) {
     if (!n.alive) continue;
     const tmax = tariffMax(n); if (n.tariff > tmax) n.tariff = tmax; // a new trade law lowers the ceiling
-    // court & administration upkeep scales with realm size
-    let locs = 0; // computed in politics monthly; reuse history
-    const last = n.history[n.history.length - 1];
-    locs = last ? last.locs : 10;
-    // a court costs what the realm can bear: a small base, its seats, and a share of last month's revenue
     const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
-    // (a petty lordship keeps a petty court: the fixed part never takes more than about half of what it earns)
-    addExpense(n, 'court', (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption));
+    addExpense(n, 'court', courtCost(n));
     // a chest beyond a year's revenue draws courtiers, feasts and building at court: it melts away, but the realm is admired
     const hoard = n.treasury - gross * 12;
     if (hoard > 0 && gross > 0) { addExpense(n, 'splendour', hoard * 0.03); n.prestige = Math.min(100, n.prestige + Math.min(0.5, hoard / (gross * 200))); }
@@ -679,36 +683,86 @@ export function monthlyLedger(s: GameState, w: World) {
       addIncome(n, 'minting', extra);
       n.inflation = clamp(n.inflation + n.coinage * 0.01 * (1 - resist), 0, 1.5);
     } else n.inflation = Math.max(0, n.inflation - 0.0015 * (1 + resist));
-    // loans due
+    // loans due: repaid when the chest allows, otherwise rolled over for a year at two points more
     for (const l of n.loans.slice()) {
       if (l.due <= s.day) {
-        if (n.treasury >= l.amount) { addExpense(n, 'loan_repay', l.amount); n.loans.splice(n.loans.indexOf(l), 1); }
+        if (n.treasury >= l.amount) { addCredit(n, 'loan_repay', -l.amount); n.loans.splice(n.loans.indexOf(l), 1); }
         else { l.due = s.day + 365; l.rate += 0.02; n.mandate -= 2; }
       }
     }
     n.debt = n.loans.reduce((a, l) => a + l.amount, 0);
-    // bankruptcy when debt crushing and treasury negative
-    if (n.treasury < 0) {
-      if (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day) {
-        // no lender will deal with a bankrupt crown: wages go unpaid, soldiers drift away, the deficit is written off
-        n.treasury = 0; n.armyMaint = 0.5;
-        for (const a of s.armies) if (a.owner === n.id && !a.fleet) for (const r of a.regs) r.men *= a.mercenary ? 0.8 : 0.95;
-      } else if (n.loans.length < 6) takeLoan(s, n, -n.treasury + 50);
-      else declareBankruptcy(s, n);
-    }
-    // roll ledger
-    n.income = n.incomeAcc; n.expense = n.expenseAcc; n.incomeAcc = {}; n.expenseAcc = {};
   }
 }
 
-export function takeLoan(s: GameState, n: Nation, amount: number) {
-  const base = loanRate(s, n);
-  const lenders = ['Bardi', 'Peruzzi', 'Medici', 'Fugger', 'Welser', 'Grimaldi', 'Lombard bankers', 'Hanseatic merchants', 'Jewish moneylenders', 'Genoese Casa di San Giorgio'];
-  const year = s.startYear + Math.floor(s.day / 365);
-  const avail = lenders.filter((l, k) => year >= [1300, 1300, 1397, 1480, 1490, 1300, 1300, 1300, 1300, 1407][k] && year <= [1345, 1343, 1494, 1650, 1650, 1815, 1815, 1815, 1815, 1805][k]);
-  n.loans.push({ amount, rate: Math.max(0.03, base), due: s.day + 365 * 5, lender: avail[(s.day + n.id) % Math.max(1, avail.length)] || 'Lombard bankers' });
-  n.treasury += amount;
+/** Book money that moves through the chest without being income or spending (loans, debts written off): it changes
+ *  the treasury and shows in the realm's ledger beside income and expenses. */
+export function addCredit(n: Nation, key: string, v: number) { const acc = (n.creditAcc ??= {}); acc[key] = (acc[key] || 0) + v; n.treasury += v; }
+
+/** The close of the month's books, after every monthly system has booked its income and costs (the last system of the
+ *  tick, systems/index.ts): a negative chest calls for a loan (or, for a bankrupt crown, the deficit is written off);
+ *  whatever changed the chest since the last close without a ledger line is booked as "other" movements; then the
+ *  month's ledger becomes last month's. So the treasury moves from one close to the next by exactly income − expenses
+ *  + credit of the ledger shown. */
+export function closeLedger(s: GameState) {
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    // bankruptcy when debt is crushing and the chest is negative
+    if (n.treasury < 0) {
+      if (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day) {
+        // no lender will deal with a bankrupt crown: wages go unpaid, soldiers drift away, the deficit is written off
+        addCredit(n, 'written_off', -n.treasury); n.armyMaint = 0.5;
+        for (const a of s.armies) if (a.owner === n.id && !a.fleet) for (const r of a.regs) r.men *= a.mercenary ? 0.8 : 0.95;
+      } else if (n.loans.length < 6) takeLoan(s, n, -n.treasury + 50, true);
+      else declareBankruptcy(s, n);
+    }
+    // movements without a ledger line since the last close (the first close of a realm has no start to compare with)
+    const t0 = n.flags.ledger_t, d0 = n.flags.ledger_day;
+    if (t0 !== undefined && d0 !== undefined && s.day - d0 <= 32) {
+      let booked = 0;
+      for (const k in n.incomeAcc) booked += n.incomeAcc[k];
+      for (const k in n.expenseAcc) booked -= n.expenseAcc[k];
+      if (n.creditAcc) for (const k in n.creditAcc) booked += n.creditAcc[k];
+      const other = n.treasury - t0 - booked;
+      if (Math.abs(other) > 0.01) { const acc = (n.creditAcc ??= {}); acc.other = (acc.other || 0) + other; }
+    }
+    n.income = n.incomeAcc; n.expense = n.expenseAcc; n.credit = n.creditAcc ?? {};
+    n.incomeAcc = {}; n.expenseAcc = {}; n.creditAcc = {};
+    n.flags.ledger_t = n.treasury; n.flags.ledger_day = s.day;
+    delete n.flags.ledger_estimate;
+  }
 }
+
+/** Lenders by the years they lent to crowns (the English name is kept on the loan; lenderName gives both languages). */
+const LENDERS: { en: string; de: string; from: number; to: number }[] = [
+  { en: 'Bardi', de: 'Bardi', from: 1300, to: 1345 }, { en: 'Peruzzi', de: 'Peruzzi', from: 1300, to: 1343 }, { en: 'Medici', de: 'Medici', from: 1397, to: 1494 },
+  { en: 'Fugger', de: 'Fugger', from: 1480, to: 1650 }, { en: 'Welser', de: 'Welser', from: 1490, to: 1650 }, { en: 'Grimaldi', de: 'Grimaldi', from: 1300, to: 1815 },
+  { en: 'Lombard bankers', de: 'Lombardische Bankiers', from: 1300, to: 1815 }, { en: 'Hanseatic merchants', de: 'Hansekaufleute', from: 1300, to: 1815 },
+  { en: 'Jewish moneylenders', de: 'Jüdische Geldverleiher', from: 1300, to: 1815 }, { en: 'Genoese Casa di San Giorgio', de: 'Genueser Casa di San Giorgio', from: 1407, to: 1805 },
+];
+export function lenderName(en: string): I18n { const l = LENDERS.find((x) => x.en === en); return { en, de: l?.de ?? en }; }
+
+/** Borrow `amount` from the lender of the day; `auto`: the crown borrowed by itself at the close of the month because
+ *  the chest was negative (a human realm is told who lent how much, at what rate and until when). */
+export function takeLoan(s: GameState, n: Nation, amount: number, auto = false) {
+  const base = loanRate(s, n);
+  const year = s.startYear + Math.floor(s.day / 365);
+  const avail = LENDERS.filter((l) => year >= l.from && year <= l.to);
+  const lender = avail[(s.day + n.id) % Math.max(1, avail.length)] ?? LENDERS[6];
+  const loan = { amount, rate: Math.max(0.03, base), due: s.day + 365 * 5, lender: lender.en };
+  n.loans.push(loan);
+  addCredit(n, 'loans', amount);
+  if (auto && s.playerNations.includes(n.id)) {
+    const d = dayToDate(loan.due, s.startYear), due = `${d.d}.${d.m + 1}.${d.y}`;
+    const r = Math.round(loan.rate * 1000) / 10;
+    notice(s, n.id, 'loan', {
+      en: `The treasury ran dry: the crown borrowed ${groupDigits(amount, ',')} marks from ${lender.en} at ${r} % a year, due on ${due}.`,
+      de: `Die Kasse war leer: Die Krone lieh sich ${groupDigits(amount, '.')} Mark bei ${lender.de} zu ${String(r).replace('.', ',')} % im Jahr, fällig am ${due}.`,
+    });
+  }
+}
+
+/** A whole number with a thousands separator (for notices). */
+function groupDigits(v: number, sep: string): string { return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, sep); }
 
 /** Highest tariff the trade law allows: 5 % plus the law's tariff_max (open ports 10 %, staple rights 20 %,
  *  protected trades 35 %). */
@@ -720,7 +774,7 @@ export function loanRate(s: GameState, n: Nation): number {
 }
 
 export function declareBankruptcy(s: GameState, n: Nation) {
-  n.loans = []; n.debt = 0; n.treasury = 0;
+  n.loans = []; n.debt = 0; addCredit(n, 'written_off', -n.treasury);
   n.concord = clamp(n.concord - 40, -100, 100); n.mandate = clamp(n.mandate - 20, 0, 100); n.prestige -= 25;
   n.flags.bankrupt_until = s.day + 365 * 5;
   n.modifiers.push({ id: 'bankruptcy', until: s.day + 365 * 5, label: { en: 'State bankruptcy', de: 'Staatsbankrott' }, effects: { tax: -0.25, unrest: 8, interest: 0.05 } });
@@ -819,7 +873,7 @@ export const economy: System = {
       if (k === 0) retoolWorkshops(s, w, true);
     }
     // starting treasuries: ~ 4 months of tax income
-    for (const n of s.nations) n.treasury = Math.max(50, (n.income.tax || 0) * 4);
+    for (const n of s.nations) { n.treasury = Math.max(50, (n.income.tax || 0) * 4); n.credit = {}; n.creditAcc = {}; }
   },
   daily({ s, w }) {
     const b = s.day % BUCKETS;
@@ -835,4 +889,11 @@ export const economy: System = {
     harvests(s, w, date.y);
     retoolWorkshops(s, w);
   },
+};
+
+/** The close of the month's books (closeLedger): the last system of the tick, after every other system has booked
+ *  the month's income and costs (systems/index.ts). */
+export const ledger: System = {
+  id: 'ledger',
+  monthly({ s }) { closeLedger(s); },
 };

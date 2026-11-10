@@ -15,6 +15,7 @@ export function EconomyTab() {
   const net = p.income - p.expense;
   const inc = Object.entries(p.incomeBreak).filter(([, x]) => Math.abs(x) > 0.005).sort((a, b) => b[1] - a[1]);
   const exp = Object.entries(p.expenseBreak).filter(([, x]) => Math.abs(x) > 0.005).sort((a, b) => b[1] - a[1]);
+  const cred = Object.entries(p.creditBreak ?? {}).filter(([, x]) => Math.abs(x) > 0.005).sort((a, b) => b[1] - a[1]);
   const maxRow = Math.max(1, ...inc.map((x) => x[1]), ...exp.map((x) => x[1]));
   return <div class="tab-econ">
     <div class="stat-cards">
@@ -37,6 +38,10 @@ export function EconomyTab() {
         {!exp.length && <div class="muted small">{t('first_month_hint')}</div>}
       </Section>
     </div>
+    <div class="muted small">{p.ledgerEstimate ? t('x_ledger_estimate') : t('x_ledger_last')}</div>
+    {cred.length > 0 && <Section title={t('x_credit_moves')} id="eco-credit">
+      {cred.map(([k, x]) => <Tip tag="div" content={<div><TipHead name={keyName(k)} value={signed(x, 1)} hint={t('x_credit_hint')} /></div>}><div class="flow-row"><span>{keyName(k)}</span><span class="flow-bar"><i class={x >= 0 ? 'pos-bg' : 'neg-bg'} style={{ width: `${Math.min(100, (Math.abs(x) / maxRow) * 100)}%` }} /></span><span class={`r ${x >= 0 ? 'pos' : 'neg'}`}>{signed(x, 1)}</span></div></Tip>)}
+    </Section>}
     <div class="cols2">
       <Section title={t('taxes')} id="eco-tax">
         {CLASSES.map((c, k) => <div class="slider-row">
@@ -74,7 +79,7 @@ function Loans() {
   const loans: any[] = r?.loans ?? [];
   return <div class="loans">
     <div class="sub-h">{t('loans')}</div>
-    {loans.map((l) => <Row k={l.lender} v={<>{num(l.amount)} · {pct(l.rate, 1)} · {t('due')} {v ? fmtDateShort(l.due, v.startYear) : ''}</>} tip={<div><TipHead name={l.lender} value={num(l.amount)} /><div class="breakdown"><div class="bd-row"><span>{t('x_rate')}</span><span>{pct(l.rate, 1)}</span></div><div class="bd-row"><span>{t('x_loan_interest')}</span><span class="neg">−{num(l.amount * l.rate / 12, 2)}</span></div><div class="bd-row"><span>{t('x_due')}</span><span>{v ? fmtDateShort(l.due, v.startYear) : ''}</span></div></div><div class="muted">{t('loan_hint')}</div></div>} />)}
+    {loans.map((l) => <Row k={L(l.name ?? { en: l.lender, de: l.lender })} v={<>{num(l.amount)} · {pct(l.rate, 1)} · {t('due')} {v ? fmtDateShort(l.due, v.startYear) : ''}</>} tip={<div><TipHead name={L(l.name ?? { en: l.lender, de: l.lender })} value={num(l.amount)} /><div class="breakdown"><div class="bd-row"><span>{t('x_rate')}</span><span>{pct(l.rate, 1)}</span></div><div class="bd-row"><span>{t('x_loan_interest')}</span><span class="neg">−{num(l.amount * l.rate / 12, 2)}</span></div><div class="bd-row"><span>{t('x_due')}</span><span>{v ? fmtDateShort(l.due, v.startYear) : ''}</span></div></div><div class="muted">{t('loan_hint')}</div></div>} />)}
     {!loans.length && <div class="muted small">{t('no_loans')}</div>}
     <div class="act-row">
       <select value={a} onChange={(e) => setAmt(Number((e.target as HTMLSelectElement).value))}>{[0.25, 0.5, 0.75, 1].map((f) => { const x = Math.round(Math.max(10, max * f)); return <option value={x}>{num(x)}</option>; })}</select>
@@ -172,7 +177,7 @@ function LoansTip() {
   const loans: any[] = r?.loans ?? [];
   return <div>
     <TipHead name={t('loans')} value={num(p.loans)} hint={t('loan_hint')} />
-    {loans.length > 0 && <div class="breakdown"><div class="bd-title">{t('x_loan_interest')}</div>{loans.map((l) => <div class="bd-row"><span>{l.lender} · {pct(l.rate, 1)}{v ? ` · ${fmtDateShort(l.due, v.startYear)}` : ''}</span><span class="neg">−{num(l.amount * l.rate / 12, 2)}</span></div>)}</div>}
+    {loans.length > 0 && <div class="breakdown"><div class="bd-title">{t('x_loan_interest')}</div>{loans.map((l) => <div class="bd-row"><span>{L(l.name ?? { en: l.lender, de: l.lender })} · {pct(l.rate, 1)}{v ? ` · ${fmtDateShort(l.due, v.startYear)}` : ''}</span><span class="neg">−{num(l.amount * l.rate / 12, 2)}</span></div>)}</div>}
     {p.debt > 0 && <div class="neg">{t('debt')}: {num(p.debt)}</div>}
     <div class="muted">{t('x_debt_hint')}</div>
   </div>;

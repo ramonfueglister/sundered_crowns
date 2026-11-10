@@ -965,6 +965,12 @@ const S: Record<string, [string, string]> = {
   terra_incognita: ['Terra incognita', 'Terra incognita'],
   terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
+  // ---- fix-econ
+  x_ledger_last: ['Last month', 'Letzter Monat'],
+  x_ledger_estimate: ['Estimate for the first month: income as the realm stands now, recurring costs (court, armies, fleets, fortresses, graft, tribute) as the month will charge them.', 'Schätzung für den ersten Monat: Einnahmen nach dem jetzigen Stand des Reiches, laufende Kosten (Hof, Heere, Flotten, Festungen, Veruntreuung, Tribut) so, wie der Monat sie verbuchen wird.'],
+  x_credit_moves: ['Loans and other movements', 'Kredite und sonstige Bewegungen'],
+  x_credit_hint: ['Money that moved through the chest without being income or spending: loans taken and repaid, debts written off, and gold that changed hands without a line of its own (gifts, treaties, agents).', 'Geld, das durch die Kasse ging, ohne Einnahme oder Ausgabe zu sein: aufgenommene und getilgte Kredite, abgeschriebene Schulden und Gold, das ohne eigene Zeile den Besitzer wechselte (Geschenke, Verträge, Agenten).'],
+  x_treasury_change: ['Change of the treasury', 'Veränderung des Schatzes'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

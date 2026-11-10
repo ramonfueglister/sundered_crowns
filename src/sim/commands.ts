@@ -9,7 +9,7 @@ import { availableCommanders, setCommander, raiseGeneral, generalCost } from './
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
-import { takeLoan, tariffMax } from './systems/economy';
+import { takeLoan, tariffMax, addCredit } from './systems/economy';
 import { setMethod } from './systems/administration';
 import { setDuty, DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
@@ -262,7 +262,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       }
       const l = n.loans[0]; if (!l) return err('no loans');
       if (n.treasury < l.amount) return err('not enough gold');
-      n.treasury -= l.amount; n.loans.shift(); return OK;
+      addCredit(n, 'loan_repay', -l.amount); n.loans.shift(); return OK;
     }
     case 'merchant': { const e = setMerchants(s, w, n, cmd.market, cmd.amount, cmd.steer); return e ? err(e) : OK; }
     case 'integrate': {

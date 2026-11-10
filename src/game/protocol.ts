@@ -99,6 +99,8 @@ export interface PlayerView {
   merchants: { used: number; cap: number };
   electionCloses?: number;                         // an imperial election this realm must still vote in closes that day (realm pass)
   asks?: number;                                   // offers of mediation and calls of the league awaiting this realm's answer (realm pass)
+  creditBreak?: Record<string, number>;            // fix-econ: last month's loans taken and repaid, debts written off, other movements
+  ledgerEstimate?: boolean;                        // fix-econ: the ledger shows the first month's costs estimated at the start
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

@@ -1,6 +1,7 @@
-// System order matters: economy first (prices, incomes), then politics, armies, wars, diplomacy, society, knowledge, events, AI.
+// System order matters: economy first (prices, incomes), then politics, armies, wars, diplomacy, society, knowledge, events, AI;
+// the ledger last, so that the month's books close after every system has booked its income and costs.
 import type { System } from '../ctx';
-import { economy } from './economy';
+import { economy, ledger } from './economy';
 import { politics } from './politics';
 import { military, releaseNation, newArmy, availableUnits, landFaith, khanFaith } from './military';
 import { war, _setMilitary, GOAL_PLACES } from './war';
@@ -26,4 +27,4 @@ _setMilitary({ releaseNation, newArmy, availableUnits, landFaith, khanFaith });
 // the towns a war of conquest is fought for include the places the realm's own goals name (systems/war.ts warGoalLocs)
 GOAL_PLACES.f = (s, w, n) => goalWants(s, w, n).places;
 
-export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai, victory];
+export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai, victory, ledger];

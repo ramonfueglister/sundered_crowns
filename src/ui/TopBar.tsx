@@ -25,6 +25,9 @@ const KEY_NAMES: Record<string, [string, string]> = {
   land_tax: ['Land tax', 'Grundsteuer'], hearth_tax: ['Hearth tax', 'Herdsteuer'], excise: ['Excise', 'Akzise'], privateers: ['Privateering', 'Kaperei'], methods: ['Reorganised workshops', 'Umgestellte Werkstätten'],
   // ---- war pass: obligations of a peace and the refill of regiments
   reparations: ['War reparations', 'Kriegsentschädigung'], trade_privileges: ['Trade privileges', 'Handelsprivilegien'], reinforcements: ['Reinforcements', 'Verstärkungen'],
+  // ---- fix-econ: event gold, generals' pay, the movements of the credit ledger (systems/economy.ts closeLedger)
+  events: ['Events', 'Ereignisse'], generals: ['Generals', 'Feldherren'], written_off: ['Deficit written off (bankrupt)', 'Abgeschriebenes Defizit (Bankrott)'],
+  other: ['Other movements (gifts, treaties, agents, decisions)', 'Sonstige Bewegungen (Geschenke, Verträge, Agenten, Beschlüsse)'],
 };
 export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');
 

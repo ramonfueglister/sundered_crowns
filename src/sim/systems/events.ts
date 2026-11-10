@@ -3,7 +3,7 @@
 import { techBase } from './progress';
 import type { GameState, Nation, I18n } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies } from '../ctx';
+import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies, addIncome, addExpense } from '../ctx';
 import { B, C, CL } from '../defs';
 import { chance, rand, pick } from '../rng';
 import { acceptProposal } from './diplomacy';
@@ -42,6 +42,8 @@ export interface DecisionDef {
   once?: boolean;                    // once per realm
 }
 
+/** Gold an event gives or takes, booked in the realm's ledger as income or expense 'events'. */
+function bookEvent(n: Nation, v: number) { if (v >= 0) addIncome(n, 'events', v); else addExpense(n, 'events', -v); }
 /** Effects helpers used by content. Every mutation an event does should go through these so tooltips can describe them. */
 export class Effects {
   constructor(private e: () => EvApi) {}
@@ -51,8 +53,8 @@ export class Effects {
   authority(v: number) { this.n.authority = Math.max(0, this.n.authority + v); }
   prestige(v: number) { this.n.prestige = clamp(this.n.prestige + v, -100, 100); }
   /** gold in months of tax income (negative = cost) */
-  gold(months: number) { this.n.treasury += Math.max(10, this.n.income.tax || 10) * months; }
-  goldFlat(v: number) { this.n.treasury += v * this.s.priceLevel; }
+  gold(months: number) { bookEvent(this.n, Math.max(10, this.n.income.tax || 10) * months); }
+  goldFlat(v: number) { bookEvent(this.n, v * this.s.priceLevel); }
   manpower(frac: number) { this.n.manpower = clamp(this.n.manpower + this.n.maxManpower * frac, 0, this.n.maxManpower); }
   warExhaustion(v: number) { this.n.warExhaustion = clamp(this.n.warExhaustion + v, 0, 100); }
   inflation(v: number) { this.n.inflation = Math.max(0, this.n.inflation + v); }

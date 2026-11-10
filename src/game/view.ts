@@ -17,7 +17,7 @@ import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrin
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate } from '../sim/systems/economy';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, lenderName } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
@@ -73,6 +73,7 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     merchants: { used: s.markets.reduce((p, m) => p + (m.merchants[n.id] || 0), 0), cap: merchantCap(n) },
     electionCloses: s.empire.election && s.empire.electors.includes(n.id) && s.empire.election.votes[n.id] === undefined ? s.empire.election.closes : 0,
     asks: (s.powers?.offers ?? []).filter((o) => o.to === n.id).length + s.leagues.reduce((p, l) => p + (l.calls ?? []).filter((c) => c.to === n.id).length, 0),
+    creditBreak: { ...(n.credit ?? {}) }, ledgerEstimate: !!n.flags.ledger_estimate, // fix-econ
   };
 }
 
@@ -396,7 +397,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     dutyUnrest: dutyUnrest(n), tariffMax: tariffMax(n), tariffMaxParts: [['x_base', 0.05], ...effectSources(n, 'tariff_max')] as BdRow[], loanRate: loanRate(s, n),
     diplomacy: { value: diploSkill(s, n), parts: [...effectSources(n, 'diplomacy'), ['x_chancellor', councilBonus(s, n, 'chancellor')]] as BdRow[] },
     tradition: traditionOf(n),
-    loans: n.loans, history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
+    loans: n.loans.map((l) => ({ ...l, name: lenderName(l.lender) })), history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
     situations: s.situations.map((x) => { const d = SITUATIONS.find((y) => y.id === x.id); return { ...x, name: d?.name, desc: d?.desc, stageName: d?.stages?.[x.stage] }; }),
     constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc], building: BUILDINGS[c.building].name })),
     recruits: s.recruits.filter((r) => r.nation === player).map((r) => ({ ...r, name: w.names[r.loc], unit: UNITS[r.type].name })),

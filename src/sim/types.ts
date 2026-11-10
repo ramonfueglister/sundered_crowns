@@ -49,6 +49,9 @@ export interface Nation {
   coinage: number;       // debasement 0..0.5
   income: LedgerEntry; expense: LedgerEntry; // last month
   incomeAcc: LedgerEntry; expenseAcc: LedgerEntry; // current month accumulators
+  // fix-econ: money that moved through the chest without being income or spending (loans taken and repaid, a bankrupt
+  // crown's deficit written off, other movements found at the close); last month and the current month (systems/economy.ts)
+  credit?: LedgerEntry; creditAcc?: LedgerEntry;
   history: { day: number; treasury: number; income: number; expense: number; manpower: number; locs: number; pop: number; dev: number; army?: number; score?: number }[];
   armyMaint: number; navyMaint: number; // 0.25..1 spending sliders
   // politics
