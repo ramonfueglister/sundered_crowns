@@ -968,6 +968,9 @@ const S: Record<string, [string, string]> = {
   // ---- fix-map
   entry_one: ['entry', 'Eintrag'],
   x_maptip_nobody: ['Nobody', 'Niemand'], x_maptip_held_by: ['Occupied by', 'Besetzt von'],
+  x_ledger_col_dev: ['Dev.', 'Entw.'], x_ledger_col_pop: ['Pop.', 'Bevölk.'], x_ledger_col_income: ['Income', 'Einn.'], x_ledger_col_tech: ['Tech', 'Wissen'],
+  x_ledger_reckoned: ['reckoned', 'gewertet am'], x_ledger_today: ['Today', 'Heute'],
+  x_ledger_score_month: ['The score is reckoned on the first of each month, and the ranking and the score victory use that figure. The parts above are today\'s.', 'Die Wertung wird am Monatsersten berechnet; Rang und Punktesieg rechnen mit diesem Stand. Die Teile oben zeigen den heutigen.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

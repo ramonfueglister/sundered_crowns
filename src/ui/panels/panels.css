@@ -518,3 +518,7 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .right-col { bottom: max(130px, calc(var(--mm-h, 74px) + 10px)); }
 .notices { max-height: calc(100% - 66px - var(--mm-h, 74px)); overflow: hidden; }
 
+/* the realms table fits its panel: brief column names (records.tsx), long realm names cut */
+.tbl.ledger td:nth-child(2) { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl.ledger th, .tbl.ledger td { padding-left: 3px; padding-right: 3px; }
+.tip-note { max-width: 280px; margin-top: 4px; line-height: 1.3; }

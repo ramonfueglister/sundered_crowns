@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { chronicle, ownChronicle, view, nations } from '../../game/client';
 import { playerId, openPanel } from '../store';
 import { Btn, Empty, NLink, NList, Tabs, useQuery, t, L, num, signed, fmtDateShort, selectLoc, Tip, realm, useRealm } from './common';
+import { dayToDate } from '../../sim/calendar';
 import { Parts, TipHead } from './explain';
 import { keyName } from '../TopBar';
 import { ChronicleExport } from './victory';
@@ -24,8 +25,10 @@ export function LedgerTab() {
   const getter = cs.find((c) => c[0] === sort.k)?.[2] ?? cs[1][2];
   const data = [...(rows ?? [])].sort((a, b) => { const x = getter(a), y = getter(b); return (typeof x === 'string' ? String(x).localeCompare(String(y)) : x - y) * sort.d; });
   const hint = (k: string) => { const h = t(`x_col_${kind}_${k}`); return h === `x_col_${kind}_${k}` ? null : h; };
-  const head = (k: string, label: string) => { const h = hint(k); const th = <th class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{label}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</th>;
-    return h ? <Tip tag="th" content={<div><TipHead name={label} hint={h} /></div>} class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{label}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</Tip> : th; };
+  // the realms table names its long columns briefly so all ten fit the panel; the tooltip gives the full name
+  const brief: Record<string, string> = kind === 'nations' ? { dev: t('x_ledger_col_dev'), pop: t('x_ledger_col_pop'), income: t('x_ledger_col_income'), tech: t('x_ledger_col_tech') } : {};
+  const head = (k: string, label: string) => { const h = hint(k); const shown = brief[k] ?? label; const th = <th title={shown !== label ? label : undefined} class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{shown}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</th>;
+    return h ? <Tip tag="th" content={<div><TipHead name={label} hint={h} /></div>} class={`sortable ${sort.k === k ? 'on' : ''} ${k === 'name' || k === 'top' || k === 'owner' ? '' : 'r'}`} onClick={() => setSort({ k, d: sort.k === k ? -sort.d : k === 'name' ? 1 : -1 })}>{shown}{sort.k === k ? (sort.d < 0 ? ' ▾' : ' ▴') : ''}</Tip> : th; };
   return <div class="tab-ledger">
     <Tabs tabs={[['nations', t('realms')], ['markets', t('markets')], ['wars', t('wars')]]} value={kind} onChange={(k) => { setKind(k); setSort({ k: k === 'markets' ? 'priceIndex' : 'score', d: -1 }); }} />
     {!rows ? <Empty>{t('loading')}…</Empty> : <div class="tbl-wrap"><table class="tbl ledger">
@@ -45,9 +48,14 @@ export function LedgerTab() {
 /** Everything about one realm of the ledger: score in parts, largest incomes, levels of knowledge. */
 function LedgerRowTip({ r, rank }: { r: any; rank: number }) {
   const parts: [string, number][] = r.scoreParts ?? [];
+  // the score (column, ranking, victory) is reckoned on the first of each month; the parts are today's: both shown, dated
+  const today = parts.reduce((p, x) => p + x[1], 0);
+  const v = view.value; const d = v ? dayToDate(v.day, v.startYear) : null;
+  const reckoned = v && d ? fmtDateShort(v.day - (d.d - 1), v.startYear) : '';
   return <div class="tip-cols">
     <div><TipHead name={L(r.name)} value={`#${rank}`} hint={t('x_ledger_row_hint')} />
-      <Parts title={`${t('score')} ${num(r.score)}`} rows={parts} total={parts.reduce((p, x) => p + x[1], 0)} fmt={(v) => num(v, 1)} /></div>
+      <Parts title={<>{t('score')} {num(r.score, 1)} <span class="muted">({t('x_ledger_reckoned')} {reckoned})</span></>} rows={parts} total={today} totalLabel={v ? `${t('x_ledger_today')} (${fmtDateShort(v.day, v.startYear)})` : '='} fmt={(x) => num(x, 1)} />
+      <div class="muted small tip-note">{t('x_ledger_score_month')}</div></div>
     <div><Parts title={`${t('income')} ${num(r.income, 1)}`} rows={(r.incomeTop ?? []).map(([k, x]: [string, number]) => [keyName(k), x])} fmt={(v) => num(v, 1)} />
       <div class="breakdown"><div class="bd-title">{t('technology')} {r.tech}</div>{(r.techs ?? []).map((lv: number, k: number) => <div class="bd-row"><span>{realm.value?.tech?.[k] ? L(realm.value.tech[k].name) : k + 1}</span><span>{lv}</span></div>)}</div></div>
   </div>;
