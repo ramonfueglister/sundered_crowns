@@ -1004,6 +1004,9 @@ const S: Record<string, [string, string]> = {
   ex_voyage_rule: ['The route decides: a voyage that sails more than 1,500 km at a stretch out of sight of land is an ocean voyage (Commerce & Learning 10 and the Age of Print and Horizons); one that keeps near the coasts needs Commerce & Learning 6, however far it goes.', 'Der Seeweg entscheidet: Eine Fahrt, die mehr als 1.500 km am Stück außer Sicht von Land segelt, ist eine Ozeanfahrt (Handel & Gelehrsamkeit 10 und das Zeitalter von Druck und Horizonten); eine, die sich an die Küsten hält, braucht Handel & Gelehrsamkeit 6, wie weit sie auch führt.'],
   ex_next_charter: ['Next charter at Commerce & Learning', 'Nächster Freibrief bei Handel & Gelehrsamkeit'],
   ex_next_charter_at: ['next at Commerce & Learning {n}', 'nächster bei Handel & Gelehrsamkeit {n}'],
+  x_kept_value: ['goods value', 'Warenwert'], x_kept_margin_short: ['margin', 'Marge'],
+  x_kept_margin: ['Margin of the goods kept out', 'Marge der ferngehaltenen Waren'],
+  x_kept_why: ['A tariff takes {cut} of the price off the trader\'s margin, and each flow shrinks by the share of its margin that this takes: goods with thin margins stay away altogether, goods with fat margins hardly notice. The value kept out is the goods\' price, not lost income: the traders lose the margin shown, and our markets have less of these goods on offer.', 'Ein Zoll nimmt dem Händler {cut} des Preises von seiner Marge, und jeder Warenstrom schrumpft um den Anteil seiner Marge, den das kostet: Waren mit dünner Marge bleiben ganz weg, Waren mit dicker Marge merken es kaum. Der ferngehaltene Wert ist der Preis der Waren, kein entgangenes Einkommen: Die Händler verlieren die gezeigte Marge, unsere Märkte haben weniger dieser Waren im Angebot.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

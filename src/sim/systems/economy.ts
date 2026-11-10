@@ -551,7 +551,15 @@ function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolea
     const steer = 1 + 0.5 * (STQ[from.id * STM + to.id] || 0);
     const qtyOf = (d: number) => d <= 0 ? 0 : Math.min(surplus * 0.35, surplus * clamp(d / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked) * agree;
     const qty = qtyOf(diff);
-    if (tr > 0) to.deter = (to.deter ?? 0) + Math.max(0, qtyOf(diff0) - qty) * from.price[g];
+    if (tr > 0) {
+      // what the tariff kept out: the part of the flow it removed, with the margin that part would have made (the flow
+      // shrinks by the share of its margin the tariff takes, so thin-margin goods stay away altogether)
+      const lost = Math.max(0, qtyOf(diff0) - qty);
+      if (lost > 0) {
+        to.deter = (to.deter ?? 0) + lost * from.price[g];
+        const by = (to.deterBy ??= {}); const e = (by[g] ??= [0, 0]); e[0] += lost * from.price[g]; e[1] += lost * diff0;
+      }
+    }
     if (qty <= 1e-6) continue;
     from.sAcc[g] -= qty; to.sAcc[g] += qty;
     from.flowOut[g] += qty; to.flowOut[g] -= qty;
@@ -582,7 +590,7 @@ export function clearMarkets(s: GameState, w: World) {
       if (path?.length) STQ[p.m * M + path[0]] += r.total / p.total;
     }
   }
-  for (const m of ms) m.deter = 0;
+  for (const m of ms) { m.deter = 0; m.deterBy = {}; }
   // 0. turn per-tier demand units into demand for each good
   for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
   // 1. inter-market trade on last month's prices

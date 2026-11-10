@@ -257,7 +257,7 @@ function PolicyView() {
       <div class="grid2">
         <Row k={t('tr_tariff_max')} v={pct(d.max)} tip={() => <div><TipHead name={t('tr_tariff_max')} value={pct(d.max)} hint={t('tr_tariff_max_hint')} /><Parts rows={d.maxParts} fmt={(v) => pct(v)} total={d.max} /></div>} />
         <Row k={t('tr_tariff_earned')} v={<span class="pos">+{num(d.earned, 1)}</span>} tip={() => <TariffTip d={d} />} />
-        <Row k={t('tr_kept_out')} v={<span class={d.deter > 0 ? 'neg' : ''}>{num(d.deter, 1)}</span>} tip={() => <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />{d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: placeName(m.name) }, m.deter])} digits={1} />}</div>} />
+        <Row k={t('tr_kept_out')} v={<span class={d.deter > 0 ? 'neg' : ''}>{num(d.deter, 1)}</span>} tip={() => <KeptOutTip d={d} />} />
         <Row k={keyName('trade')} v={<span class="pos">+{num(d.trade + d.company, 1)}</span>} tip={<div><TipHead name={keyName('trade')} value={num(d.trade + d.company, 1)} hint={t('kh_trade')} /><div class="breakdown"><div class="bd-row"><span>{keyName('trade')}</span><span>{num(d.trade, 1)}</span></div><div class="bd-row"><span>{keyName('company')}</span><span>{num(d.company, 1)}</span></div></div></div>} />
       </div>
     </Section>
@@ -289,9 +289,25 @@ function TariffTip({ d }: { d: any }) {
       <div class="bd-row"><span>{keyName('tariffs')}</span><span class="pos">+{num(d.earned, 1)} {t('x_per_month')}</span></div>
       <div class="bd-title">{t('tr_tariff_costs')}</div>
       <div class="bd-row"><span>{t('tr_kept_out')}</span><span class="neg">{num(d.deter, 1)}</span></div>
+      {d.deter > 0 && <div class="bd-row"><span>{t('x_kept_margin')}</span><span>{num(d.keptMargin ?? 0, 1)}</span></div>}
       <div class="bd-row"><span>{t('tr_partners_pay')}</span><span>× {num(d.agreementTariff, 2)}</span></div>
     </div>
     <div class="muted small">{t('tr_tariff_note')}</div>
+  </div>;
+}
+
+/** What our tariff kept out last month: by market, and by good with the margin those goods would have made. A tariff
+ *  takes half its rate off the trader's margin, so it closes the thin-margin flows first. */
+function KeptOutTip({ d }: { d: any }) {
+  const share = d.deter > 0 ? (d.keptMargin ?? 0) / d.deter : 0;
+  return <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />
+    {d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: placeName(m.name) }, m.deter])} digits={1} />}
+    {d.keptOut?.length > 0 && <div class="breakdown">
+      <div class="bd-row muted small"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
+      {d.keptOut.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.v, 1)} · {pct(x.margin, 1)}</span></div>)}
+      <div class="bd-row bd-total"><span>{t('x_kept_margin')}</span><span>{num(d.keptMargin ?? 0, 1)} ({pct(share, 1)})</span></div>
+    </div>}
+    {d.deter > 0 && <div class="muted small">{t('x_kept_why').replace('{cut}', pct(d.tariff * 0.5, 1))}</div>}
   </div>;
 }
 

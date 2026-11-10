@@ -194,6 +194,7 @@ export interface Market {
   deter?: number;                   // value of imports the ruler's tariff kept out last month
   // fix-econ: what of paid was each realm's share of this market's own trade, and the trade steered in by its source market
   own?: Record<number, number>; tinFrom?: Record<number, number>;
+  deterBy?: Record<number, [number, number]>; // fix-econ: per good, [value kept out by the tariff, margin of that part]
 }
 export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
 

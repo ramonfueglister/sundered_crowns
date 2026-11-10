@@ -7,7 +7,8 @@ import { createGame } from '../src/sim/setup';
 import { advanceDay, serialize, deserialize } from '../src/sim/engine';
 import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
-import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON } from '../src/sim/systems/economy';
+import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax } from '../src/sim/systems/economy';
+import { tradePolicy } from '../src/game/tradeview';
 import { methodsView } from '../src/game/methodsview';
 import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } from '../src/sim/systems/explore';
 import { answer, playerView } from '../src/game/view';
@@ -220,5 +221,23 @@ describe('expeditions are measured along their route', () => {
     // and a fleet sent by startExplorer obeys the same rule
     const f = s.armies.find((a) => a.owner === n.id && a.fleet)!;
     expect(startExplorer(s, w, n, f.id, red.to)).toBe('an ocean voyage needs Commerce 10');
+  });
+});
+
+describe('what a tariff keeps out is told by good, with the margin it would have made', () => {
+  it('the kept-out value splits by good, and its margin is a small part of it', () => {
+    const s = fresh('england'); const n = nat(s, 'england');
+    n.tariff = tariffMax(n);
+    toNextClose(s); toNextClose(s);
+    const d = tradePolicy(s, w, n.id)!;
+    expect(d.deter).toBeGreaterThan(0);
+    let v = 0, mg = 0;
+    for (const m of s.markets) if (m.owner === n.id) for (const [x, y] of Object.values(m.deterBy ?? {})) { v += x; mg += y; }
+    expect(v).toBeCloseTo(d.deter, 6);
+    expect(d.keptMargin).toBeCloseTo(mg, 6);
+    expect(d.keptOut.reduce((p, x) => p + x.v, 0)).toBeLessThanOrEqual(d.deter + 1e-6);
+    // the goods value is not lost income: the margin of what was kept out is a fraction of its value
+    expect(d.keptMargin / d.deter).toBeLessThan(0.5);
+    expect(d.keptOut[0].margin).toBeGreaterThan(0);
   });
 });

@@ -148,8 +148,15 @@ export function goodDetail(s: GameState, w: World, pid: number, mid: number, g: 
 export function tradePolicy(s: GameState, w: World, pid: number) {
   const n = s.nations[pid]; if (!n) return null;
   const law = lawEffect(n, 'tariff_max');
-  let deter = 0; const ours: { id: number; name: string; deter: number }[] = [];
-  for (const m of s.markets) if (m.owner === pid) { deter += m.deter ?? 0; ours.push({ id: m.id, name: m.name, deter: m.deter ?? 0 }); }
+  let deter = 0, margin = 0; const ours: { id: number; name: string; deter: number }[] = [];
+  const byGood = new Map<number, [number, number]>();
+  for (const m of s.markets) if (m.owner === pid) {
+    deter += m.deter ?? 0; ours.push({ id: m.id, name: m.name, deter: m.deter ?? 0 });
+    for (const [g, [v, mg]] of Object.entries(m.deterBy ?? {})) { const e = byGood.get(+g) ?? [0, 0]; e[0] += v; e[1] += mg; byGood.set(+g, e); margin += mg; }
+  }
+  // per good: the value kept out and the margin it would have made (as a share of that value)
+  const keptOut = [...byGood].sort((a, b) => b[1][0] - a[1][0] || a[0] - b[0]).slice(0, 8)
+    .map(([g, [v, mg]]) => ({ g, name: GOODS[g].name, v, margin: v > 0 ? mg / v : 0 }));
   const partners = treatiesOf(s, pid, 'trade').map((o) => {
     const tr = s.treaties.find((x) => x.type === 'trade' && ((x.a === pid && x.b === o) || (x.a === o && x.b === pid)));
     return { n: o, until: tr?.until ?? 0, theirs: tariffBetween(s, o, pid), ours: tariffBetween(s, pid, o) };
@@ -166,7 +173,7 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
     .map(([o, v]) => ({ n: o, goods: v, agreement: hasTreaty(s, pid, o, 'trade'), embargo: embargoedBy(s, pid, o) || embargoedBy(s, o, pid), theirTariff: s.nations[o]?.tariff ?? 0 }));
   return {
     tariff: n.tariff, max: tariffMax(n), maxParts: [['x_base', 0.05], ['x_trade_law', law]] as [string, number][],
-    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours,
+    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours, keptOut, keptMargin: margin,
     agreementTariff: AGREEMENT_TARIFF, agreementVolume: AGREEMENT_VOLUME, partners, embargoes, traders,
   };
 }
