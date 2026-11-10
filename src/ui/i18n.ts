@@ -1013,15 +1013,16 @@ const S: Record<string, [string, string]> = {
   xp_ablest_all: ['Fill the council with the ablest', 'Rat mit den Fähigsten besetzen'],
   xp_ablest_all_hint: ['Gives each office that someone at court would serve better to the ablest person still free, the largest gain first. Nobody gets two offices, and officials keep their seats: {k} changes, {n} Authority.', 'Vergibt jedes Amt, das jemand am Hof besser führen würde, an die fähigste noch freie Person, den größten Gewinn zuerst. Niemand erhält zwei Ämter, und wer schon ein Amt hat, behält es: {k} Wechsel, {n} Autorität.'],
   xp_ablest_all_done: ['Council filled with the ablest: {k} appointed', 'Rat mit den Fähigsten besetzt: {k} ernannt'],
-  xp_spy_cost: ['Cost of the operation', 'Kosten des Unternehmens'],
+  xp_spy_cost: ['Cost of the operation', 'Kosten der Unternehmung'],
   xp_spy_income: ['Share of our monthly income', 'Anteil unseres Monatseinkommens'],
   xp_spy_target: ["Size of the target realm", 'Größe des Zielreichs'],
   xp_spy_spymaster: ['Our spymaster', 'Unser Meister der Geheimnisse'],
-  xp_spy_floor: ['Least cost of an operation', 'Mindestkosten eines Unternehmens'],
+  xp_spy_floor: ['Raised to the least cost of an operation', 'Aufgerundet auf die Mindestkosten einer Unternehmung'],
   // review fixes (fix-people): the windows waiting behind the open one
   xp_next_waiting: ['Next ({n}):', 'Als Nächstes ({n}):'],
   // review fixes (fix-people): filling the council when the Authority does not reach
   xp_ablest_all_short: ['Our Authority ({a}) pays for {k} of the {m} changes: the first in this list.', 'Unsere Autorität ({a}) reicht für {k} der {m} Wechsel: die ersten dieser Liste.'],
+  xp_spy_income_share: ['{p} % of our monthly income', '{p} % unseres Monatseinkommens'],
   xp_ablest_all_part: ['{k} of {m} appointed; the Authority did not reach further', '{k} von {m} ernannt; für mehr reichte die Autorität nicht'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }

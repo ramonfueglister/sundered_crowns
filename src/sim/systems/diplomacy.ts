@@ -340,7 +340,7 @@ const SPY_BASE: Record<string, number> = { fabricate: 0.25, slander: 0.15, suppo
 const SPY_TARGET: Record<string, number> = { fabricate: 0.3, slander: 0.2, support_rebels: 0.3, steal_tech: 0.4 };
 /** What an operation of a's agents against b costs, with its parts (shown in the espionage section): a share of our
  *  monthly income, a share of the target's development, less up to 20 % for an able spymaster; never under 30. */
-export function spyCost(s: GameState, a: number, b: number, action: string): { cost: number; parts: [string, number][] } {
+export function spyCost(s: GameState, a: number, b: number, action: string): { cost: number; parts: [string, number][]; share: number } {
   const A = s.nations[a]; let inc = 0; for (const k in A.income) inc += Math.max(0, A.income[k]);
   const own = (SPY_BASE[action] ?? 0.25) * inc, size = (SPY_TARGET[action] ?? 0.3) * nationDev(s, b) * s.priceLevel;
   const off = -(own + size) * Math.min(0.2, councilBonus(s, A, 'spymaster') * 2);
@@ -348,7 +348,7 @@ export function spyCost(s: GameState, a: number, b: number, action: string): { c
   if (off) parts.push(['xp_spy_spymaster', off]);
   const raw = own + size + off, floor = 30 * s.priceLevel;
   if (raw < floor) parts.push(['xp_spy_floor', floor - raw]);
-  return { cost: Math.round(Math.max(floor, raw)), parts };
+  return { cost: Math.round(Math.max(floor, raw)), parts, share: SPY_BASE[action] ?? 0.25 }; // share: of our monthly income, for the label
 }
 export function startSpy(s: GameState, a: number, b: number, action: string): string | null {
   if (!SPY_ACTIONS.includes(action)) return 'unknown action';

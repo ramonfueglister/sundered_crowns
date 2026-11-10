@@ -44,12 +44,13 @@ export function TooltipLayer() {
 }
 export function hideTip() { tip.value = null; }
 
-/** A titled list of [label, value] rows with a total. */
-export function Breakdown({ title, rows, total, unit = '', digits = 1, sign = true }: { title?: string; rows: [string, number][]; total?: number; unit?: string; digits?: number; sign?: boolean }) {
+/** A titled list of [label, value] rows with a total. `invert`: the rows are a cost, so a part that adds to it is
+ *  shown as bad and one that lowers it as good. */
+export function Breakdown({ title, rows, total, unit = '', digits = 1, sign = true, invert = false }: { title?: string; rows: [string, number][]; total?: number; unit?: string; digits?: number; sign?: boolean; invert?: boolean }) {
   const r = rows.filter((x) => Math.abs(x[1]) > 1e-6).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
   return <div class="breakdown">
     {title && <div class="bd-title">{title}</div>}
-    {r.map(([k, v]) => <div class="bd-row"><span>{k}</span><span class={v >= 0 ? 'pos' : 'neg'}>{sign ? signed(v, digits) : num(v, digits)}{unit}</span></div>)}
+    {r.map(([k, v]) => <div class="bd-row"><span>{k}</span><span class={(v >= 0) !== invert ? 'pos' : 'neg'}>{sign ? signed(v, digits) : num(v, digits)}{unit}</span></div>)}
     {total !== undefined && <div class="bd-row bd-total"><span>Σ</span><span>{sign ? signed(total, digits) : num(total, digits)}{unit}</span></div>}
   </div>;
 }

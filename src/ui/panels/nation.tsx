@@ -219,13 +219,15 @@ function Espionage({ d }: { d: any }) {
   const mine = (r?.spies ?? []) as any[];
   const busy = mine.length >= 2;
   // what each operation costs against this realm, from the simulation (diplomacy.ts spyCost) with its parts
-  const costOf = (a: string): { cost: number; parts: [string, number][] } => d.rel?.spyCosts?.[a] ?? { cost: 0, parts: [] };
+  const costOf = (a: string): { cost: number; parts: [string, number][]; share?: number } => d.rel?.spyCosts?.[a] ?? { cost: 0, parts: [] };
+  // a cost: what adds to it shows as bad, the spymaster's saving as good; the income row names its share
+  const costRows = (a: string): [string, number][] => costOf(a).parts.map(([k, v]) => [k === 'xp_spy_income' ? t('xp_spy_income_share').replace('{p}', num((costOf(a).share ?? 0) * 100)) : k, v]);
   const here = mine.filter((s) => s.target === d.id);
   return <Section title={t('espionage')} id="nat-spy" open={false} right={<Tip content={<div><TipHead name={t('espionage')} value={`${mine.length}/2`} hint={t('x_spies_hint')} /></div>}><span class="muted has-tip">{mine.length}/2</span></Tip>}>
     {here.map((s) => <div class="kv"><span class="k">{t(`spy_${s.action}`)}</span><span class="v">{num((s.progress / Math.max(1, s.days)) * 100)} %</span></div>)}
     <div class="dip-list">{SPY.map((a) => <div class="dip-row">
       <Tip content={t(`spyhint_${a}`)}><span class="dname">{t(`spy_${a}`)}</span></Tip>
-      <Tip content={() => <Reasons title={t('xp_spy_cost')} rows={costOf(a).parts} total={costOf(a).cost} />}><span class="muted small has-tip">{num(costOf(a).cost)} <i class="ic gold sm" /></span></Tip>
+      <Tip content={() => <Reasons title={t('xp_spy_cost')} rows={costRows(a)} total={costOf(a).cost} invert />}><span class="muted small has-tip">{num(costOf(a).cost)} <i class="ic gold sm" /></span></Tip>
       <Btn disabled={busy ? 'all agents are busy' : here.some((s) => s.action === a) ? 'already under way' : (p?.treasury ?? 0) < costOf(a).cost ? 'not enough gold' : null} onClick={() => act({ t: 'spy', target: d.id, action: a }, 'click', t('spy_sent'))}>{t('do')}</Btn>
     </div>)}</div>
     <div class="muted small">{t('spy_risk')}</div>

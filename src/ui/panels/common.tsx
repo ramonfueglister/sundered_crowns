@@ -225,8 +225,8 @@ export function Effects({ fx, title }: { fx: Record<string, number> | null | und
 }
 
 /** Reasons breakdown with a translated label for each key. */
-export function Reasons({ rows, title, total }: { rows: [string, number][]; title?: string; total?: number }) {
-  return <Breakdown title={title} rows={rows.map(([k, v]) => [reasonLabel(k), v])} total={total ?? rows.reduce((p, x) => p + x[1], 0)} digits={0} />;
+export function Reasons({ rows, title, total, invert = false }: { rows: [string, number][]; title?: string; total?: number; invert?: boolean }) {
+  return <Breakdown title={title} rows={rows.map(([k, v]) => [reasonLabel(k), v])} total={total ?? rows.reduce((p, x) => p + x[1], 0)} digits={0} invert={invert} />;
 }
 export function reasonLabel(k: string): string {
   const v = t(`r_${k}`); if (v !== `r_${k}`) return v;
