@@ -5,7 +5,8 @@ import type { World } from './world';
 import { BUILDINGS, B, BI, RECIPES, UNITS } from './defs';
 import { clamp, notice, atWar, hasTreaty, bump } from './ctx';
 import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen, newArmy, unitCost, assault, scorchEarth } from './systems/military';
-import { availableCommanders, setCommander, raiseGeneral, generalCost } from './systems/commanders';
+import { availableCommanders, setCommander, raiseGeneral, generalCost, commanderSkill } from './systems/commanders';
+import { localName } from './content/names';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
@@ -141,9 +142,18 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       if (a.rebels) return err('not your army');
       if (cmd.char === 0) { appointGeneral(s, n, a); return OK; }
       if (cmd.char === -1) {
+        // the new captain joins the realm's generals; he takes this command only when he is abler than its commander
         const cost = generalCost(s, n); if (n.treasury < cost) return err('not enough gold');
         n.treasury -= cost; n.expenseAcc.generals = (n.expenseAcc.generals || 0) + cost;
-        setCommander(s, n, a, raiseGeneral(s, n, true, a.fleet)); return OK;
+        const g = raiseGeneral(s, n, true, a.fleet), cur = a.general ? s.chars[a.general] : undefined;
+        const take = !cur || !cur.alive || commanderSkill(g) > commanderSkill(cur);
+        if (take) setCommander(s, n, a, g);
+        const gs = commanderSkill(g), nm = { en: g.name, de: localName(g.name, 'de') };
+        return { ok: true, done: g.id, msg: take
+          ? { en: `${nm.en} (generalship ${gs}) takes command.`, de: `${nm.de} (Feldherrnkunst ${gs}) übernimmt den Befehl.` }
+          : commanderSkill(cur) > gs
+            ? { en: `${nm.en} (generalship ${gs}) joins our generals; ${cur!.name} (${commanderSkill(cur)}) is abler and keeps command.`, de: `${nm.de} (Feldherrnkunst ${gs}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${commanderSkill(cur)}) ist fähiger und behält den Befehl.` }
+            : { en: `${nm.en} (generalship ${gs}) joins our generals; ${cur!.name} (${commanderSkill(cur)}) is as able and keeps command.`, de: `${nm.de} (Feldherrnkunst ${gs}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${commanderSkill(cur)}) ist ebenso fähig und behält den Befehl.` } };
       }
       const c = s.chars[cmd.char]; if (!c || !c.alive || c.nation !== cmd.n) return err('no such person');
       if (!availableCommanders(s, n).some((x) => x.id === c.id)) return err('cannot lead an army');

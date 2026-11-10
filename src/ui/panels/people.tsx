@@ -1,7 +1,9 @@
 // People of the realm: names in the reader's language (German regnal numbers and epithets), the ruling house
 // (government tab), the choice of an army's commander (army panel) and what an AI realm did lately (nation panel).
 import { localName } from '../../sim/content/names';
+import { useEffect, useState } from 'preact/hooks';
 import { view } from '../../game/client';
+import { showToast } from '../store';
 import { Section, Btn, NLink, act, t, L, num, signed, Tip, useQuery, fmtDateShort } from './common';
 import { lang } from '../i18n';
 import { TipHead, Parts } from './explain';
@@ -64,8 +66,12 @@ export function DynastySection({ r }: { r: any }) {
 const pctS = (v: number) => `${signed(v * 100, 0)} %`;
 export function CommanderPicker({ army }: { army: number }) {
   const [d, refresh] = useQuery<any>({ q: 'commanders', army }, [army], 2500);
+  const [confirm, setConfirm] = useState(false);
+  useEffect(() => setConfirm(false), [army]);
   if (!d) return <div class="cmd-pick muted">{t('loading')}…</div>;
   const pick = (char: number) => act({ t: 'general', army, char }, 'click').then(() => refresh());
+  // raising a general costs real money: the price, what he may be worth and who commands now are shown before paying
+  const raise = () => act({ t: 'general', army, char: -1 }, null).then((r) => { if (r.ok && r.msg) showToast(L(r.msg)); setConfirm(false); refresh(); });
   return <div class="cmd-pick">
     <table class="tbl small"><thead><tr><th>{t('name')}</th><th class="r">{t('x_generalship')}</th><th class="r">{t('morale')}</th><th>{t('traits')}</th><th /></tr></thead>
       <tbody>{d.list.map((c: any) => <tr class={c.busy?.here ? 'sel' : ''}>
@@ -78,10 +84,16 @@ export function CommanderPicker({ army }: { army: number }) {
         <td>{c.busy?.here ? <span class="muted">{t('in_command')}</span> : <Btn onClick={() => pick(c.id)}>{t('appoint')}</Btn>}</td>
       </tr>)}</tbody></table>
     <div class="army-btns">
-      <Btn disabled={d.treasury < d.cost ? 'not enough gold' : null} onClick={() => pick(-1)}
-        tip={() => <div><TipHead name={t('recruit_general')} value={num(d.cost)} hint={t('x_recruit_general_hint')} /><Parts rows={d.costParts} total={d.cost} digits={0} bad /></div>}>{t('recruit_general')} ({num(d.cost)})</Btn>
+      <Btn cls={confirm ? 'on' : ''} disabled={d.treasury < d.cost ? 'not enough gold' : null} onClick={() => setConfirm(!confirm)}
+        tip={() => <div><TipHead name={t('recruit_general')} value={num(d.cost)} hint={t('xfw_raise_hint')} /><Parts rows={d.costParts} total={d.cost} digits={0} bad /></div>}>{t('recruit_general')}… ({num(d.cost)})</Btn>
       <Btn tip={t('auto_general_hint')} onClick={() => pick(0)}>{t('appoint_ablest')}</Btn>
     </div>
+    {confirm && <div class="warn-box xfw-raise">
+      <div><b>{t('recruit_general')}</b>: {t('xfw_raise_cost').replace('{n}', num(d.cost)).replace('{p}', num(d.cost / Math.max(1, d.treasury) * 100))} <span class="muted">({t(d.costParts[0][0])})</span></div>
+      <div>{t('xfw_raise_expect')}</div>
+      <div>{d.current ? t('xfw_raise_vs').replace('{name}', charName(d.current.name, d.current.female)).replace('{n}', num(d.current.skill, 1)) : t('xfw_raise_none')}</div>
+      <div class="act-row"><span class="spacer" /><Btn onClick={() => setConfirm(false)}>{t('cancel')}</Btn><Btn cls="gold" onClick={raise}>{t('xfw_raise_confirm').replace('{n}', num(d.cost))}</Btn></div>
+    </div>}
   </div>;
 }
 

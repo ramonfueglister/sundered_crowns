@@ -12,6 +12,8 @@ import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATT
 import { military, newArmy, siegeSteps, siegeCaptor, besiegersOf } from '../src/sim/systems/military';
 import { answer } from '../src/game/view';
 import { siegesView } from '../src/game/warview';
+import { applyCommand } from '../src/sim/commands';
+import { commanderSkill, generalCost } from '../src/sim/systems/commanders';
 import type { GameState, War } from '../src/sim/types';
 
 vi.setConfig({ testTimeout: 180_000 });
@@ -152,6 +154,31 @@ describe('the captor of a fort (major: the town fell to the first army in the li
     expect(siegeCaptor(sg, besiegersOf(s, sg)).owner).toBe(c);
     sg.nation = a;
     expect(siegeCaptor(sg, besiegersOf(s, sg)).owner).toBe(a);
+  });
+});
+
+describe('raising a general (major: it put a worse general in command)', () => {
+  it('the new captain joins the generals and takes command only when he is abler than the commander', () => {
+    const s = fresh(); clearField(s);
+    const n = nat(s, 'france'); s.playerNations = [n.id];
+    const A = newArmy(s, n.id, n.capital, [{ type: unit('men_at_arms'), men: 5000 }]);
+    expect(applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: 0 }).ok).toBe(true);
+    const cur = s.chars[A.general]; cur.skills[2] = 6; cur.traits = [];
+    n.treasury = 1e6;
+    const t0 = n.treasury, cost = generalCost(s, n);
+    const r = applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: -1 });
+    expect(r.ok).toBe(true);
+    expect(n.treasury).toBeCloseTo(t0 - cost, 6);
+    expect(A.general).toBe(cur.id); // the abler commander keeps command
+    const g = s.chars[r.done!];
+    expect(n.generals).toContain(g.id);
+    expect(commanderSkill(g)).toBeLessThanOrEqual(6);
+    expect(r.msg!.de).toContain('behält den Befehl');
+    // a weak commander gives way to the new captain
+    cur.skills[2] = 0;
+    const r2 = applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: -1 });
+    expect(A.general).toBe(r2.done);
+    expect(r2.msg!.de).toContain('übernimmt den Befehl');
   });
 });
 

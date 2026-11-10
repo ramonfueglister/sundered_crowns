@@ -977,6 +977,12 @@ const S: Record<string, [string, string]> = {
   xfw_cap_note: ['at most ±{cap}', 'höchstens ±{cap}'],
   xfw_capped_hint: ['Battles count only until the battles reach ±{cap} war score; in brackets what the battle would have been worth.', 'Schlachten zählen nur, bis sie zusammen ±{cap} Kriegspunkte erreichen; in Klammern steht, was die Schlacht sonst wert gewesen wäre.'],
   xfw_siege_blockade: ['Steps needed (the sea is closed)', 'Nötige Schritte (Seeweg gesperrt)'],
+  xfw_raise_hint: ['A seasoned captain of our own people joins our generals. He takes command of this host only if he is abler than its commander; otherwise he waits for another army.', 'Ein erfahrener Hauptmann aus unserem Volk tritt zu unseren Feldherren. Er übernimmt dieses Heer nur, wenn er fähiger ist als sein Befehlshaber; sonst wartet er auf ein anderes Heer.'],
+  xfw_raise_cost: ['{n} gold, {p} % of our treasury', '{n} Gold, {p} % unserer Schatzkammer'],
+  xfw_raise_expect: ['Generalship 2 to 5 (3.5 on average); nearly every second one brings a trait (Tactician +1, Rash +0.5, Cautious −0.5, Brave, Energetic).', 'Feldherrnkunst 2 bis 5 (im Mittel 3,5); fast jeder zweite bringt eine Eigenschaft mit (Taktiker +1, Unbesonnen +0,5, Vorsichtig −0,5, Tapfer, Tatkräftig).'],
+  xfw_raise_vs: ['Now in command: {name} (generalship {n}). The new captain takes over only if he is abler.', 'Jetzt im Befehl: {name} (Feldherrnkunst {n}). Der neue Hauptmann übernimmt nur, wenn er fähiger ist.'],
+  xfw_raise_none: ['This host has no commander: the new captain takes command.', 'Dieses Heer hat keinen Befehlshaber: Der neue Hauptmann übernimmt es.'],
+  xfw_raise_confirm: ['Raise for {n} gold', 'Für {n} Gold anwerben'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
