@@ -276,6 +276,94 @@ describe('a member asks the emperor for help', () => {
   });
 });
 
+describe('situation actions that would do nothing are refused; the code of the Bohemian crown', () => {
+  it('closing the gates or holding processions needs a wave of plague near us; protecting preachers needs places of the old faith', async () => {
+    const { SIT_EXTRA } = await import('../src/sim/content/situation_actions');
+    const { sitActionRefusal } = await import('../src/sim/systems/situations');
+    const sit = s.situations.find((x) => x.id === 'great_pestilence')!;
+    const b = nat('bohemia');
+    const q = SIT_EXTRA.great_pestilence.actions.find((a) => a.id === 'quarantine')!;
+    const pr = SIT_EXTRA.great_pestilence.actions.find((a) => a.id === 'processions')!;
+    const stage0 = sit.stage, P = s.loc.plague.slice();
+    try {
+      b.treasury = 1e6; b.authority = 500;
+      sit.stage = 0; s.loc.plague.fill(0);
+      expect(sitActionRefusal(s, w, b, sit, q)).toBe('no wave of plague is under way');
+      expect(sitActionRefusal(s, w, b, sit, pr)).toBe('no wave of plague is under way');
+      // a wave far away (in a place over 800 km from Prague, not ours)
+      sit.stage = 1;
+      const far = [...Array(w.L).keys()].find((l) => s.loc.owner[l] >= 0 && s.loc.owner[l] !== b.id && w.distKm(b.capital, l) > 1500)!;
+      s.loc.plague[far] = 0.5;
+      expect(sitActionRefusal(s, w, b, sit, q)).toBe('the plague is far from our realm');
+      // the plague in our own land
+      s.loc.plague[b.capital] = 0.5;
+      expect(sitActionRefusal(s, w, b, sit, q)).toBeNull();
+      expect(sitActionRefusal(s, w, b, sit, pr)).toBeNull();
+    } finally { sit.stage = stage0; s.loc.plague.set(P); }
+    // the reformation's preachers: only a realm with places of the old faith gains or loses anything
+    const ref = { id: 'reformation', active: true, progress: 0, stage: 0, started: 0, data: {} } as any;
+    const pp = SIT_EXTRA.reformation.actions.find((a) => a.id === 'protect_preachers')!;
+    const orth = s.nations.find((x) => x.alive && x.key === 'muscovy') ?? s.nations.find((x) => x.alive && x.faith !== b.faith)!;
+    orth.authority = 500;
+    expect(sitActionRefusal(s, w, orth, ref, pp)).toBe('none of our places hold the old faith');
+    expect(sitActionRefusal(s, w, b, ref, pp)).toBeNull();
+  });
+  it('the code starts with the game; its rows are its bar; judges carry it, foreign gold buries it, and it can be proclaimed from 30', async () => {
+    const { SIT_EXTRA } = await import('../src/sim/content/situation_actions');
+    const { situationAction } = await import('../src/sim/systems/situations');
+    const { kingsCodeRows, kingsCodeLevel } = await import('../src/sim/content/situations');
+    const b = nat('bohemia');
+    const sit = s.situations.find((x) => x.id === 'kings_code')!;
+    expect(sit).toBeTruthy(); expect(sit.active).toBe(true); expect(sit.data.b).toBe(b.id);
+    const keep = JSON.parse(JSON.stringify(sit)); const keepB = { auth: b.authority, tr: b.treasury, mods: b.modifiers.slice(), prestige: b.prestige, mag: estate(b, 'magnates').contentment };
+    try {
+      b.treasury = 1e6; b.authority = 200;
+      sit.progress = kingsCodeLevel(s, sit);
+      const rows = kingsCodeRows(s, sit);
+      expect(Math.round(rows.reduce((p, r) => p + r[1], 0))).toBe(sit.progress);
+      const v = answer(s, w, b.id, { q: 'situation', id: 'kings_code' } as any) as any;
+      expect(v.drivers.rows.length).toBe(rows.length);
+      expect(v.actions.find((a: any) => a.id === 'back_lords').refusal).toBe('we cannot back the lords against ourselves');
+      // judges: +20 (the magnates' displeasure costs back 2.5)
+      const p0 = sit.progress;
+      expect(situationAction(s, w, b, 'kings_code', 'royal_judges')).toBeNull();
+      expect(sit.progress).toBeGreaterThanOrEqual(p0 + 17);
+      // a rival's gold for the lords pulls it down
+      const rival = s.nations.find((x) => x.alive && x.key === 'hungary')!; rival.treasury = 1e6;
+      const p1 = sit.progress;
+      expect(situationAction(s, w, rival, 'kings_code', 'back_lords')).toBeNull();
+      expect(sit.progress).toBe(p1 - 20);
+      expect(sit.data.backers).toContain(rival.id);
+      expect(SIT_EXTRA.kings_code.sides(s, w, sit)[1].members).toContain(rival.id);
+      // below 30 the code cannot be proclaimed; with the judges everywhere and the lords left alone it can
+      sit.data.league = 0; sit.data.judges = 40; sit.progress = kingsCodeLevel(s, sit);
+      if (sit.progress < 30) { estate(b, 'magnates').contentment = 100; sit.progress = kingsCodeLevel(s, sit); }
+      expect(sit.progress).toBeGreaterThanOrEqual(30);
+      sit.data.judges = 0; const low = kingsCodeLevel(s, sit); sit.progress = low;
+      if (low < 30) expect(situationAction(s, w, b, 'kings_code', 'proclaim')).toBe('the code is not yet strong enough to proclaim');
+      sit.data.judges = 40; sit.progress = kingsCodeLevel(s, sit);
+      expect(situationAction(s, w, b, 'kings_code', 'proclaim')).toBeNull();
+      expect(sit.active).toBe(false); expect(sit.outcome).toBe('proclaimed');
+      expect(b.modifiers.some((m) => m.id === 'kings_code' && m.effects.authority_gain === 0.1)).toBe(true);
+    } finally {
+      for (const k of Object.keys(sit)) delete (sit as any)[k]; Object.assign(sit, keep); b.authority = keepB.auth; b.treasury = keepB.tr; b.modifiers = keepB.mods; b.prestige = keepB.prestige; estate(b, 'magnates').contentment = keepB.mag; delete s.flags.kings_code_done;
+    }
+  });
+  it('two years with the lords below -40 force the code to be withdrawn', async () => {
+    const { SITUATIONS } = await import('../src/sim/content/situations');
+    const b = nat('bohemia');
+    const sit = s.situations.find((x) => x.id === 'kings_code')!;
+    const d = SITUATIONS.find((x) => x.id === 'kings_code')!;
+    const keep = JSON.parse(JSON.stringify(sit)); const keepB = { mods: b.modifiers.slice(), prestige: b.prestige, mag: estate(b, 'magnates').contentment };
+    try {
+      sit.data.league = 40; estate(b, 'magnates').contentment = 0;
+      for (let i = 0; i < 30 && sit.active; i++) { sit.data.league = 40; estate(b, 'magnates').contentment = 0; d.monthly(s, w, sit, 1360, 1); }
+      expect(sit.active).toBe(false); expect(sit.outcome).toBe('withdrawn');
+      expect(b.modifiers.some((m) => m.id === 'lords_liberties')).toBe(true);
+    } finally { for (const k of Object.keys(sit)) delete (sit as any)[k]; Object.assign(sit, keep); b.modifiers = keepB.mods; b.prestige = keepB.prestige; estate(b, 'magnates').contentment = keepB.mag; delete s.flags.kings_code_done; }
+  });
+});
+
 describe('the select screen and the administration', () => {
   it('the realm lites mark the emperor and the electors (the select screen lists them)', async () => {
     const { nationLites } = await import('../src/game/view');

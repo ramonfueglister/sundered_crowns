@@ -179,7 +179,7 @@ function situationView(s: GameState, w: World, me: number, id: string) {
     id, name: d.name, desc: d.desc, stage: sit.stage, progress: sit.progress, started: sit.started, active: sit.active, outcome: sit.outcome,
     stages: (d.stages ?? []).map((x, i) => ({ name: x, info: ex?.stageInfo[i] })),
     sides: ex ? ex.sides(s, w, sit) : [{ name: { en: 'Involved', de: 'Beteiligt' }, members: d.involved ? d.involved(s, sit) : [] }],
-    drivers: dr,
+    drivers: dr, treasury: n?.treasury ?? 0,
     actions: ex && n ? ex.actions.map((a) => {
       const targets = a.targets ? a.targets(s, w, n, sit) : null;
       const refusal = targets ? (targets.length ? (targets.map((t) => sitActionRefusal(s, w, n, sit, a, t)).find((x) => !x) === undefined ? sitActionRefusal(s, w, n, sit, a, targets[0]) : null) : 'invalid target') : sitActionRefusal(s, w, n, sit, a);

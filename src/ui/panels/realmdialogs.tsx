@@ -154,6 +154,7 @@ function SituationWindow({ id }: { id: string }) {
   const pid = playerId.value;
   const [x, refresh] = useQuery<any>({ q: 'situation', id }, [pid, id], 1000);
   const [target, setTarget] = useState<Record<string, number>>({});
+  const [confirm, setConfirm] = useState<string | null>(null);
   if (!x) return <Modal title={t('situations')}><Empty>{t('loading')}…</Empty></Modal>;
   const dr = x.drivers;
   const cost = (c: any) => [c.gold ? `${num(c.gold)} ${t('gold')}` : '', c.authority ? `${c.authority} ${t('authority')}` : '', c.prestige ? `${c.prestige} ${t('prestige')}` : ''].filter(Boolean).join(', ');
@@ -175,9 +176,18 @@ function SituationWindow({ id }: { id: string }) {
         <div class="small">{L(a.desc)}</div>
         <div class="btn-row">
           {a.targets && a.targets.length > 0 && <span class="chips">{a.targets.map((tg: number) => <span class={`chip ${(target[a.id] ?? a.targets[0]) === tg ? 'on' : ''}`} onClick={() => setTarget({ ...target, [a.id]: tg })}><NLink id={tg} size={12} /></span>)}</span>}
-          <Btn disabled={a.refusal ? errText(a.refusal) : null} onClick={async () => { await act({ t: 'situation', id: x.id, action: a.id, target: a.targets ? (target[a.id] ?? a.targets[0]) : undefined }); refresh(); }}>{t('x_sit_do')}</Btn>
+          <Btn disabled={a.refusal ? errText(a.refusal) : null} onClick={async () => {
+            // an action that costs something is confirmed first (it cannot be undone); every action says what it did
+            if (cost(a.cost) && confirm !== a.id) { setConfirm(a.id); return; }
+            setConfirm(null);
+            const day = view.value?.day ?? 0;
+            const ok = a.cooldown > 0 ? fill('x_sit_done_again', { a: L(a.name), d: date(day + a.cooldown) }) : fill('x_sit_done', { a: L(a.name) });
+            await act({ t: 'situation', id: x.id, action: a.id, target: a.targets ? (target[a.id] ?? a.targets[0]) : undefined }, 'click', ok); refresh();
+          }}>{confirm === a.id ? t('x_sit_confirm_yes') : t('x_sit_do')}</Btn>
+          {confirm === a.id && <Btn onClick={() => setConfirm(null)}>{t('cancel')}</Btn>}
           {a.ready > (view.value?.day ?? 0) && <span class="muted small">{t('x_sit_again')} {date(a.ready)}</span>}
         </div>
+        {confirm === a.id && <div class="warn-box small">{fill('x_sit_confirm', { cost: cost(a.cost) })} {a.cost.gold && x.treasury > 0 ? fill('x_sit_confirm_share', { p: pct(a.cost.gold / x.treasury, 0) }) : ''}</div>}
       </div>) : <div class="muted small">{t('x_sit_no_actions')}</div>}
     </Section>
   </Modal>;
