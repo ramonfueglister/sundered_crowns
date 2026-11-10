@@ -520,35 +520,69 @@ export function termCost(s: GameState, war: War, t: PeaceTerm, from: number, to:
   return 10;
 }
 
-/** AI willingness: positive = accepts. Returns reasons for the UI. */
+/** Years a war has run in this game: a war that began before the game (the historical wars of the setup are dated back
+ *  up to 30 years) counts from the first day, so that it is not weary of a war it never fought. */
+export function warYears(s: GameState, war: War): number { return (s.day - Math.max(war.start, 0)) / 365; }
+/** Men under arms on land: a realm with its subjects, or a whole side of a war. */
+function landMen(s: GameState, realms: Set<number>): number {
+  let m = 0;
+  for (const a of s.armies) if (!a.fleet && !a.rebels && realms.has(a.owner)) for (const r of a.regs) m += r.men;
+  return m;
+}
+/** The balance in the field as the receiver of an offer sees it: its own host (with its subjects in the war) against the
+ *  offerer's, and the allies on each side against each other. A side much stronger in the field gives in less readily,
+ *  a weaker one more readily (each at most ±12). Also returns the receiver's side's share of all men in the war. */
+export function fieldBalance(s: GameState, war: War, from: number, to: number): { own: number; allies: number; share: number } {
+  const toSide = war.att.includes(to) ? war.att : war.def, fromSide = toSide === war.att ? war.def : war.att;
+  const core = (lead: number, side: number[]) => new Set([lead, ...side.filter((x) => s.nations[x]?.overlord === lead)]);
+  const ownT = core(to, toSide), ownF = core(from, fromSide);
+  const mT = landMen(s, ownT), mF = landMen(s, ownF);
+  const aT = landMen(s, new Set(toSide.filter((x) => !ownT.has(x)))), aF = landMen(s, new Set(fromSide.filter((x) => !ownF.has(x))));
+  // a tenth of all the men in the war as a cushion, so that a few hundred men more or less do not swing the answer
+  const k = Math.max(500, (mT + mF + aT + aF) * 0.1);
+  const lg = (x: number, y: number) => Math.log2((x + k) / (y + k));
+  return { own: clamp(Math.round(-10 * lg(mT, mF)), -12, 12), allies: clamp(Math.round(-10 * lg(aT, aF)), -12, 12), share: (mT + aT) / Math.max(1, mT + aT + mF + aF) };
+}
+/** AI willingness: positive = accepts. Returns reasons for the UI; the rows (but 'not_enough_war_score', a condition) add
+ *  up to the score, and a white peace adds its +5 unlisted (the peace panel lists it, see game/view.ts peaceAnswer). */
 export function evaluatePeace(s: GameState, war: War, from: number, to: number, terms: PeaceTerm[]): { accept: boolean; score: number; reasons: [string, number][] } {
   const reasons: [string, number][] = [];
   const fromAtt = war.att.includes(from);
   const score = computeScore(s, war) * (fromAtt ? 1 : -1); // war score from the offerer's perspective
   const cost = terms.reduce((p, t) => p + termCost(s, war, t, from, to), 0);
   const white = terms.length === 0 || terms.every((t) => t.type === 'white_peace');
-  reasons.push(['war_score', Math.round(score)]);
-  reasons.push(['demands', -Math.round(cost)]);
+  const add = (k: string, v: number) => { if (v) reasons.push([k, v]); return v; };
+  let sum = 0;
+  reasons.push(['war_score', Math.round(score)]); sum += Math.round(score);
+  reasons.push(['demands', -Math.round(cost)]); sum -= Math.round(cost);
   const nTo = s.nations[to];
-  const ex = Math.round(nTo.warExhaustion * 0.4); if (ex) reasons.push(['war_exhaustion', ex]);
-  const dur = Math.round(Math.min(20, (s.day - war.start) / 365 * 2)); if (dur) reasons.push(['war_length', dur]);
-  if (nTo.treasury < 0) reasons.push(['empty_treasury', 10]);
-  const capLost = nTo.capital >= 0 && s.loc.ctrl[nTo.capital] !== to; if (capLost) reasons.push(['capital_occupied', 10]);
-  const sum = score - cost + ex + dur + (nTo.treasury < 0 ? 10 : 0) + (capLost ? 10 : 0) + (white ? 5 : 0);
-  if (!white && score < cost * 0.8) reasons.push(['not_enough_war_score', -20]);
+  sum += add('war_exhaustion', Math.round(nTo.warExhaustion * 0.4));
+  const years = warYears(s, war);
+  sum += add('war_length', Math.round(Math.min(20, years * 2)));
+  if (nTo.treasury < 0) sum += add('empty_treasury', 10);
+  const capLost = nTo.capital >= 0 && s.loc.ctrl[nTo.capital] !== to; if (capLost) sum += add('capital_occupied', 10);
+  // the balance of the armies in the field and of the allies
+  const bal = fieldBalance(s, war, from, to);
+  sum += add('field_armies', bal.own); sum += add('allies_in_field', bal.allies);
+  if (white) sum += 5;
+  const ai = !s.playerNations.includes(to);
   // a subject fighting for its freedom does not give up for nothing while the war still goes its way
-  const holdOut = white && war.goal.type === 'independence' && from === war.defLead && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && !s.playerNations.includes(to);
-  if (holdOut) reasons.push(['fighting_for_freedom', -30]);
+  const holdOut = white && war.goal.type === 'independence' && from === war.defLead && to === war.attLead && -score > -15 && nTo.warExhaustion < 50 && ai;
+  if (holdOut) sum += add('fighting_for_freedom', -30);
   // an attacker whose host lies before the walls of a town it went to war for does not give it up for nothing, nor
-  // does one that is winning a young war before the towns it declared it for are taken
-  const goal = war.goal.locs;
-  const keen = white && !holdOut && to === war.attLead && goal.length > 0 && nTo.warExhaustion < 60 && !s.playerNations.includes(to);
-  const sieging = keen && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc));
-  const unmet = keen && !sieging && score < 0 && (s.day - war.start) / 365 < 1.5 && goal.some((l) => war.def.includes(s.loc.owner[l]));
-  if (sieging) reasons.push(['siege_under_way', -30]);
-  if (unmet) reasons.push(['war_aims_unmet', -30]);
-  const pen = (holdOut || sieging || unmet) ? 30 : 0;
-  return { accept: !holdOut && !sieging && !unmet && sum >= 0 && (white || score >= cost * 0.8), score: sum - pen, reasons };
+  // does one with armies in the field whose war is young (counted from the first day of the game) and its aims unmet;
+  // one pressing a claim to the throne does not settle for the old order while its armies hold the field
+  const goal = war.goal.locs.length ? war.goal.locs : (['throne', 'subjugate', 'conquest'].includes(war.goal.type) && s.nations[war.goal.target]?.capital >= 0 ? [s.nations[war.goal.target].capital] : []);
+  const keen = white && !holdOut && to === war.attLead && nTo.warExhaustion < 60 && ai;
+  const inField = bal.share >= 0.2; // its side still has armies in the field: one man for every four of the enemy's or more
+  const sieging = keen && goal.length > 0 && s.sieges.some((x) => war.att.includes(x.nation) && goal.includes(x.loc));
+  const unmet = keen && !sieging && inField && score <= 5 && years < 1.5 && (!goal.length || goal.some((l) => war.def.includes(s.loc.owner[l])));
+  const claim = keen && !sieging && !unmet && war.goal.type === 'throne' && inField && score < 10 && nTo.warExhaustion < 40;
+  if (sieging) sum += add('siege_under_way', -30);
+  if (unmet) sum += add('war_aims_unmet', -30);
+  if (claim) sum += add('pressing_claim', -20);
+  if (!white && score < cost * 0.8) reasons.push(['not_enough_war_score', -20]);
+  return { accept: !holdOut && !sieging && !unmet && !claim && sum >= 0 && (white || score >= cost * 0.8), score: sum, reasons };
 }
 
 export function applyPeace(s: GameState, w: World, war: War, winner: number, loser: number, terms: PeaceTerm[]) {

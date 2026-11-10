@@ -11,7 +11,7 @@ import { aiApply as applyCommand } from './ai_log';
 import { statecraft, aiReforms } from './ai_statecraft';
 import { goalWants } from './goals';
 import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, supplyLimit, hostile, seaNear, newArmy, UPKEEP_SCALE, GUNS_PER_FORT, assaultOdds, besiegersOf, aiScorch } from './military';
-import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
+import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, warYears, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks } from './war';
 import { totalOpinion, evaluateProposal } from './diplomacy';
 import { lawEffect } from './politics';
 import { overextension } from './economy';
@@ -476,18 +476,21 @@ export function aiWarGoal(s: GameState, w: World, n: Nation, b: number): WarGoal
   return null;
 }
 
-function considerPeace(s: GameState, w: World, n: Nation, war: War) {
+export function considerPeace(s: GameState, w: World, n: Nation, war: War) {
   const lead = war.attLead === n.id || war.defLead === n.id;
   const other = war.att.includes(n.id) ? war.defLead : war.attLead;
   const score = computeScore(s, war) * (war.att.includes(n.id) ? 1 : -1);
-  const dur = (s.day - war.start) / 365;
+  const dur = warYears(s, war); // (a war begun before the game counts from its first day)
   if (!lead) {
     // junior participant: separate peace if exhausted (a worn-out ally goes home even from a war going well)
     if (((n.warExhaustion > 50 && score < 0) || n.warExhaustion > 75) && chance(s.rng, 0.2)) applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: [] });
     return;
   }
   if (s.playerNations.includes(other) && war.offers.some((o) => o.from === n.id)) return;
-  if (score > 15) {
+  // the bands of the war score: above 10 the winner asks for what its score covers (from 4 years on also for nothing
+  // more than peace); from -10 to -25, after two years, the loser buys peace with gold worth half the enemy's score;
+  // below -25 it yields land; within ±10 both sides make peace after five years
+  if (score > 10) {
     const enemyLeader = other;
     const enemySide = war.att.includes(n.id) ? war.def : war.att;
     const { terms, goalMet } = aiDemands(s, w, war, n, enemyLeader, enemySide, score);
@@ -502,7 +505,7 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
     if (terms.length || dur > 4) {
       applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: enemyLeader, terms });
     }
-  } else if (score < -25 || (dur > 5 && Math.abs(score) < 10) || n.warExhaustion > 60) {
+  } else if (score < -25 || (score < -10 && dur > 2) || (dur > 5 && Math.abs(score) <= 10) || n.warExhaustion > 60) {
     // losing: offer concessions the enemy would accept, or white peace
     const terms: PeaceTerm[] = [];
     if (war.goal.type === 'independence' && war.defLead === n.id && (score < -25 || n.warExhaustion > 60)) {
@@ -525,7 +528,14 @@ function considerPeace(s: GameState, w: World, n: Nation, war: War) {
         else if (theyAtt && g === 'trade') terms.push({ type: 'trade_rights' });
         else if (allowed.has('humiliate')) terms.push({ type: 'humiliate' });
       }
+    } else if (score < -10) {
+      // a war going against us, not lost: gold worth six tenths of their score (termCost weighs gold by our taxes), when
+      // the chest holds it; a winner takes a concession worth half its score (commands.ts acceptsConcession)
+      const tax = n.income.tax || 10, amount = Math.round(-score * 0.6 / 25 * tax * 12);
+      if (amount > 0 && n.treasury >= amount) terms.push({ type: 'gold', amount });
     }
+    // the same rules as for an offer made to us (evaluatePeace): no plain peace while we would refuse one ourselves
+    if (!terms.length && !evaluatePeace(s, war, other, n.id, []).accept) return;
     applyCommand(s, w, { t: 'peace', n: n.id, war: war.id, to: other, terms: terms.length ? terms.map((t) => ({ ...t })) : [], ...(terms.length ? { concede: true } : {}) } as any);
   }
 }

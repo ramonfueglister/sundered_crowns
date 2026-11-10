@@ -983,6 +983,8 @@ const S: Record<string, [string, string]> = {
   xfw_raise_vs: ['Now in command: {name} (generalship {n}). The new captain takes over only if he is abler.', 'Jetzt im Befehl: {name} (Feldherrnkunst {n}). Der neue Hauptmann übernimmt nur, wenn er fähiger ist.'],
   xfw_raise_none: ['This host has no commander: the new captain takes command.', 'Dieses Heer hat keinen Befehlshaber: Der neue Hauptmann übernimmt es.'],
   xfw_raise_confirm: ['Raise for {n} gold', 'Für {n} Gold anwerben'],
+  r_field_armies: ['Their army against ours in the field', 'Ihr Heer gegen unseres im Feld'], r_allies_in_field: ['Their allies’ armies against our allies’', 'Heere ihrer Verbündeten gegen die unserer Verbündeten'],
+  r_pressing_claim: ['They press a claim to the throne', 'Sie verfolgen einen Thronanspruch'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

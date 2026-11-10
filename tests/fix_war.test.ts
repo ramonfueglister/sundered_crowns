@@ -8,7 +8,9 @@ import { createGame } from '../src/sim/setup';
 import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
-import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT } from '../src/sim/systems/war';
+import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore } from '../src/sim/systems/war';
+import { considerPeace } from '../src/sim/systems/ai';
+import { step } from '../src/sim/engine';
 import { military, newArmy, siegeSteps, siegeCaptor, besiegersOf } from '../src/sim/systems/military';
 import { answer } from '../src/game/view';
 import { siegesView } from '../src/game/warview';
@@ -179,6 +181,54 @@ describe('raising a general (major: it put a worse general in command)', () => {
     const r2 = applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: -1 });
     expect(A.general).toBe(r2.done);
     expect(r2.msg!.de).toContain('übernimmt den Befehl');
+  });
+});
+
+describe('the AI’s peace in young and back-dated wars (major: a white peace in the Hundred Years’ War on day 1)', () => {
+  const sumRows = (ev: { reasons: [string, number][] }, white: boolean) => ev.reasons.filter(([k]) => k !== 'not_enough_war_score').reduce((p, r) => p + r[1], 0) + (white ? 5 : 0);
+  it('a war begun before the game counts from its first day; England, pressing its claim with armies in the field, refuses a white peace', () => {
+    const s = fresh();
+    const E = nat(s, 'england'), F = nat(s, 'france');
+    const hyw = s.wars.find((x) => x.attLead === E.id && x.def.includes(F.id))!;
+    expect(hyw.goal.type).toBe('throne');
+    expect(hyw.start).toBeLessThan(-365 * 15); // dated back in the setup
+    expect(warYears(s, hyw)).toBe(0);
+    const ev = evaluatePeace(s, hyw, F.id, E.id, []);
+    expect(ev.reasons.some(([k]) => k === 'war_length')).toBe(false);
+    expect(ev.reasons.some(([k]) => k === 'war_aims_unmet')).toBe(true);
+    expect(ev.reasons.some(([k]) => k === 'field_armies')).toBe(true);
+    expect(ev.accept).toBe(false);
+    expect(sumRows(ev, true)).toBe(ev.score); // the rows add up to their answer
+    // a month of play: neither crown has made a white peace, and England has offered none
+    for (let d = 0; d < 30; d++) step(s, w, []);
+    expect(s.wars.includes(hyw)).toBe(true);
+    expect(hyw.offers.filter((o) => o.from === E.id && !o.terms.length)).toEqual([]);
+  });
+  it('a loser between −10 and −25 buys peace with gold after two years; a winner above 10 makes peace after four', () => {
+    const setup = (score: number, years: number) => {
+      const s = fresh(); clearField(s);
+      const a = nat(s, 'portugal').id, b = plainTarget(s, a);
+      const war = war2(s, a, b, 'humiliate');
+      // (a war dated before the game counts from its first day: the clock runs on instead)
+      war.start = s.day; s.day += Math.round(365 * years); war.battleScore = score; war.tickScore = 0;
+      expect(computeScore(s, war)).toBeCloseTo(score, 6);
+      return { s, a, b, war };
+    };
+    // −12 for the defender after 2.5 years: it offers gold worth six tenths of the enemy's score, which is taken
+    const L = setup(12, 2.5);
+    const nb = L.s.nations[L.b]; nb.treasury = 1e5; const t0 = nb.treasury, ta = L.s.nations[L.a].treasury;
+    considerPeace(L.s, w, nb, L.war);
+    expect(L.s.wars.includes(L.war)).toBe(false);
+    expect(nb.treasury).toBeLessThan(t0);
+    expect(L.s.nations[L.a].treasury - ta).toBeCloseTo(t0 - nb.treasury, 6);
+    // in the first two years it fights on
+    const Y = setup(12, 1.5); considerPeace(Y.s, w, Y.s.nations[Y.b], Y.war);
+    expect(Y.s.wars.includes(Y.war)).toBe(true);
+    // +12 for the attacker after 4.5 years: it makes peace (the band from 10 to 15 had no rule and dragged on)
+    const W = setup(12, 4.5);
+    W.s.nations[W.a].warExhaustion = 30;
+    considerPeace(W.s, w, W.s.nations[W.a], W.war);
+    expect(W.s.wars.includes(W.war)).toBe(false);
   });
 });
 
