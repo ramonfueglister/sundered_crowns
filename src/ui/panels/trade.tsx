@@ -337,13 +337,18 @@ function TariffTip({ d }: { d: any }) {
 function KeptOutTip({ d }: { d: any }) {
   const share = d.deter > 0 ? (d.keptMargin ?? 0) / d.deter : 0;
   return <div><TipHead name={t('tr_kept_out')} value={num(d.deter, 1)} hint={t('tr_kept_out_hint')} />
-    {d.markets.length > 0 && <Parts rows={d.markets.map((m: any) => [{ en: m.name, de: placeName(m.name) }, m.deter])} digits={1} />}
+    {/* goods kept out are not gains: plain values by market, no sign or colour */}
+    {d.markets.length > 0 && <div class="breakdown">
+      <div class="bd-title">{t('x_kept_by_market')}</div>
+      {d.markets.map((m: any) => <div class="bd-row"><span>{placeName(m.name)}</span><span>{num(m.deter, 1)}</span></div>)}
+    </div>}
     {d.keptOut?.length > 0 && <div class="breakdown">
       <div class="bd-row bd-cols"><span>{t('goods')}</span><span>{t('x_kept_value')} · {t('x_kept_margin_short')}</span></div>
       {d.keptOut.map((x: any) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.v, 1)} · {pct(x.margin, 1)}</span></div>)}
       {d.keptRest?.n > 0 && <div class="bd-row"><span>{t('x_price_index_rest').replace('{n}', String(d.keptRest.n))}</span><span>{num(d.keptRest.v, 1)} · {pct(d.keptRest.margin, 1)}</span></div>}
-      <div class="bd-row bd-total"><span>{t('x_kept_margin')}</span><span>{num(d.keptMargin ?? 0, 1)} ({pct(share, 1)})</span></div>
+      <div class="bd-row bd-total"><span>{t('x_kept_all')}</span><span>{num(d.deter, 1)} · {pct(share, 1)}</span></div>
     </div>}
+    {d.deter > 0 && <div class="small"><span>{t('x_kept_margin_of').replace('{m}', num(d.keptMargin ?? 0, 1)).replace('{v}', num(d.deter, 1)).replace('{p}', pct(share, 1))}</span></div>}
     {d.deter > 0 && <div class="muted small">{t('x_kept_why').replace('{cut}', pct(d.tariff * 0.5, 1))}</div>}
   </div>;
 }

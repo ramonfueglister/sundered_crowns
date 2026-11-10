@@ -1021,6 +1021,8 @@ const S: Record<string, [string, string]> = {
   x_made_now: ['Made now, a month', 'Erzeugung derzeit, pro Monat'], x_used_now: ['Used now, a month', 'Verbrauch derzeit, pro Monat'],
   x_made_now_hint: ['What the places in the market\'s area make in a month as they stand today: fields, mines and fisheries, households and workshops. The books below hold what the market counted last month, each place as it came to market; the two part as harvests, workers and prices change.', 'Was die Orte im Marktgebiet so, wie sie heute stehen, in einem Monat herstellen: Felder, Bergwerke und Fischereien, Haushalte und Werkstätten. Die Bücher darunter halten fest, was der Markt letzten Monat zählte, jeden Ort, als er zu Markt kam; beides weicht voneinander ab, wenn sich Ernten, Arbeitskräfte und Preise ändern.'],
   x_used_now_hint: ['What the places in the market\'s area would take in a month as they stand today: the people\'s needs, what workshops use and households bake and brew. Armies\' provisions are not in it. The books below hold what the market counted last month.', 'Was die Orte im Marktgebiet so, wie sie heute stehen, in einem Monat abnehmen würden: den Bedarf der Leute, was Werkstätten verarbeiten und Haushalte zum Backen und Brauen brauchen. Die Verpflegung der Heere ist nicht dabei. Die Bücher darunter halten fest, was der Markt letzten Monat zählte.'],
+  x_kept_by_market: ['By market', 'Nach Markt'], x_kept_all: ['All goods', 'Alle Waren'],
+  x_kept_margin_of: ['Margin of the goods kept out: {m} of {v} ({p})', 'Marge der ferngehaltenen Waren: {m} von {v} ({p})'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 
