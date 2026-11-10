@@ -7,6 +7,7 @@ import { FAITH_INDEX, faithFamily } from './peoples';
 import { atlanticRealms, confessionalSplit, monarchy, faithLocs, isReform, hordeRaw, hordeProgress, HORDE_CAP } from './situations';
 import { nationDev, nationLocsRO } from '../systems/war';
 import { clamp, addOpinion, hasTreaty, atWar, chronicle, opinion } from '../ctx';
+import { addIncome } from '../ctx'; // fix-econ: what a situation's action pays another realm
 import { dayToDate } from '../calendar';
 
 type Row = [string | I18n, number];
@@ -53,7 +54,7 @@ function subsidise(sidesOf: (s: GameState, w: World, sit: Situation) => SitSide[
     cost: (s, n) => ({ gold: goldOf(n, months) }),
     targets: (s, w, n, sit) => sidesOf(s, w, sit).map((x) => x.members[0]).filter((x) => x !== undefined && x !== n.id && !!alive(s, x)),
     check: (s, w, n, sit, t) => (t === undefined || !alive(s, t) || t === n.id || !sidesOf(s, w, sit).some((x) => x.members[0] === t) ? 'invalid target' : atWar(s, n.id, t) ? 'at war with them' : null),
-    apply: (s, w, n, sit, t) => { const r = s.nations[t!]; r.treasury += goldOf(n, months); addOpinion(s, r.id, n.id, 'subsidies', 20, 365 * 5, true); },
+    apply: (s, w, n, sit, t) => { const r = s.nations[t!]; addIncome(r, 'gifts', goldOf(n, months)); addOpinion(s, r.id, n.id, 'subsidies', 20, 365 * 5, true); },
     ai: (s, w, n, sit) => {
       if (n.treasury < goldOf(n, months) * 5) return null;
       for (const side of sidesOf(s, w, sit)) { const lead = side.members[0]; if (lead === undefined || lead === n.id || side.members.includes(n.id)) continue; if (hasTreaty(s, n.id, lead, 'alliance') || opinion(s, n.id, lead) > 40) return lead; }
@@ -289,7 +290,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
         desc: T('Gold and engineers for the walls: its holder gains our gold and 10 % fort strength for five years.', 'Gold und Baumeister für die Mauern: Ihr Herr erhält unser Gold und fünf Jahre lang 10 % Festungsstärke.'),
         cost: (s, n) => ({ gold: goldOf(n, 4) }),
         check: (s, w, n, sit) => { const h = alive(s, s.loc.owner[sit.data.city]); return !h || h.id === sit.data.ott ? 'no such target' : !christian(n) ? 'only Christian realms can do this' : null; },
-        apply: (s, w, n, sit) => { const h = s.nations[s.loc.owner[sit.data.city]]; h.treasury += goldOf(n, 4); setMod(s, h, 'aid_for_the_walls', 5, T('Aid for the walls', 'Hilfe für die Mauern'), { fort_strength: 0.1 }); addOpinion(s, h.id, n.id, 'subsidies', 25, 365 * 5, true); },
+        apply: (s, w, n, sit) => { const h = s.nations[s.loc.owner[sit.data.city]]; addIncome(h, 'gifts', goldOf(n, 4)); setMod(s, h, 'aid_for_the_walls', 5, T('Aid for the walls', 'Hilfe für die Mauern'), { fort_strength: 0.1 }); addOpinion(s, h.id, n.id, 'subsidies', 25, 365 * 5, true); },
         ai: (s, w, n, sit) => (sit.stage === 2 && christian(n) && rich(n, 4) && n.capital >= 0 && w.distKm(n.capital, sit.data.city) < 1800 && n.id !== s.loc.owner[sit.data.city] ? -1 : null),
       },
       {
@@ -297,7 +298,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
         desc: T('Six months of our tax income buy five years in which the sultan picks other targets.', 'Sechs Monatssteuern kaufen fünf Jahre, in denen der Sultan andere Ziele wählt.'),
         cost: (s, n) => ({ gold: goldOf(n, 6), prestige: 5 }),
         check: (s, w, n, sit) => (!alive(s, sit.data.ott) || n.id === sit.data.ott ? 'invalid target' : atWar(s, n.id, sit.data.ott) ? 'at war with them' : null),
-        apply: (s, w, n, sit) => { s.nations[sit.data.ott].treasury += goldOf(n, 6); n.flags.tribute_osman = s.day + 365 * 5; },
+        apply: (s, w, n, sit) => { addIncome(s.nations[sit.data.ott], 'gifts', goldOf(n, 6)); n.flags.tribute_osman = s.day + 365 * 5; },
         ai: (s, w, n, sit) => { const o = alive(s, sit.data.ott); return o && n.capital >= 0 && o.capital >= 0 && w.distKm(n.capital, o.capital) < 900 && nationDev(s, n.id) < nationDev(s, o.id) * 0.4 && n.treasury > goldOf(n, 6) * 2 && !atWar(s, n.id, o.id) ? -1 : null; },
       },
       joinSide((s, w, sit) => { const war = ottWarOf(s, sit); return war ? [{ name: T('Defenders', 'Verteidiger'), members: [war.defLead] }] : []; }, ottWarOf,
@@ -345,7 +346,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
         id: 'pay_tribute', name: T('Send rich tribute to Sarai', 'Reichen Tribut nach Sarai senden'), cooldown: 365 * 3,
         desc: (s, w, n, sit) => { const d = hordeDelta(s, sit, 5, 0); return T(`Gold for the khan: the Horde thinks better of us (+20) and its unity grows (+5, at most ${HORDE_CAP}). Progress now: ${signed(d)}.`, `Gold für den Khan: Die Horde denkt besser von uns (+20) und ihre Einheit wächst (+5, höchstens ${HORDE_CAP}). Fortschritt jetzt: ${signed(d)}.`); },
         cost: (s, n) => ({ gold: goldOf(n, 3) }), check: (s, w, n, sit) => (n.id === sit.data.h || !alive(s, sit.data.h) ? 'invalid target' : null),
-        apply: (s, w, n, sit) => { s.nations[sit.data.h].treasury += goldOf(n, 3); if (sit.stage === 0) { sit.data.unity = Math.min(HORDE_CAP, (sit.data.unity || 0) + 5); hordeRedraw(s, sit); } addOpinion(s, sit.data.h, n.id, 'tribute', 20, 365 * 5, true); },
+        apply: (s, w, n, sit) => { addIncome(s.nations[sit.data.h], 'gifts', goldOf(n, 3)); if (sit.stage === 0) { sit.data.unity = Math.min(HORDE_CAP, (sit.data.unity || 0) + 5); hordeRedraw(s, sit); } addOpinion(s, sit.data.h, n.id, 'tribute', 20, 365 * 5, true); },
         ai: (s, w, n, sit) => (n.overlord === sit.data.h && n.libertyDesire < 20 && rich(n, 3) ? -1 : null),
       },
     ],
@@ -367,7 +368,7 @@ export const SIT_EXTRA: Record<string, SitExtra> = {
         id: 'pay_parias', name: T('Pay parias', 'Parias zahlen'), cooldown: 365 * 5,
         desc: T('Gold for the champion keeps the frontier quiet for five years: no war for Granada begins.', 'Gold für den Vorkämpfer hält die Grenze fünf Jahre ruhig: Kein Krieg um Granada beginnt.'),
         cost: (s, n) => ({ gold: goldOf(n, 6) }), check: (s, w, n, sit) => (n.id !== sit.data.g ? 'only the emirate can do this' : sit.stage !== 0 ? 'not possible at this stage' : null),
-        apply: (s, w, n, sit) => { const c = alive(s, sit.data.champion); if (c) c.treasury += goldOf(n, 6); sit.data.parias_until = s.day + 365 * 5; },
+        apply: (s, w, n, sit) => { const c = alive(s, sit.data.champion); if (c) addIncome(c, 'gifts', goldOf(n, 6)); sit.data.parias_until = s.day + 365 * 5; },
         ai: (s, w, n, sit) => (n.treasury > goldOf(n, 6) * 1.5 ? -1 : null),
       },
     ],

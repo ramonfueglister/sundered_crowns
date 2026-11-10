@@ -36,6 +36,7 @@ export type Query =
   | { q: 'goals'; nation: number }  // goal tree of any realm with done/open state (nation selection, ambitions)
   | { q: 'eventFx'; pending: number } // what each option of a pending event of ours does (src/game/eventfx.ts)
   | { q: 'works' }                  // building and levy overview of our realm (src/game/worksview.ts)
+  | { q: 'methods' }                // production methods of our workshop towns (src/game/methodsview.ts)
   | { q: 'scope'; loc: number; scope: 'province' | 'area' } // orders for the province or area of a location
   | { q: 'gain'; loc: number; building: number }             // the estimate behind one place's building yield
   | { q: 'places'; locs: number[] }                           // province and area of locations (grouped peace demands)
@@ -107,6 +108,8 @@ export interface PlayerView {
   merchants: { used: number; cap: number };
   electionCloses?: number;                         // an imperial election this realm must still vote in closes that day (realm pass)
   asks?: number;                                   // offers of mediation and calls of the league awaiting this realm's answer (realm pass)
+  creditBreak?: Record<string, number>;            // fix-econ: last month's loans taken and repaid, debts written off, other movements
+  ledgerEstimate?: boolean;                        // fix-econ: the ledger shows the first month's costs estimated at the start
 }
 
 /** War score parts from the attackers' side, before the ±100 cap (src/sim/systems/war.ts scoreParts). */

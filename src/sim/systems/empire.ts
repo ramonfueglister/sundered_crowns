@@ -394,7 +394,7 @@ export function campaign(s: GameState, n: Nation, target: number): string | null
   if (n.treasury < cost) return 'not enough gold';
   const k = `${n.id}>${target}`; const fav = (E.favour ??= {});
   if ((fav[k] ?? 0) >= 60) return 'they cannot be swayed further';
-  addExpense(n, 'gifts', cost); t.treasury += cost;
+  addExpense(n, 'gifts', cost); addIncome(t, 'gifts', cost);
   fav[k] = Math.min(60, (fav[k] ?? 0) + 15);
   addOpinion(s, target, n.id, 'gift', 10, 365 * 2, true);
   return null;

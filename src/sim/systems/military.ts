@@ -12,7 +12,7 @@ import { commanderSkill, commanderMorale, battleLessons, appointBest } from './c
 import { personName, localName } from '../content/names';
 import { genCoa } from '../content/heraldry';
 import { GROUP_OF } from '../content/peoples';
-import { integrationYield } from './economy';
+import { integrationYield, grossIncome } from './economy';
 import { MinHeap } from '../setup';
 import { warScoreEvent, ownedLocs } from './war';
 import { forgetTrade } from './trade';
@@ -51,7 +51,7 @@ function cultureId(i: number) { return ALL_CULTURES[i] || 'unknown'; }
 
 export function unitCost(s: GameState, n: Nation, unit: number, men: number) {
   const u = UNITS[unit];
-  const k = u.kind === 'ship' ? men : men / 1000;
+  const k = u.kind === 'ship' ? men * SHIP_SCALE : men / 1000;
   return u.cost * k * COST_SCALE * 0.1 * s.priceLevel * (1 + n.inflation);
 }
 
@@ -1157,52 +1157,92 @@ export function hireMercenaries(s: GameState, w: World, n: Nation, loc: number, 
 }
 
 // ---------------- upkeep & manpower (monthly) ----------------
-function upkeepMonth(s: GameState, w: World) {
+/** Ships are priced on the regiments' scale (price and upkeep per thousand men) as if each ship were this many thousand
+ *  men: a war galley of 1356 costs about what 150 to 250 men-at-arms do (the pay of its rowers and marines), not what
+ *  1,000 of them do. Their goods (grain for the crew, timber and pitch) are listed per ship already. */
+export const SHIP_SCALE = 0.06;
+/** What a regiment of army `a` costs its realm a month: the gold of its upkeep and the goods it eats at the prices of
+ *  market m (half of their value is paid from the chest); `book` also puts the goods on the market's demand. */
+/** The gold part of a unit's monthly upkeep for `men` men (ships: `men` ships) at full maintenance, without the goods
+ *  they eat: its upkeep per thousand men (ships: × SHIP_SCALE each) × price level × its cost effects. */
+export function unitUpkeep(s: GameState, n: Nation, unit: number, men: number): number {
+  const u = UNITS[unit]; const ship = u.kind === 'ship';
+  // (lawEffect holds laws, values, tradition and modifiers alike; ships pay naval_cost instead of army_cost)
+  return u.upkeep * (ship ? men * SHIP_SCALE : men / 1000) * UPKEEP_SCALE * 0.1 * s.priceLevel * clamp(1 + lawEffect(n, ship ? 'naval_cost' : 'army_cost'), 0.3, 2);
+}
+function regimentUpkeep(s: GameState, n: Nation, a: Army, r: Regiment, m: GameState['markets'][number] | undefined, book: boolean): number {
+  const u = UNITS[r.type];
+  const ship = u.kind === 'ship';
+  const k = ship ? r.men : r.men / 1000; // the goods are listed per ship and per thousand men
+  let c = unitUpkeep(s, n, r.type, r.men) * (a.mercenary ? 2.2 : 1);
+  if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; if (book) m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
+  return c * (ship ? n.navyMaint : n.armyMaint);
+}
+/** This month's upkeep of every realm's armies and of its fleets (each army eats from the market of the place it
+ *  stands in, a fleet from its capital's); `book` also puts the goods they eat on those markets' demand. */
+export function upkeepCosts(s: GameState, w: World, book = false): { army: Float64Array; navy: Float64Array } {
   const army = new Float64Array(s.nations.length), navy = new Float64Array(s.nations.length);
-  // armies consume goods from the market of the location they stand in (or the capital's market for fleets)
   for (const a of s.armies) {
     if (a.rebels || a.hostile) continue;
     const n = s.nations[a.owner]; if (!n) continue;
     const mloc = a.loc < w.L ? a.loc : n.capital >= 0 ? n.capital : 0;
     const m = s.markets[s.loc.market[mloc]];
-    for (const r of a.regs) {
-      const u = UNITS[r.type];
-      const k = u.kind === 'ship' ? r.men : r.men / 1000;
-      // (lawEffect holds laws, values, tradition and modifiers alike; ships pay naval_cost instead of army_cost)
-      let c = u.upkeep * k * UPKEEP_SCALE * 0.1 * s.priceLevel * (a.mercenary ? 2.2 : 1) * clamp(1 + lawEffect(n, u.kind === 'ship' ? 'naval_cost' : 'army_cost'), 0.3, 2);
-      if (m) for (const [gid, q] of u.goods) { const gi = GI[gid]; m.dAcc[gi] += q * k; c += q * k * m.price[gi] * 0.5; }
-      if (u.kind === 'ship') navy[a.owner] += c * n.navyMaint; else army[a.owner] += c * n.armyMaint;
-    }
+    for (const r of a.regs) { const c = regimentUpkeep(s, n, a, r, m, book); if (UNITS[r.type].kind === 'ship') navy[a.owner] += c; else army[a.owner] += c; }
   }
+  return { army, navy };
+}
+/** The fleet a merchant republic starts with, sized to what it can pay: about a quarter of its revenue (the first
+ *  month's estimate, setup.ts), between 1 and 20 ships. Military init gives every coastal merchant republic 20, which
+ *  a small one (Ragusa, Chios, Caffa, Visby) pays several times its revenue for. Returns whether a fleet was cut (its
+ *  ships were part of the realm's trade power, so the revenue is estimated again: setup.ts). */
+export function sizeStartingFleets(s: GameState, w: World): boolean {
+  const { navy } = upkeepCosts(s, w); let cut = false;
+  for (const n of s.nations) {
+    if (!n.alive || n.gov !== 'merchant_republic' || navy[n.id] <= 0) continue;
+    const regs = s.armies.filter((a) => a.owner === n.id && a.fleet).flatMap((a) => a.regs);
+    const ships = regs.reduce((p, r) => p + r.men, 0); if (ships <= 0) continue;
+    const want = clamp(Math.round(0.25 * grossIncome(n) / (navy[n.id] / ships)), 1, 20);
+    if (want < ships) { cut = true; for (const r of regs) r.men = Math.max(1, Math.round(r.men * want / ships)); }
+  }
+  return cut;
+}
+/** Garrison pay of a realm's forts this month: the full pay, and what it pays — a realm pays its garrisons only what
+ *  it can bear: beyond a third of last month's revenue the walls are left to the militia. */
+export function fortPay(s: GameState, n: Nation): { forts: number; full: number; pay: number } {
+  let forts = 0;
+  for (const i of ownedLocs(s, n.id)) forts += s.loc.buildings[i * B + BI.fort];
+  const full = forts * 2.5 * s.priceLevel * Math.max(0.2, 1 + lawEffect(n, 'fort_cost'));
+  const gross = grossIncome(n);
+  return { forts, full, pay: Math.min(full, gross * 0.33) };
+}
+/** A realm's manpower limit and the sailors its coasts give a month (the limit of sailors is four times that): levies
+ *  from the peasants and labourers of the land it holds and controls, fewer where control is weak and from land still
+ *  being integrated (integrationYield), times its manpower effects; sailors from the labourers of its coasts, more with
+ *  harbours. The top bar, its breakdown (src/game/view.ts explainRealm) and the start of the game use this. */
+export function manpowerOf(s: GameState, w: World, n: Nation): { max: number; sail: number } {
+  let mp = 0, sail = 0;
+  for (const i of ownedLocs(s, n.id)) {
+    if (s.loc.ctrl[i] !== n.id) continue;
+    const base = i * C;
+    mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]) * integrationYield(s.loc.integ[i]);
+    if (w.coastal[i]) sail += s.loc.pop[base + CL.labourers] * 0.02 * (1 + s.loc.buildings[i * B + BI.port]);
+  }
+  return { max: mp * Math.max(0.1, 1 + lawEffect(n, 'manpower')), sail: sail * Math.max(0.1, 1 + lawEffect(n, 'sailors')) };
+}
+function upkeepMonth(s: GameState, w: World) {
+  const { army, navy } = upkeepCosts(s, w, true);
   for (const n of s.nations) {
     if (!n.alive) continue;
     if (army[n.id] > 0) addExpense(n, 'army', army[n.id]);
     if (navy[n.id] > 0) addExpense(n, 'navy', navy[n.id]);
     // garrisons of forts
-    let forts = 0;
-    // manpower: from peasant & labourer population of controlled, integrated land
-    let mp = 0, sail = 0;
-    for (const i of ownedLocs(s, n.id)) {
-      forts += s.loc.buildings[i * B + BI.fort];
-      if (s.loc.ctrl[i] !== n.id) continue;
-      const base = i * C;
-      // land still being integrated sends fewer levies (integrationYield, systems/economy.ts)
-      mp += (s.loc.pop[base + CL.peasants] + s.loc.pop[base + CL.labourers]) * 0.012 * (0.4 + 0.6 * s.loc.control[i]) * integrationYield(s.loc.integ[i]);
-      if (w.coastal[i]) sail += s.loc.pop[base + CL.labourers] * 0.02 * (1 + s.loc.buildings[i * B + BI.port]);
-    }
-    sail *= Math.max(0.1, 1 + lawEffect(n, 'sailors'));
-    if (forts) {
-      // a realm pays its garrisons only what it can bear: beyond a third of its revenue the walls are left to the militia
-      const full = forts * 2.5 * s.priceLevel * Math.max(0.2, 1 + lawEffect(n, 'fort_cost'));
-      const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
-      const pay = Math.min(full, gross * 0.33);
-      addExpense(n, 'fortresses', pay);
-      n.flags.fort_pay = Math.round((pay / full) * 100) / 100;
-    } else delete n.flags.fort_pay;
-    const mpMult = Math.max(0.1, 1 + lawEffect(n, 'manpower'));
-    n.maxManpower = mp * mpMult;
+    const fp = fortPay(s, n);
+    if (fp.forts) { addExpense(n, 'fortresses', fp.pay); n.flags.fort_pay = Math.round((fp.pay / fp.full) * 100) / 100; } else delete n.flags.fort_pay;
+    // manpower and sailors refill toward their limits
+    const mo = manpowerOf(s, w, n);
+    n.maxManpower = mo.max;
     n.manpower = Math.min(n.maxManpower, n.manpower + n.maxManpower / 120);
-    n.sailors = Math.min(sail * 4, n.sailors + sail / 10);
+    n.sailors = Math.min(mo.sail * 4, n.sailors + mo.sail / 10);
     // unpaid armies lose morale and desert
     if (n.treasury < 0) for (const a of s.armies) if (a.owner === n.id) { a.morale *= 0.8; if (a.mercenary) for (const r of a.regs) r.men *= 0.85; }
   }
@@ -1293,11 +1333,12 @@ export function releaseNation(s: GameState, w: World, from: Nation, locs: number
       rank: 'duchy', culture, capital: locs[0], treasury: 50, debt: 0, manpower: 1000, overlord: -1, subjectType: null, rivals: [from.id], dread: 0, isHRE: false, elector: false,
       playerId: null, ai: true, stats: { battlesWon: 0, battlesLost: 0, locsGained: 0, locsLost: 0, warsWon: 0 }, goalsDone: [], flags: {}, coa: null, alive: true,
       candidates: [], generals: [], aiLog: [],
+      income: {}, expense: {}, incomeAcc: {}, expenseAcc: {}, credit: {}, creditAcc: {}, // a new realm starts with books of its own
     });
     s.nations.push(nn!);
     nn!.ruler = 0;
   }
-  if (!nn!.alive) forgetTrade(s, nn!.id); // a realm brought back starts without its old merchants and embargoes
+  if (!nn!.alive) { forgetTrade(s, nn!.id); nn!.incomeAcc = {}; nn!.expenseAcc = {}; nn!.creditAcc = {}; } // a realm brought back starts without its old merchants, embargoes and books
   if (faith >= 0) nn!.faith = faith;
   // a ruler of the land's own people and a house of its nobility, arms of its own (content/names.ts, heraldry.ts)
   if (!s.chars[nn!.ruler]?.alive || s.chars[nn!.ruler]?.nation !== nn!.id) releasedRuler(s, nn!, culture);

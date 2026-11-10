@@ -4,7 +4,11 @@
 .tbl tr.click { cursor: pointer; }
 .tbl tr.click:hover td { background: rgba(217, 180, 90, .12); }
 .tr-merch-btns { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 6px; }
-.tr-merch-btns .pos, .tr-merch-btns .neg { margin-left: 4px; font-weight: bold; }
+/* the expected gain on a merchant button: a light chip so the green and red read on the dark button (contrast ≥ 5:1) */
+.tr-merch-btns .pos, .tr-merch-btns .neg { margin-left: 4px; font-weight: bold; padding: 0 4px; border-radius: 3px; background: #f3ead2; }
+.pnl .tr-merch-btns .pos { color: #24561f; } .pnl .tr-merch-btns .neg { color: #8e2216; }
+.tr-books { margin: 4px 0 6px; gap: 10px; }
+.eco-mkt-top { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
 .tr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
 .tr-cols .bd-title { margin-top: 6px; }
 .tr-chart { width: 100%; height: 110px; display: block; margin: 2px 0 6px; }
@@ -16,3 +20,5 @@
 .ex-list .kv:hover { background: rgba(217, 180, 90, .15); }
 .legend .lg-good { margin-left: 6px; font-size: .9em; max-width: 150px; }
 .trade-rel .kv .v .btn { margin-left: 6px; }
+/* column heads inside a tooltip breakdown (price index, goods kept out) */
+.tooltip .bd-row.bd-cols, .tooltip .bd-row.bd-cols > span:first-child { color: #a8987a; font-size: .85em; }

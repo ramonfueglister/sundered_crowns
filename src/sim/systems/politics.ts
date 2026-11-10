@@ -2,6 +2,7 @@
 import type { GameState, Nation, Character, Estate, I18n } from '../types';
 import type { World } from '../world';
 import { type Ctx, type System, DAY_EPOCH, clamp, chronicle, notice, newId, addExpense, addOpinion } from '../ctx';
+import { addIncome } from '../ctx'; // fix-econ: what an estate pays for a privilege
 import { LAWS, LAW_INDEX, VALUES } from '../content/laws';
 import { rand, chance, hash01, pick, seedRng } from '../rng';
 import { dayToDate, dateToDay } from '../calendar';
@@ -905,7 +906,7 @@ export function grantPrivilege(s: GameState, n: Nation, pid: string): string | n
   if (p.grant.authority) n.authority += p.grant.authority;
   if (p.grant.concord) n.concord = clamp(n.concord + p.grant.concord, -100, 100);
   if (p.grant.mandate) n.mandate = clamp(n.mandate + p.grant.mandate, 0, 100);
-  if (p.grant.treasury_months) n.treasury += (n.income.tax || 10) * p.grant.treasury_months;
+  if (p.grant.treasury_months) addIncome(n, 'privileges', (n.income.tax || 10) * p.grant.treasury_months);
   n.modifiers.push({ id: `priv_${pid}`, until: 1e9, label: p.name, effects: p.effects });
   return null;
 }

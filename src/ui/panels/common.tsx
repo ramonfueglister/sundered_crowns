@@ -76,7 +76,7 @@ export function useQuery<T = any>(q: Query | null, deps: any[], every = 500): [T
 
 /** One shared realm query for all components that need it (outliner, panels). */
 export const realm = signal<any>(null);
-let realmUsers = 0, realmLast = 0, realmUnsub: (() => void) | null = null, realmSeq = 0;
+let realmUsers = 0, realmLast = 0, realmUnsub: (() => void) | null = null, realmSeq = 0, realmTrail: ReturnType<typeof setTimeout> | null = null;
 export function refreshRealm() {
   if (playerId.value < 0) { realm.value = null; return; }
   const my = ++realmSeq; realmLast = performance.now();
@@ -86,9 +86,15 @@ export function useRealm(every = 1000): any {
   useEffect(() => {
     if (realmUsers++ === 0) {
       refreshRealm();
-      realmUnsub = view.subscribe(() => { if (performance.now() - realmLast >= every) refreshRealm(); });
+      // throttled like useQuery: a tick inside the window schedules one trailing refresh, so when the game pauses
+      // right after it the ledger, forecast and treasury of the panels still come from the same day
+      realmUnsub = view.subscribe(() => {
+        const wait = every - (performance.now() - realmLast);
+        if (wait <= 0) { refreshRealm(); return; }
+        if (!realmTrail) realmTrail = setTimeout(() => { realmTrail = null; refreshRealm(); }, wait);
+      });
     } else if (performance.now() - realmLast > 300) refreshRealm();
-    return () => { if (--realmUsers === 0) { realmUnsub?.(); realmUnsub = null; } };
+    return () => { if (--realmUsers === 0) { realmUnsub?.(); realmUnsub = null; if (realmTrail) { clearTimeout(realmTrail); realmTrail = null; } } };
   }, []);
   return realm.value;
 }

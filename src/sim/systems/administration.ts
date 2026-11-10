@@ -6,7 +6,7 @@ import type { World } from '../world';
 import { type System, addIncome, addExpense, atWar, hasTreaty } from '../ctx';
 import { B, BI, C, CL, METHODS } from '../defs';
 import { lawEffect, OFFICES, classExempt } from './politics';
-import { overextension } from './economy';
+import { overextension, ONE_OFF } from './economy';
 import { ownedLocs } from './war';
 import { chance } from '../rng';
 import { DUTIES, dutyRate, setDuty, dutyWeight } from './duties';
@@ -221,7 +221,7 @@ export function aiDuties(s: GameState, w: World, n: Nation, atWarNow: boolean) {
 }
 
 // ---------------- budget forecast ----------------
-const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour']);
+// (the one-off ledger lines, ONE_OFF, are listed in economy.ts)
 /** The next twelve months projected from the current state: last month's recurring income and expenses (one-off
  *  spending left out), interest on the loans now owed, and loans falling due (repaid if the chest allows, otherwise
  *  rolled over at two points more). Upkeep and taxes are held at last month's level. */

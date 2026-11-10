@@ -6,6 +6,11 @@ import { ALL_CULTURES, FAITH_INDEX, GROUP_OF } from './content/peoples';
 import { seedRng, hash01 } from './rng';
 import { dateToDay } from './calendar';
 import { SYSTEMS } from './systems';
+import { DAY_EPOCH, bump } from './ctx';
+import { upkeepCosts, fortPay, sizeStartingFleets } from './systems/military';
+import { courtCost, refreshLimits, estimateTradeMonth, forgetWarmup } from './systems/economy';
+import { treasurerGraft } from './systems/politics';
+import { subjectTribute } from './systems/diplomacy';
 
 export interface SetupState {
   year: number;
@@ -192,7 +197,47 @@ export function createGame(w: World, setup: SetupState, hubs: TradeHub[], seed =
     });
   }
   for (const sys of SYSTEMS) sys.init?.(s, w);
+  // the inits added laws and modifiers within one simulated day: effect tables cached before them are rebuilt now
+  DAY_EPOCH.v++; bump();
+  refreshLimits(s, w); // the manpower limit and envoys from the formulas the top bar's breakdowns show, not a seed value
+  estimateFirstMonth(s, w);
   return s;
+}
+
+/** The first month's recurring costs, estimated at the start with the formulas the month itself will use: tribute to
+ *  an overlord, the court, armies, fleets, fortresses and the treasurer's graft. So the ledger, the treasury tooltip
+ *  and the forecast show them from the first day; the realm is marked as showing an estimate until its books first
+ *  close (systems/economy.ts closeLedger), and the starting treasury is where those books start. */
+function estimateFirstMonth(s: GameState, w: World) {
+  const live = s.nations.filter((n) => n.alive);
+  // trade, company profits and tariffs as the first month's clearing will pay them (the warm-up's fall far short);
+  // merchant republics' fleets are sized to that revenue, and as their ships carried part of their trade power, the
+  // trade is estimated again with the fleets they keep, until no fleet is cut any more (twice or three times)
+  for (let k = 0; k < 4; k++) {
+    estimateTradeMonth(s, w);
+    if (k === 3 || !sizeStartingFleets(s, w)) break;
+    DAY_EPOCH.v++; bump(); // (the day's trade powers were taken with the fleets before)
+  }
+  forgetWarmup(s);
+  for (const n of live) n.expense = {};
+  // tribute first: it is part of the overlord's revenue, which the court's cost follows
+  for (const n of live) {
+    const ov = n.overlord >= 0 ? s.nations[n.overlord] : undefined; const t = subjectTribute(n);
+    if (ov?.alive && t > 0.005) { n.expense.tribute = t; ov.income.tribute = (ov.income.tribute || 0) + t; }
+  }
+  const { army, navy } = upkeepCosts(s, w);
+  for (const n of live) {
+    const e = n.expense;
+    const put = (k: string, v: number) => { if (v > 0.005) e[k] = (e[k] || 0) + v; };
+    put('court', courtCost(n));
+    put('army', army[n.id]); put('navy', navy[n.id]);
+    put('fortresses', fortPay(s, n).pay);
+    const tr = s.chars[n.council.treasurer]; if (tr?.alive) put('graft', treasurerGraft(tr, n.income.tax || 0));
+    n.flags.ledger_estimate = 1; n.flags.ledger_t = n.treasury; n.flags.ledger_day = s.day;
+    // the history's first point (realm.init) shows the same month as the ledger
+    const h = n.history[n.history.length - 1];
+    if (h && h.day === s.day) { h.income = Object.values(n.income).reduce((a, b) => a + b, 0); h.expense = Object.values(e).reduce((a, b) => a + b, 0); }
+  }
 }
 
 export function workshopOptions(w: World, i: number): number[] {

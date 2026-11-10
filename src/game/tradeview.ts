@@ -8,8 +8,9 @@ import { GOODS, G, GI, UNITS, C } from '../sim/defs';
 import {
   marketPowers, merchantGains, merchantRefusal, merchantsFree, merchantCap, merchantsUsed, merchantReach, routeCost, homeMarket, steerRoute,
   marketPath, embargoedBy, embargoStakes, tariffBetween, marketWaters, shipTable, MAX_HOPS, AGREEMENT_TARIFF, AGREEMENT_VOLUME, MERCHANT_CROWD,
+  tradeEarnings, STEER_BONUS, HOP_LOSS,
 } from '../sim/systems/trade';
-import { tariffMax, LOC_ECON, locGoods, needWeights } from '../sim/systems/economy';
+import { tariffMax, LOC_ECON, locGoods, needWeights, priceIndexWeight } from '../sim/systems/economy';
 import { lawEffect } from '../sim/systems/politics';
 import { hasTreaty, treatiesOf } from '../sim/ctx';
 import { expeditionTargets, expeditionPlan, MAX_EXPEDITIONS, regionOf, harbours } from '../sim/systems/explore';
@@ -52,27 +53,72 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
     have, steer: !!mk.steer?.[pid], used: merchantsUsed(s, pid), cap: merchantCap(n), free: merchantsFree(s, n),
     refusal: merchantRefusal(s, w, n, mid), home, homeName: home >= 0 ? s.markets[home].name : '',
     reach: merchantReach(n), cost: home >= 0 ? routeCost(s, home, mid) : Infinity,
-    route: route ? { hops: route.hops, factor: route.factor, via: (marketPath(s, mid, route.dest) ?? []).map((x) => s.markets[x].name) } : null,
+    route: route ? { hops: route.hops, factor: route.factor, bonus: 1 + STEER_BONUS, loss: Math.pow(1 - HOP_LOSS, Math.max(0, route.hops - 1)), via: (marketPath(s, mid, route.dest) ?? []).map((x) => s.markets[x].name) } : null,
     gains: merchantGains(s, w, pid, mid), paid: paid[pid] ?? 0, steered: steered[pid] ?? 0,
     share: mp.total > 0 ? (mp.rows.find((r) => r.n === pid)?.total ?? 0) / mp.total : 0,
+    // last month, exactly as paid (fix-econ): our share of this market's own trade, our share of the trade steered in
+    // here by the market it came from, and what our merchants here steered home earned us where it arrived
+    own: mk.own?.[pid] ?? paid[pid] ?? 0,
+    fromIn: steeredInShares(s, pid, mid),
+    homeRows: (tradeEarnings(s, pid).find((r) => r.m === mid)?.steered ?? []).map((x) => ({ to: x.to, name: s.markets[x.to]?.name ?? '?', v: x.v })),
   } : null;
   const wat = marketWaters(s, w).byMarket[mid] ?? [];
   const goods = GOODS.map((g, k) => ({ id: g.id, k, name: g.name, price: mk.price[k], supply: mk.supply[k], demand: mk.demand[k], base: g.base * s.priceLevel, net: mk.flowOut[k], hist: priceHist(s, mid, k, 24) }));
   return {
-    id: mid, name: mk.name, hub: mk.hub, hubName: placeI18n(w, mk.hub), owner: mk.owner, priceIndex: mk.priceIndex,
+    id: mid, name: mk.name, hub: mk.hub, hubName: placeI18n(w, mk.hub), owner: mk.owner, priceIndex: mk.priceIndex, index: priceIndexParts(s, mid),
     tv: mk.tv ?? 0, tin: mk.tin ?? 0, deter: mk.deter ?? 0, base: mp.base, total: mp.total, crowdCap: MERCHANT_CROWD,
     rows, our, goods, waters: wat.length, seaRoutes: mk.links.filter((l) => l.sea).length,
     links: mk.links.filter((l) => known(s, n, s.markets[l.to].hub)).map((l) => ({ to: l.to, name: s.markets[l.to].name, sea: l.sea, ocean: !!l.ocean })),
   };
 }
 
-/** Every market we know: our share, income and merchants there (the market list of the trade panel). */
+/** What moves a market's price index (economy.ts clearMarkets): each good's price against its base at the age's prices,
+ *  its weight (the value of last month's demand for it at those prices) and how far it pulls the index above or below
+ *  1. The goods that pull most come first; their pulls and the rest add up to index − 1. */
+export function priceIndexParts(s: GameState, mid: number) {
+  const mk = s.markets[mid]; if (!mk) return null;
+  const pl = s.priceLevel;
+  let wsum = 0; const wt = new Float64Array(G);
+  for (let g = 0; g < G; g++) { wt[g] = priceIndexWeight(mk.demand[g], g, pl); wsum += wt[g]; }
+  const goods = Array.from({ length: G }, (_, g) => { const rel = mk.price[g] / (GOODS[g].base * pl); const share = wsum > 0 ? wt[g] / wsum : 0; return { g, name: GOODS[g].name, rel, share, pull: share * (rel - 1) }; })
+    .filter((x) => x.share > 0).sort((a, b) => Math.abs(b.pull) - Math.abs(a.pull) || a.g - b.g);
+  const top = goods.slice(0, 6);
+  // the rest is what the other goods pull, taken against the index as it was set at the close (the price level moves
+  // a hair after the markets clear), so the rows add up to the index shown
+  return { goods: goods.length, top, rest: mk.priceIndex - 1 - top.reduce((p, x) => p + x.pull, 0) };
+}
+
+/** Our share of the trade steered into market m last month, by the market it was steered from. */
+function steeredInShares(s: GameState, pid: number, m: number): { from: number; name: string; v: number }[] {
+  const mk = s.markets[m]; const paid = mk?.paid?.[pid] ?? 0, own = mk?.own?.[pid] ?? paid, tin = mk?.tin ?? 0;
+  if (!mk || paid - own <= 1e-9 || tin <= 0) return [];
+  return Object.entries(mk.tinFrom ?? {}).map(([src, v]) => ({ from: +src, name: s.markets[+src]?.name ?? '?', v: (paid - own) * v / tin })).sort((a, b) => b.v - a.v || a.from - b.from);
+}
+
+/** Every market we know: our share, income and merchants there (the market list of the trade panel); `earned` is what
+ *  the market earned us last month with the trade our merchants steered home from it credited to it (tradeEarnings),
+ *  so that the column adds up to our trade and company profits. */
 export function marketList(s: GameState, w: World, pid: number) {
   const n = s.nations[pid]; const home = homeMarket(s, n); const mps = marketPowers(s, w);
-  return s.markets.filter((m) => known(s, n, m.hub)).map((m) => {
-    const r = mps[m.id].rows.find((x) => x.n === pid);
-    return { id: m.id, name: m.name, home: m.id === home, tv: m.tv ?? 0, share: mps[m.id].total > 0 ? (r?.total ?? 0) / mps[m.id].total : 0, paid: m.paid?.[pid] ?? 0, merchants: m.merchants[pid] || 0, steer: !!m.steer?.[pid], owner: m.owner, reach: n && home >= 0 ? routeCost(s, home, m.id) <= merchantReach(n) : false };
+  const earn = new Map(tradeEarnings(s, pid).map((r) => [r.m, r]));
+  return s.markets.filter((m) => known(s, n, m.hub) || earn.has(m.id)).map((m) => {
+    const r = mps[m.id].rows.find((x) => x.n === pid); const e = earn.get(m.id);
+    return { id: m.id, name: m.name, home: m.id === home, tv: m.tv ?? 0, share: mps[m.id].total > 0 ? (r?.total ?? 0) / mps[m.id].total : 0, paid: m.paid?.[pid] ?? 0, merchants: m.merchants[pid] || 0, steer: !!m.steer?.[pid], owner: m.owner, reach: n && home >= 0 ? routeCost(s, home, m.id) <= merchantReach(n) : false,
+      earned: e?.total ?? 0, own: e?.own ?? 0, company: !!e?.company, steeredHome: (e?.steered ?? []).map((x) => ({ to: x.to, name: s.markets[x.to]?.name ?? '?', v: x.v })) };
   }).sort((a, b) => b.tv - a.tv || a.id - b.id);
+}
+
+/** Our trade and company income of last month by market, for the ledger line (the economy panel): each market's own
+ *  share, and the trade steered home credited to the market it came from. Adds up to income.trade + income.company. */
+export function tradeIncomeBy(s: GameState, pid: number): { m: number; name: string; to: number; toName: string; steered: boolean; company: boolean; v: number }[] {
+  const co = new Set((s.companies ?? []).filter((c) => c.nation === pid).map((c) => c.market));
+  const out: { m: number; name: string; to: number; toName: string; steered: boolean; company: boolean; v: number }[] = [];
+  const nm = (m: number) => s.markets[m]?.name ?? '?';
+  for (const r of tradeEarnings(s, pid)) {
+    if (r.own > 0) out.push({ m: r.m, name: nm(r.m), to: r.m, toName: nm(r.m), steered: false, company: co.has(r.m), v: r.own });
+    for (const x of r.steered) out.push({ m: r.m, name: nm(r.m), to: x.to, toName: nm(x.to), steered: true, company: co.has(x.to), v: x.v });
+  }
+  return out.sort((a, b) => b.v - a.v || a.m - b.m);
 }
 
 // ---------------- one good in one market ----------------
@@ -106,6 +152,9 @@ export function goodDetail(s: GameState, w: World, pid: number, mid: number, g: 
   return {
     good: g, name: GOODS[g].name, market: mid, marketName: mk.name, price: mk.price[g], base: GOODS[g].base, priceLevel: s.priceLevel, debase, anchor,
     supply: S, demand: D, net: mk.flowOut[g], stock: mk.stock[g], ratio, step, ready,
+    // what last month's clearing counted, so the detail adds up to the table: supply = made here + imports − exports +
+    // half the stock carried over; demand = the people's + the rest (workshops, households, armies' provisions)
+    books: mk.held && mk.dPeople ? { made: S - mk.held[g] + mk.flowOut[g], netIn: -mk.flowOut[g], held: mk.held[g], people: mk.dPeople[g], rest: D - mk.dPeople[g], unmet: Math.max(0, D - S), left: Math.max(0, S - D) } : null,
     hist: priceHist(s, mid, g, 24),
     made, people, crafts, house,
     producers: prod.slice(0, 8).map((x) => ({ ...x, name: placeI18n(w, x.loc), owner: s.loc.owner[x.loc] })), producerRealms: realms(byRealmP),
@@ -118,8 +167,17 @@ export function goodDetail(s: GameState, w: World, pid: number, mid: number, g: 
 export function tradePolicy(s: GameState, w: World, pid: number) {
   const n = s.nations[pid]; if (!n) return null;
   const law = lawEffect(n, 'tariff_max');
-  let deter = 0; const ours: { id: number; name: string; deter: number }[] = [];
-  for (const m of s.markets) if (m.owner === pid) { deter += m.deter ?? 0; ours.push({ id: m.id, name: m.name, deter: m.deter ?? 0 }); }
+  let deter = 0, margin = 0; const ours: { id: number; name: string; deter: number }[] = [];
+  const byGood = new Map<number, [number, number]>();
+  for (const m of s.markets) if (m.owner === pid) {
+    deter += m.deter ?? 0; ours.push({ id: m.id, name: m.name, deter: m.deter ?? 0 });
+    for (const [g, [v, mg]] of Object.entries(m.deterBy ?? {})) { const e = byGood.get(+g) ?? [0, 0]; e[0] += v; e[1] += mg; byGood.set(+g, e); margin += mg; }
+  }
+  // per good: the value kept out and the margin it would have made (as a share of that value)
+  const keptAll = [...byGood].sort((a, b) => b[1][0] - a[1][0] || a[0] - b[0]);
+  const keptOut = keptAll.slice(0, 8).map(([g, [v, mg]]) => ({ g, name: GOODS[g].name, v, margin: v > 0 ? mg / v : 0 }));
+  // the goods past the eighth, so the list adds up to the value kept out
+  const keptRest = keptAll.slice(8).reduce((a, [, [v, mg]]) => ({ n: a.n + 1, v: a.v + v, mg: a.mg + mg }), { n: 0, v: 0, mg: 0 });
   const partners = treatiesOf(s, pid, 'trade').map((o) => {
     const tr = s.treaties.find((x) => x.type === 'trade' && ((x.a === pid && x.b === o) || (x.a === o && x.b === pid)));
     return { n: o, until: tr?.until ?? 0, theirs: tariffBetween(s, o, pid), ours: tariffBetween(s, pid, o) };
@@ -136,7 +194,7 @@ export function tradePolicy(s: GameState, w: World, pid: number) {
     .map(([o, v]) => ({ n: o, goods: v, agreement: hasTreaty(s, pid, o, 'trade'), embargo: embargoedBy(s, pid, o) || embargoedBy(s, o, pid), theirTariff: s.nations[o]?.tariff ?? 0 }));
   return {
     tariff: n.tariff, max: tariffMax(n), maxParts: [['x_base', 0.05], ['x_trade_law', law]] as [string, number][],
-    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours,
+    earned: n.income.tariffs ?? 0, trade: n.income.trade ?? 0, company: n.income.company ?? 0, deter, markets: ours, keptOut, keptRest: { n: keptRest.n, v: keptRest.v, margin: keptRest.v > 0 ? keptRest.mg / keptRest.v : 0 }, keptMargin: margin,
     agreementTariff: AGREEMENT_TARIFF, agreementVolume: AGREEMENT_VOLUME, partners, embargoes, traders,
   };
 }
@@ -195,7 +253,9 @@ export function companiesView(s: GameState, w: World, pid: number) {
   });
   const have = new Set(mine.map((c) => c.market));
   const options = charterOptions(s, w, n).filter((m) => !have.has(m)).map((m) => ({ market: m, name: s.markets[m].name, tv: s.markets[m].tv ?? 0 }));
-  return { mine, options, slots: companySlots(n), commerce: n.tech[1], need: 12, cost: 600 * s.priceLevel, treasury: n.treasury };
+  // the Commerce & Learning level that brings the next charter (colonial.ts companySlots: one at 12, one more every six)
+  const slots = companySlots(n);
+  return { mine, options, slots, nextAt: 12 + 6 * slots, commerce: n.tech[1], need: 12, cost: 600 * s.priceLevel, treasury: n.treasury };
 }
 
 // ---------------- map modes ----------------

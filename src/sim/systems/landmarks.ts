@@ -4,6 +4,7 @@
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice } from '../ctx';
+import { addExpense } from '../ctx'; // fix-econ
 import { LANDMARKS, landmarkCost, LANDMARK_MONTHS } from '../content/landmarks';
 import { chance } from '../rng';
 
@@ -40,7 +41,7 @@ export function startLandmark(s: GameState, w: World, n: Nation, id: string): st
   if (x.tier >= d.max) return 'fully built';
   const cost = landmarkPrice(s, n, id, x.tier);
   if (n.treasury < cost) return 'not enough gold';
-  n.treasury -= cost;
+  addExpense(n, 'landmark', cost);
   x.work = s.day + Math.round(LANDMARK_MONTHS * 30.44);
   return null;
 }

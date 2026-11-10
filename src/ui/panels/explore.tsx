@@ -38,7 +38,7 @@ function Expeditions() {
       <div class="muted small">{t('ex_pick_target')}</div>
       <div class="ex-list">{d.targets.map((x: any) => <div class={`kv ${x.to === d.to ? 'on' : ''}`} onClick={() => setTo(x.to)}>
         <span class="k">{L(x.name)}</span>
-        <span class="v"><Tip content={<div><TipHead name={L(x.name)} hint={t('ex_target_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('ex_unknown_waters')}</span><span>{x.unknown} / {x.zones}</span></div><div class="bd-row"><span>{t('ex_distance')}</span><span>{num(x.km)} km</span></div></div></div>}>
+        <span class="v"><Tip content={<div><TipHead name={L(x.name)} hint={t('ex_target_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('ex_unknown_waters')}</span><span>{x.unknown} / {x.zones}</span></div><div class="bd-row"><span>{t('ex_route_km')}</span><span>{num(x.km)} km</span></div></div></div>}>
           <span class="muted">{x.unknown}/{x.zones} · {num(x.km)} km</span></Tip></span></div>)}
         {!d.targets.length && <Empty>{t('ex_no_targets')}</Empty>}
       </div>
@@ -53,7 +53,7 @@ function Expeditions() {
           <Row k={t('ex_target')} v={sel ? L(sel.name) : '—'} tip={<div><TipHead name={t('ex_target')} value={sel ? L(sel.name) : '—'} hint={t('ex_target_hint')} /></div>} />
           <Row k={t('ex_departure')} v={p.portName ? <a class="lk" onClick={() => flyToLoc(p.port)}>{placeName(L(p.portName))}</a> : '—'} tip={<div><TipHead name={t('ex_departure')} hint={fleet ? t('ex_departure_fleet') : t('ex_departure_hint')} /></div>} />
           <Row k={t('ex_ships')} v={`${p.ships} × ${p.unitName ? L(p.unitName) : '—'}`} tip={<div><TipHead name={t('ex_ships')} value={p.ships} hint={fleet ? t('ex_ships_fleet') : t('ex_ships_hint')} /></div>} />
-          <Row k={t('ex_time')} v={`≈ ${daysText(p.days)}`} tip={<div><TipHead name={t('ex_time')} value={`${p.days} ${t('days')}`} hint={t('ex_time_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('ex_distance')}</span><span>{num(p.km)} km</span></div><div class="bd-row"><span>{t('ex_route_zones')}</span><span>{p.path}</span></div><div class="bd-row"><span>{t('ex_voyage')}</span><span>{p.ocean ? t('ex_ocean') : t('ex_coastal')}</span></div></div></div>} />
+          <Row k={t('ex_time')} v={`≈ ${daysText(p.days)}`} tip={<div><TipHead name={t('ex_time')} value={`${p.days} ${t('days')}`} hint={t('ex_time_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('ex_route_km')}</span><span>{num(p.km)} km</span></div><div class="bd-row"><span>{t('ex_route_zones')}</span><span>{p.path}</span></div><div class="bd-row"><span>{t('ex_open_water')}</span><span>{num(p.open)} km</span></div><div class="bd-row"><span>{t('ex_voyage')}</span><span>{p.ocean ? t('ex_ocean_route') : t('ex_coastal')}</span></div></div><div class="muted small">{t('ex_voyage_rule')}</div></div>} />
           <Row k={t('ex_cost')} v={num(p.cost.total)} tip={() => <div><TipHead name={t('ex_cost')} value={num(p.cost.total)} hint={t('ex_cost_hint')} />
             <Parts rows={[['ex_cost_ships', p.cost.ships], ['ex_cost_provisions', p.cost.provisions]]} digits={0} total={p.cost.total} />
             <div class="muted small">{t('ex_provisions_rule')}: {p.cost.months} × {p.ships} × 40 × {num(p.priceLevel, 2)}</div></div>} />
@@ -76,8 +76,12 @@ function Companies() {
   const startYear = view.value?.startYear ?? 1356;
   if (!d) return <Empty>{t('loading')}…</Empty>;
   const free = d.slots - d.mine.length;
+  // where charters come from and when the next one comes
+  const slotsTip = <div><TipHead name={t('ex_charters')} value={`${d.mine.length}/${d.slots}`} hint={t('ex_slots_hint')} />
+    <div class="breakdown"><div class="bd-row"><span>{t('ex_need_commerce')}</span><span>{d.commerce}</span></div>
+      <div class="bd-row"><span>{t('ex_next_charter')}</span><span>{d.nextAt}</span></div></div></div>;
   return <>
-    <Section title={t('ex_companies')} id="ex-co" right={<Tip content={<div><TipHead name={t('ex_charters')} value={`${d.mine.length}/${d.slots}`} hint={t('ex_slots_hint')} /></div>}><span class="muted has-tip">{d.mine.length}/{d.slots}</span></Tip>}>
+    <Section title={t('ex_companies')} id="ex-co" right={<Tip content={slotsTip}><span class="muted has-tip">{t('ex_charters')} {d.mine.length}/{d.slots}</span></Tip>}>
       {d.mine.length ? d.mine.map((c: any) => <div class="company">
         <div class="kv"><span class="k"><b>{L(c.name)}</b></span><span class="v muted">{t('since')} {Math.floor(startYear + c.since / 365.25)}</span></div>
         <div class="grid2">
@@ -93,7 +97,7 @@ function Companies() {
     <Section title={t('ex_charter')} id="ex-charter">
       <div class="ex-needs">
         <Tip content={<div><TipHead name={t('ex_need_commerce')} value={`${d.commerce} / ${d.need}`} hint={t('ex_charter_commerce_hint')} /></div>}><span class={d.commerce >= d.need ? 'ok' : 'no'}>{d.commerce >= d.need ? '✔' : '✘'} {t('ex_need_commerce')} {d.commerce}/{d.need}</span></Tip>
-        <Tip content={<div><TipHead name={t('ex_charters')} value={`${d.mine.length}/${d.slots}`} hint={t('ex_slots_hint')} /></div>}><span class={free > 0 ? 'ok' : 'no'}>{free > 0 ? '✔' : '✘'} {t('ex_charters')} {d.mine.length}/{d.slots}</span></Tip>
+        <Tip content={slotsTip}><span class={free > 0 ? 'ok' : 'no'}>{free > 0 ? '✔' : '✘'} {t('ex_charters')} {d.mine.length}/{d.slots}{free <= 0 ? ` · ${t('ex_next_charter_at').replace('{n}', String(d.nextAt))}` : ''}</span></Tip>
         <Tip content={<div><TipHead name={t('ex_cost')} value={num(d.cost)} hint={t('ex_charter_cost_hint')} /></div>}><span class={d.treasury >= d.cost ? 'ok' : 'no'}>{d.treasury >= d.cost ? '✔' : '✘'} {t('ex_cost')} {num(d.cost)}</span></Tip>
       </div>
       {d.options.length ? d.options.map((o: any) => <div class="kv"><span class="k">{placeName(o.name)}</span><span class="v"><Tip content={<div><TipHead name={placeName(o.name)} hint={t('ex_charter_option_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_value')}</span><span>{num(o.tv, 1)}</span></div></div></div>}><span class="muted has-tip">{num(o.tv, 0)}</span></Tip>

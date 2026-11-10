@@ -3,12 +3,13 @@ import { techBase } from './progress';
 import type { GameState, Nation, Envoy } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, opinion, rel, hasTreaty, allies, atWar, subjectsOf, treatiesOf, addExpense } from '../ctx';
+import { addIncome } from '../ctx'; // fix-econ: gifts and exactions are booked on both sides
 import { rand, chance } from '../rng';
 import { GROUP_OF, ALL_CULTURES, FAITHS } from '../content/peoples';
 import { nationDev, declareWar, hasCasusBelli, gatherClaim } from './war';
 import { lawEffect, councilBonus } from './politics';
 import { excommunicate, steppeFade } from './realm';
-import { embargoedBy, embargoBetween, embargoStakes } from './trade';
+import { embargoedBy, embargoBetween, embargoStakes, tradeDiploRefusal } from './trade';
 import { isGreatPower, GP_REGARD } from './powers';
 
 /** How much less a realm thinks of the one that keeps an embargo on it. */
@@ -122,6 +123,7 @@ export function envoyDays(s: GameState, w: World, A: Nation, b: number): number 
 export function sendEnvoy(s: GameState, w: World, a: number, b: number, action: string, payload?: any): string | null {
   const A = s.nations[a];
   if (!s.nations[b]?.alive || a === b) return 'invalid target';
+  const unknown = tradeDiploRefusal(s, a, b, action); if (unknown) return unknown; // fix-econ: trade diplomacy needs to know them
   if (['gift', 'insult', 'break_alliance', 'rival', 'unrival', 'cancel_access', 'fabricate', 'excommunicate', 'embargo', 'lift_embargo'].includes(action)) return immediateAction(s, w, a, b, action, payload);
   if (A.envoysBusy >= A.envoys) return 'all envoys are busy';
   if (action === 'alliance' && hasTreaty(s, a, b, 'alliance')) return 'already allied';
@@ -141,7 +143,7 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
     case 'gift': {
       const amt = payload?.amount ?? Math.max(20, (A.income.tax || 10) * 2);
       if (A.treasury < amt) return 'not enough gold';
-      A.treasury -= amt; Bn.treasury += amt; addOpinion(s, b, a, 'gift', 10 + Math.min(40, amt / Math.max(1, (Bn.income.tax || 10)) * 5), 365 * 2, true);
+      addExpense(A, 'gifts', amt); addIncome(Bn, 'gifts', amt); addOpinion(s, b, a, 'gift', 10 + Math.min(40, amt / Math.max(1, (Bn.income.tax || 10)) * 5), 365 * 2, true);
       rel(s, b, a).trust = clamp(rel(s, b, a).trust + 3, 0, 100);
       return null;
     }
@@ -272,7 +274,7 @@ export function acceptProposal(s: GameState, w: World, a: number, b: number, act
     case 'trade': s.treaties.push({ a: lo, b: hi, type: 'trade', since: s.day, until: s.day + 365 * 15 }); break;
     case 'guarantee': s.treaties.push({ a, b, type: 'guarantee', since: s.day, until: 1e9 }); break;
     case 'vassalize': Bn.overlord = a; Bn.subjectType = 'vassal'; Bn.subjectSince = s.day; Bn.libertyDesire = 20; chronicle(s, a, 'vassal', { en: `${Bn.short.en} became a vassal of ${A.short.en}.`, de: `${Bn.short.de} wurde Vasall von ${A.short.de}.` }, undefined, [b]); break;
-    case 'demand': { const amt = Math.max(20, (Bn.income.tax || 10) * 3); Bn.treasury -= amt; A.treasury += amt; addOpinion(s, b, a, 'extorted', -30, 365 * 5); break; }
+    case 'demand': { const amt = Math.max(20, (Bn.income.tax || 10) * 3); addExpense(Bn, 'exactions', amt); addIncome(A, 'exactions', amt); addOpinion(s, b, a, 'extorted', -30, 365 * 5); break; }
   }
 }
 
@@ -297,6 +299,12 @@ export function libertyTarget(s: GameState, w: World, n: Nation, ov: Nation): nu
   let t = 0; for (const [, v] of libertyParts(s, w, n, ov)) t += v;
   return clamp(t, 0, 100);
 }
+/** What a subject pays its overlord a month: a colony a quarter of its taxes and trade, a tributary 15 % and a vassal
+ *  10 % of its taxes (of last month's ledger). */
+export function subjectTribute(n: Nation): number {
+  if (n.subjectType !== 'tributary' && n.subjectType !== 'vassal' && n.subjectType !== 'colonial') return 0;
+  return n.subjectType === 'colonial' ? (n.income.tax || 0) * 0.25 + (n.income.trade || 0) * 0.25 : (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1);
+}
 function subjectsMonth(s: GameState, w: World) {
   for (const n of s.nations) {
     if (!n.alive || n.overlord < 0) continue;
@@ -306,7 +314,7 @@ function subjectsMonth(s: GameState, w: World) {
     n.libertyDesire += (target - n.libertyDesire) * 0.05;
     // tribute
     if (n.subjectType === 'tributary' || n.subjectType === 'vassal' || n.subjectType === 'colonial') {
-      const t = (n.subjectType === 'colonial' ? (n.income.tax || 0) * 0.25 + (n.income.trade || 0) * 0.25 : (n.income.tax || 0) * (n.subjectType === 'tributary' ? 0.15 : 0.1));
+      const t = subjectTribute(n);
       if (t > 0) { n.treasury -= t; n.expenseAcc.tribute = (n.expenseAcc.tribute || 0) + t; ov.treasury += t; ov.incomeAcc.tribute = (ov.incomeAcc.tribute || 0) + t; }
     }
     // integration in progress
@@ -357,7 +365,7 @@ export function startSpy(s: GameState, a: number, b: number, action: string): st
   if (s.spies.filter((x) => x.nation === a).length >= 2) return 'all agents are busy';
   const cost = spyCost(s, a, b, action).cost;
   const A = s.nations[a]; if (A.treasury < cost) return 'not enough gold';
-  A.treasury -= cost;
+  addExpense(A, 'espionage', cost);
   s.spies.push({ nation: a, target: b, action, progress: 0, days: action === 'fabricate' ? 240 : 120 });
   return null;
 }
@@ -387,6 +395,14 @@ function spiesDay(s: GameState, w: World) {
   }
 }
 
+/** Where a realm's envoys come from: two, one more for every three points of the ruler's statecraft and one more with a
+ *  chancellor (the top bar's breakdown, src/game/view.ts explainRealm, shows these rows). */
+export function envoyParts(s: GameState, n: Nation): [string, number][] {
+  const r = s.chars[n.ruler];
+  return [['x_base', 2], ['x_ruler_dip', r ? Math.floor(r.skills[1] / 3) : 0], ['x_chancellor', n.council.chancellor ? 1 : 0]];
+}
+export function envoysOf(s: GameState, n: Nation): number { let v = 0; for (const [, x] of envoyParts(s, n)) v += x; return v; }
+
 export const diplomacy: System = {
   id: 'diplomacy',
   daily({ s, w }) {
@@ -401,6 +417,6 @@ export const diplomacy: System = {
     s.treaties = s.treaties.filter((t) => t.until > s.day && s.nations[t.a]?.alive && s.nations[t.b]?.alive);
     for (const k in s.flags) if (k.startsWith('deny_') && s.flags[k] <= s.day) delete s.flags[k]; // refusals forgotten (noteRefusal)
     // envoys: number by statecraft
-    for (const n of s.nations) if (n.alive) { const r = s.chars[n.ruler]; n.envoys = 2 + (r ? Math.floor(r.skills[1] / 3) : 0) + (n.council.chancellor ? 1 : 0); }
+    for (const n of s.nations) if (n.alive) n.envoys = envoysOf(s, n);
   },
 };

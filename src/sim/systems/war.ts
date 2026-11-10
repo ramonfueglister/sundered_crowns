@@ -5,6 +5,8 @@ import type { GameState, War, PeaceTerm, Nation, WarGoal, PendingEvent } from '.
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, rel, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
+import { addIncome, addExpense } from '../ctx'; // fix-econ: the gold of a peace is booked on both sides
+import { grossIncome } from './economy'; // fix-econ
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
@@ -871,7 +873,7 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
       parts.push(`${t.locs.length} ${one ? 'location' : 'locations'} (${[...new Set(t.locs.map((l) => w.provinces[w.provOf[l]]?.name))].slice(0, 3).join(', ')})`);
       partsDe.push(`${t.locs.length} ${one ? 'Ort' : 'Orte'} (${[...new Set(t.locs.map((l) => deName(w.provinces[w.provOf[l]]?.name)))].slice(0, 3).join(', ')})`);
     }
-    if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); Ln.treasury -= amt; W.treasury += amt; parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
+    if (t.type === 'gold') { const amt = Math.min(t.amount || 0, Math.max(0, Ln.treasury) + (Ln.income.tax || 0) * 6); addExpense(Ln, 'peace_gold', amt); addIncome(W, 'peace_gold', amt); parts.push(`${Math.round(amt)} marks`); partsDe.push(`${Math.round(amt)} Mark`); }
     if (t.type === 'vassal') { Ln.overlord = winner; Ln.subjectType = 'vassal'; Ln.subjectSince = s.day; Ln.libertyDesire = 30; parts.push('vassalage'); partsDe.push('Vasallität'); }
     if (t.type === 'break_alliance') { s.treaties = s.treaties.filter((x) => !(x.type === 'alliance' && (x.a === loser || x.b === loser) && (t.nation === undefined || x.a === t.nation || x.b === t.nation))); parts.push('alliances broken'); partsDe.push('Bündnisse gelöst'); }
     if (t.type === 'faith') { Ln.faith = W.faith; Ln.concord = clamp(Ln.concord - 30, -100, 100); parts.push('change of faith'); partsDe.push('Glaubenswechsel'); }
@@ -962,7 +964,7 @@ export function peaceObligations(s: GameState) {
     if (!x?.alive || (m[3] !== undefined && !y?.alive)) { delete s.flags[k]; continue; }
     if (m[1] === 'repar' && y) {
       // the payer x pays the winner y
-      const gross = Object.values(x.income).reduce((p, v) => p + Math.max(0, v), 0);
+      const gross = grossIncome(x);
       const amt = Math.max(0, gross * 0.1);
       if (amt > 0) { x.treasury -= amt; x.expenseAcc.reparations = (x.expenseAcc.reparations || 0) + amt; y.treasury += amt; y.incomeAcc.reparations = (y.incomeAcc.reparations || 0) + amt; }
     } else if (m[1] === 'tradepriv' && y) {

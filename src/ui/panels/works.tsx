@@ -7,7 +7,8 @@ import { useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { sim } from '../../game/client';
 import type { Command, CmdResult, I18n } from '../../sim/types';
-import { BUILDINGS, UNITS } from '../../sim/defs';
+import { BUILDINGS, UNITS, RECIPES } from '../../sim/defs';
+import type { MethodAlt } from '../../game/methodsview';
 import { playerId, panelArg, openPanel, showToast } from '../store';
 import { errText } from '../i18n';
 import { sfx, type Sfx } from '../audio';
@@ -68,20 +69,28 @@ function Place({ d, l }: { d: { names: Record<number, I18n> }; l: number }) {
 
 // ---------------------------------------------------------------- the panel
 export function WorksTab() {
-  const [tab, setTab] = useState<'build' | 'levy'>(() => (panelArg.value?.tab === 'levy' ? 'levy' : 'build'));
+  type TabK = 'build' | 'levy' | 'methods';
+  const [tab, setTabRaw] = useState<TabK>(() => (['levy', 'methods'].includes(panelArg.value?.tab) ? panelArg.value.tab : 'build'));
   const [f, setF] = useState<Filter>({ prov: -1, area: -1, type: -1 });
+  // the type filter names a building on one tab and a kind of workshop on the other
+  const setTab = (v: TabK) => { setTabRaw(v); setF({ ...f, type: -1 }); };
   const [d, refresh] = useQuery<WorksV>({ q: 'works' }, [], 2000);
+  const [md, mRefresh] = useQuery<MethodsV>(tab === 'methods' ? { q: 'methods' } : null, [tab], 2000);
   if (!d) return <Empty>{t('loading')}…</Empty>;
   const where = new Map(d.rows.map(([l, p, a]) => [l, [p, a] as const]));
   const inFilter = (l: number) => { const x = where.get(l); return !!x && (f.prov < 0 || x[0] === f.prov) && (f.area < 0 || x[1] === f.area); };
+  const typeOpts: [number, string][] | null = tab === 'build' ? d.types.filter((x) => x.known).map((x) => [x.id, L(x.name)])
+    : tab === 'methods' && md ? [...new Set(md.towns.flatMap((x) => x.recipes))].sort((a, b) => a - b).map((r) => [r, L(RECIPES[r].name)]) : null;
   return <div class="works">
-    <Tabs tabs={[['build', t('x_w_tab_build')], ['levy', t('x_w_tab_levy')]]} value={tab} onChange={setTab} />
-    <Filters d={d} f={f} setF={setF} types={tab === 'build'} />
-    {tab === 'build' ? <BuildTab d={d} f={f} inFilter={inFilter} refresh={refresh} /> : <LevyTab d={d} inFilter={inFilter} refresh={refresh} />}
+    <Tabs tabs={[['build', t('x_w_tab_build')], ['levy', t('x_w_tab_levy')], ['methods', t('x_w_tab_methods')]]} value={tab} onChange={setTab} />
+    <Filters d={d} f={f} setF={setF} types={typeOpts} allTypes={tab === 'methods' ? t('x_w_all_crafts') : t('x_w_all_types')} />
+    {tab === 'build' ? <BuildTab d={d} f={f} inFilter={inFilter} refresh={refresh} />
+      : tab === 'levy' ? <LevyTab d={d} inFilter={inFilter} refresh={refresh} />
+      : md ? <MethodsTab md={md} f={f} inFilter={inFilter} refresh={() => { mRefresh(); refresh(); }} /> : <Empty>{t('loading')}…</Empty>}
   </div>;
 }
 
-function Filters({ d, f, setF, types }: { d: WorksV; f: Filter; setF: (f: Filter) => void; types: boolean }) {
+function Filters({ d, f, setF, types, allTypes }: { d: WorksV; f: Filter; setF: (f: Filter) => void; types: [number, string][] | null; allTypes: string }) {
   const provOfArea = new Map<number, Set<number>>();
   for (const [, p, a] of d.rows) if (p >= 0) { if (!provOfArea.has(a)) provOfArea.set(a, new Set()); provOfArea.get(a)!.add(p); }
   const sortNames = (r: Record<number, string>, keep?: Set<number>) => Object.entries(r).map(([k, v]) => [Number(k), placeName(v)] as const)
@@ -91,7 +100,7 @@ function Filters({ d, f, setF, types }: { d: WorksV; f: Filter; setF: (f: Filter
   return <div class="w-filters">
     <select value={f.area} onChange={(e) => setF({ ...f, area: val(e), prov: -1 })}><option value={-1}>{t('x_w_all_areas')}</option>{areas.map(([k, v]) => <option value={k}>{v}</option>)}</select>
     <select value={f.prov} onChange={(e) => setF({ ...f, prov: val(e) })}><option value={-1}>{t('x_w_all_provs')}</option>{provs.map(([k, v]) => <option value={k}>{v}</option>)}</select>
-    {types && <select value={f.type} onChange={(e) => setF({ ...f, type: val(e) })}><option value={-1}>{t('x_w_all_types')}</option>{d.types.filter((x) => x.known).map((x) => <option value={x.id}>{L(x.name)}</option>)}</select>}
+    {types && <select value={f.type} onChange={(e) => setF({ ...f, type: val(e) })}><option value={-1}>{allTypes}</option>{types.map(([k, v]) => <option value={k}>{v}</option>)}</select>}
   </div>;
 }
 
@@ -310,6 +319,155 @@ function RaiseTip({ d, u, k, want, menEach, pool, plan }: { d: WorksV; u: WorksV
       <div class="bd-row bd-total"><span>{t('x_w_left_over')}</span><span>{num(d.treasury - u.cost * k)}</span></div>
     </div>
     {per.size > 0 && <div class="small w-placelist"><b>{t('x_w_where')}:</b> {[...per].map(([l, c]) => `${locLabel(d, l)} ×${c}`).join(', ')}</div>}
+  </div>;
+}
+
+// ---------------------------------------------------------------- production methods
+interface MethodV { id: number; key: string; name: I18n; mult: number; input: number; jobs: number; cost: number; commerce: number; building: I18n | null }
+interface TownV { loc: number; method: number; recipes: number[]; alt: MethodAlt[] }
+interface MethodsV { treasury: number; commerce: number; provs: Record<number, string>; areas: Record<number, string>; rows: [number, number, number][]; names: Record<number, I18n>; methods: MethodV[]; towns: TownV[] }
+const A_JOBS = 0, A_CAP = 1, A_OUT = 2, A_INP = 3, A_WHY = 4;
+type NumK = 0 | 1 | 2 | 3;
+const net = (a: MethodAlt) => a[A_OUT] - a[A_INP];
+const signedN = (v: number, dg = 1) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${num(Math.abs(v), dg)}`;
+const cls = (v: number) => (v > 1e-6 ? 'pos' : v < -1e-6 ? 'neg' : 'muted');
+/** A switch of town x to method m: the change in goods made, raw goods used, hands at work and value added. */
+const delta = (x: TownV, m: number) => {
+  const a = x.alt[x.method], b = x.alt[m];
+  return { out: b[A_OUT] - a[A_OUT], inp: b[A_INP] - a[A_INP], jobs: b[A_JOBS] - a[A_JOBS], net: net(b) - net(a) };
+};
+
+/** The methods of the realm's workshop towns: per method the towns that use it with their summed output, raw goods
+ *  and hands, and "switch all" for the towns shown, sent as one batch of ordinary 'method' orders. */
+function MethodsTab({ md, f, inFilter, refresh }: { md: MethodsV; f: Filter; inFilter: (l: number) => boolean; refresh: () => void }) {
+  const [open, setOpen] = useState(-1);
+  const towns = md.towns.filter((x) => inFilter(x.loc) && (f.type < 0 || x.recipes.includes(f.type)));
+  if (!md.towns.length || !towns.length) return <><div class="muted small">{t('x_w_methods_hint')}</div><Empty>{t('x_w_no_towns')}</Empty></>;
+  const sum = (xs: TownV[], k: NumK, m?: number) => xs.reduce((p, x) => p + x.alt[m ?? x.method][k], 0);
+  const rows = md.methods.map((m) => {
+    const using = towns.filter((x) => x.method === m.id);
+    const cand = towns.filter((x) => x.method !== m.id && x.alt[m.id][A_WHY] === null)
+      .sort((a, b) => delta(b, m.id).net - delta(a, m.id).net || a.loc - b.loc);
+    const blocked = towns.filter((x) => x.method !== m.id && x.alt[m.id][A_WHY] !== null);
+    const k = m.cost > 0 ? Math.min(cand.length, Math.floor(md.treasury / m.cost)) : cand.length;
+    return { m, using, cand, blocked, chosen: cand.slice(0, k) };
+  });
+  const send = (m: number, xs: TownV[]) => sendOrders(xs.map((x) => ({ t: 'method', loc: x.loc, method: m }) as Cmd)).then(refresh);
+  const head = (label: string, hint: string, c = 'r') => <Tip tag="th" class={c} content={<div><TipHead name={label} hint={hint} /></div>}>{label}</Tip>;
+  const sums = (xs: TownV[], m?: number) => <>
+    <td class="r">{num(sum(xs, A_JOBS, m))} <span class="muted small">/ {num(sum(xs, A_CAP, m))}</span></td>
+    <td class="r">{num(sum(xs, A_OUT, m), 1)}</td>
+    <td class="r">{num(sum(xs, A_INP, m), 1)}</td>
+    <td class="r">{num(sum(xs, A_OUT, m) - sum(xs, A_INP, m), 1)}</td>
+  </>;
+  return <>
+    <div class="muted small">{t('x_w_methods_hint')}</div>
+    <div class="w-bar"><span class="muted">{t('treasury')}: <b>{num(md.treasury)}</b> <i class="ic gold sm" /></span></div>
+    <div class="tbl-wrap"><table class="tbl w-tbl">
+      <thead><tr>
+        {head(t('production_method'), t('production_method_hint'), '')}
+        {head(t('x_w_towns'), t('x_w_towns_hint'))}
+        {head(t('x_w_hands'), t('x_w_hands_hint'))}
+        {head(t('x_w_made'), t('x_w_made_hint'))}
+        {head(t('x_w_raw'), t('x_w_raw_hint'))}
+        {head(t('x_w_net'), t('x_w_net_hint'))}
+        <th />
+      </tr></thead>
+      <tbody>{rows.map((r) => {
+        const m = r.m;
+        const why = !r.cand.length ? (r.blocked[0]?.alt[m.id][A_WHY] ?? 'nothing to do') : !r.chosen.length ? 'not enough gold' : null;
+        const out = [<tr class={`click ${open === m.id ? 'me' : ''} ${r.using.length ? '' : 'muted'}`} onClick={() => setOpen(open === m.id ? -1 : m.id)}>
+          <Tip tag="td" content={() => <MethodHead m={m} />}><span class="caret">{open === m.id ? '▾' : '▸'}</span> {L(m.name)}</Tip>
+          <td class="r">{r.using.length}</td>
+          {sums(r.using)}
+          <td class="r w-acts" onClick={(e) => e.stopPropagation()}>
+            <Btn disabled={why} tip={() => <SwitchTip md={md} m={m} chosen={r.chosen} cand={r.cand.length} blocked={r.blocked} />} onClick={() => send(m.id, r.chosen)}>{tf('x_w_switch_all', { k: r.chosen.length })}</Btn>
+          </td>
+        </tr>];
+        if (open === m.id) out.push(<tr class="w-sub"><td colSpan={7}><SwitchList md={md} m={m} cand={r.cand} blocked={r.blocked} onSwitch={(x) => send(m.id, [x])} /></td></tr>);
+        return out;
+      })}
+      <tr class="bd-total">
+        <Tip tag="td" content={<div><TipHead name={t('x_w_total_towns')} hint={t('x_w_total_towns_hint')} /></div>}><b>{t('x_w_total_towns')}</b></Tip>
+        <td class="r">{towns.length}</td>
+        {sums(towns)}
+        <td />
+      </tr></tbody>
+    </table></div>
+  </>;
+}
+function MethodHead({ m }: { m: MethodV }) {
+  return <div>
+    <TipHead name={L(m.name)} value={m.cost > 0 ? `${num(m.cost)} ${t('x_w_per_town')}` : undefined} hint={t(`method_${m.key}_hint`)} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('x_method_output')}</span><span class={m.mult > 1 ? 'pos' : ''}>× {num(m.mult, 2)}</span></div>
+      <div class="bd-row"><span>{t('x_method_inputs')}</span><span class={m.mult * m.input > 1 ? 'neg' : ''}>× {num(m.mult * m.input, 2)}</span></div>
+      <div class="bd-row"><span>{t('x_method_jobs')}</span><span>× {num(m.jobs, 2)}</span></div>
+    </div>
+    {m.commerce > 0 && <div class="muted small">{errText(`needs Commerce & Learning ${m.commerce}`)}</div>}
+    {m.building && <div class="muted small">{errText('needs a manufactory')}</div>}
+  </div>;
+}
+/** Why the towns shown that cannot switch to m cannot, counted by reason. */
+function Blocked({ blocked, m }: { blocked: TownV[]; m: number }) {
+  if (!blocked.length) return null;
+  const by = new Map<string, number>();
+  for (const x of blocked) { const k = x.alt[m][A_WHY]!; by.set(k, (by.get(k) ?? 0) + 1); }
+  return <div class="small"><b>{t('x_w_cannot')}:</b> {[...by].sort((a, b) => b[1] - a[1]).map(([k, c]) => `${c} × ${errText(k)}`).join(' · ')}</div>;
+}
+function SwitchTip({ md, m, chosen, cand, blocked }: { md: MethodsV; m: MethodV; chosen: TownV[]; cand: number; blocked: TownV[] }) {
+  const tot = chosen.reduce((p, x) => { const dl = delta(x, m.id); return { out: p.out + dl.out, inp: p.inp + dl.inp, jobs: p.jobs + dl.jobs, net: p.net + dl.net }; }, { out: 0, inp: 0, jobs: 0, net: 0 });
+  const cost = m.cost * chosen.length;
+  return <div>
+    <TipHead name={L(m.name)} value={tf('x_w_affordable', { k: chosen.length, m: cand })} hint={t('x_w_switch_all_hint')} />
+    {chosen.length > 0 && <div class="breakdown">
+      <div class="bd-row"><span>{t('x_w_total_cost')}</span><span class="neg">{num(cost)}</span></div>
+      <div class="bd-row"><span>{t('x_w_change_made')}</span><span class={cls(tot.out)}>{signedN(tot.out)}</span></div>
+      <div class="bd-row"><span>{t('x_w_change_raw')}</span><span class={cls(-tot.inp)}>{signedN(tot.inp)}</span></div>
+      <div class="bd-row"><span>{t('x_w_change_net')}</span><span class={cls(tot.net)}>{signedN(tot.net)}</span></div>
+      <div class="bd-row"><span>{t('x_w_change_hands')}</span><span>{signedN(tot.jobs, 0)}</span></div>
+      <div class="bd-row bd-total"><span>{t('x_w_left_over')}</span><span>{num(md.treasury - cost)}</span></div>
+    </div>}
+    <PlaceList d={md} locs={chosen.map((x) => x.loc)} />
+    {cand > chosen.length && <div class="muted small">{t('x_w_not_paid')}: {cand - chosen.length}</div>}
+    <Blocked blocked={blocked} m={m.id} />
+  </div>;
+}
+function SwitchList({ md, m, cand, blocked, onSwitch }: { md: MethodsV; m: MethodV; cand: TownV[]; blocked: TownV[]; onSwitch: (x: TownV) => void }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? cand : cand.slice(0, 12);
+  const prov = new Map(md.rows.map(([l, p]) => [l, p]));
+  return <div class="w-spots">
+    {!cand.length ? <div class="muted small">{t('x_w_no_switch')}</div> : <table class="tbl">
+      <thead><tr><th>{t('location')}</th><th>{t('x_w_now')}</th><th class="r">{t('x_w_made')}</th><th class="r">{t('x_w_raw')}</th><th class="r">{t('x_w_hands')}</th><th /></tr></thead>
+      <tbody>{shown.map((x) => {
+        const dl = delta(x, m.id);
+        return <tr>
+          <td><Place d={md} l={x.loc} /> <span class="muted small">{placeName(md.provs[prov.get(x.loc) ?? -1] ?? '')}</span></td>
+          <td class="muted">{L(md.methods[x.method].name)}</td>
+          <Tip tag="td" class={`r has-tip ${cls(dl.out)}`} content={() => <TownTip md={md} x={x} m={m.id} />}>{signedN(dl.out)}</Tip>
+          <Tip tag="td" class={`r has-tip ${cls(-dl.inp)}`} content={() => <TownTip md={md} x={x} m={m.id} />}>{signedN(dl.inp)}</Tip>
+          <Tip tag="td" class="r has-tip" content={() => <TownTip md={md} x={x} m={m.id} />}>{signedN(dl.jobs, 0)}</Tip>
+          <td class="r"><Btn disabled={m.cost > md.treasury ? 'not enough gold' : null} onClick={() => onSwitch(x)}>{t('x_w_switch')}{m.cost > 0 ? ` · ${num(m.cost)}` : ''}</Btn></td>
+        </tr>;
+      })}</tbody></table>}
+    {cand.length > shown.length && <a class="more" onClick={() => setAll(true)}>{t('more')} ({cand.length - shown.length})</a>}
+    <Blocked blocked={blocked} m={m.id} />
+  </div>;
+}
+function TownTip({ md, x, m }: { md: MethodsV; x: TownV; m: number }) {
+  const a = x.alt[x.method], b = x.alt[m];
+  const row = (label: string, i: NumK, dg = 1, good = 1) => <div class="bd-row"><span>{label}</span><span>{num(a[i], dg)} → <b class={cls((b[i] - a[i]) * good)}>{num(b[i], dg)}</b></span></div>;
+  return <div>
+    <TipHead name={locLabel(md, x.loc)} value={`${L(md.methods[x.method].name)} → ${L(md.methods[m].name)}`} hint={t('x_w_methods_hint')} />
+    <div class="breakdown">
+      {row(t('x_w_made'), A_OUT)}
+      {row(t('x_w_raw'), A_INP, 1, -1)}
+      <div class="bd-row"><span>{t('x_w_net')}</span><span>{num(net(a), 1)} → <b class={cls(net(b) - net(a))}>{num(net(b), 1)}</b></span></div>
+      {row(t('x_w_hands'), A_JOBS, 0)}
+      {row(t('x_method_jobs'), A_CAP, 0)}
+    </div>
+    <div class="muted small">{x.recipes.map((r) => L(RECIPES[r].name)).join(', ')}</div>
   </div>;
 }
 

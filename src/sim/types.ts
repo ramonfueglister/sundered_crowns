@@ -49,6 +49,9 @@ export interface Nation {
   coinage: number;       // debasement 0..0.5
   income: LedgerEntry; expense: LedgerEntry; // last month
   incomeAcc: LedgerEntry; expenseAcc: LedgerEntry; // current month accumulators
+  // fix-econ: money that moved through the chest without being income or spending (loans taken and repaid, a bankrupt
+  // crown's deficit written off, other movements found at the close); last month and the current month (systems/economy.ts)
+  credit?: LedgerEntry; creditAcc?: LedgerEntry;
   history: { day: number; treasury: number; income: number; expense: number; manpower: number; locs: number; pop: number; dev: number; army?: number; score?: number }[];
   armyMaint: number; navyMaint: number; // 0.25..1 spending sliders
   // politics
@@ -196,6 +199,12 @@ export interface Market {
   paid?: Record<number, number>;    // what each realm took here last month (own share and share of the trade steered in)
   steered?: Record<number, number>; // what each steering realm sent home from here last month
   deter?: number;                   // value of imports the ruler's tariff kept out last month
+  // fix-econ: what of paid was each realm's share of this market's own trade, and the trade steered in by its source market
+  own?: Record<number, number>; tinFrom?: Record<number, number>;
+  // fix-econ: per good, what last month's clearing counted: the half of the stock offered with the month's goods, and
+  // the people's demand (the rest of demand is workshops, households and armies)
+  held?: Float32Array; dPeople?: Float32Array;
+  deterBy?: Record<number, [number, number]>; // fix-econ: per good, [value kept out by the tariff, margin of that part]
 }
 export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
 

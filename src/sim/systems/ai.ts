@@ -14,7 +14,7 @@ import { armyMen, armyStrength, canEnter, findPath, availableUnits, unitCost, su
 import { nationDev, nationLocs, nationLocsRO, ownedLocs, ownerTable, ctrlTable, computeScore, evaluatePeace, termCost, casusBelliAll, locValue, gatherClaim, tributaryPeace, allowedTerms, cedeFits, holyLand, faithTermFits, warHooks, warYears } from './war';
 import { totalOpinion, evaluateProposal, refusedRecently, spyCost } from './diplomacy';
 import { lawEffect } from './politics';
-import { overextension } from './economy';
+import { overextension, grossIncome } from './economy';
 import { aiDuties } from './administration';
 import { FAITH_INDEX, FAITHS } from '../content/peoples';
 import { landmarksOf, landmarkDef, landmarkPrice, startLandmark } from './landmarks';
@@ -99,7 +99,15 @@ function budget(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   const delta = exp > inc * 1.05 && avgUnrest < 40 && !rich ? 0.005 : avgUnrest > 45 || rich ? -0.006 : 0;
   const floor = avgUnrest > 45 ? 0.02 : 0.05;
   if (delta) n.taxRate = n.taxRate.map((t, c) => clamp(t + delta * (c === CL.clergy || c === CL.nobles ? 0.3 : 1), Math.min(t, floor), 0.25));
-  if (!atWarNow && exp > inc && n.treasury < inc * 2) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
+  // in deficit and short of money, the army is put on half pay. The books close after the month's costs (economy.ts
+  // closeLedger), so a crown that had to borrow starts its month with a token chest: the loan it took last month says
+  // it is short of money, as does a chest below two months' revenue (or a hundred marks for a petty lordship)
+  const borrowed = (n.credit?.loans ?? 0) > 0;
+  // a junior partner in a war (it leads neither side) whose own lands no enemy holds fights at half pay sooner than
+  // borrow itself into ruin: the petty lords of a common front cannot keep a war chest the size of their overlord's
+  const junior = atWarNow && borrowed && exp > inc * 2 && warsOf(s, n.id).every((x) => x.att[0] !== n.id && x.def[0] !== n.id)
+    && !ownedLocs(s, n.id).some((l) => s.loc.ctrl[l] !== n.id && s.loc.ctrl[l] >= 0);
+  if ((!atWarNow || junior) && exp > inc && (borrowed || n.treasury < Math.max(inc * 2, 100 * s.priceLevel))) n.armyMaint = clamp(n.armyMaint - 0.1, 0.5, 1);
   else n.armyMaint = clamp(n.armyMaint + 0.1, 0.5, 1);
   // debt: repay loans when rich
   if (n.loans.length && n.treasury > n.loans[0].amount * 1.5) applyCommand(s, w, { t: 'loan', n: n.id, take: false, amount: n.loans[0].amount });
@@ -290,7 +298,7 @@ const MINEABLE = Uint8Array.from(GOODS, (g) => (RAW_FROM_MINE.has(g.id) ? 1 : 0)
  *  coastal power (buildings and lower taxes take the rest, see construction and budget; colonial ventures are a
  *  decision). The realm keeps a year of revenue in reserve. */
 export function spendSurplus(s: GameState, w: World, n: Nation) {
-  const gross = Object.values(n.income).reduce((p, v) => p + Math.max(0, v), 0);
+  const gross = grossIncome(n);
   if (gross <= 0 || n.capital < 0) return;
   const reserve = gross * 12;
   const surplus = () => n.treasury - reserve;

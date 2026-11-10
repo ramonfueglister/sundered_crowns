@@ -1,9 +1,10 @@
 // The simulated economy: population groups produce, earn, pay taxes and buy their needs in regional markets.
 // Prices form from accumulated buy and sell orders; goods flow between markets along land and sea links
 // when price differences exceed transport cost, tolls and risk.
-import type { GameState, Market, Nation } from '../types';
+import type { GameState, Market, Nation, I18n } from '../types';
 import type { World } from '../world';
-import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH } from '../ctx';
+import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH, notice } from '../ctx';
+import { fmtDate } from '../calendar';
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
 import { lawEffect, officeBonusOf } from './politics';
@@ -11,6 +12,9 @@ import { dutyUnrest } from './duties';
 import { secondFaith } from './faith';
 import { marketPower, payTrade, tariffBetween, homeMarket, marketPath, AGREEMENT_VOLUME, embargoBetween } from './trade';
 import { hasTreaty } from '../ctx';
+import { manpowerOf } from './military';
+import { envoysOf } from './diplomacy';
+import { historySample } from './realm';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
@@ -64,6 +68,33 @@ export function locGoods(lc: GameState['loc'], w: World, i: number, needs: { goo
   add(house, G_GRAIN, gq[b + GQ_HOUSE + 2] * 0.8 + gq[b + GQ_HOUSE + 3] * 0.5);
   if (needs) for (const nw of needs) add(people, nw.good, ec.gd[i * 4 + nw.tier] * nw.q);
   return { made, people, crafts, house };
+}
+
+/** What a town's workshops make and use in a month under production method m (default: the one it has), at its
+ *  market's present prices and supply: the crafts formula of stepLoop, read without changing anything. jobs: hands
+ *  at work; cap: places of work; out: value of the goods made (with the realm's craft quality); inp: price of the raw
+ *  materials used (marks per month). Display and planning (the methods overview, src/game/methodsview.ts). */
+export function craftOutcome(s: GameState, w: World, i: number, m = s.loc.method[i]): { jobs: number; cap: number; out: number; inp: number } {
+  const lc = s.loc, md = METHODS[m] ?? METHODS[0], mk = s.markets[lc.market[i]];
+  let nSlots = 0; for (let k = 0; k < 3; k++) if (lc.workshop[i * 3 + k] > 0) nSlots++;
+  const art = lc.pop[i * C + CL.artisans] + lc.pop[i * C + CL.wage_workers];
+  const cap = nSlots * (1 + lc.buildings[i * B + BI.workshop]) * 1600 * (1 + lc.buildings[i * B + BI.manufactory]) * md.jobs;
+  if (!mk || !nSlots || art <= 0) return { jobs: 0, cap, out: 0, inp: 0 };
+  const jobs = Math.min(art, cap), per = jobs / nSlots;
+  const n = lc.owner[i] >= 0 ? s.nations[lc.owner[i]] : null;
+  const prodMod = 1 + (n ? lawEffect(n, 'production') + (n.tech[1] - 1) * 0.03 : 0);
+  const quality = 1 + (n ? lawEffect(n, 'quality') : 0);
+  let out = 0, inp = 0;
+  for (let k = 0; k < 3; k++) {
+    const v = lc.workshop[i * 3 + k]; if (v <= 0) continue;
+    const ins = REC_IN[v - 1], qs = REC_Q[v - 1];
+    let scale = 1;
+    for (let j = 0; j < ins.length; j++) scale = Math.min(scale, 0.25 + 0.75 * marketFill(mk, ins[j]));
+    const kk = per / 100 * CRAFT_PROD * scale;
+    for (let j = 0; j < ins.length; j++) inp += qs[j] * md.mult * md.input * kk * mk.price[ins[j]];
+    out += RECIPES[v - 1].outQty * kk * md.mult * prodMod * mk.price[REC_OUT[v - 1]] * quality;
+  }
+  return { jobs, cap, out, inp };
 }
 
 /** Per-tier price of the basket (per person) and how well the market can fill it; recomputed when prices change. */
@@ -521,7 +552,15 @@ function tradeLink(s: GameState, a: Market, b: Market, cost: number, sea: boolea
     const steer = 1 + 0.5 * (STQ[from.id * STM + to.id] || 0);
     const qtyOf = (d: number) => d <= 0 ? 0 : Math.min(surplus * 0.35, surplus * clamp(d / Math.max(0.01, from.price[g]), 0, 1) * 0.6 * steer) * (1 - blocked) * agree;
     const qty = qtyOf(diff);
-    if (tr > 0) to.deter = (to.deter ?? 0) + Math.max(0, qtyOf(diff0) - qty) * from.price[g];
+    if (tr > 0) {
+      // what the tariff kept out: the part of the flow it removed, with the margin that part would have made (the flow
+      // shrinks by the share of its margin the tariff takes, so thin-margin goods stay away altogether)
+      const lost = Math.max(0, qtyOf(diff0) - qty);
+      if (lost > 0) {
+        to.deter = (to.deter ?? 0) + lost * from.price[g];
+        const by = (to.deterBy ??= {}); const e = (by[g] ??= [0, 0]); e[0] += lost * from.price[g]; e[1] += lost * diff0;
+      }
+    }
     if (qty <= 1e-6) continue;
     from.sAcc[g] -= qty; to.sAcc[g] += qty;
     from.flowOut[g] += qty; to.flowOut[g] -= qty;
@@ -552,9 +591,15 @@ export function clearMarkets(s: GameState, w: World) {
       if (path?.length) STQ[p.m * M + path[0]] += r.total / p.total;
     }
   }
-  for (const m of ms) m.deter = 0;
+  for (const m of ms) { m.deter = 0; m.deterBy = {}; }
   // 0. turn per-tier demand units into demand for each good
-  for (const m of ms) { if (!m.tierAcc) continue; const wq = tierCache(m, s.priceLevel).wq; NEED_IDX.forEach(([g, , tier], k) => { m.dAcc[g] += wq[k] * m.tierAcc![tier]; }); m.tierAcc.fill(0); }
+  for (const m of ms) {
+    if (!m.dPeople || m.dPeople.length !== G) m.dPeople = new Float32Array(G); else m.dPeople.fill(0);
+    if (!m.tierAcc) continue;
+    const wq = tierCache(m, s.priceLevel).wq, dp = m.dPeople;
+    NEED_IDX.forEach(([g, , tier], k) => { const q = wq[k] * m.tierAcc![tier]; m.dAcc[g] += q; dp[g] += q; });
+    m.tierAcc.fill(0);
+  }
   // 1. inter-market trade on last month's prices
   for (const a of ms) a.flowOut.fill(0);
   const oceanOpen = !!(s.flags.ocean_open || s.flags.west_route_found);
@@ -579,9 +624,11 @@ export function clearMarkets(s: GameState, w: World) {
   for (const m of ms) {
     const ownerN = s.nations[m.owner];
     const debase = ownerN ? 1 + ownerN.inflation : 1;
+    if (!m.held || m.held.length !== G) m.held = new Float32Array(G);
     let idx = 0, wsum = 0;
     for (let g = 0; g < G; g++) {
-      const S = m.sAcc[g] + m.stock[g] * 0.5;
+      m.held[g] = m.stock[g] * 0.5;
+      const S = m.sAcc[g] + m.held[g];
       const D = m.dAcc[g];
       const anchor = GOODS[g].base * pl * debase;
       let p = m.price[g];
@@ -602,14 +649,19 @@ export function clearMarkets(s: GameState, w: World) {
       m.stock[g] = Math.min((S - traded) * 0.85, D * 3 + 100);
       m.sAcc[g] = 0; m.dAcc[g] = 0;
       m.hist[g * 120 + m.histPos] = p;
-      const wt = GOODS[g].tier === 0 ? 3 : 1;
+      // the price index is a basket: each good weighs by what the market's people, workshops and armies bought of it
+      // (its demand at the age's prices), so a dear staple moves it and a good nobody here wants does not
+      const wt = priceIndexWeight(D, g, pl);
       idx += (p / (GOODS[g].base * pl)) * wt; wsum += wt;
     }
     m.histPos = (m.histPos + 1) % 120;
-    m.priceIndex = idx / wsum;
+    m.priceIndex = wsum > 0 ? idx / wsum : 1;
     m.owner = s.loc.owner[m.hub];
   }
 }
+
+/** Weight of a good in a market's price index: the value of its demand there at the age's prices (clearMarkets). */
+export function priceIndexWeight(demand: number, g: number, pl: number): number { return Math.max(0, demand) * GOODS[g].base * pl; }
 
 /** What a good costs where no one offers it: the cheapest linked market where it is on offer, plus carriage (a quarter
  *  more by land, a sixth by sea), between half and three times its anchor; two and a half times the anchor where no
@@ -652,19 +704,35 @@ export function harvests(s: GameState, w: World, year: number) {
   }
 }
 
+/** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
+ *  out (administration.ts budgetForecast) and the court, the splendour of a full chest, the fortresses' pay and the
+ *  reserve the AI keeps are measured without them (grossIncome). */
+export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
+  'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
+/** Last month's running revenue: every positive income line except one-off payments (an event's windfall, a gift, a
+ *  peace's gold, what an estate paid for a privilege), so a windfall does not raise next month's court. */
+export function grossIncome(n: Nation): number {
+  let g = 0; for (const k in n.income) if (!ONE_OFF.has(k)) g += Math.max(0, n.income[k]);
+  return g;
+}
+
+/** What the court costs a month: a small base, its seats and a share of last month's running revenue (a petty
+ *  lordship keeps a petty court: the fixed part never takes more than about half of what it earns), more with
+ *  corruption. */
+export function courtCost(n: Nation): number {
+  const last = n.history[n.history.length - 1];
+  const locs = last ? last.locs : 10;
+  const gross = grossIncome(n);
+  return (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption);
+}
 export function monthlyLedger(s: GameState, w: World) {
-  // per-nation monthly fixed items: court, interest, inflation & coinage, loans
+  // per-nation monthly fixed items: court, interest, inflation & coinage, loans falling due (the close of the books,
+  // with the loan a negative chest calls for, is closeLedger at the end of the monthly systems)
   for (const n of s.nations) {
     if (!n.alive) continue;
     const tmax = tariffMax(n); if (n.tariff > tmax) n.tariff = tmax; // a new trade law lowers the ceiling
-    // court & administration upkeep scales with realm size
-    let locs = 0; // computed in politics monthly; reuse history
-    const last = n.history[n.history.length - 1];
-    locs = last ? last.locs : 10;
-    // a court costs what the realm can bear: a small base, its seats, and a share of last month's revenue
-    const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
-    // (a petty lordship keeps a petty court: the fixed part never takes more than about half of what it earns)
-    addExpense(n, 'court', (Math.min(4 + locs * 1.2, gross * 0.45) + gross * 0.12) * (1 + n.corruption));
+    const gross = grossIncome(n);
+    addExpense(n, 'court', courtCost(n));
     // a chest beyond a year's revenue draws courtiers, feasts and building at court: it melts away, but the realm is admired
     const hoard = n.treasury - gross * 12;
     if (hoard > 0 && gross > 0) { addExpense(n, 'splendour', hoard * 0.03); n.prestige = Math.min(100, n.prestige + Math.min(0.5, hoard / (gross * 200))); }
@@ -679,36 +747,92 @@ export function monthlyLedger(s: GameState, w: World) {
       addIncome(n, 'minting', extra);
       n.inflation = clamp(n.inflation + n.coinage * 0.01 * (1 - resist), 0, 1.5);
     } else n.inflation = Math.max(0, n.inflation - 0.0015 * (1 + resist));
-    // loans due
+    // loans due: repaid when the chest allows, otherwise rolled over for a year at two points more
     for (const l of n.loans.slice()) {
       if (l.due <= s.day) {
-        if (n.treasury >= l.amount) { addExpense(n, 'loan_repay', l.amount); n.loans.splice(n.loans.indexOf(l), 1); }
+        if (n.treasury >= l.amount) { addCredit(n, 'loan_repay', -l.amount); n.loans.splice(n.loans.indexOf(l), 1); }
         else { l.due = s.day + 365; l.rate += 0.02; n.mandate -= 2; }
       }
     }
     n.debt = n.loans.reduce((a, l) => a + l.amount, 0);
-    // bankruptcy when debt crushing and treasury negative
-    if (n.treasury < 0) {
-      if (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day) {
-        // no lender will deal with a bankrupt crown: wages go unpaid, soldiers drift away, the deficit is written off
-        n.treasury = 0; n.armyMaint = 0.5;
-        for (const a of s.armies) if (a.owner === n.id && !a.fleet) for (const r of a.regs) r.men *= a.mercenary ? 0.8 : 0.95;
-      } else if (n.loans.length < 6) takeLoan(s, n, -n.treasury + 50);
-      else declareBankruptcy(s, n);
-    }
-    // roll ledger
-    n.income = n.incomeAcc; n.expense = n.expenseAcc; n.incomeAcc = {}; n.expenseAcc = {};
   }
 }
 
-export function takeLoan(s: GameState, n: Nation, amount: number) {
-  const base = loanRate(s, n);
-  const lenders = ['Bardi', 'Peruzzi', 'Medici', 'Fugger', 'Welser', 'Grimaldi', 'Lombard bankers', 'Hanseatic merchants', 'Jewish moneylenders', 'Genoese Casa di San Giorgio'];
-  const year = s.startYear + Math.floor(s.day / 365);
-  const avail = lenders.filter((l, k) => year >= [1300, 1300, 1397, 1480, 1490, 1300, 1300, 1300, 1300, 1407][k] && year <= [1345, 1343, 1494, 1650, 1650, 1815, 1815, 1815, 1815, 1805][k]);
-  n.loans.push({ amount, rate: Math.max(0.03, base), due: s.day + 365 * 5, lender: avail[(s.day + n.id) % Math.max(1, avail.length)] || 'Lombard bankers' });
-  n.treasury += amount;
+/** Book money that moves through the chest without being income or spending (loans, debts written off): it changes
+ *  the treasury and shows in the realm's ledger beside income and expenses. */
+export function addCredit(n: Nation, key: string, v: number) { const acc = (n.creditAcc ??= {}); acc[key] = (acc[key] || 0) + v; n.treasury += v; }
+
+/** The close of the month's books, after every monthly system has booked its income and costs (the last system of the
+ *  tick, systems/index.ts): a negative chest calls for a loan (or, for a bankrupt crown, the deficit is written off);
+ *  whatever changed the chest since the last close without a ledger line is booked as "other" movements; then the
+ *  month's ledger becomes last month's. So the treasury moves from one close to the next by exactly income − expenses
+ *  + credit of the ledger shown. */
+export function closeLedger(s: GameState) {
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    // bankruptcy when debt is crushing and the chest is negative
+    if (n.treasury < 0) {
+      if (n.flags.bankrupt_until && n.flags.bankrupt_until > s.day) {
+        // no lender will deal with a bankrupt crown: wages go unpaid, soldiers drift away, the deficit is written off
+        addCredit(n, 'written_off', -n.treasury); n.armyMaint = 0.5;
+        for (const a of s.armies) if (a.owner === n.id && !a.fleet) for (const r of a.regs) r.men *= a.mercenary ? 0.8 : 0.95;
+      } else if (n.loans.length < 6) takeLoan(s, n, -n.treasury + 50, true);
+      else declareBankruptcy(s, n);
+    }
+    // movements without a ledger line since the last close (the first close of a realm has no start to compare with)
+    const t0 = n.flags.ledger_t, d0 = n.flags.ledger_day;
+    if (t0 !== undefined && d0 !== undefined && s.day - d0 <= 32) {
+      let booked = 0;
+      for (const k in n.incomeAcc) booked += n.incomeAcc[k];
+      for (const k in n.expenseAcc) booked -= n.expenseAcc[k];
+      if (n.creditAcc) for (const k in n.creditAcc) booked += n.creditAcc[k];
+      const other = n.treasury - t0 - booked;
+      if (Math.abs(other) > 0.01) { const acc = (n.creditAcc ??= {}); acc.other = (acc.other || 0) + other; }
+    }
+    n.income = n.incomeAcc; n.expense = n.expenseAcc; n.credit = n.creditAcc ?? {};
+    n.incomeAcc = {}; n.expenseAcc = {}; n.creditAcc = {};
+    n.flags.ledger_t = n.treasury; n.flags.ledger_day = s.day;
+    delete n.flags.ledger_estimate;
+  }
 }
+
+/** Lenders by the years they lent to crowns (the English name is kept on the loan; lenderName gives both languages).
+ *  `by`: the name as a sentence uses it after 'from' (English, with its article) and after 'bei' (German dative). */
+const LENDERS: { en: string; de: string; by: I18n; from: number; to: number }[] = [
+  { en: 'Bardi', de: 'Bardi', by: { en: 'the Bardi', de: 'den Bardi' }, from: 1300, to: 1345 },
+  { en: 'Peruzzi', de: 'Peruzzi', by: { en: 'the Peruzzi', de: 'den Peruzzi' }, from: 1300, to: 1343 },
+  { en: 'Medici', de: 'Medici', by: { en: 'the Medici', de: 'den Medici' }, from: 1397, to: 1494 },
+  { en: 'Fugger', de: 'Fugger', by: { en: 'the Fugger', de: 'den Fuggern' }, from: 1480, to: 1650 },
+  { en: 'Welser', de: 'Welser', by: { en: 'the Welser', de: 'den Welsern' }, from: 1490, to: 1650 },
+  { en: 'Grimaldi', de: 'Grimaldi', by: { en: 'the Grimaldi', de: 'den Grimaldi' }, from: 1300, to: 1815 },
+  { en: 'Lombard bankers', de: 'Lombardische Bankiers', by: { en: 'Lombard bankers', de: 'lombardischen Bankiers' }, from: 1300, to: 1815 },
+  { en: 'Hanseatic merchants', de: 'Hansekaufleute', by: { en: 'Hanseatic merchants', de: 'Hansekaufleuten' }, from: 1300, to: 1815 },
+  { en: 'Jewish moneylenders', de: 'Jüdische Geldverleiher', by: { en: 'Jewish moneylenders', de: 'jüdischen Geldverleihern' }, from: 1300, to: 1815 },
+  { en: 'Genoese Casa di San Giorgio', de: 'Genueser Casa di San Giorgio', by: { en: 'the Genoese Casa di San Giorgio', de: 'der Genueser Casa di San Giorgio' }, from: 1407, to: 1805 },
+];
+export function lenderName(en: string): I18n { const l = LENDERS.find((x) => x.en === en); return { en, de: l?.de ?? en }; }
+
+/** Borrow `amount` from the lender of the day; `auto`: the crown borrowed by itself at the close of the month because
+ *  the chest was negative (a human realm is told who lent how much, at what rate and until when). */
+export function takeLoan(s: GameState, n: Nation, amount: number, auto = false) {
+  const base = loanRate(s, n);
+  const year = s.startYear + Math.floor(s.day / 365);
+  const avail = LENDERS.filter((l) => year >= l.from && year <= l.to);
+  const lender = avail[(s.day + n.id) % Math.max(1, avail.length)] ?? LENDERS[6];
+  const loan = { amount, rate: Math.max(0.03, base), due: s.day + 365 * 5, lender: lender.en };
+  n.loans.push(loan);
+  addCredit(n, 'loans', amount);
+  if (auto && s.playerNations.includes(n.id)) {
+    const r = Math.round(loan.rate * 1000) / 10;
+    notice(s, n.id, 'loan', {
+      en: `The treasury ran dry: the crown borrowed ${groupDigits(amount, ',')} marks from ${lender.by.en} at ${r} % a year, due on ${fmtDate(loan.due, s.startYear, 'en')}.`,
+      de: `Die Kasse war leer: Die Krone lieh sich ${groupDigits(amount, '.')} Mark bei ${lender.by.de} zu ${String(r).replace('.', ',')} % im Jahr, fällig am ${fmtDate(loan.due, s.startYear, 'de')}.`,
+    });
+  }
+}
+
+/** A whole number with a thousands separator (for notices). */
+function groupDigits(v: number, sep: string): string { return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, sep); }
 
 /** Highest tariff the trade law allows: 5 % plus the law's tariff_max (open ports 10 %, staple rights 20 %,
  *  protected trades 35 %). */
@@ -720,7 +844,7 @@ export function loanRate(s: GameState, n: Nation): number {
 }
 
 export function declareBankruptcy(s: GameState, n: Nation) {
-  n.loans = []; n.debt = 0; n.treasury = 0;
+  n.loans = []; n.debt = 0; addCredit(n, 'written_off', -n.treasury);
   n.concord = clamp(n.concord - 40, -100, 100); n.mandate = clamp(n.mandate - 20, 0, 100); n.prestige -= 25;
   n.flags.bankrupt_until = s.day + 365 * 5;
   n.modifiers.push({ id: 'bankruptcy', until: s.day + 365 * 5, label: { en: 'State bankruptcy', de: 'Staatsbankrott' }, effects: { tax: -0.25, unrest: 8, interest: 0.05 } });
@@ -806,6 +930,53 @@ export function retoolWorkshops(s: GameState, w: World, full = false) {
   }
 }
 
+/** Per market, what the last month of the warm-up brought to market (economy.init): the supply, the demand and the
+ *  demand by need tier before that month's clearing. Read once, by estimateTradeMonth, when a game is set up. */
+const WARM = new WeakMap<Market, { s: Float64Array; d: Float64Array; t?: Float64Array }>();
+const TRADE_KEYS = ['trade', 'company', 'tariffs'];
+
+/** The first month's trade, estimated when a game is set up (setup.ts, after every system has set up its merchants,
+ *  fleets and treaties): the clearing of the markets is run once more on copies of the markets, with the goods the
+ *  warm-up's last month brought to market and the prices that month left. The warm-up's own trade was cleared on the
+ *  prices of the month before, when prices had hardly begun to differ between markets, and falls far short of what
+ *  the first month will pay. The realms' trade, company and tariff income are replaced by those of the dry run; each
+ *  market keeps the dry run's trade results (trade value, the shares paid out and steered, what the tariffs kept out),
+ *  so the Trade panel shows the month the ledger estimates. Prices, stocks, supply, demand and the flows of goods stay
+ *  as the warm-up left them (they are what the goods tables add up). Returns false when there is no warm-up to use.
+ *  The set-up may estimate several times (the fleets are sized in between) and then calls forgetWarmup. */
+export function estimateTradeMonth(s: GameState, w: World): boolean {
+  const ms = s.markets;
+  if (!ms.length || !ms.every((m) => WARM.has(m))) return false;
+  // a dry run: clearing pays trade and tariffs into the treasuries (addIncome), and those are given back below
+  const orig = ms.slice(), flows = s.flows, acc = s.nations.map((n) => n.incomeAcc), gold = s.nations.map((n) => n.treasury);
+  const coIncome = (s.companies ?? []).map((c) => c.income);
+  try {
+    for (let k = 0; k < ms.length; k++) {
+      const c = structuredClone(orig[k]), x = WARM.get(orig[k])!;
+      c.sAcc = x.s.slice(); c.dAcc = x.d.slice(); if (x.t) c.tierAcc = x.t.slice();
+      ms[k] = c;
+    }
+    for (const n of s.nations) n.incomeAcc = {};
+    clearMarkets(s, w);
+    for (const n of s.nations) {
+      if (!n.alive) continue;
+      for (const key of TRADE_KEYS) { const v = n.incomeAcc[key] ?? 0; if (v > 0) n.income[key] = v; else delete n.income[key]; }
+    }
+    for (let k = 0; k < ms.length; k++) {
+      const o = orig[k], c = ms[k];
+      o.tv = c.tv; o.tin = c.tin; o.paid = c.paid; o.steered = c.steered; o.own = c.own; o.tinFrom = c.tinFrom; o.deter = c.deter; o.deterBy = c.deterBy;
+    }
+  } finally {
+    for (let k = 0; k < ms.length; k++) ms[k] = orig[k];
+    s.flows = flows; s.nations.forEach((n, k) => { n.incomeAcc = acc[k]; n.treasury = gold[k]; });
+    (s.companies ?? []).forEach((c, k) => { c.income = coIncome[k]; });
+  }
+  return true;
+}
+
+/** The warm-up's goods are of no use once the game is set up (setup.ts). */
+export function forgetWarmup(s: GameState) { for (const m of s.markets) WARM.delete(m); }
+
 export const economy: System = {
   id: 'economy',
   init(s, w) {
@@ -814,12 +985,14 @@ export const economy: System = {
     for (let k = 0; k < 2; k++) {
       PASS++;
       stepLocations(s, w, 0, w.L, 1, true);
+      // the goods the last warm-up month brought to market, kept for the estimate of the first month's trade
+      if (k === 1) for (const m of s.markets) WARM.set(m, { s: m.sAcc.slice(), d: m.dAcc.slice(), t: m.tierAcc?.slice() });
       clearMarkets(s, w);
       for (const n of s.nations) { n.treasury = 0; n.income = n.incomeAcc; n.incomeAcc = {}; n.expenseAcc = {}; }
       if (k === 0) retoolWorkshops(s, w, true);
     }
     // starting treasuries: ~ 4 months of tax income
-    for (const n of s.nations) n.treasury = Math.max(50, (n.income.tax || 0) * 4);
+    for (const n of s.nations) { n.treasury = Math.max(50, (n.income.tax || 0) * 4); n.credit = {}; n.creditAcc = {}; }
   },
   daily({ s, w }) {
     const b = s.day % BUCKETS;
@@ -836,3 +1009,23 @@ export const economy: System = {
     retoolWorkshops(s, w);
   },
 };
+
+/** The close of the month's books (closeLedger): the last system of the tick, after every other system has booked
+ *  the month's income and costs (systems/index.ts). */
+export const ledger: System = {
+  id: 'ledger',
+  daily({ s, w }) { refreshLimits(s, w); },
+  monthly({ s, w }) { closeLedger(s); historySample(s, w); },
+};
+
+/** The limits the top bar shows beside their breakdowns follow the state every day (and from the start of the game):
+ *  the manpower limit (military.ts manpowerOf; the pool never exceeds it) and the envoys (diplomacy.ts envoysOf). The
+ *  monthly refill of manpower and sailors stays with the military system. */
+export function refreshLimits(s: GameState, w: World) {
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    n.maxManpower = manpowerOf(s, w, n).max;
+    if (n.manpower > n.maxManpower) n.manpower = n.maxManpower;
+    n.envoys = envoysOf(s, n);
+  }
+}

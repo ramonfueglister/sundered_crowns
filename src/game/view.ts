@@ -5,9 +5,9 @@ import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
-import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit } from '../sim/systems/military';
+import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit, unitUpkeep } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed, scoreCaps, warYears, fieldBalance, type PeaceVeto } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe, envoyParts } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, ablestGain, ablestPlan, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
@@ -17,12 +17,13 @@ import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrin
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, locGoods } from '../sim/systems/economy';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, locGoods, lenderName, grossIncome } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
-import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView } from './tradeview';
+import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView, tradeIncomeBy } from './tradeview';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
+import { methodsView } from './methodsview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
@@ -76,6 +77,7 @@ export function playerView(s: GameState, n: Nation): PlayerView {
     merchants: { used: s.markets.reduce((p, m) => p + (m.merchants[n.id] || 0), 0), cap: merchantCap(n) },
     electionCloses: s.empire.election && s.empire.electors.includes(n.id) && s.empire.election.votes[n.id] === undefined ? s.empire.election.closes : 0,
     asks: (s.powers?.offers ?? []).filter((o) => o.to === n.id).length + s.leagues.reduce((p, l) => p + (l.calls ?? []).filter((c) => c.to === n.id).length, 0),
+    creditBreak: { ...(n.credit ?? {}) }, ledgerEstimate: !!n.flags.ledger_estimate, // fix-econ
   };
 }
 
@@ -414,6 +416,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'goals': { const n = s.nations[q.nation]; return n ? goalsView(s, w, n) : null; }
     case 'eventFx': return player >= 0 ? eventOptionFxCached(s, w, player, q.pending) : null;
     case 'works': return player >= 0 ? worksView(s, w, player) : null;
+    case 'methods': return player >= 0 ? methodsView(s, w, player) : null;
     case 'scope': return player >= 0 ? scopeView(s, w, player, q.loc, q.scope) : null;
     case 'gain': return player >= 0 ? gainDetail(s, w, player, q.loc, q.building) : null;
     case 'places': return Array.isArray(q.locs) ? placesOf(w, q.locs.slice(0, w.L)) : null;
@@ -503,7 +506,7 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     agents: s.agents.filter((a) => a.loc === l), siege: s.sieges.find((x) => x.loc === l) ?? null, war: locWar(s, w, l, player),
     armies: s.armies.filter((a) => a.loc === l).map((a) => ({ id: a.id, owner: a.owner, men: armyMen(a), fleet: a.fleet, name: a.name, mercenary: !!a.mercenary, rebels: !!a.rebels })),
     mercenaries: n && player === o ? MERC_SIZES.map((men) => ({ men, ...mercenaryCostParts(s, n, men) })) : [],
-    units: n && player === o ? availableUnits(s, n, false).concat(w.coastal[l] ? availableUnits(s, n, true) : []).map((u) => ({ id: u, name: UNITS[u].name, kind: UNITS[u].kind, cost1000: unitCost(s, n, u, UNITS[u].kind === 'ship' ? 1 : 1000) })) : [],
+    units: n && player === o ? availableUnits(s, n, false).concat(w.coastal[l] ? availableUnits(s, n, true) : []).map((u) => ({ id: u, name: UNITS[u].name, kind: UNITS[u].kind, cost1000: unitCost(s, n, u, UNITS[u].kind === 'ship' ? 1 : 1000), upkeep: unitUpkeep(s, n, u, UNITS[u].kind === 'ship' ? 1 : 1000) })) : [],
   };
 }
 
@@ -580,13 +583,14 @@ function realmDetail(s: GameState, w: World, player: number) {
     dutyUnrest: dutyUnrest(n), tariffMax: tariffMax(n), tariffMaxParts: [['x_base', 0.05], ...effectSources(n, 'tariff_max')] as BdRow[], loanRate: loanRate(s, n),
     diplomacy: { value: diploSkill(s, n), parts: [...effectSources(n, 'diplomacy'), ['x_chancellor', councilBonus(s, n, 'chancellor')]] as BdRow[] },
     tradition: traditionOf(n),
-    loans: n.loans, history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
+    loans: n.loans.map((l) => ({ ...l, name: lenderName(l.lender) })), history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
     situations: s.situations.map((x) => { const d = SITUATIONS.find((y) => y.id === x.id); return { ...x, name: d?.name, desc: d?.desc, stageName: d?.stages?.[x.stage] }; }),
     constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc], building: BUILDINGS[c.building].name })),
     recruits: s.recruits.filter((r) => r.nation === player).map((r) => ({ ...r, name: w.names[r.loc], unit: UNITS[r.type].name })),
     spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors, election: !!s.empire.election, diet: !!s.empire.diet },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,
-    priceLevel: s.priceLevel, markets: s.markets.map((m) => ({ id: m.id, name: m.name, mine: m.merchants[player] || 0 })),
+    priceLevel: s.priceLevel, // fix-econ: the list of every market (undiscovered ones too) went with the economy panel's old market table
+    tradeBy: tradeIncomeBy(s, player), // fix-econ: last month's trade income by market (the ledger line's breakdown)
     explain: explainRealm(s, w, n), goals: goalsView(s, w, n),
   };
 }
@@ -678,7 +682,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   const authorityParts: BdRow[] = [['x_base', 1], ['x_ruler_skills', sk * 0.4], ['x_mandate', n.mandate / 50],
     ...scaleRows(effectSources(n, 'authority_gain'), aBase), ...effectSources(n, 'authority')];
   // ---- Prestige: decays by 0.5 % a month; landmarks and a full chest add to it
-  const gross = Object.values(n.income).reduce((a, b) => a + Math.max(0, b), 0);
+  const gross = grossIncome(n); // (as the month's splendour reckons it: systems/economy.ts monthlyLedger)
   const prestigeParts: BdRow[] = [['x_decay', -n.prestige * 0.005], ...effectSources(n, 'prestige')];
   for (const x of landmarksOf(s, w)) if (x.tier > 0 && s.loc.owner[x.loc] === n.id) { const d = landmarkDef(x.id); if (d.prestige) prestigeParts.push([d.name, d.prestige * x.tier]); }
   const hoard = n.treasury - gross * 12;
@@ -687,7 +691,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
   const rr = researchRate(s, w, n);
   const insightParts: BdRow[] = [['x_base', 1.5], ['x_learning', (rr[0] + rr[1] + rr[2]) * 0.13], ['x_ruler_skills', r ? (r.skills[0] + r.skills[1]) * 0.15 : 0], ['x_prestige', Math.max(0, n.prestige) * 0.01]];
   // ---- Envoys (systems/diplomacy.ts)
-  const envoyParts: BdRow[] = [['x_base', 2], ['x_ruler_dip', r ? Math.floor(r.skills[1] / 3) : 0], ['x_chancellor', n.council.chancellor ? 1 : 0]];
+  const envoyRows: BdRow[] = envoyParts(s, n);
   // ---- Manpower and sailors (systems/military.ts monthly)
   let pl = 0, mp0 = 0, mp = 0, sail = 0, occupied = 0;
   const lc = s.loc;
@@ -762,7 +766,7 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     authority: { value: n.authority, monthly: sumRows(authorityParts), parts: authorityParts },
     prestige: { value: n.prestige, monthly: sumRows(prestigeParts), parts: prestigeParts },
     insight: { value: n.flags.doctrine_pts || 0, monthly: sumRows(insightParts), parts: insightParts },
-    envoys: { value: n.envoys, parts: envoyParts },
+    envoys: { value: n.envoys, parts: envoyRows },
     manpower: { max: mp * mpMult, parts: manpowerParts, monthly: mp * mpMult / 120, occupied },
     sailors: { max: sail * sailMult * 4, monthly: sail * sailMult / 10, mods: sailSources },
     warExhaustion: { value: n.warExhaustion, monthly: sumRows(weParts), parts: weParts, wars: atWarCount },

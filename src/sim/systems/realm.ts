@@ -39,19 +39,11 @@ export function nationStats(s: GameState, w: World): NationStats[] {
 /** Score: weighted dev, military, prestige, wealth, subjects. Drives the great-power ranking and leaderboards. */
 function rankingMonth(s: GameState, w: World) {
   const st = nationStats(s, w);
-  // men under arms per realm, for the history graphs (sampled with the history below)
-  const sample = s.day % 90 < 31; let men: Float64Array | null = null;
-  if (sample) { men = new Float64Array(s.nations.length); for (const a of s.armies) if (!a.rebels && !a.fleet && a.owner >= 0 && a.owner < men.length) for (const r of a.regs) men[a.owner] += r.men; }
   for (const n of s.nations) {
     if (!n.alive) { n.score = 0; continue; }
     const x = st[n.id];
     let sub = 0; for (const o of s.nations) if (o.alive && o.overlord === n.id) sub += st[o.id].dev * 0.5;
     n.score = x.dev + sub + x.army / 4000 + x.navy / 400 + Math.max(0, n.prestige) * 2 + Math.min(100, Math.max(0, n.treasury) / (500 * s.priceLevel));
-    // monthly history (for graphs)
-    if (sample) {
-      n.history.push({ day: s.day, treasury: n.treasury, income: Object.values(n.income).reduce((p, v) => p + v, 0), expense: Object.values(n.expense).reduce((p, v) => p + v, 0), manpower: n.manpower, locs: x.locs, pop: x.pop, dev: x.dev, army: Math.round(men![n.id]), score: Math.round(n.score * 10) / 10 });
-      if (n.history.length > 1900) n.history.splice(0, n.history.length - 1900);
-    }
     if (x.locs === 0 && n.alive) {
       n.alive = false;
       chronicle(s, n.id, 'fall', { en: `${n.short.en} ceased to exist.`, de: `${n.short.de} hörte auf zu bestehen.` });
@@ -65,6 +57,22 @@ function rankingMonth(s: GameState, w: World) {
   const prev = s.ranking.slice(0, 8);
   s.ranking = s.nations.filter((n) => n.alive && n.overlord < 0).sort((a, b) => b.score - a.score).slice(0, 8).map((n) => n.id);
   for (const id of s.ranking) if (!prev.includes(id) && prev.length) chronicle(s, id, 'great_power', { en: `${s.nations[id].short.en} rose among the great powers.`, de: `${s.nations[id].short.de} stieg zur Großmacht auf.` });
+}
+
+/** The history for the graphs, every three months: taken at the close of the month's books (the ledger system, the
+ *  last of the tick: systems/economy.ts), so the treasury is the chest after the month's loan or write-off and the
+ *  income and expenses are those of the month just closed. Day 0 is sampled at the start (realm.init). */
+export function historySample(s: GameState, w: World) {
+  if (s.day % 90 >= 31) return;
+  const st = nationStats(s, w);
+  const men = new Float64Array(s.nations.length);
+  for (const a of s.armies) if (!a.rebels && !a.fleet && a.owner >= 0 && a.owner < men.length) for (const r of a.regs) men[a.owner] += r.men;
+  for (const n of s.nations) {
+    if (!n.alive) continue;
+    const x = st[n.id];
+    n.history.push({ day: s.day, treasury: n.treasury, income: Object.values(n.income).reduce((p, v) => p + v, 0), expense: Object.values(n.expense).reduce((p, v) => p + v, 0), manpower: n.manpower, locs: x.locs, pop: x.pop, dev: x.dev, army: Math.round(men[n.id]), score: Math.round(n.score * 10) / 10 });
+    if (n.history.length > 1900) n.history.splice(0, n.history.length - 1900);
+  }
 }
 
 function timelapseYear(s: GameState, w: World) {
@@ -194,7 +202,7 @@ function steppeSplitYear(s: GameState, w: World) {
 
 export const realm: System = {
   id: 'realm',
-  init(s, w) { empireInit(s); papacyInit(s, w); rankingMonth(s, w); timelapseYear(s, w); },
+  init(s, w) { empireInit(s); papacyInit(s, w); rankingMonth(s, w); historySample(s, w); timelapseYear(s, w); },
   daily({ s, w }) { constructionsDay(s, w); },
   monthly({ s, w }) { rankingMonth(s, w); },
   yearly({ s, w }) { timelapseYear(s, w); papacyYear(s); steppeYear(s, w); steppeSplitYear(s, w); },
