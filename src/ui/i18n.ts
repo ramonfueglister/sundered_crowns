@@ -1007,6 +1007,12 @@ const S: Record<string, [string, string]> = {
   xp_trait_health_bad: ['Dies sooner than others of the same age.', 'Stirbt früher als andere desselben Alters.'],
   xp_trait_health_good: ['Lives longer than others of the same age.', 'Lebt länger als andere desselben Alters.'],
   xp_trait_source: ["The ruler's traits", 'Eigenschaften des Herrschers'],
+  xp_ablest: ['Appoint the ablest', 'Den Fähigsten ernennen'],
+  xp_ablest_is: ['Ablest at court:', 'Am fähigsten am Hof:'],
+  xp_ablest_hint: ['The candidate at court whose skill and honesty give this office the greatest bonus (the heir is not chosen).', 'Die Person am Hof, deren Können und Redlichkeit diesem Amt den größten Bonus geben (der Thronfolger wird nicht gewählt).'],
+  xp_ablest_all: ['Fill the council with the ablest', 'Rat mit den Fähigsten besetzen'],
+  xp_ablest_all_hint: ['Appoints the ablest candidate to every office an abler person would serve better: {k} changes, {n} Authority.', 'Besetzt jedes Amt, das eine fähigere Person besser führen würde, mit dem Fähigsten: {k} Wechsel, {n} Autorität.'],
+  xp_ablest_all_done: ['The council is filled with the ablest', 'Der Rat ist mit den Fähigsten besetzt'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -425,7 +425,9 @@ export function characterDies(s: GameState, w: World, n: Nation, cid: number) {
     if (X.heir === cid) { X.heir = 0; pickNewHeir(s, X); notice(s, X.id, 'heir_death', { en: `The heir ${c.name} has died.`, de: `${c.female ? 'Die Thronfolgerin' : 'Der Thronfolger'} ${de(c)} ist gestorben.` }); }
     if (X.consort === cid) X.consort = 0;
     if (X.regent === cid) X.regent = 0;
-    for (const off in X.council) if (X.council[off] === cid) delete X.council[off];
+    let wasOfficial = false;
+    for (const off in X.council) if (X.council[off] === cid) { delete X.council[off]; wasOfficial = true; }
+    if (wasOfficial && X.alive) fillCouncil(s, X, c);
   }
 }
 
@@ -591,14 +593,52 @@ export function courtPerson(s: GameState, n: Nation, female: boolean, rng: numbe
   const p = personName(rng, n.culture, female);
   return { name: p.name, dynasty: p.dynasty };
 }
-function fillCouncil(s: GameState, n: Nation) {
+/** The office in the German genitive ("das Amt des Kanzlers"). */
+const OFFICE_GEN_DE: Record<string, string> = { chancellor: 'des Kanzlers', treasurer: 'des Schatzmeisters', marshal: 'des Marschalls', chaplain: 'des Hofkaplans', spymaster: 'des Meisters der Geheimnisse' };
+/** Fill the vacant seats of the council. A seat goes to the ablest candidate at court for that office (officeBonusOf),
+ *  else to a new man of the realm's nobility; the player is told who died and who holds the office now. */
+function fillCouncil(s: GameState, n: Nation, dead?: Character) {
   for (const off of OFFICES) {
     const c = s.chars[n.council[off.id]];
     if (c && c.alive) continue;
-    const nc = newChar(s, n, { ...courtPerson(s, n, false), born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false });
-    nc.loyalty = 40 + rand(s.rng) * 50; nc.corruption = rand(s.rng) * 0.3; nc.ambition = rand(s.rng);
+    const best = n.ruler && s.day > 0 ? ablestFor(s, n, off.id) : null; // (the council of the start is drawn as before)
+    let nc: Character;
+    if (best) { nc = best; nc.role = 'official'; nc.loyalty ??= 60; nc.corruption ??= 0; nc.ambition ??= 0.3; n.candidates = (n.candidates ?? []).filter((id) => id !== nc.id); }
+    else {
+      nc = newChar(s, n, { ...courtPerson(s, n, false), born: s.day - Math.floor((30 + rand(s.rng) * 25) * 365), role: 'official', female: false });
+      nc.loyalty = 40 + rand(s.rng) * 50; nc.corruption = rand(s.rng) * 0.3; nc.ambition = rand(s.rng);
+    }
     n.council[off.id] = nc.id;
+    if (s.playerNations.includes(n.id) && s.day > 0) {
+      const was = dead ? { en: `${dead.name} has died. `, de: `${de(dead)} ist gestorben. ` } : { en: '', de: '' };
+      notice(s, n.id, 'council', { en: `${was.en}${nc.name} holds the office of ${off.name.en.toLowerCase()} now${best ? ', the ablest at court' : ''}.`, de: `${was.de}${de(nc)} übernimmt das Amt ${OFFICE_GEN_DE[off.id]}${best ? (nc.female ? ' als Fähigste am Hof' : ' als Fähigster am Hof') : ''}.` });
+    }
   }
+}
+/** The candidate at court who would serve best in an office (officeCandidates, officeBonusOf), or null. The heir is
+ *  left out: the heir is named by hand or not at all. */
+export function ablestFor(s: GameState, n: Nation, office: string): Character | null {
+  let best: Character | null = null, bb = -1;
+  for (const c of officeCandidates(s, n)) {
+    if (c.id === n.heir) continue;
+    const b = officeBonusOf(c, office);
+    if (b > bb + 1e-9 || (Math.abs(b - bb) <= 1e-9 && best && c.id < best.id)) { best = c; bb = b; }
+  }
+  return best;
+}
+/** Appoint the ablest candidate to an office ('*': to every office whose holder an abler candidate would beat), each
+ *  appointment at the usual Authority cost (the 'office' command with char -1). */
+export function appointAblest(s: GameState, n: Nation, office: string): string | null {
+  const offices = office === '*' ? OFFICES.map((o) => o.id) : [office];
+  if (!offices.every((o) => OFFICES.some((x) => x.id === o))) return 'unknown office';
+  let done = 0, err: string | null = null;
+  for (const o of offices) {
+    const c = ablestFor(s, n, o); const cur = s.chars[n.council[o]];
+    if (!c || (cur?.alive && officeBonusOf(c, o) <= officeBonusOf(cur, o) + 1e-9)) continue;
+    err = appointOfficial(s, n, o, c.id); if (err) break;
+    done++;
+  }
+  return done ? null : err ?? 'no abler candidate at court';
 }
 // ---------------- candidates for office ----------------
 export const OFFICE_COST = 10; // Authority per appointment
@@ -858,7 +898,7 @@ export const politics: System = {
       characterMonth(s, w, n);
       nationPoliticsMonth(s, w, n, cs);
       officialsMonth(s, n);
-      if (s.day % 365 < 31) fillCouncil(s, n);
+      fillCouncil(s, n); // a vacant seat is filled within the month (it was left empty up to a year)
       // every court has candidates for office, the AI's as the player's (the AI appoints the ablest, ai_statecraft.ts)
       refreshCandidates(s, n, s.day % 365 < 31);
       n.modifiers = n.modifiers.filter((m) => m.until > s.day);

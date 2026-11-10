@@ -5,7 +5,9 @@
 // Run: npx vitest run tests/fix_people.test.ts
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
-import { characterDies, lineOfSuccession, ageOf, politics, houseKin, syncRulerTraits, lawEffect } from '../src/sim/systems/politics';
+import { characterDies, lineOfSuccession, ageOf, politics, houseKin, syncRulerTraits, lawEffect, officeCandidates, officeBonusOf, OFFICES } from '../src/sim/systems/politics';
+import { applyCommand } from '../src/sim/commands';
+import { localName } from '../src/sim/content/names';
 import { RULER_TRAIT_FX, TRAITS_DESCRIPTIVE, TRAITS_HEALTH } from '../src/sim/content/traits';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dynastyView, successionClaims, marriagePreview, freshGivenName } from '../src/sim/systems/dynasty';
@@ -251,5 +253,44 @@ describe('traits', () => {
     expect(E.ruler).toBe(bp.id);
     expect(fx('unrest')).toBeCloseTo(unrest0 + 1, 9);
     expect(fx('tax')).toBeCloseTo(tax0 + 0.05, 9);
+  });
+});
+
+describe('the council', () => {
+  it('a dead official is replaced at once by the ablest at court, and the player is told who', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); s.playerNations = [E.id]; s.day = 40;
+    politics.monthly!({ s, w } as any); // candidates for office at court
+    const cands = officeCandidates(s, E).filter((c) => c.id !== E.heir);
+    expect(cands.length).toBeGreaterThan(0);
+    const best = [...cands].sort((a, b) => officeBonusOf(b, 'chancellor') - officeBonusOf(a, 'chancellor') || a.id - b.id)[0];
+    const dead = s.chars[E.council.chancellor];
+    characterDies(s, w, E, dead.id);
+    expect(E.council.chancellor).toBe(best.id);
+    const n = s.notices.find((x) => x.nation === E.id && x.kind === 'council')!;
+    expect(n.text.de).toContain(`${localName(dead.name, 'de')} ist gestorben.`);
+    expect(n.text.de).toContain(`${localName(best.name, 'de', best.female)} übernimmt das Amt des Kanzlers als Fähigste`);
+  });
+
+  it('"appoint the ablest" names the best candidate for one office or for the whole council, at the usual cost', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'); s.playerNations = [E.id]; s.day = 40;
+    politics.monthly!({ s, w } as any);
+    // a weak council: every holder has no skill, so an abler candidate beats each one
+    for (const o of OFFICES) s.chars[E.council[o.id]].skills = [0, 0, 0];
+    E.authority = 100;
+    const pick = (off: string) => [...officeCandidates(s, E)].filter((c) => c.id !== E.heir).sort((a, b) => officeBonusOf(b, off) - officeBonusOf(a, off) || a.id - b.id)[0];
+    const m = pick('marshal');
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: 'marshal', char: -1 }).ok).toBe(true);
+    expect(E.council.marshal).toBe(m.id);
+    expect(E.authority).toBe(90);
+    // again: nobody is abler now
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: 'marshal', char: -1 }).ok).toBe(false);
+    const before = OFFICES.map((o) => officeBonusOf(s.chars[E.council[o.id]], o.id));
+    expect(applyCommand(s, w, { t: 'office', n: E.id, office: '*', char: -1 }).ok).toBe(true);
+    const after = OFFICES.map((o) => officeBonusOf(s.chars[E.council[o.id]], o.id));
+    expect(after.every((v, i) => v >= before[i])).toBe(true);
+    expect(after.reduce((a, b) => a + b, 0)).toBeGreaterThan(before.reduce((a, b) => a + b, 0));
+    expect(E.authority).toBe(90 - 10 * after.filter((v, i) => v > before[i]).length);
   });
 });

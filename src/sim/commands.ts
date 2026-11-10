@@ -8,7 +8,7 @@ import { findPath, recruit, hireMercenaries, appointGeneral, removeArmy, armyMen
 import { availableCommanders, setCommander, raiseGeneral, generalCost } from './systems/commanders';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
-import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
+import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, appointAblest, lawEffect } from './systems/politics';
 import { takeLoan, tariffMax } from './systems/economy';
 import { setMethod } from './systems/administration';
 import { setDuty, DUTY_INDEX } from './systems/duties';
@@ -254,7 +254,8 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     case 'charter': { const e = charterCompany(s, w, n, cmd.market); return e ? err(e) : OK; }
     case 'explore': { const e = launchExpedition(s, w, n, cmd.fleet, cmd.to); return e ? err(e) : OK; }
     case 'spy': { const e = startSpy(s, cmd.n, cmd.target, cmd.action); return e ? err(e) : OK; }
-    case 'office': { const e = appointOfficial(s, n, cmd.office, cmd.char); return e ? err(e) : OK; }
+    // char -1: the ablest candidate at court; office '*': the ablest for every office they would serve better
+    case 'office': { const e = cmd.char === -1 || cmd.office === '*' ? appointAblest(s, n, cmd.office) : appointOfficial(s, n, cmd.office, cmd.char); return e ? err(e) : OK; }
     case 'loan': {
       if (cmd.take) {
         if (n.loans.length >= 8) return err('no lender will extend more credit');

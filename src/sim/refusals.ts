@@ -114,6 +114,7 @@ export const REFUSAL_DE: Record<string, string> = {
   'the event cannot happen now': 'Das Ereignis kann jetzt nicht eintreten',
   // ---- fix-people
   'they refused us recently': 'Sie haben uns erst kürzlich abgewiesen',
+  'no abler candidate at court': 'Niemand am Hof wäre fähiger',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

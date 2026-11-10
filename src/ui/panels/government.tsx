@@ -38,7 +38,7 @@ export function GovernmentTab() {
       <Section title={t('ruler')} id="gov-ruler">
         <div class="ruler-big">
           <div class="ruler-name">{charName(p.ruler, me?.ruler?.female)}</div>
-          {me?.ruler?.dynasty && !p.ruler.includes(me.ruler.dynasty.slice(0, 5)) && <div class="muted">{t('house_of')} {me.ruler.dynasty}</div>}
+          {me?.ruler?.dynasty && !p.ruler.includes(me.ruler.dynasty.slice(0, 5)) && <div class="muted">{t('house_of')} {houseName(me.ruler.dynasty)}</div>}
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
           {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
           {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <TraitChip k={x} ruler />)}</div>}
@@ -82,7 +82,7 @@ function Council({ r, authority }: { r: any; authority: number }) {
   const cands: any[] = r.candidates ?? [];
   const cost = r.officeCost ?? 10;
   const person = (c: any, office: any, bonus: number) => <div>
-    <b>{c.name}</b>{c.age !== undefined && <span class="muted"> · {c.age} {t('years_old')}</span>}
+    <b>{charName(c.name, c.female)}</b>{c.age !== undefined && <span class="muted"> · {c.age} {t('years_old')}</span>}
     <div>{SK.map((k, i) => <span class={i === office.skill ? 'hl' : ''}>{t(k)} {c.skills[i]}{i < 2 ? ' · ' : ''}</span>)}</div>
     {c.traits?.length > 0 && <div class="muted"><TraitList traits={c.traits} /></div>}
     {c.loyalty !== undefined && <div>{t('loyalty')}: {num(c.loyalty)}</div>}
@@ -90,29 +90,45 @@ function Council({ r, authority }: { r: any; authority: number }) {
     <Parts title={`${t('council_bonus')}: ${L(OFFICE_FX[office.effect] ?? { en: office.effect, de: office.effect })}`} rows={[['x_office_skill', (c.skills[office.skill] / 6) * 10], ['x_corruption', -(c.skills[office.skill] / 6) * 10 * (c.corruption ?? 0)]]} total={bonus * 100} fmt={(v) => `${signed(v, 1)} %`} />
     <div class="muted small office-does">{t(`x_office_${office.id}_does`).replace('{b}', signed(bonus * 100, 1)).replace('{b2}', signed(bonus * 200, 1))}</div>
   </div>;
+  // the ablest candidate for each office (never the heir, as the simulation's appointAblest) and whether it beats the holder
+  const ablest = (o: any) => cands.filter((c) => !c.heir).sort((a, b) => (b.bonus?.[o.id] ?? 0) - (a.bonus?.[o.id] ?? 0) || a.id - b.id)[0];
+  const gain = (o: any) => { const c = ablest(o); return c && (!o.char || (c.bonus?.[o.id] ?? 0) > (o.bonus ?? 0) + 1e-9) ? c : null; };
+  const changes = r.council.filter((o: any) => gain(o));
   return <Section title={t('council')} id="gov-council" right={<Tip content={() => <AuthorityTip />}><span class="muted has-tip">{t('authority')}: <b>{num(authority)}</b></span></Tip>}>
-    {r.council.map((o: any) => { const open = openOff === o.id;
+    {r.council.map((o: any) => { const open = openOff === o.id; const best = gain(o);
       return <div class={`council-office ${open ? 'open' : ''}`}>
         <div class="council-row">
           <span class="k">{L(o.name)}</span>
           {o.char ? <Tip content={() => person(o.char, o, o.bonus)}>
-            <span class="v">{o.char.name} <small class="muted">({o.char.skills.join('/')}) · {signed(o.bonus * 100, 1)} %</small></span>
+            <span class="v">{charName(o.char.name, o.char.female)} <small class="muted">({o.char.skills.join('/')}) · {signed(o.bonus * 100, 1)} %</small></span>
           </Tip> : <span class="v muted">{t('vacant')}</span>}
           <Btn tip={t('appoint_hint').replace('{n}', String(cost))} onClick={() => setOpen(open ? null : o.id)}>{open ? t('cancel') : o.char ? t('replace_official') : t('appoint')}</Btn>
         </div>
         {open && <div class="council-cands">
+          {best && <div class="cand-row ablest">
+            <span class="cand-n">{t('xp_ablest_is')} <b>{charName(best.name, best.female)}</b></span>
+            <span class="cand-b pos">{signed((best.bonus?.[o.id] ?? 0) * 100, 1)} %</span>
+            <Btn disabled={authority < cost ? 'not enough Authority' : null} tip={<div>{t('xp_ablest_hint')}<div class="muted">{t('appoint_hint').replace('{n}', String(cost))}</div></div>}
+              onClick={() => act({ t: 'office', office: o.id, char: -1 }, 'bell', `${t('appointed')}: ${charName(best.name, best.female)}`).then((res) => { if (res.ok) setOpen(null); })}>{t('xp_ablest')}</Btn>
+          </div>}
           {cands.length ? [...cands].sort((a, b) => (b.bonus?.[o.id] ?? 0) - (a.bonus?.[o.id] ?? 0)).map((c) => {
             const bonus = c.bonus?.[o.id] ?? 0; const better = bonus - (o.bonus ?? 0);
             return <div class="cand-row">
-              <Tip content={() => person(c, o, bonus)}><span class="cand-n">{c.name}{c.kin && <small class="muted"> ({t('kin')})</small>}</span></Tip>
+              <Tip content={() => person(c, o, bonus)}><span class="cand-n">{charName(c.name, c.female)}{c.kin && <small class="muted"> ({t('kin')})</small>}</span></Tip>
               <span class="cand-sk muted">{c.age} · {c.skills.map((x: number, i: number) => i === o.skill ? <b>{x}</b> : String(x)).reduce((acc: any[], x: any, i: number) => (i ? [...acc, '/', x] : [x]), [])}</span>
               <span class={`cand-b ${better > 0.0005 ? 'pos' : better < -0.0005 ? 'neg' : 'muted'}`}>{signed(bonus * 100, 1)} %</span>
               <Btn disabled={authority < cost ? 'not enough Authority' : null} tip={<div>{t('appoint_hint').replace('{n}', String(cost))}</div>}
-                onClick={() => act({ t: 'office', office: o.id, char: c.id }, 'bell', `${t('appointed')}: ${c.name}`).then((res) => { if (res.ok) setOpen(null); })}>{t('appoint')}</Btn>
+                onClick={() => act({ t: 'office', office: o.id, char: c.id }, 'bell', `${t('appointed')}: ${charName(c.name, c.female)}`).then((res) => { if (res.ok) setOpen(null); })}>{t('appoint')}</Btn>
             </div>;
           }) : <div class="muted small">{t('no_candidates')}</div>}
         </div>}
       </div>; })}
+    <div class="council-all">
+      <Btn disabled={!changes.length ? 'no abler candidate at court' : authority < cost ? 'not enough Authority' : null}
+        tip={<div>{t('xp_ablest_all_hint').replace('{k}', String(changes.length)).replace('{n}', String(changes.length * cost))}
+          {changes.map((o: any) => <div class="muted">{L(o.name)}: {charName(gain(o).name, gain(o).female)}</div>)}</div>}
+        onClick={() => act({ t: 'office', office: '*', char: -1 }, 'bell', t('xp_ablest_all_done'))}>{t('xp_ablest_all')}</Btn>
+    </div>
     <div class="muted small">{t('council_hint')}</div>
   </Section>;
 }
