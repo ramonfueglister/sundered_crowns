@@ -268,15 +268,22 @@ export function Spark({ data, w = 80, h = 20, color = '#7a4e1c', base }: { data:
   </svg>;
 }
 
-export function Slider({ value, min, max, step = 0.01, onCommit, fmt, disabled }: { value: number; min: number; max: number; step?: number; onCommit: (v: number) => void; fmt?: (v: number) => string; disabled?: boolean }) {
+/** A range slider that commits on release. onCommit may return the command's result (act()): a refused command leaves
+ *  the value prop as it was, so the slider then shows the real value again instead of the one it was dragged to. */
+export function Slider({ value, min, max, step = 0.01, onCommit, fmt, disabled }: { value: number; min: number; max: number; step?: number; onCommit: (v: number) => unknown; fmt?: (v: number) => string; disabled?: boolean }) {
   const [v, setV] = useState(value);
   const dragging = useRef(false);
+  const real = useRef(value); real.current = value;
   useEffect(() => { if (!dragging.current) setV(value); }, [value]);
+  const commit = (x: number) => {
+    const r = onCommit(x) as Promise<CmdResult | void> | undefined;
+    if (r && typeof r.then === 'function') r.then((res) => { if (res && res.ok === false && !dragging.current) setV(real.current); }, () => { if (!dragging.current) setV(real.current); });
+  };
   return <span class="slider">
     <input type="range" min={min} max={max} step={step} value={v} disabled={disabled}
       onPointerDown={() => { dragging.current = true; }}
       onInput={(e) => setV(Number((e.target as HTMLInputElement).value))}
-      onChange={(e) => { dragging.current = false; const x = Number((e.target as HTMLInputElement).value); setV(x); onCommit(x); }} />
+      onChange={(e) => { dragging.current = false; const x = Number((e.target as HTMLInputElement).value); setV(x); commit(x); }} />
     <span class="slider-v">{fmt ? fmt(v) : num(v, 2)}</span>
   </span>;
 }
