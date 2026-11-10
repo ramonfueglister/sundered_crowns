@@ -3,7 +3,7 @@ import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice } from '../ctx';
 import { B, BI, C } from '../defs';
-import { MinHeap } from '../setup';
+import { MinHeap } from '../minheap';
 import { lawEffect, councilBonus } from './politics';
 import { computeAdmin, integrationShare } from './administration';
 import { overextension } from './economy';

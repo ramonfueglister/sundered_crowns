@@ -7,7 +7,7 @@ import { advanceDay } from '../../src/sim/engine';
 import { createGame } from '../../src/sim/setup';
 import { dayToDate } from '../../src/sim/calendar';
 import { mkCtx } from '../../src/sim/ctx';
-import { SYSTEMS } from '../../src/sim/systems';
+import { systems } from '../../src/sim/systems';
 import { goals as goalsSystem } from '../../src/sim/systems/goals';
 import { SITUATIONS } from '../../src/sim/content/situations';
 import { DOCTRINES } from '../../src/sim/content/doctrines';
@@ -21,7 +21,7 @@ const w = loadWorld();
 const setup = loadSetup(1356); setup.year = startYear;
 const t0 = Date.now();
 const s = createGame(w, setup, loadHubs(), seed);
-const registered = SYSTEMS.some((x) => x.id === 'goals');
+const registered = systems().some((x) => x.id === 'goals');
 if (startYear > 1356) { // test scaffolding for re-dated starts: the Curia has aged as it would have
   s.papacy.corruption = Math.min(100, 30 + (startYear - 1356) * 0.3); s.papacy.reformPressure = 30;
 }

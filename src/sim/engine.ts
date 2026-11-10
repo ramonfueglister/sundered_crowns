@@ -2,7 +2,7 @@
 import type { GameState, Command, CmdResult } from './types';
 import type { World } from './world';
 import { mkCtx, bump, DAY_EPOCH } from './ctx';
-import { SYSTEMS } from './systems';
+import { systems } from './systems';
 import { applyCommand } from './commands';
 import { setFullStrength } from './systems/military';
 import type { Treaty } from './types';
@@ -39,7 +39,7 @@ export function advanceDay(s: GameState, w: World) {
   const c = mkCtx(s, w);
   const firstOfMonth = c.date.d === 1;
   const newYear = firstOfMonth && c.date.m === 0;
-  for (const sys of SYSTEMS) {
+  for (const sys of systems()) {
     const t0 = profiling ? now() : 0;
     sys.daily?.(c);
     if (firstOfMonth) sys.monthly?.(c);

@@ -3,8 +3,8 @@
 import type { System } from '../ctx';
 import { economy, ledger } from './economy';
 import { politics } from './politics';
-import { military, releaseNation, newArmy, availableUnits, landFaith, khanFaith } from './military';
-import { war, _setMilitary, GOAL_PLACES } from './war';
+import { military } from './military';
+import { war } from './war';
 import { diplomacy } from './diplomacy';
 import { society } from './society';
 import { administration } from './administration';
@@ -13,7 +13,7 @@ import { colonial } from './colonial';
 import { realm } from './realm';
 import { landmarks } from './landmarks';
 import { situations } from './situations';
-import { goals, goalWants } from './goals';
+import { goals } from './goals';
 import { events } from './events';
 import { ai } from './ai';
 import { faith } from './faith';
@@ -23,8 +23,9 @@ import { powers } from './powers';
 import { commanders } from './commanders';
 import { victory } from './victory';
 
-_setMilitary({ releaseNation, newArmy, availableUnits, landFaith, khanFaith });
-// the towns a war of conquest is fought for include the places the realm's own goals name (systems/war.ts warGoalLocs)
-GOAL_PLACES.f = (s, w, n) => goalWants(s, w, n).places;
-
-export const SYSTEMS: System[] = [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai, victory, ledger];
+let LIST: System[] | null = null;
+/** The systems in the order they run. Built on first use, not while the modules load: the sim's modules import one
+ *  another in cycles, and a system still loading when the list was built would leave a hole in it. */
+export function systems(): System[] {
+  return LIST ??= [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai, victory, ledger];
+}

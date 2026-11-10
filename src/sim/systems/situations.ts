@@ -16,11 +16,13 @@ export interface SituationDef {
   outcomeText?: (s: GameState, sit: Situation) => I18n;
   involved?: (s: GameState, sit: Situation) => number[]; // realms affected (for the UI)
 }
-export const SIT_INDEX: Record<string, number> = Object.fromEntries(SITUATIONS.map((x, i) => [x.id, i]));
+// built on first use: the situations' content imports this module, so SITUATIONS may not exist yet while it loads
+let SIT_INDEX: Record<string, number> | null = null;
+const sitDef = (id: string) => SITUATIONS[(SIT_INDEX ??= Object.fromEntries(SITUATIONS.map((x, i) => [x.id, i])))[id]];
 
 export function endSituation(s: GameState, sit: Situation, outcome: string) {
   sit.active = false; sit.ended = s.day; sit.outcome = outcome;
-  const d = SITUATIONS[SIT_INDEX[sit.id]];
+  const d = sitDef(sit.id);
   const t = d?.outcomeText ? d.outcomeText(s, sit) : { en: `${d?.name.en} has ended (${outcome}).`, de: `${d?.name.de} ist beendet (${outcome}).` };
   chronicle(s, -1, 'situation', t);
   for (const p of s.playerNations) notice(s, p, 'situation', t);
@@ -63,7 +65,7 @@ function takeAction(s: GameState, w: World, n: Nation, sit: Situation, a: SitAct
   if (c.prestige) n.prestige -= c.prestige;
   n.flags[actFlag(sit.id, a.id)] = s.day + a.cooldown;
   a.apply(s, w, n, sit, target);
-  const d = SITUATIONS[SIT_INDEX[sit.id]];
+  const d = sitDef(sit.id);
   if (d) chronicle(s, n.id, 'situation', { en: `${n.short.en}: ${a.name.en} (${d.name.en}).`, de: `${n.short.de}: ${a.name.de} (${d.name.de}).` });
 }
 /** The 'situation' command: a realm takes one of the actions open in a situation. */

@@ -7,7 +7,8 @@
 import type { GameState, Nation, War, WarGoal, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies, opinion, addIncome, addExpense } from '../ctx';
-import { nationDev, nationLocsRO, concludePeace, warHooks, emperorAttacksMember, EMPEROR_JOIN_ATTACK } from './war';
+import { nationDev, nationLocsRO, concludePeace, emperorAttacksMember, EMPEROR_JOIN_ATTACK } from './war';
+import { warHooks } from './warhooks';
 import { totalOpinion } from './diplomacy';
 import { assemblyWarVeto, assemblyWarRefusal } from './government';
 import { hash01, chance } from '../rng';

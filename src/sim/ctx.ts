@@ -37,6 +37,17 @@ export function chronicle(s: GameState, nation: number, kind: string, text: I18n
 export function chronInvolves(e: { nation: number; also?: readonly number[] }, id: number): boolean {
   return id >= 0 && (e.nation === id || !!e.also?.includes(id));
 }
+/** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
+ *  out (administration.ts budgetForecast) and the court, the splendour of a full chest, the fortresses' pay and the
+ *  reserve the AI keeps are measured without them (grossIncome). */
+export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
+  'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
+/** Last month's running revenue: every positive income line except one-off payments (an event's windfall, a gift, a
+ *  peace's gold, what an estate paid for a privilege), so a windfall does not raise next month's court. */
+export function grossIncome(n: Nation): number {
+  let g = 0; for (const k in n.income) if (!ONE_OFF.has(k)) g += Math.max(0, n.income[k]);
+  return g;
+}
 export function addIncome(n: Nation, key: string, v: number) { n.incomeAcc[key] = (n.incomeAcc[key] || 0) + v; n.treasury += v; }
 export function addExpense(n: Nation, key: string, v: number) { n.expenseAcc[key] = (n.expenseAcc[key] || 0) + v; n.treasury -= v; }
 

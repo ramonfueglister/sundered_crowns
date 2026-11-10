@@ -7,7 +7,7 @@ import type { World } from '../world';
 import { UNITS, B, BI, GOODS } from '../defs';
 import { notice, chronicle } from '../ctx';
 import { findPath, travelDays, unitCost, availableUnits, newArmy, seaNear, canEnter } from './military';
-import { MinHeap } from '../setup';
+import { MinHeap } from '../minheap';
 
 /** Ships of a squadron fitted out for an expedition; expeditions a realm may have at sea at once. */
 export const EXPEDITION_SHIPS = 3, MAX_EXPEDITIONS = 2;

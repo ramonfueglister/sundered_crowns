@@ -7,7 +7,8 @@ import type { SituationDef } from '../systems/situations';
 import { endSituation } from '../systems/situations';
 import { seedPlague } from '../systems/society';
 import { nearestLoc } from '../setup';
-import { declareWar, nationLocsRO, nationDev, startCivilWar, require_military } from '../systems/war';
+import { declareWar, nationLocsRO, nationDev, startCivilWar } from '../systems/war';
+import { releaseNation, newArmy, availableUnits, khanFaith } from '../systems/military';
 import { lawEffect } from '../systems/politics';
 import { nationPower } from '../systems/ai';
 import { greatGuns } from '../systems/military';
@@ -571,7 +572,6 @@ const DEFS: SituationDef[] = [
           else if (w.lon[l] > cl + 7) groups[2].locs.push(l);
           else if (w.lat[l] > ca + 5) groups[1].locs.push(l);
         }
-        const { releaseNation, newArmy, availableUnits, khanFaith } = require_military();
         const made: number[] = [];
         for (const g of groups) {
           if (g.locs.length < 15) continue;

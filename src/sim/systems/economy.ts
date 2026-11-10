@@ -3,7 +3,7 @@
 // when price differences exceed transport cost, tolls and risk.
 import type { GameState, Market, Nation, I18n } from '../types';
 import type { World } from '../world';
-import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH, notice } from '../ctx';
+import { type Ctx, type System, addIncome, addExpense, clamp, EPOCH, notice, grossIncome } from '../ctx';
 import { fmtDate } from '../calendar';
 import { C, CL, G, GOODS, GI, NEEDS, CLASS_NEED_MULT, CLASS_MAX_TIER, RECIPES, METHODS, TERRAIN_DEF, TERRAINS, B, BI, RAW_FROM_MINE } from '../defs';
 import { hash01 } from '../rng';
@@ -737,17 +737,9 @@ export function harvests(s: GameState, w: World, year: number) {
   }
 }
 
-/** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
- *  out (administration.ts budgetForecast) and the court, the splendour of a full chest, the fortresses' pay and the
- *  reserve the AI keeps are measured without them (grossIncome). */
-export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
-  'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
-/** Last month's running revenue: every positive income line except one-off payments (an event's windfall, a gift, a
- *  peace's gold, what an estate paid for a privilege), so a windfall does not raise next month's court. */
-export function grossIncome(n: Nation): number {
-  let g = 0; for (const k in n.income) if (!ONE_OFF.has(k)) g += Math.max(0, n.income[k]);
-  return g;
-}
+// the one-off lines and last month's running revenue live with the ledger helpers (ctx.ts), so that war.ts can read
+// them without loading the economy
+export { ONE_OFF, grossIncome } from '../ctx';
 
 /** What the court costs a month: a small base, its seats and a share of last month's running revenue (a petty
  *  lordship keeps a petty court: the fixed part never takes more than about half of what it earns), more with

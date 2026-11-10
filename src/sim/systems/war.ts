@@ -5,8 +5,7 @@ import type { GameState, War, PeaceTerm, Nation, WarGoal, PendingEvent } from '.
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, rel, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
-import { addIncome, addExpense } from '../ctx'; // fix-econ: the gold of a peace is booked on both sides
-import { grossIncome } from './economy'; // fix-econ
+import { addIncome, addExpense, grossIncome } from '../ctx'; // fix-econ: the gold of a peace is booked on both sides
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
 import { chance, rand } from '../rng';
@@ -220,7 +219,7 @@ export function warGoalLocs(s: GameState, w: World, a: number, b: number, goal: 
     case 'conquest': {
       // border towns, more for a greater realm, and first the places the realm's own goals name (systems/goals.ts)
       const k = clamp(Math.round(ownedLocs(s, a).length / 40), 6, 15);
-      const want = (GOAL_PLACES.f?.(s, w, s.nations[a]) ?? []).filter((l) => s.loc.owner[l] === b);
+      const want = goalWants(s, w, s.nations[a]).places.filter((l) => s.loc.owner[l] === b);
       return [...new Set([...want, ...targetLocs(s, w, a, b, k)])].slice(0, k + 2);
     }
     case 'reconquest': return reconquestLocs(s, a, b);
@@ -262,8 +261,6 @@ export function goalTowns(s: GameState, w: World, a: number, b: number, goal: Wa
   }
   return [...new Set([...warGoalLocs(s, w, a, b, goal), ...more])].slice(0, GOAL_TOWNS_MAX);
 }
-/** The places named by a realm's open goals (systems/goals.ts sets this; the war module does not import the goals). */
-export const GOAL_PLACES: { f: ((s: GameState, w: World, n: Nation) => number[]) | null } = { f: null };
 /** Border locations of b next to a (the best first, grown along their provinces): the towns a war of conquest is fought for. */
 export function targetLocs(s: GameState, w: World, a: number, b: number, k: number): number[] {
   const out: [number, number][] = [];
@@ -281,19 +278,12 @@ export function targetLocs(s: GameState, w: World, a: number, b: number, k: numb
 
 /** Why a cannot declare this war on b now (null = it can). The declaration dialog shows it per goal; declareWar
  *  refuses with exactly this. */
-/** The bodies of the realm that weigh in on a war: the Empire's peace and the assemblies before it is declared, the
- *  emperor's defence and the league after. Set by systems/empire.ts, so that this module does not import it (the
- *  Empire reaches the setup through diplomacy and the military, and war.ts must load before them). */
-export const warHooks: {
-  veto?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
-  /** The same refusal without side effects (no assembly is held): the AI drops the targets it would be refused. */
-  check?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
-  declared?: (s: GameState, w: World, war: War) => void;
-  /** A realm joined the attackers of a war (an ally's call): the emperor attacking a member pays in authority. */
-  joined?: (s: GameState, w: World, war: War, n: number) => void;
-  /** Who the Empire's bodies would send to the defence of b (the emperor, the circles, the league), for predictSides. */
-  predict?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type'], att: number[], def: number[]) => { id: number; role: 'emperor' | 'league' | 'circle'; odds: number | null }[];
-} = {};
+export { warHooks } from './warhooks';
+import { warHooks } from './warhooks';
+// the military and the goals import this module too: the cycle is safe because nothing here calls them while the
+// modules load (ES modules bind functions live)
+import { releaseNation, newArmy, availableUnits, landFaith } from './military';
+import { goalWants } from './goals';
 
 export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = [], situation = false): string | null {
   const na = s.nations[a], nb = s.nations[b];
@@ -931,7 +921,6 @@ export function applyPeace(s: GameState, w: World, war: War, winner: number, los
     if (t.type === 'end_rivalry') { Ln.rivals = Ln.rivals.filter((x) => x !== winner); Ln.prestige = clamp(Ln.prestige - 10, -100, 100); W.prestige = clamp(W.prestige + 5, -100, 100); parts.push('rivalry renounced'); partsDe.push('Rivalität aufgegeben'); }
     if (t.type === 'release' && t.locs?.length) {
       // release a nation from the loser's land
-      const { releaseNation, landFaith } = require_military();
       const nn = releaseNation(s, w, Ln, t.locs, s.loc.culture[t.locs[0]], landFaith(s, t.locs)); // a people set free keeps its own faith (and arms to match)
       parts.push(`release of ${nn.short.en}`); partsDe.push(`Freilassung von ${nn.short.de}`);
     }
@@ -974,9 +963,6 @@ export function peaceObligations(s: GameState) {
     } else if (m[1] === 'tariffcap') x.tariff = Math.min(x.tariff, TARIFF_CAP);
   }
 }
-let _mil: any = null;
-export function require_military() { return _mil; }
-export function _setMilitary(m: any) { _mil = m; }
 
 /** How strongly conquest and unjust wars frighten others: 1 plus the dread effects (a warlike reputation). */
 export function dreadGain(n: Nation): number { return Math.max(0.2, 1 + lawEffect(n, 'dread')); }
@@ -1172,7 +1158,6 @@ export function startCivilWar(s: GameState, w: World, n: Nation) {
   const cap = n.capital;
   locs.sort((a, b) => w.distKm(b, cap) - w.distKm(a, cap));
   const take = locs.slice(0, Math.floor(locs.length * 0.4));
-  const { releaseNation, newArmy, availableUnits } = require_military();
   const pre = releaseNation(s, w, n, take, n.culture) as Nation;
   const bare = (x: string) => x.replace(/\s*\((pretender|Prätendent)\)$/, '');
   pre.name = { en: `${bare(n.short.en)} (pretender)`, de: `${bare(n.short.de)} (Prätendent)` }; pre.short = pre.name; pre.adj = n.adj; pre.faith = n.faith; pre.gov = n.gov;

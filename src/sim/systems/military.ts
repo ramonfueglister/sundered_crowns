@@ -13,7 +13,7 @@ import { personName, localName } from '../content/names';
 import { genCoa } from '../content/heraldry';
 import { GROUP_OF } from '../content/peoples';
 import { integrationYield, grossIncome } from './economy';
-import { MinHeap } from '../setup';
+import { MinHeap } from '../minheap';
 import { warScoreEvent, ownedLocs } from './war';
 import { forgetTrade } from './trade';
 

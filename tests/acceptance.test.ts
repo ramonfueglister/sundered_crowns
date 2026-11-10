@@ -123,8 +123,10 @@ describe('acceptance (point 119)', () => {
   it('events fire with choices that change the game state', () => {
     const s = game(1356, 77, [nat(game(), 'england').id]);
     const pid = s.playerNations[0];
-    let d = 0; while (!s.pending.some((p) => p.nation === pid && !p.event.startsWith('diplo_')) && d++ < 3650) step(s, w, []);
-    const pe = s.pending.find((p) => p.nation === pid && !p.event.startsWith('diplo_'));
+    // a random event of the event pool (offers of other realms and calls to arms wait in the same list)
+    const isEvent = (p: { nation: number; event: string }) => p.nation === pid && EVENTS.some((e) => e.id === p.event);
+    let d = 0; while (!s.pending.some(isEvent) && d++ < 3650) step(s, w, []);
+    const pe = s.pending.find(isEvent);
     expect(pe).toBeDefined();
     const a = clone(s), b = clone(s);
     const ra = applyCommand(a, w, { t: 'event', n: pid, pending: pe!.id, choice: 0 });
