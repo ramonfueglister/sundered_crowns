@@ -167,7 +167,7 @@ describe('raising a general (major: it put a worse general in command)', () => {
     const n = nat(s, 'france'); s.playerNations = [n.id];
     const A = newArmy(s, n.id, n.capital, [{ type: unit('men_at_arms'), men: 5000 }]);
     expect(applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: 0 }).ok).toBe(true);
-    const cur = s.chars[A.general]; cur.skills[2] = 6; cur.traits = [];
+    const cur = s.chars[A.general]; cur.skills[2] = 6; cur.traits = ['rash']; // 6.5 (a half point from the trait): abler than any new captain (at most 6)
     n.treasury = 1e6;
     const t0 = n.treasury, cost = generalCost(s, n);
     const r = applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: -1 });
@@ -178,6 +178,10 @@ describe('raising a general (major: it put a worse general in command)', () => {
     expect(n.generals).toContain(g.id);
     expect(commanderSkill(g)).toBeLessThanOrEqual(6);
     expect(r.msg!.de).toContain('behält den Befehl');
+    // German writes the half point with a decimal comma, English with a point
+    expect(r.msg!.de).toContain('(6,5) ist fähiger');
+    expect(r.msg!.en).toContain('(6.5) is abler');
+    expect(r.msg!.de).not.toMatch(/\d\.\d/);
     // a weak commander gives way to the new captain
     cur.skills[2] = 0;
     const r2 = applyCommand(s, w, { t: 'general', n: n.id, army: A.id, char: -1 });

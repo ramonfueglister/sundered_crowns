@@ -148,12 +148,15 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
         const g = raiseGeneral(s, n, true, a.fleet), cur = a.general ? s.chars[a.general] : undefined;
         const take = !cur || !cur.alive || commanderSkill(g) > commanderSkill(cur);
         if (take) setCommander(s, n, a, g);
+        // generalship comes in half points (traits): German writes them with a decimal comma
         const gs = commanderSkill(g), nm = { en: g.name, de: localName(g.name, 'de') };
+        const en1 = (v: number) => String(Math.round(v * 10) / 10), de1 = (v: number) => en1(v).replace('.', ',');
+        const cs = cur ? commanderSkill(cur) : 0;
         return { ok: true, done: g.id, msg: take
-          ? { en: `${nm.en} (generalship ${gs}) takes command.`, de: `${nm.de} (Feldherrnkunst ${gs}) übernimmt den Befehl.` }
-          : commanderSkill(cur) > gs
-            ? { en: `${nm.en} (generalship ${gs}) joins our generals; ${cur!.name} (${commanderSkill(cur)}) is abler and keeps command.`, de: `${nm.de} (Feldherrnkunst ${gs}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${commanderSkill(cur)}) ist fähiger und behält den Befehl.` }
-            : { en: `${nm.en} (generalship ${gs}) joins our generals; ${cur!.name} (${commanderSkill(cur)}) is as able and keeps command.`, de: `${nm.de} (Feldherrnkunst ${gs}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${commanderSkill(cur)}) ist ebenso fähig und behält den Befehl.` } };
+          ? { en: `${nm.en} (generalship ${en1(gs)}) takes command.`, de: `${nm.de} (Feldherrnkunst ${de1(gs)}) übernimmt den Befehl.` }
+          : cs > gs
+            ? { en: `${nm.en} (generalship ${en1(gs)}) joins our generals; ${cur!.name} (${en1(cs)}) is abler and keeps command.`, de: `${nm.de} (Feldherrnkunst ${de1(gs)}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${de1(cs)}) ist fähiger und behält den Befehl.` }
+            : { en: `${nm.en} (generalship ${en1(gs)}) joins our generals; ${cur!.name} (${en1(cs)}) is as able and keeps command.`, de: `${nm.de} (Feldherrnkunst ${de1(gs)}) tritt zu unseren Feldherren; ${localName(cur!.name, 'de', cur!.female)} (${de1(cs)}) ist ebenso fähig und behält den Befehl.` } };
       }
       const c = s.chars[cmd.char]; if (!c || !c.alive || c.nation !== cmd.n) return err('no such person');
       if (!availableCommanders(s, n).some((x) => x.id === c.id)) return err('cannot lead an army');
