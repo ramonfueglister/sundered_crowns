@@ -240,8 +240,9 @@ export interface Empire {
   favour?: Record<string, number>;
   /** what moved imperial authority this year and last, by cause (for the breakdown) */
   authLog?: Record<string, number>; authLast?: Record<string, number>;
-  /** calls to the emperor to defend a member (war id, member, attacker, deadline, answer: 1 joined, -1 refused, 0 open) */
-  calls?: { war: number; member: number; attacker: number; until: number; answer: number }[];
+  /** calls to the emperor to defend a member (war id, member, attacker, deadline, answer: 1 joined, -1 refused, 0 open;
+   *  rows: the reasons he weighed when he answered) */
+  calls?: { war: number; member: number; attacker: number; until: number; answer: number; rows?: [string | I18n, number][] }[];
   /** the emperor's orders to make peace between members (war id, deadline, answer as above) */
   orders?: { war: number; to: number; until: number; answer: number }[];
   /** member land last month (1 = held by a member): land lost to outsiders lowers authority */

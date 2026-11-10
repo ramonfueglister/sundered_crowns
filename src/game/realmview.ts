@@ -73,8 +73,10 @@ function empireView(s: GameState, w: World, me: number) {
     // would weigh, and how an earlier call was answered (1 yes, -1 no, 0 open)
     helpWars: n?.isHRE ? s.wars.filter((x) => x.def.includes(me) && (x.defLead === me || x.goal.target === me)).map((x) => {
       const c = (E.calls ?? []).find((q) => q.war === x.id && q.member === me); const em = s.nations[E.emperor];
-      return { war: x.id, name: x.name, attacker: x.attLead, refusal: helpRefusal(s, n, x), answer: c ? c.answer : n.flags[`emp_call_${x.id}`] !== undefined ? -1 : null,
-        rows: em?.alive && em.id !== me ? defendScore(s, w, em, { war: x.id, member: me, attacker: x.attLead }) : [] };
+      // an answered call shows the reasons he weighed then; an open or possible one what weighs on him now
+      const answered = !!c && c.answer !== 0;
+      return { war: x.id, name: x.name, attacker: x.attLead, refusal: helpRefusal(s, n, x), answer: c ? c.answer : n.flags[`emp_call_${x.id}`] !== undefined ? -1 : null, answered,
+        rows: answered ? c!.rows ?? [] : em?.alive && em.id !== me ? defendScore(s, w, em, { war: x.id, member: me, attacker: x.attLead }) : [] };
     }) : [],
     orders: (E.orders ?? []).filter((o) => o.answer === 0).map((o) => { const war = s.wars.find((x) => x.id === o.war); return { ...o, rows: war ? obeyScore(s, war) : [] }; }),
     league: lg ? {

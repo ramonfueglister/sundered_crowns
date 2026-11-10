@@ -21,7 +21,7 @@ export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd, o
           if (!c || E.emperor !== n.id) return 'no call is pending';
           answerCall(s, w, c, cmd.action === 'defend'); return null;
         }
-        case 'order_peace': return orderPeace(s, w, n, cmd.war ?? -1);
+        case 'order_peace': return orderPeace(s, w, n, cmd.war ?? -1, out);
         case 'comply': {
           const o = (E.orders ?? []).find((x) => x.war === cmd.war && x.to === n.id && x.answer === 0);
           if (!o) return 'no order is pending';

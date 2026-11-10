@@ -347,6 +347,55 @@ describe('a member asks the emperor for help', () => {
   });
 });
 
+describe('the emperor\'s answers told as they are', () => {
+  const mkWar = (c: GameState, id: number, att: number, def: number) => ({ id, name: { en: 'Test war', de: 'Testkrieg' }, att: [att], def: [def], attLead: att, defLead: def, goal: { type: 'conquest', target: def, locs: [] }, start: c.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [] } as any);
+  it('the war the emperor joined does not count against him as another war; the help section shows what he weighed then', async () => {
+    const { defendScore, answerCall } = await import('../src/sim/systems/empire');
+    const c = deserialize(serialize(s)) as GameState;
+    const E = c.empire; const em = c.nations[E.emperor];
+    const free = (id: number) => !c.wars.some((q) => q.att.includes(id) || q.def.includes(id));
+    c.wars = c.wars.filter((x) => !x.att.includes(em.id) && !x.def.includes(em.id));
+    const outsider = c.nations.find((x) => x.key === 'hungary')!;
+    const m = c.nations.find((x) => x.alive && x.isHRE && x.overlord < 0 && x.id !== em.id && free(x.id))!;
+    const war = mkWar(c, 900001, outsider.id, m.id); c.wars.push(war); c.playerNations = [m.id];
+    const call = { war: war.id, member: m.id, attacker: outsider.id, until: c.day + 45, answer: 0 };
+    (E.calls ??= []).push(call);
+    const weighed = defendScore(c, w, em, call);
+    answerCall(c, w, call, true);
+    expect(war.def).toContain(em.id);
+    // in the war he joined he is not "busy elsewhere"; another war of his still counts
+    expect(defendScore(c, w, em, call).some((r) => r[0] === 'x_emp_busy')).toBe(false);
+    c.wars.push(mkWar(c, 900002, em.id, outsider.id));
+    expect(defendScore(c, w, em, call).some((r) => r[0] === 'x_emp_busy')).toBe(true);
+    // the section shows the reasons of his answer, not a fresh score that counts his new war against him
+    const hw = (answer(c, w, m.id, { q: 'empire' } as any) as any).helpWars.find((x: any) => x.war === war.id);
+    expect(hw.answer).toBe(1); expect(hw.answered).toBe(true);
+    expect(hw.rows).toEqual(weighed);
+  });
+  it('an order to make peace tells at once whether a computer realm obeyed or defied it; a human one has 60 days', () => {
+    const run = (auth: number, score: number, humanAtt = false) => {
+      const c = deserialize(serialize(s)) as GameState;
+      const E = c.empire; const em = c.nations[E.emperor];
+      const free = (id: number) => !c.wars.some((q) => q.att.includes(id) || q.def.includes(id));
+      const [a, d] = c.nations.filter((x) => x.alive && x.isHRE && x.overlord < 0 && x.id !== em.id && free(x.id));
+      const war = mkWar(c, 900003, a.id, d.id); war.score = score; c.wars.push(war);
+      c.playerNations = humanAtt ? [em.id, a.id] : [em.id]; em.authority = 100; E.authority = auth;
+      const r = applyCommand(c, w, { t: 'empire', n: em.id, action: 'order_peace', war: war.id } as any);
+      expect(r.ok).toBe(true);
+      return { r, o: E.orders!.find((x) => x.war === war.id)!, ended: !c.wars.includes(war), a };
+    };
+    const ob = run(100, 0);
+    expect(ob.o.answer).toBe(1); expect(ob.ended).toBe(true);
+    expect(ob.r.msg?.de).toBe(`${ob.a.short.de} gehorchte: Der Frieden ist geschlossen (Testkrieg). Die Autorität des Reiches steigt um 1.`);
+    const df = run(0, 100);
+    expect(df.o.answer).toBe(-1); expect(df.ended).toBe(false);
+    expect(df.r.msg?.de).toMatch(new RegExp(`^${df.a.short.de} widersetzt sich dem Befehl \\(Testkrieg\\): Der Krieg geht weiter\\. Die Autorität des Reiches sinkt um 3; .* 5 Jahre lang geächtet \\(Eintracht −10, Mandat −8\\)`));
+    const hu = run(100, 0, true);
+    expect(hu.o.answer).toBe(0); expect(hu.ended).toBe(false);
+    expect(hu.r.msg?.de).toMatch(/hat 60 Tage, um zu gehorchen oder sich zu widersetzen/);
+  });
+});
+
 describe('situation actions that would do nothing are refused; the code of the Bohemian crown', () => {
   it('closing the gates or holding processions needs a wave of plague near us; protecting preachers needs places of the old faith', async () => {
     const { SIT_EXTRA } = await import('../src/sim/content/situation_actions');

@@ -1000,6 +1000,7 @@ const S: Record<string, [string, string]> = {
   x_emp_help_title: ['The emperor’s help', 'Hilfe des Kaisers'], x_emp_help_ask: ['Ask the emperor for help', 'Den Kaiser um Hilfe bitten'],
   x_emp_help_hint: ['A member attacked by a realm outside the Empire can call on the emperor to defend it, once per war: when the war is declared, or later when no call was made (a war from before, a new emperor). He weighs the same reasons whoever asks.', 'Ein Glied, das von einem Reich außerhalb des Reiches angegriffen wird, kann den Kaiser einmal je Krieg zu seiner Verteidigung rufen: bei der Kriegserklärung oder später, wenn kein Ruf erging (ein Krieg von früher, ein neuer Kaiser). Er wägt dieselben Gründe, wer auch immer bittet.'],
   x_emp_help_btn_hint: ['An emperor of the computer answers at once by the reasons shown; a human emperor has 45 days. A refusal costs him authority and our good opinion.', 'Ein Kaiser des Computers antwortet sofort nach den gezeigten Gründen; ein menschlicher Kaiser hat 45 Tage. Eine Absage kostet ihn Autorität und unsere gute Meinung.'],
+  x_emp_weighed: ['What the emperor weighed when he answered', 'Was der Kaiser bei seiner Antwort abwog'],
   x_emp_help_yes: ['the emperor fights for us', 'der Kaiser kämpft für uns'], x_emp_help_no: ['the emperor refused', 'der Kaiser lehnte ab'], x_emp_help_open: ['awaiting the emperor', 'wartet auf den Kaiser'],
   r_backed_the_lords: ['Backed our lords against the crown', 'Unterstützte unsere Herren gegen die Krone'],
   x_sit_confirm: ['Pay {cost}? This cannot be undone.', '{cost} bezahlen? Das lässt sich nicht rückgängig machen.'], x_sit_confirm_share: ['({p} of our treasury)', '({p} unseres Schatzes)'],
@@ -1010,7 +1011,7 @@ const S: Record<string, [string, string]> = {
   x_core_admin: ['Integrated land (development)', 'Eingegliedertes Land (Entwicklung)'], x_core_admin_hint: ['The development of all our fully integrated places. It adds to the capacity and puts no load on it.', 'Die Entwicklung aller voll eingegliederten Orte. Sie erhöht die Kapazität und belastet sie nicht.'],
   x_value_axis_hint: ['Each axis runs from -100 to +100. Its effects grow with the distance from the middle; shown here at the present value.', 'Jede Achse reicht von -100 bis +100. Ihre Wirkungen wachsen mit dem Abstand von der Mitte; hier beim jetzigen Wert gezeigt.'],
   x_sel_empire: ['The Empire: emperor and electors', 'Das Reich: Kaiser und Kurfürsten'],
-  x_ok_order_peace: ['The order to make peace is sent.', 'Der Befehl zum Frieden ist ergangen.'], x_ok_league_joined: ['We have joined the league.', 'Wir sind dem Bund beigetreten.'], x_ok_league_left: ['We have left the league.', 'Wir haben den Bund verlassen.'], x_gp_unreckoned: ['Not yet counted: changes since the monthly reckoning', 'Noch nicht gezählt: Änderungen seit der Monatswertung'],
+  x_ok_league_joined: ['We have joined the league.', 'Wir sind dem Bund beigetreten.'], x_ok_league_left: ['We have left the league.', 'Wir haben den Bund verlassen.'], x_gp_unreckoned: ['Not yet counted: changes since the monthly reckoning', 'Noch nicht gezählt: Änderungen seit der Monatswertung'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

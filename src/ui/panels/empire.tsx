@@ -84,7 +84,7 @@ function EmpireView() {
     {e.helpWars.length > 0 && <Section title={t('x_emp_help_title')} id="emp-help">
       <div class="muted small">{t('x_emp_help_hint')}</div>
       {e.helpWars.map((x: any) => <div class="kv"><span class="k"><NLink id={x.attacker} size={14} /> ⚔ {L(x.name)}</span><span class="v">
-        {x.rows.length > 0 && <Tip content={() => <Reasons2 title={t('x_emp_ai_would')} rows={x.rows} />}><span class={`has-tip ${sum(x.rows) > 0 ? 'pos' : 'neg'}`}>{signed(sum(x.rows), 0)}</span></Tip>}
+        {x.rows.length > 0 && <Tip content={() => <Reasons2 title={x.answered ? t('x_emp_weighed') : t('x_emp_ai_would')} rows={x.rows} />}><span class={`has-tip ${sum(x.rows) > 0 ? 'pos' : 'neg'}`}>{signed(sum(x.rows), 0)}</span></Tip>}
         {x.answer === 1 ? <span class="tag">{t('x_emp_help_yes')}</span> : x.answer === -1 ? <span class="tag warn">{t('x_emp_help_no')}</span> : x.answer === 0 ? <span class="tag">{t('x_emp_help_open')}</span>
           : <Btn disabled={x.refusal ? errText(x.refusal) : null} tip={t('x_emp_help_btn_hint')} onClick={() => doAct({ t: 'empire', action: 'ask_help', war: x.war })}>{t('x_emp_help_ask')}</Btn>}
       </span></div>)}
@@ -98,7 +98,7 @@ function EmpireView() {
         <Tip content={() => <Reasons2 title={t('x_emp_obey_why')} rows={o.rows} />}><span class="has-tip muted">{date(o.until)}</span></Tip>
         {o.to === pid && <><Btn onClick={() => doAct({ t: 'empire', action: 'comply', war: o.war, yes: true }, t('x_ok_obeyed'))}>{t('x_emp_obey')}</Btn><Btn onClick={() => doAct({ t: 'empire', action: 'comply', war: o.war, yes: false }, t('x_ok_defied'))}>{t('x_emp_defy')}</Btn></>}
       </span></div>)}
-      {e.internalWars.map((x: any) => <div class="kv"><span class="k">{L(x.name)}</span><span class="v">{e.isEmperor && <Btn disabled={x.ordered ? t('x_emp_ordered') : null} tip={orderHint(e.orderTerms)} onClick={() => doAct({ t: 'empire', action: 'order_peace', war: x.id }, t('x_ok_order_peace'))}>{t('x_emp_order_peace')}</Btn>}</span></div>)}
+      {e.internalWars.map((x: any) => <div class="kv"><span class="k">{L(x.name)}</span><span class="v">{e.isEmperor && <Btn disabled={x.ordered ? t('x_emp_ordered') : null} tip={orderHint(e.orderTerms)} onClick={() => doAct({ t: 'empire', action: 'order_peace', war: x.id })}>{t('x_emp_order_peace')}</Btn>}</span></div>)}
     </Section>}
     {e.league && <Section title={L(e.league.name)} id="emp-league">
       <div class="muted small">{t('x_league_hint')}</div>

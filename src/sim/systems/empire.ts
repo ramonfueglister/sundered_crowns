@@ -212,15 +212,17 @@ export function defendScore(s: GameState, w: World, em: Nation, call: { war: num
   const rows: Row[] = [['x_emp_duty', (E.authority - 30) * 0.5], ['r_opinion', opinion(s, em.id, m.id) * 0.3], ['x_emp_strength', clamp((ratio - 0.8) * 30, -40, 30)]];
   if (em.rivals.includes(a.id)) rows.push(['r_rival', 30]);
   if (hasTreaty(s, em.id, a.id, 'alliance')) rows.push(['r_allied', -100]);
-  if (s.wars.some((x) => x.att.includes(em.id) || x.def.includes(em.id))) rows.push(['x_emp_busy', -30]);
+  // busy in another war (the war he is asked into, or has joined, does not count against it)
+  if (s.wars.some((x) => x.id !== call.war && (x.att.includes(em.id) || x.def.includes(em.id)))) rows.push(['x_emp_busy', -30]);
   if (em.warExhaustion > 10) rows.push(['r_war_exhaustion', -em.warExhaustion * 0.5]);
   if (em.capital >= 0 && m.capital >= 0 && w.distKm(em.capital, m.capital) > 1200) rows.push(['x_emp_far', -20]);
   return rows;
 }
 /** The emperor answers a call to defend a member. */
-export function answerCall(s: GameState, w: World, call: { war: number; member: number; attacker: number; answer: number }, yes: boolean) {
+export function answerCall(s: GameState, w: World, call: { war: number; member: number; attacker: number; answer: number; rows?: Row[] }, yes: boolean) {
   const E = s.empire; const em = s.nations[E.emperor]; const war = s.wars.find((x) => x.id === call.war);
   if (!war || !em?.alive) { call.answer = -1; return; }
+  call.rows = defendScore(s, w, em, call); // what he weighed when he answered (the help section shows it afterwards)
   const m = s.nations[call.member], a = s.nations[call.attacker];
   if (yes) {
     call.answer = 1;
@@ -257,7 +259,9 @@ export const ORDER_COST = 20;
 export const ORDER_OBEYED = 1, ORDER_DEFIED = -3;
 export const BAN_EFFECTS = { concord: -10, mandate: -8 }, BAN_YEARS = 5;
 /** The emperor orders the aggressor in a war between members to make peace (costs the emperor ORDER_COST Authority). */
-export function orderPeace(s: GameState, w: World, em: Nation, warId: number): string | null {
+/** The emperor orders the attacker of a war between members to make peace. A computer realm answers at once, a human
+ *  one has 60 days; out.msg tells the emperor which (obeyed, defied with its price, or waiting). */
+export function orderPeace(s: GameState, w: World, em: Nation, warId: number, out?: { msg?: I18n }): string | null {
   const E = s.empire; const war = s.wars.find((x) => x.id === warId);
   if (E.emperor !== em.id) return 'only the emperor can do this';
   if (!war || !internalWars(s).includes(war)) return 'not a war between members';
@@ -268,8 +272,18 @@ export function orderPeace(s: GameState, w: World, em: Nation, warId: number): s
   const to = war.attLead;
   const order = { war: warId, to, until: s.day + 60, answer: 0 };
   (E.orders ??= []).push(order);
-  if (isHuman(s, to)) { notice(s, to, 'imperial_order', T(`The emperor orders us to make peace with ${s.nations[war.defLead].short.en}.`, `Der Kaiser befiehlt uns, Frieden mit ${s.nations[war.defLead].short.de} zu schließen.`), { war: warId }); return null; }
+  const A = s.nations[to].short, wn = war.name;
+  if (isHuman(s, to)) {
+    notice(s, to, 'imperial_order', T(`The emperor orders us to make peace with ${s.nations[war.defLead].short.en}.`, `Der Kaiser befiehlt uns, Frieden mit ${s.nations[war.defLead].short.de} zu schließen.`), { war: warId });
+    if (out) out.msg = T(`The order to make peace is sent (${wn.en}): ${A.en} has 60 days to obey or defy it.`, `Der Befehl zum Frieden ist ergangen (${wn.de}): ${A.de} hat 60 Tage, um zu gehorchen oder sich zu widersetzen.`);
+    return null;
+  }
   answerOrder(s, w, order, obeyScore(s, war).reduce((p, r) => p + r[1], 0) > 0);
+  const ban = String(BAN_EFFECTS.concord).replace('-', '−'), man = String(BAN_EFFECTS.mandate).replace('-', '−');
+  if (out) out.msg = order.answer === 1
+    ? T(`${A.en} obeyed: peace is made (${wn.en}). The Empire's authority rises by ${ORDER_OBEYED}.`, `${A.de} gehorchte: Der Frieden ist geschlossen (${wn.de}). Die Autorität des Reiches steigt um ${ORDER_OBEYED}.`)
+    : T(`${A.en} defies the order (${wn.en}): the war goes on. The Empire's authority falls by ${-ORDER_DEFIED}; ${A.en} bears the ban for ${BAN_YEARS} years (Concord ${ban}, Mandate ${man}) and we hold a claim against it.`,
+      `${A.de} widersetzt sich dem Befehl (${wn.de}): Der Krieg geht weiter. Die Autorität des Reiches sinkt um ${-ORDER_DEFIED}; ${A.de} ist ${BAN_YEARS} Jahre lang geächtet (Eintracht ${ban}, Mandat ${man}), und wir haben einen Anspruch gegen ${A.de}.`);
   return null;
 }
 export function answerOrder(s: GameState, w: World, order: { war: number; to: number; answer: number }, obey: boolean) {
