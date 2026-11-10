@@ -20,6 +20,7 @@ import { UNITS, C, CL, GOODS, G, GI } from '../src/sim/defs';
 import { applyCommand } from '../src/sim/commands';
 import { homeMarket, merchantRefusal, steerRoute, tradeEarnings, knowsRealm } from '../src/sim/systems/trade';
 import { refusal } from '../src/sim/refusals';
+import { deName } from '../src/sim/content/names_de';
 import { hasTreaty } from '../src/sim/ctx';
 import type { GameState, Nation } from '../src/sim/types';
 
@@ -373,5 +374,15 @@ describe('review: the books close after the month, and the realms read them righ
     expect(grossIncome(n)).toBeCloseTo(gross, 6);
     expect(courtCost(n)).toBeCloseTo(court, 6);
     expect(fortPay(s, n).pay).toBeCloseTo(forts, 6);
+  });
+});
+
+describe('review: market names in German', () => {
+  it('markets named after their fair or with their town in brackets have a German name', () => {
+    const named = loadHubs().map((h: any) => h.name as string);
+    for (const en of named.filter((x: string) => x.includes('('))) expect(deName(en), en).not.toBe(en);
+    expect(deName('Champagne Fairs (Troyes)')).toBe('Champagnemessen (Troyes)');
+    expect(deName('Hajji Tarkhan (Astrakhan)')).toBe('Hadschi Tarchan (Astrachan)');
+    expect(deName('Cape of Good Hope (Table Bay)')).toBe('Kap der Guten Hoffnung (Tafelbucht)');
   });
 });

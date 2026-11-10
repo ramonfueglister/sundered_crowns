@@ -1,6 +1,9 @@
 // German forms of place names. The map data carries one historical name per place (mostly the English or local form);
 // German players read the established German exonyms instead. Unlisted names stay as they are.
 export const PLACE_DE: Record<string, string> = {
+  // trade markets named after their fair or with their town (fix-econ)
+  'Champagne Fairs (Troyes)': 'Champagnemessen (Troyes)', 'Hajji Tarkhan (Astrakhan)': 'Hadschi Tarchan (Astrachan)',
+  'Cape of Good Hope (Table Bay)': 'Kap der Guten Hoffnung (Tafelbucht)', Mogadishu: 'Mogadischu', Havana: 'Havanna', Bolghar: 'Bolgar', Urgench: 'Urgentsch',
   // cities
   Cologne: 'Köln', Vienna: 'Wien', Venice: 'Venedig', Milan: 'Mailand', Florence: 'Florenz', Naples: 'Neapel', Rome: 'Rom',
   Lisbon: 'Lissabon', Prague: 'Prag', Warsaw: 'Warschau', Moscow: 'Moskau', Constantinople: 'Konstantinopel', Munich: 'München',
