@@ -112,7 +112,8 @@ export function MapView() {
       }
       const kMen = (m: number) => (m >= 1000 ? (m / 1000).toFixed(1) + 'k' : String(Math.max(0, Math.round(m))));
       for (const u of units) u.label = u.kind === 'fleet' ? String(Math.round(u.men)) : kMen(u.men);
-      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: sgi.progress, color: ns[sgi.nation] ? (cvd() ? cvdColorOf(sgi.nation) : ns[sgi.nation].color) : [90, 90, 90], label: Math.round(sgi.progress) + '%', kind: 'siege' }); }
+      // a siege counts steps (sgi.progress of sgi.need, 3 under blockade); the camp props take the share as 0..100
+      for (const sgi of v.sieges) { if (knownLocs && knownLocs[sgi.loc] === 0) continue; units.push({ id: -sgi.loc, x: g.loc.x[sgi.loc], y: g.loc.y[sgi.loc] + 10, lx: g.loc.x[sgi.loc], ly: g.loc.y[sgi.loc], progress: Math.min(100, sgi.progress * 100 / Math.max(1, sgi.need)), color: ns[sgi.nation] ? (cvd() ? cvdColorOf(sgi.nation) : ns[sgi.nation].color) : [90, 90, 90], label: `${sgi.progress}/${sgi.need}`, kind: 'siege' }); }
       for (const b of v.battles) { if (knownLocs && knownLocs[b.loc] === 0) continue; units.push({ id: -100000 - b.id, x: g.loc.x[b.loc], y: g.loc.y[b.loc] - 12, lx: g.loc.x[b.loc], ly: g.loc.y[b.loc], color: [200, 40, 30], label: `${kMen(b.startA - b.lossA)} : ${kMen(b.startD - b.lossD)}`, kind: 'battle' }); }
       r.setUnits(units);
     };

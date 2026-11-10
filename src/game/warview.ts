@@ -5,7 +5,7 @@ import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm } from '../s
 import type { World } from '../sim/world';
 import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
-import { armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
+import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
 import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
@@ -38,13 +38,18 @@ export function siegeView(s: GameState, w: World, sg: Siege, player: number) {
   // the garrison starves slowly: faster when the sea is closed (siegesDay)
   const starve = 1 - Math.pow(sg.blockade ? 0.997 : 0.999, 30);
   return {
-    loc: sg.loc, nation: sg.nation, defender: s.loc.ctrl[sg.loc], progress: sg.progress, need: sg.blockade ? 3 : 4, days: sg.days,
+    loc: sg.loc, nation: sg.nation, defender: s.loc.ctrl[sg.loc], progress: sg.progress, need: siegeSteps(sg), days: sg.days,
     garrison: sg.garrison, garrison0: sg.garrison0 ?? sg.garrison, breach: sg.breach, blockade: sg.blockade, coastal: !!w.coastal[sg.loc],
     starve, starveRows: [['x_sg_starve_base', 0.001 * 30], ...(sg.blockade ? [['x_sg_starve_blockade', 0.002 * 30]] : [])] as [string, number][],
     odds: { parts: o.parts, bonus: o.bonus, need: o.need, pStep: o.pStep, pBreach: o.pBreach, battering: o.battering, pResupply: o.pResupply, steps: o.steps, days: o.days, men: o.men, art: o.art },
     log: sg.log.map((e) => { const k = e.indexOf(':'); return k < 0 ? { day: -1, kind: e } : { day: Number(e.slice(0, k)), kind: e.slice(k + 1) }; }).reverse(),
     assault: as && mine.length ? { army: mine[0].id, p: as.p, loss: as.loss, men: as.men, parts: as.parts, garrison: as.garrison, wait: as.wait, refusal: assaultRefusal(s, mine[0]) } : null,
   };
+}
+
+/** The sieges of the tick view: who besieges, the steps made and the steps the town needs (the map badge, the overview). */
+export function siegesView(s: GameState): { loc: number; nation: number; progress: number; need: number; garrison: number }[] {
+  return s.sieges.map((x) => ({ loc: x.loc, nation: x.nation, progress: x.progress, need: siegeSteps(x), garrison: x.garrison }));
 }
 
 // ---------------------------------------------------------------- armies

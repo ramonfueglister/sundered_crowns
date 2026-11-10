@@ -965,6 +965,8 @@ const S: Record<string, [string, string]> = {
   terra_incognita: ['Terra incognita', 'Terra incognita'],
   terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
+  // ---- fix-war
+  xfw_siege_blockade: ['Steps needed (the sea is closed)', 'Nötige Schritte (Seeweg gesperrt)'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

@@ -65,9 +65,9 @@ describe('fog of war', () => {
     const sight = sightOf(s, w, P);
     const farLoc = s.nations[nid(s, 'moscow')].capital;
     expect(fogBattles([{ id: 1, loc: farLoc, att: nid(s, 'moscow'), def: nid(s, 'lithuania'), lossA: 0, lossD: 0, startA: 1, startD: 1, phase: 0 }], sight)).toHaveLength(0);
-    expect(fogSieges(s, [{ loc: farLoc, nation: nid(s, 'lithuania'), progress: 0, garrison: 1 }], sight)).toHaveLength(0);
+    expect(fogSieges(s, [{ loc: farLoc, nation: nid(s, 'lithuania'), progress: 0, need: 4, garrison: 1 }], sight)).toHaveLength(0);
     const cap = s.nations[P].capital;
-    expect(fogSieges(s, [{ loc: cap, nation: nid(s, 'granada'), progress: 0, garrison: 1 }], sight)).toHaveLength(1);
+    expect(fogSieges(s, [{ loc: cap, nation: nid(s, 'granada'), progress: 0, need: 4, garrison: 1 }], sight)).toHaveLength(1);
   });
 
   it('unknown land has no owner, and queries tell nothing about it', () => {

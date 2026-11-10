@@ -855,6 +855,8 @@ export function greatGuns(n: Nation | undefined): boolean { return !!n && (n.tec
 export function bastions(n: Nation | undefined): boolean { return !!n && n.modifiers.some((m) => m.id === 'inv_trace_italienne'); }
 /** Artillery (men in the guns) a host needs to batter the walls of a fort of this level. */
 export const GUNS_PER_FORT = 250;
+/** The steps of progress that take a town: four, three when the sea is closed too (the monthly siege roll adds them). */
+export function siegeSteps(sg: Siege): number { return sg.blockade ? 3 : 4; }
 /** The armies working a siege: those besieging the place, standing there, not marching or fighting. */
 export function besiegersOf(s: GameState, sg: Siege): Army[] { return s.armies.filter((a) => a.siege === sg.loc && a.loc === sg.loc && !a.battle && !a.path.length); }
 /** A fleet of the besiegers' side (or not hostile to them) in a sea zone next to the town shuts it off from the sea. */
@@ -901,7 +903,7 @@ export function siegeOdds(s: GameState, w: World, sg: Siege) {
   if (battering) pBreach = 1; // great guns widen the breach every month
   // a coastal town not blockaded may be resupplied from the sea (a roll of 3 sets the siege back a step)
   const pResupply = !sg.blockade && w.coastal[l] ? 1 / 14 : 0;
-  const steps = Math.max(0, (sg.blockade ? 3 : 4) - sg.progress);
+  const steps = Math.max(0, siegeSteps(sg) - sg.progress);
   const net = Math.max(0.01, pStep - pResupply);
   const days = steps <= 0 ? 0 : Math.round(steps / net * 30 - (sg.days % 30));
   return { parts, bonus, need, pStep, pBreach, battering, pResupply, steps, days: Math.max(0, days), men, art, garrison: sg.garrison, besiegers };
@@ -970,7 +972,7 @@ function siegesDay(s: GameState, w: World) {
         siegeLog(s, sg, 'disease');
       }
       if (roll === 3 && !sg.blockade && w.coastal[l]) { sg.progress = Math.max(0, sg.progress - 1); siegeLog(s, sg, 'resupplied'); }
-      if (sg.progress >= 4 || (sg.blockade && sg.progress >= 3)) {
+      if (sg.progress >= siegeSteps(sg)) {
         siegeLog(s, sg, 'fallen');
         occupy(s, w, l, besiegers[0].rebels ? -2 : besiegers[0].owner, besiegers[0]);
         s.sieges.splice(s.sieges.indexOf(sg), 1);
