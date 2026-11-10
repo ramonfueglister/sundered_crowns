@@ -1,7 +1,7 @@
 // People of the realm: names in the reader's language (German regnal numbers and epithets), the ruling house
 // (government tab), the choice of an army's commander (army panel) and what an AI realm did lately (nation panel).
 import { localName, localHouse } from '../../sim/content/names';
-import { view } from '../../game/client';
+import { view, nations } from '../../game/client';
 import { Section, Btn, NLink, act, t, L, num, signed, Tip, useQuery, fmtDateShort, Effects } from './common';
 import { RULER_TRAIT_FX, TRAITS_HEALTH } from '../../sim/content/traits';
 import { lang } from '../i18n';
@@ -62,9 +62,12 @@ export function DynastySection({ r }: { r: any }) {
   const d = r?.dynasty; if (!d) return null;
   const who = (c: any) => charName(c.name, c.female, true);
   return <Section title={<>{t('house_of')} {houseName(d.house)}</>} id="gov-dynasty">
-    {d.warn && <div class="warn-box"><b>⚠ {t(d.warn === 'none' ? 'xp_house_none' : 'xp_house_last')}</b>
-      <div class="small">{d.warn === 'last' && d.line[0] ? `${who(d.line[0])}. ` : ''}{d.fallback ? t('xp_house_then_claim').replace('{p}', who(d.fallback)) : t('xp_house_then_native')}
-        {d.fallback && <> <NLink id={d.fallback.nation} size={14} /></>}</div>
+    {d.warn && <div class="warn-box"><b>⚠ {t(d.warn === 'none' ? (d.fallback?.kin ? 'xp_house_none_here' : 'xp_house_none') : 'xp_house_last')}</b>
+      <div class="small">{d.warn === 'last' && d.line[0] ? `${who(d.line[0])}. ` : ''}{!d.fallback ? t('xp_house_then_native')
+        : d.fallback.kin ? <>{t(d.fallback.female ? 'xp_house_then_kin_f' : 'xp_house_then_kin_m').replace('{p}', who(d.fallback))} <NLink id={d.fallback.nation} size={14} />{t('xp_house_then_kin_end')}</>
+        // (the realm is named once: "Ludwig von Ungarn" gets only the arms of Hungary, not "von Ungarn" again)
+        : who(d.fallback).includes(L(nations.value[d.fallback.nation]?.short)) ? <>{t('xp_house_then_claim').replace('{p}', who(d.fallback))} <NLink id={d.fallback.nation} size={14} name={false} />.</>
+        : <>{t('xp_house_then_claim').replace('{p}', who(d.fallback))} (<NLink id={d.fallback.nation} size={14} />).</>}</div>
       <div class="muted small">{t('xp_house_secure')}</div></div>}
     {d.hereditary && d.line.length > 0 && <div class="small dyn-line"><Tip content={<div><TipHead name={t('xp_line')} hint={t('xp_line_hint')} /></div>}><b class="has-tip">{t('xp_line')}:</b></Tip>{' '}
       {d.line.map((c: any, k: number) => <span>{k > 0 && ' › '}{k + 1}. {who(c)} <span class="muted">({c.age})</span></span>)}</div>}

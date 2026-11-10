@@ -51,6 +51,37 @@ describe('royal houses of 1356 and the succession', () => {
     expect(lineOfSuccession(s, S, s.chars[S.ruler])[0]).toBe(S.heir);
   });
 
+  it('Norway and Sweden share the house of Bjälbo: Haakon is the son of Magnus, Eric his brother with a claim (review fix)', () => {
+    const { s, w } = newGame(1356);
+    const N = nat(s, 'norway'), S = nat(s, 'sweden');
+    const haakon = s.chars[N.ruler], magnus = s.chars[S.ruler], eric = s.chars[S.heir], blanche = s.chars[S.consort];
+    expect(haakon.father).toBe(magnus.id); expect(haakon.mother).toBe(blanche.id);
+    expect(magnus.children).toEqual(expect.arrayContaining([eric.id, haakon.id]));
+    expect(eric.claims).toContain(N.id); expect(haakon.claims).toContain(S.id);
+    const v = dynastyView(s, N)!;
+    expect(v.members.map((m) => m.name)).toEqual(expect.arrayContaining(['Eric Magnusson', 'Magnus Eriksson', 'Blanche of Namur']));
+    // nobody at the Norwegian court, but the house lives on in Sweden: the warning says so, and the crown would pass by blood
+    expect(v.warn).toBe('none');
+    expect(v.fallback).toMatchObject({ nation: S.id, name: 'Eric Magnusson', kin: true });
+    expect(successionClaims(s, N)[0]).toMatchObject({ nation: S.id, char: eric.id, how: 'blood' });
+    s.playerNations = [N.id]; s.day += 30; politics.monthly!({ s, w } as any);
+    const warn = s.notices.find((x) => x.nation === N.id && x.kind === 'house_warning')!;
+    expect(warn.text.de).toMatch(/^An unserem Hof lebt kein Erbe\. .*Erich Magnusson aus unserem Haus, der in Schweden lebt/);
+    expect(warn.text.de).not.toContain('Niemand aus unserem Haus');
+    // Haakon dies childless: Norway passes to the house in Sweden, in a personal union
+    characterDies(s, w, N, haakon.id);
+    expect(N.ruler === magnus.id || S.ruler === N.ruler).toBe(true);
+    expect(N.overlord === S.id || S.overlord === N.id).toBe(true);
+  });
+
+  it('no couple of the start is a marriage of later years (John Stewart wed Annabella Drummond, then five, about 1367)', () => {
+    const { s } = newGame(1356);
+    // (royal brides of twelve, wed as children, are history: Jeanne of France married Charles of Navarre in 1352)
+    const young = Object.values(s.chars).filter((c) => c.alive && c.spouse && s.chars[c.spouse]?.alive && ageOf(s, c) < 10).map((c) => c.name);
+    expect(young).toEqual([]);
+    expect(named(s, 'John Stewart').spouse).toBeUndefined();
+  });
+
   it('a dead heir is followed by his brother; a dead son\'s children come before his younger brothers', () => {
     const { s, w } = newGame(1356);
     const E = nat(s, 'england');

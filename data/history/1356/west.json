@@ -714,13 +714,7 @@
      "parent": "heir",
      "name": "John Stewart",
      "born": 1337,
-     "dynasty": "Stewart",
-     "spouse": {
-      "female": true,
-      "name": "Annabella Drummond",
-      "born": 1350,
-      "dynasty": "Drummond"
-     }
+     "dynasty": "Stewart"
     },
     {
      "female": false,

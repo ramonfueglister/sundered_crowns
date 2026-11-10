@@ -224,7 +224,8 @@ export function dynastyView(s: GameState, n: Nation) {
   const inLine = lineIds.length || (n.heir && s.chars[n.heir]?.alive ? 1 : 0);
   const warn: 'none' | 'last' | null = !hereditary ? null : inLine === 0 ? 'none' : inLine === 1 ? 'last' : null;
   return { house: r.dynasty || n.dynasty, members: out, claimants, line, warn, hereditary,
-    fallback: blood ? { nation: blood.nation, name: s.chars[blood.char]?.name ?? '', female: !!s.chars[blood.char]?.female } : null };
+    // kin: the claimant is of this very house, living at another court (Eric of Sweden for his brother Haakon of Norway)
+    fallback: blood ? { nation: blood.nation, name: s.chars[blood.char]?.name ?? '', female: !!s.chars[blood.char]?.female, kin: !!n.dynasty && s.chars[blood.char]?.dynasty === n.dynasty } : null };
 }
 
 /** fix-people: a player is told when the line of the ruling house is down to one person or none (checked each month,
@@ -239,13 +240,19 @@ export function houseWarning(s: GameState, n: Nation) {
   const r = s.chars[n.ruler];
   const nm = (c: { name: string; female: boolean } | null | undefined, l: 'en' | 'de') => (c ? localName(c.name, l, c.female, true) : '');
   const fb = v.fallback ? s.nations[v.fallback.nation] : null;
-  const then: I18n = fb ? { en: `the crown would pass to ${nm(v.fallback, 'en')} of ${fb.short.en}, who has a claim by blood`, de: `ginge die Krone an ${nm(v.fallback, 'de')} von ${fb.short.de}, ${v.fallback!.female ? 'die' : 'der'} einen Anspruch durch Blut hat` }
+  // (the realm is named once: "Ludwig von Ungarn" is not followed by "von Ungarn" again)
+  const of = (l: 'en' | 'de') => (!fb || nm(v.fallback, l).includes(fb.short[l]) ? '' : l === 'de' ? ` von ${fb.short.de}` : ` of ${fb.short.en}`);
+  const pron = v.fallback?.female ? 'die' : 'der';
+  const then: I18n = fb && v.fallback!.kin
+    ? { en: `the crown would pass to ${nm(v.fallback, 'en')} of our house, who lives in ${fb.short.en}, and both crowns would be joined in a personal union`, de: `ginge die Krone an ${nm(v.fallback, 'de')} aus unserem Haus, ${pron} in ${fb.short.de} lebt, und beide Kronen kämen in Personalunion` }
+    : fb ? { en: `the crown would pass to ${nm(v.fallback, 'en')}${of('en')}, who has a claim by blood`, de: `ginge die Krone an ${nm(v.fallback, 'de')}${of('de')}, ${pron} einen Anspruch durch Blut hat` }
     : { en: 'the magnates would raise a lord of another house to the throne, and the succession would be disputed', de: 'höben die Magnaten einen Herrn aus einem anderen Haus auf den Thron, und die Nachfolge wäre umstritten' };
   if (k === 1) {
     const last = v.line[0] ?? (s.chars[n.heir] ? { name: s.chars[n.heir].name, female: s.chars[n.heir].female } : null);
     const erbe = last?.female ? 'die Erbin' : 'der Erbe';
     notice(s, n.id, 'house_warning', { en: `Our house rests on one heir: ${nm(last, 'en')}. Should both ${nm(r, 'en')} and the heir die, ${then.en}. A marriage and children would secure the line.`, de: `Unser Haus ruht auf ${last?.female ? 'einer einzigen Erbin' : 'einem einzigen Erben'}: ${nm(last, 'de')}. Stürben ${nm(r, 'de')} und ${erbe}, ${then.de}. Eine Heirat und Kinder würden die Linie sichern.` }, { loc: n.capital });
   } else {
-    notice(s, n.id, 'house_warning', { en: `No one of our house can inherit the crown. Should ${nm(r, 'en')} die, ${then.en}.`, de: `Niemand aus unserem Haus kann die Krone erben. Stürbe ${nm(r, 'de')}, ${then.de}.` }, { loc: n.capital });
+    const head: I18n = v.fallback?.kin ? { en: 'No heir lives at our court.', de: 'An unserem Hof lebt kein Erbe.' } : { en: 'No one of our house can inherit the crown.', de: 'Niemand aus unserem Haus kann die Krone erben.' };
+    notice(s, n.id, 'house_warning', { en: `${head.en} Should ${nm(r, 'en')} die, ${then.en}.`, de: `${head.de} Stürbe ${nm(r, 'de')}, ${then.de}.` }, { loc: n.capital });
   }
 }

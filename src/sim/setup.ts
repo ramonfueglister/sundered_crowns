@@ -390,9 +390,16 @@ function addFamily(s: GameState, st: any, i: number, keyIndex: Record<string, nu
     }
   };
   const wed = (a: Character, b: Character) => { a.spouse = b.id; b.spouse = a.id; };
+  // a person who already rules, is heir or consort of a realm ("ref": "sweden.ruler"): Haakon VI of Norway is the son
+  // of Magnus Eriksson, king of Sweden, and the brother of Sweden's heir
+  const refChar = (ref: unknown): Character | undefined => {
+    if (typeof ref !== 'string') return undefined;
+    const [k, role] = ref.split('.'); const X = s.nations[keyIndex[k] ?? -1];
+    return X && (role === 'ruler' || role === 'heir' || role === 'consort') ? s.chars[X[role]] : undefined;
+  };
   const fam: any[] = Array.isArray(st.family) ? st.family : [];
   // parents first: the ruler (and an heir who is a brother) are their children
-  const parents = fam.filter((e) => e.rel === 'parent').map((e) => { const c = make(e, i); byName.set(e.name, c); return c; });
+  const parents = fam.filter((e) => e.rel === 'parent').map((e) => refChar(e.ref) ?? make(e, i)).filter((c) => { if (c) byName.set(c.name, c); return !!c; });
   const father = parents.find((p) => !p.female), mother = parents.find((p) => p.female);
   if (father && mother) wed(father, mother);
   link(r, father, mother);
@@ -402,10 +409,12 @@ function addFamily(s: GameState, st: any, i: number, keyIndex: Record<string, nu
   if (h && st.heir_spouse) wed(h, make(st.heir_spouse, i));
   for (const e of fam) {
     if (e.rel === 'parent') continue;
-    const at = typeof e.at === 'string' && keyIndex[e.at] !== undefined ? keyIndex[e.at] : i;
-    const c = make(e, at);
-    byName.set(e.name, c);
-    if (at !== i) c.claims = [i];
+    const known = refChar(e.ref);
+    if (e.ref && !known) continue;
+    const at = known ? known.nation : typeof e.at === 'string' && keyIndex[e.at] !== undefined ? keyIndex[e.at] : i;
+    const c = known ?? make(e, at);
+    byName.set(c.name, c);
+    if (at !== i) c.claims = [...new Set([...(c.claims ?? []), i])]; // living at another court: a claim on this throne
     if (e.rel === 'sibling') link(c, father, e.of_consort === false ? undefined : mother); // (a half-brother or -sister by the father)
     else if (e.rel === 'child') link(c, r, e.of_consort === false ? undefined : s.chars[n.consort]);
     else {

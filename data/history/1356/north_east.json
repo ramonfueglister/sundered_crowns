@@ -622,7 +622,17 @@
       "arrangement": "two_and_one"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "rel": "child",
+     "ref": "sweden.heir"
+    },
+    {
+     "rel": "child",
+     "ref": "norway.ruler"
+    }
+   ]
   },
   {
    "id": "visby",
@@ -873,7 +883,21 @@
       "count": 1
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "rel": "parent",
+     "ref": "sweden.ruler"
+    },
+    {
+     "rel": "parent",
+     "ref": "sweden.consort"
+    },
+    {
+     "rel": "sibling",
+     "ref": "sweden.heir"
+    }
+   ]
   },
   {
    "id": "poland",

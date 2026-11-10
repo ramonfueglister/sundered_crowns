@@ -968,11 +968,11 @@ const S: Record<string, [string, string]> = {
   // ---- fix-people
   xp_house_last: ['Our house rests on one heir', 'Unser Haus ruht auf einem einzigen Erben'],
   xp_house_none: ['No one of our house can inherit', 'Niemand aus unserem Haus kann erben'],
-  xp_house_then_claim: ['Should the line end, the crown would pass by blood to {p} of', 'Erlischt die Linie, ginge die Krone durch Blut an {p} von'],
-  xp_house_then_native: ['Should the line end, the magnates would raise a lord of another house to the throne, and the succession would be disputed.', 'Erlischt die Linie, höben die Magnaten einen Herrn aus einem anderen Haus auf den Thron, und die Nachfolge wäre umstritten.'],
+  xp_house_then_claim: ['Should the line end, the crown would pass by blood to {p}', 'Sollte die Linie erlöschen, ginge die Krone durch Blut an {p}'],
+  xp_house_then_native: ['Should the line end, the magnates would raise a lord of another house to the throne, and the succession would be disputed.', 'Sollte die Linie erlöschen, höben die Magnaten einen Herrn aus einem anderen Haus auf den Thron, und die Nachfolge wäre umstritten.'],
   xp_house_secure: ['A marriage of the ruler or the heir, and children, secure the line.', 'Eine Heirat des Herrschers oder des Erben und Kinder sichern die Linie.'],
   xp_line: ['Line of succession', 'Thronfolge'],
-  xp_line_hint: ['Who inherits after the ruler, first in line first: the ruler\'s children and their children, then brothers, sisters and their children. Under male primogeniture the men of the male line come first. People married abroad are not in the line; they pass a claim instead.', 'Wer nach dem Herrscher erbt, der Erste zuerst: die Kinder des Herrschers und deren Kinder, dann Brüder, Schwestern und ihre Kinder. Bei männlicher Primogenitur kommen die Männer der männlichen Linie zuerst. Wer ins Ausland geheiratet hat, steht nicht in der Linie, sondern vererbt einen Anspruch.'],
+  xp_line_hint: ['Who inherits after the ruler, in the order of succession: the ruler\'s children and their children, then brothers, sisters and their children. Under male primogeniture the men of the male line come first. People who live at another court are not in the line; they carry a claim instead.', 'Wer nach dem Herrscher erbt, in der Reihenfolge der Thronfolge: die Kinder des Herrschers und deren Kinder, dann Brüder, Schwestern und ihre Kinder. Bei männlicher Primogenitur kommen die Männer der männlichen Linie zuerst. Wer an einem anderen Hof lebt, steht nicht in der Linie, sondern trägt einen Anspruch.'],
   xp_improve_title: ['Improved relations', 'Verbesserte Beziehungen'], xp_improve_base: ['An envoy at their court', 'Ein Gesandter an ihrem Hof'],
   xp_improve_cap: ['Limit of +100 from improved relations', 'Grenze von +100 durch verbesserte Beziehungen'], xp_opinion_short: ['opinion', 'Meinung'],
   xp_improve_hint: ['Never refused: their opinion of us rises for three years, and their trust by 5. From improved relations so far: {now}, at most +{cap}.', 'Wird nie abgelehnt: Ihre Meinung über uns steigt für drei Jahre, ihr Vertrauen um 5. Bisher durch verbesserte Beziehungen: {now}, höchstens +{cap}.'],
@@ -1022,6 +1022,10 @@ const S: Record<string, [string, string]> = {
   xp_next_waiting: ['Next ({n}):', 'Als Nächstes ({n}):'],
   // review fixes (fix-people): filling the council when the Authority does not reach
   xp_ablest_all_short: ['Our Authority ({a}) pays for {k} of the {m} changes: the first in this list.', 'Unsere Autorität ({a}) reicht für {k} der {m} Wechsel: die ersten dieser Liste.'],
+  xp_house_none_here: ['No heir lives at our court', 'An unserem Hof lebt kein Erbe'],
+  xp_house_then_kin_m: ['Should the line at our court end, the crown would pass to {p} of our house, who lives in', 'Sollte die Linie an unserem Hof erlöschen, ginge die Krone an {p} aus unserem Haus, der in'],
+  xp_house_then_kin_f: ['Should the line at our court end, the crown would pass to {p} of our house, who lives in', 'Sollte die Linie an unserem Hof erlöschen, ginge die Krone an {p} aus unserem Haus, die in'],
+  xp_house_then_kin_end: ['. Both crowns would be joined in a personal union.', ' lebt. Beide Kronen kämen in Personalunion.'],
   xp_spy_income_share: ['{p} % of our monthly income', '{p} % unseres Monatseinkommens'],
   xp_ablest_all_part: ['{k} of {m} appointed; the Authority did not reach further', '{k} von {m} ernannt; für mehr reichte die Autorität nicht'],
 };
