@@ -6,8 +6,10 @@
 // Known land: the explored map of the realm's knowledge group (unknown land stays terra incognita, without owners).
 // Sight (armies, fleets, battles, sieges): our own land and that of our subjects, overlord and allies; every place
 // next to it; two steps around each of our hosts and fleets; and what our spies report from their target's heartland.
-// Wars, peace treaties and the chronicle stay public: news travels.
-import type { GameState } from '../sim/types';
+// Realms met: our friends, the realms at war with us or beside us, and every realm that holds or controls land we know or
+// has its capital there. The ledger, the chronicle and the great-power ranking speak only of realms met: news travels,
+// but not from lands nobody has heard of.
+import type { GameState, ChronEntry } from '../sim/types';
 import type { World } from '../sim/world';
 import type { ArmyLite, TickView } from './protocol';
 import { allies, subjectsOf } from '../sim/ctx';
@@ -112,9 +114,35 @@ export function fogColors(rgba: Uint8Array, known: Uint8Array | null): Uint8Arra
   return rgba;
 }
 
-/** Applies the fog to the parts of a tick view that show armies (in place; returns it). */
-export function fogTick<T extends Pick<TickView, 'armies' | 'battles' | 'sieges'>>(s: GameState, v: T, sight: Sight): T {
+/** Realms the viewer has met (1 per nation id): itself and its friends, the realms in its wars, and every realm that
+ *  owns or controls a place it knows or has its capital there. Everything when the whole map is known. */
+export function metRealms(s: GameState, sight: Sight): Uint8Array {
+  const out = new Uint8Array(s.nations.length);
+  const known = sight.known;
+  if (!known) return out.fill(1);
+  for (const f of sight.friends) if (f >= 0 && f < out.length) out[f] = 1;
+  const own = s.loc.owner, ctrl = s.loc.ctrl;
+  for (let i = 0; i < own.length && i < known.length; i++) {
+    if (!known[i]) continue;
+    if (own[i] >= 0 && own[i] < out.length) out[own[i]] = 1;
+    if (ctrl[i] >= 0 && ctrl[i] < out.length) out[ctrl[i]] = 1;
+  }
+  for (const n of s.nations) if (n.capital >= 0 && n.capital < known.length && known[n.capital]) out[n.id] = 1;
+  for (const war of s.wars) if (war.att.includes(sight.nation) || war.def.includes(sight.nation)) for (const x of [...war.att, ...war.def]) if (x >= 0 && x < out.length) out[x] = 1;
+  return out;
+}
+
+/** Chronicle entries the viewer hears of: world news (no realm), entries about a realm it has met or naming one, and
+ *  entries placed on land it knows. */
+export function fogChronicle(list: ChronEntry[], met: Uint8Array, known: Uint8Array | null): ChronEntry[] {
+  if (!known) return list;
+  return list.filter((e) => e.nation < 0 || met[e.nation] === 1 || !!e.also?.some((x) => met[x] === 1) || (e.loc !== undefined && e.loc >= 0 && known[e.loc] === 1));
+}
+
+/** Applies the fog to the parts of a tick view that show armies, and to the day's chronicle (in place; returns it). */
+export function fogTick<T extends Pick<TickView, 'armies' | 'battles' | 'sieges'> & { chronicle?: ChronEntry[] }>(s: GameState, v: T, sight: Sight): T {
   v.armies = fogArmies(v.armies, sight); v.battles = fogBattles(v.battles, sight); v.sieges = fogSieges(s, v.sieges, sight);
+  if (v.chronicle?.length) v.chronicle = fogChronicle(v.chronicle, metRealms(s, sight), sight.known);
   return v;
 }
 
@@ -162,6 +190,26 @@ export function fogAnswerWith(s: GameState, w: World, getSight: () => Sight | 'n
       const sight = getSight(); if (sight === 'none') return null;
       const a = s.armies.find((x) => x.id === q.army);
       return a && a.owner === sight.nation ? data : null;
+    }
+    case 'chronicle': {
+      const sight = getSight(); if (sight === 'none' || !Array.isArray(data)) return data;
+      return fogChronicle(data, metRealms(s, sight), sight.known);
+    }
+    case 'ledger': {
+      // realms met, markets whose hub we know, wars with a realm we have met
+      const sight = getSight(); if (sight === 'none' || !sight.known || !Array.isArray(data)) return data;
+      const met = metRealms(s, sight), known = sight.known;
+      if (q.kind === 'nations') return data.filter((r: any) => met[r.id] === 1);
+      if (q.kind === 'markets') return data.filter((r: any) => { const m = s.markets[r.id]; return !!m && known[m.hub] === 1; });
+      if (q.kind === 'wars') return data.filter((r: any) => [...r.att, ...r.def].some((x: number) => met[x] === 1));
+      return data;
+    }
+    case 'powers': {
+      // the ranking of the realms and the wars of the world: only realms met (the ranks stay those of the whole world)
+      const sight = getSight(); if (sight === 'none' || !sight.known || !data) return data;
+      const met = metRealms(s, sight);
+      return { ...data, ranking: Array.isArray(data.ranking) ? data.ranking.filter((r: any) => met[r.id] === 1) : data.ranking,
+        wars: Array.isArray(data.wars) ? data.wars.filter((x: any) => met[x.att] === 1 || met[x.def] === 1 || x.mine) : data.wars };
     }
     case 'timelapse': {
       // the frames store owner + 1 (0 = nobody): unknown land shows as nobody's; once the game has ended all is shown
