@@ -225,7 +225,9 @@ export function companiesView(s: GameState, w: World, pid: number) {
   });
   const have = new Set(mine.map((c) => c.market));
   const options = charterOptions(s, w, n).filter((m) => !have.has(m)).map((m) => ({ market: m, name: s.markets[m].name, tv: s.markets[m].tv ?? 0 }));
-  return { mine, options, slots: companySlots(n), commerce: n.tech[1], need: 12, cost: 600 * s.priceLevel, treasury: n.treasury };
+  // the Commerce & Learning level that brings the next charter (colonial.ts companySlots: one at 12, one more every six)
+  const slots = companySlots(n);
+  return { mine, options, slots, nextAt: 12 + 6 * slots, commerce: n.tech[1], need: 12, cost: 600 * s.priceLevel, treasury: n.treasury };
 }
 
 // ---------------- map modes ----------------

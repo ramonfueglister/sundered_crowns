@@ -999,6 +999,11 @@ const S: Record<string, [string, string]> = {
   x_w_no_towns: ['No towns with workshops at work here.', 'Hier gibt es keine Städte mit arbeitenden Werkstätten.'],
   x_w_no_switch: ['No town shown can switch to this method now.', 'Keine der gezeigten Städte kann jetzt auf diese Produktionsweise umstellen.'],
   x_w_methods_all: ['Methods of all towns', 'Produktionsweisen aller Städte'],
+  ex_open_water: ['Out of sight of land at a stretch', 'Am Stück außer Sicht von Land'], ex_route_km: ['Route by sea', 'Seeweg'],
+  ex_ocean_route: ['ocean voyage', 'Ozeanfahrt'],
+  ex_voyage_rule: ['The route decides: a voyage that sails more than 1,500 km at a stretch out of sight of land is an ocean voyage (Commerce & Learning 10 and the Age of Print and Horizons); one that keeps near the coasts needs Commerce & Learning 6, however far it goes.', 'Der Seeweg entscheidet: Eine Fahrt, die mehr als 1.500 km am Stück außer Sicht von Land segelt, ist eine Ozeanfahrt (Handel & Gelehrsamkeit 10 und das Zeitalter von Druck und Horizonten); eine, die sich an die Küsten hält, braucht Handel & Gelehrsamkeit 6, wie weit sie auch führt.'],
+  ex_next_charter: ['Next charter at Commerce & Learning', 'Nächster Freibrief bei Handel & Gelehrsamkeit'],
+  ex_next_charter_at: ['next at Commerce & Learning {n}', 'nächster bei Handel & Gelehrsamkeit {n}'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

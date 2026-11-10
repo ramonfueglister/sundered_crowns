@@ -9,6 +9,7 @@ import { dayToDate } from '../src/sim/calendar';
 import { budgetForecast } from '../src/sim/systems/administration';
 import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON } from '../src/sim/systems/economy';
 import { methodsView } from '../src/game/methodsview';
+import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } from '../src/sim/systems/explore';
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
@@ -185,5 +186,39 @@ describe('production methods can be set for many towns at once', () => {
     // and the overview now says why they cannot switch again so soon
     const v3 = methodsView(s, w, n.id)!;
     expect(v3.towns.find((t) => t.loc === go[0])!.alt[0][4]).toBe('the workshops were reorganised recently');
+  });
+});
+
+describe('expeditions are measured along their route', () => {
+  it('the Red Sea from Venice is an ocean voyage round Africa, and the refusal names what that voyage needs', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice');
+    n.tech[1] = 7; n.era = 0; n.treasury = 1e5; n.sailors = 1e4;
+    const tg = expeditionTargets(s, w, n);
+    // sorted by the route from our harbours, and every one of them reachable
+    expect(tg.length).toBeGreaterThan(5);
+    for (let k = 1; k < tg.length; k++) expect(tg[k].km).toBeGreaterThanOrEqual(tg[k - 1].km);
+    const red = tg.find((x) => x.region.name.en === 'Red Sea')!;
+    expect(red).toBeTruthy();
+    const p = expeditionPlan(s, w, n, red.to, 0);
+    expect(p.path.length).toBeGreaterThan(10);
+    const straight = w.distKm(p.start, red.to);
+    expect(straight).toBeLessThan(OCEAN_KM); // as the crow flies it would have passed for a coastal voyage
+    expect(p.km).toBeGreaterThan(straight * 3); // but the way there runs round Africa
+    expect(p.km).toBeCloseTo(red.km, -2);
+    expect(p.ocean).toBe(true);
+    expect(p.open).toBeGreaterThan(OPEN_KM);
+    expect(p.refusal).toBe('an ocean voyage needs Commerce 10');
+    expect(p.needs.find((x) => x.key === 'commerce')!.need).toBe(10);
+    // without even the coastal knowledge, the refusal still names the voyage's own requirement
+    n.tech[1] = 3;
+    expect(expeditionPlan(s, w, n, red.to, 0).refusal).toBe('an ocean voyage needs Commerce 10');
+    // a voyage along the coasts needs only Commerce 6, however long
+    n.tech[1] = 7;
+    const coast = tg.map((x) => expeditionPlan(s, w, n, x.to, 0)).find((x) => !x.ocean && x.path.length > 0)!;
+    expect(coast).toBeTruthy();
+    expect(coast.refusal).toBeNull();
+    // and a fleet sent by startExplorer obeys the same rule
+    const f = s.armies.find((a) => a.owner === n.id && a.fleet)!;
+    expect(startExplorer(s, w, n, f.id, red.to)).toBe('an ocean voyage needs Commerce 10');
   });
 });
