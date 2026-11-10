@@ -977,8 +977,14 @@ const S: Record<string, [string, string]> = {
   xp_improve_cap: ['Limit of +100 from improved relations', 'Grenze von +100 durch verbesserte Beziehungen'], xp_opinion_short: ['opinion', 'Meinung'],
   xp_improve_hint: ['Never refused: their opinion of us rises for three years, and their trust by 5. From improved relations so far: {now}, at most +{cap}.', 'Wird nie abgelehnt: Ihre Meinung über uns steigt für drei Jahre, ihr Vertrauen um 5. Bisher durch verbesserte Beziehungen: {now}, höchstens +{cap}.'],
   xp_refused_lately: ['They refused this proposal of ours lately.', 'Sie haben diesen Vorschlag von uns kürzlich abgelehnt.'],
+  xp_wed_if: ['If they accept', 'Wenn sie annehmen'], xp_wed_house: ['Their house', 'Ihr Haus'],
   xp_pause_on_offers: ['Pause on offers of other realms', 'Bei Angeboten anderer Reiche anhalten'],
   xp_pause_on_offers_hint: ['Offers (alliance, marriage, passage, trade) wait 60 days for an answer; the game runs on unless this is ticked. Answering resumes only a pause that an event window made.', 'Angebote (Bündnis, Heirat, Durchmarsch, Handel) warten 60 Tage auf eine Antwort; das Spiel läuft weiter, außer dies ist angehakt. Eine Antwort setzt nur eine Pause fort, die ein Ereignisfenster ausgelöst hat.'],
+  xp_wed_unnamed_f: ['a daughter or sister of their house of fitting age, named at the wedding', 'eine Tochter oder Schwester ihres Hauses im passenden Alter, die bei der Hochzeit bestimmt wird'],
+  xp_wed_unnamed_m: ['a son or brother of their house of fitting age, named at the wedding', 'ein Sohn oder Bruder ihres Hauses im passenden Alter, der bei der Hochzeit bestimmt wird'],
+  xp_wed_claim_ours: ['The bride or groom joins our court with a claim on their throne and passes it to our children: should their house die out, its crown may pass to us.', 'Braut oder Bräutigam kommt mit einem Anspruch auf ihren Thron an unseren Hof und vererbt ihn an unsere Kinder: Erlischt ihr Haus, kann dessen Krone an uns fallen.'],
+  xp_wed_claim_theirs: ['A member of our house goes to their court and keeps a claim on our throne: should our house die out, they may inherit our crown by blood.', 'Ein Mitglied unseres Hauses geht an ihren Hof und behält einen Anspruch auf unseren Thron: Erlischt unser Haus, können sie unsere Krone durch Blut erben.'],
+  xp_wed_none: ['Nobody of either house can wed now: the treaty binds the houses until someone comes of age. A treaty alone carries no blood: should our house die out, they could press a claim by war, but not take the crown.', 'Keines der beiden Häuser hat jetzt jemanden zu verheiraten: Der Vertrag bindet die Häuser, bis jemand ins heiratsfähige Alter kommt. Ein Vertrag allein stiftet keine Blutsverwandtschaft: Erlischt unser Haus, könnten sie einen Anspruch mit Krieg durchsetzen, aber nicht die Krone erben.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

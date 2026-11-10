@@ -6,7 +6,8 @@
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
 import { characterDies, lineOfSuccession, ageOf, politics } from '../src/sim/systems/politics';
-import { dynastyView, successionClaims } from '../src/sim/systems/dynasty';
+import { dynastyView, successionClaims, marriagePreview } from '../src/sim/systems/dynasty';
+import { acceptProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
 import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP } from '../src/sim/systems/diplomacy';
 import { answerEvent } from '../src/sim/systems/events';
@@ -148,4 +149,22 @@ describe('diplomatic answers', () => {
     expect(repeats).toEqual([]);
     expect(fromSubjects).toEqual([]);
   }, 600000);
+});
+
+describe('marriage preview', () => {
+  it('the diplomacy row names who would wed whom, and the treaty weds exactly them', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), A = nat(s, 'austria'); s.playerNations = [E.id];
+    const q = answer(s, w, E.id, { q: 'diplo', target: A.id, action: 'marriage' } as any);
+    const m = q.preview.match;
+    expect(m).not.toBeNull();
+    // Austria's unwed heir Rudolf takes a daughter of Edward III; the panel also lists the Austrian house
+    expect(m.realm).toBe(A.id); expect(m.person.id).toBe(A.heir);
+    expect(m.spouse.name).toBe('Isabella of England');
+    expect(q.preview.members.length).toBeGreaterThan(0);
+    acceptProposal(s, w, E.id, A.id, 'marriage');
+    expect(s.chars[A.heir].spouse).toBe(m.spouse.id);
+    // once wed, nobody is left to match on either side for a second treaty
+    expect(marriagePreview(s, E.id, A.id).match?.spouse?.id).not.toBe(m.spouse.id);
+  });
 });

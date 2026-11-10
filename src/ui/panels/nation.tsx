@@ -5,7 +5,7 @@ import { selectedNation, playerId, openPanel } from '../store';
 import type { WarGoal } from '../../sim/types';
 import { Parts, TipHead } from './explain';
 import { TradeRelations } from './tradediplo';
-import { charName, charFull, AiLogSection } from './people';
+import { charName, charFull, relName, AiLogSection } from './people';
 import { Panel, Section, Row, NLink, NList, Btn, Empty, Reasons, Effects, useQuery, act, t, L, lang, num, signed, pct, Tip, Coa, realm, useRealm, reasonLabel, flyToLoc, placeName, LocName, namesVersion } from './common';
 import { errText } from '../i18n';
 
@@ -110,6 +110,7 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   const free = p ? p.envoys - p.envoysBusy : 0;
   const giftAmt = gift || Math.max(20, Math.round((p?.incomeBreak?.tax || 10) * 2));
   const actName = (a: string) => L(rel.actions.find((x: any) => x.id === a)?.name) || t(`act_${a}`);
+  const pid = playerId.value;
   return <Section title={t('diplomacy')} id="nat-dip" right={<Tip content={t('envoys_hint')}><span class={free ? 'muted' : 'neg'}><i class="ic envoy sm" /> {free}/{p?.envoys ?? 0}</span></Tip>}>
     <div class="dip-list">{proposals.map((a) => {
       const pr = pred[a];
@@ -125,7 +126,7 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
         </Tip> : <span class="pred">…</span>}
         <Btn disabled={free <= 0 ? 'all envoys are busy' : null} tip={t('envoy_travel')} onClick={() => act({ t: 'diplo', target: d.id, action: a }, 'page', t('envoy_sent')).then(refresh)}>{t('send')}</Btn>
       </div>;
-      return row;
+      return a === 'marriage' && pr?.preview ? <>{row}<MarriagePreview p={pr.preview} us={pid} them={d.id} /></> : row;
     })}</div>
     <div class="dip-list uni">{unilateral.map((a) => <div class="dip-row">
       <span class="dname">{actName(a)}</span>
@@ -136,6 +137,20 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
   </Section>;
 }
 
+/** What a royal marriage with this realm would bring today (systems/dynasty.ts marriagePreview): who weds whom, the
+ *  claim it creates and on which throne, or that the treaty alone binds the houses; and who lives in their house. */
+function MarriagePreview({ p, us, them }: { p: any; us: number; them: number }) {
+  const m = p.match;
+  const who = (c: any) => <b>{charName(c.name, c.female)}</b>;
+  const role = (c: any) => <span class="muted">({relName(c.rel, c.female)}, {c.age})</span>;
+  return <div class="dip-wed small" style={{ margin: '0 0 6px 10px' }}>
+    {m ? <>
+      <div>{t('xp_wed_if')}: {who(m.person)} {role(m.person)} <NLink id={m.realm} size={14} /> ⚭ {m.spouse ? <>{who(m.spouse)} {role(m.spouse)}</> : <span class="muted">{t(m.female ? 'xp_wed_unnamed_f' : 'xp_wed_unnamed_m')}</span>} <NLink id={m.house} size={14} /></div>
+      <div class={m.realm === us ? 'pos' : 'neg'}>{m.realm === us ? t('xp_wed_claim_ours') : t('xp_wed_claim_theirs')}</div>
+    </> : <div class="muted">{t('xp_wed_none')}</div>}
+    {p.members.length > 0 && <div class="muted">{t('xp_wed_house')}: {p.members.map((x: any, k: number) => <span>{k > 0 && ', '}{charName(x.name, x.female)} ({relName(x.rel, x.female)}, {x.age}{x.wed ? ', ⚭' : ''})</span>)}</div>}
+  </div>;
+}
 
 /** Our justifications against this realm, as the simulation sees them (src/sim/systems/war.ts casusBelliAll). */
 const cbList = (d: any): string[] => d.rel?.cb ?? [];

@@ -35,7 +35,7 @@ import { declareView, armyView, battleView, battleList, warView, locWar, armySup
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
-import { dynastyView } from '../sim/systems/dynasty';
+import { dynastyView, marriagePreview } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 import { victoryView, historyView } from './endview';
 import { EVENTS } from '../sim/content/events';
@@ -217,7 +217,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       if (q.action === 'improve') { const g = improveGain(s, player, q.target); return { kind: 'gain', accept: true, gain: g.gain, now: g.now, cap: IMPROVE_CAP, reasons: g.parts }; }
       const ev = evaluateProposal(s, w, player, q.target, q.action);
       const again = refusedRecently(s, player, q.target, q.action) ? s.flags[`deny_${player}_${q.target}_${q.action}`] : 0;
-      return { ...ev, again };
+      return q.action === 'marriage' ? { ...ev, again, preview: marriagePreview(s, player, q.target) } : { ...ev, again };
     }
     case 'tmarket': return marketDetail(s, w, player, q.market);
     case 'tmarkets': return marketList(s, w, player);
