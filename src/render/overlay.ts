@@ -255,10 +255,12 @@ export class Overlay {
         const tl = d ? this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d) : cd.lay;
         if (fits(tl.boxes)) { lay = tl; free = true; used = d; break; }
       }
-      if (free) { placed.push(...lay.boxes); if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); } }
-      // a legible realm name keeps its letters clear of place and landmark names (a faded watermark does not)
-      if (free && cd.alpha >= 0.45) this.realmBoxes.push(...lay.boxes);
-      else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
+      if (free) {
+        placed.push(...lay.boxes);
+        // a legible realm name keeps its letters clear of place and landmark names (a faded watermark does not)
+        if (cd.alpha >= 0.45) this.realmBoxes.push(...lay.boxes);
+        if (!instant) { if (used) this.shift.set(cd.key, used); else this.shift.delete(cd.key); }
+      } else { const d = this.shift.get(cd.key) ?? 0; if (d) lay = this.layoutLabel(v, l0, cd.ds, cd.spacing, cd.sc, d); }
       const target = free ? cd.alpha : 0;
       const cur = instant ? target : (this.fade.get(cd.key) ?? 0);
       const a = instant ? target : cur + (target - cur) * k;
