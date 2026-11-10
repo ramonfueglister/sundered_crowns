@@ -388,6 +388,15 @@ svg.event-art { display: block; width: 100%; height: 190px; border-bottom: 2px s
 .lg-t { color: var(--gilt2); font-variant: small-caps; margin-bottom: 3px; }
 .lg-items { display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .lg-i { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* fix-map: many entries in columns, a numeric scale for the continuous modes, a note */
+.lg-items.many { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 1px 10px; max-height: 168px; overflow-y: auto; }
+.lg-items.many .lg-i { overflow: hidden; text-overflow: ellipsis; }
+.lg-scale { position: relative; margin: 2px 6px 0; padding-bottom: 15px; min-width: 260px; }
+.lg-bar { height: 10px; border: 1px solid rgba(0, 0, 0, .55); border-radius: 2px; }
+.lg-ticks { position: absolute; left: 0; right: 0; top: 11px; height: 14px; }
+.lg-tick { position: absolute; transform: translateX(-50%); font-size: .92em; color: var(--parch2); white-space: nowrap; }
+.lg-tick::before { content: ''; position: absolute; left: 50%; top: -3px; width: 1px; height: 4px; background: var(--parch2); }
+.lg-note { margin-top: 3px; color: #b9a98a; font-style: italic; }
 
 /* ---------------------------------------------------------------- tutorial & hints */
 .tutorial, .hint-card { position: absolute; right: 270px; bottom: 82px; width: 390px; z-index: 30; padding: 10px 14px 8px; animation: nt-in .3s ease-out; }

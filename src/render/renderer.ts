@@ -969,8 +969,9 @@ export class MapRenderer {
     u[0] = W; u[1] = H; u[2] = 1 / (z * pr); u[3] = z;
     u[4] = c.x; u[5] = c.y; u[6] = this.time; u[7] = pr;
     const lz = clamp((Math.log2(z) + 1.5) / 4.5, 0, 1); // 0 at zoom ~0.35, 1 at zoom ~8
-    // close in, the land itself shows through: the realm's colour becomes a wash with a strong band at the border
-    const polA = 0.82 - 0.56 * smooth(lz), flatA = 0.9 - 0.35 * smooth(lz);
+    // close in, the land itself shows through: the realm's colour becomes a wash with a strong band at the border, but
+    // stays strong enough at the closest zoom to tell whose land it is; a map mode's colours stay strong at every zoom
+    const polA = 0.82 - 0.4 * smooth(lz), flatA = 0.95 - 0.2 * smooth(lz);
     u[8] = this.W; u[9] = this.H; u[10] = this.L; u[11] = this.mode === 'flat' ? flatA : polA;
     u[12] = this.mode === 'political' ? 0 : this.mode === 'terrain' ? 1 : 2; u[13] = this.selected; u[14] = this.hover; u[15] = q.q;
     u[16] = this.inkSpeed; u[17] = z >= 1.5 ? 1 : 0; u[18] = q.waves; u[19] = q.rings.length;

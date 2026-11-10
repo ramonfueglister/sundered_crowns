@@ -4,7 +4,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { advanceDay } from '../src/sim/engine';
-import { answer } from '../src/game/view';
+import { answer, mapModeColors, borderColors, MODE_SCALE } from '../src/game/view';
+import { GOODS } from '../src/sim/defs';
+import { FAITHS, ALL_CULTURES } from '../src/sim/content/peoples';
 import { fogAnswer, sightOf, metRealms, fogChronicle, fogTick } from '../src/game/fog';
 import { declareWar, applyPeace } from '../src/sim/systems/war';
 import { chronicle as addEntry, chronInvolves } from '../src/sim/ctx';
@@ -149,5 +151,72 @@ describe('fog of war online: the day\'s chronicle goes to each session under its
       expect(got(alice.msgs)).not.toContain('far news');
       expect(got(guest.msgs)).toContain('far news');
     } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
+describe('map legends: what the viewer knows, every raw good, numbers on the continuous modes', () => {
+  const s = createGame(w, loadSetup(1356), loadHubs(), 777, { player: [] });
+  const P = nid(s, 'portugal');
+  s.playerNations = [P];
+  for (let i = 0; i < 3; i++) advanceDay(s, w);
+  const known = sightOf(s, w, P).known!;
+  const label = (x: any) => (typeof x === 'string' ? x : x.en);
+
+  it('the culture legend shows the cultures around our realm, our own first, and no far peoples', () => {
+    const { legend, rgba } = mapModeColors(s, w, 'culture', P, -1, P);
+    const names = legend.items.map((it) => label(it.label));
+    expect(names[0]).toBe('Portuguese');
+    expect(names).toContain('Castilian');
+    for (const far of ['Inuit', 'Mande', 'Russian']) expect(names).not.toContain(far);
+    // unknown land is left blank
+    const unknown = Array.from({ length: w.L }, (_, i) => i).find((i) => !known[i] && s.loc.owner[i] >= 0)!;
+    expect(rgba[unknown * 4 + 3]).toBe(0);
+  });
+
+  it('neighbouring cultures and trade regions get different colours', () => {
+    const lc = s.loc;
+    const keyOf = (i: number) => (lc.owner[i] >= 0 ? lc.culture[i] : -1);
+    const col = borderColors(w, keyOf, ALL_CULTURES.length, [[230, 25, 75], [60, 180, 75], [255, 225, 25], [67, 99, 216], [245, 130, 49], [145, 30, 180], [66, 212, 244], [240, 50, 230], [191, 239, 69], [250, 190, 212], [70, 153, 144], [220, 190, 255], [154, 99, 36], [255, 250, 200], [128, 0, 0], [170, 255, 195], [128, 128, 0], [255, 216, 177], [0, 0, 117], [169, 169, 169]]);
+    let pairs = 0, same = 0;
+    for (let i = 0; i < w.L; i++) { const a = keyOf(i); if (a < 0) continue; for (const j of w.neighbours(i)) { if (j >= w.L) continue; const b = keyOf(j); if (b < 0 || b === a) continue; pairs++; if (col[a].join() === col[b].join()) same++; } }
+    expect(pairs).toBeGreaterThan(100);
+    expect(same).toBe(0);
+  });
+
+  it('the faith and trade legends name only what Portugal knows', () => {
+    const faith = mapModeColors(s, w, 'faith', P, -1, P).legend.items.map((it) => label(it.label));
+    expect(faith[0]).toBe('Latin Church');
+    for (const far of ['Andean faith', 'Mesoamerican faith', 'Native American faiths']) expect(faith).not.toContain(far);
+    const trade = mapModeColors(s, w, 'trade', P, -1, P).legend.items.map((it) => label(it.label));
+    expect(trade.length).toBeGreaterThan(3);
+    for (const m of s.markets) if (!known[m.hub]) expect(trade).not.toContain(w.names[m.hub] ?? m.name);
+    // the observer's legends still name the whole world
+    const all = mapModeColors(s, w, 'faith', P, -1, -1).legend.items.map((it) => label(it.label));
+    expect(all).toContain('Andean faith');
+    expect(FAITHS.length).toBeGreaterThan(faith.length);
+  });
+
+  it('the goods legend lists every raw good, each in its own colour', () => {
+    const items = mapModeColors(s, w, 'goods', P, -1, P).legend.items;
+    const raw = GOODS.filter((g) => g.kind === 'raw');
+    expect(items.length).toBe(raw.length);
+    const rgb = (h: string) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
+    // salt, cotton and saltpetre were all near white: every pair of raw goods now differs clearly
+    let minD = 1e9;
+    for (let a = 0; a < raw.length; a++) for (let b = a + 1; b < raw.length; b++) { const x = rgb(raw[a].color), y = rgb(raw[b].color); minD = Math.min(minD, Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])); }
+    expect(minD).toBeGreaterThan(25);
+  });
+
+  it('the continuous modes carry a numeric scale whose ticks sit where the colours put those values', () => {
+    for (const mode of ['development', 'population', 'unrest', 'control'] as const) {
+      const lg = mapModeColors(s, w, mode, P, -1, P).legend;
+      expect(lg.scale, mode).toBeTruthy();
+      expect(lg.scale!.ticks.length).toBeGreaterThanOrEqual(4);
+      const at = lg.scale!.ticks.map((k) => k.at);
+      expect([...at].sort((a, b) => a - b)).toEqual(at);
+      expect(at[0]).toBeGreaterThanOrEqual(0); expect(at[at.length - 1]).toBeLessThanOrEqual(1.0001);
+    }
+    const dev = mapModeColors(s, w, 'development', P, -1, P).legend.scale!;
+    expect(dev.ticks.find((k) => k.label === '10')!.at).toBeCloseTo(MODE_SCALE.development(10), 6);
   });
 });

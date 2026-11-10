@@ -88,10 +88,16 @@ export function EventModal() {
 
 export function Legend() {
   const lg = legend.value; const m = mapMode.value;
-  if (!lg || m === 'political' || m === 'terrain' || !lg.items.length) return null;
+  if (!lg || m === 'political' || m === 'terrain' || (!lg.items.length && !lg.scale)) return null;
+  const sc = lg.scale;
   return <div class="legend" onPointerDown={(e) => e.stopPropagation()}>
     <div class="lg-t">{L(lg.title)}{lg.good !== undefined && <GoodPicker good={lg.good} optional={!!lg.goodOptional} />}</div>
-    <div class="lg-items">{lg.items.slice(0, 16).map((it) => <span class="lg-i"><span class="sw" style={{ background: it.color }} />{L(it.label)}</span>)}</div>
+    {sc && <div class="lg-scale">
+      <div class="lg-bar" style={{ background: `linear-gradient(to right, ${sc.colors.join(', ')})` }} />
+      <div class="lg-ticks">{sc.ticks.map((k) => <span class="lg-tick" style={{ left: `${Math.max(0, Math.min(1, k.at)) * 100}%` }}>{k.label}</span>)}</div>
+    </div>}
+    {lg.items.length > 0 && <div class={`lg-items ${lg.items.length > 10 ? 'many' : ''}`}>{lg.items.map((it) => <span class="lg-i"><span class="sw" style={{ background: it.color }} />{L(it.label)}</span>)}</div>}
+    {lg.note && <div class="lg-note">{L(lg.note)}</div>}
   </div>;
 }
 
