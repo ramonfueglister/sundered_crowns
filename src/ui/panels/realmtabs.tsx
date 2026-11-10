@@ -126,7 +126,7 @@ export function MilitaryTab() {
         <div class="muted small">{t('recruit_hint')}</div>
       </Section>
       <Section title={t('sieges')} id="mil-sieges">
-        {sieges.length ? sieges.map((s) => <div class="kv"><span class="k"><LocName id={s.loc} /></span><span class="v"><Bar value={s.progress} max={4} color="#9b2a20" tip={<div><TipHead name={t('siege')} value={`${s.progress}/4`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(s.garrison)}</span></div></div></div>} /> {s.progress}/4</span></div>) : <div class="muted small">{t('none')}</div>}
+        {sieges.length ? sieges.map((s) => <div class="kv"><span class="k"><LocName id={s.loc} /></span><span class="v"><Bar value={s.progress} max={s.need} color="#9b2a20" tip={<div><TipHead name={t('siege')} value={`${s.progress}/${s.need}`} hint={t('x_siege_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('garrison')}</span><span>{num(s.garrison)}</span></div>{s.need < 4 && <div class="bd-row"><span>{t('xfw_siege_blockade')}</span><span>{s.need}</span></div>}</div></div>} /> {s.progress}/{s.need}</span></div>) : <div class="muted small">{t('none')}</div>}
       </Section>
     </div>
     <Section title={t('wars')} id="mil-wars">{wars.length ? wars.map((w) => <WarCard w={w} />) : <div class="muted small">{t('at_peace')}</div>}</Section>
