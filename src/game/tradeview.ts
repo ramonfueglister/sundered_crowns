@@ -8,6 +8,7 @@ import { GOODS, G, GI, UNITS, C } from '../sim/defs';
 import {
   marketPowers, merchantGains, merchantRefusal, merchantsFree, merchantCap, merchantsUsed, merchantReach, routeCost, homeMarket, steerRoute,
   marketPath, embargoedBy, embargoStakes, tariffBetween, marketWaters, shipTable, MAX_HOPS, AGREEMENT_TARIFF, AGREEMENT_VOLUME, MERCHANT_CROWD,
+  tradeEarnings,
 } from '../sim/systems/trade';
 import { tariffMax, LOC_ECON, locGoods, needWeights } from '../sim/systems/economy';
 import { lawEffect } from '../sim/systems/politics';
@@ -55,6 +56,11 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
     route: route ? { hops: route.hops, factor: route.factor, via: (marketPath(s, mid, route.dest) ?? []).map((x) => s.markets[x].name) } : null,
     gains: merchantGains(s, w, pid, mid), paid: paid[pid] ?? 0, steered: steered[pid] ?? 0,
     share: mp.total > 0 ? (mp.rows.find((r) => r.n === pid)?.total ?? 0) / mp.total : 0,
+    // last month, exactly as paid (fix-econ): our share of this market's own trade, our share of the trade steered in
+    // here by the market it came from, and what our merchants here steered home earned us where it arrived
+    own: mk.own?.[pid] ?? paid[pid] ?? 0,
+    fromIn: steeredInShares(s, pid, mid),
+    homeRows: (tradeEarnings(s, pid).find((r) => r.m === mid)?.steered ?? []).map((x) => ({ to: x.to, name: s.markets[x.to]?.name ?? '?', v: x.v })),
   } : null;
   const wat = marketWaters(s, w).byMarket[mid] ?? [];
   const goods = GOODS.map((g, k) => ({ id: g.id, k, name: g.name, price: mk.price[k], supply: mk.supply[k], demand: mk.demand[k], base: g.base * s.priceLevel, net: mk.flowOut[k], hist: priceHist(s, mid, k, 24) }));
@@ -66,13 +72,37 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
   };
 }
 
-/** Every market we know: our share, income and merchants there (the market list of the trade panel). */
+/** Our share of the trade steered into market m last month, by the market it was steered from. */
+function steeredInShares(s: GameState, pid: number, m: number): { from: number; name: string; v: number }[] {
+  const mk = s.markets[m]; const paid = mk?.paid?.[pid] ?? 0, own = mk?.own?.[pid] ?? paid, tin = mk?.tin ?? 0;
+  if (!mk || paid - own <= 1e-9 || tin <= 0) return [];
+  return Object.entries(mk.tinFrom ?? {}).map(([src, v]) => ({ from: +src, name: s.markets[+src]?.name ?? '?', v: (paid - own) * v / tin })).sort((a, b) => b.v - a.v || a.from - b.from);
+}
+
+/** Every market we know: our share, income and merchants there (the market list of the trade panel); `earned` is what
+ *  the market earned us last month with the trade our merchants steered home from it credited to it (tradeEarnings),
+ *  so that the column adds up to our trade and company profits. */
 export function marketList(s: GameState, w: World, pid: number) {
   const n = s.nations[pid]; const home = homeMarket(s, n); const mps = marketPowers(s, w);
-  return s.markets.filter((m) => known(s, n, m.hub)).map((m) => {
-    const r = mps[m.id].rows.find((x) => x.n === pid);
-    return { id: m.id, name: m.name, home: m.id === home, tv: m.tv ?? 0, share: mps[m.id].total > 0 ? (r?.total ?? 0) / mps[m.id].total : 0, paid: m.paid?.[pid] ?? 0, merchants: m.merchants[pid] || 0, steer: !!m.steer?.[pid], owner: m.owner, reach: n && home >= 0 ? routeCost(s, home, m.id) <= merchantReach(n) : false };
+  const earn = new Map(tradeEarnings(s, pid).map((r) => [r.m, r]));
+  return s.markets.filter((m) => known(s, n, m.hub) || earn.has(m.id)).map((m) => {
+    const r = mps[m.id].rows.find((x) => x.n === pid); const e = earn.get(m.id);
+    return { id: m.id, name: m.name, home: m.id === home, tv: m.tv ?? 0, share: mps[m.id].total > 0 ? (r?.total ?? 0) / mps[m.id].total : 0, paid: m.paid?.[pid] ?? 0, merchants: m.merchants[pid] || 0, steer: !!m.steer?.[pid], owner: m.owner, reach: n && home >= 0 ? routeCost(s, home, m.id) <= merchantReach(n) : false,
+      earned: e?.total ?? 0, own: e?.own ?? 0, company: !!e?.company, steeredHome: (e?.steered ?? []).map((x) => ({ to: x.to, name: s.markets[x.to]?.name ?? '?', v: x.v })) };
   }).sort((a, b) => b.tv - a.tv || a.id - b.id);
+}
+
+/** Our trade and company income of last month by market, for the ledger line (the economy panel): each market's own
+ *  share, and the trade steered home credited to the market it came from. Adds up to income.trade + income.company. */
+export function tradeIncomeBy(s: GameState, pid: number): { m: number; name: string; to: number; toName: string; steered: boolean; company: boolean; v: number }[] {
+  const co = new Set((s.companies ?? []).filter((c) => c.nation === pid).map((c) => c.market));
+  const out: { m: number; name: string; to: number; toName: string; steered: boolean; company: boolean; v: number }[] = [];
+  const nm = (m: number) => s.markets[m]?.name ?? '?';
+  for (const r of tradeEarnings(s, pid)) {
+    if (r.own > 0) out.push({ m: r.m, name: nm(r.m), to: r.m, toName: nm(r.m), steered: false, company: co.has(r.m), v: r.own });
+    for (const x of r.steered) out.push({ m: r.m, name: nm(r.m), to: x.to, toName: nm(x.to), steered: true, company: co.has(x.to), v: x.v });
+  }
+  return out.sort((a, b) => b.v - a.v || a.m - b.m);
 }
 
 // ---------------- one good in one market ----------------

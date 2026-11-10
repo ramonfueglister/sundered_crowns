@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { view, nations } from '../../game/client';
 import { playerId } from '../store';
 import { CLASSES, CLASS_NAME } from '../../sim/defs';
-import { Section, Row, Bar, Btn, Empty, Spark, Slider, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm } from './common';
+import { Section, Row, Bar, Btn, Empty, Spark, Slider, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm, placeName } from './common';
 import { TreasuryTip, IncomeTip, ExpenseTip, InflationTip, CorruptionTip, TaxClassTip, MerchantsTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
 import { Duties, Forecast, TariffCap } from './statecraft';
@@ -158,7 +158,13 @@ void Bar;
 /** One line of income or expenses: what it is and its share of the total. */
 function FlowTip({ k, v, total }: { k: string; v: number; total: number }) {
   const hint = t(`kh_${k}`);
-  return <div><TipHead name={keyName(k)} value={num(v, 1)} hint={hint !== `kh_${k}` ? hint : undefined} /><div class="muted">{pct(v / Math.max(1e-9, total), 0)} {t('x_of_total')}</div></div>;
+  // trade and company profits: by market, the trade our merchants steered home credited to the market it came from
+  const by = (k === 'trade' || k === 'company') ? ((realm.value?.tradeBy ?? []) as any[]).filter((x) => x.company === (k === 'company')) : [];
+  const rows = by.slice(0, 12).map((x) => [x.steered ? t('tr_steered_from').replace('{m}', placeName(x.name)) : placeName(x.name), x.v] as [string, number]);
+  const rest = by.slice(12).reduce((p, x) => p + x.v, 0);
+  if (rest > 0) rows.push([t('tr_others'), rest]);
+  return <div><TipHead name={keyName(k)} value={num(v, 1)} hint={hint !== `kh_${k}` ? hint : undefined} /><div class="muted">{pct(v / Math.max(1e-9, total), 0)} {t('x_of_total')}</div>
+    {rows.length > 0 && <Parts title={t('tr_by_market')} rows={rows} total={v} />}</div>;
 }
 /** Army or navy maintenance: what it costs now and what changes the cost. */
 function MaintTip({ kind }: { kind: 'army' | 'navy' }) {

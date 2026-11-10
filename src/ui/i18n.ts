@@ -973,6 +973,16 @@ const S: Record<string, [string, string]> = {
   x_treasury_change: ['Change of the treasury', 'Veränderung des Schatzes'],
   x_upkeep_per1000: ['Upkeep: {v} gold a month per 1,000 men, and their provisions at the prices of the market they stand in.', 'Unterhalt: {v} Gold im Monat je 1.000 Mann, dazu ihre Verpflegung zu den Preisen des Marktes, in dem sie stehen.'],
   x_upkeep_per_ship: ['Upkeep: {v} gold a month per ship, and the crew\'s provisions at the prices of the home market.', 'Unterhalt: {v} Gold im Monat je Schiff, dazu die Verpflegung der Mannschaft zu den Preisen des Heimatmarkts.'],
+  tr_by_market: ['Our trade income by market', 'Unsere Handelseinnahmen nach Markt'],
+  tr_earned: ['Last month', 'Letzter Monat'],
+  tr_earned_hint: ['What this market earned us last month: our share of its own trade, and what our merchants steered home from it (paid out at home, counted here where it came from). The column adds up to our trade and company profits.', 'Was uns dieser Markt letzten Monat einbrachte: unser Anteil an seinem eigenen Handel und was unsere Kaufleute von hier nach Hause lenkten (zu Hause ausgezahlt, hier gezählt, wo es herkam). Die Spalte ergibt zusammen unsere Handels- und Kompaniegewinne.'],
+  tr_earned_sum: ['Together', 'Zusammen'], tr_earned_sum_hint: ['The ledger lines of last month this column adds up to.', 'Die Zeilen des letzten Monats im Haushalt, die diese Spalte ergibt.'],
+  tr_own_share: ['Our share of its own trade', 'Unser Anteil an seinem eigenen Handel'],
+  tr_steered_from: ['Steered home from {m}', 'Hergelenkt aus {m}'],
+  tr_arrived_at: ['Steered home to {m}', 'Nach {m} gelenkt'],
+  tr_from_here_home: ['What our merchants here brought home', 'Was unsere Kaufleute von hier heimbrachten'], tr_sent_short: ['sent', 'abgeschickt'],
+  tr_from_here_home_hint: ['Our share of what arrived at home (a fifth more, less a little for every market on the way), booked there as trade profit.', 'Unser Anteil an dem, was zu Hause ankam (ein Fünftel mehr, abzüglich etwas für jeden Markt unterwegs), dort als Handelsgewinn verbucht.'],
+  tr_gain_steer_note: ['Steering also draws more goods along the route home, which can raise this market\'s own trade value; that is not in the estimate and shows next month under Last month.', 'Lenkung zieht außerdem mehr Waren auf den Weg nach Hause, was den Handelswert dieses Marktes selbst erhöhen kann; das steckt nicht in der Schätzung und zeigt sich im nächsten Monat unter Letzter Monat.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

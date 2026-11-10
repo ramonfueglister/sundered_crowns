@@ -13,6 +13,8 @@ import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
 import { unitCost, unitUpkeep } from '../src/sim/systems/military';
 import { UNITS } from '../src/sim/defs';
+import { applyCommand } from '../src/sim/commands';
+import { homeMarket, merchantRefusal, steerRoute, tradeEarnings } from '../src/sim/systems/trade';
 import type { GameState, Nation } from '../src/sim/types';
 
 const w = loadWorld();
@@ -118,5 +120,33 @@ describe('ships are priced like their crews', () => {
     const share = (n.expense.navy ?? 0) / sum(n.income);
     expect(share).toBeGreaterThan(0.15); expect(share).toBeLessThan(0.35);
     expect(n.loans.length).toBe(0);
+  });
+});
+
+describe('trade income can be traced to the markets it came from', () => {
+  it('merchants steering home: last month\'s income by market adds up to the ledger, the steered trade credited to its source', () => {
+    const s = fresh('venice'); const n = nat(s, 'venice'); const home = homeMarket(s, n);
+    toNextClose(s);
+    // two merchants steer home from the richest market in reach with a route home
+    const m = s.markets.filter((x) => x.id !== home && !merchantRefusal(s, w, n, x.id) && steerRoute(s, n.id, x.id) && (x.tv ?? 0) > 0).sort((a, b) => (b.tv ?? 0) - (a.tv ?? 0))[0];
+    expect(m).toBeTruthy();
+    expect(applyCommand(s, w, { t: 'merchant', n: n.id, market: m.id, amount: 2, steer: true }).ok).toBe(true);
+    toNextClose(s);
+    const rows = tradeEarnings(s, n.id);
+    const total = rows.reduce((p, r) => p + r.total, 0);
+    expect(total).toBeCloseTo((n.income.trade ?? 0) + (n.income.company ?? 0), 6);
+    // what our merchants steered from m is credited to m, though it was paid at home
+    const src = rows.find((r) => r.m === m.id)!;
+    expect(src).toBeTruthy();
+    expect(src.steered.some((x) => x.to === home && x.v > 0)).toBe(true);
+    expect(s.markets[home].tinFrom?.[m.id] ?? 0).toBeGreaterThan(0);
+    // the market view says the same: our income at home splits into our own share and the shares steered in by source
+    const d = answer(s, w, n.id, { q: 'tmarket', market: home }) as any;
+    expect(d.our.own + d.our.fromIn.reduce((p: number, x: any) => p + x.v, 0)).toBeCloseTo(d.our.paid, 6);
+    expect(d.our.fromIn.some((x: any) => x.from === m.id)).toBe(true);
+    const dm = answer(s, w, n.id, { q: 'tmarket', market: m.id }) as any;
+    expect(dm.our.homeRows.reduce((p: number, x: any) => p + x.v, 0)).toBeCloseTo(src.steered.reduce((p, x) => p + x.v, 0), 6);
+    const list = answer(s, w, n.id, { q: 'tmarkets' }) as any[];
+    expect(list.reduce((p, x) => p + x.earned, 0)).toBeCloseTo(total, 6);
   });
 });

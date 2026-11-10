@@ -21,7 +21,7 @@ import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, t
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
-import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView } from './tradeview';
+import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView, tradeIncomeBy } from './tradeview';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
@@ -404,6 +404,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors, election: !!s.empire.election, diet: !!s.empire.diet },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,
     priceLevel: s.priceLevel, markets: s.markets.map((m) => ({ id: m.id, name: m.name, mine: m.merchants[player] || 0 })),
+    tradeBy: tradeIncomeBy(s, player), // fix-econ: last month's trade income by market (the ledger line's breakdown)
     explain: explainRealm(s, w, n), goals: goalsView(s, w, n),
   };
 }

@@ -29,6 +29,7 @@ export function TradeTab() {
       {sel >= 0 && sel !== home && home >= 0 && <Btn onClick={() => setSel(-1)}>{t('tr_home_market')}</Btn>}
     </div>}
     {tab === 'market' && (mid >= 0 ? <MarketView mid={mid} /> : <Empty>{t('tr_no_home')}</Empty>)}
+    {tab === 'market' && <OurMarkets list={list ?? []} pick={setSel} />}
     {tab === 'goods' && (mid >= 0 ? <GoodsView mid={mid} /> : <Empty>{t('tr_no_home')}</Empty>)}
     {tab === 'policy' && <PolicyView />}
   </div>;
@@ -62,10 +63,7 @@ function MarketView({ mid }: { mid: number }) {
         <Row k={t('tr_value')} v={num(d.tv, 1)} tip={<div><TipHead name={t('tr_value')} value={num(d.tv, 1)} hint={t('tr_value_hint')} /></div>} />
         <Row k={t('tr_steered_in')} v={num(d.tin, 1)} tip={<div><TipHead name={t('tr_steered_in')} value={num(d.tin, 1)} hint={t('tr_steered_in_hint')} /></div>} />
         <Row k={t('tr_our_share')} v={pct(d.our?.share ?? 0, 1)} tip={() => mine ? <PowerTip r={mine} total={d.total} /> : <div>{t('tr_no_power')}</div>} />
-        <Row k={t('tr_our_income')} v={<span class="pos">+{num(d.our?.paid ?? 0, 1)}</span>} tip={<div><TipHead name={t('tr_our_income')} value={num(d.our?.paid ?? 0, 2)} hint={t('tr_our_income_hint')} />
-          <div class="breakdown"><div class="bd-row"><span>{t('tr_value')} × {t('tr_share')}</span><span>{num(d.tv * (d.our?.share ?? 0), 2)}</span></div>
-            {(d.our?.steered ?? 0) > 0 && <div class="bd-row"><span>{t('tr_sent_home')}</span><span>−{num(d.our.steered, 2)}</span></div>}
-            {d.tin > 0 && <div class="bd-row"><span>{t('tr_share_of_steered_in')}</span><span>+{num(Math.max(0, (d.our?.paid ?? 0) - (d.tv * (d.our?.share ?? 0) - (d.our?.steered ?? 0))), 2)}</span></div>}</div></div>} />
+        <Row k={t('tr_our_income')} v={<span class="pos">+{num(d.our?.paid ?? 0, 1)}</span>} tip={() => <OurIncomeTip d={d} />} />
       </div>
       <div class="tbl-wrap"><table class="tbl tr-power">
         <thead><tr><th>{t('realm')}</th><th class="r">{t('tr_power')}</th><th class="r">{t('tr_share')}</th><th class="r">{t('tr_income')}</th><th>{t('tr_mode')}</th></tr></thead>
@@ -84,6 +82,43 @@ function MarketView({ mid }: { mid: number }) {
   </>;
 }
 
+/** What we took in this market last month, exactly as paid: our share of its own trade and of the trade steered in
+ *  (by the market it came from); and what our merchants here steered home earned us where it arrived. */
+function OurIncomeTip({ d }: { d: any }) {
+  const o = d.our; if (!o) return <div>{t('tr_no_power')}</div>;
+  const rows: [string, number][] = [[t('tr_own_share'), o.own], ...o.fromIn.map((x: any) => [t('tr_steered_from').replace('{m}', placeName(x.name)), x.v] as [string, number])];
+  const home = o.homeRows.reduce((p: number, x: any) => p + x.v, 0);
+  return <div><TipHead name={t('tr_our_income')} value={num(o.paid, 2)} hint={t('tr_our_income_hint')} />
+    <Parts rows={rows} total={o.paid} digits={2} />
+    {o.homeRows.length > 0 && <Parts title={<>{t('tr_from_here_home')} ({num(o.steered, 2)} {t('tr_sent_short')})</>} rows={o.homeRows.map((x: any) => [t('tr_arrived_at').replace('{m}', placeName(x.name)), x.v] as [string, number])} total={home} digits={2} />}
+    {o.homeRows.length > 0 && <div class="muted small">{t('tr_from_here_home_hint')}</div>}
+  </div>;
+}
+
+/** Our trade income of last month by market: the markets that earned us something or hold our merchants, the trade
+ *  steered home credited to the market it came from; the column adds up to the ledger's trade and company lines. */
+function OurMarkets({ list, pick }: { list: any[]; pick: (m: number) => void }) {
+  const p = view.value?.player;
+  const rows = list.filter((m) => m.earned > 0.005 || m.merchants > 0).sort((a, b) => b.earned - a.earned || a.id - b.id);
+  if (!rows.length) return null;
+  const sum = rows.reduce((q, m) => q + m.earned, 0);
+  const ledger = (p?.incomeBreak.trade ?? 0) + (p?.incomeBreak.company ?? 0);
+  return <Section title={t('tr_by_market')} id="tr-ours">
+    <div class="tbl-wrap"><table class="tbl tr-ours">
+      <thead><tr><th>{t('market')}</th><th class="r">{t('merchants')}</th><th class="r">{t('tr_share')}</th><Tip tag="th" class="r" content={<div><TipHead name={t('tr_earned')} hint={t('tr_earned_hint')} /></div>}>{t('tr_earned')}</Tip></tr></thead>
+      <tbody>{rows.map((m) => <tr class="click" onClick={() => pick(m.id)}>
+        <td>{placeName(m.name)}{m.home ? ` (${t('home')})` : ''}</td>
+        <td class="r">{m.merchants ? <>{m.merchants}{m.steer ? ' ➜' : ''}</> : '—'}</td>
+        <td class="r">{pct(m.share, 1)}</td>
+        <td class="r"><Tip content={() => <div><TipHead name={placeName(m.name)} value={num(m.earned, 2)} hint={t('tr_earned_hint')} />
+          <Parts rows={[...(m.own > 0 ? [[m.company ? keyName('company') : t('tr_own_share'), m.own] as [string, number]] : []), ...m.steeredHome.map((x: any) => [t('tr_arrived_at').replace('{m}', placeName(x.name)), x.v] as [string, number])]} total={m.earned} digits={2} /></div>}>
+          <span class={m.earned > 0 ? 'pos' : 'muted'}>{m.earned > 0 ? `+${num(m.earned, 1)}` : '0'}</span></Tip></td>
+      </tr>)}</tbody>
+      <tfoot><tr class="bd-total"><td colSpan={3}><Tip content={<div><TipHead name={t('tr_earned_sum')} value={num(sum, 1)} hint={t('tr_earned_sum_hint')} /><div class="breakdown"><div class="bd-row"><span>{keyName('trade')}</span><span>{num(p?.incomeBreak.trade ?? 0, 1)}</span></div><div class="bd-row"><span>{keyName('company')}</span><span>{num(p?.incomeBreak.company ?? 0, 1)}</span></div><div class="bd-row bd-total"><span>=</span><span>{num(ledger, 1)}</span></div></div></div>}><span class="has-tip">{t('tr_earned_sum')}</span></Tip></td><td class="r pos">+{num(sum, 1)}</td></tr></tfoot>
+    </table></div>
+  </Section>;
+}
+
 function PowerRow({ r, d, pid }: { r: any; d: any; pid: number }) {
   return <tr class={r.n === pid ? 'mine' : ''}>
     <td><NLink id={r.n} /></td>
@@ -95,11 +130,11 @@ function PowerRow({ r, d, pid }: { r: any; d: any; pid: number }) {
 }
 
 function gainText(v: number | null) { return v === null ? '' : `${v >= 0 ? '+' : '−'}${num(Math.abs(v), 1)}`; }
-function GainTip({ name, v, hint, d }: { name: string; v: number | null; hint: string; d: any }) {
+function GainTip({ name, v, hint, d, steer = false }: { name: string; v: number | null; hint: string; d: any; steer?: boolean }) {
   return <div><TipHead name={name} value={v === null ? '—' : `${gainText(v)} ${t('x_per_month')}`} hint={hint} />
     <div class="breakdown"><div class="bd-row"><span>{t('tr_trade_now')}</span><span>{num(d.our.gains.now, 1)}</span></div>
       {v !== null && <div class="bd-row bd-total"><span>{t('tr_trade_then')}</span><span>{num(d.our.gains.now + v, 1)}</span></div>}</div>
-    <div class="muted small">{t('tr_gain_basis')}</div></div>;
+    <div class="muted small">{t('tr_gain_basis')}</div>{steer && <div class="muted small">{t('tr_gain_steer_note')}</div>}</div>;
 }
 
 function Merchants({ d, refresh }: { d: any; refresh: () => void }) {
@@ -116,11 +151,11 @@ function Merchants({ d, refresh }: { d: any; refresh: () => void }) {
     <div class="tr-merch-btns">
       <Btn disabled={why} tip={() => <GainTip name={t('tr_send_collect')} v={g.addCollect} hint={o.have > 0 && o.steer ? t('tr_send_collect_switch_hint') : t('tr_send_collect_hint')} d={d} />} onClick={() => send(o.have + 1, false)}>
         {t('tr_send_collect')} {g.addCollect !== null && <span class={g.addCollect >= 0 ? 'pos' : 'neg'}>{gainText(g.addCollect)}</span>}</Btn>
-      {!home && <Btn disabled={why ?? (!o.route ? 'no trade route home' : null)} tip={() => <GainTip name={t('tr_send_steer')} v={g.addSteer ?? (o.steer ? g.add : null)} hint={t('tr_send_steer_hint')} d={d} />} onClick={() => send(o.have + 1, true)}>
+      {!home && <Btn disabled={why ?? (!o.route ? 'no trade route home' : null)} tip={() => <GainTip name={t('tr_send_steer')} v={g.addSteer ?? (o.steer ? g.add : null)} hint={t('tr_send_steer_hint')} d={d} steer />} onClick={() => send(o.have + 1, true)}>
         {t('tr_send_steer')} {(g.addSteer ?? (o.steer ? g.add : null)) !== null && <span class={(g.addSteer ?? g.add) >= 0 ? 'pos' : 'neg'}>{gainText(g.addSteer ?? g.add)}</span>}</Btn>}
       <Btn disabled={o.have <= 0 ? 'none' : null} tip={() => <GainTip name={t('tr_recall')} v={g.recall} hint={t('tr_recall_hint')} d={d} />} onClick={() => send(o.have - 1)}>
         {t('tr_recall')} {g.recall !== null && <span class={g.recall >= 0 ? 'pos' : 'neg'}>{gainText(g.recall)}</span>}</Btn>
-      {o.have > 0 && !home && <Btn disabled={!o.route ? 'no trade route home' : null} tip={() => <GainTip name={o.steer ? t('tr_to_collect') : t('tr_to_steer')} v={g.toggle} hint={t('tr_toggle_hint')} d={d} />} onClick={() => send(o.have, !o.steer)}>
+      {o.have > 0 && !home && <Btn disabled={!o.route ? 'no trade route home' : null} tip={() => <GainTip name={o.steer ? t('tr_to_collect') : t('tr_to_steer')} v={g.toggle} hint={t('tr_toggle_hint')} d={d} steer={!o.steer} />} onClick={() => send(o.have, !o.steer)}>
         {o.steer ? t('tr_to_collect') : t('tr_to_steer')} {g.toggle !== null && <span class={g.toggle >= 0 ? 'pos' : 'neg'}>{gainText(g.toggle)}</span>}</Btn>}
     </div>
     {!home && (o.route

@@ -292,19 +292,25 @@ export interface TradeSplit {
   tin: Float64Array;
   /** per market: trade steered away, by realm */
   out: Map<number, number>[];
+  /** per market: what each collecting realm takes of the market's own trade value (paid less its share of tin) */
+  own: Map<number, number>[];
+  /** per market: the trade steered in, by the market it was steered from (what arrived, after the route's factor) */
+  tinFrom: Map<number, number>[];
 }
 /** Share out trade values tv (one per market) by trade power: steered shares move to the realm's home market. */
 export function splitTrade(s: GameState, mp: MarketPower[], tv: ArrayLike<number>): TradeSplit {
   const M = mp.length;
   const paid: Map<number, number>[] = Array.from({ length: M }, () => new Map()), out: Map<number, number>[] = Array.from({ length: M }, () => new Map());
   const tin = new Float64Array(M);
+  const own: Map<number, number>[] = Array.from({ length: M }, () => new Map()), tinFrom: Map<number, number>[] = Array.from({ length: M }, () => new Map());
   for (let m = 0; m < M; m++) {
     const p = mp[m], v = tv[m] || 0; if (v <= 0 || p.total <= 0) continue;
     for (const r of p.rows) {
       if (r.total <= 0) continue;
       const amt = v * r.total / p.total;
-      if (r.steer) { const rt = steerRoute(s, r.n, m); if (rt) { tin[rt.dest] += amt * rt.factor; out[m].set(r.n, amt); continue; } }
+      if (r.steer) { const rt = steerRoute(s, r.n, m); if (rt) { tin[rt.dest] += amt * rt.factor; tinFrom[rt.dest].set(m, (tinFrom[rt.dest].get(m) ?? 0) + amt * rt.factor); out[m].set(r.n, amt); continue; } }
       paid[m].set(r.n, (paid[m].get(r.n) ?? 0) + amt);
+      own[m].set(r.n, (own[m].get(r.n) ?? 0) + amt);
     }
   }
   for (let m = 0; m < M; m++) {
@@ -314,7 +320,7 @@ export function splitTrade(s: GameState, mp: MarketPower[], tv: ArrayLike<number
     if (col <= 0) continue;
     for (const r of p.rows) if (!r.steer && r.total > 0) paid[m].set(r.n, (paid[m].get(r.n) ?? 0) + tin[m] * r.total / col);
   }
-  return { paid, tin, out };
+  return { paid, tin, out, own, tinFrom };
 }
 /** The month's trade: share out the trade values, pay the realms (a company's market books as company profit) and keep
  *  what each market earned and paid for the panels. */
@@ -337,7 +343,32 @@ export function payTrade(s: GameState, w: World, tv: Float64Array, mp0?: MarketP
     const steered: Record<number, number> = {};
     for (const [n, v] of sp.out[m]) steered[n] = v;
     mk.steered = steered;
+    // (fix-econ) what of it was each realm's share of the market's own trade, and where the trade steered in came from
+    const own: Record<number, number> = {};
+    for (const [n, v] of sp.own[m]) if (paid[n] !== undefined) own[n] = v;
+    mk.own = own;
+    const from: Record<number, number> = {};
+    for (const [src, v] of [...sp.tinFrom[m].entries()].sort((a, b) => a[0] - b[0])) from[src] = v;
+    mk.tinFrom = from;
   }
+}
+
+/** What each market earned a realm last month, the trade steered home credited to the market it came from: its own
+ *  share of the market's trade (collected there), and for every market its merchants steered from, its share of what
+ *  arrived at the markets it was steered to. Company markets book as company profit. The rows add up to the realm's
+ *  trade and company income of the month (payTrade). */
+export function tradeEarnings(s: GameState, nid: number): { m: number; own: number; steered: { to: number; v: number }[]; total: number; company: boolean }[] {
+  const by = new Map<number, { m: number; own: number; steered: { to: number; v: number }[]; total: number; company: boolean }>();
+  const row = (m: number) => { let r = by.get(m); if (!r) by.set(m, (r = { m, own: 0, steered: [], total: 0, company: false })); return r; };
+  for (const mk of s.markets) {
+    const paid = mk.paid?.[nid]; if (!paid) continue;
+    const own = mk.own?.[nid] ?? paid; // (a save from before this ledger: all of it counts as the market's own)
+    if (own > 0) { const r = row(mk.id); r.own += own; r.total += own; }
+    const fromIn = paid - own, tin = mk.tin ?? 0;
+    if (fromIn > 1e-9 && tin > 0) for (const [src, v] of Object.entries(mk.tinFrom ?? {})) { const x = fromIn * v / tin; const r = row(+src); r.steered.push({ to: mk.id, v: x }); r.total += x; }
+  }
+  for (const c of s.companies ?? []) if (c.nation === nid && by.has(c.market)) by.get(c.market)!.company = true;
+  return [...by.values()].sort((a, b) => b.total - a.total || a.m - b.m);
 }
 
 /** Last month's trade shared out by the powers as they stand now (cached per command): the base of every estimate. */

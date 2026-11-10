@@ -192,6 +192,8 @@ export interface Market {
   paid?: Record<number, number>;    // what each realm took here last month (own share and share of the trade steered in)
   steered?: Record<number, number>; // what each steering realm sent home from here last month
   deter?: number;                   // value of imports the ruler's tariff kept out last month
+  // fix-econ: what of paid was each realm's share of this market's own trade, and the trade steered in by its source market
+  own?: Record<number, number>; tinFrom?: Record<number, number>;
 }
 export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
 
