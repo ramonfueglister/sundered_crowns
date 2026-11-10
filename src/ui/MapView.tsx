@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { sim, view, nations, landmarks } from '../game/client';
 import type { TickView } from '../game/protocol';
-import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast } from './store';
+import { selectedLoc, selectedArmies, selectedNation, mapMode, hoverLoc, settings, playerId, screen, showToast, mapHighlight } from './store';
 import { t, L, lang } from './i18n';
 import { sfx } from './audio';
 import { abortTimelapse, timelapseRunning } from './timelapse';
@@ -166,7 +166,7 @@ export function MapView() {
   useEffect(() => { const v = view.value; const r = rendererRef.r; if (r && v?.owner && v.ctrl) r.setPolitical(v.owner, v.ctrl, realmColors(v.owner, nations.value)); sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); }, [settings.value.palette]);
   useEffect(() => { if (rendererRef.r && labelOwner) rendererRef.r.setLabels(computeLabels(labelOwner, rendererRef.assets, nations.value)); }, [lang.value]);
   useEffect(() => { sim().mapMode(mapMode.value, selectedNation.value >= 0 ? selectedNation.value : playerId.value, settings.value.palette); applyTrade(); }, [mapMode.value, selectedNation.value, lang.value]);
-  useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, []); }, [selectedLoc.value]);
+  useEffect(() => { rendererRef.r?.setSelection?.(selectedLoc.value, mapHighlight.value); }, [selectedLoc.value, mapHighlight.value]);
   return <div class="mapwrap">
     <canvas ref={canvas} class="map" onContextMenu={(e) => e.preventDefault()} />
     {mapError.value && <div class="maperror">{mapError.value}</div>}

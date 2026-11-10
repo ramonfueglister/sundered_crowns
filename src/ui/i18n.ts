@@ -995,6 +995,10 @@ const S: Record<string, [string, string]> = {
   xfw_why_exhausted: ['worn out by war', 'kriegsmüde'], xfw_why_both: ['allied with both sides', 'mit beiden Seiten verbündet'], xfw_why_subject: ['subject of another realm', 'Untertan eines anderen Reiches'],
   xfw_why_faith: ['will not defend another faith', 'verteidigt keinen fremden Glauben'], xfw_breaks_with: ['leaves its alliance with', 'verlässt sein Bündnis mit'],
   xfw_side_sure: ['Certain', 'Sicher'], xfw_side_maybe: ['Possibly', 'Möglicherweise'],
+  xfw_towns: ['Towns we fight for', 'Orte, um die wir kämpfen'], xfw_pick_one: ['Choose at least one town.', 'Mindestens einen Ort wählen.'],
+  xfw_towns_hint: ['The land this war goal covers; the goal’s own choice is ticked. While we hold more than half of the towns named, the war score ticks up (to +25); it falls while we do not even besiege them. Fewer towns are easier to hold. The number is what ceding the town would cost in war score at the peace, against the defenders certain to fight: every ally that joins them makes a town cheaper. Each cession costs {fixed} more.', 'Das Land, das dieses Kriegsziel abdeckt; die Wahl des Kriegsziels selbst ist angehakt. Solange wir mehr als die Hälfte der genannten Orte halten, steigen die Kriegspunkte (bis +25); sie sinken, solange wir sie nicht einmal belagern. Wenige Orte sind leichter zu halten. Die Zahl ist, was die Abtretung des Ortes beim Frieden an Kriegspunkten kostet, gegen die sicheren Verteidiger: Jeder Verbündete, der ihnen beitritt, macht einen Ort billiger. Jede Abtretung kostet {fixed} mehr.'],
+  xfw_town_price_hint: ['War score its cession would cost at the peace (against the defenders certain to fight).', 'Kriegspunkte, die seine Abtretung beim Frieden kosten würde (gegen die sicheren Verteidiger).'],
+  xfw_towns_sum: ['Ceding all chosen towns: ≈ {n} war score (with the {fixed} of a cession).', 'Abtretung aller gewählten Orte: ≈ {n} Kriegspunkte (mit den {fixed} einer Abtretung).'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

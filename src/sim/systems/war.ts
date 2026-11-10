@@ -231,6 +231,35 @@ export function warGoalLocs(s: GameState, w: World, a: number, b: number, goal: 
   }
   return [];
 }
+/** The most towns a declaration may name. */
+export const GOAL_TOWNS_MAX = 30;
+/** The towns a declaration may name for this goal, the land its cause covers (warGoalLocs, the choice made when none
+ *  is named, first): for a conquest the land along our border with its provinces and the places our goals name (the
+ *  best of their land when we share no border); for a reconquest our own land they hold; for a holy war the land of our
+ *  faith and our holy sites; for a trade war their markets; for a crown or a subject their capital. */
+export function goalTowns(s: GameState, w: World, a: number, b: number, goal: WarGoal['type']): number[] {
+  const nb = s.nations[b]; if (!nb) return [];
+  const byValue = (xs: number[]) => xs.sort((x, y) => locValue(s, y) - locValue(s, x) || x - y);
+  let more: number[] = [];
+  switch (goal) {
+    case 'conquest': {
+      more = targetLocs(s, w, a, b, GOAL_TOWNS_MAX / 2);
+      if (!more.length) more = byValue([...ownedLocs(s, b)]).slice(0, 12);
+      break;
+    }
+    case 'reconquest': {
+      const target = topOverlord(s, b), theirs = new Set([b, target, ...subjectsOf(s, target)]);
+      const out: number[] = []; for (const t of theirs) for (const l of nationLocsRO(s, t)) if (s.loc.core[l] === a) out.push(l);
+      more = byValue(out);
+      break;
+    }
+    case 'faith': more = holyLand(s, w, a, b, GOAL_TOWNS_MAX); break;
+    case 'trade': more = s.markets.filter((m) => m.owner === b && s.loc.owner[m.hub] === b).map((m) => m.hub); break;
+    case 'throne': case 'subjugate': break;
+    default: return [];
+  }
+  return [...new Set([...warGoalLocs(s, w, a, b, goal), ...more])].slice(0, GOAL_TOWNS_MAX);
+}
 /** The places named by a realm's open goals (systems/goals.ts sets this; the war module does not import the goals). */
 export const GOAL_PLACES: { f: ((s: GameState, w: World, n: Nation) => number[]) | null } = { f: null };
 /** Border locations of b next to a (the best first, grown along their provinces): the towns a war of conquest is fought for. */
@@ -264,7 +293,7 @@ export const warHooks: {
   predict?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type'], att: number[], def: number[]) => { id: number; role: 'emperor' | 'league' | 'circle'; odds: number | null }[];
 } = {};
 
-export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = []): string | null {
+export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = [], situation = false): string | null {
   const na = s.nations[a], nb = s.nations[b];
   if (!na?.alive || !nb?.alive || a === b) return 'invalid';
   if (atWar(s, a, b)) return 'already at war';
@@ -277,6 +306,12 @@ export function declareRefusal(s: GameState, w: World, a: number, b: number, goa
   locs = [...new Set((locs ?? []).filter((l) => Number.isInteger(l) && l >= 0 && l < w.L))];
   if (goalType === 'reconquest') {
     if (!casusBelliAll(s, a, b, w).includes('reconquest') || locs.some((l) => s.loc.core[l] !== a)) return 'no land of ours to win back';
+  }
+  // the towns a declaration names must lie in the land its goal covers (a situation's war names the towns it is about)
+  if (locs.length && !situation) {
+    if (locs.length > GOAL_TOWNS_MAX) return 'too many towns named';
+    const ok = new Set(goalTowns(s, w, a, b, goalType));
+    if (locs.some((l) => !ok.has(l))) return 'a town beyond what this war is fought for';
   }
   if (goalType === 'faith' && na.faith === nb.faith) return 'they share our faith';
   if (goalType === 'trade' && !s.markets.some((m) => m.owner === b) && !tradeConflict(s, a, b)) return 'they hold no market';
@@ -292,18 +327,18 @@ export function declareRefusal(s: GameState, w: World, a: number, b: number, goa
 }
 export function declareWar(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'] = 'conquest', locs: number[] = [], opts?: { situation?: boolean }): string | null {
   locs = [...new Set((locs ?? []).filter((l) => Number.isInteger(l) && l >= 0 && l < w.L))];
-  const why = declareRefusal(s, w, a, b, goalType, locs); if (why) return why;
+  const why = declareRefusal(s, w, a, b, goalType, locs, !!opts?.situation); if (why) return why;
   // the assembly votes now (the AI may buy the missing votes), the Empire's peace is enforced (systems/empire.ts warVeto)
   const veto = warHooks.veto?.(s, w, a, b, goalType); if (veto) return veto;
   const na = s.nations[a], nb = s.nations[b];
   const target = topOverlord(s, b);
-  // the towns the war is fought for are the goal's own (warGoalLocs, the same for the player and the AI). Only a war of
-  // reconquest may name some of our own land they hold, and a situation's war (the war for a great city, a crusade for
-  // a holy site) the towns the situation is about: a declaration naming the enemy's richest towns, or towns far from the
-  // land a holy war is about, would otherwise make them goals (and cessions) the justification never covered.
-  const theirs = new Set([b, target, ...subjectsOf(s, target)]);
-  if (goalType === 'reconquest' || (opts?.situation && (goalType === 'conquest' || goalType === 'faith'))) locs = locs.filter((l) => theirs.has(s.loc.owner[l]));
-  else locs = [];
+  // the towns the war is fought for: those the declaration names, from the land its goal covers (goalTowns, checked by
+  // declareRefusal), or else the goal's own choice (warGoalLocs, the same for the player and the AI). A situation's war
+  // (the war for a great city, a crusade for a holy site) names the towns the situation is about.
+  if (opts?.situation) {
+    const theirs = new Set([b, target, ...subjectsOf(s, target)]);
+    locs = goalType === 'reconquest' || goalType === 'conquest' || goalType === 'faith' ? locs.filter((l) => theirs.has(s.loc.owner[l])) : [];
+  }
   if (!locs.length) locs = warGoalLocs(s, w, a, b, goalType);
   // the price of the declaration (an unjust war, a broken truce, a betrayed ally), paid once it stands; a situation's
   // war (a crusade, the war for a great city) is justified by the situation itself
@@ -645,11 +680,15 @@ export function faithShare(s: GameState, n: number, faith: number): number {
   return all > 0 ? ours / all : 0;
 }
 /** Price of a peace term in war score (what the side giving it weighs it at). */
+/** The war score a cession of these towns costs against a losing side of this weight (termCost; the declaration
+ *  dialog prices each town it may name with it), and the points every cession costs on top. */
+export function cedeWorth(s: GameState, locs: number[], loserDev: number): number { return locs.reduce((p, l) => p + locValue(s, l), 0) / loserDev * 100 * 1.6; }
+export const CEDE_FIXED = 3;
 export function termCost(s: GameState, war: War, t: PeaceTerm, from: number, to: number): number {
   const loserDev = Math.max(10, [...(war.att.includes(to) ? war.att : war.def)].reduce((p, n) => p + nationDev(s, n), 0));
   const share = clamp(nationDev(s, to) / loserDev, 0.2, 1); // the loser's own weight on its side
   switch (t.type) {
-    case 'cede': return (t.locs || []).reduce((p, l) => p + locValue(s, l), 0) / loserDev * 100 * 1.6 + (t.locs?.length ? 3 : 0);
+    case 'cede': return cedeWorth(s, t.locs || [], loserDev) + (t.locs?.length ? CEDE_FIXED : 0);
     case 'convert': return (t.locs || []).reduce((p, l) => p + locValue(s, l), 0) / loserDev * 100 * 0.6 + (t.locs?.length ? 2 : 0);
     case 'gold': return clamp((t.amount || 0) / Math.max(1, (s.nations[to].income.tax || 10) * 12) * 25, 1, 60);
     case 'release': return 25;

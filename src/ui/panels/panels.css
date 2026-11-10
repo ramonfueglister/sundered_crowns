@@ -162,6 +162,11 @@ svg.spark { display: block; }
 .xfw-side-row { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; align-items: center; padding: 1px 0; border-bottom: 1px dotted var(--p-line); font-size: .9em; }
 .xfw-side-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .xfw-side-note { grid-column: 1 / -1; padding-left: 18px; }
+.xfw-towns { margin: 6px 0; }
+.xfw-town-list { max-height: 170px; overflow-y: auto; border: 1px solid var(--p-line); padding: 2px 4px; }
+.xfw-town { display: grid; grid-template-columns: 18px 1fr auto; gap: 4px; align-items: center; font-size: .9em; cursor: pointer; padding: 1px 0; }
+.xfw-town.on { background: rgba(155, 42, 32, .07); }
+.xfw-town-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------------------------------------------------------------- army panel & outliner */
 .army-wrap { position: absolute; left: 376px; bottom: 56px; width: 500px; max-width: calc(100% - 650px); min-width: 380px; z-index: 16; }
