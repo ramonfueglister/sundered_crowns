@@ -27,7 +27,20 @@ export interface GoalDef {
  * A condition: text, test and (for counted conditions) progress as [current, required]; place conditions name their
  * places so the goal tree can show which are held.
  */
-export interface GoalCond { t: I18n; f: (e: EvApi) => boolean; p?: (e: EvApi) => [number, number]; places?: string[]; building?: number }
+export interface GoalCond { t: I18n; f: (e: EvApi) => boolean; p?: (e: EvApi) => [number, number]; places?: string[]; building?: number; prog?: (e: EvApi) => CondProg }
+/** How far a condition is: the count shown (cur of max, where it counts), the share done (0..1) and, for a condition
+ *  that holds only from a year on, that year and the share of the time to it that has passed. */
+export interface CondProg { cur?: number; max?: number; frac: number; from?: number; timeFrac?: number }
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+/** The progress of a condition: met is 1; a counted one cur / max; one with a year gate (C.after) never more than
+ *  the share of the time to that year that has passed, so it cannot look done while the year is still to come. */
+export function condProgress(c: GoalCond, e: EvApi): CondProg {
+  if (c.prog) return c.prog(e);
+  let ok = false; try { ok = c.f(e); } catch { ok = false; }
+  const p = c.p?.(e);
+  if (!p) return { frac: ok ? 1 : 0 };
+  return { cur: p[0], max: p[1], frac: ok ? 1 : clamp01(p[0] / Math.max(1e-9, p[1])) };
+}
 type Cond = GoalCond;
 interface Rew { t: I18n; f: (e: EvApi) => void }
 const NAMES = new WeakMap<World, Map<string, number>>();
@@ -91,8 +104,23 @@ const C = {
   overseas: (k: number): Cond => ({ t: { en: `hold ${k} locations beyond the Ocean Sea`, de: `${k} Orte jenseits des Ozeanmeers besitzen` }, f: (e) => overseasLocs(e) >= k, p: (e) => [overseasLocs(e), k] }),
   situation: (id: string, outcomes: string[], t: I18n): Cond => ({ t, f: (e) => e.s.situations.some((x) => x.id === id && !x.active && outcomes.includes(x.outcome || '')) }),
   worldFlag: (k: string, t: I18n): Cond => ({ t, f: (e) => e.s.flags[k] !== undefined }),
-  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e), p: a.p || b.p ? (e) => better(a.p?.(e), b.p?.(e)) : undefined, places: a.places || b.places ? [...(a.places ?? []), ...(b.places ?? [])] : undefined, building: a.building ?? b.building }),
-  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e), p: c.p, places: c.places, building: c.building }),
+  /** The side further along counts (a side met makes the whole condition met). */
+  either: (a: Cond, b: Cond): Cond => ({ t: { en: `${a.t.en} or ${b.t.en}`, de: `${a.t.de} oder ${b.t.de}` }, f: (e) => a.f(e) || b.f(e), p: a.p || b.p ? (e) => better(a.p?.(e), b.p?.(e)) : undefined, places: a.places || b.places ? [...(a.places ?? []), ...(b.places ?? [])] : undefined, building: a.building ?? b.building,
+    prog: (e) => {
+      const pa = condProgress(a, e), pb = condProgress(b, e);
+      // on a tie the side with a count or a year gate is shown (it says more than a plain "not yet")
+      if (pa.frac !== pb.frac) return pa.frac > pb.frac ? pa : pb;
+      return pa.max !== undefined || pa.from !== undefined ? pa : pb;
+    } }),
+  /** Holds only from year y: before it the progress is the smaller of the inner condition's and the share of the time
+   *  from the start of the game to y that has passed (both shown in the goal's tooltip). */
+  after: (y: number, c: Cond): Cond => ({ t: { en: `${c.t.en} (from ${y})`, de: `${c.t.de} (ab ${y})` }, f: (e) => e.year >= y && c.f(e), p: c.p, places: c.places, building: c.building,
+    prog: (e) => {
+      const inner = condProgress(c, e);
+      if (e.year >= y) return inner;
+      const t0 = e.s.startYear, tf = clamp01((e.year - t0) / Math.max(1, y - t0));
+      return { ...inner, frac: Math.min(inner.frac, tf), from: y, timeFrac: tf };
+    } }),
   capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${name} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
 };
 

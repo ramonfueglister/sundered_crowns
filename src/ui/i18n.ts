@@ -965,6 +965,10 @@ const S: Record<string, [string, string]> = {
   terra_incognita: ['Terra incognita', 'Terra incognita'],
   terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
+  // ---- fix-realm
+  x_cond_from: ['from {y}: {n} years to go', 'ab {y}: noch {n} Jahre'], x_cond_from_1: ['from {y}: one year to go', 'ab {y}: noch ein Jahr'],
+  x_cond_time_to: ['Time to {y} passed', 'Verstrichene Zeit bis {y}'],
+  x_cond_gate_hint: ['This condition counts only from the year named. Until then its progress is the smaller of the two: how far the condition itself is, and how much of the time to that year has passed.', 'Diese Bedingung zählt erst ab dem genannten Jahr. Bis dahin ist ihr Fortschritt der kleinere von beiden Werten: wie weit die Bedingung selbst ist und wie viel der Zeit bis zu diesem Jahr verstrichen ist.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

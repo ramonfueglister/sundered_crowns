@@ -607,9 +607,10 @@ export function goalsView(s: GameState, w: World, n: Nation) {
     const isDone = done.has(g.id), open = !isDone && (g.req ?? []).every((x) => done.has(x));
     // conditions are evaluated for open goals and the next ones (done goals keep their texts only)
     const conds = isDone ? g.conds.map((c) => ({ t: c.t, ok: true, places: c.places })) : goalConditions(s, w, n, g);
-    const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max,
+    // frac: the share of a condition done (systems/goals.ts goalConditions; a year gate holds it below full until then)
+    const condsOut = conds.map((c: any) => ({ t: c.t, ok: c.ok, cur: c.cur, max: c.max, frac: c.ok ? 1 : clamp01(c.frac ?? 0), from: c.from, yearsLeft: c.yearsLeft, timeFrac: c.timeFrac,
       places: c.places?.map((nm: string) => { const l = goalPlace(w, nm); return { name: nm, loc: l, owner: l >= 0 ? s.loc.owner[l] : -1 }; }) }));
-    const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + (c.ok ? 1 : c.max ? clamp01(c.cur / c.max) : 0), 0) / condsOut.length : 0;
+    const frac = condsOut.length ? condsOut.reduce((p: number, c: any) => p + c.frac, 0) / condsOut.length : 0;
     // ready only after the realm's first look (src/sim/systems/goals.ts firstLook): before it a claim would inherit the goal without reward
     return { id: g.id, name: g.name, desc: g.desc, flav: g.flav ?? null, req: g.req ?? [], done: isDone, inherited: inherited.has(g.id), open, ready: open && looked && conds.every((c) => c.ok),
       conds: condsOut, rews: g.rews, unlocks: tree.filter((x) => x.req?.includes(g.id)).map((x) => x.id), depth: depthOf(g.id), progress: isDone ? 1 : frac };
