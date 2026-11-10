@@ -86,7 +86,8 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
       {!a.needed && <div class="muted small">{t('x_asm_not_needed2')}</div>}
     </div>}
     <Bar value={total > 0 ? a.yes / total : 0} max={1} color={a.passes ? '#4d8a3a' : '#a8331f'} label={`${t('yes')} ${num(a.yes)} · ${t('no')} ${num(a.no)}`} />
-    <div class={a.passes ? 'pos small' : 'neg small'}>{a.passes ? t('x_asm_would_pass') : t('x_asm_would_fail')}</div>
+    {/* no verdict (and no "buy votes first") when the change needs no vote */}
+    {a.needed !== false && <div class={a.passes ? 'pos small' : 'neg small'}>{a.passes ? t('x_asm_would_pass') : t('x_asm_would_fail')}</div>}
     <div class="asm-estates">{a.estates.map((e: any) => <div class="kv">
       <span class="k"><b>{L(e.name)}</b> <span class="muted small">{t('influence')} {num(e.influence)}</span></span>
       <span class="v">
