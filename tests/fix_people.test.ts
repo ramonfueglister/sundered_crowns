@@ -22,6 +22,7 @@ import { answerEvent } from '../src/sim/systems/events';
 import { answer } from '../src/game/view';
 import { advanceDay } from '../src/sim/engine';
 import { atWar, DAY_EPOCH } from '../src/sim/ctx';
+import { nationDev } from '../src/sim/systems/war';
 
 const nat = (s: GameState, key: string) => s.nations.find((n) => n.key === key)!;
 const named = (s: GameState, name: string) => Object.values(s.chars).find((c) => c.name === name)!;
@@ -139,16 +140,17 @@ describe('diplomatic answers', () => {
     expect(answer(s, w, E.id, { q: 'diplo', target: F.id, action: 'alliance' } as any).again).toBeGreaterThan(s.day);
   });
 
-  it('a declined offer is not repeated for years, and subjects do not offer alliances', () => {
+  it('a declined offer is not repeated for years; subjects offer no alliance or marriage, small lordships no marriage', () => {
     const { s, w } = newGame(1356);
     const E = nat(s, 'england'); s.playerNations = [E.id];
-    const seen = new Map<string, number>(); const repeats: string[] = []; const fromSubjects: string[] = [];
+    const seen = new Map<string, number>(); const repeats: string[] = []; const fromSubjects: string[] = []; const tooSmall: string[] = [];
     const cool: Record<string, number> = { alliance: 3, marriage: 10, access: 2, trade: 3, vassalize: 5, demand: 3 };
     for (let d = 0; d < 365 * 3; d++) {
       for (const p of s.pending.filter((x) => x.nation === E.id && x.event.startsWith('diplo_'))) {
         const key = `${p.ctx.from}_${p.event}`; const act = p.event.slice(6);
         if (seen.has(key) && s.day - seen.get(key)! < cool[act] * 365 - 1) repeats.push(`${key}@${s.day}`);
-        if (act === 'alliance' && s.nations[p.ctx.from].overlord >= 0) fromSubjects.push(key);
+        if ((act === 'alliance' || act === 'marriage') && s.nations[p.ctx.from].overlord >= 0) fromSubjects.push(key);
+        if (act === 'marriage' && nationDev(s, p.ctx.from) * 6 < nationDev(s, E.id)) tooSmall.push(key);
         seen.set(key, s.day);
         answerEvent(s, w, E.id, p.id, 1);
       }
@@ -156,6 +158,7 @@ describe('diplomatic answers', () => {
     }
     expect(repeats).toEqual([]);
     expect(fromSubjects).toEqual([]);
+    expect(tooSmall).toEqual([]);
   }, 600000);
 });
 

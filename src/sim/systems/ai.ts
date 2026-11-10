@@ -373,9 +373,10 @@ function diplomacy(s: GameState, w: World, n: Nation) {
     cands.sort((a, b) => b[1] - a[1]);
     if (cands.length) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'alliance', target: cands[0][0] });
   }
-  // royal marriages with same-faith neighbours (monarchies)
-  if (!n.gov.includes('republic') && n.gov !== 'theocracy' && chance(s.rng, 0.08)) {
-    const c = [...neigh].find((x) => s.nations[x].faith === n.faith && !hasTreaty(s, n.id, x, 'marriage') && !s.nations[x].gov.includes('republic') && s.nations[x].gov !== 'theocracy' && s.nations[x].gov !== 'military_order' && !refusedRecently(s, n.id, x, 'marriage') && !atWar(s, n.id, x));
+  // royal marriages with same-faith neighbours (monarchies). A subject leaves the great matches to its overlord, and a
+  // small lordship does not court a crown many times its size (Irish lords proposed to England every few months)
+  if (!n.gov.includes('republic') && n.gov !== 'theocracy' && n.overlord < 0 && chance(s.rng, 0.08)) {
+    const c = [...neigh].find((x) => s.nations[x].faith === n.faith && nationDev(s, x) <= nationDev(s, n.id) * 6 && !hasTreaty(s, n.id, x, 'marriage') && !s.nations[x].gov.includes('republic') && s.nations[x].gov !== 'theocracy' && s.nations[x].gov !== 'military_order' && !refusedRecently(s, n.id, x, 'marriage') && !atWar(s, n.id, x));
     if (c !== undefined) applyCommand(s, w, { t: 'diplo', n: n.id, action: 'marriage', target: c });
   }
   // improve relations with a feared neighbour
