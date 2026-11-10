@@ -83,3 +83,13 @@
 .mod-report q { display: block; margin: 2px 0; font-style: italic; }
 .mod-report q { quotes: none; }
 .sc-admin-reports label.chk, .mod-report label.chk { display: inline-flex; flex-direction: row; align-items: center; gap: 4px; }
+/* fix-map: the map tooltip (src/ui/MapTip.tsx) */
+.map-tip { position: fixed; left: 0; top: 0; z-index: 45; pointer-events: none; min-width: 170px; max-width: 300px; padding: 6px 9px 5px;
+  background: rgba(36, 24, 15, .95); border: 1px solid var(--gilt); color: var(--parch2); font-size: .82em; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
+.map-tip .mt-name { font-variant: small-caps; color: var(--gilt2); font-size: 1.12em; letter-spacing: .03em; }
+.map-tip .mt-sub { color: #b9a98a; font-style: italic; margin-bottom: 3px; }
+.map-tip .mt-row { display: flex; justify-content: space-between; gap: 12px; line-height: 1.45; }
+.map-tip .mt-row > span:first-child { color: #c9b994; }
+.map-tip .mt-row.neg > span:last-child { color: #f0a080; }
+.map-tip .mt-sw { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border: 1px solid rgba(0, 0, 0, .6); vertical-align: -1px; }
+

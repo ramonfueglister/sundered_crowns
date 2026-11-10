@@ -5,7 +5,7 @@ import type { NationLite, ArmyLite, PlayerView, TickView, MapMode, Legend, Query
 import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmarks';
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
-import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
+import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts, supplyLimit } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
@@ -17,7 +17,7 @@ import { BRANCHES, ERAS, techCost, techBase, researchRate, doctrineCost, doctrin
 import { DOCTRINES } from '../sim/content/doctrines';
 import { INNOVATIONS } from '../sim/content/innovations';
 import { decisionsFor, eventDef, interpolate } from '../sim/systems/events';
-import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate } from '../sim/systems/economy';
+import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, tariffMax, loanRate, locGoods } from '../sim/systems/economy';
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
@@ -35,6 +35,7 @@ import { declareView, armyView, battleView, battleList, warView, locWar, armySup
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { knownOf, fogColors } from './fog';
+import { regionOf } from '../sim/systems/explore';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
@@ -303,6 +304,70 @@ export function mapModeColors(s: GameState, w: World, mode: MapMode, focus: numb
   return { rgba: fogColors(out, known), legend };
 }
 
+/** A line of the map tooltip: a number (formatted by the UI: d digits, or a percentage) or a text. */
+export interface TipRow { k: I18n; v?: number; d?: number; pct?: boolean; text?: I18n | string; key?: string }
+/**
+ * The map tooltip (spec: hover shows place, owner, controller and the current mode's value): the same numbers the
+ * colours are made from. Unknown land is answered by the fog (src/game/fog.ts) with its name only.
+ */
+export function mapTip(s: GameState, w: World, l: number, mode: MapMode, good: number, focus: number) {
+  if (!(l >= 0 && l < w.N)) return null;
+  const name: I18n = { en: w.names[l] ?? '', de: w.namesDe[l] ?? w.names[l] ?? '' };
+  // a sea zone goes by its sea (and quarter of an ocean), in the player's language, without the zone number
+  if (l >= w.L) return { id: l, sea: true, name: regionOf(w, l)?.name ?? name, owner: -1, ctrl: -1, rows: [] as TipRow[] };
+  const lc = s.loc; const o = lc.owner[l], c = lc.ctrl[l];
+  const prov = w.provinces[w.provOf[l]];
+  let pop = 0; for (let k = 0; k < C; k++) pop += lc.pop[l * C + k];
+  const rows: TipRow[] = [];
+  const T = (en: string, de: string): I18n => ({ en, de });
+  const m = s.markets[lc.market[l]];
+  const mName = (mk: typeof m): I18n | string => (mk ? { en: w.names[mk.hub] ?? mk.name, de: w.namesDe[mk.hub] ?? mk.name } : '—');
+  const minority = () => (lc.minShare[l] > 0.02 ? lc.minShare[l] : 0);
+  switch (mode) {
+    case 'development': rows.push({ k: T('Development', 'Entwicklung'), v: lc.dev[l], d: 1 }); break;
+    case 'population': rows.push({ k: T('People', 'Menschen'), v: pop }, { k: T('People per km²', 'Menschen je km²'), v: pop / Math.max(1, w.area[l]), d: 1 }); break;
+    case 'unrest': if (o >= 0) rows.push({ k: T('Unrest', 'Unruhe'), v: lc.unrest[l], d: 1 }, { k: T('Revolts possible from', 'Aufstände möglich ab'), v: REVOLT_UNREST }); break;
+    case 'control': if (o >= 0) rows.push({ k: T('Control', 'Kontrolle'), v: lc.control[l], pct: true }); break;
+    case 'culture': {
+      rows.push({ k: T('Culture', 'Kultur'), text: cultureName(ALL_CULTURES[lc.culture[l]] || 'unknown') });
+      const sh = minority(); if (sh) rows.push({ k: T('Minority', 'Minderheit'), text: cultureName(ALL_CULTURES[lc.minCulture[l]] || 'unknown') }, { k: T('Its share', 'Ihr Anteil'), v: sh, pct: true });
+      break;
+    }
+    case 'faith': {
+      rows.push({ k: T('Faith', 'Glaube'), text: FAITHS[lc.faith[l]]?.name ?? '?' });
+      const sh = minority(); if (sh && lc.minFaith[l] !== lc.faith[l]) rows.push({ k: T('Minority', 'Minderheit'), text: FAITHS[lc.minFaith[l]]?.name ?? '?' }, { k: T('Its share', 'Ihr Anteil'), v: sh, pct: true });
+      break;
+    }
+    case 'trade': case 'markets': rows.push({ k: T('Market', 'Markt'), text: mName(m) }); if (mode === 'markets' && m && good >= 0) rows.push({ k: T('Net exports of the good last month', 'Nettoausfuhr der Ware im letzten Monat'), v: m.flowOut[good], d: 1 }); break;
+    case 'goods': rows.push({ k: T('Yields', 'Liefert'), text: GOODS[w.resource[l]].name }); break;
+    case 'terrain': rows.push({ k: T('Terrain', 'Gelände'), text: TERRAINS[w.terrain[l]], key: 'terrain' }, { k: T('Height', 'Höhe'), v: w.elev[l], text: 'm' }); break;
+    case 'prices': {
+      const g = good >= 0 && good < GOODS.length ? good : GI.grain;
+      if (m) { const base = GOODS[g].base * s.priceLevel; rows.push({ k: T('Market', 'Markt'), text: mName(m) }, { k: { en: `Price of ${GOODS[g].name.en}`, de: `Preis für ${GOODS[g].name.de}` }, v: m.price[g], d: 2 }, { k: T('Against the base price', 'Gegenüber dem Grundpreis'), v: m.price[g] / Math.max(1e-9, base) - 1, pct: true }); }
+      break;
+    }
+    case 'production': {
+      const g = good >= 0 && good < GOODS.length ? good : GI.grain;
+      const made = LOC_ECON && LOC_ECON.grain.length === w.L ? locGoods(lc, w, l, null).made.get(g) ?? 0 : 0;
+      rows.push({ k: { en: `${GOODS[g].name.en} made here a month`, de: `${GOODS[g].name.de}, hier im Monat erzeugt` }, v: made, d: 1 });
+      break;
+    }
+    case 'army_supply': rows.push({ k: T('Men fed here', 'Hier ernährte Männer'), v: supplyLimit(s, w, l, s.nations[focus] ? focus : -1) }); break;
+    case 'diplomatic': {
+      const F = s.nations[focus];
+      if (F && o >= 0) {
+        const en = s.wars.some((x) => (x.att.includes(focus) && x.def.includes(o)) || (x.def.includes(focus) && x.att.includes(o)));
+        const rel = o === focus ? T('The selected realm', 'Das gewählte Reich') : subjectsOf(s, focus).includes(o) || s.nations[o].overlord === focus ? T('Subject', 'Untertan') : allies(s, focus).includes(o) ? T('Ally', 'Verbündeter')
+          : en ? T('At war', 'Im Krieg') : F.rivals.includes(o) ? T('Rival', 'Rivale') : treatiesOf(s, focus, 'truce').includes(o) ? T('Truce', 'Waffenstillstand') : F.overlord === o ? T('Overlord', 'Lehnsherr') : T('No ties', 'Keine Bindung');
+        rows.push({ k: { en: `Towards ${F.short.en}`, de: `Gegenüber ${F.short.de}` }, text: rel });
+      }
+      break;
+    }
+    default: break;
+  }
+  return { id: l, sea: false, name, province: prov?.name ?? null, owner: o, ctrl: c, core: lc.core[l], rows };
+}
+
 // ---------------- queries ----------------
 export function answer(s: GameState, w: World, player: number, q: Query): any {
   switch (q.q) {
@@ -329,6 +394,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
       const warScore = computeScore(s, war) * (war.att.includes(player) ? 1 : -1);
       return { ...peaceAnswer(ev, terms, warScore, cost), cost, costs, warScore };
     }
+    case 'maptip': return mapTip(s, w, Number(q.loc), q.mode, Number.isInteger(q.good) ? q.good! : -1, Number.isInteger(q.focus) ? q.focus! : player);
     case 'path': { const a = s.armies.find((x) => x.id === q.army); if (!a) return null; const p = findPath(s, w, a, a.loc, q.to); return p ? { path: p, days: Math.ceil(travelDays(s, w, a, p)) } : null; }
     case 'chronicle': return s.chronicle.slice(q.from ?? 0);
     case 'timelapse': return s.timelapse.map((t) => ({ day: t.day, owners: t.owners }));

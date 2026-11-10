@@ -4,6 +4,7 @@ import { sim, view, nations, ready, workerError } from '../game/client';
 import { screen, startYear, selectedNation, selectedLoc, selectedArmies, panel, mapMode, uiHidden, toast, settings, playerId, lastSpeed, openPanel, tutorialStep, showToast } from './store';
 import { t, L, lang, setLang } from './i18n';
 import { MapView, mapReady, rendererRef } from './MapView';
+import { MapTip } from './MapTip';
 import { timelapse, stopTimelapse } from './timelapse';
 import { MenuMap, menuMapReady } from './MenuMap';
 import { TopBar } from './TopBar';
@@ -45,6 +46,7 @@ export function App() {
   const s = screen.value;
   return <div class={`app lang-${lang.value}`} style={{ fontSize: `${settings.value.uiScale * 100}%` }}>
     {(s === 'select' || s === 'game' || s === 'end') && <MapView />}
+    {(s === 'select' || s === 'game') && <MapTip />}
     {s === 'menu' && <MainMenu />}
     {s === 'loading' && <Loading />}
     {s === 'select' && <SelectScreen />}

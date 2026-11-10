@@ -967,6 +967,7 @@ const S: Record<string, [string, string]> = {
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
   // ---- fix-map
   entry_one: ['entry', 'Eintrag'],
+  x_maptip_nobody: ['Nobody', 'Niemand'], x_maptip_held_by: ['Occupied by', 'Besetzt von'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

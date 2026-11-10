@@ -27,6 +27,8 @@ export type Query =
   | { q: 'diplo'; target: number; action: string }
   | { q: 'peace'; war: number; to: number; terms: any[]; concede?: boolean }
   | { q: 'path'; army: number; to: number }
+  /** the map tooltip: a place, its owner and controller, and the value the current map mode shows there */
+  | { q: 'maptip'; loc: number; mode: MapMode; good?: number; focus?: number }
   | { q: 'realm' }           // full data for the player's realm panels (laws, estates, council, tech, doctrines, decisions)
   | { q: 'chronicle'; from?: number }
   | { q: 'timelapse' }

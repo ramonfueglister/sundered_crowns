@@ -186,6 +186,12 @@ export function fogAnswerWith(s: GameState, w: World, getSight: () => Sight | 'n
       if (Array.isArray(out.agents) && sight.see[l] !== 1) out.agents = out.agents.filter((a: any) => a.nation === sight.nation);
       return out;
     }
+    case 'maptip': {
+      // the map tooltip of unknown land: its name only (no owner, no values)
+      const sight = getSight(); const l = Number(q.loc);
+      if (sight !== 'none' && sight.known && !sight.known[l]) return { id: l, unknown: true, sea: l >= w.L, name: data.name, owner: -1, ctrl: -1, rows: [] };
+      return data;
+    }
     case 'path': {
       const sight = getSight(); if (sight === 'none') return null;
       const a = s.armies.find((x) => x.id === q.army);

@@ -1,7 +1,7 @@
 // WebGPU map renderer.
 import type { MapAssets } from './assets';
 import { buildCoastSdf } from './coast';
-import { Overlay, type MapLabel, type MapUnit, type MapLandmark, type MapFlow, type MapMarket } from './overlay';
+import { Overlay, type MapLabel, type MapUnit, type MapLandmark, type MapFlow, type MapMarket, type MapPlace } from './overlay';
 import { ALBEDO_WGSL, BAKE_WGSL, HEIGHT_WGSL, MAIN_WGSL, MIP_WGSL, RIVER_WGSL, TERRAIN_WGSL } from './shaders';
 import { makeCamera, project, screenToPlane, screenToTerrain, type Cam3 } from './camera3d';
 import { Props, loadModelSet, figureSpot, SHOW_UNITS, type Settlement, type UnitProp, type SceneProp } from './props';
@@ -617,7 +617,10 @@ export class MapRenderer {
     }
     this.locDirty = true;
     this.props?.setExplored(known);
+    this.overlay.known = known;
   }
+  /** place names shown at close zoom (index = location; null: none), in the player's language */
+  setPlaces(list: (MapPlace | null)[]) { this.overlay.places = list; }
 
   setSnow(snow: Float32Array) {
     for (let i = 0; i < this.L; i++) this.locF32[i * LOC_WORDS + 6] = i < snow.length ? clamp(snow[i], 0, 1) : 0;
@@ -1056,7 +1059,7 @@ export class MapRenderer {
       toScreenZ: (x: number, y: number, z: number) => { const c = this.cam3 ?? this.camNow(); const [sx, sy, w] = project(c, x, y, -z); return (w > 0 ? [sx, sy] : [-1e5, -1e5]) as [number, number]; },
       heightAt: (x: number, y: number) => this.terrainZ(x, y),
       figuresFrom: this.props?.enabled ? SHOW_UNITS * 1.25 : Infinity,
-      zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time,
+      zoom: this.camera.zoom, cssW: this.cssW, cssH: this.cssH, time: this.time, cx: this.camera.x, cy: this.camera.y,
     };
   }
 
