@@ -7,7 +7,7 @@ import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
 import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
-import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
+import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill, spyCost, SPY_ACTIONS, improveGain, IMPROVE_CAP, refusedRecently, REFUSAL_COOLDOWN, pluralDe } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
 import { DUTIES, dutyRate, dutyUnrest, dutyDiscontent, dutyEstates } from '../sim/systems/duties';
@@ -346,6 +346,7 @@ function nationDetail(s: GameState, w: World, id: number, player: number) {
     // justifications for war: ours against them, theirs against us, a claim being fabricated by our clerks
     cb: casusBelliAll(s, player, id), theirCb: casusBelliAll(s, id, player), sameFaith: s.nations[player].faith === n.faith,
     fabricating: s.spies.find((x) => x.nation === player && x.target === id && x.action === 'fabricate') ?? null,
+    spyCosts: Object.fromEntries(SPY_ACTIONS.map((a) => [a, spyCost(s, player, id, a)])), // espionage section (diplomacy.ts spyCost)
     actions: DIPLO_ACTIONS.map((a) => ({ id: a, name: ACT_NAME[a] ?? { en: a, de: a } })),
     // Favour of the Curia: a Latin ruler can have another Latin ruler banned (realm.ts excommunicate)
     canExcommunicate: FAITHS[s.nations[player].faith]?.id === 'latin' && FAITHS[n.faith]?.id === 'latin' && !n.excommunicated && s.papacy.holder !== id, curiaFavour: s.papacy.curiaFavour[player] ?? 0,

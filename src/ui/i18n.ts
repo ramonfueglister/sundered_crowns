@@ -1013,6 +1013,11 @@ const S: Record<string, [string, string]> = {
   xp_ablest_all: ['Fill the council with the ablest', 'Rat mit den Fähigsten besetzen'],
   xp_ablest_all_hint: ['Appoints the ablest candidate to every office an abler person would serve better: {k} changes, {n} Authority.', 'Besetzt jedes Amt, das eine fähigere Person besser führen würde, mit dem Fähigsten: {k} Wechsel, {n} Autorität.'],
   xp_ablest_all_done: ['The council is filled with the ablest', 'Der Rat ist mit den Fähigsten besetzt'],
+  xp_spy_cost: ['Cost of the operation', 'Kosten des Unternehmens'],
+  xp_spy_income: ['Share of our monthly income', 'Anteil unseres Monatseinkommens'],
+  xp_spy_target: ["Size of the target realm", 'Größe des Zielreichs'],
+  xp_spy_spymaster: ['Our spymaster', 'Unser Meister der Geheimnisse'],
+  xp_spy_floor: ['Least cost of an operation', 'Mindestkosten eines Unternehmens'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

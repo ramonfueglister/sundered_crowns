@@ -13,7 +13,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dynastyView, successionClaims, marriagePreview, freshGivenName } from '../src/sim/systems/dynasty';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
-import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP } from '../src/sim/systems/diplomacy';
+import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP, spyCost, startSpy } from '../src/sim/systems/diplomacy';
 import { answerEvent } from '../src/sim/systems/events';
 import { answer } from '../src/game/view';
 import { advanceDay } from '../src/sim/engine';
@@ -292,5 +292,32 @@ describe('the council', () => {
     expect(after.every((v, i) => v >= before[i])).toBe(true);
     expect(after.reduce((a, b) => a + b, 0)).toBeGreaterThan(before.reduce((a, b) => a + b, 0));
     expect(E.authority).toBe(90 - 10 * after.filter((v, i) => v > before[i]).length);
+  });
+});
+
+describe('espionage', () => {
+  it('an operation costs by what is asked, our income and the size of the target, and the parts add up', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), F = nat(s, 'france'), N = nat(s, 'navarre');
+    const big = spyCost(s, E.id, F.id, 'fabricate'), small = spyCost(s, E.id, N.id, 'fabricate');
+    expect(big.cost).toBeGreaterThan(small.cost);
+    expect(spyCost(s, E.id, F.id, 'steal_tech').cost).toBeGreaterThan(spyCost(s, E.id, F.id, 'slander').cost);
+    expect(small.cost).toBeGreaterThan(30);
+    for (const c of [big, small]) expect(Math.round(c.parts.reduce((a, x) => a + x[1], 0))).toBe(c.cost);
+    const before = E.treasury;
+    expect(startSpy(s, E.id, N.id, 'slander')).toBeNull();
+    expect(before - E.treasury).toBe(spyCost(s, E.id, N.id, 'slander').cost);
+    // the view the nation panel shows is the same number
+    expect(answer(s, w, E.id, { q: 'nation', nation: F.id } as any).rel.spyCosts.fabricate.cost).toBe(big.cost);
+  });
+
+  it('fabricating a claim from the diplomacy list is the same agent operation (one path, one cost, one limit)', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england'), N = nat(s, 'navarre'); s.playerNations = [E.id];
+    const cost = spyCost(s, E.id, N.id, 'fabricate').cost, before = E.treasury;
+    expect(applyCommand(s, w, { t: 'diplo', n: E.id, action: 'fabricate', target: N.id }).ok).toBe(true);
+    expect(before - E.treasury).toBe(cost);
+    expect(s.spies.filter((x) => x.nation === E.id && x.action === 'fabricate').map((x) => x.days)).toEqual([240]);
+    expect(applyCommand(s, w, { t: 'spy', n: E.id, action: 'fabricate', target: N.id }).ok).toBe(false);
   });
 });

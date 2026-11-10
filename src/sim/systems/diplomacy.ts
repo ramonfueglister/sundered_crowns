@@ -179,12 +179,8 @@ function immediateAction(s: GameState, w: World, a: number, b: number, action: s
       if (s.playerNations.includes(b)) notice(s, b, 'embargo', { en: `${A.short.en} has lifted its embargo on us.`, de: `${A.short.de} hat die Handelssperre gegen uns aufgehoben.` });
       return null;
     }
-    case 'fabricate': {
-      // fabricating a justification takes time and can be discovered
-      if (s.spies.some((x) => x.nation === a && x.target === b && x.action === 'fabricate')) return 'already fabricating';
-      s.spies.push({ nation: a, target: b, action: 'fabricate', progress: 0, days: 180 + Math.floor(rand(s.rng) * 180) });
-      return null;
-    }
+    // fabricating a justification is an agent's work: the same path, cost and limit as the espionage section
+    case 'fabricate': return startSpy(s, a, b, 'fabricate');
   }
   return 'unknown action';
 }
@@ -338,10 +334,28 @@ function require_war() { return warmod; }
 
 // ---------------- espionage ----------------
 export const SPY_ACTIONS = ['fabricate', 'slander', 'support_rebels', 'steal_tech'];
+// ---- fix-people: an agent's work costs by what is asked, our purse and the size of the target (it was a flat 30)
+/** Months of our income an operation costs, and gold per point of the target's development. */
+const SPY_BASE: Record<string, number> = { fabricate: 0.25, slander: 0.15, support_rebels: 0.3, steal_tech: 0.4 };
+const SPY_TARGET: Record<string, number> = { fabricate: 0.3, slander: 0.2, support_rebels: 0.3, steal_tech: 0.4 };
+/** What an operation of a's agents against b costs, with its parts (shown in the espionage section): a share of our
+ *  monthly income, a share of the target's development, less up to 20 % for an able spymaster; never under 30. */
+export function spyCost(s: GameState, a: number, b: number, action: string): { cost: number; parts: [string, number][] } {
+  const A = s.nations[a]; let inc = 0; for (const k in A.income) inc += Math.max(0, A.income[k]);
+  const own = (SPY_BASE[action] ?? 0.25) * inc, size = (SPY_TARGET[action] ?? 0.3) * nationDev(s, b) * s.priceLevel;
+  const off = -(own + size) * Math.min(0.2, councilBonus(s, A, 'spymaster') * 2);
+  const parts: [string, number][] = [['xp_spy_income', own], ['xp_spy_target', size]];
+  if (off) parts.push(['xp_spy_spymaster', off]);
+  const raw = own + size + off, floor = 30 * s.priceLevel;
+  if (raw < floor) parts.push(['xp_spy_floor', floor - raw]);
+  return { cost: Math.round(Math.max(floor, raw)), parts };
+}
 export function startSpy(s: GameState, a: number, b: number, action: string): string | null {
   if (!SPY_ACTIONS.includes(action)) return 'unknown action';
+  if (!s.nations[b]?.alive || a === b) return 'invalid target';
+  if (s.spies.some((x) => x.nation === a && x.target === b && x.action === action)) return action === 'fabricate' ? 'already fabricating' : 'already under way';
   if (s.spies.filter((x) => x.nation === a).length >= 2) return 'all agents are busy';
-  const cost = 30 * s.priceLevel;
+  const cost = spyCost(s, a, b, action).cost;
   const A = s.nations[a]; if (A.treasury < cost) return 'not enough gold';
   A.treasury -= cost;
   s.spies.push({ nation: a, target: b, action, progress: 0, days: action === 'fabricate' ? 240 : 120 });
