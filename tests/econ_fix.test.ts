@@ -11,7 +11,7 @@ import { closeLedger, craftOutcome, locationStep, locGoods, LOC_ECON, tariffMax,
 import { landmarksOf, landmarkPrice } from '../src/sim/systems/landmarks';
 import { tradePolicy, priceIndexParts, goodDetail } from '../src/game/tradeview';
 import { methodsView } from '../src/game/methodsview';
-import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM } from '../src/sim/systems/explore';
+import { expeditionTargets, expeditionPlan, startExplorer, OCEAN_KM, OPEN_KM, LONG_KM } from '../src/sim/systems/explore';
 import { answer, playerView } from '../src/game/view';
 import { authorityGain } from '../src/sim/systems/politics';
 import { ownedLocs } from '../src/sim/systems/war';
@@ -236,11 +236,22 @@ describe('expeditions are measured along their route', () => {
     // without even the coastal knowledge, the refusal still names the voyage's own requirement
     n.tech[1] = 3;
     expect(expeditionPlan(s, w, n, red.to, 0).refusal).toBe('an ocean voyage needs Commerce & Learning 10');
-    // a voyage along the coasts needs only Commerce 6, however long
+    // a voyage along the coasts needs only Commerce 6, as long as it stays within LONG_KM
     n.tech[1] = 7;
-    const coast = tg.map((x) => expeditionPlan(s, w, n, x.to, 0)).find((x) => !x.ocean && x.path.length > 0)!;
+    const plans = tg.map((x) => expeditionPlan(s, w, n, x.to, 0));
+    const coast = plans.find((x) => !x.ocean && x.path.length > 0)!;
     expect(coast).toBeTruthy();
     expect(coast.refusal).toBeNull();
+    for (const p of plans) if (p.path.length && !p.ocean) { expect(p.km).toBeLessThanOrEqual(LONG_KM); expect(p.open).toBeLessThanOrEqual(OPEN_KM); }
+    // the Gulf of Guinea lies along the coasts, but 9,000 km away: in 1356 it needs the knowledge of the open sea
+    const guinea = tg.find((x) => x.region.name.en === 'Gulf of Guinea')!;
+    expect(guinea).toBeTruthy();
+    const gp = expeditionPlan(s, w, n, guinea.to, 0);
+    expect(gp.open).toBeLessThan(OPEN_KM);
+    expect(gp.km).toBeGreaterThan(LONG_KM);
+    expect(gp.ocean).toBe(true);
+    expect(gp.refusal).toBe('an ocean voyage needs Commerce & Learning 10');
+    expect(gp.needs.find((x) => x.key === 'commerce')!.need).toBe(10);
     // and a fleet sent by startExplorer obeys the same rule
     const f = s.armies.find((a) => a.owner === n.id && a.fleet)!;
     expect(startExplorer(s, w, n, f.id, red.to)).toBe('an ocean voyage needs Commerce & Learning 10');

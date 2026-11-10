@@ -13,9 +13,10 @@ import { MinHeap } from '../setup';
 export const EXPEDITION_SHIPS = 3, MAX_EXPEDITIONS = 2;
 /** Commerce & Learning for coastal voyages; for an ocean voyage also the Age of Print and Horizons (era 1). The route
  *  decides which a voyage is (voyageOf): one that sails more than OPEN_KM at a stretch out of sight of land is an ocean
- *  voyage, however close its goal lies as the crow flies. OCEAN_KM classifies by the straight line where there is no
- *  route to measure. */
-export const COAST_TECH = 6, OCEAN_TECH = 10, OCEAN_ERA = 1, OCEAN_KM = 2500, OPEN_KM = 1500;
+ *  voyage, however close its goal lies as the crow flies, and so is one longer than LONG_KM in all, however close to
+ *  the coasts it keeps (the far coasts of Africa and the Arctic need the ships and knowledge of the open sea, not the
+ *  first era's coasting). OCEAN_KM classifies by the straight line where there is no route to measure. */
+export const COAST_TECH = 6, OCEAN_TECH = 10, OCEAN_ERA = 1, OCEAN_KM = 2500, OPEN_KM = 1500, LONG_KM = 5000;
 /** Provisions and crews' pay per ship and month at sea, times the price level; a squadron of light vessels fitted out
  *  for discovery costs half the price of the same ships built for war. */
 export const PROVISIONS = 40, FIT_OUT = 0.5;
@@ -93,8 +94,8 @@ function openWater(w: World, z: number): boolean {
   for (let e = w.adjStart[z]; e < w.adjStart[z + 1]; e++) if (w.adj[e] < w.L) return false;
   return true;
 }
-/** A voyage from `start` along `path`: its length, the longest stretch it sails out of sight of land, and whether that
- *  makes it an ocean voyage. */
+/** A voyage from `start` along `path`: its length, the longest stretch it sails out of sight of land, and whether these
+ *  make it an ocean voyage (more than OPEN_KM out of sight of land, or more than LONG_KM in all). */
 export function voyageOf(w: World, start: number, path: readonly number[]): { km: number; open: number; ocean: boolean } {
   let km = 0, run = 0, open = 0, prev = start;
   for (const z of path) {
@@ -102,7 +103,7 @@ export function voyageOf(w: World, start: number, path: readonly number[]): { km
     if (openWater(w, z)) { run += d; if (run > open) open = run; } else run = 0;
     prev = z;
   }
-  return { km: Math.round(km), open: Math.round(open), ocean: open > OPEN_KM };
+  return { km: Math.round(km), open: Math.round(open), ocean: open > OPEN_KM || km > LONG_KM };
 }
 /** What our navigators lack for a coastal or an ocean voyage (the requirement that applies, not the first one). */
 export function voyageRefusal(n: Nation, ocean: boolean): string | null {
