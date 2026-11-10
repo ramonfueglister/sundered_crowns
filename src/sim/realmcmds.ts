@@ -3,7 +3,7 @@
 import type { GameState, Command, Nation, I18n } from './types';
 import type { World } from './world';
 import { castVote, campaign, answerCall, orderPeace, answerOrder, summonDiet, dietVote, joinLeague, leaveLeague, answerLeagueCall } from './systems/empire';
-import { holdAssembly, taxLevel, askRates, needsTaxVote, backCandidate, answerDemand } from './systems/government';
+import { holdAssembly, taxAsk, needsTaxVote, backCandidate, answerDemand } from './systems/government';
 import { powersCommand } from './systems/powers';
 import { situationAction } from './systems/situations';
 
@@ -35,13 +35,13 @@ export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd): 
     case 'powers': return powersCommand(s, w, n, cmd.action, cmd.target, cmd.war);
     case 'assembly': {
       if (cmd.kind === 'tax') {
-        const cls = cmd.cls ?? -1; if (cls < -1 || cls >= n.taxRate.length) return 'bad class';
-        const rates = askRates(n.taxRate, cls, cmd.rate ?? 0);
-        // within the granted level no vote is needed: the rates apply at once
-        if (!needsTaxVote(n, taxLevel(rates))) { n.taxRate = rates; return null; }
-        const e = holdAssembly(s, n, { kind: 'tax', level: taxLevel(rates), rates }, cmd.bribe ?? [], cmd.concede);
-        if (!e) n.taxRate = rates;
-        return e;
+        // a class rate (cls, rate), every class at once (cls -1: rate is the whole level asked) or a duty (duty, value)
+        const ask = taxAsk(s, n, cmd.cls, cmd.rate, cmd.duty, cmd.value); if (typeof ask === 'string') return ask;
+        // within the granted level (or lower than now) no vote is needed: the rates apply at once
+        if (ask.level > ask.now + 1e-9 && needsTaxVote(n, ask.level, ask.now)) { const e = holdAssembly(s, n, { kind: 'tax', level: ask.level, rates: ask.rates, duties: ask.duties }, cmd.bribe ?? [], cmd.concede, ask.cs); if (e) return e; }
+        n.taxRate = ask.rates;
+        if (n.duties || cmd.duty) n.duties = { ...ask.duties };
+        return null;
       }
       const t = s.nations[cmd.target ?? -1]; if (!t?.alive || t.id === n.id) return 'invalid target';
       return holdAssembly(s, n, { kind: 'war', target: t.id, goal: cmd.goal ?? 'conquest' }, cmd.bribe ?? [], cmd.concede);

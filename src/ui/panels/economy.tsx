@@ -6,8 +6,19 @@ import { CLASSES, CLASS_NAME } from '../../sim/defs';
 import { Section, Row, Bar, Btn, Empty, Spark, Slider, useQuery, act, t, L, num, signed, pct, Tip, fmtDateShort, realm } from './common';
 import { TreasuryTip, IncomeTip, ExpenseTip, InflationTip, CorruptionTip, TaxClassTip, MerchantsTip, TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
-import { Duties, Forecast, TariffCap } from './statecraft';
+import { Duties, Forecast, TariffCap, taxAct } from './statecraft';
 
+
+/** The tax level the assembly weighs (class taxes by weight and duties) against what it granted. */
+function TaxLevel() {
+  const pid = playerId.value;
+  const [g] = useQuery<any>({ q: 'govern' }, [pid], 1500);
+  if (!g) return null;
+  return <Row k={t('x_asm_level')} v={<>{pct(g.taxLevel, 1)} <small class="muted">{g.taxVote ? `(${t('x_asm_tax_ceiling')} ${pct(g.taxCeiling, 1)})` : `(${t('x_asm_no_vote')})`}</small></>} tip={() => <div>
+    <TipHead name={t('x_asm_level')} value={pct(g.taxLevel, 1)} hint={t('x_asm_level_hint')} />
+    <Parts rows={g.taxLevelRows} total={g.taxLevel} fmt={(v) => pct(v, 2)} />
+    <div class="muted small">{g.taxVote ? t('x_asm_ceiling_hint') : t('x_asm_no_vote_hint')}</div></div>} />;
+}
 
 export function EconomyTab() {
   const v = view.value; const p = v?.player; const r = realm.value;
@@ -41,8 +52,9 @@ export function EconomyTab() {
       <Section title={t('taxes')} id="eco-tax">
         {CLASSES.map((c, k) => <div class="slider-row">
           <Tip tag="div" class="tip-contents" content={() => <TaxClassTip c={k} />}><span class="k has-tip">{L(CLASS_NAME[c])}</span>
-          <Slider value={p.taxRate[k] ?? 0} min={0} max={0.5} step={0.01} fmt={(x) => pct(x)} onCommit={(x) => act({ t: 'tax', cls: k, rate: x })} /></Tip>
+          <Slider value={p.taxRate[k] ?? 0} min={0} max={0.5} step={0.01} fmt={(x) => pct(x)} onCommit={(x) => taxAct({ t: 'tax', cls: k, rate: x })} /></Tip>
         </div>)}
+        <TaxLevel />
       </Section>
       <Section title={t('budget')} id="eco-budget">
         <div class="slider-row"><Tip tag="div" class="tip-contents" content={() => <MaintTip kind="army" />}><span class="k has-tip">{t('army_maint')}</span>

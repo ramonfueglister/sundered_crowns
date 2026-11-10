@@ -3,16 +3,16 @@
 // window of a situation (sides, what drives it, its stages and the actions open to us).
 import { useState, useEffect } from 'preact/hooks';
 import { playerId, realmDialog } from '../store';
-import { view } from '../../game/client';
+import { view, nations } from '../../game/client';
+import { CLASSES, CLASS_NAME } from '../../sim/defs';
 import { Panel, Section, Row, Bar, Btn, Empty, NLink, NList, Tip, useQuery, act, t, L, num, signed, pct, fmtDateShort, Slider } from './common';
 import { Parts, TipHead } from './explain';
 import { errText } from '../i18n';
-import { MediationOffers, LeagueCalls } from './empire';
+import { MediationOffers, LeagueCalls, fill } from './empire';
 
 type Row2 = [any, number];
 const sum = (r: Row2[]) => r.reduce((p, x) => p + x[1], 0);
 const date = (d: number) => fmtDateShort(d, view.value?.startYear ?? 1356);
-const CLASS_KEYS = ['cls_peasants', 'cls_labourers', 'cls_artisans', 'cls_burghers', 'cls_clergy', 'cls_nobles', 'cls_wage_workers'];
 
 export function RealmDialogs() {
   const d = realmDialog.value;
@@ -31,37 +31,61 @@ function Modal({ title, children }: { title: any; children: any }) {
 }
 
 // ---------------------------------------------------------------- the assembly
+/** The assembly's vote on a war (from the declaration), on a tax (a class rate, or every class to a whole level) or on
+ *  a duty (from the duty sliders). The tally is the simulation's (realmview.ts assemblyView): a vote that would fail
+ *  is not put, and bribes are paid only for a yes. */
 function AssemblyDialog({ cmd }: { cmd: any }) {
   const pid = playerId.value;
   const war = cmd.t === 'declare' || (cmd.t === 'assembly' && cmd.kind === 'war');
+  const dutyId: string | undefined = cmd.t === 'budget' ? cmd.key : cmd.duty;
   const [bribe, setBribe] = useState<string[]>([]);
   const [concede, setConcede] = useState<string | undefined>(undefined);
   const [cls, setCls] = useState<number>(cmd.cls ?? 0);
   const [rate, setRate] = useState<number>(cmd.rate ?? 0.1);
+  const [value, setValue] = useState<number>(cmd.value ?? 0);
   const [busy, setBusy] = useState(false);
-  const q: any = war ? { q: 'assembly', kind: 'war', target: cmd.target, goal: cmd.goal, bribe, concede } : { q: 'assembly', kind: 'tax', cls, rate, bribe, concede };
-  const [a] = useQuery<any>(q, [pid, JSON.stringify(bribe), concede, cls, rate], 1000);
+  const q: any = war ? { q: 'assembly', kind: 'war', target: cmd.target, goal: cmd.goal, bribe, concede }
+    : dutyId ? { q: 'assembly', kind: 'tax', duty: dutyId, value, bribe, concede } : { q: 'assembly', kind: 'tax', cls, rate, bribe, concede };
+  const [a] = useQuery<any>(q, [pid, JSON.stringify(bribe), concede, cls, rate, value, dutyId], 1000);
   if (!a) return <Modal title={t('x_asm_title')}><Empty>{t('loading')}…</Empty></Modal>;
   const toggle = (id: string) => setBribe(bribe.includes(id) ? bribe.filter((x) => x !== id) : [...bribe, id]);
+  const okText = war ? fill('x_asm_war_granted', { realm: L(nations.value[cmd.target]?.short) ?? '' }) : a.needed ? fill('x_asm_tax_granted', { p: pct(a.tax?.grant ?? 0, 1) }) : t('x_asm_applied');
   const vote = async () => {
     if (busy) return; setBusy(true);
-    const r = await act(war ? { t: 'assembly', kind: 'war', target: cmd.target, goal: cmd.goal, bribe, concede } : { t: 'assembly', kind: 'tax', cls, rate, bribe, concede }, 'click');
+    // a war the assembly has already approved is simply declared
+    if (war && a.needed === false && cmd.t === 'declare') { const r = await act(cmd, 'war', t('war_declared')); setBusy(false); if (r.ok) close(); return; }
+    const c: any = war ? { t: 'assembly', kind: 'war', target: cmd.target, goal: cmd.goal, bribe, concede }
+      : dutyId ? { t: 'assembly', kind: 'tax', duty: dutyId, value, bribe, concede } : { t: 'assembly', kind: 'tax', cls, rate, bribe, concede };
+    const r = await act(c, 'click', okText);
     setBusy(false);
     if (!r.ok) return;
-    if (war && cmd.t === 'declare') await act(cmd, 'war');
+    if (war && cmd.t === 'declare') await act(cmd, 'war', t('war_declared'));
     close();
   };
   const total = a.yes + a.no;
+  const dd = dutyId ? (a.dutyDefs ?? []).find((x: any) => x.id === dutyId) : null;
+  const fmtDuty = (v: number) => (dutyId === 'hearth' ? num(v, 2) : pct(v, 1));
+  const why = busy ? '…' : a.cost > a.treasury ? errText('not enough gold') : a.needed !== false && !a.passes ? t('x_asm_would_fail') : null;
   return <Modal title={t('x_asm_title')}>
-    <div class="small">{war ? <>{t('x_asm_war_q')} <NLink id={cmd.target} /></> : t('x_asm_tax_q')}</div>
+    <div class="small">{war ? <>{t('x_asm_war_q')} <NLink id={cmd.target} /></> : dutyId ? fill('x_asm_duty_q', { duty: t(`duty_${dutyId}`) }) : t('x_asm_tax_q')}</div>
     {!war && <div class="asm-tax">
-      <div class="chips"><span class={`chip ${cls === -1 ? 'on' : ''}`} onClick={() => setCls(-1)}>{t('x_asm_all_classes')}</span>{CLASS_KEYS.map((k, i) => <span class={`chip ${i === cls ? 'on' : ''}`} onClick={() => setCls(i)}>{t(k)}</span>)}</div>
-      <Row k={cls === -1 ? t('x_asm_all_classes') : t(CLASS_KEYS[cls])} v={pct(rate, 1)} />
-      <Slider value={rate} min={0} max={0.5} step={0.005} onCommit={setRate} fmt={(v) => pct(v, 1)} />
-      <Row k={t('x_asm_tax_level')} v={`${pct(a.level, 1)} (${t('x_asm_tax_ceiling')} ${pct(a.ceiling, 1)})`} tip={t('x_asm_ceiling_hint')} />
-      {!a.needed && <div class="muted small">{t('x_asm_not_needed')}</div>}
+      {dutyId ? <>
+        <Row k={t(`duty_${dutyId}`)} v={fmtDuty(value)} />
+        {dd && <Slider value={value} min={0} max={dd.max} step={dd.step} onCommit={setValue} fmt={fmtDuty} />}
+      </> : <>
+        <div class="chips"><span class={`chip ${cls === -1 ? 'on' : ''}`} onClick={() => setCls(-1)}>{t('x_asm_all_level')}</span>{CLASSES.map((k, i) => <span class={`chip ${i === cls ? 'on' : ''}`} onClick={() => setCls(i)}>{L(CLASS_NAME[k])}</span>)}</div>
+        <Row k={cls === -1 ? t('x_asm_level') : L(CLASS_NAME[CLASSES[cls]])} v={pct(rate, 1)} />
+        <Slider value={rate} min={0} max={0.5} step={0.005} onCommit={setRate} fmt={(v) => pct(v, 1)} />
+      </>}
+      {a.tax && <Row k={t('x_asm_level')} v={`${pct(a.tax.now, 1)} → ${pct(a.level, 1)} (${t('x_asm_tax_ceiling')} ${pct(a.ceiling, 1)})`} tip={() => <div>
+        <TipHead name={t('x_asm_level')} value={pct(a.level, 1)} hint={t('x_asm_level_hint')} />
+        <Parts title={t('x_asm_level_asked')} rows={a.tax.rows} total={a.level} fmt={(v) => pct(v, 2)} />
+        <Parts title={t('x_asm_level_now')} rows={a.tax.nowRows} total={a.tax.now} fmt={(v) => pct(v, 2)} />
+      </div>} />}
+      {!a.needed && <div class="muted small">{t('x_asm_not_needed2')}</div>}
     </div>}
     <Bar value={total > 0 ? a.yes / total : 0} max={1} color={a.passes ? '#4d8a3a' : '#a8331f'} label={`${t('yes')} ${num(a.yes)} · ${t('no')} ${num(a.no)}`} />
+    <div class={a.passes ? 'pos small' : 'neg small'}>{a.passes ? t('x_asm_would_pass') : t('x_asm_would_fail')}</div>
     <div class="asm-estates">{a.estates.map((e: any) => <div class="kv">
       <span class="k"><b>{L(e.name)}</b> <span class="muted small">{t('influence')} {num(e.influence)}</span></span>
       <span class="v">
@@ -70,9 +94,9 @@ function AssemblyDialog({ cmd }: { cmd: any }) {
         {e.concession && <label class="small"><input type="radio" name="concede" checked={concede === e.concession} onChange={() => setConcede(concede === e.concession ? undefined : e.concession)} onClick={() => { if (concede === e.concession) setConcede(undefined); }} /> {t('x_asm_concede')}: {L(e.concessionName)}</label>}
       </span>
     </div>)}</div>
-    <div class="muted small">{t('x_asm_rule')}</div>
+    <div class="muted small">{t('x_asm_rule2')}</div>
     <div class="btn-row">
-      <Btn small={false} disabled={busy ? '…' : a.cost > a.treasury ? errText('not enough gold') : null} onClick={vote}>{t('x_asm_put')}{a.cost ? ` (${num(a.cost)})` : ''}</Btn>
+      <Btn small={false} disabled={why} onClick={vote}>{a.needed === false ? (war ? t('declare_war') : t('x_asm_apply')) : t('x_asm_put')}{a.cost && a.needed !== false ? ` (${num(a.cost)})` : ''}</Btn>
       <Btn small={false} onClick={close}>{t('cancel')}</Btn>
     </div>
   </Modal>;

@@ -32,7 +32,7 @@ import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
 import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
-import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
+import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts, classSums, contentParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView } from '../sim/systems/dynasty';
@@ -556,10 +556,12 @@ export function explainRealm(s: GameState, w: World, n: Nation) {
     const ex = Math.max(0, Math.min(1, sumRows(exParts)));
     return { nominal: n.taxRate[c] ?? 0.05, exempt: ex, exemptParts: exParts, effective: (n.taxRate[c] ?? 0.05) * (1 - ex) * Math.max(0, (1 - n.corruption) * (1 + sumRows(taxMods)) * (1 + trB)) };
   });
-  // ---- estates: contentment drifts 3 % a month toward 50 + 6 per privilege
-  // influence drifts 5 % a month toward the Power's share of all weights (systems/government.ts influenceFactors)
-  const inflF = influenceFactors(s, n); const inflT = influenceTargets(s, n);
-  const estates = n.estates.map((e) => { const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const resent = resentment(n, e.id); const tgt = 50 + e.privileges.length * 6 - duty + resent; return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, privileges: e.privileges.length, duties: duty, resent, appeaseUntil: n.flags[`appease_${e.id}`] || 0,
+  // ---- estates: contentment drifts 3 % a month toward its target (systems/government.ts contentParts: 50, privileges,
+  // class taxes above the customary rates, duties, resented privileges); influence drifts 5 % a month toward the
+  // Power's share of all weights (systems/government.ts influenceFactors)
+  const csE = classSums(s);
+  const inflF = influenceFactors(s, n, csE); const inflT = influenceTargets(s, n, csE);
+  const estates = n.estates.map((e) => { const contentRows = contentParts(n, e.id, csE); const duty = dutyDiscontent(n, e.id, (c) => classExempt(n, c)); const resent = resentment(n, e.id); const tgt = sumRows(contentRows); return { id: e.id, contentTarget: tgt, contentMonthly: (tgt - e.contentment) * 0.03, contentParts: contentRows, privileges: e.privileges.length, duties: duty, resent, appeaseUntil: n.flags[`appease_${e.id}`] || 0,
     influence: { value: e.influence, target: inflT[e.id] ?? e.influence, monthly: ((inflT[e.id] ?? e.influence) - e.influence) * INFLUENCE_DRIFT, factors: inflF[e.id] ?? [], weight: (inflF[e.id] ?? []).reduce((p, r) => p * r[1], 1) } }; });
   return {
     concord: { value: n.concord, target: concordTarget, monthly: (concordTarget - n.concord) * 0.04, parts: concordParts },

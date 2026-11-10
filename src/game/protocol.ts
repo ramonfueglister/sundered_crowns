@@ -54,7 +54,7 @@ export type Query =
   // ---- realm pass (src/game/realmview.ts): the Empire and the league, the great powers, the assembly, the government, a situation
   | { q: 'empire' }
   | { q: 'powers' }
-  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
+  | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
   | { q: 'govern' }
   | { q: 'situation'; id: string }
   // people pass (src/game/view.ts commandersView)

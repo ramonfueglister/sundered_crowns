@@ -969,6 +969,19 @@ const S: Record<string, [string, string]> = {
   x_cond_from: ['from {y}: {n} years to go', 'ab {y}: noch {n} Jahre'], x_cond_from_1: ['from {y}: one year to go', 'ab {y}: noch ein Jahr'],
   x_cond_time_to: ['Time to {y} passed', 'Verstrichene Zeit bis {y}'],
   x_cond_gate_hint: ['This condition counts only from the year named. Until then its progress is the smaller of the two: how far the condition itself is, and how much of the time to that year has passed.', 'Diese Bedingung zählt erst ab dem genannten Jahr. Bis dahin ist ihr Fortschritt der kleinere von beiden Werten: wie weit die Bedingung selbst ist und wie viel der Zeit bis zu diesem Jahr verstrichen ist.'],
+  x_class_taxes: ['Class taxes above the customary rates', 'Ständesteuern über dem Herkommen'],
+  x_asm_tax_burden: ['Class taxes above the customary rates (x 2)', 'Ständesteuern über dem Herkommen (x 2)'], x_asm_duties: ['Duties it would pay (x 2)', 'Abgaben, die sie zahlen müsste (x 2)'],
+  x_asm_level: ['Tax level', 'Steuerlast'], x_asm_level_asked: ['Asked for', 'Beantragt'], x_asm_level_now: ['Now', 'Jetzt'],
+  x_asm_level_hint: ['What the assembly weighs: each class rate times the class’s share of the realm’s means (the many peasants weigh much, the few nobles little), plus the land tax, hearth tax and excise at the class-tax points they raise as much as.', 'Was die Versammlung wägt: jeder Steuersatz mal dem Anteil des Standes an den Mitteln des Reiches (die vielen Bauern wiegen viel, die wenigen Adligen wenig), dazu Grundsteuer, Herdsteuer und Akzise mit den Punkten Ständesteuer, die sie ebenso viel einbringen.'],
+  x_asm_no_vote_hint: ['Our laws give the estates no say in taxes: we set them as we like.', 'Unsere Gesetze geben den Ständen kein Mitspracherecht bei Steuern: Wir setzen sie nach Belieben.'],
+  x_asm_all_level: ['All classes alike', 'Alle Stände gleich'], x_asm_duty_q: ['The assembly votes on raising the {duty}:', 'Die Versammlung stimmt über eine höhere {duty} ab:'],
+  x_asm_not_needed2: ['This stays within the level the assembly granted (or lowers the taxes): no vote is needed.', 'Das bleibt im bewilligten Rahmen (oder senkt die Steuern): Eine Abstimmung ist nicht nötig.'],
+  x_asm_would_pass: ['The majority of the influence would vote yes.', 'Die Mehrheit des Einflusses würde zustimmen.'],
+  x_asm_would_fail: ['The majority would vote no: buy votes or offer a privilege first.', 'Die Mehrheit würde ablehnen: Kauft erst Stimmen oder bietet ein Privileg an.'],
+  x_asm_rule2: ['Each Power votes by its stance and weighs with its influence; a majority of the influence decides. Bought votes are paid only when the assembly says yes.', 'Jede Macht stimmt nach ihrer Haltung und wiegt mit ihrem Einfluss; die Mehrheit des Einflusses entscheidet. Gekaufte Stimmen werden nur bezahlt, wenn die Versammlung zustimmt.'],
+  x_asm_apply: ['Apply', 'Übernehmen'], x_asm_applied: ['The new rates apply.', 'Die neuen Sätze gelten.'],
+  x_asm_tax_granted: ['The assembly granted taxes up to a level of {p}.', 'Die Versammlung bewilligte Steuern bis zu einer Steuerlast von {p}.'],
+  x_asm_war_granted: ['The assembly approved the war against {realm}.', 'Die Versammlung billigte den Krieg gegen {realm}.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

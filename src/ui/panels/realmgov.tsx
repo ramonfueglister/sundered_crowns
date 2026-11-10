@@ -37,7 +37,7 @@ export function RealmGovernment() {
       </>}
     </Section>
     <Section title={t('x_asm_title')} id="gov-assembly">
-      <Row k={t('x_asm_tax_level')} v={pct(g.taxLevel, 1)} tip={t('x_asm_tax_level_hint')} />
+      <Row k={t('x_asm_level')} v={pct(g.taxLevel, 1)} tip={() => <div><TipHead name={t('x_asm_level')} value={pct(g.taxLevel, 1)} hint={t('x_asm_level_hint')} /><Parts rows={g.taxLevelRows} total={g.taxLevel} fmt={(v) => pct(v, 2)} /></div>} />
       <Row k={t('x_asm_tax_ceiling')} v={g.taxVote ? pct(g.taxCeiling, 1) : t('x_asm_no_vote')} tip={t('x_asm_ceiling_hint')} />
       <Row k={t('x_asm_war_vote')} v={g.warVote ? t('yes') : t('no')} tip={t('x_asm_war_vote_hint')} />
       {g.taxVote && <Btn onClick={() => { realmDialog.value = { kind: 'assembly', cmd: { t: 'tax', cls: -1, rate: Math.min(0.5, Math.round(((g.taxCeiling ?? 0.1) + 0.02) * 200) / 200) } }; }}>{t('x_asm_ask_taxes')}</Btn>}

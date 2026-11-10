@@ -9,8 +9,9 @@
 import type { GameState, Nation, WarGoal, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addExpense } from '../ctx';
-import { CL, CLASS_NEED_MULT } from '../defs';
-import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir, consortOf } from './politics';
+import { CL, CLASS_NEED_MULT, CLASSES, CLASS_NAME } from '../defs';
+import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege, pickNewHeir, consortOf, classExempt } from './politics';
+import { DUTIES, DUTY_INDEX, dutyDiscontent, dutyDiscontentAt, dutyValue } from './duties';
 import { nationDev, hasCasusBelli } from './war';
 import { chance, rand, hash01 } from '../rng';
 import { houseName as cultureHouse } from '../content/names';
@@ -143,34 +144,118 @@ export function answerDemand(s: GameState, n: Nation, grant: boolean): string | 
   return null;
 }
 
-// ---------------------------------------------------------------- the assembly
-export type AssemblyAsk = { kind: 'tax'; level: number; rates?: number[] } | { kind: 'war'; target: number; goal: WarGoal['type'] };
-/** The tax level the assembly weighs: the mean rate over all classes. */
-export const taxLevel = (rates: number[]) => rates.reduce((p, x) => p + x, 0) / Math.max(1, rates.length);
-/** The rates a request to the assembly would set: one class's rate, or (cls -1) every class moved alike so that the
- *  mean is the rate asked. */
-export function askRates(rates: number[], cls: number, rate: number): number[] {
-  const out = rates.slice(); const r = clamp(rate, 0, 0.5);
-  if (cls >= 0 && cls < out.length) out[cls] = r;
-  else if (cls === -1) { const d = r - taxLevel(rates); for (let i = 0; i < out.length; i++) out[i] = +clamp(out[i] + d, 0, 0.5).toFixed(4); }
+// ---------------------------------------------------------------- what the Powers pay
+/** The rates each class has long paid (every realm starts with them, setup.ts): what the Powers call customary. A
+ *  class taxed above its customary rate is resented by the Powers that live from it, one taxed below welcomed. */
+export const CUSTOM_RATE = [0.06, 0.06, 0.08, 0.08, 0.02, 0.02, 0.08];
+/** Contentment target a Power loses per unit of a weighed class rate above the customary one. */
+export const CLASS_TAX_DISCONTENT = 100;
+/** Beside its own classes, the classes a Power lives from: the lords from the dues of their peasants, the church
+ *  from the tithe (a heavy royal tax on the peasants leaves less for both). */
+const TAX_STAKE: Record<string, [number, number][]> = { magnates: [[CL.peasants, 0.15]], prelates: [[CL.peasants, 0.05]] };
+export type Duties = { land: number; hearth: number; excise: number };
+export const dutiesOf = (n: Nation): Duties => ({ land: n.duties?.land ?? 0, hearth: n.duties?.hearth ?? 0, excise: n.duties?.excise ?? 0 });
+/** How much each class's rate weighs for a Power: its own classes by their share of its means, and the classes it
+ *  lives from (TAX_STAKE). */
+export function taxStake(n: Nation, eid: string, cs: ClassSums): [number, number][] {
+  const own = ESTATE_CLASSES[eid] ?? []; const mn = means(cs, n.id);
+  let tot = 0; for (const c of own) tot += mn[c] ?? 0;
+  const out: [number, number][] = own.map((c) => [c, tot > 0 ? (mn[c] ?? 0) / tot : 1 / own.length]);
+  for (const x of TAX_STAKE[eid] ?? []) out.push(x);
   return out;
 }
+/** Contentment a Power's target loses to the class taxes (negative: gains, for rates below the customary ones). A
+ *  class exempt by law pays nothing, and so weighs nothing. */
+export function classTaxDiscontent(n: Nation, eid: string, cs: ClassSums, rates: number[] = n.taxRate): number {
+  let v = 0;
+  for (const [c, k] of taxStake(n, eid, cs)) v += k * ((rates[c] ?? 0) - (CUSTOM_RATE[c] ?? 0.05)) * (1 - classExempt(n, c));
+  return v * CLASS_TAX_DISCONTENT;
+}
+/** The contentment a Power drifts toward, row by row (systems/politics.ts and the estates tooltip use the same rows). */
+export function contentParts(n: Nation, eid: string, cs: ClassSums): Row[] {
+  const e = estate(n, eid);
+  return [['x_base', 50], ['x_privileges', e.privileges.length * 6], ['x_class_taxes', -classTaxDiscontent(n, eid, cs)],
+    ['x_tax_duties', -dutyDiscontent(n, eid, (c) => classExempt(n, c))], ['x_resented_privileges', resentment(n, eid)]];
+}
+
+// ---------------------------------------------------------------- the assembly
+export type AssemblyAsk = { kind: 'tax'; level: number; rates?: number[]; duties?: Duties } | { kind: 'war'; target: number; goal: WarGoal['type'] };
+/** What each class weighs in the tax level: its share of the realm's means (its people weighed by station and
+ *  savings, as for the influence of the Powers), so that a tax on the many peasants counts for much and one on the
+ *  few nobles for little. Without people every class weighs alike. */
+export function taxWeights(n: Nation, cs: ClassSums): number[] {
+  const m = means(cs, n.id); const tot = m.reduce((p, x) => p + x, 0);
+  return m.map((x) => (tot > 0 ? x / tot : 1 / m.length));
+}
+const pctTxt = (v: number, d = 1): I18n => ({ en: `${(v * 100).toFixed(d)} %`, de: `${(v * 100).toFixed(d).replace('.', ',')} %` });
+const DUTY_NAME: Record<string, I18n> = { land: T('Land tax', 'Grundsteuer'), hearth: T('Hearth tax', 'Herdsteuer'), excise: T('Excise', 'Akzise') };
+/** The tax level the assembly grants, row by row: each class's rate times its weight, and each duty at the share of
+ *  the class taxes it raises as much as (systems/duties.ts level). The rows add up to the level. */
+export function taxLevelParts(rates: number[], wts: number[], duties?: Duties): Row[] {
+  const rows: Row[] = [];
+  CLASSES.forEach((k, c) => {
+    const r = rates[c] ?? 0, wt = wts[c] ?? 0; if (r <= 0 || wt <= 0) return;
+    const nm = CLASS_NAME[k], a = pctTxt(r), b = pctTxt(wt, 0);
+    rows.push([T(`${nm.en} ${a.en} x weight ${b.en}`, `${nm.de} ${a.de} x Gewicht ${b.de}`), r * wt]);
+  });
+  if (duties) for (const d of DUTIES) {
+    const r = duties[d.id] ?? 0; if (r <= 0) continue;
+    const nm = DUTY_NAME[d.id], a = d.id === 'hearth' ? { en: r.toFixed(2), de: r.toFixed(2).replace('.', ',') } : pctTxt(r);
+    rows.push([T(`${nm.en} ${a.en} x ${d.level}`, `${nm.de} ${a.de} x ${String(d.level).replace('.', ',')}`), r * d.level]);
+  }
+  return rows;
+}
+/** The tax level: the class rates by weight (without weights their plain mean) plus the duties. */
+export function taxLevel(rates: number[], wts?: number[], duties?: Duties): number {
+  const w = wts ?? rates.map(() => 1 / Math.max(1, rates.length));
+  let v = 0; for (let c = 0; c < rates.length; c++) v += (rates[c] ?? 0) * (w[c] ?? 0);
+  if (duties) for (const d of DUTIES) v += (duties[d.id] ?? 0) * d.level;
+  return v;
+}
+/** A realm's tax level now (class taxes and duties). */
+export const realmTaxLevel = (s: GameState, n: Nation, cs: ClassSums = classSums(s)) => taxLevel(n.taxRate, taxWeights(n, cs), dutiesOf(n));
+/** The rates a request to the assembly would set: one class's rate, or (cls -1) every class moved alike so that the
+ *  whole tax level (with the duties, dutyLevel) is the rate asked. */
+export function askRates(rates: number[], cls: number, rate: number, wts?: number[], dutyLevel = 0): number[] {
+  const out = rates.slice(); const r = clamp(rate, 0, 0.5);
+  if (cls >= 0 && cls < out.length) out[cls] = r;
+  else if (cls === -1) { const d = r - taxLevel(rates, wts) - dutyLevel; for (let i = 0; i < out.length; i++) out[i] = +clamp(out[i] + d, 0, 0.5).toFixed(4); }
+  return out;
+}
+/** What a request to the assembly would set, with the level it reaches and the level now: a class rate (cls, rate),
+ *  every class moved alike to a whole level (cls -1, rate), or a duty (duty, value). The assembly command and the
+ *  dialog's query build it the same way. */
+export function taxAsk(s: GameState, n: Nation, cls?: number, rate?: number, duty?: string, value?: number): { rates: number[]; duties: Duties; level: number; now: number; wts: number[]; cs: ClassSums } | string {
+  const cs = classSums(s); const wts = taxWeights(n, cs); const du = dutiesOf(n);
+  const now = taxLevel(n.taxRate, wts, du);
+  let rates = n.taxRate.slice(), duties = du;
+  if (duty !== undefined) { const d = DUTY_INDEX[duty]; if (!d) return 'unknown budget item'; duties = { ...du, [d.id]: dutyValue(d, value ?? 0) }; }
+  else if (cls !== undefined) {
+    if (cls < -1 || cls >= n.taxRate.length || !Number.isInteger(cls)) return 'bad class';
+    rates = askRates(n.taxRate, cls, rate ?? now, wts, taxLevel(n.taxRate.map(() => 0), wts, du));
+  }
+  return { rates, duties, level: taxLevel(rates, wts, duties), now, wts, cs };
+}
 /** The highest tax level the assembly has granted (new realms: 10 %, or what they already levy). */
-export const taxCeiling = (n: Nation) => n.flags.tax_grant ?? Math.max(0.1, taxLevel(n.taxRate));
-export const needsTaxVote = (n: Nation, level: number) => lawEffect(n, 'tax_vote') > 0 && level > taxCeiling(n) + 1e-6;
+export const taxCeiling = (n: Nation, level?: number) => n.flags.tax_grant ?? Math.max(0.1, level ?? taxLevel(n.taxRate));
+export const needsTaxVote = (n: Nation, level: number, now?: number) => lawEffect(n, 'tax_vote') > 0 && level > taxCeiling(n, now) + 1e-6;
+/** The level a yes grants: the level asked, with a little room. */
+export const grantFor = (level: number) => +(level + 0.02).toFixed(4);
 const NO_VOTE_GOALS = ['independence', 'civil_war', 'coalition', 'rebels'];
 export const needsWarVote = (s: GameState, n: Nation, target: number, goal: string) => lawEffect(n, 'war_vote') > 0 && !NO_VOTE_GOALS.includes(goal) && !((n.flags[`war_ok_${target}`] ?? 0) > s.day);
 /** Gold it takes to buy one Power's vote. */
 export const bribeCost = (n: Nation) => Math.round(Math.max(25, (n.income.tax || 10) * 2));
 /** The privilege a Power would take as the price of its vote (the first it lacks). */
 export const concessionFor = (n: Nation, eid: string) => PRIVILEGES.find((p) => p.estate === eid && !estate(n, eid).privileges.includes(p.id))?.id;
-/** Why a Power votes for or against what is asked of the assembly. */
-export function assemblyStance(s: GameState, n: Nation, eid: string, ask: AssemblyAsk, bribe: string[] = [], concede?: string): Row[] {
+/** Why a Power votes for or against what is asked of the assembly. A tax costs a Power twice the contentment the
+ *  asked rates and duties would cost it (classTaxDiscontent, systems/duties.ts). */
+export function assemblyStance(s: GameState, n: Nation, eid: string, ask: AssemblyAsk, bribe: string[] = [], concede?: string, cs: ClassSums = classSums(s)): Row[] {
   const e = estate(n, eid); const rows: Row[] = [['x_asm_base', 10], ['x_asm_content', Math.round((e.contentment - 50) * 0.5)]];
   if (ask.kind === 'tax') {
-    const rates = ask.rates ?? n.taxRate.map(() => ask.level);
-    const cls = ESTATE_CLASSES[eid] ?? []; const own = cls.length ? cls.reduce((p, c) => p + (rates[c] ?? 0), 0) / cls.length : ask.level;
-    rows.push(['x_asm_burden', -Math.round(Math.max(0, own - 0.06) * 200)]);
+    const rates = ask.rates ?? n.taxRate; const duties = ask.duties ?? dutiesOf(n);
+    rows.push(['x_asm_tax_burden', -Math.round(Math.max(0, classTaxDiscontent(n, eid, cs, rates)) * 2)]);
+    const dd = dutyDiscontentAt(duties, eid, (c) => classExempt(n, c));
+    if (dd > 0) rows.push(['x_asm_duties', -Math.round(dd * 2)]);
     const inc = Object.values(n.income).reduce((p, v) => p + v, 0), exp = Object.values(n.expense).reduce((p, v) => p + v, 0);
     if (exp > inc || n.treasury < 0) rows.push(['x_asm_need', 10]);
     if (s.wars.some((x) => x.def.includes(n.id))) rows.push(['x_asm_war_need', 15]);
@@ -194,42 +279,47 @@ export function assemblyStance(s: GameState, n: Nation, eid: string, ask: Assemb
 export interface AssemblyResult { passes: boolean; yes: number; no: number; cost: number; estates: { id: string; name: I18n; influence: number; yes: boolean; sum: number; rows: Row[]; concession?: string }[] }
 /** How the assembly would vote: each Power votes by its stance, weighed by its influence; a majority of the
  *  influence decides. */
-export function assemblyVote(s: GameState, n: Nation, ask: AssemblyAsk, bribe: string[] = [], concede?: string): AssemblyResult {
+export function assemblyVote(s: GameState, n: Nation, ask: AssemblyAsk, bribe: string[] = [], concede?: string, cs: ClassSums = classSums(s)): AssemblyResult {
   let yes = 0, no = 0;
   const estates = n.estates.map((e) => {
-    const rows = assemblyStance(s, n, e.id, ask, bribe, concede); const sum = sumRows(rows); const y = sum > 0;
+    const rows = assemblyStance(s, n, e.id, ask, bribe, concede, cs); const sum = sumRows(rows); const y = sum > 0;
     if (y) yes += e.influence; else no += e.influence;
     return { id: e.id, name: estateName(e.id), influence: e.influence, yes: y, sum, rows, concession: concessionFor(n, e.id) };
   });
   const bribes = n.estates.filter((e) => bribe.includes(e.id)).length;
   return { passes: yes > no, yes, no, cost: bribes * bribeCost(n), estates };
 }
-/** Put a question to the assembly, paying the bribes and granting the concession offered. On a yes, a tax level is
- *  granted (with a little room) or the war is approved for 90 days. */
-export function holdAssembly(s: GameState, n: Nation, ask: AssemblyAsk, bribe: string[] = [], concede?: string): string | null {
+/** What the realm's ruler is told of a yes (the same text as the notice). */
+export function assemblyGranted(s: GameState, n: Nation, ask: AssemblyAsk): I18n {
+  if (ask.kind === 'tax') { const g = pctTxt(grantFor(ask.level), 1); return T(`The assembly granted taxes up to a level of ${g.en}.`, `Die Versammlung bewilligte Steuern bis zu einer Steuerlast von ${g.de}.`); }
+  return T(`The assembly approved the war against ${s.nations[ask.target]?.short.en}.`, `Die Versammlung billigte den Krieg gegen ${s.nations[ask.target]?.short.de}.`);
+}
+/** Put a question to the assembly, granting the concession offered. The bribes are paid only for a yes: the Powers
+ *  take no gold for a vote they do not give. On a yes, a tax level is granted (with a little room) or the war is
+ *  approved for 90 days. */
+export function holdAssembly(s: GameState, n: Nation, ask: AssemblyAsk, bribe: string[] = [], concede?: string, cs?: ClassSums): string | null {
   bribe = [...new Set(bribe)].filter((b) => n.estates.some((e) => e.id === b));
   if (concede && !PRIVILEGES.some((p) => p.id === concede && !estate(n, p.estate).privileges.includes(p.id))) return 'unknown privilege';
-  const r = assemblyVote(s, n, ask, bribe, concede);
+  const r = assemblyVote(s, n, ask, bribe, concede, cs);
   if (n.treasury < r.cost) return 'not enough gold';
-  if (r.cost) addExpense(n, 'gifts', r.cost);
   if (!r.passes) return ask.kind === 'tax' ? 'the assembly refused the new taxes' : 'the assembly refused to fund the war';
+  if (r.cost) addExpense(n, 'gifts', r.cost);
   if (concede) grantPrivilege(s, n, concede);
-  if (ask.kind === 'tax') n.flags.tax_grant = +(ask.level + 0.02).toFixed(4);
+  if (ask.kind === 'tax') n.flags.tax_grant = grantFor(ask.level);
   else n.flags[`war_ok_${ask.target}`] = s.day + 90;
-  if (isHuman(s, n.id)) notice(s, n.id, 'assembly', ask.kind === 'tax'
-    ? T(`The assembly granted taxes up to ${Math.round(n.flags.tax_grant * 100)} % on average.`, `Die Versammlung bewilligte Steuern bis durchschnittlich ${Math.round(n.flags.tax_grant * 100)} %.`)
-    : T(`The assembly approved the war against ${s.nations[ask.target]?.short.en}.`, `Die Versammlung billigte den Krieg gegen ${s.nations[ask.target]?.short.de}.`));
+  if (isHuman(s, n.id)) notice(s, n.id, 'assembly', assemblyGranted(s, n, ask));
   return null;
 }
 /** The AI buys the votes it lacks when it can afford them: the cheapest Powers whose vote is closest to a yes. */
-function aiBribes(s: GameState, n: Nation, ask: AssemblyAsk): string[] | null {
-  const r = assemblyVote(s, n, ask);
+function aiBribes(s: GameState, n: Nation, ask: AssemblyAsk, cs?: ClassSums): string[] | null {
+  const c = cs ?? (ask.kind === 'tax' ? classSums(s) : undefined);
+  const r = assemblyVote(s, n, ask, [], undefined, c);
   if (r.passes) return [];
   const cost = bribeCost(n); const bribe: string[] = [];
   for (const e of [...r.estates].filter((x) => !x.yes && x.sum > -25).sort((a, b) => b.influence - a.influence)) {
     if (n.treasury < cost * (bribe.length + 1) * 3) break;
     bribe.push(e.id);
-    if (assemblyVote(s, n, ask, bribe).passes) return bribe;
+    if (assemblyVote(s, n, ask, bribe, undefined, c).passes) return bribe;
   }
   return null;
 }
@@ -252,29 +342,48 @@ export function assemblyWarVeto(s: GameState, _w: World, A: Nation, b: number, g
   if (bribe.length) holdAssembly(s, A, ask, bribe);
   return null;
 }
-/** The tax command of the player: rates above the granted level need the assembly. */
-export function setTaxRate(s: GameState, n: Nation, cls: number, rate: number): string | null {
-  const rates = n.taxRate.slice(); rates[cls] = clamp(rate, 0, 0.5);
-  const level = taxLevel(rates);
-  if (needsTaxVote(n, level)) {
-    const e = holdAssembly(s, n, { kind: 'tax', level, rates }); if (e) return e;
+/** A change of the taxes (class rates, duties) as the player's command makes it: within the granted level it applies
+ *  at once; above it the assembly votes first (refused, nothing changes). out.msg carries the assembly's yes. */
+function changeTaxes(s: GameState, n: Nation, rates: number[], duties: Duties, out?: { msg?: I18n }): string | null {
+  const cs = classSums(s); const wts = taxWeights(n, cs);
+  const level = taxLevel(rates, wts, duties), now = taxLevel(n.taxRate, wts, dutiesOf(n));
+  // lowering the level never needs a vote, nor does a change that keeps within the granted level
+  if (level > now + 1e-9 && needsTaxVote(n, level, now)) {
+    const ask: AssemblyAsk = { kind: 'tax', level, rates, duties };
+    const e = holdAssembly(s, n, ask, [], undefined, cs); if (e) return e;
+    if (out) out.msg = assemblyGranted(s, n, ask);
   }
   n.taxRate = rates;
+  if (n.duties || duties.land || duties.hearth || duties.excise) n.duties = { ...duties };
   return null;
 }
-/** An AI realm that raised taxes beyond the granted level asks the assembly; refused, it lowers them again. */
-function aiTaxMonth(s: GameState, n: Nation) {
-  const level = taxLevel(n.taxRate);
+/** The tax command of the player: a level above the granted one needs the assembly. */
+export function setTaxRate(s: GameState, n: Nation, cls: number, rate: number, out?: { msg?: I18n }): string | null {
+  const rates = n.taxRate.slice(); rates[cls] = clamp(rate, 0, 0.5);
+  return changeTaxes(s, n, rates, dutiesOf(n), out);
+}
+/** The budget command for a duty: like a class tax, a rise above the granted level needs the assembly. */
+export function setDutyRate(s: GameState, n: Nation, id: string, value: number, out?: { msg?: I18n }): string | null {
+  const d = DUTY_INDEX[id]; if (!d) return 'unknown budget item';
+  return changeTaxes(s, n, n.taxRate.slice(), { ...dutiesOf(n), [d.id]: dutyValue(d, value) }, out);
+}
+/** An AI realm that raised taxes beyond the granted level asks the assembly; refused, it lowers its class rates and
+ *  duties again to that level. */
+function aiTaxMonth(s: GameState, n: Nation, cs: ClassSums) {
+  const wts = taxWeights(n, cs), du = dutiesOf(n);
+  const level = taxLevel(n.taxRate, wts, du);
   if (n.flags.tax_grant === undefined) n.flags.tax_grant = +Math.max(0.1, level).toFixed(4);
   if (!needsTaxVote(n, level)) return;
-  const ask: AssemblyAsk = { kind: 'tax', level, rates: n.taxRate };
+  const ask: AssemblyAsk = { kind: 'tax', level, rates: n.taxRate, duties: du };
   if (!((n.flags.tax_refused ?? 0) > s.day)) {
-    const bribe = aiBribes(s, n, ask);
-    if (bribe && !holdAssembly(s, n, ask, bribe)) return;
+    const bribe = aiBribes(s, n, ask, cs);
+    if (bribe && !holdAssembly(s, n, ask, bribe, undefined, cs)) return;
     n.flags.tax_refused = s.day + 365;
   }
+  // every rate and duty lowered alike to the granted level
   const k = taxCeiling(n) / level;
   n.taxRate = n.taxRate.map((t) => +(t * k).toFixed(4));
+  if (n.duties) for (const d of DUTIES) n.duties[d.id] = +((n.duties[d.id] ?? 0) * k).toFixed(4);
 }
 
 // ---------------------------------------------------------------- how each form chooses its head
@@ -438,13 +547,14 @@ export function govMandateParts(s: GameState, n: Nation): Row[] {
 
 // ---------------------------------------------------------------- the system
 function governmentMonth(s: GameState, w: World) {
+  const cs = classSums(s);
   for (const n of s.nations) {
     if (!n.alive) continue;
     if (s.wars.some((x) => x.att.includes(n.id) || x.def.includes(n.id))) n.flags.gov_war = s.day;
     demandMonth(s, n);
     const human = isHuman(s, n.id);
-    if (!human) aiTaxMonth(s, n);
-    else if (n.flags.tax_grant === undefined) n.flags.tax_grant = +Math.max(0.1, taxLevel(n.taxRate)).toFixed(4);
+    if (!human) aiTaxMonth(s, n, cs);
+    else if (n.flags.tax_grant === undefined) n.flags.tax_grant = +Math.max(0.1, realmTaxLevel(s, n, cs)).toFixed(4);
     const proc = govProcess(n);
     if (proc === 'republic') {
       if (n.flags.next_election === undefined) n.flags.next_election = s.day + Math.floor((0.25 + hash01(n.id, 77) * 0.75) * termYears(n) * 365);

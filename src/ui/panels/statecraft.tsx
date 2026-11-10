@@ -5,6 +5,7 @@
 import { Section, Row, Bar, Btn, Slider, act, t, L, num, signed, pct, Tip, Effects, Spark } from './common';
 import { TipHead, Parts, type Row as BdRow } from './explain';
 import { keyName } from '../TopBar';
+import { showToast } from '../store';
 import { CLASSES, CLASS_NAME } from '../../sim/defs';
 
 const ESTATE_KEY: Record<string, string> = { magnates: 'est_magnates', prelates: 'est_prelates', burghers: 'est_burghers', commons: 'est_commons' };
@@ -25,13 +26,17 @@ function DutyTip({ d, p }: { d: any; p: any }) {
     <div class="muted small">{t('x_duty_max')}: {d.id === 'hearth' ? num(d.max, 2) : pct(d.max, 0)}</div>
   </div>;
 }
-/** Sliders for the three instruments (command { t: 'budget', key: 'land' | 'hearth' | 'excise' }). */
+/** A tax or duty command: a rise the assembly had to vote on and granted is told in a toast (a refusal opens its
+ *  vote, panels/common.tsx act). */
+export function taxAct(c: any) { return act(c).then((r) => { if (r.ok && r.msg) showToast(L(r.msg)); return r; }); }
+/** Sliders for the three instruments (command { t: 'budget', key: 'land' | 'hearth' | 'excise' }); like the class
+ *  taxes they count in the tax level the assembly grants. */
 export function Duties({ r, p }: { r: any; p: any }) {
   if (!r?.duties) return null;
   return <Section title={t('duties')} id="eco-duties" right={<Tip content={<div><TipHead name={t('unrest')} value={`+${num(r.dutyUnrest, 1)}`} hint={t('x_duty_unrest_hint')} /></div>}><span class="muted has-tip">{t('unrest')} +{num(r.dutyUnrest, 1)}</span></Tip>}>
     {r.duties.map((d: any) => <div class="slider-row">
       <Tip tag="div" class="tip-contents" content={() => <DutyTip d={d} p={p} />}><span class="k has-tip">{t(`duty_${d.id}`)}</span>
-        <Slider value={d.rate} min={0} max={d.max} step={d.step} fmt={(x) => (d.id === 'hearth' ? num(x, 2) : pct(x, 1))} onCommit={(x) => act({ t: 'budget', key: d.id, value: x })} /></Tip>
+        <Slider value={d.rate} min={0} max={d.max} step={d.step} fmt={(x) => (d.id === 'hearth' ? num(x, 2) : pct(x, 1))} onCommit={(x) => taxAct({ t: 'budget', key: d.id, value: x })} /></Tip>
     </div>)}
     <div class="muted small">{t('duties_hint')}</div>
   </Section>;

@@ -253,7 +253,7 @@ export function EstateTip({ e, kind }: { e: any; kind: 'influence' | 'contentmen
   return <div>
     <TipHead name={t('contentment')} value={num(e.contentment)} hint={t('contentment_hint')} />
     {x && <><Drift target={x.contentTarget} monthly={x.contentMonthly} />
-      <Parts title={t('x_target_from')} rows={[['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)], ['x_resented_privileges', x.resent ?? 0]]} total={x.contentTarget} digits={0} /></>}
+      <Parts title={t('x_target_from')} rows={x.contentParts ?? [['x_base', 50], ['x_privileges', x.privileges * 6], ['x_tax_duties', -(x.duties ?? 0)], ['x_resented_privileges', x.resent ?? 0]]} total={x.contentTarget} digits={1} /></>}
     <div class="muted">{t('x_content_events')}</div>
   </div>;
 }

@@ -11,7 +11,7 @@ import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, lawEffect } from './systems/politics';
 import { takeLoan, tariffMax } from './systems/economy';
 import { setMethod } from './systems/administration';
-import { setDuty, DUTY_INDEX } from './systems/duties';
+import { DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
 import { startAgent } from './systems/society';
 import { startColony, charterCompany } from './systems/colonial';
@@ -23,7 +23,7 @@ import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
 import { LAW_INDEX } from './content/laws';
 import { realmCommand } from './realmcmds';
-import { setTaxRate } from './systems/government';
+import { setTaxRate, setDutyRate } from './systems/government';
 
 const OK: CmdResult = { ok: true };
 const err = (e: string | I18n): CmdResult => (typeof e === 'string' ? { ok: false, err: e } : { ok: false, err: e.en, msg: e });
@@ -229,15 +229,21 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
     }
     case 'tax': {
       if (cmd.cls < 0 || cmd.cls >= n.taxRate.length) return err('bad class');
-      // raising taxes beyond what the assembly granted needs its vote (systems/government.ts)
-      const e = setTaxRate(s, n, cmd.cls, cmd.rate); return e ? err(e) : OK;
+      // raising taxes beyond what the assembly granted needs its vote (systems/government.ts); a yes is told back
+      const out: { msg?: I18n } = {};
+      const e = setTaxRate(s, n, cmd.cls, cmd.rate, out); return e ? err(e) : out.msg ? { ok: true, msg: out.msg } : OK;
     }
     case 'empire': case 'league': case 'powers': case 'assembly': case 'govern': case 'situation': { const e = realmCommand(s, w, n, cmd); return e ? err(e) : OK; }
     case 'budget': {
       if (cmd.key === 'army') n.armyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'navy') n.navyMaint = clamp(cmd.value, 0.25, 1);
       else if (cmd.key === 'tariff') n.tariff = clamp(cmd.value, 0, (s.flags[`tariffcap_${cmd.n}`] ?? 0) > s.day ? Math.min(TARIFF_CAP, tariffMax(n)) : tariffMax(n)); // a peace may have capped our tolls
-      else if (DUTY_INDEX[cmd.key]) { const e = setDuty(n, cmd.key, cmd.value); if (e) return err(e); }
+      else if (DUTY_INDEX[cmd.key]) {
+        // the duties count in the tax level the assembly grants, like the class taxes (systems/government.ts)
+        const out: { msg?: I18n } = {};
+        const e = setDutyRate(s, n, cmd.key, cmd.value, out); if (e) return err(e);
+        if (out.msg) return { ok: true, msg: out.msg };
+      }
       else if (cmd.key === 'coinage') {
         const nv = clamp(cmd.value, 0, 0.5);
         if (nv > n.coinage + 0.001) n.mandate = clamp(n.mandate - (nv - n.coinage) * 20, 0, 100);
