@@ -159,7 +159,7 @@ function Merchants({ d, refresh }: { d: any; refresh: () => void }) {
         {o.steer ? t('tr_to_collect') : t('tr_to_steer')} {g.toggle !== null && <span class={g.toggle >= 0 ? 'pos' : 'neg'}>{gainText(g.toggle)}</span>}</Btn>}
     </div>
     {!home && (o.route
-      ? <Tip content={<div><TipHead name={t('tr_route_home')} value={`× ${num(o.route.factor, 2)}`} hint={t('tr_route_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_links')}</span><span>{o.route.hops}</span></div><div class="bd-row"><span>{t('tr_bonus')}</span><span>× 1.20</span></div><div class="bd-row"><span>{t('tr_loss_per_link')}</span><span>× {num(Math.pow(0.95, Math.max(0, o.route.hops - 1)), 2)}</span></div></div></div>}>
+      ? <Tip content={<div><TipHead name={t('tr_route_home')} value={`× ${num(o.route.factor, 2)}`} hint={t('tr_route_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('tr_links')}</span><span>{o.route.hops}</span></div><div class="bd-row"><span>{t('tr_bonus')}</span><span>× {num(o.route.bonus, 2)}</span></div><div class="bd-row"><span>{t('tr_loss_per_link')}</span><span>× {num(o.route.loss, 2)}</span></div></div></div>}>
         <div class="muted small has-tip">{t('tr_route_home')}: {placeName(d.name)} → {o.route.via.map(placeName).join(' → ')} (× {num(o.route.factor, 2)})</div></Tip>
       : <div class="muted small">{t('tr_no_route_home')}</div>)}
     {home && <div class="muted small">{t('tr_home_note')}</div>}

@@ -8,7 +8,7 @@ import { GOODS, G, GI, UNITS, C } from '../sim/defs';
 import {
   marketPowers, merchantGains, merchantRefusal, merchantsFree, merchantCap, merchantsUsed, merchantReach, routeCost, homeMarket, steerRoute,
   marketPath, embargoedBy, embargoStakes, tariffBetween, marketWaters, shipTable, MAX_HOPS, AGREEMENT_TARIFF, AGREEMENT_VOLUME, MERCHANT_CROWD,
-  tradeEarnings,
+  tradeEarnings, STEER_BONUS, HOP_LOSS,
 } from '../sim/systems/trade';
 import { tariffMax, LOC_ECON, locGoods, needWeights } from '../sim/systems/economy';
 import { lawEffect } from '../sim/systems/politics';
@@ -53,7 +53,7 @@ export function marketDetail(s: GameState, w: World, pid: number, mid: number) {
     have, steer: !!mk.steer?.[pid], used: merchantsUsed(s, pid), cap: merchantCap(n), free: merchantsFree(s, n),
     refusal: merchantRefusal(s, w, n, mid), home, homeName: home >= 0 ? s.markets[home].name : '',
     reach: merchantReach(n), cost: home >= 0 ? routeCost(s, home, mid) : Infinity,
-    route: route ? { hops: route.hops, factor: route.factor, via: (marketPath(s, mid, route.dest) ?? []).map((x) => s.markets[x].name) } : null,
+    route: route ? { hops: route.hops, factor: route.factor, bonus: 1 + STEER_BONUS, loss: Math.pow(1 - HOP_LOSS, Math.max(0, route.hops - 1)), via: (marketPath(s, mid, route.dest) ?? []).map((x) => s.markets[x].name) } : null,
     gains: merchantGains(s, w, pid, mid), paid: paid[pid] ?? 0, steered: steered[pid] ?? 0,
     share: mp.total > 0 ? (mp.rows.find((r) => r.n === pid)?.total ?? 0) / mp.total : 0,
     // last month, exactly as paid (fix-econ): our share of this market's own trade, our share of the trade steered in
