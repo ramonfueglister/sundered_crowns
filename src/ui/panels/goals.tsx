@@ -59,8 +59,9 @@ function Cond({ c, compact = false }: { c: GoalV['conds'][number]; compact?: boo
       {c.max !== undefined && <span class="gcond-n">{fmtCount(c.cur)} / {fmtCount(c.max)}</span>}</Tip>
     {c.from !== undefined && <div class="muted small">{gateText(c)}</div>}
     {(c.max !== undefined || c.from !== undefined) && !c.ok && <Bar value={c.frac} max={1} h={4} color="#b8913f" />}
-    {!compact && c.places && c.places.length > 1 && <div class="gplaces">{c.places.map((p) => <a class={`gplace ${p.owner === pid ? 'held' : ''}`} onClick={() => p.loc >= 0 && selectLoc(p.loc)}>
-      {p.owner >= 0 && p.owner !== pid && <NLink id={p.owner} size={11} name={false} />}{placeName(p.name)}</a>)}</div>}
+    {/* a span, not a link: the holder's coat of arms inside is a link of its own */}
+    {!compact && c.places && c.places.length > 1 && <div class="gplaces">{c.places.map((p) => <span role="button" class={`gplace ${p.owner === pid ? 'held' : ''}`} onClick={() => p.loc >= 0 && selectLoc(p.loc)}>
+      {p.owner >= 0 && p.owner !== pid && <NLink id={p.owner} size={11} name={false} />}{placeName(p.name)}</span>)}</div>}
   </li>;
 }
 /** Overall progress with what makes it up (each condition's part). */

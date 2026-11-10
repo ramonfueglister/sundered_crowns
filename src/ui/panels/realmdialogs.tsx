@@ -19,8 +19,9 @@ export function RealmDialogs() {
   return <>
     <ElectionModal />
     <AsksModal />
-    {d?.kind === 'assembly' && <AssemblyDialog cmd={d.cmd} />}
-    {d?.kind === 'situation' && <SituationWindow id={d.id} />}
+    {/* keyed by what is asked, so that a new question never inherits the slider of the last one */}
+    {d?.kind === 'assembly' && <AssemblyDialog key={JSON.stringify(d.cmd)} cmd={d.cmd} />}
+    {d?.kind === 'situation' && <SituationWindow key={d.id} id={d.id} />}
   </>;
 }
 const close = () => { realmDialog.value = null; };
