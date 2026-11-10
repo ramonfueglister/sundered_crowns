@@ -134,8 +134,8 @@ export function interpolate(s: GameState, w: World, n: Nation, ctx: Record<strin
   const rep = (str: string, lang: 'en' | 'de') => str
     .replace(/\{nation\}/g, n.short[lang]).replace(/\{adj\}/g, n.adj[lang])
     // German declines the epithet by case: explicit {ruler_acc} / {ruler_dat}, else by the word before ("bittet {ruler}")
-    .replace(/\{ruler_(acc|dat)\}/g, (_m, k) => (r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female), r.female, k) : r.name) : '—'))
-    .replace(/(\S*)(\s*)\{ruler\}/g, (_m, prev, sp) => `${prev}${sp}${r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female), r.female, caseAfterDe(prev)) : r.name) : '—'}`)
+    .replace(/\{ruler_(acc|dat)\}/g, (_m, k) => (r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female, true), r.female, k) : r.name) : '—'))
+    .replace(/(\S*)(\s*)\{ruler\}/g, (_m, prev, sp) => `${prev}${sp}${r ? (lang === 'de' ? declineDe(localName(r.name, 'de', r.female, true), r.female, caseAfterDe(prev)) : r.name) : '—'}`)
     .replace(/\{loc\}/g, ctx.loc !== undefined && ctx.loc >= 0 ? (lang === 'de' ? w.namesDe : w.names)[ctx.loc] : '—')
     .replace(/\{other\}/g, ctx.other !== undefined && s.nations[ctx.other] ? s.nations[ctx.other].short[lang] : '—')
     .replace(/\{year\}/g, String(dayToDate(s.day, s.startYear).y))

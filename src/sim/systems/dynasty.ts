@@ -140,7 +140,7 @@ export function royalMatch(s: GameState, w: World, a: number, b: number): { real
   for (const { X, Y, p } of pick ? [pick.k] : seekers) {
     const m = pick?.m ?? houseMember(s, Y, !p.female, p.born); if (!m) continue;
     wed(s, X, p, m, Y);
-    const nm = (c: Character, l: 'en' | 'de') => localName(c.name, l, c.female);
+    const nm = (c: Character, l: 'en' | 'de') => localName(c.name, l, c.female, true);
     chronicle(s, X.id, 'marriage', { en: `${nm(p, 'en')} of ${X.short.en} married ${nm(m, 'en')} of the house of ${Y.short.en}.`, de: `${nm(p, 'de')} von ${X.short.de} heiratete ${nm(m, 'de')} aus dem Haus von ${Y.short.de}.` });
     for (const k of [X.id, Y.id]) if (s.playerNations.includes(k)) notice(s, k, 'marriage', { en: `${nm(p, 'en')} of ${X.short.en} weds ${nm(m, 'en')} of ${Y.short.en}, who keeps a claim on the throne of ${Y.short.en} and passes it to their children: should the house of ${Y.short.en} die out, its crown may pass to ${X.short.en}.`, de: `${nm(p, 'de')} von ${X.short.de} heiratet ${nm(m, 'de')} von ${Y.short.de}. ${m.female ? 'Sie' : 'Er'} behält einen Anspruch auf den Thron von ${Y.short.de} und vererbt ihn an die Kinder: Erlischt das Haus von ${Y.short.de}, kann dessen Krone an ${X.short.de} fallen.` });
     return { realm: X.id, person: p.id, spouse: m.id };
@@ -237,7 +237,7 @@ export function houseWarning(s: GameState, n: Nation) {
   n.flags.house_line = k;
   if (k >= was || k === 2) return;
   const r = s.chars[n.ruler];
-  const nm = (c: { name: string; female: boolean } | null | undefined, l: 'en' | 'de') => (c ? localName(c.name, l, c.female) : '');
+  const nm = (c: { name: string; female: boolean } | null | undefined, l: 'en' | 'de') => (c ? localName(c.name, l, c.female, true) : '');
   const fb = v.fallback ? s.nations[v.fallback.nation] : null;
   const then: I18n = fb ? { en: `the crown would pass to ${nm(v.fallback, 'en')} of ${fb.short.en}, who has a claim by blood`, de: `ginge die Krone an ${nm(v.fallback, 'de')} von ${fb.short.de}, ${v.fallback!.female ? 'die' : 'der'} einen Anspruch durch Blut hat` }
     : { en: 'the magnates would raise a lord of another house to the throne, and the succession would be disputed', de: 'höben die Magnaten einen Herrn aus einem anderen Haus auf den Thron, und die Nachfolge wäre umstritten' };

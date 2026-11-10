@@ -431,6 +431,20 @@ describe('German text', () => {
     expect(declineDe('Häuptling der Cocom', false, 'dat')).toBe('Häuptling der Cocom');
   });
 
+  it('rulers, heirs and consorts of 1356 show German names: no English given name, no English council (review fix)', () => {
+    const { s } = newGame(1356);
+    const EN = /\b(of|the|The|and|Council|Diet|under|John|Henry|William|Charles|Edward|Frederick|Louis|Philip|James|Mary|Margaret|Joan|Elizabeth|Catherine|Eleanor|Blanche|Stephen|Andrew|Nicholas|Hugh|Jean|Pierre|Juan|Pedro|Enrique|Guillaume|Henri)\b/;
+    const hits: string[] = [];
+    for (const n of s.nations) if (n.alive) for (const id of [n.ruler, n.heir, n.consort]) {
+      const c = s.chars[id]; if (!c) continue;
+      const de = localName(c.name, 'de', c.female, true);
+      // (an English given name stays with a family name of the British Isles, as German writes them; a bishop's own name stays)
+      if (EN.test(de) && !/\b(de Mohun|de Burgh|Darcy|Burghersh|Stewart|Butler)\b|Bischof/.test(de)) hits.push(`${n.key}: ${de}`);
+    }
+    expect(hits).toEqual([]);
+    expect(readFileSync('src/sim/content/landmarks.ts', 'utf8')).toContain('den König Peter im maurischen Stil');
+  });
+
   it('the AI log names every command it shows, and Governance is one German word', () => {
     const { s, w } = newGame(1356);
     expect(aiLogText(s, w, { d: 0, c: { t: 'assault' } } as any).de).toBe('Sturmangriff auf eine belagerte Stadt');

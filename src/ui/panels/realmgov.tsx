@@ -25,7 +25,7 @@ export function RealmGovernment() {
         <Row k={t('x_gov_term')} v={`${g.term} / ${g.termLimit}`} />
       </>}
       {g.lastMargin !== undefined && g.process !== 'heredity' && <Row k={t('x_gov_last_margin')} v={`${g.lastMargin} %`} tip={t('x_gov_margin_hint')} />}
-      {g.process === 'heredity' ? <Row k={t('heir')} v={g.heirName ? charName(g.heirName, g.heirFemale) : '—'} tip={t('x_gov_heredity_hint')} /> : <>
+      {g.process === 'heredity' ? <Row k={t('heir')} v={g.heirName ? charName(g.heirName, g.heirFemale, true) : '—'} tip={t('x_gov_heredity_hint')} /> : <>
         <div class="sub-h">{t('x_gov_candidates')}</div>
         {g.candidates.map((c: any) => <div class={`kv ${c.id === g.winner ? 'pos' : ''}`}>
           <span class="k"><Tip content={() => <div><TipHead name={c.name} value={`${c.age} ${t('years_old')}`} hint={c.dynasty} />{c.skills && <div>{c.skills.map((v: number, k: number) => <span class="chip">{t(SK[k])} {v}</span>)}</div>}<div class="muted">{partyName(c)}</div></div>}>

@@ -37,12 +37,12 @@ export function GovernmentTab() {
     <div class="cols2">
       <Section title={t('ruler')} id="gov-ruler">
         <div class="ruler-big">
-          <div class="ruler-name">{charName(p.ruler, me?.ruler?.female)}</div>
+          <div class="ruler-name">{charName(p.ruler, me?.ruler?.female, true)}</div>
           {me?.ruler?.dynasty && !p.ruler.includes(me.ruler.dynasty.slice(0, 5)) && <div class="muted">{t('house_of')} {houseName(me.ruler.dynasty)}</div>}
           <div class="muted">{p.rulerAge} {t('years_old')}{me && <> · {rankName(me.rank)} · {govName(me.gov)}</>}</div>
           {me?.ruler && <div class="skills">{me.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SK[k])} value={s} /><div class="muted">{t(`x_skill${k}_fx`)}</div></div>}><span class="skill"><i class={`sk sk${k}`} />{t(SK[k])} <b>{s}</b></span></Tip>)}</div>}
           {me?.ruler?.traits?.length > 0 && <div class="chips">{me.ruler.traits.map((x: string) => <TraitChip k={x} ruler />)}</div>}
-          <Row k={t('heir')} v={<>{charName(p.heir, me?.heir?.female)}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
+          <Row k={t('heir')} v={<>{charName(p.heir, me?.heir?.female, true)}{me?.heir && <span class="muted"> · {me.heir.age} {t('years_old')}</span>}</>} tip={t('x_heir_hint')} />
         </div>
       </Section>
       <Section title={t('standing')} id="gov-standing">

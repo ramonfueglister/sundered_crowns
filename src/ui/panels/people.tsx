@@ -9,9 +9,11 @@ import { TipHead, Parts } from './explain';
 import { traitName } from './nation';
 
 /** A person's name as the reader's language writes it ("Pedro I. der Grausame" in German). */
-export function charName(name: string | null | undefined, female = false): string {
+/** ofHouse: the person belongs to a ruling house (ruler, heir, consort, a member or a member's spouse), whose given
+ *  names German writes in their German form (content/names.ts localName). */
+export function charName(name: string | null | undefined, female = false, ofHouse = false): string {
   if (!name) return '';
-  return lang.value === 'de' ? localName(name, 'de', female) : name;
+  return lang.value === 'de' ? localName(name, 'de', female, ofHouse) : name;
 }
 /** A house as the reader's language writes it ("Haus Luxemburg"). */
 export function houseName(h: string | null | undefined): string { return localHouse(h ?? '', lang.value); }
@@ -40,8 +42,8 @@ function houseOf(name: string, dynasty: string | undefined, own?: string): strin
   return dynasty && dynasty !== own && !/,| of | von /.test(name) && !name.includes(dynasty.slice(0, 5)) ? dynasty : '';
 }
 /** Name with the house when the name does not already carry it. */
-export function charFull(name: string, dynasty: string | undefined, female = false): string {
-  const n = charName(name, female), h = houseOf(name, dynasty);
+export function charFull(name: string, dynasty: string | undefined, female = false, ofHouse = false): string {
+  const n = charName(name, female, ofHouse), h = houseOf(name, dynasty);
   return h ? `${n} (${h})` : n;
 }
 /** How a member is related to the ruler, as a man or a woman. */
@@ -58,7 +60,7 @@ function Skills({ s }: { s: number[] }) {
 const HOW: Record<string, string> = { blood: 'claim_blood', descent: 'claim_descent', marriage: 'claim_marriage' };
 export function DynastySection({ r }: { r: any }) {
   const d = r?.dynasty; if (!d) return null;
-  const who = (c: any) => charName(c.name, c.female);
+  const who = (c: any) => charName(c.name, c.female, true);
   return <Section title={<>{t('house_of')} {houseName(d.house)}</>} id="gov-dynasty">
     {d.warn && <div class="warn-box"><b>⚠ {t(d.warn === 'none' ? 'xp_house_none' : 'xp_house_last')}</b>
       <div class="small">{d.warn === 'last' && d.line[0] ? `${who(d.line[0])}. ` : ''}{d.fallback ? t('xp_house_then_claim').replace('{p}', who(d.fallback)) : t('xp_house_then_native')}
@@ -68,13 +70,13 @@ export function DynastySection({ r }: { r: any }) {
       {d.line.map((c: any, k: number) => <span>{k > 0 && ' › '}{k + 1}. {who(c)} <span class="muted">({c.age})</span></span>)}</div>}
     <table class="tbl dyn-tbl"><tbody>
       {d.members.map((m: any) => <tr class={m.rel === 'ruler' ? 'sel' : ''}>
-        <td><b>{charName(m.name, m.female)}</b>{houseOf(m.name, m.dynasty, d.house) && <small class="muted"> {houseName(houseOf(m.name, m.dynasty, d.house))}</small>}
+        <td><b>{charName(m.name, m.female, true)}</b>{houseOf(m.name, m.dynasty, d.house) && <small class="muted"> {houseName(houseOf(m.name, m.dynasty, d.house))}</small>}
           {m.heir && m.rel !== 'heir' && <small class="pos"> · {relName('heir', m.female)}</small>}</td>
         <td class="muted">{relName(m.rel, m.female)}</td>
-        <td class="r"><Tip content={<div><TipHead name={charName(m.name, m.female)} value={`${m.age} ${t('years_old')}`} hint={t('x_member_age_hint')} /></div>}><span>{m.age}</span></Tip></td>
+        <td class="r"><Tip content={<div><TipHead name={charName(m.name, m.female, true)} value={`${m.age} ${t('years_old')}`} hint={t('x_member_age_hint')} /></div>}><span>{m.age}</span></Tip></td>
         <td><Skills s={m.skills} /></td>
         <td class="small">
-          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female)}{houseOf(m.spouse.name, m.spouse.dynasty, d.house) ? ` ${houseName(houseOf(m.spouse.name, m.spouse.dynasty, d.house))}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
+          {m.spouse && <Tip content={<div><TipHead name={charName(m.spouse.name, m.spouse.female, true)} hint={t(m.spouse.alive ? 'x_spouse_hint' : 'x_spouse_dead_hint')} /></div>}><span class="muted">⚭ {charName(m.spouse.name, m.spouse.female, true)}{houseOf(m.spouse.name, m.spouse.dynasty, d.house) ? ` ${houseName(houseOf(m.spouse.name, m.spouse.dynasty, d.house))}` : ''}{!m.spouse.alive && ' †'}</span></Tip>}
           {m.abroad >= 0 && <span> · {t('at_court_of')} <NLink id={m.abroad} size={14} /></span>}
           {m.claims.length > 0 && <Tip content={<div><TipHead name={t('claims')} hint={t('x_claims_hint')} /></div>}><span> · {t('claim_on')} {m.claims.map((k: number) => <NLink id={k} size={14} />)}</span></Tip>}
           {m.traits.length > 0 && <span> · <TraitList traits={m.traits} /></span>}
@@ -83,7 +85,7 @@ export function DynastySection({ r }: { r: any }) {
     </tbody></table>
     <div class="dyn-claimants">
       <Tip content={<div><TipHead name={t('if_house_dies')} hint={t('x_if_house_dies_hint')} /></div>}><b class="has-tip">{t('if_house_dies')}</b></Tip>{' '}
-      {d.claimants.length ? d.claimants.map((c: any, k: number) => <span>{k > 0 && ', '}<NLink id={c.nation} size={14} />{c.name && <span class="muted"> ({charName(c.name, c.female)})</span>}{' '}
+      {d.claimants.length ? d.claimants.map((c: any, k: number) => <span>{k > 0 && ', '}<NLink id={c.nation} size={14} />{c.name && <span class="muted"> ({charName(c.name, c.female, true)})</span>}{' '}
         <Tip content={<div><TipHead name={t(HOW[c.how])} value={c.rank} hint={t(`x_${HOW[c.how]}_hint`)} /></div>}><small class="chip">{t(HOW[c.how])}</small></Tip></span>)
         : <span class="muted">{t('no_claimants')}</span>}
     </div>

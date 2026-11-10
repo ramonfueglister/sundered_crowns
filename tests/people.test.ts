@@ -81,6 +81,25 @@ describe('German regnal numbers and epithets', () => {
     // a courtier of the name pools keeps the name of his people
     expect(localName('John Percy', 'de')).toBe('John Percy');
     expect(localName('Jean de Craon', 'de')).toBe('Jean de Craon');
+    // fix-people review: people of a ruling house, marked so by the caller, take the German form of their given names
+    // even without a royal style; a family name after the given names stays as it is
+    expect(localName('John Henry', 'de', false, true)).toBe('Johann Heinrich');
+    expect(localName('John Henry', 'de')).toBe('John Henry'); // (a courtier of that name keeps it)
+    expect(localName('Henry', 'de', false, true)).toBe('Heinrich');
+    expect(localName('Frederick', 'de', false, true)).toBe('Friedrich');
+    expect(localName('John Sobieslav', 'de', false, true)).toBe('Johann Soběslav');
+    expect(localName('Charles de Blois', 'de', false, true)).toBe('Karl von Blois');
+    expect(localName('Louis de Bourbon', 'de', false, true)).toBe('Ludwig von Bourbon');
+    expect(localName("Pierre d'Alençon", 'de', false, true)).toBe('Peter von Alençon');
+    expect(localName('Jean de Craon', 'de', false, false)).toBe('Jean de Craon');
+    expect(localName('Elizabeth de Burgh', 'de', true, true)).toBe('Elizabeth de Burgh');
+    expect(localName('John Stewart', 'de', false, true)).toBe('John Stewart');
+    expect(localName('Adolf of the Mark', 'de')).toBe('Adolf von der Mark');
+    expect(localName('Council under the Ammeister and Stettmeister', 'de')).toBe('Rat unter dem Ammeister und den Stettmeistern');
+    expect(localName('Council under the Bürgermeister', 'de')).toBe('Rat unter dem Bürgermeister');
+    expect(localName('Diet of envoys of the eight places', 'de')).toBe('Tagsatzung der Gesandten der acht Orte');
+    expect(localName('Pisan Anziani and Podestà', 'de')).toBe('Pisanische Anziani und Podestà');
+    expect(localName('The Priors of the Arts', 'de')).toBe('Die Prioren der Zünfte');
     expect(localHouse('Luxembourg', 'de')).toBe('Luxemburg');
     expect(localHouse('Burgundy-Ivrea (Anscarid)', 'de')).toBe('Burgund-Ivrea (Anskarier)');
   });

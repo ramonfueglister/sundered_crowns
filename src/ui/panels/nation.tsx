@@ -38,13 +38,13 @@ export function NationPanel({ nation }: { nation: number }) {
     {!d.alive && <div class="neg">{t('fallen_realm')}</div>}
     <div class="ruler-box">
       <div>
-        <div class="ruler-name">{d.ruler ? charName(d.ruler.name, d.ruler.female) : '—'}</div>
+        <div class="ruler-name">{d.ruler ? charName(d.ruler.name, d.ruler.female, true) : '—'}</div>
         {d.ruler?.dynasty && !d.ruler.name.includes(d.ruler.dynasty.slice(0, 5)) && <div class="muted small">{t('house_of')} {houseName(d.ruler.dynasty)}</div>}
-        <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={charFull(d.ruler.name, d.ruler.dynasty, d.ruler.female)} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
+        <div class="muted">{t('ruler')}{d.ruler && <> · <Tip content={<div><TipHead name={charFull(d.ruler.name, d.ruler.dynasty, d.ruler.female, true)} value={`${d.ruler.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{d.ruler.age} {t('years_old')}</span></Tip></>}</div>
         {d.ruler && <div class="skills">{d.ruler.skills.map((s: number, k: number) => <Tip content={<div><TipHead name={t(SKILLS[k])} value={s} hint={t(`x_skill${k}_fx`)} /></div>}><span class="skill"><i class={`sk sk${k}`} />{s}</span></Tip>)}</div>}
         {d.ruler?.traits?.length > 0 && <div class="chips">{d.ruler.traits.map((tr: string) => <TraitChip k={tr} ruler />)}</div>}
       </div>
-      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <Tip content={<div><TipHead name={charName(d.heir.name, d.heir.female)} value={`${d.heir.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{charName(d.heir.name, d.heir.female)} <span class="muted">({d.heir.age})</span></span></Tip> : <span class="muted">{t('none')}</span>}</div></div>
+      <div class="heir"><div class="muted">{t('heir')}</div><div>{d.heir ? <Tip content={<div><TipHead name={charName(d.heir.name, d.heir.female, true)} value={`${d.heir.age} ${t('years_old')}`} hint={t('x_heir_hint')} /></div>}><span>{charName(d.heir.name, d.heir.female, true)} <span class="muted">({d.heir.age})</span></span></Tip> : <span class="muted">{t('none')}</span>}</div></div>
     </div>
     <div class="loc-id">
       <Tip content={<div><TipHead name={placeName(d.capitalName)} hint={t('x_click_capital')} /></div>}><span class="chip" onClick={() => flyToLoc(d.capital)}><small>{t('capital')}</small><a class="lk">{placeName(d.capitalName)}</a></span></Tip>
@@ -141,14 +141,14 @@ function Diplomacy({ d, refresh }: { d: any; refresh: () => void }) {
  *  claim it creates and on which throne, or that the treaty alone binds the houses; and who lives in their house. */
 function MarriagePreview({ p, us, them }: { p: any; us: number; them: number }) {
   const m = p.match;
-  const who = (c: any) => <b>{charName(c.name, c.female)}</b>;
+  const who = (c: any) => <b>{charName(c.name, c.female, true)}</b>;
   const role = (c: any) => <span class="muted">({relName(c.rel, c.female)}, {c.age})</span>;
   return <div class="dip-wed small" style={{ margin: '0 0 6px 10px' }}>
     {m ? <>
       <div>{t('xp_wed_if')}: {who(m.person)} {role(m.person)} <NLink id={m.realm} size={14} /> ⚭ {m.spouse ? <>{who(m.spouse)} {role(m.spouse)}</> : <span class="muted">{t(m.female ? 'xp_wed_unnamed_f' : 'xp_wed_unnamed_m')}</span>} <NLink id={m.house} size={14} /></div>
       <div class={m.realm === us ? 'pos' : 'neg'}>{m.realm === us ? t('xp_wed_claim_ours') : t('xp_wed_claim_theirs')}</div>
     </> : <div class="muted">{t('xp_wed_none')}</div>}
-    {p.members.length > 0 && <div class="muted">{t('xp_wed_house')}: {p.members.map((x: any, k: number) => <span>{k > 0 && ', '}{charName(x.name, x.female)} ({relName(x.rel, x.female)}, {x.age}{x.wed ? ', ⚭' : ''})</span>)}</div>}
+    {p.members.length > 0 && <div class="muted">{t('xp_wed_house')}: {p.members.map((x: any, k: number) => <span>{k > 0 && ', '}{charName(x.name, x.female, true)} ({relName(x.rel, x.female)}, {x.age}{x.wed ? ', ⚭' : ''})</span>)}</div>}
   </div>;
 }
 
