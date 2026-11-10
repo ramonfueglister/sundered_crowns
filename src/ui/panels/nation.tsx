@@ -217,9 +217,10 @@ function WarSides({ sides }: { sides: any }) {
   const col = (xs: any[], m: any, title: string) => <div class="xfw-side">
     <div class="bd-title">{title}</div>
     {xs.map((x) => <div class={`xfw-side-row ${x.odds === 0 ? 'muted' : ''}`}>
-      <span class="xfw-side-name"><NLink id={x.id} size={14} /> <small class="muted">{t(`xfw_role_${x.role}`)}</small></span>
+      <span class="xfw-side-name"><NLink id={x.id} size={14} /></span>
       <span class="r">{num(x.men)}</span>
-      {(tag(x) || x.breaks !== undefined) && <span class="xfw-side-note small">{tag(x)}{x.breaks !== undefined && <span class="neg">{t('xfw_breaks_with')} <NLink id={x.breaks} size={12} /></span>}</span>}
+      {/* the role and the odds on a line of their own, so that a long name is never cut off */}
+      <span class="xfw-side-note small"><span class="muted">{t(`xfw_role_${x.role}`)}</span>{tag(x) && <> · {tag(x)}</>}{x.breaks !== undefined && <> · <span class="neg">{t('xfw_breaks_with')} <NLink id={x.breaks} size={12} /></span></>}</span>
     </div>)}
     <div class="bd-row bd-total"><span>{t('xfw_side_sure')}</span><span>{num(m.sure)}</span></div>
     {m.maybe > 0 && <div class="bd-row muted"><span>{t('xfw_side_maybe')}</span><span>+{num(m.maybe)}</span></div>}
