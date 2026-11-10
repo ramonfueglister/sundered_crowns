@@ -124,7 +124,7 @@ export function estate(n: Nation, id: string) { return n.estates.find((e) => e.i
 // Names come from the realm's people (content/names.ts): given names and noble families of its culture.
 import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
 import { givenName, personName, houseName, localName, familyForm, localHouse } from '../content/names';
-import { christianClaimants, pressLater, houseMember, inheritClaims, unwed, houseWarning } from './dynasty';
+import { christianClaimants, pressLater, houseMember, inheritClaims, unwed, houseWarning, freshGivenName } from './dynasty';
 function nameFor(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): string {
   return givenName(rng, n.culture, female);
 }
@@ -455,6 +455,55 @@ export function settleCourts(s: GameState, w: World) {
   }
 }
 
+/** Roles of house members whose death characterMonth draws with the house (rulers, heirs, consorts, officials and
+ *  commanders have their own draw). */
+const KIN_ROLES = new Set(['courtier', 'clergy']);
+/** The living kin of a ruler's house, wherever they live: descendants, and the lines of the father and grandfather
+ *  (parents included), as lineOfSuccession walks them. */
+export function houseKin(s: GameState, r: Character): number[] {
+  const out: number[] = []; const seen = new Set<number>([r.id]);
+  const visit = (c: Character | undefined, depth: number) => {
+    if (!c || depth > 5 || seen.has(c.id)) return; seen.add(c.id);
+    if (c.alive) out.push(c.id);
+    for (const k of c.children) visit(s.chars[k], depth + 1);
+  };
+  for (const k of r.children) visit(s.chars[k], 1);
+  const parentOf = (c: Character) => (c.father && s.chars[c.father]) || (c.mother && s.chars[c.mother]) || undefined;
+  let prev: Character = r, anc = parentOf(r);
+  for (let up = 0; up < 2 && anc; up++) {
+    if (!seen.has(anc.id)) { seen.add(anc.id); if (anc.alive) out.push(anc.id); }
+    for (const k of anc.children) if (k !== prev.id) visit(s.chars[k], 1);
+    prev = anc; anc = parentOf(anc);
+  }
+  return out;
+}
+/** A bride or groom for p (a ruler or an heir): a member of a house bound to ours by a marriage treaty, else the
+ *  daughter or son of a noble family of our own people (systems/dynasty.ts houseMember). */
+function spouseFor(s: GameState, n: Nation, p: Character, role: 'consort' | 'courtier'): Character {
+  const born = p.born + Math.floor((rand(s.rng) * 12 - 4) * 365);
+  let sp: Character | null = null;
+  for (const t of s.treaties) {
+    if (t.type !== 'marriage' || (t.a !== n.id && t.b !== n.id) || t.until <= s.day) continue;
+    const B = s.nations[t.a === n.id ? t.b : t.a]; if (!B?.alive) continue;
+    sp = houseMember(s, B, !p.female, p.born);
+    if (sp) { sp.nation = n.id; sp.claims = [...new Set([...(sp.claims ?? []), B.id])]; break; }
+  }
+  if (!sp) { const g = nameFor(s, n, !p.female), h = houseName(s.rng, n.culture); sp = newChar(s, n, { name: g, female: !p.female, born, role, dynasty: h ? familyForm(h, n.culture, !p.female) : n.dynasty }); }
+  sp.role = role;
+  return sp;
+}
+/** A child to the couple a and b, now and then: a given name none of its living brothers and sisters bears, the
+ *  father's house, and the claims a foreign-born parent carries. */
+function bear(s: GameState, n: Nation, a: Character, b: Character): Character | null {
+  const mother = a.female ? a : b, father = a.female ? b : a;
+  const ma = ageOf(s, mother);
+  if (!(ma > 16 && ma < 42 && a.children.length < 9 && chance(s.rng, 0.022))) return null;
+  const female = chance(s.rng, 0.5);
+  const child = newChar(s, n, { born: s.day, female, name: freshGivenName(s, n.culture, female, father, mother), role: 'courtier', dynasty: father.dynasty, father: father.id, mother: mother.id, skills: [Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6)] });
+  a.children.push(child.id); b.children.push(child.id);
+  inheritClaims(child, a, b); // a foreign-born parent's claim on the throne of their house
+  return child;
+}
 function characterMonth(s: GameState, w: World, n: Nation) {
   // a crown shared in personal union: the senior crown's court lives, weds and bears children, and this one follows it
   const O = n.overlord >= 0 && n.subjectType === 'personal_union' && s.nations[n.overlord]?.ruler === n.ruler ? s.nations[n.overlord] : null;
@@ -469,30 +518,35 @@ function characterMonth(s: GameState, w: World, n: Nation) {
   }
   if (O && O.ruler === n.ruler) { n.heir = O.heir; n.consort = O.consort; n.regent = O.regent; return; }
   const r = s.chars[n.ruler];
+  // the rest of the house (children, brothers and sisters, nephews and nieces, wherever they live) ages and may die
+  // as the ruler does, so a house thins out as a real one did. The draw is a side stream of the game's seed
+  // (rng.ts hash01), so the size of a house does not shift the main stream.
+  if (r) for (const id of houseKin(s, r)) {
+    const c = s.chars[id]; if (!c.alive || (c.role && !KIN_ROLES.has(c.role))) continue;
+    if (hash01(s.seed, id, s.day) < monthlyDeathChance(ageOf(s, c), c)) characterDies(s, w, s.nations[c.nation] ?? n, id);
+  }
   if (n.regent && r && ageOf(s, r) >= 16) { n.regent = 0; notice(s, n.id, 'majority', { en: `${r.name} has come of age and rules in person.`, de: `${de(r)} ist volljährig und regiert selbst.` }); n.mandate = clamp(n.mandate + 10, 0, 100); }
   // marriage of an unmarried adult ruler: a member of a house bound to ours by a marriage treaty, else the daughter
   // or son of a noble family of our own people (systems/dynasty.ts)
   if (r && r.alive && !n.consort && unwed(s, r) && ageOf(s, r) > 16 && ageOf(s, r) < 55 && chance(s.rng, 0.04)) {
-    const born = r.born + Math.floor((rand(s.rng) * 12 - 4) * 365);
-    let sp: Character | null = null;
-    for (const t of s.treaties) {
-      if (t.type !== 'marriage' || (t.a !== n.id && t.b !== n.id) || t.until <= s.day) continue;
-      const B = s.nations[t.a === n.id ? t.b : t.a]; if (!B?.alive) continue;
-      sp = houseMember(s, B, !r.female, r.born);
-      if (sp) { sp.nation = n.id; sp.claims = [...new Set([...(sp.claims ?? []), B.id])]; break; }
-    }
-    if (!sp) { const g = nameFor(s, n, !r.female), h = houseName(s.rng, n.culture); sp = newChar(s, n, { name: g, female: !r.female, born, role: 'consort', dynasty: h ? familyForm(h, n.culture, !r.female) : n.dynasty }); }
-    sp.role = 'consort'; sp.spouse = r.id; r.spouse = sp.id; n.consort = sp.id;
+    const sp = spouseFor(s, n, r, 'consort');
+    sp.spouse = r.id; r.spouse = sp.id; n.consort = sp.id;
   }
+  // an unwed heir of age marries as well, the same way, and the heir's children are born into the line (before, only
+  // the ruling couple married and had children, so a young king's brothers and nephews were all the line he had)
+  const h = s.chars[n.heir];
+  if (h && h.alive && h.nation === n.id && h.id !== n.ruler && unwed(s, h) && ageOf(s, h) > 16 && ageOf(s, h) < 45 && chance(s.rng, 0.03)) {
+    const sp = spouseFor(s, n, h, 'courtier');
+    sp.spouse = h.id; h.spouse = sp.id;
+    if (s.playerNations.includes(n.id)) notice(s, n.id, 'marriage', { en: `The heir ${h.name} has married ${sp.name}.`, de: `${h.female ? 'Die Thronfolgerin' : 'Der Thronfolger'} ${de(h)} hat ${de(sp)} geheiratet.` });
+  }
+  const hs = h && h.alive && h.nation === n.id && h.id !== n.ruler ? s.chars[h.spouse ?? 0] : undefined;
+  if (h && hs?.alive && hs.spouse === h.id) bear(s, n, h, hs);
   // births
   const cons = s.chars[n.consort];
   if (r && cons && r.alive && cons.alive) {
-    const mother = r.female ? r : cons;
-    const ma = ageOf(s, mother);
-    if (ma > 16 && ma < 42 && r.children.length < 9 && chance(s.rng, 0.022)) {
-      const child = newChar(s, n, { born: s.day, role: 'courtier', dynasty: r.female ? cons.dynasty : r.dynasty, father: r.female ? cons.id : r.id, mother: mother.id, skills: [Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6)] });
-      r.children.push(child.id); cons.children.push(child.id);
-      inheritClaims(child, r, cons); // a foreign-born parent's claim on the throne of their house
+    const child = bear(s, n, r, cons);
+    if (child) {
       pickNewHeir(s, n); // a newborn son may come before a daughter, a brother or a nephew
       if (n.heir === child.id) notice(s, n.id, 'heir_born', { en: `An heir is born: ${child.name}!`, de: `${child.female ? 'Eine Thronfolgerin' : 'Ein Thronfolger'} ist geboren: ${de(child)}!` }, { loc: n.capital });
     }

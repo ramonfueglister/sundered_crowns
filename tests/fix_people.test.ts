@@ -5,8 +5,8 @@
 // Run: npx vitest run tests/fix_people.test.ts
 import { describe, it, expect } from 'vitest';
 import { newGame } from '../tools/sim/load';
-import { characterDies, lineOfSuccession, ageOf, politics } from '../src/sim/systems/politics';
-import { dynastyView, successionClaims, marriagePreview } from '../src/sim/systems/dynasty';
+import { characterDies, lineOfSuccession, ageOf, politics, houseKin } from '../src/sim/systems/politics';
+import { dynastyView, successionClaims, marriagePreview, freshGivenName } from '../src/sim/systems/dynasty';
 import { acceptProposal } from '../src/sim/systems/diplomacy';
 import type { GameState } from '../src/sim/types';
 import { diplomacy, sendEnvoy, refusedRecently, IMPROVE_CAP } from '../src/sim/systems/diplomacy';
@@ -166,5 +166,40 @@ describe('marriage preview', () => {
     expect(s.chars[A.heir].spouse).toBe(m.spouse.id);
     // once wed, nobody is left to match on either side for a second treaty
     expect(marriagePreview(s, E.id, A.id).match?.spouse?.id).not.toBe(m.spouse.id);
+  });
+});
+
+describe('houses that live', () => {
+  // months of the people's lives without the rest of the game: politics.monthly runs every court's month
+  const months = (s: GameState, w: any, k: number) => { for (let i = 0; i < k; i++) { s.day += 30; politics.monthly!({ s, w } as any); } };
+
+  it('brothers, sisters and nephews age and die, not only rulers, heirs and officials', () => {
+    const { s, w } = newGame(1356);
+    const E = nat(s, 'england');
+    const kin = houseKin(s, s.chars[E.ruler]).map((id) => s.chars[id]).filter((c) => c.role === 'courtier');
+    expect(kin.length).toBeGreaterThanOrEqual(8);
+    // the youngest son, made ninety years old: he no longer lives for ever as a courtier
+    const old = kin.find((c) => c.name === 'Thomas of Woodstock')!; old.born = s.day - 90 * 365;
+    months(s, w, 60);
+    expect(old.alive).toBe(false);
+  });
+
+  it('unwed heirs of age marry and have children, with names their brothers and sisters do not bear', () => {
+    const { s, w } = newGame(1356);
+    const heirs = () => s.nations.filter((n) => n.alive && n.heir && s.chars[n.heir]?.alive && s.chars[n.heir].nation === n.id && n.heir !== n.ruler);
+    const single = heirs().filter((n) => { const h = s.chars[n.heir]; return !h.spouse && ageOf(s, h) > 18 && ageOf(s, h) < 35; }).map((n) => n.heir);
+    expect(single.length).toBeGreaterThan(10);
+    const day0 = s.day;
+    months(s, w, 60);
+    // (the dead are pruned from s.chars after a while)
+    const living = single.filter((id) => s.chars[id]?.alive);
+    const wed = living.filter((id) => s.chars[id].spouse && s.chars[s.chars[id].spouse!]?.spouse === id);
+    expect(wed.length / living.length).toBeGreaterThan(0.5);
+    const born = wed.flatMap((id) => s.chars[id].children.filter((k) => (s.chars[k]?.born ?? 0) > day0));
+    expect(born.length).toBeGreaterThan(0);
+    // a fresh given name: never that of a living brother or sister
+    const r = s.chars[nat(s, 'england').ruler];
+    const taken = new Set(r.children.map((k) => s.chars[k]).filter((c) => c.alive).map((c) => c.name.split(' ')[0]));
+    for (let i = 0; i < 30; i++) expect(taken.has(freshGivenName(s, nat(s, 'england').culture, true, r))).toBe(false);
   });
 });
