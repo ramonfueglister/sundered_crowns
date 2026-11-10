@@ -123,8 +123,8 @@ export function estate(n: Nation, id: string) { return n.estates.find((e) => e.i
 // ---------------- characters ----------------
 // Names come from the realm's people (content/names.ts): given names and noble families of its culture.
 import { GROUP_OF, ALL_CULTURES } from '../content/peoples';
-import { givenName, personName, houseName, localName, familyForm } from '../content/names';
-import { christianClaimants, pressLater, houseMember, inheritClaims, unwed } from './dynasty';
+import { givenName, personName, houseName, localName, familyForm, localHouse } from '../content/names';
+import { christianClaimants, pressLater, houseMember, inheritClaims, unwed, houseWarning } from './dynasty';
 function nameFor(s: GameState, n: Nation, female: boolean, rng: number[] = s.rng): string {
   return givenName(rng, n.culture, female);
 }
@@ -164,21 +164,52 @@ export function rulerAge(s: GameState, n: Nation) { const r = s.chars[n.ruler]; 
  *  married abroad keeps the claim on the house's throne (systems/dynasty.ts wed) but is no longer in line here: the
  *  claim passes the crown only when the house dies out, through successionClaims and a personal union. */
 const atCourt = (n: Nation, r: Character, c: Character) => c.nation === n.id || c.nation === r.nation;
+/** The line of succession of a hereditary crown after ruler r, first in line first: the ruler's descendants, then
+ *  the descendants of the ruler's father (brothers and sisters, their children and grandchildren), then of the
+ *  grandfather. Each person is followed by their own descendants, so a dead son's children come before his younger
+ *  brothers. Under male primogeniture (and seniority or an elective crown, whose heir presumptive is found the same
+ *  way) the men of the house in the male line come first (sons, grandsons by sons, brothers, their sons), then everyone
+ *  else with sons before daughters; under cognatic primogeniture age alone decides. Only living people of this court
+ *  count (atCourt): one married abroad passes the crown only through a claim (successionClaims). */
+export function lineOfSuccession(s: GameState, n: Nation, r: Character, limit = 16): number[] {
+  const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0]?.id;
+  const malePref = law !== 'cognatic';
+  const kidsOf = (c: Character) => c.children.map((k) => s.chars[k]).filter((x): x is Character => !!x)
+    .sort((a, b) => (malePref ? Number(a.female) - Number(b.female) : 0) || a.born - b.born || a.id - b.id);
+  const parentOf = (c: Character) => (c.father && s.chars[c.father]) || (c.mother && s.chars[c.mother]) || undefined;
+  const out: number[] = []; const inLine = new Set<number>();
+  for (const maleOnly of malePref ? [true, false] : [false]) {
+    const seen = new Set<number>([r.id]);
+    const visit = (c: Character, depth: number) => {
+      if (out.length >= limit || depth > 6 || seen.has(c.id) || (maleOnly && c.female)) return;
+      seen.add(c.id);
+      if (c.alive && atCourt(n, r, c) && !inLine.has(c.id)) { inLine.add(c.id); out.push(c.id); }
+      for (const k of kidsOf(c)) visit(k, depth + 1);
+    };
+    for (const k of kidsOf(r)) visit(k, 1);
+    let prev: Character = r, anc = parentOf(r);
+    for (let up = 0; up < 2 && anc && out.length < limit; up++) {
+      seen.add(anc.id);
+      for (const k of kidsOf(anc)) if (k.id !== prev.id) visit(k, 1);
+      prev = anc; anc = parentOf(anc);
+    }
+  }
+  return out;
+}
 function findHeir(s: GameState, n: Nation, dead: Character): number {
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
-  const kids = dead.children.map((k) => s.chars[k]).filter((c) => c && c.alive && atCourt(n, dead, c));
-  kids.sort((a, b) => a.born - b.born);
-  if (law === 'primogeniture') { const m = kids.find((c) => !c.female); if (m) return m.id; }
-  if (law === 'cognatic' && kids.length) return kids[0].id;
   if (law === 'seniority') {
     // eldest living dynast: brothers first
     const sib = Object.values(s.chars).filter((c) => c.alive && atCourt(n, dead, c) && c.dynasty === dead.dynasty && c.id !== dead.id && !c.female && ageOf(s, c) > 16).sort((a, b) => a.born - b.born);
     if (sib.length) return sib[0].id;
   }
+  // by blood: the first in the line of succession, else an heir the realm named who is not of the line (a nephew
+  // through a sister, a king of another house chosen by treaty)
+  const line = lineOfSuccession(s, n, dead, 1);
+  if (line.length) return line[0];
   const h = s.chars[n.heir];
   if (h && h.alive && h.id !== dead.id && atCourt(n, dead, h)) return h.id;
-  const m = kids.find((c) => !c.female) || kids[0];
-  return m ? m.id : 0;
+  return 0;
 }
 /** Who would take n's crown if the ruler died today: under a crown by blood the person findHeir names (the heir, or
  *  the eldest daughter when male primogeniture finds no son), under an elected crown the heir presumptive; 0 when the
@@ -220,7 +251,11 @@ export function succession(s: GameState, w: World, n: Nation) {
       // abroad, or their children; else a realm bound by a marriage treaty) may inherit; otherwise a magnate takes the
       // crown (crowns pass through marriage between Christian realms; a sultanate or khanate whose house dies out
       // raises a new house of its own, so no beylik inherits the Ottoman throne through a bride; systems/dynasty.ts)
-      const claimants = christianClaimants(s, n).map((c) => c.nation);
+      // A marriage treaty without a wedding carries no blood: the partner may press a claim on the throne by war (a
+      // cause for war for 25 years), but only a claim by blood passes the crown.
+      const all = christianClaimants(s, n);
+      for (const c of all) if (c.how === 'marriage') pressLater(s, c.nation, n);
+      const claimants = all.filter((c) => c.how !== 'marriage').map((c) => c.nation);
       if (claimants.length) {
         const k = claimants[0];
         const other = s.nations[k];
@@ -254,8 +289,10 @@ export function succession(s: GameState, w: World, n: Nation) {
         pressLater(s, k, n);
       }
       // a lord of a native house takes the crown
+      const oldHouse = n.dynasty;
       const c = newChar(s, n, { born: s.day - Math.floor((30 + rand(s.rng) * 20) * 365), role: 'ruler', female: false, dynasty: houseName(s.rng, n.culture) || `${w.names[n.capital] ?? 'House'}` });
       next = c.id; n.dynasty = c.dynasty; contested = true;
+      notice(s, n.id, 'house_extinct', { en: `The house of ${oldHouse || n.short.en} has died out. The magnates raised ${c.name} of the house of ${c.dynasty} to the throne; the succession is disputed.`, de: `Das Haus ${localHouse(oldHouse, 'de') || n.short.de} ist erloschen. Die Magnaten haben ${de(c)} aus dem Haus ${localHouse(c.dynasty, 'de')} auf den Thron gehoben; die Nachfolge ist umstritten.` }, { loc: n.capital });
     }
   }
   const heir = s.chars[next];
@@ -323,9 +360,13 @@ export function pickNewHeir(s: GameState, n: Nation) {
   const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id;
   // elected to office: the presumptive successor is whoever the council would choose today
   if (law === 'office') { const b = ablestOfficial(s, n); n.heir = b ? b.id : 0; return; }
-  const kids = r.children.map((k) => s.chars[k]).filter((c) => c && c.alive && atCourt(n, r, c)).sort((a, b) => a.born - b.born);
-  const h = law === 'primogeniture' ? kids.find((c) => !c.female) : kids[0];
-  n.heir = h ? h.id : 0;
+  // the first in the line of succession; failing the line, an heir named before who still lives at court
+  const old = s.chars[n.heir];
+  const line = lineOfSuccession(s, n, r, 1);
+  const keep = old && old.alive && old.id !== r.id && atCourt(n, r, old) ? old.id : 0;
+  n.heir = line[0] ?? keep;
+  if (old && old.id !== n.heir && old.role === 'heir') old.role = 'courtier';
+  const h = s.chars[n.heir];
   if (h) h.role = 'heir';
 }
 
@@ -452,13 +493,13 @@ function characterMonth(s: GameState, w: World, n: Nation) {
       const child = newChar(s, n, { born: s.day, role: 'courtier', dynasty: r.female ? cons.dynasty : r.dynasty, father: r.female ? cons.id : r.id, mother: mother.id, skills: [Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6), Math.floor(rand(s.rng) * 6)] });
       r.children.push(child.id); cons.children.push(child.id);
       inheritClaims(child, r, cons); // a foreign-born parent's claim on the throne of their house
-      if (!n.heir || (!s.chars[n.heir]?.alive)) pickNewHeir(s, n);
-      else { const law = LAWS[LAW_INDEX.succession].options[n.laws.succession ?? 0].id; if (law === 'primogeniture' && s.chars[n.heir]?.female && !child.female) pickNewHeir(s, n); }
+      pickNewHeir(s, n); // a newborn son may come before a daughter, a brother or a nephew
       if (n.heir === child.id) notice(s, n.id, 'heir_born', { en: `An heir is born: ${child.name}!`, de: `${child.female ? 'Eine Thronfolgerin' : 'Ein Thronfolger'} ist geboren: ${de(child)}!` }, { loc: n.capital });
     }
   }
   // children grow up: if no heir, check
   if (!n.heir || !s.chars[n.heir]?.alive) pickNewHeir(s, n);
+  houseWarning(s, n);
 }
 
 // ---------------- council ----------------
@@ -737,6 +778,7 @@ export const politics: System = {
       n.estates = estateDefaults(n);
       fillCouncil(s, n);
       refreshCandidates(s, n, false);
+      if (!n.heir) pickNewHeir(s, n); // a house researched without a named heir (Castile: the king's daughters)
       if (n.ruler && s.chars[n.ruler] && ageOf(s, s.chars[n.ruler]) < 16) n.regent = newChar(s, n, { born: s.day - 40 * 365, role: 'courtier' }).id;
     }
   },

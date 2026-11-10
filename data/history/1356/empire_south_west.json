@@ -5147,7 +5147,49 @@
     "ordinary": "fess",
     "ordinary_tincture": "argent",
     "charges": []
-   }
+   },
+   "family": [
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Katharina",
+     "born": 1342,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Margarete",
+     "born": 1346,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Friedrich",
+     "born": 1347,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Albrecht",
+     "born": 1349,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Leopold",
+     "born": 1351,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    }
+   ]
   },
   {
    "id": "tyrol",

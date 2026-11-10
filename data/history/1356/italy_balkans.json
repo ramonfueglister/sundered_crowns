@@ -495,7 +495,42 @@
       "arrangement": "semee"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Charles, Duke of Calabria",
+     "born": 1298,
+     "died": 1328,
+     "dynasty": "Anjou"
+    },
+    {
+     "female": true,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Joanna of Durazzo",
+     "born": 1344,
+     "dynasty": "Anjou"
+    },
+    {
+     "female": true,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Agnes of Durazzo",
+     "born": 1345,
+     "dynasty": "Anjou"
+    },
+    {
+     "female": true,
+     "rel": "grandchild",
+     "parent": "heir",
+     "name": "Margaret of Durazzo",
+     "born": 1347,
+     "dynasty": "Anjou"
+    }
+   ],
+   "heir_rel": "sibling"
   },
   {
    "id": "sicily",
@@ -3824,7 +3859,25 @@
       "count": 1
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "child",
+     "name": "John of Lusignan",
+     "born": 1329,
+     "dynasty": "Lusignan",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "James of Lusignan",
+     "born": 1334,
+     "dynasty": "Lusignan",
+     "of_consort": false
+    }
+   ]
   },
   {
    "id": "achaea",
@@ -4703,7 +4756,16 @@
       "text": "B"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Manuel Palaiologos",
+     "born": 1350,
+     "dynasty": "Palaiologos"
+    }
+   ]
   },
   {
    "id": "kantakouzenos",
@@ -6614,7 +6676,56 @@
       "arrangement": "semee"
      }
     ]
-   }
+   },
+   "family": [
+    {
+     "female": false,
+     "rel": "parent",
+     "name": "Charles I",
+     "born": 1288,
+     "died": 1342,
+     "dynasty": "Anjou"
+    },
+    {
+     "female": true,
+     "rel": "parent",
+     "name": "Elizabeth of Poland",
+     "born": 1305,
+     "dynasty": "Piast",
+     "skills": [
+      3,
+      4,
+      1
+     ],
+     "traits": [
+      "pious"
+     ]
+    },
+    {
+     "female": false,
+     "rel": "sibling",
+     "name": "Stephen, Duke of Slavonia",
+     "born": 1332,
+     "died": 1354,
+     "dynasty": "Anjou",
+     "spouse": {
+      "female": true,
+      "name": "Margaret of Bavaria",
+      "born": 1325,
+      "dynasty": "Wittelsbach"
+     }
+    },
+    {
+     "female": true,
+     "rel": "nephew",
+     "parent": "Stephen, Duke of Slavonia",
+     "name": "Elizabeth of Slavonia",
+     "born": 1352,
+     "dynasty": "Anjou"
+    }
+   ],
+   "heir_rel": "nephew",
+   "heir_parent": "Stephen, Duke of Slavonia"
   }
  ],
  "wars": [

@@ -882,11 +882,11 @@ const S: Record<string, [string, string]> = {
   at_court_of: ['at the court of', 'am Hof von'], claims: ['Claims', 'Ansprüche'], claim_on: ['claim on', 'Anspruch auf'],
   x_claims_hint: ['A son or daughter of a ruling house married abroad keeps a claim on its throne and passes it to their children. If that house dies out, the claim can be pressed.', 'Wer aus einem Herrscherhaus in die Fremde heiratet, behält einen Anspruch auf dessen Thron und vererbt ihn den Kindern. Stirbt das Haus aus, kann der Anspruch eingefordert werden.'],
   if_house_dies: ['Should the house die out:', 'Sollte das Haus erlöschen:'],
-  x_if_house_dies_hint: ['Realms whose rulers or kin carry a claim on our throne, best first. A Christian crown passes to the first of them that can take it (a personal union); the others keep a cause for war.', 'Reiche, deren Herrscher oder Verwandte einen Anspruch auf unseren Thron haben, der beste zuerst. Eine christliche Krone geht an den ersten, der sie annehmen kann (Personalunion); die anderen behalten einen Kriegsgrund.'],
+  x_if_house_dies_hint: ['Realms whose rulers or kin carry a claim on our throne, best first. A Christian crown passes to the first claim by blood or descent that can take it (a personal union); a marriage treaty alone passes no crown. The others keep a cause for war.', 'Reiche, deren Herrscher oder Verwandte einen Anspruch auf unseren Thron haben, der beste zuerst. Eine christliche Krone geht an den ersten Anspruch durch Blut oder Abstammung, der sie annehmen kann (Personalunion); ein Heiratsvertrag allein vererbt keine Krone. Die anderen behalten einen Kriegsgrund.'],
   claim_blood: ['by blood', 'durch Blut'], claim_descent: ['by descent', 'durch Abstammung'], claim_marriage: ['by marriage', 'durch Heirat'],
   x_claim_blood_hint: ['A member of our own house married abroad (rank 3, one more when they rule or will rule there).', 'Ein Mitglied unseres Hauses, das in die Fremde geheiratet hat (Rang 3, einer mehr, wenn es dort herrscht oder herrschen wird).'],
   x_claim_descent_hint: ['A descendant of our house through a marriage (rank 2, one more when they rule or will rule there).', 'Ein Nachkomme unseres Hauses durch eine Heirat (Rang 2, einer mehr, wenn er dort herrscht oder herrschen wird).'],
-  x_claim_marriage_hint: ['A marriage treaty without a wedding binds the houses (rank 1).', 'Ein Heiratsvertrag ohne Hochzeit verbindet die Häuser (Rang 1).'],
+  x_claim_marriage_hint: ['A marriage treaty without a wedding binds the houses (rank 1). It carries no blood: should our house die out, the partner gets a claim to press by war for 25 years, but not the crown.', 'Ein Heiratsvertrag ohne Hochzeit verbindet die Häuser (Rang 1). Er stiftet keine Blutsverwandtschaft: Erlischt unser Haus, erhält der Partner 25 Jahre lang einen Anspruch, den er mit Krieg durchsetzen kann, aber nicht die Krone.'],
   no_claimants: ['nobody has a claim', 'niemand hat einen Anspruch'],
   recent_decisions: ['Recent decisions', 'Jüngste Entscheidungen'], appoint_ablest: ['Appoint the ablest', 'Den Fähigsten ernennen'],
   trait_charming: ['charming', 'charmant'], trait_craven: ['craven', 'feige'], trait_weak_willed: ['weak-willed', 'willensschwach'], trait_profligate: ['profligate', 'verschwenderisch'],
@@ -965,6 +965,14 @@ const S: Record<string, [string, string]> = {
   terra_incognita: ['Terra incognita', 'Terra incognita'],
   terra_incognita_hint: ['Our realm has no knowledge of this place yet. Explorers, trade and neighbours bring news of it.', 'Unser Reich weiß von diesem Ort noch nichts. Entdecker, Handel und Nachbarn bringen Kunde davon.'],
   x_dev_world_wide: ['Not online: it would lift the fog of war for every player. Admins see the whole map anyway.', 'Nicht online: Das würde den Nebel des Krieges für alle Mitspieler aufheben. Admins sehen ohnehin die ganze Karte.'],
+  // ---- fix-people
+  xp_house_last: ['Our house rests on one heir', 'Unser Haus ruht auf einem einzigen Erben'],
+  xp_house_none: ['No one of our house can inherit', 'Niemand aus unserem Haus kann erben'],
+  xp_house_then_claim: ['Should the line end, the crown would pass by blood to {p} of', 'Erlischt die Linie, ginge die Krone durch Blut an {p} von'],
+  xp_house_then_native: ['Should the line end, the magnates would raise a lord of another house to the throne, and the succession would be disputed.', 'Erlischt die Linie, höben die Magnaten einen Herrn aus einem anderen Haus auf den Thron, und die Nachfolge wäre umstritten.'],
+  xp_house_secure: ['A marriage of the ruler or the heir, and children, secure the line.', 'Eine Heirat des Herrschers oder des Erben und Kinder sichern die Linie.'],
+  xp_line: ['Line of succession', 'Thronfolge'],
+  xp_line_hint: ['Who inherits after the ruler, first in line first: the ruler\'s children and their children, then brothers, sisters and their children. Under male primogeniture the men of the male line come first. People married abroad are not in the line; they pass a claim instead.', 'Wer nach dem Herrscher erbt, der Erste zuerst: die Kinder des Herrschers und deren Kinder, dann Brüder, Schwestern und ihre Kinder. Bei männlicher Primogenitur kommen die Männer der männlichen Linie zuerst. Wer ins Ausland geheiratet hat, steht nicht in der Linie, sondern vererbt einen Anspruch.'],
 };
 export function t(k: string): string { const v = S[k]; return v ? v[lang.value === 'de' ? 1 : 0] : k; }
 

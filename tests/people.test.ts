@@ -124,13 +124,17 @@ describe('royal marriages and claims', () => {
   });
   it('a marriage accepted through diplomacy weds real people', () => {
     const { s, w } = newGame(1356);
-    const A = nat(s, 'aragon'), B = nat(s, 'navarre');
+    // (Aragon and Navarre had nobody to wed once the houses of 1356 were complete: Philippe of Navarre married Yolande
+    // of Flanders in 1353; Austria's unwed heir Rudolf and Edward III's daughter Isabella are both living people)
+    const A = nat(s, 'austria'), B = nat(s, 'england');
+    const isabella = Object.values(s.chars).find((c) => c.name === 'Isabella of England')!;
     const r = applyCommand(s, w, { t: 'diplo', n: A.id, action: 'marriage', target: B.id });
     expect(r.ok).toBe(true);
     for (let d = 0; d < 60 && !s.treaties.some((t) => t.type === 'marriage' && ((t.a === A.id && t.b === B.id) || (t.a === B.id && t.b === A.id))); d++) advanceDay(s, w);
     const wed = s.chronicle.some((c) => c.kind === 'marriage' && /married/.test(c.text.en) && (c.text.en.includes(A.short.en) || c.text.en.includes(B.short.en)));
     const treaty = s.treaties.some((t) => t.type === 'marriage' && ((t.a === A.id && t.b === B.id) || (t.a === B.id && t.b === A.id)));
     if (treaty) expect(wed).toBe(true);
+    if (treaty) expect(s.chars[A.heir].spouse).toBe(isabella.id);
   });
   it('shows the ruling house with its members and claimants', () => {
     const { s, w } = newGame(1356);

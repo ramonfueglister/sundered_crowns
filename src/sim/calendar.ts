@@ -9,6 +9,7 @@ function yearStart(y: number): number {
   if (v !== undefined) return v;
   let s = 0;
   for (let k = 1300; k < y; k++) s += yearDays(k);
+  for (let k = y; k < 1300; k++) s -= yearDays(k); // people born before 1300 (Afonso IV of Portugal, 1291)
   cache.set(y, s); return s;
 }
 export function dayToDate(day: number, startYear: number): DateParts {
