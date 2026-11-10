@@ -9,7 +9,7 @@ import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord, rel } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore,
-  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal, scoreCaps, applyPeace } from '../src/sim/systems/war';
+  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK, predictSides, goalTowns, cedeWorth, CEDE_FIXED, nationDev, termCost, declareRefusal, scoreCaps, applyPeace, war as warSystem } from '../src/sim/systems/war';
 import { answerEvent } from '../src/sim/systems/events';
 import { considerPeace } from '../src/sim/systems/ai';
 import { step } from '../src/sim/engine';
@@ -454,5 +454,23 @@ describe('war texts and the war score hint (minors)', () => {
     const c = s.chronicle[s.chronicle.length - 1];
     expect(c.text.de).toMatch(/: 1 Ort \(/);
     expect(c.text.en).toMatch(/: 1 location \(/);
+  });
+});
+
+describe('Common Fronts keep truces (extra: coalition wars rose again within months of every peace)', () => {
+  it('a realm bound by a truce with the aggressor joins no front against it, and no coalition breaks that truce', () => {
+    const s = fresh(); clearField(s);
+    const agg = nat(s, 'france');
+    agg.dread = 90;
+    warSystem.monthly!(mkCtx(s, w));
+    const members: number[] = (s as any).fronts[agg.id] ?? [];
+    expect(members.length).toBeGreaterThanOrEqual(3); // the fear is real
+    // a peace with all of them: truces for five years
+    for (const m of members) s.treaties.push({ type: 'truce', a: Math.min(m, agg.id), b: Math.max(m, agg.id), since: s.day, until: s.day + 365 * 5 });
+    s.wars = [];
+    for (let k = 0; k < 24; k++) { warSystem.monthly!(mkCtx(s, w)); s.day += 30; agg.dread = 90; }
+    for (const m of (s as any).fronts[agg.id] ?? []) expect(members).not.toContain(m);
+    for (const x of s.wars.filter((x) => x.goal.type === 'coalition' && x.goal.target === agg.id)) expect(hasTreaty(s, x.attLead, agg.id, 'truce')).toBe(false);
+    expect(s.wars.filter((x) => x.goal.type === 'coalition' && x.goal.target === agg.id).every((x) => x.att.every((m) => !members.includes(m) || !hasTreaty(s, m, agg.id, 'truce')))).toBe(true);
   });
 });

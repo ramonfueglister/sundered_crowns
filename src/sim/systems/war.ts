@@ -1017,6 +1017,9 @@ function dreadMonth(s: GameState, w: World) {
     for (const o of s.nations) {
       if (!o.alive || o.id === agg.id || o.overlord >= 0 || o.capital < 0) continue;
       if (hasTreaty(s, o.id, agg.id, 'alliance') || o.overlord === agg.id) continue;
+      // a realm bound by a truce with the aggressor keeps it: it joins no front against it until the truce runs out
+      // (without this a front rose again within months of every peace, its leader breaking the truce)
+      if (hasTreaty(s, o.id, agg.id, 'truce')) continue;
       const d = w.distKm(o.capital, capA);
       if (d > 1400) continue;
       const fear = agg.dread * (1 - d / 1600) - opinion(s, o.id, agg.id) * 0.3 - (o.faith === agg.faith ? 5 : -10);
