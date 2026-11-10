@@ -9,7 +9,7 @@ import { serialize, deserialize } from '../src/sim/engine';
 import { mkCtx, hasTreaty, atWar, topOverlord } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
 import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT } from '../src/sim/systems/war';
-import { military, newArmy, siegeSteps } from '../src/sim/systems/military';
+import { military, newArmy, siegeSteps, siegeCaptor, besiegersOf } from '../src/sim/systems/military';
 import { answer } from '../src/game/view';
 import { siegesView } from '../src/game/warview';
 import type { GameState, War } from '../src/sim/types';
@@ -120,6 +120,38 @@ describe('the battles behind the war score (blocker: battles the player never sa
       const capped = war.battleLog!.filter((x) => x.raw > 0 && x.score < x.raw - 1e-9);
       expect(capped.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('the captor of a fort (major: the town fell to the first army in the list)', () => {
+  function siegeOf(s: GameState) {
+    const a = nat(s, 'portugal').id, b = plainTarget(s, a), c = plainTarget(s, a, [b]);
+    const war = war2(s, a, b, 'humiliate'); if (!war.att.includes(c)) war.att.push(c);
+    let l = -1; for (const i of owned(s, b)) if (s.loc.buildings[i * B + BI.fort] > 0 && !w.coastal[i]) { l = i; break; }
+    if (l < 0) { l = owned(s, b).find((i) => !w.coastal[i])!; s.loc.buildings[l * B + BI.fort] = 1; }
+    return { a, b, c, l };
+  }
+  it('the realm leading the siege takes the town, though an ally’s army comes first in the list', () => {
+    const s = fresh(); clearField(s);
+    const { a, c, l } = siegeOf(s);
+    const ally = newArmy(s, c, l, [{ type: unit('men_at_arms'), men: 800 }]); ally.siege = l; // first in s.armies
+    const lead = newArmy(s, a, l, [{ type: unit('men_at_arms'), men: 12000 }]); lead.siege = l;
+    // five steps made (a resupply from the sea could take one back), the monthly roll is due tomorrow
+    s.sieges.push({ loc: l, nation: a, progress: 5, days: 29, garrison: 300, garrison0: 1000, breach: 0, blockade: false, log: [] });
+    expect(s.armies.indexOf(ally)).toBeLessThan(s.armies.indexOf(lead));
+    military.daily!(mkCtx(s, w));
+    expect(s.loc.ctrl[l]).toBe(a);
+  });
+  it('without the leader before the walls, the realm with the most men there takes it', () => {
+    const s = fresh(); clearField(s);
+    const { a, c, l } = siegeOf(s);
+    const small = newArmy(s, a, l, [{ type: unit('men_at_arms'), men: 500 }]); small.siege = l;
+    const big = newArmy(s, c, l, [{ type: unit('men_at_arms'), men: 3000 }]); big.siege = l;
+    const sg = { loc: l, nation: -5, progress: 0, days: 1, garrison: 300, garrison0: 1000, breach: 0, blockade: false, log: [] as string[] };
+    s.sieges.push(sg);
+    expect(siegeCaptor(sg, besiegersOf(s, sg)).owner).toBe(c);
+    sg.nation = a;
+    expect(siegeCaptor(sg, besiegersOf(s, sg)).owner).toBe(a);
   });
 });
 
