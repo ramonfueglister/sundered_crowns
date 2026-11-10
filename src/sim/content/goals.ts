@@ -11,6 +11,8 @@ import { FAITH_INDEX, GROUP_OF, ALL_CULTURES } from './peoples';
 import { DOCTRINES, DOCTRINE_INDEX } from './doctrines';
 import { INNOVATIONS } from './innovations';
 import { B, BI } from '../defs';
+import { deName } from './names_de';
+import { CODE_PROCLAIM } from './situations';
 
 export interface GoalDef {
   nation?: string; // nation key, or undefined = generic tree for realms without their own
@@ -53,7 +55,8 @@ function loc(w: World, name: string): number {
 }
 /** All location names used by goals (checked by tools/sim/check_content.ts). */
 export const GOAL_PLACES = new Set<string>();
-const list = (xs: string[], lang: 'en' | 'de') => xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${lang === 'en' ? 'and' : 'und'} ${xs[xs.length - 1]}`;
+/** Place names joined for a goal text: the map's names in English, their German forms in German (Wien, Meißen). */
+const list = (names: string[], lang: 'en' | 'de') => { const xs = lang === 'de' ? names.map(deName) : names; return xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${lang === 'en' ? 'and' : 'und'} ${xs[xs.length - 1]}`; };
 const owns = (e: EvApi, name: string) => { const l = loc(e.w, name); return l >= 0 && e.s.loc.owner[l] === e.n.id; };
 const ownsOrSubject = (e: EvApi, name: string) => { const l = loc(e.w, name); if (l < 0) return false; const o = e.s.loc.owner[l]; return o === e.n.id || (o >= 0 && e.s.nations[o].overlord === e.n.id); };
 const nat = (e: EvApi, key: string): Nation | undefined => e.s.nations.find((x) => x.key === key && x.alive);
@@ -127,7 +130,15 @@ const C = {
       const t0 = e.s.startYear, tf = clamp01((e.year - t0) / Math.max(1, y - t0));
       return { ...inner, frac: Math.min(inner.frac, tf), from: y, timeFrac: tf };
     } }),
-  capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${name} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
+  capitalAt: (name: string): Cond => { GOAL_PLACES.add(name); return { t: { en: `have the capital in ${name}`, de: `die Hauptstadt in ${deName(name)} haben` }, f: (e) => e.n.capital === loc(e.w, name) }; },
+  imperialReforms: (k: number): Cond => ({ t: { en: `see ${k} imperial reforms passed by the diet`, de: `${k} Reichsreformen vom Reichstag beschlossen sehen` }, f: (e) => e.s.empire.reforms.length >= k, p: (e) => [e.s.empire.reforms.length, k] }),
+  imperialAuthority: (k: number): Cond => ({ t: { en: `raise imperial authority to ${k} as emperor`, de: `als Kaiser die Reichsautorität auf ${k} heben` }, f: (e) => e.s.empire.emperor === e.n.id && e.s.empire.authority >= k, p: (e) => [e.s.empire.emperor === e.n.id ? Math.round(e.s.empire.authority) : 0, k] }),
+  electedEmperor: (k: number): Cond => ({ t: { en: k > 1 ? `win ${k} imperial elections` : 'win an imperial election', de: k > 1 ? `${k} Kaiserwahlen gewinnen` : 'eine Kaiserwahl gewinnen' }, f: (e) => (e.n.flags.elected_emperor ?? 0) >= k, p: (e) => [e.n.flags.elected_emperor ?? 0, k] }),
+  estateContent: (id: string, k: number, t: I18n): Cond => ({ t: { en: `keep ${t.en} at ${k} contentment`, de: `${t.de} bei ${k} Zufriedenheit halten` }, f: (e) => (e.n.estates.find((x) => x.id === id)?.contentment ?? 0) >= k, p: (e) => [Math.round(e.n.estates.find((x) => x.id === id)?.contentment ?? 0), k] }),
+  /** The code of the Bohemian crown proclaimed; progress: the situation's bar against the mark for proclaiming it. */
+  codeProclaimed: (): Cond => ({ t: { en: 'proclaim the code of the Bohemian crown', de: 'das Gesetzbuch der böhmischen Krone verkünden' },
+    f: (e) => e.s.situations.some((x) => x.id === 'kings_code' && !x.active && x.outcome === 'proclaimed' && x.data.b === e.n.id),
+    p: (e) => { const x = e.s.situations.find((q) => q.id === 'kings_code' && q.data.b === e.n.id); return [x ? (x.outcome === 'proclaimed' ? CODE_PROCLAIM : x.active ? Math.max(0, x.progress) : 0) : 0, CODE_PROCLAIM]; } }),
 };
 
 const R = {
@@ -346,6 +357,18 @@ const BOHEMIA: GoalDef[] = [
   G('bohemia', 'austria', 'Danube Lands', 'Donaulande', ['moravia'], [C.control('Vienna')], [R.prestige(20)]),
   G('bohemia', 'meissen', 'Meissen', 'Meißen', ['lusatia'], [C.control('Meissen')], [R.gold(6)]),
   G('bohemia', 'great_power', 'Heart of the Empire', 'Herz des Reiches', ['emperor', 'silesia'], [C.greatPower()], [R.prestige(25)]),
+  // the Empire: the diet's reforms, the majesty of the crown, an election won
+  G('bohemia', 'reform', 'Reform of the Empire', 'Reform des Reiches', ['emperor'], [C.imperialReforms(2)], [R.authority(30), R.mod('reform', 30, T('Reformer of the Empire', 'Erneuerer des Reiches'), { authority_gain: 0.05 })]),
+  G('bohemia', 'majesty', 'Majesty of the Crown', 'Majestät der Krone', ['emperor'], [C.imperialAuthority(70)], [R.prestige(15), R.mandate(10)]),
+  G('bohemia', 'election', 'The Crown Stays in Prague', 'Die Krone bleibt in Prag', ['emperor'], [C.electedEmperor(1)], [R.prestige(20), R.mod('election', 30, T('House of emperors', 'Kaiserhaus'), { diplomacy: 0.1 })]),
+  // the estates: the code of the crown against the lords, and Powers at peace with it
+  G('bohemia', 'code', 'Law of the Land', 'Landrecht', [], [C.codeProclaimed()], [R.authority(40)], T('The lords rejected the king’s code of land law; carry it, and the royal courts stand over theirs.', 'Die Herren verwarfen das Landrecht des Königs; setzt es durch, und die königlichen Gerichte stehen über den ihren.')),
+  G('bohemia', 'estates', 'Lords and Towns Content', 'Herren und Städte zufrieden', [], [C.estateContent('magnates', 60, T('the magnates', 'die Magnaten')), C.estateContent('burghers', 60, T('the burghers', 'die Bürger'))], [R.concord(10), R.estate('burghers', 10, T('Burghers', 'Bürger'))]),
+  // Silesia: Schweidnitz and Jauer, then the duchies under the crown itself
+  G('bohemia', 'schweidnitz', 'Schweidnitz and Jauer', 'Schweidnitz und Jauer', ['silesia'], [C.control('Świdnica', 'Jawor')], [R.prestige(10), R.gold(4)]),
+  G('bohemia', 'silesian_duchies', 'The Silesian Duchies', 'Die schlesischen Herzogtümer', ['schweidnitz'], [C.ownK(4, ['Legnica', 'Opole', 'Brzeg', 'Opava', 'Głogów', 'Racibórz'])], [R.authority(25), R.mod('silesian_duchies', 30, T('Crown lands of Silesia', 'Krongut in Schlesien'), { tax: 0.03 })]),
+  // the chalice: after the peace, one kingdom again
+  G('bohemia', 'one_kingdom', 'One Kingdom Again', 'Wieder ein Königreich', ['chalice'], [C.faithUnity(0.8), C.concord(40)], [R.concord(10), R.prestige(10)]),
 ];
 
 // ---------------- Austria ----------------

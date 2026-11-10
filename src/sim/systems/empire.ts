@@ -386,6 +386,7 @@ function closeElection(s: GameState, w: World) {
   if (best === E.electors.length && best > 0) moveAuth(s, 'x_emp_unanimous', 3);
   E.emperor = winner;
   const wn = s.nations[winner];
+  wn.flags.elected_emperor = (wn.flags.elected_emperor ?? 0) + 1; // elections won (a goal counts them)
   chronicle(s, winner, 'emperor', T(`The electors chose the ruler of ${wn.short.en} as emperor (${best} of ${E.electors.length} votes).`, `Die Kurfürsten wählten den Herrscher von ${wn.short.de} zum Kaiser (${best} von ${E.electors.length} Stimmen).`));
   for (const p of s.playerNations) if (s.nations[p]?.isHRE) notice(s, p, 'emperor', p === winner ? T('We have been elected emperor!', 'Wir wurden zum Kaiser gewählt!') : T(`The ruler of ${wn.short.en} is the new emperor.`, `Der Herrscher von ${wn.short.de} ist der neue Kaiser.`));
 }

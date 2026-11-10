@@ -30,6 +30,8 @@ export const PLACE_DE: Record<string, string> = {
   Chełmno: 'Kulm', Kołobrzeg: 'Kolberg', Legnica: 'Liegnitz', Opole: 'Oppeln', Racibórz: 'Ratibor', Cieszyn: 'Teschen',
   Opava: 'Troppau', Cheb: 'Eger', 'Karlovy Vary': 'Karlsbad', 'Kutná Hora': 'Kuttenberg', Jihlava: 'Iglau', Znojmo: 'Znaim', Žatec: 'Saaz',
   Litoměřice: 'Leitmeritz', Bautzen: 'Bautzen', Görlitz: 'Görlitz', Frankfurt: 'Frankfurt', Ghent: 'Gent',
+  Meissen: 'Meißen', Świdnica: 'Schweidnitz', Jawor: 'Jauer', Brzeg: 'Brieg', Głogów: 'Glogau', Nysa: 'Neisse', Kłodzko: 'Glatz',
+  Zágráb: 'Agram', Thebes: 'Theben', Candia: 'Kandia', Corfu: 'Korfu', Tarnovo: 'Tarnowo', Smederevo: 'Semendria', Tangier: 'Tanger', Lutsk: 'Luzk',
   // lands, used inside province names
   Normandy: 'Normandie', Flanders: 'Flandern', Burgundy: 'Burgund', Brittany: 'Bretagne', Bohemia: 'Böhmen', Moravia: 'Mähren',
   Silesia: 'Schlesien', Bavaria: 'Bayern', Swabia: 'Schwaben', Saxony: 'Sachsen', Austria: 'Österreich', Styria: 'Steiermark',

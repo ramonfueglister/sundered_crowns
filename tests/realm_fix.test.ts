@@ -364,6 +364,53 @@ describe('situation actions that would do nothing are refused; the code of the B
   });
 });
 
+describe("Bohemia's goals and the German place names", () => {
+  it('Bohemia has branches for the diet, the election, the estates, Silesia and the chalice, each with a count to show', () => {
+    const b = nat('bohemia');
+    const ids = goalsFor(b).map((g) => g.id);
+    for (const id of ['reform', 'majesty', 'election', 'code', 'estates', 'schweidnitz', 'silesian_duchies', 'one_kingdom']) expect(ids).toContain(`bohemia.${id}`);
+    for (const id of ['reform', 'majesty', 'election', 'code', 'estates', 'silesian_duchies', 'one_kingdom']) {
+      const g = goalsFor(b).find((x) => x.id === `bohemia.${id}`)!;
+      for (const c of goalConditions(s, w, b, g)) { expect(c.max).toBeGreaterThan(0); expect(c.frac).toBeGreaterThanOrEqual(0); expect(c.frac).toBeLessThanOrEqual(1); }
+    }
+    // the code's progress is the situation's bar against the mark for proclaiming it
+    const sit = s.situations.find((x) => x.id === 'kings_code')!;
+    const code = goalConditions(s, w, b, goalsFor(b).find((x) => x.id === 'bohemia.code')!)[0];
+    expect(code.cur).toBe(Math.max(0, sit.progress)); expect(code.max).toBe(30);
+    // the diet's reforms count the reforms passed
+    const ref = goalConditions(s, w, b, goalsFor(b).find((x) => x.id === 'bohemia.reform')!)[0];
+    expect(ref.cur).toBe(s.empire.reforms.length);
+  });
+  it('an election won is counted for the goal "the crown stays in Prague"', async () => {
+    const { empire } = await import('../src/sim/systems/empire');
+    const E = s.empire; const b = nat('bohemia');
+    const keep = { el: E.election, em: E.emperor, last: E.lastElection, fav: E.favour, flag: b.flags.elected_emperor, auth: E.authority, mods: s.nations.map((n) => n.modifiers.slice()) };
+    try {
+      const g = goalsFor(b).find((x) => x.id === 'bohemia.election')!;
+      expect(goalConditions(s, w, b, g)[0].ok).toBe(false);
+      // an election with Bohemia as the only candidate closes today
+      E.election = { opened: s.day - 45, closes: s.day, candidates: [b.id], votes: Object.fromEntries(E.electors.map((x) => [x, b.id])), late: E.emperor } as any;
+      empire.monthly!(mkCtx(s, w));
+      expect(E.election).toBeNull(); expect(E.emperor).toBe(b.id);
+      expect(b.flags.elected_emperor).toBe((keep.flag ?? 0) + 1);
+      const c = goalConditions(s, w, b, g)[0];
+      expect(c.ok).toBe(true); expect(c.cur).toBe(1); expect(c.max).toBe(1);
+    } finally {
+      E.election = keep.el; E.emperor = keep.em; E.lastElection = keep.last; E.favour = keep.fav; E.authority = keep.auth; s.nations.forEach((n, i) => { n.modifiers = keep.mods[i]; });
+      if (keep.flag === undefined) delete b.flags.elected_emperor; else b.flags.elected_emperor = keep.flag;
+    }
+  });
+  it('goal texts name places in German for German players (Wien, Meißen, Brünn)', () => {
+    const b = nat('bohemia');
+    const de = (id: string) => goalsFor(b).find((x) => x.id === id)!.desc.de;
+    expect(de('bohemia.austria')).toContain('Wien'); expect(de('bohemia.austria')).not.toContain('Vienna');
+    expect(de('bohemia.meissen')).toContain('Meißen');
+    expect(de('bohemia.moravia')).toContain('Brünn');
+    expect(de('bohemia.schweidnitz')).toContain('Schweidnitz und Jauer');
+    expect(goalsFor(b).find((x) => x.id === 'bohemia.austria')!.desc.en).toContain('Vienna');
+  });
+});
+
 describe('the select screen and the administration', () => {
   it('the realm lites mark the emperor and the electors (the select screen lists them)', async () => {
     const { nationLites } = await import('../src/game/view');
