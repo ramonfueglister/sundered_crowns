@@ -183,7 +183,7 @@ export function answerCall(s: GameState, w: World, call: { war: number; member: 
     if (!war.def.includes(em.id) && !war.att.includes(em.id)) war.def.push(em.id);
     moveAuth(s, 'x_emp_defended', 2); em.prestige = clamp(em.prestige + 5, -100, 100);
     addOpinion(s, m.id, em.id, 'imperial_defence', 25, 365 * 10);
-    chronicle(s, em.id, 'empire', T(`The emperor took up arms for ${m.short.en} against ${a.short.en}.`, `Der Kaiser griff für ${m.short.de} gegen ${a.short.de} zu den Waffen.`));
+    chronicle(s, em.id, 'empire', T(`The emperor took up arms for ${m.short.en} against ${a.short.en}.`, `Der Kaiser griff für ${m.short.de} gegen ${a.short.de} zu den Waffen.`), undefined, [m.id, a.id]);
     for (const p of s.playerNations) if (p === m.id || p === a.id) notice(s, p, 'empire', T(`The emperor has come to the defence of ${m.short.en}.`, `Der Kaiser ist ${m.short.de} zu Hilfe gekommen.`), { war: war.id });
   } else {
     call.answer = -1;
@@ -192,7 +192,7 @@ export function answerCall(s: GameState, w: World, call: { war: number; member: 
     moveAuth(s, 'x_emp_ignored', far || nationDev(s, m.id) < 100 ? -1.5 : -3); em.prestige = clamp(em.prestige - 5, -100, 100);
     addOpinion(s, m.id, em.id, 'abandoned_by_emperor', -30, 365 * 10);
     for (const id of E.members) if (id !== m.id && id !== em.id && s.nations[id]?.alive) addOpinion(s, id, em.id, 'emperor_failed_member', -10, 365 * 5);
-    chronicle(s, em.id, 'empire', T(`The emperor left ${m.short.en} to fight ${a.short.en} alone.`, `Der Kaiser ließ ${m.short.de} allein gegen ${a.short.de} kämpfen.`));
+    chronicle(s, em.id, 'empire', T(`The emperor left ${m.short.en} to fight ${a.short.en} alone.`, `Der Kaiser ließ ${m.short.de} allein gegen ${a.short.de} kämpfen.`), undefined, [m.id, a.id]);
     if (isHuman(s, m.id)) notice(s, m.id, 'empire', T('The emperor will not come to our defence.', 'Der Kaiser kommt uns nicht zu Hilfe.'), { war: war.id });
   }
 }
@@ -233,10 +233,10 @@ export function answerOrder(s: GameState, w: World, order: { war: number; to: nu
   if (!war || !a?.alive) { order.answer = -1; return; }
   if (obey) {
     order.answer = 1;
-    const d = war.defLead;
+    const d = war.defLead, sides = [...war.att, ...war.def];
     concludePeace(s, w, war, war.attLead, d, [{ type: 'white_peace' }]);
     moveAuth(s, 'x_emp_obeyed', ORDER_OBEYED);
-    chronicle(s, a.id, 'empire', T(`At the emperor's command ${a.short.en} made peace with ${s.nations[d].short.en}.`, `Auf Befehl des Kaisers schloss ${a.short.de} Frieden mit ${s.nations[d].short.de}.`));
+    chronicle(s, a.id, 'empire', T(`At the emperor's command ${a.short.en} made peace with ${s.nations[d].short.en}.`, `Auf Befehl des Kaisers schloss ${a.short.de} Frieden mit ${s.nations[d].short.de}.`), undefined, [em?.id ?? -1, ...sides]);
   } else {
     order.answer = -1;
     moveAuth(s, 'x_emp_defied', ORDER_DEFIED);
@@ -244,7 +244,7 @@ export function answerOrder(s: GameState, w: World, order: { war: number; to: nu
     a.modifiers.push({ id: 'imperial_ban', until: s.day + 365 * BAN_YEARS, label: T('Defied the emperor', 'Dem Kaiser getrotzt'), effects: { ...BAN_EFFECTS } });
     for (const id of E.members) if (id !== a.id && s.nations[id]?.alive) addOpinion(s, id, a.id, 'defied_emperor', -20, 365 * 5);
     if (em?.alive && !hasTreaty(s, em.id, a.id, 'claim')) s.treaties.push({ a: Math.min(em.id, a.id), b: Math.max(em.id, a.id), type: 'claim', since: s.day, until: s.day + 365 * BAN_YEARS });
-    chronicle(s, a.id, 'empire', T(`${a.short.en} defied the emperor's order to make peace.`, `${a.short.de} trotzte dem Friedensgebot des Kaisers.`));
+    chronicle(s, a.id, 'empire', T(`${a.short.en} defied the emperor's order to make peace.`, `${a.short.de} trotzte dem Friedensgebot des Kaisers.`), undefined, [em?.id ?? -1, war.defLead]);
     if (em && isHuman(s, em.id)) notice(s, em.id, 'empire', T(`${a.short.en} defies our order to make peace.`, `${a.short.de} trotzt unserem Friedensgebot.`), { war: war.id });
   }
 }
@@ -544,7 +544,7 @@ export function answerLeagueCall(s: GameState, w: World, n: Nation, warId: numbe
   if (!lg.members.includes(n.id) || !leagueCallable(s, w, war, n.id, c.member, c.attacker)) return 'no call of the league is pending';
   if (!yes) { stayedOut(s, n.id, c.member); return null; }
   war.def.push(n.id);
-  chronicle(s, n.id, 'league', T(`${n.short.en} answered the league's call and took up arms for ${s.nations[c.member].short.en}.`, `${n.short.de} folgte dem Ruf des Bundes und griff für ${s.nations[c.member].short.de} zu den Waffen.`));
+  chronicle(s, n.id, 'league', T(`${n.short.en} answered the league's call and took up arms for ${s.nations[c.member].short.en}.`, `${n.short.de} folgte dem Ruf des Bundes und griff für ${s.nations[c.member].short.de} zu den Waffen.`), undefined, [c.member, c.attacker]);
   return null;
 }
 /** Calls left unanswered: the member stays out. Calls for wars that ended lapse. */

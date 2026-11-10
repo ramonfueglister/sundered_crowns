@@ -1224,7 +1224,7 @@ function enforceRebels(s: GameState, w: World, n: Nation, a: Army, held: number)
   if (f === 'separatist' && locs.length >= 3) {
     // break away as a new nation
     const nn = releaseNation(s, w, n, locs, s.loc.culture[locs[0]], landFaith(s, locs));
-    chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0]);
+    chronicle(s, nn.id, 'independence', { en: `Rebels in ${w.names[locs[0]]} broke away from ${n.short.en} and founded ${nn.short.en}.`, de: `Rebellen bei ${w.namesDe[locs[0]]} sagten sich von ${n.short.de} los und gründeten ${nn.short.de}.` }, locs[0], [n.id]);
   } else {
     for (const l of locs) s.loc.ctrl[l] = n.id as any;
     if (f === 'peasant') { n.taxRate = n.taxRate.map((t) => t * 0.8); n.modifiers.push({ id: 'peasant_concessions', until: s.day + 365 * 5, label: { en: 'Concessions to the commons', de: 'Zugeständnisse an die Gemeinen' }, effects: { unrest: -6, tax: -0.05 } }); }

@@ -77,7 +77,7 @@ function topOver(s: GameState, n: number): number { let k = n, g = 0; while (s.n
 function tell(s: GameState, text: I18n, who?: number[], loc?: number) {
   for (const p of s.playerNations) if (!who || who.includes(p)) notice(s, p, 'situation', text, loc !== undefined ? { loc } : {});
 }
-function world(s: GameState, text: I18n, nation = -1, loc?: number) { chronicle(s, nation, 'situation', text, loc); }
+function world(s: GameState, text: I18n, nation = -1, loc?: number, also?: number[]) { chronicle(s, nation, 'situation', text, loc, also); }
 function avgUnrest(s: GameState, id: number) { const ls = nationLocsRO(s, id); let u = 0; for (const l of ls) u += s.loc.unrest[l]; return ls.length ? u / ls.length : 0; }
 function neighboursOf(s: GameState, w: World, id: number): Set<number> {
   const out = new Set<number>();
@@ -268,7 +268,7 @@ const DEFS: SituationDef[] = [
         const goal = land.filter((l) => s.loc.owner[l] === def.id).sort((a, b) => s.loc.dev[b] - s.loc.dev[a]).slice(0, 6);
         if (aiWar(s, w, att.id, def.id, 'conquest', goal) >= 0) {
           sit.data.nextWar = y + 6 + Math.floor(rand(s.rng) * 8); sit.data.bouts = (sit.data.bouts || 0) + 1;
-          world(s, { en: `The war between ${en.short.en} and ${fr.short.en} for the crown of France flared up again.`, de: `Der Krieg zwischen ${en.short.de} und ${fr.short.de} um die Krone Frankreichs flammte wieder auf.` }, att.id);
+          world(s, { en: `The war between ${en.short.en} and ${fr.short.en} for the crown of France flared up again.`, de: `Der Krieg zwischen ${en.short.de} und ${fr.short.de} um die Krone Frankreichs flammte wieder auf.` }, att.id, undefined, [en.id, fr.id]);
         } else sit.data.nextWar = y + 2;
       }
       // the burden of the long war and the rally of the realm
@@ -384,7 +384,7 @@ const DEFS: SituationDef[] = [
             sit.data.wars++; sit.data.nextCrusade = y + 4;
             const war = s.wars.find((x) => x.id === wid);
             if (war) for (const nb of neighboursOf(s, w, h.id)) { const o = s.nations[nb]; if (o.alive && o.faith === LATIN && o.overlord < 0 && !human(s, o.id) && !war.att.includes(o.id) && !war.def.includes(o.id) && chance(s.rng, 0.4)) war.att.push(o.id); }
-            world(s, { en: `A crusade was proclaimed against the chalice in ${h.short.en}.`, de: `Gegen den Kelch in ${h.short.de} wurde ein Kreuzzug ausgerufen.` }, lead.id, h.capital);
+            world(s, { en: `A crusade was proclaimed against the chalice in ${h.short.en}.`, de: `Gegen den Kelch in ${h.short.de} wurde ein Kreuzzug ausgerufen.` }, lead.id, h.capital, [h.id]);
             tell(s, { en: `A crusade has been proclaimed against ${h.short.en}.`, de: `Gegen ${h.short.de} wurde ein Kreuzzug ausgerufen.` });
           }
         }
@@ -520,7 +520,7 @@ const DEFS: SituationDef[] = [
           if (aiWar(s, w, o.id, target, 'conquest', goal, cityWar && target === cityOwner?.id) < 0) continue;
           sit.data.wars++; sit.data.nextWar = y + 3 + Math.floor(rand(s.rng) * 3);
           const t = s.nations[target];
-          world(s, { en: `The ${o.adj.en} host marched against ${t.short.en}.`, de: `Das Heer von ${o.short.de} zog gegen ${t.short.de}.` }, o.id, t.capital);
+          world(s, { en: `The ${o.adj.en} host marched against ${t.short.en}.`, de: `Das Heer von ${o.short.de} zog gegen ${t.short.de}.` }, o.id, t.capital, [t.id]);
           break;
         }
       }
@@ -600,7 +600,7 @@ const DEFS: SituationDef[] = [
         for (const a of made) for (const b of made) if (a < b && !s.nations[a].rivals.includes(b)) { s.nations[a].rivals.push(b); s.nations[b].rivals.push(a); }
         sit.stage = 1; sit.data.split = y; sit.progress = 100;
         dropMod(h, 'great_troubles');
-        world(s, { en: `The Horde has broken apart: rival khans now rule ${made.map((x) => s.nations[x].short.en).join(', ')}.`, de: `Die Horde ist zerbrochen: Rivalisierende Khane herrschen nun über ${made.map((x) => s.nations[x].short.de).join(', ')}.` }, h.id, s.nations[made[0]].capital);
+        world(s, { en: `The Horde has broken apart: rival khans now rule ${made.map((x) => s.nations[x].short.en).join(', ')}.`, de: `Die Horde ist zerbrochen: Rivalisierende Khane herrschen nun über ${made.map((x) => s.nations[x].short.de).join(', ')}.` }, h.id, s.nations[made[0]].capital, made);
         for (const p of s.playerNations) notice(s, p, 'situation', { en: 'The Horde has broken apart into rival khanates.', de: 'Die Horde ist in rivalisierende Khanate zerfallen.' }, { loc: h.capital });
         s.flags.ownershipDirty = s.day;
       }
@@ -659,7 +659,7 @@ const DEFS: SituationDef[] = [
         if (((y >= 1440 && !parias) || strong) && !s.wars.some((x) => x.attLead === c!.id) && c.warExhaustion < 40 && c.concord > -30) {
           sit.stage = 1;
           if (g.overlord === c.id) { g.overlord = -1; g.subjectType = null; }
-          world(s, { en: `${g.short.en} refused its tribute; ${c.short.en} prepared the war for Granada.`, de: `${g.short.de} verweigerte den Tribut; ${c.short.de} rüstete zum Krieg um Granada.` }, c.id, g.capital);
+          world(s, { en: `${g.short.en} refused its tribute; ${c.short.en} prepared the war for Granada.`, de: `${g.short.de} verweigerte den Tribut; ${c.short.de} rüstete zum Krieg um Granada.` }, c.id, g.capital, [g.id]);
         }
         return;
       }
@@ -680,7 +680,7 @@ const DEFS: SituationDef[] = [
           const far = (x: number) => { const n = s.nations[x]; return !n || n.capital < 0 || w.lat[n.capital] < 36 || (city >= 0 && w.distKm(n.capital, city) > 600) || faithFamily(n.faith) === 'christian'; };
           if (war) war.def = war.def.filter((x) => x === war.defLead || s.nations[x]?.overlord === g.id || human(s, x) || !far(x));
           sit.data.wars = (sit.data.wars || 0) + 1;
-          world(s, { en: `${c.short.en} marched on the emirate of ${g.short.en}.`, de: `${c.short.de} zog gegen das Emirat ${g.short.de}.` }, c.id, g.capital);
+          world(s, { en: `${c.short.en} marched on the emirate of ${g.short.en}.`, de: `${c.short.de} zog gegen das Emirat ${g.short.de}.` }, c.id, g.capital, [g.id]);
         }
       }
     },
@@ -808,7 +808,7 @@ const DEFS: SituationDef[] = [
         if (ext) joinWar(s, war, ext.id, protSide, 1);
         const rival = s.nations.filter((n) => n.alive && !n.isHRE && n.overlord < 0 && n.faith === LATIN && n.id !== emp.id && (n.rivals.includes(emp.id) || n.key === 'france') && n.capital >= 0 && w.distKm(n.capital, emp.capital) < 1500)[0];
         if (rival) joinWar(s, war, rival.id, protSide, 1);
-        world(s, { en: `Foreign crowns entered the war of the confessions${ext ? `: ${ext.short.en}` : ''}${rival ? `${ext ? ' and ' : ': '}${rival.short.en}` : ''}.`, de: `Fremde Kronen traten in den Krieg der Konfessionen ein${ext ? `: ${ext.short.de}` : ''}${rival ? `${ext ? ' und ' : ': '}${rival.short.de}` : ''}.` });
+        world(s, { en: `Foreign crowns entered the war of the confessions${ext ? `: ${ext.short.en}` : ''}${rival ? `${ext ? ' and ' : ': '}${rival.short.en}` : ''}.`, de: `Fremde Kronen traten in den Krieg der Konfessionen ein${ext ? `: ${ext.short.de}` : ''}${rival ? `${ext ? ' und ' : ': '}${rival.short.de}` : ''}.` }, -1, undefined, [ext?.id ?? -1, rival?.id ?? -1]);
       }
       const lead = s.nations[sp.cath];
       if (sit.stage >= 1 && (lead.warExhaustion > 70 || s.day - sit.data.warStart > 365 * 25)) sit.stage = 3;
@@ -870,7 +870,7 @@ const DEFS: SituationDef[] = [
           const war = s.wars.find((x) => x.id === wid)!;
           for (const f of foes.slice(1)) if (opinion(s, f.id, id) < -10 || chance(s.rng, 0.35)) joinWar(s, war, f.id, 'att', 1);
           sit.data.wars = (sit.data.wars || 0) + 1;
-          world(s, { en: `The crowned heads formed a coalition against the ${r.name.en}.`, de: `Die gekrönten Häupter verbündeten sich gegen die ${r.name.de}.` }, lead.id, r.capital);
+          world(s, { en: `The crowned heads formed a coalition against the ${r.name.en}.`, de: `Die gekrönten Häupter verbündeten sich gegen die ${r.name.de}.` }, lead.id, r.capital, [r.id, ...foes.map((f) => f.id)]);
         }
       }
       sit.stage = revs.some((id) => s.wars.some((x) => x.goal.type === 'coalition' && x.goal.target === id)) ? 2 : revs.length ? 1 : 0;

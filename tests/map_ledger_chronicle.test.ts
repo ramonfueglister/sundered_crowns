@@ -8,7 +8,8 @@ import { answer, mapModeColors, borderColors, MODE_SCALE } from '../src/game/vie
 import { GOODS } from '../src/sim/defs';
 import { FAITHS, ALL_CULTURES } from '../src/sim/content/peoples';
 import { fogAnswer, sightOf, metRealms, fogChronicle, fogTick } from '../src/game/fog';
-import { declareWar, applyPeace } from '../src/sim/systems/war';
+import { declareWar, applyPeace, war as warSystem } from '../src/sim/systems/war';
+import { military as militarySystem, newArmy } from '../src/sim/systems/military';
 import { chronicle as addEntry, chronInvolves } from '../src/sim/ctx';
 import { chronicle, ownChronicle, addChronicle, setChronicle } from '../src/game/client';
 import type { GameState, ChronEntry } from '../src/sim/types';
@@ -37,6 +38,83 @@ describe('chronicle: every realm an entry concerns', () => {
     expect(peace.nation).toBe(G);
     expect(chronInvolves(peace, P)).toBe(true);
     expect(chronInvolves(peace, C)).toBe(war.att.includes(C) || war.def.includes(C));
+  });
+
+  it('a Common Front rising against a realm is in that realm\'s own history, and in each member\'s', () => {
+    const t = createGame(w, loadSetup(1356), loadHubs(), 4243, { player: [] });
+    const agg = t.nations[nid(t, 'portugal')];
+    let entry: ChronEntry | undefined;
+    // the front's pressure builds month by month (war.ts dreadMonth); only the war system's month is run
+    for (let m = 0; m < 120 && !entry; m++) {
+      agg.dread = 90; const from = t.chronicle.length;
+      warSystem.monthly!({ s: t, w } as any);
+      entry = t.chronicle.slice(from).find((e) => e.kind === 'coalition');
+    }
+    expect(entry, 'no Common Front formed against Portugal').toBeTruthy();
+    const war = t.wars.find((x) => x.goal.type === 'coalition' && x.goal.target === agg.id)!;
+    expect(entry!.nation).toBe(war.attLead);
+    expect(chronInvolves(entry!, agg.id)).toBe(true);
+    for (const x of war.att) expect(chronInvolves(entry!, x)).toBe(true);
+  });
+
+  it('rebels breaking away are in the history of the realm they left', () => {
+    const t = createGame(w, loadSetup(1356), loadHubs(), 4244, { player: [] });
+    const n = t.nations[nid(t, 'portugal')];
+    const locs: number[] = []; for (let i = 0; i < w.L && locs.length < 3; i++) if (t.loc.owner[i] === n.id && i !== n.capital) locs.push(i);
+    const a = newArmy(t, n.id, locs[0], [{ type: 0, men: 3000 }], false, 'Separatists');
+    a.rebels = { faction: 'separatist', demand: 'independence', target: n.id };
+    for (const l of locs) t.loc.ctrl[l] = -2 as any;
+    const from = t.chronicle.length;
+    militarySystem.monthly!({ s: t, w } as any);
+    const entry = t.chronicle.slice(from).find((e) => e.kind === 'independence')!;
+    expect(entry, 'the rebels did not break away').toBeTruthy();
+    expect(entry.nation).not.toBe(n.id);
+    expect(chronInvolves(entry, n.id)).toBe(true);
+    expect(t.nations[entry.nation].alive).toBe(true);
+  });
+
+  it('every entry whose text names two realms passes the other ones (source check of src/sim)', async () => {
+    const { readFileSync, readdirSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const files: string[] = [];
+    const walk = (d: string) => { for (const f of readdirSync(d, { withFileTypes: true })) { const p = join(d, f.name); if (f.isDirectory()) walk(p); else if (p.endsWith('.ts')) files.push(p); } };
+    walk(join(__dirname, '../src/sim'));
+    // the arguments of a call, split at its top level (strings, template literals and brackets skipped)
+    const callArgs = (src: string, open: number): string[] => {
+      // stack: open brackets, quotes, and '${' for an expression inside a template literal
+      const args: string[] = []; const stack: string[] = []; let cur = '';
+      for (let i = open; i < src.length; i++) {
+        const c = src[i]; const top = stack[stack.length - 1];
+        if (top === '`' || top === "'" || top === '"') {
+          cur += c;
+          if (c === '\\') { cur += src[++i]; continue; }
+          if (c === top) stack.pop();
+          else if (top === '`' && c === '$' && src[i + 1] === '{') { cur += '{'; i++; stack.push('${'); }
+          continue;
+        }
+        if (c === '`' || c === "'" || c === '"' || c === '(' || c === '[' || c === '{') { stack.push(c); if (stack.length > 1) cur += c; continue; }
+        if (c === ')' || c === ']' || c === '}') { stack.pop(); if (!stack.length) { args.push(cur.trim()); return args; } cur += c; continue; }
+        if (c === ',' && stack.length === 1) { args.push(cur.trim()); cur = ''; continue; }
+        cur += c;
+      }
+      return args;
+    };
+    const missing: string[] = [];
+    for (const f of files) {
+      if (f.endsWith('ctx.ts')) continue;
+      const src = readFileSync(f, 'utf8');
+      // chronicle(s, nation, kind, text, loc?, also?) and the situations' world(s, text, nation?, loc?, also?)
+      for (const m of src.matchAll(/\b(chronicle|world)\(/g)) {
+        const args = callArgs(src, m.index! + m[0].length - 1);
+        const isWorld = m[1] === 'world';
+        if (isWorld ? args[0] !== 's' : args.length < 4) continue;
+        const text = isWorld ? args[1] : args[3];
+        const realms = new Set([...text.matchAll(/\$\{([^{}]*?)\.short\.en\}/g)].map((x) => x[1]));
+        if (realms.size < 2) continue;
+        if (args.length < (isWorld ? 5 : 6)) missing.push(`${f.split('src/sim/')[1]}:${src.slice(0, m.index).split('\n').length}`);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 
   it('the helper keeps the list short: no duplicates, not the realm itself, no empty list', () => {

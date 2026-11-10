@@ -687,7 +687,7 @@ export function concludePeace(s: GameState, w: World, war: War, from: number, to
       const city = w.names[pre.capital] ?? pre.short.en, cityDe = w.namesDe[pre.capital] ?? city;
       pre.name = { en: `Khanate of ${city}`, de: `Khanat ${cityDe}` }; pre.short = { en: city, de: cityDe }; pre.adj = { en: city, de: cityDe };
       delete pre.flags.pretender_of;
-      chronicle(s, pre.id, 'independence', { en: `The war of succession in ${legit.short.en} ended undecided: the ${pre.name.en} goes its own way.`, de: `Der Erbfolgekrieg in ${legit.short.de} endete unentschieden: das ${pre.name.de} geht seinen eigenen Weg.` });
+      chronicle(s, pre.id, 'independence', { en: `The war of succession in ${legit.short.en} ended undecided: the ${pre.name.en} goes its own way.`, de: `Der Erbfolgekrieg in ${legit.short.de} endete unentschieden: das ${pre.name.de} geht seinen eigenen Weg.` }, undefined, [legit.id]);
     }
   }
   // if the offer was between the war leaders, the whole war ends; otherwise only the separate peace
@@ -761,7 +761,7 @@ function dreadMonth(s: GameState, w: World) {
           delete agg.flags.front_months;
           const war = s.wars[s.wars.length - 1];
           for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) war.att.push(m);
-          chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` });
+          chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` }, undefined, [agg.id, ...members]);
           notice(s, agg.id, 'coalition', { en: `A Common Front of ${members.length} realms has declared war on us!`, de: `Eine Gemeinsame Front von ${members.length} Reichen hat uns den Krieg erklärt!` }, { war: war.id });
         }
       }
@@ -819,7 +819,7 @@ function endCivilWar(s: GameState, w: World, war: War, pre: Nation, legit: Natio
   const text = pretenderWon
     ? { en: `The pretender prevailed in ${legit.short.en}: ${r} now wears the crown of a reunited realm.`, de: `Der Prätendent setzte sich in ${legit.short.de} durch: ${r} trägt nun die Krone des wiedervereinten Reiches.` }
     : { en: `The pretender in ${legit.short.en} submitted; the realm is whole again under ${r}.`, de: `Der Prätendent in ${legit.short.de} unterwarf sich; das Reich ist unter ${r} wieder vereint.` };
-  chronicle(s, legit.id, 'peace', text);
+  chronicle(s, legit.id, 'peace', text, undefined, [...sides]);
   for (const p of s.playerNations) if (sides.has(p)) notice(s, p, 'peace', text, { loc: legit.capital });
   s.flags.lastPeaceDay = s.day;
 }
