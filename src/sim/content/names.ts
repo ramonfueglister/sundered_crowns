@@ -332,11 +332,14 @@ export function declineDe(name: string, female: boolean, kase: 'nom' | 'acc' | '
   return name
     .replace(/( [IVXLC]+\.) (der|die) ([A-ZÄÖÜ][^()]*)$/, (_m, num, _a, e) => `${num} ${art} ${ep(e)}`)
     .replace(/\((der|die) ([^)]+)\)/, (_m, _a, e) => `(${art} ${ep(e)})`)
-    .replace(/^(\S+) (der|die) ([A-ZÄÖÜ][^(),]*)$/, (_m, g, _a, e) => `${g} ${art} ${ep(e)}`);
+    // a lone given name with an epithet ("Margarete die Große"); not a council or a title ("Rat der Sachems")
+    .replace(/^(\S+) (der|die) ([A-ZÄÖÜ][^(),]*)$/, (m, g, _a, e) => (EPITHETS_DE.has(`der ${e}`) ? `${g} ${art} ${ep(e)}` : m));
 }
+/** Every German epithet of the tables above, in the masculine form ("der Große"). */
+const EPITHETS_DE = new Set([...Object.values(EPITHET_DE), ...Object.values(EPITHET_FR)]);
 /** Which case a German event text asks of the name that follows this word ("bittet {ruler}" → accusative, "von
  *  {ruler}" → dative); a word not listed leaves the nominative. */
-const DE_DAT = new Set(['von', 'vom', 'zu', 'mit', 'bei', 'nach', 'aus', 'seit', 'gegenüber', 'zeigt', 'bietet', 'bieten', 'trugen', 'seien', 'gehorcht', 'dient', 'dienen', 'schreibt']);
+const DE_DAT = new Set(['von', 'vom', 'zu', 'mit', 'bei', 'nach', 'aus', 'seit', 'gegenüber', 'zeigt', 'bietet', 'bieten', 'seien', 'gehorcht', 'dient', 'dienen', 'schreibt']);
 const DE_ACC = new Set(['bitten', 'bittet', 'fragt', 'fragen', 'erinnern', 'erinnert', 'fleht', 'flehen', 'drängen', 'drängt', 'an', 'für', 'gegen', 'um', 'durch', 'ohne', 'verspricht', 'ehrt', 'ehren', 'grüßt', 'grüßen']);
 export function caseAfterDe(word: string): 'nom' | 'acc' | 'dat' {
   const w = word.toLowerCase().replace(/[^a-zäöüß]/g, '');

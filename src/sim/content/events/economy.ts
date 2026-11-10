@@ -12,7 +12,7 @@ export const ECONOMY_EVENTS: EventDef[] = [
     title: { en: 'The Bank Has Failed', de: 'Die Bank ist zusammengebrochen' },
     text: {
       en: 'The great banking house that lent to {ruler} has closed its counters. Its partners have fled, its depositors storm the shutters, and its agents now demand immediate repayment of everything the crown owes, so as to save what can be saved.',
-      de: 'Das große Bankhaus, das {ruler} Geld geliehen hat, hat seine Schalter geschlossen. Seine Teilhaber sind geflohen, die Einleger stürmen die Läden, und seine Faktoren verlangen nun die sofortige Rückzahlung aller Schulden der Krone, um zu retten, was zu retten ist.',
+      de: 'Das große Bankhaus, das {ruler_dat} Geld geliehen hat, hat seine Schalter geschlossen. Seine Teilhaber sind geflohen, die Einleger stürmen die Läden, und seine Faktoren verlangen nun die sofortige Rückzahlung aller Schulden der Krone, um zu retten, was zu retten ist.',
     },
     mtth: 200, cooldown: 40,
     trigger: (e) => e.s.day > 730 && (e.n.loans.length >= 2 || e.n.debt > inc(e) * 12),

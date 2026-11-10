@@ -419,6 +419,16 @@ describe('German text', () => {
     expect(declineDe('Eduard von Woodstock (der Schwarze Prinz)', false, 'acc')).toBe('Eduard von Woodstock (den Schwarzen Prinzen)');
     expect(declineDe('Margarete die Große', true, 'dat')).toBe('Margarete der Großen');
     expect(declineDe('Karl, Dauphin und Herzog der Normandie', false, 'dat')).toBe('Karl, Dauphin und Herzog der Normandie');
+    // review fixes: "trugen" asks the accusative, "das … Geld geliehen hat" the dative, and a council is not a name
+    expect(x('Die Jäger trugen {ruler_acc} auf einer Trage')).toBe('Die Jäger trugen Peter I. den Grausamen auf einer Trage');
+    expect(x('Die Jäger trugen {ruler} zurück')).toBe('Die Jäger trugen Peter I. der Grausame zurück'); // (no rule by the word: the text says which case)
+    const ev = (file: string, re: RegExp) => readFileSync(`src/sim/content/events/${file}`, 'utf8').match(re)?.[0];
+    expect(ev('court.ts', /Die Jäger trugen \{ruler_acc\}/)).toBeTruthy();
+    expect(ev('economy.ts', /das \{ruler_dat\} Geld geliehen hat/)).toBeTruthy();
+    expect(x('Das große Bankhaus, das {ruler_dat} Geld geliehen hat')).toBe('Das große Bankhaus, das Peter I. dem Grausamen Geld geliehen hat');
+    expect(declineDe('Rat der Sachems', false, 'acc')).toBe('Rat der Sachems');
+    expect(declineDe('Rat der Sachems', false, 'dat')).toBe('Rat der Sachems');
+    expect(declineDe('Häuptling der Cocom', false, 'dat')).toBe('Häuptling der Cocom');
   });
 
   it('the AI log names every command it shows, and Governance is one German word', () => {
