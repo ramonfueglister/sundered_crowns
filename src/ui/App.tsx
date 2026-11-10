@@ -12,7 +12,7 @@ import { TooltipLayer, Tip } from './Tip';
 import { MAP_MODES, type MapMode } from '../game/protocol';
 import * as P from './panels';
 import { initAudio, setMood, setVolumes, sfx } from './audio';
-import { autosaveTick, listSaves, loadSave } from './saves';
+import { autosaveTick, listSaves, loadSave, saveLabel } from './saves';
 import { rgb, num } from './format';
 import { OnlineHud } from './online/OnlineButton';
 import { actionFor, keyFor, keyLabel } from './keys';
@@ -77,7 +77,7 @@ function MainMenu() {
     <div class="menu-box">
       <h1 class="title">Sundered Crowns</h1>
       <div class="subtitle">{lang.value === 'de' ? 'Europa 1356 – 1815' : 'Europe 1356 – 1815'}</div>
-      {saves[0] && <button class="btn big" onClick={() => cont(saves[0].id)}>{t('continue')} <small>{saves[0].label}</small></button>}
+      {saves[0] && <button class="btn big" onClick={() => cont(saves[0].id)}>{t('continue')} <small>{saveLabel(saves[0])}</small></button>}
       <button class="btn big start" onClick={() => start(1356)}><span>{t('new_game')} · {t('start_1356')}</span><small class="sub">{t('x_start_1356_sub')}</small></button>
       <button class="btn big start" onClick={() => start(1492)}><span>{t('new_game')} · {t('start_1492')}</span><small class="sub">{t('x_start_1492_sub')}</small></button>
       <div class="menu-sec">

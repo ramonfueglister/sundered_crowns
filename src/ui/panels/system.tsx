@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sim, view, nations } from '../../game/client';
 import { screen, panel, settings, saveSettings, selectedLoc, selectedNation, playerId, showToast, lastSpeed, openPanel, type Settings } from '../store';
-import { listSaves, loadSave, deleteSave, saveNow, importSave, type SaveMeta } from '../saves';
+import { listSaves, loadSave, deleteSave, saveNow, importSave, saveLabel, saveDate, type SaveMeta } from '../saves';
 import { setLang } from '../i18n';
 import { rendererRef } from '../MapView';
 import { timelapse, playTimelapse, abortTimelapse } from '../timelapse';
@@ -68,7 +68,7 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
   const exportSave = async (m: SaveMeta) => {
     const data = await loadSave(m.id); if (!data) return;
     const blob = new Blob([data as BlobPart], { type: 'application/octet-stream' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${m.label.replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'save'}.scsave`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${saveLabel(m).replace(/[^\p{L}\p{N} _-]+/gu, '').trim() || 'save'}.scsave`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
   const onFile = async (e: Event) => {
@@ -83,7 +83,7 @@ export function SavesPanel({ onLoad }: { onLoad?: (id: string) => void }) {
       <Btn small={false} cls="gold" onClick={() => saveNow(name.trim() || undefined).then(() => { showToast(t('saved')); sfx('page'); setName(''); reload(); }).catch((x) => showToast(String(x), 'err'))}>{t('save')}</Btn>
     </div>}
     {!saves ? <Empty>{t('loading')}…</Empty> : !saves.length ? <Empty>{t('no_saves')}</Empty> : <div class="save-list">{saves.map((m) => <div class="save-row">
-      <div class="sv-main"><div class="sv-label">{m.auto && <span class="tag">{t('auto')}</span>} {m.label}</div><div class="muted small">{m.date && <>{m.date} · </>}{new Date(m.real).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB')} · {num(m.size / 1024)} KB</div></div>
+      <div class="sv-main"><div class="sv-label">{m.auto && <span class="tag">{t('auto')}</span>} {saveLabel(m)}</div><div class="muted small">{saveDate(m) && <>{saveDate(m)} · </>}{new Date(m.real).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB')} · {num(m.size / 1024)} KB</div></div>
       <div class="sv-btns">
         <Btn cls="gold" onClick={() => load(m.id)}>{t('load_short')}</Btn>
         <Btn onClick={() => exportSave(m)}>{t('export')}</Btn>
