@@ -547,9 +547,11 @@ describe('the sides of a declaration (major: the dialog did not say who joins; a
 });
 
 describe('the towns of a conquest (major: the player could not choose them)', () => {
+  // Granada: 32 towns, more than a conquest covers, and no ally, guarantor or body of the realm to defend it, so that
+  // the defenders certain to fight are the defenders (review: the checks below were skipped for a three-town target)
   it('the dialog offers the land the goal covers, priced per town; the towns we name are the war’s goal; others are refused', () => {
     const s = fresh(); clearField(s);
-    const a = nat(s, 'portugal').id, b = plainTarget(s, a);
+    const a = nat(s, 'portugal').id, b = nat(s, 'granada').id;
     s.playerNations = [a];
     const dv = answer(s, w, a, { q: 'declare', target: b } as any) as any;
     const g = dv.goals.find((x: any) => x.goal === 'conquest');
@@ -563,24 +565,27 @@ describe('the towns of a conquest (major: the player could not choose them)', ()
     expect(g.towns[0].price).toBeCloseTo(cedeWorth(s, [towns[0]], dev), 9);
     // a town deep in their land (not covered by the goal) is refused
     const deep = owned(s, b).find((l) => !towns.includes(l));
-    if (deep !== undefined) expect(applyCommand(s, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: [deep] } as any).err).toBe('a town beyond what this war is fought for');
+    expect(deep).toBeDefined();
+    expect(applyCommand(s, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: [deep!] } as any).err).toBe('a town beyond what this war is fought for');
     // a single town of the set, not the default list, becomes the war goal
     const one = towns[towns.length - 1];
     expect(applyCommand(s, w, { t: 'declare', n: a, target: b, goal: 'conquest', locs: [one] } as any).ok).toBe(true);
     const war = s.wars.at(-1)!;
     expect(war.goal.locs).toEqual([one]);
-    // and the war's cession of exactly that town costs what the dialog said (no allies joined b)
-    if (war.def.length === 1) expect(termCost(s, war, { type: 'cede', locs: [one], to: a } as any, a, b)).toBeCloseTo(g.towns[g.towns.length - 1].price + CEDE_FIXED, 6);
+    // and the war's cession of exactly that town costs what the dialog said: the defenders are the ones it counted
+    expect(g.sides.def.map((x: any) => x.id)).toEqual([b]);
+    expect(war.def).toEqual([b]);
+    expect(termCost(s, war, { type: 'cede', locs: [one], to: a } as any, a, b)).toBeCloseTo(g.towns[g.towns.length - 1].price + CEDE_FIXED, 6);
   });
   it('a goal without towns refuses named towns; a situation’s war still names the towns it is about', () => {
     const s = fresh(); clearField(s);
-    const a = nat(s, 'portugal').id, b = plainTarget(s, a);
+    const a = nat(s, 'portugal').id, b = nat(s, 'granada').id;
     expect(declareRefusal(s, w, a, b, 'humiliate', [s.nations[b].capital])).toBe('a town beyond what this war is fought for');
     const deep = owned(s, b).find((l) => !goalTowns(s, w, a, b, 'conquest').includes(l));
-    if (deep !== undefined) {
-      expect(declareWar(s, w, a, b, 'conquest', [deep], { situation: true })).toBeNull();
-      expect(s.wars.at(-1)!.goal.locs).toEqual([deep]);
-    }
+    expect(deep).toBeDefined();
+    expect(declareRefusal(s, w, a, b, 'conquest', [deep!])).toBe('a town beyond what this war is fought for');
+    expect(declareWar(s, w, a, b, 'conquest', [deep!], { situation: true })).toBeNull();
+    expect(s.wars.at(-1)!.goal.locs).toEqual([deep]);
   });
 });
 
