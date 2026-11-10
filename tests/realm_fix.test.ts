@@ -192,3 +192,43 @@ describe('our own great-power standing', () => {
     expect(g2.mine.next.id).toBe(s.ranking[2]);
   });
 });
+
+describe('the diet lobbied member by member', () => {
+  it('the emperor can sway any voting member while the diet sits, at a cost scaled by its size', async () => {
+    const { dietVoters, dietStance, campaignCost, lobbyCost, nextReform } = await import('../src/sim/systems/empire');
+    const { nationDev } = await import('../src/sim/systems/war');
+    const E = s.empire; const em = s.nations[E.emperor];
+    const r = nextReform(s)!;
+    const voters = dietVoters(s).filter((id) => id !== em.id && !E.electors.includes(id));
+    const small = s.nations[voters.reduce((a, b) => (nationDev(s, a) <= nationDev(s, b) ? a : b))];
+    const big = s.nations[voters.reduce((a, b) => (nationDev(s, a) >= nationDev(s, b) ? a : b))];
+    const keepDiet = E.diet, keepFav = { ...(E.favour ?? {}) }, keepT = em.treasury, keepP = s.playerNations;
+    try {
+      s.playerNations = [em.id]; em.treasury = 1e6;
+      // without a sitting diet only electors can be given gifts
+      E.diet = null;
+      expect(applyCommand(s, w, { t: 'empire', n: em.id, action: 'campaign', target: small.id } as any).err).toBe('not an elector');
+      E.diet = { proposal: r.id, votesFor: [], votesAgainst: [], ends: s.day + 60, by: em.id } as any;
+      // a small member costs a fraction of the campaign cost, the greatest prince more; an elector at least the full cost
+      expect(lobbyCost(s, em, small)).toBeLessThan(campaignCost(s, em) * 0.25);
+      expect(lobbyCost(s, em, big)).toBeGreaterThan(lobbyCost(s, em, small) * 3);
+      const el = s.nations[E.electors.find((x) => x !== em.id && dietVoters(s).includes(x))!];
+      expect(lobbyCost(s, em, el)).toBeGreaterThanOrEqual(Math.round(campaignCost(s, em)));
+      const t0 = em.treasury, cost = lobbyCost(s, em, small);
+      const before = dietStance(s, small, r).find((x) => x[0] === 'x_el_gifts')?.[1] ?? 0;
+      expect(applyCommand(s, w, { t: 'empire', n: em.id, action: 'campaign', target: small.id } as any).ok).toBe(true);
+      expect(em.treasury).toBeCloseTo(t0 - cost, 6);
+      expect(dietStance(s, small, r).find((x) => x[0] === 'x_el_gifts')![1]).toBe(before + 15);
+      // the empire view lists every voter with its reasons, and the lobbying cost for the emperor
+      const v = answer(s, w, em.id, { q: 'empire' } as any) as any;
+      expect(v.dietMembers.length).toBe(dietVoters(s).length);
+      const row = v.dietMembers.find((x: any) => x.id === small.id);
+      expect(row.cost).toBe(lobbyCost(s, em, small));
+      expect(row.favour).toBe(before + 15);
+      expect(row.sum).toBeCloseTo(dietStance(s, small, r).reduce((p, x) => p + x[1], 0), 9);
+      // another member sees the votes and reasons, but no lobbying
+      const other = answer(s, w, small.id, { q: 'empire' } as any) as any;
+      expect(other.dietMembers.every((x: any) => x.cost === null)).toBe(true);
+    } finally { E.diet = keepDiet; E.favour = keepFav; em.treasury = keepT; s.playerNations = keepP; }
+  });
+});

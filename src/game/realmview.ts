@@ -8,6 +8,7 @@ import {
   IMPERIAL_REFORMS, nextReform, authorityDrift, crownEffects, memberEffects, internalWars, electionCandidates, voteScore, electorChoice, tally,
   campaignCost, dietStance, dietTally, dietPasses, dietCooldown, dietWeight, dietVoters, league, leagueEligible, leagueEffects, LEAGUE_NAME, defendScore, obeyScore,
   ORDER_COST, ORDER_OBEYED, ORDER_DEFIED, BAN_EFFECTS, BAN_YEARS, LEAGUE_CALL_EXHAUSTION, LEAGUE_STAYED_OUT, pennyParts, PENNY_CAP, hasReform,
+  lobbyCost, isLobby, isHuman, reformDef,
 } from '../sim/systems/empire';
 import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT, SPURNED } from '../sim/systems/powers';
 import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, grantFor, type AssemblyAsk } from '../sim/systems/government';
@@ -42,6 +43,7 @@ function empireView(s: GameState, w: World, me: number) {
   const drift = authorityDrift(s);
   const r = nextReform(s);
   const dt = dietTally(s);
+  const rd = reformDef(E.diet?.proposal ?? r?.id ?? ''); // the reform the tally is about
   const lg = league(s);
   return {
     emperor: E.emperor, authority: E.authority, members: E.members, electors: E.electors, reforms: E.reforms, isMember: !!n?.isHRE, elector: E.electors.includes(me), isEmperor: E.emperor === me,
@@ -52,13 +54,18 @@ function empireView(s: GameState, w: World, me: number) {
     candidates: cands.map((c) => ({ id: c, votes: t[c] ?? 0 })),
     electorViews: E.electors.map((x) => {
       const choice = electorChoice(s, w, x);
-      return { id: x, human: s.playerNations.includes(x), choice, rows: choice >= 0 ? voteScore(s, w, x, choice) : [], forMe: me !== choice && cands.includes(me) ? voteScore(s, w, x, me) : null, favour: E.favour?.[`${me}>${x}`] ?? 0 };
+      return { id: x, human: s.playerNations.includes(x), choice, rows: choice >= 0 ? voteScore(s, w, x, choice) : [], forMe: me !== choice && cands.includes(me) ? voteScore(s, w, x, me) : null, favour: E.favour?.[`${me}>${x}`] ?? 0, cost: n && s.nations[x] && isLobby(s, n, s.nations[x]) ? lobbyCost(s, n, s.nations[x]) : null };
     }),
     campaignCost: n ? campaignCost(s, n) : 0,
     reformList: IMPERIAL_REFORMS.map((x) => ({ id: x.id, name: x.name, desc: x.desc, cost: x.cost, passed: E.reforms.includes(x.id) })),
     next: r ? { id: r.id, name: r.name, cost: r.cost, stance: n && n.isHRE ? dietStance(s, n, r) : [] } : null,
     diet: E.diet ? { proposal: E.diet.proposal, ends: E.diet.ends, mine: E.diet.votesFor.includes(me) ? 1 : E.diet.votesAgainst.includes(me) ? -1 : 0 } : null,
     dietTally: { yes: dt.yes, no: dt.no, total: dt.total, passes: dietPasses(dt), votes: Object.entries(dt.votes).map(([id, v]) => ({ id: +id, v, weight: dietWeight(s.nations[+id]) })) },
+    // every voting member with its vote and reasons on the reform before the diet, and, for the emperor while the
+    // diet sits, what lobbying it costs (systems/empire.ts lobbyCost) and the favour it already has
+    dietMembers: rd && n?.isHRE ? dietVoters(s).map((id) => { const x = s.nations[id]; const rows = isHuman(s, id) ? [] : dietStance(s, x, rd);
+      return { id, weight: dietWeight(x), elector: E.electors.includes(id), human: isHuman(s, id), vote: dt.votes[id] ?? 0, sum: sum(rows), rows, favour: E.favour?.[`${E.emperor}>${id}`] ?? 0,
+        cost: n && isLobby(s, n, x) ? lobbyCost(s, n, x) : null }; }) : [],
     dietReady: s.day - (E.lastDiet ?? -1e9) >= dietCooldown(s) ? 0 : (E.lastDiet ?? 0) + dietCooldown(s),
     voters: dietVoters(s).length,
     calls: (E.calls ?? []).filter((c) => c.answer === 0).map((c) => ({ ...c, rows: s.nations[E.emperor]?.alive ? defendScore(s, w, s.nations[E.emperor], c) : [] })),

@@ -14,7 +14,7 @@ import { hash01, chance } from '../rng';
 
 type Row = [string | I18n, number];
 const T = (en: string, de: string): I18n => ({ en, de });
-const isHuman = (s: GameState, id: number) => s.playerNations.includes(id) || !!s.nations[id]?.playerId;
+export const isHuman = (s: GameState, id: number) => s.playerNations.includes(id) || !!s.nations[id]?.playerId;
 const alive = (s: GameState, id: number | undefined) => (id !== undefined && id >= 0 && s.nations[id]?.alive ? s.nations[id] : undefined);
 
 // ---------------------------------------------------------------- the reforms of the diet
@@ -345,17 +345,29 @@ function closeElection(s: GameState, w: World) {
   chronicle(s, winner, 'emperor', T(`The electors chose the ruler of ${wn.short.en} as emperor (${best} of ${E.electors.length} votes).`, `Die Kurfürsten wählten den Herrscher von ${wn.short.de} zum Kaiser (${best} von ${E.electors.length} Stimmen).`));
   for (const p of s.playerNations) if (s.nations[p]?.isHRE) notice(s, p, 'emperor', p === winner ? T('We have been elected emperor!', 'Wir wurden zum Kaiser gewählt!') : T(`The ruler of ${wn.short.en} is the new emperor.`, `Der Herrscher von ${wn.short.de} ist der neue Kaiser.`));
 }
-/** Gold a realm spends to win an elector's or a diet member's favour. */
+/** Gold a realm spends to win an elector's favour: two months of its taxes. */
 export function campaignCost(s: GameState, n: Nation): number { return Math.max(20, (n.income.tax || 10) * 2); }
-/** Campaign with an elector (for our own candidacy) or, as emperor during a diet, lobby a member. */
+/** Development at which lobbying a diet member costs as much as campaigning with an elector (a middling prince). */
+export const LOBBY_DEV = 150;
+/** Gold the emperor spends to lobby one member during a diet: the campaign cost scaled by the member's size, from a
+ *  tenth for a small imperial town to one and a half for the greatest princes. An elector, whose favour also counts
+ *  in the election, costs at least the full campaign cost. */
+export function lobbyCost(s: GameState, n: Nation, target: Nation): number {
+  const k = clamp(nationDev(s, target.id) / LOBBY_DEV, 0.1, 1.5);
+  return Math.max(10, Math.round(campaignCost(s, n) * (s.empire.electors.includes(target.id) ? Math.max(1, k) : k)));
+}
+/** Whether n would lobby target as emperor during a sitting diet (rather than campaign with an elector). */
+export const isLobby = (s: GameState, n: Nation, t: Nation) => !!s.empire.diet && s.empire.emperor === n.id && t.isHRE && dietVoters(s).includes(t.id);
+/** Campaign with an elector (for our own candidacy) or, as emperor during a diet, lobby any member at a cost scaled
+ *  by its size (lobbyCost). */
 export function campaign(s: GameState, n: Nation, target: number): string | null {
   const E = s.empire; const t = s.nations[target];
   if (!t?.alive || target === n.id) return 'invalid target';
   if (!n.isHRE || n.overlord >= 0) return 'not a member of the Empire';
-  const lobby = !!E.diet && E.emperor === n.id && t.isHRE;
+  const lobby = isLobby(s, n, t);
   if (!lobby && !E.electors.includes(target)) return 'not an elector';
   if (!lobby && hasReform(s, 'hereditary_crown') && alive(s, E.emperor)) return 'the crown is hereditary';
-  const cost = campaignCost(s, n);
+  const cost = lobby ? lobbyCost(s, n, t) : campaignCost(s, n);
   if (n.treasury < cost) return 'not enough gold';
   const k = `${n.id}>${target}`; const fav = (E.favour ??= {});
   if ((fav[k] ?? 0) >= 60) return 'they cannot be swayed further';
