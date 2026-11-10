@@ -1,9 +1,9 @@
 // Wars: justifications, declarations, war score, war exhaustion, peace treaties with costed terms,
 // AI acceptance with reasons, truces, Dread (expansion backlash) and the Common Front (coalitions).
 import { deName } from '../content/names_de';
-import type { GameState, War, PeaceTerm, Nation, WarGoal } from '../types';
+import type { GameState, War, PeaceTerm, Nation, WarGoal, PendingEvent } from '../types';
 import type { World } from '../world';
-import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, subjectsOf, topOverlord, treatiesOf } from '../ctx';
+import { type System, clamp, chronicle, notice, newId, addOpinion, allies, atWar, hasTreaty, opinion, rel, subjectsOf, topOverlord, treatiesOf } from '../ctx';
 import { EPOCH } from '../ctx';
 import { landmarkValue } from './landmarks';
 import { C, B, BI } from '../defs';
@@ -258,6 +258,8 @@ export const warHooks: {
   /** The same refusal without side effects (no assembly is held): the AI drops the targets it would be refused. */
   check?: (s: GameState, w: World, a: number, b: number, goal: WarGoal['type']) => string | null;
   declared?: (s: GameState, w: World, war: War) => void;
+  /** A realm joined the attackers of a war (an ally's call): the emperor attacking a member pays in authority. */
+  joined?: (s: GameState, w: World, war: War, n: number) => void;
 } = {};
 
 export function declareRefusal(s: GameState, w: World, a: number, b: number, goalType: WarGoal['type'], locs: number[] = []): string | null {
@@ -319,13 +321,19 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
     goal: { type: goalType, target: b, locs, ...(cb ? { cb } : {}) }, start: s.day, score: 0, battleScore: 0, tickScore: 0, battles: 0, lossesA: 0, lossesD: 0, offers: [],
   };
   s.wars.push(war);
-  // call allies
+  // call allies: the AI answers at once (willJoin), a player is asked (callToArms)
   // in a war of reconquest or of faith the attacker's brethren in faith do not defend the other faith
   const holy = goalType === 'reconquest' || goalType === 'faith';
-  for (const al of allies(s, target)) if (!war.att.includes(al) && !war.def.includes(al) && !(holy && FAITHS[s.nations[al].faith]?.family === FAITHS[na.faith]?.family && FAITHS[nb.faith]?.family !== FAITHS[na.faith]?.family) && willJoin(s, al, target, a, true)) { war.def.push(al); }
-  for (const al of allies(s, a)) if (!war.att.includes(al) && !war.def.includes(al) && willJoin(s, al, a, target, false)) { war.att.push(al); }
-  // guarantees
-  for (const t of s.treaties) if (t.type === 'guarantee' && t.b === b && t.until > s.day && !war.att.includes(t.a) && !war.def.includes(t.a) && s.nations[t.a].alive) war.def.push(t.a);
+  for (const al of allies(s, target)) if (!war.att.includes(al) && !war.def.includes(al) && !(holy && FAITHS[s.nations[al].faith]?.family === FAITHS[na.faith]?.family && FAITHS[nb.faith]?.family !== FAITHS[na.faith]?.family) && mayJoin(s, al, target, a)) {
+    if (s.playerNations.includes(al)) callToArms(s, war, al, target, true); else if (willJoin(s, al, target, a, true)) war.def.push(al);
+  }
+  for (const al of allies(s, a)) if (!war.att.includes(al) && !war.def.includes(al) && mayJoin(s, al, a, target)) {
+    if (s.playerNations.includes(al)) callToArms(s, war, al, a, false); else if (willJoin(s, al, a, target, false)) { war.att.push(al); warHooks.joined?.(s, w, war, al); }
+  }
+  // guarantees (a player guarantor is asked like an ally)
+  for (const t of s.treaties) if (t.type === 'guarantee' && t.b === b && t.until > s.day && !war.att.includes(t.a) && !war.def.includes(t.a) && s.nations[t.a].alive) {
+    if (s.playerNations.includes(t.a)) callToArms(s, war, t.a, b, true); else war.def.push(t.a);
+  }
   addOpinion(s, b, a, 'war_declared', -60, 365 * 10);
   chronicle(s, a, 'war', { en: `${na.short.en} declared war on ${nb.short.en}${unjust ? ' without just cause' : ''}.`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg${unjust ? ' ohne gerechten Grund' : ''}.` });
   for (const p of s.playerNations) if (war.def.includes(p) || war.att.includes(p)) notice(s, p, 'war', { en: `${na.short.en} declared war on ${nb.short.en}!`, de: `${na.short.de} erklärte ${nb.short.de} den Krieg!` }, { war: war.id, loc: nb.capital });
@@ -333,16 +341,85 @@ export function declareWar(s: GameState, w: World, a: number, b: number, goalTyp
   warHooks.declared?.(s, w, war);
   return null;
 }
-function willJoin(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean): boolean {
+/** Whether an ally can be called at all: alive, nobody else's subject, not allied to the enemy too. */
+function mayJoin(s: GameState, ally: number, friend: number, enemy: number): boolean {
   const n = s.nations[ally];
   if (!n.alive || n.overlord >= 0 && n.overlord !== friend) return false;
-  if (hasTreaty(s, ally, enemy, 'alliance')) return false;
-  if (s.playerNations.includes(ally)) return true; // players are called; they can make separate peace
+  return !hasTreaty(s, ally, enemy, 'alliance');
+}
+/** Whether an AI ally answers a call to arms (players are asked instead, see callToArms). */
+function willJoin(s: GameState, ally: number, friend: number, enemy: number, defensive: boolean): boolean {
+  const n = s.nations[ally];
+  if (!mayJoin(s, ally, friend, enemy)) return false;
   // a realm worn out by war stays home from an ally's campaign, and once spent even from its defence
   if (n.warExhaustion > (defensive ? 75 : 40)) return false;
   const op = opinion(s, ally, friend) - opinion(s, ally, enemy) * 0.5 + (defensive ? 30 : 0) + (n.rivals.includes(enemy) ? 40 : 0);
   return op > 0 || chance(s.rng, 0.5);
 }
+// ---------------- calls to arms ----------------
+/** Days a player has to answer a call to arms; then the court decides (it honours a call to defend, declines one to attack). */
+export const CALL_DAYS = 30;
+/** What refusing a call costs with the ally that called: opinion for five years and trust; a second refusal within ten
+ *  years ends the alliance. */
+export const CALL_REFUSED = { defend: { opinion: -25, trust: -20 }, attack: { opinion: -15, trust: -10 }, years: 10 };
+/** What answering a call brings: their opinion of us for five years and their trust. */
+export const CALL_ANSWERED = { opinion: 15, trust: 5 };
+/** Imperial authority the emperor loses when he joins an attack on a member of the Empire (systems/empire.ts). */
+export const EMPEROR_JOIN_ATTACK = 3;
+/** Whether n, joining the attackers of this war, is the emperor attacking a member of the Empire. */
+export function emperorAttacksMember(s: GameState, war: War, n: number): boolean {
+  const t = s.nations[war.goal.target];
+  return s.empire.emperor === n && !!t?.isHRE && t.id !== n && !['independence', 'civil_war', 'rebels'].includes(war.goal.type);
+}
+/** A player's ally (or the realm it guarantees) went to war, or was attacked: the player is asked whether to join, on
+ *  the side of friend (a pending event 'call_to_arms', answered through answerCallToArms). */
+export function callToArms(s: GameState, war: War, ally: number, friend: number, defensive: boolean) {
+  if (s.pending.some((p) => p.event === 'call_to_arms' && p.nation === ally && p.ctx.war === war.id)) return;
+  s.pending.push({ id: s.nextId++, event: 'call_to_arms', nation: ally, day: s.day, expires: s.day + CALL_DAYS, ctx: { war: war.id, from: friend, def: defensive ? 1 : 0 } });
+  const F = s.nations[friend], E = s.nations[defensive ? war.attLead : war.defLead];
+  notice(s, ally, 'call_to_arms', defensive
+    ? { en: `${E.short.en} has attacked ${F.short.en}: our ally calls us to its defence.`, de: `${E.short.de} hat ${F.short.de} angegriffen: Unser Verbündeter ruft uns zu seiner Verteidigung.` }
+    : { en: `${F.short.en} has gone to war against ${E.short.en} and calls us to arms.`, de: `${F.short.de} zieht gegen ${E.short.de} in den Krieg und ruft uns zu den Waffen.` }, { war: war.id });
+}
+/** Why a call to arms has lapsed (null = it still stands): the war ended, or the ally that called left it. */
+export function callLapsed(s: GameState, p: PendingEvent): string | null {
+  const war = s.wars.find((x) => x.id === p.ctx.war); if (!war) return 'the war is over';
+  if (!war.att.includes(p.ctx.from) && !war.def.includes(p.ctx.from)) return 'the war is over';
+  if (war.att.includes(p.nation) || war.def.includes(p.nation)) return 'already in this war';
+  return null;
+}
+/** Whether refusing this call would end the alliance (the ally was refused once already within ten years). */
+export function callRefusalBreaks(s: GameState, ally: number, friend: number): boolean {
+  const last = s.nations[ally]?.flags[`refused_call_${friend}`];
+  return last !== undefined && s.day - last < 365 * CALL_REFUSED.years;
+}
+/** The answer to a call to arms (choice 0 joins, 1 stays out; -1 or auto: the court decides). */
+export function answerCallToArms(s: GameState, w: World, p: PendingEvent, choice: number): string | null {
+  const why = callLapsed(s, p); if (why) return why; // the call lapsed: nothing to answer
+  const war = s.wars.find((x) => x.id === p.ctx.war)!;
+  const n = s.nations[p.nation], F = s.nations[p.ctx.from], defensive = !!p.ctx.def;
+  const join = choice === 0 || (choice < 0 && defensive);
+  const side = war.att.includes(F.id) ? war.att : war.def;
+  if (join) {
+    side.push(n.id);
+    addOpinion(s, F.id, n.id, 'answered_call', CALL_ANSWERED.opinion, 365 * 5);
+    rel(s, F.id, n.id).trust = clamp(rel(s, F.id, n.id).trust + CALL_ANSWERED.trust, 0, 100);
+    if (side === war.att) warHooks.joined?.(s, w, war, n.id);
+    chronicle(s, n.id, 'war', { en: `${n.short.en} answered the call of ${F.short.en} and joined the ${war.name.en}.`, de: `${n.short.de} folgte dem Ruf von ${F.short.de} und trat in den Krieg ein (${war.name.de}).` });
+    return null;
+  }
+  const k = defensive ? CALL_REFUSED.defend : CALL_REFUSED.attack;
+  const breaks = callRefusalBreaks(s, n.id, F.id);
+  addOpinion(s, F.id, n.id, 'refused_call', k.opinion, 365 * 5);
+  rel(s, F.id, n.id).trust = clamp(rel(s, F.id, n.id).trust + k.trust, 0, 100);
+  n.flags[`refused_call_${F.id}`] = s.day;
+  if (breaks) {
+    s.treaties = s.treaties.filter((t) => !(t.type === 'alliance' && ((t.a === n.id && t.b === F.id) || (t.a === F.id && t.b === n.id))));
+    notice(s, n.id, 'call_to_arms', { en: `${F.short.en} has ended our alliance: we refused its call to arms a second time.`, de: `${F.short.de} hat unser Bündnis aufgelöst: Wir sind seinem Ruf zu den Waffen zum zweiten Mal nicht gefolgt.` });
+  }
+  return null;
+}
+
 function warName(s: GameState, w: World, a: number, b: number, goal: string) {
   const A = s.nations[a], Bn = s.nations[b];
   if (goal === 'independence') return { en: `${A.adj.en} War of Independence`, de: `${A.adj.de}er Unabhängigkeitskrieg` };
@@ -821,14 +898,15 @@ function dreadMonth(s: GameState, w: World) {
       const strengthF = members.reduce((p, m) => p + nationDev(s, m), 0);
       const strengthA = nationDev(s, agg.id) + allies(s, agg.id).reduce((p, m) => p + nationDev(s, m) * 0.5, 0);
       if (strengthF > strengthA * 0.9) {
-        // the strongest member leads; if it cannot (a truce, a family tie), the next one does
-        const order = members.sort((a, b) => nationDev(s, b) - nationDev(s, a) || a - b);
+        // the strongest member leads; if it cannot (a truce, a family tie), the next one does. A player's realm is never
+        // made to declare: it is called to arms like the other members once the front has risen
+        const order = members.sort((a, b) => nationDev(s, b) - nationDev(s, a) || a - b).filter((m) => !s.playerNations.includes(m));
         let lead = -1, err: string | null = 'none';
         for (const m of order.slice(0, 6)) { err = declareWar(s, w, m, agg.id, 'coalition'); if (!err) { lead = m; break; } }
         if (!err && lead >= 0) {
           delete agg.flags.front_months;
           const war = s.wars[s.wars.length - 1];
-          for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) war.att.push(m);
+          for (const m of members) if (!war.att.includes(m) && !war.def.includes(m)) { if (s.playerNations.includes(m)) callToArms(s, war, m, lead, false); else war.att.push(m); }
           chronicle(s, lead, 'coalition', { en: `A Common Front of ${members.length} realms rose against ${agg.short.en}.`, de: `Eine Gemeinsame Front von ${members.length} Reichen erhob sich gegen ${agg.short.de}.` });
           notice(s, agg.id, 'coalition', { en: `A Common Front of ${members.length} realms has declared war on us!`, de: `Eine Gemeinsame Front von ${members.length} Reichen hat uns den Krieg erklärt!` }, { war: war.id });
         }

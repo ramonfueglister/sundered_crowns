@@ -1,12 +1,13 @@
 // Worker-side views of war (claude/war-pass): the declaration dialog, the army and siege panels, battle reports, the
 // peace terms a war allows, and the army supply map mode. Every number comes from the same simulation function that
 // applies it, so what the panels show is what happens.
-import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm, War } from '../sim/types';
+import type { GameState, Siege, BattleRep, BattleSideRep, PeaceTerm, War, PendingEvent } from '../sim/types';
 import type { World } from '../sim/world';
 import type { Legend } from './protocol';
 import { UNITS } from '../sim/defs';
 import { siegeSteps, armyMen, supplyParts, attritionParts, refillPlan, siegeOdds, assaultOdds, assaultRefusal, besiegersOf, scorched, scorchRefusal, blockadedPorts, maxMorale, SCORCH_SUPPLY } from '../sim/systems/military';
-import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth } from '../sim/systems/war';
+import { casusBelliAll, CB_GOALS, DECLARE_GOALS, declarationCost, declareRefusal, warGoalLocs, allowedTerms, cedeFits, GOAL_TERMS, faithTermFits, faithShare, nationDev, BATTLE_CAP, battleWorth,
+  CALL_DAYS, CALL_REFUSED, CALL_ANSWERED, EMPEROR_JOIN_ATTACK, callRefusalBreaks, emperorAttacksMember } from '../sim/systems/war';
 import { hasTreaty } from '../sim/ctx';
 import { FAITHS } from '../sim/content/peoples';
 
@@ -26,6 +27,39 @@ export function declareView(s: GameState, w: World, player: number, target: numb
     };
   }).filter((g) => g.refusal !== 'they are not our overlord');
   return { cbs, goals, truce: hasTreaty(s, player, target, 'truce'), ally: hasTreaty(s, player, target, 'alliance') };
+}
+
+// ---------------------------------------------------------------- calls to arms
+/** A call to arms as the event card shows it: who calls, against whom, and what each answer does (systems/war.ts
+ *  answerCallToArms with its numbers; the price for the emperor of joining an attack on a member). */
+export function callToArmsView(s: GameState, p: PendingEvent) {
+  const war = s.wars.find((x) => x.id === p.ctx.war);
+  const F = s.nations[p.ctx.from];
+  const def = !!p.ctx.def;
+  const foe = war ? s.nations[def ? war.attLead : war.defLead] : undefined;
+  const fe = F?.short ?? { en: '?', de: '?' }, ee = foe?.short ?? { en: '?', de: '?' };
+  const wn = war?.name ?? { en: 'the war', de: 'den Krieg' };
+  const side = war && war.att.includes(F?.id ?? -1) ? 'att' : 'def';
+  const k = def ? CALL_REFUSED.defend : CALL_REFUSED.attack;
+  const breaks = !!F && callRefusalBreaks(s, p.nation, F.id) && hasTreaty(s, p.nation, F.id, 'alliance');
+  const emp = !!war && side === 'att' && emperorAttacksMember(s, war, p.nation);
+  const sideMen = (ids: number[]) => s.armies.reduce((m, a) => m + (!a.fleet && !a.rebels && ids.includes(a.owner) ? armyMen(a) : 0), 0);
+  const ours = war ? (side === 'att' ? war.att : war.def) : [], theirs = war ? (side === 'att' ? war.def : war.att) : [];
+  const realms = (k: number) => ({ en: `${k} realm${k === 1 ? '' : 's'}`, de: `${k} ${k === 1 ? 'Reich' : 'Reiche'}` });
+  const ro = realms(ours.length), rt = realms(theirs.length);
+  const strength = { en: `The other side: ${rt.en} with ${Math.round(sideMen(theirs)).toLocaleString('en')} men in the field; the side of ${fe.en}: ${ro.en} with ${Math.round(sideMen(ours)).toLocaleString('en')} men.`,
+    de: `Gegenseite: ${rt.de} mit ${Math.round(sideMen(theirs)).toLocaleString('de')} Mann im Feld; Seite von ${fe.de}: ${ro.de} mit ${Math.round(sideMen(ours)).toLocaleString('de')} Mann.` };
+  const text = def
+    ? { en: `${ee.en} has attacked ${fe.en}, and our ally calls us to its defence in the ${wn.en}. ${strength.en} If we give no answer within ${CALL_DAYS} days, the court honours the call.`,
+        de: `${ee.de} hat ${fe.de} angegriffen, und unser Verbündeter ruft uns zu seiner Verteidigung (${wn.de}). ${strength.de} Antworten wir nicht binnen ${CALL_DAYS} Tagen, folgt der Hof dem Ruf.` }
+    : { en: `${fe.en} has gone to war against ${ee.en} and calls us to arms in the ${wn.en}. ${strength.en} If we give no answer within ${CALL_DAYS} days, the court stays out of this attack.`,
+        de: `${fe.de} zieht gegen ${ee.de} in den Krieg und ruft uns zu den Waffen (${wn.de}). ${strength.de} Antworten wir nicht binnen ${CALL_DAYS} Tagen, hält sich der Hof aus diesem Angriff heraus.` };
+  const joinHint = { en: `We join the war on the side of ${fe.en} against ${ee.en}. ${fe.en}'s opinion of us +${CALL_ANSWERED.opinion} for five years, their trust +${CALL_ANSWERED.trust}.${emp ? ` As emperor we attack a member of the Empire: imperial authority −${EMPEROR_JOIN_ATTACK}.` : ''}`,
+    de: `Wir treten an der Seite von ${fe.de} gegen ${ee.de} in den Krieg ein. Meinung von ${fe.de} über uns +${CALL_ANSWERED.opinion} für fünf Jahre, ihr Vertrauen +${CALL_ANSWERED.trust}.${emp ? ` Als Kaiser greifen wir ein Glied des Reiches an: Reichsautorität −${EMPEROR_JOIN_ATTACK}.` : ''}` };
+  const stayHint = { en: `${fe.en}'s opinion of us ${k.opinion} for five years, their trust ${k.trust}.${breaks ? ' We refused them once already: they end our alliance.' : ` Refusing them again within ${CALL_REFUSED.years} years ends the alliance.`}`,
+    de: `Meinung von ${fe.de} über uns ${k.opinion} für fünf Jahre, ihr Vertrauen ${k.trust}.${breaks ? ' Wir haben sie schon einmal abgewiesen: Sie lösen unser Bündnis.' : ` Weisen wir sie binnen ${CALL_REFUSED.years} Jahren erneut ab, endet das Bündnis.`}` };
+  return { ...p, title: def ? { en: 'An ally calls for help', de: 'Ein Verbündeter ruft um Hilfe' } : { en: 'A call to arms', de: 'Ein Ruf zu den Waffen' }, text,
+    options: [{ label: { en: 'To arms', de: 'Zu den Waffen' }, hint: joinHint }, { label: { en: 'Stay out', de: 'Fernbleiben' }, hint: stayHint }], art: 'battle' };
 }
 
 // ---------------------------------------------------------------- sieges

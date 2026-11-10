@@ -6,7 +6,7 @@ import { landmarksOf, landmarkDef, landmarkPrice } from '../sim/systems/landmark
 import { LANDMARK_MONTHS } from '../sim/content/landmarks';
 import { C, CL, CLASSES, CLASS_NAME, B, BI, BUILDINGS, GOODS, G, GI, RECIPES, TERRAINS, UNITS } from '../sim/defs';
 import { armyMen, findPath, travelDays, unitCost, availableUnits, mercenaryCostParts } from '../sim/systems/military';
-import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost } from '../sim/systems/war';
+import { nationDev, computeScore, scoreParts, casusBelliAll, evaluatePeace, termCost, callLapsed } from '../sim/systems/war';
 import { opinionBreakdown, evaluateProposal, trust, DIPLO_ACTIONS, libertyParts, libertyTarget, diploSkill } from '../sim/systems/diplomacy';
 import { ageOf, ESTATES, PRIVILEGES, OFFICES, OFFICE_COST, reformCost, councilBonus, officeCandidates, officeBonusOf, lawEffect, traditionOf, classExempt } from '../sim/systems/politics';
 import { adminInfo, budgetForecast, methodBlock, methodCost, integrationShare } from '../sim/systems/administration';
@@ -31,7 +31,7 @@ import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/sys
 import { METHODS } from '../sim/defs';
 import { ownFaith } from '../sim/systems/faith';
 import { SITUATIONS } from '../sim/content/situations';
-import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors } from './warview';
+import { declareView, armyView, battleView, battleList, warView, locWar, armySupplyColors, callToArmsView } from './warview';
 import { influenceFactors, influenceTargets, resentment, INFLUENCE_DRIFT, govMandateParts } from '../sim/systems/government';
 import { realmAnswer } from './realmview';
 import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
@@ -82,13 +82,14 @@ export function warsView(s: GameState): TickView['wars'] {
 }
 
 export function pendingView(s: GameState, w: World, player: number): TickView['pending'] {
-  return s.pending.filter((p) => p.nation === player).map((p) => {
+  return s.pending.filter((p) => p.nation === player && !(p.event === 'call_to_arms' && callLapsed(s, p))).map((p) => {
     const n = s.nations[player];
     if (p.event.startsWith('diplo_')) {
       const from = s.nations[p.ctx.from]; const act = p.event.slice(6);
       return { ...p, title: { en: 'A proposal', de: 'Ein Vorschlag' }, text: { en: `${from?.short.en} proposes: ${ACT_NAME[act]?.en ?? act}.`, de: `${from?.short.de} schlägt vor: ${ACT_NAME[act]?.de ?? act}.` },
         options: [{ label: { en: 'Accept', de: 'Annehmen' }, hint: proposalHint(act, from?.short ?? { en: '?', de: '?' }, n) }, { label: { en: 'Decline', de: 'Ablehnen' }, hint: { en: `${from?.short.en}'s opinion of us falls by 10 for a year.`, de: `Die Meinung von ${from?.short.de} über uns sinkt für ein Jahr um 10.` } }], art: 'court' };
     }
+    if (p.event === 'call_to_arms') return callToArmsView(s, p); // an ally's call (game/warview.ts)
     const d = eventDef(p.event);
     if (!d) return { ...p, title: { en: p.event, de: p.event }, text: { en: '', de: '' }, options: [{ label: { en: 'OK', de: 'OK' } }] };
     return { ...p, title: interpolate(s, w, n, p.ctx, d.title), text: interpolate(s, w, n, p.ctx, d.text), options: d.options.map((o) => ({ label: interpolate(s, w, n, p.ctx, o.label), hint: o.hint })), art: d.art };

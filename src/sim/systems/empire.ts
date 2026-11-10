@@ -7,7 +7,7 @@
 import type { GameState, Nation, War, WarGoal, I18n } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion, atWar, hasTreaty, allies, opinion, addIncome, addExpense } from '../ctx';
-import { nationDev, nationLocsRO, concludePeace, warHooks } from './war';
+import { nationDev, nationLocsRO, concludePeace, warHooks, emperorAttacksMember, EMPEROR_JOIN_ATTACK } from './war';
 import { totalOpinion } from './diplomacy';
 import { assemblyWarVeto, assemblyWarRefusal } from './government';
 import { hash01, chance } from '../rng';
@@ -678,6 +678,8 @@ function empireYear(s: GameState, w: World) {
 warHooks.veto = warVeto;
 warHooks.check = warVetoCheck;
 warHooks.declared = realmBodiesOnWar;
+// the emperor who joins an ally's attack on a member of the Empire betrays his office (player and AI alike)
+warHooks.joined = (s, w, war, n) => { if (emperorAttacksMember(s, war, n)) moveAuth(s, 'x_emp_joined_attack', -EMPEROR_JOIN_ATTACK); };
 
 export const empire: System = {
   id: 'empire',

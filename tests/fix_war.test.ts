@@ -6,13 +6,15 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { serialize, deserialize } from '../src/sim/engine';
-import { mkCtx, hasTreaty, atWar, topOverlord } from '../src/sim/ctx';
+import { mkCtx, hasTreaty, atWar, topOverlord, rel } from '../src/sim/ctx';
 import { B, BI, UNITS, TERRAINS } from '../src/sim/defs';
-import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore } from '../src/sim/systems/war';
+import { casusBelliAll, declareWar, warScoreEvent, battleWorth, BATTLE_CAP, BATTLE_LOG_KEPT, evaluatePeace, warYears, computeScore,
+  CALL_ANSWERED, CALL_REFUSED, EMPEROR_JOIN_ATTACK } from '../src/sim/systems/war';
+import { answerEvent } from '../src/sim/systems/events';
 import { considerPeace } from '../src/sim/systems/ai';
 import { step } from '../src/sim/engine';
 import { military, newArmy, siegeSteps, siegeCaptor, besiegersOf } from '../src/sim/systems/military';
-import { answer } from '../src/game/view';
+import { answer, pendingView } from '../src/game/view';
 import { siegesView } from '../src/game/warview';
 import { applyCommand } from '../src/sim/commands';
 import { commanderSkill, generalCost } from '../src/sim/systems/commanders';
@@ -246,5 +248,103 @@ describe('sieges count steps (blocker: the map badge showed the steps as a perce
     sg.blockade = true;
     expect(siegeSteps(sg)).toBe(3);
     expect(siegesView(s)[0].need).toBe(3);
+  });
+});
+
+describe('calls to arms (major: the player was pulled into allies’ wars without being asked)', () => {
+  const ally = (s: GameState, a: number, b: number) => s.treaties.push({ type: 'alliance', a, b, since: s.day, until: s.day + 365 * 50 });
+  const calls = (s: GameState, n: number) => s.pending.filter((p) => p.event === 'call_to_arms' && p.nation === n);
+  const reply = (s: GameState, n: number, id: number, choice: number) => applyCommand(s, w, { t: 'event', n, pending: id, choice } as any);
+  const mod = (s: GameState, a: number, b: number, id: string) => rel(s, a, b).mods.find((m) => m.id === id)?.v;
+  /** An AI realm a, its fresh ally p (the player's realm) and a target b. */
+  function setup(p0?: number) {
+    const s = fresh(); clearField(s);
+    const a = nat(s, 'portugal').id;
+    const p = p0 ?? plainTarget(s, a);
+    const b = plainTarget(s, a, [p]);
+    ally(s, a, p);
+    s.playerNations = [p];
+    return { s, a, p, b };
+  }
+  it('an ally’s attack asks the player; joining puts the player on its side and raises the ally’s opinion and trust', () => {
+    const { s, a, p, b } = setup();
+    const war = war2(s, a, b, 'humiliate');
+    expect(war.att).not.toContain(p); expect(war.def).not.toContain(p);
+    const c = calls(s, p);
+    expect(c).toHaveLength(1);
+    expect(c[0].ctx).toMatchObject({ war: war.id, from: a, def: 0 });
+    expect(s.notices.some((x) => x.nation === p && x.kind === 'call_to_arms')).toBe(true);
+    // the card names both answers with what they bring
+    const card = pendingView(s, w, p).find((x) => x.id === c[0].id)!;
+    expect(card.options).toHaveLength(2);
+    expect(card.options[0].hint!.en).toContain(`+${CALL_ANSWERED.opinion}`);
+    expect(card.options[1].hint!.de).toContain(`${CALL_REFUSED.attack.opinion}`);
+    const trust0 = rel(s, a, p).trust;
+    expect(reply(s, p, c[0].id, 0).ok).toBe(true);
+    expect(war.att).toContain(p);
+    expect(calls(s, p)).toHaveLength(0);
+    expect(mod(s, a, p, 'answered_call')).toBe(CALL_ANSWERED.opinion);
+    expect(rel(s, a, p).trust).toBe(Math.min(100, trust0 + CALL_ANSWERED.trust));
+  });
+  it('staying out costs opinion and trust; a second refusal within ten years ends the alliance', () => {
+    const { s, a, p, b } = setup();
+    const war = war2(s, a, b, 'humiliate');
+    const trust0 = rel(s, a, p).trust;
+    expect(reply(s, p, calls(s, p)[0].id, 1).ok).toBe(true);
+    expect(war.att).not.toContain(p);
+    expect(mod(s, a, p, 'refused_call')).toBe(CALL_REFUSED.attack.opinion);
+    expect(rel(s, a, p).trust).toBe(Math.max(0, trust0 + CALL_REFUSED.attack.trust));
+    expect(hasTreaty(s, a, p, 'alliance')).toBe(true);
+    // a year later a second call, refused again: the alliance ends
+    s.day += 365;
+    const c = plainTarget(s, a, [p, b]);
+    war2(s, a, c, 'humiliate');
+    expect(calls(s, p)).toHaveLength(1);
+    expect(reply(s, p, calls(s, p)[0].id, 1).ok).toBe(true);
+    expect(hasTreaty(s, a, p, 'alliance')).toBe(false);
+  });
+  it('unanswered, the court honours a call to defend and stays out of an attack', () => {
+    const { s, a, p, b } = setup();
+    const war = war2(s, b, a, 'humiliate'); // b attacks our ally
+    expect(war.def).not.toContain(p);
+    const c = calls(s, p)[0]; expect(c.ctx.def).toBe(1);
+    expect(answerEvent(s, w, p, c.id, -1, true)).toBeNull();
+    expect(war.def).toContain(p);
+    const d = plainTarget(s, a, [p, b]);
+    const war3 = war2(s, a, d, 'humiliate'); // our ally attacks
+    const c2 = calls(s, p).find((x) => x.ctx.war === war3.id)!;
+    expect(answerEvent(s, w, p, c2.id, -1, true)).toBeNull();
+    expect(war3.att).not.toContain(p);
+  });
+  it('a lapsed call is not shown and cannot be answered', () => {
+    const { s, a, p, b } = setup();
+    const war = war2(s, a, b, 'humiliate');
+    const c = calls(s, p)[0];
+    s.wars.splice(s.wars.indexOf(war), 1);
+    expect(pendingView(s, w, p).some((x) => x.id === c.id)).toBe(false);
+    const r = reply(s, p, c.id, 0);
+    expect(r.ok).toBe(false);
+  });
+  it('an AI ally still answers at once, as before', () => {
+    const { s, a, p, b } = setup();
+    const q = plainTarget(s, a, [b, p]);
+    ally(s, a, q);
+    war2(s, a, b, 'humiliate');
+    expect(s.pending.some((x) => x.event === 'call_to_arms' && x.nation === q)).toBe(false);
+  });
+  it('the emperor who joins an ally’s attack on a member of the Empire loses imperial authority', () => {
+    const s0 = fresh();
+    const { s, a, p } = setup(s0.empire.emperor);
+    const hre = s.nations.find((n) => n.alive && n.isHRE && n.id !== p && n.id !== a && n.overlord < 0 && n.capital >= 0
+      && !s.treaties.some((t) => (t.type === 'alliance' || t.type === 'guarantee') && (t.a === n.id || t.b === n.id)) && !hasTreaty(s, a, n.id, 'truce'))!;
+    s.empire.authority = 50;
+    const war = war2(s, a, hre.id, 'humiliate');
+    const c = calls(s, p).find((x) => x.ctx.war === war.id)!;
+    expect(c).toBeTruthy();
+    expect(pendingView(s, w, p).find((x) => x.id === c.id)!.options[0].hint!.en).toContain(`imperial authority −${EMPEROR_JOIN_ATTACK}`);
+    const auth0 = s.empire.authority;
+    expect(reply(s, p, c.id, 0).ok).toBe(true);
+    expect(war.att).toContain(p);
+    expect(s.empire.authority).toBe(auth0 - EMPEROR_JOIN_ATTACK);
   });
 });

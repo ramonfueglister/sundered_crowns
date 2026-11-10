@@ -339,7 +339,7 @@ const TRIALS = 3;
  */
 export function eventOptionFx(s: GameState, w: World, nid: number, pendingId: number): OptionFx[] | null {
   const p = s.pending.find((x) => x.id === pendingId && x.nation === nid); if (!p) return null;
-  const nOpts = p.event.startsWith('diplo_') ? 2 : eventDef(p.event)?.options.length ?? 0;
+  const nOpts = p.event.startsWith('diplo_') || p.event === 'call_to_arms' ? 2 : eventDef(p.event)?.options.length ?? 0;
   const seeds: number[][] = [s.rng.slice()];
   for (let k = 1; k < TRIALS; k++) seeds.push(s.rng.map((v, i) => (Math.floor(hash01(v, pendingId, k * 4 + i) * 4294967296) >>> 0) || 1));
   // what can already happen, before any answer (on a copy, so a trigger's random draw stays there)
