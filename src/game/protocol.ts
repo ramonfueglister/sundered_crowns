@@ -79,6 +79,8 @@ export interface NationLite {
   id: number; key: string; alive: boolean; name: I18n; short: I18n; adj: I18n; color: [number, number, number];
   capital: number; rank: string; gov: string; score: number; overlord: number; faith: number; culture: number; coa: any;
   ruler: string; difficulty: number; summary: I18n; dev: number; locs: number; personality: string; player: boolean;
+  /** wears the imperial crown / is one of the electors (the select screen lists them) */
+  emperor?: boolean; elector?: boolean;
 }
 
 export interface ArmyLite {

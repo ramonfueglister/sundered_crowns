@@ -79,7 +79,8 @@ export function Forecast({ r }: { r: any }) {
 // ---------------------------------------------------------------- administration
 export function AdminTip({ a }: { a: any }) {
   return <div>
-    <TipHead name={t('admin_capacity')} value={`${num(a.load, 1)} / ${num(a.capacity, 1)}`} hint={t('admin_capacity_hint')} />
+    <TipHead name={t('x_integ_load')} value={`${num(a.load, 1)} / ${num(a.capacity, 1)}`} hint={t('admin_capacity_hint')} />
+    {a.load <= 0 && <div class="small">{t('x_integ_load_none')}</div>}
     <Parts title={t('x_capacity_from')} rows={a.parts} total={a.capacity} digits={1} />
     {a.loadTop.length > 0 && <Parts title={t('x_load_from')} rows={a.loadTop.map((x: any) => [x.name, x.load] as BdRow)} total={a.load} digits={1} />}
     {a.overext > 0 ? <div class="breakdown">
@@ -95,7 +96,9 @@ export function Administration({ r }: { r: any }) {
   const a = r?.admin; if (!a) return null;
   const use = a.load / Math.max(1e-9, a.capacity);
   return <Section title={t('administration')} id="gov-admin">
-    <Row k={t('admin_capacity')} v={<>{num(a.load, 1)} / {num(a.capacity, 1)} <small class={use > 1 ? 'neg' : 'muted'}>({pct(use, 0)})</small></>} tip={() => <AdminTip a={a} />} />
+    {/* the load counts only land still being integrated: a realm without new land reads 0, which says so */}
+    <Row k={t('x_integ_load')} v={<>{num(a.load, 1)} / {num(a.capacity, 1)} <small class={use > 1 ? 'neg' : 'muted'}>({a.load > 0 ? pct(use, 0) : t('x_integ_load_free')})</small></>} tip={() => <AdminTip a={a} />} />
+    {a.core !== undefined && <Row k={t('x_core_admin')} v={num(a.core)} tip={t('x_core_admin_hint')} />}
     <Bar value={Math.min(use, 2)} max={2} color={use > 1 ? '#a8331f' : '#4d8a3a'} tip={() => <AdminTip a={a} />} />
     <Row k={t('x_unintegrated_locs')} v={num(a.pending)} tip={t('x_unintegrated_hint')} />
     {r.tradition && <Row k={t('tradition')} v={L(r.tradition.name)} tip={() => <div><Effects title={L(r.tradition.name)} fx={r.tradition.effects} /><div class="muted">{t('tradition_hint')}</div></div>} />}

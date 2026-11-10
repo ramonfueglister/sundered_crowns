@@ -65,8 +65,8 @@ export function GovernmentTab() {
       <Council r={r} authority={p.authority} />
       <Section title={t('values')} id="gov-values">
         {VALUES.map((a, k) => { const val = r.values[k] || 0; const fx = val < 0 ? a.effectsLow : a.effectsHigh; const s = Math.abs(val) / 100;
-          return <Tip tag="div" content={() => <div><b>{L(val < 0 ? a.low : a.high)}</b> ({signed(val)})<Effects fx={Object.fromEntries(Object.entries(fx).map(([kk, x]) => [kk, x * s]))} /></div>}>
-            <div class="axis"><span class={`ax-l ${val < -10 ? 'on' : ''}`}>{L(a.low)}</span><span class="ax-bar"><i class="ax-mid" /><i class="ax-dot" style={{ left: `${50 + val / 2}%` }} /></span><span class={`ax-r ${val > 10 ? 'on' : ''}`}>{L(a.high)}</span></div>
+          return <Tip tag="div" content={() => <div><TipHead name={`${L(a.low)} – ${L(a.high)}`} value={signed(val)} hint={t('x_value_axis_hint')} /><b>{L(val < 0 ? a.low : a.high)}</b> ({signed(val)} / {val < 0 ? -100 : 100})<Effects fx={Object.fromEntries(Object.entries(fx).map(([kk, x]) => [kk, x * s]))} /></div>}>
+            <div class="axis"><span class={`ax-l ${val < -10 ? 'on' : ''}`}>{L(a.low)}</span><span class="ax-bar"><i class="ax-mid" /><i class="ax-dot" style={{ left: `${50 + val / 2}%` }} /></span><span class={`ax-r ${val > 10 ? 'on' : ''}`}>{L(a.high)}</span><span class="ax-v">{signed(val)}</span></div>
           </Tip>; })}
       </Section>
     </div>

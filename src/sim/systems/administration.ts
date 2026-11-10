@@ -63,7 +63,7 @@ export function adminInfo(s: GameState, w: World, n: Nation) {
   const share = load <= capacity ? 1 : Math.max(MIN_INTEG_SHARE, capacity / load);
   top.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
   return {
-    capacity, parts, load, pending, share, overext: ox,
+    capacity, parts, load, pending, share, overext: ox, core, seats, // core: development of the integrated land
     effects: { unrest: Math.min(15, ox * 10), control: -Math.min(0.3, ox * 0.15), integration: share - 1 },
     loadTop: top.slice(0, 8).map(([i, l]) => ({ loc: i, name: { en: w.names[i], de: w.namesDe[i] }, load: l, integ: s.loc.integ[i] })),
   };

@@ -49,6 +49,7 @@ export function nationLites(s: GameState, w: World): NationLite[] {
     id: n.id, key: n.key, alive: n.alive, name: n.name, short: n.short, adj: n.adj, color: n.color, capital: n.capital, rank: n.rank, gov: n.gov,
     score: n.score, overlord: n.overlord, faith: n.faith, culture: n.culture, coa: n.coa, ruler: s.chars[n.ruler]?.name ?? '—', difficulty: n.difficulty,
     summary: n.summary, dev: nationDev(s, n.id), locs: locs[n.id], personality: n.personality, player: s.playerNations.includes(n.id),
+    emperor: s.empire.emperor === n.id, elector: s.empire.electors.includes(n.id),
   }));
 }
 

@@ -275,3 +275,22 @@ describe('a member asks the emperor for help', () => {
     }
   });
 });
+
+describe('the select screen and the administration', () => {
+  it('the realm lites mark the emperor and the electors (the select screen lists them)', async () => {
+    const { nationLites } = await import('../src/game/view');
+    const lites = nationLites(s, w);
+    expect(lites.filter((x) => x.emperor).map((x) => x.id)).toEqual([s.empire.emperor]);
+    expect(lites.find((x) => x.key === 'bohemia')!.emperor).toBe(true);
+    expect(lites.filter((x) => x.elector).length).toBe(s.empire.electors.length);
+  });
+  it('the administration tells the integrated land beside the load of land still being integrated', async () => {
+    const { adminInfo } = await import('../src/sim/systems/administration');
+    const { ownedLocs } = await import('../src/sim/systems/war');
+    const b = nat('bohemia');
+    const a = adminInfo(s, w, b);
+    let core = 0, load = 0; for (const l of ownedLocs(s, b.id)) { if (s.loc.integ[l] >= 1) core += s.loc.dev[l]; else load += Math.max(1, s.loc.dev[l]) * (1 - s.loc.integ[l]); }
+    expect(a.core).toBeCloseTo(core, 6); expect(a.load).toBeCloseTo(load, 6);
+    expect(a.core).toBeGreaterThan(0);
+  });
+});

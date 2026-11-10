@@ -253,9 +253,10 @@ svg.chart .ax { font-size: 10px; fill: #6b5236; font-family: var(--serif); }
 .cand-b { text-align: right; font-variant-numeric: tabular-nums; }
 .tooltip .hl { color: var(--gilt2); font-weight: bold; }
 .army-here .k { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.axis { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 6px; align-items: center; padding: 2px 0; font-size: .88em; cursor: help; }
+.axis { display: grid; grid-template-columns: 1fr 90px 1fr 30px; gap: 6px; align-items: center; padding: 2px 0; font-size: .88em; cursor: help; }
 .ax-l { text-align: right; color: var(--p-mut); } .ax-r { color: var(--p-mut); }
 .ax-l.on, .ax-r.on { color: var(--p-ink); font-weight: bold; }
+.ax-v { text-align: right; font-variant-numeric: tabular-nums; color: var(--p-ink); }
 .ax-bar { position: relative; height: 8px; background: linear-gradient(90deg, #b9a072, #e9dab5 50%, #b9a072); border: 1px solid #8a6a3a; }
 .ax-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: #4a3218; }
 .ax-dot { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; background: #7a2a1a; border: 1px solid #f3e6c4; transform: rotate(45deg); }
