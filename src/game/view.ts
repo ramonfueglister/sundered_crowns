@@ -28,6 +28,8 @@ import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
 import { buildMatsView } from './worksview';
+import { foodStores, foodMonths, FAMINE_FOOD, FOOD_PUT, FOOD_SPOIL } from '../sim/systems/economy';
+import { marketAccess, farmgate, reaching, markup, ACCESS_RANGE, MIN_ACCESS, ROAD_CUT, CANAL_CUT } from '../sim/systems/access';
 import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
 import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
 import { METHODS } from '../sim/defs';
@@ -503,6 +505,7 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
     minority: lc.minShare[l] > 0.02 ? { culture: cultureName(ALL_CULTURES[lc.minCulture[l]] || 'unknown'), faith: FAITHS[lc.minFaith[l]]?.name, share: lc.minShare[l] } : null,
     pops, buildings, workshops, dev: lc.dev[l], control: lc.control[l], integ: lc.integ[l], unrest: lc.unrest[l], unrestWhy, literacy: lc.literacy[l], devast: lc.devast[l], harvest: lc.harvest[l],
     plague: lc.plague[l], snow: lc.snow[l], garrison: lc.garrison[l], resource: GOODS[w.resource[l]].name, resourceId: w.resource[l], market: m ? { id: m.id, name: m.name, price: m.price[w.resource[l]] } : null,
+    access: accessView(s, w, l), food: foodView(s, w, l),
     tax: lc.income[l], econ: ec ? { grain: ec.grain[l], rgo: ec.rgo[l], craft: ec.craft[l], income: ec.income[l] } : null, elev: w.elev[l], lat: w.lat[l], lon: w.lon[l],
     landmark: landmarkDetail(s, w, l, player), why: locExplain(s, w, l),
     method: lc.method[l], migration: lc.migr[l], employed: lc.employed ? lc.employed[l * C + CL.artisans] : 0,
@@ -908,4 +911,21 @@ export function commandersView(s: GameState, player: number, army: number) {
     list, cost: generalCost(s, n), treasury: n.treasury,
     // the price: two months of taxes, at least 25 marks at the prices of the day
     costParts: (n.income.tax || 10) * 2 >= 25 * s.priceLevel ? [['x_gen_cost_taxes', (n.income.tax || 10) * 2]] : [['x_gen_cost_min', 25 * s.priceLevel]] };
+}
+
+/** A place's market access (src/sim/systems/access.ts): the way's cost to the nearest hub, the access it gives and what
+ *  that does to sales, supply and purchases. */
+function accessView(s: GameState, w: World, l: number) {
+  const ma = marketAccess(s, w); const a = ma.access[l];
+  return { access: a, cost: ma.cost[l], range: ACCESS_RANGE, min: MIN_ACCESS, farmgate: farmgate(a), reaching: reaching(a), markup: markup(a),
+    road: s.loc.buildings[l * B + BI.road], canal: s.loc.buildings[l * B + BI.canal], roadCut: ROAD_CUT, canalCut: CANAL_CUT };
+}
+
+/** A place's grain stores (src/sim/systems/economy.ts): grain in store, what the barns hold, a month's need and last
+ *  month's food security. */
+function foodView(s: GameState, w: World, l: number) {
+  let p = 0; for (let c = 0; c < C; c++) p += s.loc.pop[l * C + c];
+  const need = Math.max(1, p / 100 * 9), months = foodMonths(s.loc.buildings[l * B + BI.farm], s.loc.buildings[l * B + BI.church]);
+  const ec = LOC_ECON;
+  return { store: foodStores(s, w)[l], cap: need * months, need, months, security: ec && ec.food.length === w.L ? ec.food[l] : null, famine: FAMINE_FOOD, put: FOOD_PUT, spoil: 1 - FOOD_SPOIL };
 }

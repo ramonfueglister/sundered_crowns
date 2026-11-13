@@ -46,6 +46,8 @@ export function LocationPanel({ loc }: { loc: number }) {
       <Tip content={<div><TipHead name={L(d.culture)} hint={<>{t('culture_group')}: {d.cultureGroup ?? '—'}</>} />{d.minority && <div class="muted">{t('minority')}: {L(d.minority.culture)} / {L(d.minority.faith)} · {pct(d.minority.share)} {t('of_population')}</div>}</div>}><span class="chip"><small>{t('culture')}</small>{L(d.culture)}</span></Tip>
       <Tip content={<div><TipHead name={L(d.faith)} hint={t('x_loc_faith_hint')} /></div>}><span class="chip"><small>{t('faith')}</small>{L(d.faith)}</span></Tip>
       <Tip content={<div><TipHead name={L(d.resource)} hint={t('x_loc_resource_hint')} />{d.market && <div class="breakdown"><div class="bd-row"><span>{t('market')}</span><span>{d.market.name}</span></div><div class="bd-row"><span>{t('price')}</span><span>{num(d.market.price, 2)}</span></div></div>}</div>}><span class="chip"><small>{t('resource')}</small>{L(d.resource)}</span></Tip>
+      {d.food && <Tip content={<FoodTip f={d.food} />}><span class={`chip ${d.food.security !== null && d.food.security < d.food.famine ? 'neg' : ''}`}><small>{t('x_food')}</small>{num(d.food.store / d.food.need, 1)} {t('months')}</span></Tip>}
+      {d.access && <Tip content={<AccessTip a={d.access} market={d.market?.name} />}><span class={`chip ${d.access.access < 0.6 ? 'neg' : ''}`}><small>{t('x_mkt_access')}</small>{pct(d.access.access, 0)}</span></Tip>}
     </div>
     <div class="grid2">
       <Row k={t('development')} v={num(d.dev, 1)} tip={() => <DevTip d={d} />} />
@@ -287,3 +289,32 @@ function BuildCost({ b }: { b: any }) {
 }
 
 export function regionName(id: string): string { const v = t('reg_' + id); return v.startsWith('reg_') ? id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : v; }
+
+/** Market access of a place (src/sim/systems/access.ts) and what it does. */
+function AccessTip({ a, market }: { a: any; market?: string }) {
+  return <div>
+    <TipHead name={t('x_mkt_access')} value={pct(a.access, 0)} hint={t('x_access_hint').replace('{m}', market ? placeName(market) : '—').replace('{r}', num(a.range)).replace('{min}', pct(a.min, 0))} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('x_access_way')}</span><span>{num(a.cost)} km</span></div>
+      <div class="bd-row"><span>{t('x_access_sales')}</span><span>× {num(a.farmgate, 2)}</span></div>
+      <div class="bd-row"><span>{t('x_access_reach')}</span><span>× {num(a.reaching, 2)}</span></div>
+      <div class="bd-row"><span>{t('x_access_buy')}</span><span>× {num(a.markup, 2)}</span></div>
+    </div>
+    <div class="muted small">{t('x_access_roads').replace('{r}', pct(a.roadCut, 0)).replace('{c}', pct(a.canalCut, 0))}</div>
+  </div>;
+}
+
+/** The grain stores of a place and its food security. */
+function FoodTip({ f }: { f: any }) {
+  return <div>
+    <TipHead name={t('x_food')} value={`${num(f.store / f.need, 1)} / ${num(f.months, 1)} ${t('months')}`} hint={t('x_food_hint').replace('{p}', pct(f.put, 0)).replace('{s}', pct(f.spoil, 0))} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('x_food_store')}</span><span>{num(f.store)}</span></div>
+      <div class="bd-row"><span>{t('x_food_cap')}</span><span>{num(f.cap)}</span></div>
+      <div class="bd-row"><span>{t('x_food_need')}</span><span>{num(f.need)}</span></div>
+      {f.security !== null && <div class={`bd-row ${f.security < f.famine ? 'neg' : ''}`}><span>{t('x_food_security')}</span><span>{pct(f.security, 0)}</span></div>}
+    </div>
+    {f.security !== null && f.security < f.famine && <div class="neg small">{t('x_famine_now')}</div>}
+    <div class="muted small">{t('x_food_cap_rule')}</div>
+  </div>;
+}

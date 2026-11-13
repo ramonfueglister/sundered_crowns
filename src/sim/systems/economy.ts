@@ -16,8 +16,28 @@ import { manpowerOf } from './military';
 import { envoysOf } from './diplomacy';
 import { historySample } from './realm';
 import { runVentures, pruneVentures } from './ventures';
+import { marketAccess, farmgate, reaching, markup } from './access';
 
 export const BUCKETS = 30;
+// ---- food stores and famine ----
+/** Months of a place's grain need its barns hold: 1.5, one more for each level of field improvements, half a month
+ *  more for each level of church and schools (tithe barns). */
+export const foodMonths = (farm: number, church: number) => 1.5 + farm + 0.5 * church;
+/** Share of a month's grain surplus put into store; share of the store left after a month (spoilage). */
+export const FOOD_PUT = 0.25, FOOD_SPOIL = 0.99;
+/** Food security below which a place starves, and the unrest each point below it brings (×100). */
+export const FAMINE_FOOD = 0.5, FAMINE_UNREST = 40;
+/** People starving in each realm last month (FAMINE), and its largest starving place (for the notice). */
+export const FAMINE: number[] = [], FAMINE_LOC: number[] = [], FAMINE_POP: number[] = [];
+/** The grain stores of every place (created half full the first time, from the month's need). */
+export function foodStores(s: GameState, w: World): Float32Array {
+  const lc = s.loc;
+  if (!lc.food || lc.food.length !== w.L) {
+    lc.food = new Float32Array(w.L);
+    for (let i = 0; i < w.L; i++) { let p = 0; for (let c = 0; c < C; c++) p += lc.pop[i * C + c]; lc.food[i] = p / 100 * 9 * foodMonths(lc.buildings[i * B + BI.farm], lc.buildings[i * B + BI.church]) * 0.5; }
+  }
+  return lc.food;
+}
 export const CROWN_SHARE = 0.08;
 const NEED_IDX = NEEDS.map(([g, q, t]) => [GI[g], q / 100, t] as [number, number, number]);
 const TIER_W = [0.5, 0.25, 0.15, 0.1];
@@ -36,11 +56,13 @@ export interface LocEcon {
   ck: Float32Array;
   /** demand units of the people per need tier (4 per location) */
   gd: Float32Array;
+  /** food security of the last month (0..1; famine below FAMINE_FOOD) */
+  food: Float32Array;
 }
 export const GQ_SLOTS = 12, GQ_GRAIN = 0, GQ_RES = 1, GQ_RURAL = 2, GQ_HOUSE = 3, GQ_CRAFT = 9;
 export let LOC_ECON: LocEcon | null = null;
 function locEcon(L: number) {
-  if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L), gq: new Float32Array(L * GQ_SLOTS), ck: new Float32Array(L * 3), gd: new Float32Array(L * 4) };
+  if (!LOC_ECON || LOC_ECON.grain.length !== L) LOC_ECON = { grain: new Float32Array(L), rgo: new Float32Array(L), craft: new Float32Array(L), tax: new Float32Array(L), income: new Float32Array(L), gq: new Float32Array(L * GQ_SLOTS), ck: new Float32Array(L * 3), gd: new Float32Array(L * 4), food: new Float32Array(L) };
   return LOC_ECON;
 }
 /** The household goods in the order of their GQ slots. */
@@ -85,6 +107,7 @@ export function craftOutcome(s: GameState, w: World, i: number, m = s.loc.method
   const n = lc.owner[i] >= 0 ? s.nations[lc.owner[i]] : null;
   const prodMod = 1 + (n ? lawEffect(n, 'production') + (n.tech[1] - 1) * 0.03 : 0);
   const quality = 1 + (n ? lawEffect(n, 'quality') : 0);
+  const ax = marketAccess(s, w).access[i], fg = farmgate(ax), mu = markup(ax);
   let out = 0, inp = 0;
   for (let k = 0; k < 3; k++) {
     const v = lc.workshop[i * 3 + k]; if (v <= 0) continue;
@@ -92,8 +115,8 @@ export function craftOutcome(s: GameState, w: World, i: number, m = s.loc.method
     let scale = 1;
     for (let j = 0; j < ins.length; j++) scale = Math.min(scale, 0.25 + 0.75 * marketFill(mk, ins[j]));
     const kk = per / 100 * CRAFT_PROD * scale;
-    for (let j = 0; j < ins.length; j++) inp += qs[j] * md.mult * md.input * kk * mk.price[ins[j]];
-    out += RECIPES[v - 1].outQty * kk * md.mult * prodMod * mk.price[REC_OUT[v - 1]] * quality;
+    for (let j = 0; j < ins.length; j++) inp += qs[j] * md.mult * md.input * kk * mk.price[ins[j]] * mu;
+    out += RECIPES[v - 1].outQty * kk * md.mult * prodMod * mk.price[REC_OUT[v - 1]] * quality * fg;
   }
   return { jobs, cap, out, inp };
 }
@@ -299,12 +322,12 @@ export function overextension(n: Nation): number { return Math.max(0, (n.adminLo
 function stepLocations(s: GameState, w: World, from: number, to: number, stride: number, settled: boolean) {
   NPAY = 0; CHARS = s.chars;
   if (TY.length < s.nations.length * 4) TY = new Float64Array(s.nations.length * 4 + 256); else TY.fill(0);
-  s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled);
+  s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled, marketAccess(s, w).access, foodStores(s, w));
   flushPayments(s);
 }
 // The state's own fields are read once by the caller and passed in (the state object changes shape as a game
 // goes on, which would otherwise throw the optimised loop away); silver is threaded through and written back.
-function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl: number, silverIn: number, w: World, from: number, to: number, stride: number, settled: boolean): number {
+function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl: number, silverIn: number, w: World, from: number, to: number, stride: number, settled: boolean, acc: Float32Array, food$: Float32Array): number {
   let silver = silverIn;
   for (let i = from; i < to; i += stride) {
     if (settled && !(lc.owner[i] >= 0 || lc.pop[i * C] > 0)) continue;
@@ -324,13 +347,16 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     const techA = n ? ns[nr] : 1;
     const arid = w.arid[i];
     const ec = locEcon(w.L);
+    // market access (systems/access.ts): what of the place's goods reaches the hub, what they fetch there after the
+    // carter's share, and what the people pay above the hub's price for what they buy
+    const ax = acc[i], rs = reaching(ax), fg = farmgate(ax), mu = markup(ax);
     // ---- agriculture ----
     const peas = P[base + CL.peasants], lab = P[base + CL.labourers];
     const aridMult = arid > 0.85 ? 0.25 : arid > 0.6 ? 0.6 : 1;
     const serfdom = n ? ns[nr + 1] : 0; // 0 free .. 1 full serfdom
     const yieldMult = terr.yield * lc.harvest[i] * (1 + 0.12 * farmLvl) * (1 - 0.7 * devast) * techA * aridMult * (1 - 0.08 * serfdom);
     const grainQ = peas * 0.155 * yieldMult;
-    m.sAcc[G_GRAIN] += grainQ;
+    m.sAcc[G_GRAIN] += grainQ * rs;
     // ---- natural resource ----
     const r = w.resource[i];
     const rgoWorkers = lab * 0.55 + peas * 0.22;
@@ -349,11 +375,11 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     gq[gb + GQ_GRAIN] = grainQ;
     if (rp) {
       const raw = rgoQ * rp[2], out = raw * rp[1];
-      m.sAcc[r] += rgoQ - raw; m.sAcc[rp[0]] += out;
-      ruralValue = out * m.price[rp[0]] - raw * m.price[r];
+      m.sAcc[r] += (rgoQ - raw) * rs; m.sAcc[rp[0]] += out * rs;
+      ruralValue = (out * m.price[rp[0]] - raw * m.price[r]) * fg;
       gq[gb + GQ_RES] = rgoQ - raw; gq[gb + GQ_RURAL] = out;
-    } else { m.sAcc[r] += rgoQ; gq[gb + GQ_RES] = rgoQ; gq[gb + GQ_RURAL] = 0; }
-    const pGrain = m.price[G_GRAIN], pR = m.price[r];
+    } else { m.sAcc[r] += rgoQ * rs; gq[gb + GQ_RES] = rgoQ; gq[gb + GQ_RURAL] = 0; }
+    const pGrain = m.price[G_GRAIN] * fg, pR = m.price[r] * fg;
     // ---- household production: firewood, homespun cloth, baking and brewing (most of what common folk use) ----
     let ptotH = 0; for (let c = 0; c < C; c++) ptotH += P[base + c];
     const hh = ptotH / 100 * (1 - 0.6 * devast);
@@ -390,12 +416,12 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         for (let j = 0; j < ins.length; j++) scale = Math.min(scale, 0.25 + 0.75 * marketFill(m, ins[j]));
         const k = per / 100 * CRAFT_PROD * scale;
         let inCost = 0;
-        for (let j = 0; j < ins.length; j++) { const gi = ins[j], q = qs[j] * inNeed; m.dAcc[gi] += q * k; inCost += q * k * m.price[gi]; }
+        for (let j = 0; j < ins.length; j++) { const gi = ins[j], q = qs[j] * inNeed; m.dAcc[gi] += q * k; inCost += q * k * m.price[gi] * mu; }
         const outQ = rc.outQty * k * meth * prodMod;
         const og = REC_OUT[sl - 1];
-        m.sAcc[og] += outQ;
+        m.sAcc[og] += outQ * rs;
         gq[gb + GQ_CRAFT + si] = outQ; ec.ck[i * 3 + si] = k;
-        const val = outQ * m.price[og] * quality;
+        const val = outQ * m.price[og] * quality * fg;
         craftValue += val; craftProfit += val - inCost;
       }
     }
@@ -467,7 +493,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
       if (!tc) tc = tierCache(m, pl);
       for (let t = 0; t <= 3; t++) {
         if (t > maxT) break;
-        const cost = tc.cost[t] * mult * pc;
+        const cost = tc.cost[t] * mult * pc * mu;
         if (cost <= 0) continue;
         // poorer classes get basic food partly through subsistence (own harvest), not only purchases
         const subsidy = t === 0 && (c === CL.peasants) ? Math.min(cost * 0.6, grainQ * pGrain * 0.6) : 0;
@@ -492,7 +518,16 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     // ---- demography ----
     // food security: own harvest plus what the market supplies
     const grainNeed = Math.max(1, ptotH / 100 * 9);
-    const food = clamp(0.55 * Math.min(1, grainQ / grainNeed) + 0.45 * marketFill(m, G_GRAIN) * Math.min(1, lc.harvest[i] + 0.2) + 0.1, 0, 1);
+    // the village stores (FOOD_* below): a share of a good month's surplus goes into the barns, kept off the market,
+    // and a short month eats from them; a little spoils every month
+    const store = food$[i] * FOOD_SPOIL, cap = grainNeed * foodMonths(farmLvl, lc.buildings[i * B + BI.church]);
+    const surplus = grainQ - grainNeed;
+    let draw = 0;
+    if (surplus > 0) { const put = Math.max(0, Math.min(cap - store, surplus * FOOD_PUT)); food$[i] = store + put; m.sAcc[G_GRAIN] -= put * rs; }
+    else { draw = Math.min(store, -surplus); food$[i] = store - draw; }
+    const food = clamp(0.55 * Math.min(1, (grainQ + draw) / grainNeed) + 0.45 * marketFill(m, G_GRAIN) * Math.min(1, lc.harvest[i] + 0.2) + 0.1, 0, 1);
+    if (food < FAMINE_FOOD && o >= 0) { FAMINE[o] = (FAMINE[o] ?? 0) + ptotH; if (FAMINE_LOC[o] === undefined || ptotH > FAMINE_POP[o]) { FAMINE_LOC[o] = i; FAMINE_POP[o] = ptotH; } }
+    ec.food[i] = food;
     const plague = Math.max(0, lc.plague[i]); // below 0 only marks the survivors' resistance after an outbreak (society.ts)
     const growthMod = terr.growth;
     const growthFx = Math.max(0, 1 + (n ? ns[nr + NX] : 0));
@@ -525,6 +560,7 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
       u += ns[nr + 9];
       u += ns[nr + 8] * 20;
       u += ns[nr + NX + 7]; // tax instruments
+      if (food < FAMINE_FOOD) u += (FAMINE_FOOD - food) * FAMINE_UNREST; // hunger
       if (lc.core[i] !== o) u += 6;
       // an over-extended administration cannot hold newly won land
       if (lc.integ[i] < 1 && ns[nr + NX + 3] > 0) u += Math.min(15, ns[nr + NX + 3] * 10);
@@ -1030,6 +1066,7 @@ export const economy: System = {
     stepLocations(s, w, b, w.L, BUCKETS, false);
   },
   monthly({ s, w }) {
+    famineNotices(s, w);
     clearMarkets(s, w);
     updateMoney(s);
     monthlyLedger(s, w);
@@ -1039,6 +1076,20 @@ export const economy: System = {
     retoolWorkshops(s, w);
   },
 };
+
+/** Last month's famines: the realms of players hear of their largest starving place (at most every half year); the
+ *  tallies start afresh. */
+function famineNotices(s: GameState, w: World) {
+  for (let o = 0; o < FAMINE.length; o++) {
+    const n = s.nations[o]; const people = FAMINE[o] ?? 0, l = FAMINE_LOC[o];
+    if (!n?.alive || people <= 0 || l === undefined || !s.playerNations.includes(o)) continue;
+    if ((n.flags.famine_notice ?? -1e9) > s.day - 180) continue;
+    n.flags.famine_notice = s.day;
+    const k = Math.round(people / 1000);
+    notice(s, o, 'famine', { en: `Famine: the barns are empty in ${w.names[l]} and elsewhere; about ${k} thousand of our people go hungry. Grain is dear, and unrest grows where they starve.`, de: `Hungersnot: In ${w.namesDe[l]} und anderswo sind die Speicher leer; etwa ${k} Tausend unserer Leute hungern. Getreide ist teuer, und wo sie hungern, wächst die Unruhe.` }, { loc: l });
+  }
+  FAMINE.length = 0; FAMINE_LOC.length = 0; FAMINE_POP.length = 0;
+}
 
 /** The close of the month's books (closeLedger): the last system of the tick, after every other system has booked
  *  the month's income and costs (systems/index.ts). */
