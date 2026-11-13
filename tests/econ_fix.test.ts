@@ -1,6 +1,6 @@
 // Economy fixes (fix-econ track): the month's books close after every system has booked its costs, so the ledger
 // shown is what moved the treasury; the first month's recurring costs are shown from day 0; a crown that borrows by
-// itself says so. Run: npx vitest run --testTimeout=180000 tests/econ_fix.test.ts
+// itself says so. Run: npx vitest run tests/econ_fix.test.ts
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
