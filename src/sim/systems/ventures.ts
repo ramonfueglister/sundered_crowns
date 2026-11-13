@@ -82,6 +82,8 @@ export function routeTerms(s: GameState, nid: number, a: number, b: number): Rou
     cost += lk.cost;
     if (lk.sea) sea = true;
     blocked = Math.max(blocked, tradeBlocked(s, prev, next, lk.sea));
+    // an embargo between the rulers of two markets on the way stops a venture's goods outright (the peddlers still smuggle a little)
+    if (prev.owner >= 0 && next.owner >= 0 && prev.owner !== next.owner && embargoBetween(s, prev.owner, next.owner)) blocked = 1;
     prev = next;
   }
   const fo = ms[a].owner, to = ms[b].owner;

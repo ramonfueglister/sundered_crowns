@@ -336,7 +336,8 @@ describe('review: the books close after the month, and the realms read them righ
   it('day 0 shows the first month\'s income within 15 %, trade and tariffs included, and the trade rows add up to it', () => {
     const s = fresh(); const keys = ['venice', 'genoa', 'england', 'france'];
     // recurring lines only: a one-off windfall (an event's purse, England's in the first month) cannot be forecast
-    const recurring = (o: Record<string, number> | undefined) => Object.entries(o ?? {}).reduce((p, [k, v]) => p + (ONE_OFF.has(k) ? 0 : v), 0);
+    // (and the trading ventures the AI opens during the month, systems/ventures.ts: day 0 has none to forecast)
+    const recurring = (o: Record<string, number> | undefined) => Object.entries(o ?? {}).reduce((p, [k, v]) => p + (ONE_OFF.has(k) || k === 'ventures' ? 0 : v), 0);
     const day0 = keys.map((k) => { s.playerNations = [nat(s, k).id]; const p = playerView(s, nat(s, k)); return { inc: recurring(p.incomeBreak), trade: p.incomeBreak.trade ?? 0 }; });
     s.playerNations = [];
     // the Trade panel's rows by market are the same month as the ledger's trade line
