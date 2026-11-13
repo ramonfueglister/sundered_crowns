@@ -75,7 +75,7 @@ const CMD_TEXT: Record<string, I18n> = {
 /** Why the AI did it. */
 export const WHY: Record<string, I18n> = {
   'cu:conclave': T('to win the conclave', 'um das Konklave zu gewinnen'), 'cu:hat': T('for our share of the College', 'für unseren Anteil am Kollegium'),
-  'cu:gold': T('for an empty chest', 'für eine leere Kasse'), 'cu:crusade': T('for the faith', 'für den Glauben'),
+  'cu:gold': T('for an empty chest', 'für eine leere Kasse'), 'gov:succession': T('to secure the succession', 'um die Nachfolge zu sichern'), 'cu:crusade': T('for the faith', 'für den Glauben'),
   need_authority: T('to gain Authority', 'um Autorität zu gewinnen'),
   for_reform: T('to pay for a reform', 'um eine Reform zu bezahlen'),
   poor_general: T('our largest host lacked an able commander', 'unserem größten Heer fehlte ein fähiger Befehlshaber'),
@@ -178,6 +178,7 @@ export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
       : c.action === 'indulgence' ? T('Sold indulgences', 'Ablässe verkauft')
       : c.action === 'crusade' ? T('Had the pope proclaim a crusade against {T}', 'Den Papst zum Kreuzzug gegen {T} aufrufen lassen')
       : T('Cast our cardinals\' votes for {T}', 'Die Stimmen unserer Kardinäle für {T} abgegeben')); break;
+    case 'govern': out = c.action === 'designate' ? T('Had the Powers elect a successor in the ruler\'s lifetime', 'Die Mächte zu Lebzeiten des Herrschers einen Nachfolger wählen lassen') : CMD_TEXT.govern; break;
     case 'decision': out = fill(T('Took the decision: {I}', 'Entscheidung getroffen: {I}'), { I: (DECISIONS.find((d) => d.id === c.id)?.name ?? T(c.id, c.id)) }); break;
     default: out = CMD_TEXT[c.t] ?? T(c.t, c.t);
   }

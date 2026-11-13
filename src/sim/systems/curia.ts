@@ -40,9 +40,9 @@ export const SIMONY_STEP = 15, SIMONY_MAX = 60, SIMONY_CORRUPTION = 0.1;
 /** Indulgences: a month and a half of taxes for 10 favour, once in three years; the Church's corruption rises by a half and the
  *  realm's own pressure for church reform by a fifth for ten years. */
 export const INDULGENCE_FAVOUR = 10, INDULGENCE_YEARS = 3, INDULGENCE_CORRUPTION = 0.5, INDULGENCE_REFORM = 0.2;
-/** A crusade: 70 favour (50 for the pope's own country and the Holy See), lasts 5 years, at most one in 15 years;
+/** A crusade: 50 favour (35 for the pope's own country and the Holy See), lasts 5 years, at most one in 15 years;
  *  the crusaders at war with its target gain 10 % morale. */
-export const CRUSADE_FAVOUR = 70, CRUSADE_FAVOUR_PAPAL = 50, CRUSADE_YEARS = 5, CRUSADE_GAP = 15, CRUSADE_MORALE = 0.1;
+export const CRUSADE_FAVOUR = 50, CRUSADE_FAVOUR_PAPAL = 35, CRUSADE_YEARS = 5, CRUSADE_GAP = 15, CRUSADE_MORALE = 0.1;
 /** What the pope's own country gains while he reigns (a modifier, renewed monthly). */
 export const PATRON_EFFECTS = { prestige: 0.3, curia: 3 };
 
@@ -348,30 +348,40 @@ function aiConclave(s: GameState, w: World) {
 function aiCuriaYear(s: GameState, w: World) {
   let targets: number[] | null = null;
   const y = Math.floor(s.day / YEAR);
+  const open = !crusadeOpenRefusal(s);
   for (const n of s.nations) {
     if (!isLatin(n) || isHuman(s, n.id) || n.excommunicated) continue;
     const fav = favourOf(s, n.id);
+    // a frontier realm of the Church (bordering an unbelieving realm not much stronger than itself) saves its favour
+    // for a crusade; a zealous or pious crown, a military order, the pope's country and the Holy See ask more often
+    let foe = -1;
+    if (n.overlord < 0) {
+      targets ??= crusadeTargets(s, w);
+      const own = nationDev(s, n.id);
+      foe = targets.filter((x) => nationDev(s, x) < own * 2 && bordering(s, w, n.id, x)).sort((a, b) => nationDev(s, b) - nationDev(s, a) || a - b)[0] ?? -1;
+    }
+    if (foe >= 0 && open && fav >= crusadeFavour(s, n) && !crusadeRefusal(s, null, n)) {
+      const zeal = n.personality === 'zealot' || n.gov === 'military_order' || !!s.chars[n.ruler]?.traits.includes('pious') || n.id === s.papacy.patron || n.id === s.papacy.holder;
+      if (hash01(n.id, y, 43) < (zeal ? 0.5 : 0.2)) { aiApply(s, w, { t: 'curia', n: n.id, action: 'crusade', target: foe }, 'cu:crusade'); continue; }
+    }
+    const keep = foe >= 0 ? crusadeFavour(s, n) : 0; // favour a frontier realm keeps back
     // a red hat when we hold fewer than our share and the chest is full
-    if (fav >= RED_HAT_FAVOUR + 30 && hats(s, n.id) < fairShare(s, n) && n.treasury > redHatGold(n) * 4 && !redHatRefusal(s, n)) {
+    if (fav - RED_HAT_FAVOUR >= Math.max(30, keep) && hats(s, n.id) < fairShare(s, n) && n.treasury > redHatGold(n) * 4 && !redHatRefusal(s, n)) {
       aiApply(s, w, { t: 'curia', n: n.id, action: 'red_hat' }, 'cu:hat');
       continue;
     }
     // indulgences when the chest is empty
-    if ((n.treasury < 0 || n.debt > 0) && fav >= 30 && !indulgenceRefusal(s, n) && hash01(n.id, y, 41) < 0.25) {
+    if ((n.treasury < 0 || n.debt > 0) && fav >= 30 && fav - INDULGENCE_FAVOUR >= keep && !indulgenceRefusal(s, n) && hash01(n.id, y, 41) < 0.25) {
       aiApply(s, w, { t: 'curia', n: n.id, action: 'indulgence' }, 'cu:gold');
-      continue;
-    }
-    // a crusade against an unbelieving neighbour not much stronger than us (more often for a zealous or pious crown,
-    // the pope's country or the Holy See)
-    if (fav >= crusadeFavour(s, n) + 10 && !crusadeRefusal(s, null, n)) {
-      const zeal = n.personality === 'zealot' || !!s.chars[n.ruler]?.traits.includes('pious') || n.id === s.papacy.patron || n.id === s.papacy.holder;
-      if (hash01(n.id, y, 43) > (zeal ? 0.3 : 0.1)) continue;
-      targets ??= crusadeTargets(s, w);
-      const own = nationDev(s, n.id);
-      const t = targets.filter((x) => bordering(s, w, n.id, x) && nationDev(s, x) < own * 2).sort((a, b) => nationDev(s, b) - nationDev(s, a) || a - b)[0];
-      if (t !== undefined) aiApply(s, w, { t: 'curia', n: n.id, action: 'crusade', target: t }, 'cu:crusade');
     }
   }
+}
+/** Whether the Church can proclaim a crusade at all now (none under way, the last long enough ago). */
+function crusadeOpenRefusal(s: GameState): string | null {
+  const P = s.papacy;
+  if (P.crusade && s.day < P.crusade.until) return 'a crusade is already under way';
+  if (s.day - (P.lastCrusade ?? -1e9) < CRUSADE_GAP * YEAR) return 'too soon';
+  return null;
 }
 
 // ---------------------------------------------------------------- the months and years

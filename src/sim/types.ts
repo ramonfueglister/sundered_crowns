@@ -390,7 +390,7 @@ export type Command =
   | { t: 'league'; n: number; action: 'join' | 'leave' | 'answer_call'; war?: number; yes?: boolean }
   | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline' | 'accept_mediation' | 'refuse_mediation'; target?: number; war?: number }
   | { t: 'assembly'; n: number; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: WarGoal['type']; bribe?: string[]; concede?: string }
-  | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand'; char?: number }
+  | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand' | 'designate'; char?: number }
   | { t: 'situation'; n: number; id: string; action: string; target?: number };
 
 /** err: the refusal as an English key (src/sim/refusals.ts gives both languages); msg: set when the refusal names a realm or an estate. */
