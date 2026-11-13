@@ -269,7 +269,20 @@ export interface Empire {
   land?: Uint8Array;
   lastDiet?: number;
 }
-export interface Papacy { holder: number; seat: number; antipope: number; curiaFavour: Record<number, number>; schism: boolean; reformPressure: number; corruption: number }
+export interface Papacy {
+  holder: number; seat: number; antipope: number; curiaFavour: Record<number, number>; schism: boolean; reformPressure: number; corruption: number;
+  // ---- the Curia (systems/curia.ts); optional so that older saves load (seated on the first month)
+  /** red hats per realm (the College of Cardinals) */
+  cardinals?: Record<number, number>;
+  /** the realm the reigning pope comes from (the Holy See's own realm for a man of the Curia), -1 none */
+  patron?: number; lastConclave?: number;
+  /** a sitting conclave: candidate realms, the blocs players cast (realm → candidate), the round and its closing day */
+  conclave?: { opened: number; closes: number; round: number; candidates: number[]; votes: Record<number, number> } | null;
+  /** gifts to the cardinals: `${candidate}>${realm}` → points (fade yearly outside a conclave) */
+  simony?: Record<string, number>;
+  /** a crusade proclaimed against a realm of another family of faiths */
+  crusade?: { target: number; by: number; start: number; until: number } | null; lastCrusade?: number;
+}
 export interface League {
   id: string; name: I18n; members: number[]; leader: number; strength: number; markets: number[];
   /** Calls to arms to human members (an AI member answers at once): join the defence of a member town, or stay out. */
@@ -372,11 +385,12 @@ export type Command =
   | { t: 'batch'; n: number; cmds: Command[] }                  // many build / recruit / agent orders at once (province, area, realm)
   | { t: 'dev'; n: number; action: string; payload?: any } // developer tools (single player / admin only)
   // ---- realm pass: the Empire, the league, great powers, assemblies, elections, situations
+  | { t: 'curia'; n: number; action: 'red_hat' | 'simony' | 'vote' | 'indulgence' | 'crusade'; target?: number }
   | { t: 'empire'; n: number; action: 'vote' | 'campaign' | 'defend' | 'refuse' | 'order_peace' | 'comply' | 'summon_diet' | 'diet_vote' | 'ask_help'; target?: number; war?: number; yes?: boolean }
   | { t: 'league'; n: number; action: 'join' | 'leave' | 'answer_call'; war?: number; yes?: boolean }
   | { t: 'powers'; n: number; action: 'intervene' | 'mediate' | 'seek_protection' | 'protect' | 'decline' | 'accept_mediation' | 'refuse_mediation'; target?: number; war?: number }
   | { t: 'assembly'; n: number; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: WarGoal['type']; bribe?: string[]; concede?: string }
-  | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand'; char?: number }
+  | { t: 'govern'; n: number; action: 'back' | 'grant_demand' | 'refuse_demand' | 'designate'; char?: number }
   | { t: 'situation'; n: number; id: string; action: string; target?: number };
 
 /** err: the refusal as an English key (src/sim/refusals.ts gives both languages); msg: set when the refusal names a realm or an estate. */

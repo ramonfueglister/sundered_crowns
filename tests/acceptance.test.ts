@@ -5,7 +5,7 @@ import { loadWorld, loadSetup, loadHubs } from '../tools/sim/load';
 import { createGame } from '../src/sim/setup';
 import { step, hashState, serialize, deserialize } from '../src/sim/engine';
 import { applyCommand } from '../src/sim/commands';
-import { hasCasusBelli, nationLocs, computeScore } from '../src/sim/systems/war';
+import { hasCasusBelli, nationLocs, computeScore, goalTowns } from '../src/sim/systems/war';
 import { nationPower, neighboursCached } from '../src/sim/systems/ai';
 import { findPath, seaNear, newArmy, availableUnits } from '../src/sim/systems/military';
 import { allies, hasTreaty, atWar } from '../src/sim/ctx';
@@ -59,7 +59,7 @@ describe('acceptance (point 119)', () => {
       const cmds: Command[] = [];
       const war = s.wars.find((x) => x.att.includes(P.id) && x.def.includes(T.id));
       if (!war && !hasCasusBelli(s, P.id, T.id) && day % 30 === 0 && !s.spies.some((x) => x.nation === P.id && x.action === 'fabricate')) applyCommand(s, w, { t: 'diplo', n: P.id, action: 'fabricate', target: T.id });
-      if (!war && hasCasusBelli(s, P.id, T.id) && !atWar(s, P.id, T.id)) cmds.push({ t: 'declare', n: P.id, target: T.id, goal: 'conquest', locs: nationLocs(s, T.id).slice(0, 3) });
+      if (!war && hasCasusBelli(s, P.id, T.id) && !atWar(s, P.id, T.id)) cmds.push({ t: 'declare', n: P.id, target: T.id, goal: 'conquest', locs: goalTowns(s, w, P.id, T.id, 'conquest').slice(0, 3) }); // the towns the claim covers, as the declare dialog offers them
       if (war) {
         // any town of the enemy side that can be reached (the target first, then its allies' land on the way)
         const enemyLocs = war.def.flatMap((e) => nationLocs(s, e));

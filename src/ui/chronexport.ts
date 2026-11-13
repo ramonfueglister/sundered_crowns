@@ -25,6 +25,7 @@ const KIND: Record<string, [string, string]> = {
   alliance: ['Alliance', 'Bündnis'], marriage: ['Marriage', 'Heirat'], vassal: ['Vassal', 'Vasall'], goal: ['Goal', 'Ziel'], bankruptcy: ['Bankruptcy', 'Bankrott'],
   decision: ['Decision', 'Beschluss'], coalition: ['Common Front', 'Gemeinsame Front'], crisis: ['Crisis', 'Krise'], innovation: ['Innovation', 'Neuerung'],
   landmark: ['Landmark', 'Wahrzeichen'], integration: ['Integration', 'Eingliederung'], excommunication: ['Excommunication', 'Kirchenbann'], explore: ['Exploration', 'Erkundung'],
+  pope: ['Pope', 'Papst'], curia: ['Curia', 'Kurie'], crusade: ['Crusade', 'Kreuzzug'],
   company: ['Company', 'Kompanie'], embargo: ['Embargo', 'Embargo'], election: ['Election', 'Wahl'], diet: ['Diet', 'Reichstag'], rebels: ['Rebels', 'Aufständische'],
 };
 export const kindLabel = (k: string, lang: 'en' | 'de') => KIND[k]?.[lang === 'de' ? 1 : 0] ?? k.replace(/_/g, ' ');

@@ -21,7 +21,7 @@ const KEY_NAMES: Record<string, [string, string]> = {
   expeditions: ['Expeditions', 'Expeditionen'],
   // ---- truth pass: tax instruments, privateering, production methods
   // ---- realm pass: the imperial tax, gifts to the Powers, situation actions
-  imperial_tax: ['Common Penny', 'Gemeiner Pfennig'], situations: ['Situations', 'Lagen'],
+  imperial_tax: ['Common Penny', 'Gemeiner Pfennig'], curia: ['The Curia (red hats, gifts to cardinals)', 'Kurie (Kardinalshüte, Geschenke an Kardinäle)'], indulgences: ['Indulgences', 'Ablässe'], situations: ['Situations', 'Lagen'],
   land_tax: ['Land tax', 'Grundsteuer'], hearth_tax: ['Hearth tax', 'Herdsteuer'], excise: ['Excise', 'Akzise'], privateers: ['Privateering', 'Kaperei'], methods: ['Reorganised workshops', 'Umgestellte Werkstätten'],
   // ---- war pass: obligations of a peace and the refill of regiments
   reparations: ['War reparations', 'Kriegsentschädigung'], trade_privileges: ['Trade privileges', 'Handelsprivilegien'], reinforcements: ['Reinforcements', 'Verstärkungen'],
@@ -39,11 +39,11 @@ export const keyName = (k: string) => KEY_NAMES[k]?.[lang.value === 'de' ? 1 : 0
 const MENU = [
   { k: 'economy', icon: '⚖', key: 'E', main: true }, { k: 'government', icon: '♛', key: 'G', main: true }, { k: 'diplomacy', icon: '✉', key: 'Shift+D', main: true },
   { k: 'military', icon: '⚔', key: 'M', main: true }, { k: 'trade', icon: '⚓', key: '', main: false }, { k: 'explore', icon: '🧭', key: '', main: false }, { k: 'works', icon: '⚒', key: 'B', main: false }, { k: 'knowledge', icon: '⚗', key: 'K', main: false }, { k: 'society', icon: '✝', key: '', main: false },
-  { k: 'empire', icon: '♚', key: '', main: false }, { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
+  { k: 'empire', icon: '♚', key: '', main: false }, { k: 'curia', icon: '✠', key: '', main: false }, { k: 'decisions', icon: '⚑', key: '', main: false }, { k: 'ledger', icon: '▤', key: 'L', main: false }, { k: 'chronicle', icon: '❧', key: 'C', main: false },
   { k: 'victory', icon: '♕', key: 'V', main: false },
 ] as const;
 const MAX_LEVEL = 5;
-const SHORT: Record<string, [string, string]> = { victory: ['Victory', 'Sieg'], empire: ['Empire', 'Reich'], trade: ['Trade', 'Handel'], explore: ['Discovery', 'Entdeckung'], works: ['Works', 'Bauten'], government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
+const SHORT: Record<string, [string, string]> = { victory: ['Victory', 'Sieg'], empire: ['Empire', 'Reich'], curia: ['Curia', 'Kurie'], trade: ['Trade', 'Handel'], explore: ['Discovery', 'Entdeckung'], works: ['Works', 'Bauten'], government: ['Rule', 'Herrschaft'], society: ['Society', 'Glaube'], decisions: ['Goals', 'Ziele'], knowledge: ['Learning', 'Wissen'] };
 const short = (k: string) => SHORT[k]?.[lang.value === 'de' ? 1 : 0] ?? t(k);
 /** Full names of the panels (some differ from the generic word: "Herrschaft", "Goals & decisions"). */
 export const panelName = (k: string) => { const v = t(`nav_${k}`); return v === `nav_${k}` ? t(k) : v; };

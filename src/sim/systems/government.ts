@@ -14,8 +14,9 @@ import { ESTATES, PRIVILEGES, estate, lawEffect, newChar, ageOf, grantPrivilege,
 import { DUTIES, DUTY_INDEX, dutyDiscontent, dutyDiscontentAt, dutyValue } from './duties';
 import { nationDev, hasCasusBelli, DECLARE_GOALS } from './war';
 import { taxCommon, TAX_YIELD_KEYS } from './economy';
-import { chance, rand, hash01 } from '../rng';
+import { chance, rand, hash01, seedRng } from '../rng';
 import { houseName as cultureHouse } from '../content/names';
+import { aiApply } from './ai_log';
 
 type Row = [string | I18n, number];
 const T = (en: string, de: string): I18n => ({ en, de });
@@ -526,6 +527,16 @@ function choose(s: GameState, w: World, n: Nation): number {
 export function govSuccessor(s: GameState, w: World, n: Nation): number {
   const proc = govProcess(n);
   if (proc === 'heredity') return 0;
+  const elect = proc === 'elective' ? designated(s, n) : 0;
+  if (elect) {
+    // the successor the Powers elected in the late ruler's lifetime takes the crown: no interregnum, no new vote
+    n.flags.elect_margin = n.flags.designated_margin ?? 60; n.flags.elected = s.day; delete n.flags.elect_contested;
+    delete n.flags.designated; delete n.flags.designated_margin; delete n.flags.designated_on;
+    n.electCands = (n.electCands ?? []).map((x) => (x === elect ? 0 : x));
+    for (const off in n.council) if (n.council[off] === elect) delete n.council[off];
+    if (isHuman(s, n.id)) notice(s, n.id, 'election', T(`${s.chars[elect]?.name ?? '?'}, elected in the late ruler's lifetime, takes the crown.`, `${s.chars[elect]?.name ?? '?'}, schon zu Lebzeiten des verstorbenen Herrschers gewählt, übernimmt die Krone.`));
+    return elect;
+  }
   const id = choose(s, w, n);
   if (!id) return 0;
   if (proc === 'republic') { n.flags.term = 1; n.flags.next_election = s.day + termYears(n) * 365; }
@@ -552,6 +563,67 @@ function termElection(s: GameState, w: World, n: Nation) {
   if (notable(s, n)) chronicle(s, n.id, 'election', T(`${c.name} was elected head of ${n.short.en} (${n.flags.elect_margin} % of the votes), succeeding ${oc?.name ?? '?'}.`, `${c.name} wurde zum Haupt von ${n.short.de} gewählt (${n.flags.elect_margin} % der Stimmen) und folgt ${oc?.name ?? '?'}.`));
   if (isHuman(s, n.id)) notice(s, n.id, 'election', T(`${c.name} has been elected to lead the republic.`, `${c.name} wurde zum Haupt der Republik gewählt.`), { loc: n.capital });
 }
+// ---------------------------------------------------------------- a successor elected in the ruler's lifetime
+// An elective crown can ask its Powers to elect the next ruler while the present one still reigns (as kings of the
+// Romans, of Bohemia and of Poland had their sons elected vivente rege). The vote is held at once by the same tally as
+// at a death, with the crown's backing for the candidate it names. If its man wins, the succession is secure; if the
+// Powers prefer another, that other is the king-elect, and the crown has lost face.
+/** Authority the vote costs, the years before a refused crown may ask again, and the Mandate it moves. */
+export const DESIGNATE_COST = 40, DESIGNATE_RETRY = 10, DESIGNATE_MANDATE = 5, DESIGNATE_SNUB = -10;
+/** The king-elect, if one lives at this court (0: none). */
+export function designated(s: GameState, n: Nation): number {
+  const id = n.flags.designated ?? 0; const c = s.chars[id];
+  return id && c?.alive && c.nation === n.id && id !== n.ruler ? id : 0;
+}
+export function designateRefusal(s: GameState, w: World, n: Nation, cid: number): string | null {
+  if (govProcess(n) !== 'elective') return 'only an elective crown holds such a vote';
+  if (designated(s, n)) return 'a successor is already elected';
+  if (!(n.electCands ?? []).includes(cid) || !s.chars[cid]?.alive) return 'not a candidate';
+  if (s.day - (n.flags.designate_try ?? -1e9) < DESIGNATE_RETRY * 365) return 'too soon';
+  if (n.authority < DESIGNATE_COST) return 'not enough Authority';
+  return null;
+}
+/** Who the Powers would elect now if the crown named cid (the tally with the crown's backing for cid). Changes
+ *  nothing: views call it. */
+export function designatePreview(s: GameState, _w: World, n: Nation, cid: number): ElectionView {
+  const was = n.backed; n.backed = cid;
+  try { return electionTally(s, n); } finally { n.backed = was; }
+}
+export function designateSuccessor(s: GameState, w: World, n: Nation, cid: number): string | null {
+  if (govProcess(n) === 'elective') ensureCandidates(s, w, n);
+  const e = designateRefusal(s, w, n, cid); if (e) return e;
+  const t = designatePreview(s, w, n, cid);
+  if (!t.winner) return 'not a candidate';
+  const win = t.cands.find((c) => c.id === t.winner)!;
+n.authority -= DESIGNATE_COST; n.flags.designate_try = s.day; n.backed = undefined;
+  n.flags.designated = t.winner; n.flags.designated_on = s.day;
+  n.flags.designated_margin = Math.round(t.total > 0 ? (win.votes / t.total) * 100 : 50);
+  n.electCands = (n.electCands ?? []).map((x) => (x === t.winner ? 0 : x));
+  const ours = t.winner === cid;
+  n.mandate = clamp(n.mandate + (ours ? DESIGNATE_MANDATE : DESIGNATE_SNUB), 0, 100);
+  const nm = s.chars[t.winner]?.name ?? '?';
+  if (notable(s, n) || isHuman(s, n.id)) chronicle(s, n.id, 'election', ours
+    ? T(`The Powers of ${n.short.en} elected ${nm} to succeed the reigning ruler (${n.flags.designated_margin} % of the votes).`, `Die Mächte von ${n.short.de} wählten ${nm} zum Nachfolger des regierenden Herrschers (${n.flags.designated_margin} % der Stimmen).`)
+    : T(`Asked to elect the crown's man, the Powers of ${n.short.en} chose ${nm} as the next ruler instead.`, `Statt des Mannes der Krone wählten die Mächte von ${n.short.de} ${nm} zum nächsten Herrscher.`));
+  if (isHuman(s, n.id)) notice(s, n.id, 'election', ours
+    ? T(`${nm} has been elected our successor (${n.flags.designated_margin} %). The succession is secure.`, `${nm} wurde zu unserem Nachfolger gewählt (${n.flags.designated_margin} %). Die Nachfolge ist gesichert.`)
+    : T(`The Powers refused our man and elected ${nm} as our successor.`, `Die Mächte lehnten unseren Mann ab und wählten ${nm} zu unserem Nachfolger.`));
+  return null;
+}
+/** An AI crown of fifty or more without a king-elect asks for the vote when its own house's candidate would win. */
+function aiDesignate(s: GameState, w: World, n: Nation) {
+  if (govProcess(n) !== 'elective' || designated(s, n) || n.authority < DESIGNATE_COST + 20) return;
+  const r = s.chars[n.ruler]; if (!r || ageOf(s, r) < 50 || hash01(n.id, Math.floor(s.day / 365), 59) > 0.5) return;
+  // the AI's candidates are drawn from a stream of their own, so that merely weighing the vote leaves the world's
+  // dice where they were (the vote itself, if held, changes the world as it should)
+  const dice = s.rng; s.rng = seedRng(Math.floor(hash01(n.id, s.day, 61) * 4294967296));
+  let crown = 0;
+  try { crown = ensureCandidates(s, w, n)[0]; } finally { s.rng = dice; }
+  if (!crown || designateRefusal(s, w, n, crown)) return;
+  if (designatePreview(s, w, n, crown).winner !== crown) return;
+  aiApply(s, w, { t: 'govern', n: n.id, action: 'designate', char: crown }, 'gov:succession');
+}
+
 /** Back a candidate for the next choice of the realm's head (costs 25 Authority): every Power weighs it. */
 export function backCandidate(s: GameState, w: World, n: Nation, cid: number): string | null {
   if (govProcess(n) === 'heredity') return 'the crown passes by inheritance';
@@ -571,6 +643,10 @@ export function govMandateParts(s: GameState, n: Nation): Row[] {
     const rows: Row[] = [];
     const m = n.flags.elect_margin;
     if (m !== undefined) rows.push(['x_mand_election', Math.round((m - 50) * 0.3 * Math.max(0, 1 - yrs(n.flags.elected) / 20))]);
+    if (proc === 'elective') {
+      if (designated(s, n)) rows.push(['x_mand_designated', DESIGNATE_MANDATE]);
+      else { const r = s.chars[n.ruler]; if (r && ageOf(s, r) >= 55) rows.push(['x_mand_open_succession', -4]); }
+    }
     if (proc === 'republic') { const ne = n.flags.next_election; const f = ne === undefined ? 0.5 : clamp(1 - (ne - s.day) / (termYears(n) * 365), 0, 1); rows.push(['x_mand_term', Math.round(8 * (1 - 2 * f))]); }
     if (proc === 'clergy') rows.push(['x_mand_piety', Math.round((estate(n, 'prelates').contentment - 50) * 0.3)]);
     return rows;
@@ -602,6 +678,11 @@ function governmentMonth(s: GameState, w: World) {
       if (s.day >= n.flags.next_election) termElection(s, w, n);
     }
     if (human && proc !== 'heredity') ensureCandidates(s, w, n);
+    if (n.flags.designated && !designated(s, n)) {
+      if (human && s.chars[n.flags.designated] && n.flags.designated !== n.ruler) notice(s, n.id, 'election', T('Our king-elect is dead: the succession is open again.', 'Unser gewählter Nachfolger ist tot: Die Nachfolge ist wieder offen.'));
+      delete n.flags.designated; delete n.flags.designated_margin; delete n.flags.designated_on;
+    }
+    if (!human && proc === 'elective' && s.day % 365 < 31) aiDesignate(s, w, n);
   }
 }
 

@@ -43,6 +43,7 @@ import { aiLogText, aiLogSecret } from '../sim/systems/ai_log';
 import { dynastyView, marriagePreview, marriageOfferText } from '../sim/systems/dynasty';
 import { availableCommanders, commanderSkill, commanderMorale, commanderParts, commandOf, generalCost } from '../sim/systems/commanders';
 import { victoryView, historyView } from './endview';
+import { curiaView } from './curiaview';
 import { EVENTS } from '../sim/content/events';
 
 const sumObj = (o: Record<string, number>) => Object.values(o).reduce((p, v) => p + v, 0);
@@ -428,6 +429,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'battles': return battleList(s, q.war, player);
     case 'war': return warView(s, w, player, q.war);
     case 'empire': case 'powers': case 'assembly': case 'govern': case 'situation': return player >= 0 ? realmAnswer(s, w, player, q) : null;
+    case 'curia': return player >= 0 ? curiaView(s, w, player) : null;
     case 'commanders': return player >= 0 ? commandersView(s, player, q.army) : null;
     case 'victory': return victoryView(s, w, player);
     case 'devEvents': return s.flags.devtools ? { events: EVENTS.map((d) => ({ id: d.id, title: d.title, major: !!d.major })), aiDisabled: s.aiDisabled.slice() } : null;

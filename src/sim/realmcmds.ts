@@ -3,7 +3,7 @@
 import type { GameState, Command, Nation, I18n } from './types';
 import type { World } from './world';
 import { castVote, campaign, answerCall, orderPeace, answerOrder, summonDiet, dietVote, joinLeague, leaveLeague, answerLeagueCall, askHelp } from './systems/empire';
-import { holdAssembly, taxAsk, needsTaxVote, backCandidate, answerDemand } from './systems/government';
+import { holdAssembly, taxAsk, needsTaxVote, backCandidate, answerDemand, designateSuccessor } from './systems/government';
 import { powersCommand } from './systems/powers';
 import { situationAction } from './systems/situations';
 
@@ -50,6 +50,7 @@ export function realmCommand(s: GameState, w: World, n: Nation, cmd: RealmCmd, o
     }
     case 'govern': {
       if (cmd.action === 'back') return backCandidate(s, w, n, cmd.char ?? -1);
+      if (cmd.action === 'designate') return designateSuccessor(s, w, n, cmd.char ?? -1);
       return answerDemand(s, n, cmd.action === 'grant_demand');
     }
     case 'situation': return situationAction(s, w, n, cmd.id, cmd.action, cmd.target);

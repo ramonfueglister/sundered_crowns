@@ -11,7 +11,7 @@ import {
   lobbyCost, isLobby, isHuman, reformDef, helpRefusal,
 } from '../sim/systems/empire';
 import { greatPowers, isGreatPower, scoreParts, growth, RISING, GP_EFFECTS, GP_REGARD, balanceThreat, interveneScore, mediationScore, protectScore, powersState, GP_COUNT, SPURNED } from '../sim/systems/powers';
-import { assemblyVote, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, dutyLevels, grantFor, type AssemblyAsk } from '../sim/systems/government';
+import { assemblyVote, designated, designateRefusal, designatePreview, DESIGNATE_COST, DESIGNATE_RETRY, DESIGNATE_MANDATE, DESIGNATE_SNUB, taxLevel, taxCeiling, needsTaxVote, needsWarVote, bribeCost, govProcess, partiesOf, electionTally, termYears, TERM_LIMIT, estateName, taxAsk, taxLevelParts, taxWeights, classSums, dutiesOf, dutyLevels, grantFor, type AssemblyAsk } from '../sim/systems/government';
 import { DUTIES } from '../sim/systems/duties';
 import { PRIVILEGES, ageOf, lawEffect } from '../sim/systems/politics';
 import { SITUATIONS } from '../sim/content/situations';
@@ -163,6 +163,13 @@ function governView(s: GameState, w: World, me: number) {
     candidates: t ? t.cands.map((c) => { const ch = s.chars[c.id]; return { id: c.id, name: ch?.name, dynasty: ch?.dynasty, age: ch ? Math.floor(ageOf(s, ch)) : 0, skills: ch?.skills, traits: ch?.traits, party: c.party, partyName: c.party === 'crown' || c.party === 'incumbent' ? null : estateName(c.party), votes: c.votes, share: t.total > 0 ? c.votes / t.total * 100 : 0, by: c.by.map((b) => ({ ...b, name: estateName(b.estate) })) }; }) : [],
     winner: t?.winner ?? 0, total: t?.total ?? 0,
     heir: n.heir, heirName: s.chars[n.heir]?.name, heirFemale: !!s.chars[n.heir]?.female,
+    // a successor elected in the ruler's lifetime (elective crowns): the king-elect, or for each candidate whom the
+    // Powers would elect if the crown named him now
+    vivente: proc === 'elective' ? (() => { const d = designated(s, n); const dc = s.chars[d];
+      return { elect: d ? { id: d, name: dc?.name, female: !!dc?.female, margin: n.flags.designated_margin ?? 0, on: n.flags.designated_on ?? 0 } : null,
+        cost: DESIGNATE_COST, retry: DESIGNATE_RETRY, mandate: DESIGNATE_MANDATE, snub: DESIGNATE_SNUB, again: (n.flags.designate_try ?? -1e9) + DESIGNATE_RETRY * 365,
+        options: d ? [] : (t?.cands ?? []).map((c) => { const pv = designatePreview(s, w, n, c.id); const win = pv.cands.find((x) => x.id === pv.winner);
+          return { id: c.id, name: s.chars[c.id]?.name, refusal: designateRefusal(s, w, n, c.id), winner: pv.winner, winnerName: s.chars[pv.winner]?.name, share: win && pv.total > 0 ? win.votes / pv.total * 100 : 0 }; }) }; })() : null,
     demand: n.demand ? { ...n.demand, estateName: estateName(n.demand.estate), privName: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.name, effects: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.effects, resent: PRIVILEGES.find((p) => p.id === n.demand!.privilege)?.resent } : null,
     ...(() => { const cs = classSums(s); const wts = taxWeights(n, cs); const dl = dutyLevels(s, n); const rows = taxLevelParts(n.taxRate, wts, dutiesOf(n), dl); const lv = taxLevel(n.taxRate, wts, dutiesOf(n), dl);
       return { taxLevel: lv, taxLevelRows: rows, taxRates: n.taxRate, taxCeiling: taxCeiling(n, lv) }; })(),

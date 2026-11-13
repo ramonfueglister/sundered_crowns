@@ -133,6 +133,8 @@ function holyWarCause(s: GameState, w: World | null, a: number, b: number): bool
   const na = s.nations[a], nb = s.nations[b];
   const fa = FAITHS[na.faith]?.family, fb = FAITHS[nb.faith]?.family;
   if (!fa || !fb || fa === fb) return false;
+  // a crusade the pope proclaimed against b (systems/curia.ts): every realm of the Latin Church may fight it
+  const cr = s.papacy.crusade; if (cr && cr.target === b && s.day < cr.until && FAITHS[na.faith]?.id === 'latin') return true;
   if (w ? holyLand(s, w, a, b, 1).length > 0 : ownedLocs(s, b).some((l) => s.loc.faith[l] === na.faith)) return true;
   const zeal = na.personality === 'zealot' || (na.flags.holy_war || 0) > 0 || !!s.chars[na.ruler]?.traits.includes('pious');
   return zeal && !!w && bordering(s, w, a, b);

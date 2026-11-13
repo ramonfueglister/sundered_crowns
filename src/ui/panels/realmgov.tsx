@@ -5,6 +5,7 @@ import { view } from '../../game/client';
 import { Section, Row, Btn, Empty, Effects, Tip, useQuery, act, t, L, num, pct, fmtDateShort } from './common';
 import { Parts, TipHead } from './explain';
 import { charName } from './people';
+import { errText } from '../i18n';
 
 type Row2 = [any, number];
 const sum = (r: Row2[]) => r.reduce((p, x) => p + x[1], 0);
@@ -35,6 +36,7 @@ export function RealmGovernment() {
             {!c.by.length && <div class="muted">{t('x_gov_no_support')}</div>}</div>}><span class="has-tip">{pct(c.share / 100, 0)}</span></Tip>
             <Btn disabled={g.backed === c.id ? t('x_gov_backed') : null} tip={t('x_gov_back_hint')} onClick={() => doAct({ t: 'govern', action: 'back', char: c.id })}>{t('x_gov_back')}</Btn></span>
         </div>)}
+        {g.vivente && <Vivente v={g.vivente} doAct={doAct} />}
       </>}
     </Section>
     <Section title={t('x_asm_title')} id="gov-assembly">
@@ -50,5 +52,26 @@ export function RealmGovernment() {
         <div class="btn-row"><Btn onClick={() => doAct({ t: 'govern', action: 'grant_demand' })}>{t('x_dem_grant')}</Btn><Btn tip={t('x_dem_refuse_hint')} onClick={() => doAct({ t: 'govern', action: 'refuse_demand' })}>{t('x_dem_refuse')}</Btn></div>
       </div>}
     </Section>
+  </div>;
+}
+
+/** An elective crown's choice of the next ruler in the present ruler's lifetime: the king-elect, or for each candidate
+ *  whom the Powers would elect if we named him now (systems/government.ts designateSuccessor). */
+function Vivente({ v, doAct }: { v: any; doAct: (c: any) => void }) {
+  const fill = (k: string) => t(k).replace('{cost}', String(v.cost)).replace('{years}', String(v.retry)).replace('{m}', String(v.mandate)).replace('{snub}', String(-v.snub));
+  return <div>
+    <div class="sub-h">{t('x_viv_title')}</div>
+    {v.elect ? <Row k={t('x_viv_elect')} v={charName(v.elect.name, v.elect.female, true)} tip={<div><TipHead name={t('x_viv_elect')} value={`${v.elect.margin} %`} hint={t('x_viv_elect_hint')} /><div class="muted">{t('x_viv_since')} {date(v.elect.on)}</div></div>} />
+      : <>
+        <div class="muted small">{fill('x_viv_hint')}</div>
+        {v.options.map((o: any) => <div>
+          <div class="kv"><span class="k">{o.name}</span><span class="v">
+            <Btn disabled={o.refusal ? (o.refusal === 'too soon' ? `${t('x_again_from')} ${date(v.again)}` : errText(o.refusal)) : null}
+              tip={<div>{fill('x_viv_btn_hint')}{o.winner !== o.id && <div class="neg">{t('x_viv_warn')}</div>}</div>}
+              onClick={() => doAct({ t: 'govern', action: 'designate', char: o.id })}>{t('x_viv_name')} ({v.cost})</Btn>
+          </span></div>
+          {o.winnerName && <div class="muted small">→ {t('x_viv_would')}: <b class={o.winner === o.id ? 'pos' : 'neg'}>{o.winnerName}</b> ({Math.round(o.share)} %)</div>}
+        </div>)}
+      </>}
   </div>;
 }
