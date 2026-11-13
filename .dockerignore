@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+world-data
+.git
+.env
+.env.*
+!.env.example
+tools/geo
+public/map
+test-results
+playwright-report
+*.log

@@ -1,0 +1,507 @@
+{
+  "sources": [
+    "Oxford Atlas of World History",
+    "Grove Dictionary of Art",
+    "Wikipedia articles on the individual monuments"
+  ],
+  "landmarks": [
+    {
+      "id": "hagia_sophia",
+      "name": {
+        "en": "Hagia Sophia",
+        "de": "Hagia Sophia"
+      },
+      "lat": 41.008,
+      "lon": 28.98,
+      "built_state": "complete",
+      "build_start": 532,
+      "build_end": 537,
+      "description": {
+        "en": "Justinian's great domed church has been the seat of the Patriarch of Constantinople for eight centuries. Part of its dome and the great eastern arch, brought down by the earthquake of 1346, were rebuilt only shortly before 1356.",
+        "de": "Justinians gewaltige Kuppelkirche ist seit acht Jahrhunderten Sitz des Patriarchen von Konstantinopel. Teile der Kuppel und der große Ostbogen, die beim Erdbeben von 1346 einstürzten, wurden erst kurz vor 1356 wiederhergestellt."
+      },
+      "suggested_bonus": "+faith influence across the Orthodox world"
+    },
+    {
+      "id": "alhambra",
+      "name": {
+        "en": "Alhambra",
+        "de": "Alhambra"
+      },
+      "lat": 37.176,
+      "lon": -3.588,
+      "built_state": "under_construction",
+      "build_start": 1238,
+      "build_end": 1391,
+      "description": {
+        "en": "The Nasrid palace-fortress above Granada is being enriched by Yusuf I and Muhammad V. The Court of the Lions and its famous fountain are still to come in the following decades.",
+        "de": "Die nasridische Palastburg über Granada wird unter Yusuf I. und Muhammad V. prächtig erweitert. Der Löwenhof mit seinem berühmten Brunnen entsteht erst in den kommenden Jahrzehnten."
+      },
+      "suggested_bonus": "+prestige and +stability in the province"
+    },
+    {
+      "id": "notre_dame_paris",
+      "name": {
+        "en": "Notre-Dame de Paris",
+        "de": "Notre-Dame de Paris"
+      },
+      "lat": 48.853,
+      "lon": 2.35,
+      "built_state": "complete",
+      "build_start": 1163,
+      "build_end": 1345,
+      "description": {
+        "en": "The cathedral on the Île de la Cité was declared finished in 1345 after nearly two centuries of work. Its flying buttresses and rose windows make it a model for Gothic builders across Europe.",
+        "de": "Die Kathedrale auf der Île de la Cité galt 1345 nach fast zwei Jahrhunderten Bauzeit als vollendet. Ihre Strebebögen und Rosenfenster sind Vorbild für gotische Baumeister in ganz Europa."
+      },
+      "suggested_bonus": "+faith influence in the region"
+    },
+    {
+      "id": "moscow_kremlin",
+      "name": {
+        "en": "Moscow Kremlin",
+        "de": "Moskauer Kreml"
+      },
+      "lat": 55.752,
+      "lon": 37.617,
+      "built_state": "complete",
+      "build_start": 1339,
+      "build_end": 1340,
+      "description": {
+        "en": "Ivan Kalita surrounded the hill above the Moskva with stout oak walls in 1339. Dmitry Donskoy will replace them with white limestone ramparts in 1366–1367.",
+        "de": "Iwan Kalita umgab den Hügel über der Moskwa 1339 mit Mauern aus Eichenholz. Dmitri Donskoi ersetzt sie 1366–1367 durch Wälle aus weißem Kalkstein."
+      },
+      "suggested_bonus": "+fort level and +defence of the capital",
+      "later_phase": {
+        "build_start": 1366,
+        "build_end": 1367,
+        "note": "white limestone walls replace the oak walls"
+      }
+    },
+    {
+      "id": "st_marks_basilica",
+      "name": {
+        "en": "St Mark's Basilica",
+        "de": "Markusdom"
+      },
+      "lat": 45.434,
+      "lon": 12.34,
+      "built_state": "complete",
+      "build_start": 1063,
+      "build_end": 1094,
+      "description": {
+        "en": "The doge's chapel houses the relics of St Mark, the patron of the Venetian Republic. Its domes and mosaics, enriched with spoils from Constantinople, proclaim Venice's maritime wealth.",
+        "de": "Die Kapelle des Dogen birgt die Reliquien des heiligen Markus, des Schutzpatrons der Republik Venedig. Kuppeln und Mosaiken, bereichert durch Beute aus Konstantinopel, künden vom Reichtum der Seemacht."
+      },
+      "suggested_bonus": "+trade income and +prestige"
+    },
+    {
+      "id": "cologne_cathedral",
+      "name": {
+        "en": "Cologne Cathedral",
+        "de": "Kölner Dom"
+      },
+      "lat": 50.941,
+      "lon": 6.958,
+      "built_state": "under_construction",
+      "build_start": 1248,
+      "build_end": 1880,
+      "description": {
+        "en": "The Gothic choir was consecrated in 1322 to house the shrine of the Three Kings. Work on the nave and the west towers continues slowly and will halt in 1473, unfinished for centuries.",
+        "de": "Der gotische Chor wurde 1322 geweiht und birgt den Dreikönigenschrein. Langhaus und Westtürme wachsen nur langsam; 1473 ruht der Bau und bleibt jahrhundertelang unvollendet."
+      },
+      "suggested_bonus": "+pilgrim income and +faith influence"
+    },
+    {
+      "id": "marienburg_castle",
+      "name": {
+        "en": "Marienburg Castle",
+        "de": "Marienburg"
+      },
+      "lat": 54.04,
+      "lon": 19.028,
+      "built_state": "complete",
+      "build_start": 1274,
+      "build_end": 1406,
+      "description": {
+        "en": "Since 1309 the brick fortress on the Nogat has been the seat of the Grand Master of the Teutonic Order. The Middle Castle with the Grand Master's palace is being completed in these decades.",
+        "de": "Seit 1309 ist die Backsteinburg an der Nogat Sitz des Hochmeisters des Deutschen Ordens. Das Mittelschloss mit dem Hochmeisterpalast wird in diesen Jahrzehnten vollendet."
+      },
+      "suggested_bonus": "+defence and +military recruitment"
+    },
+    {
+      "id": "charles_bridge",
+      "name": {
+        "en": "Charles Bridge",
+        "de": "Karlsbrücke"
+      },
+      "lat": 50.086,
+      "lon": 14.411,
+      "built_state": "not_yet_built",
+      "build_start": 1357,
+      "build_end": 1402,
+      "description": {
+        "en": "Charles IV will lay the foundation stone of a new stone bridge over the Vltava in 1357, replacing the flood-wrecked Judith Bridge. Peter Parler's workshop will need nearly half a century to finish it.",
+        "de": "Karl IV. legt 1357 den Grundstein einer neuen Steinbrücke über die Moldau, die die vom Hochwasser zerstörte Judithbrücke ersetzt. Peter Parlers Bauhütte braucht fast ein halbes Jahrhundert für die Vollendung."
+      },
+      "suggested_bonus": "+trade in the market and +province development"
+    },
+    {
+      "id": "st_vitus_cathedral",
+      "name": {
+        "en": "St Vitus Cathedral",
+        "de": "Veitsdom"
+      },
+      "lat": 50.091,
+      "lon": 14.4,
+      "built_state": "under_construction",
+      "build_start": 1344,
+      "build_end": 1929,
+      "description": {
+        "en": "Begun in 1344 when Prague became an archbishopric, the cathedral is being raised by Matthias of Arras and, from 1356, by the young Peter Parler. Only the choir will be finished in the Middle Ages.",
+        "de": "Der 1344 mit der Erhebung Prags zum Erzbistum begonnene Dom wird von Matthias von Arras und ab 1356 vom jungen Peter Parler errichtet. Im Mittelalter wird nur der Chor fertig."
+      },
+      "suggested_bonus": "+faith influence and +prestige of the crown"
+    },
+    {
+      "id": "westminster_abbey",
+      "name": {
+        "en": "Westminster Abbey",
+        "de": "Westminster Abbey"
+      },
+      "lat": 51.499,
+      "lon": -0.127,
+      "built_state": "under_construction",
+      "build_start": 1245,
+      "build_end": 1517,
+      "description": {
+        "en": "Henry III's Gothic church holds the shrine of Edward the Confessor and is the coronation church of English kings. The rebuilding of the old Romanesque nave is still pending in 1356.",
+        "de": "Heinrichs III. gotische Kirche birgt den Schrein Eduards des Bekenners und ist Krönungskirche der englischen Könige. Der Neubau des alten romanischen Langhauses steht 1356 noch aus."
+      },
+      "suggested_bonus": "+legitimacy for the ruler"
+    },
+    {
+      "id": "santiago_compostela",
+      "name": {
+        "en": "Cathedral of Santiago de Compostela",
+        "de": "Kathedrale von Santiago de Compostela"
+      },
+      "lat": 42.88,
+      "lon": -8.544,
+      "built_state": "complete",
+      "build_start": 1075,
+      "build_end": 1211,
+      "description": {
+        "en": "The Romanesque cathedral guards the tomb of St James at the end of the great pilgrim road. Pilgrims from all of Latin Christendom bring alms and trade to Galicia.",
+        "de": "Die romanische Kathedrale hütet das Grab des Apostels Jakobus am Ende des großen Pilgerwegs. Pilger aus der ganzen lateinischen Christenheit bringen Almosen und Handel nach Galicien."
+      },
+      "suggested_bonus": "+pilgrim income and +faith influence"
+    },
+    {
+      "id": "mont_saint_michel",
+      "name": {
+        "en": "Mont-Saint-Michel",
+        "de": "Mont-Saint-Michel"
+      },
+      "lat": 48.636,
+      "lon": -1.511,
+      "built_state": "complete",
+      "build_start": 966,
+      "build_end": 1228,
+      "description": {
+        "en": "The Benedictine abbey crowns a tidal island between Normandy and Brittany. During the war with England it is being fortified and will never fall to the English.",
+        "de": "Die Benediktinerabtei krönt eine Gezeiteninsel zwischen Normandie und Bretagne. Im Krieg gegen England wird sie befestigt und fällt nie in englische Hand."
+      },
+      "suggested_bonus": "+defence and +faith influence"
+    },
+    {
+      "id": "mezquita_cordoba",
+      "name": {
+        "en": "Great Mosque of Córdoba",
+        "de": "Mezquita von Córdoba"
+      },
+      "lat": 37.879,
+      "lon": -4.779,
+      "built_state": "complete",
+      "build_start": 785,
+      "build_end": 987,
+      "description": {
+        "en": "The vast Umayyad mosque with its forest of striped arches has served as Córdoba's Christian cathedral since 1236. Castilian kings have added chapels, such as the Royal Chapel finished in 1371.",
+        "de": "Die riesige Moschee der Umayyaden mit ihrem Wald gestreifter Bögen dient seit 1236 als christliche Kathedrale. Kastilische Könige fügen Kapellen hinzu, etwa die 1371 vollendete Königskapelle."
+      },
+      "suggested_bonus": "+prestige and +culture in the region"
+    },
+    {
+      "id": "al_azhar",
+      "name": {
+        "en": "Al-Azhar Mosque",
+        "de": "Al-Azhar-Moschee"
+      },
+      "lat": 30.046,
+      "lon": 31.263,
+      "built_state": "complete",
+      "build_start": 970,
+      "build_end": 972,
+      "description": {
+        "en": "Founded by the Fatimids, al-Azhar has become a leading centre of Sunni learning under the Mamluks. Students from the Maghreb to Central Asia study law and theology in its arcades.",
+        "de": "Von den Fatimiden gegründet, ist al-Azhar unter den Mamluken ein führendes Zentrum sunnitischer Gelehrsamkeit. Studenten vom Maghreb bis Zentralasien lernen in seinen Arkaden Recht und Theologie."
+      },
+      "suggested_bonus": "+faith influence and +administrative skill"
+    },
+    {
+      "id": "dome_of_the_rock",
+      "name": {
+        "en": "Dome of the Rock",
+        "de": "Felsendom"
+      },
+      "lat": 31.778,
+      "lon": 35.235,
+      "built_state": "complete",
+      "build_start": 688,
+      "build_end": 692,
+      "description": {
+        "en": "The Umayyad shrine on the Temple Mount is one of the oldest surviving monuments of Islam. Mamluk sultans restore and endow it as a symbol of their guardianship of Jerusalem.",
+        "de": "Das umayyadische Heiligtum auf dem Tempelberg gehört zu den ältesten erhaltenen Bauten des Islam. Die Mamlukensultane restaurieren und stiften es als Zeichen ihrer Schutzherrschaft über Jerusalem."
+      },
+      "suggested_bonus": "+faith influence in the region"
+    },
+    {
+      "id": "wawel",
+      "name": {
+        "en": "Wawel Castle and Cathedral",
+        "de": "Wawel (Burg und Kathedrale)"
+      },
+      "lat": 50.054,
+      "lon": 19.936,
+      "built_state": "under_construction",
+      "build_start": 1320,
+      "build_end": 1364,
+      "description": {
+        "en": "On the Wawel hill above the Vistula stand the royal residence and the Gothic cathedral consecrated in 1364. Casimir the Great is turning it into a fitting seat for the restored Polish crown.",
+        "de": "Auf dem Wawelhügel über der Weichsel stehen die Königsresidenz und die 1364 geweihte gotische Kathedrale. Kasimir der Große baut sie zum würdigen Sitz der erneuerten polnischen Krone aus."
+      },
+      "suggested_bonus": "+legitimacy and +stability"
+    },
+    {
+      "id": "sultan_hasan_mosque",
+      "name": {
+        "en": "Mosque-Madrasa of Sultan Hasan",
+        "de": "Sultan-Hasan-Moschee"
+      },
+      "lat": 30.032,
+      "lon": 31.257,
+      "built_state": "not_yet_built",
+      "build_start": 1356,
+      "build_end": 1363,
+      "description": {
+        "en": "Sultan an-Nasir Hasan will begin this colossal mosque and madrasa below the Cairo citadel in 1356, funded partly by estates left vacant by the plague. It will be among the largest buildings of the medieval Islamic world.",
+        "de": "Sultan an-Nasir Hasan beginnt 1356 unterhalb der Zitadelle von Kairo diese gewaltige Moschee mit Madrasa, teils finanziert aus Gütern, die die Pest herrenlos machte. Sie wird zu den größten Bauten der mittelalterlichen islamischen Welt zählen."
+      },
+      "suggested_bonus": "+faith influence and +prestige"
+    },
+    {
+      "id": "monte_cassino",
+      "name": {
+        "en": "Abbey of Monte Cassino",
+        "de": "Kloster Montecassino"
+      },
+      "lat": 41.49,
+      "lon": 13.814,
+      "built_state": "under_construction",
+      "build_start": 529,
+      "build_end": 1366,
+      "description": {
+        "en": "St Benedict's mother house was shattered by the earthquake of 1349. Its monks are rebuilding the abbey with papal support.",
+        "de": "Das Mutterkloster des heiligen Benedikt wurde beim Erdbeben von 1349 schwer zerstört. Die Mönche bauen die Abtei mit päpstlicher Hilfe wieder auf."
+      },
+      "suggested_bonus": "+faith influence and +learning"
+    },
+    {
+      "id": "palais_des_papes",
+      "name": {
+        "en": "Palace of the Popes",
+        "de": "Papstpalast von Avignon"
+      },
+      "lat": 43.951,
+      "lon": 4.807,
+      "built_state": "complete",
+      "build_start": 1335,
+      "build_end": 1352,
+      "description": {
+        "en": "Benedict XII's austere Old Palace and Clement VI's splendid New Palace make Avignon the capital of Latin Christendom. Innocent VI is now adding fortifications against the roaming free companies.",
+        "de": "Benedikts XII. strenger Alter Palast und Clemens' VI. prächtiger Neuer Palast machen Avignon zur Hauptstadt der lateinischen Christenheit. Innozenz VI. ergänzt nun Befestigungen gegen die umherziehenden Söldnerkompanien."
+      },
+      "suggested_bonus": "+papal influence and +diplomatic reputation"
+    },
+    {
+      "id": "milan_cathedral",
+      "name": {
+        "en": "Milan Cathedral",
+        "de": "Mailänder Dom"
+      },
+      "lat": 45.464,
+      "lon": 9.19,
+      "built_state": "not_yet_built",
+      "build_start": 1386,
+      "build_end": 1965,
+      "description": {
+        "en": "In 1356 the old basilica of Santa Maria Maggiore still stands on the site. Gian Galeazzo Visconti's era will begin the marble Gothic cathedral in 1386.",
+        "de": "1356 steht an dieser Stelle noch die alte Basilika Santa Maria Maggiore. Unter Gian Galeazzo Visconti beginnt 1386 der Bau der gotischen Marmorkathedrale."
+      },
+      "suggested_bonus": "+prestige and +faith influence"
+    },
+    {
+      "id": "florence_cathedral",
+      "name": {
+        "en": "Florence Cathedral (Santa Maria del Fiore)",
+        "de": "Dom von Florenz (Santa Maria del Fiore)"
+      },
+      "lat": 43.773,
+      "lon": 11.256,
+      "built_state": "under_construction",
+      "build_start": 1296,
+      "build_end": 1436,
+      "description": {
+        "en": "Giotto's bell tower is nearly finished, and Francesco Talenti is enlarging the plan of the nave from 1357. The great dome will only be closed by Brunelleschi in 1436.",
+        "de": "Giottos Glockenturm ist fast fertig, und Francesco Talenti vergrößert ab 1357 den Plan des Langhauses. Die große Kuppel wird erst 1436 von Brunelleschi geschlossen."
+      },
+      "suggested_bonus": "+prestige and +artisan output"
+    },
+    {
+      "id": "great_zimbabwe",
+      "name": {
+        "en": "Great Zimbabwe",
+        "de": "Groß-Simbabwe"
+      },
+      "lat": -20.271,
+      "lon": 30.933,
+      "built_state": "complete",
+      "build_start": 1100,
+      "build_end": 1450,
+      "description": {
+        "en": "Dry-stone enclosures without mortar form the capital of a Shona kingdom that trades gold and ivory towards the Swahili coast. The Great Enclosure is at its height in the fourteenth century.",
+        "de": "Mörtellose Trockenmauern umschließen die Hauptstadt eines Shona-Reiches, das Gold und Elfenbein zur Swahili-Küste handelt. Die Große Einfriedung erlebt im 14. Jahrhundert ihre Blüte."
+      },
+      "suggested_bonus": "+gold trade income"
+    },
+    {
+      "id": "djinguereber",
+      "name": {
+        "en": "Djinguereber Mosque",
+        "de": "Djinguereber-Moschee"
+      },
+      "lat": 16.771,
+      "lon": -3.009,
+      "built_state": "complete",
+      "build_start": 1327,
+      "build_end": 1330,
+      "description": {
+        "en": "Mansa Musa had this mud-brick mosque raised in Timbuktu after returning from his pilgrimage, reportedly to plans by the Andalusi poet as-Sahili. It anchors the city's growing fame as a seat of learning.",
+        "de": "Mansa Musa ließ diese Lehmziegelmoschee nach seiner Pilgerfahrt in Timbuktu errichten, angeblich nach Plänen des andalusischen Dichters as-Sahili. Sie begründet den wachsenden Ruf der Stadt als Ort der Gelehrsamkeit."
+      },
+      "suggested_bonus": "+faith influence and +trade across the Sahara"
+    },
+    {
+      "id": "chartres_cathedral",
+      "name": {
+        "en": "Chartres Cathedral",
+        "de": "Kathedrale von Chartres"
+      },
+      "lat": 48.448,
+      "lon": 1.488,
+      "built_state": "complete",
+      "build_start": 1194,
+      "build_end": 1260,
+      "description": {
+        "en": "Rebuilt after the fire of 1194, Chartres preserves an unmatched ensemble of stained glass. Its relic of the Virgin's tunic draws pilgrims from all over France.",
+        "de": "Nach dem Brand von 1194 neu errichtet, bewahrt Chartres einen einzigartigen Bestand an Glasfenstern. Die Reliquie des Marienschleiers zieht Pilger aus ganz Frankreich an."
+      },
+      "suggested_bonus": "+pilgrim income"
+    },
+    {
+      "id": "castel_del_monte",
+      "name": {
+        "en": "Castel del Monte",
+        "de": "Castel del Monte"
+      },
+      "lat": 41.085,
+      "lon": 16.271,
+      "built_state": "complete",
+      "build_start": 1240,
+      "build_end": 1250,
+      "description": {
+        "en": "Frederick II's octagonal castle stands alone on a hill in Apulia. Its geometry and refined stonework remain a riddle to visitors.",
+        "de": "Friedrichs II. achteckiges Kastell steht einsam auf einem Hügel in Apulien. Seine Geometrie und feine Steinmetzarbeit bleiben Besuchern ein Rätsel."
+      },
+      "suggested_bonus": "+prestige of the ruler"
+    },
+    {
+      "id": "krak_des_chevaliers",
+      "name": {
+        "en": "Krak des Chevaliers",
+        "de": "Krak des Chevaliers"
+      },
+      "lat": 34.757,
+      "lon": 36.294,
+      "built_state": "complete",
+      "build_start": 1142,
+      "build_end": 1271,
+      "description": {
+        "en": "The great Hospitaller fortress fell to Sultan Baybars in 1271 and is now a Mamluk stronghold. Its concentric walls still dominate the Homs gap.",
+        "de": "Die große Johanniterfestung fiel 1271 an Sultan Baibars und ist nun eine Mamlukenfestung. Ihre konzentrischen Mauern beherrschen noch immer die Senke von Homs."
+      },
+      "suggested_bonus": "+defence of the province"
+    },
+    {
+      "id": "pharos_alexandria",
+      "name": {
+        "en": "Lighthouse of Alexandria (ruins)",
+        "de": "Leuchtturm von Alexandria (Ruine)"
+      },
+      "lat": 31.214,
+      "lon": 29.886,
+      "built_state": "complete",
+      "build_start": -280,
+      "build_end": -247,
+      "description": {
+        "en": "The ancient lighthouse was ruined by earthquakes, the last heavy blow coming in 1323. Ibn Battuta found it in such a state in 1349 that he could no longer enter it.",
+        "de": "Der antike Leuchtturm wurde durch Erdbeben zerstört, der letzte schwere Schlag traf ihn 1323. Ibn Battuta fand ihn 1349 in einem Zustand, in dem er nicht mehr zu betreten war."
+      },
+      "suggested_bonus": "+naval tradition (minor)"
+    },
+    {
+      "id": "hospitaller_rhodes",
+      "name": {
+        "en": "Palace of the Grand Master, Rhodes",
+        "de": "Großmeisterpalast auf Rhodos"
+      },
+      "lat": 36.446,
+      "lon": 28.224,
+      "built_state": "complete",
+      "build_start": 1309,
+      "build_end": 1350,
+      "description": {
+        "en": "After conquering Rhodes the Knights Hospitaller rebuilt the Byzantine citadel as their headquarters. From here their galleys patrol against Turkish corsairs.",
+        "de": "Nach der Eroberung von Rhodos bauten die Johanniter die byzantinische Zitadelle zu ihrem Hauptsitz aus. Von hier aus kreuzen ihre Galeeren gegen türkische Korsaren."
+      },
+      "suggested_bonus": "+naval strength and +defence"
+    },
+    {
+      "id": "aachen_cathedral",
+      "name": {
+        "en": "Aachen Cathedral",
+        "de": "Aachener Dom"
+      },
+      "lat": 50.775,
+      "lon": 6.084,
+      "built_state": "under_construction",
+      "build_start": 796,
+      "build_end": 1414,
+      "description": {
+        "en": "Charlemagne's Palatine Chapel is the coronation church of the kings of the Romans. A tall Gothic choir, the 'glass house', is being added from 1355.",
+        "de": "Die Pfalzkapelle Karls des Großen ist Krönungskirche der römisch-deutschen Könige. Ab 1355 wird ihr ein hoher gotischer Chor, das 'Glashaus', angefügt."
+      },
+      "suggested_bonus": "+imperial legitimacy"
+    }
+  ]
+}

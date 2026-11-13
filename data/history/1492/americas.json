@@ -1,0 +1,4120 @@
+{
+ "region": "americas",
+ "year": 1492,
+ "date": "1492-01-01",
+ "sources": [
+  "Oxford Atlas of World History",
+  "Cambridge History of the Native Peoples of the Americas vol. I (North America) and II (Mesoamerica)",
+  "R. Hassig, Aztec Warfare: Imperial Expansion and Political Control",
+  "F. F. Berdan et al., Aztec Imperial Strategies",
+  "R. M. Carmack, The Quiché Mayas of Utatlán",
+  "M. Restall, Maya Conquistador / The Maya World",
+  "I. Rouse, The Tainos",
+  "C. Hudson, Knights of Spain, Warriors of the Sun (southeastern chiefdoms at contact)",
+  "T. N. D'Altroy, The Incas; J. Hemming, The Conquest of the Incas",
+  "Cabello Balboa / Sarmiento de Gamboa chronologies of the Inca rulers",
+  "Wikipedia articles on the respective polities and rulers"
+ ],
+ "new_ids": [],
+ "notes": [
+  "Inca chronology follows Cabello Balboa, by which Tupac Inca Yupanqui reigns until c.1493; Huayna Capac is his designated heir on 1 January 1492.",
+  "Hispaniola caciquedoms and their caciques are those met by Columbus and his men in December 1492 - 1494.",
+  "Purépecha (Tzintzuntzan) lies west of the map edge (100 deg W) and is omitted.",
+  "Moundville, Etowah and Spiro had declined by 1492; their 1356 colours are reused for the contact-era chiefdoms of Tascaluza, Coosa and the Caddo."
+ ],
+ "states": [
+  {
+   "id": "tenochtitlan",
+   "name": {
+    "en": "Mexica Empire (Triple Alliance)",
+    "de": "Reich der Mexica (Dreibund)"
+   },
+   "short": {
+    "en": "Mexica",
+    "de": "Mexica"
+   },
+   "adjective": {
+    "en": "Mexica",
+    "de": "mexikanisch"
+   },
+   "rank": "empire",
+   "government": "elective_monarchy",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#00838f",
+   "capital": {
+    "name": "Tenochtitlan",
+    "lat": 19.435,
+    "lon": -99.133
+   },
+   "holdings": [
+    {
+     "name": "Tenochtitlan",
+     "lat": 19.435,
+     "lon": -99.133
+    },
+    {
+     "name": "Toluca",
+     "lat": 19.29,
+     "lon": -99.66
+    },
+    {
+     "name": "Cuauhnahuac",
+     "lat": 18.92,
+     "lon": -99.23
+    },
+    {
+     "name": "Huaxtepec",
+     "lat": 18.9,
+     "lon": -98.97
+    },
+    {
+     "name": "Huaxyacac",
+     "lat": 17.06,
+     "lon": -96.72
+    },
+    {
+     "name": "Cuetlaxtlan",
+     "lat": 18.9,
+     "lon": -96.2
+    },
+    {
+     "name": "Tochtepec",
+     "lat": 18.1,
+     "lon": -96.1
+    },
+    {
+     "name": "Tepeacac",
+     "lat": 18.97,
+     "lon": -97.9
+    },
+    {
+     "name": "Coixtlahuaca",
+     "lat": 17.71,
+     "lon": -97.32
+    },
+    {
+     "name": "Tlachco",
+     "lat": 18.56,
+     "lon": -99.6
+    },
+    {
+     "name": "Cempoala",
+     "lat": 19.45,
+     "lon": -96.4
+    },
+    {
+     "name": "Tuxpan",
+     "lat": 20.95,
+     "lon": -97.4
+    }
+   ],
+   "ruler": {
+    "name": "Ahuitzotl",
+    "born": 1450,
+    "dynasty": "Mexica (Acamapichtli)",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     6
+    ],
+    "traits": [
+     "warlike",
+     "cruel",
+     "energetic"
+    ]
+   },
+   "heir": {
+    "name": "Moctezuma Xocoyotzin",
+    "born": 1466,
+    "dynasty": "Mexica",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "pious",
+     "proud"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Huey tlatoani of Tenochtitlan since 1486, chosen by a council of nobles; Ahuitzotl dedicated the rebuilt Templo Mayor in 1487 and extends the empire towards Oaxaca and Soconusco.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "texcoco_acolhua",
+    "tlacopan"
+   ],
+   "rivals": [
+    "tlaxcala",
+    "zaachila",
+    "tututepec"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Under Ahuitzotl the Triple Alliance reaches its greatest extent, levying tribute from the Gulf coast to the Pacific. Its armies capture prisoners for the gods in endless campaigns, while Tlaxcala remains an unconquered enemy at its heart.",
+    "de": "Unter Ahuitzotl erreicht der Dreibund seine größte Ausdehnung und erhebt Tribut von der Golfküste bis zum Pazifik. Seine Heere fangen in endlosen Feldzügen Gefangene für die Götter, während Tlaxcala als unbesiegter Feind in seiner Mitte verharrt."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "texcoco_acolhua",
+   "name": {
+    "en": "Acolhua Altepetl of Texcoco",
+    "de": "Acolhua-Altepetl Texcoco"
+   },
+   "short": {
+    "en": "Texcoco",
+    "de": "Texcoco"
+   },
+   "adjective": {
+    "en": "Acolhua",
+    "de": "acolhuanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#558b2f",
+   "capital": {
+    "name": "Texcoco",
+    "lat": 19.51,
+    "lon": -98.88
+   },
+   "holdings": [
+    {
+     "name": "Texcoco",
+     "lat": 19.51,
+     "lon": -98.88
+    },
+    {
+     "name": "Otumba",
+     "lat": 19.69,
+     "lon": -98.76
+    },
+    {
+     "name": "Tulancingo",
+     "lat": 20.08,
+     "lon": -98.36
+    },
+    {
+     "name": "Coatlinchan region",
+     "lat": 19.4,
+     "lon": -98.82
+    }
+   ],
+   "ruler": {
+    "name": "Nezahualpilli",
+    "born": 1464,
+    "dynasty": "Acolhua",
+    "female": false,
+    "skills": [
+     5,
+     4,
+     3
+    ],
+    "traits": [
+     "learned",
+     "wise"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Acolhua tlatoani of Texcoco since 1472, son of the poet-king Nezahualcoyotl.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "tenochtitlan",
+    "tlacopan"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Nezahualpilli, astronomer and lawgiver, rules Texcoco, the cultured second partner of the Triple Alliance.",
+    "de": "Nezahualpilli, Astronom und Gesetzgeber, regiert Texcoco, den gebildeten zweiten Partner des Dreibunds."
+   },
+   "coa": {
+    "blazon": "Vert, a mountain Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tlacopan",
+   "name": {
+    "en": "Tepanec Kingdom of Tlacopan",
+    "de": "Tepanekenreich Tlacopan"
+   },
+   "short": {
+    "en": "Tlacopan",
+    "de": "Tlacopan"
+   },
+   "adjective": {
+    "en": "Tepanec",
+    "de": "tepanekisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#7e57c2",
+   "capital": {
+    "name": "Tlacopan",
+    "lat": 19.46,
+    "lon": -99.22
+   },
+   "holdings": [
+    {
+     "name": "Tlacopan",
+     "lat": 19.46,
+     "lon": -99.22
+    },
+    {
+     "name": "Xilotepec",
+     "lat": 19.95,
+     "lon": -99.53
+    },
+    {
+     "name": "Tepotzotlán",
+     "lat": 19.71,
+     "lon": -99.22
+    }
+   ],
+   "ruler": {
+    "name": "Totoquihuaztli I",
+    "born": 1440,
+    "dynasty": "Tepanec",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tepanec tlatoani of Tlacopan, junior partner of the Triple Alliance.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "tenochtitlan",
+    "texcoco_acolhua"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Tlacopan, the junior member of the Triple Alliance, receives a fifth of the tribute.",
+    "de": "Tlacopan, das jüngste Mitglied des Dreibunds, erhält ein Fünftel des Tributs."
+   },
+   "coa": {
+    "blazon": "Azure, a stone (tetl) Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tlaxcala",
+   "name": {
+    "en": "Republic of Tlaxcala",
+    "de": "Republik Tlaxcala"
+   },
+   "short": {
+    "en": "Tlaxcala",
+    "de": "Tlaxcala"
+   },
+   "adjective": {
+    "en": "Tlaxcalan",
+    "de": "tlaxkaltekisch"
+   },
+   "rank": "republic",
+   "government": "tribal_federation",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#c03a3a",
+   "capital": {
+    "name": "Tlaxcala",
+    "lat": 19.31,
+    "lon": -98.24
+   },
+   "holdings": [
+    {
+     "name": "Tlaxcala",
+     "lat": 19.31,
+     "lon": -98.24
+    },
+    {
+     "name": "Huexotzinco",
+     "lat": 19.16,
+     "lon": -98.41
+    },
+    {
+     "name": "Cholula",
+     "lat": 19.06,
+     "lon": -98.3
+    }
+   ],
+   "ruler": {
+    "name": "Xicotencatl the Elder",
+    "born": 1425,
+    "dynasty": "Tizatlan",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "stubborn",
+     "old"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Confederation of four altepetl (Tepeticpac, Ocotelolco, Tizatlan, Quiahuiztlan) ruled by their tlatoque in council; Huexotzinco and Cholula are allied.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tenochtitlan"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Encircled by the Triple Alliance, the confederation of Tlaxcala refuses to submit and fights the ritual \"flower wars\"; it lacks salt and cotton but not courage.",
+    "de": "Vom Dreibund umzingelt, verweigert die Konföderation von Tlaxcala die Unterwerfung und kämpft die rituellen \"Blumenkriege\"; es fehlt ihr an Salz und Baumwolle, aber nicht an Mut."
+   },
+   "coa": {
+    "blazon": "Gules a castle Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "zaachila",
+   "name": {
+    "en": "Zapotec Kingdom of Zaachila",
+    "de": "Zapotekenreich Zaachila"
+   },
+   "short": {
+    "en": "Zapotecs",
+    "de": "Zapoteken"
+   },
+   "adjective": {
+    "en": "Zapotec",
+    "de": "zapotekisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "mixtec",
+   "faith": "mesoamerican",
+   "color": "#7a9a3a",
+   "capital": {
+    "name": "Zaachila",
+    "lat": 16.95,
+    "lon": -96.75
+   },
+   "holdings": [
+    {
+     "name": "Zaachila",
+     "lat": 16.95,
+     "lon": -96.75
+    },
+    {
+     "name": "Tehuantepec",
+     "lat": 16.32,
+     "lon": -95.24
+    },
+    {
+     "name": "Mitla",
+     "lat": 16.92,
+     "lon": -96.36
+    }
+   ],
+   "ruler": {
+    "name": "Cocijoeza",
+    "born": 1460,
+    "dynasty": "Zaachila",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "cunning"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Zapotec kings of Zaachila; Cocijoeza (c.1487-1529) withdraws to Tehuantepec and resists Ahuitzotl.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tenochtitlan",
+    "tututepec"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Zapotec king Cocijoeza defends the Isthmus of Tehuantepec against Mexica expansion.",
+    "de": "Der Zapotekenkönig Cocijoeza verteidigt den Isthmus von Tehuantepec gegen die mexikanische Expansion."
+   },
+   "coa": {
+    "blazon": "Vert a jaguar Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "tututepec",
+   "name": {
+    "en": "Mixtec Kingdom of Tututepec",
+    "de": "Mixtekenreich Tututepec"
+   },
+   "short": {
+    "en": "Tututepec",
+    "de": "Tututepec"
+   },
+   "adjective": {
+    "en": "Mixtec",
+    "de": "mixtekisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "mixtec",
+   "faith": "mesoamerican",
+   "color": "#b0803a",
+   "capital": {
+    "name": "Tututepec",
+    "lat": 16.13,
+    "lon": -97.61
+   },
+   "holdings": [
+    {
+     "name": "Tututepec",
+     "lat": 16.13,
+     "lon": -97.61
+    },
+    {
+     "name": "Juquila",
+     "lat": 16.24,
+     "lon": -97.29
+    },
+    {
+     "name": "Pinotepa",
+     "lat": 16.34,
+     "lon": -98.05
+    }
+   ],
+   "ruler": {
+    "name": "Lord of Tututepec",
+    "born": 1450,
+    "dynasty": "Tututepec",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Coastal Mixtec kingdom founded by Eight Deer Jaguar Claw; its ruler in 1492 is not securely known.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tenochtitlan",
+    "zaachila"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Mixtec kingdom of Tututepec dominates the Pacific coast of Oaxaca and is never conquered by the Mexica.",
+    "de": "Das Mixtekenreich Tututepec beherrscht die Pazifikküste Oaxacas und wird von den Mexica nie erobert."
+   },
+   "coa": {
+    "blazon": "Azure a bird Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mani",
+   "name": {
+    "en": "Province of Maní (Tutul Xiu)",
+    "de": "Provinz Maní (Tutul Xiu)"
+   },
+   "short": {
+    "en": "Maní",
+    "de": "Maní"
+   },
+   "adjective": {
+    "en": "Xiu",
+    "de": "xiu"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#00695c",
+   "capital": {
+    "name": "Maní",
+    "lat": 20.39,
+    "lon": -89.39
+   },
+   "holdings": [
+    {
+     "name": "Maní",
+     "lat": 20.39,
+     "lon": -89.39
+    },
+    {
+     "name": "Ticul",
+     "lat": 20.4,
+     "lon": -89.53
+    },
+    {
+     "name": "Oxkutzcab",
+     "lat": 20.3,
+     "lon": -89.42
+    }
+   ],
+   "ruler": {
+    "name": "Halach uinic of the Xiu",
+    "born": 1450,
+    "dynasty": "Tutul Xiu",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tutul Xiu lords of Maní, destroyers of Mayapan (c.1441); the name of the halach uinic in 1492 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sotuta"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Since the fall of Mayapan, Yucatán is divided among rival provinces; the Xiu of Maní and the Cocom of Sotuta are mortal enemies.",
+    "de": "Seit dem Fall Mayapans ist Yucatán unter rivalisierende Provinzen geteilt; die Xiu von Maní und die Cocom von Sotuta sind Todfeinde."
+   },
+   "coa": {
+    "blazon": "Vert, a sun Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sotuta",
+   "name": {
+    "en": "Province of Sotuta (Cocom)",
+    "de": "Provinz Sotuta (Cocom)"
+   },
+   "short": {
+    "en": "Sotuta",
+    "de": "Sotuta"
+   },
+   "adjective": {
+    "en": "Cocom",
+    "de": "cocom"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#3a8a7a",
+   "capital": {
+    "name": "Sotuta",
+    "lat": 20.6,
+    "lon": -89.01
+   },
+   "holdings": [
+    {
+     "name": "Sotuta",
+     "lat": 20.6,
+     "lon": -89.01
+    },
+    {
+     "name": "Izamal",
+     "lat": 20.93,
+     "lon": -89.02
+    },
+    {
+     "name": "Tihó",
+     "lat": 20.97,
+     "lon": -89.62
+    }
+   ],
+   "ruler": {
+    "name": "Lord of the Cocom",
+    "born": 1450,
+    "dynasty": "Cocom",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Cocom lineage, former rulers of Mayapan; the ruler name in 1492 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "mani"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The surviving Cocom rule Sotuta and nurse their hatred of the Xiu.",
+    "de": "Die überlebenden Cocom herrschen in Sotuta und pflegen ihren Hass auf die Xiu."
+   },
+   "coa": {
+    "blazon": "Gules a serpent Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "dragon",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "chetumal",
+   "name": {
+    "en": "Province of Chetumal",
+    "de": "Provinz Chetumal"
+   },
+   "short": {
+    "en": "Chetumal",
+    "de": "Chetumal"
+   },
+   "adjective": {
+    "en": "Chetumal",
+    "de": "chetumal"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#5aaa8a",
+   "capital": {
+    "name": "Chetumal",
+    "lat": 18.5,
+    "lon": -88.3
+   },
+   "holdings": [
+    {
+     "name": "Chetumal",
+     "lat": 18.5,
+     "lon": -88.3
+    },
+    {
+     "name": "Bacalar",
+     "lat": 18.68,
+     "lon": -88.39
+    },
+    {
+     "name": "Ecab",
+     "lat": 21.5,
+     "lon": -87.1
+    }
+   ],
+   "ruler": {
+    "name": "Lord of Chetumal",
+    "born": 1450,
+    "dynasty": "Chetumal",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "mercantile"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Maya trading province on the east coast of Yucatán; ruler unknown.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Chetumal controls the canoe trade along the Caribbean coast of Yucatán in cacao, salt and honey.",
+    "de": "Chetumal beherrscht den Kanuhandel an der Karibikküste Yucatáns mit Kakao, Salz und Honig."
+   },
+   "coa": {
+    "blazon": "Azure a canoe Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "ship",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "itza",
+   "name": {
+    "en": "Itza Kingdom of Nojpetén",
+    "de": "Itza-Königreich Nojpetén"
+   },
+   "short": {
+    "en": "Itza",
+    "de": "Itza"
+   },
+   "adjective": {
+    "en": "Itza",
+    "de": "itza"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#2a6a5a",
+   "capital": {
+    "name": "Nojpetén",
+    "lat": 16.93,
+    "lon": -89.89
+   },
+   "holdings": [
+    {
+     "name": "Nojpetén",
+     "lat": 16.93,
+     "lon": -89.89
+    },
+    {
+     "name": "Lake Petén",
+     "lat": 17.0,
+     "lon": -89.6
+    }
+   ],
+   "ruler": {
+    "name": "Ajaw Kan Ek'",
+    "born": 1450,
+    "dynasty": "Kan Ek'",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Itza kingdom of the Petén lakes, ruled by kings bearing the dynastic title Kan Ek'; it will hold out until 1697.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Itza kings rule from their island city in Lake Petén Itzá, far from all conquerors.",
+    "de": "Die Itza-Könige herrschen von ihrer Inselstadt im Petén-Itzá-See aus, fern aller Eroberer."
+   },
+   "coa": {
+    "blazon": "Vert a jaguar Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kiche",
+   "name": {
+    "en": "K'iche' Kingdom of Q'umarkaj",
+    "de": "K'iche'-Reich von Q'umarkaj"
+   },
+   "short": {
+    "en": "K'iche'",
+    "de": "K'iche'"
+   },
+   "adjective": {
+    "en": "K'iche'",
+    "de": "k'iche'"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#8a3a5a",
+   "capital": {
+    "name": "Q'umarkaj",
+    "lat": 15.02,
+    "lon": -91.17
+   },
+   "holdings": [
+    {
+     "name": "Q'umarkaj",
+     "lat": 15.02,
+     "lon": -91.17
+    },
+    {
+     "name": "Xelajú",
+     "lat": 14.84,
+     "lon": -91.52
+    },
+    {
+     "name": "Zaculeu",
+     "lat": 15.34,
+     "lon": -91.5
+    }
+   ],
+   "ruler": {
+    "name": "Ajpop Oxib Kej",
+    "born": 1450,
+    "dynasty": "Kaweq",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Kaweq lineage of Q'umarkaj (Utatlán); its power waned after the Kaqchikel secession (c.1470); the ruler name is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kaqchikel"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The K'iche' kingdom, once master of the Guatemalan highlands, is weakened by the revolt of its Kaqchikel vassals.",
+    "de": "Das K'iche'-Reich, einst Herr des guatemaltekischen Hochlands, ist durch den Abfall seiner Kaqchikel-Vasallen geschwächt."
+   },
+   "coa": {
+    "blazon": "Gules a bird Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kaqchikel",
+   "name": {
+    "en": "Kaqchikel Kingdom of Iximche'",
+    "de": "Kaqchikel-Reich von Iximche'"
+   },
+   "short": {
+    "en": "Kaqchikel",
+    "de": "Kaqchikel"
+   },
+   "adjective": {
+    "en": "Kaqchikel",
+    "de": "kaqchikel"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#5a3a8a",
+   "capital": {
+    "name": "Iximche'",
+    "lat": 14.74,
+    "lon": -90.99
+   },
+   "holdings": [
+    {
+     "name": "Iximche'",
+     "lat": 14.74,
+     "lon": -90.99
+    },
+    {
+     "name": "Atitlán",
+     "lat": 14.64,
+     "lon": -91.23
+    },
+    {
+     "name": "Escuintla",
+     "lat": 14.3,
+     "lon": -90.78
+    }
+   ],
+   "ruler": {
+    "name": "Oxlajuj Tz'i'",
+    "born": 1430,
+    "dynasty": "Xahil",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "old"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Kaqchikel kingdom founded c.1470 after breaking with the K'iche'; Oxlajuj Tz'i' reigns until 1508.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kiche"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Kaqchikel of Iximche' have become the strongest highland Maya kingdom under their old king Oxlajuj Tz'i'.",
+    "de": "Die Kaqchikel von Iximche' sind unter ihrem alten König Oxlajuj Tz'i' zum stärksten Maya-Reich des Hochlands geworden."
+   },
+   "coa": {
+    "blazon": "Azure a bat Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_xaragua",
+   "name": {
+    "en": "Taíno Cacicazgo of Xaraguá",
+    "de": "Taíno-Cacicazgo Xaraguá"
+   },
+   "short": {
+    "en": "Xaraguá",
+    "de": "Xaraguá"
+   },
+   "adjective": {
+    "en": "Taíno",
+    "de": "taíno"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#26a69a",
+   "capital": {
+    "name": "Xaraguá",
+    "lat": 18.51,
+    "lon": -72.63
+   },
+   "holdings": [
+    {
+     "name": "Xaraguá",
+     "lat": 18.51,
+     "lon": -72.63
+    },
+    {
+     "name": "Hinche plain",
+     "lat": 19.15,
+     "lon": -72.0
+    }
+   ],
+   "ruler": {
+    "name": "Bohechío",
+    "born": 1440,
+    "dynasty": "Xaraguá caciques",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Anacaona",
+    "born": 1474,
+    "dynasty": "Xaraguá caciques",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "learned"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Cacicazgo of Xaraguá, the richest of Hispaniola; Bohechío's sister Anacaona is married to Caonabo of Maguana.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "taino_maguana"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bohechío rules western Hispaniola, the most populous and refined of the island's five chiefdoms.",
+    "de": "Bohechío regiert das westliche Hispaniola, das volkreichste und verfeinertste der fünf Häuptlingstümer der Insel."
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_maguana",
+   "name": {
+    "en": "Cacicazgo of Maguana",
+    "de": "Kazikat Maguana"
+   },
+   "short": {
+    "en": "Maguana",
+    "de": "Maguana"
+   },
+   "adjective": {
+    "en": "Maguana",
+    "de": "maguanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#3a9a8a",
+   "capital": {
+    "name": "Maguana",
+    "lat": 18.8,
+    "lon": -71.1
+   },
+   "holdings": [
+    {
+     "name": "Maguana",
+     "lat": 18.8,
+     "lon": -71.1
+    },
+    {
+     "name": "Cibao mountains",
+     "lat": 19.0,
+     "lon": -70.7
+    }
+   ],
+   "ruler": {
+    "name": "Caonabo",
+    "born": 1450,
+    "dynasty": "Maguana caciques",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anacaona",
+    "born": 1474,
+    "dynasty": "Xaraguá caciques",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Cacicazgo of Maguana in central Hispaniola; Caonabo, said to be of Lucayan origin, will destroy La Navidad (1493).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "taino_xaragua"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Caonabo, the warlike cacique of Maguana, controls the gold-bearing Cibao mountains.",
+    "de": "Caonabo, der kriegerische Kazike von Maguana, beherrscht das goldhaltige Cibao-Gebirge."
+   },
+   "coa": {
+    "blazon": "Or a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_magua",
+   "name": {
+    "en": "Taíno Cacicazgo of Maguá",
+    "de": "Taíno-Cacicazgo Maguá"
+   },
+   "short": {
+    "en": "Maguá",
+    "de": "Maguá"
+   },
+   "adjective": {
+    "en": "Taíno",
+    "de": "taíno"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#4db6ac",
+   "capital": {
+    "name": "Maguá",
+    "lat": 19.22,
+    "lon": -70.53
+   },
+   "holdings": [
+    {
+     "name": "Maguá",
+     "lat": 19.22,
+     "lon": -70.53
+    }
+   ],
+   "ruler": {
+    "name": "Guarionex",
+    "born": 1460,
+    "dynasty": "Maguá caciques",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Cacicazgo of Maguá (Vega Real); Guarionex is the senior cacique of the island.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "taino_marien"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Guarionex rules the fertile Vega Real, the heart of Hispaniola.",
+    "de": "Guarionex regiert die fruchtbare Vega Real, das Herz Hispaniolas."
+   },
+   "coa": {
+    "blazon": "Vert, a sun Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_marien",
+   "name": {
+    "en": "Cacicazgo of Marién",
+    "de": "Kazikat Marién"
+   },
+   "short": {
+    "en": "Marién",
+    "de": "Marién"
+   },
+   "adjective": {
+    "en": "Marién",
+    "de": "mariensch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#5ac0b0",
+   "capital": {
+    "name": "Marién",
+    "lat": 19.7,
+    "lon": -72.2
+   },
+   "holdings": [
+    {
+     "name": "Marién",
+     "lat": 19.7,
+     "lon": -72.2
+    },
+    {
+     "name": "Monte Cristi",
+     "lat": 19.85,
+     "lon": -71.65
+    }
+   ],
+   "ruler": {
+    "name": "Guacanagarí",
+    "born": 1460,
+    "dynasty": "Marién caciques",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Cacicazgo of Marién on the north coast of Hispaniola; Guacanagarí will befriend Columbus after the wreck of the Santa María.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "taino_magua"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Guacanagarí rules the north-west coast of Hispaniola, where in December the Santa María will run aground.",
+    "de": "Guacanagarí regiert die Nordwestküste Hispaniolas, wo im Dezember die Santa María auf Grund laufen wird."
+   },
+   "coa": {
+    "blazon": "Azure a fish Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_higuey",
+   "name": {
+    "en": "Cacicazgo of Higüey",
+    "de": "Kazikat Higüey"
+   },
+   "short": {
+    "en": "Higüey",
+    "de": "Higüey"
+   },
+   "adjective": {
+    "en": "Higüey",
+    "de": "higüeyisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#80d0c0",
+   "capital": {
+    "name": "Higüey",
+    "lat": 18.62,
+    "lon": -68.71
+   },
+   "holdings": [
+    {
+     "name": "Higüey",
+     "lat": 18.62,
+     "lon": -68.71
+    }
+   ],
+   "ruler": {
+    "name": "Cayacoa",
+    "born": 1450,
+    "dynasty": "Higüey caciques",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Cacicazgo of Higüey in eastern Hispaniola, much exposed to Carib raids.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kalinago"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The cacique of Higüey defends eastern Hispaniola against Carib raiders.",
+    "de": "Der Kazike von Higüey verteidigt das östliche Hispaniola gegen karibische Räuber."
+   },
+   "coa": {
+    "blazon": "Gules a bow Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horn",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_boriken",
+   "name": {
+    "en": "Taíno Chiefdoms of Borikén",
+    "de": "Taíno-Häuptlingtümer von Borikén"
+   },
+   "short": {
+    "en": "Borikén",
+    "de": "Borikén"
+   },
+   "adjective": {
+    "en": "Boricua",
+    "de": "boricua"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#80cbc4",
+   "capital": {
+    "name": "Caguana",
+    "lat": 18.3,
+    "lon": -66.7
+   },
+   "holdings": [
+    {
+     "name": "Caguana",
+     "lat": 18.3,
+     "lon": -66.7
+    },
+    {
+     "name": "Caguas",
+     "lat": 18.23,
+     "lon": -66.04
+    }
+   ],
+   "ruler": {
+    "name": "Agüeybaná I",
+    "born": 1440,
+    "dynasty": "Boriken caciques",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "wise"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Paramount cacique of Borikén (Puerto Rico), seated at Guaynía.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kalinago"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Agüeybaná the Elder is the paramount cacique of Borikén, honoured by the island's many chiefs.",
+    "de": "Agüeybaná der Ältere ist der oberste Kazike von Borikén, geehrt von den vielen Häuptlingen der Insel."
+   },
+   "coa": {
+    "blazon": "Azure, a sun Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_cuba",
+   "name": {
+    "en": "Taíno Chiefdoms of Cuba",
+    "de": "Taíno-Häuptlingstümer Kubas"
+   },
+   "short": {
+    "en": "Cuba",
+    "de": "Kuba"
+   },
+   "adjective": {
+    "en": "Cuban",
+    "de": "kubanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#6ab0a0",
+   "capital": {
+    "name": "Baracoa",
+    "lat": 20.35,
+    "lon": -74.5
+   },
+   "holdings": [
+    {
+     "name": "Baracoa",
+     "lat": 20.35,
+     "lon": -74.5
+    },
+    {
+     "name": "Bayamo",
+     "lat": 20.38,
+     "lon": -76.64
+    },
+    {
+     "name": "Camagüey",
+     "lat": 21.38,
+     "lon": -77.92
+    },
+    {
+     "name": "Sagua",
+     "lat": 22.81,
+     "lon": -80.07
+    },
+    {
+     "name": "Havana coast",
+     "lat": 23.1,
+     "lon": -82.4
+    }
+   ],
+   "ruler": {
+    "name": "Caciques of Cuba",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Cuba is divided into some thirty cacicazgos without a paramount ruler.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Cuba's Taíno live in many independent chiefdoms; in October Columbus will land on their north coast thinking he has reached Asia.",
+    "de": "Kubas Taíno leben in vielen unabhängigen Häuptlingstümern; im Oktober wird Kolumbus an ihrer Nordküste landen und meinen, Asien erreicht zu haben."
+   },
+   "coa": {
+    "blazon": "Vert a palm Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_jamaica",
+   "name": {
+    "en": "Taíno Chiefdoms of Yamaye",
+    "de": "Taíno-Häuptlingstümer von Yamaye"
+   },
+   "short": {
+    "en": "Jamaica",
+    "de": "Jamaika"
+   },
+   "adjective": {
+    "en": "Jamaican",
+    "de": "jamaikanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#4aa080",
+   "capital": {
+    "name": "Maima",
+    "lat": 18.44,
+    "lon": -77.2
+   },
+   "holdings": [
+    {
+     "name": "Maima",
+     "lat": 18.44,
+     "lon": -77.2
+    },
+    {
+     "name": "Yamaye south",
+     "lat": 17.97,
+     "lon": -77.0
+    }
+   ],
+   "ruler": {
+    "name": "Caciques of Yamaye",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Jamaica's Taíno chiefdoms.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Taíno of Yamaye (Jamaica) live from fishing and cassava in many villages.",
+    "de": "Die Taíno von Yamaye (Jamaika) leben in vielen Dörfern von Fischfang und Maniok."
+   },
+   "coa": {
+    "blazon": "Azure a fish Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "lucayan",
+   "name": {
+    "en": "Lucayan Islands",
+    "de": "Lucayische Inseln"
+   },
+   "short": {
+    "en": "Lucayans",
+    "de": "Lukayer"
+   },
+   "adjective": {
+    "en": "Lucayan",
+    "de": "lukayisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#9ad0e0",
+   "capital": {
+    "name": "Guanahani",
+    "lat": 24.05,
+    "lon": -74.5
+   },
+   "holdings": [
+    {
+     "name": "Guanahani",
+     "lat": 24.05,
+     "lon": -74.5
+    },
+    {
+     "name": "Abaco",
+     "lat": 26.4,
+     "lon": -77.1
+    },
+    {
+     "name": "Andros",
+     "lat": 24.4,
+     "lon": -77.9
+    },
+    {
+     "name": "Inagua",
+     "lat": 21.1,
+     "lon": -73.4
+    }
+   ],
+   "ruler": {
+    "name": "Lucayan caciques",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     1,
+     2,
+     1
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Taíno-speaking islanders of the Bahamas; Columbus will make landfall on Guanahani on 12 October 1492.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The peaceful Lucayans of the Bahamas will be the first people of the Americas to meet Columbus.",
+    "de": "Die friedlichen Lukayer der Bahamas werden das erste Volk Amerikas sein, das Kolumbus begegnet."
+   },
+   "coa": {
+    "blazon": "Azure a shell Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kalinago",
+   "name": {
+    "en": "Kalinago (Island Caribs)",
+    "de": "Kalinago (Inselkariben)"
+   },
+   "short": {
+    "en": "Kalinago",
+    "de": "Kalinago"
+   },
+   "adjective": {
+    "en": "Carib",
+    "de": "karibisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "carib",
+   "faith": "american_traditional",
+   "color": "#a05030",
+   "capital": {
+    "name": "Wai'tukubuli",
+    "lat": 15.42,
+    "lon": -61.35
+   },
+   "holdings": [
+    {
+     "name": "Wai'tukubuli",
+     "lat": 15.42,
+     "lon": -61.35
+    },
+    {
+     "name": "Karukera",
+     "lat": 16.25,
+     "lon": -61.55
+    },
+    {
+     "name": "Iouanalao",
+     "lat": 13.9,
+     "lon": -60.97
+    },
+    {
+     "name": "Camerhogne",
+     "lat": 12.1,
+     "lon": -61.68
+    }
+   ],
+   "ruler": {
+    "name": "Carib war chiefs",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     1,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Kalinago of the Lesser Antilles; war leaders are chosen for raids.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "taino_boriken",
+    "taino_higuey"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "The seafaring Kalinago of the Lesser Antilles raid the Taíno islands in great war canoes.",
+    "de": "Die seefahrenden Kalinago der Kleinen Antillen überfallen in großen Kriegskanus die Taíno-Inseln."
+   },
+   "coa": {
+    "blazon": "Gules a canoe Sable",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "ship",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "coosa",
+   "name": {
+    "en": "Paramount Chiefdom of Coosa",
+    "de": "Oberhäuptlingstum Coosa"
+   },
+   "short": {
+    "en": "Coosa",
+    "de": "Coosa"
+   },
+   "adjective": {
+    "en": "Coosa",
+    "de": "coosa"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#9e6b52",
+   "capital": {
+    "name": "Coosa",
+    "lat": 34.62,
+    "lon": -84.85
+   },
+   "holdings": [
+    {
+     "name": "Coosa",
+     "lat": 34.62,
+     "lon": -84.85
+    },
+    {
+     "name": "Etowah",
+     "lat": 34.13,
+     "lon": -84.81
+    },
+    {
+     "name": "Coosa valley",
+     "lat": 34.3,
+     "lon": -85.2
+    },
+    {
+     "name": "Itaba",
+     "lat": 34.17,
+     "lon": -84.78
+    },
+    {
+     "name": "Ulibahali",
+     "lat": 34.35,
+     "lon": -85.15
+    },
+    {
+     "name": "Chiaha",
+     "lat": 35.9,
+     "lon": -83.6
+    }
+   ],
+   "ruler": {
+    "name": "Paramount chief of Coosa",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mississippian paramount chiefdom in the Ridge-and-Valley of Georgia and Tennessee; individual chiefs' names are unknown before 1540.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "tascaluza"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Coosa is the greatest Mississippian chiefdom of the south-east, with tributary towns from Tennessee to Alabama.",
+    "de": "Coosa ist das größte Mississippi-Häuptlingstum des Südostens mit tributpflichtigen Orten von Tennessee bis Alabama."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tascaluza",
+   "name": {
+    "en": "Chiefdom of Tascaluza",
+    "de": "Häuptlingstum Tascaluza"
+   },
+   "short": {
+    "en": "Tascaluza",
+    "de": "Tascaluza"
+   },
+   "adjective": {
+    "en": "Tascaluza",
+    "de": "tascaluza"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#a1887f",
+   "capital": {
+    "name": "Atahachi",
+    "lat": 32.4,
+    "lon": -86.55
+   },
+   "holdings": [
+    {
+     "name": "Atahachi",
+     "lat": 32.4,
+     "lon": -86.55
+    },
+    {
+     "name": "Moundville",
+     "lat": 33.0,
+     "lon": -87.63
+    },
+    {
+     "name": "Black Warrior valley",
+     "lat": 33.4,
+     "lon": -87.4
+    },
+    {
+     "name": "Mabila",
+     "lat": 31.9,
+     "lon": -87.6
+    }
+   ],
+   "ruler": {
+    "name": "Chief of Tascaluza",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Successor chiefdom in central Alabama after the decline of Moundville.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "coosa"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The towns of the Black Warrior and Alabama rivers have regrouped under the chiefs of Tascaluza.",
+    "de": "Die Orte am Black Warrior und Alabama River haben sich unter den Häuptlingen von Tascaluza neu formiert."
+   },
+   "coa": {
+    "blazon": "Or, a cross Gules (sun circle)",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "caddo",
+   "name": {
+    "en": "Caddo Chiefdoms",
+    "de": "Caddo-Häuptlingstümer"
+   },
+   "short": {
+    "en": "Caddo",
+    "de": "Caddo"
+   },
+   "adjective": {
+    "en": "Caddo",
+    "de": "caddo"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#bcaaa4",
+   "capital": {
+    "name": "Hasinai",
+    "lat": 31.6,
+    "lon": -95.0
+   },
+   "holdings": [
+    {
+     "name": "Hasinai",
+     "lat": 31.6,
+     "lon": -95.0
+    },
+    {
+     "name": "Arkansas valley",
+     "lat": 35.4,
+     "lon": -95.3
+    },
+    {
+     "name": "Kadohadacho",
+     "lat": 33.4,
+     "lon": -94.1
+    },
+    {
+     "name": "Spiro",
+     "lat": 35.31,
+     "lon": -94.57
+    }
+   ],
+   "ruler": {
+    "name": "Caddi of the Caddo",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Caddoan chiefdoms of the Red River and East Texas; Spiro has been abandoned.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Caddo farm the valleys of the Red and Neches rivers and trade salt and bows across the southern plains.",
+    "de": "Die Caddo bebauen die Täler des Red River und des Neches und handeln Salz und Bögen über die südlichen Plains."
+   },
+   "coa": {
+    "blazon": "Azure, a roundel Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "natchez",
+   "name": {
+    "en": "Natchez",
+    "de": "Natchez"
+   },
+   "short": {
+    "en": "Natchez",
+    "de": "Natchez"
+   },
+   "adjective": {
+    "en": "Natchez",
+    "de": "natchez"
+   },
+   "rank": "chiefdom",
+   "government": "theocracy",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#a07a6a",
+   "capital": {
+    "name": "Emerald Mound",
+    "lat": 31.64,
+    "lon": -91.25
+   },
+   "holdings": [
+    {
+     "name": "Emerald Mound",
+     "lat": 31.64,
+     "lon": -91.25
+    },
+    {
+     "name": "Quigualtam",
+     "lat": 32.3,
+     "lon": -91.0
+    }
+   ],
+   "ruler": {
+    "name": "Great Sun",
+    "born": 1450,
+    "dynasty": "Suns",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chiefdoms of the lower Mississippi ruled by sacred \"Suns\".",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "On the lower Mississippi the Great Sun rules as a divine king from his temple mound.",
+    "de": "Am unteren Mississippi herrscht die Große Sonne als göttlicher König von ihrem Tempelhügel."
+   },
+   "coa": {
+    "blazon": "Or a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "pacaha",
+   "name": {
+    "en": "Pacaha and Casqui",
+    "de": "Pacaha und Casqui"
+   },
+   "short": {
+    "en": "Pacaha",
+    "de": "Pacaha"
+   },
+   "adjective": {
+    "en": "Pacaha",
+    "de": "pacaha"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#8a6a5a",
+   "capital": {
+    "name": "Pacaha",
+    "lat": 35.0,
+    "lon": -90.4
+   },
+   "holdings": [
+    {
+     "name": "Pacaha",
+     "lat": 35.0,
+     "lon": -90.4
+    },
+    {
+     "name": "Casqui",
+     "lat": 35.2,
+     "lon": -90.8
+    }
+   ],
+   "ruler": {
+    "name": "Chiefs of Pacaha",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "quarrelsome"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Rival Mississippian chiefdoms of north-eastern Arkansas.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The palisaded towns of Pacaha and Casqui feud on the middle Mississippi.",
+    "de": "Die palisadenbewehrten Orte Pacaha und Casqui befehden sich am mittleren Mississippi."
+   },
+   "coa": {
+    "blazon": "Sable a hand Or",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "apalachee",
+   "name": {
+    "en": "Apalachee",
+    "de": "Apalachee"
+   },
+   "short": {
+    "en": "Apalachee",
+    "de": "Apalachee"
+   },
+   "adjective": {
+    "en": "Apalachee",
+    "de": "apalachee"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#7a5a3a",
+   "capital": {
+    "name": "Anhaica",
+    "lat": 30.44,
+    "lon": -84.28
+   },
+   "holdings": [
+    {
+     "name": "Anhaica",
+     "lat": 30.44,
+     "lon": -84.28
+    },
+    {
+     "name": "Lake Jackson",
+     "lat": 30.53,
+     "lon": -84.32
+    }
+   ],
+   "ruler": {
+    "name": "Paramount chief of Apalachee",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Maize-growing Mississippian chiefdom of the Florida panhandle.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "timucua"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Apalachee are the most populous and warlike chiefdom of northern Florida.",
+    "de": "Die Apalachee sind das volkreichste und kriegerischste Häuptlingstum Nordfloridas."
+   },
+   "coa": {
+    "blazon": "Gules a maize ear Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "timucua",
+   "name": {
+    "en": "Timucua Chiefdoms",
+    "de": "Timucua-Häuptlingstümer"
+   },
+   "short": {
+    "en": "Timucua",
+    "de": "Timucua"
+   },
+   "adjective": {
+    "en": "Timucuan",
+    "de": "timucuanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#9a8a5a",
+   "capital": {
+    "name": "Utina",
+    "lat": 29.8,
+    "lon": -82.2
+   },
+   "holdings": [
+    {
+     "name": "Utina",
+     "lat": 29.8,
+     "lon": -82.2
+    },
+    {
+     "name": "Saturiwa",
+     "lat": 30.33,
+     "lon": -81.66
+    },
+    {
+     "name": "Ocale",
+     "lat": 29.1,
+     "lon": -82.2
+    }
+   ],
+   "ruler": {
+    "name": "Timucua holata",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Timucua-speaking chiefdoms of northern Florida.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "apalachee"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Timucua chiefdoms of north Florida hunt, fish and farm around the St Johns river.",
+    "de": "Die Timucua-Häuptlingstümer Nordfloridas jagen, fischen und bauen am St. Johns River an."
+   },
+   "coa": {
+    "blazon": "Azure a heron Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "calusa",
+   "name": {
+    "en": "Calusa",
+    "de": "Calusa"
+   },
+   "short": {
+    "en": "Calusa",
+    "de": "Calusa"
+   },
+   "adjective": {
+    "en": "Calusa",
+    "de": "calusa"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#3a7a9a",
+   "capital": {
+    "name": "Calos",
+    "lat": 26.42,
+    "lon": -81.86
+   },
+   "holdings": [
+    {
+     "name": "Calos",
+     "lat": 26.42,
+     "lon": -81.86
+    },
+    {
+     "name": "Lake Okeechobee",
+     "lat": 26.9,
+     "lon": -80.8
+    },
+    {
+     "name": "Tequesta",
+     "lat": 25.77,
+     "lon": -80.19
+    }
+   ],
+   "ruler": {
+    "name": "Calusa paramount chief",
+    "born": 1450,
+    "dynasty": "Calusa",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Fishing chiefdom of south-west Florida that exacts tribute from much of the peninsula.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Calusa build a powerful chiefdom on fishing alone and rule much of southern Florida from their shell-mound capital.",
+    "de": "Die Calusa errichten allein auf Fischfang ein mächtiges Häuptlingstum und beherrschen von ihrer Muschelhügel-Hauptstadt große Teile Südfloridas."
+   },
+   "coa": {
+    "blazon": "Azure a fish Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "cofitachequi",
+   "name": {
+    "en": "Cofitachequi",
+    "de": "Cofitachequi"
+   },
+   "short": {
+    "en": "Cofitachequi",
+    "de": "Cofitachequi"
+   },
+   "adjective": {
+    "en": "Cofitachequi",
+    "de": "cofitachequi"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#b0905a",
+   "capital": {
+    "name": "Cofitachequi",
+    "lat": 34.25,
+    "lon": -80.6
+   },
+   "holdings": [
+    {
+     "name": "Cofitachequi",
+     "lat": 34.25,
+     "lon": -80.6
+    },
+    {
+     "name": "Ocute",
+     "lat": 33.1,
+     "lon": -83.2
+    },
+    {
+     "name": "Joara",
+     "lat": 35.75,
+     "lon": -81.7
+    }
+   ],
+   "ruler": {
+    "name": "Lady of Cofitachequi",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mississippian paramount chiefdom of the Carolina piedmont, later ruled by the famous \"Lady of Cofitachequi\".",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Cofitachequi on the Wateree river is rich in freshwater pearls and copper.",
+    "de": "Cofitachequi am Wateree River ist reich an Süßwasserperlen und Kupfer."
+   },
+   "coa": {
+    "blazon": "Argent a pearl Azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "haudenosaunee_ancestral",
+   "name": {
+    "en": "Haudenosaunee Confederacy",
+    "de": "Haudenosaunee-Bund"
+   },
+   "short": {
+    "en": "Haudenosaunee",
+    "de": "Haudenosaunee"
+   },
+   "adjective": {
+    "en": "Iroquois",
+    "de": "irokesisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "iroquoian",
+   "faith": "american_traditional",
+   "color": "#6a1b9a",
+   "capital": {
+    "name": "Onondaga country",
+    "lat": 42.95,
+    "lon": -76.05
+   },
+   "holdings": [
+    {
+     "name": "Onondaga country",
+     "lat": 42.95,
+     "lon": -76.05
+    },
+    {
+     "name": "Mohawk valley",
+     "lat": 42.93,
+     "lon": -74.4
+    },
+    {
+     "name": "Seneca country",
+     "lat": 42.9,
+     "lon": -77.5
+    },
+    {
+     "name": "Oneida country",
+     "lat": 43.05,
+     "lon": -75.65
+    },
+    {
+     "name": "Cayuga country",
+     "lat": 42.85,
+     "lon": -76.7
+    }
+   ],
+   "ruler": {
+    "name": "Grand Council of the Fifty Sachems",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "diplomat"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "League of the Five Nations (Mohawk, Oneida, Onondaga, Cayuga, Seneca) founded by Deganawida and Hiawatha in the 15th century under the Great Law of Peace.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "wendat",
+    "st_lawrence_iroquoians",
+    "algonquian_lenape"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Five Nations have bound themselves under the Great Law of Peace; the Grand Council meets at Onondaga.",
+    "de": "Die Fünf Nationen haben sich unter dem Großen Gesetz des Friedens verbunden; der Große Rat tagt in Onondaga."
+   },
+   "coa": {
+    "blazon": "Purpure, a tree Argent",
+    "field": "purpure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "wendat",
+   "name": {
+    "en": "Wendat Confederacy",
+    "de": "Wendat-Bund"
+   },
+   "short": {
+    "en": "Wendat",
+    "de": "Wendat"
+   },
+   "adjective": {
+    "en": "Huron",
+    "de": "huronisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "iroquoian",
+   "faith": "american_traditional",
+   "color": "#9a5ab0",
+   "capital": {
+    "name": "Wendake",
+    "lat": 44.6,
+    "lon": -79.7
+   },
+   "holdings": [
+    {
+     "name": "Wendake",
+     "lat": 44.6,
+     "lon": -79.7
+    },
+    {
+     "name": "Lake Simcoe",
+     "lat": 44.4,
+     "lon": -79.3
+    }
+   ],
+   "ruler": {
+    "name": "Wendat confederacy council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Iroquoian-speaking confederacy between Lake Simcoe and Georgian Bay.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "haudenosaunee_ancestral"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Wendat farm maize between Lake Simcoe and Georgian Bay and trade with the northern Algonquians.",
+    "de": "Die Wendat bauen zwischen Lake Simcoe und Georgian Bay Mais an und handeln mit den nördlichen Algonkin."
+   },
+   "coa": {
+    "blazon": "Vert a turtle Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "st_lawrence_iroquoians",
+   "name": {
+    "en": "St. Lawrence Iroquoians",
+    "de": "Sankt-Lorenz-Irokesen"
+   },
+   "short": {
+    "en": "St. Lawrence",
+    "de": "Sankt Lorenz"
+   },
+   "adjective": {
+    "en": "St. Lawrence Iroquoian",
+    "de": "sanktlorenz-irokesisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "iroquoian",
+   "faith": "american_traditional",
+   "color": "#8e24aa",
+   "capital": {
+    "name": "Hochelaga",
+    "lat": 45.5,
+    "lon": -73.58
+   },
+   "holdings": [
+    {
+     "name": "Hochelaga",
+     "lat": 45.5,
+     "lon": -73.58
+    },
+    {
+     "name": "Stadacona",
+     "lat": 46.81,
+     "lon": -71.21
+    }
+   ],
+   "ruler": {
+    "name": "Village councils",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Iroquoian villages of the St Lawrence valley; they will vanish by the late 16th century.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "haudenosaunee_ancestral"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The palisaded maize villages of Hochelaga and Stadacona line the St Lawrence.",
+    "de": "Die palisadenbewehrten Maisdörfer Hochelaga und Stadacona säumen den Sankt-Lorenz-Strom."
+   },
+   "coa": {
+    "blazon": "Purpure, a fish Argent",
+    "field": "purpure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "algonquian_lenape",
+   "name": {
+    "en": "Lenape Peoples",
+    "de": "Lenape-Völker"
+   },
+   "short": {
+    "en": "Lenapehoking",
+    "de": "Lenapehoking"
+   },
+   "adjective": {
+    "en": "Lenape",
+    "de": "lenapisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "algonquian",
+   "faith": "american_traditional",
+   "color": "#43a047",
+   "capital": {
+    "name": "Delaware valley",
+    "lat": 40.75,
+    "lon": -75.12
+   },
+   "holdings": [
+    {
+     "name": "Delaware valley",
+     "lat": 40.75,
+     "lon": -75.12
+    },
+    {
+     "name": "Lower Delaware",
+     "lat": 39.9,
+     "lon": -75.3
+    },
+    {
+     "name": "Manahatta",
+     "lat": 40.78,
+     "lon": -73.97
+    }
+   ],
+   "ruler": {
+    "name": "Lenape sachems",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Lenape bands of the Delaware and lower Hudson valleys.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Lenape live in villages along the Delaware and the lower Hudson.",
+    "de": "Die Lenape leben in Dörfern am Delaware und am unteren Hudson."
+   },
+   "coa": {
+    "blazon": "Vert, a tree Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mikmaq",
+   "name": {
+    "en": "Mi'kmaq",
+    "de": "Mi'kmaq"
+   },
+   "short": {
+    "en": "Mi'kmaq",
+    "de": "Mi'kmaq"
+   },
+   "adjective": {
+    "en": "Mi'kmaq",
+    "de": "mi'kmaq"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "algonquian",
+   "faith": "american_traditional",
+   "color": "#5a9a5a",
+   "capital": {
+    "name": "Mi'kma'ki",
+    "lat": 45.3,
+    "lon": -63.3
+   },
+   "holdings": [
+    {
+     "name": "Mi'kma'ki",
+     "lat": 45.3,
+     "lon": -63.3
+    },
+    {
+     "name": "Unama'ki",
+     "lat": 46.1,
+     "lon": -60.7
+    },
+    {
+     "name": "Gespe'gewa'gi",
+     "lat": 48.0,
+     "lon": -66.0
+    }
+   ],
+   "ruler": {
+    "name": "Grand Council of the Mi'kmaq",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Algonquian people of the Maritime peninsula, organised in seven districts under a Grand Council.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Mi'kmaq hunt and fish along the Atlantic coasts of the Maritime peninsula.",
+    "de": "Die Mi'kmaq jagen und fischen an den Atlantikküsten der Maritimen Halbinsel."
+   },
+   "coa": {
+    "blazon": "Azure a star Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "argent",
+      "count": 8
+     }
+    ]
+   }
+  },
+  {
+   "id": "beothuk",
+   "name": {
+    "en": "Beothuk",
+    "de": "Beothuk"
+   },
+   "short": {
+    "en": "Beothuk",
+    "de": "Beothuk"
+   },
+   "adjective": {
+    "en": "Beothuk",
+    "de": "beothukisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "algonquian",
+   "faith": "american_traditional",
+   "color": "#b04a3a",
+   "capital": {
+    "name": "Exploits river",
+    "lat": 48.9,
+    "lon": -55.6
+   },
+   "holdings": [
+    {
+     "name": "Exploits river",
+     "lat": 48.9,
+     "lon": -55.6
+    },
+    {
+     "name": "Notre Dame Bay",
+     "lat": 49.5,
+     "lon": -55.2
+    }
+   ],
+   "ruler": {
+    "name": "Beothuk bands",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     1,
+     1,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hunter-gatherers of Newfoundland, called \"Red Indians\" for their ochre paint.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Beothuk of Newfoundland paint themselves with red ochre; John Cabot will reach their island in 1497.",
+    "de": "Die Beothuk Neufundlands bemalen sich mit rotem Ocker; John Cabot wird ihre Insel 1497 erreichen."
+   },
+   "coa": {
+    "blazon": "Gules plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "cusco",
+   "name": {
+    "en": "Inca Empire (Tawantinsuyu)",
+    "de": "Inkareich (Tawantinsuyu)"
+   },
+   "short": {
+    "en": "Inca",
+    "de": "Inka"
+   },
+   "adjective": {
+    "en": "Inca",
+    "de": "inkaisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "quechua",
+   "faith": "andean",
+   "color": "#f9a825",
+   "capital": {
+    "name": "Cusco",
+    "lat": -13.53,
+    "lon": -71.97
+   },
+   "holdings": [
+    {
+     "name": "Cusco",
+     "lat": -13.53,
+     "lon": -71.97
+    },
+    {
+     "name": "Sacred Valley",
+     "lat": -13.33,
+     "lon": -72.08
+    },
+    {
+     "name": "Quito",
+     "lat": -0.22,
+     "lon": -78.51
+    },
+    {
+     "name": "Tumebamba",
+     "lat": -2.9,
+     "lon": -79.0
+    },
+    {
+     "name": "Cajamarca",
+     "lat": -7.16,
+     "lon": -78.51
+    },
+    {
+     "name": "Chan Chan",
+     "lat": -8.11,
+     "lon": -79.07
+    },
+    {
+     "name": "Chachapoyas",
+     "lat": -6.23,
+     "lon": -77.87
+    },
+    {
+     "name": "Huánuco Pampa",
+     "lat": -9.87,
+     "lon": -76.82
+    },
+    {
+     "name": "Jauja",
+     "lat": -11.78,
+     "lon": -75.5
+    },
+    {
+     "name": "Pachacamac",
+     "lat": -12.26,
+     "lon": -76.9
+    },
+    {
+     "name": "Vilcas Huamán",
+     "lat": -13.65,
+     "lon": -73.95
+    },
+    {
+     "name": "Arequipa",
+     "lat": -16.4,
+     "lon": -71.53
+    },
+    {
+     "name": "Hatun Colla",
+     "lat": -15.53,
+     "lon": -70.05
+    },
+    {
+     "name": "Tiwanaku",
+     "lat": -16.55,
+     "lon": -68.67
+    },
+    {
+     "name": "Charcas",
+     "lat": -19.0,
+     "lon": -65.3
+    },
+    {
+     "name": "Tupiza",
+     "lat": -21.45,
+     "lon": -65.72
+    },
+    {
+     "name": "Atacama",
+     "lat": -22.9,
+     "lon": -68.2
+    },
+    {
+     "name": "Copiapó",
+     "lat": -27.37,
+     "lon": -70.33
+    },
+    {
+     "name": "Mapocho",
+     "lat": -33.45,
+     "lon": -70.67
+    },
+    {
+     "name": "Tucumán",
+     "lat": -26.8,
+     "lon": -65.2
+    },
+    {
+     "name": "Tumbes",
+     "lat": -3.57,
+     "lon": -80.45
+    }
+   ],
+   "ruler": {
+    "name": "Tupac Inca Yupanqui",
+    "born": 1441,
+    "dynasty": "Hurin Cusco / Hanan Cusco (Inca)",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     6
+    ],
+    "traits": [
+     "warlike",
+     "builder"
+    ]
+   },
+   "heir": {
+    "name": "Huayna Capac",
+    "born": 1467,
+    "dynasty": "Inca",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": {
+    "name": "Mama Ocllo",
+    "born": 1445,
+    "dynasty": "Inca",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Sapa Inca since 1471 (after Pachacuti); conqueror of Chimor, Quito and Chile to the Maule; Huayna Capac, his son by the coya Mama Ocllo, is the designated heir and succeeds c.1493.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "mapuche"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 1,
+   "summary": {
+    "en": "Tupac Inca Yupanqui has carried the empire from Quito to central Chile and organised it with roads, storehouses and the decimal administration. His heir Huayna Capac will push north into Ecuador.",
+    "de": "Tupac Inca Yupanqui hat das Reich von Quito bis nach Mittelchile ausgedehnt und mit Straßen, Speichern und Dezimalverwaltung geordnet. Sein Erbe Huayna Capac wird nach Norden ins heutige Ecuador vorstoßen."
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mapuche",
+   "name": {
+    "en": "Mapuche",
+    "de": "Mapuche"
+   },
+   "short": {
+    "en": "Mapuche",
+    "de": "Mapuche"
+   },
+   "adjective": {
+    "en": "Mapuche",
+    "de": "mapuche"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "mapuche",
+   "faith": "american_traditional",
+   "color": "#3a5a8a",
+   "capital": {
+    "name": "Biobío",
+    "lat": -37.3,
+    "lon": -72.4
+   },
+   "holdings": [
+    {
+     "name": "Biobío",
+     "lat": -37.3,
+     "lon": -72.4
+    },
+    {
+     "name": "Maule",
+     "lat": -35.6,
+     "lon": -71.6
+    },
+    {
+     "name": "Arauco",
+     "lat": -37.25,
+     "lon": -73.3
+    }
+   ],
+   "ruler": {
+    "name": "Lonkos of the Mapuche",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     1,
+     2,
+     5
+    ],
+    "traits": [
+     "defiant"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free Mapuche lineages under their lonkos; in war they elect a toqui.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "cusco"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "South of the Maule the Mapuche have stopped the Inca advance and will resist every conqueror.",
+    "de": "Südlich des Maule haben die Mapuche den Vormarsch der Inka gestoppt und werden jedem Eroberer widerstehen."
+   },
+   "coa": {
+    "blazon": "Azure a star Argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "muisca_bacata",
+   "name": {
+    "en": "Muisca Confederation of Bacatá",
+    "de": "Muisca-Konföderation Bacatá"
+   },
+   "short": {
+    "en": "Bacatá",
+    "de": "Bacatá"
+   },
+   "adjective": {
+    "en": "Muisca",
+    "de": "muiscanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "muisca",
+   "faith": "american_traditional",
+   "color": "#fbc02d",
+   "capital": {
+    "name": "Bacatá",
+    "lat": 4.72,
+    "lon": -74.21
+   },
+   "holdings": [
+    {
+     "name": "Bacatá",
+     "lat": 4.72,
+     "lon": -74.21
+    },
+    {
+     "name": "Zipaquirá",
+     "lat": 5.02,
+     "lon": -74.0
+    },
+    {
+     "name": "Fusagasugá",
+     "lat": 4.34,
+     "lon": -74.36
+    }
+   ],
+   "ruler": {
+    "name": "Zipa Nemequene",
+    "born": 1450,
+    "dynasty": "Zipa of Bacatá",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     4
+    ],
+    "traits": [
+     "just",
+     "stern"
+    ]
+   },
+   "heir": {
+    "name": "Tisquesusa",
+    "born": 1480,
+    "dynasty": "Zipa of Bacatá",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Muisca confederation of the south; Nemequene became zipa in 1490 after Saguamanchica fell fighting the zaque; he is remembered as a lawgiver.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "muisca_hunza"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "The zipa Nemequene rules the southern Muisca from Bacatá and has given them a famous code of laws; war with the zaque of Hunza goes on.",
+    "de": "Der Zipa Nemequene regiert die südlichen Muisca von Bacatá aus und hat ihnen ein berühmtes Gesetzbuch gegeben; der Krieg mit dem Zaque von Hunza dauert an."
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muisca_hunza",
+   "name": {
+    "en": "Muisca Confederation of Hunza",
+    "de": "Muisca-Konföderation Hunza"
+   },
+   "short": {
+    "en": "Hunza",
+    "de": "Hunza"
+   },
+   "adjective": {
+    "en": "Muisca",
+    "de": "muiscanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "muisca",
+   "faith": "american_traditional",
+   "color": "#f57f17",
+   "capital": {
+    "name": "Hunza",
+    "lat": 5.54,
+    "lon": -73.36
+   },
+   "holdings": [
+    {
+     "name": "Hunza",
+     "lat": 5.54,
+     "lon": -73.36
+    },
+    {
+     "name": "Sogamoso",
+     "lat": 5.72,
+     "lon": -72.93
+    }
+   ],
+   "ruler": {
+    "name": "Zaque Quemuenchatocha",
+    "born": 1460,
+    "dynasty": "Zaque of Hunza",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Northern Muisca confederation; Quemuenchatocha became zaque in 1490 after Michuá died in battle.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "muisca_bacata"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The zaque of Hunza rules the northern Muisca and the sacred Sun Temple of Sogamoso.",
+    "de": "Der Zaque von Hunza herrscht über die nördlichen Muisca und den heiligen Sonnentempel von Sogamoso."
+   },
+   "coa": {
+    "blazon": "Gules, a sun Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tairona",
+   "name": {
+    "en": "Tairona",
+    "de": "Tairona"
+   },
+   "short": {
+    "en": "Tairona",
+    "de": "Tairona"
+   },
+   "adjective": {
+    "en": "Tairona",
+    "de": "tairona"
+   },
+   "rank": "chiefdom",
+   "government": "theocracy",
+   "culture": "chibchan",
+   "faith": "american_traditional",
+   "color": "#c0a030",
+   "capital": {
+    "name": "Ciudad Perdida",
+    "lat": 11.04,
+    "lon": -73.93
+   },
+   "holdings": [
+    {
+     "name": "Ciudad Perdida",
+     "lat": 11.04,
+     "lon": -73.93
+    },
+    {
+     "name": "Pocigüeica",
+     "lat": 11.1,
+     "lon": -74.1
+    },
+    {
+     "name": "Bonda",
+     "lat": 11.23,
+     "lon": -74.13
+    }
+   ],
+   "ruler": {
+    "name": "Naoma priests",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chibchan chiefdoms of the Sierra Nevada de Santa Marta, with stone-terraced towns and famed goldwork.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Tairona build stone towns and terraces in the Sierra Nevada de Santa Marta and are masters of goldwork.",
+    "de": "Die Tairona bauen Steinstädte und Terrassen in der Sierra Nevada de Santa Marta und sind Meister der Goldschmiedekunst."
+   },
+   "coa": {
+    "blazon": "Or a figure Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "tupinamba",
+   "name": {
+    "en": "Tupinambá Peoples",
+    "de": "Tupinambá-Völker"
+   },
+   "short": {
+    "en": "Tupinambá",
+    "de": "Tupinambá"
+   },
+   "adjective": {
+    "en": "Tupinambá",
+    "de": "tupinambá"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "tupi",
+   "faith": "american_traditional",
+   "color": "#388e3c",
+   "capital": {
+    "name": "Bahia coast",
+    "lat": -12.97,
+    "lon": -38.51
+   },
+   "holdings": [
+    {
+     "name": "Bahia coast",
+     "lat": -12.97,
+     "lon": -38.51
+    },
+    {
+     "name": "Guanabara",
+     "lat": -22.9,
+     "lon": -43.17
+    },
+    {
+     "name": "Pernambuco coast",
+     "lat": -8.05,
+     "lon": -34.9
+    }
+   ],
+   "ruler": {
+    "name": "Tupinambá village chiefs",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     1,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tupí-speaking coastal peoples living in autonomous villages.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "guarani"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Tupinambá dominate the Brazilian coast in warring village alliances.",
+    "de": "Die Tupinambá beherrschen die brasilianische Küste in kriegerischen Dorfbündnissen."
+   },
+   "coa": {
+    "blazon": "Vert, a horn Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horn",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "guarani",
+   "name": {
+    "en": "Guaraní Peoples",
+    "de": "Guaraní-Völker"
+   },
+   "short": {
+    "en": "Guaraní",
+    "de": "Guaraní"
+   },
+   "adjective": {
+    "en": "Guaraní",
+    "de": "guaraní"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "guarani",
+   "faith": "american_traditional",
+   "color": "#66bb6a",
+   "capital": {
+    "name": "Paraguay river",
+    "lat": -25.28,
+    "lon": -57.63
+   },
+   "holdings": [
+    {
+     "name": "Paraguay river",
+     "lat": -25.28,
+     "lon": -57.63
+    },
+    {
+     "name": "Upper Paraná",
+     "lat": -27.0,
+     "lon": -55.0
+    }
+   ],
+   "ruler": {
+    "name": "Guaraní tuvichá",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guaraní farming villages of the Paraguay and Paraná basins.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tupinamba",
+    "cusco"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Guaraní farm the forests of the Paraguay and Paraná and raid the Inca frontier in the Chaco.",
+    "de": "Die Guaraní bebauen die Wälder am Paraguay und Paraná und überfallen die Inka-Grenze im Chaco."
+   },
+   "coa": {
+    "blazon": "Vert, a tree Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Flower War against Tlaxcala",
+    "de": "Blumenkrieg gegen Tlaxcala"
+   },
+   "attackers": [
+    "tenochtitlan",
+    "texcoco_acolhua",
+    "tlacopan"
+   ],
+   "defenders": [
+    "tlaxcala"
+   ],
+   "since": 1455,
+   "goal": "conquest"
+  },
+  {
+   "name": {
+    "en": "Muisca War of Zipa and Zaque",
+    "de": "Muisca-Krieg zwischen Zipa und Zaque"
+   },
+   "attackers": [
+    "muisca_bacata"
+   ],
+   "defenders": [
+    "muisca_hunza"
+   ],
+   "since": 1490,
+   "goal": "conquest"
+  }
+ ]
+}

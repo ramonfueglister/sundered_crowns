@@ -1,0 +1,4070 @@
+{
+ "region": "italy_balkans",
+ "year": 1492,
+ "date": "1492-01-01",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "New Cambridge Medieval History vol. VII",
+  "Oxford Atlas of World History; Putzger Historischer Weltatlas (Italien um 1490)",
+  "J. M. Najemy, A History of Florence 1200-1575",
+  "F. C. Lane, Venice: A Maritime Republic",
+  "M. Mallett & C. Shaw, The Italian Wars 1494-1559 (introductory chapter on Italy in 1492)",
+  "D. Abulafia (ed.), The French Descent into Renaissance Italy",
+  "P. Engel, The Realm of St Stephen: A History of Medieval Hungary",
+  "K. M. Setton, The Papacy and the Levant vol. II",
+  "Wikipedia articles on the respective states and rulers"
+ ],
+ "new_ids": [],
+ "notes": [
+  "Lorenzo de' Medici dies on 8 April 1492 and Innocent VIII on 25 July 1492; both are alive on 1 January.",
+  "Milan: Duke Gian Galeazzo Maria Sforza is of age but power is exercised by his uncle Ludovico il Moro; Genoa has been under Milanese lordship since 1488.",
+  "Cyprus has been a Venetian possession since Queen Catherine Cornaro's abdication in February 1489.",
+  "The Peace of Pressburg (7 November 1491) ended the Austro-Hungarian war of succession: no war is active between Hungary and Austria on 1 January 1492; Maximilian keeps a succession claim.",
+  "Sicily and Sardinia are part of the Crown of Aragon (see west.json)."
+ ],
+ "states": [
+  {
+   "id": "papal_states",
+   "name": {
+    "en": "Papal States",
+    "de": "Kirchenstaat"
+   },
+   "short": {
+    "en": "Papacy",
+    "de": "Papsttum"
+   },
+   "adjective": {
+    "en": "Papal",
+    "de": "päpstlich"
+   },
+   "rank": "principality",
+   "government": "theocracy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#f2e6a0",
+   "capital": {
+    "name": "Rome",
+    "lat": 41.902,
+    "lon": 12.496
+   },
+   "holdings": [
+    {
+     "name": "Rome",
+     "lat": 41.902,
+     "lon": 12.496
+    },
+    {
+     "name": "Viterbo",
+     "lat": 42.42,
+     "lon": 12.107
+    },
+    {
+     "name": "Orvieto",
+     "lat": 42.718,
+     "lon": 12.111
+    },
+    {
+     "name": "Spoleto",
+     "lat": 42.734,
+     "lon": 12.738
+    },
+    {
+     "name": "Foligno",
+     "lat": 42.956,
+     "lon": 12.703
+    },
+    {
+     "name": "Rieti",
+     "lat": 42.404,
+     "lon": 12.857
+    },
+    {
+     "name": "Civitavecchia",
+     "lat": 42.093,
+     "lon": 11.796
+    },
+    {
+     "name": "Anagni",
+     "lat": 41.744,
+     "lon": 13.158
+    },
+    {
+     "name": "Terracina",
+     "lat": 41.291,
+     "lon": 13.248
+    },
+    {
+     "name": "Ancona",
+     "lat": 43.616,
+     "lon": 13.519
+    },
+    {
+     "name": "Macerata",
+     "lat": 43.3,
+     "lon": 13.453
+    },
+    {
+     "name": "Fermo",
+     "lat": 43.16,
+     "lon": 13.718
+    },
+    {
+     "name": "Ascoli",
+     "lat": 42.854,
+     "lon": 13.575
+    },
+    {
+     "name": "Benevento",
+     "lat": 41.13,
+     "lon": 14.782
+    },
+    {
+     "name": "Perugia",
+     "lat": 43.112,
+     "lon": 12.389
+    },
+    {
+     "name": "Città di Castello",
+     "lat": 43.457,
+     "lon": 12.24
+    },
+    {
+     "name": "Assisi",
+     "lat": 43.07,
+     "lon": 12.62
+    },
+    {
+     "name": "Todi",
+     "lat": 42.78,
+     "lon": 12.41
+    },
+    {
+     "name": "Narni",
+     "lat": 42.52,
+     "lon": 12.52
+    },
+    {
+     "name": "Tivoli",
+     "lat": 41.96,
+     "lon": 12.8
+    },
+    {
+     "name": "Cesena",
+     "lat": 44.139,
+     "lon": 12.243
+    },
+    {
+     "name": "Fano",
+     "lat": 43.84,
+     "lon": 13.02
+    },
+    {
+     "name": "Senigallia",
+     "lat": 43.71,
+     "lon": 13.22
+    },
+    {
+     "name": "Carpentras",
+     "lat": 44.06,
+     "lon": 5.05
+    }
+   ],
+   "ruler": {
+    "name": "Pope Innocent VIII",
+    "born": 1432,
+    "dynasty": "Cybo",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "sickly",
+     "lazy",
+     "greedy"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elective papal monarchy; Giovanni Battista Cybo, pope since 1484, holds the Ottoman pretender Cem Sultan in the Vatican, for whom Bayezid II pays an annual pension.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence",
+    "naples"
+   ],
+   "rivals": [],
+   "claims_on": [
+    "naples"
+   ],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "The ailing Innocent VIII has made peace with Ferrante of Naples and married his son Franceschetto to a daughter of Lorenzo de' Medici. He keeps Prince Cem in Rome as a hostage, paid by the Sultan to keep him there; his death in July will bring Rodrigo Borgia to the throne.",
+    "de": "Der kränkelnde Innozenz VIII. hat mit Ferrante von Neapel Frieden geschlossen und seinen Sohn Franceschetto mit einer Tochter Lorenzos de' Medici verheiratet. Er hält Prinz Cem in Rom als Geisel, wofür ihn der Sultan bezahlt; sein Tod im Juli wird Rodrigo Borgia auf den Thron bringen."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire Or and argent beneath a papal tiara",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "crown",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "naples",
+   "name": {
+    "en": "Kingdom of Naples",
+    "de": "Königreich Neapel"
+   },
+   "short": {
+    "en": "Naples",
+    "de": "Neapel"
+   },
+   "adjective": {
+    "en": "Neapolitan",
+    "de": "neapolitanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "neapolitan",
+   "faith": "latin",
+   "color": "#5b7fd1",
+   "capital": {
+    "name": "Naples",
+    "lat": 40.852,
+    "lon": 14.268
+   },
+   "holdings": [
+    {
+     "name": "Naples",
+     "lat": 40.852,
+     "lon": 14.268
+    },
+    {
+     "name": "Capua",
+     "lat": 41.106,
+     "lon": 14.212
+    },
+    {
+     "name": "Gaeta",
+     "lat": 41.213,
+     "lon": 13.571
+    },
+    {
+     "name": "L'Aquila",
+     "lat": 42.35,
+     "lon": 13.4
+    },
+    {
+     "name": "Sulmona",
+     "lat": 42.048,
+     "lon": 13.926
+    },
+    {
+     "name": "Chieti",
+     "lat": 42.351,
+     "lon": 14.168
+    },
+    {
+     "name": "Teramo",
+     "lat": 42.66,
+     "lon": 13.7
+    },
+    {
+     "name": "Campobasso",
+     "lat": 41.56,
+     "lon": 14.66
+    },
+    {
+     "name": "Foggia",
+     "lat": 41.462,
+     "lon": 15.545
+    },
+    {
+     "name": "Manfredonia",
+     "lat": 41.63,
+     "lon": 15.917
+    },
+    {
+     "name": "Trani",
+     "lat": 41.277,
+     "lon": 16.416
+    },
+    {
+     "name": "Bari",
+     "lat": 41.117,
+     "lon": 16.872
+    },
+    {
+     "name": "Brindisi",
+     "lat": 40.638,
+     "lon": 17.946
+    },
+    {
+     "name": "Taranto",
+     "lat": 40.464,
+     "lon": 17.247
+    },
+    {
+     "name": "Lecce",
+     "lat": 40.352,
+     "lon": 18.169
+    },
+    {
+     "name": "Otranto",
+     "lat": 40.146,
+     "lon": 18.491
+    },
+    {
+     "name": "Matera",
+     "lat": 40.666,
+     "lon": 16.604
+    },
+    {
+     "name": "Melfi",
+     "lat": 40.996,
+     "lon": 15.652
+    },
+    {
+     "name": "Potenza",
+     "lat": 40.64,
+     "lon": 15.806
+    },
+    {
+     "name": "Salerno",
+     "lat": 40.682,
+     "lon": 14.768
+    },
+    {
+     "name": "Cosenza",
+     "lat": 39.298,
+     "lon": 16.254
+    },
+    {
+     "name": "Rossano",
+     "lat": 39.576,
+     "lon": 16.634
+    },
+    {
+     "name": "Catanzaro",
+     "lat": 38.91,
+     "lon": 16.588
+    },
+    {
+     "name": "Gerace",
+     "lat": 38.271,
+     "lon": 16.22
+    },
+    {
+     "name": "Reggio Calabria",
+     "lat": 38.17,
+     "lon": 15.85
+    }
+   ],
+   "ruler": {
+    "name": "Ferdinand I (Ferrante)",
+    "born": 1423,
+    "dynasty": "Trastámara",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     3
+    ],
+    "traits": [
+     "cruel",
+     "cunning"
+    ]
+   },
+   "heir": {
+    "name": "Alfonso, Duke of Calabria",
+    "born": 1448,
+    "dynasty": "Trastámara",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     4
+    ],
+    "traits": [
+     "cruel",
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Joanna of Aragon",
+    "born": 1454,
+    "dynasty": "Trastámara",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Neapolitan branch of the Trastámara; Ferrante, bastard son of Alfonso V, crushed the Barons' Conspiracy (1485-87) and executed its leaders.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence",
+    "aragon",
+    "papal_states"
+   ],
+   "rivals": [
+    "milan",
+    "venice",
+    "france"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Old Ferrante has survived Angevin invasions, the Turkish landing at Otranto and the Barons' Conspiracy, ruling by fear and cunning. He is furious that Ludovico il Moro keeps his granddaughter Isabella and her husband, the Duke of Milan, from power, and he fears the French claim to his throne.",
+    "de": "Der alte Ferrante hat angevinische Invasionen, die türkische Landung in Otranto und die Baronenverschwörung überstanden und herrscht durch Furcht und List. Er ist erzürnt, dass Ludovico il Moro seine Enkelin Isabella und deren Gemahl, den Herzog von Mailand, von der Macht fernhält, und fürchtet den französischen Anspruch auf seinen Thron."
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or, a label gules",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 9,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "venice",
+   "name": {
+    "en": "Republic of Venice",
+    "de": "Republik Venedig"
+   },
+   "short": {
+    "en": "Venice",
+    "de": "Venedig"
+   },
+   "adjective": {
+    "en": "Venetian",
+    "de": "venezianisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#2e8b8b",
+   "capital": {
+    "name": "Venice",
+    "lat": 45.438,
+    "lon": 12.335
+   },
+   "holdings": [
+    {
+     "name": "Venice",
+     "lat": 45.438,
+     "lon": 12.335
+    },
+    {
+     "name": "Padua",
+     "lat": 45.406,
+     "lon": 11.876
+    },
+    {
+     "name": "Vicenza",
+     "lat": 45.548,
+     "lon": 11.546
+    },
+    {
+     "name": "Verona",
+     "lat": 45.438,
+     "lon": 10.992
+    },
+    {
+     "name": "Treviso",
+     "lat": 45.666,
+     "lon": 12.243
+    },
+    {
+     "name": "Bassano",
+     "lat": 45.77,
+     "lon": 11.73
+    },
+    {
+     "name": "Feltre",
+     "lat": 46.02,
+     "lon": 11.91
+    },
+    {
+     "name": "Belluno",
+     "lat": 46.14,
+     "lon": 12.22
+    },
+    {
+     "name": "Udine",
+     "lat": 46.063,
+     "lon": 13.235
+    },
+    {
+     "name": "Cividale",
+     "lat": 46.093,
+     "lon": 13.432
+    },
+    {
+     "name": "Gemona",
+     "lat": 46.28,
+     "lon": 13.139
+    },
+    {
+     "name": "Sacile",
+     "lat": 45.954,
+     "lon": 12.502
+    },
+    {
+     "name": "Bergamo",
+     "lat": 45.698,
+     "lon": 9.677
+    },
+    {
+     "name": "Brescia",
+     "lat": 45.541,
+     "lon": 10.211
+    },
+    {
+     "name": "Crema",
+     "lat": 45.363,
+     "lon": 9.686
+    },
+    {
+     "name": "Rovigo",
+     "lat": 45.07,
+     "lon": 11.79
+    },
+    {
+     "name": "Rovereto",
+     "lat": 45.89,
+     "lon": 11.04
+    },
+    {
+     "name": "Ravenna",
+     "lat": 44.418,
+     "lon": 12.204
+    },
+    {
+     "name": "Cervia",
+     "lat": 44.262,
+     "lon": 12.355
+    },
+    {
+     "name": "Capodistria",
+     "lat": 45.548,
+     "lon": 13.73
+    },
+    {
+     "name": "Parenzo",
+     "lat": 45.227,
+     "lon": 13.594
+    },
+    {
+     "name": "Pola",
+     "lat": 44.87,
+     "lon": 13.85
+    },
+    {
+     "name": "Veglia",
+     "lat": 45.03,
+     "lon": 14.57
+    },
+    {
+     "name": "Zara",
+     "lat": 44.119,
+     "lon": 15.231
+    },
+    {
+     "name": "Sebenico",
+     "lat": 43.735,
+     "lon": 15.89
+    },
+    {
+     "name": "Traù",
+     "lat": 43.517,
+     "lon": 16.25
+    },
+    {
+     "name": "Spalato",
+     "lat": 43.508,
+     "lon": 16.44
+    },
+    {
+     "name": "Lesina",
+     "lat": 43.17,
+     "lon": 16.44
+    },
+    {
+     "name": "Curzola",
+     "lat": 42.96,
+     "lon": 17.14
+    },
+    {
+     "name": "Cattaro",
+     "lat": 42.42,
+     "lon": 18.77
+    },
+    {
+     "name": "Antivari",
+     "lat": 42.09,
+     "lon": 19.1
+    },
+    {
+     "name": "Dulcigno",
+     "lat": 41.93,
+     "lon": 19.21
+    },
+    {
+     "name": "Durazzo",
+     "lat": 41.323,
+     "lon": 19.441
+    },
+    {
+     "name": "Corfu",
+     "lat": 39.624,
+     "lon": 19.921
+    },
+    {
+     "name": "Zante",
+     "lat": 37.78,
+     "lon": 20.9
+    },
+    {
+     "name": "Modon",
+     "lat": 36.82,
+     "lon": 21.705
+    },
+    {
+     "name": "Coron",
+     "lat": 36.795,
+     "lon": 21.96
+    },
+    {
+     "name": "Nauplia",
+     "lat": 37.57,
+     "lon": 22.8
+    },
+    {
+     "name": "Monemvasia",
+     "lat": 36.687,
+     "lon": 23.056
+    },
+    {
+     "name": "Candia",
+     "lat": 35.339,
+     "lon": 25.144
+    },
+    {
+     "name": "Canea",
+     "lat": 35.514,
+     "lon": 24.018
+    },
+    {
+     "name": "Rettimo",
+     "lat": 35.366,
+     "lon": 24.474
+    },
+    {
+     "name": "Sitia",
+     "lat": 35.207,
+     "lon": 26.104
+    },
+    {
+     "name": "Tinos",
+     "lat": 37.54,
+     "lon": 25.16
+    },
+    {
+     "name": "Nicosia",
+     "lat": 35.17,
+     "lon": 33.36
+    },
+    {
+     "name": "Famagusta",
+     "lat": 35.12,
+     "lon": 33.94
+    },
+    {
+     "name": "Limassol",
+     "lat": 34.68,
+     "lon": 33.04
+    },
+    {
+     "name": "Kyrenia",
+     "lat": 35.34,
+     "lon": 33.32
+    },
+    {
+     "name": "Paphos",
+     "lat": 34.77,
+     "lon": 32.42
+    }
+   ],
+   "ruler": {
+    "name": "Doge Agostino Barbarigo",
+    "born": 1419,
+    "dynasty": "Barbarigo",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     1
+    ],
+    "traits": [
+     "proud",
+     "shrewd"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elective dogeship for life; Agostino Barbarigo was elected in 1486 after his brother Marco; the Council of Ten and the Senate hold real power.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "archipelago"
+   ],
+   "rivals": [
+    "ottoman",
+    "milan",
+    "ferrara"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Serenissima is at its territorial peak: it rules the Terraferma from Friuli to Bergamo, the Polesine taken from Ferrara in 1484, Dalmatia, the Ionian islands, Crete and, since 1489, Cyprus. At peace with the Sultan since 1479, it guards its Levant trade and watches Milan and Naples.",
+    "de": "Die Serenissima steht auf dem Höhepunkt ihrer Ausdehnung: Sie beherrscht die Terraferma von Friaul bis Bergamo, den 1484 Ferrara entrissenen Polesine, Dalmatien, die Ionischen Inseln, Kreta und seit 1489 Zypern. Seit 1479 im Frieden mit dem Sultan, hütet sie ihren Levantehandel und beobachtet Mailand und Neapel."
+   },
+   "coa": {
+    "blazon": "Azure, a winged lion passant Or holding a book",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "milan",
+   "name": {
+    "en": "Duchy of Milan",
+    "de": "Herzogtum Mailand"
+   },
+   "short": {
+    "en": "Milan",
+    "de": "Mailand"
+   },
+   "adjective": {
+    "en": "Milanese",
+    "de": "mailändisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#3a6fb5",
+   "capital": {
+    "name": "Milan",
+    "lat": 45.464,
+    "lon": 9.19
+   },
+   "holdings": [
+    {
+     "name": "Milan",
+     "lat": 45.464,
+     "lon": 9.19
+    },
+    {
+     "name": "Pavia",
+     "lat": 45.19,
+     "lon": 9.16
+    },
+    {
+     "name": "Vigevano",
+     "lat": 45.32,
+     "lon": 8.86
+    },
+    {
+     "name": "Como",
+     "lat": 45.808,
+     "lon": 9.085
+    },
+    {
+     "name": "Lodi",
+     "lat": 45.314,
+     "lon": 9.503
+    },
+    {
+     "name": "Cremona",
+     "lat": 45.133,
+     "lon": 10.022
+    },
+    {
+     "name": "Piacenza",
+     "lat": 45.052,
+     "lon": 9.693
+    },
+    {
+     "name": "Parma",
+     "lat": 44.801,
+     "lon": 10.328
+    },
+    {
+     "name": "Novara",
+     "lat": 45.446,
+     "lon": 8.622
+    },
+    {
+     "name": "Alessandria",
+     "lat": 44.913,
+     "lon": 8.615
+    },
+    {
+     "name": "Tortona",
+     "lat": 44.895,
+     "lon": 8.865
+    },
+    {
+     "name": "Varese",
+     "lat": 45.82,
+     "lon": 8.83
+    },
+    {
+     "name": "Lugano",
+     "lat": 46.0,
+     "lon": 8.95
+    },
+    {
+     "name": "Locarno",
+     "lat": 46.17,
+     "lon": 8.8
+    },
+    {
+     "name": "Bellinzona",
+     "lat": 46.19,
+     "lon": 9.02
+    },
+    {
+     "name": "Domodossola",
+     "lat": 46.11,
+     "lon": 8.29
+    },
+    {
+     "name": "Sondrio",
+     "lat": 46.17,
+     "lon": 9.87
+    },
+    {
+     "name": "Chiavenna",
+     "lat": 46.32,
+     "lon": 9.4
+    },
+    {
+     "name": "Bormio",
+     "lat": 46.467,
+     "lon": 10.371
+    }
+   ],
+   "ruler": {
+    "name": "Gian Galeazzo Maria Sforza",
+    "born": 1469,
+    "dynasty": "Sforza",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "weak_willed",
+     "sickly"
+    ]
+   },
+   "heir": {
+    "name": "Francesco Sforza",
+    "born": 1491,
+    "dynasty": "Sforza",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "infant"
+    ]
+   },
+   "consort": {
+    "name": "Isabella of Aragon",
+    "born": 1470,
+    "dynasty": "Trastámara",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "proud"
+    ]
+   },
+   "dynasty_note": "House of Sforza; Duke Gian Galeazzo is a figurehead: his uncle Ludovico il Moro (b. 1452), married in January 1491 to Beatrice d'Este, governs Milan and Genoa in his name.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "florence",
+    "ferrara",
+    "france"
+   ],
+   "rivals": [
+    "naples",
+    "venice",
+    "swiss_confederacy"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "Milan is the richest state of Lombardy, and its real master is Ludovico il Moro, patron of Leonardo da Vinci, who rules for his feeble nephew. The resentment of Naples over the sidelined duke drives Ludovico to look for support in France — with fateful consequences.",
+    "de": "Mailand ist der reichste Staat der Lombardei, und sein wahrer Herr ist Ludovico il Moro, Förderer Leonardos da Vinci, der für seinen schwachen Neffen regiert. Der Groll Neapels über den kaltgestellten Herzog treibt Ludovico, Rückhalt in Frankreich zu suchen - mit verhängnisvollen Folgen."
+   },
+   "coa": {
+    "blazon": "Argent, a serpent azure crowned Or devouring a child gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "dragon",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "genoa",
+   "name": {
+    "en": "Republic of Genoa",
+    "de": "Republik Genua"
+   },
+   "short": {
+    "en": "Genoa",
+    "de": "Genua"
+   },
+   "adjective": {
+    "en": "Genoese",
+    "de": "genuesisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#c8c8d8",
+   "capital": {
+    "name": "Genoa",
+    "lat": 44.407,
+    "lon": 8.934
+   },
+   "holdings": [
+    {
+     "name": "Genoa",
+     "lat": 44.407,
+     "lon": 8.934
+    },
+    {
+     "name": "Savona",
+     "lat": 44.309,
+     "lon": 8.477
+    },
+    {
+     "name": "Albenga",
+     "lat": 44.05,
+     "lon": 8.218
+    },
+    {
+     "name": "Ventimiglia",
+     "lat": 43.79,
+     "lon": 7.608
+    },
+    {
+     "name": "Chiavari",
+     "lat": 44.317,
+     "lon": 9.322
+    },
+    {
+     "name": "La Spezia",
+     "lat": 44.103,
+     "lon": 9.824
+    },
+    {
+     "name": "Bonifacio",
+     "lat": 41.387,
+     "lon": 9.159
+    },
+    {
+     "name": "Calvi",
+     "lat": 42.567,
+     "lon": 8.757
+    },
+    {
+     "name": "Bastia",
+     "lat": 42.7,
+     "lon": 9.45
+    },
+    {
+     "name": "Corte",
+     "lat": 42.306,
+     "lon": 9.15
+    },
+    {
+     "name": "Ajaccio",
+     "lat": 41.92,
+     "lon": 8.74
+    }
+   ],
+   "ruler": {
+    "name": "Governor Agostino Adorno",
+    "born": 1440,
+    "dynasty": "Adorno",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Republic under Milanese lordship since 1488; Agostino Adorno governs for the Sforza; Corsica is administered by the Bank of St George.",
+   "overlord": "milan",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "venice",
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Torn by the feuds of Adorno and Fregoso, Genoa has once again given itself to the Duke of Milan. Its bankers and the Casa di San Giorgio, which rules Corsica, remain among the great financiers of Europe.",
+    "de": "Zerrissen von den Fehden der Adorno und Fregoso, hat sich Genua wieder dem Herzog von Mailand unterstellt. Seine Bankiers und die Casa di San Giorgio, die Korsika regiert, gehören weiter zu den großen Finanziers Europas."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "florence",
+   "name": {
+    "en": "Republic of Florence",
+    "de": "Republik Florenz"
+   },
+   "short": {
+    "en": "Florence",
+    "de": "Florenz"
+   },
+   "adjective": {
+    "en": "Florentine",
+    "de": "florentinisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#b22a2a",
+   "capital": {
+    "name": "Florence",
+    "lat": 43.769,
+    "lon": 11.256
+   },
+   "holdings": [
+    {
+     "name": "Florence",
+     "lat": 43.769,
+     "lon": 11.256
+    },
+    {
+     "name": "Pistoia",
+     "lat": 43.933,
+     "lon": 10.917
+    },
+    {
+     "name": "Prato",
+     "lat": 43.88,
+     "lon": 11.097
+    },
+    {
+     "name": "San Miniato",
+     "lat": 43.68,
+     "lon": 10.85
+    },
+    {
+     "name": "Colle di Val d'Elsa",
+     "lat": 43.422,
+     "lon": 11.126
+    },
+    {
+     "name": "Firenzuola",
+     "lat": 44.12,
+     "lon": 11.38
+    },
+    {
+     "name": "Pisa",
+     "lat": 43.716,
+     "lon": 10.401
+    },
+    {
+     "name": "Livorno",
+     "lat": 43.55,
+     "lon": 10.31
+    },
+    {
+     "name": "Volterra",
+     "lat": 43.402,
+     "lon": 10.861
+    },
+    {
+     "name": "Arezzo",
+     "lat": 43.463,
+     "lon": 11.88
+    },
+    {
+     "name": "Cortona",
+     "lat": 43.27,
+     "lon": 11.99
+    },
+    {
+     "name": "Sansepolcro",
+     "lat": 43.572,
+     "lon": 12.14
+    },
+    {
+     "name": "Montepulciano",
+     "lat": 43.093,
+     "lon": 11.781
+    },
+    {
+     "name": "Pietrasanta",
+     "lat": 43.959,
+     "lon": 10.227
+    },
+    {
+     "name": "Sarzana",
+     "lat": 44.11,
+     "lon": 9.96
+    },
+    {
+     "name": "Castrocaro",
+     "lat": 44.17,
+     "lon": 11.93
+    }
+   ],
+   "ruler": {
+    "name": "Lorenzo de' Medici, the Magnificent",
+    "born": 1449,
+    "dynasty": "Medici",
+    "female": false,
+    "skills": [
+     4,
+     6,
+     1
+    ],
+    "traits": [
+     "cultured",
+     "shrewd",
+     "sickly"
+    ]
+   },
+   "heir": {
+    "name": "Piero de' Medici",
+    "born": 1472,
+    "dynasty": "Medici",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     2
+    ],
+    "traits": [
+     "proud",
+     "rash"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Republic ruled informally by the Medici through the Council of Seventy; Lorenzo, gravely ill with gout, dies on 8 April 1492; his son Giovanni has just been made a cardinal.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "milan",
+    "naples",
+    "papal_states"
+   ],
+   "rivals": [
+    "genoa",
+    "siena",
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "Lorenzo the Magnificent, the \"needle of the Italian scales\", has kept the peace of Italy since 1480 and made Florence the capital of the Renaissance. He is dying, and his arrogant son Piero is ill suited to succeed him while Savonarola thunders from the pulpit of San Marco.",
+    "de": "Lorenzo il Magnifico, das \"Zünglein an der Waage Italiens\", hat seit 1480 den Frieden Italiens gewahrt und Florenz zur Hauptstadt der Renaissance gemacht. Er liegt im Sterben, und sein hochmütiger Sohn Piero ist kaum geeignet, ihm zu folgen, während Savonarola von der Kanzel von San Marco donnert."
+   },
+   "coa": {
+    "blazon": "Argent, a fleur-de-lis florencée gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "siena",
+   "name": {
+    "en": "Republic of Siena",
+    "de": "Republik Siena"
+   },
+   "short": {
+    "en": "Siena",
+    "de": "Siena"
+   },
+   "adjective": {
+    "en": "Sienese",
+    "de": "sienesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#2b2b2b",
+   "capital": {
+    "name": "Siena",
+    "lat": 43.318,
+    "lon": 11.331
+   },
+   "holdings": [
+    {
+     "name": "Siena",
+     "lat": 43.318,
+     "lon": 11.331
+    },
+    {
+     "name": "Grosseto",
+     "lat": 42.76,
+     "lon": 11.113
+    },
+    {
+     "name": "Massa Marittima",
+     "lat": 43.049,
+     "lon": 10.889
+    },
+    {
+     "name": "Montalcino",
+     "lat": 43.058,
+     "lon": 11.49
+    },
+    {
+     "name": "Talamone",
+     "lat": 42.556,
+     "lon": 11.135
+    },
+    {
+     "name": "Orbetello",
+     "lat": 42.44,
+     "lon": 11.21
+    },
+    {
+     "name": "Chiusi",
+     "lat": 43.02,
+     "lon": 11.95
+    }
+   ],
+   "ruler": {
+    "name": "Balia of the Monte dei Nove",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "factional"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Republic; since 1487 the Noveschi faction led by Pandolfo Petrucci dominates.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Siena's republic is dominated by the Noveschi party and its rising strongman Pandolfo Petrucci. It fears Florentine expansion above all.",
+    "de": "Die Republik Siena wird von der Partei der Noveschi und ihrem aufsteigenden Machthaber Pandolfo Petrucci beherrscht. Sie fürchtet vor allem die florentinische Expansion."
+   },
+   "coa": {
+    "blazon": "Per fess argent and sable (the Balzana)",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "lucca",
+   "name": {
+    "en": "Commune of Lucca",
+    "de": "Kommune Lucca"
+   },
+   "short": {
+    "en": "Lucca",
+    "de": "Lucca"
+   },
+   "adjective": {
+    "en": "Lucchese",
+    "de": "lucchesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#d0d0d0",
+   "capital": {
+    "name": "Lucca",
+    "lat": 43.843,
+    "lon": 10.507
+   },
+   "holdings": [
+    {
+     "name": "Lucca",
+     "lat": 43.843,
+     "lon": 10.507
+    },
+    {
+     "name": "Camaiore",
+     "lat": 43.94,
+     "lon": 10.3
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Oligarchic republic of silk merchants.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Lucca is a small oligarchic republic living from silk weaving and wary of its Florentine neighbour.",
+    "de": "Lucca ist eine kleine oligarchische Republik, die von der Seidenweberei lebt und ihrem florentinischen Nachbarn misstraut."
+   },
+   "coa": {
+    "blazon": "Per fess argent and gules",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "piombino",
+   "name": {
+    "en": "Lordship of Piombino",
+    "de": "Herrschaft Piombino"
+   },
+   "short": {
+    "en": "Piombino",
+    "de": "Piombino"
+   },
+   "adjective": {
+    "en": "Piombinese",
+    "de": "piombinesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#5aa0a0",
+   "capital": {
+    "name": "Piombino",
+    "lat": 42.926,
+    "lon": 10.526
+   },
+   "holdings": [
+    {
+     "name": "Piombino",
+     "lat": 42.926,
+     "lon": 10.526
+    },
+    {
+     "name": "Portoferraio",
+     "lat": 42.81,
+     "lon": 10.32
+    },
+    {
+     "name": "Scarlino",
+     "lat": 42.91,
+     "lon": 10.85
+    }
+   ],
+   "ruler": {
+    "name": "Jacopo IV Appiani",
+    "born": 1460,
+    "dynasty": "Appiani",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Appiani, lords of Piombino and Elba since 1399.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Appiani hold the port of Piombino and the iron island of Elba.",
+    "de": "Die Appiani halten den Hafen Piombino und die Eiseninsel Elba."
+   },
+   "coa": {
+    "blazon": "Per fess Argent and Gules, a lozenge counterchanged",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "massa",
+   "name": {
+    "en": "Marquisate of Massa",
+    "de": "Markgrafschaft Massa"
+   },
+   "short": {
+    "en": "Massa",
+    "de": "Massa"
+   },
+   "adjective": {
+    "en": "Massese",
+    "de": "massesisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#80a060",
+   "capital": {
+    "name": "Massa",
+    "lat": 44.03,
+    "lon": 10.14
+   },
+   "holdings": [
+    {
+     "name": "Massa",
+     "lat": 44.03,
+     "lon": 10.14
+    },
+    {
+     "name": "Carrara",
+     "lat": 44.08,
+     "lon": 10.1
+    }
+   ],
+   "ruler": {
+    "name": "Alberico I Malaspina",
+    "born": 1450,
+    "dynasty": "Malaspina",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Malaspina, marquises of Massa since 1442 and of Carrara since 1473.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Malaspina of Massa own the marble quarries of Carrara.",
+    "de": "Die Malaspina von Massa besitzen die Marmorbrüche von Carrara."
+   },
+   "coa": {
+    "blazon": "Or a thorn-tree Vert",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "san_marino",
+   "name": {
+    "en": "Commune of San Marino",
+    "de": "Kommune San Marino"
+   },
+   "short": {
+    "en": "San Marino",
+    "de": "San Marino"
+   },
+   "adjective": {
+    "en": "Sammarinese",
+    "de": "san-marinesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#6fb4d8",
+   "capital": {
+    "name": "San Marino",
+    "lat": 43.936,
+    "lon": 12.447
+   },
+   "holdings": [
+    {
+     "name": "San Marino",
+     "lat": 43.936,
+     "lon": 12.447
+    }
+   ],
+   "ruler": {
+    "name": "Captains Regent",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ancient republic; its territory was enlarged in 1463.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The tiny mountain republic of San Marino keeps its liberty between Rimini and Urbino.",
+    "de": "Die winzige Bergrepublik San Marino bewahrt ihre Freiheit zwischen Rimini und Urbino."
+   },
+   "coa": {
+    "blazon": "Azure, three towers argent on three peaks vert",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "argent",
+      "count": 3
+     },
+     {
+      "type": "mountain",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mantua",
+   "name": {
+    "en": "Marquisate of Mantua",
+    "de": "Markgrafschaft Mantua"
+   },
+   "short": {
+    "en": "Mantua",
+    "de": "Mantua"
+   },
+   "adjective": {
+    "en": "Mantuan",
+    "de": "mantuanisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#e07b39",
+   "capital": {
+    "name": "Mantua",
+    "lat": 45.156,
+    "lon": 10.791
+   },
+   "holdings": [
+    {
+     "name": "Mantua",
+     "lat": 45.156,
+     "lon": 10.791
+    },
+    {
+     "name": "Viadana",
+     "lat": 44.93,
+     "lon": 10.52
+    },
+    {
+     "name": "Ostiglia",
+     "lat": 45.07,
+     "lon": 11.14
+    },
+    {
+     "name": "Gonzaga",
+     "lat": 44.95,
+     "lon": 10.82
+    }
+   ],
+   "ruler": {
+    "name": "Francesco II Gonzaga",
+    "born": 1466,
+    "dynasty": "Gonzaga",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave",
+     "lustful"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Isabella d'Este",
+    "born": 1474,
+    "dynasty": "Este",
+    "female": true,
+    "skills": [
+     5,
+     5,
+     0
+    ],
+    "traits": [
+     "cultured",
+     "ambitious"
+    ]
+   },
+   "dynasty_note": "House of Gonzaga, marquises since 1433; Francesco II (since 1484) married Isabella d'Este in 1490.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "ferrara",
+    "milan"
+   ],
+   "rivals": [
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Marquis Francesco Gonzaga is a famous condottiere, and his young wife Isabella d'Este is becoming the first lady of the Renaissance. Mantua lives from war contracts and its court.",
+    "de": "Markgraf Francesco Gonzaga ist ein berühmter Condottiere, und seine junge Gemahlin Isabella d'Este wird zur ersten Dame der Renaissance. Mantua lebt von Kriegsverträgen und seinem Hof."
+   },
+   "coa": {
+    "blazon": "Barry of six Or and sable",
+    "field": "or",
+    "division": "barry",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ferrara",
+   "name": {
+    "en": "Duchy of Ferrara and Modena",
+    "de": "Herzogtum Ferrara und Modena"
+   },
+   "short": {
+    "en": "Ferrara",
+    "de": "Ferrara"
+   },
+   "adjective": {
+    "en": "Ferrarese",
+    "de": "ferraresisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#ffffff",
+   "capital": {
+    "name": "Ferrara",
+    "lat": 44.836,
+    "lon": 11.62
+   },
+   "holdings": [
+    {
+     "name": "Ferrara",
+     "lat": 44.836,
+     "lon": 11.62
+    },
+    {
+     "name": "Modena",
+     "lat": 44.647,
+     "lon": 10.925
+    },
+    {
+     "name": "Reggio",
+     "lat": 44.698,
+     "lon": 10.631
+    },
+    {
+     "name": "Comacchio",
+     "lat": 44.694,
+     "lon": 12.183
+    },
+    {
+     "name": "Argenta",
+     "lat": 44.614,
+     "lon": 11.836
+    },
+    {
+     "name": "Castelnuovo di Garfagnana",
+     "lat": 44.11,
+     "lon": 10.41
+    },
+    {
+     "name": "Lugo",
+     "lat": 44.42,
+     "lon": 11.91
+    },
+    {
+     "name": "Finale Emilia",
+     "lat": 44.83,
+     "lon": 11.29
+    }
+   ],
+   "ruler": {
+    "name": "Ercole I d'Este",
+    "born": 1431,
+    "dynasty": "Este",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "builder"
+    ]
+   },
+   "heir": {
+    "name": "Alfonso d'Este",
+    "born": 1476,
+    "dynasty": "Este",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Eleonora of Naples",
+    "born": 1450,
+    "dynasty": "Trastámara",
+    "female": true,
+    "skills": [
+     4,
+     4,
+     0
+    ],
+    "traits": [
+     "shrewd"
+    ]
+   },
+   "dynasty_note": "House of Este; Ercole I (duke since 1471) lost the Polesine to Venice in the War of Ferrara (1482-84); Ferrara is a papal fief, Modena and Reggio imperial ones.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "milan",
+    "naples",
+    "mantua"
+   ],
+   "rivals": [
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Duke Ercole is rebuilding Ferrara as the first planned modern city (the Addizione Erculea) and presides over a brilliant musical court. His daughter Beatrice has just married Ludovico il Moro.",
+    "de": "Herzog Ercole baut Ferrara als erste planmäßige Stadt der Neuzeit aus (Addizione Erculea) und führt einen glänzenden Musikhof. Seine Tochter Beatrice hat eben Ludovico il Moro geheiratet."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle argent crowned Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mirandola",
+   "name": {
+    "en": "Lordship of Mirandola",
+    "de": "Herrschaft Mirandola"
+   },
+   "short": {
+    "en": "Mirandola",
+    "de": "Mirandola"
+   },
+   "adjective": {
+    "en": "Mirandolese",
+    "de": "mirandolesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#b0a0d0",
+   "capital": {
+    "name": "Mirandola",
+    "lat": 44.89,
+    "lon": 11.07
+   },
+   "holdings": [
+    {
+     "name": "Mirandola",
+     "lat": 44.89,
+     "lon": 11.07
+    },
+    {
+     "name": "Concordia sulla Secchia",
+     "lat": 44.91,
+     "lon": 10.99
+    }
+   ],
+   "ruler": {
+    "name": "Galeotto I Pico",
+    "born": 1442,
+    "dynasty": "Pico",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "quarrelsome"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Pico della Mirandola; Galeotto is the elder brother of the philosopher Giovanni Pico.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Pico family rules Mirandola, a fortress lordship between Modena and Mantua.",
+    "de": "Die Familie Pico regiert Mirandola, eine Festungsherrschaft zwischen Modena und Mantua."
+   },
+   "coa": {
+    "blazon": "Quarterly Or an eagle Sable and chequy",
+    "field": "or",
+    "division": "quarterly",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "montferrat",
+   "name": {
+    "en": "Marquisate of Montferrat",
+    "de": "Markgrafschaft Montferrat"
+   },
+   "short": {
+    "en": "Montferrat",
+    "de": "Montferrat"
+   },
+   "adjective": {
+    "en": "Montferratese",
+    "de": "montferratisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#d94848",
+   "capital": {
+    "name": "Casale",
+    "lat": 45.133,
+    "lon": 8.453
+   },
+   "holdings": [
+    {
+     "name": "Casale",
+     "lat": 45.133,
+     "lon": 8.453
+    },
+    {
+     "name": "Chivasso",
+     "lat": 45.191,
+     "lon": 7.889
+    },
+    {
+     "name": "Acqui",
+     "lat": 44.676,
+     "lon": 8.468
+    },
+    {
+     "name": "Trino",
+     "lat": 45.193,
+     "lon": 8.296
+    },
+    {
+     "name": "Alba",
+     "lat": 44.7,
+     "lon": 8.03
+    }
+   ],
+   "ruler": {
+    "name": "Boniface III",
+    "born": 1424,
+    "dynasty": "Palaiologos",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "old"
+    ]
+   },
+   "heir": {
+    "name": "William IX",
+    "born": 1486,
+    "dynasty": "Palaiologos",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": {
+    "name": "Maria of Serbia",
+    "born": 1466,
+    "dynasty": "Branković",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Palaiologos-Montferrat, a branch of the Byzantine imperial house; Boniface III (since 1483) married the Serbian princess Maria Branković.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "savoy",
+    "milan"
+   ],
+   "rivals": [
+    "saluzzo"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Palaiologan marquises of Montferrat rule from Casale between Savoy and Milan. Old Boniface has a young son by his Serbian wife.",
+    "de": "Die palaiologischen Markgrafen von Montferrat herrschen von Casale aus zwischen Savoyen und Mailand. Der alte Bonifaz hat von seiner serbischen Gemahlin einen kleinen Sohn."
+   },
+   "coa": {
+    "blazon": "Argent, a chief gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "saluzzo",
+   "name": {
+    "en": "Marquisate of Saluzzo",
+    "de": "Markgrafschaft Saluzzo"
+   },
+   "short": {
+    "en": "Saluzzo",
+    "de": "Saluzzo"
+   },
+   "adjective": {
+    "en": "Saluzzese",
+    "de": "saluzzisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#4a6fa0",
+   "capital": {
+    "name": "Saluzzo",
+    "lat": 44.645,
+    "lon": 7.49
+   },
+   "holdings": [
+    {
+     "name": "Saluzzo",
+     "lat": 44.645,
+     "lon": 7.49
+    },
+    {
+     "name": "Carmagnola",
+     "lat": 44.847,
+     "lon": 7.718
+    },
+    {
+     "name": "Dronero",
+     "lat": 44.466,
+     "lon": 7.364
+    },
+    {
+     "name": "Revello",
+     "lat": 44.65,
+     "lon": 7.39
+    }
+   ],
+   "ruler": {
+    "name": "Ludovico II",
+    "born": 1438,
+    "dynasty": "Del Vasto",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave",
+     "learned"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Aleramici del Vasto; Ludovico II (since 1475) is a French ally who fought off a Savoyard occupation (1487-90).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [
+    "savoy"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Marquis Ludovico II has just recovered Saluzzo after its occupation by Savoy and relies on France.",
+    "de": "Markgraf Ludwig II. hat Saluzzo eben nach der savoyischen Besetzung zurückgewonnen und stützt sich auf Frankreich."
+   },
+   "coa": {
+    "blazon": "Argent, a chief azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "monaco",
+   "name": {
+    "en": "Lordship of Monaco",
+    "de": "Herrschaft Monaco"
+   },
+   "short": {
+    "en": "Monaco",
+    "de": "Monaco"
+   },
+   "adjective": {
+    "en": "Monegasque",
+    "de": "monegassisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#e05050",
+   "capital": {
+    "name": "Monaco",
+    "lat": 43.731,
+    "lon": 7.42
+   },
+   "holdings": [
+    {
+     "name": "Monaco",
+     "lat": 43.731,
+     "lon": 7.42
+    }
+   ],
+   "ruler": {
+    "name": "Lambert Grimaldi",
+    "born": 1420,
+    "dynasty": "Grimaldi",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "cunning"
+    ]
+   },
+   "heir": {
+    "name": "Jean II",
+    "born": 1468,
+    "dynasty": "Grimaldi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Claudine Grimaldi",
+    "born": 1451,
+    "dynasty": "Grimaldi",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Grimaldi; Lambert has held the rock since 1458 through his wife Claudine.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Lambert Grimaldi holds the rock of Monaco with Menton and Roquebrune, balancing between France, Savoy and Genoa.",
+    "de": "Lambert Grimaldi hält den Felsen von Monaco mit Menton und Roquebrune und laviert zwischen Frankreich, Savoyen und Genua."
+   },
+   "coa": {
+    "blazon": "Fusily argent and gules",
+    "field": "argent",
+    "division": "chequy",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bologna",
+   "name": {
+    "en": "Lordship of Bologna",
+    "de": "Herrschaft Bologna"
+   },
+   "short": {
+    "en": "Bologna",
+    "de": "Bologna"
+   },
+   "adjective": {
+    "en": "Bolognese",
+    "de": "bolognesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#e8c547",
+   "capital": {
+    "name": "Bologna",
+    "lat": 44.494,
+    "lon": 11.343
+   },
+   "holdings": [
+    {
+     "name": "Bologna",
+     "lat": 44.494,
+     "lon": 11.343
+    },
+    {
+     "name": "Castel San Pietro",
+     "lat": 44.398,
+     "lon": 11.589
+    },
+    {
+     "name": "Cento",
+     "lat": 44.727,
+     "lon": 11.288
+    },
+    {
+     "name": "Budrio",
+     "lat": 44.54,
+     "lon": 11.53
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni II Bentivoglio",
+    "born": 1443,
+    "dynasty": "Bentivoglio",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "proud",
+     "cultured"
+    ]
+   },
+   "heir": {
+    "name": "Annibale II Bentivoglio",
+    "born": 1469,
+    "dynasty": "Bentivoglio",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Ginevra Sforza",
+    "born": 1440,
+    "dynasty": "Sforza",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "dynasty_note": "Bentivoglio signoria within the Papal States since 1463; Giovanni II rules with a papal legate and the Senate of Sixteen.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "milan",
+    "florence"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Giovanni Bentivoglio is the uncrowned lord of Bologna, a papal city with a famous university.",
+    "de": "Giovanni Bentivoglio ist der ungekrönte Herr Bolognas, einer päpstlichen Stadt mit berühmter Universität."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules (Bologna)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "rimini",
+   "name": {
+    "en": "Lordship of Rimini",
+    "de": "Herrschaft Rimini"
+   },
+   "short": {
+    "en": "Rimini",
+    "de": "Rimini"
+   },
+   "adjective": {
+    "en": "Malatesta",
+    "de": "malatestisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#3c8f5a",
+   "capital": {
+    "name": "Rimini",
+    "lat": 44.06,
+    "lon": 12.568
+   },
+   "holdings": [
+    {
+     "name": "Rimini",
+     "lat": 44.06,
+     "lon": 12.568
+    },
+    {
+     "name": "Santarcangelo",
+     "lat": 44.06,
+     "lon": 12.45
+    }
+   ],
+   "ruler": {
+    "name": "Pandolfo IV Malatesta",
+    "born": 1475,
+    "dynasty": "Malatesta",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     2
+    ],
+    "traits": [
+     "cruel",
+     "young"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Malatesta papal vicars; Pandolfetto has ruled since 1482, first under his mother's regency.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The last Malatesta of Rimini, the young and violent Pandolfo, clings to a shrunken lordship.",
+    "de": "Der letzte Malatesta von Rimini, der junge und gewalttätige Pandolfo, klammert sich an eine geschrumpfte Herrschaft."
+   },
+   "coa": {
+    "blazon": "Bendy chequy Or and gules on vert",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "pesaro",
+   "name": {
+    "en": "Lordship of Pesaro",
+    "de": "Herrschaft Pesaro"
+   },
+   "short": {
+    "en": "Pesaro",
+    "de": "Pesaro"
+   },
+   "adjective": {
+    "en": "Pesarese",
+    "de": "pesaresisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#4f7fc0",
+   "capital": {
+    "name": "Pesaro",
+    "lat": 43.91,
+    "lon": 12.913
+   },
+   "holdings": [
+    {
+     "name": "Pesaro",
+     "lat": 43.91,
+     "lon": 12.913
+    },
+    {
+     "name": "Gradara",
+     "lat": 43.94,
+     "lon": 12.77
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni Sforza",
+    "born": 1466,
+    "dynasty": "Sforza",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Sforza of Pesaro, papal vicars; Giovanni will marry Lucrezia Borgia in 1493.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "milan"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "A cadet line of the Sforza holds Pesaro on the Adriatic as papal vicars.",
+    "de": "Eine Nebenlinie der Sforza hält Pesaro an der Adria als päpstliche Vikare."
+   },
+   "coa": {
+    "blazon": "Azure a lion Or holding a quince",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "urbino",
+   "name": {
+    "en": "Duchy of Urbino",
+    "de": "Herzogtum Urbino"
+   },
+   "short": {
+    "en": "Urbino",
+    "de": "Urbino"
+   },
+   "adjective": {
+    "en": "Urbinate",
+    "de": "urbinatisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#5a6db8",
+   "capital": {
+    "name": "Urbino",
+    "lat": 43.726,
+    "lon": 12.637
+   },
+   "holdings": [
+    {
+     "name": "Urbino",
+     "lat": 43.726,
+     "lon": 12.637
+    },
+    {
+     "name": "Cagli",
+     "lat": 43.546,
+     "lon": 12.65
+    },
+    {
+     "name": "Gubbio",
+     "lat": 43.351,
+     "lon": 12.577
+    },
+    {
+     "name": "Fossombrone",
+     "lat": 43.69,
+     "lon": 12.81
+    },
+    {
+     "name": "San Leo",
+     "lat": 43.9,
+     "lon": 12.34
+    }
+   ],
+   "ruler": {
+    "name": "Guidobaldo da Montefeltro",
+    "born": 1472,
+    "dynasty": "Montefeltro",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "learned",
+     "sickly"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Elisabetta Gonzaga",
+    "born": 1471,
+    "dynasty": "Gonzaga",
+    "female": true,
+    "skills": [
+     4,
+     4,
+     0
+    ],
+    "traits": [
+     "cultured"
+    ]
+   },
+   "dynasty_note": "Montefeltro, dukes since 1474; Guidobaldo succeeded his father Federico, the great condottiere, in 1482.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Duke Guidobaldo and his wife Elisabetta Gonzaga keep the most refined court in Italy in Federico da Montefeltro's palace.",
+    "de": "Der junge Herzog Guidobaldo und seine Gemahlin Elisabetta Gonzaga führen im Palast Federicos da Montefeltro den feinsten Hof Italiens."
+   },
+   "coa": {
+    "blazon": "Bendy Or and azure, a chief Or with an eagle sable",
+    "field": "or",
+    "division": "bendy",
+    "field2": "azure",
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "forli",
+   "name": {
+    "en": "Lordship of Imola and Forlì",
+    "de": "Herrschaft Imola und Forlì"
+   },
+   "short": {
+    "en": "Forlì",
+    "de": "Forlì"
+   },
+   "adjective": {
+    "en": "Forlivese",
+    "de": "forlivesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#2f6b2f",
+   "capital": {
+    "name": "Forlì",
+    "lat": 44.222,
+    "lon": 12.041
+   },
+   "holdings": [
+    {
+     "name": "Forlì",
+     "lat": 44.222,
+     "lon": 12.041
+    },
+    {
+     "name": "Imola",
+     "lat": 44.35,
+     "lon": 11.71
+    },
+    {
+     "name": "Forlimpopoli",
+     "lat": 44.188,
+     "lon": 12.127
+    }
+   ],
+   "ruler": {
+    "name": "Ottaviano Riario",
+    "born": 1479,
+    "dynasty": "Riario",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Riario; after the murder of Girolamo Riario (1488) his widow Caterina Sforza (b. 1463) rules as regent for their son.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "milan"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Caterina Sforza, the \"tigress of Forlì\", holds Imola and Forlì for her son after avenging her husband's murder.",
+    "de": "Caterina Sforza, die \"Tigerin von Forlì\", hält Imola und Forlì für ihren Sohn, nachdem sie den Mord an ihrem Gemahl gerächt hat."
+   },
+   "coa": {
+    "blazon": "Per fess vert and Or, a lion counterchanged",
+    "field": "vert",
+    "division": "per_fess",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "faenza",
+   "name": {
+    "en": "Lordship of Faenza",
+    "de": "Herrschaft Faenza"
+   },
+   "short": {
+    "en": "Faenza",
+    "de": "Faenza"
+   },
+   "adjective": {
+    "en": "Faentine",
+    "de": "faentinisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#7aa0d0",
+   "capital": {
+    "name": "Faenza",
+    "lat": 44.285,
+    "lon": 11.883
+   },
+   "holdings": [
+    {
+     "name": "Faenza",
+     "lat": 44.285,
+     "lon": 11.883
+    },
+    {
+     "name": "Brisighella",
+     "lat": 44.22,
+     "lon": 11.77
+    }
+   ],
+   "ruler": {
+    "name": "Astorre III Manfredi",
+    "born": 1485,
+    "dynasty": "Manfredi",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Manfredi papal vicars; the child Astorre succeeded his murdered father Galeotto in 1488 under Florentine protection.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The boy lord Astorre Manfredi rules Faenza under the protection of Florence.",
+    "de": "Der Knabe Astorre Manfredi regiert Faenza unter dem Schutz von Florenz."
+   },
+   "coa": {
+    "blazon": "Azure, three bendlets argent",
+    "field": "azure",
+    "division": "bendy",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "camerino",
+   "name": {
+    "en": "Lordship of Camerino",
+    "de": "Herrschaft Camerino"
+   },
+   "short": {
+    "en": "Camerino",
+    "de": "Camerino"
+   },
+   "adjective": {
+    "en": "Camerinese",
+    "de": "camerinesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#8a5aa0",
+   "capital": {
+    "name": "Camerino",
+    "lat": 43.14,
+    "lon": 13.07
+   },
+   "holdings": [
+    {
+     "name": "Camerino",
+     "lat": 43.14,
+     "lon": 13.07
+    },
+    {
+     "name": "Tolentino",
+     "lat": 43.21,
+     "lon": 13.28
+    }
+   ],
+   "ruler": {
+    "name": "Giulio Cesare da Varano",
+    "born": 1434,
+    "dynasty": "Varano",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "cultured"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Da Varano papal vicars; Giulio Cesare has ruled since 1444.",
+   "overlord": "papal_states",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Varano lords of Camerino rule the upper Marche from their hill town.",
+    "de": "Die Varano regieren von ihrer Bergstadt Camerino aus die obere Mark."
+   },
+   "coa": {
+    "blazon": "Gules a cross Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "hospitallers",
+   "name": {
+    "en": "Knights Hospitaller of Rhodes",
+    "de": "Johanniter auf Rhodos"
+   },
+   "short": {
+    "en": "Rhodes",
+    "de": "Rhodos"
+   },
+   "adjective": {
+    "en": "Hospitaller",
+    "de": "johannitisch"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#1a1a1a",
+   "capital": {
+    "name": "Rhodes",
+    "lat": 36.444,
+    "lon": 28.224
+   },
+   "holdings": [
+    {
+     "name": "Rhodes",
+     "lat": 36.444,
+     "lon": 28.224
+    },
+    {
+     "name": "Lindos",
+     "lat": 36.092,
+     "lon": 28.086
+    },
+    {
+     "name": "Kos",
+     "lat": 36.893,
+     "lon": 27.288
+    },
+    {
+     "name": "Leros",
+     "lat": 37.15,
+     "lon": 26.85
+    },
+    {
+     "name": "Bodrum",
+     "lat": 37.035,
+     "lon": 27.43,
+     "outpost": true
+    }
+   ],
+   "ruler": {
+    "name": "Grand Master Pierre d'Aubusson",
+    "born": 1423,
+    "dynasty": "Aubusson",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     5
+    ],
+    "traits": [
+     "brave",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Order of St John; Pierre d'Aubusson, Grand Master since 1476 and cardinal since 1489, defended Rhodes against Mehmed II in 1480 and handed Prince Cem to the Pope.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "papal_states",
+    "venice"
+   ],
+   "rivals": [
+    "ottoman",
+    "mamluk"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Knights of St John repelled the great Ottoman siege of Rhodes in 1480. Grand Master d'Aubusson profits from guarding the Ottoman pretender Cem, for whom the Sultan pays.",
+    "de": "Die Johanniter wehrten 1480 die große osmanische Belagerung von Rhodos ab. Großmeister d'Aubusson profitiert von der Bewachung des osmanischen Thronanwärters Cem, für den der Sultan zahlt."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "archipelago",
+   "name": {
+    "en": "Duchy of the Archipelago",
+    "de": "Herzogtum Archipelagos"
+   },
+   "short": {
+    "en": "Naxos",
+    "de": "Naxos"
+   },
+   "adjective": {
+    "en": "Naxian",
+    "de": "naxisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#4ab0a0",
+   "capital": {
+    "name": "Naxos",
+    "lat": 37.105,
+    "lon": 25.376
+   },
+   "holdings": [
+    {
+     "name": "Naxos",
+     "lat": 37.105,
+     "lon": 25.376
+    },
+    {
+     "name": "Paros",
+     "lat": 37.085,
+     "lon": 25.15
+    },
+    {
+     "name": "Milos",
+     "lat": 36.725,
+     "lon": 24.43
+    },
+    {
+     "name": "Syros",
+     "lat": 37.444,
+     "lon": 24.942
+    },
+    {
+     "name": "Santorini",
+     "lat": 36.42,
+     "lon": 25.43
+    },
+    {
+     "name": "Ios",
+     "lat": 36.732,
+     "lon": 25.282
+    }
+   ],
+   "ruler": {
+    "name": "Giovanni III Crispo",
+    "born": 1450,
+    "dynasty": "Crispo",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Crispo dukes of the Archipelago under Venetian protection; Giovanni III reigns 1480-1494.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice"
+   ],
+   "rivals": [
+    "ottoman"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Latin Duchy of the Archipelago survives in the Cyclades under Venetian protection and Ottoman tribute.",
+    "de": "Das lateinische Herzogtum des Archipels überlebt in den Kykladen unter venezianischem Schutz und osmanischem Tribut."
+   },
+   "coa": {
+    "blazon": "Argent, a fess azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "chios",
+   "name": {
+    "en": "Maona of Chios",
+    "de": "Maona von Chios"
+   },
+   "short": {
+    "en": "Chios",
+    "de": "Chios"
+   },
+   "adjective": {
+    "en": "Chiot",
+    "de": "chiotisch"
+   },
+   "rank": "lordship",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#b0b0ff",
+   "capital": {
+    "name": "Chios",
+    "lat": 38.37,
+    "lon": 26.136
+   },
+   "holdings": [
+    {
+     "name": "Chios",
+     "lat": 38.37,
+     "lon": 26.136
+    }
+   ],
+   "ruler": {
+    "name": "Maona of the Giustiniani",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Genoese chartered company (Maona) ruling Chios; tributary to the Ottomans since 1455.",
+   "overlord": "ottoman",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Genoese Maona of the Giustiniani rules Chios and its mastic trade, paying tribute to the Sultan.",
+    "de": "Die genuesische Maona der Giustiniani regiert Chios und seinen Mastixhandel und zahlt dem Sultan Tribut."
+   },
+   "coa": {
+    "blazon": "Gules, a castle Or, a chief Or with an eagle sable",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "ragusa",
+   "name": {
+    "en": "Republic of Ragusa",
+    "de": "Republik Ragusa"
+   },
+   "short": {
+    "en": "Ragusa",
+    "de": "Ragusa"
+   },
+   "adjective": {
+    "en": "Ragusan",
+    "de": "ragusanisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "croatian",
+   "faith": "latin",
+   "color": "#5f9fd0",
+   "capital": {
+    "name": "Ragusa",
+    "lat": 42.641,
+    "lon": 18.108
+   },
+   "holdings": [
+    {
+     "name": "Ragusa",
+     "lat": 42.641,
+     "lon": 18.108
+    },
+    {
+     "name": "Ston",
+     "lat": 42.838,
+     "lon": 17.697
+    },
+    {
+     "name": "Lastovo",
+     "lat": 42.765,
+     "lon": 16.9
+    },
+    {
+     "name": "Cavtat",
+     "lat": 42.58,
+     "lon": 18.22
+    }
+   ],
+   "ruler": {
+    "name": "Rector and Great Council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Aristocratic merchant republic; tributary to the Ottoman sultan since 1458, formerly under Hungarian protection.",
+   "overlord": "ottoman",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "hungary",
+    "naples"
+   ],
+   "rivals": [
+    "venice"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Ragusa buys its freedom with tribute to the Sultan and trades across the Balkans and the Mediterranean. Its diplomats are among the best informed in Europe.",
+    "de": "Ragusa erkauft seine Freiheit mit Tribut an den Sultan und handelt über den Balkan und das Mittelmeer. Seine Diplomaten gehören zu den bestinformierten Europas."
+   },
+   "coa": {
+    "blazon": "Barry gules and argent",
+    "field": "gules",
+    "division": "barry",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "zeta",
+   "name": {
+    "en": "Principality of Zeta",
+    "de": "Fürstentum Zeta"
+   },
+   "short": {
+    "en": "Zeta",
+    "de": "Zeta"
+   },
+   "adjective": {
+    "en": "Zetan",
+    "de": "zetanisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "serbian",
+   "faith": "orthodox",
+   "color": "#a05a3a",
+   "capital": {
+    "name": "Cetinje",
+    "lat": 42.39,
+    "lon": 18.92
+   },
+   "holdings": [
+    {
+     "name": "Cetinje",
+     "lat": 42.39,
+     "lon": 18.92
+    },
+    {
+     "name": "Rijeka Crnojevića",
+     "lat": 42.355,
+     "lon": 19.02
+    },
+    {
+     "name": "Podgorica",
+     "lat": 42.44,
+     "lon": 19.26
+    }
+   ],
+   "ruler": {
+    "name": "Đurađ Crnojević",
+    "born": 1460,
+    "dynasty": "Crnojević",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "learned",
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Stefan Crnojević",
+    "born": 1465,
+    "dynasty": "Crnojević",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Elisabetta Erizzo",
+    "born": 1468,
+    "dynasty": "Erizzo",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Crnojević; Đurađ succeeded his father Ivan in 1490 and is about to found the first South Slav printing press at Cetinje (1493).",
+   "overlord": "ottoman",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "venice"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 5,
+   "summary": {
+    "en": "In the mountains above Kotor the Crnojević princes keep the last free Serbian lordship alive. Đurađ, married to a Venetian noblewoman, will soon print the first Cyrillic books in the Balkans.",
+    "de": "In den Bergen über Kotor halten die Crnojević die letzte freie serbische Herrschaft am Leben. Đurađ, mit einer venezianischen Adligen verheiratet, wird bald die ersten kyrillischen Bücher des Balkans drucken."
+   },
+   "coa": {
+    "blazon": "Gules a double-headed eagle Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "hungary",
+   "name": {
+    "en": "Kingdom of Hungary",
+    "de": "Königreich Ungarn"
+   },
+   "short": {
+    "en": "Hungary",
+    "de": "Ungarn"
+   },
+   "adjective": {
+    "en": "Hungarian",
+    "de": "ungarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "hungarian",
+   "faith": "latin",
+   "color": "#5a8a3a",
+   "capital": {
+    "name": "Buda",
+    "lat": 47.497,
+    "lon": 19.04
+   },
+   "holdings": [
+    {
+     "name": "Buda",
+     "lat": 47.497,
+     "lon": 19.04
+    },
+    {
+     "name": "Visegrád",
+     "lat": 47.785,
+     "lon": 18.97
+    },
+    {
+     "name": "Esztergom",
+     "lat": 47.786,
+     "lon": 18.74
+    },
+    {
+     "name": "Székesfehérvár",
+     "lat": 47.19,
+     "lon": 18.41
+    },
+    {
+     "name": "Pressburg",
+     "lat": 48.144,
+     "lon": 17.107
+    },
+    {
+     "name": "Nyitra",
+     "lat": 48.31,
+     "lon": 18.09
+    },
+    {
+     "name": "Trencsén",
+     "lat": 48.894,
+     "lon": 18.04
+    },
+    {
+     "name": "Zólyom",
+     "lat": 48.578,
+     "lon": 19.126
+    },
+    {
+     "name": "Lőcse",
+     "lat": 49.022,
+     "lon": 20.59
+    },
+    {
+     "name": "Kassa",
+     "lat": 48.72,
+     "lon": 21.258
+    },
+    {
+     "name": "Eger",
+     "lat": 47.902,
+     "lon": 20.377
+    },
+    {
+     "name": "Munkács",
+     "lat": 48.44,
+     "lon": 22.718
+    },
+    {
+     "name": "Szatmár",
+     "lat": 47.792,
+     "lon": 22.885
+    },
+    {
+     "name": "Máramarossziget",
+     "lat": 47.928,
+     "lon": 23.89
+    },
+    {
+     "name": "Várad",
+     "lat": 47.072,
+     "lon": 21.921
+    },
+    {
+     "name": "Szeged",
+     "lat": 46.253,
+     "lon": 20.148
+    },
+    {
+     "name": "Kalocsa",
+     "lat": 46.528,
+     "lon": 18.985
+    },
+    {
+     "name": "Temesvár",
+     "lat": 45.754,
+     "lon": 21.226
+    },
+    {
+     "name": "Szörény",
+     "lat": 44.632,
+     "lon": 22.656
+    },
+    {
+     "name": "Kolozsvár",
+     "lat": 46.77,
+     "lon": 23.59
+    },
+    {
+     "name": "Gyulafehérvár",
+     "lat": 46.07,
+     "lon": 23.58
+    },
+    {
+     "name": "Bistritz",
+     "lat": 47.133,
+     "lon": 24.5
+    },
+    {
+     "name": "Hermannstadt",
+     "lat": 45.793,
+     "lon": 24.152
+    },
+    {
+     "name": "Kronstadt",
+     "lat": 45.65,
+     "lon": 25.606
+    },
+    {
+     "name": "Győr",
+     "lat": 47.687,
+     "lon": 17.635
+    },
+    {
+     "name": "Sopron",
+     "lat": 47.685,
+     "lon": 16.59
+    },
+    {
+     "name": "Pécs",
+     "lat": 46.073,
+     "lon": 18.233
+    },
+    {
+     "name": "Pozsega",
+     "lat": 45.34,
+     "lon": 17.685
+    },
+    {
+     "name": "Zagreb",
+     "lat": 45.815,
+     "lon": 15.982
+    },
+    {
+     "name": "Varaždin",
+     "lat": 46.305,
+     "lon": 16.336
+    },
+    {
+     "name": "Bihać",
+     "lat": 44.817,
+     "lon": 15.87
+    },
+    {
+     "name": "Knin",
+     "lat": 44.041,
+     "lon": 16.199
+    },
+    {
+     "name": "Senj",
+     "lat": 44.99,
+     "lon": 14.905
+    },
+    {
+     "name": "Belgrade",
+     "lat": 44.82,
+     "lon": 20.46
+    },
+    {
+     "name": "Šabac",
+     "lat": 44.75,
+     "lon": 19.69
+    },
+    {
+     "name": "Jajce",
+     "lat": 44.341,
+     "lon": 17.27
+    },
+    {
+     "name": "Srebrenik",
+     "lat": 44.7,
+     "lon": 18.49
+    },
+    {
+     "name": "Lugos",
+     "lat": 45.69,
+     "lon": 21.9
+    },
+    {
+     "name": "Csanád",
+     "lat": 46.12,
+     "lon": 20.55
+    },
+    {
+     "name": "Debrecen",
+     "lat": 47.53,
+     "lon": 21.63
+    }
+   ],
+   "ruler": {
+    "name": "Vladislaus II",
+    "born": 1456,
+    "dynasty": "Jagiellon",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "kind",
+     "weak_willed",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Jagiellonian; King of Bohemia since 1471, elected King of Hungary in July 1490 after Matthias Corvinus' death; his secret marriage to Matthias' widow Beatrice of Naples is disputed and will be annulled.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "poland",
+    "bohemia"
+   ],
+   "rivals": [
+    "ottoman",
+    "austria"
+   ],
+   "claims_on": [
+    "austria"
+   ],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "The magnates elected Vladislaus precisely because he was weak: he is dismantling Matthias' Black Army and the royal revenues are collapsing. By the Peace of Pressburg he promised the succession to Maximilian should he die without a son, and the Ottoman border war is flaring up again.",
+    "de": "Die Magnaten wählten Wladislaw gerade wegen seiner Schwäche: Er löst die Schwarze Armee des Matthias auf, und die königlichen Einkünfte brechen ein. Im Frieden von Pressburg sagte er Maximilian die Nachfolge zu, falls er ohne Sohn stirbt, und der Grenzkrieg mit den Osmanen flammt wieder auf."
+   },
+   "coa": {
+    "blazon": "Per pale: barry gules and argent; azure semé-de-lis Or",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 6,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "moldavia",
+   "name": {
+    "en": "March of Moldavia",
+    "de": "Mark Moldau"
+   },
+   "short": {
+    "en": "Moldavia",
+    "de": "Moldau"
+   },
+   "adjective": {
+    "en": "Moldavian",
+    "de": "moldauisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "vlach",
+   "faith": "orthodox",
+   "color": "#c87a2a",
+   "capital": {
+    "name": "Suceava",
+    "lat": 47.65,
+    "lon": 26.25
+   },
+   "holdings": [
+    {
+     "name": "Suceava",
+     "lat": 47.65,
+     "lon": 26.25
+    },
+    {
+     "name": "Siret",
+     "lat": 47.953,
+     "lon": 26.067
+    },
+    {
+     "name": "Baia",
+     "lat": 47.421,
+     "lon": 26.221
+    },
+    {
+     "name": "Iași",
+     "lat": 47.16,
+     "lon": 27.59
+    },
+    {
+     "name": "Roman",
+     "lat": 46.92,
+     "lon": 26.92
+    },
+    {
+     "name": "Bârlad",
+     "lat": 46.23,
+     "lon": 27.67
+    },
+    {
+     "name": "Vaslui",
+     "lat": 46.64,
+     "lon": 27.73
+    },
+    {
+     "name": "Neamț",
+     "lat": 47.2,
+     "lon": 26.37
+    },
+    {
+     "name": "Hotin",
+     "lat": 48.49,
+     "lon": 26.49
+    },
+    {
+     "name": "Soroca",
+     "lat": 48.16,
+     "lon": 28.3
+    },
+    {
+     "name": "Orhei",
+     "lat": 47.38,
+     "lon": 28.82
+    },
+    {
+     "name": "Tighina",
+     "lat": 46.83,
+     "lon": 29.48
+    },
+    {
+     "name": "Galați",
+     "lat": 45.44,
+     "lon": 28.05
+    }
+   ],
+   "ruler": {
+    "name": "Stephen III the Great",
+    "born": 1433,
+    "dynasty": "Mușat",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     6
+    ],
+    "traits": [
+     "brave",
+     "pious",
+     "cruel"
+    ]
+   },
+   "heir": {
+    "name": "Alexandru",
+    "born": 1464,
+    "dynasty": "Mușat",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Maria Voichița of Wallachia",
+    "born": 1457,
+    "dynasty": "Basarab",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of Mușat (Bogdan-Mușat); Stephen has reigned since 1457; after losing Kilia and Cetatea Albă (1484) he pays tribute to the Porte and did homage to Casimir IV at Kolomyia (1485).",
+   "overlord": "ottoman",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "poland",
+    "hungary"
+   ],
+   "rivals": [
+    "ottoman",
+    "wallachia"
+   ],
+   "claims_on": [
+    "ottoman"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Stephen the Great, victor of Vaslui (1475), has fought Hungarians, Poles, Wallachians and Turks for 35 years and built a church for every victory. Since the loss of his Black Sea ports he pays tribute to Bayezid but waits for his chance.",
+    "de": "Stephan der Große, Sieger von Vaslui (1475), kämpft seit 35 Jahren gegen Ungarn, Polen, Walachen und Türken und baut für jeden Sieg eine Kirche. Seit dem Verlust seiner Schwarzmeerhäfen zahlt er Bayezid Tribut, wartet aber auf seine Gelegenheit."
+   },
+   "coa": {
+    "blazon": "Gules, an aurochs head Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bull_head",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "wallachia",
+   "name": {
+    "en": "Voivodeship of Wallachia",
+    "de": "Woiwodschaft Walachei"
+   },
+   "short": {
+    "en": "Wallachia",
+    "de": "Walachei"
+   },
+   "adjective": {
+    "en": "Wallachian",
+    "de": "walachisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "vlach",
+   "faith": "orthodox",
+   "color": "#d8c040",
+   "capital": {
+    "name": "Târgoviște",
+    "lat": 44.93,
+    "lon": 25.46
+   },
+   "holdings": [
+    {
+     "name": "Târgoviște",
+     "lat": 44.93,
+     "lon": 25.46
+    },
+    {
+     "name": "Curtea de Argeș",
+     "lat": 45.14,
+     "lon": 24.68
+    },
+    {
+     "name": "Câmpulung",
+     "lat": 45.27,
+     "lon": 25.05
+    },
+    {
+     "name": "Râmnic",
+     "lat": 45.1,
+     "lon": 24.37
+    },
+    {
+     "name": "Craiova",
+     "lat": 44.32,
+     "lon": 23.8
+    },
+    {
+     "name": "Brăila",
+     "lat": 45.27,
+     "lon": 27.96
+    },
+    {
+     "name": "Buzău",
+     "lat": 45.15,
+     "lon": 26.82
+    },
+    {
+     "name": "Bucharest",
+     "lat": 44.43,
+     "lon": 26.1
+    }
+   ],
+   "ruler": {
+    "name": "Vlad IV the Monk",
+    "born": 1425,
+    "dynasty": "Drăculești",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "pious",
+     "old"
+    ]
+   },
+   "heir": {
+    "name": "Radu the Great",
+    "born": 1467,
+    "dynasty": "Drăculești",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "consort": {
+    "name": "Maria Rada",
+    "born": 1440,
+    "dynasty": "",
+    "female": true,
+    "skills": [
+     1,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Basarab (Drăculești branch); Vlad the Monk, half-brother of Vlad the Impaler, was installed in 1482 with Ottoman support.",
+   "overlord": "ottoman",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "moldavia"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Vlad the Monk, a former cleric, rules Wallachia as a loyal tributary of the Sultan. The boyar factions and Moldavian raids keep the principality restless.",
+    "de": "Vlad der Mönch, ein ehemaliger Geistlicher, regiert die Walachei als treuer Tributär des Sultans. Bojarenparteien und moldauische Einfälle halten das Fürstentum unruhig."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or holding a cross",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}

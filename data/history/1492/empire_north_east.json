@@ -1,0 +1,5034 @@
+{
+ "region": "empire_north_east",
+ "year": 1492,
+ "date": "1492-01-01",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "New Cambridge Medieval History vol. VII",
+  "Putzger Historischer Weltatlas (Deutschland um 1490; Ostmitteleuropa)",
+  "G. Köbler, Historisches Lexikon der deutschen Länder",
+  "Historische Kommission für Schlesien, Geschichte Schlesiens vol. 1",
+  "F. Šmahel / J. Pánek & O. Tůma, A History of the Czech Lands",
+  "K. Blaschke, Geschichte Sachsens im Mittelalter (Leipzig partition 1485)",
+  "E. Gatz, Die Bischöfe des Heiligen Römischen Reiches 1448-1648",
+  "P. Dollinger, The German Hansa",
+  "Wikipedia articles on the respective states and rulers"
+ ],
+ "new_ids": [],
+ "notes": [
+  "Vladislaus II Jagiellon is King of Bohemia (since 1471) and of Hungary (since 1490) and resides at Buda; Bohemia is modelled as a personal union under Hungary.",
+  "Moravia, Silesia and the Lusatias, held for life by Matthias Corvinus under the Peace of Olomouc (1479), reverted to the Bohemian crown on his death in 1490.",
+  "Saxony: the Leipzig partition of 1485 divided the Wettin lands; the Ernestine electorate uses key 'saxony' (an elector key of the game), the Albertine duchy continues the 1356 key 'meissen'.",
+  "Pomerania was reunited under Bogislaw X in 1478; the 1356 key 'pomerania_wolgast' is kept for the united duchy.",
+  "Glogau was granted to the Polish prince John Albert in 1491 as compensation for renouncing the Hungarian crown."
+ ],
+ "states": [
+  {
+   "id": "bohemia",
+   "name": {
+    "en": "Kingdom of Bohemia",
+    "de": "Königreich Böhmen"
+   },
+   "short": {
+    "en": "Bohemia",
+    "de": "Böhmen"
+   },
+   "adjective": {
+    "en": "Bohemian",
+    "de": "böhmisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "czech",
+   "faith": "latin",
+   "color": "#c8a02a",
+   "capital": {
+    "name": "Prague",
+    "lat": 50.088,
+    "lon": 14.42
+   },
+   "holdings": [
+    {
+     "name": "Prague",
+     "lat": 50.088,
+     "lon": 14.42
+    },
+    {
+     "name": "Pilsen",
+     "lat": 49.747,
+     "lon": 13.378
+    },
+    {
+     "name": "Budweis",
+     "lat": 48.975,
+     "lon": 14.474
+    },
+    {
+     "name": "Kuttenberg",
+     "lat": 49.949,
+     "lon": 15.268
+    },
+    {
+     "name": "Königgrätz",
+     "lat": 50.209,
+     "lon": 15.833
+    },
+    {
+     "name": "Leitmeritz",
+     "lat": 50.534,
+     "lon": 14.131
+    },
+    {
+     "name": "Eger",
+     "lat": 50.08,
+     "lon": 12.374
+    },
+    {
+     "name": "Saaz",
+     "lat": 50.331,
+     "lon": 13.546
+    },
+    {
+     "name": "Tabor",
+     "lat": 49.414,
+     "lon": 14.658
+    },
+    {
+     "name": "Klattau",
+     "lat": 49.395,
+     "lon": 13.295
+    },
+    {
+     "name": "Jungbunzlau",
+     "lat": 50.411,
+     "lon": 14.906
+    },
+    {
+     "name": "Pardubitz",
+     "lat": 50.038,
+     "lon": 15.779
+    },
+    {
+     "name": "Krumau",
+     "lat": 48.811,
+     "lon": 14.315
+    },
+    {
+     "name": "Pisek",
+     "lat": 49.309,
+     "lon": 14.148
+    },
+    {
+     "name": "Brünn",
+     "lat": 49.195,
+     "lon": 16.608
+    },
+    {
+     "name": "Olmütz",
+     "lat": 49.594,
+     "lon": 17.251
+    },
+    {
+     "name": "Znaim",
+     "lat": 48.856,
+     "lon": 16.049
+    },
+    {
+     "name": "Iglau",
+     "lat": 49.396,
+     "lon": 15.591
+    },
+    {
+     "name": "Hradisch",
+     "lat": 49.069,
+     "lon": 17.46
+    },
+    {
+     "name": "Prerau",
+     "lat": 49.455,
+     "lon": 17.451
+    },
+    {
+     "name": "Nikolsburg",
+     "lat": 48.805,
+     "lon": 16.638
+    },
+    {
+     "name": "Mährisch Trübau",
+     "lat": 49.758,
+     "lon": 16.464
+    },
+    {
+     "name": "Bautzen",
+     "lat": 51.181,
+     "lon": 14.424
+    },
+    {
+     "name": "Görlitz",
+     "lat": 51.153,
+     "lon": 14.987
+    },
+    {
+     "name": "Zittau",
+     "lat": 50.896,
+     "lon": 14.807
+    },
+    {
+     "name": "Lauban",
+     "lat": 51.118,
+     "lon": 15.289
+    },
+    {
+     "name": "Kamenz",
+     "lat": 51.268,
+     "lon": 14.094
+    },
+    {
+     "name": "Löbau",
+     "lat": 51.096,
+     "lon": 14.668
+    },
+    {
+     "name": "Luckau",
+     "lat": 51.852,
+     "lon": 13.718
+    },
+    {
+     "name": "Guben",
+     "lat": 51.95,
+     "lon": 14.717
+    },
+    {
+     "name": "Lübben",
+     "lat": 51.942,
+     "lon": 13.893
+    },
+    {
+     "name": "Spremberg",
+     "lat": 51.571,
+     "lon": 14.379
+    },
+    {
+     "name": "Breslau",
+     "lat": 51.11,
+     "lon": 17.032
+    },
+    {
+     "name": "Namslau",
+     "lat": 51.074,
+     "lon": 17.718
+    },
+    {
+     "name": "Schweidnitz",
+     "lat": 50.845,
+     "lon": 16.489
+    },
+    {
+     "name": "Jauer",
+     "lat": 51.053,
+     "lon": 16.193
+    },
+    {
+     "name": "Hirschberg",
+     "lat": 50.903,
+     "lon": 15.734
+    },
+    {
+     "name": "Landeshut",
+     "lat": 50.789,
+     "lon": 16.034
+    },
+    {
+     "name": "Bunzlau",
+     "lat": 51.262,
+     "lon": 15.567
+    },
+    {
+     "name": "Löwenberg",
+     "lat": 51.112,
+     "lon": 15.582
+    },
+    {
+     "name": "Reichenbach",
+     "lat": 50.722,
+     "lon": 16.656
+    },
+    {
+     "name": "Striegau",
+     "lat": 50.959,
+     "lon": 16.344
+    }
+   ],
+   "ruler": {
+    "name": "Vladislaus II",
+    "born": 1456,
+    "dynasty": "Jagiellon",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "kind",
+     "weak_willed",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Jagiellonian; elected King of Bohemia in 1471 after George of Poděbrady, King of Hungary since 1490; his nickname \"Bene\" (very well) comes from his assent to whatever the estates ask.",
+   "overlord": "hungary",
+   "subject_type": "personal_union",
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "poland",
+    "lithuania"
+   ],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "The lands of the Bohemian crown are reunited under Vladislaus, who now lives in Buda and leaves Bohemia to its magnates and towns. The kingdom is split between Utraquist and Catholic estates, held together by the Compacts of Basel and the religious peace of Kutná Hora (1485).",
+    "de": "Die Länder der böhmischen Krone sind unter Wladislaw wiedervereint, der nun in Ofen lebt und Böhmen seinen Magnaten und Städten überlässt. Das Königreich ist in utraquistische und katholische Stände gespalten, zusammengehalten von den Basler Kompaktaten und dem Kuttenberger Religionsfrieden (1485)."
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant double-queued argent crowned or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "liegnitz",
+   "name": {
+    "en": "Duchy of Liegnitz-Brieg",
+    "de": "Herzogtum Liegnitz-Brieg"
+   },
+   "short": {
+    "en": "Liegnitz",
+    "de": "Liegnitz"
+   },
+   "adjective": {
+    "en": "Liegnitz",
+    "de": "liegnitzisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#8c4a2f",
+   "capital": {
+    "name": "Liegnitz",
+    "lat": 51.207,
+    "lon": 16.155
+   },
+   "holdings": [
+    {
+     "name": "Liegnitz",
+     "lat": 51.207,
+     "lon": 16.155
+    },
+    {
+     "name": "Goldberg",
+     "lat": 51.042,
+     "lon": 15.92
+    },
+    {
+     "name": "Haynau",
+     "lat": 51.198,
+     "lon": 15.933
+    },
+    {
+     "name": "Lüben",
+     "lat": 51.4,
+     "lon": 16.201
+    },
+    {
+     "name": "Brieg",
+     "lat": 50.861,
+     "lon": 17.468
+    },
+    {
+     "name": "Ohlau",
+     "lat": 50.946,
+     "lon": 17.297
+    },
+    {
+     "name": "Strehlen",
+     "lat": 50.722,
+     "lon": 17.064
+    }
+   ],
+   "ruler": {
+    "name": "Frederick II",
+    "born": 1480,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "heir": {
+    "name": "George I",
+    "born": 1481,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Silesian Piasts; Frederick II and his brothers reign under the regency of their mother Ludmila of Poděbrady, who holds Brieg and Ohlau as her dower.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "muensterberg"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Piast duchy of Liegnitz and Brieg is ruled by the dowager Ludmila of Poděbrady for her young sons. Frederick II will make it one of the leading Silesian principalities.",
+    "de": "Das piastische Herzogtum Liegnitz-Brieg wird von der Herzoginwitwe Ludmilla von Podiebrad für ihre jungen Söhne regiert. Friedrich II. wird es zu einem der führenden schlesischen Fürstentümer machen."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "oels",
+   "name": {
+    "en": "Duchy of Oels",
+    "de": "Herzogtum Oels"
+   },
+   "short": {
+    "en": "Oels",
+    "de": "Oels"
+   },
+   "adjective": {
+    "en": "Oels",
+    "de": "oelsnisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#5a6e2f",
+   "capital": {
+    "name": "Oels",
+    "lat": 51.209,
+    "lon": 17.39
+   },
+   "holdings": [
+    {
+     "name": "Oels",
+     "lat": 51.209,
+     "lon": 17.39
+    },
+    {
+     "name": "Trebnitz",
+     "lat": 51.309,
+     "lon": 17.064
+    },
+    {
+     "name": "Groß Wartenberg",
+     "lat": 51.32,
+     "lon": 17.72
+    },
+    {
+     "name": "Wohlau",
+     "lat": 51.34,
+     "lon": 16.63
+    },
+    {
+     "name": "Steinau",
+     "lat": 51.403,
+     "lon": 16.437
+    }
+   ],
+   "ruler": {
+    "name": "Konrad X the White",
+    "born": 1420,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "old"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Silesian Piasts of Oels; Konrad X, deposed by Matthias Corvinus in 1489 and restored in 1490, is the last of his line (d. 1492).",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The old Piast duke Konrad the White has recovered his duchy after Matthias' death. With him, the Oels line will die out.",
+    "de": "Der alte Piastenherzog Konrad der Weiße hat sein Herzogtum nach dem Tod des Matthias zurückerhalten. Mit ihm wird die Linie Oels aussterben."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muensterberg",
+   "name": {
+    "en": "Duchy of Münsterberg and County of Glatz",
+    "de": "Herzogtum Münsterberg und Grafschaft Glatz"
+   },
+   "short": {
+    "en": "Münsterberg",
+    "de": "Münsterberg"
+   },
+   "adjective": {
+    "en": "Münsterberg",
+    "de": "münsterbergisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#965a73",
+   "capital": {
+    "name": "Glatz",
+    "lat": 50.437,
+    "lon": 16.656
+   },
+   "holdings": [
+    {
+     "name": "Glatz",
+     "lat": 50.437,
+     "lon": 16.656
+    },
+    {
+     "name": "Münsterberg",
+     "lat": 50.567,
+     "lon": 17.025
+    },
+    {
+     "name": "Frankenstein",
+     "lat": 50.59,
+     "lon": 16.81
+    }
+   ],
+   "ruler": {
+    "name": "Henry the Elder",
+    "born": 1448,
+    "dynasty": "Poděbrady",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Albert",
+    "born": 1468,
+    "dynasty": "Poděbrady",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Ursula of Brandenburg",
+    "born": 1450,
+    "dynasty": "Hohenzollern",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Poděbrady, sons of King George; Henry the Elder holds Münsterberg, Frankenstein and the County of Glatz.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "liegnitz",
+    "meissen"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "The son of the Hussite king George of Poděbrady holds the County of Glatz and Münsterberg. His family is linked by marriage to the Wettins and the Hohenzollern.",
+    "de": "Der Sohn des Hussitenkönigs Georg von Podiebrad hält die Grafschaft Glatz und Münsterberg. Seine Familie ist mit Wettinern und Hohenzollern verschwägert."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable, impaling chequy",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "glogau",
+   "name": {
+    "en": "Duchy of Glogau",
+    "de": "Herzogtum Glogau"
+   },
+   "short": {
+    "en": "Glogau",
+    "de": "Glogau"
+   },
+   "adjective": {
+    "en": "Glogau",
+    "de": "glogauisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#6b5a2a",
+   "capital": {
+    "name": "Glogau",
+    "lat": 51.663,
+    "lon": 16.085
+   },
+   "holdings": [
+    {
+     "name": "Glogau",
+     "lat": 51.663,
+     "lon": 16.085
+    },
+    {
+     "name": "Freystadt",
+     "lat": 51.72,
+     "lon": 15.53
+    },
+    {
+     "name": "Sprottau",
+     "lat": 51.567,
+     "lon": 15.555
+    },
+    {
+     "name": "Guhrau",
+     "lat": 51.66,
+     "lon": 16.53
+    }
+   ],
+   "ruler": {
+    "name": "John Albert",
+    "born": 1459,
+    "dynasty": "Jagiellon",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Jagiellonian; Prince John Albert of Poland, defeated in his bid for the Hungarian crown, was granted Glogau by his brother Vladislaus in 1491.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "poland"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Prince John Albert holds Glogau as a consolation for the Hungarian crown he failed to win. He is his father's chosen successor in Poland.",
+    "de": "Prinz Johann Albrecht hält Glogau als Trostpreis für die verfehlte ungarische Krone. Er ist der vom Vater erwählte Nachfolger in Polen."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "teschen",
+   "name": {
+    "en": "Duchy of Teschen",
+    "de": "Herzogtum Teschen"
+   },
+   "short": {
+    "en": "Teschen",
+    "de": "Teschen"
+   },
+   "adjective": {
+    "en": "Teschen",
+    "de": "teschnisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#2a7f6b",
+   "capital": {
+    "name": "Teschen",
+    "lat": 49.75,
+    "lon": 18.632
+   },
+   "holdings": [
+    {
+     "name": "Teschen",
+     "lat": 49.75,
+     "lon": 18.632
+    },
+    {
+     "name": "Bielitz",
+     "lat": 49.822,
+     "lon": 19.045
+    },
+    {
+     "name": "Freistadt",
+     "lat": 49.874,
+     "lon": 18.425
+    },
+    {
+     "name": "Friedek",
+     "lat": 49.684,
+     "lon": 18.351
+    }
+   ],
+   "ruler": {
+    "name": "Casimir II",
+    "born": 1449,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "shrewd"
+    ]
+   },
+   "heir": {
+    "name": "Wenceslaus",
+    "born": 1488,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": {
+    "name": "Johanna of Poděbrady",
+    "born": 1463,
+    "dynasty": "Poděbrady",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Silesian Piasts of Teschen; Casimir II (since 1477) is a leading statesman of the Bohemian crown lands.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Duke Casimir II of Teschen is one of the most influential princes of Silesia and a councillor of King Vladislaus.",
+    "de": "Herzog Kasimir II. von Teschen ist einer der einflussreichsten Fürsten Schlesiens und Rat König Wladislaws."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "oppeln",
+   "name": {
+    "en": "Duchy of Oppeln",
+    "de": "Herzogtum Oppeln"
+   },
+   "short": {
+    "en": "Oppeln",
+    "de": "Oppeln"
+   },
+   "adjective": {
+    "en": "Oppeln",
+    "de": "oppelnsch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#2f6b8c",
+   "capital": {
+    "name": "Oppeln",
+    "lat": 50.672,
+    "lon": 17.926
+   },
+   "holdings": [
+    {
+     "name": "Oppeln",
+     "lat": 50.672,
+     "lon": 17.926
+    },
+    {
+     "name": "Lublinitz",
+     "lat": 50.669,
+     "lon": 18.684
+    },
+    {
+     "name": "Rosenberg",
+     "lat": 50.896,
+     "lon": 18.418
+    },
+    {
+     "name": "Krappitz",
+     "lat": 50.476,
+     "lon": 17.979
+    },
+    {
+     "name": "Falkenberg",
+     "lat": 50.611,
+     "lon": 17.622
+    },
+    {
+     "name": "Groß Strehlitz",
+     "lat": 50.513,
+     "lon": 18.301
+    },
+    {
+     "name": "Oberglogau",
+     "lat": 50.35,
+     "lon": 17.84
+    }
+   ],
+   "ruler": {
+    "name": "John II the Good",
+    "born": 1460,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "just",
+     "frugal"
+    ]
+   },
+   "heir": {
+    "name": "Nicholas II",
+    "born": 1462,
+    "dynasty": "Silesian Piast",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "rash"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Silesian Piasts of Oppeln; John the Good (since 1476) rules with his brother Nicholas and is gathering the Upper Silesian duchies.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "John the Good, last great Piast of Upper Silesia, is reuniting the Oppeln lands by purchase and inheritance.",
+    "de": "Johann der Gute, der letzte große Piast Oberschlesiens, vereinigt die Oppelner Lande durch Kauf und Erbschaft."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ratibor",
+   "name": {
+    "en": "Duchy of Ratibor",
+    "de": "Herzogtum Ratibor"
+   },
+   "short": {
+    "en": "Ratibor",
+    "de": "Ratibor"
+   },
+   "adjective": {
+    "en": "Ratibor",
+    "de": "ratiborisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#3a7aa0",
+   "capital": {
+    "name": "Ratibor",
+    "lat": 50.092,
+    "lon": 18.219
+   },
+   "holdings": [
+    {
+     "name": "Ratibor",
+     "lat": 50.092,
+     "lon": 18.219
+    },
+    {
+     "name": "Rybnik",
+     "lat": 50.09,
+     "lon": 18.54
+    }
+   ],
+   "ruler": {
+    "name": "John V",
+    "born": 1446,
+    "dynasty": "Přemyslid (Opava)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Opava branch of the Přemyslids; John V has ruled Ratibor since 1456.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "A last branch of the old Bohemian royal house rules the small Oder duchy of Ratibor.",
+    "de": "Ein letzter Zweig des alten böhmischen Königshauses regiert das kleine Oderherzogtum Ratibor."
+   },
+   "coa": {
+    "blazon": "Per pale Azure an eagle Or and Gules a half-eagle Argent",
+    "field": "azure",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "troppau",
+   "name": {
+    "en": "Duchy of Troppau and Ratibor",
+    "de": "Herzogtum Troppau und Ratibor"
+   },
+   "short": {
+    "en": "Troppau",
+    "de": "Troppau"
+   },
+   "adjective": {
+    "en": "Troppau",
+    "de": "troppauisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "czech",
+   "faith": "latin",
+   "color": "#9c3a3a",
+   "capital": {
+    "name": "Troppau",
+    "lat": 49.938,
+    "lon": 17.903
+   },
+   "holdings": [
+    {
+     "name": "Troppau",
+     "lat": 49.938,
+     "lon": 17.903
+    },
+    {
+     "name": "Freudenthal",
+     "lat": 49.988,
+     "lon": 17.465
+    },
+    {
+     "name": "Hultschin",
+     "lat": 49.954,
+     "lon": 18.225
+    },
+    {
+     "name": "Leobschütz",
+     "lat": 50.2,
+     "lon": 17.82
+    }
+   ],
+   "ruler": {
+    "name": "John Corvinus",
+    "born": 1473,
+    "dynasty": "Hunyadi",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "kind",
+     "weak_willed"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hunyadi; the illegitimate son of Matthias Corvinus received Troppau in 1485; he lost the royal election of 1490 and submitted to Vladislaus.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [
+    "hungary"
+   ],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "John Corvinus, the natural son of King Matthias, keeps Troppau and his Hungarian estates after failing to win his father's crown.",
+    "de": "Johann Corvinus, der natürliche Sohn König Matthias', behält Troppau und seine ungarischen Güter, nachdem er die Krone seines Vaters nicht gewinnen konnte."
+   },
+   "coa": {
+    "blazon": "Per pale gules and argent",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "breslau_bishopric",
+   "name": {
+    "en": "Prince-Bishopric of Breslau (Neisse-Ottmachau)",
+    "de": "Fürstbistum Breslau (Neisse-Ottmachau)"
+   },
+   "short": {
+    "en": "Neisse",
+    "de": "Neisse"
+   },
+   "adjective": {
+    "en": "Breslau episcopal",
+    "de": "fürstbischöflich breslauisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#d8d0b0",
+   "capital": {
+    "name": "Neisse",
+    "lat": 50.473,
+    "lon": 17.334
+   },
+   "holdings": [
+    {
+     "name": "Neisse",
+     "lat": 50.473,
+     "lon": 17.334
+    },
+    {
+     "name": "Ziegenhals",
+     "lat": 50.327,
+     "lon": 17.38
+    },
+    {
+     "name": "Ottmachau",
+     "lat": 50.46,
+     "lon": 17.17
+    },
+    {
+     "name": "Grottkau",
+     "lat": 50.7,
+     "lon": 17.38
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Johann Roth",
+    "born": 1426,
+    "dynasty": "Roth",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     1
+    ],
+    "traits": [
+     "learned",
+     "stern"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric of Breslau (Duchy of Neisse); Johann IV Roth, humanist bishop 1482-1506.",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 5,
+   "summary": {
+    "en": "The bishops of Breslau rule the Duchy of Neisse as Silesian princes. Bishop Johann Roth is a humanist and a reformer of his clergy.",
+    "de": "Die Bischöfe von Breslau herrschen als schlesische Fürsten über das Neisser Land. Bischof Johann Roth ist Humanist und Reformer seines Klerus."
+   },
+   "coa": {
+    "blazon": "Argent, six fleurs-de-lis azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "azure",
+      "count": 6,
+      "arrangement": "3-2-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "saxony",
+   "name": {
+    "en": "Electorate of Saxony",
+    "de": "Kurfürstentum Sachsen"
+   },
+   "short": {
+    "en": "Saxony",
+    "de": "Kursachsen"
+   },
+   "adjective": {
+    "en": "Saxon",
+    "de": "sächsisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#3a8f3a",
+   "capital": {
+    "name": "Wittenberg",
+    "lat": 51.866,
+    "lon": 12.646
+   },
+   "holdings": [
+    {
+     "name": "Wittenberg",
+     "lat": 51.866,
+     "lon": 12.646
+    },
+    {
+     "name": "Belzig",
+     "lat": 52.142,
+     "lon": 12.593
+    },
+    {
+     "name": "Herzberg",
+     "lat": 51.69,
+     "lon": 13.233
+    },
+    {
+     "name": "Torgau",
+     "lat": 51.56,
+     "lon": 13.005
+    },
+    {
+     "name": "Altenburg",
+     "lat": 50.985,
+     "lon": 12.434
+    },
+    {
+     "name": "Zwickau",
+     "lat": 50.72,
+     "lon": 12.49
+    },
+    {
+     "name": "Weimar",
+     "lat": 50.979,
+     "lon": 11.329
+    },
+    {
+     "name": "Gotha",
+     "lat": 50.948,
+     "lon": 10.702
+    },
+    {
+     "name": "Eisenach",
+     "lat": 50.975,
+     "lon": 10.32
+    },
+    {
+     "name": "Coburg",
+     "lat": 50.258,
+     "lon": 10.965
+    },
+    {
+     "name": "Plauen",
+     "lat": 50.495,
+     "lon": 12.137
+    },
+    {
+     "name": "Weida",
+     "lat": 50.775,
+     "lon": 12.064
+    },
+    {
+     "name": "Schleiz",
+     "lat": 50.578,
+     "lon": 11.81
+    },
+    {
+     "name": "Saalfeld",
+     "lat": 50.65,
+     "lon": 11.36
+    },
+    {
+     "name": "Jena",
+     "lat": 50.93,
+     "lon": 11.59
+    },
+    {
+     "name": "Grimma",
+     "lat": 51.236,
+     "lon": 12.725
+    },
+    {
+     "name": "Liebenwerda",
+     "lat": 51.46,
+     "lon": 13.4
+    }
+   ],
+   "ruler": {
+    "name": "Frederick III the Wise",
+    "born": 1463,
+    "dynasty": "Wettin (Ernestine)",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     2
+    ],
+    "traits": [
+     "shrewd",
+     "cautious",
+     "learned"
+    ]
+   },
+   "heir": {
+    "name": "John the Steadfast",
+    "born": 1468,
+    "dynasty": "Wettin (Ernestine)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Ernestine Wettins; Frederick the Wise (elector since 1486) rules jointly with his brother John; the Leipzig partition of 1485 gave them the electoral circle, Thuringia and the Vogtland.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "meissen"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Frederick the Wise is a careful, pious prince and one of the pillars of imperial reform. His lands stretch from Wittenberg on the Elbe across Thuringia to Coburg.",
+    "de": "Friedrich der Weise ist ein vorsichtiger, frommer Fürst und eine Säule der Reichsreform. Seine Lande reichen von Wittenberg an der Elbe über Thüringen bis Coburg."
+   },
+   "coa": {
+    "blazon": "Barry of ten sable and or, a crancelin vert in bend",
+    "field": "sable",
+    "division": "barry",
+    "field2": "or",
+    "ordinary": "bend",
+    "ordinary_tincture": "vert",
+    "charges": []
+   }
+  },
+  {
+   "id": "meissen",
+   "name": {
+    "en": "Duchy of Saxony (Albertine)",
+    "de": "Herzogtum Sachsen (albertinisch)"
+   },
+   "short": {
+    "en": "Albertine Saxony",
+    "de": "Herzogtum Sachsen"
+   },
+   "adjective": {
+    "en": "Albertine",
+    "de": "albertinisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#e0d040",
+   "capital": {
+    "name": "Dresden",
+    "lat": 51.05,
+    "lon": 13.738
+   },
+   "holdings": [
+    {
+     "name": "Dresden",
+     "lat": 51.05,
+     "lon": 13.738
+    },
+    {
+     "name": "Meissen",
+     "lat": 51.163,
+     "lon": 13.473
+    },
+    {
+     "name": "Leipzig",
+     "lat": 51.34,
+     "lon": 12.375
+    },
+    {
+     "name": "Freiberg",
+     "lat": 50.912,
+     "lon": 13.342
+    },
+    {
+     "name": "Großenhain",
+     "lat": 51.29,
+     "lon": 13.532
+    },
+    {
+     "name": "Rochlitz",
+     "lat": 51.046,
+     "lon": 12.802
+    },
+    {
+     "name": "Weißenfels",
+     "lat": 51.2,
+     "lon": 11.969
+    },
+    {
+     "name": "Sangerhausen",
+     "lat": 51.472,
+     "lon": 11.297
+    },
+    {
+     "name": "Langensalza",
+     "lat": 51.109,
+     "lon": 10.646
+    },
+    {
+     "name": "Eckartsberga",
+     "lat": 51.124,
+     "lon": 11.561
+    },
+    {
+     "name": "Pirna",
+     "lat": 50.96,
+     "lon": 13.94
+    },
+    {
+     "name": "Chemnitz",
+     "lat": 50.83,
+     "lon": 12.92
+    },
+    {
+     "name": "Sagan",
+     "lat": 51.62,
+     "lon": 15.32
+    },
+    {
+     "name": "Priebus",
+     "lat": 51.45,
+     "lon": 14.95
+    }
+   ],
+   "ruler": {
+    "name": "Albert the Bold",
+    "born": 1443,
+    "dynasty": "Wettin (Albertine)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     5
+    ],
+    "traits": [
+     "brave",
+     "loyal"
+    ]
+   },
+   "heir": {
+    "name": "George the Bearded",
+    "born": 1471,
+    "dynasty": "Wettin (Albertine)",
+    "female": false,
+    "skills": [
+     5,
+     4,
+     2
+    ],
+    "traits": [
+     "pious",
+     "diligent"
+    ]
+   },
+   "consort": {
+    "name": "Sidonie of Poděbrady",
+    "born": 1449,
+    "dynasty": "Poděbrady",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "Albertine Wettins; Albert the Bold, imperial field marshal and Maximilian's stadtholder in the Netherlands, leaves the government at Dresden to his son George.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "saxony",
+    "burgundy",
+    "austria"
+   ],
+   "rivals": [],
+   "claims_on": [
+    "frisia"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Albert the Bold is Maximilian's best general, currently crushing the Flemish rebels, while his son George governs Meissen with its silver mines at Freiberg and Schneeberg. Albert hopes to be rewarded with Friesland.",
+    "de": "Albrecht der Beherzte ist Maximilians bester Feldherr und schlägt eben die flämischen Aufständischen nieder, während sein Sohn Georg Meißen mit den Silberbergwerken von Freiberg und Schneeberg regiert. Albrecht hofft, mit Friesland belohnt zu werden."
+   },
+   "coa": {
+    "blazon": "Or, a lion rampant sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "saxe_lauenburg",
+   "name": {
+    "en": "Duchy of Saxe-Lauenburg",
+    "de": "Herzogtum Sachsen-Lauenburg"
+   },
+   "short": {
+    "en": "Lauenburg",
+    "de": "Lauenburg"
+   },
+   "adjective": {
+    "en": "Lauenburg",
+    "de": "lauenburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#5fa35f",
+   "capital": {
+    "name": "Ratzeburg",
+    "lat": 53.7,
+    "lon": 10.757
+   },
+   "holdings": [
+    {
+     "name": "Ratzeburg",
+     "lat": 53.7,
+     "lon": 10.757
+    },
+    {
+     "name": "Lauenburg",
+     "lat": 53.373,
+     "lon": 10.561
+    },
+    {
+     "name": "Otterndorf",
+     "lat": 53.809,
+     "lon": 8.899
+    }
+   ],
+   "ruler": {
+    "name": "John V",
+    "born": 1439,
+    "dynasty": "Ascania",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Magnus",
+    "born": 1470,
+    "dynasty": "Ascania",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Dorothea of Brandenburg",
+    "born": 1446,
+    "dynasty": "Hohenzollern",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Ascanians; John V (since 1463) still claims the Saxon electoral dignity lost in 1423.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [
+    "saxony"
+   ],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The last Ascanian dukes of Saxony hold Lauenburg on the lower Elbe and the Land of Hadeln, and have never forgotten the electorate they lost to the Wettins.",
+    "de": "Die letzten askanischen Sachsenherzöge halten Lauenburg an der Niederelbe und das Land Hadeln und haben die an die Wettiner verlorene Kurwürde nie vergessen."
+   },
+   "coa": {
+    "blazon": "Barry of ten sable and or, a crancelin vert in bend",
+    "field": "or",
+    "division": "barry",
+    "field2": "sable",
+    "ordinary": "bend",
+    "ordinary_tincture": "vert",
+    "charges": []
+   }
+  },
+  {
+   "id": "anhalt_dessau",
+   "name": {
+    "en": "Principality of Anhalt-Dessau",
+    "de": "Fürstentum Anhalt-Dessau"
+   },
+   "short": {
+    "en": "Anhalt-Dessau",
+    "de": "Anhalt-Dessau"
+   },
+   "adjective": {
+    "en": "Anhalt",
+    "de": "anhaltisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#4a7a3a",
+   "capital": {
+    "name": "Dessau",
+    "lat": 51.833,
+    "lon": 12.246
+   },
+   "holdings": [
+    {
+     "name": "Dessau",
+     "lat": 51.833,
+     "lon": 12.246
+    },
+    {
+     "name": "Zerbst",
+     "lat": 51.966,
+     "lon": 12.085
+    }
+   ],
+   "ruler": {
+    "name": "Ernest",
+    "born": 1454,
+    "dynasty": "Ascania",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ascanians; Ernest has ruled Anhalt-Dessau since the division of Zerbst in 1474.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Prince Ernest rules Dessau and Zerbst at the confluence of Mulde and Elbe.",
+    "de": "Fürst Ernst regiert Dessau und Zerbst am Zusammenfluss von Mulde und Elbe."
+   },
+   "coa": {
+    "blazon": "Per pale argent and barry sable and or, an eagle gules dimidiated",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "dexter"
+     }
+    ]
+   }
+  },
+  {
+   "id": "anhalt_koethen",
+   "name": {
+    "en": "Principality of Anhalt-Köthen",
+    "de": "Fürstentum Anhalt-Köthen"
+   },
+   "short": {
+    "en": "Anhalt-Köthen",
+    "de": "Anhalt-Köthen"
+   },
+   "adjective": {
+    "en": "Anhalt",
+    "de": "anhaltisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#6a9a4a",
+   "capital": {
+    "name": "Köthen",
+    "lat": 51.752,
+    "lon": 11.974
+   },
+   "holdings": [
+    {
+     "name": "Köthen",
+     "lat": 51.752,
+     "lon": 11.974
+    },
+    {
+     "name": "Bernburg",
+     "lat": 51.795,
+     "lon": 11.738
+    },
+    {
+     "name": "Ballenstedt",
+     "lat": 51.719,
+     "lon": 11.233
+    }
+   ],
+   "ruler": {
+    "name": "Waldemar VI",
+    "born": 1450,
+    "dynasty": "Ascania",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ascanians; Waldemar VI has ruled Köthen since 1471 and acquired Bernburg on the extinction of that line (1468).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Waldemar VI holds Köthen and Bernburg on the Saale and the Harz foreland.",
+    "de": "Waldemar VI. hält Köthen und Bernburg an der Saale und im Harzvorland."
+   },
+   "coa": {
+    "blazon": "Per pale argent and barry sable and or, an eagle gules dimidiated",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "dexter"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brandenburg",
+   "name": {
+    "en": "Margraviate of Brandenburg",
+    "de": "Markgrafschaft Brandenburg"
+   },
+   "short": {
+    "en": "Brandenburg",
+    "de": "Brandenburg"
+   },
+   "adjective": {
+    "en": "Brandenburg",
+    "de": "brandenburgisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#c03030",
+   "capital": {
+    "name": "Berlin",
+    "lat": 52.517,
+    "lon": 13.4
+   },
+   "holdings": [
+    {
+     "name": "Berlin",
+     "lat": 52.517,
+     "lon": 13.4
+    },
+    {
+     "name": "Brandenburg an der Havel",
+     "lat": 52.412,
+     "lon": 12.556
+    },
+    {
+     "name": "Spandau",
+     "lat": 52.535,
+     "lon": 13.2
+    },
+    {
+     "name": "Frankfurt an der Oder",
+     "lat": 52.342,
+     "lon": 14.55
+    },
+    {
+     "name": "Stendal",
+     "lat": 52.605,
+     "lon": 11.858
+    },
+    {
+     "name": "Salzwedel",
+     "lat": 52.852,
+     "lon": 11.152
+    },
+    {
+     "name": "Tangermünde",
+     "lat": 52.541,
+     "lon": 11.968
+    },
+    {
+     "name": "Perleberg",
+     "lat": 53.075,
+     "lon": 11.857
+    },
+    {
+     "name": "Prenzlau",
+     "lat": 53.317,
+     "lon": 13.863
+    },
+    {
+     "name": "Eberswalde",
+     "lat": 52.833,
+     "lon": 13.817
+    },
+    {
+     "name": "Strausberg",
+     "lat": 52.578,
+     "lon": 13.882
+    },
+    {
+     "name": "Fürstenwalde",
+     "lat": 52.36,
+     "lon": 14.064
+    },
+    {
+     "name": "Landsberg an der Warthe",
+     "lat": 52.733,
+     "lon": 15.238
+    },
+    {
+     "name": "Königsberg in der Neumark",
+     "lat": 52.873,
+     "lon": 14.13
+    },
+    {
+     "name": "Arnswalde",
+     "lat": 53.168,
+     "lon": 15.796
+    },
+    {
+     "name": "Soldin",
+     "lat": 52.952,
+     "lon": 14.711
+    },
+    {
+     "name": "Dramburg",
+     "lat": 53.533,
+     "lon": 15.8
+    },
+    {
+     "name": "Drossen",
+     "lat": 52.426,
+     "lon": 14.879
+    },
+    {
+     "name": "Treuenbrietzen",
+     "lat": 52.097,
+     "lon": 12.871
+    },
+    {
+     "name": "Havelberg",
+     "lat": 52.825,
+     "lon": 12.073
+    },
+    {
+     "name": "Angermünde",
+     "lat": 53.016,
+     "lon": 13.997
+    },
+    {
+     "name": "Cottbus",
+     "lat": 51.76,
+     "lon": 14.334
+    },
+    {
+     "name": "Peitz",
+     "lat": 51.86,
+     "lon": 14.41
+    },
+    {
+     "name": "Crossen",
+     "lat": 52.05,
+     "lon": 15.1
+    },
+    {
+     "name": "Züllichau",
+     "lat": 52.12,
+     "lon": 15.63
+    },
+    {
+     "name": "Küstrin",
+     "lat": 52.58,
+     "lon": 14.65
+    },
+    {
+     "name": "Schivelbein",
+     "lat": 53.95,
+     "lon": 15.75
+    }
+   ],
+   "ruler": {
+    "name": "John Cicero",
+    "born": 1455,
+    "dynasty": "Hohenzollern",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     1
+    ],
+    "traits": [
+     "learned",
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Joachim",
+    "born": 1484,
+    "dynasty": "Hohenzollern",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "child",
+     "learned"
+    ]
+   },
+   "consort": {
+    "name": "Margaret of Thuringia",
+    "born": 1449,
+    "dynasty": "Wettin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Hohenzollern; John Cicero (elector since 1486) is the first elector to reside permanently in Berlin-Cölln; Crossen and Züllichau were won from Glogau in 1482.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "ansbach",
+    "kulmbach"
+   ],
+   "rivals": [
+    "pomerania_wolgast"
+   ],
+   "claims_on": [
+    "pomerania_wolgast"
+   ],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "The eloquent John Cicero has made Berlin-Cölln his permanent residence and taxes his towns with a new beer excise. Brandenburg claims the succession in Pomerania.",
+    "de": "Der redegewandte Johann Cicero hat Berlin-Cölln zu seiner ständigen Residenz gemacht und belastet seine Städte mit einer neuen Bierziese. Brandenburg beansprucht die Erbfolge in Pommern."
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brunswick_wolfenbuettel",
+   "name": {
+    "en": "Duchy of Brunswick-Wolfenbüttel",
+    "de": "Herzogtum Braunschweig-Wolfenbüttel"
+   },
+   "short": {
+    "en": "Brunswick",
+    "de": "Braunschweig"
+   },
+   "adjective": {
+    "en": "Brunswick",
+    "de": "braunschweigisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#a33a3a",
+   "capital": {
+    "name": "Wolfenbüttel",
+    "lat": 52.162,
+    "lon": 10.535
+   },
+   "holdings": [
+    {
+     "name": "Wolfenbüttel",
+     "lat": 52.162,
+     "lon": 10.535
+    },
+    {
+     "name": "Helmstedt",
+     "lat": 52.228,
+     "lon": 11.01
+    },
+    {
+     "name": "Schöningen",
+     "lat": 52.138,
+     "lon": 10.968
+    },
+    {
+     "name": "Seesen",
+     "lat": 51.891,
+     "lon": 10.177
+    },
+    {
+     "name": "Königslutter",
+     "lat": 52.252,
+     "lon": 10.818
+    },
+    {
+     "name": "Gandersheim",
+     "lat": 51.87,
+     "lon": 10.03
+    },
+    {
+     "name": "Hannover",
+     "lat": 52.374,
+     "lon": 9.738
+    },
+    {
+     "name": "Calenberg",
+     "lat": 52.24,
+     "lon": 9.79
+    },
+    {
+     "name": "Hameln",
+     "lat": 52.1,
+     "lon": 9.36
+    },
+    {
+     "name": "Neustadt am Rübenberge",
+     "lat": 52.5,
+     "lon": 9.46
+    },
+    {
+     "name": "Göttingen",
+     "lat": 51.53,
+     "lon": 9.93
+    },
+    {
+     "name": "Münden",
+     "lat": 51.417,
+     "lon": 9.651
+    },
+    {
+     "name": "Uslar",
+     "lat": 51.66,
+     "lon": 9.636
+    },
+    {
+     "name": "Dransfeld",
+     "lat": 51.499,
+     "lon": 9.763
+    },
+    {
+     "name": "Northeim",
+     "lat": 51.71,
+     "lon": 10.0
+    }
+   ],
+   "ruler": {
+    "name": "Henry I the Elder",
+    "born": 1463,
+    "dynasty": "Welf",
+    "female": false,
+    "skills": [
+     3,
+     2,
+     4
+    ],
+    "traits": [
+     "warlike",
+     "rash"
+    ]
+   },
+   "heir": {
+    "name": "Eric the Elder",
+    "born": 1470,
+    "dynasty": "Welf",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "consort": {
+    "name": "Catherine of Pomerania",
+    "born": 1465,
+    "dynasty": "Griffin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Welf (Middle House of Brunswick); their father William the Younger retired in 1491; Henry and Eric rule jointly until the partition of 1495 (Wolfenbüttel and Calenberg-Göttingen).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brunswick_lueneburg"
+   ],
+   "rivals": [
+    "braunschweig",
+    "hildesheim"
+   ],
+   "claims_on": [
+    "braunschweig"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "The brothers Henry the Elder and Eric rule Wolfenbüttel, Calenberg and Göttingen together. Henry is preparing to force the proud city of Brunswick into obedience.",
+    "de": "Die Brüder Heinrich der Ältere und Erich regieren Wolfenbüttel, Calenberg und Göttingen gemeinsam. Heinrich bereitet sich darauf vor, die stolze Stadt Braunschweig zum Gehorsam zu zwingen."
+   },
+   "coa": {
+    "blazon": "Gules, two lions passant guardant or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "braunschweig",
+   "name": {
+    "en": "City of Brunswick",
+    "de": "Stadt Braunschweig"
+   },
+   "short": {
+    "en": "Brunswick",
+    "de": "Braunschweig"
+   },
+   "adjective": {
+    "en": "Brunswick",
+    "de": "Braunschweiger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d05050",
+   "capital": {
+    "name": "Braunschweig",
+    "lat": 52.269,
+    "lon": 10.521
+   },
+   "holdings": [
+    {
+     "name": "Braunschweig",
+     "lat": 52.269,
+     "lon": 10.521
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hanseatic city, de facto self-governing although formally subject to the dukes; leader of the Saxon town league.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lubeck",
+    "hamburg",
+    "goslar"
+   ],
+   "rivals": [
+    "brunswick_wolfenbuettel"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Brunswick, one of the great Hanseatic towns, is in practice an independent city republic. Its dukes have never accepted that and are about to lay siege to it.",
+    "de": "Braunschweig, eine der großen Hansestädte, ist faktisch eine unabhängige Stadtrepublik. Seine Herzöge haben das nie anerkannt und stehen vor einer Belagerung."
+   },
+   "coa": {
+    "blazon": "Argent a lion Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "brunswick_lueneburg",
+   "name": {
+    "en": "Duchy of Brunswick-Lüneburg (Lüneburg)",
+    "de": "Herzogtum Braunschweig-Lüneburg (Lüneburg)"
+   },
+   "short": {
+    "en": "Lüneburg",
+    "de": "Lüneburg"
+   },
+   "adjective": {
+    "en": "Lüneburg",
+    "de": "lüneburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#3a5fa3",
+   "capital": {
+    "name": "Celle",
+    "lat": 52.624,
+    "lon": 10.081
+   },
+   "holdings": [
+    {
+     "name": "Celle",
+     "lat": 52.624,
+     "lon": 10.081
+    },
+    {
+     "name": "Lüneburg",
+     "lat": 53.249,
+     "lon": 10.411
+    },
+    {
+     "name": "Uelzen",
+     "lat": 52.966,
+     "lon": 10.558
+    },
+    {
+     "name": "Dannenberg",
+     "lat": 53.098,
+     "lon": 11.093
+    },
+    {
+     "name": "Gifhorn",
+     "lat": 52.479,
+     "lon": 10.546
+    },
+    {
+     "name": "Harburg",
+     "lat": 53.461,
+     "lon": 9.983
+    },
+    {
+     "name": "Burgdorf",
+     "lat": 52.447,
+     "lon": 10.006
+    },
+    {
+     "name": "Winsen",
+     "lat": 53.357,
+     "lon": 10.212
+    },
+    {
+     "name": "Soltau",
+     "lat": 52.986,
+     "lon": 9.843
+    },
+    {
+     "name": "Walsrode",
+     "lat": 52.862,
+     "lon": 9.59
+    }
+   ],
+   "ruler": {
+    "name": "Henry the Middle",
+    "born": 1468,
+    "dynasty": "Welf",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Margaret of Saxony",
+    "born": 1469,
+    "dynasty": "Wettin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Welf (Middle House of Lüneburg); Henry the Middle has ruled in person since 1486.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brunswick_wolfenbuettel"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Duke Henry the Middle rules the heath lands of Lüneburg from Celle. The salt town of Lüneburg itself is rich and largely self-governing.",
+    "de": "Herzog Heinrich der Mittlere regiert die Heidelande Lüneburgs von Celle aus. Die Salzstadt Lüneburg selbst ist reich und weitgehend selbständig."
+   },
+   "coa": {
+    "blazon": "Or semé of hearts gules, a lion azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "azure",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brunswick_grubenhagen",
+   "name": {
+    "en": "Duchy of Brunswick-Grubenhagen",
+    "de": "Herzogtum Braunschweig-Grubenhagen"
+   },
+   "short": {
+    "en": "Grubenhagen",
+    "de": "Grubenhagen"
+   },
+   "adjective": {
+    "en": "Grubenhagen",
+    "de": "grubenhagensch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d07a4a",
+   "capital": {
+    "name": "Osterode",
+    "lat": 51.73,
+    "lon": 10.25
+   },
+   "holdings": [
+    {
+     "name": "Osterode",
+     "lat": 51.73,
+     "lon": 10.25
+    },
+    {
+     "name": "Einbeck",
+     "lat": 51.82,
+     "lon": 9.866
+    },
+    {
+     "name": "Herzberg am Harz",
+     "lat": 51.65,
+     "lon": 10.34
+    }
+   ],
+   "ruler": {
+    "name": "Philip I",
+    "born": 1476,
+    "dynasty": "Welf",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "young"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Welf (Grubenhagen line); Philip I has been duke since 1485 under guardianship.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The small Welf duchy of Grubenhagen lies on the southern Harz around Osterode and the beer town of Einbeck.",
+    "de": "Das kleine welfische Herzogtum Grubenhagen liegt am Südharz um Osterode und die Bierstadt Einbeck."
+   },
+   "coa": {
+    "blazon": "Or, a lion azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "azure",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "magdeburg",
+   "name": {
+    "en": "Archbishopric of Magdeburg",
+    "de": "Erzstift Magdeburg"
+   },
+   "short": {
+    "en": "Magdeburg",
+    "de": "Magdeburg"
+   },
+   "adjective": {
+    "en": "Magdeburg",
+    "de": "magdeburgisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#e8e8e8",
+   "capital": {
+    "name": "Magdeburg",
+    "lat": 52.131,
+    "lon": 11.64
+   },
+   "holdings": [
+    {
+     "name": "Magdeburg",
+     "lat": 52.131,
+     "lon": 11.64
+    },
+    {
+     "name": "Halle",
+     "lat": 51.483,
+     "lon": 11.97
+    },
+    {
+     "name": "Burg",
+     "lat": 52.272,
+     "lon": 11.855
+    },
+    {
+     "name": "Jüterbog",
+     "lat": 51.995,
+     "lon": 13.073
+    },
+    {
+     "name": "Loburg",
+     "lat": 52.115,
+     "lon": 12.083
+    },
+    {
+     "name": "Wanzleben",
+     "lat": 52.061,
+     "lon": 11.441
+    },
+    {
+     "name": "Calbe",
+     "lat": 51.91,
+     "lon": 11.77
+    }
+   ],
+   "ruler": {
+    "name": "Archbishop Ernest of Saxony",
+    "born": 1464,
+    "dynasty": "Wettin (Ernestine)",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "pious",
+     "builder"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Archbishopric; Ernest of Wettin, brother of Elector Frederick, archbishop since 1476 and administrator of Halberstadt since 1480; he subjugated Halle in 1478.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "saxony",
+    "meissen"
+   ],
+   "rivals": [
+    "brandenburg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Archbishop Ernest, a Wettin prince, has broken the independence of Halle and is building the Moritzburg there. With Halberstadt he controls the middle Elbe and the Harz foreland.",
+    "de": "Erzbischof Ernst, ein wettinischer Prinz, hat die Selbständigkeit Halles gebrochen und baut dort die Moritzburg. Mit Halberstadt beherrscht er die mittlere Elbe und das Harzvorland."
+   },
+   "coa": {
+    "blazon": "Per fess gules and argent",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "halberstadt",
+   "name": {
+    "en": "Prince-Bishopric of Halberstadt",
+    "de": "Hochstift Halberstadt"
+   },
+   "short": {
+    "en": "Halberstadt",
+    "de": "Halberstadt"
+   },
+   "adjective": {
+    "en": "Halberstadt",
+    "de": "halberstädtisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d0d0d0",
+   "capital": {
+    "name": "Halberstadt",
+    "lat": 51.896,
+    "lon": 11.047
+   },
+   "holdings": [
+    {
+     "name": "Halberstadt",
+     "lat": 51.896,
+     "lon": 11.047
+    },
+    {
+     "name": "Osterwieck",
+     "lat": 51.968,
+     "lon": 10.71
+    },
+    {
+     "name": "Aschersleben",
+     "lat": 51.757,
+     "lon": 11.459
+    },
+    {
+     "name": "Oschersleben",
+     "lat": 52.031,
+     "lon": 11.226
+    },
+    {
+     "name": "Gröningen",
+     "lat": 52.0,
+     "lon": 11.21
+    }
+   ],
+   "ruler": {
+    "name": "Administrator Ernest of Saxony",
+    "born": 1464,
+    "dynasty": "Wettin (Ernestine)",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric administered by the Archbishop of Magdeburg since 1480.",
+   "overlord": "magdeburg",
+   "subject_type": "personal_union",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Halberstadt is held in union with Magdeburg by Archbishop Ernest.",
+    "de": "Halberstadt wird von Erzbischof Ernst in Union mit Magdeburg gehalten."
+   },
+   "coa": {
+    "blazon": "Per pale argent and gules",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hildesheim",
+   "name": {
+    "en": "Prince-Bishopric of Hildesheim",
+    "de": "Hochstift Hildesheim"
+   },
+   "short": {
+    "en": "Hildesheim",
+    "de": "Hildesheim"
+   },
+   "adjective": {
+    "en": "Hildesheim",
+    "de": "hildesheimisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#c8b46a",
+   "capital": {
+    "name": "Hildesheim",
+    "lat": 52.151,
+    "lon": 9.951
+   },
+   "holdings": [
+    {
+     "name": "Hildesheim",
+     "lat": 52.151,
+     "lon": 9.951
+    },
+    {
+     "name": "Peine",
+     "lat": 52.32,
+     "lon": 10.234
+    },
+    {
+     "name": "Alfeld",
+     "lat": 51.986,
+     "lon": 9.823
+    },
+    {
+     "name": "Steuerwald",
+     "lat": 52.176,
+     "lon": 9.953
+    },
+    {
+     "name": "Marienburg",
+     "lat": 52.13,
+     "lon": 9.98
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Berthold von Landsberg",
+    "born": 1440,
+    "dynasty": "Landsberg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "stern"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric; Berthold II, bishop 1481-1502 and administrator of Verden.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "brunswick_wolfenbuettel"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Hildesheim prince-bishopric is one of the larger ecclesiastical states of Lower Saxony, constantly at odds with the Welf dukes.",
+    "de": "Das Hochstift Hildesheim ist einer der größeren geistlichen Staaten Niedersachsens und liegt ständig im Streit mit den welfischen Herzögen."
+   },
+   "coa": {
+    "blazon": "Per pale or and gules",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "muenster",
+   "name": {
+    "en": "Prince-Bishopric of Münster",
+    "de": "Hochstift Münster"
+   },
+   "short": {
+    "en": "Münster",
+    "de": "Münster"
+   },
+   "adjective": {
+    "en": "Münster",
+    "de": "münsterisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d8c84a",
+   "capital": {
+    "name": "Münster",
+    "lat": 51.962,
+    "lon": 7.626
+   },
+   "holdings": [
+    {
+     "name": "Münster",
+     "lat": 51.962,
+     "lon": 7.626
+    },
+    {
+     "name": "Coesfeld",
+     "lat": 51.946,
+     "lon": 7.168
+    },
+    {
+     "name": "Warendorf",
+     "lat": 51.954,
+     "lon": 7.99
+    },
+    {
+     "name": "Bocholt",
+     "lat": 51.838,
+     "lon": 6.616
+    },
+    {
+     "name": "Beckum",
+     "lat": 51.756,
+     "lon": 8.041
+    },
+    {
+     "name": "Meppen",
+     "lat": 52.693,
+     "lon": 7.291
+    },
+    {
+     "name": "Vechta",
+     "lat": 52.728,
+     "lon": 8.288
+    },
+    {
+     "name": "Cloppenburg",
+     "lat": 52.847,
+     "lon": 8.045
+    },
+    {
+     "name": "Dülmen",
+     "lat": 51.831,
+     "lon": 7.279
+    },
+    {
+     "name": "Rheine",
+     "lat": 52.28,
+     "lon": 7.438
+    },
+    {
+     "name": "Haselünne",
+     "lat": 52.672,
+     "lon": 7.483
+    },
+    {
+     "name": "Delmenhorst",
+     "lat": 53.051,
+     "lon": 8.632
+    },
+    {
+     "name": "Wildeshausen",
+     "lat": 52.896,
+     "lon": 8.433
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Henry of Schwarzburg",
+    "born": 1440,
+    "dynasty": "Schwarzburg",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "warlike",
+     "worldly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishop of Münster 1466-1496 and Archbishop of Bremen 1463-1496; he seized Delmenhorst from the Oldenburgs in 1482.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bremen_archbishopric"
+   ],
+   "rivals": [
+    "oldenburg",
+    "east_frisia"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Henry of Schwarzburg, warlike Bishop of Münster and Archbishop of Bremen, has taken Delmenhorst and dominates north-west Germany between the Ems and the Weser.",
+    "de": "Heinrich von Schwarzburg, kriegerischer Bischof von Münster und Erzbischof von Bremen, hat Delmenhorst genommen und beherrscht Nordwestdeutschland zwischen Ems und Weser."
+   },
+   "coa": {
+    "blazon": "Azure, a fess or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "bremen_archbishopric",
+   "name": {
+    "en": "Archbishopric of Bremen",
+    "de": "Erzstift Bremen"
+   },
+   "short": {
+    "en": "Bremen (See)",
+    "de": "Erzstift Bremen"
+   },
+   "adjective": {
+    "en": "Bremen",
+    "de": "bremisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#a0a0a0",
+   "capital": {
+    "name": "Bremervörde",
+    "lat": 53.484,
+    "lon": 9.141
+   },
+   "holdings": [
+    {
+     "name": "Bremervörde",
+     "lat": 53.484,
+     "lon": 9.141
+    },
+    {
+     "name": "Stade",
+     "lat": 53.6,
+     "lon": 9.476
+    },
+    {
+     "name": "Buxtehude",
+     "lat": 53.477,
+     "lon": 9.701
+    },
+    {
+     "name": "Langwedel",
+     "lat": 52.999,
+     "lon": 9.183
+    },
+    {
+     "name": "Hagen",
+     "lat": 53.358,
+     "lon": 8.648
+    }
+   ],
+   "ruler": {
+    "name": "Archbishop Henry of Schwarzburg",
+    "born": 1440,
+    "dynasty": "Schwarzburg",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     3
+    ],
+    "traits": [
+     "warlike"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Archbishopric held in union with Münster.",
+   "overlord": "muenster",
+   "subject_type": "personal_union",
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bremen",
+    "dithmarschen"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The archbishopric of Bremen, held by the Bishop of Münster, covers the marshes between Weser and Elbe.",
+    "de": "Das Erzstift Bremen, vom Bischof von Münster gehalten, umfasst die Marschen zwischen Weser und Elbe."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "osnabrueck",
+   "name": {
+    "en": "Prince-Bishopric of Osnabrück",
+    "de": "Hochstift Osnabrück"
+   },
+   "short": {
+    "en": "Osnabrück",
+    "de": "Osnabrück"
+   },
+   "adjective": {
+    "en": "Osnabrück",
+    "de": "osnabrückisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#b0b0d0",
+   "capital": {
+    "name": "Osnabrück",
+    "lat": 52.279,
+    "lon": 8.047
+   },
+   "holdings": [
+    {
+     "name": "Osnabrück",
+     "lat": 52.279,
+     "lon": 8.047
+    },
+    {
+     "name": "Quakenbrück",
+     "lat": 52.676,
+     "lon": 7.951
+    },
+    {
+     "name": "Fürstenau",
+     "lat": 52.517,
+     "lon": 7.673
+    },
+    {
+     "name": "Wiedenbrück",
+     "lat": 51.833,
+     "lon": 8.316
+    },
+    {
+     "name": "Melle",
+     "lat": 52.204,
+     "lon": 8.338
+    },
+    {
+     "name": "Bramsche",
+     "lat": 52.408,
+     "lon": 7.973
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Konrad von Rietberg",
+    "born": 1450,
+    "dynasty": "Rietberg",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric; Konrad IV von Rietberg, bishop 1482-1508.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The prince-bishopric of Osnabrück lies between Münster and the Welf lands.",
+    "de": "Das Hochstift Osnabrück liegt zwischen Münster und den welfischen Landen."
+   },
+   "coa": {
+    "blazon": "Argent, a wheel gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "paderborn",
+   "name": {
+    "en": "Prince-Bishopric of Paderborn",
+    "de": "Hochstift Paderborn"
+   },
+   "short": {
+    "en": "Paderborn",
+    "de": "Paderborn"
+   },
+   "adjective": {
+    "en": "Paderborn",
+    "de": "paderbornisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#a0522d",
+   "capital": {
+    "name": "Paderborn",
+    "lat": 51.719,
+    "lon": 8.754
+   },
+   "holdings": [
+    {
+     "name": "Paderborn",
+     "lat": 51.719,
+     "lon": 8.754
+    },
+    {
+     "name": "Warburg",
+     "lat": 51.49,
+     "lon": 9.14
+    },
+    {
+     "name": "Brakel",
+     "lat": 51.716,
+     "lon": 9.184
+    },
+    {
+     "name": "Lichtenau",
+     "lat": 51.616,
+     "lon": 8.892
+    },
+    {
+     "name": "Salzkotten",
+     "lat": 51.672,
+     "lon": 8.604
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Simon zur Lippe",
+    "born": 1430,
+    "dynasty": "Lippe",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "old"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric; Simon III zur Lippe, bishop 1463-1498.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lippe"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Bishop Simon of Lippe rules Paderborn in close accord with his Lippe kin.",
+    "de": "Bischof Simon zur Lippe regiert Paderborn in engem Einvernehmen mit seiner Lipper Verwandtschaft."
+   },
+   "coa": {
+    "blazon": "Gules, a cross or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "lippe",
+   "name": {
+    "en": "Lordship of Lippe",
+    "de": "Herrschaft Lippe"
+   },
+   "short": {
+    "en": "Lippe",
+    "de": "Lippe"
+   },
+   "adjective": {
+    "en": "Lippe",
+    "de": "lippisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d0a020",
+   "capital": {
+    "name": "Detmold",
+    "lat": 51.94,
+    "lon": 8.88
+   },
+   "holdings": [
+    {
+     "name": "Detmold",
+     "lat": 51.94,
+     "lon": 8.88
+    },
+    {
+     "name": "Lemgo",
+     "lat": 52.03,
+     "lon": 8.9
+    },
+    {
+     "name": "Blomberg",
+     "lat": 51.94,
+     "lon": 9.09
+    }
+   ],
+   "ruler": {
+    "name": "Bernhard VII Bellicosus",
+    "born": 1428,
+    "dynasty": "Lippe",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "warlike",
+     "old"
+    ]
+   },
+   "heir": {
+    "name": "Simon V",
+    "born": 1471,
+    "dynasty": "Lippe",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "House of Lippe; Bernhard VII \"the Warlike\" has ruled since 1429 and fought in the Soest Feud.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "paderborn"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Bernhard VII, called Bellicosus, has ruled Lippe for over sixty years.",
+    "de": "Bernhard VII., genannt Bellicosus, regiert Lippe seit über sechzig Jahren."
+   },
+   "coa": {
+    "blazon": "Argent a rose Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "rose",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "minden",
+   "name": {
+    "en": "Prince-Bishopric of Minden",
+    "de": "Hochstift Minden"
+   },
+   "short": {
+    "en": "Minden",
+    "de": "Minden"
+   },
+   "adjective": {
+    "en": "Minden",
+    "de": "mindisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#b85c5c",
+   "capital": {
+    "name": "Minden",
+    "lat": 52.289,
+    "lon": 8.917
+   },
+   "holdings": [
+    {
+     "name": "Minden",
+     "lat": 52.289,
+     "lon": 8.917
+    },
+    {
+     "name": "Lübbecke",
+     "lat": 52.304,
+     "lon": 8.617
+    },
+    {
+     "name": "Rahden",
+     "lat": 52.432,
+     "lon": 8.612
+    },
+    {
+     "name": "Schlüsselburg",
+     "lat": 52.47,
+     "lon": 9.05
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Henry of Schaumburg",
+    "born": 1450,
+    "dynasty": "Schaumburg",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric; Henry III of Holstein-Schaumburg, bishop 1473-1508.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The prince-bishopric of Minden guards the Weser gap at the Porta Westfalica.",
+    "de": "Das Hochstift Minden bewacht den Weserdurchbruch an der Porta Westfalica."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "kammin",
+   "name": {
+    "en": "Prince-Bishopric of Kammin",
+    "de": "Hochstift Cammin"
+   },
+   "short": {
+    "en": "Kammin",
+    "de": "Cammin"
+   },
+   "adjective": {
+    "en": "Kammin",
+    "de": "camminisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "pomeranian",
+   "faith": "latin",
+   "color": "#c0c0a0",
+   "capital": {
+    "name": "Kammin",
+    "lat": 53.972,
+    "lon": 14.775
+   },
+   "holdings": [
+    {
+     "name": "Kammin",
+     "lat": 53.972,
+     "lon": 14.775
+    },
+    {
+     "name": "Kolberg",
+     "lat": 54.176,
+     "lon": 15.576
+    },
+    {
+     "name": "Köslin",
+     "lat": 54.194,
+     "lon": 16.172
+    }
+   ],
+   "ruler": {
+    "name": "Bishop Benedict von Waldstein",
+    "born": 1440,
+    "dynasty": "Waldstein",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric under Pomeranian pressure; bishop 1486-1498.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "pomerania_wolgast"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Kammin bishopric is being drawn into the Pomeranian ducal state.",
+    "de": "Das Bistum Kammin wird in den pommerschen Herzogsstaat hineingezogen."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "mecklenburg",
+   "name": {
+    "en": "Duchy of Mecklenburg",
+    "de": "Herzogtum Mecklenburg"
+   },
+   "short": {
+    "en": "Mecklenburg",
+    "de": "Mecklenburg"
+   },
+   "adjective": {
+    "en": "Mecklenburg",
+    "de": "mecklenburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#e0a020",
+   "capital": {
+    "name": "Schwerin",
+    "lat": 53.629,
+    "lon": 11.414
+   },
+   "holdings": [
+    {
+     "name": "Schwerin",
+     "lat": 53.629,
+     "lon": 11.414
+    },
+    {
+     "name": "Wismar",
+     "lat": 53.893,
+     "lon": 11.465
+    },
+    {
+     "name": "Rostock",
+     "lat": 54.088,
+     "lon": 12.14
+    },
+    {
+     "name": "Gadebusch",
+     "lat": 53.703,
+     "lon": 11.116
+    },
+    {
+     "name": "Sternberg",
+     "lat": 53.711,
+     "lon": 11.826
+    },
+    {
+     "name": "Grevesmühlen",
+     "lat": 53.862,
+     "lon": 11.179
+    },
+    {
+     "name": "Ribnitz",
+     "lat": 54.243,
+     "lon": 12.432
+    },
+    {
+     "name": "Bukow",
+     "lat": 54.083,
+     "lon": 11.7
+    },
+    {
+     "name": "Grabow",
+     "lat": 53.28,
+     "lon": 11.565
+    },
+    {
+     "name": "Crivitz",
+     "lat": 53.577,
+     "lon": 11.65
+    },
+    {
+     "name": "Schwaan",
+     "lat": 53.94,
+     "lon": 12.104
+    },
+    {
+     "name": "Güstrow",
+     "lat": 53.794,
+     "lon": 12.174
+    },
+    {
+     "name": "Waren",
+     "lat": 53.518,
+     "lon": 12.681
+    },
+    {
+     "name": "Malchow",
+     "lat": 53.475,
+     "lon": 12.424
+    },
+    {
+     "name": "Parchim",
+     "lat": 53.426,
+     "lon": 11.848
+    },
+    {
+     "name": "Teterow",
+     "lat": 53.776,
+     "lon": 12.574
+    },
+    {
+     "name": "Röbel",
+     "lat": 53.375,
+     "lon": 12.605
+    },
+    {
+     "name": "Plau",
+     "lat": 53.458,
+     "lon": 12.262
+    },
+    {
+     "name": "Wittenburg",
+     "lat": 53.509,
+     "lon": 11.081
+    },
+    {
+     "name": "Neubrandenburg",
+     "lat": 53.557,
+     "lon": 13.261
+    },
+    {
+     "name": "Strelitz",
+     "lat": 53.363,
+     "lon": 13.063
+    },
+    {
+     "name": "Friedland",
+     "lat": 53.664,
+     "lon": 13.552
+    },
+    {
+     "name": "Woldegk",
+     "lat": 53.461,
+     "lon": 13.58
+    },
+    {
+     "name": "Wesenberg",
+     "lat": 53.278,
+     "lon": 12.967
+    }
+   ],
+   "ruler": {
+    "name": "Magnus II",
+    "born": 1441,
+    "dynasty": "Nikloting",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     3
+    ],
+    "traits": [
+     "stern",
+     "diligent"
+    ]
+   },
+   "heir": {
+    "name": "Henry V the Peaceful",
+    "born": 1479,
+    "dynasty": "Nikloting",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "child"
+    ]
+   },
+   "consort": {
+    "name": "Sophia of Pomerania",
+    "born": 1460,
+    "dynasty": "Griffin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Mecklenburg; all Mecklenburg was united after the Werle (1436) and Stargard (1471) lines died out; Magnus II rules jointly with his brother Balthasar and has just ended the Rostock Feud (1487-91).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brandenburg"
+   ],
+   "rivals": [
+    "lubeck"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Magnus II has reunited Mecklenburg and is building a stronger princely administration, having just humbled the Hanseatic city of Rostock. He looks for a share of the Pomeranian inheritance.",
+    "de": "Magnus II. hat Mecklenburg wiedervereinigt und baut eine stärkere fürstliche Verwaltung auf, nachdem er eben die Hansestadt Rostock gedemütigt hat. Er hofft auf einen Anteil am pommerschen Erbe."
+   },
+   "coa": {
+    "blazon": "Or, a bull's head sable crowned gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bull_head",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "pomerania_wolgast",
+   "name": {
+    "en": "Duchy of Pomerania",
+    "de": "Herzogtum Pommern"
+   },
+   "short": {
+    "en": "Pomerania",
+    "de": "Pommern"
+   },
+   "adjective": {
+    "en": "Pomeranian",
+    "de": "pommersch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "pomeranian",
+   "faith": "latin",
+   "color": "#3a8fc0",
+   "capital": {
+    "name": "Stettin",
+    "lat": 53.428,
+    "lon": 14.553
+   },
+   "holdings": [
+    {
+     "name": "Stettin",
+     "lat": 53.428,
+     "lon": 14.553
+    },
+    {
+     "name": "Wolgast",
+     "lat": 54.053,
+     "lon": 13.77
+    },
+    {
+     "name": "Greifswald",
+     "lat": 54.096,
+     "lon": 13.378
+    },
+    {
+     "name": "Anklam",
+     "lat": 53.856,
+     "lon": 13.689
+    },
+    {
+     "name": "Barth",
+     "lat": 54.37,
+     "lon": 12.723
+    },
+    {
+     "name": "Bergen auf Rügen",
+     "lat": 54.418,
+     "lon": 13.433
+    },
+    {
+     "name": "Grimmen",
+     "lat": 54.11,
+     "lon": 13.041
+    },
+    {
+     "name": "Demmin",
+     "lat": 53.907,
+     "lon": 13.043
+    },
+    {
+     "name": "Usedom",
+     "lat": 53.874,
+     "lon": 13.92
+    },
+    {
+     "name": "Belgard",
+     "lat": 54.004,
+     "lon": 15.986
+    },
+    {
+     "name": "Schlawe",
+     "lat": 54.358,
+     "lon": 16.676
+    },
+    {
+     "name": "Rügenwalde",
+     "lat": 54.418,
+     "lon": 16.41
+    },
+    {
+     "name": "Stolp",
+     "lat": 54.464,
+     "lon": 17.028
+    },
+    {
+     "name": "Treptow an der Rega",
+     "lat": 54.082,
+     "lon": 15.267
+    },
+    {
+     "name": "Greifenberg",
+     "lat": 53.919,
+     "lon": 15.199
+    },
+    {
+     "name": "Neustettin",
+     "lat": 53.711,
+     "lon": 16.7
+    },
+    {
+     "name": "Loitz",
+     "lat": 53.975,
+     "lon": 13.136
+    },
+    {
+     "name": "Stralsund",
+     "lat": 54.309,
+     "lon": 13.082
+    },
+    {
+     "name": "Gartz",
+     "lat": 53.208,
+     "lon": 14.392
+    },
+    {
+     "name": "Pasewalk",
+     "lat": 53.506,
+     "lon": 13.989
+    },
+    {
+     "name": "Ueckermünde",
+     "lat": 53.736,
+     "lon": 14.045
+    },
+    {
+     "name": "Gollnow",
+     "lat": 53.565,
+     "lon": 14.828
+    },
+    {
+     "name": "Stargard",
+     "lat": 53.336,
+     "lon": 15.05
+    },
+    {
+     "name": "Pyritz",
+     "lat": 53.146,
+     "lon": 14.892
+    },
+    {
+     "name": "Greifenhagen",
+     "lat": 53.258,
+     "lon": 14.611
+    },
+    {
+     "name": "Naugard",
+     "lat": 53.616,
+     "lon": 15.032
+    },
+    {
+     "name": "Lauenburg in Pommern",
+     "lat": 54.54,
+     "lon": 17.75
+    },
+    {
+     "name": "Bütow",
+     "lat": 54.17,
+     "lon": 17.49
+    }
+   ],
+   "ruler": {
+    "name": "Bogislaw X the Great",
+    "born": 1454,
+    "dynasty": "Griffin",
+    "female": false,
+    "skills": [
+     5,
+     4,
+     4
+    ],
+    "traits": [
+     "energetic",
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anna Jagiellon",
+    "born": 1476,
+    "dynasty": "Jagiellon",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of Griffin; Bogislaw X has ruled all Pomerania since 1478 and married Anna, daughter of Casimir IV, in 1491; Lauenburg and Bütow are held as a Polish fief.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "poland"
+   ],
+   "rivals": [
+    "brandenburg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Bogislaw the Great has reunited Pomerania and reforms its administration and coinage. His Polish marriage strengthens him against Brandenburg's claim to the succession.",
+    "de": "Bogislaw der Große hat Pommern wiedervereinigt und reformiert Verwaltung und Münzwesen. Seine polnische Heirat stärkt ihn gegen den brandenburgischen Anspruch auf die Erbfolge."
+   },
+   "coa": {
+    "blazon": "Argent, a griffin segreant gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "griffin",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "holstein_gottorp",
+   "name": {
+    "en": "Duchy of Schleswig-Holstein-Gottorp",
+    "de": "Herzogtum Schleswig-Holstein-Gottorf"
+   },
+   "short": {
+    "en": "Holstein",
+    "de": "Holstein"
+   },
+   "adjective": {
+    "en": "Holstein",
+    "de": "holsteinisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d04040",
+   "capital": {
+    "name": "Gottorf",
+    "lat": 54.513,
+    "lon": 9.542
+   },
+   "holdings": [
+    {
+     "name": "Gottorf",
+     "lat": 54.513,
+     "lon": 9.542
+    },
+    {
+     "name": "Husum",
+     "lat": 54.48,
+     "lon": 9.05
+    },
+    {
+     "name": "Tondern",
+     "lat": 54.94,
+     "lon": 8.86
+    },
+    {
+     "name": "Eckernförde",
+     "lat": 54.47,
+     "lon": 9.84
+    },
+    {
+     "name": "Kiel",
+     "lat": 54.323,
+     "lon": 10.135
+    },
+    {
+     "name": "Neumünster",
+     "lat": 54.073,
+     "lon": 9.983
+    },
+    {
+     "name": "Oldenburg in Holstein",
+     "lat": 54.292,
+     "lon": 10.887
+    },
+    {
+     "name": "Lütjenburg",
+     "lat": 54.296,
+     "lon": 10.592
+    },
+    {
+     "name": "Plön",
+     "lat": 54.162,
+     "lon": 10.422
+    }
+   ],
+   "ruler": {
+    "name": "Frederick",
+    "born": 1471,
+    "dynasty": "Oldenburg",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Oldenburg; under the division of 1490 Duke Frederick, younger brother of King Hans, received the Gottorp share of Schleswig and Holstein.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "denmark"
+   ],
+   "rivals": [
+    "dithmarschen"
+   ],
+   "claims_on": [
+    "denmark"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Duke Frederick shares Schleswig and Holstein with his brother King Hans of Denmark and resents his inferior position. He will one day take the Danish crown himself.",
+    "de": "Herzog Friedrich teilt Schleswig und Holstein mit seinem Bruder König Hans von Dänemark und grollt über seine nachgeordnete Stellung. Eines Tages wird er die dänische Krone selbst nehmen."
+   },
+   "coa": {
+    "blazon": "Gules, a nettle-leaf argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "dithmarschen",
+   "name": {
+    "en": "Land of Dithmarschen",
+    "de": "Land Dithmarschen"
+   },
+   "short": {
+    "en": "Dithmarschen",
+    "de": "Dithmarschen"
+   },
+   "adjective": {
+    "en": "Dithmarsian",
+    "de": "dithmarscher"
+   },
+   "rank": "republic",
+   "government": "tribal_federation",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#6a8a3a",
+   "capital": {
+    "name": "Heide",
+    "lat": 54.19,
+    "lon": 9.09
+   },
+   "holdings": [
+    {
+     "name": "Heide",
+     "lat": 54.19,
+     "lon": 9.09
+    },
+    {
+     "name": "Meldorf",
+     "lat": 54.09,
+     "lon": 9.069
+    },
+    {
+     "name": "Lunden",
+     "lat": 54.33,
+     "lon": 9.03
+    }
+   ],
+   "ruler": {
+    "name": "Council of the Forty-Eight",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "defiant",
+     "hardy"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free peasant republic of clans under nominal lordship of the Archbishop of Bremen; the Forty-Eight govern since 1447.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lubeck"
+   ],
+   "rivals": [
+    "denmark",
+    "holstein_gottorp"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The free peasants of Dithmarschen govern their marsh land through clans and their Council of Forty-Eight. The Danish king and the dukes of Holstein covet it.",
+    "de": "Die freien Bauern Dithmarschens regieren ihr Marschland durch Geschlechter und den Rat der Achtundvierzig. Der dänische König und die Herzöge von Holstein begehren es."
+   },
+   "coa": {
+    "blazon": "Gules a knight on horseback Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "oldenburg",
+   "name": {
+    "en": "County of Oldenburg",
+    "de": "Grafschaft Oldenburg"
+   },
+   "short": {
+    "en": "Oldenburg",
+    "de": "Oldenburg"
+   },
+   "adjective": {
+    "en": "Oldenburg",
+    "de": "oldenburgisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#c0a020",
+   "capital": {
+    "name": "Oldenburg",
+    "lat": 53.143,
+    "lon": 8.214
+   },
+   "holdings": [
+    {
+     "name": "Oldenburg",
+     "lat": 53.143,
+     "lon": 8.214
+    },
+    {
+     "name": "Westerstede",
+     "lat": 53.257,
+     "lon": 7.928
+    },
+    {
+     "name": "Rastede",
+     "lat": 53.24,
+     "lon": 8.2
+    }
+   ],
+   "ruler": {
+    "name": "John V",
+    "born": 1460,
+    "dynasty": "Oldenburg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Oldenburg, kin of the Danish kings; John V (since 1483) rules with his brother Adolf after their father Gerhard the Quarrelsome was driven out.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "denmark"
+   ],
+   "rivals": [
+    "muenster",
+    "east_frisia"
+   ],
+   "claims_on": [
+    "muenster"
+   ],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The counts of Oldenburg, cousins of the Danish king, have lost Delmenhorst to the Bishop of Münster and push into the Frisian lands.",
+    "de": "Die Grafen von Oldenburg, Vettern des dänischen Königs, haben Delmenhorst an den Bischof von Münster verloren und drängen in die friesischen Lande."
+   },
+   "coa": {
+    "blazon": "Or, two bars gules",
+    "field": "or",
+    "division": "barry",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "east_frisia",
+   "name": {
+    "en": "County of East Frisia",
+    "de": "Grafschaft Ostfriesland"
+   },
+   "short": {
+    "en": "East Frisia",
+    "de": "Ostfriesland"
+   },
+   "adjective": {
+    "en": "Frisian",
+    "de": "friesisch"
+   },
+   "rank": "county",
+   "government": "tribal_federation",
+   "culture": "frisian",
+   "faith": "latin",
+   "color": "#2a9a8a",
+   "capital": {
+    "name": "Emden",
+    "lat": 53.367,
+    "lon": 7.206
+   },
+   "holdings": [
+    {
+     "name": "Emden",
+     "lat": 53.367,
+     "lon": 7.206
+    },
+    {
+     "name": "Norden",
+     "lat": 53.596,
+     "lon": 7.206
+    },
+    {
+     "name": "Leer",
+     "lat": 53.231,
+     "lon": 7.461
+    },
+    {
+     "name": "Aurich",
+     "lat": 53.471,
+     "lon": 7.484
+    },
+    {
+     "name": "Greetsiel",
+     "lat": 53.5,
+     "lon": 7.1
+    }
+   ],
+   "ruler": {
+    "name": "Edzard I the Great",
+    "born": 1462,
+    "dynasty": "Cirksena",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "energetic"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Cirksena, imperial counts since 1464; Edzard I has ruled since 1491.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "oldenburg",
+    "groningen"
+   ],
+   "claims_on": [
+    "groningen",
+    "frisia"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Edzard the Great, a pilgrim to Jerusalem, has just taken over East Frisia and dreams of uniting all the Frisian lands from the Weser to the Zuiderzee.",
+    "de": "Edzard der Große, ein Jerusalempilger, hat eben die Herrschaft in Ostfriesland übernommen und träumt von der Vereinigung aller friesischen Lande von der Weser bis zur Zuiderzee."
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lubeck",
+   "name": {
+    "en": "Free Imperial City of Lübeck",
+    "de": "Freie Reichsstadt Lübeck"
+   },
+   "short": {
+    "en": "Lübeck",
+    "de": "Lübeck"
+   },
+   "adjective": {
+    "en": "Lübeck",
+    "de": "lübisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#e04050",
+   "capital": {
+    "name": "Lübeck",
+    "lat": 53.866,
+    "lon": 10.686
+   },
+   "holdings": [
+    {
+     "name": "Lübeck",
+     "lat": 53.866,
+     "lon": 10.686
+    },
+    {
+     "name": "Travemünde",
+     "lat": 53.962,
+     "lon": 10.87
+    },
+    {
+     "name": "Mölln",
+     "lat": 53.627,
+     "lon": 10.687
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free imperial city; head of the Hanseatic League.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "hamburg",
+    "braunschweig",
+    "dithmarschen"
+   ],
+   "rivals": [
+    "denmark"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Lübeck, queen of the Hanse, still dominates Baltic trade, though Dutch competition and the strengthening Nordic monarchies erode its position.",
+    "de": "Lübeck, die Königin der Hanse, beherrscht noch den Ostseehandel, doch holländische Konkurrenz und die erstarkenden nordischen Monarchien schwächen seine Stellung."
+   },
+   "coa": {
+    "blazon": "Per fess argent and gules",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hamburg",
+   "name": {
+    "en": "City of Hamburg",
+    "de": "Stadt Hamburg"
+   },
+   "short": {
+    "en": "Hamburg",
+    "de": "Hamburg"
+   },
+   "adjective": {
+    "en": "Hamburg",
+    "de": "hamburgisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#c02030",
+   "capital": {
+    "name": "Hamburg",
+    "lat": 53.55,
+    "lon": 9.993
+   },
+   "holdings": [
+    {
+     "name": "Hamburg",
+     "lat": 53.55,
+     "lon": 9.993
+    },
+    {
+     "name": "Ritzebüttel",
+     "lat": 53.861,
+     "lon": 8.7
+    },
+    {
+     "name": "Bergedorf",
+     "lat": 53.488,
+     "lon": 10.212
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hanseatic city, de facto free under Holstein's nominal lordship.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lubeck"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Hamburg, the North Sea port of the Hanse, brews beer for half of northern Europe and guards the Elbe mouth from Ritzebüttel.",
+    "de": "Hamburg, der Nordseehafen der Hanse, braut Bier für halb Nordeuropa und bewacht von Ritzebüttel aus die Elbmündung."
+   },
+   "coa": {
+    "blazon": "Gules, a castle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bremen",
+   "name": {
+    "en": "City of Bremen",
+    "de": "Stadt Bremen"
+   },
+   "short": {
+    "en": "Bremen",
+    "de": "Bremen"
+   },
+   "adjective": {
+    "en": "Bremen",
+    "de": "bremisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#b04040",
+   "capital": {
+    "name": "Bremen",
+    "lat": 53.076,
+    "lon": 8.807
+   },
+   "holdings": [
+    {
+     "name": "Bremen",
+     "lat": 53.076,
+     "lon": 8.807
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hanseatic city, self-governing under nominal archiepiscopal lordship.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bremen_archbishopric"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bremen on the Weser is a self-governing Hanseatic city that resists its archbishops.",
+    "de": "Bremen an der Weser ist eine selbstverwaltete Hansestadt, die sich ihren Erzbischöfen widersetzt."
+   },
+   "coa": {
+    "blazon": "Gules, a key argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "dortmund",
+   "name": {
+    "en": "Free Imperial City of Dortmund",
+    "de": "Freie Reichsstadt Dortmund"
+   },
+   "short": {
+    "en": "Dortmund",
+    "de": "Dortmund"
+   },
+   "adjective": {
+    "en": "Dortmund",
+    "de": "dortmundisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#c0a030",
+   "capital": {
+    "name": "Dortmund",
+    "lat": 51.514,
+    "lon": 7.465
+   },
+   "holdings": [
+    {
+     "name": "Dortmund",
+     "lat": 51.514,
+     "lon": 7.465
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free imperial city and Hanseatic town.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Dortmund is the only free imperial city of Westphalia.",
+    "de": "Dortmund ist die einzige freie Reichsstadt Westfalens."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "goslar",
+   "name": {
+    "en": "Free Imperial City of Goslar",
+    "de": "Freie Reichsstadt Goslar"
+   },
+   "short": {
+    "en": "Goslar",
+    "de": "Goslar"
+   },
+   "adjective": {
+    "en": "Goslar",
+    "de": "goslarsch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#d0b040",
+   "capital": {
+    "name": "Goslar",
+    "lat": 51.906,
+    "lon": 10.429
+   },
+   "holdings": [
+    {
+     "name": "Goslar",
+     "lat": 51.906,
+     "lon": 10.429
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free imperial city; owns the Rammelsberg mines.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "braunschweig"
+   ],
+   "rivals": [
+    "brunswick_wolfenbuettel"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Goslar owns the Rammelsberg silver and copper mines, coveted by the Welf dukes.",
+    "de": "Goslar besitzt die Silber- und Kupfergruben des Rammelsbergs, die die welfischen Herzöge begehren."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muehlhausen",
+   "name": {
+    "en": "Free Imperial City of Mühlhausen",
+    "de": "Freie Reichsstadt Mühlhausen"
+   },
+   "short": {
+    "en": "Mühlhausen",
+    "de": "Mühlhausen"
+   },
+   "adjective": {
+    "en": "Mühlhausen",
+    "de": "mühlhäusisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#c08040",
+   "capital": {
+    "name": "Mühlhausen",
+    "lat": 51.209,
+    "lon": 10.454
+   },
+   "holdings": [
+    {
+     "name": "Mühlhausen",
+     "lat": 51.209,
+     "lon": 10.454
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free imperial city in Thuringia.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Mühlhausen is a free imperial city in Thuringia, surrounded by Wettin lands.",
+    "de": "Mühlhausen ist eine freie Reichsstadt in Thüringen, umgeben von wettinischen Landen."
+   },
+   "coa": {
+    "blazon": "Argent, a mill-iron gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nordhausen",
+   "name": {
+    "en": "Free Imperial City of Nordhausen",
+    "de": "Freie Reichsstadt Nordhausen"
+   },
+   "short": {
+    "en": "Nordhausen",
+    "de": "Nordhausen"
+   },
+   "adjective": {
+    "en": "Nordhausen",
+    "de": "nordhäusisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#a07040",
+   "capital": {
+    "name": "Nordhausen",
+    "lat": 51.505,
+    "lon": 10.791
+   },
+   "holdings": [
+    {
+     "name": "Nordhausen",
+     "lat": 51.505,
+     "lon": 10.791
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free imperial city at the southern Harz.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Nordhausen is a small free imperial city at the foot of the Harz.",
+    "de": "Nordhausen ist eine kleine freie Reichsstadt am Fuß des Harzes."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable crowned",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}

@@ -1,0 +1,7487 @@
+{
+ "region": "empire_south_west",
+ "sources": [
+  "Handbook of Medieval Chronology",
+  "Putzger Historischer Weltatlas",
+  "Cambridge Medieval History vol. VII",
+  "Oxford Atlas of World History",
+  "Köbler, Historisches Lexikon der deutschen Länder",
+  "Neue Deutsche Biographie / Allgemeine Deutsche Biographie (ruler entries)",
+  "Historisches Lexikon der Schweiz",
+  "Wikipedia articles on the states and rulers concerned"
+ ],
+ "new_ids": [
+  "charge:crozier",
+  "charge:lamb",
+  "charge:hen",
+  "charge:moor_head",
+  "division:lozengy",
+  "coa arrangements: on_bend, addorsed, in_pale, in_chief, quarters, overall"
+ ],
+ "external_refs": [
+  "bohemia",
+  "brabant",
+  "burgundy",
+  "england",
+  "flanders",
+  "france",
+  "guelders",
+  "hagenau",
+  "hainaut",
+  "hanau",
+  "hungary",
+  "montferrat"
+ ],
+ "states": [
+  {
+   "id": "lorraine",
+   "name": {
+    "en": "Duchy of Lorraine",
+    "de": "Herzogtum Lothringen"
+   },
+   "short": {
+    "en": "Lorraine",
+    "de": "Lothringen"
+   },
+   "adjective": {
+    "en": "Lorrainer",
+    "de": "lothringisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#d8b23a",
+   "capital": {
+    "name": "Nancy",
+    "lat": 48.693,
+    "lon": 6.184
+   },
+   "holdings": [
+    {
+     "name": "Nancy",
+     "lat": 48.693,
+     "lon": 6.184
+    },
+    {
+     "name": "Lunéville",
+     "lat": 48.59,
+     "lon": 6.5
+    },
+    {
+     "name": "Neufchâteau",
+     "lat": 48.356,
+     "lon": 5.696
+    },
+    {
+     "name": "Mirecourt",
+     "lat": 48.3,
+     "lon": 6.13
+    },
+    {
+     "name": "Remiremont",
+     "lat": 48.017,
+     "lon": 6.59
+    },
+    {
+     "name": "Sierck",
+     "lat": 49.44,
+     "lon": 6.36
+    },
+    {
+     "name": "Boulay",
+     "lat": 49.18,
+     "lon": 6.49
+    },
+    {
+     "name": "Saint-Dié",
+     "lat": 48.285,
+     "lon": 6.95
+    }
+   ],
+   "ruler": {
+    "name": "Jean I",
+    "born": 1346,
+    "dynasty": "Lorraine (Châtenois)",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child",
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Lorraine (Châtenois); the boy duke rules under the regency of his mother Marie de Blois, with Count Eberhard II of Württemberg as co-guardian",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france",
+    "wurttemberg"
+   ],
+   "rivals": [
+    "bar",
+    "metz"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The ten-year-old Duke Jean I succeeded his father Raoul, killed at Crécy in 1346, and reigns under his mother's regency. Lorraine sits on the language border between France and the Empire and leans towards the French court. Quarrels with Bar and with the city of Metz are never far away.",
+    "de": "Der zehnjährige Herzog Johann I. folgte seinem 1346 bei Crécy gefallenen Vater Rudolf und regiert unter der Vormundschaft seiner Mutter. Lothringen liegt an der Sprachgrenze zwischen Frankreich und dem Reich und neigt dem französischen Hof zu. Streit mit Bar und der Stadt Metz ist stets nahe."
+   },
+   "coa": {
+    "blazon": "Or, on a bend gules three alerions argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 3,
+      "arrangement": "on_bend"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bar",
+   "name": {
+    "en": "Duchy of Bar",
+    "de": "Herzogtum Bar"
+   },
+   "short": {
+    "en": "Bar",
+    "de": "Bar"
+   },
+   "adjective": {
+    "en": "Barrois",
+    "de": "barisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#3c5aa6",
+   "capital": {
+    "name": "Bar-le-Duc",
+    "lat": 48.772,
+    "lon": 5.16
+   },
+   "holdings": [
+    {
+     "name": "Bar-le-Duc",
+     "lat": 48.772,
+     "lon": 5.16
+    },
+    {
+     "name": "Saint-Mihiel",
+     "lat": 48.888,
+     "lon": 5.543
+    },
+    {
+     "name": "Pont-à-Mousson",
+     "lat": 48.905,
+     "lon": 6.054
+    },
+    {
+     "name": "Briey",
+     "lat": 49.25,
+     "lon": 5.94
+    },
+    {
+     "name": "Longwy",
+     "lat": 49.52,
+     "lon": 5.76
+    },
+    {
+     "name": "Étain",
+     "lat": 49.21,
+     "lon": 5.64
+    },
+    {
+     "name": "Gondrecourt",
+     "lat": 48.514,
+     "lon": 5.51
+    },
+    {
+     "name": "Bourmont",
+     "lat": 48.2,
+     "lon": 5.58
+    }
+   ],
+   "ruler": {
+    "name": "Robert I",
+    "born": 1344,
+    "dynasty": "Montbéliard (House of Bar)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "young"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Bar (Montbéliard line); Robert's mother Yolande of Flanders governed for him until 1352/53",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france",
+    "luxembourg"
+   ],
+   "rivals": [
+    "lorraine"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Young Robert I was raised from count to duke by Emperor Charles IV in 1354. The lands west of the Meuse (Barrois mouvant) are held of the King of France, the rest of the Empire. His forceful mother Yolande of Flanders still exerts great influence.",
+    "de": "Der junge Robert I. wurde 1354 von Kaiser Karl IV. vom Grafen zum Herzog erhoben. Die Lande westlich der Maas (Barrois mouvant) sind französische Lehen, der Rest Reichslehen. Seine tatkräftige Mutter Yolande von Flandern hat weiterhin großen Einfluss."
+   },
+   "coa": {
+    "blazon": "Azure semé of crosses crosslet fitchy or, two barbels addorsed or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 12,
+      "arrangement": "semee"
+     },
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "addorsed"
+     }
+    ]
+   }
+  },
+  {
+   "id": "luxembourg",
+   "name": {
+    "en": "Duchy of Luxembourg",
+    "de": "Herzogtum Luxemburg"
+   },
+   "short": {
+    "en": "Luxembourg",
+    "de": "Luxemburg"
+   },
+   "adjective": {
+    "en": "Luxembourgish",
+    "de": "luxemburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#5d8fd0",
+   "capital": {
+    "name": "Luxembourg",
+    "lat": 49.611,
+    "lon": 6.13
+   },
+   "holdings": [
+    {
+     "name": "Luxembourg",
+     "lat": 49.611,
+     "lon": 6.13
+    },
+    {
+     "name": "Arlon",
+     "lat": 49.683,
+     "lon": 5.816
+    },
+    {
+     "name": "Bastogne",
+     "lat": 50.0,
+     "lon": 5.716
+    },
+    {
+     "name": "Diekirch",
+     "lat": 49.868,
+     "lon": 6.16
+    },
+    {
+     "name": "Diedenhofen",
+     "lat": 49.358,
+     "lon": 6.168
+    },
+    {
+     "name": "Durbuy",
+     "lat": 50.353,
+     "lon": 5.456
+    },
+    {
+     "name": "Bitburg",
+     "lat": 49.967,
+     "lon": 6.527
+    },
+    {
+     "name": "Echternach",
+     "lat": 49.812,
+     "lon": 6.42
+    },
+    {
+     "name": "Marche",
+     "lat": 50.227,
+     "lon": 5.344
+    }
+   ],
+   "ruler": {
+    "name": "Wenceslaus I",
+    "born": 1337,
+    "dynasty": "Luxembourg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "cultured",
+     "poet",
+     "generous"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Joanna",
+    "born": 1322,
+    "dynasty": "Leuven (Brabant)",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     0
+    ],
+    "traits": [
+     "shrewd",
+     "proud"
+    ]
+   },
+   "dynasty_note": "House of Luxembourg; half-brother of Emperor Charles IV, and since December 1355 Duke of Brabant and Limburg in right of his wife Joanna",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "brabant",
+    "bar"
+   ],
+   "rivals": [
+    "flanders"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "Wenceslaus, half-brother of Emperor Charles IV, was made the first Duke of Luxembourg in 1354. Through his wife Joanna he has just become Duke of Brabant and Limburg on the death of John III in December 1355. Louis of Male, Count of Flanders, contests the Brabant inheritance and war looms.",
+    "de": "Wenzel, Halbbruder Kaiser Karls IV., wurde 1354 erster Herzog von Luxemburg. Durch seine Gemahlin Johanna ist er nach dem Tod Johanns III. im Dezember 1355 auch Herzog von Brabant und Limburg. Ludwig von Male, Graf von Flandern, bestreitet das brabantische Erbe; ein Krieg droht."
+   },
+   "coa": {
+    "blazon": "Barry argent and azure, a lion rampant gules crowned or, tail forked",
+    "field": "argent",
+    "division": "barry",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_metz",
+   "name": {
+    "en": "Prince-Bishopric of Metz",
+    "de": "Hochstift Metz"
+   },
+   "short": {
+    "en": "Bishopric of Metz",
+    "de": "Hochstift Metz"
+   },
+   "adjective": {
+    "en": "Messin",
+    "de": "metzisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#b35a5a",
+   "capital": {
+    "name": "Vic-sur-Seille",
+    "lat": 48.783,
+    "lon": 6.533
+   },
+   "holdings": [
+    {
+     "name": "Vic-sur-Seille",
+     "lat": 48.783,
+     "lon": 6.533
+    },
+    {
+     "name": "Épinal",
+     "lat": 48.173,
+     "lon": 6.45
+    },
+    {
+     "name": "Sarrebourg",
+     "lat": 48.734,
+     "lon": 7.053
+    },
+    {
+     "name": "Rambervillers",
+     "lat": 48.346,
+     "lon": 6.634
+    },
+    {
+     "name": "Moyen",
+     "lat": 48.484,
+     "lon": 6.567
+    }
+   ],
+   "ruler": {
+    "name": "Adhémar de Monteil",
+    "born": 1300,
+    "dynasty": "Monteil",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "worldly",
+     "stubborn"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop; Adhémar de Monteil of a Dauphinois noble family (bishop 1327–1361)",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lorraine"
+   ],
+   "rivals": [
+    "metz",
+    "bar"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Adhémar de Monteil rules a scattered territory from Vic, since the city of Metz itself has shaken off episcopal lordship. He is often at odds with the citizens and his secular neighbours. The see is one of the Three Bishoprics on the western edge of the Empire.",
+    "de": "Bischof Adhémar de Monteil regiert ein zersplittertes Gebiet von Vic aus, da sich die Stadt Metz selbst der bischöflichen Herrschaft entzogen hat. Mit den Bürgern und weltlichen Nachbarn liegt er oft im Streit. Das Bistum ist eines der drei Bistümer am Westrand des Reiches."
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_toul",
+   "name": {
+    "en": "Prince-Bishopric of Toul",
+    "de": "Hochstift Toul"
+   },
+   "short": {
+    "en": "Bishopric of Toul",
+    "de": "Hochstift Toul"
+   },
+   "adjective": {
+    "en": "Toulois",
+    "de": "toulisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#a07a5a",
+   "capital": {
+    "name": "Toul",
+    "lat": 48.675,
+    "lon": 5.891
+   },
+   "holdings": [
+    {
+     "name": "Toul",
+     "lat": 48.675,
+     "lon": 5.891
+    },
+    {
+     "name": "Void",
+     "lat": 48.686,
+     "lon": 5.62
+    },
+    {
+     "name": "Blénod-lès-Toul",
+     "lat": 48.6,
+     "lon": 5.83
+    }
+   ],
+   "ruler": {
+    "name": "Bertrand de la Tour d'Auvergne",
+    "born": 1310,
+    "dynasty": "La Tour d'Auvergne",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "pious",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (bishop 1353–1361)",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bar"
+   ],
+   "rivals": [
+    "lorraine"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The small temporal lordship of the bishops of Toul is wedged between Lorraine and Bar. Bishop Bertrand relies on the protection of greater neighbours and on the distant Emperor. The city of Toul itself enjoys wide self-government.",
+    "de": "Die kleine weltliche Herrschaft der Bischöfe von Toul liegt eingeklemmt zwischen Lothringen und Bar. Bischof Bertrand ist auf den Schutz mächtiger Nachbarn und des fernen Kaisers angewiesen. Die Stadt Toul selbst genießt weitgehende Selbstverwaltung."
+   },
+   "coa": {
+    "blazon": "Gules, a pale argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "pale",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_verdun",
+   "name": {
+    "en": "Prince-Bishopric of Verdun",
+    "de": "Hochstift Verdun"
+   },
+   "short": {
+    "en": "Bishopric of Verdun",
+    "de": "Hochstift Verdun"
+   },
+   "adjective": {
+    "en": "Verdunois",
+    "de": "verdunisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#8c6a9e",
+   "capital": {
+    "name": "Verdun",
+    "lat": 49.16,
+    "lon": 5.384
+   },
+   "holdings": [
+    {
+     "name": "Verdun",
+     "lat": 49.16,
+     "lon": 5.384
+    },
+    {
+     "name": "Hattonchâtel",
+     "lat": 49.0,
+     "lon": 5.7
+    },
+    {
+     "name": "Mangiennes",
+     "lat": 49.35,
+     "lon": 5.53
+    }
+   ],
+   "ruler": {
+    "name": "Hugues de Bar",
+    "born": 1320,
+    "dynasty": "Bar",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "proud",
+     "worldly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop; Hugh III, a scion of the comital house of Bar (bishop 1352–1361)",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bar"
+   ],
+   "rivals": [
+    "lorraine"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Hugues, a member of the house of Bar, governs the temporal lands of the church of Verdun. The citizens of Verdun claim imperial liberties and resist episcopal power. France's growing influence on the Meuse is felt keenly.",
+    "de": "Bischof Hugo aus dem Hause Bar regiert das weltliche Gebiet der Kirche von Verdun. Die Bürger von Verdun beanspruchen reichsstädtische Freiheiten und widersetzen sich dem Bischof. Der wachsende französische Einfluss an der Maas ist deutlich spürbar."
+   },
+   "coa": {
+    "blazon": "Or, a cross gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "metz",
+   "name": {
+    "en": "Free Imperial City of Metz",
+    "de": "Reichsstadt Metz"
+   },
+   "short": {
+    "en": "Metz",
+    "de": "Metz"
+   },
+   "adjective": {
+    "en": "Messin",
+    "de": "Metzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#6e6e6e",
+   "capital": {
+    "name": "Metz",
+    "lat": 49.12,
+    "lon": 6.177
+   },
+   "holdings": [
+    {
+     "name": "Metz",
+     "lat": 49.12,
+     "lon": 6.177
+    },
+    {
+     "name": "Gorze",
+     "lat": 49.05,
+     "lon": 6.0
+    }
+   ],
+   "ruler": {
+    "name": "Council of the Paraiges (Master-Échevin)",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "luxembourg"
+   ],
+   "rivals": [
+    "bishopric_metz",
+    "lorraine"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Metz is a wealthy, oligarchic city-republic ruled by its patrician 'paraiges'. It has long ceased to obey its bishop and dominates the surrounding Pays messin. Its merchants and bankers lend to princes across the region.",
+    "de": "Metz ist eine reiche, oligarchische Stadtrepublik unter der Herrschaft ihrer patrizischen 'Paraiges'. Sie gehorcht ihrem Bischof längst nicht mehr und beherrscht das umliegende Pays messin. Ihre Kaufleute und Bankiers leihen Fürsten in der ganzen Region Geld."
+   },
+   "coa": {
+    "blazon": "Per pale argent and sable",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "saarbrucken",
+   "name": {
+    "en": "County of Saarbrücken",
+    "de": "Grafschaft Saarbrücken"
+   },
+   "short": {
+    "en": "Saarbrücken",
+    "de": "Saarbrücken"
+   },
+   "adjective": {
+    "en": "Saarbrücken",
+    "de": "saarbrückisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#4a7a9a",
+   "capital": {
+    "name": "Saarbrücken",
+    "lat": 49.233,
+    "lon": 6.997
+   },
+   "holdings": [
+    {
+     "name": "Saarbrücken",
+     "lat": 49.233,
+     "lon": 6.997
+    }
+   ],
+   "ruler": {
+    "name": "Johann II",
+    "born": 1325,
+    "dynasty": "Saarbrücken (Commercy line)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "loyal",
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Counts of Saarbrücken, also lords of Commercy; Johann II is a trusted servant of the French crown",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france",
+    "archbishopric_trier"
+   ],
+   "rivals": [
+    "lorraine"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Count Johann II holds the county on the Saar and the lordship of Commercy on the Meuse. He serves the King of France as a captain while remaining a prince of the Empire. His uncle Boemund is the new Archbishop of Trier.",
+    "de": "Graf Johann II. hält die Grafschaft an der Saar und die Herrschaft Commercy an der Maas. Er dient dem König von Frankreich als Heerführer und bleibt doch Reichsfürst. Sein Onkel Boemund ist der neue Erzbischof von Trier."
+   },
+   "coa": {
+    "blazon": "Azure crusily, a lion argent crowned or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 10,
+      "arrangement": "semee"
+     },
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "archbishopric_trier",
+   "name": {
+    "en": "Electorate of Trier",
+    "de": "Kurfürstentum Trier"
+   },
+   "short": {
+    "en": "Trier",
+    "de": "Kurtrier"
+   },
+   "adjective": {
+    "en": "Trevirian",
+    "de": "kurtrierisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#c43c3c",
+   "capital": {
+    "name": "Trier",
+    "lat": 49.756,
+    "lon": 6.641
+   },
+   "holdings": [
+    {
+     "name": "Trier",
+     "lat": 49.756,
+     "lon": 6.641
+    },
+    {
+     "name": "Koblenz",
+     "lat": 50.357,
+     "lon": 7.594
+    },
+    {
+     "name": "Montabaur",
+     "lat": 50.437,
+     "lon": 7.826
+    },
+    {
+     "name": "Wittlich",
+     "lat": 49.986,
+     "lon": 6.889
+    },
+    {
+     "name": "Cochem",
+     "lat": 50.147,
+     "lon": 7.167
+    },
+    {
+     "name": "Mayen",
+     "lat": 50.327,
+     "lon": 7.222
+    },
+    {
+     "name": "Saarburg",
+     "lat": 49.608,
+     "lon": 6.55
+    },
+    {
+     "name": "Sankt Wendel",
+     "lat": 49.467,
+     "lon": 7.168
+    },
+    {
+     "name": "Boppard",
+     "lat": 50.231,
+     "lon": 7.589
+    },
+    {
+     "name": "Limburg an der Lahn",
+     "lat": 50.388,
+     "lon": 8.062
+    }
+   ],
+   "ruler": {
+    "name": "Boemund II von Saarbrücken",
+    "born": 1295,
+    "dynasty": "Saarbrücken",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "old",
+     "prudent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected archbishop (1354–1362); Boemund of Saarbrücken succeeded the great Baldwin of Luxembourg",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "luxembourg",
+    "bohemia",
+    "saarbrucken"
+   ],
+   "rivals": [
+    "katzenelnbogen"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Archbishop Boemund inherited from Baldwin of Luxembourg (d. 1354) the most solidly built ecclesiastical territory on the Moselle and Rhine. Trier is one of the seven electors confirmed by the Golden Bull being proclaimed this year. The aged prelate is a loyal supporter of the House of Luxembourg.",
+    "de": "Erzbischof Boemund erbte von Balduin von Luxemburg († 1354) das am festesten gefügte geistliche Territorium an Mosel und Rhein. Trier gehört zu den sieben Kurfürsten, die die in diesem Jahr verkündete Goldene Bulle bestätigt. Der betagte Prälat ist ein treuer Anhänger des Hauses Luxemburg."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "archbishopric_cologne",
+   "name": {
+    "en": "Electorate of Cologne",
+    "de": "Kurfürstentum Köln"
+   },
+   "short": {
+    "en": "Cologne",
+    "de": "Kurköln"
+   },
+   "adjective": {
+    "en": "Colognian",
+    "de": "kurkölnisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#2f2f2f",
+   "capital": {
+    "name": "Bonn",
+    "lat": 50.735,
+    "lon": 7.1
+   },
+   "holdings": [
+    {
+     "name": "Bonn",
+     "lat": 50.735,
+     "lon": 7.1
+    },
+    {
+     "name": "Brühl",
+     "lat": 50.829,
+     "lon": 6.905
+    },
+    {
+     "name": "Andernach",
+     "lat": 50.44,
+     "lon": 7.4
+    },
+    {
+     "name": "Ahrweiler",
+     "lat": 50.543,
+     "lon": 7.097
+    },
+    {
+     "name": "Linz am Rhein",
+     "lat": 50.57,
+     "lon": 7.283
+    },
+    {
+     "name": "Zons",
+     "lat": 51.12,
+     "lon": 6.85
+    },
+    {
+     "name": "Kempen",
+     "lat": 51.364,
+     "lon": 6.42
+    },
+    {
+     "name": "Recklinghausen",
+     "lat": 51.614,
+     "lon": 7.198
+    },
+    {
+     "name": "Soest",
+     "lat": 51.571,
+     "lon": 8.106
+    },
+    {
+     "name": "Brilon",
+     "lat": 51.395,
+     "lon": 8.57
+    },
+    {
+     "name": "Medebach",
+     "lat": 51.198,
+     "lon": 8.707
+    },
+    {
+     "name": "Rüthen",
+     "lat": 51.49,
+     "lon": 8.43
+    }
+   ],
+   "ruler": {
+    "name": "Wilhelm von Gennep",
+    "born": 1300,
+    "dynasty": "Gennep",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "able",
+     "frugal"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected archbishop (1349–1362), of a Lower Rhenish lordly family",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "bohemia",
+    "julich"
+   ],
+   "rivals": [
+    "cologne",
+    "mark"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Archbishop Wilhelm von Gennep is a capable administrator restoring the finances of the see after costly wars. Barred from ruling the city of Cologne, he resides at Bonn and Brühl and holds the Duchy of Westphalia around Soest. As elector he has a vote in choosing the King of the Romans.",
+    "de": "Erzbischof Wilhelm von Gennep ist ein fähiger Verwalter, der die nach kostspieligen Kriegen zerrütteten Finanzen saniert. Von der Herrschaft über die Stadt Köln ausgeschlossen, residiert er in Bonn und Brühl und hält das Herzogtum Westfalen um Soest. Als Kurfürst wählt er den römischen König mit."
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "archbishopric_mainz",
+   "name": {
+    "en": "Electorate of Mainz",
+    "de": "Kurfürstentum Mainz"
+   },
+   "short": {
+    "en": "Mainz",
+    "de": "Kurmainz"
+   },
+   "adjective": {
+    "en": "Mainzian",
+    "de": "kurmainzisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#b8323a",
+   "capital": {
+    "name": "Eltville",
+    "lat": 50.028,
+    "lon": 8.118
+   },
+   "holdings": [
+    {
+     "name": "Eltville",
+     "lat": 50.028,
+     "lon": 8.118
+    },
+    {
+     "name": "Bingen",
+     "lat": 49.967,
+     "lon": 7.9
+    },
+    {
+     "name": "Aschaffenburg",
+     "lat": 49.974,
+     "lon": 9.149
+    },
+    {
+     "name": "Miltenberg",
+     "lat": 49.703,
+     "lon": 9.25
+    },
+    {
+     "name": "Tauberbischofsheim",
+     "lat": 49.623,
+     "lon": 9.663
+    },
+    {
+     "name": "Seligenstadt",
+     "lat": 50.044,
+     "lon": 8.977
+    },
+    {
+     "name": "Höchst",
+     "lat": 50.1,
+     "lon": 8.545
+    },
+    {
+     "name": "Fritzlar",
+     "lat": 51.132,
+     "lon": 9.274
+    },
+    {
+     "name": "Heiligenstadt",
+     "lat": 51.377,
+     "lon": 10.137
+    },
+    {
+     "name": "Buchen",
+     "lat": 49.522,
+     "lon": 9.32
+    }
+   ],
+   "ruler": {
+    "name": "Gerlach von Nassau",
+    "born": 1322,
+    "dynasty": "Nassau (Walram line)",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "shrewd"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected archbishop (from 1346; undisputed since the death of his rival Heinrich von Virneburg in 1353); son of Count Gerlach I of Nassau",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "bohemia",
+    "nassau_wiesbaden",
+    "nassau_weilburg"
+   ],
+   "rivals": [
+    "hesse",
+    "mainz"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "Gerlach of Nassau, installed by the Pope and Charles IV, has been undisputed archbishop since his rival Heinrich von Virneburg died in 1353. As arch-chancellor of the Empire he is the first among the electors. His long-standing feud with the Landgraves of Hesse over the lands in Hesse and the Eichsfeld continues.",
+    "de": "Gerlach von Nassau, von Papst und Karl IV. eingesetzt, ist seit dem Tod seines Rivalen Heinrich von Virneburg 1353 unangefochtener Erzbischof. Als Erzkanzler des Reiches ist er der Vornehmste der Kurfürsten. Die alte Fehde mit den Landgrafen von Hessen um Besitz in Hessen und im Eichsfeld dauert an."
+   },
+   "coa": {
+    "blazon": "Gules, a wheel argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "palatinate",
+   "name": {
+    "en": "Electoral Palatinate of the Rhine",
+    "de": "Kurpfalz"
+   },
+   "short": {
+    "en": "Palatinate",
+    "de": "Kurpfalz"
+   },
+   "adjective": {
+    "en": "Palatine",
+    "de": "kurpfälzisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#2d2d6e",
+   "capital": {
+    "name": "Heidelberg",
+    "lat": 49.41,
+    "lon": 8.694
+   },
+   "holdings": [
+    {
+     "name": "Heidelberg",
+     "lat": 49.41,
+     "lon": 8.694
+    },
+    {
+     "name": "Neustadt an der Haardt",
+     "lat": 49.354,
+     "lon": 8.139
+    },
+    {
+     "name": "Alzey",
+     "lat": 49.747,
+     "lon": 8.116
+    },
+    {
+     "name": "Bacharach",
+     "lat": 50.058,
+     "lon": 7.767
+    },
+    {
+     "name": "Mosbach",
+     "lat": 49.353,
+     "lon": 9.144
+    },
+    {
+     "name": "Germersheim",
+     "lat": 49.222,
+     "lon": 8.364
+    },
+    {
+     "name": "Weinheim",
+     "lat": 49.549,
+     "lon": 8.67
+    },
+    {
+     "name": "Amberg",
+     "lat": 49.443,
+     "lon": 11.858
+    },
+    {
+     "name": "Nabburg",
+     "lat": 49.453,
+     "lon": 12.18
+    },
+    {
+     "name": "Neumarkt",
+     "lat": 49.28,
+     "lon": 11.46
+    }
+   ],
+   "ruler": {
+    "name": "Ruprecht I",
+    "born": 1309,
+    "dynasty": "Wittelsbach (Palatine line)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "shrewd",
+     "founder",
+     "stern"
+    ]
+   },
+   "heir": {
+    "name": "Ruprecht II",
+    "born": 1325,
+    "dynasty": "Wittelsbach (Palatine line)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "dutiful",
+     "pious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "House of Wittelsbach, Palatine line; Ruprecht I has ruled alone since his brother Rudolf II died in 1353, with his nephew Ruprecht II as heir",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "bohemia",
+    "archbishopric_mainz"
+   ],
+   "rivals": [
+    "bavaria_upper"
+   ],
+   "claims_on": [
+    "bavaria_upper"
+   ],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Count Palatine Ruprecht I has reunited the Rhenish and Upper Palatine lands of his line. The Golden Bull, being proclaimed this year, confirms the Palatinate rather than Bavaria as holder of the Wittelsbach electoral vote. He is planning a university at Heidelberg and steadily buys up pledges and lordships.",
+    "de": "Pfalzgraf Ruprecht I. hat die rheinischen und oberpfälzischen Lande seiner Linie wieder vereint. Die in diesem Jahr verkündete Goldene Bulle bestätigt der Pfalz, nicht Bayern, die wittelsbachische Kurstimme. Er plant eine Universität in Heidelberg und erwirbt beständig Pfandschaften und Herrschaften."
+   },
+   "coa": {
+    "blazon": "Sable, a lion or crowned gules, quartered with lozengy argent and azure",
+    "field": "sable",
+    "division": "quarterly",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "quarters"
+     }
+    ]
+   }
+  },
+  {
+   "id": "cologne",
+   "name": {
+    "en": "Free City of Cologne",
+    "de": "Freie Stadt Köln"
+   },
+   "short": {
+    "en": "Cologne",
+    "de": "Köln"
+   },
+   "adjective": {
+    "en": "Colognian",
+    "de": "Kölner"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#a83232",
+   "capital": {
+    "name": "Cologne",
+    "lat": 50.938,
+    "lon": 6.958
+   },
+   "holdings": [
+    {
+     "name": "Cologne",
+     "lat": 50.938,
+     "lon": 6.958
+    },
+    {
+     "name": "Deutz",
+     "lat": 50.937,
+     "lon": 6.975
+    }
+   ],
+   "ruler": {
+    "name": "Council of the Richerzeche (patrician council)",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "aachen",
+    "bohemia"
+   ],
+   "rivals": [
+    "archbishopric_cologne"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Cologne is the largest and richest city of the Empire, a great Hanseatic and Rhine trading port. Since the battle of Worringen in 1288 its patricians have ruled it free of the archbishop's control. Its cathedral, begun in 1248, rises slowly over the river.",
+    "de": "Köln ist die größte und reichste Stadt des Reiches, ein bedeutender Hanse- und Rheinhafen. Seit der Schlacht von Worringen 1288 regieren die Patrizier sie frei von erzbischöflicher Gewalt. Der 1248 begonnene Dom wächst langsam über dem Strom empor."
+   },
+   "coa": {
+    "blazon": "Argent, a chief gules charged with three crowns or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "in_chief"
+     }
+    ]
+   }
+  },
+  {
+   "id": "aachen",
+   "name": {
+    "en": "Free Imperial City of Aachen",
+    "de": "Reichsstadt Aachen"
+   },
+   "short": {
+    "en": "Aachen",
+    "de": "Aachen"
+   },
+   "adjective": {
+    "en": "Aachen",
+    "de": "Aachener"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#d4a017",
+   "capital": {
+    "name": "Aachen",
+    "lat": 50.776,
+    "lon": 6.084
+   },
+   "holdings": [
+    {
+     "name": "Aachen",
+     "lat": 50.776,
+     "lon": 6.084
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "cologne"
+   ],
+   "rivals": [
+    "julich"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Aachen, Charlemagne's city, is where the kings of the Romans are crowned. It is a free imperial city living from cloth-making, pilgrims and its hot springs. The neighbouring Margraves of Jülich covet its protectorship.",
+    "de": "Aachen, die Stadt Karls des Großen, ist Krönungsort der römischen Könige. Die Reichsstadt lebt von Tuchmacherei, Pilgern und ihren heißen Quellen. Die benachbarten Markgrafen von Jülich begehren die Schutzvogtei."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "julich",
+   "name": {
+    "en": "Margraviate of Jülich",
+    "de": "Markgrafschaft Jülich"
+   },
+   "short": {
+    "en": "Jülich",
+    "de": "Jülich"
+   },
+   "adjective": {
+    "en": "Jülich",
+    "de": "jülichsch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#e0c020",
+   "capital": {
+    "name": "Nideggen",
+    "lat": 50.69,
+    "lon": 6.483
+   },
+   "holdings": [
+    {
+     "name": "Nideggen",
+     "lat": 50.69,
+     "lon": 6.483
+    },
+    {
+     "name": "Jülich",
+     "lat": 50.922,
+     "lon": 6.358
+    },
+    {
+     "name": "Düren",
+     "lat": 50.8,
+     "lon": 6.48
+    },
+    {
+     "name": "Münstereifel",
+     "lat": 50.557,
+     "lon": 6.763
+    },
+    {
+     "name": "Bergheim",
+     "lat": 50.955,
+     "lon": 6.64
+    },
+    {
+     "name": "Kaster",
+     "lat": 51.03,
+     "lon": 6.53
+    }
+   ],
+   "ruler": {
+    "name": "Wilhelm V",
+    "born": 1299,
+    "dynasty": "Jülich (Heimbach)",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "shrewd"
+    ]
+   },
+   "heir": {
+    "name": "Wilhelm",
+    "born": 1325,
+    "dynasty": "Jülich (Heimbach)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave",
+     "unruly"
+    ]
+   },
+   "consort": {
+    "name": "Johanna of Hainaut",
+    "born": 1315,
+    "dynasty": "Avesnes",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "dynasty_note": "House of Jülich; Wilhelm V, brother-in-law of Edward III of England and of the late Emperor Louis IV, was made margrave in 1336",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "england",
+    "berg",
+    "archbishopric_cologne"
+   ],
+   "rivals": [
+    "aachen"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Margrave Wilhelm V is one of the shrewdest princes of the Lower Rhine, linked by marriage to the English and Bavarian royal houses. He hopes to be raised to the rank of duke by Charles IV. His second son Gerhard has married the heiress of Berg and Ravensberg.",
+    "de": "Markgraf Wilhelm V. ist einer der klügsten Fürsten am Niederrhein und durch Heirat mit dem englischen und dem bayerischen Herrscherhaus verbunden. Er hofft auf die Erhebung zum Herzog durch Karl IV. Sein Sohn Gerhard hat die Erbin von Berg und Ravensberg geheiratet."
+   },
+   "coa": {
+    "blazon": "Or, a lion sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "berg",
+   "name": {
+    "en": "County of Berg",
+    "de": "Grafschaft Berg"
+   },
+   "short": {
+    "en": "Berg",
+    "de": "Berg"
+   },
+   "adjective": {
+    "en": "Bergish",
+    "de": "bergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#c8283c",
+   "capital": {
+    "name": "Burg an der Wupper",
+    "lat": 51.135,
+    "lon": 7.15
+   },
+   "holdings": [
+    {
+     "name": "Burg an der Wupper",
+     "lat": 51.135,
+     "lon": 7.15
+    },
+    {
+     "name": "Düsseldorf",
+     "lat": 51.227,
+     "lon": 6.776
+    },
+    {
+     "name": "Lennep",
+     "lat": 51.19,
+     "lon": 7.26
+    },
+    {
+     "name": "Bensberg",
+     "lat": 50.96,
+     "lon": 7.16
+    },
+    {
+     "name": "Ratingen",
+     "lat": 51.297,
+     "lon": 6.85
+    },
+    {
+     "name": "Bielefeld",
+     "lat": 52.021,
+     "lon": 8.532
+    },
+    {
+     "name": "Vlotho",
+     "lat": 52.165,
+     "lon": 8.86
+    }
+   ],
+   "ruler": {
+    "name": "Gerhard",
+    "born": 1320,
+    "dynasty": "Jülich (Heimbach)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "brave",
+     "diligent"
+    ]
+   },
+   "heir": {
+    "name": "Wilhelm",
+    "born": 1338,
+    "dynasty": "Jülich-Berg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": {
+    "name": "Margarete of Ravensberg-Berg",
+    "born": 1320,
+    "dynasty": "Ravensberg",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "heiress"
+    ]
+   },
+   "dynasty_note": "Jülich cadet line; Gerhard, second son of Wilhelm V of Jülich, holds Berg and Ravensberg in right of his wife Margarete",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "julich"
+   ],
+   "rivals": [
+    "mark"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Gerhard of Jülich rules Berg and the Westphalian county of Ravensberg through his wife, the heiress Margarete. The rising market town of Düsseldorf is the jewel of the county. Close ties with his father in Jülich shape his policy.",
+    "de": "Gerhard von Jülich regiert Berg und die westfälische Grafschaft Ravensberg durch seine Gemahlin, die Erbin Margarete. Die aufstrebende Stadt Düsseldorf ist das Juwel der Grafschaft. Enge Bindungen an seinen Vater in Jülich bestimmen seine Politik."
+   },
+   "coa": {
+    "blazon": "Argent, a lion gules crowned azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "cleves",
+   "name": {
+    "en": "County of Cleves",
+    "de": "Grafschaft Kleve"
+   },
+   "short": {
+    "en": "Cleves",
+    "de": "Kleve"
+   },
+   "adjective": {
+    "en": "Clevish",
+    "de": "klevisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#d23c3c",
+   "capital": {
+    "name": "Kleve",
+    "lat": 51.789,
+    "lon": 6.138
+   },
+   "holdings": [
+    {
+     "name": "Kleve",
+     "lat": 51.789,
+     "lon": 6.138
+    },
+    {
+     "name": "Wesel",
+     "lat": 51.659,
+     "lon": 6.618
+    },
+    {
+     "name": "Dinslaken",
+     "lat": 51.565,
+     "lon": 6.734
+    },
+    {
+     "name": "Duisburg",
+     "lat": 51.433,
+     "lon": 6.762
+    },
+    {
+     "name": "Xanten",
+     "lat": 51.66,
+     "lon": 6.45
+    }
+   ],
+   "ruler": {
+    "name": "Johann",
+    "born": 1293,
+    "dynasty": "Cleves (Flamenses)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "old",
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Adolf of the Mark",
+    "born": 1334,
+    "dynasty": "La Marck",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "clever"
+    ]
+   },
+   "consort": {
+    "name": "Mechteld of Guelders",
+    "born": 1325,
+    "dynasty": "Guelders",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "shrewd"
+    ]
+   },
+   "dynasty_note": "Old house of the counts of Cleves; Johann, a former cleric, is childless and his nephew Adolf of the Mark is expected to inherit",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mark"
+   ],
+   "rivals": [
+    "guelders"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Old Count Johann left the Church to succeed his brother in 1347 but has no children. His nephew Adolf of the Mark stands to inherit, which would join Cleves and Mark. The county controls the Rhine crossing at Wesel and quarrels with neighbouring Guelders.",
+    "de": "Der alte Graf Johann verließ den geistlichen Stand, um 1347 seinem Bruder zu folgen, ist aber kinderlos. Sein Neffe Adolf von der Mark ist der erwartete Erbe, was Kleve und Mark vereinen würde. Die Grafschaft beherrscht den Rheinübergang bei Wesel und streitet mit dem benachbarten Geldern."
+   },
+   "coa": {
+    "blazon": "Gules, an inescutcheon argent, an escarbuncle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "overall"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mark",
+   "name": {
+    "en": "County of the Mark",
+    "de": "Grafschaft Mark"
+   },
+   "short": {
+    "en": "Mark",
+    "de": "Mark"
+   },
+   "adjective": {
+    "en": "Märkish",
+    "de": "märkisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#e3c84a",
+   "capital": {
+    "name": "Hamm",
+    "lat": 51.68,
+    "lon": 7.817
+   },
+   "holdings": [
+    {
+     "name": "Hamm",
+     "lat": 51.68,
+     "lon": 7.817
+    },
+    {
+     "name": "Unna",
+     "lat": 51.537,
+     "lon": 7.689
+    },
+    {
+     "name": "Iserlohn",
+     "lat": 51.376,
+     "lon": 7.7
+    },
+    {
+     "name": "Altena",
+     "lat": 51.3,
+     "lon": 7.67
+    },
+    {
+     "name": "Bochum",
+     "lat": 51.48,
+     "lon": 7.216
+    },
+    {
+     "name": "Lüdenscheid",
+     "lat": 51.22,
+     "lon": 7.63
+    },
+    {
+     "name": "Kamen",
+     "lat": 51.59,
+     "lon": 7.66
+    }
+   ],
+   "ruler": {
+    "name": "Engelbert III",
+    "born": 1333,
+    "dynasty": "La Marck",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "warlike",
+     "energetic"
+    ]
+   },
+   "heir": {
+    "name": "Adolf",
+    "born": 1334,
+    "dynasty": "La Marck",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "clever"
+    ]
+   },
+   "consort": {
+    "name": "Richarda of Jülich",
+    "born": 1335,
+    "dynasty": "Jülich",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "House of La Marck (Mark), a branch of the Counts of Berg-Altena",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "cleves"
+   ],
+   "rivals": [
+    "archbishopric_cologne",
+    "berg"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Young Count Engelbert III is a vigorous warrior who spends much of his reign feuding with the Archbishop of Cologne and Westphalian neighbours. The county stretches from the Lippe to the hills of the Sauerland. His brother Adolf is heir both to the Mark and, through their uncle, to Cleves.",
+    "de": "Der junge Graf Engelbert III. ist ein tatkräftiger Krieger, der sich häufig mit dem Erzbischof von Köln und westfälischen Nachbarn befehdet. Die Grafschaft reicht von der Lippe bis ins Sauerland. Sein Bruder Adolf ist Erbe der Mark und über den Onkel auch Kleves."
+   },
+   "coa": {
+    "blazon": "Or, a fess chequy gules and argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "nassau_wiesbaden",
+   "name": {
+    "en": "County of Nassau-Wiesbaden-Idstein",
+    "de": "Grafschaft Nassau-Wiesbaden-Idstein"
+   },
+   "short": {
+    "en": "Nassau-Idstein",
+    "de": "Nassau-Idstein"
+   },
+   "adjective": {
+    "en": "Nassau",
+    "de": "nassauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#3a6aa8",
+   "capital": {
+    "name": "Idstein",
+    "lat": 50.22,
+    "lon": 8.27
+   },
+   "holdings": [
+    {
+     "name": "Idstein",
+     "lat": 50.22,
+     "lon": 8.27
+    },
+    {
+     "name": "Wehen",
+     "lat": 50.15,
+     "lon": 8.2
+    }
+   ],
+   "ruler": {
+    "name": "Adolf I",
+    "born": 1307,
+    "dynasty": "Nassau (Walram line)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "dutiful"
+    ]
+   },
+   "heir": {
+    "name": "Gerlach",
+    "born": 1330,
+    "dynasty": "Nassau (Walram line)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Walram line of the House of Nassau; Adolf I received Wiesbaden and Idstein when his father's lands were divided in 1355; brother of Archbishop Gerlach of Mainz",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "archbishopric_mainz",
+    "nassau_weilburg"
+   ],
+   "rivals": [
+    "katzenelnbogen"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Count Adolf I received Wiesbaden and Idstein in the partition of 1355 between the sons of Gerlach I. His brother is Archbishop Gerlach of Mainz, a powerful patron. The small county lies amid the wooded Taunus hills.",
+    "de": "Graf Adolf I. erhielt bei der Teilung von 1355 unter den Söhnen Gerlachs I. Wiesbaden und Idstein. Sein Bruder ist Erzbischof Gerlach von Mainz, ein mächtiger Gönner. Die kleine Grafschaft liegt in den Waldhöhen des Taunus."
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nassau_weilburg",
+   "name": {
+    "en": "County of Nassau-Weilburg",
+    "de": "Grafschaft Nassau-Weilburg"
+   },
+   "short": {
+    "en": "Nassau-Weilburg",
+    "de": "Nassau-Weilburg"
+   },
+   "adjective": {
+    "en": "Nassau",
+    "de": "nassauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#4f86c6",
+   "capital": {
+    "name": "Weilburg",
+    "lat": 50.485,
+    "lon": 8.262
+   },
+   "holdings": [
+    {
+     "name": "Weilburg",
+     "lat": 50.485,
+     "lon": 8.262
+    },
+    {
+     "name": "Usingen",
+     "lat": 50.336,
+     "lon": 8.535
+    }
+   ],
+   "ruler": {
+    "name": "Johann I",
+    "born": 1309,
+    "dynasty": "Nassau (Walram line)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "ambitious",
+     "shrewd"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Walram line of the House of Nassau; Johann I received Weilburg in the 1355 partition",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "archbishopric_mainz",
+    "nassau_wiesbaden",
+    "bohemia"
+   ],
+   "rivals": [
+    "hesse"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Johann I of Nassau-Weilburg is an ambitious servant of Charles IV and of his brother the Archbishop of Mainz. He gathers pledges and offices along the Lahn. He hopes for elevation to the rank of princely count.",
+    "de": "Johann I. von Nassau-Weilburg ist ein ehrgeiziger Gefolgsmann Karls IV. und seines Bruders, des Erzbischofs von Mainz. Er sammelt Pfandschaften und Ämter an der Lahn. Er hofft auf die Erhebung in den gefürsteten Grafenstand."
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nassau_dillenburg",
+   "name": {
+    "en": "County of Nassau-Dillenburg",
+    "de": "Grafschaft Nassau-Dillenburg"
+   },
+   "short": {
+    "en": "Nassau-Dillenburg",
+    "de": "Nassau-Dillenburg"
+   },
+   "adjective": {
+    "en": "Nassau",
+    "de": "nassauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#2a4f80",
+   "capital": {
+    "name": "Dillenburg",
+    "lat": 50.74,
+    "lon": 8.287
+   },
+   "holdings": [
+    {
+     "name": "Dillenburg",
+     "lat": 50.74,
+     "lon": 8.287
+    },
+    {
+     "name": "Siegen",
+     "lat": 50.874,
+     "lon": 8.024
+    },
+    {
+     "name": "Haiger",
+     "lat": 50.74,
+     "lon": 8.2
+    }
+   ],
+   "ruler": {
+    "name": "Johann I",
+    "born": 1340,
+    "dynasty": "Nassau (Ottonian line)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "young",
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ottonian line of the House of Nassau; Johann I succeeded his father Otto II around 1351",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nassau_wiesbaden"
+   ],
+   "rivals": [
+    "hesse"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Young Count Johann I rules the iron-rich hills around Dillenburg and shares the town of Siegen with the Archbishop of Cologne. Other Ottonian cousins hold Hadamar and Beilstein. Feuds with Hesse and local knights are a constant threat.",
+    "de": "Der junge Graf Johann I. regiert das erzreiche Bergland um Dillenburg und teilt sich die Stadt Siegen mit dem Erzbischof von Köln. Andere Vettern der ottonischen Linie halten Hadamar und Beilstein. Fehden mit Hessen und dem örtlichen Adel sind eine stete Gefahr."
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "katzenelnbogen",
+   "name": {
+    "en": "County of Katzenelnbogen",
+    "de": "Grafschaft Katzenelnbogen"
+   },
+   "short": {
+    "en": "Katzenelnbogen",
+    "de": "Katzenelnbogen"
+   },
+   "adjective": {
+    "en": "Katzenelnbogen",
+    "de": "katzenelnbogisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#d86a1e",
+   "capital": {
+    "name": "Katzenelnbogen",
+    "lat": 50.267,
+    "lon": 7.977
+   },
+   "holdings": [
+    {
+     "name": "Katzenelnbogen",
+     "lat": 50.267,
+     "lon": 7.977
+    },
+    {
+     "name": "Darmstadt",
+     "lat": 49.872,
+     "lon": 8.651
+    },
+    {
+     "name": "Rüsselsheim",
+     "lat": 49.99,
+     "lon": 8.41
+    },
+    {
+     "name": "Zwingenberg",
+     "lat": 49.72,
+     "lon": 8.61
+    }
+   ],
+   "ruler": {
+    "name": "Wilhelm II",
+    "born": 1315,
+    "dynasty": "Katzenelnbogen",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "thrifty",
+     "shrewd"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Counts of Katzenelnbogen; the elder line (Rheinfels) under Wilhelm II, with the younger line holding Darmstadt and Zwingenberg in the Upper County",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "palatinate"
+   ],
+   "rivals": [
+    "archbishopric_trier",
+    "nassau_wiesbaden"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Counts of Katzenelnbogen grow rich from the Rhine tolls at St. Goar beneath their castle of Rheinfels. Their lands are split between the Lower County on the Lahn and the Upper County around Darmstadt. They are renowned for clever finance and early Riesling vineyards.",
+    "de": "Die Grafen von Katzenelnbogen werden reich durch die Rheinzölle bei St. Goar unterhalb ihrer Burg Rheinfels. Ihre Lande teilen sich in die Niedergrafschaft an der Lahn und die Obergrafschaft um Darmstadt. Sie sind für kluge Finanzpolitik bekannt."
+   },
+   "coa": {
+    "blazon": "Or, a lion gules crowned azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "sponheim_kreuznach",
+   "name": {
+    "en": "County of Sponheim-Kreuznach",
+    "de": "Vordere Grafschaft Sponheim"
+   },
+   "short": {
+    "en": "Sponheim-Kreuznach",
+    "de": "Sponheim-Kreuznach"
+   },
+   "adjective": {
+    "en": "Sponheim",
+    "de": "sponheimisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#b0402a",
+   "capital": {
+    "name": "Kreuznach",
+    "lat": 49.843,
+    "lon": 7.867
+   },
+   "holdings": [
+    {
+     "name": "Kreuznach",
+     "lat": 49.843,
+     "lon": 7.867
+    },
+    {
+     "name": "Kirchberg",
+     "lat": 49.944,
+     "lon": 7.41
+    },
+    {
+     "name": "Gutenberg",
+     "lat": 49.87,
+     "lon": 7.8
+    }
+   ],
+   "ruler": {
+    "name": "Walram",
+    "born": 1305,
+    "dynasty": "Sponheim",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": {
+    "name": "Simon III",
+    "born": 1330,
+    "dynasty": "Sponheim",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Kreuznach line of the Counts of Sponheim (the 'Front County')",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "palatinate"
+   ],
+   "rivals": [
+    "archbishopric_mainz"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Count Walram holds the 'Front County' of Sponheim around Kreuznach on the Nahe. Hemmed in by Mainz, the Palatinate and Trier, the county survives by careful alliances. Its castles guard the salt and wine trade of the Nahe valley.",
+    "de": "Graf Walram hält die Vordere Grafschaft Sponheim um Kreuznach an der Nahe. Zwischen Mainz, Pfalz und Trier eingezwängt, überlebt die Grafschaft durch vorsichtige Bündnisse. Ihre Burgen schützen den Salz- und Weinhandel des Nahetals."
+   },
+   "coa": {
+    "blazon": "Chequy gules and argent",
+    "field": "gules",
+    "division": "chequy",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sponheim_starkenburg",
+   "name": {
+    "en": "County of Sponheim-Starkenburg",
+    "de": "Hintere Grafschaft Sponheim"
+   },
+   "short": {
+    "en": "Sponheim-Starkenburg",
+    "de": "Sponheim-Starkenburg"
+   },
+   "adjective": {
+    "en": "Sponheim",
+    "de": "sponheimisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#3a5ab0",
+   "capital": {
+    "name": "Starkenburg",
+    "lat": 49.958,
+    "lon": 7.118
+   },
+   "holdings": [
+    {
+     "name": "Starkenburg",
+     "lat": 49.958,
+     "lon": 7.118
+    },
+    {
+     "name": "Birkenfeld",
+     "lat": 49.65,
+     "lon": 7.167
+    },
+    {
+     "name": "Kastellaun",
+     "lat": 50.07,
+     "lon": 7.44
+    },
+    {
+     "name": "Trarbach",
+     "lat": 49.95,
+     "lon": 7.2
+    }
+   ],
+   "ruler": {
+    "name": "Johann III",
+    "born": 1315,
+    "dynasty": "Sponheim",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "patient"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Starkenburg line of the Counts of Sponheim (the 'Rear County'); Johann's mother Loretta famously held Archbishop Baldwin captive in 1328",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "luxembourg"
+   ],
+   "rivals": [
+    "archbishopric_trier"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Johann III rules the 'Rear County' of Sponheim on the Moselle and in the Hunsrück. His mother Loretta once captured Archbishop Baldwin of Trier and extracted a ransom. Relations with Trier remain watchful.",
+    "de": "Johann III. regiert die Hintere Grafschaft Sponheim an der Mosel und im Hunsrück. Seine Mutter Loretta nahm einst Erzbischof Balduin von Trier gefangen und erpresste Lösegeld. Das Verhältnis zu Trier bleibt wachsam."
+   },
+   "coa": {
+    "blazon": "Chequy azure and or",
+    "field": "azure",
+    "division": "chequy",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hesse",
+   "name": {
+    "en": "Landgraviate of Hesse",
+    "de": "Landgrafschaft Hessen"
+   },
+   "short": {
+    "en": "Hesse",
+    "de": "Hessen"
+   },
+   "adjective": {
+    "en": "Hessian",
+    "de": "hessisch"
+   },
+   "rank": "landgraviate",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#4a78b8",
+   "capital": {
+    "name": "Kassel",
+    "lat": 51.316,
+    "lon": 9.49
+   },
+   "holdings": [
+    {
+     "name": "Kassel",
+     "lat": 51.316,
+     "lon": 9.49
+    },
+    {
+     "name": "Marburg",
+     "lat": 50.81,
+     "lon": 8.77
+    },
+    {
+     "name": "Gießen",
+     "lat": 50.584,
+     "lon": 8.678
+    },
+    {
+     "name": "Eschwege",
+     "lat": 51.188,
+     "lon": 10.053
+    },
+    {
+     "name": "Melsungen",
+     "lat": 51.13,
+     "lon": 9.55
+    },
+    {
+     "name": "Alsfeld",
+     "lat": 50.75,
+     "lon": 9.27
+    },
+    {
+     "name": "Grünberg",
+     "lat": 50.594,
+     "lon": 8.96
+    },
+    {
+     "name": "Rotenburg an der Fulda",
+     "lat": 50.995,
+     "lon": 9.73
+    },
+    {
+     "name": "Frankenberg",
+     "lat": 51.06,
+     "lon": 8.8
+    },
+    {
+     "name": "Wolfhagen",
+     "lat": 51.326,
+     "lon": 9.17
+    }
+   ],
+   "ruler": {
+    "name": "Heinrich II",
+    "born": 1302,
+    "dynasty": "Hesse (Brabant line)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "iron-willed",
+     "stern"
+    ]
+   },
+   "heir": {
+    "name": "Otto",
+    "born": 1322,
+    "dynasty": "Hesse (Brabant line)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "brave",
+     "hunter"
+    ]
+   },
+   "consort": {
+    "name": "Elisabeth of Meissen",
+    "born": 1306,
+    "dynasty": "Wettin",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Hesse, descended from the Ludowingian landgraves through Sophie of Brabant; Heinrich II 'the Iron' rules with his son Otto 'the Archer' as co-regent",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "archbishopric_mainz",
+    "nassau_weilburg"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Landgrave Heinrich II 'the Iron' has fought a long and bitter war with the Archbishops of Mainz over power in Hesse. His son Otto 'the Archer' shares in the government. The landgraviate is split between Upper Hesse around Marburg and Lower Hesse around Kassel, separated by Mainz lands.",
+    "de": "Landgraf Heinrich II. 'der Eiserne' führte einen langen, erbitterten Krieg gegen die Mainzer Erzbischöfe um die Macht in Hessen. Sein Sohn Otto 'der Schütz' ist an der Regierung beteiligt. Die Landgrafschaft zerfällt in Oberhessen um Marburg und Niederhessen um Kassel, getrennt durch Mainzer Besitz."
+   },
+   "coa": {
+    "blazon": "Azure, a lion barry argent and gules crowned or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "frankfurt",
+   "name": {
+    "en": "Free Imperial City of Frankfurt",
+    "de": "Reichsstadt Frankfurt"
+   },
+   "short": {
+    "en": "Frankfurt",
+    "de": "Frankfurt"
+   },
+   "adjective": {
+    "en": "Frankfurt",
+    "de": "Frankfurter"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#c03030",
+   "capital": {
+    "name": "Frankfurt am Main",
+    "lat": 50.111,
+    "lon": 8.682
+   },
+   "holdings": [
+    {
+     "name": "Frankfurt am Main",
+     "lat": 50.111,
+     "lon": 8.682
+    },
+    {
+     "name": "Sachsenhausen",
+     "lat": 50.1,
+     "lon": 8.69
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mainz",
+    "worms",
+    "speyer",
+    "bohemia"
+   ],
+   "rivals": [
+    "hanau"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Frankfurt am Main is the traditional place of royal elections, a role the Golden Bull of this year makes permanent. Its spring and autumn fairs make it a great hub of trade between the Rhine and the east. The city leads the league of Wetterau towns.",
+    "de": "Frankfurt am Main ist der herkömmliche Ort der Königswahl, was die Goldene Bulle in diesem Jahr festschreibt. Seine Frühjahrs- und Herbstmessen machen es zum großen Handelsknoten zwischen Rhein und Osten. Die Stadt führt den Bund der Wetterauer Städte."
+   },
+   "coa": {
+    "blazon": "Gules, an eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mainz",
+   "name": {
+    "en": "Free City of Mainz",
+    "de": "Freie Stadt Mainz"
+   },
+   "short": {
+    "en": "Mainz",
+    "de": "Mainz"
+   },
+   "adjective": {
+    "en": "Mainz",
+    "de": "Mainzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#9a2a3a",
+   "capital": {
+    "name": "Mainz",
+    "lat": 49.999,
+    "lon": 8.273
+   },
+   "holdings": [
+    {
+     "name": "Mainz",
+     "lat": 49.999,
+     "lon": 8.273
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "frankfurt",
+    "worms",
+    "speyer"
+   ],
+   "rivals": [
+    "archbishopric_mainz"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "'Golden Mainz' has governed itself free of its archbishop since 1244. It is a leading member of the Rhenish town league with Worms and Speyer. Its patricians are wealthy but the guilds press ever harder for a share of power.",
+    "de": "Das 'Goldene Mainz' regiert sich seit 1244 frei von seinem Erzbischof. Mit Worms und Speyer ist es führendes Mitglied des rheinischen Städtebundes. Die Patrizier sind reich, doch die Zünfte drängen immer stärker auf Teilhabe an der Macht."
+   },
+   "coa": {
+    "blazon": "Gules, two wheels argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "argent",
+      "count": 2,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "worms",
+   "name": {
+    "en": "Free City of Worms",
+    "de": "Freie Stadt Worms"
+   },
+   "short": {
+    "en": "Worms",
+    "de": "Worms"
+   },
+   "adjective": {
+    "en": "Worms",
+    "de": "Wormser"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#7a2a2a",
+   "capital": {
+    "name": "Worms",
+    "lat": 49.632,
+    "lon": 8.359
+   },
+   "holdings": [
+    {
+     "name": "Worms",
+     "lat": 49.632,
+     "lon": 8.359
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mainz",
+    "speyer",
+    "frankfurt"
+   ],
+   "rivals": [
+    "palatinate"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Worms, ancient seat of imperial diets and of the Nibelung legend, is a free city that has thrown off episcopal lordship. It belongs to the league of Rhenish towns. The growing power of the Palatinate presses upon it.",
+    "de": "Worms, alter Ort von Reichstagen und Schauplatz der Nibelungensage, ist eine Freie Stadt, die die bischöfliche Herrschaft abgeschüttelt hat. Sie gehört dem Bund der rheinischen Städte an. Die wachsende Macht der Pfalz drückt auf sie."
+   },
+   "coa": {
+    "blazon": "Gules, a key argent with a mullet or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "speyer",
+   "name": {
+    "en": "Free Imperial City of Speyer",
+    "de": "Reichsstadt Speyer"
+   },
+   "short": {
+    "en": "Speyer",
+    "de": "Speyer"
+   },
+   "adjective": {
+    "en": "Speyer",
+    "de": "Speyerer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#4a4a8a",
+   "capital": {
+    "name": "Speyer",
+    "lat": 49.317,
+    "lon": 8.431
+   },
+   "holdings": [
+    {
+     "name": "Speyer",
+     "lat": 49.317,
+     "lon": 8.431
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "mainz",
+    "worms",
+    "frankfurt"
+   ],
+   "rivals": [
+    "bishopric_speyer",
+    "palatinate"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Speyer, burial place of the Salian emperors, is a free imperial city on the Rhine. Its citizens have long disputed rights with their bishop, who has withdrawn to Bruchsal. Guild members gained places on the council in the 1330s and 1340s.",
+    "de": "Speyer, Grablege der salischen Kaiser, ist eine Reichsstadt am Rhein. Die Bürger streiten seit Langem mit ihrem Bischof, der sich nach Bruchsal zurückgezogen hat. Zunftmitglieder erlangten in den 1330er und 1340er Jahren Sitze im Rat."
+   },
+   "coa": {
+    "blazon": "Argent, a church gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_speyer",
+   "name": {
+    "en": "Prince-Bishopric of Speyer",
+    "de": "Hochstift Speyer"
+   },
+   "short": {
+    "en": "Bishopric of Speyer",
+    "de": "Hochstift Speyer"
+   },
+   "adjective": {
+    "en": "Speyer",
+    "de": "speyerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#5a6aa8",
+   "capital": {
+    "name": "Bruchsal",
+    "lat": 49.124,
+    "lon": 8.598
+   },
+   "holdings": [
+    {
+     "name": "Bruchsal",
+     "lat": 49.124,
+     "lon": 8.598
+    },
+    {
+     "name": "Lauterburg",
+     "lat": 48.973,
+     "lon": 8.178
+    },
+    {
+     "name": "Kislau",
+     "lat": 49.23,
+     "lon": 8.62
+    },
+    {
+     "name": "Rotenberg",
+     "lat": 49.27,
+     "lon": 8.7
+    }
+   ],
+   "ruler": {
+    "name": "Gerhard von Ehrenberg",
+    "born": 1300,
+    "dynasty": "Ehrenberg",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "thrifty"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1336–1363), from a Kraichgau knightly family",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "palatinate"
+   ],
+   "rivals": [
+    "speyer"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Gerhard von Ehrenberg governs the scattered lands of the see from Bruchsal, outside the city of Speyer. He struggles with debts and with the citizens of his cathedral city. The Count Palatine is a protector and a threat at the same time.",
+    "de": "Bischof Gerhard von Ehrenberg regiert die verstreuten Lande des Hochstifts von Bruchsal aus, außerhalb der Stadt Speyer. Er ringt mit Schulden und mit den Bürgern seiner Domstadt. Der Pfalzgraf ist zugleich Schutzherr und Bedrohung."
+   },
+   "coa": {
+    "blazon": "Azure, a cross argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "wurttemberg",
+   "name": {
+    "en": "County of Württemberg",
+    "de": "Grafschaft Württemberg"
+   },
+   "short": {
+    "en": "Württemberg",
+    "de": "Württemberg"
+   },
+   "adjective": {
+    "en": "Württemberg",
+    "de": "württembergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#c9a227",
+   "capital": {
+    "name": "Stuttgart",
+    "lat": 48.776,
+    "lon": 9.18
+   },
+   "holdings": [
+    {
+     "name": "Stuttgart",
+     "lat": 48.776,
+     "lon": 9.18
+    },
+    {
+     "name": "Tübingen",
+     "lat": 48.52,
+     "lon": 9.056
+    },
+    {
+     "name": "Urach",
+     "lat": 48.493,
+     "lon": 9.4
+    },
+    {
+     "name": "Göppingen",
+     "lat": 48.703,
+     "lon": 9.652
+    },
+    {
+     "name": "Leonberg",
+     "lat": 48.8,
+     "lon": 9.013
+    },
+    {
+     "name": "Schorndorf",
+     "lat": 48.805,
+     "lon": 9.528
+    },
+    {
+     "name": "Marbach",
+     "lat": 48.94,
+     "lon": 9.26
+    },
+    {
+     "name": "Calw",
+     "lat": 48.714,
+     "lon": 8.74
+    },
+    {
+     "name": "Nürtingen",
+     "lat": 48.625,
+     "lon": 9.34
+    },
+    {
+     "name": "Herrenberg",
+     "lat": 48.596,
+     "lon": 8.87
+    }
+   ],
+   "ruler": {
+    "name": "Eberhard II",
+    "born": 1315,
+    "dynasty": "Württemberg",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "quarrelsome",
+     "warlike",
+     "tenacious"
+    ]
+   },
+   "heir": {
+    "name": "Ulrich",
+    "born": 1342,
+    "dynasty": "Württemberg",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": [
+     "brave",
+     "rash"
+    ]
+   },
+   "consort": {
+    "name": "Elisabeth of Henneberg",
+    "born": 1323,
+    "dynasty": "Henneberg",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Württemberg; Eberhard II 'the Quarreller' rules jointly with his brother Ulrich IV",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "lorraine",
+    "austria"
+   ],
+   "rivals": [
+    "ulm",
+    "esslingen",
+    "augsburg"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Count Eberhard II, 'the Quarreller' (der Greiner), is the most aggressive prince in Swabia, ruling jointly with his brother Ulrich IV. He has bought Tübingen and steadily expands his lands at the expense of lesser lords. The Swabian imperial cities, especially Esslingen, see him as their mortal enemy.",
+    "de": "Graf Eberhard II., 'der Greiner', ist der streitbarste Fürst Schwabens und regiert gemeinsam mit seinem Bruder Ulrich IV. Er hat Tübingen gekauft und erweitert sein Land stetig auf Kosten kleinerer Herren. Die schwäbischen Reichsstädte, besonders Esslingen, sehen in ihm ihren Todfeind."
+   },
+   "coa": {
+    "blazon": "Or, three stag antlers fesswise sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horn",
+      "tincture": "sable",
+      "count": 3,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "baden",
+   "name": {
+    "en": "Margraviate of Baden",
+    "de": "Markgrafschaft Baden"
+   },
+   "short": {
+    "en": "Baden",
+    "de": "Baden"
+   },
+   "adjective": {
+    "en": "Baden",
+    "de": "badisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#e04040",
+   "capital": {
+    "name": "Baden",
+    "lat": 48.762,
+    "lon": 8.24
+   },
+   "holdings": [
+    {
+     "name": "Baden",
+     "lat": 48.762,
+     "lon": 8.24
+    },
+    {
+     "name": "Stollhofen",
+     "lat": 48.68,
+     "lon": 8.04
+    },
+    {
+     "name": "Eberstein",
+     "lat": 48.7,
+     "lon": 8.33
+    }
+   ],
+   "ruler": {
+    "name": "Rudolf VI",
+    "born": 1335,
+    "dynasty": "Zähringen (Baden)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Baden, a branch of the Zähringer; Rudolf VI succeeded his father Friedrich III in 1353",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "baden_pforzheim",
+    "palatinate"
+   ],
+   "rivals": [
+    "wurttemberg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "Margrave Rudolf VI rules the Baden line from the castle above the hot springs of Baden. His cousin Rudolf V holds Pforzheim; the two branches are expected to reunite. Württemberg's expansion along the Neckar is a growing worry.",
+    "de": "Markgraf Rudolf VI. regiert die badische Linie von der Burg über den heißen Quellen von Baden aus. Sein Vetter Rudolf V. hält Pforzheim; die beiden Linien dürften sich wieder vereinen. Die württembergische Ausdehnung am Neckar bereitet zunehmend Sorge."
+   },
+   "coa": {
+    "blazon": "Or, a bend gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "baden_pforzheim",
+   "name": {
+    "en": "Margraviate of Baden-Pforzheim",
+    "de": "Markgrafschaft Baden-Pforzheim"
+   },
+   "short": {
+    "en": "Baden-Pforzheim",
+    "de": "Baden-Pforzheim"
+   },
+   "adjective": {
+    "en": "Baden",
+    "de": "badisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#f06a50",
+   "capital": {
+    "name": "Pforzheim",
+    "lat": 48.892,
+    "lon": 8.694
+   },
+   "holdings": [
+    {
+     "name": "Pforzheim",
+     "lat": 48.892,
+     "lon": 8.694
+    },
+    {
+     "name": "Durlach",
+     "lat": 49.0,
+     "lon": 8.47
+    },
+    {
+     "name": "Mühlburg",
+     "lat": 49.01,
+     "lon": 8.36
+    }
+   ],
+   "ruler": {
+    "name": "Rudolf V",
+    "born": 1310,
+    "dynasty": "Zähringen (Baden)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "childless"
+    ]
+   },
+   "heir": {
+    "name": "Rudolf VI",
+    "born": 1335,
+    "dynasty": "Zähringen (Baden)",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Pforzheim line of the House of Baden; childless, its lands will pass to the main line",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "baden"
+   ],
+   "rivals": [
+    "wurttemberg"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Margrave Rudolf V holds Pforzheim and Durlach as the Pforzheim branch of the house of Baden. He has no sons, and his cousin Rudolf VI is his heir. The little margraviate lies at the edge of the Black Forest on the road from the Rhine to the Neckar.",
+    "de": "Markgraf Rudolf V. hält als Pforzheimer Zweig des Hauses Baden Pforzheim und Durlach. Er hat keine Söhne; sein Vetter Rudolf VI. ist sein Erbe. Die kleine Markgrafschaft liegt am Rand des Schwarzwalds an der Straße vom Rhein zum Neckar."
+   },
+   "coa": {
+    "blazon": "Or, a bend gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "zollern",
+   "name": {
+    "en": "County of Zollern",
+    "de": "Grafschaft Zollern"
+   },
+   "short": {
+    "en": "Zollern",
+    "de": "Zollern"
+   },
+   "adjective": {
+    "en": "Zollern",
+    "de": "zollerisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#8a8a8a",
+   "capital": {
+    "name": "Hechingen",
+    "lat": 48.353,
+    "lon": 8.963
+   },
+   "holdings": [
+    {
+     "name": "Hechingen",
+     "lat": 48.353,
+     "lon": 8.963
+    },
+    {
+     "name": "Hohenzollern",
+     "lat": 48.323,
+     "lon": 8.968
+    },
+    {
+     "name": "Haigerloch",
+     "lat": 48.365,
+     "lon": 8.8
+    }
+   ],
+   "ruler": {
+    "name": "Friedrich IX",
+    "born": 1320,
+    "dynasty": "Hohenzollern (Swabian line)",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "impoverished"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Swabian line of the House of Zollern, kin of the Burgraves of Nuremberg; the Schalksburg branch holds Balingen separately",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nuremberg_burgraviate",
+    "austria"
+   ],
+   "rivals": [
+    "wurttemberg"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "The Swabian Counts of Zollern hold a small, debt-ridden county around the castle of Hohenzollern. Their Franconian cousins, the Burgraves of Nuremberg, have far outstripped them. Squeezed by Württemberg, they lean on the Habsburgs.",
+    "de": "Die schwäbischen Grafen von Zollern halten eine kleine, verschuldete Grafschaft um die Burg Hohenzollern. Ihre fränkischen Vettern, die Burggrafen von Nürnberg, haben sie weit überflügelt. Von Württemberg bedrängt, stützen sie sich auf die Habsburger."
+   },
+   "coa": {
+    "blazon": "Quarterly argent and sable",
+    "field": "argent",
+    "division": "quarterly",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_augsburg",
+   "name": {
+    "en": "Prince-Bishopric of Augsburg",
+    "de": "Hochstift Augsburg"
+   },
+   "short": {
+    "en": "Bishopric of Augsburg",
+    "de": "Hochstift Augsburg"
+   },
+   "adjective": {
+    "en": "Augsburg",
+    "de": "augsburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#c25050",
+   "capital": {
+    "name": "Dillingen",
+    "lat": 48.58,
+    "lon": 10.495
+   },
+   "holdings": [
+    {
+     "name": "Dillingen",
+     "lat": 48.58,
+     "lon": 10.495
+    },
+    {
+     "name": "Füssen",
+     "lat": 47.57,
+     "lon": 10.7
+    },
+    {
+     "name": "Zusmarshausen",
+     "lat": 48.4,
+     "lon": 10.6
+    },
+    {
+     "name": "Oberdorf",
+     "lat": 47.78,
+     "lon": 10.62
+    },
+    {
+     "name": "Buchloe",
+     "lat": 48.03,
+     "lon": 10.72
+    }
+   ],
+   "ruler": {
+    "name": "Marquard von Randeck",
+    "born": 1300,
+    "dynasty": "Randeck",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     2
+    ],
+    "traits": [
+     "capable",
+     "worldly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1348–1365), a trusted counsellor of Charles IV",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "austria"
+   ],
+   "rivals": [
+    "augsburg",
+    "bavaria_upper"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Marquard von Randeck rules the see's lands from Dillingen on the Danube, as the city of Augsburg has become free. He is a close adviser of Emperor Charles IV and will serve him in Italy. Wittelsbach Bavaria hems in his territories on the Lech.",
+    "de": "Bischof Marquard von Randeck regiert die Stiftslande von Dillingen an der Donau aus, da die Stadt Augsburg frei geworden ist. Er ist ein enger Berater Kaiser Karls IV. und wird ihm in Italien dienen. Das wittelsbachische Bayern umschließt seine Gebiete am Lech."
+   },
+   "coa": {
+    "blazon": "Per pale gules and argent",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_constance",
+   "name": {
+    "en": "Prince-Bishopric of Constance",
+    "de": "Hochstift Konstanz"
+   },
+   "short": {
+    "en": "Bishopric of Constance",
+    "de": "Hochstift Konstanz"
+   },
+   "adjective": {
+    "en": "Constance",
+    "de": "konstanzisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#d05a5a",
+   "capital": {
+    "name": "Meersburg",
+    "lat": 47.693,
+    "lon": 9.271
+   },
+   "holdings": [
+    {
+     "name": "Meersburg",
+     "lat": 47.693,
+     "lon": 9.271
+    },
+    {
+     "name": "Markdorf",
+     "lat": 47.72,
+     "lon": 9.39
+    },
+    {
+     "name": "Bischofszell",
+     "lat": 47.497,
+     "lon": 9.238
+    },
+    {
+     "name": "Kaiserstuhl",
+     "lat": 47.568,
+     "lon": 8.42
+    }
+   ],
+   "ruler": {
+    "name": "Johann Windlock",
+    "born": 1300,
+    "dynasty": "Windlock",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "harsh",
+     "unpopular"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1351–1356), of a Strasbourg family; his harsh rule has made him many enemies in the cathedral chapter",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [
+    "constance"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 5,
+   "summary": {
+    "en": "Bishop Johann Windlock rules the largest diocese of the Empire from his castle at Meersburg across the lake from Constance. His harsh and grasping manner has made bitter enemies among the clergy and nobility. The see's temporal lands are small and scattered around Lake Constance.",
+    "de": "Bischof Johann Windlock regiert das größte Bistum des Reiches von seiner Burg Meersburg gegenüber Konstanz. Sein hartes, habgieriges Auftreten hat ihm bittere Feinde in Klerus und Adel geschaffen. Die weltlichen Besitzungen des Hochstifts sind klein und rund um den Bodensee verstreut."
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_strasbourg",
+   "name": {
+    "en": "Prince-Bishopric of Strasbourg",
+    "de": "Hochstift Straßburg"
+   },
+   "short": {
+    "en": "Bishopric of Strasbourg",
+    "de": "Hochstift Straßburg"
+   },
+   "adjective": {
+    "en": "Strasbourg",
+    "de": "straßburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#c0303f",
+   "capital": {
+    "name": "Zabern",
+    "lat": 48.741,
+    "lon": 7.362
+   },
+   "holdings": [
+    {
+     "name": "Zabern",
+     "lat": 48.741,
+     "lon": 7.362
+    },
+    {
+     "name": "Molsheim",
+     "lat": 48.541,
+     "lon": 7.492
+    },
+    {
+     "name": "Benfeld",
+     "lat": 48.37,
+     "lon": 7.594
+    },
+    {
+     "name": "Rufach",
+     "lat": 47.958,
+     "lon": 7.3
+    },
+    {
+     "name": "Ettenheim",
+     "lat": 48.256,
+     "lon": 7.81
+    },
+    {
+     "name": "Oberkirch",
+     "lat": 48.53,
+     "lon": 8.08
+    },
+    {
+     "name": "Dachstein",
+     "lat": 48.56,
+     "lon": 7.53
+    }
+   ],
+   "ruler": {
+    "name": "Johann von Lichtenberg",
+    "born": 1305,
+    "dynasty": "Lichtenberg",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "capable",
+     "builder"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1353–1365), of the Lords of Lichtenberg in Lower Alsace",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia"
+   ],
+   "rivals": [
+    "strasbourg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Bishop Johann II of Lichtenberg is consolidating the scattered lands of his church in Lower Alsace, the Ortenau and the Upper Mundat around Rufach. He resides at Zabern, since the city of Strasbourg recognises no episcopal lordship. He is a friend of Charles IV.",
+    "de": "Bischof Johann II. von Lichtenberg festigt die verstreuten Besitzungen seiner Kirche im Unterelsass, in der Ortenau und im Oberen Mundat um Rufach. Er residiert in Zabern, da die Stadt Straßburg keine bischöfliche Herrschaft anerkennt. Er ist ein Freund Karls IV."
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_basel",
+   "name": {
+    "en": "Prince-Bishopric of Basel",
+    "de": "Hochstift Basel"
+   },
+   "short": {
+    "en": "Bishopric of Basel",
+    "de": "Hochstift Basel"
+   },
+   "adjective": {
+    "en": "Basel",
+    "de": "baslerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#a02a2a",
+   "capital": {
+    "name": "Pruntrut",
+    "lat": 47.416,
+    "lon": 7.075
+   },
+   "holdings": [
+    {
+     "name": "Pruntrut",
+     "lat": 47.416,
+     "lon": 7.075
+    },
+    {
+     "name": "Delsberg",
+     "lat": 47.364,
+     "lon": 7.345
+    },
+    {
+     "name": "Laufen",
+     "lat": 47.42,
+     "lon": 7.5
+    },
+    {
+     "name": "Biel",
+     "lat": 47.137,
+     "lon": 7.247
+    },
+    {
+     "name": "Saint-Ursanne",
+     "lat": 47.365,
+     "lon": 7.155
+    }
+   ],
+   "ruler": {
+    "name": "Johann Senn von Münsingen",
+    "born": 1310,
+    "dynasty": "Senn von Münsingen",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "prudent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1335–1365), of a Bernese noble family",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria",
+    "swiss_confederacy"
+   ],
+   "rivals": [
+    "basel"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Johann Senn von Münsingen rules the Jura valleys from Pruntrut and Delsberg. The city of Basel is ever more independent of its lord. His family ties to the Bernese nobility shape his policy towards the Swiss.",
+    "de": "Bischof Johann Senn von Münsingen regiert die Jura-Täler von Pruntrut und Delsberg aus. Die Stadt Basel wird ihrem Herrn gegenüber immer selbständiger. Seine Verwandtschaft mit dem Berner Adel prägt seine Politik gegenüber den Eidgenossen."
+   },
+   "coa": {
+    "blazon": "Argent, a crozier gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "abbey_st_gallen",
+   "name": {
+    "en": "Princely Abbey of St. Gallen",
+    "de": "Fürstabtei St. Gallen"
+   },
+   "short": {
+    "en": "St. Gallen",
+    "de": "St. Gallen"
+   },
+   "adjective": {
+    "en": "St. Gallen",
+    "de": "st. gallisch"
+   },
+   "rank": "principality",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#3a3a3a",
+   "capital": {
+    "name": "St. Gallen",
+    "lat": 47.424,
+    "lon": 9.376
+   },
+   "holdings": [
+    {
+     "name": "St. Gallen",
+     "lat": 47.424,
+     "lon": 9.376
+    },
+    {
+     "name": "Wil",
+     "lat": 47.461,
+     "lon": 9.046
+    },
+    {
+     "name": "Appenzell",
+     "lat": 47.33,
+     "lon": 9.41
+    },
+    {
+     "name": "Rorschach",
+     "lat": 47.477,
+     "lon": 9.49
+    }
+   ],
+   "ruler": {
+    "name": "Hermann von Bonstetten",
+    "born": 1300,
+    "dynasty": "Bonstetten",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "pious",
+     "indebted"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-abbot (1333–1360), of the Lords of Bonstetten",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [
+    "bishopric_constance"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The ancient Benedictine abbey of St. Gallen rules a principality between Lake Constance and the Säntis. Abbot Hermann von Bonstetten struggles with debts and pledges much of his revenue to the Habsburgs and the town of St. Gallen. The mountain folk of Appenzell are growing restless under abbatial bailiffs.",
+    "de": "Die alte Benediktinerabtei St. Gallen regiert ein Fürstentum zwischen Bodensee und Säntis. Abt Hermann von Bonstetten ringt mit Schulden und verpfändet viele Einkünfte an Habsburg und die Stadt St. Gallen. Die Bergbauern von Appenzell werden unter den äbtischen Vögten unruhig."
+   },
+   "coa": {
+    "blazon": "Or, a bear rampant sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "strasbourg",
+   "name": {
+    "en": "Free City of Strasbourg",
+    "de": "Freie Stadt Straßburg"
+   },
+   "short": {
+    "en": "Strasbourg",
+    "de": "Straßburg"
+   },
+   "adjective": {
+    "en": "Strasbourg",
+    "de": "Straßburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#d03040",
+   "capital": {
+    "name": "Strasbourg",
+    "lat": 48.583,
+    "lon": 7.746
+   },
+   "holdings": [
+    {
+     "name": "Strasbourg",
+     "lat": 48.583,
+     "lon": 7.746
+    }
+   ],
+   "ruler": {
+    "name": "Council under the Ammeister and Stettmeister",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "basel",
+    "colmar",
+    "bohemia"
+   ],
+   "rivals": [
+    "bishopric_strasbourg"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Strasbourg, one of the great cities of the Upper Rhine, governs itself as a free city after defeating its bishop at Hausbergen in 1262. Since 1332 the guilds share power with the patricians, led by an Ammeister. Its cathedral spire and bridge over the Rhine are famed throughout the Empire.",
+    "de": "Straßburg, eine der großen Städte am Oberrhein, regiert sich seit dem Sieg über seinen Bischof bei Hausbergen 1262 als Freie Stadt. Seit 1332 teilen sich die Zünfte unter einem Ammeister die Macht mit den Patriziern. Münster und Rheinbrücke sind im ganzen Reich berühmt."
+   },
+   "coa": {
+    "blazon": "Argent, a bend gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "basel",
+   "name": {
+    "en": "Free City of Basel",
+    "de": "Freie Stadt Basel"
+   },
+   "short": {
+    "en": "Basel",
+    "de": "Basel"
+   },
+   "adjective": {
+    "en": "Basel",
+    "de": "Basler"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#1a1a1a",
+   "capital": {
+    "name": "Basel",
+    "lat": 47.557,
+    "lon": 7.588
+   },
+   "holdings": [
+    {
+     "name": "Basel",
+     "lat": 47.557,
+     "lon": 7.588
+    },
+    {
+     "name": "Kleinbasel",
+     "lat": 47.564,
+     "lon": 7.597
+    }
+   ],
+   "ruler": {
+    "name": "Council under the Bürgermeister",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "strasbourg"
+   ],
+   "rivals": [
+    "bishopric_basel",
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Basel, a bridge city on the Rhine knee, is still nominally under its bishop but its council and guilds govern in practice. It lives by trade between the Rhine, Alsace and the Swiss passes. The ambitions of Habsburg, whose lands surround it, are a constant concern.",
+    "de": "Basel, Brückenstadt am Rheinknie, untersteht noch formell seinem Bischof, doch regieren tatsächlich Rat und Zünfte. Die Stadt lebt vom Handel zwischen Rhein, Elsass und Schweizer Pässen. Die Ambitionen Habsburgs, dessen Lande sie umgeben, sind eine ständige Sorge."
+   },
+   "coa": {
+    "blazon": "Argent, a crozier sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "colmar",
+   "name": {
+    "en": "Free Imperial City of Colmar",
+    "de": "Reichsstadt Colmar"
+   },
+   "short": {
+    "en": "Colmar",
+    "de": "Colmar"
+   },
+   "adjective": {
+    "en": "Colmar",
+    "de": "Colmarer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#3a8a3a",
+   "capital": {
+    "name": "Colmar",
+    "lat": 48.079,
+    "lon": 7.358
+   },
+   "holdings": [
+    {
+     "name": "Colmar",
+     "lat": 48.079,
+     "lon": 7.358
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "strasbourg",
+    "hagenau"
+   ],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Colmar is a prosperous wine town of Upper Alsace and a free imperial city. Together with Hagenau, Schlettstadt and other Alsatian towns it has formed the league of imperial cities later known as the Decapolis (1354). It looks to the Emperor's bailiff at Hagenau for protection.",
+    "de": "Colmar ist eine wohlhabende Weinstadt im Oberelsass und Reichsstadt. Mit Hagenau, Schlettstadt und anderen elsässischen Städten bildete es 1354 den Bund der Reichsstädte, später Dekapolis genannt. Schutz sucht es beim kaiserlichen Landvogt in Hagenau."
+   },
+   "coa": {
+    "blazon": "Per bend gules and vert, a morning star or",
+    "field": "gules",
+    "division": "per_bend",
+    "field2": "vert",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "constance",
+   "name": {
+    "en": "Free Imperial City of Constance",
+    "de": "Reichsstadt Konstanz"
+   },
+   "short": {
+    "en": "Constance",
+    "de": "Konstanz"
+   },
+   "adjective": {
+    "en": "Constance",
+    "de": "Konstanzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#efefef",
+   "capital": {
+    "name": "Konstanz",
+    "lat": 47.66,
+    "lon": 9.175
+   },
+   "holdings": [
+    {
+     "name": "Konstanz",
+     "lat": 47.66,
+     "lon": 9.175
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "ulm",
+    "swiss_confederacy"
+   ],
+   "rivals": [
+    "bishopric_constance"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Constance, on the Rhine where it leaves the lake, is a free imperial city made rich by the linen trade. Its citizens have long disputed rights with the bishop. Tension between the bishop and his clergy is so high this winter that murder is feared.",
+    "de": "Konstanz am Ausfluss des Rheins aus dem See ist eine durch den Leinwandhandel reich gewordene Reichsstadt. Die Bürger streiten seit Langem mit dem Bischof um Rechte. Die Spannung zwischen dem Bischof und seinem Klerus ist in diesem Winter so groß, dass Mord befürchtet wird."
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable, a chief gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "ulm",
+   "name": {
+    "en": "Free Imperial City of Ulm",
+    "de": "Reichsstadt Ulm"
+   },
+   "short": {
+    "en": "Ulm",
+    "de": "Ulm"
+   },
+   "adjective": {
+    "en": "Ulm",
+    "de": "Ulmer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#202020",
+   "capital": {
+    "name": "Ulm",
+    "lat": 48.398,
+    "lon": 9.992
+   },
+   "holdings": [
+    {
+     "name": "Ulm",
+     "lat": 48.398,
+     "lon": 9.992
+    },
+    {
+     "name": "Geislingen",
+     "lat": 48.62,
+     "lon": 9.83
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "augsburg",
+    "esslingen",
+    "constance"
+   ],
+   "rivals": [
+    "wurttemberg",
+    "bavaria_upper"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Ulm on the Danube is the leading city of the Swabian league of imperial cities. Its fustian weavers and merchants make it rich, and it is buying up a rural territory. The cities stand together against the Count of Württemberg and the territorial lords.",
+    "de": "Ulm an der Donau ist die führende Stadt im schwäbischen Reichsstädtebund. Barchentweber und Kaufleute machen es reich, und es kauft sich ein ländliches Territorium zusammen. Die Städte halten zusammen gegen den Grafen von Württemberg und die Landesherren."
+   },
+   "coa": {
+    "blazon": "Per fess sable and argent",
+    "field": "sable",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "esslingen",
+   "name": {
+    "en": "Free Imperial City of Esslingen",
+    "de": "Reichsstadt Esslingen"
+   },
+   "short": {
+    "en": "Esslingen",
+    "de": "Esslingen"
+   },
+   "adjective": {
+    "en": "Esslingen",
+    "de": "Esslinger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#d0b040",
+   "capital": {
+    "name": "Esslingen",
+    "lat": 48.74,
+    "lon": 9.31
+   },
+   "holdings": [
+    {
+     "name": "Esslingen",
+     "lat": 48.74,
+     "lon": 9.31
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "ulm",
+    "augsburg"
+   ],
+   "rivals": [
+    "wurttemberg"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "Esslingen on the Neckar is a free imperial city surrounded on all sides by Württemberg. Its long feud with Count Eberhard II is the defining struggle of its politics. It relies on the support of Ulm and the Swabian city league.",
+    "de": "Esslingen am Neckar ist eine allseits von Württemberg umschlossene Reichsstadt. Die lange Fehde mit Graf Eberhard II. bestimmt ihre Politik. Sie stützt sich auf Ulm und den schwäbischen Städtebund."
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "augsburg",
+   "name": {
+    "en": "Free Imperial City of Augsburg",
+    "de": "Reichsstadt Augsburg"
+   },
+   "short": {
+    "en": "Augsburg",
+    "de": "Augsburg"
+   },
+   "adjective": {
+    "en": "Augsburg",
+    "de": "Augsburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#b03838",
+   "capital": {
+    "name": "Augsburg",
+    "lat": 48.366,
+    "lon": 10.898
+   },
+   "holdings": [
+    {
+     "name": "Augsburg",
+     "lat": 48.366,
+     "lon": 10.898
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "ulm",
+    "esslingen",
+    "bohemia"
+   ],
+   "rivals": [
+    "bishopric_augsburg",
+    "bavaria_upper"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Augsburg, an old Roman city on the Lech, is one of the richest free imperial cities of Swabia, a centre of fustian weaving and the Italian trade. The patrician council still holds power, but the guilds are restless. Wittelsbach Bavaria lies just across the river.",
+    "de": "Augsburg, eine alte Römerstadt am Lech, ist eine der reichsten Reichsstädte Schwabens, Zentrum der Barchentweberei und des Italienhandels. Noch herrscht der patrizische Rat, doch die Zünfte sind unruhig. Das wittelsbachische Bayern liegt gleich jenseits des Flusses."
+   },
+   "coa": {
+    "blazon": "Per pale gules and argent, a pine cone or",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "swiss_confederacy",
+   "name": {
+    "en": "Swiss Confederacy",
+    "de": "Eidgenossenschaft"
+   },
+   "short": {
+    "en": "Confederacy",
+    "de": "Eidgenossen"
+   },
+   "adjective": {
+    "en": "Confederate",
+    "de": "eidgenössisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#d8262e",
+   "capital": {
+    "name": "Schwyz",
+    "lat": 47.021,
+    "lon": 8.654
+   },
+   "holdings": [
+    {
+     "name": "Schwyz",
+     "lat": 47.021,
+     "lon": 8.654
+    },
+    {
+     "name": "Altdorf",
+     "lat": 46.88,
+     "lon": 8.64
+    },
+    {
+     "name": "Sarnen",
+     "lat": 46.896,
+     "lon": 8.246
+    },
+    {
+     "name": "Stans",
+     "lat": 46.958,
+     "lon": 8.366
+    },
+    {
+     "name": "Luzern",
+     "lat": 47.05,
+     "lon": 8.31
+    },
+    {
+     "name": "Zürich",
+     "lat": 47.37,
+     "lon": 8.54
+    },
+    {
+     "name": "Zug",
+     "lat": 47.166,
+     "lon": 8.516
+    },
+    {
+     "name": "Glarus",
+     "lat": 47.04,
+     "lon": 9.068
+    },
+    {
+     "name": "Bern",
+     "lat": 46.948,
+     "lon": 7.447
+    },
+    {
+     "name": "Thun",
+     "lat": 46.758,
+     "lon": 7.63
+    },
+    {
+     "name": "Laupen",
+     "lat": 46.9,
+     "lon": 7.24
+    }
+   ],
+   "ruler": {
+    "name": "Diet of envoys of the eight places",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "defiant",
+     "hardy"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "A league of sworn rural and urban communes: Uri, Schwyz and Unterwalden (1291), Lucerne (1332), Zürich (1351), Glarus and Zug (1352) and Bern (1353); in Zürich the guild burgomaster Rudolf Brun is the dominant figure",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "strasbourg",
+    "basel"
+   ],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [
+    "austria"
+   ],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The eight places of the Confederacy are bound by sworn alliances, led by the forest cantons, Lucerne, Zürich and Bern. Duke Albrecht II of Austria fought them over Zürich and Zug; the peaces of Brandenburg (1352) and Regensburg (1355) forced Zug and Glarus back under Habsburg lordship on paper. The league has no common government, only meetings of envoys, but its peasant infantry is feared.",
+    "de": "Die acht Orte der Eidgenossenschaft sind durch beschworene Bünde verbunden, angeführt von den Waldstätten, Luzern, Zürich und Bern. Herzog Albrecht II. von Österreich kämpfte gegen sie um Zürich und Zug; der Brandenburger (1352) und der Regensburger Frieden (1355) zwangen Zug und Glarus auf dem Papier zurück unter habsburgische Herrschaft. Der Bund hat keine gemeinsame Regierung, nur Botentage, doch sein Fußvolk wird gefürchtet."
+   },
+   "coa": {
+    "blazon": "Gules, a cross couped argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "austria",
+   "name": {
+    "en": "Duchy of Austria",
+    "de": "Herzogtum Österreich"
+   },
+   "short": {
+    "en": "Austria",
+    "de": "Österreich"
+   },
+   "adjective": {
+    "en": "Austrian",
+    "de": "österreichisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#e8e8e8",
+   "capital": {
+    "name": "Vienna",
+    "lat": 48.208,
+    "lon": 16.373
+   },
+   "holdings": [
+    {
+     "name": "Vienna",
+     "lat": 48.208,
+     "lon": 16.373
+    },
+    {
+     "name": "Wiener Neustadt",
+     "lat": 47.813,
+     "lon": 16.243
+    },
+    {
+     "name": "Krems",
+     "lat": 48.41,
+     "lon": 15.6
+    },
+    {
+     "name": "Hainburg",
+     "lat": 48.147,
+     "lon": 16.94
+    },
+    {
+     "name": "Zwettl",
+     "lat": 48.6,
+     "lon": 15.17
+    },
+    {
+     "name": "Linz",
+     "lat": 48.306,
+     "lon": 14.286
+    },
+    {
+     "name": "Enns",
+     "lat": 48.213,
+     "lon": 14.475
+    },
+    {
+     "name": "Steyr",
+     "lat": 48.04,
+     "lon": 14.42
+    },
+    {
+     "name": "Wels",
+     "lat": 48.16,
+     "lon": 14.03
+    },
+    {
+     "name": "Freistadt",
+     "lat": 48.51,
+     "lon": 14.5
+    },
+    {
+     "name": "Gmunden",
+     "lat": 47.918,
+     "lon": 13.8
+    },
+    {
+     "name": "Graz",
+     "lat": 47.07,
+     "lon": 15.44
+    },
+    {
+     "name": "Bruck an der Mur",
+     "lat": 47.41,
+     "lon": 15.27
+    },
+    {
+     "name": "Judenburg",
+     "lat": 47.17,
+     "lon": 14.66
+    },
+    {
+     "name": "Marburg an der Drau",
+     "lat": 46.557,
+     "lon": 15.646
+    },
+    {
+     "name": "St. Veit an der Glan",
+     "lat": 46.768,
+     "lon": 14.36
+    },
+    {
+     "name": "Völkermarkt",
+     "lat": 46.66,
+     "lon": 14.634
+    },
+    {
+     "name": "Laibach",
+     "lat": 46.05,
+     "lon": 14.505
+    },
+    {
+     "name": "Rudolfswert",
+     "lat": 45.8,
+     "lon": 15.17
+    },
+    {
+     "name": "Baden im Aargau",
+     "lat": 47.473,
+     "lon": 8.307
+    },
+    {
+     "name": "Lenzburg",
+     "lat": 47.39,
+     "lon": 8.18
+    },
+    {
+     "name": "Winterthur",
+     "lat": 47.5,
+     "lon": 8.724
+    },
+    {
+     "name": "Frauenfeld",
+     "lat": 47.557,
+     "lon": 8.9
+    },
+    {
+     "name": "Freiburg im Üechtland",
+     "lat": 46.8,
+     "lon": 7.15
+    },
+    {
+     "name": "Waldshut",
+     "lat": 47.623,
+     "lon": 8.214
+    },
+    {
+     "name": "Laufenburg",
+     "lat": 47.56,
+     "lon": 8.06
+    },
+    {
+     "name": "Rheinfelden",
+     "lat": 47.554,
+     "lon": 7.794
+    },
+    {
+     "name": "Thann",
+     "lat": 47.808,
+     "lon": 7.103
+    },
+    {
+     "name": "Altkirch",
+     "lat": 47.624,
+     "lon": 7.24
+    },
+    {
+     "name": "Pfirt",
+     "lat": 47.494,
+     "lon": 7.315
+    },
+    {
+     "name": "Ehingen",
+     "lat": 48.283,
+     "lon": 9.723
+    },
+    {
+     "name": "Günzburg",
+     "lat": 48.453,
+     "lon": 10.277
+    },
+    {
+     "name": "Sursee",
+     "lat": 47.17,
+     "lon": 8.11
+    }
+   ],
+   "ruler": {
+    "name": "Albrecht II",
+    "born": 1298,
+    "dynasty": "Habsburg",
+    "female": false,
+    "skills": [
+     5,
+     5,
+     1
+    ],
+    "traits": [
+     "wise",
+     "lame",
+     "patient"
+    ]
+   },
+   "heir": {
+    "name": "Rudolf",
+    "born": 1339,
+    "dynasty": "Habsburg",
+    "female": false,
+    "skills": [
+     4,
+     5,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "brilliant",
+     "vain"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "House of Habsburg; Albrecht II 'the Wise' (or 'the Lame') has held Austria, Styria, Carinthia and Carniola since 1330/1335 and the Habsburg Vorlande in Swabia, Alsace and Aargau",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "wurttemberg",
+    "zollern"
+   ],
+   "rivals": [
+    "swiss_confederacy",
+    "bavaria_upper",
+    "hungary"
+   ],
+   "claims_on": [
+    "tyrol",
+    "swiss_confederacy"
+   ],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "Duke Albrecht II, crippled by illness but famed for his wisdom, rules a broad belt of lands from the Danube and the Drava to Alsace and the Aargau. He has made peace with the Swiss at Regensburg (1355) after failing to break Zürich and is on good terms with Charles IV, whose daughter is betrothed to his son Rudolf. The Habsburgs have an eye on Tyrol, held by the Wittelsbach Louis of Brandenburg and Margarete Maultasch.",
+    "de": "Herzog Albrecht II., durch Krankheit gelähmt, aber für seine Weisheit berühmt, beherrscht einen breiten Länderbogen von Donau und Drau bis ins Elsass und den Aargau. Nach dem gescheiterten Kampf um Zürich schloss er 1355 in Regensburg Frieden mit den Eidgenossen und steht gut mit Karl IV., dessen Tochter mit seinem Sohn Rudolf verlobt ist. Die Habsburger haben ein Auge auf Tirol, das der Wittelsbacher Ludwig der Brandenburger und Margarete Maultasch halten."
+   },
+   "coa": {
+    "blazon": "Gules, a fess argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "argent",
+    "charges": []
+   },
+   "family": [
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Katharina",
+     "born": 1342,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": true,
+     "rel": "child",
+     "name": "Margarete",
+     "born": 1346,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Friedrich",
+     "born": 1347,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Albrecht",
+     "born": 1349,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    },
+    {
+     "female": false,
+     "rel": "child",
+     "name": "Leopold",
+     "born": 1351,
+     "dynasty": "Habsburg",
+     "of_consort": false
+    }
+   ]
+  },
+  {
+   "id": "tyrol",
+   "name": {
+    "en": "County of Tyrol",
+    "de": "Grafschaft Tirol"
+   },
+   "short": {
+    "en": "Tyrol",
+    "de": "Tirol"
+   },
+   "adjective": {
+    "en": "Tyrolean",
+    "de": "tirolisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#e05050",
+   "capital": {
+    "name": "Meran",
+    "lat": 46.67,
+    "lon": 11.16
+   },
+   "holdings": [
+    {
+     "name": "Meran",
+     "lat": 46.67,
+     "lon": 11.16
+    },
+    {
+     "name": "Bozen",
+     "lat": 46.498,
+     "lon": 11.354
+    },
+    {
+     "name": "Innsbruck",
+     "lat": 47.268,
+     "lon": 11.393
+    },
+    {
+     "name": "Sterzing",
+     "lat": 46.893,
+     "lon": 11.43
+    },
+    {
+     "name": "Landeck",
+     "lat": 47.14,
+     "lon": 10.567
+    },
+    {
+     "name": "Glurns",
+     "lat": 46.672,
+     "lon": 10.556
+    },
+    {
+     "name": "Imst",
+     "lat": 47.24,
+     "lon": 10.74
+    },
+    {
+     "name": "Schwaz",
+     "lat": 47.35,
+     "lon": 11.71
+    }
+   ],
+   "ruler": {
+    "name": "Margarete",
+    "born": 1318,
+    "dynasty": "Meinhardiner (Görz-Tyrol)",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "determined",
+     "proud"
+    ]
+   },
+   "heir": {
+    "name": "Meinhard",
+    "born": 1344,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "sickly",
+     "weak"
+    ]
+   },
+   "consort": {
+    "name": "Ludwig V of Bavaria (the Brandenburger)",
+    "born": 1315,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "stubborn",
+     "worldly"
+    ]
+   },
+   "dynasty_note": "Margarete 'Maultasch', last of the Meinhardiner Counts of Tyrol; her husband Ludwig V of Bavaria governs with her",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bavaria_upper"
+   ],
+   "rivals": [
+    "austria",
+    "bohemia"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Countess Margarete, mocked as 'Maultasch', expelled her first husband John Henry of Luxembourg in 1341 and married Ludwig of Bavaria without a valid divorce. The scandal brought excommunication, but she and Ludwig hold the Alpine passes between Germany and Italy with the backing of the Tyrolean nobility. Their only son Meinhard is a frail boy, and Habsburg waits for the succession.",
+    "de": "Gräfin Margarete, verspottet als 'Maultasch', vertrieb 1341 ihren ersten Gemahl Johann Heinrich von Luxemburg und heiratete ohne gültige Scheidung Ludwig von Bayern. Der Skandal brachte den Kirchenbann, doch halten sie und Ludwig mit Rückhalt des Tiroler Adels die Alpenpässe zwischen Deutschland und Italien. Ihr einziger Sohn Meinhard ist ein schwächlicher Knabe, und Habsburg wartet auf das Erbe."
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules crowned or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_brixen",
+   "name": {
+    "en": "Prince-Bishopric of Brixen",
+    "de": "Hochstift Brixen"
+   },
+   "short": {
+    "en": "Brixen",
+    "de": "Brixen"
+   },
+   "adjective": {
+    "en": "Brixen",
+    "de": "brixnerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#a84040",
+   "capital": {
+    "name": "Brixen",
+    "lat": 46.716,
+    "lon": 11.656
+   },
+   "holdings": [
+    {
+     "name": "Brixen",
+     "lat": 46.716,
+     "lon": 11.656
+    },
+    {
+     "name": "Bruneck",
+     "lat": 46.796,
+     "lon": 11.937
+    },
+    {
+     "name": "Veldes",
+     "lat": 46.37,
+     "lon": 14.1
+    }
+   ],
+   "ruler": {
+    "name": "Matthäus Konzmann",
+    "born": 1290,
+    "dynasty": "Konzmann",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "pious",
+     "old"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1336–1363)",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "tyrol"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The prince-bishops of Brixen hold a modest territory in the Eisack and Puster valleys, with the outlying lordship of Veldes in Carniola. Their county rights have long passed to the Counts of Tyrol, who act as their advocates. Bishop Matthäus keeps to his church.",
+    "de": "Die Fürstbischöfe von Brixen halten ein bescheidenes Gebiet im Eisack- und Pustertal sowie die entlegene Herrschaft Veldes in Krain. Ihre Grafschaftsrechte sind längst an die Grafen von Tirol als Vögte übergegangen. Bischof Matthäus widmet sich seiner Kirche."
+   },
+   "coa": {
+    "blazon": "Gules, a paschal lamb argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lamb",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "salzburg",
+   "name": {
+    "en": "Prince-Archbishopric of Salzburg",
+    "de": "Erzstift Salzburg"
+   },
+   "short": {
+    "en": "Salzburg",
+    "de": "Salzburg"
+   },
+   "adjective": {
+    "en": "Salzburg",
+    "de": "salzburgisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#d23c3c",
+   "capital": {
+    "name": "Salzburg",
+    "lat": 47.8,
+    "lon": 13.045
+   },
+   "holdings": [
+    {
+     "name": "Salzburg",
+     "lat": 47.8,
+     "lon": 13.045
+    },
+    {
+     "name": "Hallein",
+     "lat": 47.683,
+     "lon": 13.097
+    },
+    {
+     "name": "Radstadt",
+     "lat": 47.383,
+     "lon": 13.46
+    },
+    {
+     "name": "Zell am See",
+     "lat": 47.325,
+     "lon": 12.795
+    },
+    {
+     "name": "Mühldorf",
+     "lat": 48.247,
+     "lon": 12.523
+    },
+    {
+     "name": "Laufen",
+     "lat": 47.94,
+     "lon": 12.93
+    },
+    {
+     "name": "Friesach",
+     "lat": 46.953,
+     "lon": 14.41
+    },
+    {
+     "name": "Pettau",
+     "lat": 46.42,
+     "lon": 15.87
+    },
+    {
+     "name": "Gmünd",
+     "lat": 46.907,
+     "lon": 13.535
+    },
+    {
+     "name": "Mittersill",
+     "lat": 47.28,
+     "lon": 12.48
+    }
+   ],
+   "ruler": {
+    "name": "Ortolf von Weißeneck",
+    "born": 1300,
+    "dynasty": "Weißeneck",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "prudent",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-archbishop (1343–1365), of a Carinthian noble family; his brother Gottfried is Bishop of Passau",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria",
+    "bishopric_passau"
+   ],
+   "rivals": [
+    "bavaria_landshut"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Archbishop Ortolf von Weißeneck rules the rich Alpine principality of Salzburg, whose salt mines at Hallein and gold of the Tauern bring great revenue. The see also holds Mühldorf on the Inn and outlying lands in Carinthia and Styria. It steers between Habsburg Austria and Wittelsbach Bavaria.",
+    "de": "Erzbischof Ortolf von Weißeneck regiert das reiche Alpenfürstentum Salzburg, dessen Salz aus Hallein und Gold aus den Tauern große Einkünfte bringen. Das Erzstift hält auch Mühldorf am Inn und Außenbesitz in Kärnten und der Steiermark. Es laviert zwischen dem habsburgischen Österreich und dem wittelsbachischen Bayern."
+   },
+   "coa": {
+    "blazon": "Per pale or, a lion sable, and gules, a fess argent",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bavaria_upper",
+   "name": {
+    "en": "Duchy of Upper Bavaria",
+    "de": "Herzogtum Oberbayern"
+   },
+   "short": {
+    "en": "Upper Bavaria",
+    "de": "Oberbayern"
+   },
+   "adjective": {
+    "en": "Bavarian",
+    "de": "bayerisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#3c7ac8",
+   "capital": {
+    "name": "Munich",
+    "lat": 48.137,
+    "lon": 11.575
+   },
+   "holdings": [
+    {
+     "name": "Munich",
+     "lat": 48.137,
+     "lon": 11.575
+    },
+    {
+     "name": "Ingolstadt",
+     "lat": 48.763,
+     "lon": 11.425
+    },
+    {
+     "name": "Landsberg",
+     "lat": 48.048,
+     "lon": 10.88
+    },
+    {
+     "name": "Weilheim",
+     "lat": 47.84,
+     "lon": 11.14
+    },
+    {
+     "name": "Rosenheim",
+     "lat": 47.856,
+     "lon": 12.12
+    },
+    {
+     "name": "Wasserburg",
+     "lat": 48.06,
+     "lon": 12.23
+    },
+    {
+     "name": "Friedberg",
+     "lat": 48.357,
+     "lon": 10.98
+    },
+    {
+     "name": "Aichach",
+     "lat": 48.457,
+     "lon": 11.13
+    },
+    {
+     "name": "Schongau",
+     "lat": 47.81,
+     "lon": 10.9
+    },
+    {
+     "name": "Kufstein",
+     "lat": 47.583,
+     "lon": 12.17
+    },
+    {
+     "name": "Rattenberg",
+     "lat": 47.44,
+     "lon": 11.89
+    },
+    {
+     "name": "Kitzbühel",
+     "lat": 47.446,
+     "lon": 12.39
+    },
+    {
+     "name": "Neuburg an der Donau",
+     "lat": 48.73,
+     "lon": 11.18
+    },
+    {
+     "name": "Tölz",
+     "lat": 47.76,
+     "lon": 11.56
+    }
+   ],
+   "ruler": {
+    "name": "Ludwig V (the Brandenburger)",
+    "born": 1315,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "stubborn",
+     "worldly"
+    ]
+   },
+   "heir": {
+    "name": "Meinhard",
+    "born": 1344,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "sickly",
+     "weak"
+    ]
+   },
+   "consort": {
+    "name": "Margarete of Tyrol",
+    "born": 1318,
+    "dynasty": "Meinhardiner",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "determined",
+     "proud"
+    ]
+   },
+   "dynasty_note": "House of Wittelsbach; eldest son of Emperor Louis IV, he gave up Brandenburg to his brothers in 1351 and keeps Upper Bavaria and, through his wife, Tyrol",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "tyrol",
+    "bavaria_landshut"
+   ],
+   "rivals": [
+    "bohemia",
+    "austria",
+    "palatinate"
+   ],
+   "claims_on": [
+    "bohemia"
+   ],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Ludwig V, eldest son of the late Emperor Louis the Bavarian, ceded Brandenburg to his brothers in 1351 to concentrate on Upper Bavaria and Tyrol. He has come to terms with Charles IV, but resents that the Golden Bull gives the Wittelsbach vote to the Palatinate. Bavaria is fragmented, with his brother Stephen ruling Landshut and his half-brothers Straubing and Holland.",
+    "de": "Ludwig V., ältester Sohn des verstorbenen Kaisers Ludwig des Bayern, trat 1351 Brandenburg an seine Brüder ab, um sich auf Oberbayern und Tirol zu konzentrieren. Er hat sich mit Karl IV. arrangiert, verübelt aber, dass die Goldene Bulle die wittelsbachische Kurstimme der Pfalz zuspricht. Bayern ist zersplittert: Sein Bruder Stephan regiert Landshut, seine Halbbrüder Straubing und Holland."
+   },
+   "coa": {
+    "blazon": "Lozengy bendwise argent and azure",
+    "field": "argent",
+    "division": "lozengy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bavaria_landshut",
+   "name": {
+    "en": "Duchy of Bavaria-Landshut",
+    "de": "Herzogtum Bayern-Landshut"
+   },
+   "short": {
+    "en": "Bavaria-Landshut",
+    "de": "Bayern-Landshut"
+   },
+   "adjective": {
+    "en": "Bavarian",
+    "de": "bayerisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#5a9ae0",
+   "capital": {
+    "name": "Landshut",
+    "lat": 48.537,
+    "lon": 12.152
+   },
+   "holdings": [
+    {
+     "name": "Landshut",
+     "lat": 48.537,
+     "lon": 12.152
+    },
+    {
+     "name": "Burghausen",
+     "lat": 48.17,
+     "lon": 12.83
+    },
+    {
+     "name": "Braunau",
+     "lat": 48.258,
+     "lon": 13.035
+    },
+    {
+     "name": "Ötting",
+     "lat": 48.22,
+     "lon": 12.68
+    },
+    {
+     "name": "Dingolfing",
+     "lat": 48.63,
+     "lon": 12.5
+    },
+    {
+     "name": "Vilshofen",
+     "lat": 48.633,
+     "lon": 13.19
+    },
+    {
+     "name": "Pfarrkirchen",
+     "lat": 48.43,
+     "lon": 12.94
+    },
+    {
+     "name": "Schärding",
+     "lat": 48.457,
+     "lon": 13.43
+    },
+    {
+     "name": "Ried",
+     "lat": 48.21,
+     "lon": 13.49
+    }
+   ],
+   "ruler": {
+    "name": "Stephan II",
+    "born": 1319,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "warlike",
+     "generous"
+    ]
+   },
+   "heir": {
+    "name": "Stephan",
+    "born": 1337,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     4
+    ],
+    "traits": [
+     "brave",
+     "extravagant"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "House of Wittelsbach; Stephan II 'with the Buckle', son of Emperor Louis IV, holds Lower Bavaria-Landshut since the 1353 partition",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bavaria_upper"
+   ],
+   "rivals": [
+    "salzburg",
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Duke Stephan II received the Landshut part of Lower Bavaria in the partition of 1353 with his younger half-brothers. Martial and open-handed, he seeks the reunification of Bavaria under his line. His lands on the Inn border Salzburg and Austria.",
+    "de": "Herzog Stephan II. erhielt bei der Teilung von 1353 mit seinen jüngeren Halbbrüdern den Landshuter Teil Niederbayerns. Kriegerisch und freigebig strebt er nach der Wiedervereinigung Bayerns unter seiner Linie. Seine Lande am Inn grenzen an Salzburg und Österreich."
+   },
+   "coa": {
+    "blazon": "Lozengy bendwise argent and azure",
+    "field": "argent",
+    "division": "lozengy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bavaria_straubing",
+   "name": {
+    "en": "Duchy of Bavaria-Straubing",
+    "de": "Herzogtum Bayern-Straubing"
+   },
+   "short": {
+    "en": "Bavaria-Straubing",
+    "de": "Bayern-Straubing"
+   },
+   "adjective": {
+    "en": "Bavarian",
+    "de": "bayerisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#7ab0e8",
+   "capital": {
+    "name": "Straubing",
+    "lat": 48.883,
+    "lon": 12.573
+   },
+   "holdings": [
+    {
+     "name": "Straubing",
+     "lat": 48.883,
+     "lon": 12.573
+    },
+    {
+     "name": "Deggendorf",
+     "lat": 48.84,
+     "lon": 12.96
+    },
+    {
+     "name": "Cham",
+     "lat": 49.22,
+     "lon": 12.66
+    },
+    {
+     "name": "Kelheim",
+     "lat": 48.917,
+     "lon": 11.887
+    },
+    {
+     "name": "Landau an der Isar",
+     "lat": 48.67,
+     "lon": 12.69
+    },
+    {
+     "name": "Mitterfels",
+     "lat": 48.976,
+     "lon": 12.68
+    }
+   ],
+   "ruler": {
+    "name": "Albrecht I",
+    "born": 1336,
+    "dynasty": "Wittelsbach",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "diligent",
+     "pleasure-loving"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Margarete of Brieg",
+    "born": 1342,
+    "dynasty": "Silesian Piasts",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Wittelsbach; Albrecht I administers Straubing in the name of himself and his brother Wilhelm I, who is also Count of Holland, Zeeland and Hainaut",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "hainaut",
+    "bavaria_landshut"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Straubing was carved out of Lower Bavaria in 1353 for the younger sons of Emperor Louis IV and Margaret of Hainaut. Duke Albrecht governs it while his elder brother Wilhelm reigns in Holland and Hainaut. The Danube lands are fertile but far from the brothers' other inheritance in the Low Countries.",
+    "de": "Straubing wurde 1353 für die jüngeren Söhne Kaiser Ludwigs IV. und Margaretes von Holland aus Niederbayern herausgelöst. Herzog Albrecht regiert es, während sein älterer Bruder Wilhelm in Holland und Hennegau herrscht. Die Donaulande sind fruchtbar, aber fern vom übrigen Erbe der Brüder in den Niederlanden."
+   },
+   "coa": {
+    "blazon": "Lozengy bendwise argent and azure",
+    "field": "argent",
+    "division": "lozengy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_passau",
+   "name": {
+    "en": "Prince-Bishopric of Passau",
+    "de": "Hochstift Passau"
+   },
+   "short": {
+    "en": "Passau",
+    "de": "Passau"
+   },
+   "adjective": {
+    "en": "Passau",
+    "de": "passauisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#c84848",
+   "capital": {
+    "name": "Passau",
+    "lat": 48.574,
+    "lon": 13.465
+   },
+   "holdings": [
+    {
+     "name": "Passau",
+     "lat": 48.574,
+     "lon": 13.465
+    },
+    {
+     "name": "Obernzell",
+     "lat": 48.553,
+     "lon": 13.636
+    },
+    {
+     "name": "Wegscheid",
+     "lat": 48.6,
+     "lon": 13.79
+    }
+   ],
+   "ruler": {
+    "name": "Gottfried von Weißeneck",
+    "born": 1300,
+    "dynasty": "Weißeneck",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "prudent"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1342–1362); brother of Archbishop Ortolf of Salzburg",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "salzburg",
+    "austria"
+   ],
+   "rivals": [
+    "bavaria_landshut"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Gottfried rules a small principality at the confluence of Danube, Inn and Ilz, while his vast diocese stretches down the Danube through Austria to Vienna. Passau's control of Danube trade makes it wealthy. The citizens chafe under episcopal rule.",
+    "de": "Bischof Gottfried regiert ein kleines Fürstentum am Zusammenfluss von Donau, Inn und Ilz, während seine riesige Diözese donauabwärts durch Österreich bis Wien reicht. Die Kontrolle des Donauhandels macht Passau wohlhabend. Die Bürger begehren gegen die bischöfliche Herrschaft auf."
+   },
+   "coa": {
+    "blazon": "Argent, a wolf rampant gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wolf",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_freising",
+   "name": {
+    "en": "Prince-Bishopric of Freising",
+    "de": "Hochstift Freising"
+   },
+   "short": {
+    "en": "Freising",
+    "de": "Freising"
+   },
+   "adjective": {
+    "en": "Freising",
+    "de": "freisingisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#8a3a3a",
+   "capital": {
+    "name": "Freising",
+    "lat": 48.4,
+    "lon": 11.745
+   },
+   "holdings": [
+    {
+     "name": "Freising",
+     "lat": 48.4,
+     "lon": 11.745
+    },
+    {
+     "name": "Werdenfels",
+     "lat": 47.49,
+     "lon": 11.1
+    },
+    {
+     "name": "Waidhofen an der Ybbs",
+     "lat": 47.96,
+     "lon": 14.77
+    },
+    {
+     "name": "Bischoflack",
+     "lat": 46.167,
+     "lon": 14.306
+    },
+    {
+     "name": "Innichen",
+     "lat": 46.733,
+     "lon": 12.28
+    }
+   ],
+   "ruler": {
+    "name": "Albrecht von Hohenberg",
+    "born": 1303,
+    "dynasty": "Hohenberg",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "learned",
+     "chronicler"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1349–1359), of the Counts of Hohenberg; former chancellor of Louis IV",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria",
+    "bohemia"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Albrecht von Hohenberg, scholar and chronicler, once served Louis the Bavarian as chancellor before joining Charles IV. Freising's lands are tiny around the see itself but include distant lordships in the Alps, Austria and Carniola. The bishop is a respected counsellor in imperial affairs.",
+    "de": "Bischof Albrecht von Hohenberg, Gelehrter und Chronist, diente einst Ludwig dem Bayern als Kanzler, bevor er zu Karl IV. überging. Freisings Besitz um den Bischofssitz ist winzig, umfasst aber ferne Herrschaften in den Alpen, in Österreich und Krain. Der Bischof ist ein geachteter Ratgeber in Reichsangelegenheiten."
+   },
+   "coa": {
+    "blazon": "Argent, a moor's head couped proper crowned gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "moor_head",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_regensburg",
+   "name": {
+    "en": "Prince-Bishopric of Regensburg",
+    "de": "Hochstift Regensburg"
+   },
+   "short": {
+    "en": "Bishopric of Regensburg",
+    "de": "Hochstift Regensburg"
+   },
+   "adjective": {
+    "en": "Regensburg",
+    "de": "regensburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#b83a3a",
+   "capital": {
+    "name": "Wörth an der Donau",
+    "lat": 49.0,
+    "lon": 12.4
+   },
+   "holdings": [
+    {
+     "name": "Wörth an der Donau",
+     "lat": 49.0,
+     "lon": 12.4
+    },
+    {
+     "name": "Donaustauf",
+     "lat": 49.033,
+     "lon": 12.21
+    },
+    {
+     "name": "Hohenburg",
+     "lat": 49.3,
+     "lon": 11.8
+    }
+   ],
+   "ruler": {
+    "name": "Friedrich von Zollern",
+    "born": 1320,
+    "dynasty": "Hohenzollern (Franconian line)",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": [
+     "worldly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1340–1365), a son of Burgrave Friedrich IV of Nuremberg",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nuremberg_burgraviate",
+    "bohemia"
+   ],
+   "rivals": [
+    "regensburg"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Bishop Friedrich, a son of the Burgrave of Nuremberg, holds only a few castles and lordships along the Danube, as the city of Regensburg is free. He resides mostly at Wörth. Family ties to the Hohenzollern of Nuremberg give him influence beyond his small territory.",
+    "de": "Bischof Friedrich, ein Sohn des Burggrafen von Nürnberg, hält nur einige Burgen und Herrschaften an der Donau, da die Stadt Regensburg frei ist. Er residiert meist in Wörth. Die Verwandtschaft mit den Zollern in Nürnberg verschafft ihm Einfluss über sein kleines Gebiet hinaus."
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "regensburg",
+   "name": {
+    "en": "Free City of Regensburg",
+    "de": "Freie Stadt Regensburg"
+   },
+   "short": {
+    "en": "Regensburg",
+    "de": "Regensburg"
+   },
+   "adjective": {
+    "en": "Regensburg",
+    "de": "Regensburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#901e1e",
+   "capital": {
+    "name": "Regensburg",
+    "lat": 49.015,
+    "lon": 12.097
+   },
+   "holdings": [
+    {
+     "name": "Regensburg",
+     "lat": 49.015,
+     "lon": 12.097
+    },
+    {
+     "name": "Stadtamhof",
+     "lat": 49.025,
+     "lon": 12.095
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nuremberg",
+    "augsburg"
+   ],
+   "rivals": [
+    "bavaria_straubing",
+    "bishopric_regensburg"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "Regensburg, with its great stone bridge over the Danube, was once the greatest trading city of southern Germany. A free city since 1245, it has seen its long-distance trade with Venice and the east decline. It is surrounded by Wittelsbach lands and guards its liberties jealously.",
+    "de": "Regensburg mit seiner großen Steinernen Brücke über die Donau war einst die bedeutendste Handelsstadt Süddeutschlands. Seit 1245 frei, sieht es seinen Fernhandel mit Venedig und dem Osten schwinden. Von wittelsbachischem Land umgeben, hütet es eifersüchtig seine Freiheiten."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_eichstatt",
+   "name": {
+    "en": "Prince-Bishopric of Eichstätt",
+    "de": "Hochstift Eichstätt"
+   },
+   "short": {
+    "en": "Eichstätt",
+    "de": "Eichstätt"
+   },
+   "adjective": {
+    "en": "Eichstätt",
+    "de": "eichstättisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#c05050",
+   "capital": {
+    "name": "Eichstätt",
+    "lat": 48.89,
+    "lon": 11.183
+   },
+   "holdings": [
+    {
+     "name": "Eichstätt",
+     "lat": 48.89,
+     "lon": 11.183
+    },
+    {
+     "name": "Berching",
+     "lat": 49.106,
+     "lon": 11.44
+    },
+    {
+     "name": "Spalt",
+     "lat": 49.175,
+     "lon": 10.92
+    },
+    {
+     "name": "Ornbau",
+     "lat": 49.17,
+     "lon": 10.65
+    }
+   ],
+   "ruler": {
+    "name": "Berthold von Zollern",
+    "born": 1320,
+    "dynasty": "Hohenzollern (Franconian line)",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     1
+    ],
+    "traits": [
+     "learned",
+     "loyal"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1351–1365), son of Burgrave Friedrich IV of Nuremberg and chancellor to Charles IV",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nuremberg_burgraviate",
+    "bohemia"
+   ],
+   "rivals": [
+    "bavaria_upper"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Berthold, brother of the Burgrave of Nuremberg, is chancellor to Charles IV and a key figure in imperial government. The see's lands lie along the Altmühl valley between Franconia and Bavaria. He is building up its holdings after the Wittelsbach era.",
+    "de": "Bischof Berthold, Bruder des Nürnberger Burggrafen, ist Kanzler Karls IV. und eine Schlüsselfigur der Reichsregierung. Die Stiftslande liegen im Altmühltal zwischen Franken und Bayern. Nach der wittelsbachischen Zeit baut er den Besitz des Hochstifts aus."
+   },
+   "coa": {
+    "blazon": "Gules, a crozier argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nuremberg_burgraviate",
+   "name": {
+    "en": "Burgraviate of Nuremberg",
+    "de": "Burggrafschaft Nürnberg"
+   },
+   "short": {
+    "en": "Nuremberg (Burgraviate)",
+    "de": "Burggrafschaft Nürnberg"
+   },
+   "adjective": {
+    "en": "Burgravial",
+    "de": "burggräflich"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#1e1e1e",
+   "capital": {
+    "name": "Cadolzburg",
+    "lat": 49.457,
+    "lon": 10.857
+   },
+   "holdings": [
+    {
+     "name": "Cadolzburg",
+     "lat": 49.457,
+     "lon": 10.857
+    },
+    {
+     "name": "Ansbach",
+     "lat": 49.3,
+     "lon": 10.57
+    },
+    {
+     "name": "Kulmbach",
+     "lat": 50.1,
+     "lon": 11.45
+    },
+    {
+     "name": "Bayreuth",
+     "lat": 49.945,
+     "lon": 11.578
+    },
+    {
+     "name": "Wunsiedel",
+     "lat": 50.04,
+     "lon": 12.0
+    },
+    {
+     "name": "Erlangen",
+     "lat": 49.6,
+     "lon": 11.0
+    },
+    {
+     "name": "Neustadt an der Aisch",
+     "lat": 49.58,
+     "lon": 10.59
+    },
+    {
+     "name": "Uffenheim",
+     "lat": 49.54,
+     "lon": 10.233
+    }
+   ],
+   "ruler": {
+    "name": "Johann II",
+    "born": 1309,
+    "dynasty": "Hohenzollern (Franconian line)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "thrifty",
+     "acquisitive"
+    ]
+   },
+   "heir": {
+    "name": "Friedrich",
+    "born": 1333,
+    "dynasty": "Hohenzollern (Franconian line)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "capable",
+     "loyal"
+    ]
+   },
+   "consort": {
+    "name": "Elisabeth of Henneberg",
+    "born": 1317,
+    "dynasty": "Henneberg",
+    "female": true,
+    "skills": [
+     2,
+     3,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Franconian line of the House of Hohenzollern; Burgrave Johann II governs with his brother Albrecht 'the Handsome'",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "bishopric_eichstatt",
+    "bishopric_regensburg",
+    "zollern"
+   ],
+   "rivals": [
+    "nuremberg",
+    "bishopric_bamberg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Burgrave Johann II and his brother Albrecht 'the Handsome' have built up a broad Franconian territory around Ansbach, Kulmbach and Bayreuth, largely by purchase. They are firm partisans of Charles IV, who is about to recognise their princely rank in the Golden Bull era. The burgraves' castle in Nuremberg sits uneasily beside the self-confident city.",
+    "de": "Burggraf Johann II. und sein Bruder Albrecht 'der Schöne' haben vor allem durch Kauf ein weites fränkisches Territorium um Ansbach, Kulmbach und Bayreuth aufgebaut. Sie sind treue Parteigänger Karls IV. Die Burggrafenburg in Nürnberg steht unbehaglich neben der selbstbewussten Stadt."
+   },
+   "coa": {
+    "blazon": "Or, a lion sable within a bordure compony argent and gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nuremberg",
+   "name": {
+    "en": "Free Imperial City of Nuremberg",
+    "de": "Reichsstadt Nürnberg"
+   },
+   "short": {
+    "en": "Nuremberg",
+    "de": "Nürnberg"
+   },
+   "adjective": {
+    "en": "Nuremberger",
+    "de": "Nürnberger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#e0b030",
+   "capital": {
+    "name": "Nuremberg",
+    "lat": 49.452,
+    "lon": 11.077
+   },
+   "holdings": [
+    {
+     "name": "Nuremberg",
+     "lat": 49.452,
+     "lon": 11.077
+    },
+    {
+     "name": "Lauf",
+     "lat": 49.51,
+     "lon": 11.28
+    }
+   ],
+   "ruler": {
+    "name": "City council",
+    "born": null,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "mercantile",
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Governed by its council of patrician families and, increasingly, guild representatives",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "regensburg",
+    "frankfurt"
+   ],
+   "rivals": [
+    "nuremberg_burgraviate"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "Nuremberg is a booming free imperial city of craftsmen and long-distance merchants and the favourite city of Emperor Charles IV. The guild revolt of 1348–49 was crushed and patrician rule restored with imperial help. The Golden Bull, being proclaimed at Nuremberg this January, decrees that each new king shall hold his first diet here.",
+    "de": "Nürnberg ist eine aufblühende Reichsstadt der Handwerker und Fernkaufleute und die Lieblingsstadt Kaiser Karls IV. Der Handwerkeraufstand von 1348/49 wurde niedergeschlagen und die Patrizierherrschaft mit kaiserlicher Hilfe wiederhergestellt. Die Goldene Bulle, die in diesem Januar in Nürnberg verkündet wird, bestimmt, dass jeder neue König hier seinen ersten Reichstag hält."
+   },
+   "coa": {
+    "blazon": "Per pale or, a demi-eagle sable, and bendy gules and argent",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_wurzburg",
+   "name": {
+    "en": "Prince-Bishopric of Würzburg",
+    "de": "Hochstift Würzburg"
+   },
+   "short": {
+    "en": "Würzburg",
+    "de": "Würzburg"
+   },
+   "adjective": {
+    "en": "Würzburg",
+    "de": "würzburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#c8323c",
+   "capital": {
+    "name": "Würzburg",
+    "lat": 49.794,
+    "lon": 9.929
+   },
+   "holdings": [
+    {
+     "name": "Würzburg",
+     "lat": 49.794,
+     "lon": 9.929
+    },
+    {
+     "name": "Karlstadt",
+     "lat": 49.96,
+     "lon": 9.77
+    },
+    {
+     "name": "Ochsenfurt",
+     "lat": 49.664,
+     "lon": 10.07
+    },
+    {
+     "name": "Haßfurt",
+     "lat": 50.033,
+     "lon": 10.51
+    },
+    {
+     "name": "Meiningen",
+     "lat": 50.57,
+     "lon": 10.415
+    },
+    {
+     "name": "Mellrichstadt",
+     "lat": 50.43,
+     "lon": 10.3
+    },
+    {
+     "name": "Neustadt an der Saale",
+     "lat": 50.32,
+     "lon": 10.21
+    },
+    {
+     "name": "Gerolzhofen",
+     "lat": 49.9,
+     "lon": 10.35
+    },
+    {
+     "name": "Ebern",
+     "lat": 50.095,
+     "lon": 10.795
+    },
+    {
+     "name": "Hammelburg",
+     "lat": 50.117,
+     "lon": 9.89
+    }
+   ],
+   "ruler": {
+    "name": "Albrecht von Hohenlohe",
+    "born": 1300,
+    "dynasty": "Hohenlohe",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "determined"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1345, undisputed from 1350, to 1372), of the Lords of Hohenlohe",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia"
+   ],
+   "rivals": [
+    "henneberg"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Bishop Albrecht von Hohenlohe won a long contest for the see and now rules the largest ecclesiastical territory in Franconia. The bishops also claim the ducal title in Franconia. Würzburg's citizens and the Counts of Henneberg are perennial rivals.",
+    "de": "Bischof Albrecht von Hohenlohe setzte sich in einem langen Streit um das Bistum durch und regiert nun das größte geistliche Territorium Frankens. Die Bischöfe beanspruchen zudem die fränkische Herzogswürde. Die Würzburger Bürger und die Grafen von Henneberg sind ständige Rivalen."
+   },
+   "coa": {
+    "blazon": "Per fess dancetty gules and argent",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_bamberg",
+   "name": {
+    "en": "Prince-Bishopric of Bamberg",
+    "de": "Hochstift Bamberg"
+   },
+   "short": {
+    "en": "Bamberg",
+    "de": "Bamberg"
+   },
+   "adjective": {
+    "en": "Bamberg",
+    "de": "bambergisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#e0c040",
+   "capital": {
+    "name": "Bamberg",
+    "lat": 49.891,
+    "lon": 10.886
+   },
+   "holdings": [
+    {
+     "name": "Bamberg",
+     "lat": 49.891,
+     "lon": 10.886
+    },
+    {
+     "name": "Forchheim",
+     "lat": 49.72,
+     "lon": 11.06
+    },
+    {
+     "name": "Kronach",
+     "lat": 50.24,
+     "lon": 11.33
+    },
+    {
+     "name": "Hollfeld",
+     "lat": 49.94,
+     "lon": 11.29
+    },
+    {
+     "name": "Staffelstein",
+     "lat": 50.1,
+     "lon": 11.0
+    },
+    {
+     "name": "Villach",
+     "lat": 46.61,
+     "lon": 13.85
+    },
+    {
+     "name": "Wolfsberg",
+     "lat": 46.84,
+     "lon": 14.84
+    }
+   ],
+   "ruler": {
+    "name": "Lupold von Bebenburg",
+    "born": 1297,
+    "dynasty": "Bebenburg",
+    "female": false,
+    "skills": [
+     3,
+     5,
+     1
+    ],
+    "traits": [
+     "learned",
+     "jurist"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elected prince-bishop (1353–1363); a renowned jurist and theorist of imperial rights",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "bohemia",
+    "bishopric_wurzburg"
+   ],
+   "rivals": [
+    "nuremberg_burgraviate"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "Bishop Lupold von Bebenburg is famed as the author of a treatise defending the rights of the Empire against the papacy. Bamberg's see, founded by Emperor Henry II, holds lands in upper Franconia and valuable estates in Carinthia around Villach. The expanding burgraves of Nuremberg are uncomfortable neighbours.",
+    "de": "Bischof Lupold von Bebenburg ist berühmt als Verfasser einer Schrift zur Verteidigung der Reichsrechte gegen das Papsttum. Das von Kaiser Heinrich II. gegründete Bistum hält Lande in Oberfranken und wertvolle Besitzungen in Kärnten um Villach. Die sich ausdehnenden Nürnberger Burggrafen sind unbequeme Nachbarn."
+   },
+   "coa": {
+    "blazon": "Or, a lion sable, overall a bend argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "henneberg",
+   "name": {
+    "en": "County of Henneberg-Schleusingen",
+    "de": "Grafschaft Henneberg-Schleusingen"
+   },
+   "short": {
+    "en": "Henneberg",
+    "de": "Henneberg"
+   },
+   "adjective": {
+    "en": "Henneberg",
+    "de": "hennebergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#2a2a2a",
+   "capital": {
+    "name": "Schleusingen",
+    "lat": 50.51,
+    "lon": 10.755
+   },
+   "holdings": [
+    {
+     "name": "Schleusingen",
+     "lat": 50.51,
+     "lon": 10.755
+    },
+    {
+     "name": "Ilmenau",
+     "lat": 50.687,
+     "lon": 10.914
+    },
+    {
+     "name": "Themar",
+     "lat": 50.505,
+     "lon": 10.615
+    },
+    {
+     "name": "Suhl",
+     "lat": 50.61,
+     "lon": 10.69
+    }
+   ],
+   "ruler": {
+    "name": "Johann I",
+    "born": 1305,
+    "dynasty": "Henneberg",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     1
+    ],
+    "traits": [
+     "cautious"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Elisabeth of Leuchtenberg",
+    "born": 1320,
+    "dynasty": "Leuchtenberg",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "Schleusingen line of the Counts of Henneberg, princely counts since 1310",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "nuremberg_burgraviate",
+    "wurttemberg"
+   ],
+   "rivals": [
+    "bishopric_wurzburg"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Count Johann I rules the Schleusingen line of Henneberg, raised to princely rank under Emperor Henry VII. The family's Coburg lands passed to the Wettins in 1353. Henneberg sits on the Thuringian Forest between Franconia and Thuringia.",
+    "de": "Graf Johann I. regiert die Schleusinger Linie des Hauses Henneberg, das unter Kaiser Heinrich VII. gefürstet wurde. Die Coburger Lande der Familie gingen 1353 an die Wettiner. Henneberg liegt am Thüringer Wald zwischen Franken und Thüringen."
+   },
+   "coa": {
+    "blazon": "Or, a hen sable on a mount vert",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "hen",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "savoy",
+   "name": {
+    "en": "County of Savoy",
+    "de": "Grafschaft Savoyen"
+   },
+   "short": {
+    "en": "Savoy",
+    "de": "Savoyen"
+   },
+   "adjective": {
+    "en": "Savoyard",
+    "de": "savoyisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#c81e32",
+   "capital": {
+    "name": "Chambéry",
+    "lat": 45.566,
+    "lon": 5.92
+   },
+   "holdings": [
+    {
+     "name": "Chambéry",
+     "lat": 45.566,
+     "lon": 5.92
+    },
+    {
+     "name": "Saint-Jean-de-Maurienne",
+     "lat": 45.276,
+     "lon": 6.346
+    },
+    {
+     "name": "Moûtiers",
+     "lat": 45.485,
+     "lon": 6.53
+    },
+    {
+     "name": "Aosta",
+     "lat": 45.737,
+     "lon": 7.32
+    },
+    {
+     "name": "Ivrea",
+     "lat": 45.467,
+     "lon": 7.876
+    },
+    {
+     "name": "Susa",
+     "lat": 45.138,
+     "lon": 7.048
+    },
+    {
+     "name": "Bourg-en-Bresse",
+     "lat": 46.205,
+     "lon": 5.225
+    },
+    {
+     "name": "Belley",
+     "lat": 45.76,
+     "lon": 5.69
+    },
+    {
+     "name": "Bonneville",
+     "lat": 46.078,
+     "lon": 6.4
+    },
+    {
+     "name": "Gex",
+     "lat": 46.333,
+     "lon": 6.058
+    },
+    {
+     "name": "Chillon",
+     "lat": 46.414,
+     "lon": 6.927
+    },
+    {
+     "name": "Évian",
+     "lat": 46.4,
+     "lon": 6.59
+    },
+    {
+     "name": "Pont-de-Beauvoisin",
+     "lat": 45.536,
+     "lon": 5.67
+    }
+   ],
+   "ruler": {
+    "name": "Amédée VI",
+    "born": 1334,
+    "dynasty": "Savoy",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "chivalrous",
+     "ambitious",
+     "just"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Bonne de Bourbon",
+    "born": 1341,
+    "dynasty": "Bourbon",
+    "female": true,
+    "skills": [
+     3,
+     4,
+     0
+    ],
+    "traits": [
+     "capable"
+    ]
+   },
+   "dynasty_note": "House of Savoy (Humbertine line); Amadeus VI 'the Green Count', with cousins of the Achaea line in Piedmont and of the Vaud line north of Lake Geneva",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france",
+    "geneva"
+   ],
+   "rivals": [
+    "montferrat"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Amadeus VI, 'the Green Count', has just gained Faucigny and Gex from the King of France in the Treaty of Paris (1355) in exchange for lands beyond the Rhône, and married Bonne de Bourbon. He controls the Alpine passes of the Mont Cenis and Great St Bernard between France and Italy. Ambitious and chivalrous, he looks to expand both north of the lake and into Piedmont.",
+    "de": "Amadeus VI., 'der Grüne Graf', gewann im Vertrag von Paris (1355) Faucigny und Gex vom König von Frankreich gegen Lande jenseits der Rhone und heiratete Bonne de Bourbon. Er beherrscht die Alpenpässe des Mont Cenis und des Großen St. Bernhard zwischen Frankreich und Italien. Ehrgeizig und ritterlich, strebt er nach Ausdehnung nördlich des Sees und nach Piemont."
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "geneva",
+   "name": {
+    "en": "County of Geneva",
+    "de": "Grafschaft Genf"
+   },
+   "short": {
+    "en": "Geneva",
+    "de": "Genf"
+   },
+   "adjective": {
+    "en": "Genevan",
+    "de": "genferisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#e0c030",
+   "capital": {
+    "name": "Annecy",
+    "lat": 45.9,
+    "lon": 6.125
+   },
+   "holdings": [
+    {
+     "name": "Annecy",
+     "lat": 45.9,
+     "lon": 6.125
+    },
+    {
+     "name": "Rumilly",
+     "lat": 45.867,
+     "lon": 5.94
+    },
+    {
+     "name": "Ternier",
+     "lat": 46.13,
+     "lon": 6.1
+    }
+   ],
+   "ruler": {
+    "name": "Amédée III",
+    "born": 1300,
+    "dynasty": "Geneva",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "patient"
+    ]
+   },
+   "heir": {
+    "name": "Aymon",
+    "born": 1335,
+    "dynasty": "Geneva",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Mahaut d'Auvergne",
+    "born": 1315,
+    "dynasty": "Auvergne-Boulogne",
+    "female": true,
+    "skills": [
+     2,
+     2,
+     0
+    ],
+    "traits": []
+   },
+   "dynasty_note": "House of Geneva; the counts reside at Annecy, while the city of Geneva belongs to its bishop",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "savoy"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "Count Amadeus III of Geneva rules from Annecy, the city of Geneva itself being held by its prince-bishop. Encircled by Savoy since the cession of Faucigny in 1355, the county has drawn closer to its powerful neighbour. One of his sons, Robert, will later become Pope Clement VII at Avignon.",
+    "de": "Graf Amadeus III. von Genf regiert von Annecy aus, da die Stadt Genf ihrem Fürstbischof gehört. Seit der Abtretung des Faucigny 1355 von Savoyen umschlossen, hat sich die Grafschaft dem mächtigen Nachbarn angenähert. Einer seiner Söhne, Robert, wird später als Clemens VII. Papst in Avignon."
+   },
+   "coa": {
+    "blazon": "Or, four points equipollé azure",
+    "field": "or",
+    "division": "chequy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "county_burgundy",
+   "name": {
+    "en": "County of Burgundy",
+    "de": "Freigrafschaft Burgund"
+   },
+   "short": {
+    "en": "Franche-Comté",
+    "de": "Freigrafschaft Burgund"
+   },
+   "adjective": {
+    "en": "Comtois",
+    "de": "freigräflich-burgundisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#2a4aa0",
+   "capital": {
+    "name": "Dole",
+    "lat": 47.093,
+    "lon": 5.49
+   },
+   "holdings": [
+    {
+     "name": "Dole",
+     "lat": 47.093,
+     "lon": 5.49
+    },
+    {
+     "name": "Gray",
+     "lat": 47.445,
+     "lon": 5.59
+    },
+    {
+     "name": "Vesoul",
+     "lat": 47.62,
+     "lon": 6.155
+    },
+    {
+     "name": "Salins",
+     "lat": 46.94,
+     "lon": 5.876
+    },
+    {
+     "name": "Poligny",
+     "lat": 46.837,
+     "lon": 5.71
+    },
+    {
+     "name": "Pontarlier",
+     "lat": 46.904,
+     "lon": 6.354
+    },
+    {
+     "name": "Baume-les-Dames",
+     "lat": 47.352,
+     "lon": 6.36
+    },
+    {
+     "name": "Ornans",
+     "lat": 47.105,
+     "lon": 6.145
+    },
+    {
+     "name": "Faucogney",
+     "lat": 47.85,
+     "lon": 6.57
+    }
+   ],
+   "ruler": {
+    "name": "Philippe de Rouvres",
+    "born": 1346,
+    "dynasty": "Capet-Burgundy",
+    "female": false,
+    "skills": [
+     1,
+     1,
+     1
+    ],
+    "traits": [
+     "child",
+     "sickly"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elder House of Burgundy (Capetian); the boy Philippe is also Duke of Burgundy and Count of Artois, under the guardianship of his mother Jeanne de Boulogne and his stepfather King Jean II of France",
+   "overlord": "burgundy",
+   "subject_type": "personal_union",
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france",
+    "burgundy"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "The County of Burgundy, an imperial fief, is held by nine-year-old Philippe de Rouvres together with the French Duchy of Burgundy and Artois. His stepfather King Jean II of France effectively governs through the regency. The Comtois nobility, led by the Chalon family, guard their independence jealously.",
+    "de": "Die Freigrafschaft Burgund, ein Reichslehen, gehört dem neunjährigen Philipp von Rouvres zusammen mit dem französischen Herzogtum Burgund und dem Artois. Sein Stiefvater König Johann II. von Frankreich regiert faktisch über die Vormundschaft. Der Adel der Grafschaft unter Führung der Familie Chalon hütet eifersüchtig seine Unabhängigkeit."
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "montbeliard",
+   "name": {
+    "en": "County of Montbéliard",
+    "de": "Grafschaft Mömpelgard"
+   },
+   "short": {
+    "en": "Montbéliard",
+    "de": "Mömpelgard"
+   },
+   "adjective": {
+    "en": "Montbéliard",
+    "de": "mömpelgardisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#c06a2a",
+   "capital": {
+    "name": "Montbéliard",
+    "lat": 47.51,
+    "lon": 6.8
+   },
+   "holdings": [
+    {
+     "name": "Montbéliard",
+     "lat": 47.51,
+     "lon": 6.8
+    },
+    {
+     "name": "Blamont",
+     "lat": 47.385,
+     "lon": 6.845
+    },
+    {
+     "name": "Étobon",
+     "lat": 47.64,
+     "lon": 6.68
+    }
+   ],
+   "ruler": {
+    "name": "Henri de Montfaucon",
+    "born": 1300,
+    "dynasty": "Montfaucon",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Montfaucon, counts of Montbéliard since 1332",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "county_burgundy"
+   ],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "Henri de Montfaucon holds the small county of Montbéliard in the gap between the Vosges and the Jura, the 'Burgundian Gate'. Its position on the road from the Rhine to the Saône makes it strategically valuable. Habsburg's Alsatian lands press close on the north-east.",
+    "de": "Heinrich von Montfaucon hält die kleine Grafschaft Mömpelgard in der Burgundischen Pforte zwischen Vogesen und Jura. Die Lage an der Straße vom Rhein zur Saône macht sie strategisch wertvoll. Habsburgs elsässische Besitzungen drängen von Nordosten heran."
+   },
+   "coa": {
+    "blazon": "Gules, two barbels addorsed or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "addorsed"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}
