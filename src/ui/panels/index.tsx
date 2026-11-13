@@ -15,6 +15,7 @@ import { BattleTab } from './war';
 import { TradeTab } from './trade';
 import { ExploreTab } from './explore';
 import { EmpireTab } from './empire';
+import { CuriaTab } from './curia';
 import { panelName } from '../TopBar';
 import { SettingsPanel, SavesPanel, PausePanel, DevPanel, EndScreen, loadAndPlay } from './system';
 import { VictoryTab } from './victory';
@@ -38,7 +39,7 @@ const TABS: Record<string, () => any> = {
   society: SocietyTab, decisions: DecisionsTab, ledger: LedgerTab, chronicle: ChronicleTab, peace: PeaceTab, works: WorksTab,
   battle: BattleTab,
   trade: TradeTab, explore: ExploreTab,
-  empire: EmpireTab,
+  empire: EmpireTab, curia: CuriaTab,
   victory: VictoryTab, // polish pass
 };
 const TITLES: Record<string, string> = { peace: 'offer_peace', battle: 'xw_battle_report' };

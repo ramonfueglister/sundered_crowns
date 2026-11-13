@@ -18,6 +18,7 @@ import { events } from './events';
 import { ai } from './ai';
 import { faith } from './faith';
 import { empire } from './empire';
+import { curia } from './curia';
 import { government } from './government';
 import { powers } from './powers';
 import { commanders } from './commanders';
@@ -27,5 +28,5 @@ let LIST: System[] | null = null;
 /** The systems in the order they run. Built on first use, not while the modules load: the sim's modules import one
  *  another in cycles, and a system still loading when the list was built would leave a hole in it. */
 export function systems(): System[] {
-  return LIST ??= [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, government, powers, landmarks, situations, goals, events, ai, victory, ledger];
+  return LIST ??= [politics, faith, progress, society, administration, economy, military, commanders, war, diplomacy, colonial, realm, empire, curia, government, powers, landmarks, situations, goals, events, ai, victory, ledger];
 }

@@ -15,6 +15,7 @@ export type PanelId = 'none' | 'economy' | 'government' | 'diplomacy' | 'militar
   | 'battle' // war pass: a battle report (panelArg { id })
   | 'trade' | 'explore' // trade pass
   | 'empire' // realm pass
+  | 'curia' // the Curia
   | 'victory'; // polish pass
 export const panel = signal<PanelId>('none');
 export const panelArg = signal<any>(null);

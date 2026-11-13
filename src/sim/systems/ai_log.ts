@@ -22,6 +22,7 @@ export function aiKind(c: Command): string {
   switch (c.t) {
     case 'spy': return `spy:${c.action}`;
     case 'diplo': return `diplo:${c.action}`;
+    case 'curia': return `curia:${c.action}`;
     case 'agent': return `agent:${c.kind}`;
     case 'estate': return `estate:${c.action}`;
     case 'budget': return c.key === 'coinage' ? (c.value > 0 ? 'coinage:debase' : 'coinage:restore') : `budget:${c.key}`;
@@ -73,6 +74,8 @@ const CMD_TEXT: Record<string, I18n> = {
 };
 /** Why the AI did it. */
 export const WHY: Record<string, I18n> = {
+  'cu:conclave': T('to win the conclave', 'um das Konklave zu gewinnen'), 'cu:hat': T('for our share of the College', 'für unseren Anteil am Kollegium'),
+  'cu:gold': T('for an empty chest', 'für eine leere Kasse'), 'cu:crusade': T('for the faith', 'für den Glauben'),
   need_authority: T('to gain Authority', 'um Autorität zu gewinnen'),
   for_reform: T('to pay for a reform', 'um eine Reform zu bezahlen'),
   poor_general: T('our largest host lacked an able commander', 'unserem größten Heer fehlte ein fähiger Befehlshaber'),
@@ -170,6 +173,11 @@ export function aiLogText(s: GameState, w: World, e: AiLogEntry): I18n {
     case 'colonize': out = fill(T('Sent settlers to {L}', 'Siedler nach {L} entsandt')); break;
     case 'charter': out = T('Chartered a trading company', 'Eine Handelskompanie gegründet'); break;
     case 'explore': out = T('Sent out an expedition', 'Eine Expedition ausgesandt'); break;
+    case 'curia': out = fill(c.action === 'red_hat' ? T('Bought a red hat for a churchman of our realm', 'Einen Kardinalshut für einen Kirchenmann unseres Reiches erworben')
+      : c.action === 'simony' ? T('Sent gifts to the cardinals of {T}', 'Den Kardinälen von {T} Geschenke gesandt')
+      : c.action === 'indulgence' ? T('Sold indulgences', 'Ablässe verkauft')
+      : c.action === 'crusade' ? T('Had the pope proclaim a crusade against {T}', 'Den Papst zum Kreuzzug gegen {T} aufrufen lassen')
+      : T('Cast our cardinals\' votes for {T}', 'Die Stimmen unserer Kardinäle für {T} abgegeben')); break;
     case 'decision': out = fill(T('Took the decision: {I}', 'Entscheidung getroffen: {I}'), { I: (DECISIONS.find((d) => d.id === c.id)?.name ?? T(c.id, c.id)) }); break;
     default: out = CMD_TEXT[c.t] ?? T(c.t, c.t);
   }

@@ -224,6 +224,7 @@ export function SocietyTab() {
         <Row k={t('holy_see')} v={r.papacy.holder >= 0 ? <NLink id={r.papacy.holder} /> : '—'} />
         <Row k={t('curia_favour')} v={num(r.papacy.favour)} tip={t('curia_hint')} />
         {r.papacy.schism && <div class="warn-box">{t('schism')}</div>}
+        <Btn onClick={() => openPanel('curia')}>{t('x_cu_open')}</Btn>
       </Section>
     </div>
   </div>;

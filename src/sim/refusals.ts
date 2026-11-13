@@ -131,6 +131,10 @@ export const REFUSAL_DE: Record<string, string> = {
   'the code is not yet strong enough to proclaim': 'Das Gesetzbuch ist noch nicht stark genug für die Verkündung', 'we cannot back the lords against ourselves': 'Wir können die Herren nicht gegen uns selbst unterstützen',
   'the lords have gold enough already': 'Die Herren haben schon Gold genug',
   'only once the lords have banded together against the code': 'Erst wenn sich die Herren gegen das Gesetzbuch verbündet haben',
+  // the Curia (systems/curia.ts)
+  'we are excommunicated': 'Wir sind exkommuniziert', 'the College is full': 'Das Kollegium ist voll', 'they have no cardinals': 'Sie haben keine Kardinäle',
+  'no conclave is sitting': 'Es tagt kein Konklave', 'we have no cardinals': 'Wir haben keine Kardinäle', 'a crusade is already under way': 'Es ist schon ein Kreuzzug im Gange',
+  'not of another faith': 'Nicht anderen Glaubens', 'no realm of our church borders them': 'Kein Reich unserer Kirche grenzt an sie',
 };
 
 const NEED = /^need (\d+) (Authority|Mandate|Insight)$/;

@@ -60,6 +60,7 @@ export type Query =
   | { q: 'assembly'; kind: 'tax' | 'war'; cls?: number; rate?: number; duty?: string; value?: number; target?: number; goal?: string; bribe?: string[]; concede?: string }
   | { q: 'govern' }
   | { q: 'situation'; id: string }
+  | { q: 'curia' }                                          // the pope, the College of Cardinals, the conclave and our dealings with Rome (src/game/curiaview.ts)
   // people pass (src/game/view.ts commandersView)
   | { q: 'commanders'; army: number }                        // who could lead one of our armies, and the price of a new general
   // ---- polish pass
