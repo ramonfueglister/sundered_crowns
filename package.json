@@ -11,11 +11,7 @@
     "test": "vitest run",
     "world": "tsx server/main.ts",
     "map": "cd tools/geo && python3 build_rasters.py && python3 build_locations.py && python3 build_setup.py",
-    "world:fast": "SECONDS_PER_DAY=0.05 tsx server/main.ts",
-    "smoke:online": "tsx tools/online_smoke.ts",
-    "test:accept": "vitest run tests/acceptance.test.ts",
-    "test:accept:slow": "ACCEPT_YEARS=50 vitest run tests/acceptance.test.ts",
-    "observer": "tsx tools/sim/observer.ts"
+    "world:fast": "SECONDS_PER_DAY=0.05 tsx server/main.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

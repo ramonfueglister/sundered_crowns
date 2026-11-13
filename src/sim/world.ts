@@ -1,7 +1,7 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
-import { TERRAINS, GI } from './defs';
+import { TERRAINS, RESOURCE_INDEX } from './geo';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -44,7 +44,7 @@ export class World {
     this.temp = Float32Array.from(wj.temp.slice(0, L)); this.arid = Float32Array.from(wj.arid.slice(0, L)); this.forest = Float32Array.from(wj.forest);
     for (let i = 0; i < L; i++) {
       this.terrain[i] = Math.max(0, TERRAINS.indexOf(wj.terrain[i] as any));
-      this.resource[i] = GI[wj.resource[i]] ?? 0;
+      this.resource[i] = RESOURCE_INDEX[wj.resource[i]] ?? 0;
       this.coastal[i] = wj.coastal[i] ? 1 : 0;
     }
     for (const [l] of geo.passes) this.pass[l - 1] = 1;

@@ -1,40 +1,30 @@
-# Sundered Crowns – architecture (for contributors)
+# Architecture
 
-Original grand strategy game, real Europe 1356–1815. No names, assets, UI or mechanic terms from any existing commercial game.
-Our own terms: **Concord** (internal stability −100..100), **Mandate** (legitimacy 0..100), **Authority** (political capital),
-**Powers of the Realm** (estates: magnates, prelates, burghers, commons), **Dread** (fear of expansion), **Common Front** (coalition),
-**Insight** (points for doctrines), **Marks** (money).
+## One world, one authority
+The world server (`server/world.ts`) holds the only true state. Clients send commands and receive what changed; they
+never simulate. The world has no end date: it runs one day per `SECONDS_PER_DAY` for as long as the server runs.
 
-## Layout
-- `tools/geo/*.py` – data pipeline → `public/data/{geo,world,setup_1356}.json`, `public/map/{ids.bin.gz,height.bin.gz,biome.png}`
-- `src/sim/` – deterministic simulation (no DOM, no Math.random, no Date). Runs in a Web Worker in the browser and in Node on the world server.
-  - `types.ts` GameState contract · `world.ts` static world (graph, terrain) · `setup.ts` createGame · `engine.ts` advanceDay/save/hash
-  - `commands.ts` applyCommand – the only way players/AI change state
-  - `systems/*.ts` – each `{id, init, daily, monthly, yearly}`; order in `systems/index.ts`
-  - `content/*` – data-driven content (laws, peoples, events, decisions, situations, doctrines, innovations)
-- `src/render/` – WebGPU map renderer · `src/ui/` – Preact UI · `src/game/` – worker bridge · `server/` – world server · `supabase/` – migrations
+## State as entity tables (ECS)
+- **Entities** are row numbers. Places are the fixed rows 0 … L − 1 of the map; realms (and later population groups,
+  firms, markets, routes) live in tables (`src/sim/ecs.ts`) whose rows are reused when an entity goes.
+- **Components** are dense typed arrays, one per property (`state.place.owner`, `state.realm.cols.capital`, …). Strings
+  sit in plain arrays beside a table (`realmText`).
+- **Systems** (`src/sim/systems/`) are functions that run in a fixed order once per day (`src/sim/schedule.ts`).
+  Work that covers every place is spread over `SHARDS` days (each place once per cycle), so every day costs about
+  the same.
+- The state is plain data. `src/sim/snapshot.ts` writes it as a JSON skeleton plus one binary block of all arrays; the
+  bytes are deterministic, and their hash identifies a state.
 
-## Conventions
-- Location ids in the sim are 0-based: land `0..L-1`, sea zones `L..L+S-1` (`w.L`, `w.N`). The id raster is 1-based (0 = nothing).
-- Owner `-1` = unclaimed. `ctrl -2` = rebels.
-- Randomness: `rand(s.rng)`, `chance(s.rng,p)`, `pick(s.rng, arr)` from `sim/rng.ts`. Never Math.random in sim code.
-- Text shown to players is `I18n = {en, de}`. German must be real German with umlauts.
-- Money: nation `income.tax` ≈ monthly tax income; use it to scale costs (`fx.gold(months)`).
+## Determinism and persistence
+Everything that changes the state is a log entry (`cmd`, `claim`, `release`), applied in order and appended to the
+command log between day markers. Snapshots are written every `SNAPSHOT_EVERY_DAYS`; on start the server loads the
+latest and replays the log after it. `verifyReplay` checks that a snapshot plus the log reproduces the live state.
+Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`) or from `hash01` of ids.
 
-## Effect keys (modifiers, laws, doctrines, innovations)
-Read via `lawEffect(n,key)` (laws + values + modifiers) or `mod(n,key)` (modifiers only):
-`tax, trade, production, unrest` (fractions/points; read with mod), `morale, discipline, fire, cavalry, speed, manpower, army_cost,
-mercenary_cost, fort_strength, attrition` (military, fractions), `concord_gain, mandate_gain, authority_gain, corruption, interest,
-dread_decay, tolerance, admin, control, integration, research, conversion, assimilation, colonial_range, colonial_growth, colonists, agents`.
+## Commands
+`src/sim/commands.ts` keeps one definition per command kind: a check that names the reason when it cannot be done,
+and an effect. Players and the AI of realms without a player use the same commands.
 
-## Online (persistent world, accounts, cloud saves)
-- `server/world.ts` – `WorldCore`: authoritative world without sockets. Every state change is a `LogEntry`
-  (player command, join, online/offline, release, player offer, admin dev command, season end) appended to the
-  command log in application order, interleaved with day markers; `applyEntry` + `replayLines` reproduce `hashState`
-  from any snapshot (`tests/world_replay.test.ts`). Player commands are queued and applied at the start of the next day.
-- `server/main.ts` – HTTP + WebSocket transport, `server/auth.ts` – Supabase JWT (HS256/JWKS) or DEV name login,
-  `server/store.ts` – Supabase persistence via service role (best effort; local files are the source of truth).
-- `src/online/protocol.ts` – wire protocol; `src/online/worldClient.ts` – `OnlineClient`, same surface and signals as
-  `SimClient`; `src/online/supabase.ts`, `cloudSaves.ts`, `achievements.ts` (cosmetic, checked by the server).
-- `src/ui/online/*` – online panel (account, worlds, join, standing orders, messages/offers, leaderboard, achievements,
-  cloud saves, admin), world clock, in-game HUD. Deployment: `docs/DEPLOY.md`.
+## Client
+`src/net/client.ts` keeps the server's messages as signals; `src/ui/` draws them. The map (`src/render/`) gets the
+owners of all places as one binary frame at sign-in and the changes each day.

@@ -1,24 +1,21 @@
-// Node helpers: load the generated data and create a game (tests, AI runs, world server).
+// Node helpers: load the baked map and the start setup (tests, tools, the world server).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { World } from '../../src/sim/world';
-import { createGame } from '../../src/sim/setup';
-import type { GameState } from '../../src/sim/types';
+import { createWorldState, type SetupState } from '../../src/sim/setup';
+import type { WorldState } from '../../src/sim/state';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
-let _w: World | null = null;
+let world: World | null = null;
 export function loadWorld(): World {
-  if (_w) return _w;
+  if (world) return world;
   const geo = JSON.parse(readFileSync(resolve(ROOT, 'public/data/geo.json'), 'utf8'));
   const wj = JSON.parse(readFileSync(resolve(ROOT, 'public/data/world.json'), 'utf8'));
-  _w = new World(geo, wj);
-  return _w;
+  return (world = new World(geo, wj));
 }
-export function loadSetup(year = 1356) { return JSON.parse(readFileSync(resolve(ROOT, `public/data/setup_${year}.json`), 'utf8')); }
-export function loadHubs() { return JSON.parse(readFileSync(resolve(ROOT, 'data/content/trade_hubs.json'), 'utf8')).trade_hubs; }
-export function newGame(seed = 1356, year = 1356, player: number[] = []): { s: GameState; w: World } {
+export function loadSetup(year = 1356): SetupState { return JSON.parse(readFileSync(resolve(ROOT, `public/data/setup_${year}.json`), 'utf8')); }
+export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
   const w = loadWorld();
-  const s = createGame(w, loadSetup(year), loadHubs(), seed, { player });
-  return { s, w };
+  return { s: createWorldState(w, loadSetup(year), seed), w };
 }

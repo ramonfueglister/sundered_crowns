@@ -1,12 +1,12 @@
 # Deploying Sundered Crowns online
 
-Three parts, each optional on top of the previous one:
+Three parts:
 
 | Part | Where | What it needs |
 |---|---|---|
-| Browser game (Vite build) | Vercel (static) | nothing – single player works without any backend |
-| Accounts, profiles, cloud saves, leaderboards, achievements | Supabase project | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` in the Vercel build |
-| Persistent world | one long-running Node process per world (Fly.io, Render or Railway) | `SUPABASE_*` secrets on the server, `VITE_WORLD_URL` in the Vercel build |
+| Client (Vite build) | Vercel (static) | `VITE_WORLD_URL`; without a world server it can only show the sign-in |
+| Accounts and profiles | Supabase project | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` in the Vercel build |
+| The persistent world | one long-running Node process per world (Fly.io, Render or Railway) | `SUPABASE_*` secrets on the server, `VITE_WORLD_URL` in the Vercel build |
 
 The browser only ever talks to your Vercel deployment, your Supabase project and your world server. It uses the
 **anon key** only; every table has Row Level Security (see `supabase/migrations`, tested in `tests/supabase_rls.test.ts`).
@@ -23,23 +23,25 @@ npm install
 cp .env.example .env            # leave the SUPABASE_* values empty for DEV mode
 npm run world                   # world server on ws://localhost:8787, 36 s per day, DEV login by display name
 npm run world:fast              # same, 0.05 s per day (testing)
-npm run dev                     # game on http://localhost:5173 → main menu → "Online world"
-npx vitest run                  # RLS tests (PGlite), replay determinism, auth
-npm run smoke:online            # two scripted clients against the running world server
+npm run dev                     # client on http://localhost:5173
+npx vitest run                  # RLS tests (PGlite), world server replay and resume, auth
 ```
 
-Without Supabase the online panel says so clearly and offers the local DEV world (display-name login).
+Without Supabase the sign-in asks for a display name only (DEV world).
 DEV mode is for development only: anyone can claim any name. It switches off as soon as `SUPABASE_URL`,
 `SUPABASE_JWT_SECRET` or `SUPABASE_JWKS_URL` is set on the server.
 
-World data is stored in `./world-data/<WORLD_ID>/season-<n>/`: `snap-<day>.bin` (gzip-compressed state, the
+World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
-`snapshot.json`; `meta.json` holds seats, chat and achievements. On start the server loads the latest snapshot and
+`snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats. On start the server loads the latest snapshot and
 replays the log after it, so a crash loses nothing that was logged. `SIGTERM` (every deploy) writes a final snapshot.
 
 ---
 
 ## 1. Supabase
+
+The migrations also create tables from an earlier design (cloud saves, achievements, messages, leaderboards). The
+current server does not use them; they stay so that existing projects keep a consistent history.
 
 1. **Create a project** at <https://supabase.com/dashboard> → *New project*. Pick a region close to the world server
    (e.g. *Central EU (Frankfurt)* if the server runs in Fly region `fra`). Save the database password.
@@ -139,29 +141,17 @@ fly logs --app sundered-crowns-world
 - Any VPS: `docker build -f server/Dockerfile -t sc-world . && docker run -d --restart unless-stopped -p 8787:8787 -v /srv/sc-world:/data --env-file .env sc-world`
   behind a TLS proxy (Caddy/nginx) that upgrades WebSockets.
 
-### Moderation and returning players (environment)
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `WORLD_WORD_FILTER` | `server/config/wordfilter.txt` (relative to the working directory, `/app` in the image) | The word filter list for chat lines and offer texts: one entry per line, `word*` for prefixes, `#` for comments. The image ships the starter list from `server/config/`. To edit it without a rebuild, copy it to the volume (`/data/wordfilter.txt`) and set `WORLD_WORD_FILTER=/data/wordfilter.txt`; the server re-reads it within 30 s, admins can reload it at once. An empty or missing list is logged as a warning at start. |
-| `ADMIN_TOKEN` | empty (endpoints off) | Enables `GET /admin/reports` (`?all=1` also lists handled ones), `POST /admin/ban?uid=…&reason=…&hours=…&release=1` and `POST /admin/unban?uid=…`, each with the header `Authorization: Bearer <ADMIN_TOKEN>`. Set it as a secret (`fly secrets set ADMIN_TOKEN=…`). |
-| `ADMIN_USERS` | empty | Extra admins by uid (or by display name with the development login), besides the `admin_roles` table. |
-| `CATCHUP_MIN_DAYS` | 7 | In-game days a ruler must have been away before the catch-up summary is shown on return (at 36 s per day: about 4 minutes). |
-
 ### Endpoints
 
-- `GET /health` – liveness · `GET /world` – world clock/status (JSON) · `GET /leaderboard` – live ranking
-- WebSocket on `/` – protocol in `src/online/protocol.ts` (JSON frames + binary frames for owner/controller maps,
-  map-mode colours and snow).
+- `GET /health` – liveness · `GET /world` – world clock/status (JSON)
+- WebSocket on `/` – protocol in `src/net/protocol.ts` (JSON frames, plus one binary frame with the owners of all places).
 
 ---
 
-## 4. Season length (checked)
+## 4. A world without end
 
-One season runs from 1 January 1356 to 31 December 1815. With the game calendar (`src/sim/calendar.ts`) that is
-`dateToDay(1816, 0, 1, 1356)` = **168,013 in-game days**. At the default **36 s per day**:
-168,013 × 36 s = 6,048,468 s = **70.0 real days = 10.0 weeks**. Afterwards the server writes the leaderboard and
-achievements, archives the season (`season-<n>/results.json`) and starts season n+1 on a fresh map.
+The world has no season and no end date. It advances one day every `SECONDS_PER_DAY` for as long as the server
+runs, and resumes from its snapshot and log after every restart.
 
 ---
 
@@ -170,22 +160,18 @@ achievements, archives the season (`season-<n>/results.json`) and starts season 
 - **Supabase Free**: 500 MB database, 1 GB file storage, 5 GB egress, 50,000 monthly active users, 2 projects.
   Free projects are paused after a week without activity (a running world server keeps it active). Built-in e-mail is
   limited to a few messages per hour → custom SMTP for launch. Pro plan from US$25/month removes pausing.
-  Storage use here: cloud saves ≈ 1.5–3 MB each (max 30 per user, enforced by a trigger); world snapshots ≈ 3 MB,
+  Storage use here: world snapshots (a few MB),
   overwritten in place (uploaded every `SNAPSHOT_UPLOAD_EVERY_DAYS` = 300 in-game days ≈ 3 hours).
 - **Vercel Hobby**: free for personal, non-commercial projects; the game is a static build of ≈ 30 MB (mostly map data).
   Commercial use needs Pro (US$20/month per member).
-- **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month (the simulation needs ≈ 350 MB; one day takes ≈ 60 ms CPU,
-  i.e. under 0.2 % of a core at 36 s/day), volume US$0.15/GB/month. Traffic: the daily tick sends only what changed (armies, realms,
-  owners); measured with 100 bots ≈ 30 KB per player per in-game day before WebSocket compression
-  (`tools/load_test.ts`), sent every 36 s → ≈ 70 MB per player per day online, less with compression. 100 players online all day
-  ≈ 7 GB/day; outbound traffic in Europe/North America costs about US$0.02/GB.
-- Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 orders per player per in-game day), a request
-  rate limit of 10/s (burst 40) per account, 5 chat lines per 10 s, 3 sessions per account, 12 connections per IP,
+- **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month, volume US$0.15/GB/month. The daily tick sends only the
+  date and what changed.
+- Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 commands per player per in-game day),
+  3 sessions per account, 12 connections per IP,
   64 KB per WebSocket message.
 
 ## 6. Fairness
 
-The server is authoritative: clients send `Command`s, which are checked (own realm only, developer commands only for
-admins, rate limits, protection of new players) and applied through `applyCommand` at the start of the next day.
-There are no purchases and nothing that can be bought; achievements are cosmetic. Inactive seats (no login for
-`INACTIVE_RELEASE_DAYS`) go back to the AI; while a player is offline, their realm follows their standing orders.
+The server is authoritative: clients send commands, which are checked (own realm only, rate limits) and applied
+through `applyCommand` at the start of the next day. Nothing can be bought. A realm whose player has not signed in for
+`INACTIVE_RELEASE_DAYS` is free again.
