@@ -194,6 +194,22 @@ export const U = UNITS.length;
 
 // ---------------- buildings (per location) ----------------
 export interface BuildingDef { id: string; name: { en: string; de: string }; cost: number; months: number; max: number; desc: { en: string; de: string }; needsCoast?: boolean; era?: number }
+/** Building materials for the first level of each building, bought from the place's market over the months of the work
+ *  (systems/realm.ts constructionsDay): [good, units]. Each further level needs half as much again. */
+export const BUILD_GOODS: Record<string, [string, number][]> = {
+  fort: [['stone', 120], ['timber', 40], ['iron', 10]],
+  market: [['timber', 40], ['stone', 20], ['tools', 4]],
+  workshop: [['timber', 30], ['tools', 6], ['iron', 4]],
+  farm: [['tools', 10], ['timber', 15], ['livestock', 8]],
+  road: [['stone', 60], ['timber', 10], ['tools', 3]],
+  port: [['timber', 80], ['stone', 30], ['iron', 6]],
+  church: [['stone', 60], ['timber', 20], ['glassware', 2]],
+  mine: [['timber', 40], ['tools', 10], ['iron', 8]],
+  admin: [['stone', 80], ['timber', 30], ['paper', 6]],
+  university: [['stone', 100], ['timber', 30], ['books', 8], ['paper', 10]],
+  manufactory: [['timber', 60], ['stone', 40], ['tools', 20], ['iron', 15]],
+  canal: [['stone', 150], ['timber', 40], ['tools', 20]],
+};
 export const BUILDINGS: BuildingDef[] = [
   { id: 'fort', name: { en: 'Fortifications', de: 'Befestigung' }, cost: 120, months: 18, max: 4, desc: { en: 'Walls and a garrison; resists sieges and controls nearby roads', de: 'Mauern und Besatzung; widersteht Belagerungen und kontrolliert Straßen' } },
   { id: 'market', name: { en: 'Market hall', de: 'Markthalle' }, cost: 60, months: 8, max: 3, desc: { en: 'More burghers, cheaper local trade, toll income', de: 'Mehr Bürger, günstigerer Handel, Zolleinnahmen' } },

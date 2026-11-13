@@ -124,7 +124,7 @@ function recruitment(s: GameState, w: World, n: Nation, atWarNow: boolean) {
   if (n.capital < 0 || s.loc.ctrl[n.capital] !== n.id) return;
   let men = 0; for (const a of armiesOf(s, n.id)) if (!a.fleet && !a.rebels) men += armyMen(a);
   for (const r of s.recruits) if (r.nation === n.id) men += r.men;
-  const inc = (n.income.tax || 0) + (n.income.trade || 0) + (n.income.tariffs || 0);
+  const inc = (n.income.tax || 0) + (n.income.trade || 0) + (n.income.tariffs || 0) + (n.income.ventures || 0);
   // men affordable at ~1 upkeep/1000: 45% of income plus the war chest spread over five years
   const affordable = (inc * 0.45 + Math.max(0, n.treasury) / 60) / Math.max(0.1, 1.0 * UPKEEP_SCALE * 0.1 * s.priceLevel / 1000 * clamp(1 + lawEffect(n, 'army_cost'), 0.3, 2));
   const persMult = P(n, 'conqueror') ? 1.3 : P(n, 'trader') || P(n, 'builder') ? 0.8 : P(n, 'isolationist') ? 0.9 : 1;

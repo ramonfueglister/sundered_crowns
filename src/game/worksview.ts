@@ -4,7 +4,8 @@
 // agent commands, sent as one batch.
 import type { GameState, I18n } from '../sim/types';
 import type { World } from '../sim/world';
-import { B, BI, BUILDINGS, UNITS } from '../sim/defs';
+import { B, BI, BUILDINGS, GOODS, UNITS } from '../sim/defs';
+import { buildMaterials, buildPace, MIN_PACE } from '../sim/systems/realm';
 import { buildQueue, constructionRefund, recruitRefund, buildCost } from '../sim/commands';
 import { buildSpots, buildingGain, manpowerOf } from '../sim/systems/planning';
 import { nationLocsRO } from '../sim/systems/war';
@@ -49,7 +50,8 @@ export function worksView(s: GameState, w: World, player: number) {
   // nth: the row's place among the realm's orders for the same place and item, which the cancel command names
   const seen = new Map<string, number>();
   const nthOf = (loc: number, item: number) => { const key = `${loc}:${item}`; const v = seen.get(key) ?? 0; seen.set(key, v + 1); return v; };
-  const queue = s.constructions.filter((c) => c.nation === player).map((c) => ({ loc: c.loc, building: c.building, nth: nthOf(c.loc, c.building), left: c.left, total: BUILDINGS[c.building].months * 30, cost: c.cost, refund: constructionRefund(c) }));
+  const queue = s.constructions.filter((c) => c.nation === player).map((c) => ({ loc: c.loc, building: c.building, nth: nthOf(c.loc, c.building), left: c.left, total: BUILDINGS[c.building].months * 30, cost: c.cost, refund: constructionRefund(c),
+    eta: c.left / (c.pace ?? 1), mats: buildMatsView(s, c.loc, c.building, c.level ?? s.loc.buildings[c.loc * B + c.building]) }));
   // levies: every controlled location with the men it adds to the manpower limit, and its harbour
   const levy: [number, number, number][] = [];
   for (const l of locs) if (s.loc.ctrl[l] === player && !s.sieges.some((x) => x.loc === l)) levy.push([l, round(manpowerOf(s, l), 1), w.coastal[l] ? s.loc.buildings[l * B + BI.port] : -1]);
@@ -94,4 +96,14 @@ export function gainDetail(s: GameState, w: World, player: number, loc: number, 
   let queued = 0; for (const c of s.constructions) if (c.loc === loc && c.building === b) queued++;
   const level = s.loc.buildings[loc * B + b] + queued;
   return { ...g, cost: buildCost(s, n, b, level), level, base: BUILDINGS[b].cost * 6, priceLevel: s.priceLevel, inflation: n.inflation };
+}
+
+/** The materials a work at place l needs for building b at this level, from its market (systems/realm.ts): per good the
+ *  units in all, a month's share, the price and how well last month's market supplied it, and the pace it gives. */
+export function buildMatsView(s: GameState, l: number, b: number, level: number) {
+  const m = s.loc.market[l], mk = s.markets[m];
+  const months = Math.max(1, BUILDINGS[b]?.months ?? 1);
+  const { pace, fill } = buildPace(s, m, b, level);
+  const goods = buildMaterials(b, level).map(([g, q], k) => ({ g, name: GOODS[g].name, units: round(q, 1), month: round(q / months, 2), price: round(mk?.price[g] ?? 0, 2), fill: round(fill[k]?.[1] ?? 1, 3) }));
+  return { goods, pace: round(pace, 3), minPace: MIN_PACE, market: mk?.name ?? '' };
 }

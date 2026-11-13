@@ -8,9 +8,10 @@ import { playerId, panelArg } from '../store';
 import { Section, Row, NLink, Btn, Empty, Tabs, Slider, Spark, useQuery, act, t, L, num, signed, pct, Tip, placeName, flyToLoc } from './common';
 import { TipHead, Parts } from './explain';
 import { keyName } from '../TopBar';
-import { lang } from '../i18n';
+import { lang, errText } from '../i18n';
+import { GOODS } from '../../sim/defs';
 
-type Tab = 'market' | 'goods' | 'policy';
+type Tab = 'market' | 'goods' | 'ventures' | 'policy';
 
 export function TradeTab() {
   const pv = view.value?.player;
@@ -24,8 +25,8 @@ export function TradeTab() {
   const [list] = useQuery<any[]>({ q: 'tmarkets' }, [], 3000);
   if (!pv) return <Empty>{t('loading')}…</Empty>;
   return <div class="trade-tab">
-    <Tabs<Tab> tabs={[['market', t('tr_tab_market')], ['goods', t('tr_tab_goods')], ['policy', t('tr_tab_policy')]]} value={tab} onChange={setTab} />
-    {tab !== 'policy' && <div class="act-row">
+    <Tabs<Tab> tabs={[['market', t('tr_tab_market')], ['goods', t('tr_tab_goods')], ['ventures', t('vt_tab')], ['policy', t('tr_tab_policy')]]} value={tab} onChange={setTab} />
+    {tab !== 'policy' && tab !== 'ventures' && <div class="act-row">
       <span class="k">{t('market')}</span>
       <select value={mid} onChange={(e) => setSel(Number((e.target as HTMLSelectElement).value))}>
         {(list ?? []).map((m: any) => <option value={m.id}>{placeName(m.name)}{m.home ? ` (${t('home')})` : ''}{m.merchants ? ` · ${m.merchants} ${t('tr_merchants_short')}${m.steer ? ' ➜' : ''}` : ''}{m.share >= 0.005 ? ` · ${pct(m.share, 0)}` : ''}</option>)}
@@ -35,6 +36,7 @@ export function TradeTab() {
     {tab === 'market' && (mid >= 0 ? <MarketView mid={mid} /> : <Empty>{t('tr_no_home')}</Empty>)}
     {tab === 'market' && <OurMarkets list={list ?? []} pick={setSel} />}
     {tab === 'goods' && (mid >= 0 ? <GoodsView mid={mid} /> : <Empty>{t('tr_no_home')}</Empty>)}
+    {tab === 'ventures' && <VenturesView />}
     {tab === 'policy' && <PolicyView />}
   </div>;
 }
@@ -366,4 +368,86 @@ export function StakesTip({ st }: { st: any }) {
       <div class="bd-row"><span>{t('tr_stakes_ours')}</span><span>{num(st.ours, 1)}</span></div>
       <div class="bd-row"><span>{t('tr_stakes_goods')}</span><span>{num(st.goods, 1)}</span></div>
     </div></div>;
+}
+
+// ---------------------------------------------------------------- trading ventures
+const BOUND_KEY: Record<string, string> = { loads: 'vt_b_loads', supply: 'vt_b_supply', demand: 'vt_b_demand', margin: 'vt_b_margin', blocked: 'vt_b_blocked' };
+/** Price per unit along a venture: bought, carriage, handling, tariff, sold; and what the month's goods bring. */
+function MarginTip({ e, qty, crownShare }: { e: any; qty?: number; crownShare: number }) {
+  if (!e) return <div>{t('vt_no_route')}</div>;
+  const q = qty ?? e.qty;
+  return <div><TipHead name={t('vt_margin')} value={`${num(e.margin, 2)} ${t('vt_per_unit')}`} hint={t('vt_margin_hint')} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('vt_sell')}</span><span>{num(e.sell, 2)}</span></div>
+      <div class="bd-row"><span>{t('vt_buy')}</span><span class="neg">−{num(e.buy, 2)}</span></div>
+      <div class="bd-row"><span>{t('vt_carriage')} ({e.hops} {t('tr_links')}{e.sea ? ' ⚓' : ''})</span><span class="neg">−{num(e.carriage, 2)}</span></div>
+      <div class="bd-row"><span>{t('vt_handling')}</span><span class="neg">−{num(e.handling, 2)}</span></div>
+      {e.tariff > 0 && <div class="bd-row"><span>{t('vt_tariff')}</span><span class="neg">−{num(e.tariff, 2)}</span></div>}
+      <div class="bd-row bd-total"><span>{t('vt_margin')}</span><span>{num(e.margin, 2)}</span></div>
+    </div>
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('vt_qty')}</span><span>{num(q, 0)}</span></div>
+      <div class="bd-row"><span>{t('vt_profit')}</span><span>{num(Math.max(0, q * e.margin), 1)}</span></div>
+      <div class="bd-row bd-total"><span>{t('vt_crown')} ({pct(crownShare, 0)})</span><span class="pos">+{num(Math.max(0, q * e.margin) * crownShare, 1)}</span></div>
+    </div>
+    {e.bound && <div class="muted small">{t('vt_bound')}: {t(BOUND_KEY[e.bound] ?? e.bound)}</div>}
+  </div>;
+}
+function VenturesView() {
+  const [good, setGood] = useState(-1);
+  const [d, refresh] = useQuery<any>({ q: 'ventures', good: good >= 0 ? good : undefined }, [good], 4000);
+  if (!d) return <Empty>{t('loading')}…</Empty>;
+  const c = d.cargo;
+  const set = (v: any, loads: number) => act({ t: 'venture', from: v.from, to: v.to, good: v.good, loads: Math.max(0, Math.round(loads)) }, 'coins').then(refresh);
+  const step = Math.max(10, Math.round(c.total / 10));
+  const full = d.slots.used >= d.slots.max;
+  return <>
+    <Section title={t('vt_title')} id="vt-cargo" right={<span class="muted">{keyName('ventures')}: <span class="pos">+{num(d.income, 1)}</span></span>}>
+      <div class="grid2">
+        <Row k={t('vt_cargo')} v={`${num(c.used, 0)} / ${num(c.total, 0)}`} tip={<div><TipHead name={t('vt_cargo')} value={num(c.total, 0)} hint={t('vt_cargo_hint')} />
+          <Parts rows={c.parts} digits={0} total={c.parts.reduce((p: number, x: [string, number]) => p + x[1], 0)} totalLabel={t('vt_cargo_raw')} />
+          <div class="breakdown"><div class="bd-row"><span>{t('tr_trade_effects')}</span><span>× {num(c.mult, 2)}</span></div><div class="bd-row bd-total"><span>{t('vt_cargo')}</span><span>{num(c.total, 0)}</span></div></div></div>} />
+        <Row k={t('vt_slots')} v={`${d.slots.used} / ${d.slots.max}`} tip={<div><TipHead name={t('vt_slots')} value={`${d.slots.used} / ${d.slots.max}`} hint={t('vt_slots_hint')} /></div>} />
+      </div>
+      <div class="muted small">{t('vt_intro')}</div>
+    </Section>
+    <Section title={<>{t('vt_ours')} <span class="muted">({d.list.length})</span></>} id="vt-list">
+      {!d.list.length ? <div class="muted small">{t('vt_none')}</div> : <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>{t('vt_good')}</th><th>{t('vt_route')}</th><th class="r">{t('vt_loads')}</th><th class="r">{t('vt_qty')}</th><th class="r">{t('vt_margin')}</th><th class="r">{t('vt_crown')}</th><th /></tr></thead>
+        <tbody>{d.list.map((v: any) => <tr>
+          <td>{L(v.goodName)}</td>
+          <td><Tip content={<div><TipHead name={t('vt_route')} value={`${v.via.length} ${t('tr_links')}`} hint={t('vt_route_hint')} /><div class="small">{placeName(v.fromName)} → {v.via.map(placeName).join(' → ')}</div>{v.refusal && <div class="neg small">{errText(v.refusal)}</div>}</div>}>
+            <span class="has-tip">{placeName(v.fromName)} → {placeName(v.toName)}</span></Tip></td>
+          <td class="r nowrap"><Btn disabled={v.loads <= step ? 'none' : null} onClick={() => set(v, v.loads - step)}>−</Btn> <Tip content={<div><TipHead name={t('vt_loads')} value={num(v.loads, 0)} hint={t('vt_loads_hint').replace('{w}', num(v.weight, 2))} /></div>}><span class="has-tip">{num(v.loads, 0)}</span></Tip> <Btn disabled={c.free < 1 ? 'not enough cargo space' : null} onClick={() => set(v, v.loads + Math.min(step, Math.floor(c.free)))}>+</Btn></td>
+          <td class="r">{num(v.qty, 0)}</td>
+          <td class={`r ${v.margin <= 0 ? 'neg' : ''}`}><Tip content={() => <MarginTip e={v.est} qty={v.qty} crownShare={d.crownShare} />}><span class="has-tip">{num(v.margin, 2)}</span></Tip></td>
+          <td class="r"><Tip content={<div><TipHead name={t('vt_crown')} value={num(v.crown, 1)} hint={t('vt_crown_hint')} /><div class="breakdown"><div class="bd-row"><span>{t('vt_profit')}</span><span>{num(v.profit, 1)}</span></div>{v.tolls > 0 && <div class="bd-row"><span>{t('vt_tolls_paid')}</span><span>{num(v.tolls, 1)}</span></div>}</div>{v.bound && <div class={`small ${v.bound === 'margin' || v.bound === 'blocked' ? 'neg' : 'muted'}`}>{t('vt_bound')}: {t(BOUND_KEY[v.bound] ?? v.bound)}{v.idle > 0 ? ` · ${t('vt_idle').replace('{n}', String(v.idle))}` : ''}</div>}</div>}>
+            <span class={`has-tip ${v.crown > 0 ? 'pos' : 'muted'}`}>{v.crown > 0 ? '+' : ''}{num(v.crown, 1)}</span></Tip></td>
+          <td><Btn onClick={() => set(v, 0)}>{t('vt_close')}</Btn></td>
+        </tr>)}</tbody></table></div>}
+    </Section>
+    <Section title={t('vt_options')} id="vt-opt">
+      <div class="act-row"><span class="k">{t('vt_good')}</span>
+        <select value={good} onChange={(e) => setGood(Number((e.target as HTMLSelectElement).value))}>
+          <option value={-1}>{t('vt_all_goods')}</option>
+          {GOODS.map((g, k) => ({ g, k })).sort((a, b) => L(a.g.name).localeCompare(L(b.g.name))).map(({ g, k }) => <option value={k}>{L(g.name)}</option>)}
+        </select>
+        <span class="spacer" /><span class="muted small">{t('vt_markets_open').replace('{n}', String(d.markets))}</span></div>
+      {!d.options.length ? <div class="muted small">{t('vt_no_options')}</div> : <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>{t('vt_good')}</th><th>{t('vt_route')}</th><th class="r">{t('vt_qty')}</th><th class="r">{t('vt_margin')}</th><th class="r">{t('vt_crown')}</th><th /></tr></thead>
+        <tbody>{d.options.map((o: any) => {
+          const loads = Math.min(o.loads, Math.floor(c.free));
+          const why = full ? 'no free venture' : loads < 1 ? 'not enough cargo space' : null;
+          return <tr>
+            <td>{L(o.goodName)}</td>
+            <td><Tip content={<div><TipHead name={t('vt_route')} value={`${o.via.length} ${t('tr_links')}`} hint={t('vt_route_hint')} /><div class="small">{placeName(o.fromName)} → {o.via.map(placeName).join(' → ')}</div></div>}><span class="has-tip">{placeName(o.fromName)} → {placeName(o.toName)}</span></Tip></td>
+            <td class="r">{num(o.qty, 0)}</td>
+            <td class="r"><Tip content={() => <MarginTip e={o} crownShare={d.crownShare} />}><span class="has-tip">{num(o.margin, 2)}</span></Tip></td>
+            <td class="r pos">+{num(o.crown, 1)}</td>
+            <td><Btn disabled={why} tip={<div><TipHead name={t('vt_open')} value={`${num(loads, 0)} ${t('vt_loads')}`} hint={t('vt_open_hint')} /></div>} onClick={() => set(o, loads)}>{t('vt_open')}</Btn></td>
+          </tr>;
+        })}</tbody></table></div>}
+      <div class="muted small">{t('vt_estimate_note')}</div>
+    </Section>
+  </>;
 }

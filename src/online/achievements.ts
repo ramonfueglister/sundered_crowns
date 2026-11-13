@@ -89,7 +89,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     check: (s, w, n) => { const ls = ownedLocs(s, w, n.id); return ls.length >= 15 && ls.every((l) => s.loc.faith[l] === n.faith); } },
   { key: 'merchant_prince', icon: '⚖', name: { en: 'Merchant Prince', de: 'Handelsfürst' },
     desc: { en: 'Earn at least 40% of your income from trade and tariffs.', de: 'Erziele mindestens 40 % deiner Einnahmen aus Handel und Zöllen.' },
-    check: (_s, _w, n) => { const i = income(n); return i > 10 && ((n.income.trade || 0) + (n.income.tariffs || 0)) >= i * 0.4; } },
+    check: (_s, _w, n) => { const i = income(n); return i > 10 && ((n.income.trade || 0) + (n.income.tariffs || 0) + (n.income.ventures || 0)) >= i * 0.4; } },
   { key: 'long_peace', icon: '🕊', name: { en: 'The Long Peace', de: 'Der lange Frieden' },
     desc: { en: 'Keep your realm out of war for 25 years.', de: 'Halte dein Reich 25 Jahre lang aus jedem Krieg heraus.' },
     check: (s, _w, n, c) => !atWar(s, n.id) && s.day - Math.max(c.lastWarDay, c.joinDay) >= 25 * YEAR },

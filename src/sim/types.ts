@@ -206,7 +206,14 @@ export interface Market {
   held?: Float32Array; dPeople?: Float32Array;
   deterBy?: Record<number, [number, number]>; // fix-econ: per good, [value kept out by the tariff, margin of that part]
 }
-export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number }
+export interface TradeFlow { from: number; to: number; good: number; qty: number; value: number; venture?: number /* the realm whose venture carried it */ }
+/** A trading venture (systems/ventures.ts): a realm's merchant house carries one good from one market to another, as
+ *  much as its loads of cargo space allow and the two markets bear. The figures after `since` are last month's. */
+export interface Venture {
+  n: number; good: number; from: number; to: number; loads: number; since: number;
+  qty?: number; margin?: number; profit?: number; crown?: number; tolls?: number; bound?: VentureBound; idle?: number;
+}
+export type VentureBound = 'loads' | 'supply' | 'demand' | 'margin' | 'blocked';
 
 export interface PendingEvent { id: number; event: string; nation: number; day: number; expires: number; ctx: Record<string, number> }
 export interface ChronEntry {
@@ -216,7 +223,7 @@ export interface ChronEntry {
 }
 export interface Notice { id: number; day: number; nation: number; kind: string; text: I18n; loc?: number; army?: number; war?: number; event?: number; report?: number; reasons?: [string, number][]; reasonsTitle?: string /* UI text key heading the reasons (default: their answer) */ }
 
-export interface Construction { loc: number; building: number; left: number; nation: number; cost: number }
+export interface Construction { loc: number; building: number; left: number; nation: number; cost: number; level?: number /* the level it builds, from 0 */; pace?: number /* days of work done a day: what the market supplies of the materials */ }
 export interface Recruit { loc: number; nation: number; type: number; men: number; left: number; army: number }
 export interface ConversionAgent { nation: number; loc: number; kind: 'faith' | 'culture'; progress: number }
 export interface Colony { loc: number; nation: number; settlers: number; progress: number; started: number }
@@ -310,6 +317,7 @@ export interface GameState {
   autoEvents?: { nation: number; day: number; event: string; title: I18n; option: I18n; loc?: number }[];
   flags: Record<string, number>;
   /** chartered overseas trade companies: a direct route between an overseas market and the home market */
+  ventures?: Venture[];
   companies?: { nation: number; market: number; home: number; since: number; name: { en: string; de: string }; income?: number }[];
   /** Single player: how the game was started and every command with the day it was given, so it can be replayed. */
   replay?: ReplayLog;
@@ -359,6 +367,7 @@ export type Command =
   | { t: 'office'; n: number; office: string; char: number }
   | { t: 'loan'; n: number; take: boolean; amount: number }
   | { t: 'merchant'; n: number; market: number; amount: number; steer?: boolean } // merchants kept in a market; steer: send its trade home
+  | { t: 'venture'; n: number; from: number; to: number; good: number; loads: number } // open, resize (loads) or close (loads 0) a trading venture
   | { t: 'integrate'; n: number; subject: number }
   | { t: 'orders'; n: number; orders: StandingOrders }
   | { t: 'decision'; n: number; id: string }

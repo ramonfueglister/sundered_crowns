@@ -54,6 +54,7 @@ export type Query =
   | { q: 'trel'; target: number }                            // trade between us and another realm
   | { q: 'expedition'; to?: number; fleet?: number }         // expedition targets and the plan for one
   | { q: 'companies' }                                      // our chartered companies and the charters open to us
+  | { q: 'ventures'; good?: number }                        // our cargo space, our trading ventures and the best ones open to us
   // ---- realm pass (src/game/realmview.ts): the Empire and the league, the great powers, the assembly, the government, a situation
   | { q: 'empire' }
   | { q: 'powers' }

@@ -2,18 +2,43 @@
 import type { GameState, Nation } from '../types';
 import type { World } from '../world';
 import { type System, clamp, chronicle, notice, addOpinion } from '../ctx';
-import { B, BI, BUILDINGS, C, UNITS } from '../defs';
+import { B, BI, BUILDINGS, BUILD_GOODS, C, GI, GOODS, UNITS } from '../defs';
+import { marketFill } from './economy';
 import { armyStrength, releaseNation, newArmy, availableUnits, greatGuns, khanFaith } from './military';
 import { nationLocsRO, nationDev } from './war';
 import { FAITH_INDEX } from '../content/peoples';
 import { chance, rand } from '../rng';
 import { lawEffect } from './politics';
 
+/** The materials a building of this level needs in all ([good index, units]): BUILD_GOODS, half as much again for each
+ *  level already built. */
+export function buildMaterials(b: number, level: number): [number, number][] {
+  return (BUILD_GOODS[BUILDINGS[b]?.id] ?? []).map(([g, q]) => [GI[g], q * (1 + 0.5 * Math.max(0, level))] as [number, number]);
+}
+/** The least pace of a work: without any of its materials on the market it still goes on at this speed (the builders
+ *  scrape together what they can). */
+export const MIN_PACE = 0.35;
+/** How fast a work goes in market m: the materials' supply against demand there last month (economy.ts marketFill),
+ *  weighed by their value; from MIN_PACE (none to be had) to 1. */
+export function buildPace(s: GameState, m: number, b: number, level: number): { pace: number; fill: [number, number][] } {
+  const mk = s.markets[m]; const mats = buildMaterials(b, level);
+  if (!mk || !mats.length) return { pace: 1, fill: [] };
+  let v = 0, f = 0; const fill: [number, number][] = [];
+  for (const [g, q] of mats) { const x = marketFill(mk, g); fill.push([g, x]); const val = q * GOODS[g].base; v += val; f += val * x; }
+  return { pace: MIN_PACE + (1 - MIN_PACE) * (v > 0 ? f / v : 1), fill };
+}
 function constructionsDay(s: GameState, w: World) {
   for (const c of s.constructions.slice()) {
     if (s.loc.owner[c.loc] !== c.nation) { s.constructions.splice(s.constructions.indexOf(c), 1); continue; }
     if (s.loc.ctrl[c.loc] !== c.nation) continue; // paused under occupation
-    if (--c.left > 0) continue;
+    // the day's work buys its share of the materials at the place's market; short supply slows it
+    const m = s.loc.market[c.loc], mk = s.markets[m];
+    const level = c.level ?? s.loc.buildings[c.loc * B + c.building];
+    const pace = mk ? buildPace(s, m, c.building, level).pace : 1;
+    c.pace = pace;
+    if (mk) { const days = Math.max(30, BUILDINGS[c.building].months * 30); for (const [g, q] of buildMaterials(c.building, level)) mk.dAcc[g] += q / days * pace; }
+    c.left -= pace;
+    if (c.left > 1e-9) continue;
     s.constructions.splice(s.constructions.indexOf(c), 1);
     const k = c.loc * B + c.building;
     s.loc.buildings[k] = Math.min(BUILDINGS[c.building].max, s.loc.buildings[k] + 1);

@@ -18,11 +18,24 @@ import { Section, Btn, Tabs, Empty, Bar, useQuery, t, L, num, Tip, daysText, sel
 /** [location, level after queued works, price, estimated crown gain per month] */
 type Spot = [number, number, number, number];
 interface TypeV { id: number; key: string; name: I18n; desc: I18n; months: number; max: number; base: number; known: boolean; built: number; other: I18n | null; spots: Spot[] }
+/** The building materials of a work (src/game/worksview.ts buildMatsView). */
+export interface MatsV { goods: { g: number; name: I18n; units: number; month: number; price: number; fill: number }[]; pace: number; minPace: number; market: string }
+/** What a work needs from its market and how fast that lets it go. */
+export function MatsTip({ m }: { m: MatsV }) {
+  if (!m?.goods?.length) return null;
+  return <div>
+    <TipHead name={t('x_mats')} value={`${t('x_mats_pace')} ${num(m.pace * 100)} %`} hint={t('x_mats_hint').replace('{m}', placeName(m.market)).replace('{p}', num(m.minPace * 100))} />
+    <div class="breakdown">
+      <div class="bd-row bd-cols"><span>{t('x_mats_good')}</span><span>{t('x_mats_cols')}</span></div>
+      {m.goods.map((x) => <div class="bd-row"><span>{L(x.name)}</span><span>{num(x.units, 0)} · {num(x.month, 1)} {t('unit_per_month')} · {num(x.price, 2)} · <b class={x.fill < 0.6 ? 'neg' : x.fill >= 0.95 ? 'pos' : ''}>{num(x.fill * 100)} %</b></span></div>)}
+    </div>
+  </div>;
+}
 interface WorksV {
   treasury: number; inflation: number; priceLevel: number; manpower: number; maxManpower: number; sailors: number;
   provs: Record<number, string>; areas: Record<number, string>; rows: [number, number, number][]; names: Record<number, I18n>;
   types: TypeV[];
-  queue: { loc: number; building: number; nth: number; left: number; total: number; cost: number; refund: number }[];
+  queue: { loc: number; building: number; nth: number; left: number; total: number; cost: number; refund: number; eta: number; mats: MatsV }[];
   levy: [number, number, number][];
   units: { id: number; name: I18n; kind: string; cost: number; per: number; days: number; upkeep: number }[];
   recruits: { loc: number; type: number; nth: number; men: number; left: number; total: number; refund: number }[];
@@ -238,8 +251,8 @@ function BuildQueue({ d, refresh }: { d: WorksV; refresh: () => void }) {
       const x = BUILDINGS[c.building]; const done = 1 - c.left / Math.max(1, c.total);
       return <tr>
         <td><Place d={d} l={c.loc} /></td><td>{L(x.name)}</td>
-        <td class="w-prog"><Bar value={done} max={1} color="#7a5a2a" tip={<div><TipHead name={t('x_w_progress')} value={`${num(done * 100)} %`} /><div class="muted small">{daysText(c.left)}</div></div>} /></td>
-        <td class="r muted small">{daysText(c.left)}</td>
+        <td class="w-prog"><Bar value={done} max={1} color="#7a5a2a" tip={<div><TipHead name={t('x_w_progress')} value={`${num(done * 100)} %`} /><div class="muted small">{daysText(c.eta)}</div><MatsTip m={c.mats} /></div>} /></td>
+        <Tip tag="td" class={`r small ${c.mats?.pace < 0.8 ? 'neg' : 'muted'}`} content={<MatsTip m={c.mats} />}>{daysText(c.eta)}</Tip>
         <td class="r"><Btn tip={() => <RefundTip paid={c.cost} label="x_w_paid" share={c.left / Math.max(1, c.total)} refund={c.refund} hint={t('x_w_cancel_build_hint')} />} onClick={() => sendOrders([{ t: 'cancel', kind: 'build', loc: c.loc, item: c.building, nth: c.nth } as Cmd], 'click').then(refresh)}>{t('cancel')} · +{num(c.refund)}</Btn></td>
       </tr>;
     })}</tbody></table>}

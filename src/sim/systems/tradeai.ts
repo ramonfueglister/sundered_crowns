@@ -14,11 +14,13 @@ import { OCEAN_TECH, harbours } from './explore';
 import {
   tradeIncomeWith, merchantRefusal, merchantsFree, steerRoute, homeMarket, embargoedBy, embargoBetween, embargoStakes, routeCost, merchantReach,
 } from './trade';
+import { venturesOf, cargoSpace, loadsUsed, ventureEstimate, ventureSlots, ventureOptions, ventureMarkets, IDLE_CLOSE, VENTURE_CROWN } from './ventures';
 
 /** Quarterly, staggered by realm (called from the AI's monthly strategy). */
 export function aiTrade(s: GameState, w: World, n: Nation) {
   if (n.capital < 0 || (Math.floor(s.day / 30) + n.id) % 3 !== 0) return;
   aiMerchants(s, w, n);
+  aiVentures(s, w, n);
   aiTariff(s, w, n);
   aiEmbargo(s, w, n);
   aiAgreement(s, w, n);
@@ -171,4 +173,29 @@ function aiCharter(s: GameState, w: World, n: Nation) {
   const have = new Set((s.companies ?? []).filter((c) => c.nation === n.id).map((c) => c.market));
   const opt = charterOptions(s, w, n).find((m) => !have.has(m));
   if (opt !== undefined) applyCommand(s, w, { t: 'charter', n: n.id, market: opt });
+}
+
+/** Trading ventures (systems/ventures.ts): close those that have idled for a season, give a venture that runs out of
+ *  cargo space more of what is free, and open the most profitable new one where it pays at least worth(n) a month.
+ *  The markets looked at are home, where the realm holds land or keeps merchants, and the richest within reach.
+ *  Uses no randomness. */
+export function aiVentures(s: GameState, w: World, n: Nation) {
+  const mine = venturesOf(s, n.id);
+  for (const v of mine) {
+    if ((v.idle ?? 0) >= IDLE_CLOSE) applyCommand(s, w, { t: 'venture', n: n.id, from: v.from, to: v.to, good: v.good, loads: 0 });
+  }
+  let free = cargoSpace(s, w, n).total - loadsUsed(s, n.id);
+  for (const v of venturesOf(s, n.id)) {
+    if (v.bound !== 'loads' || free < 10) continue;
+    const e = ventureEstimate(s, n, v.from, v.to, v.good, v.loads + free, v); if (!e || e.profit <= 0) continue;
+    const want = Math.floor(Math.min(v.loads + free, Math.max(v.loads, e.loadsNeeded)));
+    if (want > v.loads && applyCommand(s, w, { t: 'venture', n: n.id, from: v.from, to: v.to, good: v.good, loads: want }).ok) free -= want - v.loads;
+  }
+  if (venturesOf(s, n.id).length >= ventureSlots(n) || free < 20) return;
+  const home = homeMarket(s, n); if (home < 0) return;
+  const k = merchantReach(n);
+  const rich = s.markets.filter((m) => routeCost(s, home, m.id) <= k).sort((a, b) => (b.tv ?? 0) - (a.tv ?? 0) || a.id - b.id).slice(0, 8).map((m) => m.id);
+  const best = ventureOptions(s, w, n, { markets: ventureMarkets(s, w, n, rich), limit: 1, loads: Math.floor(free) })[0];
+  if (!best || best.profit * VENTURE_CROWN < worth(n) * 0.5) return;
+  applyCommand(s, w, { t: 'venture', n: n.id, from: best.from, to: best.to, good: best.good, loads: Math.min(Math.floor(free), best.loads) });
 }

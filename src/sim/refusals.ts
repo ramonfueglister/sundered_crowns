@@ -76,7 +76,7 @@ export const REFUSAL_DE: Record<string, string> = {
   'their realm is too great to change its faith': 'Ihr Reich ist zu groß, um seinen Glauben zu wechseln',
   // ---- trade pass (claude/trade-pass): merchants, embargoes, expeditions and companies
   'we do not know this market': 'Diesen Markt kennen wir nicht', 'an embargo shuts our merchants out': 'Eine Handelssperre hält unsere Kaufleute fern',
-  'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
+  'too far from our home market': 'Zu weit von unserem Heimatmarkt', 'unknown good': 'Unbekannte Ware', 'the same market': 'Derselbe Markt', 'no trade route': 'Kein Handelsweg', 'the route is too long': 'Der Weg ist zu lang', 'no such venture': 'Keine solche Handelsfahrt', 'no free venture': 'Keine Handelsfahrt mehr frei', 'not enough cargo space': 'Nicht genug Frachtraum', 'our merchants collect at home': 'Im Heimatmarkt sammeln unsere Kaufleute selbst',
   'no trade route home': 'Kein Handelsweg nach Hause', 'already under embargo': 'Schon mit einer Handelssperre belegt', 'not against an ally': 'Nicht gegen einen Verbündeten',
   'not within our realm': 'Nicht innerhalb unseres Reiches', 'no embargo to lift': 'Keine Handelssperre aufzuheben',
   'an ocean voyage needs the Age of Print and Horizons': 'Eine Ozeanfahrt braucht das Zeitalter von Druck und Horizonten',

@@ -20,6 +20,7 @@ import { startColony, charterCompany } from './systems/colonial';
 import { launchExpedition } from './systems/explore';
 import { startLandmark } from './systems/landmarks';
 import { setMerchants, merchantCap } from './systems/trade';
+import { setVenture } from './systems/ventures';
 import { answerEvent, takeDecision, eventDef, fireEvent } from './systems/events';
 import { claimGoal } from './systems/goals';
 import { workshopOptions } from './setup';
@@ -173,7 +174,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       const cost = buildCost(s, n, b, lvl + queued);
       if (n.treasury < cost) return err('not enough gold');
       n.treasury -= cost; n.expenseAcc.construction = (n.expenseAcc.construction || 0) + cost;
-      s.constructions.push({ loc: l, building: b, left: Math.max(30, Math.round(def.months * 30 * clamp(1 + lawEffect(n, 'build_time'), 0.3, 2))), nation: cmd.n, cost }); // build_time: e.g. the Andean labour duty
+      s.constructions.push({ loc: l, building: b, left: Math.max(30, Math.round(def.months * 30 * clamp(1 + lawEffect(n, 'build_time'), 0.3, 2))), nation: cmd.n, cost, level: lvl + queued }); // build_time: e.g. the Andean labour duty
       return OK;
     }
     case 'declare': {
@@ -286,6 +287,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       addCredit(n, 'loan_repay', -l.amount); n.loans.shift(); return OK;
     }
     case 'merchant': { const e = setMerchants(s, w, n, cmd.market, cmd.amount, cmd.steer); return e ? err(e) : OK; }
+    case 'venture': { const e = setVenture(s, w, n, cmd.from, cmd.to, cmd.good, cmd.loads); return e ? err(e) : OK; }
     case 'integrate': {
       const sub = s.nations[cmd.subject]; if (!sub || sub.overlord !== cmd.n) return err('not your subject');
       if (sub.subjectType === 'tributary') return err('tributaries cannot be integrated');

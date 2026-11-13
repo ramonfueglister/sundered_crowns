@@ -53,7 +53,7 @@ export function learningMeasure(s: GameState): Measure {
   return { values, total };
 }
 /** Monthly trade profits, tariffs and company profits. */
-export function tradeIncome(n: Nation): number { return Math.max(0, (n.income.trade ?? 0) + (n.income.tariffs ?? 0) + (n.income.company ?? 0)); }
+export function tradeIncome(n: Nation): number { return Math.max(0, (n.income.trade ?? 0) + (n.income.tariffs ?? 0) + (n.income.company ?? 0) + (n.income.ventures ?? 0)); }
 export function commerceMeasure(s: GameState): Measure {
   const values = new Map<number, number>(); let total = 0;
   for (const n of s.nations) if (n.alive) { const v = tradeIncome(n); total += v; if (n.overlord < 0) values.set(n.id, v); }

@@ -4,6 +4,8 @@
 import type { GameState, I18n, Nation } from '../sim/types';
 import type { World } from '../sim/world';
 import type { Legend } from './protocol';
+import { cargoSpace, loadsUsed, venturesOf, ventureTerms, ventureEstimate, ventureIndex, ventureRefusal, ventureOptions, ventureSlots, VENTURE_CROWN } from '../sim/systems/ventures';
+import { WEIGHT } from '../sim/systems/economy';
 import { GOODS, G, GI, UNITS, C } from '../sim/defs';
 import {
   marketPowers, merchantGains, merchantRefusal, merchantsFree, merchantCap, merchantsUsed, merchantReach, routeCost, homeMarket, steerRoute,
@@ -345,3 +347,31 @@ export function tradeMapColors(s: GameState, w: World, mode: 'prices' | 'product
   return { rgba: out, legend: { title: { en: 'Markets: leading trade power (paler: less trade)', de: 'Märkte: stärkste Handelsmacht (blasser: weniger Handel)' }, items, good: -1, goodOptional: true } };
 }
 void MAX_HOPS;
+
+// ---------------------------------------------------------------- trading ventures (src/sim/systems/ventures.ts)
+/** Our cargo space with its parts, our ventures with last month's run and the terms per unit, and the best ventures
+ *  open to us now (optionally of one good), each with the estimate the AI decides by. */
+export function venturesView(s: GameState, w: World, pid: number, good?: number) {
+  const n = s.nations[pid]; if (!n) return null;
+  const cs = cargoSpace(s, w, n), used = loadsUsed(s, pid);
+  const name = (m: number) => s.markets[m]?.name ?? '';
+  const idx = ventureIndex(s);
+  const list = venturesOf(s, pid).map((v) => {
+    const tm = ventureTerms(s, pid, v.from, v.to, v.good, s.markets[v.from]?.price[v.good] ?? 0);
+    const e = ventureEstimate(s, n, v.from, v.to, v.good, v.loads, v, idx);
+    return {
+      from: v.from, to: v.to, good: v.good, goodName: GOODS[v.good].name, fromName: name(v.from), toName: name(v.to), loads: v.loads, since: v.since,
+      qty: v.qty ?? 0, margin: v.margin ?? 0, profit: v.profit ?? 0, crown: v.crown ?? 0, tolls: v.tolls ?? 0, bound: v.bound ?? null, idle: v.idle ?? 0,
+      via: tm ? tm.path.map(name) : [], sea: tm?.sea ?? false, blocked: tm?.blocked ?? 1, weight: WEIGHT[v.good],
+      est: e, refusal: ventureRefusal(s, w, n, v.from, v.to, v.good),
+    };
+  });
+  const markets = s.markets.filter((m) => !merchantRefusal(s, w, n, m.id)).map((m) => m.id);
+  const options = ventureOptions(s, w, n, { markets, limit: 12, goods: good !== undefined && good >= 0 ? [good] : undefined })
+    .map((o) => ({ ...o, goodName: GOODS[o.good].name, fromName: name(o.from), toName: name(o.to), via: (marketPath(s, o.from, o.to) ?? []).map(name), weight: WEIGHT[o.good] }));
+  return {
+    cargo: { total: cs.total, parts: cs.parts, mult: cs.mult, used, free: Math.max(0, cs.total - used) },
+    slots: { used: list.length, max: ventureSlots(n) }, crownShare: VENTURE_CROWN, markets: markets.length,
+    list, options, income: n.income.ventures ?? 0,
+  };
+}

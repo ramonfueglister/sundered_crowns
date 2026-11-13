@@ -51,7 +51,7 @@ export function situation(s: GameState, w: World, n: Nation, atWar: boolean): Si
   return {
     gross, tax: n.income.tax || 0, expense, loans: n.loans.length, deficit: expense > gross * 1.02, atWar,
     locs: locs.length, foreignFaith: ff / dev, foreignCulture: fc / dev, kinCulture: kc / dev,
-    tradeShare: gross > 0 ? ((n.income.trade || 0) + (n.income.tariffs || 0)) / gross : 0,
+    tradeShare: gross > 0 ? ((n.income.trade || 0) + (n.income.tariffs || 0) + (n.income.ventures || 0)) / gross : 0,
     unrest: un / dev, overext: overextension(n), coast, behind,
   };
 }

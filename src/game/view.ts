@@ -21,12 +21,13 @@ import { LOC_ECON, CROWN_SHARE, effectiveTax, integrationYield, overextension, t
 import { goalsFor, goalConditions } from '../sim/systems/goals';
 import { goalPlace } from '../sim/content/goals';
 import { eventOptionFxCached } from './eventfx';
-import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView, tradeIncomeBy } from './tradeview';
+import { tradeMapColors, marketDetail, marketList, goodDetail, tradePolicy, tradeRelation, expeditionView, companiesView, tradeIncomeBy , venturesView } from './tradeview';
 import { worksView, scopeView, gainDetail, placesOf } from './worksview';
 import { methodsView } from './methodsview';
 import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
+import { buildMatsView } from './worksview';
 import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
 import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
 import { METHODS } from '../sim/defs';
@@ -399,6 +400,7 @@ export function answer(s: GameState, w: World, player: number, q: Query): any {
     case 'trel': return tradeRelation(s, w, player, q.target);
     case 'expedition': return expeditionView(s, w, player, q.to, q.fleet);
     case 'companies': return companiesView(s, w, player);
+    case 'ventures': return venturesView(s, w, player, q.good);
     case 'peace': {
       const war = s.wars.find((x) => x.id === q.war); if (!war) return null;
       const terms = q.terms as any[];
@@ -475,7 +477,8 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
   const pops = CLASSES.map((c, k) => ({ cls: c, name: CLASS_NAME[c], pop: lc.pop[l * C + k], sol: lc.sol[l * C + k], wealth: lc.wealth[l * C + k] }));
   const o = lc.owner[l], n = o >= 0 ? s.nations[o] : null;
   const buildings = BUILDINGS.map((b, k) => ({ id: k, key: b.id, name: b.name, desc: b.desc, level: lc.buildings[l * B + k], max: b.max, cost: n ? buildCost(s, n, k, lc.buildings[l * B + k]) : 0, months: b.months,
-    allowed: !(b.needsCoast && !w.coastal[l]) && (b.era ?? 0) <= (n?.era ?? 0), queued: s.constructions.filter((c) => c.loc === l && c.building === k).map((c) => c.left) }));
+    allowed: !(b.needsCoast && !w.coastal[l]) && (b.era ?? 0) <= (n?.era ?? 0), queued: s.constructions.filter((c) => c.loc === l && c.building === k).map((c) => c.left / (c.pace ?? 1)),
+    mats: buildMatsView(s, l, k, lc.buildings[l * B + k] + s.constructions.filter((c) => c.loc === l && c.building === k).length) }));
   const workshops = [0, 1, 2].map((k) => { const r = lc.workshop[l * 3 + k]; return r ? { recipe: r - 1, name: RECIPES[r - 1].name } : null; });
   // unrest drifts 30 % a month toward this target (systems/economy.ts stepLocations)
   const unrestWhy: [string | I18n, number][] = [];
@@ -587,7 +590,7 @@ function realmDetail(s: GameState, w: World, player: number) {
     tradition: traditionOf(n),
     loans: n.loans.map((l) => ({ ...l, name: lenderName(l.lender) })), history: n.history.slice(-240), modifiers: n.modifiers.filter((m) => m.until < 1e9 || m.id.startsWith('priv_')).map((m) => ({ id: m.id, label: m.label, until: m.until, effects: m.effects })),
     situations: s.situations.map((x) => { const d = SITUATIONS.find((y) => y.id === x.id); return { ...x, name: d?.name, desc: d?.desc, stageName: d?.stages?.[x.stage] }; }),
-    constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, name: w.names[c.loc], building: BUILDINGS[c.building].name })),
+    constructions: s.constructions.filter((c) => c.nation === player).map((c) => ({ ...c, left: c.left / (c.pace ?? 1), name: w.names[c.loc], building: BUILDINGS[c.building].name })),
     recruits: s.recruits.filter((r) => r.nation === player).map((r) => ({ ...r, name: w.names[r.loc], unit: UNITS[r.type].name })),
     spies: s.spies.filter((x) => x.nation === player), empire: { emperor: s.empire.emperor, authority: s.empire.authority, electors: s.empire.electors, election: !!s.empire.election, diet: !!s.empire.diet },
     papacy: { holder: s.papacy.holder, favour: s.papacy.curiaFavour[player] ?? 0, schism: s.papacy.schism }, goalsDone: n.goalsDone,

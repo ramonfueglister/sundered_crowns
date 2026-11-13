@@ -15,13 +15,14 @@ import { hasTreaty } from '../ctx';
 import { manpowerOf } from './military';
 import { envoysOf } from './diplomacy';
 import { historySample } from './realm';
+import { runVentures, pruneVentures } from './ventures';
 
 export const BUCKETS = 30;
 export const CROWN_SHARE = 0.08;
 const NEED_IDX = NEEDS.map(([g, q, t]) => [GI[g], q / 100, t] as [number, number, number]);
 const TIER_W = [0.5, 0.25, 0.15, 0.1];
 // relative transport weight per good (bulky goods cost more to move)
-const WEIGHT = new Float64Array(G);
+export const WEIGHT = new Float64Array(G);
 for (let g = 0; g < G; g++) { const b = GOODS[g].base; WEIGHT[g] = b < 2 ? 1 : b < 6 ? 0.6 : b < 15 ? 0.3 : 0.12; }
 const SILVER = GI.silver, GOLD = GI.gold;
 
@@ -648,8 +649,12 @@ export function clearMarkets(s: GameState, w: World) {
     if (!n?.alive || !a || !b || a === b) continue;
     tradeLink(s, a, b, 1.5, true, flows, n);
   }
+  // the realms' trading ventures carry their goods over longer routes (systems/ventures.ts)
+  pruneVentures(s, w);
+  runVentures(s, w, flows, (m, v) => shareTolls(s, m, v));
   flows.sort((p, q) => q.value - p.value);
-  s.flows = flows.slice(0, 400);
+  // (the ventures' flows are kept whatever their size: the trade panel and map show each)
+  s.flows = [...flows.slice(0, 400), ...flows.slice(400).filter((f) => f.venture !== undefined)];
   // the month's margins go to the realms by their trade power there (steered shares to their home markets)
   payTrade(s, w, TV, mp);
   // 2. clearing and price formation
@@ -709,7 +714,7 @@ export function importPrice(ms: Market[], m: Market, g: number, anchor: number):
 }
 
 /** 0 = free, 1 = fully blocked trade between two markets (war, blockade, piracy, embargo). */
-function tradeBlocked(s: GameState, a: Market, b: Market, sea: boolean): number {
+export function tradeBlocked(s: GameState, a: Market, b: Market, sea: boolean): number {
   const oa = a.owner, ob = b.owner;
   if (oa < 0 || ob < 0) return 0;
   let blk = 0;
@@ -958,7 +963,7 @@ export function retoolWorkshops(s: GameState, w: World, full = false) {
 /** Per market, what the last month of the warm-up brought to market (economy.init): the supply, the demand and the
  *  demand by need tier before that month's clearing. Read once, by estimateTradeMonth, when a game is set up. */
 const WARM = new WeakMap<Market, { s: Float64Array; d: Float64Array; t?: Float64Array }>();
-const TRADE_KEYS = ['trade', 'company', 'tariffs'];
+const TRADE_KEYS = ['trade', 'company', 'tariffs', 'ventures'];
 
 /** The first month's trade, estimated when a game is set up (setup.ts, after every system has set up its merchants,
  *  fleets and treaties): the clearing of the markets is run once more on copies of the markets, with the goods the

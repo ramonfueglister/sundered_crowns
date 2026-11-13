@@ -6,7 +6,7 @@ import { RECIPES, UNITS, BUILDINGS } from '../../sim/defs';
 import { Parts, TipHead, Drift, AgentsTip } from './explain';
 import { Panel, Section, Row, Bar, NLink, Btn, Empty, useQuery, act, t, L, lang, num, pct, signed, Tip, Coa, daysText, realm, selectArmy, placeName, Effects } from './common';
 import { sfx } from '../audio';
-import { ScopeOrders } from './works';
+import { ScopeOrders, MatsTip } from './works';
 import { Methods, Migration } from './statecraft';
 import { LocWar } from './war';
 
@@ -282,6 +282,7 @@ function BuildCost({ b }: { b: any }) {
   return <div>
     <Parts rows={[['x_build_base', base], ['x_build_level', 1 + b.level * 0.5], ['x_price_level', r?.priceLevel ?? 1], ['inflation', 1 + inf], ['x_fort_law', rest > 0 ? b.cost / rest : 1]]} product base={(v) => num(v, 0)} total={b.cost} totalLabel={t('cost')} />
     <div class="muted small">{b.months} {t('months')} · {t('x_two_works')}</div>
+    {b.mats && <MatsTip m={b.mats} />}
   </div>;
 }
 
