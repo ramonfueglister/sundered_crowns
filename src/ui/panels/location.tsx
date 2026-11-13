@@ -161,6 +161,7 @@ function Workshops({ d, refresh }: { d: any; refresh: () => void }) {
           <option value={-1}>— {t('idle')} —</option>
           {opts.map((o) => <option value={o.k}>{L(o.r.name)}</option>)}
         </select> : <span class="muted">{t('needs_workshops')}</span>}
+        {cur && <WorksOwner d={d} cur={cur} slot={slot} refresh={refresh} />}
       </div>;
     })}
   </Section>;
@@ -317,4 +318,22 @@ function FoodTip({ f }: { f: any }) {
     {f.security !== null && f.security < f.famine && <div class="neg small">{t('x_famine_now')}</div>}
     <div class="muted small">{t('x_food_cap_rule')}</div>
   </div>;
+}
+
+/** Who owns a workshop, what it earned and the crown's offer to buy it or sell it. */
+function WorksOwner({ d, cur, slot, refresh }: { d: any; cur: any; slot: number; refresh: () => void }) {
+  const mine = d.owner === playerId.value;
+  const crown = cur.owner === 'crown';
+  const tip = <div><TipHead name={t('x_works_owner')} value={t('x_owner_' + cur.owner)} hint={t('x_works_owner_hint').replace('{s}', pct(cur.share, 0)).replace('{c}', pct(cur.crownShare, 0))} />
+    <div class="breakdown">
+      <div class="bd-row"><span>{t('x_works_profit')}</span><span class={cur.profit < 0 ? 'neg' : ''}>{num(cur.profit, 1)}</span></div>
+      <div class="bd-row"><span>{t('x_works_owner_take')}</span><span>{num(Math.max(0, cur.profit) * cur.share, 1)}</span></div>
+      <div class="bd-row bd-total"><span>{t('x_works_price')}</span><span>{num(cur.price)}</span></div>
+    </div>
+    <div class="muted small">{t('x_works_price_rule').replace('{m}', String(cur.months))}</div>
+    {cur.profit < 0 && <div class="neg small">{t('x_works_loss')}</div>}</div>;
+  return <>
+    <Tip content={tip}><span class={`muted small has-tip ${cur.profit < 0 ? 'neg' : ''}`}>{t('x_owner_' + cur.owner)} · {num(cur.profit, 1)}</span></Tip>
+    {mine && <Btn tip={tip} onClick={() => act({ t: 'works', loc: d.id, slot, buy: !crown }, 'coins').then(refresh)}>{crown ? `${t('x_works_sell')} +${num(cur.price)}` : `${t('x_works_buy')} −${num(cur.price)}`}</Btn>}
+  </>;
 }

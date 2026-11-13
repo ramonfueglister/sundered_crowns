@@ -40,7 +40,7 @@ export function chronInvolves(e: { nation: number; also?: readonly number[] }, i
 /** Ledger lines that are one-off payments, not the realm's running revenue or costs: the budget forecast leaves them
  *  out (administration.ts budgetForecast) and the court, the splendour of a full chest, the fortresses' pay and the
  *  reserve the AI keeps are measured without them (grossIncome). */
-export const ONE_OFF = new Set(['construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
+export const ONE_OFF = new Set(['works_bought', 'works_sold', 'construction', 'recruitment', 'scholars', 'gifts', 'charter', 'loan_repay', 'agents', 'mercenaries', 'landmark', 'methods', 'loans', 'colonists_start', 'splendour', 'events',
   'refunds', 'exactions', 'espionage', 'appease', 'peace_gold', 'privileges', 'church_lands', 'parias', 'generals', 'expeditions']);
 /** Last month's running revenue: every positive income line except one-off payments (an event's windfall, a gift, a
  *  peace's gold, what an estate paid for a privilege), so a windfall does not raise next month's court. */

@@ -8,7 +8,8 @@ import { chance, rand } from '../rng';
 import { applyCommand } from '../commands';
 import { lawEffect } from './politics';
 import { refusedRecently } from './diplomacy';
-import { tariffMax } from './economy';
+import { tariffMax, worksOwners, worksProfit, worksPrice, OWNER_SHARE, CROWN_WORKS } from './economy';
+import { ownedLocs } from './war';
 import { europeanCrown, charterOptions } from './colonial';
 import { OCEAN_TECH, harbours } from './explore';
 import {
@@ -21,6 +22,7 @@ export function aiTrade(s: GameState, w: World, n: Nation) {
   if (n.capital < 0 || (Math.floor(s.day / 30) + n.id) % 3 !== 0) return;
   aiMerchants(s, w, n);
   aiVentures(s, w, n);
+  aiWorks(s, w, n);
   aiTariff(s, w, n);
   aiEmbargo(s, w, n);
   aiAgreement(s, w, n);
@@ -198,4 +200,31 @@ export function aiVentures(s: GameState, w: World, n: Nation) {
   const best = ventureOptions(s, w, n, { markets: ventureMarkets(s, w, n, rich), limit: 1, loads: Math.floor(free) })[0];
   if (!best || best.profit * VENTURE_CROWN < worth(n) * 0.5) return;
   applyCommand(s, w, { t: 'venture', n: n.id, from: best.from, to: best.to, good: best.good, loads: Math.min(Math.floor(free), best.loads) });
+}
+
+/** The crown's own workshops: a realm deep in debt sells its most valuable one to the burghers; a rich realm without
+ *  debts buys the estates' most profitable workshop when it pays itself back within five years. One a quarter, no
+ *  randomness. */
+export function aiWorks(s: GameState, w: World, n: Nation) {
+  const own = worksOwners(s, w), pf = worksProfit(s, w);
+  const locs = ownedLocs(s, n.id);
+  if (n.loans.length >= 2) {
+    let best = -1, bv = 0;
+    for (const l of locs) for (let k = 0; k < 3; k++) { const x = l * 3 + k; if (s.loc.workshop[x] && own[x] === 3) { const v = worksPrice(s, w, l, k); if (v > bv) { bv = v; best = x; } } }
+    if (best >= 0) applyCommand(s, w, { t: 'works', n: n.id, loc: Math.floor(best / 3), slot: best % 3, buy: false });
+    return;
+  }
+  const inc = incomeOf(n);
+  if (n.loans.length || n.treasury < Math.max(150 * s.priceLevel, inc * 3)) return;
+  let best = -1, bv = 0;
+  for (const l of locs) {
+    if (s.loc.ctrl[l] !== n.id) continue;
+    for (let k = 0; k < 3; k++) {
+      const x = l * 3 + k; if (!s.loc.workshop[x] || own[x] === 3 || pf[x] <= 0) continue;
+      const gain = pf[x] * OWNER_SHARE * CROWN_WORKS, price = worksPrice(s, w, l, k);
+      if (price > n.treasury * 0.3 || price > gain * 60) continue;
+      if (gain > bv) { bv = gain; best = x; }
+    }
+  }
+  if (best >= 0) applyCommand(s, w, { t: 'works', n: n.id, loc: Math.floor(best / 3), slot: best % 3, buy: true });
 }

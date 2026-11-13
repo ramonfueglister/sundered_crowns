@@ -28,7 +28,7 @@ import { nationStats } from '../sim/systems/realm';
 import { allies, hasTreaty, treatiesOf, atWar, subjectsOf } from '../sim/ctx';
 import { buildCost, merchantCap } from '../sim/commands';
 import { buildMatsView } from './worksview';
-import { foodStores, foodMonths, FAMINE_FOOD, FOOD_PUT, FOOD_SPOIL } from '../sim/systems/economy';
+import { foodStores, foodMonths, FAMINE_FOOD, FOOD_PUT, FOOD_SPOIL, worksOwners, worksProfit, worksPrice, WORKS_OWNERS, OWNER_SHARE, CROWN_WORKS, WORKS_PRICE_MONTHS } from '../sim/systems/economy';
 import { marketAccess, farmgate, reaching, markup, ACCESS_RANGE, MIN_ACCESS, ROAD_CUT, CANAL_CUT } from '../sim/systems/access';
 import { agentSlots, overextControl, integrationControl } from '../sim/systems/society';
 import { colonySlots, canColonize, colonyCost, colonyProgress } from '../sim/systems/colonial';
@@ -481,7 +481,8 @@ function locDetail(s: GameState, w: World, l: number, player: number) {
   const buildings = BUILDINGS.map((b, k) => ({ id: k, key: b.id, name: b.name, desc: b.desc, level: lc.buildings[l * B + k], max: b.max, cost: n ? buildCost(s, n, k, lc.buildings[l * B + k]) : 0, months: b.months,
     allowed: !(b.needsCoast && !w.coastal[l]) && (b.era ?? 0) <= (n?.era ?? 0), queued: s.constructions.filter((c) => c.loc === l && c.building === k).map((c) => c.left / (c.pace ?? 1)),
     mats: buildMatsView(s, l, k, lc.buildings[l * B + k] + s.constructions.filter((c) => c.loc === l && c.building === k).length) }));
-  const workshops = [0, 1, 2].map((k) => { const r = lc.workshop[l * 3 + k]; return r ? { recipe: r - 1, name: RECIPES[r - 1].name } : null; });
+  const wsOwn = worksOwners(s, w), wsProf = worksProfit(s, w);
+  const workshops = [0, 1, 2].map((k) => { const r = lc.workshop[l * 3 + k]; return r ? { recipe: r - 1, name: RECIPES[r - 1].name, owner: WORKS_OWNERS[wsOwn[l * 3 + k]], profit: wsProf[l * 3 + k], share: OWNER_SHARE, crownShare: CROWN_WORKS, price: worksPrice(s, w, l, k), months: WORKS_PRICE_MONTHS } : null; });
   // unrest drifts 30 % a month toward this target (systems/economy.ts stepLocations)
   const unrestWhy: [string | I18n, number][] = [];
   if (n) {

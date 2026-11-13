@@ -19,6 +19,65 @@ import { runVentures, pruneVentures } from './ventures';
 import { marketAccess, farmgate, reaching, markup } from './access';
 
 export const BUCKETS = 30;
+// ---- who owns the workshops ----
+/** Owners of workshops: the burghers, the nobility, the clergy or the crown (index into this list, s.loc.wsOwner). */
+export const WORKS_OWNERS = ['burghers', 'nobles', 'clergy', 'crown'] as const;
+export const OWNER_CLASS = [CL.burghers, CL.nobles, CL.clergy, -1];
+/** Share of a workshop's profit its owner takes (the rest goes to the artisans and hands who work it); share of the
+ *  crown's that reaches the treasury (the stewards keep the rest). */
+export const OWNER_SHARE = 0.3, CROWN_WORKS = 0.3;
+/** What the crown pays an estate for a workshop, or gets for one: this many months of the owner's share (at least
+ *  WORKS_MIN_PRICE × the price level). */
+export const WORKS_PRICE_MONTHS = 15, WORKS_MIN_PRICE = 15;
+const OWN_INC = new Float64Array(4), SLOTK = new Int32Array(3);
+/** The usual first owner of a workshop of recipe r (index) at place i: lords own the mills, presses, furnaces and sugar
+ *  mills of their manors, the church its scriptoria and many breweries, the crown its powder mills and foundries, and
+ *  at the capital its weaponsmiths, armourers, yards and the fine glassworks it set up for the court;
+ *  the burghers the rest. */
+export function firstOwner(s: GameState, i: number, r: number): number {
+  const id = RECIPES[r]?.id; const o = s.loc.owner[i]; const cap = o >= 0 && s.nations[o]?.capital === i;
+  if (id === 'powder_mill' || id === 'foundry' || (cap && (id === 'armoury' || id === 'plater' || id === 'shipwright' || id === 'glassworks'))) return 3;
+  if (id === 'mill' || id === 'winery' || id === 'oil_press' || id === 'smelter' || id === 'sugar_mill') return 1;
+  if (id === 'scriptorium' || (id === 'brewery' && s.loc.buildings[i * B + BI.church] > 0 && hash01(i, r, 11) < 0.5)) return 2;
+  return 0;
+}
+export function worksOwners(s: GameState, w: World): Uint8Array {
+  const lc = s.loc;
+  if (!lc.wsOwner || lc.wsOwner.length !== w.L * 3) {
+    lc.wsOwner = new Uint8Array(w.L * 3);
+    for (let k = 0; k < w.L * 3; k++) { const v = lc.workshop[k]; if (v > 0) lc.wsOwner[k] = firstOwner(s, Math.floor(k / 3), v - 1); }
+  }
+  return lc.wsOwner;
+}
+export function worksProfit(s: GameState, w: World): Float32Array {
+  const lc = s.loc;
+  if (!lc.wsProfit || lc.wsProfit.length !== w.L * 3) lc.wsProfit = new Float32Array(w.L * 3);
+  return lc.wsProfit;
+}
+/** What the crown pays for workshop slot k of place i, or is paid for it. */
+export function worksPrice(s: GameState, w: World, i: number, k: number): number {
+  return Math.max(WORKS_MIN_PRICE * s.priceLevel, WORKS_PRICE_MONTHS * Math.max(0, worksProfit(s, w)[i * 3 + k]) * OWNER_SHARE);
+}
+/** The crown buys a workshop from its estate (buy) or sells one of its own to the burghers. */
+export function tradeWorks(s: GameState, w: World, n: Nation, i: number, k: number, buy: boolean): string | null {
+  if (s.loc.owner[i] !== n.id) return 'not your location';
+  if (!Number.isInteger(k) || k < 0 || k > 2 || !s.loc.workshop[i * 3 + k]) return 'no workshop there';
+  const own = worksOwners(s, w), cur = own[i * 3 + k];
+  if (buy === (cur === 3)) return buy ? 'the crown owns it already' : 'the crown does not own it';
+  const price = worksPrice(s, w, i, k);
+  if (buy) {
+    if (n.treasury < price) return 'not enough gold';
+    addExpense(n, 'works_bought', price);
+    const cls = OWNER_CLASS[cur], pc = s.loc.pop[i * C + cls];
+    if (pc >= 1) s.loc.wealth[i * C + cls] += price / pc;
+    own[i * 3 + k] = 3;
+  } else {
+    addIncome(n, 'works_sold', price);
+    own[i * 3 + k] = 0;
+  }
+  return null;
+}
+
 // ---- food stores and famine ----
 /** Months of a place's grain need its barns hold: 1.5, one more for each level of field improvements, half a month
  *  more for each level of church and schools (tithe barns). */
@@ -290,7 +349,7 @@ function pay(nation: number, kind: number, v: number) {
  *  would raise at its highest rate; all the crown's share. The government halves them every month, so they follow
  *  the realm's land and prices. */
 export const TAX_YIELD_KEYS = ['ty_cls', 'ty_land', 'ty_hearth', 'ty_excise'];
-const PAY_KEYS = ['tax', 'contributions', 'land_tax', 'hearth_tax', 'excise'];
+const PAY_KEYS = ['tax', 'contributions', 'land_tax', 'hearth_tax', 'excise', 'royal_works'];
 function flushPayments(s: GameState) {
   for (let k = 0; k < NPAY; k++) addIncome(s.nations[PAY_N[k]], PAY_KEYS[PAY_K[k]], PAY_V[k]);
   NPAY = 0;
@@ -322,12 +381,12 @@ export function overextension(n: Nation): number { return Math.max(0, (n.adminLo
 function stepLocations(s: GameState, w: World, from: number, to: number, stride: number, settled: boolean) {
   NPAY = 0; CHARS = s.chars;
   if (TY.length < s.nations.length * 4) TY = new Float64Array(s.nations.length * 4 + 256); else TY.fill(0);
-  s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled, marketAccess(s, w).access, foodStores(s, w));
+  s.silverStock = stepLoop(s.loc, s.markets, s.nations, s.priceLevel, s.silverStock, w, from, to, stride, settled, marketAccess(s, w).access, foodStores(s, w), worksOwners(s, w), worksProfit(s, w));
   flushPayments(s);
 }
 // The state's own fields are read once by the caller and passed in (the state object changes shape as a game
 // goes on, which would otherwise throw the optimised loop away); silver is threaded through and written back.
-function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl: number, silverIn: number, w: World, from: number, to: number, stride: number, settled: boolean, acc: Float32Array, food$: Float32Array): number {
+function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl: number, silverIn: number, w: World, from: number, to: number, stride: number, settled: boolean, acc: Float32Array, food$: Float32Array, own$: Uint8Array, prof$: Float32Array): number {
   let silver = silverIn;
   for (let i = from; i < to; i += stride) {
     if (settled && !(lc.owner[i] >= 0 || lc.pop[i * C] > 0)) continue;
@@ -399,7 +458,8 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     let craftValue = 0, craftProfit = 0;
     const art = P[base + CL.artisans] + P[base + CL.wage_workers];
     let nSlots = 0;
-    for (let k = 0; k < 3; k++) { const v = lc.workshop[i * 3 + k]; if (v > 0) SLOTS[nSlots++] = v; }
+    for (let k = 0; k < 3; k++) { const v = lc.workshop[i * 3 + k]; if (v > 0) { SLOTK[nSlots] = k; SLOTS[nSlots++] = v; } }
+    OWN_INC[0] = 0; OWN_INC[1] = 0; OWN_INC[2] = 0; OWN_INC[3] = 0;
     const md = METHODS[lc.method[i]] ?? METHODS[0];
     let workers = 0;
     if (nSlots && art > 0) {
@@ -423,6 +483,12 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
         gq[gb + GQ_CRAFT + si] = outQ; ec.ck[i * 3 + si] = k;
         const val = outQ * m.price[og] * quality * fg;
         craftValue += val; craftProfit += val - inCost;
+        // the owner of the workshop (WORKS_OWNERS) takes its share of the profit; the month's profit is remembered,
+        // and a workshop that has run at a loss for a season closes (its owner will not keep paying for it)
+        const sk = i * 3 + SLOTK[si], pr = val - inCost;
+        prof$[sk] = prof$[sk] * 0.7 + pr * 0.3;
+        OWN_INC[own$[sk]] += Math.max(0, pr) * OWNER_SHARE;
+        if (prof$[sk] < -0.02 * Math.max(1e-6, val) && pr < 0) { lc.workshop[sk] = 0; prof$[sk] = 0; }
       }
     }
     lc.employed[base + CL.artisans] = art > 0 ? (nSlots ? workers / art : 0) : 1;
@@ -438,9 +504,11 @@ function stepLoop(lc: GameState['loc'], markets: Market[], nations: Nation[], pl
     inc[CL.wage_workers] = 0;
     if (P[base + CL.wage_workers] > 0) { const ww = P[base + CL.wage_workers] / Math.max(1, art); inc[CL.wage_workers] = inc[CL.artisans] * ww * 0.6; inc[CL.artisans] *= 1 - ww * 0.6; }
     const marketBonus = 1 + 0.25 * lc.buildings[i * B + BI.market];
-    inc[CL.burghers] = (Math.max(0, craftProfit) * 0.3 + (agriValue + craftValue) * 0.035 * marketBonus) * (1 + (n ? ns[nr + 3] : 0));
-    inc[CL.nobles] = agriValue * rent;
-    inc[CL.clergy] = agriValue * tithe + rgoQ * 0;
+    inc[CL.burghers] = (OWN_INC[0] + (agriValue + craftValue) * 0.035 * marketBonus) * (1 + (n ? ns[nr + 3] : 0));
+    inc[CL.nobles] = agriValue * rent + OWN_INC[1];
+    inc[CL.clergy] = agriValue * tithe + OWN_INC[2];
+    // the crown's own works pay into the treasury, less what its stewards keep
+    if (OWN_INC[3] > 0 && o >= 0 && lc.ctrl[i] === o) pay(o, 5, OWN_INC[3] * CROWN_WORKS);
     // ---- taxes ----
     let taxTotal = 0, dutyTotal = 0;
     if (n) {
@@ -931,6 +999,7 @@ export function updateMoney(s: GameState) {
  *  only for a clearly better trade. Slots the player set by hand (flag wsl_<loc>) are left alone. */
 export function retoolWorkshops(s: GameState, w: World, full = false) {
   const lc = s.loc;
+  const before = lc.workshop.slice();
   const byMarket: number[][] = s.markets.map(() => []);
   for (let i = 0; i < w.L; i++) {
     if (lc.owner[i] < 0 || s.flags['wsl_' + i]) continue;
@@ -993,6 +1062,14 @@ export function retoolWorkshops(s: GameState, w: World, full = false) {
       const old = lc.workshop[i * 3 + wk] - 1; if (old >= 0) rem[GI[RECIPES[old].out]] += est(i, old);
       lc.workshop[i * 3 + wk] = best + 1; rem[GI[RECIPES[best].out]] -= est(i, best);
     }
+  }
+  // a slot that was empty or changed hands to a new trade gets the usual owner of that trade; a slot whose trade
+  // changed keeps its owner, who retooled it
+  const own = worksOwners(s, w), pf = worksProfit(s, w);
+  for (let k = 0; k < lc.workshop.length; k++) {
+    const v = lc.workshop[k]; if (v === before[k]) continue;
+    pf[k] = 0;
+    if (v > 0 && (before[k] === 0 || full)) own[k] = firstOwner(s, Math.floor(k / 3), v - 1);
   }
 }
 

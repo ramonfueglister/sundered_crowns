@@ -252,6 +252,8 @@ export interface LocState {
   snow: Float32Array;   // current snow cover 0..1 (climate model)
   colonist: Int16Array; // nation colonising this location, -1
   migr: Float32Array;   // people who moved in (+) or out (−) last month (systems/administration.ts)
+  wsOwner?: Uint8Array; // L*3 owner of each workshop slot (systems/economy.ts WORKS_OWNERS; created when first needed)
+  wsProfit?: Float32Array; // L*3 a workshop's monthly profit, smoothed
   food?: Float32Array;  // grain in the village barns (systems/economy.ts foodStores; created when first needed)
   migrBal: Float32Array; // newcomers (+) or leavers (−) of the last decades as a share of the peasants and labourers, fading (crowding)
 }
@@ -368,6 +370,7 @@ export type Command =
   | { t: 'office'; n: number; office: string; char: number }
   | { t: 'loan'; n: number; take: boolean; amount: number }
   | { t: 'merchant'; n: number; market: number; amount: number; steer?: boolean } // merchants kept in a market; steer: send its trade home
+  | { t: 'works'; n: number; loc: number; slot: number; buy: boolean } // the crown buys a workshop from its estate or sells one of its own
   | { t: 'venture'; n: number; from: number; to: number; good: number; loads: number } // open, resize (loads) or close (loads 0) a trading venture
   | { t: 'integrate'; n: number; subject: number }
   | { t: 'orders'; n: number; orders: StandingOrders }

@@ -11,7 +11,7 @@ import { localName } from './content/names';
 import { declareWar, evaluatePeace, concludePeace, computeScore, termCost, allowedTerms, cedeFits, TARIFF_CAP, DECLARE_GOALS, faithTermFits } from './systems/war';
 import { sendEnvoy, startSpy } from './systems/diplomacy';
 import { enactReform, grantPrivilege, revokePrivilege, estate, appointOfficial, appointAblest, lawEffect } from './systems/politics';
-import { takeLoan, tariffMax, addCredit } from './systems/economy';
+import { takeLoan, tariffMax, addCredit, tradeWorks, worksOwners, worksProfit, firstOwner } from './systems/economy';
 import { setMethod } from './systems/administration';
 import { DUTY_INDEX } from './systems/duties';
 import { investTech, takeDoctrine } from './systems/progress';
@@ -287,6 +287,7 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       addCredit(n, 'loan_repay', -l.amount); n.loans.shift(); return OK;
     }
     case 'merchant': { const e = setMerchants(s, w, n, cmd.market, cmd.amount, cmd.steer); return e ? err(e) : OK; }
+    case 'works': { const e = tradeWorks(s, w, n, cmd.loc, cmd.slot, !!cmd.buy); return e ? err(e) : OK; }
     case 'venture': { const e = setVenture(s, w, n, cmd.from, cmd.to, cmd.good, cmd.loads); return e ? err(e) : OK; }
     case 'integrate': {
       const sub = s.nations[cmd.subject]; if (!sub || sub.overlord !== cmd.n) return err('not your subject');
@@ -304,7 +305,8 @@ function applyCommandInner(s: GameState, w: World, cmd: Command): CmdResult {
       if (cmd.slot >= 1 + s.loc.buildings[l * B + BI.workshop]) return err('build more workshops first');
       if (cmd.recipe >= 0 && !workshopOptions(w, l).includes(cmd.recipe) && !RECIPES[cmd.recipe]) return err('unknown recipe');
       if (cmd.recipe >= 0 && (RECIPES[cmd.recipe].minEra ?? 0) > n.era) return err('not yet known');
-      s.loc.workshop[l * 3 + cmd.slot] = cmd.recipe + 1; s.flags['wsl_' + l] = 1; return OK;
+      { const k = l * 3 + cmd.slot, had = s.loc.workshop[k]; s.loc.workshop[k] = cmd.recipe + 1; s.flags['wsl_' + l] = 1; if (!had && cmd.recipe >= 0) worksOwners(s, w)[k] = firstOwner(s, l, cmd.recipe); if (had !== cmd.recipe + 1) worksProfit(s, w)[k] = 0; }
+      return OK;
     }
     case 'embark': {
       const a = myArmy(s, cmd.n, cmd.army), f = myArmy(s, cmd.n, cmd.fleet);
