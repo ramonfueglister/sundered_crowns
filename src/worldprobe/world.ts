@@ -25,11 +25,11 @@ export interface WorldView {
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
 /** above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale */
-const TREE_LINE = 1900, SNOW_LINE = 2650;
+const TREE_LINE = 1900, SNOW_LINE = 2530;
 /** the massifs are rock from this height upwards; what stands above their valley floors is raised by this factor */
-const ROCK_FROM = 1500, PEAK = 1.5;
+const ROCK_FROM = 1500, PEAK = 1.3;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
-const VALLEY_FROM = 75, FOOT = 3;
+const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
 const levelOf = (metres: number) => Math.max(0, (Math.min(metres, TREE_LINE) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - TREE_LINE) / METRES_PER_BLOCK_HIGH;
@@ -88,14 +88,15 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   const at = (field: Float32Array | Int16Array, x: number, z: number) => field[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
   const metresAt = (x: number, z: number) => at(metres, x, z);
   /**
-   * Height of the rock pillar a column belongs to, and whether that pillar is rock. A massif of the reference is one
+   * Height of the bundle of four rock pillars a column belongs to, whether that bundle is rock, and the height of the column's own pillar. A massif of the reference is one
    * steep, calm shape: the rock takes the closed shape of whole massifs and raises it over their valley floors,
    * and leaves out what is finer. Rock or meadow is settled per bundle of four pillars, so that the rock comes in
    * whole pieces, and only away from the valley floors, which stay green.
    */
-  const pillar = (x: number, z: number): [number, boolean] => {
-    const [px, pz] = rockPillar(x, z), cx = (px + 0.5) * 2, cz = (pz + 0.5) * 2 - px, bx = Math.floor(px / 2) * 2 + 1;
-    return [at(base, cx, cz) + PEAK * (at(massif, cx, cz) - at(base, cx, cz)), at(massif, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) > ROCK_FROM && at(away, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) >= FOOT];
+  const pillar = (x: number, z: number): [number, boolean, number] => {
+    const [px, pz] = rockPillar(x, z), bx = Math.floor(px / 2) * 2 + 1, cx = bx * 2, cz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx;
+    const raised = (qx: number, qz: number) => at(base, qx, qz) + PEAK * (at(massif, qx, qz) - at(base, qx, qz));
+    return [raised(cx, cz), at(massif, cx, cz) > ROCK_FROM && at(away, cx, cz) >= FOOT, raised((px + 0.5) * 2, (pz + 0.5) * 2 - px)];
   };
 
   const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y) };
@@ -104,14 +105,14 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
     if (kind[i] !== Water.Land) { level[i] = kind[i] === Water.Lake ? Math.round(levelOf(metres[i])) : 0; continue; }
-    const [m, rock] = pillar(x, z);
+    const [m, rock, own] = pillar(x, z);
     if (!rock) { level[i] = Math.round(levelOf(metres[i])); g.mat[i] = Mat.Grass; continue; }
-    // the rock rises pillar by pillar, as the massifs of the probe do: bundles of pillars rise and fall together,
-    // each pillar a little on its own; the summits step in twos, so that their pillars join into cubes; single
-    // columns step down or stand back as dark slots
-    const [px, pz] = rockPillar(x, z), bundle = (hash2(Math.floor(px / 2), Math.floor(pz / 2), 11) - 0.5) * 1.6, own = (hash2(px, pz, 17) - 0.5) * 0.9;
-    const piece = hash2(x, z, 19), step = piece < 0.02 ? -3 : piece < 0.06 ? -1 : 0;
-    level[i] = Math.max(1, (m > SNOW_LINE ? Math.round((levelOf(m) + bundle) / 2) * 2 : Math.round(levelOf(m) + bundle + own)) + step); g.mat[i] = Mat.Rock;
+    // the rock stands in walls, as the massifs of the reference do: a bundle of pillars is one block of rock with one
+    // height, so that the faces between bundles are large; the pillars of a bundle lean a step with the slope, one here and there stands a step lower, and
+    // single columns stand back as the fine grooves of the walls
+    const lot = hash2(...rockPillar(x, z), 17), lower = lot < 0.1 ? 1 : 0, lean = Math.max(-1, Math.min(1, Math.round(levelOf(own) - levelOf(m))));
+    const piece = hash2(x, z, 19), groove = piece < 0.03 ? 3 : piece < 0.08 ? 1 : 0;
+    level[i] = Math.max(1, Math.round(levelOf(m)) + lean - lower - groove); g.mat[i] = Mat.Rock;
   }
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
