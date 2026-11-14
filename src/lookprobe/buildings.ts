@@ -76,12 +76,6 @@ function drum(b: Batch, cx: number, y0: number, cz: number, r: number, y1: numbe
   for (let i = 0; i <= segs; i++) rim.push(p(i, y1));
   b.fan([cx, y1, cz], rim, c, [0, 1, 0]);
 }
-function cone(b: Batch, cx: number, y: number, cz: number, r: number, h: number, c: RGB, segs = 10) {
-  for (let i = 0; i < segs; i++) {
-    const a0 = (i / segs) * Math.PI * 2, a1 = ((i + 1) / segs) * Math.PI * 2, am = (a0 + a1) / 2;
-    b.tri([cx + Math.cos(a0) * r, y, cz + Math.sin(a0) * r], [cx + Math.cos(a1) * r, y, cz + Math.sin(a1) * r], [cx, y + h, cz], c, c, c, [Math.cos(am), 0.5, Math.sin(am)]);
-  }
-}
 /** A dome; `squash` above 1 makes it taller than a half sphere. */
 function dome(b: Batch, cx: number, y: number, cz: number, r: number, c: RGB, squash = 1.1, segs = 12, rings = 4) {
   const p = (i: number, k: number): V3 => {
@@ -108,8 +102,9 @@ function battlements(b: Batch, x0: number, z0: number, x1: number, z1: number, y
 export const FLOOR = 2.1;
 const WINDOW = rgb(0x4a4c58), WINDOW_WARM = rgb(0x5c4a40), DOOR = rgb(0x70482c), FRAME = rgb(0xfdf6ea);
 const SHUTTERS = [rgb(0x5f8a5a), rgb(0x8a5a3c), rgb(0x4f7a8a)];
-export const WALLS = [rgb(0xfbe9d6), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xfae6d8), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xe6c4a4), rgb(0xfdf0e2)];
-export const ROOFS = [rgb(0xe8744e), rgb(0xde6a48), rgb(0xee7e56), rgb(0xdc6e4e), rgb(0xea7852), rgb(0xd46248)];
+export const WALLS = [rgb(0xfbe9d6), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xfae6d8), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xe6c4a4), rgb(0xfdf0e2),
+  rgb(0xf0c684), rgb(0xecc07a), rgb(0xf2c8ae)];
+export const ROOFS = [rgb(0xf27a50), rgb(0xe8704a), rgb(0xf68458), rgb(0xe67450), rgb(0xf47e54), rgb(0xde684a)];
 const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), MARBLE = rgb(0xfdf4ea);
 const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
@@ -306,13 +301,19 @@ export function church(r: Rnd): Batch {
   return b;
 }
 
-/** A round tower on an islet: white shaft, gallery, red cap. */
+/** A square stone tower in three steps on an islet, with a small lantern under a gilded tip. */
 export function lighthouse(): Batch {
-  const b = new Batch();
-  drum(b, 0, -1, 0, 1.5, 7.2, MARBLE, 10, 0.82);
-  drum(b, 0, 7.2, 0, 1.85, 7.6, STONE, 10);
-  drum(b, 0, 7.6, 0, 1.0, 9.0, rgb(0xf2d27a), 8);
-  cone(b, 0, 9.0, 0, 1.4, 1.9, ROOFS[1], 10);
+  const b = new Batch(), c = rgb(0xe6dcd2);
+  let y = -1;
+  for (const [half, top] of [[1.6, 3.2], [1.2, 6.0], [0.85, 7.6]] as const) {
+    b.box(-half, y, -half, half, top, half, c, { foot: 0.84 });
+    b.box(-half - 0.12, top - 0.25, -half - 0.12, half + 0.12, top, half + 0.12, shade(c, 1.05));
+    for (const s of SIDES) arch(b, wallOf(-half, -half, half, half, s), half, top - 1.5, 0.22, top - 0.95, WINDOW);
+    y = top;
+  }
+  b.box(-0.55, 7.6, -0.55, 0.55, 8.7, 0.55, rgb(0xe9a45c), { foot: 0.9 });
+  hipRoof(b, -0.7, -0.7, 0.7, 0.7, 8.7, 0.7, ROOFS[1]);
+  b.box(-0.1, 9.4, -0.1, 0.1, 10.0, 0.1, GOLD);
   return b;
 }
 

@@ -2,7 +2,7 @@
 // Everything is placed from fixed seeds, so every load gives the same picture.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
-import { borderBand, bush, crops, cypress, person, pier, sheep, ship, smoke, tree } from './blocks';
+import { borderBand, bush, crops, cypress, person, pier, sheep, ship, smoke, speck, tree } from './blocks';
 import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
@@ -65,7 +65,7 @@ export function buildScene(bakedSky = true): ProbeScene {
 
   // the city: palazzi and small houses inside its outline, first fit, with alleys between them and a few straight streets
   {
-    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 23 < 1 || Math.floor(z) % 19 < 1;
+    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 23 < 2 || Math.floor(z) % 19 < 2;
     for (const part of CITY) {
       const xs = part.map((p) => p[0]), zs = part.map((p) => p[1]);
       for (let z = Math.floor(Math.min(...zs)); z < Math.max(...zs); z++) for (let x = Math.floor(Math.min(...xs)); x < Math.max(...xs); x++) {
@@ -102,7 +102,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   });
   ISLANDS.forEach((isle, n) => {
     const r = seeded(200 + n);
-    if (isle.kind === 'tower') build(lighthouse(), isle.at[0], isle.at[1], 3, 3, 0, 8, 'landmark');
+    if (isle.kind === 'tower') build(lighthouse(), isle.at[0], isle.at[1], 3.4, 3.4, 0, 7.6, 'landmark');
     scatter(r, isle.at, isle.rx * 0.6, isle.rz * 0.6, isle.kind === 'village' ? 6 : isle.kind === 'houses' ? 3 : 1, false);
   });
 
@@ -157,7 +157,7 @@ export function buildScene(bakedSky = true): ProbeScene {
 
   // woods: dense at the foot of the mountains and along the top of the picture, clumps elsewhere, single trees between
   {
-    const r = seeded(41), pitch = 2.9;
+    const r = seeded(41), pitch = 3.1;
     const nearTown = (x: number, z: number) => TOWNS.some((t) => Math.hypot(x - t.at[0], z - t.at[1]) < t.r * 0.75);
     for (let gz = 2; gz < N - 2; gz += pitch) for (let gx = 2; gx < N - 2; gx += pitch) {
       const x = gx + r.range(-1, 1), z = gz + r.range(-1, 1), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
@@ -169,9 +169,17 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
       const y = g.h[i];
       if (r.chance(density < 0.2 ? 0.45 : 0.15)) { cypress(things, x, y, z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, y + 4.2); count('tree'); continue; }
-      tree(things, x, y, z, r); occlude(g, x - 0.95, z - 0.95, x + 0.95, z + 0.95, y + 3.4); count('tree');
+      // the trees of the woods are larger than those between the fields
+      tree(things, x, y, z, r, density > 0.3 ? 1.3 : 1); occlude(g, x - 0.95, z - 0.95, x + 0.95, z + 0.95, y + 3.4); count('tree');
     }
-    // cypresses and garden trees beside houses on the islands and at the city edge
+    // garden trees on the squares and corners that the houses of the city left open
+    for (const part of CITY) for (let k = 0; k < 90; k++) {
+      const at = r.pick(part), x = at[0] + r.range(-45, 45), z = at[1] + r.range(-45, 45);
+      if (!inGrid(Math.floor(x), Math.floor(z)) || !inCity(x, z) || !cells(x - 1.4, z - 1.4, x + 1.4, z + 1.4, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
+      if (r.chance(0.4)) cypress(things, x, baseY(x, z), z, r); else tree(things, x, baseY(x, z), z, r);
+      claim(x - 1, z - 1, x + 1, z + 1); occlude(g, x - 0.9, z - 0.9, x + 0.9, z + 0.9, baseY(x, z) + 3.4); count('tree');
+    }
+    // cypresses and garden trees beside the houses on the islands
     for (const isle of ISLANDS) for (let k = 0; k < 10; k++) {
       const x = isle.at[0] + r.range(-isle.rx, isle.rx) * 0.75, z = isle.at[1] + r.range(-isle.rz, isle.rz) * 0.75;
       if (isWet(g, x, z) || !cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
@@ -184,9 +192,10 @@ export function buildScene(bakedSky = true): ProbeScene {
   // tufts on the meadows, smoke over a few houses of the towns
   {
     const r = seeded(61);
-    for (let k = 0; k < 2600; k++) {
+    for (let k = 0; k < 9000; k++) {
       const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
-      if (inFrame(x, z) && g.mat[i] === Mat.Grass && !g.wet[i] && !used[i] && roadDist(x, z) > 1.5) bush(things, x, g.h[i], z, r);
+      if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || roadDist(x, z) < 1.5) continue;
+      if (k % 3) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
     }
     for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
   }

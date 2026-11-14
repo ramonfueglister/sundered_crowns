@@ -166,12 +166,12 @@ export function mountainAt(x: number, z: number): number {
   for (const k of MOUNTAINS) m = Math.max(m, k.top * Math.min(0.8, 1.5 * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz))));
   return m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 5 * Math.min(1, m / 4);
 }
-/** Rock comes as stacked cubes: blocks two columns wide in steps of two set the cliffs, a few single columns step off them. */
+/** Rock comes as stacked cubes: blocks three columns wide in steps of two set the cliffs, a few single columns step off them. */
 function rockHeight(x: number, z: number): number {
   const m = mountainAt(x + 0.5, z + 0.5);
   if (m < 0.6) return 0;
-  const slab = (hash2(Math.floor(x / 2), Math.floor(z / 2), 11) - 0.5) * 4, big = (hash2(Math.floor(x / 6), Math.floor(z / 6), 13) - 0.5) * 4;
-  const piece = hash2(x, z, 19), step = piece < 0.1 ? -1 : piece > 0.93 ? 1 : 0;
+  const slab = (hash2(Math.floor(x / 3), Math.floor((z + Math.floor(x / 3)) / 3), 11) - 0.5) * 5, big = (hash2(Math.floor(x / 7), Math.floor(z / 7), 13) - 0.5) * 4;
+  const piece = hash2(x, z, 19), step = piece < 0.05 ? -1 : piece > 0.96 ? 1 : 0;
   return Math.max(1, Math.round((m + (slab + big) * Math.min(1, m / 5)) / 2) * 2 + step);
 }
 
@@ -191,7 +191,8 @@ export function buildGround(): Ground {
     const city = inCity(px, pz);
     let h = LAND_Y;
     if (rock > 0) { h += rock; g.mat[i] = Mat.Rock; }
-    else if (island > 0 || city) g.mat[i] = Mat.Paved;
+    // islets are green inside a ring of stone
+    else if (city || (island > 0 && island < 0.3)) g.mat[i] = Mat.Paved;
     else {
       // the land is level, as in the reference; only the castle stands on a low stepped hill
       const castle = Math.hypot(px - CASTLE_AT[0], pz - CASTLE_AT[1]);

@@ -2,6 +2,7 @@
 
 Usage: python3 tools/lookprobe/gauntlet.py reference.png probe.png
 Needs Pillow, numpy and scipy. Prints one line per check with the reference value, the probe value and PASS or FAIL.
+The limits are tight on purpose: a pass has to mean that the two pictures are hard to tell apart at a glance.
 """
 import sys
 import numpy as np
@@ -96,17 +97,33 @@ def main(ref_path, probe_path):
     }
     for name, f in classes.items():
         ma, mb = f(rh, rs, rv), f(ph, ps, pv)
-        check(f'Anteil {name} (%)', ma.mean() * 100, mb.mean() * 100, abs(ma.mean() - mb.mean()) <= 0.035, '{:.1f}')
+        check(f'Anteil {name} (%)', ma.mean() * 100, mb.mean() * 100, abs(ma.mean() - mb.mean()) <= 0.025, '{:.1f}')
         for part, lo, hi in (('dunkel', 0.05, 0.15), ('mittel', 0.45, 0.55), ('hell', 0.85, 0.95)):
             a, b = class_colour(ref, ma, lo, hi), class_colour(probe, mb, lo, hi)
             dist = 1 if a is None or b is None else float(np.abs(a - b).max())
-            fails += 0 if dist <= 0.1 else 1
-            print(f"{'Farbe ' + name + ' ' + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {'PASS' if dist <= 0.1 else 'FAIL'}")
+            fails += 0 if dist <= 0.07 else 1
+            print(f"{'Farbe ' + name + ' ' + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {'PASS' if dist <= 0.07 else 'FAIL'}")
 
     for name, box in REGIONS.items():
         (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)
-        check(f'Feindetail {name}', rf * 100, pf * 100, 0.75 <= pf / rf <= 1.35, '{:.2f}')
-        check(f'Formenreichtum {name}', rc * 100, pc * 100, 0.75 <= pc / rc <= 1.35, '{:.2f}')
+        check(f'Feindetail {name}', rf * 100, pf * 100, 0.85 <= pf / rf <= 1.2, '{:.2f}')
+        check(f'Formenreichtum {name}', rc * 100, pc * 100, 0.85 <= pc / rc <= 1.2, '{:.2f}')
+    # the picture cut into 8 x 5 tiles: each tile must be close to the reference in mean colour and in liveliness
+    ok_colour = ok_live = 0
+    for ty in range(5):
+        for tx in range(8):
+            box = (tx * 209, ty * 188, (tx + 1) * 209, (ty + 1) * 188)
+            a, b = ref[box[1]:box[3], box[0]:box[2]].mean((0, 1)), probe[box[1]:box[3], box[0]:box[2]].mean((0, 1))
+            ok_colour += np.abs(a - b).max() <= 0.08
+            (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)
+            ok_live += 0.7 <= (pf + pc) / (rf + rc) <= 1.4
+    check('Kacheln mit passender Farbe (%)', 100, ok_colour / 0.4, ok_colour >= 34, '{:.0f}')
+    check('Kacheln mit passendem Detail (%)', 100, ok_live / 0.4, ok_live >= 34, '{:.0f}')
+    # the whole picture's colours: overlap of the two colour histograms (hue x saturation x brightness)
+    def hist(h, s_, v):
+        return np.histogramdd(np.stack([h.ravel() / 360, s_.ravel(), v.ravel()], 1), bins=(18, 5, 5), range=((0, 1),) * 3)[0] / h.size
+    overlap = np.minimum(hist(rh, rs, rv), hist(ph, ps, pv)).sum()
+    check('Überdeckung der Farbverteilung', 1, overlap, overlap >= 0.8)
     print(f"\n{fails} Prüfungen nicht bestanden" if fails else "\nAlle Prüfungen bestanden")
 
 
