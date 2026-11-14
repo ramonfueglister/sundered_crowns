@@ -211,6 +211,11 @@ von der Entfernung. Es gibt keine Nähte zwischen Detailstufen im Bild.
 - **Objekte in der Ferne:** Ab Stufe 2 werden Wald und Häuser nicht mehr einzeln gezeichnet, sondern als farbige
   Aufsätze in die Geländesäulen eingerechnet (Waldkrone als grüne Stufe, Stadt als Dachfarben). Das ist das
   Distant-Horizons-Prinzip [8] und hält die Instanzzahl klein.
+- **Menschen und Tiere:** Figuren gehören zum Massstab und werden mit ihm zusammen gewählt (Ramon, 14. November
+  2026). Startwert: ein Mensch ist 3 Voxel hoch, ein Haus 8 bis 12, ein Baum 6 bis 10. Figuren sind Symbole (eine
+  Figur steht für viele Menschen): Bauern auf Feldern, Leute auf Märkten und Stegen, Fuhrwerke auf Strassen, Herden,
+  Heere als Figurengruppen. Sichtbar nur in den zwei nächsten Zoomstufen, gezeichnet als Instanzen, Anzahl nach
+  Bevölkerung und Tätigkeit des Orts. Der Prototyp zeigt sie in allen drei Massstäben mit.
 - Wird Gelände unter Objekten verändert, legt der Browser die Dekoration der betroffenen Kacheln neu aus (Bäume
   weichen dem Kanal, Häuser stehen nicht im Wasser).
 
