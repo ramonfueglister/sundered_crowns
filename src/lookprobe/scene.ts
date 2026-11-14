@@ -47,8 +47,8 @@ export function buildScene(bakedSky = true): ProbeScene {
   // landmarks of the city
   const S = SITES;
   claim(S.plaza.at[0] - S.plaza.w / 2, S.plaza.at[1] - S.plaza.d / 2, S.plaza.at[0] + S.plaza.w / 2, S.plaza.at[1] + S.plaza.d / 2);
-  build(palace(), S.palace.at[0], S.palace.at[1], S.palace.w, S.palace.d, 0, 8.6, 'landmark');
-  build(basilica(), S.basilica.at[0], S.basilica.at[1], S.basilica.w, S.basilica.d, 1, 7, 'landmark');
+  build(palace(), S.palace.at[0], S.palace.at[1], S.palace.w, S.palace.d, 0, 9.4, 'landmark');
+  build(basilica(), S.basilica.at[0], S.basilica.at[1], S.basilica.w, S.basilica.d, 1, 9, 'landmark');
   build(campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, 20, 'landmark');
   build(castle(), CASTLE_AT[0], CASTLE_AT[1], 13.5, 13.5, 0, 5, 'landmark');
   { const r = seeded(5); for (const t of [S.westTower, S.eastTower]) build(tower(r), t.at[0], t.at[1], t.w, t.d, 0, 10, 'tower'); }
@@ -65,14 +65,14 @@ export function buildScene(bakedSky = true): ProbeScene {
 
   // the city: palazzi and small houses inside its outline, first fit, with alleys between them and a few straight streets
   {
-    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 23 < 2 || Math.floor(z) % 19 < 2;
+    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 19 < 2 || Math.floor(z) % 17 < 2;
     for (const part of CITY) {
       const xs = part.map((p) => p[0]), zs = part.map((p) => p[1]);
       for (let z = Math.floor(Math.min(...zs)); z < Math.max(...zs); z++) for (let x = Math.floor(Math.min(...xs)); x < Math.max(...xs); x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || !inCity(x + 0.5, z + 0.5)) continue;
         // a palazzo if it fits, else a small house, else a narrow one
         const turn = r.chance(0.5), free = (px: number, pz: number) => inCity(px, pz) && !street(px, pz);
-        for (const [long, short, floors] of [[r.int(10, 16), r.int(5, 7), r.chance(0.5) ? 3 : 2], [r.int(6, 8), r.int(5, 6), r.chance(0.3) ? 3 : 2], [5, 5, 2]].slice(r.chance(0.7) ? 0 : 1)) {
+        for (const [long, short, floors] of [[r.int(10, 16), r.int(5, 7), r.chance(0.75) ? 3 : 2], [r.int(6, 8), r.int(5, 6), r.chance(0.55) ? 3 : 2], [5, 5, 2]].slice(r.chance(0.7) ? 0 : 1)) {
           const w = turn ? short : long, d = turn ? long : short;
           if (fits(x, z, x + w, z + d, free, 1)) { homes(r, x, z, w, d, floors); break; }
         }
@@ -169,22 +169,25 @@ export function buildScene(bakedSky = true): ProbeScene {
   // fields
   { const r = seeded(31); for (const f of FIELDS) crops(things, g, f.at, f.w, f.d, f.crop, r); }
 
-  // woods: dense at the foot of the mountains and along the top of the picture, clumps elsewhere, single trees between
+  // woods: dense at the foot of the mountains, along the top of the picture in stands with clearings between, clumps
+  // elsewhere, single trees between
   {
-    const r = seeded(41), pitch = 3.1;
+    const r = seeded(41), pitch = 2.7;
     const nearTown = (x: number, z: number) => TOWNS.some((t) => Math.hypot(x - t.at[0], z - t.at[1]) < t.r * 0.75);
     for (let gz = 2; gz < N - 2; gz += pitch) for (let gx = 2; gx < N - 2; gx += pitch) {
       const x = gx + r.range(-1.5, 1.5), z = gz + r.range(-1.5, 1.5), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
-      const [, t] = toST(x, z);
-      let density = Math.max(0.07, 0.4 * smooth(0.54, 0.66, fbm2(x / 16, z / 16, 71)), 0.48 * smooth(0.29, 0.15, t) * (1 - 0.3 * smooth(0.55, 0.7, toST(x, z)[0])), 0.52 * smooth(-7, -1, mountainAt(x, z)));
+      const [s, t] = toST(x, z);
+      // right of the stream the top of the picture is open country with stands of trees, not closed wood
+      const open = 1 - 0.5 * smooth(0.58, 0.68, s);
+      let density = Math.max(0.045, 0.3 * smooth(0.54, 0.66, fbm2(x / 16, z / 16, 71)), 0.4 * open * smooth(0.29, 0.15, t) * (0.45 + 0.55 * smooth(0.36, 0.56, fbm2(x / 13, z / 13, 73))), 0.42 * smooth(-7, -1, mountainAt(x, z)));
       if (nearTown(x, z)) density = Math.min(density, 0.1);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
       const y = g.h[i];
       if (r.chance(density < 0.2 ? 0.45 : 0.15)) { cypress(things, x, y, z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, y + 4.2); count('tree'); continue; }
       // the trees of the woods are larger than those between the fields
-      tree(things, x, y, z, r, (density > 0.3 ? 1.3 : 1) * r.range(0.85, 1.2)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, y + 3.4); count('tree');
+      tree(things, x, y, z, r, (density > 0.3 ? 1.15 : 1) * r.range(0.85, 1.2)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, y + 3.4); count('tree');
     }
     // cypresses beside the roads, every few steps on one side or the other
     for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) {
@@ -216,10 +219,10 @@ export function buildScene(bakedSky = true): ProbeScene {
   // tufts on the meadows, smoke over a few houses of the towns
   {
     const r = seeded(61);
-    for (let k = 0; k < 9000; k++) {
+    for (let k = 0; k < 17000; k++) {
       const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z)), road = roadDist(x, z);
       // stones and flowers lie mostly along the paths, few out on the meadows
-      if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || road < 1.5 || (road > 4 && k % 6)) continue;
+      if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || road < 1.5 || (road > 4 && k % 3)) continue;
       if (k % 3 === 0) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
     }
     for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
@@ -246,6 +249,11 @@ export function buildScene(bakedSky = true): ProbeScene {
       const q = r.next(), x = road[i][0] + (road[i + 1][0] - road[i][0]) * q + r.range(-0.6, 0.6), z = road[i][1] + (road[i + 1][1] - road[i][1]) * q + r.range(-0.6, 0.6);
       if (inGrid(Math.floor(x), Math.floor(z)) && !isWet(g, x, z) && !used[idx(Math.floor(x), Math.floor(z))] && inFrame(x, z)) { person(things, x, baseY(x, z), z, r); count('person'); }
     }
+    // townsfolk in the streets and on the quays of the city
+    for (let k = 0, tries = 0; k < 40 && tries < 20000; tries++) {
+      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
+      if (g.mat[i] === Mat.Paved && !g.wet[i] && !used[i] && inCity(x, z) && g.h[i] === LAND_Y) { person(things, x, g.h[i], z, r); count('person'); k++; }
+    }
     for (const [s, t] of [[0.105, 0.455], [0.59, 0.19]] as const) for (let k = 0; k < 9; k++) {
       const at = toXZ(s, t), x = at[0] + r.range(-6, 6), z = at[1] + r.range(-6, 6), i = idx(Math.floor(x), Math.floor(z));
       if (g.mat[i] === Mat.Grass && !g.wet[i] && !used[i]) { sheep(things, x, g.h[i], z, r); count('sheep'); }
@@ -256,7 +264,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   // rowing boats on the water before the quays
   {
     const r = seeded(81);
-    for (let k = 0, tries = 0; k < 22 && tries < 4000; tries++) {
+    for (let k = 0, tries = 0; k < 28 && tries < 4000; tries++) {
       const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
       if (g.wet[i] && g.shore[i] >= 3 && g.shore[i] <= 9 && inFrame(x, z) && riverDist(x, z) > 12) { boat(things, x, z, r); count('boat'); k++; }
     }

@@ -85,7 +85,7 @@ async function start() {
     halfW = Math.max(halfW, Math.abs(p.dot(across))); halfH = Math.max(halfH, Math.abs(p.dot(up))); depth = Math.max(depth, Math.abs(p.dot(toSun)));
   }
   sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
-  sun.shadow.radius = 5; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
+  sun.shadow.radius = 2; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
   const side = new THREE.DirectionalLight(LOOK.sideColor, LOOK.side * Math.PI);
   side.position.copy(centre).addScaledVector(from(0, 0), 100);
   side.target.position.copy(centre);

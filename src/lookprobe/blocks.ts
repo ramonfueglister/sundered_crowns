@@ -3,15 +3,15 @@ import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
-const TRUNK = rgb(0x5a3c26);
+const TRUNK = rgb(0x7a4a2c);
 const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
-const FLANK = rgb(0x567e3a), FLANK_AWAY = rgb(0x4a8650), FLANK_AWAY_WARM = rgb(0x56863e);
+const FLANK = rgb(0x4e8a2e), FLANK_AWAY = rgb(0x3e8a4a), FLANK_AWAY_WARM = rgb(0x4c8c36);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
-const WHEAT = [rgb(0xffcc58), rgb(0xf8c450), rgb(0xffd460)], WHEAT_SIDE = rgb(0xf0bc4c);
+const WHEAT = [rgb(0xffc84c), rgb(0xf8be44), rgb(0xffce52)], WHEAT_SIDE = rgb(0xdea43e);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
-const WHEAT_GLOW: RGB = [1.9, 1.0, 0.11], VINE_GLOW: RGB = [0.62, 0.62, 0.06], HEDGE_GLOW = rgb(0x7ea634);
-const VINE = [rgb(0xdcc838), rgb(0xd0bc34), rgb(0xe4d03c), rgb(0xc8b432)], VINE_SIDE = rgb(0xbcb42c), VINE_BODY = rgb(0x4e7c22), GRAPES = rgb(0xe89038);
-const POST = rgb(0x93552f), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a);
+const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
+const VINE = [rgb(0xecd43a), rgb(0xe2cc36), rgb(0xf4da40), rgb(0xdcc634)], VINE_SIDE = rgb(0xc8c42c), VINE_BODY = rgb(0x4a8c22), GRAPES = rgb(0xe89038);
+const POST = rgb(0xb06c3a), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a), PIER_STONE = rgb(0xdcc4b4);
 const HULL = rgb(0x9c6238), HULL_DARK = rgb(0x74482a), SHIP_DECK = rgb(0xc09a68), SAIL = rgb(0xf2e0c6), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
 const WAKE = rgb(0xd5eeee);
 const SKIN = rgb(0xe2b48c);
@@ -19,28 +19,29 @@ const SPECKS = [rgb(0xf4e9a0), rgb(0xf6f0e0), rgb(0xe8a0b0), rgb(0xd8d0c4), rgb(
 const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb(0x6a4a7a), rgb(0xd8d0c0)];
 
 /**
- * A leafy tree: a short trunk under a tall crown of a few blocks, bright on top and darker down the sides; about two
- * blocks wide and four high at `size` 1.
+ * A leafy tree: a bare trunk a good block high under a crown in three tiers (a skirt, the broad middle, a cap), bright
+ * on top and darker down the sides; a little under two blocks wide and a good four high at `size` 1.
  */
 export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1) {
   // the sides are a deeper green than the yellowish sunlit top
   const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
-  b.box(x - 0.22, y, z - 0.22, x + 0.22, y + 1.3 * s, z + 0.22, TRUNK, { foot: 0.75 });
-  const w = 1.05 * s, y1 = y + 0.9 * s, y2 = y1 + 2.1 * s;
-  b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.8, bottom: true, away });
-  const ox = r.range(-0.25, 0.25) * s, oz = r.range(-0.25, 0.25) * s, t = 0.66 * s;
-  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.7 * s, z + oz + t, flank, { top: shade(g, 1.06), away });
+  const w = 0.92 * s, y0 = y + 1.15 * s, y1 = y0 + 0.7 * s, y2 = y1 + 1.5 * s;
+  b.box(x - 0.24, y, z - 0.24, x + 0.24, y0 + 0.2, z + 0.24, TRUNK, { foot: 0.75 });
+  b.box(x - w * 0.7, y0, z - w * 0.7, x + w * 0.7, y1, z + w * 0.7, shade(flank, 0.9), { bottom: true, away });
+  b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.84, bottom: true, away });
+  const ox = r.range(-0.22, 0.22) * s, oz = r.range(-0.22, 0.22) * s, t = 0.62 * w;
+  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.85 * s, z + oz + t, flank, { top: shade(g, 1.06), away });
   // a second, lower cube set against one corner makes the crown irregular
   if (r.chance(0.55)) {
-    const k = r.range(0.6, 0.85) * s, cx = x + r.pick([-1, 1]) * w * 0.7, cz = z + r.pick([-1, 1]) * w * 0.7, top = y1 + r.range(1.2, 1.9) * s;
-    b.box(cx - k, y1 + 0.2 * s, cz - k, cx + k, top, cz + k, shade(flank, r.range(0.92, 1.06)), { top: shade(g, r.range(0.94, 1.04)), foot: 0.74, bottom: true, away });
+    const k = r.range(0.5, 0.7) * s, cx = x + r.pick([-1, 1]) * w * 0.7, cz = z + r.pick([-1, 1]) * w * 0.7, top = y1 + r.range(0.9, 1.4) * s;
+    b.box(cx - k, y1 - 0.2 * s, cz - k, cx + k, top, cz + k, shade(flank, r.range(0.92, 1.06)), { top: shade(g, r.range(0.94, 1.04)), foot: 0.74, bottom: true, away });
   }
   // lumps on the sides break the cube outline, as on the trees of the reference
   for (const side of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
     if (!r.chance(0.6)) continue;
-    const k = r.range(0.4, 0.58) * s, out = w + k * 0.4, along = r.range(-0.35, 0.35) * s;
-    const cx = x + side[0] * out + side[1] * along, cz = z + side[1] * out + side[0] * along, cy = y1 + r.range(0.1, 1.1) * s;
-    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.9, 1.3) * s, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true, away });
+    const k = r.range(0.32, 0.48) * s, out = w + k * 0.4, along = r.range(-0.35, 0.35) * s;
+    const cx = x + side[0] * out + side[1] * along, cz = z + side[1] * out + side[0] * along, cy = y1 + r.range(0, 0.6) * s;
+    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.7, 0.9) * s, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true, away });
   }
 }
 
@@ -54,8 +55,8 @@ export function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
 }
 
 /**
- * A field. Wheat stands as single sheaves in rows; vines come as single plants on a grid (a green body under a yellow
- * head) or, every other field, as green hedges along x with yellow tips. The crops of the reference glow more than
+ * A field. Wheat stands as single sheaves in rows; vines come as single plants on a grid (a green body under a head
+ * with a yellow top) or, every other field, as green hedges along x with yellow tips. The crops of the reference glow more than
  * the light allows: their sides turned from the sun are as bright as the lit ones. The `GLOW` colours (above 1) give
  * those sides that brightness.
  */
@@ -66,7 +67,7 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
       const x = x0 + row + 0.5, z = z0 + k + 0.5;
       if (isWet(g, x, z)) continue;
       const y = groundY(g, x, z), top = y + 1.35 + 0.5 * hash2(row, k, 51);
-      b.box(x - 0.36, y, z - 0.36, x + 0.36, top, z + 0.36, WHEAT_SIDE, { top: shade(WHEAT[Math.floor(hash2(row, k, 53) * WHEAT.length)], 1.2), foot: 0.85, away: WHEAT_GLOW });
+      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, WHEAT_SIDE, { top: shade(WHEAT[Math.floor(hash2(row, k, 53) * WHEAT.length)], 1.2), foot: 0.85, away: WHEAT_GLOW });
     }
     return;
   }
@@ -77,23 +78,23 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
     if (hedges) {
       const h = 1.7 + 0.3 * lot;
-      b.box(x - 0.46, y, z - 0.46, x + 0.46, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.75), foot: 0.7, away: HEDGE_GLOW });
+      b.box(x - 0.46, y, z - 0.46, x + 0.46, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
       if (r.chance(0.55)) b.box(x - 0.3, y + h, z - 0.3, x + 0.3, y + h + 0.3, z + 0.3, VINE_SIDE, { top: c, away: VINE_GLOW });
     } else {
       const h = 1.7 + 0.6 * lot;
       // the green body shows under a smaller yellow head, so the field reads as speckled, not as one yellow sheet
-      b.box(x - 0.44, y, z - 0.44, x + 0.44, y + h - 0.5, z + 0.44, VINE_BODY, { top: mix(VINE_BODY, c, 0.4), foot: 0.8, away: HEDGE_GLOW });
-      b.box(x - 0.3, y + h - 0.5, z - 0.3, x + 0.3, y + h, z + 0.3, shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: c, away: VINE_GLOW });
+      b.box(x - 0.44, y, z - 0.44, x + 0.44, y + h - 0.6, z + 0.44, VINE_BODY, { top: mix(VINE_BODY, c, 0.4), foot: 0.8, away: HEDGE_GLOW });
+      b.box(x - 0.36, y + h - 0.6, z - 0.36, x + 0.36, y + h, z + 0.36, shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: c, away: VINE_GLOW });
     }
-    if (r.chance(0.5)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.58, y + 1.36, z + 0.14, GRAPES, { bottom: true, away: [2.4, 1.0, 0.2] });
+    if (r.chance(0.5)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.58, y + 1.36, z + 0.14, GRAPES, { bottom: true, away: [1.7, 0.8, 0.16] });
   }
 }
 
-/** A landing stage from the quay out over the water, along +x or +z. */
+/** A landing stage from the quay out over the water, along +x or +z: stone slabs on a timber frame, as in the reference. */
 export function pier(b: Batch, x: number, z: number, dir: 'x' | 'z', length: number, deckY: number) {
   const half = 1.0;
   const [x0, x1, z0, z1] = dir === 'x' ? [x, x + length, z - half, z + half] : [x - half, x + half, z, z + length];
-  b.box(x0, deckY - 0.3, z0, x1, deckY, z1, shade(DECK, 0.85), { top: DECK, bottom: true });
+  b.box(x0, deckY - 0.3, z0, x1, deckY, z1, DECK, { top: PIER_STONE, bottom: true });
   const post = (px: number, pz: number) => {
     b.box(px - 0.26, SEA_Y - 1.2, pz - 0.26, px + 0.26, deckY + 0.9, pz + 0.26, POST, { foot: 0.6 });
     b.box(px - 0.26, deckY + 0.9, pz - 0.26, px + 0.26, deckY + 1.1, pz + 0.26, POST_CAP);
@@ -103,7 +104,7 @@ export function pier(b: Batch, x: number, z: number, dir: 'x' | 'z', length: num
   }
   // a cross piece at the head makes a T, as on the landing stages of the reference
   const arm = 2.6, [hx0, hx1, hz0, hz1] = dir === 'x' ? [x + length - 1.6, x + length, z - arm, z + arm] : [x - arm, x + arm, z + length - 1.6, z + length];
-  b.box(hx0, deckY - 0.3, hz0, hx1, deckY, hz1, shade(DECK, 0.85), { top: DECK, bottom: true });
+  b.box(hx0, deckY - 0.3, hz0, hx1, deckY, hz1, DECK, { top: PIER_STONE, bottom: true });
   for (const px of [hx0, hx1]) for (const pz of [hz0, hz1]) post(px, pz);
 }
 

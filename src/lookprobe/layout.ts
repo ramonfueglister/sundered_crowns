@@ -118,7 +118,11 @@ export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
   { at: toXZ(0.493, 0.356), w: 13, d: 9, crop: 'vine' },
 ];
 export const BORDERS: readonly { pts: readonly P2[]; color: number }[] = [
-  { pts: line([[0.33, 1.02], [0.36, 0.9], [0.3, 0.83], [0.345, 0.72], [0.42, 0.7], [0.44, 0.56], [0.52, 0.47], [0.6, 0.41], [0.72, 0.385], [0.83, 0.375]]), color: 0xd2453a },
+  // the red border keeps to the land side of the city: along the bay, north of the roofs, round the western quarter
+  { pts: line([[1.03, 0.3], [0.91, 0.318], [0.86, 0.345], [0.815, 0.37], [0.79, 0.395], [0.74, 0.352], [0.68, 0.356], [0.62, 0.385], [0.575, 0.39], [0.525, 0.405],
+    [0.495, 0.44], [0.46, 0.45], [0.42, 0.49], [0.37, 0.495], [0.295, 0.505], [0.262, 0.56], [0.243, 0.61], [0.25, 0.68], [0.262, 0.72], [0.29, 0.775], [0.275, 0.81], [0.235, 0.85],
+    [0.21, 0.88], [0.12, 0.915], [0.05, 0.95]]), color: 0xd2453a },
+  { pts: line([[0.33, 1.02], [0.335, 0.96]]), color: 0xd2453a },
   { pts: line([[0.67, -0.02], [0.69, 0.1], [0.74, 0.16], [0.72, 0.22], [0.83, 0.27], [0.94, 0.25], [1.03, 0.26]]), color: 0x9a55c8 },
   { pts: line([[-0.02, 0.9], [0.06, 0.93], [0.1, 1.02]]), color: 0x9a55c8 },
 ];
@@ -128,10 +132,10 @@ export const SHIPS: readonly { at: P2; heading: number }[] = [
 const PALACE_AT = toXZ(0.735, 0.585);
 /** landmark sites of the city: centre and footprint (along x and z); the square lies before the long front of the palace */
 export const SITES = {
-  palace: { at: PALACE_AT, w: 9, d: 20 },
+  palace: { at: PALACE_AT, w: 9, d: 24 },
   campanile: { at: toXZ(0.742, 0.5), w: 4, d: 4 },
   basilica: { at: toXZ(0.64, 0.5), w: 13, d: 11 },
-  plaza: { at: [PALACE_AT[0] + 11.5, PALACE_AT[1]] as P2, w: 14, d: 22 },
+  plaza: { at: [PALACE_AT[0] + 11.5, PALACE_AT[1]] as P2, w: 14, d: 26 },
   westTower: { at: toXZ(0.355, 0.57), w: 2.4, d: 2.4 },
   eastTower: { at: toXZ(0.56, 0.6), w: 2.4, d: 2.4 },
 } as const;
