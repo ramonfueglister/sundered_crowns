@@ -8,7 +8,7 @@ Die Wirtschaft von Sundered Crowns wird Feature für Feature neu gebaut. Jedes F
 
 | Feature | Status | Kurz |
 |---|---|---|
-| [Getreideernte pro Ort](getreideernte.md) | Beschlossen | Jährliche Ernte je Ort aus Fläche, Bodenertrag und Arbeitskräften (Malthus-Produktionsfunktion). Gebaut und abgenommen, noch nicht im laufenden Spiel |
+| [Getreideernte pro Ort](getreideernte.md) | Im Spiel | Jährliche Ernte je Ort aus Fläche, Bodenertrag und Arbeitskräften (Malthus-Produktionsfunktion). Seit 14.11.2026 in der laufenden Welt, zu sehen im Ortsfenster |
 
 Weitere Themen wie Verbrauch und Hunger, Bevölkerungswachstum, Preise, Handel und Steuern bekommen je eine eigene Seite, sobald ihr Design vorliegt.
 

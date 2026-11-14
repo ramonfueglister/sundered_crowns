@@ -24,7 +24,7 @@ players and the AI of realms without a player act through the same commands.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; not yet in the running world |
+| 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
 
 ## 1. Grain harvest per place
 
