@@ -1,12 +1,13 @@
 // The real landscape in the look of the probe: heights, coast, lakes and rivers of a region become a ground of columns
 // on the probe's grid, with rock, meadow and woods chosen from the real heights and the forest cover of 1356.
-// North is at the top of the picture. No towns, fields or roads yet.
+// On it stand the towns, villages and fields of 1356 (see settle.ts). North is at the top of the picture. No roads yet.
 import { Batch, hash2, rgb, seeded, smooth } from '../lookprobe/batch';
 import { cypress, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { StageScene } from '../lookprobe/stage';
 import { buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Region, Water, cellOf, sample, waterAt } from './region';
+import { type Site, settle } from './settle';
 
 export interface WorldView {
   /** the place at the middle of the ground, in degrees */
@@ -14,6 +15,8 @@ export interface WorldView {
   /** blocks per cell of the region */
   perCell: number;
 }
+/** A place of the gazetteer (data/content/gazetteer.json). */
+export interface Place { lon: number; lat: number; size: number; pop1356: number | null }
 
 /**
  * How real heights become blocks. The plains stay level, as in the reference; above them one block stands for
@@ -38,7 +41,7 @@ const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
 
-export function buildWorld(region: Region, view: WorldView, bakedSky = true): StageScene {
+export function buildWorld(region: Region, view: WorldView, places: readonly Place[], bakedSky = true): StageScene {
   const shift = lineShift(view.lat), treeLine = TREE_LINE + shift, snowLine = SNOW_LINE + shift, rockFrom = Math.max(300, ROCK_FROM + shift);
   const levelOf = (metres: number) => Math.max(0, (Math.min(metres, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - treeLine) / METRES_PER_BLOCK_HIGH;
   const C = N / 2, perBlock = 1 / view.perCell, [c0x, c0y] = cellOf(region, view.lon, view.lat);
@@ -91,7 +94,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   }
   // the valley floor under every massif, blended where massifs of different valleys meet, and the massifs' closed shape
   const base = averaged(averaged(foot, 2), 2), massif = averaged(rise, 2);
-  const at = (field: Float32Array | Int16Array, x: number, z: number) => field[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
+  const at = (field: Float32Array | Int16Array | Uint8Array, x: number, z: number) => field[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
   const metresAt = (x: number, z: number) => at(metres, x, z);
   /**
    * Height of the bundle of four rock pillars a column belongs to, whether that bundle is rock, and the height of the column's own pillar. A massif of the reference is one
@@ -169,8 +172,18 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   // the sea bed falls away from the coast, as in the probe
   for (let i = 0; i < N * N; i++) { if (kind[i] === Water.Sea) g.h[i] = Math.max(0, 2 - Math.floor(g.shore[i] / 4)); g.occ[i] = g.wet[i] ? g.surf[i] : g.h[i]; }
 
+  // towns, villages and fields: the places that fall on the ground, and the share of the land under the plough.
+  // Vineyards are a quarter of the fields of the warm low country and thin out to none by 52° north (a rule of thumb).
+  const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [];
+  for (const p of places) {
+    const at = toGround(...cellOf(region, p.lon, p.lat));
+    if (at[0] >= 2 && at[1] >= 2 && at[0] < N - 2 && at[1] < N - 2) sites.push({ at, size: p.size, pop: p.pop1356 });
+  }
+  const settled = settle(g, things, sites, (x, z) => sample(region, region.crops, ...toCell(x, z)) / 255,
+    (x, z) => 0.25 * smooth(52, 47, view.lat) * smooth(700, 400, metresAt(x, z)), counts);
+
   // woods where the forest of 1356 stood, up to the tree line: leafy in the low country, dark conifers towards the heights
-  const things = new Batch(), counts: Record<string, number> = { tree: 0 }, r = seeded(41), pitch = 2.4;
+  const r = seeded(41), pitch = 2.4;
   for (let gz = 2; gz < N - 2; gz += pitch) for (let gx = 2; gx < N - 2; gx += pitch) {
     const x = gx + r.range(-1.2, 1.2), z = gz + r.range(-1.2, 1.2), roll = r.next(), conifer = r.next(), i = idx(Math.floor(x), Math.floor(z));
     if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > treeLine) continue;
@@ -178,7 +191,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
     if (roll > 0.04 + 0.7 * cover) continue;
     // a tree stands clear of the water and of drops of more than a step
     let fits = true;
-    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || settled.used[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
     if (!fits) continue;
     if (conifer < 0.08 + 0.8 * smooth(500 + shift, 1300 + shift, metres[i])) { cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2); }
     else { tree(things, x, g.h[i], z, r, cover > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4); }
@@ -186,7 +199,8 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   }
 
   const traits: GroundTraits = {
-    city: () => false, plaza: () => Infinity, crop: () => null, road: () => Infinity,
+    city: (x, z) => at(settled.town, x, z) === 1, plaza: () => Infinity, road: () => Infinity,
+    crop: (x, z) => ([null, 'wheat', 'vine'] as const)[at(settled.field, x, z)],
     // the low country is sun-bleached, the mountain meadows are green
     bleach: (x, z) => smooth(900, 200, metresAt(x, z)),
     // the snow line stands where the probe's summits begin; bundles of pillars differ a little, so that the line is ragged

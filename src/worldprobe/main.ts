@@ -2,6 +2,7 @@
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
 // ?km=0.54 (side of one block in kilometres), ?wide=190 (blocks across the picture), ?elev=18.7 (how far the camera
 // looks down, in degrees; 60 gives a map-like view), ?region=europe (the cut of the world to show).
+import gazetteer from '../../data/content/gazetteer.json';
 import { N } from '../lookprobe/layout';
 import { showError, stage } from '../lookprobe/stage';
 import { loadRegion } from './region';
@@ -16,5 +17,5 @@ stage(async (bakedSky) => {
   const lon = num('lon', 12.1), lat = num('lat', 45.85), km = num('km', BLOCK_KM);
   // the ground is turned against the map, so the window reaches as far as the ground's corners
   const { region, kmPerCell } = await loadRegion(q.get('region') ?? 'europe', lon, lat, (N / Math.SQRT2 + 4) * km, import.meta.env.BASE_URL);
-  return buildWorld(region, { lon, lat, perCell: kmPerCell / km }, bakedSky);
+  return buildWorld(region, { lon, lat, perCell: kmPerCell / km }, gazetteer.places, bakedSky);
 }, { wholeGrid: true, frameW: num('wide', 0) || undefined, elevation: num('elev', 0) || undefined }).catch(showError);
