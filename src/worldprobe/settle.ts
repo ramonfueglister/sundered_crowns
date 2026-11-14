@@ -1,14 +1,17 @@
 // The settled land of 1356 on the world's ground: the towns and villages of the gazetteer at their real sites, sized by
-// their inhabitants, and fields where the land was under the plough. The buildings are those of the look probe; what
-// belongs to one culture or another is not told apart yet.
+// their inhabitants and built in the tradition of their land (styles.ts), the monuments that have a model, and fields
+// where the land was under the plough.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { FLOOR, ROOFS, WALLS, basilica, campanile, church, house, palace, tower, townHouse, townWall } from '../lookprobe/buildings';
+import { FLOOR, type HouseStyle, SOUTH, house, tower, townHouse, townWall } from '../lookprobe/buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
+import type { Model, Style } from './styles';
 
 /** A place of the gazetteer on the ground. */
-export interface Site { at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null }
+export interface Site { at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; style: Style }
+/** A monument on the ground: one building of it. */
+export interface Monument { at: P2; model: Model }
 export interface Settled {
   /** 1 where something stands or grows */
   used: Uint8Array;
@@ -31,10 +34,10 @@ const LOT_W = 11, LOT_D = 8;
 const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
 
 /**
- * Builds the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
- * ground point (0 … 1), `vines` the share of the fields there that are vineyards.
+ * Builds the monuments, then the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
+ * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` the style of the farmhouses.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), m = new THREE.Matrix4();
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
@@ -54,20 +57,23 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], cultiva
     claim(x, z, x + w, z + d); occlude(g, x, z, x + w, z + d, y + height); count(kind);
   };
   /** A house on the footprint from (x, z), if it is free; returns the persons it holds. */
-  const home = (r: Rnd, x: number, z: number, w: number, d: number, floors: number, gap: number): number => {
+  const home = (r: Rnd, x: number, z: number, w: number, d: number, floors: number, gap: number, style = SOUTH): number => {
     const y = lot(x, z, x + w, z + d, gap);
     if (y === null) return 0;
-    const model = Math.max(w, d) >= 8 && r.chance(0.7) ? townHouse(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r) : house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r);
-    build(model, x, z, w, d, y, floors * FLOOR + 1.2, 'house');
+    const wallC = r.pick(style.walls), roofC = r.pick(style.roofs);
+    const model = Math.max(w, d) >= 8 && r.chance(0.7) ? townHouse(w, d, floors, wallC, roofC, r, style) : house(w, d, floors, wallC, roofC, r, style);
+    build(model, x, z, w, d, y, floors * FLOOR + 1.2 + style.maxRise, 'house');
     return w * d * floors * PERSONS_PER_FLOOR_BLOCK;
   };
-  /** A landmark as near the centre as it finds room, within `reach` blocks. */
-  const landmark = (model: () => Batch, cx: number, cz: number, w: number, d: number, height: number, reach: number, kind: string) => {
+  /** A great building as near a point as it finds room, within `reach` blocks. */
+  const landmark = (model: Model, r: Rnd, cx: number, cz: number, reach: number, kind: string) => {
     for (let k = 0; k <= reach; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx += Math.abs(dz) === k ? 1 : 2 * k || 1) {
-      const x = cx + dx - Math.floor(w / 2), z = cz + dz - Math.floor(d / 2), y = lot(x, z, x + w, z + d, 1);
-      if (y !== null) { build(model(), x, z, w, d, y, height, kind); return; }
+      const x = cx + dx - Math.floor(model.w / 2), z = cz + dz - Math.floor(model.d / 2), y = lot(x, z, x + model.w, z + model.d, 1);
+      if (y !== null) { build(model.build(r), x, z, model.w, model.d, y, model.height, kind); return; }
     }
   };
+
+  monuments.forEach((mon, n) => landmark(mon.model, seeded(500 + n), Math.floor(mon.at[0]), Math.floor(mon.at[1]), 14, 'monument'));
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0)).forEach((s, n) => {
     // the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on
@@ -81,21 +87,19 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], cultiva
     let housed = 0;
     if (s.size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
-      if (s.size === 2) landmark(() => church(r), cx, cz, 6, 11, 6, 4, 'church');
+      if (s.size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, turn = r.chance(0.5), long = r.int(4, 5), short = r.int(3, 4), w = turn ? short : long, d = turn ? long : short;
-        housed += home(r, Math.round(cx + Math.cos(a) * q - w / 2), Math.round(cz + Math.sin(a) * q - d / 2), w, d, r.chance(0.5) ? 2 : 1, 1);
+        housed += home(r, Math.round(cx + Math.cos(a) * q - w / 2), Math.round(cz + Math.sin(a) * q - d / 2), w, d, r.chance(0.5) ? 2 : 1, 1, s.style.house);
       }
       count('village');
       return;
     }
     // a walled town: its great buildings in the middle, then houses packed in a square that grows until all are housed
-    if (s.size === 5) {
-      landmark(basilica, cx, cz, 13, 11, 9, 8, 'landmark'); landmark(campanile, cx + 10, cz, 4, 4, 20, 8, 'landmark'); landmark(palace, cx, cz + 14, 9, 24, 9.4, 12, 'landmark');
-    } else landmark(() => church(r), cx, cz, 6, 11, 6, 6, 'church');
-    if (s.size === 4) landmark(() => church(r), cx + 12, cz + 6, 6, 11, 6, 8, 'church');
-    for (let k = s.size - 2; k > 0; k--) landmark(() => tower(r), cx + r.int(-7, 7), cz + r.int(-7, 7), 3, 3, 10, 5, 'tower');
+    landmark(s.size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, s.size >= 4 ? 'landmark' : 'church');
+    for (let k = s.size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
+    if (s.style.towers) for (let k = s.size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + r.int(-7, 7), cz + r.int(-7, 7), 5, 'tower');
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
@@ -107,7 +111,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], cultiva
         for (const [long, short, floors] of [[r.int(9, 14), r.int(5, 6), r.chance(0.4) ? 3 : 2], [r.int(5, 7), r.int(4, 5), r.chance(0.25) ? 3 : 2], [4, 4, 2]].slice(r.chance(0.35) ? 0 : 1)) {
           const w = turn ? short : long, d = turn ? long : short;
           if (x + w > cx + half || z + d > cz + half || crosses(x, z, w, d)) continue;
-          const got = home(r, x, z, w, d, floors, r.chance(0.5) ? 1 : 0);
+          const got = home(r, x, z, w, d, floors, r.chance(0.5) ? 1 : 0, s.style.house);
           if (got) { housed += got; break; }
         }
       }
@@ -142,7 +146,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], cultiva
     crops(things, g, [mx, mz], w, d, CROPS[kind]!, r);
     claim(x0, z0, x0 + w, z0 + d); count('field');
     // a farmhouse beside one field in four
-    if (hash2(lx, lz, 69) < 0.25) home(r, x0 + w + 1, z0 + r.int(0, 2), r.int(3, 4), r.int(3, 4), r.chance(0.4) ? 2 : 1, 0);
+    if (hash2(lx, lz, 69) < 0.25) home(r, x0 + w + 1, z0 + r.int(0, 2), r.int(3, 4), r.int(3, 4), r.chance(0.4) ? 2 : 1, 0, farm);
   }
   return { used, town, field };
 }

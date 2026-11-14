@@ -7,7 +7,8 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SUM
 import type { StageScene } from '../lookprobe/stage';
 import { buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Region, Water, cellOf, sample, waterAt } from './region';
-import { type Site, settle } from './settle';
+import { type Monument, type Site, settle } from './settle';
+import { MONUMENTS, styleOf } from './styles';
 
 export interface WorldView {
   /** the place at the middle of the ground, in degrees */
@@ -16,7 +17,9 @@ export interface WorldView {
   perCell: number;
 }
 /** A place of the gazetteer (data/content/gazetteer.json). */
-export interface Place { lon: number; lat: number; size: number; pop1356: number | null }
+export interface Place { lon: number; lat: number; size: number; pop1356: number | null; region: string }
+/** A monument of data/content/landmarks.json. */
+export interface Landmark { id: string; lon: number; lat: number; built_state: string }
 
 /**
  * How real heights become blocks. The plains stay level, as in the reference; above them one block stands for
@@ -41,7 +44,7 @@ const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
 
-export function buildWorld(region: Region, view: WorldView, places: readonly Place[], bakedSky = true): StageScene {
+export function buildWorld(region: Region, view: WorldView, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true): StageScene {
   const shift = lineShift(view.lat), treeLine = TREE_LINE + shift, snowLine = SNOW_LINE + shift, rockFrom = Math.max(300, ROCK_FROM + shift);
   const levelOf = (metres: number) => Math.max(0, (Math.min(metres, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - treeLine) / METRES_PER_BLOCK_HIGH;
   const C = N / 2, perBlock = 1 / view.perCell, [c0x, c0y] = cellOf(region, view.lon, view.lat);
@@ -174,12 +177,21 @@ export function buildWorld(region: Region, view: WorldView, places: readonly Pla
 
   // towns, villages and fields: the places that fall on the ground, and the share of the land under the plough.
   // Vineyards are a quarter of the fields of the warm low country and thin out to none by 52° north (a rule of thumb).
-  const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [];
+  const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [], monuments: Monument[] = [];
+  const onGround = (p: readonly [number, number]) => p[0] >= 2 && p[1] >= 2 && p[0] < N - 2 && p[1] < N - 2;
+  let nearest: Site | null = null;
   for (const p of places) {
-    const at = toGround(...cellOf(region, p.lon, p.lat));
-    if (at[0] >= 2 && at[1] >= 2 && at[0] < N - 2 && at[1] < N - 2) sites.push({ at, size: p.size, pop: p.pop1356 });
+    const at = toGround(...cellOf(region, p.lon, p.lat)), site = { at, size: p.size, pop: p.pop1356, style: styleOf(p.region) };
+    if (onGround(at)) sites.push(site);
+    if (!nearest || Math.hypot(at[0] - C, at[1] - C) < Math.hypot(nearest.at[0] - C, nearest.at[1] - C)) nearest = site;
   }
-  const settled = settle(g, things, sites, (x, z) => sample(region, region.crops, ...toCell(x, z)) / 255,
+  // the monuments that stood in 1356 and have a model
+  for (const l of landmarks) {
+    const at = toGround(...cellOf(region, l.lon, l.lat));
+    if (l.built_state !== 'not_yet_built' && onGround(at)) for (const part of MONUMENTS[l.id] ?? []) monuments.push({ at: [at[0] + part.dx, at[1] + part.dz], model: part.model });
+  }
+  // the farms are built as the place nearest the middle of the ground builds
+  const settled = settle(g, things, sites, monuments, (nearest?.style ?? styleOf('')).house, (x, z) => sample(region, region.crops, ...toCell(x, z)) / 255,
     (x, z) => 0.25 * smooth(52, 47, view.lat) * smooth(700, 400, metresAt(x, z)), counts);
 
   // woods where the forest of 1356 stood, up to the tree line: leafy in the low country, dark conifers towards the heights

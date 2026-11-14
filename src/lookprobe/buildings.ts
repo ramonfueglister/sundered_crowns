@@ -131,10 +131,18 @@ const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), 
 const LEAD = rgb(0xd0ced4), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
 /**
+ * How the houses of a land are built: their wall and roof colours, how steep the roofs are (rise over half the width,
+ * up to `maxRise` blocks), and how many of them end in gables instead of hips. `flat` houses have a terrace roof.
+ */
+export interface HouseStyle { walls: readonly RGB[]; roofs: readonly RGB[]; pitch: readonly [number, number]; maxRise: number; gables: number; flat?: boolean }
+/** the houses of the reference image: pale plaster under low roofs of red tiles */
+export const SOUTH: HouseStyle = { walls: WALLS, roofs: ROOFS, pitch: [0.26, 0.36], maxRise: 1.5, gables: 0.3 };
+
+/**
  * One block of a house: walls with plinth, storey bands, windows and a door, under a tiled hip roof. The walls reach one
  * unit into the ground so that the block also sits on steps.
  */
-function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, door = true) {
+function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, door = true, style: HouseStyle = SOUTH) {
   const top = floors * FLOOR + 0.3, w = x1 - x0, d = z1 - z0;
   b.box(x0, -1, z0, x1, top, z1, wallC, { foot: 0.9 });
   const glass = r.chance(0.5) ? WINDOW : WINDOW_WARM, shutter = r.chance(0.08) ? r.pick(SHUTTERS) : null, arched = r.chance(0.25);
@@ -164,7 +172,13 @@ function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors:
       if (arched) arch(b, wl, t, y, 0.26, y + 0.62, glass, 0.05); else pane(b, wl, t - 0.26, y, t + 0.26, y + 0.88, glass, 0.05);
     });
   }
-  const ov = 0.2, rise = Math.min((Math.min(w, d) / 2) * r.range(0.26, 0.36), 1.5), gable = r.chance(0.3), eaves = top + 0.12;
+  if (style.flat) {
+    // a terrace roof behind a low parapet
+    b.box(x0 - 0.06, top, z0 - 0.06, x1 + 0.06, top + 0.4, z1 + 0.06, shade(wallC, 1.03), { top: shade(wallC, 0.86) });
+    if (r.chance(0.4)) { const cx = r.range(x0 + 1, x1 - 1), cz = r.range(z0 + 1, z1 - 1); b.box(cx - 0.8, top, cz - 0.8, cx + 0.8, top + 1.5, cz + 0.8, shade(wallC, 0.97), { top: shade(wallC, 0.88) }); }
+    return;
+  }
+  const ov = 0.2, rise = Math.min((Math.min(w, d) / 2) * r.range(style.pitch[0], style.pitch[1]), style.maxRise), gable = r.chance(style.gables), eaves = top + 0.12;
   b.box(x0 - ov, top, z0 - ov, x1 + ov, eaves, z1 + ov, shade(roofC, 0.78));
   const rows = Math.max(4, Math.round(Math.min(w, d) / 0.7));
   if (gable) gableRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, eaves, rise, roofC, wallC, rows);
@@ -188,9 +202,9 @@ function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors:
 }
 
 /** A plain house of one block: `w` along x, `d` along z. */
-export function house(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd): Batch {
+export function house(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, style: HouseStyle = SOUTH): Batch {
   const b = new Batch();
-  block(b, -w / 2, -d / 2, w / 2, d / 2, floors, wallC, roofC, r);
+  block(b, -w / 2, -d / 2, w / 2, d / 2, floors, wallC, roofC, r, true, style);
   return b;
 }
 
@@ -198,20 +212,20 @@ export function house(w: number, d: number, floors: number, wallC: RGB, roofC: R
  * A larger town house inside a footprint of w × d: a main block with a lower wing in an L, or two blocks of different
  * height side by side, sometimes with a slim tower. This gives the broken roof line of the city in the reference.
  */
-export function townHouse(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd): Batch {
+export function townHouse(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, style: HouseStyle = SOUTH): Batch {
   const b = new Batch(), x0 = -w / 2, x1 = w / 2, z0 = -d / 2, z1 = d / 2, alongX = w >= d, wing = shade(wallC, r.range(0.94, 1.04));
   const cut = r.range(0.5, 0.68), low = Math.max(1, floors - 1);
   if (Math.min(w, d) >= 6 && r.chance(0.3)) {
     // three wings round a court that opens to one side
     const t = Math.min(w, d) * 0.36;
-    if (alongX) { block(b, x0, z0, x1, z0 + t, floors, wallC, roofC, r); block(b, x0, z0 + t, x0 + t, z1, low, wing, roofC, r, false); block(b, x1 - t, z0 + t, x1, z1, low, wing, roofC, r, false); }
-    else { block(b, x0, z0, x0 + t, z1, floors, wallC, roofC, r); block(b, x0 + t, z0, x1, z0 + t, low, wing, roofC, r, false); block(b, x0 + t, z1 - t, x1, z1, low, wing, roofC, r, false); }
+    if (alongX) { block(b, x0, z0, x1, z0 + t, floors, wallC, roofC, r, true, style); block(b, x0, z0 + t, x0 + t, z1, low, wing, roofC, r, false, style); block(b, x1 - t, z0 + t, x1, z1, low, wing, roofC, r, false, style); }
+    else { block(b, x0, z0, x0 + t, z1, floors, wallC, roofC, r, true, style); block(b, x0 + t, z0, x1, z0 + t, low, wing, roofC, r, false, style); block(b, x0 + t, z1 - t, x1, z1, low, wing, roofC, r, false, style); }
   } else if (r.chance(0.5)) {
     // L: the main block takes one end at full depth, the wing the rest at part of the depth
-    if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r); block(b, x0 + w * cut, z0, x1, z0 + d * r.range(0.55, 0.75), low, wing, roofC, r, false); }
-    else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r); block(b, x0, z0 + d * cut, x0 + w * r.range(0.55, 0.75), z1, low, wing, roofC, r, false); }
-  } else if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r); block(b, x0 + w * cut, z0, x1, z1, low, wing, r.pick(ROOFS), r, false); }
-  else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r); block(b, x0, z0 + d * cut, x1, z1, low, wing, r.pick(ROOFS), r, false); }
+    if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r, true, style); block(b, x0 + w * cut, z0, x1, z0 + d * r.range(0.55, 0.75), low, wing, roofC, r, false, style); }
+    else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r, true, style); block(b, x0, z0 + d * cut, x0 + w * r.range(0.55, 0.75), z1, low, wing, roofC, r, false, style); }
+  } else if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r, true, style); block(b, x0 + w * cut, z0, x1, z1, low, wing, r.pick(style.roofs), r, false, style); }
+  else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r, true, style); block(b, x0, z0 + d * cut, x1, z1, low, wing, r.pick(style.roofs), r, false, style); }
   if (r.chance(0.12)) {
     const tx = x1 - 1.1, tz = z1 - 1.1, th = (floors + 1.3) * FLOOR;
     b.box(tx - 1, -1, tz - 1, tx + 1, th, tz + 1, shade(wallC, 0.97), { foot: 0.9 });
@@ -417,5 +431,166 @@ export function bridge(span: number, width = 3): Batch {
     b.box(t0, -1.6, -hw, t1, y, hw, shade(c, 0.9), { top: c, foot: 0.7 });
     for (const z of [-hw - 0.2, hw]) b.box(t0, y - 0.3, z, t1, y + 0.55, z + 0.2, shade(c, 0.96), { bottom: true });
   }
+  return b;
+}
+
+// ---- buildings of other lands than the reference image's ------------------------------------------------------------
+
+const SLATE = rgb(0x7c8494);
+/** the brick and plaster of the north, under steep roofs that mostly end in gables */
+export const NORTH: HouseStyle = {
+  walls: [BRICK, rgb(0xc8684a), rgb(0xdc7a56), rgb(0xd6694a), rgb(0xf6ecdc), rgb(0xf2e2c4), rgb(0xe6d2b4), rgb(0xdccfc0)],
+  roofs: [rgb(0xd05a3c), rgb(0xc24e36), rgb(0xb84a34), rgb(0xdc6a48), SLATE, rgb(0x9a6a4c)], pitch: [0.75, 1.05], maxRise: 3.4, gables: 0.85,
+};
+/** the timber houses of the Rus under shingle roofs */
+export const TIMBER: HouseStyle = {
+  walls: [rgb(0xc09a6c), rgb(0xb48a5c), rgb(0xcaa87c), rgb(0xa87e54), rgb(0xd4b68c)],
+  roofs: [rgb(0x9a7a5c), rgb(0x8a6c50), rgb(0xa88868), rgb(0x8c8478)], pitch: [0.6, 0.9], maxRise: 2.8, gables: 0.9,
+};
+/** the whitewashed and earthen houses of the lands of Islam, with terrace roofs */
+export const TERRACE: HouseStyle = {
+  walls: [rgb(0xfaf2e2), rgb(0xf6e8cc), rgb(0xf0dcb8), rgb(0xe8cea2), rgb(0xf4e4c8), rgb(0xe2c498)],
+  roofs: [rgb(0xe8cea2)], pitch: [0, 0], maxRise: 0, gables: 0, flat: true,
+};
+
+/** A parish church of the north: a brick or stone nave under a steep roof, a tower with a tall spire at its -z end. 6 × 11. */
+export function spireChurch(r: Rnd): Batch {
+  const b = new Batch(), wallC = r.pick([BRICK, rgb(0xc8684a), STONE, rgb(0xe6d8c4)]), roofC = r.pick(NORTH.roofs), th = r.range(8.5, 10.5), spire = r.chance(0.5) ? COPPER : SLATE;
+  b.box(-2.6, -1, -3, 2.6, 4.6, 5, wallC, { foot: 0.84 });
+  gableRoof(b, -2.9, -3.3, 2.9, 5.3, 4.6, 3.6, roofC, wallC, 5);
+  const front = wallOf(-2.6, -3, 2.6, 5, 'pz');
+  arch(b, front, 2.6, 0, 0.6, 1.4, DOOR); arch(b, front, 2.6, 2.6, 0.5, 5.2, WINDOW);
+  for (const s of ['px', 'nx'] as const) { const w = wallOf(-2.6, -3, 2.6, 5, s); for (const t of spread(w, 4, 0.5)) arch(b, w, t, 1.1, 0.26, 3.5, WINDOW); }
+  b.box(-1.6, -1, -5.8, 1.6, th, -2.6, wallC, { foot: 0.86 });
+  for (const s of SIDES) { const w = wallOf(-1.6, -5.8, 1.6, -2.6, s); arch(b, w, 1.6, th - 2.4, 0.4, th - 1.0, rgb(0x3d4650)); pane(b, w, 0, th - 0.3, w.len, th, shade(wallC, 1.1), 0.02); }
+  hipRoof(b, -1.75, -5.95, 1.75, -2.45, th, r.range(6, 8), spire);
+  return b;
+}
+
+/**
+ * A Gothic cathedral, 11 × 20: a high nave between lower aisles with buttresses, a transept, and at the +z end the
+ * front with its rose between two towers, which carry spires or end flat.
+ */
+export function cathedral(wallC: RGB, roofC: RGB, spire: RGB | null): Batch {
+  const b = new Batch(), x0 = -4.5, x1 = 4.5, z0 = -10, z1 = 6.4, aisle = 4.4, nave = 8.6, glass = rgb(0x46506a);
+  b.box(x0, -1, z0, x1, aisle, z1, wallC, { foot: 0.84 });
+  b.box(-2.3, aisle, z0, 2.3, nave, z1, shade(wallC, 1.03));
+  for (const sx of [-1, 1]) b.box(sx > 0 ? 2.3 : x0 - 0.15, aisle, z0 - 0.15, sx > 0 ? x1 + 0.15 : -2.3, aisle + 0.3, z1, shade(roofC, 0.92), { top: roofC });
+  gableRoof(b, -2.6, z0 - 0.3, 2.6, z1, nave, 3.2, roofC, wallC, 5);
+  for (const s of ['px', 'nx'] as const) {
+    const low = wallOf(x0, z0, x1, z1, s), high = wallOf(-2.3, z0, 2.3, z1, s);
+    for (const t of spread(low, 7, 0.4)) arch(b, low, t, 1.0, 0.36, 3.2, glass);
+    for (const t of spread(high, 7, 0.4)) arch(b, high, t, aisle + 0.9, 0.32, nave - 1.3, glass);
+    // buttresses with pinnacles between the windows
+    for (let k = 0; k <= 7; k++) {
+      const z = z0 + 0.3 + (k * (z1 - z0 - 0.6)) / 7, x = s === 'px' ? x1 : x0 - 0.5;
+      b.box(x, -1, z - 0.22, x + 0.5, aisle + 0.8, z + 0.22, shade(wallC, 0.97), { foot: 0.86 });
+      hipRoof(b, x - 0.05, z - 0.27, x + 0.55, z + 0.27, aisle + 0.8, 0.9, shade(wallC, 1.06));
+    }
+  }
+  const apse = wallOf(x0, z0, x1, z1, 'nz');
+  for (const t of spread(apse, 4, 0.5)) arch(b, apse, t, 1.0, 0.36, 3.2, glass);
+  // the transept
+  b.box(-5.5, -1, -3.2, 5.5, nave, 0, wallC, { foot: 0.84 });
+  gableRoof(b, -5.8, -3.5, 5.8, 0.3, nave, 3.2, roofC, wallC, 5);
+  for (const s of ['px', 'nx'] as const) { const w = wallOf(-5.5, -3.2, 5.5, 0, s); arch(b, w, 1.6, 0, 0.5, 1.4, DOOR); arch(b, w, 1.6, 3.2, 0.7, 6.6, glass); }
+  hipRoof(b, -0.5, -2.1, 0.5, -1.1, nave + 2.4, 4.2, spire ?? SLATE);
+  // the front: two towers, the portals, the rose
+  const th = 12.6;
+  b.box(x0 - 0.3, -1, z1, x1 + 0.3, nave + 1.2, z1 + 3.6, wallC, { foot: 0.84 });
+  const front = wallOf(x0 - 0.3, z1, x1 + 0.3, z1 + 3.6, 'pz');
+  for (const [t, half] of [[1.9, 0.75], [4.8, 1.05], [7.7, 0.75]] as const) { arch(b, front, t, 0, half, 1.6, shade(wallC, 0.82), 0.03); arch(b, front, t, 0, half * 0.66, 1.3, DOOR, 0.06); }
+  pane(b, front, 0, 3.4, front.len, 3.7, shade(wallC, 0.84), 0.04);
+  { const rim: V3[] = []; for (let k = 0; k <= 12; k++) rim.push(on(front, 4.8 + Math.cos((Math.PI * k) / 6) * 1.25, 6.2 + Math.sin((Math.PI * k) / 6) * 1.25, 0.06)); b.fan(on(front, 4.8, 6.2, 0.06), rim, glass, front.n); }
+  for (const tx of [x0 - 0.3, x1 + 0.3 - 3.4]) {
+    b.box(tx, nave + 1.2, z1 + 0.1, tx + 3.4, th, z1 + 3.5, shade(wallC, 1.02));
+    for (const s of SIDES) { const w = wallOf(tx, z1 + 0.1, tx + 3.4, z1 + 3.5, s); for (const t of [1.05, 2.35]) arch(b, w, t, nave + 1.7, 0.3, th - 0.9, rgb(0x3d4650)); }
+    if (spire) hipRoof(b, tx - 0.1, z1, tx + 3.5, z1 + 3.6, th, 7.5, spire);
+    else battlements(b, tx, z1 + 0.1, tx + 3.4, z1 + 3.5, th, wallC, 0.4, 0.5);
+  }
+  return b;
+}
+
+/**
+ * A domed church of the Greek rite, a square of 7 × `s` with an apse at its -z end: walls of stone banded with brick, a
+ * dome on a drum over the middle, a narthex before the door. The dome is of tiles, lead or gilded.
+ */
+export function domedChurch(r: Rnd, s = 1, domeC: RGB = r.pick([ROOFS[0], ROOFS[3], LEAD])): Batch {
+  const b = new Batch(), h = 3.5 * s, top = 4.6 * s, wallC = r.pick([rgb(0xf0d8b8), rgb(0xecd0b0), rgb(0xf4e0c4)]), band = rgb(0xd88462), glass = rgb(0x46506a);
+  b.box(-h, -1, -h, h, top, h, wallC, { foot: 0.84, top: shade(ROOFS[1], 0.9) });
+  for (const sd of SIDES) {
+    const w = wallOf(-h, -h, h, h, sd);
+    for (let y = 0.9; y < top - 0.3; y += 0.9) pane(b, w, 0, y, w.len, y + 0.16, band, 0.02);
+    for (const t of spread(w, 3, 0.6 * s)) arch(b, w, t, 1.5 * s, 0.34 * s, 3.1 * s, glass);
+  }
+  // the arms of the cross stand above the corners, under tiled roofs
+  gableRoof(b, -h - 0.15, -1.6 * s, h + 0.15, 1.6 * s, top, 1.3 * s, ROOFS[1], wallC, 3);
+  gableRoof(b, -1.6 * s, -h - 0.15, 1.6 * s, h + 0.15, top, 1.3 * s, ROOFS[1], wallC, 3);
+  drum(b, 0, top, 0, 2.0 * s, top + 2.4 * s, wallC, 12, 0.92);
+  for (let i = 0; i < 12; i += 2) { const a = ((i + 0.5) / 12) * Math.PI * 2, x = Math.cos(a) * 1.95 * s, z = Math.sin(a) * 1.95 * s; b.box(x - 0.2 * s, top + 0.8 * s, z - 0.2 * s, x + 0.2 * s, top + 1.9 * s, z + 0.2 * s, glass); }
+  dome(b, 0, top + 2.4 * s, 0, 2.15 * s, domeC, 0.85);
+  b.box(-0.08, top + 4.2 * s, -0.08, 0.08, top + 5.3 * s, 0.08, GOLD); b.box(-0.35, top + 4.8 * s, -0.08, 0.35, top + 4.95 * s, 0.08, GOLD, { bottom: true });
+  // apse and narthex
+  drum(b, 0, -1, -h, 1.7 * s, 3.2 * s, wallC, 10, 0.86); dome(b, 0, 3.2 * s, -h, 1.75 * s, ROOFS[1], 0.5, 10, 3);
+  b.box(-h, -1, h, h, 2.8 * s, h + 1.6 * s, shade(wallC, 0.98), { foot: 0.84, top: shade(ROOFS[1], 0.95) });
+  arch(b, wallOf(-h, h, h, h + 1.6 * s, 'pz'), h, 0, 0.6 * s, 1.5 * s, DOOR);
+  return b;
+}
+
+/**
+ * A mosque, 9 × 9 at `s` = 1: a prayer hall under a dome behind a court with arcades, a square minaret with a gallery at
+ * one corner.
+ */
+export function mosque(r: Rnd, s = 1): Batch {
+  const b = new Batch(), h = 4.5 * s, wallC = r.pick(TERRACE.walls), top = 3.8 * s, dark = rgb(0x4a4038), tile = rgb(0x4f9a8a);
+  // the hall at the -z half, the court before it
+  b.box(-h, -1, -h, h, top, 0.4 * s, wallC, { foot: 0.86, top: shade(wallC, 0.88) });
+  battlements(b, -h, -h, h, 0.4 * s, top, wallC, 0.4, 0.4, 1.0);
+  b.box(-h, -1, 0.4 * s, h, 2.4 * s, h, shade(wallC, 0.98), { foot: 0.86, top: shade(wallC, 0.9) });
+  b.box(-h + 0.9, 0.05, 1.3 * s, h - 0.9, 2.41 * s, h - 0.9, shade(wallC, 0.7), { top: rgb(0xe8dcc4) });
+  for (const sd of ['px', 'pz'] as const) { const w = wallOf(-h, 0.4 * s, h, h, sd); for (const t of spread(w, Math.max(3, Math.round(w.len / 1.6)), 0.3)) arch(b, w, t, 0, 0.45, 1.5 * s, dark, 0.05); }
+  for (const sd of ['px', 'nx', 'nz'] as const) { const w = wallOf(-h, -h, h, 0.4 * s, sd); for (const t of spread(w, Math.max(2, Math.round(w.len / 2.2)), 0.5)) arch(b, w, t, 1.4 * s, 0.3, 2.8 * s, dark); pane(b, w, 0, top - 0.5, w.len, top - 0.3, tile, 0.03); }
+  drum(b, 0, top, -h / 2 - 0.2, 2.1 * s, top + 1.0 * s, wallC, 12, 0.92);
+  dome(b, 0, top + 1.0 * s, -h / 2 - 0.2, 2.2 * s, r.pick([rgb(0xf4ead8), tile, LEAD]), 1.05);
+  b.box(-0.07, top + 3.3 * s, -h / 2 - 0.27, 0.07, top + 4.2 * s, -h / 2 - 0.13, GOLD);
+  // the minaret
+  const mx = h - 1.1, mz = h - 1.1, mh = 10.5 * s;
+  b.box(mx - 1.1, -1, mz - 1.1, mx + 1.1, mh, mz + 1.1, wallC, { foot: 0.86 });
+  for (const sd of SIDES) { const w = wallOf(mx - 1.1, mz - 1.1, mx + 1.1, mz + 1.1, sd); for (const y of [3, 5.5, 8]) arch(b, w, 1.1, y * s, 0.22, y * s + 0.8, dark); pane(b, w, 0, mh - 0.9, w.len, mh - 0.5, tile, 0.03); }
+  b.box(mx - 1.4, mh, mz - 1.4, mx + 1.4, mh + 0.3, mz + 1.4, shade(wallC, 1.04));
+  battlements(b, mx - 1.4, mz - 1.4, mx + 1.4, mz + 1.4, mh + 0.3, wallC, 0.3, 0.4, 0.7);
+  b.box(mx - 0.6, mh + 0.3, mz - 0.6, mx + 0.6, mh + 2.4, mz + 0.6, wallC);
+  dome(b, mx, mh + 2.4, mz, 0.66, rgb(0xf4ead8), 1.2, 8, 3);
+  b.box(mx - 0.05, mh + 3.1, mz - 0.05, mx + 0.05, mh + 4.0, mz + 0.05, GOLD);
+  return b;
+}
+
+/**
+ * The Great Church of Constantinople, 18 × 16: the square nave under its wide shallow dome on a ring of windows, half
+ * domes before and behind it, the heavy buttress towers at the sides, small domes at the corners. No minarets in 1356.
+ */
+export function hagiaSophia(): Batch {
+  const b = new Batch(), wallC = rgb(0xe8b89a), pale = rgb(0xf2d2b6), glass = rgb(0x46506a), body = 6.4, cube = 10.6;
+  b.box(-9, -1, -8, 9, body, 8, wallC, { foot: 0.84, top: LEAD });
+  b.box(-5.6, body, -5.6, 5.6, cube, 5.6, pale, { top: LEAD });
+  for (const sd of SIDES) {
+    const low = wallOf(-9, -8, 9, 8, sd), high = wallOf(-5.6, -5.6, 5.6, 5.6, sd);
+    for (let y = 1.0; y < body - 0.4; y += 1.1) pane(b, low, 0, y, low.len, y + 0.14, shade(wallC, 0.88), 0.02);
+    for (const t of spread(low, 8, 0.6)) { arch(b, low, t, 0.9, 0.42, 2.4, glass); arch(b, low, t, 3.6, 0.42, 5.2, glass); }
+    // the great arch of each side of the nave, filled with rows of windows
+    arch(b, high, 5.6, body + 0.2, 4.4, body + 0.3, shade(pale, 0.9), 0.03);
+    for (const t of spread(high, 7, 1.6)) arch(b, high, t, body + 0.6, 0.3, body + 1.7, glass, 0.06);
+    for (const t of spread(high, 5, 2.6)) arch(b, high, t, body + 2.3, 0.3, body + 3.2, glass, 0.06);
+  }
+  // buttress towers at the sides, half domes at the ends
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.box(sx * 7.6 - 1.3, body, sz * 3.4 - 1.3, sx * 7.6 + 1.3, cube - 0.6, sz * 3.4 + 1.3, wallC, { top: LEAD });
+  for (const sz of [-1, 1]) { dome(b, 0, body, sz * 5.9, 4.6, LEAD, 0.9, 14, 4); for (const sx of [-1, 1]) dome(b, sx * 6.6, body, sz * 5.6, 2.1, LEAD, 0.8, 10, 3); }
+  drum(b, 0, cube, 0, 5.3, cube + 1.3, pale, 20, 0.94);
+  for (let i = 0; i < 20; i++) { const a = ((i + 0.5) / 20) * Math.PI * 2, x = Math.cos(a) * 5.25, z = Math.sin(a) * 5.25; b.box(x - 0.24, cube + 0.25, z - 0.24, x + 0.24, cube + 1.1, z + 0.24, glass); }
+  dome(b, 0, cube + 1.3, 0, 5.5, LEAD, 0.62, 20, 5);
+  b.box(-0.1, cube + 4.6, -0.1, 0.1, cube + 6.2, 0.1, GOLD); b.box(-0.5, cube + 5.5, -0.1, 0.5, cube + 5.7, 0.1, GOLD, { bottom: true });
+  // the narthex with the doors at the +z end
+  b.box(-7, -1, 8, 7, 3.6, 10, shade(wallC, 0.97), { foot: 0.84, top: LEAD });
+  for (const t of spread(wallOf(-7, 8, 7, 10, 'pz'), 5, 0.8)) arch(b, wallOf(-7, 8, 7, 10, 'pz'), t, 0, 0.6, 1.7, DOOR);
   return b;
 }
