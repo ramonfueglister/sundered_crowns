@@ -123,13 +123,20 @@ werden:
 - **Bodenmassstab:** wie viel Land ein Feld darstellt (K, Entscheid D). Stark gestaucht.
 - **Figurenmassstab:** wie gross Häuser, Bäume, Menschen und Schiffe gezeichnet werden. Viel grösser als der
   Bodenmassstab, untereinander stimmig (Mensch 3, Haus 8 bis 12, Baum 6 bis 10, Kirchturm 25 bis 40 Voxel hoch).
-- **Mengen sind Symbole.** Die Simulation rechnet immer mit den echten Zahlen; die Karte zeigt eine verkleinerte
-  Menge. Startwert für Häuser: `0,25 × Einwohner^0,6`, also Dorf mit 500 Einwohnern etwa 10 Häuser, Stadt mit
-  5'000 etwa 40, mit 40'000 etwa 145, Venedig (110'000) etwa 265, Paris (200'000) etwa 380. Grosse Städte wachsen
-  damit sichtbar, sprengen aber den Ort nicht.
-- Dasselbe gilt für Figuren (eine Figur für viele Menschen), Herden, Felder (ein Feldstück für viel Ackerland),
-  Schiffe (ein Schiff für einen Handelsstrom) und Heere (eine Figurengruppe für ein Regiment).
-- Die Formeln sind Stellschrauben des Prototyps, keine Spielregeln.
+- **Die Welt ist das Diorama: auch die Simulation rechnet mit den verkleinerten Mengen** (Ramon, 14. November
+  2026, Korrektur eines früheren Entwurfs). Was man sieht, ist das, was simuliert wird. Ein Haus auf der Karte ist
+  ein Haushalt der Simulation, ein Feld ist ein bewirtschaftetes Feld, eine Figur ist ein Mensch oder eine feste
+  kleine Gruppe.
+- **Ein einziger Verkleinerungsfaktor für die ganze Welt** (Vorschlag 1 zu 100, noch zu entscheiden). Linear, damit
+  die Verhältnisse zwischen Orten und Reichen stimmen. Die Startdaten haben 150 Millionen Menschen in 15'220 Orten;
+  bei 1 zu 100 sind das 1,5 Millionen Menschen in rund 300'000 Haushalten, im Schnitt 20 Häuser pro Ort. Venedig
+  (110'000) hat dann 1'100 Einwohner in etwa 220 Häusern, Paris (200'000) 2'000 in etwa 400, ein Dorf mit 500
+  Einwohnern ist ein Hof mit 5 Menschen. Jeder bewohnte Ort hat mindestens einen Haushalt.
+- Folge für die Technik: **Häuser, Felder und Werkstätten sind Weltzustand**, keine Dekoration. Die Simulation
+  legt fest, wo sie stehen (deterministisch, auf dem Server), der Renderer zeichnet sie nur. Rein optisch bleiben
+  Bäume, Rauch, Wellen und Kleinkram.
+- Folge fürs Wirtschaftsdesign: Einwohner, Haushalte, Felder, Gebäude, Heere und Schiffe werden in diesen kleinen,
+  zählbaren Einheiten entworfen. Das gehört in `docs/ECONOMY_DESIGN.md` und wird dort mit Ramon besprochen.
 
 ### 5.2 Daten pro Säule (Entscheid A: Säulen)
 
@@ -216,10 +223,10 @@ von der Entfernung. Es gibt keine Nähte zwischen Detailstufen im Bild.
 
 ### 6.3 Objekte: Bäume, Felder, Häuser, Schiffe
 
-- Die Dekoration ist eine **reine Funktion** aus Karte, Ortszustand (Bevölkerungsstufe, später Gebäude der
-  Wirtschaft) und Gelände. Sie wird im Browser berechnet, ist aber für alle Spieler gleich, weil sie nur von
-  gemeinsamen Daten und der Orts-ID abhängt. Sie ist kein Teil des Weltzustands.
-- Siedlungen: Strassennetz aus dem Ortskern, Häuserzahl nach Bevölkerung (symbolisch, nicht 1 zu 1), Kirche, Mauer
+- **Gebäude und Felder kommen aus dem Weltzustand** (Abschnitt 5.1a): Position, Art und Besitzer stehen in der
+  Simulation, der Renderer wählt nur das passende Modell. Rein optische Dekoration (Bäume, Kleinkram) ist eine
+  Funktion aus Karte und Gelände, für alle Spieler gleich, und kein Teil des Weltzustands.
+- Siedlungen: Strassennetz aus dem Ortskern, ein Haus pro Haushalt, Kirche, Mauer
   und Hafen nach Ortsgrösse und Lage, Wahrzeichen aus `data/content/landmarks.json`.
 - Land: Äcker, Weinberge und Weiden nach Rohstoff des Orts, Wald nach Biom.
 - Zeichnen mit `InstancedMesh` pro Modelltyp, mit Farbkanal für Dachvarianten und Reichsfarben (das heutige
