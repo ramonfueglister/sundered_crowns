@@ -8,7 +8,7 @@ Rivers go along as lines, because the probe draws them on its own turned grid.
 Inputs (all open, fetched into GEO_CACHE on first use):
   - AWS Terrain Tiles, terrarium, zoom 8 (SRTM / GMTED derived), about 430 m per pixel at 45° N
   - Natural Earth 10m: land, lakes, rivers, each with its European supplement (public domain)
-  - the game's own 1356 layers: coast and lake overrides (data/history/1356), forest and cultivation (public/map/biome.png)
+  - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
 Outputs: public/map/regions/<name>.json (window, rivers) and <name>.bin.gz (the rasters, row by row).
 
 Usage: python3 tools/worldprobe/build_region.py alps
@@ -63,6 +63,60 @@ def elevation(lon, lat):
             a = np.asarray(Image.open(io.BytesIO(cached(TILES.format(z=ZOOM, x=x, y=y), f'terrarium/{ZOOM}_{x}_{y}.png'))).convert('RGB'), dtype=np.float32)
             mosaic[(y - y0) * 256:(y - y0 + 1) * 256, (x - x0) * 256:(x - x0 + 1) * 256] = a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
     return ndimage.map_coordinates(mosaic, [(ty - y0) * 256 - 0.5, (tx - x0) * 256 - 0.5], order=1, mode='nearest')
+
+
+def read_rivers(area, water, drawn, km):
+    """
+    The rivers that the drawn lines leave out, read from the drainage: every run of land cells through which at least
+    RIVER_FROM km² drain, from where it lies clear of the drawn rivers down to the water or to the drawn river it
+    joins. A run ends where the path goes straight for long, which is where the heights are too flat to say where the
+    water runs; what then ends in the open plain is dropped.
+    """
+    RIVER_FROM, CLEAR_KM, STRAIGHT, SHORTEST = 400, 7, 10, 10
+    h, w = area.shape
+    img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
+    for r in drawn: d.line([tuple(p) for p in r['pts']], fill=1, width=1)
+    away = ndimage.distance_transform_edt(np.asarray(img) == 0)
+    clear, stream = away * km > CLEAR_KM, (area >= RIVER_FROM * 1e6) & (water == 0)
+    down = {}
+    for y, x in zip(*np.nonzero(stream)):
+        best = None
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                ny, nx = y + dy, x + dx
+                if (dy or dx) and 0 <= ny < h and 0 <= nx < w and area[ny, nx] > area[y, x] and (best is None or area[ny, nx] < area[best]): best = (ny, nx)
+        if best: down[(y, x)] = best
+    fed = {v for c, v in down.items() if clear[c]}
+    heads, seen, found = [c for c in down if clear[c] and c not in fed], set(), []
+    for head in sorted(heads, key=lambda c: area[c]):
+        path, c, beside = [], head, 0
+        while c in down and c not in seen:
+            seen.add(c); path.append(c)
+            beside = 0 if clear[c] else beside + 1
+            # beside a drawn river: it is joined soon, or the path is that river itself, read a little off its line
+            if away[c] <= 1.5: break
+            if beside * km > 2 * CLEAR_KM: path = path[:-beside]; break
+            c = down[c]
+        else: path.append(c)
+        # cut out the straight stretches
+        runs, start = [], 0
+        for i in range(1, len(path)):
+            step = (path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1])
+            if i == 1 or step != last: turn = i - 1
+            last = step
+            if i - turn == STRAIGHT: runs.append(path[start:turn + 1]); start = None
+            if start is None and i - turn < STRAIGHT: start = i - 1
+        if start is not None: runs.append(path[start:])
+        found += [run for run in runs if len(run) >= SHORTEST]
+    # a river goes on to water, to a drawn river or to another river that does; what ends in the open plain is dropped
+    kept, reached = [], ~clear | ndimage.binary_dilation(water != 0, iterations=2)
+    while True:
+        more = [run for run in found if reached[run[-1]]]
+        if not more: break
+        for run in more:
+            found.remove(run); kept.append(run)
+            for c in run: reached[c] = True
+    return [{'name': '', 'rank': 10 if area[run[-1]] < 2000e6 else 9, 'pts': [[float(x) + 0.5, float(y) + 0.5] for y, x in run[::2] + run[-1:]]} for run in kept]
 
 
 def main(name):
@@ -131,14 +185,27 @@ def main(name):
     forest = ndimage.map_coordinates(biome[..., 1].astype(np.float32), [by, bx], order=1, mode='nearest')
     crops = ndimage.map_coordinates(biome[..., 2].astype(np.float32), [by, bx], order=1, mode='nearest')
 
+    # rivers: today's lines, without the reaches that ran elsewhere in 1356, then the courses of 1356, then the rivers
+    # the lines leave out, read from the drainage
+    changed = [e for e in ov.get('rivers_1356') or [] if isinstance(e, dict) and len(e.get('line') or []) >= 2]
+    dropped = {e['name']: mask([[e['replaces']]]) for e in changed if e.get('replaces')}
     rivers = []
     for source in ('ne_10m_rivers_lake_centerlines', 'ne_10m_rivers_europe'):
         for f in near(natural_earth(source)):
             p = f['properties']
             if str(p.get('featurecla', '')).lower().startswith('lake'): continue
+            river = p.get('name_en') or p.get('name') or ''; gone = dropped.get(river)
             for line in lines_from_geojson_geom(f['geometry']):
-                pts = [[round(v, 1) for v in to_cell(lo, la)] for lo, la in line]
-                if len(pts) >= 2: rivers.append({'name': p.get('name_en') or p.get('name') or '', 'rank': int(p.get('scalerank') or 10), 'pts': pts})
+                run = []
+                for ll in list(line) + [None]:
+                    pt = None if ll is None else [round(v, 1) for v in to_cell(ll[0], ll[1])]
+                    inside = pt is not None and gone is not None and 0 <= int(pt[1]) < h and 0 <= int(pt[0]) < w and gone[int(pt[1]), int(pt[0])]
+                    if pt is not None and not inside: run.append(pt); continue
+                    if len(run) >= 2: rivers.append({'name': river, 'rank': int(p.get('scalerank') or 10), 'pts': run})
+                    run = []
+    for e in changed:
+        rivers.append({'name': e['name'], 'rank': int(e.get('rank') or 10), 'pts': [[round(v, 1) for v in to_cell(lo, la)] for lo, la in e['line']]})
+    rivers += read_rivers(area, water, rivers, meta_km)
 
     out = os.path.join(ROOT, 'public', 'map', 'regions'); os.makedirs(out, exist_ok=True)
     meta = {'name': name, 'w': w, 'h': h, 'x0': px0, 'y0': py0, 'cells': CELLS, 'mapW': W, 'mapH': H,
