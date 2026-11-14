@@ -1,6 +1,6 @@
 # Getreideernte pro Ort
 
-**Status:** Beschlossen und gebaut, wartet auf Abnahme · **Bereich:** Wirtschaft · **Stand:** 2026-11-14
+**Status:** Beschlossen, gebaut und am 14.11.2026 abgenommen, noch nicht im laufenden Spiel · **Bereich:** Wirtschaft · **Stand:** 2026-11-14
 
 > Jeder Ort bringt einmal im Jahr eine Getreideernte ein. Ihre Höhe hängt von der Landfläche des Ortes, der Ertragskraft seines Bodens und der Zahl der Menschen ab, die das Land bearbeiten.
 
