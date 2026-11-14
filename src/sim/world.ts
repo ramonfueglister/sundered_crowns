@@ -1,7 +1,7 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
-import { TERRAINS, GI } from './defs';
+import { TERRAINS, RESOURCE_INDEX } from './geo';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -14,6 +14,13 @@ export interface GeoJson {
   rivers: { name: string; rank: number; pts: [number, number][] }[];
 }
 export interface WorldJson { terrain: string[]; resource: string[]; name: string[]; coastal: boolean[]; temp: number[]; arid: number[]; forest: number[] }
+/** Land productivity per place (public/data/land.json, written by tools/geo/build_land.py). */
+export interface LandJson {
+  /** Caloric Suitability Index of the place (Galor and Özak 2016); null where the data set has no value */
+  yield: (number | null)[];
+  /** England as the harvest is calibrated on it: land = index × hectares, places = the places inside its outline */
+  england: { land: number; places: number[] };
+}
 
 export const EDGE_RIVER = 1, EDGE_STRAIT = 2, EDGE_COAST = 4, EDGE_SEA = 8;
 
@@ -27,13 +34,17 @@ export class World {
   area: Float32Array; elev: Float32Array; rough: Float32Array;
   terrain: Uint8Array; resource: Uint8Array; coastal: Uint8Array; pass: Uint8Array;
   temp: Float32Array; arid: Float32Array; forest: Float32Array;
+  /** land productivity A of each place: potential calories per hectare and year (NaN: no data) */
+  landYield: Float32Array;
+  /** A × hectares summed over England, the land the harvest is calibrated on (src/sim/systems/harvest.ts) */
+  landEngland: number;
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
   rivers: GeoJson['rivers'];
   kmPerPx: Float32Array; // per location
 
-  constructor(geo: GeoJson, wj: WorldJson) {
+  constructor(geo: GeoJson, wj: WorldJson, land: LandJson) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;
     const N = this.N, L = this.L;
@@ -44,10 +55,13 @@ export class World {
     this.temp = Float32Array.from(wj.temp.slice(0, L)); this.arid = Float32Array.from(wj.arid.slice(0, L)); this.forest = Float32Array.from(wj.forest);
     for (let i = 0; i < L; i++) {
       this.terrain[i] = Math.max(0, TERRAINS.indexOf(wj.terrain[i] as any));
-      this.resource[i] = GI[wj.resource[i]] ?? 0;
+      this.resource[i] = RESOURCE_INDEX[wj.resource[i]] ?? 0;
       this.coastal[i] = wj.coastal[i] ? 1 : 0;
     }
     for (const [l] of geo.passes) this.pass[l - 1] = 1;
+    if (land.yield.length !== L) throw new Error(`land.json has ${land.yield.length} places, the map has ${L}`);
+    this.landYield = Float32Array.from(land.yield, (v) => v ?? NaN);
+    this.landEngland = land.england.land;
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

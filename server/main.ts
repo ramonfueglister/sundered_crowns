@@ -7,7 +7,7 @@ import { WebSocketServer, type WebSocket, type RawData } from 'ws';
 import { WorldCore, configFromEnv, type Session } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
-import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/online/protocol';
+import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
 
 // local development: read ./.env if present (production hosts set real environment variables)
 if (existsSync('.env') && typeof (process as any).loadEnvFile === 'function') (process as any).loadEnvFile('.env');
@@ -15,7 +15,6 @@ const env = process.env;
 const PORT = Number(env.PORT || env.WORLD_PORT || 8787);
 const ORIGINS = (env.ALLOWED_ORIGINS || '').split(',').map((x) => x.trim()).filter(Boolean);
 const MAX_PER_USER = Number(env.MAX_CONN_PER_USER || 3), MAX_PER_IP = Number(env.MAX_CONN_PER_IP || 12); // raised only for local load tests
-const ADMIN_TOKEN = env.ADMIN_TOKEN || ''; // enables the /admin/* endpoints (reports, bans)
 
 const cfg = configFromEnv(env);
 const store = SupabaseStore.fromEnv(env) ?? new NullStore();
@@ -23,7 +22,7 @@ const auth = authConfigFromEnv(env);
 if (auth.devMode) console.warn('[world] DEV mode: no Supabase configured, players log in with a display name only. Do not expose this publicly.');
 const core = new WorldCore(cfg, store).init();
 core.start();
-console.log(`[world] ${cfg.id} season ${core.meta.season} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`);
+console.log(`[world] ${cfg.id} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`);
 
 const cors = (req: IncomingMessage) => {
   const o = req.headers.origin; const ok = !o || !ORIGINS.length || ORIGINS.includes(o);
@@ -33,16 +32,6 @@ const http = createServer((req, res) => {
   const h = { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) };
   if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day, players: core.seats().length, stepMs: core.stepMs })); return; }
   if (req.url === '/world') { res.writeHead(200, h); res.end(JSON.stringify(core.worldInfo())); return; }
-  if (req.url === '/leaderboard') { res.writeHead(200, h); res.end(JSON.stringify({ season: core.meta.season, rows: core.leaderRows(50) })); return; }
-  // moderation for operators (ADMIN_TOKEN): reports, bans (the same as the admin tab in the game)
-  if (req.url?.startsWith('/admin/') && ADMIN_TOKEN) {
-    const auth = String(req.headers.authorization || '');
-    if (auth !== `Bearer ${ADMIN_TOKEN}`) { res.writeHead(401, h); res.end('{"error":"unauthorized"}'); return; }
-    const u = new URL(req.url, 'http://x'); const q = (k: string) => u.searchParams.get(k) ?? '';
-    if (u.pathname === '/admin/reports' && req.method === 'GET') { res.writeHead(200, h); res.end(JSON.stringify({ reports: core.reports(q('all') === '1'), bans: core.bans(), filter: core.filter.size })); return; }
-    if (u.pathname === '/admin/ban' && req.method === 'POST' && q('uid')) { core.ban(q('uid'), 'http', q('reason'), Number(q('hours')) || 0, q('release') === '1'); res.writeHead(200, h); res.end('{"ok":true}'); return; }
-    if (u.pathname === '/admin/unban' && req.method === 'POST' && q('uid')) { core.unban(q('uid')); res.writeHead(200, h); res.end('{"ok":true}'); return; }
-  }
   res.writeHead(404, h); res.end('{"error":"not found"}');
 });
 
@@ -75,7 +64,7 @@ wss.on('connection', (ws, req) => {
     if (ws.readyState !== ws.OPEN) return;
     clearTimeout(helloTimer);
     uid = user.uid; perUser.set(uid, (perUser.get(uid) ?? 0) + 1);
-    session = core.attach({ send, sendRaw: (j) => { if (ws.readyState === ws.OPEN) ws.send(j); }, sendBin: (b) => { if (ws.readyState === ws.OPEN) ws.send(b, { binary: true }); }, close: (c, r) => ws.close(c, r) }, user);
+    session = core.attach({ send, sendBin: (b) => { if (ws.readyState === ws.OPEN) ws.send(b, { binary: true }); }, close: (c, r) => ws.close(c, r) }, user);
   });
   ws.on('close', () => {
     clearTimeout(helloTimer);
@@ -90,7 +79,7 @@ const beat = setInterval(() => {
   for (const ws of wss.clients) { if (!alive.get(ws)) { ws.terminate(); continue; } alive.set(ws, false); try { ws.ping(); } catch { /* ignore */ } }
 }, 30_000);
 
-http.listen(PORT, () => console.log(`[world] listening on :${PORT} (ws + /health, /world, /leaderboard)`));
+http.listen(PORT, () => console.log(`[world] listening on :${PORT} (ws + /health, /world)`));
 
 let stopping = false;
 function stop(sig: string) {

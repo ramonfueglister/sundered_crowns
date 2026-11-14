@@ -8,7 +8,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
 
 - [Die Welt](welt.md): Karte, Massstab, die dauerhafte Welt und die KI-Reiche
 - [Wirtschaft](wirtschaft/README.md): Übersicht über alle Wirtschafts-Features
-  - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Entwurf)*
+  - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Im Spiel)*
 
 ## Status der Seiten
 

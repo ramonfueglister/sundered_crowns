@@ -1,7 +1,7 @@
 # Fly.io app for one world server. Deploy from the repository root:
 #   fly deploy . --config server/fly.toml --dockerfile server/Dockerfile
 # (the build context must be the repository root: the image needs src/, tools/sim/ and public/data/)
-app = "sundered-crowns-world"
+app = "grand-strategy-game"
 primary_region = "fra"
 kill_signal = "SIGTERM"
 kill_timeout = "30s"

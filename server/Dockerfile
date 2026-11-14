@@ -20,9 +20,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY public/data ./public/data
-COPY data/content/trade_hubs.json ./data/content/trade_hubs.json
-# the word filter list (WORLD_WORD_FILTER, default server/config/wordfilter.txt relative to /app)
-COPY server/config ./server/config
 COPY --from=build /app/build/server ./build/server
 RUN mkdir -p /data
 VOLUME /data
