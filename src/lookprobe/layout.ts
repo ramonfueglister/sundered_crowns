@@ -153,6 +153,24 @@ export interface Ground {
   shore: Uint8Array;
   /** height that blocks the sky over each column: ground, later raised by houses and trees */
   occ: Float32Array;
+  /** height of the water surface over each wet column */
+  surf: Float32Array;
+}
+/** What the ground mesher needs to know about a scene beyond heights and materials. Positions are ground coordinates. */
+export interface GroundTraits {
+  /** paved town ground */
+  city(x: number, z: number): boolean;
+  /** blocks to the edge of the main square, negative inside it (Infinity where there is none) */
+  plaza(x: number, z: number): number;
+  crop(x: number, z: number, margin?: number): Crop | null;
+  /** blocks to the nearest path */
+  road(x: number, z: number): number;
+  /** how sun-bleached the meadow is (0 … 1) */
+  bleach(x: number, z: number): number;
+  /** how far up its massif a rock column stands (0 … 1); pale summit above `SUMMIT` */
+  summit(x: number, z: number): number;
+  /** linear RGB of the sides of meadow steps where hills are overgrown; bare earth if left out */
+  slope?: readonly [number, number, number];
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;
@@ -217,8 +235,28 @@ function rockHeight(x: number, z: number): number {
   return Math.max(1, (share > SUMMIT ? Math.round((m + bundle) / 2) * 2 : Math.round(m + bundle + own)) + step);
 }
 
+/** Fills `shore`: blocks from each wet column to the nearest dry one, by repeated relaxation (two passes are enough for the short range needed). */
+export function measureShore(g: Ground) {
+  const far = 14;
+  for (let i = 0; i < N * N; i++) g.shore[i] = g.wet[i] ? far : 0;
+  for (let pass = 0; pass < 2; pass++) {
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      const i = idx(x, z); if (!g.wet[i]) continue;
+      let d = g.shore[i];
+      if (x > 0) d = Math.min(d, g.shore[i - 1] + 1); if (z > 0) d = Math.min(d, g.shore[i - N] + 1);
+      g.shore[i] = d;
+    }
+    for (let z = N - 1; z >= 0; z--) for (let x = N - 1; x >= 0; x--) {
+      const i = idx(x, z); if (!g.wet[i]) continue;
+      let d = g.shore[i];
+      if (x < N - 1) d = Math.min(d, g.shore[i + 1] + 1); if (z < N - 1) d = Math.min(d, g.shore[i + N] + 1);
+      g.shore[i] = d;
+    }
+}
+}
+
 export function buildGround(): Ground {
-  const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N) };
+  const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y) };
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const px = x + 0.5, pz = z + 0.5, i = idx(x, z);
     const island = islandAt(px, pz);
@@ -251,26 +289,21 @@ export function buildGround(): Ground {
     if (g.wet[i] && (paved(i - 1) || paved(i + 1) || paved(i - N) || paved(i + N)) && riverDist(x + 0.5, z + 0.5) > 4 && hash2(x, z, 29) < 0.8) rim.push(i);
   }
   for (const i of rim) { g.wet[i] = 0; g.h[i] = LAND_Y - 1; g.mat[i] = Mat.Paved; }
-  // distance to the shore, by repeated relaxation (two passes are enough for the short range needed)
-  const far = 14;
-  for (let i = 0; i < N * N; i++) g.shore[i] = g.wet[i] ? far : 0;
-  for (let pass = 0; pass < 2; pass++) {
-    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-      const i = idx(x, z); if (!g.wet[i]) continue;
-      let d = g.shore[i];
-      if (x > 0) d = Math.min(d, g.shore[i - 1] + 1); if (z > 0) d = Math.min(d, g.shore[i - N] + 1);
-      g.shore[i] = d;
-    }
-    for (let z = N - 1; z >= 0; z--) for (let x = N - 1; x >= 0; x--) {
-      const i = idx(x, z); if (!g.wet[i]) continue;
-      let d = g.shore[i];
-      if (x < N - 1) d = Math.min(d, g.shore[i + 1] + 1); if (z < N - 1) d = Math.min(d, g.shore[i + N] + 1);
-      g.shore[i] = d;
-    }
-  }
-  for (let i = 0; i < N * N; i++) g.occ[i] = g.wet[i] ? SEA_Y : g.h[i];
+  measureShore(g);
+  for (let i = 0; i < N * N; i++) g.occ[i] = g.wet[i] ? g.surf[i] : g.h[i];
   return g;
 }
+
+/** the traits of the probe scene's ground */
+export const TRAITS: GroundTraits = {
+  city: inCity,
+  plaza: (x, z) => Math.max(Math.abs(x - SITES.plaza.at[0]) - SITES.plaza.w / 2, Math.abs(z - SITES.plaza.at[1]) - SITES.plaza.d / 2),
+  crop: fieldAt,
+  road: roadDist,
+  // more bleached towards the coast than under the mountains
+  bleach: (x, z) => smooth(0.3, 0.65, toST(x, z)[1]),
+  summit: summitShare,
+};
 
 /** Raises the sky blocker over a ground rectangle (houses, trees). */
 export function occlude(g: Ground, x0: number, z0: number, x1: number, z1: number, top: number) {
@@ -280,6 +313,6 @@ export function occlude(g: Ground, x0: number, z0: number, x1: number, z1: numbe
 /** Ground height under a point (the water surface over water). */
 export const groundY = (g: Ground, x: number, z: number) => {
   const i = idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))));
-  return g.wet[i] ? SEA_Y : g.h[i];
+  return g.wet[i] ? g.surf[i] : g.h[i];
 };
 export const isWet = (g: Ground, x: number, z: number) => !inGrid(Math.floor(x), Math.floor(z)) || g.wet[idx(Math.floor(x), Math.floor(z))] === 1;

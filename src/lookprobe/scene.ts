@@ -5,7 +5,7 @@ import { Batch, type Rnd, fbm2, hash2, seeded, smooth } from './batch';
 import { boat, borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
 import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse, townWall } from './buildings';
 import {
-  BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
+  BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS, TRAITS,
   buildGround, fieldAt, idx, inCity, inGrid, isWet, mountainAt, occlude, riverDist, roadDist, toST, toXZ,
 } from './layout';
 import { buildTerrain, buildWater } from './terrain';
@@ -277,7 +277,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   }
   things.append(bands, m.identity());
 
-  const ground = buildTerrain(g, bakedSky), water = buildWater(g);
+  const ground = buildTerrain(g, TRAITS, bakedSky), water = buildWater(g);
   counts.triangles = ground.triangles + water.triangles + things.triangles;
   return { ground, water, things, counts };
 }
