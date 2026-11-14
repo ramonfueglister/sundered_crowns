@@ -59,25 +59,33 @@ Das Bild wurde in sechs Ausschnitten vierfach vergrössert untersucht.
 
   | Element | Gemessen im Bild (1672 × 941) | In Bodenblöcken |
   |---|---|---|
-  | Baumblock, Grenzband, Steinrand der Inseln | 7 bis 8 Pixel | 1 (das ist der Bodenblock) |
-  | Baum | 25 × 32 Pixel | 3 bis 4 breit, 4 bis 5 hoch |
-  | Feldfrucht | 4 bis 5 Pixel | etwa ein halber Block |
+  | Bodenblock (Grenzband, Steinrand der Inseln) | 8,8 Pixel entlang der Bildbreite | 1 |
+  | Laubbaum | 28 × 50 Pixel | Krone 2,6 breit, ganzer Baum 5 bis 6 hoch |
+  | Zypresse | 16 × 50 Pixel | 1,6 breit, 6 hoch |
+  | Feldfrucht | 8 × 10 Pixel | 1 breit, gut 1 hoch |
   | Mensch | 3 × 10 Pixel | gut 1 hoch, ein Drittel breit |
-  | Haus (Langseite, Wandhöhe) | 100 und 42 Pixel | 13 lang, 6 hoch, dazu das Dach |
-  | Fenster | 3 × 5 Pixel | kleiner als ein halber Block |
-  | Campanile, Dogenpalast | 48 bzw. 180 Pixel breit | 6 bzw. 24 breit |
-  | Felsblöcke im Gebirge | 40 bis 60 Pixel | 6 bis 8 |
+  | Stadthaus (zwei Geschosse) | Wände 27 und 35 Pixel breit, 30 hoch | 5 × 5 im Grundriss, 4 bis zur Traufe |
+  | Landhaus | Wände 18 und 28 Pixel breit, 20 hoch | 3 × 4,5 im Grundriss, 2,5 bis 3,5 hoch |
+  | Fenster | 4 × 7 Pixel | ein halber Block breit |
+  | Campanile, Dogenpalast | 50 bzw. 180 Pixel breit | 4 × 4 und 29 hoch, 16 × 13 und 9,5 hoch |
+  | Felsblöcke im Gebirge | 12 bis 25 Pixel | 2 bis 4, Gipfel 17 bis 22 hoch |
+
+  Stand nach der Look-Probe (14.11.2026). Die erste Fassung dieser Tabelle hatte Häuser doppelt so gross und Bäume
+  halb so gross angesetzt. Das fiel erst im Bild neben der Referenz auf. Ein Baum ist im Bild so hoch wie ein
+  zweigeschossiges Haus, ein Haus nur doppelt so breit wie eine Baumkrone: klassische Dioramaverhältnisse.
 
 - **Die Häuser sind keine Voxel.** Sie haben glatte Walmdächer, glatte Wände, runde Bögen, eine runde Kuppel und
   Fenster, die kleiner sind als ein Block. Blockig sind nur Bäume, Felder, Fels, Stege, Schiffsrümpfe und das
   Grenzband.
 - **Der Boden wirkt glatt.** Wiesen zeigen kein Raster, nur leichte Farbflecken. Wege haben weiche Ränder. Stufen
   sieht man nur an Hängen, Ufern und Inselrändern.
-- **Licht:** tiefe, warme Sonne von links, kühle bläuliche Schatten, sehr weiche Schattenränder. Gemessen: Ein
-  Schlagschatten auf Gras ist noch 74 % so hell wie besonntes Gras, auf Wasser 52 %, eine abgewandte Felswand 46 %
-  der besonnten Oberseite. Die dunkelsten 5 % aller Bildpunkte haben noch 26 % Helligkeit, es gibt also kein
-  Schwarz. Mittlere Sättigung 0,51. Das ist das Kennzeichen von Streulicht, wie es der Pfadverfolger von
-  MagicaVoxel erzeugt [24].
+- **Licht:** warme Sonne von rechts hinten, kühle bläuliche Schatten, weiche Schattenränder. In der Look-Probe neu
+  und genauer gemessen, in linearem Licht: Ein Schlagschatten behält etwa ein Drittel des Lichts, eine von der Sonne
+  abgewandte Hauswand etwa ein Viertel einer besonnten Wand, und die Schatten sind kurz (ein Haus wirft weniger als
+  seine Höhe). Das passt zu keiner einzelnen Sonne. Die Probe benutzt deshalb eine hohe Sonne für die Schatten und
+  ein flaches Seitenlicht ohne Schatten für die Wände. Die dunkelsten 5 % aller Bildpunkte haben noch 24 %
+  Helligkeit, es gibt also kein Schwarz. Mittlere Sättigung 0,51, mittlere Helligkeit 0,54. (Die frühere Angabe
+  "74 % auf Gras" war an einem weichen Schattenrand gemessen und zu hell.)
 - **Wasser:** glatt und türkis, mit weichen Spiegelungen der Stege und Häuser, weichem Schiffsschatten und
   Kielwasser aus kleinen hellen Strichen.
 
@@ -140,9 +148,10 @@ Look-Probe. Bis dahin ist jede Prozentzahl geraten.
 1. **Feste Probeszene.** Ein Ausschnitt mit derselben Bildaufteilung wie die Referenz (Stadt am Wasser, Felder,
    Wald, Fels, Inseln, Schiffe, Grenzband), gleiche Auflösung, gleicher Blickwinkel.
 2. **Bild neben Bild.** Jede Runde liefert das Bildpaar und eine Liste der Abweichungen.
-3. **Messwerte.** Dieselben Messungen wie oben werden am eigenen Bild wiederholt: Schattenhelligkeit auf Gras
-   (Ziel 0,65 bis 0,8), auf Wasser (0,45 bis 0,6), dunkelste 5 % (mindestens 0,2), mittlere Sättigung (0,45 bis
-   0,55), Bodenblock 7 bis 8 Pixel, Hauslänge 12 bis 14 Blöcke. Das verhindert, dass ich mir ein Bild schönrede.
+3. **Messwerte.** Dieselben Messungen wie oben werden am eigenen Bild wiederholt: dunkelste 5 % (Referenz 0,24),
+   hellste 5 % (0,93), mittlere Sättigung (0,51), mittlere Helligkeit (0,54), dazu die mittleren Farben von Gras,
+   Wasser, Dächern und Wänden im Licht und im Schatten, und die Grössen aus der Tabelle. Das verhindert, dass ich
+   mir ein Bild schönrede.
 4. **Dein Urteil pro Merkmal.** Für jedes Merkmal aus der Rezepttabelle: stimmt, nah dran, stimmt nicht.
 5. **Leistung.** Bildrate auf deinem Rechner, je Lichtstufe einzeln ein- und ausschaltbar.
 6. **Abbruchregel.** Stimmt der Look nach fünf Runden nicht, wird nicht weitergebaut, sondern der Ansatz neu
@@ -243,7 +252,7 @@ werden:
   2026, Korrektur eines früheren Entwurfs). Was man sieht, ist das, was simuliert wird. Ein Haus auf der Karte ist
   ein Haushalt der Simulation, ein Feld ist ein bewirtschaftetes Feld, eine Figur ist ein Mensch oder eine feste
   kleine Gruppe.
-- **Ein einziger Verkleinerungsfaktor für die ganze Welt** (Vorschlag 1 zu 100, noch zu entscheiden). Linear, damit
+- **Ein einziger Verkleinerungsfaktor für die ganze Welt** (1 zu 100, von Ramon am 14.11.2026 entschieden; gilt für Menschen, Waren und Geld). Linear, damit
   die Verhältnisse zwischen Orten und Reichen stimmen. Die Startdaten haben 150 Millionen Menschen in 15'220 Orten;
   bei 1 zu 100 sind das 1,5 Millionen Menschen in rund 300'000 Haushalten, im Schnitt 20 Häuser pro Ort. Venedig
   (110'000) hat dann 1'100 Einwohner in etwa 220 Häusern, Paris (200'000) 2'000 in etwa 400, ein Dorf mit 500
