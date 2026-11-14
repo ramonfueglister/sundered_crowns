@@ -24,15 +24,23 @@ export interface WorldView {
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
 /** above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale */
 const TREE_LINE = 1900, SNOW_LINE = 2530;
+/**
+ * These heights hold in the Alps, at 46° north. Towards the pole the tree line sinks by about 60 m a degree (some
+ * 1000 m in southern Norway, 500 m in the far north), towards the south it rises to about 2300 m; the snow line and
+ * the foot of the rock go with it. A rule of thumb for the mainland: on the ocean's edge (Scotland, Iceland) the real
+ * tree line lies lower still.
+ */
+const lineShift = (lat: number) => Math.min(400, Math.max(-1500, (46 - lat) * 60));
 /** the massifs are rock from this height upwards; what stands above their valley floors is raised by this factor */
 const ROCK_FROM = 1500, PEAK = 1.3;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
 const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
-const levelOf = (metres: number) => Math.max(0, (Math.min(metres, TREE_LINE) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - TREE_LINE) / METRES_PER_BLOCK_HIGH;
 
 export function buildWorld(region: Region, view: WorldView, bakedSky = true): StageScene {
+  const shift = lineShift(view.lat), treeLine = TREE_LINE + shift, snowLine = SNOW_LINE + shift, rockFrom = Math.max(300, ROCK_FROM + shift);
+  const levelOf = (metres: number) => Math.max(0, (Math.min(metres, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - treeLine) / METRES_PER_BLOCK_HIGH;
   const C = N / 2, perBlock = 1 / view.perCell, [c0x, c0y] = cellOf(region, view.lon, view.lat);
   /** region cell under a ground point: east is the picture's right, south its near side */
   const toCell = (x: number, z: number): [number, number] => {
@@ -94,7 +102,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   const pillar = (x: number, z: number): [number, boolean, number] => {
     const [px, pz] = rockPillar(x, z), bx = Math.floor(px / 2) * 2 + 1, cx = bx * 2, cz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx;
     const raised = (qx: number, qz: number) => at(base, qx, qz) + PEAK * (at(massif, qx, qz) - at(base, qx, qz));
-    return [raised(cx, cz), at(massif, cx, cz) > ROCK_FROM && at(away, cx, cz) >= FOOT, raised((px + 0.5) * 2, (pz + 0.5) * 2 - px)];
+    return [raised(cx, cz), at(massif, cx, cz) > rockFrom && at(away, cx, cz) >= FOOT, raised((px + 0.5) * 2, (pz + 0.5) * 2 - px)];
   };
 
   const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y) };
@@ -165,14 +173,14 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   const things = new Batch(), counts: Record<string, number> = { tree: 0 }, r = seeded(41), pitch = 2.4;
   for (let gz = 2; gz < N - 2; gz += pitch) for (let gx = 2; gx < N - 2; gx += pitch) {
     const x = gx + r.range(-1.2, 1.2), z = gz + r.range(-1.2, 1.2), roll = r.next(), conifer = r.next(), i = idx(Math.floor(x), Math.floor(z));
-    if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > TREE_LINE) continue;
+    if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > treeLine) continue;
     const [cx, cy] = toCell(x, z), cover = sample(region, region.forest, cx, cy) / 255;
     if (roll > 0.04 + 0.7 * cover) continue;
     // a tree stands clear of the water and of drops of more than a step
     let fits = true;
     for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
     if (!fits) continue;
-    if (conifer < 0.08 + 0.8 * smooth(500, 1300, metres[i])) { cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2); }
+    if (conifer < 0.08 + 0.8 * smooth(500 + shift, 1300 + shift, metres[i])) { cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2); }
     else { tree(things, x, g.h[i], z, r, cover > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4); }
     counts.tree++;
   }
@@ -183,7 +191,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
     bleach: (x, z) => smooth(900, 200, metresAt(x, z)),
     // the snow line stands where the probe's summits begin; bundles of pillars differ a little, so that the line is ragged
     slope: SLOPE,
-    summit: (x, z) => { const [px, pz] = rockPillar(x, z); return (pillar(x, z)[0] / SNOW_LINE) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
+    summit: (x, z) => { const [px, pz] = rockPillar(x, z); return (pillar(x, z)[0] / snowLine) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
   const ground = buildTerrain(g, traits, bakedSky), water = buildWater(g), raised = buildWater(g, true);
   counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles;
