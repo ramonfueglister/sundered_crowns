@@ -6,7 +6,7 @@ import { borderBand, bush, crops, cypress, person, pier, sheep, ship, smoke, tre
 import { ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
-  buildGround, fieldAt, idx, inCity, inGrid, isWet, mountainAt, occlude, riverDist, roadDist, toST,
+  buildGround, fieldAt, idx, inCity, inGrid, isWet, mountainAt, occlude, riverDist, roadDist, toST, toXZ,
 } from './layout';
 import { buildTerrain, buildWater } from './terrain';
 
@@ -193,7 +193,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (inGrid(Math.floor(x), Math.floor(z)) && !isWet(g, x, z) && !used[idx(Math.floor(x), Math.floor(z))] && inFrame(x, z)) { person(things, x, baseY(x, z), z, r); count('person'); }
     }
     for (const [s, t] of [[0.105, 0.455], [0.59, 0.19]] as const) for (let k = 0; k < 9; k++) {
-      const u = (s - 0.5) * 190 + r.range(-5, 5), v = (t - 0.5) * 214 + r.range(-4, 4), x = N / 2 + (u + v) * Math.SQRT1_2, z = N / 2 + (v - u) * Math.SQRT1_2, i = idx(Math.floor(x), Math.floor(z));
+      const at = toXZ(s, t), x = at[0] + r.range(-6, 6), z = at[1] + r.range(-6, 6), i = idx(Math.floor(x), Math.floor(z));
       if (g.mat[i] === Mat.Grass && !g.wet[i] && !used[i]) { sheep(things, x, g.h[i], z, r); count('sheep'); }
     }
   }

@@ -5,20 +5,28 @@
 import { fbm2, hash2, noise2 } from './batch';
 
 /** side of the square ground grid */
-export const N = 300;
+export const N = 400;
 const C = N / 2;
-/** ground units across the picture and from its top to its bottom edge (at 30° camera elevation) */
-export const FRAME_W = 190, FRAME_D = 214;
+/**
+ * The camera of the reference image, measured from the directions of its building edges (they run 18.5° down and 16.5°
+ * up to the right): it looks down by 18.7°, and the ground's x axis lies 46.7° from the picture's horizontal.
+ */
+export const VIEW = { elevation: 18.7, turn: 46.7 } as const;
+const TURN = (VIEW.turn * Math.PI) / 180;
+/** ground directions (x, z) of the picture's right and of its bottom (towards the camera) */
+export const RIGHT: P2 = [Math.cos(TURN), -Math.sin(TURN)], NEAR: P2 = [Math.sin(TURN), Math.cos(TURN)];
+/** ground units across the picture and from its top to its bottom edge */
+export const FRAME_W = 190, FRAME_D = (FRAME_W * 941) / 1672 / Math.sin((VIEW.elevation * Math.PI) / 180);
 /** height of the water surface; land starts at LAND_Y */
 export const SEA_Y = 2.7, LAND_Y = 4;
 
 export type P2 = readonly [number, number];
 export const toXZ = (s: number, t: number): P2 => {
   const u = (s - 0.5) * FRAME_W, v = (t - 0.5) * FRAME_D;
-  return [C + (u + v) * Math.SQRT1_2, C + (v - u) * Math.SQRT1_2];
+  return [C + u * RIGHT[0] + v * NEAR[0], C + u * RIGHT[1] + v * NEAR[1]];
 };
 export const toST = (x: number, z: number): P2 => {
-  const u = (x - z) * Math.SQRT1_2, v = (x + z - 2 * C) * Math.SQRT1_2;
+  const u = (x - C) * RIGHT[0] + (z - C) * RIGHT[1], v = (x - C) * NEAR[0] + (z - C) * NEAR[1];
   return [u / FRAME_W + 0.5, v / FRAME_D + 0.5];
 };
 const line = (pts: readonly P2[]) => pts.map(([s, t]) => toXZ(s, t));

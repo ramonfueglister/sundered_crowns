@@ -6,7 +6,7 @@ import { float, pass, reflector } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
-import { FRAME_W, LAND_Y, N, SEA_Y } from './layout';
+import { FRAME_D, FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW, toXZ } from './layout';
 import { buildScene } from './scene';
 import { OPEN_WATER } from './terrain';
 
@@ -20,7 +20,7 @@ const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fa
  * shadows and a level side light without shadows that brightens the walls facing right.
  */
 const LOOK = {
-  elevation: 30, distance: 945,
+  distance: 3000,
   sun: 0.82, sunElevation: 55, sunTurn: 12, sunColor: 0xfff0d8,
   side: 0.7, sideColor: 0xffe6c8,
   sky: 0.36, skyColor: 0xcfe0ff, bounce: 0.12, bounceColor: 0xffe2c0,
@@ -62,16 +62,23 @@ async function start() {
   const centre = new THREE.Vector3(N / 2, LAND_Y, N / 2), rad = THREE.MathUtils.degToRad;
   /** a direction on the ground given by its share to the right of the picture and towards its back, raised by `elev` */
   const from = (turn: number, elev: number) => {
-    const right = Math.cos(rad(turn)), back = Math.sin(rad(turn));
-    return new THREE.Vector3((right - back) * Math.SQRT1_2 * Math.cos(rad(elev)), Math.sin(rad(elev)), -(right + back) * Math.SQRT1_2 * Math.cos(rad(elev)));
+    const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
+    return new THREE.Vector3(RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back);
   };
   const sun = new THREE.DirectionalLight(LOOK.sunColor, LOOK.sun * Math.PI);
   sun.position.copy(centre).addScaledVector(from(LOOK.sunTurn, LOOK.sunElevation), 420);
   sun.target.position.copy(centre);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
-  const sc = sun.shadow.camera;
-  sc.left = -128; sc.right = 128; sc.top = 128; sc.bottom = -128; sc.near = 150; sc.far = 700;
+  // the shadow map covers the ground of the picture and what stands on it, seen from the sun
+  const sc = sun.shadow.camera, toSun = from(LOOK.sunTurn, LOOK.sunElevation);
+  const across = new THREE.Vector3().crossVectors(toSun, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(across, toSun);
+  let halfW = 0, halfH = 0, depth = 0;
+  for (const s of [-0.02, 1.02]) for (const t of [-0.02, 1.02]) for (const y of [0, 36]) {
+    const [x, z] = toXZ(s, t), p = new THREE.Vector3(x, y, z).sub(centre);
+    halfW = Math.max(halfW, Math.abs(p.dot(across))); halfH = Math.max(halfH, Math.abs(p.dot(up))); depth = Math.max(depth, Math.abs(p.dot(toSun)));
+  }
+  sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
   sun.shadow.radius = 5; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
   const side = new THREE.DirectionalLight(LOOK.sideColor, LOOK.side * Math.PI);
   side.position.copy(centre).addScaledVector(from(0, 0), 100);
@@ -80,13 +87,13 @@ async function start() {
   scene.add(sun, sun.target, side, side.target, sky);
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
-  const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, LOOK.distance - 420, LOOK.distance + 420);
-  const elev = THREE.MathUtils.degToRad(LOOK.elevation);
-  camera.position.copy(centre).add(new THREE.Vector3(Math.SQRT1_2 * Math.cos(elev), Math.sin(elev), Math.SQRT1_2 * Math.cos(elev)).multiplyScalar(LOOK.distance));
+  const elev = rad(VIEW.elevation), reach = (FRAME_D / 2) * Math.cos(elev) + 80;
+  const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, LOOK.distance - reach, LOOK.distance + reach);
+  camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(LOOK.distance));
   camera.lookAt(centre);
   const controls = new MapControls(camera, canvas);
   controls.target.copy(centre);
-  controls.minDistance = 200; controls.maxDistance = 1300; controls.maxPolarAngle = THREE.MathUtils.degToRad(80);
+  controls.minDistance = 600; controls.maxDistance = 4200; controls.maxPolarAngle = rad(80);
   controls.update();
 
   const pipeline = new THREE.RenderPipeline(renderer);
