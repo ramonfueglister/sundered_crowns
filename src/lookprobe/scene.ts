@@ -3,7 +3,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
 import { borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
-import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse } from './buildings';
+import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse, townWall } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
   buildGround, fieldAt, idx, inCity, inGrid, isWet, mountainAt, occlude, riverDist, roadDist, toST, toXZ,
@@ -98,7 +98,21 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (k % 2 === 0) { if (fits(x - 2, z - 2, x + 2, z + 2, rural)) { build(tower(r), x, z, 2.4, 2.4, 0, 10, 'tower'); k++; } }
       else if (fits(x - 3, z - 6, x + 3, z + 5, rural)) { build(church(r), x, z, 5.2, 10.6, 0, 6, 'church'); k++; }
     }
-    scatter(r, t.at, t.r, t.r, t.houses, t.houses > 8);
+    if (t.houses > 12) {
+      // a walled town: houses packed inside a square, the wall round them
+      const half = Math.round(t.r * 0.62), cx = Math.round(t.at[0]), cz = Math.round(t.at[1]), inside = (px: number, pz: number) => Math.abs(px - cx) < half - 1.5 && Math.abs(pz - cz) < half - 1.5;
+      for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) {
+        if (used[idx(x, z)]) continue;
+        const turn = r.chance(0.5);
+        for (const [long, short, floors] of [[r.int(7, 10), r.int(4, 5), r.chance(0.4) ? 3 : 2], [r.int(4, 5), 4, 2], [3, 3, 2]]) {
+          const w = turn ? short : long, d = turn ? long : short;
+          if (fits(x, z, x + w, z + d, inside, r.chance(0.5) ? 1 : 0)) { homes(r, x, z, w, d, floors); break; }
+        }
+      }
+      put(townWall(half * 2, half * 2), cx, baseY(cx, cz), cz, 0);
+      for (const [ax, az, bx, bz] of [[-half, -half, half, -half + 1], [-half, half - 1, half, half], [-half, -half, -half + 1, half], [half - 1, -half, half, half]]) claim(cx + ax - 1, cz + az - 1, cx + bx + 1, cz + bz + 1);
+      count('wall');
+    } else scatter(r, t.at, t.r, t.r, t.houses, t.houses > 8);
   });
   ISLANDS.forEach((isle, n) => {
     const r = seeded(200 + n);
@@ -163,7 +177,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const x = gx + r.range(-1, 1), z = gz + r.range(-1, 1), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
       const [, t] = toST(x, z);
-      let density = Math.max(0.05, 0.42 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.52 * smooth(0.27, 0.12, t), 0.6 * smooth(-7, -1, mountainAt(x, z)));
+      let density = Math.max(0.04, 0.38 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.44 * smooth(0.27, 0.12, t), 0.55 * smooth(-7, -1, mountainAt(x, z)));
       if (nearTown(x, z)) density = Math.min(density, 0.08);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
@@ -202,10 +216,10 @@ export function buildScene(bakedSky = true): ProbeScene {
   // tufts on the meadows, smoke over a few houses of the towns
   {
     const r = seeded(61);
-    for (let k = 0; k < 9000; k++) {
+    for (let k = 0; k < 16000; k++) {
       const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || roadDist(x, z) < 1.5) continue;
-      if (k % 3) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
+      if (k % 2) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
     }
     for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
   }
