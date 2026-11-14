@@ -38,5 +38,5 @@ Open questions to Ramon:
 2. Are the six estates right, or are some missing (serfs, slaves, Jewish communities as their own estate, mercenaries)?
 3. Closed circulation of money: yes or no?
 4. Scale (raised by Ramon on 14 November: the simulation itself reckons with scaled-down quantities, as in a diorama).
-   Proposal: one model rule for all quantities, e.g. 1 : 100 (Paris 258,825 → about 2,600 people, Europe about 750,000;
+   Proposal: one model rule for all quantities, e.g. 1 : 100 (Paris 258,825 → about 2,600 people, the whole map about 1.5 million;
    goods and money in the same proportion). Which factor: 1 : 100, 1 : 1,000, or a fixed size per place type?
