@@ -66,10 +66,10 @@ tools/geo/build_land.py overlays both on the place raster and writes public/data
 the land of each place, weighted by ground area. Cells of zero yield count as zero, cells without data are left out.
 The index covers 99.73 % of the map's land; 26.92 % of the land has zero yield; 13 places have no data at all (the
 Azores and two map artefacts) and bring in no harvest; 107 places have data for less than 90 % of their area.
-The two first steps need zenodo.org and raw.githubusercontent.com, which the cloud environment cannot reach; they were
-run on Ramon's Mac on 14 November 2026. land.json and the crop are adapted from the data set and carry its licence,
-CC BY-SA 4.0. The outline file (tools/geo/data/ne/england.json) is still to be pushed from the Mac; land.json was
-built there with it (its checksum is in the commit that added land.json).
+The first step needs zenodo.org, which the cloud environment cannot reach; it was run on Ramon's Mac on 14 November
+2026. The outline (tools/geo/data/ne/england.json) was built on the Mac and again in the cloud environment from the
+same source file, with the same checksum, and build_land.py reproduces land.json byte for byte in both places.
+land.json and the crop are adapted from the data set and carry its licence, CC BY-SA 4.0.
 
 **Implementation.** src/sim/systems/harvest.ts holds the model and the system, which runs on the first day of each
 year over all places. The harvest is a column of the places (state version 2); a world saved by an older build is
