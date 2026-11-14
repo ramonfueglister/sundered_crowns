@@ -5,6 +5,7 @@ import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout
 
 const TRUNK = rgb(0x5a3c26);
 const LEAVES = [rgb(0x72aa38), rgb(0x80b63c), rgb(0x649c34), rgb(0x8cbe42), rgb(0x5a9232)];
+const FLANK = rgb(0x3c8440);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
 const WHEAT = [rgb(0xffcf40), rgb(0xf6c238), rgb(0xffd850)];
 const VINE = [rgb(0xa4c040), rgb(0x90b438), rgb(0xb4c848), rgb(0x84a834)];
@@ -20,7 +21,8 @@ const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb
  * blocks wide and four high at `size` 1.
  */
 export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1) {
-  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = shade(g, 0.74);
+  // the sides are a cooler, deeper green than the sunlit top
+  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.55);
   b.box(x - 0.22, y, z - 0.22, x + 0.22, y + 1.3 * s, z + 0.22, TRUNK, { foot: 0.75 });
   const w = 0.9 * s, y1 = y + 0.9 * s, y2 = y1 + 2.3 * s;
   b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.7, bottom: true });
@@ -53,13 +55,13 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     const x = wheat ? x0 + row : x0 + k + 0.5, z = wheat ? z0 + k + 0.5 : z0 + row, seed = Math.round(row * 10);
     if (isWet(g, x, z)) continue;
     const y = groundY(g, x, z), lot = hash2(k, seed, 51);
-    const [hx, hz] = wheat ? [0.4, 0.47] : [0.46, 0.42];
+    const [hx, hz] = wheat ? [0.4, 0.42] : [0.4, 0.42];
     if (wheat) {
       const c = WHEAT[Math.floor(hash2(k, seed, 53) * WHEAT.length)];
       b.box(x - hx, y, z - hz, x + hx, y + 1.45 + 0.4 * lot, z + hz, shade(c, 0.94), { top: c, foot: 0.74 });
     } else if (lot > 0.07) {
       const c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)], h = 1.0 + 0.45 * lot;
-      b.box(x - hx, y, z - hz, x + hx, y + h, z + hz, shade(c, 0.86), { top: c, foot: 0.62 });
+      b.box(x - hx, y, z - hz, x + hx, y + h, z + hz, shade(c, 0.8), { top: c, foot: 0.6 });
       if (r.chance(0.5)) b.box(x - 0.26, y + h, z - 0.24, x + 0.26, y + h + 0.32, z + 0.24, shade(c, 1.1));
     }
   }
@@ -148,6 +150,21 @@ export function smoke(b: Batch, x: number, y: number, z: number, r: Rnd) {
     const s = 0.28 + k * 0.07, px = x - k * 0.35 + r.range(-0.2, 0.2), pz = z + k * 0.35 + r.range(-0.2, 0.2), py = y + k * 0.95;
     b.box(px - s, py, pz - s, px + s, py + s * 1.8, pz + s, c, { bottom: true });
   }
+}
+
+/** A market stall: four posts under a striped awning, a counter with goods. */
+export function stall(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const stripe = r.pick([rgb(0xd0453a), rgb(0x3f6f9a), rgb(0xd9a23a)]), white = rgb(0xf6efe2);
+  for (const [px, pz] of [[-1, -0.7], [1, -0.7], [-1, 0.7], [1, 0.7]]) b.box(x + px - 0.07, y, z + pz - 0.07, x + px + 0.07, y + 1.5, z + pz + 0.07, POST);
+  for (let k = 0; k < 5; k++) b.box(x - 1.15 + k * 0.46, y + 1.5, z - 0.85, x - 1.15 + (k + 1) * 0.46, y + 1.62, z + 0.85, k % 2 ? white : stripe, { bottom: true });
+  b.box(x - 0.9, y, z - 0.4, x + 0.9, y + 0.6, z + 0.4, DECK, { top: r.pick(SPECKS) });
+}
+
+/** Goods on the quay: a crate or a barrel, sometimes two stacked. */
+export function crate(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const s = r.range(0.22, 0.34), c = r.pick([DECK, POST, rgb(0xc09a64), rgb(0x8a6a48)]);
+  b.box(x - s, y, z - s, x + s, y + s * 2, z + s, shade(c, 0.9), { top: c, foot: 0.8 });
+  if (r.chance(0.3)) b.box(x - s * 0.7, y + s * 2, z - s * 0.7, x + s * 0.7, y + s * 3.3, z + s * 0.7, c);
 }
 
 /** A flower or a stone in the grass: one tiny bright block. */

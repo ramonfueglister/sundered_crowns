@@ -1,14 +1,14 @@
 // Ground and water of the probe scene as meshes. The ground is made of columns (one height per cell), as the real
 // renderer will be: level neighbours form one smooth surface, steps show only where heights differ.
 import { Batch, type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch';
-import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDist } from './layout';
+import { type Ground, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SITES, fieldAt, idx, inCity, roadDist } from './layout';
 
-const GRASS_A = rgb(0x8ea838), GRASS_B = rgb(0xa8b23a), GRASS_DRY = rgb(0xc4b842), GRASS_DEEP = rgb(0x749a32);
+const GRASS_A = rgb(0x9cb83c), GRASS_B = rgb(0xb2c040), GRASS_DRY = rgb(0xccc248), GRASS_DEEP = rgb(0x84a836);
 const ROAD = rgb(0xd6c6a2), PAVED = rgb(0xd8c0b0), PLAZA = rgb(0xe2ccbc), ISLE_STONE = rgb(0xe4dacc);
-const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0x8e868a), ROCK_SIDE_WARM = rgb(0xa2978f), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
+const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0x847c82), ROCK_SIDE_WARM = rgb(0x968b86), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
 const SOIL_WHEAT = rgb(0xa08434), SOIL_VINE = rgb(0x6f8a30);
 const QUAY = rgb(0xd4c6ba), EARTH = rgb(0x9a8450);
-const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c);
+const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c), RIPPLE = rgb(0xdff4f2);
 
 /** Share of the sky seen from a point: eight directions, the steepest blocker in each. This is light step 2 of the plan. */
 const DIRS: readonly (readonly [number, number])[] = [[1, 0], [0.707, 0.707], [0, 1], [-0.707, 0.707], [-1, 0], [-0.707, -0.707], [0, -1], [0.707, -0.707]];
@@ -31,7 +31,7 @@ export function skyShare(g: Ground, x: number, z: number, y: number): number {
 export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.08);
 
 /** how far rock at this height has turned into the pale stone of the summits (0 … 1) */
-const pale = (x: number, z: number, y: number) => smooth(8.4, 9.8, y - LAND_Y + (noise2(x / 5, z / 5, 9) - 0.5) * 5);
+const pale = (x: number, z: number, y: number) => smooth(7, 8.4, y - LAND_Y + (noise2(x / 5, z / 5, 9) - 0.5) * 5);
 
 function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB {
   if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, pale(x, z, h));
@@ -44,7 +44,7 @@ function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB 
   const crop = mat === Mat.Soil ? fieldAt(x, z, 0.6) : null;
   let c = mix(GRASS_A, GRASS_B, fbm2(x / 11, z / 11, 21));
   c = mix(c, GRASS_DRY, smooth(0.5, 0.8, noise2(x / 7, z / 7, 23)) * 0.6);
-  c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(x / 13, z / 13, 25)) * 0.8);
+  c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(x / 13, z / 13, 25)) * 0.6);
   if (crop) c = mix(c, crop === 'wheat' ? SOIL_WHEAT : SOIL_VINE, 0.85);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
   const road = 1 - smooth(1.0, 2.5, roadDist(x, z) + (noise2(x / 2, z / 2, 27) - 0.5) * 0.9);
@@ -59,7 +59,9 @@ export function buildTerrain(g: Ground, baked = true): Batch {
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z), h = g.h[i], mat = g.mat[i];
     // every cell is a touch lighter or darker than its neighbours: the fine grain of the reference's ground
-    const grain = mat === Mat.Rock ? 1 : 1 + (hash2(x, z, 45) - 0.5) * (mat === Mat.Paved || roadDist(x + 0.5, z + 0.5) < 1.7 ? 0.16 : 0.1);
+    // paving lies in slabs of two by two cells, every other row shifted by one
+    const col = Math.floor(x / 2), slab = hash2(col, Math.floor((z + (col % 2)) / 2), 47) - 0.5;
+    const grain = mat === Mat.Rock ? 1 : mat === Mat.Paved ? 1 + slab * 0.2 + (hash2(x, z, 45) - 0.5) * 0.06 : 1 + (hash2(x, z, 45) - 0.5) * (roadDist(x + 0.5, z + 0.5) < 1.7 ? 0.16 : 0.1);
     const corner = (cx: number, cz: number): RGB => shade(topColor(g, cx, cz, mat, h), light(cx, cz, h + 0.02) * grain);
     const c00 = corner(x, z), c10 = corner(x + 1, z), c11 = corner(x + 1, z + 1), c01 = corner(x, z + 1);
     if (!g.wet[i]) b.quad([x, h, z], [x, h, z + 1], [x + 1, h, z + 1], [x + 1, h, z], [c00, c01, c11, c10], [0, 1, 0]);
@@ -115,6 +117,12 @@ export function buildWater(g: Ground): Batch {
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!g.wet[idx(x, z)]) continue;
     b.quad([x, SEA_Y, z], [x, SEA_Y, z + 1], [x + 1, SEA_Y, z + 1], [x + 1, SEA_Y, z], [corner(x, z), corner(x, z + 1), corner(x + 1, z + 1), corner(x + 1, z)], [0, 1, 0]);
+    // ripples: a short pale stroke on some cells of the open water, lying across the picture
+    if (g.shore[idx(x, z)] > 2 && hash2(x, z, 49) < 0.035) {
+      const len = 0.5 + hash2(x, z, 50), cx = x + 0.5, cz = z + 0.5, y = SEA_Y + 0.02, c = mix(corner(x, z), RIPPLE, 0.35);
+      b.quad([cx - RIGHT[0] * len, y, cz - RIGHT[1] * len], [cx - RIGHT[0] * len + NEAR[0] * 0.14, y, cz - RIGHT[1] * len + NEAR[1] * 0.14],
+        [cx + RIGHT[0] * len + NEAR[0] * 0.14, y, cz + RIGHT[1] * len + NEAR[1] * 0.14], [cx + RIGHT[0] * len, y, cz + RIGHT[1] * len], c, [0, 1, 0]);
+    }
   }
   return b;
 }

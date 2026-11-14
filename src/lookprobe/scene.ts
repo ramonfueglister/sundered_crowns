@@ -2,7 +2,7 @@
 // Everything is placed from fixed seeds, so every load gives the same picture.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
-import { borderBand, bush, crops, cypress, person, pier, sheep, ship, smoke, speck, tree } from './blocks';
+import { borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
 import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
@@ -163,7 +163,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const x = gx + r.range(-1, 1), z = gz + r.range(-1, 1), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
       const [, t] = toST(x, z);
-      let density = Math.max(0.05, 0.42 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.6 * smooth(0.27, 0.12, t), 0.62 * smooth(-7, -1, mountainAt(x, z)));
+      let density = Math.max(0.05, 0.42 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.52 * smooth(0.27, 0.12, t), 0.6 * smooth(-7, -1, mountainAt(x, z)));
       if (nearTown(x, z)) density = Math.min(density, 0.08);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
@@ -171,6 +171,16 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (r.chance(density < 0.2 ? 0.45 : 0.15)) { cypress(things, x, y, z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, y + 4.2); count('tree'); continue; }
       // the trees of the woods are larger than those between the fields
       tree(things, x, y, z, r, density > 0.3 ? 1.3 : 1); occlude(g, x - 0.95, z - 0.95, x + 0.95, z + 0.95, y + 3.4); count('tree');
+    }
+    // cypresses beside the roads, every few steps on one side or the other
+    for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) {
+      const a = road[i], c = road[i + 1], len = Math.hypot(c[0] - a[0], c[1] - a[1]), dx = (c[0] - a[0]) / len, dz = (c[1] - a[1]) / len;
+      for (let k = 3; k < len; k += r.range(4, 9)) {
+        const side = r.pick([-1, 1]) * r.range(2.6, 3.4), x = a[0] + dx * k - dz * side, z = a[1] + dz * k + dx * side;
+        if (!inGrid(Math.floor(x), Math.floor(z)) || inCity(x, z) || fieldAt(x, z, 0.8) || g.mat[idx(Math.floor(x), Math.floor(z))] !== Mat.Grass) continue;
+        if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
+        cypress(things, x, baseY(x, z), z, r); claim(x - 0.6, z - 0.6, x + 0.6, z + 0.6); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, baseY(x, z) + 4.2); count('tree');
+      }
     }
     // garden trees on the squares and corners that the houses of the city left open
     for (const part of CITY) for (let k = 0; k < 90; k++) {
@@ -180,7 +190,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       claim(x - 1, z - 1, x + 1, z + 1); occlude(g, x - 0.9, z - 0.9, x + 0.9, z + 0.9, baseY(x, z) + 3.4); count('tree');
     }
     // cypresses and garden trees beside the houses on the islands
-    for (const isle of ISLANDS) for (let k = 0; k < 10; k++) {
+    for (const isle of ISLANDS) for (let k = 0; k < 16; k++) {
       const x = isle.at[0] + r.range(-isle.rx, isle.rx) * 0.75, z = isle.at[1] + r.range(-isle.rz, isle.rz) * 0.75;
       if (isWet(g, x, z) || !cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
       if (baseY(x, z) < LAND_Y) continue;
@@ -198,6 +208,19 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (k % 3) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
     }
     for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
+  }
+
+  // market stalls on the square, goods on the paving near the water
+  {
+    const r = seeded(71), p = S.plaza;
+    for (let k = 0; k < 5; k++) {
+      const x = p.at[0] + r.range(-p.w, p.w) * 0.4, z = p.at[1] + r.range(-p.d, p.d) * 0.4;
+      if (cells(x - 1.5, z - 1.2, x + 1.5, z + 1.2, (j) => g.wet[j] === 0)) { stall(things, x, baseY(x, z), z, r); count('stall'); }
+    }
+    for (let k = 0; k < 9000; k++) {
+      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
+      if (g.mat[i] === Mat.Paved && !g.wet[i] && !used[i] && g.shore[i] === 0 && inFrame(x, z) && cells(x - 3, z - 3, x + 3, z + 3, (j) => g.wet[j] === 0) === false) { crate(things, x, g.h[i], z, r); count('crate'); }
+    }
   }
 
   // people on the square, the quay and the roads; sheep on two meadows

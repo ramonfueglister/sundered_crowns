@@ -3,7 +3,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners).
 import * as THREE from 'three/webgpu';
-import { convertToTexture, float, mrt, normalView, output, pass, reflector, vec3 } from 'three/tsl';
+import { convertToTexture, float, mix, mrt, normalView, output, pass, reflector, vec3 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -25,10 +25,10 @@ const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fa
 const LOOK = {
   distance: 3000,
   sun: 0.9, sunElevation: 48, sunTurn: 12, sunColor: 0xffe9c8,
-  side: 0.72, sideColor: 0xffe8cc,
-  sky: 0.36, skyColor: 0xc2d4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffdcff,
+  side: 0.78, sideColor: 0xffe8cc,
+  sky: 0.36, skyColor: 0xa8c4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffdcff,
   mirror: 0.3, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
-  creaseReach: 2.0, creaseDepth: 1.0,
+  creaseReach: 2.0, creaseDepth: 1.0, creaseColor: 0x5a6aa0,
   focusRange: 150, blur: 2.6,
 };
 
@@ -116,7 +116,9 @@ async function start() {
     const facing = scenePass.getTextureNode('normal'), creases = ao(far, facing, camera);
     creases.radius.value = LOOK.creaseReach; creases.thickness.value = 4; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
-    picture = colour.mul(convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r);
+    // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
+    const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
+    picture = colour.mul(mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open));
   }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;

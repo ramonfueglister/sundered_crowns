@@ -40,7 +40,7 @@ function slope(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, facing: V3, row
   const cols = rows > 1 ? Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / 1.1)) : 1;
   for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
     const t0 = k / rows, t1 = (k + 1) / rows, u0 = j / cols, u1 = (j + 1) / cols;
-    const col = rows > 1 ? shade(c, 0.9 + 0.2 * hash2(Math.round(e0[0] * 7 + j * 3 + k), Math.round(e0[2] * 7 + k * 5 - j), 81)) : c;
+    const col = rows > 1 ? shade(c, 0.87 + 0.2 * hash2(Math.round(e0[0] * 7 + j * 3 + k), Math.round(e0[2] * 7 + k * 5 - j), 81)) : c;
     b.quad(lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t1), lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t1), col, facing);
   }
 }
@@ -104,7 +104,7 @@ const WINDOW = rgb(0x4a4c58), WINDOW_WARM = rgb(0x5c4a40), DOOR = rgb(0x70482c),
 const SHUTTERS = [rgb(0x5f8a5a), rgb(0x8a5a3c), rgb(0x4f7a8a)];
 export const WALLS = [rgb(0xfbe9d6), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xfae6d8), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xe6c4a4), rgb(0xfdf0e2),
   rgb(0xf0c684), rgb(0xecc07a), rgb(0xf2c8ae)];
-export const ROOFS = [rgb(0xf27a50), rgb(0xe8704a), rgb(0xf68458), rgb(0xe67450), rgb(0xf47e54), rgb(0xde684a)];
+export const ROOFS = [rgb(0xe87a56), rgb(0xe07050), rgb(0xec845e), rgb(0xde7454), rgb(0xea7e5a), rgb(0xd8684e)];
 const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), MARBLE = rgb(0xfdf4ea);
 const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
