@@ -2,7 +2,7 @@
 // small towns, a large harbour city in the middle right, sea with islets and ships at the bottom right, two realm borders.
 // Positions are given in frame coordinates (s to the right, t downwards, 0 … 1 across the picture) and turned into ground
 // cells here. One ground block is one unit.
-import { fbm2, hash2, noise2 } from './batch';
+import { fbm2, hash2, noise2, smooth } from './batch';
 
 /** side of the square ground grid */
 export const N = 400;
@@ -77,13 +77,13 @@ export const ROADS: readonly (readonly P2[])[] = [
 ];
 /** peaks: foot centre, radii on the ground, height in blocks */
 const MOUNTAINS: readonly { at: P2; rx: number; rz: number; top: number }[] = [
-  { at: toXZ(0.06, 0.12), rx: 14, rz: 10, top: 15 },
-  { at: toXZ(0.135, 0.16), rx: 14, rz: 11, top: 18 },
-  { at: toXZ(0.21, 0.185), rx: 13, rz: 10, top: 16 },
-  { at: toXZ(0.28, 0.185), rx: 12, rz: 9, top: 15 },
-  { at: toXZ(0.345, 0.16), rx: 9, rz: 8, top: 12 },
-  { at: toXZ(0.41, 0.115), rx: 8, rz: 6, top: 9 },
-  { at: toXZ(0.0, 0.05), rx: 15, rz: 11, top: 15 },
+  { at: toXZ(0.06, 0.03), rx: 9, rz: 8, top: 11 },
+  { at: toXZ(0.135, 0.17), rx: 14, rz: 12, top: 19 },
+  { at: toXZ(0.21, 0.2), rx: 12, rz: 11, top: 18 },
+  { at: toXZ(0.272, 0.19), rx: 13, rz: 10, top: 16 },
+  { at: toXZ(0.315, 0.175), rx: 8, rz: 7, top: 9 },
+  { at: toXZ(0.404, 0.1), rx: 8, rz: 7, top: 8 },
+  { at: toXZ(0.36, 0.015), rx: 7, rz: 6, top: 9 },
 ];
 export const CASTLE_AT = toXZ(0.92, 0.125);
 /** the built-up ground of the city: the main part, the western quarter and the quarter at the lower left, with a meadow between the last two */
@@ -171,20 +171,50 @@ function islandAt(x: number, z: number): number {
   }
   return 0;
 }
-/** Height of the mountains over a point in blocks, before it is cut into cubes; below 0 outside (by the distance). */
-export function mountainAt(x: number, z: number): number {
-  let m = -Infinity;
-  // steep flanks under a broad top: the cone is cut off at four fifths of its height
-  for (const k of MOUNTAINS) m = Math.max(m, k.top * Math.min(0.8, 1.5 * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz))));
-  return m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 5 * Math.min(1, m / 4);
+/**
+ * The massif that stands highest over a point: its height in blocks before it is cut into cubes (below 0 outside, by
+ * the distance), and how far up that massif's own top this is (0 … 1).
+ */
+function massif(x: number, z: number): readonly [number, number] {
+  let m = -Infinity, share = 0;
+  // a cliff round the foot carries a stepped summit: the outer eighth of the radius rises to a fifth of the height, the
+  // rest climbs evenly to the top
+  for (const k of MOUNTAINS) {
+    const q = 1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz);
+    const part = q <= 0 ? 1.5 * q : 0.22 * smooth(0, 0.12, q) + 0.78 * Math.min(1, Math.max(0, (q - 0.05) / 0.75));
+    if (k.top * part > m) { m = k.top * part; share = part; }
+  }
+  return [m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 6 * Math.min(1, m / 4), share];
 }
-/** Rock comes as stacked cubes: blocks four columns wide in steps of two set the cliffs, a few single columns step off them. */
+/** Height of the mountains over a point in blocks, before it is cut into cubes; below 0 outside (by the distance). */
+export const mountainAt = (x: number, z: number): number => massif(x, z)[0];
+/** rock above this share of its massif's height is summit: pale cubes */
+export const SUMMIT = 0.66;
+/** side of the pillars the rock is stacked from, in columns */
+const ROCK_PILLAR = 2;
+/** the pillar of rock a column belongs to; the rows of pillars are shifted against each other like bricks */
+export const rockPillar = (x: number, z: number): P2 => { const cx = Math.floor(x / ROCK_PILLAR); return [cx, Math.floor((z + cx) / ROCK_PILLAR)]; };
+/**
+ * Height of the mountains at the centre of a pillar, and how far up its massif the pillar stands; the share differs a
+ * little per bundle of pillars, so that the summits end in a ragged line of whole cubes.
+ */
+function pillarAt(cx: number, cz: number): readonly [number, number] {
+  const [m, share] = massif((cx + 0.5) * ROCK_PILLAR, (cz + 0.5) * ROCK_PILLAR - cx);
+  return [m, share + (hash2(Math.floor(cx / 2), Math.floor(cz / 2), 9) - 0.5) * 0.16];
+}
+/** how far up its massif the rock column at (x, z) stands (0 … 1); summit above `SUMMIT` */
+export const summitShare = (x: number, z: number): number => pillarAt(...rockPillar(x, z))[1];
+/**
+ * Rock comes as bundles of pillars with flat tops, as in the reference: the height is taken once per pillar, at its
+ * centre, and pillars of one bundle rise and fall together. The summits step in twos, so that their pillars join into
+ * cubes. A few single columns step off the pillars or stand back as dark slots.
+ */
 function rockHeight(x: number, z: number): number {
-  const m = mountainAt(x + 0.5, z + 0.5);
+  const [cx, cz] = rockPillar(x, z), [m, share] = pillarAt(cx, cz);
   if (m < 0.6) return 0;
-  const slab = (hash2(Math.floor(x / 4), Math.floor((z + Math.floor(x / 4)) / 4), 11) - 0.5) * 5, big = (hash2(Math.floor(x / 8), Math.floor(z / 8), 13) - 0.5) * 5;
-  const piece = hash2(x, z, 19), step = piece < 0.03 ? -1 : piece > 0.98 ? 1 : 0;
-  return Math.max(1, Math.round((m + (slab + big) * Math.min(1, m / 5)) / 2) * 2 + step);
+  const rough = Math.min(1, m / 5), bundle = (hash2(Math.floor(cx / 2), Math.floor(cz / 2), 11) - 0.5) * 4 * rough, own = (hash2(cx, cz, 17) - 0.5) * 3 * rough;
+  const piece = hash2(x, z, 19), step = piece < 0.03 ? -3 : piece < 0.09 ? -1 : piece > 0.95 ? 1 : 0;
+  return Math.max(1, (share > SUMMIT ? Math.round((m + bundle) / 2) * 2 : Math.round(m + bundle + own)) + step);
 }
 
 export function buildGround(): Ground {

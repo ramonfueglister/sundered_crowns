@@ -1,12 +1,12 @@
 // Ground and water of the probe scene as meshes. The ground is made of columns (one height per cell), as the real
 // renderer will be: level neighbours form one smooth surface, steps show only where heights differ.
 import { Batch, type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch';
-import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDist, toST } from './layout';
+import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, SUMMIT, fieldAt, idx, inCity, roadDist, rockPillar, summitShare, toST } from './layout';
 
 const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
 const MEADOW_MID = rgb(0x9abf3d), MEADOW_DEEP = rgb(0x82ac37), TUFT = rgb(0x5f9030);
 const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_STONE = rgb(0xf0d6bc);
-const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0xa49088), ROCK_SIDE_COOL = rgb(0x86989e), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
+const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
 const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
 const DIRT = rgb(0xa88a52), SHADED_SOIL = rgb(0x6a705c), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
 const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c);
@@ -31,9 +31,8 @@ export function skyShare(g: Ground, x: number, z: number, y: number): number {
 /** Brightness factor from the sky share: open ground stays at 1, deep corners fall to about a half. */
 export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.08);
 
-/** how far rock at this height has turned into the pale stone of the summits (0 … 1) */
-/** whether the rock column at (x, z) with its top at y belongs to the pale stone of the summits; decided per slab of four columns, so that whole cubes are pale */
-const pale = (x: number, z: number, y: number) => (y - LAND_Y + (hash2(Math.floor(x / 4), Math.floor((z + Math.floor(x / 4)) / 4), 9) - 0.5) * 3 > 10 ? 1 : 0);
+/** whether the rock column at (x, z) belongs to the pale stone of the summits */
+const pale = (x: number, z: number) => (summitShare(x, z) > SUMMIT ? 1 : 0);
 
 /**
  * The meadows of the reference are tiled, not washed: flat patches of a few cells, each a step greener, darker or
@@ -49,7 +48,7 @@ function meadowPatch(x: number, z: number): readonly [RGB, number] | null {
 }
 
 function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB {
-  if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, pale(x, z, h));
+  if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, pale(x, z));
   if (mat === Mat.Paved && !inCity(x, z)) return shade(ISLE_STONE, 0.94 + 0.1 * noise2(x / 1.7, z / 1.7, 6));
   if (mat === Mat.Paved) {
     const p = SITES.plaza, plaza = Math.max(Math.abs(x - p.at[0]) - p.w / 2, Math.abs(z - p.at[1]) - p.d / 2);
@@ -101,8 +100,12 @@ export function buildTerrain(g: Ground, baked = true): Batch {
       if (nh >= h) continue;
       const wetSide = !out && g.wet[idx(nx, nz)] === 1;
       let side: RGB;
-      // rock: warm stone on the faces towards the sun, slate blue on those turned away, as on the cliffs of the reference
-      if (mat === Mat.Rock) side = shade(dx === 1 || dz === -1 ? ROCK_SIDE : ROCK_SIDE_COOL, 0.92 + 0.16 * hash2(Math.floor(x / 4), Math.floor((z + Math.floor(x / 4)) / 4), 35));
+      // rock: on the faces towards the sun grey stone that turns warm and light towards the summits, slate blue on those
+      // turned away, each pillar lighter or darker than the next and a third of the slate ones dark
+      if (mat === Mat.Rock) {
+        const lot = hash2(...rockPillar(x, z), 35);
+        side = dx === 1 ? shade(mix(ROCK_SIDE_LOW, ROCK_SIDE, smooth(0.2, SUMMIT, summitShare(x, z))), 0.86 + 0.24 * lot) : shade(ROCK_SIDE_COOL, lot < 0.35 ? 0.42 + 0.3 * lot : 0.6 + 0.4 * lot);
+      }
       else if (mat === Mat.Paved && !inCity(x + 0.5, z + 0.5)) side = shade(ISLE_STONE, 0.9 + 0.12 * hash2(Math.floor(x / 2), Math.floor(z / 2), 37));
       else if (wetSide || mat === Mat.Paved) side = shade(QUAY, 0.9 + 0.2 * hash2(x, z, 37));
       else side = EARTH;
@@ -112,11 +115,10 @@ export function buildTerrain(g: Ground, baked = true): Batch {
       const la = light(ax + dx * 0.3, az + dz * 0.3, h - 0.2), lb = light(bx + dx * 0.3, bz + dz * 0.3, h - 0.2);
       const foot = 0.7;
       if (mat === Mat.Rock) {
-        // cliffs: pale stone near the summits, grey below, cut into pieces so that the change follows the height
-        // cliffs: flat faces without a gradient, pale for the upper four blocks of a pale column, grey below
-        const split = pale(x, z, h) ? Math.max(nh, h - 4) : h, la2 = 0.5 + 0.5 * la, lb2 = 0.5 + 0.5 * lb;
+        // cliffs: flat faces without a gradient, pale for the upper two or four blocks of a pale pillar, grey below
+        const split = pale(x, z) ? Math.max(nh, h - 2 - 2 * Math.floor(hash2(...rockPillar(x, z), 38) * 2)) : h, la2 = 0.5 + 0.5 * la, lb2 = 0.5 + 0.5 * lb;
         if (split > nh) b.quad([ax, nh, az], [bx, nh, bz], [bx, split, bz], [ax, split, az], [shade(side, la2), shade(side, lb2), shade(side, lb2), shade(side, la2)], [dx, 0, dz]);
-        if (split < h) { const hi = dx === 1 || dz === -1 ? ROCK_SIDE_HIGH : mix(ROCK_SIDE_HIGH, ROCK_SIDE_COOL, 0.35); b.quad([ax, split, az], [bx, split, bz], [bx, h, bz], [ax, h, az], hi, [dx, 0, dz]); }
+        if (split < h) { const hi = dx === 1 ? ROCK_SIDE_HIGH : ROCK_SIDE_HIGH_COOL; b.quad([ax, split, az], [bx, split, bz], [bx, h, bz], [ax, h, az], hi, [dx, 0, dz]); }
         continue;
       }
       b.quad([ax, nh, az], [bx, nh, bz], [bx, h, bz], [ax, h, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
