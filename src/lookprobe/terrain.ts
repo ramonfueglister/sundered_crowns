@@ -5,7 +5,7 @@ import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDi
 
 const GRASS_A = rgb(0x8ea838), GRASS_B = rgb(0xa8b23a), GRASS_DRY = rgb(0xc4b842), GRASS_DEEP = rgb(0x749a32);
 const ROAD = rgb(0xcbb894), PAVED = rgb(0xc9b0a2), PLAZA = rgb(0xd6beb0);
-const ROCK_TOP_LOW = rgb(0xe6dad2), ROCK_TOP_HIGH = rgb(0xfbf1e8), ROCK_SIDE = rgb(0xb4aaa8), ROCK_SIDE_WARM = rgb(0xc2b5aa);
+const ROCK_TOP_LOW = rgb(0xeee2da), ROCK_TOP_HIGH = rgb(0xfff6ee), ROCK_SIDE = rgb(0x9c9498), ROCK_SIDE_WARM = rgb(0xaea39c);
 const SOIL_WHEAT = rgb(0xb89a3c), SOIL_VINE = rgb(0x7a9a34);
 const QUAY = rgb(0xc8b8ac), EARTH = rgb(0x9a8450);
 const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c);
@@ -78,6 +78,9 @@ export function buildTerrain(g: Ground, baked = true): Batch {
   }
   return b;
 }
+
+/** the colour of open water; the picture uses it as its backdrop so that mirrored sky leaves the water as it is */
+export const OPEN_WATER = WATER_DEEP;
 
 export function buildWater(g: Ground): Batch {
   const b = new Batch();

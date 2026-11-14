@@ -107,12 +107,13 @@ export function house(w: number, d: number, floors: number, wallC: RGB, roofC: R
       else arch(b, wl, t, y, 0.23, y + 0.5, glass);
     });
   }
-  const ov = 0.3, rise = (Math.min(w, d) / 2) * r.range(0.4, 0.52);
+  const ov = 0.3, rise = (Math.min(w, d) / 2) * r.range(0.32, 0.44);
   b.box(x0 - ov, top, z0 - ov, x1 + ov, top + 0.14, z1 + ov, shade(roofC, 0.8));
   hipRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, top + 0.14, rise, roofC);
-  for (let k = r.int(0, 2); k > 0; k--) {
-    const cx = r.range(x0 + 0.8, x1 - 0.8), cz = r.range(z0 + 0.8, z1 - 0.8);
-    b.box(cx - 0.2, top + rise * 0.3, cz - 0.2, cx + 0.2, top + rise + 0.45, cz + 0.2, shade(wallC, 0.94), { top: shade(roofC, 0.7) });
+  // chimneys and dormers: the small clutter that makes the roofs of the reference lively
+  for (let k = r.int(1, 3); k > 0; k--) {
+    const cx = r.range(x0 + 0.7, x1 - 0.7), cz = r.range(z0 + 0.7, z1 - 0.7), s = r.range(0.14, 0.24);
+    b.box(cx - s, top + rise * 0.3, cz - s, cx + s, top + rise + r.range(0.1, 0.5), cz + s, r.chance(0.5) ? shade(wallC, 0.94) : shade(roofC, 0.6), { top: shade(roofC, 0.62) });
   }
   return b;
 }
@@ -165,14 +166,19 @@ export function basilica(): Batch {
     drum(b, cx, top + 1.5 + rad * 1.12, cz, 0.22, top + 1.5 + rad * 1.12 + 0.6, MARBLE, 6);
     b.box(cx - 0.1, top + 2.1 + rad * 1.12, cz - 0.1, cx + 0.1, top + 2.7 + rad * 1.12, cz + 0.1, GOLD);
   };
-  domeAt(0, 0, 2.5); domeAt(-3.9, 0, 1.75); domeAt(3.9, 0, 1.75); domeAt(0, -3.4, 1.75); domeAt(0, 3.1, 1.75);
+  domeAt(0, 0, 3.0); domeAt(-4.2, 0, 2.0); domeAt(4.2, 0, 2.0); domeAt(0, -3.5, 2.0); domeAt(0, 3.2, 2.0);
   return b;
 }
 
 /** The palace, 16 × 13: two arcades below, a pale pink wall with large windows above, battlements, tiled roof. */
 export function palace(): Batch {
-  const b = new Batch(), x0 = -8, x1 = 8, z0 = -6.5, z1 = 6.5, top = 9.5, dark = rgb(0x4b4a50);
-  b.box(x0, -1, z0, x1, top, z1, PINK, { foot: 0.9 });
+  const b = new Batch(), x0 = -8, x1 = 8, z0 = -6.5, z1 = 6.5, top = 9.5, dark = rgb(0x4b4a50), wing = 3.6, roof = rgb(0xc4bfc2);
+  // four wings round a courtyard, flat lead roofs
+  b.box(x0, -1, z0, x1, top, z0 + wing, PINK, { foot: 0.9, top: roof });
+  b.box(x0, -1, z1 - wing, x1, top, z1, PINK, { foot: 0.9, top: roof });
+  b.box(x0, -1, z0 + wing, x0 + wing, top, z1 - wing, PINK, { foot: 0.9, top: roof });
+  b.box(x1 - wing, -1, z0 + wing, x1, top, z1 - wing, PINK, { foot: 0.9, top: roof });
+  b.box(x0 + wing, -1, z0 + wing, x1 - wing, 0.05, z1 - wing, STONE);
   for (const s of SIDES) {
     const w = wallOf(x0, z0, x1, z1, s);
     pane(b, w, 0, 0, w.len, 5.3, MARBLE, 0.02);
@@ -182,8 +188,9 @@ export function palace(): Batch {
     pane(b, w, 0, 5.2, w.len, 5.5, shade(MARBLE, 0.9), 0.06);
     for (const t of spread(w, Math.max(3, Math.round(w.len / 2.7)), 0.8)) { arch(b, w, t, 6.3, 0.5, 7.9, FRAME, 0.05); arch(b, w, t, 6.4, 0.38, 7.85, dark, 0.07); }
   }
-  battlements(b, x0, z0, x1, z1, top, MARBLE, 0.34, 0.45);
-  hipRoof(b, x0 + 0.5, z0 + 0.5, x1 - 0.5, z1 - 0.5, top, 1.9, ROOFS[0]);
+  battlements(b, x0, z0, x1, z1, top, MARBLE, 0.34, 0.5);
+  b.box(x0 + 0.6, top, z0 + 0.6, x1 - 0.6, top + 0.12, z0 + wing - 0.4, shade(roof, 0.94));
+  b.box(x0 + 0.6, top, z1 - wing + 0.4, x1 - 0.6, top + 0.12, z1 - 0.6, shade(roof, 0.94));
   return b;
 }
 

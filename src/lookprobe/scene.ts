@@ -2,7 +2,7 @@
 // Everything is placed from fixed seeds, so every load gives the same picture.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
-import { borderBand, crops, cypress, person, pier, sheep, ship, tree } from './blocks';
+import { borderBand, bush, crops, cypress, person, pier, sheep, ship, smoke, tree } from './blocks';
 import { ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
@@ -51,8 +51,11 @@ export function buildScene(bakedSky = true): ProbeScene {
   build(campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, 24, 'landmark');
   build(castle(), CASTLE_AT[0], CASTLE_AT[1], 13.5, 13.5, 0, 5, 'landmark');
 
+  /** roof tops of the houses outside the city, for the smoke */
+  const hearths: [number, number, number][] = [];
   const homes = (r: Rnd, x: number, z: number, w: number, d: number, floors: number) => {
     const turns = r.int(0, 1) * 2;
+    if (!inCity(x, z)) hearths.push([x + w / 2, baseY(x + w / 2, z + d / 2) + floors * 1.85 + 1.2, z + d / 2]);
     build(house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r), x + w / 2, z + d / 2, w, d, turns, floors * 1.85 + 1, 'house');
   };
 
@@ -63,9 +66,9 @@ export function buildScene(bakedSky = true): ProbeScene {
       const xs = part.map((p) => p[0]), zs = part.map((p) => p[1]);
       for (let z = Math.floor(Math.min(...zs)); z < Math.max(...zs); z++) for (let x = Math.floor(Math.min(...xs)); x < Math.max(...xs); x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || !inCity(x + 0.5, z + 0.5)) continue;
-        const grand = r.chance(0.1), long = grand ? r.int(8, 9) : r.int(5, 6), short = grand ? 5 : r.int(4, 5), turn = r.chance(0.5), w = turn ? short : long, d = turn ? long : short;
+        const grand = r.chance(0.08), long = grand ? r.int(7, 9) : r.int(4, 5), short = grand ? 5 : r.int(3, 4), turn = r.chance(0.5), w = turn ? short : long, d = turn ? long : short;
         if (!fits(x, z, x + w, z + d, (px, pz) => inCity(px, pz) && !street(px, pz), 0)) continue;
-        homes(r, x, z, w, d, r.chance(0.35) ? 3 : 2);
+        homes(r, x, z, w, d, r.chance(0.45) ? 3 : 2);
       }
     }
   }
@@ -105,7 +108,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const dir = open(x, z, 1, 0) ? 'x' : open(x, z, 0, 1) ? 'z' : null;
       if (!dir) continue;
       made.push([x, z]);
-      const len = 5 + ((x * 7 + z * 3) % 3);
+      const len = 7 + ((x * 7 + z * 3) % 3);
       if (dir === 'x') pier(things, x + 1, z + 0.5, 'x', len, deck); else pier(things, x + 0.5, z + 1, 'z', len, deck);
       count('pier');
     }
@@ -162,12 +165,23 @@ export function buildScene(bakedSky = true): ProbeScene {
       tree(things, x, y, z, r); occlude(g, x - 1.3, z - 1.3, x + 1.3, z + 1.3, y + 3.6); count('tree');
     }
     // cypresses and garden trees beside houses on the islands and at the city edge
-    for (const isle of ISLANDS) for (let k = 0; k < 5; k++) {
+    for (const isle of ISLANDS) for (let k = 0; k < 10; k++) {
       const x = isle.at[0] + r.range(-isle.rx, isle.rx) * 0.75, z = isle.at[1] + r.range(-isle.rz, isle.rz) * 0.75;
       if (isWet(g, x, z) || !cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
-      if (r.chance(0.5)) cypress(things, x, baseY(x, z), z, r); else tree(things, x, baseY(x, z), z, r);
+      if (baseY(x, z) < LAND_Y) continue;
+      if (r.chance(0.7)) cypress(things, x, baseY(x, z), z, r); else tree(things, x, baseY(x, z), z, r);
       occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, baseY(x, z) + 3.6); count('tree');
     }
+  }
+
+  // tufts on the meadows, smoke over a few houses of the towns
+  {
+    const r = seeded(61);
+    for (let k = 0; k < 2600; k++) {
+      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
+      if (inFrame(x, z) && g.mat[i] === Mat.Grass && !g.wet[i] && !used[i] && roadDist(x, z) > 1.5) bush(things, x, g.h[i], z, r);
+    }
+    for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
   }
 
   // people on the square, the quay and the roads; sheep on two meadows

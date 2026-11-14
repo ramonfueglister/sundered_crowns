@@ -156,12 +156,12 @@ export function mountainAt(x: number, z: number): number {
   for (const k of MOUNTAINS) m = Math.max(m, k.top * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz)));
   return m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 5 * Math.min(1, m / 4);
 }
-/** Rock comes as pillars of cubes two columns wide; neighbours differ by whole cubes so that the faces read as steps. */
+/** Rock comes as pillars four columns wide with broad flat tops; a quarter of a pillar may sit a step lower or higher. */
 function rockHeight(x: number, z: number): number {
-  const cx = Math.floor(x / 2), cz = Math.floor(z / 2), m = mountainAt(cx * 2 + 1, cz * 2 + 1);
+  const px = Math.floor(x / 4), pz = Math.floor(z / 4), m = mountainAt(px * 4 + 2, pz * 4 + 2);
   if (m < 1) return 0;
-  const pillar = (hash2(Math.floor(x / 4), Math.floor(z / 4), 11) - 0.5) * 6, piece = hash2(cx, cz, 19);
-  return Math.max(2, Math.round((m * 1.15 + pillar * Math.min(1, m / 5) + (piece < 0.3 ? -2 : piece > 0.8 ? 2 : 0)) / 2) * 2);
+  const pillar = (hash2(px, pz, 11) - 0.5) * 7, piece = hash2(Math.floor(x / 2), Math.floor(z / 2), 19);
+  return Math.max(2, Math.round((m * 1.15 + pillar * Math.min(1, m / 5)) / 2) * 2 + (piece < 0.22 ? -2 : piece > 0.9 ? 2 : 0));
 }
 
 export function buildGround(): Ground {
@@ -189,6 +189,13 @@ export function buildGround(): Ground {
     }
     g.h[i] = h;
   }
+  // stone blocks at the waterline of quays and islets: most sea cells that touch paved ground become a low step
+  const rim: number[] = [];
+  for (let z = 1; z < N - 1; z++) for (let x = 1; x < N - 1; x++) {
+    const i = idx(x, z), paved = (j: number) => g.wet[j] === 0 && g.mat[j] === Mat.Paved;
+    if (g.wet[i] && (paved(i - 1) || paved(i + 1) || paved(i - N) || paved(i + N)) && riverDist(x + 0.5, z + 0.5) > 4 && hash2(x, z, 29) < 0.8) rim.push(i);
+  }
+  for (const i of rim) { g.wet[i] = 0; g.h[i] = LAND_Y - 1; g.mat[i] = Mat.Paved; }
   // distance to the shore, by repeated relaxation (two passes are enough for the short range needed)
   const far = 14;
   for (let i = 0; i < N * N; i++) g.shore[i] = g.wet[i] ? far : 0;

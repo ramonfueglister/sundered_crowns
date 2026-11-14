@@ -1,12 +1,14 @@
 // Look probe: one fixed scene, rendered with the camera of Ramon's reference image, to be judged side by side with it.
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
-// which the reference does not have), ?shadows=0, ?sky=0 (without the baked sky share: light step 1 only).
+// which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only).
 import * as THREE from 'three/webgpu';
-import { pass } from 'three/tsl';
+import { float, pass, reflector } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
-import { FRAME_W, LAND_Y, N } from './layout';
+import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
+import { FRAME_W, LAND_Y, N, SEA_Y } from './layout';
 import { buildScene } from './scene';
+import { OPEN_WATER } from './terrain';
 
 const q = new URLSearchParams(location.search);
 const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fallback);
@@ -22,6 +24,7 @@ const LOOK = {
   sun: 0.82, sunElevation: 55, sunTurn: 12, sunColor: 0xfff0d8,
   side: 0.7, sideColor: 0xffe6c8,
   sky: 0.36, skyColor: 0xcfe0ff, bounce: 0.12, bounceColor: 0xffe2c0,
+  mirror: 0.32, mirrorBlur: 0.006,
   focusRange: 150, blur: 2.6,
 };
 
@@ -36,9 +39,19 @@ async function start() {
 
   const built = buildScene(flag('sky', true));
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x9fc6d8);
+  scene.background = new THREE.Color(...OPEN_WATER);
   const solid = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
-  const water = solid;
+  // water: a soft mirror image of piers, hulls and houses is laid over the water colour
+  let water = solid;
+  if (flag('mirror', true)) {
+    const mirror = reflector({ resolutionScale: 0.5 });
+    mirror.target.rotateX(-Math.PI / 2);
+    mirror.target.position.y = SEA_Y;
+    scene.add(mirror.target);
+    water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+    water.color.setScalar(1 - LOOK.mirror);
+    water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(LOOK.mirror);
+  }
   for (const [batch, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false]] as const) {
     const mesh = new THREE.Mesh(batch.toGeometry(), material);
     mesh.castShadow = casts; mesh.receiveShadow = true;

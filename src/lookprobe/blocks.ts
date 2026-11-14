@@ -4,8 +4,8 @@ import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
 const TRUNK = rgb(0x6b4a2f);
-const LEAVES = [rgb(0x5f9230), rgb(0x6a9c34), rgb(0x548731), rgb(0x7aa338), rgb(0x4c8234)];
-const CYPRESS = [rgb(0x3a7a36), rgb(0x336f33), rgb(0x41833a)];
+const LEAVES = [rgb(0x528c30), rgb(0x5c9634), rgb(0x478030), rgb(0x6a9a38), rgb(0x3f7a32)];
+const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
 const WHEAT = [rgb(0xecb63e), rgb(0xe2ab38), rgb(0xf2c04a)];
 const VINE = [rgb(0x6a9a30), rgb(0x80a834), rgb(0x5a8c2e), rgb(0x98b03a)];
 const GRAPE = rgb(0xd98a2e);
@@ -67,26 +67,32 @@ export function pier(b: Batch, x: number, z: number, dir: 'x' | 'z', length: num
   const half = 1.0;
   const [x0, x1, z0, z1] = dir === 'x' ? [x, x + length, z - half, z + half] : [x - half, x + half, z, z + length];
   b.box(x0, deckY - 0.3, z0, x1, deckY, z1, shade(DECK, 0.85), { top: DECK, bottom: true });
-  for (let k = 0.6; k < length + 0.1; k += 2.2) for (const side of [-1, 1]) {
-    const px = dir === 'x' ? x + k : x + side * (half + 0.12), pz = dir === 'x' ? z + side * (half + 0.12) : z + k;
-    b.box(px - 0.2, SEA_Y - 1.2, pz - 0.2, px + 0.2, deckY + 0.75, pz + 0.2, POST, { foot: 0.6 });
-    b.box(px - 0.2, deckY + 0.75, pz - 0.2, px + 0.2, deckY + 0.95, pz + 0.2, POST_CAP);
+  const post = (px: number, pz: number) => {
+    b.box(px - 0.26, SEA_Y - 1.2, pz - 0.26, px + 0.26, deckY + 0.9, pz + 0.26, POST, { foot: 0.6 });
+    b.box(px - 0.26, deckY + 0.9, pz - 0.26, px + 0.26, deckY + 1.1, pz + 0.26, POST_CAP);
+  };
+  for (let k = 0.8; k < length - 1; k += 2.4) for (const side of [-1, 1]) {
+    if (dir === 'x') post(x + k, z + side * (half + 0.15)); else post(x + side * (half + 0.15), z + k);
   }
+  // a cross piece at the head makes a T, as on the landing stages of the reference
+  const arm = 2.6, [hx0, hx1, hz0, hz1] = dir === 'x' ? [x + length - 1.6, x + length, z - arm, z + arm] : [x - arm, x + arm, z + length - 1.6, z + length];
+  b.box(hx0, deckY - 0.3, hz0, hx1, deckY, hz1, shade(DECK, 0.85), { top: DECK, bottom: true });
+  for (const px of [hx0, hx1]) for (const pz of [hz0, hz1]) post(px, pz);
 }
 
 /** A realm border: a band of low blocks along a line, one block wide, as in the reference image. */
 export function borderBand(b: Batch, g: Ground, pts: readonly P2[], hex: number, blocked: (x: number, z: number) => boolean) {
-  const base = rgb(hex), pale = mix(base, rgb(0xffffff), 0.75), done = new Set<number>();
+  const base = rgb(hex), done = new Set<number>();
   for (let i = 0; i + 1 < pts.length; i++) {
     const a = pts[i], c = pts[i + 1], len = Math.hypot(c[0] - a[0], c[1] - a[1]);
-    for (let k = 0; k <= len; k += 0.5) {
-      const wobble = (hash2(i, Math.floor(k / 3), 61) - 0.5) * 1.6;
+    for (let k = 0; k <= len; k += 0.25) {
+      const wobble = (hash2(i, Math.floor(k / 4), 61) - 0.5) * 1.1;
       const x = Math.floor(a[0] + ((c[0] - a[0]) * k) / len + wobble), z = Math.floor(a[1] + ((c[1] - a[1]) * k) / len - wobble);
       const key = z * 4096 + x;
       if (done.has(key) || isWet(g, x + 0.5, z + 0.5) || blocked(x, z)) continue;
       done.add(key);
-      const y = groundY(g, x + 0.5, z + 0.5), col = hash2(x, z, 63) < 0.1 ? pale : shade(base, 0.88 + 0.24 * hash2(x, z, 65));
-      b.box(x + 0.04, y, z + 0.04, x + 0.96, y + 0.42 + 0.14 * hash2(x, z, 67), z + 0.96, col, { foot: 0.78 });
+      const y = groundY(g, x + 0.5, z + 0.5), col = shade(base, 0.9 + 0.2 * hash2(x, z, 65));
+      b.box(x + 0.02, y, z + 0.02, x + 0.98, y + 0.5 + 0.16 * hash2(x, z, 67), z + 0.98, col, { top: mix(col, rgb(0xffffff), 0.18), foot: 0.8 });
     }
   }
 }
@@ -130,6 +136,21 @@ export function person(b: Batch, x: number, y: number, z: number, r: Rnd) {
   const c = r.pick(CLOTHES);
   b.box(x - 0.17, y, z - 0.13, x + 0.17, y + 0.72, z + 0.13, c, { foot: 0.8 });
   b.box(x - 0.13, y + 0.72, z - 0.13, x + 0.13, y + 1.0, z + 0.13, SKIN);
+}
+
+/** Smoke over a chimney: a few pale blocks drifting to the left of the picture as they rise. */
+export function smoke(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const c = rgb(0xfbf6f0);
+  for (let k = 0; k < 6; k++) {
+    const s = 0.28 + k * 0.07, px = x - k * 0.35 + r.range(-0.2, 0.2), pz = z + k * 0.35 + r.range(-0.2, 0.2), py = y + k * 0.95;
+    b.box(px - s, py, pz - s, px + s, py + s * 1.8, pz + s, c, { bottom: true });
+  }
+}
+
+/** A low bush or tuft: one small dark green block. */
+export function bush(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const s = r.range(0.25, 0.5);
+  b.box(x - s, y, z - s, x + s, y + s * r.range(0.9, 1.5), z + s, shade(r.pick(LEAVES), 0.92), { foot: 0.8 });
 }
 
 export function sheep(b: Batch, x: number, y: number, z: number, r: Rnd) {
