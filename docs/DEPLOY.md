@@ -111,19 +111,19 @@ One process = one world. Image: `server/Dockerfile` (build context = repository 
 # once
 curl -L https://fly.io/install.sh | sh
 fly auth login
-fly apps create sundered-crowns-world                 # or change `app` in server/fly.toml
-fly volumes create world_data --size 1 --region fra --app sundered-crowns-world
-fly secrets set --app sundered-crowns-world \
+fly apps create grand-strategy-game                   # or change `app` in server/fly.toml
+fly volumes create world_data --size 1 --region fra --app grand-strategy-game
+fly secrets set --app grand-strategy-game \
   SUPABASE_URL=https://<ref>.supabase.co \
   SUPABASE_SERVICE_ROLE_KEY=<service role key> \
   SUPABASE_JWT_SECRET=<legacy jwt secret, or leave out for JWKS> \
-  PUBLIC_WORLD_URL=wss://sundered-crowns-world.fly.dev \
+  PUBLIC_WORLD_URL=wss://grand-strategy-game.fly.dev \
   ALLOWED_ORIGINS=https://<your-app>.vercel.app
 
 # every release (from the repository root)
 fly deploy . --config server/fly.toml --dockerfile server/Dockerfile
-curl https://sundered-crowns-world.fly.dev/health      # {"ok":true,"world":"europa-1","day":…}
-fly logs --app sundered-crowns-world
+curl https://grand-strategy-game.fly.dev/health      # {"ok":true,"world":"europa-1","day":…}
+fly logs --app grand-strategy-game
 ```
 
 - Keep exactly **one machine** per world (`fly scale count 1`); the volume pins it to one region.
