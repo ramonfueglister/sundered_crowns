@@ -60,19 +60,27 @@ Das Bild wurde in sechs Ausschnitten vierfach vergrössert untersucht.
   | Element | Gemessen im Bild (1672 × 941) | In Bodenblöcken |
   |---|---|---|
   | Bodenblock (Grenzband, Steinrand der Inseln) | 8,8 Pixel entlang der Bildbreite | 1 |
-  | Laubbaum | 28 × 50 Pixel | Krone 2,6 breit, ganzer Baum 5 bis 6 hoch |
-  | Zypresse | 16 × 50 Pixel | 1,6 breit, 6 hoch |
-  | Feldfrucht | 8 × 10 Pixel | 1 breit, gut 1 hoch |
+  | Laubbaum | 22 bis 35 breit, 35 bis 45 hoch | Krone 2 bis 2,8 breit, ganzer Baum 3,5 bis 4,5 hoch (im Wald grösser) |
+  | Zypresse | 14 × 50 Pixel | 1,2 breit, 5,5 hoch |
+  | Feldfrucht | Garben 10 × 16 Pixel | knapp 1 breit, 1,5 bis 1,9 hoch, in Zeilen |
   | Mensch | 3 × 10 Pixel | gut 1 hoch, ein Drittel breit |
-  | Stadthaus (zwei Geschosse) | Wände 27 und 35 Pixel breit, 30 hoch | 5 × 5 im Grundriss, 4 bis zur Traufe |
-  | Landhaus | Wände 18 und 28 Pixel breit, 20 hoch | 3 × 4,5 im Grundriss, 2,5 bis 3,5 hoch |
-  | Fenster | 4 × 7 Pixel | ein halber Block breit |
-  | Campanile, Dogenpalast | 50 bzw. 180 Pixel breit | 4 × 4 und 29 hoch, 16 × 13 und 9,5 hoch |
-  | Felsblöcke im Gebirge | 12 bis 25 Pixel | 2 bis 4, Gipfel 17 bis 22 hoch |
+  | Stockwerk | Fensterreihen 17 bis 22 Pixel auseinander | 2,1 |
+  | Stadthaus (Palazzo) | Wände 30 bis 110 Pixel lang, 37 bis 55 hoch | 10 bis 16 lang, 5 bis 7 tief, zwei oder drei Geschosse |
+  | Landhaus | Wände 18 und 28 Pixel breit, 20 bis 37 hoch | 3 bis 5 im Grundriss, ein oder zwei Geschosse |
+  | Fenster | 3,5 × 7 Pixel, Abstand 8 | 0,5 breit, 0,8 hoch, alle 1,4 |
+  | Campanile | 50 Pixel breit | 4 × 4, Schaft 13, mit Spitze 27 hoch |
+  | Dogenpalast | lange Front 128 Pixel | 9 × 20, 8,6 hoch, lange Front nach rechts unten |
+  | Felsblöcke im Gebirge | 12 bis 40 Pixel | 1 bis 3 breit, Stufen von 2, Gipfel 14 bis 18 hoch, oberes Drittel weiss |
 
-  Stand nach der Look-Probe (14.11.2026). Die erste Fassung dieser Tabelle hatte Häuser doppelt so gross und Bäume
-  halb so gross angesetzt. Das fiel erst im Bild neben der Referenz auf. Ein Baum ist im Bild so hoch wie ein
-  zweigeschossiges Haus, ein Haus nur doppelt so breit wie eine Baumkrone: klassische Dioramaverhältnisse.
+  **Kamera der Referenz (vermessen am 14.11.2026 an den Richtungen der Gebäudekanten):** Die Kanten laufen 18,5°
+  abwärts und 16,5° aufwärts nach rechts. Daraus folgt: Blick 18,7° von oben, Boden um 46,7° gedreht. Die Probe
+  hatte zuerst 30° und 45° angenommen; das Bild wirkte dadurch von viel zu weit oben gesehen, und alle Höhen, die
+  aus dem Bild gelesen waren, stimmten nicht. Pro Bodenblock ergeben sich 8,8 Pixel quer, 8,3 Pixel je Block Höhe
+  und nur 2,8 Pixel je Block Tiefe. Der Bildausschnitt ist 190 Blöcke breit und rund 333 tief.
+
+  Stand nach Runde 3 der Look-Probe (14.11.2026). Frühere Fassungen dieser Tabelle hatten erst Häuser doppelt so
+  gross, dann wegen der falschen Kamera ein Drittel zu klein angesetzt. Beides fiel erst im Bild neben der Referenz
+  auf.
 
 - **Die Häuser sind keine Voxel.** Sie haben glatte Walmdächer, glatte Wände, runde Bögen, eine runde Kuppel und
   Fenster, die kleiner sind als ein Block. Blockig sind nur Bäume, Felder, Fels, Stege, Schiffsrümpfe und das
@@ -81,9 +89,10 @@ Das Bild wurde in sechs Ausschnitten vierfach vergrössert untersucht.
   sieht man nur an Hängen, Ufern und Inselrändern.
 - **Licht:** warme Sonne von rechts hinten, kühle bläuliche Schatten, weiche Schattenränder. In der Look-Probe neu
   und genauer gemessen, in linearem Licht: Ein Schlagschatten behält etwa ein Drittel des Lichts, eine von der Sonne
-  abgewandte Hauswand etwa ein Viertel einer besonnten Wand, und die Schatten sind kurz (ein Haus wirft weniger als
-  seine Höhe). Das passt zu keiner einzelnen Sonne. Die Probe benutzt deshalb eine hohe Sonne für die Schatten und
-  ein flaches Seitenlicht ohne Schatten für die Wände. Die dunkelsten 5 % aller Bildpunkte haben noch 24 %
+  abgewandte Hauswand etwa ein Viertel einer besonnten Wand, und ein Schatten ist etwas kürzer als das, was ihn
+  wirft. Das passt zu keiner einzelnen Sonne. Die Probe benutzt deshalb eine Sonne auf 48° für die Schatten, ein
+  flaches Seitenlicht ohne Schatten für die Wände, ein schwaches Gegenlicht für die abgewandten Wände und
+  Umgebungsschatten (GTAO) mit bläulichem Ton für Gassen und Ecken. Die dunkelsten 5 % aller Bildpunkte haben noch 24 %
   Helligkeit, es gibt also kein Schwarz. Mittlere Sättigung 0,51, mittlere Helligkeit 0,54. (Die frühere Angabe
   "74 % auf Gras" war an einem weichen Schattenrand gemessen und zu hell.)
 - **Wasser:** glatt und türkis, mit weichen Spiegelungen der Stege und Häuser, weichem Schiffsschatten und

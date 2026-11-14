@@ -57,7 +57,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   const hearths: [number, number, number][] = [];
   /** a house on the footprint from (x, z): one block when small, a town house of two blocks when long */
   const homes = (r: Rnd, x: number, z: number, w: number, d: number, floors: number) => {
-    const top = floors * FLOOR + 1.2, model = Math.max(w, d) >= 8 && r.chance(0.5) ? townHouse(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r) : house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r);
+    const top = floors * FLOOR + 1.2, model = Math.max(w, d) >= 8 && r.chance(0.7) ? townHouse(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r) : house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r);
     if (!inCity(x, z)) hearths.push([x + w / 2, baseY(x + w / 2, z + d / 2) + top + 0.4, z + d / 2]);
     build(model, x + w / 2, z + d / 2, w, d, 0, top, 'house');
   };

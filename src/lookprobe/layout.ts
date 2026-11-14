@@ -118,12 +118,13 @@ export const BORDERS: readonly { pts: readonly P2[]; color: number }[] = [
 export const SHIPS: readonly { at: P2; heading: number }[] = [
   { at: toXZ(0.935, 0.56), heading: 0 }, { at: toXZ(0.755, 0.76), heading: 0 }, { at: toXZ(0.6, 0.885), heading: 0 },
 ];
-/** landmark sites of the city: centre and footprint (along x and z) */
+const PALACE_AT = toXZ(0.735, 0.585);
+/** landmark sites of the city: centre and footprint (along x and z); the square lies before the long front of the palace */
 export const SITES = {
-  palace: { at: toXZ(0.735, 0.585), w: 9, d: 20 },
+  palace: { at: PALACE_AT, w: 9, d: 20 },
   campanile: { at: toXZ(0.742, 0.5), w: 4, d: 4 },
   basilica: { at: toXZ(0.64, 0.5), w: 13, d: 11 },
-  plaza: { at: toXZ(0.8, 0.615), w: 14, d: 12 },
+  plaza: { at: [PALACE_AT[0] + 11.5, PALACE_AT[1]] as P2, w: 14, d: 22 },
   westTower: { at: toXZ(0.355, 0.57), w: 2.4, d: 2.4 },
   eastTower: { at: toXZ(0.56, 0.6), w: 2.4, d: 2.4 },
 } as const;
