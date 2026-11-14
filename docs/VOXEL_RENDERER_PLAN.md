@@ -39,7 +39,7 @@ stark vergrössert. Daraus folgt fast die ganze Architektur unten.
 | F | **Modelle:** wer baut sie? | Häuser, Bäume, Felder, Schiffe prozedural per Code; Wahrzeichen als `.vox`-Dateien (MagicaVoxel oder KI-Generator mit Nacharbeit) | Prozedural ergibt regionale Stile und Varianten ohne Handarbeit. Wahrzeichen (Campanile, Dogenpalast) müssen erkennbar sein und brauchen Handarbeit. |
 | G | **Technik:** Three.js-`WebGPURenderer` mit WebGL-2-Rückfall | ja | Siehe Abschnitt 4. |
 
-Punkt A ist der einzige, der sich später kaum noch ändern lässt. Alle anderen kann der Prototyp noch korrigieren.
+**Entschieden am 14. November 2026 (Ramon): A = Säulen.** B bis G sind noch Empfehlungen; der Prototyp kann sie korrigieren.
 
 ## 3. Was die Recherche ergeben hat
 
