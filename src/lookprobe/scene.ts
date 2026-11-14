@@ -177,7 +177,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const x = gx + r.range(-1.5, 1.5), z = gz + r.range(-1.5, 1.5), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
       const [, t] = toST(x, z);
-      let density = Math.max(0.07, 0.4 * smooth(0.54, 0.66, fbm2(x / 16, z / 16, 71)), 0.55 * smooth(0.29, 0.15, t) * (1 - 0.3 * smooth(0.55, 0.7, toST(x, z)[0])), 0.6 * smooth(-7, -1, mountainAt(x, z)));
+      let density = Math.max(0.07, 0.4 * smooth(0.54, 0.66, fbm2(x / 16, z / 16, 71)), 0.48 * smooth(0.29, 0.15, t) * (1 - 0.3 * smooth(0.55, 0.7, toST(x, z)[0])), 0.52 * smooth(-7, -1, mountainAt(x, z)));
       if (nearTown(x, z)) density = Math.min(density, 0.1);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
@@ -242,7 +242,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   {
     const r = seeded(51), p = S.plaza;
     for (let k = 0; k < 34; k++) { const x = p.at[0] + r.range(-p.w, p.w) * 0.48, z = p.at[1] + r.range(-p.d, p.d) * 0.48; if (!isWet(g, x, z)) { person(things, x, baseY(x, z), z, r); count('person'); } }
-    for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) for (let k = 0; k < 5; k++) {
+    for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) for (let k = 0; k < 8; k++) {
       const q = r.next(), x = road[i][0] + (road[i + 1][0] - road[i][0]) * q + r.range(-0.6, 0.6), z = road[i][1] + (road[i + 1][1] - road[i][1]) * q + r.range(-0.6, 0.6);
       if (inGrid(Math.floor(x), Math.floor(z)) && !isWet(g, x, z) && !used[idx(Math.floor(x), Math.floor(z))] && inFrame(x, z)) { person(things, x, baseY(x, z), z, r); count('person'); }
     }

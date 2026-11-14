@@ -4,11 +4,13 @@ import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
 const TRUNK = rgb(0x5a3c26);
-const LEAVES = [rgb(0x90b238), rgb(0x9cba3c), rgb(0x86ac36), rgb(0xa4be40), rgb(0x7ea434)];
+const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
 const FLANK = rgb(0x567e3a), FLANK_AWAY = rgb(0x4a8650), FLANK_AWAY_WARM = rgb(0x56863e);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
-const WHEAT = [rgb(0xffc858), rgb(0xf8be50), rgb(0xffd060)], WHEAT_SIDE = rgb(0xdca444);
-const VINE = [rgb(0xf0d634), rgb(0xe6cc30), rgb(0xf6de3a), rgb(0xdcc22e)], VINE_SIDE = rgb(0xbcb42c), VINE_BODY = rgb(0x4c7a22), GRAPES = rgb(0xe89038);
+const WHEAT = [rgb(0xffcc58), rgb(0xf8c450), rgb(0xffd460)], WHEAT_SIDE = rgb(0xf0bc4c);
+/** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
+const WHEAT_GLOW: RGB = [1.9, 1.0, 0.11], VINE_GLOW: RGB = [0.62, 0.62, 0.06], HEDGE_GLOW = rgb(0x7ea634);
+const VINE = [rgb(0xdcc838), rgb(0xd0bc34), rgb(0xe4d03c), rgb(0xc8b432)], VINE_SIDE = rgb(0xbcb42c), VINE_BODY = rgb(0x4e7c22), GRAPES = rgb(0xe89038);
 const POST = rgb(0x93552f), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a);
 const HULL = rgb(0x9c6238), HULL_DARK = rgb(0x74482a), SHIP_DECK = rgb(0xc09a68), SAIL = rgb(0xf2e0c6), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
 const WAKE = rgb(0xd5eeee);
@@ -52,29 +54,38 @@ export function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
 }
 
 /**
- * A field. Wheat is a close stand of sheaves with a notched top. Vines come as
- * single plants on a grid (a green body under a yellow head) or, every other field, as hedges along x.
+ * A field. Wheat stands as single sheaves in rows; vines come as single plants on a grid (a green body under a yellow
+ * head) or, every other field, as green hedges along x with yellow tips. The crops of the reference glow more than
+ * the light allows: their sides turned from the sun are as bright as the lit ones. The `GLOW` colours (above 1) give
+ * those sides that brightness.
  */
 export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd) {
   const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2);
   if (crop === 'wheat') {
-    // sheaves stand shoulder to shoulder; small steps in height between them draw the rows
-    for (let row = 0; row + 0.9 <= w; row += 0.9) for (let k = 0; (k + 1) * 0.9 <= d; k++) {
-      const x = x0 + row + 0.45, z = z0 + k * 0.9 + 0.45, seed = Math.round(row * 10);
+    for (let row = 0; row + 1 <= w; row++) for (let k = 0; k + 1 <= d; k++) {
+      const x = x0 + row + 0.5, z = z0 + k + 0.5;
       if (isWet(g, x, z)) continue;
-      const y = groundY(g, x, z), top = y + 1.3 + 0.45 * hash2(seed, 7, 51) + 0.2 * hash2(Math.floor(k / 2), seed, 52);
-      b.box(x - 0.45, y, z - 0.45, x + 0.45, top, z + 0.45, WHEAT_SIDE, { top: WHEAT[Math.floor(hash2(k, seed, 53) * WHEAT.length)], foot: 0.8 });
+      const y = groundY(g, x, z), top = y + 1.35 + 0.5 * hash2(row, k, 51);
+      b.box(x - 0.36, y, z - 0.36, x + 0.36, top, z + 0.36, WHEAT_SIDE, { top: shade(WHEAT[Math.floor(hash2(row, k, 53) * WHEAT.length)], 1.2), foot: 0.85, away: WHEAT_GLOW });
     }
     return;
   }
-  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 1.9 : 1.2;
+  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.2 : 1.2;
   for (let row = 0.6; row < w - 0.3; row += pitchX) for (let k = 0; k * pitchZ < d - 0.5; k++) {
     const x = x0 + row, z = z0 + k * pitchZ + 0.6, seed = Math.round(row * 10), lot = hash2(k, seed, 51);
     if (isWet(g, x, z) || lot < 0.04) continue;
-    const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)], h = (hedges ? 1.3 : 1.7) + 0.6 * lot;
-    b.box(x - 0.4, y, z - 0.4, x + 0.4, y + 1.0, z + 0.4, VINE_BODY, { foot: 0.6 });
-    b.box(x - 0.46, y + 0.9, z - 0.46, x + 0.46, y + h, z + 0.46, hedges ? mix(VINE_BODY, VINE_SIDE, 0.3) : shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: hedges ? mix(c, VINE_BODY, 0.35) : c, bottom: true, away: VINE_BODY });
-    if (r.chance(0.35)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.56, y + 1.32, z + 0.12, GRAPES, { bottom: true });
+    const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
+    if (hedges) {
+      const h = 1.7 + 0.3 * lot;
+      b.box(x - 0.46, y, z - 0.46, x + 0.46, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.75), foot: 0.7, away: HEDGE_GLOW });
+      if (r.chance(0.55)) b.box(x - 0.3, y + h, z - 0.3, x + 0.3, y + h + 0.3, z + 0.3, VINE_SIDE, { top: c, away: VINE_GLOW });
+    } else {
+      const h = 1.7 + 0.6 * lot;
+      // the green body shows under a smaller yellow head, so the field reads as speckled, not as one yellow sheet
+      b.box(x - 0.44, y, z - 0.44, x + 0.44, y + h - 0.5, z + 0.44, VINE_BODY, { top: mix(VINE_BODY, c, 0.4), foot: 0.8, away: HEDGE_GLOW });
+      b.box(x - 0.3, y + h - 0.5, z - 0.3, x + 0.3, y + h, z + 0.3, shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: c, away: VINE_GLOW });
+    }
+    if (r.chance(0.5)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.58, y + 1.36, z + 0.14, GRAPES, { bottom: true, away: [2.4, 1.0, 0.2] });
   }
 }
 

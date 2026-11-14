@@ -105,17 +105,17 @@ export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number
 export type Crop = 'wheat' | 'vine';
 /** fields as ground rectangles: centre, size along x and z, crop */
 export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
-  { at: toXZ(0.04, 0.3), w: 19, d: 13, crop: 'vine' },
-  { at: toXZ(0.645, 0.255), w: 19, d: 12, crop: 'vine' },
-  { at: toXZ(0.7, 0.305), w: 13, d: 9, crop: 'wheat' },
-  { at: toXZ(0.365, 0.455), w: 19, d: 16, crop: 'vine' },
-  { at: toXZ(0.152, 0.505), w: 12, d: 14, crop: 'vine' },
-  { at: toXZ(0.207, 0.532), w: 10, d: 13, crop: 'wheat' },
-  { at: toXZ(0.072, 0.56), w: 12, d: 13, crop: 'vine' },
-  { at: toXZ(0.19, 0.66), w: 10, d: 11, crop: 'wheat' },
-  { at: toXZ(0.232, 0.627), w: 8, d: 8, crop: 'wheat' },
-  { at: toXZ(0.206, 0.767), w: 16, d: 15, crop: 'vine' },
-  { at: toXZ(0.493, 0.356), w: 11, d: 8, crop: 'vine' },
+  { at: toXZ(0.04, 0.3), w: 22, d: 15, crop: 'vine' },
+  { at: toXZ(0.645, 0.255), w: 22, d: 14, crop: 'vine' },
+  { at: toXZ(0.7, 0.305), w: 15, d: 10, crop: 'wheat' },
+  { at: toXZ(0.365, 0.455), w: 22, d: 18, crop: 'vine' },
+  { at: toXZ(0.152, 0.505), w: 14, d: 16, crop: 'vine' },
+  { at: toXZ(0.207, 0.532), w: 12, d: 15, crop: 'wheat' },
+  { at: toXZ(0.072, 0.56), w: 14, d: 15, crop: 'vine' },
+  { at: toXZ(0.19, 0.66), w: 12, d: 13, crop: 'wheat' },
+  { at: toXZ(0.232, 0.627), w: 9, d: 9, crop: 'wheat' },
+  { at: toXZ(0.206, 0.767), w: 18, d: 17, crop: 'vine' },
+  { at: toXZ(0.493, 0.356), w: 13, d: 9, crop: 'vine' },
 ];
 export const BORDERS: readonly { pts: readonly P2[]; color: number }[] = [
   { pts: line([[0.33, 1.02], [0.36, 0.9], [0.3, 0.83], [0.345, 0.72], [0.42, 0.7], [0.44, 0.56], [0.52, 0.47], [0.6, 0.41], [0.72, 0.385], [0.83, 0.375]]), color: 0xd2453a },

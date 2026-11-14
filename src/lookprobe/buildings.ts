@@ -126,7 +126,7 @@ const WINDOW = rgb(0x3c3e48), WINDOW_WARM = rgb(0x4a3a34), DOOR = rgb(0x5a3a26),
 const SHUTTERS = [rgb(0x5f8a5a), rgb(0x8a5a3c), rgb(0x4f7a8a)];
 export const WALLS = [rgb(0xf6e2cc), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xf2c4b4), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xeebaa6), rgb(0xdcc6b4),
   rgb(0xf0c684), rgb(0xecc07a), rgb(0xf2c8ae), rgb(0xf6d0c4), rgb(0xf0c0ac)];
-export const ROOFS = [rgb(0xf0805c), rgb(0xe87656), rgb(0xf48a64), rgb(0xe67a5a), rgb(0xf28460), rgb(0xe06e54)];
+export const ROOFS = [rgb(0xf0805c), rgb(0xe87656), rgb(0xf29068), rgb(0xe67a5a), rgb(0xee8c64), rgb(0xe06e54)];
 const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), MARBLE = rgb(0xfdf4ea);
 const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
@@ -139,7 +139,7 @@ function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors:
   b.box(x0, -1, z0, x1, top, z1, wallC, { foot: 0.9 });
   const glass = r.chance(0.5) ? WINDOW : WINDOW_WARM, shutter = r.chance(0.08) ? r.pick(SHUTTERS) : null, arched = r.chance(0.25);
   for (const s of SIDES) {
-    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(1, Math.round(wl.len / 1.25)), 0.2);
+    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(1, Math.round(wl.len / 1.5)), 0.2);
     // a door on most walls of the ground floor, two on a long one
     const doors = new Set<number>();
     if (door) for (let k = wl.len > 9 ? 2 : r.chance(0.7) ? 1 : 0; k > 0; k--) doors.add(r.int(0, cols.length - 1));
@@ -155,8 +155,8 @@ function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors:
       const y = f * FLOOR + 0.72;
       if (f === 0 && doors.has(k)) { arch(b, wl, t, 0, 0.4, 1.15, DOOR, 0.05); return; }
       if (shutter) { pane(b, wl, t - 0.52, y, t - 0.29, y + 0.9, shutter); pane(b, wl, t + 0.29, y, t + 0.52, y + 0.9, shutter); }
-      pane(b, wl, t - 0.33, y - 0.09, t + 0.33, y, shade(wallC, 1.1));
-      if (arched) arch(b, wl, t, y, 0.26, y + 0.62, glass, 0.05); else pane(b, wl, t - 0.26, y, t + 0.26, y + 0.9, glass, 0.05);
+      pane(b, wl, t - 0.38, y - 0.1, t + 0.38, y, shade(wallC, 1.1));
+      if (arched) arch(b, wl, t, y, 0.3, y + 0.68, glass, 0.05); else pane(b, wl, t - 0.3, y, t + 0.3, y + 0.98, glass, 0.05);
     });
   }
   const ov = 0.2, rise = Math.min((Math.min(w, d) / 2) * r.range(0.26, 0.36), 1.5), gable = r.chance(0.3), eaves = top + 0.12;

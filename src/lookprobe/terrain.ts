@@ -1,14 +1,14 @@
 // Ground and water of the probe scene as meshes. The ground is made of columns (one height per cell), as the real
 // renderer will be: level neighbours form one smooth surface, steps show only where heights differ.
 import { Batch, type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch';
-import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDist } from './layout';
+import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDist, toST } from './layout';
 
-const GRASS_A = rgb(0xa8c03a), GRASS_B = rgb(0xb4c23c), GRASS_DRY = rgb(0xc8bc40), GRASS_DEEP = rgb(0x90ae36);
+const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
 const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xf0dac2), PLAZA = rgb(0xf6e4d0), ISLE_STONE = rgb(0xf0d6bc);
 const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0xa49088), ROCK_SIDE_COOL = rgb(0x86989e), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
 const SOIL_WHEAT = rgb(0xa08434), SOIL_VINE = rgb(0x6f8a30);
-const DIRT = rgb(0xa88a52), QUAY = rgb(0xe6d6c4), EARTH = rgb(0x9a8450);
-const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c);
+const DIRT = rgb(0xa88a52), SHADED_SOIL = rgb(0x6a705c), QUAY = rgb(0xe6d6c4), EARTH = rgb(0x9a8450);
+const WATER_SHALLOW = rgb(0x389ea8), WATER_DEEP = rgb(0x2b818c);
 
 /** Share of the sky seen from a point: eight directions, the steepest blocker in each. This is light step 2 of the plan. */
 const DIRS: readonly (readonly [number, number])[] = [[1, 0], [0.707, 0.707], [0, 1], [-0.707, 0.707], [-1, 0], [-0.707, -0.707], [0, -1], [0.707, -0.707]];
@@ -44,8 +44,9 @@ function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB 
   if (mat === Mat.Bed) return QUAY;
   const crop = mat === Mat.Soil ? fieldAt(x, z, 0.6) : null;
   let c = mix(GRASS_A, GRASS_B, fbm2(x / 11, z / 11, 21));
-  // sun-bleached blades between the green ones, changing from cell to cell: the lit meadows of the reference are speckled yellow-green
-  c = mix(c, GRASS_DRY, hash2(Math.round(x), Math.round(z), 23) * 0.6);
+  // sun-bleached blades between the green ones, changing from cell to cell: the lit meadows of the reference are
+  // speckled yellow-green, more so towards the coast than under the mountains
+  c = mix(c, GRASS_DRY, hash2(Math.round(x), Math.round(z), 23) * (0.3 + 0.35 * smooth(0.3, 0.65, toST(x, z)[1])));
   c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(x / 13, z / 13, 25)) * 0.6);
   if (crop) c = mix(c, crop === 'wheat' ? SOIL_WHEAT : SOIL_VINE, 0.85);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
@@ -65,12 +66,14 @@ export function buildTerrain(g: Ground, baked = true): Batch {
     // every cell is a touch lighter or darker than its neighbours: the fine grain of the reference's ground
     // paving lies in slabs of two by two cells, every other row shifted by one
     const col = Math.floor(x / 2), slab = hash2(col, Math.floor((z + (col % 2)) / 2), 47) - 0.5;
-    const grain = mat === Mat.Rock ? 1 : mat === Mat.Paved ? 1 + slab * 0.2 + (hash2(x, z, 45) - 0.5) * 0.06 : 1 + (hash2(x, z, 45) - 0.5) * (roadDist(x + 0.5, z + 0.5) < 1.7 ? 0.16 : 0.1);
+    const grain = mat === Mat.Rock ? 1 : mat === Mat.Paved ? (1 + slab * 0.3 + (hash2(x, z, 45) - 0.5) * 0.08) * (hash2(x, z, 46) < 0.07 ? 0.8 : 1) : 1 + (hash2(x, z, 45) - 0.5) * (roadDist(x + 0.5, z + 0.5) < 1.7 ? 0.16 : 0.1);
     // a rock column has one colour over its whole top, so that the cubes stay crisp
     const rockTop = mat === Mat.Rock ? topColor(g, x, z, mat, h) : null;
     // where less of the sky is seen the ground turns not only darker but cooler: red falls off faster than blue
     const corner = (cx: number, cz: number): RGB => {
-      const c = rockTop ?? topColor(g, cx, cz, mat, h), l = light(cx, cz, h + 0.02);
+      const l = light(cx, cz, h + 0.02), base = rockTop ?? topColor(g, cx, cz, mat, h);
+      // under trees and between houses the grass gives way to dull, dark soil
+      const c = mat === Mat.Grass ? mix(base, SHADED_SOIL, Math.min(1, (1 - l) * 1.3)) : base;
       return [c[0] * grain * l ** 1.5, c[1] * grain * l, c[2] * grain * l ** 0.3];
     };
     const c00 = corner(x, z), c10 = corner(x + 1, z), c11 = corner(x + 1, z + 1), c01 = corner(x, z + 1);
