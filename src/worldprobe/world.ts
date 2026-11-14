@@ -24,12 +24,10 @@ export interface WorldView {
  * not a relief map).
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
-/** above this no trees grow and the heights are stretched; above the snow line the rock is pale */
-const TREE_LINE = 1900, SNOW_LINE = 2500;
-/** the massifs are rock from this height of their broad shape upwards; what stands above that shape is raised by this factor */
-const ROCK_FROM = 1500, PEAK = 1.8;
-/** height of one tier of rock below the snow, in blocks */
-const TIER = 3;
+/** above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale */
+const TREE_LINE = 1900, SNOW_LINE = 2650;
+/** the massifs are rock from this height upwards; what stands above their valley floors is raised by this factor */
+const ROCK_FROM = 1500, PEAK = 1.5;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
 const VALLEY_FROM = 75, FOOT = 3;
 /** the sides of the steps of overgrown hills */
@@ -69,7 +67,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   // VALLEY_FROM square kilometres drain. From them the land is walked outwards, and each column is held at least as
   // high as the one it was reached from, so that every massif rises closed from its valley floor to its divide and
   // the gullies finer than the valleys are filled.
-  const rise = new Float32Array(metres), away = new Int16Array(N * N).fill(-1), queue = new Int32Array(N * N);
+  const rise = new Float32Array(metres), foot = new Float32Array(metres), away = new Int16Array(N * N).fill(-1), queue = new Int32Array(N * N);
   let head = 0, tail = 0;
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5), i = idx(x, z);
@@ -82,22 +80,22 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
       if (!inGrid(x + dx, z + dz)) continue;
       const j = idx(x + dx, z + dz);
       if (away[j] >= 0) continue;
-      away[j] = away[i] + 1; rise[j] = Math.max(rise[j], rise[i]); queue[tail++] = j;
+      away[j] = away[i] + 1; rise[j] = Math.max(rise[j], rise[i]); foot[j] = foot[i]; queue[tail++] = j;
     }
   }
-  // the broad shape of the land (about five blocks, twice) and the closed shape of single massifs (five blocks)
-  const broad = averaged(averaged(metres, 2), 2), massif = averaged(rise, 2);
+  // the valley floor under every massif, blended where massifs of different valleys meet, and the massifs' closed shape
+  const base = averaged(averaged(foot, 2), 2), massif = averaged(rise, 2);
   const at = (field: Float32Array | Int16Array, x: number, z: number) => field[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
   const metresAt = (x: number, z: number) => at(metres, x, z);
   /**
    * Height of the rock pillar a column belongs to, and whether that pillar is rock. A massif of the reference is one
-   * steep, calm shape: the rock takes the closed shape of whole massifs and raises it over the broad shape of the land,
+   * steep, calm shape: the rock takes the closed shape of whole massifs and raises it over their valley floors,
    * and leaves out what is finer. Rock or meadow is settled per bundle of four pillars, so that the rock comes in
    * whole pieces, and only away from the valley floors, which stay green.
    */
   const pillar = (x: number, z: number): [number, boolean] => {
     const [px, pz] = rockPillar(x, z), cx = (px + 0.5) * 2, cz = (pz + 0.5) * 2 - px, bx = Math.floor(px / 2) * 2 + 1;
-    return [at(broad, cx, cz) + PEAK * (at(massif, cx, cz) - at(broad, cx, cz)), at(massif, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) > ROCK_FROM && at(away, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) >= FOOT];
+    return [at(base, cx, cz) + PEAK * (at(massif, cx, cz) - at(base, cx, cz)), at(massif, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) > ROCK_FROM && at(away, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) >= FOOT];
   };
 
   const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y) };
@@ -108,11 +106,12 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
     if (kind[i] !== Water.Land) { level[i] = kind[i] === Water.Lake ? Math.round(levelOf(metres[i])) : 0; continue; }
     const [m, rock] = pillar(x, z);
     if (!rock) { level[i] = Math.round(levelOf(metres[i])); g.mat[i] = Mat.Grass; continue; }
-    // the rock rises in tiers, as the massifs of the reference do: whole terraces of one height with cliffs between
-    // them; a pillar here and there stands a step lower, single columns step down or stand back as dark slots
-    const [px, pz] = rockPillar(x, z), lower = hash2(px, pz, 17) < 0.12 ? 1 : 0, tier = m > SNOW_LINE ? 2 : TIER;
+    // the rock rises pillar by pillar, as the massifs of the probe do: bundles of pillars rise and fall together,
+    // each pillar a little on its own; the summits step in twos, so that their pillars join into cubes; single
+    // columns step down or stand back as dark slots
+    const [px, pz] = rockPillar(x, z), bundle = (hash2(Math.floor(px / 2), Math.floor(pz / 2), 11) - 0.5) * 1.6, own = (hash2(px, pz, 17) - 0.5) * 0.9;
     const piece = hash2(x, z, 19), step = piece < 0.02 ? -3 : piece < 0.06 ? -1 : 0;
-    level[i] = Math.max(1, Math.round(levelOf(m) / tier) * tier - lower + step); g.mat[i] = Mat.Rock;
+    level[i] = Math.max(1, (m > SNOW_LINE ? Math.round((levelOf(m) + bundle) / 2) * 2 : Math.round(levelOf(m) + bundle + own)) + step); g.mat[i] = Mat.Rock;
   }
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
