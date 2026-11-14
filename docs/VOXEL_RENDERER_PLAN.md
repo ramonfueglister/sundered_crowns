@@ -115,6 +115,22 @@ Bearbeitung; läuft auch auf dem Server) und `src/render3/` (Three.js), umschalt
 - Grössen zur Orientierung: Venedig rund 450 × 450 Säulen, ein mittlerer Ort (1'600 km²) rund 1'200 × 1'200,
   der kleinste Ort rund 100 × 100.
 
+### 5.1a Darstellungsmassstäbe wie im Modellbau (Ramon, 14. November 2026)
+
+Wie bei einem Diorama oder im Tabletop gibt es **zwei Massstäbe**, und Dinge dürfen verkleinert und zusammengefasst
+werden:
+
+- **Bodenmassstab:** wie viel Land ein Feld darstellt (K, Entscheid D). Stark gestaucht.
+- **Figurenmassstab:** wie gross Häuser, Bäume, Menschen und Schiffe gezeichnet werden. Viel grösser als der
+  Bodenmassstab, untereinander stimmig (Mensch 3, Haus 8 bis 12, Baum 6 bis 10, Kirchturm 25 bis 40 Voxel hoch).
+- **Mengen sind Symbole.** Die Simulation rechnet immer mit den echten Zahlen; die Karte zeigt eine verkleinerte
+  Menge. Startwert für Häuser: `0,25 × Einwohner^0,6`, also Dorf mit 500 Einwohnern etwa 10 Häuser, Stadt mit
+  5'000 etwa 40, mit 40'000 etwa 145, Venedig (110'000) etwa 265, Paris (200'000) etwa 380. Grosse Städte wachsen
+  damit sichtbar, sprengen aber den Ort nicht.
+- Dasselbe gilt für Figuren (eine Figur für viele Menschen), Herden, Felder (ein Feldstück für viel Ackerland),
+  Schiffe (ein Schiff für einen Handelsstrom) und Heere (eine Figurengruppe für ein Regiment).
+- Die Formeln sind Stellschrauben des Prototyps, keine Spielregeln.
+
 ### 5.2 Daten pro Säule (Entscheid A: Säulen)
 
 | Feld | Typ | Bedeutung |
