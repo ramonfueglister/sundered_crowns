@@ -1,10 +1,12 @@
 // The smooth low-poly buildings of the reference image: houses with hip roofs, the bell tower, the domed church, the
 // palace, a castle, village churches, bridges. Every builder returns a model around its own origin (ground at y = 0);
 // the scene places it with `Batch.append`.
-import { Batch, type RGB, type Rnd, type V3, rgb, shade } from './batch';
+import { Batch, type RGB, type Rnd, type V3, hash2, rgb, seeded, shade } from './batch';
 
 type Side = 'px' | 'pz' | 'nx' | 'nz';
 const SIDES: readonly Side[] = ['px', 'pz', 'nx', 'nz'];
+/** a fixed random source for landmarks that exist once */
+const seededFlat = () => seeded(977);
 /** one wall of a box: `o` is its lower left corner seen from outside, `u` runs along it, `n` points outwards */
 interface Wall { o: V3; u: V3; n: V3; len: number }
 function wallOf(x0: number, z0: number, x1: number, z1: number, side: Side): Wall {
@@ -29,14 +31,31 @@ function arch(b: Batch, w: Wall, tc: number, y0: number, half: number, spring: n
 /** `n` evenly spaced items along a wall, with a margin at both ends */
 const spread = (w: Wall, n: number, margin = 0): number[] => Array.from({ length: n }, (_, k) => margin + ((w.len - 2 * margin) * (k + 0.5)) / n);
 
-/** A hip roof over a rectangle; a square gives a pyramid. */
-function hipRoof(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, h: number, c: RGB) {
+const lerp3 = (a: V3, b: V3, t: number): V3 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+/**
+ * One roof slope from the eaves edge (e0 → e1) up to the ridge edge (r0 → r1), laid as a patchwork of tiles: `rows` up the
+ * slope, a column about every block along it, each patch a touch lighter or darker.
+ */
+function slope(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, facing: V3, rows: number) {
+  const cols = rows > 1 ? Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / 1.1)) : 1;
+  for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
+    const t0 = k / rows, t1 = (k + 1) / rows, u0 = j / cols, u1 = (j + 1) / cols;
+    const col = rows > 1 ? shade(c, 0.9 + 0.2 * hash2(Math.round(e0[0] * 7 + j * 3 + k), Math.round(e0[2] * 7 + k * 5 - j), 81)) : c;
+    b.quad(lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t1), lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t1), col, facing);
+  }
+}
+/** A hip roof over a rectangle; a square gives a pyramid. `rows` of tiles per slope, a paler cap along the ridge. */
+function hipRoof(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, h: number, c: RGB, rows = 1) {
   const alongX = x1 - x0 >= z1 - z0, s = Math.min(x1 - x0, z1 - z0) / 2, xc = (x0 + x1) / 2, zc = (z0 + z1) / 2, top = y + h;
   const a: V3 = alongX ? [x0 + s, top, zc] : [xc, top, z0 + s], e: V3 = alongX ? [x1 - s, top, zc] : [xc, top, z1 - s];
-  b.quad([x0, y, z1], [x1, y, z1], e, alongX ? a : e, c, [0, 1, 1]);
-  b.quad([x1, y, z0], [x0, y, z0], a, alongX ? e : a, c, [0, 1, -1]);
-  b.quad([x1, y, z1], [x1, y, z0], alongX ? e : a, e, c, [1, 1, 0]);
-  b.quad([x0, y, z0], [x0, y, z1], alongX ? a : e, a, c, [-1, 1, 0]);
+  slope(b, [x0, y, z1], [x1, y, z1], alongX ? a : e, e, c, [0, 1, 1], rows);
+  slope(b, [x1, y, z0], [x0, y, z0], alongX ? e : a, a, c, [0, 1, -1], rows);
+  slope(b, [x1, y, z1], [x1, y, z0], e, alongX ? e : a, c, [1, 1, 0], rows);
+  slope(b, [x0, y, z0], [x0, y, z1], a, alongX ? a : e, c, [-1, 1, 0], rows);
+  if (rows > 1 && Math.hypot(e[0] - a[0], e[2] - a[2]) > 0.4) {
+    const k = 0.11, cap = shade(c, 1.14);
+    b.box(Math.min(a[0], e[0]) - k, top - 0.05, Math.min(a[2], e[2]) - k, Math.max(a[0], e[0]) + k, top + 0.1, Math.max(a[2], e[2]) + k, cap);
+  }
 }
 /** A gable roof with the ridge along z; the two gable ends are filled in the wall colour. */
 function gableRoofZ(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, h: number, c: RGB, wallC: RGB) {
@@ -85,59 +104,115 @@ function battlements(b: Batch, x0: number, z0: number, x1: number, z1: number, y
   }
 }
 
-/** height of one storey; measured on the reference, where a house of two storeys is about four blocks to the eaves */
-const FLOOR = 1.85;
+/** height of one storey; measured on the reference, where the window rows of the town houses lie 2 to 2.3 blocks apart */
+export const FLOOR = 2.1;
 const WINDOW = rgb(0x4a4c58), WINDOW_WARM = rgb(0x5c4a40), DOOR = rgb(0x70482c), FRAME = rgb(0xfdf6ea);
-export const WALLS = [rgb(0xfbe9d6), rgb(0xfdf0e2), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xf8e4cc), rgb(0xeecf9e), rgb(0xfae6d8)];
-export const ROOFS = [rgb(0xdc6e50), rgb(0xd26446), rgb(0xe27854), rgb(0xd0684c), rgb(0xde7250)];
+const SHUTTERS = [rgb(0x5f8a5a), rgb(0x8a5a3c), rgb(0x4f7a8a)];
+export const WALLS = [rgb(0xfbe9d6), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xfae6d8), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xe6c4a4), rgb(0xfdf0e2)];
+export const ROOFS = [rgb(0xe8744e), rgb(0xde6a48), rgb(0xee7e56), rgb(0xdc6e4e), rgb(0xea7852), rgb(0xd46248)];
 const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), MARBLE = rgb(0xfdf4ea);
 const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
-/** A plain house: `w` along x, `d` along z, walls sunk one unit into the ground so that it sits on slopes. */
-export function house(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd): Batch {
-  const b = new Batch(), x0 = -w / 2, x1 = w / 2, z0 = -d / 2, z1 = d / 2, top = floors * FLOOR + 0.3;
-  b.box(x0, -1, z0, x1, top, z1, wallC, { foot: 0.86 });
-  const doorSide = r.pick(SIDES), glass = r.chance(0.5) ? WINDOW : WINDOW_WARM;
+/**
+ * One block of a house: walls with plinth, storey bands, windows and a door, under a tiled hip roof. The walls reach one
+ * unit into the ground so that the block also sits on steps.
+ */
+function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, door = true) {
+  const top = floors * FLOOR + 0.3, w = x1 - x0, d = z1 - z0;
+  b.box(x0, -1, z0, x1, top, z1, wallC, { foot: 0.9 });
+  const doorSide = r.pick(SIDES), glass = r.chance(0.5) ? WINDOW : WINDOW_WARM, shutter = r.chance(0.15) ? r.pick(SHUTTERS) : null;
   for (const s of SIDES) {
-    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(2, Math.round(wl.len / 1.7)), 0.15);
-    const doorAt = s === doorSide ? r.int(0, cols.length - 1) : -1;
+    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(1, Math.round(wl.len / 1.4)), 0.2);
+    const doorAt = door && s === doorSide ? r.int(0, cols.length - 1) : -1;
+    pane(b, wl, 0, 0, wl.len, 0.4, shade(wallC, 0.8), 0.02);
+    for (let f = 1; f < floors; f++) pane(b, wl, 0, f * FLOOR + 0.2, wl.len, f * FLOOR + 0.32, shade(wallC, 1.06), 0.02);
     for (let f = 0; f < floors; f++) cols.forEach((t, k) => {
-      const y = f * FLOOR + 0.7;
-      if (f === 0 && k === doorAt) arch(b, wl, t, 0, 0.32, 1.1, DOOR);
-      else arch(b, wl, t, y, 0.23, y + 0.5, glass);
+      const y = f * FLOOR + 0.78;
+      if (f === 0 && k === doorAt) { arch(b, wl, t, 0, 0.46, 1.2, FRAME, 0.03); arch(b, wl, t, 0, 0.35, 1.16, DOOR, 0.05); return; }
+      if (shutter) { pane(b, wl, t - 0.5, y, t - 0.29, y + 0.8, shutter); pane(b, wl, t + 0.29, y, t + 0.5, y + 0.8, shutter); }
+      pane(b, wl, t - 0.33, y - 0.08, t + 0.33, y, FRAME);
+      arch(b, wl, t, y, 0.25, y + 0.56, glass, 0.05);
     });
   }
-  const ov = 0.3, rise = (Math.min(w, d) / 2) * r.range(0.32, 0.44);
-  b.box(x0 - ov, top, z0 - ov, x1 + ov, top + 0.14, z1 + ov, shade(roofC, 0.8));
-  hipRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, top + 0.14, rise, roofC);
-  // chimneys and dormers: the small clutter that makes the roofs of the reference lively
-  for (let k = r.int(1, 3); k > 0; k--) {
-    const cx = r.range(x0 + 0.7, x1 - 0.7), cz = r.range(z0 + 0.7, z1 - 0.7), s = r.range(0.14, 0.24);
-    b.box(cx - s, top + rise * 0.3, cz - s, cx + s, top + rise + r.range(0.1, 0.5), cz + s, r.chance(0.5) ? shade(wallC, 0.94) : shade(roofC, 0.6), { top: shade(roofC, 0.62) });
+  const ov = 0.16, rise = Math.min((Math.min(w, d) / 2) * r.range(0.36, 0.48), 1.9);
+  b.box(x0 - ov, top, z0 - ov, x1 + ov, top + 0.12, z1 + ov, shade(roofC, 0.78));
+  hipRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, top + 0.12, rise, roofC, Math.max(3, Math.round(Math.min(w, d) / 1.1)));
+  // chimneys and roof hatches: the small clutter that makes the roofs of the reference lively
+  for (let k = r.int(1, 2) + Math.floor((w * d) / 14); k > 0; k--) {
+    const cx = r.range(x0 + 0.6, x1 - 0.6), cz = r.range(z0 + 0.6, z1 - 0.6), sz = r.range(0.13, 0.2);
+    // height of the roof under this point: it falls from the ridge towards the nearer eaves
+    const under = top + 0.12 + rise * Math.min(1, Math.min(cx - x0, x1 - cx, cz - z0, z1 - cz) / (Math.min(w, d) / 2));
+    b.box(cx - sz, under - 0.1, cz - sz, cx + sz, under + r.range(0.3, 0.6), cz + sz, r.chance(0.5) ? shade(roofC, 0.55) : rgb(0x6a5a58), { top: r.chance(0.6) ? rgb(0xf0e6dc) : shade(roofC, 0.6) });
+  }
+}
+
+/** A plain house of one block: `w` along x, `d` along z. */
+export function house(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd): Batch {
+  const b = new Batch();
+  block(b, -w / 2, -d / 2, w / 2, d / 2, floors, wallC, roofC, r);
+  return b;
+}
+
+/**
+ * A larger town house inside a footprint of w × d: a main block with a lower wing in an L, or two blocks of different
+ * height side by side, sometimes with a slim tower. This gives the broken roof line of the city in the reference.
+ */
+export function townHouse(w: number, d: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd): Batch {
+  const b = new Batch(), x0 = -w / 2, x1 = w / 2, z0 = -d / 2, z1 = d / 2, alongX = w >= d, wing = shade(wallC, r.range(0.94, 1.04));
+  const cut = r.range(0.5, 0.68), low = Math.max(1, floors - 1);
+  if (r.chance(0.5)) {
+    // L: the main block takes one end at full depth, the wing the rest at part of the depth
+    if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r); block(b, x0 + w * cut, z0, x1, z0 + d * r.range(0.55, 0.75), low, wing, roofC, r, false); }
+    else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r); block(b, x0, z0 + d * cut, x0 + w * r.range(0.55, 0.75), z1, low, wing, roofC, r, false); }
+  } else if (alongX) { block(b, x0, z0, x0 + w * cut, z1, floors, wallC, roofC, r); block(b, x0 + w * cut, z0, x1, z1, low, wing, r.pick(ROOFS), r, false); }
+  else { block(b, x0, z0, x1, z0 + d * cut, floors, wallC, roofC, r); block(b, x0, z0 + d * cut, x1, z1, low, wing, r.pick(ROOFS), r, false); }
+  if (r.chance(0.12)) {
+    const tx = x1 - 1.1, tz = z1 - 1.1, th = (floors + 1.3) * FLOOR;
+    b.box(tx - 1, -1, tz - 1, tx + 1, th, tz + 1, shade(wallC, 0.97), { foot: 0.9 });
+    for (const s of SIDES) arch(b, wallOf(tx - 1, tz - 1, tx + 1, tz + 1, s), 1, th - 1.1, 0.24, th - 0.6, WINDOW);
+    b.box(tx - 1.2, th, tz - 1.2, tx + 1.2, th + 0.12, tz + 1.2, shade(roofC, 0.78));
+    hipRoof(b, tx - 1.2, tz - 1.2, tx + 1.2, tz + 1.2, th + 0.12, 1.1, roofC, 3);
   }
   return b;
 }
 
-/** The bell tower: brick shaft, white belfry with arches, attic, green spire. 4 × 4 at the foot, about 29 high. */
+/** A slim town tower of brick with a pointed roof, as in the towns of the reference; 2.4 × 2.4, about 10 high. */
+export function tower(r: Rnd): Batch {
+  const b = new Batch(), h = 1.2, top = r.range(8, 10.5), c = r.pick([rgb(0xc98a64), rgb(0xd29a72), rgb(0xbf7f5c)]);
+  b.box(-h, -1, -h, h, top, h, c, { foot: 0.88 });
+  for (const s of SIDES) {
+    const wl = wallOf(-h, -h, h, h, s);
+    for (const y of [2.2, 4.4]) pane(b, wl, 1.05, y, 1.35, y + 0.7, WINDOW);
+    for (const t of [0.75, 1.65]) arch(b, wl, t, top - 1.7, 0.26, top - 0.9, rgb(0x3d4650));
+    pane(b, wl, 0, top - 2.2, wl.len, top - 2.05, shade(c, 1.12), 0.02);
+  }
+  b.box(-h - 0.18, top, -h - 0.18, h + 0.18, top + 0.16, h + 0.18, shade(c, 1.1));
+  hipRoof(b, -h - 0.1, -h - 0.1, h + 0.1, h + 0.1, top + 0.16, 2.0, ROOFS[5], 4);
+  return b;
+}
+
+/** The bell tower: brick shaft, white belfry with arches, brick band with a clock, green spire. 4 × 4, about 27 high. */
 export function campanile(): Batch {
-  const b = new Batch(), h = 2;
-  b.box(-h - 0.25, -1, -h - 0.25, h + 0.25, 1.1, h + 0.25, STONE, { foot: 0.8 });
-  b.box(-h, 1.1, -h, h, 17.5, h, BRICK, { foot: 0.86 });
+  const b = new Batch(), h = 2, dark = rgb(0x3d4650);
+  b.box(-h - 0.2, -1, -h - 0.2, h + 0.2, 0.9, h + 0.2, STONE, { foot: 0.8 });
+  b.box(-h, 0.9, -h, h, 13.2, h, BRICK, { foot: 0.88 });
   for (const s of SIDES) {
     const w = wallOf(-h, -h, h, h, s);
-    for (const t of [1.0, 2.0, 3.0]) pane(b, w, t - 0.17, 2.2, t + 0.17, 16.6, shade(BRICK, 0.8));
+    for (const t of [0.8, 1.6, 2.4, 3.2]) pane(b, w, t - 0.14, 1.6, t + 0.14, 12.6, shade(BRICK, 0.8));
   }
-  b.box(-h - 0.3, 17.5, -h - 0.3, h + 0.3, 18.0, h + 0.3, MARBLE);
-  b.box(-h - 0.05, 18.0, -h - 0.05, h + 0.05, 21.2, h + 0.05, MARBLE, { foot: 0.92 });
+  b.box(-h - 0.3, 13.2, -h - 0.3, h + 0.3, 13.7, h + 0.3, MARBLE);
+  b.box(-h - 0.05, 13.7, -h - 0.05, h + 0.05, 17.0, h + 0.05, MARBLE, { foot: 0.92 });
   for (const s of SIDES) {
     const w = wallOf(-h - 0.05, -h - 0.05, h + 0.05, h + 0.05, s);
-    for (const t of spread(w, 4, 0.35)) arch(b, w, t, 18.35, 0.3, 20.2, rgb(0x3d4650));
+    for (const t of spread(w, 4, 0.35)) arch(b, w, t, 14.1, 0.3, 15.9, dark);
   }
-  b.box(-h - 0.35, 21.2, -h - 0.35, h + 0.35, 21.7, h + 0.35, MARBLE);
-  b.box(-h + 0.2, 21.7, -h + 0.2, h - 0.2, 24.0, h - 0.2, BRICK, { foot: 0.9 });
-  b.box(-h, 24.0, -h, h, 24.35, h, MARBLE);
-  hipRoof(b, -h + 0.25, -h + 0.25, h - 0.25, h - 0.25, 24.35, 4.9, COPPER);
-  b.box(-0.16, 28.9, -0.16, 0.16, 29.9, 0.16, GOLD);
+  b.box(-h - 0.35, 17.0, -h - 0.35, h + 0.35, 17.45, h + 0.35, MARBLE);
+  b.box(-h + 0.1, 17.45, -h + 0.1, h - 0.1, 19.4, h - 0.1, BRICK, { foot: 0.92 });
+  for (const s of SIDES) { const w = wallOf(-h + 0.1, -h + 0.1, h - 0.1, h - 0.1, s); pane(b, w, 1.35, 17.85, 2.45, 18.95, MARBLE); pane(b, w, 1.5, 18.0, 2.3, 18.8, rgb(0xb0463a), 0.06); }
+  b.box(-h - 0.2, 19.4, -h - 0.2, h + 0.2, 19.8, h + 0.2, MARBLE);
+  hipRoof(b, -h - 0.05, -h - 0.05, h + 0.05, h + 0.05, 19.8, 6.0, COPPER);
+  b.box(-0.14, 25.6, -0.14, 0.14, 27.0, 0.14, GOLD);
+  b.box(-0.4, 26.3, -0.1, 0.4, 26.55, 0.1, GOLD);
   return b;
 }
 
@@ -166,14 +241,13 @@ export function basilica(): Batch {
     drum(b, cx, top + 1.5 + rad * 1.12, cz, 0.22, top + 1.5 + rad * 1.12 + 0.6, MARBLE, 6);
     b.box(cx - 0.1, top + 2.1 + rad * 1.12, cz - 0.1, cx + 0.1, top + 2.7 + rad * 1.12, cz + 0.1, GOLD);
   };
-  domeAt(0, 0, 3.0); domeAt(-4.2, 0, 2.0); domeAt(4.2, 0, 2.0); domeAt(0, -3.5, 2.0); domeAt(0, 3.2, 2.0);
+  domeAt(0, 0, 3.2); domeAt(-4.3, 0, 1.9); domeAt(4.3, 0, 1.9); domeAt(0, -3.6, 1.9); domeAt(0, 3.3, 1.9);
   return b;
 }
 
-/** The palace, 16 × 13: two arcades below, a pale pink wall with large windows above, battlements, tiled roof. */
+/** The palace, 9 × 20 (the long front along z, facing +x), 8.6 high: two arcades, a pale wall with windows, battlements, a court. */
 export function palace(): Batch {
-  const b = new Batch(), x0 = -8, x1 = 8, z0 = -6.5, z1 = 6.5, top = 9.5, dark = rgb(0x4b4a50), wing = 3.6, roof = rgb(0xc4bfc2);
-  // four wings round a courtyard, flat lead roofs
+  const b = new Batch(), x0 = -4.5, x1 = 4.5, z0 = -10, z1 = 10, top = 8.6, dark = rgb(0x4b4a50), wing = 3.0, roof = rgb(0xc4bfc2);
   b.box(x0, -1, z0, x1, top, z0 + wing, PINK, { foot: 0.9, top: roof });
   b.box(x0, -1, z1 - wing, x1, top, z1, PINK, { foot: 0.9, top: roof });
   b.box(x0, -1, z0 + wing, x0 + wing, top, z1 - wing, PINK, { foot: 0.9, top: roof });
@@ -181,33 +255,39 @@ export function palace(): Batch {
   b.box(x0 + wing, -1, z0 + wing, x1 - wing, 0.05, z1 - wing, STONE);
   for (const s of SIDES) {
     const w = wallOf(x0, z0, x1, z1, s);
-    pane(b, w, 0, 0, w.len, 5.3, MARBLE, 0.02);
-    for (const t of spread(w, Math.round(w.len / 1.75), 0.2)) arch(b, w, t, 0, 0.58, 1.85, dark, 0.05);
-    pane(b, w, 0, 2.75, w.len, 3.0, shade(MARBLE, 0.9), 0.06);
-    for (const t of spread(w, Math.round(w.len / 0.9), 0.15)) arch(b, w, t, 3.1, 0.27, 4.45, dark, 0.05);
-    pane(b, w, 0, 5.2, w.len, 5.5, shade(MARBLE, 0.9), 0.06);
-    for (const t of spread(w, Math.max(3, Math.round(w.len / 2.7)), 0.8)) { arch(b, w, t, 6.3, 0.5, 7.9, FRAME, 0.05); arch(b, w, t, 6.4, 0.38, 7.85, dark, 0.07); }
+    pane(b, w, 0, 0, w.len, 4.9, MARBLE, 0.02);
+    for (const t of spread(w, Math.round(w.len / 1.55), 0.2)) arch(b, w, t, 0, 0.52, 1.7, dark, 0.05);
+    pane(b, w, 0, 2.55, w.len, 2.8, shade(MARBLE, 0.9), 0.06);
+    for (const t of spread(w, Math.round(w.len / 0.8), 0.15)) arch(b, w, t, 2.9, 0.24, 4.1, dark, 0.05);
+    pane(b, w, 0, 4.8, w.len, 5.08, shade(MARBLE, 0.9), 0.06);
+    for (const t of spread(w, Math.max(3, Math.round(w.len / 2.6)), 0.8)) { arch(b, w, t, 5.8, 0.46, 7.2, FRAME, 0.05); arch(b, w, t, 5.9, 0.34, 7.15, dark, 0.07); }
   }
-  battlements(b, x0, z0, x1, z1, top, MARBLE, 0.34, 0.5);
-  b.box(x0 + 0.6, top, z0 + 0.6, x1 - 0.6, top + 0.12, z0 + wing - 0.4, shade(roof, 0.94));
-  b.box(x0 + 0.6, top, z1 - wing + 0.4, x1 - 0.6, top + 0.12, z1 - 0.6, shade(roof, 0.94));
+  battlements(b, x0, z0, x1, z1, top, MARBLE, 0.34, 0.55);
   return b;
 }
 
-/** A castle on its hill: curtain wall, four corner towers with pointed roofs, a keep. */
+/** A castle on its hill, 11 × 11: a curtain wall with square corner towers, a tall keep with a flag, a hall in the court. */
 export function castle(): Batch {
-  const b = new Batch(), s = 5.2, wallH = 4.2;
-  b.box(-s, -2, -s, s, wallH, s, STONE, { foot: 0.8 });
-  battlements(b, -s, -s, s, s, wallH, STONE, 0.5, 0.5);
-  pane(b, wallOf(-s, -s, s, s, 'px'), s - 0.8, 0, s + 0.8, 2.2, rgb(0x4a3f38));
-  for (const [tx, tz] of [[-s, -s], [s, -s], [s, s], [-s, s]] as const) {
-    b.box(tx - 1.4, -2, tz - 1.4, tx + 1.4, 7, tz + 1.4, shade(STONE, 0.97), { foot: 0.8 });
-    b.box(tx - 1.6, 7, tz - 1.6, tx + 1.6, 7.3, tz + 1.6, STONE_DARK);
-    hipRoof(b, tx - 1.6, tz - 1.6, tx + 1.6, tz + 1.6, 7.3, 2.6, ROOFS[1]);
+  const b = new Batch(), s = 5.2, wallH = 4.2, c = rgb(0xb09c8c), flag = rgb(0xd23b2e);
+  const slit = (x0: number, z0: number, x1: number, z1: number, y: number) => { for (const sd of SIDES) { const w = wallOf(x0, z0, x1, z1, sd); for (const t of spread(w, Math.max(1, Math.round(w.len / 2)), 0.3)) pane(b, w, t - 0.12, y, t + 0.12, y + 0.7, rgb(0x4a4038)); } };
+  b.box(-s, -2, -s, s, wallH, s, c, { foot: 0.8, top: shade(c, 0.9) });
+  b.box(-s + 1, wallH - 1.2, -s + 1, s - 1, wallH - 1.19, s - 1, shade(c, 0.7));
+  battlements(b, -s, -s, s, s, wallH, c, 0.5, 0.55);
+  slit(-s, -s, s, s, 2.2);
+  arch(b, wallOf(-s, -s, s, s, 'px'), s, 0, 0.8, 1.6, rgb(0x4a3f38));
+  for (const [tx, tz, th] of [[-s, -s, 7.2], [s, -s, 6.6], [s, s, 6.4], [-s, s, 6.6]] as const) {
+    b.box(tx - 1.5, -2, tz - 1.5, tx + 1.5, th, tz + 1.5, shade(c, 1.03), { foot: 0.8, top: shade(c, 0.92) });
+    battlements(b, tx - 1.5, tz - 1.5, tx + 1.5, tz + 1.5, th, c, 0.5, 0.55);
+    slit(tx - 1.5, tz - 1.5, tx + 1.5, tz + 1.5, th - 1.8);
   }
-  b.box(-2.2, wallH, -2.2, 2.2, 9.5, 2.2, shade(STONE, 1.03), { foot: 0.88 });
-  battlements(b, -2.2, -2.2, 2.2, 2.2, 9.5, STONE, 0.5, 0.5);
-  for (const sd of SIDES) { const w = wallOf(-2.2, -2.2, 2.2, 2.2, sd); for (const t of spread(w, 2, 0.4)) pane(b, w, t - 0.22, 6.6, t + 0.22, 7.7, WINDOW); }
+  block(b, -2.6, -1.2, 1.6, 2.6, 2, shade(c, 1.08), ROOFS[1], seededFlat(), false);
+  b.box(-3.6, -2, -3.6, -0.8, 10.2, -0.8, shade(c, 1.06), { foot: 0.86, top: shade(c, 0.92) });
+  battlements(b, -3.6, -3.6, -0.8, -0.8, 10.2, c, 0.5, 0.55);
+  slit(-3.6, -3.6, -0.8, -0.8, 7.6); slit(-3.6, -3.6, -0.8, -0.8, 4.8);
+  for (const [fx, fz, fy] of [[-2.2, -2.2, 10.2], [s, -s, 6.6]] as const) {
+    b.box(fx - 0.06, fy, fz - 0.06, fx + 0.06, fy + 2.2, fz + 0.06, rgb(0x6a4a30));
+    b.box(fx - 0.9, fy + 1.5, fz - 0.03, fx - 0.06, fy + 2.15, fz + 0.03, flag, { bottom: true });
+  }
   return b;
 }
 

@@ -81,11 +81,12 @@ const MOUNTAINS: readonly { at: P2; rx: number; rz: number; top: number }[] = [
   { at: toXZ(0.0, 0.04), rx: 16, rz: 12, top: 20 },
 ];
 export const CASTLE_AT = toXZ(0.92, 0.125);
-/** the built-up ground of the city: the main part east of the river and a suburb on the other bank */
+/** the built-up ground of the city: the main part east of the river and the quarters on the other bank */
 export const CITY: readonly (readonly P2[])[] = [
   line([[0.44, 0.5], [0.52, 0.42], [0.66, 0.38], [0.8, 0.42], [0.86, 0.48], [0.875, 0.55], [0.85, 0.62],
     [0.78, 0.66], [0.7, 0.68], [0.63, 0.71], [0.57, 0.76], [0.5, 0.8], [0.44, 0.86], [0.415, 0.8], [0.425, 0.62]]),
-  line([[0.26, 0.88], [0.32, 0.79], [0.385, 0.76], [0.4, 0.86], [0.37, 0.95], [0.33, 1.06], [0.2, 1.06]]),
+  line([[0.25, 0.6], [0.3, 0.52], [0.38, 0.5], [0.435, 0.52], [0.42, 0.62], [0.4, 0.74], [0.4, 0.86], [0.37, 0.95], [0.33, 1.06], [0.2, 1.06],
+    [0.26, 0.88], [0.3, 0.78], [0.27, 0.68]]),
 ];
 export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number }[] = [
   { at: toXZ(0.145, 0.365), r: 17, houses: 16, towers: 2 },
@@ -107,9 +108,7 @@ export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
   { at: toXZ(0.07, 0.545), w: 19, d: 11, crop: 'vine' },
   { at: toXZ(0.2, 0.635), w: 16, d: 9, crop: 'wheat' },
   { at: toXZ(0.21, 0.755), w: 20, d: 14, crop: 'vine' },
-  { at: toXZ(0.33, 0.78), w: 15, d: 11, crop: 'wheat' },
   { at: toXZ(0.52, 0.335), w: 16, d: 11, crop: 'wheat' },
-  { at: toXZ(0.3, 0.6), w: 15, d: 11, crop: 'vine' },
 ];
 export const BORDERS: readonly { pts: readonly P2[]; color: number }[] = [
   { pts: line([[0.33, 1.02], [0.36, 0.9], [0.3, 0.83], [0.345, 0.72], [0.42, 0.7], [0.44, 0.56], [0.52, 0.47], [0.6, 0.41], [0.72, 0.385], [0.83, 0.375]]), color: 0xd2453a },
@@ -121,10 +120,12 @@ export const SHIPS: readonly { at: P2; heading: number }[] = [
 ];
 /** landmark sites of the city: centre and footprint (along x and z) */
 export const SITES = {
-  palace: { at: toXZ(0.74, 0.585), w: 16, d: 13 },
+  palace: { at: toXZ(0.735, 0.585), w: 9, d: 20 },
   campanile: { at: toXZ(0.742, 0.5), w: 4, d: 4 },
   basilica: { at: toXZ(0.64, 0.5), w: 13, d: 11 },
   plaza: { at: toXZ(0.8, 0.615), w: 14, d: 12 },
+  westTower: { at: toXZ(0.355, 0.57), w: 2.4, d: 2.4 },
+  eastTower: { at: toXZ(0.56, 0.6), w: 2.4, d: 2.4 },
 } as const;
 
 // ---- ground fields -------------------------------------------------------------------------------------------------
@@ -161,15 +162,17 @@ function islandAt(x: number, z: number): number {
 /** Height of the mountains over a point in blocks, before it is cut into cubes; below 0 outside (by the distance). */
 export function mountainAt(x: number, z: number): number {
   let m = -Infinity;
-  for (const k of MOUNTAINS) m = Math.max(m, k.top * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz)));
+  // steep flanks under a broad top: the cone is cut off at four fifths of its height
+  for (const k of MOUNTAINS) m = Math.max(m, k.top * Math.min(0.8, 1.5 * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz))));
   return m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 5 * Math.min(1, m / 4);
 }
-/** Rock comes as pillars four columns wide with broad flat tops; a quarter of a pillar may sit a step lower or higher. */
+/** Rock comes as stacked cubes: blocks two columns wide in steps of two set the cliffs, a few single columns step off them. */
 function rockHeight(x: number, z: number): number {
-  const px = Math.floor(x / 4), pz = Math.floor(z / 4), m = mountainAt(px * 4 + 2, pz * 4 + 2);
-  if (m < 1) return 0;
-  const pillar = (hash2(px, pz, 11) - 0.5) * 7, piece = hash2(Math.floor(x / 2), Math.floor(z / 2), 19);
-  return Math.max(2, Math.round((m * 1.15 + pillar * Math.min(1, m / 5)) / 2) * 2 + (piece < 0.22 ? -2 : piece > 0.9 ? 2 : 0));
+  const m = mountainAt(x + 0.5, z + 0.5);
+  if (m < 0.6) return 0;
+  const slab = (hash2(Math.floor(x / 2), Math.floor(z / 2), 11) - 0.5) * 4, big = (hash2(Math.floor(x / 6), Math.floor(z / 6), 13) - 0.5) * 4;
+  const piece = hash2(x, z, 19), step = piece < 0.1 ? -1 : piece > 0.93 ? 1 : 0;
+  return Math.max(1, Math.round((m + (slab + big) * Math.min(1, m / 5)) / 2) * 2 + step);
 }
 
 export function buildGround(): Ground {

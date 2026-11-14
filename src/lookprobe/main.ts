@@ -23,7 +23,7 @@ const LOOK = {
   distance: 3000,
   sun: 0.82, sunElevation: 55, sunTurn: 12, sunColor: 0xfff0d8,
   side: 0.7, sideColor: 0xffe6c8,
-  sky: 0.36, skyColor: 0xcfe0ff, bounce: 0.12, bounceColor: 0xffe2c0,
+  sky: 0.36, skyColor: 0xcfe0ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffdcff,
   mirror: 0.32, mirrorBlur: 0.006,
   focusRange: 150, blur: 2.6,
 };
@@ -84,7 +84,11 @@ async function start() {
   side.position.copy(centre).addScaledVector(from(0, 0), 100);
   side.target.position.copy(centre);
   const sky = new THREE.HemisphereLight(LOOK.skyColor, new THREE.Color(LOOK.bounceColor).multiplyScalar(LOOK.bounce / LOOK.sky), LOOK.sky * Math.PI);
-  scene.add(sun, sun.target, side, side.target, sky);
+  // light thrown back by the sunlit ground and walls: it lifts the walls that face the viewer's left, as in the reference
+  const fill = new THREE.DirectionalLight(LOOK.fillColor, LOOK.fill * Math.PI);
+  fill.position.copy(centre).addScaledVector(from(180 + VIEW.turn, 20), 100);
+  fill.target.position.copy(centre);
+  scene.add(sun, sun.target, side, side.target, fill, fill.target, sky);
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
   const elev = rad(VIEW.elevation), reach = (FRAME_D / 2) * Math.cos(elev) + 80;

@@ -5,8 +5,8 @@ import { type Ground, LAND_Y, Mat, N, SEA_Y, SITES, fieldAt, idx, inCity, roadDi
 
 const GRASS_A = rgb(0x8ea838), GRASS_B = rgb(0xa8b23a), GRASS_DRY = rgb(0xc4b842), GRASS_DEEP = rgb(0x749a32);
 const ROAD = rgb(0xcbb894), PAVED = rgb(0xc9b0a2), PLAZA = rgb(0xd6beb0);
-const ROCK_TOP_LOW = rgb(0xeee2da), ROCK_TOP_HIGH = rgb(0xfff6ee), ROCK_SIDE = rgb(0x9c9498), ROCK_SIDE_WARM = rgb(0xaea39c);
-const SOIL_WHEAT = rgb(0xb89a3c), SOIL_VINE = rgb(0x7a9a34);
+const ROCK_TOP_LOW = rgb(0xbdb2ac), ROCK_TOP_HIGH = rgb(0xfdf6f2), ROCK_SIDE = rgb(0x9a9296), ROCK_SIDE_WARM = rgb(0xaca19a), ROCK_SIDE_HIGH = rgb(0xe9e2e0);
+const SOIL_WHEAT = rgb(0xa08434), SOIL_VINE = rgb(0x6f8a30);
 const QUAY = rgb(0xc8b8ac), EARTH = rgb(0x9a8450);
 const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c);
 
@@ -30,8 +30,11 @@ export function skyShare(g: Ground, x: number, z: number, y: number): number {
 /** Brightness factor from the sky share: open ground stays at 1, deep corners fall to about a half. */
 export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.08);
 
+/** how far rock at this height has turned into the pale stone of the summits (0 … 1) */
+const pale = (x: number, z: number, y: number) => smooth(6, 10, y - LAND_Y + (noise2(x / 4, z / 4, 9) - 0.5) * 4);
+
 function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB {
-  if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, smooth(2, 9, h - LAND_Y) * (0.85 + 0.15 * noise2(x / 3, z / 3, 9)));
+  if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, pale(x, z, h));
   if (mat === Mat.Paved) {
     const p = SITES.plaza, plaza = Math.max(Math.abs(x - p.at[0]) - p.w / 2, Math.abs(z - p.at[1]) - p.d / 2);
     return shade(mix(PLAZA, PAVED, smooth(-1, 3, plaza)), 0.93 + 0.12 * noise2(x / 2.3, z / 2.3, 4));
@@ -40,7 +43,7 @@ function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB 
   const crop = mat === Mat.Soil ? fieldAt(x, z, 0.6) : null;
   let c = mix(GRASS_A, GRASS_B, fbm2(x / 11, z / 11, 21));
   c = mix(c, GRASS_DRY, smooth(0.5, 0.8, noise2(x / 7, z / 7, 23)) * 0.6);
-  c = mix(c, GRASS_DEEP, smooth(0.6, 0.85, noise2(x / 17, z / 17, 25)) * 0.5);
+  c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(x / 13, z / 13, 25)) * 0.8);
   if (crop) c = mix(c, crop === 'wheat' ? SOIL_WHEAT : SOIL_VINE, 0.85);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
   const road = 1 - smooth(0.7, 2.3, roadDist(x, z) + (noise2(x / 2, z / 2, 27) - 0.5) * 0.9);
@@ -54,7 +57,9 @@ export function buildTerrain(g: Ground, baked = true): Batch {
   const NB: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z), h = g.h[i], mat = g.mat[i];
-    const corner = (cx: number, cz: number): RGB => shade(topColor(g, cx, cz, mat, h), light(cx, cz, h + 0.02));
+    // every cell is a touch lighter or darker than its neighbours: the fine grain of the reference's ground
+    const grain = mat === Mat.Rock ? 1 : 1 + (hash2(x, z, 45) - 0.5) * (mat === Mat.Paved ? 0.13 : 0.09);
+    const corner = (cx: number, cz: number): RGB => shade(topColor(g, cx, cz, mat, h), light(cx, cz, h + 0.02) * grain);
     const c00 = corner(x, z), c10 = corner(x + 1, z), c11 = corner(x + 1, z + 1), c01 = corner(x, z + 1);
     if (!g.wet[i]) b.quad([x, h, z], [x, h, z + 1], [x + 1, h, z + 1], [x + 1, h, z], [c00, c01, c11, c10], [0, 1, 0]);
     if (g.wet[i]) continue;
@@ -65,7 +70,7 @@ export function buildTerrain(g: Ground, baked = true): Batch {
       if (nh >= h) continue;
       const wetSide = !out && g.wet[idx(nx, nz)] === 1;
       let side: RGB;
-      if (mat === Mat.Rock) side = shade(mix(ROCK_SIDE, ROCK_SIDE_WARM, hash2(Math.floor(x / 4), Math.floor(z / 4), 33)), 0.92 + 0.16 * hash2(x, z, 35));
+      if (mat === Mat.Rock) side = shade(mix(ROCK_SIDE, ROCK_SIDE_WARM, hash2(Math.floor(x / 2), Math.floor(z / 2), 33)), 0.9 + 0.2 * hash2(x, z, 35));
       else if (wetSide || mat === Mat.Paved) side = shade(QUAY, 0.9 + 0.2 * hash2(x, z, 37));
       else side = EARTH;
       // the two top corners of this side, in the order that keeps the face turned outwards
@@ -73,6 +78,15 @@ export function buildTerrain(g: Ground, baked = true): Batch {
       const bx = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x + 1 : x, bz = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z + 1 : z;
       const la = light(ax + dx * 0.3, az + dz * 0.3, h - 0.2), lb = light(bx + dx * 0.3, bz + dz * 0.3, h - 0.2);
       const foot = 0.7;
+      if (mat === Mat.Rock) {
+        // cliffs: pale stone near the summits, grey below, cut into pieces so that the change follows the height
+        for (let y0 = nh; y0 < h; y0 += 3) {
+          const y1 = Math.min(h, y0 + 3), lo = mix(side, ROCK_SIDE_HIGH, pale(x, z, y0)), hi = mix(side, ROCK_SIDE_HIGH, pale(x, z, y1));
+          const f0 = foot + (1 - foot) * ((y0 - nh) / (h - nh)), f1 = foot + (1 - foot) * ((y1 - nh) / (h - nh));
+          b.quad([ax, y0, az], [bx, y0, bz], [bx, y1, bz], [ax, y1, az], [shade(lo, la * f0), shade(lo, lb * f0), shade(hi, lb * f1), shade(hi, la * f1)], [dx, 0, dz]);
+        }
+        continue;
+      }
       b.quad([ax, nh, az], [bx, nh, bz], [bx, h, bz], [ax, h, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
     }
   }
