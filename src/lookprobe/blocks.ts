@@ -7,10 +7,10 @@ const TRUNK = rgb(0x7a4a2c);
 const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
 const FLANK = rgb(0x4e8a2e), FLANK_AWAY = rgb(0x3e8a4a), FLANK_AWAY_WARM = rgb(0x4c8c36);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
-const WHEAT = [rgb(0xffc84c), rgb(0xf8be44), rgb(0xffce52)], WHEAT_SIDE = rgb(0xdea43e);
+const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
 const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
-const VINE = [rgb(0xecd43a), rgb(0xe2cc36), rgb(0xf4da40), rgb(0xdcc634)], VINE_SIDE = rgb(0xc8c42c), VINE_BODY = rgb(0x4a8c22), GRAPES = rgb(0xe89038);
+const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], VINE_SIDE = rgb(0xc8c42c), VINE_BODY = rgb(0x4a8c22), GRAPES = rgb(0xe89038);
 const POST = rgb(0xb06c3a), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a), PIER_STONE = rgb(0xdcc4b4);
 const HULL = rgb(0x9c6238), HULL_DARK = rgb(0x74482a), SHIP_DECK = rgb(0xc09a68), SAIL = rgb(0xf2e0c6), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
 const WAKE = rgb(0xd5eeee);
@@ -77,9 +77,10 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     if (isWet(g, x, z) || lot < 0.04) continue;
     const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
     if (hedges) {
-      const h = 1.7 + 0.3 * lot;
-      b.box(x - 0.46, y, z - 0.46, x + 0.46, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
-      if (r.chance(0.55)) b.box(x - 0.3, y + h, z - 0.3, x + 0.3, y + h + 0.3, z + 0.3, VINE_SIDE, { top: c, away: VINE_GLOW });
+      // a row is a line of bushes of uneven height, not a clipped hedge
+      const h = 1.45 + 0.65 * lot;
+      b.box(x - 0.42, y, z - 0.46, x + 0.42, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
+      if (r.chance(0.7)) b.box(x - 0.3, y + h, z - 0.32, x + 0.3, y + h + 0.32, z + 0.32, VINE_SIDE, { top: c, away: VINE_GLOW });
     } else {
       const h = 1.7 + 0.6 * lot;
       // the green body shows under a smaller yellow head, so the field reads as speckled, not as one yellow sheet

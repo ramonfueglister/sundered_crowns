@@ -100,7 +100,8 @@ export function buildScene(bakedSky = true): ProbeScene {
     const r = seeded(100 + n);
     for (let k = 0, tries = 0; k < t.towers && tries < 80; tries++) {
       const x = Math.round(t.at[0] + r.range(-t.r, t.r) * 0.4), z = Math.round(t.at[1] + r.range(-t.r, t.r) * 0.4);
-      if (k % 2 === 0) { if (fits(x - 2, z - 2, x + 2, z + 2, rural)) { build(tower(r), x, z, 2.4, 2.4, 0, 10, 'tower'); k++; } }
+      // the walled town has two brick towers, as in the reference; the open towns a tower or a church
+      if (k % 2 === 0 || t.houses > 12) { if (fits(x - 2, z - 2, x + 2, z + 2, rural)) { build(tower(r), x, z, 2.4, 2.4, 0, 10, 'tower'); k++; } }
       else if (fits(x - 3, z - 6, x + 3, z + 5, rural)) { build(church(r), x, z, 5.2, 10.6, 0, 6, 'church'); k++; }
     }
     if (t.houses > 12) {
@@ -192,7 +193,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const y = g.h[i];
       if (r.chance(density < 0.2 ? 0.45 : 0.15)) { cypress(things, x, y, z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, y + 4.2); count('tree'); continue; }
       // the trees of the woods are larger than those between the fields
-      tree(things, x, y, z, r, (density > 0.3 ? 1.15 : 1) * r.range(0.85, 1.2)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, y + 3.4); count('tree');
+      tree(things, x, y, z, r, density > 0.3 ? r.range(0.9, 1.55) : r.range(0.85, 1.2)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, y + 3.4); count('tree');
     }
     // cypresses beside the roads, every few steps on one side or the other
     for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) {
