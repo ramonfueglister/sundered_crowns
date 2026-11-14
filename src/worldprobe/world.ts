@@ -13,6 +13,8 @@ export interface WorldView {
   lon: number; lat: number;
   /** side of one block in kilometres */
   km: number;
+  /** heights after river erosion instead of the measured ones */
+  shaped: boolean;
 }
 
 /**
@@ -22,10 +24,12 @@ export interface WorldView {
  * not a relief map).
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
-/** above this the ground is bare rock, and above the snow line the rock is pale */
+/** above this no trees grow and the heights are stretched; above the snow line the rock is pale */
 const TREE_LINE = 1900, SNOW_LINE = 2500;
-/** steep ground below the tree line is rock too: more than this many metres of rise within three blocks, above the valley floors */
-const CLIFF_RISE = 900, CLIFF_FROM = 900;
+/** the massifs are rock from this height of their broad shape upwards; what stands above that shape is raised by this factor */
+const ROCK_FROM = 1500, PEAK = 1.8;
+/** height of one tier of rock below the snow, in blocks */
+const TIER = 3;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
 const levelOf = (metres: number) => Math.max(0, (Math.min(metres, TREE_LINE) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - TREE_LINE) / METRES_PER_BLOCK_HIGH;
@@ -47,18 +51,31 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5);
-    metres[idx(x, z)] = sample(region, region.height, cx, cy); kind[idx(x, z)] = waterAt(region, cx, cy);
+    metres[idx(x, z)] = sample(region, view.shaped ? region.shaped : region.height, cx, cy); kind[idx(x, z)] = waterAt(region, cx, cy);
   }
-  const metresAt = (x: number, z: number) => metres[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
-  /** real height of the rock pillar a column belongs to, and whether that pillar is rock */
+  /** a field averaged over a square of blocks reaching `reach` to each side */
+  const averaged = (field: Float32Array, reach: number) => {
+    const out = new Float32Array(N * N);
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      let sum = 0, n = 0;
+      for (let dz = -reach; dz <= reach; dz++) for (let dx = -reach; dx <= reach; dx++) if (inGrid(x + dx, z + dz)) { sum += field[idx(x + dx, z + dz)]; n++; }
+      out[idx(x, z)] = sum / n;
+    }
+    return out;
+  };
+  // the broad shape of the land (about five blocks, twice) and the relief of single massifs (three blocks)
+  const broad = averaged(averaged(metres, 2), 2), massif = averaged(metres, 1);
+  const at = (field: Float32Array, x: number, z: number) => field[idx(Math.max(0, Math.min(N - 1, Math.floor(x))), Math.max(0, Math.min(N - 1, Math.floor(z))))];
+  const metresAt = (x: number, z: number) => at(metres, x, z);
+  /**
+   * Height of the rock pillar a column belongs to, and whether that pillar is rock. A massif of the reference is one
+   * steep, calm shape: the rock takes the relief of whole massifs and raises it over the broad shape of the land,
+   * and leaves out what is finer. Rock or meadow is settled per bundle of four pillars, so that the rock comes in
+   * whole pieces.
+   */
   const pillar = (x: number, z: number): [number, boolean] => {
-    const [px, pz] = rockPillar(x, z), m = metresAt((px + 0.5) * 2, (pz + 0.5) * 2 - px);
-    // rock or meadow is settled per bundle of four pillars, so that the rock comes in whole pieces
-    const bx = Math.floor(px / 2) * 2 + 1, mx = bx * 2, mz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx, mid = metresAt(mx, mz);
-    let lo = mid, hi = mid;
-    for (let dz = -3; dz <= 3; dz += 3) for (let dx = -3; dx <= 3; dx += 3) { const v = metresAt(mx + dx, mz + dz); lo = Math.min(lo, v); hi = Math.max(hi, v); }
-    // a pillar stands halfway between its own height and that of its bundle: single pillars do not shoot up as towers
-    return [(m + mid) / 2, mid > TREE_LINE || (hi - lo > CLIFF_RISE && mid > CLIFF_FROM)];
+    const [px, pz] = rockPillar(x, z), cx = (px + 0.5) * 2, cz = (pz + 0.5) * 2 - px, bx = Math.floor(px / 2) * 2 + 1;
+    return [at(broad, cx, cz) + PEAK * (at(massif, cx, cz) - at(broad, cx, cz)), at(broad, bx * 2, (Math.floor(pz / 2) * 2 + 1) * 2 - bx) > ROCK_FROM];
   };
 
   const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y) };
@@ -69,11 +86,11 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
     if (kind[i] !== Water.Land) { level[i] = kind[i] === Water.Lake ? Math.round(levelOf(metres[i])) : 0; continue; }
     const [m, rock] = pillar(x, z);
     if (!rock) { level[i] = Math.round(levelOf(metres[i])); g.mat[i] = Mat.Grass; continue; }
-    // rock as in the probe: pillars with flat tops, the snow in steps of two, single columns stepping down or standing
-    // back as dark slots; the real heights give the rise and fall that the probe makes up
-    const [px, pz] = rockPillar(x, z), own = hash2(px, pz, 17) - 0.5;
-    const piece = hash2(x, z, 19), step = piece < 0.02 ? -3 : piece < 0.06 ? -1 : 0, top = levelOf(m);
-    level[i] = Math.max(1, (m > SNOW_LINE ? Math.round(top / 2) * 2 : Math.round(top + own)) + step); g.mat[i] = Mat.Rock;
+    // the rock rises in tiers, as the massifs of the reference do: whole terraces of one height with cliffs between
+    // them; a pillar here and there stands a step lower, single columns step down or stand back as dark slots
+    const [px, pz] = rockPillar(x, z), lower = hash2(px, pz, 17) < 0.25 ? 1 : 0, tier = m > SNOW_LINE ? 2 : TIER;
+    const piece = hash2(x, z, 19), step = piece < 0.02 ? -3 : piece < 0.06 ? -1 : 0;
+    level[i] = Math.max(1, Math.round(levelOf(m) / tier) * tier - lower + step); g.mat[i] = Mat.Rock;
   }
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor

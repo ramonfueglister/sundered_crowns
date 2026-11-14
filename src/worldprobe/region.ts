@@ -1,5 +1,6 @@
 // A region of the real world as cut by tools/worldprobe/build_region.py: a window of the game map at a few cells per
-// map pixel, with height, water, forest and cultivation per cell and the rivers as lines.
+// map pixel, with height (as measured and after river erosion), drainage, water, forest and cultivation per cell and
+// the rivers as lines.
 import { maybeGunzip } from '../render/assets';
 
 export const Water = { Land: 0, Sea: 1, Lake: 2 } as const;
@@ -11,6 +12,10 @@ export interface Region {
   kmPerCell: number;
   /** metres above sea level; lakes are level, the sea is 0 */
   height: Int16Array;
+  /** the same after river erosion (tools/worldprobe/erosion.py): clean valleys and ridges, the broad shape kept */
+  shaped: Int16Array;
+  /** area draining through the cell: 16 steps per doubling of (km² + 1) */
+  drainage: Uint8Array;
   water: Uint8Array;
   /** forest and cultivation of 1356, 0 … 255 */
   forest: Uint8Array; crops: Uint8Array;
@@ -21,12 +26,12 @@ export async function loadRegion(name: string, base = '/'): Promise<Region> {
   const get = async (file: string) => { const r = await fetch(`${base}map/regions/${file}`); if (!r.ok) throw new Error(`${file}: HTTP ${r.status}`); return r; };
   const [meta, packed] = await Promise.all([get(`${name}.json`).then((r) => r.json()), get(`${name}.bin.gz`).then((r) => r.arrayBuffer())]);
   const raw = await maybeGunzip(new Uint8Array(packed)), n = meta.w * meta.h;
-  if (raw.byteLength !== n * 5) throw new Error(`${name}.bin: expected ${n * 5} bytes, got ${raw.byteLength}`);
+  if (raw.byteLength !== n * 8) throw new Error(`${name}.bin: expected ${n * 8} bytes, got ${raw.byteLength}`);
   const part = (from: number, len: number) => raw.buffer.slice(raw.byteOffset + from, raw.byteOffset + from + len);
   return {
     ...meta,
-    height: new Int16Array(part(0, n * 2)), water: new Uint8Array(part(n * 2, n)),
-    forest: new Uint8Array(part(n * 3, n)), crops: new Uint8Array(part(n * 4, n)),
+    height: new Int16Array(part(0, n * 2)), shaped: new Int16Array(part(n * 2, n * 2)), drainage: new Uint8Array(part(n * 4, n)),
+    water: new Uint8Array(part(n * 5, n)), forest: new Uint8Array(part(n * 6, n)), crops: new Uint8Array(part(n * 7, n)),
   };
 }
 

@@ -1,7 +1,8 @@
 """Cuts one region of the real world out of open geodata for the world probe (src/worldprobe).
 
 The region is a window of the game map (same Mercator projection as tools/geo) at CELLS cells per map pixel, so that
-it lines up with locations and borders later. Per cell: height in metres, water class, forest and cultivation share.
+it lines up with locations and borders later. Per cell: height in metres (as measured, and after river erosion), drainage area, water class, forest and
+cultivation share.
 Rivers go along as lines, because the probe draws them on its own turned grid.
 
 Inputs (all open, fetched into GEO_CACHE on first use):
@@ -18,6 +19,7 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
+from erosion import erode
 from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, lonlat_to_px, lonlat_to_px_np, load_json, lines_from_geojson_geom, polys_from_geojson_geom, px_to_lonlat_np
 
 Image.MAX_IMAGE_PIXELS = None
@@ -72,6 +74,7 @@ def main(name):
     mx, my = np.meshgrid(px0 + (np.arange(w) + 0.5) / CELLS, py0 + (np.arange(h) + 0.5) / CELLS)
     lon, lat = px_to_lonlat_np(mx, my)
     height = elevation(lon, lat)
+    meta_km = float(np.mean(np.cos(np.radians(lat))) * (LON1 - LON0) / W * 111.32 / CELLS)
 
     def to_cell(lo, la):
         x, y = lonlat_to_px(lo, la)
@@ -119,6 +122,9 @@ def main(name):
     height[water == SEA] = 0
     height = np.where(water == 0, np.maximum(height, 1), height)
 
+    # the same land after river erosion: clean valleys and ridges, the broad shape kept (see erosion.py)
+    shaped, area = erode(height, water != 0, meta_km * 1000)
+
     # forest and cultivation of 1356 from the game's biome layer (half map resolution: G forest, B cultivation)
     biome = np.asarray(Image.open(os.path.join(ROOT, 'public', 'map', 'biome.png')).convert('RGBA'))
     by, bx = my / 2 - 0.5, mx / 2 - 0.5
@@ -137,12 +143,15 @@ def main(name):
     out = os.path.join(ROOT, 'public', 'map', 'regions'); os.makedirs(out, exist_ok=True)
     meta = {'name': name, 'w': w, 'h': h, 'x0': px0, 'y0': py0, 'cells': CELLS, 'mapW': W, 'mapH': H,
             'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
-            'kmPerCell': round(float(np.mean(np.cos(np.radians(lat))) * 170 / W * 111.32 / CELLS), 4),
-            'layers': ['height:i16', 'water:u8', 'forest:u8', 'crops:u8'], 'rivers': rivers}
+            'kmPerCell': round(meta_km, 4),
+            'layers': ['height:i16', 'shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'rivers': rivers}
     with open(os.path.join(out, f'{name}.json'), 'w', encoding='utf-8') as f:
         json.dump(meta, f, ensure_ascii=False, separators=(',', ':'))
     with gzip.open(os.path.join(out, f'{name}.bin.gz'), 'wb', compresslevel=9) as f:
         f.write(np.clip(np.round(height), -500, 9000).astype('<i2').tobytes())
+        f.write(np.clip(np.round(shaped), -500, 9000).astype('<i2').tobytes())
+        # drainage area in km² as a logarithm: 16 steps per doubling
+        f.write(np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8).tobytes())
         f.write(water.tobytes())
         f.write(np.clip(np.round(forest), 0, 255).astype(np.uint8).tobytes())
         f.write(np.clip(np.round(crops), 0, 255).astype(np.uint8).tobytes())
