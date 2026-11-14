@@ -40,7 +40,8 @@ function slope(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, facing: V3, row
   const cols = rows > 1 ? Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / 1.1)) : 1;
   for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
     const t0 = k / rows, t1 = (k + 1) / rows, u0 = j / cols, u1 = (j + 1) / cols;
-    const col = rows > 1 ? shade(c, 0.94 + 0.08 * hash2(Math.round(e0[0] * 7 + j * 3 + k), Math.round(e0[2] * 7 + k * 5 - j), 81)) : c;
+    // every other row of tiles a touch darker, every patch a touch lighter or darker
+    const col = rows > 1 ? shade(c, (k % 2 ? 0.93 : 1.03) + 0.14 * hash2(Math.round(e0[0] * 7 + j * 3 + k), Math.round(e0[2] * 7 + k * 5 - j), 81)) : c;
     b.quad(lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t0), lerp3(lerp3(e0, e1, u1), lerp3(r0, r1, u1), t1), lerp3(lerp3(e0, e1, u0), lerp3(r0, r1, u0), t1), col, facing);
   }
 }
@@ -52,9 +53,13 @@ function hipRoof(b: Batch, x0: number, z0: number, x1: number, z1: number, y: nu
   slope(b, [x1, y, z0], [x0, y, z0], alongX ? e : a, a, c, [0, 1, -1], rows);
   slope(b, [x1, y, z1], [x1, y, z0], e, alongX ? e : a, c, [1, 1, 0], rows);
   slope(b, [x0, y, z0], [x0, y, z1], a, alongX ? a : e, c, [-1, 1, 0], rows);
-  if (rows > 1 && Math.hypot(e[0] - a[0], e[2] - a[2]) > 0.4) {
-    const k = 0.11, cap = shade(c, 1.14);
-    b.box(Math.min(a[0], e[0]) - k, top - 0.05, Math.min(a[2], e[2]) - k, Math.max(a[0], e[0]) + k, top + 0.1, Math.max(a[2], e[2]) + k, cap);
+  if (rows <= 1) return;
+  const k = 0.11, cap = shade(c, 1.14);
+  if (Math.hypot(e[0] - a[0], e[2] - a[2]) > 0.4) b.box(Math.min(a[0], e[0]) - k, top - 0.05, Math.min(a[2], e[2]) - k, Math.max(a[0], e[0]) + k, top + 0.1, Math.max(a[2], e[2]) + k, cap);
+  // a line of paler cap tiles down each hip
+  for (const [cx, cz, end] of [[x0, z0, a], [x0, z1, alongX ? a : e], [x1, z1, e], [x1, z0, alongX ? e : a]] as const) {
+    const len = Math.hypot(end[0] - cx, end[2] - cz), px = (-(end[2] - cz) / len) * k, pz = ((end[0] - cx) / len) * k;
+    b.quad([cx - px, y + 0.05, cz - pz], [cx + px, y + 0.05, cz + pz], [end[0] + px, top + 0.05, end[2] + pz], [end[0] - px, top + 0.05, end[2] - pz], cap, [0, 1, 0]);
   }
 }
 /** A gable roof over a rectangle, ridge along its longer side, laid in tiles; the gable ends are filled in the wall colour. */
@@ -93,7 +98,8 @@ function dome(b: Batch, cx: number, y: number, cz: number, r: number, c: RGB, sq
   };
   for (let i = 0; i < segs; i++) {
     const am = ((i + 0.5) / segs) * Math.PI * 2;
-    for (let k = 0; k < rings; k++) b.quad(p(i, k), p(i + 1, k), p(i + 1, k + 1), p(i, k + 1), c, [Math.cos(am), 0.4, Math.sin(am)]);
+    // every other gore a touch darker: the ribs of a lead roof
+    for (let k = 0; k < rings; k++) b.quad(p(i, k), p(i + 1, k), p(i + 1, k + 1), p(i, k + 1), shade(c, i % 2 ? 0.93 : 1.03), [Math.cos(am), 0.4, Math.sin(am)]);
   }
 }
 /** A row of small blocks along the top edge of a box (battlements). */
@@ -107,13 +113,20 @@ function battlements(b: Batch, x0: number, z0: number, x1: number, z1: number, y
   }
 }
 
+/** Height of a hip or gable roof above its eaves at (x, z); the roof covers x0 … x1 × z0 … z1 and rises by `rise`. */
+function roofAt(x0: number, z0: number, x1: number, z1: number, rise: number, gable: boolean, x: number, z: number) {
+  const alongX = x1 - x0 >= z1 - z0, half = Math.min(x1 - x0, z1 - z0) / 2;
+  const across = alongX ? Math.min(z - z0, z1 - z) : Math.min(x - x0, x1 - x), along = alongX ? Math.min(x - x0, x1 - x) : Math.min(z - z0, z1 - z);
+  return rise * Math.max(0, Math.min(1, (gable ? across : Math.min(across, along)) / half));
+}
+
 /** height of one storey; measured on the reference, where the window rows of the town houses lie 2 to 2.3 blocks apart */
 export const FLOOR = 2.1;
-const WINDOW = rgb(0x4a4c58), WINDOW_WARM = rgb(0x5c4a40), DOOR = rgb(0x70482c), FRAME = rgb(0xfdf6ea);
+const WINDOW = rgb(0x3c3e48), WINDOW_WARM = rgb(0x4a3a34), DOOR = rgb(0x5a3a26), FRAME = rgb(0xfdf6ea), DORMER = rgb(0x4e3630);
 const SHUTTERS = [rgb(0x5f8a5a), rgb(0x8a5a3c), rgb(0x4f7a8a)];
-export const WALLS = [rgb(0xfbe9d6), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xfae6d8), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xe6c4a4), rgb(0xfdf0e2),
-  rgb(0xf0c684), rgb(0xecc07a), rgb(0xf2c8ae)];
-export const ROOFS = [rgb(0xf07e58), rgb(0xe87452), rgb(0xf48860), rgb(0xe67856), rgb(0xf2825c), rgb(0xe06c50)];
+export const WALLS = [rgb(0xf6e2cc), rgb(0xf6dfbc), rgb(0xf5d6c2), rgb(0xf2dab0), rgb(0xeecf9e), rgb(0xf2c4b4), rgb(0xe9c79a), rgb(0xf0d2b8), rgb(0xeebaa6), rgb(0xdcc6b4),
+  rgb(0xf0c684), rgb(0xecc07a), rgb(0xf2c8ae), rgb(0xf6d0c4), rgb(0xf0c0ac)];
+export const ROOFS = [rgb(0xf0805c), rgb(0xe87656), rgb(0xf48a64), rgb(0xe67a5a), rgb(0xf28460), rgb(0xe06e54)];
 const STONE = rgb(0xd8ccc0), STONE_DARK = rgb(0xb0a69c), BRICK = rgb(0xd0603c), MARBLE = rgb(0xfdf4ea);
 const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK = rgb(0xf6dccc);
 
@@ -124,31 +137,48 @@ const LEAD = rgb(0xb9b6bc), COPPER = rgb(0x6fb078), GOLD = rgb(0xf4c440), PINK =
 function block(b: Batch, x0: number, z0: number, x1: number, z1: number, floors: number, wallC: RGB, roofC: RGB, r: Rnd, door = true) {
   const top = floors * FLOOR + 0.3, w = x1 - x0, d = z1 - z0;
   b.box(x0, -1, z0, x1, top, z1, wallC, { foot: 0.9 });
-  const doorSide = r.pick(SIDES), glass = r.chance(0.5) ? WINDOW : WINDOW_WARM, shutter = r.chance(0.15) ? r.pick(SHUTTERS) : null;
+  const glass = r.chance(0.5) ? WINDOW : WINDOW_WARM, shutter = r.chance(0.08) ? r.pick(SHUTTERS) : null, arched = r.chance(0.25);
   for (const s of SIDES) {
-    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(1, Math.round(wl.len / 1.4)), 0.2);
-    const doorAt = door && s === doorSide ? r.int(0, cols.length - 1) : -1;
+    const wl = wallOf(x0, z0, x1, z1, s), cols = spread(wl, Math.max(1, Math.round(wl.len / 1.25)), 0.2);
+    // a door on most walls of the ground floor, two on a long one
+    const doors = new Set<number>();
+    if (door) for (let k = wl.len > 9 ? 2 : r.chance(0.7) ? 1 : 0; k > 0; k--) doors.add(r.int(0, cols.length - 1));
     pane(b, wl, 0, 0, wl.len, 0.4, shade(wallC, 0.8), 0.02);
     for (let f = 1; f < floors; f++) pane(b, wl, 0, f * FLOOR + 0.2, wl.len, f * FLOOR + 0.32, shade(wallC, 1.06), 0.02);
+    // the shadow line under the eaves, and patches of older plaster
+    pane(b, wl, 0, top - 0.2, wl.len, top, shade(wallC, 0.7), 0.02);
+    for (let k = Math.round(wl.len / 3) + r.int(0, 1); k > 0 && wl.len > 3; k--) {
+      const t = r.range(0, wl.len - 2), y = r.range(0.4, top - 1.6);
+      pane(b, wl, t, y, t + r.range(0.8, 2), y + r.range(0.5, 1.3), shade(wallC, r.chance(0.7) ? r.range(0.86, 0.94) : r.range(1.05, 1.1)), 0.015);
+    }
     for (let f = 0; f < floors; f++) cols.forEach((t, k) => {
-      const y = f * FLOOR + 0.78;
-      if (f === 0 && k === doorAt) { arch(b, wl, t, 0, 0.46, 1.2, FRAME, 0.03); arch(b, wl, t, 0, 0.35, 1.16, DOOR, 0.05); return; }
-      if (shutter) { pane(b, wl, t - 0.5, y, t - 0.29, y + 0.8, shutter); pane(b, wl, t + 0.29, y, t + 0.5, y + 0.8, shutter); }
-      pane(b, wl, t - 0.33, y - 0.08, t + 0.33, y, FRAME);
-      arch(b, wl, t, y, 0.25, y + 0.56, glass, 0.05);
+      const y = f * FLOOR + 0.72;
+      if (f === 0 && doors.has(k)) { arch(b, wl, t, 0, 0.4, 1.15, DOOR, 0.05); return; }
+      if (shutter) { pane(b, wl, t - 0.52, y, t - 0.29, y + 0.9, shutter); pane(b, wl, t + 0.29, y, t + 0.52, y + 0.9, shutter); }
+      pane(b, wl, t - 0.33, y - 0.09, t + 0.33, y, shade(wallC, 1.1));
+      if (arched) arch(b, wl, t, y, 0.26, y + 0.62, glass, 0.05); else pane(b, wl, t - 0.26, y, t + 0.26, y + 0.9, glass, 0.05);
     });
   }
-  const ov = 0.16, rise = Math.min((Math.min(w, d) / 2) * r.range(0.26, 0.36), 1.5);
-  b.box(x0 - ov, top, z0 - ov, x1 + ov, top + 0.12, z1 + ov, shade(roofC, 0.78));
-  const rows = Math.max(3, Math.round(Math.min(w, d) / 1.1));
-  if (r.chance(0.3)) gableRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, top + 0.12, rise, roofC, wallC, rows);
-  else hipRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, top + 0.12, rise, roofC, rows);
-  // chimneys and roof hatches: the small clutter that makes the roofs of the reference lively
-  for (let k = r.int(1, 2) + Math.floor((w * d) / 14); k > 0; k--) {
-    const cx = r.range(x0 + 0.6, x1 - 0.6), cz = r.range(z0 + 0.6, z1 - 0.6), sz = r.range(0.13, 0.2);
-    // height of the roof under this point: it falls from the ridge towards the nearer eaves
-    const under = top + 0.12 + rise * Math.min(1, Math.min(cx - x0, x1 - cx, cz - z0, z1 - cz) / (Math.min(w, d) / 2));
-    b.box(cx - sz, under - 0.1, cz - sz, cx + sz, under + r.range(0.3, 0.6), cz + sz, r.chance(0.5) ? shade(roofC, 0.55) : rgb(0x6a5a58), { top: r.chance(0.6) ? rgb(0xf0e6dc) : shade(roofC, 0.6) });
+  const ov = 0.2, rise = Math.min((Math.min(w, d) / 2) * r.range(0.26, 0.36), 1.5), gable = r.chance(0.3), eaves = top + 0.12;
+  b.box(x0 - ov, top, z0 - ov, x1 + ov, eaves, z1 + ov, shade(roofC, 0.78));
+  const rows = Math.max(4, Math.round(Math.min(w, d) / 0.7));
+  if (gable) gableRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, eaves, rise, roofC, wallC, rows);
+  else hipRoof(b, x0 - ov, z0 - ov, x1 + ov, z1 + ov, eaves, rise, roofC, rows);
+  // dormers, chimneys and hatches: the small clutter that makes the roofs of the reference lively
+  for (let k = r.int(1, 2) + Math.round((w * d) / 5.5); k > 0; k--) {
+    const cx = r.range(x0 + 0.7, x1 - 0.7), cz = r.range(z0 + 0.7, z1 - 0.7), under = eaves + roofAt(x0 - ov, z0 - ov, x1 + ov, z1 + ov, rise, gable, cx, cz), kind = r.next();
+    if (kind < 0.7) {
+      // a dormer: a dark opening under its own piece of roof
+      const hw = r.range(0.16, 0.26);
+      b.box(cx - hw, under - 0.3, cz - hw, cx + hw, under + r.range(0.2, 0.32), cz + hw, r.chance(0.25) ? DORMER : shade(roofC, 0.66), { top: shade(roofC, r.range(1.04, 1.16)) });
+    } else if (kind < 0.86) {
+      const sz = r.range(0.13, 0.2);
+      b.box(cx - sz, under - 0.3, cz - sz, cx + sz, under + r.range(0.45, 0.8), cz + sz, r.chance(0.5) ? shade(roofC, 0.55) : rgb(0x6a5a58), { top: r.chance(0.6) ? rgb(0xf0e6dc) : shade(roofC, 0.6) });
+    } else {
+      // a hatch or a patch of new tiles: a pale spot lying on the slope
+      const sz = r.range(0.16, 0.26);
+      b.box(cx - sz, under - 0.3, cz - sz, cx + sz, under + 0.12, cz + sz, rgb(0xf2e2d2));
+    }
   }
 }
 
@@ -250,8 +280,14 @@ export function basilica(): Batch {
     drum(b, cx, top + 0.3, cz, rad * 0.92, top + 1.5, MARBLE, 12, 0.9);
     dome(b, cx, top + 1.5, cz, rad, LEAD, 1.15);
     drum(b, cx, top + 1.5 + rad * 1.12, cz, 0.22, top + 1.5 + rad * 1.12 + 0.6, MARBLE, 6);
-    b.box(cx - 0.1, top + 2.1 + rad * 1.12, cz - 0.1, cx + 0.1, top + 2.7 + rad * 1.12, cz + 0.1, GOLD);
+    const tip = top + 2.1 + rad * 1.12;
+    b.box(cx - 0.08, tip, cz - 0.08, cx + 0.08, tip + 1.0, cz + 0.08, MARBLE);
+    b.box(cx - 0.08, tip + 0.55, cz - 0.34, cx + 0.08, tip + 0.72, cz + 0.34, MARBLE, { bottom: true });
   };
+  for (const t of spread(front, 6, -0.9)) {
+    b.box(x0 + t - 0.22, top, z1 - 0.45, x0 + t + 0.22, top + 1.5, z1, MARBLE, { foot: 0.92 });
+    hipRoof(b, x0 + t - 0.3, z1 - 0.52, x0 + t + 0.3, z1 + 0.08, top + 1.5, 0.7, GOLD);
+  }
   domeAt(0, 0, 3.2); domeAt(-4.3, 0, 1.9); domeAt(4.3, 0, 1.9); domeAt(0, -3.6, 1.9); domeAt(0, 3.3, 1.9);
   return b;
 }
@@ -284,7 +320,7 @@ export function castle(): Batch {
   b.box(-s, -2, -s, s, wallH, s, c, { foot: 0.8, top: shade(c, 0.9) });
   b.box(-s + 1, wallH - 1.2, -s + 1, s - 1, wallH - 1.19, s - 1, shade(c, 0.7));
   battlements(b, -s, -s, s, s, wallH, c, 0.5, 0.55);
-  slit(-s, -s, s, s, 2.2);
+  slit(-s, -s, s, s, 2.4); slit(-s, -s, s, s, 0.9);
   arch(b, wallOf(-s, -s, s, s, 'px'), s, 0, 0.8, 1.6, rgb(0x4a3f38));
   for (const [tx, tz, th] of [[-s, -s, 7.2], [s, -s, 6.6], [s, s, 6.4], [-s, s, 6.6]] as const) {
     b.box(tx - 1.5, -2, tz - 1.5, tx + 1.5, th, tz + 1.5, shade(c, 1.03), { foot: 0.8, top: shade(c, 0.92) });
@@ -295,7 +331,10 @@ export function castle(): Batch {
   b.box(-3.6, -2, -3.6, -0.8, 10.2, -0.8, shade(c, 1.06), { foot: 0.86, top: shade(c, 0.92) });
   battlements(b, -3.6, -3.6, -0.8, -0.8, 10.2, c, 0.5, 0.55);
   slit(-3.6, -3.6, -0.8, -0.8, 7.6); slit(-3.6, -3.6, -0.8, -0.8, 4.8);
-  for (const [fx, fz, fy] of [[-2.2, -2.2, 10.2], [s, -s, 6.6]] as const) {
+  // pointed tile roofs on the keep and on the tower beside the gate, as on the castle of the reference
+  hipRoof(b, -3.3, -3.3, -1.1, -1.1, 10.2, 2.0, ROOFS[1], 3);
+  hipRoof(b, s - 1.2, -s - 1.2, s + 1.2, -s + 1.2, 6.6, 1.8, ROOFS[3], 3);
+  for (const [fx, fz, fy] of [[-2.2, -2.2, 12.2], [s, -s, 8.4], [-s, s, 6.6]] as const) {
     b.box(fx - 0.06, fy, fz - 0.06, fx + 0.06, fy + 2.2, fz + 0.06, rgb(0x6a4a30));
     b.box(fx - 0.9, fy + 1.5, fz - 0.03, fx - 0.06, fy + 2.15, fz + 0.03, flag, { bottom: true });
   }

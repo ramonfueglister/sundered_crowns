@@ -56,29 +56,34 @@ function inPolygon(x: number, z: number, pts: readonly P2[]): boolean {
 const SEA = line([[0.34, 1.08], [0.38, 0.93], [0.44, 0.86], [0.5, 0.8], [0.57, 0.76], [0.63, 0.71], [0.7, 0.68], [0.78, 0.66],
   [0.85, 0.62], [0.875, 0.55], [0.86, 0.47], [0.8, 0.42], [0.83, 0.38], [0.9, 0.355], [1.1, 0.33], [1.1, 1.08]]);
 export const ISLANDS: readonly { at: P2; rx: number; rz: number; kind: 'village' | 'tower' | 'houses' }[] = [
-  { at: toXZ(0.885, 0.435), rx: 10.5, rz: 6.5, kind: 'village' },
-  { at: toXZ(0.925, 0.7), rx: 7, rz: 7, kind: 'houses' },
-  { at: toXZ(0.875, 0.865), rx: 7.5, rz: 7, kind: 'houses' },
-  { at: toXZ(0.725, 0.935), rx: 6, rz: 6, kind: 'tower' },
+  { at: toXZ(0.885, 0.435), rx: 11, rz: 7, kind: 'village' },
+  { at: toXZ(0.925, 0.7), rx: 8, rz: 7, kind: 'houses' },
+  { at: toXZ(0.875, 0.855), rx: 10.5, rz: 8.5, kind: 'village' },
+  { at: toXZ(0.725, 0.935), rx: 7.5, rz: 6.5, kind: 'tower' },
 ];
-export const RIVER = line([[0.47, 0.08], [0.43, 0.17], [0.36, 0.22], [0.3, 0.27], [0.31, 0.33], [0.36, 0.37], [0.4, 0.43],
-  [0.405, 0.52], [0.39, 0.62], [0.4, 0.74], [0.42, 0.84], [0.445, 0.875]]);
-const RIVER_HALF = 1.5;
+/** a stream from the mountains: it winds through the woods and ends among the trees before the town, as in the reference */
+export const RIVER = line([[0.5, -0.04], [0.515, 0.1], [0.525, 0.16], [0.47, 0.215], [0.4, 0.245], [0.33, 0.255], [0.3, 0.29], [0.295, 0.35], [0.27, 0.395], [0.262, 0.412]]);
+const RIVER_HALF = 1.1;
+/** paths between the fields: most run along one of the two ground axes, as the field edges do */
 export const ROADS: readonly (readonly P2[])[] = [
-  line([[-0.05, 0.63], [0.15, 0.56], [0.3, 0.5], [0.42, 0.475], [0.5, 0.5]]),
-  line([[0.3, 0.5], [0.25, 0.4], [0.17, 0.37], [0.05, 0.36]]),
+  line([[0.68, 0.16], [0.44, 0.32], [0.33, 0.385], [0.22, 0.4]]),
+  line([[-0.03, 0.565], [0.09, 0.5], [0.2, 0.44]]),
+  line([[-0.03, 0.645], [0.1, 0.73], [0.2, 0.83], [0.27, 0.9]]),
+  line([[0.02, 0.635], [0.13, 0.6], [0.27, 0.555]]),
+  line([[0.44, 0.315], [0.52, 0.38]]),
+  line([[0.4, 0.17], [0.445, 0.215], [0.5, 0.28]]),
+  line([[0.23, 0.34], [0.3, 0.31], [0.37, 0.3], [0.44, 0.32]]),
   line([[0.6, 0.4], [0.62, 0.28], [0.75, 0.2], [0.9, 0.14]]),
-  line([[0.08, 0.78], [0.25, 0.69], [0.43, 0.7]]),
-  line([[0.25, 0.4], [0.33, 0.31], [0.37, 0.245], [0.5, 0.18], [0.62, 0.28]]),
 ];
 /** peaks: foot centre, radii on the ground, height in blocks */
 const MOUNTAINS: readonly { at: P2; rx: number; rz: number; top: number }[] = [
-  { at: toXZ(0.07, 0.11), rx: 15, rz: 11, top: 19 },
-  { at: toXZ(0.16, 0.15), rx: 14, rz: 11, top: 22 },
-  { at: toXZ(0.235, 0.19), rx: 14, rz: 10, top: 21 },
-  { at: toXZ(0.315, 0.19), rx: 12, rz: 10, top: 19 },
-  { at: toXZ(0.415, 0.14), rx: 13, rz: 9, top: 17 },
-  { at: toXZ(0.0, 0.04), rx: 16, rz: 12, top: 20 },
+  { at: toXZ(0.06, 0.12), rx: 14, rz: 10, top: 15 },
+  { at: toXZ(0.135, 0.16), rx: 14, rz: 11, top: 18 },
+  { at: toXZ(0.21, 0.185), rx: 13, rz: 10, top: 16 },
+  { at: toXZ(0.28, 0.185), rx: 12, rz: 9, top: 15 },
+  { at: toXZ(0.345, 0.16), rx: 9, rz: 8, top: 12 },
+  { at: toXZ(0.41, 0.115), rx: 8, rz: 6, top: 9 },
+  { at: toXZ(0.0, 0.05), rx: 15, rz: 11, top: 15 },
 ];
 export const CASTLE_AT = toXZ(0.92, 0.125);
 /** the built-up ground of the city: the main part east of the river and the quarters on the other bank */
@@ -92,24 +97,25 @@ export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number
   { at: toXZ(0.145, 0.365), r: 17, houses: 16, towers: 2 },
   { at: toXZ(0.345, 0.31), r: 8, houses: 5, towers: 0 },
   { at: toXZ(0.07, 0.62), r: 10, houses: 7, towers: 0 },
-  { at: toXZ(0.19, 0.88), r: 11, houses: 6, towers: 1 },
+  { at: toXZ(0.19, 0.9), r: 13, houses: 11, towers: 1 },
+  { at: toXZ(0.06, 0.76), r: 9, houses: 6, towers: 0 },
   { at: toXZ(0.52, 0.27), r: 7, houses: 4, towers: 0 },
   { at: toXZ(0.86, 0.19), r: 7, houses: 5, towers: 0 },
 ];
 export type Crop = 'wheat' | 'vine';
 /** fields as ground rectangles: centre, size along x and z, crop */
 export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
-  { at: toXZ(0.035, 0.3), w: 20, d: 14, crop: 'vine' },
-  { at: toXZ(0.655, 0.255), w: 19, d: 12, crop: 'vine' },
-  { at: toXZ(0.7, 0.3), w: 15, d: 10, crop: 'wheat' },
-  { at: toXZ(0.365, 0.435), w: 19, d: 12, crop: 'vine' },
-  { at: toXZ(0.155, 0.49), w: 18, d: 12, crop: 'vine' },
-  { at: toXZ(0.205, 0.525), w: 16, d: 10, crop: 'wheat' },
-  { at: toXZ(0.07, 0.545), w: 19, d: 11, crop: 'wheat' },
-  { at: toXZ(0.1, 0.69), w: 18, d: 11, crop: 'wheat' },
-  { at: toXZ(0.2, 0.635), w: 16, d: 9, crop: 'wheat' },
-  { at: toXZ(0.21, 0.755), w: 20, d: 14, crop: 'vine' },
-  { at: toXZ(0.52, 0.335), w: 16, d: 11, crop: 'wheat' },
+  { at: toXZ(0.04, 0.3), w: 19, d: 13, crop: 'vine' },
+  { at: toXZ(0.645, 0.255), w: 19, d: 12, crop: 'vine' },
+  { at: toXZ(0.7, 0.305), w: 13, d: 9, crop: 'wheat' },
+  { at: toXZ(0.365, 0.455), w: 19, d: 16, crop: 'vine' },
+  { at: toXZ(0.152, 0.505), w: 12, d: 14, crop: 'vine' },
+  { at: toXZ(0.207, 0.532), w: 10, d: 13, crop: 'wheat' },
+  { at: toXZ(0.072, 0.56), w: 12, d: 13, crop: 'vine' },
+  { at: toXZ(0.19, 0.66), w: 10, d: 11, crop: 'wheat' },
+  { at: toXZ(0.232, 0.627), w: 8, d: 8, crop: 'wheat' },
+  { at: toXZ(0.206, 0.767), w: 16, d: 15, crop: 'vine' },
+  { at: toXZ(0.493, 0.356), w: 11, d: 8, crop: 'vine' },
 ];
 export const BORDERS: readonly { pts: readonly P2[]; color: number }[] = [
   { pts: line([[0.33, 1.02], [0.36, 0.9], [0.3, 0.83], [0.345, 0.72], [0.42, 0.7], [0.44, 0.56], [0.52, 0.47], [0.6, 0.41], [0.72, 0.385], [0.83, 0.375]]), color: 0xd2453a },
@@ -168,12 +174,12 @@ export function mountainAt(x: number, z: number): number {
   for (const k of MOUNTAINS) m = Math.max(m, k.top * Math.min(0.8, 1.5 * (1 - Math.hypot((x - k.at[0]) / k.rx, (z - k.at[1]) / k.rz))));
   return m <= 0 ? m : m + (fbm2(x / 9, z / 9, 5) - 0.5) * 5 * Math.min(1, m / 4);
 }
-/** Rock comes as stacked cubes: blocks three columns wide in steps of two set the cliffs, a few single columns step off them. */
+/** Rock comes as stacked cubes: blocks four columns wide in steps of two set the cliffs, a few single columns step off them. */
 function rockHeight(x: number, z: number): number {
   const m = mountainAt(x + 0.5, z + 0.5);
   if (m < 0.6) return 0;
-  const slab = (hash2(Math.floor(x / 3), Math.floor((z + Math.floor(x / 3)) / 3), 11) - 0.5) * 5, big = (hash2(Math.floor(x / 7), Math.floor(z / 7), 13) - 0.5) * 4;
-  const piece = hash2(x, z, 19), step = piece < 0.05 ? -1 : piece > 0.96 ? 1 : 0;
+  const slab = (hash2(Math.floor(x / 4), Math.floor((z + Math.floor(x / 4)) / 4), 11) - 0.5) * 5, big = (hash2(Math.floor(x / 8), Math.floor(z / 8), 13) - 0.5) * 5;
+  const piece = hash2(x, z, 19), step = piece < 0.03 ? -1 : piece > 0.98 ? 1 : 0;
   return Math.max(1, Math.round((m + (slab + big) * Math.min(1, m / 5)) / 2) * 2 + step);
 }
 
@@ -194,7 +200,8 @@ export function buildGround(): Ground {
     let h = LAND_Y;
     if (rock > 0) { h += rock; g.mat[i] = Mat.Rock; }
     // islets are green inside a ring of stone
-    else if (city || (island > 0 && island < 0.3)) g.mat[i] = Mat.Paved;
+    else if (city || (island > 0 && island < 0.3)) { g.mat[i] = Mat.Paved; if (!city) h += 1; }
+    else if (island > 0) { h += 1; g.mat[i] = Mat.Grass; }
     else {
       // the land is level, as in the reference; only the castle stands on a low stepped hill
       const castle = Math.hypot(px - CASTLE_AT[0], pz - CASTLE_AT[1]);

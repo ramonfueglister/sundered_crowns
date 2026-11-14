@@ -4,13 +4,13 @@ import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
 const TRUNK = rgb(0x5a3c26);
-const LEAVES = [rgb(0x78a846), rgb(0x86b44a), rgb(0x6a9a42), rgb(0x90ba50), rgb(0x629240)];
-const FLANK = rgb(0x3a7c4a);
+const LEAVES = [rgb(0x90b238), rgb(0x9cba3c), rgb(0x86ac36), rgb(0xa4be40), rgb(0x7ea434)];
+const FLANK = rgb(0x567e3a), FLANK_AWAY = rgb(0x4a8650), FLANK_AWAY_WARM = rgb(0x56863e);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
-const WHEAT = [rgb(0xffcf40), rgb(0xf6c238), rgb(0xffd850)];
-const VINE = [rgb(0xa4c040), rgb(0x90b438), rgb(0xb4c848), rgb(0x84a834)];
+const WHEAT = [rgb(0xffc858), rgb(0xf8be50), rgb(0xffd060)], WHEAT_SIDE = rgb(0xdca444);
+const VINE = [rgb(0xf0d634), rgb(0xe6cc30), rgb(0xf6de3a), rgb(0xdcc22e)], VINE_SIDE = rgb(0xbcb42c), VINE_BODY = rgb(0x4c7a22), GRAPES = rgb(0xe89038);
 const POST = rgb(0x93552f), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a);
-const HULL = rgb(0x8a5a36), HULL_DARK = rgb(0x6f4528), SHIP_DECK = rgb(0xb48f62), SAIL = rgb(0xf3ecde), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
+const HULL = rgb(0x9c6238), HULL_DARK = rgb(0x74482a), SHIP_DECK = rgb(0xc09a68), SAIL = rgb(0xf2e0c6), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
 const WAKE = rgb(0xd5eeee);
 const SKIN = rgb(0xe2b48c);
 const SPECKS = [rgb(0xf4e9a0), rgb(0xf6f0e0), rgb(0xe8a0b0), rgb(0xd8d0c4), rgb(0xc8bfb0), rgb(0xf0c850)];
@@ -21,49 +21,60 @@ const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb
  * blocks wide and four high at `size` 1.
  */
 export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1) {
-  // the sides are a cooler, deeper green than the sunlit top
-  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.7);
+  // the sides are a deeper green than the yellowish sunlit top
+  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
   b.box(x - 0.22, y, z - 0.22, x + 0.22, y + 1.3 * s, z + 0.22, TRUNK, { foot: 0.75 });
-  const w = 0.9 * s, y1 = y + 0.9 * s, y2 = y1 + 2.3 * s;
-  b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.7, bottom: true });
-  const ox = r.range(-0.25, 0.25) * s, oz = r.range(-0.25, 0.25) * s, t = 0.58 * s;
-  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.7 * s, z + oz + t, shade(g, 0.86), { top: shade(g, 1.06) });
+  const w = 1.05 * s, y1 = y + 0.9 * s, y2 = y1 + 2.1 * s;
+  b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.8, bottom: true, away });
+  const ox = r.range(-0.25, 0.25) * s, oz = r.range(-0.25, 0.25) * s, t = 0.66 * s;
+  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.7 * s, z + oz + t, flank, { top: shade(g, 1.06), away });
+  // a second, lower cube set against one corner makes the crown irregular
+  if (r.chance(0.55)) {
+    const k = r.range(0.6, 0.85) * s, cx = x + r.pick([-1, 1]) * w * 0.7, cz = z + r.pick([-1, 1]) * w * 0.7, top = y1 + r.range(1.2, 1.9) * s;
+    b.box(cx - k, y1 + 0.2 * s, cz - k, cx + k, top, cz + k, shade(flank, r.range(0.92, 1.06)), { top: shade(g, r.range(0.94, 1.04)), foot: 0.74, bottom: true, away });
+  }
   // lumps on the sides break the cube outline, as on the trees of the reference
   for (const side of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
     if (!r.chance(0.6)) continue;
     const k = r.range(0.4, 0.58) * s, out = w + k * 0.4, along = r.range(-0.35, 0.35) * s;
     const cx = x + side[0] * out + side[1] * along, cz = z + side[1] * out + side[0] * along, cy = y1 + r.range(0.1, 1.1) * s;
-    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.9, 1.3) * s, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true });
+    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.9, 1.3) * s, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true, away });
   }
 }
 
 /** A cypress: a dark, narrow column in three steps, a good block wide and five to six high. */
 export function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const g = r.pick(CYPRESS), s = r.range(0.85, 1.15);
+  const g = r.pick(CYPRESS), s = r.range(0.85, 1.15), away = mix(g, FLANK_AWAY, 0.5);
   b.box(x - 0.16, y, z - 0.16, x + 0.16, y + 0.8, z + 0.16, TRUNK);
-  b.box(x - 0.6, y + 0.6, z - 0.6, x + 0.6, y + 3.4 * s, z + 0.6, g, { foot: 0.74, bottom: true });
-  b.box(x - 0.44, y + 3.4 * s, z - 0.44, x + 0.44, y + 4.7 * s, z + 0.44, shade(g, 1.05), { foot: 0.92 });
-  b.box(x - 0.24, y + 4.7 * s, z - 0.24, x + 0.24, y + 5.5 * s, z + 0.24, shade(g, 1.1));
+  b.box(x - 0.78, y + 0.6, z - 0.78, x + 0.78, y + 3.0 * s, z + 0.78, g, { foot: 0.74, bottom: true, top: shade(g, 1.25), away });
+  b.box(x - 0.54, y + 3.0 * s, z - 0.54, x + 0.54, y + 4.5 * s, z + 0.54, shade(g, 1.05), { foot: 0.92, top: shade(g, 1.3), away });
+  b.box(x - 0.3, y + 4.5 * s, z - 0.3, x + 0.3, y + 5.5 * s, z + 0.3, shade(g, 1.1), { top: shade(g, 1.35), away });
 }
 
-/** A field: wheat stands in rows of tall sheaves along z, vines in rows of bushy lumps along x. */
+/**
+ * A field. Wheat is a close stand of sheaves with a notched top. Vines come as
+ * single plants on a grid (a green body under a yellow head) or, every other field, as hedges along x.
+ */
 export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd) {
-  const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2), wheat = crop === 'wheat';
-  const pitch = wheat ? 1.3 : 1.9, across = wheat ? w : d, along = wheat ? d : w;
-  for (let row = 0.6; row < across - 0.3; row += pitch) for (let k = 0; k < along; k++) {
-    // centre of this plant: rows of wheat step along x, rows of vines along z
-    const x = wheat ? x0 + row : x0 + k + 0.5, z = wheat ? z0 + k + 0.5 : z0 + row, seed = Math.round(row * 10);
-    if (isWet(g, x, z)) continue;
-    const y = groundY(g, x, z), lot = hash2(k, seed, 51);
-    const [hx, hz] = wheat ? [0.4, 0.42] : [0.4, 0.42];
-    if (wheat) {
-      const c = WHEAT[Math.floor(hash2(k, seed, 53) * WHEAT.length)];
-      b.box(x - hx, y, z - hz, x + hx, y + 1.45 + 0.4 * lot, z + hz, shade(c, 0.94), { top: c, foot: 0.74 });
-    } else if (lot > 0.07) {
-      const c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)], h = 1.0 + 0.45 * lot;
-      b.box(x - hx, y, z - hz, x + hx, y + h, z + hz, shade(c, 0.8), { top: c, foot: 0.6 });
-      if (r.chance(0.5)) b.box(x - 0.26, y + h, z - 0.24, x + 0.26, y + h + 0.32, z + 0.24, shade(c, 1.1));
+  const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2);
+  if (crop === 'wheat') {
+    // sheaves stand shoulder to shoulder; small steps in height between them draw the rows
+    for (let row = 0; row + 0.9 <= w; row += 0.9) for (let k = 0; (k + 1) * 0.9 <= d; k++) {
+      const x = x0 + row + 0.45, z = z0 + k * 0.9 + 0.45, seed = Math.round(row * 10);
+      if (isWet(g, x, z)) continue;
+      const y = groundY(g, x, z), top = y + 1.3 + 0.45 * hash2(seed, 7, 51) + 0.2 * hash2(Math.floor(k / 2), seed, 52);
+      b.box(x - 0.45, y, z - 0.45, x + 0.45, top, z + 0.45, WHEAT_SIDE, { top: WHEAT[Math.floor(hash2(k, seed, 53) * WHEAT.length)], foot: 0.8 });
     }
+    return;
+  }
+  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 1.9 : 1.2;
+  for (let row = 0.6; row < w - 0.3; row += pitchX) for (let k = 0; k * pitchZ < d - 0.5; k++) {
+    const x = x0 + row, z = z0 + k * pitchZ + 0.6, seed = Math.round(row * 10), lot = hash2(k, seed, 51);
+    if (isWet(g, x, z) || lot < 0.04) continue;
+    const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)], h = (hedges ? 1.3 : 1.7) + 0.6 * lot;
+    b.box(x - 0.4, y, z - 0.4, x + 0.4, y + 1.0, z + 0.4, VINE_BODY, { foot: 0.6 });
+    b.box(x - 0.46, y + 0.9, z - 0.46, x + 0.46, y + h, z + 0.46, hedges ? mix(VINE_BODY, VINE_SIDE, 0.3) : shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: hedges ? mix(c, VINE_BODY, 0.35) : c, bottom: true, away: VINE_BODY });
+    if (r.chance(0.35)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.56, y + 1.32, z + 0.12, GRAPES, { bottom: true });
   }
 }
 
@@ -125,15 +136,20 @@ function shipModel(): Batch {
 }
 
 export function ship(b: Batch, x: number, z: number, quarterTurns: number) {
-  const size = 1.3, m = new THREE.Matrix4().makeRotationY((quarterTurns * Math.PI) / 2).scale(new THREE.Vector3(size, size, size)).setPosition(x, SEA_Y, z);
+  const size = 1.5, m = new THREE.Matrix4().makeRotationY((quarterTurns * Math.PI) / 2).scale(new THREE.Vector3(size, size, size)).setPosition(x, SEA_Y, z);
   b.append(shipModel(), m);
   // wake: short pale strokes behind the stern, as in the reference
   const ang = (quarterTurns * Math.PI) / 2, bx = -Math.cos(ang), bz = Math.sin(ang);
   for (let k = 0; k < 9; k++) for (const side of [-1, 1]) {
     const dist = 6 + k * 1.25, spread = side * (0.5 + k * 0.16);
     const wx = x + bx * dist - bz * spread, wz = z + bz * dist + bx * spread;
-    const hx = Math.abs(bx) > 0.5 ? 0.34 : 0.12, hz = Math.abs(bx) > 0.5 ? 0.12 : 0.34;
-    if (hash2(k, side, 71 + quarterTurns) < 0.8) b.box(wx - hx, SEA_Y, wz - hz, wx + hx, SEA_Y + 0.03, wz + hz, WAKE);
+    const hx = Math.abs(bx) > 0.5 ? 0.5 : 0.2, hz = Math.abs(bx) > 0.5 ? 0.2 : 0.5;
+    if (hash2(k, side, 71 + quarterTurns) < 0.8) b.box(wx - hx, SEA_Y, wz - hz, wx + hx, SEA_Y + 0.05, wz + hz, WAKE);
+  }
+  // foam where the hull cuts the water
+  for (let k = 0; k < 14; k++) {
+    const along = -4.6 + k * 0.75, side = k % 2 ? 1 : -1, wx = x - bx * along - bz * side * 1.9, wz = z - bz * along + bx * side * 1.9, q = 0.22 + 0.2 * hash2(k, 3, 73);
+    if (hash2(k, 5, 75 + quarterTurns) < 0.7) b.box(wx - q, SEA_Y, wz - q, wx + q, SEA_Y + 0.06, wz + q, WAKE);
   }
 }
 
@@ -176,7 +192,7 @@ export function crate(b: Batch, x: number, y: number, z: number, r: Rnd) {
 
 /** A flower or a stone in the grass: one tiny bright block. */
 export function speck(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const s = r.range(0.12, 0.22);
+  const s = r.range(0.15, 0.26);
   b.box(x - s, y, z - s, x + s, y + s * 1.6, z + s, r.pick(SPECKS));
 }
 

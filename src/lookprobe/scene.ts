@@ -117,7 +117,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   ISLANDS.forEach((isle, n) => {
     const r = seeded(200 + n);
     if (isle.kind === 'tower') build(lighthouse(), isle.at[0], isle.at[1], 3.4, 3.4, 0, 7.6, 'landmark');
-    scatter(r, isle.at, isle.rx * 0.6, isle.rz * 0.6, isle.kind === 'village' ? 6 : isle.kind === 'houses' ? 3 : 1, false);
+    scatter(r, isle.at, isle.rx * 0.6, isle.rz * 0.6, isle.kind === 'village' ? 5 : isle.kind === 'houses' ? 3 : 0, false);
   });
 
   // piers: wherever the city quay looks onto open water, every few cells
@@ -174,17 +174,17 @@ export function buildScene(bakedSky = true): ProbeScene {
     const r = seeded(41), pitch = 3.1;
     const nearTown = (x: number, z: number) => TOWNS.some((t) => Math.hypot(x - t.at[0], z - t.at[1]) < t.r * 0.75);
     for (let gz = 2; gz < N - 2; gz += pitch) for (let gx = 2; gx < N - 2; gx += pitch) {
-      const x = gx + r.range(-1, 1), z = gz + r.range(-1, 1), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
+      const x = gx + r.range(-1.5, 1.5), z = gz + r.range(-1.5, 1.5), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
       const [, t] = toST(x, z);
-      let density = Math.max(0.04, 0.3 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.44 * smooth(0.27, 0.12, t) * (1 - 0.45 * smooth(0.55, 0.7, toST(x, z)[0])), 0.55 * smooth(-7, -1, mountainAt(x, z)));
-      if (nearTown(x, z)) density = Math.min(density, 0.08);
+      let density = Math.max(0.07, 0.4 * smooth(0.54, 0.66, fbm2(x / 16, z / 16, 71)), 0.55 * smooth(0.29, 0.15, t) * (1 - 0.3 * smooth(0.55, 0.7, toST(x, z)[0])), 0.6 * smooth(-7, -1, mountainAt(x, z)));
+      if (nearTown(x, z)) density = Math.min(density, 0.1);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
       const y = g.h[i];
       if (r.chance(density < 0.2 ? 0.45 : 0.15)) { cypress(things, x, y, z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, y + 4.2); count('tree'); continue; }
       // the trees of the woods are larger than those between the fields
-      tree(things, x, y, z, r, density > 0.3 ? 1.3 : 1); occlude(g, x - 0.95, z - 0.95, x + 0.95, z + 0.95, y + 3.4); count('tree');
+      tree(things, x, y, z, r, (density > 0.3 ? 1.3 : 1) * r.range(0.85, 1.2)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, y + 3.4); count('tree');
     }
     // cypresses beside the roads, every few steps on one side or the other
     for (const road of ROADS) for (let i = 0; i + 1 < road.length; i++) {
@@ -204,7 +204,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       claim(x - 1, z - 1, x + 1, z + 1); occlude(g, x - 0.9, z - 0.9, x + 0.9, z + 0.9, baseY(x, z) + 3.4); count('tree');
     }
     // cypresses and garden trees beside the houses on the islands
-    for (const isle of ISLANDS) for (let k = 0; k < 16; k++) {
+    for (const isle of ISLANDS) for (let k = 0; k < (isle.kind === 'tower' ? 8 : 30); k++) {
       const x = isle.at[0] + r.range(-isle.rx, isle.rx) * 0.75, z = isle.at[1] + r.range(-isle.rz, isle.rz) * 0.75;
       if (isWet(g, x, z) || !cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
       if (baseY(x, z) < LAND_Y) continue;
@@ -216,10 +216,11 @@ export function buildScene(bakedSky = true): ProbeScene {
   // tufts on the meadows, smoke over a few houses of the towns
   {
     const r = seeded(61);
-    for (let k = 0; k < 16000; k++) {
-      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
-      if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || roadDist(x, z) < 1.5) continue;
-      if (k % 2) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
+    for (let k = 0; k < 9000; k++) {
+      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z)), road = roadDist(x, z);
+      // stones and flowers lie mostly along the paths, few out on the meadows
+      if (!inFrame(x, z) || g.mat[i] !== Mat.Grass || g.wet[i] || used[i] || road < 1.5 || (road > 4 && k % 6)) continue;
+      if (k % 3 === 0) bush(things, x, g.h[i], z, r); else speck(things, x, g.h[i], z, r);
     }
     for (const k of [3, 21, 40]) if (hearths[k]) smoke(things, ...hearths[k], r);
   }

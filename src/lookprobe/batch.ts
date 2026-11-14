@@ -51,15 +51,17 @@ export class Batch {
 
   /**
    * An axis-aligned box. `top` recolours the upper face; `foot` darkens the lower corners of the sides (cheap contact
-   * shading); `bottom` adds the lower face, which is left out by default.
+   * shading); `bottom` adds the lower face, which is left out by default; `away` recolours the two sides turned from
+   * the sun (-x and +z), for things whose shaded side has its own hue, such as foliage.
    */
-  box(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: RGB, o: { top?: RGB; foot?: number; bottom?: boolean } = {}) {
+  box(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: RGB, o: { top?: RGB; foot?: number; bottom?: boolean; away?: RGB } = {}) {
     const lo = shade(color, o.foot ?? 1), side: readonly [RGB, RGB, RGB, RGB] = [lo, lo, color, color];
+    const dark = o.away ?? color, darkLo = shade(dark, o.foot ?? 1), far: readonly [RGB, RGB, RGB, RGB] = [darkLo, darkLo, dark, dark];
     this.quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], o.top ?? color, [0, 1, 0]);
     if (o.bottom) this.quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], lo, [0, -1, 0]);
     this.quad([x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0], side, [1, 0, 0]);
-    this.quad([x0, y0, z1], [x0, y0, z0], [x0, y1, z0], [x0, y1, z1], side, [-1, 0, 0]);
-    this.quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [lo, lo, color, color], [0, 0, 1]);
+    this.quad([x0, y0, z1], [x0, y0, z0], [x0, y1, z0], [x0, y1, z1], far, [-1, 0, 0]);
+    this.quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], far, [0, 0, 1]);
     this.quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], side, [0, 0, -1]);
   }
 

@@ -25,10 +25,10 @@ const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fa
 const LOOK = {
   distance: 3000,
   sun: 0.9, sunElevation: 48, sunTurn: 12, sunColor: 0xffe9c8,
-  side: 0.78, sideColor: 0xfff2e4,
-  sky: 0.36, skyColor: 0xa8c4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffdcff,
+  side: 0.78, sideColor: 0xfff0dc,
+  sky: 0.36, skyColor: 0xa8c4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffe0c4,
   mirror: 0.38, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
-  creaseReach: 2.0, creaseDepth: 1.2, creaseColor: 0x3a4c66,
+  creaseReach: 2.0, creaseDepth: 1.2, creaseColor: 0x44485a,
   focusRange: 150, blur: 2.6,
 };
 

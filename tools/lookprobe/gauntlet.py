@@ -62,6 +62,25 @@ def class_colour(im, mask, lo, hi):
     return np.median(px[order[int(len(px) * lo):int(len(px) * hi)]], axis=0)
 
 
+def inner(im, mask):
+    """what lies inside the surfaces of one colour class: the share of the picture that is closed surface of this class
+    (two pixels away from any other colour), and the fine structure on it (dormers on roofs, windows on walls)"""
+    core = ndi.binary_erosion(mask, iterations=2)
+    g = lum(im)
+    fine = np.abs(g - ndi.gaussian_filter(g, 1.2))
+    return core.mean(), (fine[core].mean() if core.sum() > 300 else 0)
+
+
+def spots(im, box, sign):
+    """number of small spots (3 to 90 pixels) that stand out from their surroundings: darker (sign -1) or lighter (+1).
+    These are the windows, doors, chimneys, dormers, figures and flowers of a region."""
+    x0, y0, x1, y1 = box
+    g = lum(im)[y0:y1, x0:x1]
+    lab, n = ndi.label((g - ndi.gaussian_filter(g, 4)) * sign > 0.1)
+    sizes = ndi.sum(np.ones_like(g), lab, range(1, n + 1))
+    return int(((sizes >= 3) & (sizes <= 90)).sum())
+
+
 def hexc(c):
     return '   -   ' if c is None else '#%02x%02x%02x' % tuple(int(round(v * 255)) for v in c)
 
@@ -104,6 +123,17 @@ def main(ref_path, probe_path):
             fails += 0 if dist <= 0.07 else 1
             print(f"{'Farbe ' + name + ' ' + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {'PASS' if dist <= 0.07 else 'FAIL'}")
 
+    # details: what lies on the surfaces of each class, and the small spots of each region
+    for name, f in classes.items():
+        if name == 'Grau/Schatten':
+            continue
+        (ra, rt), (pa, pt) = inner(ref, f(rh, rs, rv)), inner(probe, f(ph, ps, pv))
+        check(f'Struktur auf {name}', rt * 100, pt * 100, 0.8 <= pt / rt <= 1.25, '{:.2f}')
+        check(f'geschlossene Fläche {name} (%)', ra * 100, pa * 100, abs(ra - pa) <= 0.02 + 0.15 * ra, '{:.1f}')
+    for name, box in REGIONS.items():
+        for label, sign in (('dunkle Tupfer', -1), ('helle Tupfer', 1)):
+            a, b = spots(ref, box, sign), spots(probe, box, sign)
+            check(f'{label} {name}', a, b, 0.8 <= b / max(a, 1) <= 1.25, '{:.0f}')
     for name, box in REGIONS.items():
         (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)
         check(f'Feindetail {name}', rf * 100, pf * 100, 0.85 <= pf / rf <= 1.2, '{:.2f}')
