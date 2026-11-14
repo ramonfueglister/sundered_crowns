@@ -6,6 +6,8 @@ import { type Ground, type GroundTraits, Mat, N, SEA_Y, SUMMIT, idx, rockPillar 
 const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
 const MEADOW_MID = rgb(0x9abf3d), MEADOW_DEEP = rgb(0x82ac37), TUFT = rgb(0x5f9030);
 const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_STONE = rgb(0xf0d6bc);
+/** how much the single stones of a cliff differ in brightness, and how much darker its notches are */
+const ROCK_GRAIN = 0.3, ROCK_NOTCH = 0.3;
 const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
 const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
 const DIRT = rgb(0xa88a52), SHADED_SOIL = rgb(0x6a705c), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
@@ -111,8 +113,17 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true): Batch {
       if (mat === Mat.Rock) {
         // cliffs: flat faces without a gradient, pale for the upper two or four blocks of a pale pillar, grey below
         const split = pale ? Math.max(nh, h - 2 - 2 * Math.floor(hash2(...rockPillar(x, z), 38) * 2)) : h, la2 = 0.5 + 0.5 * la, lb2 = 0.5 + 0.5 * lb;
-        if (split > nh) b.quad([ax, nh, az], [bx, nh, bz], [bx, split, bz], [ax, split, az], [shade(side, la2), shade(side, lb2), shade(side, lb2), shade(side, la2)], [dx, 0, dz]);
-        if (split < h) { const hi = dx === 1 ? ROCK_SIDE_HIGH : ROCK_SIDE_HIGH_COOL; b.quad([ax, split, az], [bx, split, bz], [bx, h, bz], [ax, h, az], hi, [dx, 0, dz]); }
+        // the wall is built of stones half a block wide and one to three high, each a touch lighter or darker than
+        // the next and a few of them dark, as notches: the fine drawing of the reference's cliffs
+        const mx = (ax + bx) / 2, mz = (az + bz) / 2, lm2 = (la2 + lb2) / 2;
+        for (let half = 0; half < 2; half++) for (let y = nh; y < h;) {
+          const key = x * 4 + dx + half, lot = hash2(key, z * 4 + dz, 100 + y), top = Math.min(y < split ? split : h, y + 1 + Math.floor(lot * 3));
+          const tone = 1 + (y < split ? 1 : 0.4) * ((hash2(key, z * 4 + dz, 300 + y) - 0.5) * ROCK_GRAIN - (lot > 0.9 ? ROCK_NOTCH : 0));
+          const base = y < split ? side : dx === 1 ? ROCK_SIDE_HIGH : ROCK_SIDE_HIGH_COOL;
+          const [px, pz, qx, qz] = half ? [mx, mz, bx, bz] : [ax, az, mx, mz], lp = y < split ? (half ? lm2 : la2) : 1, lq = y < split ? (half ? lb2 : lm2) : 1;
+          b.quad([px, y, pz], [qx, y, qz], [qx, top, qz], [px, top, pz], [shade(base, lp * tone), shade(base, lq * tone), shade(base, lq * tone), shade(base, lp * tone)], [dx, 0, dz]);
+          y = top;
+        }
         continue;
       }
       b.quad([ax, nh, az], [bx, nh, bz], [bx, h, bz], [ax, h, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
