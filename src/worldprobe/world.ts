@@ -11,10 +11,8 @@ import { type Region, Water, cellOf, sample, waterAt } from './region';
 export interface WorldView {
   /** the place at the middle of the ground, in degrees */
   lon: number; lat: number;
-  /** side of one block in kilometres */
-  km: number;
-  /** heights after river erosion instead of the measured ones */
-  shaped: boolean;
+  /** blocks per cell of the region */
+  perCell: number;
 }
 
 /**
@@ -35,7 +33,7 @@ const SLOPE = rgb(0x86983c);
 const levelOf = (metres: number) => Math.max(0, (Math.min(metres, TREE_LINE) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, metres - TREE_LINE) / METRES_PER_BLOCK_HIGH;
 
 export function buildWorld(region: Region, view: WorldView, bakedSky = true): StageScene {
-  const C = N / 2, perBlock = view.km / region.kmPerCell, [c0x, c0y] = cellOf(region, view.lon, view.lat);
+  const C = N / 2, perBlock = 1 / view.perCell, [c0x, c0y] = cellOf(region, view.lon, view.lat);
   /** region cell under a ground point: east is the picture's right, south its near side */
   const toCell = (x: number, z: number): [number, number] => {
     const u = (x - C) * RIGHT[0] + (z - C) * RIGHT[1], v = (x - C) * NEAR[0] + (z - C) * NEAR[1];
@@ -51,7 +49,7 @@ export function buildWorld(region: Region, view: WorldView, bakedSky = true): St
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5);
-    metres[idx(x, z)] = sample(region, view.shaped ? region.shaped : region.height, cx, cy); kind[idx(x, z)] = waterAt(region, cx, cy);
+    metres[idx(x, z)] = sample(region, region.shaped, cx, cy); kind[idx(x, z)] = waterAt(region, cx, cy);
   }
   /** a field averaged over a square of blocks reaching `reach` to each side */
   const averaged = (field: Float32Array, reach: number) => {

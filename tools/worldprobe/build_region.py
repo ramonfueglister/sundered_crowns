@@ -1,37 +1,42 @@
-"""Cuts one region of the real world out of open geodata for the world probe (src/worldprobe).
+"""Cuts a region of the real world out of open geodata for the world probe (src/worldprobe).
 
 The region is a window of the game map (same Mercator projection as tools/geo) at CELLS cells per map pixel, so that
-it lines up with locations and borders later. Per cell: height in metres (as measured, and after river erosion), drainage area, water class, forest and
-cultivation share.
-Rivers go along as lines, because the probe draws them on its own turned grid.
+it lines up with locations and borders later. It is written as square tiles of TILE cells, which the probe loads as it
+needs them. Per cell: height in metres after river erosion, drainage area, water class, forest and cultivation share.
+Rivers go along as lines, tile by tile, because the probe draws them on its own turned grid.
 
 Inputs (all open, fetched into GEO_CACHE on first use):
   - AWS Terrain Tiles, terrarium, zoom 8 (SRTM / GMTED derived), about 430 m per pixel at 45° N
   - Natural Earth 10m: land, lakes, rivers, each with its European supplement (public domain)
   - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
-Outputs: public/map/regions/<name>.json (window, rivers) and <name>.bin.gz (the rasters, row by row).
+Outputs in public/map/regions/<name>/: index.json (projection, list of tiles), <tx>_<ty>.bin.gz (the rasters of a tile,
+layer after layer, row by row) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map).
 
-Usage: python3 tools/worldprobe/build_region.py alps
+Usage: python3 tools/worldprobe/build_region.py europe      (about an hour and 8 GB of memory; `alps` takes a minute)
 """
-import gzip, io, json, math, os, sys, urllib.request
+import gzip, io, json, math, os, shutil, sys, urllib.request
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
 from erosion import erode
-from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, lonlat_to_px, lonlat_to_px_np, load_json, lines_from_geojson_geom, polys_from_geojson_geom, px_to_lonlat_np
+from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, lonlat_to_px, load_json, lines_from_geojson_geom, polys_from_geojson_geom, px_to_lonlat_np
 
 Image.MAX_IMAGE_PIXELS = None
 CELLS = 4
+TILE = 512
 ZOOM = 8
 REGIONS = {
-    # name: west, south, east, north (degrees)
+    # name: west, south, east, north (degrees); the window is widened to whole tiles
     'alps': (6.0, 43.0, 15.0, 48.6),
+    'europe': (-25.0, 34.0, 45.0, 72.0),
 }
 TILES = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
 NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/{name}.geojson'
 SEA, LAKE = 1, 2
+ROWS = 512  # rows sampled at a time, to keep the memory in bounds
 
 
 def cached(url, path):
@@ -51,22 +56,34 @@ def natural_earth(name):
     return json.loads(cached(NE.format(name=name), f'{name}.geojson'))['features']
 
 
+def grid(field, ys, xs, order=1):
+    """`field` sampled on the grid of rows `ys` and columns `xs` (pixel coordinates of the field), a few rows at a time."""
+    out = np.empty((len(ys), len(xs)), np.float32)
+    for r in range(0, len(ys), ROWS):
+        yy, xx = np.meshgrid(ys[r:r + ROWS], xs, indexing='ij')
+        out[r:r + ROWS] = ndimage.map_coordinates(field, [yy, xx], order=order, mode='nearest')
+    return out
+
+
 def elevation(lon, lat):
-    """Metres above sea level at arrays of lon/lat, from terrarium tiles, bilinear."""
+    """Metres above sea level on the grid of longitudes `lon` and latitudes `lat`, from terrarium tiles, bilinear."""
     n = 2 ** ZOOM
     tx = (lon + 180) / 360 * n
     ty = (1 - np.arcsinh(np.tan(np.radians(lat))) / math.pi) / 2 * n
     x0, x1, y0, y1 = int(tx.min()), int(tx.max()), int(ty.min()), int(ty.max())
+    wanted = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
+    with ThreadPoolExecutor(16) as pool:
+        list(pool.map(lambda t: cached(TILES.format(z=ZOOM, x=t[0], y=t[1]), f'terrarium/{ZOOM}_{t[0]}_{t[1]}.png'), wanted))
     mosaic = np.zeros(((y1 - y0 + 1) * 256, (x1 - x0 + 1) * 256), np.float32)
-    for x in range(x0, x1 + 1):
-        for y in range(y0, y1 + 1):
-            a = np.asarray(Image.open(io.BytesIO(cached(TILES.format(z=ZOOM, x=x, y=y), f'terrarium/{ZOOM}_{x}_{y}.png'))).convert('RGB'), dtype=np.float32)
-            mosaic[(y - y0) * 256:(y - y0 + 1) * 256, (x - x0) * 256:(x - x0 + 1) * 256] = a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
-    return ndimage.map_coordinates(mosaic, [(ty - y0) * 256 - 0.5, (tx - x0) * 256 - 0.5], order=1, mode='nearest')
+    for x, y in wanted:
+        a = np.asarray(Image.open(io.BytesIO(cached(TILES.format(z=ZOOM, x=x, y=y), f'terrarium/{ZOOM}_{x}_{y}.png'))).convert('RGB'), dtype=np.float32)
+        mosaic[(y - y0) * 256:(y - y0 + 1) * 256, (x - x0) * 256:(x - x0 + 1) * 256] = a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
+    return grid(mosaic, (ty - y0) * 256 - 0.5, (tx - x0) * 256 - 0.5)
 
 
 def read_rivers(area, water, drawn, km):
     """
+    (`km` is the size of a cell in each row.)
     The rivers that the drawn lines leave out, read from the drainage: every run of land cells through which at least
     RIVER_FROM km² drain, from where it lies clear of the drawn rivers down to the water or to the drawn river it
     joins. A run ends where the path goes straight for long, which is where the heights are too flat to say where the
@@ -77,7 +94,7 @@ def read_rivers(area, water, drawn, km):
     img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
     for r in drawn: d.line([tuple(p) for p in r['pts']], fill=1, width=1)
     away = ndimage.distance_transform_edt(np.asarray(img) == 0)
-    clear, stream = away * km > CLEAR_KM, (area >= RIVER_FROM * 1e6) & (water == 0)
+    clear, stream = away * km[:, None] > CLEAR_KM, (area >= RIVER_FROM * 1e6) & (water == 0)
     down = {}
     for y, x in zip(*np.nonzero(stream)):
         best = None
@@ -95,7 +112,7 @@ def read_rivers(area, water, drawn, km):
             beside = 0 if clear[c] else beside + 1
             # beside a drawn river: it is joined soon, or the path is that river itself, read a little off its line
             if away[c] <= 1.5: break
-            if beside * km > 2 * CLEAR_KM: path = path[:-beside]; break
+            if beside * km[c[0]] > 2 * CLEAR_KM: path = path[:-beside]; break
             c = down[c]
         else: path.append(c)
         # cut out the straight stretches
@@ -121,18 +138,22 @@ def read_rivers(area, water, drawn, km):
 
 def main(name):
     west, south, east, north = REGIONS[name]
-    px0, py0 = (int(math.floor(v)) for v in lonlat_to_px(west, north))
-    px1, py1 = (int(math.ceil(v)) for v in lonlat_to_px(east, south))
-    w, h = (px1 - px0) * CELLS, (py1 - py0) * CELLS
-    # cell centres in map pixels and in degrees
-    mx, my = np.meshgrid(px0 + (np.arange(w) + 0.5) / CELLS, py0 + (np.arange(h) + 0.5) / CELLS)
+    # the window in cells of the whole map, widened to whole tiles
+    gx0, gy0 = (int(math.floor(v * CELLS / TILE)) * TILE for v in lonlat_to_px(west, north))
+    gx1, gy1 = (int(math.ceil(v * CELLS / TILE)) * TILE for v in lonlat_to_px(east, south))
+    gy0, gy1 = max(gy0, 0), min(gy1, H * CELLS // TILE * TILE)
+    w, h = gx1 - gx0, gy1 - gy0
+    # cell centres in map pixels and in degrees: columns share a longitude, rows a latitude
+    mx, my = (gx0 + np.arange(w) + 0.5) / CELLS, (gy0 + np.arange(h) + 0.5) / CELLS
     lon, lat = px_to_lonlat_np(mx, my)
     height = elevation(lon, lat)
-    meta_km = float(np.mean(np.cos(np.radians(lat))) * (LON1 - LON0) / W * 111.32 / CELLS)
+    # a cell is as wide as it is high (Mercator), and smaller towards the north
+    km = np.cos(np.radians(lat)) * (LON1 - LON0) / W * 111.32 / CELLS
+    west, east, north, south = lon[0], lon[-1], lat[0], lat[-1]
 
     def to_cell(lo, la):
         x, y = lonlat_to_px(lo, la)
-        return (x - px0) * CELLS, (y - py0) * CELLS
+        return x * CELLS - gx0, y * CELLS - gy0
 
     def mask(rings_of_polys):
         img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
@@ -170,20 +191,20 @@ def main(name):
     water[lake & land] = LAKE
     # a lake is level: every lake takes the height of its lowest tenth; the sea lies at 0
     labels, count = ndimage.label(water == LAKE)
-    for k in range(1, count + 1):
-        m = labels == k
-        height[m] = np.percentile(height[m], 10)
+    for k, box in enumerate(ndimage.find_objects(labels), 1):
+        m = labels[box] == k
+        height[box][m] = np.percentile(height[box][m], 10)
+    del labels
     height[water == SEA] = 0
     height = np.where(water == 0, np.maximum(height, 1), height)
 
     # the same land after river erosion: clean valleys and ridges, the broad shape kept (see erosion.py)
-    shaped, area = erode(height, water != 0, meta_km * 1000)
+    shaped, area = erode(height, water != 0, km * 1000)
 
     # forest and cultivation of 1356 from the game's biome layer (half map resolution: G forest, B cultivation)
     biome = np.asarray(Image.open(os.path.join(ROOT, 'public', 'map', 'biome.png')).convert('RGBA'))
-    by, bx = my / 2 - 0.5, mx / 2 - 0.5
-    forest = ndimage.map_coordinates(biome[..., 1].astype(np.float32), [by, bx], order=1, mode='nearest')
-    crops = ndimage.map_coordinates(biome[..., 2].astype(np.float32), [by, bx], order=1, mode='nearest')
+    forest = grid(biome[..., 1].astype(np.float32), my / 2 - 0.5, mx / 2 - 0.5)
+    crops = grid(biome[..., 2].astype(np.float32), my / 2 - 0.5, mx / 2 - 0.5)
 
     # rivers: today's lines, without the reaches that ran elsewhere in 1356, then the courses of 1356, then the rivers
     # the lines leave out, read from the drainage
@@ -205,24 +226,39 @@ def main(name):
                     run = []
     for e in changed:
         rivers.append({'name': e['name'], 'rank': int(e.get('rank') or 10), 'pts': [[round(v, 1) for v in to_cell(lo, la)] for lo, la in e['line']]})
-    rivers += read_rivers(area, water, rivers, meta_km)
+    rivers += read_rivers(area, water, rivers, km)
 
-    out = os.path.join(ROOT, 'public', 'map', 'regions'); os.makedirs(out, exist_ok=True)
-    meta = {'name': name, 'w': w, 'h': h, 'x0': px0, 'y0': py0, 'cells': CELLS, 'mapW': W, 'mapH': H,
-            'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
-            'kmPerCell': round(meta_km, 4),
-            'layers': ['height:i16', 'shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'rivers': rivers}
-    with open(os.path.join(out, f'{name}.json'), 'w', encoding='utf-8') as f:
-        json.dump(meta, f, ensure_ascii=False, separators=(',', ':'))
-    with gzip.open(os.path.join(out, f'{name}.bin.gz'), 'wb', compresslevel=9) as f:
-        f.write(np.clip(np.round(height), -500, 9000).astype('<i2').tobytes())
-        f.write(np.clip(np.round(shaped), -500, 9000).astype('<i2').tobytes())
-        # drainage area in km² as a logarithm: 16 steps per doubling
-        f.write(np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8).tobytes())
-        f.write(water.tobytes())
-        f.write(np.clip(np.round(forest), 0, 255).astype(np.uint8).tobytes())
-        f.write(np.clip(np.round(crops), 0, 255).astype(np.uint8).tobytes())
-    print(f'{name}: {w} x {h} cells, {meta["kmPerCell"]} km per cell, height {height.min():.0f} … {height.max():.0f} m, '
+    out = os.path.join(ROOT, 'public', 'map', 'regions', name)
+    shutil.rmtree(out, ignore_errors=True); os.makedirs(out)
+    layers = [np.clip(np.round(shaped), -500, 9000).astype('<i2'),
+              # drainage area in km² as a logarithm: 16 steps per doubling
+              np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8), water,
+              np.clip(np.round(forest), 0, 255).astype(np.uint8), np.clip(np.round(crops), 0, 255).astype(np.uint8)]
+    tiles = []
+    for ty in range(h // TILE):
+        for tx in range(w // TILE):
+            box = (slice(ty * TILE, (ty + 1) * TILE), slice(tx * TILE, (tx + 1) * TILE))
+            if (water[box] == SEA).all(): continue
+            key = f'{gx0 // TILE + tx}_{gy0 // TILE + ty}'; tiles.append(key)
+            with gzip.open(os.path.join(out, f'{key}.bin.gz'), 'wb', compresslevel=9) as f:
+                for layer in layers: f.write(layer[box].tobytes())
+            # the rivers that cross the tile or pass close by, cut to the stretch that does
+            x0, y0, x1, y1, crossing = tx * TILE - 8, ty * TILE - 8, (tx + 1) * TILE + 8, (ty + 1) * TILE + 8, []
+            for r in rivers:
+                inside = [x0 <= p[0] <= x1 and y0 <= p[1] <= y1 for p in r['pts']]
+                run = []
+                for i, p in enumerate(r['pts'] + [None]):
+                    if p is not None and (inside[i] or (i > 0 and inside[i - 1]) or (i + 1 < len(inside) and inside[i + 1])): run.append([round(p[0] + gx0, 1), round(p[1] + gy0, 1)]); continue
+                    if len(run) >= 2: crossing.append({'name': r['name'], 'rank': r['rank'], 'pts': run})
+                    run = []
+            with open(os.path.join(out, f'{key}.json'), 'w', encoding='utf-8') as f:
+                json.dump(crossing, f, ensure_ascii=False, separators=(',', ':'))
+    meta = {'name': name, 'tile': TILE, 'cells': CELLS, 'mapW': W, 'mapH': H, 'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
+            'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'tiles': tiles}
+    with open(os.path.join(out, 'index.json'), 'w', encoding='utf-8') as f:
+        json.dump(meta, f, separators=(',', ':'))
+    size = sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out))
+    print(f'{name}: {w} x {h} cells, {len(tiles)} tiles, {size / 1e6:.0f} MB, height {height.min():.0f} … {height.max():.0f} m, '
           f'sea {np.mean(water == SEA):.1%}, lakes {count}, rivers {len(rivers)}')
 
 
