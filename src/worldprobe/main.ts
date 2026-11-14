@@ -15,6 +15,6 @@ const BLOCK_KM = 0.54;
 stage(async (bakedSky) => {
   const lon = num('lon', 12.1), lat = num('lat', 45.85), km = num('km', BLOCK_KM);
   // the ground is turned against the map, so the window reaches as far as the ground's corners
-  const { region, kmPerCell } = await loadRegion(q.get('region') ?? 'alps', lon, lat, (N / Math.SQRT2 + 4) * km, import.meta.env.BASE_URL);
+  const { region, kmPerCell } = await loadRegion(q.get('region') ?? 'europe', lon, lat, (N / Math.SQRT2 + 4) * km, import.meta.env.BASE_URL);
   return buildWorld(region, { lon, lat, perCell: kmPerCell / km }, bakedSky);
 }, { wholeGrid: true, frameW: num('wide', 0) || undefined, elevation: num('elev', 0) || undefined }).catch(showError);
