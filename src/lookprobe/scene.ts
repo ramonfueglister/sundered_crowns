@@ -1,7 +1,7 @@
 // Fills the probe scene: landmarks, city, towns, islands, piers, bridges, woods, fields, borders, ships, figures.
 // Everything is placed from fixed seeds, so every load gives the same picture.
 import * as THREE from 'three/webgpu';
-import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
+import { Batch, type Rnd, fbm2, hash2, seeded, smooth } from './batch';
 import { boat, borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
 import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse, townWall } from './buildings';
 import {
@@ -49,6 +49,9 @@ export function buildScene(bakedSky = true): ProbeScene {
   claim(S.plaza.at[0] - S.plaza.w / 2, S.plaza.at[1] - S.plaza.d / 2, S.plaza.at[0] + S.plaza.w / 2, S.plaza.at[1] + S.plaza.d / 2);
   build(palace(), S.palace.at[0], S.palace.at[1], S.palace.w, S.palace.d, 0, 9.4, 'landmark');
   build(basilica(), S.basilica.at[0], S.basilica.at[1], S.basilica.w, S.basilica.d, 1, 9, 'landmark');
+  // a small square before the front of the basilica and a lane along its side keep the domes in view
+  claim(S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] - 7, S.basilica.at[0] + S.basilica.d / 2 + 7, S.basilica.at[1] + 7);
+  claim(S.basilica.at[0] - S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2, S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2 + 4);
   build(campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, 20, 'landmark');
   build(castle(), CASTLE_AT[0], CASTLE_AT[1], 13.5, 13.5, 0, 5, 'landmark');
   { const r = seeded(5); for (const t of [S.westTower, S.eastTower]) build(tower(r), t.at[0], t.at[1], t.w, t.d, 0, 10, 'tower'); }
@@ -65,16 +68,18 @@ export function buildScene(bakedSky = true): ProbeScene {
 
   // the city: palazzi and small houses inside its outline, first fit, with alleys between them and a few straight streets
   {
-    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 19 < 2 || Math.floor(z) % 17 < 2;
+    // straight streets, and here and there a yard of five by five cells left open for a garden
+    const yard = (x: number, z: number) => { const cx = Math.floor(x / 9), cz = Math.floor(z / 9), ix = Math.floor(x) - cx * 9, iz = Math.floor(z) - cz * 9; return hash2(cx, cz, 91) < 0.2 && ix >= 2 && ix < 7 && iz >= 2 && iz < 7; };
+    const r = seeded(7), street = (x: number, z: number) => Math.floor(x) % 19 < 2 || Math.floor(z) % 17 < 2 || yard(x, z);
     for (const part of CITY) {
       const xs = part.map((p) => p[0]), zs = part.map((p) => p[1]);
       for (let z = Math.floor(Math.min(...zs)); z < Math.max(...zs); z++) for (let x = Math.floor(Math.min(...xs)); x < Math.max(...xs); x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || !inCity(x + 0.5, z + 0.5)) continue;
-        // a palazzo if it fits, else a small house, else a narrow one
+        // one house in three is a long palazzo, the rest are small: the roofs of the reference are mostly five or six blocks wide
         const turn = r.chance(0.5), free = (px: number, pz: number) => inCity(px, pz) && !street(px, pz);
-        for (const [long, short, floors] of [[r.int(10, 16), r.int(5, 7), r.chance(0.75) ? 3 : 2], [r.int(6, 8), r.int(5, 6), r.chance(0.55) ? 3 : 2], [5, 5, 2]].slice(r.chance(0.7) ? 0 : 1)) {
+        for (const [long, short, floors] of [[r.int(9, 14), r.int(5, 6), r.chance(0.4) ? 3 : 2], [r.int(5, 7), r.int(4, 5), r.chance(0.25) ? 3 : 2], [4, 4, 2]].slice(r.chance(0.35) ? 0 : 1)) {
           const w = turn ? short : long, d = turn ? long : short;
-          if (fits(x, z, x + w, z + d, free, 1)) { homes(r, x, z, w, d, floors); break; }
+          if (fits(x, z, x + w, z + d, free, r.chance(0.5) ? 2 : 1)) { homes(r, x, z, w, d, floors); break; }
         }
       }
     }

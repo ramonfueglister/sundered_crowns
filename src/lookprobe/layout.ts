@@ -86,12 +86,12 @@ const MOUNTAINS: readonly { at: P2; rx: number; rz: number; top: number }[] = [
   { at: toXZ(0.0, 0.05), rx: 15, rz: 11, top: 15 },
 ];
 export const CASTLE_AT = toXZ(0.92, 0.125);
-/** the built-up ground of the city: the main part east of the river and the quarters on the other bank */
+/** the built-up ground of the city: the main part, the western quarter and the quarter at the lower left, with a meadow between the last two */
 export const CITY: readonly (readonly P2[])[] = [
   line([[0.44, 0.5], [0.52, 0.42], [0.66, 0.38], [0.8, 0.42], [0.86, 0.48], [0.875, 0.55], [0.85, 0.62],
     [0.78, 0.66], [0.7, 0.68], [0.63, 0.71], [0.57, 0.76], [0.5, 0.8], [0.44, 0.86], [0.415, 0.8], [0.425, 0.62]]),
-  line([[0.25, 0.6], [0.3, 0.52], [0.38, 0.5], [0.435, 0.52], [0.42, 0.62], [0.4, 0.74], [0.4, 0.86], [0.37, 0.95], [0.33, 1.06], [0.28, 1.06],
-    [0.3, 0.9], [0.31, 0.78], [0.27, 0.68]]),
+  line([[0.25, 0.6], [0.3, 0.52], [0.38, 0.5], [0.445, 0.5], [0.43, 0.62], [0.36, 0.64], [0.29, 0.635]]),
+  line([[0.29, 0.83], [0.32, 0.765], [0.36, 0.735], [0.42, 0.735], [0.42, 0.8], [0.45, 0.86], [0.37, 0.95], [0.33, 1.06], [0.28, 1.06], [0.3, 0.9]]),
 ];
 export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number }[] = [
   { at: toXZ(0.145, 0.365), r: 17, houses: 16, towers: 2 },

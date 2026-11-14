@@ -7,7 +7,7 @@ const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444
 const MEADOW_MID = rgb(0x9abf3d), MEADOW_DEEP = rgb(0x82ac37), TUFT = rgb(0x5f9030);
 const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_STONE = rgb(0xf0d6bc);
 const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0xa49088), ROCK_SIDE_COOL = rgb(0x86989e), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
-const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x6f8a30);
+const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
 const DIRT = rgb(0xa88a52), SHADED_SOIL = rgb(0x6a705c), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
 const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c);
 
