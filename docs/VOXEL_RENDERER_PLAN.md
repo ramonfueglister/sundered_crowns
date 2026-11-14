@@ -34,12 +34,126 @@ stark vergrössert. Daraus folgt fast die ganze Architektur unten.
 | A | Gelände als **Säulen** (pro Bodenfeld eine Höhe) oder **volle 3D-Voxel** (Höhlen, Tunnel, Überhänge)? | Säulen | Die Kamera schaut immer von schräg oben, Überhänge sieht man kaum. Säulen brauchen 10 bis 50 Mal weniger Daten und Rechenzeit. Graben, Kanäle, Burggräben, Dämme, Terrassen und Hügel gehen alle. Brücken, Tore und Tunnelportale sind Modelle, kein Gelände. |
 | B | **Wer** darf umformen? | Technik für beides: sofortige Werkzeuge für dich als Spielleiter, dieselben Operationen später als Bauprojekte der Spieler | Die Technik ist dieselbe. Kosten, Dauer und Regeln für Spieler gehören ins Wirtschaftsdesign und werden dort besprochen. |
 | C | **Wasser:** fest oder fliessend? | Feste Wasserflächen mit einer Füllregel beim Graben (ein Graben, der an Meer, See oder Fluss anschliesst, läuft bis zu einer Grenze voll) | Eine echte Wassersimulation über eine ganze MMO-Welt ist teuer und schwer deterministisch zu halten. Die Füllregel deckt Kanäle und Burggräben ab. |
-| D | **Massstab:** wie viele Voxel pro Kartenpixel? | 64 als Startwert, im Prototyp gegen 32 und 48 prüfen | Bei 64 ist Venedig rund 450 × 450 Säulen gross, das entspricht dem Bildausschnitt der Referenz. |
-| E | **Kamera:** echte Parallelprojektion (wie im Bild) oder Perspektive? | Parallelprojektion, frei drehbar in 90°-Schritten, stufenlos zoombar | Mit Parallelprojektion hat der ganze Bildschirm denselben Massstab. Das macht LOD und Schatten viel einfacher (Abschnitt 6). |
+| D | **Massstab:** wie viele Geländefelder pro Kartenpixel? | 32 als Startwert, in der Look-Probe gegen 16, 24 und 48 prüfen | Nach dem Vermessen der Referenz (Abschnitt 2a): bei 32 ist Venedig rund 225 × 225 Felder gross, das ist ziemlich genau der Bildausschnitt. Die frühere Schätzung von 64 war zu hoch. |
+| E | **Kamera:** echte Parallelprojektion (wie im Bild) oder Perspektive? | Parallel wirkende Kamera, frei drehbar in 90°-Schritten, stufenlos zoombar. Technisch entweder echte Parallelprojektion oder ein starkes Teleobjektiv (rund 8° Öffnungswinkel), das fast gleich aussieht | Der ganze Bildschirm hat praktisch denselben Massstab. Das macht LOD und Schatten viel einfacher (Abschnitt 6). Das Teleobjektiv ist die Ausweichlösung, weil der Streulicht-Effekt von Three.js nur mit Perspektive rechnet (Abschnitt 2a). |
 | F | **Modelle:** wer baut sie? | Häuser, Bäume, Felder, Schiffe prozedural per Code; Wahrzeichen als `.vox`-Dateien (MagicaVoxel oder KI-Generator mit Nacharbeit) | Prozedural ergibt regionale Stile und Varianten ohne Handarbeit. Wahrzeichen (Campanile, Dogenpalast) müssen erkennbar sein und brauchen Handarbeit. |
 | G | **Technik:** Three.js-`WebGPURenderer` mit WebGL-2-Rückfall | ja | Siehe Abschnitt 4. |
+| H | **Gebäude:** echte Voxel mit Treppchendächern oder glatte Flächen wie im Bild? | glatte, einfache Flächen wie im Bild; Bäume, Felder, Fels und Stege bleiben Blöcke | Im Referenzbild sind die Häuser keine Voxel (Abschnitt 2a). Die Look-Probe zeigt beide Varianten nebeneinander. |
 
 **Entschieden am 14. November 2026 (Ramon): A = Säulen.** B bis G sind noch Empfehlungen; der Prototyp kann sie korrigieren.
+
+## 2a. Der Weg zur Referenzgrafik (Analyse vom 14. November 2026)
+
+Ramons Frage: Wie kommt man **genau** zu diesem Bild, ohne dass am Ende etwas anderes herauskommt als versprochen?
+Dieser Abschnitt beantwortet das mit Messungen am Bild, mit dem, was Three.js nachweislich kann, und mit einem
+Abnahmeverfahren. Er korrigiert auch zwei frühere Annahmen dieses Plans.
+
+### Was das Referenzbild wirklich ist
+
+Das Bild wurde in sechs Ausschnitten vierfach vergrössert untersucht.
+
+- **Es ist ein KI-Bild, kein Bildschirmfoto einer Engine.** Erkennbar an verlaufenen Details, einem
+  Regenbogen-Fehler am Bach und daran, dass kein durchgehendes Raster existiert. Ein echtes Programm erzeugt ein
+  regelmässigeres, saubereres Bild. Das wird sich leicht anders anfühlen und ist nicht vermeidbar.
+- **Es ist kein einheitliches Voxelbild. Es mischt drei Grössen:**
+
+  | Element | Gemessen im Bild (1672 × 941) | In Bodenblöcken |
+  |---|---|---|
+  | Baumblock, Grenzband, Steinrand der Inseln | 7 bis 8 Pixel | 1 (das ist der Bodenblock) |
+  | Baum | 25 × 32 Pixel | 3 bis 4 breit, 4 bis 5 hoch |
+  | Feldfrucht | 4 bis 5 Pixel | etwa ein halber Block |
+  | Mensch | 3 × 10 Pixel | gut 1 hoch, ein Drittel breit |
+  | Haus (Langseite, Wandhöhe) | 100 und 42 Pixel | 13 lang, 6 hoch, dazu das Dach |
+  | Fenster | 3 × 5 Pixel | kleiner als ein halber Block |
+  | Campanile, Dogenpalast | 48 bzw. 180 Pixel breit | 6 bzw. 24 breit |
+  | Felsblöcke im Gebirge | 40 bis 60 Pixel | 6 bis 8 |
+
+- **Die Häuser sind keine Voxel.** Sie haben glatte Walmdächer, glatte Wände, runde Bögen, eine runde Kuppel und
+  Fenster, die kleiner sind als ein Block. Blockig sind nur Bäume, Felder, Fels, Stege, Schiffsrümpfe und das
+  Grenzband.
+- **Der Boden wirkt glatt.** Wiesen zeigen kein Raster, nur leichte Farbflecken. Wege haben weiche Ränder. Stufen
+  sieht man nur an Hängen, Ufern und Inselrändern.
+- **Licht:** tiefe, warme Sonne von links, kühle bläuliche Schatten, sehr weiche Schattenränder. Gemessen: Ein
+  Schlagschatten auf Gras ist noch 74 % so hell wie besonntes Gras, auf Wasser 52 %, eine abgewandte Felswand 46 %
+  der besonnten Oberseite. Die dunkelsten 5 % aller Bildpunkte haben noch 26 % Helligkeit, es gibt also kein
+  Schwarz. Mittlere Sättigung 0,51. Das ist das Kennzeichen von Streulicht, wie es der Pfadverfolger von
+  MagicaVoxel erzeugt [24].
+- **Wasser:** glatt und türkis, mit weichen Spiegelungen der Stege und Häuser, weichem Schiffsschatten und
+  Kielwasser aus kleinen hellen Strichen.
+
+**Korrektur 1:** Ein einheitliches Voxelraster, wie dieser Plan es zuerst annahm, kann das Bild nicht treffen.
+Häuser wären entweder klobig mit Treppchendächern oder bräuchten ein drei- bis viermal feineres Raster.
+**Korrektur 2:** Der Bodenblock ist im Bild 7 bis 8 Pixel gross, nicht knapp 4. Das Bild zeigt deshalb nur etwa
+220 × 250 Bodenblöcke. Dazu passt K = 32 statt 64 (Entscheid D).
+
+### Das Rezept, Merkmal für Merkmal
+
+| Merkmal im Bild | So wird es gebaut | Sicherheit |
+|---|---|---|
+| Glatte Wiese mit Farbflecken | Säulengelände; ebene Nachbarn verschmelzen zu einer Fläche, Farbe mit Rauschen über Blockgrenzen hinweg | hoch |
+| Weiche Wege und Plätze | Material pro Säule, im Shader über die Blockkante weich überblendet | hoch |
+| Stufen an Hang, Ufer, Inselrand | ergeben sich direkt aus den Säulen, mit Steinrand am Wasser | hoch |
+| Gebirge aus grossen Würfeln | Fels wird im Generator auf grobe Zellen von 6 bis 8 Blöcken gerastert, mit hellen Oberseiten | hoch |
+| Blockbäume, Zypressen | wenige Blöcke pro Baum, per Code erzeugt, als Instanzen | hoch |
+| Felder in Reihen, Weinberg | Reihen aus halben Blöcken als Instanzen, Farbe nach Frucht | hoch |
+| Häuser mit glattem Walmdach, Fenstern, Kaminen, Gauben | per Code erzeugte einfache Körper: Quader, Dachflächen, eingelassene Fenster und Türen. Masse am Blockraster, Flächen glatt (Entscheid H) | mittel bis hoch, braucht mehrere Runden für Vielfalt |
+| Dogenpalast, Markusdom, Campanile | Einzelstücke. Von Hand oder mit KI-Hilfe modelliert, Bögen und Kuppeln als echte Rundungen | **mittel, grösstes Risiko** |
+| Stege, Pfähle, Brücken | Blöcke und Balken per Code | hoch |
+| Schiffe mit Segeln, Flagge, Kielwasser | Blockrumpf, glatte Segelflächen, Kielwasser als Striche im Wassershader | hoch |
+| Türkises Wasser mit Spiegelung | eigenes Wassermaterial, Spiegelung über den mitgelieferten SSR-Effekt oder eine gespiegelte Kamera | mittel bis hoch |
+| Grenzband | eine Reihe leicht erhöhter Blöcke in Reichsfarbe entlang der Grenze, wie im Bild | hoch |
+| Menschen, Tiere | kleine Figuren aus wenigen Teilen als Instanzen | hoch |
+| Warme Sonne, weiche Schatten | eine Sonne, eine Schattenkarte mit weichem Rand | hoch |
+| Helle, farbige Schatten (Streulicht) | Stufenplan unten | Stufen 1 und 2 hoch, 3 bis 5 offen bis zur Probe |
+| Miniatur-Unschärfe | Tiefenunschärfe aus Three.js, Schärfe auf Bildmitte | hoch |
+
+### Licht: fünf Stufen, jede einzeln prüfbar
+
+Das Licht entscheidet, ob es nach Diorama aussieht. Was Three.js r187 dafür mitbringt, wurde im heruntergeladenen
+Paket nachgesehen, nicht aus der Erinnerung behauptet [21].
+
+1. **Grundlicht (alle Geräte, auch WebGL 2).** Warme Sonne mit weicher Schattenkarte, kühles Himmelslicht von oben
+   und warmes Rücklicht vom Boden, Kantenabdunklung in den Meshes. Three.js sagt selbst, dass seine neue
+   Kaskaden-Sonne für Dioramen ungeeignet ist und eine einzelne Schattenkarte besser passt [21].
+2. **Gebackenes Himmelslicht (alle Geräte).** Pro Kachel wird im Hintergrund berechnet, wie viel Himmel jede
+   Stelle sieht, mit Häusern und Bäumen als Hindernissen. Das Verfahren (Linien-Sweep über das Höhenfeld) kostet
+   linear viel Zeit und läuft in einem Web Worker [25]. Es ergibt die weichen, grossflächigen Abschattungen
+   zwischen Häusern und in Tälern.
+3. **Streulicht im Bildraum (WebGPU).** `SSGINode` lässt Farbe von Flächen auf Nachbarn abstrahlen (rote Dächer
+   färben Wände), `GTAONode` dunkelt Winkel ab, `TRAANode` beruhigt das Bild. **Nachgeprüft im Quelltext:** GTAO
+   kann Parallelprojektion, SSGI rechnet nur mit Perspektive. Darum die Teleobjektiv-Kamera als Ausweg
+   (Entscheid E). Im Forum gilt SSGI als teuer für grosse Szenen [26]; unser Bildausschnitt ist klein.
+4. **Streulicht über ein Voxelgitter (WebGPU, zu prüfen).** Three.js r187 enthält `VXGINode`: Die Szene wird in
+   ein Gitter bis 256³ übertragen und indirektes Licht per Kegelverfolgung gesammelt. Gedacht für ruhende
+   Geometrie, neu berechnet nach Änderungen. Das passt zu einem Diorama-Ausschnitt, ist aber neu und ungetestet.
+5. **Standbild-Verfeinerung (WebGPU, zu prüfen).** Steht die Kamera still, rechnet ein Pfadverfolger das Bild
+   Schritt für Schritt auf Offline-Qualität hoch, also auf genau die Lichtart des Referenzbilds.
+   `three-gpu-pathtracer` läuft inzwischen auf WebGPU mit dem `WebGPURenderer` [23]. Einschränkung: nur
+   Standardmaterialien, unser Wasser müsste dafür eine einfache Fassung bekommen.
+
+Ehrliche Einordnung: Die Stufen 1 und 2 sind erprobte Technik und ergeben ein stimmiges, etwas härteres Bild als
+die Referenz. Wie nah die Stufen 3 bis 5 an die Referenz herankommen und was sie kosten, weiss ich erst nach der
+Look-Probe. Bis dahin ist jede Prozentzahl geraten.
+
+### Abnahme: du entscheidest am Bild, mit Messwerten als Kontrolle
+
+1. **Feste Probeszene.** Ein Ausschnitt mit derselben Bildaufteilung wie die Referenz (Stadt am Wasser, Felder,
+   Wald, Fels, Inseln, Schiffe, Grenzband), gleiche Auflösung, gleicher Blickwinkel.
+2. **Bild neben Bild.** Jede Runde liefert das Bildpaar und eine Liste der Abweichungen.
+3. **Messwerte.** Dieselben Messungen wie oben werden am eigenen Bild wiederholt: Schattenhelligkeit auf Gras
+   (Ziel 0,65 bis 0,8), auf Wasser (0,45 bis 0,6), dunkelste 5 % (mindestens 0,2), mittlere Sättigung (0,45 bis
+   0,55), Bodenblock 7 bis 8 Pixel, Hauslänge 12 bis 14 Blöcke. Das verhindert, dass ich mir ein Bild schönrede.
+4. **Dein Urteil pro Merkmal.** Für jedes Merkmal aus der Rezepttabelle: stimmt, nah dran, stimmt nicht.
+5. **Leistung.** Bildrate auf deinem Rechner, je Lichtstufe einzeln ein- und ausschaltbar.
+6. **Abbruchregel.** Stimmt der Look nach fünf Runden nicht, wird nicht weitergebaut, sondern der Ansatz neu
+   besprochen. Gelände, Streaming und Bearbeiten beginnen erst nach deinem Ja zum Look.
+
+### Was auch im besten Fall anders bleibt als im Bild
+
+- Ein regelmässigeres Bild ohne die zufälligen Verläufe der KI.
+- In Bewegung etwas härteres Licht als im Standbild (Stufe 5 wirkt nur bei ruhender Kamera).
+- Wahrzeichen so gut, wie ihre Modelle sind. Jedes ist Einzelarbeit.
+- Auf Geräten ohne WebGPU nur die Lichtstufen 1 und 2.
 
 ## 3. Was die Recherche ergeben hat
 
@@ -106,13 +220,14 @@ Bearbeitung; läuft auch auf dem Server) und `src/render3/` (Three.js), umschalt
 
 ### 5.1 Raster und Massstab
 
-- Das Voxelraster hängt fest am Kartenraster: **1 Kartenpixel = K × K Säulen**, K = 64 (Entscheid D).
-  Die Welt hat damit 393'216 × 338'944 Säulen. Eine Säule ist bei 45° Nord etwa 34 m breit.
-- **Eine Kachel = 64 × 64 Säulen = genau ein Kartenpixel.** Kachelkoordinate und Kartenpixel sind dasselbe. Das
-  hält alle Umrechnungen ganzzahlig.
+- Das Geländeraster hängt fest am Kartenraster: **1 Kartenpixel = K × K Säulen** (Entscheid D, Startwert K = 32).
+  Bei K = 32 hat die Welt 196'608 × 169'472 Säulen (33 Milliarden), eine Säule ist bei 45° Nord etwa 68 m breit.
+  Die Rechenbeispiele weiter unten sind noch mit K = 64 gerechnet; mit K = 32 wird alles um den Faktor 4 leichter.
+- **Eine Kachel = 64 × 64 Säulen**, bei K = 64 genau ein Kartenpixel, bei K = 32 zwei mal zwei Kartenpixel. Alle
+  Umrechnungen bleiben ganzzahlig.
 - Höhe in Voxelstufen, überhöht (Startwert etwa 3-fach, also rund 11 m pro Stufe: Hügel 200 m = 18 Stufen,
   Alpengipfel rund 430 Stufen). Im Prototyp einstellen, eventuell mit gestauchter Kurve für Hochgebirge.
-- Grössen zur Orientierung: Venedig rund 450 × 450 Säulen, ein mittlerer Ort (1'600 km²) rund 1'200 × 1'200,
+- Grössen zur Orientierung bei K = 64 (bei K = 32 jeweils die Hälfte): Venedig rund 450 × 450 Säulen, ein mittlerer Ort (1'600 km²) rund 1'200 × 1'200,
   der kleinste Ort rund 100 × 100.
 
 ### 5.1a Darstellungsmassstäbe wie im Modellbau (Ramon, 14. November 2026)
@@ -122,7 +237,8 @@ werden:
 
 - **Bodenmassstab:** wie viel Land ein Feld darstellt (K, Entscheid D). Stark gestaucht.
 - **Figurenmassstab:** wie gross Häuser, Bäume, Menschen und Schiffe gezeichnet werden. Viel grösser als der
-  Bodenmassstab, untereinander stimmig (Mensch 3, Haus 8 bis 12, Baum 6 bis 10, Kirchturm 25 bis 40 Voxel hoch).
+  Bodenmassstab, untereinander stimmig. Die im Referenzbild gemessenen Grössen stehen in Abschnitt 2a und gelten
+  als Vorgabe.
 - **Die Welt ist das Diorama: auch die Simulation rechnet mit den verkleinerten Mengen** (Ramon, 14. November
   2026, Korrektur eines früheren Entwurfs). Was man sieht, ist das, was simuliert wird. Ein Haus auf der Karte ist
   ein Haushalt der Simulation, ein Feld ist ein bewirtschaftetes Feld, eine Figur ist ein Mensch oder eine feste
@@ -235,7 +351,8 @@ von der Entfernung. Es gibt keine Nähte zwischen Detailstufen im Bild.
   Aufsätze in die Geländesäulen eingerechnet (Waldkrone als grüne Stufe, Stadt als Dachfarben). Das ist das
   Distant-Horizons-Prinzip [8] und hält die Instanzzahl klein.
 - **Menschen und Tiere:** Figuren gehören zum Massstab und werden mit ihm zusammen gewählt (Ramon, 14. November
-  2026). Startwert: ein Mensch ist 3 Voxel hoch, ein Haus 8 bis 12, ein Baum 6 bis 10. Figuren sind Symbole (eine
+  2026). Grössen wie im Referenzbild gemessen (Abschnitt 2a): ein Mensch ist gut einen Block hoch, eine Hauswand
+  sechs, ein Baum vier bis fünf. Figuren sind zählbare Einheiten der Simulation (Abschnitt 5.1a) (eine
   Figur steht für viele Menschen): Bauern auf Feldern, Leute auf Märkten und Stegen, Fuhrwerke auf Strassen, Herden,
   Heere als Figurengruppen. Sichtbar nur in den zwei nächsten Zoomstufen, gezeichnet als Instanzen, Anzahl nach
   Bevölkerung und Tätigkeit des Orts. Der Prototyp zeigt sie in allen drei Massstäben mit.
@@ -386,7 +503,12 @@ Die Dauern sind grobe Schätzungen und hängen von den Entscheiden ab.
 
 **Phase 0: Entscheide A bis G** (dieses Dokument).
 
-**Phase 1: Prototyp Venedig, ohne Server** (grösster Erkenntnisgewinn)
+**Phase 1a: Look-Probe** (vor allem anderen)
+- Feste Probeszene nach Abschnitt 2a, kein Server, keine Weltkarte, kein Bearbeiten.
+- Zeigt nebeneinander: Häuser glatt und als Voxel (Entscheid H), Massstäbe (Entscheid D), Lichtstufen 1 bis 5.
+- Fertig, wenn Ramon den Look abnimmt oder die Abbruchregel greift.
+
+**Phase 1b: Prototyp Venedig, ohne Server** (erst nach abgenommenem Look)
 - Generator für ein Fenster von etwa 16 × 16 Kartenpixeln um Venedig, mit erster Ortsvorlage für die Lagune.
 - Kacheln, Meshing mit AO im Worker, Materialpalette, Parallelkamera, Sonne mit Schatten, Wasser, Tilt-Shift.
 - Prozedurale Häuser, Bäume, Felder, Stege, ein Platzhalter für den Campanile, Grenzband.
@@ -439,3 +561,12 @@ Phase 1 berührt weder Server noch Produktivseite und lässt sich gefahrlos in e
 18. Mechanistry, Timberborn Update 7 (3D-Gelände): https://mechanistry.com/press/ziplines-tubeways-timberborn-update-7-adds-3d-terrain-unique-modular-transport-for-each-faction-more
 19. Three.js-Dokumentation, VOXLoader: https://threejs.org/docs/pages/VOXLoader.html
 20. Rosebud, «AI Tool Stack for Voxel Games 2026»: https://lab.rosebud.ai/blog/ai-tool-stack-voxel-games-2026
+21. Three.js r187, npm-Paket `three@0.187.0`, direkt gelesen: `examples/jsm/tsl/display/SSGINode.js`, `GTAONode.js`,
+    `TRAANode.js`, `DepthOfFieldNode.js`, `SSRNode.js`, `examples/jsm/lighting/vxgi/VXGINode.js`,
+    `examples/jsm/lights/SunLight.js`: https://www.npmjs.com/package/three
+22. Three.js-Dokumentation, VXGINode: https://threejs.org/docs/pages/VXGINode.html
+23. three-gpu-pathtracer (WebGPU): https://github.com/gkjohnson/three-gpu-pathtracer
+24. MagicaVoxel, Editor und Pfadverfolger: https://ephtracy.github.io/mv_main.html
+25. Ricky Reusser, «Line-Sweep Terrain Lighting»: https://rreusser.github.io/notebooks/line-sweep-terrain-lighting/
+26. Three.js-Forum, «Global Illumination» (2026): https://discourse.threejs.org/t/global-illumination/91243
+27. Voxagon Blog, «From screen space to voxel space» (Licht im Voxelraum): https://blog.voxagon.se/2018/10/17/from-screen-space-to-voxel-space.html
