@@ -25,6 +25,7 @@ players and the AI of realms without a player act through the same commands.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
+| 2 | Cultivated land per place | proposed to Ramon 14 Nov 2026; not agreed, nothing built |
 
 ## 1. Grain harvest per place
 
@@ -191,3 +192,114 @@ Regions of the map with the start population of 1356. The benchmark is a floor o
   https://edepot.wur.nl/296371 (p. 16: 3.0–4.7 grains harvested per grain sown before 1500, which is why the harvest is
   counted net of seed)
 - Natural Earth. Admin 0 – Map Units, 1:10m. Public domain. https://www.naturalearthdata.com/
+
+## 2. Cultivated land per place (proposal, not agreed, nothing built)
+
+Proposed on 14 November 2026 after Ramon chose "Bestellte Fläche vorschlagen". Proposal for Ramon (German):
+https://claude.ai/artifact/UumAzzpLcdRmHcSUB5kRTz. Player wiki: docs/wiki/wirtschaft/bestellte-flaeche.md (Entwurf).
+All numbers below were computed on the game's map outside the game, with an exploratory script that is not in the
+repository. If the feature is agreed, `npm run harvest:check` has to reproduce the tables from game code.
+
+**What it changes.** Feature 1 counts all land of a place as worked. Feature 2 replaces that by the land the people
+of the place cultivate: X_i = min(c · P_i, s · F_i, F⁺_i), best soil first. The harvest equation of feature 1 stays;
+A·X becomes the sum of yield times area over the cultivated land.
+
+| Symbol | Meaning | Value | Source |
+|---|---|---|---|
+| X | cultivated land of the place in ha: arable including fallow | result | |
+| P | people of the place | game state | |
+| F | land area of the place | game map | |
+| F⁺ | land of the place with a yield above zero | Caloric Suitability Index as in feature 1 | |
+| s | land limit: largest share of a place that becomes arable | 39.2 % | chosen so that England's 162 places with 4.72 m people together give 11.52 m acres of arable: Broadberry et al. 2010, table 1 (1300) and table 19 (1300/09); the source takes 1300 as the medieval peak of the arable acreage (pp. 5–6) |
+| c | arable per head while land is free | 1.759 ha (4.35 acres) | chosen so that the same places with 2.36 m people together give 8.73 m acres: table 1 (1380), table 19 (1380/89) |
+| Z | calibration constant of the harvest | recalibrated | England 1300/09, 1,242 kcal per head and day (table 19), now with the cultivated land of England's places |
+| α, L, A | unchanged | | feature 1 |
+
+**Where the rule comes from.** It is the method of the published land-use reconstructions applied to a single place:
+cropland = cropland per capita × population (Klein Goldewijk et al. 2017, HYDE 3.2, sect. 2.3.1; Pongratz et al. 2008,
+paras 12 and 14, per-capita area constant before AD 1700), a maximum area per grid cell (HYDE 3.2, eq. 1), saturation
+with population density and "the highest quality land for crops is cleared first" (Kaplan et al. 2009). The grid of
+HYDE is not imported: it is itself modelled, with its own population; a grid for one year cannot follow the game's
+population; and HYDE states an uncertainty range of 50 % at 850 CE and 25 % at 1700 CE (sect. 5).
+
+**Calibration.** One case, England, at two dates (two parameters need two dates). The people of every English place
+on the map (1356) are scaled by the same factor to the population of the decade. Directly from the source, arable per
+head was 2.44 acres in 1300, 3.70 in 1380, 3.82 in 1420 and 3.96 in 1450; c is higher (4.35) because 57 of the 162
+English places are still at the land limit in 1380 on the map.
+
+**Model against history (preview, nothing tuned beyond the calibration).** England through time, arable in million
+acres, harvest in kcal per head and day from arable farming (Broadberry et al. 2010, tables 1 and 19):
+
+| Decade | People (m) | Arable, history | Arable, model | Deviation | Harvest, history | Feature 1 | Deviation | Feature 2 | Deviation |
+|---|---|---|---|---|---|---|---|---|---|
+| 1270/79 | 4.40 | 11.52 | 11.28 | -2 % | 1,415 | 1,305 | -8 % | 1,289 | -9 % |
+| 1300/09 | 4.72 | 11.52 | 11.52 | calibrated | 1,242 | 1,242 | calibrated | 1,242 | calibrated |
+| 1310/19 | 4.63 | | 11.46 | | 1,199 | 1,259 | +5 % | 1,255 | +5 % |
+| 1380/89 | 2.36 | 8.73 | 8.73 | calibrated | 1,801 | 2,018 | +12 % | 1,709 | -5 % |
+| 1420/29 | 2.03 | 7.76 | 8.05 | +4 % | 1,468 | 2,242 | +53 % | 1,802 | +23 % |
+| 1450/59 | 1.93 | 7.64 | 7.82 | +2 % | 1,512 | 2,323 | +54 % | 1,832 | +21 % |
+| 1600/09 | 4.27 | 8.87 | 11.16 | +26 % | 1,664 | 1,332 | -20 % | 1,309 | -21 % |
+| 1691/1700 | 5.14 | 9.70 | 11.72 | +21 % | 1,678 | 1,170 | -30 % | 1,181 | -30 % |
+
+England on the map at the start of 1356 (2.58 m people): 9.15 m acres of arable, 61 of 162 places at the land limit,
+1,653 kcal per head and day (history 1380/89 with 2.36 m people: 8.73 m acres, 1,801 kcal; feature 1: 1,856 kcal).
+
+Regions at the start of 1356, kcal per head and day, feature 1 → feature 2: Low Countries 1,493 → 1,385, Scandinavia
+4,241 → 1,559, Italy 1,905 → 1,584, British Isles 2,252 → 1,617, Greece 3,484 → 1,681, France 1,855 → 1,722, Iberia
+3,703 → 1,850, Rus 12,739 → 1,857, Germany 2,731 → 2,016, Bohemia 3,437 → 2,027, Baltic 10,155 → 2,043, Poland
+7,355 → 2,179, Balkans 7,483 → 2,253, Hungary 5,810 → 2,257, steppe 14,878 → 1,463, whole map 6,613 → 1,843. The dry
+regions fall far below subsistence (Egypt 3,791 → 699, Persia 4,880 → 1,071, Mesopotamia 3,761 → 1,161, Maghreb
+3,038 → 1,262, Arabia 148 → 47): the index knows rain-fed farming only, and the huge area no longer hides it. The full
+table is in the wiki page. No documented harvest per head was found for regions outside England.
+
+Arable against HYDE 3.2 (Klein Goldewijk et al. 2017, table 2, 1400 CE, million ha; the paper does not define its
+regions, the mapping of the map's regions is ours, and HYDE uses its own population):
+
+| Group | Model 1356 | HYDE 3.2, 1400 | Model / HYDE |
+|---|---|---|---|
+| Europe without the former Soviet Union | 64.0 | 50.2 | 1.27 |
+| North Africa and Middle East | 24.8 | 18.0 | 1.38 |
+| Tropical Africa | 86.6 | 27.1 | 3.2 |
+| Americas | 52.8 | 20.6 | 2.6 |
+| Former Soviet Union (the map covers the west only) | 10.0 | 12.0 | not comparable |
+
+In Europe the model is 27 % above HYDE, of the order of HYDE's own range; Kaplan et al. (2017) find that HYDE 3.1
+shows roughly 25 % less open land than pollen-based reconstructions in preindustrial Europe. Outside Europe the model
+is 2.6 to 3.2 times HYDE: England's arable per head does not transfer to Africa and the Americas.
+
+**Known limits.**
+- Both numbers come from England and are applied to the whole map; no source says they hold for Flanders, the Po
+  plain or Poland. Outside Europe the comparison with HYDE speaks against them.
+- The calibration assumes that people were spread over England's places in 1300 and 1380 as on the map in 1356. No
+  source.
+- c is only loosely pinned down: c = 1.5 ha with a land limit of 42.6 % gives 8.28 m acres in 1380, 5 % below the
+  source.
+- The source estimates too: its starting point is an estimate for 1300; 1270 to 1500 are extrapolated from it with the
+  trends of demesne acreage and tithes, 1600 is interpolated backwards with population (pp. 5–6).
+- Fifteenth century still 21 to 23 % too high: the source shows less harvest per head than in 1380 although arable per
+  head was higher. After 1600 the arable is 21 to 26 % too large and the harvest 21 to 30 % too small (Z fixed).
+- Irrigation is missing (Cairo: no cultivated land). Towns cannot feed themselves (Paris 418 kcal per head and day).
+- The rule has a kink (free land or land limit); Kaplan et al. 2009 describe a smooth curve. The area follows the
+  people within the same year; in England arable per head still rose from 3.70 to 3.96 acres between 1380 and 1450.
+- Fallow is part of the cultivated land and its share is not modelled (36 % in 1300, 40 % in 1380, 20 % in 1700 in
+  table 1).
+- "Best soil first" cannot be tested on England: without it England's numbers change by at most 3 kcal, those of the
+  regions by up to 13 % (Persia, Scandinavia, Levant). The index has a 5 arc-minute grid.
+- Land that is not arable has no use yet (no pasture, woodland, livestock).
+- Not opened: the HYDE 3.3 grids and country values (the data server blocks automated access), the per-capita
+  cropland by country (Klein Goldewijk et al. 2017, Journal of Land Use Science), the grids of Kaplan et al. 2009 and
+  Pongratz et al. 2008. The comparison uses the printed table 2 of HYDE 3.2 only.
+
+**Sources** (all opened on 14 November 2026)
+- Broadberry et al. (2010), as above: table 1 (arable land use), table 19, method pp. 5–6.
+- Klein Goldewijk, K., Beusen, A., Doelman, J., Stehfest, E. (2017). Anthropogenic land use estimates for the
+  Holocene – HYDE 3.2. Earth System Science Data 9, 927–953.
+  https://essd.copernicus.org/articles/9/927/2017/essd-9-927-2017.pdf (sect. 2.3.1, eq. 1, table 2, sect. 5)
+- Pongratz, J., Reick, C., Raddatz, T., Claussen, M. (2008). A reconstruction of global agricultural areas and land
+  cover for the last millennium. Global Biogeochemical Cycles 22, GB3018.
+  https://pure.mpg.de/pubman/item/item_994221_6/component/file_1786333/gbc1508.pdf
+- Kaplan, J. O., Krumhardt, K. M., Zimmermann, N. (2009). The prehistoric and preindustrial deforestation of Europe.
+  Quaternary Science Reviews 28, 3016–3034. https://doi.org/10.1016/j.quascirev.2009.09.028
+- Kaplan, J. O. et al. (2017). Constraining the deforestation history of Europe. Land 6(4), 91.
+  https://doi.org/10.3390/land6040091
+- Klein Goldewijk, K. (2023). HYDE 3.3. Utrecht University. https://doi.org/10.24416/UU01-67UHB4 (catalogue page only)
