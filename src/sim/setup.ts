@@ -7,6 +7,7 @@ import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
 import { ALL_CULTURES, FAITH_INDEX } from './content/peoples';
 import type { I18n } from './i18n';
+import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 
 export interface SetupRealm {
@@ -48,7 +49,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   }
   const place = {
     owner: new Int16Array(L).fill(-1), culture: new Uint16Array(L), faith: new Uint8Array(L), pop: new Float32Array(L),
-    harvest: new Float64Array(L),
+    harvest: new Float64Array(L), arable: new Float64Array(L), // in the order the columns were added (src/sim/upgrade.ts)
   };
   for (let i = 0; i < L; i++) {
     const o = setup.owner[i];
@@ -63,6 +64,6 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText, ruler: new Array(realm.size).fill(''),
   };
-  bringInHarvest(s, w); // the harvest of the year before the start
+  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   return s;
 }

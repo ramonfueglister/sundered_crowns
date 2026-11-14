@@ -4,7 +4,8 @@ import type { World } from '../sim/world';
 import type { PlaceDetail, RealmInfo } from './protocol';
 import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
-import { farmers, hectares, kcalPerHeadDay } from '../sim/systems/harvest';
+import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
+import { farmers, kcalPerHeadDay } from '../sim/systems/harvest';
 
 export function realmInfos(s: WorldState, rulerName: (uid: string) => string | null): RealmInfo[] {
   const count = new Int32Array(s.realm.size);
@@ -24,12 +25,17 @@ export function realmInfos(s: WorldState, rulerName: (uid: string) => string | n
 export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | null {
   if (!Number.isInteger(i) || i < 0 || i >= w.L) return null;
   const f = FAITHS[s.place.faith[i]];
+  const arable = s.place.arable[i], land = hectares(w, i);
   return {
     id: i, name: w.names[i], nameDe: w.namesDe[i], owner: s.place.owner[i], terrain: TERRAINS[w.terrain[i]], resource: RESOURCES[w.resource[i]],
     culture: cultureLabel(ALL_CULTURES[s.place.culture[i]] ?? 'unknown'), faith: f ? f.name : { en: '?', de: '?' }, pop: Math.round(s.place.pop[i]),
     harvest: {
       kcal: s.place.harvest[i], perHeadDay: kcalPerHeadDay(s.place.harvest[i], s.place.pop[i]),
-      landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: hectares(w, i), farmers: farmers(s.place.pop[i]),
+      landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: land, farmers: farmers(s.place.pop[i]),
+      arable: {
+        hectares: arable, share: land > 0 ? arable / land : 0, landYield: arable > 0 ? soilOf(w, i, arable) / arable : null,
+        atLimit: s.place.pop[i] > 0 && arable >= landLimitHa(w, i),
+      },
     },
   };
 }

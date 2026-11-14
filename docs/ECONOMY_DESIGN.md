@@ -25,7 +25,7 @@ players and the AI of realms without a player act through the same commands.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
-| 2 | Cultivated land per place | proposed to Ramon 14 Nov 2026; not agreed, nothing built |
+| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 ("Ja, so bauen") and built as proposed; not yet on the world server |
 
 ## 1. Grain harvest per place
 

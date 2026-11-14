@@ -18,8 +18,23 @@ export interface WorldJson { terrain: string[]; resource: string[]; name: string
 export interface LandJson {
   /** Caloric Suitability Index of the place (Galor and Özak 2016); null where the data set has no value */
   yield: (number | null)[];
-  /** England as the harvest is calibrated on it: land = index × hectares, places = the places inside its outline */
+  /** England: places = the places inside its outline, on which cultivation and harvest are calibrated;
+   *  land = index × hectares of England as one piece of land (the calibration of the harvest before cultivated land) */
   england: { land: number; places: number[] };
+  /** The land of each place sorted by yield, best soil first: mean yield of the land between two consecutive edges
+   *  (shares of the place's land); a place has one step for every edge that starts below its fertile share, and its
+   *  last step ends there. fertile: the share of the place's land with a yield above zero. */
+  curve: { edges: number[]; fertile: number[]; steps: number[] };
+}
+/** The calibration of cultivated land and harvest on England (public/data/cultivation.json, written by
+ *  tools/sim/calibrate_cultivation.ts; sources in docs/ECONOMY_DESIGN.md, feature 2). */
+export interface CultivationJson {
+  /** s: the largest share of a place's land that becomes arable */
+  landLimit: number;
+  /** c: hectares of arable per head while a place has land to spare */
+  arablePerHead: number;
+  /** T_E: the land of England in the harvest equation, so that England's places bring in England's harvest of 1300–09 */
+  englandLand: number;
 }
 
 export const EDGE_RIVER = 1, EDGE_STRAIT = 2, EDGE_COAST = 4, EDGE_SEA = 8;
@@ -36,15 +51,20 @@ export class World {
   temp: Float32Array; arid: Float32Array; forest: Float32Array;
   /** land productivity A of each place: potential calories per hectare and year (NaN: no data) */
   landYield: Float32Array;
-  /** A × hectares summed over England, the land the harvest is calibrated on (src/sim/systems/harvest.ts) */
+  /** T_E, the land of England in the harvest equation (src/sim/systems/harvest.ts) */
   landEngland: number;
+  /** s and c of cultivated land (src/sim/systems/cultivation.ts) */
+  landLimit: number; arablePerHead: number;
+  /** yield curve of each place, best soil first: the steps of place i are landSteps[landStepStart[i] … landStepStart[i + 1]),
+   *  step k covers the land between the shares landEdges[k − 1] and landEdges[k], cut off at landFertile[i] */
+  landEdges: Float64Array; landFertile: Float64Array; landStepStart: Int32Array; landSteps: Float32Array;
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
   rivers: GeoJson['rivers'];
   kmPerPx: Float32Array; // per location
 
-  constructor(geo: GeoJson, wj: WorldJson, land: LandJson) {
+  constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;
     const N = this.N, L = this.L;
@@ -61,7 +81,18 @@ export class World {
     for (const [l] of geo.passes) this.pass[l - 1] = 1;
     if (land.yield.length !== L) throw new Error(`land.json has ${land.yield.length} places, the map has ${L}`);
     this.landYield = Float32Array.from(land.yield, (v) => v ?? NaN);
-    this.landEngland = land.england.land;
+    this.landEngland = cultivation.englandLand; this.landLimit = cultivation.landLimit; this.arablePerHead = cultivation.arablePerHead;
+    const c = land.curve;
+    if (c.fertile.length !== L) throw new Error(`land.json has a yield curve for ${c.fertile.length} places, the map has ${L}`);
+    this.landEdges = Float64Array.from(c.edges); this.landFertile = Float64Array.from(c.fertile);
+    this.landStepStart = new Int32Array(L + 1);
+    for (let i = 0; i < L; i++) {
+      let n = 0; // one step for every edge that starts below the fertile share
+      while (n < c.edges.length && (n === 0 ? 0 : c.edges[n - 1]) < c.fertile[i]) n++;
+      this.landStepStart[i + 1] = this.landStepStart[i] + n;
+    }
+    if (this.landStepStart[L] !== c.steps.length) throw new Error(`land.json has ${c.steps.length} steps of the yield curve, the places need ${this.landStepStart[L]}`);
+    this.landSteps = Float32Array.from(c.steps);
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

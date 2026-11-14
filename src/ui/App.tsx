@@ -4,7 +4,7 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace } from './MapView';
-import { t, L, lang, setLang, terrainName, resourceName, num, kcalText } from './i18n';
+import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
 
@@ -94,7 +94,13 @@ function PlacePanel() {
         <tr><th>{t('harvest_year')}</th><td>{kcalText(d.harvest.kcal)}</td></tr>
         <tr><th>{t('harvest_head')}</th><td>{num(d.harvest.perHeadDay)} kcal</td></tr>
         <tr><th>{t('harvest_land')}</th><td>{num(d.harvest.hectares)} ha</td></tr>
-        <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>
+        {d.harvest.arable
+          ? <>
+            <tr><th>{t('arable')}</th><td>{num(d.harvest.arable.hectares)} ha ({pct(d.harvest.arable.share)})</td></tr>
+            <tr><th>{t('arable_state')}</th><td>{t(d.harvest.arable.hectares <= 0 ? 'arable_none' : d.harvest.arable.atLimit ? 'arable_limit' : 'arable_free')}</td></tr>
+            <tr><th>{t('arable_yield')}</th><td>{d.harvest.arable.landYield === null ? '–' : num(d.harvest.arable.landYield)}</td></tr>
+          </>
+          : <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>}
         <tr><th>{t('harvest_farmers')}</th><td>{num(d.harvest.farmers)}</td></tr>
       </tbody></table>
     </div>}

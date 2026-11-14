@@ -20,8 +20,18 @@ export interface PlaceDetail {
 export interface HarvestDetail {
   /** kilocalories of food from arable farming in the year, and per head and day */
   kcal: number; perHeadDay: number;
-  /** land productivity (index of potential calories per hectare and year; null: no data), land in hectares, people in agriculture */
+  /** land productivity of the whole place (index of potential calories per hectare and year; null: no data), land in hectares, people in agriculture */
   landYield: number | null; hectares: number; farmers: number;
+  /** cultivated land (absent when the server is older than the client) */
+  arable?: ArableDetail;
+}
+export interface ArableDetail {
+  /** arable in hectares and as a share of the place's land */
+  hectares: number; share: number;
+  /** mean productivity of the arable (null: none) */
+  landYield: number | null;
+  /** the place cultivates all the land it can: more people get no more land */
+  atLimit: boolean;
 }
 export interface Me { uid: string; name: string; admin: boolean; realm: number }
 

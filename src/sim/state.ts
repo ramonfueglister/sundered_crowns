@@ -3,8 +3,8 @@
 import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
-/** 2: places have a harvest. Older snapshots are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 2;
+/** 2: places have a harvest. 3: places have arable. Older snapshots are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 3;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -16,6 +16,8 @@ export interface Places {
   pop: Float32Array;
   /** the last harvest: kilocalories of food from arable farming in a year (src/sim/systems/harvest.ts) */
   harvest: Float64Array;
+  /** cultivated land in hectares: arable including fallow (src/sim/systems/cultivation.ts) */
+  arable: Float64Array;
 }
 
 export const REALM_SCHEMA = { capital: 'i32', color: 'u32', culture: 'u16', faith: 'u8', rank: 'u8' } as const;

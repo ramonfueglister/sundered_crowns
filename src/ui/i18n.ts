@@ -45,6 +45,12 @@ const S = {
   harvest_land: ['Land', 'Landfläche'],
   harvest_yield: ['Yield of the soil', 'Ertragskraft des Bodens'],
   harvest_farmers: ['In agriculture', 'In der Landwirtschaft'],
+  arable: ['Cultivated land', 'Bestellte Fläche'],
+  arable_state: ['Land', 'Lage'],
+  arable_free: ['land to spare', 'freies Land'],
+  arable_limit: ['at the land limit', 'an der Landgrenze'],
+  arable_none: ['no land with a yield', 'kein Land mit Ertrag'],
+  arable_yield: ['Yield of the cultivated soil', 'Ertragskraft des bestellten Bodens'],
   no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
@@ -71,6 +77,8 @@ const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.sl
 export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
 export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
+/** A share as per cent with one decimal. */
+export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
 /** A large amount of kilocalories in millions or billions. */
 export function kcalText(v: number): string {
   const de = lang.value === 'de', f = (x: number) => x.toLocaleString(de ? 'de-DE' : 'en-GB', { maximumSignificantDigits: 3 });

@@ -1,57 +1,96 @@
-// "Model against history" for the grain harvest (docs/ECONOMY_DESIGN.md, feature 1). Prints three Markdown tables:
-// England through time, England on the map at the start, and the regions of the map at the start.
+// "Model against history" for the grain harvest and the cultivated land (docs/ECONOMY_DESIGN.md, features 1 and 2).
+// Prints Markdown tables: England through time, England on the map at the start, the regions of the map at the
+// start, the arable of groups of regions against HYDE 3.2, and some places.
 // Nothing here feeds back into the model: the tables are the check, deviations stay as they are.
 //   npx tsx tools/sim/harvest_check.ts [startYear]
-import { harvestKcal, kcalPerHeadDay, farmers, hectares, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
+import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
+import { hectares, landLimitHa, HECTARES_PER_ACRE } from '../../src/sim/systems/cultivation';
 import { newWorldState, loadLand } from './load';
+import { englandAt } from './calibration';
 
-/** Broadberry et al. (2010), table 19: decade, people (millions), kcal per head and day from arable farming (net). */
-const ENGLAND: [string, number, number][] = [
-  ['1270/79', 4.40, 1415], ['1300/09', 4.72, 1242], ['1310/19', 4.63, 1199], ['1380/89', 2.36, 1801],
-  ['1420/29', 2.03, 1468], ['1450/59', 1.93, 1512], ['1600/09', 4.27, 1664], ['1691/1700', 5.14, 1678],
+/** Broadberry et al. (2010): decade and people in millions (table 19), total arable in million acres (table 1; the
+ *  years 1270, 1300, 1380, 1420, 1450, 1600, 1700), kcal per head and day from arable farming, net (table 19). */
+const ENGLAND: [string, number, number | null, number][] = [
+  ['1270/79', 4.40, 11.52, 1415], ['1300/09', 4.72, 11.52, 1242], ['1310/19', 4.63, null, 1199], ['1380/89', 2.36, 8.73, 1801],
+  ['1420/29', 2.03, 7.76, 1468], ['1450/59', 1.93, 7.64, 1512], ['1600/09', 4.27, 8.87, 1664], ['1691/1700', 5.14, 9.70, 1678],
 ];
-/** The older calibration of α, shown beside the estimate in use: Voigtländer and Voth (2013), table 1. */
-const LAND_SHARE_VV = 0.4;
+/** Klein Goldewijk et al. (2017), HYDE 3.2, table 2: cropland in 1400 CE, million hectares. The paper does not say
+ *  which countries belong to which region; the regions of the map are assigned here. */
+const HYDE: [string, number | null, string[]][] = [
+  ['Europe (without the former Soviet Union)', 50.2, ['france', 'germany', 'italy', 'iberia', 'british_isles', 'low_countries', 'scandinavia', 'balkans', 'hungary', 'greece', 'bohemia', 'poland', 'atlantic_islands']],
+  ['North Africa and Middle East', 18.0, ['maghreb', 'egypt', 'levant', 'mesopotamia', 'arabia', 'persia', 'anatolia']],
+  ['Tropical Africa', 27.1, ['west_africa', 'east_africa', 'sahel']],
+  ['Americas (North 1.1 + Latin 19.5)', 20.6, ['americas']],
+  ['Former Soviet Union (the map covers its west only; HYDE: 12.0 for all of it)', null, ['rus', 'baltic', 'steppe', 'caucasus']],
+];
+const PLACES = ['Kraków', 'Moscow', 'Norwich', 'Novgorod', 'London', 'Ghent', 'Florence', 'Paris', 'Cairo'];
 
 const year = Number(process.argv[2] ?? 1356);
 const { s, w } = newWorldState(year, year);
 const land = loadLand();
-const pct = (model: number, history: number) => `${model >= history ? '+' : ''}${(100 * (model / history - 1)).toFixed(0)} %`;
+const pop = s.place.pop;
+const dev = (model: number, history: number) => `${model >= history ? '+' : ''}${(100 * (model / history - 1)).toFixed(0)} %`;
 const int = (v: number) => Math.round(v).toLocaleString('en-GB');
+const m2 = (v: number) => (v / 1e6).toFixed(2);
 
-console.log(`\n### England through time (the model with England as one piece of land)\n`);
-console.log(`| Decade | People (m) | History, kcal per head and day | Model α = ${LAND_SHARE} | Deviation | Model α = ${LAND_SHARE_VV} | Deviation |`);
-console.log('|---|---|---|---|---|---|---|');
-for (const [decade, people, history] of ENGLAND) {
-  const m = (a: number) => kcalPerHeadDay(harvestKcal(1, w.landEngland, farmers(people * 1e6), w.landEngland, a), people * 1e6);
-  const calibrated = people * 1e6 === ENGLAND_1300.people ? ' (calibrated)' : '';
-  console.log(`| ${decade}${calibrated} | ${people.toFixed(2)} | ${int(history)} | ${int(m(LAND_SHARE))} | ${pct(m(LAND_SHARE), history)} | ${int(m(LAND_SHARE_VV))} | ${pct(m(LAND_SHARE_VV), history)} |`);
+console.log(`\n### England through time (the people of every English place of ${year} scaled alike)\n`);
+console.log('| Decade | People (m) | Arable, history (m acres) | Arable, model | Deviation | Places at the land limit | Harvest, history (kcal per head and day) | All land (feature 1) | Deviation | Model | Deviation |');
+console.log('|---|---|---|---|---|---|---|---|---|---|---|');
+for (const [decade, people, acres, history] of ENGLAND) {
+  const e = englandAt(w, land.england.places, pop, people * 1e6);
+  const before = kcalPerHeadDay(harvestKcal(1, farmers(people * 1e6), 1), people * 1e6); // England as one piece, all of its land
+  const cal = (calibrated: boolean, text: string) => (calibrated ? 'calibrated' : text);
+  const is1300 = people * 1e6 === ENGLAND_1300.people, is1380 = decade === '1380/89';
+  console.log(`| ${decade} | ${people.toFixed(2)} | ${acres === null ? '' : acres.toFixed(2)} | ${m2(e.arableAcres)} | ${acres === null ? '' : cal(is1300 || is1380, dev(e.arableAcres / 1e6, acres))} | ${e.atLimit} | ${int(history)} | ${int(before)} | ${cal(is1300, dev(before, history))} | ${int(e.perHeadDay)} | ${cal(is1300, dev(e.perHeadDay, history))} |`);
 }
 
-/** People, land and harvest of a set of places with the people of the start. */
-function sum(places: Iterable<number>, a: number) {
-  let people = 0, km2 = 0, ax = 0, kcal = 0;
+/** People, land, arable and harvest of a set of places with the people of the start. */
+function sum(places: Iterable<number>) {
+  let people = 0, km2 = 0, arable = 0, kcal = 0, before = 0, atLimit = 0, peopleAtLimit = 0, n = 0;
   for (const i of places) {
-    people += s.place.pop[i]; km2 += w.area[i]; ax += (w.landYield[i] || 0) * hectares(w, i);
-    kcal += harvestKcal(w.landYield[i], hectares(w, i), farmers(s.place.pop[i]), w.landEngland, a);
+    n++; people += pop[i]; km2 += w.area[i]; arable += s.place.arable[i]; kcal += s.place.harvest[i];
+    before += harvestKcal((w.landYield[i] || 0) * hectares(w, i), farmers(pop[i]), land.england.land); // feature 1: all land, England as one piece
+    if (pop[i] > 0 && w.arablePerHead * pop[i] > landLimitHa(w, i)) { atLimit++; peopleAtLimit += pop[i]; }
   }
-  return { people, km2, yield: ax / (km2 * 100), perHead: kcalPerHeadDay(kcal, people) };
+  return { n, people, km2, arable, atLimit, peopleAtLimit, perHead: kcalPerHeadDay(kcal, people), before: kcalPerHeadDay(before, people) };
 }
 
-const e = sum(land.england.places, LAND_SHARE), eVV = sum(land.england.places, LAND_SHARE_VV);
+const e = sum(land.england.places);
 console.log(`\n### England on the map at the start of ${year}\n`);
-console.log(`- places inside the outline: ${land.england.places.length}, ${int(e.km2)} km²`);
-console.log(`- people at the start: ${(e.people / 1e6).toFixed(2)} m (Broadberry et al. 2010, table 16: 2.60 m in 1351, 2.50 m in 1377)`);
-console.log(`- harvest per head and day: ${int(e.perHead)} kcal with α = ${LAND_SHARE}, ${int(eVV.perHead)} kcal with α = ${LAND_SHARE_VV} (table 19: 1,801 kcal in 1380/89)`);
+console.log(`- places inside the outline: ${e.n}, ${int(e.km2)} km²; people at the start: ${m2(e.people)} m (Broadberry et al. 2010, table 16: 2.60 m in 1351, 2.50 m in 1377)`);
+console.log(`- arable: ${m2(e.arable / HECTARES_PER_ACRE)} m acres, ${(e.arable / e.km2).toFixed(1)} % of the land; ${e.atLimit} of ${e.n} places at the land limit (table 1: 8.73 m acres in 1380)`);
+console.log(`- harvest per head and day: ${int(e.perHead)} kcal; with all land (feature 1) ${int(e.before)} kcal (table 19: 1,801 kcal in 1380/89)`);
 
 const byRegion = new Map<string, number[]>();
 for (const p of w.provinces) byRegion.set(p.region, [...(byRegion.get(p.region) ?? []), ...p.locs]);
 console.log(`\n### Regions of the map at the start of ${year}\n`);
-console.log(`| Region | People (m) | Land (1000 km²) | People per km² | Mean yield of the soil | kcal per head and day, α = ${LAND_SHARE} | α = ${LAND_SHARE_VV} |`);
-console.log('|---|---|---|---|---|---|---|');
-const rows = [...byRegion].map(([region, places]) => ({ region, a: sum(places, LAND_SHARE), b: sum(places, LAND_SHARE_VV) })).sort((x, y) => y.a.people - x.a.people);
-for (const { region, a, b } of rows) {
-  console.log(`| ${region} | ${(a.people / 1e6).toFixed(2)} | ${int(a.km2 / 1000)} | ${(a.people / a.km2).toFixed(1)} | ${int(a.yield)} | ${int(a.perHead)} | ${int(b.perHead)} |`);
+console.log('| Region | People (m) | Arable (m ha) | Share of the land | ha per head | People at the land limit | kcal per head and day: all land (feature 1) | Model |');
+console.log('|---|---|---|---|---|---|---|---|');
+const row = (name: string, r: ReturnType<typeof sum>) =>
+  `| ${name} | ${m2(r.people)} | ${m2(r.arable)} | ${(r.arable / r.km2).toFixed(1)} % | ${(r.arable / r.people).toFixed(2)} | ${(100 * r.peopleAtLimit / r.people).toFixed(0)} % | ${int(r.before)} | ${int(r.perHead)} |`;
+const rows = [...byRegion].map(([region, places]) => ({ region, r: sum(places) })).sort((x, y) => y.r.people - x.r.people);
+for (const { region, r } of rows) console.log(row(region, r));
+const everywhere = Array.from({ length: w.L }, (_, i) => i);
+const all = sum(everywhere);
+console.log(row('**whole map**', all));
+let noHarvest = 0, peopled = 0;
+for (const i of everywhere) if (pop[i] > 0) { peopled++; if (!(s.place.harvest[i] > 0)) noHarvest++; }
+console.log(`\nplaces at the land limit: ${all.atLimit} of ${w.L}; places with people: ${peopled}, of which without a harvest: ${noHarvest}`);
+
+console.log('\n### Arable against HYDE 3.2 (Klein Goldewijk et al. 2017, table 2, cropland in 1400 CE, million hectares)\n');
+console.log(`| Group of regions | People ${year} (m) | Model ${year} | HYDE 3.2, 1400 | Model / HYDE |`);
+console.log('|---|---|---|---|---|');
+for (const [name, hyde, regions] of HYDE) {
+  const r = sum(regions.flatMap((g) => byRegion.get(g) ?? []));
+  console.log(`| ${name} | ${m2(r.people)} | ${(r.arable / 1e6).toFixed(1)} | ${hyde === null ? '' : hyde.toFixed(1)} | ${hyde === null ? 'not comparable' : (r.arable / 1e6 / hyde).toFixed(2)} |`);
 }
-const all = sum(Array.from({ length: w.L }, (_, i) => i), LAND_SHARE);
-console.log(`| **whole map** | ${(all.people / 1e6).toFixed(2)} | ${int(all.km2 / 1000)} | ${(all.people / all.km2).toFixed(1)} | ${int(all.yield)} | ${int(all.perHead)} | ${int(sum(Array.from({ length: w.L }, (_, i) => i), LAND_SHARE_VV).perHead)} |`);
+
+console.log(`\n### Places at the start of ${year}\n`);
+console.log('| Place | People | Arable (ha) | Share of the land | ha per head | kcal per head and day | |');
+console.log('|---|---|---|---|---|---|---|');
+for (const name of PLACES) {
+  const i = w.names.indexOf(name); if (i < 0 || i >= w.L) continue;
+  const x = s.place.arable[i], limit = w.arablePerHead * pop[i] > landLimitHa(w, i);
+  console.log(`| ${name} | ${int(pop[i])} | ${int(x)} | ${(100 * x / hectares(w, i)).toFixed(1)} % | ${(x / pop[i]).toFixed(2)} | ${int(kcalPerHeadDay(s.place.harvest[i], pop[i]))} | ${x > 0 ? (limit ? 'land limit' : 'land to spare') : 'no land with a yield'} |`);
+}
+

@@ -8,6 +8,13 @@ England written by build_england.py, and writes public/data/land.json:
   england  the land of England as the calibration of the harvest needs it (src/sim/systems/harvest.ts):
            land   = mean index x area in hectares of the map's land inside the outline
            places = places with at least half of their area inside the outline
+  curve    per place, its land sorted by yield, best soil first (feature 2, src/sim/systems/cultivation.ts):
+           fertile = share of the place's land with a yield above zero (cells without data count as zero yield)
+           steps   = mean yield of the land between two consecutive edges of the sorted land; the edges are shares
+                     of the place's land (the same list for every place), the last step of a place ends at fertile.
+                     Places follow one another in steps; a place has one step for every edge that starts below its
+                     fertile share. The sum of yield x area up to each edge is exact; inside a step the land counts
+                     with the step's mean.
 
 Nothing is tuned here. The report printed at the end says how much of the map the index covers.
 """
@@ -17,6 +24,49 @@ from PIL import Image, ImageDraw
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, ROOT, km_per_px, lonlat_to_px_np, px_to_lonlat_np
 
 DATA = os.path.join(ROOT, 'tools', 'geo', 'data')
+
+# Upper edges of the steps of the yield curve, as shares of a place's land. Fine at the top, where thinly settled
+# places cultivate a per cent or two of their land, and every 2 % up to 40 %.
+CURVE_EDGES = [0.001, 0.002, 0.004, 0.007, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08] + \
+              [round(0.10 + 0.02 * k, 2) for k in range(16)] + [0.45, 0.50, 0.60, 0.80, 1.0]
+
+
+def yield_curve(ids, land, cell, ncell, v0, km2, L):
+    """The land of every place sorted by yield, best first, as step means between CURVE_EDGES (see the module text)."""
+    key = (ids[land].astype(np.int64) - 1) * ncell + cell[land]
+    u, inv = np.unique(key, return_inverse=True)           # one piece per (place, index cell)
+    ha = np.bincount(inv, weights=km2[land])
+    val = np.zeros(len(u)); val[inv] = v0[land]
+    owner = u // ncell
+    order = np.lexsort((u, -val, owner))                    # best soil first within a place; ties by cell
+    owner, ha, val = owner[order], ha[order], val[order]
+    start = np.searchsorted(owner, np.arange(L + 1))
+    cum_a = np.concatenate([[0.0], np.cumsum(ha)])          # cum_a[j]: area before piece j, over all places
+    cum_ax = np.concatenate([[0.0], np.cumsum(ha * val)])
+    tot = cum_a[start[1:]] - cum_a[start[:-1]]
+    pos = np.bincount(owner, weights=ha * (val > 0), minlength=L)
+    fertile = np.round(np.divide(pos, tot, out=np.zeros(L), where=tot > 0), 6)
+
+    def g(i, share):
+        """Sum of yield x area over the best `share` of place i's land."""
+        target = cum_a[start[i]] + share * tot[i]
+        j = np.clip(np.searchsorted(cum_a, target, side='right') - 1, start[i], np.maximum(start[i + 1] - 1, start[i]))
+        return cum_ax[j] + (target - cum_a[j]) * val[np.minimum(j, len(val) - 1)] - cum_ax[start[i]]
+
+    places = np.arange(L)
+    edges = np.array(CURVE_EDGES)
+    lower = np.concatenate([[0.0], edges[:-1]])
+    steps = []
+    counts = np.zeros(L, dtype=np.int64)
+    means = np.zeros((L, len(edges)))
+    for k in range(len(edges)):
+        lo = np.minimum(lower[k], fertile); hi = np.minimum(edges[k], fertile)
+        width = (hi - lo) * tot
+        means[:, k] = np.divide(g(places, hi) - g(places, lo), width, out=np.zeros(L), where=width > 0)
+        counts += (lower[k] < fertile)
+    for i in range(L):
+        steps.extend(round(float(m), 1) for m in means[i, :counts[i]])
+    return fertile, steps
 
 
 def main():
@@ -69,6 +119,8 @@ def main():
     share = np.bincount(flat, weights=(km2 * inside).ravel(), minlength=N)[1:L + 1] / area
     places = [int(i) for i in np.nonzero(share >= 0.5)[0]]
 
+    fertile, steps = yield_curve(ids, land, row[:, None] * crop['width'] + col[None, :], crop['width'] * crop['height'], v0, km2, L)
+
     out = {
         'source': {
             'dataset': meta['source']['dataset'], 'doi': meta['source']['doi'], 'paper': meta['source']['paper'],
@@ -83,6 +135,14 @@ def main():
         'england': {
             'outline': '%s (%s)' % (eng['source']['dataset'], eng['source']['licence']),
             'area_km2': round(e_area, 1), 'mean': round(e_mean, 2), 'land': round(e_land, 0), 'places': places,
+        },
+        'curve': {
+            'method': 'land of each place sorted by yield, best first; steps = mean yield between consecutive edges '
+                      '(shares of the place\'s land), the last step of a place ends at its fertile share; a place '
+                      'has one step for every edge that starts below its fertile share',
+            'edges': CURVE_EDGES,
+            'fertile': [float(f) for f in fertile],
+            'steps': steps,
         },
     }
     path = os.path.join(OUT_DATA, 'land.json')
@@ -111,6 +171,8 @@ def main():
     pl = np.array(places)
     print('  places at least half inside: %d, %.0f km2, sum of yield x hectares %.4g (%.2f %% of land)' % (
         len(places), area[pl].sum(), float(np.nansum(mean[pl] * area[pl]) * 100), 100 * float(np.nansum(mean[pl] * area[pl]) * 100) / e_land))
+    print('yield curve: %d steps for %d places; land with a yield above zero: %.2f %% of the map' % (
+        len(steps), L, 100 * float((fertile * area).sum()) / tot))
     print('wrote %s (%d bytes)' % (path, os.path.getsize(path)))
 
 
