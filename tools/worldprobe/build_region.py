@@ -173,10 +173,16 @@ def main(name):
             c = np.array([p for poly in polys_from_geojson_geom(f['geometry']) for p in poly[0]] or [p for l in lines_from_geojson_geom(f['geometry']) for p in l])
             if len(c) and c[:, 0].max() >= west and c[:, 0].min() <= east and c[:, 1].max() >= south and c[:, 1].min() <= north: yield f
 
-    land = mask(polys(near(natural_earth('ne_10m_land'))))
-    lake = mask(polys(near(natural_earth('ne_10m_lakes')))) | mask(polys(near(natural_earth('ne_10m_lakes_europe'))))
-    # the coast and the lakes of 1356 where they differ from today's
     ov = load_json(os.path.join(ROOT, 'data', 'history', '1356', 'terrain_overrides.json'), {}) or {}
+    # today's lakes without the reservoirs of the 20th century
+    dammed = set((ov.get('reservoirs') or {}).get('names') or [])
+    def natural(features):
+        for f in features:
+            p = f['properties']
+            if not (p.get('featurecla') == 'Reservoir' and (not p.get('name') or p['name'] in dammed)): yield f
+    land = mask(polys(near(natural_earth('ne_10m_land'))))
+    lake = mask(polys(natural(near(natural_earth('ne_10m_lakes'))))) | mask(polys(natural(near(natural_earth('ne_10m_lakes_europe')))))
+    # the coast and the lakes of 1356 where they differ from today's
     for e in ov.get('coast_1356') or []:
         if not isinstance(e, dict) or len(e.get('polygon') or []) < 3: continue
         m = mask([[e['polygon']]])
@@ -263,4 +269,6 @@ def main(name):
 
 
 if __name__ == '__main__':
+    # a cut of one's own, to try something out: build_region.py <name> <west> <south> <east> <north>
+    if len(sys.argv) == 6: REGIONS[sys.argv[1]] = tuple(float(v) for v in sys.argv[2:])
     main(sys.argv[1] if len(sys.argv) > 1 else 'alps')

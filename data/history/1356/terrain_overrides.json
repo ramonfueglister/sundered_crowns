@@ -9,7 +9,8 @@
   "H.H. Lamb, Historic Storms of the North Sea (1991)",
   "R. Bartlett, The Making of Europe",
   "Wikipedia articles on the Zuiderzee, Dollart, Haarlemmermeer, Grote Mandrenke, St Elizabeth's flood, Sarykamysh Lake, Pontine Marshes, Mesopotamian Marshes",
-  "Italian Wikipedia, 'Taglio di Porto Viro' (Po delta before 1604: dune line Massenzatica–Donada, advance of 25 m a year 1200–1600); English Wikipedia, 'Gronda lagunare', 'Sile (river)', 'Lago di Bientina'"
+  "Italian Wikipedia, 'Taglio di Porto Viro' (Po delta before 1604: dune line Massenzatica–Donada, advance of 25 m a year 1200–1600); English Wikipedia, 'Gronda lagunare', 'Sile (river)', 'Lago di Bientina'",
+  "English Wikipedia, 'Limfjord', 'Kolindsund', 'Lake Prile'; Natural Earth 10m lakes (class Reservoir)"
  ],
  "notes": [
   "Polygons are coarse (4–21 vertices), lon/lat order. 'impassable' leaves the main 14th-century trans-Saharan caravan corridors open (Sijilmasa–Taghaza–Walata, Tuat–Gao, Ghadames–Air, Fezzan–Kawar–Bornu, Darb al-Arba'in).",
@@ -1635,6 +1636,29 @@
    ]
   },
   {
+   "name": "Limfjord, western end closed",
+   "type": "land",
+   "note": "The western passage to the North Sea closed around 1200 (Saxo); from then until the flood of 3 February 1825 the Limfjord was open to the sea only in the east, at Hals, and brackish. The Thyborøn channel of today dates from 1862.",
+   "polygon": [
+    [
+     8.19,
+     56.74
+    ],
+    [
+     8.27,
+     56.74
+    ],
+    [
+     8.27,
+     56.68
+    ],
+    [
+     8.19,
+     56.68
+    ]
+   ]
+  },
+  {
    "name": "Notes without polygons",
    "type": "note",
    "note": "Dunwich and the Holderness villages (Ravenser Odd) still existed; Ostrobothnian coast lay several km inland of today's because of post-glacial uplift; Pisa, Ravenna and Aigues-Mortes lay closer to the sea; the Caspian stood a few metres higher than in the 20th century.",
@@ -1995,6 +2019,70 @@
     [
      10.58,
      43.76
+    ]
+   ]
+  },
+  {
+   "name": "Kolindsund",
+   "note": "Freshwater lake of Djursland, 25 km long from Grenå west to Kolind and 0.8–2.5 km wide; drained 1872–80.",
+   "polygon": [
+    [
+     10.6,
+     56.375
+    ],
+    [
+     10.7,
+     56.4
+    ],
+    [
+     10.8,
+     56.43
+    ],
+    [
+     10.86,
+     56.425
+    ],
+    [
+     10.86,
+     56.405
+    ],
+    [
+     10.78,
+     56.405
+    ],
+    [
+     10.7,
+     56.38
+    ],
+    [
+     10.6,
+     56.355
+    ]
+   ]
+  },
+  {
+   "name": "Lake Prile (Lago di Castiglione)",
+   "note": "Salt lagoon turning to marsh in the plain of Grosseto, east of Castiglione della Pescaia; filled with river silt from 1828. The outline is a rough estimate, no measured medieval extent was found.",
+   "polygon": [
+    [
+     10.9,
+     42.78
+    ],
+    [
+     10.98,
+     42.82
+    ],
+    [
+     11.05,
+     42.8
+    ],
+    [
+     11.04,
+     42.76
+    ],
+    [
+     10.95,
+     42.75
     ]
    ]
   }
@@ -2791,5 +2879,35 @@
     ]
    ]
   }
- ]
+ ],
+ "reservoirs": {
+  "note": "Lakes of today's maps that are reservoirs behind dams of the 20th century and did not exist in 1356. Natural Earth marks them, and regulated natural lakes (Mjøsa, Ilmen, Oulujärvi …), as class Reservoir; only the man-made ones are listed here, and unnamed ones of that class are dropped as well.",
+  "names": [
+   "Kiev Reservoir",
+   "Kakhovka Reservoir",
+   "Kremenchuk Reservoir",
+   "Rybinsk Reservoir",
+   "Kostroma Reservoir",
+   "Uglich Reservoir",
+   "Ivankovo Reservoir",
+   "Gorky Reservoir",
+   "Tsimlyansk Reservoir",
+   "Kauno marios",
+   "Ataturk Barajt",
+   "Keban Baraji",
+   "Saksak Dagi",
+   "Buhayrat al-Assad",
+   "Embalse de Entrepeas",
+   "Embalse de Buendía",
+   "Embalse de García de Sola",
+   "Embalse de Orellana",
+   "Embalse de Cala",
+   "Porttipahta Reservoir",
+   "Lokan Tekojarvi",
+   "Serebryanskoe Reservoir",
+   "Veselovskoe Reservoir",
+   "Krasnodarsk Reservoir",
+   "Sheksinskoe Reservoir"
+  ]
+ }
 }
