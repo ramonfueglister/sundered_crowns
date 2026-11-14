@@ -4,6 +4,8 @@
 
 > Jeder Ort bringt einmal im Jahr eine Getreideernte ein. Ihre Höhe hängt von der Landfläche des Ortes, der Ertragskraft seines Bodens und der Zahl der Menschen ab, die das Land bearbeiten.
 
+**Ergänzt durch [Bestellte Fläche](bestellte-flaeche.md):** Die Ernte rechnet inzwischen mit dem Acker, den ein Ort bestellt, statt mit seinem ganzen Land. Diese Seite beschreibt die Getreideernte so, wie sie für sich allein gebaut wurde; ihre Tabellen zeigen diesen Stand. Die heutigen Zahlen stehen auf der Seite zur bestellten Fläche.
+
 ## Das Feature
 
 Einmal im Jahr, am 1. Januar, wird für jeden Ort die Ernte berechnet. Dazu gehört nur die Ernte selbst. Verbrauch und Hunger, Bevölkerungswachstum, Preise, Handel, Steuern, Städte, Wetterschwankungen und alle anderen Güter sind eigene Features und kommen einzeln danach.
@@ -137,7 +139,7 @@ Die Funktion hat konstante Skalenerträge. Der [Massstab 1 : 100](../welt.md#mas
 
 ## Grenzen
 
-- **Alles Land gilt als bestellt.** Siehe oben. Eine Rekonstruktion der damals bestellten Fläche wäre die naheliegende Quelle; geprüft ist noch keine.
+- **Alles Land gilt als bestellt.** Siehe oben. Das Feature [Bestellte Fläche](bestellte-flaeche.md) ersetzt diese Annahme.
 - **Bewässerung fehlt.** Der Index rechnet mit Regenfeldbau. Galor und Özak lassen Bewässerung weg, weil die verfügbaren Schätzungen die Anlagen des späten 20. Jahrhunderts abbilden (2015, S. 4, Fussnote 1). Das Niltal und Mesopotamien kommen deshalb zu schlecht weg und brauchen eine eigene Quelle.
 - **Heutiges Klima.** Der Index beruht auf den Agrarklimadaten der FAO. Das Klima des 14. Jahrhunderts ist darin nicht abgebildet.
 - **England steht für alle.** Der Anteil von 74 % in der Landwirtschaft stammt aus England und Frankreich um 1500. Solange er überall gleich ist, kürzt er sich aus der Rechnung heraus. α = 0,70 ist für die Gesamtwirtschaft Englands geschätzt, nicht für die Landwirtschaft allein. Beide Werte gelten auf der ganzen Karte. Allens Originaltabelle ist nur über das Zitat bei Crafts und Harley belegt.

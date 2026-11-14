@@ -1,10 +1,13 @@
 // "Model against history" for the grain harvest and the cultivated land (docs/ECONOMY_DESIGN.md, features 1 and 2).
 // Prints Markdown tables: England through time, England on the map at the start, the regions of the map at the
-// start, the arable of groups of regions against HYDE 3.2, and some places.
+// start, the arable of groups of regions against HYDE 3.2, of every region against the HYDE 3.2.1 grid, and some
+// places.
 // Nothing here feeds back into the model: the tables are the check, deviations stay as they are.
 //   npx tsx tools/sim/harvest_check.ts [startYear]
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
 import { hectares, landLimitHa, HECTARES_PER_ACRE } from '../../src/sim/systems/cultivation';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { newWorldState, loadLand } from './load';
 import { englandAt } from './calibration';
 
@@ -23,6 +26,11 @@ const HYDE: [string, number | null, string[]][] = [
   ['Americas (North 1.1 + Latin 19.5)', 20.6, ['americas']],
   ['Former Soviet Union (the map covers its west only; HYDE: 12.0 for all of it)', null, ['rus', 'baltic', 'steppe', 'caucasus']],
 ];
+/** Cropland (km²) and people of the HYDE 3.2.1 grid summed over the regions of the map, written by
+ *  tools/geo/check_hyde.py where the grids could be downloaded (file names, sizes and checksums are in the file). */
+interface HydeGrid { dataset: string; cropland_km2: Record<string, Record<string, number>>; people: Record<string, Record<string, number>> }
+const GRID: HydeGrid = JSON.parse(readFileSync(fileURLToPath(new URL('../geo/data/hyde/hyde_regions.json', import.meta.url)), 'utf8'));
+const GRID_YEARS = ['1300', '1400'];
 const PLACES = ['Kraków', 'Moscow', 'Norwich', 'Novgorod', 'London', 'Ghent', 'Florence', 'Paris', 'Cairo'];
 
 const year = Number(process.argv[2] ?? 1356);
@@ -78,12 +86,27 @@ for (const i of everywhere) if (pop[i] > 0) { peopled++; if (!(s.place.harvest[i
 console.log(`\nplaces at the land limit: ${all.atLimit} of ${w.L}; places with people: ${peopled}, of which without a harvest: ${noHarvest}`);
 
 console.log('\n### Arable against HYDE 3.2 (Klein Goldewijk et al. 2017, table 2, cropland in 1400 CE, million hectares)\n');
-console.log(`| Group of regions | People ${year} (m) | Model ${year} | HYDE 3.2, 1400 | Model / HYDE |`);
-console.log('|---|---|---|---|---|');
+console.log(`| Group of regions | People ${year} (m) | Model ${year} | HYDE 3.2, 1400 | Model / HYDE | HYDE 3.2.1 grid on the map, 1400 |`);
+console.log('|---|---|---|---|---|---|');
 for (const [name, hyde, regions] of HYDE) {
   const r = sum(regions.flatMap((g) => byRegion.get(g) ?? []));
-  console.log(`| ${name} | ${m2(r.people)} | ${(r.arable / 1e6).toFixed(1)} | ${hyde === null ? '' : hyde.toFixed(1)} | ${hyde === null ? 'not comparable' : (r.arable / 1e6 / hyde).toFixed(2)} |`);
+  const grid = regions.reduce((a, g) => a + GRID.cropland_km2['1400'][g], 0) / 1e4;
+  console.log(`| ${name} | ${m2(r.people)} | ${(r.arable / 1e6).toFixed(1)} | ${hyde === null ? '' : hyde.toFixed(1)} | ${hyde === null ? 'not comparable' : (r.arable / 1e6 / hyde).toFixed(2)} | ${grid.toFixed(1)} |`);
 }
+
+console.log(`\n### Arable of every region against the grid of ${GRID.dataset}\n`);
+console.log('Cropland and people of the grid summed over the land of each region of the map (tools/geo/check_hyde.py). Arable in million hectares, people in millions.\n');
+console.log(`| Region | People, map ${year} | People, HYDE 1300 | HYDE 1400 | Arable, model ${year} | HYDE 1300 | HYDE 1400 | Model / HYDE 1300 | Model / HYDE 1400 | ha per head, model | HYDE 1300 | HYDE 1400 |`);
+console.log('|---|---|---|---|---|---|---|---|---|---|---|---|');
+const gridRow = (name: string, key: string, r: ReturnType<typeof sum>) => {
+  const ha = GRID_YEARS.map((y) => GRID.cropland_km2[y][key] * 100), people = GRID_YEARS.map((y) => GRID.people[y][key]);
+  return `| ${name} | ${m2(r.people)} | ${m2(people[0])} | ${m2(people[1])} | ${m2(r.arable)} | ${m2(ha[0])} | ${m2(ha[1])} | ${(r.arable / ha[0]).toFixed(2)} | ${(r.arable / ha[1]).toFixed(2)} | ${(r.arable / r.people).toFixed(2)} | ${(ha[0] / people[0]).toFixed(2)} | ${(ha[1] / people[1]).toFixed(2)} |`;
+};
+for (const { region, r } of rows) console.log(gridRow(region, region, r));
+console.log(gridRow('**whole map**', 'whole_map', all));
+console.log(gridRow('England (162 places)', 'england_places', e));
+const acres = (y: string) => m2(GRID.cropland_km2[y].england_places * 100 / HECTARES_PER_ACRE);
+console.log(`\nEngland in the grid: ${acres('1300')} m acres in 1300 and ${acres('1400')} m acres in 1400; Broadberry et al. 2010, table 1: 11.52 m acres in 1300, 8.73 m in 1380, 7.76 m in 1420.`);
 
 console.log(`\n### Places at the start of ${year}\n`);
 console.log('| Place | People | Arable (ha) | Share of the land | ha per head | kcal per head and day | |');

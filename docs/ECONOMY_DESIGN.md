@@ -25,7 +25,7 @@ players and the AI of realms without a player act through the same commands.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
-| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 ("Ja, so bauen") and built as proposed; not yet on the world server |
+| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 
 ## 1. Grain harvest per place
 
@@ -150,8 +150,8 @@ Regions of the map with the start population of 1356. The benchmark is a floor o
 - A place with a large town cannot feed itself (Paris: 394 kcal per head and day). Trade is not part of the feature.
 
 **Known limits.**
-- All land of a place counts as worked (see above). A reconstruction of cultivated land would be the obvious source;
-  none has been checked yet.
+- All land of a place counts as worked (see above). Feature 2 replaces this by the cultivated land; the tables of
+  this section show feature 1 on its own, as it was built.
 - Irrigation is not in the index (Galor and Özak 2015, p. 4, fn. 1): the Nile valley and Mesopotamia are understated and
   need their own source.
 - The index uses the FAO's present-day agro-climatic data, not the climate of the fourteenth century. The data set
@@ -193,12 +193,13 @@ Regions of the map with the start population of 1356. The benchmark is a floor o
   counted net of seed)
 - Natural Earth. Admin 0 – Map Units, 1:10m. Public domain. https://www.naturalearthdata.com/
 
-## 2. Cultivated land per place (proposal, not agreed, nothing built)
+## 2. Cultivated land per place
 
-Proposed on 14 November 2026 after Ramon chose "Bestellte Fläche vorschlagen". Proposal for Ramon (German):
-https://claude.ai/artifact/UumAzzpLcdRmHcSUB5kRTz. Player wiki: docs/wiki/wirtschaft/bestellte-flaeche.md (Entwurf).
-All numbers below were computed on the game's map outside the game, with an exploratory script that is not in the
-repository. If the feature is agreed, `npm run harvest:check` has to reproduce the tables from game code.
+Proposed on 14 November 2026 after Ramon chose "Bestellte Fläche vorschlagen"; agreed by him the same day ("Ja, so
+bauen" on the decision card, 22:33 UTC) and built exactly as proposed. Proposal and result for Ramon (German):
+https://claude.ai/artifact/UumAzzpLcdRmHcSUB5kRTz. Player wiki: docs/wiki/wirtschaft/bestellte-flaeche.md.
+All tables below are printed by `npm run harvest:check` from game code. They reproduce the numbers of the proposal,
+which had been computed outside the game (one ratio rounds differently: Europe against HYDE 1.28, not 1.27).
 
 **What it changes.** Feature 1 counts all land of a place as worked. Feature 2 replaces that by the land the people
 of the place cultivate: X_i = min(c · P_i, s · F_i, F⁺_i), best soil first. The harvest equation of feature 1 stays;
@@ -227,7 +228,25 @@ on the map (1356) are scaled by the same factor to the population of the decade.
 head was 2.44 acres in 1300, 3.70 in 1380, 3.82 in 1420 and 3.96 in 1450; c is higher (4.35) because 57 of the 162
 English places are still at the land limit in 1380 on the map.
 
-**Model against history (preview, nothing tuned beyond the calibration).** England through time, arable in million
+The two values are not typed in: tools/sim/calibrate_cultivation.ts (part of `npm run land`) solves for them on the
+map with the game's own functions and writes public/data/cultivation.json (land limit 0.3923, arable per head
+1.7586 ha, T_E = 3.603 × 10¹⁰: the sum of yield × hectares over the cultivated land of England's places in 1300/09).
+tests/cultivation.test.ts fails if the stored values no longer follow from the map.
+
+**Data.** tools/geo/build_land.py adds a yield curve per place to public/data/land.json: the land of the place sorted
+by yield, best first, as the mean yield between fixed shares of its land (33 edges from 0.1 % to 100 %, every 2 %
+between 10 % and 40 %) and the share of the land with a yield above zero. The sum of yield × area is exact at every
+edge and linear in between. 72.81 % of the map's land has a yield above zero.
+
+**Implementation.** src/sim/systems/cultivation.ts holds the rule and the system; it runs on the first day of each
+year before the harvest and writes the cultivated land into a new column of the places (state version 3; older worlds
+are brought up to date when loaded, src/sim/upgrade.ts). src/sim/systems/harvest.ts takes the soil of the cultivated
+land instead of the mean yield times all land. The place panel shows the cultivated land in hectares and per cent of
+the land, whether the place is at the land limit, and the mean yield of the cultivated soil.
+tests/cultivation.test.ts and tests/harvest.test.ts cover rule, curve, calibration, system, upgrade and view. A
+world created by the build of feature 1 was resumed by this build and its command log replayed to the same hash.
+
+**Model against history (npm run harvest:check; nothing tuned beyond the calibration).** England through time, arable in million
 acres, harvest in kcal per head and day from arable farming (Broadberry et al. 2010, tables 1 and 19):
 
 | Decade | People (m) | Arable, history | Arable, model | Deviation | Harvest, history | Feature 1 | Deviation | Feature 2 | Deviation |
@@ -255,17 +274,79 @@ table is in the wiki page. No documented harvest per head was found for regions 
 Arable against HYDE 3.2 (Klein Goldewijk et al. 2017, table 2, 1400 CE, million ha; the paper does not define its
 regions, the mapping of the map's regions is ours, and HYDE uses its own population):
 
-| Group | Model 1356 | HYDE 3.2, 1400 | Model / HYDE |
-|---|---|---|---|
-| Europe without the former Soviet Union | 64.0 | 50.2 | 1.27 |
-| North Africa and Middle East | 24.8 | 18.0 | 1.38 |
-| Tropical Africa | 86.6 | 27.1 | 3.2 |
-| Americas | 52.8 | 20.6 | 2.6 |
-| Former Soviet Union (the map covers the west only) | 10.0 | 12.0 | not comparable |
+| Group | Model 1356 | HYDE 3.2, 1400 | Model / HYDE | HYDE 3.2.1 grid on the map, 1400 |
+|---|---|---|---|---|
+| Europe without the former Soviet Union | 64.0 | 50.2 | 1.28 | 50.5 |
+| North Africa and Middle East | 24.8 | 18.0 | 1.38 | 22.6 |
+| Tropical Africa | 86.6 | 27.1 | 3.20 | 24.5 |
+| Americas | 52.8 | 20.6 | 2.56 | 16.0 |
+| Former Soviet Union (the map covers the west only) | 10.0 | 12.0 | not comparable | 10.0 |
 
-In Europe the model is 27 % above HYDE, of the order of HYDE's own range; Kaplan et al. (2017) find that HYDE 3.1
+In Europe the model is 28 % above HYDE, of the order of HYDE's own range; Kaplan et al. (2017) find that HYDE 3.1
 shows roughly 25 % less open land than pollen-based reconstructions in preindustrial Europe. Outside Europe the model
 is 2.6 to 3.2 times HYDE: England's arable per head does not transfer to Africa and the Americas.
+
+**Every region against the HYDE grid** (the check promised in the proposal, done after the build). The grids of
+HYDE 3.2.1 (baseline) for 1300 and 1400, cropland in km² and people per 5 arc-minute cell, were fetched on Ramon's
+Mac on 14 November 2026 from the DANS archive and summed over the land of each region of the map
+(tools/geo/check_hyde.py; the sums, with file names, sizes and checksums, are in
+tools/geo/data/hyde/hyde_regions.json; the grids themselves stay out of the repository). HYDE 3.3 could not be
+fetched: Utrecht's data server answers automated requests with a bot check, on the Mac as well. Summed over the
+map's European regions the grid gives 50.5 million hectares in 1400 against 50.2 in the printed table 2, so overlay
+and assignment of regions agree with the paper. Arable in million hectares, people in millions:
+
+| Region | People, map 1356 | People, HYDE 1300 | HYDE 1400 | Arable, model 1356 | HYDE 1300 | HYDE 1400 | Model / HYDE 1300 | Model / HYDE 1400 | ha per head, model | HYDE 1300 | HYDE 1400 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| americas | 31.32 | 39.32 | 42.92 | 52.83 | 14.92 | 15.98 | 3.54 | 3.31 | 1.69 | 0.38 | 0.37 |
+| east_africa | 25.10 | 13.28 | 14.90 | 43.71 | 6.34 | 7.08 | 6.89 | 6.17 | 1.74 | 0.48 | 0.48 |
+| west_africa | 16.46 | 15.86 | 18.00 | 28.91 | 9.01 | 10.21 | 3.21 | 2.83 | 1.76 | 0.57 | 0.57 |
+| france | 10.80 | 13.53 | 9.37 | 14.95 | 15.59 | 10.41 | 0.96 | 1.44 | 1.39 | 1.15 | 1.11 |
+| sahel | 8.20 | 8.81 | 9.84 | 14.02 | 6.41 | 7.18 | 2.19 | 1.95 | 1.71 | 0.73 | 0.73 |
+| germany | 7.24 | 13.75 | 9.87 | 11.96 | 16.97 | 9.83 | 0.70 | 1.22 | 1.65 | 1.23 | 1.00 |
+| italy | 5.62 | 12.19 | 7.81 | 7.23 | 11.54 | 7.11 | 0.63 | 1.02 | 1.29 | 0.95 | 0.91 |
+| persia | 5.25 | 7.97 | 8.62 | 8.14 | 5.75 | 5.96 | 1.42 | 1.36 | 1.55 | 0.72 | 0.69 |
+| egypt | 4.98 | 7.75 | 7.37 | 3.47 | 3.65 | 3.58 | 0.95 | 0.97 | 0.70 | 0.47 | 0.48 |
+| iberia | 4.40 | 8.69 | 6.38 | 7.36 | 5.56 | 6.24 | 1.32 | 1.18 | 1.67 | 0.64 | 0.98 |
+| maghreb | 3.62 | 4.74 | 4.21 | 5.22 | 4.32 | 3.82 | 1.21 | 1.37 | 1.44 | 0.91 | 0.91 |
+| british_isles | 3.48 | 7.13 | 3.50 | 5.26 | 5.55 | 2.54 | 0.95 | 2.08 | 1.51 | 0.78 | 0.72 |
+| low_countries | 2.65 | 3.17 | 2.18 | 2.76 | 2.03 | 1.26 | 1.36 | 2.19 | 1.04 | 0.64 | 0.58 |
+| anatolia | 2.44 | 5.77 | 4.65 | 4.21 | 7.57 | 5.95 | 0.56 | 0.71 | 1.73 | 1.31 | 1.28 |
+| rus | 2.14 | 3.74 | 3.74 | 3.72 | 2.45 | 2.47 | 1.52 | 1.51 | 1.74 | 0.65 | 0.66 |
+| scandinavia | 1.84 | 2.35 | 1.25 | 2.96 | 3.57 | 1.98 | 0.83 | 1.49 | 1.61 | 1.52 | 1.59 |
+| balkans | 1.77 | 3.79 | 3.08 | 3.11 | 4.36 | 3.41 | 0.71 | 0.91 | 1.76 | 1.15 | 1.11 |
+| steppe | 1.74 | 2.87 | 2.92 | 3.04 | 3.69 | 3.71 | 0.82 | 0.82 | 1.75 | 1.29 | 1.27 |
+| arabia | 1.61 | 4.88 | 4.48 | 0.21 | 0.11 | 0.08 | 1.93 | 2.66 | 0.13 | 0.02 | 0.02 |
+| hungary | 1.60 | 3.52 | 2.93 | 2.81 | 3.66 | 2.93 | 0.77 | 0.96 | 1.76 | 1.04 | 1.00 |
+| greece | 1.31 | 1.98 | 1.48 | 1.87 | 1.06 | 0.78 | 1.76 | 2.39 | 1.43 | 0.54 | 0.53 |
+| mesopotamia | 1.28 | 1.52 | 1.47 | 2.05 | 1.41 | 1.33 | 1.45 | 1.53 | 1.60 | 0.93 | 0.91 |
+| bohemia | 1.09 | 2.74 | 2.35 | 1.83 | 2.08 | 1.65 | 0.88 | 1.11 | 1.67 | 0.76 | 0.70 |
+| poland | 1.08 | 2.64 | 2.64 | 1.90 | 2.37 | 2.32 | 0.80 | 0.82 | 1.76 | 0.90 | 0.88 |
+| levant | 0.96 | 2.34 | 1.87 | 1.45 | 2.41 | 1.91 | 0.60 | 0.76 | 1.51 | 1.03 | 1.02 |
+| baltic | 0.93 | 1.13 | 1.14 | 1.63 | 1.85 | 1.79 | 0.88 | 0.91 | 1.76 | 1.64 | 1.57 |
+| caucasus | 0.89 | 1.88 | 1.56 | 1.57 | 2.47 | 2.03 | 0.64 | 0.77 | 1.76 | 1.31 | 1.30 |
+| atlantic_islands | 0.03 | 0.19 | 0.14 | 0.03 | 0.01 | 0.01 | 4.28 | 3.63 | 1.09 | 0.04 | 0.07 |
+| **whole map** | 149.81 | 197.56 | 180.66 | 238.22 | 146.68 | 123.56 | 1.62 | 1.93 | 1.59 | 0.74 | 0.68 |
+| England (162 places) | 2.58 | 4.72 | 2.13 | 3.70 | 4.09 | 1.75 | 0.90 | 2.11 | 1.43 | 0.87 | 0.82 |
+
+- Area. In Europe the model's arable of 1356 lies between HYDE's values for 1300 and 1400 in France, Germany,
+  Italy, the British Isles, Scandinavia and Bohemia, the regions where HYDE's population falls strongly between the
+  two years. It is above both in the Low Countries (1.36 and 2.19 times), Greece (1.76 and 2.39) and Iberia (1.32 and
+  1.18) and below both in Anatolia, the Balkans, Hungary, Poland, the Baltic, the Levant, the Caucasus and the
+  steppe (0.56 to 0.96).
+- Per head. The model cultivates more land per head than HYDE in every region: 1.0 to 2.7 times HYDE's value of
+  1400 in Europe (the Atlantic islands aside), 2.3 to 4.5 times in Africa south of the Sahara and the Americas. The areas in Europe are closer than that only
+  because the map of 1356 holds fewer people than HYDE (42.9 m in the European group against 53.0 m in HYDE in 1400
+  and 75.7 m in 1300).
+- Where the difference comes from. For England's places HYDE has 4.72 m people and 10.12 m acres of cropland in
+  1300 (Broadberry et al.: 11.52 m acres of arable, 14 % more) but only 2.13 m people and 4.33 m acres in 1400
+  (Broadberry et al.: 8.73 m in 1380, 7.76 m in 1420). HYDE lets cropland fall almost in step with population
+  (0.87 and 0.82 ha per head); Broadberry et al. find 2.44 acres per head in 1300 and 3.70 in 1380. The model is
+  calibrated on Broadberry et al., so its arable per head on free land (1.76 ha) is above HYDE's value for every
+  European region (0.53 to 1.59 ha per head in 1400). The two sources contradict each other for England after the Black Death; nothing was changed in the model
+  because of it.
+- The people of the map are not HYDE's: 149.8 m on the map in 1356 against 197.6 m (1300) and 180.7 m (1400) in
+  the same window, with large differences by region (East Africa 25.1 m against 14.9 m, Germany 7.2 m against
+  9.9 m, Arabia 1.6 m against 4.5 m). The start population is not part of this feature.
 
 **Known limits.**
 - Both numbers come from England and are applied to the whole map; no source says they hold for Flanders, the Po
@@ -288,7 +369,8 @@ is 2.6 to 3.2 times HYDE: England's arable per head does not transfer to Africa 
 - Land that is not arable has no use yet (no pasture, woodland, livestock).
 - Not opened: the HYDE 3.3 grids and country values (the data server blocks automated access), the per-capita
   cropland by country (Klein Goldewijk et al. 2017, Journal of Land Use Science), the grids of Kaplan et al. 2009 and
-  Pongratz et al. 2008. The comparison uses the printed table 2 of HYDE 3.2 only.
+  Pongratz et al. 2008. The comparison uses the printed table 2 of HYDE 3.2 and the grids of HYDE 3.2.1 for 1300 and
+  1400 only.
 
 **Sources** (all opened on 14 November 2026)
 - Broadberry et al. (2010), as above: table 1 (arable land use), table 19, method pp. 5–6.
@@ -302,4 +384,7 @@ is 2.6 to 3.2 times HYDE: England's arable per head does not transfer to Africa 
   Quaternary Science Reviews 28, 3016–3034. https://doi.org/10.1016/j.quascirev.2009.09.028
 - Kaplan, J. O. et al. (2017). Constraining the deforestation history of Europe. Land 6(4), 91.
   https://doi.org/10.3390/land6040091
+- Klein Goldewijk, K. (2017). Anthropogenic land-use estimates for the Holocene; HYDE 3.2 (data set, release
+  3.2.1). DANS. https://doi.org/10.17026/dans-25g-gez3 (baseline scenario; cropland and population count for 1300
+  and 1400; the archive page states CC0 1.0, the readme of the data set CC BY 3.0)
 - Klein Goldewijk, K. (2023). HYDE 3.3. Utrecht University. https://doi.org/10.24416/UU01-67UHB4 (catalogue page only)
