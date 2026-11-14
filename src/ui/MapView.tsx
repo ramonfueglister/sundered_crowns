@@ -13,6 +13,7 @@ import type { MapPlace } from '../render/overlay';
 export const hoverPlace = signal(-1);
 export const selectedPlace = signal(-1);
 export const mapError = signal<string | null>(null);
+if (import.meta.env.DEV) (window as any).__ui = { selectedPlace }; // for browser tests
 
 const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 
