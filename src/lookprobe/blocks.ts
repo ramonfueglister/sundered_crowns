@@ -71,15 +71,15 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     }
     return;
   }
-  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.2 : 1.2;
+  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.4 : 1.2;
   for (let row = 0.6; row < w - 0.3; row += pitchX) for (let k = 0; k * pitchZ < d - 0.5; k++) {
     const x = x0 + row, z = z0 + k * pitchZ + 0.6, seed = Math.round(row * 10), lot = hash2(k, seed, 51);
     if (isWet(g, x, z) || lot < 0.04) continue;
     const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
     if (hedges) {
       // a row is a line of bushes of uneven height, not a clipped hedge
-      const h = 1.45 + 0.65 * lot;
-      b.box(x - 0.42, y, z - 0.46, x + 0.42, y + h, z + 0.46, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
+      const h = 1.55 + 0.45 * lot;
+      b.box(x - 0.46, y, z - 0.4, x + 0.46, y + h, z + 0.4, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
       if (r.chance(0.7)) b.box(x - 0.3, y + h, z - 0.32, x + 0.3, y + h + 0.32, z + 0.32, VINE_SIDE, { top: c, away: VINE_GLOW });
     } else {
       const h = 1.7 + 0.6 * lot;

@@ -304,7 +304,7 @@ export function basilica(): Batch {
  * pink wall with a few tall windows, slim battlements, a court inside.
  */
 export function palace(): Batch {
-  const b = new Batch(), x0 = -4.5, x1 = 4.5, z0 = -12, z1 = 12, top = 9.4, dark = rgb(0x3e3c44), wing = 3.0, roof = rgb(0xb4b6c4);
+  const b = new Batch(), x0 = -4.5, x1 = 4.5, z0 = -12, z1 = 12, top = 9.4, dark = rgb(0x3e3c44), shadow = rgb(0x6c6870), wing = 3.0, roof = rgb(0xb4b6c4);
   b.box(x0, -1, z0, x1, top, z0 + wing, PINK, { foot: 0.9, top: roof });
   b.box(x0, -1, z1 - wing, x1, top, z1, PINK, { foot: 0.9, top: roof });
   b.box(x0, -1, z0 + wing, x0 + wing, top, z1 - wing, PINK, { foot: 0.9, top: roof });
@@ -313,9 +313,9 @@ export function palace(): Batch {
   for (const s of SIDES) {
     const w = wallOf(x0, z0, x1, z1, s);
     pane(b, w, 0, 0, w.len, 5.2, MARBLE, 0.02);
-    for (const t of spread(w, Math.round(w.len / 1.9), 0.15)) arch(b, w, t, 0, 0.76, 2.2, dark, 0.05);
+    for (const t of spread(w, Math.round(w.len / 1.9), 0.15)) arch(b, w, t, 0, 0.76, 2.2, shadow, 0.05);
     pane(b, w, 0, 2.72, w.len, 2.98, shade(MARBLE, 0.86), 0.06);
-    for (const t of spread(w, Math.round(w.len / 0.95), 0.12)) arch(b, w, t, 3.15, 0.24, 4.55, dark, 0.05);
+    for (const t of spread(w, Math.round(w.len / 0.95), 0.12)) arch(b, w, t, 3.15, 0.24, 4.55, shadow, 0.05);
     pane(b, w, 0, 5.0, w.len, 5.26, shade(MARBLE, 0.86), 0.06);
     // the pink wall: a pattern of paler and deeper diamonds, pointed windows, a balcony in the middle of the long
     // fronts, a row of putlog holes under the battlements
