@@ -221,6 +221,14 @@ von der Entfernung. Es gibt keine Nähte zwischen Detailstufen im Bild.
 
 ### 6.4 Licht, Wasser, Look
 
+**Leitbild: Diorama** (Ramon, 14. November 2026). Die Karte soll wirken wie eine liebevoll gebaute Miniatur auf
+einem Tisch. Daran wird jede Entscheidung zum Look gemessen:
+- Parallelprojektion und Tilt-Shift: scharfe Mitte, weiche Unschärfe oben und unten.
+- Warmes, tiefes Seitenlicht mit weichen, langen Schatten; kräftige, leicht gesättigte Farben.
+- Sichtbare Blockkanten und klare Formen statt feiner Texturen; Figuren und Häuser eher gedrungen und gut lesbar.
+- Kleine, ruhige Bewegungen: Rauch, Segel, Wasser, Herden, Leute auf dem Markt.
+- Geländeschnitt am Kartenrand und an Gräben: man sieht die Erdschichten wie bei einem Modell.
+
 - **Sonne** warm von der Seite, **eine** Schattenkarte, die genau auf den Bildausschnitt passt. Kaskaden braucht es
   dank Parallelprojektion nicht. Sie wird nur neu gezeichnet, wenn sich Kamera, Gelände oder Objekte ändern.
   Sundial [16] oder Kaskaden [15] sind Ausweichlösungen.
