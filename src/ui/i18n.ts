@@ -39,6 +39,13 @@ const S = {
   culture: ['Culture', 'Kultur'],
   faith: ['Faith', 'Glaube'],
   population: ['Population', 'Bevölkerung'],
+  harvest: ['Grain harvest', 'Getreideernte'],
+  harvest_year: ['Food in the year', 'Nahrung im Jahr'],
+  harvest_head: ['Per head and day', 'Pro Kopf und Tag'],
+  harvest_land: ['Land', 'Landfläche'],
+  harvest_yield: ['Yield of the soil', 'Ertragskraft des Bodens'],
+  harvest_farmers: ['In agriculture', 'In der Landwirtschaft'],
+  no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
 } as const satisfies Record<string, readonly [string, string]>;
@@ -64,3 +71,10 @@ const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.sl
 export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
 export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
+/** A large amount of kilocalories in millions or billions. */
+export function kcalText(v: number): string {
+  const de = lang.value === 'de', f = (x: number) => x.toLocaleString(de ? 'de-DE' : 'en-GB', { maximumSignificantDigits: 3 });
+  if (v >= 1e9) return `${f(v / 1e9)} ${de ? 'Mrd.' : 'bn'} kcal`;
+  if (v >= 1e6) return `${f(v / 1e6)} ${de ? 'Mio.' : 'm'} kcal`;
+  return `${num(v)} kcal`;
+}

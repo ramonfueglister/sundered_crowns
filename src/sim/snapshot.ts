@@ -52,7 +52,8 @@ export function decodeState(bytes: Uint8Array): WorldState {
     }
     return v;
   }) as WorldState;
-  if (s.v !== STATE_VERSION) throw new Error(`snapshot version ${s.v}, this build reads ${STATE_VERSION}`);
+  // an older state is returned as it is; upgradeState (src/sim/upgrade.ts) brings it up to date
+  if (!(s.v >= 1 && s.v <= STATE_VERSION)) throw new Error(`snapshot version ${s.v}, this build reads up to ${STATE_VERSION}`);
   return s;
 }
 

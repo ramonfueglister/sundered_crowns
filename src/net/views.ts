@@ -4,6 +4,7 @@ import type { World } from '../sim/world';
 import type { PlaceDetail, RealmInfo } from './protocol';
 import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
+import { farmers, hectares, kcalPerHeadDay } from '../sim/systems/harvest';
 
 export function realmInfos(s: WorldState, rulerName: (uid: string) => string | null): RealmInfo[] {
   const count = new Int32Array(s.realm.size);
@@ -26,5 +27,9 @@ export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | n
   return {
     id: i, name: w.names[i], nameDe: w.namesDe[i], owner: s.place.owner[i], terrain: TERRAINS[w.terrain[i]], resource: RESOURCES[w.resource[i]],
     culture: cultureLabel(ALL_CULTURES[s.place.culture[i]] ?? 'unknown'), faith: f ? f.name : { en: '?', de: '?' }, pop: Math.round(s.place.pop[i]),
+    harvest: {
+      kcal: s.place.harvest[i], perHeadDay: kcalPerHeadDay(s.place.harvest[i], s.place.pop[i]),
+      landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: hectares(w, i), farmers: farmers(s.place.pop[i]),
+    },
   };
 }

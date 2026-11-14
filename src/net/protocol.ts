@@ -14,6 +14,14 @@ export interface RealmInfo {
 }
 export interface PlaceDetail {
   id: number; name: string; nameDe: string; owner: number; terrain: string; resource: string; culture: I18n; faith: I18n; pop: number;
+  /** the last grain harvest and what it was computed from (absent when the server is older than the client) */
+  harvest?: HarvestDetail;
+}
+export interface HarvestDetail {
+  /** kilocalories of food from arable farming in the year, and per head and day */
+  kcal: number; perHeadDay: number;
+  /** land productivity (index of potential calories per hectare and year; null: no data), land in hectares, people in agriculture */
+  landYield: number | null; hectares: number; farmers: number;
 }
 export interface Me { uid: string; name: string; admin: boolean; realm: number }
 

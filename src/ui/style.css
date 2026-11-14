@@ -40,7 +40,7 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .side-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 1.15em; margin-bottom: 8px; }
 .facts { width: 100%; border-collapse: collapse; }
 .facts th { text-align: left; font-weight: normal; color: var(--muted); padding: 3px 8px 3px 0; }
-.facts td { text-align: right; padding: 3px 0; }
-.realm-box { margin-top: 12px; border-top: 1px solid #c9a24a55; padding-top: 8px; }
-.realm-box h3 { margin: 0 0 6px; color: var(--gilt); font-size: 1.05em; }
-.realm-box p { margin: 4px 0; }
+.facts td { text-align: right; padding: 3px 0; white-space: nowrap; }
+.section { margin-top: 12px; border-top: 1px solid #c9a24a55; padding-top: 8px; }
+.section h3 { margin: 0 0 6px; color: var(--gilt); font-size: 1.05em; }
+.section p { margin: 4px 0; }

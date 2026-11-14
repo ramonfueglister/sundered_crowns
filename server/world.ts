@@ -13,6 +13,7 @@ import { applyCommand, type Command, type CmdResult } from '../src/sim/commands'
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
+import { upgradeState } from '../src/sim/upgrade';
 import { loadWorld, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
@@ -187,7 +188,7 @@ export class WorldCore {
       this.files.writeSnapshot(this.s);
       this.log(`created at day 0, hash ${hashState(this.s)}`);
     } else {
-      this.s = this.files.readSnapshot(latest.day);
+      this.s = upgradeState(this.files.readSnapshot(latest.day), this.w);
       const lines = this.files.readLines(latest.day);
       replayLines(this.s, this.w, lines);
       this.files.openSegment(latest.day);
@@ -256,7 +257,7 @@ export class WorldCore {
   /** Replays the log from a snapshot on disk and compares with the live state. */
   verifyReplay(fromDay?: number): { hash: string; live: string; from: number; lines: number } {
     const from = fromDay ?? this.files.snapshots()[0] ?? 0;
-    const s = this.files.readSnapshot(from); const lines = this.files.readLines(from);
+    const s = upgradeState(this.files.readSnapshot(from), this.w); const lines = this.files.readLines(from);
     replayLines(s, this.w, lines);
     return { hash: hashState(s), live: hashState(this.s), from, lines: lines.length };
   }

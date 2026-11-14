@@ -11,7 +11,9 @@
     "test": "vitest run",
     "world": "tsx server/main.ts",
     "map": "cd tools/geo && python3 build_rasters.py && python3 build_locations.py && python3 build_setup.py",
-    "world:fast": "SECONDS_PER_DAY=0.05 tsx server/main.ts"
+    "world:fast": "SECONDS_PER_DAY=0.05 tsx server/main.ts",
+    "land": "cd tools/geo && python3 build_land.py",
+    "harvest:check": "tsx tools/sim/harvest_check.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

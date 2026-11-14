@@ -4,7 +4,7 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace } from './MapView';
-import { t, L, lang, setLang, terrainName, resourceName, num } from './i18n';
+import { t, L, lang, setLang, terrainName, resourceName, num, kcalText } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
 
@@ -88,7 +88,17 @@ function PlacePanel() {
       <tr><th>{t('terrain')}</th><td>{terrainName(d.terrain)}</td></tr>
       <tr><th>{t('resource')}</th><td>{resourceName(d.resource)}</td></tr>
     </tbody></table>}
-    {r && <div class="realm-box">
+    {d?.harvest && <div class="section">
+      <h3>{t('harvest')}</h3>
+      <table class="facts"><tbody>
+        <tr><th>{t('harvest_year')}</th><td>{kcalText(d.harvest.kcal)}</td></tr>
+        <tr><th>{t('harvest_head')}</th><td>{num(d.harvest.perHeadDay)} kcal</td></tr>
+        <tr><th>{t('harvest_land')}</th><td>{num(d.harvest.hectares)} ha</td></tr>
+        <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>
+        <tr><th>{t('harvest_farmers')}</th><td>{num(d.harvest.farmers)}</td></tr>
+      </tbody></table>
+    </div>}
+    {r && <div class="section">
       <h3>{L(r.name)}</h3>
       <p>{t('places')}: {num(r.places)}</p>
       <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>

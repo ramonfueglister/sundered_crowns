@@ -7,6 +7,7 @@ import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
 import { ALL_CULTURES, FAITH_INDEX } from './content/peoples';
 import type { I18n } from './i18n';
+import { bringInHarvest } from './systems/harvest';
 
 export interface SetupRealm {
   id: string; name: I18n; short?: I18n; adjective?: I18n; rank?: string; culture?: string; faith?: string; color?: string; capital_loc?: number;
@@ -47,6 +48,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   }
   const place = {
     owner: new Int16Array(L).fill(-1), culture: new Uint16Array(L), faith: new Uint8Array(L), pop: new Float32Array(L),
+    harvest: new Float64Array(L),
   };
   for (let i = 0; i < L; i++) {
     const o = setup.owner[i];
@@ -57,8 +59,10 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   }
   // a capital the realm does not hold is no capital
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
-  return {
+  const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText, ruler: new Array(realm.size).fill(''),
   };
+  bringInHarvest(s, w); // the harvest of the year before the start
+  return s;
 }
