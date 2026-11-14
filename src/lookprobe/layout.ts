@@ -85,14 +85,14 @@ export const CASTLE_AT = toXZ(0.92, 0.125);
 export const CITY: readonly (readonly P2[])[] = [
   line([[0.44, 0.5], [0.52, 0.42], [0.66, 0.38], [0.8, 0.42], [0.86, 0.48], [0.875, 0.55], [0.85, 0.62],
     [0.78, 0.66], [0.7, 0.68], [0.63, 0.71], [0.57, 0.76], [0.5, 0.8], [0.44, 0.86], [0.415, 0.8], [0.425, 0.62]]),
-  line([[0.25, 0.6], [0.3, 0.52], [0.38, 0.5], [0.435, 0.52], [0.42, 0.62], [0.4, 0.74], [0.4, 0.86], [0.37, 0.95], [0.33, 1.06], [0.2, 1.06],
-    [0.26, 0.88], [0.3, 0.78], [0.27, 0.68]]),
+  line([[0.25, 0.6], [0.3, 0.52], [0.38, 0.5], [0.435, 0.52], [0.42, 0.62], [0.4, 0.74], [0.4, 0.86], [0.37, 0.95], [0.33, 1.06], [0.28, 1.06],
+    [0.3, 0.9], [0.31, 0.78], [0.27, 0.68]]),
 ];
 export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number }[] = [
   { at: toXZ(0.145, 0.365), r: 17, houses: 16, towers: 2 },
   { at: toXZ(0.345, 0.31), r: 8, houses: 5, towers: 0 },
   { at: toXZ(0.07, 0.62), r: 10, houses: 7, towers: 0 },
-  { at: toXZ(0.2, 0.86), r: 13, houses: 10, towers: 1 },
+  { at: toXZ(0.19, 0.88), r: 11, houses: 6, towers: 1 },
   { at: toXZ(0.52, 0.27), r: 7, houses: 4, towers: 0 },
   { at: toXZ(0.86, 0.19), r: 7, houses: 5, towers: 0 },
 ];
@@ -105,7 +105,8 @@ export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
   { at: toXZ(0.365, 0.435), w: 19, d: 12, crop: 'vine' },
   { at: toXZ(0.155, 0.49), w: 18, d: 12, crop: 'vine' },
   { at: toXZ(0.205, 0.525), w: 16, d: 10, crop: 'wheat' },
-  { at: toXZ(0.07, 0.545), w: 19, d: 11, crop: 'vine' },
+  { at: toXZ(0.07, 0.545), w: 19, d: 11, crop: 'wheat' },
+  { at: toXZ(0.1, 0.69), w: 18, d: 11, crop: 'wheat' },
   { at: toXZ(0.2, 0.635), w: 16, d: 9, crop: 'wheat' },
   { at: toXZ(0.21, 0.755), w: 20, d: 14, crop: 'vine' },
   { at: toXZ(0.52, 0.335), w: 16, d: 11, crop: 'wheat' },

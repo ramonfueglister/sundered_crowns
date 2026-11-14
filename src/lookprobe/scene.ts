@@ -2,7 +2,7 @@
 // Everything is placed from fixed seeds, so every load gives the same picture.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, seeded, smooth } from './batch';
-import { borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
+import { boat, borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
 import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse, townWall } from './buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS,
@@ -177,7 +177,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       const x = gx + r.range(-1, 1), z = gz + r.range(-1, 1), roll = r.next(), i = idx(Math.floor(x), Math.floor(z));
       if (!inFrame(x, z) || g.wet[i] || g.mat[i] !== Mat.Grass || inCity(x, z)) continue;
       const [, t] = toST(x, z);
-      let density = Math.max(0.04, 0.38 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.44 * smooth(0.27, 0.12, t), 0.55 * smooth(-7, -1, mountainAt(x, z)));
+      let density = Math.max(0.04, 0.3 * smooth(0.56, 0.66, fbm2(x / 22, z / 22, 71)), 0.44 * smooth(0.27, 0.12, t) * (1 - 0.45 * smooth(0.55, 0.7, toST(x, z)[0])), 0.55 * smooth(-7, -1, mountainAt(x, z)));
       if (nearTown(x, z)) density = Math.min(density, 0.08);
       if (roll > density || roadDist(x, z) < 2 || riverDist(x, z) < 3.2 || fieldAt(x, z, 1.2)) continue;
       if (!cells(x - 1, z - 1, x + 1, z + 1, (j) => used[j] === 0 && g.wet[j] === 0)) continue;
@@ -252,6 +252,14 @@ export function buildScene(bakedSky = true): ProbeScene {
   }
 
   for (const s of SHIPS) { ship(things, s.at[0], s.at[1], s.heading); count('ship'); }
+  // rowing boats on the water before the quays
+  {
+    const r = seeded(81);
+    for (let k = 0, tries = 0; k < 22 && tries < 4000; tries++) {
+      const x = r.range(2, N - 2), z = r.range(2, N - 2), i = idx(Math.floor(x), Math.floor(z));
+      if (g.wet[i] && g.shore[i] >= 3 && g.shore[i] <= 9 && inFrame(x, z) && riverDist(x, z) > 12) { boat(things, x, z, r); count('boat'); k++; }
+    }
+  }
   things.append(bands, m.identity());
 
   const ground = buildTerrain(g, bakedSky), water = buildWater(g);

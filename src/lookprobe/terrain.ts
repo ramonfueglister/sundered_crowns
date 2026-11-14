@@ -5,7 +5,7 @@ import { type Ground, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SITES, fieldAt, idx, i
 
 const GRASS_A = rgb(0x9cb83c), GRASS_B = rgb(0xb2c040), GRASS_DRY = rgb(0xccc248), GRASS_DEEP = rgb(0x84a836);
 const ROAD = rgb(0xd6c6a2), PAVED = rgb(0xd8c0b0), PLAZA = rgb(0xe2ccbc), ISLE_STONE = rgb(0xe4dacc);
-const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0x847c82), ROCK_SIDE_WARM = rgb(0x968b86), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
+const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE = rgb(0x6c6866), ROCK_SIDE_WARM = rgb(0x7e7874), ROCK_SIDE_HIGH = rgb(0xf4f0ee);
 const SOIL_WHEAT = rgb(0xa08434), SOIL_VINE = rgb(0x6f8a30);
 const QUAY = rgb(0xd4c6ba), EARTH = rgb(0x9a8450);
 const WATER_SHALLOW = rgb(0x409ea6), WATER_DEEP = rgb(0x2b818c), RIPPLE = rgb(0xdff4f2);
@@ -31,7 +31,7 @@ export function skyShare(g: Ground, x: number, z: number, y: number): number {
 export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.08);
 
 /** how far rock at this height has turned into the pale stone of the summits (0 … 1) */
-const pale = (x: number, z: number, y: number) => smooth(7, 8.4, y - LAND_Y + (noise2(x / 5, z / 5, 9) - 0.5) * 5);
+const pale = (x: number, z: number, y: number) => smooth(7.2, 8.6, y - LAND_Y + (noise2(x / 5, z / 5, 9) - 0.5) * 5);
 
 function topColor(g: Ground, x: number, z: number, mat: number, h: number): RGB {
   if (mat === Mat.Rock) return mix(ROCK_TOP_LOW, ROCK_TOP_HIGH, pale(x, z, h));

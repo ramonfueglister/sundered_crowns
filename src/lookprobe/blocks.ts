@@ -4,8 +4,8 @@ import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
 const TRUNK = rgb(0x5a3c26);
-const LEAVES = [rgb(0x72aa38), rgb(0x80b63c), rgb(0x649c34), rgb(0x8cbe42), rgb(0x5a9232)];
-const FLANK = rgb(0x3c8440);
+const LEAVES = [rgb(0x78a846), rgb(0x86b44a), rgb(0x6a9a42), rgb(0x90ba50), rgb(0x629240)];
+const FLANK = rgb(0x3a7c4a);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
 const WHEAT = [rgb(0xffcf40), rgb(0xf6c238), rgb(0xffd850)];
 const VINE = [rgb(0xa4c040), rgb(0x90b438), rgb(0xb4c848), rgb(0x84a834)];
@@ -22,7 +22,7 @@ const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb
  */
 export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1) {
   // the sides are a cooler, deeper green than the sunlit top
-  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.55);
+  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.7);
   b.box(x - 0.22, y, z - 0.22, x + 0.22, y + 1.3 * s, z + 0.22, TRUNK, { foot: 0.75 });
   const w = 0.9 * s, y1 = y + 0.9 * s, y2 = y1 + 2.3 * s;
   b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.7, bottom: true });
@@ -135,6 +135,13 @@ export function ship(b: Batch, x: number, z: number, quarterTurns: number) {
     const hx = Math.abs(bx) > 0.5 ? 0.34 : 0.12, hz = Math.abs(bx) > 0.5 ? 0.12 : 0.34;
     if (hash2(k, side, 71 + quarterTurns) < 0.8) b.box(wx - hx, SEA_Y, wz - hz, wx + hx, SEA_Y + 0.03, wz + hz, WAKE);
   }
+}
+
+/** A rowing boat on the water: a low hull with a pale inside, lying along x or z. */
+export function boat(b: Batch, x: number, z: number, r: Rnd) {
+  const [hx, hz] = r.chance(0.5) ? [1.1, 0.42] : [0.42, 1.1];
+  b.box(x - hx, SEA_Y - 0.2, z - hz, x + hx, SEA_Y + 0.4, z + hz, HULL, { top: SHIP_DECK, foot: 0.7 });
+  b.box(x - hx * 0.25, SEA_Y + 0.4, z - hz * 0.25, x + hx * 0.25, SEA_Y + 0.75, z + hz * 0.25, r.pick(CLOTHES));
 }
 
 export function person(b: Batch, x: number, y: number, z: number, r: Rnd) {
