@@ -13,13 +13,15 @@ import type { PieceDone, PieceJob } from './piece.worker';
 import { projectionOf } from './region';
 import { blockOfCell, cellOfBlock } from './world';
 
-const q = new URLSearchParams(location.search), num = (k: string, fallback: number) => Number(q.get(k)) || fallback;
+const q = new URLSearchParams(location.search);
+/** a number of the address; the equator and the meridian of Greenwich are places too, so 0 counts */
+const num = (k: string, fallback: number) => { const v = Number(q.get(k) || NaN); return Number.isFinite(v) ? v : fallback; };
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
-/** finest blocks across the picture: from a town filling it to the whole continent */
-const NEAREST = 90, FARTHEST = 16000;
+/** finest blocks across the picture: from a town filling it to the whole map */
+const NEAREST = 90, FARTHEST = 32000;
 /** the coarsest step of the map, and the blocks across the picture from which a step takes over from the finer one */
-const STEPS = 6, STEP_FROM = 150;
+const STEPS = 7, STEP_FROM = 150;
 /** pieces kept on the stage, beyond those in the picture */
 const SPARE = 10;
 /** the camera looks down as in the reference from near, and ever more steeply from afar, where the land is read as a map */
