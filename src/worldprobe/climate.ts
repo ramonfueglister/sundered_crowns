@@ -1,8 +1,11 @@
 // What kind of land a place is, from tools/worldprobe/build_climate.py: one byte per two by two map pixels, the kind
-// (from the Köppen-Geiger climate zones) in the low bits and, in bit 7, whether the forest layer of 1356 knows the place.
+// (from the Köppen-Geiger climate zones and the grasslands of the ecoregions) in the low bits, in bit 7 whether the
+// forest layer of 1356 knows the place and in bit 6 whether its fields do.
 import { maybeGunzip } from '../render/assets';
 
-export const Land = { None: 0, Temperate: 1, Mediterranean: 2, Steppe: 3, Desert: 4, Savanna: 5, Rainforest: 6, Boreal: 7, Tundra: 8, Ice: 9 } as const;
+export const Land = { None: 0, Temperate: 1, Mediterranean: 2, Steppe: 3, Desert: 4, Savanna: 5, Rainforest: 6, Boreal: 7, Tundra: 8, Ice: 9, Grassland: 10 } as const;
+/** the bits of a place's byte: its kind of land, and whether the game's layers of 1356 know its woods and its fields */
+export const KIND = 63, WOODS_KNOWN = 128, FIELDS_KNOWN = 64;
 export interface Climate { w: number; h: number; cells: Uint8Array }
 
 let loaded: Promise<Climate> | undefined;
