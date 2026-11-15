@@ -8,6 +8,7 @@ import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, I
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
+import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
@@ -18,6 +19,7 @@ export function App() {
     <IconDefs />
     {st === 'idle' || st === 'refused' ? <SignIn /> : <>
       <MapView />
+      <Music />
       <TopBar />
       <RealmBanner />
       <MapTools />
@@ -47,6 +49,34 @@ function RealmBanner() {
     </svg>
     {arms ? <img class="arms" src={arms} alt="" /> : <span class="initial">{L(r.short).slice(0, 1)}</span>}
   </button>;
+}
+
+/** Starts the background music with the game view and listens for M (on/off) and N (next piece). */
+function Music() {
+  useEffect(() => {
+    startMusic();
+    const key = (e: KeyboardEvent) => { if (musicKey(e)) e.preventDefault(); };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, []);
+  return null;
+}
+
+/** Music settings in the settings menu: on/off, volume, the piece now playing and the next one. */
+function MusicSettings() {
+  const off = musicMuted.value;
+  return <div class="music-set" onClick={(e) => e.stopPropagation()}>
+    <div class="music-row">
+      <span class="music-label">{t('music')}</span>
+      <button class="btn small" aria-pressed={!off} title={`${t(off ? 'music_on' : 'music_off')} (M)`} onClick={() => setMuted(!off)}>{t(off ? 'music_on' : 'music_off')}</button>
+    </div>
+    <input class="music-vol" type="range" min={0} max={100} step={1} value={musicVolume.value} aria-label={t('music_volume')} title={`${t('music_volume')}: ${musicVolume.value}`}
+      onInput={(e) => setVolume(Number((e.target as HTMLInputElement).value))} />
+    <div class="music-row">
+      <small class="music-now">{off ? t('music_is_off') : musicWaiting.value ? t('music_waiting') : nowPlaying.value ?? '…'}</small>
+      {!off && <button class="btn small" title={`${t('music_next')} (N)`} aria-label={t('music_next')} onClick={() => skip()}>»</button>}
+    </div>
+  </div>;
 }
 
 function MapTools() {
@@ -109,9 +139,11 @@ function TopBar() {
     <button class="tb lang" title={t('language')} onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>
     <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
+      <MusicSettings />
       {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
       <button class="menu-item" onClick={() => { disconnect(); if (online.available) signOut(); }}>{t('sign_out')}</button>
       {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
+      <p class="credit">{t('music_credit')}</p>
     </div>}
   </header>;
 }
