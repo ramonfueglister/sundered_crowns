@@ -7,10 +7,12 @@
 // ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show). The address follows the view.
 import { NEAR, RIGHT } from '../lookprobe/layout';
 import { bakedSky, createStage, showError } from '../lookprobe/stage';
+import { createNames } from './names';
+import { createPaper } from './paper';
 import { createPieces } from './pieces';
 import { projectionOf } from './region';
-import { blockOfCell, cellOfBlock } from './world';
-import { FARTHEST, NEAREST, elevationOf } from './zoom';
+import { blockOfCell, cellOfBlock } from './land';
+import { FARTHEST, NEAREST, creasesOf, elevationOf, realmsOf } from './zoom';
 
 const q = new URLSearchParams(location.search);
 /** a number of the address; the equator and the meridian of Greenwich are places too, so 0 counts */
@@ -29,13 +31,18 @@ async function main() {
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(num('lon', 12.1), num('lat', 45.85))), wide = Math.min(FARTHEST, Math.max(NEAREST, num('wide', 190)));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
+  const paper = createPaper(stage, { region: name, base, ahead: !still, changed: () => look() }), names = createNames();
 
   const look = () => {
-    const elevation = elevationOf(wide), at = pieces.look({ x, z, wide, aspect: canvas.clientWidth / canvas.clientHeight, elevation });
+    const elevation = elevationOf(wide), view = { x, z, wide, aspect: canvas.clientWidth / canvas.clientHeight, pixels: canvas.clientWidth, elevation };
+    const at = pieces.look(view), missing = at.missing + paper.look(view, at), failed = pieces.failed || paper.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
-    stage.busy = at.missing > 0 && !pieces.failed;
+    stage.creases(creasesOf(wide));
+    const [u, v] = cellOfBlock(x, z), box = canvas.getBoundingClientRect();
+    names.show(paper.names, box, u / projection.cells, v / projection.cells, (box.width / wide) * projection.cells, Math.sin((elevation * Math.PI) / 180), realmsOf(wide));
+    stage.busy = missing > 0 && !failed;
     if (stage.busy) stage.probe.ready = false;
-    if (status) status.textContent = pieces.failed || (still && at.missing ? `Lade ${at.missing} ${at.missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : '');
+    if (status) status.textContent = failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : '');
   };
 
   // the address follows the view, a moment after it has come to rest

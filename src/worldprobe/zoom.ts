@@ -1,6 +1,6 @@
 // How the world changes with the distance it is looked at from, as in a map that is a model up close: near, a
-// diorama seen from the side; farther out the relief sinks, the camera rises, and woods and towns become patches of
-// colour; from the width of a few countries on, the flat world gives way to the painted map with its realms.
+// diorama seen from the side; farther out the relief sinks and the camera rises, until the flat world gives way to the
+// painted map, on which woods and towns are patches of colour; from the width of a country on, the realms colour it.
 // Every rule is a smooth function of `wide`, the finest blocks across the picture, so that nothing jumps while zooming.
 import { smooth } from '../lookprobe/batch';
 import { VIEW } from '../lookprobe/layout';
@@ -10,15 +10,17 @@ export const NEAREST = 90, FARTHEST = 32000;
 /** a step of the map takes over from the finer one when this many of its blocks lie across the picture */
 const STEP_FROM = 150;
 /** the coarsest step drawn in blocks: beyond it only the painted map shows */
-export const COARSEST = 5;
+export const COARSEST = 1;
+/** the coarsest level of the painted map: there one tile holds the whole world */
+export const PAPER_COARSEST = 6;
 /** where the painted map begins to show through the blocks, and from where it stands alone */
-const PAPER_FROM = 3200, PAPER_ALONE = 6400;
-/** the camera looks down as in the reference from near, and straight down where the painted map begins */
-const TILT_FROM = 400, TILT_UNTIL = 4500, STRAIGHT_DOWN = 89.5;
+const PAPER_FROM = 450, PAPER_ALONE = 900;
+/** the camera looks down as in the reference from near, and straight down before the painted map stands alone */
+const TILT_FROM = 250, TILT_UNTIL = 800, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = 500, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 250, RELIEF_LEAST = 0.06;
 /** the realms colour the painted map from here, fully from there */
-const REALMS_FROM = 4000, REALMS_FULL = 9000;
+const REALMS_FROM = 1000, REALMS_FULL = 2200;
 /** blocks across the picture at the middle of the finest step: there a step's heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
@@ -32,6 +34,10 @@ export const stepOf = (wide: number) => Math.max(0, Math.min(COARSEST, Math.floo
 export const elevationOf = (wide: number) => VIEW.elevation + (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
 /** How strongly the painted map covers the blocks, 0 … 1. */
 export const paperOf = (wide: number) => over(PAPER_FROM, PAPER_ALONE, wide);
+/** The level of the painted map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */
+export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
+/** How deep the creases and corners of the blocks are drawn, 1 … 0: they go as the relief goes. */
+export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, PAPER_FROM, wide);
 /** How strongly the realms colour the painted map, 0 … 1. */
 export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
 /**

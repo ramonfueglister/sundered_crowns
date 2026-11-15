@@ -8,6 +8,7 @@ import type * as THREE from 'three/webgpu';
 import { N, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import type { PieceDone, PieceJob } from './piece.worker';
+import { cover, keyOf } from './pyramid';
 import { COARSEST, paperOf, reliefOf, stepOf } from './zoom';
 
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
@@ -19,15 +20,12 @@ const SPARE = 10;
 /** the stage counts its blocks from a home near the view; a new home is taken when the view has moved this far from it */
 const HOME_REACH = 3000;
 
-/** The view: the place at the middle of the picture in the finest blocks, how many of them lie across it, its shape and how far the camera looks down. */
-export interface View { x: number; z: number; wide: number; aspect: number; elevation: number }
+/** The view: the place at the middle of the picture in the finest blocks, how many of them lie across it, the picture's shape and width in pixels, and how far the camera looks down. */
+export interface View { x: number; z: number; wide: number; aspect: number; pixels: number; elevation: number }
 /** How the stage is laid out for a view: its blocks are `coarse` finest blocks wide and counted from `home`. */
 export interface Layout { step: number; coarse: number; homeX: number; homeZ: number }
 interface Held { group: THREE.Group; step: number; px: number; pz: number; /** the last look that showed or asked for it */ seen: number }
 interface Spot { key: string; step: number; px: number; pz: number }
-
-const keyOf = (step: number, px: number, pz: number) => `${step}:${px},${pz}`;
-const KIDS = [[0, 0], [1, 0], [0, 1], [1, 1]] as const;
 
 export interface Pieces {
   /** Brings the stage to the view: asks for what is missing, shows what covers the picture best. Returns the layout and how many pieces of the picture are still to come. */
@@ -106,19 +104,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share
-    const shown = new Set<Held>(), inView = (s: number, px: number, pz: number) => outside(v, s, px, pz) <= 0;
-    /** whether the part of a piece that lies in the picture can be covered at the view's step, or by the piece itself */
-    const covered = (s: number, px: number, pz: number): boolean =>
-      !inView(s, px, pz) || held.has(keyOf(s, px, pz)) || (s > step && KIDS.every(([dx, dz]) => covered(s - 1, px * 2 + dx, pz * 2 + dz)));
-    const show = (s: number, px: number, pz: number, deeper: number) => {
-      if (!inView(s, px, pz)) return;
-      const own = held.get(keyOf(s, px, pz)), kids = () => { if (s > 0) for (const [dx, dz] of KIDS) show(s - 1, px * 2 + dx, pz * 2 + dz, s > step ? deeper : deeper - 1); };
-      if (s > step && KIDS.every(([dx, dz]) => covered(s - 1, px * 2 + dx, pz * 2 + dz))) kids();
-      else if (own) shown.add(own);
-      // neither the piece nor all of what lies under it: what there is of the finer steps fills in
-      else if (s > step || deeper > 0) kids();
-    };
-    if (blocks) { const top = Math.min(COARSEST, step + 2); for (const p of near(v, top, 0)) show(top, p.px, p.pz, 2); }
+    const top = Math.min(COARSEST, step + 2);
+    const shown = blocks ? cover(step, top, near(v, top, 0).map((p) => [p.px, p.pz] as const), (s, px, pz) => held.get(keyOf(s, px, pz)), (s, px, pz) => outside(v, s, px, pz) <= 0) : new Set<Held>();
 
     for (const h of held.values()) {
       h.group.visible = shown.has(h);
