@@ -143,6 +143,49 @@
    "sources": [
     "Cambridge History of Scandinavia I, ch. 14"
    ]
+  },
+  {
+   "state": "chagatai",
+   "area": [
+    [
+     62.6,
+     43.6
+    ],
+    [
+     70.6,
+     43.6
+    ],
+    [
+     70.6,
+     35.6
+    ],
+    [
+     66.5,
+     35.6
+    ],
+    [
+     64.0,
+     35.9
+    ],
+    [
+     63.0,
+     38.6
+    ],
+    [
+     62.0,
+     40.6
+    ]
+   ],
+   "from": [
+    "golden_horde",
+    "kart",
+    null
+   ],
+   "note": "Transoxiana, Balkh, Termez and Shash are the western Chagatai ulus under Amir Qazaghan in 1356, not the Golden Horde's (which holds Khwarezm until c.1360) nor the Kartids' (Herat, Ghur, Badghis, Farah). Manz 1989 ch. 2; Grousset 1970 pp. 342-344",
+   "sources": [
+    "B. F. Manz, The Rise and Rule of Tamerlane (1989)",
+    "R. Grousset, The Empire of the Steppes (1970)"
+   ]
   }
  ]
 }

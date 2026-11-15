@@ -34,6 +34,7 @@ ANCHORS = {
     'aragon': '#6e4b4b',
     'bohemia': '#6f663c',
     'castile': '#816627',
+    'chagatai': '#555558',
     'cyprus': '#236355',
     'england': '#82453f',
     'france': '#39376e',

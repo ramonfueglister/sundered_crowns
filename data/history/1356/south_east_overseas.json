@@ -16,7 +16,9 @@
   "Relación de Michoacán",
   "M. E. Smith, The Aztecs; F. Berdan, Aztec Archaeology and Ethnohistory",
   "T. N. D'Altroy, The Incas",
-  "Wikipedia articles on the respective states and rulers"
+  "Wikipedia articles on the respective states and rulers",
+  "B. F. Manz, The Rise and Rule of Tamerlane (1989), ch. 2",
+  "R. Grousset, The Empire of the Steppes (1970), pp. 342-344"
  ],
  "new_ids": [
   {
@@ -84,7 +86,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#457f5c",
+   "color": "#457c5e",
    "capital": {
     "name": "Bursa",
     "lat": 40.183,
@@ -381,7 +383,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#8b6843",
+   "color": "#8c6c4d",
    "capital": {
     "name": "Kütahya",
     "lat": 39.42,
@@ -609,7 +611,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#514120",
+   "color": "#56441d",
    "capital": {
     "name": "Magnesia",
     "lat": 38.61,
@@ -719,7 +721,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#194c42",
+   "color": "#194e44",
    "capital": {
     "name": "Milas",
     "lat": 37.32,
@@ -936,7 +938,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#424226",
+   "color": "#44411e",
    "capital": {
     "name": "Eğirdir",
     "lat": 37.87,
@@ -1271,7 +1273,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#a25b56",
+   "color": "#a45d5d",
    "capital": {
     "name": "Elbistan",
     "lat": 38.2,
@@ -1362,7 +1364,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#4e8264",
+   "color": "#487f6e",
    "capital": {
     "name": "Yüreğir plain",
     "lat": 36.95,
@@ -1462,7 +1464,7 @@
    "government": "feudal_monarchy",
    "culture": "armenian",
    "faith": "armenian_apostolic",
-   "color": "#5e4018",
+   "color": "#5b4427",
    "capital": {
     "name": "Sis",
     "lat": 37.45,
@@ -1572,7 +1574,7 @@
    "government": "feudal_monarchy",
    "culture": "egyptian_arab",
    "faith": "sunni",
-   "color": "#756138",
+   "color": "#766239",
    "capital": {
     "name": "Cairo",
     "lat": 30.044,
@@ -2098,7 +2100,7 @@
    "government": "feudal_monarchy",
    "culture": "bedouin",
    "faith": "ibadi",
-   "color": "#844a3e",
+   "color": "#7e4b3e",
    "capital": {
     "name": "Bahla",
     "lat": 22.96,
@@ -2188,7 +2190,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#327f95",
+   "color": "#1f4651",
    "capital": {
     "name": "Hormuz",
     "lat": 27.1,
@@ -2296,7 +2298,7 @@
    "government": "feudal_monarchy",
    "culture": "iraqi_arab",
    "faith": "sunni",
-   "color": "#657461",
+   "color": "#66735f",
    "capital": {
     "name": "Baghdad",
     "lat": 33.31,
@@ -2448,7 +2450,7 @@
    "government": "feudal_monarchy",
    "culture": "mongol",
    "faith": "sunni",
-   "color": "#985c58",
+   "color": "#9d5e5a",
    "capital": {
     "name": "Tabriz",
     "lat": 38.08,
@@ -2589,7 +2591,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#573b1d",
+   "color": "#563a1c",
    "capital": {
     "name": "Shiraz",
     "lat": 29.61,
@@ -2999,7 +3001,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#86472e",
+   "color": "#86472c",
    "capital": {
     "name": "Herat",
     "lat": 34.35,
@@ -3060,9 +3062,9 @@
     "traits": []
    },
    "consort": null,
-   "dynasty_note": "Kart (Kurt) maliks of Herat, of Ghurid Tajik stock, ruling since 1245",
-   "overlord": null,
-   "subject_type": null,
+   "dynasty_note": "Kart (Kurt) maliks of Herat, of Ghurid Tajik stock, ruling since 1245; tributary to Amir Qazaghan of the Chagatai ulus since his siege of Herat in 1351",
+   "overlord": "chagatai",
+   "subject_type": "tributary",
    "empire_member": false,
    "elector": false,
    "allies": [],
@@ -3214,7 +3216,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#7e734d",
+   "color": "#7d7450",
    "capital": {
     "name": "Bayburt",
     "lat": 40.26,
@@ -3312,7 +3314,7 @@
    "government": "feudal_monarchy",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#563f2c",
+   "color": "#563d28",
    "capital": {
     "name": "Mardin",
     "lat": 37.31,
@@ -3416,7 +3418,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#775943",
+   "color": "#775944",
    "capital": {
     "name": "Fez",
     "lat": 34.06,
@@ -3599,7 +3601,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#6c6642",
+   "color": "#6c6643",
    "capital": {
     "name": "Tunis",
     "lat": 36.8,
@@ -3718,7 +3720,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#54402a",
+   "color": "#593e22",
    "capital": {
     "name": "Constantine",
     "lat": 36.37,
@@ -3894,7 +3896,7 @@
    "government": "tribal_federation",
    "culture": "guanche",
    "faith": "african_traditional",
-   "color": "#726132",
+   "color": "#82633a",
    "capital": {
     "name": "Taoro",
     "lat": 28.39,
@@ -4069,7 +4071,7 @@
    "government": "tribal_federation",
    "culture": "guanche",
    "faith": "african_traditional",
-   "color": "#806b4b",
+   "color": "#7e5e37",
    "capital": {
     "name": "Zonzamas",
     "lat": 29.05,
@@ -4145,7 +4147,7 @@
    "government": "feudal_monarchy",
    "culture": "mande",
    "faith": "sunni",
-   "color": "#727768",
+   "color": "#717768",
    "capital": {
     "name": "Niani",
     "lat": 11.38,
@@ -4292,7 +4294,7 @@
    "government": "feudal_monarchy",
    "culture": "wolof",
    "faith": "african_traditional",
-   "color": "#3a5029",
+   "color": "#3b4f2c",
    "capital": {
     "name": "Yang-Yang",
     "lat": 15.3,
@@ -4479,7 +4481,7 @@
    "government": "feudal_monarchy",
    "culture": "hausa",
    "faith": "african_traditional",
-   "color": "#84453b",
+   "color": "#8c4945",
    "capital": {
     "name": "Kano",
     "lat": 12.0,
@@ -4560,7 +4562,7 @@
    "government": "feudal_monarchy",
    "culture": "hausa",
    "faith": "african_traditional",
-   "color": "#7a5e14",
+   "color": "#725d18",
    "capital": {
     "name": "Katsina",
     "lat": 12.99,
@@ -4640,7 +4642,7 @@
    "government": "feudal_monarchy",
    "culture": "amhara",
    "faith": "ethiopian",
-   "color": "#2c492c",
+   "color": "#2e4c2f",
    "capital": {
     "name": "Tegulet",
     "lat": 9.7,
@@ -4871,7 +4873,7 @@
    "government": "feudal_monarchy",
    "culture": "nubian",
    "faith": "coptic",
-   "color": "#754f41",
+   "color": "#744f41",
    "capital": {
     "name": "Dongola",
     "lat": 18.22,
@@ -4949,7 +4951,7 @@
    "government": "feudal_monarchy",
    "culture": "nubian",
    "faith": "coptic",
-   "color": "#65676f",
+   "color": "#666771",
    "capital": {
     "name": "Soba",
     "lat": 15.52,
@@ -5280,7 +5282,7 @@
    "government": "theocracy",
    "culture": "yoruba",
    "faith": "african_traditional",
-   "color": "#5a3829",
+   "color": "#5e3929",
    "capital": {
     "name": "Ile-Ife",
     "lat": 7.48,
@@ -5360,7 +5362,7 @@
    "government": "feudal_monarchy",
    "culture": "nahua",
    "faith": "mesoamerican",
-   "color": "#4c3c67",
+   "color": "#4a3d5f",
    "capital": {
     "name": "Azcapotzalco",
     "lat": 19.48,
@@ -5736,7 +5738,7 @@
    "government": "feudal_monarchy",
    "culture": "purepecha",
    "faith": "mesoamerican",
-   "color": "#92615d",
+   "color": "#906260",
    "capital": {
     "name": "Pátzcuaro",
     "lat": 19.51,
@@ -5831,7 +5833,7 @@
    "government": "tribal_federation",
    "culture": "taino",
    "faith": "american_traditional",
-   "color": "#274b3f",
+   "color": "#195041",
    "capital": {
     "name": "Xaraguá",
     "lat": 18.51,
@@ -6080,7 +6082,7 @@
    "government": "tribal_federation",
    "culture": "mississippian",
    "faith": "american_traditional",
-   "color": "#7e4c3a",
+   "color": "#794e3e",
    "capital": {
     "name": "Moundville",
     "lat": 33.0,
@@ -6583,7 +6585,7 @@
    "government": "feudal_monarchy",
    "culture": "quechua",
    "faith": "andean",
-   "color": "#784c0a",
+   "color": "#715023",
    "capital": {
     "name": "Cusco",
     "lat": -13.53,
@@ -6679,7 +6681,7 @@
    "government": "feudal_monarchy",
    "culture": "chimu",
    "faith": "andean",
-   "color": "#64382c",
+   "color": "#7d493b",
    "capital": {
     "name": "Chan Chan",
     "lat": -8.11,
@@ -6785,7 +6787,7 @@
    "government": "tribal_federation",
    "culture": "muisca",
    "faith": "american_traditional",
-   "color": "#513e0a",
+   "color": "#4d3f1c",
    "capital": {
     "name": "Bacatá",
     "lat": 4.72,
@@ -6868,7 +6870,7 @@
    "government": "tribal_federation",
    "culture": "muisca",
    "faith": "american_traditional",
-   "color": "#71513d",
+   "color": "#765037",
    "capital": {
     "name": "Hunza",
     "lat": 5.54,
@@ -7043,7 +7045,7 @@
    "government": "tribal_federation",
    "culture": "guarani",
    "faith": "american_traditional",
-   "color": "#3b6438",
+   "color": "#4a6245",
    "capital": {
     "name": "Paraguay river",
     "lat": -25.28,
@@ -7102,6 +7104,124 @@
      {
       "type": "tree",
       "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "chagatai",
+   "name": {
+    "en": "Chagatai Khanate",
+    "de": "Tschagatai-Chanat"
+   },
+   "short": {
+    "en": "Chagatai",
+    "de": "Tschagatai"
+   },
+   "adjective": {
+    "en": "Chagatai",
+    "de": "tschagataisch"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "color": "#555558",
+   "capital": {
+    "name": "Sali Saray",
+    "lat": 37.35,
+    "lon": 68.55
+   },
+   "holdings": [
+    {
+     "name": "Samarkand",
+     "lat": 39.65,
+     "lon": 66.96
+    },
+    {
+     "name": "Bukhara",
+     "lat": 39.77,
+     "lon": 64.42
+    },
+    {
+     "name": "Kesh",
+     "lat": 39.05,
+     "lon": 66.83
+    },
+    {
+     "name": "Qarshi",
+     "lat": 38.86,
+     "lon": 65.79
+    },
+    {
+     "name": "Termez",
+     "lat": 37.22,
+     "lon": 67.28
+    },
+    {
+     "name": "Balkh",
+     "lat": 36.76,
+     "lon": 66.9
+    },
+    {
+     "name": "Kunduz",
+     "lat": 36.73,
+     "lon": 68.86
+    },
+    {
+     "name": "Khujand",
+     "lat": 40.28,
+     "lon": 69.62
+    },
+    {
+     "name": "Shash",
+     "lat": 41.31,
+     "lon": 69.24
+    }
+   ],
+   "ruler": {
+    "name": "Bayan Quli Khan",
+    "born": 1320,
+    "dynasty": "Chagataid",
+    "female": false,
+    "skills": [
+     1,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chagataid khans as puppets of the Qara'una amir Qazaghan, who killed Khan Qazan in 1346/47 and raised Danishmendji and then Bayan Quli (1348-1358); the real power is Qazaghan's, from his winter seat Sali Saray on the Oxus (position approximate). East of the Syr Darya the Dughlat amirs raised Tughlugh Timur as khan of Moghulistan (1347).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "golden_horde"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "The western Chagatai ulus, Transoxiana and the lands of Balkh, is ruled in the khan's name by Amir Qazaghan. In 1351 he besieged Herat and made its Kart malik his vassal. The tribal amirs (Barlas, Jalayir, Suldus, Arlat) chafe under him; within two years he will be murdered and the ulus will fall apart, the stage on which Timur rises.",
+    "de": "Das westliche Tschagatai-Ulus, Transoxanien und das Land um Balch, beherrscht Emir Qazaghan im Namen des Chans. 1351 belagerte er Herat und machte den Kart-Malik zu seinem Vasallen. Die Stammesemire (Barlas, Dschalair, Suldus, Arlat) murren; in zwei Jahren wird er ermordet, das Ulus zerfällt, und auf dieser Bühne steigt Timur auf."
+   },
+   "coa": {
+    "blazon": "Gules, a tamga Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
       "count": 1,
       "arrangement": "single"
      }
