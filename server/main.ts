@@ -8,6 +8,8 @@ import { WorldCore, configFromEnv, type Session } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
+import { placePeople, personDetail } from '../src/net/people';
+import { ALL_CULTURES } from '../src/sim/content/peoples';
 
 // local development: read ./.env if present (production hosts set real environment variables)
 if (existsSync('.env') && typeof (process as any).loadEnvFile === 'function') (process as any).loadEnvFile('.env');
@@ -32,6 +34,13 @@ const http = createServer((req, res) => {
   const h = { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) };
   if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day, players: core.seats().length, stepMs: core.stepMs })); return; }
   if (req.url === '/world') { res.writeHead(200, h); res.end(JSON.stringify(core.worldInfo())); return; }
+  // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
+  const people = /^\/people\/(\d+)$/.exec(req.url ?? ''), person = /^\/person\/(\d+)$/.exec(req.url ?? '');
+  if (people && Number(people[1]) < core.s.place.pop.length) { res.writeHead(200, h); res.end(JSON.stringify(placePeople(core.s, Number(people[1])))); return; }
+  if (person) {
+    const d = personDetail(core.s, Number(person[1]), (i) => ALL_CULTURES[i] ?? 'unknown');
+    if (d) { res.writeHead(200, h); res.end(JSON.stringify(d)); return; }
+  }
   res.writeHead(404, h); res.end('{"error":"not found"}');
 });
 
