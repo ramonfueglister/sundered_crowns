@@ -51,7 +51,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#3e4e04",
+   "color": "#404d02",
    "capital": {
     "name": "Nancy",
     "lat": 48.693,
@@ -296,7 +296,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#2c4672",
+   "color": "#274774",
    "capital": {
     "name": "Luxembourg",
     "lat": 49.611,
@@ -435,7 +435,7 @@
    "government": "theocracy",
    "culture": "french",
    "faith": "latin",
-   "color": "#674261",
+   "color": "#614365",
    "capital": {
     "name": "Vic-sur-Seille",
     "lat": 48.783,
@@ -532,7 +532,7 @@
    "government": "theocracy",
    "culture": "french",
    "faith": "latin",
-   "color": "#855250",
+   "color": "#834f52",
    "capital": {
     "name": "Toul",
     "lat": 48.675,
@@ -618,7 +618,7 @@
    "government": "theocracy",
    "culture": "french",
    "faith": "latin",
-   "color": "#7a4f4c",
+   "color": "#795149",
    "capital": {
     "name": "Verdun",
     "lat": 49.16,
@@ -704,7 +704,7 @@
    "government": "city_republic",
    "culture": "french",
    "faith": "latin",
-   "color": "#876d42",
+   "color": "#886b40",
    "capital": {
     "name": "Metz",
     "lat": 49.12,
@@ -786,7 +786,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#337c86",
+   "color": "#387d85",
    "capital": {
     "name": "Saarbrücken",
     "lat": 49.233,
@@ -875,7 +875,7 @@
    "government": "theocracy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#8d4f4b",
+   "color": "#8b4f46",
    "capital": {
     "name": "Trier",
     "lat": 49.756,
@@ -1261,7 +1261,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#453d74",
+   "color": "#453d76",
    "capital": {
     "name": "Heidelberg",
     "lat": 49.41,
@@ -1496,7 +1496,7 @@
    "government": "city_republic",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#534a78",
+   "color": "#544a75",
    "capital": {
     "name": "Aachen",
     "lat": 50.776,
@@ -1578,7 +1578,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#387c57",
+   "color": "#2b7b5b",
    "capital": {
     "name": "Nideggen",
     "lat": 50.69,
@@ -1852,7 +1852,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#7a6a9a",
+   "color": "#766a9a",
    "capital": {
     "name": "Kleve",
     "lat": 51.789,
@@ -1987,7 +1987,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#98585e",
+   "color": "#9c5f6c",
    "capital": {
     "name": "Hamm",
     "lat": 51.68,
@@ -2121,7 +2121,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#596a9b",
+   "color": "#5a6ca0",
    "capital": {
     "name": "Idstein",
     "lat": 50.22,
@@ -2308,7 +2308,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#796086",
+   "color": "#735f88",
    "capital": {
     "name": "Dillenburg",
     "lat": 50.74,
@@ -2594,7 +2594,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#5f71aa",
+   "color": "#6270a9",
    "capital": {
     "name": "Starkenburg",
     "lat": 49.958,
@@ -2684,7 +2684,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#2b3d6f",
+   "color": "#293d72",
    "capital": {
     "name": "Kassel",
     "lat": 51.316,
@@ -3010,7 +3010,7 @@
    "government": "city_republic",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#8f5145",
+   "color": "#8d503f",
    "capital": {
     "name": "Worms",
     "lat": 49.632,
@@ -3184,7 +3184,7 @@
    "government": "theocracy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#25736f",
+   "color": "#1e7072",
    "capital": {
     "name": "Bruchsal",
     "lat": 49.124,
@@ -3274,7 +3274,7 @@
    "government": "feudal_monarchy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#6170aa",
+   "color": "#6d6ca9",
    "capital": {
     "name": "Stuttgart",
     "lat": 48.776,
@@ -3431,7 +3431,7 @@
    "government": "feudal_monarchy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#0b4a67",
+   "color": "#104b6a",
    "capital": {
     "name": "Baden",
     "lat": 48.762,
@@ -3615,7 +3615,7 @@
    "government": "feudal_monarchy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#5c6c41",
+   "color": "#5e6a3c",
    "capital": {
     "name": "Hechingen",
     "lat": 48.353,
@@ -3701,7 +3701,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#383e6e",
+   "color": "#3d4274",
    "capital": {
     "name": "Dillingen",
     "lat": 48.58,
@@ -3996,7 +3996,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#5f3954",
+   "color": "#5a374c",
    "capital": {
     "name": "Pruntrut",
     "lat": 47.416,
@@ -4098,7 +4098,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#23748d",
+   "color": "#297a8d",
    "capital": {
     "name": "St. Gallen",
     "lat": 47.424,
@@ -4273,7 +4273,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#4f6c4d",
+   "color": "#4f6c4e",
    "capital": {
     "name": "Basel",
     "lat": 47.557,
@@ -4361,7 +4361,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#475f7c",
+   "color": "#44607d",
    "capital": {
     "name": "Colmar",
     "lat": 48.079,
@@ -4444,7 +4444,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#554060",
+   "color": "#514367",
    "capital": {
     "name": "Konstanz",
     "lat": 47.66,
@@ -4688,7 +4688,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#745438",
+   "color": "#775537",
    "capital": {
     "name": "Augsburg",
     "lat": 48.366,
@@ -4773,7 +4773,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#6e5f17",
+   "color": "#706015",
    "capital": {
     "name": "Schwyz",
     "lat": 47.021,
@@ -4908,7 +4908,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#36511f",
+   "color": "#37511f",
    "capital": {
     "name": "Vienna",
     "lat": 48.208,
@@ -5747,7 +5747,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#294467",
+   "color": "#264567",
    "capital": {
     "name": "Landshut",
     "lat": 48.537,
@@ -6182,7 +6182,7 @@
    "government": "theocracy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#5b4615",
+   "color": "#58481a",
    "capital": {
     "name": "Wörth an der Donau",
     "lat": 49.0,
@@ -6268,7 +6268,7 @@
    "government": "city_republic",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#2f776d",
+   "color": "#3c7b6b",
    "capital": {
     "name": "Regensburg",
     "lat": 49.015,
@@ -6455,7 +6455,7 @@
    "government": "feudal_monarchy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#652f08",
+   "color": "#672d0d",
    "capital": {
     "name": "Cadolzburg",
     "lat": 49.457,
@@ -6601,7 +6601,7 @@
    "government": "city_republic",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#21644d",
+   "color": "#246046",
    "capital": {
     "name": "Nuremberg",
     "lat": 49.452,
@@ -6690,7 +6690,7 @@
    "government": "theocracy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#5c73a6",
+   "color": "#5a70a5",
    "capital": {
     "name": "Würzburg",
     "lat": 49.794,
@@ -6923,7 +6923,7 @@
    "government": "feudal_monarchy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#885c3e",
+   "color": "#88633d",
    "capital": {
     "name": "Schleusingen",
     "lat": 50.51,
@@ -7182,7 +7182,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#5b6642",
+   "color": "#536646",
    "capital": {
     "name": "Annecy",
     "lat": 45.9,
@@ -7287,7 +7287,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#164871",
+   "color": "#184b72",
    "capital": {
     "name": "Dole",
     "lat": 47.093,

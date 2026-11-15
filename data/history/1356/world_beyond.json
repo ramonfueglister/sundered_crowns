@@ -3,6 +3,7 @@
  "year": 1356,
  "date": "1356-01-01",
  "sources": [
+  "Wang Dayuan, Daoyi Zhilüe (1349); W. H. Scott, Barangay: Sixteenth-Century Philippine Culture and Society (1994); L. L. Junker, Raiding, Trading, and Feasting (1999)",
   "F. W. Mote and D. Twitchett (eds.), The Cambridge History of China vol. 6 (Alien Regimes and Border States) and vol. 7 (The Ming Dynasty, part 1), 1988-1994",
   "J. W. Dardess, Conquerors and Confucians: Aspects of Political Change in Late Yuan China (1973)",
   "R. Grousset, The Empire of the Steppes (1970)",
@@ -58,6 +59,11 @@
    "kind": "faith",
    "id": "polynesian_faith",
    "note": "Polynesian religion"
+  },
+  {
+   "kind": "faith",
+   "id": "anitism",
+   "note": "Philippine folk religion (the anito and diwata)"
   },
   {
    "kind": "culture",
@@ -339,7 +345,7 @@
    "government": "feudal_monarchy",
    "culture": "mongol",
    "faith": "vajrayana",
-   "color": "#75693f",
+   "color": "#75693e",
    "capital": {
     "name": "Dadu",
     "lat": 39.9,
@@ -1091,7 +1097,7 @@
    "government": "feudal_monarchy",
    "culture": "korean",
    "faith": "mahayana",
-   "color": "#727650",
+   "color": "#727750",
    "capital": {
     "name": "Kaegyeong",
     "lat": 37.97,
@@ -1686,7 +1692,7 @@
    "government": "theocracy",
    "culture": "tibetan",
    "faith": "vajrayana",
-   "color": "#5d584b",
+   "color": "#5f5846",
    "capital": {
     "name": "Tsaparang",
     "lat": 31.48,
@@ -1904,7 +1910,7 @@
    "government": "feudal_monarchy",
    "culture": "hindustani",
    "faith": "sunni",
-   "color": "#6d773b",
+   "color": "#6c773c",
    "capital": {
     "name": "Delhi",
     "lat": 28.61,
@@ -2100,7 +2106,7 @@
    "government": "feudal_monarchy",
    "culture": "bengali",
    "faith": "sunni",
-   "color": "#804c23",
+   "color": "#814e29",
    "capital": {
     "name": "Pandua",
     "lat": 25.14,
@@ -2932,7 +2938,7 @@
    "government": "feudal_monarchy",
    "culture": "odia",
    "faith": "hindu",
-   "color": "#4a5d1e",
+   "color": "#485d23",
    "capital": {
     "name": "Cuttack",
     "lat": 20.46,
@@ -3127,7 +3133,7 @@
    "government": "feudal_monarchy",
    "culture": "nepali",
    "faith": "hindu",
-   "color": "#355519",
+   "color": "#125931",
    "capital": {
     "name": "Sinja",
     "lat": 29.26,
@@ -3213,7 +3219,7 @@
    "government": "feudal_monarchy",
    "culture": "newar",
    "faith": "hindu",
-   "color": "#745220",
+   "color": "#715127",
    "capital": {
     "name": "Bhaktapur",
     "lat": 27.67,
@@ -3371,7 +3377,7 @@
    "government": "feudal_monarchy",
    "culture": "assamese",
    "faith": "hindu",
-   "color": "#7d714e",
+   "color": "#7d7355",
    "capital": {
     "name": "Kamatapur",
     "lat": 26.3,
@@ -4356,7 +4362,7 @@
    "government": "feudal_monarchy",
    "culture": "lao",
    "faith": "theravada",
-   "color": "#76460d",
+   "color": "#734a07",
    "capital": {
     "name": "Muang Sua",
     "lat": 19.89,
@@ -4475,7 +4481,7 @@
    "government": "feudal_monarchy",
    "culture": "burmese",
    "faith": "theravada",
-   "color": "#7a581e",
+   "color": "#79581c",
    "capital": {
     "name": "Pinya",
     "lat": 21.8,
@@ -5406,6 +5412,321 @@
    }
   },
   {
+   "id": "tondo",
+   "name": {
+    "en": "Polity of Tondo",
+    "de": "Tondo"
+   },
+   "short": {
+    "en": "Tondo",
+    "de": "Tondo"
+   },
+   "adjective": {
+    "en": "Tagalog",
+    "de": "tagalisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#7a4a3a",
+   "capital": {
+    "name": "Tondo",
+    "lat": 14.62,
+    "lon": 120.97
+   },
+   "holdings": [
+    {
+     "name": "Tondo",
+     "lat": 14.62,
+     "lon": 120.97
+    },
+    {
+     "name": "Bai",
+     "lat": 14.18,
+     "lon": 121.28
+    },
+    {
+     "name": "Pila",
+     "lat": 14.23,
+     "lon": 121.36
+    },
+    {
+     "name": "Malolos",
+     "lat": 14.84,
+     "lon": 120.81
+    }
+   ],
+   "ruler": {
+    "name": "Lakan of Tondo",
+    "born": 1310,
+    "dynasty": "Tondo",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Paramount chiefs (lakan) of the Pasig delta and Laguna de Bay; the name of the lakan of 1356 is not recorded. Tondo sends tribute to the Ming from 1373 as Luzon.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "On the delta of the Pasig the lakan of Tondo gathers the datus of Manila Bay and the lake of Bai, and trades rice and gold for Chinese porcelain and silk.",
+    "de": "Am Delta des Pasig sammelt der Lakan von Tondo die Datus der Bucht von Manila und des Sees von Bai und tauscht Reis und Gold gegen chinesisches Porzellan und Seide."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   },
+   "reach_km": 150
+  },
+  {
+   "id": "ma_i",
+   "name": {
+    "en": "Ma-i",
+    "de": "Ma-i"
+   },
+   "short": {
+    "en": "Ma-i",
+    "de": "Ma-i"
+   },
+   "adjective": {
+    "en": "Ma-i",
+    "de": "ma-iisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#304c32",
+   "capital": {
+    "name": "Puerto Galera",
+    "lat": 13.5,
+    "lon": 120.95
+   },
+   "holdings": [
+    {
+     "name": "Puerto Galera",
+     "lat": 13.5,
+     "lon": 120.95
+    },
+    {
+     "name": "Calapan",
+     "lat": 13.41,
+     "lon": 121.18
+    }
+   ],
+   "ruler": {
+    "name": "Datu of Ma-i",
+    "born": 1315,
+    "dynasty": "Ma-i",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Ma-i of the Chinese records (Zhao Rugua 1225, Wang Dayuan 1349), most likely on Mindoro; its datus are not named.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "Chinese junks call at Ma-i on Mindoro, where the datu keeps their goods under his protection until his people have traded them along the islands.",
+    "de": "Chinesische Dschunken legen in Ma-i auf Mindoro an, wo der Datu ihre Waren schützt, bis seine Leute sie entlang der Inseln eingetauscht haben."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   },
+   "reach_km": 90
+  },
+  {
+   "id": "butuan",
+   "name": {
+    "en": "Rajahnate of Butuan",
+    "de": "Rajahnat Butuan"
+   },
+   "short": {
+    "en": "Butuan",
+    "de": "Butuan"
+   },
+   "adjective": {
+    "en": "Butuanon",
+    "de": "butuanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#675221",
+   "capital": {
+    "name": "Butuan",
+    "lat": 8.95,
+    "lon": 125.54
+   },
+   "holdings": [
+    {
+     "name": "Butuan",
+     "lat": 8.95,
+     "lon": 125.54
+    },
+    {
+     "name": "Surigao",
+     "lat": 9.78,
+     "lon": 125.49
+    }
+   ],
+   "ruler": {
+    "name": "Rajah of Butuan",
+    "born": 1305,
+    "dynasty": "Butuan",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Butuan sent envoys to the Song from 1001; its boats and gold work are known from excavation. No ruler of the 14th century is named.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "At the mouth of the Agusan the rajah of Butuan trades the gold of the Mindanao rivers for Chinese wares, as his forebears did when they sent envoys to the Song.",
+    "de": "An der Mündung des Agusan tauscht der Rajah von Butuan das Gold der Flüsse Mindanaos gegen chinesische Waren, wie seine Vorfahren, als sie Gesandte zu den Song schickten."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   },
+   "reach_km": 140
+  },
+  {
+   "id": "sulu",
+   "name": {
+    "en": "Sulu",
+    "de": "Sulu"
+   },
+   "short": {
+    "en": "Sulu",
+    "de": "Sulu"
+   },
+   "adjective": {
+    "en": "Tausug",
+    "de": "tausugisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#896172",
+   "capital": {
+    "name": "Buansa",
+    "lat": 6.05,
+    "lon": 121.0
+   },
+   "holdings": [
+    {
+     "name": "Buansa",
+     "lat": 6.05,
+     "lon": 121.0
+    },
+    {
+     "name": "Siasi",
+     "lat": 5.55,
+     "lon": 120.81
+    },
+    {
+     "name": "Basilan",
+     "lat": 6.7,
+     "lon": 121.97
+    }
+   ],
+   "ruler": {
+    "name": "Datu of Sulu",
+    "born": 1310,
+    "dynasty": "Sulu",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wang Dayuan (1349) praises the pearls of Sulu; in 1369 the Sulu sack Po-ni (Brunei). Muslim traders such as Tuan Masha'ika have settled, but the sultanate comes only in the 15th century.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "aggressive",
+   "difficulty": 1,
+   "summary": {
+    "en": "The datus of Sulu dive for the finest pearls of the southern seas and sail out to raid; Muslim merchants have begun to settle at Buansa.",
+    "de": "Die Datus von Sulu tauchen nach den schönsten Perlen der südlichen Meere und segeln zu Raubzügen aus; in Buansa haben sich muslimische Kaufleute niedergelassen."
+   },
+   "coa": {
+    "blazon": "Sable, plain",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   },
+   "reach_km": 110
+  },
+  {
    "id": "tui_tonga",
    "name": {
     "en": "Tuʻi Tonga",
@@ -5423,7 +5744,7 @@
    "government": "tribal_federation",
    "culture": "polynesian",
    "faith": "polynesian_faith",
-   "color": "#7a6331",
+   "color": "#75693f",
    "capital": {
     "name": "Lapaha",
     "lat": -21.15,
@@ -6436,21 +6757,21 @@
    "lat": 14.6,
    "lon": 121.0,
    "culture": "tagalog",
-   "faith": "hindu",
+   "faith": "anitism",
    "density": 5
   },
   {
    "lat": 10.0,
    "lon": 124.0,
    "culture": "tagalog",
-   "faith": "hindu",
+   "faith": "anitism",
    "density": 4
   },
   {
    "lat": 7.0,
    "lon": 125.0,
    "culture": "tagalog",
-   "faith": "hindu",
+   "faith": "anitism",
    "density": 3
   },
   {

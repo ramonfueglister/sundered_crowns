@@ -117,6 +117,7 @@ export const FAITHS: FaithDef[] = [
   { id: 'white_lotus', name: { en: 'White Lotus', de: 'Weißer Lotus' }, family: 'dharmic', color: '#eeeeee' },
   { id: 'tai_folk', name: { en: 'Tai folk faith', de: 'Tai-Volksglaube' }, family: 'traditional', color: '#a1887f' },
   { id: 'polynesian_faith', name: { en: 'Polynesian faith', de: 'Polynesische Religion' }, family: 'traditional', color: '#00897b' },
+  { id: 'anitism', name: { en: 'Anito faith', de: 'Anito-Glaube' }, family: 'traditional', color: '#558b2f' },
 ];
 export const FAITH_INDEX: Record<string, number> = Object.fromEntries(FAITHS.map((f, i) => [f.id, i]));
 export function faithFamily(i: number) { return FAITHS[i]?.family ?? 'traditional'; }

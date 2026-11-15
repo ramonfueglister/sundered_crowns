@@ -55,7 +55,7 @@
    "government": "theocracy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#4b4107",
+   "color": "#4a4115",
    "capital": {
     "name": "Avignon",
     "lat": 43.949,
@@ -678,7 +678,7 @@
    "government": "feudal_monarchy",
    "culture": "sardinian",
    "faith": "latin",
-   "color": "#89615f",
+   "color": "#8a5e5a",
    "capital": {
     "name": "Cagliari",
     "lat": 39.223,
@@ -929,7 +929,7 @@
    "government": "merchant_republic",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#0c8084",
+   "color": "#058079",
    "capital": {
     "name": "Venice",
     "lat": 45.438,
@@ -1095,7 +1095,7 @@
    "government": "merchant_republic",
    "culture": "ligurian",
    "faith": "latin",
-   "color": "#64293d",
+   "color": "#67283a",
    "capital": {
     "name": "Genoa",
     "lat": 44.407,
@@ -1225,7 +1225,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#0b4b76",
+   "color": "#084c74",
    "capital": {
     "name": "Milan",
     "lat": 45.464,
@@ -1527,7 +1527,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#5a7a47",
+   "color": "#507746",
    "capital": {
     "name": "Siena",
     "lat": 43.318,
@@ -1627,7 +1627,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#885a7b",
+   "color": "#895773",
    "capital": {
     "name": "Pisa",
     "lat": 43.716,
@@ -1812,7 +1812,7 @@
    "government": "city_republic",
    "culture": "roman",
    "faith": "latin",
-   "color": "#3b3e73",
+   "color": "#3e3d76",
    "capital": {
     "name": "Perugia",
     "lat": 43.112,
@@ -1905,7 +1905,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#8a5067",
+   "color": "#8b5267",
    "capital": {
     "name": "Arezzo",
     "lat": 43.463,
@@ -1988,7 +1988,7 @@
    "government": "city_republic",
    "culture": "roman",
    "faith": "latin",
-   "color": "#4a4311",
+   "color": "#38481c",
    "capital": {
     "name": "San Marino",
     "lat": 43.936,
@@ -2074,7 +2074,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#966265",
+   "color": "#946169",
    "capital": {
     "name": "Mantua",
     "lat": 45.156,
@@ -2436,7 +2436,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#905d5b",
+   "color": "#8f5d5b",
    "capital": {
     "name": "Padua",
     "lat": 45.406,
@@ -2545,7 +2545,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#935b46",
+   "color": "#955a41",
    "capital": {
     "name": "Chivasso",
     "lat": 45.191,
@@ -2648,7 +2648,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#467b9a",
+   "color": "#437c95",
    "capital": {
     "name": "Saluzzo",
     "lat": 44.645,
@@ -2756,7 +2756,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#225c41",
+   "color": "#295b3b",
    "capital": {
     "name": "Pinerolo",
     "lat": 44.885,
@@ -3063,7 +3063,7 @@
    "government": "feudal_monarchy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#217884",
+   "color": "#17737d",
    "capital": {
     "name": "Urbino",
     "lat": 43.726,
@@ -3155,7 +3155,7 @@
    "government": "feudal_monarchy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#607645",
+   "color": "#6f7139",
    "capital": {
     "name": "Forlì",
     "lat": 44.222,
@@ -3279,7 +3279,7 @@
    "government": "feudal_monarchy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#846693",
+   "color": "#7f6798",
    "capital": {
     "name": "Faenza",
     "lat": 44.285,
@@ -3359,7 +3359,7 @@
    "government": "feudal_monarchy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#5c395b",
+   "color": "#5d395b",
    "capital": {
     "name": "Ravenna",
     "lat": 44.418,
@@ -3445,7 +3445,7 @@
    "government": "theocracy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#94692f",
+   "color": "#996734",
    "capital": {
     "name": "Udine",
     "lat": 46.063,
@@ -3552,7 +3552,7 @@
    "government": "feudal_monarchy",
    "culture": "ligurian",
    "faith": "latin",
-   "color": "#815d40",
+   "color": "#85614a",
    "capital": {
     "name": "Monaco",
     "lat": 43.731,
@@ -3897,7 +3897,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#4d376d",
+   "color": "#543567",
    "capital": {
     "name": "Andravida",
     "lat": 37.904,
@@ -4037,7 +4037,7 @@
    "government": "feudal_monarchy",
    "culture": "catalan",
    "faith": "latin",
-   "color": "#513d0a",
+   "color": "#544402",
    "capital": {
     "name": "Thebes",
     "lat": 38.32,
@@ -4261,7 +4261,7 @@
    "government": "merchant_republic",
    "culture": "ligurian",
    "faith": "latin",
-   "color": "#87627a",
+   "color": "#86647f",
    "capital": {
     "name": "Chios",
     "lat": 38.37,
@@ -4446,7 +4446,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#8c6430",
+   "color": "#94672e",
    "capital": {
     "name": "Bodonitsa",
     "lat": 38.79,
@@ -4532,7 +4532,7 @@
    "government": "feudal_monarchy",
    "culture": "albanian",
    "faith": "latin",
-   "color": "#4d3c5e",
+   "color": "#4a3c60",
    "capital": {
     "name": "Durazzo",
     "lat": 41.323,
@@ -4785,7 +4785,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#866454",
+   "color": "#704731",
    "capital": {
     "name": "Adrianople",
     "lat": 41.677,
@@ -4886,7 +4886,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#8b5e67",
+   "color": "#8b5e6d",
    "capital": {
     "name": "Mistra",
     "lat": 37.073,
@@ -5154,7 +5154,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#8a5f58",
+   "color": "#89554d",
    "capital": {
     "name": "Serres",
     "lat": 41.09,
@@ -5266,7 +5266,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#84619a",
+   "color": "#866296",
    "capital": {
     "name": "Kastoria",
     "lat": 40.52,
@@ -5390,7 +5390,7 @@
    "government": "feudal_monarchy",
    "culture": "albanian",
    "faith": "orthodox",
-   "color": "#597a55",
+   "color": "#5c754b",
    "capital": {
     "name": "Valona",
     "lat": 40.466,
@@ -5495,7 +5495,7 @@
    "government": "feudal_monarchy",
    "culture": "serbian",
    "faith": "orthodox",
-   "color": "#4d4e19",
+   "color": "#564b07",
    "capital": {
     "name": "Užice",
     "lat": 43.858,
@@ -5588,7 +5588,7 @@
    "culture": "bosnian",
    "faith": "bosnian_church",
    "faith_note": "The Bosnian Church (krstjani) was the church of the nobility and of most of the land; Ban Tvrtko I was nominally Catholic but ruled with its elders, so the realm starts in the Bosnian Church",
-   "color": "#344378",
+   "color": "#32416b",
    "capital": {
     "name": "Bobovac",
     "lat": 44.11,
@@ -5717,7 +5717,7 @@
    "government": "merchant_republic",
    "culture": "croatian",
    "faith": "latin",
-   "color": "#3e7d97",
+   "color": "#3b7f92",
    "capital": {
     "name": "Ragusa",
     "lat": 42.641,
@@ -5803,7 +5803,7 @@
    "government": "feudal_monarchy",
    "culture": "bulgarian",
    "faith": "orthodox",
-   "color": "#615609",
+   "color": "#777748",
    "capital": {
     "name": "Tarnovo",
     "lat": 43.081,
@@ -5967,7 +5967,7 @@
    "government": "feudal_monarchy",
    "culture": "bulgarian",
    "faith": "orthodox",
-   "color": "#2f482d",
+   "color": "#364928",
    "capital": {
     "name": "Vidin",
     "lat": 43.99,
@@ -6078,7 +6078,7 @@
    "government": "feudal_monarchy",
    "culture": "bulgarian",
    "faith": "orthodox",
-   "color": "#30472e",
+   "color": "#3f4a22",
    "capital": {
     "name": "Kaliakra",
     "lat": 43.362,
@@ -6171,7 +6171,7 @@
    "government": "feudal_monarchy",
    "culture": "vlach",
    "faith": "orthodox",
-   "color": "#526b80",
+   "color": "#536b80",
    "capital": {
     "name": "Curtea de Argeș",
     "lat": 45.14,
@@ -6412,7 +6412,7 @@
    "government": "feudal_monarchy",
    "culture": "hungarian",
    "faith": "latin",
-   "color": "#715651",
+   "color": "#6f5651",
    "capital": {
     "name": "Visegrád",
     "lat": 47.785,

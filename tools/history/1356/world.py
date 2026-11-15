@@ -38,7 +38,7 @@ USED = set()
 
 
 def S(id, n, sh, adj, rank, gov, cult, faith, cap, hold, ruler, heir=None, consort=None, note='', over=None, subj=None,
-      allies='', rivals='', pers='opportunist', diff=3, en='', de='', field='gules'):
+      allies='', rivals='', pers='opportunist', diff=3, en='', de='', field='gules', reach=None):
     assert id not in USED, id
     USED.add(id)
     capp = at(cap)
@@ -47,10 +47,11 @@ def S(id, n, sh, adj, rank, gov, cult, faith, cap, hold, ruler, heir=None, conso
             'holdings': [capp] + [at(h) for h in hold], 'ruler': ruler, 'heir': heir, 'consort': consort, 'dynasty_note': note,
             'overlord': over, 'subject_type': (subj or 'vassal') if over else None, 'empire_member': False, 'elector': False,
             'allies': allies.split(), 'rivals': rivals.split(), 'claims_on': [], 'personality': pers, 'difficulty': diff,
-            'summary': {'en': en, 'de': de}, 'coa': PLAIN(field)}
+            'summary': {'en': en, 'de': de}, 'coa': PLAIN(field), **({'reach_km': reach} if reach else {})}
 
 
 SOURCES = [
+    'Wang Dayuan, Daoyi Zhilüe (1349); W. H. Scott, Barangay: Sixteenth-Century Philippine Culture and Society (1994); L. L. Junker, Raiding, Trading, and Feasting (1999)',
     'F. W. Mote and D. Twitchett (eds.), The Cambridge History of China vol. 6 (Alien Regimes and Border States) and vol. 7 (The Ming Dynasty, part 1), 1988-1994',
     'J. W. Dardess, Conquerors and Confucians: Aspects of Political Change in Late Yuan China (1973)',
     'R. Grousset, The Empire of the Steppes (1970)',
@@ -435,6 +436,42 @@ S('singapura', ('Kingdom of Singapura', 'Königreich Singapura'), ('Singapura', 
   pers='trader', diff=1, field='gules',
   en='At the tip of the Malay peninsula the port of Temasek, which its kings call Singapura, trades between the Indian Ocean and the South China Sea.',
   de='An der Spitze der Malaiischen Halbinsel handelt der Hafen Temasek, den seine Könige Singapura nennen, zwischen dem Indischen Ozean und dem Südchinesischen Meer.'),
+# ------------------------------------------------------------------------------------------------ the Philippines
+# Wang Dayuan's Daoyi Zhilüe (1349) describes Ma-i, Sulu and the ports of Luzon as he saw them; no ruler of 1356 is
+# named in any source, so the rulers below are their offices, not persons (W. H. Scott, Barangay, 1994; L. L. Junker,
+# Raiding, Trading, and Feasting, 1999).
+S('tondo', ('Polity of Tondo', 'Tondo'), ('Tondo', 'Tondo'), ('Tagalog', 'tagalisch'), 'chiefdom', 'tribal_federation', 'tagalog', 'anitism',
+  'Tondo@14.62,120.97', ['Bai@14.18,121.28', 'Pila@14.23,121.36', 'Malolos@14.84,120.81'],
+  P('Lakan of Tondo', 1310, 'Tondo', 2, 2, 2), None, None,
+  'Paramount chiefs (lakan) of the Pasig delta and Laguna de Bay; the name of the lakan of 1356 is not recorded. Tondo sends tribute to the Ming from 1373 as Luzon.',
+  pers='trader', diff=1, field='azure',
+  reach=150,
+  en='On the delta of the Pasig the lakan of Tondo gathers the datus of Manila Bay and the lake of Bai, and trades rice and gold for Chinese porcelain and silk.',
+  de='Am Delta des Pasig sammelt der Lakan von Tondo die Datus der Bucht von Manila und des Sees von Bai und tauscht Reis und Gold gegen chinesisches Porzellan und Seide.'),
+S('ma_i', ('Ma-i', 'Ma-i'), ('Ma-i', 'Ma-i'), ('Ma-i', 'ma-iisch'), 'chiefdom', 'tribal_federation', 'tagalog', 'anitism',
+  'Puerto Galera@13.50,120.95', ['Calapan@13.41,121.18'],
+  P('Datu of Ma-i', 1315, 'Ma-i', 2, 2, 1), None, None,
+  'The Ma-i of the Chinese records (Zhao Rugua 1225, Wang Dayuan 1349), most likely on Mindoro; its datus are not named.',
+  pers='trader', diff=1, field='vert',
+  reach=90,
+  en='Chinese junks call at Ma-i on Mindoro, where the datu keeps their goods under his protection until his people have traded them along the islands.',
+  de='Chinesische Dschunken legen in Ma-i auf Mindoro an, wo der Datu ihre Waren schützt, bis seine Leute sie entlang der Inseln eingetauscht haben.'),
+S('butuan', ('Rajahnate of Butuan', 'Rajahnat Butuan'), ('Butuan', 'Butuan'), ('Butuanon', 'butuanisch'), 'chiefdom', 'tribal_federation', 'tagalog', 'anitism',
+  'Butuan@8.95,125.54', ['Surigao@9.78,125.49'],
+  P('Rajah of Butuan', 1305, 'Butuan', 2, 2, 2), None, None,
+  'Butuan sent envoys to the Song from 1001; its boats and gold work are known from excavation. No ruler of the 14th century is named.',
+  pers='trader', diff=1, field='or',
+  reach=140,
+  en='At the mouth of the Agusan the rajah of Butuan trades the gold of the Mindanao rivers for Chinese wares, as his forebears did when they sent envoys to the Song.',
+  de='An der Mündung des Agusan tauscht der Rajah von Butuan das Gold der Flüsse Mindanaos gegen chinesische Waren, wie seine Vorfahren, als sie Gesandte zu den Song schickten.'),
+S('sulu', ('Sulu', 'Sulu'), ('Sulu', 'Sulu'), ('Tausug', 'tausugisch'), 'chiefdom', 'tribal_federation', 'tagalog', 'anitism',
+  'Buansa@6.05,121.00', ['Siasi@5.55,120.81', 'Basilan@6.70,121.97'],
+  P('Datu of Sulu', 1310, 'Sulu', 2, 2, 3), None, None,
+  'Wang Dayuan (1349) praises the pearls of Sulu; in 1369 the Sulu sack Po-ni (Brunei). Muslim traders such as Tuan Masha\'ika have settled, but the sultanate comes only in the 15th century.',
+  pers='aggressive', diff=1, field='sable',
+  reach=110,
+  en='The datus of Sulu dive for the finest pearls of the southern seas and sail out to raid; Muslim merchants have begun to settle at Buansa.',
+  de='Die Datus von Sulu tauchen nach den schönsten Perlen der südlichen Meere und segeln zu Raubzügen aus; in Buansa haben sich muslimische Kaufleute niedergelassen.'),
 # ------------------------------------------------------------------------------------------------ the Pacific and the Americas
 S('tui_tonga', ('Tuʻi Tonga', 'Tuʻi Tonga'), ('Tonga', 'Tonga'), ('Tongan', 'tongaisch'), 'empire', 'tribal_federation', 'polynesian', 'polynesian_faith',
   'Lapaha@-21.15,-175.18', ['Vavaʻu@-18.65,-173.98', 'Haʻapai@-19.80,-174.35', 'ʻUvea@-13.29,-176.20'],
@@ -469,6 +506,7 @@ NEW_IDS = [
     {'kind': 'faith', 'id': 'white_lotus', 'note': 'White Lotus millenarian Buddhism of the Red Turbans'},
     {'kind': 'faith', 'id': 'tai_folk', 'note': 'Tai folk religion (Ahom)'},
     {'kind': 'faith', 'id': 'polynesian_faith', 'note': 'Polynesian religion'},
+    {'kind': 'faith', 'id': 'anitism', 'note': 'Philippine folk religion (the anito and diwata)'},
 ]
 CULTURE_GROUPS = {
     'sinic': ['han', 'korean', 'japanese', 'ryukyuan', 'jurchen'],
@@ -529,8 +567,8 @@ DEMOGRAPHY = [
     # islands
     D(-7.5, 112.0, 'javanese', 'hindu', 30), D(-7.0, 110.0, 'javanese', 'hindu', 25), D(-6.8, 107.5, 'sundanese', 'hindu', 15), D(-8.4, 115.2, 'javanese', 'hindu', 30),
     D(5.0, 97.0, 'malay', 'sunni', 8), D(-0.5, 100.6, 'malay', 'vajrayana', 8), D(-2.5, 104.0, 'malay', 'hindu', 3), D(0.5, 113.0, 'malay', 'hindu', 1),
-    D(-3.5, 120.0, 'bugis', 'hindu', 5), D(-3.5, 129.0, 'bugis', 'hindu', 3), D(14.6, 121.0, 'tagalog', 'hindu', 5), D(10.0, 124.0, 'tagalog', 'hindu', 4),
-    D(7.0, 125.0, 'tagalog', 'hindu', 3), D(-5.0, 140.0, 'australian_aboriginal', 'polynesian_faith', 1.5),
+    D(-3.5, 120.0, 'bugis', 'hindu', 5), D(-3.5, 129.0, 'bugis', 'hindu', 3), D(14.6, 121.0, 'tagalog', 'anitism', 5), D(10.0, 124.0, 'tagalog', 'anitism', 4),
+    D(7.0, 125.0, 'tagalog', 'anitism', 3), D(-5.0, 140.0, 'australian_aboriginal', 'polynesian_faith', 1.5),
     # Siberia, the far north-east
     D(58.0, 80.0, 'samoyed', 'tengri', 0.05), D(62.0, 100.0, 'evenk', 'tengri', 0.02), D(62.0, 130.0, 'yakut', 'tengri', 0.05), D(52.0, 105.0, 'mongol', 'tengri', 0.3),
     D(66.0, 170.0, 'chukchi', 'tengri', 0.02), D(56.0, 160.0, 'chukchi', 'tengri', 0.03), D(68.0, 85.0, 'samoyed', 'tengri', 0.02),

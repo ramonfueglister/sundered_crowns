@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from common import ROOT, CACHE, W as MAP_W, H as MAP_H
 from build_beyond import frame, load_step
 from build_export import build_provinces, build_areas
+from build_land import yield_curve
 from build_setup import climate, assign_resources, gen_name, SYL, CULT_GROUP, TERRAINS
 
 DATA = os.path.join(ROOT, 'public', 'data')
@@ -218,7 +219,7 @@ def main():
     ids_of = {s['id']: k for k, s in enumerate(states)}
     for s in hist['states']:
         if s['id'] in ids_of: raise SystemExit(f'realm {s["id"]} exists already')
-        o = dict(s); o['capital_loc'] = 0
+        o = dict(s); o['capital_loc'] = 0; o.pop('reach_km', None)
         ids_of[s['id']] = len(states); states.append(o)
     owner = np.full(Lt + 1, -1, np.int32)
     owner[1:L + 1] = [-1 if v is None else v for v in setup['owner']]
@@ -226,6 +227,7 @@ def main():
     def place_at(lo, la):
         d, j = tree_new.query(xyz(np.array([lo]), np.array([la]))[0])
         return L + 1 + int(j) if d < math.radians(1.5) else 0
+    REACH = 380
     rank_w = {'kingdom': 0.8, 'empire': 0.75, 'khanate': 0.7, 'sultanate': 0.85, 'duchy': 1.0, 'principality': 1.1, 'lordship': 1.5, 'chiefdom': 1.2}
     best = np.full(Lt + 1, np.inf); pq = []
     def anchor(si, p, wgt):
@@ -234,7 +236,8 @@ def main():
         best[l] = 0; owner[l] = si; heapq.heappush(pq, (0.0, l, si, wgt))
         return l
     for s in hist['states']:
-        si = ids_of[s['id']]; wgt = rank_w.get(s['rank'], 1.0)
+        # a small realm whose land the sources bound (the chiefdoms of the Philippines) spreads only as far as its reach
+        si = ids_of[s['id']]; wgt = rank_w.get(s['rank'], 1.0) * (REACH / s['reach_km'] if s.get('reach_km') else 1.0)
         cap = anchor(si, s['capital'], wgt)
         states[si]['capital_loc'] = int(cap) if cap else 0
         for p in s['holdings'][1:]: anchor(si, p, wgt)
@@ -243,7 +246,6 @@ def main():
         for spec in pts:
             nm, c = spec.split('@'); la, lo = map(float, c.split(','))
             anchor(si, {'lon': lo, 'lat': la}, wgt)
-    REACH = 380
     def wander(lo, la, k):
         """a smooth field in 0..1 of a few hundred km, so that the spread's fronts are not circles or straight lines"""
         a, b = math.radians(lo), math.radians(la)
@@ -320,9 +322,30 @@ def main():
     world['arid'] = ins(world['arid'], [round(float(v), 2) for v in arid], [round(float(v), 2) for v in climate(lon[sea_sl], lat[sea_sl], np.zeros(S2))[1]])
     json.dump(world, open(os.path.join(DATA, 'world.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     land = read('land.json')
-    # the Caloric Suitability Index is cut to the game map: the new places have no yield until the whole raster is read
-    land['yield'] += [None] * L2
-    land['curve']['fertile'] += [0.0] * L2
+    # the Caloric Suitability Index of the whole globe (tools/geo/build_csi_crop.py --world), read over the new places as
+    # tools/geo/build_land.py reads it over the game map: each cell of the step takes the index cell its centre lies in
+    cmeta = json.load(open(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', 'pre1500_max_world.json'), encoding='utf-8'))
+    if cmeta['raster']['sha256'] != land['source']['sha256']: raise SystemExit('the whole raster is not the one of land.json')
+    cc = cmeta['crop']
+    csi = np.frombuffer(gzip.open(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', cc['file'])).read(), dtype='<f4').reshape(cc['height'], cc['width'])
+    clon = np.mod(lon_of(np.mod((xs + 0.5) / cells, worldW)) + 180.0, 360.0) - 180.0; clat = lat_of((ys + 0.5) / cells)
+    ccol = np.clip(np.floor((clon - cc['lon0']) / cc['cell_lon']).astype(np.int64), 0, cc['width'] - 1)
+    crow = np.floor((cc['lat0'] - clat) / cc['cell_lat']).astype(np.int64)
+    inside = (crow >= 0) & (crow < cc['height'])
+    cv = np.full(flat.size, np.nan, np.float32); cv[inside] = csi[crow[inside], ccol[inside]]
+    has = np.isfinite(cv); cv0 = np.where(has, cv, 0.0).astype(np.float64)
+    km2c = kmc ** 2
+    nland = (flat >= 1) & (flat <= L2)
+    cov = np.bincount(flat, weights=km2c * has, minlength=n)[1:L2 + 1]
+    tot = np.bincount(flat, weights=km2c * cv0, minlength=n)[1:L2 + 1]
+    ymean = np.divide(tot, cov, out=np.full(L2, np.nan), where=cov > 0)
+    cell_ix = np.where(inside, crow, 0) * cc['width'] + ccol
+    fert2, steps2 = yield_curve(flat, nland, cell_ix, cc['width'] * cc['height'], cv0, km2c, L2)
+    land['yield'] += [None if np.isnan(m) else round(float(m), 1) for m in ymean]
+    land['curve']['fertile'] += [float(f) for f in fert2]
+    land['curve']['steps'] += steps2
+    land['source']['beyond'] = 'places beyond the game map: the whole raster, %s' % cc['file']
+    print('yield of the new places: without data %d, median %.0f' % (int(np.isnan(ymean).sum()), float(np.nanmedian(ymean))))
     json.dump(land, open(os.path.join(DATA, 'land.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     setup['states'] = states
     setup['owner'] = [None if v < 0 else int(v) for v in owner[1:L + 1]] + [int(v) for v in owner[L + 1:]]
