@@ -4,7 +4,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners).
 import * as THREE from 'three/webgpu';
-import { convertToTexture, float, mix, mrt, normalView, output, pass, reflector, uniform, vec3 } from 'three/tsl';
+import { convertToTexture, dot, float, fract, mix, mrt, normalView, output, pass, reflector, screenCoordinate, uniform, userData, vec2, vec3 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -55,12 +55,20 @@ export interface StageOptions {
   fixed?: boolean;
   /** height in blocks of the tallest thing that casts a shadow into the picture */
   tall?: number;
+  /** the canvas to draw on (default: the page's first); the picture is as large as the canvas lies on the page */
+  canvas?: HTMLCanvasElement;
 }
 export interface Stage {
   canvas: HTMLCanvasElement;
   /** Puts a scene on the stage, moved by (x, z) blocks. */
   add(built: StageScene<Shape>, x?: number, z?: number): THREE.Group;
   remove(group: THREE.Group): void;
+  /**
+   * Draws a group on a share of the picture's dots only, to dissolve it into the picture or out of it: of a fine
+   * pattern that gives every dot a value from 0 to 1, those from `from` up to `until` (0 and 1: all of the group).
+   * Two groups whose shares meet take each other's place dot by dot.
+   */
+  dissolve(group: THREE.Group, from: number, until: number): void;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
   put(thing: THREE.Object3D): void;
   take(thing: THREE.Object3D): void;
@@ -70,6 +78,8 @@ export interface Stage {
   aim(x: number, z: number, frameW: number, elevation: number): void;
   /** Asks for a new picture. */
   redraw(): void;
+  /** Stops drawing and lets go of the renderer; the stage is not used after that. */
+  dispose(): void;
   /** The point of the ground under a point of the page, in the stage's blocks; none where the picture shows no ground. */
   pick(px: number, py: number): [number, number, number] | null;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
@@ -80,7 +90,7 @@ export interface Stage {
 
 /** Sets up the stage: renderer, light, camera and picture pipeline, with nothing on it yet. */
 export async function createStage(o: StageOptions = {}): Promise<Stage> {
-  const canvas = document.querySelector('canvas')!;
+  const canvas = o.canvas ?? document.querySelector('canvas')!;
   const fixedW = Number(q.get('w')) || 0, fixedH = Number(q.get('h')) || 0;
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false) });
   renderer.toneMapping = THREE.NoToneMapping;
@@ -91,6 +101,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(...OPEN_WATER);
   const solid = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+  // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
+  // pattern is interleaved gradient noise, which has no stripes or clumps
+  const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)), marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>;
+  solid.maskNode = dots.greaterThanEqual(marks.x).and(dots.lessThan(marks.y));
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   if (flag('mirror', true)) {
@@ -99,6 +113,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     mirror.target.position.y = SEA_Y;
     scene.add(mirror.target);
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+    water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     const tint = new THREE.Color(LOOK.mirrorTint).multiplyScalar(LOOK.mirror);
     water.color.setRGB(1 - tint.r, 1 - tint.g, 1 - tint.b);
@@ -184,9 +199,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
 
   const resize = () => {
-    const w = fixedW || innerWidth, h = fixedH || innerHeight;
+    // a canvas of the page's own is laid out by the page; the stage only follows its size
+    const w = fixedW || (o.canvas?.clientWidth ?? innerWidth) || 1, h = fixedH || (o.canvas?.clientHeight ?? innerHeight) || 1;
     renderer.setPixelRatio(fixedW ? 1 : Math.min(devicePixelRatio, 2));
-    renderer.setSize(w, h, true);
+    renderer.setSize(w, h, !o.canvas || !!fixedW);
     camera.aspect = w / h;
     lens();
     pending = Math.max(pending, 1);
@@ -204,7 +220,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape || !shape.pos.length) continue;
         const mesh = new THREE.Mesh(geometry(shape), material);
-        mesh.castShadow = casts; mesh.receiveShadow = true; mesh.userData.ground = shape === built.ground;
+        mesh.castShadow = casts; mesh.receiveShadow = true; mesh.userData.ground = shape === built.ground; mesh.userData.dots = new THREE.Vector2(0, 1);
         group.add(mesh);
       }
       if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); showFigures(frameW); }
@@ -218,10 +234,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
       pending = Math.max(pending, 1);
     },
+    dissolve(group, from, until) {
+      // the figures are too small to dissolve: they show with the whole group only
+      for (const mesh of group.children) if (mesh.userData.figures) mesh.visible = from <= 0 && until >= 1; else (mesh.userData.dots as THREE.Vector2).set(from, until);
+      pending = Math.max(pending, 1);
+    },
     put(thing) { scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
     redraw() { pending = Math.max(pending, 1); },
+    dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
     pick(px, py) {
       const box = canvas.getBoundingClientRect(), ray = new THREE.Raycaster(), grounds: THREE.Object3D[] = [];
       ray.setFromCamera(new THREE.Vector2(((px - box.left) / box.width) * 2 - 1, 1 - ((py - box.top) / box.height) * 2), camera);

@@ -92,11 +92,15 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     // a rock column has one colour over its whole top, so that the cubes stay crisp
     const rockTop = mat === Mat.Rock ? topColor(t, x, z, mat, wx, wz) : null, pale = mat === Mat.Rock && t.summit(x, z) > SUMMIT;
     const tint = mat === Mat.Grass || mat === Mat.Soil ? t.tint?.(x + 0.5, z + 0.5) ?? null : null;
+    // a column that carries a house, a tree or a field as part of itself has their colour over its whole top
+    const cover = g.wet[i] ? null : t.cover?.(x, z) ?? null;
     // the tiled meadow belongs to green land
-    const patch = mat === Mat.Grass && t.road(x + 0.5, z + 0.5) > 2.2 && !t.city(x + 0.5, z + 0.5) && !(tint && tint[1] > 0.4) ? meadowPatch(wx, wz) : null;
+    const patch = !cover && mat === Mat.Grass && t.road(x + 0.5, z + 0.5) > 2.2 && !t.city(x + 0.5, z + 0.5) && !(tint && tint[1] > 0.4) ? meadowPatch(wx, wz) : null;
     // where less of the sky is seen the ground turns not only darker but cooler: red falls off faster than blue
     const corner = (cx: number, cz: number): RGB => {
-      const l = light(cx, cz, h + 0.02), smoothBase = rockTop ?? topColor(t, cx, cz, mat, cx + ox, cz + oz), base = patch ? mix(smoothBase, patch[0], patch[1]) : smoothBase;
+      const l = light(cx, cz, h + 0.02);
+      if (cover && !(cover.share! < 1)) return [cover.top[0] * grain * l ** 1.5, cover.top[1] * grain * l, cover.top[2] * grain * l ** 0.3];
+      const smoothBase = rockTop ?? topColor(t, cx, cz, mat, cx + ox, cz + oz), own = patch ? mix(smoothBase, patch[0], patch[1]) : smoothBase, base = cover ? mix(own, cover.top, cover.share!) : own;
       // under trees and between houses the grass gives way to dull, dark soil
       const c = mat === Mat.Grass ? mix(base, SHADED_SOIL, Math.min(1, (1 - l) * 1.3)) : base;
       return [c[0] * grain * l ** 1.5, c[1] * grain * l, c[2] * grain * l ** 0.3];
@@ -142,7 +146,10 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
         }
         continue;
       }
-      b.quad([ax, nh, az], [bx, nh, bz], [bx, h, bz], [ax, h, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
+      // what the column carries shows its own sides, down to the ground it stands on
+      const ground = cover ? Math.max(nh, h - cover.rise) : h;
+      if (ground < h) b.quad([ax, ground, az], [bx, ground, bz], [bx, h, bz], [ax, h, az], [shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la)], [dx, 0, dz]);
+      if (nh < ground) b.quad([ax, nh, az], [bx, nh, bz], [bx, ground, bz], [ax, ground, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
     }
   }
   return b;
