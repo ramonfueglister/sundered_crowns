@@ -274,6 +274,10 @@
    "bytes": 20765
   },
   {
+   "name": "eyebrow011.txt",
+   "bytes": 20779
+  },
+  {
    "name": "plait01.txt.zst",
    "bytes": 366356
   },
@@ -424,6 +428,7 @@
   "curly01_n.webp",
   "eyeball.webp",
   "eyebrow001.webp",
+  "eyebrow011.webp",
   "plait01.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",

@@ -205,6 +205,22 @@ at the panel's size because the upper lip lay in shadow as a dark line: the uppe
 lower lip flatter, and `mouth_shut` is 0.75 / 0.6. The lips of round 50 read as painted: `lips` 0.55 / 0.45.
 Still open: women's brows as heavy as men's, children's eyes large and round, the full beard as rows of shingles.
 
+**Girls with a child's head, women that read as children (round 52).** Seen from the front and from the side
+(`?turn=0`, `?turn=-1.3`), not only as the panel shows them:
+
+| what was wrong | cause | now |
+|---|---|---|
+| a girl of 17 with a high round forehead over a small face | MakeHuman's head grows evenly from its child of ten to its adult of 25: at 17 it is more than half a child's | `adult` in the dress table (15 for women, 17 for men, Apoleia's own ages for "grown"): the head has its adult form from then on (`dress.rs` `head_years`). Face width, upper face height and the lower jaw's height reach adult size at 12 in girls and at 15 in boys (Farkas, Posnick & Hreczko 1992, Cleft Palate-Craniofacial Journal 29: 308-315, read from the abstract); the ages chosen are later than those, PLACEHOLDER |
+| a woman's brows as a broad dark bar low over the eye, as a man's | everyone wore MakeHuman's `eyebrow001`, and Apoleia paints the brow's colour on the skin under it (made for the faceted look, which has no hairs) | `brows` in the dress table: women wear `eyebrow011` (finer, tapering); `brow_paint` 0.25 for women, 0.6 for men; the brows a little higher and level (`rest`) |
+| a woman's eyes as slits | the lids of round 50 were set on the man | `lids` per sex (women: only the fold, 0.3); the eyes a little larger (`rest`) |
+| a woman of 28 under her veil reads as a child of ten | MakeHuman's woman has a round head with a short nose and chin; `jaw_women` and the jaw that closes the mouth shorten the chin further | women's weights in `rest`: chin and nose longer, the head more oval, the forehead lower |
+
+Tried and dropped: the brows drawn 0.05 higher than MakeHuman lays them (they sink into the forehead, and what
+reads as a bar is the shade of the socket, which stays); the mouth narrower and further back (a puckered mouth
+with a dark gap); a chin longer still (0.7: pointed). The change at the panel's size is small: the women read as
+women of their age, not as CK3's. Open: the full and the white beard as rows of shingles are now what stands out
+most; children's eyes large and dark; men all wear one cut of hair.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips) and full and white beards (rows of card ends) are not; the thrown-back hood closes round the neck since

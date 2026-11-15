@@ -31,6 +31,8 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     };
     // macro targets: sex × age × base type, sex × age × muscle × weight
     let yrs = p.age;
+    // a dress with a table may say from which age a head has its adult form (MakeHuman's: 25)
+    let yrs = p.dress.set().map_or(yrs, |d| crate::dress::head_years(d.adult[if p.female { 0 } else { 1 }], yrs));
     let a = if yrs < 11.0 {
         (yrs - 1.0) / 10.0 * 0.1875
     } else if yrs < 25.0 {
@@ -38,6 +40,7 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     } else {
         (0.5 + (yrs - 25.0) / 65.0 * 0.5).min(1.0)
     };
+    let yrs = p.age;
     let age_w: Vec<(&str, f32)> = if a < 0.1875 {
         // MakeHuman's baby at one year, its child at eleven; the baby at
         // most two thirds, more puts a snout on the face and folds the arms
@@ -208,8 +211,8 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     // lids at rest, where a dress with a table asks for them
     if let Some(d) = p.dress.set() {
         for sd in ["l", "r"] {
-            for (t, w) in ["height1-decr", "height2-decr", "height3-decr", "eyefold-down"].iter().zip(d.lids) {
-                add(&format!("eyes/{sd}-eye-{t}"), w);
+            for (k, t) in ["height1-decr", "height2-decr", "height3-decr", "eyefold-down"].iter().enumerate() {
+                add(&format!("eyes/{sd}-eye-{t}"), crate::dress::by_sex(d.lids[0][k], d.lids[1][k], p.female, p.grown()));
             }
         }
         let child = 0.35 + 0.65 * p.grown();

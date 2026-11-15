@@ -103,6 +103,34 @@ mod tests {
     }
 
     #[test]
+    fn a_head_is_grown_when_the_dress_says_so() {
+        use crate::dress::head_years;
+        // up to MakeHuman's child of eleven and from its adult of 25 on the years stay as they are
+        for yrs in [1.0, 8.0, 11.0, 25.0, 40.0, 80.0] {
+            assert_eq!(head_years(15.0, yrs), yrs);
+        }
+        // between them the head gets from child to adult by `adult`, evenly, and stays an adult's
+        assert_eq!(head_years(15.0, 13.0), 18.0);
+        assert_eq!(head_years(15.0, 15.0), 25.0);
+        assert_eq!(head_years(15.0, 20.0), 25.0);
+        assert_eq!(head_years(17.0, 14.0), 18.0);
+        // a dress without an earlier age leaves MakeHuman's
+        assert_eq!(head_years(25.0, 17.0), 17.0);
+        // a girl of 17 of England is far nearer to herself at 25 than a Roman one is
+        let Some(h) = head() else { return };
+        let apart = |dress| {
+            let mut young = look(true, 17.0, 1, 7);
+            young.dress = dress;
+            let mut adult = young.clone();
+            adult.age = 25.0;
+            let (a, b) = (morph_test(&h, &young), morph_test(&h, &adult));
+            a.iter().zip(&b).map(|(p, q)| (0..3).map(|k| (p[k] - q[k]).abs()).fold(0.0, f32::max)).fold(0.0, f32::max)
+        };
+        let (roman, england) = (apart(crate::dress::Dress::Roman), apart(crate::dress::Dress::England1356));
+        assert!(england < roman * 0.25, "{england} {roman}");
+    }
+
+    #[test]
     fn the_face_at_rest_names_targets_the_head_has() {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };

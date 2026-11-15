@@ -266,7 +266,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         (false, true) => 0.55,
         (false, false) => 0.3,
     });
-    let brow_c = cmix(skin, hair, if fem { 0.4 } else { 0.55 });
+    let brow_c = cmix(skin, hair, (if fem { 0.4 } else { 0.55 }) * garb.filter(|_| real.is_some()).map_or(1.0, |d| d.brow_paint[if fem { 0 } else { 1 }]));
     let stub_c = cmix(skin, cmix(hex("#33271f"), hair, 0.3), (if p.age < 20.0 { 0.22 } else { 0.4 }) + 0.22 * cov);
     let in_brow = |c: V3| {
         let ax = c[0].abs();
@@ -996,7 +996,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // real look: MakeHuman brows and lashes as textured cards
         if let Some(dir) = &real {
             // (lashes a very dark shade of the brows' colour, not black; PLACEHOLDER)
-            for (name, col) in [("eyebrow001", cmul(bc, 0.75)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
+            let brow = garb.map_or("eyebrow001", |d| d.brows[if fem { 0 } else { 1 }]);
+            for (name, col) in [(brow, cmul(bc, 0.75)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
                 if let Some(sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
                     out.push(sf);
                 }

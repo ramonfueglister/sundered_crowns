@@ -11,7 +11,7 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
 - Kleider (cloth_tunic, cloth_toga, cloth_palla, cloth_veil): in Blender drapiert, `_ao.txt`
   Schatten in den Falten.
 - Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt;
-  Augen (eyeball.webp: 4 x 4 Irisfarben), Brauen und Wimpern (eyebrow001, Eyelashes01, MakeHuman CC0).
+  Augen (eyeball.webp: 4 x 4 Irisfarben), Brauen und Wimpern (eyebrow001, eyebrow011 für Frauen im Kleid England 1356, Eyelashes01, MakeHuman CC0).
 
 Gebaut mit der Realismus-Pipeline (Blender 5.2, Skripte in /mnt/project-files/portraits/realismus-pipeline/),
 verkleinert auf höchstens 1024 px, WebP; Textdateien über 64 KB zstd-gepackt.

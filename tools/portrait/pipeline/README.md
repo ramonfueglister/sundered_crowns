@@ -30,6 +30,7 @@ Every value is a choice by eye from the rounds against the reference pictures (P
 | full beard cut close `beard_trim` | `python3 beards.py $B beard trim beard_trim` (fewer, broader cards that hardly taper; `TRIM_K`, `TRIM_L`, `TRIM_W` to try others); card images copied from `beard_full.webp`, `beard_full_n.webp` |
 | hair under a hood `bob02` | the same lying flat: `BOB_LIFT=0.015,0.03 BOB_FMIN=6 BOB_FW=62 BOB_FK=0.45 SEED=5 BOB_END=-26 BOB_FRINGE=46 python3 styles.py $B hairflat bob bob02` |
 | hair of girls and young women `plait01` | `python3 styles.py $B plait plait plait01` (centre parting, the hair by the temples over the ears, two plaits; their way down in front of the shoulders is a table in the script, measured on `cote.obj`; `PLAIT_G`, `PLAIT_T`, `PLAIT_HL`, `PLAIT_LIFT`, `PLAIT_R`, `PLAIT_W`). Since round 46 the hairline lies 11 degrees lower and the hair stands further off the head (`PLAIT_HL` 11, `PLAIT_LIFT` 0.075,0.05; before 5 and 0.045,0.04: a high forehead under a flat cap of hair). Its card image is Apoleia's `braid01.webp` unchanged. |
+| women's brows `eyebrow011` | MakeHuman's proxy (makehuman/data/eyebrows/eyebrow011, CC0; H its folder): `python3 convert.py $B $H out eyebrow011`, `ALPHA_GAIN=2.5 python3 tex.py $H out eyebrow011` (2.5 is what Apoleia's `eyebrow001.webp` was written with: its image comes out the same) |
 | normals of the painted caps | `python3 nmap.py bob01_cap.png bob01_cap_n.png 8` |
 | cloth images | `python3 fabric_tex.py out.png out_n.png wool 88`, `... linen 128` |
 

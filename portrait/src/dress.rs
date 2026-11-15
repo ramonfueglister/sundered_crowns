@@ -72,6 +72,13 @@ pub struct DressSet {
     pub beards: [Beard; 6],
     /// The file of the full beard (Apoleia's hangs in long single strands).
     pub beard_full: &'static str,
+    /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Apoleia's `eyebrow001` on
+    /// everyone is a broad, dense bar: on a woman's face it reads as a man's.
+    pub brows: [&'static str; 2],
+    /// How much of the brow's colour is painted on the skin under the brow's hairs, women and men (1 = Apoleia's:
+    /// a band of two fifths to half the hair's colour, drawn for the faceted look that has no hairs). Under hairs
+    /// it reads as a broad dark bar low over the eye.
+    pub brow_paint: [f32; 2],
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
@@ -84,7 +91,17 @@ pub struct DressSet {
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down). Half as much as up to round 49: lids that far down over eyes that
     /// look past the viewer read as lifeless.
-    pub lids: [f32; 4],
+    /// For women and for men (a boy's grow from the women's to the men's, `by_sex`): on MakeHuman's woman, seen a
+    /// little from above, the men's lids left a slit.
+    pub lids: [[f32; 4]; 2],
+    /// From which age a head has its adult form, women and men. MakeHuman's head goes on growing evenly from its
+    /// child of ten to its adult of 25, so that a girl of 17 has more than half a child's head: a high round
+    /// forehead over a small face. Faces are grown far earlier: face width, upper face height and the lower jaw's
+    /// height reach their adult size at 12 in girls and at 15 in boys (Farkas, Posnick & Hreczko 1992, Cleft
+    /// Palate-Craniofacial Journal 29: 308-315; 1594 North Americans of 1 to 18; read from the abstract). The ages
+    /// here are Apoleia's own for "grown" (`Look::grown`), later than those: soft tissue rounds a young face longer
+    /// than the bone grows. PLACEHOLDER.
+    pub adult: [f32; 2],
     /// The mouth at rest: MakeHuman's lips stand a little apart and show the teeth, more so with thin lips.
     /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up. The lower lip pushed up stands
     /// out as a pout from the side; the jaw closes the mouth instead (`rest`).
@@ -92,9 +109,11 @@ pub struct DressSet {
     /// Face and bearing at rest, under every mood: MakeHuman's targets and their weights for women and for men.
     /// Its base has a mouth that turns down at the corners with a heavy lower lip, and brows low over the eyes,
     /// which on a calm face reads as lifeless; its man has a short neck with the head pushed forward, so that a
-    /// gown's shoulders stand as high as his chin. A boy's weight grows from the women's to the men's as he grows up
-    /// (MakeHuman's child stands as its woman does; `by_sex`), and a child's face takes a third of them, growing
-    /// to all (as the genes of the face do, `Look::face`: on a child's small mouth they gave a pout).
+    /// gown's shoulders stand as high as his chin; its woman has a round head with a short nose and chin under
+    /// small eyes, which under a veil reads as a child (the women's weights for brows, eyes, chin, nose, head and
+    /// forehead). A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
+    /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
+    /// face do, `Look::face`: on a child's small mouth they gave a pout).
     pub rest: &'static [(&'static str, f32, f32)],
     /// How strongly a mood shows in the face (Apoleia: 1.7, drawn for a small picture; in a large one a sad
     /// mouth on an old face read as a mask).
@@ -142,21 +161,31 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_trim",
+    brows: ["eyebrow011", "eyebrow001"],
+    brow_paint: [0.25, 0.6],
     lips: [0.55, 0.45],
     hair_red: [0.45, 0.74],
     flush: 0.7,
-    lids: [0.1, 0.3, 0.1, 0.3],
+    lids: [[0.0, 0.0, 0.0, 0.3], [0.1, 0.3, 0.1, 0.3]],
+    adult: [15.0, 17.0],
     mouth_shut: [0.75, 0.6],
     rest: &[
         ("mouth/mouth-angles-up", 0.3, 0.3),
         ("cheek/l-cheek-trans-up", 0.15, 0.15),
         ("cheek/r-cheek-trans-up", 0.15, 0.15),
-        ("eyebrows/eyebrows-trans-up", 0.25, 0.25),
+        ("eyebrows/eyebrows-trans-up", 0.6, 0.25),
+        ("eyebrows/eyebrows-angle-up", 0.45, 0.0),
+        ("eyes/l-eye-scale-incr", 0.4, 0.0),
+        ("eyes/r-eye-scale-incr", 0.4, 0.0),
         ("chin/chin-jaw-drop-decr", 0.6, 0.6),
+        ("chin/chin-height-incr", 0.35, 0.0),
+        ("nose/nose-scale-vert-incr", 0.4, 0.0),
+        ("head/head-oval", 0.3, 0.0),
+        ("forehead/forehead-scale-vert-decr", 0.3, 0.0),
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
         ("mouth/mouth-scale-depth-decr", 0.3, 0.3),
         ("mouth/mouth-upperlip-height-incr", 0.45, 0.45),
-        ("mouth/mouth-upperlip-volume-incr", 0.45, 0.45),
+        ("mouth/mouth-upperlip-volume-incr", 0.25, 0.45),
         ("mouth/mouth-lowerlip-height-decr", 0.5, 0.5),
         ("neck/neck-scale-vert-incr", 0.0, 0.4),
     ],
@@ -174,7 +203,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows and the colour painted under them", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
@@ -190,6 +219,17 @@ impl Dress {
     /// Its table; none for the Roman dress, which lives in the code.
     pub fn set(self) -> Option<&'static DressSet> {
         SETS.iter().find(|(d, _)| *d == self).map(|(_, s)| *s)
+    }
+}
+
+/// The age MakeHuman's head is given for a person of `yrs` years, where a head has its adult form from `adult`
+/// years on (`DressSet::adult`): as it is up to MakeHuman's child (11), from there to `adult` through the years
+/// MakeHuman takes to 25, an adult's from then on.
+pub fn head_years(adult: f32, yrs: f32) -> f32 {
+    if yrs > 11.0 && yrs < 25.0 && adult > 11.0 && adult < 25.0 {
+        (11.0 + (yrs - 11.0) / (adult - 11.0) * 14.0).min(25.0)
+    } else {
+        yrs
     }
 }
 

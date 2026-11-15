@@ -58,3 +58,7 @@ direction) in the dress table; Roman bytes unchanged.
 `rest` holds a weight for women and one for men; `dress.rs` `by_sex` lets a boy grow from the women's value to the
 men's (`rest`, `lean`, gaze), and a child's face takes a third of `rest` and of `mouth_shut`, growing to all
 (`morph.rs`); Roman bytes unchanged.
+`adult` (from which age the head has its adult form, `dress.rs` `head_years`, `morph.rs`), `lids` per sex, `brows`
+(which of MakeHuman's brows women and men wear, `build.rs`; `eyebrow011` added from MakeHuman, CC0) and
+`brow_paint` (how much of the brow's colour is painted on the skin under it, `build.rs`) in the dress table; Roman
+bytes unchanged.
