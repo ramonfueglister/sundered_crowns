@@ -42,8 +42,8 @@ await stage.draw(assets.builder.build(person));            // the picture is on 
    | | mean | worst person |
    |---|---|---|
    | pixels covered by only one of the two (outline) | 0.2 % | 0.2 % |
-   | mean absolute colour difference (0..255) | 7.0 | 9.8 |
-   | difference of the mean colour (0..255, per channel) | −1.8 | −4.7 |
+   | mean absolute colour difference (0..255) | 6.3 | 8.9 |
+   | difference of the mean colour (0..255, per channel) | −3.3 | −6.6 |
 
    Both renders ran on a software graphics driver in the cloud (Godot: llvmpipe, three.js: SwiftShader). Neither was
    checked on a real graphics card.
@@ -54,7 +54,7 @@ await stage.draw(assets.builder.build(person));            // the picture is on 
   Faces come out a little harder and darker in the shadows.
 - **The shadow of the key light is calibrated, not derived**: map of 512 pixels, strength 0.7
   (`src/portrait/stage.ts`). At full strength three.js' shadows were darker and sharper than Godot's (mean colour
-  difference 8.0 instead of 7.0).
+  difference 8.0 instead of 7.0, measured before the textures repeated).
 - **Hair cards** are drawn in two passes (depth of their opaque parts, then blended), which stands in for Godot's
   "alpha with depth pre-pass". Fine strands at the edge of beards differ.
 - Veils and cloaks come out up to 4 units darker.

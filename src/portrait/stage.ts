@@ -9,7 +9,7 @@
 // where Apoleia took it from.
 import {
   ACESFilmicToneMapping, DirectionalLight, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, NoColorSpace,
-  PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector3, WebGLRenderer,
+  PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector3, WebGLRenderer,
 } from 'three';
 import { surfaceGeometry } from './mesh';
 import { drawOrder, normalMapOf, surfaceMaterials } from './materials';
@@ -88,6 +88,7 @@ export class PortraitStage {
       t = this.loader.loadAsync(this.options.url(path)).then(tex => {
         tex.flipY = false; // texture coordinates as the builder gives them: v grows downwards
         tex.colorSpace = colour ? SRGBColorSpace : NoColorSpace;
+        tex.wrapS = tex.wrapT = RepeatWrapping; // as Godot's materials: a cloth's weave tiles over the garment
         tex.minFilter = LinearMipmapLinearFilter;
         tex.generateMipmaps = true;
         return tex;
