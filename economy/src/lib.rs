@@ -1,12 +1,15 @@
 //! The economy engine of the world server: a shell around the unchanged port of BeforeIT.jl, the agent-based model
 //! of Poledna, Miess, Hommes and Rabitsch (2023). The shell loads the parameters, computes periods, hands out key
-//! figures and saves and loads the state. It changes no rule of the port. Since economy feature 4 it runs the port
-//! as the model type of the daily clock ([`clock`]), which replaces two of the port's rules through the port's own
-//! mechanism for model types; with a plan and a window of one period that model type is the port itself.
+//! figures and saves and loads the state. It changes no rule of the port. It runs the port as the model type of the
+//! daily clock ([`clock`]), which replaces rules through the port's own mechanism for model types; with a plan and
+//! a window of one period and without merchants that model type is the port itself.
+//!
+//! An [`Economy`] is one economy of the port. The world has [`trade::Cities`]: every city is an economy, and the
+//! merchants between them are each city's rest of the world ([`trade`]).
 //!
 //! The world server holds no model in memory between two periods. It keeps the state as bytes in the state of the
 //! world (src/sim/state.ts), hands them in, and gets the next state back. So a period is a function of the state
-//! alone, like every other system of the simulation, and a snapshot of the world holds the whole economy.
+//! alone, like every other system of the simulation, and a snapshot of the world holds all economies.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
 pub mod clock;
@@ -153,38 +156,39 @@ fn drop_rows(d: &mut Data, n: usize) {
 /// the instance; its message is then at [`sce_panic_ptr`].
 pub mod abi {
     use super::Economy;
+    use crate::trade::Cities;
     use std::cell::{RefCell, UnsafeCell};
     use std::sync::Once;
 
     thread_local! {
         static OUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
-        /// The economy of the state that the last [`sce_step`] or [`sce_create`] handed out, beside that state. A
-        /// call that is given exactly these bytes again (the world server computes day after day) takes the economy
+        /// The cities of the state that the last [`sce_step`] or [`sce_create`] handed out, beside that state. A
+        /// call that is given exactly these bytes again (the world server computes day after day) takes the cities
         /// from here instead of reading the bytes; any other bytes are read. So the answers stay a function of the
         /// bytes alone.
-        static LAST: RefCell<Option<(Vec<u8>, Economy)>> = const { RefCell::new(None) };
+        static LAST: RefCell<Option<(Vec<u8>, Cities)>> = const { RefCell::new(None) };
     }
 
-    /// The economy of a state, taken out of [`LAST`] when the bytes are those it holds.
-    fn take(state: &[u8]) -> Result<Economy, String> {
+    /// The cities of a state, taken out of [`LAST`] when the bytes are those it holds.
+    fn take(state: &[u8]) -> Result<Cities, String> {
         match LAST.with(|l| l.borrow_mut().take()) {
-            Some((bytes, e)) if bytes == state => Ok(e),
-            _ => Economy::load(state),
+            Some((bytes, all)) if bytes == state => Ok(all),
+            _ => Cities::load(state),
         }
     }
 
-    /// Hands out the state of `e` and keeps both in [`LAST`].
-    fn keep(e: Economy) -> Vec<u8> {
-        let bytes = e.save();
-        LAST.with(|l| *l.borrow_mut() = Some((bytes.clone(), e)));
+    /// Hands out the state of `all` and keeps both in [`LAST`].
+    fn keep(all: Cities) -> Vec<u8> {
+        let bytes = all.save();
+        LAST.with(|l| *l.borrow_mut() = Some((bytes.clone(), all)));
         bytes
     }
 
-    /// What `f` says about the economy of a state, which stays in [`LAST`] when it is the one there.
-    fn look<T>(state: &[u8], f: impl FnOnce(&Economy) -> T) -> Result<T, String> {
+    /// What `f` says about the cities of a state, which stay in [`LAST`] when they are the ones there.
+    fn look<T>(state: &[u8], f: impl FnOnce(&Cities) -> T) -> Result<T, String> {
         LAST.with(|l| match &*l.borrow() {
-            Some((bytes, e)) if bytes == state => Ok(f(e)),
-            _ => Economy::load(state).map(|e| f(&e)),
+            Some((bytes, all)) if bytes == state => Ok(f(all)),
+            _ => Cities::load(state).map(|all| f(&all)),
         })
     }
 
@@ -225,8 +229,8 @@ pub mod abi {
         ok
     }
 
-    fn floats(v: &[f64]) -> Vec<u8> {
-        v.iter().flat_map(|x| x.to_le_bytes()).collect()
+    fn floats(v: impl IntoIterator<Item = f64>) -> Vec<u8> {
+        v.into_iter().flat_map(|x| x.to_le_bytes()).collect()
     }
 
     /// SAFETY: `ptr` and `len` describe memory from [`sce_alloc`] that the caller has filled.
@@ -234,8 +238,30 @@ pub mod abi {
         if len == 0 { &[] } else { unsafe { std::slice::from_raw_parts(ptr, len) } }
     }
 
-    unsafe fn text<'a>(ptr: *const u8, len: usize, what: &str) -> Result<&'a str, String> {
-        std::str::from_utf8(unsafe { bytes(ptr, len) }).map_err(|e| format!("{what} are not text: {e}"))
+    /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
+    /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
+    fn cities(mut list: &[u8], plan: usize, window: usize) -> Result<Cities, String> {
+        fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
+            if list.len() < n {
+                return Err(format!("the list of cities ends {} bytes early", n - list.len()));
+            }
+            let (head, rest) = list.split_at(n);
+            *list = rest;
+            Ok(head)
+        }
+        fn text<'a>(list: &mut &'a [u8], what: &str, c: usize) -> Result<&'a str, String> {
+            let n = u32::from_le_bytes(take(list, 4)?.try_into().unwrap()) as usize;
+            std::str::from_utf8(take(list, n)?).map_err(|e| format!("{what} of city {c} are not text: {e}"))
+        }
+        let mut all = Vec::new();
+        while !list.is_empty() {
+            let c = all.len();
+            let seed = u64::from_le_bytes(take(&mut list, 8)?.try_into().unwrap());
+            let p = text(&mut list, "the parameters", c)?;
+            let ic = text(&mut list, "the initial conditions", c)?;
+            all.push(Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?);
+        }
+        Cities::new(all)
     }
 
     /// Memory for an input of `len` bytes.
@@ -257,30 +283,17 @@ pub mod abi {
         drop(unsafe { Vec::from_raw_parts(ptr, 0, len.max(1)) });
     }
 
-    /// A new economy from the port's parameters and initial conditions (JSON), a 64-bit seed in two halves and the
-    /// two lengths of the daily clock ([`Economy::new`]). Result: its state.
+    /// New cities that trade with each other, from a list of cities (for every city the 64-bit seed, then the
+    /// port's parameters and initial conditions as JSON, each with its length in 32 bits before it) and the two
+    /// lengths of the daily clock ([`Economy::new`], [`Cities::new`]). Result: their state.
     ///
     /// # Safety
     ///
-    /// The pointers and lengths describe memory from [`sce_alloc`] that the caller has filled.
+    /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(
-        p: *const u8,
-        p_len: usize,
-        ic: *const u8,
-        ic_len: usize,
-        seed_lo: u32,
-        seed_hi: u32,
-        plan: u32,
-        window: u32,
-    ) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32) -> u32 {
         hook();
-        answer((|| {
-            let p = unsafe { text(p, p_len, "the parameters") }?;
-            let ic = unsafe { text(ic, ic_len, "the initial conditions") }?;
-            let seed = (seed_hi as u64) << 32 | seed_lo as u64;
-            Ok(keep(Economy::new(p, ic, seed, plan as usize, window as usize)?))
-        })())
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize).map(keep))
     }
 
     /// Computes `periods` periods from a state. Result: the state after them.
@@ -292,13 +305,13 @@ pub mod abi {
     pub unsafe extern "C" fn sce_step(state: *const u8, len: usize, periods: u32) -> u32 {
         hook();
         answer((|| {
-            let mut e = take(unsafe { bytes(state, len) })?;
-            e.step(periods as usize);
-            Ok(keep(e))
+            let mut all = take(unsafe { bytes(state, len) })?;
+            all.step(periods as usize);
+            Ok(keep(all))
         })())
     }
 
-    /// Result: the key figures of a state, [`super::FIGURES`] 64-bit floats.
+    /// Result: the key figures of every city of a state, [`super::FIGURES`] 64-bit floats a city.
     ///
     /// # Safety
     ///
@@ -306,10 +319,11 @@ pub mod abi {
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn sce_figures(state: *const u8, len: usize) -> u32 {
         hook();
-        answer(look(unsafe { bytes(state, len) }, |e| floats(&e.figures())))
+        answer(look(unsafe { bytes(state, len) }, |all| floats(all.cities.iter().flat_map(Economy::figures))))
     }
 
-    /// Result: the accounting identities of a state, six 64-bit floats ([`Economy::checks`]).
+    /// Result: what must be 0 in a state, as 64-bit floats: for every city the six numbers of [`Economy::checks`],
+    /// then for the merchants the pairs of [`Cities::checks`] (what is off, and the amount to judge it by).
     ///
     /// # Safety
     ///
@@ -317,7 +331,9 @@ pub mod abi {
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn sce_checks(state: *const u8, len: usize) -> u32 {
         hook();
-        answer(look(unsafe { bytes(state, len) }, |e| floats(&e.checks())))
+        answer(look(unsafe { bytes(state, len) }, |all| {
+            floats(all.cities.iter().flat_map(Economy::checks).chain(all.checks().into_iter().flatten()))
+        }))
     }
 
     /// Where the result of the last call lies, and how long it is.

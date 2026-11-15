@@ -9,7 +9,8 @@
 //
 // The table and `calibrateEconomy` are yearly (the port's `timescale` is 1: the amounts of a year are the amounts of a
 // period). Since economy feature 4 the model computes one day per period: `dailyEconomy` turns the yearly calibration
-// into the daily one that the world server reads, by the rules listed there.
+// into the daily one, by the rules listed there. Since feature 5 the world has no economy of England as a whole:
+// every city is an economy of its own, calibrated from the table of England at the city's size (`cityTable`).
 
 export type Kind = 'source' | 'derived' | 'assumption';
 export interface Entry<T> { value: T; kind: Kind; source: string }
@@ -21,6 +22,8 @@ export interface CalibrationTable {
   scale: Entry<number>;
   /** the daily clock of economy feature 4 */
   clock: { days_per_year: Entry<number>; plan_days: Entry<number> };
+  /** what a city's table takes in place of England's (economy feature 5) */
+  cities: { structure: Entry<string>; duty_shillings_per_sack: Entry<number> };
   sectors: string[];
   inputs: {
     gdp_nominal_gbp_mn: Entry<number>;
@@ -59,7 +62,7 @@ export interface CalibrationTable {
   };
 }
 
-/** What the world server gives the engine (public/data/economy_england.json). */
+/** What the engine is given for one economy, with the accounts it was computed from. */
 export interface EconomyCalibration {
   case: string;
   /** the year the starting position stands for */
@@ -195,6 +198,17 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     gdpCheck: sum(households) + sum(crown) + sum(investment) + building + X + duty - sum(imports) - gdp,
   };
   return { case: t.case, year: t.year, scale: S, periods_per_year: 1, clock: { plan: 1, window: 1 }, parameters, initial_conditions, accounts };
+}
+
+/** The table of a city with `people` inhabitants (economy feature 5): England's table at the city's share of
+ *  England's people, so that the model computes the city at the scale of the table (1:100), and with the duty
+ *  between cities in place of England's wool duty. Both are assumptions of the table (`cities`). */
+export function cityTable(t: CalibrationTable, people: number): CalibrationTable {
+  if (!(people > 0)) throw new Error(`a city of ${people} people`);
+  const c = structuredClone(t);
+  c.scale.value = t.scale.value * people / (t.inputs.population_thousand.value * 1e3);
+  c.inputs.wool_export.value.duty_shillings_per_sack = t.cities.duty_shillings_per_sack.value;
+  return c;
 }
 
 /** The calibration with one day as the period (economy feature 4), from the yearly one. `days` is the number of

@@ -4,8 +4,9 @@ import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
 /** 2: places have a harvest. 3: places have arable. 4: England has a national economy. 5: the 30 largest cities have
- *  persons and families. 6: the persons have genes. 7: England's economy computes one period a day. Older snapshots
- *  are brought up to date by src/sim/upgrade.ts. */
+ *  persons and families. 6: the persons have genes. 7: the cities have economies of their own that trade with each
+ *  other and compute one period a day; England's economy is gone. Older snapshots are brought up to date by
+ *  src/sim/upgrade.ts. */
 export const STATE_VERSION = 7;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
@@ -61,18 +62,21 @@ export type FamilySchema = typeof FAMILY_SCHEMA;
 /** Texts of a realm (kept beside the table: strings do not go into typed arrays). */
 export interface RealmText { key: string; name: I18n; short: I18n; adjective: I18n }
 
-/** A national economy computed by the economy engine (src/sim/systems/economy.ts). */
-export interface NationalEconomy {
-  /** the day of the world up to which the economy is computed: 0 at the start, then the day of the last period */
+/** The economies of the cities, computed by the economy engine (src/sim/systems/economy.ts). The cities are those
+ *  of `World.cityEconomies`, in its order. */
+export interface CityEconomies {
+  /** the day of the world up to which the economies are computed: the day they were founded on, then the day of the
+   *  last period */
   day: number;
-  /** the state of the model as the engine's bytes (economy/src/state.rs) */
+  /** the state of all cities and of the merchants between them as the engine's bytes (economy/src/state.rs) */
   model: Uint8Array;
-  /** the key figures on that day (FIGURE in src/sim/economy/engine.ts): flows are sums over the last 365 days */
+  /** the key figures of every city on that day (FIGURES numbers a city, FIGURE in src/sim/economy/engine.ts): flows
+   *  are sums over the last 365 days */
   figures: Float64Array;
-  /** the yearly accounts: for each year that has ended, the year and the key figures at its end (YEAR_ROW numbers
-   *  a year, src/sim/systems/economy.ts) */
+  /** the yearly accounts: for each year that has ended, the year and the key figures of every city at its end
+   *  (`yearRow` numbers a year, src/sim/systems/economy.ts) */
   years: Float64Array;
-  /** why the economy stands still, '' while it runs: a day that the engine could not compute stops it for good */
+  /** why the economies stand still, '' while they run: a day that the engine could not compute stops them for good */
   halted: string;
 }
 
@@ -93,7 +97,7 @@ export interface WorldState {
   person: Table<PersonSchema>;
   family: Table<FamilySchema>;
   economy: {
-    /** England as one economy; null in a world that does not start in the year of its calibration */
-    england: NationalEconomy | null;
+    /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
+    cities: CityEconomies | null;
   };
 }

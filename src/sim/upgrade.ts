@@ -5,7 +5,7 @@ import { STATE_VERSION } from './state';
 import type { World } from './world';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
-import { foundEconomy, computeTo } from './systems/economy';
+import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
 
@@ -22,8 +22,8 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 3;
   }
-  if (s.v === 3) { // 3 → 4: England's economy (one period a year; replaced by the step to 7)
-    s.economy = { england: null };
+  if (s.v === 3) { // 3 → 4: England's economy (one period a year; gone with the step to 7, which founds the cities)
+    s.economy = { cities: null };
     s.v = 4;
   }
   if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
@@ -38,11 +38,11 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     giveGenes(s);
     s.v = 6;
   }
-  if (s.v === 6) { // 6 → 7: England's economy computes one period a day. It starts again from the starting position
-    // and computes the days the world has already seen (it depends on nothing else in the state, so the result is
-    // the economy of a world that had the daily clock from its first day). The yearly figures of before are gone.
+  if (s.v === 6) { // 6 → 7: the cities have economies of their own that trade and compute one period a day;
+    // England's economy and its yearly figures are gone. The cities are founded on the day the world has reached,
+    // each from its starting position: the days before are not computed (a world that has run for years would
+    // stand still for minutes), so the first period of the economies is the next day of the world.
     foundEconomy(s, w);
-    computeTo(s, w, s.day);
     s.v = 7;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);

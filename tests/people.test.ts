@@ -98,7 +98,7 @@ describe('the persons of a world founded in 1356', () => {
   });
   it('do not change while the world runs (only their age does)', () => {
     // the size of the state without the economy: its accounts of the last 365 days grow in the first year
-    const size = (x: typeof s) => encodeState({ ...x, economy: { england: null } }).length;
+    const size = (x: typeof s) => encodeState({ ...x, economy: { cities: null } }).length;
     const t = newWorldState().s, before = size(t);
     const { w } = newWorldState();
     for (let d = 0; d < 3; d++) advanceDay(t, w);

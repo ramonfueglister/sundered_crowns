@@ -14,6 +14,11 @@
   "days_per_year": { "value": 365, "kind": "assumption", "source": "the yearly amounts of the sources are spread evenly over 365 days: the year has no seasons. A leap day of the calendar is computed as a day like any other" },
   "plan_days": { "value": 30, "kind": "source", "source": "Dawid, Gemkow, Harting, van der Hoog, Neugart (2011), The Eurace@Unibi Model, Model v1.0 User Manual, section 2.3 (a firm acts 'monthly on the ideosyncratic day of the month to act') and section 4.1.1 ('Firms perform the following activities on a monthly base'), opened on 15 November 2026; a month is taken as 30 days" }
  },
+ "cities": {
+  "about": "Economy feature 5 (docs/ECONOMY_DESIGN.md): every one of the 30 largest cities is an economy of its own, and the cities trade with each other. tools/sim/economy_calibration.ts (cityTable) makes the table of a city from this one.",
+  "structure": { "value": "England 1356", "kind": "assumption", "source": "none. Every city has the economy of England in 1356 at the city's share of England's people: the same sectors, shares, wages and behaviour. No city has data of its own" },
+  "duty_shillings_per_sack": { "value": 0, "kind": "assumption", "source": "none. England's wool duty was a duty of the crown on exports out of the realm, not between cities. Between the cities no duty is raised; the crown of a city takes all its revenue as a direct tax" }
+ },
  "sectors": ["agriculture", "industry", "services"],
  "inputs": {
   "gdp_nominal_gbp_mn": { "value": 4.52478, "kind": "source", "source": "Bank of England, A millennium of macroeconomic data, version 3.1, sheet A1, column V, year 1356: nominal GDP at market prices (Broadberry, Campbell, Klein, Overton, van Leeuwen)" },
