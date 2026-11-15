@@ -101,11 +101,11 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
   m.roughness = k.rough; m.ior = ior(k.specular);
   m.onBeforeCompile = shader => {
-    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY;'),
-      '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y;');
-    shader.fragmentShader = swap(swap(shader.fragmentShader, '#include <common>', '#include <common>\nvarying float vLidY;'),
+    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
+      '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y; vLidX = abs( objectNormal.x );');
+    shader.fragmentShader = swap(swap(shader.fragmentShader, '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <color_fragment>', `#include <color_fragment>
-diffuseColor.rgb *= vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) );
+diffuseColor.rgb *= vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;

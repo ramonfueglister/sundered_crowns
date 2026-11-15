@@ -12,6 +12,9 @@ export interface StageLight { from: readonly [number, number, number]; colour: s
 export interface StageProfile {
   key: string;
   lights: { key: StageLight; rim: StageLight; fill: StageLight };
+  /** Whether the rim light throws shadows too. Without them it shines through the head from behind onto the side
+   *  of the nose (Apoleia's stage has none). */
+  rimShadow: boolean;
   sky: { top: string; ground: string; energy: number };
   exposure: number;
   /** How far the head is turned to the left (radians), and how far above the point it looks at the camera stands
@@ -26,10 +29,11 @@ export interface StageProfile {
    *  how much of its colour is left (1 = all). */
   skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
-   *  ball's normal), a tint, how much of its colour is left (1 = all), how far its darks are lifted (the exponent
+   *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
+   *  of the gaze), a tint, how much of its colour is left (1 = all), how far its darks are lifted (the exponent
    *  on the colour: below 1 a dark iris shows its colour), and the glint of the key light on it
    *  (roughness: the rougher the larger and fainter; Godot's "specular"). */
-  eye: null | { lid: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; colour: number; lift: number; rough: number; specular: number };
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; colour: number; lift: number; rough: number; specular: number };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -52,6 +56,7 @@ export const APOLEIA: StageProfile = {
     fill: { from: [3.0, -1.0, 5.0], colour: '#ffe2c8', energy: 0.35 },
   },
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.75 },
+  rimShadow: false,
   exposure: 0.92,
   turn: -0.35, rise: 0.08,
   anisotropy: 1,
@@ -61,21 +66,23 @@ export const APOLEIA: StageProfile = {
 };
 
 /** England 1356: the key light more from the side and less light from all round than Apoleia's, so that a face has
- *  a lit and a shaded half; matt, blotchy, less coloured skin with a soft edge of the shadow; eyes shaded by the
- *  lid, with a glint; thin lashes and brows that do not read as painted; matt hair. All PLACEHOLDER (see above). */
+ *  a lit and a shaded half; a rim light with shadows; matt, blotchy, less coloured skin with a soft edge of the
+ *  shadow; eyes shaded by the lid and in their corners, with a glint; thin lashes and brows that do not read as
+ *  painted; hair with a sheen of strands. All PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
-    key: { from: [-4.5, 4.5, 4.0], colour: '#fff0de', energy: 1.8 },
-    rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 1.8 },
-    fill: { from: [3.0, -1.0, 5.0], colour: '#ffe2c8', energy: 0.3 },
+    key: { from: [-5.0, 4.5, 3.2], colour: '#fff0de', energy: 1.9 },
+    rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 1.4 },
+    fill: { from: [3.0, -1.0, 5.0], colour: '#ffe2c8', energy: 0.15 },
   },
-  sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.55 },
+  sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.3 },
+  rimShadow: true,
   exposure: 0.8,
   turn: -0.24, rise: 0.02,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.24, 0.16, 0.12], blotch: 0.11, speckle: 0.10, colour: 0.82 },
-  eye: { lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
+  eye: { corner: { from: 0.3, to: 0.75, dark: 0.4 }, lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35 },

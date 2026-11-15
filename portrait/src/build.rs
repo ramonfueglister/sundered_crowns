@@ -820,7 +820,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             for &v in idx {
                 if !seen[v as usize] {
                     seen[v as usize] = true;
-                    x.pp[v as usize][2] += 0.012;
+                    x.pp[v as usize][2] += garb.map_or(0.012, |d| d.eye_forward);
                 }
             }
             if eye_tex.is_some() {

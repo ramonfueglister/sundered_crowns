@@ -64,12 +64,14 @@ export class PortraitStage {
     };
     this.lights = { key: light(), rim: light(), fill: light() };
     this.light(APOLEIA);
-    const key = this.lights.key;
+    const { key, rim } = this.lights;
     key.castShadow = true;
-    key.shadow.mapSize.set(SHADOW.map, SHADOW.map);
-    key.shadow.bias = -0.0005;
-    key.shadow.normalBias = 0.02;
     key.shadow.intensity = SHADOW.strength;
+    for (const l of [key, rim]) {
+      l.shadow.mapSize.set(SHADOW.map, SHADOW.map);
+      l.shadow.bias = -0.0005;
+      l.shadow.normalBias = 0.02;
+    }
     this.scene.add(this.pivot);
   }
 
@@ -146,10 +148,14 @@ export class PortraitStage {
       l.position.set(at.x + f[0], at.y + f[1], at.z + f[2]);
       l.target.position.copy(at);
     }
-    // the shadow of the key light: a box around head and shoulders
-    const c = this.lights.key.shadow.camera, r = hv * 0.9;
-    c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
-    c.updateProjectionMatrix();
+    // the shadows of the key light and, where the profile has them, of the rim light: a box around head and
+    // shoulders
+    this.lights.rim.castShadow = profile.rimShadow;
+    for (const l of [this.lights.key, this.lights.rim]) {
+      const c = l.shadow.camera, r = hv * 0.9;
+      c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
+      c.updateProjectionMatrix();
+    }
   }
 
   private clear(): void {
