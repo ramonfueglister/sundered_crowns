@@ -174,7 +174,10 @@ if GRID:
             ph = 360.0 * k / NPH - 180.0    # 0 in front
             if kind == 'cowl':
                 continue
-            if kind == 'veil' and abs(ph) < 42 and th < float(os.environ.get('VTH', '38')):
+            # a veil is open in front of the face, and wider below the jaw (VJ, to VW2 at 30 degrees lower), so
+            # that its front edges hang from the temples to the shoulders instead of clinging to the neck
+            _vj = float(os.environ.get('VJ', '-90')); _vw = 42 + (float(os.environ.get('VW2', '42')) - 42) * min(1.0, max(0.0, (_vj - th) / 30.0))
+            if kind == 'veil' and abs(ph) < _vw and th < float(os.environ.get('VTH', '38')):
                 continue
             if kind == 'hood' and (th < float(os.environ.get('TH0', '-33')) or th > float(os.environ.get('THMAX', '90'))):
                 continue
@@ -232,6 +235,7 @@ if GRID:
                     rho = rn + w * (1 - math.cos(u)) / 2 + 0.05 * _fa * _f1 * math.sin(u) * math.sin(3 * u + 0.8 * _f2)
                     idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
         UCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('UCUT', '').split(',') if c]
+        DCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('DCUT', '').split(',') if c]
         st = {}
         for k in range(NPH):
             i0 = idx.get((R0, k))
@@ -260,6 +264,9 @@ if GRID:
                 # the face's opening goes on below the chin as a U cut into the front
                 phd = abs(360.0 * k / NPH - 180.0)
                 if kind == 'hood' and any(phd < w_ and j <= n_ for w_, n_ in UCUT):
+                    continue
+                # and may widen further down (DCUT=width:from ring), for a veil that hangs behind the shoulders
+                if kind == 'hood' and any(phd < w_ and j >= n_ for w_, n_ in DCUT):
                     continue
                 idx[(R0 + j, k)] = len(gp); gp.append([AX[0] + dx * raw[k], ys[k], AX[2] + dz * raw[k]]); rows.append(0.0)
     # below the last ring of rays the cloth goes on as a skirt, a little
@@ -320,7 +327,7 @@ elif kind == 'cowl':
     off = np.full(len(B), 0.02 * S)
 elif kind == 'hood':
     # close on the crown, baggy round the neck, the cape standing off the shoulders
-    off = (0.12 + LOOSE * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1)) * S
+    off = (float(os.environ.get('OFF0', '0.12')) + LOOSE * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1)) * S
 else:
     off = (0.15 + LOOSE * np.clip((5.4 - B[:, 1]) / 1.4, 0, 1)) * S
 # start outside the tunic: where a ray along the normal meets the tunic, at
