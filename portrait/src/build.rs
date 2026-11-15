@@ -331,11 +331,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             }
             let cm = Ctx::mask3(&h.cheek, a, b, cc);
             if cm > 0.35 {
-                col = cmix(col, hex("#c06a58"), (if fem { 0.2 } else { 0.1 }) * cm);
+                col = cmix(col, hex("#c06a58"), garb.filter(|_| real.is_some()).map_or(if fem { 0.2 } else { 0.1 }, |d| d.cheeks[if fem { 0 } else { 1 }]) * cm);
             }
             let (ex, ey) = (c[0].abs() - 0.31, c[1] - 7.36);
             if c[2] > 1.1 && ey > -0.02 && (ex * 0.8).hypot(ey) < 0.15 {
-                col = cmul(col, if fem { 0.8 } else { 0.9 });
+                col = cmul(col, 1.0 - garb.filter(|_| real.is_some()).map_or(if fem { 0.2 } else { 0.1 }, |d| d.sockets[if fem { 0 } else { 1 }]));
             }
             if Ctx::mask3(&h.ear, a, b, cc) > 0.3 {
                 col = cmix(col, hex("#c06a58"), 0.08);
@@ -828,7 +828,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let (cx, cy) = ((cell % 4) as f32, (cell / 4) as f32);
                 // +u away from the nose; a child's iris fills more of the eye
                 let temporal = if c[0] >= 0.0 { 1.0 } else { -1.0 };
-                let ks = 1.0 / (1.0 + 0.23 * (1.0 - grown));
+                let ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
                 // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
                 // image is laid round that direction, which on a ball is the same as turning the eye)

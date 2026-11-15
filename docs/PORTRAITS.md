@@ -22,7 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 28 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -239,9 +239,51 @@ head without it. Tried and dropped: see `tools/portrait/pipeline/README.md`.
 Still open: the beard reaches far down the throat (Apoleia's zone of the beard) and its outline is one shape for
 every man; children's eyes large and dark; men all wear one cut of hair; flat light on flat skin.
 
+**Judged on England's own people, measured per band of lightness (round 54).** Ramon on round 53: "zombie mode,
+not at CK3's level". Two things had hidden what he saw. The rounds were judged on Apoleia's twelve test people in
+England's dress, who are not the people the game has: `tests/portrait/sample_england.json` now holds 28 founders
+of the pool England draws from (women and men of 8 to 68, four of each; written by
+`cargo run --release --example sample -- England Gallia 28` in `portrait/`), and the test page draws them with
+`?sample=england`. And the skin had been set by one median of the lit face. Per band of lightness (CIELAB, men of
+30 beside the ruler in the screenshot):
+
+| L | CK3 a | CK3 b | ours before a | b | ours now a | b |
+|---|---|---|---|---|---|---|
+| 20 to 30 | 16 | 15 | 10 | 10 | 14 | 12 |
+| 30 to 40 | 16 | 19 | 15 | 18 | 20 | 22 |
+| 40 to 50 | 17 | 21 | 16 | 22 | 21 | 26 |
+| 50 to 60 | 18 | 25 | 15 | 23 | 20 | 27 |
+| 60 to 70 | 19 | 27 | 13 | 23 | 17 | 27 |
+| 70 to 80 | 18 | 27 | 11 | 21 | 13 | 23 |
+
+CK3's skin keeps its red from the darkest shade to the lightest; ours lost it at both ends: grey shadows and pale
+lights, which is what dead skin looks like. Now `skin.colour` 1.1 and `skin.tint` [1, 0.72, 0.82]
+(`src/portrait/profile.ts`). The lightest band is still paler than there. One screenshot, one ruler: PLACEHOLDER.
+The test page's `?set=exposure:0.5,skin.colour:1.1,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the profile by
+their path, so that a round of trials needs no build.
+
+| what was wrong | cause | now |
+|---|---|---|
+| dark bars between the lips of every full beard, light dots beside them (they read as teeth) | the beard's zone leaves the mouth free by an ellipse round it, tested at the point where a ray from the head's centre hits the head. Rays through the gap between the lips hit the mouth's hollow behind them, outside the ellipse, and hairs were rooted there | for `crop` the ellipse is tested by the ray's direction (where it crosses the plane z = 1.5), not by where it hits (`beards.py`) |
+| the full beard reached down to the collar | Apoleia's zone of the beard, whose neckline lies low on the throat | `crop` ends under the jaw (`CROP_NECK`, default `6.2,0.3,0.95,0.4`: height at the chin, how much higher towards the ear, from where and over what depth) |
+| every woman frowned | MakeHuman's `eyebrow011` (women's since round 52) sits slanted on these heads, the inner end low over the eye; so do `eyebrow005` and `eyebrow002` | everyone wears `eyebrow001`, which sits level; how heavy it reads is the profile's `brow.brows`. `eyebrow011` is removed |
+| mouths a little open, or pouting | `mouth_shut` was two fixed weights on `mouth-upperlip-ext-down` and `mouth-lowerlip-ext-up`, which do not move the middle of the lips at all (vertices 474 and 493), and the weights that made up for it (lip volumes, heights) gave the pout. MakeHuman's young heads stand open by 0.005 to 0.025 units, and genes, age and moods move the lips too | the mouth is closed by exactly its measured gap, and opened by as much as the lips lie in each other (`morph.rs` `lip_gap`; `mouth_shut`, `mouth_part` in the dress table name the targets and their shares). Test: 864 faces of England (2 sexes, 9 ages, 12 sets of genes, 4 moods) have their lips within 0.002 units; the mouth hacks of rounds 50 and 51 are gone from `rest` |
+| red patches on the cheeks down to the jaw, a darker band over the eyes | Apoleia paints both on the skin for its faceted look (cheeks 0.2 / 0.1, sockets 0.2 / 0.1); the real look has its red from `flush` and the shade from its light | `cheeks`, `sockets` in the dress table, 0 for 1356 |
+| children as dolls: bulging forehead, huge dark eyes | Apoleia lays its own child's face (`KID`, a block of targets, an iris 23 % larger) over MakeHuman's child, which is a child already | `kid` in the dress table, 0 for 1356; `child` holds targets of a child's face per sex (lids lower over the large eyes) |
+
+Tried and dropped: the colour of the key light warmer (`ffdcc4`: a 21 to 24, too red in the middle bands);
+`brow_paint` and `sockets` alone against the frown (what stays is the shade under the brow ridge, which is right);
+`FACE_GAIN` 1.0 in place of 1.6 (hardly visible: `FACE_SOFT` squashes the genes; left as Apoleia has it); for
+girls the mouth further back and less deep (a sunken, old mouth), its corners up by 1.0 (a smirk), narrower and
+lower (pursed).
+Still open: children of 8 keep a pouting mouth that stands forward and large eyes (MakeHuman's child); the plaits'
+hairline lies high, so that girls have a bare forehead; women's lower faces are wide and the women look alike;
+stubble reads as a grey-green patch with a hard edge; the bald head's ring of hair as a dark flap; every man wears
+one cut of hair; flat light; the eye has no cornea.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
-nostrils, edge of the lips) and full and white beards (rows of card ends) are not; the thrown-back hood closes round the neck since
+nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
 round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places

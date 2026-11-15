@@ -67,3 +67,9 @@ skin (pipeline: `beards.py` style `crop`, `hairlib.py` `paint_cap(lift=)`); `bea
 light a painted layer without shadows (`profile.ts` `cap.shadow`, `stage.ts`); Apoleia's profile is unchanged.
 The normal maps of the painted layers of 1356 rewritten without `nmap.py`'s profile for cards; Roman bytes
 unchanged.
+Round 54: what Apoleia stacks for its faceted look is a value of the dress table and 0 for 1356: `kid` (Apoleia's
+own child's face over MakeHuman's child: `look.rs` `KID`, the block of targets in `morph.rs`, the larger iris in
+`build.rs`), `cheeks` and `sockets` (red and shade painted on the skin, `build.rs`). The mouth at rest is closed
+by its measured gap (`morph.rs` `lip_gap`; `mouth_shut`, `mouth_part` name the targets), `child` holds targets of
+a child's face. Everyone wears `eyebrow001` again (`eyebrow011` removed). `examples/sample.rs` writes a sample of
+founders of a pool for the test page. Roman bytes unchanged.

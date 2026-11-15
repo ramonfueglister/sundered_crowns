@@ -135,11 +135,43 @@ mod tests {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };
         for (_, set) in crate::dress::SETS.iter() {
+            for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)) {
+                assert!(h.targets.contains_key(name), "{}: {name}", set.key);
+            }
             for (name, women, men) in set.rest {
                 assert!(h.targets.contains_key(*name), "{}: {name}", set.key);
                 assert!(women.max(*men) > 0.0 && women.min(*men) >= 0.0 && women.max(*men) <= 1.0, "{}: {name}", set.key);
             }
         }
+    }
+
+    #[test]
+    fn a_mouth_at_rest_is_closed_in_the_dress_of_england() {
+        use crate::morph::{lip_gap, morph, LIP_LOWER, LIP_UPPER};
+        let Some(h) = head() else { return };
+        // the two vertices are the lips' meeting point in the middle of MakeHuman's closed mouth
+        let (up, lo) = (h.base[LIP_UPPER], h.base[LIP_LOWER]);
+        assert!(up[0].abs() < 1e-3 && lo[0].abs() < 1e-3, "in the middle");
+        assert!(up[1] > lo[1] && up[1] - lo[1] < 0.01, "touching: {} over {}", up[1], lo[1]);
+        assert!(h.lip[LIP_UPPER] > 0.2 && h.lip[LIP_LOWER] > 0.2, "on the lips");
+        let (mut widest_roman, mut n) = (0f32, 0);
+        for female in [false, true] {
+            for age in [4.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0, 85.0] {
+                for seed in 0..12 {
+                    for mood in [Mood::Neutral, Mood::Content, Mood::Grim, Mood::Sad] {
+                        let mut p = look(female, age, 1, 500 + seed);
+                        p.mood = mood;
+                        widest_roman = widest_roman.max(lip_gap(&h, &morph(&h, &p).0).abs());
+                        p.dress = crate::dress::Dress::England1356;
+                        let gap = lip_gap(&h, &morph(&h, &p).0);
+                        assert!(gap.abs() < 0.002, "{} of {age}, seed {seed}, {mood:?}: lips {gap} apart", if female { "woman" } else { "man" });
+                        n += 1;
+                    }
+                }
+            }
+        }
+        // (Apoleia's mouths, which stay as they are, stand up to this far open or closed)
+        assert!(n == 864 && widest_roman > 0.01, "{widest_roman}");
     }
 
     #[test]

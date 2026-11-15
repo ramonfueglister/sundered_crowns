@@ -263,7 +263,7 @@ impl Look {
     /// A face gene as it shows (-1 .. 1), the child's face mixed in.
     pub fn face(&self, i: usize) -> f32 {
         let g = self.grown();
-        (self.g(i) - 128.0) / 127.0 * (0.35 + 0.65 * g) + KID[i] * (1.0 - g)
+        (self.g(i) - 128.0) / 127.0 * (0.35 + 0.65 * g) + KID[i] * (1.0 - g) * self.dress.set().map_or(1.0, |d| d.kid)
     }
 
     /// The gene as it shows: muscles grow with work, weight with food.

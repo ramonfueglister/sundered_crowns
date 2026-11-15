@@ -130,7 +130,7 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         }
     }
     for (k, &(names, lo, hi)) in FACE.iter().enumerate() {
-        let x = if modules { KID[k] * (1.0 - p.grown()) } else { p.face(k) };
+        let x = if modules { KID[k] * (1.0 - p.grown()) * p.dress.set().map_or(1.0, |d| d.kid) } else { p.face(k) };
         if names.is_empty() {
             if x < 0.0 {
                 add("head/head-oval", -x * 0.8);
@@ -153,7 +153,7 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         }
     }
     // children: a young, round head, full cheeks, open eyes
-    let kid = 1.0 - p.grown();
+    let kid = (1.0 - p.grown()) * p.dress.set().map_or(1.0, |d| d.kid);
     add("head/head-age-decr", kid * 0.8);
     add("head/head-round", kid * 0.4);
     add("eyebrows/eyebrows-trans-up", kid * 0.3);
@@ -219,8 +219,9 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         for &(n, women, men) in d.rest {
             add(n, crate::dress::by_sex(women, men, p.female, p.grown()) * child);
         }
-        add("mouth/mouth-upperlip-ext-down", d.mouth_shut[0] * child);
-        add("mouth/mouth-lowerlip-ext-up", d.mouth_shut[1] * child);
+        for &(n, girls, boys) in d.child {
+            add(n, (if p.female { girls } else { boys }) * (1.0 - p.grown()));
+        }
     }
     let strength = p.dress.set().map_or(1.7, |d| d.mood);
     for &(n, w) in mood {
@@ -242,6 +243,31 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     if l.ill + l.mourn > 0.0 {
         for sd in ["l", "r"] {
             add(&format!("eyes/{sd}-eye-bag-incr"), l.ill * 0.7 + l.mourn * 0.5);
+        }
+    }
+    // the mouth at rest, where a dress with a table asks for it: closed by as much as it stands open, and opened
+    // by as much as the lips lie in each other (MakeHuman's young heads stand a little open; genes, age and moods
+    // each move the lips: a fixed weight on top of them left some mouths open and pressed others to a pout)
+    if let Some(d) = p.dress.set() {
+        let gap = lip_gap(h, &pp);
+        let with = if gap > 0.0 { d.mouth_shut } else { d.mouth_part };
+        // how far a weight of 1 on each target moves the lips apart in the middle
+        let at = |t: &crate::head::Target, v: usize| t.ids.iter().position(|&i| i as usize == v).map_or(0.0, |j| t.d[j][1] as f32 * DELTA_SCALE);
+        let per: f32 = with.iter().filter_map(|&(name, share)| h.targets.get(name).map(|t| share * (at(t, LIP_UPPER) - at(t, LIP_LOWER)))).sum();
+        if per * gap < -1e-9 {
+            let w = (-gap / per).min(MOUTH_MOST);
+            for &(name, share) in with {
+                let Some(t) = h.targets.get(name) else { continue };
+                used += 1;
+                let k = w * share * DELTA_SCALE;
+                for (j, &i) in t.ids.iter().enumerate() {
+                    let dd = t.d[j];
+                    let v = &mut pp[i as usize];
+                    v[0] += dd[0] as f32 * k;
+                    v[1] += dd[1] as f32 * k;
+                    v[2] += dd[2] as f32 * k;
+                }
+            }
         }
     }
     // arms down from the A pose, softly weighted around the shoulder joint
@@ -275,6 +301,20 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         }
     }
     (pp, used)
+}
+
+/// The lowest point of the upper lip and the highest of the lower lip in the middle of the mouth (vertices of
+/// MakeHuman's base head; lib.rs tests that they are those).
+pub(crate) const LIP_UPPER: usize = 474;
+pub(crate) const LIP_LOWER: usize = 493;
+/// The most a mouth is closed or opened by (the weight on the targets' shares; MakeHuman's targets are made
+/// for 0 to 1).
+const MOUTH_MOST: f32 = 2.5;
+
+/// How far the lips of a head stand apart in the middle of the mouth, measured against MakeHuman's base head,
+/// whose mouth is closed: above 0 the mouth stands open, below 0 the lips lie in each other.
+pub(crate) fn lip_gap(h: &Head, pp: &[V3]) -> f32 {
+    (pp[LIP_UPPER][1] - pp[LIP_LOWER][1]) - (h.base[LIP_UPPER][1] - h.base[LIP_LOWER][1])
 }
 
 /// Area-weighted vertex normals over the triangles `idx`.

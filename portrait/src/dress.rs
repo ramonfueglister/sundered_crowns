@@ -73,8 +73,10 @@ pub struct DressSet {
     /// The file of the full beard (Apoleia's hangs in long single strands). England's `beard_crop` has no cards:
     /// the painted layer of short hairs alone, standing off the skin (tools/portrait/pipeline/beards.py `crop`).
     pub beard_full: &'static str,
-    /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Apoleia's `eyebrow001` on
-    /// everyone is a broad, dense bar: on a woman's face it reads as a man's.
+    /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Of those tried, Apoleia's
+    /// `eyebrow001` alone sits level on these heads. `eyebrow011` (women's until round 53), `eyebrow005` and
+    /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
+    /// frown. How heavy a brow reads is `brows` in the stage's profile (src/portrait/profile.ts).
     pub brows: [&'static str; 2],
     /// How much of the brow's colour is painted on the skin under the brow's hairs, women and men (1 = Apoleia's:
     /// a band of two fifths to half the hair's colour, drawn for the faceted look that has no hairs). Under hairs
@@ -103,10 +105,14 @@ pub struct DressSet {
     /// here are Apoleia's own for "grown" (`Look::grown`), later than those: soft tissue rounds a young face longer
     /// than the bone grows. PLACEHOLDER.
     pub adult: [f32; 2],
-    /// The mouth at rest: MakeHuman's lips stand a little apart and show the teeth, more so with thin lips.
-    /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up. The lower lip pushed up stands
-    /// out as a pout from the side; the jaw closes the mouth instead (`rest`).
-    pub mouth_shut: [f32; 2],
+    /// The mouth at rest. MakeHuman's young heads stand a little open, and genes, age and moods each move the
+    /// lips; so the head is closed by exactly as much as its mouth stands open in the middle, with these targets
+    /// in these shares (`mouth_shut`), and opened by as much as its lips lie in each other (`mouth_part`;
+    /// morph.rs `lip_gap`). Until round 53 fixed weights on mouth-upperlip-ext-down and mouth-lowerlip-ext-up,
+    /// which do not move the middle of the lips at all: they left mouths open and gave a pout. Empty lists leave
+    /// the mouth as it comes.
+    pub mouth_shut: &'static [(&'static str, f32)],
+    pub mouth_part: &'static [(&'static str, f32)],
     /// Face and bearing at rest, under every mood: MakeHuman's targets and their weights for women and for men.
     /// Its base has a mouth that turns down at the corners with a heavy lower lip, and brows low over the eyes,
     /// which on a calm face reads as lifeless; its man has a short neck with the head pushed forward, so that a
@@ -134,6 +140,20 @@ pub struct DressSet {
     pub gaze: [f32; 2],
     /// Women's jaw and jaw angle narrower and softer on average: shift of the genes headF and jaw.
     pub jaw_women: f32,
+    /// How much of Apoleia's child's face lies over MakeHuman's own child (1 = all of it): Apoleia adds a round
+    /// head with a high forehead, a small chin and nose and large, wide open eyes (look.rs `KID`, morph.rs) to a
+    /// head that is a child's already. In the faceted look that reads as a child; in the real look as a doll.
+    pub kid: f32,
+    /// Paint on the skin that Apoleia's faceted look needs and the real look has from its light and its images
+    /// (build.rs): how much red is mixed into the cheeks (Apoleia's 0.2 on women, 0.1 on men: on the real look a
+    /// red patch down to the jaw), and how much darker the skin between eye and brow is (Apoleia's 0.2 on women,
+    /// 0.1 on men: the real look has the shade under the brow from its light already, and the two add up).
+    /// Women, men.
+    pub cheeks: [f32; 2],
+    pub sockets: [f32; 2],
+    /// Targets of a child's face, a weight for girls and one for boys: in full on a small child, fading as it
+    /// grows up (`Look::grown`). The counterpart of `rest`, which a child takes a third of.
+    pub child: &'static [(&'static str, f32, f32)],
     pub sources: &'static [Source],
 }
 
@@ -162,14 +182,15 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
-    brows: ["eyebrow011", "eyebrow001"],
-    brow_paint: [0.25, 0.6],
+    brows: ["eyebrow001", "eyebrow001"],
+    brow_paint: [0.0, 0.0],
     lips: [0.55, 0.45],
     hair_red: [0.45, 0.74],
     flush: 0.7,
     lids: [[0.0, 0.0, 0.0, 0.3], [0.1, 0.3, 0.1, 0.3]],
     adult: [15.0, 17.0],
-    mouth_shut: [0.75, 0.6],
+    mouth_shut: &[("mouth/mouth-upperlip-height-incr", 0.6), ("mouth/mouth-lowerlip-middle-down", 0.4)],
+    mouth_part: &[("mouth/mouth-lowerlip-middle-up", 1.0)],
     rest: &[
         ("mouth/mouth-angles-up", 0.3, 0.3),
         ("cheek/l-cheek-trans-up", 0.15, 0.15),
@@ -183,11 +204,6 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("nose/nose-scale-vert-incr", 0.4, 0.0),
         ("head/head-oval", 0.3, 0.0),
         ("forehead/forehead-scale-vert-decr", 0.3, 0.0),
-        ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
-        ("mouth/mouth-scale-depth-decr", 0.3, 0.3),
-        ("mouth/mouth-upperlip-height-incr", 0.45, 0.45),
-        ("mouth/mouth-upperlip-volume-incr", 0.25, 0.45),
-        ("mouth/mouth-lowerlip-height-decr", 0.5, 0.5),
         ("neck/neck-scale-vert-incr", 0.0, 0.4),
     ],
     mood: 0.6,
@@ -195,6 +211,13 @@ pub static ENGLAND_1356: DressSet = DressSet {
     lean: [-0.1, 0.14],
     gaze: [-0.2, 0.0],
     jaw_women: -0.35,
+    kid: 0.0,
+    cheeks: [0.0, 0.0],
+    sockets: [0.0, 0.0],
+    child: &[
+        ("eyes/l-eye-height2-decr", 1.0, 0.6),
+        ("eyes/r-eye-height2-decr", 1.0, 0.6),
+    ],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -204,7 +227,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows and the colour painted under them", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows, and how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 

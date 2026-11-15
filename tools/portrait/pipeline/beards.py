@@ -64,17 +64,29 @@ def front_depth():
 # --- the beard zone: a signed distance (units, positive inside) ---
 TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'trim': 7.45, 'crop': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
 RAISE = {'full': 0.04, 'trim': 0.04, 'crop': 0.04, 'phil': 0.07}.get(style, 0.0)
+# the neckline: its height in front, how much higher it lies towards the neck, from which depth (z) and over which
+# (Apoleia's reaches 0.15 below the chin and so down the front of the throat; `crop` ends under the jaw)
+NECK = tuple(float(t) for t in os.environ.get('CROP_NECK', '6.2,0.3,0.95,0.4').split(',')) if style == 'crop' else (6.05, 0.37, 0.8, 0.5)
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]
     ax = np.abs(x)
     top = np.interp(ax, [0, 0.3, 0.45, 0.55, 0.68, 0.78, 1.3], [6.86, 6.85, 6.80, 6.745 + RAISE, 6.93 + RAISE, TOPS, TOPS])
     g = top - y
-    g = np.minimum(g, y - (6.05 + 0.37 * np.clip((0.8 - z) / 0.5, 0, 1)))       # neckline
+    g = np.minimum(g, y - (NECK[0] + NECK[1] * np.clip((NECK[2] - z) / NECK[3], 0, 1)))       # neckline
     g = np.minimum(g, z - np.interp(y, [6.3, 6.6, 6.85, 7.5], [0.25, 0.45, 0.6, 0.66]))    # in front of the ear
     g = np.minimum(g, 0.86 - ax)
     em = (np.sqrt((x / 0.39) ** 2 + ((y - 6.6) / 0.12) ** 2) - 1) * 0.11          # the mouth
-    g = np.minimum(g, np.where(z > 1.0, em, 1.0))
+    if style == 'crop':
+        # the skin point of a direction through the gap between the lips lies deep in the mouth's hollow, where
+        # this test by depth does not reach: hairs rooted there showed as dark bars between the lips (Apoleia's own
+        # beards were written so). Here the mouth is left free by where the direction passes the plane of the lips
+        k = (1.5 - HC[2]) / np.maximum(z - HC[2], 1e-3)
+        xm, ym = HC[0] + (x - HC[0]) * k, HC[1] + (y - HC[1]) * k
+        em = (np.sqrt((xm / 0.39) ** 2 + ((ym - 6.6) / 0.12) ** 2) - 1) * 0.11
+        g = np.minimum(g, np.where(z - HC[2] > 0.2, em, 1.0))
+    else:
+        g = np.minimum(g, np.where(z > 1.0, em, 1.0))
     if style == 'chin':
         # chin beard with moustache: the chin below the mouth, widening to the corners
         w = 0.32 + 0.14 * np.clip((y - 6.42) / 0.3, 0, 1)
