@@ -4326,7 +4326,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#8b6371",
+   "color": "#8f6271",
    "capital": {
     "name": "Pronsk",
     "lat": 54.12,
@@ -4892,7 +4892,7 @@
    "government": "tribal_federation",
    "culture": "mordvin",
    "faith": "finnic_old",
-   "color": "#595241",
+   "color": "#5a523e",
    "capital": {
     "name": "Temnikov",
     "lat": 54.63,

@@ -273,7 +273,8 @@ def main():
         for v in adj[u]:
             # the new realms also take land of the game map that no realm holds next to theirs (Sindh beside Delhi),
             # so that no realm ends on the meridian of the map's edge
-            if not (L < v <= Lt or (1 <= v <= L and old_owner[v] < 0 and states[si]['id'] in new_ids)): continue
+            # (those reaching beyond it too in the steppe south of 55° N, not the forest of Yugra to the north)
+            if not (L < v <= Lt or (1 <= v <= L and old_owner[v] < 0 and (states[si]['id'] in new_ids or (states[si]['id'] in hist['extends'] and lat0[v - 1] < 55)))): continue
             nd = d + km_between(u, v) * wgt * (0.7 + 0.6 * wander(*ll(v), 1))
             if nd < best[v] and nd < REACH:
                 best[v] = nd; owner[v] = si; heapq.heappush(pq, (nd, v, si, wgt))

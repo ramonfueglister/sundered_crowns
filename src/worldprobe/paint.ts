@@ -68,7 +68,8 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
   const out = new Uint8ClampedArray(side * side * 4), perDot = 2 ** level / cells, lands = r.owner.length, chosen = r.chosen ?? -1;
   // a margin of dots around the tile, wide enough for the shading, so that a dot's distances are those of the whole map
   const margin = marginOf(level, cells), n = side + 2 * margin;
-  const kind = new Int16Array(n * n), place = new Int32Array(n * n);
+  // `onMap`: the dot lies on the game map (its places end at the map's edge, which is no line between places on the land)
+  const kind = new Int16Array(n * n), place = new Int32Array(n * n), onMap = new Uint8Array(n * n);
   for (let y = 0; y < n; y++) {
     const my = Math.floor((ty * side + y - margin + 0.5) * perDot);
     for (let x = 0; x < n; x++) {
@@ -76,6 +77,8 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
       const at = placeAt(r, mx, my);
       if (at === OUTSIDE) { place[i] = -1; kind[i] = OUTSIDE; continue; }
       place[i] = at;
+      const wx = r.round ? ((mx % r.round) + r.round) % r.round : mx;
+      onMap[i] = wx < r.w && my >= 0 && my < r.h ? 1 : 0;
       kind[i] = at < 0 || at >= lands ? WATER : r.owner[at] >= 0 ? r.owner[at] : NONE;
     }
   }
@@ -91,7 +94,7 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
       if (k !== WATER && o !== WATER && o !== k) border[i] = 1;
       if ((k === WATER) !== (o === WATER)) coast[i] = 1;
       if (k === WATER && o === WATER && place[j] !== place[i]) zone[i] = 1;
-      if (k >= 0 && o === k && place[j] !== place[i] && j > i) seam[i] = 1;
+      if (k >= 0 && o === k && place[j] !== place[i] && j > i && onMap[i] === onMap[j]) seam[i] = 1;
       if (chosen >= 0 && place[i] === chosen && place[j] !== chosen) mine[i] = 1;
     }
   }
