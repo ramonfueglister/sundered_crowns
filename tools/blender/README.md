@@ -23,8 +23,11 @@ jedes Modell nachvollziehbar, änderbar und auf andere Bauzustände umstellbar, 
    Referenzbild (Bandhöhen, Farben der Sonnenseite, Bogenanteile, Streifen, Breite, Kleinkontrast je Band). Der Gauntlet-Loop läuft, bis
    die Messungen bestehen; dann Ramons Urteil. Was am Bau nicht vermessen ist, folgt dem Referenzbild und steht so
    in der Massdatei.
-5. **Im Spiel:** `glbToBatch()` macht aus der Datei einen `Batch`, den `settle()` wie jedes handgebaute Modell
-   stellt. Das läuft in den Web-Workern der Welt, ohne DOM und ohne Renderer.
+5. **Im Spiel:** ein Eintrag in `MONUMENTS` (`src/buildings/landmarks/index.ts`) nennt die Datei, ihre Grundfläche
+   und Höhe in Blöcken. Die Web-Worker der Welt laden jede Datei einmal (`src/worldprobe/models.ts`), `glbToBatch()`
+   macht daraus einen `Batch`, und `settle()` stellt ihn an den Ort des Wahrzeichens wie jedes handgebaute Modell,
+   ohne DOM und ohne Renderer. Ein Block der Welt ist eine Kartenzelle (rund 540 m), darum stehen die Teile eines
+   Wahrzeichens ohne Abstand am Ort selbst; was keinen ebenen, trockenen Platz findet, zählt als `monument dropped`.
 
 ## Werkzeug
 

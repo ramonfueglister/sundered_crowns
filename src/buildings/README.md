@@ -15,6 +15,22 @@ at the top of `index.ts`.
   deliberate change to a building rewrites it (`UPDATE_GOLDEN=1 npx vitest run tests/buildings`) and says so in the
   commit, with a picture pair against the reference.
 
+## The house of the near view
+
+Up close, a house is built from fine blocks of an eighth of a storey (`VOXEL` in `houses/style.ts`, 0.375 m), the
+size Ramon's reference class image of 2026-11-15 draws its houses at (`traditions/measures/referenzklasse_nahsicht.json`
+holds what was measured on it: storey 8 fine blocks, window 2 × 3, door 3 × 5 under a hood, plinth, string course,
+cornice, a roof plate of tile cubes, the clutter of the quay). `houses/grammar.ts` is the split grammar: the plot
+becomes a body of storeys, each storey's wall is split into axes, each axis gets a part from `houses/parts.ts`
+(windows straight or under a pointed arch, doors, shop fronts, water gates, the faint ashlar grid, tile cubes, Venetian
+chimneys, corbels, the roof terrace), the quay gets its clutter from `houses/clutter.ts`. All sizes come from a
+`Tradition` (`traditions/tradition.ts`), which a tradition file builds from its measure file: `traditions/venice.ts`
+from `measures/venedig_1356.json`. `detail: 0` builds the same house for the far view (about 320 triangles for a small
+house instead of about 10,000).
+
+The near probe (`near-probe.html`, `src/lookprobe/near.ts`) shows a quay of Venice on the look probe's stage;
+`tools/lookprobe/gauntlet_near.py` measures it against the reference class image.
+
 ## Building tradition by tradition
 
 Each region goes through the same steps, and the next region starts only after Ramon has judged the last one:

@@ -37,8 +37,31 @@ export function parseColor(h: string | undefined): number {
 export function createWorldState(w: World, setup: SetupState, seed: number): WorldState {
   const L = w.L;
   const realm = createTable(REALM_SCHEMA, setup.states.length);
-  const realmText: RealmText[] = [];
-  for (const st of setup.states) {
+  const place = {
+    owner: new Int16Array(L).fill(-1), culture: new Uint16Array(L), faith: new Uint8Array(L), pop: new Float32Array(L),
+    harvest: new Float64Array(L), arable: new Float64Array(L), // in the order the columns were added (src/sim/upgrade.ts)
+  };
+  const s: WorldState = {
+    v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
+    place, realm, realmText: [], ruler: [],
+    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
+    // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
+  };
+  addRealms(s, setup, 0, L);
+  setPlaces(s, setup, 0, L);
+  // a capital the realm does not hold is no capital
+  for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
+  if (s.startYear === 1356) fitPlacesToCities(s); // no place is smaller than its cities
+  foundPeople(s);
+  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
+  foundEconomy(s, w);
+  return s;
+}
+
+/** Adds the realms of the setup from number `from` on, with their capitals among the `L` places. */
+export function addRealms(s: WorldState, setup: SetupState, from: number, L: number): void {
+  const realm = s.realm;
+  for (const st of setup.states.slice(from)) {
     const id = spawn(realm), c = realm.cols;
     const cap = (st.capital_loc ?? 0) - 1;
     c.capital[id] = cap >= 0 && cap < L ? cap : -1;
@@ -47,30 +70,19 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
     c.faith[id] = faithIndex(st.faith);
     c.rank[id] = Math.max(0, RANKS.indexOf((st.rank ?? 'duchy') as any));
     const name = st.name, short = st.short ?? name;
-    realmText.push({ key: st.id, name, short, adjective: st.adjective ?? short });
+    s.realmText.push({ key: st.id, name, short, adjective: st.adjective ?? short });
+    s.ruler.push('');
   }
-  const place = {
-    owner: new Int16Array(L).fill(-1), culture: new Uint16Array(L), faith: new Uint8Array(L), pop: new Float32Array(L),
-    harvest: new Float64Array(L), arable: new Float64Array(L), // in the order the columns were added (src/sim/upgrade.ts)
-  };
-  for (let i = 0; i < L; i++) {
+}
+
+/** Sets the places `from` … `to` − 1 as the setup has them: holder, culture, faith and people. */
+export function setPlaces(s: WorldState, setup: SetupState, from: number, to: number): void {
+  const place = s.place, n = s.realm.size;
+  for (let i = from; i < to; i++) {
     const o = setup.owner[i];
-    place.owner[i] = Number.isInteger(o) && o >= 0 && o < realm.size ? o : -1;
+    place.owner[i] = Number.isInteger(o) && o >= 0 && o < n ? o : -1;
     place.culture[i] = cultureIndex(setup.culture[i]);
     place.faith[i] = faithIndex(setup.faith[i]);
     place.pop[i] = Math.max(0, setup.pop[i] ?? 0);
   }
-  // a capital the realm does not hold is no capital
-  for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
-  const s: WorldState = {
-    v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
-    place, realm, realmText, ruler: new Array(realm.size).fill(''),
-    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
-    // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
-  };
-  if (s.startYear === 1356) fitPlacesToCities(s); // no place is smaller than its cities
-  foundPeople(s);
-  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
-  foundEconomy(s, w);
-  return s;
 }

@@ -21,8 +21,11 @@ export const PAPER_COARSEST = 6;
 const TILT_FROM = 500, TILT_UNTIL = 11000, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
 const RELIEF_FROM = 500, RELIEF_LEAST = 0.06;
-/** the realms colour the flat world from here, fully from there */
-const REALMS_FROM = 11000, REALMS_FULL = 19000;
+/**
+ * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
+ * the map comes in one move of the wheel and the world is not seen half under it for long
+ */
+const REALMS_FROM = 15000, REALMS_FULL = 17500;
 /** blocks across the picture at the middle of a step: there its heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
@@ -40,6 +43,8 @@ export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.m
 export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, TILT_UNTIL, wide);
 /** How strongly the realms colour the world, 0 … 1. */
 export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
+/** Whether a view shows the realms rather than the land: there a click means the place, nearer it means what stands on the ground. */
+export const realmsShown = (wide: number) => realmsOf(wide) >= 0.5;
 /**
  * How tall a piece of `step` is drawn, as a share of how it was built. From far away the land keeps the height it has
  * between the steps (each coarser step is built flatter), then sinks towards the flat map.

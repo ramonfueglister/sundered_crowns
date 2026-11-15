@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { newWorldState, loadWorld, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
+import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { calibrationJson, cityCalibrations, cityPlaces, dailyCalibration, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, cityTable, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
@@ -560,11 +560,17 @@ describe('the economies of the cities in the world', () => {
       expect(hashState(upgradeState(loaded, w))).toBe(hashState(s));
     });
     it("replace England's economy on the day the world has reached, each from its starting position", () => {
-      // the state of the yearly economy of England (state version 6): a year, a model, 15 figures
-      const old = decodeState(encodeState(run.s)) as any;
-      old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = 6;
-      const loaded = upgradeState(decodeState(encodeState(old)), run.w);
+      // the state of the yearly economy of England: a year, a model, 15 figures. Version 7 is the running world (the
+      // places of the whole globe, England's economy); version 6 takes the step to 7 first
+      const england = (v: number) => {
+        const old = decodeState(encodeState(run.s)) as any;
+        old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = v;
+        return upgradeState(decodeState(encodeState(old)), run.w, () => loadSetup(1356));
+      };
+      const loaded = england(7);
+      expect(STATE_VERSION).toBe(8);
       expect(loaded.v).toBe(STATE_VERSION);
+      expect(hashState(england(6))).toBe(hashState(loaded));
       expect((loaded.economy as any).england).toBeUndefined();
       const e = loaded.economy.cities!;
       expect(e.day).toBe(400); expect(e.years.length).toBe(0); expect(e.halted).toBe('');
