@@ -7,6 +7,9 @@ const TRUNK = rgb(0x7a4a2c);
 const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
 const FLANK = rgb(0x4e8a2e), FLANK_AWAY = rgb(0x3e8a4a), FLANK_AWAY_WARM = rgb(0x4c8c36);
 const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
+/** the crowns of the rain forest: deeper and bluer than the leaves of the temperate woods */
+export const JUNGLE = [rgb(0x4f9a2e), rgb(0x5aa232), rgb(0x47902c), rgb(0x62a636)];
+const PALM_TRUNK = rgb(0xa98558), PALM = [rgb(0x5aa23a), rgb(0x66aa3e), rgb(0x4f9636)], ACACIA = [rgb(0x8a9a34), rgb(0x94a23a), rgb(0x7e9230)];
 const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
 const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
@@ -22,9 +25,9 @@ const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb
  * A leafy tree: a bare trunk a good block high under a crown in three tiers (a skirt, the broad middle, a cap), bright
  * on top and darker down the sides; a little under two blocks wide and a good four high at `size` 1.
  */
-export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1) {
+export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1, leaves: readonly RGB[] = LEAVES) {
   // the sides are a deeper green than the yellowish sunlit top
-  const g = r.pick(LEAVES), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
+  const g = r.pick(leaves), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
   const w = 0.92 * s, y0 = y + 1.15 * s, y1 = y0 + 0.7 * s, y2 = y1 + 1.5 * s;
   b.box(x - 0.24, y, z - 0.24, x + 0.24, y0 + 0.2, z + 0.24, TRUNK, { foot: 0.75 });
   b.box(x - w * 0.7, y0, z - w * 0.7, x + w * 0.7, y1, z + w * 0.7, shade(flank, 0.9), { bottom: true, away });
@@ -52,6 +55,26 @@ export function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
   b.box(x - 0.78, y + 0.6, z - 0.78, x + 0.78, y + 3.0 * s, z + 0.78, g, { foot: 0.74, bottom: true, top: shade(g, 1.25), away });
   b.box(x - 0.54, y + 3.0 * s, z - 0.54, x + 0.54, y + 4.5 * s, z + 0.54, shade(g, 1.05), { foot: 0.92, top: shade(g, 1.3), away });
   b.box(x - 0.3, y + 4.5 * s, z - 0.3, x + 0.3, y + 5.5 * s, z + 0.3, shade(g, 1.1), { top: shade(g, 1.35), away });
+}
+
+/** A palm: a thin bare trunk four to five blocks high under a cross of fronds that droop at their tips. */
+export function palm(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const g = r.pick(PALM), top = y + r.range(3.6, 5), under = shade(g, 0.7), reach = r.range(1.0, 1.3);
+  b.box(x - 0.15, y, z - 0.15, x + 0.15, top, z + 0.15, PALM_TRUNK, { foot: 0.8 });
+  b.box(x - 0.34, top - 0.1, z - 0.34, x + 0.34, top + 0.45, z + 0.34, under, { top: g, bottom: true });
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    const ax = x + dx * 0.3, az = z + dz * 0.3, bx = x + dx * reach, bz = z + dz * reach, wide = 0.26;
+    b.box(Math.min(ax, bx) - Math.abs(dz) * wide, top + 0.05, Math.min(az, bz) - Math.abs(dx) * wide, Math.max(ax, bx) + Math.abs(dz) * wide, top + 0.33, Math.max(az, bz) + Math.abs(dx) * wide, under, { top: g, bottom: true });
+    b.box(bx - wide, top - 0.4, bz - wide, bx + wide, top + 0.1, bz + wide, under, { top: shade(g, 0.95), bottom: true });
+  }
+}
+
+/** A tree of the savanna: a short trunk under a broad, flat crown. */
+export function acacia(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const g = r.pick(ACACIA), s = r.range(0.85, 1.2), y0 = y + 1.5 * s, w = 1.15 * s, flank = shade(g, 0.68);
+  b.box(x - 0.2, y, z - 0.2, x + 0.2, y0 + 0.1, z + 0.2, TRUNK, { foot: 0.75 });
+  b.box(x - w, y0, z - w, x + w, y0 + 0.6 * s, z + w, flank, { top: g, bottom: true });
+  b.box(x - w * 0.55, y0 + 0.6 * s, z - w * 0.55, x + w * 0.55, y0 + 0.95 * s, z + w * 0.55, flank, { top: shade(g, 1.05) });
 }
 
 /**

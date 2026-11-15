@@ -171,6 +171,8 @@ export interface GroundTraits {
   bleach(x: number, z: number): number;
   /** how far up its massif a rock column stands (0 … 1); pale summit above `SUMMIT` */
   summit(x: number, z: number): number;
+  /** the colour the meadow is pulled towards where the land is not green (sand, dry grass, snow), and how far (0 … 1) */
+  tint?(x: number, z: number): readonly [readonly [number, number, number], number] | null;
   /** linear RGB of the sides of meadow steps where hills are overgrown; bare earth if left out */
   slope?: readonly [number, number, number];
 }

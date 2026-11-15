@@ -10,11 +10,18 @@ Inputs (all open, fetched into GEO_CACHE on first use):
   - Natural Earth 10m: land, lakes, rivers, each with its European supplement (public domain)
   - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
 Outputs in public/map/regions/<name>/: index.json (projection, list of tiles), <tx>_<ty>.bin.gz (the rasters of a tile,
-layer after layer, row by row) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map).
+layer after layer, row by row) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map). Tiles are
+named by their place on the whole map.
 
-Usage: python3 tools/worldprobe/build_region.py europe      (about an hour and 8 GB of memory; `alps` takes a minute)
+The whole map is too large to cut in one go, so the region `world` is cut part by part (PARTS): every part writes
+its tiles into public/map/regions/world/ and leaves those of the other parts alone. A part is worked out together
+with a margin of land around it, so that its rivers and valleys do not end at its edge.
+
+Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world: about an hour and 8 GB of memory)
+       python3 tools/worldprobe/build_region.py alps        (a region of its own, a minute)
+then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
-import gzip, io, json, math, os, shutil, sys, urllib.request
+import gzip, http.client, io, json, math, os, shutil, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from PIL import Image, ImageDraw
@@ -31,8 +38,20 @@ ZOOM = 8
 REGIONS = {
     # name: west, south, east, north (degrees); the window is widened to whole tiles
     'alps': (6.0, 43.0, 15.0, 48.6),
-    'europe': (-25.0, 34.0, 45.0, 72.0),
 }
+# the parts of the region `world`: first tile and the tile after the last, across and down (the map is 48 x 41 tiles)
+PARTS = {
+    'europe': (21, 0, 41, 20),
+    'asia': (41, 0, 48, 20),
+    'africa_west': (21, 20, 35, 41),
+    'africa_east': (35, 20, 48, 41),
+    'america_north': (0, 0, 21, 14),
+    'america_middle': (0, 14, 21, 28),
+    'america_south': (0, 28, 21, 41),
+}
+# cells of land worked out around a part (Europe was cut first, without)
+MARGIN = {'europe': 0}
+MARGIN_CELLS = 256
 TILES = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
 NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/{name}.geojson'
 SEA, LAKE = 1, 2
@@ -44,10 +63,19 @@ def cached(url, path):
     full = os.path.join(CACHE, path)
     if not os.path.exists(full):
         os.makedirs(os.path.dirname(full), exist_ok=True)
-        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'worldprobe'}), timeout=120) as r:
-            data = r.read()
-        with open(full, 'wb') as f:
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'worldprobe'}), timeout=120) as r:
+                    data = r.read()
+                break
+            except (OSError, http.client.HTTPException):
+                # the line drops now and then: wait and ask again
+                if attempt == 4: raise
+                time.sleep(2 ** attempt)
+        # written under another name first, so that no half file is ever read
+        with open(f'{full}.{os.getpid()}', 'wb') as f:
             f.write(data)
+        os.replace(f'{full}.{os.getpid()}', full)
     with open(full, 'rb') as f:
         return f.read()
 
@@ -137,11 +165,18 @@ def read_rivers(area, water, drawn, km):
 
 
 def main(name):
-    west, south, east, north = REGIONS[name]
-    # the window in cells of the whole map, widened to whole tiles
-    gx0, gy0 = (int(math.floor(v * CELLS / TILE)) * TILE for v in lonlat_to_px(west, north))
-    gx1, gy1 = (int(math.ceil(v * CELLS / TILE)) * TILE for v in lonlat_to_px(east, south))
-    gy0, gy1 = max(gy0, 0), min(gy1, H * CELLS // TILE * TILE)
+    if name in PARTS:
+        # the tiles to write, and around them the margin, as far as the map goes
+        cx0, cy0, cx1, cy1 = (v * TILE for v in PARTS[name]); m = MARGIN.get(name, MARGIN_CELLS)
+        gx0, gy0, gx1, gy1 = max(cx0 - m, 0), max(cy0 - m, 0), min(cx1 + m, W * CELLS), min(cy1 + m, H * CELLS // TILE * TILE)
+        folder = 'world'
+    else:
+        west, south, east, north = REGIONS[name]
+        # the window in cells of the whole map, widened to whole tiles
+        gx0, gy0 = (int(math.floor(v * CELLS / TILE)) * TILE for v in lonlat_to_px(west, north))
+        gx1, gy1 = (int(math.ceil(v * CELLS / TILE)) * TILE for v in lonlat_to_px(east, south))
+        gy0, gy1 = max(gy0, 0), min(gy1, H * CELLS // TILE * TILE)
+        cx0, cy0, cx1, cy1, folder = gx0, gy0, gx1, gy1, name
     w, h = gx1 - gx0, gy1 - gy0
     # cell centres in map pixels and in degrees: columns share a longitude, rows a latitude
     mx, my = (gx0 + np.arange(w) + 0.5) / CELLS, (gy0 + np.arange(h) + 0.5) / CELLS
@@ -234,18 +269,25 @@ def main(name):
         rivers.append({'name': e['name'], 'rank': int(e.get('rank') or 10), 'pts': [[round(v, 1) for v in to_cell(lo, la)] for lo, la in e['line']]})
     rivers += read_rivers(area, water, rivers, km)
 
-    out = os.path.join(ROOT, 'public', 'map', 'regions', name)
-    shutil.rmtree(out, ignore_errors=True); os.makedirs(out)
+    out = os.path.join(ROOT, 'public', 'map', 'regions', folder)
+    if folder == name: shutil.rmtree(out, ignore_errors=True)
+    os.makedirs(out, exist_ok=True)
+    # of a region cut in parts, the tiles of the other parts stay
+    mine = lambda key: cx0 <= int(key.split('_')[0]) * TILE < cx1 and cy0 <= int(key.split('_')[1]) * TILE < cy1
+    for f in os.listdir(out):
+        if f[0].isdigit() and mine(f.split('.')[0]): os.remove(os.path.join(out, f))
     layers = [np.clip(np.round(shaped), -500, 9000).astype('<i2'),
               # drainage area in km² as a logarithm: 16 steps per doubling
               np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8), water,
               np.clip(np.round(forest), 0, 255).astype(np.uint8), np.clip(np.round(crops), 0, 255).astype(np.uint8)]
     tiles = []
-    for ty in range(h // TILE):
-        for tx in range(w // TILE):
-            box = (slice(ty * TILE, (ty + 1) * TILE), slice(tx * TILE, (tx + 1) * TILE))
+    for ky in range(cy0 // TILE, cy1 // TILE):
+        for kx in range(cx0 // TILE, cx1 // TILE):
+            # the tile's place in the window, in tiles
+            tx, ty = (kx * TILE - gx0) / TILE, (ky * TILE - gy0) / TILE
+            box = (slice(int(ty * TILE), int((ty + 1) * TILE)), slice(int(tx * TILE), int((tx + 1) * TILE)))
             if (water[box] == SEA).all(): continue
-            key = f'{gx0 // TILE + tx}_{gy0 // TILE + ty}'; tiles.append(key)
+            key = f'{kx}_{ky}'; tiles.append(key)
             with gzip.open(os.path.join(out, f'{key}.bin.gz'), 'wb', compresslevel=9) as f:
                 for layer in layers: f.write(layer[box].tobytes())
             # the rivers that cross the tile or pass close by, cut to the stretch that does
@@ -259,12 +301,13 @@ def main(name):
                     run = []
             with open(os.path.join(out, f'{key}.json'), 'w', encoding='utf-8') as f:
                 json.dump(crossing, f, ensure_ascii=False, separators=(',', ':'))
-    meta = {'name': name, 'tile': TILE, 'cells': CELLS, 'mapW': W, 'mapH': H, 'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
+    tiles = sorted((f.split('.')[0] for f in os.listdir(out) if f.endswith('.bin.gz')), key=lambda k: [int(v) for v in k.split('_')][::-1])
+    meta = {'name': folder, 'tile': TILE, 'cells': CELLS, 'mapW': W, 'mapH': H, 'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
             'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'tiles': tiles}
     with open(os.path.join(out, 'index.json'), 'w', encoding='utf-8') as f:
         json.dump(meta, f, separators=(',', ':'))
-    size = sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out))
-    print(f'{name}: {w} x {h} cells, {len(tiles)} tiles, {size / 1e6:.0f} MB, height {height.min():.0f} … {height.max():.0f} m, '
+    size = sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out) if os.path.isfile(os.path.join(out, f)))
+    print(f'{name}: {w} x {h} cells, {folder} now {len(tiles)} tiles, {size / 1e6:.0f} MB, height {height.min():.0f} … {height.max():.0f} m, '
           f'sea {np.mean(water == SEA):.1%}, lakes {count}, rivers {len(rivers)}')
 
 

@@ -58,6 +58,8 @@ function topColor(t: GroundTraits, x: number, z: number, mat: number, wx = x, wz
   // speckled yellow-green
   c = mix(c, GRASS_DRY, hash2(Math.round(wx), Math.round(wz), 23) * (0.25 + 0.3 * t.bleach(x, z)));
   c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(wx / 13, wz / 13, 25)) * 0.6);
+  const tint = t.tint?.(x, z);
+  if (tint) c = mix(c, shade(tint[0], 0.96 + 0.08 * hash2(Math.round(wx), Math.round(wz), 24)), tint[1]);
   if (crop) c = mix(c, crop === 'wheat' ? SOIL_WHEAT : SOIL_VINE, 0.85);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
   const near = t.road(x, z), road = 1 - smooth(1.3, 2.0, near + (noise2(wx / 2, wz / 2, 27) - 0.5) * 0.9);
@@ -87,7 +89,9 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     const grain = mat === Mat.Rock ? 1 : mat === Mat.Paved ? (1.03 + slab * 0.22 + (hash2(wx, wz, 45) - 0.5) * 0.1) * (hash2(wx, wz, 46) < 0.06 ? 0.8 : hash2(wx, wz, 46) > 0.95 ? 1.1 : 1) : 1 + (hash2(wx, wz, 45) - 0.5) * (t.road(x + 0.5, z + 0.5) < 1.7 ? 0.16 : 0.1);
     // a rock column has one colour over its whole top, so that the cubes stay crisp
     const rockTop = mat === Mat.Rock ? topColor(t, x, z, mat, wx, wz) : null, pale = mat === Mat.Rock && t.summit(x, z) > SUMMIT;
-    const patch = mat === Mat.Grass && t.road(x + 0.5, z + 0.5) > 2.2 && !t.city(x + 0.5, z + 0.5) ? meadowPatch(wx, wz) : null;
+    const tint = mat === Mat.Grass || mat === Mat.Soil ? t.tint?.(x + 0.5, z + 0.5) ?? null : null;
+    // the tiled meadow belongs to green land
+    const patch = mat === Mat.Grass && t.road(x + 0.5, z + 0.5) > 2.2 && !t.city(x + 0.5, z + 0.5) && !(tint && tint[1] > 0.4) ? meadowPatch(wx, wz) : null;
     // where less of the sky is seen the ground turns not only darker but cooler: red falls off faster than blue
     const corner = (cx: number, cz: number): RGB => {
       const l = light(cx, cz, h + 0.02), smoothBase = rockTop ?? topColor(t, cx, cz, mat, cx + ox, cz + oz), base = patch ? mix(smoothBase, patch[0], patch[1]) : smoothBase;
@@ -114,6 +118,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
       else if (mat === Mat.Paved && !t.city(x + 0.5, z + 0.5)) side = shade(ISLE_STONE, 0.9 + 0.12 * hash2(Math.floor(wx / 2), Math.floor(wz / 2), 37));
       else if (wetSide || mat === Mat.Paved) side = shade(QUAY, 0.9 + 0.2 * hash2(wx, wz, 37));
       else side = t.slope ? shade(t.slope, 0.9 + 0.2 * hash2(wx, wz, 37)) : EARTH;
+      if (tint && !wetSide) side = mix(side, shade(tint[0], 0.8), tint[1]);
       // the two top corners of this side, in the order that keeps the face turned outwards
       const ax = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x : x + 1, az = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z : z + 1;
       const bx = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x + 1 : x, bz = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z + 1 : z;

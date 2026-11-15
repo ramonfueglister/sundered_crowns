@@ -4,7 +4,7 @@
 // with blocks twice as wide at every step, so that the picture always holds about the same number of blocks.
 // Drag moves the picture, the wheel or two fingers zoom about the pointer, the arrow keys move, + and - zoom.
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
-// ?wide=190 (finest blocks across the picture), ?region=europe (the cut of the world to show). The address follows the view.
+// ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show). The address follows the view.
 import type * as THREE from 'three/webgpu';
 import { smooth } from '../lookprobe/batch';
 import { N, NEAR, RIGHT, SEA_Y, VIEW } from '../lookprobe/layout';
@@ -29,7 +29,7 @@ const elevationOf = (wide: number) => VIEW.elevation + (FAR_ELEVATION - VIEW.ele
 interface Shown { group: THREE.Group; step: number; px: number; pz: number }
 
 async function main() {
-  const name = q.get('region') ?? 'europe', base = import.meta.env.BASE_URL, sky = bakedSky();
+  const name = q.get('region') ?? 'world', base = import.meta.env.BASE_URL, sky = bakedSky();
   const stage = await createStage({ fixed: true, tall: 70 }), status = document.querySelector<HTMLElement>('#status'), canvas = stage.canvas;
   const projection = await projectionOf(name, base);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture

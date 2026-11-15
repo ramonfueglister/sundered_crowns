@@ -5,16 +5,17 @@ Step z of a region is the same map with cells 2^z times as wide, in the same til
 if half of it is, its height lies between the mean and the highest of its land, its drainage is the largest, forest
 and cultivation are the means. Of the rivers only the larger ones go along, the fewer the coarser the step.
 
-Usage: python3 tools/worldprobe/build_overviews.py europe      (a minute; run after build_region.py, which clears the folder)
+Usage: python3 tools/worldprobe/build_overviews.py world      (some minutes and 6 GB of memory; run after build_region.py)
 """
 import gzip, json, os, shutil, sys
 import numpy as np
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
-STEPS = 6
+STEPS = 7
 LAND, SEA, LAKE = 0, 1, 2
+BAND = 2048
 # the rivers of a step: those of at most this rank (Natural Earth's scale rank; rivers read from the drainage are 9 and 10)
-RANK = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3}
+RANK = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2}
 
 
 def write(out, meta, layers, rivers, gx0, gy0):
@@ -48,8 +49,13 @@ def write(out, meta, layers, rivers, gx0, gy0):
     return len(tiles), sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out))
 
 
-def halve(shaped, drainage, water, forest, crops):
-    """Two by two cells into one."""
+def halve(*layers):
+    """Two by two cells into one, a band of rows at a time to keep the memory in bounds."""
+    bands = [halve_band(*(l[r:r + BAND] for l in layers)) for r in range(0, layers[0].shape[0], BAND)]
+    return tuple(np.concatenate([b[k] for b in bands]) for k in range(len(layers)))
+
+
+def halve_band(shaped, drainage, water, forest, crops):
     four = lambda a: a.reshape(a.shape[0] // 2, 2, a.shape[1] // 2, 2).swapaxes(1, 2).reshape(a.shape[0] // 2, a.shape[1] // 2, 4)
     w4, s4 = four(water), four(shaped).astype(np.float32)
     land, lake = w4 == LAND, w4 == LAKE
@@ -93,4 +99,4 @@ def main(name):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1] if len(sys.argv) > 1 else 'europe')
+    main(sys.argv[1] if len(sys.argv) > 1 else 'world')
