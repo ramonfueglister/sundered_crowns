@@ -1,6 +1,6 @@
 // The figures on the stage (lookprobe/stage.ts): which pieces show figures, near or far kit by how much of the world
 // is in the picture, and whether anything walks, so that the stage keeps drawing. Main thread only.
-import * as THREE from 'three/webgpu';
+import type * as THREE from 'three/webgpu';
 import type { Figures } from './crowd';
 import { figureMeshes as build, figureAt as standing, figureSeconds } from './material';
 
@@ -32,20 +32,20 @@ export function showFigures(across: number) {
 }
 
 /**
- * The person whose figure stands nearest a point of the scene (world space), within `reach` blocks across and three
- * up or down, or null: anonymous figures (outside the 30 cities, or without a world server) do not count.
+ * The person whose figure stands nearest a point of the world (finest world blocks; y in blocks as the piece was
+ * built), within `reach` blocks across and three up or down, or null: anonymous figures (outside the 30 cities, or
+ * without a world server) do not count.
  */
-export function personAt(point: THREE.Vector3, reach = 1.2): number | null {
-  const t = figureSeconds(), local = new THREE.Vector3(), inv = new THREE.Matrix4();
+export function personAt(x: number, y: number, z: number, reach = 1.2): number | null {
+  const t = figureSeconds();
   let best: number | null = null, bestD = reach;
   for (const p of shown) {
-    p.near.updateWorldMatrix(true, false);
-    local.copy(point).applyMatrix4(inv.copy(p.near.matrixWorld).invert());
+    const lx = x - (p.f.ox ?? 0), lz = z - (p.f.oz ?? 0);
     for (let i = 0; i < p.f.count; i++) {
       const id = p.f.e[i * 4 + 3];
       if (!id) continue;
-      const [x, y, z] = standing(p.f, i, t), d = Math.hypot(x - local.x, z - local.z);
-      if (d < bestD && Math.abs(y - local.y) < 3) { bestD = d; best = id - 1; }
+      const [fx, fy, fz] = standing(p.f, i, t), d = Math.hypot(fx - lx, fz - lz);
+      if (d < bestD && Math.abs(fy - y) < 3) { bestD = d; best = id - 1; }
     }
   }
   return best;

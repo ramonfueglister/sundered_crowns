@@ -49,7 +49,7 @@ const FEMALE = new Set(['Bäuerin', 'Bürgerin']);
  * c: mode, load, cut, headwear; d: colours of skin, garment, hose, headwear; e: colour of the load and of the hair, the
  * facing of a figure on the spot, and the person it is (id + 1; 0 for an anonymous figure). Colours are 0xRRGGBB as numbers.
  */
-export interface Figures { count: number; a: Float32Array; b: Float32Array; c: Float32Array; d: Float32Array; e: Float32Array }
+export interface Figures { count: number; a: Float32Array; b: Float32Array; c: Float32Array; d: Float32Array; e: Float32Array; /** the piece's ground in the world */ ox?: number; oz?: number }
 
 /**
  * Share of the free columns that hold a figure: of the town streets, of the ground round the houses of villages and
@@ -118,7 +118,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     out[4].push(estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10), pick(HAIR, 11), kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2, shown ? shown.id + 1 : 0);
   }
   const [a, b, c, d, e] = out.map((l) => new Float32Array(l));
-  return { count: a.length / 4, a, b, c, d, e };
+  return { count: a.length / 4, a, b, c, d, e, ox, oz };
 }
 
 /** No figures: for the coarser steps of the map, where a block is wider than a person is tall. */
