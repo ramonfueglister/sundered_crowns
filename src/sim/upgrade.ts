@@ -7,6 +7,10 @@ import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy, computeYear } from './systems/economy';
 import { dayToDate } from './calendar';
+import { fitPlacesToCities, foundPeople } from './systems/people';
+
+/** The fields of a WorldState in the order createWorldState writes them. */
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
 
 export function upgradeState(s: WorldState, w: World): WorldState {
   if (s.v === 1) { // 1 → 2: the harvest of each place (filled by the next step)
@@ -25,6 +29,16 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     for (let y = s.startYear + 1; y <= now; y++) computeYear(s, w, y);
     s.v = 4;
   }
+  if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
+    // died since: the people do not change yet). Places smaller than their cities grow to them; the arable and the
+    // harvest follow on the next 1 January, as they do for any change of people.
+    if (s.startYear === 1356) fitPlacesToCities(s);
+    foundPeople(s);
+    s.v = 5;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
+  // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
+  const o = s as unknown as Record<string, unknown>;
+  for (const k of STATE_FIELDS) if (k in o) { const v = o[k]; delete o[k]; o[k] = v; }
   return s;
 }

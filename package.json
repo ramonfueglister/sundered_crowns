@@ -16,7 +16,8 @@
     "harvest:check": "tsx tools/sim/harvest_check.ts",
     "economy:build": "tsx tools/sim/build_economy.ts",
     "economy:calibrate": "tsx tools/sim/calibrate_economy.ts",
-    "economy:check": "tsx tools/sim/economy_check.ts"
+    "economy:check": "tsx tools/sim/economy_check.ts",
+    "people:check": "tsx tools/sim/people_check.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
