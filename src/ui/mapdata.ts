@@ -1,6 +1,7 @@
 // Map data derived from the game state for the renderer: realm names along their land and the towns of every location.
 // Kept free of the UI and the game client so that it can be tested on its own.
 import { L } from './i18n';
+import type { I18n } from '../sim/i18n';
 import { FAITHS } from '../sim/content/peoples';
 
 /**
@@ -9,15 +10,15 @@ import { FAITHS } from '../sim/content/peoples';
  * the sea. The size follows the extent along the text (in map px); the overlay keeps it within a readable range on screen and
  * resolves overlaps by `weight` (the area of that body).
  */
-export function labelsFor(owner: Int16Array, assets: any, ns: { short: any; alive: boolean; capital?: number }[], knownLocs: Uint8Array | null = null) {
+export function labelsFor(owner: Int16Array, assets: any, ns: ({ short: I18n; capital: number } | undefined)[]) {
   const geo = assets.geo; const L0 = geo.L;
   const X = geo.loc.x, Y = geo.loc.y, A = geo.loc.area;
   const locs: number[][] = ns.map(() => []);
-  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length && (!knownLocs || knownLocs[i] !== 0)) locs[o].push(i); }
+  for (let i = 0; i < L0; i++) { const o = owner[i]; if (o >= 0 && o < ns.length) locs[o].push(i); }
   const CELL = 40;
   const out: any[] = [];
   for (let n = 0; n < ns.length; n++) {
-    const all = locs[n]; if (!all.length || !ns[n]?.alive) continue;
+    const all = locs[n]; const realm = ns[n]; if (!all.length || !realm) continue;
     // connected clusters on a coarse grid (gaps up to about one cell, e.g. narrow straits, are bridged)
     const cells = new Map<number, number[]>();
     for (const i of all) { const k = Math.floor(X[i] / CELL) * 65536 + Math.floor(Y[i] / CELL); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(i); }
@@ -34,7 +35,7 @@ export function labelsFor(owner: Int16Array, assets: any, ns: { short: any; aliv
     }
     let body = comps[0];
     for (const c of comps) if (c.area > body.area) body = c;
-    const cap = ns[n].capital ?? -1;
+    const cap = realm.capital;
     if (cap >= 0 && owner[cap] === n) { const ck = Math.floor(X[cap] / CELL) * 65536 + Math.floor(Y[cap] / CELL); const cc = comps[comp.get(ck) ?? -1]; if (cc && cc.area >= body.area * 0.3) body = cc; }
     let sx = 0, sy = 0, cnt = 0;
     for (const i of body.locs) { const a = Math.max(1, A[i]); sx += X[i] * a; sy += Y[i] * a; cnt += a; }
@@ -52,7 +53,7 @@ export function labelsFor(owner: Int16Array, assets: any, ns: { short: any; aliv
     const co = Math.cos(ang), si = Math.sin(ang);
     const along = Math.sqrt(Math.max(0, a * co * co + 2 * b * si * co + c * si * si));
     const across = Math.sqrt(Math.max(0, a * si * si - 2 * b * si * co + c * co * co));
-    const text = L(ns[n].short).toUpperCase();
+    const text = L(realm.short).toUpperCase();
     // the name spans about the realm's length along the text and is never much taller than the realm is wide
     const size = Math.max(1, Math.min(along * 3.84 / Math.max(3, text.length), across * 2.2));
     // a covered name may slide across its direction while it stays well inside the realm (about 1.2 standard deviations)
@@ -89,11 +90,12 @@ export function labelsFor(owner: Int16Array, assets: any, ns: { short: any; aliv
   return out;
 }
 
-/** Towns and villages for the 3D map: every owned location gets houses by its size, built in the style of its region and faith. */
-export function computeSettlements(owner: Int16Array, assets: any, ns: { faith: number; gov: string; capital?: number }[]) {
+/** Towns and villages for the 3D map: every owned place gets houses by its size, built in the style of its region and its
+ *  realm's faith. */
+export function computeSettlements(owner: Int16Array, assets: any, ns: ({ faith: number; capital: number } | undefined)[]) {
   const g = assets.geo, L = g.L;
   const caps = new Set<number>();
-  for (const n of ns) if (n.capital !== undefined && n.capital >= 0) caps.add(n.capital);
+  for (const n of ns) if (n && n.capital >= 0) caps.add(n.capital);
   const out: { x: number; y: number; size: number; capital: boolean; style: 'north' | 'stone' | 'south' | 'steppe' | 'muslim'; loc: number }[] = [];
   for (let l = 0; l < L && l < owner.length; l++) {
     const o = owner[l];
@@ -101,8 +103,8 @@ export function computeSettlements(owner: Int16Array, assets: any, ns: { faith: 
     const n = ns[o];
     const lat = g.loc.lat[l], lon = g.loc.lon[l], elev = g.loc.elev[l];
     let style: 'north' | 'stone' | 'south' | 'steppe' | 'muslim';
-    if (n && FAITHS[n.faith]?.family === 'muslim') style = n.gov === 'nomadic_horde' ? 'steppe' : 'muslim';
-    else if (n && (n.gov === 'nomadic_horde' || (n.gov === 'tribal_federation' && lon > 28 && lat > 43))) style = 'steppe';
+    if (n && FAITHS[n.faith]?.family === 'muslim') style = 'muslim';
+    else if (lon > 34 && lat > 44) style = 'steppe';
     else if (lat < 44.5) style = 'south';
     else if (elev > 700) style = 'stone';
     else style = 'north';
@@ -110,4 +112,3 @@ export function computeSettlements(owner: Int16Array, assets: any, ns: { faith: 
   }
   return out;
 }
-

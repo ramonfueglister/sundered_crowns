@@ -1,0 +1,23 @@
+{
+ "source": "Broadberry, Campbell, Klein, Overton, van Leeuwen (2010), English Economic Growth, 1270-1700: table 1 (total arable) and table 19 (people; kilocalories per head and day from arable farming)",
+ "method": "the people of each decade are spread over the 162 places of England as on the map in 1356; landLimit and arablePerHead are set so that the places together cultivate the arable of 1300 and of 1380, englandLand so that they bring in the harvest of 1300-09",
+ "targets": {
+  "arable": {
+   "y1300": {
+    "people": 4720000,
+    "acres": 11520000
+   },
+   "y1380": {
+    "people": 2360000,
+    "acres": 8730000
+   }
+  },
+  "harvest": {
+   "people": 4720000,
+   "kcalPerHeadDay": 1242
+  }
+ },
+ "landLimit": 0.39231320026428407,
+ "arablePerHead": 1.7586204007400266,
+ "englandLand": 36030232456.89535
+}

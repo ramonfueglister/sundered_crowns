@@ -1,24 +1,37 @@
-// Node helpers: load the generated data and create a game (tests, AI runs, world server).
-import { readFileSync } from 'node:fs';
+// Node helpers: load the baked map and the start setup (tests, tools, the world server).
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { World } from '../../src/sim/world';
-import { createGame } from '../../src/sim/setup';
-import type { GameState } from '../../src/sim/types';
+import { World, type LandJson, type CultivationJson, type EconomyJson } from '../../src/sim/world';
+import { wasmEconomyEngine, type EconomyEngine } from '../../src/sim/economy/engine';
+import { createWorldState, type SetupState } from '../../src/sim/setup';
+import type { WorldState } from '../../src/sim/state';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
-let _w: World | null = null;
+export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
+const read = (name: string) => JSON.parse(readFileSync(dataPath(name), 'utf8'));
+let world: World | null = null;
 export function loadWorld(): World {
-  if (_w) return _w;
-  const geo = JSON.parse(readFileSync(resolve(ROOT, 'public/data/geo.json'), 'utf8'));
-  const wj = JSON.parse(readFileSync(resolve(ROOT, 'public/data/world.json'), 'utf8'));
-  _w = new World(geo, wj);
-  return _w;
+  return (world ??= buildWorld(loadCultivation()));
 }
-export function loadSetup(year = 1356) { return JSON.parse(readFileSync(resolve(ROOT, `public/data/setup_${year}.json`), 'utf8')); }
-export function loadHubs() { return JSON.parse(readFileSync(resolve(ROOT, 'data/content/trade_hubs.json'), 'utf8')).trade_hubs; }
-export function newGame(seed = 1356, year = 1356, player: number[] = []): { s: GameState; w: World } {
+/** A world with the given calibration of cultivated land (the calibration itself starts from one without). */
+export function buildWorld(cultivation: CultivationJson): World {
+  return new World(read('geo.json'), read('world.json'), loadLand(), cultivation, { engine: loadEconomyEngine(), england: loadEconomy() });
+}
+export function loadLand(): LandJson { return read('land.json'); }
+export function loadCultivation(): CultivationJson { return read('cultivation.json'); }
+export function loadEconomy(): EconomyJson { return read('economy_england.json'); }
+/** The economy engine: the WebAssembly file built from economy/ (npm run economy:build; server/Dockerfile builds it
+ *  into the image). */
+export const ECONOMY_WASM = resolve(ROOT, 'build/economy/sc_economy.wasm');
+let engine: EconomyEngine | null = null;
+export function loadEconomyEngine(): EconomyEngine {
+  if (engine) return engine;
+  if (!existsSync(ECONOMY_WASM)) throw new Error(`${ECONOMY_WASM} is missing: build the economy engine with "npm run economy:build" (needs the Rust toolchain, https://rustup.rs)`);
+  return (engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM)));
+}
+export function loadSetup(year = 1356): SetupState { return read(`setup_${year}.json`); }
+export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
   const w = loadWorld();
-  const s = createGame(w, loadSetup(year), loadHubs(), seed, { player });
-  return { s, w };
+  return { s: createWorldState(w, loadSetup(year), seed), w };
 }
