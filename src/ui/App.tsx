@@ -1,9 +1,10 @@
-// Application shell: sign in, then the map of the world with the top bar and the panel of the selected place.
+// Application shell: sign in, then the map of the world with the HUD (banner, value bar, map tools) and the panel of the selected place.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
-import { MapView, selectedPlace } from './MapView';
+import { MapView, selectedPlace, mapCtl } from './MapView';
+import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
@@ -14,12 +15,47 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 export function App() {
   const st = status.value;
   return <div class={`app lang-${lang.value}`}>
+    <IconDefs />
     {st === 'idle' || st === 'refused' ? <SignIn /> : <>
       <MapView />
       <TopBar />
-      {st !== 'open' && <div class="banner">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
+      <RealmBanner />
+      <MapTools />
+      {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
       {selectedPlace.value >= 0 && <PlacePanel />}
     </>}
+  </div>;
+}
+
+/** The realm the player rules (undefined: none). */
+const myRealm = computed(() => { const m = me.value; return m && m.realm >= 0 ? realmById.value.get(m.realm) : undefined; });
+
+/** Realms with a drawn coat of arms; the others show their initial. */
+const ARMS: Record<string, string> = { venice: '/ui/arms/venice.svg' };
+
+function RealmBanner() {
+  const r = myRealm.value;
+  if (!r) return null;
+  const arms = ARMS[r.key];
+  return <button class="realm-banner" title={L(r.name)} aria-label={L(r.name)} onClick={() => mapCtl.home(r.capital)}>
+    <svg width="145" height="104" viewBox="0 0 150 104" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z" fill="#1450a0" stroke="#e8c35a" stroke-width="3.5" />
+      <path d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z" fill="url(#flagshade)" />
+      <path d="M7 2h137v10c-18 7-38-5-68 1S30 17 7 11z" fill="#0a2e60" opacity=".6" />
+      <path d="M0 82l20 3-5 6 5 6-20-3z" fill="#c99a32" stroke="#8a6a1c" stroke-width=".8" />
+      <rect x="0" y="0" width="6" height="100" fill="#d4a93f" /><path d="M0 100h6l-3 4z" fill="#d4a93f" />
+    </svg>
+    {arms ? <img class="arms" src={arms} alt="" /> : <span class="initial">{L(r.short).slice(0, 1)}</span>}
+  </button>;
+}
+
+function MapTools() {
+  const r = myRealm.value;
+  const full = () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.(); };
+  return <div class="maptools" role="toolbar" aria-label={t('map_tools')}>
+    {r && <><button class="tool" title={t('to_my_realm')} aria-label={t('to_my_realm')} onClick={() => mapCtl.home(r.capital)}><IconCrown /></button><i /></>}
+    <button class="tool" title={t('whole_map')} aria-label={t('whole_map')} onClick={() => mapCtl.overview()}><IconGlobe /></button><i />
+    <button class="tool" title={t('fullscreen')} aria-label={t('fullscreen')} onClick={full}><IconFullscreen /></button>
   </div>;
 }
 
@@ -59,17 +95,25 @@ function SignIn() {
 }
 
 function TopBar() {
-  const wi = world.value, m = me.value;
-  const mine = m && m.realm >= 0 ? realmById.value.get(m.realm) : undefined;
-  return <div class="topbar pnl">
-    {mine ? <span class="realm"><i class="swatch" style={{ background: hex(mine.color) }} />{L(mine.short)}</span> : <span class="muted">{t('no_realm')}</span>}
-    <span class="date">{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}{wi?.paused ? ` · ${t('paused')}` : ''}</span>
-    <span class="muted">{t('players')}: {wi?.players ?? 0}/{wi?.maxPlayers ?? 0}</span>
-    <span class="grow" />
-    {mine && <button class="btn small danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
-    <LangSwitch />
-    <button class="btn small" onClick={() => { disconnect(); if (online.available) signOut(); }}>{t('sign_out')}</button>
-  </div>;
+  const wi = world.value, mine = myRealm.value;
+  const [menu, setMenu] = useState(false);
+  return <header class="hud-top">
+    <div class="hud-values">
+      {mine ? <>
+        <span class="realm-name">{L(mine.short)}</span>
+        <span class="val" title={t('places')}><IconPlaces /><span><b>{num(mine.places)}</b><small>{t('places')}</small></span></span>
+      </> : <span class="hint">{t('no_realm')}</span>}
+      <span class="val" title={t('players')}><IconPlayers /><span><b>{num(wi?.players ?? 0)} / {num(wi?.maxPlayers ?? 0)}</b><small>{t('players')}</small></span></span>
+    </div>
+    <div class="hud-date"><IconCalendar /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{wi?.paused && <small>{t('paused')}</small>}</div>
+    <button class="tb lang" title={t('language')} onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>
+    <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
+    {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
+      {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
+      <button class="menu-item" onClick={() => { disconnect(); if (online.available) signOut(); }}>{t('sign_out')}</button>
+      {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
+    </div>}
+  </header>;
 }
 
 function PlacePanel() {
@@ -78,8 +122,8 @@ function PlacePanel() {
   const d = placeInfo.value?.id === p ? placeInfo.value : null;
   const r = d && d.owner >= 0 ? realmById.value.get(d.owner) : undefined;
   const m = me.value;
-  return <div class="side pnl">
-    <div class="side-head"><b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b><button class="btn small" onClick={() => { selectedPlace.value = -1; }}>{t('close')}</button></div>
+  return <aside class="side pnl">
+    <div class="side-head"><b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b><button class="close" title={t('close')} aria-label={t('close')} onClick={() => { selectedPlace.value = -1; }}><IconClose /></button></div>
     {d && <table class="facts"><tbody>
       <tr><th>{t('owner')}</th><td>{r ? <><i class="swatch" style={{ background: hex(r.color) }} />{L(r.name)}</> : t('nobody')}</td></tr>
       <tr><th>{t('population')}</th><td>{num(d.pop)}</td></tr>
@@ -110,6 +154,6 @@ function PlacePanel() {
       <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>
       {!r.ruler && m && m.realm < 0 && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
     </div>}
-  </div>;
+  </aside>;
 }
 
