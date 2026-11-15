@@ -22,7 +22,7 @@ All variables are listed with comments in [`.env.example`](../.env.example).
 npm install
 cp .env.example .env            # leave the SUPABASE_* values empty for DEV mode
 npm run economy:build           # the economy engine as WebAssembly (needs the Rust toolchain, https://rustup.rs)
-npm run world                   # world server on ws://localhost:8787, 36 s per day, DEV login by display name
+npm run world                   # world server on ws://localhost:8787, 240 s per day (four minutes), DEV login by display name
 npm run world:fast              # same, 0.05 s per day (testing)
 npm run dev                     # client on http://localhost:5173
 npx vitest run                  # RLS tests (PGlite), world server replay and resume, auth
