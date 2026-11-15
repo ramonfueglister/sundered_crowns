@@ -95,7 +95,7 @@ a dark ground as the rounds had judged it. There the head filled a third of the 
 whole width. The 1356 profile frames it closer (`close` 1.3: chin to crown nearly half the height, as in CK3's
 character window). The white of the eye went back to 1.3 (at 1.5 it stared on the light ground), and the red
 edge of the skin's shadow is narrower (`wrap` 0.18 / 0.15 / 0.13: the shaded cheek at a 11 to 20, b 13 to 22).
-The rounds are judged in this panel from now on.
+The rounds were judged in this panel until round 48 (see round 49 for the panel as it is now).
 
 **What the panel showed (round 43).** At that size Apoleia's hair for a head that loses it reads as rows of
 scales (short locks, white on the old), its chin beard as a tuft of long strands, and the short beards as black
@@ -164,6 +164,15 @@ about 8). The tint towards red is stronger (`skin.tint` 1 / 0.82 / 0.86) and gro
 that the dark skins of the test people stay as they were (round 41 had stopped where they turned brick red). The
 exposure went from 0.46 to 0.43, and the cheeks' flush from 1 to 0.7 (`flush` in the dress table: on skin that
 light it read as rouge). Still lighter and less red than the ruler; further it turned pink.
+
+**In the navy panel (round 49).** Since 15.11.2026 (PR #21) the person's panel is the game's navy and gold
+HUD: the portrait stands about 268 px wide on a dark blue ground (`src/people/panel.css`), not on parchment. The
+rounds are judged there now. The panel drew the picture at 224 x 280 and the page scaled it up, which made it
+soft; it is drawn at 448 x 560 (`src/people/panel.ts`). On the dark ground the rim light (as strong as three
+quarters of the key light, bluish) made the plait on the far side a pale, see-through grey: its energy went from
+1.4 to 0.8. The eyeball had been brightened for the parchment (`eye.tint` 1.3) and light eyes stared, children's
+most: back to 1.08, with more shade from the upper lid (`eye.lid.dark` 0.65). White hair's darker strands a little
+less dark (`sheen.light` 1.5: at 2 it read as striped).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

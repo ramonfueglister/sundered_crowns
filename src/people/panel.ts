@@ -73,7 +73,8 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
       const head = el('div', 'head');
       head.append(el('b', '', `${p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' (verstorben)'}`), close);
       const pic = el('canvas', 'portrait');
-      pic.width = 224; pic.height = 280;
+      // drawn at twice the size the panel shows it at (about 268 px wide, panel.css): scaled up from 224 px it was soft
+      pic.width = 448; pic.height = 560;
       const facts = el('table', 'facts'), body = el('tbody');
       for (const [k, v] of [['Alter', `${Math.floor(p.age)} Jahre`], ['IQ', String(p.iq)]]) {
         const tr = el('tr');

@@ -89,7 +89,7 @@ export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
     key: { from: [-5.0, 4.5, 3.2], colour: '#fff0de', energy: 1.9 },
-    rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 1.4 },
+    rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 0.8 },
     fill: { from: [3.0, -1.0, 5.0], colour: '#efe4da', energy: 0.15 },
   },
   sky: { top: '#e6ecff', ground: '#4d443c', energy: 0.3 },
@@ -98,11 +98,11 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.82, 0.86] },
-  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.32, 1.3, 1.27], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
+  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [1.08, 1.06, 1.03], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
-  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 2, colour: 0.7, wrap: 1 },
+  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
 };
 
 const PROFILES = [ENGLAND_1356];
