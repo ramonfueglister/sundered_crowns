@@ -55,6 +55,8 @@ export interface StageOptions {
   fixed?: boolean;
   /** height in blocks of the tallest thing that casts a shadow into the picture */
   tall?: number;
+  /** the canvas to draw on (default: the page's first); the picture is as large as the canvas lies on the page */
+  canvas?: HTMLCanvasElement;
 }
 export interface Stage {
   canvas: HTMLCanvasElement;
@@ -76,6 +78,8 @@ export interface Stage {
   aim(x: number, z: number, frameW: number, elevation: number): void;
   /** Asks for a new picture. */
   redraw(): void;
+  /** Stops drawing and lets go of the renderer; the stage is not used after that. */
+  dispose(): void;
   /** The point of the ground under a point of the page, in the stage's blocks; none where the picture shows no ground. */
   pick(px: number, py: number): [number, number, number] | null;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
@@ -86,7 +90,7 @@ export interface Stage {
 
 /** Sets up the stage: renderer, light, camera and picture pipeline, with nothing on it yet. */
 export async function createStage(o: StageOptions = {}): Promise<Stage> {
-  const canvas = document.querySelector('canvas')!;
+  const canvas = o.canvas ?? document.querySelector('canvas')!;
   const fixedW = Number(q.get('w')) || 0, fixedH = Number(q.get('h')) || 0;
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false) });
   renderer.toneMapping = THREE.NoToneMapping;
@@ -195,9 +199,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
 
   const resize = () => {
-    const w = fixedW || innerWidth, h = fixedH || innerHeight;
+    // a canvas of the page's own is laid out by the page; the stage only follows its size
+    const w = fixedW || (o.canvas?.clientWidth ?? innerWidth) || 1, h = fixedH || (o.canvas?.clientHeight ?? innerHeight) || 1;
     renderer.setPixelRatio(fixedW ? 1 : Math.min(devicePixelRatio, 2));
-    renderer.setSize(w, h, true);
+    renderer.setSize(w, h, !o.canvas || !!fixedW);
     camera.aspect = w / h;
     lens();
     pending = Math.max(pending, 1);
@@ -238,6 +243,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
     redraw() { pending = Math.max(pending, 1); },
+    dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
     pick(px, py) {
       const box = canvas.getBoundingClientRect(), ray = new THREE.Raycaster(), grounds: THREE.Object3D[] = [];
       ray.setFromCamera(new THREE.Vector2(((px - box.left) / box.width) * 2 - 1, 1 - ((py - box.top) / box.height) * 2), camera);

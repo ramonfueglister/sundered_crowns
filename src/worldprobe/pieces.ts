@@ -45,6 +45,8 @@ export interface Pieces {
   look(view: View): Layout & { missing: number };
   /** the first error of a worker, if any */
   failed: string;
+  /** Stops the workers; the pieces are not used after that. */
+  dispose(): void;
 }
 
 /**
@@ -53,7 +55,8 @@ export interface Pieces {
  */
 export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
-  const pieces: Pieces = { look, failed: '' };
+  const workers: Worker[] = [];
+  const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
 
   for (let k = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)); k > 0; k--) {
@@ -71,7 +74,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       o.changed();
     };
     worker.onerror = (e) => { pieces.failed ||= e.message; o.changed(); };
-    idle.push(worker);
+    idle.push(worker); workers.push(worker);
   }
 
   /** how far a piece lies outside the picture, in finest blocks (0: it reaches into it) */

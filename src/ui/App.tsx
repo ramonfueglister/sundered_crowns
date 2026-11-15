@@ -1,9 +1,10 @@
-// Application shell: sign in, then the map of the world with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// Application shell: sign in, then the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace, mapCtl } from './MapView';
+import { WorldView } from './WorldView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
@@ -12,13 +13,15 @@ import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+/** the address option ?map=2d shows the earlier flat map in place of the world (kept until the world has all it showed) */
+const FLAT_MAP = new URLSearchParams(location.search).get('map') === '2d';
 
 export function App() {
   const st = status.value;
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
     {st === 'idle' || st === 'refused' ? <SignIn /> : <>
-      <MapView />
+      {FLAT_MAP ? <MapView /> : <WorldView />}
       <Music />
       <TopBar />
       <RealmBanner />

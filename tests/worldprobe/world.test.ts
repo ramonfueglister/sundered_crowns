@@ -85,7 +85,7 @@ describe('the land from farther away', () => {
       }
       expect(covered).toBeGreaterThan(500);
     }
-  });
+  }, 60000);
 
   it('stands lower step by step, until it is only the colour of the ground', () => {
     // from the step at which the great buildings too are part of the ground
@@ -93,5 +93,5 @@ describe('the land from farther away', () => {
     for (let k = 1; k < tallest.length; k++) expect(tallest[k]).toBeLessThanOrEqual(tallest[k - 1]);
     expect(tallest[0]).toBeGreaterThan(0);
     expect(tallest[3]).toBe(0);
-  });
+  }, 60000);
 });

@@ -10,7 +10,7 @@ import { blockOfCell, cellOfBlock } from './land';
 import type { RealmName } from './paint';
 import type { Layout, View } from './pieces';
 import { cover, keyOf } from './pyramid';
-import type { RealmsDone, RealmsJob } from './realms.worker';
+import type { RealmsDone, RealmsJob, RealmsNow } from './realms.worker';
 import { PAPER_COARSEST, paperLevelOf, realmsOf, reliefOf } from './zoom';
 
 /** dots along the side of a tile: as the tiles of the region (region.ts) */
@@ -23,8 +23,8 @@ const SOON = 2;
 const SPARE = 16, AT_ONCE = 4;
 
 /** A tile of the pyramid that has been painted; without a mesh it holds no realm. */
-interface Held { level: number; x: number; y: number; seen: number; mesh?: THREE.Mesh; picture?: THREE.Texture }
-interface Want { key: string; level: number; x: number; y: number; rank: number }
+interface Held { level: number; x: number; y: number; seen: number; mesh?: THREE.Mesh; picture?: THREE.Texture; /** painted for realms that have changed since: shown until its new picture comes */ old?: boolean }
+interface Want { key: string; level: number; x: number; y: number; rank: number; /** the realms it was asked for (see `set`) */ age: number }
 
 export interface RealmsMap {
   /** Brings the map to the view. Returns how many tiles of what the picture shows of it are still to come. */
@@ -35,18 +35,25 @@ export interface RealmsMap {
   lap: number;
   /** the first error of the worker, if any */
   failed: string;
+  /** Draws these realms from now on, in place of those the game sets up. */
+  set(now: RealmsNow): void;
+  /** The place of the game map at a cell of the world (-1: none, sea or beyond the game map), counted from 0. */
+  placeAt(u: number, v: number): Promise<number>;
+  /** Stops the worker; the map is not used after that. */
+  dispose(): void;
 }
 
 /**
- * `map`: the game map's width and height in cells; `round`: the cells after which the world begins again.
+ * `map`: the game map's width and height in cells, of which `cells` lie along a map pixel; `round`: the cells after
+ * which the world begins again.
  * `ahead`: paint the surroundings of the picture too. `changed` is called whenever a tile has arrived.
  */
-export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; round: number; ahead: boolean; changed(): void }): RealmsMap {
-  const held = new Map<string, Held>(), asked = new Map<number, Want | 'names'>(), busy = new Set<string>();
-  const realms: RealmsMap = { look, names: [], lap: 0, failed: '' };
+export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; ahead: boolean; changed(): void }): RealmsMap {
+  const held = new Map<string, Held>(), asked = new Map<number, Want | 'names' | 'realms' | ((place: number) => void)>(), busy = new Set<string>();
+  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, placeAt, dispose: () => worker.terminate() };
   /** how strongly the realms' colours cover the world */
   const wash = uniform(0);
-  let nextId = 1, looks = 0, named = false;
+  let nextId = 1, looks = 0, named = false, age = 0;
 
   /** the tile as a square on the ground, in finest blocks from its north-west corner */
   const square = (level: number) => {
@@ -58,7 +65,8 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
   };
 
   const worker = new Worker(new URL('./realms.worker.ts', import.meta.url), { type: 'module' });
-  const ask = (job: { kind: 'names' } | { kind: 'tile'; level: number; tx: number; ty: number }, what: Want | 'names') => {
+  type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base'> : never) : never;
+  const ask = (job: Job, what: Want | 'names' | 'realms' | ((place: number) => void)) => {
     const id = nextId++;
     asked.set(id, what);
     worker.postMessage({ id, region: o.region, base: o.base, ...job } satisfies RealmsJob);
@@ -66,9 +74,15 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
   worker.onmessage = (e: MessageEvent<RealmsDone>) => {
     const what = asked.get(e.data.id)!;
     asked.delete(e.data.id);
+    if (typeof what === 'function') return what(e.data.place ?? -1);
     if (e.data.error) realms.failed ||= e.data.error;
     else if (what === 'names') realms.names = e.data.names ?? [];
-    else {
+    else if (what === 'realms') {
+      // the worker works through what it is asked in turn: every tile that comes from now on shows the new realms,
+      // and takes the place of the one that shows the old
+      for (const h of held.values()) h.old = true;
+      named = false;
+    } else if (what.age === age) {
       const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks };
       if (e.data.tile) {
         // the picture holds colour times cover, and the cover, in linear light, so that its dots blend cleanly
@@ -81,9 +95,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
         h.mesh.renderOrder = 1; h.mesh.frustumCulled = false; h.mesh.visible = false;
         stage.put(h.mesh);
       }
+      const before = held.get(what.key);
+      if (before) drop(before);
       held.set(what.key, h);
     }
-    if (what !== 'names') busy.delete(what.key);
+    if (what !== 'names' && what !== 'realms') busy.delete(what.key);
     o.changed();
   };
   worker.onerror = (e) => { realms.failed ||= e.message; o.changed(); };
@@ -91,6 +107,16 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     if (!h.mesh) return;
     stage.take(h.mesh); (h.mesh.material as THREE.Material).dispose(); h.mesh.geometry.dispose(); h.picture!.dispose();
   };
+
+  function set(now: RealmsNow) {
+    // tiles asked for before this are of the old realms: they are let go when they come
+    age++;
+    ask({ kind: 'realms', ...now }, 'realms');
+  }
+  function placeAt(u: number, v: number): Promise<number> {
+    const x = Number.isFinite(o.round) ? ((u % o.round) + o.round) % o.round : u;
+    return new Promise((found) => ask({ kind: 'place', x: x / o.cells, y: v / o.cells }, found));
+  }
 
   function look(v: View, at: Layout): number {
     const [u, cv] = cellOfBlock(v.x, v.z), halfW = v.wide / 2, halfD = v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2;
@@ -113,7 +139,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
 
     // what the view asks for once the realms are near: the coarser level under the picture first, then its own level
     // in the picture, then around it
-    const wanted: Want[] = [], want = (l: number, t: { x: number; y: number }, rank: number) => wanted.push({ key: keyOf(l, t.x, t.y), level: l, x: t.x, y: t.y, rank });
+    const wanted: Want[] = [], want = (l: number, t: { x: number; y: number }, rank: number) => wanted.push({ key: keyOf(l, t.x, t.y), level: l, x: t.x, y: t.y, rank, age });
     if (soon) {
       if (o.ahead && level < PAPER_COARSEST) for (const t of near(level + 1, 0)) want(level + 1, t, t.far);
       for (const t of near(level, o.ahead ? AHEAD * v.wide : 0)) want(level, t, (t.out > 0 ? 2e9 : 1e9) + t.far);
@@ -121,7 +147,8 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     }
     let missing = 0;
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (wash.value > 0 && w.level === level && w.rank < 2e9) missing++; }
-    const queue = wanted.filter((w) => !held.has(w.key) && !busy.has(w.key)).sort((a, b) => b.rank - a.rank);
+    // to paint: what is not there yet, and what still shows the old realms
+    const queue = wanted.filter((w) => { const h = held.get(w.key); return (!h || h.old) && !busy.has(w.key); }).sort((a, b) => b.rank - a.rank);
     while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y }, next); }
 
     // what is shown: every part of the picture once, from the tiles nearest the view's level that are there
