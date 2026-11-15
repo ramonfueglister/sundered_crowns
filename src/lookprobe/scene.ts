@@ -3,7 +3,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, fbm2, hash2, seeded, smooth } from './batch';
 import { boat, borderBand, bush, crate, crops, cypress, person, pier, sheep, ship, smoke, speck, stall, tree } from './blocks';
-import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, palace, tower, townHouse, townWall } from '../buildings';
+import { FLOOR, ROOFS, WALLS, basilica, bridge, campanile, castle, church, house, lighthouse, m, palace, tower, townHouse, townWall } from '../buildings';
 import {
   BORDERS, CASTLE_AT, CITY, FIELDS, type Ground, ISLANDS, LAND_Y, Mat, N, type P2, ROADS, SHIPS, SITES, TOWNS, TRAITS,
   buildGround, fieldAt, idx, inCity, inGrid, isWet, mountainAt, occlude, riverDist, roadDist, toST, toXZ,
@@ -12,11 +12,15 @@ import { buildTerrain, buildWater } from './terrain';
 
 export interface ProbeScene { ground: Batch; water: Batch; things: Batch; counts: Record<string, number> }
 
-export function buildScene(bakedSky = true): ProbeScene {
+/** A footprint side drawn between two lengths in metres, whole blocks (the footprints were read off the reference image). */
+const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(m(lo))), Math.max(2, Math.round(m(hi))));
+
+/** The scene; `swap` puts another model in a landmark's place, e.g. the campanile read from its GLB (?campanile=glb). */
+export function buildScene(bakedSky = true, swap: { campanile?: Batch } = {}): ProbeScene {
   const g = buildGround(), things = new Batch(), used = new Uint8Array(N * N), counts: Record<string, number> = {};
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
-  const m = new THREE.Matrix4();
-  const put = (model: Batch, x: number, y: number, z: number, angle: number) => things.append(model, m.makeRotationY(angle).setPosition(x, y, z));
+  const mat = new THREE.Matrix4();
+  const put = (model: Batch, x: number, y: number, z: number, angle: number) => things.append(model, mat.makeRotationY(angle).setPosition(x, y, z));
   const cells = (x0: number, z0: number, x1: number, z1: number, f: (i: number, x: number, z: number) => boolean | void): boolean => {
     for (let z = Math.floor(z0); z < Math.ceil(z1); z++) for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
       if (!inGrid(x, z) || f(idx(x, z), x, z) === false) return false;
@@ -52,7 +56,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   // a small square before the front of the basilica and a lane along its side keep the domes in view
   claim(S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] - 7, S.basilica.at[0] + S.basilica.d / 2 + 7, S.basilica.at[1] + 7);
   claim(S.basilica.at[0] - S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2, S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2 + 4);
-  build(campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, 20, 'landmark');
+  build(swap.campanile ?? campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, swap.campanile ? 25 : 20, 'landmark');
   build(castle(), CASTLE_AT[0], CASTLE_AT[1], 13.5, 13.5, 0, 5, 'landmark');
   { const r = seeded(5); for (const t of [S.westTower, S.eastTower]) build(tower(r), t.at[0], t.at[1], t.w, t.d, 0, 10, 'tower'); }
 
@@ -60,7 +64,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   const hearths: [number, number, number][] = [];
   /** a house on the footprint from (x, z): one block when small, a town house of two blocks when long */
   const homes = (r: Rnd, x: number, z: number, w: number, d: number, floors: number) => {
-    const top = floors * FLOOR + 1.2, model = Math.max(w, d) >= 8 && r.chance(0.7) ? townHouse(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r) : house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r);
+    const top = floors * FLOOR + m(1.7), model = Math.max(w, d) >= m(11.4) && r.chance(0.7) ? townHouse(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r) : house(w, d, floors, r.pick(WALLS), r.pick(ROOFS), r);
     if (!inCity(x, z)) hearths.push([x + w / 2, baseY(x + w / 2, z + d / 2) + top + 0.4, z + d / 2]);
     build(model, x + w / 2, z + d / 2, w, d, 0, top, 'house');
   };
@@ -77,7 +81,7 @@ export function buildScene(bakedSky = true): ProbeScene {
         if (!inGrid(x, z) || used[idx(x, z)] || !inCity(x + 0.5, z + 0.5)) continue;
         // one house in three is a long palazzo, the rest are small: the roofs of the reference are mostly five or six blocks wide
         const turn = r.chance(0.5), free = (px: number, pz: number) => inCity(px, pz) && !street(px, pz);
-        for (const [long, short, floors] of [[r.int(9, 14), r.int(5, 6), r.chance(0.4) ? 3 : 2], [r.int(5, 7), r.int(4, 5), r.chance(0.25) ? 3 : 2], [4, 4, 2]].slice(r.chance(0.35) ? 0 : 1)) {
+        for (const [long, short, floors] of [[blocks(r, 13, 20), blocks(r, 7.2, 8.6), r.chance(0.4) ? 3 : 2], [blocks(r, 7.2, 10), blocks(r, 5.7, 7.2), r.chance(0.25) ? 3 : 2], [blocks(r, 5.7, 5.7), blocks(r, 5.7, 5.7), 2]].slice(r.chance(0.35) ? 0 : 1)) {
           const w = turn ? short : long, d = turn ? long : short;
           if (fits(x, z, x + w, z + d, free, r.chance(0.5) ? 2 : 1)) { homes(r, x, z, w, d, floors); break; }
         }
@@ -89,7 +93,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   const scatter = (r: Rnd, at: P2, rx: number, rz: number, n: number, big: boolean) => {
     for (let k = 0, tries = 0; k < n && tries < n * 60; tries++) {
       const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()), grand = big && r.chance(0.3);
-      const long = grand ? r.int(7, 9) : r.int(4, 5), short = grand ? 5 : r.int(3, 4), turn = r.chance(0.5), w = turn ? short : long, d = turn ? long : short;
+      const long = grand ? blocks(r, 10, 13) : blocks(r, 5.7, 7.2), short = grand ? blocks(r, 7.2, 7.2) : blocks(r, 4.3, 5.7), turn = r.chance(0.5), w = turn ? short : long, d = turn ? long : short;
       const x = Math.round(at[0] + Math.cos(a) * q * rx - w / 2), z = Math.round(at[1] + Math.sin(a) * q * rz - d / 2);
       if (!fits(x, z, x + w, z + d, rural)) continue;
       homes(r, x, z, w, d, grand || r.chance(0.55) ? 2 : 1);
@@ -110,7 +114,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) {
         if (used[idx(x, z)]) continue;
         const turn = r.chance(0.5);
-        for (const [long, short, floors] of [[r.int(7, 10), r.int(4, 5), r.chance(0.4) ? 3 : 2], [r.int(4, 5), 4, 2], [3, 3, 2]]) {
+        for (const [long, short, floors] of [[blocks(r, 10, 14.3), blocks(r, 5.7, 7.2), r.chance(0.4) ? 3 : 2], [blocks(r, 5.7, 7.2), blocks(r, 5.7, 5.7), 2], [blocks(r, 4.3, 4.3), blocks(r, 4.3, 4.3), 2]]) {
           const w = turn ? short : long, d = turn ? long : short;
           if (fits(x, z, x + w, z + d, inside, r.chance(0.5) ? 1 : 0)) { homes(r, x, z, w, d, floors); break; }
         }
@@ -275,7 +279,7 @@ export function buildScene(bakedSky = true): ProbeScene {
       if (g.wet[i] && g.shore[i] >= 3 && g.shore[i] <= 9 && inFrame(x, z) && riverDist(x, z) > 12) { boat(things, x, z, r); count('boat'); k++; }
     }
   }
-  things.append(bands, m.identity());
+  things.append(bands, mat.identity());
 
   const ground = buildTerrain(g, TRAITS, bakedSky), water = buildWater(g);
   counts.triangles = ground.triangles + water.triangles + things.triangles;
