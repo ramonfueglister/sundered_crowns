@@ -12,8 +12,6 @@ import type { WorldView as View } from '../worldprobe/view';
 const START = { lon: 12, lat: 47, wide: 20000 };
 /** a flight to a place shows this many finest blocks across the picture: its town and the land round it */
 const AT_PLACE = 260;
-/** from this width on the realms colour the world (worldprobe/zoom.ts): there a click means the place, nearer it means what stands on the ground */
-const REALMS_SHOW = 11000;
 
 interface Geo { loc: { lon: number[]; lat: number[] } }
 /** the panel of the person clicked, once for the page */
@@ -26,7 +24,7 @@ export function WorldView() {
     const stops: (() => void)[] = [];
     (async () => {
       try {
-        const { createWorldView } = await import('../worldprobe/view');
+        const [{ createWorldView }, { realmsShown }] = await Promise.all([import('../worldprobe/view'), import('../worldprobe/zoom')]);
         // taken down while the world was being fetched: the canvas is gone
         if (disposed) return;
         const made = await createWorldView({
@@ -35,7 +33,7 @@ export function WorldView() {
           moved: (_lon, _lat, w) => { wide = w; },
           // far out a click selects the place under it; near, it is for what stands there (people/panel.ts), and the
           // place's panel makes room for the person's
-          clicked: (_hit, place) => { if (wide >= REALMS_SHOW) place().then((id) => { selectedPlace.value = id; }); else selectedPlace.value = -1; },
+          clicked: (_hit, place) => { if (realmsShown(wide)) place().then((id) => { selectedPlace.value = id; }); else selectedPlace.value = -1; },
         });
         if (disposed) { made.dispose(); return; }
         view = made;
