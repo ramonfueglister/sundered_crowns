@@ -179,7 +179,10 @@ elif style == 'plait':
     # the hairline of the crown braid, on the forehead lower by PLAIT_HL degrees (a parting with the hair lying
     # flat shows the whole forehead)
     _hl = float(os.environ.get('PLAIT_HL', '11'))
-    hl, hln = line([(0, 19 - _hl), (20, 18 - _hl), (32, 12 - 0.8 * _hl), (44, 3 - 0.4 * _hl), (58, -6), (66, -14), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)])
+    # and lower still at the temples by PLAIT_TEMPLE degrees: with the line of the crown braid the hairline has a
+    # corner above each temple, a square forehead as of a man whose hair goes back there
+    _tp = float(os.environ.get('PLAIT_TEMPLE', '7'))
+    hl, hln = line([(0, 19 - _hl), (20, 18 - _hl - 0.3 * _tp), (32, 12 - 0.8 * _hl - 0.8 * _tp), (44, 3 - 0.4 * _hl - _tp), (58, -6 - _tp), (66, -14 - 0.5 * _tp), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)])
     margin = lambda th, el: el - hln(th)
     GTH, GEL = [float(t) for t in os.environ.get('PLAIT_G', '92,-44').split(',')]
     TTH, TEL = [float(t) for t in os.environ.get('PLAIT_T', '60,4').split(',')]

@@ -309,6 +309,13 @@ that the weight lay elsewhere; the solver that closes the mouth then printed gap
 Still open: small children look past the viewer and some frown; girls and boys under seven look the same; what
 rounds 54 and 55 list.
 
+**Girls' hairline (round 57).** Girls with plaits had a square, bare forehead: the hairline of the plaits is that
+of Apoleia's crown braid, with a corner above each temple, as on a man whose hair goes back there. It lies 7
+degrees lower at the temples now and runs as one arc from the parting to the ears (`styles.py` `PLAIT_TEMPLE`;
+`plait01*` written anew). Still open there: the parting shows as a dark stripe, darkest on blond hair (between the
+cards' faded roots the painted layer shows, which is darker than the cards; a parting shows scalp, which is
+lighter).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
