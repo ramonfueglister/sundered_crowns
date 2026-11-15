@@ -66,6 +66,29 @@ skin with a soft reddish edge of the shadow (wrap lighting, where Godot scatters
 blotches, the lid's shadow on the eyeball and shade in its corners, the eye less white and less coloured, thin
 lashes; hair with a sheen of strands (two bands along the strand after Kajiya & Kay 1989, as in Scheuermann 2004);
 the rim light throws shadows, so that it does not shine through the head onto the side of the nose.
+Hair keeps its colour on its shaded side (wrap lighting, `sheen.wrap`: hair passes light round, a plain surface
+does not).
+
+**Tone, measured (round 41).** Until round 40 the lit half of a face was nearly as bright as white linen and
+pale yellow: the tone mapping (ACES) takes the colour out of what is that bright. Measured in CIELAB at spots
+set by hand on one screenshot of Crusader Kings III (a ruler, his wife, a small portrait of the heir) and on four
+of ours:
+
+| | L | a | b |
+|---|---|---|---|
+| CK3, lit skin (five spots) | 38 to 61 | 14 to 21 | 14 to 26 |
+| CK3, shaded cheek | 20 to 24 | 12 to 18 | 9 to 18 |
+| ours until round 40, lit skin | 80 to 81 | 6 to 8 | 18 to 21 |
+| ours until round 40, shaded cheek | 37 to 53 | 23 to 24 | 24 to 29 |
+| ours since round 41, lit skin | 67 to 69 | 10 to 12 | 22 to 26 |
+| ours since round 41, shaded cheek | 24 to 38 | 18 to 23 | 16 to 24 |
+
+So the exposure went from 0.8 to 0.46, the skin got a slight tint towards red (`skin.tint`), the light from
+below (fill and the sky's ground) lost its brown, and the flush of the cheeks went back from 1.35 to 1 (it had
+been raised against the pale skin and now read as rouge). Further towards their numbers (exposure 0.42, tint
+1 / 0.9 / 0.95: lit skin L 64, a 14 to 16) the darker skins turned brick red, so it stops short: our lit skin is
+still paler and less red than theirs, our shaded half more coloured. One screenshot of a dim hall is a thin
+base: the numbers say where the tone lies, not that it is right.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the

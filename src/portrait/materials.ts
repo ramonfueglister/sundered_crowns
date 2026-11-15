@@ -91,7 +91,7 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
 diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} ) * vec3( ${k.tint.map(f).join(', ')} );`);
   };
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
@@ -142,6 +142,8 @@ float hairStrand = 1.0;
       float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
       float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
       reflectedLight.directSpecular += directionalLights[ i ].color * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * diffuseColor.rgb );
+      float hairN = dot( normal, hairL );
+      reflectedLight.directDiffuse += directionalLights[ i ].color * diffuseColor.rgb * RECIPROCAL_PI * ( saturate( ( hairN + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) - saturate( hairN ) );
     }
   }
 }
