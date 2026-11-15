@@ -19,7 +19,7 @@ export const VENICE: Tradition = {
   walls: Object.entries(v.wand.anteile).flatMap(([name, n]) => Array<RGB>(n).fill(hex(W[name as keyof typeof W]))),
   stone: hex(W.istrischer_stein), roof: hex(v.dach.farbe_hex), wood: hex(v.barbacani.holz_hex), chimneyC: hex(v.kamin.farbe_hex),
   window: pair(ref.fenster_feinbloecke), door: pair(ref.tuer_feinbloecke), sill: ref.fenster_sohlbank_feinblock, bay: ref.achsabstand_feinbloecke,
-  arched: v.oeffnungen.bogenanteil,
+  arched: v.oeffnungen.bogenanteil, shutters: v.oeffnungen.laeden_anteil, washing: v.oeffnungen.waesche_anteil,
   jetty: { out: vox(v.barbacani.vorsprung_m), from: v.barbacani.ab_geschoss, share: v.barbacani.anteil },
   pitch: pair(v.dach.neigung), altana: v.dach.altana_anteil,
   chimney: { height: [vox(v.kamin.hoehe_m[0]), vox(v.kamin.hoehe_m[1])], perHouse: v.kamin.anteil_je_haus },

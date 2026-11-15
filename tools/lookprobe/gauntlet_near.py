@@ -10,7 +10,8 @@ stage's, not the houses'.
 """
 import sys
 import numpy as np
-from gauntlet import class_colour, detail, hexc, hsv, inner, load, spots
+from gauntlet import class_colour, detail, hexc, hsv, inner, load, lum
+from scipy import ndimage as ndi
 
 # picture regions (x0, y0, x1, y1) in a 1672 x 941 frame, read off the reference class image
 REGIONS = {'Häuser': (170, 150, 1672, 660), 'Kai': (0, 600, 1300, 941), 'Wasser': (950, 640, 1672, 941)}
@@ -27,6 +28,18 @@ def region_mask(shape):
     for x0, y0, x1, y1 in REGIONS.values():
         m[y0:y1, x0:x1] = True
     return m
+
+
+def spot_groups(im, box, sign):
+    """spots as gauntlet.spots counts them, but merged where they lie within three pixels of each other: the AI
+    reference's spots are grainy and one window or bush falls into three or four fragments, which a clean voxel
+    picture would never match; merged, both count the windows, flowers and lights, not the grain"""
+    x0, y0, x1, y1 = box
+    g = lum(im)[y0:y1, x0:x1]
+    lab, n = ndi.label((g - ndi.gaussian_filter(g, 4)) * sign > 0.1)
+    sizes = ndi.sum(np.ones_like(g), lab, range(1, n + 1))
+    keep = np.isin(lab, np.where((sizes >= 3) & (sizes <= 90))[0] + 1)
+    return int(ndi.label(ndi.binary_dilation(keep, iterations=3))[1])
 
 
 def main(ref_path, probe_path):
@@ -62,7 +75,7 @@ def main(ref_path, probe_path):
         check(f'geschlossene Fläche {name} (%)', ra * 100, pa * 100, abs(ra - pa) <= 0.02 + 0.2 * ra, '{:.1f}')
     for name, box in REGIONS.items():
         for label, sign in (('dunkle Tupfer', -1), ('helle Tupfer', 1)):
-            a, b = spots(ref, box, sign), spots(probe, box, sign)
+            a, b = spot_groups(ref, box, sign), spot_groups(probe, box, sign)
             check(f'{label} {name}', a, b, 0.75 <= b / max(a, 1) <= 1.33, '{:.0f}')
     for name, box in REGIONS.items():
         (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)

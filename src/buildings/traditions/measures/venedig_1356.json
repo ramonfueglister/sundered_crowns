@@ -47,11 +47,11 @@
     "oberflaeche": "Sichtziegel hell ockergelb (albasi) bis rot, darüber oft dünne Putze mit Quaderimitation (regalzier) oder farbige Fassungen; gotische Muster in Rot, Grün, Gelb.",
     "quelle_oberflaeche": "Squassina 2011, S. 1 f., 5, 13; venice.jc-r.net/plaster-frescoes nach Schuller 2000.",
     "farben_hex": {
-      "ziegel_hell": "#eca858",
-      "ziegel_rot": "#e07e58",
-      "putz_hell": "#f6c27c",
-      "putz_rosa": "#f2b078",
-      "putz_rot": "#d46a48",
+      "ziegel_hell": "#f4aa7a",
+      "ziegel_rot": "#e8886a",
+      "putz_hell": "#f8bc8a",
+      "putz_rosa": "#f4ac86",
+      "putz_rot": "#dc765e",
       "istrischer_stein": "#f2dcb4"
     },
     "farben_bemerkung": "Annahme: Hexwerte nach den Beschreibungen (albasi = ockergelb; Putze ocker bis rosa; roter Putz = rosso veneziano), nicht gemessen; als Albedo so gesetzt, dass die Bühne der Nahsicht sie wie das Referenzbild beleuchtet (Gauntlet).",
@@ -76,7 +76,11 @@
     ],
     "tuer_bemerkung": "Annahme nach Referenzklasse (3 × 5 Feinblöcke).",
     "bogenanteil": 0.2,
-    "bogen_bemerkung": "Annahme: ein Fünftel der kleinen Häuser mit Spitzbogenfenstern, die übrigen gerade mit Steinsturz; die Hauptgeschosse der Kaufmannshäuser immer mit Bogenreihe (ICCD-Karten zeigen Bogenfenster an besseren Häusern)."
+    "bogen_bemerkung": "Annahme: ein Fünftel der kleinen Häuser mit Spitzbogenfenstern, die übrigen gerade mit Steinsturz; die Hauptgeschosse der Kaufmannshäuser immer mit Bogenreihe (ICCD-Karten zeigen Bogenfenster an besseren Häusern).",
+    "laeden_anteil": 0.55,
+    "laeden_bemerkung": "Annahme: gut die Hälfte der geraden Fenster mit offenen Holzläden; Fensterglas war vor 1400 selten, Fenster wurden mit Holzläden oder impannate (gewachstes Leinen) geschlossen (Wikipedia: Window, History; Murano-Glas für Fenster erst 15. Jh.).",
+    "waesche_anteil": 0.3,
+    "waesche_bemerkung": "Annahme ohne Quelle für 1356: Wäscheleine über dem Obergeschoss an knapp einem Drittel der Fronten, nach der Referenzklasse, die an den meisten Obergeschossen Tuch hängen hat."
   },
   "barbacani": {
     "vorsprung_m": 0.75,

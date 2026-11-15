@@ -8,7 +8,7 @@ import { SIDES, type Side, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
-import { type Materials, altana, ashlar, chimney, corbels, door, gate, shop, tiledGable, window } from './parts';
+import { type Materials, altana, ashlar, chimney, corbels, door, gate, shop, shutters, tiledGable, washing, window } from './parts';
 import { VOXEL as V } from './style';
 
 export interface HouseOptions {
@@ -26,6 +26,7 @@ const grow = (f: Box, side: Side, by: number): Box => ({ x0: f.x0 - (side === 'n
 const ring = (b: Batch, f: Box, y0: number, y1: number, out: number, c: RGB) => b.box(f.x0 - out, y0, f.z0 - out, f.x1 + out, y1, f.z1 + out, c, { bottom: true });
 const AWNINGS: readonly RGB[] = [[0.72, 0.16, 0.12], [0.42, 0.18, 0.5], [0.85, 0.6, 0.12]];
 const JAR: RGB = [0.72, 0.36, 0.2], WHITE: RGB = [0.92, 0.88, 0.8];
+const CLOTHS: readonly RGB[] = [WHITE, [0.96, 0.94, 0.9], [0.86, 0.78, 0.62], [0.62, 0.68, 0.8], [0.8, 0.42, 0.34]];
 
 /** A house of `w` × `d` blocks and `floors` storeys in a tradition, around its origin with the ground at y = 0. */
 export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r: Rnd, o: HouseOptions = {}): Batch {
@@ -75,7 +76,10 @@ function facade(b: Batch, f: Box, s: Side, k: number, y: number, h: number, tr: 
   const wl = wallOf(f.x0, f.z0, f.x1, f.z1, s), bay = tr.bay * V, n = Math.max(1, Math.floor((wl.len + V) / bay));
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay), [ww, wh] = tr.window;
   if (o.detail) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
-  const win = (t: number, hv = wh) => window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
+  const win = (t: number, hv = wh) => {
+    window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
+    if (o.detail && !o.arched && r.chance(tr.shutters)) shutters(b, wl, t, y + tr.sill * V, ww, hv, tr.wood, o.seed + Math.round(t * 100));
+  };
   if (k === 0 && s === o.front) {
     // the ground floor of the front: a shop at one end, the door beside it or in the middle, windows elsewhere
     const di = o.shop ? Math.min(1, n - 1) : Math.floor(n / 2);
@@ -100,4 +104,9 @@ function facade(b: Batch, f: Box, s: Side, k: number, y: number, h: number, tr: 
     return;
   }
   for (const t of axes) win(t);
+  // washing across the upper front now and then, between two window axes above their lintels
+  if (o.detail && s === o.front && k >= 1 && n >= 2 && r.chance(tr.washing)) {
+    const i = r.int(0, n - 2);
+    washing(b, wl, axes[i] + (ww / 2 + 0.5) * V, axes[i + 1] - (ww / 2 + 0.5) * V, y + (tr.sill + wh + 2.5) * V, CLOTHS, o.seed + k * 13);
+  }
 }

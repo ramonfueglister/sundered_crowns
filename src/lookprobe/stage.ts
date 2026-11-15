@@ -56,7 +56,7 @@ export interface StageOptions {
   /** height in blocks of the tallest thing that casts a shadow into the picture */
   tall?: number;
   /** the light strengths of this page where they differ from the look's (the near view is lit softer than the far view) */
-  light?: Partial<Pick<typeof LOOK, 'sun' | 'side' | 'sky' | 'bounce' | 'fill'>>;
+  light?: Partial<Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'skyColor' | 'bounce' | 'fill' | 'mirror' | 'mirrorTint'>>;
   /** softness of the cast shadows (the look's is 2) */
   shadowRadius?: number;
 }
@@ -97,7 +97,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     scene.add(mirror.target);
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
-    const tint = new THREE.Color(LOOK.mirrorTint).multiplyScalar(LOOK.mirror);
+    const tint = new THREE.Color(o.light?.mirrorTint ?? LOOK.mirrorTint).multiplyScalar(o.light?.mirror ?? LOOK.mirror);
     water.color.setRGB(1 - tint.r, 1 - tint.g, 1 - tint.b);
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(vec3(tint.r, tint.g, tint.b));
   }

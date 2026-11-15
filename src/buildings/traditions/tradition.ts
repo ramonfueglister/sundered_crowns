@@ -14,6 +14,8 @@ export interface Tradition {
   window: readonly [number, number]; door: readonly [number, number]; sill: number; bay: number;
   /** share of houses whose windows stand under pointed arches */
   arched: number;
+  /** share of straight windows with open wooden shutters; share of upper storeys with washing on a line across the front */
+  shutters: number; washing: number;
   /** upper storeys jettied out on wooden corbels: how far, from which storey (1 = first upper), share of houses */
   jetty: { out: number; from: number; share: number };
   /** roof pitch as rise over half the width [lowest, highest], and the share of houses with a roof terrace */

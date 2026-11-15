@@ -1,7 +1,7 @@
 // The hand-made parts of the fine-block house, which the grammar (grammar.ts) sets on a wall or a roof: windows,
 // doors, gates, the faint ashlar grid, tiles, chimneys, corbels, the roof terrace. Sizes are in fine blocks (VOXEL,
 // measured on the reference class image, traditions/measures/referenzklasse_nahsicht.json); positions in blocks.
-import { type Batch, type RGB, type V3, hash2, shade } from '../../lookprobe/batch';
+import { type Batch, type RGB, type V3, hash2, mix, shade } from '../../lookprobe/batch';
 import { type Wall, arch, on, pane } from '../core/wall';
 import { VOXEL as V } from './style';
 
@@ -19,7 +19,7 @@ export function boxOn(b: Batch, w: Wall, t0: number, y0: number, t1: number, y1:
  * of fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
  */
 export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
-  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 1.22), dark = shade(c, 0.88), light = shade(c, 1.08), j = V * 0.12;
+  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = mix(c, [1, 1, 1], 0.3), j = V * 0.12;
   for (let k = 0; k < rows; k++) {
     const y = y0 + k * V;
     pane(b, w, 0, y - j / 2, w.len, y + j / 2, joint, 0.02);
@@ -27,8 +27,9 @@ export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: 
       const t = (i + (k % 2) * 0.5) * V;
       if (t > j && t < w.len - j) pane(b, w, t - j / 2, y + j / 2, t + j / 2, y + V - j / 2, joint, 0.02);
       const h = hash2(i, k, seed);
-      if (h < 0.4 || t + V > w.len) continue;
-      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, h < 0.75 ? dark : light, 0.02);
+      if (h < 0.15 || t + V > w.len) continue;
+      // the blocks that differ from the wall: a smooth spread of tones from a sixth darker to a sixth lighter
+      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, shade(c, 0.84 + 0.32 * hash2(k, i, seed + 1)), 0.02);
     }
   }
 }
@@ -129,7 +130,7 @@ export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: nu
   const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
   for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
     const a = at(j / cols, k / rows), d = at((j + 1) / cols, (k + 1) / rows), h = hash2(j, k, seed), col = shade(c, 0.88 + 0.2 * hash2(j, k, seed + 5));
-    const rim = j === 0 || j === cols - 1 || k === 0 || k === rows - 1, top = Math.max(a[1], d[1]) + V * (0.1 + 0.3 * h) + (rim ? V * 0.7 : 0), g = V * 0.05;
+    const rim = j === 0 || j === cols - 1 || k === 0 || k === rows - 1, top = Math.max(a[1], d[1]) + V * (0.15 + 0.2 * h) + (rim ? V * 0.7 : 0), g = V * 0.05;
     b.box(Math.min(a[0], d[0]) + g, Math.min(a[1], d[1]) - V * 0.5, Math.min(a[2], d[2]) + g, Math.max(a[0], d[0]) - g, top, Math.max(a[2], d[2]) - g, col, { top: shade(col, 1.12) });
   }
 }
@@ -139,7 +140,7 @@ export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: nu
  * slope under the plate of cubes, the gable ends filled in the wall colour.
  */
 export function tiledGable(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, rise: number, c: RGB, wallC: RGB, seed: number) {
-  const top = y + rise, under = shade(c, 0.5), w3: [RGB, RGB, RGB] = [wallC, wallC, wallC];
+  const top = y + rise, under = shade(c, 0.68), w3: [RGB, RGB, RGB] = [wallC, wallC, wallC];
   if (x1 - x0 >= z1 - z0) {
     const zc = (z0 + z1) / 2;
     b.quad([x0, y, z1], [x1, y, z1], [x1, top, zc], [x0, top, zc], under, [0, 1, 1]);
@@ -186,4 +187,36 @@ export function altana(b: Batch, x0: number, z0: number, x1: number, z1: number,
   for (const [x, z] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) b.box(x - p, y - 2 * V, z - p, x + p, deck + 2 * V, z + p, shade(c, 0.9));
   b.box(x0 - p, deck, z0 - p, x1 + p, deck + V * 0.4, z1 + p, c, { bottom: true });
   for (const [ax, az, bx, bz] of [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) b.box(Math.min(ax, bx) - p / 2, deck + 2 * V, Math.min(az, bz) - p / 2, Math.max(ax, bx) + p / 2, deck + 2.4 * V, Math.max(az, bz) + p / 2, shade(c, 0.95), { bottom: true });
+}
+
+/**
+ * A pair of wooden shutters thrown open beside a window of `wv` × `hv` fine blocks, each a block wide and the
+ * opening's height, hinged at the jambs and lying flat on the wall a quarter block proud, of paler wood than the
+ * frame so they read as leaves and not as a wider opening. Glass was rare before
+ * 1400; windows were closed with wooden shutters or impannate (Venice measure file, assumption).
+ */
+export function shutters(b: Batch, w: Wall, t: number, y: number, wv: number, hv: number, wood: RGB, seed: number) {
+  const half = (wv * V) / 2, c = shade(wood, 1.3 + 0.35 * hash2(seed, 3, 5)), dark = shade(c, 0.75);
+  for (const q of [-1, 1]) {
+    const t0 = t + q * (half + V * 0.5), t1 = t + q * (half + V * 1.5);
+    boxOn(b, w, Math.min(t0, t1), y, Math.max(t0, t1), y + hv * V, 0, V * 0.25, c);
+    // two panels on the leaf, read as a dark groove across the middle
+    pane(b, w, Math.min(t0, t1) + V * 0.15, y + hv * V * 0.5 - V * 0.08, Math.max(t0, t1) - V * 0.15, y + hv * V * 0.5 + V * 0.08, dark, V * 0.26);
+  }
+}
+
+/**
+ * Washing on a line between two points of a wall at height `y`: a thin pole-to-pole cord a block in front of the
+ * wall and a few pale cloths hanging from it, each two to three fine blocks wide and three tall (assumption: no source
+ * for 1356, taken from the reference class, which hangs cloth from most upper storeys).
+ */
+export function washing(b: Batch, w: Wall, t0: number, t1: number, y: number, cloths: readonly RGB[], seed: number) {
+  const out = V * 1.0, cord = shade(cloths[0], 0.6);
+  boxOn(b, w, t0, y - V * 0.06, t1, y + V * 0.06, -out - V * 0.04, out + V * 0.04, cord);
+  let t = t0 + V * 0.4, k = 0;
+  while (t + V < t1) {
+    const wv = 2 + Math.round(hash2(seed, k, 17)), c = cloths[Math.floor(hash2(seed, k, 19) * cloths.length) % cloths.length];
+    boxOn(b, w, t, y - 3 * V, t + wv * V, y, -out - V * 0.08, out + V * 0.08, c, { bottom: true });
+    t += (wv + 0.6) * V; k++;
+  }
 }
