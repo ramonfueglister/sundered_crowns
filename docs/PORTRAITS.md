@@ -1,0 +1,116 @@
+# Portraits
+
+Status: **carried over, not yet in the game.** The portrait generator of Apoleia (Ramon's earlier project) builds
+and draws in Sundered Crowns as it did there. No window of the game shows a portrait yet, because the game has no
+persons yet (thread "Personensystem als ECS entwerfen").
+
+Since 15.11.2026 (Ramon: build the state of the rounds in cleanly) there is a first set of dress of the game's own
+beside Apoleia's Roman one: simple people of England 1356, see below. It is a draft by eye, not sourced.
+
+Ramon, 15.11.2026: the style stays the realistic look of Apoleia's portraits, adapted to 1356, later for every
+country of the world; the takeover is to be a clean refactoring, not a rewrite by feel. So the first step, this
+one, changes nothing: same people in, same pictures out, measured.
+
+## What there is
+
+| Part | Where | What it does |
+|---|---|---|
+| Builder | `portrait/` (Rust, WebAssembly) | From a person (68 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
+| Genes | `portrait/src/dna.rs` | 34 genes of two alleles, one byte each; a child takes one allele of each gene from either parent, plus a small mutation |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; no set: Apoleia's Roman dress |
+| Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
+| Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
+| Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
+| Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356 |
+
+`npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
+repository, because the site is built where there is no Rust).
+
+Use:
+
+```ts
+const assets = await loadPortraitAssets();                 // builder, head, data files (about 5.7 MB, once)
+const stage = new PortraitStage({ images: assets.images, url: assets.url });
+await stage.draw(assets.builder.build(person));            // the picture is on stage.renderer.domElement
+```
+
+## The dress of England 1356 (draft)
+
+A person whose family comes from "England" (`PortraitPerson.origin`) is dressed from the table `ENGLAND_1356` in
+`portrait/src/dress.rs`; every other origin still gets Apoleia's Roman dress, unchanged to the byte. A further
+country is meant to be a further table and its files, not code. That is only half true yet: the table chooses among
+the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three hairstyles); a part of another kind
+(a hat, a turban, a cloak) needs code once.
+
+| What | In the table | State |
+|---|---|---|
+| Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
+| Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
+| Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
+| Hair: cut round with a fringe (men, girls), flat under a hood, a bun under the veil | `hair`, `hair_hooded`, `hair_veiled` | by eye |
+| Faces: relaxed lids, softer jaw for women, lips less red | `lids`, `jaw_women`, `lips` | by eye, against the reference |
+
+**Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
+(proposal of 15.11.2026), none in the original, and no value is taken from a source. Everything is PLACEHOLDER
+until the cut, the colours and the headwear are checked against sources (e.g. the Luttrell Psalter's working
+people, finds of cloth from London). No estates yet: a noble of England wears the same gown as a villein.
+
+**Calmed clothes** (`real_look.rs`, `calm`): a garment bound to the head's triangles follows every small bump of a
+morphed body and crumples. The builder now takes only the smooth part of the movement (24 passes over the
+neighbours) and keeps a least distance to the body per layer (gown 0.07 to 0.09, what lies over it 0.13 to 0.17,
+on the head at most 0.05). Apoleia's own clothes are bound as before.
+
+**Stage profile** (`src/portrait/profile.ts`, by eye): key light more from the side, less light from all round,
+skin with a soft reddish edge of the shadow (wrap lighting, where Godot scatters inside the skin) and slight
+blotches, the lid's shadow on the eyeball, the eye less white and less coloured, thin lashes, matt hair.
+
+**Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
+reached. Cloth and hoods are close; faces (shape of eyes and lids, flat skin of the young), hair cards, the
+corners of the veil on the shoulders, the roll of the thrown-back hood and a lone lock under the hood are not.
+
+## Measured against Apoleia
+
+1. **The triangles.** `portrait/examples/reference.rs` run on Apoleia's own crate and on the game's, same machine,
+   twelve test people, real look on: the same bytes. As WebAssembly the sums of positions, colours, texture
+   coordinates and normals agree within rounding (`tests/portrait.test.ts`; sin, cos and pow differ in the last
+   digits between a machine's library and WebAssembly).
+2. **The pictures.** `tools/portrait/compare.mjs` holds the stage's pictures against the ones Apoleia's game rendered
+   in Godot 4.7.2 for the same people (`tests/portrait/godot/`, 336 x 420). Over the pixels either picture covers,
+   both on mid grey, 15.11.2026:
+
+   | | mean | worst person |
+   |---|---|---|
+   | pixels covered by only one of the two (outline) | 0.2 % | 0.2 % |
+   | mean absolute colour difference (0..255) | 6.3 | 8.9 |
+   | difference of the mean colour (0..255, per channel) | −3.3 | −6.6 |
+
+   Both renders ran on a software graphics driver in the cloud (Godot: llvmpipe, three.js: SwiftShader). Neither was
+   checked on a real graphics card.
+
+## Where the stage deviates from Godot
+
+- **No light scattering inside skin.** Godot's skin mode softens the shading of faces; three.js has no counterpart.
+  Faces come out a little harder and darker in the shadows.
+- **The shadow of the key light is calibrated, not derived**: map of 512 pixels, strength 0.7
+  (`src/portrait/stage.ts`). At full strength three.js' shadows were darker and sharper than Godot's (mean colour
+  difference 8.0 instead of 7.0, measured before the textures repeated).
+- **Hair cards** are drawn in two passes (depth of their opaque parts, then blended), which stands in for Godot's
+  "alpha with depth pre-pass". Fine strands at the edge of beards differ.
+- Veils and cloaks come out up to 4 units darker.
+
+## What is still Apoleia and has to go (next steps, each needs Ramon's yes where it is a choice)
+
+- Roman clothes, hats and hairstyles (`build.rs`, `look.rs`) for every origin but England; the seven Roman origins and their ranges without
+  source (`dna.rs`: only Germania and Aegyptus rest on Howells' skull measurements, the rest is marked
+  PLACEHOLDER); the German job names of Apoleia's simulation (`person.rs`).
+- `build()` in `portrait/src/build.rs` is still one function of 1,640 lines whose parts share some hundred local
+  values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
+  up together with the new clothes and headwear, which replace about half of it.
+- Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
+- Loading: the 4.1 MB of data files are loaded together on the first portrait; not measured on a slow line.
+- Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly
+  (cloud machine). Drawing was only timed on the software driver (0.3 to 1.6 s), which says nothing about a real
+  graphics card.
+- Licences not checked online: the skin images come from MakeHuman's system assets (stated CC0 in Apoleia's
+  repository); Howells' data set is published, its terms of use were not checked.

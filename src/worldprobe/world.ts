@@ -1,13 +1,14 @@
 // The real landscape in the look of the probe: heights, coast, lakes and rivers of a region become a ground of columns
 // on the probe's grid, with rock, meadow and woods chosen from the real heights and the forest cover of 1356.
 // On it stand the towns, villages and fields of 1356 (see settle.ts). North is at the top of the picture. No roads yet.
-import { Batch, type RGB, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
+import { Batch, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
 import { JUNGLE, acacia, cypress, palm, tree } from '../lookprobe/blocks';
-import { type Ground, type GroundTraits, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
+import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, Land, climateAt } from './climate';
+import { BARE, ROCK_FROM, ROCK_SHIFT_MOST, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Monument, type Site, settle } from './settle';
 import { MONUMENTS, styleOf } from '../buildings';
@@ -20,10 +21,6 @@ import { MONUMENTS, styleOf } from '../buildings';
  * fit together.
  */
 export interface Piece { ox: number; oz: number; part: Part }
-/** Whole-map cell of a world block. */
-export const cellOfBlock = (wx: number, wz: number): [number, number] => [wx * RIGHT[0] + wz * RIGHT[1], wx * NEAR[0] + wz * NEAR[1]];
-/** World block of a whole-map cell. */
-export const blockOfCell = (u: number, v: number): [number, number] => [u * RIGHT[0] + v * NEAR[0], u * RIGHT[1] + v * NEAR[1]];
 /** The window of whole-map cells that the ground starting at world block (ox, oz) needs. */
 export function windowOf(ox: number, oz: number): { gx0: number; gy0: number; w: number; h: number } {
   const us: number[] = [], vs: number[] = [];
@@ -43,32 +40,12 @@ export interface Landmark { id: string; lon: number; lat: number; built_state: s
  * not a relief map).
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
-/** above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale */
-const TREE_LINE = 1900, SNOW_LINE = 2530;
-/**
- * These heights hold in the Alps, at 46° north. Towards the pole the tree line sinks by about 60 m a degree (some
- * 1000 m in southern Norway, 500 m in the far north), towards the equator it rises to about 3900 m; the snow line
- * goes with it, and so does the foot of the rock as far as the Mediterranean (ROCK_SHIFT_MOST): farther south the
- * mountains are bare long before the trees end. A rule of thumb for the mainland: on the ocean's edge (Scotland,
- * Iceland) the real tree line lies lower still.
- */
-const lineShift = (lat: number) => Math.min(2000, Math.max(-1500, (46 - Math.abs(lat)) * 60));
-const ROCK_SHIFT_MOST = 400;
-/** the massifs are rock from this height upwards; what stands above their valley floors is raised by this factor */
-const ROCK_FROM = 1500, PEAK = 1.3;
+/** what stands above the valley floors of the massifs is raised by this factor */
+const PEAK = 1.3;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
 const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
-/** the ground of the lands that are not green: the colour the meadow is pulled towards, and how far */
-const TINT: Record<number, readonly [RGB, number]> = {
-  [Land.Mediterranean]: [rgb(0xd2c444), 0.2], [Land.Steppe]: [rgb(0xd0c264), 0.7], [Land.Desert]: [rgb(0xe8d096), 1], [Land.Savanna]: [rgb(0xc6bc52), 0.55],
-  [Land.Rainforest]: [rgb(0x74a630), 0.6], [Land.Boreal]: [rgb(0x90aa3a), 0.35], [Land.Tundra]: [rgb(0xaaa87c), 0.8], [Land.Ice]: [rgb(0xf4f6f8), 1],
-};
-/** the share of woods the climate grows where the forest layer of 1356 does not reach (estimates) */
-const WOODS: Record<number, number> = { [Land.Temperate]: 0.6, [Land.Mediterranean]: 0.3, [Land.Steppe]: 0.02, [Land.Savanna]: 0.1, [Land.Rainforest]: 0.95, [Land.Boreal]: 0.7 };
-/** lands without a single tree away from the water */
-const BARE: readonly number[] = [Land.Desert, Land.Tundra, Land.Ice];
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);

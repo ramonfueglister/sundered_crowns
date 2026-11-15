@@ -12,8 +12,14 @@ const CTOR: Record<ColumnType, new (n: number) => Column> = {
 type ArrayOf<T extends ColumnType> = T extends 'f64' ? Float64Array : T extends 'f32' ? Float32Array : T extends 'i32' ? Int32Array
   : T extends 'i16' ? Int16Array : T extends 'i8' ? Int8Array : T extends 'u32' ? Uint32Array : T extends 'u16' ? Uint16Array : Uint8Array;
 
-export type Schema = Record<string, ColumnType>;
-export type Columns<S extends Schema> = { [K in keyof S]: ArrayOf<S[K]> };
+/** A column holds one value per row, or a fixed number of values per row ([type, width]: row i owns the values
+ *  i·width … i·width + width − 1), e.g. the 68 gene bytes of a person. */
+export type ColumnSpec = ColumnType | readonly [ColumnType, number];
+type TypeOf<C extends ColumnSpec> = C extends readonly [infer T extends ColumnType, number] ? T : C extends ColumnType ? C : never;
+export type Schema = Record<string, ColumnSpec>;
+export type Columns<S extends Schema> = { [K in keyof S]: ArrayOf<TypeOf<S[K]>> };
+const typeOf = (c: ColumnSpec): ColumnType => (typeof c === 'string' ? c : c[0]);
+const widthOf = (c: ColumnSpec): number => (typeof c === 'string' ? 1 : c[1]);
 
 export interface Table<S extends Schema> {
   /** rows in use or freed (the high-water mark); ids are 0 … size − 1 */
@@ -28,7 +34,7 @@ export interface Table<S extends Schema> {
 /** Makes columns of the given types and length (all zero). */
 export function makeColumns<S extends Schema>(schema: S, n: number): Columns<S> {
   const c: Record<string, Column> = {};
-  for (const k of Object.keys(schema)) c[k] = new CTOR[schema[k]](n);
+  for (const k of Object.keys(schema)) c[k] = new CTOR[typeOf(schema[k])](n * widthOf(schema[k]));
   return c as Columns<S>;
 }
 
@@ -42,7 +48,8 @@ function grow<S extends Schema>(t: Table<S>, need: number) {
   const a = new Uint8Array(n); a.set(t.alive); t.alive = a;
   const cols = t.cols as Record<string, Column>;
   for (const k of Object.keys(cols)) {
-    const old = cols[k]; const c = new (old.constructor as new (n: number) => Column)(n); c.set(old as any); cols[k] = c;
+    const old = cols[k], width = old.length / cap;
+    const c = new (old.constructor as new (n: number) => Column)(n * width); c.set(old as any); cols[k] = c;
   }
 }
 
@@ -51,7 +58,7 @@ export function spawn<S extends Schema>(t: Table<S>): number {
   const id = t.free.length ? t.free.pop()! : t.size++;
   grow(t, t.size);
   const cols = t.cols as Record<string, Column>;
-  for (const k of Object.keys(cols)) cols[k][id] = 0;
+  for (const k of Object.keys(cols)) { const w = cols[k].length / t.alive.length; cols[k].fill(0, id * w, id * w + w); }
   t.alive[id] = 1;
   return id;
 }

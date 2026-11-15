@@ -4,13 +4,13 @@ import { Batch, type RGB, type Rnd, hash2, mix, rgb, shade } from './batch';
 import { type Crop, type Ground, type P2, SEA_Y, groundY, isWet } from './layout';
 
 const TRUNK = rgb(0x7a4a2c);
-const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
+export const LEAVES = [rgb(0x86a632), rgb(0x92ae36), rgb(0x7ca030), rgb(0x9ab23a), rgb(0x74982e)];
 const FLANK = rgb(0x4e8a2e), FLANK_AWAY = rgb(0x3e8a4a), FLANK_AWAY_WARM = rgb(0x4c8c36);
-const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
+export const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
 /** the crowns of the rain forest: deeper and bluer than the leaves of the temperate woods */
 export const JUNGLE = [rgb(0x4f9a2e), rgb(0x5aa232), rgb(0x47902c), rgb(0x62a636)];
 const PALM_TRUNK = rgb(0xa98558), PALM = [rgb(0x5aa23a), rgb(0x66aa3e), rgb(0x4f9636)], ACACIA = [rgb(0x8a9a34), rgb(0x94a23a), rgb(0x7e9230)];
-const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
+export const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
 const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
 const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], VINE_SIDE = rgb(0xc8c42c), VINE_BODY = rgb(0x4a8c22), GRAPES = rgb(0xe89038);
