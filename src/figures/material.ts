@@ -3,7 +3,7 @@
 // wear or carry, and takes its colours, from five numbers per figure that never change. Per frame the processor only
 // advances the clock. Main thread only (needs the renderer's node materials).
 import * as THREE from 'three/webgpu';
-import { Fn, abs, attribute, cos, float, fract, instancedBufferAttribute, length, max, mix, normalLocal, positionGeometry, select, sin, time, varying, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, abs, attribute, cos, float, fract, instancedBufferAttribute, length, max, mix, normalLocal, positionGeometry, select, sin, uniform, varying, vec2, vec3, vec4 } from 'three/tsl';
 import type { Figures } from './crowd';
 import { HIP, Joint, Load, SHOULDER, Slot, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';
 
@@ -18,6 +18,19 @@ const unpack = (n: F): V3 => {
 };
 /** turns (y, z) about the x axis by `a` */
 const turnX = (v: V3, a: F): V3 => vec3(v.x, v.y.mul(cos(a)).sub(v.z.mul(sin(a))), v.y.mul(sin(a)).add(v.z.mul(cos(a))));
+
+/** The figures' clock in seconds: the page's own, so that a click can find where a walker is (stage.ts figureAt). */
+export const figureSeconds = () => performance.now() / 1000;
+const time = uniform(0).onFrameUpdate(figureSeconds);
+
+/** Where a figure stands at a time, in its piece (the same as the vertex stage below, on the processor). */
+export function figureAt(f: { a: Float32Array; b: Float32Array; c: Float32Array }, i: number, t: number): [number, number, number] {
+  const a = i * 4, x0 = f.a[a], y0 = f.a[a + 1], z0 = f.a[a + 2];
+  if (Math.abs(f.c[a] - 1) > 0.5) return [x0, y0, z0];
+  const dx = f.b[a] - x0, dz = f.b[a + 2] - z0, long = Math.max(Math.hypot(dx, dz), 0.001);
+  const v = (t * f.b[a + 3]) / (long * 2) + f.a[a + 3], lap = v - Math.floor(v), along = lap < 0.5 ? lap * 2 : 2 - lap * 2;
+  return [x0 + dx * along, y0 + (f.b[a + 1] - y0) * along, z0 + dz * along];
+}
 
 /** Strides a second: a cadence of about 110 steps a minute at comfortable pace (Bohannon 1997), two steps a stride. */
 const STRIDE = 2 * Math.PI * 0.92;
