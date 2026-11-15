@@ -12,7 +12,8 @@ import { buildTerrain, buildWater } from './terrain';
 
 export interface ProbeScene { ground: Batch; water: Batch; things: Batch; counts: Record<string, number> }
 
-export function buildScene(bakedSky = true): ProbeScene {
+/** The scene; `swap` puts another model in a landmark's place, e.g. the campanile read from its GLB (?campanile=glb). */
+export function buildScene(bakedSky = true, swap: { campanile?: Batch } = {}): ProbeScene {
   const g = buildGround(), things = new Batch(), used = new Uint8Array(N * N), counts: Record<string, number> = {};
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
   const m = new THREE.Matrix4();
@@ -52,7 +53,7 @@ export function buildScene(bakedSky = true): ProbeScene {
   // a small square before the front of the basilica and a lane along its side keep the domes in view
   claim(S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] - 7, S.basilica.at[0] + S.basilica.d / 2 + 7, S.basilica.at[1] + 7);
   claim(S.basilica.at[0] - S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2, S.basilica.at[0] + S.basilica.d / 2, S.basilica.at[1] + S.basilica.w / 2 + 4);
-  build(campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, 20, 'landmark');
+  build(swap.campanile ?? campanile(), S.campanile.at[0], S.campanile.at[1], S.campanile.w, S.campanile.d, 0, swap.campanile ? 25 : 20, 'landmark');
   build(castle(), CASTLE_AT[0], CASTLE_AT[1], 13.5, 13.5, 0, 5, 'landmark');
   { const r = seeded(5); for (const t of [S.westTower, S.eastTower]) build(tower(r), t.at[0], t.at[1], t.w, t.d, 0, 10, 'tower'); }
 

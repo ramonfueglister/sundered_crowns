@@ -8,15 +8,18 @@ jedes Modell nachvollziehbar, änderbar und auf andere Bauzustände umstellbar, 
 
 1. **Massdatei** `landmarks/<id>_<jahr>.json`: jedes Mass mit Wert, Einheit und Quelle. Was nicht belegt ist, steht
    als `Annahme` da. Dazu der Bauzustand im Spieljahr, was deshalb nicht gebaut wird, und was offen bleibt.
-2. **Skript** `landmarks/<id>.py`: setzt die Masse zu Körpern zusammen (`lib/diorama.py`: Kästen, Pyramiden, flache
-   Fenster und Bögen auf Wänden, Farben aus der Palette des Spiels). Das Skript enthält keine eigenen Zahlen.
+2. **Skript** `landmarks/<id>.py`: setzt die Masse zu Körpern zusammen (`lib/diorama.py`: Kästen mit
+   Fuss-Schattierung wie in `batch.ts`, Pyramiden, flache Fenster und Bögen auf Wänden, Bogenhallen mit echten
+   Öffnungen und Laibungen, Farben aus der Palette des Spiels). Das Skript enthält keine eigenen Zahlen.
 3. **Ausgabe:** `python3 tools/blender/landmarks/<id>.py --preview bild.png` schreibt
    `public/models/landmarks/<id>_<jahr>.glb` (binäres glTF: Positionen, flache Normalen, Farbe je Ecke, Y nach
    oben, keine Materialien) und ein Vorschaubild aus der Kamera der Look-Probe (18,7° über dem Boden, Boden um
    46,7° gedreht, Sonne von rechts hinten).
 4. **Prüfung:** `npx vitest run tests/buildings/glb.test.ts` liest die Datei mit dem Leser des Spiels
-   (`src/buildings/landmarks/glb.ts`) und prüft Dreiecke, Höhe, Grundfläche, Palette und Normalen. Dazu kommt der
-   Blick auf das Vorschaubild neben Fotos aus gleichem Winkel, dann Ramons Urteil.
+   (`src/buildings/landmarks/glb.ts`) und prüft Dreiecke, Höhe, Grundfläche, Palette und Normalen. Beurteilt wird
+   das Modell im Spiel-Renderer, nicht im Vorschaubild: `look-probe.html?campanile=glb` stellt die Datei an die
+   Stelle des handgebauten Campanile, `node tools/lookprobe/shot.mjs bild.png campanile=glb` macht das Bild dazu.
+   Dann Ramons Urteil.
 5. **Im Spiel:** `glbToBatch()` macht aus der Datei einen `Batch`, den `settle()` wie jedes handgebaute Modell
    stellt. Das läuft in den Web-Workern der Welt, ohne DOM und ohne Renderer.
 

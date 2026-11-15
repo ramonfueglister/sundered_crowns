@@ -46,7 +46,7 @@ SIDE_NORMAL = {'+x': (1, 0, 0), '-x': (-1, 0, 0), '+y': (0, 1, 0), '-y': (0, -1,
 
 @dataclass
 class Model:
-    """One model under construction: a bmesh with a colour per face."""
+    """One model under construction: a bmesh with a colour per face, or one per corner where a face is shaded."""
     name: str
     bm: bmesh.types.BMesh
     colours: list
@@ -56,29 +56,35 @@ class Model:
         return cls(name, bmesh.new(), [])
 
     def _add_faces(self, verts, faces, colour, outward=None):
-        """Adds faces over new vertices. ``outward`` says which way a face must look: ('along', vector) or
-        ('from', point the faces turn away from); a face wound the other way is flipped. Isolated faces (panes) need this, because Blender's
-        normal recalculation only orients faces that share edges."""
+        """Adds faces over new vertices. ``colour`` is one RGBA for the whole face, or one per corner in the order of
+        the face's vertices. ``outward`` says which way a face must look: ('along', vector) or ('from', point the
+        faces turn away from); a face wound the other way is flipped (its corner colours follow). Isolated faces
+        (panes) need this, because Blender's normal recalculation only orients faces that share edges."""
         vs = [self.bm.verts.new(Vector(v)) for v in verts]
         for f in faces:
             face = self.bm.faces.new([vs[i] for i in f])
-            self.colours.append(colour)
+            per_corner = colour if isinstance(colour[0], (tuple, list)) else None
             face.smooth = False
             if outward is not None:
                 face.normal_update()
                 want = Vector(outward[1]) if outward[0] == 'along' else face.calc_center_median() - Vector(outward[1])
                 if face.normal.dot(want) < 0:
                     face.normal_flip()
+                    if per_corner:
+                        per_corner = list(reversed(per_corner))
+            self.colours.append(per_corner or colour)
 
-    def box(self, x0, y0, z0, x1, y1, z1, colour, top=None, bottom=False):
-        """An axis-aligned box; the lower face is left out unless asked for (the ground hides it)."""
+    def box(self, x0, y0, z0, x1, y1, z1, colour, top=None, bottom=False, foot=1.0):
+        """An axis-aligned box; the lower face is left out unless asked for (the ground hides it). ``foot`` darkens the
+        lower corners of the sides, the cheap contact shading the game's batch.ts gives its boxes."""
         v = [(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0), (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]
         sides = [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
         centre = ('from', ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2))
-        self._add_faces(v, sides, colour, centre)
+        lo = shade(colour, foot)
+        self._add_faces(v, sides, [lo, lo, colour, colour] if foot != 1.0 else colour, centre)
         self._add_faces(v, [(4, 5, 6, 7)], top or colour, centre)
         if bottom:
-            self._add_faces(v, [(3, 2, 1, 0)], colour, centre)
+            self._add_faces(v, [(3, 2, 1, 0)], lo, centre)
 
     def pyramid(self, cx, cy, z0, half, height, colour, top_half=0.0):
         """A square pyramid (or a truncated one when ``top_half`` > 0) standing on z0."""
@@ -92,43 +98,69 @@ class Model:
             vs = base + [(cx - t, cy - t, z1), (cx + t, cy - t, z1), (cx + t, cy + t, z1), (cx - t, cy + t, z1)]
             self._add_faces(vs, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (4, 5, 6, 7)], colour, ('from', (cx, cy, z0)))
 
+    @staticmethod
+    def _on(side, x0, y0, x1, y1, u, z, t=0.0):
+        """A point on one side ('+x', '-x', '+y', '-y') of the box x0..x1 × y0..y1: ``u`` along the side as seen from
+        outside, left to right, ``z`` up it, ``t`` outwards from the wall (negative: into it)."""
+        if side == '+y': return (x0 + u, y1 + t, z)
+        if side == '-y': return (x1 - u, y0 - t, z)
+        if side == '+x': return (x1 + t, y1 - u, z)
+        return (x0 - t, y0 + u, z)
+
     def pane(self, side: str, x0, y0, x1, y1, z0, z1, u0, u1, colour, lift=0.04):
-        """A flat rectangle lying on one side ('+x', '-x', '+y', '-y') of the box x0..x1 × y0..y1, from u0 to u1 along
-        that side and z0 to z1 up it, a little off the wall so that it does not flicker into it."""
-        if side == '+y':
-            v = [(x0 + u0, y1 + lift, z0), (x0 + u1, y1 + lift, z0), (x0 + u1, y1 + lift, z1), (x0 + u0, y1 + lift, z1)]
-        elif side == '-y':
-            v = [(x1 - u0, y0 - lift, z0), (x1 - u1, y0 - lift, z0), (x1 - u1, y0 - lift, z1), (x1 - u0, y0 - lift, z1)]
-        elif side == '+x':
-            v = [(x1 + lift, y1 - u0, z0), (x1 + lift, y1 - u1, z0), (x1 + lift, y1 - u1, z1), (x1 + lift, y1 - u0, z1)]
-        else:
-            v = [(x0 - lift, y0 + u0, z0), (x0 - lift, y0 + u1, z0), (x0 - lift, y0 + u1, z1), (x0 - lift, y0 + u0, z1)]
-        self._add_faces(v, [(0, 1, 2, 3)], colour, ('along', SIDE_NORMAL[side]))
+        """A flat rectangle lying on one side of the box x0..x1 × y0..y1, from u0 to u1 along that side and z0 to z1
+        up it, a little off the wall so that it does not flicker into it."""
+        on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
+        self._add_faces([on(u0, z0), on(u1, z0), on(u1, z1), on(u0, z1)], [(0, 1, 2, 3)], colour, ('along', SIDE_NORMAL[side]))
 
     def arch(self, side, x0, y0, x1, y1, uc, z0, half, spring, colour, lift=0.04, segs=6):
         """A round-headed opening drawn flat on a wall: a pane up to ``spring``, a half disc above it."""
         self.pane(side, x0, y0, x1, y1, z0, spring, uc - half, uc + half, colour, lift)
         pts = [(uc + math.cos(math.pi * k / segs) * half, spring + math.sin(math.pi * k / segs) * half) for k in range(segs + 1)]
+        on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
         for (ua, za), (ub, zb) in zip(pts, pts[1:]):
-            self._tri_on(side, x0, y0, x1, y1, [(uc, spring), (ua, za), (ub, zb)], colour, lift)
+            self._add_faces([on(uc, spring), on(ua, za), on(ub, zb)], [(0, 1, 2)], colour, ('along', SIDE_NORMAL[side]))
 
-    def _tri_on(self, side, x0, y0, x1, y1, uz, colour, lift):
-        def at(u, z):
-            if side == '+y': return (x0 + u, y1 + lift, z)
-            if side == '-y': return (x1 - u, y0 - lift, z)
-            if side == '+x': return (x1 + lift, y1 - u, z)
-            return (x0 - lift, y0 + u, z)
-        self._add_faces([at(u, z) for u, z in uz], [(0, 1, 2)], colour, ('along', SIDE_NORMAL[side]))
+    def arcade(self, side, x0, y0, x1, y1, z0, z1, n, pier, thickness, top_gap, colour, segs=8):
+        """A wall of thickness ``thickness`` on one side of the box, from z0 to z1, pierced by ``n`` round-headed
+        openings between piers ``pier`` wide; the arch tops stay ``top_gap`` below z1. The openings are real: piers,
+        the wall above the arches and the arch soffits are geometry, so that the inside shows through and the
+        reveals catch light and shadow. Build something dark inside the box so the view through them ends."""
+        length = (x1 - x0) if side in ('+y', '-y') else (y1 - y0)
+        ow = (length - (n + 1) * pier) / n
+        radius = ow / 2
+        spring = z1 - top_gap - radius
+        on = lambda u, z, t=0.0: self._on(side, x0, y0, x1, y1, u, z, t)
+        normal = Vector(SIDE_NORMAL[side])
+        for k in range(n + 1):
+            u = k * (ow + pier)
+            a, b, c, d = on(u, z0, 0), on(u + pier, z0, 0), on(u + pier, z0, -thickness), on(u, z0, -thickness)
+            xs, ys = [p[0] for p in (a, b, c, d)], [p[1] for p in (a, b, c, d)]
+            self.box(min(xs), min(ys), z0, max(xs), max(ys), z1, colour)
+        for k in range(n):
+            u0 = pier + k * (ow + pier)
+            uc, u1 = u0 + radius, u0 + ow
+            pts = [(uc + math.cos(math.pi * i / segs) * radius, spring + math.sin(math.pi * i / segs) * radius) for i in range(segs + 1)]
+            mid = segs // 2
+            tris = [[(u1, z1), pts[i], pts[i + 1]] for i in range(mid)] + [[(u0, z1), pts[i], pts[i + 1]] for i in range(mid, segs)] + [[pts[mid], (u0, z1), (u1, z1)]]
+            for tri in tris:
+                self._add_faces([on(u, z, 0) for u, z in tri], [(0, 1, 2)], colour, ('along', normal))
+            for (ua, za), (ub, zb) in zip(pts, pts[1:]):
+                quad = [on(ua, za, 0), on(ub, zb, 0), on(ub, zb, -thickness), on(ua, za, -thickness)]
+                centre = Vector(on(uc, spring, -thickness / 2))
+                mid_pt = sum((Vector(p) for p in quad), Vector()) / 4
+                self._add_faces(quad, [(0, 1, 2, 3)], colour, ('along', centre - mid_pt))
 
     def to_object(self) -> bpy.types.Object:
-        """Turns the bmesh into a mesh object with a face colour attribute and flat shading. Every face was oriented
-        when it was added, so no normal recalculation here: it would turn isolated panes at random."""
+        """Turns the bmesh into a mesh object with a colour attribute per corner and flat shading. Every face was
+        oriented when it was added, so no normal recalculation here: it would turn isolated panes at random."""
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
         col = mesh.color_attributes.new(name='Col', type='FLOAT_COLOR', domain='CORNER')
         for poly, c in zip(mesh.polygons, self.colours):
-            for li in poly.loop_indices:
-                col.data[li].color = c
+            per_corner = c if isinstance(c[0], (tuple, list)) else [c] * len(poly.loop_indices)
+            for li, cc in zip(poly.loop_indices, per_corner):
+                col.data[li].color = cc
         mesh.color_attributes.active_color = col
         mesh.shade_flat()
         obj = bpy.data.objects.new(self.name, mesh)

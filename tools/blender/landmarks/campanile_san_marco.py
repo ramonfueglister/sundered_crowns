@@ -16,51 +16,63 @@ sys.path.insert(0, os.path.dirname(HERE))
 from lib.diorama import Model, clear_scene, export_glb, load_measures, m2b, render_preview, rgb, shade  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+SIDES = ('+x', '-x', '+y', '-y')
+
+
+def cornice(m: Model, half: float, z: float, h: float, out: float, colour):
+    """A stepped cornice around the square of half side ``half``: a narrow lower step, a wider upper one."""
+    m.box(-half - out / 2, -half - out / 2, z, half + out / 2, half + out / 2, z + h / 2, colour)
+    m.box(-half - out, -half - out, z + h / 2, half + out, half + out, z + h, colour)
 
 
 def build(data: dict) -> Model:
     m = Model.new(data['id'])
-    half = m2b(data, 'schaft_seite') / 2
-    plinth, shaft_h = m2b(data, 'sockel_hoehe'), m2b(data, 'schaft_hoehe')
-    belfry_h, dado_h, spire_h = m2b(data, 'glockenstube_hoehe'), m2b(data, 'dado_hoehe'), m2b(data, 'spitze_hoehe')
+    b = lambda key: m2b(data, key)  # noqa: E731
+    half = b('schaft_seite') / 2
     brick, stone, marble, copper, dark = rgb('BRICK'), rgb('STONE'), rgb('MARBLE'), rgb('COPPER'), rgb('OPENING')
 
-    # the stone plinth, a little wider than the shaft
-    p = half + m2b(data, 'sockel_vorsprung')
-    m.box(-p, -p, -0.5, p, p, plinth, stone)
+    # the stone plinth, a little wider than the shaft, reaching half a block into the ground
+    p = half + b('sockel_vorsprung')
+    z0 = b('sockel_hoehe')
+    m.box(-p, -p, -0.5, p, p, z0, stone, foot=0.8)
 
-    # the brick shaft with its pilaster strips: the strips stand a touch proud and paler, the fields between them darker
-    z0, z1 = plinth, plinth + shaft_h
-    m.box(-half, -half, z0, half, half, z1, brick)
-    n, w = int(data['masse']['lisenen_pro_seite']['wert']), m2b(data, 'lisenen_breite')
-    side = 2 * half
-    for s in ('+x', '-x', '+y', '-y'):
-        for k in range(n):
-            u = (side / n) * (k + 0.5)
-            m.pane(s, -half, -half, half, half, z0 + 0.1, z1 - 0.1, u - w / 2, u + w / 2, shade(brick, 1.18), 0.06)
-            if k > 0:
-                # the shadow of the recessed field between two strips
-                m.pane(s, -half, -half, half, half, z0 + 0.3, z1 - 0.3, u - side / n + w / 2 + 0.02, u - w / 2 - 0.02, shade(brick, 0.86), 0.02)
+    # the fluted brick shaft: a core, and on each side five pilaster strips standing proud of it, so that the four
+    # flutes between them are real recesses; the strips at the corners are shared by two sides
+    z1 = z0 + b('schaft_hoehe')
+    n, fw, depth = int(data['masse']['rillen_pro_seite']['wert']), b('rillen_breite'), b('rillen_tiefe')
+    core = half - depth
+    m.box(-core, -core, z0, core, core, z1, shade(brick, 0.9), foot=0.88)
+    strip = (2 * half - n * fw) / (n + 1)
+    for s in SIDES:
+        for k in range(n + 1):
+            u0 = k * (strip + fw)
+            a, c = Model._on(s, -half, -half, half, half, u0, z0, 0), Model._on(s, -half, -half, half, half, u0 + strip, z0, -depth)
+            m.box(min(a[0], c[0]), min(a[1], c[1]), z0, max(a[0], c[0]), max(a[1], c[1]), z1, brick, foot=0.88)
+    # the eight small windows of the stair ramp, one above the other in one flute of one side
+    wins, wh = int(data['masse']['schaft_fenster']['wert']), b('schaft_fenster_hoehe')
+    uw = strip + fw / 2
+    for k in range(wins):
+        zc = z0 + (k + 1) * (z1 - z0) / (wins + 1)
+        m.pane('+y', -half, -half, half, half, zc - wh / 2, zc + wh / 2, uw - fw * 0.3, uw + fw * 0.3, dark, -depth + 0.02)
 
-    # the belfry of 1329: a stone arcade on a thin cornice
-    z2 = z1 + belfry_h
-    m.box(-half - 0.08, -half - 0.08, z1, half + 0.08, half + 0.08, z1 + 0.14, marble)
-    m.box(-half, -half, z1 + 0.14, half, half, z2, stone)
-    arches = int(data['masse']['glockenstube_boegen_pro_seite']['wert'])
-    aw = side / arches
-    for s in ('+x', '-x', '+y', '-y'):
-        for k in range(arches):
-            uc = aw * (k + 0.5)
-            m.arch(s, -half, -half, half, half, uc, z1 + 0.14 + belfry_h * 0.12, aw * 0.3, z2 - belfry_h * 0.35, dark)
+    # the belfry of 1329: an arcade of stone on a cornice, open so that the dark bell chamber shows through
+    gh, go = b('gesims_hoehe'), b('gesims_vorsprung')
+    cornice(m, half, z1, gh, go, marble)
+    z2 = z1 + gh
+    z3 = z2 + b('glockenstube_hoehe')
+    arches, pier, thick = int(data['masse']['glockenstube_boegen_pro_seite']['wert']), b('glockenstube_pfeiler_breite'), b('glockenstube_mauerstaerke')
+    m.box(-half + thick - 0.02, -half + thick - 0.02, z2, half - thick + 0.02, half - thick + 0.02, z3, dark, top=dark)
+    for s in SIDES:
+        m.arcade(s, -half, -half, half, half, z2, z3, arches, pier, thick, gh, stone)
 
-    # the dado above it, brick again, and the eaves board of the spire
-    z3 = z2 + dado_h
-    m.box(-half - 0.1, -half - 0.1, z2, half + 0.1, half + 0.1, z2 + 0.14, marble)
-    m.box(-half, -half, z2 + 0.14, half, half, z3, brick)
-    m.box(-half - 0.12, -half - 0.12, z3, half + 0.12, half + 0.12, z3 + 0.12, shade(copper, 0.8))
+    # the dado above it, brick again, with the eaves board of the spire
+    cornice(m, half, z3, gh, go, marble)
+    z4 = z3 + gh + b('dado_hoehe')
+    m.box(-half, -half, z3 + gh, half, half, z4, brick, foot=0.92)
+    cornice(m, half, z4, gh, go, shade(copper, 0.8))
 
     # the wooden spire in its copper plates, not yet gilded
-    m.pyramid(0, 0, z3 + 0.12, half + 0.12, spire_h, copper)
+    m.pyramid(0, 0, z4 + gh, half + go, b('spitze_hoehe'), copper)
     return m
 
 
