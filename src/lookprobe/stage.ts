@@ -10,7 +10,7 @@ import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
-import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW, toXZ } from './layout';
+import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
 import { OPEN_WATER } from './terrain';
 
@@ -33,12 +33,14 @@ const LOOK = {
   focusRange: 150, blur: 2.6,
 };
 
-export interface StageScene {
-  ground: Batch; things: Batch;
+/** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
+export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
+export interface StageScene<S extends Shape = Batch> {
+  ground: S; things: S;
   /** the sea, which mirrors what stands beside it */
-  water: Batch;
+  water: S;
   /** water above sea level (lakes, rivers): drawn plain, because the mirror lies at sea level */
-  raised?: Batch;
+  raised?: S;
   counts: Record<string, number>;
 }
 export interface StageOptions {
@@ -46,13 +48,28 @@ export interface StageOptions {
   frameW?: number;
   /** how far the camera looks down, in degrees (default: as in the reference) */
   elevation?: number;
-  /** shadows over the whole ground grid instead of the reference frame only, for scenes that are panned */
-  wholeGrid?: boolean;
+  /** the picture is moved by the page itself (`Stage.aim`), not by the stage's own mouse controls */
+  fixed?: boolean;
+  /** height in blocks of the tallest thing that casts a shadow into the picture */
+  tall?: number;
+}
+export interface Stage {
+  canvas: HTMLCanvasElement;
+  /** Puts a scene on the stage, moved by (x, z) blocks. */
+  add(built: StageScene<Shape>, x?: number, z?: number): THREE.Group;
+  remove(group: THREE.Group): void;
+  /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees. */
+  aim(x: number, z: number, frameW: number, elevation: number): void;
+  /** Asks for a new picture. */
+  redraw(): void;
+  /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
+  probe: { ready: boolean; counts: Record<string, number>; backend: string };
+  /** more is still to come onto the stage (true until the page says otherwise) */
+  busy: boolean;
 }
 
-/** Builds the scene with `build` (told whether the sky share is to be baked in) and shows it. */
-export async function stage(build: (bakedSky: boolean) => StageScene | Promise<StageScene>, o: StageOptions = {}) {
-  const frameW = o.frameW ?? FRAME_W, elev = THREE.MathUtils.degToRad(o.elevation ?? VIEW.elevation), frameD = (frameW * 941) / 1672 / Math.sin(elev);
+/** Sets up the stage: renderer, light, camera and picture pipeline, with nothing on it yet. */
+export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const canvas = document.querySelector('canvas')!;
   const fixedW = Number(q.get('w')) || 0, fixedH = Number(q.get('h')) || 0;
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false) });
@@ -61,7 +78,6 @@ export async function stage(build: (bakedSky: boolean) => StageScene | Promise<S
   renderer.shadowMap.type = THREE.PCFShadowMap;
   await renderer.init();
 
-  const built = await build(flag('sky', true));
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(...OPEN_WATER);
   const solid = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
@@ -78,54 +94,65 @@ export async function stage(build: (bakedSky: boolean) => StageScene | Promise<S
     water.color.setRGB(1 - tint.r, 1 - tint.g, 1 - tint.b);
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(vec3(tint.r, tint.g, tint.b));
   }
-  for (const [batch, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
-    if (!batch) continue;
-    const mesh = new THREE.Mesh(batch.toGeometry(), material);
-    mesh.castShadow = casts; mesh.receiveShadow = true;
-    scene.add(mesh);
-  }
+  const geometry = (s: Shape) => {
+    const g = new THREE.BufferGeometry(), list = (a: ArrayLike<number>) => new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), 3);
+    g.setAttribute('position', list(s.pos)); g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col));
+    g.computeBoundingSphere();
+    return g;
+  };
 
   // light step 1: sun, side light and sky; strengths are multiplied by π because a Lambert surface returns light / π
-  const centre = new THREE.Vector3(N / 2, LAND_Y, N / 2), rad = THREE.MathUtils.degToRad;
+  const rad = THREE.MathUtils.degToRad;
   /** a direction on the ground given by its share to the right of the picture and towards its back, raised by `elev` */
   const from = (turn: number, elev: number) => {
     const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
     return new THREE.Vector3(RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back);
   };
   const sun = new THREE.DirectionalLight(LOOK.sunColor, LOOK.sun * Math.PI);
-  sun.position.copy(centre).addScaledVector(from(LOOK.sunTurn, LOOK.sunElevation), 420);
-  sun.target.position.copy(centre);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
-  // the shadow map covers the ground of the picture and what stands on it, seen from the sun
-  const sc = sun.shadow.camera, toSun = from(LOOK.sunTurn, LOOK.sunElevation);
-  const across = new THREE.Vector3().crossVectors(toSun, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(across, toSun);
-  let halfW = 0, halfH = 0, depth = 0;
-  for (const s of [-0.02, 1.02]) for (const t of [-0.02, 1.02]) for (const y of [0, 36]) {
-    const [x, z] = o.wholeGrid ? [s * N, t * N] : toXZ(s, t), p = new THREE.Vector3(x, y, z).sub(centre);
-    halfW = Math.max(halfW, Math.abs(p.dot(across))); halfH = Math.max(halfH, Math.abs(p.dot(up))); depth = Math.max(depth, Math.abs(p.dot(toSun)));
-  }
-  sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
   sun.shadow.radius = 2; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
   const side = new THREE.DirectionalLight(LOOK.sideColor, LOOK.side * Math.PI);
-  side.position.copy(centre).addScaledVector(from(0, 0), 100);
-  side.target.position.copy(centre);
   const sky = new THREE.HemisphereLight(LOOK.skyColor, new THREE.Color(LOOK.bounceColor).multiplyScalar(LOOK.bounce / LOOK.sky), LOOK.sky * Math.PI);
   // light thrown back by the sunlit ground and walls: it lifts the walls that face the viewer's left, as in the reference
   const fill = new THREE.DirectionalLight(LOOK.fillColor, LOOK.fill * Math.PI);
-  fill.position.copy(centre).addScaledVector(from(180 + VIEW.turn, 20), 100);
-  fill.target.position.copy(centre);
   scene.add(sun, sun.target, side, side.target, fill, fill.target, sky);
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
-  const reach = (o.wholeGrid ? N * 0.75 : frameD / 2) * Math.cos(elev) + 80;
-  const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, LOOK.distance - reach, LOOK.distance + reach);
-  camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(LOOK.distance));
-  camera.lookAt(centre);
-  const controls = new MapControls(camera, canvas);
-  controls.target.copy(centre);
-  controls.minDistance = 600; controls.maxDistance = 4200; controls.maxPolarAngle = rad(80);
-  controls.update();
+  const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, 1, LOOK.distance * 2);
+  const controls = o.fixed ? null : new MapControls(camera, canvas);
+  if (controls) { controls.minDistance = 600; controls.maxDistance = 4200; controls.maxPolarAngle = rad(80); }
+  let frameW = o.frameW ?? FRAME_W, pending = 3;
+  const lens = () => {
+    // frameW ground units across the picture at the middle distance, whatever the window shape
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(frameW / camera.aspect / 2 / LOOK.distance));
+    camera.updateProjectionMatrix();
+  };
+  const aim = (x: number, z: number, across: number, elevation: number) => {
+    frameW = across;
+    const elev = rad(elevation), frameD = (frameW * 941) / 1672 / Math.sin(elev), centre = new THREE.Vector3(x, LAND_Y, z);
+    const toSun = from(LOOK.sunTurn, LOOK.sunElevation);
+    sun.position.copy(centre).addScaledVector(toSun, 420); sun.target.position.copy(centre);
+    // the shadow map covers the ground of the picture and what stands on it, seen from the sun
+    const sc = sun.shadow.camera, wide = new THREE.Vector3().crossVectors(toSun, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(wide, toSun);
+    let halfW = 0, halfH = 0, depth = 0;
+    for (const s of [-0.02, 1.02]) for (const t of [-0.02, 1.02]) for (const y of [0, o.tall ?? 36]) {
+      const u = (s - 0.5) * frameW, v = (t - 0.5) * frameD, p = new THREE.Vector3(u * RIGHT[0] + v * NEAR[0], y - LAND_Y, u * RIGHT[1] + v * NEAR[1]);
+      halfW = Math.max(halfW, Math.abs(p.dot(wide))); halfH = Math.max(halfH, Math.abs(p.dot(up))); depth = Math.max(depth, Math.abs(p.dot(toSun)));
+    }
+    sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
+    sc.updateProjectionMatrix();
+    side.position.copy(centre).addScaledVector(from(0, 0), 100); side.target.position.copy(centre);
+    fill.position.copy(centre).addScaledVector(from(180 + VIEW.turn, 20), 100); fill.target.position.copy(centre);
+    const reach = (frameD / 2) * Math.cos(elev) + 80 + (o.tall ?? 0);
+    camera.near = LOOK.distance - reach; camera.far = LOOK.distance + reach;
+    camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(LOOK.distance));
+    camera.lookAt(centre);
+    if (controls) { controls.target.copy(centre); controls.update(); }
+    lens();
+    pending = Math.max(pending, 1);
+  };
+  aim(N / 2, N / 2, frameW, o.elevation ?? VIEW.elevation);
 
   const pipeline = new THREE.RenderPipeline(renderer);
   const scenePass = pass(scene, camera);
@@ -144,29 +171,59 @@ export async function stage(build: (bakedSky: boolean) => StageScene | Promise<S
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
 
-  let pending = 3;
   const resize = () => {
     const w = fixedW || innerWidth, h = fixedH || innerHeight;
     renderer.setPixelRatio(fixedW ? 1 : Math.min(devicePixelRatio, 2));
     renderer.setSize(w, h, true);
     camera.aspect = w / h;
-    // frameW ground units across the picture at the middle distance, whatever the window shape
-    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(frameW / camera.aspect / 2 / LOOK.distance));
-    camera.updateProjectionMatrix();
+    lens();
     pending = Math.max(pending, 1);
   };
   addEventListener('resize', resize);
-  controls.addEventListener('change', () => { pending = Math.max(pending, 1); });
+  controls?.addEventListener('change', () => { pending = Math.max(pending, 1); });
   resize();
 
-  const probe = { ready: false, counts: built.counts, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' };
-  (window as unknown as { __probe: typeof probe }).__probe = probe;
+  const stage: Stage = {
+    canvas, aim, busy: true,
+    probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },
+    add(built, x = 0, z = 0) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      for (const [shape, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
+        if (!shape || !shape.pos.length) continue;
+        const mesh = new THREE.Mesh(geometry(shape), material);
+        mesh.castShadow = casts; mesh.receiveShadow = true;
+        group.add(mesh);
+      }
+      scene.add(group);
+      pending = Math.max(pending, 3);
+      return group;
+    },
+    remove(group) {
+      scene.remove(group);
+      for (const mesh of group.children) (mesh as THREE.Mesh).geometry.dispose();
+      pending = Math.max(pending, 1);
+    },
+    redraw() { pending = Math.max(pending, 1); },
+  };
+  (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
   renderer.setAnimationLoop(() => {
-    if (pending <= 0) return;
+    // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
+    if (pending <= 0 || (fixedW && stage.busy)) return;
     pipeline.render();
-    if (--pending === 0) probe.ready = true;
+    if (--pending === 0 && !stage.busy) stage.probe.ready = true;
   });
+  return stage;
 }
+
+/** Builds the scene with `build` (told whether the sky share is to be baked in) and shows it. */
+export async function stage(build: (bakedSky: boolean) => StageScene | Promise<StageScene>, o: StageOptions = {}) {
+  const st = await createStage(o), built = await build(flag('sky', true));
+  st.add(built);
+  st.probe.counts = built.counts; st.busy = false;
+}
+/** Whether the sky share is to be baked into the ground (address option ?sky=0 switches it off). */
+export const bakedSky = () => flag('sky', true);
 
 /** Shows an error of the stage on the page instead of a blank picture. */
 export function showError(e: unknown): never {

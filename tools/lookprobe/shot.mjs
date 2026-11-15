@@ -17,5 +17,5 @@ await page.goto(url);
 await page.waitForFunction(() => globalThis.__probe?.ready === true, null, { timeout: 240000 });
 await page.waitForTimeout(500);
 console.log(JSON.stringify(await page.evaluate(() => globalThis.__probe)), `${Date.now() - t0} ms`);
-await page.locator('canvas').screenshot({ path: out });
+await page.screenshot({ path: out });
 await browser.close();

@@ -155,6 +155,8 @@ export interface Ground {
   occ: Float32Array;
   /** height of the water surface over each wet column */
   surf: Float32Array;
+  /** world block of the ground's first column, where the ground is a piece of a larger world (else 0) */
+  ox?: number; oz?: number;
 }
 /** What the ground mesher needs to know about a scene beyond heights and materials. Positions are ground coordinates. */
 export interface GroundTraits {
