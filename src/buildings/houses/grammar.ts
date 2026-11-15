@@ -33,7 +33,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   const W = Math.max(6, Math.round(w / V)) * V, D = Math.max(6, Math.round(d / V)) * V;
   // what the whole house decides, drawn first and in this order
   // the openings are dark and warm, as in the reference class image (not the blue-grey glass of the far view)
-  const wallC = r.pick(tr.walls), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.8, 1.1)) };
+  const wallC = r.pick(tr.walls), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.55, 0.8)) };
   const arched = r.chance(tr.arched), jetty = detail && floors > tr.jetty.from && r.chance(tr.jetty.share) ? tr.jetty.out * V : 0;
   const altanaOn = r.chance(tr.altana), seed = r.int(0, 1e6), pitch = r.range(tr.pitch[0], tr.pitch[1]);
   // storeys: the ground floor, the hall storey of a great house, the upper storeys; the last block of each is its band
@@ -48,10 +48,10 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     b.box(u.x0, yj - V, u.z0, u.x1, top, u.z1, wallC, { bottom: true });
     corbels(b, wallOf(base.x0, base.z0, base.x1, base.z1, front), yj - V, jetty, Math.max(2, Math.round(W / (2 * V))), tr.wood);
   } else b.box(base.x0, -1, base.z0, base.x1, top, base.z1, wallC, { foot: 0.9 });
-  // plinth, string courses and the wooden eaves as rings round the body (plinth and courses of Istrian stone: assumption)
+  // plinth, string courses and cornice as rings of stone round the body (Istrian stone: assumption)
   ring(b, fp(0), 0, V, V * 0.25, shade(mt.stone, 0.88));
   for (let k = 1; k < hs.length; k++) ring(b, fp(k), ys[k] - V, ys[k], V * 0.5, mt.stone);
-  ring(b, fp(hs.length - 1), top - V, top, V * 0.8, shade(tr.wood, 0.9));
+  ring(b, fp(hs.length - 1), top - V, top, V * 0.8, shade(mt.stone, 0.96));
   for (const s of SIDES) {
     if (blind.has(s)) continue;
     for (let k = 0; k < hs.length; k++) facade(b, fp(k), s, k, ys[k], hs[k], tr, mt, r, { front, canal: o.canal ?? null, shop: !!o.shop, great: !!o.great, arched, detail, seed, wallC });

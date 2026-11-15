@@ -47,14 +47,14 @@
     "oberflaeche": "Sichtziegel hell ockergelb (albasi) bis rot, darüber oft dünne Putze mit Quaderimitation (regalzier) oder farbige Fassungen; gotische Muster in Rot, Grün, Gelb.",
     "quelle_oberflaeche": "Squassina 2011, S. 1 f., 5, 13; venice.jc-r.net/plaster-frescoes nach Schuller 2000.",
     "farben_hex": {
-      "ziegel_hell": "#f0c48c",
-      "ziegel_rot": "#d87858",
-      "putz_hell": "#faf0d8",
-      "putz_rosa": "#f6d0b4",
-      "putz_rot": "#cc6448",
-      "istrischer_stein": "#f4f0e8"
+      "ziegel_hell": "#eaa65c",
+      "ziegel_rot": "#dc7a56",
+      "putz_hell": "#f4c080",
+      "putz_rosa": "#f0b07c",
+      "putz_rot": "#d0674a",
+      "istrischer_stein": "#f4ebd8"
     },
-    "farben_bemerkung": "Annahme: Hexwerte nach den Beschreibungen (albasi = ockergelb; roter Putz = rosso veneziano), nicht gemessen; als Albedo so hell gesetzt, dass die Bühne des Look-Probe sie wie das Referenzbild der Nahsicht beleuchtet (Gauntlet).",
+    "farben_bemerkung": "Annahme: Hexwerte nach den Beschreibungen (albasi = ockergelb; Putze ocker bis rosa; roter Putz = rosso veneziano), nicht gemessen; als Albedo so gesetzt, dass die Bühne der Nahsicht sie wie das Referenzbild beleuchtet (Gauntlet).",
     "anteile": {
       "ziegel_hell": 3,
       "putz_hell": 2,
@@ -75,8 +75,8 @@
       1.875
     ],
     "tuer_bemerkung": "Annahme nach Referenzklasse (3 × 5 Feinblöcke).",
-    "bogenanteil": 0.5,
-    "bogen_bemerkung": "Annahme: die Hälfte der Fenster mit Spitz- oder Dreipassbogen, der Rest gerade mit Steinsturz."
+    "bogenanteil": 0.2,
+    "bogen_bemerkung": "Annahme: ein Fünftel der kleinen Häuser mit Spitzbogenfenstern, die übrigen gerade mit Steinsturz; die Hauptgeschosse der Kaufmannshäuser immer mit Bogenreihe (ICCD-Karten zeigen Bogenfenster an besseren Häusern)."
   },
   "barbacani": {
     "vorsprung_m": 0.75,
@@ -88,23 +88,23 @@
   },
   "dach": {
     "neigung": [
-      0.2,
-      0.3
+      0.08,
+      0.14
     ],
     "deckung": "coppi, rot",
-    "bemerkung": "Annahme: flache Satteldächer mit Mönch-Nonne-Ziegeln wie in de' Barbaris Ansicht 1500; die Neigung ist nicht belegt.",
+    "bemerkung": "Annahme: flache Satteldächer mit Mönch-Nonne-Ziegeln (coppi) wie in de' Barbaris Ansicht 1500; die Neigung (Anstieg über die halbe Breite) ist nicht belegt und nach dem Referenzbild der Nahsicht flach gesetzt.",
     "altana_anteil": 0.15,
     "altana_quelle": "Altane bezeugt um 1500 (Carpaccio, Bellini, de' Barbari); Anteil und Vorkommen 1356 Annahme.",
-    "farbe_hex": "#f07a52",
+    "farbe_hex": "#ff7e4a",
     "farbe_bemerkung": "Annahme: coppi in Rot, als Albedo auf der Höhe der Dachfarben des Look-Probe (ROOFS), damit die Bühne sie wie die Referenzbilder beleuchtet."
   },
   "kamin": {
     "hoehe_m": [
       2.0,
-      3.5
+      2.6
     ],
     "form": "schlanker Schaft mit umgekehrter Glocke oben",
-    "quelle": "Lupo 2016, ArcHistoR 5, S. 16 bis 19: hoch, schlank, Glocke gegen Funken, alla Carpaccio; Höhe Annahme (Serlio: furchterregend hoch).",
+    "quelle": "Lupo 2016, ArcHistoR 5, S. 16 bis 19: hoch, schlank, Glocke gegen Funken, alla Carpaccio; Höhe über First Annahme (Serlio: furchterregend hoch; hier das untere Ende, damit die Kamine im Bild nicht als Spitzen stehen).",
     "anteil_je_haus": 1.5,
     "farbe_hex": "#ece4d4",
     "farbe_bemerkung": "Annahme: verputzte Kaminschäfte (Lupo 2016 nennt Putz und Ziegel)."

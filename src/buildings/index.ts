@@ -14,7 +14,7 @@
 export { FLOOR, type HouseStyle, METRES_PER_BLOCK, VOXEL, m, m2, vox } from './houses/style';
 export { type HouseOptions, fineHouse } from './houses/grammar';
 export { type Chosen, houseOf } from './houses/choose';
-export { type Side, type Wall, wallOf } from './core/wall';
+export { type Side, type Wall, pane, wallOf } from './core/wall';
 export { awning, bollard, cloth, crate, jar, jetty, paving, stairs } from './houses/clutter';
 export type { Tradition } from './traditions/tradition';
 export { VENICE } from './traditions/venice';

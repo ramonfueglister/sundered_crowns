@@ -15,11 +15,11 @@ export function boxOn(b: Batch, w: Wall, t0: number, y0: number, t1: number, y1:
 }
 
 /**
- * The faint grid of ashlar, or of plaster scored to look like it, in running bond: a thin joint under every row of
- * fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
+ * The faint grid of ashlar, or of plaster scored to look like it, in running bond: a thin pale joint under every row
+ * of fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
  */
 export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
-  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 0.72), dark = shade(c, 0.92), light = shade(c, 1.06), j = V * 0.08;
+  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 1.18), dark = shade(c, 0.9), light = shade(c, 1.06), j = V * 0.09;
   for (let k = 0; k < rows; k++) {
     const y = y0 + k * V;
     pane(b, w, 0, y - j / 2, w.len, y + j / 2, joint, 0.02);
@@ -27,8 +27,8 @@ export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: 
       const t = (i + (k % 2) * 0.5) * V;
       if (t > j && t < w.len - j) pane(b, w, t - j / 2, y + j / 2, t + j / 2, y + V - j / 2, joint, 0.02);
       const h = hash2(i, k, seed);
-      if (h < 0.7 || t + V > w.len) continue;
-      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, h < 0.88 ? dark : light, 0.02);
+      if (h < 0.4 || t + V > w.len) continue;
+      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, h < 0.75 ? dark : light, 0.02);
     }
   }
 }
@@ -73,8 +73,11 @@ export function window(b: Batch, w: Wall, t: number, y: number, wv: number, hv: 
   pane(b, w, t - half, y, t + half, y + hv * V, mt.glass, 0.05);
   boxOn(b, w, t - half - V, y + hv * V, t + half + V, y + (hv + 1) * V, 0, V / 2, mt.stone);
   if (!detail) return;
-  boxOn(b, w, t - half - V * 0.4, y, t - half, y + hv * V, 0, V * 0.25, shade(mt.wood, 0.8));
-  boxOn(b, w, t + half, y, t + half + V * 0.4, y + hv * V, 0, V * 0.25, shade(mt.wood, 0.8));
+  // the wooden frame: jambs half a block wide and a head under the lintel, a quarter block proud
+  const frame = shade(mt.wood, 0.7);
+  boxOn(b, w, t - half - V * 0.5, y, t - half, y + hv * V, 0, V * 0.25, frame);
+  boxOn(b, w, t + half, y, t + half + V * 0.5, y + hv * V, 0, V * 0.25, frame);
+  boxOn(b, w, t - half - V * 0.5, y + (hv - 0.4) * V, t + half + V * 0.5, y + hv * V, 0, V * 0.25, frame);
 }
 
 /**
@@ -117,49 +120,42 @@ const lerp3 = (a: V3, b: V3, t: number): V3 => [a[0] + (b[0] - a[0]) * t, a[1] +
 
 /**
  * A slope of tiles, each a cube of one fine block set on the slope from the eaves edge e0 → e1 up to the ridge edge
- * r0 → r1, every cube a touch lighter or darker and a little higher or lower: the plate of tile cubes of the
- * reference class, stepping up the slope the way rows of coppi lie over each other.
+ * r0 → r1: the plate of tile cubes of the reference class. Every cube reaches down under the slope and stands a
+ * little higher or lower on it, a touch lighter or darker; the cubes along the eaves, the verges and the ridge stand
+ * a block higher: the raised rim of the plate.
  */
 export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number) {
   const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)), rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
   const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
   for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
-    const a = at(j / cols, k / rows), d = at((j + 1) / cols, (k + 1) / rows), h = hash2(j, k, seed), col = shade(c, 0.78 + 0.36 * hash2(j, k, seed + 5));
-    // the cubes at the verges and along the ridge stand higher: the raised rim of the reference class
-    const y = Math.max(a[1], d[1]) + V * (0.1 + 0.55 * h) + (j === 0 || j === cols - 1 || k === rows - 1 ? V * 0.35 : 0), g = V * 0.06;
-    // each cube a little smaller than its cell, so that the dark slope shows as a seam between the cubes
-    b.box(Math.min(a[0], d[0]) + g, y - V * 0.7, Math.min(a[2], d[2]) + g, Math.max(a[0], d[0]) - g, y, Math.max(a[2], d[2]) - g, col, { top: shade(col, 1.04) });
+    const a = at(j / cols, k / rows), d = at((j + 1) / cols, (k + 1) / rows), h = hash2(j, k, seed), col = shade(c, 0.88 + 0.2 * hash2(j, k, seed + 5));
+    const rim = j === 0 || j === cols - 1 || k === 0 || k === rows - 1, top = Math.max(a[1], d[1]) + V * (0.1 + 0.3 * h) + (rim ? V * 0.7 : 0), g = V * 0.05;
+    b.box(Math.min(a[0], d[0]) + g, Math.min(a[1], d[1]) - V * 0.5, Math.min(a[2], d[2]) + g, Math.max(a[0], d[0]) - g, top, Math.max(a[2], d[2]) - g, col, { top: shade(col, 1.12) });
   }
 }
 
 /**
- * A gable roof of fine-block tiles over x0 … z1 at height y, ridge along the longer side rising by `rise`, with a raised
- * rim of tiles along both eaves, a cap along the ridge and the gable ends filled in the wall colour.
+ * A gable roof of fine-block tiles over x0 … z1 at height y, ridge along the longer side rising by `rise`: a dark
+ * slope under the plate of cubes, the gable ends filled in the wall colour.
  */
 export function tiledGable(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, rise: number, c: RGB, wallC: RGB, seed: number) {
-  const top = y + rise, rim = shade(c, 0.82), cap = shade(c, 1.12), w3: [RGB, RGB, RGB] = [wallC, wallC, wallC];
+  const top = y + rise, under = shade(c, 0.5), w3: [RGB, RGB, RGB] = [wallC, wallC, wallC];
   if (x1 - x0 >= z1 - z0) {
     const zc = (z0 + z1) / 2;
-    b.quad([x0, y, z1], [x1, y, z1], [x1, top, zc], [x0, top, zc], shade(c, 0.5), [0, 1, 1]);
-    b.quad([x1, y, z0], [x0, y, z0], [x0, top, zc], [x1, top, zc], shade(c, 0.5), [0, 1, -1]);
+    b.quad([x0, y, z1], [x1, y, z1], [x1, top, zc], [x0, top, zc], under, [0, 1, 1]);
+    b.quad([x1, y, z0], [x0, y, z0], [x0, top, zc], [x1, top, zc], under, [0, 1, -1]);
     tiles(b, [x0, y, z1], [x1, y, z1], [x0, top, zc], [x1, top, zc], c, seed);
     tiles(b, [x1, y, z0], [x0, y, z0], [x1, top, zc], [x0, top, zc], c, seed + 1);
     b.tri([x1, y, z1], [x1, y, z0], [x1, top, zc], ...w3, [1, 0, 0]);
     b.tri([x0, y, z0], [x0, y, z1], [x0, top, zc], ...w3, [-1, 0, 0]);
-    b.box(x0, y - V * 0.3, z1 - V, x1, y + V * 0.5, z1, rim, { bottom: true });
-    b.box(x0, y - V * 0.3, z0, x1, y + V * 0.5, z0 + V, rim, { bottom: true });
-    b.box(x0, top - V * 0.2, zc - V / 2, x1, top + V * 0.3, zc + V / 2, cap);
   } else {
     const xc = (x0 + x1) / 2;
-    b.quad([x1, y, z1], [x1, y, z0], [xc, top, z0], [xc, top, z1], shade(c, 0.5), [1, 1, 0]);
-    b.quad([x0, y, z0], [x0, y, z1], [xc, top, z1], [xc, top, z0], shade(c, 0.5), [-1, 1, 0]);
+    b.quad([x1, y, z1], [x1, y, z0], [xc, top, z0], [xc, top, z1], under, [1, 1, 0]);
+    b.quad([x0, y, z0], [x0, y, z1], [xc, top, z1], [xc, top, z0], under, [-1, 1, 0]);
     tiles(b, [x1, y, z1], [x1, y, z0], [xc, top, z1], [xc, top, z0], c, seed);
     tiles(b, [x0, y, z0], [x0, y, z1], [xc, top, z0], [xc, top, z1], c, seed + 1);
     b.tri([x0, y, z1], [x1, y, z1], [xc, top, z1], ...w3, [0, 0, 1]);
     b.tri([x1, y, z0], [x0, y, z0], [xc, top, z0], ...w3, [0, 0, -1]);
-    b.box(x1 - V, y - V * 0.3, z0, x1, y + V * 0.5, z1, rim, { bottom: true });
-    b.box(x0, y - V * 0.3, z0, x0 + V, y + V * 0.5, z1, rim, { bottom: true });
-    b.box(xc - V / 2, top - V * 0.2, z0, xc + V / 2, top + V * 0.3, z1, cap);
   }
 }
 
@@ -174,12 +170,12 @@ export function frustum(b: Batch, cx: number, cz: number, y0: number, y1: number
 }
 
 /**
- * A Venetian chimney `hv` fine blocks high: a slender shaft one block square that widens at the top into an inverted
+ * A Venetian chimney `hv` fine blocks high: a shaft of a block and a half square that widens at the top into an inverted
  * bell against sparks (Lupo 2016, ArcHistoR 5: "alla Carpaccio"), the opening dark on top.
  */
 export function chimney(b: Batch, cx: number, cz: number, y: number, hv: number, c: RGB, dark: RGB) {
-  const s = V / 2, neck = y + (hv - 2) * V, top = y + hv * V;
-  b.box(cx - s, y, cz - s, cx + s, neck, cz + s, c, { foot: 0.88 });
+  const s = V * 0.7, neck = y + (hv - 2) * V, top = y + hv * V;
+  b.box(cx - s, y - V, cz - s, cx + s, neck, cz + s, c, { foot: 0.88 });
   frustum(b, cx, cz, neck, top, s, V, shade(c, 0.96), shade(c, 1.04));
   b.box(cx - V * 0.6, top, cz - V * 0.6, cx + V * 0.6, top + V * 0.12, cz + V * 0.6, dark);
 }
