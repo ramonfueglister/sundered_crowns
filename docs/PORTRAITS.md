@@ -22,7 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -174,9 +174,29 @@ quarters of the key light, bluish) made the plait on the far side a pale, see-th
 most: back to 1.08, with more shade from the upper lid (`eye.lid.dark` 0.65). White hair's darker strands a little
 less dark (`sheen.light` 1.5: at 2 it read as striped).
 
+**Lifeless faces (round 50).** Ramon on the state of round 49: "Zombie-Modus", not CK3's level. Held large
+against the ruler's face in CK3, the causes were pose and expression more than surface:
+
+| what read as lifeless | cause | now |
+|---|---|---|
+| the head bowed, seen from above, sunk between the shoulders, the brow hanging over the eyes | MakeHuman's man stands with the head pushed forward; its woman holds hers up and was seen from below | `lean` in the dress table, per sex (men 0.14 back, women 0.1 forward, radians), turned in the builder about the head's centre (`build.rs` `lean_back`) |
+| the eyes looking past the viewer | the eyeballs look straight ahead of a head that the stage turns away | `gaze` in the dress table (-0.2): the ball's image is laid round that direction, the lean taken out of it |
+| heavy lids | `lids` had been set against a stare on parchment | half as far down (0.1 / 0.3 / 0.1 / 0.3) |
+| a broad grey sheen on the eyeball, no point of light; then the whites far brighter than the face | `eye.rough` 0.2 spread the key light's glint; `eye.tint` above 1 | `eye.rough` 0.07, `eye.specular` 0.6; `eye.tint` 0.84 / 0.82 / 0.8 |
+| the mouth's corners down, the lower lip a pale block that stands out from the side as a pout | MakeHuman's base, and `mouth_shut` pushing the lower lip up | `rest` in the dress table: targets under every mood (corners and cheeks up a little, brows up, the jaw closing the mouth, less lower lip); `mouth_shut` 0.6 / 0.45; lips redder (`lips` 0.7 / 0.5) |
+| a mourner's mouth as an upturned U | the mood's targets at full weight | `mood` 0.6 |
+| pale skin | measured again in the face's box: median a 12 against the ruler's 19, L 55 against 42 | `skin.tint` 1 / 0.78 / 0.8, exposure 0.41: a 14, L 53 (further it turned pink; CK3's wife in half shade has a 13) |
+
+The straight men's hair (`bob01`) is built from more, narrower strands with a slight swing (`BOB_WAVE=0.03,0.05,0.9`):
+its outline shows locks instead of a smooth dome. Tried and dropped: the full beard's cards cut off before the
+strands thin out (`TRIM_V=0.68`: square notches along its lower edge). Not solved by this round: the women's and
+children's mouths still stand a little open or pout, children's eyes are large and round, women's brows are as
+heavy as men's, the full beard reads as rows of shingles at a large size, and the gown lies round the neck as a
+mound that hides it (CK3 shows neck and shoulders).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
-nostrils, edge of the lips), the outline of the hair (a smooth dome) and white hair and beards (no depth, they read as knitted) are not; the thrown-back hood closes round the neck since
+nostrils, edge of the lips), the gown's shoulders (a mound round the neck) and full and white beards (rows of card ends) are not; the thrown-back hood closes round the neck since
 round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places

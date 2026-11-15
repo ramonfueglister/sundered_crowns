@@ -148,7 +148,8 @@ P_ = dict(
     short=dict(cards=False, Lc=0.03, Lm=0.038, base=0.82, mean=0.55, n=115000),
     full=dict(cards=True, K=340, Nr=14000, L=(0.32, 0.62, 0.11), lift=(0.012, 0.09), hang=True, steps=18, w=(0.07, 0.16), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.55, wave=0.012, Lm=0.075),
     # a full beard cut close below the chin: fewer, broader cards that hardly taper, so that it reads as a mass
-    # and not as single strands (TRIM_L, TRIM_W, TRIM_K to try others)
+    # and not as single strands (TRIM_L, TRIM_W, TRIM_K to try others); TRIM_V: how much of the strands' image a
+    # card shows from its root on (below 1 the thin tips are cut off, as scissors do)
     trim=dict(cards=True, K=int(os.environ.get('TRIM_K', '260')), Nr=14000, L=tuple(float(t) for t in os.environ.get('TRIM_L', '0.16,0.3,0.09').split(',')), lift=(0.012, 0.06), hang=True, steps=12,
               w=tuple(float(t) for t in os.environ.get('TRIM_W', '0.16,0.3').split(',')), taper=0.65, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.5, wave=0.006, Lm=0.075),
     phil=dict(cards=True, K=380, Nr=16000, L=(0.5, 1.0, 0.13), lift=(0.012, 0.1), hang=True, steps=24, w=(0.08, 0.17), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.38, wave=0.022, Lm=0.085),
@@ -247,7 +248,8 @@ if P_['cards']:
         tiles.append(int(rng.integers(0, 4)) if (not P_['hang'] or mo) else int(rng.integers(0, 8)))
         clen = float(np.linalg.norm(np.diff(c, axis=0), axis=1).sum())
         vstart.append(0.0 if P_['hang'] else 1 - float(np.clip(clen / (4 * w[0]), 0.15, 1)))
-    nv, nt = write_cards(H, out, name, cards, tiles, anchors=anchors, vstart=vstart)
+    nv, nt = write_cards(H, out, name, cards, tiles, anchors=anchors, vstart=vstart,
+                         vend=float(os.environ.get('TRIM_V', '1')) if style == 'trim' else 1.0)
     rl = unit(S[:, 0] - hc)
     wb = rng.uniform(0.62, 1.0, K)
     def shade(Q):

@@ -79,6 +79,33 @@ mod tests {
     }
 
     #[test]
+    fn a_bust_leans_back_about_its_head() {
+        let mut s = crate::geo::Surface::new(crate::geo::mat(0.5));
+        s.pos = vec![[0.3, 8.0, 0.2], [0.3, 7.0, 1.2]];
+        s.nrm = vec![[0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+        crate::build::lean_back(std::slice::from_mut(&mut s), 7.0, 0.2, 0.14);
+        // the crown goes back and hardly down, the nose goes up and hardly back; nothing moves sideways
+        assert!(s.pos[0][2] < 0.2 - 0.13 && s.pos[0][1] > 7.98, "{:?}", s.pos[0]);
+        assert!(s.pos[1][1] > 7.0 + 0.13 && s.pos[1][2] > 1.18, "{:?}", s.pos[1]);
+        assert!(s.pos.iter().all(|q| q[0] == 0.3));
+        // normals turn with it and keep their length
+        assert!(s.nrm[0][2] < -0.13 && s.nrm[1][1] > 0.13);
+        assert!(s.nrm.iter().all(|n| (n.iter().map(|c| c * c).sum::<f32>() - 1.0).abs() < 1e-5));
+    }
+
+    #[test]
+    fn the_face_at_rest_names_targets_the_head_has() {
+        // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
+        let Some(h) = head() else { return };
+        for (_, set) in crate::dress::SETS.iter() {
+            for (name, weight) in set.rest {
+                assert!(h.targets.contains_key(*name), "{}: {name}", set.key);
+                assert!(*weight > 0.0 && *weight <= 1.0, "{}: {name} {weight}", set.key);
+            }
+        }
+    }
+
+    #[test]
     fn every_style_builds() {
         let Some(h) = head() else { return };
         let mut n = 0;

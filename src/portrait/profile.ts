@@ -84,7 +84,9 @@ export const APOLEIA: StageProfile = {
  *  painted; hair with a sheen of strands that keeps its colour in the shade. Exposure, the skin's tint and the
  *  colour of the light from below were set in round 41 so that lit skin lies where it does in one screenshot of
  *  CK3 (CIELAB, docs/PORTRAITS.md), again in round 48 on the light skin England's people have, and in round 47 the colour left in hair so that red hair is as coloured as
- *  the reddest there; the rest by eye. All PLACEHOLDER (see above). */
+ *  the reddest there; the rest by eye. Round 50 (the faces read as lifeless): the glint in the eye small and sharp
+ *  instead of a broad grey sheen, light skin redder and the picture a little darker (the face's median against the
+ *  ruler's there: a 12 against 19, L 55 against 42; now a 14, L 53). All PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -94,11 +96,11 @@ export const ENGLAND_1356: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#4d443c', energy: 0.3 },
   rimShadow: true,
-  exposure: 0.43,
+  exposure: 0.41,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
-  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.82, 0.86] },
-  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [1.08, 1.06, 1.03], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
+  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.78, 0.8] },
+  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },

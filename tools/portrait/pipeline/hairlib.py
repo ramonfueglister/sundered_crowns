@@ -192,7 +192,7 @@ def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7)
     return cards, tiles
 
 
-def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=None):
+def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=None, vend=1.0):
     verts, tri_list, tri_uv = [], [], []
     for ci, (lft, mid, rgt) in enumerate(cards):
         steps = len(lft) - 1
@@ -204,8 +204,9 @@ def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=No
         us = [u0 + 0.004, u0 + tw / 2, u0 + tw - 0.004]
         v0 = 0.0 if vstart is None else vstart[ci]
         for s in range(steps):
-            # a short card shows only the tip end of its tile (strands keep their shape)
-            vA, vB = v0 + (1 - v0) * s / steps, v0 + (1 - v0) * (s + 1) / steps
+            # a short card shows only the tip end of its tile (strands keep their shape); a card cut short ends
+            # at `vend` of it, before the strands thin out into single tips
+            vA, vB = v0 + (vend - v0) * s / steps, v0 + (vend - v0) * (s + 1) / steps
             for (i, jj) in [(0, 1), (1, 2)]:
                 a0, a1 = o + 3 * s + i, o + 3 * s + jj
                 b0, b1 = o + 3 * (s + 1) + i, o + 3 * (s + 1) + jj

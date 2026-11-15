@@ -52,3 +52,6 @@ crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Ro
 unchanged.
 `hair_red` in the dress table (from which strength of the red gene hair shows red, `look.rs` `hair_colour`;
 Apoleia's: from 0 on, in step with the gene); Roman bytes unchanged.
+`rest` (targets of the face at rest under every mood, `morph.rs`), `lean` (the bust leaning back or forward per
+sex, `build.rs` `lean_back`) and `gaze` (where the eyes look, `build.rs`: the eyeball's image laid round that
+direction) in the dress table; Roman bytes unchanged.

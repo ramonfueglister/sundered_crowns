@@ -3,9 +3,12 @@
 // against Apoleia's (Godot). ?size=672x840 sets the size of a picture, ?simple the faceted look,
 // ?origin=England moves every test person there (and with that into the dress of England 1356); ?female=1 or 0
 // and ?age=12 make every test person a woman or a man, or of that age (to see one garment on many faces);
-// ?gene=27:240,32:0 sets both alleles of genes by their number in portrait/src/look.rs GENES (27 hairL, 32 grey).
+// ?gene=27:240,32:0 sets both alleles of genes by their number in portrait/src/look.rs GENES (27 hairL, 32 grey);
+// ?only=930000,930003 draws these test people alone; ?turn=-1.3 turns every head that far (radians) instead of as
+// its profile says, to see a face from the side.
 import people from '../../tests/portrait/people.json';
 import { loadPortraitAssets } from './assets';
+import { profileOf } from './profile';
 import { PortraitStage } from './stage';
 import type { PortraitPerson } from './wire';
 
@@ -20,7 +23,9 @@ async function main(): Promise<void> {
   const wall = document.getElementById('wall')!;
   const origin = q.get('origin');
   const genes = (q.get('gene') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
+  const only = (q.get('only') ?? '').split(',').filter(Boolean).map(Number);
   for (const given of people as PortraitPerson[]) {
+    if (only.length && !only.includes(given.pid)) continue;
     const person: PortraitPerson = {
       ...given,
       ...(origin ? { origin } : {}),
@@ -35,6 +40,7 @@ async function main(): Promise<void> {
     const t0 = performance.now();
     const portrait = assets.builder.build(person);
     const t1 = performance.now();
+    if (q.has('turn')) profileOf(portrait.look).turn = Number(q.get('turn'));
     await stage.draw(portrait);
     const picture = document.createElement('canvas');
     picture.width = width; picture.height = height;

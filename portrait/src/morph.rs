@@ -212,6 +212,9 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
                 add(&format!("eyes/{sd}-eye-{t}"), w);
             }
         }
+        for &(n, w) in d.rest {
+            add(n, w);
+        }
         add("mouth/mouth-upperlip-ext-down", d.mouth_shut[0]);
         add("mouth/mouth-lowerlip-ext-up", d.mouth_shut[1]);
     }

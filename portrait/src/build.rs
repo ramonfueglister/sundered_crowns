@@ -830,8 +830,18 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let temporal = if c[0] >= 0.0 { 1.0 } else { -1.0 };
                 let ks = 1.0 / (1.0 + 0.23 * (1.0 - grown));
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
+                // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
+                // image is laid round that direction, which on a ball is the same as turning the eye)
+                let gaze = garb.map(|d| [d.gaze[0], d.gaze[1] - d.lean[if fem { 0 } else { 1 }]]).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
+                    let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
+                    let r = norm(cross([0.0, 1.0, 0.0], g));
+                    (r, cross(g, r), g)
+                });
                 for &v in idx {
-                    let q = sub(x.pp[v as usize], c);
+                    let mut q = sub(x.pp[v as usize], c);
+                    if let Some((r, u, g)) = gaze {
+                        q = [dot(q, r), dot(q, u), dot(q, g)];
+                    }
                     let l = len(q).max(1e-9);
                     let rr = (q[2] / l).clamp(-1.0, 1.0).acos() * ks / PI * 0.5;
                     let rho = q[0].hypot(q[1]).max(1e-9);
@@ -1786,10 +1796,30 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
     }
     let tris = merged.iter().map(|s| s.tris()).sum();
+    // the bust leaning back, where the dress asks for it
+    let lean = garb.map_or(0.0, |d| d.lean[if fem { 0 } else { 1 }]);
+    if lean != 0.0 {
+        lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);
+    }
     // the picture's foot (0.86 of its height below the top) stays above
     // where the chest's data ends
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
     Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, tris, targets }
+}
+
+/// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above
+/// goes back, what lies in front goes up.
+pub(crate) fn lean_back(surfaces: &mut [Surface], cy: f32, cz: f32, a: f32) {
+    let (cs, sn) = (a.cos(), a.sin());
+    for s in surfaces.iter_mut() {
+        for q in s.pos.iter_mut() {
+            let (dy, dz) = (q[1] - cy, q[2] - cz);
+            *q = [q[0], cy + dy * cs + dz * sn, cz + dz * cs - dy * sn];
+        }
+        for n in s.nrm.iter_mut() {
+            *n = [n[0], n[1] * cs + n[2] * sn, n[2] * cs - n[1] * sn];
+        }
+    }
 }

@@ -82,17 +82,32 @@ pub struct DressSet {
     /// people who work out of doors.
     pub flush: f32,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
-    /// -height3 (decr) and eye-eyefold (down).
+    /// -height3 (decr) and eye-eyefold (down). Half as much as up to round 49: lids that far down over eyes that
+    /// look past the viewer read as lifeless.
     pub lids: [f32; 4],
     /// The mouth at rest: MakeHuman's lips stand a little apart and show the teeth, more so with thin lips.
-    /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up.
+    /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up. The lower lip pushed up stands
+    /// out as a pout from the side; the jaw closes the mouth instead (`rest`).
     pub mouth_shut: [f32; 2],
+    /// The face at rest, under every mood: MakeHuman's targets and their weights. Its base has a mouth that turns
+    /// down at the corners with a heavy lower lip, and brows low over the eyes, which on a calm face reads as
+    /// lifeless.
+    pub rest: &'static [(&'static str, f32)],
     /// How strongly a mood shows in the face (Apoleia: 1.7, drawn for a small picture; in a large one a sad
     /// mouth on an old face read as a mask).
     pub mood: f32,
     /// How far the eyeballs are moved forward in their sockets (Apoleia: 0.012). With the lids at rest the ball
     /// came through the lower lid in places.
     pub eye_forward: f32,
+    /// How far the bust leans back, women and men (radians, about the axis from ear to ear through the head's
+    /// centre). MakeHuman's man stands with the head pushed forward and bowed, its woman nearly upright: seen from
+    /// eye level the man's brow hangs over his eyes and his head sits between the shoulders.
+    pub lean: [f32; 2],
+    /// Where the eyes look, seen from the head: turned about the vertical (radians, in the sense of the stage's
+    /// `turn`, src/portrait/profile.ts: with the turn's sign the eyes come back towards whoever looks at the
+    /// picture) and upwards. The lean is taken out of it, so that the eyes keep looking level. Apoleia's eyes look
+    /// straight ahead of the head, past the viewer.
+    pub gaze: [f32; 2],
     /// Women's jaw and jaw angle narrower and softer on average: shift of the genes headF and jaw.
     pub jaw_women: f32,
     pub sources: &'static [Source],
@@ -123,13 +138,24 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_trim",
-    lips: [0.55, 0.38],
+    lips: [0.7, 0.5],
     hair_red: [0.45, 0.74],
     flush: 0.7,
-    lids: [0.2, 0.45, 0.2, 0.45],
-    mouth_shut: [0.75, 0.75],
-    mood: 1.0,
+    lids: [0.1, 0.3, 0.1, 0.3],
+    mouth_shut: [0.6, 0.45],
+    rest: &[
+        ("mouth/mouth-angles-up", 0.3),
+        ("cheek/l-cheek-trans-up", 0.15),
+        ("cheek/r-cheek-trans-up", 0.15),
+        ("eyebrows/eyebrows-trans-up", 0.25),
+        ("chin/chin-jaw-drop-decr", 0.6),
+        ("mouth/mouth-lowerlip-volume-decr", 0.3),
+        ("mouth/mouth-scale-depth-decr", 0.3),
+    ],
+    mood: 0.6,
     eye_forward: 0.0,
+    lean: [-0.1, 0.14],
+    gaze: [-0.2, 0.0],
     jaw_women: -0.35,
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
@@ -140,7 +166,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, strength of moods, eyeballs' depth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
