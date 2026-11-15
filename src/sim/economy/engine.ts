@@ -2,9 +2,10 @@
 // Rabitsch 2023), built to WebAssembly from the shell in economy/ (economy features 3 and 4, docs/ECONOMY_DESIGN.md).
 // The shell runs the port as the model type of the daily clock (economy/src/clock.rs): one period is one day.
 //
-// The engine keeps nothing between two calls. The state of an economy is a sequence of bytes that lives in the state
-// of the world (src/sim/state.ts); a call takes the bytes and gives new ones. So a period is a function of the state
-// alone, like every other system, and the snapshot of a world holds its whole economy.
+// What a call gives depends on its arguments alone. The state of an economy is a sequence of bytes that lives in the
+// state of the world (src/sim/state.ts); a call takes the bytes and gives new ones. So a period is a function of the
+// state alone, like every other system, and the snapshot of a world holds its whole economy. (The engine remembers the
+// economy of the bytes it handed out last and uses it for exactly those bytes, to save decoding them every day.)
 
 /** The key figures of a state, in the order of `Economy::figures` (economy/src/lib.rs). Amounts are in the units
  *  of the calibration; "real" means at the prices of the starting position. Flows (GDP and its uses) are sums over
