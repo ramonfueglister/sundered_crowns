@@ -1,12 +1,11 @@
 // The settled land of 1356 on the world's ground: the towns and villages of the gazetteer at their real sites, sized by
-// their inhabitants and built in the tradition of their land (styles.ts), the monuments that have a model, and fields
+// their inhabitants and built in the tradition of their land (buildings/traditions), the monuments that have a model, and fields
 // where the land was under the plough.
 import * as THREE from 'three/webgpu';
 import { Batch, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { FLOOR, type HouseStyle, SOUTH, house, tower, townHouse, townWall } from '../lookprobe/buildings';
+import { FLOOR, type HouseStyle, type Model, SOUTH, type Style, house, tower, townHouse, townWall } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
-import type { Model, Style } from './styles';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; style: Style }
