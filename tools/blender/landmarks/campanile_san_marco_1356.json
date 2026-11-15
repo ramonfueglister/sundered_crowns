@@ -1,0 +1,32 @@
+{
+  "id": "campanile_san_marco",
+  "name": "Campanile di San Marco, Venedig",
+  "zustand": "1356",
+  "zustand_beschreibung": "Backsteinschaft des 12. Jahrhunderts, erste Glockenstube (1156 bis 1172, um 1329 erneuert), hölzerne Pyramidenspitze mit Kupferplatten. Noch ohne Vergoldung (erst 1388), ohne die Istrier-Stein-Glockenstube, den Dado und den Engel von 1511 bis 1514. Nicht die heutige Form.",
+  "massstab": {
+    "meter_pro_block": 3.65,
+    "quelle": "Annahme: so gewaehlt, dass der Turm die 27 Bloecke behaelt, die er in der Look-Probe hat (98,6 m / 27). Die Haeuser nutzen einen groesseren Massstab (Geschoss 2,1 Bloecke fuer rund 3 m); diese Verzerrung stammt aus dem Referenzbild. Entscheidung fuer Ramon."
+  },
+  "masse": {
+    "gesamthoehe_heute": { "wert": 98.6, "einheit": "m", "quelle": "en.wikipedia.org/wiki/St_Mark's_Campanile und it.wikipedia.org/wiki/Campanile_di_San_Marco (heutiger Bau von 1912); fuer 1356 nur Vergleichswert" },
+    "schaft_seite": { "wert": 12.0, "einheit": "m", "quelle": "en.wikipedia.org/wiki/St_Mark's_Campanile: '12 metres wide on each side'; it.wikipedia: 'un lato di 12 metri'" },
+    "schaft_hoehe": { "wert": 50.0, "einheit": "m", "quelle": "it.wikipedia.org/wiki/Campanile_di_San_Marco: canna 'alta circa 50 metri'; Schaft 1147 bis 1156 bis zur Glockenstube hochgefuehrt, danach unveraendert bis 1902" },
+    "sockel_hoehe": { "wert": 2.0, "einheit": "m", "quelle": "Annahme" },
+    "sockel_vorsprung": { "wert": 0.5, "einheit": "m", "quelle": "Annahme" },
+    "lisenen_pro_seite": { "wert": 4, "einheit": "Stueck", "quelle": "Annahme nach Fotos des heutigen Schafts (Nachbau von 1912 folgt dem alten Schaft); nicht gezaehlt an einer Bauaufnahme" },
+    "lisenen_breite": { "wert": 1.2, "einheit": "m", "quelle": "Annahme" },
+    "glockenstube_hoehe": { "wert": 10.0, "einheit": "m", "quelle": "Annahme nach der Darstellung des Turms vor 1511 bei Gentile Bellini, Prozession auf der Piazza San Marco (1496): Bogenhalle von etwa einem Fuenftel der Schafthoehe; nicht vermessen" },
+    "glockenstube_boegen_pro_seite": { "wert": 3, "einheit": "Stueck", "quelle": "Annahme nach Bellini 1496; die heutige Glockenstube von 1514 hat vier" },
+    "dado_hoehe": { "wert": 4.0, "einheit": "m", "quelle": "Annahme nach Bellini 1496" },
+    "spitze_hoehe": { "wert": 24.0, "einheit": "m", "quelle": "Annahme: Holzpyramide mit Kupferplatten (en.wikipedia: 'pyramidal spire in wood that was sheathed with copper plates', 1156 bis 1172, um 1329 erneuert). Hoehe vor 1489 nicht ueberliefert; so gewaehlt, dass der Turm rund 90 m erreicht" }
+  },
+  "nicht_gebaut_weil_1356_noch_nicht_vorhanden": [
+    "Vergoldung der Kupferplatten (1388, en.wikipedia)",
+    "Glockenstube aus Istrier Stein, Dado mit Reliefs, Bronzespitze, Engel Gabriel (1511 bis 1514)",
+    "die 1912 wiederaufgebaute Form insgesamt"
+  ],
+  "offen": [
+    "Form und Hoehe der Glockenstube und der Spitze von 1329 sind nicht vermessen; sie stammen aus Bellinis Bild von 1496, das den Zustand nach dem Wiederaufbau von 1405/06 zeigt",
+    "Farbe der Kupferplatten 1356 (nach 27 Jahren Bewitterung braun bis gruen): hier das Kupfergruen der Palette"
+  ]
+}
