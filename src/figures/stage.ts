@@ -33,10 +33,10 @@ export function showFigures(across: number) {
 
 /**
  * The person whose figure stands nearest a point of the world (finest world blocks; y in blocks as the piece was
- * built), within `reach` blocks across and three up or down, or null: anonymous figures (outside the 30 cities, or
+ * built), within `reach` blocks across (the click hits the ground just behind a figure) and three up or down, or null: anonymous figures (outside the 30 cities, or
  * without a world server) do not count.
  */
-export function personAt(x: number, y: number, z: number, reach = 1.2): number | null {
+export function personAt(x: number, y: number, z: number, reach = 2): number | null {
   const t = figureSeconds();
   let best: number | null = null, bestD = reach;
   for (const p of shown) {
