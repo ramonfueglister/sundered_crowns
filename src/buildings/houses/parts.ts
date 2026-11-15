@@ -19,7 +19,7 @@ export function boxOn(b: Batch, w: Wall, t0: number, y0: number, t1: number, y1:
  * of fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
  */
 export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
-  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 1.18), dark = shade(c, 0.9), light = shade(c, 1.06), j = V * 0.09;
+  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 1.22), dark = shade(c, 0.88), light = shade(c, 1.08), j = V * 0.12;
   for (let k = 0; k < rows; k++) {
     const y = y0 + k * V;
     pane(b, w, 0, y - j / 2, w.len, y + j / 2, joint, 0.02);
@@ -63,7 +63,7 @@ export function window(b: Batch, w: Wall, t: number, y: number, wv: number, hv: 
     pane(b, w, t - half, y, t + half, y + hv * V, mt.glass, 0.05);
     return;
   }
-  boxOn(b, w, t - half - V, y - V, t + half + V, y, 0, V / 2, mt.stone);
+  boxOn(b, w, t - half - V / 2, y - V, t + half + V / 2, y, 0, V / 2, mt.stone);
   if (arched) {
     const spring = y + hv * V - 1.732 * half;
     pointed(b, w, t, y, half + V / 2, spring, mt.stone, 0.05);

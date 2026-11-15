@@ -8,9 +8,9 @@ import { VENICE, VOXEL as V, bollard, cloth, crate, fineHouse, jar, jetty, pane,
 import { LAND_Y, N, SEA_Y } from './layout';
 import { type StageScene, showError, stage } from './stage';
 
-const PAVING = rgb(0xf2d4ac), QUAY = 2.6, STONE = rgb(0xcdbba4), WOOD = rgb(0xa9744a);
+const PAVING = rgb(0xf0cfa0), QUAY = 2.6, STONE = rgb(0xcdbba4), WOOD = rgb(0xa9744a);
 /** the lagoon before the quay: brighter than the open sea of the look probe, as the water of the reference class image (assumption) */
-const LAGOON = rgb(0x0a929a), RIPPLE = rgb(0x8adcdc);
+const LAGOON = rgb(0x10a0a8), RIPPLE = rgb(0x8adcdc);
 const q = new URLSearchParams(location.search);
 const GOODS: readonly RGB[] = [rgb(0xe8a030), rgb(0xd04030), rgb(0x8ab040), rgb(0xf0e0c0), rgb(0x3f5f8a), rgb(0xe8c050)];
 
@@ -40,11 +40,11 @@ async function build(): Promise<StageScene> {
     water.quad([x, SEA_Y, z], [x, SEA_Y, z + 1], [x + 1, SEA_Y, z + 1], [x + 1, SEA_Y, z], col, [0, 1, 0]);
   }
   // ripples: short pale streaks along the quay, as the light lies on the water of the reference
-  for (let k = 0; k < 700; k++) {
+  for (let k = 0; k < 1400; k++) {
     // streaks lying level on the picture: along the picture's right, which is (0.686, -0.728) on the ground
-    const x = xq + 0.6 + r.range(0, 40), z = r.range(z0 - 24, z1 + 24), l = r.range(0.4, 1.6), t = V * 0.4, dark = r.chance(0.35);
+    const x = xq + 0.6 + r.range(0, 40), z = r.range(z0 - 24, z1 + 24), l = r.range(0.3, 1.4), t = V * 0.3, dark = r.chance(0.3);
     const ax = 0.686 * l, az = -0.728 * l, px = 0.728 * t, pz = 0.686 * t, y = SEA_Y + 0.01;
-    water.quad([x - px, y, z - pz], [x + px, y, z + pz], [x + ax + px, y, z + az + pz], [x + ax - px, y, z + az - pz], dark ? shade(LAGOON, 0.62) : shade(RIPPLE, r.range(0.9, 1.15)), [0, 1, 0]);
+    water.quad([x - px, y, z - pz], [x + px, y, z + pz], [x + ax + px, y, z + az + pz], [x + ax - px, y, z + az - pz], dark ? shade(LAGOON, 0.72) : shade(RIPPLE, r.range(0.85, 1.1)), [0, 1, 0]);
   }
   row(things, xf, z0, z1, r, true);
   row(things, xf - 10, z0 - 6, z1 + 4, seeded(8), false);
@@ -57,9 +57,9 @@ async function build(): Promise<StageScene> {
   boat(things, xq + 3.5, c - 4, r); boat(things, xq + 9, c + 9, r);
   // goods, cloth and jars along the fronts, and the people of the quay
   const front = wallOf(xf - 1, z0, xf, z1, 'px');
-  for (let k = 0; k < 16; k++) crate(things, xf + r.range(0.4, 2.0), LAND_Y, r.range(z0 + 2, z1 - 2), r.chance(0.5) ? 'x' : 'z', rgb(0xa9744a), GOODS, k);
+  for (let k = 0; k < 24; k++) crate(things, xf + r.range(0.4, 2.0), LAND_Y, r.range(z0 + 2, z1 - 2), r.chance(0.5) ? 'x' : 'z', rgb(0xa9744a), GOODS, k);
   for (let k = 0; k < 3; k++) cloth(things, front, r.range(4, front.len - 4), LAND_Y + 11 * V, 2, 3, r.pick([rgb(0xf0e6d0), rgb(0xd8b060), rgb(0x9a6a8a)]), rgb(0x7a5230));
-  for (let k = 0; k < 7; k++) jar(things, xf + r.range(0.3, 0.9), LAND_Y, r.range(z0, z1), rgb(0xb85c34));
+  for (let k = 0; k < 12; k++) jar(things, xf + r.range(0.3, 0.9), LAND_Y, r.range(z0, z1), rgb(0xb85c34));
   // the quay's wall to the water: blocks of stone two fine blocks by one
   const face = wallOf(c - 60, z0 - 30, xq, z1 + 30, 'px'), rows = Math.ceil((LAND_Y - SEA_Y + 1) / V);
   for (let k = 0; k < rows; k++) for (let j = 0; j < face.len / (2 * V); j++) {
