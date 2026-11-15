@@ -1,7 +1,10 @@
 // The real world as cut by tools/worldprobe/build_region.py: the game map at a few cells per map pixel, in square
 // tiles, with height (after river erosion), drainage, water, forest and cultivation per cell and the rivers as lines.
 // A `Region` is the window of it that one piece of the world needs, put together from the tiles it touches. One cell
-// is about 0.77 km × cos(latitude) wide: the map is a Mercator map, so the cells grow smaller towards the north.
+// is about 0.77 km × cos(latitude) wide: the map is a Mercator map, so the cells grow smaller towards the poles.
+// The region `world` goes once round the globe: after `worldW` map pixels it begins again, so a window may lie
+// anywhere to the east or west. The first `mapW` of those pixels are the game map; beyond it a pixel spans a touch
+// less longitude, so that the way round is a whole number of cells at every step of the map.
 import { maybeGunzip } from '../render/assets';
 
 export const Water = { Land: 0, Sea: 1, Lake: 2 } as const;
@@ -10,6 +13,8 @@ export interface Region {
   w: number; h: number;
   /** the window on the game map: its first map pixel, cells per map pixel, and the map's size and projection */
   x0: number; y0: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number;
+  /** map pixels round the globe and from the north edge to the south edge, where the region is the whole world */
+  worldW?: number; worldH?: number;
   /** metres above sea level after river erosion (tools/worldprobe/erosion.py); lakes are level, the sea is 0 */
   shaped: Int16Array;
   /** area draining through the cell: 16 steps per doubling of (km² + 1) */
@@ -19,12 +24,22 @@ export interface Region {
   forest: Uint8Array; crops: Uint8Array;
   rivers: River[];
 }
-interface Index { tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; tiles: string[] }
+export interface Index { tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; worldW?: number; worldH?: number; tiles: string[] }
+type Frame = Pick<Index, 'mapW' | 'mapH' | 'lon0' | 'lon1' | 'latN' | 'latS' | 'worldW'>;
 
 const merc = (deg: number) => Math.asinh(Math.tan((deg * Math.PI) / 180));
-/** Map pixel of a place given in degrees (the game map is a Mercator map). */
-const mapPixel = (m: Index | Region, lon: number, lat: number): [number, number] =>
-  [((lon - m.lon0) / (m.lon1 - m.lon0)) * m.mapW, ((merc(m.latN) - merc(lat)) / (merc(m.latN) - merc(m.latS))) * m.mapH];
+const mod = (a: number, n: number) => ((a % n) + n) % n;
+/** Map pixel of a place given in degrees (the game map is a Mercator map); of a world, the pixel of its first lap. */
+function mapPixel(m: Frame, lon: number, lat: number): [number, number] {
+  const span = m.lon1 - m.lon0, east = m.worldW ? mod(lon - m.lon0, 360) : lon - m.lon0;
+  return [east <= span || !m.worldW ? (east / span) * m.mapW : m.mapW + ((east - span) / (360 - span)) * (m.worldW - m.mapW), ((merc(m.latN) - merc(lat)) / (merc(m.latN) - merc(m.latS))) * m.mapH];
+}
+/** Longitude in degrees (-180 … 180 round a world) of a map pixel column. */
+function lonOf(m: Frame, x: number): number {
+  if (!m.worldW) return m.lon0 + (x / m.mapW) * (m.lon1 - m.lon0);
+  const xm = mod(x, m.worldW), lon = xm < m.mapW ? m.lon0 + (xm / m.mapW) * (m.lon1 - m.lon0) : m.lon1 + ((xm - m.mapW) / (m.worldW - m.mapW)) * (360 - m.lon1 + m.lon0);
+  return mod(lon + 180, 360) - 180;
+}
 /** Latitude in degrees of a row of cells of the window (a cell coordinate of the window). */
 export function latOf(r: Region, cy: number): number {
   const y = merc(r.latN) - ((r.y0 + cy / r.cells) / r.mapH) * (merc(r.latN) - merc(r.latS));
@@ -33,12 +48,13 @@ export function latOf(r: Region, cy: number): number {
 
 /** What one tile of a region holds, unpacked. */
 interface Tile { shaped: Int16Array; layers: Uint8Array[]; rivers: River[] }
-const indexes = new Map<string, Promise<Index>>(), tiles = new Map<string, Promise<Tile>>();
+const indexes = new Map<string, Promise<Index & { has: Set<string> }>>(), tiles = new Map<string, Promise<Tile>>();
 /** tiles kept unpacked; the oldest go first */
 const TILES_KEPT = 24;
 const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
-const indexOf = (name: string, base: string) => {
-  if (!indexes.has(name)) indexes.set(name, get(`${base}map/regions/${name}/index.json`).then((r) => r.json() as Promise<Index>));
+/** The index of region `name`: its tiles and how it lies on the game map. */
+export const indexOf = (name: string, base: string) => {
+  if (!indexes.has(name)) indexes.set(name, get(`${base}map/regions/${name}/index.json`).then(async (r) => { const index = (await r.json()) as Index; return { ...index, has: new Set(index.tiles) }; }));
   return indexes.get(name)!;
 };
 function tileOf(name: string, base: string, T: number, tx: number, ty: number): Promise<Tile> {
@@ -58,43 +74,61 @@ function tileOf(name: string, base: string, T: number, tx: number, ty: number): 
 
 /**
  * The window of region `name` that starts at cell (gx0, gy0) of the whole map and is w × h cells large. Tiles the
- * region does not have are open sea.
+ * region does not have are open sea, and so is all that lies north or south of it; to the east and west a world
+ * begins again.
  */
 export async function loadWindow(name: string, gx0: number, gy0: number, w: number, h: number, base = '/'): Promise<Region> {
-  const index = await indexOf(name, base), T = index.tile, n = w * h;
+  const index = await indexOf(name, base), T = index.tile, n = w * h, round = index.worldW ? index.worldW * index.cells : Infinity;
   const region: Region = {
-    w, h, x0: gx0 / index.cells, y0: gy0 / index.cells, cells: index.cells, mapW: index.mapW, mapH: index.mapH, lon0: index.lon0, lon1: index.lon1, latN: index.latN, latS: index.latS,
+    w, h, x0: gx0 / index.cells, y0: gy0 / index.cells, cells: index.cells, mapW: index.mapW, mapH: index.mapH, lon0: index.lon0, lon1: index.lon1, latN: index.latN, latS: index.latS, worldW: index.worldW, worldH: index.worldH,
     shaped: new Int16Array(n), drainage: new Uint8Array(n), water: new Uint8Array(n).fill(Water.Sea), forest: new Uint8Array(n), crops: new Uint8Array(n), rivers: [],
   };
-  const wanted: [number, number][] = [];
-  for (let ty = Math.floor(gy0 / T); ty * T < gy0 + h; ty++) for (let tx = Math.floor(gx0 / T); tx * T < gx0 + w; tx++) if (index.tiles.includes(`${tx}_${ty}`)) wanted.push([tx, ty]);
-  await Promise.all(wanted.map(async ([tx, ty]) => {
+  // the window's columns in runs that lie in one tile: `at` is the run's first column, `x` the same column on the first lap
+  const wanted: { tx: number; ty: number; at: number; x: number; len: number }[] = [];
+  for (let at = gx0; at < gx0 + w;) {
+    const x = round === Infinity ? at : mod(at, round), tx = Math.floor(x / T), len = Math.min(gx0 + w - at, (tx + 1) * T - x, round - x);
+    for (let ty = Math.floor(gy0 / T); ty * T < gy0 + h; ty++) if (index.has.has(`${tx}_${ty}`)) wanted.push({ tx, ty, at, x, len });
+    at += len;
+  }
+  await Promise.all(wanted.map(async ({ tx, ty, at, x, len }) => {
     const tile = await tileOf(name, base, T, tx, ty), to = [region.drainage, region.water, region.forest, region.crops];
     // the part of the tile that lies in the window, row by row
-    const x0 = Math.max(gx0, tx * T), x1 = Math.min(gx0 + w, (tx + 1) * T);
     for (let gy = Math.max(gy0, ty * T); gy < Math.min(gy0 + h, (ty + 1) * T); gy++) {
-      const src = (gy - ty * T) * T + (x0 - tx * T), dst = (gy - gy0) * w + (x0 - gx0), len = x1 - x0;
+      const src = (gy - ty * T) * T + (x - tx * T), dst = (gy - gy0) * w + (at - gx0);
       region.shaped.set(tile.shaped.subarray(src, src + len), dst);
       for (let k = 0; k < 4; k++) to[k].set(tile.layers[k].subarray(src, src + len), dst);
     }
-    for (const r of tile.rivers) region.rivers.push({ ...r, pts: r.pts.map(([x, y]) => [x - gx0, y - gy0]) });
+    for (const r of tile.rivers) region.rivers.push({ ...r, pts: r.pts.map(([px, py]) => [px + at - x - gx0, py - gy0]) });
   }));
   return region;
 }
 
-/** The projection of region `name`: the whole-map cell of a place given in degrees, and the place of a cell. */
-export async function projectionOf(name: string, base = '/'): Promise<{ cellOf(lon: number, lat: number): [number, number]; placeOf(u: number, v: number): [number, number] }> {
+/** How region `name` lies on the globe. */
+export interface Projection {
+  /** cells per map pixel */
+  cells: number;
+  /** cells round the globe, after which the region begins again (a region that is not the whole world: none), and from its north edge to its south edge */
+  round: number; rows: number;
+  /** the game map's width and height in cells */
+  map: readonly [number, number];
+  /** the whole-map cell of a place given in degrees, on the first lap round the globe */
+  cellOf(lon: number, lat: number): [number, number];
+  /** the place of a cell, in degrees */
+  placeOf(u: number, v: number): [number, number];
+}
+export async function projectionOf(name: string, base = '/'): Promise<Projection> {
   const m = await indexOf(name, base);
   return {
+    cells: m.cells, round: m.worldW ? m.worldW * m.cells : Infinity, rows: (m.worldH ?? m.mapH) * m.cells, map: [m.mapW * m.cells, m.mapH * m.cells],
     cellOf: (lon, lat) => { const [x, y] = mapPixel(m, lon, lat); return [x * m.cells, y * m.cells]; },
-    placeOf: (u, v) => [m.lon0 + (u / m.cells / m.mapW) * (m.lon1 - m.lon0), (Math.atan(Math.sinh(merc(m.latN) - (v / m.cells / m.mapH) * (merc(m.latN) - merc(m.latS)))) * 180) / Math.PI],
+    placeOf: (u, v) => [lonOf(m, u / m.cells), (Math.atan(Math.sinh(merc(m.latN) - (v / m.cells / m.mapH) * (merc(m.latN) - merc(m.latS)))) * 180) / Math.PI],
   };
 }
 
-/** Cell coordinates of a place given in degrees. */
+/** Cell coordinates of a place given in degrees; of a world, on the lap round the globe on which the window lies. */
 export function cellOf(r: Region, lon: number, lat: number): [number, number] {
-  const [x, y] = mapPixel(r, lon, lat);
-  return [(x - r.x0) * r.cells, (y - r.y0) * r.cells];
+  const [x, y] = mapPixel(r, lon, lat), lap = r.worldW ? Math.round((r.x0 + r.w / r.cells / 2 - x) / r.worldW) * r.worldW : 0;
+  return [(x + lap - r.x0) * r.cells, (y - r.y0) * r.cells];
 }
 
 /** A layer at a point between cell centres, blended from the four cells around it; the edge cells go on outside. */

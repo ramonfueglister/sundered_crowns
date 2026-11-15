@@ -14,9 +14,10 @@ import { PERSON_SCHEMA, FAMILY_SCHEMA } from '../state';
 import { createTable, spawn } from '../ecs';
 import { hash01 } from '../rng';
 import { personYears, type Sex } from '../people/lifetable';
+import { child, founder, origin, NG } from '../people/genes';
 import CITIES_JSON from '../content/cities_1356.json';
 
-export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string }
+export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number; site: number }
 export const CITIES: readonly City[] = CITIES_JSON.cities;
 
 /** The scale of the world: one person for this many people of 1356. */
@@ -57,7 +58,8 @@ export function fitPlacesToCities(s: WorldState): void {
 }
 
 // --- random numbers: a stream of their own, a hash of the world's seed, the person and the number of the draw ---
-const K = { sex: 0, age: 1, ageInYear: 2, marriage: 3, mother: 5, trait: 10 } as const;
+// slots 0 … 21 for the founding, from 100 on for the genes (two 32-bit draws make one 64-bit draw of genes.ts)
+const K = { sex: 0, age: 1, ageInYear: 2, marriage: 3, mother: 5, trait: 10, genes: 100 } as const;
 const u01 = (seed: number, id: number, k: number) => hash01(seed, id, k);
 /** A standard normal draw (Box–Muller) from the draws k and k + 1. */
 function normal(seed: number, id: number, k: number): number {
@@ -148,7 +150,39 @@ export function foundPeople(s: WorldState): void {
       P.a[id] = clampU8(50 + 10 * z.a[id]); P.n[id] = clampU8(50 + 10 * z.n[id]);
     }
   }
+  giveGenes(s);
 }
+
+/** The draws of the genes of a person: a 64-bit number per draw k, from the person's own stream. */
+const geneBits = (seed: number, id: number) => (k: number) => {
+  const u = (j: number) => BigInt(Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296));
+  return (u(1) << 32n) | u(0);
+};
+/** The gene pool of each city place: the origin of the place (genes.ts, after dna.rs). */
+function poolOf(place: number): number {
+  const c = CITIES.find((x) => x.place === place);
+  return c ? origin(c.lon, c.lat) : 0;
+}
+
+/** Gives every person founded on the first day their genes: those without known parents draw them from the gene pool
+ *  of their city, children take them from their parents (all parents of the first day have none known themselves). */
+export function giveGenes(s: WorldState): void {
+  const P = s.person.cols, F = s.family.cols, G = P.genes, seed = s.seed >>> 0;
+  for (let id = 0; id < s.person.size; id++) {
+    if (P.mother[id] >= 0) continue;
+    G.set(founder(poolOf(F.place[P.family[id]]), geneBits(seed, id)), id * 2 * NG);
+  }
+  for (let id = 0; id < s.person.size; id++) {
+    const m = P.mother[id], f = P.father[id];
+    if (m < 0) continue;
+    if (P.mother[m] >= 0 || P.mother[f] >= 0) throw new Error(`person ${id}: a parent has parents; found the elder first`);
+    const g = (x: number) => G.subarray(x * 2 * NG, (x + 1) * 2 * NG);
+    G.set(child(g(f), g(m), geneBits(seed, id)), id * 2 * NG);
+  }
+}
+
+/** The 68 gene bytes of a person (a view, not a copy). */
+export const genesOf = (s: WorldState, id: number): Uint8Array => s.person.cols.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG);
 const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
 /** The persons who live in a place (the people of its cities). */

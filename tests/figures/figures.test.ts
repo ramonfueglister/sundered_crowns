@@ -4,10 +4,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { type Figures, type SettledGround, crowd } from '../../src/figures';
+import { type Figures, type SettledGround, crowd, setPlacePeople } from '../../src/figures';
+import CITIES_JSON from '../../src/sim/content/cities_1356.json';
 import { ESTATES, Mode } from '../../src/figures/estates';
 import { FAR_PARTS, HEIGHT, NEAR_PARTS, buildKit } from '../../src/figures/kit';
 import { type Ground, Mat, N, idx } from '../../src/lookprobe/layout';
+
+const CITIES = CITIES_JSON.cities;
 
 /** A ground with a walled town (paved streets between built blocks), a field with its grass strip, a farm and a river. */
 function testGround(ox = 0, oz = 0): { g: Ground; s: SettledGround } {
@@ -80,14 +83,53 @@ describe('pieces', () => {
   });
 });
 
+describe('the persons of a town', () => {
+  // a town in the middle of the test ground, with 400 persons of the place of Paris (gazetteer site 68)
+  const paris = CITIES.find((c) => c.name === 'Paris')!;
+  setPlacePeople({ place: paris.place, day: 0, id: Array.from({ length: 400 }, (_, k) => 50000 + k), born: Array.from({ length: 400 }, (_, k) => (k % 10 === 0 ? -365 : -365 * 30)), sex: Array.from({ length: 400 }, (_, k) => k % 2) });
+  const withTown = (ox: number) => { const t = testGround(ox, 0); t.s.towns = [{ site: paris.site, cx: 180, cz: 180, half: 80 }]; return t; };
+  const persons = (f: Figures) => Array.from({ length: f.count }, (_, k) => f.e[k * 4 + 3]).filter((v) => v > 0).map((v) => v - 1);
+  it('walk its streets as themselves, adults only, each at most once', () => {
+    const { g, s } = withTown(0), f = crowd(g, s, all), ids = persons(f);
+    expect(ids.length).toBeGreaterThan(20);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) { expect(id).toBeGreaterThanOrEqual(50000); expect((id - 50000) % 10).not.toBe(0); }
+    // a woman wears a woman's estate
+    for (let k = 0; k < f.count; k++) { const id = f.e[k * 4 + 3] - 1; if (id >= 0) expect(['Bäuerin', 'Bürgerin'].includes(ESTATES.find((e) => e.cut === f.c[k * 4 + 2] && e.head === f.c[k * 4 + 3])!.name)).toBe((id - 50000) % 2 === 0); }
+  });
+  it('are put into exactly one of two pieces that share the town', () => {
+    const l = withTown(0), r = withTown(100);
+    const both = [...persons(crowd(l.g, l.s, (x) => x >= 100 && x < 200)), ...persons(crowd(r.g, r.s, (x) => x >= 100 && x < 200))].sort();
+    expect(both).toEqual(persons(crowd(l.g, l.s, (x) => x >= 100 && x < 300)).sort());
+  });
+  it('leave the other towns their anonymous figures', () => {
+    const { g, s } = testGround(), f = crowd(g, s, all);
+    expect(persons(f).length).toBe(0);
+  });
+});
+
 describe('the figure code that runs in a web worker', () => {
   const dir = join(__dirname, '../../src/figures');
-  for (const file of readdirSync(dir).filter((n) => n.endsWith('.ts'))) it(`${file}: at most 300 lines${['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts'].includes(file) ? ', no page' : ''}`, () => {
+  for (const file of readdirSync(dir).filter((n) => n.endsWith('.ts'))) it(`${file}: at most 300 lines${['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts', 'people.ts'].includes(file) ? ', no page' : ''}`, () => {
     const src = readFileSync(join(dir, file), 'utf8');
     expect(src.split('\n').length).toBeLessThanOrEqual(300);
-    if (['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts'].includes(file)) {
+    if (['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts', 'people.ts'].includes(file)) {
       expect(src).not.toMatch(/\b(document|window|localStorage|requestAnimationFrame)\./);
       expect(src).not.toMatch(/from '(three|three\/webgpu|three\/tsl)'/);
     }
+  });
+});
+
+// The five numbers per figure travel as one vertex buffer: separate ones made nine buffers with the kit and the
+// instance matrix, over WebGPU's default limit of eight, and no figure was drawn on a real device.
+describe('the figure buffer', () => {
+  it('holds the five lists of each figure side by side', async () => {
+    const { interleave } = await import('../../src/figures/material');
+    const l = [0, 1, 2, 3, 4].map((k) => Float32Array.from({ length: 8 }, (_, j) => k * 100 + j));
+    const out = interleave(l, 2);
+    expect(out.length).toBe(40);
+    expect(Array.from(out.subarray(0, 8))).toEqual([0, 1, 2, 3, 100, 101, 102, 103]);
+    expect(Array.from(out.subarray(20, 24))).toEqual([4, 5, 6, 7]);
+    expect(Array.from(out.subarray(36, 40))).toEqual([404, 405, 406, 407]);
   });
 });

@@ -19,6 +19,8 @@ const S = {
   send_link: ['Send sign-in link', 'Anmeldelink senden'],
   link_sent: ['Check your mail for the sign-in link.', 'Prüfe deine E-Mails auf den Anmeldelink.'],
   sign_out: ['Sign out', 'Abmelden'],
+  observer_hint: ['You are watching the world.', 'Du schaust der Welt zu.'],
+  reload: ['Reload', 'Neu laden'],
   connecting: ['Connecting to the world…', 'Verbinde mit der Welt…'],
   disconnected: ['The connection to the world was lost. Reconnecting…', 'Die Verbindung zur Welt ist abgerissen. Verbinde neu…'],
   no_webgpu: ['This browser cannot draw the map: it needs WebGPU (a current Chrome, Edge or Safari).', 'Dieser Browser kann die Karte nicht zeichnen: Er braucht WebGPU (aktuelles Chrome, Edge oder Safari).'],

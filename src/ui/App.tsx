@@ -1,9 +1,11 @@
-// Application shell: sign in, then the map of the world with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// Application shell: the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// For now everyone only watches the world (Ramon, 15 November 2026: "im moment nur zuschauer möglichkeit"): the game opens at
+// once as an observer and offers no sign-in. The server still knows players (src/online, server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
-import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace, mapCtl } from './MapView';
+import { WorldView } from './WorldView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
@@ -12,13 +14,18 @@ import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+/** the address option ?map=2d shows the earlier flat map in place of the world (kept until the world has all it showed) */
+const FLAT_MAP = new URLSearchParams(location.search).get('map') === '2d';
+
 
 export function App() {
   const st = status.value;
+  // watch at once, as an observer
+  useEffect(() => { connect({}); return () => disconnect(); }, []);
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
-    {st === 'idle' || st === 'refused' ? <SignIn /> : <>
-      <MapView />
+    {st === 'refused' ? <Refused /> : <>
+      {FLAT_MAP ? <MapView /> : <WorldView />}
       <Music />
       <TopBar />
       <RealmBanner />
@@ -93,32 +100,15 @@ function LangSwitch() {
   return <button class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>;
 }
 
-function SignIn() {
-  const [name, setName] = useState(''), [email, setEmail] = useState(''), [note, setNote] = useState<string | null>(null);
-  // a Supabase session (after the magic link) connects at once
-  useEffect(() => {
-    if (!online.available || !session.value) return;
-    accessToken().then((token) => { if (token) connect({ token }); });
-  }, [session.value]);
+/** What the server said when it turned the game away (an old client after an update, too many connections). */
+function Refused() {
   return <div class="menu">
     <div class="menu-bg" />
     <div class="menu-box">
       <h1>{t('title')}</h1>
       <p class="muted">{t('tagline')}</p>
       {refusal.value && <p class="neg">{refusal.value}</p>}
-      {online.available ? <>
-        {session.value
-          ? <><p>{profile.value?.display_name ?? session.value.user.email}</p><button class="btn" onClick={() => signOut()}>{t('sign_out')}</button></>
-          : <form onSubmit={async (e) => { e.preventDefault(); const er = await signInWithEmail(email); setNote(er ?? t('link_sent')); }}>
-            <input class="field" type="email" placeholder={t('email')} value={email} onInput={(e) => setEmail((e.target as HTMLInputElement).value)} />
-            <button class="btn big gold" type="submit">{t('send_link')}</button>
-            {note && <p class="muted">{note}</p>}
-          </form>}
-      </> : <form onSubmit={(e) => { e.preventDefault(); connect({ name }); }}>
-        <p class="muted">{t('dev_login')}</p>
-        <input class="field" placeholder={t('display_name')} value={name} maxLength={24} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-        <button class="btn big gold" type="submit" disabled={name.trim().length < 3}>{t('enter')}</button>
-      </form>}
+      <button class="btn big gold" onClick={() => location.reload()}>{t('reload')}</button>
       <div class="menu-foot"><LangSwitch /></div>
     </div>
   </div>;
@@ -132,7 +122,7 @@ function TopBar() {
       {mine ? <>
         <span class="realm-name">{L(mine.short)}</span>
         <span class="val" title={t('places')}><IconPlaces /><span><b>{num(mine.places)}</b><small>{t('places')}</small></span></span>
-      </> : <span class="hint">{t('no_realm')}</span>}
+      </> : <span class="hint">{t(me.value?.observer ? 'observer_hint' : 'no_realm')}</span>}
       <span class="val" title={t('players')}><IconPlayers /><span><b>{num(wi?.players ?? 0)} / {num(wi?.maxPlayers ?? 0)}</b><small>{t('players')}</small></span></span>
     </div>
     <div class="hud-date"><IconCalendar /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{wi?.paused && <small>{t('paused')}</small>}</div>
@@ -141,7 +131,6 @@ function TopBar() {
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />
       {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
-      <button class="menu-item" onClick={() => { disconnect(); if (online.available) signOut(); }}>{t('sign_out')}</button>
       {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
       <p class="credit">{t('music_credit')}</p>
     </div>}
@@ -203,7 +192,7 @@ function PlacePanel() {
       <h3>{L(r.name)}</h3>
       <p>{t('places')}: {num(r.places)}</p>
       <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>
-      {!r.ruler && m && m.realm < 0 && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
+      {!r.ruler && m && m.realm < 0 && !m.observer && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
     </div>}
   </aside>;
 }

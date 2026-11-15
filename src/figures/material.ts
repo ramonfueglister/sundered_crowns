@@ -3,7 +3,7 @@
 // wear or carry, and takes its colours, from five numbers per figure that never change. Per frame the processor only
 // advances the clock. Main thread only (needs the renderer's node materials).
 import * as THREE from 'three/webgpu';
-import { Fn, abs, attribute, cos, float, fract, instancedBufferAttribute, length, max, mix, normalLocal, positionGeometry, select, sin, time, varying, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, abs, attribute, cos, float, fract, instancedBufferAttribute, length, max, mix, normalLocal, positionGeometry, select, sin, uniform, varying, vec2, vec3, vec4 } from 'three/tsl';
 import type { Figures } from './crowd';
 import { HIP, Joint, Load, SHOULDER, Slot, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';
 
@@ -19,12 +19,37 @@ const unpack = (n: F): V3 => {
 /** turns (y, z) about the x axis by `a` */
 const turnX = (v: V3, a: F): V3 => vec3(v.x, v.y.mul(cos(a)).sub(v.z.mul(sin(a))), v.y.mul(sin(a)).add(v.z.mul(cos(a))));
 
+/** The figures' clock in seconds: the page's own, so that a click can find where a walker is (stage.ts figureAt). */
+export const figureSeconds = () => performance.now() / 1000;
+const time = uniform(0).onFrameUpdate(figureSeconds);
+
+/** Where a figure stands at a time, in its piece (the same as the vertex stage below, on the processor). */
+export function figureAt(f: { a: Float32Array; b: Float32Array; c: Float32Array }, i: number, t: number): [number, number, number] {
+  const a = i * 4, x0 = f.a[a], y0 = f.a[a + 1], z0 = f.a[a + 2];
+  if (Math.abs(f.c[a] - 1) > 0.5) return [x0, y0, z0];
+  const dx = f.b[a] - x0, dz = f.b[a + 2] - z0, long = Math.max(Math.hypot(dx, dz), 0.001);
+  const v = (t * f.b[a + 3]) / (long * 2) + f.a[a + 3], lap = v - Math.floor(v), along = lap < 0.5 ? lap * 2 : 2 - lap * 2;
+  return [x0 + dx * along, y0 + (f.b[a + 1] - y0) * along, z0 + dz * along];
+}
+
 /** Strides a second: a cadence of about 110 steps a minute at comfortable pace (Bohannon 1997), two steps a stride. */
 const STRIDE = 2 * Math.PI * 0.92;
 
+/** The per-figure vec4 lists side by side: figure i holds lists[0][i], lists[1][i], ... (each four floats). */
+export function interleave(lists: readonly Float32Array[], count: number): Float32Array {
+  const w = lists.length * 4, out = new Float32Array(Math.max(count, 1) * w);
+  for (let i = 0; i < count; i++) lists.forEach((l, k) => out.set(l.subarray(i * 4, i * 4 + 4), i * w + k * 4));
+  return out;
+}
+
 function material(f: Figures): THREE.MeshLambertNodeMaterial {
-  const inst = (list: Float32Array) => instancedBufferAttribute(new THREE.InstancedBufferAttribute(list, 4)) as unknown as THREE.Node<'vec4'>;
-  const A = inst(f.a), B = inst(f.b), C = inst(f.c), D = inst(f.d), E = inst(f.e);
+  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: with three of the kit and
+  // the instance matrix, five separate ones made nine, and WebGPU allows only eight by default (maxVertexBuffers),
+  // so the pipeline failed and no figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
+  const all = interleave([f.a, f.b, f.c, f.d, f.e], f.count);
+  const buffer = new THREE.InstancedInterleavedBuffer(all, 20);
+  const inst = (k: number) => (instancedBufferAttribute(buffer as never, 'vec4', 20, k * 4) as unknown as { setInstanced(v: boolean): THREE.Node<'vec4'> }).setInstanced(true);
+  const A = inst(0), B = inst(1), C = inst(2), D = inst(3), E = inst(4);
   const info = vec4(attribute('info', 'vec4')), slot = info.x, joint = info.y, part = info.z, variant = info.w;
   const mode = C.x, carried = C.y, cut = C.z, head = C.w, walking = is(mode, 1), working = is(mode, 2);
 
