@@ -148,6 +148,23 @@ white. Hair as light as white now gets its darker strands drawn darker (`sheen.l
 lighter (`cap.light`), so that a white moustache (painted) matches the white beard (cards). Tried and dropped:
 less flush for old men (the red patch on their far cheek is the key light past the nose, not the flush).
 
+**Skin of England's people, measured (round 48).** Round 41 measured the test people, whose skin is darker than
+any the game draws for England (skin gene 0 to 80 of 255). Faces of that pool, the box between brows and mouth,
+CIELAB at the 50th and 90th percentile:
+
+| | L | a | b |
+|---|---|---|---|
+| CK3, the ruler (in the light) | 42, 66 | 19, 24 | 23, 28 |
+| CK3, his wife (in the dim) | 34, 45 | 13, 16 | 12, 16 |
+| ours before, women of England's pool | 53 to 58, 73 to 75 | 7 to 8, 9 to 11 | 18 to 20, 20 to 22 |
+| ours now | 49 to 53, 69 to 71 | 11 to 12, 13 to 15 | 19 to 21, 21 to 22 |
+
+Their skin was paler and far less red than CK3's: Apoleia's lightest skin colours are a yellowish beige (a of
+about 8). The tint towards red is stronger (`skin.tint` 1 / 0.82 / 0.86) and grows with the skin's lightness, so
+that the dark skins of the test people stay as they were (round 41 had stopped where they turned brick red). The
+exposure went from 0.46 to 0.43, and the cheeks' flush from 1 to 0.7 (`flush` in the dress table: on skin that
+light it read as rouge). Still lighter and less red than the ruler; further it turned pink.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), the outline of the hair (a smooth dome) and white hair and beards (no depth, they read as knitted) are not; the thrown-back hood closes round the neck since

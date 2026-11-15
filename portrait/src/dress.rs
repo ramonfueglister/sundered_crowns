@@ -125,7 +125,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     beard_full: "beard_trim",
     lips: [0.55, 0.38],
     hair_red: [0.45, 0.74],
-    flush: 1.0,
+    flush: 0.7,
     lids: [0.2, 0.45, 0.2, 0.45],
     mouth_shut: [0.75, 0.75],
     mood: 1.0,

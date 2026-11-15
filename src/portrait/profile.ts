@@ -29,7 +29,8 @@ export interface StageProfile {
   /** Skin: null leaves it as the builder gives it. Else roughness, Godot's "specular", strength of the pores'
    *  normal map; how far light bleeds round the edge of its shadow per colour (wrap lighting, the usual stand-in
    *  for scattering inside skin); how blotchy (broad patches redder or paler) and speckled (fine, in brightness);
-   *  how much of its colour is left (1 = all), and a tint over that. */
+   *  how much of its colour is left (1 = all), and a tint over that, which grows with the skin's lightness (none
+   *  on dark skin, all of it on light skin: blood shows through light skin, melanin hides it). */
   skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
@@ -82,7 +83,7 @@ export const APOLEIA: StageProfile = {
  *  shadow; eyes shaded by the lid and in their corners, with a glint; thin lashes and brows that do not read as
  *  painted; hair with a sheen of strands that keeps its colour in the shade. Exposure, the skin's tint and the
  *  colour of the light from below were set in round 41 so that lit skin lies where it does in one screenshot of
- *  CK3 (CIELAB, docs/PORTRAITS.md), and in round 47 the colour left in hair so that red hair is as coloured as
+ *  CK3 (CIELAB, docs/PORTRAITS.md), again in round 48 on the light skin England's people have, and in round 47 the colour left in hair so that red hair is as coloured as
  *  the reddest there; the rest by eye. All PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
@@ -93,10 +94,10 @@ export const ENGLAND_1356: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#4d443c', energy: 0.3 },
   rimShadow: true,
-  exposure: 0.46,
+  exposure: 0.43,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
-  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.95, 0.97] },
+  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.82, 0.86] },
   eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.32, 1.3, 1.27], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1 },

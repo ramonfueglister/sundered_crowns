@@ -97,7 +97,8 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
 diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} ) * vec3( ${k.tint.map(f).join(', ')} );`);
+float skinGrey = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * mix( vec3( 1.0 ), vec3( ${k.tint.map(f).join(', ')} ), smoothstep( 0.12, 0.45, skinGrey ) );`);
   };
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
