@@ -8,11 +8,14 @@
   "P. Vos et al., Atlas of the Holocene Netherlands (2011)",
   "H.H. Lamb, Historic Storms of the North Sea (1991)",
   "R. Bartlett, The Making of Europe",
-  "Wikipedia articles on the Zuiderzee, Dollart, Haarlemmermeer, Grote Mandrenke, St Elizabeth's flood, Sarykamysh Lake, Pontine Marshes, Mesopotamian Marshes"
+  "Wikipedia articles on the Zuiderzee, Dollart, Haarlemmermeer, Grote Mandrenke, St Elizabeth's flood, Sarykamysh Lake, Pontine Marshes, Mesopotamian Marshes",
+  "Italian Wikipedia, 'Taglio di Porto Viro' (Po delta before 1604: dune line Massenzatica–Donada, advance of 25 m a year 1200–1600); English Wikipedia, 'Gronda lagunare', 'Sile (river)', 'Lago di Bientina'",
+  "English Wikipedia, 'Limfjord', 'Kolindsund', 'Lake Prile'; Natural Earth 10m lakes (class Reservoir)"
  ],
  "notes": [
   "Polygons are coarse (4–21 vertices), lon/lat order. 'impassable' leaves the main 14th-century trans-Saharan caravan corridors open (Sijilmasa–Taghaza–Walata, Tuat–Gao, Ghadames–Air, Fezzan–Kawar–Bornu, Darb al-Arba'in).",
-  "Zuiderzee check: it already existed in 1356 (open to the sea since the 1287 St Lucia's flood), so it is listed under coast_1356 as sea rather than as a later feature."
+  "Zuiderzee check: it already existed in 1356 (open to the sea since the 1287 St Lucia's flood), so it is listed under coast_1356 as sea rather than as a later feature.",
+  "rivers_1356: lower courses that differ from today's, as lines of lon/lat way points (accurate to about a kilometre); 'replaces' is the area in which today's course of the same river is dropped."
  ],
  "impassable": [
   {
@@ -1602,6 +1605,60 @@
    ]
   },
   {
+   "name": "Po delta before the Porto Viro cut",
+   "type": "sea",
+   "note": "Today's delta is younger than 1604. Around 1150 the coast ran along the dunes from Massenzatica to Donada; from 1200 to 1600 the land grew some 25 m a year, so in 1356 the shore lay about 4 km east of that line (taken at 12.27–12.31° E, uncertain by 2–3 km). Everything east of it was sea.",
+   "polygon": [
+    [
+     12.31,
+     45.13
+    ],
+    [
+     12.285,
+     45.06
+    ],
+    [
+     12.27,
+     44.96
+    ],
+    [
+     12.27,
+     44.79
+    ],
+    [
+     12.8,
+     44.79
+    ],
+    [
+     12.8,
+     45.13
+    ]
+   ]
+  },
+  {
+   "name": "Limfjord, western end closed",
+   "type": "land",
+   "note": "The western passage to the North Sea closed around 1200 (Saxo); from then until the flood of 3 February 1825 the Limfjord was open to the sea only in the east, at Hals, and brackish. The Thyborøn channel of today dates from 1862.",
+   "polygon": [
+    [
+     8.19,
+     56.74
+    ],
+    [
+     8.27,
+     56.74
+    ],
+    [
+     8.27,
+     56.68
+    ],
+    [
+     8.19,
+     56.68
+    ]
+   ]
+  },
+  {
    "name": "Notes without polygons",
    "type": "note",
    "note": "Dunwich and the Holderness villages (Ravenser Odd) still existed; Ostrobothnian coast lay several km inland of today's because of post-glacial uplift; Pisa, Ravenna and Aigues-Mortes lay closer to the sea; the Caspian stood a few metres higher than in the 20th century.",
@@ -1932,6 +1989,100 @@
     [
      13.8,
      12.6
+    ]
+   ]
+  },
+  {
+   "name": "Lago di Bientina (Lago di Sesto)",
+   "note": "Largest lake of Tuscany, 36 km² on average (16–96 km² with the seasons), between Lucca and Pisa; drained 1852–59.",
+   "polygon": [
+    [
+     10.6,
+     43.8
+    ],
+    [
+     10.66,
+     43.8
+    ],
+    [
+     10.68,
+     43.74
+    ],
+    [
+     10.65,
+     43.71
+    ],
+    [
+     10.6,
+     43.72
+    ],
+    [
+     10.58,
+     43.76
+    ]
+   ]
+  },
+  {
+   "name": "Kolindsund",
+   "note": "Freshwater lake of Djursland, 25 km long from Grenå west to Kolind and 0.8–2.5 km wide; drained 1872–80.",
+   "polygon": [
+    [
+     10.6,
+     56.375
+    ],
+    [
+     10.7,
+     56.4
+    ],
+    [
+     10.8,
+     56.43
+    ],
+    [
+     10.86,
+     56.425
+    ],
+    [
+     10.86,
+     56.405
+    ],
+    [
+     10.78,
+     56.405
+    ],
+    [
+     10.7,
+     56.38
+    ],
+    [
+     10.6,
+     56.355
+    ]
+   ]
+  },
+  {
+   "name": "Lake Prile (Lago di Castiglione)",
+   "note": "Salt lagoon turning to marsh in the plain of Grosseto, east of Castiglione della Pescaia; filled with river silt from 1828. The outline is a rough estimate, no measured medieval extent was found.",
+   "polygon": [
+    [
+     10.9,
+     42.78
+    ],
+    [
+     10.98,
+     42.82
+    ],
+    [
+     11.05,
+     42.8
+    ],
+    [
+     11.04,
+     42.76
+    ],
+    [
+     10.95,
+     42.75
     ]
    ]
   }
@@ -2575,5 +2726,188 @@
     ]
    ]
   }
- ]
+ ],
+ "rivers_1356": [
+  {
+   "name": "Brenta",
+   "rank": 9,
+   "note": "Reached the lagoon at Fusina, opposite Venice, until the Brenta Nova (1489–1507) led it south to Conche. The old bed is today's Naviglio del Brenta.",
+   "line": [
+    [
+     11.734,
+     45.767
+    ],
+    [
+     11.745,
+     45.7
+    ],
+    [
+     11.754,
+     45.636
+    ],
+    [
+     11.8,
+     45.55
+    ],
+    [
+     11.846,
+     45.476
+    ],
+    [
+     11.93,
+     45.435
+    ],
+    [
+     12.007,
+     45.41
+    ],
+    [
+     12.076,
+     45.427
+    ],
+    [
+     12.13,
+     45.437
+    ],
+    [
+     12.18,
+     45.449
+    ],
+    [
+     12.225,
+     45.432
+    ],
+    [
+     12.256,
+     45.418
+    ]
+   ]
+  },
+  {
+   "name": "Sile",
+   "rank": 10,
+   "note": "A spring-fed river; it entered the northern lagoon at Portegrandi until the Taglio del Sile (1683).",
+   "line": [
+    [
+     12.02,
+     45.66
+    ],
+    [
+     12.12,
+     45.655
+    ],
+    [
+     12.245,
+     45.666
+    ],
+    [
+     12.29,
+     45.64
+    ],
+    [
+     12.33,
+     45.596
+    ],
+    [
+     12.373,
+     45.578
+    ],
+    [
+     12.447,
+     45.558
+    ]
+   ]
+  },
+  {
+   "name": "Piave",
+   "rank": 9,
+   "note": "Below San Donà the Piave ran in the bed now called Piave Vecchia (today the lower Sile) past Jesolo to the sea at Cavallino; Venice led it east to Cortellazzo in the 17th century.",
+   "line": [
+    [
+     12.566,
+     45.631
+    ],
+    [
+     12.56,
+     45.615
+    ],
+    [
+     12.585,
+     45.573
+    ],
+    [
+     12.615,
+     45.55
+    ],
+    [
+     12.642,
+     45.535
+    ],
+    [
+     12.615,
+     45.505
+    ],
+    [
+     12.585,
+     45.478
+    ]
+   ],
+   "replaces": [
+    [
+     12.6,
+     45.63
+    ],
+    [
+     12.8,
+     45.63
+    ],
+    [
+     12.8,
+     45.5
+    ],
+    [
+     12.68,
+     45.5
+    ],
+    [
+     12.68,
+     45.57
+    ],
+    [
+     12.6,
+     45.61
+    ]
+   ]
+  }
+ ],
+ "reservoirs": {
+  "note": "Lakes of today's maps that are reservoirs behind dams of the 20th century and did not exist in 1356. Natural Earth marks them, and regulated natural lakes (Mjøsa, Ilmen, Oulujärvi …), as class Reservoir; only the man-made ones are listed here, and unnamed ones of that class are dropped as well.",
+  "names": [
+   "Kiev Reservoir",
+   "Kakhovka Reservoir",
+   "Kremenchuk Reservoir",
+   "Rybinsk Reservoir",
+   "Kostroma Reservoir",
+   "Uglich Reservoir",
+   "Ivankovo Reservoir",
+   "Gorky Reservoir",
+   "Tsimlyansk Reservoir",
+   "Kauno marios",
+   "Ataturk Barajt",
+   "Keban Baraji",
+   "Saksak Dagi",
+   "Buhayrat al-Assad",
+   "Embalse de Entrepeas",
+   "Embalse de Buendía",
+   "Embalse de García de Sola",
+   "Embalse de Orellana",
+   "Embalse de Cala",
+   "Porttipahta Reservoir",
+   "Lokan Tekojarvi",
+   "Serebryanskoe Reservoir",
+   "Veselovskoe Reservoir",
+   "Krasnodarsk Reservoir",
+   "Sheksinskoe Reservoir"
+  ]
+ }
 }

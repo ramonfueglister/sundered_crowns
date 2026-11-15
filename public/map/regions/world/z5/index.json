@@ -1,0 +1,1 @@
+{"name":"world/z5","tile":512,"cells":0.125,"mapW":6144,"mapH":5296,"lon0":-100.0,"lon1":70.0,"latN":72.0,"latS":-38.0,"layers":["shaped:i16","drainage:u8","water:u8","forest:u8","crops:u8"],"tiles":["0_0","1_0"]}
