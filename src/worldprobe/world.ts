@@ -9,7 +9,7 @@ import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, Land, climateAt } from './climate';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Monument, type Site, settle } from './settle';
-import { MONUMENTS, styleOf } from './styles';
+import { MONUMENTS, styleOf } from '../buildings';
 
 /**
  * The world is laid out in blocks: one block is one cell of the game map (about 0.77 km × cos(latitude), so 0.54 km in

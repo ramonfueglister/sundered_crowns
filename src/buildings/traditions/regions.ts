@@ -1,14 +1,18 @@
 // How the lands of the map build: the houses, the parish church and the great church or mosque of each building
-// tradition, and the real monuments that have a model of their own. The traditions follow the gazetteer's regions,
-// which is coarse: Granada builds like Castile, and a region's minorities do not show.
-import { type Batch, type Rnd, rgb } from '../lookprobe/batch';
-import { type HouseStyle, NORTH, SOUTH, TERRACE, TIMBER, basilica, campanile, cathedral, church, domedChurch, hagiaSophia, mosque, palace, spireChurch } from '../lookprobe/buildings';
+// tradition. The traditions follow the gazetteer's regions, which is coarse: Granada builds like Castile, and a
+// region's minorities do not show. Each tradition will be split up and sourced region by region.
+import { rgb } from '../../lookprobe/batch';
+import type { HouseStyle } from '../houses/style';
+import type { Model } from '../model';
+import { BRICK, COPPER, GOLD, MARBLE, SLATE, STONE_PALE } from '../palette';
+import { cathedral } from '../sacred/cathedral';
+import { church, spireChurch } from '../sacred/church';
+import { domedChurch } from '../sacred/domed-church';
+import { mosque } from '../sacred/mosque';
+import { NORTH, SOUTH, TERRACE, TIMBER } from './house-styles';
 
-/** A building with the ground it needs (along x and z) and its height, in blocks. */
-export interface Model { build(r: Rnd): Batch; w: number; d: number; height: number }
 export interface Style { house: HouseStyle; church: Model; great: Model; /** brick towers of the leading families stand over the town */ towers: boolean }
 
-const MARBLE = rgb(0xfdf4ea), STONE = rgb(0xe6dccc), BRICK = rgb(0xd0603c), COPPER = rgb(0x6fb078), SLATE = rgb(0x7c8494), GOLD = rgb(0xf4c440);
 const LATIN: Style = {
   house: SOUTH, towers: true,
   church: { build: church, w: 6, d: 11, height: 6 },
@@ -17,7 +21,7 @@ const LATIN: Style = {
 const GOTHIC: Style = {
   house: NORTH, towers: false,
   church: { build: spireChurch, w: 6, d: 11, height: 8 },
-  great: { build: (r) => cathedral(r.pick([STONE, STONE, BRICK]), r.pick([SLATE, rgb(0xc24e36)]), r.chance(0.6) ? r.pick([COPPER, SLATE]) : null), w: 12, d: 21, height: 12 },
+  great: { build: (r) => cathedral(r.pick([STONE_PALE, STONE_PALE, BRICK]), r.pick([SLATE, rgb(0xc24e36)]), r.chance(0.6) ? r.pick([COPPER, SLATE]) : null), w: 12, d: 21, height: 12 },
 };
 const GREEK: Style = {
   house: SOUTH, towers: false,
@@ -39,18 +43,6 @@ const BY_REGION: Record<string, Style> = {
   greece: GREEK, balkans: GREEK, caucasus: GREEK, rus: RUS, steppe: RUS,
   anatolia: ISLAM, maghreb: ISLAM, levant: ISLAM, egypt: ISLAM, arabia: ISLAM, mesopotamia: ISLAM, persia: ISLAM, sahel: ISLAM, west_africa: ISLAM, east_africa: ISLAM,
 };
+
 /** The building tradition of a region of the gazetteer; the Latin south where none is set. */
 export const styleOf = (region: string): Style => BY_REGION[region] ?? LATIN;
-
-/**
- * The monuments of data/content/landmarks.json that have a model, by id: each a group of buildings, set off from the
- * site by (dx, dz) blocks.
- */
-export const MONUMENTS: Record<string, readonly { model: Model; dx: number; dz: number }[]> = {
-  hagia_sophia: [{ model: { build: hagiaSophia, w: 18, d: 20, height: 14 }, dx: 0, dz: 0 }],
-  st_marks_basilica: [
-    { model: { build: basilica, w: 13, d: 11, height: 9 }, dx: 0, dz: 0 },
-    { model: { build: campanile, w: 4, d: 4, height: 20 }, dx: 10, dz: 0 },
-    { model: { build: palace, w: 9, d: 24, height: 9.4 }, dx: 0, dz: 14 },
-  ],
-};
