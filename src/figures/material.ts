@@ -35,9 +35,21 @@ export function figureAt(f: { a: Float32Array; b: Float32Array; c: Float32Array 
 /** Strides a second: a cadence of about 110 steps a minute at comfortable pace (Bohannon 1997), two steps a stride. */
 const STRIDE = 2 * Math.PI * 0.92;
 
+/** The per-figure vec4 lists side by side: figure i holds lists[0][i], lists[1][i], ... (each four floats). */
+export function interleave(lists: readonly Float32Array[], count: number): Float32Array {
+  const w = lists.length * 4, out = new Float32Array(Math.max(count, 1) * w);
+  for (let i = 0; i < count; i++) lists.forEach((l, k) => out.set(l.subarray(i * 4, i * 4 + 4), i * w + k * 4));
+  return out;
+}
+
 function material(f: Figures): THREE.MeshLambertNodeMaterial {
-  const inst = (list: Float32Array) => instancedBufferAttribute(new THREE.InstancedBufferAttribute(list, 4)) as unknown as THREE.Node<'vec4'>;
-  const A = inst(f.a), B = inst(f.b), C = inst(f.c), D = inst(f.d), E = inst(f.e);
+  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: with three of the kit and
+  // the instance matrix, five separate ones made nine, and WebGPU allows only eight by default (maxVertexBuffers),
+  // so the pipeline failed and no figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
+  const all = interleave([f.a, f.b, f.c, f.d, f.e], f.count);
+  const buffer = new THREE.InstancedInterleavedBuffer(all, 20);
+  const inst = (k: number) => (instancedBufferAttribute(buffer as never, 'vec4', 20, k * 4) as unknown as { setInstanced(v: boolean): THREE.Node<'vec4'> }).setInstanced(true);
+  const A = inst(0), B = inst(1), C = inst(2), D = inst(3), E = inst(4);
   const info = vec4(attribute('info', 'vec4')), slot = info.x, joint = info.y, part = info.z, variant = info.w;
   const mode = C.x, carried = C.y, cut = C.z, head = C.w, walking = is(mode, 1), working = is(mode, 2);
 

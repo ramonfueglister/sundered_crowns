@@ -129,7 +129,7 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
   };
 }
 
-export interface UserAuth { uid: string; name: string; admin: boolean }
+export interface UserAuth { uid: string; name: string; admin: boolean; /** connected without signing in: sees the world, rules nothing */ observer?: boolean }
 export interface Conn { send(m: ServerMsg): void; sendBin(b: Uint8Array): void; close(code: number, reason: string): void }
 
 interface Seat { uid: string; name: string; realm: number; joinedAt: number; lastSeen: number }
@@ -265,7 +265,7 @@ export class WorldCore {
   // ------------------------------------------------------------- players
   seats(): Seat[] { return Object.values(this.meta.seats); }
   private rulerName = (uid: string) => this.meta.seats[uid]?.name ?? null;
-  private me(ss: Session): Me { return { uid: ss.user.uid, name: ss.user.name, admin: ss.user.admin, realm: this.meta.seats[ss.user.uid]?.realm ?? -1 }; }
+  private me(ss: Session): Me { return { uid: ss.user.uid, name: ss.user.name, admin: ss.user.admin, realm: this.meta.seats[ss.user.uid]?.realm ?? -1, ...(ss.user.observer ? { observer: true } : {}) }; }
   worldInfo(): WorldInfo {
     return { id: this.cfg.id, name: this.meta.name, day: this.s.day, startYear: this.s.startYear, secondsPerDay: this.cfg.secondsPerDay, paused: this.meta.paused, players: this.seats().length, maxPlayers: this.cfg.maxPlayers };
   }
@@ -299,7 +299,7 @@ export class WorldCore {
       case 'cmd': {
         const seat = this.meta.seats[ss.user.uid];
         const id = Number(m.id) || 0;
-        if (!seat) return ss.send({ type: 'result', id, ok: false, err: 'you rule no realm' });
+        if (!seat || ss.user.observer) return ss.send({ type: 'result', id, ok: false, err: 'you rule no realm' });
         let b = this.buckets.get(ss.user.uid); if (!b) this.buckets.set(ss.user.uid, (b = new Bucket(this.cfg.cmdsPerDay, this.cfg.cmdsPerDay / Math.max(0.05, this.cfg.secondsPerDay))));
         if (!b.take()) return ss.send({ type: 'result', id, ok: false, err: 'too many orders, wait a moment' });
         const cmd = { ...(m.cmd ?? {}), realm: seat.realm } as Command;
@@ -312,6 +312,7 @@ export class WorldCore {
 
   private claim(ss: Session, realm: number) {
     const uid = ss.user.uid;
+    if (ss.user.observer) return ss.send({ type: 'error', code: 'claim', message: 'Sign in to rule a realm.' });
     if (this.meta.seats[uid]) return ss.send({ type: 'error', code: 'claim', message: 'You already rule a realm.' });
     if (this.seats().length >= this.cfg.maxPlayers) return ss.send({ type: 'error', code: 'claim', message: 'This world is full.' });
     if (this.queue.some((q) => q.e.k === 'claim' && (q.e.realm === realm || q.e.uid === uid))) return ss.send({ type: 'error', code: 'claim', message: 'Someone is taking this realm just now.' });

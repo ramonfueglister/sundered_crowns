@@ -1,6 +1,7 @@
-// Application shell: sign in, then the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// Application shell: the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// Anyone sees the world at once as an observer; signing in (magic link) is needed only to take up a crown (Ramon, 15 November 2026).
 import { useEffect, useState } from 'preact/hooks';
-import { computed } from '@preact/signals';
+import { computed, signal } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace, mapCtl } from './MapView';
@@ -16,11 +17,24 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 /** the address option ?map=2d shows the earlier flat map in place of the world (kept until the world has all it showed) */
 const FLAT_MAP = new URLSearchParams(location.search).get('map') === '2d';
 
+/** true while the sign-in box is open over the world */
+const signingIn = signal(false);
+
+/** Connects as the signed-in player when there is a Supabase session, else as an observer. */
+async function enter() {
+  const token = online.available && session.value ? await accessToken() : null;
+  disconnect();
+  connect(token ? { token } : {});
+}
+
 export function App() {
   const st = status.value;
+  // watch at once; a session (after the magic link) reconnects as the player
+  useEffect(() => { if (online.available) void enter(); }, [session.value]);
+  const gate = st === 'refused' || signingIn.value || (!online.available && st === 'idle');
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
-    {st === 'idle' || st === 'refused' ? <SignIn /> : <>
+    {gate ? <SignIn /> : <>
       {FLAT_MAP ? <MapView /> : <WorldView />}
       <Music />
       <TopBar />
@@ -98,11 +112,7 @@ function LangSwitch() {
 
 function SignIn() {
   const [name, setName] = useState(''), [email, setEmail] = useState(''), [note, setNote] = useState<string | null>(null);
-  // a Supabase session (after the magic link) connects at once
-  useEffect(() => {
-    if (!online.available || !session.value) return;
-    accessToken().then((token) => { if (token) connect({ token }); });
-  }, [session.value]);
+  useEffect(() => { if (session.value) signingIn.value = false; }, [session.value]);
   return <div class="menu">
     <div class="menu-bg" />
     <div class="menu-box">
@@ -122,7 +132,7 @@ function SignIn() {
         <input class="field" placeholder={t('display_name')} value={name} maxLength={24} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
         <button class="btn big gold" type="submit" disabled={name.trim().length < 3}>{t('enter')}</button>
       </form>}
-      <div class="menu-foot"><LangSwitch /></div>
+      <div class="menu-foot">{online.available && status.value !== 'refused' && <button class="btn small" onClick={() => { signingIn.value = false; }}>{t('back_to_world')}</button>} <LangSwitch /></div>
     </div>
   </div>;
 }
@@ -135,7 +145,7 @@ function TopBar() {
       {mine ? <>
         <span class="realm-name">{L(mine.short)}</span>
         <span class="val" title={t('places')}><IconPlaces /><span><b>{num(mine.places)}</b><small>{t('places')}</small></span></span>
-      </> : <span class="hint">{t('no_realm')}</span>}
+      </> : <span class="hint">{t(me.value?.observer ? 'observer_hint' : 'no_realm')}</span>}
       <span class="val" title={t('players')}><IconPlayers /><span><b>{num(wi?.players ?? 0)} / {num(wi?.maxPlayers ?? 0)}</b><small>{t('players')}</small></span></span>
     </div>
     <div class="hud-date"><IconCalendar /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{wi?.paused && <small>{t('paused')}</small>}</div>
@@ -144,7 +154,9 @@ function TopBar() {
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />
       {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
-      <button class="menu-item" onClick={() => { disconnect(); if (online.available) signOut(); }}>{t('sign_out')}</button>
+      {me.value?.observer
+        ? <button class="menu-item" onClick={() => { signingIn.value = true; }}>{t('sign_in_to_play')}</button>
+        : <button class="menu-item" onClick={() => { disconnect(); if (online.available) void signOut(); }}>{t('sign_out')}</button>}
       {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
       <p class="credit">{t('music_credit')}</p>
     </div>}
@@ -206,7 +218,9 @@ function PlacePanel() {
       <h3>{L(r.name)}</h3>
       <p>{t('places')}: {num(r.places)}</p>
       <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>
-      {!r.ruler && m && m.realm < 0 && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
+      {!r.ruler && m && m.realm < 0 && (m.observer
+        ? <button class="btn big gold" onClick={() => { signingIn.value = true; }}>{t('sign_in_to_play')}</button>
+        : <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>)}
     </div>}
   </aside>;
 }

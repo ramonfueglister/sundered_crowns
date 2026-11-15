@@ -31,8 +31,9 @@ export function WorldView() {
           canvas: canvas.current!, names: wrap.current!, ...START,
           status: (text) => { mapError.value = text || null; },
           moved: (_lon, _lat, w) => { wide = w; },
-          // far out a click selects the place under it; near, it is for what stands there (people/panel.ts)
-          clicked: (_hit, place) => { if (wide >= REALMS_SHOW) place().then((id) => { selectedPlace.value = id; }); },
+          // far out a click selects the place under it; near, it is for what stands there (people/panel.ts), and the
+          // place's panel makes room for the person's
+          clicked: (_hit, place) => { if (wide >= REALMS_SHOW) place().then((id) => { selectedPlace.value = id; }); else selectedPlace.value = -1; },
         });
         if (disposed) { made.dispose(); return; }
         view = made;
@@ -57,7 +58,7 @@ export function WorldView() {
         // the place selected is picked out on the far map
         stops.push(effect(() => { made.choose(selectedPlace.value); }));
         // a click on a figure of the great cities opens that person
-        people ??= listenForWorldClicks();
+        people ??= listenForWorldClicks(wrap.current!.closest<HTMLElement>('.app') ?? document.body);
       } catch (e: any) { console.error(e); mapError.value = String(e?.message || e); }
     })();
     hoverPlace.value = -1;
