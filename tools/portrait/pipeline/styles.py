@@ -274,8 +274,10 @@ elif style == 'bob':
                 out_[i, :, c] = np.interp(u, t, S[i, :, c])
         return out_
     _l = [float(t) for t in os.environ.get('BOB_LIFT', '0.07,0.07').split(',')]   # height over the skin: least, and spread
-    S, lab, nc, nt = men_cards(margin, flow, length, 420, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=0.5, wmin=0.34, trim=trim)
-    cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, 420, rng), n=60000, mean=0.6)
+    # how many strands (cards) and their least and greatest width
+    BK = int(os.environ.get('BOB_K', '420')); _w = [float(t) for t in os.environ.get('BOB_W', '0.34,0.5').split(',')]
+    S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim)
+    cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6)
     print(style, 'cards', nc, 'tris', nt, 'cap coverage', round(cov, 3))
 
 write_head_obj(H, os.path.join(out, name + '_head.obj'))
