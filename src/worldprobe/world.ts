@@ -4,14 +4,14 @@
 import { Batch, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
-import type { StageScene } from '../lookprobe/stage';
+import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt } from './climate';
 import { BARE, ROCK_FROM, ROCK_SHIFT_MOST, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
-import { type Monument, type Settled, type Site, settle } from './settle';
+import { type Lot, type Monument, type Settled, type Site, raise, settle } from './settle';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
 /**
@@ -22,6 +22,12 @@ import { MONUMENTS, modelOf, styleOf } from '../buildings';
  * fit together.
  */
 export interface Piece { ox: number; oz: number; part: Part }
+/** the houses that have fine blocks are kept in cells of this many blocks a side */
+export const CELL = 25;
+/** A cell of houses: its middle on the ground, the houses as the far view shows them, and their lots. */
+export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[] }
+/** A piece of the world for the stage, with its cells of houses. */
+export interface WorldScene<S extends Shape = Batch> extends StageScene<S> { cells: Cell<S>[] }
 /** The window of whole-map cells that the ground starting at world block (ox, oz) needs. */
 export function windowOf(ox: number, oz: number): { gx0: number; gy0: number; w: number; h: number } {
   const us: number[] = [], vs: number[] = [];
@@ -61,7 +67,7 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
  * only; from step 1 on it is part of the ground (far.ts). `inhabitants` gives the people of the places (by their
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map()): StageScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map()): WorldScene {
   const wider = 2 ** step, flatter = wider ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * step), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(wider)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
   /** region cell under a ground point: east is the picture's right, south its near side */
@@ -211,7 +217,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [], monuments: Monument[] = [], all: Site[] = [];
   const onGround = (p: readonly [number, number]) => p[0] >= 2 && p[1] >= 2 && p[0] < N - 2 && p[1] < N - 2;
   places.forEach((p, id) => {
-    const site: Site = { id, at: toGround(...cellOf(region, p.lon, p.lat)), size: p.size, pop: inhabitants.get(id) ?? p.pop1356, style: styleOf(p.region) };
+    const site: Site = { id, at: toGround(...cellOf(region, p.lon, p.lat)), size: p.size, pop: inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region) };
     all.push(site);
     if (onGround(site.at)) sites.push(site);
   });
@@ -236,11 +242,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** how likely a tree away from the heights and the north is a dark conifer */
   const conifers = (i: number) => ((land[i] & KIND) === Land.Boreal ? 0.85 : 0.08 + 0.8 * smooth(500 + shift[i], 1300 + shift[i], metres[i]));
   /** a farm is built as the place nearest to it builds */
-  const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return (best?.style ?? styleOf('')).house; };
+  const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return best ?? { region: '', style: styleOf('') }; };
   let settled: Settled | undefined, cover: Cover | undefined;
   if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { cultivated, vines, farm, own, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { cultivated, vines, farm: (x, z) => farm(x, z).style.house, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > TREE_LINE + shift[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / wider))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -295,9 +301,20 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / (SNOW_LINE + at(shift, x, z))) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
   const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
-  counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles;
+  // the houses that have fine blocks stand in cells of their own, so that the near view can take them out cell by cell
+  const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), byCell = new Map<number, Lot[]>();
+  for (const l of settled?.lots ?? []) {
+    const k = Math.floor((l.x + l.w / 2 - part.x0) / CELL) + across * Math.floor((l.z + l.d / 2 - part.z0) / CELL);
+    byCell.set(k, [...(byCell.get(k) ?? []), l]);
+  }
+  for (const [k, lots] of byCell) {
+    const far = new Batch();
+    for (const l of lots) raise(far, l, 0);
+    cells.push({ x: part.x0 + ((k % across) + 0.5) * CELL, z: part.z0 + (Math.floor(k / across) + 0.5) * CELL, far, lots });
+  }
+  counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
   const figures = settled ? crowd(g, settled, own) : undefined;
   if (figures) counts.figures = figures.count;
-  return { ground, things, water, raised, figures, counts };
+  return { ground, things, water, raised, figures, cells, counts };
 }

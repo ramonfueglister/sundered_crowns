@@ -6,7 +6,8 @@ import { seeded } from '../../src/lookprobe/batch';
 import { layoutNames, nameSvg } from '../../src/worldprobe/names';
 import { distance, mapColours, paintRealms, realmNames } from '../../src/worldprobe/paint';
 import { cover, keyOf } from '../../src/worldprobe/pyramid';
-import { COARSEST, FARTHEST, NEAREST, creasesOf, elevationOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
+import { VIEW } from '../../src/lookprobe/layout';
+import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
 
 describe('pyramid', () => {
   interface T { level: number; x: number; y: number }
@@ -47,13 +48,20 @@ describe('zoom', () => {
   for (let w = NEAREST; w <= FARTHEST; w *= 1.01) widths.push(w);
 
   it('changes every rule smoothly and in one direction as the view widens', () => {
-    const rules: [string, (w: number) => number, number][] = [['elevation', elevationOf, 1], ['realms', realmsOf, 1], ['creases', creasesOf, -1]];
+    // the camera looks down the least on the diorama: more steeply from very near, and straight down from far away
+    const rules: [string, (w: number) => number, (w: number) => number][] = [['elevation', elevationOf, (w) => (w < 300 ? -1 : 1)], ['near', nearOf, () => -1], ['realms', realmsOf, () => 1], ['creases', creasesOf, () => -1]];
     for (const [name, rule, way] of rules) for (let k = 1; k < widths.length; k++) {
       const a = rule(widths[k - 1]), b = rule(widths[k]), span = name === 'elevation' ? 90 : 1;
-      expect((b - a) * way, `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
+      expect((b - a) * way(widths[k]), `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
       // the realms come in over a short way, so that the world is not seen half under them for long: still without a leap
       expect(Math.abs(b - a) / span, `${name} at ${widths[k]}`).toBeLessThan(name === 'realms' ? 0.12 : 0.03);
     }
+  });
+
+  it('is the near view where the houses are built from their fine blocks, and the diorama of the reference from a town on', () => {
+    expect(NEAREST).toBeLessThan(FINE_UNTIL);
+    for (const w of [NEAREST, FINE_UNTIL]) { expect(nearOf(w)).toBe(1); expect(elevationOf(w)).toBeCloseTo(30, 6); }
+    for (const w of [160, 190, 400]) { expect(nearOf(w)).toBe(0); expect(elevationOf(w)).toBeCloseTo(VIEW.elevation, 6); }
   });
 
   it('draws the land at the same height on both sides of a change of step', () => {

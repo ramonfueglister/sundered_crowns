@@ -6,7 +6,7 @@ import { Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from './batch';
 import { boat } from './blocks';
 import { VENICE, VOXEL as V, bollard, cloth, crate, fineHouse, jar, jetty, pane, paving, stairs, wallOf } from '../buildings';
 import { LAND_Y, N, SEA_Y } from './layout';
-import { type StageScene, showError, stage } from './stage';
+import { NEAR_LIGHT, NEAR_SHADOW, type StageScene, showError, stage } from './stage';
 
 const PAVING = rgb(0xe2c296), QUAY = 3.0, STONE = rgb(0xcdbba4), WOOD = rgb(0xa9744a);
 /** the lagoon before the quay: brighter than the open sea of the look probe, as the water of the reference class image (assumption) */
@@ -104,6 +104,6 @@ async function build(): Promise<StageScene> {
   return { ground, things, water, counts: { triangles: ground.triangles + things.triangles + water.triangles } };
 }
 
-/** the light of the near view: softer than the far view's, so that the shaded sides keep about two thirds of the sunlit ones, as in the reference class image */
-const NEAR_LIGHT = { sun: Number(q.get('sun')) || 1.05, sunColor: 0xfff2e4, side: Number(q.get('sidel')) || 0.7, sky: Number(q.get('sky')) || 0.4, skyColor: 0xc8d4f0, bounce: Number(q.get('bounce')) || 0.26, fill: Number(q.get('fill')) || 0.26, mirror: Number(q.get('mirror')) || 0.3, mirrorTint: 0x1898a8 };
-stage(build, { frameW: Number(q.get('across')) || 24, elevation: Number(q.get('elev')) || 30, tall: 14, light: NEAR_LIGHT, shadowRadius: Number(q.get('soft')) || 6 }).catch(showError);
+/** the light of the near view (stage.ts), each strength to be tried out from the address */
+const LIGHT = { ...NEAR_LIGHT, sun: Number(q.get('sun')) || NEAR_LIGHT.sun, side: Number(q.get('sidel')) || NEAR_LIGHT.side, sky: Number(q.get('sky')) || NEAR_LIGHT.sky, bounce: Number(q.get('bounce')) || NEAR_LIGHT.bounce, fill: Number(q.get('fill')) || NEAR_LIGHT.fill, mirror: Number(q.get('mirror')) || NEAR_LIGHT.mirror };
+stage(build, { frameW: Number(q.get('across')) || 24, elevation: Number(q.get('elev')) || 30, tall: 14, light: LIGHT, shadowRadius: Number(q.get('soft')) || NEAR_SHADOW }).catch(showError);
