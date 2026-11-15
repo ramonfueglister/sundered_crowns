@@ -38,6 +38,14 @@ pub fn mix(a: V3, b: V3, t: f32) -> V3 {
     [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 }
 
+/// Degrees to radians.
+pub const D2R: f32 = std::f32::consts::PI / 180.0;
+
+/// JavaScript's Math.round.
+pub fn jround(x: f32) -> f32 {
+    (x + 0.5).floor()
+}
+
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
 }
@@ -223,4 +231,22 @@ pub fn octahedron() -> (Vec<V3>, Vec<[usize; 3]>) {
     let v = vec![[1.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]];
     let f = vec![[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4], [1, 4, 2]];
     (v, f)
+}
+
+/// Ellipse-free polyhedron put down at `c`, radius `r`, rotated by `m`,
+/// scaled per axis by `s`.
+pub fn solid(out: &mut Surface, shape: &(Vec<V3>, Vec<[usize; 3]>), c: V3, s: V3, m: &[V3; 3], col: Rgb) {
+    let (v, f) = shape;
+    let w: Vec<V3> = v.iter().map(|q| add(c, rot(m, [q[0] * s[0], q[1] * s[1], q[2] * s[2]]))).collect();
+    for t in f {
+        out.tri(w[t[0]], w[t[1]], w[t[2]], col);
+    }
+}
+
+/// A small octahedron (jewel, pearl, chain link).
+pub fn gem(out: &mut Surface, c: V3, r: f32, col: Rgb) {
+    let v = [[r, 0.0, 0.0], [-r, 0.0, 0.0], [0.0, r, 0.0], [0.0, -r, 0.0], [0.0, 0.0, r], [0.0, 0.0, -r]].map(|o| add(c, o));
+    for [a, b, d] in [[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]] {
+        out.tri(v[a], v[b], v[d], col);
+    }
 }

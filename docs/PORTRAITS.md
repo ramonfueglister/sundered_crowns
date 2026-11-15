@@ -64,8 +64,9 @@ await stage.draw(assets.builder.build(person));            // the picture is on 
 - Roman clothes, hats and hairstyles (`build.rs`, `look.rs`); the seven Roman origins and their ranges without
   source (`dna.rs`: only Germania and Aegyptus rest on Howells' skull measurements, the rest is marked
   PLACEHOLDER); the German job names of Apoleia's simulation (`person.rs`).
-- Switches read from environment variables in `build.rs` (test hooks of Apoleia).
-- `build.rs` is one file of 2,853 lines: to be split by part (skin, eyes, hair, beard, clothes, headwear).
+- `build()` in `portrait/src/build.rs` is still one function of 1,640 lines whose parts share some hundred local
+  values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
+  up together with the new clothes and headwear, which replace about half of it.
 - Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
 - Loading: the 4.1 MB of data files are loaded together on the first portrait; not measured on a slow line.
 - Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly

@@ -14,6 +14,7 @@ interface Golden { pid: number; top: number; chin: number; cx: number; cz: numbe
 const here = (name: string) => resolve(__dirname, 'portrait', name);
 const people: PortraitPerson[] = JSON.parse(readFileSync(here('people.json'), 'utf8'));
 const golden: Golden[] = JSON.parse(readFileSync(here('golden.json'), 'utf8'));
+const goldenSimple: Golden[] = JSON.parse(readFileSync(here('golden_simple.json'), 'utf8'));
 const sum = (v: Float32Array) => v.reduce((a, x) => a + x, 0);
 
 /** Sums of thousands of single-precision numbers: equal up to the rounding of the functions sin, cos and pow,
@@ -60,10 +61,10 @@ describe('portraits', () => {
     expect(sum(other.surfaces[0].pos)).not.toBe(sum(a.surfaces[0].pos));
   });
 
-  it('without the real look the portrait is the simple, faceted one', () => {
-    const p = loadPortraitBuilder(PORTRAIT_TEST_WASM, false).build(people[0]);
-    expect(p.surfaces.every(s => s.tex === '' && s.uv.length === 0)).toBe(true);
-    expect(p.tris).toBeGreaterThan(1000);
+  it('without the real look the portrait is the simple, faceted one of Apoleia', () => {
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM, false);
+    people.forEach((p, i) => expectSame(b.build(p), goldenSimple[i]));
+    expect(b.build(people[0]).surfaces.every(s => s.tex === '' && s.uv.length === 0)).toBe(true);
   });
 
   it('the list of files in the repository is the list of files there', () => {

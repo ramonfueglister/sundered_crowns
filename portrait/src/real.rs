@@ -65,16 +65,6 @@ pub fn folder() -> Option<String> {
     REAL.read().ok().and_then(|r| r.clone())
 }
 
-/// A folder setting: its environment variable, else the real look's folder.
-pub fn dir(var: &str) -> Option<String> {
-    std::env::var(var).ok().or_else(folder)
-}
-
-/// A switch: its environment variable, else whether the real look is on.
-pub fn on(var: &str) -> bool {
-    std::env::var_os(var).is_some() || folder().is_some()
-}
-
 /// A data file as text, packed (path.zst) or not.
 pub fn read_text(path: &str) -> Option<String> {
     bytes(path).and_then(|b| String::from_utf8(b.to_vec()).ok()).or_else(|| {
