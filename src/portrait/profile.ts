@@ -35,6 +35,12 @@ export interface StageProfile {
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
   /** Hair cards: roughness, "specular", anisotropy of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
+  /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
+   *  cards with their plain glint. Else a white band and a band in the hair's own colour: strength and sharpness
+   *  (exponent) of each, how far each is shifted along the strand, how much the strands' image shifts the bands
+   *  from strand to strand (their ragged look), and how much darker the image's dark strands are drawn
+   *  (exponent on the image, 1 = as painted). */
+  sheen: null | { white: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number };
 }
 
 /** Apoleia's stage (app/scripts/ui/portrait_cache.gd) and materials (sim/godot/src/portrait.rs). */
@@ -51,6 +57,7 @@ export const APOLEIA: StageProfile = {
   anisotropy: 1,
   skin: null, eye: null, brow: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
+  sheen: null,
 };
 
 /** England 1356: the key light more from the side and less light from all round than Apoleia's, so that a face has
@@ -71,6 +78,7 @@ export const ENGLAND_1356: StageProfile = {
   eye: { lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
+  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35 },
 };
 
 const PROFILES = [ENGLAND_1356];

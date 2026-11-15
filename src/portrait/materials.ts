@@ -111,6 +111,46 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;
 }
 
+/** Hair cards of a profile: two bands of sheen along the strands, for every directional light, shifted towards
+ *  root and tip, and ragged by the strands' image. The strand's direction is taken as "down along the head" (the
+ *  card's normal points away from the head's centre, portrait/src/real_look.rs): the direction read from the
+ *  card's own triangles is constant on each triangle and showed as a band of rectangles. */
+function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['sheen']>): void {
+  m.onBeforeCompile = shader => {
+    let code = swap(shader.fragmentShader, '#include <map_fragment>', `#include <map_fragment>
+float hairStrand = 1.0;
+#ifdef USE_MAP
+  hairStrand = dot( sampledDiffuseColor.rgb, vec3( 0.3333 ) );
+  diffuseColor.rgb *= pow( max( hairStrand, 0.001 ) / 0.6, ${f(k.strands - 1)} );
+#endif`);
+    code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
+#if defined( USE_MAP ) && NUM_DIR_LIGHTS > 0
+{
+  vec3 hairDown = - normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
+  vec3 hairT = hairDown - normal * dot( hairDown, normal );
+  if ( dot( hairT, hairT ) > 1e-4 ) {
+    hairT = normalize( hairT );
+    vec3 hairV = normalize( vViewPosition );
+    float hairJ = ( hairStrand - 0.5 ) * ${f(k.ragged)};
+    vec3 hairT1 = normalize( hairT + normal * ( ${f(k.whiteShift)} + hairJ ) );
+    vec3 hairT2 = normalize( hairT + normal * ( ${f(k.ownShift)} + hairJ ) );
+    for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+      vec3 hairL = directionalLights[ i ].direction;
+      vec3 hairH = normalize( hairL + hairV );
+      float hairLit = saturate( dot( normal, hairL ) * 0.7 + 0.3 );
+      float hairA = dot( hairT1, hairH ), hairB = dot( hairT2, hairH );
+      float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
+      float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
+      reflectedLight.directSpecular += directionalLights[ i ].color * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * diffuseColor.rgb );
+    }
+  }
+}
+#endif`);
+    shader.fragmentShader = code;
+  };
+  m.customProgramCacheKey = () => `portrait-hair-${p.key}`;
+}
+
 /** The materials of a surface, drawn in this order (hair cards have two, everything else one). */
 export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA): MeshPhysicalMaterial[] {
   const kind = surfaceKind(s);
@@ -134,6 +174,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
       break;
     case 'cards': {
       m.side = DoubleSide; m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;
+      if (p.sheen) hairLook(m, p, p.sheen);
       const depth = m.clone();
       depth.alphaTest = CARD_OPAQUE; depth.colorWrite = false;
       blended(m); m.depthFunc = LessEqualDepth;
