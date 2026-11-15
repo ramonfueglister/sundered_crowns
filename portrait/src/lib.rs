@@ -131,12 +131,33 @@ mod tests {
     }
 
     #[test]
+    fn a_childs_face_lasts_as_long_as_its_head_is_a_childs() {
+        use crate::dress::child_share;
+        // all child up to MakeHuman's child of eleven, none from the age the dress gives the head its adult form
+        for yrs in [0.0, 2.0, 8.0, 11.0] {
+            assert_eq!(child_share(15.0, yrs), 1.0);
+        }
+        assert_eq!(child_share(15.0, 13.0), 0.5);
+        assert_eq!(child_share(15.0, 15.0), 0.0);
+        assert_eq!(child_share(17.0, 14.0), 0.5);
+        assert_eq!(child_share(17.0, 40.0), 0.0);
+        // a dress may draw single genes of the face less strongly; one it does not name stays as it is
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        let at = |name: &str| GENES.iter().position(|g| *g == name).unwrap();
+        assert!(set.gene_gain(at("lips")) < 1.0);
+        assert_eq!(set.gene_gain(at("mouthW")), 1.0);
+    }
+
+    #[test]
     fn the_face_at_rest_names_targets_the_head_has() {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };
         for (_, set) in crate::dress::SETS.iter() {
             for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)) {
                 assert!(h.targets.contains_key(name), "{}: {name}", set.key);
+            }
+            for (gene, gain) in set.genes {
+                assert!(GENES.contains(gene) && *gain >= 0.0, "{}: {gene}", set.key);
             }
             for (name, women, men) in set.rest {
                 assert!(h.targets.contains_key(*name), "{}: {name}", set.key);

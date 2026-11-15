@@ -161,7 +161,7 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
         let r = Rng::new(p.seed ^ 0x2545_f491).next();
         let name = if p.age < 7.0 {
             // small children: short loose hair
-            "crop01"
+            p.dress.set().map_or("crop01", |d| d.hair_small)
         } else if long_hair {
             match p.hair_style() {
                 Hair::Braid => p.dress.set().map_or("braid01", |d| d.hair_girl),

@@ -103,7 +103,7 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
                 Some(d) if p.female && (k == 2 || k == 4) => xl + d.jaw_women,
                 _ => xl,
             };
-            let x = xl * (0.35 + 0.65 * gr) * gain;
+            let x = xl * (0.35 + 0.65 * gr) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k));
             for &(n, lo, hi, w) in loads.iter() {
                 let v = if !n.is_empty() && lo.is_empty() { (x * w).max(0.0) } else { x * w };
                 match sums.iter_mut().find(|e| e.0 == n && e.1 == lo && e.2 == hi) {
@@ -219,8 +219,9 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         for &(n, women, men) in d.rest {
             add(n, crate::dress::by_sex(women, men, p.female, p.grown()) * child);
         }
+        let young = crate::dress::child_share(d.adult[if p.female { 0 } else { 1 }], p.age);
         for &(n, girls, boys) in d.child {
-            add(n, (if p.female { girls } else { boys }) * (1.0 - p.grown()));
+            add(n, (if p.female { girls } else { boys }) * young);
         }
     }
     let strength = p.dress.set().map_or(1.7, |d| d.mood);

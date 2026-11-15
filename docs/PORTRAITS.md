@@ -22,7 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 28 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -241,7 +241,7 @@ every man; children's eyes large and dark; men all wear one cut of hair; flat li
 
 **Judged on England's own people, measured per band of lightness (round 54).** Ramon on round 53: "zombie mode,
 not at CK3's level". Two things had hidden what he saw. The rounds were judged on Apoleia's twelve test people in
-England's dress, who are not the people the game has: `tests/portrait/sample_england.json` now holds 28 founders
+England's dress, who are not the people the game has: `tests/portrait/sample_england.json` now holds 28 founders (36 since round 56)
 of the pool England draws from (women and men of 8 to 68, four of each; written by
 `cargo run --release --example sample -- England Gallia 28` in `portrait/`), and the test page draws them with
 `?sample=england`. And the skin had been set by one median of the lit face. Per band of lightness (CIELAB, men of
@@ -293,6 +293,21 @@ hard edge, a grey-haired one a pale dust over it.
 Still open: the shadow of the beard on the skin ends at the edges of triangles (a hard line on the cheek); the
 bald head's ring of hair shows the root ends of its broad cards as blocks and hangs as a flap beside the face;
 and what round 54 lists.
+
+**Children (round 56).** The sample of round 54 began at eight. Children of two and five, looked at by chance,
+were old men with shaven heads; a girl of eleven of the test people had the mouth of a duck.
+
+| what was wrong | cause | now |
+|---|---|---|
+| small children with half the head a bare forehead | under seven everyone wore Apoleia's `crop01`, cropped short, which begins far back on a child's large skull | `hair_small` in the dress table: the hair of 1356 with its fringe (`bob01`), girls and boys alike (PLACEHOLDER, nothing read) |
+| a child of two with an old man's face | MakeHuman's brows are an adult's, dense and dark | `brows_child` 0.6: a child's brows mixed towards the colour of its skin, fading as it grows up |
+| a pout, strongest at eleven | the gene `lips` (thin to full) correlates -0.91 with how far the lips stand apart before the mouth is closed: Apoleia draws its genes large (`FACE_GAIN` 1.6, made for the faceted look at the size of a coin), full lips lie in each other by up to 0.012 units and stand forward, and MakeHuman's child has a narrow mouth with full lips already. The child's own targets faded with `Look::grown`, which is at four fifths when a girl is eleven and her head still all child | `genes` in the dress table: how strongly single genes of the face show in the real look (`lips` 0.4; every other as it was). `child` holds a wider mouth with thinner lips and follows the head: in full while the head is MakeHuman's child (to eleven), none where it has its adult form (`dress.rs` `child_share`) |
+
+The sample has 36 people now: after the 28 come eight children of two and five (`examples/sample.rs`).
+How the cause of the pout was found: three changes to the child's targets left the picture as it was, which showed
+that the weight lay elsewhere; the solver that closes the mouth then printed gap and weight for 864 faces.
+Still open: small children look past the viewer and some frown; girls and boys under seven look the same; what
+rounds 54 and 55 list.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

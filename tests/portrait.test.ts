@@ -111,7 +111,7 @@ describe('portraits', () => {
     expect(skinTone(new Float32Array(0))).toBe(0);
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    expect(sample.length).toBe(28);
+    expect(sample.length).toBe(36);
     const tones = sample.map(p => skinTone(b.build(p).surfaces.find(s => surfaceKind(s) === 'skin')!.col));
     // 0.44 to 0.63: from 0.45 on a skin takes all of the tint (materials.ts skinLook)
     for (const t of tones) expect(t).toBeGreaterThan(0.4);

@@ -76,3 +76,7 @@ founders of a pool for the test page. Roman bytes unchanged.
 Round 55 (stage only): the skin's tint of the 1356 profile goes by the person's skin as a whole (`materials.ts`
 `skinTone`), stubble's painted layer is not drawn lighter (`profile.ts` `cap.stubble`); `beard_crop` written anew
 with its neckline below the tip of the chin. Apoleia's profile and Roman bytes unchanged.
+Round 56: `hair_small` (the hair of children under seven, `real_look.rs`; Apoleia's `crop01` stays for Roman
+portraits), `brows_child` (`build.rs`), `genes` (how strongly single genes of the face show in the real look's face
+space, `morph.rs`; `lips` 0.4 for 1356), `child` follows the head's child share (`dress.rs` `child_share`).
+`examples/sample.rs` adds children of two and five. Roman bytes unchanged.

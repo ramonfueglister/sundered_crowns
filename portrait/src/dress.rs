@@ -67,6 +67,9 @@ pub struct DressSet {
     pub hair_hooded: &'static str,
     pub hair_veiled: &'static str,
     pub hair_girl: &'static str,
+    /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
+    /// skull: half the head a bare forehead, which reads as a shaven head.
+    pub hair_small: &'static str,
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
     pub beards: [Beard; 6],
@@ -78,6 +81,10 @@ pub struct DressSet {
     /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
     /// frown. How heavy a brow reads is `brows` in the stage's profile (src/portrait/profile.ts).
     pub brows: [&'static str; 2],
+    /// How far a small child's brows are mixed towards the colour of its skin, fading as it grows up
+    /// (`Look::grown`). MakeHuman's brows are an adult's, dense and dark: on a child of two they make an old
+    /// man's face.
+    pub brows_child: f32,
     /// How much of the brow's colour is painted on the skin under the brow's hairs, women and men (1 = Apoleia's:
     /// a band of two fifths to half the hair's colour, drawn for the faceted look that has no hairs). Under hairs
     /// it reads as a broad dark bar low over the eye.
@@ -151,9 +158,17 @@ pub struct DressSet {
     /// Women, men.
     pub cheeks: [f32; 2],
     pub sockets: [f32; 2],
-    /// Targets of a child's face, a weight for girls and one for boys: in full on a small child, fading as it
-    /// grows up (`Look::grown`). The counterpart of `rest`, which a child takes a third of.
+    /// Targets of a child's face, a weight for girls and one for boys: in full for as long as the head is
+    /// MakeHuman's child (up to eleven), fading to none where it has its adult form (`child_share`). The
+    /// counterpart of `rest`, which a child takes a third of. MakeHuman's child has wide open eyes and a narrow
+    /// mouth with full lips, on which the genes for full lips and a narrow mouth give a pout: lids lower, the
+    /// mouth wider, the lips thinner. (Until round 55 they faded with `Look::grown`, which is at four fifths
+    /// when a girl is eleven and her head still all child: the pout was strongest then.)
     pub child: &'static [(&'static str, f32, f32)],
+    /// How strongly single genes of the face show (names of `look::GENES`; 1 = as Apoleia, which is every gene not
+    /// named). Apoleia draws its genes large, so that a face is told apart at the size of a coin
+    /// (`settings::FACE_GAIN`); in the real look the fullest lips are a pout.
+    pub genes: &'static [(&'static str, f32)],
     pub sources: &'static [Source],
 }
 
@@ -180,9 +195,11 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_hooded: "bob02",
     hair_veiled: "bun01",
     hair_girl: "plait01",
+    hair_small: "bob01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
     brows: ["eyebrow001", "eyebrow001"],
+    brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     lips: [0.55, 0.45],
     hair_red: [0.45, 0.74],
@@ -215,19 +232,24 @@ pub static ENGLAND_1356: DressSet = DressSet {
     cheeks: [0.0, 0.0],
     sockets: [0.0, 0.0],
     child: &[
-        ("eyes/l-eye-height2-decr", 1.0, 0.6),
-        ("eyes/r-eye-height2-decr", 1.0, 0.6),
+        ("eyes/l-eye-height2-decr", 0.7, 0.4),
+        ("eyes/r-eye-height2-decr", 0.7, 0.4),
+        ("mouth/mouth-scale-horiz-incr", 0.45, 0.45),
+        ("mouth/mouth-upperlip-volume-decr", 0.5, 0.5),
+        ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
     ],
+    genes: &[("lips", 0.4)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet)." },
+        Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows, and how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
@@ -257,6 +279,11 @@ pub fn head_years(adult: f32, yrs: f32) -> f32 {
     }
 }
 
+/// How much of MakeHuman's child a head still is: all of it up to eleven, none from `adult` on (`head_years`).
+pub fn child_share(adult: f32, yrs: f32) -> f32 {
+    ((25.0 - head_years(adult, yrs)) / 14.0).clamp(0.0, 1.0)
+}
+
 /// A value given for women and for men, for a person: the women's for a woman, and for a man what lies between the
 /// two by how far he is grown up (`Look::grown`).
 pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
@@ -269,6 +296,11 @@ pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
 
 impl DressSet {
     /// What a man wears on the head.
+    /// How strongly the gene `i` of the face shows in this dress (`genes`).
+    pub fn gene_gain(&self, i: usize) -> f32 {
+        self.genes.iter().find(|g| g.0 == crate::look::GENES[i]).map_or(1.0, |g| g.1)
+    }
+
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {
         if female || age < self.hood_from {
             Hood::None

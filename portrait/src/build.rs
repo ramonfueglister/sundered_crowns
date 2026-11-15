@@ -997,7 +997,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if let Some(dir) = &real {
             // (lashes a very dark shade of the brows' colour, not black; PLACEHOLDER)
             let brow = garb.map_or("eyebrow001", |d| d.brows[if fem { 0 } else { 1 }]);
-            for (name, col) in [(brow, cmul(bc, 0.75)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
+            let young = garb.map_or(0.0, |d| d.brows_child * (1.0 - p.grown()));
+            for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
                 if let Some(sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
                     out.push(sf);
                 }
