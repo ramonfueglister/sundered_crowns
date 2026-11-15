@@ -316,6 +316,11 @@ degrees lower at the temples now and runs as one arc from the parting to the ear
 cards' faded roots the painted layer shows, which is darker than the cards; a parting shows scalp, which is
 lighter).
 
+**The bald head's ring of hair (round 58).** `bob04` stood off the skull as far as the full hair does (a dark
+flap beside the face) and showed the root ends of its broad strands as blocks. Written anew lying close to the
+skull, from more and narrower strands (`BOB_LIFT=0.025,0.03 BOB_K=640 BOB_W=0.2,0.3`). Still open: from the side
+its upper edge is a row of steps (the root ends of the strands), and it is the full hair's length.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
