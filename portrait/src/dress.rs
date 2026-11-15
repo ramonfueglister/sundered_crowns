@@ -68,6 +68,9 @@ pub struct DressSet {
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down).
     pub lids: [f32; 4],
+    /// The mouth at rest: MakeHuman's lips stand a little apart and show the teeth, more so with thin lips.
+    /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up.
+    pub mouth_shut: [f32; 2],
     /// Women's jaw and jaw angle narrower and softer on average: shift of the genes headF and jaw.
     pub jaw_women: f32,
     pub sources: &'static [Source],
@@ -96,6 +99,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     lips: [0.55, 0.38],
     flush: 1.35,
     lids: [0.4, 0.8, 0.4, 0.6],
+    mouth_shut: [0.75, 0.75],
     jaw_women: -0.35,
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
@@ -104,7 +108,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
-        Source { what: "lids, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
