@@ -7,11 +7,14 @@ import { loadClimate } from './climate';
 import { type RealmName, type Realms, paintLand, paintRealms, realmNames } from './paint';
 import { Water, indexOf, loadWindow } from './region';
 
-export type PaperJob = { id: number; region: string; base: string } & ({ kind: 'land' | 'realms'; level: number; tx: number; ty: number } | { kind: 'names' });
+/** A tile's land (with its realms, if `realms` says so), a tile's realms alone, or the realms' names. */
+export type PaperJob = { id: number; region: string; base: string } & ({ kind: 'land'; level: number; tx: number; ty: number; realms: boolean } | { kind: 'realms'; level: number; tx: number; ty: number } | { kind: 'names' });
 export interface PaperDone {
   id: number;
-  /** the tile's picture, RGBA row by row from the north; none where the tile is open sea or holds no realm */
-  pixels?: Uint8ClampedArray;
+  /** the tile's land, RGBA row by row from the north; none where the tile is open sea */
+  land?: Uint8ClampedArray;
+  /** the tile's realms, as the land; none where the tile holds no realm */
+  realms?: Uint8ClampedArray;
   /** where the realms' names are written, with the names */
   names?: (RealmName & { name: string })[];
   error?: string;
@@ -29,16 +32,15 @@ const realmsOf = (name: string, base: string) => realms ??= (async () => {
 })();
 
 self.onmessage = async (e: MessageEvent<PaperJob>) => {
-  const job = e.data, done = (d: Omit<PaperDone, 'id'>) => (self as unknown as Worker).postMessage({ id: job.id, ...d } satisfies PaperDone, d.pixels ? [d.pixels.buffer] : []);
+  const job = e.data, done = (d: Omit<PaperDone, 'id'>) => (self as unknown as Worker).postMessage({ id: job.id, ...d } satisfies PaperDone, [d.land, d.realms].flatMap((p) => (p ? [p.buffer] : [])));
   try {
     if (job.kind === 'names') { const r = await realmsOf(job.region, job.base); return done({ names: realmNames(r).map((n) => ({ ...n, name: r.names[n.realm] })) }); }
     const index = await indexOf(job.region, job.base), T = index.tile;
-    if (job.kind === 'realms') {
-      const pixels = paintRealms(await realmsOf(job.region, job.base), job.level, job.tx, job.ty, T, index.cells);
-      return done(pixels.some((v) => v > 0) ? { pixels } : {});
-    }
+    const realms = async () => { const p = paintRealms(await realmsOf(job.region, job.base), job.level, job.tx, job.ty, T, index.cells); return p.some((v) => v > 0) ? p : undefined; };
+    if (job.kind === 'realms') return done({ realms: await realms() });
     const region = await loadWindow(job.level ? `${job.region}/z${job.level}` : job.region, job.tx * T, job.ty * T, T, T, job.base);
-    done(region.water.every((k) => k === Water.Sea) ? {} : { pixels: paintLand(region, await loadClimate(job.base, region.mapW, region.mapH), job.level, gazetteer.places) });
+    if (region.water.every((k) => k === Water.Sea)) return done({});
+    done({ land: paintLand(region, await loadClimate(job.base, region.mapW, region.mapH), job.level, gazetteer.places), realms: job.realms ? await realms() : undefined });
   } catch (err) {
     done({ error: String(err) });
   }
