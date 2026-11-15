@@ -673,8 +673,8 @@ capital, the people).
   older rows after each step, which needs no change of the port (item 6 of the proposal). The figures of each
   calendar year are kept as a row of `years` in the state of the world, written before 1 January is computed. Still
   growing: the port's series of GDP and inflation, 16 bytes a day (5.8 kB a game year).
-- `src/sim/systems/economy.ts`: one period for each day of the world. State version 6. A world saved by an older
-  build (the running world, state version 5) is upgraded when it is loaded: England starts again from the starting
+- `src/sim/systems/economy.ts`: one period for each day of the world. State version 7. A world saved by an older
+  build (the running world, state version 6) is upgraded when it is loaded: England starts again from the starting
   position of 1356 and computes every day the world has seen (`src/sim/upgrade.ts`); the result is the economy of a
   world that had the daily clock from its first day, and the yearly figures shown before are gone. If a day cannot
   be computed, the economy stands still with the state of the day before and the date and reason.
@@ -685,9 +685,9 @@ capital, the people).
   1.8 MB of state go into the engine and come back every day); the world's day lasts 240 s. The state of the economy
   is 1.74 MB at the start and 1.90 MB after 2,800 days.
 
-**Rehearsal of the upgrade.** A world of the build before (main, state version 5) was run for 2,800 days with a
-player, saved, and resumed by this build: the upgrade took 19.5 s (the catch-up of 2,800 days), and the resumed world
-has the same hash as a world of this build run for 2,800 days from its first day.
+**Rehearsal of the upgrade.** A world of the build before (main with the genes of the persons, state version 6) was
+run for 2,800 days with a player, saved, and resumed by this build: the upgrade took 19.0 s (the catch-up of 2,800
+days), and the resumed world has the same hash as a world of this build run for 2,800 days from its first day.
 
 **Trial runs of the proposal** (outside the game; 5 worlds, seeds 1356 to 1360, 30 years each from the calibration
 of 1356; growth, standard deviation and mean are means of the worlds, the worst value is that of the worst world,
@@ -776,7 +776,7 @@ again and are not those of the trial.
 one period the engine computes what the port computes; a firm sets supply and price only on its plan day, as the
 mean demand times the expected growth; the accounts keep the rows of one window and the figures are their sums; one
 call for many periods equals many calls; a state loads bit for bit and continues as if it had never stopped; the
-clock stops when it does not hold every firm; the accounting identities hold. `tests/economy.test.ts` (36 tests): the
+clock stops when it does not hold every firm; the accounting identities hold. `tests/economy.test.ts` (36 of the 774 tests of the game): the
 daily calibration follows from the yearly one by the rules above; the WebAssembly engine gives bit for bit the
 figures of the native build (65 days, two seeds, and 10 periods with the clock of the port); the identities hold
 every day; the same seed gives the same world; one period a day in the world; many days at once equal the days one

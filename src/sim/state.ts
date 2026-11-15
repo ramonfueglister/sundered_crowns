@@ -4,9 +4,9 @@ import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
 /** 2: places have a harvest. 3: places have arable. 4: England has a national economy. 5: the 30 largest cities have
- *  persons and families. 6: England's economy computes one period a day. Older snapshots are brought up to date by
- *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 6;
+ *  persons and families. 6: the persons have genes. 7: England's economy computes one period a day. Older snapshots
+ *  are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 7;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -45,6 +45,9 @@ export const PERSON_SCHEMA = {
   iq: 'u8',
   /** the Big Five as T-scores (mean 50, standard deviation 10): openness, conscientiousness, extraversion, agreeableness, neuroticism */
   o: 'u8', c: 'u8', e: 'u8', a: 'u8', n: 'u8',
+  /** the genes the portraits draw the face from: 34 genes of two alleles, 68 bytes a person, the first allele of
+   *  every gene then the second (src/sim/people/genes.ts, after Apoleia's portrait/src/dna.rs) */
+  genes: ['u8', 68],
 } as const;
 export type PersonSchema = typeof PERSON_SCHEMA;
 /** A family: a couple and its unmarried children in one place, or a person on their own. The id is never reused. */

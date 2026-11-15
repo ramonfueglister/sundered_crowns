@@ -7,10 +7,10 @@
 /** a tenth of a block */
 export const MICRO = 0.1;
 /**
- * A figure is 12 micro voxels = 1.2 blocks tall. A storey is 2.1 blocks (FLOOR in buildings/houses/style.ts, measured
- * on the reference image); men of 14th-century Europe stood about 1.70 m (Koepke & Baten 2005, Eur. Rev. Econ. Hist. 9) and a
- * storey of a town house about 3 m (assumption), so a person is 0.57 of a storey: 1.2 blocks. The head is drawn larger
- * than true so that a figure reads from afar (a drawing value of the diorama, not a measurement).
+ * A figure is 12 micro voxels = 1.2 blocks tall: 2.4 m at METRES_PER_BLOCK 2.0 (buildings/houses/style.ts, scale B
+ * chosen by Ramon on 2026-11-15), deliberately larger than the 1.70 m of a man of 14th-century Europe (Koepke & Baten
+ * 2005, Eur. Rev. Econ. Hist. 9) so that a figure reads next to a storey of 1.5 blocks, as in Die Siedler. The head is
+ * drawn larger than true for the same reason (a drawing value of the diorama, not a measurement).
  */
 export const HEIGHT = 1.2;
 

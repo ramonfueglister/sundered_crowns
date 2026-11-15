@@ -370,9 +370,9 @@ describe("England's economy in the world", () => {
       expect(hashState(upgradeState(loaded, w))).toBe(hashState(s));
     });
     it('starts again from 1356 and computes the days the world has seen, when the world had the yearly economy', () => {
-      // the state of the yearly economy (state version 5): a year, a model, 15 figures
+      // the state of the yearly economy (state version 6): a year, a model, 15 figures
       const old = decodeState(encodeState(run.s)) as any;
-      old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = 5;
+      old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = 6;
       const loaded = upgradeState(decodeState(encodeState(old)), run.w);
       expect(loaded.v).toBe(STATE_VERSION);
       expect(loaded.economy.england!.day).toBe(400);

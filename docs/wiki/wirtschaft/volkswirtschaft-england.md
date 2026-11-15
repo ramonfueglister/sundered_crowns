@@ -226,7 +226,7 @@ Der Motor ist ein Modell für eine heutige Volkswirtschaft. Unverändert eingese
 - Die Tageszeilen der Gesamtrechnung bleiben nur für die letzten 365 Tage im Zustand. Die Zahlen jedes abgeschlossenen Kalenderjahrs bleiben als eine Zeile erhalten. Weiter wachsen nur die Reihen von BIP und Teuerung, um 16 Byte pro Tag.
 - Die WebAssembly-Fassung rechnet Bit für Bit dasselbe wie die native Fassung.
 - Ein Tag kostet im Spiel rund 10 Millisekunden Rechenzeit; ein Spieltag dauert 240 Sekunden.
-- Eine Welt, die vor dem Tagestakt gespeichert wurde, rechnet England beim Laden ab 1356 neu bis zu ihrem heutigen Tag. Geprobt mit einer Welt von 2'800 Tagen: 19,5 Sekunden, und die Welt hat danach dieselbe Prüfsumme wie eine, die den Tagestakt vom ersten Tag an hatte.
+- Eine Welt, die vor dem Tagestakt gespeichert wurde, rechnet England beim Laden ab 1356 neu bis zu ihrem heutigen Tag. Geprobt mit einer Welt von 2'800 Tagen: 19 Sekunden, und die Welt hat danach dieselbe Prüfsumme wie eine, die den Tagestakt vom ersten Tag an hatte.
 
 ## Quellen
 

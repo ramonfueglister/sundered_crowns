@@ -6,7 +6,8 @@ import type { World } from './world';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy, computeTo } from './systems/economy';
-import { fitPlacesToCities, foundPeople } from './systems/people';
+import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
+import { NG } from './people/genes';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
@@ -21,7 +22,7 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 3;
   }
-  if (s.v === 3) { // 3 → 4: England's economy (one period a year; replaced by the step to 6)
+  if (s.v === 3) { // 3 → 4: England's economy (one period a year; replaced by the step to 7)
     s.economy = { england: null };
     s.v = 4;
   }
@@ -32,12 +33,17 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     foundPeople(s);
     s.v = 5;
   }
-  if (s.v === 5) { // 5 → 6: England's economy computes one period a day. It starts again from the starting position
+  if (s.v === 5) { // 5 → 6: the genes of the persons, as the founding of a new world gives them (nobody has changed)
+    (s.person.cols as { genes: Uint8Array }).genes = new Uint8Array(s.person.alive.length * 2 * NG);
+    giveGenes(s);
+    s.v = 6;
+  }
+  if (s.v === 6) { // 6 → 7: England's economy computes one period a day. It starts again from the starting position
     // and computes the days the world has already seen (it depends on nothing else in the state, so the result is
     // the economy of a world that had the daily clock from its first day). The yearly figures of before are gone.
     foundEconomy(s, w);
     computeTo(s, w, s.day);
-    s.v = 6;
+    s.v = 7;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

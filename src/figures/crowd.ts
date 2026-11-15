@@ -9,17 +9,47 @@ import { hash2 } from '../lookprobe/batch';
 import { type Ground, Mat, N, idx } from '../lookprobe/layout';
 import { ESTATES, HAIR, HOSE, LOAD_COLOURS, Mode, SKIN, pickEstate } from './estates';
 import { Load } from './kit';
+import { type TownPerson, townPeople } from './people';
 
-/** What settle() leaves on the ground (worldprobe/settle.ts): 1 where built (2 on town paving), the town paving, the crops. */
-export interface SettledGround { used: Uint8Array; town: Uint8Array; field: Uint8Array }
+/** A walled town as settle() laid it out: its gazetteer index, its middle and the half side of its square, in world blocks. */
+export interface Town { site: number; cx: number; cz: number; half: number }
+/** What settle() leaves on the ground (worldprobe/settle.ts): 1 where built (2 on town paving), the town paving, the
+ *  crops, and the walled towns (absent from older builds). */
+export interface SettledGround { used: Uint8Array; town: Uint8Array; field: Uint8Array; towns?: readonly Town[] }
+
+/**
+ * Where the persons of a town walk: each person aims at a column of the town's square drawn from a hash of their id,
+ * in world blocks, so that every piece of the world agrees without seeing the others; a person shows where that column
+ * is street, and of two persons aiming at one column the first. A town shows a share of its persons, as large as the
+ * share of street in its square.
+ */
+const aims = new Map<string, Map<number, TownPerson>>();
+const key = (wx: number, wz: number) => wx * 1048576 + wz;
+function aimsOf(t: Town): Map<number, TownPerson> | undefined {
+  const people = townPeople(t.site);
+  if (!people?.length) return undefined;
+  const k = `${t.site}:${t.cx}:${t.cz}:${t.half}:${people.length}`;
+  let m = aims.get(k);
+  if (!m) {
+    m = new Map();
+    for (const p of people) {
+      const at = key(t.cx - t.half + Math.floor(hash2(p.id, 1, 920) * 2 * t.half), t.cz - t.half + Math.floor(hash2(p.id, 2, 920) * 2 * t.half));
+      if (!m.has(at)) m.set(at, p);
+    }
+    aims.set(k, m);
+  }
+  return m;
+}
+/** Estates a woman or a man of the town is shown in, until the person system gives each household its estate. */
+const FEMALE = new Set(['Bäuerin', 'Bürgerin']);
 
 /**
  * The figures of a piece as flat lists, four numbers per figure in each, ready for instanced attributes:
  * a: start of the way (x, y, z) and the phase; b: end of the way (x, y, z) and the pace in blocks a second (0 on the spot);
  * c: mode, load, cut, headwear; d: colours of skin, garment, hose, headwear; e: colour of the load and of the hair, the
- * facing of a figure on the spot, unused. Colours are 0xRRGGBB as numbers.
+ * facing of a figure on the spot, and the person it is (id + 1; 0 for an anonymous figure). Colours are 0xRRGGBB as numbers.
  */
-export interface Figures { count: number; a: Float32Array; b: Float32Array; c: Float32Array; d: Float32Array; e: Float32Array }
+export interface Figures { count: number; a: Float32Array; b: Float32Array; c: Float32Array; d: Float32Array; e: Float32Array; /** the piece's ground in the world */ ox?: number; oz?: number }
 
 /**
  * Share of the free columns that hold a figure: of the town streets, of the ground round the houses of villages and
@@ -45,20 +75,27 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) { const i = idx(x + dx, z + dz); if (s.used[i] === 1 && !s.field[i] && !s.town[i]) return true; }
     return false;
   };
+  const towns = (s.towns ?? []).map((t) => ({ t, aims: aimsOf(t) })).filter((t) => t.aims);
   for (let z = 2; z < N - 2; z++) for (let x = 2; x < N - 2; x++) {
     if (!own(x, z)) continue;
     const wx = x + ox, wz = z + oz, i = idx(x, z), lot = hash2(wx, wz, 401);
+    // in a town with persons the street holds them, not chance
+    const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
+    const person = town?.aims!.get(key(wx, wz));
     // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
     const street = free(x, z, true), field = !street && free(x, z, false) ? DIRS.findIndex(([dx, dz]) => s.field[idx(x + dx, z + dz)] > 0) : -1;
     let kind: 'street' | 'house' | 'field' | null = null;
-    if (street && lot < IN_STREET) kind = 'street';
+    if (street && (town ? person : lot < IN_STREET)) kind = 'street';
     else if (field >= 0 && lot < IN_FIELD) kind = 'field';
     else if (!street && lot < ABOUT_HOUSE && free(x, z, false) && nearHouse(x, z)) kind = 'house';
     if (!kind) continue;
     const h = (k: number) => hash2(wx, wz, 410 + k);
     // who: farmers in the fields (vines are tended standing, with a basket), the rest by the share of town or village
     const crop = field >= 0 ? s.field[idx(x + DIRS[field][0], z + DIRS[field][1])] : 0;
-    const e = kind === 'field' ? (crop === 2 ? 1 : 3) : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
+    const shown = kind === 'street' ? person : undefined;
+    const e = kind === 'field' ? (crop === 2 ? 1 : 3)
+      : shown ? pickEstate(h(0), (q) => (FEMALE.has(q.name) === shown.female ? q.townShare : 0))
+        : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
     const estate = ESTATES[e];
     let mode = kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : estate.mode;
     // the way: straight on over free ground of even height, as far as it goes
@@ -78,10 +115,10 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     out[1].push(ex, mode === Mode.Walk ? ey : y, ez, mode === Mode.Walk ? PACE * (0.8 + 0.4 * h(5)) : 0);
     out[2].push(mode, estate.load, estate.cut, estate.head);
     out[3].push(pick(SKIN, 6), pick(estate.tunic, 7), pick(HOSE, 8), pick(estate.headwear, 9));
-    out[4].push(estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10), pick(HAIR, 11), kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2, 0);
+    out[4].push(estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10), pick(HAIR, 11), kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2, shown ? shown.id + 1 : 0);
   }
   const [a, b, c, d, e] = out.map((l) => new Float32Array(l));
-  return { count: a.length / 4, a, b, c, d, e };
+  return { count: a.length / 4, a, b, c, d, e, ox, oz };
 }
 
 /** No figures: for the coarser steps of the map, where a block is wider than a person is tall. */

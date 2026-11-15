@@ -10,3 +10,4 @@ world-data/
 build/
 __pycache__/
 economy/target/
+portrait/target/

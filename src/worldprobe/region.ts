@@ -19,7 +19,7 @@ export interface Region {
   forest: Uint8Array; crops: Uint8Array;
   rivers: River[];
 }
-interface Index { tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; tiles: string[] }
+export interface Index { tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; tiles: string[] }
 
 const merc = (deg: number) => Math.asinh(Math.tan((deg * Math.PI) / 180));
 /** Map pixel of a place given in degrees (the game map is a Mercator map). */
@@ -37,7 +37,8 @@ const indexes = new Map<string, Promise<Index>>(), tiles = new Map<string, Promi
 /** tiles kept unpacked; the oldest go first */
 const TILES_KEPT = 24;
 const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
-const indexOf = (name: string, base: string) => {
+/** The index of region `name`: its tiles and how it lies on the game map. */
+export const indexOf = (name: string, base: string) => {
   if (!indexes.has(name)) indexes.set(name, get(`${base}map/regions/${name}/index.json`).then((r) => r.json() as Promise<Index>));
   return indexes.get(name)!;
 };
@@ -82,10 +83,11 @@ export async function loadWindow(name: string, gx0: number, gy0: number, w: numb
   return region;
 }
 
-/** The projection of region `name`: the whole-map cell of a place given in degrees, and the place of a cell. */
-export async function projectionOf(name: string, base = '/'): Promise<{ cellOf(lon: number, lat: number): [number, number]; placeOf(u: number, v: number): [number, number] }> {
+/** The projection of region `name`: its cells per map pixel, the whole-map cell of a place given in degrees, and the place of a cell. */
+export async function projectionOf(name: string, base = '/'): Promise<{ cells: number; cellOf(lon: number, lat: number): [number, number]; placeOf(u: number, v: number): [number, number] }> {
   const m = await indexOf(name, base);
   return {
+    cells: m.cells,
     cellOf: (lon, lat) => { const [x, y] = mapPixel(m, lon, lat); return [x * m.cells, y * m.cells]; },
     placeOf: (u, v) => [m.lon0 + (u / m.cells / m.mapW) * (m.lon1 - m.lon0), (Math.atan(Math.sinh(merc(m.latN) - (v / m.cells / m.mapH) * (merc(m.latN) - merc(m.latS)))) * 180) / Math.PI],
   };
