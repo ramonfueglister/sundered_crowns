@@ -1,8 +1,10 @@
 # Volkswirtschaft England
 
-**Status:** Im Spiel als Jahresmodell (seit 15.11.2026 in der laufenden Welt). Der Tagestakt ist am 15.11.2026 freigegeben und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
+**Status:** Im Spiel abgelöst durch die [Wirtschaft der Städte](wirtschaft-der-staedte.md) (entschieden am 15.11.2026). Bis der Weltserver neu aufgespielt ist, läuft England in der laufenden Welt noch als Jahresmodell. Modell, Tagestakt und Eichtabelle dieser Seite gelten weiter, für jede Stadt · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
 
 > England läuft in der Welt als eine ganze Volkswirtschaft: Personen, Betriebe, eine Bank, die Krone und das Ausland, jeder mit eigener Bilanz. Gerechnet wird sie an jedem Spieltag von einem wissenschaftlichen Modell, dessen Regeln unverändert übernommen sind. Jeder Betrieb legt alle 30 Tage an seinem eigenen Plantag Menge und Preis neu fest.
+
+**England rechnet im Spiel nicht mehr als ein Ganzes.** Seit Feature 5 ist jede der grössten Städte eine eigene Volkswirtschaft dieses Modells, geeicht als Englands Tabelle im Verhältnis ihrer Einwohner. Was unter «Im Spiel» steht, beschreibt den Abschnitt «Volkswirtschaft England», den es nach der Umstellung nicht mehr gibt. Die historische Prüfung unten ist für England als Ganzes gemessen und für die Städte nicht wiederholt.
 
 Die Seite beschreibt zwei Features: die Volkswirtschaft selbst (Feature 3) und ihren Tagestakt (Feature 4). Beide sind so gebaut, wie sie vorgeschlagen waren. Wo der Bau vom Probelauf eines Vorschlags abweicht, steht es unter «Historische Prüfung». Alle Zahlen auf dieser Seite stammen aus dem Spielcode, ausser wo «Probelauf» dabeisteht.
 

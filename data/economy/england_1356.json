@@ -1,6 +1,6 @@
 {
  "case": "England 1356",
- "about": "The calibration table of economy features 3 and 4 (docs/ECONOMY_DESIGN.md): what the port of BeforeIT.jl is given for England in the start year of the world. tools/sim/calibrate_economy.ts computes the port's parameters from it and writes public/data/economy_england.json. Amounts are those of the sources (the whole of England); the script scales them.",
+ "about": "The calibration table of economy features 3 to 5 (docs/ECONOMY_DESIGN.md): what the port of BeforeIT.jl is given for England in the start year of the world. tools/sim/calibrate_economy.ts computes the port's parameters from it and writes public/data/economy_cities.json: one economy per city of the game, each at its share of England (section cities; feature 5). Amounts are those of the sources (the whole of England); the script scales them.",
  "kinds": {
   "source": "the number stands in the named source, which was opened on 15 November 2026",
   "derived": "computed from numbers with a source by the stated rule",

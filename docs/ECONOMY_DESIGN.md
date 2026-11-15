@@ -30,9 +30,9 @@ players and the AI of realms without a player act through the same commands.
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
-| 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026 |
-| 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
-| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; built and tested in the engine (economy/src/trade.rs), not in the game: whether the cities replace England's economy there is Ramon's decision |
+| 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
+| 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed |
 
 ## 1. Grain harvest per place
 
@@ -592,6 +592,10 @@ years as the local build.
 
 ## 4. England's economy computes every day
 
+Feature 5 (below) replaced England's economy in the game by the economies of the cities. The daily clock of this
+section is the clock of every city, unchanged. The check against history below was measured for England as one
+economy; it has not been repeated for the cities. `npm run economy:check` now computes the cities.
+
 Direction: on 15 November 2026 Ramon set the priority ("mich interessiert weniger die perfekte geschichte als das
 perfekte wirtschaftssystem sota 2026 agentbasiert nach papers und modellen. und ja tägliches rechnen", 12:22 UTC).
 Feature 4 was proposed with trial runs outside the game and agreed by him the same day ("Ja, so bauen", 13:10 UTC).
@@ -826,7 +830,10 @@ standstill with its date.
 
 ## 5. Cities as economies of their own that trade with each other
 
-Status: built in the engine and tested there. Nothing in the game uses it yet.
+Status: built in the engine and in the game. Ramon decided on 15 November 2026 (17:15 UTC, "Ja, Städte ersetzen
+England") that in the game the largest cities each compute an economy of their own and trade with each other, and
+that England's economy as one whole goes. In the running world once the world server is redeployed. Player wiki:
+docs/wiki/wirtschaft/wirtschaft-der-staedte.md.
 
 ### What it is
 
@@ -860,7 +867,8 @@ Rules 3 and 5 are ours: the port has no linked economies, and no source was look
 Travel takes one day between any two cities and costs nothing.
 
 The port takes one model type per model, so the model type of the daily clock carries the link (economy/src/clock.rs).
-An economy without merchants computes as before, number for number: England in the running world is untouched.
+An economy without merchants computes as before, number for number (tested against the port bit for bit with a
+clock of one day).
 
 One more rule of the port is touched for a reason of arithmetic: the port divides the exports of a day by the mean
 price paid for them, which is 0 / 0 on a day without exports. Its own rule always exports, the merchants may not. On
@@ -881,9 +889,9 @@ such a day the model type sets that price to 1, so real exports are 0.
   refused.
 - A day without exports has real exports of 0 and a real GDP that is a number.
 
-### Trial: the 30 cities for five years
+### Trial of the engine: the 30 cities for five years
 
-Outside the game (economy/examples/cities.rs; calibrations and results in the project files under wirtschaft/staedte).
+Before the cities came into the game, outside it (economy/examples/cities.rs; calibrations and results in the project files under wirtschaft/staedte).
 Every city is England's calibration of 1356 at the city's share of England's people: an assumption, no city has data
 of its own. Seed 1356, plan every 30 days, windows of 365 days. All 30 cities together.
 
@@ -911,12 +919,109 @@ Reading:
 Speed: one day of all 30 cities takes 13 ms in the native build (England alone in the world server: 6 ms); the
 state of all 30 cities is 6.2 MB (England: 1.9 MB).
 
+### In the game
+
+**Which cities.** The cities of `src/sim/content/cities_1356.json` (the 30 largest of the world in 1356 after
+Chandler, the places that have persons). Two of them, Texcoco and Tenayuca, lie in the same place of the map and are
+one economy, so there are 29 economies. Together they have 2,572,165 people, by chance almost the people of England
+in the table (2,583,180).
+
+**Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `tools/sim/economy_calibration.ts`,
+`cityTable`). Two assumptions, both marked as such in the table:
+
+1. Every city has the structure of England in 1356: England's table at the city's share of England's people. No city
+   has data of its own. London (60,862 people) is 2.36 % of England: at the scale of 1 : 100 a real GDP of £1,066 a
+   year, 266 working persons, 67 firms. Cairo, the largest: 1,527 working persons, 381 firms. All cities together:
+   11,228 working persons, 2,791 firms, a real GDP of £45,055.
+2. No duty between cities. England's wool duty is not put on trade between cities (the trial of the engine above
+   shows what it does). The crown of a city then lives from the direct tax alone, and in the starting position a city
+   imports as much as it exports (3.3 % of its output).
+
+`npm run economy:calibrate` writes `public/data/economy_cities.json`; a test fails if the file does not follow from
+the table.
+
+**In the world** (`src/sim/systems/economy.ts`). The state of the world holds the state of all cities and of the
+merchants as one block of bytes (`economy.cities.model`), the figures of every city, and one row of figures per city
+for every calendar year that is complete. On every day of the world all cities compute one day. Every city has its
+own seed, derived from the seed of the world and the place of the city. If the engine cannot compute a day, all
+cities stop with the day before and the panel names date and reason; the world goes on.
+
+**State version 7 and the running world.** A world saved with England's economy (version 6) founds the cities on the
+day it has reached: they start from the starting position of 1356 on that day, and no past days are computed for
+them. England's state is dropped. (Computing the past would hold the world server for minutes when it starts; the
+cities of a new world start on its first day.) Rehearsed with a world of 400 days made by the build of main
+(c84e60b): loaded by this build in 0.6 s as version 7, 60 more days computed, saved and loaded again with the same
+hash.
+
+**What a player sees.** The panel of a place with a city has the section "Wirtschaft der Stadt": real GDP of the last
+365 days, its level against the start, the price level of today, consumption, the crown's purchases, investment,
+exports to and imports from the other cities, persons with and without work, coin of households and firms; all at
+1 : 100. Places without one of these cities show no economy (also the English places that showed England's).
+
+**Protocol.** `PlaceDetail.cityEconomy` is a new optional field and the old field `economy` is gone, so a client
+older than the server shows no economy instead of England's title over a city's numbers.
+
+**Tests** (`tests/economy.test.ts`, 43 tests). The calibration of England (unchanged) and of the cities; the
+WebAssembly build against the native build bit for bit with three cities; the books of the cities and of the
+merchants; the cities in the world: one day per day of the world, the yearly rows, a year of books, many days at
+once, snapshots, halting, the upgrade from versions 3 and 6; what a player is told; the world server.
+
+**Five years in the game** (`npm run economy:check 5 4`: 4 worlds of the game, seeds 1356 to 1359, every day
+computed in all of them).
+
+| All cities together, year 5 | Mean of the worlds | Range of the worlds |
+|---|---|---|
+| Real output (start = 100) | 103.7 | 101.2 to 106.5 |
+| Price level of output (start = 100) | 104.3 | 103.1 to 105.0 |
+| Exports, share of output | 2.46 % | 2.38 % to 2.66 % |
+| Imports, share of output | 2.46 % | 2.37 % to 2.66 % |
+| Without work, mean of all cities and days | 0.87 % | 0.61 % to 1.17 % |
+| Without work, the worst city on its worst day | 9.1 % | 6.7 % to 11.6 % |
+| City with the lowest output (its start = 100) | 92.0 | 88.6 to 95.7 |
+| City with the highest output | 114.1 | 112.8 to 114.7 |
+| Lowest price level of a city on the last day (start = 100) | 100.0 | 98.4 to 101.4 |
+| Highest price level of a city on the last day | 107.4 | 106.8 to 107.8 |
+
+| Year | Real output of all cities (start = 100), mean of the worlds | World 1356 | Exports = imports, share of output |
+|---|---|---|---|
+| start | 100.0 | 100.0 | 3.27 % |
+| 1356 | 101.0 | 100.8 | 2.87 % |
+| 1357 | 103.0 | 102.1 | 2.74 % |
+| 1358 | 104.1 | 102.3 | 2.65 % |
+| 1359 | 104.1 | 101.9 | 2.53 % |
+| 1360 | 103.7 | 101.2 | 2.46 % |
+
+The books (the identities of every city and the books of the merchants, once a month) are off by at most 8.0e-14
+of the amount they are judged by.
+
+What the tables say, and what is not explained:
+
+- All cities together grow a little and prices rise by a little under 1 % a year. Exports of all cities equal their imports
+  in every year, as they must.
+- Trade shrinks year by year, from 3.3 % to 2.5 % of output. Not traced. (England as one economy lost imports in the
+  same way, section 4.)
+- The cities drift apart: after five years they stand between 89 and 113 in the world of seed 1356. The largest do
+  worst there: Cairo 88.6 with 5.6 % without work on average, Fez 96.6, while small cities such as Alexandria (112.8)
+  and Soltaniyeh (111.0) gain. Why size hurts is not traced; rule 4 of the merchants sends orders to the larger city,
+  so it is not for lack of orders alone.
+- Five years and four worlds are a short look. Nothing here is checked against history.
+
+**Speed and size.** One day of all 29 cities takes about 15 ms in the world server; a day of the world
+lasts 240 s. The state of the cities is 1.85 MB at the start and 2.4 MB
+after 60 days; a snapshot of the world with them is 3.3 MB on disk.
+
 ### Limits
 
 - All cities have England's structure and differ only in size and in their random numbers. Cairo is England with more
   people.
 - The countryside is inside each city's economy (the calibration is that of a whole country); places that are not
-  among the 30 cities have no economy.
+  among the 30 cities have no economy. England's own places, York for one, had England's economy before and have none
+  now.
+- The cities are those of the whole map, so Texcoco in Mexico and Niani in Mali trade with Paris from one day to the
+  next.
+- The economies are not connected to the persons of the cities, to harvest and land, to realms or to anything a
+  player does. The crown of a city is the model's government and no realm of the game.
+- In a running world the cities start on the day of the changeover, from the starting position of 1356.
 - No distance: every city is one day from every other, and carrying goods costs nothing.
 - The port does not record exports product by product. What the merchants bought counts as bought in the mix they
   ordered.
