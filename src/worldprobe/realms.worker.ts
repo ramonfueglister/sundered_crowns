@@ -48,7 +48,7 @@ self.onmessage = async (e: MessageEvent<RealmsJob>) => {
       const x = Math.floor(job.x), y = Math.floor(job.y), place = x < 0 || y < 0 || x >= r.w || y >= r.h ? -1 : r.ids[y * r.w + x] - 1;
       return done({ place: place < r.owner.length ? place : -1 });
     }
-    if (job.kind === 'names') return done({ names: realmNames(r).map((n) => ({ ...n, name: r.names[n.realm] })) });
+    if (job.kind === 'names') return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? "")].length).map((n) => ({ ...n, name: r.names[n.realm] })) });
     const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, index.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
   } catch (err) {
