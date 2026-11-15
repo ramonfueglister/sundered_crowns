@@ -60,6 +60,9 @@ pub struct DressSet {
     pub hair_veiled: &'static str,
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
+    /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
+    /// people who work out of doors.
+    pub flush: f32,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down).
     pub lids: [f32; 4],
@@ -87,7 +90,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair: "bob01",
     hair_hooded: "bob02",
     hair_veiled: "bun01",
-    lips: [0.42, 0.28],
+    lips: [0.55, 0.38],
+    flush: 1.35,
     lids: [0.4, 0.8, 0.4, 0.6],
     jaw_women: -0.35,
     sources: &[
@@ -97,7 +101,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
-        Source { what: "lids, women's jaw, lips", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 

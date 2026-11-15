@@ -49,7 +49,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men, girls), flat under a hood, a bun under the veil | `hair`, `hair_hooded`, `hair_veiled` | by eye |
-| Faces: relaxed lids, softer jaw for women, lips less red | `lids`, `jaw_women`, `lips` | by eye, against the reference |
+| Faces: relaxed lids, softer jaw for women, redder lips, more flush on cheeks and nose | `lids`, `jaw_women`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
 (proposal of 15.11.2026), none in the original, and no value is taken from a source. Everything is PLACEHOLDER
