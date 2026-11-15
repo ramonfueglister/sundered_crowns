@@ -119,3 +119,17 @@ describe('the figure code that runs in a web worker', () => {
     }
   });
 });
+
+// The five numbers per figure travel as one vertex buffer: separate ones made nine buffers with the kit and the
+// instance matrix, over WebGPU's default limit of eight, and no figure was drawn on a real device.
+describe('the figure buffer', () => {
+  it('holds the five lists of each figure side by side', async () => {
+    const { interleave } = await import('../../src/figures/material');
+    const l = [0, 1, 2, 3, 4].map((k) => Float32Array.from({ length: 8 }, (_, j) => k * 100 + j));
+    const out = interleave(l, 2);
+    expect(out.length).toBe(40);
+    expect(Array.from(out.subarray(0, 8))).toEqual([0, 1, 2, 3, 100, 101, 102, 103]);
+    expect(Array.from(out.subarray(20, 24))).toEqual([4, 5, 6, 7]);
+    expect(Array.from(out.subarray(36, 40))).toEqual([404, 405, 406, 407]);
+  });
+});
