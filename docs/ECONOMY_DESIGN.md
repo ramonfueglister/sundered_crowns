@@ -1057,7 +1057,11 @@ its starting output with half its people without work after 30 years. What binds
 model in that run, is demand, nothing else: the bank could
 lend (its room for loans is untouched), the capital stock is whole, materials are there. The firms plan less and
 less because they sell less and less, their unsold goods pile up to weeks of output, their coin drains away, and
-their prices go on rising all the while (to 126 with half the city out of work; a wage never falls). Persons
+their prices go on rising all the while (to 126 with half the city out of work). The port's rules for that: a
+firm sets its supply to its last demand (A.5) and its price to the old price times the change of its costs times
+expected inflation (A.8); what it sells is not in the price rule. Its wage is a fixed real rate from the start, paid
+times the price index of the households. So prices and wages can fall with costs and expected inflation, but
+neither answers a slump: the model adjusts quantities. Persons
 without work have no income in this calibration (no dole in 1356) and buy nothing, so a slump has nothing that
 stops it.
 
