@@ -346,6 +346,23 @@ pairs, round 59 above round 60: women, men, small children).
 Still open: the hood's hem is a black cord round the face and across the chest; every mouth is the same calm
 line; what the rounds before list.
 
+**The black cord round hood, veil and neckline (round 61).** Every garment's edge was drawn as a black cord: round
+the face under a hood, round a veil, as a ring round the neck. It is the hem, a thin tube along the edge
+(`tunic_bind.py`), and it was black for two reasons. Its fold shade: the shade in the folds measures how far a
+point lies below the cloth smoothed over a few centimetres, and against that the tube is a valley all along (0.5
+to 0.7 of the cloth's colour). And, the larger part, its own shadow: the tube was wound inward, so the builder's
+normals pointed into it; the stage looks up a shadow from a point a little off the surface along the normal
+(three.js' `normalBias`), which here lay inside the tube, behind its own wall. How it was found: the shade set to 1
+left the hem black; set to 4 it was light grey, so the hem was the cord; without shadows on cloth it was as dark as
+cloth in shade; a shadow map of four times the size changed nothing, so it was not the map's coarseness. Now the
+tube is wound outward and has no shade of its own (`HEM_AO`), and gown, both hoods, veil and wimple are written
+anew: number for number the same files but for the order of the corners of the hems' triangles and the hems' shade.
+A test holds the hems of England's sample to it (`tests/portrait.test.ts`; it fails on the files as they were).
+Picture: `runde61_saum_vorher_nachher.png`.
+Still open: the hem still reads as a cord of the cloth's colour where the hood's front edges hang free beside the
+neck (a hood of the time closes under the chin); the moustache of the full beard hangs over the mouth, its tips on
+the lower lip read as teeth at the panel's size.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

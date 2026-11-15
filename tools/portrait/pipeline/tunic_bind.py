@@ -116,7 +116,16 @@ for ch in chains:
             k2 = (k + 1) % NS
             a0, a1, b0, b1 = base_i + i * NS + k, base_i + i * NS + k2, base_i + j * NS + k, base_i + j * NS + k2
             tri += [[a0, b0, a1], [a1, b0, b1]]
-    newP.append(ring); newT.append(np.array(tri))
+    # wound so that the tube's normals point away from its axis (as the cloth's point away from the body): wound
+    # the other way, as until round 61, the builder's normals point into the tube, the stage's shadow lookup,
+    # which starts a little off the surface along the normal, starts inside it, and the hem is in its own
+    # shadow all round: a black cord
+    tri = np.array(tri)
+    q = ring[tri - base_i]
+    away = q.mean(1) - np.repeat(pts + nn * R_HEM * 0.6, NS, axis=0)[(tri[:, 0] - base_i)]
+    if (np.cross(q[:, 1] - q[:, 0], q[:, 2] - q[:, 0]) * away).sum(1).mean() < 0:
+        tri = tri[:, [0, 2, 1]]
+    newP.append(ring); newT.append(tri)
     newUV.append(np.stack([np.repeat(run, NS) / 2.0, np.tile(np.arange(NS) / NS * 0.05, m)], -1))
     base_i += len(ring)
 print('hem chains', [len(c) for c in chains])
@@ -140,6 +149,9 @@ for _ in range(2):
     dh = 0.5 * dh + 0.5 * np.array([dh[n_].mean() for n_ in nbl])
 print('fold depth sd', dh.std().round(4), 'min', dh.min().round(3), 'max', dh.max().round(3))
 ao = np.clip(1 + float(os.environ.get('AO', '4.0')) * dh, 0.5, 1.1)
+# the hem is the cloth's own edge rolled in, not a fold: it has no shade of its own (measured against the
+# smoothed cloth it is a valley all along, which drew a black cord round every edge)
+ao[len(newP[0]):] = float(os.environ.get('HEM_AO', '1.0'))
 np.savetxt(os.path.join(out, name + '_ao.txt'), ao, fmt='%.3f')
 print('ao range', ao.min().round(2), ao.max().round(2), 'mean', ao.mean().round(3))
 # binding (as write_cards)

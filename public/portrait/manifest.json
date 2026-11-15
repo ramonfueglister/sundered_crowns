@@ -199,7 +199,7 @@
   },
   {
    "name": "cloth_cote.txt.zst",
-   "bytes": 125015
+   "bytes": 125308
   },
   {
    "name": "cloth_cote_ao.txt",
@@ -207,7 +207,7 @@
   },
   {
    "name": "cloth_hood_down.txt.zst",
-   "bytes": 96501
+   "bytes": 97837
   },
   {
    "name": "cloth_hood_down_ao.txt",
@@ -215,7 +215,7 @@
   },
   {
    "name": "cloth_hood_up.txt.zst",
-   "bytes": 229887
+   "bytes": 232426
   },
   {
    "name": "cloth_hood_up_ao.txt",
@@ -255,7 +255,7 @@
   },
   {
    "name": "cloth_veil_linen.txt.zst",
-   "bytes": 164237
+   "bytes": 165845
   },
   {
    "name": "cloth_veil_linen_ao.txt",
@@ -263,7 +263,7 @@
   },
   {
    "name": "cloth_wimple.txt.zst",
-   "bytes": 198773
+   "bytes": 202837
   },
   {
    "name": "cloth_wimple_ao.txt",

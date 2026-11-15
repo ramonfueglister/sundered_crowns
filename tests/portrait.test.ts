@@ -116,4 +116,36 @@ describe('portraits', () => {
     // 0.44 to 0.63: from 0.45 on a skin takes all of the tint (materials.ts skinLook)
     for (const t of tones) expect(t).toBeGreaterThan(0.4);
   });
+  it('the hems of the garments of England are wound outward', () => {
+    // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals
+    // point into it, the stage's shadow lookup starts inside the tube, and the hem lies in its own shadow: a black
+    // cord round hood, veil and neckline (until round 61). On a tube with normals pointing outward, position and
+    // normal change in the same direction from corner to corner of a triangle (nine in ten of the hems' triangles
+    // or more as they are now, one in ten wound inward).
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const seen = new Map<string, number>();
+    for (const p of sample) {
+      for (const s of b.build(p).surfaces) {
+        if (surfaceKind(s) !== 'cloth') continue;
+        let hem = 0, outward = 0;
+        for (let t = 0; t + 2 < s.pos.length / 3; t += 3) {
+          // the hem's texture coordinates run along it and a twentieth of the image round it
+          if (![0, 1, 2].every(k => Math.abs(s.uv[(t + k) * 2 + 1]!) <= 0.05)) continue;
+          let along = 0;
+          for (const [i, j] of [[0, 1], [1, 2], [2, 0]] as const) {
+            for (let a = 0; a < 3; a++) along += (s.pos[(t + i) * 3 + a]! - s.pos[(t + j) * 3 + a]!) * (s.nrm[(t + i) * 3 + a]! - s.nrm[(t + j) * 3 + a]!);
+          }
+          hem++;
+          if (along > 0) outward++;
+        }
+        if (hem) {
+          expect(outward / hem, `person ${p.pid}: ${s.tex}`).toBeGreaterThan(0.8);
+          seen.set(s.tex, hem);
+        }
+      }
+    }
+    // gown, hood on the head and thrown back, veil and wimple all have a hem
+    expect([...seen.keys()].map(t => t.replace(/^.*\/|\..*$/g, '')).sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple']);
+  });
 });
