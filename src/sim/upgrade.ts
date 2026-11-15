@@ -7,7 +7,8 @@ import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy, computeYear } from './systems/economy';
 import { dayToDate } from './calendar';
-import { fitPlacesToCities, foundPeople } from './systems/people';
+import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
+import { NG } from './people/genes';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
@@ -35,6 +36,11 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     if (s.startYear === 1356) fitPlacesToCities(s);
     foundPeople(s);
     s.v = 5;
+  }
+  if (s.v === 5) { // 5 → 6: the genes of the persons, as the founding of a new world gives them (nobody has changed)
+    (s.person.cols as { genes: Uint8Array }).genes = new Uint8Array(s.person.alive.length * 2 * NG);
+    giveGenes(s);
+    s.v = 6;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
