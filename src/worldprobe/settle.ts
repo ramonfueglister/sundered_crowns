@@ -37,9 +37,10 @@ const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
  * Builds the monuments, then the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
  * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` the style of the farmhouses
  * there. Everything is laid out so that it comes out the same on every ground that covers it; only what `own` holds
- * at its middle is added to `things`.
+ * at its middle is added to `things`. On a coarser map of the world a block covers `shrink` times the land, and the
+ * places shrink with it.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, shrink = 1): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), m = new THREE.Matrix4();
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
@@ -85,11 +86,14 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       if (Math.max(Math.abs(dx), Math.abs(dz)) === k && buildable(x, z)) { cx = x; cz = z; break; }
     }
     if (cx < 0) return;
-    const r = seeded(1000 + s.id), need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON;
+    // on a coarser map a place holds fewer of the diorama's people and falls into a smaller class, down to none
+    const pop = (s.pop ?? POP_OF_SIZE[s.size]) / shrink, size = shrink === 1 ? s.size : pop >= 40000 ? 5 : pop >= 8000 ? 4 : pop >= 3000 ? 3 : pop >= 1200 ? 2 : pop >= 300 ? 1 : 0;
+    if (!size) return;
+    const r = seeded(1000 + s.id), need = pop / PEOPLE_PER_PERSON;
     let housed = 0;
-    if (s.size < WALLED_FROM) {
+    if (size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
-      if (s.size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
+      if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, turn = r.chance(0.5), long = r.int(4, 5), short = r.int(3, 4), w = turn ? short : long, d = turn ? long : short;
@@ -99,9 +103,9 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       return;
     }
     // a walled town: its great buildings in the middle, then houses packed in a square that grows until all are housed
-    landmark(s.size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, s.size >= 4 ? 'landmark' : 'church');
-    for (let k = s.size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
-    if (s.style.towers) for (let k = s.size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + r.int(-7, 7), cz + r.int(-7, 7), 5, 'tower');
+    landmark(size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, size >= 4 ? 'landmark' : 'church');
+    for (let k = size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
+    if (s.style.towers) for (let k = size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + r.int(-7, 7), cz + r.int(-7, 7), 5, 'tower');
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;

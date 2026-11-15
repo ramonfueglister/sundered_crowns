@@ -60,8 +60,15 @@ const SLOPE = rgb(0x86983c);
 const TREE_PITCH = 2.4;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
-/** `region` must cover `windowOf(piece.ox, piece.oz)`. */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true): StageScene {
+/**
+ * `region` must cover `windowOf(piece.ox, piece.oz)`. `step` is the step of the map the region is taken from: at step z
+ * a block is 2^z map cells wide (see tools/worldprobe/build_overviews.py), and the world is drawn the same way with
+ * everything that much larger: the valleys are those of rivers 4^z times the size, the heights are flattened (by
+ * 2^(0.6 z), so that ranges still stand out but do not tower), towns hold 4^z times fewer houses and the small places
+ * drop out.
+ */
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0): StageScene {
+  const wider = 2 ** step, flatter = wider ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * step), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(wider)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
   /** region cell under a ground point: east is the picture's right, south its near side */
   const toCell = (x: number, z: number): [number, number] => { const [u, v] = cellOfBlock(x + ox, z + oz); return [u - c0x, v - c0y]; };
@@ -76,7 +83,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const [cx, cy] = toCell(x + 0.5, z + 0.5), i = idx(x, z);
     metres[i] = sample(region, region.shaped, cx, cy); kind[i] = waterAt(region, cx, cy); lat[i] = latOf(region, cy); shift[i] = lineShift(lat[i]);
   }
-  const levelOf = (m: number, i: number) => { const treeLine = TREE_LINE + shift[i]; return Math.max(0, (Math.min(m, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, m - treeLine) / METRES_PER_BLOCK_HIGH; };
+  const levelOf = (m: number, i: number) => { const treeLine = TREE_LINE + shift[i]; return (Math.max(0, (Math.min(m, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, m - treeLine) / METRES_PER_BLOCK_HIGH) / flatter; };
   /** a field averaged over a square of blocks reaching `reach` to each side */
   const averaged = (field: Float32Array, reach: number) => {
     const out = new Float32Array(N * N);
@@ -96,7 +103,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5), i = idx(x, z);
     const cell = Math.max(0, Math.min(region.h - 1, Math.floor(cy))) * region.w + Math.max(0, Math.min(region.w - 1, Math.floor(cx)));
-    if (kind[i] !== Water.Land || region.drainage[cell] >= VALLEY_FROM) { away[i] = 0; ring.push(i); }
+    if (kind[i] !== Water.Land || region.drainage[cell] >= valleyFrom) { away[i] = 0; ring.push(i); }
   }
   for (let step = 1; ring.length; step++) {
     const next: number[] = [];
@@ -130,7 +137,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const pillar = (x: number, z: number): [number, boolean, number] => {
     const [px, pz] = rockPillar(x + ox, z + oz), bx = Math.floor(px / 2) * 2 + 1, cx = bx * 2 - ox, cz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx - oz;
     const raised = (qx: number, qz: number) => at(base, qx, qz) + PEAK * (at(massif, qx, qz) - at(base, qx, qz));
-    return [raised(cx, cz), at(massif, cx, cz) > Math.max(300, ROCK_FROM + at(shift, cx, cz)) && at(away, cx, cz) >= FOOT, raised((px + 0.5) * 2 - ox, (pz + 0.5) * 2 - px - oz)];
+    return [raised(cx, cz), at(massif, cx, cz) > Math.max(300, ROCK_FROM + at(shift, cx, cz)) && at(away, cx, cz) >= rockFoot, raised((px + 0.5) * 2 - ox, (pz + 0.5) * 2 - px - oz)];
   };
 
   const g: Ground = { h: new Int16Array(N * N), mat: new Uint8Array(N * N), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N), surf: new Float32Array(N * N).fill(SEA_Y), ox, oz };
@@ -209,12 +216,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // the monuments that stood in 1356 and have a model
   landmarks.forEach((l, id) => {
     const here = toGround(...cellOf(region, l.lon, l.lat));
-    if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: m.model }));
+    if (step <= 1 && l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: m.model }));
   });
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return (best?.style ?? styleOf('')).house; };
   const settled = settle(g, things, sites, monuments, farm, (x, z) => sample(region, region.crops, ...toCell(x, z)) / 255,
-    (x, z) => 0.25 * smooth(52, 47, at(lat, x, z)) * smooth(700, 400, metresAt(x, z)), counts, own);
+    (x, z) => 0.25 * smooth(52, 47, at(lat, x, z)) * smooth(700, 400, metresAt(x, z)), counts, own, wider * wider);
 
   // woods where the forest of 1356 stood, up to the tree line: leafy in the low country, dark conifers towards the heights
   for (let tz = Math.ceil((oz + 2) / TREE_PITCH); tz * TREE_PITCH < oz + N - 2; tz++) for (let tx = Math.ceil((ox + 2) / TREE_PITCH); tx * TREE_PITCH < ox + N - 2; tx++) {

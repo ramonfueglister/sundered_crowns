@@ -82,10 +82,13 @@ export async function loadWindow(name: string, gx0: number, gy0: number, w: numb
   return region;
 }
 
-/** The projection of region `name`, and the whole-map cell of a place given in degrees. */
-export async function placeCell(name: string, lon: number, lat: number, base = '/'): Promise<[number, number]> {
-  const index = await indexOf(name, base), [x, y] = mapPixel(index, lon, lat);
-  return [x * index.cells, y * index.cells];
+/** The projection of region `name`: the whole-map cell of a place given in degrees, and the place of a cell. */
+export async function projectionOf(name: string, base = '/'): Promise<{ cellOf(lon: number, lat: number): [number, number]; placeOf(u: number, v: number): [number, number] }> {
+  const m = await indexOf(name, base);
+  return {
+    cellOf: (lon, lat) => { const [x, y] = mapPixel(m, lon, lat); return [x * m.cells, y * m.cells]; },
+    placeOf: (u, v) => [m.lon0 + (u / m.cells / m.mapW) * (m.lon1 - m.lon0), (Math.atan(Math.sinh(merc(m.latN) - (v / m.cells / m.mapH) * (merc(m.latN) - merc(m.latS)))) * 180) / Math.PI],
+  };
 }
 
 /** Cell coordinates of a place given in degrees. */
