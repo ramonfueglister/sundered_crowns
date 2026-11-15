@@ -1,0 +1,314 @@
+{
+ "folder": "real",
+ "data": [
+  {
+   "name": "Eyelashes01.txt",
+   "bytes": 39776
+  },
+  {
+   "name": "bald01.txt",
+   "bytes": 4
+  },
+  {
+   "name": "bald01_cap.txt",
+   "bytes": 47367
+  },
+  {
+   "name": "bald01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "beard_chin.txt.zst",
+   "bytes": 103940
+  },
+  {
+   "name": "beard_chin_cap.txt.zst",
+   "bytes": 42751
+  },
+  {
+   "name": "beard_chin_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "beard_full.txt.zst",
+   "bytes": 309163
+  },
+  {
+   "name": "beard_full_cap.txt.zst",
+   "bytes": 60889
+  },
+  {
+   "name": "beard_full_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "beard_phil.txt.zst",
+   "bytes": 404420
+  },
+  {
+   "name": "beard_phil_cap.txt.zst",
+   "bytes": 60081
+  },
+  {
+   "name": "beard_phil_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "beard_short.txt",
+   "bytes": 4
+  },
+  {
+   "name": "beard_short_cap.txt.zst",
+   "bytes": 58620
+  },
+  {
+   "name": "beard_short_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "beard_stubble.txt",
+   "bytes": 4
+  },
+  {
+   "name": "beard_stubble_cap.txt.zst",
+   "bytes": 58108
+  },
+  {
+   "name": "beard_stubble_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "braid01.txt.zst",
+   "bytes": 251169
+  },
+  {
+   "name": "braid01_cap.txt",
+   "bytes": 59417
+  },
+  {
+   "name": "braid01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "bun01.txt.zst",
+   "bytes": 281638
+  },
+  {
+   "name": "bun01_cap.txt",
+   "bytes": 59832
+  },
+  {
+   "name": "bun01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "cloth_palla.txt.zst",
+   "bytes": 122777
+  },
+  {
+   "name": "cloth_palla_ao.txt",
+   "bytes": 19020
+  },
+  {
+   "name": "cloth_toga.txt.zst",
+   "bytes": 115089
+  },
+  {
+   "name": "cloth_toga_ao.txt",
+   "bytes": 18144
+  },
+  {
+   "name": "cloth_tunic.txt.zst",
+   "bytes": 90784
+  },
+  {
+   "name": "cloth_tunic_ao.txt",
+   "bytes": 12732
+  },
+  {
+   "name": "cloth_veil.txt.zst",
+   "bytes": 213591
+  },
+  {
+   "name": "cloth_veil_ao.txt",
+   "bytes": 37866
+  },
+  {
+   "name": "crop01.txt",
+   "bytes": 4
+  },
+  {
+   "name": "crop01_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "crop01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "curly01.txt.zst",
+   "bytes": 236679
+  },
+  {
+   "name": "curly01_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "curly01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "eyebrow001.txt",
+   "bytes": 20765
+  },
+  {
+   "name": "receding01.txt.zst",
+   "bytes": 143081
+  },
+  {
+   "name": "receding01_cap.txt",
+   "bytes": 53257
+  },
+  {
+   "name": "receding01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "roman01.txt.zst",
+   "bytes": 179744
+  },
+  {
+   "name": "roman01_cap.txt",
+   "bytes": 60732
+  },
+  {
+   "name": "roman01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "sidepart01.txt.zst",
+   "bytes": 107953
+  },
+  {
+   "name": "sidepart01_cap.txt",
+   "bytes": 59081
+  },
+  {
+   "name": "sidepart01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "skin_ao.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "skin_red.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "uvs.txt.zst",
+   "bytes": 22874
+  },
+  {
+   "name": "wrinkle_fold.txt.zst",
+   "bytes": 2632
+  },
+  {
+   "name": "wrinkle_lines.txt",
+   "bytes": 187
+  }
+ ],
+ "images": [
+  "Eyelashes01.webp",
+  "bald01.webp",
+  "bald01_cap.webp",
+  "bald01_cap_n.webp",
+  "beard_chin.webp",
+  "beard_chin_cap.webp",
+  "beard_chin_cap_n.webp",
+  "beard_chin_n.webp",
+  "beard_full.webp",
+  "beard_full_cap.webp",
+  "beard_full_cap_n.webp",
+  "beard_full_n.webp",
+  "beard_phil.webp",
+  "beard_phil_cap.webp",
+  "beard_phil_cap_n.webp",
+  "beard_phil_n.webp",
+  "beard_short.webp",
+  "beard_short_cap.webp",
+  "beard_short_cap_n.webp",
+  "beard_short_n.webp",
+  "beard_stubble_cap.webp",
+  "beard_stubble_cap_n.webp",
+  "braid01.webp",
+  "braid01_cap.webp",
+  "braid01_cap_n.webp",
+  "braid01_n.webp",
+  "bun01.webp",
+  "bun01_cap.webp",
+  "bun01_cap_n.webp",
+  "bun01_n.webp",
+  "cloth_palla.webp",
+  "cloth_palla_n.webp",
+  "cloth_toga.webp",
+  "cloth_toga_n.webp",
+  "cloth_tunic.webp",
+  "cloth_tunic_n.webp",
+  "cloth_veil.webp",
+  "cloth_veil_n.webp",
+  "crop01.webp",
+  "crop01_cap.webp",
+  "crop01_cap_n.webp",
+  "curly01.webp",
+  "curly01_cap.webp",
+  "curly01_cap_n.webp",
+  "curly01_n.webp",
+  "eyeball.webp",
+  "eyebrow001.webp",
+  "receding01.webp",
+  "receding01_cap.webp",
+  "receding01_cap_n.webp",
+  "receding01_n.webp",
+  "roman01.webp",
+  "roman01_cap.webp",
+  "roman01_cap_n.webp",
+  "roman01_n.webp",
+  "sidepart01.webp",
+  "sidepart01_cap.webp",
+  "sidepart01_cap_n.webp",
+  "sidepart01_n.webp",
+  "skin_middleage_female.webp",
+  "skin_middleage_female_n.webp",
+  "skin_middleage_female_w38_n.webp",
+  "skin_middleage_female_w46_n.webp",
+  "skin_middleage_female_w54_n.webp",
+  "skin_middleage_female_w62_n.webp",
+  "skin_middleage_male.webp",
+  "skin_middleage_male_n.webp",
+  "skin_middleage_male_w38_n.webp",
+  "skin_middleage_male_w46_n.webp",
+  "skin_middleage_male_w54_n.webp",
+  "skin_middleage_male_w62_n.webp",
+  "skin_old_female.webp",
+  "skin_old_female_n.webp",
+  "skin_old_female_w46_n.webp",
+  "skin_old_female_w54_n.webp",
+  "skin_old_female_w62_n.webp",
+  "skin_old_female_w70_n.webp",
+  "skin_old_female_w78_n.webp",
+  "skin_old_female_w86_n.webp",
+  "skin_old_male.webp",
+  "skin_old_male_n.webp",
+  "skin_old_male_w46_n.webp",
+  "skin_old_male_w54_n.webp",
+  "skin_old_male_w62_n.webp",
+  "skin_old_male_w70_n.webp",
+  "skin_old_male_w78_n.webp",
+  "skin_old_male_w86_n.webp",
+  "skin_young_female.webp",
+  "skin_young_female_n.webp",
+  "skin_young_male.webp",
+  "skin_young_male_n.webp"
+ ]
+}

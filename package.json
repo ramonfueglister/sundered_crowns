@@ -16,12 +16,14 @@
     "harvest:check": "tsx tools/sim/harvest_check.ts",
     "economy:build": "tsx tools/sim/build_economy.ts",
     "economy:calibrate": "tsx tools/sim/calibrate_economy.ts",
-    "economy:check": "tsx tools/sim/economy_check.ts"
+    "economy:check": "tsx tools/sim/economy_check.ts",
+    "portrait:build": "tsx tools/portrait/build_portrait.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^26.6.6",
+    "@types/three": "^0.187.0",
     "@types/ws": "^8.18.2",
     "@webgpu/types": "^0.1.74",
     "tsx": "^4.23.15",
@@ -35,6 +37,7 @@
     "@supabase/supabase-js": "^2.119.0",
     "fflate": "^0.8.3",
     "preact": "^11.2.0",
+    "three": "^0.187.0",
     "ws": "^8.22.2"
   }
 }
