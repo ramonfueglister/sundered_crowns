@@ -7,9 +7,10 @@ beyond its own slope there is spread over REACH cells to either side, half to ea
 does the land on its shore.
 
 Run it once all parts are built, before build_overviews.py. A part built anew is joined to its neighbours by
-running it again; lines already joined stay as they are (their step is gone).
+naming it: then only the lines along its edges are joined. (A line joined twice is spread a little further each
+time, so the lines of parts that have not changed are left alone.)
 
-Usage: python3 tools/worldprobe/stitch_parts.py [--dry]      (--dry only tells how the land steps at every line)
+Usage: python3 tools/worldprobe/stitch_parts.py [--dry] [part ...]      (--dry only tells how the land steps at every line)
 """
 import gzip, os, sys
 import numpy as np
@@ -43,6 +44,14 @@ def lines():
     for x0, y0, x1, y1 in PARTS.values():
         for line in ((True, x0 % ACROSS, y0, y1),) + (((False, y0, x0, x1),) if y0 > 0 else ()):
             if line not in seen: seen.add(line); yield line
+
+
+def touches(line, part):
+    """Whether a line runs along an edge of a part."""
+    upright, at, first, last = line
+    x0, y0, x1, y1 = PARTS[part]
+    if upright: return at in (x0 % ACROSS, x1 % ACROSS) and first < y1 and last > y0
+    return at in (y0, y1) and any(first < x1 + lap and last > x0 + lap for lap in (-ACROSS, 0, ACROSS))
 
 
 def strips(upright, at, k):
@@ -94,14 +103,18 @@ def stitch(upright, at, first, last, dry):
             # the heights of the tile look into its bytes: the strip is written back where it was cut from
             if upright: h[:, (slice(0, REACH) if side else slice(w - 1, w - 1 - REACH, -1))] = fresh
             else: h[(slice(0, REACH) if side else slice(TILE - 1, TILE - 1 - REACH, -1)), :w] = fresh.T
-            with gzip.open(path(tx, ty), 'wb', compresslevel=9) as f: f.write(bytes(raw))
+            # written beside the tile and put in its place whole, so that a run cut short leaves no half tile
+            with open(path(tx, ty) + '.new', 'wb') as f: f.write(gzip.compress(bytes(raw), 9, mtime=0))
+            os.replace(path(tx, ty) + '.new', path(tx, ty))
             written += 1
         row += m
     return written
 
 
 if __name__ == '__main__':
-    dry = '--dry' in sys.argv
+    dry, named = '--dry' in sys.argv, [a for a in sys.argv[1:] if a != '--dry']
+    for part in named:
+        if part not in PARTS: sys.exit(f'no part {part}')
     # the upright lines first: where four parts meet, the level ones then join what those have made
-    count = sum(stitch(*line, dry) for line in sorted(lines(), key=lambda l: not l[0]))
+    count = sum(stitch(*line, dry) for line in sorted(lines(), key=lambda l: not l[0]) if not named or any(touches(line, p) for p in named))
     print(f'{count} tiles written')

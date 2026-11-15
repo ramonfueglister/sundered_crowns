@@ -365,7 +365,8 @@ def main(name):
         box = (slice(ky * TILE - gy0, (ky + 1) * TILE - gy0), slice(first - gx0, after - gx0))
         if (water[box] == SEA).all(): continue
         key = f'{kx}_{ky}'
-        with gzip.open(os.path.join(out, f'{key}.bin.gz'), 'wb', compresslevel=9) as f:
+        # no time of writing in the file: a tile that has not changed stays the same file
+        with open(os.path.join(out, f'{key}.bin.gz'), 'wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
             for k, layer in enumerate(layers):
                 full = np.full((TILE, TILE), SEA if k == 2 else 0, layer.dtype)
                 full[:, :after - first] = layer[box]

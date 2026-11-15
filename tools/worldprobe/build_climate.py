@@ -3,8 +3,9 @@
 One byte per two by two map pixels (the grid of public/map/biome.png), once round the globe and as far south as the
 world goes (build_region.py): the low bits are the kind of land (LAND below), taken from the Köppen-Geiger climate
 zones; bit 7 is set where the game's own forest layer of 1356 knows the place. It does not beyond the game map, and
-on it where the game has sea, jungle, tundra or wasteland: for those it sets no forest at all. There the probe plants
-the woods the climate grows.
+on it where the game has sea, jungle, tundra or wasteland: for those it sets no forest at all. Nor does it in the
+Americas, of which the game map has only the eastern half and that as one forest, prairie and all: the land would
+change at the map's edge, in the middle of the continent. There the probe plants the woods the climate grows.
 
 Input: the Köppen-Geiger map of Rubel et al. (2017, doi:10.1127/metz/2016/0816) at 100 arc seconds, as packaged by
 kgcpy (github.com/cwru-sdle/kgcpy, BSD-3). It shows the climate of 1986-2010; that of 1356 is not mapped anywhere at
@@ -28,6 +29,8 @@ SOURCE = 'https://raw.githubusercontent.com/cwru-sdle/kgcpy/4bce28ba7596f870e508
 # the zones in the order of the source's numbers 1 … 32
 ZONES = 'Af Am As Aw BSh BSk BWh BWk Cfa Cfb Cfc Csa Csb Csc Cwa Cwb Cwc Dfa Dfb Dfc Dfd Dsa Dsb Dsc Dsd Dwa Dwb Dwc Dwd EF ET Ocean'.split()
 # kinds of land, as src/worldprobe/climate.ts names them
+# west of this longitude, in the middle of the Atlantic, lie the Americas
+OLD_WORLD_FROM = -30
 LAND = {'temperate': 1, 'mediterranean': 2, 'steppe': 3, 'desert': 4, 'savanna': 5, 'rainforest': 6, 'boreal': 7, 'tundra': 8, 'ice': 9}
 
 
@@ -57,10 +60,10 @@ def main():
     out = kinds[np.ix_(y, x)]
     # the game's terrain class of each place (0 sea, else 1 + its place in TERRAINS)
     terrain = np.asarray(Image.open(os.path.join(ROOT, 'public', 'map', 'biome.png')).convert('RGBA'))[..., 0]
-    known = ~np.isin(terrain, [0] + [TERRAINS.index(t) + 1 for t in ('jungle', 'tundra', 'wasteland')])
+    known = ~np.isin(terrain, [0] + [TERRAINS.index(t) + 1 for t in ('jungle', 'tundra', 'wasteland')]) & (lon[None, :W // 2] > OLD_WORLD_FROM)
     out[:H // 2, :W // 2] |= known.astype(np.uint8) << 7
     path = os.path.join(ROOT, 'public', 'map', 'climate.bin.gz')
-    with gzip.open(path, 'wb', compresslevel=9) as f: f.write(out.tobytes())
+    with open(path, 'wb') as f: f.write(gzip.compress(out.tobytes(), 9, mtime=0))
     names = {v: k for k, v in LAND.items()}
     print(f'climate: {out.shape[1]} x {out.shape[0]}, {os.path.getsize(path) / 1e3:.0f} kB, ' + ', '.join(f'{names[k]} {np.mean((out & 127) == k):.0%}' for k in sorted(names)))
     Image.fromarray((out & 127) * 25).save(os.path.join(os.environ.get('GEO_CACHE', '/tmp'), 'climate_check.png'))

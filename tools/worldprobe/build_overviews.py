@@ -32,7 +32,8 @@ def write(out, meta, layers, rivers, gx0, gy0):
             y0, y1, x0, x1 = max(gy0, ty * T), min(gy0 + h, (ty + 1) * T), max(gx0, tx * T), min(gx0 + w, (tx + 1) * T)
             if (layers[2][y0 - gy0:y1 - gy0, x0 - gx0:x1 - gx0] == SEA).all(): continue
             key = f'{tx}_{ty}'; tiles.append(key)
-            with gzip.open(os.path.join(out, f'{key}.bin.gz'), 'wb', compresslevel=9) as f:
+            # no time of writing in the file: a tile that has not changed stays the same file
+            with open(os.path.join(out, f'{key}.bin.gz'), 'wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
                 for k, layer in enumerate(layers):
                     full = np.full((T, T), SEA if k == 2 else 0, layer.dtype)
                     full[y0 - ty * T:y1 - ty * T, x0 - tx * T:x1 - tx * T] = layer[y0 - gy0:y1 - gy0, x0 - gx0:x1 - gx0]
