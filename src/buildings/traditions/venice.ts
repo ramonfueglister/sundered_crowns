@@ -12,6 +12,8 @@ const pair = (a: readonly number[]): readonly [number, number] => [a[0], a[1]];
 const W = v.wand.farben_hex;
 
 export const VENICE: Tradition = {
+  // the fondamenta: wall and coping of stone, paving, water steps and mooring posts (measure file, assumptions)
+  quay: { wall: hex(v.kai.mauer_hex), coping: hex(v.kai.abdeckung_hex), paving: hex(v.kai.pflaster_hex), post: hex(v.kai.poller_hex), stepsEvery: [m(v.kai.treppe_alle_m[0]), m(v.kai.treppe_alle_m[1])], postEvery: [m(v.kai.poller_alle_m[0]), m(v.kai.poller_alle_m[1])] },
   // ground floor 8 or 9 piedi, upper storeys 7 or 8 (Dorigo): 3.0 m and the middle of 2.43 to 2.78 m, in fine blocks
   ground: vox(3.0), upper: vox((v.geschoss.obergeschoss_m[0] + v.geschoss.obergeschoss_m[1]) / 2), noble: vox(v.geschoss.piano_nobile_m[0]),
   storeys: pair(v.geschosse.klein), greatStoreys: pair(v.geschosse.kaufmannshaus),
