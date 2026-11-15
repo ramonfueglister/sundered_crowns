@@ -74,6 +74,10 @@ pub struct DressSet {
     pub beard_full: &'static str,
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
+    /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
+    /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
+    /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
+    pub hair_red: [f32; 2],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
     /// people who work out of doors.
     pub flush: f32,
@@ -120,6 +124,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_trim",
     lips: [0.55, 0.38],
+    hair_red: [0.45, 0.74],
     flush: 1.0,
     lids: [0.2, 0.45, 0.2, 0.45],
     mouth_shut: [0.75, 0.75],
@@ -134,6 +139,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
+        Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
         Source { what: "lids, closed mouth, strength of moods, eyeballs' depth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };

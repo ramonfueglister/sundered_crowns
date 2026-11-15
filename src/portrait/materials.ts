@@ -109,7 +109,8 @@ function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageP
   const lights = wrapped(`vec3( ${f(k.wrap)} )`);
   m.onBeforeCompile = shader => {
     const code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
-    shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= ${f(k.tone)};`);
+    shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= mix( ${f(k.tone)}, ${f(k.light)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-cap-${p.key}`;
 }
@@ -141,6 +142,9 @@ float hairStrand = 1.0;
   hairStrand = dot( sampledDiffuseColor.rgb, vec3( 0.3333 ) );
   diffuseColor.rgb *= pow( max( hairStrand, 0.001 ) / 0.6, ${f(k.strands - 1)} );
 #endif`);
+    code = swap(code, '#include <color_fragment>', `#include <color_fragment>
+diffuseColor.rgb *= pow( min( hairStrand / 0.8, 1.0 ), ${f(k.light)} * smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
     code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
 #if defined( USE_MAP ) && NUM_DIR_LIGHTS > 0
 {

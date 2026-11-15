@@ -50,3 +50,5 @@ crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Ro
 `morph.rs`; Apoleia's 1.7) in the dress table; Roman bytes unchanged.
 `hair_curly` (England: `bob05`, wavy hair in place of Apoleia's `curly01`; `real_look.rs` `mh_pick`); Roman bytes
 unchanged.
+`hair_red` in the dress table (from which strength of the red gene hair shows red, `look.rs` `hair_colour`;
+Apoleia's: from 0 on, in step with the gene); Roman bytes unchanged.

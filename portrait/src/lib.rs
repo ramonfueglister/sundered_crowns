@@ -49,6 +49,36 @@ mod tests {
     }
 
     #[test]
+    fn red_hair_is_rare_in_the_dress_of_england() {
+        use crate::look::{GREY, HAIR_R};
+        let hair = |dress, red: f32| {
+            let mut p = look(false, 30.0, 1, 7);
+            p.dress = dress;
+            p.genes[GREY] = 0.0;
+            p.genes[HAIR_R] = red;
+            p.hair_colour()
+        };
+        let (roman, england) = (crate::dress::Dress::Roman, crate::dress::Dress::England1356);
+        // the middle of the pool England draws from (alleles 20 to 170): red in Apoleia's hair, none in England's
+        assert_ne!(hair(roman, 95.0), hair(roman, 0.0));
+        assert_eq!(hair(england, 95.0), hair(england, 0.0));
+        // the strongest gene is as red in both
+        assert_eq!(hair(england, 255.0), hair(roman, 255.0));
+        // and of all pairs of such alleles about 5 in 100 show a third of the red or more
+        let set = england.set().unwrap();
+        let (mut red, mut all) = (0, 0);
+        for a in 20..=170 {
+            for b in 20..=170 {
+                let t = ((((a + b) as f32 / 2.0) / 255.0 - set.hair_red[0]) / (set.hair_red[1] - set.hair_red[0])).clamp(0.0, 1.0);
+                red += (t * t * (3.0 - 2.0 * t) >= 0.4) as u32;
+                all += 1;
+            }
+        }
+        let share = red as f32 / all as f32;
+        assert!((0.04..0.06).contains(&share), "{share}");
+    }
+
+    #[test]
     fn every_style_builds() {
         let Some(h) = head() else { return };
         let mut n = 0;

@@ -415,7 +415,11 @@ impl Look {
 
     pub fn hair_colour(&self) -> Rgb {
         let mut c = chain(&["#1a1411", "#3e281a", "#6e4a2a", "#a07a45", "#d9bb78"], self.u(HAIR_L));
-        c = cmix(c, hex("#a4461d"), self.u(HAIR_R) * 0.75);
+        let red = self.dress.set().map_or(self.u(HAIR_R), |d| {
+            let t = c01((self.u(HAIR_R) - d.hair_red[0]) / (d.hair_red[1] - d.hair_red[0]));
+            t * t * (3.0 - 2.0 * t)
+        });
+        c = cmix(c, hex("#a4461d"), red * 0.75);
         let start = 28.0 + (1.0 - self.u(GREY)) * 32.0;
         cmix(c, hex("#cfcac2"), c01((self.age - start) / 25.0))
     }

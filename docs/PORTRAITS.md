@@ -22,7 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356 |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -117,6 +117,36 @@ and the head's outline came from the stage, not from the hair: the light that bl
 (`wrap`) also went into three.js' highlight, whose term for grazing angles divides by the angle to the light. The
 wrap now lights the diffuse part only (`materials.ts` `wrapped`); near-white pixels over twelve girls went from
 174 to 0.
+
+**Hair colour, measured (round 47).** The twelve test people are Apoleia's, most of them dark. A person of the
+game's England draws the genes of hair and skin from other ranges (`dna.rs`, pool of Gallia: lightness 50 to 220,
+red 20 to 170 of 255), so the test page can now set genes (`?gene=27:135,28:95`: both alleles of lightness and
+red). With the middle of those ranges every man had bright orange hair. Two causes, two changes:
+
+| hair above the brows, CIELAB (10th, 50th, 90th percentile) | L | chroma |
+|---|---|---|
+| CK3, the ruler's red hair in the light | 10, 22, 66 | 10, 24, 33 |
+| CK3, his beard | 10, 24, 39 | 17, 27, 34 |
+| CK3, the heir's red-blond hair | 23, 37, 56 | 16, 26, 36 |
+| ours before, middle of England's ranges | 25, 33, 40 | 29, 37, 44 |
+| ours before, strongly red | 33, 43, 50 | 36, 44, 50 |
+| ours now, middle of England's ranges (brown) | 23, 32, 39 | 15, 21, 25 |
+| ours now, strongly red | 33, 42, 50 | 25, 31, 36 |
+| ours now, blond | 39, 49, 58 | 18, 24, 27 |
+
+1. The stage drew hair about one and a half times as coloured as the reddest hair in the screenshot. The 1356
+   profile leaves 0.7 of the colour in hair and its painted layer (`sheen.colour`, `cap.colour`).
+2. Apoleia mixes red into hair in step with the red gene from 0 on, so the middle of England's range is already a
+   quarter red. The dress table sets from which strength of the gene red shows at all and where it is full
+   (`hair_red` 0.45 to 0.74): of founders of that pool about 5 in 100 have clearly red hair, about 18 in 100 a
+   tint, the rest are brown to blond. The 5 in 100 is an estimate from a press report of carriers (34 to 40 in 100
+   in Yorkshire and south-east Scotland, BritainsDNA 2013), not a count and not of 1356: PLACEHOLDER. The pool
+   itself is unchanged (it belongs to the persons' simulation and is in the saved world).
+
+White hair read as wool: bright all over, and the sheen that shows the strands of dark hair does not show on
+white. Hair as light as white now gets its darker strands drawn darker (`sheen.light`), and its painted layer
+lighter (`cap.light`), so that a white moustache (painted) matches the white beard (cards). Tried and dropped:
+less flush for old men (the red patch on their far cheek is the key light past the nose, not the flush).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

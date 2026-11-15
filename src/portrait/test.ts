@@ -2,7 +2,8 @@
 // the stage and laid out in a row of pictures. tools/portrait/compare.ts photographs it and holds each picture
 // against Apoleia's (Godot). ?size=672x840 sets the size of a picture, ?simple the faceted look,
 // ?origin=England moves every test person there (and with that into the dress of England 1356); ?female=1 or 0
-// and ?age=12 make every test person a woman or a man, or of that age (to see one garment on many faces).
+// and ?age=12 make every test person a woman or a man, or of that age (to see one garment on many faces);
+// ?gene=27:240,32:0 sets both alleles of genes by their number in portrait/src/look.rs GENES (27 hairL, 32 grey).
 import people from '../../tests/portrait/people.json';
 import { loadPortraitAssets } from './assets';
 import { PortraitStage } from './stage';
@@ -18,6 +19,7 @@ async function main(): Promise<void> {
   const stage = new PortraitStage({ width, height, images: assets.images, url: assets.url });
   const wall = document.getElementById('wall')!;
   const origin = q.get('origin');
+  const genes = (q.get('gene') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   for (const given of people as PortraitPerson[]) {
     const person: PortraitPerson = {
       ...given,
@@ -25,6 +27,11 @@ async function main(): Promise<void> {
       ...(q.has('female') ? { female: q.get('female') === '1' } : {}),
       ...(q.has('age') ? { age: Number(q.get('age')) } : {}),
     };
+    if (genes.length) {
+      const dna = Array.from(person.dna);
+      for (const [gene, value] of genes) dna[gene] = dna[gene + dna.length / 2] = value;
+      person.dna = dna;
+    }
     const t0 = performance.now();
     const portrait = assets.builder.build(person);
     const t1 = performance.now();
