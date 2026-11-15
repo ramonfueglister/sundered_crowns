@@ -111,6 +111,18 @@ describe('realms', () => {
     for (let i = 0; i < p.length; i += 4) expect(Math.max(p[i], p[i + 1], p[i + 2])).toBeLessThanOrEqual(p[i + 3]);
   });
 
+  it('picks a place out: lighter, inside a line of its own, and nothing else changes', () => {
+    const plain = paintRealms(realms, 0, 0, 0, 64, 2), p = paintRealms({ ...realms, chosen: 1 }, 0, 0, 0, 64, 2);
+    const at = (of: Uint8ClampedArray, x: number, y: number) => [...of.subarray((y * 64 + x) * 4, (y * 64 + x) * 4 + 4)];
+    // inside, the realm's blue with white in it; on its rim, towards the other realm and at the map's edge, the line
+    expect(at(p, 24, 10)[0]).toBeGreaterThan(80); expect(at(p, 24, 10)[2]).toBeGreaterThan(at(plain, 24, 10)[2]);
+    expect(at(p, 16, 10)).toEqual(at(p, 24, 0)); expect(at(p, 16, 10)[3]).toBe(255); expect(at(p, 16, 10)[0]).toBeGreaterThan(at(p, 16, 10)[2]);
+    for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (x < 16 || x >= 32) expect(at(p, x, y), `${x}, ${y}`).toEqual(at(plain, x, y));
+    // land without a realm is clear until it is picked out
+    expect(at(paintRealms({ ...realms, chosen: 2 }, 0, 0, 0, 64, 2), 40, 10)[3]).toBeGreaterThan(200);
+    for (let i = 0; i < p.length; i += 4) expect(Math.max(p[i], p[i + 1], p[i + 2])).toBeLessThanOrEqual(p[i + 3]);
+  });
+
   it('finds where a realm lies and how', () => {
     const names = realmNames(realms, 1), first = names.find((n) => n.realm === 0)!;
     expect(names.length).toBe(2);

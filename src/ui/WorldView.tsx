@@ -54,6 +54,8 @@ export function WorldView() {
           shown = { owner: o, realms: now };
           made.setRealms({ owner: o, colors, names });
         }));
+        // the place selected is picked out on the far map
+        stops.push(effect(() => { made.choose(selectedPlace.value); }));
         // a click on a figure of the great cities opens that person
         people ??= listenForWorldClicks();
       } catch (e: any) { console.error(e); mapError.value = String(e?.message || e); }

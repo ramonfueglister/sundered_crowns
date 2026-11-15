@@ -53,6 +53,8 @@ export interface WorldView {
   flyTo(lon: number, lat: number, wide: number): void;
   /** Colours the far map by these realms from now on, in place of those the game sets up. */
   setRealms(now: RealmsNow): void;
+  /** Picks a place of the game map out on the far map (counted from 0; -1: none). */
+  choose(place: number): void;
   /** Stops the view and lets go of all it holds. */
   dispose(): void;
 }
@@ -197,6 +199,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   return {
     flyTo,
     setRealms(now) { realms.set(now); },
+    choose(place) { realms.choose(place); },
     dispose() {
       gone = true;
       window.removeEventListener('keydown', key); window.removeEventListener('resize', look); sized.disconnect();

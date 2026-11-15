@@ -24,6 +24,8 @@ const SPARE = 16, AT_ONCE = 4;
 
 /** A tile of the pyramid that has been painted; without a mesh it holds no realm. */
 interface Held { level: number; x: number; y: number; seen: number; mesh?: THREE.Mesh; picture?: THREE.Texture; /** painted for realms that have changed since: shown until its new picture comes */ old?: boolean }
+/** what the worker was asked for: a tile, the names, to draw other realms or pick another place out, or which place lies somewhere */
+type Asked = Want | 'names' | 'realms' | 'chosen' | ((place: number) => void);
 interface Want { key: string; level: number; x: number; y: number; rank: number; /** the realms it was asked for (see `set`) */ age: number }
 
 export interface RealmsMap {
@@ -37,6 +39,8 @@ export interface RealmsMap {
   failed: string;
   /** Draws these realms from now on, in place of those the game sets up. */
   set(now: RealmsNow): void;
+  /** Picks a place of the game map out on the map from now on (counted from 0; -1: none). */
+  choose(place: number): void;
   /** The place of the game map at a cell of the world (-1: none, sea or beyond the game map), counted from 0. */
   placeAt(u: number, v: number): Promise<number>;
   /** Stops the worker; the map is not used after that. */
@@ -49,11 +53,11 @@ export interface RealmsMap {
  * `ahead`: paint the surroundings of the picture too. `changed` is called whenever a tile has arrived.
  */
 export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; ahead: boolean; changed(): void }): RealmsMap {
-  const held = new Map<string, Held>(), asked = new Map<number, Want | 'names' | 'realms' | ((place: number) => void)>(), busy = new Set<string>();
-  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, placeAt, dispose: () => worker.terminate() };
+  const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
+  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, choose, placeAt, dispose: () => worker.terminate() };
   /** how strongly the realms' colours cover the world */
   const wash = uniform(0);
-  let nextId = 1, looks = 0, named = false, age = 0;
+  let nextId = 1, looks = 0, named = false, age = 0, chosen = -1;
 
   /** the tile as a square on the ground, in finest blocks from its north-west corner */
   const square = (level: number) => {
@@ -66,7 +70,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
 
   const worker = new Worker(new URL('./realms.worker.ts', import.meta.url), { type: 'module' });
   type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base'> : never) : never;
-  const ask = (job: Job, what: Want | 'names' | 'realms' | ((place: number) => void)) => {
+  const ask = (job: Job, what: Asked) => {
     const id = nextId++;
     asked.set(id, what);
     worker.postMessage({ id, region: o.region, base: o.base, ...job } satisfies RealmsJob);
@@ -77,11 +81,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     if (typeof what === 'function') return what(e.data.place ?? -1);
     if (e.data.error) realms.failed ||= e.data.error;
     else if (what === 'names') realms.names = e.data.names ?? [];
-    else if (what === 'realms') {
+    else if (what === 'realms' || what === 'chosen') {
       // the worker works through what it is asked in turn: every tile that comes from now on shows the new realms,
       // and takes the place of the one that shows the old
       for (const h of held.values()) h.old = true;
-      named = false;
+      if (what === 'realms') named = false;
     } else if (what.age === age) {
       const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks };
       if (e.data.tile) {
@@ -99,7 +103,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
       if (before) drop(before);
       held.set(what.key, h);
     }
-    if (what !== 'names' && what !== 'realms') busy.delete(what.key);
+    if (typeof what === 'object') busy.delete(what.key);
     o.changed();
   };
   worker.onerror = (e) => { realms.failed ||= e.message; o.changed(); };
@@ -112,6 +116,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     // tiles asked for before this are of the old realms: they are let go when they come
     age++;
     ask({ kind: 'realms', ...now }, 'realms');
+  }
+  function choose(place: number) {
+    if (place === chosen) return;
+    chosen = place; age++;
+    ask({ kind: 'choose', place }, 'chosen');
   }
   function placeAt(u: number, v: number): Promise<number> {
     const x = Number.isFinite(o.round) ? ((u % o.round) + o.round) % o.round : u;
