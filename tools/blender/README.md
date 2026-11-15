@@ -18,8 +18,11 @@ jedes Modell nachvollziehbar, änderbar und auf andere Bauzustände umstellbar, 
 4. **Prüfung:** `npx vitest run tests/buildings/glb.test.ts` liest die Datei mit dem Leser des Spiels
    (`src/buildings/landmarks/glb.ts`) und prüft Dreiecke, Höhe, Grundfläche, Palette und Normalen. Beurteilt wird
    das Modell im Spiel-Renderer, nicht im Vorschaubild: `look-probe.html?campanile=glb` stellt die Datei an die
-   Stelle des handgebauten Campanile, `node tools/lookprobe/shot.mjs bild.png campanile=glb` macht das Bild dazu.
-   Dann Ramons Urteil.
+   Stelle des handgebauten Campanile, `node tools/lookprobe/shot.mjs bild.png campanile=glb` macht das Bild dazu,
+   und `python3 tools/lookprobe/gauntlet_campanile.py referenz.png bild.png` misst den Turm gegen Ramons
+   Referenzbild (Bandhöhen, Farben der Sonnenseite, Bogenanteile, Streifen, Breite). Der Gauntlet-Loop läuft, bis
+   die Messungen bestehen; dann Ramons Urteil. Was am Bau nicht vermessen ist, folgt dem Referenzbild und steht so
+   in der Massdatei.
 5. **Im Spiel:** `glbToBatch()` macht aus der Datei einen `Batch`, den `settle()` wie jedes handgebaute Modell
    stellt. Das läuft in den Web-Workern der Welt, ohne DOM und ohne Renderer.
 

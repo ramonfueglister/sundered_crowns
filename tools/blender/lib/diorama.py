@@ -121,17 +121,22 @@ class Model:
         for (ua, za), (ub, zb) in zip(pts, pts[1:]):
             self._add_faces([on(uc, spring), on(ua, za), on(ub, zb)], [(0, 1, 2)], colour, ('along', SIDE_NORMAL[side]))
 
-    def arcade(self, side, x0, y0, x1, y1, z0, z1, n, pier, thickness, top_gap, colour, segs=8):
+    def arcade(self, side, x0, y0, x1, y1, z0, z1, n, pier, thickness, top_gap, colour, segs=8, sill=0.0):
         """A wall of thickness ``thickness`` on one side of the box, from z0 to z1, pierced by ``n`` round-headed
-        openings between piers ``pier`` wide; the arch tops stay ``top_gap`` below z1. The openings are real: piers,
-        the wall above the arches and the arch soffits are geometry, so that the inside shows through and the
-        reveals catch light and shadow. Build something dark inside the box so the view through them ends."""
+        openings between piers ``pier`` wide; the arch tops stay ``top_gap`` below z1 and the openings start ``sill``
+        above z0. The openings are real: piers, the wall above the arches and the arch soffits are geometry, so that
+        the inside shows through and the reveals catch light and shadow. Build something dark inside the box so the
+        view through them ends."""
         length = (x1 - x0) if side in ('+y', '-y') else (y1 - y0)
         ow = (length - (n + 1) * pier) / n
         radius = ow / 2
         spring = z1 - top_gap - radius
         on = lambda u, z, t=0.0: self._on(side, x0, y0, x1, y1, u, z, t)
         normal = Vector(SIDE_NORMAL[side])
+        if sill > 0:
+            a, c = on(0, z0, 0), on(length, z0, -thickness)
+            self.box(min(a[0], c[0]), min(a[1], c[1]), z0, max(a[0], c[0]), max(a[1], c[1]), z0 + sill, colour)
+            z0 = z0 + sill
         for k in range(n + 1):
             u = k * (ow + pier)
             a, b, c, d = on(u, z0, 0), on(u + pier, z0, 0), on(u + pier, z0, -thickness), on(u, z0, -thickness)

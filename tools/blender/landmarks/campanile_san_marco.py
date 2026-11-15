@@ -29,7 +29,9 @@ def build(data: dict) -> Model:
     m = Model.new(data['id'])
     b = lambda key: m2b(data, key)  # noqa: E731
     half = b('schaft_seite') / 2
-    brick, stone, marble, copper, dark = rgb('BRICK'), rgb('STONE'), rgb('MARBLE'), rgb('COPPER'), rgb('OPENING')
+    stone, marble, gold, dark = rgb('STONE'), rgb('MARBLE'), rgb('GOLD'), rgb('OPENING')
+    colour = lambda key: rgb(int(data['masse'][key]['wert'].lstrip('#'), 16))  # noqa: E731
+    brick, dado, copper = colour('farbe_schaft'), colour('farbe_dado'), colour('farbe_spitze')
 
     # the stone plinth, a little wider than the shaft, reaching half a block into the ground
     p = half + b('sockel_vorsprung')
@@ -41,7 +43,7 @@ def build(data: dict) -> Model:
     z1 = z0 + b('schaft_hoehe')
     n, fw, depth = int(data['masse']['rillen_pro_seite']['wert']), b('rillen_breite'), b('rillen_tiefe')
     core = half - depth
-    m.box(-core, -core, z0, core, core, z1, shade(brick, 0.9), foot=0.88)
+    m.box(-core, -core, z0, core, core, z1, brick, foot=0.88)
     strip = (2 * half - n * fw) / (n + 1)
     for s in SIDES:
         for k in range(n + 1):
@@ -55,24 +57,33 @@ def build(data: dict) -> Model:
         zc = z0 + (k + 1) * (z1 - z0) / (wins + 1)
         m.pane('+y', -half, -half, half, half, zc - wh / 2, zc + wh / 2, uw - fw * 0.3, uw + fw * 0.3, dark, -depth + 0.02)
 
-    # the belfry of 1329: an arcade of stone on a cornice, open so that the dark bell chamber shows through
+    # the belfry: a white arcade on a cornice, open so that the dark bell chamber shows through the arches
     gh, go = b('gesims_hoehe'), b('gesims_vorsprung')
-    cornice(m, half, z1, gh, go, marble)
-    z2 = z1 + gh
+    cornice(m, half, z1, gh / 2, go, marble)
+    z2 = z1 + gh / 2
     z3 = z2 + b('glockenstube_hoehe')
     arches, pier, thick = int(data['masse']['glockenstube_boegen_pro_seite']['wert']), b('glockenstube_pfeiler_breite'), b('glockenstube_mauerstaerke')
-    m.box(-half + thick - 0.02, -half + thick - 0.02, z2, half - thick + 0.02, half - thick + 0.02, z3, dark, top=dark)
+    m.box(-half + thick - 0.02, -half + thick - 0.02, z2, half - thick + 0.02, half - thick + 0.02, z3, shade(dark, 0.5), top=shade(dark, 0.5))
     for s in SIDES:
-        m.arcade(s, -half, -half, half, half, z2, z3, arches, pier, thick, gh, stone)
+        m.arcade(s, -half, -half, half, half, z2, z3, arches, pier, thick, b('glockenstube_bogen_abstand_oben'), marble, sill=b('glockenstube_bruestung'))
 
-    # the dado above it, brick again, with the eaves board of the spire
-    cornice(m, half, z3, gh, go, marble)
-    z4 = z3 + gh + b('dado_hoehe')
-    m.box(-half, -half, z3 + gh, half, half, z4, brick, foot=0.92)
-    cornice(m, half, z4, gh, go, shade(copper, 0.8))
+    # the dado above it, brick with a white relief on each face, under the white band that carries the spire
+    cornice(m, half, z3, gh / 2, go, marble)
+    z4 = z3 + gh / 2 + b('dado_hoehe')
+    m.box(-half, -half, z3 + gh / 2, half, half, z4, dado, foot=0.92)
+    dh = b('dado_hoehe')
+    for s in SIDES:
+        m.pane(s, -half, -half, half, half, z3 + gh / 2 + dh * 0.25, z4 - dh * 0.25, half - dh * 0.25, half + dh * 0.25, marble, 0.05)
+    cornice(m, half, z4, gh, go, marble)
 
-    # the wooden spire in its copper plates, not yet gilded
-    m.pyramid(0, 0, z4 + gh, half + go, b('spitze_hoehe'), copper)
+    # the wooden spire in its copper plates, and the crowning figure on its white pedestal
+    z5 = z4 + gh
+    sh = b('spitze_hoehe')
+    m.pyramid(0, 0, z5, half + go, sh, copper)
+    fh, fwid = b('bekroenung_hoehe'), b('bekroenung_breite')
+    m.box(-0.14, -0.14, z5 + sh - 0.05, 0.14, 0.14, z5 + sh + fh * 0.25, marble)
+    m.box(-0.12, -0.12, z5 + sh + fh * 0.25, 0.12, 0.12, z5 + sh + fh, gold)
+    m.box(-fwid / 2, -0.07, z5 + sh + fh * 0.45, fwid / 2, 0.07, z5 + sh + fh * 0.8, gold)
     return m
 
 

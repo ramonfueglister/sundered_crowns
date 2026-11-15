@@ -34,24 +34,24 @@
       "quelle": "Annahme"
     },
     "glockenstube_hoehe": {
-      "wert": 10.0,
+      "wert": 16.2,
       "einheit": "m",
-      "quelle": "Annahme nach der Darstellung des Turms vor 1511 bei Gentile Bellini, Prozession auf der Piazza San Marco (1496): Bogenhalle von etwa einem Fuenftel der Schafthoehe; nicht vermessen"
+      "quelle": "Annahme nach Ramons Referenzbild (gemessen mit tools/lookprobe/gauntlet_campanile.py, 8,33 px je Block); am Bau nicht vermessen; Bellinis Bild von 1496 zeigt eine niedrigere Bogenhalle"
     },
     "glockenstube_boegen_pro_seite": {
-      "wert": 3,
+      "wert": 4,
       "einheit": "Stueck",
-      "quelle": "Annahme nach Bellini 1496; die heutige Glockenstube von 1514 hat vier"
+      "quelle": "Annahme nach Referenzbild; auch die heutige Glockenstube von 1514 hat vier"
     },
     "dado_hoehe": {
-      "wert": 4.0,
+      "wert": 6.1,
       "einheit": "m",
-      "quelle": "Annahme nach Bellini 1496"
+      "quelle": "Annahme nach Ramons Referenzbild (gemessen mit tools/lookprobe/gauntlet_campanile.py, 8,33 px je Block); am Bau nicht vermessen"
     },
     "spitze_hoehe": {
-      "wert": 24.0,
+      "wert": 18.8,
       "einheit": "m",
-      "quelle": "Annahme: Holzpyramide mit Kupferplatten (en.wikipedia: 'pyramidal spire in wood that was sheathed with copper plates', 1156 bis 1172, um 1329 erneuert). Hoehe vor 1489 nicht ueberliefert; so gewaehlt, dass der Turm rund 90 m erreicht"
+      "quelle": "Annahme nach Ramons Referenzbild (gemessen mit tools/lookprobe/gauntlet_campanile.py, 8,33 px je Block); am Bau nicht vermessen; Holzpyramide mit Kupferplatten (en.wikipedia), Hoehe vor 1489 nicht ueberliefert"
     },
     "rillen_pro_seite": {
       "wert": 4,
@@ -64,9 +64,9 @@
       "quelle": "Annahme nach Fotos des heutigen Schafts (Nachbau von 1912 folgt dem alten Schaft)"
     },
     "rillen_tiefe": {
-      "wert": 0.6,
+      "wert": 0.4,
       "einheit": "m",
-      "quelle": "Annahme; eher tief gewaehlt, damit die Rille im Blockmassstab einen Schatten wirft"
+      "quelle": "Annahme; so gewaehlt, dass die Rillen im Spiel-Renderer so kraeftig zeichnen wie die Streifen im Referenzbild (gauntlet_campanile.py)"
     },
     "schaft_fenster": {
       "wert": 8,
@@ -84,19 +84,54 @@
       "quelle": "Annahme"
     },
     "glockenstube_pfeiler_breite": {
-      "wert": 1.2,
+      "wert": 0.85,
       "einheit": "m",
-      "quelle": "Annahme nach Bellini 1496"
+      "quelle": "Annahme nach Referenzbild: vier Bogen je Seite, Oeffnungen rund 2 m breit, etwa viermal so hoch wie breit"
     },
     "gesims_hoehe": {
-      "wert": 0.5,
+      "wert": 2.6,
       "einheit": "m",
-      "quelle": "Annahme"
+      "quelle": "Annahme nach Ramons Referenzbild (gemessen mit tools/lookprobe/gauntlet_campanile.py, 8,33 px je Block); am Bau nicht vermessen; das weisse Band unter der Spitze"
     },
     "gesims_vorsprung": {
       "wert": 0.4,
       "einheit": "m",
       "quelle": "Annahme"
+    },
+    "bekroenung_hoehe": {
+      "wert": 4.4,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild (goldene Figur auf weissem Sockel); fuer 1356 nicht belegt, der vergoldete Engel kam 1513"
+    },
+    "farbe_schaft": {
+      "wert": "#ff865d",
+      "einheit": "sRGB",
+      "quelle": "Annahme nach Referenzbild: sRGB-Albedo, so gewaehlt, dass die Sonnenseite im Spiel-Renderer die Farbe des Bildes trifft (gauntlet_campanile.py); heller als die Ziegel der Haeuser"
+    },
+    "farbe_dado": {
+      "wert": "#ea8968",
+      "einheit": "sRGB",
+      "quelle": "Annahme nach Referenzbild: sRGB-Albedo, so gewaehlt, dass die Sonnenseite im Spiel-Renderer die Farbe des Bildes trifft (gauntlet_campanile.py); heller als die Ziegel der Haeuser"
+    },
+    "farbe_spitze": {
+      "wert": "#92c080",
+      "einheit": "sRGB",
+      "quelle": "Annahme nach Referenzbild: sRGB-Albedo, so gewaehlt, dass die Sonnenseite im Spiel-Renderer die Farbe des Bildes trifft (gauntlet_campanile.py); heller als die Ziegel der Haeuser; Kupfer nach 27 Jahren Bewitterung"
+    },
+    "bekroenung_breite": {
+      "wert": 1.8,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild (Figur mit Fluegeln)"
+    },
+    "glockenstube_bruestung": {
+      "wert": 4.0,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild: die Bogen beginnen ueber einem geschlossenen Band"
+    },
+    "glockenstube_bogen_abstand_oben": {
+      "wert": 3.5,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild: geschlossenes Band ueber den Bogen"
     }
   },
   "nicht_gebaut_weil_1356_noch_nicht_vorhanden": [
@@ -105,8 +140,9 @@
     "die 1912 wiederaufgebaute Form insgesamt"
   ],
   "offen": [
-    "Form und Hoehe der Glockenstube und der Spitze von 1329 sind nicht vermessen; sie stammen aus Bellinis Bild von 1496, das den Zustand nach dem Wiederaufbau von 1405/06 zeigt",
     "Farbe der Kupferplatten 1356 (nach 27 Jahren Bewitterung braun bis gruen): hier das Kupfergruen der Palette",
-    "Die Tiefe der Rillen und die Fenster sind im Blockmassstab groesser als am Bau, damit sie sichtbar bleiben; hier die Annahmen, nicht der Vermessungswert"
+    "Die Tiefe der Rillen und die Fenster sind im Blockmassstab groesser als am Bau, damit sie sichtbar bleiben; hier die Annahmen, nicht der Vermessungswert",
+    "Glockenstube, Dado, Spitze, Gesimse und Bekroenung folgen dem Referenzbild (Form von 1514), weil kein Mass von 1329 bis 1489 ueberliefert ist; fuer einen strengen Zustand 1356 fielen Reliefs und Goldfigur weg. Entscheidung fuer Ramon",
+    "Schaftbreite: im Referenzbild rund 4,3 Bloecke (15,8 m), gebaut 12 m nach Quelle; der Turm im Bild ist gedrungener als der echte"
   ]
 }
