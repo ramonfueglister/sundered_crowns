@@ -17,7 +17,8 @@ The whole map is too large to cut in one go, so the region `world` is cut part b
 its tiles into public/map/regions/world/ and leaves those of the other parts alone. A part is worked out together
 with a margin of land around it, so that its rivers and valleys do not end at its edge.
 
-Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world: about an hour and 8 GB of memory)
+Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world: up to an hour and 8 GB of memory;
+                                                             the smaller parts take 3 GB, so that two can run at once)
        python3 tools/worldprobe/build_region.py alps        (a region of its own, a minute)
 then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
@@ -43,10 +44,14 @@ REGIONS = {
 PARTS = {
     'europe': (21, 0, 41, 20),
     'asia': (41, 0, 48, 20),
-    'africa_west': (21, 20, 35, 41),
-    'africa_east': (35, 20, 48, 41),
-    'america_north': (0, 0, 21, 14),
-    'america_middle': (0, 14, 21, 28),
+    'africa_north_west': (21, 20, 35, 30),
+    'africa_south_west': (21, 30, 35, 41),
+    'africa_north_east': (35, 20, 48, 30),
+    'africa_south_east': (35, 30, 48, 41),
+    'america_north_west': (0, 0, 11, 14),
+    'america_north_east': (11, 0, 21, 14),
+    'america_middle_west': (0, 14, 11, 28),
+    'america_middle_east': (11, 14, 21, 28),
     'america_south': (0, 28, 21, 41),
 }
 # cells of land worked out around a part (Europe was cut first, without)
