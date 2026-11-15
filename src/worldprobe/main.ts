@@ -1,6 +1,7 @@
 // World probe: the real world of 1356 in the look of the look probe, to travel through, from a single town to the
-// whole map. Up close it is a diorama of blocks; farther out it sinks into a flat map (zoom.ts). The blocks are built
-// in pieces around the place the camera looks at, coarser the farther away (pieces.ts).
+// whole map. Up close it is a diorama of blocks, built in pieces around the place the camera looks at (pieces.ts);
+// farther out it sinks into the flat painted map that lies under it at every distance (paper.ts), on which the realms
+// and their names show from the width of a country on (names.ts). zoom.ts holds the rules of the change.
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
 // + and - zoom.
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
