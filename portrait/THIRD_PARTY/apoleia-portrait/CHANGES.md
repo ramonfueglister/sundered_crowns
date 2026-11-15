@@ -80,3 +80,6 @@ Round 56: `hair_small` (the hair of children under seven, `real_look.rs`; Apolei
 portraits), `brows_child` (`build.rs`), `genes` (how strongly single genes of the face show in the real look's face
 space, `morph.rs`; `lips` 0.4 for 1356), `child` follows the head's child share (`dress.rs` `child_share`).
 `examples/sample.rs` adds children of two and five. Roman bytes unchanged.
+Rounds 57 to 59: `plait01` and `bob04` written anew (pipeline switches, see `tools/portrait/pipeline/README.md`);
+`hair_lengths` in the dress table (`dress.rs` `hair_of`, `real_look.rs`) with the new `bob06`, `bob07`. Roman
+bytes unchanged.

@@ -150,6 +150,30 @@
    "bytes": 42006
   },
   {
+   "name": "bob06.txt.zst",
+   "bytes": 485231
+  },
+  {
+   "name": "bob06_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "bob06_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "bob07.txt.zst",
+   "bytes": 495257
+  },
+  {
+   "name": "bob07_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "bob07_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "braid01.txt.zst",
    "bytes": 251169
   },
@@ -387,6 +411,14 @@
   "bob05_cap.webp",
   "bob05_cap_n.webp",
   "bob05_n.webp",
+  "bob06.webp",
+  "bob06_cap.webp",
+  "bob06_cap_n.webp",
+  "bob06_n.webp",
+  "bob07.webp",
+  "bob07_cap.webp",
+  "bob07_cap_n.webp",
+  "bob07_n.webp",
   "braid01.webp",
   "braid01_cap.webp",
   "braid01_cap_n.webp",

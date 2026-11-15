@@ -149,6 +149,24 @@ mod tests {
     }
 
     #[test]
+    fn men_of_england_wear_their_hair_in_three_lengths() {
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        let mut n = std::collections::BTreeMap::new();
+        for seed in 0..1000u32 {
+            *n.entry(set.hair_of(seed)).or_insert(0) += 1;
+        }
+        // the shares are tenths of the people, and the same person keeps the same hair
+        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
+        assert_eq!(set.hair_of(4711), set.hair_of(4711));
+        // each length is a hair the repository has
+        if let Some(dir) = crate::real::folder() {
+            for name in set.hair_lengths.iter().map(|h| h.0).chain([set.hair]) {
+                assert!(crate::real::exists(&format!("{dir}/{name}_cap.txt")), "{name}");
+            }
+        }
+    }
+
+    #[test]
     fn the_face_at_rest_names_targets_the_head_has() {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };

@@ -59,6 +59,9 @@ pub struct DressSet {
     /// Men's hair, loose and under the hood on the head; the hair under a veil; the hair of girls and of women
     /// too young for the veil.
     pub hair: &'static str,
+    /// Other lengths of the same cut, each with its share in ten (by the person's seed); the rest wear `hair`.
+    /// With one length every man of a town has the same head.
+    pub hair_lengths: &'static [(&'static str, u32)],
     /// The same on a head that loses its hair: gone back at the temples, and a horseshoe round a bare top.
     /// The same on a head with curls (wavy, standing off the head).
     pub hair_curly: &'static str,
@@ -189,6 +192,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     veil: "cloth_veil_linen",
     wimple: "cloth_wimple",
     hair: "bob01",
+    hair_lengths: &[("bob06", 3), ("bob07", 2)],
     hair_curly: "bob05",
     hair_receding: "bob03",
     hair_bald: "bob04",
@@ -245,6 +249,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet)." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
+        Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 5 : 2", source: "PLACEHOLDER: lengths and shares by eye, so that the men of a town do not all have one head." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
@@ -296,6 +301,18 @@ pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
 
 impl DressSet {
     /// What a man wears on the head.
+    /// The hair of the head of a person with this seed: one of `hair_lengths` by its share, else `hair`.
+    pub fn hair_of(&self, seed: u32) -> &'static str {
+        let mut r = (seed / 10) % 10;
+        for &(name, share) in self.hair_lengths {
+            if r < share {
+                return name;
+            }
+            r -= share;
+        }
+        self.hair
+    }
+
     /// How strongly the gene `i` of the face shows in this dress (`genes`).
     pub fn gene_gain(&self, i: usize) -> f32 {
         self.genes.iter().find(|g| g.0 == crate::look::GENES[i]).map_or(1.0, |g| g.1)

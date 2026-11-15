@@ -321,6 +321,12 @@ flap beside the face) and showed the root ends of its broad strands as blocks. W
 skull, from more and narrower strands (`BOB_LIFT=0.025,0.03 BOB_K=640 BOB_W=0.2,0.3`). Still open: from the side
 its upper edge is a row of steps (the root ends of the strands), and it is the full hair's length.
 
+**Men's hair in three lengths (round 59).** Every man of England wore `bob01`: one head for a whole town. The
+dress table's `hair_lengths` names other lengths of the same cut with their shares in ten, picked by the person's
+seed (`dress.rs` `hair_of`): `bob06` to above the ear (3 in 10), `bob07` to the jaw (2 in 10), the rest `bob01`.
+Lengths and shares are PLACEHOLDER, by eye. Under the hood on the head, on heads with curls and on heads that
+lose their hair nothing changes; nor for small children.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
