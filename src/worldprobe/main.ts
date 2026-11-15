@@ -13,7 +13,9 @@ import type { PieceDone, PieceJob } from './piece.worker';
 import { projectionOf } from './region';
 import { blockOfCell, cellOfBlock } from './world';
 
-const q = new URLSearchParams(location.search), num = (k: string, fallback: number) => Number(q.get(k)) || fallback;
+const q = new URLSearchParams(location.search);
+/** a number of the address; the equator and the meridian of Greenwich are places too, so 0 counts */
+const num = (k: string, fallback: number) => { const v = Number(q.get(k) || NaN); return Number.isFinite(v) ? v : fallback; };
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
 /** finest blocks across the picture: from a town filling it to the whole map */
