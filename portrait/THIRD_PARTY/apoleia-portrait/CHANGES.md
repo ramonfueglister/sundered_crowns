@@ -83,3 +83,5 @@ space, `morph.rs`; `lips` 0.4 for 1356), `child` follows the head's child share 
 Rounds 57 to 59: `plait01` and `bob04` written anew (pipeline switches, see `tools/portrait/pipeline/README.md`);
 `hair_lengths` in the dress table (`dress.rs` `hair_of`, `real_look.rs`) with the new `bob06`, `bob07`. Roman
 bytes unchanged.
+Round 60: `DressSet::converge` and `gaze_of` (each eye turned towards the nose; `build.rs` eyes), `gaze` -0.1 for
+1356. Roman bytes unchanged.

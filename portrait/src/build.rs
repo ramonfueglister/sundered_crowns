@@ -832,7 +832,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
                 // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
                 // image is laid round that direction, which on a ball is the same as turning the eye)
-                let gaze = garb.map(|d| [d.gaze[0], d.gaze[1] - crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown)]).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
+                let gaze = garb.map(|d| d.gaze_of(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
                     let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
                     let r = norm(cross([0.0, 1.0, 0.0], g));
                     (r, cross(g, r), g)

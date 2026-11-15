@@ -146,8 +146,13 @@ pub struct DressSet {
     /// Where the eyes look, seen from the head: turned about the vertical (radians, in the sense of the stage's
     /// `turn`, src/portrait/profile.ts: with the turn's sign the eyes come back towards whoever looks at the
     /// picture) and upwards. The lean is taken out of it, so that the eyes keep looking level. Apoleia's eyes look
-    /// straight ahead of the head, past the viewer.
+    /// straight ahead of the head, past the viewer. Less than the stage's turn: turned all the way back to the
+    /// viewer the irises stand in the corners of the eyes, a glance out of the corner of the eye (until round 60).
     pub gaze: [f32; 2],
+    /// How far each eye is turned towards the nose on top of that (radians). Eyes that look at somebody near meet
+    /// on them; eyes that stand parallel look through them into the distance. 0.03 lets them meet about a metre
+    /// in front of the face.
+    pub converge: f32,
     /// Women's jaw and jaw angle narrower and softer on average: shift of the genes headF and jaw.
     pub jaw_women: f32,
     /// How much of Apoleia's child's face lies over MakeHuman's own child (1 = all of it): Apoleia adds a round
@@ -230,7 +235,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
     mood: 0.6,
     eye_forward: 0.0,
     lean: [-0.1, 0.14],
-    gaze: [-0.2, 0.0],
+    gaze: [-0.1, 0.0],
+    converge: 0.03,
     jaw_women: -0.35,
     kid: 0.0,
     cheeks: [0.0, 0.0],
@@ -254,7 +260,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze, women's jaw, lips, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, lips, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
@@ -318,6 +324,12 @@ impl DressSet {
         self.genes.iter().find(|g| g.0 == crate::look::GENES[i]).map_or(1.0, |g| g.1)
     }
 
+    /// Where one eye looks, seen from the head (yaw and pitch as `gaze`): `side` is 1 for the eye on the head's
+    /// +x side and -1 for the other, `lean` how far the bust leans back.
+    pub fn gaze_of(&self, side: f32, lean: f32) -> [f32; 2] {
+        [self.gaze[0] - self.converge * side, self.gaze[1] - lean]
+    }
+
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {
         if female || age < self.hood_from {
             Hood::None
@@ -344,5 +356,21 @@ mod tests {
         assert_eq!(e.hood_of(false, 30.0, 0), Hood::Up);
         assert_eq!(e.hood_of(false, 30.0, 5), Hood::Back);
         assert!(e.sources.iter().all(|s| !s.what.is_empty() && !s.source.is_empty()));
+    }
+
+    #[test]
+    fn the_eyes_of_england_meet_in_front_of_the_face() {
+        let e = Dress::England1356.set().unwrap();
+        let (left, right) = (e.gaze_of(1.0, 0.1), e.gaze_of(-1.0, 0.1));
+        // each eye is turned towards the nose by the same amount, about the direction both look in
+        assert!(left[0] < right[0], "{left:?} {right:?}");
+        assert!(((left[0] + right[0]) / 2.0 - e.gaze[0]).abs() < 1e-6);
+        // so their lines of sight cross in front of the face, where somebody stands who is spoken to (the head's
+        // eyes are 0.616 apart in its units, decimetres: between half a metre and two metres away)
+        let at = 0.616 / (right[0].tan() - left[0].tan());
+        assert!(at > 5.0 && at < 20.0, "they meet {at} in front");
+        // the lean is taken out of the pitch, the same for both
+        assert_eq!(left[1], right[1]);
+        assert!((left[1] - (e.gaze[1] - 0.1)).abs() < 1e-6);
     }
 }

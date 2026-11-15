@@ -327,6 +327,25 @@ seed (`dress.rs` `hair_of`): `bob06` to above the ear (3 in 10), `bob07` to the 
 Lengths and shares are PLACEHOLDER, by eye. Under the hood on the head, on heads with curls and on heads that
 lose their hair nothing changes; nor for small children.
 
+**Mouths that read as open, eyes that look out of their corners (round 60).** Three things that made the faces
+of England's sample read as absent, all found on the sample at the panel's size and then large:
+
+| what was wrong | cause | now |
+|---|---|---|
+| women's mouths read as slightly open, a dark line over a bright lower lip (the mouth is closed since round 54) | the key light stood 37 degrees above the head. The upper lip faces down and lay in shade, and so did the eyes in their sockets | the key light 24 degrees above the head (`lights.key.from` y 4.5 to 2.6) and a little weaker (energy 1.9 to 1.8), so that the share of the lightest band of skin stays about where it was (L 70 to 80 on the measured woman: 10 in 100 before, 22 with the lower light alone, 16 now). The colours per band are unchanged (the table of round 54 holds) |
+| a glance out of the corner of the eye, small children nearly wall-eyed | `gaze` (-0.2) turned the eyes back by 0.2 of the 0.24 the head is turned: the irises stood in the corners of the eyes, the near eye's against the outer corner | `gaze` -0.1 (the head's turn is -0.24): the eyes come back less than half way, the irises stand in the middle of the eyes. Each eye is turned 0.03 towards the nose on top of that (`converge`, new in the dress table; `dress.rs` `gaze_of`): the lines of sight meet about a metre in front of the face instead of standing parallel, as eyes do that look at somebody |
+| a dark grey sickle beside each iris, on the side away from the key light | the eyeball was lit as a hard ball: its half away from the light dark. The white of an eye lets light through | `eye.wrap` 0.5 in the profile: light reaches round the ball as it does round skin (`materials.ts` `eyeLook`) |
+
+Tried and dropped: more light from below instead of a lower key light (`sky.ground` lighter, `sky.energy` 0.4,
+`lights.fill.energy` 0.45: the upper lip hardly changes); the key light at 28 degrees (y 3.2: the lip still dark)
+and at 20 (y 2.2: the face flatter); `gaze` 0 (straight ahead of the head: calm, but past the viewer), -0.3 (more
+of the corner glance); `converge` 0.06 (no gain over 0.03 at the panel's size); `eye.wrap` 1 (the ball a flat
+white); denser lashes (`brow.lashes` 0.6, 0.7: the lower lashes show as spikes). All values PLACEHOLDER, by eye;
+the test page's `?set=` and four builds served the trials. Picture: `runde60_england_vorher_nachher.png` (rows in
+pairs, round 59 above round 60: women, men, small children).
+Still open: the hood's hem is a black cord round the face and across the chest; every mouth is the same calm
+line; what the rounds before list.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
