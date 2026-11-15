@@ -1,4 +1,4 @@
-// The names of the realms, written across their lands on the painted map: letters over the picture, spaced out along
+// The names of the realms, written across their lands on the 2D map (realms.ts): letters over the picture, spaced out along
 // each realm's length as on an old map, shown as far as the realms colour the map.
 import type { RealmName } from './paint';
 

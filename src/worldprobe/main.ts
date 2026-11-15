@@ -1,7 +1,8 @@
-// World probe: the real world of 1356 in the look of the look probe, to travel through, from a single town to the
-// whole map. Up close it is a diorama of blocks, built in pieces around the place the camera looks at (pieces.ts);
-// farther out it sinks into the flat painted map that lies under it at every distance (paper.ts), on which the realms
-// and their names show from the width of a country on (names.ts). zoom.ts holds the rules of the change.
+// World probe: the real world of 1356 in the look of the look probe, to travel through, from a single town to half
+// the globe. It is a diorama of blocks, built in pieces around the place the camera looks at (pieces.ts); farther out
+// the same world is seen from farther away, with less and less detail and relief, until it lies flat and the realms
+// and their names show on it (realms.ts, names.ts). zoom.ts holds the rules of the change. To the east and west the
+// world goes round the globe without an end; in the north and south the picture stops at its edge.
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
@@ -9,8 +10,8 @@
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage, showError } from '../lookprobe/stage';
 import { createNames } from './names';
-import { createPaper } from './paper';
 import { type Layout, createPieces } from './pieces';
+import { createRealms } from './realms';
 import { projectionOf } from './region';
 import { blockOfCell, cellOfBlock } from './land';
 import { FARTHEST, NEAREST, creasesOf, elevationOf, realmsOf, reliefOf } from './zoom';
@@ -34,17 +35,21 @@ async function main() {
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(num('lon', 12.1), num('lat', 45.85))), wide = Math.min(FARTHEST, Math.max(NEAREST, num('wide', 190)));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
-  const paper = createPaper(stage, { region: name, base, ahead: !still, changed: () => look() }), names = createNames();
+  const realms = createRealms(stage, { region: name, base, map: projection.map, round: projection.round, ahead: !still, changed: () => look() }), names = createNames();
 
   /** how the stage is laid out for the view, as of the last look */
   let laid: Layout = { step: 0, coarse: 1, homeX: 0, homeZ: 0 };
   const look = () => {
-    const elevation = elevationOf(wide), view = { x, z, wide, aspect: canvas.clientWidth / canvas.clientHeight, pixels: canvas.clientWidth, elevation };
-    const at = pieces.look(view), missing = at.missing + paper.look(view, at), failed = pieces.failed || paper.failed;
+    const elevation = elevationOf(wide), aspect = canvas.clientWidth / canvas.clientHeight, squash = Math.sin((elevation * Math.PI) / 180);
+    // north and south of the world there is nothing: the picture stops at its edge (the map's rows run with the picture's)
+    const [u, v] = cellOfBlock(x, z), half = Math.min(projection.rows, wide / aspect / squash) / 2, held = Math.min(projection.rows - half, Math.max(half, v));
+    if (held !== v) [x, z] = blockOfCell(u, held);
+    const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
+    const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
     stage.creases(creasesOf(wide)); laid = at;
-    const [u, v] = cellOfBlock(x, z), box = canvas.getBoundingClientRect();
-    names.show(paper.names, box, u / projection.cells, v / projection.cells, (box.width / wide) * projection.cells, Math.sin((elevation * Math.PI) / 180), realmsOf(wide));
+    const box = canvas.getBoundingClientRect();
+    names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realmsOf(wide));
     stage.busy = missing > 0 && !failed;
     if (stage.busy) stage.probe.ready = false;
     if (status) status.textContent = failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : '');

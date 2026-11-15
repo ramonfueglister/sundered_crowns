@@ -1,14 +1,11 @@
 // Properties the map mode of the world must keep: whatever tiles have arrived, the picture is covered exactly once
-// (no hole, nothing drawn twice); the rules of the view change smoothly with its width; and the painted map shows
-// sea, land, snow and realms where they are.
+// (no hole, nothing drawn twice); the rules of the view change smoothly with its width; and the realms' map shows
+// the realms where they are.
 import { describe, expect, it } from 'vitest';
 import { seeded } from '../../src/lookprobe/batch';
-import { OPEN_WATER } from '../../src/lookprobe/terrain';
-import { Land } from '../../src/worldprobe/climate';
-import { paintLand, paintRealms, realmNames } from '../../src/worldprobe/paint';
+import { paintRealms, realmNames } from '../../src/worldprobe/paint';
 import { cover, keyOf } from '../../src/worldprobe/pyramid';
-import { type Region, Water, latOf } from '../../src/worldprobe/region';
-import { COARSEST, FARTHEST, NEAREST, creasesOf, elevationOf, paperLevelOf, paperOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
+import { COARSEST, FARTHEST, NEAREST, creasesOf, elevationOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
 
 describe('pyramid', () => {
   interface T { level: number; x: number; y: number }
@@ -49,7 +46,7 @@ describe('zoom', () => {
   for (let w = NEAREST; w <= FARTHEST; w *= 1.01) widths.push(w);
 
   it('changes every rule smoothly and in one direction as the view widens', () => {
-    const rules: [string, (w: number) => number, number][] = [['elevation', elevationOf, 1], ['paper', paperOf, 1], ['realms', realmsOf, 1], ['creases', creasesOf, -1]];
+    const rules: [string, (w: number) => number, number][] = [['elevation', elevationOf, 1], ['realms', realmsOf, 1], ['creases', creasesOf, -1]];
     for (const [name, rule, way] of rules) for (let k = 1; k < widths.length; k++) {
       const a = rule(widths[k - 1]), b = rule(widths[k]), span = name === 'elevation' ? 90 : 1;
       expect((b - a) * way, `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
@@ -65,13 +62,25 @@ describe('zoom', () => {
     }
   });
 
-  it('has laid the world flat under a camera looking straight down before the map stands alone', () => {
-    const alone = widths.find((w) => paperOf(w) >= 1)!;
-    expect(elevationOf(alone)).toBeGreaterThan(89);
-    expect(reliefOf(alone, stepOf(alone))).toBeLessThan(0.1);
-    expect(creasesOf(widths.find((w) => paperOf(w) > 0)!)).toBeLessThan(0.01);
-    expect(stepOf(alone)).toBe(COARSEST);
-    expect(realmsOf(alone)).toBe(0);
+  it('goes through every step of the map, one at a time, and keeps a step for at least a doubling of the width', () => {
+    let from = widths[0];
+    for (let k = 1; k < widths.length; k++) {
+      const a = stepOf(widths[k - 1]), b = stepOf(widths[k]);
+      if (a === b) continue;
+      expect(b).toBe(a + 1);
+      if (a > 0) expect(widths[k] / from).toBeGreaterThan(1.9);
+      from = widths[k];
+    }
+    expect(stepOf(NEAREST)).toBe(0); expect(stepOf(FARTHEST)).toBe(COARSEST);
+  });
+
+  it('shows the realms only once the world lies flat under a camera looking straight down', () => {
+    const first = widths.find((w) => realmsOf(w) > 0)!;
+    expect(elevationOf(first)).toBeGreaterThan(89);
+    expect(reliefOf(first, stepOf(first))).toBeLessThan(0.1);
+    expect(creasesOf(first)).toBeLessThan(0.01);
+    expect(stepOf(first)).toBeGreaterThanOrEqual(COARSEST - 1);
+    expect(realmsOf(FARTHEST)).toBe(1);
   });
 
   it('paints the map at about a dot to a pixel', () => {
@@ -83,39 +92,7 @@ describe('zoom', () => {
   });
 });
 
-describe('painted map', () => {
-  const W = 16;
-  /** a tile at the latitude of the Alps: sea in the west, plains, and a mountain of 4000 m in the east */
-  const region = (): Region => {
-    const r: Region = { w: W, h: W, x0: 3000, y0: 1900, cells: 4, mapW: 6144, mapH: 5296, lon0: -100, lon1: 70, latN: 72, latS: -38, shaped: new Int16Array(W * W), drainage: new Uint8Array(W * W), water: new Uint8Array(W * W), forest: new Uint8Array(W * W), crops: new Uint8Array(W * W), rivers: [] };
-    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { r.water[y * W + x] = x < 4 ? Water.Sea : Water.Land; r.shaped[y * W + x] = x < 4 ? 0 : x > 11 ? 4000 : 200; }
-    return r;
-  };
-  const climate = { w: 3072, h: 2648, cells: new Uint8Array(3072 * 2648).fill(Land.Temperate | 128) };
-  const dot = (p: Uint8ClampedArray, x: number, y: number) => [...p.subarray((y * W + x) * 4, (y * W + x) * 4 + 4)];
-
-  it('paints sea, meadow and snow, and lets the realms colour the land alone', () => {
-    const p = paintLand(region(), climate, 0), sea = dot(p, 1, 8), meadow = dot(p, 8, 8), snow = dot(p, 14, 8);
-    const srgb = (v: number) => Math.round(255 * (1.055 * v ** (1 / 2.4) - 0.055));
-    expect(sea.slice(0, 3)).toEqual(OPEN_WATER.map(srgb));
-    expect(meadow[1]).toBeGreaterThan(meadow[2] + 40);
-    expect(Math.min(...snow.slice(0, 3))).toBeGreaterThan(230);
-    expect([sea[3], meadow[3], snow[3]]).toEqual([0, 255, 255]);
-  });
-
-  it('draws a river and a town where they are', () => {
-    const plain = paintLand(region(), climate, 0), r = region();
-    r.rivers = [{ name: 'test', rank: 1, pts: [[6.5, 0], [6.5, 16]] }];
-    const p = paintLand(r, climate, 0, [{ lon: -100 + ((r.x0 + 9.5 / r.cells) / r.mapW) * 170, lat: latOf(r, 13), size: 3 }]);
-    // the river is bluer than the meadow it crosses, and the meadow beside it is as it was
-    expect(dot(p, 6, 2)[2]).toBeGreaterThan(dot(plain, 6, 2)[2] + 40);
-    expect(dot(p, 9, 2)).toEqual(dot(plain, 9, 2));
-    expect(dot(p, 6, 2)[3]).toBeLessThan(100);
-    // the town is a mark in the red of its roofs
-    expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(plain, 9, 13)[0] + 40);
-    expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(p, 9, 13)[1] + 40);
-  });
-
+describe('realms', () => {
   // two realms of 8 × 16 map pixels side by side, a strip of land without a realm and water to the east
   const ids = new Uint16Array(32 * 16), owner = [0, 1, -1];
   for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) ids[y * 32 + x] = x < 8 ? 1 : x < 16 ? 2 : x < 24 ? 3 : 4;

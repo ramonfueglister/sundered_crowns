@@ -27,7 +27,7 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     let scene: StageScene<Shape>;
     if (region.water.every((k) => k === Water.Sea)) scene = { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), counts: {} };
     else { if (step === 0) await loadTownPeople(); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
-      const built = buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.mapW, region.mapH), inhabitants); scene = { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, counts: built.counts }; }
+      const built = buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), inhabitants); scene = { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, counts: built.counts }; }
     const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     (self as unknown as Worker).postMessage({ id, scene } satisfies PieceDone, lists);
   } catch (err) {

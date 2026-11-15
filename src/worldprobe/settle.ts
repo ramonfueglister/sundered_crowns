@@ -24,16 +24,18 @@ export interface Settled {
 }
 
 /** The diorama holds one person for every hundred of 1356 (the scale agreed for the simulation too). */
-const PEOPLE_PER_PERSON = 100;
+export const PEOPLE_PER_PERSON = 100;
 /** A household of five on every storey of 33 m² (sixteen blocks of the reference image), per block of floor. */
-const PERSONS_PER_FLOOR_BLOCK = 5 / m2(33);
+export const PERSONS_PER_FLOOR_BLOCK = 5 / m2(33);
 /** Inhabitants taken for the places the gazetteer gives no estimate for: a village, a small town. An assumption. */
-const POP_OF_SIZE = [0, 500, 2000];
+export const POP_OF_SIZE = [0, 500, 2000];
 /** towns from this size on are walled and paved */
-const WALLED_FROM = 3;
+export const WALLED_FROM = 3;
 /** a field lot with the hedge round it, in blocks */
 const LOT_W = 11, LOT_D = 8;
 const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
+/** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
+export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
 /** A footprint side drawn between two lengths in metres, whole blocks (the footprints were read off the reference image). */
 const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(m(lo))), Math.max(2, Math.round(m(hi))));
 
@@ -41,10 +43,9 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  * Builds the monuments, then the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
  * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` the style of the farmhouses
  * there. Everything is laid out so that it comes out the same on every ground that covers it; only what `own` holds
- * at its middle is added to `things`. On a coarser map of the world a block covers `shrink` times the land, and the
- * places shrink with it.
+ * at its middle is added to `things`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, shrink = 1): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [];
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
@@ -91,9 +92,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       if (Math.max(Math.abs(dx), Math.abs(dz)) === k && buildable(x, z)) { cx = x; cz = z; break; }
     }
     if (cx < 0) return;
-    // on a coarser map a place holds fewer of the diorama's people and falls into a smaller class, down to none
-    const pop = (s.pop ?? POP_OF_SIZE[s.size]) / shrink, size = shrink === 1 ? s.size : pop >= 40000 ? 5 : pop >= 8000 ? 4 : pop >= 3000 ? 3 : pop >= 1200 ? 2 : pop >= 300 ? 1 : 0;
-    if (!size) return;
+    const pop = s.pop ?? POP_OF_SIZE[s.size], size = s.size;
     const r = seeded(1000 + s.id), need = pop / PEOPLE_PER_PERSON;
     let housed = 0;
     if (size < WALLED_FROM) {
@@ -114,7 +113,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
-    let half = Math.max(6, Math.round(0.8 * Math.sqrt(need / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
+    let half = firstHalf(pop);
     for (; housed < need && half <= 70; half += 2) {
       for (let z = cz - half; z < cz + half && housed < need; z++) for (let x = cx - half; x < cx + half && housed < need; x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || street(x, z)) continue;

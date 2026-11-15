@@ -1,5 +1,5 @@
 // A pyramid of square tiles: a tile of one level covers four of the level below it (x, y → 2x … 2x + 1, 2y … 2y + 1).
-// The world's pieces of blocks and the tiles of its painted map are both laid out this way, so that a coarser tile can
+// The world's pieces of blocks and the tiles of its realms are both laid out this way, so that a coarser tile can
 // stand in for finer ones that are not there yet, and the picture never shows a hole or changes all at once.
 
 export const keyOf = (level: number, x: number, y: number) => `${level}:${x},${y}`;

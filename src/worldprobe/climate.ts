@@ -6,7 +6,7 @@ export const Land = { None: 0, Temperate: 1, Mediterranean: 2, Steppe: 3, Desert
 export interface Climate { w: number; h: number; cells: Uint8Array }
 
 let loaded: Promise<Climate> | undefined;
-/** The climate layer of a map of mapW × mapH pixels. */
+/** The climate layer of a map of mapW × mapH pixels (of the world: once round the globe). */
 export function loadClimate(base: string, mapW: number, mapH: number): Promise<Climate> {
   loaded ??= (async () => {
     const r = await fetch(`${base}map/climate.bin.gz`);
@@ -17,6 +17,6 @@ export function loadClimate(base: string, mapW: number, mapH: number): Promise<C
   })();
   return loaded;
 }
-/** The byte of the place at map pixel (px, py); beyond the map that of its edge. */
+/** The byte of the place at map pixel (px, py): round the globe the layer begins again, north and south of it its edge goes on. */
 export const climateAt = (c: Climate, px: number, py: number) =>
-  c.cells[Math.max(0, Math.min(c.h - 1, Math.floor(py / 2))) * c.w + Math.max(0, Math.min(c.w - 1, Math.floor(px / 2)))];
+  c.cells[Math.max(0, Math.min(c.h - 1, Math.floor(py / 2))) * c.w + (((Math.floor(px / 2) % c.w) + c.w) % c.w)];

@@ -5,6 +5,9 @@ Step z of a region is the same map with cells 2^z times as wide, in the same til
 if half of it is, its height lies between the mean and the highest of its land, its drainage is the largest, forest
 and cultivation are the means. Of the rivers only the larger ones go along, the fewer the coarser the step.
 
+A world goes round the globe: its width is a whole number of the cells of every step (build_region.py), so that
+each step joins itself as the world does.
+
 Usage: python3 tools/worldprobe/build_overviews.py world      (some minutes and 6 GB of memory; run after build_region.py)
 """
 import gzip, json, os, shutil, sys
@@ -72,20 +75,26 @@ def halve_band(shaped, drainage, water, forest, crops):
 def main(name):
     base = os.path.join(ROOT, 'public', 'map', 'regions', name)
     meta = json.load(open(os.path.join(base, 'index.json')))
-    T, keys = meta['tile'], [tuple(map(int, k.split('_'))) for k in meta.pop('tiles')]
-    tx0, ty0 = min(k[0] for k in keys), min(k[1] for k in keys)
-    w, h = (max(k[0] for k in keys) - tx0 + 1) * T, (max(k[1] for k in keys) - ty0 + 1) * T
+    T, keys, cells = meta['tile'], [tuple(map(int, k.split('_'))) for k in meta.pop('tiles')], meta['cells']
+    # the tiles the region reaches over: all of a world (the last one across is cut short where it joins itself and
+    # filled up with sea, which stays sea at every step), else the box of those it has
+    tx0, ty0 = (0, 0) if 'worldW' in meta else (min(k[0] for k in keys), min(k[1] for k in keys))
+    across, down = (-(-meta['worldW'] * cells // T), meta['worldH'] * cells // T) if 'worldW' in meta else (max(k[0] for k in keys) - tx0 + 1, max(k[1] for k in keys) - ty0 + 1)
+    # the first step is made tile by tile, so that the region itself is never held whole
+    w, h, half = across * T // 2, down * T // 2, T // 2
     layers = [np.zeros((h, w), '<i2'), np.zeros((h, w), np.uint8), np.full((h, w), SEA, np.uint8), np.zeros((h, w), np.uint8), np.zeros((h, w), np.uint8)]
     rivers = []
     for tx, ty in keys:
-        raw, at = gzip.open(os.path.join(base, f'{tx}_{ty}.bin.gz')).read(), 0
+        raw, at, tile = gzip.open(os.path.join(base, f'{tx}_{ty}.bin.gz')).read(), 0, []
         for layer in layers:
             n = T * T * layer.dtype.itemsize
-            layer[(ty - ty0) * T:(ty - ty0 + 1) * T, (tx - tx0) * T:(tx - tx0 + 1) * T] = np.frombuffer(raw[at:at + n], layer.dtype).reshape(T, T); at += n
+            tile.append(np.frombuffer(raw[at:at + n], layer.dtype).reshape(T, T)); at += n
+        for layer, halved in zip(layers, halve_band(*tile)): layer[(ty - ty0) * half:(ty - ty0 + 1) * half, (tx - tx0) * half:(tx - tx0 + 1) * half] = halved
         rivers += json.load(open(os.path.join(base, f'{tx}_{ty}.json'), encoding='utf-8'))
-    gx0, gy0, cells = tx0 * T, ty0 * T, meta['cells']
+    gx0, gy0 = tx0 * T, ty0 * T
     for z in range(1, STEPS + 1):
-        layers = halve(*layers); gx0 //= 2; gy0 //= 2; k = 2 ** z
+        if z > 1: layers = halve(*layers)
+        gx0 //= 2; gy0 //= 2; k = 2 ** z
         coarse = []
         for r in rivers:
             if r['rank'] > RANK[z]: continue

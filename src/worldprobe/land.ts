@@ -1,5 +1,5 @@
-// The rules of the land that the blocks (world.ts) and the painted map (paint.ts) share: how the blocks lie on the
-// map, where the trees end and the snow begins, and what grows in which kind of land.
+// The rules of the land: how the blocks lie on the map (world.ts and the realms laid over them, realms.ts), where
+// the trees end and the snow begins, and what grows in which kind of land.
 import { type RGB, rgb } from '../lookprobe/batch';
 import { NEAR, RIGHT } from '../lookprobe/layout';
 import { Land } from './climate';
