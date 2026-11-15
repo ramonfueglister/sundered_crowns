@@ -15,24 +15,25 @@ export function boxOn(b: Batch, w: Wall, t0: number, y0: number, t1: number, y1:
 }
 
 /**
- * The faint grid of ashlar, or of plaster scored to look like it, in running bond: a thin pale joint under every row
- * of fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
+ * The grid of ashlar, or of plaster scored to look like it, in running bond: every fine block of the wall as a pane
+ * in its own tone, a smooth spread from a sixth darker to a sixth lighter than the wall, set a thin joint apart;
+ * the wall itself, in the pale joint colour (`jointOf`), shows between them as the joints. One pane per block
+ * instead of joints drawn on their own: a fifth of the wall's triangles saved, and every block has a tone.
  */
 export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
-  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = mix(c, [1, 1, 1], 0.3), j = V * 0.12;
+  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), j = V * 0.12;
   for (let k = 0; k < rows; k++) {
     const y = y0 + k * V;
-    pane(b, w, 0, y - j / 2, w.len, y + j / 2, joint, 0.02);
-    for (let i = 0; i <= cols; i++) {
-      const t = (i + (k % 2) * 0.5) * V;
-      if (t > j && t < w.len - j) pane(b, w, t - j / 2, y + j / 2, t + j / 2, y + V - j / 2, joint, 0.02);
-      const h = hash2(i, k, seed);
-      if (h < 0.15 || t + V > w.len) continue;
-      // the blocks that differ from the wall: a smooth spread of tones from a sixth darker to a sixth lighter
-      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, shade(c, 0.84 + 0.32 * hash2(k, i, seed + 1)), 0.02);
+    for (let i = -1; i <= cols; i++) {
+      const t0 = Math.max(0, (i + (k % 2) * 0.5) * V + j / 2), t1 = Math.min(w.len, (i + 1 + (k % 2) * 0.5) * V - j / 2);
+      if (t1 - t0 < j) continue;
+      pane(b, w, t0, y + j / 2, t1, y + V - j / 2, shade(c, 0.84 + 0.32 * hash2(k, i, seed + 1)), 0.02);
     }
   }
 }
+
+/** The colour of the joints between the blocks of a wall of colour `c`: the wall lightened towards white, hue kept. */
+export const jointOf = (c: RGB): RGB => mix(c, [1, 1, 1], 0.3);
 
 /** The rim of a pointed (equilateral) arch from the left springing over the apex to the right, `half` the opening's half width. */
 function pointedRim(w: Wall, tc: number, spring: number, half: number, lift: number): V3[] {
@@ -74,11 +75,12 @@ export function window(b: Batch, w: Wall, t: number, y: number, wv: number, hv: 
   pane(b, w, t - half, y, t + half, y + hv * V, mt.glass, 0.05);
   boxOn(b, w, t - half - V, y + hv * V, t + half + V, y + (hv + 1) * V, 0, V / 2, mt.stone);
   if (!detail) return;
-  // the wooden frame: jambs half a block wide and a head under the lintel, a quarter block proud
+  // the wooden frame: jambs half a block wide and a head under the lintel, as panes (a quarter block of relief is
+  // under a pixel at the near zoom, and a pane costs a fifth of a box)
   const frame = shade(mt.wood, 0.7);
-  boxOn(b, w, t - half - V * 0.5, y, t - half, y + hv * V, 0, V * 0.25, frame);
-  boxOn(b, w, t + half, y, t + half + V * 0.5, y + hv * V, 0, V * 0.25, frame);
-  boxOn(b, w, t - half - V * 0.5, y + (hv - 0.4) * V, t + half + V * 0.5, y + hv * V, 0, V * 0.25, frame);
+  pane(b, w, t - half - V * 0.5, y, t - half, y + hv * V, frame, 0.06);
+  pane(b, w, t + half, y, t + half + V * 0.5, y + hv * V, frame, 0.06);
+  pane(b, w, t - half - V * 0.5, y + (hv - 0.4) * V, t + half + V * 0.5, y + hv * V, frame, 0.06);
 }
 
 /**
@@ -123,15 +125,25 @@ const lerp3 = (a: V3, b: V3, t: number): V3 => [a[0] + (b[0] - a[0]) * t, a[1] +
  * A slope of tiles, each a cube of one fine block set on the slope from the eaves edge e0 → e1 up to the ridge edge
  * r0 → r1: the plate of tile cubes of the reference class. Every cube reaches down under the slope and stands a
  * little higher or lower on it, a touch lighter or darker; the cubes along the eaves, the verges and the ridge stand
- * a block higher: the raised rim of the plate.
+ * a block higher: the raised rim of the plate. Only the faces that can be seen are drawn: the top and the downhill
+ * face of every cube (the step to the row below), and all four sides of the rim cubes; an inner cube's other sides
+ * are hidden by its neighbours, since the gap between them is a twentieth of a block.
  */
 export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number) {
   const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)), rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
   const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
+  // the way down the slope, towards the eaves: one of the ground axes
+  const dx = e0[0] - r0[0], dz = e0[2] - r0[2], down = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? 'px' : 'nx') : dz > 0 ? 'pz' : 'nz';
   for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
     const a = at(j / cols, k / rows), d = at((j + 1) / cols, (k + 1) / rows), h = hash2(j, k, seed), col = shade(c, 0.88 + 0.2 * hash2(j, k, seed + 5));
     const rim = j === 0 || j === cols - 1 || k === 0 || k === rows - 1, top = Math.max(a[1], d[1]) + V * (0.15 + 0.2 * h) + (rim ? V * 0.7 : 0), g = V * 0.05;
-    b.box(Math.min(a[0], d[0]) + g, Math.min(a[1], d[1]) - V * 0.5, Math.min(a[2], d[2]) + g, Math.max(a[0], d[0]) - g, top, Math.max(a[2], d[2]) - g, col, { top: shade(col, 1.12) });
+    const x0 = Math.min(a[0], d[0]) + g, x1 = Math.max(a[0], d[0]) - g, z0 = Math.min(a[2], d[2]) + g, z1 = Math.max(a[2], d[2]) - g, y0 = Math.min(a[1], d[1]) - V * 0.5;
+    if (rim) { b.box(x0, y0, z0, x1, top, z1, col, { top: shade(col, 1.12) }); continue; }
+    b.quad([x0, top, z0], [x0, top, z1], [x1, top, z1], [x1, top, z0], shade(col, 1.12), [0, 1, 0]);
+    if (down === 'px') b.quad([x1, y0, z0], [x1, y0, z1], [x1, top, z1], [x1, top, z0], col, [1, 0, 0]);
+    else if (down === 'nx') b.quad([x0, y0, z1], [x0, y0, z0], [x0, top, z0], [x0, top, z1], col, [-1, 0, 0]);
+    else if (down === 'pz') b.quad([x0, y0, z1], [x1, y0, z1], [x1, top, z1], [x0, top, z1], col, [0, 0, 1]);
+    else b.quad([x1, y0, z0], [x0, y0, z0], [x0, top, z0], [x1, top, z0], col, [0, 0, -1]);
   }
 }
 
@@ -191,7 +203,7 @@ export function altana(b: Batch, x0: number, z0: number, x1: number, z1: number,
 
 /**
  * A pair of wooden shutters thrown open beside a window of `wv` × `hv` fine blocks, each a block wide and the
- * opening's height, hinged at the jambs and lying flat on the wall a quarter block proud, of paler wood than the
+ * opening's height, hinged at the jambs and lying flat on the wall as panes, of paler wood than the
  * frame so they read as leaves and not as a wider opening. Glass was rare before
  * 1400; windows were closed with wooden shutters or impannate (Venice measure file, assumption).
  */
@@ -199,9 +211,9 @@ export function shutters(b: Batch, w: Wall, t: number, y: number, wv: number, hv
   const half = (wv * V) / 2, c = shade(wood, 1.3 + 0.35 * hash2(seed, 3, 5)), dark = shade(c, 0.75);
   for (const q of [-1, 1]) {
     const t0 = t + q * (half + V * 0.5), t1 = t + q * (half + V * 1.5);
-    boxOn(b, w, Math.min(t0, t1), y, Math.max(t0, t1), y + hv * V, 0, V * 0.25, c);
+    pane(b, w, Math.min(t0, t1), y, Math.max(t0, t1), y + hv * V, c, 0.06);
     // two panels on the leaf, read as a dark groove across the middle
-    pane(b, w, Math.min(t0, t1) + V * 0.15, y + hv * V * 0.5 - V * 0.08, Math.max(t0, t1) - V * 0.15, y + hv * V * 0.5 + V * 0.08, dark, V * 0.26);
+    pane(b, w, Math.min(t0, t1) + V * 0.15, y + hv * V * 0.5 - V * 0.08, Math.max(t0, t1) - V * 0.15, y + hv * V * 0.5 + V * 0.08, dark, 0.07);
   }
 }
 

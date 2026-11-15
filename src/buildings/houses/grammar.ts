@@ -8,7 +8,7 @@ import { SIDES, type Side, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
-import { type Materials, altana, ashlar, chimney, corbels, door, gate, shop, shutters, tiledGable, washing, window } from './parts';
+import { type Materials, altana, ashlar, chimney, corbels, door, gate, jointOf, shop, shutters, tiledGable, washing, window } from './parts';
 import { VOXEL as V } from './style';
 
 export interface HouseOptions {
@@ -34,7 +34,9 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   const W = Math.max(6, Math.round(w / V)) * V, D = Math.max(6, Math.round(d / V)) * V;
   // what the whole house decides, drawn first and in this order
   // the openings are dark and warm, as in the reference class image (not the blue-grey glass of the far view)
-  const wallC = r.pick(tr.walls), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.55, 0.8)) };
+  const wallC = r.pick(tr.walls), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.4, 0.65)) };
+  // in the near view the body shows in the joint colour between the ashlar panes, from afar in the wall colour
+  const bodyC = detail ? jointOf(wallC) : wallC;
   const arched = r.chance(tr.arched), jetty = detail && floors > tr.jetty.from && r.chance(tr.jetty.share) ? tr.jetty.out * V : 0;
   const altanaOn = r.chance(tr.altana), seed = r.int(0, 1e6), pitch = r.range(tr.pitch[0], tr.pitch[1]);
   // storeys: the ground floor, the hall storey of a great house, the upper storeys; the last block of each is its band
@@ -45,10 +47,10 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   // the body: walls one block into the ground; a jettied house carries its upper storeys on corbels over the front
   if (jetty) {
     const yj = ys[tr.jetty.from], u = fp(tr.jetty.from);
-    b.box(base.x0, -1, base.z0, base.x1, yj, base.z1, wallC, { foot: 0.9 });
-    b.box(u.x0, yj - V, u.z0, u.x1, top, u.z1, wallC, { bottom: true });
+    b.box(base.x0, -1, base.z0, base.x1, yj, base.z1, bodyC, { foot: 0.9 });
+    b.box(u.x0, yj - V, u.z0, u.x1, top, u.z1, bodyC, { bottom: true });
     corbels(b, wallOf(base.x0, base.z0, base.x1, base.z1, front), yj - V, jetty, Math.max(2, Math.round(W / (2 * V))), tr.wood);
-  } else b.box(base.x0, -1, base.z0, base.x1, top, base.z1, wallC, { foot: 0.9 });
+  } else b.box(base.x0, -1, base.z0, base.x1, top, base.z1, bodyC, { foot: 0.9 });
   // plinth, string courses and cornice as rings of stone round the body (Istrian stone: assumption)
   ring(b, fp(0), 0, V, V * 0.25, shade(mt.stone, 0.88));
   for (let k = 1; k < hs.length; k++) ring(b, fp(k), ys[k] - V, ys[k], V * 0.5, mt.stone);
