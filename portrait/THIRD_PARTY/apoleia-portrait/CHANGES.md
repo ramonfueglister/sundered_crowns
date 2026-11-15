@@ -42,3 +42,5 @@ Added beside Apoleia's code (15.11.2026), without changing a Roman portrait (`ex
 `morph.rs` and `real_look.rs` (every branch behind `p.dress.set()`), `real_look.rs` `calm` (smooth movement and
 least distance for the game's own garments; Apoleia's are bound as before), the look's name with the set in front
 (`wire.rs`), `examples/genes.rs` (founders and children as numbers for the game's simulation of persons).
+Since then: `hair_girl` in the dress table (England: `plait01`, a parting and two plaits, in place of Apoleia's
+crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Roman bytes unchanged.

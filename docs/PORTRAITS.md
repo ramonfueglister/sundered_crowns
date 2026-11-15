@@ -48,7 +48,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
-| Hair: cut round with a fringe (men, girls), flat under a hood, a bun under the veil | `hair`, `hair_hooded`, `hair_veiled` | by eye |
+| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Faces: relaxed lids, softer jaw for women, redder lips, more flush on cheeks and nose | `lids`, `jaw_women`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries

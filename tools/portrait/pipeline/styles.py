@@ -1,6 +1,6 @@
 # More hairstyles from the same pipeline (hairlib.py): short crop, bald
 # (horseshoe), receding temples, short curls, a side parting of about 1900,
-# and a women's crown braid.
+# a women's crown braid, and (for 1350) the bob and a parting with two plaits.
 # usage: python3 -I styles.py base.obj outdir style name
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
@@ -168,6 +168,78 @@ elif style == 'braid':
     nv, nt = write_cards(H, out, name, hair_cards + cards, hair_tiles + tiles)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.4 + 0 * th, make_shade(H, S, lab, 240, rng), n=60000, mean=0.6)
     print(style, 'cards', len(hair_cards), '+ braid', len(cards), 'tris', nt, 'cap coverage', round(cov, 3))
+
+elif style == 'plait':
+    # about 1350, girls and unmarried women: a centre parting, the hair drawn down over the ears to below them,
+    # from there two plaits falling in front of the shoulders (PLACEHOLDER by eye, to be checked against the
+    # picture sources). The plaits lie on the gown of England 1356: their way down is measured on its cote.obj
+    # and written here as a table (x to the side, y up, z to the front, in base units).
+    # the hairline of the crown braid, on the forehead lower by PLAIT_HL degrees (a parting with the hair lying
+    # flat shows the whole forehead)
+    _hl = float(os.environ.get('PLAIT_HL', '5'))
+    hl, hln = line([(0, 19 - _hl), (20, 18 - _hl), (32, 12 - 0.8 * _hl), (44, 3 - 0.4 * _hl), (58, -6), (66, -14), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)])
+    margin = lambda th, el: el - hln(th)
+    GTH, GEL = [float(t) for t in os.environ.get('PLAIT_G', '92,-44').split(',')]
+    TTH, TEL = [float(t) for t in os.environ.get('PLAIT_T', '60,4').split(',')]
+    def gd(d):
+        return dirs(np.where(d[..., 0] >= 0, GTH, -GTH), GEL + 0 * d[..., 0])
+    def td(d):
+        return dirs(np.where(d[..., 0] >= 0, TTH, -TTH), TEL + 0 * d[..., 0])
+    def front(th, el):
+        # how much a place belongs to the front of the head, whose hair goes by the temple
+        return np.clip((TTH - 5 - np.abs(th)) / 20, 0, 1) * np.clip((el - TEL) / 12, 0, 1)
+    def flow(d, th, el):
+        # from the parting down the side first; in front by the temple, so that the hair frames the forehead
+        # in a round line and covers the ear, then to the place below the ear where the plait begins
+        k = np.clip((el - 35) / 40, 0, 1)[..., None]
+        f = front(th, el)[..., None]
+        sx = tangent(np.sign(d[..., 0:1] + 1e-6) * np.array([1.0, 0, 0]), d)
+        return unit((1 - k) * tangent((1 - f) * gd(d) + f * td(d) - d, d) + k * sx)
+    def length(th, el):
+        d = dirs(th, el)
+        ac = lambda a_, b_: np.arccos(np.clip((a_ * b_).sum(-1), -1, 1))
+        f = front(th, el)
+        way = f * (ac(d, td(d)) + ac(td(d), gd(d))) + (1 - f) * ac(d, gd(d))
+        return 0.98 * way * (0.92 + 0.1 * rng.random(np.shape(th))) + 0.08
+    _l = [float(t) for t in os.environ.get('PLAIT_LIFT', '0.045,0.04').split(',')]
+    S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26)
+    WAY = np.array([[0.74, 7.02, 0.34], [0.80, 6.55, 0.42], [0.84, 5.98, 0.62], [0.82, 5.40, 1.12], [0.76, 4.60, 1.46], [0.72, 4.15, 1.66]])
+    RB, LAM = [float(t) for t in os.environ.get('PLAIT_R', '0.13,0.34').split(',')]
+    cards, tiles = [], []
+    for sgn in (1.0, -1.0):
+        way = WAY * np.array([sgn, 1, 1])
+        way[0] = H.at(dirs(np.array([sgn * GTH]), np.array([GEL])), np.array([0.05]))[0]
+        # a smooth line through the table's points
+        u0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(way, axis=0), axis=1))])
+        uu = np.linspace(0, u0[-1], 400)
+        rp = np.stack([np.interp(uu, u0, way[:, i]) for i in range(3)], -1)
+        for _ in range(40):
+            rp[1:-1] = 0.5 * rp[1:-1] + 0.25 * (rp[:-2] + rp[2:])
+        arc = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(rp, axis=0), axis=1))])
+        total = arc[-1]
+        nseg = int(total / 0.36)
+        for k in range(3):
+            for sg in range(nseg):
+                a0 = sg * total / nseg; a1 = min(total, a0 + total / nseg * 1.15)
+                tt = np.linspace(a0, a1, 13)
+                c = np.stack([np.interp(tt, arc, rp[:, i]) for i in range(3)], -1)
+                nrm = unit(c - np.stack([0 * c[:, 0], c[:, 1], 0.2 + 0 * c[:, 0]], -1))
+                tg = unit(np.gradient(c, axis=0))
+                nrm = unit(nrm - (nrm * tg).sum(-1, keepdims=True) * tg)
+                bn = unit(np.cross(tg, nrm))
+                thin = np.clip((total - tt) / (0.14 * total), 0.3, 1)        # the end runs out thin
+                ph = 2 * np.pi * tt / LAM + 2 * np.pi * k / 3
+                q = c + bn * (RB * thin * np.sin(ph))[:, None] + nrm * (0.4 * RB * thin * np.sin(2 * ph) + 0.03)[:, None]
+                tg2 = unit(np.gradient(q, axis=0)); b2 = unit(np.cross(tg2, nrm))
+                w = float(os.environ.get('PLAIT_W', '0.19')) * thin[:, None]
+                cards.append((q - b2 * w / 2, q + nrm * 0.006, q + b2 * w / 2))
+                tiles.append(int(rng.integers(0, 4)))
+    hair_cards, hair_tiles = cards_from_wisps(H, S, lab, 320, rng, 4.0, 0.7, lambda d: int(rng.integers(0, 4)), clump=(0.1, 0.6), wmax=0.42, wmin=0.26)
+    # the plaits are bound to neck, shoulders and chest as well: a head that knows the body down to there
+    H2 = Head(base, ymin=3.9, hc=H.hc)
+    nv, nt = write_cards(H2, out, name, hair_cards + cards, hair_tiles + tiles)
+    cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.4 + 0 * th, make_shade(H, S, lab, 320, rng), n=60000, mean=0.6)
+    print(style, 'cards', len(hair_cards), '+ plaits', len(cards), 'tris', nt, 'cap coverage', round(cov, 3))
 
 elif style == 'bob':
     # about 1350: the hair grown to the jaw all round, covering the ears, a

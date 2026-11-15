@@ -889,7 +889,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // cards (their short cut shows gaps as patches; the bald pattern does
         // the work). Shares PLACEHOLDER
         let thin = if fem { c01((p.age - 45.0) / 40.0) * (0.3 + 0.7 * p.u(BALD)) * 0.55 } else { 0.0 };
-        if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, false, (thin, p.seed ^ 0x3c6e_f372)) {
+        // plaits hang below the head: their light is that of the side they hang on, not of the head's underside
+        let hangs = garb.is_some_and(|d| name == d.hair_girl);
+        if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, hangs, (thin, p.seed ^ 0x3c6e_f372)) {
             out.push(sf);
         }
         // real look: a painted cap of fine hairs under the cards, if there is one

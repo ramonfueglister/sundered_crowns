@@ -54,10 +54,12 @@ pub struct DressSet {
     pub wimple_from: f32,
     pub veil: &'static str,
     pub wimple: &'static str,
-    /// Men's hair, loose and under the hood on the head; the hair under a veil.
+    /// Men's hair, loose and under the hood on the head; the hair under a veil; the hair of girls and of women
+    /// too young for the veil.
     pub hair: &'static str,
     pub hair_hooded: &'static str,
     pub hair_veiled: &'static str,
+    pub hair_girl: &'static str,
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
@@ -90,6 +92,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair: "bob01",
     hair_hooded: "bob02",
     hair_veiled: "bun01",
+    hair_girl: "plait01",
     lips: [0.55, 0.38],
     flush: 1.35,
     lids: [0.4, 0.8, 0.4, 0.6],

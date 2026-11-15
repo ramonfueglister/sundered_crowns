@@ -226,6 +226,18 @@
    "bytes": 20765
   },
   {
+   "name": "plait01.txt.zst",
+   "bytes": 367569
+  },
+  {
+   "name": "plait01_cap.txt",
+   "bytes": 60918
+  },
+  {
+   "name": "plait01_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "receding01.txt.zst",
    "bytes": 143081
   },
@@ -348,6 +360,10 @@
   "curly01_n.webp",
   "eyeball.webp",
   "eyebrow001.webp",
+  "plait01.webp",
+  "plait01_cap.webp",
+  "plait01_cap_n.webp",
+  "plait01_n.webp",
   "receding01.webp",
   "receding01_cap.webp",
   "receding01_cap_n.webp",

@@ -1,7 +1,8 @@
 // The portrait test page (portrait-test.html): the test people of tests/portrait/people.json, drawn one by one on
 // the stage and laid out in a row of pictures. tools/portrait/compare.ts photographs it and holds each picture
 // against Apoleia's (Godot). ?size=672x840 sets the size of a picture, ?simple the faceted look,
-// ?origin=England moves every test person there (and with that into the dress of England 1356).
+// ?origin=England moves every test person there (and with that into the dress of England 1356); ?female=1 or 0
+// and ?age=12 make every test person a woman or a man, or of that age (to see one garment on many faces).
 import people from '../../tests/portrait/people.json';
 import { loadPortraitAssets } from './assets';
 import { PortraitStage } from './stage';
@@ -18,7 +19,12 @@ async function main(): Promise<void> {
   const wall = document.getElementById('wall')!;
   const origin = q.get('origin');
   for (const given of people as PortraitPerson[]) {
-    const person = origin ? { ...given, origin } : given;
+    const person: PortraitPerson = {
+      ...given,
+      ...(origin ? { origin } : {}),
+      ...(q.has('female') ? { female: q.get('female') === '1' } : {}),
+      ...(q.has('age') ? { age: Number(q.get('age')) } : {}),
+    };
     const t0 = performance.now();
     const portrait = assets.builder.build(person);
     const t1 = performance.now();

@@ -93,6 +93,7 @@ describe('portraits', () => {
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
       // women from the age of the veil wear it, men never
       expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
+      expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
     }
   });
 });
