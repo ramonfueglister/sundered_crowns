@@ -149,7 +149,54 @@ Einrichtungen, die England 1356 nicht hatte, sind über Parameter stillgelegt: M
 
 ## Historische Prüfung
 
-Geeicht ist das Modell auf England im Jahr 1356. Geprüft wird es an den 64 Jahren danach, ohne etwas nachzustellen: 20 Welten des Spiels, Tag für Tag gerechnet (`npm run economy:check`), gegen das reale BIP und den BIP-Preisindex von Broadberry u. a. Die Tabellen des Tagestakts folgen mit dem nächsten Stand dieser Seite.
+Geeicht ist das Modell auf England im Jahr 1356. Geprüft wird es an den 64 Jahren danach, ohne etwas nachzustellen: 20 Welten des Spiels, Tag für Tag gerechnet (`npm run economy:check`), gegen das reale BIP und den BIP-Preisindex von Broadberry u. a. Ein Jahr des Modells ist die Summe der 365 Tage bis zum 31. Dezember. Die Startposition steht für 1356; das Modell nach t Jahren wird also mit der Geschichte des Jahres 1356 + t verglichen. In allen 20 Welten wurde jeder Tag gerechnet.
+
+| Reales BIP | Tagestakt (Mittel der Welten) | Spanne der Welten | Jahresmodell (Feature 3) | Geschichte |
+|---|---|---|---|---|
+| Wachstum pro Jahr | +0,17 % | −0,03 % bis +0,25 % | +0,06 % | −0,14 % |
+| Standardabweichung des Jahreswachstums | 2,1 % | 1,0 % bis 2,7 % | 5,0 % | 6,7 % |
+| Tiefstes Jahr (Start = 100) | 100 | 96 bis 100 | 86 | 77 |
+| Höchstes Jahr | 118 | 116 bis 119 | 118 | 110 |
+| Mittlerer Stand aller Jahre | 113,6 | 110,3 bis 115,5 | 106,0 | 92,8 |
+| Stand nach 64 Jahren | 112 | 98 bis 117 | 104 | 91 |
+
+| Preisniveau des BIP | Tagestakt (Mittel der Welten) | Spanne der Welten | Jahresmodell (Feature 3) | Geschichte |
+|---|---|---|---|---|
+| Stand nach 64 Jahren (Start = 100) | 171 (Median 163) | 113 bis 252 | 292 (Median 79), Spanne 17 bis 1'410 | 96 |
+| Standardabweichung der Jahresteuerung | 0,9 % | 0,6 % bis 1,4 % | 9,9 % | 8,4 % |
+
+| Die Tage | Mittel der Welten | Spanne der Welten |
+|---|---|---|
+| Tage, an denen sich das Preisniveau des Tages bewegt | 100,0 % | 100,0 % bis 100,0 % |
+| Preisniveau am letzten Tag (Start = 100) | 172 (Median 164) | 114 bis 256 |
+| Ohne Arbeit, Mittel aller Tage (Anteil der Erwerbspersonen) | 0,03 % | 0,00 % bis 0,28 % |
+| Ohne Arbeit, schlechtester Tag | 1,3 % | 0,0 % bis 7,0 % |
+
+| Jahre nach dem Start | Geschichte (1356 = 100) | Tagestakt, Mittel | Tagestakt, Startwert der laufenden Welt |
+|---|---|---|---|
+| 0 (1356) | 100 | 100 | 100 |
+| 8 (1364) | 103 | 114 | 117 |
+| 16 (1372) | 85 | 115 | 118 |
+| 24 (1380) | 90 | 115 | 114 |
+| 32 (1388) | 92 | 114 | 118 |
+| 40 (1396) | 94 | 114 | 117 |
+| 48 (1404) | 94 | 114 | 117 |
+| 56 (1412) | 85 | 113 | 118 |
+| 64 (1420) | 91 | 112 | 114 |
+
+Was die Tabellen sagen:
+
+- Das reale BIP steigt wie im Jahresmodell in wenigen Jahren auf die Grenze von etwa 118 und bleibt dann nahe daran. Der mittlere Stand ist 113,6 (Jahresmodell 106,0, Geschichte 92,8). Der Tagestakt liegt also weiter über der Geschichte als das Jahresmodell, weil er fast keine Abschwünge hat.
+- Die Wirtschaft ist viel ruhiger als die Geschichte: Das Jahreswachstum streut um 2,1 % (Geschichte 6,7 %), die Jahresteuerung um 0,9 % (Geschichte 8,4 %).
+- Der Rückgang der Geschichte fehlt weiterhin. Englands Bevölkerung sank nach 1356; im Modell ist sie fest.
+- Das Preisniveau hat weiterhin keinen Anker, läuft aber nicht mehr davon: Nach 64 Jahren steht es in den 20 Welten bei 113 bis 252 (Jahresmodell 17 bis 1'410). Es steigt in jeder Welt.
+- Fast niemand ist ohne Arbeit. Der schlechteste Tag der schlechtesten Welt hatte 7,0 % ohne Arbeit.
+- Das Preisniveau des Tages bewegte sich an jedem Tag jeder Welt. Es ist mit der Tagesproduktion gewichtet und bewegt sich darum auch, wenn sich nur die Mengen ändern; neue Preise setzen pro Tag rund 93 Betriebe.
+- Die Einfuhr sinkt von 3,3 % auf 2,0 % des realen BIP (Jahresmodell 2,9 %). Warum sie stärker sinkt als im Jahresmodell, ist nicht geklärt.
+
+Abweichungen vom Probelauf des Vorschlags zum Tagestakt: Im Spiel ist der Plantag eines Betriebs seine Stelle in der Reihenfolge der Betriebe (statt eines Streuwerts daraus), und die Geschichte vor 1356 bleibt als 76 Jahreswerte gespeichert, die je für 365 Tage stehen. Mit denselben Plantagen eingestellt, lieferte das Probeprogramm über 401 Tage dieselben Beschäftigten, Arbeitslosen und Guthaben wie der Motor des Spiels. Die Zahlen oben sind im Spiel neu gemessen: 20 Welten über 64 Jahre statt 5 Welten über 30 Jahre. Dadurch wurden aus +0,43 % Wachstum, 0,02 % ohne Arbeit (höchster Stand 2,1 %) und einem Preisniveau von 124 bis 143 nach 30 Jahren die Werte oben; die Streuung des Jahreswachstums ist mit 2,1 % gleich.
+
+Abweichungen vom Probelauf des Vorschlags zu Feature 3: Der Probelauf rechnete bei Ausfuhr und Zins noch mit den Werten von 1381. Gebaut ist durchgehend der Stand 1356 (Ausfuhr 1356–60, Zins 7,5 % statt 5 %), der Tuchwert kam als dreizehnte Annahme dazu, und die Wertschöpfung ist um den Wollzoll bereinigt, damit das Modell genau beim BIP der Quelle startet.
 
 ## Massstab 1 : 100
 

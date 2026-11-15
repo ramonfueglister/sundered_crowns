@@ -703,8 +703,67 @@ the price level is the range of the worlds).
 | Daily clock, plan every 90 days | +0.43 % | 1.3 % | 0.00 % | 1.2 % | 115 to 180 |
 | Daily clock, plan every 365 days | +0.23 % | 0.8 % | 0.23 % | 5.6 % | 121 to 241 |
 
-**Model against history (`npm run economy:check`; nothing tuned).** The run of 20 worlds of the game over 64 years, day
-by day, was still computing when this text was committed; its tables follow with the next commit.
+**Model against history (`npm run economy:check`; nothing tuned).** 20 worlds of the game over 64 years from 1356,
+run day by day (seeds 1356 to 1375; the running world has seed 1356); all 20 computed every day. A year of the model
+is the sum of the 365 days up to 31 December; the starting position stands for 1356, so the model after t years is
+set against the history of 1356 + t. History: real GDP and GDP deflator of Broadberry et al. (Bank of England
+workbook, sheet A1; `data/economy/england_after_1356.json`). The yearly model of feature 3 is in its section above.
+
+| Real GDP | Model (mean of the worlds) | Range of the worlds | History |
+|---|---|---|---|
+| Mean growth a year | +0.17 % | −0.03 % to +0.25 % | −0.14 % |
+| Standard deviation of annual growth | 2.1 % | 1.0 % to 2.7 % | 6.7 % |
+| Lowest year (start = 100) | 100 | 96 to 100 | 77 |
+| Highest year | 118 | 116 to 119 | 110 |
+| Mean level of all years | 113.6 | 110.3 to 115.5 | 92.8 |
+| Level after 64 years | 112 | 98 to 117 | 91 |
+
+| Price level of GDP | Model (mean of the worlds) | Range of the worlds | History |
+|---|---|---|---|
+| Level after 64 years (start = 100) | 171 (median 163) | 113 to 252 | 96 |
+| Standard deviation of annual inflation | 0.9 % | 0.6 % to 1.4 % | 8.4 % |
+
+| Share of real GDP | At the start | Mean of all years and worlds |
+|---|---|---|
+| Household consumption | 88.8 % | 88.6 % |
+| Crown | 2.3 % | 1.8 % |
+| Investment | 7.4 % | 7.4 % |
+| Exports (with duty) | 4.7 % | 4.1 % |
+| Imports | 3.3 % | 2.0 % |
+
+| The days | Mean of the worlds | Range of the worlds |
+|---|---|---|
+| Days on which the price level of the day moves | 100.0 % | 100.0 % to 100.0 % |
+| Price level of the last day (start = 100) | 172 (median 164) | 114 to 256 |
+| Without work, mean of all days (share of the labour force) | 0.03 % | 0.00 % to 0.28 % |
+| Without work, the worst day | 1.3 % | 0.0 % to 7.0 % |
+
+| Years after the start | History (1356 = 100) | Model, mean | Model, world 1356 |
+|---|---|---|---|
+| 0 (1356) | 100 | 100 | 100 |
+| 8 (1364) | 103 | 114 | 117 |
+| 16 (1372) | 85 | 115 | 118 |
+| 24 (1380) | 90 | 115 | 114 |
+| 32 (1388) | 92 | 114 | 118 |
+| 40 (1396) | 94 | 114 | 117 |
+| 48 (1404) | 94 | 114 | 117 |
+| 56 (1412) | 85 | 113 | 118 |
+| 64 (1420) | 91 | 112 | 114 |
+
+Reading:
+- Real GDP rises to the ceiling of about 118 within a few years, as in the yearly model, and then stays close to it:
+  the mean level of all years is 113.6 (yearly model 106.0, history 92.8). The daily economy is further above
+  history than the yearly one, because it has almost no downturns.
+- It is much calmer than history: annual growth spreads by 2.1 % (history 6.7 %, yearly model 5.0 %), annual
+  inflation by 0.9 % (history 8.4 %, yearly model 9.9 %). The 2.1 % is what the trial of the proposal showed.
+- The price level still has no anchor, but it no longer runs away: after 64 years it stands at 113 to 252 in the 20
+  worlds (yearly model 17 to 1,410, history 96). It rises in every world.
+- Almost nobody is without work: 0.03 % of the labour force on the mean of all days; the worst day of the worst
+  world had 7.0 % (the trial of the proposal, 5 worlds over 30 years: 2.1 %).
+- The price level of the day moved on every day of every world. It is the port's index, weighted with the output of
+  the day, so it also moves when only the quantities move; about 93 firms set a new price each day.
+- Imports fall from 3.3 % to 2.0 % of real GDP (yearly model 2.9 %); the crown and exports fall by about as much as
+  GDP rises. Why imports fall further than in the yearly model was not traced.
 
 **Differences from the trial program of the proposal.** The plan day of a firm is its place in the order of the
 firms (i mod 30) instead of a hash of it; the power is the one of `libm` instead of the standard library's; the
@@ -727,12 +786,12 @@ standstill with its date.
 
 **Limits (none is addressed by this feature).**
 - The combination of the port's rules with a daily clock is not from a paper (see above).
-- Calmer than history: annual growth spreads less than in the history of 1356 to 1420. Nothing was tuned to close
-  the gap.
-- Almost always full employment: the economy runs close to its capacity, and the port's labour market fills a
-  vacancy on the same day.
+- Calmer than history and further above it: annual growth spreads by 2.1 % (history 6.7 %), the mean level of GDP
+  is 113.6 (history 92.8). Nothing was tuned to close the gap.
+- Almost always full employment (0.03 % without work): the economy runs close to its capacity, and the port's labour
+  market fills a vacancy on the same day.
 - No seasons: every day is the same; the harvest of feature 1 is not connected.
-- The price level still has no anchor; it drifts in a narrower band than in the yearly model.
+- The price level still has no anchor; it rises in every world, in a narrower band than in the yearly model.
 - The random part of the expectations is drawn anew every day and reaches only the firms that plan on that day; in
   the yearly model it reached all firms at once.
 - The yearly sums of exports and of the crown's purchases spread somewhat less than in the yearly model, because the
