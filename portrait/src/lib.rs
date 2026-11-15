@@ -94,13 +94,22 @@ mod tests {
     }
 
     #[test]
+    fn a_boy_stands_as_a_woman_until_he_is_grown() {
+        use crate::dress::by_sex;
+        assert_eq!(by_sex(-0.1, 0.14, true, 1.0), -0.1);
+        assert_eq!(by_sex(-0.1, 0.14, false, 0.0), -0.1);
+        assert_eq!(by_sex(-0.1, 0.14, false, 1.0), 0.14);
+        assert!((by_sex(-0.1, 0.14, false, 0.5) - 0.02).abs() < 1e-6);
+    }
+
+    #[test]
     fn the_face_at_rest_names_targets_the_head_has() {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };
         for (_, set) in crate::dress::SETS.iter() {
-            for (name, weight) in set.rest {
+            for (name, women, men) in set.rest {
                 assert!(h.targets.contains_key(*name), "{}: {name}", set.key);
-                assert!(*weight > 0.0 && *weight <= 1.0, "{}: {name} {weight}", set.key);
+                assert!(women.max(*men) > 0.0 && women.min(*men) >= 0.0 && women.max(*men) <= 1.0, "{}: {name}", set.key);
             }
         }
     }

@@ -55,3 +55,6 @@ Apoleia's: from 0 on, in step with the gene); Roman bytes unchanged.
 `rest` (targets of the face at rest under every mood, `morph.rs`), `lean` (the bust leaning back or forward per
 sex, `build.rs` `lean_back`) and `gaze` (where the eyes look, `build.rs`: the eyeball's image laid round that
 direction) in the dress table; Roman bytes unchanged.
+`rest` holds a weight for women and one for men; `dress.rs` `by_sex` lets a boy grow from the women's value to the
+men's (`rest`, `lean`, gaze), and a child's face takes a third of `rest` and of `mouth_shut`, growing to all
+(`morph.rs`); Roman bytes unchanged.

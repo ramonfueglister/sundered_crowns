@@ -89,10 +89,13 @@ pub struct DressSet {
     /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up. The lower lip pushed up stands
     /// out as a pout from the side; the jaw closes the mouth instead (`rest`).
     pub mouth_shut: [f32; 2],
-    /// The face at rest, under every mood: MakeHuman's targets and their weights. Its base has a mouth that turns
-    /// down at the corners with a heavy lower lip, and brows low over the eyes, which on a calm face reads as
-    /// lifeless.
-    pub rest: &'static [(&'static str, f32)],
+    /// Face and bearing at rest, under every mood: MakeHuman's targets and their weights for women and for men.
+    /// Its base has a mouth that turns down at the corners with a heavy lower lip, and brows low over the eyes,
+    /// which on a calm face reads as lifeless; its man has a short neck with the head pushed forward, so that a
+    /// gown's shoulders stand as high as his chin. A boy's weight grows from the women's to the men's as he grows up
+    /// (MakeHuman's child stands as its woman does; `by_sex`), and a child's face takes a third of them, growing
+    /// to all (as the genes of the face do, `Look::face`: on a child's small mouth they gave a pout).
+    pub rest: &'static [(&'static str, f32, f32)],
     /// How strongly a mood shows in the face (Apoleia: 1.7, drawn for a small picture; in a large one a sad
     /// mouth on an old face read as a mask).
     pub mood: f32,
@@ -101,7 +104,8 @@ pub struct DressSet {
     pub eye_forward: f32,
     /// How far the bust leans back, women and men (radians, about the axis from ear to ear through the head's
     /// centre). MakeHuman's man stands with the head pushed forward and bowed, its woman nearly upright: seen from
-    /// eye level the man's brow hangs over his eyes and his head sits between the shoulders.
+    /// eye level the man's brow hangs over his eyes and his head sits between the shoulders. A boy's grows from the
+    /// women's to the men's (`by_sex`).
     pub lean: [f32; 2],
     /// Where the eyes look, seen from the head: turned about the vertical (radians, in the sense of the stage's
     /// `turn`, src/portrait/profile.ts: with the turn's sign the eyes come back towards whoever looks at the
@@ -138,19 +142,23 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_trim",
-    lips: [0.7, 0.5],
+    lips: [0.55, 0.45],
     hair_red: [0.45, 0.74],
     flush: 0.7,
     lids: [0.1, 0.3, 0.1, 0.3],
-    mouth_shut: [0.6, 0.45],
+    mouth_shut: [0.75, 0.6],
     rest: &[
-        ("mouth/mouth-angles-up", 0.3),
-        ("cheek/l-cheek-trans-up", 0.15),
-        ("cheek/r-cheek-trans-up", 0.15),
-        ("eyebrows/eyebrows-trans-up", 0.25),
-        ("chin/chin-jaw-drop-decr", 0.6),
-        ("mouth/mouth-lowerlip-volume-decr", 0.3),
-        ("mouth/mouth-scale-depth-decr", 0.3),
+        ("mouth/mouth-angles-up", 0.3, 0.3),
+        ("cheek/l-cheek-trans-up", 0.15, 0.15),
+        ("cheek/r-cheek-trans-up", 0.15, 0.15),
+        ("eyebrows/eyebrows-trans-up", 0.25, 0.25),
+        ("chin/chin-jaw-drop-decr", 0.6, 0.6),
+        ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
+        ("mouth/mouth-scale-depth-decr", 0.3, 0.3),
+        ("mouth/mouth-upperlip-height-incr", 0.45, 0.45),
+        ("mouth/mouth-upperlip-volume-incr", 0.45, 0.45),
+        ("mouth/mouth-lowerlip-height-decr", 0.5, 0.5),
+        ("neck/neck-scale-vert-incr", 0.0, 0.4),
     ],
     mood: 0.6,
     eye_forward: 0.0,
@@ -182,6 +190,16 @@ impl Dress {
     /// Its table; none for the Roman dress, which lives in the code.
     pub fn set(self) -> Option<&'static DressSet> {
         SETS.iter().find(|(d, _)| *d == self).map(|(_, s)| *s)
+    }
+}
+
+/// A value given for women and for men, for a person: the women's for a woman, and for a man what lies between the
+/// two by how far he is grown up (`Look::grown`).
+pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
+    if female {
+        women
+    } else {
+        women * (1.0 - grown) + men * grown
     }
 }
 

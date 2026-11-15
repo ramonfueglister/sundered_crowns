@@ -194,9 +194,20 @@ children's mouths still stand a little open or pout, children's eyes are large a
 heavy as men's, the full beard reads as rows of shingles at a large size, and the gown lies round the neck as a
 mound that hides it (CK3 shows neck and shoulders).
 
+**Neck, boys, women's mouths (round 51).** The "mound round the neck" was not the gown: with the Roman dress and
+with the genes for weight and muscle at their ends the men's necks showed. It is the cape of the thrown-back hood
+(three men in ten wear it so) on the short neck MakeHuman's man has. `rest` in the dress table now holds a weight
+for women and one for men, and men get a longer neck (`neck/neck-scale-vert-incr` 0.4; at 0.5 it read as
+stretched). A boy took the men's values from birth: a long neck and a bust leaning back on a child's body. He now
+grows from the women's values to the men's as he grows up (`dress.rs` `by_sex`, for `rest`, `lean` and the gaze),
+and a child's face takes a third of the resting targets, growing to all of them. The women's mouth read as open
+at the panel's size because the upper lip lay in shadow as a dark line: the upper lip is taller and fuller, the
+lower lip flatter, and `mouth_shut` is 0.75 / 0.6. The lips of round 50 read as painted: `lips` 0.55 / 0.45.
+Still open: women's brows as heavy as men's, children's eyes large and round, the full beard as rows of shingles.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
-nostrils, edge of the lips), the gown's shoulders (a mound round the neck) and full and white beards (rows of card ends) are not; the thrown-back hood closes round the neck since
+nostrils, edge of the lips) and full and white beards (rows of card ends) are not; the thrown-back hood closes round the neck since
 round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places

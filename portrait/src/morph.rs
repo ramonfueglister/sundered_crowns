@@ -212,11 +212,12 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
                 add(&format!("eyes/{sd}-eye-{t}"), w);
             }
         }
-        for &(n, w) in d.rest {
-            add(n, w);
+        let child = 0.35 + 0.65 * p.grown();
+        for &(n, women, men) in d.rest {
+            add(n, crate::dress::by_sex(women, men, p.female, p.grown()) * child);
         }
-        add("mouth/mouth-upperlip-ext-down", d.mouth_shut[0]);
-        add("mouth/mouth-lowerlip-ext-up", d.mouth_shut[1]);
+        add("mouth/mouth-upperlip-ext-down", d.mouth_shut[0] * child);
+        add("mouth/mouth-lowerlip-ext-up", d.mouth_shut[1] * child);
     }
     let strength = p.dress.set().map_or(1.7, |d| d.mood);
     for &(n, w) in mood {
