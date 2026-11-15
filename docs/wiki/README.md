@@ -11,6 +11,8 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Im Spiel)*
   - [Bestellte Fläche](wirtschaft/bestellte-flaeche.md) *(Beschlossen)*
   - [Volkswirtschaft England](wirtschaft/volkswirtschaft-england.md) *(Beschlossen)*
+- [Personen](personen/README.md): wer als eigene Person in der Welt lebt
+  - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 
 ## Status der Seiten
 

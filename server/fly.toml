@@ -11,7 +11,7 @@ kill_timeout = "30s"
   WORLD_DATA_DIR = "/data"
   WORLD_ID = "europa-1"
   WORLD_NAME = "Europa I"
-  SECONDS_PER_DAY = "36"
+  SECONDS_PER_DAY = "240"
   MAX_PLAYERS = "100"
 
 # persistent disk for snapshots and the command log (one volume = one machine = one world)

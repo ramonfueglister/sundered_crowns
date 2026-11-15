@@ -1,0 +1,365 @@
+{
+ "year": 1356,
+ "source": "Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)",
+ "note": "written by tools/people/build_cities.py; people = inhabitants in 1356, real scale (the game divides by 100)",
+ "cities": [
+  {
+   "name": "Cairo",
+   "country": "Egypt",
+   "people": 351200,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 16,
+   "placeName": "Cairo"
+  },
+  {
+   "name": "Paris",
+   "country": "France",
+   "people": 230938,
+   "certainty": 1,
+   "years": [
+    1350,
+    1382
+   ],
+   "place": 1,
+   "placeName": "Paris"
+  },
+  {
+   "name": "Fez",
+   "country": "Morocco",
+   "people": 125000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 17,
+   "placeName": "Fez"
+  },
+  {
+   "name": "Sarai",
+   "country": "Russian Federation",
+   "people": 120000,
+   "certainty": 1,
+   "years": [
+    1350
+   ],
+   "place": 117,
+   "placeName": "Sarai"
+  },
+  {
+   "name": "Tabriz",
+   "country": "Iran",
+   "people": 106000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 18,
+   "placeName": "Tabriz"
+  },
+  {
+   "name": "Baghdad",
+   "country": "Iraq",
+   "people": 98800,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 127,
+   "placeName": "Baghdad"
+  },
+  {
+   "name": "Venice",
+   "country": "Italy",
+   "people": 90172,
+   "certainty": 1,
+   "years": [
+    1350,
+    1379
+   ],
+   "place": 7,
+   "placeName": "Venice"
+  },
+  {
+   "name": "Dumyat",
+   "country": "Egypt",
+   "people": 81200,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 507,
+   "placeName": "Damietta"
+  },
+  {
+   "name": "Shiraz",
+   "country": "Iran",
+   "people": 80000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 131,
+   "placeName": "Shiraz"
+  },
+  {
+   "name": "Istanbul",
+   "country": "Turkey",
+   "people": 79400,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 14,
+   "placeName": "Constantinople"
+  },
+  {
+   "name": "Damascus",
+   "country": "Syria",
+   "people": 74000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 15,
+   "placeName": "Damascus"
+  },
+  {
+   "name": "Seville",
+   "country": "Spain",
+   "people": 73200,
+   "certainty": 1,
+   "years": [
+    1300,
+    1400
+   ],
+   "place": 11,
+   "placeName": "Seville"
+  },
+  {
+   "name": "Aleppo",
+   "country": "Syria",
+   "people": 70612,
+   "certainty": 1,
+   "years": [
+    1350,
+    1399
+   ],
+   "place": 122,
+   "placeName": "Aleppo"
+  },
+  {
+   "name": "Esfahan",
+   "country": "Iran",
+   "people": 70000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1387
+   ],
+   "place": 130,
+   "placeName": "Isfahan"
+  },
+  {
+   "name": "Genova",
+   "country": "Italy",
+   "people": 69489,
+   "certainty": 1,
+   "years": [
+    1350,
+    1397
+   ],
+   "place": 8,
+   "placeName": "Genoa"
+  },
+  {
+   "name": "Texcoco",
+   "country": "Mexico",
+   "people": 68800,
+   "certainty": 2,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 549,
+   "placeName": "Texcoco"
+  },
+  {
+   "name": "Granada",
+   "country": "Spain",
+   "people": 63600,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 12,
+   "placeName": "Granada"
+  },
+  {
+   "name": "London",
+   "country": "United Kingdom",
+   "people": 60862,
+   "certainty": 1,
+   "years": [
+    1348,
+    1377
+   ],
+   "place": 4,
+   "placeName": "London"
+  },
+  {
+   "name": "Prague",
+   "country": "Austria",
+   "people": 59643,
+   "certainty": 1,
+   "years": [
+    1350,
+    1378
+   ],
+   "place": 13,
+   "placeName": "Prague"
+  },
+  {
+   "name": "Gent",
+   "country": "Belgium",
+   "people": 59250,
+   "certainty": 1,
+   "years": [
+    1350,
+    1358
+   ],
+   "place": 3,
+   "placeName": "Ghent"
+  },
+  {
+   "name": "Mali",
+   "country": "Mali",
+   "people": 58800,
+   "certainty": 3,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 542,
+   "placeName": "Niani"
+  },
+  {
+   "name": "Alexandria",
+   "country": "Egypt",
+   "people": 58235,
+   "certainty": 1,
+   "years": [
+    1350,
+    1384
+   ],
+   "place": 123,
+   "placeName": "Alexandria"
+  },
+  {
+   "name": "Feodosia",
+   "country": "Russian Federation",
+   "people": 57400,
+   "certainty": 2,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 118,
+   "placeName": "Caffa"
+  },
+  {
+   "name": "Trabzon",
+   "country": "Turkey",
+   "people": 54400,
+   "certainty": 3,
+   "years": [
+    1300,
+    1400
+   ],
+   "place": 119,
+   "placeName": "Trebizond"
+  },
+  {
+   "name": "Tenayuca",
+   "country": "Mexico",
+   "people": 54000,
+   "certainty": 2,
+   "years": [
+    1298
+   ],
+   "place": 549,
+   "placeName": "Texcoco"
+  },
+  {
+   "name": "Milan",
+   "country": "Italy",
+   "people": 53600,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 6,
+   "placeName": "Milan"
+  },
+  {
+   "name": "Tlemcen",
+   "country": "Algeria",
+   "people": 52400,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 125,
+   "placeName": "Tlemcen"
+  },
+  {
+   "name": "Cologne",
+   "country": "Germany",
+   "people": 51164,
+   "certainty": 1,
+   "years": [
+    1333,
+    1400
+   ],
+   "place": 5,
+   "placeName": "Cologne"
+  },
+  {
+   "name": "Marrakech",
+   "country": "Morocco",
+   "people": 50000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 126,
+   "placeName": "Marrakesh"
+  },
+  {
+   "name": "Soltaniyeh",
+   "country": "Iran",
+   "people": 50000,
+   "certainty": 1,
+   "years": [
+    1350,
+    1400
+   ],
+   "place": 524,
+   "placeName": "Soltaniyeh"
+  }
+ ]
+}

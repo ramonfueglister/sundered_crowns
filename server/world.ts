@@ -121,7 +121,7 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
   const num = (k: string, d: number) => { const v = Number(env[k]); return env[k] !== undefined && env[k] !== '' && Number.isFinite(v) ? v : d; };
   return {
     id: (env.WORLD_ID || 'europa-1').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 32), name: env.WORLD_NAME || 'Europa I', dataDir: env.WORLD_DATA_DIR || './world-data',
-    secondsPerDay: num('SECONDS_PER_DAY', 36), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 300)),
+    secondsPerDay: num('SECONDS_PER_DAY', 240), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 300)),
     seed: num('WORLD_SEED', 1356), startYear: num('WORLD_START_YEAR', 1356), maxPlayers: num('MAX_PLAYERS', 100),
     inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000, cmdsPerDay: num('CMDS_PER_DAY', 60),
     admins: (env.ADMIN_USERS || '').split(',').map((x) => x.trim()).filter(Boolean),

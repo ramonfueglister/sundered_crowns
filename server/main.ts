@@ -1,5 +1,5 @@
 // World server transport: HTTP (health/status) + WebSocket API around one WorldCore.
-//   npm run world                      → SECONDS_PER_DAY=36, port 8787, DEV login when Supabase is not configured
+//   npm run world                      → SECONDS_PER_DAY=240, port 8787, DEV login when Supabase is not configured
 //   SECONDS_PER_DAY=0.05 npm run world → fast mode for testing
 import { createServer, type IncomingMessage } from 'node:http';
 import { existsSync } from 'node:fs';
