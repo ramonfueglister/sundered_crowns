@@ -39,6 +39,14 @@ def at_year(row, years):
     return a[1], [a[0]]
 
 
+def site(gaz, city, lat, lon):
+    """The gazetteer place (index) of a city: by the place OVERRIDES name where there is one, else the nearest."""
+    if city in OVERRIDES:
+        return next(k for k, p in enumerate(gaz) if p['name'] == OVERRIDES[city])
+    c = math.cos(math.radians(lat))
+    return min(range(len(gaz)), key=lambda k: (gaz[k]['lat'] - lat) ** 2 + ((gaz[k]['lon'] - lon) * c) ** 2)
+
+
 def main(csv_path):
     raw = Path(csv_path).read_bytes()
     if hashlib.sha256(raw).hexdigest() != SHA256:
@@ -46,6 +54,7 @@ def main(csv_path):
     rows = list(csv.DictReader(raw.decode('latin-1').splitlines()))
     years = [(int(c[3:]), c) for c in rows[0] if c.startswith('AD_')]
     geo = json.loads((ROOT / 'public/data/geo.json').read_text())
+    gaz = json.loads((ROOT / 'data/content/gazetteer.json').read_text())['places']
     loc = geo['loc']
     found = []
     for r in rows:
@@ -68,7 +77,9 @@ def main(csv_path):
             place = min(range(geo['L']), key=lambda k: (loc['lat'][k] - lat) ** 2 + ((loc['lon'][k] - lon) * c) ** 2)
         out.append({'name': r['City'], 'country': r['Country'], 'people': round(pop), 'certainty': int(r['Certainty']),
                     'years': from_years, 'place': place, 'placeName': loc['name'][place],
-                    'lon': round(loc['lon'][place], 3), 'lat': round(loc['lat'][place], 3)})
+                    'lon': round(loc['lon'][place], 3), 'lat': round(loc['lat'][place], 3),
+                    # the town of the world graphic the persons walk in: the nearest place of the gazetteer
+                    'site': site(gaz, r['City'], lat, lon)})
     doc = {
         'year': YEAR,
         'source': 'Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)',

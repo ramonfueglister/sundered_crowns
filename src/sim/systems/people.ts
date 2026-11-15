@@ -17,7 +17,7 @@ import { personYears, type Sex } from '../people/lifetable';
 import { child, founder, origin, NG } from '../people/genes';
 import CITIES_JSON from '../content/cities_1356.json';
 
-export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number }
+export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number; site: number }
 export const CITIES: readonly City[] = CITIES_JSON.cities;
 
 /** The scale of the world: one person for this many people of 1356. */

@@ -2,7 +2,7 @@
 // their city, children from their parents, the same bytes as the Rust original, and the upgrade of an older world.
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
-import { child, founder, origin, GENES, NG, Origin } from '../src/sim/people/genes';
+import { child, founder, origin, GENES, NG, ORIGINS, Origin } from '../src/sim/people/genes';
 import { CITIES, genesOf } from '../src/sim/systems/people';
 import { newWorldState } from '../tools/sim/load';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -90,9 +90,11 @@ const GOLDEN = 'tests/portrait/genes_golden.json';
 describe.skipIf(!existsSync(GOLDEN))('the port', () => {
   it('gives the bytes of portrait/src/dna.rs', () => {
     const g = JSON.parse(readFileSync(GOLDEN, 'utf8'));
-    const bits = (list: string[]) => (k: number) => BigInt(list[k]);
-    for (const f of g.founders ?? []) expect(Array.from(founder(f.origin, bits(f.bits)))).toEqual(f.dna);
-    for (const c of g.children ?? []) expect(Array.from(child(c.father, c.mother, bits(c.bits)))).toEqual(c.dna);
-    for (const o of g.origins ?? []) expect(origin(o.lon, o.lat)).toBe(o.origin);
+    const bits = (list: string[]) => (k: number) => BigInt(`0x${list[k]}`);
+    for (const f of g.founders) expect(Array.from(founder(f.origin, bits(f.draws)))).toEqual(f.dna);
+    for (const c of g.children) expect(Array.from(child(c.father, c.mother, bits(c.draws)))).toEqual(c.dna);
+    expect(g.founders.length).toBe(21); expect(g.children.length).toBe(12);
+    for (const o of g.places) expect(origin(o.lon, o.lat)).toBe(o.origin);
+    expect(g.origins).toEqual([...ORIGINS]);
   });
 });

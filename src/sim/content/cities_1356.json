@@ -15,7 +15,8 @@
    "place": 16,
    "placeName": "Cairo",
    "lon": 31.447,
-   "lat": 29.903
+   "lat": 29.903,
+   "site": 2978
   },
   {
    "name": "Paris",
@@ -29,7 +30,8 @@
    "place": 1,
    "placeName": "Paris",
    "lon": 2.396,
-   "lat": 48.774
+   "lat": 48.774,
+   "site": 68
   },
   {
    "name": "Fez",
@@ -43,7 +45,8 @@
    "place": 17,
    "placeName": "Fez",
    "lon": -5.071,
-   "lat": 34.102
+   "lat": 34.102,
+   "site": 3053
   },
   {
    "name": "Sarai",
@@ -56,7 +59,8 @@
    "place": 117,
    "placeName": "Sarai",
    "lon": 45.248,
-   "lat": 48.716
+   "lat": 48.716,
+   "site": 2759
   },
   {
    "name": "Tabriz",
@@ -70,7 +74,8 @@
    "place": 18,
    "placeName": "Tabriz",
    "lon": 46.191,
-   "lat": 38.013
+   "lat": 38.013,
+   "site": 3127
   },
   {
    "name": "Baghdad",
@@ -84,7 +89,8 @@
    "place": 127,
    "placeName": "Baghdad",
    "lon": 44.306,
-   "lat": 33.319
+   "lat": 33.319,
+   "site": 3107
   },
   {
    "name": "Venice",
@@ -98,7 +104,8 @@
    "place": 7,
    "placeName": "Venice",
    "lon": 12.098,
-   "lat": 45.405
+   "lat": 45.405,
+   "site": 1329
   },
   {
    "name": "Dumyat",
@@ -112,7 +119,8 @@
    "place": 507,
    "placeName": "Damietta",
    "lon": 31.716,
-   "lat": 31.34
+   "lat": 31.34,
+   "site": 2961
   },
   {
    "name": "Shiraz",
@@ -126,7 +134,8 @@
    "place": 131,
    "placeName": "Shiraz",
    "lon": 52.555,
-   "lat": 29.505
+   "lat": 29.505,
+   "site": 3182
   },
   {
    "name": "Istanbul",
@@ -140,7 +149,8 @@
    "place": 14,
    "placeName": "Constantinople",
    "lon": 29.055,
-   "lat": 41.043
+   "lat": 41.043,
+   "site": 2575
   },
   {
    "name": "Damascus",
@@ -154,7 +164,8 @@
    "place": 15,
    "placeName": "Damascus",
    "lon": 36.316,
-   "lat": 33.546
+   "lat": 33.546,
+   "site": 2936
   },
   {
    "name": "Seville",
@@ -168,7 +179,8 @@
    "place": 11,
    "placeName": "Seville",
    "lon": -6.149,
-   "lat": 37.389
+   "lat": 37.389,
+   "site": 1867
   },
   {
    "name": "Aleppo",
@@ -182,7 +194,8 @@
    "place": 122,
    "placeName": "Aleppo",
    "lon": 37.096,
-   "lat": 36.181
+   "lat": 36.181,
+   "site": 2910
   },
   {
    "name": "Esfahan",
@@ -196,7 +209,8 @@
    "place": 130,
    "placeName": "Isfahan",
    "lon": 51.672,
-   "lat": 32.624
+   "lat": 32.624,
+   "site": 3168
   },
   {
    "name": "Genova",
@@ -210,7 +224,8 @@
    "place": 8,
    "placeName": "Genoa",
    "lon": 8.805,
-   "lat": 44.456
+   "lat": 44.456,
+   "site": 1380
   },
   {
    "name": "Texcoco",
@@ -224,7 +239,8 @@
    "place": 549,
    "placeName": "Texcoco",
    "lon": -98.832,
-   "lat": 19.696
+   "lat": 19.696,
+   "site": 3355
   },
   {
    "name": "Granada",
@@ -238,7 +254,8 @@
    "place": 12,
    "placeName": "Granada",
    "lon": -3.55,
-   "lat": 37.182
+   "lat": 37.182,
+   "site": 1876
   },
   {
    "name": "London",
@@ -252,7 +269,8 @@
    "place": 4,
    "placeName": "London",
    "lon": -0.223,
-   "lat": 51.549
+   "lat": 51.549,
+   "site": 753
   },
   {
    "name": "Prague",
@@ -266,7 +284,8 @@
    "place": 13,
    "placeName": "Prague",
    "lon": 14.294,
-   "lat": 50.072
+   "lat": 50.072,
+   "site": 2266
   },
   {
    "name": "Gent",
@@ -280,7 +299,8 @@
    "place": 3,
    "placeName": "Ghent",
    "lon": 3.684,
-   "lat": 51.08
+   "lat": 51.08,
+   "site": 460
   },
   {
    "name": "Mali",
@@ -294,7 +314,8 @@
    "place": 542,
    "placeName": "Niani",
    "lon": -8.355,
-   "lat": 11.49
+   "lat": 11.49,
+   "site": 3260
   },
   {
    "name": "Alexandria",
@@ -308,7 +329,8 @@
    "place": 123,
    "placeName": "Alexandria",
    "lon": 30.013,
-   "lat": 31.207
+   "lat": 31.207,
+   "site": 2964
   },
   {
    "name": "Feodosia",
@@ -322,7 +344,8 @@
    "place": 118,
    "placeName": "Caffa",
    "lon": 35.335,
-   "lat": 45.145
+   "lat": 45.145,
+   "site": 2771
   },
   {
    "name": "Trabzon",
@@ -336,7 +359,8 @@
    "place": 119,
    "placeName": "Trebizond",
    "lon": 39.742,
-   "lat": 40.927
+   "lat": 40.927,
+   "site": 2823
   },
   {
    "name": "Tenayuca",
@@ -349,7 +373,8 @@
    "place": 549,
    "placeName": "Texcoco",
    "lon": -98.832,
-   "lat": 19.696
+   "lat": 19.696,
+   "site": 3357
   },
   {
    "name": "Milan",
@@ -363,7 +388,8 @@
    "place": 6,
    "placeName": "Milan",
    "lon": 9.237,
-   "lat": 45.451
+   "lat": 45.451,
+   "site": 1327
   },
   {
    "name": "Tlemcen",
@@ -377,7 +403,8 @@
    "place": 125,
    "placeName": "Tlemcen",
    "lon": -1.273,
-   "lat": 34.979
+   "lat": 34.979,
+   "site": 3047
   },
   {
    "name": "Cologne",
@@ -391,7 +418,8 @@
    "place": 5,
    "placeName": "Cologne",
    "lon": 6.96,
-   "lat": 50.963
+   "lat": 50.963,
+   "site": 998
   },
   {
    "name": "Marrakech",
@@ -405,7 +433,8 @@
    "place": 126,
    "placeName": "Marrakesh",
    "lon": -7.967,
-   "lat": 31.669
+   "lat": 31.669,
+   "site": 3077
   },
   {
    "name": "Soltaniyeh",
@@ -419,7 +448,8 @@
    "place": 524,
    "placeName": "Soltaniyeh",
    "lon": 48.805,
-   "lat": 36.432
+   "lat": 36.432,
+   "site": 3144
   }
  ]
 }
