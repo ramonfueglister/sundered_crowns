@@ -44,8 +44,8 @@ describe('houses', () => {
         expect(lo[1]).toBeGreaterThanOrEqual(-FOOTING);
         // walls, then a terrace with a small room of 1.5 on it, or eaves, roof and chimneys up to 1 above the ridge; on a
         // town house also a tower one storey and a third above the house under a pointed roof
-        const walls = floors * B.FLOOR + 0.3, roofed = style.flat ? walls + 1.5 : walls + 0.12 + style.maxRise + 1;
-        const tower = kind === 'townHouse' ? (floors + 1.3) * B.FLOOR + 0.12 + 1.1 : 0;
+        const walls = floors * B.FLOOR + B.m(0.45), roofed = style.flat ? walls + B.m(2.1) : walls + B.m(0.17) + style.maxRise + B.m(1.14);
+        const tower = kind === 'townHouse' ? (floors + 1.3) * B.FLOOR + B.m(0.17) + B.m(1.57) : 0;
         expect(hi[1]).toBeLessThanOrEqual(Math.max(roofed, tower + 0.2));
       });
     }
