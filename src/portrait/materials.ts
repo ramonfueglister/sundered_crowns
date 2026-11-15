@@ -90,7 +90,8 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
-diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );`);
+diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
@@ -128,7 +129,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
       blended(m); m.side = DoubleSide;
       if (p.brow) {
         m.roughness = p.brow.rough; m.ior = ior(p.brow.specular);
-        if (s.tex.includes('/Eyelashes')) m.opacity = p.brow.lashes;
+        m.opacity = s.tex.includes('/Eyelashes') ? p.brow.lashes : p.brow.brows;
       }
       break;
     case 'cards': {
