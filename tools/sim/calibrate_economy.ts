@@ -1,5 +1,5 @@
 // Computes the port's parameters for every city from the calibration table and writes public/data/economy_cities.json
-// (economy features 3 to 5, docs/ECONOMY_DESIGN.md): for each of the places with one of the 30 largest cities, the
+// (economy features 3 to 6, docs/ECONOMY_DESIGN.md): for each of the places with one of the 30 largest cities, the
 // yearly calibration of England at the city's size, turned into days. Run after the table or the cities have changed:
 //   npm run economy:calibrate
 import { readFileSync, writeFileSync } from 'node:fs';

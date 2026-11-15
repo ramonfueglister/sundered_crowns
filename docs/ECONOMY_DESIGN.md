@@ -32,7 +32,8 @@ players and the AI of realms without a player act through the same commands.
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
-| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Open finding: over decades the linked cities sink (section 5) |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
+| 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built; in the running world together with feature 5 once the world server is redeployed |
 
 ## 1. Grain harvest per place
 
@@ -485,7 +486,8 @@ Without a source (assumptions, marked as such in the table; none is a statement 
 | Value of a cloth in 1356–60 | £1.751 | Munro's table 8 starts in 1371; its value for 1371–75 |
 
 Switched off by parameters: value added tax, social insurance, corporate tax and the other taxes of the model (0),
-unemployment benefit (rate 1e-9; the port divides by it), pensions (0), Taylor rule (policy rate fixed at 0; the loan
+unemployment benefit (rate 1e-9; the port divides by it; switched on for the cities of the game by feature 6),
+pensions (0), Taylor rule (policy rate fixed at 0; the loan
 rate is the interest above), shocks to output abroad and imports (1e-12).
 
 Scaled 1:100: GDP £45,248, 25,832 people, labour force 11,219 (8,415 employees in 2,804 firms, their owners, one
@@ -835,6 +837,10 @@ England") that in the game the largest cities each compute an economy of their o
 that England's economy as one whole goes. In the running world once the world server is redeployed. Player wiki:
 docs/wiki/wirtschaft/wirtschaft-der-staedte.md.
 
+Feature 6 (below) switched the model's unemployment benefit on in the calibration of every city. The tables of the
+game in this section ("Five years in the game", "Thirty years in the game" and what follows them) were measured
+before that and are kept as the record of what was found; the figures of the game as it is now stand in section 6.
+
 ### What it is
 
 Every city is a whole economy of the port: its own persons, firms, bank, crown and rest of the world, computed day by
@@ -931,7 +937,8 @@ one economy, so there are 29 economies. Together they have 2,572,165 people, by 
 in the table (2,583,180).
 
 **Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `tools/sim/economy_calibration.ts`,
-`cityTable`). Two assumptions, both marked as such in the table:
+`cityTable`). Two assumptions, both marked as such in the table (feature 6 adds a third, the unemployment
+benefit; section 6):
 
 1. Every city has the structure of England in 1356: England's table at the city's share of England's people. No city
    has data of its own. London (60,862 people) is 2.36 % of England: at the scale of 1 : 100 a real GDP of £1,066 a
@@ -965,13 +972,13 @@ exports to and imports from the other cities, persons with and without work, coi
 **Protocol.** `PlaceDetail.cityEconomy` is a new optional field and the old field `economy` is gone, so a client
 older than the server shows no economy instead of England's title over a city's numbers.
 
-**Tests** (`tests/economy.test.ts`, 43 tests). The calibration of England (unchanged) and of the cities; the
+**Tests** (`tests/economy.test.ts`, 44 tests with feature 5; 47 with feature 6). The calibration of England (unchanged) and of the cities; the
 WebAssembly build against the native build bit for bit with three cities; the books of the cities and of the
 merchants; the cities in the world: one day per day of the world, the yearly rows, a year of books, many days at
 once, snapshots, halting, the upgrade from versions 3 and 6; what a player is told; the world server.
 
 **Five years in the game** (`npm run economy:check 5 8`: 8 worlds of the game, seeds 1356 to 1363, every day
-computed in all of them; with rule 4 as corrected below).
+computed in all of them; with rule 4 as corrected below; before feature 6).
 
 | All cities together, year 5 | Mean of the worlds | Range of the worlds |
 |---|---|---|
@@ -1021,7 +1028,8 @@ firms of the first product) the stall sells 70 to 80 % of its goods, in the smal
 This is the port's goods market, untouched; England as one economy lost imports in the same way (section 4). So
 small cities import a little more than they export and large ones the other way round.
 
-**Thirty years in the game** (`npm run economy:check 30 4`: 4 worlds, seeds 1356 to 1359, every day computed).
+**Thirty years in the game** (`npm run economy:check 30 4`: 4 worlds, seeds 1356 to 1359, every day computed;
+before feature 6).
 
 | All cities together | Year 5 | Year 10 | Year 20 | Year 30 | Range of the worlds in year 30 |
 |---|---|---|---|---|---|
@@ -1033,8 +1041,8 @@ In year 30: price level 126.6 (124.1 to 129.5); without work 4.86 % as the mean 
 years (1.40 % to 10.60 %), the worst city on its worst day 23.8 % (13.3 % to 39.5 %); the lowest city at 78.2 of its
 start (46.0 to 100.9), the highest at 112.5.
 
-**Linked cities sink over decades; cities on their own do not.** This is the finding that matters for a world
-that runs for ever (a year of the game is a day of real time). Measured with the native build over 30 years
+**Linked cities sank over decades; cities on their own did not.** (Before feature 6.) This is the finding that
+matters for a world that runs for ever (a year of the game is a day of real time). Measured with the native build over 30 years
 (economy/examples/cities.rs with the game's calibrations, every city with a seed of its own):
 
 | After 30 years | Real output of all cities | Without work, mean of the cities | Cities below 80 |
@@ -1068,8 +1076,11 @@ closed that hole, as they were meant to; the coin of all cities together is now 
 the coin buys shrinks by a quarter in 30 years. Households keep their coin (they spend from income only), the firms
 lose theirs.
 
-So the merchants' rules are not the place to mend this. The closed system needs what the open one got for nothing:
-something that anchors prices or lets coin grow or be spent. That is a feature of its own and Ramon's to decide.
+So the merchants' rules are not the place to mend this. The first reading was that the closed system needs what
+the open one got for nothing: something that anchors prices or lets coin grow or be spent. That reading was too
+pessimistic. The cause lay in our own calibration: it had switched off the model's unemployment benefit, the one
+rule of the model that keeps a person without work buying. With the benefit as the original code sets it, the linked
+cities hold over 30 years although prices still rise and the coin is still fixed (section 6).
 
 What the tables do not say: nothing here is checked against history, and the long runs are few (2 to 4 worlds).
 
@@ -1080,9 +1091,9 @@ native build). A snapshot of the world after 60 days is 3.3 MB on disk.
 
 ### Limits
 
-- Over decades the linked cities sink, one after another, and do not come back ("Linked cities sink over decades"
-  above). Nothing in the model stops a slump of a city, and the coin of the closed system does not keep up with its
-  prices. Open.
+- Over decades the linked cities sank, one after another, and did not come back ("Linked cities sank over decades"
+  above). Mended by feature 6 (section 6). What is left of it: the coin of the closed system does not keep up with
+  its prices.
 - All cities have England's structure and differ only in size and in their random numbers. Cairo is England with more
   people.
 - The countryside is inside each city's economy (the calibration is that of a whole country); places that are not
@@ -1098,3 +1109,161 @@ native build). A snapshot of the world after 60 days is 3.3 MB on disk.
   ordered.
 - An order is filled only as far as the firms of the city of origin have goods to sell.
 
+## 6. The cities pay the model's unemployment benefit
+
+Status: built. Ramon agreed on 15 November 2026 (19:29 UTC): "das kannst du gerne einstellen für den moment. aber
+historisch gab es ja kein arbeitslosengeld? wie würde die wirschaft dann immer noch gehen?" So it is set for the
+time being, and what it stands for in 1356 is an open question of his (see "What it stands for" below). His
+condition for mending the slump of section 5 (18:34 UTC): "das muss aber in einklang mit dem echten urcode und dem
+paper passieren." In the running world together with feature 5 once the world server is redeployed; no state of a
+running world changes with it, because feature 5 is not live yet. Player wiki:
+docs/wiki/wirtschaft/arbeitslosengeld-der-staedte.md.
+
+### What it is
+
+One entry in the calibration of the cities. Not a line of the engine changes, and no rule is written in the game.
+
+In the model a person without an employer is paid a part `theta_UB` of the last wage (Poledna et al. 2023, online
+appendix, A.44 and A.53; `households_income_act` in src/households.rs of the port). The government pays it and adds
+what it lacks to its debt (A.60, A.61; `gov_loans`). The original code calibrates the part as
+
+    theta_UB = 0.55 · (1 − tau_INC) · (1 − tau_SIW)
+
+(BeforeIT.jl; src/calibration.rs, line 1287 of the port): 55 % of the wage after tax and social insurance. The
+calibration of England in 1356 (feature 3) had switched this off, because England had no such benefit. The cities of
+the game now have it with the constant of the original code.
+
+### Why
+
+Section 5 found that linked cities sink over decades and stay down, and that what binds in a sunken city is demand
+and nothing else. A person without work had no income in our calibration, bought nothing, the firms sold less and
+laid off more. In the original this loop is cut by the benefit: a person who loses work goes on buying with a little
+more than half the income. The cities on their own did not sink only because the port's rest of the world paid them
+coin from nowhere; the merchants of feature 5 closed that, as they were meant to, and the missing benefit showed.
+
+### Calibration (`data/economy/england_1356.json`, `tools/sim/economy_calibration.ts`)
+
+| Entry | Value | Kind |
+|---|---|---|
+| `cities.unemployment_benefit` | 0.55 | assumption: the constant of the original code; no source for 1356 |
+| `inputs.unemployment_benefit` (England's own table) | 0 | England had no such benefit; the model's benefit stays off there |
+
+`cityTable` gives a city the value of `cities`. `unemploymentBenefit` computes from it:
+
+- `theta_UB = 0.55 · (1 − tau_INC) · (1 − tau_SIW)` = 0.5362 in every city (direct tax 2.51 % of income, no social
+  insurance).
+- `w_UB`, the benefit of a person at the start. The original takes it from data (benefits paid, divided by the
+  persons without work). No such data exist here, so it is the benefit on the mean wage of an employee of the city:
+  London £1.77 a year at 1 : 100 (mean wage £3.30), a 365th of it per day. The port starts every person with the
+  last wage `w_UB / theta_UB`, which is then that mean wage. This choice is ours.
+- The income households spend from includes the benefits paid at the start, as in the original's calibration
+  (disposable income with social benefits; src/calibration.rs, lines 1150 and 1282). The calibration has one person
+  without work, so the propensity to consume of a city falls by the benefit of one person over the city's income:
+  by 0.18 % in London, by 0.03 % in Cairo. Households then buy at the start what the accounts say, and the port's
+  identities hold from the first day (without this the accounts of the starting position were off by the benefit of
+  one person; a test found it).
+- With a period of a day the benefit of the start is divided by 365, like the wage.
+
+Nothing else of the calibration changes (a test compares every parameter of every city with the same city without
+the benefit).
+
+### What it stands for
+
+No unemployment benefit existed in 1356, and the table says so. The entry is the model's own way of saying that a
+person without wage work goes on eating: the model has no household that grows its own food, no family that feeds a
+member, no alms. What a person without wage work lived on in a city of 1356 was not looked up in a source for this
+feature. Two things in it are plainly not of 1356: the crown of the city pays, and the 55 % is the value of the
+original code, made for an economy of today. Ramon's question of 19:29 UTC ("wie würde die wirtschaft dann immer
+noch gehen?") is answered by the model only this far: without any income for persons without work it does not hold
+(section 5), with the model's own rule it does (below). A support that is closer to 1356, such as a household living
+from the harvest of its place, would be a link of our own between the model and the rest of the game and no longer
+the paper's rule. That is a later feature and Ramon's to decide.
+
+### Tests
+
+`economy/tests/benefit.rs` (4 tests, on London of the game, read from the file the world server reads):
+
+- The calibration of a city sets the rate of the original code, and every person starts with the mean wage as the
+  last wage.
+- On each of 400 days every person has the income of A.53 as the port computes it: the wage after tax with an
+  employer, 55 % of that without; every person plans to buy; the books of the city balance.
+- The control: the same city with the benefit switched off, as before this feature. A person without work has no
+  income and a budget of nothing.
+- The crown pays: after one day the debt of the crown with the benefit differs from the debt without it by the
+  benefit of the one person without work (to 1 %).
+
+`tests/economy.test.ts` (3 new tests, 47 in all): the rule of the original code in `unemploymentBenefit`, a rate of 0
+and rates that are refused; every city has 55 % of the wage after tax, the benefit of a day on the mean wage, a
+365th of the year's, and nothing else changed against the same city without the benefit; the table marks the entry
+as an assumption and names the line of the original code; England's own calibration stays without the benefit. The
+test of the books (three cities in WebAssembly, every day) covers the accounts of the first day.
+
+The purpose itself, that no city sinks over decades, is not a unit test: 30 years of 29 cities take 100 seconds
+natively and six minutes for four worlds of the game. `npm run economy:check 30 4` is that check, and its tables
+are below.
+
+### In the game
+
+`npm run economy:check 30 4` (4 worlds of the game, seeds 1356 to 1359, every day computed in all of them) and
+`npm run economy:check 5 8` (8 worlds, seeds 1356 to 1363), each against the same worlds before this feature
+(section 5):
+
+| All cities together, year 30 (4 worlds) | Before | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 97.1 | 107.2 | 105.3 to 108.6 (before: 74.8 to 110.6) |
+| Price level of output (start = 100) | 126.6 | 123.6 | 119.1 to 127.1 |
+| Exports = imports, share of output | 2.19 % | 2.25 % | 2.06 % to 2.43 % |
+| Without work, mean of all cities and days of the 30 years | 4.86 % | 0.70 % | 0.62 % to 0.81 % (before: 1.40 % to 10.60 %) |
+| Without work, the worst city on its worst day | 23.8 % | 4.9 % | 4.3 % to 5.9 % (before: up to 39.5 %) |
+| City with the lowest output (its start = 100) | 78.2 | 101.3 | 100.2 to 102.2 (before: 46.0 to 100.9) |
+| City with the highest output | 112.5 | 113.9 | 112.0 to 115.3 |
+
+| All cities together, mean of the 4 worlds | Year 5 | Year 10 | Year 20 | Year 30 |
+|---|---|---|---|---|
+| Real output (start = 100), now | 105.1 | 107.0 | 108.0 | 107.2 |
+| Before | 102.8 | 101.9 | 100.1 | 97.1 |
+| World of seed 1356, now | 104.3 | 106.4 | 109.2 | 107.2 |
+| World of seed 1356, before | 100.2 | 97.0 | 90.0 | 74.8 |
+| Exports = imports, share of output, now | 2.58 % | 2.43 % | 2.31 % | 2.25 % |
+
+| All cities together, year 5 (8 worlds) | Before | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 104.3 | 105.0 | 104.3 to 106.7 |
+| Price level of output (start = 100) | 104.3 | 103.7 | 102.6 to 104.5 |
+| Exports = imports, share of output | 2.55 % | 2.57 % | 2.46 % to 2.76 % |
+| Without work, mean of all cities and days | 0.91 % | 0.51 % | 0.39 % to 0.63 % |
+| Without work, the worst city on its worst day | 5.6 % | 2.9 % | 2.6 % to 3.6 % |
+| City with the lowest output (its start = 100) | 97.8 | 100.8 | 99.1 to 101.8 |
+| City with the highest output | 111.9 | 111.2 | 107.8 to 114.5 |
+
+In none of the 4 worlds a city stands below its start after 30 years. The books (the identities of every city and
+the books of the merchants, once a month) are off by at most 1.4e-13 of the amount they are judged by. The outputs
+of both runs lie in the project files (wirtschaft/staedte/befunde/feature6_check_30_4.txt and
+feature6_check_5_8.txt).
+
+Before the build the same was tried outside the game (native build, the game's calibrations with only `theta_UB`
+and `w_UB` changed, without the adjustment of the propensity to consume): 5 seeds over 30 years gave an output of 104
+to 109, 0.4 % to 1.9 % without work and no city below 97; 2 seeds over 100 years an output of 102 and 108 with 2.2 %
+and 0.6 % without work and the lowest city at 98 and 101.
+
+### What it does not change
+
+- Prices still rise, by about 0.7 % a year (123.6 after 30 years; 248 and 263 after 100 years in the trial). The
+  model has nothing that holds the price level (section 3), and the coin of the cities together is still fixed.
+- Trade still shrinks, from 3.3 % of output at the start to 2.25 % in year 30 (the stalls do not sell out;
+  section 5).
+- Cities still differ by chance and a little by size: in the world of seed 1356 the cities stand between 101.2
+  and 114.8 after 30 years, the four largest between 104.5 and 112.6.
+- In the trial outside the game the coin of the firms went on draining slowly (2,204 to 1,220 in 30 years, all
+  cities of one seed), and the crowns ran a surplus (their debt fell to −409): the real purchases of a crown follow
+  their own rule (A.55, A.56) while its revenue grows with output. Not measured in the game.
+
+### Limits
+
+- The benefit is no institution of 1356. It is set for the time being (Ramon, 15 November 2026), with the value of
+  the original code, and paid by the crown of the city.
+- Every person without an employer is paid, for as long as it lasts, and nobody is excluded.
+- The benefit at the start is the benefit on the mean wage; the original takes it from data.
+- The long runs are few: 4 worlds over 30 years in the game, 2 runs over 100 years outside it. A year of the game is
+  a day of real time, so 30 years are a month of the running world.
+- Nothing here is checked against history.

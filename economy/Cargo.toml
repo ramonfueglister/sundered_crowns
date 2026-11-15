@@ -21,3 +21,7 @@ libm = "0.2"
 
 [profile.release]
 opt-level = 3
+
+[dev-dependencies]
+# to read the calibration of a city of the game in tests/benefit.rs; the port itself depends on it
+serde_json = "1"

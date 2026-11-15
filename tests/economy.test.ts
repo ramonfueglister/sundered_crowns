@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { newWorldState, loadWorld, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { calibrationJson, cityCalibrations, cityPlaces, dailyCalibration, readTable } from '../tools/sim/calibrate_economy';
-import { calibrateEconomy, cityTable, dailyEconomy, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
+import { calibrateEconomy, cityTable, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine } from '../src/sim/economy/engine';
 import { citySeed, computeTo, foundEconomy, yearRow } from '../src/sim/systems/economy';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
@@ -80,6 +80,11 @@ describe("the calibration of England's economy (the year of the sources)", () =>
     expect(p.rho).toBe(1); // no Taylor rule
     expect(ic.r_bar).toBe(0);
     expect(p.mu).toBe(0.075); // the loan rate
+  });
+  it('pays a person without work nothing: England had no such benefit', () => {
+    expect(table.inputs.unemployment_benefit.value).toBe(0);
+    expect(p.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
+    expect(ic.w_UB).toBe(0);
   });
   it('hands over the history of 1281 to 1356 and nothing after it', () => {
     expect(p.T_prime).toBe(76);
@@ -170,12 +175,53 @@ describe('the calibration of the cities', () => {
     expect(cities.find((c) => c.name === 'Texcoco')!.people).toBe(68800 + 54000);
     expect(cities[0]).toMatchObject({ name: 'Cairo', people: 351200 });
   });
-  it('says that the structure of a city and the duty between cities are assumptions', () => {
-    for (const e of [table.cities.structure, table.cities.duty_shillings_per_sack] as Entry<unknown>[]) {
+  it('says that the structure of a city, the duty between cities and the benefit of a person without work are assumptions', () => {
+    for (const e of [table.cities.structure, table.cities.duty_shillings_per_sack, table.cities.unemployment_benefit] as Entry<unknown>[]) {
       expect(e.kind).toBe('assumption');
       expect(e.source.length).toBeGreaterThan(10);
     }
     expect(table.cities.duty_shillings_per_sack.value).toBe(0);
+    expect(table.cities.unemployment_benefit.value).toBe(0.55); // the constant of the original code's calibration
+    expect(table.cities.unemployment_benefit.source).toMatch(/0\.55 \* \(1 - tau_INC\) \* \(1 - tau_SIW\)/);
+  });
+  it("computes the benefit of a person without work by the original code's rule, and none for a rate of 0", () => {
+    const b = unemploymentBenefit(0.55, 0.2, 0.1, 10);
+    expect(b.theta_UB).toBeCloseTo(0.55 * 0.8 * 0.9, 15); // the part of the wage after tax
+    expect(b.w_UB).toBeCloseTo(0.55 * 0.8 * 0.9 * 10, 12); // the benefit on the mean wage
+    expect(b.w_UB / b.theta_UB).toBeCloseTo(10, 12); // the port starts every person with this last wage
+    expect(unemploymentBenefit(0, 0.2, 0.1, 10)).toEqual({ theta_UB: 1e-9, w_UB: 0 });
+    for (const rate of [-0.1, 1, NaN]) expect(() => unemploymentBenefit(rate, 0.2, 0.1, 10)).toThrow(/unemployment benefit/);
+  });
+  it('pays a person without work 55 % of the last wage after tax in every city, from the first day', () => {
+    const without = structuredClone(table);
+    without.cities.unemployment_benefit.value = 0;
+    for (const c of cities) {
+      const p = c.calibration.parameters as Record<string, any>, ic = c.calibration.initial_conditions as Record<string, any>;
+      const a = c.calibration.accounts as Record<string, any>;
+      expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
+      expect(p.theta_UB).toBeGreaterThan(0.5); expect(p.theta_UB).toBeLessThan(0.55);
+      // the benefit of a day at the start: on the mean wage of an employee of the city on a day
+      const meanWage = sum(p.w_s.map((w: number, g: number) => w * ic.N_s[g])) / sum(ic.N_s);
+      expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
+      expect(ic.w_UB * 365).toBeCloseTo(p.theta_UB * sum(a.wages) / sum(a.employees), 12);
+      // the same city as a year: the benefit of a day is a 365th of the benefit of the year
+      const year = calibrateEconomy(cityTable(table, c.people));
+      expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
+      expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
+      // Against the same city without the benefit: households spend from an income that includes the benefit of
+      // the one person without work at the start (the original's calibration), so they buy at the start what the
+      // accounts say. Nothing else changes.
+      const off = dailyEconomy(calibrateEconomy(cityTable(without, c.people)), 365, 30);
+      const po = off.parameters as Record<string, any>, io = off.initial_conditions as Record<string, any>;
+      expect(po.theta_UB).toBe(1e-9); expect(io.w_UB).toBe(0);
+      expect(off.accounts).toEqual(c.calibration.accounts);
+      expect(sum(a.households) / p.psi).toBeCloseTo(sum(a.households) / po.psi + ic.w_UB * 365, 9);
+      expect(a.building / p.psi_H).toBeCloseTo(sum(a.households) / p.psi, 9);
+      expect(p.psi / po.psi).toBeGreaterThan(0.995); // the benefit of one person is a small part of the city's income
+      expect(p.psi).toBeLessThan(po.psi);
+      for (const k of Object.keys(p)) if (!['theta_UB', 'psi', 'psi_H'].includes(k)) expect(p[k], k).toEqual(po[k]);
+      for (const k of Object.keys(ic)) if (k !== 'w_UB') expect(ic[k], k).toEqual(io[k]);
+    }
   });
   it('gives a city the economy of England at its share of the people, without a duty', () => {
     const englandPeople = table.inputs.population_thousand.value * 1e3;
@@ -210,6 +256,8 @@ describe('the calibration of the cities', () => {
     expect(JSON.stringify(table)).toBe(before);
     expect(t.inputs.wool_export.value.duty_shillings_per_sack).toBe(0);
     expect(t.inputs.wool_export.value.sacks).toBe(table.inputs.wool_export.value.sacks);
+    expect(t.inputs.unemployment_benefit).toEqual(table.cities.unemployment_benefit);
+    expect(table.inputs.unemployment_benefit.value).toBe(0);
     expect(() => cityTable(table, 0)).toThrow(/city of 0 people/);
   });
 });

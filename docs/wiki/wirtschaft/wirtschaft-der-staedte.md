@@ -61,12 +61,13 @@ Die Regeln 3 und 5 sind eigene Festlegungen dieses Spiels. Das Modell kennt kein
 
 ## Daten und Parameter
 
-Keine Stadt hat eigene Daten. Zwei Annahmen, beide in der Eichtabelle (`data/economy/england_1356.json`) als Annahme markiert:
+Keine Stadt hat eigene Daten. Drei Annahmen, alle in der Eichtabelle (`data/economy/england_1356.json`) als Annahme markiert:
 
 | Annahme | Wert | Was sie bedeutet |
 |---|---|---|
 | Struktur jeder Stadt | England 1356 | Jede Stadt ist Englands Eichtabelle im Verhältnis ihrer Einwohner zu Englands Einwohnern (2'583'180). Kairo ist England mit mehr Menschen |
 | Zoll zwischen Städten | 0 | Englands Wollzoll von 1356 gilt nicht für den Handel zwischen Städten. Die Krone einer Stadt lebt von der direkten Steuer allein. Am Start führt jede Stadt so viel ein wie aus: 3,3 % ihrer Produktion |
+| Unterstützung ohne Arbeit | 55 % des Lohns nach Steuern | Wer keine Arbeit hat, bekommt von der Krone der Stadt diesen Teil des letzten Lohns: die Regel des Modells mit dem Wert des Originalcodes. 1356 gab es kein Arbeitslosengeld; der Eintrag ist vorläufig. Siehe [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md) |
 
 Jede Stadt hat einen eigenen Zufallsstartwert aus dem Startwert der Welt und ihrem Ort.
 
@@ -76,40 +77,38 @@ Acht Welten des Spiels über fünf Jahre, Tag für Tag gerechnet (`npm run econo
 
 | Alle Städte zusammen, Jahr 5 | Mittel der Welten | Spanne der Welten |
 |---|---|---|
-| Reale Produktion (Start = 100) | 104,3 | 100,2 bis 107,7 |
-| Preisniveau (Start = 100) | 104,3 | 103,6 bis 105,5 |
-| Ausfuhr = Einfuhr, Anteil an der Produktion | 2,55 % | 2,25 % bis 2,86 % |
-| Ohne Arbeit, Mittel aller Städte und Tage | 0,91 % | 0,33 % bis 1,73 % |
-| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 5,6 % | 2,2 % bis 10,0 % |
-| Stadt mit der tiefsten Produktion (ihr Start = 100) | 97,8 | 91,7 bis 103,5 |
-| Stadt mit der höchsten Produktion | 111,9 | 106,1 bis 114,4 |
+| Reale Produktion (Start = 100) | 105,0 | 104,3 bis 106,7 |
+| Preisniveau (Start = 100) | 103,7 | 102,6 bis 104,5 |
+| Ausfuhr = Einfuhr, Anteil an der Produktion | 2,57 % | 2,46 % bis 2,76 % |
+| Ohne Arbeit, Mittel aller Städte und Tage | 0,51 % | 0,39 % bis 0,63 % |
+| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 2,9 % | 2,6 % bis 3,6 % |
+| Stadt mit der tiefsten Produktion (ihr Start = 100) | 100,8 | 99,1 bis 101,8 |
+| Stadt mit der höchsten Produktion | 111,2 | 107,8 bis 114,5 |
 
 Die Bücher (die Identitäten jeder Stadt und die Bücher der Händler, einmal im Monat geprüft) weichen höchstens um 1 · 10⁻¹³ ihres Betrags ab.
 
 Was die Tabelle sagt:
 
 - Alle Städte zusammen wachsen leicht, und die Preise steigen um knapp 1 % im Jahr. Ausfuhr und Einfuhr aller Städte sind in jedem Jahr gleich.
-- Grosse und kleine Städte stehen nach fünf Jahren nahe beieinander: Kairo bei 105, die kleinsten bei 102 bis 103. In einer ersten Fassung der Regel 4 fielen die grossen Städte zurück (Kairo auf 89), weil jede Stadt als ein einziger Verkäufer zählte und Kairo darum nur für 1,7 % seiner Produktion angefragt wurde, die kleinsten Städte für 3,9 %. Das ist korrigiert.
-- Der Handel sinkt von 3,3 % auf 2,55 % der Produktion. Der Grund liegt im Gütermarkt des Modells: Der Stand der Händler ist dort ein Verkäufer unter allen Betrieben der Stadt. In Kairo verkauft er 70 bis 80 % seiner Ware, in den kleinsten Städten fast alles.
+- Grosse und kleine Städte stehen nach fünf Jahren nahe beieinander. In einer ersten Fassung der Regel 4 fielen die grossen Städte zurück (Kairo auf 89), weil jede Stadt als ein einziger Verkäufer zählte und Kairo darum nur für 1,7 % seiner Produktion angefragt wurde, die kleinsten Städte für 3,9 %. Das ist korrigiert.
+- Der Handel sinkt von 3,3 % auf 2,57 % der Produktion. Der Grund liegt im Gütermarkt des Modells: Der Stand der Händler ist dort ein Verkäufer unter allen Betrieben der Stadt. In Kairo verkauft er 70 bis 80 % seiner Ware, in den kleinsten Städten fast alles.
 
-### Über 30 Jahre: offener Befund
+### Über 30 Jahre
 
 Vier Welten des Spiels über 30 Jahre (`npm run economy:check 30 4`):
 
 | Alle Städte zusammen | Jahr 5 | Jahr 10 | Jahr 20 | Jahr 30 | Spanne der Welten im Jahr 30 |
 |---|---|---|---|---|---|
-| Reale Produktion (Start = 100), Mittel | 102,8 | 101,9 | 100,1 | 97,1 | 74,8 bis 110,6 |
-| Welt mit dem Startwert 1356 | 100,2 | 97,0 | 90,0 | 74,8 | |
+| Reale Produktion (Start = 100), Mittel | 105,1 | 107,0 | 108,0 | 107,2 | 105,3 bis 108,6 |
+| Welt mit dem Startwert 1356 | 104,3 | 106,4 | 109,2 | 107,2 | |
 
-Über die 30 Jahre sind im Mittel 4,9 % ohne Arbeit (1,4 % bis 10,6 % je Welt), die schlechteste Stadt an ihrem schlechtesten Tag 23,8 % (bis 39,5 %). Die tiefste Stadt steht im Jahr 30 bei 78 (46 bis 101).
+Über die 30 Jahre sind im Mittel 0,7 % ohne Arbeit, die schlechteste Stadt an ihrem schlechtesten Tag 4,9 % (bis 5,9 %). Die tiefste Stadt steht im Jahr 30 bei 101 (100 bis 102).
 
-**Über Jahrzehnte sinken die verbundenen Städte, eine nach der anderen, und kommen nicht zurück.** Städte, die für sich allein rechnen, tun das nicht (nach 30 Jahren 107 bis 109, 2,5 % ohne Arbeit). In einer gesunkenen Stadt fehlt die Nachfrage, nichts sonst: Die Bank könnte leihen, das Kapital ist da. Die Betriebe verkaufen weniger, planen weniger, entlassen; wer keine Arbeit hat, hat in dieser Eichung kein Einkommen und kauft nichts; und die Preise steigen trotzdem weiter.
+**Ohne die Unterstützung für Menschen ohne Arbeit sanken die verbundenen Städte über Jahrzehnte, eine nach der anderen, und kamen nicht zurück** (Produktion im Jahr 30 im Mittel 97, in einer Welt 75; einzelne Städte bei der Hälfte). In einer gesunkenen Stadt fehlte die Nachfrage, nichts sonst: Wer entlassen war, hatte kein Einkommen und kaufte nichts, die Betriebe verkauften weniger und entliessen weiter. Die Ursache lag in unserer Eichung, die diese Regel des Modells ausgeschaltet hatte. Seit Feature 6 ist sie eingeschaltet: [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md), dort stehen die Zahlen vorher und jetzt.
 
-Der Grund liegt im geschlossenen Kreislauf. Die Preise steigen im Modell um etwa 0,75 % im Jahr, weil nichts das Preisniveau hält. Eine Stadt für sich verkauft dem Ausland des Modells jedes Jahr mehr, als sie dort kauft, und bekommt dafür Münzgeld, das aus dem Nichts kommt; ihr Geld hält mit den Preisen Schritt. Die Händler haben dieses Loch geschlossen. Jetzt ist das Münzgeld aller Städte fest, die Preise steigen weiter, und nach 30 Jahren kauft das Geld ein Viertel weniger. Die Haushalte behalten ihr Geld, die Betriebe verlieren ihres.
+Geblieben ist: Die Preise steigen um rund 0,7 % im Jahr, weil nichts im Modell das Preisniveau hält, und das Münzgeld aller Städte zusammen ist fest.
 
-Das lässt sich nicht an den Regeln der Händler beheben. Es braucht ein eigenes Feature: etwas, das die Preise hält oder das Geld wachsen oder ausgeben lässt. Ein Spieljahr dauert einen echten Tag; in der laufenden Welt würde sich der Befund also nach einigen Wochen zeigen.
-
-Nichts davon ist an der Geschichte geprüft, und die langen Läufe sind wenige (zwei bis vier Welten).
+Nichts davon ist an der Geschichte geprüft, und die langen Läufe sind wenige (vier Welten).
 
 ## Massstab 1 : 100
 
@@ -117,7 +116,8 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 
 ## Grenzen
 
-- Über Jahrzehnte sinken die verbundenen Städte (siehe «Über 30 Jahre: offener Befund»). Offen.
+- Die Unterstützung für Menschen ohne Arbeit gab es 1356 nicht; sie ist vorläufig eingestellt (siehe [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md)). Ohne sie sinken die verbundenen Städte über Jahrzehnte.
+- Die Preise steigen dauernd leicht, und das Münzgeld aller Städte zusammen wächst nicht mit.
 - Alle Städte haben Englands Struktur und unterscheiden sich nur in Grösse und Zufall.
 - Keine Entfernung: Jede Stadt ist von jeder einen Tag entfernt, auch Texcoco in Mexiko und Niani in Mali von Paris. Transport kostet nichts.
 - Das Umland steckt in der Volkswirtschaft der Stadt, weil die Eichung die eines ganzen Landes ist. Orte ohne eine dieser Städte haben keine Wirtschaft.
