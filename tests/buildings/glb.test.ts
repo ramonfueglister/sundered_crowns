@@ -10,11 +10,11 @@ const load = (path: string) => { const f = readFileSync(path); return glbToBatch
 describe('campanile_san_marco_1356.glb', () => {
   const b = load(CAMPANILE);
   it('has the triangles the build printed and stands on the ground, Y up', () => {
-    expect(b.triangles).toBe(998);
+    expect(b.triangles).toBe(3014);
     let top = -Infinity, bottom = Infinity, reach = 0;
     for (let i = 0; i < b.pos.length; i += 3) { top = Math.max(top, b.pos[i + 1]); bottom = Math.min(bottom, b.pos[i + 1]); reach = Math.max(reach, Math.abs(b.pos[i]), Math.abs(b.pos[i + 2])); }
-    // 103 m at 3.65 m per block (tools/blender/landmarks/campanile_san_marco_1356.json); the plinth reaches half a block into the ground
-    expect(top).toBeCloseTo(28.1, 0);
+    // 106 m at 3.65 m per block (tools/blender/landmarks/campanile_san_marco_1356.json); the plinth reaches half a block into the ground
+    expect(top).toBeCloseTo(29.1, 0);
     expect(bottom).toBeCloseTo(-0.5, 1);
     expect(reach).toBeCloseTo((12 / 2 + 0.5) / 3.65, 1);
   });

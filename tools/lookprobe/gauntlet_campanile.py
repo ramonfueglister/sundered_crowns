@@ -1,7 +1,7 @@
 """The campanile's own gauntlet: the bell tower of a probe shot measured against the reference image's tower.
 
 Usage: python3 tools/lookprobe/gauntlet_campanile.py reference.png probe.png
-Both pictures are the 1672 x 941 frame of the look probe. The tower is found in its window, its colour bands are
+Both pictures are the 1672 x 941 frame of the look probe. Needs Pillow, numpy and scipy. The tower is found in its window, its colour bands are
 read along its axis (gold finial, green spire, white cornice, brick dado, white belfry, brick shaft) and compared:
 heights of the bands, their colours, the stripes of the shaft, the openings of the belfry, the width of the shaft.
 Prints one line per check with reference value, probe value and PASS or FAIL; exits 1 when a check fails.
@@ -9,6 +9,7 @@ Prints one line per check with reference value, probe value and PASS or FAIL; ex
 import sys
 import numpy as np
 from PIL import Image
+from scipy import ndimage as ndi
 
 WINDOW = (1180, 240, 1340, 560)   # x0, y0, x1, y1: the tower stands in here in both pictures
 PX_PER_BLOCK = 8.33               # height, from the look probe's calibration
@@ -145,6 +146,13 @@ def main(ref_path, probe_path):
         cols = lum.mean(0)
         return cols.std() / max(cols.mean(), 1e-6)
     check('shaft stripe contrast', stripes(ref), stripes(probe), rel(0.4))
+    def fine(t, name):
+        """small-scale liveliness of a band on the lit face: what a 3-pixel blur removes"""
+        im, _ = t.band(name)
+        g = im @ np.array([0.2126, 0.7152, 0.0722])
+        return float(np.abs(g - ndi.gaussian_filter(g, 1.5)).mean()) if g.size else 0.0
+    for name in ('spire', 'belfry', 'dado', 'shaft'):
+        check(f'{name} fine detail', fine(ref, name), fine(probe, name), lambda a, b: b >= 0.75 * a, '{:.4f}')
     print(f"{fails} failed")
     return fails
 

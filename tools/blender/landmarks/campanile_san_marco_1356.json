@@ -132,6 +132,36 @@
       "wert": 3.5,
       "einheit": "m",
       "quelle": "Annahme nach Referenzbild: geschlossenes Band ueber den Bogen"
+    },
+    "spitze_plattenreihen": {
+      "wert": 9,
+      "einheit": "Stueck",
+      "quelle": "Annahme nach Referenzbild: die Spitze zeigt waagrechte Plattenreihen in hellerem und dunklerem Gruen"
+    },
+    "schaft_fenster_seite": {
+      "wert": "-y",
+      "einheit": "Seite",
+      "quelle": "Annahme: die Seite, die in der Look-Probe zur Kamera zeigt (Blender -y wird im Spiel +z); am Bau liegen die Fenster der Rampe auf einer Seite, welche ist nicht belegt"
+    },
+    "backstein_flecken": {
+      "wert": 0.06,
+      "einheit": "Anteil",
+      "quelle": "Annahme nach Referenzbild: der Schaft ist nicht einfarbig, Felder von rund 1,5 Bloecken schwanken um diesen Anteil um den Grundton (Kleinkontrast gemessen mit gauntlet_campanile.py)"
+    },
+    "spitze_grate_breite": {
+      "wert": 0.8,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild: helle Grate auf den vier Kanten der Spitze"
+    },
+    "bekroenung_mast_hoehe": {
+      "wert": 3.6,
+      "einheit": "m",
+      "quelle": "Annahme nach Referenzbild: weisser Mast zwischen Spitze und Figur"
+    },
+    "spitze_grate_helligkeit": {
+      "wert": 3.0,
+      "einheit": "Faktor",
+      "quelle": "Annahme nach Referenzbild: der Grat bleibt dort auch auf der Schattenseite fast weiss; ueberhelle Eckfarbe, damit der Spiel-Renderer das ebenso zeigt"
     }
   },
   "nicht_gebaut_weil_1356_noch_nicht_vorhanden": [
