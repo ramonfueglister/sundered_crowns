@@ -8,3 +8,4 @@ test-results/
 playwright-report/
 world-data/
 build/
+__pycache__/
