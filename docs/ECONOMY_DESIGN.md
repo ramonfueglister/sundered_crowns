@@ -26,7 +26,8 @@ players and the AI of realms without a player act through the same commands.
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
-| 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
+| 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026 |
+| 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 
 ## 1. Grain harvest per place
 
@@ -398,6 +399,10 @@ proposed with two trial runs outside the game and agreed by him the same day ("J
 result for Ramon (German): https://claude.ai/artifact/HMoTEyc5UXQKuh2J4hkJPk. Player wiki:
 docs/wiki/wirtschaft/volkswirtschaft-england.md.
 
+Feature 4 (below) changed the period of the model from a year to a day. This section describes the build of feature
+3 as it was: where it says "one period a year", "computed on 1 January" or gives yearly figures of the game, feature
+4 has replaced it. The port, the calibration table, its sources and the limits stay as described here.
+
 **What it is.** England runs in the world as one national economy. It is computed by the unchanged port
 (github.com/ramonfueglister/port-beforeit, commit 7291531, Apache-2.0) of BeforeIT.jl (Banca d'Italia, commit
 0926398), the implementation of the agent-based model of Poledna, Miess, Hommes and Rabitsch (2023): persons, firms
@@ -579,3 +584,178 @@ years as the local build.
   Working Paper 94. https://www.ehes.org/wp/EHES_94.pdf (p. 22)
 - Not opened (paywall), only seen cited: Horrell, Humphries, Weale (1994), Economic History Review 47(3); Campbell
   (2008), Economic History Review 61(4); Broadberry et al. (2015), British Economic Growth 1270–1870.
+
+## 4. England's economy computes every day
+
+Direction: on 15 November 2026 Ramon set the priority ("mich interessiert weniger die perfekte geschichte als das
+perfekte wirtschaftssystem sota 2026 agentbasiert nach papers und modellen. und ja tägliches rechnen", 12:22 UTC).
+Feature 4 was proposed with trial runs outside the game and agreed by him the same day ("Ja, so bauen", 13:10 UTC).
+Proposal and result for Ramon (German): https://claude.ai/artifact/Kg3HJCK3K6VwKSVs21U1SE. Player wiki:
+docs/wiki/wirtschaft/volkswirtschaft-england.md. The trial programs are kept outside the repository (project files,
+wirtschaft/feature-4-tagestakt).
+
+**What it is.** One period of the model is one day of the game instead of one year. Every day goods are made and
+bought, wages are paid, the crown and the rest of the world buy, and the books are closed, by the unchanged rules of
+the port with the amounts of a day. Two rules of the port are replaced, through the port's own mechanism for model
+types (its `Extension` trait, `src/extension.rs`); the port stays pinned at commit 7291531 and not a line of it is
+changed or copied. The calibration is the one of feature 3, turned from the year into the day.
+
+**What it is not.** No new agents, goods or markets; no seasons (every day is like every other); no link to harvest,
+cultivated land or the people of the places; no second country; nothing a player does reaches it.
+
+**Why two rules had to be replaced.** The port's rules know no length of a period, but the period is also the speed
+of behaviour: every firm sets its supply to the demand of the period before, in every period, and lays off at once.
+Run unchanged with a day as the period, the economy swings 2.5 times harder than with a year, and in the worst trial
+world 31 % were without work at times (table of the trial runs below). So a day as the period needs a statement
+about how often an agent decides.
+
+**The two rules** (`economy/src/clock.rs`, the model type `DailyClock`).
+
+1. *Plan day.* Every firm has its own plan day, the firms spread evenly over 30 days in their order (firm i plans
+   when day − 1 ≡ i mod 30; on the first day all firms plan). Only on that day it sets its supply and its price, by
+   the port's rule (A.5, A.8, A.9):
+
+   Q_s,i = mean demand per day since its last plan × (1 + γ_e)^30,  P_i ← P_i × (1 + π_c,i) × (1 + π_e)^30
+
+   with π_c,i the cost push of the port's rule and γ_e, π_e the growth and inflation expected per day. On the other 29
+   days the firm keeps both. Employment, materials and investment follow from the supply as in the port (A.14, A.18,
+   A.22).
+2. *Expectations.* Growth and inflation are expected as in the port (an AR(1) forecast with a random shock, A.6, A.7,
+   A.10), but on sums over windows of 365 days that end today (the last 365 days, the 365 days before them, and so
+   on; each of the 76 yearly values of the history before 1356 stands for 365 days). The result is expressed per
+   day.
+
+With a plan every day and windows of one day both rules are the port's rules: the engine then computes the port's
+numbers bit for bit (tested).
+
+**Where the rules come from.**
+- The timing is that of Eurace@Unibi (Dawid, Gemkow, Harting, van der Hoog, Neugart 2011, user manual): the clock is
+  the day, a firm acts "monthly on the ideosyncratic day of the month to act" (section 2.3), "Firms perform the
+  following activities on a monthly base" (section 4.1.1), and the malls report "at the end of each day". A month is
+  taken as 30 days.
+- The rules themselves are the port's (Poledna et al. 2023). I found no paper that runs the model of Poledna et al.
+  on a daily clock: the combination of its rules with the timing of Eurace@Unibi is ours and is marked as such here.
+- Expectations stay on yearly sums because the sources of 1356 are yearly (Wiese et al. 2024, section 3.4, choose
+  their period "based on the timefrequency of the data sources we use"). It is also what the trial runs demanded:
+  with expectations on windows of 30 days all 5 trial worlds stopped after 141 to 183 days, with windows of 90 days
+  after 342 to 1,021 days (prices exploded). My reading, not shown one by one: a history made of yearly values is
+  smooth within a year, so the estimated inflation follows every movement in full.
+- Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
+  all firms planning on the first day, and three of the seven conversions below.
+
+**From the year to the day** (`dailyEconomy` in `tools/sim/economy_calibration.ts`; the table of sources
+`data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
+and 30 days between two plans, from Eurace@Unibi).
+
+| Quantity | Year | Day | Rule | Where the rule comes from |
+|---|---|---|---|---|
+| Flows: output per employee, output per capital, depreciation, wage | yearly value | yearly value / 365 | flows times the time scale | the port, `src/calibration.rs` |
+| Interest | 7.5 % | 0.0198 % | (1 + interest)^(1/365) − 1 | the port, `src/calibration.rs`, lines 697 to 706 (year to quarter there) |
+| Share of a loan repaid | 0.05 | 0.000137 | share / 365 | the form of Pichler et al., footnote 15 |
+| Purchases of the crown, AR(1) | persistence 0.952, spread 0.168 | 0.999866 and 0.00902 | α^(1/365); the same long-run mean and the same variance of the level | our own conversion |
+| Exports, AR(1) | persistence 0.371, spread 0.331 | 0.997287 and 0.0262 | as above | our own conversion |
+| History before 1356 | 76 yearly values | 76 values, each standing for 365 days | every day of a year = the yearly value / 365 | our own |
+| Plan of a firm | did not exist | every 30 days | an own day per firm, monthly | Eurace@Unibi, manual of 2011 |
+
+Shares and stocks stay as they are (propensity to consume, tax rates, dividend share, capital rules, deposits,
+capital, the people).
+
+**How it is built.**
+- `economy/src/clock.rs` holds the model type and what it adds to a model: per firm the demand since its last plan
+  and the number of those days, the plan period and the window. `economy/src/lib.rs` builds the port's model with it;
+  `economy/src/state.rs` saves it with the model (format 2). The crate uses `libm` for logarithm, exponential and
+  power, as the port does, so the native and the WebAssembly build agree bit for bit.
+- Key figures (`figures`, 16 numbers): GDP and its uses are sums over the last 365 days (while fewer days are
+  computed, the starting position fills the rest), the persons and the deposits are those of today, and the new 16th
+  figure is the price level of today (the port's price index of the day, `P_bar`: the prices of all firms weighted
+  with what they made today).
+- The accounts of the port (one row of 40 numbers per period) are kept for the last 365 days only: the shell drops
+  older rows after each step, which needs no change of the port (item 6 of the proposal). The figures of each
+  calendar year are kept as a row of `years` in the state of the world, written before 1 January is computed. Still
+  growing: the port's series of GDP and inflation, 16 bytes a day (5.8 kB a game year).
+- `src/sim/systems/economy.ts`: one period for each day of the world. State version 6. A world saved by an older
+  build (the running world, state version 5) is upgraded when it is loaded: England starts again from the starting
+  position of 1356 and computes every day the world has seen (`src/sim/upgrade.ts`); the result is the economy of a
+  world that had the daily clock from its first day, and the yearly figures shown before are gone. If a day cannot
+  be computed, the economy stands still with the state of the day before and the date and reason.
+- The place panel "Volkswirtschaft England" shows the sums of the last 365 days up to today and the price level of
+  today, and asks for them again on every new day. The two new fields of the protocol are optional, so a client and
+  a server of different builds understand each other.
+- Measured in the game (this sandbox, one core): a day takes 6.3 ms in the engine and 10.5 ms in the world (the
+  1.8 MB of state go into the engine and come back every day); the world's day lasts 240 s. The state of the economy
+  is 1.74 MB at the start and 1.90 MB after 2,800 days.
+
+**Rehearsal of the upgrade.** A world of the build before (main, state version 5) was run for 2,800 days with a
+player, saved, and resumed by this build: the upgrade took 19.5 s (the catch-up of 2,800 days), and the resumed world
+has the same hash as a world of this build run for 2,800 days from its first day.
+
+**Trial runs of the proposal** (outside the game; 5 worlds, seeds 1356 to 1360, 30 years each from the calibration
+of 1356; growth, standard deviation and mean are means of the worlds, the worst value is that of the worst world,
+the price level is the range of the worlds).
+
+| Variant | Growth a year | Sd of annual growth | Without work, mean | Without work, worst | Price level in year 30 (start 100) |
+|---|---|---|---|---|---|
+| Yearly model (feature 3) | +0.28 % | 4.0 % | 0.48 % | 8.8 % | 23 to 594 |
+| Port unchanged, period a quarter | −0.03 % | 3.0 % | 2.33 % | 15.4 % | 35 to 500 |
+| Port unchanged, period a month | −0.47 % | 5.1 % | 8.05 % | 27.3 % | 3 to 353 |
+| Port unchanged, period a day | +0.10 % | 10.0 % | 3.70 % | 30.5 % | 54 to 256 |
+| **Daily clock, plan every 30 days (built)** | +0.43 % | 2.1 % | 0.02 % | 2.1 % | 124 to 143 |
+| Daily clock, plan every 90 days | +0.43 % | 1.3 % | 0.00 % | 1.2 % | 115 to 180 |
+| Daily clock, plan every 365 days | +0.23 % | 0.8 % | 0.23 % | 5.6 % | 121 to 241 |
+
+**Model against history (`npm run economy:check`; nothing tuned).** The run of 20 worlds of the game over 64 years, day
+by day, was still computing when this text was committed; its tables follow with the next commit.
+
+**Differences from the trial program of the proposal.** The plan day of a firm is its place in the order of the
+firms (i mod 30) instead of a hash of it; the power is the one of `libm` instead of the standard library's; the
+history is kept as 76 yearly values that each stand for 365 days instead of 27,740 daily values (the same windows).
+With the trial program set to the same plan days and the same power, the engine gave the same employees, people
+without work and deposits of households and firms on each of 401 days. The numbers of the game above are measured
+again and are not those of the trial.
+
+**Tests.** `economy/src/clock.rs` and `economy/tests/shell.rs` (cargo test, 15 tests): with a plan and a window of
+one period the engine computes what the port computes; a firm sets supply and price only on its plan day, as the
+mean demand times the expected growth; the accounts keep the rows of one window and the figures are their sums; one
+call for many periods equals many calls; a state loads bit for bit and continues as if it had never stopped; the
+clock stops when it does not hold every firm; the accounting identities hold. `tests/economy.test.ts` (36 tests): the
+daily calibration follows from the yearly one by the rules above; the WebAssembly engine gives bit for bit the
+figures of the native build (65 days, two seeds, and 10 periods with the clock of the port); the identities hold
+every day; the same seed gives the same world; one period a day in the world; many days at once equal the days one
+by one; the row of a year; save in the middle of a month, load and continue; the upgrade of a world with the yearly
+economy; the days replayed from the command log of the world server and resumed from disk; the view of a place; the
+standstill with its date.
+
+**Limits (none is addressed by this feature).**
+- The combination of the port's rules with a daily clock is not from a paper (see above).
+- Calmer than history: annual growth spreads less than in the history of 1356 to 1420. Nothing was tuned to close
+  the gap.
+- Almost always full employment: the economy runs close to its capacity, and the port's labour market fills a
+  vacancy on the same day.
+- No seasons: every day is the same; the harvest of feature 1 is not connected.
+- The price level still has no anchor; it drifts in a narrower band than in the yearly model.
+- The random part of the expectations is drawn anew every day and reaches only the firms that plan on that day; in
+  the yearly model it reached all firms at once.
+- The yearly sums of exports and of the crown's purchases spread somewhat less than in the yearly model, because the
+  conversion matches the level of a day only.
+- The model's year has 365 days; a leap day of the calendar is computed like any other day, so the row of a leap
+  year holds its last 365 days.
+- All limits of feature 3 stay (no land, no families, one bank, one country, fixed population, thirteen inputs
+  without a source).
+
+**Sources** (opened on 15 November 2026 unless noted)
+- Dawid, H., Gemkow, S., Harting, P., van der Hoog, S., Neugart, M. (2011). The Eurace@Unibi Model: An Agent-Based
+  Macroeconomic Model for Economic Policy Analysis. Model v1.0 User Manual. https://core.ac.uk/download/16690523.pdf
+  (sections 2.3 and 4.1.1: the day as the clock, an own day of the month per firm, decisions monthly)
+- Pichler, A., Pangallo, M., del Rio-Chanona, R. M., Lafond, F., Farmer, J. D. In and out of lockdown: propagation
+  of supply and demand shocks in a dynamic input-output model. arXiv 2102.09608 (a step is a day; footnote 15: a
+  quarterly quantity turned into a daily one). The journal version was not checked.
+- Wiese et al. (2024). arXiv 2409.18760, section 3.4: the period follows the frequency of the data sources.
+- CANVAS: Bank of Canada Staff Working Paper 2022-51,
+  https://www.bankofcanada.ca/wp-content/uploads/2022/12/swp2022-51.pdf (equations 36 to 38: the price rule of the
+  firms)
+- port-beforeit, commit 7291531: `src/calibration.rs` (time scale of the flows, conversion of interest),
+  `src/firms.rs` (the rule of the firms), `src/aggregates.rs` (expectations), `src/extension.rs` (rules that can be
+  replaced).
+- Not readable: Poledna et al. (2023) in the version of IIASA (barrier for automated readers) and Dawid et al.
+  (2019) in the Journal of Evolutionary Economics (paywall). The equation numbers of the model of Poledna et al.
+  are therefore those of the comments of the port.

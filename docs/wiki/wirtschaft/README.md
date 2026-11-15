@@ -10,7 +10,7 @@ Die Wirtschaft von Sundered Crowns wird Feature für Feature neu gebaut. Jedes F
 |---|---|---|
 | [Getreideernte pro Ort](getreideernte.md) | Im Spiel | Jährliche Ernte je Ort aus Fläche, Bodenertrag und Arbeitskräften (Malthus-Produktionsfunktion). Seit 14.11.2026 in der laufenden Welt, zu sehen im Ortsfenster |
 | [Bestellte Fläche](bestellte-flaeche.md) | Beschlossen | Ein Ort bestellt nur so viel Acker, wie seine Menschen bearbeiten können, höchstens bis zu einer Landgrenze. Freigegeben am 14.11.2026 und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist |
-| [Volkswirtschaft England](volkswirtschaft-england.md) | Beschlossen | England als ganze Volkswirtschaft aus Personen, Betrieben, Bank, Krone und Ausland, gerechnet vom unveränderten Port des Modells von Poledna u. a. (2023), ein Jahr pro Spieljahr. Freigegeben am 15.11.2026 und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist |
+| [Volkswirtschaft England](volkswirtschaft-england.md) | Im Spiel | England als ganze Volkswirtschaft aus Personen, Betrieben, Bank, Krone und Ausland, gerechnet vom unveränderten Port des Modells von Poledna u. a. (2023). Als Jahresmodell seit 15.11.2026 in der laufenden Welt. Der Tagestakt (ein Schritt pro Spieltag, eigener Plantag je Betrieb alle 30 Tage) ist am 15.11.2026 freigegeben und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist |
 
 Weitere Themen wie Verbrauch und Hunger, Bevölkerungswachstum, Preise, Handel und Steuern bekommen je eine eigene Seite, sobald ihr Design vorliegt.
 
