@@ -26,8 +26,10 @@ export const ROCK_FROM = 1500;
 export const TINT: Record<number, readonly [RGB, number]> = {
   [Land.Mediterranean]: [rgb(0xd2c444), 0.2], [Land.Steppe]: [rgb(0xd0c264), 0.7], [Land.Desert]: [rgb(0xe8d096), 1], [Land.Savanna]: [rgb(0xc6bc52), 0.55],
   [Land.Rainforest]: [rgb(0x74a630), 0.6], [Land.Boreal]: [rgb(0x90aa3a), 0.35], [Land.Tundra]: [rgb(0xaaa87c), 0.8], [Land.Ice]: [rgb(0xf4f6f8), 1],
+  // prairie, pampas and the grass of the high plateaus: green, but drier than the meadows between the woods
+  [Land.Grassland]: [rgb(0xc4c458), 0.4],
 };
 /** the share of woods the climate grows where the forest layer of 1356 does not reach (estimates) */
-export const WOODS: Record<number, number> = { [Land.Temperate]: 0.6, [Land.Mediterranean]: 0.3, [Land.Steppe]: 0.02, [Land.Savanna]: 0.1, [Land.Rainforest]: 0.95, [Land.Boreal]: 0.7 };
+export const WOODS: Record<number, number> = { [Land.Temperate]: 0.6, [Land.Mediterranean]: 0.3, [Land.Steppe]: 0.02, [Land.Savanna]: 0.1, [Land.Rainforest]: 0.95, [Land.Boreal]: 0.7, [Land.Grassland]: 0.05 };
 /** lands without a single tree away from the water */
 export const BARE: readonly number[] = [Land.Desert, Land.Tundra, Land.Ice];

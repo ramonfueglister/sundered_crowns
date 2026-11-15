@@ -7,7 +7,7 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inG
 import type { StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
-import { type Climate, Land, climateAt } from './climate';
+import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt } from './climate';
 import { BARE, ROCK_FROM, ROCK_SHIFT_MOST, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
@@ -41,8 +41,8 @@ export interface Landmark { id: string; lon: number; lat: number; built_state: s
  * not a relief map).
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
-/** the forest layer of 1356 ends with the game map: over this many map pixels before its east edge (some eight degrees) it gives way to the woods the climate grows */
-const FOREST_FADES = 300;
+/** the woods and fields of 1356 end with the game map: over this many map pixels before its east edge (some eight degrees) they give way to what the climate grows */
+const LAYERS_FADE = 300;
 /** what stands above the valley floors of the massifs is raised by this factor */
 const PEAK = 1.3;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
@@ -73,9 +73,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // real height, water class and latitude of every column, taken at its centre; the tree line, the snow line and the
   // foot of the rock follow the latitude
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N), shift = new Float32Array(N * N), lat = new Float32Array(N * N);
-  // the kind of land of every column (bit 7: the forest of 1356 is known there); the borders between the kinds are
+  // the kind of land of every column, and whether the woods and fields of 1356 are known there; the borders between the kinds are
   // frayed by a few kilometres, the same at every step
-  const land = new Uint8Array(N * N).fill(Land.Temperate | 128);
+  const land = new Uint8Array(N * N).fill(Land.Temperate | WOODS_KNOWN | FIELDS_KNOWN);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5), i = idx(x, z);
     metres[i] = sample(region, region.shaped, cx, cy); kind[i] = waterAt(region, cx, cy); lat[i] = latOf(region, cy); shift[i] = lineShift(lat[i]);
@@ -215,31 +215,33 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     all.push(site);
     if (onGround(site.at)) sites.push(site);
   });
-  const cultivated = (x: number, z: number) => sample(region, region.crops, ...toCell(x, z)) / 255;
+  /** how much the game's layers of 1356 count at a cell: towards the east edge of the game map they give way, so that no line shows where they end */
+  const reach = (cx: number) => { const px = region.x0 + cx / region.cells; return smooth(region.mapW, region.mapW - LAYERS_FADE, region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px); };
+  /** the share of its ground that is fields: none where the fields of 1356 are not known (the Americas, which the game map has as one farmland) */
+  const cultivated = (x: number, z: number) => { const [cx, cy] = toCell(x, z); return at(land, x, z) & FIELDS_KNOWN ? sample(region, region.crops, cx, cy) / 255 * reach(cx) : 0; };
   const vines = (x: number, z: number) => 0.25 * smooth(52, 47, at(lat, x, z)) * smooth(700, 400, metresAt(x, z));
   /** whether water lies within `reach` columns of a column */
   const byWater = (x: number, z: number, reach: number) => { for (let dz = -reach; dz <= reach; dz++) for (let dx = -reach; dx <= reach; dx++) if (inGrid(x + dx, z + dz) && g.wet[idx(x + dx, z + dz)]) return true; return false; };
   /** palms line the water of the desert and of the hot steppe */
-  const oasis = (i: number) => Math.abs(lat[i]) < 37 && metres[i] < 1200 && ((land[i] & 127) === Land.Desert || (land[i] & 127) === Land.Steppe);
+  const oasis = (i: number) => Math.abs(lat[i]) < 37 && metres[i] < 1200 && ((land[i] & KIND) === Land.Desert || (land[i] & KIND) === Land.Steppe);
   /** the share of its ground the woods cover at a ground point: where the forest of 1356 stood, and beyond its reach where the climate grows them */
   const wooded = (x: number, z: number) => {
-    const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & 127, grown = WOODS[here] ?? 0;
+    const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & KIND, grown = WOODS[here] ?? 0;
     if (BARE.includes(here)) return 0;
-    if (!(land[i] & 128)) return grown;
-    // towards the east edge of the game map its forest gives way to the climate's, so that no line shows where it ends
-    const [cx, cy] = toCell(x, z), px = region.x0 + cx / region.cells, east = region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px;
-    const stood = sample(region, region.forest, cx, cy) / 255, known = smooth(region.mapW, region.mapW - FOREST_FADES, east);
-    return grown + (stood - grown) * known;
+    if (!(land[i] & WOODS_KNOWN)) return grown;
+    // towards the east edge of the game map its forest gives way to the climate's
+    const [cx, cy] = toCell(x, z);
+    return grown + (sample(region, region.forest, cx, cy) / 255 - grown) * reach(cx);
   };
   /** how likely a tree away from the heights and the north is a dark conifer */
-  const conifers = (i: number) => ((land[i] & 127) === Land.Boreal ? 0.85 : 0.08 + 0.8 * smooth(500 + shift[i], 1300 + shift[i], metres[i]));
+  const conifers = (i: number) => ((land[i] & KIND) === Land.Boreal ? 0.85 : 0.08 + 0.8 * smooth(500 + shift[i], 1300 + shift[i], metres[i]));
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return (best?.style ?? styleOf('')).house; };
   let settled: Settled | undefined, cover: Cover | undefined;
   if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
     cover = coverLand(g, step, things, sites, { cultivated, vines, farm, own, woods: (x, z): Woods | null => {
-      const i = idx(x, z), here = land[i] & 127;
+      const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > TREE_LINE + shift[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / wider))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const share = wooded(x + 0.5, z + 0.5);
@@ -262,7 +264,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     for (let tz = Math.ceil((oz + 2) / TREE_PITCH); tz * TREE_PITCH < oz + N - 2; tz++) for (let tx = Math.ceil((ox + 2) / TREE_PITCH); tx * TREE_PITCH < ox + N - 2; tx++) {
       const x = tx * TREE_PITCH - ox + (hash2(tx, tz, 71) - 0.5) * 2.4, z = tz * TREE_PITCH - oz + (hash2(tx, tz, 72) - 0.5) * 2.4;
       if (x < 2 || z < 2 || x >= N - 2 || z >= N - 2) continue;
-      const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & 127;
+      const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & KIND;
       if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > TREE_LINE + shift[i]) continue;
       // a tree stands clear of the water, of what is built and of drops of more than a step
       let fits = true;
@@ -287,7 +289,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover: cover && ((x, z) => { const i = idx(x, z); return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]], side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]], rise: cover.rise[i], share: cover.share[i] } : null; }),
     // the low country is sun-bleached, the mountain meadows are green
     bleach: (x, z) => smooth(900, 200, metresAt(x, z)),
-    tint: (x, z) => TINT[at(land, x, z) & 127] ?? null,
+    tint: (x, z) => TINT[at(land, x, z) & KIND] ?? null,
     // the snow line stands where the probe's summits begin; bundles of pillars differ a little, so that the line is ragged
     slope: SLOPE,
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / (SNOW_LINE + at(shift, x, z))) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
