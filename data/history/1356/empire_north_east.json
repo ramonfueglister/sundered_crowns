@@ -44,7 +44,7 @@
    "government": "feudal_monarchy",
    "culture": "czech",
    "faith": "latin",
-   "color": "#c8a02a",
+   "color": "#a08a55",
    "capital": {
     "name": "Prague",
     "lat": 50.088,
@@ -303,7 +303,7 @@
    "government": "feudal_monarchy",
    "culture": "czech",
    "faith": "latin",
-   "color": "#d9b85c",
+   "color": "#665528",
    "capital": {
     "name": "Brünn",
     "lat": 49.195,
@@ -444,7 +444,7 @@
    "government": "feudal_monarchy",
    "culture": "sorbian",
    "faith": "latin",
-   "color": "#e3c77a",
+   "color": "#896805",
    "capital": {
     "name": "Bautzen",
     "lat": 51.181,
@@ -577,7 +577,7 @@
    "government": "feudal_monarchy",
    "culture": "sorbian",
    "faith": "latin",
-   "color": "#b3743a",
+   "color": "#ad805e",
    "capital": {
     "name": "Luckau",
     "lat": 51.852,
@@ -701,7 +701,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#7a3b6e",
+   "color": "#96708e",
    "capital": {
     "name": "Schweidnitz",
     "lat": 50.845,
@@ -847,7 +847,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#8c4a2f",
+   "color": "#a06037",
    "capital": {
     "name": "Liegnitz",
     "lat": 51.207,
@@ -955,7 +955,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#a35d3a",
+   "color": "#a26147",
    "capital": {
     "name": "Brieg",
     "lat": 50.861,
@@ -1060,7 +1060,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#b8724a",
+   "color": "#863b2b",
    "capital": {
     "name": "Lüben",
     "lat": 51.4,
@@ -1171,7 +1171,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#6b5a2a",
+   "color": "#575734",
    "capital": {
     "name": "Sagan",
     "lat": 51.617,
@@ -1296,7 +1296,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#5a6e2f",
+   "color": "#64774b",
    "capital": {
     "name": "Oels",
     "lat": 51.209,
@@ -1405,7 +1405,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#7f6a45",
+   "color": "#a38b62",
    "capital": {
     "name": "Steinau",
     "lat": 51.403,
@@ -1485,7 +1485,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#965a73",
+   "color": "#7e4a62",
    "capital": {
     "name": "Münsterberg",
     "lat": 50.567,
@@ -1574,7 +1574,7 @@
    "government": "theocracy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#d8d0b0",
+   "color": "#6a5f31",
    "capital": {
     "name": "Neisse",
     "lat": 50.473,
@@ -1660,7 +1660,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#2f6b8c",
+   "color": "#6b97b2",
    "capital": {
     "name": "Oppeln",
     "lat": 50.672,
@@ -1770,7 +1770,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#4f7f9c",
+   "color": "#4c758f",
    "capital": {
     "name": "Falkenberg",
     "lat": 50.611,
@@ -1860,7 +1860,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#3f5f7a",
+   "color": "#4e7492",
    "capital": {
     "name": "Groß Strehlitz",
     "lat": 50.513,
@@ -1938,7 +1938,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#2a7f6b",
+   "color": "#4c8072",
    "capital": {
     "name": "Teschen",
     "lat": 49.75,
@@ -2049,7 +2049,7 @@
    "government": "feudal_monarchy",
    "culture": "polish",
    "faith": "latin",
-   "color": "#5a8f5a",
+   "color": "#435d42",
    "capital": {
     "name": "Auschwitz",
     "lat": 50.038,
@@ -2157,7 +2157,7 @@
    "government": "feudal_monarchy",
    "culture": "czech",
    "faith": "latin",
-   "color": "#9c3a3a",
+   "color": "#9b625f",
    "capital": {
     "name": "Troppau",
     "lat": 49.938,
@@ -2274,7 +2274,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#3a8f3a",
+   "color": "#63936c",
    "capital": {
     "name": "Wittenberg",
     "lat": 51.866,
@@ -2393,7 +2393,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#5fa35f",
+   "color": "#557854",
    "capital": {
     "name": "Ratzeburg",
     "lat": 53.7,
@@ -2495,7 +2495,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#e0d040",
+   "color": "#406e31",
    "capital": {
     "name": "Meissen",
     "lat": 51.163,
@@ -2684,7 +2684,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#8a7a3a",
+   "color": "#8a6728",
    "capital": {
     "name": "Plauen",
     "lat": 50.495,
@@ -2792,7 +2792,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#4a7a3a",
+   "color": "#506d4c",
    "capital": {
     "name": "Zerbst",
     "lat": 51.966,
@@ -2894,7 +2894,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#6a9a4a",
+   "color": "#78986c",
    "capital": {
     "name": "Bernburg",
     "lat": 51.795,
@@ -2990,7 +2990,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c03030",
+   "color": "#8b4442",
    "capital": {
     "name": "Berlin",
     "lat": 52.517,
@@ -3205,7 +3205,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#3a5fa3",
+   "color": "#637ca3",
    "capital": {
     "name": "Lüneburg",
     "lat": 53.249,
@@ -3348,7 +3348,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#a33a3a",
+   "color": "#b46b6e",
    "capital": {
     "name": "Wolfenbüttel",
     "lat": 52.162,
@@ -3483,7 +3483,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c35a5a",
+   "color": "#764c4c",
    "capital": {
     "name": "Göttingen",
     "lat": 51.534,
@@ -3608,7 +3608,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d07a4a",
+   "color": "#a9566a",
    "capital": {
     "name": "Osterode",
     "lat": 51.729,
@@ -3718,7 +3718,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#e8e8e8",
+   "color": "#95722a",
    "capital": {
     "name": "Magdeburg",
     "lat": 52.131,
@@ -3820,7 +3820,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d0d0d0",
+   "color": "#724f1c",
    "capital": {
     "name": "Halberstadt",
     "lat": 51.896,
@@ -3909,7 +3909,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c8b46a",
+   "color": "#796c41",
    "capital": {
     "name": "Hildesheim",
     "lat": 52.151,
@@ -3998,7 +3998,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d8c84a",
+   "color": "#7f7537",
    "capital": {
     "name": "Münster",
     "lat": 51.962,
@@ -4125,7 +4125,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#b0b0d0",
+   "color": "#74719c",
    "capital": {
     "name": "Osnabrück",
     "lat": 52.279,
@@ -4232,7 +4232,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#a0522d",
+   "color": "#b07e5e",
    "capital": {
     "name": "Paderborn",
     "lat": 51.719,
@@ -4325,7 +4325,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#b85c5c",
+   "color": "#b17878",
    "capital": {
     "name": "Minden",
     "lat": 52.289,
@@ -4423,7 +4423,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#a0a0a0",
+   "color": "#8d7a4d",
    "capital": {
     "name": "Bremervörde",
     "lat": 53.484,
@@ -4531,7 +4531,7 @@
    "government": "theocracy",
    "culture": "pomeranian",
    "faith": "latin",
-   "color": "#c0c0a0",
+   "color": "#787946",
    "capital": {
     "name": "Kammin",
     "lat": 53.972,
@@ -4614,7 +4614,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#e0a020",
+   "color": "#b48f3f",
    "capital": {
     "name": "Wismar",
     "lat": 53.893,
@@ -4771,7 +4771,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c88a30",
+   "color": "#937044",
    "capital": {
     "name": "Neubrandenburg",
     "lat": 53.557,
@@ -4872,7 +4872,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#9a6a2a",
+   "color": "#8b7351",
    "capital": {
     "name": "Schwerin",
     "lat": 53.629,
@@ -4948,7 +4948,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#b8a040",
+   "color": "#655a1e",
    "capital": {
     "name": "Güstrow",
     "lat": 53.794,
@@ -5072,7 +5072,7 @@
    "government": "feudal_monarchy",
    "culture": "pomeranian",
    "faith": "latin",
-   "color": "#3a8fc0",
+   "color": "#7196af",
    "capital": {
     "name": "Wolgast",
     "lat": 54.053,
@@ -5256,7 +5256,7 @@
    "government": "feudal_monarchy",
    "culture": "pomeranian",
    "faith": "latin",
-   "color": "#2a6aa0",
+   "color": "#517291",
    "capital": {
     "name": "Stettin",
     "lat": 53.428,
@@ -5405,7 +5405,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d04040",
+   "color": "#cb777b",
    "capital": {
     "name": "Rendsburg",
     "lat": 54.304,
@@ -5532,7 +5532,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#e06060",
+   "color": "#956361",
    "capital": {
     "name": "Plön",
     "lat": 54.162,
@@ -5646,7 +5646,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#b03050",
+   "color": "#88585e",
    "capital": {
     "name": "Stadthagen",
     "lat": 52.324,
@@ -5747,7 +5747,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c0a020",
+   "color": "#60532a",
    "capital": {
     "name": "Oldenburg",
     "lat": 53.143,
@@ -5848,7 +5848,7 @@
    "government": "tribal_federation",
    "culture": "frisian",
    "faith": "latin",
-   "color": "#2a9a8a",
+   "color": "#419386",
    "capital": {
     "name": "Oldeborg",
     "lat": 53.51,
@@ -5959,7 +5959,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#e04050",
+   "color": "#724645",
    "capital": {
     "name": "Lübeck",
     "lat": 53.866,
@@ -6042,7 +6042,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c02030",
+   "color": "#926662",
    "capital": {
     "name": "Hamburg",
     "lat": 53.55,
@@ -6128,7 +6128,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#b04040",
+   "color": "#915453",
    "capital": {
     "name": "Bremen",
     "lat": 53.076,
@@ -6210,7 +6210,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d06070",
+   "color": "#976468",
    "capital": {
     "name": "Stralsund",
     "lat": 54.309,
@@ -6293,7 +6293,7 @@
    "government": "city_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#c0a030",
+   "color": "#807347",
    "capital": {
     "name": "Dortmund",
     "lat": 51.514,
@@ -6375,7 +6375,7 @@
    "government": "city_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#d0b040",
+   "color": "#9e8c56",
    "capital": {
     "name": "Goslar",
     "lat": 51.906,
@@ -6457,7 +6457,7 @@
    "government": "city_republic",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#c08040",
+   "color": "#734e2b",
    "capital": {
     "name": "Mühlhausen",
     "lat": 51.209,
@@ -6539,7 +6539,7 @@
    "government": "city_republic",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#a07040",
+   "color": "#966e3c",
    "capital": {
     "name": "Nordhausen",
     "lat": 51.505,
