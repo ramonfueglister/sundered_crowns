@@ -1,8 +1,9 @@
 """Makes the climate layer of the world probe: what kind of land a place is, for the colour of its ground and its trees.
 
 One byte per two by two map pixels (the grid of public/map/biome.png): the low bits are the kind of land (LAND below),
-taken from the Köppen-Geiger climate zones; bit 7 is set where the game's own forest layer of 1356 knows the place,
-which is the part of the map that has locations. Elsewhere the probe plants the woods the climate grows.
+taken from the Köppen-Geiger climate zones; bit 7 is set where the game's own forest layer of 1356 knows the place.
+It does not where the game has sea, jungle, tundra or wasteland: for those it sets no forest at all. There the probe
+plants the woods the climate grows.
 
 Input: the Köppen-Geiger map of Rubel et al. (2017, doi:10.1127/metz/2016/0816) at 100 arc seconds, as packaged by
 kgcpy (github.com/cwru-sdle/kgcpy, BSD-3). It shows the climate of 1986-2010; that of 1356 is not mapped anywhere at
@@ -17,6 +18,7 @@ from PIL import Image
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
+from build_setup import TERRAINS
 from common import H, ROOT, W, px_to_lonlat_np
 from build_region import cached
 
@@ -52,7 +54,9 @@ def main():
     x = np.clip(((lon + 180) / 360 * zones.shape[1]).astype(int), 0, zones.shape[1] - 1)
     y = np.clip(((90 - lat) / 180 * zones.shape[0]).astype(int), 0, zones.shape[0] - 1)
     out = kinds[np.ix_(y, x)]
-    known = np.asarray(Image.open(os.path.join(ROOT, 'public', 'map', 'biome.png')).convert('RGBA'))[..., 0] != 0
+    # the game's terrain class of each place (0 sea, else 1 + its place in TERRAINS)
+    terrain = np.asarray(Image.open(os.path.join(ROOT, 'public', 'map', 'biome.png')).convert('RGBA'))[..., 0]
+    known = ~np.isin(terrain, [0] + [TERRAINS.index(t) + 1 for t in ('jungle', 'tundra', 'wasteland')])
     out = out | (known.astype(np.uint8) << 7)
     path = os.path.join(ROOT, 'public', 'map', 'climate.bin.gz')
     with gzip.open(path, 'wb', compresslevel=9) as f: f.write(out.tobytes())
