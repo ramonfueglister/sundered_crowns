@@ -6,6 +6,7 @@ import { Batch, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
 import { FLOOR, type HouseStyle, type Model, SOUTH, type Style, house, m, m2, tower, townHouse, townWall } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
+import type { Town } from '../figures';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; style: Style }
@@ -18,6 +19,8 @@ export interface Settled {
   town: Uint8Array;
   /** the crop of each column: 0 none, 1 wheat, 2 vine */
   field: Uint8Array;
+  /** the walled towns as they were laid out, in world blocks */
+  towns: Town[];
 }
 
 /** The diorama holds one person for every hundred of 1356 (the scale agreed for the simulation too). */
@@ -43,6 +46,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  */
 export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, shrink = 1): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
+  const towns: Town[] = [];
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
   /** The height to build at on a footprint, if it is free with `gap` columns round it and level to within a step. */
@@ -138,6 +142,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
     }
+    towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
     if (own(cx, cz)) count('town');
   });
 
@@ -155,5 +160,5 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // a farmhouse beside one field in four
     if (hash2(lx, lz, 69) < 0.25) { const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296)); home(f, x0 + w + 1, z0 + f.int(0, 2), f.int(3, 4), f.int(3, 4), f.chance(0.4) ? 2 : 1, 0, farm(mx, mz)); }
   }
-  return { used, town, field };
+  return { used, town, field, towns };
 }
