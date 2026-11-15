@@ -98,6 +98,7 @@ diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.b
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
  *  ball darkens towards its top), a tint and less colour. */
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
+  m.roughness = k.rough; m.ior = ior(k.specular);
   m.onBeforeCompile = shader => {
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY;'),
       '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y;');
