@@ -70,7 +70,8 @@ pub struct DressSet {
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
     pub beards: [Beard; 6],
-    /// The file of the full beard (Apoleia's hangs in long single strands).
+    /// The file of the full beard (Apoleia's hangs in long single strands). England's `beard_crop` has no cards:
+    /// the painted layer of short hairs alone, standing off the skin (tools/portrait/pipeline/beards.py `crop`).
     pub beard_full: &'static str,
     /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Apoleia's `eyebrow001` on
     /// everyone is a broad, dense bar: on a woman's face it reads as a man's.
@@ -160,7 +161,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_veiled: "bun01",
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
-    beard_full: "beard_trim",
+    beard_full: "beard_crop",
     brows: ["eyebrow011", "eyebrow001"],
     brow_paint: [0.25, 0.6],
     lips: [0.55, 0.45],

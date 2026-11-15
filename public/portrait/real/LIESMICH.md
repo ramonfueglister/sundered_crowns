@@ -8,6 +8,7 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
   (`name.txt.zst`: je Ecke drei Kopf-Ecken, Gewichte, Versatz; `name.webp` Farbe mit Alpha,
   `name_n.webp` Normalen), bemalte Kappe (`name_cap.*`), Kopfhaut je Kopf-Ecke (`name_scalp.txt`).
 - Bärte (beard_stubble, beard_short, beard_full, beard_phil, beard_chin): wie die Frisuren.
+  beard_crop (Vollbart im Kleid England 1356): ohne Karten, nur die bemalte Schicht, die von der Haut absteht.
 - Kleider (cloth_tunic, cloth_toga, cloth_palla, cloth_veil): in Blender drapiert, `_ao.txt`
   Schatten in den Falten.
 - Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt;

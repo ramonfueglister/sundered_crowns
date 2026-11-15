@@ -5,7 +5,8 @@
 // and ?age=12 make every test person a woman or a man, or of that age (to see one garment on many faces);
 // ?gene=27:240,32:0 sets both alleles of genes by their number in portrait/src/look.rs GENES (27 hairL, 32 grey);
 // ?only=930000,930003 draws these test people alone; ?turn=-1.3 turns every head that far (radians) instead of as
-// its profile says, to see a face from the side.
+// its profile says, to see a face from the side; ?without=_cap. leaves out every surface whose image has that in its
+// name, to see what lies under it.
 import people from '../../tests/portrait/people.json';
 import { loadPortraitAssets } from './assets';
 import { profileOf } from './profile';
@@ -41,6 +42,8 @@ async function main(): Promise<void> {
     const portrait = assets.builder.build(person);
     const t1 = performance.now();
     if (q.has('turn')) profileOf(portrait.look).turn = Number(q.get('turn'));
+    const without = q.get('without');
+    if (without) portrait.surfaces = portrait.surfaces.filter(s => !s.tex.includes(without));
     await stage.draw(portrait);
     const picture = document.createElement('canvas');
     picture.width = width; picture.height = height;

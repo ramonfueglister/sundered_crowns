@@ -262,15 +262,26 @@ def write_head_obj(head, path):
 
 
 def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, curl=0.0, curl_len=0.06,
-              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None):
+              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None):
     """The cap: scalp triangles lifted 0.008, textured with n painted fine
     hairs along the flow (length Lc(th, el) each, brightness shade(dirs)),
     over a darker base inside the margin. curl: sideways swing (radians of
-    head angle) of curly hairs, period curl_len."""
+    head angle) of curly hairs, period curl_len. lift(V, margin, triangles):
+    how much further each vertex stands off the skin (a vector per vertex),
+    for a layer that has a thickness of its own (a beard cut close)."""
     V, T, hc = head.V, head.T, head.hc
     cdir = unit(V - hc)
     cm = margin(*ang(cdir))
     tsel = [t for t in T if cm[t].max() > -7 and V[t][:, 1].min() > ymin]
+    if lift is not None:
+        # a layer that stands off the skin must be the skin's outer side alone: the triangles are chosen by their
+        # direction from the head's centre, which also takes the walls of the mouth's hollow that lie behind the
+        # lower face; on the skin they stay hidden inside the head, lifted they come out through it
+        cen = V[np.array(tsel)].mean(1)
+        nrm = np.cross(V[np.array(tsel)[:, 1]] - V[np.array(tsel)[:, 0]], V[np.array(tsel)[:, 2]] - V[np.array(tsel)[:, 0]])
+        out_ = ((cen - hc) * nrm).sum(1) > 0
+        far = np.linalg.norm(cen - hc, axis=1) > 0.85 * head.skin(unit(cen - hc))
+        tsel = [t for t, k in zip(tsel, out_ & far) if k]
     cv = sorted({i for t in tsel for i in t}); cmap = {o: k for k, o in enumerate(cv)}
     ax_ = np.array([0, 1.0, 0]) if uvc is None else unit(np.array(uvc, float))
     e1 = unit(np.cross(np.array([0, 0, 1.0]) if abs(ax_[2]) < 0.9 else np.array([1.0, 0, 0]), ax_)) if uvc is not None else np.array([1.0, 0, 0])
@@ -334,16 +345,17 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     c = c / max(1e-6, (c * a).sum() / max(a.sum(), 1e-6)) * mean
     img = np.dstack([np.clip(c, 0, 1)] * 3 + [np.clip(a, 0, 1)])
     Image.fromarray((img * 255).astype(np.uint8), 'RGBA').save(os.path.join(out, name + '_cap.png'))
+    more = lift(V, cm, tsel) if lift is not None else np.zeros_like(V)
     with open(os.path.join(out, name + '_cap.txt'), 'w') as f:
         f.write(f'{len(cv)} {len(tsel)}\n')
         for o in cv:
-            nn = head.vn[o] * 0.008
+            nn = head.vn[o] * 0.008 + more[o]
             f.write(f'{head.remap[o]} {head.remap[o]} {head.remap[o]} 1 0 0 {nn[0]:.6f} {nn[1]:.6f} {nn[2]:.6f}\n')
         for t in tsel:
             f.write(' '.join(str(cmap[i]) for i in t) + ' ' + ' '.join(f'{cuv[i][0]:.6f} {1 - cuv[i][1]:.6f}' for i in t) + '\n')
     with open(os.path.join(out, name + '_capview.obj'), 'w') as f:
         for o in cv:
-            f.write('v %.5f %.5f %.5f\n' % tuple(V[o] + head.vn[o] * 0.008))
+            f.write('v %.5f %.5f %.5f\n' % tuple(V[o] + head.vn[o] * 0.008 + more[o]))
         for o in cv:
             f.write('vt %.5f %.5f\n' % (cuv[o][0], 1 - cuv[o][1]))
         for t in tsel:

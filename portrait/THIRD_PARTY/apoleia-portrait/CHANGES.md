@@ -62,3 +62,8 @@ men's (`rest`, `lean`, gaze), and a child's face takes a third of `rest` and of 
 (which of MakeHuman's brows women and men wear, `build.rs`; `eyebrow011` added from MakeHuman, CC0) and
 `brow_paint` (how much of the brow's colour is painted on the skin under it, `build.rs`) in the dress table; Roman
 bytes unchanged.
+The full beard of England is `beard_crop` (round 53): a file without cards, its painted layer standing off the
+skin (pipeline: `beards.py` style `crop`, `hairlib.py` `paint_cap(lift=)`); `beard_trim` removed. The stage may
+light a painted layer without shadows (`profile.ts` `cap.shadow`, `stage.ts`); Apoleia's profile is unchanged.
+The normal maps of the painted layers of 1356 rewritten without `nmap.py`'s profile for cards; Roman bytes
+unchanged.

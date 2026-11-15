@@ -44,8 +44,10 @@ export interface StageProfile {
   /** The painted layer of short hairs under the cards and of the short beards: null as it is. Else how much
    *  lighter it is drawn (factor on its colour: `tone` for dark hair, `light` for hair as light as white, between
    *  them by the hair's brightness), how much of its colour is left (as `sheen.colour`), and how far light reaches
-   *  round to its shaded side (as `sheen.wrap`). */
-  cap: null | { tone: number; light: number; colour: number; wrap: number };
+   *  round to its shaded side (as `sheen.wrap`), and whether shadows fall on it (`shadow`: the edge of a shadow
+   *  from the shadow map is a straight, hard line, which on skin reads as the chin's shadow and on a beard as a
+   *  dark patch with corners). */
+  cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean };
   /** Hair cards: roughness, "specular", anisotropy of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
   /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
@@ -102,7 +104,7 @@ export const ENGLAND_1356: StageProfile = {
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.78, 0.8] },
   eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
-  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1 },
+  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
 };

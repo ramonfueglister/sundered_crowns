@@ -7,6 +7,7 @@
 # painted layer of short hairs on the skin under them.
 # usage: python3 -I beards.py base.obj outdir style name
 #   style: region (control image) | stubble | short | full | phil | chin | trim (a full beard cut close, for 1350)
+#          | crop (a full beard cut close as one painted layer that stands off the skin, without cards)
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
@@ -61,8 +62,8 @@ def front_depth():
     return zf
 
 # --- the beard zone: a signed distance (units, positive inside) ---
-TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'trim': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
-RAISE = {'full': 0.04, 'trim': 0.04, 'phil': 0.07}.get(style, 0.0)
+TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'trim': 7.45, 'crop': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
+RAISE = {'full': 0.04, 'trim': 0.04, 'crop': 0.04, 'phil': 0.07}.get(style, 0.0)
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]
@@ -152,6 +153,10 @@ P_ = dict(
     # card shows from its root on (below 1 the thin tips are cut off, as scissors do)
     trim=dict(cards=True, K=int(os.environ.get('TRIM_K', '260')), Nr=14000, L=tuple(float(t) for t in os.environ.get('TRIM_L', '0.16,0.3,0.09').split(',')), lift=(0.012, 0.06), hang=True, steps=12,
               w=tuple(float(t) for t in os.environ.get('TRIM_W', '0.16,0.3').split(',')), taper=0.65, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.5, wave=0.006, Lm=0.075),
+    # the same beard without cards: its painted layer alone, standing off the skin by CROP_LIFT (at the jaw and
+    # cheeks, under the chin) so that it has a thickness and an outline of its own. Cards of any width read as rows
+    # of shingles on a beard this short, and lighter than the layer under them.
+    crop=dict(cards=False, Lc=float(os.environ.get('CROP_LC', '0.08')), Lm=0.075, base=0.95, mean=0.55, n=int(os.environ.get('CROP_N', '130000'))),
     phil=dict(cards=True, K=380, Nr=16000, L=(0.5, 1.0, 0.13), lift=(0.012, 0.1), hang=True, steps=24, w=(0.08, 0.17), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.38, wave=0.022, Lm=0.085),
     chin=dict(cards=True, K=160, Nr=6000, L=(0.2, 0.42, 0.08), lift=(0.01, 0.05), hang=True, steps=14, w=(0.06, 0.13), taper=0.35, Lc=0.06, base=0.88, mean=0.55, n=80000, conv=0.6, wave=0.01, Lm=0.06),
 )[style]
@@ -270,7 +275,39 @@ def Lfun(th, el):
     x, y, z = sk[..., 0], sk[..., 1], sk[..., 2]
     wm = np.clip((y - 6.66) / 0.04, 0, 1) * np.clip((0.58 - np.abs(x)) / 0.1, 0, 1) * np.clip((z - 1.1) / 0.2, 0, 1)
     return Lc + (Lm - Lc) * wm
+def crop_lift(V, m, tris):
+    """How far the layer of a beard cut close stands off the skin (a vector per vertex): nothing at the zone's edge
+    and on the upper lip, CROP_LIFT[0] on cheeks and jaw, CROP_LIFT[1] at the chin. Under the jaw the layer does
+    not follow the skin into the hollow between jaw and neck: its vertices there (skin facing downwards) are
+    drawn taut between the jaw's edge and the neckline, as a sheet over the skin (each moved along its normal
+    towards the mean of its neighbours, CROP_TAUT times, never into the skin), which is the outline of a beard
+    cut close seen from the side."""
+    l0, l1 = (float(t) for t in os.environ.get('CROP_LIFT', '0.03,0.06').split(','))
+    x, y, z = V[:, 0], V[:, 1], V[:, 2]
+    ax = np.abs(x)
+    inside = np.clip((m - 0.5) / 4.0, 0, 1) ** 0.7
+    must = np.clip((y - 6.62) / 0.06, 0, 1) * np.clip((0.6 - ax) / 0.12, 0, 1) * np.clip((z - 1.05) / 0.2, 0, 1)
+    chin = np.clip(1 - ax / 0.6, 0, 1) * np.clip((6.6 - y) / 0.3, 0, 1)
+    amt = inside * (1 - 0.85 * must) * (l0 + (l1 - l0) * chin)
+    outw = unit(np.stack([x, np.zeros_like(x), np.maximum(z - HC[2], 0.2)], -1))
+    off = amt[:, None] * (outw * (1 - 0.5 * chin)[:, None] + np.array([0, -1.0, 0.25])[None] * (0.9 * chin)[:, None])
+    P = V + H.vn * 0.008 + off
+    free = (m > 0.5) & (H.vn[:, 1] < float(os.environ.get('CROP_DOWN', '-0.25'))) & (y < 6.55)
+    nb = {}
+    for t in tris:
+        for a in t:
+            nb.setdefault(a, set()).update(b for b in t if b != a)
+    ids = [i for i in np.nonzero(free)[0] if i in nb]
+    nbl = [np.array(sorted(nb[i])) for i in ids]
+    P0, vn = P[ids].copy(), H.vn[ids]
+    for _ in range(int(os.environ.get('CROP_TAUT', '300'))):
+        # along its own normal only, and never back into the skin: where chin and jaw bulge the layer stays on them
+        d = ((np.array([P[n].mean(0) for n in nbl]) - P0) * vn).sum(1)
+        P[ids] = P0 + vn * np.maximum(d, 0)[:, None]
+    return P - V - H.vn * 0.008
+
 cov = paint_cap(H, out, name, margin, flow, rng, Lfun, shade, n=P_['n'], steps=8,
-                base=P_['base'], base_ramp=4.0, mean=P_['mean'], ymin=5.7, uvc=UVC)
+                base=P_['base'], base_ramp=float(os.environ.get('CROP_RAMP', '1.5')) if style == 'crop' else 4.0, mean=P_['mean'], ymin=5.7, uvc=UVC,
+                lift=crop_lift if style == 'crop' else None)
 print(style, 'cap coverage', round(cov, 3))
 write_head_obj(H, os.path.join(out, name + '_head.obj'))

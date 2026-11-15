@@ -22,7 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -106,8 +106,9 @@ painted layer of short hairs is drawn lighter and lit round its shaded side as t
 profile): its image is far darker than the cards', which at the lower exposure turned a brown beard black.
 A mood shows less strongly (`mood` 1 in the dress table, Apoleia's 1.7 was drawn for a small picture): a sad
 mouth on an old face read as a mask.
-The full beard is the dress's own (`beard_full`: `beard_trim`, cut close below the chin, from fewer and broader
-cards): Apoleia's hangs in long single strands that read as wool.
+The full beard is the dress's own (`beard_full`): Apoleia's hangs in long single strands that read as wool. Until
+round 52 it was `beard_trim` (round 45), from fewer and broader cards; since round 53 it is `beard_crop`, without cards (see
+there).
 
 **Curls, plaits, white dots (round 46).** A head with curls wore Apoleia's `curly01`, which reads at the panel's
 size as ridges of short locks: the dress table names its own (`hair_curly`: `bob05`, the hair of 1356 from
@@ -220,6 +221,23 @@ reads as a bar is the shade of the socket, which stays); the mouth narrower and 
 with a dark gap); a chin longer still (0.7: pointed). The change at the panel's size is small: the women read as
 women of their age, not as CK3's. Open: the full and the white beard as rows of shingles are now what stands out
 most; children's eyes large and dark; men all wear one cut of hair.
+
+**The full beard, and dark patches on every painted layer (round 53).** Held large beside CK3's, the full and the
+white beard were rows of shingles (the ends of the cards in rows), lighter than the painted layer of short hairs
+under them, with dark patches that had straight edges.
+
+| what was wrong | cause | now |
+|---|---|---|
+| rows of shingles, a second colour | hair cards a few centimetres long cannot lie as a dense beard: each ends in a visible edge, and their image is lighter than the painted layer's | `beard_crop` has no cards: the painted layer alone, standing off the skin by 0.03 units on cheeks and jaw and 0.06 at the chin (the head is about two units tall), drawn taut from the jaw to the throat (`tools/portrait/pipeline/beards.py` style `crop`, `hairlib.py` `paint_cap(lift=)`). One surface, one colour, a soft edge |
+| dark patches with straight upright edges on the beard, fainter on the hair's painted layer | the normal maps of all painted layers of 1356 were written with `nmap.py ... 8`. The third argument is for images of cards (eight strands side by side, each given a round profile): on a painted layer it tilts the normals in eight upright bands (mean red per column 88 to 174 of 255; now within 2) | `bob01` to `bob05_cap_n`, `plait01_cap_n` and the beard's written without it. Apoleia's own files were right |
+| a dark triangle with straight sides under the mouth | the shadow map's edge of the chin's shadow: soft enough on skin, a hard line on a layer that stands off it | the painted layer takes no shadows (`cap.shadow` in the profile, `stage.ts`); it is shaded by its own normals |
+
+How the cause was found: shadows off, drawing order (a depth pass for the layer), the walls of the mouth's hollow
+and the vertex data were each ruled out before the image was looked at column by column. The test page's new
+`?without=_cap.` leaves out every surface whose image name contains the text, which shows a layer alone or a
+head without it. Tried and dropped: see `tools/portrait/pipeline/README.md`.
+Still open: the beard reaches far down the throat (Apoleia's zone of the beard) and its outline is one shape for
+every man; children's eyes large and dark; men all wear one cut of hair; flat light on flat skin.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
