@@ -175,6 +175,12 @@ export interface GroundTraits {
   tint?(x: number, z: number): readonly [readonly [number, number, number], number] | null;
   /** linear RGB of the sides of meadow steps where hills are overgrown; bare earth if left out */
   slope?: readonly [number, number, number];
+  /**
+   * What stands or grows on a column as part of the ground itself, where the land is seen from so far that a house or
+   * a tree is a single block: the colour of its top, and of its sides down to `rise` blocks below the top (a field
+   * only colours the top: `rise` 0).
+   */
+  cover?(x: number, z: number): { top: readonly [number, number, number]; side: readonly [number, number, number]; rise: number; /** how much of the top the cover colours, 0 … 1 (all of it if left out) */ share?: number } | null;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

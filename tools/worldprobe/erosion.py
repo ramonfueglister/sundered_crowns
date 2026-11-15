@@ -90,3 +90,19 @@ def erode(height, fixed, cell, steps=60, keep=6.0):
         # steer the uplift: where the land has sunk below the real broad shape it is pushed up harder, and the reverse
         uplift *= np.clip((broad + 100) / (ndimage.gaussian_filter(h, keep) + 100), 0.8, 1.25)
     return np.where(fixed, real, h), area
+
+
+def erode_lands(height, fixed, sea, cell, apart=48):
+    """
+    `erode` for a window that is mostly sea: every piece of land, with the sea within `apart` cells of it, is eroded on
+    its own, in the box that holds it. Pieces of land farther apart than that do not drain into each other, so the
+    land comes out as if the whole window had been eroded at once, and the open sea is not worked on at all.
+    """
+    cell = np.broadcast_to(np.asarray(cell, np.float64), height.shape[:1])
+    shaped, area = height.astype(np.float64).copy(), np.repeat((cell * cell)[:, None], height.shape[1], axis=1)
+    pieces, _ = ndimage.label(ndimage.maximum_filter((~sea).astype(np.uint8), size=2 * apart + 1))
+    for k, box in enumerate(ndimage.find_objects(pieces), 1):
+        own = pieces[box] == k
+        h, a = erode(height[box], fixed[box], cell[box[0]])
+        shaped[box][own], area[box][own] = h[own], a[own]
+    return shaped, area

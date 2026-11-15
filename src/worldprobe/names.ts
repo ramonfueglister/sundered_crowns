@@ -1,4 +1,4 @@
-// The names of the realms, written across their lands on the painted map: letters over the picture, spaced out along
+// The names of the realms, written across their lands on the 2D map (realms.ts): letters over the picture, spaced out along
 // each realm's length as on an old map, shown as far as the realms colour the map.
 import type { RealmName } from './paint';
 
@@ -12,20 +12,28 @@ const LEAN_MOST = 0.8;
 export interface Names {
   /** Lays the names over a picture `box` whose middle shows the map pixel (x, y), with `scale` pixels to a map pixel across and `squash` times that down the picture. */
   show(names: readonly (RealmName & { name: string })[], box: DOMRect, x: number, y: number, scale: number, squash: number, strength: number): void;
+  /** Takes the names off the page. */
+  remove(): void;
 }
 
-export function createNames(): Names {
+/** The names are written into `into`, over all of it that the picture's box covers. */
+export function createNames(into: HTMLElement = document.body): Names {
   const layer = document.createElement('div'), spans = new Map<number, HTMLSpanElement>();
   layer.style.cssText = "position:fixed;overflow:hidden;pointer-events:none;font-family:'Crimson Pro','Palatino Linotype',Palatino,Georgia,serif;font-weight:600;text-transform:uppercase;color:#2a1c10;text-shadow:0 0 3px #fff8e6cc,0 0 1px #fff8e6";
-  document.body.append(layer);
+  into.append(layer);
   return {
+    remove() { layer.remove(); },
     show(names, box, x, y, scale, squash, strength) {
       layer.style.display = strength > 0 ? '' : 'none';
       if (strength <= 0) return;
       layer.style.left = `${box.left}px`; layer.style.top = `${box.top}px`; layer.style.width = `${box.width}px`; layer.style.height = `${box.height}px`; layer.style.opacity = String(strength);
+      // a realm that is gone, or has no land left, loses its name
+      const named = new Set(names.map((n) => n.realm));
+      for (const [realm, span] of spans) if (!named.has(realm)) { span.remove(); spans.delete(realm); }
       for (const n of names) {
         let span = spans.get(n.realm);
-        if (!span) { span = document.createElement('span'); span.textContent = n.name; span.style.cssText = 'position:absolute;left:0;top:0;white-space:nowrap;line-height:1;transform-origin:0 0'; layer.append(span); spans.set(n.realm, span); }
+        if (!span) { span = document.createElement('span'); span.style.cssText = 'position:absolute;left:0;top:0;white-space:nowrap;line-height:1;transform-origin:0 0'; layer.append(span); spans.set(n.realm, span); }
+        if (span.textContent !== n.name) span.textContent = n.name;
         // the letters are spread over the name's span: each takes about 0.62 of its height, the rest is space between them
         const long = n.long * scale * SPAN, letters = n.name.length, size = Math.min(LARGEST, n.broad * scale * TALL, long / letters / 0.62), gap = Math.min(size * 1.5, long / letters - size * 0.62);
         const px = box.width / 2 + (n.x - x) * scale, py = box.height / 2 + (n.y - y) * scale * squash;
