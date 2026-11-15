@@ -132,7 +132,7 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 - Der Zustand aller Städte und der Händler liegt als ein Block im Speicherstand der Welt und in dessen Prüfsumme: 1,85 MB zum Start, rund 6 MB nach dem ersten Jahr, danach 16 Byte mehr pro Stadt und Tag. Speichern, laden und weiterrechnen ergibt dasselbe wie durchrechnen.
 - Die WebAssembly-Fassung rechnet Bit für Bit dasselbe wie die native Fassung (Test mit drei Städten).
 - Ein Tag aller 29 Städte kostet im Spiel rund 15 Millisekunden Rechenzeit; ein Spieltag dauert 240 Sekunden.
-- Eine Welt, die mit der Volkswirtschaft England gespeichert wurde, gründet die Städte beim Laden an ihrem heutigen Tag. Geprobt mit einer Welt von 400 Tagen: geladen in 0,6 Sekunden, 60 Tage weitergerechnet, gespeichert und mit derselben Prüfsumme wieder geladen.
+- Eine Welt, die mit der Volkswirtschaft England gespeichert wurde, gründet die Städte beim Laden an ihrem heutigen Tag. Geprobt mit einer Welt von 400 Tagen aus dem heutigen Stand des Spiels (alle 25'103 Orte der Erde): in 0,03 Sekunden umgestellt, 60 Tage weitergerechnet, gespeichert und mit derselben Prüfsumme wieder geladen.
 
 ## Quellen
 
