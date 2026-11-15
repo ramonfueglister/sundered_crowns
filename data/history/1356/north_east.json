@@ -252,7 +252,7 @@
    "government": "feudal_monarchy",
    "culture": "danish",
    "faith": "latin",
-   "color": "#9b8857",
+   "color": "#9a8957",
    "capital": {
     "name": "Gottorf",
     "lat": 54.52,
@@ -368,7 +368,7 @@
    "government": "elective_monarchy",
    "culture": "swedish",
    "faith": "latin",
-   "color": "#3d8ca2",
+   "color": "#3c8ca2",
    "capital": {
     "name": "Stockholm",
     "lat": 59.33,
@@ -652,7 +652,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#868fc9",
+   "color": "#938fbb",
    "capital": {
     "name": "Visby",
     "lat": 57.64,
@@ -1913,7 +1913,7 @@
    "government": "military_order",
    "culture": "prussian_german",
    "faith": "latin",
-   "color": "#6f6e74",
+   "color": "#6e6e74",
    "capital": {
     "name": "Marienburg",
     "lat": 54.04,
@@ -2271,7 +2271,7 @@
    "government": "military_order",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#5d540c",
+   "color": "#5f570c",
    "capital": {
     "name": "Wenden",
     "lat": 57.31,
@@ -2448,7 +2448,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#79444f",
+   "color": "#794450",
    "capital": {
     "name": "Kokenhusen",
     "lat": 56.64,
@@ -3000,7 +3000,7 @@
    "government": "city_republic",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#1d635d",
+   "color": "#15625d",
    "capital": {
     "name": "Pskov",
     "lat": 57.82,
@@ -3098,7 +3098,7 @@
    "government": "city_republic",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#738254",
+   "color": "#6c7b4a",
    "capital": {
     "name": "Khlynov",
     "lat": 58.6,
@@ -3182,7 +3182,7 @@
    "government": "tribal_federation",
    "culture": "komi",
    "faith": "finnic_old",
-   "color": "#4c6545",
+   "color": "#3e5f36",
    "capital": {
     "name": "Ust-Vym",
     "lat": 62.23,
@@ -3430,7 +3430,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#286235",
+   "color": "#296134",
    "capital": {
     "name": "Tver",
     "lat": 56.86,
@@ -3530,7 +3530,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#43a994",
+   "color": "#39aa99",
    "capital": {
     "name": "Mikulin",
     "lat": 56.44,
@@ -4145,7 +4145,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#916686",
+   "color": "#8c6484",
    "capital": {
     "name": "Murom",
     "lat": 55.58,
@@ -4326,7 +4326,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#9a681f",
+   "color": "#9a652f",
    "capital": {
     "name": "Pronsk",
     "lat": 54.12,
@@ -4702,7 +4702,7 @@
    "government": "nomadic_horde",
    "culture": "tatar",
    "faith": "sunni",
-   "color": "#b09139",
+   "color": "#af9238",
    "capital": {
     "name": "New Sarai",
     "lat": 48.56,
@@ -4892,7 +4892,7 @@
    "government": "tribal_federation",
    "culture": "mordvin",
    "faith": "finnic_old",
-   "color": "#6a6340",
+   "color": "#746830",
    "capital": {
     "name": "Temnikov",
     "lat": 54.63,

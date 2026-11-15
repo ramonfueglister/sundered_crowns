@@ -768,7 +768,7 @@
    "government": "feudal_monarchy",
    "culture": "scottish",
    "faith": "latin",
-   "color": "#5a8a66",
+   "color": "#638a6b",
    "capital": {
     "name": "Finlaggan",
     "lat": 55.836,
@@ -1535,7 +1535,7 @@
    "government": "elective_monarchy",
    "culture": "irish",
    "faith": "latin",
-   "color": "#4d5e35",
+   "color": "#4c5f36",
    "capital": {
     "name": "Roscommon",
     "lat": 53.632,
@@ -1722,7 +1722,7 @@
    "government": "feudal_monarchy",
    "culture": "irish",
    "faith": "latin",
-   "color": "#a5906c",
+   "color": "#aa9064",
    "capital": {
     "name": "Loughrea",
     "lat": 53.197,
@@ -1912,7 +1912,7 @@
    "government": "elective_monarchy",
    "culture": "irish",
    "faith": "latin",
-   "color": "#526138",
+   "color": "#526137",
    "capital": {
     "name": "Ferns",
     "lat": 52.59,
@@ -2711,7 +2711,7 @@
    "government": "feudal_monarchy",
    "culture": "breton",
    "faith": "latin",
-   "color": "#6c5826",
+   "color": "#69582d",
    "capital": {
     "name": "Vannes",
     "lat": 47.658,
@@ -2825,7 +2825,7 @@
    "government": "feudal_monarchy",
    "culture": "flemish",
    "faith": "latin",
-   "color": "#8b762d",
+   "color": "#8a762d",
    "capital": {
     "name": "Bruges",
     "lat": 51.209,
@@ -2969,7 +2969,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#6e425c",
+   "color": "#6d455d",
    "capital": {
     "name": "Dijon",
     "lat": 47.322,
@@ -3866,7 +3866,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#ba798c",
+   "color": "#b9798e",
    "capital": {
     "name": "Saint-Bertrand-de-Comminges",
     "lat": 43.03,
@@ -4060,7 +4060,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#a97876",
+   "color": "#a97879",
    "capital": {
     "name": "Casteljaloux",
     "lat": 44.31,
@@ -4166,7 +4166,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#645523",
+   "color": "#82783e",
    "capital": {
     "name": "La Teste-de-Buch",
     "lat": 44.63,
@@ -4374,7 +4374,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#466794",
+   "color": "#4c668d",
    "capital": {
     "name": "Bar-le-Duc",
     "lat": 48.773,
@@ -4633,7 +4633,7 @@
    "government": "feudal_monarchy",
    "culture": "hollandic",
    "faith": "latin",
-   "color": "#b3856d",
+   "color": "#b4856e",
    "capital": {
     "name": "The Hague",
     "lat": 52.08,
@@ -4782,7 +4782,7 @@
    "government": "feudal_monarchy",
    "culture": "picard",
    "faith": "latin",
-   "color": "#3f6e2c",
+   "color": "#3e7140",
    "capital": {
     "name": "Mons",
     "lat": 50.454,
@@ -5146,7 +5146,7 @@
    "government": "theocracy",
    "culture": "french",
    "faith": "latin",
-   "color": "#9b6969",
+   "color": "#946767",
    "capital": {
     "name": "Liège",
     "lat": 50.633,
@@ -5350,7 +5350,7 @@
    "government": "feudal_monarchy",
    "culture": "flemish",
    "faith": "latin",
-   "color": "#999681",
+   "color": "#969782",
    "capital": {
     "name": "Hasselt",
     "lat": 50.93,

@@ -1,0 +1,148 @@
+{
+ "year": 1356,
+ "about": "Corrections of who holds which place in 1356, applied after the anchor-based spread (tools/map/borders.py). Each rule names its sources.",
+ "rules": [
+  {
+   "islands": {
+    "km": 60,
+    "box": [
+     -12,
+     30,
+     46,
+     72
+    ]
+   },
+   "note": "Islands within sight of a coast belonged to the coastal power that held it; exceptions follow.",
+   "sources": [
+    "Putzger Historischer Weltatlas, Europa um 1360",
+    "W. R. Shepherd, Historical Atlas (1923), Europe about 1360"
+   ]
+  },
+  {
+   "state": "norway",
+   "area": [
+    [
+     12.2,
+     65.0
+    ],
+    [
+     14.6,
+     65.6
+    ],
+    [
+     16.2,
+     67.0
+    ],
+    [
+     18.1,
+     68.3
+    ],
+    [
+     20.4,
+     69.0
+    ],
+    [
+     22.5,
+     69.5
+    ],
+    [
+     25.0,
+     69.9
+    ],
+    [
+     28.0,
+     69.9
+    ],
+    [
+     31.2,
+     69.6
+    ],
+    [
+     31.2,
+     72.0
+    ],
+    [
+     9.0,
+     72.0
+    ],
+    [
+     9.0,
+     65.0
+    ]
+   ],
+   "from": [
+    null
+   ],
+   "note": "Halogaland and Finnmark: the Norwegian crown held the coast to Varanger (Vardohus built 1307); the inland Sapmi stayed shared Sami land.",
+   "sources": [
+    "K. Helle (ed.), Cambridge History of Scandinavia I (2003), ch. 15",
+    "Shepherd 1923, Europe about 1360"
+   ]
+  },
+  {
+   "state": "norway",
+   "note": "Orkney and Shetland: Norwegian earldoms until the pledges of 1468 and 1469.",
+   "sources": [
+    "B. E. Crawford, The Northern Earldoms (2013)"
+   ],
+   "area": [
+    [
+     -4.6,
+     58.6
+    ],
+    [
+     0.0,
+     58.6
+    ],
+    [
+     0.0,
+     61.2
+    ],
+    [
+     -4.6,
+     61.2
+    ]
+   ],
+   "from": [
+    null,
+    "scotland"
+   ]
+  },
+  {
+   "state": "england",
+   "places": [
+    "Berwick-upon-Tweed",
+    "St Helier"
+   ],
+   "note": "Berwick: taken by the Scots in November 1355, retaken by Edward III in January 1356. Jersey: a possession of the English crown.",
+   "sources": [
+    "R. Nicholson, Scotland: The Later Middle Ages (1974), 160-163",
+    "J. Sumption, Trial by Fire (1999)"
+   ]
+  },
+  {
+   "state": "venice",
+   "places": [
+    "Hvar",
+    "Neoia",
+    "Agiokastro 26"
+   ],
+   "note": "Hvar and Brac: Venetian 1278-1358 (lost at the Treaty of Zadar). Karpathos: the Cornaro's Venetian lordship (1306-1538).",
+   "sources": [
+    "J. V. A. Fine, The Late Medieval Balkans (1987), 343-345",
+    "K. M. Setton, The Papacy and the Levant I (1976)"
+   ]
+  },
+  {
+   "state": "denmark",
+   "places": [
+    "Rønne",
+    "Sandholm 85"
+   ],
+   "note": "Bornholm: held by the archbishop of Lund under the Danish crown; not part of the Scanian lands pledged to Magnus of Sweden in 1332.",
+   "sources": [
+    "Cambridge History of Scandinavia I, ch. 14"
+   ]
+  }
+ ]
+}

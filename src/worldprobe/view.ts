@@ -66,7 +66,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(FARTHEST, Math.max(NEAREST, o.wide));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
-  const realms = createRealms(stage, { region: name, base, map: projection.map, cells: projection.cells, round: projection.round, ahead: !still, changed: () => look() }), names = createNames(o.names);
+  const realms = createRealms(stage, { region: name, base, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
   /** how the stage is laid out for the view, as of the last look */

@@ -11,6 +11,8 @@ const FILL = 0.84, ASPECT = 0.5;
 const SMALLEST = 9, LARGEST = 0.11;
 /** letters stand no further apart than this many times their height */
 const SPREAD_MOST = 0.9;
+/** two names keep this share of their summed heights apart (between points along them) */
+const CLEAR = 0.5;
 
 export interface LaidName { realm: number; name: string; /** SVG path of the curve in pixels of the picture, west to east */ d: string; size: number; /** length the name is spread over, in pixels */ length: number }
 
@@ -19,15 +21,16 @@ export interface LaidName { realm: number; name: string; /** SVG path of the cur
  * across and `squash` times that down the picture. Names that would be too small, or lie outside, are left out.
  */
 export function layoutNames(names: readonly (RealmName & { name: string })[], w: number, h: number, x: number, y: number, scale: number, squash: number): LaidName[] {
-  const laid: LaidName[] = [], at = ([px, py]: readonly [number, number]): [number, number] => [w / 2 + (px - x) * scale, h / 2 + (py - y) * scale * squash];
+  const laid: (LaidName & { pts: [number, number][] })[] = [], at = ([px, py]: readonly [number, number]): [number, number] => [w / 2 + (px - x) * scale, h / 2 + (py - y) * scale * squash];
   for (const n of names) {
     if (!n.name) continue;
     const a = at(n.from), c = at(n.bend), b = at(n.to);
     // the curve's length, from a few points along it
     let length = 0, prev = a;
+    const pts: [number, number][] = [a];
     for (let k = 1; k <= 8; k++) {
       const t = k / 8, p: [number, number] = [(1 - t) ** 2 * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
-      length += Math.hypot(p[0] - prev[0], p[1] - prev[1]); prev = p;
+      length += Math.hypot(p[0] - prev[0], p[1] - prev[1]); prev = p; pts.push(p);
     }
     const letters = [...n.name].length, span = length * FILL;
     // as tall as the realm is broad there, as the curve is long for the letters, and not too large for the picture
@@ -39,9 +42,18 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
     if (hi < 0 || lo > w || bottom < 0 || top > h) continue;
     size = Math.round(size * 10) / 10;
     const f = (v: number) => v.toFixed(1);
-    laid.push({ realm: n.realm, name: n.name, d: `M${f(a[0])} ${f(a[1])}Q${f(c[0])} ${f(c[1])} ${f(b[0])} ${f(b[1])}`, size, length: Math.round(spread) });
+    // the part of the curve the letters cover (they are spread from its middle)
+    const cover = spread / length, used = pts.filter((_, k) => Math.abs(k / 8 - 0.5) <= cover / 2 + 0.07);
+    laid.push({ realm: n.realm, name: n.name, d: `M${f(a[0])} ${f(a[1])}Q${f(c[0])} ${f(c[1])} ${f(b[0])} ${f(b[1])}`, size, length: Math.round(spread), pts: used });
   }
-  return laid;
+  // the larger names first; a name that would run into one already written is left out, as on a printed map
+  laid.sort((p, q) => q.size - p.size);
+  const kept: (LaidName & { pts: [number, number][] })[] = [];
+  for (const n of laid) {
+    const clash = kept.some((k) => n.pts.some((p) => k.pts.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < (n.size + k.size) * CLEAR)));
+    if (!clash) kept.push(n);
+  }
+  return kept.map(({ pts: _, ...n }) => n);
 }
 
 /** how the names look: ink of the atlas (dark sepia), set in the HUD's serif */

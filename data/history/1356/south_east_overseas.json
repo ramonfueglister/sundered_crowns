@@ -936,7 +936,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#8f9d50",
+   "color": "#979b4d",
    "capital": {
     "name": "Eğirdir",
     "lat": 37.87,
@@ -1462,7 +1462,7 @@
    "government": "feudal_monarchy",
    "culture": "armenian",
    "faith": "armenian_apostolic",
-   "color": "#795006",
+   "color": "#734b07",
    "capital": {
     "name": "Sis",
     "lat": 37.45,
@@ -2098,7 +2098,7 @@
    "government": "feudal_monarchy",
    "culture": "bedouin",
    "faith": "ibadi",
-   "color": "#764a43",
+   "color": "#7d514a",
    "capital": {
     "name": "Bahla",
     "lat": 22.96,
@@ -3807,7 +3807,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#728953",
+   "color": "#718954",
    "capital": {
     "name": "Gabès",
     "lat": 33.88,
@@ -4145,7 +4145,7 @@
    "government": "feudal_monarchy",
    "culture": "mande",
    "faith": "sunni",
-   "color": "#896e14",
+   "color": "#866e26",
    "capital": {
     "name": "Niani",
     "lat": 11.38,
@@ -4292,7 +4292,7 @@
    "government": "feudal_monarchy",
    "culture": "wolof",
    "faith": "african_traditional",
-   "color": "#4b5f38",
+   "color": "#495b3b",
    "capital": {
     "name": "Yang-Yang",
     "lat": 15.3,
@@ -5280,7 +5280,7 @@
    "government": "theocracy",
    "culture": "yoruba",
    "faith": "african_traditional",
-   "color": "#ba6f49",
+   "color": "#bb6f4a",
    "capital": {
     "name": "Ile-Ife",
     "lat": 7.48,
@@ -5643,7 +5643,7 @@
    "government": "elective_monarchy",
    "culture": "maya",
    "faith": "mesoamerican",
-   "color": "#2c8b78",
+   "color": "#308b74",
    "capital": {
     "name": "Mayapan",
     "lat": 20.63,
@@ -6419,7 +6419,7 @@
    "government": "tribal_federation",
    "culture": "iroquoian",
    "faith": "american_traditional",
-   "color": "#64476b",
+   "color": "#65466a",
    "capital": {
     "name": "Hochelaga",
     "lat": 45.5,

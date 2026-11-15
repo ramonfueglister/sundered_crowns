@@ -10,7 +10,16 @@
 import type { RGB } from '../lookprobe/batch';
 
 /** The realms on the map: `ids` holds the place of every map pixel, counted from 1 (land places first: `owner` has one entry each, -1 for no realm; then the sea zones). */
-export interface Realms { ids: Uint16Array; w: number; h: number; owner: ArrayLike<number>; /** linear colour of every realm */ colors: readonly RGB[]; /** the place that is picked out, counted from 0 (none: -1 or left out) */ chosen?: number }
+export interface Realms {
+  ids: Uint16Array; w: number; h: number; owner: ArrayLike<number>; /** linear colour of every realm */ colors: readonly RGB[]; /** the place that is picked out, counted from 0 (none: -1 or left out) */ chosen?: number;
+  /** map pixels round the globe, after which the map begins again (none: the map ends at its edges) */
+  round?: number;
+}
+/**
+ * Land and water beyond the game map (where `ids` has nothing), as a raster: `water` (0: land) of `w` × `h` cells, of
+ * which `cells` lie along a map pixel, its first cell at map pixel (x0, y0) of the lap the tile is painted on.
+ */
+export interface Beyond { water: Uint8Array; w: number; h: number; cells: number; x0: number; y0: number }
 
 // ---------------------------------------------------------------- colours (sRGB 0 … 255 as measured, used linear)
 /** the sea, and the shallow along the coasts (EU5 atlas: open sea 83,114,135; the shallow ~ 112,140,156) */
@@ -26,7 +35,7 @@ const INNER_LIGHT = 0.035, INNER_CHROMA = 0.7, RIM_DARK = 0.05, RIM_CHROMA = 1.3
 /** the place picked out: its colour lightened this far towards white, inside a line of this colour */
 const CHOSEN_LIGHT = 0.45, CHOSEN_LINE: RGB = [1, 0.86, 0.5];
 /** how strongly the map covers the world below it: a trace of the relief shows through */
-const COVER = 0.93;
+const COVER = 0.95;
 
 // ---------------------------------------------------------------- sizes, in map pixels unless said
 /** the shading inside a realm reaches this far from its border; the shallow this far out to sea */
@@ -41,19 +50,28 @@ const NONE = -1, WATER = -2, OUTSIDE = -3;
 
 /**
  * The realms of the tile (tx, ty) of `level` of a map with `cells` finest cells per map pixel, `side` dots wide: per
- * dot the colour times its cover, and the cover (so that the dots blend cleanly), in linear light.
+ * dot the colour times its cover, and the cover (so that the dots blend cleanly), in linear light. Beyond the game map
+ * the land and water of `beyond` are painted, the land in sand. The tile's margin in map pixels is `marginOf`.
  */
-export function paintRealms(r: Realms, level: number, tx: number, ty: number, side: number, cells: number): Uint8ClampedArray {
+export function paintRealms(r: Realms, level: number, tx: number, ty: number, side: number, cells: number, beyond?: Beyond): Uint8ClampedArray {
   const out = new Uint8ClampedArray(side * side * 4), perDot = 2 ** level / cells, lands = r.owner.length, chosen = r.chosen ?? -1;
   // a margin of dots around the tile, wide enough for the shading, so that a dot's distances are those of the whole map
-  const reach = Math.max(RIM, SHALLOW_REACH * 3) / perDot, margin = Math.min(96, Math.ceil(reach) + 2), n = side + 2 * margin;
+  const margin = marginOf(level, cells), n = side + 2 * margin;
   const kind = new Int16Array(n * n), place = new Int32Array(n * n);
   for (let y = 0; y < n; y++) {
     const my = Math.floor((ty * side + y - margin + 0.5) * perDot);
     for (let x = 0; x < n; x++) {
       const mx = Math.floor((tx * side + x - margin + 0.5) * perDot), i = y * n + x;
-      if (mx < 0 || my < 0 || mx >= r.w || my >= r.h) { kind[i] = OUTSIDE; place[i] = -1; continue; }
-      const at = r.ids[my * r.w + mx] - 1;
+      // round the globe the game map comes again; beyond it there are land and water, but no places
+      const wx = r.round ? ((mx % r.round) + r.round) % r.round : mx;
+      if (wx < 0 || my < 0 || wx >= r.w || my >= r.h) {
+        place[i] = -1;
+        if (!beyond) { kind[i] = OUTSIDE; continue; }
+        const bx = Math.floor((mx - beyond.x0) * beyond.cells), by = Math.floor((my - beyond.y0) * beyond.cells);
+        kind[i] = bx < 0 || by < 0 || bx >= beyond.w || by >= beyond.h || beyond.water[by * beyond.w + bx] !== 0 ? WATER : NONE;
+        continue;
+      }
+      const at = r.ids[my * r.w + wx] - 1;
       place[i] = at;
       kind[i] = at < 0 || at >= lands ? WATER : r.owner[at] >= 0 ? r.owner[at] : NONE;
     }
@@ -106,6 +124,9 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
   }
   return out;
 }
+
+/** The margin in dots that a tile of `level` is painted with beyond its edges (for the distances to borders and coasts). */
+export const marginOf = (level: number, cells: number) => Math.min(96, Math.ceil(Math.max(RIM, SHALLOW_REACH * 3) / (2 ** level / cells)) + 2);
 
 /** whether a dot touches one of the marked ones (so that the line round the picked place is two dots wide) */
 const near = (marked: Uint8Array, i: number, n: number) => marked[i - 1] === 1 || marked[i + 1] === 1 || marked[i - n] === 1 || marked[i + n] === 1;
@@ -191,6 +212,8 @@ const SLICES = 24;
 const FILL = 0.62, NAME_FILL = 0.84, NAME_ASPECT = 0.5;
 /** a name bends no further than this share of its length */
 const BEND_MOST = 0.16, TILT_MOST = 0.3;
+/** inlets of other lands narrower than twice this many sampled pixels are closed over for the name */
+const CLOSE = 5;
 /** a piece less than this many times as long as broad has its name run level (fully from 0.6 more) */
 const ROUND = 1.3;
 
@@ -235,15 +258,34 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     const cells = members.get(s.id)!;
     let bx0 = w, by0 = h, bx1 = 0, by1 = 0;
     for (const i of cells) { const x = i % w, y = (i - x) / w; bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
-    const bw = bx1 - bx0 + 3, bh = by1 - by0 + 3, outside = new Uint8Array(bw * bh).fill(1);
-    for (const i of cells) { const x = i % w, y = (i - x) / w; outside[(y - by0 + 1) * bw + x - bx0 + 1] = 0; }
-    const inside = distance(outside, bw, bh);
+    const pad = CLOSE + 2, bw = bx1 - bx0 + 1 + 2 * pad, bh = by1 - by0 + 1 + 2 * pad, outside = new Uint8Array(bw * bh).fill(1);
+    for (const i of cells) { const x = i % w, y = (i - x) / w; outside[(y - by0 + pad) * bw + x - bx0 + pad] = 0; }
+    // lands of others that the piece encloses (enclaves, lakes) do not stop its name: only what reaches its outline does
+    const open = new Uint8Array(bw * bh), flood: number[] = [];
+    for (let x = 0; x < bw; x++) { flood.push(x, (bh - 1) * bw + x); }
+    for (let y = 0; y < bh; y++) { flood.push(y * bw, y * bw + bw - 1); }
+    while (flood.length) {
+      const i = flood.pop()!;
+      if (open[i] || !outside[i]) continue;
+      open[i] = 1;
+      const x = i % bw;
+      if (x > 0) flood.push(i - 1);
+      if (x < bw - 1) flood.push(i + 1);
+      if (i >= bw) flood.push(i - bw);
+      if (i < (bh - 1) * bw) flood.push(i + bw);
+    }
+    // and narrow inlets of others are closed over (a morphological closing of CLOSE sampled pixels): the name may run
+    // across a neck of a neighbour that cuts deep into the realm
+    const near = distance(Uint8Array.from(open, (v) => 1 - v), bw, bh), r2 = CLOSE * CLOSE;
+    const back = distance(Uint8Array.from(near, (d) => (d > r2 ? 1 : 0)), bw, bh);
+    const closed = Uint8Array.from(open, (v, i) => (v && back[i] <= r2 ? 1 : 0));
+    const inside = distance(closed, bw, bh);
     // slices across the long axis: in each, the point deepest inside the piece (on its ridge, the medial axis) and its depth
     const width = (2 * span) / SLICES, mids = new Array<number>(SLICES).fill(0), thick = new Array<number>(SLICES).fill(0);
     for (const i of cells) {
       const x = i % w, y = (i - x) / w, dx = x - mx, dy = y - my, a = dx * ux + dy * uy;
       const k = Math.max(0, Math.min(SLICES - 1, Math.floor(((a + span) / (2 * span)) * SLICES)));
-      const deep = 2 * Math.sqrt(inside[(y - by0 + 1) * bw + x - bx0 + 1]);
+      const deep = 2 * Math.sqrt(inside[(y - by0 + pad) * bw + x - bx0 + pad]);
       if (deep > thick[k]) { thick[k] = deep; mids[k] = dx * vx + dy * vy; }
     }
     // the stretch of slices where the name can be written largest: as tall as the stretch is deep at its shallowest, and
@@ -286,7 +328,7 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
       let fits = true;
       for (let k = 1; k < 10 && fits; k++) {
         const q = 0.1 + (0.8 * k) / 10, t = t0 + (t1 - t0) * q, off = (1 - q) ** 2 * e0 + 2 * (1 - q) * q * ctrl + q * q * e1;
-        const x = Math.round(mx + ux * t + vx * off), y = Math.round(my + uy * t + vy * off), gx = x - bx0 + 1, gy = y - by0 + 1;
+        const x = Math.round(mx + ux * t + vx * off), y = Math.round(my + uy * t + vy * off), gx = x - bx0 + pad, gy = y - by0 + pad;
         const depth = gx < 0 || gy < 0 || gx >= bw || gy >= bh ? 0 : Math.sqrt(inside[gy * bw + gx]);
         if (depth < Math.max(1, (room * FILL) / every / 4)) fits = false;
       }

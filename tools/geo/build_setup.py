@@ -1,7 +1,8 @@
 """Stage D: historical 1356 setup baked onto the map.
 
 - merges the researched state files (data/history/<year>/*.json)
-- assigns every location to a state (weighted multi-source Dijkstra from each state's researched anchor places)
+- assigns every location to a state (weighted multi-source Dijkstra from each state's researched anchor places),
+  then applies the researched corrections of data/history/<year>/borders.json (tools/map/borders.py)
 - culture, faith, minority and population density per location (data/history/1356/demography.json)
 - climate, terrain and natural resources per location
 - names unnamed rural locations with culture-appropriate district names
@@ -261,6 +262,12 @@ def main():
     for i in range(L):
         if not names[i]:
             names[i] = gen_name(culture[i], i, used, lon[i], lat[i]); used.add(names[i])
+    # ---------------- researched corrections of the holders (islands, where the spread is wrong) ----------------
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'map'))
+    import borders
+    fixed = [int(v) for v in owner[1:]]
+    borders.apply(fixed, [s['id'] for s in states], geo, names, YEAR)
+    owner[1:] = fixed
     # ---------------- output ----------------
     st_out = []
     for si, s in enumerate(states):

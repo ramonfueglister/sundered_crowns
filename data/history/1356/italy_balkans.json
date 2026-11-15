@@ -1413,7 +1413,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#bd857e",
+   "color": "#bd857d",
    "capital": {
     "name": "Florence",
     "lat": 43.769,
@@ -1812,7 +1812,7 @@
    "government": "city_republic",
    "culture": "roman",
    "faith": "latin",
-   "color": "#624a6b",
+   "color": "#644a71",
    "capital": {
     "name": "Perugia",
     "lat": 43.112,
@@ -2185,7 +2185,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#725c08",
+   "color": "#6b5e1a",
    "capital": {
     "name": "Ferrara",
     "lat": 44.836,
@@ -2648,7 +2648,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#587a9f",
+   "color": "#5b7a99",
    "capital": {
     "name": "Saluzzo",
     "lat": 44.645,
@@ -2875,7 +2875,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#928d42",
+   "color": "#8d8f53",
    "capital": {
     "name": "Bologna",
     "lat": 44.494,
@@ -3359,7 +3359,7 @@
    "government": "feudal_monarchy",
    "culture": "roman",
    "faith": "latin",
-   "color": "#9d6d8b",
+   "color": "#9c6c88",
    "capital": {
     "name": "Ravenna",
     "lat": 44.418,
@@ -3445,7 +3445,7 @@
    "government": "theocracy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#9f8d5a",
+   "color": "#9d8c61",
    "capital": {
     "name": "Udine",
     "lat": 46.063,
@@ -4353,7 +4353,7 @@
    "government": "feudal_monarchy",
    "culture": "ligurian",
    "faith": "latin",
-   "color": "#479395",
+   "color": "#469396",
    "capital": {
     "name": "Mytilene",
     "lat": 39.107,
@@ -4532,7 +4532,7 @@
    "government": "feudal_monarchy",
    "culture": "albanian",
    "faith": "latin",
-   "color": "#7a85ae",
+   "color": "#7b85ae",
    "capital": {
     "name": "Durazzo",
     "lat": 41.323,
@@ -5154,7 +5154,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#a66162",
+   "color": "#a46160",
    "capital": {
     "name": "Serres",
     "lat": 41.09,
@@ -5495,7 +5495,7 @@
    "government": "feudal_monarchy",
    "culture": "serbian",
    "faith": "orthodox",
-   "color": "#7d5e0d",
+   "color": "#725f24",
    "capital": {
     "name": "Užice",
     "lat": 43.858,
@@ -5588,7 +5588,7 @@
    "culture": "bosnian",
    "faith": "bosnian_church",
    "faith_note": "The Bosnian Church (krstjani) was the church of the nobility and of most of the land; Ban Tvrtko I was nominally Catholic but ruled with its elders, so the realm starts in the Bosnian Church",
-   "color": "#3b5091",
+   "color": "#3f4e91",
    "capital": {
     "name": "Bobovac",
     "lat": 44.11,
