@@ -28,6 +28,9 @@ function cases(): Record<string, () => Batch> {
     out[`house/${name}/${seed}/${w}x${d}x${floors}`] = () => { const r = seeded(seed); return B.house(w, d, floors, r.pick(style.walls), r.pick(style.roofs), r, style); };
     out[`townHouse/${name}/${seed}/${w}x${d}x${floors}`] = () => { const r = seeded(seed + 100); return B.townHouse(w, d, floors, r.pick(style.walls), r.pick(style.roofs), r, style); };
   }
+  for (const seed of [1, 2, 3, 4]) for (const [w, d, floors, o] of [[3, 5, 2, {}], [2.5, 4, 3, { shop: true, canal: 'nz' }], [7, 9, 3, { great: true, canal: 'nz' }], [3.5, 6, 2, { detail: 0 }]] as const) {
+    out[`fineHouse/VENICE/${seed}/${w}x${d}x${floors}/${JSON.stringify(o)}`] = () => B.fineHouse(w, d, floors, B.VENICE, seeded(seed), o);
+  }
   for (const seed of [1, 2, 3, 4, 5, 6]) {
     out[`tower/${seed}`] = () => B.tower(seeded(seed));
     out[`church/${seed}`] = () => B.church(seeded(seed));

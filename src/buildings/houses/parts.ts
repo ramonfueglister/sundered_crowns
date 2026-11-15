@@ -1,0 +1,193 @@
+// The hand-made parts of the fine-block house, which the grammar (grammar.ts) sets on a wall or a roof: windows,
+// doors, gates, the faint ashlar grid, tiles, chimneys, corbels, the roof terrace. Sizes are in fine blocks (VOXEL,
+// measured on the reference class image, traditions/measures/referenzklasse_nahsicht.json); positions in blocks.
+import { type Batch, type RGB, type V3, hash2, shade } from '../../lookprobe/batch';
+import { type Wall, arch, on, pane } from '../core/wall';
+import { VOXEL as V } from './style';
+
+type BoxOpts = Parameters<Batch['box']>[7];
+
+/** An axis-aligned box on a wall: t0 … t1 along it, y0 … y1 up, from `inn` behind its face to `out` in front of it. */
+export function boxOn(b: Batch, w: Wall, t0: number, y0: number, t1: number, y1: number, inn: number, out: number, c: RGB, o?: BoxOpts) {
+  const xs: number[] = [], zs: number[] = [];
+  for (const t of [t0, t1]) for (const d of [-inn, out]) { xs.push(w.o[0] + w.u[0] * t + w.n[0] * d); zs.push(w.o[2] + w.u[2] * t + w.n[2] * d); }
+  b.box(Math.min(...xs), y0, Math.min(...zs), Math.max(...xs), y1, Math.max(...zs), c, o);
+}
+
+/**
+ * The faint grid of ashlar, or of plaster scored to look like it, in running bond: a thin joint under every row of
+ * fine blocks, short joints between the blocks of a row, and here and there a block a touch darker or lighter.
+ */
+export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
+  const cols = Math.ceil(w.len / V), rows = Math.round((y1 - y0) / V), joint = shade(c, 0.72), dark = shade(c, 0.92), light = shade(c, 1.06), j = V * 0.08;
+  for (let k = 0; k < rows; k++) {
+    const y = y0 + k * V;
+    pane(b, w, 0, y - j / 2, w.len, y + j / 2, joint, 0.02);
+    for (let i = 0; i <= cols; i++) {
+      const t = (i + (k % 2) * 0.5) * V;
+      if (t > j && t < w.len - j) pane(b, w, t - j / 2, y + j / 2, t + j / 2, y + V - j / 2, joint, 0.02);
+      const h = hash2(i, k, seed);
+      if (h < 0.7 || t + V > w.len) continue;
+      pane(b, w, t + j / 2, y + j / 2, t + V - j / 2, y + V - j / 2, h < 0.88 ? dark : light, 0.02);
+    }
+  }
+}
+
+/** The rim of a pointed (equilateral) arch from the left springing over the apex to the right, `half` the opening's half width. */
+function pointedRim(w: Wall, tc: number, spring: number, half: number, lift: number): V3[] {
+  const R = 2 * half, rim: V3[] = [];
+  for (let k = 0; k <= 5; k++) { const a = Math.PI - (Math.PI / 3) * (k / 5); rim.push(on(w, tc + half + Math.cos(a) * R, spring + Math.sin(a) * R, lift)); }
+  for (let k = 1; k <= 5; k++) { const a = (Math.PI / 3) * (1 - k / 5); rim.push(on(w, tc - half + Math.cos(a) * R, spring + Math.sin(a) * R, lift)); }
+  return rim;
+}
+
+/** A pointed opening on a wall, as the Gothic windows and gates of Venice: straight up to `spring`, then the arch. */
+export function pointed(b: Batch, w: Wall, tc: number, y0: number, half: number, spring: number, c: RGB, lift: number) {
+  pane(b, w, tc - half, y0, tc + half, spring, c, lift);
+  b.fan(on(w, tc, spring, lift), pointedRim(w, tc, spring, half, lift), c, w.n);
+}
+
+export interface Materials { stone: RGB; wood: RGB; glass: RGB }
+
+/**
+ * A window of `wv` × `hv` fine blocks: a dark opening under a stone lintel and over a stone sill, each a block wider
+ * on both sides and half a block proud; in the near view also jambs of dark wood. `arched` sets the opening under a
+ * pointed arch in a surround of pale stone (ICCD card 10198988: Gothic arch of Istrian stone, 14th century).
+ */
+export function window(b: Batch, w: Wall, t: number, y: number, wv: number, hv: number, mt: Materials, arched: boolean, detail: number) {
+  const half = (wv * V) / 2;
+  if (!detail) {
+    // seen from afar: the opening, its lintel and its sill as flat panes
+    pane(b, w, t - half - V, y - V, t + half + V, y, mt.stone, 0.04);
+    pane(b, w, t - half - V, y + hv * V, t + half + V, y + (hv + 1) * V, mt.stone, 0.04);
+    pane(b, w, t - half, y, t + half, y + hv * V, mt.glass, 0.05);
+    return;
+  }
+  boxOn(b, w, t - half - V, y - V, t + half + V, y, 0, V / 2, mt.stone);
+  if (arched) {
+    const spring = y + hv * V - 1.732 * half;
+    pointed(b, w, t, y, half + V / 2, spring, mt.stone, 0.05);
+    pointed(b, w, t, y, half, spring, mt.glass, 0.06);
+    return;
+  }
+  pane(b, w, t - half, y, t + half, y + hv * V, mt.glass, 0.05);
+  boxOn(b, w, t - half - V, y + hv * V, t + half + V, y + (hv + 1) * V, 0, V / 2, mt.stone);
+  if (!detail) return;
+  boxOn(b, w, t - half - V * 0.4, y, t - half, y + hv * V, 0, V * 0.25, shade(mt.wood, 0.8));
+  boxOn(b, w, t + half, y, t + half + V * 0.4, y + hv * V, 0, V * 0.25, shade(mt.wood, 0.8));
+}
+
+/**
+ * A door of `wv` × `hv` fine blocks: a leaf of dark wood in a stone frame; in the near view with two paler panels and
+ * a wooden hood on two corbels above it (reference class: hood 1 high, 1 proud, on 2 corbels).
+ */
+export function door(b: Batch, w: Wall, t: number, y: number, wv: number, hv: number, mt: Materials, detail: number) {
+  const half = (wv * V) / 2, leaf = shade(mt.wood, 0.75);
+  if (!detail) { pane(b, w, t - half - V / 2, y, t + half + V / 2, y + (hv + 1) * V, mt.stone, 0.04); pane(b, w, t - half, y, t + half, y + hv * V, leaf, 0.05); return; }
+  boxOn(b, w, t - half, y, t + half, y + hv * V, 0, V * 0.15, leaf);
+  boxOn(b, w, t - half - V / 2, y, t - half, y + hv * V, 0, V * 0.3, mt.stone);
+  boxOn(b, w, t + half, y, t + half + V / 2, y + hv * V, 0, V * 0.3, mt.stone);
+  boxOn(b, w, t - half - V / 2, y + hv * V, t + half + V / 2, y + (hv + 1) * V, 0, V * 0.3, mt.stone);
+  if (!detail) return;
+  for (const s of [-1, 1]) pane(b, w, t + s * half * 0.5 - V * 0.3, y + V, t + s * half * 0.5 + V * 0.3, y + (hv - 1) * V, shade(mt.wood, 0.9), V * 0.15 + 0.02);
+  boxOn(b, w, t - half - V, y + (hv + 1) * V, t + half + V, y + (hv + 2) * V, 0, V, mt.wood, { bottom: true });
+  for (const s of [-1, 1]) boxOn(b, w, t + s * (half + V * 0.75) - V / 4, y + hv * V, t + s * (half + V * 0.75) + V / 4, y + (hv + 1) * V, 0, V * 0.9, shade(mt.wood, 0.85));
+}
+
+/** A shop front: a round-headed opening `wv` wide and `hv` high in a stone surround, as under the jettied upper storeys of Calle del Paradiso. */
+export function shop(b: Batch, w: Wall, t: number, y: number, wv: number, hv: number, mt: Materials) {
+  const half = (wv * V) / 2;
+  arch(b, w, t, y, half + V / 2, y + hv * V - half - V / 2, mt.stone, 0.05);
+  arch(b, w, t, y, half, y + hv * V - half - V / 2, shade(mt.glass, 0.8), 0.06);
+}
+
+/** A water gate on the canal front: a pointed opening `wv` wide and `hv` high in a surround of Istrian stone, down to the water. */
+export function gate(b: Batch, w: Wall, t: number, y: number, wv: number, hv: number, mt: Materials) {
+  const half = (wv * V) / 2, spring = y + hv * V - 1.732 * half;
+  pointed(b, w, t, y - V, half + V / 2, spring, mt.stone, 0.05);
+  pointed(b, w, t, y - V, half, spring, shade(mt.glass, 0.7), 0.06);
+}
+
+/** Wooden corbels under a jettied storey: `n` blocks half a fine block wide, one high, reaching `out` from the wall. */
+export function corbels(b: Batch, w: Wall, y: number, out: number, n: number, c: RGB) {
+  for (let k = 0; k < n; k++) { const t = ((k + 0.5) / n) * w.len; boxOn(b, w, t - V / 4, y - V, t + V / 4, y, 0, out, c, { bottom: true }); }
+}
+
+const lerp3 = (a: V3, b: V3, t: number): V3 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+
+/**
+ * A slope of tiles, each a cube of one fine block set on the slope from the eaves edge e0 → e1 up to the ridge edge
+ * r0 → r1, every cube a touch lighter or darker and a little higher or lower: the plate of tile cubes of the
+ * reference class, stepping up the slope the way rows of coppi lie over each other.
+ */
+export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number) {
+  const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)), rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
+  const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
+  for (let k = 0; k < rows; k++) for (let j = 0; j < cols; j++) {
+    const a = at(j / cols, k / rows), d = at((j + 1) / cols, (k + 1) / rows), h = hash2(j, k, seed), col = shade(c, 0.78 + 0.36 * hash2(j, k, seed + 5));
+    // the cubes at the verges and along the ridge stand higher: the raised rim of the reference class
+    const y = Math.max(a[1], d[1]) + V * (0.1 + 0.55 * h) + (j === 0 || j === cols - 1 || k === rows - 1 ? V * 0.35 : 0), g = V * 0.06;
+    // each cube a little smaller than its cell, so that the dark slope shows as a seam between the cubes
+    b.box(Math.min(a[0], d[0]) + g, y - V * 0.7, Math.min(a[2], d[2]) + g, Math.max(a[0], d[0]) - g, y, Math.max(a[2], d[2]) - g, col, { top: shade(col, 1.04) });
+  }
+}
+
+/**
+ * A gable roof of fine-block tiles over x0 … z1 at height y, ridge along the longer side rising by `rise`, with a raised
+ * rim of tiles along both eaves, a cap along the ridge and the gable ends filled in the wall colour.
+ */
+export function tiledGable(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, rise: number, c: RGB, wallC: RGB, seed: number) {
+  const top = y + rise, rim = shade(c, 0.82), cap = shade(c, 1.12), w3: [RGB, RGB, RGB] = [wallC, wallC, wallC];
+  if (x1 - x0 >= z1 - z0) {
+    const zc = (z0 + z1) / 2;
+    b.quad([x0, y, z1], [x1, y, z1], [x1, top, zc], [x0, top, zc], shade(c, 0.5), [0, 1, 1]);
+    b.quad([x1, y, z0], [x0, y, z0], [x0, top, zc], [x1, top, zc], shade(c, 0.5), [0, 1, -1]);
+    tiles(b, [x0, y, z1], [x1, y, z1], [x0, top, zc], [x1, top, zc], c, seed);
+    tiles(b, [x1, y, z0], [x0, y, z0], [x1, top, zc], [x0, top, zc], c, seed + 1);
+    b.tri([x1, y, z1], [x1, y, z0], [x1, top, zc], ...w3, [1, 0, 0]);
+    b.tri([x0, y, z0], [x0, y, z1], [x0, top, zc], ...w3, [-1, 0, 0]);
+    b.box(x0, y - V * 0.3, z1 - V, x1, y + V * 0.5, z1, rim, { bottom: true });
+    b.box(x0, y - V * 0.3, z0, x1, y + V * 0.5, z0 + V, rim, { bottom: true });
+    b.box(x0, top - V * 0.2, zc - V / 2, x1, top + V * 0.3, zc + V / 2, cap);
+  } else {
+    const xc = (x0 + x1) / 2;
+    b.quad([x1, y, z1], [x1, y, z0], [xc, top, z0], [xc, top, z1], shade(c, 0.5), [1, 1, 0]);
+    b.quad([x0, y, z0], [x0, y, z1], [xc, top, z1], [xc, top, z0], shade(c, 0.5), [-1, 1, 0]);
+    tiles(b, [x1, y, z1], [x1, y, z0], [xc, top, z1], [xc, top, z0], c, seed);
+    tiles(b, [x0, y, z0], [x0, y, z1], [xc, top, z0], [xc, top, z1], c, seed + 1);
+    b.tri([x0, y, z1], [x1, y, z1], [xc, top, z1], ...w3, [0, 0, 1]);
+    b.tri([x1, y, z0], [x0, y, z0], [xc, top, z0], ...w3, [0, 0, -1]);
+    b.box(x1 - V, y - V * 0.3, z0, x1, y + V * 0.5, z1, rim, { bottom: true });
+    b.box(x0, y - V * 0.3, z0, x0 + V, y + V * 0.5, z1, rim, { bottom: true });
+    b.box(xc - V / 2, top - V * 0.2, z0, xc + V / 2, top + V * 0.3, z1, cap);
+  }
+}
+
+/** A square frustum round (cx, cz): half width s0 at y0, s1 at y1, with its top face. */
+export function frustum(b: Batch, cx: number, cz: number, y0: number, y1: number, s0: number, s1: number, c: RGB, top: RGB = c) {
+  const lo = (sx: number, sz: number): V3 => [cx + sx * s0, y0, cz + sz * s0], hi = (sx: number, sz: number): V3 => [cx + sx * s1, y1, cz + sz * s1];
+  b.quad(lo(1, -1), lo(1, 1), hi(1, 1), hi(1, -1), c, [1, 0, 0]);
+  b.quad(lo(-1, 1), lo(-1, -1), hi(-1, -1), hi(-1, 1), c, [-1, 0, 0]);
+  b.quad(lo(-1, 1), lo(1, 1), hi(1, 1), hi(-1, 1), c, [0, 0, 1]);
+  b.quad(lo(1, -1), lo(-1, -1), hi(-1, -1), hi(1, -1), c, [0, 0, -1]);
+  b.quad(hi(-1, -1), hi(-1, 1), hi(1, 1), hi(1, -1), top, [0, 1, 0]);
+}
+
+/**
+ * A Venetian chimney `hv` fine blocks high: a slender shaft one block square that widens at the top into an inverted
+ * bell against sparks (Lupo 2016, ArcHistoR 5: "alla Carpaccio"), the opening dark on top.
+ */
+export function chimney(b: Batch, cx: number, cz: number, y: number, hv: number, c: RGB, dark: RGB) {
+  const s = V / 2, neck = y + (hv - 2) * V, top = y + hv * V;
+  b.box(cx - s, y, cz - s, cx + s, neck, cz + s, c, { foot: 0.88 });
+  frustum(b, cx, cz, neck, top, s, V, shade(c, 0.96), shade(c, 1.04));
+  b.box(cx - V * 0.6, top, cz - V * 0.6, cx + V * 0.6, top + V * 0.12, cz + V * 0.6, dark);
+}
+
+/** A roof terrace (altana) of wood over the ridge: a deck on four posts, a rail round it, as in Carpaccio's Venice. */
+export function altana(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, c: RGB) {
+  const p = V * 0.3, deck = y + 3 * V;
+  for (const [x, z] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) b.box(x - p, y - 2 * V, z - p, x + p, deck + 2 * V, z + p, shade(c, 0.9));
+  b.box(x0 - p, deck, z0 - p, x1 + p, deck + V * 0.4, z1 + p, c, { bottom: true });
+  for (const [ax, az, bx, bz] of [[x0, z0, x1, z0], [x0, z1, x1, z1], [x0, z0, x0, z1], [x1, z0, x1, z1]]) b.box(Math.min(ax, bx) - p / 2, deck + 2 * V, Math.min(az, bz) - p / 2, Math.max(ax, bx) + p / 2, deck + 2.4 * V, Math.max(az, bz) + p / 2, shade(c, 0.95), { bottom: true });
+}
