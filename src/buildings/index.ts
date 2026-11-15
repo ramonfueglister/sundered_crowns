@@ -25,6 +25,6 @@ export { castle } from './fortified/castle';
 export { townWall } from './fortified/town-wall';
 export { bridge } from './works/bridge';
 export { lighthouse } from './works/lighthouse';
-export { MONUMENTS, type MonumentPart } from './landmarks';
+export { type FileModel, MONUMENTS, MONUMENT_FILES, type MonumentPart, isFile, modelOf } from './landmarks';
 export { basilica, campanile, palace } from './landmarks/st-marks';
 export { hagiaSophia } from './landmarks/hagia-sophia';

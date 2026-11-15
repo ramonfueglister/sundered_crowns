@@ -75,6 +75,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       const x = cx + dx - Math.floor(model.w / 2), z = cz + dz - Math.floor(model.d / 2), y = lot(x, z, x + model.w, z + model.d, 1);
       if (y !== null) { build(model.build(r), x, z, model.w, model.d, y, model.height, kind); return; }
     }
+    // no level, dry, free ground within reach: the model is left out, and the count says so
+    if (own(cx, cz)) count(`${kind} dropped`);
   };
 
   for (const mon of monuments) landmark(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]), 14, 'monument');

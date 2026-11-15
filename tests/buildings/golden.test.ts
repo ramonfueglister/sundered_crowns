@@ -7,6 +7,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { type Batch, seeded } from '../../src/lookprobe/batch';
 import * as B from '../../src/buildings';
+import { glbToBatch } from '../../src/buildings/landmarks/glb';
+
+/** the monument files as the world's workers load them, read from public/ */
+const FILES = new Map(B.MONUMENT_FILES.map((f) => { const buf = readFileSync(`public/models/landmarks/${f}`); return [f, glbToBatch(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength))]; }));
 
 const FIXTURE = new URL('./golden.json', import.meta.url);
 
@@ -47,7 +51,7 @@ function cases(): Record<string, () => Batch> {
     out[`style/${region}/church/${seed}`] = () => st.church.build(seeded(seed));
     out[`style/${region}/great/${seed}`] = () => st.great.build(seeded(seed));
   }
-  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => { out[`monument/${id}/${k}`] = () => p.model.build(seeded(500)); });
+  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => { out[`monument/${id}/${k}`] = () => B.modelOf(p, FILES).build(seeded(500)); });
   return out;
 }
 
