@@ -50,6 +50,17 @@ describe('fine house', () => {
   });
 });
 
+describe('the house the settlement chooses', () => {
+  it('Italy gets the fine-block house of Venice, Germany the house of its style, both under their stated height', () => {
+    for (const [region, fine] of [['italy', true], ['germany', false]] as const) for (const detail of [0, 1] as const) {
+      const r = seeded(5), st = B.styleOf(region), c = B.houseOf(st, 3, 5, 2, r.pick(st.house.walls), r.pick(st.house.roofs), r, detail);
+      expect(!!st.tradition).toBe(fine);
+      let top = -Infinity; for (let i = 1; i < c.model.pos.length; i += 3) top = Math.max(top, c.model.pos[i]);
+      expect(top).toBeLessThanOrEqual(c.height + 0.01);
+    }
+  });
+});
+
 describe('the Venice tradition keeps its sources', () => {
   const metres = (fine: number) => fine * V * B.METRES_PER_BLOCK, [g0, g1] = venice.geschoss.erdgeschoss_m, [u0, u1] = venice.geschoss.obergeschoss_m;
   it('storey heights lie in Dorigo\'s ranges (8 to 9, 7 to 8 and 14 to 18 piedi), to half a fine block', () => {
