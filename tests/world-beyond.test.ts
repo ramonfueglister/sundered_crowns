@@ -57,6 +57,12 @@ describe('a running world of the game map alone', () => {
     for (const k of ['owner', 'culture', 'faith', 'pop', 'arable', 'harvest'] as const) expect(Array.from(up.place[k]), k).toEqual(Array.from(s.place[k]));
     expect(Array.from(up.realm.cols.capital.slice(0, s.realm.size))).toEqual(Array.from(s.realm.cols.capital.slice(0, s.realm.size)));
   });
+  it('takes the colours of the map of 1356 by the upgrade', () => {
+    const old = decodeState(encodeState(s)) as any;
+    old.realm.cols.color.fill(0x123456); old.v = 6;
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
+    expect(Array.from(up.realm.cols.color.slice(0, s.realm.size))).toEqual(Array.from(s.realm.cols.color.slice(0, s.realm.size)));
+  });
   it('cannot be upgraded without the setup', () => {
     const old = decodeState(encodeState(s)) as any;
     for (const k of Object.keys(old.place)) old.place[k] = old.place[k].slice(0, GAME_MAP);

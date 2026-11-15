@@ -9,7 +9,7 @@ import { foundEconomy, computeYear } from './systems/economy';
 import { dayToDate } from './calendar';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
-import { type SetupState, addRealms, setPlaces } from './setup';
+import { type SetupState, addRealms, parseColor, setPlaces } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
@@ -68,6 +68,11 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
       cultivate(s, w); bringInHarvest(s, w);
       place.arable.set(keep[0]); place.harvest.set(keep[1]);
       for (let r = R0; r < s.realm.size; r++) { const c = s.realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) s.realm.cols.capital[r] = -1; }
+    }
+    // the colours of the realms are those of the map of 1356 (tools/map/palette.py, measured against the EU5 atlas)
+    if (setup) {
+      const st = setup(), byKey = new Map(st.states.map((x) => [x.id, x.color]));
+      for (let r = 0; r < s.realm.size; r++) { const c = byKey.get(s.realmText[r]?.key); if (c) s.realm.cols.color[r] = parseColor(c); }
     }
     s.v = 7;
   }
