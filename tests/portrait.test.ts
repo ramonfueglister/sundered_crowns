@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
+import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
@@ -75,5 +76,23 @@ describe('portraits', () => {
     expect(encodePerson(people[0], 1).length).toBe(32 + 68 + 4 + Buffer.byteLength(people[0].job) + Buffer.byteLength(people[0].origin));
     expect(() => encodePerson({ ...people[0], dna: [1, 2, 3] }, 1)).toThrow(/68 bytes/);
     expect(() => decodePortrait(new Uint8Array(40))).toThrow();
+  });
+
+  it('people of England wear the dress of 1356, everyone else Apoleia\'s', () => {
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
+    for (const p of people) {
+      const roman = b.build(p), english = b.build({ ...p, origin: 'England' });
+      expect(roman.look.includes('/'), `person ${p.pid}`).toBe(false);
+      expect(profileOf(roman.look)).toBe(APOLEIA);
+      expect(english.look.startsWith('england1356/'), `person ${p.pid}`).toBe(true);
+      expect(profileOf(english.look)).toBe(ENGLAND_1356);
+      const worn = english.surfaces.map(s => s.tex);
+      expect(worn.some(t => t.includes('/cloth_cote.')), `person ${p.pid} wears the gown`).toBe(true);
+      expect(worn.some(t => t.includes('/cloth_tunic.') || t.includes('/cloth_veil.')), `person ${p.pid} wears nothing Roman`).toBe(false);
+      for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
+      // women from the age of the veil wear it, men never
+      expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
+    }
   });
 });

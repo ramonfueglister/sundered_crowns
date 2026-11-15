@@ -78,6 +78,30 @@
    "bytes": 42006
   },
   {
+   "name": "bob01.txt.zst",
+   "bytes": 400230
+  },
+  {
+   "name": "bob01_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "bob01_scalp.txt",
+   "bytes": 42006
+  },
+  {
+   "name": "bob02.txt.zst",
+   "bytes": 394632
+  },
+  {
+   "name": "bob02_cap.txt",
+   "bytes": 58785
+  },
+  {
+   "name": "bob02_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "braid01.txt.zst",
    "bytes": 251169
   },
@@ -100,6 +124,30 @@
   {
    "name": "bun01_scalp.txt",
    "bytes": 42006
+  },
+  {
+   "name": "cloth_cote.txt.zst",
+   "bytes": 125015
+  },
+  {
+   "name": "cloth_cote_ao.txt",
+   "bytes": 17040
+  },
+  {
+   "name": "cloth_hood_down.txt.zst",
+   "bytes": 96359
+  },
+  {
+   "name": "cloth_hood_down_ao.txt",
+   "bytes": 17280
+  },
+  {
+   "name": "cloth_hood_up.txt.zst",
+   "bytes": 229887
+  },
+  {
+   "name": "cloth_hood_up_ao.txt",
+   "bytes": 41250
   },
   {
    "name": "cloth_palla.txt.zst",
@@ -132,6 +180,22 @@
   {
    "name": "cloth_veil_ao.txt",
    "bytes": 37866
+  },
+  {
+   "name": "cloth_veil_linen.txt.zst",
+   "bytes": 213297
+  },
+  {
+   "name": "cloth_veil_linen_ao.txt",
+   "bytes": 38130
+  },
+  {
+   "name": "cloth_wimple.txt.zst",
+   "bytes": 198773
+  },
+  {
+   "name": "cloth_wimple_ao.txt",
+   "bytes": 37050
   },
   {
    "name": "crop01.txt",
@@ -241,6 +305,14 @@
   "beard_short_n.webp",
   "beard_stubble_cap.webp",
   "beard_stubble_cap_n.webp",
+  "bob01.webp",
+  "bob01_cap.webp",
+  "bob01_cap_n.webp",
+  "bob01_n.webp",
+  "bob02.webp",
+  "bob02_cap.webp",
+  "bob02_cap_n.webp",
+  "bob02_n.webp",
   "braid01.webp",
   "braid01_cap.webp",
   "braid01_cap_n.webp",
@@ -249,6 +321,12 @@
   "bun01_cap.webp",
   "bun01_cap_n.webp",
   "bun01_n.webp",
+  "cloth_cote.webp",
+  "cloth_cote_n.webp",
+  "cloth_hood_down.webp",
+  "cloth_hood_down_n.webp",
+  "cloth_hood_up.webp",
+  "cloth_hood_up_n.webp",
   "cloth_palla.webp",
   "cloth_palla_n.webp",
   "cloth_toga.webp",
@@ -256,7 +334,11 @@
   "cloth_tunic.webp",
   "cloth_tunic_n.webp",
   "cloth_veil.webp",
+  "cloth_veil_linen.webp",
+  "cloth_veil_linen_n.webp",
   "cloth_veil_n.webp",
+  "cloth_wimple.webp",
+  "cloth_wimple_n.webp",
   "crop01.webp",
   "crop01_cap.webp",
   "crop01_cap_n.webp",

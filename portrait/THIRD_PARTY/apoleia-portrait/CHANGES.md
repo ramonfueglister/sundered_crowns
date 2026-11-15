@@ -36,3 +36,9 @@ look and simple look, for all twelve test people.
 
 Still as in Apoleia and to be replaced (docs/PORTRAITS.md): Roman clothes, hats and hairstyles, the seven Roman
 origins, the German job names of Apoleia's simulation; `build()` itself is still one function of 1,640 lines.
+
+Added beside Apoleia's code (15.11.2026), without changing a Roman portrait (`examples/reference.rs`, same bytes):
+`dress.rs` (sets of dress as tables; England 1356), the choice of a set in `person.rs`, `look.rs`, `build.rs`,
+`morph.rs` and `real_look.rs` (every branch behind `p.dress.set()`), `real_look.rs` `calm` (smooth movement and
+least distance for the game's own garments; Apoleia's are bound as before), the look's name with the set in front
+(`wire.rs`), `examples/genes.rs` (founders and children as numbers for the game's simulation of persons).
