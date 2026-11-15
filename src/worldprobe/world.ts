@@ -5,6 +5,7 @@ import { Batch, type RGB, hash2, noise2, rgb, seeded, smooth } from '../lookprob
 import { JUNGLE, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, NEAR, RIGHT, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { StageScene } from '../lookprobe/stage';
+import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, Land, climateAt } from './climate';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
@@ -281,5 +282,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   };
   const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
   counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles;
-  return { ground, things, water, raised, counts };
+  // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
+  const figures = step === 0 ? crowd(g, settled, own) : undefined;
+  if (figures) counts.figures = figures.count;
+  return { ground, things, water, raised, figures, counts };
 }
