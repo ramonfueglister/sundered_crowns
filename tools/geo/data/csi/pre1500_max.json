@@ -1,0 +1,86 @@
+{
+ "source": {
+  "dataset": "Galor, O., Özak, Ö. (2015). Caloric Suitability Index - Data (v1.0). Zenodo.",
+  "doi": "10.5281/zenodo.14714917",
+  "url": "https://zenodo.org/records/14714917/files/pre1500MaximumCalories.tif",
+  "paper": "Galor, O., Özak, Ö. (2016). The Agricultural Origins of Time Preference. American Economic Review 106(10), 3064-3103.",
+  "licence": "CC BY-SA 4.0",
+  "downloaded": "2026-11-14"
+ },
+ "raster": {
+  "file": "pre1500MaximumCalories.tif",
+  "bytes": 36037264,
+  "sha256": "501f35a9eb724f28469ac5cd8a0ee0bfa91d85a1fd72abfc96271c4eae12354e",
+  "width": 4320,
+  "height": 2084,
+  "dtype": "float32",
+  "nodata_tag": "-9",
+  "georef": {
+   "pixel_scale": [
+    0.08333333333333333,
+    0.08333333333333333,
+    0.0
+   ],
+   "tiepoint": [
+    0.0,
+    0.0,
+    0.0,
+    -180.0,
+    83.66666666666667,
+    0.0
+   ],
+   "matrix": null,
+   "raster_type": 1,
+   "geographic_type": 4326,
+   "assumed": false,
+   "x0": -180.0,
+   "y0": 83.66666666666667,
+   "sx": 0.08333333333333333,
+   "sy": 0.08333333333333333
+  },
+  "stats": {
+   "cells": 9002880,
+   "nodata": 6725913,
+   "negative": 0,
+   "zero": 1002204,
+   "positive": 1274763,
+   "min_positive": 10.119999885559082,
+   "max": 19454.5,
+   "mean_positive": 6475.1669921875,
+   "p01": 505.8899841308594,
+   "p25": 3050.4599609375,
+   "p50": 6694.3798828125,
+   "p75": 9022.7998046875,
+   "p99": 18323.0,
+   "integer_valued": false
+  }
+ },
+ "crop": {
+  "file": "pre1500_max.f32.gz",
+  "encoding": "gzip, float32 little-endian, row-major, NaN = no data",
+  "row0": 138,
+  "col0": 958,
+  "width": 2044,
+  "height": 1325,
+  "lon0": -100.16666666666667,
+  "lat0": 72.16666666666667,
+  "cell_lon": 0.08333333333333333,
+  "cell_lat": 0.08333333333333333,
+  "stats": {
+   "cells": 2708300,
+   "nodata": 1537725,
+   "negative": 0,
+   "zero": 355997,
+   "positive": 814578,
+   "min_positive": 10.119999885559082,
+   "max": 19454.5,
+   "mean_positive": 7491.8759765625,
+   "p01": 787.5400390625,
+   "p25": 4515.68017578125,
+   "p50": 7915.31982421875,
+   "p75": 9581.25,
+   "p99": 18589.451171875,
+   "integer_valued": false
+  }
+ }
+}

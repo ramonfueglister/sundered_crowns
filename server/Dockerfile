@@ -1,6 +1,15 @@
 # World server image. Build from the repository root:
 #   docker build -f server/Dockerfile -t sundered-crowns-world .
 #   docker run -p 8787:8787 -v $PWD/world-data:/data --env-file .env sundered-crowns-world
+# ---- economy: the economy engine as one WebAssembly file (economy/: a shell around the port of BeforeIT.jl, which
+# economy/Cargo.toml pins to one commit; the compiler is the one of economy/rust-toolchain.toml)
+FROM rust:1.88.0-slim AS economy
+WORKDIR /economy
+RUN rustup target add wasm32-unknown-unknown
+COPY economy/Cargo.toml economy/Cargo.lock economy/rust-toolchain.toml ./
+COPY economy/src ./src
+RUN cargo build --release --locked --lib --target wasm32-unknown-unknown
+
 # ---- build: bundle server + simulation into one ES module
 FROM node:22-slim AS build
 WORKDIR /app
@@ -20,10 +29,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY public/data ./public/data
-COPY data/content/trade_hubs.json ./data/content/trade_hubs.json
-# the word filter list (WORLD_WORD_FILTER, default server/config/wordfilter.txt relative to /app)
-COPY server/config ./server/config
 COPY --from=build /app/build/server ./build/server
+# where tools/sim/load.ts looks for the engine
+COPY --from=economy /economy/target/wasm32-unknown-unknown/release/sc_economy.wasm ./build/economy/sc_economy.wasm
 RUN mkdir -p /data
 VOLUME /data
 EXPOSE 8787
