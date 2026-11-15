@@ -27,6 +27,8 @@ export function WorldView() {
     (async () => {
       try {
         const { createWorldView } = await import('../worldprobe/view');
+        // taken down while the world was being fetched: the canvas is gone
+        if (disposed) return;
         const made = await createWorldView({
           canvas: canvas.current!, names: wrap.current!, ...START,
           status: (text) => { mapError.value = text || null; },
