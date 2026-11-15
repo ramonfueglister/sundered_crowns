@@ -66,8 +66,8 @@ skin with a soft reddish edge of the shadow (wrap lighting, where Godot scatters
 blotches, the lid's shadow on the eyeball, the eye less white and less coloured, thin lashes, matt hair.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
-reached. Cloth, hoods and veil are close; faces (shape of eyes and lids, flat skin of the young), hair cards, the
-roll of the thrown-back hood and a lone lock under the hood are not.
+reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the
+look of the hair cards and the roll of the thrown-back hood are not.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and

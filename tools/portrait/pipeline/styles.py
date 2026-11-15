@@ -49,12 +49,14 @@ def empty_cards():
         f.write('')
 
 
-def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000):
+def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000, trim=None):
     P = roots(Nr, margin, rng)
     th, el = ang(P)
     Ls = L(th, el) * (0.9 + 0.2 * rng.random(len(P)))
     lw = lift0(P)
     S = grow(H, P, Ls, steps, flow, lambda s, d, P0: lw * min(1, 0.35 + s * 2) + 0.004)
+    if trim is not None:
+        S = trim(S)
     lab = wisps(S, K, rng)
     cards, tiles = cards_from_wisps(H, S, lab, K, rng, 4.0, taper, tile, clump=clump, wmax=wmax, wmin=wmin)
     nv, nt = write_cards(H, out, name, cards, tiles)
@@ -183,7 +185,24 @@ elif style == 'bob':
         fringe = float(os.environ.get('BOB_FK', '0.95')) * np.radians(np.maximum(el - FR, float(os.environ.get('BOB_FMIN', '2')))) + 0.03
         f = np.clip((np.abs(th) - float(os.environ.get('BOB_FW', '38'))) / 22, 0, 1)
         return (fringe * (1 - f) + side * f) * (0.9 + 0.12 * rng.random(np.shape(th)))   # uneven ends
-    S, lab, nc, nt = men_cards(margin, flow, length, 420, lambda P: 0.07 + 0.07 * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=0.5, wmin=0.34)
+    def trim(S):
+        # a strand's length follows from where its root is; one rooted behind the crown with the length of the
+        # sides can still run forward over the forehead (a lone lock down to the nose). So every strand is cut
+        # where it crosses the fringe's line in front of the face (BOB_CUT); the sides are left as they grow
+        # (angles seen from the head's centre of the hair scripts, which lies high and forward: the hairline is
+        # at 20 degrees, the brows near -25, the jaw near -60)
+        th, el = ang(unit(S - H.hc))
+        f = np.clip((np.abs(th) - 45) / 25, 0, 1)
+        over = el < float(os.environ.get('BOB_CUT', '-20')) * (1 - f) - 90 * f
+        out_ = S.copy(); t = np.arange(S.shape[1])
+        for i in np.where(over.any(1))[0]:
+            k = max(1, int(np.argmax(over[i])))          # the first point beyond the line
+            u = np.linspace(0, k - 1, S.shape[1]) if k > 1 else np.zeros(S.shape[1])
+            for c in range(3):
+                out_[i, :, c] = np.interp(u, t, S[i, :, c])
+        return out_
+    _l = [float(t) for t in os.environ.get('BOB_LIFT', '0.07,0.07').split(',')]   # height over the skin: least, and spread
+    S, lab, nc, nt = men_cards(margin, flow, length, 420, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=0.5, wmin=0.34, trim=trim)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, 420, rng), n=60000, mean=0.6)
     print(style, 'cards', nc, 'tris', nt, 'cap coverage', round(cov, 3))
 

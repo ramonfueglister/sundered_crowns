@@ -3,7 +3,7 @@
 Apoleia's `tools/portrait-pipeline` (Blender scripts that drape clothes over MakeHuman's body, lay hair cards, and
 bind both to the head's triangles so the builder can move them with a morphed head), with what the dress of England
 1356 needed added: `tunic_sim.py` (neck opening `NECK`, `NDIP`; sleeves `SLEN`, `SFLARE`), `drape_sim.py` (kinds
-`hood` and `cowl`; `UCUT`, `THMAX`, `OFF0`, `VTH`, `SK_OUT`), `styles.py` / `styles_flat.py` (hairstyle `bob`),
+`hood` and `cowl`; `UCUT`, `THMAX`, `OFF0`, `VTH`, `SK_OUT`), `styles.py` (hairstyle `bob`, with `BOB_CUT`: every strand is cut where it crosses the fringe's line in front of the face),
 `tunic_bind.py` (`HEAD`, `HEM`, `HEMSMOOTH`, `TAUBIN`), `fabric_tex.py` (woven cloth as an image).
 
 Not part of the game's build: the files they wrote are in `public/portrait/real/`. This folder is there so that
@@ -25,7 +25,7 @@ Every value is a choice by eye from the rounds against the reference pictures (P
 | wimple `cloth_wimple` | `UCUT=20:3,28:2,36:1 FACE_LO=-46 TH0=-49 THMAX=52 FACE_W=36 PINY=5.0 HEMY=5.45 LOOSE=0.12 BEND=2.0 $PY drape_sim.py $B cote.obj hood wimple.obj 2` |
 | the four above, bound | `HEAD=1 HEM=all R_HEM=0.035 TAUBIN=10 HEMSMOOTH=60 AO=9 python3 tunic_bind.py $B x.obj out cloth_<name>` (veil: `R_HEM=0.03`) |
 | hair `bob01` | `BOB_FMIN=11 BOB_FW=62 BOB_FK=0.75 SEED=5 BOB_END=-26 BOB_FRINGE=40 python3 styles.py $B hair bob bob01` |
-| hair under a hood `bob02` | `BOB_FMIN=6 BOB_FW=62 BOB_FK=0.45 SEED=5 BOB_END=-26 BOB_FRINGE=46 python3 styles_flat.py $B hairflat bob bob02` |
+| hair under a hood `bob02` | the same lying flat: `BOB_LIFT=0.015,0.03 BOB_FMIN=6 BOB_FW=62 BOB_FK=0.45 SEED=5 BOB_END=-26 BOB_FRINGE=46 python3 styles.py $B hairflat bob bob02` |
 | normals of the painted caps | `python3 nmap.py bob01_cap.png bob01_cap_n.png 8` |
 | cloth images | `python3 fabric_tex.py out.png out_n.png wool 88`, `... linen 128` |
 
