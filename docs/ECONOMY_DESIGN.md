@@ -32,7 +32,7 @@ players and the AI of realms without a player act through the same commands.
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
-| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Open finding: over decades the linked cities sink (section 5) |
 
 ## 1. Grain harvest per place
 
@@ -858,8 +858,10 @@ in every economy; new is only what they want and what they bring.
    imports, as a share of the city's output, product by product. An order placed today is bought tomorrow and on
    offer the day after, so they order what will be missing by then: the stock to keep minus what is left of today's
    stock if tomorrow sells the same part of it as today.
-4. A city of origin gets the larger part of an order the cheaper the product is there and the larger the city is.
-   These are the weights with which every buyer of the port picks a seller, taken as shares.
+4. An order is split over the cities of origin as if the merchants picked a seller among the firms of the product
+   in all other cities, with the weights of every buyer of the port (half by price, half by what the seller offers:
+   its production plus its stock). A city has the weights of its firms. So it counts by the number of its firms and
+   by what they offer, not by what it sells.
 5. A city exports the products that are ordered from it. The mix of its exports, a constant of the calibration in
    the port, becomes the mix of the orders of the day.
 
@@ -883,7 +885,9 @@ such a day the model type sets that price to 1, so real exports are 0.
 - What one city exports lies in the other the next day, at what it cost; the stall asks cost; a city's demand for
   exports and supply of imports are what the merchants ordered and hold.
 - A stall is full again the morning after next when its orders were filled and it sells the same part of its stock.
-- Orders go to the cheaper and to the larger city; no city orders from itself.
+- The merchants pick among the firms of the other cities as a buyer of the port does: the part of a city is the
+  sum of the weights of its firms; it falls when its firms are dearer and rises when they offer more; what the city
+  has sold does not count; firms that are alike count one by one; no city orders from itself.
 - The order in which the cities compute changes nothing; the same cities give the same days; cities saved in the
   middle of a run and loaded continue as a straight run, bit for bit; broken bytes and cities that cannot trade are
   refused.
@@ -891,7 +895,7 @@ such a day the model type sets that price to 1, so real exports are 0.
 
 ### Trial of the engine: the 30 cities for five years
 
-Before the cities came into the game, outside it (economy/examples/cities.rs; calibrations and results in the project files under wirtschaft/staedte).
+Before the cities came into the game, outside it and with the first form of rule 4 (see "Rule 4 corrected" below) (economy/examples/cities.rs; calibrations and results in the project files under wirtschaft/staedte).
 Every city is England's calibration of 1356 at the city's share of England's people: an assumption, no city has data
 of its own. Seed 1356, plan every 30 days, windows of 365 days. All 30 cities together.
 
@@ -966,52 +970,119 @@ WebAssembly build against the native build bit for bit with three cities; the bo
 merchants; the cities in the world: one day per day of the world, the yearly rows, a year of books, many days at
 once, snapshots, halting, the upgrade from versions 3 and 6; what a player is told; the world server.
 
-**Five years in the game** (`npm run economy:check 5 4`: 4 worlds of the game, seeds 1356 to 1359, every day
-computed in all of them).
+**Five years in the game** (`npm run economy:check 5 8`: 8 worlds of the game, seeds 1356 to 1363, every day
+computed in all of them; with rule 4 as corrected below).
 
 | All cities together, year 5 | Mean of the worlds | Range of the worlds |
 |---|---|---|
-| Real output (start = 100) | 103.7 | 101.2 to 106.5 |
-| Price level of output (start = 100) | 104.3 | 103.1 to 105.0 |
-| Exports, share of output | 2.46 % | 2.38 % to 2.66 % |
-| Imports, share of output | 2.46 % | 2.37 % to 2.66 % |
-| Without work, mean of all cities and days | 0.87 % | 0.61 % to 1.17 % |
-| Without work, the worst city on its worst day | 9.1 % | 6.7 % to 11.6 % |
-| City with the lowest output (its start = 100) | 92.0 | 88.6 to 95.7 |
-| City with the highest output | 114.1 | 112.8 to 114.7 |
-| Lowest price level of a city on the last day (start = 100) | 100.0 | 98.4 to 101.4 |
-| Highest price level of a city on the last day | 107.4 | 106.8 to 107.8 |
+| Real output (start = 100) | 104.3 | 100.2 to 107.7 |
+| Price level of output (start = 100) | 104.3 | 103.6 to 105.5 |
+| Exports = imports, share of output | 2.55 % | 2.25 % to 2.86 % |
+| Without work, mean of all cities and days | 0.91 % | 0.33 % to 1.73 % |
+| Without work, the worst city on its worst day | 5.6 % | 2.2 % to 10.0 % |
+| City with the lowest output (its start = 100) | 97.8 | 91.7 to 103.5 |
+| City with the highest output | 111.9 | 106.1 to 114.4 |
+| Lowest price level of a city on the last day (start = 100) | 101.6 | 100.1 to 103.5 |
+| Highest price level of a city on the last day | 108.0 | 106.7 to 111.3 |
 
-| Year | Real output of all cities (start = 100), mean of the worlds | World 1356 | Exports = imports, share of output |
-|---|---|---|---|
-| start | 100.0 | 100.0 | 3.27 % |
-| 1356 | 101.0 | 100.8 | 2.87 % |
-| 1357 | 103.0 | 102.1 | 2.74 % |
-| 1358 | 104.1 | 102.3 | 2.65 % |
-| 1359 | 104.1 | 101.9 | 2.53 % |
-| 1360 | 103.7 | 101.2 | 2.46 % |
-
-The books (the identities of every city and the books of the merchants, once a month) are off by at most 8.0e-14
+The books (the identities of every city and the books of the merchants, once a month) are off by at most 9.8e-14
 of the amount they are judged by.
 
-What the tables say, and what is not explained:
+**Rule 4 corrected (15 November 2026, after the first five-year tables).** The first tables showed the largest
+cities falling behind (Cairo at 88.6 in the world of seed 1356). Traced in 8 worlds: the first form of rule 4 split
+an order over the *cities* with the port's weights, half by price and half by size. The half by price gave every
+city the same part, whatever its size. So Cairo was asked for 1.7 % of its output in the first year and the smallest
+cities for 3.9 % (correlation of the export share with the logarithm of the people: -0.97), and the level of a city
+after five years fell with its size (correlation -0.78). Now the merchants pick among the *firms* of the other
+cities, which is the port's rule taken as it stands. Same 8 worlds, year 5:
 
-- All cities together grow a little and prices rise by a little under 1 % a year. Exports of all cities equal their imports
-  in every year, as they must.
-- Trade shrinks year by year, from 3.3 % to 2.5 % of output. Not traced. (England as one economy lost imports in the
-  same way, section 4.)
-- The cities drift apart: after five years they stand between 89 and 113 in the world of seed 1356. The largest do
-  worst there: Cairo 88.6 with 5.6 % without work on average, Fez 96.6, while small cities such as Alexandria (112.8)
-  and Soltaniyeh (111.0) gain. Why size hurts is not traced; rule 4 of the merchants sends orders to the larger city,
-  so it is not for lack of orders alone.
-- Five years and four worlds are a short look. Nothing here is checked against history.
+| | First form (cities as sellers) | Now (firms as sellers) |
+|---|---|---|
+| Exports in year 1, Cairo / the smallest cities, share of output | 1.70 % / 3.9 % | 2.68 % / 3.1 % |
+| Cairo, real output (mean of the worlds, lowest world) | 101.1, 88.6 | 105.2, 101.6 |
+| Lowest city of any world | 82.1 | 91.7 |
+| Spread of the cities' levels (standard deviation) | 5.6 | 3.4 |
+| Without work, mean / worst city on its worst day | 0.88 % / 7.9 % | 0.91 % / 5.6 % |
+| All cities, real output | 104.3 | 104.3 |
 
-**Speed and size.** One day of all 29 cities takes about 15 ms in the world server; a day of the world
-lasts 240 s. The state of the cities is 1.85 MB at the start and 2.4 MB
-after 60 days; a snapshot of the world with them is 3.3 MB on disk.
+Two other forms were measured and dropped. Counting a city by its output in both halves took the bias away but made
+a slump feed itself (a city that sells less is asked for less): 1.34 % without work, worst day 13.1 %. Counting a
+city by what the merchants sell there (they buy where they sell) balanced the trade of every city but let the trade
+of the large cities run down (Cairo from 2.6 % to 1.7 % of output in five years).
+
+A smaller effect of size is left and now points the other way: the large cities stand at about 105, the small ones
+at 102 to 103, with 0.3 % against 1.1 % without work. See the next point for one reason.
+
+**Why trade shrinks.** Trade falls from 3.3 % of output in the starting position to 2.55 % in year 5. The orders of
+the merchants are filled (99.9 %); it is the stalls that do not sell all they offer: 92 % of their goods in year 1,
+84 % in year 5 (economy/examples/cities.rs prints both). In the port a buyer picks among the sellers of a product
+half by price, and there the stall is one seller among all firms of the city, however much it offers. In Cairo (218
+firms of the first product) the stall sells 70 to 80 % of its goods, in the smallest cities (31 firms) nearly all.
+This is the port's goods market, untouched; England as one economy lost imports in the same way (section 4). So
+small cities import a little more than they export and large ones the other way round.
+
+**Thirty years in the game** (`npm run economy:check 30 4`: 4 worlds, seeds 1356 to 1359, every day computed).
+
+| All cities together | Year 5 | Year 10 | Year 20 | Year 30 | Range of the worlds in year 30 |
+|---|---|---|---|---|---|
+| Real output (start = 100), mean of the worlds | 102.8 | 101.9 | 100.1 | 97.1 | 74.8 to 110.6 |
+| World of seed 1356 | 100.2 | 97.0 | 90.0 | 74.8 | |
+| Exports = imports, share of output | 2.43 % | 2.17 % | 2.17 % | 2.19 % | 1.68 % to 2.63 % |
+
+In year 30: price level 126.6 (124.1 to 129.5); without work 4.86 % as the mean of all cities and days of the 30
+years (1.40 % to 10.60 %), the worst city on its worst day 23.8 % (13.3 % to 39.5 %); the lowest city at 78.2 of its
+start (46.0 to 100.9), the highest at 112.5.
+
+**Linked cities sink over decades; cities on their own do not.** This is the finding that matters for a world
+that runs for ever (a year of the game is a day of real time). Measured with the native build over 30 years
+(economy/examples/cities.rs with the game's calibrations, every city with a seed of its own):
+
+| After 30 years | Real output of all cities | Without work, mean of the cities | Cities below 80 |
+|---|---|---|---|
+| On their own (the port's rule), 2 seeds | 109, 107 | 2.5 %, 2.6 % | 1, 2 of 29 |
+| Linked, rule 4 as now, 3 seeds | 100, 92, 87 | 6.4 %, 10.7 %, 15.6 % | 1, 8, 15 of 29 |
+| Linked, first form of rule 4, 1 seed | 90 | 11.1 % | 8 of 29 |
+| Linked, a city counted by its output, 3 seeds | 79, 96, 77 | 22.0 %, 9.9 %, 21.1 % | 16, 9, 17 of 29 |
+
+A city that sinks stays down: in one run (of the form that counts a city by its output) a city stood at 20 % of
+its starting output with half its people without work after 30 years. What binds there, read from the state of the
+model in that run, is demand, nothing else: the bank could
+lend (its room for loans is untouched), the capital stock is whole, materials are there. The firms plan less and
+less because they sell less and less, their unsold goods pile up to weeks of output, their coin drains away, and
+their prices go on rising all the while (to 126 with half the city out of work; a wage never falls). Persons
+without work have no income in this calibration (no dole in 1356) and buy nothing, so a slump has nothing that
+stops it.
+
+Why the link does it, in the sums over all cities of one seed (linked: rule 4 as now):
+
+| After 30 years | Coin of households and firms | Price level | Coin in goods | Coin of the firms | Unsold goods |
+|---|---|---|---|---|---|
+| Start | 11,019 | 100 | 100 | 2,204 | 0 |
+| Linked | 10,436 | 125 | 76 | 1,106 | 1,224 |
+| On their own | 18,169 | 126 | 131 | 1,765 | 633 |
+
+Prices rise by about 0.75 % a year in both; the model has nothing that holds the price level (section 3). On its own
+a city sells more to the port's rest of the world than it buys there, year after year, and is paid in coin that
+comes from nowhere: the "claims on nobody" of the engine's trial. That coin keeps up with the prices. The merchants
+closed that hole, as they were meant to; the coin of all cities together is now fixed, prices still rise, and what
+the coin buys shrinks by a quarter in 30 years. Households keep their coin (they spend from income only), the firms
+lose theirs.
+
+So the merchants' rules are not the place to mend this. The closed system needs what the open one got for nothing:
+something that anchors prices or lets coin grow or be spent. That is a feature of its own and Ramon's to decide.
+
+What the tables do not say: nothing here is checked against history, and the long runs are few (2 to 4 worlds).
+
+**Speed and size.** One day of all 29 cities takes about 15 ms in the world server; a day of the world lasts
+240 s. The state of the cities is 1.85 MB at the start and grows through the first year, while the daily accounts
+of the last 365 days fill up, to about 6 MB; after that by 16 bytes per city and day (10.3 MB after 30 years in the
+native build). A snapshot of the world after 60 days is 3.3 MB on disk.
 
 ### Limits
 
+- Over decades the linked cities sink, one after another, and do not come back ("Linked cities sink over decades"
+  above). Nothing in the model stops a slump of a city, and the coin of the closed system does not keep up with its
+  prices. Open.
 - All cities have England's structure and differ only in size and in their random numbers. Cairo is England with more
   people.
 - The countryside is inside each city's economy (the calibration is that of a whole country); places that are not

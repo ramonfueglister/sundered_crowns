@@ -15,8 +15,9 @@
 //!   on offer the day after, so they order what will be missing by then: the stock to keep minus what is left of
 //!   today's stock if tomorrow sells the same part of it as today did. A stall that had nothing on offer today is
 //!   expected to sell all it has.
-//!   A city of origin gets the larger part of an order the cheaper the product is there and the larger the city
-//!   is: the weights with which a buyer of the port picks a seller (`create_weighted_sampler`), taken as shares.
+//!   An order is split over the cities of origin as if the merchants picked a seller among the firms of all other
+//!   cities with the weights of a buyer of the port (`create_weighted_sampler`): a city gets the larger part the
+//!   more firms of the product it has, the cheaper they are and the more they offer.
 //! - A city exports the products that are ordered from it: the mix of its exports (`c_E_g`, a constant of the
 //!   calibration in the port) is the mix of the orders of the day.
 //!
@@ -89,14 +90,24 @@ fn output(e: &Economy) -> f64 {
     e.figures()[1] / e.model.ext.window as f64
 }
 
-/// The parts of an order of city `d` for product `g` that go to each city of origin: the weights with which a buyer
-/// of the port picks a seller, half by price and half by size, as shares (0 for `d` itself). Price is the price
-/// index of the product in the city of origin, size the city's output.
+/// The parts of an order of city `d` for product `g` that go to each city of origin (0 for `d` itself). The merchants
+/// pick a seller as every buyer of the port does (`create_weighted_sampler`: half by price, half by what the seller
+/// offers, its production plus its stock), among the firms of the product in all other cities; the part of a city
+/// is the sum of the weights of its firms. So a city counts by the number of its firms and by what they offer, not
+/// by what it sells: of two cities with the same prices the one twice as large gets twice the orders, and a city
+/// whose sales fall keeps its part as long as its firms offer goods.
 pub fn origins(cities: &[Economy], d: usize, g: usize) -> Vec<f64> {
-    let cheap: Vec<f64> = cities.iter().map(|e| libm::exp(-2.0 * e.model.agg.P_bar_g[g])).collect();
-    let size: Vec<f64> = cities.iter().map(output).collect();
+    let of = |e: &Economy, w: &dyn Fn(usize) -> f64| -> f64 {
+        let f = &e.model.firms;
+        (0..f.len()).filter(|&i| f.G_i[i] == g).map(w).sum()
+    };
+    let cheap: Vec<f64> = cities.iter().map(|e| of(e, &|i| libm::exp(-2.0 * e.model.firms.P_i[i]))).collect();
+    let size: Vec<f64> = cities.iter().map(|e| of(e, &|i| e.model.firms.Y_i[i] + e.model.firms.S_i[i])).collect();
     let others = |v: &[f64]| (0..v.len()).filter(|&c| c != d).map(|c| v[c]).sum::<f64>();
     let (cheap_sum, size_sum) = (others(&cheap), others(&size));
+    if cheap_sum <= 0.0 || size_sum <= 0.0 {
+        return vec![0.0; cities.len()]; // no firm of the other cities makes the product
+    }
     (0..cities.len()).map(|c| if c == d { 0.0 } else { 0.5 * cheap[c] / cheap_sum + 0.5 * size[c] / size_sum }).collect()
 }
 

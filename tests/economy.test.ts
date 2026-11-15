@@ -417,6 +417,15 @@ describe('the economies of the cities in the world', () => {
     const f = run.s.economy.cities!.figures;
     for (let c = 0; c < N; c++) { expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0); }
   });
+  it('sell to the merchants about the same share of their output, the largest city as the smallest', () => {
+    // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
+    // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
+    const f = at[365].figures, share = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
+    const people = run.w.cityEconomies.cities.map((c) => c.people), largest = people.indexOf(Math.max(...people));
+    expect(run.w.names[run.w.cityEconomies.cities[largest].place]).toBe('Cairo');
+    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
+    expect(share[largest]).toBeGreaterThan(0.75 * Math.max(...share));
+  });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();
     computeTo(s, w, 400); s.day = 400;

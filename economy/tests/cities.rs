@@ -241,35 +241,72 @@ fn a_stall_is_full_again_the_morning_after_next_when_the_orders_are_filled() {
 }
 
 #[test]
-fn a_cheaper_and_a_larger_city_gets_the_larger_part_of_an_order() {
+fn the_merchants_pick_among_the_firms_of_the_other_cities_as_a_buyer_of_the_port_does() {
     let mut all = cities(&[1, 2, 3]);
     all.step(5);
-    // city 0 orders product g from 1 and 2: half by price, half by size (the weights of the port's buyers)
+    // city 0 orders product g from 1 and 2: every firm of the product there has the weight of a seller of the
+    // port, half by its price and half by what it offers, and a city has the weights of its firms
     let g = (0..all.cities[0].model.prop.G).find(|&g| all.merchants.orders[1][0][g] > 0.0).expect("an order of city 0");
     let m = &all.merchants;
     let base = m.orders[1][0][g] / (m.orders[1][0][g] + m.orders[2][0][g]);
     assert!(base > 0.0 && base < 1.0);
-    let cheap = (libm::exp(-2.0 * all.cities[1].model.agg.P_bar_g[g]), libm::exp(-2.0 * all.cities[2].model.agg.P_bar_g[g]));
-    let size = (all.cities[1].figures()[1], all.cities[2].figures()[1]);
-    let expected = 0.5 * cheap.0 / (cheap.0 + cheap.1) + 0.5 * size.0 / (size.0 + size.1);
+    let firms = |e: &Economy| -> Vec<usize> { (0..e.model.firms.len()).filter(|&i| e.model.firms.G_i[i] == g).collect() };
+    let cheap = |e: &Economy| -> f64 { firms(e).iter().map(|&i| libm::exp(-2.0 * e.model.firms.P_i[i])).sum() };
+    let offer = |e: &Economy| -> f64 { firms(e).iter().map(|&i| e.model.firms.Y_i[i] + e.model.firms.S_i[i]).sum() };
+    let (one, two) = (&all.cities[1], &all.cities[2]);
+    let expected = 0.5 * cheap(one) / (cheap(one) + cheap(two)) + 0.5 * offer(one) / (offer(one) + offer(two));
     assert!((base - expected).abs() < 1e-12, "{base} against {expected}");
-
-    // the same cities with the product dearer in city 1, and with city 1 larger: its part of an order of city 0
-    // falls, and rises
     let w = origins(&all.cities, 0, g);
     assert_eq!(w[0], 0.0);
     assert!((w.iter().sum::<f64>() - 1.0).abs() < 1e-12);
     assert!((w[1] - base).abs() < 1e-12);
+
+    // the product dearer in city 1: its part of an order falls; its firms offering more: it rises
     let mut dear = all.clone();
-    dear.cities[1].model.agg.P_bar_g[g] *= 1.5;
-    assert!(origins(&dear.cities, 0, g)[1] < w[1]);
-    let mut large = all.clone();
-    for y in &mut large.cities[1].model.data.real_gdp {
-        *y *= 2.0;
+    for i in firms(&all.cities[1]) {
+        dear.cities[1].model.firms.P_i[i] *= 1.5;
     }
-    assert!(origins(&large.cities, 0, g)[1] > w[1]);
-    // with two cities the other one gets the whole order
+    assert!(origins(&dear.cities, 0, g)[1] < w[1]);
+    let mut more = all.clone();
+    for i in firms(&all.cities[1]) {
+        more.cities[1].model.firms.Y_i[i] *= 2.0;
+    }
+    assert!(origins(&more.cities, 0, g)[1] > w[1]);
+
+    // what a city has sold does not count: with the sales of city 1 halved its part is the same
+    let mut slump = all.clone();
+    for y in &mut slump.cities[1].model.data.real_gdp {
+        *y *= 0.5;
+    }
+    assert_eq!(origins(&slump.cities, 0, g), w);
+
+    // firms that are alike count one by one: a city with a third of the firms gets a third of the part
+    let mut alike = all.clone();
+    for e in &mut alike.cities {
+        for i in firms(e) {
+            (e.model.firms.P_i[i], e.model.firms.Y_i[i], e.model.firms.S_i[i]) = (1.0, 1.0, 0.0);
+        }
+    }
+    let other = (0..all.cities[0].model.prop.G).find(|&h| h != g).unwrap();
+    let of_two = firms(&alike.cities[2]);
+    let keep = of_two.len() / 3;
+    assert!(keep > 0);
+    for &i in &of_two[keep..] {
+        alike.cities[2].model.firms.G_i[i] = other;
+    }
+    let w = origins(&alike.cities, 0, g);
+    let n = firms(&alike.cities[1]).len() as f64;
+    assert!((w[2] / w[1] - keep as f64 / n).abs() < 1e-12, "{} against {}", w[2] / w[1], keep as f64 / n);
+
+    // with two cities the other one gets the whole order; a product that no other city makes is not ordered
     assert_eq!(origins(&all.cities[..2], 0, g), vec![0.0, 1.0]);
+    let mut none = all.clone();
+    for c in 1..3 {
+        for i in firms(&all.cities[c]) {
+            none.cities[c].model.firms.G_i[i] = other;
+        }
+    }
+    assert_eq!(origins(&none.cities, 0, g), vec![0.0; 3]);
 }
 
 #[test]

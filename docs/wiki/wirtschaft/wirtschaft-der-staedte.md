@@ -54,7 +54,7 @@ Im Modell ist das Ausland zwei Zufallsreihen, eine Nachfrage nach Ausfuhr und ei
 1. Was die Händler an einem Tag in einer Stadt kaufen, liegt am nächsten Tag an ihren Ständen in den Städten, für die es bestellt war, Gut für Gut.
 2. Sie verkaufen zu dem, was die Ware sie gekostet hat. Ihr Vermögen, Geld in allen Städten plus Lager zum Einkaufswert, ändert sich darum nie: Zwischen den Städten entsteht und verschwindet kein Geld.
 3. In jeder Stadt wollen sie jeden Morgen so viel anbieten, wie die Eichung der Stadt als Einfuhr vorsieht, als Anteil an der Produktion der Stadt. Eine Bestellung von heute wird morgen gekauft und liegt übermorgen am Stand. Sie bestellen also, was bis dahin fehlen wird.
-4. Eine Bestellung geht zum grösseren Teil an die Stadt, in der das Gut billiger ist, und an die grössere Stadt. Das sind die Gewichte, mit denen im Modell jeder Käufer seinen Verkäufer wählt.
+4. Eine Bestellung wird auf die Herkunftsstädte verteilt, als wählten die Händler unter den Betrieben aller anderen Städte, so wie im Modell jeder Käufer seinen Verkäufer wählt: zur Hälfte nach dem Preis, zur Hälfte nach dem Angebot (Produktion plus Lager). Eine Stadt zählt also mit der Zahl ihrer Betriebe und deren Angebot, nicht mit dem, was sie verkauft.
 5. Eine Stadt führt die Güter aus, die bei ihr bestellt werden.
 
 Die Regeln 3 und 5 sind eigene Festlegungen dieses Spiels. Das Modell kennt keine verbundenen Volkswirtschaften, und nach einer Quelle dafür wurde nicht gesucht. Eine Reise dauert zwischen zwei beliebigen Städten einen Tag und kostet nichts.
@@ -72,27 +72,44 @@ Jede Stadt hat einen eigenen Zufallsstartwert aus dem Startwert der Welt und ihr
 
 ## Probelauf im Spiel
 
-Vier Welten des Spiels über fünf Jahre, Tag für Tag gerechnet (`npm run economy:check 5 4`). In allen vier wurde jeder Tag gerechnet.
+Acht Welten des Spiels über fünf Jahre, Tag für Tag gerechnet (`npm run economy:check 5 8`). In allen acht wurde jeder Tag gerechnet.
 
 | Alle Städte zusammen, Jahr 5 | Mittel der Welten | Spanne der Welten |
 |---|---|---|
-| Reale Produktion (Start = 100) | 103,7 | 101,2 bis 106,5 |
-| Preisniveau (Start = 100) | 104,3 | 103,1 bis 105,0 |
-| Ausfuhr, Anteil an der Produktion | 2,46 % | 2,38 % bis 2,66 % |
-| Einfuhr, Anteil an der Produktion | 2,46 % | 2,37 % bis 2,66 % |
-| Ohne Arbeit, Mittel aller Städte und Tage | 0,87 % | 0,61 % bis 1,17 % |
-| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 9,1 % | 6,7 % bis 11,6 % |
-| Stadt mit der tiefsten Produktion (ihr Start = 100) | 92,0 | 88,6 bis 95,7 |
-| Stadt mit der höchsten Produktion | 114,1 | 112,8 bis 114,7 |
+| Reale Produktion (Start = 100) | 104,3 | 100,2 bis 107,7 |
+| Preisniveau (Start = 100) | 104,3 | 103,6 bis 105,5 |
+| Ausfuhr = Einfuhr, Anteil an der Produktion | 2,55 % | 2,25 % bis 2,86 % |
+| Ohne Arbeit, Mittel aller Städte und Tage | 0,91 % | 0,33 % bis 1,73 % |
+| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 5,6 % | 2,2 % bis 10,0 % |
+| Stadt mit der tiefsten Produktion (ihr Start = 100) | 97,8 | 91,7 bis 103,5 |
+| Stadt mit der höchsten Produktion | 111,9 | 106,1 bis 114,4 |
 
-Die Bücher (die Identitäten jeder Stadt und die Bücher der Händler, einmal im Monat geprüft) weichen höchstens um 8 · 10⁻¹⁴ ihres Betrags ab.
+Die Bücher (die Identitäten jeder Stadt und die Bücher der Händler, einmal im Monat geprüft) weichen höchstens um 1 · 10⁻¹³ ihres Betrags ab.
 
-Was die Tabelle sagt und was nicht geklärt ist:
+Was die Tabelle sagt:
 
 - Alle Städte zusammen wachsen leicht, und die Preise steigen um knapp 1 % im Jahr. Ausfuhr und Einfuhr aller Städte sind in jedem Jahr gleich.
-- Der Handel schrumpft von 3,3 % auf 2,5 % der Produktion. Warum, ist nicht geklärt.
-- Die Städte laufen auseinander. In der Welt mit dem Startwert 1356 steht Kairo, die grösste, nach fünf Jahren bei 88,6 mit im Mittel 5,6 % ohne Arbeit; kleine Städte wie Alexandria (112,8) und Soltaniyeh (111,0) gewinnen. Warum Grösse schadet, ist nicht geklärt.
-- Fünf Jahre und vier Welten sind ein kurzer Blick. Nichts davon ist an der Geschichte geprüft.
+- Grosse und kleine Städte stehen nach fünf Jahren nahe beieinander: Kairo bei 105, die kleinsten bei 102 bis 103. In einer ersten Fassung der Regel 4 fielen die grossen Städte zurück (Kairo auf 89), weil jede Stadt als ein einziger Verkäufer zählte und Kairo darum nur für 1,7 % seiner Produktion angefragt wurde, die kleinsten Städte für 3,9 %. Das ist korrigiert.
+- Der Handel sinkt von 3,3 % auf 2,55 % der Produktion. Der Grund liegt im Gütermarkt des Modells: Der Stand der Händler ist dort ein Verkäufer unter allen Betrieben der Stadt. In Kairo verkauft er 70 bis 80 % seiner Ware, in den kleinsten Städten fast alles.
+
+### Über 30 Jahre: offener Befund
+
+Vier Welten des Spiels über 30 Jahre (`npm run economy:check 30 4`):
+
+| Alle Städte zusammen | Jahr 5 | Jahr 10 | Jahr 20 | Jahr 30 | Spanne der Welten im Jahr 30 |
+|---|---|---|---|---|---|
+| Reale Produktion (Start = 100), Mittel | 102,8 | 101,9 | 100,1 | 97,1 | 74,8 bis 110,6 |
+| Welt mit dem Startwert 1356 | 100,2 | 97,0 | 90,0 | 74,8 | |
+
+Über die 30 Jahre sind im Mittel 4,9 % ohne Arbeit (1,4 % bis 10,6 % je Welt), die schlechteste Stadt an ihrem schlechtesten Tag 23,8 % (bis 39,5 %). Die tiefste Stadt steht im Jahr 30 bei 78 (46 bis 101).
+
+**Über Jahrzehnte sinken die verbundenen Städte, eine nach der anderen, und kommen nicht zurück.** Städte, die für sich allein rechnen, tun das nicht (nach 30 Jahren 107 bis 109, 2,5 % ohne Arbeit). In einer gesunkenen Stadt fehlt die Nachfrage, nichts sonst: Die Bank könnte leihen, das Kapital ist da. Die Betriebe verkaufen weniger, planen weniger, entlassen; wer keine Arbeit hat, hat in dieser Eichung kein Einkommen und kauft nichts; und die Preise steigen trotzdem weiter.
+
+Der Grund liegt im geschlossenen Kreislauf. Die Preise steigen im Modell um etwa 0,75 % im Jahr, weil nichts das Preisniveau hält. Eine Stadt für sich verkauft dem Ausland des Modells jedes Jahr mehr, als sie dort kauft, und bekommt dafür Münzgeld, das aus dem Nichts kommt; ihr Geld hält mit den Preisen Schritt. Die Händler haben dieses Loch geschlossen. Jetzt ist das Münzgeld aller Städte fest, die Preise steigen weiter, und nach 30 Jahren kauft das Geld ein Viertel weniger. Die Haushalte behalten ihr Geld, die Betriebe verlieren ihres.
+
+Das lässt sich nicht an den Regeln der Händler beheben. Es braucht ein eigenes Feature: etwas, das die Preise hält oder das Geld wachsen oder ausgeben lässt. Ein Spieljahr dauert einen echten Tag; in der laufenden Welt würde sich der Befund also nach einigen Wochen zeigen.
+
+Nichts davon ist an der Geschichte geprüft, und die langen Läufe sind wenige (zwei bis vier Welten).
 
 ## Massstab 1 : 100
 
@@ -100,6 +117,7 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 
 ## Grenzen
 
+- Über Jahrzehnte sinken die verbundenen Städte (siehe «Über 30 Jahre: offener Befund»). Offen.
 - Alle Städte haben Englands Struktur und unterscheiden sich nur in Grösse und Zufall.
 - Keine Entfernung: Jede Stadt ist von jeder einen Tag entfernt, auch Texcoco in Mexiko und Niani in Mali von Paris. Transport kostet nichts.
 - Das Umland steckt in der Volkswirtschaft der Stadt, weil die Eichung die eines ganzen Landes ist. Orte ohne eine dieser Städte haben keine Wirtschaft.
@@ -111,7 +129,7 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 
 ## Technik
 
-- Der Zustand aller Städte und der Händler liegt als ein Block im Speicherstand der Welt und in dessen Prüfsumme: 1,85 MB zum Start. Speichern, laden und weiterrechnen ergibt dasselbe wie durchrechnen.
+- Der Zustand aller Städte und der Händler liegt als ein Block im Speicherstand der Welt und in dessen Prüfsumme: 1,85 MB zum Start, rund 6 MB nach dem ersten Jahr, danach 16 Byte mehr pro Stadt und Tag. Speichern, laden und weiterrechnen ergibt dasselbe wie durchrechnen.
 - Die WebAssembly-Fassung rechnet Bit für Bit dasselbe wie die native Fassung (Test mit drei Städten).
 - Ein Tag aller 29 Städte kostet im Spiel rund 15 Millisekunden Rechenzeit; ein Spieltag dauert 240 Sekunden.
 - Eine Welt, die mit der Volkswirtschaft England gespeichert wurde, gründet die Städte beim Laden an ihrem heutigen Tag. Geprobt mit einer Welt von 400 Tagen: geladen in 0,6 Sekunden, 60 Tage weitergerechnet, gespeichert und mit derselben Prüfsumme wieder geladen.
