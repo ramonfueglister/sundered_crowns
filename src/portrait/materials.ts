@@ -106,7 +106,7 @@ function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageP
     shader.fragmentShader = swap(swap(shader.fragmentShader, '#include <common>', '#include <common>\nvarying float vLidY;'),
       '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;
 }

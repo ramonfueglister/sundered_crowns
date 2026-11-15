@@ -26,9 +26,10 @@ export interface StageProfile {
    *  how much of its colour is left (1 = all). */
   skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
-   *  ball's normal), a tint, how much of its colour is left (1 = all), and the glint of the key light on it
+   *  ball's normal), a tint, how much of its colour is left (1 = all), how far its darks are lifted (the exponent
+   *  on the colour: below 1 a dark iris shows its colour), and the glint of the key light on it
    *  (roughness: the rougher the larger and fainter; Godot's "specular"). */
-  eye: null | { lid: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; colour: number; rough: number; specular: number };
+  eye: null | { lid: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; colour: number; lift: number; rough: number; specular: number };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -67,7 +68,7 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.02,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.24, 0.16, 0.12], blotch: 0.11, speckle: 0.10, colour: 0.82 },
-  eye: { lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, rough: 0.2, specular: 1.0 },
+  eye: { lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
 };
