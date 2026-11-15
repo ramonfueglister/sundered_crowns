@@ -204,10 +204,10 @@ if GRID:
         R0 = max(r_ for r_, th in enumerate(ths) if th >= TH0) if kind == 'hood' else int(os.environ.get('NU', '9'))
         for key in [key for key in idx if key[0] > R0]:
             del idx[key]
-        def outer(y, dx, dz):
+        def outer(y, dx, dz, of=None):
             o_ = np.array([AX[0] + dx * 6, y, AX[2] + dz * 6])
             best = 0.0
-            for bv in (hb, tbv):
+            for bv in (of or (hb, tbv)):
                 h = bv.ray_cast(Vector(np.array([o_[0], -o_[2], o_[1]]) * S), Vector([-dx, dz, 0.0]), 0.6)
                 if h[0] is not None:
                     best = max(best, 6 - h[3] / S)
@@ -222,9 +222,15 @@ if GRID:
                 back = 0.5 - 0.5 * math.cos(ph)          # 0 in front, 1 behind
                 dx, dz = math.sin(ph), math.cos(ph)
                 yn = float(os.environ.get('CW_Y', '5.72')) + 0.2 * back
-                rn = outer(yn, dx, dz) + 0.06
+                ro = outer(yn, dx, dz) + 0.06
+                # CW_IN draws the roll's inner edge from the gown's neckline in to the neck itself (1: on the
+                # neck); the roll then grows wider by as much, so that its foot stays outside the gown
+                # and CW_UP lifts that edge up the neck (fully at the nape, two fifths of it under the chin, where
+                # CW_GAP lets it hang off the throat)
+                yi = yn + float(os.environ.get('CW_UP', '0')) * (0.4 + 0.6 * back)
+                rn = ro - float(os.environ.get('CW_IN', '0')) * (ro - outer(yi, dx, dz, (hb,)) - 0.06 - float(os.environ.get('CW_GAP', '0')) * (1 - back))
                 _c = [float(t) for t in os.environ.get('COWL', '0.3,0.75,0.26,0.5').split(',')]
-                w = _c[0] + _c[1] * back ** 1.5; hgt = _c[2] + _c[3] * back ** 1.5
+                w = _c[0] + _c[1] * back ** 1.5 + (ro - rn); hgt = _c[2] + _c[3] * back ** 1.5
                 # the bunched cloth: folds running across the roll, uneven
                 _fa = float(os.environ.get('FOLD', '0.0')); _kk = 2 * math.pi * k / NPH
                 _f1 = math.sin(11 * _kk + 0.7) + 0.6 * math.sin(17 * _kk + 2.1) + 0.4 * math.sin(29 * _kk + 4.0)
@@ -233,7 +239,7 @@ if GRID:
                 for j in range(R0 + 1):
                     u = math.pi * (0.12 + 0.88 * j / R0)
                     rho = rn + w * (1 - math.cos(u)) / 2 + 0.05 * _fa * _f1 * math.sin(u) * math.sin(3 * u + 0.8 * _f2)
-                    idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
+                    idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + (yi - yn) * (1 + math.cos(u)) / 2 + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
         UCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('UCUT', '').split(',') if c]
         DCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('DCUT', '').split(',') if c]
         st = {}

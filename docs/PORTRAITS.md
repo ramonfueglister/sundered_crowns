@@ -67,7 +67,7 @@ blotches, the lid's shadow on the eyeball, the eye less white and less coloured,
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the
-look of the hair cards and the roll of the thrown-back hood are not.
+look of the hair cards are not; the thrown-back hood closes round the neck since round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and
