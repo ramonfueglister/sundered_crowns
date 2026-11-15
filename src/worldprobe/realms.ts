@@ -1,7 +1,8 @@
 // The 2D map: once the world lies flat under a camera that looks straight down (zoom.ts), the realms of 1356 colour
 // it. Their colours are painted tile by tile (paint.ts) by a worker, at the level whose dots are about a pixel wide,
 // and laid over the blocks. The tiles form a pyramid (pyramid.ts), so that a coarser tile stands in for finer ones
-// that are not there yet. The realms lie on the game map only; round the globe they come again with it.
+// that are not there yet. The realms lie on the game map only; round the globe they come again with it, and between
+// its laps the map goes on as land and water.
 import * as THREE from 'three/webgpu';
 import { texture, uniform } from 'three/tsl';
 import { LAND_Y, SEA_Y } from '../lookprobe/layout';
@@ -52,7 +53,7 @@ export interface RealmsMap {
  * which the world begins again.
  * `ahead`: paint the surroundings of the picture too. `changed` is called whenever a tile has arrived.
  */
-export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; ahead: boolean; changed(): void }): RealmsMap {
+export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
   const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, choose, placeAt, dispose: () => worker.terminate() };
   /** how strongly the realms' colours cover the world */
@@ -140,8 +141,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     /** the tiles of a level on the game map within `around` cells of the picture */
     const near = (l: number, around: number) => {
       const side = TILE * 2 ** l, list: { x: number; y: number; out: number; far: number }[] = [];
-      for (let y = Math.max(0, Math.floor((cv - halfD - around) / side)); y * side <= Math.min(o.map[1] - 1, cv + halfD + around); y++)
-        for (let x = Math.max(0, Math.floor((cu - halfW - around) / side)); x * side <= Math.min(o.map[0] - 1, cu + halfW + around); x++)
+      // round the globe the map goes on (beyond the game map as land and water alone, paint.ts); a map that is not the
+      // whole world ends at its edges
+      const wraps = Number.isFinite(o.round), rows = wraps ? (o.rows ?? o.map[1]) : o.map[1], west = cu - halfW - around, east = cu + halfW + around;
+      for (let y = Math.max(0, Math.floor((cv - halfD - around) / side)); y * side <= Math.min(rows - 1, cv + halfD + around); y++)
+        for (let x = wraps ? Math.floor(west / side) : Math.max(0, Math.floor(west / side)); x * side <= (wraps ? east : Math.min(o.map[0] - 1, east)); x++)
           list.push({ x, y, out: outside(l, x, y), far: Math.hypot((x + 0.5) * side - cu, (y + 0.5) * side - cv) });
       return list;
     };

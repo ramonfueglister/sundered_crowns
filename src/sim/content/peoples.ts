@@ -27,6 +27,18 @@ export const CULTURE_GROUPS: Record<string, string[]> = {
   american: ['taino', 'carib', 'nahua', 'maya', 'mississippian', 'algonquian', 'iroquoian', 'tupi', 'muisca', 'quechua', 'guarani', 'purepecha', 'chimu', 'arawak', 'aymara', 'chibchan', 'chichimec', 'diaguita', 'ge', 'guaycuru', 'inuit', 'mapuche', 'mixtec', 'siouan', 'tehuelche'],
   northern: ['samoyed', 'ob_ugric', 'mari', 'chuvash'],
   other: ['unknown'],
+  // the rest of the world (data/history/1356/world_beyond.json), after 'other' so that the cultures before keep their numbers
+  sinic: ['han', 'korean', 'japanese', 'ryukyuan', 'jurchen'],
+  tibeto_burman: ['tibetan', 'burmese', 'newar', 'arakanese'],
+  indic: ['hindustani', 'bengali', 'kashmiri', 'dakhini', 'rajput', 'nepali', 'assamese', 'odia', 'sinhala', 'dhivehi', 'gujarati', 'punjabi'],
+  dravidian: ['kannada', 'tamil', 'telugu', 'malayali'],
+  tai: ['thai', 'lao', 'shan', 'ahom'],
+  austroasiatic: ['vietnamese', 'khmer', 'mon'],
+  austronesian: ['cham', 'javanese', 'sundanese', 'malay', 'bugis', 'tagalog', 'polynesian', 'maori'],
+  siberian: ['evenk', 'yakut', 'chukchi', 'ainu', 'nivkh'],
+  aboriginal: ['australian_aboriginal'],
+  western_american: ['puebloan', 'apache', 'salish'],
+  central_asian: ['chagatai_turkic', 'uyghur'],
 };
 export const GROUP_OF: Record<string, string> = {};
 for (const [g, ms] of Object.entries(CULTURE_GROUPS)) for (const m of ms) GROUP_OF[m] = g;
@@ -57,6 +69,15 @@ const CULTURE_DE: Record<string, string> = {
   ashkenazi: 'Aschkenasisch', sephardi: 'Sephardisch', nubian: 'Nubisch', somali: 'Somalisch', swahili: 'Swahili', amhara: 'Amharisch',
   taino: 'Taíno', carib: 'Karibisch', maya: 'Maya', mississippian: 'Mississippisch', algonquian: 'Algonkin', iroquoian: 'Irokesisch',
   inuit: 'Inuit', samoyed: 'Samojedisch', ob_ugric: 'Obugrisch', mari: 'Mari', chuvash: 'Tschuwaschisch', unknown: 'Unbekannt',
+  han: 'Han-Chinesisch', korean: 'Koreanisch', japanese: 'Japanisch', ryukyuan: 'Ryukyuanisch', jurchen: 'Dschurdschenisch',
+  tibetan: 'Tibetisch', burmese: 'Birmanisch', newar: 'Newari', arakanese: 'Arakanesisch', hindustani: 'Hindustani', bengali: 'Bengalisch',
+  kashmiri: 'Kaschmirisch', dakhini: 'Dakhni', rajput: 'Rajputisch', nepali: 'Nepalesisch', assamese: 'Assamesisch', odia: 'Oriya',
+  sinhala: 'Singhalesisch', dhivehi: 'Maledivisch', gujarati: 'Gujarati', punjabi: 'Pandschabi', kannada: 'Kannada', tamil: 'Tamilisch',
+  telugu: 'Telugu', malayali: 'Malayalam', thai: 'Thai', lao: 'Laotisch', shan: 'Shan', ahom: 'Ahom', vietnamese: 'Vietnamesisch',
+  khmer: 'Khmer', mon: 'Mon', cham: 'Cham', javanese: 'Javanisch', sundanese: 'Sundanesisch', malay: 'Malaiisch', bugis: 'Buginesisch',
+  tagalog: 'Tagalog', polynesian: 'Polynesisch', maori: 'Māori', evenk: 'Ewenkisch', yakut: 'Jakutisch', chukchi: 'Tschuktschisch',
+  ainu: 'Ainu', nivkh: 'Niwchisch', australian_aboriginal: 'Aborigines', puebloan: 'Pueblo', apache: 'Apache', salish: 'Salish',
+  chagatai_turkic: 'Tschagataisch', uyghur: 'Uigurisch',
 };
 /** Culture name in both languages. */
 export function cultureLabel(id: string): I18n { const en = cultureName(id); return { en, de: CULTURE_DE[id] ?? en }; }
@@ -88,6 +109,15 @@ export const FAITHS: FaithDef[] = [
   { id: 'evangelical', name: { en: 'Evangelical Church', de: 'Evangelische Kirche' }, family: 'christian', color: '#5e35b1' },
   { id: 'reformed', name: { en: 'Reformed Church', de: 'Reformierte Kirche' }, family: 'christian', color: '#3949ab' },
   { id: 'anglican_type', name: { en: 'National Church', de: 'Nationalkirche' }, family: 'christian', color: '#8e24aa' },
+  // the faiths of the rest of the world, after the others so that those keep their numbers
+  { id: 'mahayana', name: { en: 'Mahayana Buddhism', de: 'Mahayana-Buddhismus' }, family: 'dharmic', color: '#f9a825' },
+  { id: 'theravada', name: { en: 'Theravada Buddhism', de: 'Theravada-Buddhismus' }, family: 'dharmic', color: '#fbc02d' },
+  { id: 'vajrayana', name: { en: 'Vajrayana Buddhism', de: 'Vajrayana-Buddhismus' }, family: 'dharmic', color: '#c62828' },
+  { id: 'shinto', name: { en: 'Shinto', de: 'Shintō' }, family: 'traditional', color: '#d84315' },
+  { id: 'white_lotus', name: { en: 'White Lotus', de: 'Weißer Lotus' }, family: 'dharmic', color: '#eeeeee' },
+  { id: 'tai_folk', name: { en: 'Tai folk faith', de: 'Tai-Volksglaube' }, family: 'traditional', color: '#a1887f' },
+  { id: 'polynesian_faith', name: { en: 'Polynesian faith', de: 'Polynesische Religion' }, family: 'traditional', color: '#00897b' },
+  { id: 'anitism', name: { en: 'Anito faith', de: 'Anito-Glaube' }, family: 'traditional', color: '#558b2f' },
 ];
 export const FAITH_INDEX: Record<string, number> = Object.fromEntries(FAITHS.map((f, i) => [f.id, i]));
 export function faithFamily(i: number) { return FAITHS[i]?.family ?? 'traditional'; }

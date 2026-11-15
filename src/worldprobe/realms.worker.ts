@@ -3,7 +3,7 @@
 // those of 1356 as the game sets them up, until the page says who holds which place now.
 import { rgb } from '../lookprobe/batch';
 import { maybeGunzip } from '../render/assets';
-import { type RealmName, type Realms, paintRealms, realmNames } from './paint';
+import { type RealmName, type Realms, type Rest, paintRealms, placeAt, realmNames } from './paint';
 import { indexOf } from './region';
 
 /** The realms as they stand: who holds every place (-1: no realm), and every realm's colour (0xrrggbb) and name, by its number. */
@@ -25,30 +25,39 @@ const NO_COLOUR = 0x808080;
 interface Setup { states: { short: { de: string }; color: string }[]; owner: number[] }
 
 const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
+const u16 = (raw: Uint8Array) => new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength));
+/** cells of the rest of the world to a map pixel (half as fine as the game map) */
+const REST_CELLS = 0.5;
+/** The places of the rest of the world, beyond the game map, over the whole world frame (0 on the game map). */
+async function restOf(base: string, worldW: number): Promise<Rest> {
+  const raw = await maybeGunzip(new Uint8Array(await (await get(`${base}map/beyond.bin.gz`)).arrayBuffer())), w = Math.round(worldW * REST_CELLS);
+  if (raw.byteLength % (w * 2)) throw new Error(`beyond.bin: ${raw.byteLength} bytes are no rows of ${w}`);
+  return { ids: u16(raw), w, h: raw.byteLength / (w * 2), cells: REST_CELLS };
+}
 let realms: Promise<Realms & { names: string[] }> | undefined;
 /** The realms of 1356 as the game sets them up, on the map of region `name`. */
 const realmsOf = (name: string, base: string) => realms ??= (async (): Promise<Realms & { names: string[] }> => {
   const [index, setup, packed] = await Promise.all([indexOf(name, base), get(`${base}data/setup_1356.json`).then((r) => r.json() as Promise<Setup>), get(`${base}map/ids.bin.gz`).then((r) => r.arrayBuffer())]);
   const raw = await maybeGunzip(new Uint8Array(packed));
   if (raw.byteLength !== index.mapW * index.mapH * 2) throw new Error(`ids.bin: expected ${index.mapW * index.mapH * 2} bytes, got ${raw.byteLength}`);
-  return { ids: new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength)), w: index.mapW, h: index.mapH, owner: setup.owner, colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
+  return { ids: u16(raw), w: index.mapW, h: index.mapH, round: index.worldW, rest: index.worldW ? await restOf(base, index.worldW) : undefined, owner: setup.owner, colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
 })();
 
 self.onmessage = async (e: MessageEvent<RealmsJob>) => {
   const job = e.data, done = (d: Omit<RealmsDone, 'id'>) => (self as unknown as Worker).postMessage({ id: job.id, ...d } satisfies RealmsDone, d.tile ? [d.tile.buffer] : []);
   try {
     if (job.kind === 'realms') {
-      const { ids, w, h, chosen } = await realmsOf(job.region, job.base);
-      realms = Promise.resolve({ ids, w, h, chosen, owner: job.owner, colors: Array.from(job.colors, (c) => rgb(c ?? NO_COLOUR)), names: Array.from(job.names, (n) => n ?? '') });
+      const { ids, w, h, round, rest, chosen } = await realmsOf(job.region, job.base);
+      realms = Promise.resolve({ ids, w, h, round, rest, chosen, owner: job.owner, colors: Array.from(job.colors, (c) => rgb(c ?? NO_COLOUR)), names: Array.from(job.names, (n) => n ?? '') });
       return done({});
     }
     const r = await realmsOf(job.region, job.base);
     if (job.kind === 'choose') { realms = Promise.resolve({ ...r, chosen: job.place }); return done({}); }
     if (job.kind === 'place') {
-      const x = Math.floor(job.x), y = Math.floor(job.y), place = x < 0 || y < 0 || x >= r.w || y >= r.h ? -1 : r.ids[y * r.w + x] - 1;
-      return done({ place: place < r.owner.length ? place : -1 });
+      const place = placeAt(r, Math.floor(job.x), Math.floor(job.y));
+      return done({ place: place >= 0 && place < r.owner.length ? place : -1 });
     }
-    if (job.kind === 'names') return done({ names: realmNames(r).map((n) => ({ ...n, name: r.names[n.realm] })) });
+    if (job.kind === 'names') return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? "")].length).map((n) => ({ ...n, name: r.names[n.realm] })) });
     const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, index.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
   } catch (err) {

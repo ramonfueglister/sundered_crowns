@@ -10,6 +10,9 @@ import { smooth } from '../lookprobe/batch';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
 import { createNames } from './names';
+// the face of the realms' names (names.ts), bundled: no requests to a font service
+import '@fontsource/eb-garamond/latin-500.css';
+import '@fontsource/eb-garamond/latin-ext-500.css';
 import { type Layout, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
@@ -66,7 +69,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(FARTHEST, Math.max(NEAREST, o.wide));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
-  const realms = createRealms(stage, { region: name, base, map: projection.map, cells: projection.cells, round: projection.round, ahead: !still, changed: () => look() }), names = createNames(o.names);
+  const realms = createRealms(stage, { region: name, base, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
   /** how the stage is laid out for the view, as of the last look */
