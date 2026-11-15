@@ -53,7 +53,7 @@ def empty_cards():
         f.write('')
 
 
-def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000, trim=None):
+def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000, trim=None, wave=None):
     P = roots(Nr, margin, rng)
     th, el = ang(P)
     Ls = L(th, el) * (0.9 + 0.2 * rng.random(len(P)))
@@ -62,7 +62,7 @@ def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(
     if trim is not None:
         S = trim(S)
     lab = wisps(S, K, rng)
-    cards, tiles = cards_from_wisps(H, S, lab, K, rng, 4.0, taper, tile, clump=clump, wmax=wmax, wmin=wmin)
+    cards, tiles = cards_from_wisps(H, S, lab, K, rng, 4.0, taper, tile, clump=clump, wmax=wmax, wmin=wmin, wave=wave)
     nv, nt = write_cards(H, out, name, cards, tiles)
     return S, lab, len(cards), nt
 
@@ -178,7 +178,7 @@ elif style == 'plait':
     # and written here as a table (x to the side, y up, z to the front, in base units).
     # the hairline of the crown braid, on the forehead lower by PLAIT_HL degrees (a parting with the hair lying
     # flat shows the whole forehead)
-    _hl = float(os.environ.get('PLAIT_HL', '5'))
+    _hl = float(os.environ.get('PLAIT_HL', '11'))
     hl, hln = line([(0, 19 - _hl), (20, 18 - _hl), (32, 12 - 0.8 * _hl), (44, 3 - 0.4 * _hl), (58, -6), (66, -14), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)])
     margin = lambda th, el: el - hln(th)
     GTH, GEL = [float(t) for t in os.environ.get('PLAIT_G', '92,-44').split(',')]
@@ -203,7 +203,7 @@ elif style == 'plait':
         f = front(th, el)
         way = f * (ac(d, td(d)) + ac(td(d), gd(d))) + (1 - f) * ac(d, gd(d))
         return 0.98 * way * (0.92 + 0.1 * rng.random(np.shape(th))) + 0.08
-    _l = [float(t) for t in os.environ.get('PLAIT_LIFT', '0.045,0.04').split(',')]
+    _l = [float(t) for t in os.environ.get('PLAIT_LIFT', '0.075,0.05').split(',')]
     S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26)
     WAY = np.array([[0.74, 7.02, 0.34], [0.80, 6.55, 0.42], [0.84, 5.98, 0.62], [0.82, 5.40, 1.12], [0.76, 4.60, 1.46], [0.72, 4.15, 1.66]])
     RB, LAM = [float(t) for t in os.environ.get('PLAIT_R', '0.13,0.34').split(',')]
@@ -277,10 +277,12 @@ elif style == 'bob':
             for c in range(3):
                 out_[i, :, c] = np.interp(u, t, S[i, :, c])
         return out_
+    # wavy hair: how far a strand swings to the side and lifts off the head, and the length of a wave
+    WAVE = tuple(float(t) for t in os.environ['BOB_WAVE'].split(',')) if os.environ.get('BOB_WAVE') else None
     _l = [float(t) for t in os.environ.get('BOB_LIFT', '0.07,0.07').split(',')]   # height over the skin: least, and spread
     # how many strands (cards) and their least and greatest width
     BK = int(os.environ.get('BOB_K', '420')); _w = [float(t) for t in os.environ.get('BOB_W', '0.34,0.5').split(',')]
-    S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim)
+    S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim, wave=WAVE)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6)
     print(style, 'cards', nc, 'tris', nt, 'cap coverage', round(cov, 3))
 

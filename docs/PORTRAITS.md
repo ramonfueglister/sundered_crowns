@@ -48,7 +48,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
-| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
+| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), softer jaw for women, redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `jaw_women`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -108,6 +108,15 @@ A mood shows less strongly (`mood` 1 in the dress table, Apoleia's 1.7 was drawn
 mouth on an old face read as a mask.
 The full beard is the dress's own (`beard_full`: `beard_trim`, cut close below the chin, from fewer and broader
 cards): Apoleia's hangs in long single strands that read as wool.
+
+**Curls, plaits, white dots (round 46).** A head with curls wore Apoleia's `curly01`, which reads at the panel's
+size as ridges of short locks: the dress table names its own (`hair_curly`: `bob05`, the hair of 1356 from
+narrower strands that swing and stand off the head; `styles.py` `BOB_WAVE`). The plaits' hairline lies lower and
+the hair above it stands further off (the forehead was high under a flat cap). Single white pixels at the parting
+and the head's outline came from the stage, not from the hair: the light that bleeds round the edge of a shadow
+(`wrap`) also went into three.js' highlight, whose term for grazing angles divides by the angle to the light. The
+wrap now lights the diffuse part only (`materials.ts` `wrapped`); near-white pixels over twelve girls went from
+174 to 0.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

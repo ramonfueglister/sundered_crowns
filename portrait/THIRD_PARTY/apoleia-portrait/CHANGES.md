@@ -48,3 +48,5 @@ crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Ro
 `real_look.rs` `mh_pick`) and `beards` (which beard a dress wears in place of each of Apoleia's; `look.rs`
 `beard_style`), `beard_full` (the file of the full beard, `build.rs`) and `mood` (how strongly a mood shows,
 `morph.rs`; Apoleia's 1.7) in the dress table; Roman bytes unchanged.
+`hair_curly` (England: `bob05`, wavy hair in place of Apoleia's `curly01`; `real_look.rs` `mh_pick`); Roman bytes
+unchanged.

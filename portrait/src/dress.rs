@@ -60,6 +60,8 @@ pub struct DressSet {
     /// too young for the veil.
     pub hair: &'static str,
     /// The same on a head that loses its hair: gone back at the temples, and a horseshoe round a bare top.
+    /// The same on a head with curls (wavy, standing off the head).
+    pub hair_curly: &'static str,
     pub hair_receding: &'static str,
     pub hair_bald: &'static str,
     pub hair_hooded: &'static str,
@@ -109,6 +111,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     veil: "cloth_veil_linen",
     wimple: "cloth_wimple",
     hair: "bob01",
+    hair_curly: "bob05",
     hair_receding: "bob03",
     hair_bald: "bob04",
     hair_hooded: "bob02",

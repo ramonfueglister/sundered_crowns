@@ -181,7 +181,7 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
             } else if bald > 0.4 {
                 p.dress.set().map_or("receding01", |d| bare.map_or(d.hair_hooded, |d| d.hair_receding))
             } else if p.u(CURL) > 0.62 {
-                "curly01"
+                p.dress.set().map_or("curly01", |d| bare.map_or(d.hair_hooded, |d| d.hair_curly))
             } else if let Some(d) = p.dress.set() {
                 // under the hood on the head the hair lies flat
                 if d.hood_of(p.female, p.age, p.seed) == crate::dress::Hood::Up { d.hair_hooded } else { d.hair }

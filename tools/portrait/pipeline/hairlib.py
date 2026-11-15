@@ -153,11 +153,14 @@ def wisps(S, K, rng, iters=12):
     return lab
 
 
-def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7), wmin=0.12, wmax=0.3, arch=0.005):
+def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7), wmin=0.12, wmax=0.3, arch=0.005, wave=None):
     """One card per wisp along its centre line, every column at the centre
     line's height over the skin. width: factor on the wisp's spread; taper:
     end width relative to the root (or a function of the root direction);
-    tile: function(root direction) -> atlas tile."""
+    tile: function(root direction) -> atlas tile. wave: None, or (to the
+    side, off the head, length of a wave): the wisp swings to the side and
+    lifts off the head along its run, each wisp with its own phase (wavy
+    hair, whose outline is not the head's)."""
     steps = S.shape[1] - 1
     cards, tiles = [], []
     for j in range(K):
@@ -175,6 +178,12 @@ def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7)
         tp = taper(n0[0]) if callable(taper) else taper
         w = np.clip(width * np.sqrt((lat ** 2).mean(0)), wmin, wmax) * np.linspace(1.0, tp, steps + 1)
         hcen = np.maximum(np.linalg.norm(c - head.hc, axis=-1) - head.skin(n0), 0.012)
+        if wave is not None:
+            run = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c, axis=0), axis=1))])
+            ramp = np.clip(run / (0.5 * wave[2]), 0, 1)
+            ph = rng.uniform(0, 2 * np.pi, 2)
+            c = c + b * (wave[0] * ramp * np.sin(2 * np.pi * run / wave[2] + ph[0]))[:, None]
+            hcen = hcen + wave[1] * ramp * (0.5 + 0.5 * np.sin(2 * np.pi * run / wave[2] + ph[1]))
         def put(q, extra):
             dd = unit(q - head.hc)
             return head.hc + dd * (head.skin(dd) + hcen + extra)[:, None]

@@ -61,7 +61,14 @@ function blended(m: MeshPhysicalMaterial): void {
 const CARD_OPAQUE = 0.99;
 
 const f = (v: number): string => v.toFixed(3);
-const DIRECT = 'vec3 irradiance = dotNL * directLight.color;';
+const DIFFUSE = 'reflectedLight.directDiffuse += irradiance * diffuseBRDF * ( 1.0 - F );';
+/** three.js' direct lighting with the light bleeding round the edge of the shadow by `wrap` (a vec3 in GLSL), in
+ *  the diffuse part only: the highlight keeps to the lit side (lit by the wrapped light as well, its term for
+ *  grazing angles, which divides by N.L, turned single pixels at the head's outline white). */
+function wrapped(wrap: string): string {
+  return swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE,
+    `vec3 wrapBy = ${wrap}; reflectedLight.directDiffuse += saturate( ( dot( geometryNormal, directLight.direction ) + wrapBy ) / ( 1.0 + wrapBy ) ) * directLight.color * diffuseBRDF * ( 1.0 - F );`);
+}
 const NOISE = `
 varying vec3 vSkinP;
 float skinHash( vec3 p ) { p = fract( p * 0.3183099 + 0.1 ); p *= 17.0; return fract( p.x * p.y * p.z * ( p.x + p.y + p.z ) ); }
@@ -80,8 +87,7 @@ function swap(code: string, piece: string, by: string): string {
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
 function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>): void {
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores, k.pores);
-  const lights = swap(ShaderChunk.lights_physical_pars_fragment, DIRECT,
-    `vec3 wrapSkin = vec3( ${k.wrap.map(f).join(', ')} ); vec3 irradiance = saturate( ( dot( geometryNormal, directLight.direction ) + wrapSkin ) / ( 1.0 + wrapSkin ) ) * directLight.color;`);
+  const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`);
   m.onBeforeCompile = shader => {
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
       '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
@@ -100,8 +106,7 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
  *  its shaded side as the cards are. Its image is far darker than the cards' (it holds the shade between the hairs),
  *  which at a low exposure turns a brown beard black. */
 function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>): void {
-  const lights = swap(ShaderChunk.lights_physical_pars_fragment, DIRECT,
-    `vec3 irradiance = saturate( ( dot( geometryNormal, directLight.direction ) + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) * directLight.color;`);
+  const lights = wrapped(`vec3( ${f(k.wrap)} )`);
   m.onBeforeCompile = shader => {
     const code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= ${f(k.tone)};`);
