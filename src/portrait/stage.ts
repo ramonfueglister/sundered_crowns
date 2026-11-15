@@ -19,8 +19,6 @@ import type { Portrait } from './wire';
 
 /** Width and height of a portrait in the game at scale 1 (Apoleia's 4:5), and of the picture drawn for it. */
 export const PORTRAIT_SIZE = { width: 112, height: 140 } as const;
-/** The head is turned a little to the left. */
-const TURN = -0.35;
 /** Vertical field of view of the camera in degrees. */
 const FOV = 22;
 /** The shadow of the key light: pixels of its map, and how dark it falls (1 = no key light in the shadow). Measured,
@@ -137,11 +135,11 @@ export class PortraitStage {
     const h = Math.max(0.8, p.top - p.chin), hv = h / p.fill;
     const cy = p.top - 0.36 * hv, dist = (hv * 0.5) / Math.tan((FOV / 2) * Math.PI / 180);
     this.pivot.position.set(p.cx, 0, p.cz);
-    this.pivot.rotation.y = TURN;
+    this.pivot.rotation.y = profile.turn;
     inner.position.set(-p.cx, 0, -p.cz);
     this.pivot.add(inner);
     const at = new Vector3(p.cx, cy, p.cz);
-    this.camera.position.set(p.cx, cy + 0.08 * hv, p.cz + dist);
+    this.camera.position.set(p.cx, cy + profile.rise * hv, p.cz + dist);
     this.camera.lookAt(at);
     for (const k of Object.keys(this.lights) as (keyof StageProfile['lights'])[]) {
       const l = this.lights[k], f = profile.lights[k].from;

@@ -14,6 +14,10 @@ export interface StageProfile {
   lights: { key: StageLight; rim: StageLight; fill: StageLight };
   sky: { top: string; ground: string; energy: number };
   exposure: number;
+  /** How far the head is turned to the left (radians), and how far above the point it looks at the camera stands
+   *  (in heights of the picture's view: above 0 it looks down on the face). */
+  turn: number;
+  rise: number;
   /** Sharpness of the images seen at a slant (anisotropic filtering, 1 = off). */
   anisotropy: number;
   /** Skin: null leaves it as the builder gives it. Else roughness, Godot's "specular", strength of the pores'
@@ -42,6 +46,7 @@ export const APOLEIA: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.75 },
   exposure: 0.92,
+  turn: -0.35, rise: 0.08,
   anisotropy: 1,
   skin: null, eye: null, brow: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
@@ -59,6 +64,7 @@ export const ENGLAND_1356: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.55 },
   exposure: 0.8,
+  turn: -0.24, rise: 0.02,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.24, 0.16, 0.12], blotch: 0.11, speckle: 0.10, colour: 0.82 },
   eye: { lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.25, 1.23, 1.2], colour: 0.85, rough: 0.2, specular: 1.0 },
