@@ -70,6 +70,8 @@ export interface Stage {
   aim(x: number, z: number, frameW: number, elevation: number): void;
   /** Asks for a new picture. */
   redraw(): void;
+  /** The point of the ground under a point of the page, in the stage's blocks; none where the picture shows no ground. */
+  pick(px: number, py: number): [number, number, number] | null;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
   probe: { ready: boolean; counts: Record<string, number>; backend: string; /** pictures drawn in the last second, while figures walk */ fps?: number };
   /** more is still to come onto the stage (true until the page says otherwise) */
@@ -202,7 +204,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape || !shape.pos.length) continue;
         const mesh = new THREE.Mesh(geometry(shape), material);
-        mesh.castShadow = casts; mesh.receiveShadow = true;
+        mesh.castShadow = casts; mesh.receiveShadow = true; mesh.userData.ground = shape === built.ground;
         group.add(mesh);
       }
       if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); showFigures(frameW); }
@@ -220,6 +222,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
     redraw() { pending = Math.max(pending, 1); },
+    pick(px, py) {
+      const box = canvas.getBoundingClientRect(), ray = new THREE.Raycaster(), grounds: THREE.Object3D[] = [];
+      ray.setFromCamera(new THREE.Vector2(((px - box.left) / box.width) * 2 - 1, 1 - ((py - box.top) / box.height) * 2), camera);
+      scene.traverseVisible((thing) => { if (thing.userData.ground) grounds.push(thing); });
+      const hit = ray.intersectObjects(grounds, false)[0];
+      return hit ? [hit.point.x, hit.point.y, hit.point.z] : null;
+    },
   };
   (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
   let drawn = 0, since = performance.now();

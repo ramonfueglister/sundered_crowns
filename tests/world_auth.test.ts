@@ -37,7 +37,15 @@ describe('HS256 tokens', () => {
     const u = await authenticate({ token: signHs256(good, SECRET) }, hsCfg, new NullStore());
     expect(u).toEqual({ uid: UID, name: 'alice', admin: false });
     expect(await authenticate({ token: signHs256({ ...good, role: 'anon' }, SECRET) }, hsCfg, new NullStore())).toHaveProperty('error');
-    expect(await authenticate({ name: 'Mallory' }, hsCfg, new NullStore())).toHaveProperty('error');
+    // a name alone signs nobody in: without a token one only watches
+    const m = await authenticate({ name: 'Mallory' }, hsCfg, new NullStore());
+    expect(m).toMatchObject({ name: 'Observer', admin: false, observer: true });
+  });
+  it('lets anyone watch without signing in, each connection under an id of its own', async () => {
+    const a = await authenticate({}, hsCfg, new NullStore()), b = await authenticate({}, hsCfg, new NullStore());
+    expect(a).toMatchObject({ observer: true, admin: false });
+    expect((a as { uid: string }).uid).toMatch(/^watch-/);
+    expect((a as { uid: string }).uid).not.toBe((b as { uid: string }).uid);
   });
 });
 
