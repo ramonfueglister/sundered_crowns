@@ -8,5 +8,6 @@ test-results/
 playwright-report/
 world-data/
 build/
+__pycache__/
 economy/target/
 portrait/target/

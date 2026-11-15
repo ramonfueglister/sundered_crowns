@@ -6,7 +6,9 @@ never simulate. The world has no end date: it runs one day per `SECONDS_PER_DAY`
 
 ## State as entity tables (ECS)
 - **Entities** are row numbers. Places are the fixed rows 0 … L − 1 of the map; realms (and later population groups,
-  firms, markets, routes) live in tables (`src/sim/ecs.ts`) whose rows are reused when an entity goes.
+  firms, markets, routes) live in tables (`src/sim/ecs.ts`) whose rows are reused when an entity goes. Persons and
+  families (`state.person`, `state.family`, docs/PEOPLE_DESIGN.md) are the exception: their rows are never freed, so a
+  person id stays the same person for ever (parents, families and portraits point at it).
 - **Components** are dense typed arrays, one per property (`state.place.owner`, `state.realm.cols.capital`, …). Strings
   sit in plain arrays beside a table (`realmText`).
 - **Systems** (`src/sim/systems/`) are functions that run in a fixed order once per day (`src/sim/schedule.ts`).

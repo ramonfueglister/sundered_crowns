@@ -2,7 +2,7 @@
 // who owns which place, the realms with their capitals, colours, cultures and faiths, and how many people live where.
 import type { World } from './world';
 import type { WorldState, RealmText } from './state';
-import { STATE_VERSION, REALM_SCHEMA, RANKS } from './state';
+import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA } from './state';
 import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
 import { ALL_CULTURES, FAITH_INDEX } from './content/peoples';
@@ -10,6 +10,7 @@ import type { I18n } from './i18n';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
+import { fitPlacesToCities, foundPeople } from './systems/people';
 
 export interface SetupRealm {
   id: string; name: I18n; short?: I18n; adjective?: I18n; rank?: string; culture?: string; faith?: string; color?: string; capital_loc?: number;
@@ -63,8 +64,12 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
   const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
-    place, realm, realmText, ruler: new Array(realm.size).fill(''), economy: { england: null },
+    place, realm, realmText, ruler: new Array(realm.size).fill(''),
+    economy: { england: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
+    // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
+  if (s.startYear === 1356) fitPlacesToCities(s); // no place is smaller than its cities
+  foundPeople(s);
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   foundEconomy(s, w);
   return s;

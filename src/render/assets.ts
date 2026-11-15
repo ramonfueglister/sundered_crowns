@@ -15,7 +15,7 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
 }
 
 /** Gunzip unless the server already removed the gzip layer (Content-Encoding). */
-async function maybeGunzip(b: Uint8Array): Promise<Uint8Array> {
+export async function maybeGunzip(b: Uint8Array): Promise<Uint8Array> {
   if (b.length < 2 || b[0] !== 0x1f || b[1] !== 0x8b) return b;
   if (typeof DecompressionStream !== 'undefined') {
     try {
