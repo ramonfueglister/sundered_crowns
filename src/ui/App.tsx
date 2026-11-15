@@ -1,9 +1,9 @@
 // Application shell: the map of the world with the HUD (banner, value bar, map tools) and the panel of the selected place.
-// Anyone sees the world at once as an observer; signing in (magic link) is needed only to take up a crown (Ramon, 15 November 2026).
+// For now everyone only watches the world (Ramon, 15 November 2026: "im moment nur zuschauer möglichkeit"): the game opens at
+// once as an observer and offers no sign-in. The server still knows players (src/online, server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
-import { computed, signal } from '@preact/signals';
+import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
-import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
@@ -14,24 +14,14 @@ import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
-/** true while the sign-in box is open over the world */
-const signingIn = signal(false);
-
-/** Connects as the signed-in player when there is a Supabase session, else as an observer. */
-async function enter() {
-  const token = online.available && session.value ? await accessToken() : null;
-  disconnect();
-  connect(token ? { token } : {});
-}
 
 export function App() {
   const st = status.value;
-  // watch at once; a session (after the magic link) reconnects as the player
-  useEffect(() => { if (online.available) void enter(); }, [session.value]);
-  const gate = st === 'refused' || signingIn.value || (!online.available && st === 'idle');
+  // watch at once, as an observer
+  useEffect(() => { connect({}); return () => disconnect(); }, []);
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
-    {gate ? <SignIn /> : <>
+    {st === 'refused' ? <Refused /> : <>
       <MapView />
       <Music />
       <TopBar />
@@ -107,29 +97,16 @@ function LangSwitch() {
   return <button class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>;
 }
 
-function SignIn() {
-  const [name, setName] = useState(''), [email, setEmail] = useState(''), [note, setNote] = useState<string | null>(null);
-  useEffect(() => { if (session.value) signingIn.value = false; }, [session.value]);
+/** What the server said when it turned the game away (an old client after an update, too many connections). */
+function Refused() {
   return <div class="menu">
     <div class="menu-bg" />
     <div class="menu-box">
       <h1>{t('title')}</h1>
       <p class="muted">{t('tagline')}</p>
       {refusal.value && <p class="neg">{refusal.value}</p>}
-      {online.available ? <>
-        {session.value
-          ? <><p>{profile.value?.display_name ?? session.value.user.email}</p><button class="btn" onClick={() => signOut()}>{t('sign_out')}</button></>
-          : <form onSubmit={async (e) => { e.preventDefault(); const er = await signInWithEmail(email); setNote(er ?? t('link_sent')); }}>
-            <input class="field" type="email" placeholder={t('email')} value={email} onInput={(e) => setEmail((e.target as HTMLInputElement).value)} />
-            <button class="btn big gold" type="submit">{t('send_link')}</button>
-            {note && <p class="muted">{note}</p>}
-          </form>}
-      </> : <form onSubmit={(e) => { e.preventDefault(); connect({ name }); }}>
-        <p class="muted">{t('dev_login')}</p>
-        <input class="field" placeholder={t('display_name')} value={name} maxLength={24} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-        <button class="btn big gold" type="submit" disabled={name.trim().length < 3}>{t('enter')}</button>
-      </form>}
-      <div class="menu-foot">{online.available && status.value !== 'refused' && <button class="btn small" onClick={() => { signingIn.value = false; }}>{t('back_to_world')}</button>} <LangSwitch /></div>
+      <button class="btn big gold" onClick={() => location.reload()}>{t('reload')}</button>
+      <div class="menu-foot"><LangSwitch /></div>
     </div>
   </div>;
 }
@@ -151,9 +128,6 @@ function TopBar() {
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />
       {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
-      {me.value?.observer
-        ? <button class="menu-item" onClick={() => { signingIn.value = true; }}>{t('sign_in_to_play')}</button>
-        : <button class="menu-item" onClick={() => { disconnect(); if (online.available) void signOut(); }}>{t('sign_out')}</button>}
       {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
       <p class="credit">{t('music_credit')}</p>
     </div>}
@@ -215,9 +189,7 @@ function PlacePanel() {
       <h3>{L(r.name)}</h3>
       <p>{t('places')}: {num(r.places)}</p>
       <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>
-      {!r.ruler && m && m.realm < 0 && (m.observer
-        ? <button class="btn big gold" onClick={() => { signingIn.value = true; }}>{t('sign_in_to_play')}</button>
-        : <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>)}
+      {!r.ruler && m && m.realm < 0 && !m.observer && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
     </div>}
   </aside>;
 }
