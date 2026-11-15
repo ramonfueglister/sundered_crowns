@@ -2,7 +2,8 @@
 
 Every realm keeps the hue it was given (its heraldic or customary colour: England red, France blue, Castile gold),
 moved only as far as needed so that neighbours stand apart. Lightness and chroma are chosen inside the atlas band
-(OKLCH L 0.44 ... 0.67, C 0.03 ... 0.11; land there: L median 0.50, 5-95 % 0.37 ... 0.67, C median 0.045, measured on karte/referenz-eu5/eu5-atlas-europa.png).
+(OKLCH L 0.37 ... 0.56, C 0.02 ... 0.095), measured on karte/referenz-eu5/eu5-weltkarte-1337.png: realms of Europe
+L 5-50-95 % 0.37 / 0.46 / 0.53, C 0.021 / 0.055 / 0.094; sea #4d5e6a (L 0.47), land without a realm #7a716b (L 0.555).
 
 Method: perceptual graph colouring. The realms' adjacency is weighted by the length of their common border
 (public/data/geo.json edges). The cost of a colouring is
@@ -18,22 +19,49 @@ import json, math, os, sys, glob, random
 from collections import defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-D = 0.11            # neighbours closer than this in OKLab are pushed apart
-L_LOW, L_HIGH, L0 = 0.44, 0.67, 0.55
-C_LOW, C_HIGH, C0 = 0.03, 0.11, 0.065
+D_SMALL = 0.16      # ... and two small realms closer than this
+D = 0.1            # neighbours closer than this in OKLab are pushed apart
+L_LOW, L_HIGH, L0 = 0.37, 0.56, 0.48
+C_LOW, C_HIGH, C0 = 0.02, 0.095, 0.055
 K_HUE, K_BAND = 0.9, 0.6
+GREAT = 4           # realms this many times the median size keep their hue fully (weight sqrt(size)); smaller ones less
 ROUNDS, CANDIDATES = 40, 60
 
-# The great realms keep the colour they have on the atlas reference (karte/referenz-eu5), read by eye from it, since
-# the reference is a dim, blurred photograph whose patches mix in names and border glow; sampled patches are in
-# docs/map/political-map.md. Lightness lies in the atlas band.
+# The realms that the reference shows keep its colour: the median of a 9 x 9 patch inside each (ink left out) of
+# karte/referenz-eu5/eu5-weltkarte-1337.png, sampled by tools/map/ref_anchors.py.
 ANCHORS = {
-    'france': '#3d3f8c', 'england': '#9a5242', 'scotland': '#a29a42', 'castile': '#b08a3c', 'portugal': '#4f8088',
-    'aragon': '#9c6448', 'sweden': '#3f8aa0', 'denmark': '#94504b', 'hungary': '#9b7559',
-    'poland': '#a06872', 'lithuania': '#977a98', 'bohemia': '#a08a55', 'serbia': '#8c3b34', 'bulgaria': '#9b8b70',
-    'wallachia': '#7b96ad', 'naples': '#9a4f8a', 'sicily': '#a39b3c', 'novgorod': '#8b9a52', 'golden_horde': '#ae923f',
-    'mamluk': '#b98549', 'granada': '#9a9a80', 'kiev': '#7888ad', 'byzantium': '#7b4f87',
-    'ottoman': '#5d8a6b', 'venice': '#3f7d70', 'papal_states': '#b6ae86', 'teutonic_order': '#6e6e74', 'moscow': '#6f8c50',
+    'alodia': '#67676f',
+    'aragon': '#6e4b4b',
+    'bohemia': '#6f663c',
+    'castile': '#816627',
+    'cyprus': '#236355',
+    'england': '#82453f',
+    'france': '#39376e',
+    'georgia': '#744242',
+    'golden_horde': '#7d6c42',
+    'great_perm': '#826c53',
+    'hafsid_tunis': '#6d6646',
+    'hungary': '#6f5553',
+    'jalayirid': '#6a7260',
+    'kiev': '#526077',
+    'lithuania': '#6f4e5b',
+    'makuria': '#745142',
+    'mali': '#74746b',
+    'mamluk': '#75623f',
+    'marinid': '#765c47',
+    'moscow': '#523c55',
+    'naples': '#2d5664',
+    'norway': '#5f6d73',
+    'novgorod': '#62643d',
+    'poland': '#705156',
+    'portugal': '#3f5b64',
+    'serbia': '#733330',
+    'sicily': '#575711',
+    'sweden': '#325b6b',
+    'teutonic_order': '#615a5c',
+    'volhynia': '#7a3e3a',
+    'vyatka': '#606e7b',
+    'wallachia': '#536b7f',
 }
 
 
@@ -108,7 +136,7 @@ def main():
         weight[(min(oa, ob), max(oa, ob))] += max(1, c)
     # the sea and land without a realm are neighbours of fixed colour (paint.ts SEA and SAND)
     fixed = defaultdict(list)
-    sea_c, sand_c = to_oklch('#4f6d83'), to_oklch('#a69884')
+    sea_c, sand_c = to_oklch('#4d5e6a'), to_oklch('#7a716b')
     shore, wild = defaultdict(float), defaultdict(float)
     for a, b, kind, c, _ in geo['edges']:
         if kind == 1:
@@ -139,7 +167,10 @@ def main():
 
     def own_cost(i, p):
         l, c, h = p
-        big = math.sqrt(size[i] / smed) if size[i] > 0 else 0.3
+        # big realms keep their customary hue; the small ones (the confetti of the Empire and Italy) may take any hue
+        # that sets them apart, as on the reference, where they show every hue
+        r = size[i] / smed
+        big = min(1, r / GREAT) * math.sqrt(r) if r > 0 else 0.01
         if i in pinned:
             return 30 * (dist(p, orig[i]) / 0.03) ** 2
         return big * K_HUE * (hue_shift(h, orig[i][2]) / 60) ** 2 + K_BAND * (((l - L0) / 0.12) ** 2 + ((c - C0) / 0.035) ** 2) * 0.05
@@ -147,8 +178,10 @@ def main():
     def pair_cost(i, p):
         s = 0.0
         for j, w in nb[i]:
-            gap = max(0.0, D - dist(p, cur[j]))
-            s += (w / wmed) ** 0.5 * (gap / D) ** 2 * 10
+            # two small neighbours stand further apart: the confetti of small realms shows every hue, as on the reference
+            d = D_SMALL if size[i] < GREAT * smed and size[j] < GREAT * smed else D
+            gap = max(0.0, d - dist(p, cur[j]))
+            s += (w / wmed) ** 0.5 * (gap / d) ** 2 * 10
         for q, w in fixed[i]:
             gap = max(0.0, D - dist(p, q))
             s += (w / wmed) ** 0.5 * (gap / D) ** 2 * 10

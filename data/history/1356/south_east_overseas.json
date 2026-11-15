@@ -84,7 +84,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#5d8a6b",
+   "color": "#457f5c",
    "capital": {
     "name": "Bursa",
     "lat": 40.183,
@@ -260,7 +260,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#33643d",
+   "color": "#236137",
    "capital": {
     "name": "Larende",
     "lat": 37.18,
@@ -381,7 +381,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#846440",
+   "color": "#8b6843",
    "capital": {
     "name": "Kütahya",
     "lat": 39.42,
@@ -491,7 +491,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#6f94b8",
+   "color": "#4d789f",
    "capital": {
     "name": "Ayasoluk",
     "lat": 37.95,
@@ -609,7 +609,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#a99067",
+   "color": "#514120",
    "capital": {
     "name": "Magnesia",
     "lat": 38.61,
@@ -719,7 +719,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#299382",
+   "color": "#194c42",
    "capital": {
     "name": "Milas",
     "lat": 37.32,
@@ -827,7 +827,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#694778",
+   "color": "#523a5b",
    "capital": {
     "name": "Kastamonu",
     "lat": 41.38,
@@ -936,7 +936,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#979b4d",
+   "color": "#424226",
    "capital": {
     "name": "Eğirdir",
     "lat": 37.87,
@@ -1044,7 +1044,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#906253",
+   "color": "#8a6153",
    "capital": {
     "name": "Antalya",
     "lat": 36.89,
@@ -1147,7 +1147,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#7b89b3",
+   "color": "#65739c",
    "capital": {
     "name": "Kayseri",
     "lat": 38.72,
@@ -1271,7 +1271,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#896f57",
+   "color": "#a25b56",
    "capital": {
     "name": "Elbistan",
     "lat": 38.2,
@@ -1362,7 +1362,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#727947",
+   "color": "#4e8264",
    "capital": {
     "name": "Yüreğir plain",
     "lat": 36.95,
@@ -1462,7 +1462,7 @@
    "government": "feudal_monarchy",
    "culture": "armenian",
    "faith": "armenian_apostolic",
-   "color": "#734b07",
+   "color": "#5e4018",
    "capital": {
     "name": "Sis",
     "lat": 37.45,
@@ -1572,7 +1572,7 @@
    "government": "feudal_monarchy",
    "culture": "egyptian_arab",
    "faith": "sunni",
-   "color": "#ba8447",
+   "color": "#756138",
    "capital": {
     "name": "Cairo",
     "lat": 30.044,
@@ -1791,7 +1791,7 @@
    "government": "theocracy",
    "culture": "hejazi",
    "faith": "shia",
-   "color": "#5f8d6f",
+   "color": "#2a7754",
    "capital": {
     "name": "Mecca",
     "lat": 21.422,
@@ -1895,7 +1895,7 @@
    "government": "feudal_monarchy",
    "culture": "yemeni",
    "faith": "sunni",
-   "color": "#a76c77",
+   "color": "#5a343b",
    "capital": {
     "name": "Ta'izz",
     "lat": 13.58,
@@ -2010,7 +2010,7 @@
    "government": "theocracy",
    "culture": "yemeni",
    "faith": "shia",
-   "color": "#4e6139",
+   "color": "#3d4e2a",
    "capital": {
     "name": "Sa'da",
     "lat": 16.94,
@@ -2098,7 +2098,7 @@
    "government": "feudal_monarchy",
    "culture": "bedouin",
    "faith": "ibadi",
-   "color": "#7d514a",
+   "color": "#844a3e",
    "capital": {
     "name": "Bahla",
     "lat": 22.96,
@@ -2188,7 +2188,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#4f93a4",
+   "color": "#327f95",
    "capital": {
     "name": "Hormuz",
     "lat": 27.1,
@@ -2296,7 +2296,7 @@
    "government": "feudal_monarchy",
    "culture": "iraqi_arab",
    "faith": "sunni",
-   "color": "#6f91be",
+   "color": "#657461",
    "capital": {
     "name": "Baghdad",
     "lat": 33.31,
@@ -2448,7 +2448,7 @@
    "government": "feudal_monarchy",
    "culture": "mongol",
    "faith": "sunni",
-   "color": "#b98380",
+   "color": "#985c58",
    "capital": {
     "name": "Tabriz",
     "lat": 38.08,
@@ -2589,7 +2589,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#9c6e40",
+   "color": "#573b1d",
    "capital": {
     "name": "Shiraz",
     "lat": 29.61,
@@ -2725,7 +2725,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#678e75",
+   "color": "#074e2f",
    "capital": {
     "name": "Isfahan",
     "lat": 32.65,
@@ -2814,7 +2814,7 @@
    "government": "city_republic",
    "culture": "persian",
    "faith": "shia",
-   "color": "#307171",
+   "color": "#2f6464",
    "capital": {
     "name": "Sabzevar",
     "lat": 36.21,
@@ -2918,7 +2918,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#926c9b",
+   "color": "#513b57",
    "capital": {
     "name": "Astarabad",
     "lat": 36.84,
@@ -2999,7 +2999,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#7c4a33",
+   "color": "#86472e",
    "capital": {
     "name": "Herat",
     "lat": 34.35,
@@ -3112,7 +3112,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "shia",
-   "color": "#61522a",
+   "color": "#705604",
    "capital": {
     "name": "Erciş",
     "lat": 39.03,
@@ -3214,7 +3214,7 @@
    "government": "tribal_federation",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#88784a",
+   "color": "#7e734d",
    "capital": {
     "name": "Bayburt",
     "lat": 40.26,
@@ -3312,7 +3312,7 @@
    "government": "feudal_monarchy",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#906645",
+   "color": "#563f2c",
    "capital": {
     "name": "Mardin",
     "lat": 37.31,
@@ -3416,7 +3416,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#a6534b",
+   "color": "#775943",
    "capital": {
     "name": "Fez",
     "lat": 34.06,
@@ -3599,7 +3599,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#6e5d2c",
+   "color": "#6c6642",
    "capital": {
     "name": "Tunis",
     "lat": 36.8,
@@ -3718,7 +3718,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#9e8060",
+   "color": "#54402a",
    "capital": {
     "name": "Constantine",
     "lat": 36.37,
@@ -3807,7 +3807,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#718954",
+   "color": "#3f4e2c",
    "capital": {
     "name": "Gabès",
     "lat": 33.88,
@@ -3894,7 +3894,7 @@
    "government": "tribal_federation",
    "culture": "guanche",
    "faith": "african_traditional",
-   "color": "#8b6c42",
+   "color": "#726132",
    "capital": {
     "name": "Taoro",
     "lat": 28.39,
@@ -3984,7 +3984,7 @@
    "government": "tribal_federation",
    "culture": "guanche",
    "faith": "african_traditional",
-   "color": "#9a6b47",
+   "color": "#7e5c38",
    "capital": {
     "name": "Gáldar",
     "lat": 28.15,
@@ -4069,7 +4069,7 @@
    "government": "tribal_federation",
    "culture": "guanche",
    "faith": "african_traditional",
-   "color": "#8b7351",
+   "color": "#806b4b",
    "capital": {
     "name": "Zonzamas",
     "lat": 29.05,
@@ -4145,7 +4145,7 @@
    "government": "feudal_monarchy",
    "culture": "mande",
    "faith": "sunni",
-   "color": "#866e26",
+   "color": "#727768",
    "capital": {
     "name": "Niani",
     "lat": 11.38,
@@ -4292,7 +4292,7 @@
    "government": "feudal_monarchy",
    "culture": "wolof",
    "faith": "african_traditional",
-   "color": "#495b3b",
+   "color": "#3a5029",
    "capital": {
     "name": "Yang-Yang",
     "lat": 15.3,
@@ -4378,7 +4378,7 @@
    "government": "feudal_monarchy",
    "culture": "kanuri",
    "faith": "sunni",
-   "color": "#9c7a2d",
+   "color": "#524529",
    "capital": {
     "name": "Njimi",
     "lat": 14.0,
@@ -4479,7 +4479,7 @@
    "government": "feudal_monarchy",
    "culture": "hausa",
    "faith": "african_traditional",
-   "color": "#984f2e",
+   "color": "#84453b",
    "capital": {
     "name": "Kano",
     "lat": 12.0,
@@ -4560,7 +4560,7 @@
    "government": "feudal_monarchy",
    "culture": "hausa",
    "faith": "african_traditional",
-   "color": "#60513d",
+   "color": "#7a5e14",
    "capital": {
     "name": "Katsina",
     "lat": 12.99,
@@ -4640,7 +4640,7 @@
    "government": "feudal_monarchy",
    "culture": "amhara",
    "faith": "ethiopian",
-   "color": "#60865e",
+   "color": "#2c492c",
    "capital": {
     "name": "Tegulet",
     "lat": 9.7,
@@ -4775,7 +4775,7 @@
    "government": "feudal_monarchy",
    "culture": "somali",
    "faith": "sunni",
-   "color": "#775f26",
+   "color": "#695623",
    "capital": {
     "name": "Ifat",
     "lat": 10.1,
@@ -4871,7 +4871,7 @@
    "government": "feudal_monarchy",
    "culture": "nubian",
    "faith": "coptic",
-   "color": "#795143",
+   "color": "#754f41",
    "capital": {
     "name": "Dongola",
     "lat": 18.22,
@@ -4949,7 +4949,7 @@
    "government": "feudal_monarchy",
    "culture": "nubian",
    "faith": "coptic",
-   "color": "#a26e5b",
+   "color": "#65676f",
    "capital": {
     "name": "Soba",
     "lat": 15.52,
@@ -5018,7 +5018,7 @@
    "government": "feudal_monarchy",
    "culture": "swahili",
    "faith": "sunni",
-   "color": "#44978b",
+   "color": "#1c4a43",
    "capital": {
     "name": "Kilwa Kisiwani",
     "lat": -8.96,
@@ -5117,7 +5117,7 @@
    "government": "feudal_monarchy",
    "culture": "shona",
    "faith": "african_traditional",
-   "color": "#906657",
+   "color": "#724d40",
    "capital": {
     "name": "Great Zimbabwe",
     "lat": -20.27,
@@ -5200,7 +5200,7 @@
    "government": "feudal_monarchy",
    "culture": "edo",
    "faith": "african_traditional",
-   "color": "#8f554e",
+   "color": "#894942",
    "capital": {
     "name": "Edo (Benin City)",
     "lat": 6.34,
@@ -5280,7 +5280,7 @@
    "government": "theocracy",
    "culture": "yoruba",
    "faith": "african_traditional",
-   "color": "#bb6f4a",
+   "color": "#5a3829",
    "capital": {
     "name": "Ile-Ife",
     "lat": 7.48,
@@ -5360,7 +5360,7 @@
    "government": "feudal_monarchy",
    "culture": "nahua",
    "faith": "mesoamerican",
-   "color": "#8a7cad",
+   "color": "#4c3c67",
    "capital": {
     "name": "Azcapotzalco",
     "lat": 19.48,
@@ -5464,7 +5464,7 @@
    "government": "tribal_federation",
    "culture": "nahua",
    "faith": "mesoamerican",
-   "color": "#3f8189",
+   "color": "#15616e",
    "capital": {
     "name": "Tenochtitlan",
     "lat": 19.435,
@@ -5545,7 +5545,7 @@
    "government": "feudal_monarchy",
    "culture": "nahua",
    "faith": "mesoamerican",
-   "color": "#4b663a",
+   "color": "#3a4e2d",
    "capital": {
     "name": "Texcoco",
     "lat": 19.51,
@@ -5643,7 +5643,7 @@
    "government": "elective_monarchy",
    "culture": "maya",
    "faith": "mesoamerican",
-   "color": "#308b74",
+   "color": "#2a866f",
    "capital": {
     "name": "Mayapan",
     "lat": 20.63,
@@ -5831,7 +5831,7 @@
    "government": "tribal_federation",
    "culture": "taino",
    "faith": "american_traditional",
-   "color": "#0b624d",
+   "color": "#274b3f",
    "capital": {
     "name": "Xaraguá",
     "lat": 18.51,
@@ -5914,7 +5914,7 @@
    "government": "tribal_federation",
    "culture": "taino",
    "faith": "american_traditional",
-   "color": "#54938c",
+   "color": "#43817b",
    "capital": {
     "name": "Maguá",
     "lat": 19.22,
@@ -5997,7 +5997,7 @@
    "government": "tribal_federation",
    "culture": "taino",
    "faith": "american_traditional",
-   "color": "#5f948e",
+   "color": "#4b807a",
    "capital": {
     "name": "Caguana",
     "lat": 18.3,
@@ -6080,7 +6080,7 @@
    "government": "tribal_federation",
    "culture": "mississippian",
    "faith": "american_traditional",
-   "color": "#7c4a39",
+   "color": "#7e4c3a",
    "capital": {
     "name": "Moundville",
     "lat": 33.0,
@@ -6163,7 +6163,7 @@
    "government": "tribal_federation",
    "culture": "mississippian",
    "faith": "american_traditional",
-   "color": "#996e5b",
+   "color": "#523a30",
    "capital": {
     "name": "Etowah",
     "lat": 34.13,
@@ -6246,7 +6246,7 @@
    "government": "tribal_federation",
    "culture": "mississippian",
    "faith": "american_traditional",
-   "color": "#ac6047",
+   "color": "#6a483e",
    "capital": {
     "name": "Spiro",
     "lat": 35.31,
@@ -6329,7 +6329,7 @@
    "government": "tribal_federation",
    "culture": "iroquoian",
    "faith": "american_traditional",
-   "color": "#907aa7",
+   "color": "#785a92",
    "capital": {
     "name": "Onondaga country",
     "lat": 42.95,
@@ -6419,7 +6419,7 @@
    "government": "tribal_federation",
    "culture": "iroquoian",
    "faith": "american_traditional",
-   "color": "#65466a",
+   "color": "#563a5b",
    "capital": {
     "name": "Hochelaga",
     "lat": 45.5,
@@ -6500,7 +6500,7 @@
    "government": "tribal_federation",
    "culture": "algonquian",
    "faith": "american_traditional",
-   "color": "#678967",
+   "color": "#324e32",
    "capital": {
     "name": "Delaware valley",
     "lat": 40.75,
@@ -6679,7 +6679,7 @@
    "government": "feudal_monarchy",
    "culture": "chimu",
    "faith": "andean",
-   "color": "#8c5f53",
+   "color": "#64382c",
    "capital": {
     "name": "Chan Chan",
     "lat": -8.11,
@@ -6785,7 +6785,7 @@
    "government": "tribal_federation",
    "culture": "muisca",
    "faith": "american_traditional",
-   "color": "#857246",
+   "color": "#513e0a",
    "capital": {
     "name": "Bacatá",
     "lat": 4.72,
@@ -6868,7 +6868,7 @@
    "government": "tribal_federation",
    "culture": "muisca",
    "faith": "american_traditional",
-   "color": "#724d35",
+   "color": "#71513d",
    "capital": {
     "name": "Hunza",
     "lat": 5.54,
@@ -6953,7 +6953,7 @@
    "government": "tribal_federation",
    "culture": "tupi",
    "faith": "american_traditional",
-   "color": "#5d855a",
+   "color": "#2c5230",
    "capital": {
     "name": "Bahia coast",
     "lat": -12.97,
@@ -7043,7 +7043,7 @@
    "government": "tribal_federation",
    "culture": "guarani",
    "faith": "american_traditional",
-   "color": "#577754",
+   "color": "#3b6438",
    "capital": {
     "name": "Paraguay river",
     "lat": -25.28,

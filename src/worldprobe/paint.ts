@@ -22,28 +22,31 @@ export interface Realms {
 export interface Beyond { water: Uint8Array; w: number; h: number; cells: number; x0: number; y0: number }
 
 // ---------------------------------------------------------------- colours (sRGB 0 … 255 as measured, used linear)
-/** the sea, and the shallow along the coasts (EU5 atlas: open sea 83,114,135; the shallow ~ 112,140,156) */
-const SEA = lin([79, 109, 131]), SHALLOW = lin([116, 145, 161]), ZONE_LINE = lin([66, 92, 112]);
+// Measured on the EU5 reference (karte/referenz-eu5/eu5-weltkarte-1337.png, medians of open patches): open sea
+// 77,94,106; the haze along a coast at most 88,107,121; land without a realm 122,113,107; a realm's border a line of
+// its own colour about 12 % darker; inside a realm faint lines between its places; no dark line along the coasts.
+/** the sea, and the light haze along the coasts */
+const SEA = lin([77, 94, 106]), SHALLOW = lin([89, 108, 122]), ZONE_LINE = lin([70, 86, 98]);
 /** land that no realm holds */
-const SAND = lin([166, 152, 132]);
-/** the lines: between realms (their colour darkened this far), at the coast (land side), between sea zones */
-const LINE_DARK = 0.42, COAST_DARK = 0.7, SEA_ZONE_LINE = 0.5;
-/** a realm's colour on the map: lightness and chroma (OKLCH) are held in the atlas' muted band */
-const L_LOW = 0.42, L_HIGH = 0.7, C_MOST = 0.115;
-/** as in the atlas, a realm is paler inside (lighter, less chroma) and its own colour glows strongest along its border */
-const INNER_LIGHT = 0.035, INNER_CHROMA = 0.7, RIM_DARK = 0.05, RIM_CHROMA = 1.35;
+const SAND = lin([122, 113, 107]);
+/** the lines: at a realm's edge (its edge colour darkened this far), at the coast of land without a realm, between a realm's own places, between sea zones */
+const LINE_DARK = 0.86, SAND_COAST = 0.9, PLACE_DARK = 0.93, SEA_ZONE_LINE = 0.35;
+/** a realm's colour on the map: lightness and chroma (OKLCH) are held in the reference's band (L 0.37 … 0.56) */
+const L_LOW = 0.36, L_HIGH = 0.58, C_MOST = 0.1;
+/** a realm is flat inside; only a narrow seam along its border is a little darker and fuller in its own hue */
+const RIM_DARK = 0.035, RIM_CHROMA = 1.15, RIM_STRENGTH = 0.45;
 /** the place picked out: its colour lightened this far towards white, inside a line of this colour */
 const CHOSEN_LIGHT = 0.45, CHOSEN_LINE: RGB = [1, 0.86, 0.5];
-/** how strongly the map covers the world below it: a trace of the relief shows through */
-const COVER = 0.95;
+/** how strongly the map covers the world below it: wholly, flat as the reference's atlas */
+const COVER = 1;
 
 // ---------------------------------------------------------------- sizes, in map pixels unless said
 /** the shading inside a realm reaches this far from its border; the shallow this far out to sea */
-const RIM = 14, SHALLOW_REACH = 9;
+const RIM = 5, SHALLOW_REACH = 14;
 /** lines are this many dots wide, whatever the scale */
 const LINE = 1.1;
 /** the paper's grain: its size and strength */
-const GRAIN = 3, GRAIN_STRENGTH = 0.035;
+const GRAIN = 2, GRAIN_STRENGTH = 0.03;
 
 /** what lies at a dot: a realm (≥ 0), land without a realm, water, or nothing (beyond the map) */
 const NONE = -1, WATER = -2, OUTSIDE = -3;
@@ -77,7 +80,7 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
     }
   }
   // the dots at a border: land whose neighbour is other land of another holder; at a coast: land or water next to the other
-  const border = new Uint8Array(n * n), coast = new Uint8Array(n * n), zone = new Uint8Array(n * n), mine = new Uint8Array(n * n);
+  const border = new Uint8Array(n * n), coast = new Uint8Array(n * n), zone = new Uint8Array(n * n), mine = new Uint8Array(n * n), seam = new Uint8Array(n * n);
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
     const i = y * n + x, k = kind[i];
     if (k === OUTSIDE) continue;
@@ -88,6 +91,7 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
       if (k !== WATER && o !== WATER && o !== k) border[i] = 1;
       if ((k === WATER) !== (o === WATER)) coast[i] = 1;
       if (k === WATER && o === WATER && place[j] !== place[i]) zone[i] = 1;
+      if (k >= 0 && o === k && place[j] !== place[i] && j > i) seam[i] = 1;
       if (chosen >= 0 && place[i] === chosen && place[j] !== chosen) mine[i] = 1;
     }
   }
@@ -97,7 +101,7 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
   // every realm's colour on the map, and its colour at the border, once
   const styled = new Map<number, [RGB, RGB]>();
   const styleOf = (k: number) => { let s = styled.get(k); if (!s) { s = mapColours(r.colors[k] ?? [0.5, 0.5, 0.5]); styled.set(k, s); } return s; };
-  const rim = Math.max(3, RIM / perDot), shallow = Math.max(1.5, SHALLOW_REACH / perDot);
+  const rim = Math.max(2, RIM / perDot), shallow = Math.max(1.5, SHALLOW_REACH / perDot), places = perDot <= 2;
   for (let y = 0; y < side; y++) for (let x = 0; x < side; x++) {
     const i = (y + margin) * n + x + margin, k = kind[i], o = (y * side + x) * 4;
     if (k === OUTSIDE) continue;
@@ -105,16 +109,20 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
     let c: RGB;
     if (k === WATER) {
       // the shallow along the coast fades into the open sea
-      const d = Math.sqrt(toCoast[i]), s = Math.exp(-((d / shallow) ** 1.5));
+      const d = Math.sqrt(toCoast[i]), s = Math.exp(-((d / shallow) ** 1.2));
       c = mix(SEA, SHALLOW, s);
       if (toZone) c = mix(c, ZONE_LINE, SEA_ZONE_LINE * line(Math.sqrt(toZone[i]), LINE));
     } else {
-      const d = Math.sqrt(toBorder[i]), t = Math.min(1, d / rim) ** 0.7;
-      if (k === NONE) c = SAND;
-      else { const [inner, edge] = styleOf(k); c = mix(edge, inner, t); }
-      // the line between holders, and a soft darker coastline on the land's side
-      c = mix(c, scale(c, LINE_DARK), line(d, LINE));
-      c = mix(c, scale(c, COAST_DARK), 0.6 * line(Math.sqrt(toCoast[i]), LINE));
+      // the edge of a land is its border with another holder or with the sea
+      const d = Math.sqrt(Math.min(toBorder[i], toCoast[i]));
+      if (k === NONE) c = mix(SAND, scale(SAND, SAND_COAST), line(d, LINE));
+      else {
+        // flat, with a narrow seam of its own darker colour along the border, and faint lines between its places
+        const [fill, edge] = styleOf(k), t = smoothstep(0, rim, d);
+        c = mix(edge, fill, 1 - RIM_STRENGTH * (1 - t));
+        if (places && seam[i]) c = scale(c, PLACE_DARK);
+        c = mix(c, scale(edge, LINE_DARK), line(d, LINE));
+      }
     }
     if (chosen >= 0 && place[i] === chosen) {
       c = mine[i] || near(mine, i, n) ? CHOSEN_LINE : mix(c, [1, 1, 1], CHOSEN_LIGHT);
@@ -138,8 +146,8 @@ const near = (marked: Uint8Array, i: number, n: number) => marked[i - 1] === 1 |
 export function mapColours(c: RGB): [RGB, RGB] {
   const [L, a, b] = toOklab(c), C = Math.hypot(a, b), h = Math.atan2(b, a);
   const Lm = Math.max(L_LOW, Math.min(L_HIGH, L)), Cm = Math.min(C_MOST, C);
-  const Ci = Cm * INNER_CHROMA, inner = fromOklab([Lm + INNER_LIGHT, Ci * Math.cos(h), Ci * Math.sin(h)]);
-  const Ce = Math.min(C_MOST * 1.3, Cm * RIM_CHROMA), edge = fromOklab([Lm - RIM_DARK, Ce * Math.cos(h), Ce * Math.sin(h)]);
+  const inner = fromOklab([Lm, Cm * Math.cos(h), Cm * Math.sin(h)]);
+  const Ce = Math.min(C_MOST * 1.2, Cm * RIM_CHROMA), edge = fromOklab([Lm - RIM_DARK, Ce * Math.cos(h), Ce * Math.sin(h)]);
   return [inner, edge];
 }
 

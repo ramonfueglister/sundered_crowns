@@ -39,10 +39,10 @@ console.log(`${tiles} tiles in ${Date.now() - t0} ms, ${pw}x${ph}`);
 
 // the map as a PNG through a canvas of the browser, the names over it as in the game
 const laid = layoutNames(names, pw, ph, d0[0] * perDot + (pw / 2) * perDot, d0[1] * perDot + (ph / 2) * perDot, 1 / perDot, 1);
-const font = (wt: number) => `@font-face{font-family:'Crimson Pro';font-weight:${wt};src:url('file://${process.cwd()}/node_modules/@fontsource/crimson-pro/files/crimson-pro-latin-${wt}-normal.woff2')}@font-face{font-family:'Crimson Pro';font-weight:${wt};unicode-range:U+0100-024F;src:url('file://${process.cwd()}/node_modules/@fontsource/crimson-pro/files/crimson-pro-latin-ext-${wt}-normal.woff2')}`;
+const font = (wt: number) => `@font-face{font-family:'EB Garamond';font-weight:${wt};src:url('file://${process.cwd()}/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-${wt}-normal.woff2')}@font-face{font-family:'EB Garamond';font-weight:${wt};unicode-range:U+0100-024F;src:url('file://${process.cwd()}/node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-ext-${wt}-normal.woff2')}`;
 const html = `<!doctype html><meta charset="utf-8"><style>${font(500)}${font(600)}${font(700)}body{margin:0}canvas,svg{position:absolute;left:0;top:0}</style>
 <canvas id="c" width="${pw}" height="${ph}"></canvas>
-<svg width="${pw}" height="${ph}" style="font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};opacity:${NAME_STYLE.opacity};paint-order:stroke;stroke:${NAME_STYLE.halo};stroke-width:2px">${laid.map((n) => nameSvg(n, `n${n.realm}`)).join('')}</svg>`;
+<svg width="${pw}" height="${ph}" style="font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};opacity:${NAME_STYLE.opacity};stroke:${NAME_STYLE.halo}">${laid.map((n) => nameSvg(n, `n${n.realm}`)).join('')}</svg>`;
 writeFileSync(out.replace(/\.png$/, '.html'), html);
 // Playwright is the cloud's own (not a dependency of the game), found as tools/lookprobe/shot.mjs finds it
 const { chromium } = createRequire(import.meta.url)('playwright') as typeof import('playwright');

@@ -111,11 +111,14 @@ describe('realms', () => {
     for (let i = 0; i < p.length; i += 4) expect(Math.max(p[i], p[i + 1], p[i + 2])).toBeLessThanOrEqual(p[i + 3]);
   });
 
-  it('draws a dark line between realms and shades a realm deeper towards its border, paler inside', () => {
+  it('draws a darker line of the realm’s own colour at its border and keeps the realm flat inside, as the reference', () => {
     const p = paintRealms(realms, 0, 0, 0, 64, 2), lum = (d: { r: number; g: number; b: number }) => 0.2126 * d.r + 0.7152 * d.g + 0.0722 * d.b;
-    const line = look(p, 15, 10), nearBorder = look(p, 13, 10), inside = look(p, 4, 10);
-    expect(lum(line)).toBeLessThan(lum(nearBorder) * 0.75);
-    expect(lum(nearBorder)).toBeLessThan(lum(inside));
+    const line = look(p, 15, 10), nearBorder = look(p, 13, 10), inside = look(p, 4, 10), inside2 = look(p, 6, 10);
+    expect(lum(line)).toBeLessThan(lum(inside) * 0.8);
+    expect(lum(nearBorder)).toBeLessThanOrEqual(lum(inside) * 1.001);
+    expect(Math.abs(lum(inside) - lum(inside2))).toBeLessThan(lum(inside) * 0.08);
+    // the line keeps the realm's hue
+    expect(line.r).toBeGreaterThan(line.b * 1.5);
   });
 
   it('lightens the shallow water along the coast', () => {

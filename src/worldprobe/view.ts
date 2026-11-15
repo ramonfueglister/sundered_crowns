@@ -10,6 +10,9 @@ import { smooth } from '../lookprobe/batch';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
 import { createNames } from './names';
+// the face of the realms' names (names.ts), bundled: no requests to a font service
+import '@fontsource/eb-garamond/latin-500.css';
+import '@fontsource/eb-garamond/latin-ext-500.css';
 import { type Layout, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';

@@ -1,12 +1,12 @@
-// The names of the realms, written across their lands on the 2D map (realms.ts) as in a printed atlas: in a book serif
-// (Crimson Pro, the HUD's type), dark ink, each along the curve through its realm that paint.ts finds, spread to fill
+// The names of the realms, written across their lands on the 2D map (realms.ts) as in a printed atlas: in a Garamond
+// (EB Garamond, the face nearest to the EU5 reference's; bundled through view.ts), dark ink without a halo, each along the curve through its realm that paint.ts finds, spread to fill
 // it and as large as the realm's breadth allows. Shown as far as the realms colour the map.
 //
 // `layoutNames` is pure (no page): the game and the map's still (tools/map/still.ts) lay the names out the same way.
 import type { RealmName } from './paint';
 
 /** a name fills this share of its curve; letters are about this wide for their height (Crimson Pro, mixed case) */
-const FILL = 0.84, ASPECT = 0.5;
+const FILL = 0.84, ASPECT = 0.46;
 /** names smaller than this many pixels are left out; none is written larger than this share of the picture's height */
 const SMALLEST = 9, LARGEST = 0.11;
 /** letters stand no further apart than this many times their height */
@@ -56,8 +56,8 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
   return kept.map(({ pts: _, ...n }) => n);
 }
 
-/** how the names look: ink of the atlas (dark sepia), set in the HUD's serif */
-export const NAME_STYLE = { font: "'Crimson Pro','Palatino Linotype',Palatino,serif", weight: 600, ink: '#2a241c', opacity: 0.82, halo: 'rgba(235,225,205,0.28)' } as const;
+/** how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28, no halo */
+export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'none' } as const;
 
 /** One name as SVG: its curve and its letters spread along it from the middle. */
 export function nameSvg(n: LaidName, id: string): string {
@@ -75,7 +75,7 @@ export interface Names {
 /** The names are written into `into`, over all of it that the picture's box covers. */
 export function createNames(into: HTMLElement = document.body): Names {
   const SVG = 'http://www.w3.org/2000/svg', layer = document.createElementNS(SVG, 'svg');
-  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};paint-order:stroke;stroke:${NAME_STYLE.halo};stroke-width:2px`);
+  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo}`);
   into.append(layer);
   let last = '';
   return {
