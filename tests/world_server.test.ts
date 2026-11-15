@@ -41,6 +41,18 @@ describe('world server', () => {
     expect(a.msgs).toContainEqual({ type: 'result', id: 7, ok: false, err: 'unknown command' });
     expect(a.msgs.filter((m) => m.type === 'tick').length).toBe(12);
     sb.handle({ type: 'place', place: 0 });
+    // an observer sees the world and its places but cannot take a realm or give orders
+    const o = conn(); const so = core.attach(o.c, { uid: 'watch-1', name: 'Observer', admin: false, observer: true });
+    const ow = o.msgs.find((m) => m.type === 'welcome') as Extract<ServerMsg, { type: 'welcome' }>;
+    expect(ow.me).toMatchObject({ realm: -1, observer: true });
+    const en = welcome.realms.find((r) => r.key === 'england')!;
+    so.handle({ type: 'claim', realm: en.id });
+    expect(core.s.ruler[en.id]).toBe('');
+    expect(o.msgs).toContainEqual({ type: 'error', code: 'claim', message: 'Sign in to rule a realm.' });
+    so.handle({ type: 'place', place: 0 });
+    expect(o.msgs.some((m) => m.type === 'place')).toBe(true);
+    so.disconnect();
+    expect(core.seats().length).toBe(1);
     expect(b.msgs.some((m) => m.type === 'place')).toBe(true);
     // abdicating frees the realm on the next day
     sa.handle({ type: 'abdicate' }); core.step();

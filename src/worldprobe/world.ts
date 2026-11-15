@@ -55,9 +55,10 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
  * a block is 2^z map cells wide (see tools/worldprobe/build_overviews.py), and the world is drawn the same way with
  * everything that much larger: the valleys are those of rivers 4^z times the size, the heights are flattened (by
  * 2^(0.6 z), so that ranges still stand out but do not tower), towns hold 4^z times fewer houses and the small places
- * drop out.
+ * drop out. `inhabitants` gives the people of the places (by their index in `places`) for which more is known than
+ * the gazetteer says.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null): StageScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map()): StageScene {
   const wider = 2 ** step, flatter = wider ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * step), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(wider)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
   /** region cell under a ground point: east is the picture's right, south its near side */
@@ -206,7 +207,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [], monuments: Monument[] = [], all: Site[] = [];
   const onGround = (p: readonly [number, number]) => p[0] >= 2 && p[1] >= 2 && p[0] < N - 2 && p[1] < N - 2;
   places.forEach((p, id) => {
-    const site: Site = { id, at: toGround(...cellOf(region, p.lon, p.lat)), size: p.size, pop: p.pop1356, style: styleOf(p.region) };
+    const site: Site = { id, at: toGround(...cellOf(region, p.lon, p.lat)), size: p.size, pop: inhabitants.get(id) ?? p.pop1356, style: styleOf(p.region) };
     all.push(site);
     if (onGround(site.at)) sites.push(site);
   });

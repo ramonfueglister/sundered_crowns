@@ -1,0 +1,9 @@
+/* The colours and the type of the navy and gold HUD (docs/ui/HUD.md), shared by every page that shows game UI:
+   the game (style.css) and the person panel over the world graphic (src/people/panel.css). */
+:root {
+  --bar: #14324b; --bar2: #1a3a55; --gold: #f1dba4; --gold2: #c9ad62; --brass: #e8c35a;
+  --rail: #1d3c52; --panel: #1a3f5d; --panel2: #163752; --btn: #2c5274; --btn2: #23465f; --edge: #a6c2d0;
+  --tx: #fdfaef; --tx2: #c9d3d8; --plus: #82d26f; --minus: #ffb27a;
+  --serif: 'Crimson Pro', 'Palatino Linotype', Palatino, Georgia, serif;
+  --shadow: 0 4px 14px rgba(0,0,0,.4);
+}

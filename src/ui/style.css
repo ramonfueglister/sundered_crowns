@@ -1,11 +1,5 @@
 /* Sundered Crowns – navy and gold HUD after Ramon's reference image (docs/ui/HUD.md). Crimson Pro is bundled (@fontsource), no external requests. */
-:root {
-  --bar: #14324b; --bar2: #1a3a55; --gold: #f1dba4; --gold2: #c9ad62; --brass: #e8c35a;
-  --rail: #1d3c52; --panel: #1a3f5d; --panel2: #163752; --btn: #2c5274; --btn2: #23465f; --edge: #a6c2d0;
-  --tx: #fdfaef; --tx2: #c9d3d8; --plus: #82d26f; --minus: #ffb27a;
-  --serif: 'Crimson Pro', 'Palatino Linotype', Palatino, Georgia, serif;
-  --shadow: 0 4px 14px rgba(0,0,0,.4);
-}
+@import './tokens.css';
 * { box-sizing: border-box; }
 html, body, #app { margin: 0; height: 100%; overflow: hidden; background: #0b1a26; color: var(--tx); font-family: var(--serif); font-weight: 500; }
 .app { position: fixed; inset: 0; font-variant-numeric: lining-nums tabular-nums; }

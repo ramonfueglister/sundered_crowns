@@ -1,0 +1,38 @@
+/* The person panel over the world graphic, in the game's navy and gold HUD (docs/ui/HUD.md, src/ui/tokens.css):
+   the panel of src/ui/style.css (.pnl, .side, .facts, .section, .close, .btn), scoped so that it does not touch the
+   world graphic's own page. */
+@import '../ui/tokens.css';
+
+.person-panel {
+  position: absolute; top: 16px; right: 16px; z-index: 20; width: min(300px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto;
+  padding: 12px 14px; color: var(--tx); font: 500 16px/1.35 var(--serif); font-variant-numeric: lining-nums tabular-nums;
+  background: linear-gradient(var(--panel), var(--panel2)); border: 2px solid var(--edge); border-radius: 14px; box-shadow: var(--shadow);
+}
+.person-panel[hidden] { display: none; }
+.person-panel button { font-family: inherit; color: inherit; cursor: pointer; }
+.person-panel .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.person-panel .head b { font-size: 1.25em; font-weight: 600; }
+.person-panel .close {
+  width: 32px; height: 32px; border: 0; border-radius: 7px; display: grid; place-items: center; font-size: 20px; line-height: 1;
+  background: linear-gradient(var(--btn), var(--btn2));
+}
+.person-panel .close:hover, .person-panel .btn:hover { background: linear-gradient(#36618a, #2a536f); }
+.person-panel .portrait {
+  display: block; width: 100%; height: auto; aspect-ratio: 224 / 280; margin-bottom: 8px; border: 1px solid var(--gold2); border-radius: 8px;
+  background: radial-gradient(ellipse at 50% 35%, #2a5878 0%, #10283b 80%);
+}
+.person-panel .facts { width: 100%; border-collapse: collapse; }
+.person-panel .facts th { text-align: left; font-weight: 500; color: var(--tx2); padding: 3px 8px 3px 0; }
+.person-panel .facts td { text-align: right; padding: 3px 0; white-space: nowrap; }
+.person-panel .section { margin-top: 10px; border-top: 1px solid rgba(166, 194, 208, .35); padding-top: 8px; }
+.person-panel .section h3 { margin: 0 0 6px; color: var(--gold); font-size: 1.05em; font-weight: 600; }
+.person-panel .trait { display: grid; grid-template-columns: 1fr 90px 26px; align-items: center; gap: 8px; padding: 2px 0; }
+.person-panel .trait span:first-child { color: var(--tx2); }
+.person-panel .bar { height: 6px; border-radius: 3px; background: rgba(166, 194, 208, .25); overflow: hidden; }
+.person-panel .bar i { display: block; height: 100%; background: var(--gold); }
+.person-panel .trait span:last-child { text-align: right; }
+.person-panel .kin { display: flex; gap: 8px; }
+.person-panel .btn {
+  border: 0; border-radius: 7px; padding: 3px 10px; font-size: .95em; font-weight: 600;
+  background: linear-gradient(var(--btn), var(--btn2)); box-shadow: inset 0 0 0 1px rgba(170, 200, 220, .3), 0 2px 4px rgba(0, 0, 0, .25);
+}

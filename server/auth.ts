@@ -2,7 +2,8 @@
 // - Supabase mode: the client sends its Supabase access token (JWT). It is verified with HS256 and
 //   SUPABASE_JWT_SECRET (legacy JWT secret), or against the project's JWKS (asymmetric signing keys: RS256/ES256).
 // - DEV mode (no Supabase configured at all): the client sends a display name and is trusted. Never use in production.
-import { createHmac, createPublicKey, timingSafeEqual, verify as cryptoVerify, type KeyObject } from 'node:crypto';
+// - Without a token (or, in DEV mode, a name) the client is an observer: it sees the world and rules nothing.
+import { createHmac, createPublicKey, randomUUID, timingSafeEqual, verify as cryptoVerify, type KeyObject } from 'node:crypto';
 import type { UserAuth } from './world';
 import type { WorldStore } from './store';
 
@@ -61,12 +62,14 @@ export function cleanName(n: unknown): string | null {
 
 /** Turns a hello message into a user, or an error message. */
 export async function authenticate(hello: { token?: string; name?: string }, cfg: AuthConfig, store: WorldStore): Promise<UserAuth | { error: string }> {
+  // without a token (and, in dev mode, without a name) one watches the world: anyone may (Ramon, 15 November 2026)
+  if (!hello.token && !(cfg.devMode && hello.name)) return observer();
   if (cfg.devMode) {
     const name = cleanName(hello.name);
     if (!name) return { error: 'Choose a display name of 3 to 24 characters.' };
     return { uid: 'dev-' + name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-'), name, admin: false };
   }
-  if (!hello.token) return { error: 'Please sign in first.' };
+  if (!hello.token) return observer();
   try {
     const c = await verifyJwt(hello.token, cfg);
     if (c.role && c.role !== 'authenticated') return { error: 'Not a signed-in user.' };
@@ -76,6 +79,9 @@ export async function authenticate(hello: { token?: string; name?: string }, cfg
     return { error: `Sign-in rejected: ${e?.message ?? e}` };
   }
 }
+
+/** A watcher without an account: an id of its own per connection, so that sessions never mix. */
+export const observer = (): UserAuth => ({ uid: `watch-${randomUUID()}`, name: 'Observer', admin: false, observer: true });
 
 /** Test helper: sign an HS256 token. */
 export function signHs256(claims: Record<string, any>, secret: string): string {
