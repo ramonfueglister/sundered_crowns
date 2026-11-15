@@ -6,7 +6,7 @@
 # middle, kept in front of neck and chest), cards bound to head.bin, and a
 # painted layer of short hairs on the skin under them.
 # usage: python3 -I beards.py base.obj outdir style name
-#   style: region (control image) | stubble | short | full | phil | chin
+#   style: region (control image) | stubble | short | full | phil | chin | trim (a full beard cut close, for 1350)
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
@@ -61,8 +61,8 @@ def front_depth():
     return zf
 
 # --- the beard zone: a signed distance (units, positive inside) ---
-TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
-RAISE = {'full': 0.04, 'phil': 0.07}.get(style, 0.0)
+TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'trim': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
+RAISE = {'full': 0.04, 'trim': 0.04, 'phil': 0.07}.get(style, 0.0)
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]
@@ -147,6 +147,10 @@ P_ = dict(
     shortcap=dict(cards=False, Lc=0.024, base=0.6, mean=0.55, n=95000),
     short=dict(cards=False, Lc=0.03, Lm=0.038, base=0.82, mean=0.55, n=115000),
     full=dict(cards=True, K=340, Nr=14000, L=(0.32, 0.62, 0.11), lift=(0.012, 0.09), hang=True, steps=18, w=(0.07, 0.16), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.55, wave=0.012, Lm=0.075),
+    # a full beard cut close below the chin: fewer, broader cards that hardly taper, so that it reads as a mass
+    # and not as single strands (TRIM_L, TRIM_W, TRIM_K to try others)
+    trim=dict(cards=True, K=int(os.environ.get('TRIM_K', '260')), Nr=14000, L=tuple(float(t) for t in os.environ.get('TRIM_L', '0.16,0.3,0.09').split(',')), lift=(0.012, 0.06), hang=True, steps=12,
+              w=tuple(float(t) for t in os.environ.get('TRIM_W', '0.16,0.3').split(',')), taper=0.65, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.5, wave=0.006, Lm=0.075),
     phil=dict(cards=True, K=380, Nr=16000, L=(0.5, 1.0, 0.13), lift=(0.012, 0.1), hang=True, steps=24, w=(0.08, 0.17), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.38, wave=0.022, Lm=0.085),
     chin=dict(cards=True, K=160, Nr=6000, L=(0.2, 0.42, 0.08), lift=(0.01, 0.05), hang=True, steps=14, w=(0.06, 0.13), taper=0.35, Lc=0.06, base=0.88, mean=0.55, n=80000, conv=0.6, wave=0.01, Lm=0.06),
 )[style]

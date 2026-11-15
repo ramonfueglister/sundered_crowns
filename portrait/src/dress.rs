@@ -68,6 +68,8 @@ pub struct DressSet {
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
     pub beards: [Beard; 6],
+    /// The file of the full beard (Apoleia's hangs in long single strands).
+    pub beard_full: &'static str,
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
@@ -113,6 +115,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_veiled: "bun01",
     hair_girl: "plait01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
+    beard_full: "beard_trim",
     lips: [0.55, 0.38],
     flush: 1.0,
     lids: [0.2, 0.45, 0.2, 0.45],

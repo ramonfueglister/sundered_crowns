@@ -46,4 +46,5 @@ Since then: `hair_girl` in the dress table (England: `plait01`, a parting and tw
 crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Roman bytes unchanged.
 `hair_receding`, `hair_bald` (England: `bob03`, `bob04`, in place of Apoleia's short locks and painted horseshoe;
 `real_look.rs` `mh_pick`) and `beards` (which beard a dress wears in place of each of Apoleia's; `look.rs`
-`beard_style`) in the dress table; Roman bytes unchanged.
+`beard_style`), `beard_full` (the file of the full beard, `build.rs`) and `mood` (how strongly a mood shows,
+`morph.rs`; Apoleia's 1.7) in the dress table; Roman bytes unchanged.

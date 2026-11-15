@@ -303,7 +303,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 Beard::Shaven => return None,
                 Beard::Stubble => "beard_stubble",
                 Beard::Short => "beard_short",
-                Beard::Full => "beard_full",
+                Beard::Full => p.dress.set().map_or("beard_full", |d| d.beard_full),
                 Beard::Philosopher => "beard_phil",
                 Beard::Chin => "beard_chin",
             };

@@ -78,6 +78,18 @@
    "bytes": 42006
   },
   {
+   "name": "beard_trim.txt.zst",
+   "bytes": 167277
+  },
+  {
+   "name": "beard_trim_cap.txt.zst",
+   "bytes": 60892
+  },
+  {
+   "name": "beard_trim_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "bob01.txt.zst",
    "bytes": 399775
   },
@@ -341,6 +353,10 @@
   "beard_short_n.webp",
   "beard_stubble_cap.webp",
   "beard_stubble_cap_n.webp",
+  "beard_trim.webp",
+  "beard_trim_cap.webp",
+  "beard_trim_cap_n.webp",
+  "beard_trim_n.webp",
   "bob01.webp",
   "bob01_cap.webp",
   "bob01_cap_n.webp",

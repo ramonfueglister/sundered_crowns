@@ -106,11 +106,12 @@ painted layer of short hairs is drawn lighter and lit round its shaded side as t
 profile): its image is far darker than the cards', which at the lower exposure turned a brown beard black.
 A mood shows less strongly (`mood` 1 in the dress table, Apoleia's 1.7 was drawn for a small picture): a sad
 mouth on an old face read as a mask.
+The full beard is the dress's own (`beard_full`: `beard_trim`, cut close below the chin, from fewer and broader
+cards): Apoleia's hangs in long single strands that read as wool.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
-nostrils, edge of the lips), the outline of the hair (a smooth dome), the full beard (reads as strands of wool)
-and the shoulders of the gowns (they look padded) are not; the thrown-back hood closes round the neck since
+nostrils, edge of the lips), the outline of the hair (a smooth dome) and white hair and beards (no depth, they read as knitted) are not; the thrown-back hood closes round the neck since
 round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
