@@ -3,15 +3,17 @@
 import { Batch, type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch';
 import { type Ground, type GroundTraits, Mat, N, SEA_Y, SUMMIT, idx, rockPillar } from './layout';
 
-const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
+export const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
 const MEADOW_MID = rgb(0x9abf3d), MEADOW_DEEP = rgb(0x82ac37), TUFT = rgb(0x5f9030);
 const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_STONE = rgb(0xf0d6bc);
 /** how much the single stones of a cliff differ in brightness, and how much darker its notches are */
 const ROCK_GRAIN = 0.3, ROCK_NOTCH = 0.3;
-const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8), ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
-const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
-const DIRT = rgb(0xa88a52), SHADED_SOIL = rgb(0x6a705c), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
-const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c), FALLS = rgb(0x9fd6d8);
+export const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8);
+const ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
+export const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
+export const SHADED_SOIL = rgb(0x6a705c);
+const DIRT = rgb(0xa88a52), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
+export const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c), FALLS = rgb(0x9fd6d8);
 
 /** Share of the sky seen from a point: eight directions, the steepest blocker in each. This is light step 2 of the plan. */
 const DIRS: readonly (readonly [number, number])[] = [[1, 0], [0.707, 0.707], [0, 1], [-0.707, 0.707], [-1, 0], [-0.707, -0.707], [0, -1], [0.707, -0.707]];

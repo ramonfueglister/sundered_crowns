@@ -4,7 +4,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners).
 import * as THREE from 'three/webgpu';
-import { convertToTexture, float, mix, mrt, normalView, output, pass, reflector, vec3 } from 'three/tsl';
+import { convertToTexture, float, mix, mrt, normalView, output, pass, reflector, uniform, vec3 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -61,6 +61,11 @@ export interface Stage {
   /** Puts a scene on the stage, moved by (x, z) blocks. */
   add(built: StageScene<Shape>, x?: number, z?: number): THREE.Group;
   remove(group: THREE.Group): void;
+  /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
+  put(thing: THREE.Object3D): void;
+  take(thing: THREE.Object3D): void;
+  /** How deep creases and corners are drawn, as a share of the look's own depth (1: as in the reference, 0: not at all). */
+  creases(share: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees. */
   aim(x: number, z: number, frameW: number, elevation: number): void;
   /** Asks for a new picture. */
@@ -163,6 +168,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // creases and corners: every point is darkened by how much of its surroundings stands in front of it
   const colour = scenePass.getTextureNode('output'), far = scenePass.getTextureNode('depth');
   let picture: typeof colour | ReturnType<typeof colour.mul> = colour;
+  const creased = uniform(1);
   if (flag('ao', true)) {
     scenePass.setMRT(mrt({ output, normal: normalView }));
     const facing = scenePass.getTextureNode('normal'), creases = ao(far, facing, camera);
@@ -170,7 +176,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
     const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
-    picture = colour.mul(mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open));
+    picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
   }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
@@ -210,6 +216,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
       pending = Math.max(pending, 1);
     },
+    put(thing) { scene.add(thing); pending = Math.max(pending, 1); },
+    take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
+    creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
     redraw() { pending = Math.max(pending, 1); },
   };
   (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
