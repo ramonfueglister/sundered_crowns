@@ -58,7 +58,7 @@ export const ENGLAND_1356: StageProfile = {
   exposure: 0.86,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.26, 0.13, 0.08], blotch: 0.11, speckle: 0.10 },
-  eye: { lid: { from: -0.45, to: -0.05, dark: 0.55 }, tint: [0.86, 0.84, 0.82], colour: 0.6 },
+  eye: { lid: { from: -0.35, to: 0.05, dark: 0.7 }, tint: [0.95, 0.93, 0.91], colour: 0.8 },
   brow: { rough: 1, specular: 0.05, lashes: 0.45 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
 };
