@@ -41,6 +41,8 @@ export interface Landmark { id: string; lon: number; lat: number; built_state: s
  * not a relief map).
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
+/** the forest layer of 1356 ends with the game map: over this many map pixels before its east edge (some eight degrees) it gives way to the woods the climate grows */
+const FOREST_FADES = 300;
 /** what stands above the valley floors of the massifs is raised by this factor */
 const PEAK = 1.3;
 /** a valley is where this much land drains through (25 km², in the steps of the region's drainage layer); the rock begins this many blocks from it */
@@ -220,7 +222,15 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** palms line the water of the desert and of the hot steppe */
   const oasis = (i: number) => Math.abs(lat[i]) < 37 && metres[i] < 1200 && ((land[i] & 127) === Land.Desert || (land[i] & 127) === Land.Steppe);
   /** the share of its ground the woods cover at a ground point: where the forest of 1356 stood, and beyond its reach where the climate grows them */
-  const wooded = (x: number, z: number) => { const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & 127; return BARE.includes(here) ? 0 : land[i] & 128 ? sample(region, region.forest, ...toCell(x, z)) / 255 : WOODS[here] ?? 0; };
+  const wooded = (x: number, z: number) => {
+    const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & 127, grown = WOODS[here] ?? 0;
+    if (BARE.includes(here)) return 0;
+    if (!(land[i] & 128)) return grown;
+    // towards the east edge of the game map its forest gives way to the climate's, so that no line shows where it ends
+    const [cx, cy] = toCell(x, z), px = region.x0 + cx / region.cells, east = region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px;
+    const stood = sample(region, region.forest, cx, cy) / 255, known = smooth(region.mapW, region.mapW - FOREST_FADES, east);
+    return grown + (stood - grown) * known;
+  };
   /** how likely a tree away from the heights and the north is a dark conifer */
   const conifers = (i: number) => ((land[i] & 127) === Land.Boreal ? 0.85 : 0.08 + 0.8 * smooth(500 + shift[i], 1300 + shift[i], metres[i]));
   /** a farm is built as the place nearest to it builds */
