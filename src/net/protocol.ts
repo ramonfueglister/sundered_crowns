@@ -57,7 +57,7 @@ export interface ArableDetail {
   /** the place cultivates all the land it can: more people get no more land */
   atLimit: boolean;
 }
-export interface Me { uid: string; name: string; admin: boolean; realm: number }
+export interface Me { uid: string; name: string; admin: boolean; realm: number; /** watches the world without an account: may not take a realm */ observer?: boolean }
 
 export type ClientMsg =
   | { type: 'hello'; v: number; token?: string; name?: string }
