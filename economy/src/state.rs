@@ -15,9 +15,15 @@ use beforeit::{
     AbstractModel, Aggregates, Banks, CentralBank, Data, Firms, Government, Properties, RestOfTheWorld, Workers, Xoshiro,
 };
 
+use crate::Economy;
 use crate::clock::DailyClock;
+use crate::trade::{Cities, Merchants};
 
 const TAG: &[u8; 4] = b"SCEC";
+/// The tag of cities with their merchants ([`save_cities`]).
+const TAG_CITIES: &[u8; 4] = b"SCET";
+/// Version of the byte format of cities with their merchants.
+pub const FORMAT_CITIES: u32 = 1;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock.
 pub const FORMAT: u32 = 2;
@@ -641,7 +647,8 @@ fn get_data(i: &mut In) -> Res<Data> {
 }
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
-    let DailyClock { plan, window, demand, periods, start } = c;
+    // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
+    let DailyClock { plan, window, demand, periods, start, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -664,7 +671,7 @@ fn get_clock(i: &mut In) -> Res<DailyClock> {
     for _ in 0..n {
         periods.push(i.u32()?);
     }
-    Ok(DailyClock { plan, window, demand, periods, start: [i.f64()?, i.f64()?] })
+    Ok(DailyClock { plan, window, demand, periods, start: [i.f64()?, i.f64()?], trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
@@ -718,4 +725,77 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
     }
     Ok((model, rng))
+}
+
+// ---- cities that trade
+
+/// Cities and their merchants as bytes: the tag `SCET`, the format version, the number of cities, the state of every
+/// city ([`save`]) with its length before it, then the books of the merchants. The same cities always give the same
+/// bytes.
+pub fn save_cities(all: &Cities) -> Vec<u8> {
+    let Cities { cities, merchants } = all;
+    let Merchants { stock, value, orders, share, bought, sold, start, start_stock } = merchants;
+    let mut o = Out(Vec::new());
+    o.0.extend_from_slice(TAG_CITIES);
+    o.u32(FORMAT_CITIES);
+    o.n(cities.len());
+    for e in cities {
+        let bytes = e.save();
+        o.n(bytes.len());
+        o.0.extend_from_slice(&bytes);
+    }
+    for v in [stock, value] {
+        o.f64ss(v);
+    }
+    o.n(orders.len());
+    for v in orders {
+        o.f64ss(v);
+    }
+    for v in [share, bought, sold] {
+        o.f64s(v);
+    }
+    o.f64(*start);
+    o.f64s(start_stock);
+    o.0
+}
+
+/// Reads the bytes of [`save_cities`].
+pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
+    let mut i = In { b: bytes, at: 0 };
+    if i.take(4)? != TAG_CITIES {
+        return Err("these bytes are not the state of cities".into());
+    }
+    let format = i.u32()?;
+    if format != FORMAT_CITIES {
+        return Err(format!("state format {format} of cities, this engine reads format {FORMAT_CITIES}"));
+    }
+    let n = i.len(4)?;
+    let mut cities = Vec::with_capacity(n);
+    for c in 0..n {
+        let len = i.n()?;
+        cities.push(Economy::load(i.take(len)?).map_err(|e| format!("city {c}: {e}"))?);
+    }
+    let (stock, value) = (i.f64ss()?, i.f64ss()?);
+    let orders = (0..i.len(4)?).map(|_| i.f64ss()).collect::<Res<Vec<_>>>()?;
+    let (share, bought, sold) = (i.f64s()?, i.f64s()?, i.f64s()?);
+    let merchants = Merchants { stock, value, orders, share, bought, sold, start: i.f64()?, start_stock: i.f64s()? };
+    if i.at != bytes.len() {
+        return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
+    }
+    // the books must fit the cities: a list of another length would be read past its end in the next period
+    let G = cities.first().map_or(0, |e: &Economy| e.model.prop.G);
+    let per_city = |v: &[Vec<f64>], len: usize| v.len() == n && v.iter().all(|x| x.len() == len);
+    let m = &merchants;
+    let fits = n >= 2
+        && cities.iter().all(|e| e.model.prop.G == G)
+        && per_city(&m.stock, G)
+        && per_city(&m.value, G)
+        && m.orders.len() == n
+        && m.orders.iter().all(|o| per_city(o, G))
+        && m.share.len() == n
+        && [&m.bought, &m.sold, &m.start_stock].iter().all(|v| v.len() == G);
+    if !fits {
+        return Err(format!("the books of the merchants do not fit {n} cities with {G} products"));
+    }
+    Ok(Cities { cities, merchants })
 }

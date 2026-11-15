@@ -11,6 +11,7 @@
 
 pub mod clock;
 pub mod state;
+pub mod trade;
 
 use beforeit::{
     AbstractModel, Data, InitialConditions, Model, Parameters, Xoshiro, get_accounting_identities, get_accounting_identity_banks,

@@ -20,9 +20,15 @@
 //!    expressed per day. An entry of the history before the start stands for `window` days.
 //!
 //! With `plan` and `window` of 1 both rules are the port's rules, number for number (economy/tests/shell.rs).
+//!
+//! The port takes one model type per model, so this one also carries what a city needs that trades with other cities
+//! ([`crate::trade`]): while the merchants have set what they want and bring, the rule of the rest of the world reads
+//! that instead of the port's random series. An economy on its own never has merchants and computes as before.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
 use beforeit::{AbstractModel, Extension, FirmsDecisions, Randomness, base};
+
+use crate::trade::{self, Trade};
 
 /// The model type of the daily clock and the fields it adds to a model.
 #[derive(Clone, Debug, PartialEq)]
@@ -36,6 +42,9 @@ pub struct DailyClock {
     pub periods: Vec<u32>,
     /// real and nominal GDP of the starting position, per period
     pub start: [f64; 2],
+    /// what the merchants want from this economy and bring to it in the period that is being computed
+    /// ([`crate::trade`]); `None` between two periods and in an economy on its own. Not part of the saved state.
+    pub trade: Option<Trade>,
 }
 
 impl DailyClock {
@@ -44,7 +53,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2] })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -133,6 +142,28 @@ impl Extension for DailyClock {
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
         d
+    }
+
+    /// The port's `rotw_import_export`; in a city with merchants what they want and bring ([`trade::import_export`]).
+    fn rotw_import_export<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, f64, Vec<f64>, Vec<f64>, Vec<f64>) {
+        match m.ext.trade.take() {
+            Some(t) => {
+                let r = trade::import_export(m, &t);
+                m.ext.trade = Some(t);
+                r
+            }
+            None => base::rotw_import_export(m, rng),
+        }
+    }
+
+    /// The port's `rotw_deposits`. The port divides the exports by the mean price paid for them, which is 0 / 0 on
+    /// a day without exports; its own rule of exports never gives such a day, the merchants do. For such a day the
+    /// mean price is set to 1 here, before the national accounts read it, so that real exports are 0.
+    fn rotw_deposits(m: &mut AbstractModel<Self>) -> f64 {
+        if m.ext.trade.is_some() && m.rotw.C_l == 0.0 {
+            m.rotw.P_l = 1.0;
+        }
+        base::rotw_deposits(m)
     }
 }
 

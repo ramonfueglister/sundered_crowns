@@ -12,6 +12,10 @@
    invented for the game.
 5. Nothing is built before Ramon has agreed to the feature.
 
+Ramon, 15 November 2026, on the economy after feature 4: less work on sources, more code and clean tests for the
+economic system. And the shape of the system: every city is an economy of its own with all its parts (what the model
+calls a country is a city before modern times), and the cities are connected through their foreign relations.
+
 The earlier drafts in this file (about 40 goods in three tiers, six estates, closed money circulation, need tiers and
 a standard-of-living formula) were rejected by Ramon on 14 November 2026 for breaking rules 1 to 4. They are not to be
 revived. The diorama scale of 1 : 100 for people and quantities was answered with "finde ich gut" on the same day; it is
@@ -28,6 +32,7 @@ players and the AI of realms without a player act through the same commands.
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026 |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; built and tested in the engine (economy/src/trade.rs), not in the game: whether the cities replace England's economy there is Ramon's decision |
 
 ## 1. Grain harvest per place
 
@@ -818,3 +823,102 @@ standstill with its date.
 - Not readable: Poledna et al. (2023) in the version of IIASA (barrier for automated readers) and Dawid et al.
   (2019) in the Journal of Evolutionary Economics (paywall). The equation numbers of the model of Poledna et al.
   are therefore those of the comments of the port.
+
+## 5. Cities as economies of their own that trade with each other
+
+Status: built in the engine and tested there. Nothing in the game uses it yet.
+
+### What it is
+
+Every city is a whole economy of the port: its own persons, firms, bank, crown and rest of the world, computed day by
+day with the daily clock of feature 4. The rest of the world of a city is the other cities.
+
+In the port the rest of the world is two random series: a demand for exports and a supply of imports, each drawn from
+a rule of its own (A.76, A.81). Nothing connects them. A city on its own therefore sells goods to nobody and buys
+goods from nowhere, and its claims on the rest of the world grow without anyone owing them (in the trial below: 10 %
+of a year's output after five years). Exactly this one rule is replaced. Every other rule of a city is the port's.
+
+### The merchants (economy/src/trade.rs)
+
+Between the cities stand merchants. They are the foreign consumers and the foreign sellers that the port already has
+in every economy; new is only what they want and what they bring.
+
+1. What the merchants buy in a city on a day lies the next day at their stalls in the cities it was ordered for,
+   product by product.
+2. They sell at what the goods cost them, the export duty of the city of origin included. So their worth, money in
+   all cities plus stock at cost, never changes: no money is made or lost between the cities.
+3. In every city they want to have on offer every morning what the calibration of the city gives as its supply of
+   imports, as a share of the city's output, product by product. An order placed today is bought tomorrow and on
+   offer the day after, so they order what will be missing by then: the stock to keep minus what is left of today's
+   stock if tomorrow sells the same part of it as today.
+4. A city of origin gets the larger part of an order the cheaper the product is there and the larger the city is.
+   These are the weights with which every buyer of the port picks a seller, taken as shares.
+5. A city exports the products that are ordered from it. The mix of its exports, a constant of the calibration in
+   the port, becomes the mix of the orders of the day.
+
+Rules 3 and 5 are ours: the port has no linked economies, and no source was looked for (Ramon's direction above).
+Travel takes one day between any two cities and costs nothing.
+
+The port takes one model type per model, so the model type of the daily clock carries the link (economy/src/clock.rs).
+An economy without merchants computes as before, number for number: England in the running world is untouched.
+
+One more rule of the port is touched for a reason of arithmetic: the port divides the exports of a day by the mean
+price paid for them, which is 0 / 0 on a day without exports. Its own rule always exports, the merchants may not. On
+such a day the model type sets that price to 1, so real exports are 0.
+
+### Tests (economy/tests/cities.rs, 14 tests)
+
+- The merchants' worth does not change, and for every product the goods bought equal the goods sold plus the goods in
+  stock, day after day (both to better than 1e-12 of their size in the trial below).
+- The books of every city balance as the port's identities demand (income, nominal and real GDP by uses, central
+  bank, banks).
+- What one city exports lies in the other the next day, at what it cost; the stall asks cost; a city's demand for
+  exports and supply of imports are what the merchants ordered and hold.
+- A stall is full again the morning after next when its orders were filled and it sells the same part of its stock.
+- Orders go to the cheaper and to the larger city; no city orders from itself.
+- The order in which the cities compute changes nothing; the same cities give the same days; cities saved in the
+  middle of a run and loaded continue as a straight run, bit for bit; broken bytes and cities that cannot trade are
+  refused.
+- A day without exports has real exports of 0 and a real GDP that is a number.
+
+### Trial: the 30 cities for five years
+
+Outside the game (economy/examples/cities.rs; calibrations and results in the project files under wirtschaft/staedte).
+Every city is England's calibration of 1356 at the city's share of England's people: an assumption, no city has data
+of its own. Seed 1356, plan every 30 days, windows of 365 days. All 30 cities together.
+
+| After five years | On their own (the port's rule) | Linked, England's wool duty on all trade | Linked, no duty |
+|---|---|---|---|
+| Real output (start = 100) | 111.8 | 91.7 | 106.5 |
+| Range over the cities | 84 to 118 | 76 to 103 | 100 to 114 |
+| Price level (start = 100) | 104.7 | 149.7 | 104.9 |
+| Without work, mean of the cities | 0.7 % | 7.7 % | 0.6 % |
+| Without work, the worst city | 13.2 % | 20.5 % | 2.7 % |
+| Exports, share of output | 4.8 % | 1.2 % | 2.7 % |
+| Imports, share of output | 2.7 % | 0.9 % | 2.7 % |
+| Claims of the cities on nobody | 10 % of a year's output | 0 | 0 |
+
+Reading:
+
+- The link closes the books. On their own the cities pile up claims that nobody owes; linked, exports of one city are
+  imports of another, and without a duty both are the same 2.7 % of output.
+- Without a duty the linked cities behave much like cities on their own, with less spread between them.
+- England's calibration carries the wool duty of 1356, 44 % of the value of exports. Put on every trade between
+  cities it makes imports that much dearer everywhere. In the model that is not a single step of the price level but
+  lasting inflation (the firms' cost push looks at the prices paid, which stay above their own), and output falls.
+  So the duty between cities has to be set with care when the cities come into the game; it is a lever that works.
+
+Speed: one day of all 30 cities takes 13 ms in the native build (England alone in the world server: 6 ms); the
+state of all 30 cities is 6.2 MB (England: 1.9 MB).
+
+### Limits
+
+- All cities have England's structure and differ only in size and in their random numbers. Cairo is England with more
+  people.
+- The countryside is inside each city's economy (the calibration is that of a whole country); places that are not
+  among the 30 cities have no economy.
+- No distance: every city is one day from every other, and carrying goods costs nothing.
+- The port does not record exports product by product. What the merchants bought counts as bought in the mix they
+  ordered.
+- An order is filled only as far as the firms of the city of origin have goods to sell.
+
