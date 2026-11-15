@@ -54,6 +54,12 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .menu-item { text-align: left; padding: 8px 12px; border: 0; border-radius: 7px; background: linear-gradient(var(--btn), var(--btn2)); font-size: 16px; }
 .menu-item:hover { background: linear-gradient(#36618a, #2a536f); }
 .menu-item.danger { color: var(--minus); }
+/* settings menu: music */
+.music-set { display: grid; gap: 6px; padding: 4px 4px 8px; border-bottom: 1px solid rgba(166,194,208,.3); }
+.music-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; }
+.music-label { font-size: 16px; font-weight: 600; color: var(--gold); }
+.music-now { color: var(--tx2); font-size: 14px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.music-vol { width: 100%; accent-color: var(--gold2); }
 .credit { margin: 4px 4px 0; font-size: 13px; color: var(--tx2); line-height: 1.3; }
 .credit a { color: var(--gold); }
 

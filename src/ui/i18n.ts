@@ -60,6 +60,14 @@ const S = {
   to_my_realm: ['To my realm', 'Zu meinem Reich'],
   whole_map: ['Whole map', 'Ganze Karte'],
   fullscreen: ['Full screen', 'Vollbild'],
+  music: ['Music', 'Musik'],
+  music_on: ['Turn on', 'Einschalten'],
+  music_off: ['Turn off', 'Ausschalten'],
+  music_volume: ['Music volume', 'Lautstärke der Musik'],
+  music_next: ['Next piece', 'Nächstes Stück'],
+  music_is_off: ['Music is off', 'Musik ist aus'],
+  music_waiting: ['Starts with your next click', 'Beginnt mit deinem nächsten Klick'],
+  music_credit: ['Music: made for Apoleia with AI (Suno).', 'Musik: für Apoleia mit KI erzeugt (Suno).'],
   arms_credit: ['Lion of Saint Mark: after Samhanin,', 'Markuslöwe: nach Samhanin,'],
 } as const satisfies Record<string, readonly [string, string]>;
 export type TextKey = keyof typeof S;
