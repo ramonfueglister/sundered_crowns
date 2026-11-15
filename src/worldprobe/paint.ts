@@ -24,8 +24,8 @@ const LEAF = woods(LEAVES), CONIFER = woods(CYPRESS), RAIN = woods(JUNGLE), FIEL
 /** a wood as thick as can be covers this share of its ground with crowns */
 const CROWNS = 1.4;
 /**
- * Ripe fields cover this share of the ploughland. Up close they are patches of this many finest cells, as the fields
- * of the blocks are; once a dot is wider than a patch, the land only takes on their colour.
+ * Ripe fields cover this share of the ploughland. At the finest level they are patches of this many blocks on the
+ * blocks' own grid, as the fields of the blocks are; on the coarser levels the land only takes on their colour.
  */
 const RIPE = 0.34, FIELD_SIDE = 6, FIELD_LIGHT = 0.85;
 /** rock and snow take over across this many metres */
@@ -46,20 +46,24 @@ const BYTE = new Uint8Array(4097);
 for (let i = 0; i <= 4096; i++) { const v = i / 4096; BYTE[i] = Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055)); }
 const byteOf = (v: number) => BYTE[Math.max(0, Math.min(4096, Math.round(v * 4096)))];
 
+/** a river keeps this much of itself under a realm's colour */
+const RIVER_KEPT = 0.8;
+
 /**
  * The land of a tile: `region` is the tile's own window of the map at `level` (cells 2^level finest cells wide).
- * Returns one RGBA dot per cell, row by row from the north.
+ * Returns one RGBA dot per cell, row by row from the north. The fourth value says how far a realm's colour may cover
+ * the dot: not at all on the sea and the lakes, hardly on a river.
  */
 export function paintLand(region: Region, climate: Climate, level: number, places: readonly Mark[] = []): Uint8ClampedArray {
   const { w, h } = region, out = new Uint8ClampedArray(w * h * 4), wider = 2 ** level, wall = WALL * wider ** FLATTER;
   const at = (x: number, y: number) => Math.max(0, Math.min(h - 1, y)) * w + Math.max(0, Math.min(w - 1, x));
   const c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
-  const put = (i: number, c: RGB) => { out[i * 4] = byteOf(c[0]); out[i * 4 + 1] = byteOf(c[1]); out[i * 4 + 2] = byteOf(c[2]); out[i * 4 + 3] = 255; };
+  const put = (i: number, c: RGB, land = 255) => { out[i * 4] = byteOf(c[0]); out[i * 4 + 1] = byteOf(c[1]); out[i * 4 + 2] = byteOf(c[2]); out[i * 4 + 3] = land; };
   for (let y = 0; y < h; y++) {
     const lat = latOf(region, y + 0.5), shift = lineShift(lat), treeLine = TREE_LINE + shift, rockFrom = Math.max(300, ROCK_FROM + Math.min(ROCK_SHIFT_MOST, shift));
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (region.water[i] !== Water.Land) { put(i, OPEN_WATER); continue; }
+      if (region.water[i] !== Water.Land) { put(i, OPEN_WATER, 0); continue; }
       const m = region.shaped[i];
       // the kind of land, its borders frayed as those of the blocks are (world.ts)
       const [bx, bz] = blockOfCell((c0x + x + 0.5) * wider, (c0y + y + 0.5) * wider);
@@ -69,8 +73,8 @@ export function paintLand(region: Region, climate: Climate, level: number, place
       const tint = TINT[kind];
       if (tint) c = mix(c, tint[0], tint[1]);
       c = shade(c, GROUND_LIGHT + (BARE_LIGHT - GROUND_LIGHT) * (tint?.[1] ?? 0));
-      const ripe = RIPE * (region.crops[i] / 255), fu = Math.floor(((c0x + x + 0.5) * wider) / FIELD_SIDE), fv = Math.floor(((c0y + y + 0.5) * wider) / FIELD_SIDE);
-      c = mix(c, shade(FIELD, FIELD_LIGHT), wider * 2 > FIELD_SIDE ? ripe : hash2(fu, fv, 31) < ripe ? 1 : 0);
+      const ripe = RIPE * (region.crops[i] / 255);
+      c = mix(c, shade(FIELD, FIELD_LIGHT), level > 0 ? ripe : hash2(Math.floor(bx / FIELD_SIDE), Math.floor(bz / FIELD_SIDE), 31) < ripe ? 1 : 0);
       // woods up to the tree line, of the trees the blocks would plant; rock and snow above
       const rock = smooth(rockFrom, rockFrom + ROCK_BAND, m);
       if (!BARE.includes(kind) && m <= treeLine) {
@@ -87,6 +91,7 @@ export function paintLand(region: Region, climate: Climate, level: number, place
     }
   }
   // the rivers as lines, the great ones broader
+  const wet = new Float32Array(w * h);
   for (const r of region.rivers) {
     const half = r.rank <= 2 ? 1.1 : r.rank <= 5 ? 0.75 : 0.5;
     for (let k = 0; k + 1 < r.pts.length; k++) {
@@ -95,17 +100,16 @@ export function paintLand(region: Region, climate: Climate, level: number, place
         const px = ax + ((bx - ax) * t) / (len || 1), py = ay + ((by - ay) * t) / (len || 1);
         for (let y = Math.floor(py - half - 0.5); y <= py + half + 0.5; y++) for (let x = Math.floor(px - half - 0.5); x <= px + half + 0.5; x++) {
           if (x < 0 || y < 0 || x >= w || y >= h || region.water[y * w + x] !== Water.Land) continue;
-          // the line's share of the dot; a dot keeps the most that any point of the line gave it (its alpha notes it meanwhile)
-          const share = Math.max(0, Math.min(1, half + 0.5 - Math.hypot(x + 0.5 - px, y + 0.5 - py))), i = (y * w + x) * 4, had = 1 - out[i + 3] / 255;
+          // the line's share of the dot; a dot keeps the most that any point of the line gave it
+          const share = Math.max(0, Math.min(1, half + 0.5 - Math.hypot(x + 0.5 - px, y + 0.5 - py))), i = y * w + x, had = wet[i];
           if (share <= had) continue;
           const more = (share - had) / (1 - had);
-          for (let ch = 0; ch < 3; ch++) out[i + ch] += (byteOf(WATER_SHALLOW[ch]) - out[i + ch]) * more;
-          out[i + 3] = 255 * (1 - share);
+          for (let ch = 0; ch < 3; ch++) out[i * 4 + ch] += (byteOf(WATER_SHALLOW[ch]) - out[i * 4 + ch]) * more;
+          wet[i] = share; out[i * 4 + 3] = 255 * (1 - RIVER_KEPT * share);
         }
       }
     }
   }
-  for (let i = 3; i < out.length; i += 4) out[i] = 255;
   // the towns: all but the villages at the finest level, fewer and fewer on the coarser ones
   const least = level === 0 ? 2 : Math.min(5, 2 + Math.ceil(level / 2));
   for (const p of places) {

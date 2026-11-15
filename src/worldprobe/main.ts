@@ -71,16 +71,17 @@ async function main() {
   };
 
   // the view in motion: it closes on the width the wheel asked for, and glides on after a drag
-  let goal = wide, about: [number, number] = [innerWidth / 2, innerHeight / 2], glide: [number, number] = [0, 0], last = 0, moving = false;
+  let goal = wide, about: [number, number] = [innerWidth / 2, innerHeight / 2], glide: [number, number] = [0, 0], last = -1, moving = false;
   const step = (now: number) => {
-    const dt = Math.min(50, now - last); last = now;
+    // time is taken from the pictures alone: the first one of a motion only starts the clock
+    const dt = last < 0 ? 0 : Math.min(50, now - last); last = now;
     const closing = Math.abs(Math.log(goal / wide)) > 1e-3, gliding = Math.hypot(...glide) > GLIDE_END * wide;
     if (closing) zoom(wide * (goal / wide) ** (1 - Math.exp(-dt * ZOOM_EASE)), ...about); else goal = wide;
     if (gliding) { move(glide[0] * dt, glide[1] * dt); const keep = Math.exp(-dt * GLIDE_EASE); glide = [glide[0] * keep, glide[1] * keep]; } else glide = [0, 0];
     moving = closing || gliding;
-    if (moving) requestAnimationFrame(step);
+    if (moving) requestAnimationFrame(step); else last = -1;
   };
-  const set = () => { if (!moving) { moving = true; last = performance.now(); requestAnimationFrame(step); } };
+  const set = () => { if (!moving) { moving = true; requestAnimationFrame(step); } };
   const zoomTo = (factor: number, px = innerWidth / 2, py = innerHeight / 2) => {
     goal = Math.min(FARTHEST, Math.max(NEAREST, goal * factor)); about = [px, py];
     if (still) zoom(goal, px, py); else set();

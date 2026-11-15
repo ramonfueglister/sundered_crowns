@@ -94,13 +94,13 @@ describe('painted map', () => {
   const climate = { w: 3072, h: 2648, cells: new Uint8Array(3072 * 2648).fill(Land.Temperate | 128) };
   const dot = (p: Uint8ClampedArray, x: number, y: number) => [...p.subarray((y * W + x) * 4, (y * W + x) * 4 + 4)];
 
-  it('paints sea, meadow and snow, and all of it solid', () => {
+  it('paints sea, meadow and snow, and lets the realms colour the land alone', () => {
     const p = paintLand(region(), climate, 0), sea = dot(p, 1, 8), meadow = dot(p, 8, 8), snow = dot(p, 14, 8);
     const srgb = (v: number) => Math.round(255 * (1.055 * v ** (1 / 2.4) - 0.055));
     expect(sea.slice(0, 3)).toEqual(OPEN_WATER.map(srgb));
     expect(meadow[1]).toBeGreaterThan(meadow[2] + 40);
     expect(Math.min(...snow.slice(0, 3))).toBeGreaterThan(230);
-    for (let i = 3; i < p.length; i += 4) expect(p[i]).toBe(255);
+    expect([sea[3], meadow[3], snow[3]]).toEqual([0, 255, 255]);
   });
 
   it('draws a river and a town where they are', () => {
@@ -110,6 +110,7 @@ describe('painted map', () => {
     // the river is bluer than the meadow it crosses, and the meadow beside it is as it was
     expect(dot(p, 6, 2)[2]).toBeGreaterThan(dot(plain, 6, 2)[2] + 40);
     expect(dot(p, 9, 2)).toEqual(dot(plain, 9, 2));
+    expect(dot(p, 6, 2)[3]).toBeLessThan(100);
     // the town is a mark in the red of its roofs
     expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(plain, 9, 13)[0] + 40);
     expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(p, 9, 13)[1] + 40);

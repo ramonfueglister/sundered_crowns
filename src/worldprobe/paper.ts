@@ -79,11 +79,12 @@ export function createPaper(stage: Stage, o: { region: string; base: string; ahe
     else if (what.kind === 'land') {
       const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks };
       if (e.data.pixels) {
-        // the realms' picture holds colour times cover and the cover: it is laid over the land as far as `wash` says,
-        // and keeps the land's light and shade, so that mountains and rivers still show through a realm's colour
-        const land = picture(e.data.pixels, true), realms = texture(nothing), ground = texture(land).rgb;
-        const shade = dot(ground, vec3(0.2126, 0.7152, 0.0722)).div(LAND_LIGHT).clamp(0, 1.5).mul(SHADE_KEPT).add(1 - SHADE_KEPT);
-        const colour = ground.mul(realms.a.mul(wash).oneMinus()).add(realms.rgb.mul(shade).mul(wash));
+        // the realms' picture holds colour times cover and the cover: it is laid over the land as far as `wash` says
+        // and the land's picture lets it (not on water), and keeps the land's light and shade, so that the mountains
+        // still show through a realm's colour
+        const land = picture(e.data.pixels, true), realms = texture(nothing), ground = texture(land), laid = wash.mul(ground.a);
+        const shade = dot(ground.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LAND_LIGHT).clamp(0, 1.5).mul(SHADE_KEPT).add(1 - SHADE_KEPT);
+        const colour = ground.rgb.mul(realms.a.mul(laid).oneMinus()).add(realms.rgb.mul(shade).mul(laid));
         const below = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false }), above = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false, transparent: true });
         below.colorNode = colour; above.colorNode = colour; above.opacityNode = strength;
         const g = square(what.level), under = new THREE.Mesh(g, below), over = new THREE.Mesh(g, above);
