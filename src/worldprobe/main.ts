@@ -3,23 +3,25 @@
 // farther out it sinks into the flat painted map that lies under it at every distance (paper.ts), on which the realms
 // and their names show from the width of a country on (names.ts). zoom.ts holds the rules of the change.
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
-// + and - zoom.
+// + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
 // ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show). The address follows the view.
-import { NEAR, RIGHT } from '../lookprobe/layout';
+import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage, showError } from '../lookprobe/stage';
 import { createNames } from './names';
 import { createPaper } from './paper';
-import { createPieces } from './pieces';
+import { type Layout, createPieces } from './pieces';
 import { projectionOf } from './region';
 import { blockOfCell, cellOfBlock } from './land';
-import { FARTHEST, NEAREST, creasesOf, elevationOf, realmsOf } from './zoom';
+import { FARTHEST, NEAREST, creasesOf, elevationOf, realmsOf, reliefOf } from './zoom';
 
 const q = new URLSearchParams(location.search);
 /** a number of the address; the equator and the meridian of Greenwich are places too, so 0 counts */
 const num = (k: string, fallback: number) => { const v = Number(q.get(k) || NaN); return Number.isFinite(v) ? v : fallback; };
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
 const ZOOM_EASE = 1 / 90, GLIDE_EASE = 1 / 280;
+/** a press that is let go within this many pixels and milliseconds is a click, not a drag */
+const CLICK_REACH = 4, CLICK_TIME = 400;
 /** a drag hands its speed over the last so many milliseconds to the glide; below this many blocks a millisecond, as a share of the picture's width, the glide ends */
 const GLIDE_WINDOW = 90, GLIDE_END = 2e-5;
 
@@ -34,11 +36,13 @@ async function main() {
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
   const paper = createPaper(stage, { region: name, base, ahead: !still, changed: () => look() }), names = createNames();
 
+  /** how the stage is laid out for the view, as of the last look */
+  let laid: Layout = { step: 0, coarse: 1, homeX: 0, homeZ: 0 };
   const look = () => {
     const elevation = elevationOf(wide), view = { x, z, wide, aspect: canvas.clientWidth / canvas.clientHeight, pixels: canvas.clientWidth, elevation };
     const at = pieces.look(view), missing = at.missing + paper.look(view, at), failed = pieces.failed || paper.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
-    stage.creases(creasesOf(wide));
+    stage.creases(creasesOf(wide)); laid = at;
     const [u, v] = cellOfBlock(x, z), box = canvas.getBoundingClientRect();
     names.show(paper.names, box, u / projection.cells, v / projection.cells, (box.width / wide) * projection.cells, Math.sin((elevation * Math.PI) / 180), realmsOf(wide));
     stage.busy = missing > 0 && !failed;
@@ -89,10 +93,20 @@ async function main() {
   /** sets the view gliding so that it comes to rest this far on */
   const push = (right: number, near: number) => { if (still) move(right, near); else { glide = [glide[0] + right * GLIDE_EASE, glide[1] + near * GLIDE_EASE]; set(); } };
 
+  /**
+   * Tells the page that the ground was clicked: the event `world-click` on the window, whose detail holds the point in
+   * finest world blocks (x, z; y in blocks above the stage's floor as the land was built, before the relief was
+   * scaled) and the step the view is drawn in. Who wants to know what stands there listens for it.
+   */
+  const click = (px: number, py: number) => {
+    const hit = stage.pick(px, py), tall = reliefOf(wide, laid.step);
+    if (hit) window.dispatchEvent(new CustomEvent('world-click', { detail: { x: (hit[0] + laid.homeX) * laid.coarse, y: (hit[1] - SEA_Y * (1 - tall)) / tall, z: (hit[2] + laid.homeZ) * laid.coarse, step: laid.step } }));
+  };
   // one pointer drags the ground along; two pinch it larger or smaller
   const held = new Map<number, { x: number; y: number }>(), trail: { t: number; right: number; near: number }[] = [];
+  let pressed = { x: 0, y: 0, t: 0, alone: false };
   canvas.style.touchAction = 'none'; canvas.style.cursor = 'grab';
-  canvas.addEventListener('pointerdown', (e) => { held.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; glide = [0, 0]; trail.length = 0; });
+  canvas.addEventListener('pointerdown', (e) => { pressed = { x: e.clientX, y: e.clientY, t: performance.now(), alone: held.size === 0 }; held.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; glide = [0, 0]; trail.length = 0; });
   canvas.addEventListener('pointermove', (e) => {
     const was = held.get(e.pointerId);
     if (!was) return;
@@ -109,8 +123,9 @@ async function main() {
   });
   for (const up of ['pointerup', 'pointercancel'] as const) canvas.addEventListener(up, (e) => {
     held.delete(e.pointerId);
-    if (held.size) return;
+    if (held.size) { pressed.alone = false; return; }
     canvas.style.cursor = 'grab';
+    if (up === 'pointerup' && pressed.alone && Math.hypot(e.clientX - pressed.x, e.clientY - pressed.y) <= CLICK_REACH && performance.now() - pressed.t <= CLICK_TIME) click(e.clientX, e.clientY);
     // the drag's speed over its last moments carries the view on
     const now = performance.now(), recent = trail.filter((p) => now - p.t <= GLIDE_WINDOW);
     if (!still && recent.length > 1) { glide = [recent.reduce((s, p) => s + p.right, 0) / GLIDE_WINDOW, recent.reduce((s, p) => s + p.near, 0) / GLIDE_WINDOW]; set(); }
