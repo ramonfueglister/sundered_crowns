@@ -1,0 +1,6772 @@
+{
+ "region": "world_beyond",
+ "year": 1356,
+ "date": "1356-01-01",
+ "sources": [
+  "F. W. Mote and D. Twitchett (eds.), The Cambridge History of China vol. 6 (Alien Regimes and Border States) and vol. 7 (The Ming Dynasty, part 1), 1988-1994",
+  "J. W. Dardess, Conquerors and Confucians: Aspects of Political Change in Late Yuan China (1973)",
+  "R. Grousset, The Empire of the Steppes (1970)",
+  "B. F. Manz, The Rise and Rule of Tamerlane (1989)",
+  "P. Jackson, The Delhi Sultanate: A Political and Military History (1999)",
+  "R. M. Eaton, A Social History of the Deccan 1300-1761 (2005); R. M. Eaton, The Rise of Islam and the Bengal Frontier (1993)",
+  "B. Stein, Vijayanagara (New Cambridge History of India I.2, 1989)",
+  "N. Tarling (ed.), The Cambridge History of Southeast Asia vol. 1 (1992)",
+  "V. Lieberman, Strange Parallels vol. 1 (2003)",
+  "K. W. Taylor, A History of the Vietnamese (2013)",
+  "M. Vickery, Cambodia after Angkor (1977); D. K. Wyatt, Thailand: A Short History (2003)",
+  "M. C. Ricklefs, A History of Modern Indonesia since c.1200 (2008); Nagarakretagama (1365)",
+  "K. Yamamura (ed.), The Cambridge History of Japan vol. 3 (Medieval Japan, 1990)",
+  "Ki-baik Lee, A New History of Korea (1984)",
+  "W. D. Shakabpa, Tibet: A Political History (1967); L. Petech, Central Tibet and the Mongols (1990)",
+  "K. M. de Silva, A History of Sri Lanka (1981)",
+  "Ibn Battuta, Rihla (travels 1333-1347 in India, the Maldives, Sumatra and China)",
+  "G. H. Kerr, Okinawa: The History of an Island People (1958)",
+  "Cambridge History of the Native Peoples of the Americas vol. 1 and 2"
+ ],
+ "new_ids": [
+  {
+   "kind": "faith",
+   "id": "mahayana",
+   "note": "Mahayana Buddhism (China, Korea, Japan, Vietnam)"
+  },
+  {
+   "kind": "faith",
+   "id": "theravada",
+   "note": "Theravada Buddhism (Lanka, Burma, Thai, Lao, Khmer)"
+  },
+  {
+   "kind": "faith",
+   "id": "vajrayana",
+   "note": "Vajrayana Buddhism (Tibet, the Mongol court)"
+  },
+  {
+   "kind": "faith",
+   "id": "shinto",
+   "note": "Shinto with Buddhism (the Southern Court as keeper of the imperial rites)"
+  },
+  {
+   "kind": "faith",
+   "id": "white_lotus",
+   "note": "White Lotus millenarian Buddhism of the Red Turbans"
+  },
+  {
+   "kind": "faith",
+   "id": "tai_folk",
+   "note": "Tai folk religion (Ahom)"
+  },
+  {
+   "kind": "faith",
+   "id": "polynesian_faith",
+   "note": "Polynesian religion"
+  },
+  {
+   "kind": "culture",
+   "id": "han",
+   "group": "sinic"
+  },
+  {
+   "kind": "culture",
+   "id": "korean",
+   "group": "sinic"
+  },
+  {
+   "kind": "culture",
+   "id": "japanese",
+   "group": "sinic"
+  },
+  {
+   "kind": "culture",
+   "id": "ryukyuan",
+   "group": "sinic"
+  },
+  {
+   "kind": "culture",
+   "id": "jurchen",
+   "group": "sinic"
+  },
+  {
+   "kind": "culture",
+   "id": "tibetan",
+   "group": "tibeto_burman"
+  },
+  {
+   "kind": "culture",
+   "id": "burmese",
+   "group": "tibeto_burman"
+  },
+  {
+   "kind": "culture",
+   "id": "newar",
+   "group": "tibeto_burman"
+  },
+  {
+   "kind": "culture",
+   "id": "arakanese",
+   "group": "tibeto_burman"
+  },
+  {
+   "kind": "culture",
+   "id": "hindustani",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "bengali",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "kashmiri",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "dakhini",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "rajput",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "nepali",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "assamese",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "odia",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "sinhala",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "dhivehi",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "gujarati",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "punjabi",
+   "group": "indic"
+  },
+  {
+   "kind": "culture",
+   "id": "kannada",
+   "group": "dravidian"
+  },
+  {
+   "kind": "culture",
+   "id": "tamil",
+   "group": "dravidian"
+  },
+  {
+   "kind": "culture",
+   "id": "telugu",
+   "group": "dravidian"
+  },
+  {
+   "kind": "culture",
+   "id": "malayali",
+   "group": "dravidian"
+  },
+  {
+   "kind": "culture",
+   "id": "thai",
+   "group": "tai"
+  },
+  {
+   "kind": "culture",
+   "id": "lao",
+   "group": "tai"
+  },
+  {
+   "kind": "culture",
+   "id": "shan",
+   "group": "tai"
+  },
+  {
+   "kind": "culture",
+   "id": "ahom",
+   "group": "tai"
+  },
+  {
+   "kind": "culture",
+   "id": "vietnamese",
+   "group": "austroasiatic"
+  },
+  {
+   "kind": "culture",
+   "id": "khmer",
+   "group": "austroasiatic"
+  },
+  {
+   "kind": "culture",
+   "id": "mon",
+   "group": "austroasiatic"
+  },
+  {
+   "kind": "culture",
+   "id": "cham",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "javanese",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "sundanese",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "malay",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "bugis",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "tagalog",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "polynesian",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "maori",
+   "group": "austronesian"
+  },
+  {
+   "kind": "culture",
+   "id": "evenk",
+   "group": "siberian"
+  },
+  {
+   "kind": "culture",
+   "id": "yakut",
+   "group": "siberian"
+  },
+  {
+   "kind": "culture",
+   "id": "chukchi",
+   "group": "siberian"
+  },
+  {
+   "kind": "culture",
+   "id": "ainu",
+   "group": "siberian"
+  },
+  {
+   "kind": "culture",
+   "id": "nivkh",
+   "group": "siberian"
+  },
+  {
+   "kind": "culture",
+   "id": "australian_aboriginal",
+   "group": "aboriginal"
+  },
+  {
+   "kind": "culture",
+   "id": "puebloan",
+   "group": "western_american"
+  },
+  {
+   "kind": "culture",
+   "id": "apache",
+   "group": "western_american"
+  },
+  {
+   "kind": "culture",
+   "id": "salish",
+   "group": "western_american"
+  },
+  {
+   "kind": "culture",
+   "id": "chagatai_turkic",
+   "group": "central_asian"
+  },
+  {
+   "kind": "culture",
+   "id": "uyghur",
+   "group": "central_asian"
+  }
+ ],
+ "notes": [
+  "China on 1 January 1356: the Yuan court still holds the north, the south-west and the south coast, but the Red Turban rising of 1351 has split the Yangzi: the Song of Han Lin'er (Longfeng, Liu Futong) in the Huai, Xu Shouhui's Tianwan on the middle Yangzi, Zhang Shicheng at Gaoyou (he takes Suzhou in the spring of 1356), Zhu Yuanzhang at Hezhou (he takes Nanjing in April 1356) and Fang Guozhen on the Zhejiang coast, who has taken Yuan offices.",
+  "Japan is split between the Northern Court of Kyoto with the Ashikaga shoguns and the Southern Court of Go-Murakami, whose strength in 1356 lies in Yoshino and with the Kikuchi in Kyushu.",
+  "Rulers whose names or dates are uncertain in the sources (Angkor, Champa, Arakan, Kamata, Jaffna, Mong Mao, Tu'i Tonga) are flagged in dynasty_note."
+ ],
+ "states": [
+  {
+   "id": "yuan",
+   "name": {
+    "en": "Great Yuan",
+    "de": "Große Yuan"
+   },
+   "short": {
+    "en": "Yuan",
+    "de": "Yuan"
+   },
+   "adjective": {
+    "en": "Yuan",
+    "de": "yuan"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "mongol",
+   "faith": "vajrayana",
+   "color": "#75693f",
+   "capital": {
+    "name": "Dadu",
+    "lat": 39.9,
+    "lon": 116.4
+   },
+   "holdings": [
+    {
+     "name": "Dadu",
+     "lat": 39.9,
+     "lon": 116.4
+    },
+    {
+     "name": "Shangdu",
+     "lat": 42.36,
+     "lon": 116.18
+    },
+    {
+     "name": "Karakorum",
+     "lat": 47.2,
+     "lon": 102.82
+    },
+    {
+     "name": "Yingchang",
+     "lat": 43.4,
+     "lon": 116.6
+    },
+    {
+     "name": "Liaoyang",
+     "lat": 41.27,
+     "lon": 123.17
+    },
+    {
+     "name": "Shenyang",
+     "lat": 41.8,
+     "lon": 123.43
+    },
+    {
+     "name": "Taiyuan",
+     "lat": 37.87,
+     "lon": 112.55
+    },
+    {
+     "name": "Datong",
+     "lat": 40.08,
+     "lon": 113.3
+    },
+    {
+     "name": "Fengyuan",
+     "lat": 34.27,
+     "lon": 108.95
+    },
+    {
+     "name": "Lanzhou",
+     "lat": 36.06,
+     "lon": 103.83
+    },
+    {
+     "name": "Ganzhou",
+     "lat": 38.93,
+     "lon": 100.45
+    },
+    {
+     "name": "Suzhou (Gansu)",
+     "lat": 39.74,
+     "lon": 98.5
+    },
+    {
+     "name": "Ningxia",
+     "lat": 38.47,
+     "lon": 106.27
+    },
+    {
+     "name": "Jinan",
+     "lat": 36.65,
+     "lon": 117.0
+    },
+    {
+     "name": "Yidu",
+     "lat": 36.69,
+     "lon": 118.48
+    },
+    {
+     "name": "Zhending",
+     "lat": 38.15,
+     "lon": 114.57
+    },
+    {
+     "name": "Daming",
+     "lat": 36.28,
+     "lon": 115.15
+    },
+    {
+     "name": "Kaifeng",
+     "lat": 34.8,
+     "lon": 114.3
+    },
+    {
+     "name": "Luoyang",
+     "lat": 34.62,
+     "lon": 112.45
+    },
+    {
+     "name": "Hangzhou",
+     "lat": 30.25,
+     "lon": 120.17
+    },
+    {
+     "name": "Shaoxing",
+     "lat": 30.0,
+     "lon": 120.58
+    },
+    {
+     "name": "Fuzhou",
+     "lat": 26.08,
+     "lon": 119.3
+    },
+    {
+     "name": "Quanzhou",
+     "lat": 24.9,
+     "lon": 118.6
+    },
+    {
+     "name": "Guangzhou",
+     "lat": 23.13,
+     "lon": 113.26
+    },
+    {
+     "name": "Guilin",
+     "lat": 25.27,
+     "lon": 110.29
+    },
+    {
+     "name": "Nanchang",
+     "lat": 28.68,
+     "lon": 115.86
+    },
+    {
+     "name": "Ganzhou (Jiangxi)",
+     "lat": 25.83,
+     "lon": 114.93
+    },
+    {
+     "name": "Changsha",
+     "lat": 28.2,
+     "lon": 112.97
+    },
+    {
+     "name": "Chengdu",
+     "lat": 30.66,
+     "lon": 104.07
+    },
+    {
+     "name": "Chongqing",
+     "lat": 29.56,
+     "lon": 106.55
+    },
+    {
+     "name": "Zhongqing (Kunming)",
+     "lat": 25.04,
+     "lon": 102.71
+    },
+    {
+     "name": "Dali",
+     "lat": 25.69,
+     "lon": 100.16
+    },
+    {
+     "name": "Hami",
+     "lat": 42.83,
+     "lon": 93.51
+    },
+    {
+     "name": "Qiqihar country",
+     "lat": 47.35,
+     "lon": 123.92
+    },
+    {
+     "name": "Kerulen",
+     "lat": 47.8,
+     "lon": 112.5
+    }
+   ],
+   "ruler": {
+    "name": "Toghon Temür (Emperor Huizong)",
+    "born": 1320,
+    "dynasty": "Borjigin",
+    "female": false,
+    "skills": [
+     2,
+     1,
+     1
+    ],
+    "traits": [
+     "lazy"
+    ]
+   },
+   "heir": {
+    "name": "Ayushiridara",
+    "born": 1339,
+    "dynasty": "Borjigin",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Empress Gi",
+    "born": 1315,
+    "dynasty": "Haengju Gi",
+    "female": true,
+    "skills": [
+     4,
+     4,
+     0
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "dynasty_note": "Borjigin, Yuan line of Qubilai. Toghon Temür reigns since 1333; the chancellor Toqto'a, who crushed the Red Turbans at Gaoyou, was dismissed in January 1355 and the court is ruled by Hama and Empress Gi. Yunnan is held by the Prince of Liang (Basalawarmi) for the throne.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "song_red_turban",
+    "tianwan",
+    "zhang_shicheng",
+    "zhu_yuanzhang"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 4,
+   "summary": {
+    "en": "The Great Yuan still rules from Dadu over the steppe, the north of China, Yunnan and the southern coast, but the Red Turban rising has broken its hold on the Yangzi. The emperor leaves the government to his ministers and to Empress Gi; the great general Toqto'a has been dismissed on the eve of victory.",
+    "de": "Die Große Yuan herrscht von Dadu aus noch über die Steppe, den Norden Chinas, Yunnan und die Südküste, doch der Aufstand der Roten Turbane hat ihren Griff auf den Jangtse gebrochen. Der Kaiser überlässt die Regierung seinen Ministern und der Kaiserin Gi; der große Feldherr Toqto'a wurde am Vorabend des Sieges entlassen."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "song_red_turban",
+   "name": {
+    "en": "Song of the Red Turbans",
+    "de": "Song der Roten Turbane"
+   },
+   "short": {
+    "en": "Song",
+    "de": "Song"
+   },
+   "adjective": {
+    "en": "Song",
+    "de": "Song-"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "han",
+   "faith": "white_lotus",
+   "color": "#7a421b",
+   "capital": {
+    "name": "Bozhou",
+    "lat": 33.87,
+    "lon": 115.77
+   },
+   "holdings": [
+    {
+     "name": "Bozhou",
+     "lat": 33.87,
+     "lon": 115.77
+    },
+    {
+     "name": "Yingzhou",
+     "lat": 32.9,
+     "lon": 115.81
+    },
+    {
+     "name": "Shouzhou",
+     "lat": 32.58,
+     "lon": 116.78
+    },
+    {
+     "name": "Guide",
+     "lat": 34.42,
+     "lon": 115.65
+    },
+    {
+     "name": "Xuzhou",
+     "lat": 34.26,
+     "lon": 117.19
+    }
+   ],
+   "ruler": {
+    "name": "Han Lin'er (Longfeng Emperor)",
+    "born": 1338,
+    "dynasty": "Han",
+    "female": false,
+    "skills": [
+     1,
+     2,
+     1
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Han Lin'er, son of the White Lotus leader Han Shantong, was enthroned by Liu Futong at Bozhou in March 1355 as emperor of a restored Song (era Longfeng). Liu Futong commands; Zhu Yuanzhang at Hezhou serves under the Longfeng era name.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "In the Huai valley the Red Turbans of the White Lotus have raised the boy Han Lin'er as emperor of a reborn Song. Their general Liu Futong holds Bozhou and prepares the march on Kaifeng, the old Song capital.",
+    "de": "Im Tal des Huai haben die Roten Turbane des Weißen Lotus den Knaben Han Lin'er zum Kaiser einer wiedergeborenen Song erhoben. Ihr Feldherr Liu Futong hält Bozhou und rüstet zum Zug auf Kaifeng, die alte Hauptstadt der Song."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "zhu_yuanzhang",
+   "name": {
+    "en": "Domain of Zhu Yuanzhang",
+    "de": "Herrschaft des Zhu Yuanzhang"
+   },
+   "short": {
+    "en": "Zhu",
+    "de": "Zhu"
+   },
+   "adjective": {
+    "en": "Zhu",
+    "de": "Zhu-"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "han",
+   "faith": "white_lotus",
+   "color": "#405c20",
+   "capital": {
+    "name": "Hezhou",
+    "lat": 31.72,
+    "lon": 118.37
+   },
+   "holdings": [
+    {
+     "name": "Hezhou",
+     "lat": 31.72,
+     "lon": 118.37
+    },
+    {
+     "name": "Chuzhou",
+     "lat": 32.3,
+     "lon": 118.31
+    },
+    {
+     "name": "Taiping",
+     "lat": 31.55,
+     "lon": 118.5
+    },
+    {
+     "name": "Wuhu",
+     "lat": 31.33,
+     "lon": 118.38
+    },
+    {
+     "name": "Jiqing (Nanjing)",
+     "lat": 32.06,
+     "lon": 118.79
+    }
+   ],
+   "ruler": {
+    "name": "Zhu Yuanzhang",
+    "born": 1328,
+    "dynasty": "Zhu",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     5
+    ],
+    "traits": [
+     "ambitious",
+     "cruel"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Lady Ma",
+    "born": 1332,
+    "dynasty": "Ma",
+    "female": true,
+    "skills": [
+     4,
+     3,
+     0
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "dynasty_note": "A former monk and Red Turban soldier, master of the army of Guo Zixing since 1355; he crosses the Yangzi in 1355 and takes Jiqing (Nanjing) in April 1356, renaming it Yingtian. Founder of the Ming in 1368.",
+   "overlord": "song_red_turban",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "zhang_shicheng",
+    "tianwan",
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "At Hezhou on the Yangzi stands the army of Zhu Yuanzhang, a peasant's son and former monk who serves the Song of the Red Turbans. Across the river lies Jiqing, the old capital of the south; whoever holds it holds the lower Yangzi.",
+    "de": "Bei Hezhou am Jangtse steht das Heer des Zhu Yuanzhang, eines Bauernsohns und einstigen Mönchs im Dienst der Song der Roten Turbane. Jenseits des Flusses liegt Jiqing, die alte Hauptstadt des Südens; wer sie hält, hält den unteren Jangtse."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "zhang_shicheng",
+   "name": {
+    "en": "Great Zhou",
+    "de": "Groß-Zhou"
+   },
+   "short": {
+    "en": "Zhou",
+    "de": "Zhou"
+   },
+   "adjective": {
+    "en": "Zhou",
+    "de": "Zhou-"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "han",
+   "faith": "mahayana",
+   "color": "#484031",
+   "capital": {
+    "name": "Gaoyou",
+    "lat": 32.78,
+    "lon": 119.44
+   },
+   "holdings": [
+    {
+     "name": "Gaoyou",
+     "lat": 32.78,
+     "lon": 119.44
+    },
+    {
+     "name": "Taizhou",
+     "lat": 32.49,
+     "lon": 119.91
+    },
+    {
+     "name": "Xinghua",
+     "lat": 32.94,
+     "lon": 119.84
+    },
+    {
+     "name": "Tongzhou",
+     "lat": 32.01,
+     "lon": 120.86
+    },
+    {
+     "name": "Changshu",
+     "lat": 31.65,
+     "lon": 120.75
+    },
+    {
+     "name": "Pingjiang (Suzhou)",
+     "lat": 31.3,
+     "lon": 120.62
+    }
+   ],
+   "ruler": {
+    "name": "Zhang Shicheng",
+    "born": 1321,
+    "dynasty": "Zhang",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "greedy"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "A salt smuggler who rose in 1353 and proclaimed himself King of Great Zhou at Gaoyou in 1354; he survived Toqto'a's siege when the chancellor was dismissed, and crosses the Yangzi early in 1356 to take Pingjiang (Suzhou).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "zhu_yuanzhang",
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "The salt smuggler Zhang Shicheng, King of Great Zhou, held Gaoyou against the whole Yuan army and was saved when its general fell from favour. Now he reaches across the Yangzi for Suzhou and the richest rice and silk lands of China.",
+    "de": "Der Salzschmuggler Zhang Shicheng, König von Groß-Zhou, hielt Gaoyou gegen das ganze Heer der Yuan und wurde gerettet, als dessen Feldherr in Ungnade fiel. Nun greift er über den Jangtse nach Suzhou und den reichsten Reis- und Seidenländern Chinas."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tianwan",
+   "name": {
+    "en": "Tianwan",
+    "de": "Tianwan"
+   },
+   "short": {
+    "en": "Tianwan",
+    "de": "Tianwan"
+   },
+   "adjective": {
+    "en": "Tianwan",
+    "de": "Tianwan-"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "han",
+   "faith": "white_lotus",
+   "color": "#444033",
+   "capital": {
+    "name": "Hanyang",
+    "lat": 30.55,
+    "lon": 114.27
+   },
+   "holdings": [
+    {
+     "name": "Hanyang",
+     "lat": 30.55,
+     "lon": 114.27
+    },
+    {
+     "name": "Qishui",
+     "lat": 30.45,
+     "lon": 115.27
+    },
+    {
+     "name": "Huangzhou",
+     "lat": 30.45,
+     "lon": 114.87
+    },
+    {
+     "name": "Jiangzhou",
+     "lat": 29.7,
+     "lon": 116.0
+    },
+    {
+     "name": "Wuchang",
+     "lat": 30.55,
+     "lon": 114.3
+    },
+    {
+     "name": "Mianyang",
+     "lat": 30.36,
+     "lon": 113.45
+    }
+   ],
+   "ruler": {
+    "name": "Xu Shouhui",
+    "born": 1320,
+    "dynasty": "Xu",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Xu Shouhui, a cloth peddler, was proclaimed emperor of Tianwan by the western Red Turbans in 1351 at Qishui; driven out in 1353, he re-established his court at Hanyang in 1356. His general Chen Youliang will murder him in 1360.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan",
+    "zhu_yuanzhang"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "On the middle Yangzi the western Red Turbans have restored their emperor Xu Shouhui at Hanyang. His fleets rule the river and the lakes; his generals, above all the fisherman's son Chen Youliang, are more dangerous to him than the Yuan.",
+    "de": "Am mittleren Jangtse haben die westlichen Roten Turbane ihren Kaiser Xu Shouhui in Hanyang wieder eingesetzt. Seine Flotten beherrschen Fluss und Seen; seine Feldherren, vor allem der Fischersohn Chen Youliang, sind ihm gefährlicher als die Yuan."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "fang_guozhen",
+   "name": {
+    "en": "Domain of Fang Guozhen",
+    "de": "Herrschaft des Fang Guozhen"
+   },
+   "short": {
+    "en": "Fang",
+    "de": "Fang"
+   },
+   "adjective": {
+    "en": "Fang",
+    "de": "Fang-"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "han",
+   "faith": "mahayana",
+   "color": "#60481f",
+   "capital": {
+    "name": "Qingyuan (Ningbo)",
+    "lat": 29.87,
+    "lon": 121.55
+   },
+   "holdings": [
+    {
+     "name": "Qingyuan (Ningbo)",
+     "lat": 29.87,
+     "lon": 121.55
+    },
+    {
+     "name": "Taizhou (Zhejiang)",
+     "lat": 28.66,
+     "lon": 121.42
+    },
+    {
+     "name": "Wenzhou",
+     "lat": 28.0,
+     "lon": 120.67
+    },
+    {
+     "name": "Dinghai",
+     "lat": 30.02,
+     "lon": 122.1
+    }
+   ],
+   "ruler": {
+    "name": "Fang Guozhen",
+    "born": 1319,
+    "dynasty": "Fang",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": [
+     "deceitful"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "A salt trader turned sea raider since 1348, who has taken Yuan offices in exchange for shipping the southern grain to Dadu; he holds the ports of eastern Zhejiang.",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "Fang Guozhen, the first of the great rebels, rules the sea off Zhejiang. He changes sides as the wind blows; for now he is a Yuan official and carries the rice of the south to the hungry capital.",
+    "de": "Fang Guozhen, der erste der großen Rebellen, beherrscht das Meer vor Zhejiang. Er wechselt die Seiten, wie der Wind weht; einstweilen ist er Beamter der Yuan und fährt den Reis des Südens in die hungernde Hauptstadt."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "goryeo",
+   "name": {
+    "en": "Kingdom of Goryeo",
+    "de": "Königreich Goryeo"
+   },
+   "short": {
+    "en": "Goryeo",
+    "de": "Goryeo"
+   },
+   "adjective": {
+    "en": "Goryeo",
+    "de": "koreanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "korean",
+   "faith": "mahayana",
+   "color": "#727650",
+   "capital": {
+    "name": "Kaegyeong",
+    "lat": 37.97,
+    "lon": 126.55
+   },
+   "holdings": [
+    {
+     "name": "Kaegyeong",
+     "lat": 37.97,
+     "lon": 126.55
+    },
+    {
+     "name": "Pyongyang",
+     "lat": 39.03,
+     "lon": 125.75
+    },
+    {
+     "name": "Hanyang",
+     "lat": 37.57,
+     "lon": 126.98
+    },
+    {
+     "name": "Gyeongju",
+     "lat": 35.84,
+     "lon": 129.21
+    },
+    {
+     "name": "Sangju",
+     "lat": 36.41,
+     "lon": 128.16
+    },
+    {
+     "name": "Jeonju",
+     "lat": 35.82,
+     "lon": 127.15
+    },
+    {
+     "name": "Naju",
+     "lat": 35.02,
+     "lon": 126.71
+    },
+    {
+     "name": "Chungju",
+     "lat": 36.99,
+     "lon": 127.93
+    },
+    {
+     "name": "Wonju",
+     "lat": 37.34,
+     "lon": 127.92
+    },
+    {
+     "name": "Gangneung",
+     "lat": 37.75,
+     "lon": 128.9
+    },
+    {
+     "name": "Tamna (Jeju)",
+     "lat": 33.5,
+     "lon": 126.53
+    },
+    {
+     "name": "Ssangseong",
+     "lat": 39.85,
+     "lon": 127.53
+    }
+   ],
+   "ruler": {
+    "name": "King Gongmin",
+    "born": 1330,
+    "dynasty": "Wang",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "ambitious",
+     "just"
+    ]
+   },
+   "heir": null,
+   "consort": {
+    "name": "Princess Noguk",
+    "born": 1330,
+    "dynasty": "Borjigin",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "kind"
+    ]
+   },
+   "dynasty_note": "Wang dynasty. Gongmin, raised at the Yuan court and married to the Yuan princess Noguk, reigns since 1351. In 1356 he purges the pro-Yuan Gi clan and retakes the Ssangseong commandery in the north-east.",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "King Gongmin of Goryeo has spent his youth as a hostage in Dadu. Now that the Yuan totters, he is about to strike: the kin of Empress Gi, who lord it over Korea, will be killed, and the lands taken by the Mongols a century ago won back.",
+    "de": "König Gongmin von Goryeo verbrachte seine Jugend als Geisel in Dadu. Nun, da die Yuan wanken, holt er zum Schlag aus: die Sippe der Kaiserin Gi, die über Korea herrscht, wird getötet, und das vor einem Jahrhundert von den Mongolen genommene Land zurückgewonnen."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ashikaga",
+   "name": {
+    "en": "Ashikaga Shogunate",
+    "de": "Ashikaga-Shogunat"
+   },
+   "short": {
+    "en": "Japan",
+    "de": "Japan"
+   },
+   "adjective": {
+    "en": "Japanese",
+    "de": "japanisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "japanese",
+   "faith": "mahayana",
+   "color": "#6c3748",
+   "capital": {
+    "name": "Kyoto",
+    "lat": 35.01,
+    "lon": 135.77
+   },
+   "holdings": [
+    {
+     "name": "Kyoto",
+     "lat": 35.01,
+     "lon": 135.77
+    },
+    {
+     "name": "Kamakura",
+     "lat": 35.32,
+     "lon": 139.55
+    },
+    {
+     "name": "Sakai",
+     "lat": 34.57,
+     "lon": 135.48
+    },
+    {
+     "name": "Nara",
+     "lat": 34.68,
+     "lon": 135.8
+    },
+    {
+     "name": "Owari",
+     "lat": 35.18,
+     "lon": 136.9
+    },
+    {
+     "name": "Suruga",
+     "lat": 34.97,
+     "lon": 138.38
+    },
+    {
+     "name": "Shimotsuke",
+     "lat": 36.55,
+     "lon": 139.88
+    },
+    {
+     "name": "Mutsu (Taga)",
+     "lat": 38.3,
+     "lon": 140.99
+    },
+    {
+     "name": "Dewa",
+     "lat": 38.92,
+     "lon": 139.84
+    },
+    {
+     "name": "Echizen",
+     "lat": 36.07,
+     "lon": 136.22
+    },
+    {
+     "name": "Harima",
+     "lat": 34.83,
+     "lon": 134.69
+    },
+    {
+     "name": "Bizen",
+     "lat": 34.66,
+     "lon": 133.92
+    },
+    {
+     "name": "Aki",
+     "lat": 34.39,
+     "lon": 132.46
+    },
+    {
+     "name": "Izumo",
+     "lat": 35.37,
+     "lon": 132.75
+    },
+    {
+     "name": "Sanuki",
+     "lat": 34.34,
+     "lon": 134.04
+    },
+    {
+     "name": "Iyo",
+     "lat": 33.84,
+     "lon": 132.77
+    },
+    {
+     "name": "Hakata",
+     "lat": 33.59,
+     "lon": 130.4
+    },
+    {
+     "name": "Shinano",
+     "lat": 36.24,
+     "lon": 137.97
+    },
+    {
+     "name": "Kai",
+     "lat": 35.66,
+     "lon": 138.57
+    }
+   ],
+   "ruler": {
+    "name": "Ashikaga Takauji",
+    "born": 1305,
+    "dynasty": "Ashikaga",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     5
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": {
+    "name": "Ashikaga Yoshiakira",
+    "born": 1330,
+    "dynasty": "Ashikaga",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Ashikaga shoguns since 1338, ruling in the name of the Northern Court (Emperor Go-Kōgon, reigning since 1352). Takauji has just retaken Kyoto (March 1355) from his rebel son Tadafuyu and the Southern Court; his son Motouji holds Kamakura for him.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "southern_court"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Japan has two emperors. In Kyoto the shogun Ashikaga Takauji rules in the name of the Northern Court, after years of war with the Southern Court and with his own brother and son. The great warrior houses obey him only as long as he wins.",
+    "de": "Japan hat zwei Kaiser. In Kyoto herrscht der Shogun Ashikaga Takauji im Namen des Nördlichen Hofes, nach Jahren des Krieges gegen den Südlichen Hof und gegen den eigenen Bruder und Sohn. Die großen Kriegerhäuser gehorchen ihm nur, solange er siegt."
+   },
+   "coa": {
+    "blazon": "Argent, plain",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "southern_court",
+   "name": {
+    "en": "Southern Court",
+    "de": "Südlicher Hof"
+   },
+   "short": {
+    "en": "Yoshino",
+    "de": "Yoshino"
+   },
+   "adjective": {
+    "en": "Southern",
+    "de": "südlich"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "japanese",
+   "faith": "shinto",
+   "color": "#79673f",
+   "capital": {
+    "name": "Anō",
+    "lat": 34.32,
+    "lon": 135.73
+   },
+   "holdings": [
+    {
+     "name": "Anō",
+     "lat": 34.32,
+     "lon": 135.73
+    },
+    {
+     "name": "Yoshino",
+     "lat": 34.37,
+     "lon": 135.86
+    },
+    {
+     "name": "Kikuchi",
+     "lat": 32.98,
+     "lon": 130.81
+    },
+    {
+     "name": "Higo",
+     "lat": 32.8,
+     "lon": 130.71
+    },
+    {
+     "name": "Chikugo",
+     "lat": 33.32,
+     "lon": 130.51
+    },
+    {
+     "name": "Kii",
+     "lat": 34.13,
+     "lon": 135.56
+    },
+    {
+     "name": "Kawachi",
+     "lat": 34.47,
+     "lon": 135.6
+    }
+   ],
+   "ruler": {
+    "name": "Emperor Go-Murakami",
+    "born": 1328,
+    "dynasty": "Yamato",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "stubborn"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Imperial line of Go-Daigo, ruling from the mountains of Yoshino (Anō) since 1336; Go-Murakami reigns since 1339. In Kyushu his son Prince Kanenaga and Kikuchi Takemitsu are winning: they will take Dazaifu in 1361.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ashikaga"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "In the mountains of Yoshino the Southern Court of Emperor Go-Murakami keeps the true regalia and the claim to all Japan. Its hope lies far away in Kyushu, where Prince Kanenaga and the Kikuchi drive back the shogun's men.",
+    "de": "In den Bergen von Yoshino bewahrt der Südliche Hof des Kaisers Go-Murakami die wahren Throninsignien und den Anspruch auf ganz Japan. Seine Hoffnung liegt fern in Kyushu, wo Prinz Kanenaga und die Kikuchi die Männer des Shoguns zurückdrängen."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "chuzan",
+   "name": {
+    "en": "Kingdom of Chūzan",
+    "de": "Königreich Chūzan"
+   },
+   "short": {
+    "en": "Chūzan",
+    "de": "Chūzan"
+   },
+   "adjective": {
+    "en": "Chūzan",
+    "de": "chūzanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "ryukyuan",
+   "faith": "shinto",
+   "color": "#836447",
+   "capital": {
+    "name": "Urasoe",
+    "lat": 26.25,
+    "lon": 127.72
+   },
+   "holdings": [
+    {
+     "name": "Urasoe",
+     "lat": 26.25,
+     "lon": 127.72
+    },
+    {
+     "name": "Shuri",
+     "lat": 26.22,
+     "lon": 127.72
+    }
+   ],
+   "ruler": {
+    "name": "Satto",
+    "born": 1321,
+    "dynasty": "Satto",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Satto, king of Chūzan since 1350, the middle of three Okinawan realms (with Hokuzan at Nakijin and Nanzan in the south). He will open tribute to the Ming in 1372.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "On Okinawa three kings contend; the strongest is Satto of Chūzan at Urasoe, a farmer's son raised to the throne by the island's lords.",
+    "de": "Auf Okinawa ringen drei Könige; der stärkste ist Satto von Chūzan in Urasoe, ein Bauernsohn, den die Herren der Insel auf den Thron hoben."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "phagmodrupa",
+   "name": {
+    "en": "Phagmodrupa Tibet",
+    "de": "Tibet der Phagmodrupa"
+   },
+   "short": {
+    "en": "Tibet",
+    "de": "Tibet"
+   },
+   "adjective": {
+    "en": "Tibetan",
+    "de": "tibetisch"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "color": "#454134",
+   "capital": {
+    "name": "Nêdong",
+    "lat": 29.23,
+    "lon": 91.77
+   },
+   "holdings": [
+    {
+     "name": "Nêdong",
+     "lat": 29.23,
+     "lon": 91.77
+    },
+    {
+     "name": "Lhasa",
+     "lat": 29.65,
+     "lon": 91.1
+    },
+    {
+     "name": "Sakya",
+     "lat": 28.9,
+     "lon": 88.02
+    },
+    {
+     "name": "Shigatse",
+     "lat": 29.27,
+     "lon": 88.88
+    },
+    {
+     "name": "Gyantse",
+     "lat": 28.92,
+     "lon": 89.6
+    },
+    {
+     "name": "Tsetang",
+     "lat": 29.24,
+     "lon": 91.77
+    },
+    {
+     "name": "Gongkar",
+     "lat": 29.29,
+     "lon": 90.98
+    }
+   ],
+   "ruler": {
+    "name": "Tai Situ Changchub Gyaltsen",
+    "born": 1302,
+    "dynasty": "Lang (Phagmodru)",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "shrewd",
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Changchub Gyaltsen of the Lang clan, myriarch of Phagmodru, broke the Sakya and their Yuan overlords and took Sakya in 1354; the Yuan court recognised him as Tai Situ. He rules Ü and Tsang.",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Changchub Gyaltsen of Phagmodru has overthrown the Sakya lamas who ruled Tibet for the Mongols. From Nêdong he governs Ü and Tsang by old Tibetan law, and Dadu has had to grant him the title Tai Situ.",
+    "de": "Changchub Gyaltsen von Phagmodru hat die Sakya-Lamas gestürzt, die Tibet für die Mongolen regierten. Von Nêdong aus regiert er Ü und Tsang nach altem tibetischem Recht, und Dadu musste ihm den Titel Tai Situ verleihen."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "guge",
+   "name": {
+    "en": "Kingdom of Guge",
+    "de": "Königreich Guge"
+   },
+   "short": {
+    "en": "Guge",
+    "de": "Guge"
+   },
+   "adjective": {
+    "en": "Guge",
+    "de": "gugeisch"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "color": "#5d584b",
+   "capital": {
+    "name": "Tsaparang",
+    "lat": 31.48,
+    "lon": 79.8
+   },
+   "holdings": [
+    {
+     "name": "Tsaparang",
+     "lat": 31.48,
+     "lon": 79.8
+    },
+    {
+     "name": "Tholing",
+     "lat": 31.48,
+     "lon": 79.79
+    },
+    {
+     "name": "Purang",
+     "lat": 30.29,
+     "lon": 81.18
+    },
+    {
+     "name": "Rutog",
+     "lat": 33.43,
+     "lon": 79.66
+    }
+   ],
+   "ruler": {
+    "name": "King of Guge",
+    "born": 1310,
+    "dynasty": "Guge",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The kings of Guge in Ngari (western Tibet), of the old imperial line; the king of 1356 is not named in the sources we have (flagged as uncertain).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Behind the Himalaya the old royal house of Guge rules the high valleys of Ngari around Tsaparang and the monastery of Tholing.",
+    "de": "Hinter dem Himalaya regiert das alte Königshaus von Guge die Hochtäler von Ngari um Tsaparang und das Kloster Tholing."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "moghulistan",
+   "name": {
+    "en": "Moghulistan",
+    "de": "Moghulistan"
+   },
+   "short": {
+    "en": "Moghulistan",
+    "de": "Moghulistan"
+   },
+   "adjective": {
+    "en": "Moghul",
+    "de": "moghulisch"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "color": "#503e05",
+   "capital": {
+    "name": "Almaliq",
+    "lat": 43.96,
+    "lon": 80.8
+   },
+   "holdings": [
+    {
+     "name": "Almaliq",
+     "lat": 43.96,
+     "lon": 80.8
+    },
+    {
+     "name": "Kashgar",
+     "lat": 39.47,
+     "lon": 75.99
+    },
+    {
+     "name": "Yarkand",
+     "lat": 38.42,
+     "lon": 77.24
+    },
+    {
+     "name": "Khotan",
+     "lat": 37.11,
+     "lon": 79.92
+    },
+    {
+     "name": "Aksu",
+     "lat": 41.17,
+     "lon": 80.26
+    },
+    {
+     "name": "Kucha",
+     "lat": 41.72,
+     "lon": 82.96
+    },
+    {
+     "name": "Turfan",
+     "lat": 42.95,
+     "lon": 89.18
+    },
+    {
+     "name": "Issyk-Kul",
+     "lat": 42.45,
+     "lon": 78.4
+    },
+    {
+     "name": "Talas",
+     "lat": 42.52,
+     "lon": 72.24
+    },
+    {
+     "name": "Ili",
+     "lat": 43.9,
+     "lon": 81.3
+    },
+    {
+     "name": "Karashahr",
+     "lat": 42.06,
+     "lon": 86.57
+    }
+   ],
+   "ruler": {
+    "name": "Tughlugh Timur Khan",
+    "born": 1329,
+    "dynasty": "Chagataid",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": {
+    "name": "Ilyas Khoja",
+    "born": 1342,
+    "dynasty": "Chagataid",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Chagataid khan raised in 1347 by Amir Puladchi of the Dughlat; he converted to Islam (traditionally 1353/54) with many of his Moghuls. He will invade Transoxiana in 1360.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "chagatai"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "East of the Syr Darya the Moghul nomads have their own Chagatai khan, Tughlugh Timur, who has lately taken Islam. From the Ili valley the Dughlat amirs rule the oases of Kashgar and the Tarim for him; across the mountains Transoxiana, torn by its amirs, lies open.",
+    "de": "Östlich des Syr Darja haben die moghulischen Nomaden ihren eigenen Tschagatai-Chan, Tughlugh Timur, der jüngst den Islam angenommen hat. Vom Ili-Tal aus regieren die Dughlat-Emire für ihn die Oasen von Kaschgar und des Tarim; jenseits der Berge liegt Transoxanien, von seinen Emiren zerrissen, offen da."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "delhi",
+   "name": {
+    "en": "Sultanate of Delhi",
+    "de": "Sultanat Delhi"
+   },
+   "short": {
+    "en": "Delhi",
+    "de": "Delhi"
+   },
+   "adjective": {
+    "en": "Delhi",
+    "de": "Delhier"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "hindustani",
+   "faith": "sunni",
+   "color": "#6d773b",
+   "capital": {
+    "name": "Delhi",
+    "lat": 28.61,
+    "lon": 77.21
+   },
+   "holdings": [
+    {
+     "name": "Delhi",
+     "lat": 28.61,
+     "lon": 77.21
+    },
+    {
+     "name": "Lahore",
+     "lat": 31.55,
+     "lon": 74.34
+    },
+    {
+     "name": "Multan",
+     "lat": 30.2,
+     "lon": 71.47
+    },
+    {
+     "name": "Dipalpur",
+     "lat": 30.67,
+     "lon": 73.65
+    },
+    {
+     "name": "Hisar",
+     "lat": 29.15,
+     "lon": 75.72
+    },
+    {
+     "name": "Sirhind",
+     "lat": 30.64,
+     "lon": 76.38
+    },
+    {
+     "name": "Badaun",
+     "lat": 28.03,
+     "lon": 79.12
+    },
+    {
+     "name": "Kanauj",
+     "lat": 27.06,
+     "lon": 79.92
+    },
+    {
+     "name": "Kara",
+     "lat": 25.7,
+     "lon": 81.35
+    },
+    {
+     "name": "Awadh",
+     "lat": 26.8,
+     "lon": 82.2
+    },
+    {
+     "name": "Gwalior",
+     "lat": 26.22,
+     "lon": 78.18
+    },
+    {
+     "name": "Bayana",
+     "lat": 26.91,
+     "lon": 77.29
+    },
+    {
+     "name": "Chanderi",
+     "lat": 24.72,
+     "lon": 78.13
+    },
+    {
+     "name": "Dhar",
+     "lat": 22.6,
+     "lon": 75.3
+    },
+    {
+     "name": "Ujjain",
+     "lat": 23.18,
+     "lon": 75.78
+    },
+    {
+     "name": "Anhilwara",
+     "lat": 23.85,
+     "lon": 72.12
+    },
+    {
+     "name": "Cambay",
+     "lat": 22.3,
+     "lon": 72.62
+    },
+    {
+     "name": "Broach",
+     "lat": 21.71,
+     "lon": 72.98
+    },
+    {
+     "name": "Bihar",
+     "lat": 25.2,
+     "lon": 85.52
+    },
+    {
+     "name": "Tirhut",
+     "lat": 26.12,
+     "lon": 85.39
+    },
+    {
+     "name": "Ajmer",
+     "lat": 26.45,
+     "lon": 74.64
+    },
+    {
+     "name": "Nagaur",
+     "lat": 27.2,
+     "lon": 73.73
+    },
+    {
+     "name": "Samana",
+     "lat": 30.15,
+     "lon": 76.19
+    }
+   ],
+   "ruler": {
+    "name": "Firuz Shah Tughluq",
+    "born": 1309,
+    "dynasty": "Tughluq",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     1
+    ],
+    "traits": [
+     "pious",
+     "builder"
+    ]
+   },
+   "heir": {
+    "name": "Fath Khan",
+    "born": 1338,
+    "dynasty": "Tughluq",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Tughluq dynasty. Firuz Shah, cousin of Muhammad bin Tughluq, reigns since 1351; in 1356 he receives robes of investiture from the Abbasid caliph in Cairo. He has given up the Deccan and made peace with Bengal (1355).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bengal",
+    "bahmani"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "After the wild reign of Muhammad bin Tughluq, his cousin Firuz Shah rules Delhi gently: he digs canals, founds towns like Hisar and lightens taxes. The Deccan and Bengal are lost, but from the Indus to Bihar Hindustan obeys him.",
+    "de": "Nach der wilden Herrschaft Muhammad bin Tughluqs regiert sein Vetter Firuz Schah Delhi milde: Er gräbt Kanäle, gründet Städte wie Hisar und senkt die Steuern. Der Dekkan und Bengalen sind verloren, doch vom Indus bis Bihar gehorcht ihm Hindustan."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bengal",
+   "name": {
+    "en": "Sultanate of Bengal",
+    "de": "Sultanat Bengalen"
+   },
+   "short": {
+    "en": "Bengal",
+    "de": "Bengalen"
+   },
+   "adjective": {
+    "en": "Bengali",
+    "de": "bengalisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "bengali",
+   "faith": "sunni",
+   "color": "#804c23",
+   "capital": {
+    "name": "Pandua",
+    "lat": 25.14,
+    "lon": 88.15
+   },
+   "holdings": [
+    {
+     "name": "Pandua",
+     "lat": 25.14,
+     "lon": 88.15
+    },
+    {
+     "name": "Lakhnauti",
+     "lat": 24.87,
+     "lon": 88.13
+    },
+    {
+     "name": "Sonargaon",
+     "lat": 23.65,
+     "lon": 90.6
+    },
+    {
+     "name": "Satgaon",
+     "lat": 22.95,
+     "lon": 88.4
+    },
+    {
+     "name": "Chittagong",
+     "lat": 22.34,
+     "lon": 91.82
+    },
+    {
+     "name": "Sylhet",
+     "lat": 24.9,
+     "lon": 91.87
+    },
+    {
+     "name": "Mahasthan",
+     "lat": 24.96,
+     "lon": 89.34
+    },
+    {
+     "name": "Jessore",
+     "lat": 23.17,
+     "lon": 89.21
+    }
+   ],
+   "ruler": {
+    "name": "Shamsuddin Ilyas Shah",
+    "born": 1300,
+    "dynasty": "Ilyas Shahi",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "heir": {
+    "name": "Sikandar Shah",
+    "born": 1330,
+    "dynasty": "Ilyas Shahi",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Ilyas Shah united Lakhnauti, Satgaon and Sonargaon in 1352 as the first sultan of all Bengal; he withstood Firuz Shah's siege of Ekdala in 1353 and made peace in 1355.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "delhi"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Haji Ilyas has made Bengal one kingdom from the Ganges to Chittagong and held his fort of Ekdala against the army of Delhi. The rice and muslin of the delta make his Pandua one of the richest courts of India.",
+    "de": "Haji Ilyas hat Bengalen vom Ganges bis Chittagong zu einem Reich gemacht und seine Feste Ekdala gegen das Heer Delhis gehalten. Reis und Musselin des Deltas machen sein Pandua zu einem der reichsten Höfe Indiens."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "kashmir",
+   "name": {
+    "en": "Sultanate of Kashmir",
+    "de": "Sultanat Kaschmir"
+   },
+   "short": {
+    "en": "Kashmir",
+    "de": "Kaschmir"
+   },
+   "adjective": {
+    "en": "Kashmiri",
+    "de": "kaschmirisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "kashmiri",
+   "faith": "sunni",
+   "color": "#95675b",
+   "capital": {
+    "name": "Srinagar",
+    "lat": 34.08,
+    "lon": 74.8
+   },
+   "holdings": [
+    {
+     "name": "Srinagar",
+     "lat": 34.08,
+     "lon": 74.8
+    },
+    {
+     "name": "Anantnag",
+     "lat": 33.73,
+     "lon": 75.15
+    },
+    {
+     "name": "Baramulla",
+     "lat": 34.2,
+     "lon": 74.34
+    },
+    {
+     "name": "Sopore",
+     "lat": 34.3,
+     "lon": 74.47
+    }
+   ],
+   "ruler": {
+    "name": "Shihab ud-Din",
+    "born": 1320,
+    "dynasty": "Shah Mir",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Shah Mir dynasty since 1339; Shihab ud-Din reigns since 1354 and will carry his raids from Kabul to Kangra.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the vale of Kashmir the house of Shah Mir rules over a Hindu people; Sultan Shihab ud-Din is a soldier who looks beyond the passes.",
+    "de": "Im Tal von Kaschmir herrscht das Haus Shah Mir über ein hinduistisches Volk; Sultan Schihab ud-Din ist ein Soldat, der über die Pässe hinausblickt."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bahmani",
+   "name": {
+    "en": "Bahmani Sultanate",
+    "de": "Bahmaniden-Sultanat"
+   },
+   "short": {
+    "en": "Bahmani",
+    "de": "Bahmaniden"
+   },
+   "adjective": {
+    "en": "Bahmani",
+    "de": "bahmanidisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "dakhini",
+   "faith": "sunni",
+   "color": "#483f2a",
+   "capital": {
+    "name": "Gulbarga",
+    "lat": 17.33,
+    "lon": 76.83
+   },
+   "holdings": [
+    {
+     "name": "Gulbarga",
+     "lat": 17.33,
+     "lon": 76.83
+    },
+    {
+     "name": "Daulatabad",
+     "lat": 19.94,
+     "lon": 75.21
+    },
+    {
+     "name": "Bidar",
+     "lat": 17.91,
+     "lon": 77.52
+    },
+    {
+     "name": "Ellichpur",
+     "lat": 21.25,
+     "lon": 77.51
+    },
+    {
+     "name": "Mahur",
+     "lat": 19.83,
+     "lon": 77.93
+    },
+    {
+     "name": "Kalyani",
+     "lat": 17.88,
+     "lon": 76.95
+    },
+    {
+     "name": "Dabhol",
+     "lat": 17.59,
+     "lon": 73.18
+    },
+    {
+     "name": "Kolhapur",
+     "lat": 16.7,
+     "lon": 74.24
+    },
+    {
+     "name": "Indur",
+     "lat": 18.67,
+     "lon": 78.1
+    }
+   ],
+   "ruler": {
+    "name": "Alauddin Bahman Shah",
+    "born": 1290,
+    "dynasty": "Bahmani",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": {
+    "name": "Muhammad Shah",
+    "born": 1330,
+    "dynasty": "Bahmani",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Hasan Gangu, an officer who led the revolt of the Deccan amirs against Muhammad bin Tughluq, was crowned at Daulatabad in 1347 and rules from Gulbarga. He dies in 1358.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "vijayanagara",
+    "musunuri",
+    "delhi"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "Ten years ago the amirs of the Deccan threw off Delhi and crowned one of their own, Hasan Bahman Shah. From Gulbarga his young sultanate looks south to the rich Raichur doab, which the new kings of Vijayanagara also claim.",
+    "de": "Vor zehn Jahren warfen die Emire des Dekkan Delhi ab und krönten einen der Ihren, Hasan Bahman Schah. Von Gulbarga aus blickt sein junges Sultanat nach Süden auf das reiche Raichur-Doab, das auch die neuen Könige von Vijayanagara beanspruchen."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "vijayanagara",
+   "name": {
+    "en": "Vijayanagara",
+    "de": "Vijayanagara"
+   },
+   "short": {
+    "en": "Vijayanagara",
+    "de": "Vijayanagara"
+   },
+   "adjective": {
+    "en": "Vijayanagara",
+    "de": "vijayanagarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "kannada",
+   "faith": "hindu",
+   "color": "#78490e",
+   "capital": {
+    "name": "Vijayanagara",
+    "lat": 15.33,
+    "lon": 76.46
+   },
+   "holdings": [
+    {
+     "name": "Vijayanagara",
+     "lat": 15.33,
+     "lon": 76.46
+    },
+    {
+     "name": "Anegondi",
+     "lat": 15.35,
+     "lon": 76.49
+    },
+    {
+     "name": "Penukonda",
+     "lat": 14.08,
+     "lon": 77.6
+    },
+    {
+     "name": "Udayagiri",
+     "lat": 14.87,
+     "lon": 79.31
+    },
+    {
+     "name": "Barkur",
+     "lat": 13.47,
+     "lon": 74.75
+    },
+    {
+     "name": "Dwarasamudra",
+     "lat": 13.21,
+     "lon": 75.99
+    },
+    {
+     "name": "Chandragiri",
+     "lat": 13.58,
+     "lon": 79.32
+    },
+    {
+     "name": "Mulbagal",
+     "lat": 13.16,
+     "lon": 78.39
+    },
+    {
+     "name": "Gutti",
+     "lat": 15.11,
+     "lon": 77.64
+    },
+    {
+     "name": "Adoni",
+     "lat": 15.63,
+     "lon": 77.27
+    },
+    {
+     "name": "Raichur",
+     "lat": 16.2,
+     "lon": 77.35
+    },
+    {
+     "name": "Honavar",
+     "lat": 14.28,
+     "lon": 74.44
+    },
+    {
+     "name": "Banavasi",
+     "lat": 14.53,
+     "lon": 75.02
+    }
+   ],
+   "ruler": {
+    "name": "Bukka Raya I",
+    "born": 1310,
+    "dynasty": "Sangama",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     4
+    ],
+    "traits": [
+     "ambitious",
+     "just"
+    ]
+   },
+   "heir": {
+    "name": "Kumara Kampana",
+    "born": 1330,
+    "dynasty": "Sangama",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Sangama brothers, founders of the kingdom in 1336; Harihara I dies in 1356 and his brother Bukka I succeeds. Bukka's son Kampana will take Kanchi from the Sambuvarayas and Madurai from its sultans.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bahmani",
+    "madurai"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "At Hampi on the Tungabhadra the Sangama brothers have built the City of Victory, gathering the Hoysala lands and the coast. Harihara has died; his brother Bukka now leads the Hindu south against the sultans of the Deccan and Madurai.",
+    "de": "In Hampi an der Tungabhadra haben die Sangama-Brüder die Stadt des Sieges erbaut und die Lande der Hoysala und die Küste gesammelt. Harihara ist gestorben; sein Bruder Bukka führt nun den hinduistischen Süden gegen die Sultane des Dekkan und Maduras."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "madurai",
+   "name": {
+    "en": "Sultanate of Madurai",
+    "de": "Sultanat Madurai"
+   },
+   "short": {
+    "en": "Madurai",
+    "de": "Madurai"
+   },
+   "adjective": {
+    "en": "Madurai",
+    "de": "madurai"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "tamil",
+   "faith": "sunni",
+   "color": "#7a6d49",
+   "capital": {
+    "name": "Madurai",
+    "lat": 9.93,
+    "lon": 78.12
+   },
+   "holdings": [
+    {
+     "name": "Madurai",
+     "lat": 9.93,
+     "lon": 78.12
+    },
+    {
+     "name": "Tiruchirappalli",
+     "lat": 10.8,
+     "lon": 78.69
+    },
+    {
+     "name": "Ramanathapuram",
+     "lat": 9.37,
+     "lon": 78.83
+    },
+    {
+     "name": "Kayalpattinam",
+     "lat": 8.57,
+     "lon": 78.12
+    }
+   ],
+   "ruler": {
+    "name": "Nasir ud-Din Mahmud Damghan Shah",
+    "born": 1310,
+    "dynasty": "Damghani",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": [
+     "cruel"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The sultans of Ma'bar, once Delhi's governors, independent since 1335; Nasir ud-Din, nephew of Ghiyath ud-Din (Ibn Battuta's brother-in-law), reigns from 1345 until about 1356. The succession around 1356 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "vijayanagara"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Far in the south the sultans of Madurai rule the old Pandya lands with a small Muslim garrison. Ibn Battuta, who served one of them, found their rule cruel and their power brittle.",
+    "de": "Fern im Süden regieren die Sultane von Madurai die alten Pandya-Lande mit einer kleinen muslimischen Besatzung. Ibn Battuta, der einem von ihnen diente, fand ihre Herrschaft grausam und ihre Macht brüchig."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sambuvaraya",
+   "name": {
+    "en": "Sambuvarayas",
+    "de": "Sambuvarayas"
+   },
+   "short": {
+    "en": "Sambuvaraya",
+    "de": "Sambuvaraya"
+   },
+   "adjective": {
+    "en": "Sambuvaraya",
+    "de": "sambuvarayisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "tamil",
+   "faith": "hindu",
+   "color": "#464025",
+   "capital": {
+    "name": "Padaividu",
+    "lat": 12.67,
+    "lon": 79.1
+   },
+   "holdings": [
+    {
+     "name": "Padaividu",
+     "lat": 12.67,
+     "lon": 79.1
+    },
+    {
+     "name": "Kanchipuram",
+     "lat": 12.83,
+     "lon": 79.7
+    },
+    {
+     "name": "Chingleput",
+     "lat": 12.69,
+     "lon": 79.98
+    },
+    {
+     "name": "Tiruvannamalai",
+     "lat": 12.23,
+     "lon": 79.07
+    }
+   ],
+   "ruler": {
+    "name": "Rajanarayana Sambuvaraya",
+    "born": 1310,
+    "dynasty": "Sambuvaraya",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Chieftains of Tondaimandalam who made themselves kings after the fall of the Pandyas; Kumara Kampana of Vijayanagara will conquer them around 1361.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "vijayanagara"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Around Kanchipuram, the city of temples, the Sambuvaraya chiefs rule as kings in the gap between the Muslims of Madurai and the rising power of Vijayanagara.",
+    "de": "Um Kanchipuram, die Stadt der Tempel, herrschen die Sambuvaraya-Häuptlinge als Könige in der Lücke zwischen den Muslimen Maduras und der aufsteigenden Macht Vijayanagaras."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "musunuri",
+   "name": {
+    "en": "Musunuri Nayakas",
+    "de": "Musunuri-Nayakas"
+   },
+   "short": {
+    "en": "Warangal",
+    "de": "Warangal"
+   },
+   "adjective": {
+    "en": "Telugu",
+    "de": "telugu"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "telugu",
+   "faith": "hindu",
+   "color": "#486326",
+   "capital": {
+    "name": "Warangal",
+    "lat": 17.97,
+    "lon": 79.6
+   },
+   "holdings": [
+    {
+     "name": "Warangal",
+     "lat": 17.97,
+     "lon": 79.6
+    },
+    {
+     "name": "Golconda",
+     "lat": 17.38,
+     "lon": 78.4
+    },
+    {
+     "name": "Bhongir",
+     "lat": 17.51,
+     "lon": 78.89
+    },
+    {
+     "name": "Kaulas",
+     "lat": 18.47,
+     "lon": 77.67
+    },
+    {
+     "name": "Khammam",
+     "lat": 17.25,
+     "lon": 80.15
+    }
+   ],
+   "ruler": {
+    "name": "Kapaya Nayaka",
+    "born": 1300,
+    "dynasty": "Musunuri",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Telugu chiefs who freed Warangal from Delhi in 1336 at the head of a league of Nayakas; at war with the Bahmanis, to whom Kapaya will cede Golconda in 1364.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bahmani"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "At Warangal, the old Kakatiya capital, Kapaya Nayaka leads the Telugu chiefs who drove out the Tughluq governors. The Bahmani sultans press on his western forts.",
+    "de": "In Warangal, der alten Hauptstadt der Kakatiya, führt Kapaya Nayaka die Telugu-Häuptlinge, die die Statthalter der Tughluq vertrieben. Die Bahmaniden-Sultane bedrängen seine westlichen Festungen."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "reddi",
+   "name": {
+    "en": "Reddi Kingdom",
+    "de": "Reddi-Königreich"
+   },
+   "short": {
+    "en": "Kondavidu",
+    "de": "Kondavidu"
+   },
+   "adjective": {
+    "en": "Reddi",
+    "de": "reddi"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "telugu",
+   "faith": "hindu",
+   "color": "#7b6d4c",
+   "capital": {
+    "name": "Kondavidu",
+    "lat": 16.25,
+    "lon": 80.27
+   },
+   "holdings": [
+    {
+     "name": "Kondavidu",
+     "lat": 16.25,
+     "lon": 80.27
+    },
+    {
+     "name": "Addanki",
+     "lat": 15.81,
+     "lon": 79.97
+    },
+    {
+     "name": "Rajahmundry",
+     "lat": 17.0,
+     "lon": 81.8
+    },
+    {
+     "name": "Kondapalli",
+     "lat": 16.62,
+     "lon": 80.54
+    },
+    {
+     "name": "Motupalli",
+     "lat": 15.73,
+     "lon": 80.29
+    }
+   ],
+   "ruler": {
+    "name": "Anavota Reddi",
+    "born": 1320,
+    "dynasty": "Reddi",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Reddi kings of coastal Andhra since 1325 (Prolaya Vema Reddi); Anavota Reddi reigns from Kondavidu since 1353.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Reddi kings hold the coast of Andhra between the Krishna and the Godavari, with the port of Motupalli for the trade across the Bay of Bengal.",
+    "de": "Die Reddi-Könige halten die Küste Andhras zwischen Krishna und Godavari, mit dem Hafen Motupalli für den Handel über den Golf von Bengalen."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "eastern_ganga",
+   "name": {
+    "en": "Eastern Ganga Kingdom",
+    "de": "Östliches Ganga-Reich"
+   },
+   "short": {
+    "en": "Odisha",
+    "de": "Orissa"
+   },
+   "adjective": {
+    "en": "Odia",
+    "de": "orissisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "odia",
+   "faith": "hindu",
+   "color": "#4a5d1e",
+   "capital": {
+    "name": "Cuttack",
+    "lat": 20.46,
+    "lon": 85.88
+   },
+   "holdings": [
+    {
+     "name": "Cuttack",
+     "lat": 20.46,
+     "lon": 85.88
+    },
+    {
+     "name": "Puri",
+     "lat": 19.8,
+     "lon": 85.83
+    },
+    {
+     "name": "Jajpur",
+     "lat": 20.85,
+     "lon": 86.33
+    },
+    {
+     "name": "Konark",
+     "lat": 19.89,
+     "lon": 86.09
+    },
+    {
+     "name": "Berhampur",
+     "lat": 19.31,
+     "lon": 84.79
+    },
+    {
+     "name": "Kalinganagara",
+     "lat": 18.43,
+     "lon": 84.03
+    }
+   ],
+   "ruler": {
+    "name": "Narasimha Deva III",
+    "born": 1320,
+    "dynasty": "Eastern Ganga",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Eastern Ganga dynasty, builders of Konark and Puri; Narasimha III reigns since about 1352. Firuz Shah will raid Odisha in 1360.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Ganga kings of Odisha, servants of Lord Jagannath of Puri, still rule the coast from the Ganges delta to the Godavari, behind the forests and hills that have kept the sultans out.",
+    "de": "Die Ganga-Könige Orissas, Diener des Herrn Jagannath von Puri, beherrschen noch die Küste vom Gangesdelta bis zur Godavari, hinter Wäldern und Bergen, die die Sultane ferngehalten haben."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "mewar",
+   "name": {
+    "en": "Kingdom of Mewar",
+    "de": "Königreich Mewar"
+   },
+   "short": {
+    "en": "Mewar",
+    "de": "Mewar"
+   },
+   "adjective": {
+    "en": "Mewari",
+    "de": "mewarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "rajput",
+   "faith": "hindu",
+   "color": "#605331",
+   "capital": {
+    "name": "Chittor",
+    "lat": 24.89,
+    "lon": 74.65
+   },
+   "holdings": [
+    {
+     "name": "Chittor",
+     "lat": 24.89,
+     "lon": 74.65
+    },
+    {
+     "name": "Mandalgarh",
+     "lat": 25.2,
+     "lon": 75.07
+    },
+    {
+     "name": "Nagda",
+     "lat": 24.8,
+     "lon": 73.72
+    },
+    {
+     "name": "Kelwara",
+     "lat": 25.15,
+     "lon": 73.58
+    }
+   ],
+   "ruler": {
+    "name": "Rana Hammir Singh",
+    "born": 1302,
+    "dynasty": "Sisodia",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     4
+    ],
+    "traits": [
+     "brave"
+    ]
+   },
+   "heir": {
+    "name": "Kshetra Singh",
+    "born": 1325,
+    "dynasty": "Sisodia",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Sisodia ranas; Hammir Singh won back Chittor from the Delhi sultans around 1326 and founded the line of the Ranas of Mewar.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "delhi"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the hills of Rajasthan Rana Hammir has retaken Chittor, sacked by Delhi a generation ago, and made Mewar the first of the Rajput kingdoms again.",
+    "de": "In den Bergen Rajasthans hat Rana Hammir Chittor zurückgewonnen, das Delhi vor einer Generation geplündert hatte, und Mewar wieder zum ersten der Rajputenreiche gemacht."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "khasa",
+   "name": {
+    "en": "Khasa Kingdom",
+    "de": "Khasa-Königreich"
+   },
+   "short": {
+    "en": "Khasa",
+    "de": "Khasa"
+   },
+   "adjective": {
+    "en": "Khasa",
+    "de": "khasisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nepali",
+   "faith": "hindu",
+   "color": "#355519",
+   "capital": {
+    "name": "Sinja",
+    "lat": 29.26,
+    "lon": 82.18
+   },
+   "holdings": [
+    {
+     "name": "Sinja",
+     "lat": 29.26,
+     "lon": 82.18
+    },
+    {
+     "name": "Dullu",
+     "lat": 28.95,
+     "lon": 81.6
+    },
+    {
+     "name": "Jumla",
+     "lat": 29.27,
+     "lon": 82.18
+    },
+    {
+     "name": "Taklakot",
+     "lat": 30.3,
+     "lon": 81.17
+    }
+   ],
+   "ruler": {
+    "name": "Prithvi Malla",
+    "born": 1310,
+    "dynasty": "Khasa Malla",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Khasa Malla kings of western Nepal, patrons of both Buddhism and Hinduism; Prithvi Malla reigns in the 1350s (dates approximate).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "From Sinja in the Karnali valley the Khasa Malla kings rule the western Himalaya, up to the sacred lakes of Mount Kailash.",
+    "de": "Von Sinja im Karnali-Tal aus herrschen die Khasa-Malla-Könige über den westlichen Himalaya bis zu den heiligen Seen des Kailash."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "nepal_malla",
+   "name": {
+    "en": "Nepal Mandala",
+    "de": "Nepal Mandala"
+   },
+   "short": {
+    "en": "Nepal",
+    "de": "Nepal"
+   },
+   "adjective": {
+    "en": "Newar",
+    "de": "newarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "newar",
+   "faith": "hindu",
+   "color": "#745220",
+   "capital": {
+    "name": "Bhaktapur",
+    "lat": 27.67,
+    "lon": 85.43
+   },
+   "holdings": [
+    {
+     "name": "Bhaktapur",
+     "lat": 27.67,
+     "lon": 85.43
+    },
+    {
+     "name": "Kathmandu",
+     "lat": 27.7,
+     "lon": 85.32
+    },
+    {
+     "name": "Patan",
+     "lat": 27.67,
+     "lon": 85.32
+    }
+   ],
+   "ruler": {
+    "name": "Jayarajadeva",
+    "born": 1320,
+    "dynasty": "Malla",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Malla kings of the Kathmandu valley; Jayarajadeva reigns 1347-1361 while real power lies with the nobles of Bhaktapur. Shams ud-Din Ilyas of Bengal sacked the valley in 1349.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Newar cities of the Kathmandu valley are still rebuilding after the Bengali raid of 1349; the Malla king reigns while the lords of Bhaktapur rule.",
+    "de": "Die Newar-Städte des Kathmandu-Tals bauen noch nach dem bengalischen Raubzug von 1349 wieder auf; der Malla-König thront, während die Herren von Bhaktapur regieren."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ahom",
+   "name": {
+    "en": "Ahom Kingdom",
+    "de": "Ahom-Königreich"
+   },
+   "short": {
+    "en": "Ahom",
+    "de": "Ahom"
+   },
+   "adjective": {
+    "en": "Ahom",
+    "de": "ahomisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "ahom",
+   "faith": "tai_folk",
+   "color": "#405c21",
+   "capital": {
+    "name": "Charaideo",
+    "lat": 26.94,
+    "lon": 94.85
+   },
+   "holdings": [
+    {
+     "name": "Charaideo",
+     "lat": 26.94,
+     "lon": 94.85
+    },
+    {
+     "name": "Sibsagar",
+     "lat": 26.98,
+     "lon": 94.64
+    },
+    {
+     "name": "Dihing",
+     "lat": 27.3,
+     "lon": 95.0
+    }
+   ],
+   "ruler": {
+    "name": "Sukhrangpha",
+    "born": 1310,
+    "dynasty": "Ahom",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tai kings of the upper Brahmaputra since Sukaphaa (1228); Sukhrangpha reigns about 1332-1364.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the upper Brahmaputra valley the Tai lords of the Ahom rule over the rice lands their ancestors took a century ago, keeping their own chronicles and gods.",
+    "de": "Im oberen Brahmaputra-Tal herrschen die Tai-Herren der Ahom über das Reisland, das ihre Vorfahren vor einem Jahrhundert nahmen, mit eigenen Chroniken und Göttern."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "kamata",
+   "name": {
+    "en": "Kamata Kingdom",
+    "de": "Königreich Kamata"
+   },
+   "short": {
+    "en": "Kamata",
+    "de": "Kamata"
+   },
+   "adjective": {
+    "en": "Kamata",
+    "de": "kamatisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "assamese",
+   "faith": "hindu",
+   "color": "#7d714e",
+   "capital": {
+    "name": "Kamatapur",
+    "lat": 26.3,
+    "lon": 89.4
+   },
+   "holdings": [
+    {
+     "name": "Kamatapur",
+     "lat": 26.3,
+     "lon": 89.4
+    },
+    {
+     "name": "Kamarupa",
+     "lat": 26.14,
+     "lon": 91.74
+    },
+    {
+     "name": "Dhubri",
+     "lat": 26.02,
+     "lon": 89.97
+    }
+   ],
+   "ruler": {
+    "name": "Indranarayana",
+    "born": 1320,
+    "dynasty": "Kamata",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Successor kingdom of Kamarupa west of the Brahmaputra; the kings of the mid-14th century are known only from traditions (Indranarayana is uncertain).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "Between Bengal and the Ahom the kings of Kamata hold the old Kamarupa lands of the lower Brahmaputra.",
+    "de": "Zwischen Bengalen und den Ahom halten die Könige von Kamata die alten Kamarupa-Lande am unteren Brahmaputra."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "gampola",
+   "name": {
+    "en": "Kingdom of Gampola",
+    "de": "Königreich Gampola"
+   },
+   "short": {
+    "en": "Lanka",
+    "de": "Lanka"
+   },
+   "adjective": {
+    "en": "Sinhalese",
+    "de": "singhalesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sinhala",
+   "faith": "theravada",
+   "color": "#30573b",
+   "capital": {
+    "name": "Gampola",
+    "lat": 7.16,
+    "lon": 80.57
+   },
+   "holdings": [
+    {
+     "name": "Gampola",
+     "lat": 7.16,
+     "lon": 80.57
+    },
+    {
+     "name": "Dedigama",
+     "lat": 7.27,
+     "lon": 80.3
+    },
+    {
+     "name": "Kotte",
+     "lat": 6.89,
+     "lon": 79.9
+    },
+    {
+     "name": "Galle",
+     "lat": 6.03,
+     "lon": 80.22
+    },
+    {
+     "name": "Polonnaruwa",
+     "lat": 7.94,
+     "lon": 81.0
+    }
+   ],
+   "ruler": {
+    "name": "Parakramabahu V",
+    "born": 1320,
+    "dynasty": "Siri Sanga Bo",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Vikramabahu III",
+    "born": 1330,
+    "dynasty": "Siri Sanga Bo",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "The Sinhalese kingdom has shrunk to the south-west and the hills; Parakramabahu V and Vikramabahu III share the kingship in the 1350s while the Alagakkonara ministers gain power.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "jaffna"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Sinhalese kings have withdrawn to Gampola in the hills, guarding the Tooth Relic; their ministers of the Alagakkonara family are the real masters of the south.",
+    "de": "Die singhalesischen Könige haben sich nach Gampola in die Berge zurückgezogen und hüten die Zahnreliquie; ihre Minister aus der Familie Alagakkonara sind die wahren Herren des Südens."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "jaffna",
+   "name": {
+    "en": "Kingdom of Jaffna",
+    "de": "Königreich Jaffna"
+   },
+   "short": {
+    "en": "Jaffna",
+    "de": "Jaffna"
+   },
+   "adjective": {
+    "en": "Jaffna",
+    "de": "jaffnesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "tamil",
+   "faith": "hindu",
+   "color": "#88704a",
+   "capital": {
+    "name": "Nallur",
+    "lat": 9.67,
+    "lon": 80.03
+   },
+   "holdings": [
+    {
+     "name": "Nallur",
+     "lat": 9.67,
+     "lon": 80.03
+    },
+    {
+     "name": "Mannar",
+     "lat": 8.98,
+     "lon": 79.9
+    },
+    {
+     "name": "Trincomalee",
+     "lat": 8.57,
+     "lon": 81.23
+    },
+    {
+     "name": "Puttalam",
+     "lat": 8.04,
+     "lon": 79.83
+    }
+   ],
+   "ruler": {
+    "name": "Varothaya Cinkaiariyan",
+    "born": 1310,
+    "dynasty": "Aryacakravarti",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Aryacakravarti kings of Jaffna, masters of the pearl fisheries; Ibn Battuta met their king at Puttalam in 1344. The king of 1356 is uncertain in the traditions.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "gampola"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the north of Lanka the Aryacakravarti kings of Jaffna grow rich on the pearl banks and press the Sinhalese south.",
+    "de": "Im Norden Lankas werden die Aryacakravarti-Könige von Jaffna an den Perlenbänken reich und bedrängen den singhalesischen Süden."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "maldives",
+   "name": {
+    "en": "Sultanate of the Maldives",
+    "de": "Sultanat der Malediven"
+   },
+   "short": {
+    "en": "Maldives",
+    "de": "Malediven"
+   },
+   "adjective": {
+    "en": "Maldivian",
+    "de": "maledivisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "dhivehi",
+   "faith": "sunni",
+   "color": "#885347",
+   "capital": {
+    "name": "Malé",
+    "lat": 4.17,
+    "lon": 73.51
+   },
+   "holdings": [
+    {
+     "name": "Malé",
+     "lat": 4.17,
+     "lon": 73.51
+    }
+   ],
+   "ruler": {
+    "name": "Sultana Khadijah",
+    "born": 1320,
+    "dynasty": "Theemuge",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     1
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Theemuge dynasty; Sultana Khadijah reigns since 1347 (Ibn Battuta served as her qadi). Her husband Muhammad Jamaluddin deposes her in 1363.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "The coral islands of the Maldives, rich in cowrie shells and coconut rope, are ruled by a woman, Sultana Khadijah, whose qadi was once Ibn Battuta.",
+    "de": "Die Koralleninseln der Malediven, reich an Kaurimuscheln und Kokostauen, werden von einer Frau regiert, der Sultanin Khadija, deren Kadi einst Ibn Battuta war."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "dai_viet",
+   "name": {
+    "en": "Đại Việt",
+    "de": "Đại Việt"
+   },
+   "short": {
+    "en": "Đại Việt",
+    "de": "Đại Việt"
+   },
+   "adjective": {
+    "en": "Vietnamese",
+    "de": "vietnamesisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "vietnamese",
+   "faith": "mahayana",
+   "color": "#444034",
+   "capital": {
+    "name": "Thăng Long",
+    "lat": 21.03,
+    "lon": 105.85
+   },
+   "holdings": [
+    {
+     "name": "Thăng Long",
+     "lat": 21.03,
+     "lon": 105.85
+    },
+    {
+     "name": "Thiên Trường",
+     "lat": 20.43,
+     "lon": 106.17
+    },
+    {
+     "name": "Thanh Hóa",
+     "lat": 19.8,
+     "lon": 105.77
+    },
+    {
+     "name": "Nghệ An",
+     "lat": 18.67,
+     "lon": 105.68
+    },
+    {
+     "name": "Thuận Hóa",
+     "lat": 16.46,
+     "lon": 107.59
+    },
+    {
+     "name": "Lạng Sơn",
+     "lat": 21.85,
+     "lon": 106.76
+    },
+    {
+     "name": "Vân Đồn",
+     "lat": 21.07,
+     "lon": 107.42
+    },
+    {
+     "name": "Tuyên Quang",
+     "lat": 21.82,
+     "lon": 105.21
+    }
+   ],
+   "ruler": {
+    "name": "Trần Dụ Tông",
+    "born": 1336,
+    "dynasty": "Trần",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     1
+    ],
+    "traits": [
+     "lazy"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Trần dynasty; Dụ Tông reigns since 1341, under the guidance of the retired emperor Minh Tông until 1357. The court is turning to pleasure and the dynasty to decline.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "champa"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "The Trần emperors who threw back the Mongols three times still rule the Red River and the coast to Huế. The young Dụ Tông leaves the state to his father the retired emperor and to the mandarins.",
+    "de": "Die Trần-Kaiser, die dreimal die Mongolen zurückschlugen, beherrschen noch den Roten Fluss und die Küste bis Huế. Der junge Dụ Tông überlässt den Staat seinem Vater, dem Altkaiser, und den Mandarinen."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "champa",
+   "name": {
+    "en": "Champa",
+    "de": "Champa"
+   },
+   "short": {
+    "en": "Champa",
+    "de": "Champa"
+   },
+   "adjective": {
+    "en": "Cham",
+    "de": "chamisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "cham",
+   "faith": "hindu",
+   "color": "#6b4e0e",
+   "capital": {
+    "name": "Vijaya",
+    "lat": 13.87,
+    "lon": 109.11
+   },
+   "holdings": [
+    {
+     "name": "Vijaya",
+     "lat": 13.87,
+     "lon": 109.11
+    },
+    {
+     "name": "Amaravati",
+     "lat": 15.8,
+     "lon": 108.1
+    },
+    {
+     "name": "Kauthara",
+     "lat": 12.25,
+     "lon": 109.18
+    },
+    {
+     "name": "Panduranga",
+     "lat": 11.57,
+     "lon": 108.99
+    },
+    {
+     "name": "Quảng Ngãi",
+     "lat": 15.12,
+     "lon": 108.8
+    }
+   ],
+   "ruler": {
+    "name": "Trà Hoa Bố Đề",
+    "born": 1310,
+    "dynasty": "Champa",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     3
+    ],
+    "traits": []
+   },
+   "heir": {
+    "name": "Chế Bồng Nga",
+    "born": 1330,
+    "dynasty": "Champa",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     5
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Trà Hoa Bố Đề took the throne about 1342; Chế Bồng Nga, who will raid Thăng Long from 1371, succeeds about 1360. Chronology from the Vietnamese annals, uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "dai_viet"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Hindu kingdom of Champa holds the central coast from Quảng Ngãi to Phan Rang. Its kings wait for the chance to win back the provinces Đại Việt took from them.",
+    "de": "Das hinduistische Königreich Champa hält die mittlere Küste von Quảng Ngãi bis Phan Rang. Seine Könige warten auf die Gelegenheit, die Provinzen zurückzugewinnen, die Đại Việt ihnen nahm."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "khmer",
+   "name": {
+    "en": "Khmer Empire",
+    "de": "Khmer-Reich"
+   },
+   "short": {
+    "en": "Angkor",
+    "de": "Angkor"
+   },
+   "adjective": {
+    "en": "Khmer",
+    "de": "khmer"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "khmer",
+   "faith": "theravada",
+   "color": "#6c7148",
+   "capital": {
+    "name": "Yasodharapura (Angkor)",
+    "lat": 13.41,
+    "lon": 103.87
+   },
+   "holdings": [
+    {
+     "name": "Yasodharapura (Angkor)",
+     "lat": 13.41,
+     "lon": 103.87
+    },
+    {
+     "name": "Battambang",
+     "lat": 13.1,
+     "lon": 103.2
+    },
+    {
+     "name": "Srei Santhor",
+     "lat": 11.85,
+     "lon": 105.1
+    },
+    {
+     "name": "Phnom Penh",
+     "lat": 11.56,
+     "lon": 104.92
+    },
+    {
+     "name": "Kampong Thom",
+     "lat": 12.71,
+     "lon": 104.89
+    },
+    {
+     "name": "Phimai",
+     "lat": 15.22,
+     "lon": 102.49
+    },
+    {
+     "name": "Stung Treng",
+     "lat": 13.52,
+     "lon": 105.97
+    }
+   ],
+   "ruler": {
+    "name": "Lampong Paramaraja",
+    "born": 1300,
+    "dynasty": "Varman",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Angkor's kings of the mid-14th century are known only from late chronicles, which say Ayutthaya sacked Angkor in about 1352 and set its princes on the throne; the king of 1356 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ayutthaya"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "Angkor is still the greatest city of the mainland, but its empire is shrinking: the Thai have taken its western provinces, and the chronicles tell of a Thai army in the capital itself.",
+    "de": "Angkor ist noch die größte Stadt des Festlands, doch sein Reich schrumpft: Die Thai haben seine westlichen Provinzen genommen, und die Chroniken berichten von einem Thai-Heer in der Hauptstadt selbst."
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ayutthaya",
+   "name": {
+    "en": "Kingdom of Ayutthaya",
+    "de": "Königreich Ayutthaya"
+   },
+   "short": {
+    "en": "Ayutthaya",
+    "de": "Ayutthaya"
+   },
+   "adjective": {
+    "en": "Siamese",
+    "de": "siamesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "thai",
+   "faith": "theravada",
+   "color": "#5d4e1e",
+   "capital": {
+    "name": "Ayutthaya",
+    "lat": 14.35,
+    "lon": 100.58
+   },
+   "holdings": [
+    {
+     "name": "Ayutthaya",
+     "lat": 14.35,
+     "lon": 100.58
+    },
+    {
+     "name": "Lopburi",
+     "lat": 14.8,
+     "lon": 100.62
+    },
+    {
+     "name": "Suphanburi",
+     "lat": 14.47,
+     "lon": 100.12
+    },
+    {
+     "name": "Ratchaburi",
+     "lat": 13.54,
+     "lon": 99.82
+    },
+    {
+     "name": "Phetchaburi",
+     "lat": 13.11,
+     "lon": 99.94
+    },
+    {
+     "name": "Chanthaburi",
+     "lat": 12.61,
+     "lon": 102.1
+    },
+    {
+     "name": "Chainat",
+     "lat": 15.19,
+     "lon": 100.13
+    },
+    {
+     "name": "Nakhon Si Thammarat",
+     "lat": 8.43,
+     "lon": 99.96
+    },
+    {
+     "name": "Tenasserim",
+     "lat": 12.1,
+     "lon": 99.02
+    }
+   ],
+   "ruler": {
+    "name": "Ramathibodi I",
+    "born": 1314,
+    "dynasty": "Uthong",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "just"
+    ]
+   },
+   "heir": {
+    "name": "Ramesuan",
+    "born": 1339,
+    "dynasty": "Uthong",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "U Thong founded Ayutthaya in 1351 at the meeting of the Chao Phraya, Lopburi and Pa Sak rivers; his law codes stand at the head of Siamese law. His son Ramesuan governs Lopburi; his brother-in-law Pha-ngua holds Suphanburi.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "khmer",
+    "sukhothai"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "Five years ago King Ramathibodi founded a new city on an island in the Chao Phraya: Ayutthaya. Already its armies have struck at Angkor, and its ships trade with China and India.",
+    "de": "Vor fünf Jahren gründete König Ramathibodi auf einer Insel im Chao Phraya eine neue Stadt: Ayutthaya. Schon haben seine Heere Angkor getroffen, und seine Schiffe handeln mit China und Indien."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sukhothai",
+   "name": {
+    "en": "Kingdom of Sukhothai",
+    "de": "Königreich Sukhothai"
+   },
+   "short": {
+    "en": "Sukhothai",
+    "de": "Sukhothai"
+   },
+   "adjective": {
+    "en": "Sukhothai",
+    "de": "sukhothaiisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "thai",
+   "faith": "theravada",
+   "color": "#6f323a",
+   "capital": {
+    "name": "Sukhothai",
+    "lat": 17.01,
+    "lon": 99.82
+   },
+   "holdings": [
+    {
+     "name": "Sukhothai",
+     "lat": 17.01,
+     "lon": 99.82
+    },
+    {
+     "name": "Si Satchanalai",
+     "lat": 17.43,
+     "lon": 99.79
+    },
+    {
+     "name": "Phitsanulok",
+     "lat": 16.82,
+     "lon": 100.26
+    },
+    {
+     "name": "Kamphaeng Phet",
+     "lat": 16.48,
+     "lon": 99.52
+    },
+    {
+     "name": "Nakhon Sawan",
+     "lat": 15.7,
+     "lon": 100.13
+    },
+    {
+     "name": "Uttaradit",
+     "lat": 17.62,
+     "lon": 100.1
+    }
+   ],
+   "ruler": {
+    "name": "Maha Thammaracha I (Li Thai)",
+    "born": 1300,
+    "dynasty": "Phra Ruang",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "pious",
+     "scholar"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Phra Ruang dynasty; Li Thai, grandson of Ram Khamhaeng, king since 1347, author of the Traiphum cosmology.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ayutthaya"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "King Li Thai of Sukhothai is a scholar and a monk at heart, who wrote the Three Worlds of the Buddhist cosmos. His kingdom is pious and old; Ayutthaya in the south is young and hungry.",
+    "de": "König Li Thai von Sukhothai ist ein Gelehrter und im Herzen ein Mönch, der die Drei Welten des buddhistischen Kosmos schrieb. Sein Reich ist fromm und alt; Ayutthaya im Süden ist jung und hungrig."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "lan_na",
+   "name": {
+    "en": "Kingdom of Lan Na",
+    "de": "Königreich Lan Na"
+   },
+   "short": {
+    "en": "Lan Na",
+    "de": "Lan Na"
+   },
+   "adjective": {
+    "en": "Lanna",
+    "de": "lannaisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "thai",
+   "faith": "theravada",
+   "color": "#385d2b",
+   "capital": {
+    "name": "Chiang Mai",
+    "lat": 18.79,
+    "lon": 98.99
+   },
+   "holdings": [
+    {
+     "name": "Chiang Mai",
+     "lat": 18.79,
+     "lon": 98.99
+    },
+    {
+     "name": "Lamphun",
+     "lat": 18.58,
+     "lon": 99.01
+    },
+    {
+     "name": "Lampang",
+     "lat": 18.29,
+     "lon": 99.49
+    },
+    {
+     "name": "Chiang Rai",
+     "lat": 19.91,
+     "lon": 99.83
+    },
+    {
+     "name": "Chiang Saen",
+     "lat": 20.27,
+     "lon": 100.09
+    },
+    {
+     "name": "Phayao",
+     "lat": 19.17,
+     "lon": 99.9
+    }
+   ],
+   "ruler": {
+    "name": "Phayu",
+    "born": 1310,
+    "dynasty": "Mangrai",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": {
+    "name": "Kue Na",
+    "born": 1339,
+    "dynasty": "Mangrai",
+    "female": false,
+    "skills": [
+     4,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "consort": null,
+   "dynasty_note": "Mangrai dynasty; Phayu reigns 1345-1367 from Chiang Mai, where he founded Wat Phra Singh.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the northern hills the kingdom of a million rice fields, Lan Na, is ruled from Chiang Mai by the heirs of Mangrai.",
+    "de": "In den nördlichen Bergen wird das Reich der Million Reisfelder, Lan Na, von Chiang Mai aus von den Erben Mangrais regiert."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "lan_xang",
+   "name": {
+    "en": "Kingdom of Lan Xang",
+    "de": "Königreich Lan Xang"
+   },
+   "short": {
+    "en": "Lan Xang",
+    "de": "Lan Xang"
+   },
+   "adjective": {
+    "en": "Lao",
+    "de": "laotisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "lao",
+   "faith": "theravada",
+   "color": "#76460d",
+   "capital": {
+    "name": "Muang Sua",
+    "lat": 19.89,
+    "lon": 102.13
+   },
+   "holdings": [
+    {
+     "name": "Muang Sua",
+     "lat": 19.89,
+     "lon": 102.13
+    },
+    {
+     "name": "Vientiane",
+     "lat": 17.97,
+     "lon": 102.6
+    },
+    {
+     "name": "Xieng Khouang",
+     "lat": 19.45,
+     "lon": 103.2
+    },
+    {
+     "name": "Sikhottabong",
+     "lat": 17.4,
+     "lon": 104.8
+    },
+    {
+     "name": "Muang Phuan",
+     "lat": 19.3,
+     "lon": 103.5
+    }
+   ],
+   "ruler": {
+    "name": "Fa Ngum",
+    "born": 1316,
+    "dynasty": "Khun Lo",
+    "female": false,
+    "skills": [
+     3,
+     4,
+     5
+    ],
+    "traits": [
+     "ambitious",
+     "brave"
+    ]
+   },
+   "heir": {
+    "name": "Samsenthai",
+    "born": 1356,
+    "dynasty": "Khun Lo",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "consort": {
+    "name": "Keo Kengkanya",
+    "born": 1320,
+    "dynasty": "Varman",
+    "female": true,
+    "skills": [
+     3,
+     3,
+     0
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "dynasty_note": "Fa Ngum, raised at Angkor and married to a Khmer princess, conquered Muang Sua with a Khmer army in 1353 and founded Lan Xang; he takes Vientiane about 1356. His son Samsenthai is born in 1356.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "lan_na",
+    "sukhothai"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Fa Ngum, a prince raised in exile at Angkor, has come up the Mekong with a Khmer army and made himself king of a Million Elephants. City after city of the Lao submits to him.",
+    "de": "Fa Ngum, ein im Exil zu Angkor erzogener Prinz, ist mit einem Khmer-Heer den Mekong hinaufgezogen und hat sich zum König der Million Elefanten gemacht. Stadt um Stadt der Lao unterwirft sich ihm."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "pinya",
+   "name": {
+    "en": "Kingdom of Pinya",
+    "de": "Königreich Pinya"
+   },
+   "short": {
+    "en": "Pinya",
+    "de": "Pinya"
+   },
+   "adjective": {
+    "en": "Burmese",
+    "de": "birmanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "burmese",
+   "faith": "theravada",
+   "color": "#7a581e",
+   "capital": {
+    "name": "Pinya",
+    "lat": 21.8,
+    "lon": 96.01
+   },
+   "holdings": [
+    {
+     "name": "Pinya",
+     "lat": 21.8,
+     "lon": 96.01
+    },
+    {
+     "name": "Pagan",
+     "lat": 21.17,
+     "lon": 94.86
+    },
+    {
+     "name": "Kyaukse",
+     "lat": 21.6,
+     "lon": 96.13
+    },
+    {
+     "name": "Toungoo",
+     "lat": 18.94,
+     "lon": 96.43
+    },
+    {
+     "name": "Prome",
+     "lat": 18.82,
+     "lon": 95.22
+    },
+    {
+     "name": "Myingyan",
+     "lat": 21.46,
+     "lon": 95.39
+    },
+    {
+     "name": "Taungdwingyi",
+     "lat": 20.0,
+     "lon": 95.55
+    }
+   ],
+   "ruler": {
+    "name": "Kyawswa I",
+    "born": 1330,
+    "dynasty": "Myinsaing",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Myinsaing-Pinya dynasty; Kyawswa I reigns 1350-1359. Pinya and its rival Sagaing across the Irrawaddy are both heirs of Pagan; Mong Mao raids will bring both down in 1364.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sagaing"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the dry zone of Upper Burma the kingdom of Pinya keeps the rice granary of Kyaukse and the memory of Pagan, while its sister kingdom Sagaing rules across the river.",
+    "de": "In der Trockenzone Oberbirmas bewahrt das Königreich Pinya die Reiskammer von Kyaukse und die Erinnerung an Pagan, während das Schwesterreich Sagaing jenseits des Flusses herrscht."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sagaing",
+   "name": {
+    "en": "Kingdom of Sagaing",
+    "de": "Königreich Sagaing"
+   },
+   "short": {
+    "en": "Sagaing",
+    "de": "Sagaing"
+   },
+   "adjective": {
+    "en": "Burmese",
+    "de": "birmanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "burmese",
+   "faith": "theravada",
+   "color": "#797367",
+   "capital": {
+    "name": "Sagaing",
+    "lat": 21.88,
+    "lon": 95.98
+   },
+   "holdings": [
+    {
+     "name": "Sagaing",
+     "lat": 21.88,
+     "lon": 95.98
+    },
+    {
+     "name": "Tagaung",
+     "lat": 23.5,
+     "lon": 96.02
+    },
+    {
+     "name": "Myedu",
+     "lat": 22.8,
+     "lon": 95.4
+    },
+    {
+     "name": "Ava",
+     "lat": 21.85,
+     "lon": 95.98
+    }
+   ],
+   "ruler": {
+    "name": "Tarabya II",
+    "born": 1330,
+    "dynasty": "Myinsaing",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Sagaing broke away from Pinya in 1315; Tarabya II reigns 1352-1364.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "pinya"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 2,
+   "summary": {
+    "en": "West of the Irrawaddy the kings of Sagaing rule the northern half of the old Burmese lands, facing the Shan of Mong Mao in the hills.",
+    "de": "Westlich des Irrawaddy regieren die Könige von Sagaing die nördliche Hälfte der alten birmanischen Lande, den Shan von Mong Mao in den Bergen gegenüber."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hanthawaddy",
+   "name": {
+    "en": "Martaban-Hanthawaddy",
+    "de": "Martaban-Hanthawaddy"
+   },
+   "short": {
+    "en": "Martaban",
+    "de": "Martaban"
+   },
+   "adjective": {
+    "en": "Mon",
+    "de": "mon"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "mon",
+   "faith": "theravada",
+   "color": "#797465",
+   "capital": {
+    "name": "Martaban",
+    "lat": 16.53,
+    "lon": 97.6
+   },
+   "holdings": [
+    {
+     "name": "Martaban",
+     "lat": 16.53,
+     "lon": 97.6
+    },
+    {
+     "name": "Pegu",
+     "lat": 17.34,
+     "lon": 96.48
+    },
+    {
+     "name": "Dagon",
+     "lat": 16.8,
+     "lon": 96.15
+    },
+    {
+     "name": "Bassein",
+     "lat": 16.78,
+     "lon": 94.73
+    },
+    {
+     "name": "Myaungmya",
+     "lat": 16.59,
+     "lon": 94.93
+    },
+    {
+     "name": "Moulmein",
+     "lat": 16.49,
+     "lon": 97.63
+    },
+    {
+     "name": "Syriam",
+     "lat": 16.77,
+     "lon": 96.24
+    }
+   ],
+   "ruler": {
+    "name": "Binnya U",
+    "born": 1323,
+    "dynasty": "Wareru",
+    "female": false,
+    "skills": [
+     2,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wareru dynasty of the Mon; Binnya U reigns 1348-1384 from Martaban (he moves to Pegu in 1369). Ayutthaya has taken his Tenasserim coast.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ayutthaya"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "The Mon kingdom of Lower Burma lives from its ports, Martaban with its famous glazed jars, Bassein and Dagon with the great golden pagoda.",
+    "de": "Das Mon-Reich Unterbirmas lebt von seinen Häfen: Martaban mit seinen berühmten glasierten Krügen, Bassein und Dagon mit der großen goldenen Pagode."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "arakan",
+   "name": {
+    "en": "Kingdom of Arakan",
+    "de": "Königreich Arakan"
+   },
+   "short": {
+    "en": "Arakan",
+    "de": "Arakan"
+   },
+   "adjective": {
+    "en": "Arakanese",
+    "de": "arakanesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "burmese",
+   "faith": "theravada",
+   "color": "#4e4423",
+   "capital": {
+    "name": "Launggyet",
+    "lat": 20.6,
+    "lon": 93.19
+   },
+   "holdings": [
+    {
+     "name": "Launggyet",
+     "lat": 20.6,
+     "lon": 93.19
+    },
+    {
+     "name": "Sandoway",
+     "lat": 18.47,
+     "lon": 94.37
+    },
+    {
+     "name": "Ramu",
+     "lat": 21.42,
+     "lon": 92.1
+    }
+   ],
+   "ruler": {
+    "name": "Min Di",
+    "born": 1270,
+    "dynasty": "Launggyet",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Launggyet dynasty; the Arakanese chronicles give Min Di an improbable reign of 1279-1385, so the king of 1356 is uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 1,
+   "summary": {
+    "en": "Behind the Arakan Yoma the coast kingdom of Arakan, with its capital Launggyet, lives between Bengal and Burma.",
+    "de": "Hinter dem Arakan-Joma lebt das Küstenreich Arakan mit seiner Hauptstadt Launggyet zwischen Bengalen und Birma."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "mong_mao",
+   "name": {
+    "en": "Mong Mao",
+    "de": "Mong Mao"
+   },
+   "short": {
+    "en": "Mong Mao",
+    "de": "Mong Mao"
+   },
+   "adjective": {
+    "en": "Shan",
+    "de": "shanisch"
+   },
+   "rank": "kingdom",
+   "government": "tribal_federation",
+   "culture": "shan",
+   "faith": "theravada",
+   "color": "#4f3c1d",
+   "capital": {
+    "name": "Mong Mao",
+    "lat": 24.01,
+    "lon": 97.85
+   },
+   "holdings": [
+    {
+     "name": "Mong Mao",
+     "lat": 24.01,
+     "lon": 97.85
+    },
+    {
+     "name": "Bhamo",
+     "lat": 24.27,
+     "lon": 97.23
+    },
+    {
+     "name": "Mong Yang",
+     "lat": 25.3,
+     "lon": 96.8
+    },
+    {
+     "name": "Hsenwi",
+     "lat": 23.3,
+     "lon": 97.95
+    }
+   ],
+   "ruler": {
+    "name": "Tho Kho Bwa",
+    "born": 1320,
+    "dynasty": "Mao",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     4
+    ],
+    "traits": [
+     "ambitious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Shan realm of the upper Shweli under nominal Yuan suzerainty (the Luchuan of the Chinese sources); its ruler Tho Kho Bwa (Si Kefa) is dated differently in Shan and Chinese sources.",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sagaing",
+    "pinya"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the Shweli valley the Shan of Mong Mao have grown into a power that defies the Yuan governors of Yunnan and raids down into Burma.",
+    "de": "Im Shweli-Tal sind die Shan von Mong Mao zu einer Macht geworden, die den Yuan-Statthaltern von Yunnan trotzt und nach Birma hinab plündert."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "majapahit",
+   "name": {
+    "en": "Majapahit",
+    "de": "Majapahit"
+   },
+   "short": {
+    "en": "Majapahit",
+    "de": "Majapahit"
+   },
+   "adjective": {
+    "en": "Javanese",
+    "de": "javanisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "javanese",
+   "faith": "hindu",
+   "color": "#763242",
+   "capital": {
+    "name": "Trowulan",
+    "lat": -7.56,
+    "lon": 112.38
+   },
+   "holdings": [
+    {
+     "name": "Trowulan",
+     "lat": -7.56,
+     "lon": 112.38
+    },
+    {
+     "name": "Tuban",
+     "lat": -6.9,
+     "lon": 112.05
+    },
+    {
+     "name": "Gresik",
+     "lat": -7.16,
+     "lon": 112.65
+    },
+    {
+     "name": "Surabaya",
+     "lat": -7.25,
+     "lon": 112.75
+    },
+    {
+     "name": "Kediri",
+     "lat": -7.82,
+     "lon": 112.01
+    },
+    {
+     "name": "Singhasari",
+     "lat": -7.89,
+     "lon": 112.66
+    },
+    {
+     "name": "Blambangan",
+     "lat": -8.22,
+     "lon": 114.37
+    },
+    {
+     "name": "Madura",
+     "lat": -7.03,
+     "lon": 113.25
+    },
+    {
+     "name": "Gelgel (Bali)",
+     "lat": -8.56,
+     "lon": 115.4
+    },
+    {
+     "name": "Lombok",
+     "lat": -8.65,
+     "lon": 116.32
+    },
+    {
+     "name": "Palembang",
+     "lat": -2.99,
+     "lon": 104.76
+    },
+    {
+     "name": "Banjar",
+     "lat": -3.32,
+     "lon": 114.59
+    },
+    {
+     "name": "Kutai",
+     "lat": -0.43,
+     "lon": 116.98
+    },
+    {
+     "name": "Tanjungpura",
+     "lat": -1.83,
+     "lon": 110.0
+    }
+   ],
+   "ruler": {
+    "name": "Hayam Wuruk (Rajasanagara)",
+    "born": 1334,
+    "dynasty": "Rajasa",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     2
+    ],
+    "traits": [
+     "just"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Rajasa dynasty; Hayam Wuruk reigns since 1350 with the mahapatih Gajah Mada, who swore the Palapa oath to unite the archipelago. The war with Sunda breaks out at Bubat in 1357.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sunda"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "Majapahit stands at its height. From Trowulan in East Java the young king Hayam Wuruk and his great minister Gajah Mada receive tribute from Sumatra to the Moluccas, and Gajah Mada has sworn to eat no spice until the whole archipelago is theirs.",
+    "de": "Majapahit steht auf seinem Höhepunkt. Von Trowulan in Ostjava aus empfangen der junge König Hayam Wuruk und sein großer Minister Gajah Mada Tribut von Sumatra bis zu den Molukken, und Gajah Mada hat geschworen, kein Gewürz zu essen, bis der ganze Archipel ihnen gehört."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sunda",
+   "name": {
+    "en": "Kingdom of Sunda",
+    "de": "Königreich Sunda"
+   },
+   "short": {
+    "en": "Sunda",
+    "de": "Sunda"
+   },
+   "adjective": {
+    "en": "Sundanese",
+    "de": "sundanesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sundanese",
+   "faith": "hindu",
+   "color": "#786940",
+   "capital": {
+    "name": "Kawali",
+    "lat": -7.18,
+    "lon": 108.36
+   },
+   "holdings": [
+    {
+     "name": "Kawali",
+     "lat": -7.18,
+     "lon": 108.36
+    },
+    {
+     "name": "Pakuan",
+     "lat": -6.6,
+     "lon": 106.8
+    },
+    {
+     "name": "Sunda Kalapa",
+     "lat": -6.12,
+     "lon": 106.81
+    },
+    {
+     "name": "Banten",
+     "lat": -6.04,
+     "lon": 106.15
+    },
+    {
+     "name": "Cirebon",
+     "lat": -6.71,
+     "lon": 108.56
+    }
+   ],
+   "ruler": {
+    "name": "Prabu Maharaja Linggabuana",
+    "born": 1310,
+    "dynasty": "Sunda",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "King of Sunda (West Java) since 1350; he will die with his daughter Dyah Pitaloka and his court at Bubat in 1357, betrayed by Gajah Mada.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "majapahit"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 2,
+   "summary": {
+    "en": "West Java belongs to the kings of Sunda, whose pepper goes out through the port of Kalapa. King Linggabuana is about to promise his daughter to Hayam Wuruk of Majapahit.",
+    "de": "Westjava gehört den Königen von Sunda, deren Pfeffer über den Hafen Kalapa hinausgeht. König Linggabuana ist im Begriff, seine Tochter Hayam Wuruk von Majapahit zu versprechen."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "malayupura",
+   "name": {
+    "en": "Malayupura",
+    "de": "Malayupura"
+   },
+   "short": {
+    "en": "Malayu",
+    "de": "Malayu"
+   },
+   "adjective": {
+    "en": "Malay",
+    "de": "malaiisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "malay",
+   "faith": "vajrayana",
+   "color": "#5e4c1e",
+   "capital": {
+    "name": "Pagaruyung",
+    "lat": -0.47,
+    "lon": 100.62
+   },
+   "holdings": [
+    {
+     "name": "Pagaruyung",
+     "lat": -0.47,
+     "lon": 100.62
+    },
+    {
+     "name": "Dharmasraya",
+     "lat": -1.03,
+     "lon": 101.62
+    },
+    {
+     "name": "Jambi",
+     "lat": -1.6,
+     "lon": 103.6
+    },
+    {
+     "name": "Muara Jambi",
+     "lat": -1.48,
+     "lon": 103.67
+    },
+    {
+     "name": "Indragiri",
+     "lat": -0.4,
+     "lon": 102.45
+    }
+   ],
+   "ruler": {
+    "name": "Adityawarman",
+    "born": 1294,
+    "dynasty": "Mauli",
+    "female": false,
+    "skills": [
+     4,
+     4,
+     3
+    ],
+    "traits": [
+     "pious",
+     "ambitious"
+    ]
+   },
+   "heir": {
+    "name": "Ananggawarman",
+    "born": 1330,
+    "dynasty": "Mauli",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "consort": null,
+   "dynasty_note": "Adityawarman, of Javanese and Malay royal blood, sent by Majapahit, rules the Minangkabau highlands as maharajadhiraja since 1347 with growing independence.",
+   "overlord": "majapahit",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "In the gold-bearing highlands of Sumatra Adityawarman, a Tantric Buddhist king trained at the court of Majapahit, has made himself the great king of Malayupura.",
+    "de": "Im goldführenden Hochland Sumatras hat sich Adityawarman, ein tantrisch-buddhistischer König, am Hof von Majapahit erzogen, zum Großkönig von Malayupura gemacht."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "samudera_pasai",
+   "name": {
+    "en": "Sultanate of Samudera Pasai",
+    "de": "Sultanat Samudera Pasai"
+   },
+   "short": {
+    "en": "Pasai",
+    "de": "Pasai"
+   },
+   "adjective": {
+    "en": "Pasai",
+    "de": "pasaiisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "malay",
+   "faith": "sunni",
+   "color": "#786b45",
+   "capital": {
+    "name": "Pasai",
+    "lat": 5.16,
+    "lon": 97.15
+   },
+   "holdings": [
+    {
+     "name": "Pasai",
+     "lat": 5.16,
+     "lon": 97.15
+    },
+    {
+     "name": "Lamuri",
+     "lat": 5.55,
+     "lon": 95.32
+    },
+    {
+     "name": "Pidie",
+     "lat": 5.38,
+     "lon": 95.96
+    },
+    {
+     "name": "Perlak",
+     "lat": 4.85,
+     "lon": 97.85
+    }
+   ],
+   "ruler": {
+    "name": "Ahmad Malik az-Zahir",
+    "born": 1310,
+    "dynasty": "Malik as-Salih",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The first Muslim kingdom of the archipelago (Malik as-Salih, d. 1297); Ibn Battuta visited Sultan Ahmad Malik az-Zahir in 1345/46. Majapahit will sack Pasai in the 1360s.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "On the Strait of Malacca the port of Pasai is a city of Muslim scholars and pepper merchants, where Ibn Battuta waited for the monsoon to China.",
+    "de": "An der Straße von Malakka ist der Hafen Pasai eine Stadt muslimischer Gelehrter und Pfefferhändler, in der Ibn Battuta auf den Monsun nach China wartete."
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "singapura",
+   "name": {
+    "en": "Kingdom of Singapura",
+    "de": "Königreich Singapura"
+   },
+   "short": {
+    "en": "Singapura",
+    "de": "Singapura"
+   },
+   "adjective": {
+    "en": "Malay",
+    "de": "malaiisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "malay",
+   "faith": "hindu",
+   "color": "#84651e",
+   "capital": {
+    "name": "Singapura",
+    "lat": 1.29,
+    "lon": 103.85
+   },
+   "holdings": [
+    {
+     "name": "Singapura",
+     "lat": 1.29,
+     "lon": 103.85
+    },
+    {
+     "name": "Bintan",
+     "lat": 1.07,
+     "lon": 104.47
+    }
+   ],
+   "ruler": {
+    "name": "Sri Wikrama Wira",
+    "born": 1320,
+    "dynasty": "Sang Nila Utama",
+    "female": false,
+    "skills": [
+     2,
+     2,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Second king of Temasek-Singapura in the Malay Annals (reigning about 1347-1362); dates and names after the Sejarah Melayu, uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "At the tip of the Malay peninsula the port of Temasek, which its kings call Singapura, trades between the Indian Ocean and the South China Sea.",
+    "de": "An der Spitze der Malaiischen Halbinsel handelt der Hafen Temasek, den seine Könige Singapura nennen, zwischen dem Indischen Ozean und dem Südchinesischen Meer."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tui_tonga",
+   "name": {
+    "en": "Tuʻi Tonga",
+    "de": "Tuʻi Tonga"
+   },
+   "short": {
+    "en": "Tonga",
+    "de": "Tonga"
+   },
+   "adjective": {
+    "en": "Tongan",
+    "de": "tongaisch"
+   },
+   "rank": "empire",
+   "government": "tribal_federation",
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "color": "#7a6331",
+   "capital": {
+    "name": "Lapaha",
+    "lat": -21.15,
+    "lon": -175.18
+   },
+   "holdings": [
+    {
+     "name": "Lapaha",
+     "lat": -21.15,
+     "lon": -175.18
+    },
+    {
+     "name": "Vavaʻu",
+     "lat": -18.65,
+     "lon": -173.98
+    },
+    {
+     "name": "Haʻapai",
+     "lat": -19.8,
+     "lon": -174.35
+    },
+    {
+     "name": "ʻUvea",
+     "lat": -13.29,
+     "lon": -176.2
+    }
+   ],
+   "ruler": {
+    "name": "Tuʻi Tonga",
+    "born": 1310,
+    "dynasty": "Tuʻi Tonga",
+    "female": false,
+    "skills": [
+     3,
+     3,
+     3
+    ],
+    "traits": [
+     "pious"
+    ]
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The sacred Tuʻi Tonga line at Lapaha on Tongatapu, whose sway reached Samoa, ʻUvea and Futuna; the holder of the title in 1356 is not certain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 1,
+   "summary": {
+    "en": "Across the southern Pacific the sacred kings of Tonga receive the first fruits of islands far over the sea, carried in great double canoes.",
+    "de": "Über den Südpazifik empfangen die heiligen Könige Tongas die ersten Früchte von Inseln weit über dem Meer, gebracht in großen Doppelkanus."
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "paquime",
+   "name": {
+    "en": "Paquimé",
+    "de": "Paquimé"
+   },
+   "short": {
+    "en": "Paquimé",
+    "de": "Paquimé"
+   },
+   "adjective": {
+    "en": "Paquimé",
+    "de": "paquimé"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "puebloan",
+   "faith": "american_traditional",
+   "color": "#5e4a0f",
+   "capital": {
+    "name": "Paquimé",
+    "lat": 30.37,
+    "lon": -107.95
+   },
+   "holdings": [
+    {
+     "name": "Paquimé",
+     "lat": 30.37,
+     "lon": -107.95
+    },
+    {
+     "name": "Janos",
+     "lat": 30.89,
+     "lon": -108.19
+    },
+    {
+     "name": "Babícora",
+     "lat": 29.3,
+     "lon": -107.75
+    }
+   ],
+   "ruler": {
+    "name": "Lords of Paquimé",
+    "born": 1310,
+    "dynasty": null,
+    "female": false,
+    "skills": [
+     3,
+     3,
+     2
+    ],
+    "traits": []
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Casas Grandes (Paquimé), a town of multi-storey adobe houses, ball courts and macaw pens at its height c.1300-1450; its rulers are unknown.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 1,
+   "summary": {
+    "en": "In the valley of the Casas Grandes stands Paquimé, a town of adobe towers where macaws are bred for their feathers and shell and copper come in from far away.",
+    "de": "Im Tal der Casas Grandes steht Paquimé, eine Stadt aus Lehmtürmen, in der Aras um ihrer Federn willen gezüchtet werden und Muscheln und Kupfer von weit her kommen."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Red Turban Rebellion",
+    "de": "Aufstand der Roten Turbane"
+   },
+   "attackers": [
+    "song_red_turban",
+    "tianwan",
+    "zhu_yuanzhang"
+   ],
+   "defenders": [
+    "yuan"
+   ],
+   "since": 1351,
+   "goal": "independence"
+  },
+  {
+   "name": {
+    "en": "Nanboku-chō War",
+    "de": "Krieg der Nord- und Südhöfe"
+   },
+   "attackers": [
+    "southern_court"
+   ],
+   "defenders": [
+    "ashikaga"
+   ],
+   "since": 1336,
+   "goal": "succession"
+  }
+ ],
+ "extends": {
+  "golden_horde": [
+   "Ulus of Orda (Irtysh)@50.40,76.00",
+   "Ishim steppe@52.00,71.50",
+   "Balkhash steppe@46.50,74.50",
+   "Semirechye north@45.50,77.50"
+  ],
+  "chagatai": [
+   "Ferghana@40.39,71.78",
+   "Osh@40.53,72.80",
+   "Andijan@40.78,72.34",
+   "Badakhshan@37.10,70.60"
+  ],
+  "purepecha": [
+   "Tzintzuntzan@19.63,-101.58",
+   "Pátzcuaro@19.51,-101.61",
+   "Uruapan@19.42,-102.06",
+   "Zacapu@19.81,-101.79"
+  ],
+  "kart": [
+   "Ghazni@33.55,68.42"
+  ]
+ },
+ "demography": [
+  {
+   "lat": 39.9,
+   "lon": 116.4,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 28
+  },
+  {
+   "lat": 36.6,
+   "lon": 117.0,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 30
+  },
+  {
+   "lat": 37.9,
+   "lon": 112.5,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 22
+  },
+  {
+   "lat": 34.3,
+   "lon": 108.9,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 18
+  },
+  {
+   "lat": 34.8,
+   "lon": 114.3,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 25
+  },
+  {
+   "lat": 33.0,
+   "lon": 116.5,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 30
+  },
+  {
+   "lat": 32.0,
+   "lon": 119.0,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 55
+  },
+  {
+   "lat": 31.0,
+   "lon": 120.5,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 80
+  },
+  {
+   "lat": 30.0,
+   "lon": 120.5,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 60
+  },
+  {
+   "lat": 28.5,
+   "lon": 115.9,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 40
+  },
+  {
+   "lat": 30.5,
+   "lon": 114.3,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 30
+  },
+  {
+   "lat": 28.2,
+   "lon": 113.0,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 25
+  },
+  {
+   "lat": 30.6,
+   "lon": 104.1,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 18
+  },
+  {
+   "lat": 29.6,
+   "lon": 106.6,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 12
+  },
+  {
+   "lat": 26.1,
+   "lon": 119.3,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 40
+  },
+  {
+   "lat": 23.1,
+   "lon": 113.3,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 25
+  },
+  {
+   "lat": 25.3,
+   "lon": 110.3,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 10
+  },
+  {
+   "lat": 26.6,
+   "lon": 106.7,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 5
+  },
+  {
+   "lat": 25.0,
+   "lon": 102.7,
+   "culture": "han",
+   "faith": "vajrayana",
+   "density": 6
+  },
+  {
+   "lat": 25.7,
+   "lon": 100.2,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 6
+  },
+  {
+   "lat": 36.1,
+   "lon": 103.8,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 6
+  },
+  {
+   "lat": 39.0,
+   "lon": 100.5,
+   "culture": "mongol",
+   "faith": "vajrayana",
+   "density": 1.5
+  },
+  {
+   "lat": 41.3,
+   "lon": 123.2,
+   "culture": "han",
+   "faith": "mahayana",
+   "density": 8
+  },
+  {
+   "lat": 44.0,
+   "lon": 126.0,
+   "culture": "jurchen",
+   "faith": "tengri",
+   "density": 1.5
+  },
+  {
+   "lat": 47.5,
+   "lon": 130.0,
+   "culture": "jurchen",
+   "faith": "tengri",
+   "density": 0.5
+  },
+  {
+   "lat": 48.5,
+   "lon": 123.0,
+   "culture": "mongol",
+   "faith": "tengri",
+   "density": 0.5
+  },
+  {
+   "lat": 47.2,
+   "lon": 102.8,
+   "culture": "mongol",
+   "faith": "vajrayana",
+   "density": 0.5
+  },
+  {
+   "lat": 48.0,
+   "lon": 112.0,
+   "culture": "mongol",
+   "faith": "tengri",
+   "density": 0.4
+  },
+  {
+   "lat": 43.0,
+   "lon": 108.0,
+   "culture": "mongol",
+   "faith": "tengri",
+   "density": 0.2
+  },
+  {
+   "lat": 43.0,
+   "lon": 89.0,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 1.5
+  },
+  {
+   "lat": 39.5,
+   "lon": 76.0,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 4
+  },
+  {
+   "lat": 41.5,
+   "lon": 82.0,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 2
+  },
+  {
+   "lat": 38.5,
+   "lon": 84.0,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 0.3
+  },
+  {
+   "lat": 43.9,
+   "lon": 80.8,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 1
+  },
+  {
+   "lat": 42.5,
+   "lon": 76.0,
+   "culture": "chagatai_turkic",
+   "faith": "sunni",
+   "density": 1
+  },
+  {
+   "lat": 48.0,
+   "lon": 75.0,
+   "culture": "kipchak_nomad",
+   "faith": "tengri",
+   "density": 0.4
+  },
+  {
+   "lat": 52.0,
+   "lon": 72.0,
+   "culture": "kipchak_nomad",
+   "faith": "tengri",
+   "density": 0.3
+  },
+  {
+   "lat": 46.0,
+   "lon": 74.0,
+   "culture": "kipchak_nomad",
+   "faith": "sunni",
+   "density": 0.3
+  },
+  {
+   "lat": 37.5,
+   "lon": 127.0,
+   "culture": "korean",
+   "faith": "mahayana",
+   "density": 25
+  },
+  {
+   "lat": 35.5,
+   "lon": 128.5,
+   "culture": "korean",
+   "faith": "mahayana",
+   "density": 28
+  },
+  {
+   "lat": 39.0,
+   "lon": 125.8,
+   "culture": "korean",
+   "faith": "mahayana",
+   "density": 15
+  },
+  {
+   "lat": 41.0,
+   "lon": 128.5,
+   "culture": "jurchen",
+   "faith": "tengri",
+   "density": 2
+  },
+  {
+   "lat": 35.0,
+   "lon": 135.8,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 35
+  },
+  {
+   "lat": 34.5,
+   "lon": 133.5,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 22
+  },
+  {
+   "lat": 35.5,
+   "lon": 139.5,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 25
+  },
+  {
+   "lat": 33.0,
+   "lon": 130.7,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 18
+  },
+  {
+   "lat": 38.5,
+   "lon": 140.5,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 8
+  },
+  {
+   "lat": 36.5,
+   "lon": 137.5,
+   "culture": "japanese",
+   "faith": "mahayana",
+   "density": 15
+  },
+  {
+   "lat": 43.0,
+   "lon": 142.5,
+   "culture": "ainu",
+   "faith": "tengri",
+   "density": 0.3
+  },
+  {
+   "lat": 50.0,
+   "lon": 143.0,
+   "culture": "nivkh",
+   "faith": "tengri",
+   "density": 0.1
+  },
+  {
+   "lat": 26.3,
+   "lon": 127.8,
+   "culture": "ryukyuan",
+   "faith": "shinto",
+   "density": 20
+  },
+  {
+   "lat": 29.6,
+   "lon": 91.1,
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "density": 2
+  },
+  {
+   "lat": 31.5,
+   "lon": 80.0,
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "density": 0.3
+  },
+  {
+   "lat": 33.5,
+   "lon": 88.0,
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "density": 0.1
+  },
+  {
+   "lat": 31.0,
+   "lon": 97.0,
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "density": 1.2
+  },
+  {
+   "lat": 35.5,
+   "lon": 100.0,
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "density": 1
+  },
+  {
+   "lat": 27.7,
+   "lon": 85.3,
+   "culture": "newar",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 29.3,
+   "lon": 82.2,
+   "culture": "nepali",
+   "faith": "hindu",
+   "density": 4
+  },
+  {
+   "lat": 34.1,
+   "lon": 74.8,
+   "culture": "kashmiri",
+   "faith": "hindu",
+   "density": 12
+  },
+  {
+   "lat": 28.6,
+   "lon": 77.2,
+   "culture": "hindustani",
+   "faith": "hindu",
+   "density": 30
+  },
+  {
+   "lat": 31.5,
+   "lon": 74.3,
+   "culture": "punjabi",
+   "faith": "sunni",
+   "density": 25
+  },
+  {
+   "lat": 30.2,
+   "lon": 71.5,
+   "culture": "punjabi",
+   "faith": "sunni",
+   "density": 15
+  },
+  {
+   "lat": 26.8,
+   "lon": 81.0,
+   "culture": "hindustani",
+   "faith": "hindu",
+   "density": 40
+  },
+  {
+   "lat": 25.4,
+   "lon": 85.0,
+   "culture": "hindustani",
+   "faith": "hindu",
+   "density": 40
+  },
+  {
+   "lat": 24.0,
+   "lon": 88.5,
+   "culture": "bengali",
+   "faith": "hindu",
+   "density": 45
+  },
+  {
+   "lat": 23.5,
+   "lon": 90.5,
+   "culture": "bengali",
+   "faith": "sunni",
+   "density": 45
+  },
+  {
+   "lat": 26.5,
+   "lon": 92.0,
+   "culture": "assamese",
+   "faith": "hindu",
+   "density": 8
+  },
+  {
+   "lat": 27.0,
+   "lon": 94.8,
+   "culture": "ahom",
+   "faith": "tai_folk",
+   "density": 6
+  },
+  {
+   "lat": 26.0,
+   "lon": 74.0,
+   "culture": "rajput",
+   "faith": "hindu",
+   "density": 10
+  },
+  {
+   "lat": 27.0,
+   "lon": 71.5,
+   "culture": "rajput",
+   "faith": "hindu",
+   "density": 3
+  },
+  {
+   "lat": 23.0,
+   "lon": 72.5,
+   "culture": "gujarati",
+   "faith": "hindu",
+   "density": 25
+  },
+  {
+   "lat": 23.0,
+   "lon": 77.5,
+   "culture": "hindustani",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 21.0,
+   "lon": 82.0,
+   "culture": "hindustani",
+   "faith": "hindu",
+   "density": 6
+  },
+  {
+   "lat": 20.5,
+   "lon": 85.8,
+   "culture": "odia",
+   "faith": "hindu",
+   "density": 20
+  },
+  {
+   "lat": 19.0,
+   "lon": 75.5,
+   "culture": "dakhini",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 17.3,
+   "lon": 76.8,
+   "culture": "dakhini",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 17.9,
+   "lon": 79.6,
+   "culture": "telugu",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 16.3,
+   "lon": 80.4,
+   "culture": "telugu",
+   "faith": "hindu",
+   "density": 22
+  },
+  {
+   "lat": 15.3,
+   "lon": 76.5,
+   "culture": "kannada",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 13.0,
+   "lon": 75.8,
+   "culture": "kannada",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": 13.0,
+   "lon": 79.7,
+   "culture": "tamil",
+   "faith": "hindu",
+   "density": 25
+  },
+  {
+   "lat": 10.0,
+   "lon": 78.5,
+   "culture": "tamil",
+   "faith": "hindu",
+   "density": 22
+  },
+  {
+   "lat": 10.0,
+   "lon": 76.3,
+   "culture": "malayali",
+   "faith": "hindu",
+   "density": 25
+  },
+  {
+   "lat": 7.3,
+   "lon": 80.6,
+   "culture": "sinhala",
+   "faith": "theravada",
+   "density": 12
+  },
+  {
+   "lat": 9.6,
+   "lon": 80.0,
+   "culture": "tamil",
+   "faith": "hindu",
+   "density": 10
+  },
+  {
+   "lat": 4.2,
+   "lon": 73.5,
+   "culture": "dhivehi",
+   "faith": "sunni",
+   "density": 10
+  },
+  {
+   "lat": 21.0,
+   "lon": 105.8,
+   "culture": "vietnamese",
+   "faith": "mahayana",
+   "density": 40
+  },
+  {
+   "lat": 19.0,
+   "lon": 105.6,
+   "culture": "vietnamese",
+   "faith": "mahayana",
+   "density": 20
+  },
+  {
+   "lat": 16.5,
+   "lon": 107.5,
+   "culture": "vietnamese",
+   "faith": "mahayana",
+   "density": 8
+  },
+  {
+   "lat": 13.8,
+   "lon": 109.0,
+   "culture": "cham",
+   "faith": "hindu",
+   "density": 8
+  },
+  {
+   "lat": 11.6,
+   "lon": 108.9,
+   "culture": "cham",
+   "faith": "hindu",
+   "density": 4
+  },
+  {
+   "lat": 13.4,
+   "lon": 103.9,
+   "culture": "khmer",
+   "faith": "theravada",
+   "density": 10
+  },
+  {
+   "lat": 11.5,
+   "lon": 105.0,
+   "culture": "khmer",
+   "faith": "theravada",
+   "density": 10
+  },
+  {
+   "lat": 14.5,
+   "lon": 100.5,
+   "culture": "thai",
+   "faith": "theravada",
+   "density": 10
+  },
+  {
+   "lat": 17.0,
+   "lon": 99.8,
+   "culture": "thai",
+   "faith": "theravada",
+   "density": 8
+  },
+  {
+   "lat": 18.8,
+   "lon": 99.0,
+   "culture": "thai",
+   "faith": "theravada",
+   "density": 8
+  },
+  {
+   "lat": 19.9,
+   "lon": 102.1,
+   "culture": "lao",
+   "faith": "theravada",
+   "density": 3
+  },
+  {
+   "lat": 17.0,
+   "lon": 104.5,
+   "culture": "lao",
+   "faith": "theravada",
+   "density": 4
+  },
+  {
+   "lat": 21.5,
+   "lon": 95.8,
+   "culture": "burmese",
+   "faith": "theravada",
+   "density": 10
+  },
+  {
+   "lat": 17.0,
+   "lon": 96.5,
+   "culture": "mon",
+   "faith": "theravada",
+   "density": 8
+  },
+  {
+   "lat": 20.6,
+   "lon": 93.2,
+   "culture": "burmese",
+   "faith": "theravada",
+   "density": 6
+  },
+  {
+   "lat": 22.5,
+   "lon": 98.0,
+   "culture": "shan",
+   "faith": "theravada",
+   "density": 4
+  },
+  {
+   "lat": 8.5,
+   "lon": 99.9,
+   "culture": "thai",
+   "faith": "theravada",
+   "density": 6
+  },
+  {
+   "lat": 4.0,
+   "lon": 101.5,
+   "culture": "malay",
+   "faith": "hindu",
+   "density": 2
+  },
+  {
+   "lat": 10.5,
+   "lon": 106.5,
+   "culture": "khmer",
+   "faith": "theravada",
+   "density": 4
+  },
+  {
+   "lat": -7.5,
+   "lon": 112.0,
+   "culture": "javanese",
+   "faith": "hindu",
+   "density": 30
+  },
+  {
+   "lat": -7.0,
+   "lon": 110.0,
+   "culture": "javanese",
+   "faith": "hindu",
+   "density": 25
+  },
+  {
+   "lat": -6.8,
+   "lon": 107.5,
+   "culture": "sundanese",
+   "faith": "hindu",
+   "density": 15
+  },
+  {
+   "lat": -8.4,
+   "lon": 115.2,
+   "culture": "javanese",
+   "faith": "hindu",
+   "density": 30
+  },
+  {
+   "lat": 5.0,
+   "lon": 97.0,
+   "culture": "malay",
+   "faith": "sunni",
+   "density": 8
+  },
+  {
+   "lat": -0.5,
+   "lon": 100.6,
+   "culture": "malay",
+   "faith": "vajrayana",
+   "density": 8
+  },
+  {
+   "lat": -2.5,
+   "lon": 104.0,
+   "culture": "malay",
+   "faith": "hindu",
+   "density": 3
+  },
+  {
+   "lat": 0.5,
+   "lon": 113.0,
+   "culture": "malay",
+   "faith": "hindu",
+   "density": 1
+  },
+  {
+   "lat": -3.5,
+   "lon": 120.0,
+   "culture": "bugis",
+   "faith": "hindu",
+   "density": 5
+  },
+  {
+   "lat": -3.5,
+   "lon": 129.0,
+   "culture": "bugis",
+   "faith": "hindu",
+   "density": 3
+  },
+  {
+   "lat": 14.6,
+   "lon": 121.0,
+   "culture": "tagalog",
+   "faith": "hindu",
+   "density": 5
+  },
+  {
+   "lat": 10.0,
+   "lon": 124.0,
+   "culture": "tagalog",
+   "faith": "hindu",
+   "density": 4
+  },
+  {
+   "lat": 7.0,
+   "lon": 125.0,
+   "culture": "tagalog",
+   "faith": "hindu",
+   "density": 3
+  },
+  {
+   "lat": -5.0,
+   "lon": 140.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 1.5
+  },
+  {
+   "lat": 58.0,
+   "lon": 80.0,
+   "culture": "samoyed",
+   "faith": "tengri",
+   "density": 0.05
+  },
+  {
+   "lat": 62.0,
+   "lon": 100.0,
+   "culture": "evenk",
+   "faith": "tengri",
+   "density": 0.02
+  },
+  {
+   "lat": 62.0,
+   "lon": 130.0,
+   "culture": "yakut",
+   "faith": "tengri",
+   "density": 0.05
+  },
+  {
+   "lat": 52.0,
+   "lon": 105.0,
+   "culture": "mongol",
+   "faith": "tengri",
+   "density": 0.3
+  },
+  {
+   "lat": 66.0,
+   "lon": 170.0,
+   "culture": "chukchi",
+   "faith": "tengri",
+   "density": 0.02
+  },
+  {
+   "lat": 56.0,
+   "lon": 160.0,
+   "culture": "chukchi",
+   "faith": "tengri",
+   "density": 0.03
+  },
+  {
+   "lat": 68.0,
+   "lon": 85.0,
+   "culture": "samoyed",
+   "faith": "tengri",
+   "density": 0.02
+  },
+  {
+   "lat": -25.0,
+   "lon": 135.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.05
+  },
+  {
+   "lat": -25.0,
+   "lon": 121.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.03
+  },
+  {
+   "lat": -21.0,
+   "lon": 117.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.06
+  },
+  {
+   "lat": -31.5,
+   "lon": 116.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.12
+  },
+  {
+   "lat": -17.0,
+   "lon": 125.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.08
+  },
+  {
+   "lat": -12.5,
+   "lon": 132.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.12
+  },
+  {
+   "lat": -20.0,
+   "lon": 145.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.1
+  },
+  {
+   "lat": -37.0,
+   "lon": 145.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.2
+  },
+  {
+   "lat": -30.0,
+   "lon": 140.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.04
+  },
+  {
+   "lat": -42.0,
+   "lon": 146.5,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.1
+  },
+  {
+   "lat": -27.0,
+   "lon": 152.5,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.2
+  },
+  {
+   "lat": -34.5,
+   "lon": 138.5,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.12
+  },
+  {
+   "lat": -33.0,
+   "lon": 150.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.15
+  },
+  {
+   "lat": -15.0,
+   "lon": 130.0,
+   "culture": "australian_aboriginal",
+   "faith": "polynesian_faith",
+   "density": 0.08
+  },
+  {
+   "lat": -38.0,
+   "lon": 176.0,
+   "culture": "maori",
+   "faith": "polynesian_faith",
+   "density": 1
+  },
+  {
+   "lat": -44.0,
+   "lon": 171.0,
+   "culture": "maori",
+   "faith": "polynesian_faith",
+   "density": 0.2
+  },
+  {
+   "lat": -21.1,
+   "lon": -175.2,
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "density": 15
+  },
+  {
+   "lat": -17.7,
+   "lon": 178.0,
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "density": 5
+  },
+  {
+   "lat": -14.0,
+   "lon": -172.0,
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "density": 10
+  },
+  {
+   "lat": 20.0,
+   "lon": -156.0,
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "density": 10
+  },
+  {
+   "lat": -17.6,
+   "lon": -149.5,
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "density": 8
+  },
+  {
+   "lat": 64.0,
+   "lon": -150.0,
+   "culture": "inuit",
+   "faith": "american_traditional",
+   "density": 0.02
+  },
+  {
+   "lat": 60.0,
+   "lon": -135.0,
+   "culture": "salish",
+   "faith": "american_traditional",
+   "density": 0.05
+  },
+  {
+   "lat": 48.0,
+   "lon": -123.0,
+   "culture": "salish",
+   "faith": "american_traditional",
+   "density": 1.5
+  },
+  {
+   "lat": 40.0,
+   "lon": -122.0,
+   "culture": "salish",
+   "faith": "american_traditional",
+   "density": 1.5
+  },
+  {
+   "lat": 35.0,
+   "lon": -119.0,
+   "culture": "salish",
+   "faith": "american_traditional",
+   "density": 1.2
+  },
+  {
+   "lat": 36.0,
+   "lon": -108.0,
+   "culture": "puebloan",
+   "faith": "american_traditional",
+   "density": 0.8
+  },
+  {
+   "lat": 33.0,
+   "lon": -112.0,
+   "culture": "puebloan",
+   "faith": "american_traditional",
+   "density": 0.6
+  },
+  {
+   "lat": 30.4,
+   "lon": -108.0,
+   "culture": "puebloan",
+   "faith": "american_traditional",
+   "density": 1
+  },
+  {
+   "lat": 42.0,
+   "lon": -112.0,
+   "culture": "apache",
+   "faith": "american_traditional",
+   "density": 0.1
+  },
+  {
+   "lat": 47.0,
+   "lon": -110.0,
+   "culture": "apache",
+   "faith": "american_traditional",
+   "density": 0.1
+  },
+  {
+   "lat": 25.0,
+   "lon": -105.0,
+   "culture": "apache",
+   "faith": "american_traditional",
+   "density": 0.5
+  },
+  {
+   "lat": 19.6,
+   "lon": -101.6,
+   "culture": "purepecha",
+   "faith": "mesoamerican",
+   "density": 25
+  },
+  {
+   "lat": 20.5,
+   "lon": -103.5,
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "density": 8
+  },
+  {
+   "lat": 17.5,
+   "lon": -101.0,
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "density": 10
+  },
+  {
+   "lat": -40.0,
+   "lon": -72.0,
+   "culture": "mapuche",
+   "faith": "andean",
+   "density": 2
+  },
+  {
+   "lat": -48.0,
+   "lon": -70.0,
+   "culture": "mapuche",
+   "faith": "andean",
+   "density": 0.05
+  }
+ ]
+}

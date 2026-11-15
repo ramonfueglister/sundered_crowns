@@ -3,8 +3,8 @@
 // those of 1356 as the game sets them up, until the page says who holds which place now.
 import { rgb } from '../lookprobe/batch';
 import { maybeGunzip } from '../render/assets';
-import { type Beyond, type RealmName, type Realms, marginOf, paintRealms, realmNames } from './paint';
-import { indexOf, loadWindow } from './region';
+import { type RealmName, type Realms, type Rest, paintRealms, placeAt, realmNames } from './paint';
+import { indexOf } from './region';
 
 /** The realms as they stand: who holds every place (-1: no realm), and every realm's colour (0xrrggbb) and name, by its number. */
 export interface RealmsNow { owner: Int16Array; colors: number[]; names: string[] }
@@ -25,44 +25,40 @@ const NO_COLOUR = 0x808080;
 interface Setup { states: { short: { de: string }; color: string }[]; owner: number[] }
 
 const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
+const u16 = (raw: Uint8Array) => new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength));
+/** cells of the rest of the world to a map pixel (half as fine as the game map) */
+const REST_CELLS = 0.5;
+/** The places of the rest of the world, beyond the game map, over the whole world frame (0 on the game map). */
+async function restOf(base: string, worldW: number): Promise<Rest> {
+  const raw = await maybeGunzip(new Uint8Array(await (await get(`${base}map/beyond.bin.gz`)).arrayBuffer())), w = Math.round(worldW * REST_CELLS);
+  if (raw.byteLength % (w * 2)) throw new Error(`beyond.bin: ${raw.byteLength} bytes are no rows of ${w}`);
+  return { ids: u16(raw), w, h: raw.byteLength / (w * 2), cells: REST_CELLS };
+}
 let realms: Promise<Realms & { names: string[] }> | undefined;
 /** The realms of 1356 as the game sets them up, on the map of region `name`. */
 const realmsOf = (name: string, base: string) => realms ??= (async (): Promise<Realms & { names: string[] }> => {
   const [index, setup, packed] = await Promise.all([indexOf(name, base), get(`${base}data/setup_1356.json`).then((r) => r.json() as Promise<Setup>), get(`${base}map/ids.bin.gz`).then((r) => r.arrayBuffer())]);
   const raw = await maybeGunzip(new Uint8Array(packed));
   if (raw.byteLength !== index.mapW * index.mapH * 2) throw new Error(`ids.bin: expected ${index.mapW * index.mapH * 2} bytes, got ${raw.byteLength}`);
-  return { ids: new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength)), w: index.mapW, h: index.mapH, round: index.worldW, owner: setup.owner, colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
+  return { ids: u16(raw), w: index.mapW, h: index.mapH, round: index.worldW, rest: index.worldW ? await restOf(base, index.worldW) : undefined, owner: setup.owner, colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
 })();
-
-/**
- * Land and water round a tile where it reaches beyond the game map (none where it lies on it), from the step of the
- * region whose cells are as wide as the tile's dots.
- */
-async function beyondOf(region: string, base: string, level: number, tx: number, ty: number, side: number, cells: number, r: Realms): Promise<Beyond | undefined> {
-  const perDot = 2 ** level / cells, m = marginOf(level, cells), x0 = (tx * side - m) * perDot, x1 = ((tx + 1) * side + m) * perDot, y0 = (ty * side - m) * perDot, y1 = ((ty + 1) * side + m) * perDot;
-  if (x0 >= 0 && x1 <= r.w && y0 >= 0 && y1 <= r.h) return undefined;
-  const step = Math.min(7, level), name = step > 0 ? `${region}/z${step}` : region, c = (await indexOf(name, base)).cells;
-  const gx0 = Math.floor(x0 * c), gy0 = Math.max(0, Math.floor(y0 * c)), w = Math.ceil(x1 * c) - gx0 + 1, h = Math.max(1, Math.ceil(y1 * c) - gy0 + 1);
-  const window = await loadWindow(name, gx0, gy0, w, h, base);
-  return { water: window.water, w, h, cells: c, x0: gx0 / c, y0: gy0 / c };
-}
 
 self.onmessage = async (e: MessageEvent<RealmsJob>) => {
   const job = e.data, done = (d: Omit<RealmsDone, 'id'>) => (self as unknown as Worker).postMessage({ id: job.id, ...d } satisfies RealmsDone, d.tile ? [d.tile.buffer] : []);
   try {
     if (job.kind === 'realms') {
-      const { ids, w, h, round, chosen } = await realmsOf(job.region, job.base);
-      realms = Promise.resolve({ ids, w, h, round, chosen, owner: job.owner, colors: Array.from(job.colors, (c) => rgb(c ?? NO_COLOUR)), names: Array.from(job.names, (n) => n ?? '') });
+      const { ids, w, h, round, rest, chosen } = await realmsOf(job.region, job.base);
+      realms = Promise.resolve({ ids, w, h, round, rest, chosen, owner: job.owner, colors: Array.from(job.colors, (c) => rgb(c ?? NO_COLOUR)), names: Array.from(job.names, (n) => n ?? '') });
       return done({});
     }
     const r = await realmsOf(job.region, job.base);
     if (job.kind === 'choose') { realms = Promise.resolve({ ...r, chosen: job.place }); return done({}); }
     if (job.kind === 'place') {
-      const x = Math.floor(job.x), y = Math.floor(job.y), place = x < 0 || y < 0 || x >= r.w || y >= r.h ? -1 : r.ids[y * r.w + x] - 1;
-      return done({ place: place < r.owner.length ? place : -1 });
+      const place = placeAt(r, Math.floor(job.x), Math.floor(job.y));
+      return done({ place: place >= 0 && place < r.owner.length ? place : -1 });
     }
     if (job.kind === 'names') return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? "")].length).map((n) => ({ ...n, name: r.names[n.realm] })) });
-    const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, index.cells, await beyondOf(job.region, job.base, job.level, job.tx, job.ty, index.tile, index.cells, r));
+    const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, index.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
   } catch (err) {
     done({ error: String(err) });

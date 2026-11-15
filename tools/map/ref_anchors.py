@@ -24,7 +24,9 @@ POINTS = {'france': (1175, 325), 'england': (1175, 270), 'castile': (1160, 385),
           'lithuania': (1360, 237), 'kiev': (1407, 282), 'volhynia': (1357, 277), 'teutonic_order': (1335, 220),
           'golden_horde': (1550, 247), 'great_perm': (1557, 187), 'vyatka': (1530, 192), 'wallachia': (1355, 342),
           'georgia': (1510, 380), 'jalayirid': (1467, 413), 'cyprus': (1415, 435), 'mamluk': (1410, 497), 'makuria': (1405, 580),
-          'alodia': (1420, 617), 'marinid': (1127, 457), 'hafsid_tunis': (1237, 427), 'mali': (1085, 640), 'chagatai': (1735, 383)}
+          'alodia': (1420, 617), 'marinid': (1127, 457), 'hafsid_tunis': (1237, 427), 'mali': (1085, 640), 'chagatai': (1735, 383),
+          'yuan': (1960, 319), 'delhi': (1732, 510), 'ashikaga': (2151, 419), 'goryeo': (2069, 392), 'gampola': (1750, 674),
+          'khmer': (1928, 629), 'sukhothai': (1909, 597), 'majapahit': (1978, 807)}
 
 if __name__ == '__main__':
     path = sys.argv[1] if len(sys.argv) > 1 else '/mnt/project-files/karte/referenz-eu5/eu5-weltkarte-1337.png'

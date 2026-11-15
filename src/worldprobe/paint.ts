@@ -14,12 +14,20 @@ export interface Realms {
   ids: Uint16Array; w: number; h: number; owner: ArrayLike<number>; /** linear colour of every realm */ colors: readonly RGB[]; /** the place that is picked out, counted from 0 (none: -1 or left out) */ chosen?: number;
   /** map pixels round the globe, after which the map begins again (none: the map ends at its edges) */
   round?: number;
+  /** the places of the rest of the globe (public/map/beyond.bin.gz): ids as in `ids`, 0 on the game map, over the
+   *  world frame from its north-west corner, `cells` to a map pixel */
+  rest?: Rest;
 }
-/**
- * Land and water beyond the game map (where `ids` has nothing), as a raster: `water` (0: land) of `w` × `h` cells, of
- * which `cells` lie along a map pixel, its first cell at map pixel (x0, y0) of the lap the tile is painted on.
- */
-export interface Beyond { water: Uint8Array; w: number; h: number; cells: number; x0: number; y0: number }
+export interface Rest { ids: Uint16Array; w: number; h: number; cells: number }
+
+/** The place at map pixel (mx, my), counted from 0 (land places first, then the sea zones); -1 where there is none (a lake), OUTSIDE off the world. */
+export function placeAt(r: Realms, mx: number, my: number): number {
+  const wx = r.round ? ((mx % r.round) + r.round) % r.round : mx;
+  if (wx >= 0 && my >= 0 && wx < r.w && my < r.h) return r.ids[my * r.w + wx] - 1;
+  if (!r.rest || wx < 0 || my < 0) return OUTSIDE;
+  const bx = Math.floor(wx * r.rest.cells), by = Math.floor(my * r.rest.cells);
+  return bx >= r.rest.w || by >= r.rest.h ? OUTSIDE : r.rest.ids[by * r.rest.w + bx] - 1;
+}
 
 // ---------------------------------------------------------------- colours (sRGB 0 … 255 as measured, used linear)
 // Measured on the EU5 reference (karte/referenz-eu5/eu5-weltkarte-1337.png, medians of open patches): open sea
@@ -54,9 +62,9 @@ const NONE = -1, WATER = -2, OUTSIDE = -3;
 /**
  * The realms of the tile (tx, ty) of `level` of a map with `cells` finest cells per map pixel, `side` dots wide: per
  * dot the colour times its cover, and the cover (so that the dots blend cleanly), in linear light. Beyond the game map
- * the land and water of `beyond` are painted, the land in sand. The tile's margin in map pixels is `marginOf`.
+ * the places of `r.rest` are painted. The tile's margin in map pixels is `marginOf`.
  */
-export function paintRealms(r: Realms, level: number, tx: number, ty: number, side: number, cells: number, beyond?: Beyond): Uint8ClampedArray {
+export function paintRealms(r: Realms, level: number, tx: number, ty: number, side: number, cells: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(side * side * 4), perDot = 2 ** level / cells, lands = r.owner.length, chosen = r.chosen ?? -1;
   // a margin of dots around the tile, wide enough for the shading, so that a dot's distances are those of the whole map
   const margin = marginOf(level, cells), n = side + 2 * margin;
@@ -65,16 +73,8 @@ export function paintRealms(r: Realms, level: number, tx: number, ty: number, si
     const my = Math.floor((ty * side + y - margin + 0.5) * perDot);
     for (let x = 0; x < n; x++) {
       const mx = Math.floor((tx * side + x - margin + 0.5) * perDot), i = y * n + x;
-      // round the globe the game map comes again; beyond it there are land and water, but no places
-      const wx = r.round ? ((mx % r.round) + r.round) % r.round : mx;
-      if (wx < 0 || my < 0 || wx >= r.w || my >= r.h) {
-        place[i] = -1;
-        if (!beyond) { kind[i] = OUTSIDE; continue; }
-        const bx = Math.floor((mx - beyond.x0) * beyond.cells), by = Math.floor((my - beyond.y0) * beyond.cells);
-        kind[i] = bx < 0 || by < 0 || bx >= beyond.w || by >= beyond.h || beyond.water[by * beyond.w + bx] !== 0 ? WATER : NONE;
-        continue;
-      }
-      const at = r.ids[my * r.w + wx] - 1;
+      const at = placeAt(r, mx, my);
+      if (at === OUTSIDE) { place[i] = -1; kind[i] = OUTSIDE; continue; }
       place[i] = at;
       kind[i] = at < 0 || at >= lands ? WATER : r.owner[at] >= 0 ? r.owner[at] : NONE;
     }
@@ -227,8 +227,10 @@ const ROUND = 1.3;
 
 /** The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along. */
 export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => number = () => 8): RealmName[] {
-  const w = Math.floor(r.w / every), h = Math.floor(r.h / every), lands = r.owner.length, of = new Int16Array(w * h), piece = new Int32Array(w * h).fill(-1);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = r.ids[y * every * r.w + x * every] - 1; of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
+  // over the game map, or over the whole world frame where the rest of the globe has its places
+  const W = r.rest ? Math.round(r.rest.w / r.rest.cells) : r.w, H = r.rest ? Math.round(r.rest.h / r.rest.cells) : r.h;
+  const w = Math.floor(W / every), h = Math.floor(H / every), lands = r.owner.length, of = new Int16Array(w * h), piece = new Int32Array(w * h).fill(-1);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = placeAt(r, x * every, y * every); of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
   const best = new Map<number, { id: number; n: number; sx: number; sy: number; sxx: number; syy: number; sxy: number }>(), stack: number[] = [];
   let pieces = 0;
   for (let start = 0; start < w * h; start++) {

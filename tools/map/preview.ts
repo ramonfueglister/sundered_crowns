@@ -1,7 +1,7 @@
 // A still of the realms' map as the game paints it (src/worldprobe/paint.ts) with the realms' names as the game lays
 // them out (names.ts), without the world below it: for checking the look against the reference.
 // Run: npx tsx tools/map/preview.ts <out.png> <x0> <y0> <x1> <y1> <level> [setup.json]
-// x0 … y1 are map pixels of the game map; level as in zoom.ts (its dots are 2^level / 4 map pixels).
+// x0 … y1 are map pixels of the world frame (the game map, then round the globe to the east); level as in zoom.ts (its dots are 2^level / 4 map pixels).
 // Writes <out>.rgba (the map alone), <out>.html (map and names) and, through the browser of Playwright, <out>.png.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -14,7 +14,10 @@ const [out, sx0, sy0, sx1, sy1, slevel, setupPath = 'public/data/setup_1356.json
 const level = Number(slevel), CELLS = 4, TILE = 512, W = 6144;
 const raw = gunzipSync(readFileSync('public/map/ids.bin.gz')), ids = new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength)), H = ids.length / W;
 const setup = JSON.parse(readFileSync(setupPath, 'utf8')) as { states: { short: { de: string }; color: string }[]; owner: (number | null)[] };
-const realms = { ids, w: W, h: H, owner: setup.owner.map((o) => o ?? -1), colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))) };
+const geo = JSON.parse(readFileSync('public/data/geo.json', 'utf8')) as { beyond?: { w: number; h: number; cells: number; worldW: number; raster: string } }, by = geo.beyond;
+const rraw = by ? gunzipSync(readFileSync(`public/${by.raster}`)) : undefined;
+const rest = by && rraw ? { ids: new Uint16Array(rraw.buffer.slice(rraw.byteOffset, rraw.byteOffset + rraw.byteLength)), w: by.w, h: by.h, cells: by.cells } : undefined;
+const realms = { ids, w: W, h: H, round: by?.worldW, rest, owner: setup.owner.map((o) => o ?? -1), colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))) };
 const perDot = 2 ** level / CELLS, d0 = [Math.floor(Number(sx0) / perDot), Math.floor(Number(sy0) / perDot)], d1 = [Math.ceil(Number(sx1) / perDot), Math.ceil(Number(sy1) / perDot)];
 const pw = d1[0] - d0[0], ph = d1[1] - d0[1], png = { data: new Uint8Array(pw * ph * 4) };
 const toS = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
