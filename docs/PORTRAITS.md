@@ -48,7 +48,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
-| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
+| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), softer jaw for women, redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `jaw_women`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -106,9 +106,10 @@ painted layer of short hairs is drawn lighter and lit round its shaded side as t
 profile): its image is far darker than the cards', which at the lower exposure turned a brown beard black.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
-reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the
-outline of the hair (a smooth dome) are not; the thrown-back hood closes round the neck since round 35, but has no
-folds across its cloth.
+reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
+nostrils, edge of the lips), the outline of the hair (a smooth dome), the full beard (reads as strands of wool)
+and the shoulders of the gowns (they look padded) are not; the thrown-back hood closes round the neck since
+round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and
