@@ -93,7 +93,11 @@ pub fn portrait(p: &Portrait, look: &Look) -> Vec<u8> {
     }
     out.extend((p.tris as u32).to_le_bytes());
     floats(&mut out, &st.bg.map(crate::geo::hex));
-    text(&mut out, st.key);
+    // a dress with a table names itself before the stand: the stage lights by it
+    match look.dress.set() {
+        Some(d) => text(&mut out, &format!("{}/{}", d.key, st.key)),
+        None => text(&mut out, st.key),
+    }
     out.extend((p.surfaces.len() as u32).to_le_bytes());
     for s in &p.surfaces {
         out.extend(s.mat.rough.to_le_bytes());

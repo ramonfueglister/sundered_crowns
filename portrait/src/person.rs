@@ -116,6 +116,7 @@ pub fn look_of(genes: &[u8], female: bool, age: f32, stand: u8, job: &str, weigh
         age,
         stand: st,
         east: matches!(origin, "Graecia" | "Syria" | "Aegyptus"),
+        dress: crate::dress::Dress::of(origin),
         seed,
         mood,
         life,

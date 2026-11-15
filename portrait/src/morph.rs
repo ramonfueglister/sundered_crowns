@@ -95,6 +95,11 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         for (k, loads) in FACE_MOD.iter().enumerate() {
             let xl = (p.g(k) - 128.0) / 127.0;
             let xl = if soft > 0.0 { soft * (xl / soft).tanh() } else { xl };
+            // a dress with a table may read women's jaws softer on average (genes headF and jaw)
+            let xl = match p.dress.set() {
+                Some(d) if p.female && (k == 2 || k == 4) => xl + d.jaw_women,
+                _ => xl,
+            };
             let x = xl * (0.35 + 0.65 * gr) * gain;
             for &(n, lo, hi, w) in loads.iter() {
                 let v = if !n.is_empty() && lo.is_empty() { (x * w).max(0.0) } else { x * w };
@@ -200,6 +205,14 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         Mood::Sad => &[("eyebrows/eyebrows-angle-up", 0.35), ("eyebrows/eyebrows-trans-up", 0.5), ("mouth/mouth-angles-down", 0.8), ("mouth/mouth-lowerlip-ext-up", 0.3)],
         Mood::Neutral => &[],
     };
+    // lids at rest, where a dress with a table asks for them
+    if let Some(d) = p.dress.set() {
+        for sd in ["l", "r"] {
+            for (t, w) in ["height1-decr", "height2-decr", "height3-decr", "eyefold-down"].iter().zip(d.lids) {
+                add(&format!("eyes/{sd}-eye-{t}"), w);
+            }
+        }
+    }
     for &(n, w) in mood {
         add(n, w * 1.7);
     }

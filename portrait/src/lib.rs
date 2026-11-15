@@ -10,6 +10,7 @@
 mod build;
 mod caster;
 pub mod dna;
+pub mod dress;
 pub mod geo;
 mod hair;
 pub mod head;
@@ -44,7 +45,7 @@ mod tests {
         for (i, g) in genes.iter_mut().enumerate() {
             *g = ((seed as usize * 37 + i * 101) % 200 + 28) as f32;
         }
-        Look { genes, female, age, stand, east: false, seed, mood: Mood::Neutral, life: default_life(stand, age, seed), beard: None, hair: None, hat: None, jewel: None }
+        Look { genes, female, age, stand, east: false, dress: crate::dress::Dress::Roman, seed, mood: Mood::Neutral, life: default_life(stand, age, seed), beard: None, hair: None, hat: None, jewel: None }
     }
 
     #[test]

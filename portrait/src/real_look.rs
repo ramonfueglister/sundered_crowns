@@ -165,7 +165,10 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
         } else if long_hair {
             match p.hair_style() {
                 Hair::Braid => "braid01",
-                Hair::Veil => return None,
+                Hair::Veil => match p.dress.set() {
+                    Some(d) => d.hair_veiled,
+                    None => return None,
+                },
                 _ => "bun01",
             }
         } else {
@@ -176,6 +179,9 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
                 "receding01"
             } else if p.u(CURL) > 0.62 {
                 "curly01"
+            } else if let Some(d) = p.dress.set() {
+                // under the hood on the head the hair lies flat
+                if d.hood_of(p.female, p.age, p.seed) == crate::dress::Hood::Up { d.hair_hooded } else { d.hair }
             } else if p.stand <= 1 && r < 0.6 || p.age < 13.0 && r < 0.5 {
                 // working people and many boys: cropped short
                 "crop01"
@@ -200,7 +206,106 @@ pub(crate) fn mh_hair(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, hai
 /// and its seam
 pub(crate) const CLOTH_CUTS: [f32; 5] = [0.0, 0.1, 0.14, 0.86, 0.9];
 
-pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>) -> Option<Surface> {
+/// A calmed garment. Each vertex follows its own body triangle; neighbours bound to different
+/// triangles (an ear, the jaw, the neck) would move apart and crumple the
+/// cloth. So only the smooth part of the movement is kept: the shift from
+/// the garment's own shape (the same binding on the unmorphed body) is
+/// averaged over the cloth's neighbours.
+#[allow(clippy::type_complexity)]
+fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2]; 3])], vs: Vec<V3>, pp: &[V3], base: &[V3], layer: Layer) -> Vec<V3> {
+    let nv = vs.len();
+    let rest: Vec<V3> = refs
+        .iter()
+        .map(|(r, w, o)| {
+            let (a, b, c) = (base[r[0]], base[r[1]], base[r[2]]);
+            let n = norm(cross(sub(b, a), sub(c, a)));
+            let e1 = norm(sub(b, a));
+            let e2 = cross(n, e1);
+            let on: V3 = std::array::from_fn(|i| w[0] * a[i] + w[1] * b[i] + w[2] * c[i]);
+            madd(madd(madd(on, n, o[0]), e1, o[1]), e2, o[2])
+        })
+        .collect();
+    let mut nbr: Vec<Vec<u32>> = vec![Vec::new(); nv];
+    for (t, _) in tris {
+        for k in 0..3 {
+            let (i, j) = (t[k], t[(k + 1) % 3]);
+            if !nbr[i].contains(&(j as u32)) {
+                nbr[i].push(j as u32);
+            }
+            if !nbr[j].contains(&(i as u32)) {
+                nbr[j].push(i as u32);
+            }
+        }
+    }
+    let mut shift: Vec<V3> = (0..nv).map(|i| sub(vs[i], rest[i])).collect();
+    for _ in 0..CLOTH_CALM {
+        let next: Vec<V3> = (0..nv)
+            .map(|i| {
+                if nbr[i].is_empty() {
+                    return shift[i];
+                }
+                let mut m = [0f32; 3];
+                for &j in &nbr[i] {
+                    m = add(m, shift[j as usize]);
+                }
+                let k = 1.0 / nbr[i].len() as f32;
+                [0.5 * shift[i][0] + 0.5 * m[0] * k, 0.5 * shift[i][1] + 0.5 * m[1] * k, 0.5 * shift[i][2] + 0.5 * m[2] * k]
+            })
+            .collect();
+        shift = next;
+    }
+    // the calmed cloth must not sink into the body: each vertex a little off its
+    // own triangle (along the triangle's normal), if it was bound that far off
+    (0..nv)
+        .map(|i| {
+            let v = add(rest[i], shift[i]);
+            let (r, w, o) = &refs[i];
+            let (a, b, c) = (pp[r[0]], pp[r[1]], pp[r[2]]);
+            let (a0, b0, c0) = (base[r[0]], base[r[1]], base[r[2]]);
+            let cr = cross(sub(b, a), sub(c, a));
+            let cr0 = cross(sub(b0, a0), sub(c0, a0));
+            let k = (dot(cr, cr).sqrt() / dot(cr0, cr0).sqrt().max(1e-9)).sqrt();
+            let n = norm(cr);
+            let on: V3 = std::array::from_fn(|q| w[0] * a[q] + w[1] * b[q] + w[2] * c[q]);
+            let d = dot(sub(v, on), n);
+            let [lo, hi] = match layer {
+                Layer::Gown => CLOTH_OFF_GOWN,
+                _ if rest[i][1] < CLOTH_NECK_Y => CLOTH_OFF_OVER,
+                _ => CLOTH_OFF_HEAD,
+            };
+            let want = (o[0] * k).min(hi).max(lo);
+            if want > 0.0 && d < want {
+                madd(v, n, want - d)
+            } else {
+                v
+            }
+        })
+        .collect()
+}
+
+/// How a garment follows a body other than the one it was draped on.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Layer {
+    /// Each vertex with its own body triangle, as Apoleia binds its garments.
+    Bound,
+    /// Calmed (see mh_cloth), next to the body.
+    Gown,
+    /// Calmed, lying over the gown.
+    Over,
+}
+
+/// How often a calmed garment's shift from its own shape is averaged over its neighbours (PLACEHOLDER).
+const CLOTH_CALM: usize = 24;
+/// The least and the most a calmed garment is held off the body triangle it is bound to, in base units of 10 cm:
+/// the gown; what lies over the gown below the neck; the same on the head. Below the least the body's finer bumps
+/// poke through, above the most the cloth crumples again. PLACEHOLDER, by eye.
+const CLOTH_OFF_GOWN: [f32; 2] = [0.07, 0.09];
+const CLOTH_OFF_OVER: [f32; 2] = [0.13, 0.17];
+const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
+/// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
+const CLOTH_NECK_Y: f32 = 5.9;
+
+pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let mut it = rows.iter();
     let head = it.next()?;
@@ -243,6 +348,7 @@ pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dy
         let f = it.next()?;
         tris.push(([f[0] as usize, f[1] as usize, f[2] as usize], [[f[3], 1.0 - f[4]], [f[5], 1.0 - f[6]], [f[7], 1.0 - f[8]]]));
     }
+    let vs = if layer == Layer::Bound { vs } else { calm(&refs, &tris, vs, pp, base, layer) };
     let mut vn = vec![[0f32; 3]; nv];
     for (t, _) in &tris {
         let n = cross(sub(vs[t[1]], vs[t[0]]), sub(vs[t[2]], vs[t[0]]));

@@ -134,7 +134,18 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     // girls under three have short hair like the boys
     let long_hair = fem && p.age >= 3.0;
     let grown = p.grown();
-    let st = p.st();
+    // a dress with a table: its wools instead of the stand's tunic colours, and none of the Roman pieces
+    let garb = p.dress.set();
+    let st0 = p.st();
+    let st_dress;
+    let st: &Stand = match garb {
+        Some(d) => {
+            st_dress = Stand { key: st0.key, bg: st0.bg, tunic: d.wool, toga: false, stripe: 0.0, work: st0.work, food: st0.food, palla: None, chlamys: None, sun: st0.sun };
+            &st_dress
+        }
+        None => st0,
+    };
+    let hood = garb.map_or(crate::dress::Hood::None, |d| d.hood_of(fem, p.age, p.seed));
     let lf = p.life;
     let hung = c01((0.42 - lf.food) / 0.42);
     let hair = p.hair_colour();
@@ -250,8 +261,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     // (real look: with the textured skin lips only a little redder than the skin;
     // the full mix read as lipstick there)
     let lip_c = cmix(skin, hex(if fem { "#9a3238" } else { "#8a3a36" }), match (real.is_some(), fem) {
-        (true, true) => 0.3,
-        (true, false) => 0.2,
+        (true, true) => garb.map_or(0.3, |d| d.lips[0]),
+        (true, false) => garb.map_or(0.2, |d| d.lips[1]),
         (false, true) => 0.55,
         (false, false) => 0.3,
     });
@@ -868,7 +879,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     let hatted_mh = hatted;
     let veiled = long_hair && p.hair_style() == Hair::Veil;
-    let mh = if hatted_mh || veiled { None } else { mh_pick(p, long_hair) };
+    // (a dress with a table has hair under the veil, the Roman veil the builder's own)
+    let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -1202,10 +1214,19 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if veil {
             // the palla drawn over the head: open around the face, falling
             // in folds onto the shoulders
-            let vcol = dress(hex(st.palla.unwrap_or(["#e9e2d2", "#c8b68c", "#8396ad", "#a4664f", "#6f7d5c"][(p.seed % 5) as usize])), [0.0, 7.5, 0.0]);
+            let vcol = match garb {
+                Some(d) => hex(d.linen),
+                None => dress(hex(st.palla.unwrap_or(["#e9e2d2", "#c8b68c", "#8396ad", "#a4664f", "#6f7d5c"][(p.seed % 5) as usize])), [0.0, 7.5, 0.0]),
+            };
             // real look: the veil draped in Blender
-            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_veil", &x.pp, &h.base, &|_| vcol, None)) } else { None };
+            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth(&d, garb.map_or("cloth_veil", |t| t.veil), &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound })) } else { None };
             if let Some(s) = real_veil {
+                // the wimple under the veil of older women
+                if let Some(t) = garb.filter(|t| p.age >= t.wimple_from) {
+                    if let Some(w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over)) {
+                        out.push(w);
+                    }
+                }
                 out.push(s);
             } else {
             const VE: [[f32; 2]; 7] = [[44.0, 0.0], [30.0, 36.0], [12.0, 60.0], [-8.0, 74.0], [-35.0, 86.0], [-60.0, 94.0], [-80.0, 98.0]];
@@ -1322,7 +1343,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 }
                 cloth_col(tc, v)
             };
-            mh_cloth(&d, "cloth_tunic", &x.pp, &h.base, &col, Some(&cell))
+            mh_cloth(&d, garb.map_or("cloth_tunic", |t| t.gown), &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
         })
     } else {
         None
@@ -1330,6 +1351,20 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let had_tunic = real_tunic.is_some();
     if let Some(s) = real_tunic {
         out.push(s);
+    }
+    // the hood of a dress with a table, on the head or thrown back, in another of its wools
+    if let (Some(d), true) = (garb, real.is_some()) {
+        let name = match hood {
+            crate::dress::Hood::Up => Some(d.hood_up),
+            crate::dress::Hood::Back => Some(d.hood_back),
+            crate::dress::Hood::None => None,
+        };
+        if let Some(name) = name {
+            let hc = hex(d.wool[((p.seed / 10) as usize + 3) % d.wool.len()]);
+            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth(&f, name, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
+                out.push(s);
+            }
+        }
     }
     if !had_tunic {
         let mut s = Surface::new(mat(0.95));
@@ -1363,7 +1398,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     }
     // real look: the toga draped in Blender
     let real_toga = if st.toga && !fem && !swaddled && real.is_some() {
-        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell)))
+        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell), Layer::Bound))
     } else {
         None
     };
@@ -1398,7 +1433,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let real_palla = match (cloak, swaddled) {
         (Some(c), false) if fem && real.is_some() => {
             let dye = hex(c);
-            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell)))
+            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell), Layer::Bound))
         }
         _ => None,
     };
@@ -1682,7 +1717,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // marries; gold in the upper stands, bronze, or leather for the
         // poor ("nodus tantum et signum de paupere loro", Juvenal 5.165).
         // Slaves' children wear none.
-        let amulet = p.age >= 1.5 && p.age < if fem { 13.0 } else { 16.0 } && p.stand != SKLAVE;
+        let amulet = garb.is_none() && p.age >= 1.5 && p.age < if fem { 13.0 } else { 16.0 } && p.stand != SKLAVE;
         if amulet {
             let nc = [fit[0][1], ym(6.12), fit[2][0] * 0.25 + fit[2][1]];
             let cn = Caster::new(nc, &pp_snapshot, body_full);

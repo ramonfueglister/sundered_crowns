@@ -229,6 +229,8 @@ pub struct Look {
     pub stand: usize,
     /// From Graecia, Syria or Aegyptus, where full beards are usual.
     pub east: bool,
+    /// What they wear (dress.rs); the Roman dress unless the family's origin has a table.
+    pub dress: crate::dress::Dress,
     /// Random but fixed per person (tunic colour, beard style, …).
     pub seed: u32,
     pub mood: Mood,
@@ -314,6 +316,10 @@ impl Look {
     }
 
     pub fn hat_style(&self) -> Hat {
+        // a dress with a table brings its own headwear (build.rs)
+        if self.dress.set().is_some() {
+            return Hat::None;
+        }
         if let Some(h) = self.hat {
             return h;
         }
@@ -340,6 +346,9 @@ impl Look {
     }
 
     pub fn jewel_style(&self) -> Jewel {
+        if self.dress.set().is_some() {
+            return Jewel::None;
+        }
         if let Some(j) = self.jewel {
             return j;
         }
@@ -372,6 +381,9 @@ impl Look {
     }
 
     pub fn hair_style(&self) -> Hair {
+        if let Some(d) = self.dress.set() {
+            return if self.age < d.veil_from { Hair::Braid } else { Hair::Veil };
+        }
         if let Some(h) = self.hair {
             return h;
         }
