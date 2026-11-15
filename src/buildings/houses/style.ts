@@ -23,3 +23,11 @@ export const FLOOR = m(3.0);
  * have a terrace roof.
  */
 export interface HouseStyle { walls: readonly RGB[]; roofs: readonly RGB[]; pitch: readonly [number, number]; maxRise: number; gables: number; flat?: boolean }
+
+/**
+ * The fine block of the near view: an eighth of a storey, 0.375 m. Measured on Ramon's reference image of
+ * 2026-11-15 (traditions/measures/referenzklasse_nahsicht.json): a storey there is 8 of its blocks high.
+ */
+export const VOXEL = FLOOR / 8;
+/** A length in metres, in whole fine blocks (at least one). */
+export const vox = (metres: number) => Math.max(1, Math.round(m(metres) / VOXEL));

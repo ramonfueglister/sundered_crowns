@@ -55,6 +55,10 @@ export interface StageOptions {
   fixed?: boolean;
   /** height in blocks of the tallest thing that casts a shadow into the picture */
   tall?: number;
+  /** the light strengths of this page where they differ from the look's (the near view is lit softer than the far view) */
+  light?: Partial<Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'skyColor' | 'bounce' | 'fill' | 'mirror' | 'mirrorTint'>>;
+  /** softness of the cast shadows (the look's is 2) */
+  shadowRadius?: number;
   /** the canvas to draw on (default: the page's first); the picture is as large as the canvas lies on the page */
   canvas?: HTMLCanvasElement;
 }
@@ -115,7 +119,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
     water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
-    const tint = new THREE.Color(LOOK.mirrorTint).multiplyScalar(LOOK.mirror);
+    const tint = new THREE.Color(o.light?.mirrorTint ?? LOOK.mirrorTint).multiplyScalar(o.light?.mirror ?? LOOK.mirror);
     water.color.setRGB(1 - tint.r, 1 - tint.g, 1 - tint.b);
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(vec3(tint.r, tint.g, tint.b));
   }
@@ -133,14 +137,15 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
     return new THREE.Vector3(RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back);
   };
-  const sun = new THREE.DirectionalLight(LOOK.sunColor, LOOK.sun * Math.PI);
+  const L = { ...LOOK, ...o.light };
+  const sun = new THREE.DirectionalLight(L.sunColor, L.sun * Math.PI);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
-  sun.shadow.radius = 2; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
-  const side = new THREE.DirectionalLight(LOOK.sideColor, LOOK.side * Math.PI);
-  const sky = new THREE.HemisphereLight(LOOK.skyColor, new THREE.Color(LOOK.bounceColor).multiplyScalar(LOOK.bounce / LOOK.sky), LOOK.sky * Math.PI);
+  sun.shadow.radius = o.shadowRadius ?? 2; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
+  const side = new THREE.DirectionalLight(L.sideColor, L.side * Math.PI);
+  const sky = new THREE.HemisphereLight(L.skyColor, new THREE.Color(L.bounceColor).multiplyScalar(L.bounce / L.sky), L.sky * Math.PI);
   // light thrown back by the sunlit ground and walls: it lifts the walls that face the viewer's left, as in the reference
-  const fill = new THREE.DirectionalLight(LOOK.fillColor, LOOK.fill * Math.PI);
+  const fill = new THREE.DirectionalLight(L.fillColor, L.fill * Math.PI);
   scene.add(sun, sun.target, side, side.target, fill, fill.target, sky);
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)

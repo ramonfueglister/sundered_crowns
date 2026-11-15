@@ -10,14 +10,24 @@ import { church, spireChurch } from '../sacred/church';
 import { domedChurch } from '../sacred/domed-church';
 import { mosque } from '../sacred/mosque';
 import { NORTH, SOUTH, TERRACE, TIMBER } from './house-styles';
+import type { Tradition } from './tradition';
+import { VENICE } from './venice';
 
-export interface Style { house: HouseStyle; church: Model; great: Model; /** brick towers of the leading families stand over the town */ towers: boolean }
+export interface Style {
+  house: HouseStyle; church: Model; great: Model;
+  /** brick towers of the leading families stand over the town */
+  towers: boolean;
+  /** the sourced tradition the fine-block house is built from, where a region has one already (houses/choose.ts) */
+  tradition?: Tradition;
+}
 
 const LATIN: Style = {
   house: SOUTH, towers: true,
   church: { build: church, w: 6, d: 11, height: 6 },
   great: { build: () => cathedral(MARBLE, rgb(0xe87656), null), w: 12, d: 21, height: 12 },
 };
+/** Italy builds as Venice does until the other Italian traditions are sourced (assumption) */
+const ITALY: Style = { ...LATIN, tradition: VENICE };
 const GOTHIC: Style = {
   house: NORTH, towers: false,
   church: { build: spireChurch, w: 6, d: 11, height: 8 },
@@ -39,6 +49,7 @@ const ISLAM: Style = {
   great: { build: (r) => mosque(r, 1.6), w: 15, d: 15, height: 8 },
 };
 const BY_REGION: Record<string, Style> = {
+  italy: ITALY,
   germany: GOTHIC, low_countries: GOTHIC, baltic: GOTHIC, scandinavia: GOTHIC, poland: GOTHIC, bohemia: GOTHIC, british_isles: GOTHIC, france: GOTHIC, hungary: GOTHIC,
   greece: GREEK, balkans: GREEK, caucasus: GREEK, rus: RUS, steppe: RUS,
   anatolia: ISLAM, maghreb: ISLAM, levant: ISLAM, egypt: ISLAM, arabia: ISLAM, mesopotamia: ISLAM, persia: ISLAM, sahel: ISLAM, west_africa: ISLAM, east_africa: ISLAM,

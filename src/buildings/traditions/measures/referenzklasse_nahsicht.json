@@ -1,0 +1,50 @@
+{
+  "was": "Die Qualitätsklasse der Häuser in der Nahsicht: Ramons Referenzbild vom 2026-11-15 14:14 UTC (Hafenzeile im Würfel-Look, /mnt/project-files/wahrzeichen/referenz/nahsicht_haeuser_referenz.png, 1448 × 1086 px). Keine historische Quelle, sondern das Mass für Detail, Proportion und Beiwerk; der Stil (Palmen, Levante) gilt nicht für Venedig.",
+  "gemessen": "Pixel im Bild, Zoomausschnitte mit 10-px-Raster; ein Feinblock ist 12 px breit.",
+  "feinblock_px": 12,
+  "geschoss_feinbloecke": 8,
+  "geschoss_bemerkung": "Sockeloberkante y 733, Gurtband y 632, Traufe y 533: je rund 100 px = 8,3 Feinblöcke. Mit 3 m je Geschoss (Dorigo: 8 bis 9 piedi) ist ein Feinblock 0,375 m.",
+  "fenster_feinbloecke": [
+    2,
+    3
+  ],
+  "fenster_bemerkung": "Öffnung rund 20 × 40 px; dunkler Holzrahmen, 1 Feinblock tief; Sturz aus hellem Stein 1 hoch, je 1 breiter als die Öffnung; Sohlbank 1 hoch.",
+  "tuer_feinbloecke": [
+    3,
+    5
+  ],
+  "tuer_bemerkung": "Holztür mit Füllungen; darüber ein Vordach aus Holz, 1 hoch, 1 vorstehend, 4 bis 5 breit, auf 2 Konsolen.",
+  "wand": "Heller Putz #e7b889 (Sonnenseite), #a27c64 (Schattenseite); schwaches Quaderraster von 1 × 1 Feinblock im Läuferverband, Kontrast rund 4 Prozent.",
+  "sockel": "1 Feinblock hoch, terrakotta #e39161.",
+  "gurtband": "1 Feinblock hoch, heller als die Wand, 0,5 vorstehend.",
+  "traufe": "1 Feinblock helles Gesims, darauf die Dachplatte.",
+  "dach": "Fast flache Platte aus Ziegelwürfeln #db794c von je 1 Feinblock, leicht unterschiedlich hoch (0 bis 0,3), Rand 1 Feinblock höher; Hausecke rechts hinten mit Walm. Kamin: heller Block 2 × 2 × 1,5 mit dunkler Öffnung.",
+  "beiwerk": [
+    "Markise gestreift (rot/weiss, violett/weiss, gelb) 4 × 3 auf 2 Holzpfosten",
+    "Marktstand: Kisten 2 × 1 × 1 mit Obst",
+    "Tonkrüge 1 × 1,5 neben den Türen",
+    "Tuch an einer Stange 2 × 3",
+    "Freitreppe 1 Feinblock je Stufe",
+    "Kaipflaster Quader 2 × 2",
+    "Holzsteg auf Pfählen"
+  ],
+  "farben": {
+    "wand_sonne": "#e7b889",
+    "wand_schatten": "#a27c64",
+    "sockel": "#e39161",
+    "dach": "#db794c",
+    "holz_dunkel": "#885120",
+    "holz_hell": "#956540",
+    "wasser": "#078a90"
+  },
+  "fuer_venedig": "Übernommen werden Feinblockgrösse, Geschosshöhe in Feinblöcken, Fenster- und Türmasse, Stein um die Öffnungen, Sockel, Gurtband, Gesims, Dachplatte aus Ziegelwürfeln, Kamine als Körper und das Beiwerk am Kai. Form und Farbe folgen den Quellen in venedig_1356.json.",
+  "fenster_sohlbank_feinblock": 3,
+  "achsabstand_feinbloecke": 5,
+  "achsen_bemerkung": "Fensterachsen rund 60 px = 5 Feinblöcke auseinander; die Sohlbank liegt 3 Feinblöcke über dem Geschossboden (Öffnung in den Reihen 3 bis 6 von 8).",
+  "markise_feinbloecke": [
+    4,
+    3,
+    2
+  ],
+  "markise_bemerkung": "Breite × Tiefe × Fallhöhe; Unterkante vorn rund 5 Feinblöcke über dem Boden, Pfosten 0,3 Feinblöcke stark."
+}
