@@ -79,6 +79,11 @@ pub struct DressSet {
     /// The file of the full beard (Apoleia's hangs in long single strands). England's `beard_crop` has no cards:
     /// the painted layer of short hairs alone, standing off the skin (tools/portrait/pipeline/beards.py `crop`).
     pub beard_full: &'static str,
+    /// The file of the short beard. In Apoleia's, hairs are rooted in the gap between the lips and run on over the
+    /// line of the mouth; on a mouth that is closed by raising the lower lip they lie on that lip as dark bars, a
+    /// row of teeth. England's `beard_short1356` is the same beard with the mouth left free and the moustache
+    /// ending over it (beards.py `LIPS=1`).
+    pub beard_short: &'static str,
     /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Of those tried, Apoleia's
     /// `eyebrow001` alone sits level on these heads. `eyebrow011` (women's until round 53), `eyebrow005` and
     /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
@@ -207,6 +212,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_small: "bob01",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
+    beard_short: "beard_short1356",
     brows: ["eyebrow001", "eyebrow001"],
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],

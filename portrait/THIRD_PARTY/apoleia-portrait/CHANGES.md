@@ -85,3 +85,5 @@ Rounds 57 to 59: `plait01` and `bob04` written anew (pipeline switches, see `too
 bytes unchanged.
 Round 60: `DressSet::converge` and `gaze_of` (each eye turned towards the nose; `build.rs` eyes), `gaze` -0.1 for
 1356. Roman bytes unchanged.
+Round 62: `DressSet::beard_short` (the file of the short beard; `build.rs`), `beard_short1356` for 1356. Roman
+bytes unchanged.

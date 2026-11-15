@@ -68,6 +68,9 @@ RAISE = {'full': 0.04, 'trim': 0.04, 'crop': 0.04, 'phil': 0.07}.get(style, 0.0)
 # (Apoleia's reaches 0.15 below the chin and so down the front of the throat; `crop` ends under the jaw, a little
 # behind the tip of the chin, whose underside lies at 6.155 to 6.2: a line at 6.2 cut a hole into the beard there)
 NECK = tuple(float(t) for t in os.environ.get('CROP_NECK', '6.1,0.3,1.0,0.4').split(',')) if style == 'crop' else (6.05, 0.37, 0.8, 0.5)
+# the mouth left free by where a direction passes the plane of the lips, and the moustache ending over it: `crop`
+# always, any other style with LIPS=1 (without it they are written as Apoleia's were)
+LIPS = style == 'crop' or os.environ.get('LIPS') == '1'
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]
@@ -78,7 +81,7 @@ def gfield(p):
     g = np.minimum(g, z - np.interp(y, [6.3, 6.6, 6.85, 7.5], [0.25, 0.45, 0.6, 0.66]))    # in front of the ear
     g = np.minimum(g, 0.86 - ax)
     em = (np.sqrt((x / 0.39) ** 2 + ((y - 6.6) / 0.12) ** 2) - 1) * 0.11          # the mouth
-    if style == 'crop':
+    if LIPS:
         # the skin point of a direction through the gap between the lips lies deep in the mouth's hollow, where
         # this test by depth does not reach: hairs rooted there showed as dark bars between the lips (Apoleia's own
         # beards were written so). Here the mouth is left free by where the direction passes the plane of the lips
@@ -319,7 +322,22 @@ def crop_lift(V, m, tris):
         P[ids] = P0 + vn * np.maximum(d, 0)[:, None]
     return P - V - H.vn * 0.008
 
-cov = paint_cap(H, out, name, margin, flow, rng, Lfun, shade, n=P_['n'], steps=8,
+def lips(d):
+    """Where a direction passes the plane of the lips (as `gfield` takes the mouth for a beard cut close)."""
+    p = H.at(d, 0.0 * d[..., 0])
+    k = (1.5 - HC[2]) / np.maximum(p[..., 2] - HC[2], 1e-3)
+    return HC[0] + (p[..., 0] - HC[0]) * k, HC[1] + (p[..., 1] - HC[1]) * k
+# a moustache ends on the upper lip: over the mouth hairs that come from above end at an arch (MOUTH_CUT = half its
+# width, its height over the line where the lips meet, 6.6, and the share of it over which the hairs fade out).
+# Hairs that ran on over the line of the mouth lay on the lower lip, most of all on a mouth closed by raising
+# it, and read as a row of teeth
+MOUTH_CUT = tuple(float(t) for t in os.environ.get('MOUTH_CUT', '0.34,0.06,0.4').split(',')) if LIPS else None
+def mouth_cut(root, d):
+    (xr, yr), (x, y) = lips(root), lips(d)
+    r = np.sqrt((x / MOUTH_CUT[0]) ** 2 + ((y - 6.6) / MOUTH_CUT[1]) ** 2)
+    return np.where(yr > 6.6, np.clip((r - (1 - MOUTH_CUT[2])) / MOUTH_CUT[2], 0, 1), 1.0)
+
+cov = paint_cap(H, out, name, margin, flow, rng, Lfun, shade, n=P_['n'], steps=8, cut=mouth_cut if MOUTH_CUT else None,
                 base=P_['base'], base_ramp=float(os.environ.get('CROP_RAMP', '1.5')) if style == 'crop' else 4.0, mean=P_['mean'], ymin=5.7, uvc=UVC,
                 lift=crop_lift if style == 'crop' else None)
 print(style, 'cap coverage', round(cov, 3))

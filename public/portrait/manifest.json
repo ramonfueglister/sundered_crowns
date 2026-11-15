@@ -70,6 +70,18 @@
    "bytes": 4
   },
   {
+   "name": "beard_short1356.txt.zst",
+   "bytes": 13
+  },
+  {
+   "name": "beard_short1356_cap.txt.zst",
+   "bytes": 58623
+  },
+  {
+   "name": "beard_short1356_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "beard_short_cap.txt.zst",
    "bytes": 58620
   },
@@ -386,6 +398,8 @@
   "beard_phil_cap_n.webp",
   "beard_phil_n.webp",
   "beard_short.webp",
+  "beard_short1356_cap.webp",
+  "beard_short1356_cap_n.webp",
   "beard_short_cap.webp",
   "beard_short_cap_n.webp",
   "beard_short_n.webp",

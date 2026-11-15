@@ -302,7 +302,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             let n = match beard {
                 Beard::Shaven => return None,
                 Beard::Stubble => "beard_stubble",
-                Beard::Short => "beard_short",
+                Beard::Short => p.dress.set().map_or("beard_short", |d| d.beard_short),
                 Beard::Full => p.dress.set().map_or("beard_full", |d| d.beard_full),
                 Beard::Philosopher => "beard_phil",
                 Beard::Chin => "beard_chin",

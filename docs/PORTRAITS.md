@@ -363,6 +363,27 @@ Still open: the hem still reads as a cord of the cloth's colour where the hood's
 neck (a hood of the time closes under the chin); the moustache of the full beard hangs over the mouth, its tips on
 the lower lip read as teeth at the panel's size.
 
+**Hairs of the beard over the mouth that read as teeth (round 62).** Men with a short beard showed a row of dark
+bars on the lower lip, at the panel's size a row of teeth in a slightly open mouth. The short beard was Apoleia's
+(`beard_short`): its hairs are rooted in the gap between the lips too (a ray from the head's centre through the gap
+hits the mouth's hollow, which the test by depth takes for skin of the upper lip), and the hairs of the upper lip run
+on over the line of the mouth. On Apoleia's mouths they lie in the gap; on a mouth closed by raising the lower lip
+(round 54) they lie on that lip. First the full beard was taken for the cause, because its moustache did run on over
+the mouth line as well, less visibly; it is written anew too.
+
+| what | now |
+|---|---|
+| short beard | `beard_short` in the dress table: England wears `beard_short1356`, the same beard written with the mouth left free by the direction of the ray and the moustache ending over the mouth (`beards.py` `LIPS=1`). Apoleia's file is untouched and still worn by everyone else |
+| full beard `beard_crop` | the hairs of the upper lip end at an arch over the mouth (`MOUTH_CUT`; `hairlib.py` `paint_cap(cut=)`: how much of a hair is drawn along its way); the layer's mesh is the same number for number |
+
+A trap on the way: `git stash` during the test of round 61 left the development server without the gown's files
+(it answered with the page instead), and the builder fell back to Apoleia's faceted tunic without a word; the
+pictures of that quarter of an hour were thrown away. In the built site the files are copied, the fallback stays
+silent there too if a file is missing (open).
+Picture: `runde62_bart_vorher_nachher.png` (short beard before and after, full beard before and after).
+Still open: stubble is Apoleia's file too (its hairs are too short to show on the lip, not checked large on every
+mouth); one outline for all beards.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

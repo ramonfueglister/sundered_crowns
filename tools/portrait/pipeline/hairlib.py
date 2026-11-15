@@ -262,13 +262,15 @@ def write_head_obj(head, path):
 
 
 def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, curl=0.0, curl_len=0.06,
-              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None):
+              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None, cut=None):
     """The cap: scalp triangles lifted 0.008, textured with n painted fine
     hairs along the flow (length Lc(th, el) each, brightness shade(dirs)),
     over a darker base inside the margin. curl: sideways swing (radians of
     head angle) of curly hairs, period curl_len. lift(V, margin, triangles):
     how much further each vertex stands off the skin (a vector per vertex),
-    for a layer that has a thickness of its own (a beard cut close)."""
+    for a layer that has a thickness of its own (a beard cut close).
+    cut(root directions, directions): how much of a hair is drawn at a point
+    of its way (0 to 1); from where it is cut the hair stays cut."""
     V, T, hc = head.V, head.T, head.hc
     cdir = unit(V - hc)
     cm = margin(*ang(cdir))
@@ -314,6 +316,9 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
         dq = unit(dq + t_ * stp[:, None])
         QP[:, s1] = dq
     px = uvof(QP) * tex
+    keep = np.ones((len(Q), steps + 1))
+    if cut is not None:
+        keep = np.minimum.accumulate(np.stack([cut(Q, QP[:, s1]) for s1 in range(steps + 1)], 1), axis=1)
     Aacc = np.zeros((tex, tex)); Cacc = np.zeros((tex, tex))
     for s1 in range(steps):
         p0, p1 = px[:, s1], px[:, s1 + 1]
@@ -324,7 +329,7 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
         f = (off + 0.5) / ns[idx]
         pts = p0[idx] + (p1 - p0)[idx] * f[:, None]
         fl = (s1 + f) / steps
-        wgt = 0.5 * wq[idx] * np.minimum(1, fl * 6) * (1 - fl ** 3)
+        wgt = 0.5 * wq[idx] * np.minimum(1, fl * 6) * (1 - fl ** 3) * (keep[idx, s1] * (1 - f) + keep[idx, s1 + 1] * f)
         shd = shd_q[idx] * (0.7 + 0.45 * np.sin(np.pi * np.minimum(fl * 1.4, 1)))
         x0 = np.floor(pts[:, 0] - 0.5).astype(int); y0 = np.floor(pts[:, 1] - 0.5).astype(int)
         fx = pts[:, 0] - 0.5 - x0; fy = pts[:, 1] - 0.5 - y0
