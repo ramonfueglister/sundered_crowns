@@ -13,6 +13,8 @@ import type { MapPlace } from '../render/overlay';
 export const hoverPlace = signal(-1);
 export const selectedPlace = signal(-1);
 export const mapError = signal<string | null>(null);
+/** Camera actions for the map tools (no-ops until the renderer is up). */
+export const mapCtl = { home(_loc: number) {}, overview() {} };
 if (import.meta.env.DEV) (window as any).__ui = { selectedPlace }; // for browser tests
 
 const MONTH_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
@@ -58,6 +60,9 @@ export function MapView() {
         r.onHover = (loc: number) => { hoverPlace.value = loc >= 0 && loc < assets.geo.L ? loc : -1; };
         r.start();
         r.flyTo(assets.W * 0.55, assets.H * 0.33, 0.9);
+        mapCtl.overview = () => r.flyTo(assets.W * 0.55, assets.H * 0.33, 0.9);
+        mapCtl.home = (loc: number) => { if (loc >= 0 && loc < assets.geo.L) r.flyTo(assets.geo.loc.x[loc], assets.geo.loc.y[loc], 4); };
+        stops.push(() => { mapCtl.overview = () => {}; mapCtl.home = () => {}; });
         // borders, colours and names follow the owners and the realms
         stops.push(effect(() => {
           const o = owners.value, rs = byId(realms.value); void lang.value;

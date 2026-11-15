@@ -1,46 +1,92 @@
-/* Sundered Crowns – dark walnut, aged parchment, gilt accents. System fonts only (no external requests). */
+/* Sundered Crowns – navy and gold HUD after Ramon's reference image (docs/ui/HUD.md). Crimson Pro is bundled (@fontsource), no external requests. */
 :root {
-  --wood: #2a1d14; --wood2: #3a281b; --gilt: #c9a24a; --ink: #1d140c; --parch: #efe2c3; --muted: #8a7a62;
-  --serif: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
-  --shadow: 0 6px 24px rgba(0,0,0,.55);
+  --bar: #14324b; --bar2: #1a3a55; --gold: #f1dba4; --gold2: #c9ad62; --brass: #e8c35a;
+  --rail: #1d3c52; --panel: #1a3f5d; --panel2: #163752; --btn: #2c5274; --btn2: #23465f; --edge: #a6c2d0;
+  --tx: #fdfaef; --tx2: #c9d3d8; --plus: #82d26f; --minus: #ffb27a;
+  --serif: 'Crimson Pro', 'Palatino Linotype', Palatino, Georgia, serif;
+  --shadow: 0 4px 14px rgba(0,0,0,.4);
 }
 * { box-sizing: border-box; }
-html, body, #app { margin: 0; height: 100%; overflow: hidden; background: #0d0a07; color: var(--parch); font-family: var(--serif); }
-.app { position: fixed; inset: 0; }
-button { font-family: inherit; cursor: pointer; }
-.muted { color: var(--muted); font-size: .9em; } .neg { color: #e0705a; }
+html, body, #app { margin: 0; height: 100%; overflow: hidden; background: #0b1a26; color: var(--tx); font-family: var(--serif); font-weight: 500; }
+.app { position: fixed; inset: 0; font-variant-numeric: lining-nums tabular-nums; }
+button { font-family: inherit; cursor: pointer; color: inherit; }
+.ic { fill: url(#icg); } .ic2 { fill: url(#icg2); } .icc { fill: url(#icgc); }
+svg { display: block; }
+.muted { color: var(--tx2); font-size: .92em; } .neg { color: var(--minus); }
 .mapwrap { position: absolute; inset: 0; }
 canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
-.maperror { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: var(--wood); border: 2px solid var(--gilt); padding: 24px; max-width: 520px; text-align: center; z-index: 50; }
+.maperror { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: linear-gradient(var(--panel), var(--panel2)); border: 2px solid var(--edge); border-radius: 12px; padding: 24px; max-width: 520px; text-align: center; z-index: 50; }
 
-.btn { background: linear-gradient(#5a3f29, #3a281b); color: var(--parch); border: 1px solid var(--gilt); border-radius: 3px; padding: 7px 14px; font-size: 1em; }
-.btn:hover { background: linear-gradient(#6f4e33, #4a3322); color: #fff; }
+.btn { background: linear-gradient(var(--btn), var(--btn2)); border: 0; box-shadow: inset 0 0 0 1px rgba(170,200,220,.3), 0 2px 4px rgba(0,0,0,.25); border-radius: 7px; padding: 7px 14px; font-size: 1em; font-weight: 600; }
+.btn:hover { background: linear-gradient(#36618a, #2a536f); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.big { font-size: 1.1em; padding: 10px 18px; width: 100%; margin: 6px 0; }
-.btn.gold { background: linear-gradient(#d9b45a, #9c7a2e); color: var(--ink); font-weight: bold; }
-.btn.small { padding: 3px 9px; font-size: .85em; }
-.btn.danger { border-color: #c0503a; }
-.field { width: 100%; padding: 9px 10px; font: inherit; background: #f6ecd2; color: var(--ink); border: 1px solid var(--gilt); border-radius: 3px; }
-.pnl { background: linear-gradient(var(--wood2), var(--wood)); border: 1px solid var(--gilt); box-shadow: var(--shadow); }
+.btn.gold { background: linear-gradient(#dcebf4, #a6c8de); color: #13324a; }
+.btn.gold:hover { background: linear-gradient(#eef6fb, #b8d4e6); }
+.btn.small { padding: 3px 10px; font-size: .9em; }
+.field { width: 100%; padding: 9px 10px; font: inherit; background: #0f2a3e; color: var(--tx); border: 1px solid var(--edge); border-radius: 7px; }
+.field::placeholder { color: #8fa6b4; }
+.pnl { background: linear-gradient(var(--panel), var(--panel2)); border: 2px solid var(--edge); border-radius: 14px; box-shadow: var(--shadow); }
 .swatch { display: inline-block; width: .8em; height: .8em; border: 1px solid #0008; margin-right: .4em; vertical-align: -1px; }
 
 /* sign-in */
 .menu { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.menu-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 60% 40%, #3b2a1c 0%, #120c08 70%), #0d0a07; }
-.menu-box { position: relative; width: min(380px, 100%); padding: 26px; text-align: center; background: linear-gradient(var(--wood2), var(--wood)); border: 2px solid var(--gilt); box-shadow: var(--shadow); }
-.menu-box h1 { margin: 0 0 4px; color: var(--gilt); letter-spacing: .04em; }
+.menu-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 60% 40%, #1d4566 0%, #0b1a26 70%), #0b1a26; }
+.menu-box { position: relative; width: min(380px, 100%); padding: 26px; text-align: center; background: linear-gradient(var(--bar2), var(--bar)); border: 2px solid var(--gold2); border-radius: 14px; box-shadow: var(--shadow); }
+.menu-box h1 { margin: 0 0 4px; color: var(--gold); font-weight: 700; letter-spacing: .03em; }
+.menu-box form { display: grid; gap: 8px; }
 .menu-foot { margin-top: 12px; }
 
-/* in the world */
-.topbar { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 14px; align-items: center; padding: 6px 12px; z-index: 10; flex-wrap: wrap; }
-.topbar .realm { font-weight: bold; color: var(--gilt); }
-.topbar .grow { flex: 1; }
-.banner { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: #400c; padding: 8px 14px; border: 1px solid #c0503a; z-index: 20; }
-.side { position: absolute; top: 60px; right: 8px; width: min(330px, calc(100% - 16px)); max-height: calc(100% - 70px); overflow: auto; padding: 12px; z-index: 10; }
-.side-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 1.15em; margin-bottom: 8px; }
-.facts { width: 100%; border-collapse: collapse; }
-.facts th { text-align: left; font-weight: normal; color: var(--muted); padding: 3px 8px 3px 0; }
+/* HUD: value bar */
+.hud-top { position: absolute; left: 0; top: 0; right: 0; height: 52px; z-index: 15; display: flex; align-items: stretch; background: linear-gradient(var(--bar2), var(--bar)); border-bottom: 2px solid var(--gold); box-shadow: 0 1px 0 #0a2234, 0 3px 10px rgba(0,0,0,.35); }
+.hud-values { flex: 1; min-width: 0; display: flex; align-items: center; gap: 36px; padding-left: 175px; overflow: hidden; white-space: nowrap; }
+.realm-name { font-size: 22px; font-weight: 600; color: var(--gold); }
+.val { display: flex; align-items: center; gap: 11px; }
+.val > span { display: grid; line-height: 1.05; }
+.val b { font-size: 21px; font-weight: 500; }
+.val small { font-size: 14px; color: var(--tx2); }
+.hint { color: var(--tx2); font-size: 17px; }
+.hud-date { align-self: center; display: flex; align-items: center; gap: 11px; height: 44px; padding: 0 18px; margin: 0 6px; border-radius: 7px; background: linear-gradient(#1f3d57, #1a364e); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); font-size: 19px; white-space: nowrap; }
+.hud-date small { color: var(--minus); font-size: 15px; }
+.tb { width: 46px; border: 0; border-left: 1px solid rgba(255,255,255,.08); background: none; display: grid; place-items: center; font-size: 17px; font-weight: 600; }
+.tb:hover { background: rgba(255,255,255,.06); }
+.hud-menu { position: absolute; right: 6px; top: 58px; min-width: 230px; padding: 8px; display: grid; gap: 6px; background: linear-gradient(var(--panel), var(--panel2)); border: 2px solid var(--edge); border-radius: 12px; box-shadow: var(--shadow); }
+.menu-item { text-align: left; padding: 8px 12px; border: 0; border-radius: 7px; background: linear-gradient(var(--btn), var(--btn2)); font-size: 16px; }
+.menu-item:hover { background: linear-gradient(#36618a, #2a536f); }
+.menu-item.danger { color: var(--minus); }
+.credit { margin: 4px 4px 0; font-size: 13px; color: var(--tx2); line-height: 1.3; }
+.credit a { color: var(--gold); }
+
+/* HUD: realm banner (top left, over the bar) */
+.realm-banner { position: absolute; left: 6px; top: -2px; z-index: 16; width: 145px; height: 104px; padding: 0; border: 0; background: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
+.realm-banner > svg { position: absolute; inset: 0; }
+.realm-banner .arms { position: absolute; left: 32px; top: 7px; width: 82px; height: 66px; object-fit: contain; }
+.realm-banner .initial { position: absolute; left: 6px; right: 0; top: 10px; text-align: center; font-size: 52px; font-weight: 700; color: var(--brass); text-shadow: 0 2px 0 #0a2e60; }
+
+/* HUD: map tools (bottom right) */
+.maptools { position: absolute; right: 10px; bottom: 17px; z-index: 10; height: 55px; display: flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 28px; background: linear-gradient(#174a6e, #0f3d5e); border: 2px solid #bed0db; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+.maptools i { width: 1px; height: 30px; background: rgba(190,208,219,.35); }
+.tool { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; display: grid; place-items: center; }
+.tool:hover { background: rgba(255,255,255,.08); }
+
+.notice { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: linear-gradient(var(--panel), var(--panel2)); color: var(--minus); padding: 8px 16px; border: 2px solid var(--minus); border-radius: 10px; z-index: 20; }
+
+/* place panel */
+.side { position: absolute; top: 64px; right: 10px; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 150px); overflow: auto; padding: 12px 14px; z-index: 10; }
+.side-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 1.3em; font-weight: 600; margin-bottom: 8px; }
+.close { width: 32px; height: 32px; border: 0; border-radius: 7px; background: linear-gradient(var(--btn), var(--btn2)); display: grid; place-items: center; }
+.facts { width: 100%; border-collapse: collapse; font-size: 16px; }
+.facts th { text-align: left; font-weight: 500; color: var(--tx2); padding: 3px 8px 3px 0; }
 .facts td { text-align: right; padding: 3px 0; white-space: nowrap; }
-.section { margin-top: 12px; border-top: 1px solid #c9a24a55; padding-top: 8px; }
-.section h3 { margin: 0 0 6px; color: var(--gilt); font-size: 1.05em; }
+.section { margin-top: 12px; border-top: 1px solid rgba(166,194,208,.35); padding-top: 8px; }
+.section h3 { margin: 0 0 6px; color: var(--gold); font-size: 1.1em; font-weight: 600; }
 .section p { margin: 4px 0; }
+
+/* narrow screens: the banner shrinks, the values scroll */
+@media (max-width: 760px) {
+  .realm-banner { transform: scale(.7); transform-origin: 0 0; }
+  .hud-values { padding-left: 112px; gap: 20px; overflow-x: auto; }
+  .realm-name, .val small { display: none; }
+  .hud-date { padding: 0 10px; font-size: 16px; }
+  .hud-date svg { display: none; }
+}

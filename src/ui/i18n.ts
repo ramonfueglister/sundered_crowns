@@ -54,6 +54,13 @@ const S = {
   no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
+  settings: ['Settings', 'Einstellungen'],
+  language: ['Language', 'Sprache'],
+  map_tools: ['Map tools', 'Kartenwerkzeuge'],
+  to_my_realm: ['To my realm', 'Zu meinem Reich'],
+  whole_map: ['Whole map', 'Ganze Karte'],
+  fullscreen: ['Full screen', 'Vollbild'],
+  arms_credit: ['Lion of Saint Mark: after Samhanin,', 'Markuslöwe: nach Samhanin,'],
 } as const satisfies Record<string, readonly [string, string]>;
 export type TextKey = keyof typeof S;
 
