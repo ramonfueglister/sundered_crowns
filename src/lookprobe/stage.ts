@@ -12,6 +12,7 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
+import { type Figures, anyFigures, figureMeshes, showFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
 const q = new URLSearchParams(location.search);
@@ -41,6 +42,8 @@ export interface StageScene<S extends Shape = Batch> {
   water: S;
   /** water above sea level (lakes, rivers): drawn plain, because the mirror lies at sea level */
   raised?: S;
+  /** the people standing and walking on it (figures/crowd.ts) */
+  figures?: Figures;
   counts: Record<string, number>;
 }
 export interface StageOptions {
@@ -63,7 +66,7 @@ export interface Stage {
   /** Asks for a new picture. */
   redraw(): void;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
-  probe: { ready: boolean; counts: Record<string, number>; backend: string };
+  probe: { ready: boolean; counts: Record<string, number>; backend: string; /** pictures drawn in the last second, while figures walk */ fps?: number };
   /** more is still to come onto the stage (true until the page says otherwise) */
   busy: boolean;
 }
@@ -150,6 +153,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     camera.lookAt(centre);
     if (controls) { controls.target.copy(centre); controls.update(); }
     lens();
+    showFigures(frameW);
     pending = Math.max(pending, 1);
   };
   aim(N / 2, N / 2, frameW, o.elevation ?? VIEW.elevation);
@@ -195,22 +199,29 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         mesh.castShadow = casts; mesh.receiveShadow = true;
         group.add(mesh);
       }
+      if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); showFigures(frameW); }
       scene.add(group);
       pending = Math.max(pending, 3);
       return group;
     },
     remove(group) {
       scene.remove(group);
-      for (const mesh of group.children) (mesh as THREE.Mesh).geometry.dispose();
+      // the figures' kit is shared by every piece: only their own mesh is let go (figures/stage.ts)
+      for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
       pending = Math.max(pending, 1);
     },
     redraw() { pending = Math.max(pending, 1); },
   };
   (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
+  let drawn = 0, since = performance.now();
   renderer.setAnimationLoop(() => {
     // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
+    // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
+    if (!fixedW && anyFigures()) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
     pipeline.render();
+    drawn++;
+    if (performance.now() - since >= 1000) { stage.probe.fps = Math.round((drawn * 1000) / (performance.now() - since)); drawn = 0; since = performance.now(); }
     if (--pending === 0 && !stage.busy) stage.probe.ready = true;
   });
   return stage;
