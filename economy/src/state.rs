@@ -6,20 +6,21 @@
 //! saving half a model.
 //!
 //! Format (little endian): the tag `SCEC`, the format version, the four words of the random number generator, then the
-//! parts of the model in the order of `AbstractModel`. Lists start with their length. Numbers of agents and positions
+//! parts of the model in the order of `AbstractModel`, the fields of the daily clock last. Lists start with their length. Numbers of agents and positions
 //! are 32 bit (`u32::MAX` stands for "none"), amounts are the 64 bits of the float, so a state loads bit for bit.
 
 use std::collections::HashMap;
 
 use beforeit::{
-    Aggregates, Banks, CentralBank, Data, Firms, Government, Model, Properties, RestOfTheWorld,
-    Standard, Workers, Xoshiro,
+    AbstractModel, Aggregates, Banks, CentralBank, Data, Firms, Government, Properties, RestOfTheWorld, Workers, Xoshiro,
 };
+
+use crate::clock::DailyClock;
 
 const TAG: &[u8; 4] = b"SCEC";
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
-/// the world's upgrade chain (src/sim/upgrade.ts).
-pub const FORMAT: u32 = 1;
+/// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock.
+pub const FORMAT: u32 = 2;
 const NONE: u32 = u32::MAX;
 
 // ---- writing
@@ -639,9 +640,36 @@ fn get_data(i: &mut In) -> Res<Data> {
     })
 }
 
+fn put_clock(o: &mut Out, c: &DailyClock) {
+    let DailyClock { plan, window, demand, periods, start } = c;
+    o.n(*plan);
+    o.n(*window);
+    o.f64s(demand);
+    o.n(periods.len());
+    for &x in periods {
+        o.u32(x);
+    }
+    o.f64(start[0]);
+    o.f64(start[1]);
+}
+
+fn get_clock(i: &mut In) -> Res<DailyClock> {
+    let (plan, window) = (i.n()?, i.n()?);
+    if plan == 0 || window == 0 {
+        return Err(format!("a clock with a plan every {plan} periods and windows of {window} periods"));
+    }
+    let demand = i.f64s()?;
+    let n = i.len(4)?;
+    let mut periods = Vec::with_capacity(n);
+    for _ in 0..n {
+        periods.push(i.u32()?);
+    }
+    Ok(DailyClock { plan, window, demand, periods, start: [i.f64()?, i.f64()?] })
+}
+
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
-pub fn save(model: &Model, rng: &Xoshiro) -> Vec<u8> {
-    let Model { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext: Standard } = model;
+pub fn save(model: &AbstractModel<DailyClock>, rng: &Xoshiro) -> Vec<u8> {
+    let AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext } = model;
     let mut o = Out(Vec::new());
     o.0.extend_from_slice(TAG);
     o.u32(FORMAT);
@@ -658,11 +686,12 @@ pub fn save(model: &Model, rng: &Xoshiro) -> Vec<u8> {
     put_aggregates(&mut o, agg);
     put_properties(&mut o, prop);
     put_data(&mut o, data);
+    put_clock(&mut o, ext);
     o.0
 }
 
 /// Reads the bytes of [`save`].
-pub fn load(bytes: &[u8]) -> Result<(Model, Xoshiro), String> {
+pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String> {
     let mut i = In { b: bytes, at: 0 };
     if i.take(4)? != TAG {
         return Err("these bytes are not the state of an economy".into());
@@ -672,7 +701,7 @@ pub fn load(bytes: &[u8]) -> Result<(Model, Xoshiro), String> {
         return Err(format!("state format {format}, this engine reads format {FORMAT}"));
     }
     let rng = Xoshiro::from_state([i.u64()?, i.u64()?, i.u64()?, i.u64()?])?;
-    let model = Model {
+    let model = AbstractModel {
         w_act: get_workers(&mut i)?,
         w_inact: get_workers(&mut i)?,
         firms: get_firms(&mut i)?,
@@ -683,7 +712,7 @@ pub fn load(bytes: &[u8]) -> Result<(Model, Xoshiro), String> {
         agg: get_aggregates(&mut i)?,
         prop: get_properties(&mut i)?,
         data: get_data(&mut i)?,
-        ext: Standard,
+        ext: get_clock(&mut i)?,
     };
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));

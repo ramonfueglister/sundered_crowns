@@ -152,6 +152,9 @@ function PlacePanel() {
   const p = selectedPlace.value;
   useEffect(() => { placeInfo.value = null; askPlace(p); }, [p]);
   const d = placeInfo.value?.id === p ? placeInfo.value : null;
+  const wi = world.value, day = wi?.day;
+  // the national economy computes every day: an open panel that shows it asks again on each new day
+  useEffect(() => { if (placeInfo.value?.id === p && placeInfo.value.economy) askPlace(p); }, [day]);
   const r = d && d.owner >= 0 ? realmById.value.get(d.owner) : undefined;
   const m = me.value;
   return <aside class="side pnl">
@@ -182,12 +185,16 @@ function PlacePanel() {
     </div>}
     {d?.economy && <div class="section">
       <h3>{t('economy_england')}</h3>
-      <p class="muted">{t('economy_note', { year: d.economy.year })}</p>
+      <p class="muted">{d.economy.day !== undefined && wi
+        ? t('economy_note_days', { date: fmtDate(d.economy.day, wi.startYear, lang.value) })
+        : t('economy_note', { year: d.economy.year })}</p>
       {d.economy.halted && <p class="muted">{t('economy_halted', { why: d.economy.halted })}</p>}
       <table class="facts"><tbody>
         <tr><th>{t('economy_gdp')}</th><td>{pounds(d.economy.realGdp)}</td></tr>
         <tr><th>{t('economy_level', { base: d.economy.baseYear })}</th><td>{index(d.economy.realGdpIndex)}</td></tr>
-        <tr><th>{t('economy_prices', { base: d.economy.baseYear })}</th><td>{index(d.economy.priceIndex)}</td></tr>
+        {d.economy.priceToday !== undefined
+          ? <tr><th>{t('economy_prices_today', { base: d.economy.baseYear })}</th><td>{index(d.economy.priceToday)}</td></tr>
+          : <tr><th>{t('economy_prices', { base: d.economy.baseYear })}</th><td>{index(d.economy.priceIndex)}</td></tr>}
         <tr><th>{t('economy_consumption')}</th><td>{pounds(d.economy.consumption)}</td></tr>
         <tr><th>{t('economy_crown')}</th><td>{pounds(d.economy.crown)}</td></tr>
         <tr><th>{t('economy_investment')}</th><td>{pounds(d.economy.investment)}</td></tr>

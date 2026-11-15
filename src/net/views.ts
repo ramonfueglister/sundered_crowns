@@ -3,6 +3,7 @@ import type { WorldState } from '../sim/state';
 import type { World } from '../sim/world';
 import type { EconomyDetail, PlaceDetail, RealmInfo } from './protocol';
 import { FIGURE } from '../sim/economy/engine';
+import { dayToDate } from '../sim/calendar';
 import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
@@ -29,9 +30,9 @@ export function economyDetail(s: WorldState, w: World, i: number): EconomyDetail
   if (!e || !w.england[i]) return undefined;
   const f = e.figures, F = FIGURE;
   return {
-    country: 'england', year: e.year, baseYear: w.englandEconomy.year, scale: w.englandEconomy.scale,
+    country: 'england', year: dayToDate(e.day, s.startYear).y, baseYear: w.englandEconomy.year, day: e.day, scale: w.englandEconomy.scale,
     realGdp: f[F.realGdp], realGdpIndex: 100 * f[F.realGdp] / f[F.realGdpStart],
-    priceIndex: 100 * (f[F.nominalGdp] / f[F.realGdp]) / (f[F.nominalGdpStart] / f[F.realGdpStart]),
+    priceIndex: 100 * (f[F.nominalGdp] / f[F.realGdp]) / (f[F.nominalGdpStart] / f[F.realGdpStart]), priceToday: 100 * f[F.priceLevel],
     consumption: f[F.consumption], crown: f[F.government], investment: f[F.investment], exports: f[F.exports], imports: f[F.imports],
     employed: f[F.employees] + f[F.owners], unemployed: f[F.unemployed],
     coinHouseholds: f[F.depositsHouseholds], coinFirms: f[F.depositsFirms],

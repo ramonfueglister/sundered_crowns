@@ -1,6 +1,6 @@
 {
  "case": "England 1356",
- "about": "The calibration table of economy feature 3 (docs/ECONOMY_DESIGN.md): what the port of BeforeIT.jl is given for England in the start year of the world. tools/sim/calibrate_economy.ts computes the port's parameters from it and writes public/data/economy_england.json. Amounts are those of the sources (the whole of England); the script scales them.",
+ "about": "The calibration table of economy features 3 and 4 (docs/ECONOMY_DESIGN.md): what the port of BeforeIT.jl is given for England in the start year of the world. tools/sim/calibrate_economy.ts computes the port's parameters from it and writes public/data/economy_england.json. Amounts are those of the sources (the whole of England); the script scales them.",
  "kinds": {
   "source": "the number stands in the named source, which was opened on 15 November 2026",
   "derived": "computed from numbers with a source by the stated rule",
@@ -8,7 +8,12 @@
  },
  "year": 1356,
  "scale": { "value": 0.01, "kind": "source", "source": "the diorama scale 1:100 agreed for the game (Ramon, 14 November 2026); the model computes the scaled-down economy" },
- "period": "one year (the historical series are annual; the original model computes quarters)",
+ "period": "the table is yearly (the historical series are annual; the original model computes quarters); the model computes days, see clock",
+ "clock": {
+  "about": "Economy feature 4 (docs/ECONOMY_DESIGN.md): one period of the model is one day. tools/sim/economy_calibration.ts (dailyEconomy) turns the yearly amounts of this table into daily ones; the rules and their sources are listed there and in the design document.",
+  "days_per_year": { "value": 365, "kind": "assumption", "source": "the yearly amounts of the sources are spread evenly over 365 days: the year has no seasons. A leap day of the calendar is computed as a day like any other" },
+  "plan_days": { "value": 30, "kind": "source", "source": "Dawid, Gemkow, Harting, van der Hoog, Neugart (2011), The Eurace@Unibi Model, Model v1.0 User Manual, section 2.3 (a firm acts 'monthly on the ideosyncratic day of the month to act') and section 4.1.1 ('Firms perform the following activities on a monthly base'), opened on 15 November 2026; a month is taken as 30 days" }
+ },
  "sectors": ["agriculture", "industry", "services"],
  "inputs": {
   "gdp_nominal_gbp_mn": { "value": 4.52478, "kind": "source", "source": "Bank of England, A millennium of macroeconomic data, version 3.1, sheet A1, column V, year 1356: nominal GDP at market prices (Broadberry, Campbell, Klein, Overton, van Leeuwen)" },

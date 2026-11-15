@@ -4,8 +4,9 @@ import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
 /** 2: places have a harvest. 3: places have arable. 4: England has a national economy. 5: the 30 largest cities have
- *  persons and families. Older snapshots are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 5;
+ *  persons and families. 6: England's economy computes one period a day. Older snapshots are brought up to date by
+ *  src/sim/upgrade.ts. */
+export const STATE_VERSION = 6;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -59,13 +60,16 @@ export interface RealmText { key: string; name: I18n; short: I18n; adjective: I1
 
 /** A national economy computed by the economy engine (src/sim/systems/economy.ts). */
 export interface NationalEconomy {
-  /** the year the figures stand for: the year of the calibration at the start, then the year of the last period */
-  year: number;
+  /** the day of the world up to which the economy is computed: 0 at the start, then the day of the last period */
+  day: number;
   /** the state of the model as the engine's bytes (economy/src/state.rs) */
   model: Uint8Array;
-  /** the key figures of that year (FIGURE in src/sim/economy/engine.ts) */
+  /** the key figures on that day (FIGURE in src/sim/economy/engine.ts): flows are sums over the last 365 days */
   figures: Float64Array;
-  /** why the economy stands still, '' while it runs: a period that the engine could not compute stops it for good */
+  /** the yearly accounts: for each year that has ended, the year and the key figures at its end (YEAR_ROW numbers
+   *  a year, src/sim/systems/economy.ts) */
+  years: Float64Array;
+  /** why the economy stands still, '' while it runs: a day that the engine could not compute stops it for good */
   halted: string;
 }
 

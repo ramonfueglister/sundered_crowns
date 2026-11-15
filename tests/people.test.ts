@@ -97,11 +97,13 @@ describe('the persons of a world founded in 1356', () => {
     expect(Array.from(newWorldState(1357).s.person.cols.born.slice(0, 50))).not.toEqual(Array.from(P.born.slice(0, 50)));
   });
   it('do not change while the world runs (only their age does)', () => {
-    const t = newWorldState().s, before = encodeState(t).length;
+    // the size of the state without the economy: its accounts of the last 365 days grow in the first year
+    const size = (x: typeof s) => encodeState({ ...x, economy: { england: null } }).length;
+    const t = newWorldState().s, before = size(t);
     const { w } = newWorldState();
     for (let d = 0; d < 3; d++) advanceDay(t, w);
     expect(Array.from(t.person.cols.born)).toEqual(Array.from(P.born));
-    expect(encodeState(t).length).toBe(before);
+    expect(size(t)).toBe(before);
   });
 });
 

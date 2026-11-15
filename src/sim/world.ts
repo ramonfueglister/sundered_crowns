@@ -2,7 +2,7 @@
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
-import type { EconomyEngine } from './economy/engine';
+import type { EconomyClock, EconomyEngine } from './economy/engine';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -39,13 +39,16 @@ export interface CultivationJson {
 }
 
 /** The calibration of a national economy (public/data/economy_england.json, written by tools/sim/calibrate_economy.ts
- *  from the table data/economy/england_1356.json; sources in docs/ECONOMY_DESIGN.md, feature 3). */
+ *  from the table data/economy/england_1356.json; sources in docs/ECONOMY_DESIGN.md, features 3 and 4). */
 export interface EconomyJson {
   case: string;
   /** the year the starting position stands for: the economy exists in a world that starts in this year */
   year: number;
   /** the model computes the economy at this scale (1:100) */
   scale: number;
+  /** periods of the model in a year (365: one period is one day), and the lengths of the daily clock in periods */
+  periods_per_year: number;
+  clock: EconomyClock;
   /** `Parameters` and `InitialConditions` of the port, with its keys */
   parameters: Record<string, unknown>;
   initial_conditions: Record<string, unknown>;
@@ -79,7 +82,7 @@ export class World {
   /** the engine of the national economies and England's calibration, as the JSON texts the engine reads
    *  (src/sim/systems/economy.ts) */
   economyEngine: EconomyEngine;
-  englandEconomy: { year: number; scale: number; parameters: string; initialConditions: string };
+  englandEconomy: { year: number; scale: number; clock: EconomyClock; parameters: string; initialConditions: string };
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
@@ -119,7 +122,8 @@ export class World {
     for (const i of land.england.places) this.england[i] = 1;
     this.economyEngine = economy.engine;
     const e = economy.england;
-    this.englandEconomy = { year: e.year, scale: e.scale, parameters: JSON.stringify(e.parameters), initialConditions: JSON.stringify(e.initial_conditions) };
+    if (e.periods_per_year !== e.clock.window) throw new Error(`the economy of ${e.case} computes ${e.periods_per_year} periods a year, the window of its clock is ${e.clock.window}`);
+    this.englandEconomy = { year: e.year, scale: e.scale, clock: e.clock, parameters: JSON.stringify(e.parameters), initialConditions: JSON.stringify(e.initial_conditions) };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

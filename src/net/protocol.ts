@@ -19,18 +19,23 @@ export interface PlaceDetail {
   /** the national economy the place belongs to (only places in England; absent when the world has none) */
   economy?: EconomyDetail;
 }
-/** A national economy in the year of its last computed period (src/sim/systems/economy.ts). Amounts are in pounds at
- *  the scale of the model. */
+/** A national economy on the day of its last computed period (src/sim/systems/economy.ts). Amounts are in pounds at
+ *  the scale of the model; GDP and its uses are sums over the last 365 days. */
 export interface EconomyDetail {
   country: 'england';
-  /** the year the figures stand for, and the year of the starting position */
+  /** the year of the day the figures reach, and the year of the starting position */
   year: number; baseYear: number;
+  /** the day of the world the figures reach (absent when the server computes one period a year) */
+  day?: number;
   /** the model computes the economy at this scale (0.01: one person of the model stands for a hundred) */
   scale: number;
   /** real GDP at the prices of the base year, and as an index with the base year at 100 */
   realGdp: number; realGdpIndex: number;
   /** price level of GDP, base year 100 */
   priceIndex: number;
+  /** the price level of the last day, base year 100: the mean price of the firms weighted by their output (absent
+   *  when the server computes one period a year) */
+  priceToday?: number;
   /** at the prices of the base year: consumption of households, purchases of the crown, investment (firms and
    *  dwellings), exports with their duty, imports */
   consumption: number; crown: number; investment: number; exports: number; imports: number;

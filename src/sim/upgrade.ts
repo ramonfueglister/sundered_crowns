@@ -5,8 +5,7 @@ import { STATE_VERSION } from './state';
 import type { World } from './world';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
-import { foundEconomy, computeYear } from './systems/economy';
-import { dayToDate } from './calendar';
+import { foundEconomy, computeTo } from './systems/economy';
 import { fitPlacesToCities, foundPeople } from './systems/people';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -22,11 +21,8 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 3;
   }
-  if (s.v === 3) { // 3 → 4: England's economy, with the years the world has already seen (it depends on nothing else
-    // in the state, so the result is the economy of a world that had it from its first day)
-    foundEconomy(s, w);
-    const now = dayToDate(s.day, s.startYear).y;
-    for (let y = s.startYear + 1; y <= now; y++) computeYear(s, w, y);
+  if (s.v === 3) { // 3 → 4: England's economy (one period a year; replaced by the step to 6)
+    s.economy = { england: null };
     s.v = 4;
   }
   if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
@@ -35,6 +31,13 @@ export function upgradeState(s: WorldState, w: World): WorldState {
     if (s.startYear === 1356) fitPlacesToCities(s);
     foundPeople(s);
     s.v = 5;
+  }
+  if (s.v === 5) { // 5 → 6: England's economy computes one period a day. It starts again from the starting position
+    // and computes the days the world has already seen (it depends on nothing else in the state, so the result is
+    // the economy of a world that had the daily clock from its first day). The yearly figures of before are gone.
+    foundEconomy(s, w);
+    computeTo(s, w, s.day);
+    s.v = 6;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
