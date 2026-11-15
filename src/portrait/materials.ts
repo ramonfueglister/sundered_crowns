@@ -8,7 +8,7 @@
 // own does differently stands in its profile (profile.ts).
 import {
   CustomBlending, DoubleSide, FrontSide, LessEqualDepth, MeshPhysicalMaterial, OneFactor, OneMinusSrcAlphaFactor,
-  ShaderChunk, SrcAlphaFactor, type Texture, Vector2,
+  ShaderChunk, SrcAlphaFactor, type Texture, Vector2, Vector3,
 } from 'three';
 import { APOLEIA, type StageProfile } from './profile';
 import type { PortraitSurface } from './wire';
@@ -85,20 +85,26 @@ function swap(code: string, piece: string, by: string): string {
 /** Skin of a profile: light bleeds round the edge of its shadow, reddest furthest (three.js has no scattering
  *  inside skin as Godot has); and living skin is blotchy where the images of the young are nearly flat: broad
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
-function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>): void {
+function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number): void {
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores, k.pores);
   const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`);
+  // the tint by the person's skin as a whole (none on dark skin, all of it on light skin), the same over the whole
+  // head: taken point by point (until round 54) everything painted darker on light skin lost its red and turned
+  // olive, the shadow of a beard most of all, where in living skin the darker places are the redder ones
+  const t = Math.min(1, Math.max(0, (tone - 0.12) / (0.45 - 0.12))), share = t * t * (3 - 2 * t);
+  const tint = new Vector3(...k.tint.map(c => 1 + (c - 1) * share));
   m.onBeforeCompile = shader => {
+    shader.uniforms.skinTint = { value: tint };
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
       '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}`);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
 diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );
 float skinGrey = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
-diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * mix( vec3( 1.0 ), vec3( ${k.tint.map(f).join(', ')} ), smoothstep( 0.12, 0.45, skinGrey ) );`);
+diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * skinTint;`);
   };
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
@@ -106,14 +112,16 @@ diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * m
 /** The painted layer of short hairs of a profile (under the cards, and the short beards): lighter, and lit round
  *  its shaded side as the cards are. Its image is far darker than the cards' (it holds the shade between the hairs),
  *  which at a low exposure turns a brown beard black. */
-function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>): void {
+function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>, stubble: boolean): void {
   const lights = wrapped(`vec3( ${f(k.wrap)} )`);
+  // stubble lies on skin, which shows between its hairs: drawn lighter it is a pale dust on the face
+  const tone = stubble ? 1 + (k.tone - 1) * k.stubble : k.tone, light = stubble ? 1 + (k.light - 1) * k.stubble : k.light;
   m.onBeforeCompile = shader => {
     const code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
-    shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= mix( ${f(k.tone)}, ${f(k.light)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+    shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= mix( ${f(tone)}, ${f(light)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
   };
-  m.customProgramCacheKey = () => `portrait-cap-${p.key}`;
+  m.customProgramCacheKey = () => `portrait-cap-${p.key}-${stubble}`;
 }
 
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
@@ -176,6 +184,16 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-hair-${p.key}`;
 }
 
+/** How light a person's skin is: the median brightness of the skin's colours (linear light; the skin's images are
+ *  near white and hold the detail only). */
+export function skinTone(col: Float32Array): number {
+  const grey: number[] = [];
+  for (let i = 0; i + 2 < col.length; i += 3) grey.push(0.2126 * col[i]! + 0.7152 * col[i + 1]! + 0.0722 * col[i + 2]!);
+  if (!grey.length) return 0;
+  grey.sort((a, b) => a - b);
+  return grey[grey.length >> 1]!;
+}
+
 /** The materials of a surface, drawn in this order (hair cards have two, everything else one). */
 export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA): MeshPhysicalMaterial[] {
   const kind = surfaceKind(s);
@@ -186,9 +204,9 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
   });
   switch (kind) {
     case 'plain': break;
-    case 'skin': if (p.skin) skinLook(m, p, p.skin); break;
+    case 'skin': if (p.skin) skinLook(m, p, p.skin, skinTone(s.col)); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
-    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap); break;
+    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex.includes('/beard_stubble')); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;
     case 'brow':
       blended(m); m.side = DoubleSide;

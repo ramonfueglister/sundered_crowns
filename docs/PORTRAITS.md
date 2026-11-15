@@ -265,7 +265,7 @@ their path, so that a round of trials needs no build.
 | what was wrong | cause | now |
 |---|---|---|
 | dark bars between the lips of every full beard, light dots beside them (they read as teeth) | the beard's zone leaves the mouth free by an ellipse round it, tested at the point where a ray from the head's centre hits the head. Rays through the gap between the lips hit the mouth's hollow behind them, outside the ellipse, and hairs were rooted there | for `crop` the ellipse is tested by the ray's direction (where it crosses the plane z = 1.5), not by where it hits (`beards.py`) |
-| the full beard reached down to the collar | Apoleia's zone of the beard, whose neckline lies low on the throat | `crop` ends under the jaw (`CROP_NECK`, default `6.2,0.3,0.95,0.4`: height at the chin, how much higher towards the ear, from where and over what depth) |
+| the full beard reached down to the collar | Apoleia's zone of the beard, whose neckline lies low on the throat | `crop` ends under the jaw (`CROP_NECK`, in this round `6.2,0.3,0.95,0.4`, see round 55: height at the chin, how much higher towards the ear, from where and over what depth) |
 | every woman frowned | MakeHuman's `eyebrow011` (women's since round 52) sits slanted on these heads, the inner end low over the eye; so do `eyebrow005` and `eyebrow002` | everyone wears `eyebrow001`, which sits level; how heavy it reads is the profile's `brow.brows`. `eyebrow011` is removed |
 | mouths a little open, or pouting | `mouth_shut` was two fixed weights on `mouth-upperlip-ext-down` and `mouth-lowerlip-ext-up`, which do not move the middle of the lips at all (vertices 474 and 493), and the weights that made up for it (lip volumes, heights) gave the pout. MakeHuman's young heads stand open by 0.005 to 0.025 units, and genes, age and moods move the lips too | the mouth is closed by exactly its measured gap, and opened by as much as the lips lie in each other (`morph.rs` `lip_gap`; `mouth_shut`, `mouth_part` in the dress table name the targets and their shares). Test: 864 faces of England (2 sexes, 9 ages, 12 sets of genes, 4 moods) have their lips within 0.002 units; the mouth hacks of rounds 50 and 51 are gone from `rest` |
 | red patches on the cheeks down to the jaw, a darker band over the eyes | Apoleia paints both on the skin for its faceted look (cheeks 0.2 / 0.1, sockets 0.2 / 0.1); the real look has its red from `flush` and the shade from its light | `cheeks`, `sockets` in the dress table, 0 for 1356 |
@@ -278,8 +278,21 @@ girls the mouth further back and less deep (a sunken, old mouth), its corners up
 lower (pursed).
 Still open: children of 8 keep a pouting mouth that stands forward and large eyes (MakeHuman's child); the plaits'
 hairline lies high, so that girls have a bare forehead; women's lower faces are wide and the women look alike;
-stubble reads as a grey-green patch with a hard edge; the bald head's ring of hair as a dark flap; every man wears
-one cut of hair; flat light; the eye has no cornea.
+stubble reads as a grey-green patch with a hard edge (round 55); the bald head's ring of hair as a dark flap; every
+man wears one cut of hair; flat light; the eye has no cornea.
+
+**Stubble as dead skin (round 55).** On England's sample a man with stubble had a grey-green lower face with a
+hard edge, a grey-haired one a pale dust over it.
+
+| what was wrong | cause | now |
+|---|---|---|
+| the lower face olive under stubble and under every short beard | the tint of round 48 grew with the lightness of each point of the skin. What is painted darker on light skin (Apoleia's shadow of the beard, folds) took less of the red and turned olive, where in living skin the darker places are the redder ones | the tint goes by the person's skin as a whole: the median of the skin's colours, one value over the head (`materials.ts` `skinTone`, `skinLook`). England's sample has 0.44 to 0.63 and takes all of the tint; the lit skin measures as in round 54 |
+| stubble as a pale dust on a grey-haired man | the painted layers are drawn lighter (`cap.tone`, `cap.light`, round 44: under cards the layer turned a brown beard black); stubble has no cards and lies on skin | `cap.stubble` in the profile: how much of that lightening stubble takes, 0 for 1356 |
+| a hole in the full beard at the tip of the chin, skin showing | the neckline of round 54 lay at 6.2 in front, and the chin's underside lies at 6.155 to 6.2 | `CROP_NECK` default `6.1,0.3,1.0,0.4`; the beard ends under the chin a little behind its tip |
+
+Still open: the shadow of the beard on the skin ends at the edges of triangles (a hard line on the cheek); the
+bald head's ring of hair shows the root ends of its broad cards as blocks and hangs as a flap beside the face;
+and what round 54 lists.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

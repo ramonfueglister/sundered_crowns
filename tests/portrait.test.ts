@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
+import { skinTone, surfaceKind } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 
@@ -102,5 +103,17 @@ describe('portraits', () => {
         expect(worn.some(t => t.includes(not)), `person ${p.pid} wears no ${not}`).toBe(false);
       }
     }
+  });
+  it('the skin of a person of England is light enough to take the whole tint, whatever is painted darker on it', () => {
+    // the tint goes by the person's skin as a whole (the median of its colours), not point by point: a point
+    // painted darker (the shadow of a beard, a fold) took less of the red and turned olive
+    expect(skinTone(new Float32Array([0.9, 0.9, 0.9, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5]))).toBeCloseTo(0.5, 5);
+    expect(skinTone(new Float32Array(0))).toBe(0);
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    expect(sample.length).toBe(28);
+    const tones = sample.map(p => skinTone(b.build(p).surfaces.find(s => surfaceKind(s) === 'skin')!.col));
+    // 0.44 to 0.63: from 0.45 on a skin takes all of the tint (materials.ts skinLook)
+    for (const t of tones) expect(t).toBeGreaterThan(0.4);
   });
 });

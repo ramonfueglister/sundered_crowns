@@ -65,8 +65,9 @@ def front_depth():
 TOPS = {'stubble': 7.3, 'short': 7.35, 'full': 7.45, 'trim': 7.45, 'crop': 7.45, 'phil': 7.45, 'chin': 7.2}.get(style, 7.35)
 RAISE = {'full': 0.04, 'trim': 0.04, 'crop': 0.04, 'phil': 0.07}.get(style, 0.0)
 # the neckline: its height in front, how much higher it lies towards the neck, from which depth (z) and over which
-# (Apoleia's reaches 0.15 below the chin and so down the front of the throat; `crop` ends under the jaw)
-NECK = tuple(float(t) for t in os.environ.get('CROP_NECK', '6.2,0.3,0.95,0.4').split(',')) if style == 'crop' else (6.05, 0.37, 0.8, 0.5)
+# (Apoleia's reaches 0.15 below the chin and so down the front of the throat; `crop` ends under the jaw, a little
+# behind the tip of the chin, whose underside lies at 6.155 to 6.2: a line at 6.2 cut a hole into the beard there)
+NECK = tuple(float(t) for t in os.environ.get('CROP_NECK', '6.1,0.3,1.0,0.4').split(',')) if style == 'crop' else (6.05, 0.37, 0.8, 0.5)
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]

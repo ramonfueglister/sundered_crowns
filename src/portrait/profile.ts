@@ -29,8 +29,9 @@ export interface StageProfile {
   /** Skin: null leaves it as the builder gives it. Else roughness, Godot's "specular", strength of the pores'
    *  normal map; how far light bleeds round the edge of its shadow per colour (wrap lighting, the usual stand-in
    *  for scattering inside skin); how blotchy (broad patches redder or paler) and speckled (fine, in brightness);
-   *  how much of its colour is left (1 = all), and a tint over that, which grows with the skin's lightness (none
-   *  on dark skin, all of it on light skin: blood shows through light skin, melanin hides it). */
+   *  how much of its colour is left (1 = all), and a tint over that, which grows with the lightness of the person's skin
+   *  as a whole (none on dark skin, all of it on light skin: blood shows through light skin, melanin hides it; the
+   *  same over the whole head, so that what is painted darker on it keeps its red). */
   skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
@@ -46,8 +47,9 @@ export interface StageProfile {
    *  them by the hair's brightness), how much of its colour is left (as `sheen.colour`), and how far light reaches
    *  round to its shaded side (as `sheen.wrap`), and whether shadows fall on it (`shadow`: the edge of a shadow
    *  from the shadow map is a straight, hard line, which on skin reads as the chin's shadow and on a beard as a
-   *  dark patch with corners). */
-  cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean };
+   *  dark patch with corners), and how much of the lightening (`tone`, `light`) stubble takes (`stubble`: 1 = as the
+   *  other layers, 0 = none: skin shows between its hairs, and drawn lighter it is a pale dust on the face). */
+  cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number };
   /** Hair cards: roughness, "specular", anisotropy of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
   /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
@@ -92,7 +94,7 @@ export const APOLEIA: StageProfile = {
  *  per band of lightness instead of by one median (the ruler's skin there keeps a 16 to 19 from its darkest
  *  shade to its lightest; ours fell to a 10 in the shade and to a 11 in the light: grey shadows, pale lights.
  *  With colour 1.1 and this tint a 14 to 21; the lightest band still paler than there). The table is in
- *  docs/PORTRAITS.md. All PLACEHOLDER (see above). */
+ *  docs/PORTRAITS.md. Round 55: stubble is not drawn lighter (`cap.stubble`). All PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -108,7 +110,7 @@ export const ENGLAND_1356: StageProfile = {
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
   eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
-  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false },
+  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
 };

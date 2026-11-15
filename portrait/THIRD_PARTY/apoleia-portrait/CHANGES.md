@@ -73,3 +73,6 @@ own child's face over MakeHuman's child: `look.rs` `KID`, the block of targets i
 by its measured gap (`morph.rs` `lip_gap`; `mouth_shut`, `mouth_part` name the targets), `child` holds targets of
 a child's face. Everyone wears `eyebrow001` again (`eyebrow011` removed). `examples/sample.rs` writes a sample of
 founders of a pool for the test page. Roman bytes unchanged.
+Round 55 (stage only): the skin's tint of the 1356 profile goes by the person's skin as a whole (`materials.ts`
+`skinTone`), stubble's painted layer is not drawn lighter (`profile.ts` `cap.stubble`); `beard_crop` written anew
+with its neckline below the tip of the chin. Apoleia's profile and Roman bytes unchanged.
