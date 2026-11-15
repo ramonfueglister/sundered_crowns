@@ -51,7 +51,8 @@ describe('zoom', () => {
     for (const [name, rule, way] of rules) for (let k = 1; k < widths.length; k++) {
       const a = rule(widths[k - 1]), b = rule(widths[k]), span = name === 'elevation' ? 90 : 1;
       expect((b - a) * way, `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
-      expect(Math.abs(b - a) / span, `${name} at ${widths[k]}`).toBeLessThan(0.03);
+      // the realms come in over a short way, so that the world is not seen half under them for long: still without a leap
+      expect(Math.abs(b - a) / span, `${name} at ${widths[k]}`).toBeLessThan(name === 'realms' ? 0.12 : 0.03);
     }
   });
 

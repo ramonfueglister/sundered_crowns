@@ -12,7 +12,7 @@ import { BARE, ROCK_FROM, ROCK_SHIFT_MOST, SNOW_LINE, TINT, TREE_LINE, WOODS, bl
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
 import { type Monument, type Settled, type Site, settle } from './settle';
-import { MONUMENTS, styleOf } from '../buildings';
+import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
 /**
  * The world is laid out in blocks: one block is one cell of the game map (about 0.77 km × cos(latitude), so 0.54 km in
@@ -59,9 +59,9 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
  * step: the valleys are those of rivers 4^z times the size, and the heights are flattened (by 2^(0.6 z), so that
  * ranges still stand out but do not tower). What stands on it is built house by house and tree by tree at step 0
  * only; from step 1 on it is part of the ground (far.ts). `inhabitants` gives the people of the places (by their
- * index in `places`) for which more is known than the gazetteer says.
+ * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map()): StageScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map()): StageScene {
   const wider = 2 ** step, flatter = wider ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * step), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(wider)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
   /** region cell under a ground point: east is the picture's right, south its near side */
@@ -254,7 +254,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // the monuments that stood in 1356 and have a model
     landmarks.forEach((l, id) => {
       const here = toGround(...cellOf(region, l.lon, l.lat));
-      if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: m.model }));
+      if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
     const built = settled = settle(g, things, sites, monuments, farm, cultivated, vines, counts, own);
 

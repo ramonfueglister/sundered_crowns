@@ -6,6 +6,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { type Batch, seeded } from '../../src/lookprobe/batch';
 import * as B from '../../src/buildings';
+import { glbToBatch } from '../../src/buildings/landmarks/glb';
+
+/** the monument files as the world's workers load them, read from public/ */
+const FILES = new Map(B.MONUMENT_FILES.map((f) => { const buf = readFileSync(`public/models/landmarks/${f}`); return [f, glbToBatch(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength))]; }));
 
 const STYLES = { SOUTH: B.SOUTH, NORTH: B.NORTH, TIMBER: B.TIMBER, TERRACE: B.TERRACE };
 /** the roof's overhang and the clutter on it reach this far past the walls */
@@ -55,7 +59,7 @@ describe('houses', () => {
 describe('every model the map places', () => {
   const models: [string, B.Model][] = [];
   for (const region of ['italy', 'germany', 'greece', 'rus', 'egypt']) { const s = B.styleOf(region); models.push([`${region} church`, s.church], [`${region} great`, s.great]); }
-  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => models.push([`${id} ${k}`, p.model]));
+  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => models.push([`${id} ${k}`, B.modelOf(p, FILES)]));
   for (const [name, m] of models) it(`${name}: deterministic and finite`, () => {
     const a = m.build(seeded(5)), b = m.build(seeded(5));
     expect(a.pos).toEqual(b.pos);
