@@ -21,6 +21,9 @@ export interface StageProfile {
    *  (in heights of the picture's view: above 0 it looks down on the face). */
   turn: number;
   rise: number;
+  /** How much larger than the builder frames it the head stands in the picture (1 = as framed: the head and the
+   *  shoulders in their whole width). */
+  close: number;
   /** Sharpness of the images seen at a slant (anisotropic filtering, 1 = off). */
   anisotropy: number;
   /** Skin: null leaves it as the builder gives it. Else roughness, Godot's "specular", strength of the pores'
@@ -59,7 +62,7 @@ export const APOLEIA: StageProfile = {
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.75 },
   rimShadow: false,
   exposure: 0.92,
-  turn: -0.35, rise: 0.08,
+  turn: -0.35, rise: 0.08, close: 1,
   anisotropy: 1,
   skin: null, eye: null, brow: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
@@ -82,10 +85,10 @@ export const ENGLAND_1356: StageProfile = {
   sky: { top: '#e6ecff', ground: '#4d443c', energy: 0.3 },
   rimShadow: true,
   exposure: 0.46,
-  turn: -0.24, rise: 0.02,
+  turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
-  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.24, 0.16, 0.12], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.95, 0.97] },
-  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.5, 1.47, 1.43], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
+  skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 0.82, tint: [1, 0.95, 0.97] },
+  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.8 }, tint: [1.32, 1.3, 1.27], colour: 0.85, lift: 0.72, rough: 0.2, specular: 1.0 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, wrap: 1 },

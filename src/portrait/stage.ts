@@ -134,7 +134,7 @@ export class PortraitStage {
   /** The framing: the head from the chin to above the crown (or hat) fills `fill` of the height, the eyes a little
    *  above the middle; the person turns about the axis through the head's centre. */
   private frame(p: Portrait, inner: Group, profile: StageProfile): void {
-    const h = Math.max(0.8, p.top - p.chin), hv = h / p.fill;
+    const h = Math.max(0.8, p.top - p.chin), hv = h / (p.fill * profile.close);
     const cy = p.top - 0.36 * hv, dist = (hv * 0.5) / Math.tan((FOV / 2) * Math.PI / 180);
     this.pivot.position.set(p.cx, 0, p.cz);
     this.pivot.rotation.y = profile.turn;

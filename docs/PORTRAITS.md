@@ -90,6 +90,13 @@ been raised against the pale skin and now read as rouge). Further towards their 
 still paler and less red than theirs, our shaded half more coloured. One screenshot of a dim hall is a thin
 base: the numbers say where the tone lies, not that it is right.
 
+**In the game's panel (round 42).** The person's panel shows a portrait at 224 x 280 on parchment, not small on
+a dark ground as the rounds had judged it. There the head filled a third of the height above shoulders in their
+whole width. The 1356 profile frames it closer (`close` 1.3: chin to crown nearly half the height, as in CK3's
+character window). The white of the eye went back to 1.3 (at 1.5 it stared on the light ground), and the red
+edge of the skin's shadow is narrower (`wrap` 0.18 / 0.15 / 0.13: the shaded cheek at a 11 to 20, b 13 to 22).
+The rounds are judged in this panel from now on.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the
 outline of the hair (a smooth dome) are not; the thrown-back hood closes round the neck since round 35, but has no
