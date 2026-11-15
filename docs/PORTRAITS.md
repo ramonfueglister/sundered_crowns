@@ -104,6 +104,8 @@ hair of 1356 with the hairline gone back, and as a horseshoe round a bare top; `
 beard is worn in place of each of Apoleia's (`beards`: none on the chin alone, no philosopher's; unsourced). The
 painted layer of short hairs is drawn lighter and lit round its shaded side as the cards are (`cap` in the
 profile): its image is far darker than the cards', which at the lower exposure turned a brown beard black.
+A mood shows less strongly (`mood` 1 in the dress table, Apoleia's 1.7 was drawn for a small picture): a sad
+mouth on an old face read as a mask.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

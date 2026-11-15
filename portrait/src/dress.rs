@@ -79,6 +79,9 @@ pub struct DressSet {
     /// The mouth at rest: MakeHuman's lips stand a little apart and show the teeth, more so with thin lips.
     /// Weights of the targets mouth-upperlip-ext-down and mouth-lowerlip-ext-up.
     pub mouth_shut: [f32; 2],
+    /// How strongly a mood shows in the face (Apoleia: 1.7, drawn for a small picture; in a large one a sad
+    /// mouth on an old face read as a mask).
+    pub mood: f32,
     /// How far the eyeballs are moved forward in their sockets (Apoleia: 0.012). With the lids at rest the ball
     /// came through the lower lid in places.
     pub eye_forward: f32,
@@ -114,6 +117,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     flush: 1.0,
     lids: [0.2, 0.45, 0.2, 0.45],
     mouth_shut: [0.75, 0.75],
+    mood: 1.0,
     eye_forward: 0.0,
     jaw_women: -0.35,
     sources: &[
@@ -124,7 +128,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
-        Source { what: "lids, closed mouth, eyeballs' depth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, strength of moods, eyeballs' depth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 

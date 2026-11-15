@@ -215,8 +215,9 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         add("mouth/mouth-upperlip-ext-down", d.mouth_shut[0]);
         add("mouth/mouth-lowerlip-ext-up", d.mouth_shut[1]);
     }
+    let strength = p.dress.set().map_or(1.7, |d| d.mood);
     for &(n, w) in mood {
-        add(n, w * 1.7);
+        add(n, w * strength);
     }
     // life: hunger hollows cheeks and temples, illness gives eye bags
     let l = p.life;
