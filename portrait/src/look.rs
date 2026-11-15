@@ -289,6 +289,8 @@ impl Look {
         let r = Rng::new(self.seed ^ 0x9e37_79b9).next();
         // a man in mourning does not shave
         let b = self.usual_beard(r);
+        // a dress with a table wears its own beards
+        let b = self.dress.set().map_or(b, |d| d.beards[b as usize]);
         if self.life.mourn > 0.25 && b == Shaven {
             return Stubble;
         }

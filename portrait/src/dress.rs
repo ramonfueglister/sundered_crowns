@@ -26,6 +26,8 @@ pub enum Hood {
 }
 
 /// One statement of a dress table and where it comes from.
+use crate::look::Beard;
+
 pub struct Source {
     pub what: &'static str,
     pub source: &'static str,
@@ -57,9 +59,15 @@ pub struct DressSet {
     /// Men's hair, loose and under the hood on the head; the hair under a veil; the hair of girls and of women
     /// too young for the veil.
     pub hair: &'static str,
+    /// The same on a head that loses its hair: gone back at the temples, and a horseshoe round a bare top.
+    pub hair_receding: &'static str,
+    pub hair_bald: &'static str,
     pub hair_hooded: &'static str,
     pub hair_veiled: &'static str,
     pub hair_girl: &'static str,
+    /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
+    /// philosopher, chin): a dress leaves out what its time did not wear.
+    pub beards: [Beard; 6],
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
@@ -96,9 +104,12 @@ pub static ENGLAND_1356: DressSet = DressSet {
     veil: "cloth_veil_linen",
     wimple: "cloth_wimple",
     hair: "bob01",
+    hair_receding: "bob03",
+    hair_bald: "bob04",
     hair_hooded: "bob02",
     hair_veiled: "bun01",
     hair_girl: "plait01",
+    beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     lips: [0.55, 0.38],
     flush: 1.0,
     lids: [0.2, 0.45, 0.2, 0.45],
@@ -111,6 +122,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
+        Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "lids, closed mouth, eyeballs' depth, women's jaw, lips, flush", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],

@@ -25,6 +25,10 @@ def line(tab):
 
 
 MEN = [(0, 20), (20, 19), (32, 13), (44, 2), (58, -8), (66, -16), (71, -30), (75, -24), (78, -6), (84, -2), (102, -2), (112, -12), (126, -28), (145, -40), (165, -46), (180, -48)]
+# receding at the temples (an M-shaped hairline)
+REC = [(0, 30), (12, 31), (24, 40), (34, 46), (46, 34), (58, 6), (66, -14), (71, -30), (75, -24), (78, -6), (84, -2), (102, -2), (112, -12), (126, -28), (145, -40), (165, -46), (180, -48)]
+# the upper edge of a horseshoe of hair round the sides and back, the top bare
+BARE = lambda th: np.interp(np.abs(th), [0, 45, 60, 80, 100, 130, 180], [-30, -6, 16, 30, 35, 40, 42]) + 2.5 * np.sin(np.radians(th) * 9 + 1.0)
 W = dirs(180, 52)  # the crown whorl
 
 
@@ -80,15 +84,13 @@ elif style in ('bald', 'receding'):
     if style == 'bald':
         # a horseshoe of short hair round the sides and back, the top bare
         hl, hln = line(MEN)
-        top = lambda th: np.interp(np.abs(th), [0, 45, 60, 80, 100, 130, 180], [-30, -6, 16, 30, 35, 40, 42]) + 2.5 * np.sin(np.radians(th) * 9 + 1.0)
-        margin = lambda th, el: np.minimum(el - hln(th), top(th) - el)
+        margin = lambda th, el: np.minimum(el - hln(th), BARE(th) - el)
         empty_cards()
         cov = paint_cap(H, out, name, margin, lambda d, th, el: unit(e_dn(d) + 0.4 * tangent(np.broadcast_to(np.array([0, 0, -1.0]), d.shape).copy(), d)), rng,
                         lambda th, el: 0.12 + 0 * th, lambda Q: rng.uniform(0.75, 1.0, len(Q)), n=50000, base=0.85, base_ramp=5.0, mean=0.62)
         print(style, 'cap coverage', round(cov, 3))
     else:
         # receding at the temples (an M-shaped hairline), short locks forward
-        REC = [(0, 30), (12, 31), (24, 40), (34, 46), (46, 34), (58, 6), (66, -14), (71, -30), (75, -24), (78, -6), (84, -2), (102, -2), (112, -12), (126, -28), (145, -40), (165, -46), (180, -48)]
         hl, hln = line(REC)
         margin = lambda th, el: el - hln(th)
         S, lab, nc, nt = men_cards(margin, from_whorl, lambda th, el: np.interp(np.abs(th), [0, 40, 80, 120, 180], [0.32, 0.3, 0.22, 0.2, 0.2]), 240, lift_whorl, 0.75)
@@ -244,9 +246,11 @@ elif style == 'plait':
 elif style == 'bob':
     # about 1350: the hair grown to the jaw all round, covering the ears, a
     # short fringe on the forehead, the ends turned a little outwards
-    # (PLACEHOLDER lengths, to be checked against the picture sources)
-    hl, hln = line(MEN)
-    margin = lambda th, el: el - hln(th)
+    # (PLACEHOLDER lengths, to be checked against the picture sources). BOB_LINE: the same hair on a head that
+    # loses it, `rec` with the hairline gone back at the temples, `bald` as a horseshoe round a bare top
+    LINE = os.environ.get('BOB_LINE', 'men')
+    hl, hln = line(REC if LINE == 'rec' else MEN)
+    margin = (lambda th, el: np.minimum(el - hln(th), BARE(th) - el)) if LINE == 'bald' else (lambda th, el: el - hln(th))
     END = float(os.environ.get('BOB_END', '-24'))     # where the hair ends at the sides and back, degrees
     FR = float(os.environ.get('BOB_FRINGE', '26'))    # where the fringe ends on the forehead
     def flow(d, th, el):

@@ -96,6 +96,19 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
 
+/** The painted layer of short hairs of a profile (under the cards, and the short beards): lighter, and lit round
+ *  its shaded side as the cards are. Its image is far darker than the cards' (it holds the shade between the hairs),
+ *  which at a low exposure turns a brown beard black. */
+function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>): void {
+  const lights = swap(ShaderChunk.lights_physical_pars_fragment, DIRECT,
+    `vec3 irradiance = saturate( ( dot( geometryNormal, directLight.direction ) + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) * directLight.color;`);
+  m.onBeforeCompile = shader => {
+    const code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
+    shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= ${f(k.tone)};`);
+  };
+  m.customProgramCacheKey = () => `portrait-cap-${p.key}`;
+}
+
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
  *  ball darkens towards its top), a tint and less colour. */
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
@@ -165,7 +178,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'plain': break;
     case 'skin': if (p.skin) skinLook(m, p, p.skin); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
-    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; break;
+    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;
     case 'brow':
       blended(m); m.side = DoubleSide;

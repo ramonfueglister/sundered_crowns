@@ -44,3 +44,6 @@ least distance for the game's own garments; Apoleia's are bound as before), the 
 (`wire.rs`), `examples/genes.rs` (founders and children as numbers for the game's simulation of persons).
 Since then: `hair_girl` in the dress table (England: `plait01`, a parting and two plaits, in place of Apoleia's
 crown braid), its cards lit as hanging hair (`build.rs`, only for that file); Roman bytes unchanged.
+`hair_receding`, `hair_bald` (England: `bob03`, `bob04`, in place of Apoleia's short locks and painted horseshoe;
+`real_look.rs` `mh_pick`) and `beards` (which beard a dress wears in place of each of Apoleia's; `look.rs`
+`beard_style`) in the dress table; Roman bytes unchanged.

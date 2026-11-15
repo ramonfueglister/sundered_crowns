@@ -94,6 +94,10 @@ describe('portraits', () => {
       // women from the age of the veil wear it, men never
       expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
       expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
+      // a head that loses its hair wears the dress's own hair for it, and no beard the dress leaves out
+      for (const not of ['/receding01.', '/beard_chin.', '/beard_phil.']) {
+        expect(worn.some(t => t.includes(not)), `person ${p.pid} wears no ${not}`).toBe(false);
+      }
     }
   });
 });

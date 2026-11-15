@@ -173,10 +173,13 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
             }
         } else {
             let bald = if p.female { 0.0 } else { c01((p.age - 22.0) / 38.0) * p.u(BALD) * 1.7 };
+            // a dress with a table has its own hair for a head that loses it (under the hood on the head the
+            // hair lies flat, and a bare top has no cards that could come through the hood)
+            let bare = p.dress.set().filter(|d| d.hood_of(p.female, p.age, p.seed) != crate::dress::Hood::Up);
             if bald > 0.75 {
-                "bald01"
+                bare.map_or("bald01", |d| d.hair_bald)
             } else if bald > 0.4 {
-                "receding01"
+                p.dress.set().map_or("receding01", |d| bare.map_or(d.hair_hooded, |d| d.hair_receding))
             } else if p.u(CURL) > 0.62 {
                 "curly01"
             } else if let Some(d) = p.dress.set() {

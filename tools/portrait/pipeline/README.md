@@ -25,6 +25,7 @@ Every value is a choice by eye from the rounds against the reference pictures (P
 | wimple `cloth_wimple` | `UCUT=20:3,28:2,36:1 FACE_LO=-46 TH0=-49 THMAX=52 FACE_W=36 PINY=5.0 HEMY=5.45 LOOSE=0.12 BEND=2.0 $PY drape_sim.py $B cote.obj hood wimple.obj 2` |
 | the four above, bound | `HEAD=1 HEM=all R_HEM=0.035 TAUBIN=10 HEMSMOOTH=60 AO=9 python3 tunic_bind.py $B x.obj out cloth_<name>` (veil: `R_HEM=0.03`) |
 | hair `bob01` | `BOB_FMIN=11 BOB_FW=62 BOB_FK=0.75 SEED=5 BOB_END=-26 BOB_FRINGE=40 python3 styles.py $B hair bob bob01` |
+| hair gone back at the temples `bob03`, a horseshoe round a bare top `bob04` | as `bob01` with `BOB_LINE=rec` and `BOB_LINE=bald`: `BOB_LINE=rec BOB_FMIN=11 BOB_FW=62 BOB_FK=0.75 SEED=5 BOB_END=-26 BOB_FRINGE=40 python3 styles.py $B hair bob bob03`; card images copied from `bob01.webp`, `bob01_n.webp` |
 | hair under a hood `bob02` | the same lying flat: `BOB_LIFT=0.015,0.03 BOB_FMIN=6 BOB_FW=62 BOB_FK=0.45 SEED=5 BOB_END=-26 BOB_FRINGE=46 python3 styles.py $B hairflat bob bob02` |
 | hair of girls and young women `plait01` | `python3 styles.py $B plait plait plait01` (centre parting, the hair by the temples over the ears, two plaits; their way down in front of the shoulders is a table in the script, measured on `cote.obj`; `PLAIT_G`, `PLAIT_T`, `PLAIT_HL`, `PLAIT_LIFT`, `PLAIT_R`, `PLAIT_W`). Its card image is Apoleia's `braid01.webp` unchanged. |
 | normals of the painted caps | `python3 nmap.py bob01_cap.png bob01_cap_n.png 8` |

@@ -97,6 +97,14 @@ character window). The white of the eye went back to 1.3 (at 1.5 it stared on th
 edge of the skin's shadow is narrower (`wrap` 0.18 / 0.15 / 0.13: the shaded cheek at a 11 to 20, b 13 to 22).
 The rounds are judged in this panel from now on.
 
+**What the panel showed (round 43).** At that size Apoleia's hair for a head that loses it reads as rows of
+scales (short locks, white on the old), its chin beard as a tuft of long strands, and the short beards as black
+on brown-haired men. The dress table now names its own hair for such heads (`hair_receding`, `hair_bald`: the
+hair of 1356 with the hairline gone back, and as a horseshoe round a bare top; `styles.py` `BOB_LINE`) and which
+beard is worn in place of each of Apoleia's (`beards`: none on the chin alone, no philosopher's; unsourced). The
+painted layer of short hairs is drawn lighter and lit round its shaded side as the cards are (`cap` in the
+profile): its image is far darker than the cards', which at the lower exposure turned a brown beard black.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil and the fringe are close; faces (shape of eyes and lids, flat skin of the young), the
 outline of the hair (a smooth dome) are not; the thrown-back hood closes round the neck since round 35, but has no
