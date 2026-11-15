@@ -2,6 +2,7 @@
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
+import type { EconomyEngine } from './economy/engine';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -37,6 +38,21 @@ export interface CultivationJson {
   englandLand: number;
 }
 
+/** The calibration of a national economy (public/data/economy_england.json, written by tools/sim/calibrate_economy.ts
+ *  from the table data/economy/england_1356.json; sources in docs/ECONOMY_DESIGN.md, feature 3). */
+export interface EconomyJson {
+  case: string;
+  /** the year the starting position stands for: the economy exists in a world that starts in this year */
+  year: number;
+  /** the model computes the economy at this scale (1:100) */
+  scale: number;
+  /** `Parameters` and `InitialConditions` of the port, with its keys */
+  parameters: Record<string, unknown>;
+  initial_conditions: Record<string, unknown>;
+}
+/** The economy of the world: the engine that computes a period, and what it is given for each country. */
+export interface EconomySetup { engine: EconomyEngine; england: EconomyJson }
+
 export const EDGE_RIVER = 1, EDGE_STRAIT = 2, EDGE_COAST = 4, EDGE_SEA = 8;
 
 export interface Province { id: number; name: string; locs: number[]; capital: number; area: number; region: string }
@@ -58,13 +74,19 @@ export class World {
   /** yield curve of each place, best soil first: the steps of place i are landSteps[landStepStart[i] … landStepStart[i + 1]),
    *  step k covers the land between the shares landEdges[k − 1] and landEdges[k], cut off at landFertile[i] */
   landEdges: Float64Array; landFertile: Float64Array; landStepStart: Int32Array; landSteps: Float32Array;
+  /** 1 for the places inside the outline of England (land.json) */
+  england: Uint8Array;
+  /** the engine of the national economies and England's calibration, as the JSON texts the engine reads
+   *  (src/sim/systems/economy.ts) */
+  economyEngine: EconomyEngine;
+  englandEconomy: { year: number; scale: number; parameters: string; initialConditions: string };
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
   rivers: GeoJson['rivers'];
   kmPerPx: Float32Array; // per location
 
-  constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson) {
+  constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;
     const N = this.N, L = this.L;
@@ -93,6 +115,11 @@ export class World {
     }
     if (this.landStepStart[L] !== c.steps.length) throw new Error(`land.json has ${c.steps.length} steps of the yield curve, the places need ${this.landStepStart[L]}`);
     this.landSteps = Float32Array.from(c.steps);
+    this.england = new Uint8Array(L);
+    for (const i of land.england.places) this.england[i] = 1;
+    this.economyEngine = economy.engine;
+    const e = economy.england;
+    this.englandEconomy = { year: e.year, scale: e.scale, parameters: JSON.stringify(e.parameters), initialConditions: JSON.stringify(e.initial_conditions) };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

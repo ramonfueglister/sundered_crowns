@@ -5,7 +5,7 @@ import { status, refusal, me, world, realms, placeInfo, connect, disconnect, cla
 import { online, session, profile, signInWithEmail, signOut, accessToken } from '../online/supabase';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
-import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText } from './i18n';
+import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
 import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
@@ -178,6 +178,25 @@ function PlacePanel() {
           </>
           : <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>}
         <tr><th>{t('harvest_farmers')}</th><td>{num(d.harvest.farmers)}</td></tr>
+      </tbody></table>
+    </div>}
+    {d?.economy && <div class="section">
+      <h3>{t('economy_england')}</h3>
+      <p class="muted">{t('economy_note', { year: d.economy.year })}</p>
+      {d.economy.halted && <p class="muted">{t('economy_halted', { why: d.economy.halted })}</p>}
+      <table class="facts"><tbody>
+        <tr><th>{t('economy_gdp')}</th><td>{pounds(d.economy.realGdp)}</td></tr>
+        <tr><th>{t('economy_level', { base: d.economy.baseYear })}</th><td>{index(d.economy.realGdpIndex)}</td></tr>
+        <tr><th>{t('economy_prices', { base: d.economy.baseYear })}</th><td>{index(d.economy.priceIndex)}</td></tr>
+        <tr><th>{t('economy_consumption')}</th><td>{pounds(d.economy.consumption)}</td></tr>
+        <tr><th>{t('economy_crown')}</th><td>{pounds(d.economy.crown)}</td></tr>
+        <tr><th>{t('economy_investment')}</th><td>{pounds(d.economy.investment)}</td></tr>
+        <tr><th>{t('economy_exports')}</th><td>{pounds(d.economy.exports)}</td></tr>
+        <tr><th>{t('economy_imports')}</th><td>{pounds(d.economy.imports)}</td></tr>
+        <tr><th>{t('economy_employed')}</th><td>{num(d.economy.employed)}</td></tr>
+        <tr><th>{t('economy_unemployed')}</th><td>{num(d.economy.unemployed)}</td></tr>
+        <tr><th>{t('economy_coin_households')}</th><td>{pounds(d.economy.coinHouseholds)}</td></tr>
+        <tr><th>{t('economy_coin_firms')}</th><td>{pounds(d.economy.coinFirms)}</td></tr>
       </tbody></table>
     </div>}
     {r && <div class="section">

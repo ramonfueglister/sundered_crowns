@@ -10,6 +10,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
 - [Wirtschaft](wirtschaft/README.md): Übersicht über alle Wirtschafts-Features
   - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Im Spiel)*
   - [Bestellte Fläche](wirtschaft/bestellte-flaeche.md) *(Beschlossen)*
+  - [Volkswirtschaft England](wirtschaft/volkswirtschaft-england.md) *(Beschlossen)*
 
 ## Status der Seiten
 

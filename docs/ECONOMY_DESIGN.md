@@ -26,6 +26,7 @@ players and the AI of realms without a player act through the same commands.
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
 | 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
+| 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
 
 ## 1. Grain harvest per place
 
@@ -388,3 +389,193 @@ and assignment of regions agree with the paper. Arable in million hectares, peop
   3.2.1). DANS. https://doi.org/10.17026/dans-25g-gez3 (baseline scenario; cropland and population count for 1300
   and 1400; the archive page states CC0 1.0, the readme of the data set CC BY 3.0)
 - Klein Goldewijk, K. (2023). HYDE 3.3. Utrecht University. https://doi.org/10.24416/UU01-67UHB4 (catalogue page only)
+
+## 3. England as one national economy
+
+Direction: on 15 November 2026 Ramon asked for the state-of-the-art system itself instead of further regional
+features, and chose his own Rust port of BeforeIT.jl as its engine ("Ja, Port als Motor", 08:07 UTC). Feature 3 was
+proposed with two trial runs outside the game and agreed by him the same day ("Ja, so bauen", 08:47 UTC). Proposal and
+result for Ramon (German): https://claude.ai/artifact/HMoTEyc5UXQKuh2J4hkJPk. Player wiki:
+docs/wiki/wirtschaft/volkswirtschaft-england.md.
+
+**What it is.** England runs in the world as one national economy. It is computed by the unchanged port
+(github.com/ramonfueglister/port-beforeit, commit 7291531, Apache-2.0) of BeforeIT.jl (Banca d'Italia, commit
+0926398), the implementation of the agent-based model of Poledna, Miess, Hommes and Rabitsch (2023): persons, firms
+in sectors, a bank, a central bank, a government and the rest of the world, each with a balance sheet, meeting on the
+markets for credit, labour and goods; stock-flow consistent (online appendix, equations A.1 to A.84). One period of
+the model is one year of the game, computed on 1 January. The model is calibrated on England in 1356, the start year
+of the world, at the scale 1:100. Not a line of the port is copied or changed, and no rule is written in the game.
+
+**What it is not.** No link to harvest, cultivated land or the people of the places; no second country and no trade
+between countries; nothing a player does reaches it; none of the deviations below is corrected.
+
+**How the port is built in.**
+- `economy/` is a small Rust crate with the port as a dependency pinned to the commit. It does four things: create a
+  model from parameters, compute periods (the port's `run`), hand out key figures, save and load the state. The port
+  has no save format; `economy/src/state.rs` writes every field of the model (all are public) and the state of its
+  random number generator, taking each struct apart without `..`, so a change of the port's fields stops the build.
+- The crate is built to one WebAssembly file (0.66 MB) that the world server loads (Node 22, no second process, no
+  native code). `server/Dockerfile` builds it in a Rust stage; `npm run economy:build` builds it locally. The compiler
+  is fixed (`economy/rust-toolchain.toml`, 1.88.0).
+- The engine keeps nothing between calls (`src/sim/economy/engine.ts`): the state of the economy is 1.7 MB of bytes
+  in the state of the world (`state.economy.england`, state version 4), a period takes the bytes and gives new ones.
+  So the period is a function of the state like every other system, the snapshot holds the whole economy, and its
+  hash covers it. The economy draws from the port's own generator (xoshiro256**), seeded with the seed of the world.
+- `src/sim/systems/economy.ts` is the system: one period on the first day of each year. A world saved by an older
+  build gets the economy when it is loaded, with the years it has already seen (`src/sim/upgrade.ts`); the result is
+  the economy of a world that had it from its first day. A world that does not start in 1356 has no economy.
+- If the engine cannot compute a year (a rule of the port fails, or the year ends without a GDP), the economy stands
+  still from then on with the state of the year before and the reason; the world goes on. This did not happen in any
+  run.
+- The licence text and the NOTICE of the port are in `economy/THIRD_PARTY/port-beforeit/`.
+
+**Calibration.** The port computes its parameters from national accounts (its `src/calibration.rs`). The table
+`data/economy/england_1356.json` holds every input with its source, or marked as an assumption;
+`tools/sim/economy_calibration.ts` applies the port's formulas and `npm run economy:calibrate` writes
+`public/data/economy_england.json` (the port's `Parameters` and `InitialConditions`). A test fails if the file no
+longer follows from the table. Three sectors (agriculture, industry, services); amounts in pounds of 1356.
+
+| Input | 1356 | Source |
+|---|---|---|
+| GDP at current prices | £4.52 m | Bank of England, Millennium of macroeconomic data v3.1, sheet A1 (Broadberry et al.) |
+| People | 2.583 m | same, sheet A1 |
+| Value added: agriculture / industry / services | 45.5 / 28.8 / 25.7 % | Broadberry, Campbell, van Leeuwen (2013), table 7A, 1381 |
+| Labour force: agriculture / industry / services | 57.2 / 19.2 / 23.6 % | same, table 7B, 1381 |
+| Participation of men / women | 97.1 / 43.0 % | same, pp. 13–14 (rates of the 19th century, carried back by the authors) |
+| Shares of income: wages / land rent / other capital / house rent | 61.0 / 16.5 / 21.6 / 0.9 % | Clark, workbook of 2015, sheet Decadal, 1350–59 (ratios only) |
+| Interest | 7.5 % | Clark, Microbes and Markets, table 7: 1340s, one transfer; no observation for the 1350s, 5 % in the 1370s; fn. 15: 6 to 8 % in the mid-century |
+| Revenue of the crown (nine-year mean) | £105,544 | Bank of England workbook, sheet A26 (O'Brien and Hunt) |
+| Coin in circulation | £1.107 m | same, sheet A22 (Palma) |
+| Wool exports | 32,666 sacks at £4.05, duty 40 s a sack | Munro (2011), tables 1 and 14, 1356–60 |
+| Cloth exports | 9,061 cloths | Munro (2011), table 1, 1356–60 |
+| Real GDP, deflator, revenue, export volume before the start | 1280 to 1356, annual | Bank of England workbook, sheets A1 and A26 |
+
+Derived: value added = GDP minus the wool duty (the model's one tax on products); capital = capital income / interest
+(2.8 years of GDP); dwellings = house rents / interest; the crown spends its revenue; direct tax = revenue minus
+duty; household consumption = what is left of each sector's supply; AR(1) of crown spending and exports by the
+port's formula on the series 1281 to 1356. Land rent has no place in the model and is part of the firms' profit.
+
+Without a source (assumptions, marked as such in the table; none is a statement about history):
+
+| Input | Value | What exists |
+|---|---|---|
+| Output per intermediate input, by sector | 4 / 2.5 / 5 | earliest input-output table 1841 (Horrell, Humphries, Weale 1994), paywall |
+| Who supplies whom (3 × 3) | set | same |
+| Persons per firm | 4 | social table c. 1290 (Campbell 2008), paywall |
+| Share of the people aged 15 and over | 62 % | poll tax of 1377, not read |
+| Unemployed at the start | 1 person | none |
+| Depreciation | 2.5 % a year | none |
+| Imports | as high as exports; 30 / 70 / 0 | import series only from 1560 |
+| What the crown buys | 20 / 30 / 50 | none |
+| What is invested (firms; dwellings) | 30 / 60 / 10; 0 / 100 / 0 | none |
+| Coin of households / firms | 80 / 20 | none |
+| Equity of the bank | 5 % of the coin | none |
+| Rest of the world | constant | none |
+| Behaviour (repayment 5 %, bank rules, utilisation 85 %, firm sizes) | values of the original | none for the 14th century |
+| Value of a cloth in 1356–60 | £1.751 | Munro's table 8 starts in 1371; its value for 1371–75 |
+
+Switched off by parameters: value added tax, social insurance, corporate tax and the other taxes of the model (0),
+unemployment benefit (rate 1e-9; the port divides by it), pensions (0), Taylor rule (policy rate fixed at 0; the loan
+rate is the interest above), shocks to output abroad and imports (1e-12).
+
+Scaled 1:100: GDP £45,248, 25,832 people, labour force 11,219 (8,415 employees in 2,804 firms, their owners, one
+bank owner, one person without work), coin £11,067.
+
+**Model against history (`npm run economy:check`; nothing tuned).** 20 worlds of the game from 1356 to 1420, run day
+by day (seeds 1356 to 1375; the running world has seed 1356); all 20 computed every year. History: real GDP and GDP
+deflator of Broadberry et al. (Bank of England workbook, sheet A1; `data/economy/england_after_1356.json`).
+
+| Real GDP | Model (mean of the worlds) | Range of the worlds | History |
+|---|---|---|---|
+| Mean growth a year | +0.06 % | −0.36 % to +0.25 % | −0.14 % |
+| Standard deviation of annual growth | 5.0 % | 3.5 % to 6.6 % | 6.7 % |
+| Lowest year (1356 = 100) | 86 | 73 to 100 | 77 |
+| Highest year | 118 | 116 to 119 | 110 |
+| Mean level of all years | 106.0 | 95.9 to 113.7 | 92.8 |
+| Level in 1420 | 104 | 80 to 117 | 91 |
+
+| Price level of GDP | Model (mean of the worlds) | Range of the worlds | History |
+|---|---|---|---|
+| Level in 1420 (1356 = 100) | 292 (median 79) | 17 to 1,410 | 96 |
+| Standard deviation of annual inflation | 9.9 % | 7.8 % to 11.7 % | 8.4 % |
+
+| Share of real GDP | At the start | Mean of all years and worlds |
+|---|---|---|
+| Household consumption | 88.8 % | 88.9 % |
+| Crown | 2.3 % | 2.1 % |
+| Investment | 7.4 % | 7.4 % |
+| Exports (with duty) | 4.7 % | 4.4 % |
+| Imports | 3.3 % | 2.9 % |
+| Without work (share of the labour force) | 0.01 % | 1.14 % (highest year 14.5 %) |
+
+| Year | History | Model, mean | Model, world 1356 |
+|---|---|---|---|
+| 1356 | 100 | 100 | 100 |
+| 1364 | 103 | 106 | 116 |
+| 1372 | 85 | 109 | 113 |
+| 1380 | 90 | 108 | 116 |
+| 1388 | 92 | 108 | 111 |
+| 1396 | 94 | 104 | 113 |
+| 1404 | 94 | 104 | 110 |
+| 1412 | 85 | 105 | 110 |
+| 1420 | 91 | 104 | 117 |
+
+Reading: real GDP stays in a band like the historical one, but about 14 % higher on average (firms start at 85 %
+utilisation and fill up within a few years, ceiling about 118), it does not fall with the population (the model's
+population is fixed), and the price level has no anchor (some worlds inflate, some deflate).
+
+**Differences from the trial run of the proposal.** The proposal's table for 1356 still used the exports and the
+interest of 1381. The build uses the values of 1356 throughout: exports of 1356–60 (£148,165 instead of £137,351 at
+full scale), interest 7.5 % instead of 5 %, and the value of a cloth as a marked assumption (a thirteenth gap). Value
+added is GDP minus the duty, so the model starts at the GDP of the source (the trial started 1 % above it). The
+series handed to the model end in 1356 (the trial handed over twelve later years, which the port does not read).
+With these the proposal's +0.17 % growth, level 109.0 and price level 294 became +0.06 %, 106.0 and 292.
+
+**Tests.** `economy/tests/shell.rs` (cargo test): the shell computes what the port computes directly; a state loads
+bit for bit, also with removed agents and with NaN; save, load, continue equals a straight run; broken bytes are
+refused; the accounting identities hold. `tests/economy.test.ts`: the calibration follows from the table and
+balances; the WebAssembly engine gives bit for bit the figures of the native build (25 years, two seeds); the
+accounting identities of the port hold every year; one period per year in the world; snapshot, hash and upgrade of
+an older world; a year change replayed from the command log and resumed from disk; the view of a place; the
+standstill. The server image was built with the Rust stage and started; its engine gave the same states over 64
+years as the local build.
+
+**Limits (none is addressed by this feature).**
+- No land and no harvest: firms produce from labour, capital and inputs (Leontief, A.13). The rise of income per
+  head after the Black Death cannot come out of the model.
+- Persons have no family: who does not work lives on transfers in the model. So the model's persons are the labour
+  force; children and the old are in their consumption. This mapping is ours, not from a paper.
+- Institutions England did not have are parameters set to zero, not removed.
+- One bank; the coin is deposits with it. How much credit there was is not measurable (Palma 2016, p. 22).
+- One country, one market, no space. The rest of the world is a series, not a country.
+- Fixed population; firms as today (an owner and employees, sizes by a power law; every firm needs an employee);
+  behaviour of today's banks and firms.
+- The period is a year; the original computes quarters.
+- The price level has no anchor with the central bank switched off.
+- Thirteen inputs have no source. In the trial run they moved the mean level of GDP between 104 and 109.
+- Clark and Broadberry disagree on levels (national income of the 1380s £8.5 m against GDP £4.0 m); only Clark's
+  ratios are used.
+
+**Sources** (all opened on 15 November 2026)
+- Poledna, S., Miess, M. G., Hommes, C., Rabitsch, K. (2023). Economic forecasting with an agent-based model.
+  European Economic Review 151, 104306.
+- port-beforeit, commit 7291531, https://github.com/ramonfueglister/port-beforeit, a port of
+  bancaditalia/BeforeIT.jl at commit 0926398 (both Apache-2.0). Read: src/calibration.rs, agents.rs, params.rs,
+  firms.rs, aggregates.rs, rotw.rs, data.rs, lib.rs.
+- Broadberry, S., Campbell, B., van Leeuwen, B. (2013). When did Britain industrialise? Explorations in Economic
+  History 50(1), 16–27. Manuscript:
+  https://pureadmin.qub.ac.uk/ws/portalfiles/portal/1640964/EEH_Sectoral_shares_paper.pdf (tables 7A, 7B, pp. 13–14)
+- Thomas, R., Dimsdale, N. (2017). A millennium of macroeconomic data for the UK, version 3.1. Bank of England.
+  https://www.bankofengland.co.uk/statistics/research-datasets (sheets A1, A22, A26; no open licence: only single
+  values are in the repository)
+- Clark, G. (2015). National income, prices, wages, land rents, population, England, 1209–1869 (workbook, sheet
+  Decadal). https://faculty.econ.ucdavis.edu/faculty/gclark/data.html
+- Clark, G. Microbes and markets: was the Black Death an economic revolution? Manuscript:
+  https://scispace.com/pdf/microbes-and-markets-was-the-black-death-an-economic-gecu8oa7fi.pdf (table 7, p. 34;
+  p. 32)
+- Munro, J. H. (2011). Statistical tables on medieval and early-modern textiles.
+  https://www.economics.utoronto.ca/munro5/MedTextileStats.pdf (tables 1, 8, 14)
+- Palma, N. (2016). Reconstruction of annual money supply over the long run: the case of England, 1279–1870. EHES
+  Working Paper 94. https://www.ehes.org/wp/EHES_94.pdf (p. 22)
+- Not opened (paywall), only seen cited: Horrell, Humphries, Weale (1994), Economic History Review 47(3); Campbell
+  (2008), Economic History Review 61(4); Broadberry et al. (2015), British Economic Growth 1270–1870.

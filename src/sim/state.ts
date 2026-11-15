@@ -3,8 +3,9 @@
 import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
-/** 2: places have a harvest. 3: places have arable. Older snapshots are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 3;
+/** 2: places have a harvest. 3: places have arable. 4: England has a national economy. Older snapshots are brought
+ *  up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 4;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -32,6 +33,18 @@ export const RANKS = [
 /** Texts of a realm (kept beside the table: strings do not go into typed arrays). */
 export interface RealmText { key: string; name: I18n; short: I18n; adjective: I18n }
 
+/** A national economy computed by the economy engine (src/sim/systems/economy.ts). */
+export interface NationalEconomy {
+  /** the year the figures stand for: the year of the calibration at the start, then the year of the last period */
+  year: number;
+  /** the state of the model as the engine's bytes (economy/src/state.rs) */
+  model: Uint8Array;
+  /** the key figures of that year (FIGURE in src/sim/economy/engine.ts) */
+  figures: Float64Array;
+  /** why the economy stands still, '' while it runs: a period that the engine could not compute stops it for good */
+  halted: string;
+}
+
 export interface WorldState {
   v: number;
   seed: number;
@@ -45,4 +58,8 @@ export interface WorldState {
   realmText: RealmText[];
   /** the player who rules each realm (account id), '' when nobody does */
   ruler: string[];
+  economy: {
+    /** England as one economy; null in a world that does not start in the year of its calibration */
+    england: NationalEconomy | null;
+  };
 }

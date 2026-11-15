@@ -51,6 +51,21 @@ const S = {
   arable_limit: ['at the land limit', 'an der Landgrenze'],
   arable_none: ['no land with a yield', 'kein Land mit Ertrag'],
   arable_yield: ['Yield of the cultivated soil', 'Ertragskraft des bestellten Bodens'],
+  economy_england: ['Economy of England', 'Volkswirtschaft England'],
+  economy_note: ['All of England in {year}, at the scale 1:100', 'Ganz England im Jahr {year}, im Massstab 1:100'],
+  economy_gdp: ['Real GDP', 'Reales BIP'],
+  economy_level: ['Level ({base} = 100)', 'Stand ({base} = 100)'],
+  economy_prices: ['Price level ({base} = 100)', 'Preisniveau ({base} = 100)'],
+  economy_consumption: ['Household consumption', 'Konsum der Haushalte'],
+  economy_crown: ['Crown spending', 'Ausgaben der Krone'],
+  economy_investment: ['Investment', 'Investitionen'],
+  economy_exports: ['Exports', 'Ausfuhr'],
+  economy_imports: ['Imports', 'Einfuhr'],
+  economy_employed: ['At work', 'Beschäftigte'],
+  economy_unemployed: ['Without work', 'Ohne Arbeit'],
+  economy_coin_households: ['Coin of households', 'Münzgeld der Haushalte'],
+  economy_coin_firms: ['Coin of firms', 'Münzgeld der Betriebe'],
+  economy_halted: ['The economy stands still since {why}', 'Die Volkswirtschaft steht still seit {why}'],
   no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
@@ -94,6 +109,10 @@ export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[i
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
 /** A share as per cent with one decimal. */
 export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
+/** An amount of money in pounds. */
+export const pounds = (v: number) => `£ ${num(v)}`;
+/** An index with one decimal (100 = the base). */
+export const index = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 /** A large amount of kilocalories in millions or billions. */
 export function kcalText(v: number): string {
   const de = lang.value === 'de', f = (x: number) => x.toLocaleString(de ? 'de-DE' : 'en-GB', { maximumSignificantDigits: 3 });

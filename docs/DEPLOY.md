@@ -21,6 +21,7 @@ All variables are listed with comments in [`.env.example`](../.env.example).
 ```bash
 npm install
 cp .env.example .env            # leave the SUPABASE_* values empty for DEV mode
+npm run economy:build           # the economy engine as WebAssembly (needs the Rust toolchain, https://rustup.rs)
 npm run world                   # world server on ws://localhost:8787, 36 s per day, DEV login by display name
 npm run world:fast              # same, 0.05 s per day (testing)
 npm run dev                     # client on http://localhost:5173
@@ -103,7 +104,9 @@ current server does not use them; they stay so that existing projects keep a con
 ## 3. World server
 
 The world server is a stateful, always-on process with a disk (it cannot run as a serverless function).
-One process = one world. Image: `server/Dockerfile` (build context = repository root).
+One process = one world. Image: `server/Dockerfile` (build context = repository root). The image builds the economy
+engine itself in a Rust stage (it fetches the pinned port from GitHub and its crates from crates.io; the first build
+takes a few minutes longer), so a deploy needs no Rust on the machine that starts it.
 
 ### Fly.io (recommended; `server/fly.toml`)
 

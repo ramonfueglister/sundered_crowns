@@ -1,0 +1,70 @@
+{
+ "case": "England 1356",
+ "about": "The calibration table of economy feature 3 (docs/ECONOMY_DESIGN.md): what the port of BeforeIT.jl is given for England in the start year of the world. tools/sim/calibrate_economy.ts computes the port's parameters from it and writes public/data/economy_england.json. Amounts are those of the sources (the whole of England); the script scales them.",
+ "kinds": {
+  "source": "the number stands in the named source, which was opened on 15 November 2026",
+  "derived": "computed from numbers with a source by the stated rule",
+  "assumption": "no source was found; the value is a placeholder and no statement about history"
+ },
+ "year": 1356,
+ "scale": { "value": 0.01, "kind": "source", "source": "the diorama scale 1:100 agreed for the game (Ramon, 14 November 2026); the model computes the scaled-down economy" },
+ "period": "one year (the historical series are annual; the original model computes quarters)",
+ "sectors": ["agriculture", "industry", "services"],
+ "inputs": {
+  "gdp_nominal_gbp_mn": { "value": 4.52478, "kind": "source", "source": "Bank of England, A millennium of macroeconomic data, version 3.1, sheet A1, column V, year 1356: nominal GDP at market prices (Broadberry, Campbell, Klein, Overton, van Leeuwen)" },
+  "population_thousand": { "value": 2583.18, "kind": "source", "source": "same workbook, sheet A1, column Z, year 1356" },
+  "value_added_share": { "value": [0.455, 0.288, 0.257], "kind": "source", "source": "Broadberry, Campbell, van Leeuwen (2013), When did Britain industrialise?, Explorations in Economic History 50(1), table 7A, year 1381 (the first year with a documented structure; the authors use the weights of 1381 for 1270 to 1450)" },
+  "labour_share": { "value": [0.572, 0.192, 0.236], "kind": "source", "source": "same paper, table 7B, year 1381" },
+  "participation": { "value": { "men": 0.971, "women": 0.430 }, "kind": "source", "source": "same paper, pp. 13-14: rates of the nineteenth century, carried back by the authors" },
+  "income_gbp_mn": { "value": { "wages": 5.73907, "land_rents": 1.54771, "house_rents": 0.0860132, "other_capital": 2.0326, "net_national_income": 9.4054 }, "kind": "source", "source": "Clark, England NNI (workbook of 2015), sheet Decadal, row 1350-59. Only the shares of income are used: Clark's level is about twice Broadberry's" },
+  "interest": { "value": 0.075, "kind": "source", "source": "Clark, Microbes and Markets, table 7, p. 34: return on rent charges in the 1340s (one transfer). The table has no observation for the 1350s; the next one is 5 % in the 1370s. Footnote 15, p. 32 (Thrupp, Bean): returns of 6 to 8 % in the middle of the fourteenth century" },
+  "crown_revenue_gbp_thousand": { "value": 105.544, "kind": "source", "source": "Bank of England workbook, sheet A26, column C, year 1356: tax revenue, nine-year moving average (O'Brien and Hunt)" },
+  "coin_gbp_mn": { "value": 1.10665, "kind": "source", "source": "same workbook, sheet A22, column C, year 1356: coin in circulation (Palma)" },
+  "wool_export": { "value": { "sacks": 32666.40, "gbp_per_sack": 4.050, "duty_shillings_per_sack": 40 }, "kind": "source", "source": "Munro (2011), Statistical tables on medieval and early-modern textiles, table 1 (sacks, mean of 1356-60) and table 14 (denizen price and duty per sack, 1356-60)" },
+  "cloth_export": { "value": { "cloths": 9061.00 }, "kind": "source", "source": "Munro (2011), table 1: broadcloths, mean of 1356-60" },
+  "cloth_value_gbp": { "value": 1.751, "kind": "assumption", "source": "Munro (2011), table 8, gives no value of a cloth before 1371; this is its value for 1371-75. Cloth is about a tenth of the exports of 1356-60" },
+
+  "output_per_intermediate_input": { "value": [4.0, 2.5, 5.0], "kind": "assumption", "source": "none. The earliest input-output table for England is that of 1841 (Horrell, Humphries, Weale 1994), not read (paywall)" },
+  "input_matrix": { "value": [[0.70, 0.60, 0.30], [0.25, 0.30, 0.50], [0.05, 0.10, 0.20]], "kind": "assumption", "source": "none (see above). Column = buying sector, row = supplying sector, each column sums to 1" },
+  "persons_per_firm": { "value": 4.0, "kind": "assumption", "source": "none. A social table of around 1290 exists (Campbell 2008, p. 940), not read (paywall)" },
+  "adult_share": { "value": 0.62, "kind": "assumption", "source": "none read: share of the people aged 15 and over (the poll tax of 1377 would be the source)" },
+  "unemployed": { "value": 1, "kind": "assumption", "source": "none: the smallest number the port accepts" },
+  "depreciation": { "value": 0.025, "kind": "assumption", "source": "none: share of the capital stock used up in a year" },
+  "import_share": { "value": [0.3, 0.7, 0.0], "kind": "assumption", "source": "none: what is imported, and imports are set as high as exports. An import series exists only from 1560" },
+  "crown_purchase_share": { "value": [0.2, 0.3, 0.5], "kind": "assumption", "source": "none: what the crown buys" },
+  "investment_share": { "value": [0.3, 0.6, 0.1], "kind": "assumption", "source": "none: what firms buy to invest" },
+  "dwelling_share": { "value": [0.0, 1.0, 0.0], "kind": "assumption", "source": "none: what households buy to build" },
+  "coin_split": { "value": { "households": 0.8, "firms": 0.2 }, "kind": "assumption", "source": "none: who holds the coin" },
+  "bank_equity_of_coin": { "value": 0.05, "kind": "assumption", "source": "none: equity of the model's one bank as a share of the coin" },
+  "rest_of_the_world": { "value": { "output": 1000.0, "inflation": 0.0 }, "kind": "assumption", "source": "none: output and inflation abroad stay constant" },
+  "behaviour": { "value": { "theta": 0.05, "zeta": 0.03, "zeta_LTV": 0.6, "zeta_b": 0.5, "omega": 0.85 }, "kind": "assumption", "source": "the values of the original model, estimated on today's banks and firms (Poledna et al. 2023; src/calibration.rs of the port): repayment rate, capital requirement, loan-to-value limit, capital buffer, capacity utilisation at the start. The sizes of firms follow the power law of the original" }
+ },
+ "derived": {
+  "value_added": "GDP at market prices minus the wool duty (the one tax on products of the model), split by the shares of the sectors",
+  "capital_stock": "capital income other than house rents, divided by the interest rate",
+  "dwellings": "house rents divided by the interest rate",
+  "crown_spending": "the crown spends its revenue (a spending series exists only from 1688)",
+  "direct_tax": "crown revenue minus the wool duty",
+  "household_consumption": "what is left of the supply of each sector after inputs, crown, investment, dwellings and exports",
+  "land_rent": "has no place of its own in the model: it is part of the profit of the firms",
+  "labour_force": "people x adult share x mean participation of men and women; one person in persons_per_firm is the owner of a firm",
+  "crown_and_export_shocks": "AR(1) on the logarithm of the series below, 1281 to 1356, by the port's formula (estimate_for_calibration_script)"
+ },
+ "switched_off": {
+  "about": "Institutions of the model that England did not have in 1356. They are parameters of the port, set so that they do nothing.",
+  "taxes": "value added tax, social insurance of firms and workers, corporate tax, taxes on investment, on government purchases, on products and on production: 0",
+  "unemployment_benefit": "1e-9 instead of 0: the port divides the starting wage by this rate (src/agents.rs, line 222)",
+  "pensions_and_benefits": "0; the model's one inactive person stands for the minimum the port needs",
+  "central_bank": "policy rate fixed at 0 (rho = 1, no Taylor rule); the loan rate is the interest rate above",
+  "shocks": "covariance of the shocks: exports as estimated, 1e-12 for output abroad and imports (the port needs a positive definite matrix)"
+ },
+ "history": {
+  "about": "The years before the start. The firms of the model form their expectations from the output of all earlier years (appendix A.6, A.7), so the model needs the real history.",
+  "source": "Bank of England, A millennium of macroeconomic data, version 3.1: sheet A1 (real GDP at market prices and its deflator, Broadberry et al.; export volume) and sheet A26 (tax revenue, O'Brien and Hunt). Single values, not the workbook, which carries no open licence",
+  "first_year": 1280,
+  "real_gdp_gbp_mn_2013": [3187.38, 3389.51, 3290.19, 3130.21, 3239.45, 3282.52, 3238.34, 3547.24, 3441.5, 3177.76, 3225.14, 3231.35, 3403.05, 3483.23, 3456.9, 3701.98, 3849.83, 3683.48, 3874.32, 3731.02, 3705.25, 3731.19, 3827.5, 3986.08, 3605.68, 3705.5, 3598.4, 3771.92, 3816.14, 3910.14, 3857.98, 3993.57, 3887.66, 3956.54, 3957.42, 3555.67, 3356.17, 3510.66, 3873.32, 3889.59, 3761.67, 3180.9, 3347.06, 3471.88, 3162.99, 3422.89, 3488.04, 3449.15, 3223.25, 3411.4, 3342.79, 3205.49, 3394.5, 3517.46, 3422.23, 3298.99, 3476.25, 3876.23, 3975.57, 3264.75, 3680.04, 3741.01, 3939.91, 3853.65, 4140.21, 3879.38, 3708.72, 3877.4, 4000.38, 3061.66, 2840.72, 2673.65, 2767.41, 2771.41, 2650.31, 2727.28, 2686.02],
+  "gdp_deflator_2013_100": [0.132607, 0.1249, 0.13752, 0.137608, 0.133744, 0.115103, 0.123493, 0.120512, 0.106485, 0.113202, 0.116707, 0.130961, 0.128452, 0.126446, 0.141435, 0.147133, 0.145378, 0.120902, 0.138135, 0.145579, 0.145887, 0.139676, 0.138525, 0.132671, 0.13427, 0.143882, 0.14263, 0.141066, 0.145912, 0.161653, 0.167743, 0.165073, 0.146034, 0.147419, 0.155867, 0.163992, 0.230669, 0.221717, 0.167369, 0.139718, 0.154466, 0.158573, 0.197619, 0.174027, 0.159484, 0.181139, 0.161856, 0.129504, 0.137477, 0.145658, 0.152647, 0.16571, 0.167107, 0.139342, 0.131788, 0.131903, 0.137753, 0.127177, 0.125396, 0.115227, 0.142673, 0.132809, 0.128347, 0.125951, 0.139348, 0.131408, 0.131866, 0.146012, 0.146322, 0.123533, 0.14893, 0.173928, 0.187945, 0.165324, 0.162263, 0.159018, 0.167393],
+  "crown_revenue_gbp_thousand": [30.0364, 18.3556, 17.5212, 16.6869, 15.8525, 16.2697, 15.8525, 22.5273, 25.8646, 27.1162, 28.3677, 47.9747, 56.3182, 66.7475, 73.0051, 72.5879, 65.9131, 57.9869, 63.4101, 63.8273, 46.7232, 39.2141, 30.4535, 30.4535, 38.3798, 38.797, 45.0545, 40.4657, 40.4657, 40.0485, 45.0545, 48.8091, 42.5515, 39.2141, 41.3, 35.8768, 39.2141, 39.6313, 36.7111, 38.797, 35.4596, 35.8768, 31.2879, 28.7848, 32.5394, 26.699, 25.8646, 27.5333, 20.8586, 23.7788, 26.2818, 32.5394, 36.2939, 39.6313, 47.1404, 65.496, 82.6, 92.6121, 93.8636, 93.0293, 91.3606, 98.0354, 102.207, 106.379, 97.201, 84.2687, 80.9313, 86.7717, 95.5323, 100.121, 105.544, 101.79, 96.7838, 97.6182, 105.127, 104.293, 105.544],
+  "export_volume_gbp_mn_2013": [21.4344, 23.0419, 22.1488, 22.5061, 27.2395, 24.2923, 21.345, 21.0771, 23.7564, 26.3464, 27.954, 24.6535, 21.7426, 19.1755, 16.9115, 14.9147, 13.3072, 19.023, 23.3992, 18.9337, 28.2219, 30.9012, 15.004, 28.0433, 29.0257, 41.4398, 36.9743, 37.1529, 32.866, 36.0812, 31.1691, 33.6698, 34.4736, 33.0446, 17.2368, 29.0257, 18.6658, 24.9174, 24.4709, 19.2909, 28.1326, 26.7036, 16.433, 26.8823, 20.5413, 23.8457, 16.7902, 23.0419, 17.4154, 28.1326, 26.1678, 30.3653, 33.1339, 25.364, 30.9012, 30.4546, 16.3437, 3.84032, 17.4154, 37.3315, 17.7727, 16.6116, 20.3626, 11.9675, 13.5364, 15.3109, 17.3181, 19.5884, 22.1563, 24.0664, 26.991, 30.2882, 19.8388, 14.4157, 38.7655, 28.4328, 24.9751]
+ }
+}

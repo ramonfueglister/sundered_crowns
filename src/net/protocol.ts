@@ -16,6 +16,30 @@ export interface PlaceDetail {
   id: number; name: string; nameDe: string; owner: number; terrain: string; resource: string; culture: I18n; faith: I18n; pop: number;
   /** the last grain harvest and what it was computed from (absent when the server is older than the client) */
   harvest?: HarvestDetail;
+  /** the national economy the place belongs to (only places in England; absent when the world has none) */
+  economy?: EconomyDetail;
+}
+/** A national economy in the year of its last computed period (src/sim/systems/economy.ts). Amounts are in pounds at
+ *  the scale of the model. */
+export interface EconomyDetail {
+  country: 'england';
+  /** the year the figures stand for, and the year of the starting position */
+  year: number; baseYear: number;
+  /** the model computes the economy at this scale (0.01: one person of the model stands for a hundred) */
+  scale: number;
+  /** real GDP at the prices of the base year, and as an index with the base year at 100 */
+  realGdp: number; realGdpIndex: number;
+  /** price level of GDP, base year 100 */
+  priceIndex: number;
+  /** at the prices of the base year: consumption of households, purchases of the crown, investment (firms and
+   *  dwellings), exports with their duty, imports */
+  consumption: number; crown: number; investment: number; exports: number; imports: number;
+  /** persons at work (employees and the owners of firms) and workers without an employer */
+  employed: number; unemployed: number;
+  /** coin held by households and by firms, at current prices */
+  coinHouseholds: number; coinFirms: number;
+  /** why the economy stands still (absent while it runs) */
+  halted?: string;
 }
 export interface HarvestDetail {
   /** kilocalories of food from arable farming in the year, and per head and day */

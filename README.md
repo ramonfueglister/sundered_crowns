@@ -12,6 +12,7 @@ topic before it is built: [docs/ECONOMY_DESIGN.md](docs/ECONOMY_DESIGN.md).
 ## Run locally
 ```
 npm install
+npm run economy:build   # the economy engine (WebAssembly); needs the Rust toolchain, https://rustup.rs
 npm run world      # world server at ws://localhost:8787 (DEV login by display name when Supabase is not set)
 npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
 ```
@@ -23,6 +24,8 @@ npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
 - `src/net/`: the wire protocol, the views the server sends, and the browser's connection.
 - `src/render/`: the WebGPU map.
 - `src/ui/`: the Preact interface.
+- `economy/`: the economy engine, a Rust shell around the port of BeforeIT.jl, built to WebAssembly
+  (`npm run economy:build`; needs the Rust toolchain). `data/economy/` holds its calibration table.
 - `server/`: the world server (`world.ts` core, `main.ts` WebSocket transport, `auth.ts`, `store.ts` for Supabase).
 - `supabase/migrations/`: accounts, worlds and seats with Row Level Security.
 - `tools/geo/` builds the map, `tools/history/` the start setups.
@@ -31,6 +34,9 @@ More: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_SCHEMA.md](docs/D
 
 ## Tests
 ```
-npx vitest run     # foundation, world server replay and resume, auth, Row Level Security of all migrations
+npx vitest run     # foundation, economy, world server replay and resume, auth, Row Level Security of all migrations
 npm run typecheck
+(cd economy && cargo test --release --locked)   # the shell around the port
 ```
+The tests build the economy engine first and need the Rust toolchain (https://rustup.rs; the compiler version is
+fixed in `economy/rust-toolchain.toml`). The world server image builds the engine itself.

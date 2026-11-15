@@ -8,6 +8,8 @@ world-data
 !.env.example
 tools/geo
 public/map
+public/audio
+economy/target
 test-results
 playwright-report
 *.log

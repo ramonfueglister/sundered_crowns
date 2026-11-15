@@ -19,7 +19,18 @@ never simulate. The world has no end date: it runs one day per `SECONDS_PER_DAY`
 Everything that changes the state is a log entry (`cmd`, `claim`, `release`), applied in order and appended to the
 command log between day markers. Snapshots are written every `SNAPSHOT_EVERY_DAYS`; on start the server loads the
 latest and replays the log after it. `verifyReplay` checks that a snapshot plus the log reproduces the live state.
-Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`) or from `hash01` of ids.
+Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`), from `hash01` of ids, or from the
+generator inside the state of an economy (below).
+
+## The economy engine
+National economies are computed by the port of BeforeIT.jl (github.com/ramonfueglister/port-beforeit), unchanged and
+pinned to one commit. `economy/` is a Rust shell around it, built to one WebAssembly file
+(`build/economy/sc_economy.wasm`: `npm run economy:build`, or the Rust stage of `server/Dockerfile`).
+`src/sim/economy/engine.ts` loads it. The engine holds nothing between calls: the state of an economy is a block of
+bytes in the state of the world (`state.economy`), and a period maps bytes to bytes. So the economy is in every
+snapshot and in its hash, and replays like everything else. Its random numbers come from the port's own generator,
+whose state is part of those bytes. `src/sim/systems/economy.ts` computes one period on the first day of each year
+(docs/ECONOMY_DESIGN.md, feature 3).
 
 ## Commands
 `src/sim/commands.ts` keeps one definition per command kind: a check that names the reason when it cannot be done,
