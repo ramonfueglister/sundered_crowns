@@ -237,6 +237,8 @@ const SIZE_OVER = 0.7;
 const LONGER = 0.012;
 /** besides its own way, a name may run level or this far turned from it (radians), carried that way only if this much larger */
 const AXIS_TURN = 0.4, OTHER_WAY = 0.92;
+/** a steep name reads worse than a level one: it is carried that way only if larger by this share of its steepness (sine squared) */
+const STEEP = 0.3;
 /** a name bends no further than this share of its length */
 const BEND_MOST = 0.16, TILT_MOST = 0.3;
 /** the bounding box of a piece is padded by this many sampled pixels */
@@ -333,7 +335,7 @@ export function realmNames(r: Realms, every = 4, nameOf: (realm: number) => stri
     const step = STEP_PX / every;
     let pick: RealmName | undefined, score = 0;
     for (const along of axes) {
-    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux, own = along === prefer ? 1 : OTHER_WAY;
+    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux, own = (along === prefer ? 1 : OTHER_WAY) * (1 - STEEP * Math.sin(along) ** 2);
     let span = 1;
     for (const i of cells) { const x = i % w - mx, y = (i - (i % w)) / w - my; span = Math.max(span, Math.abs(x * ux + y * uy) + 1); }
     // slices across the long axis: in each, the point deepest inside the piece (on its ridge, the medial axis) and its depth
