@@ -221,31 +221,46 @@ export interface RealmName {
 const SLICES = 24;
 /** as names.ts lays them, a name fills at most this share of its curve, its letters this wide for their height, standing no further apart than this many times their height */
 const NAME_FILL = 0.84, NAME_ASPECT = 0.46, SPREAD_MOST = 0.9;
-/** a letter reaches this share of its height to either side of the curve (EB Garamond, mixed case, centred on it), and is kept this share of its height off the ends */
-const HALF_HEIGHT = 0.4, MARGIN = 0.1;
+/**
+ * How far the letters reach from the curve they are centred on, in shares of their size, as measured on EB Garamond 500
+ * in the browser: capitals, ascenders and small letters with marks 0.35 above, accented capitals 0.52; the baseline
+ * 0.34 below, descenders 0.54. Each with a little room more; the ends are kept this share of the size off.
+ */
+const ABOVE = 0.38, ABOVE_MARKED = 0.56, BELOW = 0.37, BELOW_DESCENDING = 0.57, MARGIN = 0.1;
+/** capitals with a mark over them, and letters reaching below the baseline */
+const MARKED_CAPITAL = /[\u00C0-\u00DD\u0100-\u017F]/u, DESCENDING = /[gjpqyçQŞşŢţȘșȚțąęįųĄĘĮŲ,;ƒ]/u;
+/** the letters are tested this many map pixels apart */
+const STEP_PX = 1.5;
 /** no name is taller than this share of the land's breadth where it runs */
 const SIZE_OVER = 0.7;
 /** a little in favour of the longer stretch, so that a name is spread as on a map rather than squeezed */
 const LONGER = 0.012;
 /** besides its own way, a name may run level or this far turned from it (radians), carried that way only if this much larger */
 const AXIS_TURN = 0.4, OTHER_WAY = 0.92;
+/** a steep name reads worse than a level one: it is carried that way only if larger by this share of its steepness (sine squared) */
+const STEEP = 0.3;
 /** a name bends no further than this share of its length */
 const BEND_MOST = 0.16, TILT_MOST = 0.3;
 /** the bounding box of a piece is padded by this many sampled pixels */
 const PAD = 2;
 /** an enclave of another realm of no more than this many sampled pixels does not stop a name */
-const ENCLAVE = 6;
+const ENCLAVE = 0;
 /** nor does a lake or land without a realm inside it of no more than this many */
-const LAKE = 6;
+const LAKE = 0;
 /** a piece less than this many times as long as broad has its name run level (fully from 0.6 more) */
 const ROUND = 1.3;
 
-/** The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along. */
-export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => number = () => 8): RealmName[] {
+/**
+ * The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along.
+ * With a `frame` (map pixels, see extent.ts), only the land inside it counts: a realm reaching out of the world the game
+ * shows has its name written over the part that is shown.
+ */
+export function realmNames(r: Realms, every = 4, nameOf: (realm: number) => string = () => 'Xxxxxxxx', frame?: { west: number; east: number; north: number; south: number }): RealmName[] {
   // over the game map, or over the whole world frame where the rest of the globe has its places
   const W = r.rest ? Math.round(r.rest.w / r.rest.cells) : r.w, H = r.rest ? Math.round(r.rest.h / r.rest.cells) : r.h;
   const w = Math.floor(W / every), h = Math.floor(H / every), lands = r.owner.length, of = new Int16Array(w * h), piece = new Int32Array(w * h).fill(-1);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = placeAt(r, x * every, y * every); of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
+  const shown = (x: number, y: number) => !frame || (x >= frame.west && x < frame.east && y >= frame.north && y < frame.south);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = shown(x * every, y * every) ? placeAt(r, x * every, y * every) : -1; of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
   const best = new Map<number, { id: number; n: number; sx: number; sy: number; sxx: number; syy: number; sxy: number }>(), stack: number[] = [];
   let pieces = 0;
   for (let start = 0; start < w * h; start++) {
@@ -315,10 +330,12 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     // (another way than its own a little less willingly)
     const axes = [prefer];
     for (const t of [0, prefer - AXIS_TURN, prefer + AXIS_TURN]) if (Math.abs(t) < 1.4 && axes.every((q) => Math.abs(q - t) > 0.15)) axes.push(t);
-    const letters = Math.max(3, lettersOf(realm));
+    const written = nameOf(realm), letters = Math.max(3, [...written].length);
+    const above = [...written].some((c) => MARKED_CAPITAL.test(c) && c === c.toUpperCase() && c !== c.toLowerCase()) ? ABOVE_MARKED : ABOVE, below = DESCENDING.test(written) ? BELOW_DESCENDING : BELOW;
+    const step = STEP_PX / every;
     let pick: RealmName | undefined, score = 0;
     for (const along of axes) {
-    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux, own = along === prefer ? 1 : OTHER_WAY;
+    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux, own = (along === prefer ? 1 : OTHER_WAY) * (1 - STEEP * Math.sin(along) ** 2);
     let span = 1;
     for (const i of cells) { const x = i % w - mx, y = (i - (i % w)) / w - my; span = Math.max(span, Math.abs(x * ux + y * uy) + 1); }
     // slices across the long axis: in each, the point deepest inside the piece (on its ridge, the medial axis) and its depth
@@ -336,7 +353,9 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     const free = (gx: number, gy: number) => {
       const x = Math.round(gx) - bx0 + pad, y = Math.round(gy) - by0 + pad;
       if (x < 0 || y < 0 || x >= bw || y >= bh) return false;
-      const place = placeAt(r, Math.floor((gx + 0.5) * every), Math.floor((gy + 0.5) * every)), own = place >= 0 && place < lands ? r.owner[place] : -1;
+      const mx0 = Math.floor((gx + 0.5) * every), my0 = Math.floor((gy + 0.5) * every);
+      if (!shown(mx0, my0)) return false;
+      const place = placeAt(r, mx0, my0), own = place >= 0 && place < lands ? r.owner[place] : -1;
       return own === realm ? blocked[y * bw + x] !== 1 && blocked[y * bw + x] !== 3 : blocked[y * bw + x] === 2;
     };
     /** the name's curve through slices `first` … `last` (straight: no bend) and the largest size its letters all keep to the land at */
@@ -372,13 +391,13 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
         return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, -ty, tx];
       };
       const span0 = chord * NAME_FILL, most = Math.min(SIZE_OVER * Math.max(...thick.slice(first, last + 1)), span0 / (letters * NAME_ASPECT));
-      /** whether every letter at this size lies on the piece: sampled at most half a sampled pixel apart */
+      /** whether every letter at this size lies on the piece, from its top to its lowest reach (towards the curve's right, down the page) */
       const fits = (size: number) => {
         const spread = Math.min(span0, letters * size * (NAME_ASPECT + SPREAD_MOST)), from = total / 2 - spread / 2 - size * MARGIN, to = total / 2 + spread / 2 + size * MARGIN;
-        const half = size * HALF_HEIGHT, across = Math.max(2, Math.ceil((2 * half) / 0.5)), along = Math.max(2, Math.ceil((to - from) / 0.5));
+        const top = -size * above - step / 2, bottom = size * below + step / 2, across = Math.max(2, Math.ceil((bottom - top) / step)), along = Math.max(2, Math.ceil((to - from) / step));
         for (let i = 0; i <= along; i++) {
           const [px, py, nx, ny] = pointAt(from + ((to - from) * i) / along);
-          for (let j = 0; j <= across; j++) { const o = -half + (2 * half * j) / across; if (!free(px + nx * o, py + ny * o)) return false; }
+          for (let j = 0; j <= across; j++) { const o = top + ((bottom - top) * j) / across; if (!free(px + nx * o, py + ny * o)) return false; }
         }
         return true;
       };
