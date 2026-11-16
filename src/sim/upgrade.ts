@@ -1,14 +1,15 @@
 // Brings the state of a world that was saved by an older build up to this build's STATE_VERSION. The world runs
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
-import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA } from './state';
+import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
+import { foundRulers } from './systems/rulers';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -56,6 +57,21 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     foundEconomy(s, w);
     s.v = 14;
+  }
+  if (s.v === 14) { // 14 → 15: the rulers (src/sim/systems/rulers.ts). Every realm gets a holder and every person the
+    // day of death (nobody has died: all live); the rulers of the chronicle come into the world as they would have
+    // since the first day, so the holders are those of the day the world has reached. The economies stay as they
+    // are: rulers have no part in them.
+    const hadDied = 'died' in s.person.cols, hadHolder = 'holder' in s.realm.cols;
+    for (const [table, schema] of [[s.realm, REALM_SCHEMA], [s.person, PERSON_SCHEMA]] as const) {
+      const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
+      for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+      (table as { cols: unknown }).cols = fresh;
+    }
+    if (!hadDied) s.person.cols.died.fill(ALIVE);
+    if (!hadHolder) s.realm.cols.holder.fill(-1);
+    if (!s.named) { s.named = []; foundRulers(s, w); }
+    s.v = 15;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

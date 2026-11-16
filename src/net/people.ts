@@ -2,6 +2,7 @@
 // for the figures that walk its streets, and one person in full, for the portrait and the panel a click opens.
 // Read-only HTTP: GET /people/<place> and GET /person/<id> (server/main.ts).
 import type { WorldState } from '../sim/state';
+import { ALIVE, BORN_UNKNOWN } from '../sim/state';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
@@ -49,7 +50,8 @@ export interface PersonHousehold {
 /** One person in full. */
 export interface PersonDetail {
   id: number; alive: boolean; day: number;
-  female: boolean; born: number; age: number;
+  /** born: BORN_UNKNOWN (−2³¹) when no source gives it, and then age null */
+  female: boolean; born: number; age: number | null;
   mother: number; father: number; family: number;
   /** the place the person lives in and its culture (the key of src/sim/content/peoples.ts) */
   place: number; culture: string;
@@ -62,6 +64,30 @@ export interface PersonDetail {
   economy: PersonEconomy | null;
   /** null in a world without economies of the cities */
   household: PersonHousehold | null;
+  /** a person of history (a ruler, src/sim/systems/rulers.ts); null for everybody else */
+  history: PersonHistory | null;
+}
+
+/** Who a person of history is: the name, the house and the Wikidata id of the sources, the realms whose crown the
+ *  person holds on the day, and the day of death (null while the person lives). */
+export interface PersonHistory {
+  name: string; house: string; qid: string;
+  /** the realms: the key (the id of the setup) and the German short name */
+  crowns: { key: string; name: string }[];
+  died: number | null;
+}
+
+export function personHistory(s: WorldState, id: number): PersonHistory | null {
+  const n = (s.named ?? []).find((x) => x.person === id);
+  if (!n) return null;
+  const crowns: PersonHistory['crowns'] = [];
+  for (let r = 0; r < s.realm.size; r++) {
+    if (s.realm.cols.holder[r] !== id) continue;
+    const t = s.realmText[r];
+    crowns.push({ key: t.key, name: t.name.de ?? t.name.en });
+  }
+  const d = s.person.cols.died[id];
+  return { name: n.name, house: n.house, qid: n.qid, crowns, died: d === ALIVE ? null : d };
 }
 
 const ROLES: Record<number, PersonEconomy['role']> = { [ROLE.worker]: 'worker', [ROLE.owner]: 'owner', [ROLE.banker]: 'banker' };
@@ -87,7 +113,7 @@ export function personHousehold(s: WorldState, id: number): PersonHousehold | nu
 export function placePeople(s: WorldState, place: number): PlacePeople {
   const P = s.person.cols, out: PlacePeople = { place, day: s.day, id: [], born: [], sex: [], family: [] };
   for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || s.family.cols.place[P.family[i]] !== place) continue;
+    if (!s.person.alive[i] || P.died[i] !== ALIVE || s.family.cols.place[P.family[i]] !== place) continue;
     out.id.push(i); out.born.push(P.born[i]); out.sex.push(P.sex[i]); out.family.push(P.family[i]);
   }
   return out;
@@ -97,13 +123,15 @@ export function personDetail(s: WorldState, id: number, cultureKey: (index: numb
   if (!Number.isInteger(id) || id < 0 || id >= s.person.size) return null;
   const P = s.person.cols, place = s.family.cols.place[P.family[id]];
   return {
-    id, alive: s.person.alive[id] === 1, day: s.day,
-    female: P.sex[id] === 0, born: P.born[id], age: Math.round(((s.day - P.born[id]) / 365.25) * 10) / 10,
+    id, alive: s.person.alive[id] === 1 && P.died[id] === ALIVE, day: s.day,
+    female: P.sex[id] === 0, born: P.born[id],
+    age: P.born[id] === BORN_UNKNOWN ? null : Math.round(((Math.min(s.day, P.died[id]) - P.born[id]) / 365.25) * 10) / 10,
     mother: P.mother[id], father: P.father[id], family: P.family[id],
     place, culture: cultureKey(s.place.culture[place]),
     iq: P.iq[id], big5: [P.o[id], P.c[id], P.e[id], P.a[id], P.n[id]],
     genes: Array.from(genesOf(s, id).subarray(0, 2 * NG)),
     economy: personEconomy(s, id),
     household: personHousehold(s, id),
+    history: personHistory(s, id),
   };
 }

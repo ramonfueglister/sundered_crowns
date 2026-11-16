@@ -4,6 +4,7 @@ import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
 import type { EconomyClock, EconomyEngine, EconomyRules } from './economy/engine';
 import type { CalibrationTable } from './economy/calibration';
+import type { Chronicle } from './content/chronicle';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -79,6 +80,9 @@ export class World {
   rivers: GeoJson['rivers'];
   kmPerPx: Float32Array; // per location
 
+  /** the chronicle of rulers of the start year of the world this build plays (src/sim/content/chronicle.ts), null
+   *  without one: then no realm has a holder. Set by the loader (tools/sim/load.ts) */
+  chronicle: Chronicle | null = null;
   constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;

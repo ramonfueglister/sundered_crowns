@@ -4,5 +4,6 @@ import type { System } from '../schedule';
 import { cultivation } from './cultivation';
 import { harvest } from './harvest';
 import { cityEconomies } from './economy';
+import { rulers } from './rulers';
 
-export const SYSTEMS: readonly System[] = [cultivation, harvest, cityEconomies];
+export const SYSTEMS: readonly System[] = [cultivation, harvest, cityEconomies, rulers];
