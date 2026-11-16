@@ -20,9 +20,9 @@ export function economyRows(p: PersonDetail): [string, string][] {
   const e = p.economy;
   if (!e) return [];
   if (e.role === 'none') return [['Erwerb', 'nicht erwerbstätig']];
-  const firm = e.firm >= 0 ? `${SECTORS[e.sector] ?? 'Betrieb'}, ${e.employees} Beschäftigte` : '';
+  const firm: [string, string][] = e.firm >= 0 ? [['Betrieb', SECTORS[e.sector] ?? 'Betrieb'], ['Beschäftigte im Betrieb', String(e.employees)]] : [];
   const rows: [string, string][] = e.role === 'worker'
-    ? (e.firm >= 0 ? [['Erwerb', p.female ? 'Arbeiterin' : 'Arbeiter'], ['Betrieb', firm], ['Lohn am Tag', pence(e.wage)]] : [['Erwerb', 'ohne Arbeit']])
-    : e.role === 'owner' ? [['Erwerb', 'führt einen Betrieb'], ['Betrieb', firm]] : [['Erwerb', 'führt die Bank der Stadt']];
+    ? (e.firm >= 0 ? [['Erwerb', p.female ? 'Arbeiterin' : 'Arbeiter'], ...firm, ['Lohn am Tag', pence(e.wage)]] : [['Erwerb', 'ohne Arbeit']])
+    : e.role === 'owner' ? [['Erwerb', 'führt einen Betrieb'], ...firm] : [['Erwerb', 'führt die Bank der Stadt']];
   return [...rows, ['Einkommen am Tag', pence(e.income)], ['Ausgaben am Tag', pence(e.spent)], ['Erspartes', lsd(e.savings)]];
 }

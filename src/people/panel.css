@@ -22,7 +22,7 @@
   background: radial-gradient(ellipse at 50% 35%, #2a5878 0%, #10283b 80%);
 }
 .person-panel .facts { width: 100%; border-collapse: collapse; }
-.person-panel .facts th { text-align: left; font-weight: 500; color: var(--tx2); padding: 3px 8px 3px 0; }
+.person-panel .facts th { text-align: left; font-weight: 500; color: var(--tx2); padding: 3px 8px 3px 0; white-space: nowrap; }
 .person-panel .facts td { text-align: right; padding: 3px 0; white-space: nowrap; }
 .person-panel .section { margin-top: 10px; border-top: 1px solid rgba(166, 194, 208, .35); padding-top: 8px; }
 .person-panel .section h3 { margin: 0 0 6px; color: var(--gold); font-size: 1.05em; font-weight: 600; }

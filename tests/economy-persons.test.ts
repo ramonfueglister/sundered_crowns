@@ -233,10 +233,11 @@ describe('a person', () => {
   it('is shown in the panel with work, wage, income, spending and savings', () => {
     const worker = by[ROLE.worker].find((id) => P.firm[id] >= 0)!, d = personDetail(s, worker, () => 'x')!;
     const rows = economyRows(d);
-    expect(rows.map((r) => r[0])).toEqual(['Erwerb', 'Betrieb', 'Lohn am Tag', 'Einkommen am Tag', 'Ausgaben am Tag', 'Erspartes']);
+    expect(rows.map((r) => r[0])).toEqual(['Erwerb', 'Betrieb', 'Beschäftigte im Betrieb', 'Lohn am Tag', 'Einkommen am Tag', 'Ausgaben am Tag', 'Erspartes']);
     expect(rows[0][1]).toBe(d.female ? 'Arbeiterin' : 'Arbeiter');
-    expect(rows[1][1]).toMatch(/^(Landwirtschaft|Gewerbe|Dienste), \d+ Beschäftigte$/);
-    expect(rows[2][1]).toBe(pence(d.economy!.wage));
+    expect(['Landwirtschaft', 'Gewerbe', 'Dienste']).toContain(rows[1][1]);
+    expect(rows[2][1]).toBe(String(d.economy!.employees));
+    expect(rows[3][1]).toBe(pence(d.economy!.wage));
     expect(economyRows(personDetail(s, by[ROLE.owner][0], () => 'x')!)[0]).toEqual(['Erwerb', 'führt einen Betrieb']);
     expect(economyRows(personDetail(s, by[ROLE.banker][0], () => 'x')!)[0]).toEqual(['Erwerb', 'führt die Bank der Stadt']);
     expect(economyRows(personDetail(s, by[ROLE.idle][0], () => 'x')!)).toEqual([['Erwerb', 'nicht erwerbstätig']]);
