@@ -1,6 +1,6 @@
 # Haushalt der Familie
 
-**Status:** Beschlossen (am 16.11.2026 freigegeben und gebaut; noch nicht in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 16.11.2026 freigegeben und gebaut; seit dem 16.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Die Familie ist die Kasse. Was ihre Erwerbstätigen verdienen, ist das Einkommen aller, und was sie ausgibt, verbrauchen alle: Erwachsene einen ganzen Korb, Kinder unter 15 einen halben. Eine Frau ohne Mann arbeitet immer.
 
@@ -88,7 +88,7 @@ Die Welt hat ein Hundertstel der Menschen der wirklichen. Jede Familie ist eine 
 
 ## Laufende Welt
 
-Noch nicht in der laufenden Welt. Beim Aufspielen bekommen die Familien ihre Kasse, und die Wirtschaften der Städte werden am erreichten Tag neu gegründet, weil sich ändert, wer arbeitet. Die bisherigen Tage und Jahreszahlen der Wirtschaften gehen dabei verloren.
+Die laufende Welt (Start 1291) rechnet seit dem 16.11.2026 so: Am Tag 83 bekamen die Familien ihre Kasse, und die Wirtschaften ihrer 30 Städte wurden neu gegründet, weil sich geändert hat, wer arbeitet. Die bisherigen Tage und Jahreszahlen der Wirtschaften gingen dabei verloren.
 
 ## Grenzen
 
