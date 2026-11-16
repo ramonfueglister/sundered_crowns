@@ -42,8 +42,25 @@ const MODELS_UNTIL = 2;
 const SEARCH = 16;
 /** fields at the finest step lie in lots of eleven by eight blocks (settle.ts) */
 const LOT_W = 11, LOT_D = 8;
-/** a lot at a step: its sides in blocks, and the share of its blocks that are its field (all, once it is too small to keep a balk) */
-const lotAt = (step: number) => { const w = Math.max(1, Math.round(LOT_W / 2 ** step)), d = Math.max(1, Math.round(LOT_D / 2 ** step)); return { w, d, fill: w >= 4 ? ((w - 1) * (d - 1)) / (w * d) : 1 }; };
+/**
+ * A lot at a step. The lots are those of the finest step (settle.ts), at the same places of the world at every step:
+ * rows of LOT_D finest blocks, every other row set off by half a lot, the field inside a balk at the lot's low sides.
+ * A block of the step belongs to the lot its middle lies in. While a lot is at least four blocks wide (`hedged`) its
+ * blocks along the low sides are the balk, and `fill` is the share of its blocks that are its field; coarser, all
+ * of the lot is field. `blended`: a lot is no larger than a block.
+ */
+const lotAt = (step: number) => {
+  const wider = 2 ** step, hedged = LOT_W / wider >= 4, blended = Math.max(1, Math.round(LOT_W / wider)) * Math.max(1, Math.round(LOT_D / wider)) === 1;
+  let field = 0, all = 0;
+  // the lots repeat after two of them along and two rows across
+  if (hedged) for (let z = 0; z < 2 * LOT_D; z++) for (let x = 0; x < 2 * LOT_W; x++) { all++; if (spotOf((x + 0.5) * wider, (z + 0.5) * wider, wider).field) field++; }
+  return { hedged, blended, fill: hedged ? field / all : 1 };
+};
+/** Where a point of the world (in finest blocks) lies among the lots: the lot, how far into it along and across, and whether that is its field at blocks `wider` wide. */
+function spotOf(fx: number, fz: number, wider: number) {
+  const lz = Math.floor(fz / LOT_D), shift = lz & 1 ? Math.floor(LOT_W / 2) : 0, lx = Math.floor((fx - shift) / LOT_W), u = fx - shift - lx * LOT_W, v = fz - lz * LOT_D;
+  return { lx, lz, shift, u, v, field: u >= wider && v >= wider };
+}
 /** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
 export const lotFill = (step: number) => lotAt(step).fill;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
@@ -143,21 +160,24 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // fields: the lots of the finest step, as large as they are. While a lot is wide enough to show it, it keeps a
   // balk's width free on two sides, the crop stands a block high and the farmhouses stand at the fields' corners.
   // A field that lies fallow is the grass with its stubble showing through, one under spring corn is green.
-  const { w: lotW, d: lotD, fill } = lotAt(step), hedged = fill < 1, blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
+  const { hedged, blended, fill } = lotAt(step), raised = new Uint8Array(N * N);
   const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
   const springOf = (lx: number, lz: number): [RGB, RGB] => [field(pick(OATS, hash2(lx, lz, 68)), !hedged, OATS_SIDE), OATS_SIDE];
-  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + step) < o.vines(mx, mz) ? [VINEYARD, shade(VINE_BODY, 0.8)] : [field(pick(WHEAT, hash2(lx, lz, 68)), !hedged), WHEAT_SIDE]);
+  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67) < o.vines(mx, mz) ? [VINEYARD, shade(VINE_BODY, 0.8)] : [field(pick(WHEAT, hash2(lx, lz, 68)), !hedged), WHEAT_SIDE]);
+  // the lots, their crops and their courses are those of the finest step (settle.ts: the same lot, the same lots
+  // drawn by the same numbers), so that a field stays the field it is from step to step
   if (!blended) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || !level(x, z)) continue;
-    const wz = z + oz, lz = Math.floor(wz / lotD), shift = lz & 1 ? Math.floor(lotW / 2) : 0, wx = x + ox + shift, lx = Math.floor(wx / lotW);
-    const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
-    if (hash2(lx, lz, 65 + step) > o.ploughed(mx, mz) / fill) continue;
-    if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) {
+    const at = spotOf((x + ox + 0.5) * wider, (z + oz + 0.5) * wider, wider), { lx, lz } = at;
+    const mx = ((lx + 0.5) * LOT_W + at.shift) / wider - ox, mz = ((lz + 0.5) * LOT_D) / wider - oz;
+    if (hash2(lx, lz, 65) > o.ploughed(mx, mz) / fill) continue;
+    if (!at.field) {
       // a hamlet at the end of the field: a block of houses at its corner and one a block on
-      if (wx - lx * lotW === lotW - 1 && (wz - lz * lotD) % 2 === 0 && wz - lz * lotD < 2 * HAMLET && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS) / HAMLET) house(o.farm(mx, mz), x, z, 1);
+      const row = Math.floor(at.v / wider);
+      if (at.u < wider && row % 2 === 0 && row < 2 * HAMLET && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS) / HAMLET) house(o.farm(mx, mz), x, z, 1);
       continue;
     }
-    const course = courseOf(courses(mx, mz), hash2(lx, lz, 166 + step));
+    const course = courseOf(courses(mx, mz), hash2(lx, lz, 66));
     if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)));
     raised[idx(x, z)] = hedged ? 1 : 0;
