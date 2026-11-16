@@ -149,6 +149,12 @@ export const APOLEIA: StageProfile = {
  *  degrees: L 12); lower (26 degrees), the shade under the brow goes and with it the eye's depth.
  *  Round 75: `turn` and the dress table's `gaze` belong together (portrait/src/dress.rs): the eyes look at the
  *  camera when the gaze's first value is this turn with the other sign (tests/portrait.test.ts).
+ *  Round 76: brows and lashes have images of England's own (portrait/src/dress.rs `brow_image`, `lash_image`):
+ *  the brow's hairs soft as MakeHuman drew them, where Apoleia's image is a closed band with a hard rim, and
+ *  the lashes a soft fringe, where MakeHuman's are single hairs. Both are drawn more densely in turn
+ *  (`brow.brows` 0.8, before 0.5; `brow.lashes` 0.6, before 0.3). Grown women's brow 38.2 L darker than the
+ *  skin over it and 0.045 of the face broad at half its darkness (the reference 37.9 and 0.045; before 38.9 and
+ *  0.050); the lid's rim as dark as before (the painted line under the lashes weaker, `lash_line`).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -165,7 +171,7 @@ export const ENGLAND_1356: StageProfile = {
   anisotropy: 8,
   skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
-  brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.5 },
+  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.8 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },

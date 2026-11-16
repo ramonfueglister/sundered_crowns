@@ -1092,6 +1092,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age));
             for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
                 if let Some(mut sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
+                    // a dress may draw another image on the brow's cards and on the lashes' (`DressSet::brow_image`,
+                    // `lash_image`)
+                    if let Some(img) = garb.map(|d| if name == brow { d.brow_image } else { d.lash_image }).filter(|i| !i.is_empty()) {
+                        sf.tex = Some(crate::real::image(dir, img));
+                    }
                     // a narrower band: every corner drawn towards the middle of those that stand at its place along
                     // the brow (the card is a strip of five corners across, columns a good 4 mm apart)
                     if band != 1.0 && name == brow {

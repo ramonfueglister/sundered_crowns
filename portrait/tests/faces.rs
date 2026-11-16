@@ -205,6 +205,23 @@ fn a_woman_of_england_wears_her_brows_higher_and_narrower_than_makehuman_draws_t
 }
 
 #[test]
+fn the_brows_and_lashes_of_england_are_drawn_with_its_own_images() {
+    // Apoleia's image of the brow is MakeHuman's with the hairs' covering times 2.5: a closed band with a hard
+    // rim, a dark bar at a game's size. MakeHuman's lashes are long single hairs: thin they do not show, dense
+    // they are a doll's. Since round 76 England names an image of its own for each, on the cards of MakeHuman's.
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert_eq!((set.brows, set.brow_image, set.lash_image), (["eyebrow001"; 2], "eyebrow1356", "Eyelashes1356"));
+    for k in 0..4 {
+        let out = build(&h, &person(k, k % 2 == 0, [5.0, 35.0][(k / 2) as usize % 2]), 1);
+        let worn = |name: &str| out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(name))).count();
+        // (the image is there: without the file the builder would name a .png)
+        assert_eq!((worn("/eyebrow1356.webp"), worn("/Eyelashes1356.webp")), (1, 1), "person {k}");
+        assert_eq!((worn("/eyebrow001."), worn("/Eyelashes01.")), (0, 0), "person {k}");
+    }
+}
+
+#[test]
 fn a_scar_of_england_is_a_pale_line_in_the_skin() {
     // Until round 72 a scar was Apoleia's raised ribbon: a surface without the skin's image, with facets, in a
     // colour mixed for skin without an image. On a face of the real look it was a dark brown strip of bark (two

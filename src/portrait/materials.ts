@@ -13,7 +13,9 @@ import {
 import { APOLEIA, type StageProfile } from './profile';
 import type { PortraitSurface } from './wire';
 
-/** What kind of surface an image belongs to, in the order Apoleia's bridge asks. */
+/** What kind of surface an image belongs to, in the order Apoleia's bridge asks. Brows and lashes are known by
+ *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
+ *  hair card. */
 export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {

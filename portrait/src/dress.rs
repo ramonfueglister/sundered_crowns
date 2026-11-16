@@ -136,6 +136,18 @@ pub struct DressSet {
     /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
     /// frown. How heavy a brow reads is `brows` in the stage's profile (src/portrait/profile.ts).
     pub brows: [&'static str; 2],
+    /// The image drawn on the brow's cards, if not the one that comes with `brows` ("" = that one). The cards and
+    /// their place on the head stay those of `brows`. Apoleia's `eyebrow001.webp` was written with the hairs'
+    /// coverage times 2.5 (tools/portrait/pipeline `tex.py`, `ALPHA_GAIN`): where MakeHuman's image has single
+    /// hairs with soft edges that thin out towards the brow's rim and its tail, that one is a closed band with a
+    /// hard rim. Seen at a game's size the band is a dark bar; the reference's brow is darkest in its core and
+    /// fades into the skin. `eyebrow1356.webp` is MakeHuman's image written as it is (gain 1), drawn more densely
+    /// in turn (the stage's `brow.brows`, src/portrait/profile.ts: 0.8, before 0.5), and with the thin streak at
+    /// the brow's outer end faded out (`brow_tail.py`: on the head it was a drawn line from the brow's tail down
+    /// towards the temple). Read in the picture at the reference's size, a grown woman's brow is 38.2 L darker
+    /// than the skin over it and 0.045 of the face's length broad at half its darkness (the reference's woman's
+    /// 37.9 and 0.045; with Apoleia's image 38.9 and 0.050), a man's 36.6 and 0.036 (37.2 and 0.039).
+    pub brow_image: &'static str,
     /// How far a small child's brows are mixed towards the colour of its skin, fading as it grows up
     /// (`Look::grown`). MakeHuman's brows are an adult's, dense and dark: on a child of two they make an old
     /// man's face.
@@ -164,7 +176,8 @@ pub struct DressSet {
     /// read in the picture at the reference's size (the lightness along a line from the upper lid up to the
     /// forehead), their brow was then 0.036 of the face's length broad at half its darkness, the reference's
     /// woman's 0.045, and darker than hers. With 0.9, and drawn less densely (profile.ts `brow.brows`), 0.036 to
-    /// 0.039 still: the reference's brow has soft edges, ours a hard one. (The band is drawn together about its
+    /// 0.039 still: the reference's brow has soft edges, ours a hard one. Since round 76 the hairs are soft
+    /// (`brow_image`) and the women's brow is as broad as the reference's. (The band is drawn together about its
     /// middle: its upper edge lies half a millimetre higher with 0.9 than the heights given at `brow_lift`, by
     /// reckoning, not measured anew.)
     pub brow_band: [f32; 2],
@@ -175,8 +188,22 @@ pub struct DressSet {
     /// single hairs: drawn dense enough to frame the eye they stand off the lid as spikes, drawn thin (the stage's
     /// `brow.lashes`) the eye has no dark edge at all and lies in the face without an outline. Since round 68
     /// the line is broader on the upper lid (skin_lash.py `LINE`): at the size of the reference's eye ours was
-    /// one and a half pixels of 27 where theirs is three.
+    /// one and a half pixels of 27 where theirs is three. Until round 76 the values were 0.85 and 0.75; since
+    /// then the lashes themselves are a soft dark fringe (`lash_image`) and the line is drawn weaker by as much
+    /// as keeps the lid's rim as dark as it was (read at the reference's size, against the skin over the brow:
+    /// women -59.5 L, men -53.8; before -59.4 and -54.0; with the fringe on the old line -62.2 and -55.9; the
+    /// reference's woman about -46). Weaker still (0.55, 0.45) an old woman's lid has no dark edge of its own
+    /// left (tests/portrait.test.ts holds it).
     pub lash_line: [f32; 2],
+    /// The image drawn on the lashes' cards, if not MakeHuman's `Eyelashes01` ("" = that one). MakeHuman's is a row
+    /// of long single hairs: drawn thin they do not show, drawn dense they stand off the lid as a doll's
+    /// (rounds 65 and 76). `Eyelashes1356.webp` is the same hairs blurred into a soft fringe, and the lower lid's
+    /// much thinner than the upper's (tools/portrait/pipeline `lash_soft.py`): seen from the front a row of
+    /// lashes is a dark soft edge on the upper lid that runs out past the eye's outer corner, not single hairs.
+    /// The stage draws it twice as densely as MakeHuman's (`brow.lashes` 0.6, before 0.3). Its name has to begin
+    /// with `Eyelashes`, a brow's with `eyebrow`: by the name the stage tells them from hair cards
+    /// (src/portrait/materials.ts `surfaceKind`).
+    pub lash_image: &'static str,
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
@@ -367,12 +394,14 @@ pub static ENGLAND_1356: DressSet = DressSet {
     beard_short: "beard_short1356",
     beard_stubble: "beard_stubble1356",
     brows: ["eyebrow001", "eyebrow001"],
+    brow_image: "eyebrow1356",
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
     lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.5, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.5, seam: 1.6, child: 0.6 }],
-    lash_line: [0.85, 0.75],
+    lash_line: [0.65, 0.55],
+    lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],
     flush: [0.7, 0.5],
     flush_map: "skin_flush.txt",

@@ -992,6 +992,59 @@ than 20 degrees past it; a Roman looks straight ahead of the head). Pictures:
 Still open: what round 74 left, and for the eyes the lashes as a soft fringe, the brow's soft edge and tapering
 tail, an iris with depth; the reference's eye is narrower (the upper lid lower over the iris).
 
+**Brows of soft hairs, lashes as a fringe (round 76).** Seen large, a brow of ours was a flat dark band with a
+hard rim, the reference's is hairs, darkest in its core, that thin out into the skin. Rounds 69 to 72 had
+worked on that band through its breadth (`brow_band`) and how densely it is drawn (`brow.brows`). The cause
+lies one step earlier: Apoleia wrote its image of the brow, `eyebrow001.webp`, from MakeHuman's with the hairs'
+covering times 2.5 (`tools/portrait/pipeline/tex.py`, `ALPHA_GAIN`; written again that way, the covering of no pixel
+differs from Apoleia's). MakeHuman's own image has single hairs with soft edges, a mean covering of 0.040; times 2.5
+they close into a band, 0.079. England now has an image of its own, MakeHuman's as it is, on the same cards
+(`DressSet::brow_image`, `eyebrow1356.webp`), drawn more densely in turn. Read at the reference's size (the
+lightness along a line from the upper lid up to the forehead; `tools/portrait/face_colour.mjs --brow`):
+
+| grown women, men | brow darker than the skin over it (L) | broad at half its darkness (of the face) |
+|---|---|---|
+| the reference's woman | 37.9 | 0.045 |
+| round 75 (Apoleia's image, `brow.brows` 0.5) | 38.9, 37.2 | 0.050, 0.039 |
+| MakeHuman's image drawn in full (1) | 43.8, 41.6 | 0.041, 0.037 |
+| now (MakeHuman's image, 0.8) | 38.2, 36.6 | 0.045, 0.036 |
+
+Girls of 8 to 17 read 37.6 and 0.033, boys 32.8 and 0.029. The thin streak in which MakeHuman's brow ends, on
+the head a drawn line from the brow's tail down towards the temple, is faded out (`brow_tail.py`).
+
+The lashes: MakeHuman's are long single hairs. Thin (0.3, until now) they do not show; dense they stand off
+the lid as a doll's (round 75). Seen from the front at a portrait's distance a row of lashes is a soft dark
+edge on the upper lid that runs out past the eye's outer corner. England's image of them is MakeHuman's hairs
+blurred (`DressSet::lash_image`, `Eyelashes1356.webp`, `lash_soft.py`: by 3 pixels of 512, the covering times
+1.5), the lower lid's strips at 0.15 of that: the lower lashes hang towards the viewer and show in full, the
+upper ones are seen from below; left alike, the lower lid gets a band of kohl. The stage draws them at 0.6.
+The line painted on the lid's edge under them (`lash_line`) is weaker by as much as keeps the lid's rim as dark
+as it was, 0.65 and 0.55 for women and men (before 0.85, 0.75): the rim reads -59.5 and -53.8 L against the
+skin over the brow (round 75: -59.4, -54.0; with the fringe on the old line -62.2, -55.9; the reference's
+woman about -46). Along the lit eye from corner to corner the mean is -34.6 and -37.6 against the lit cheek
+(round 75: -35.0, -38.1; hers -28.5).
+
+Tried and dropped: MakeHuman's brow image written with the covering times 1.5 (the hairs close up again, the
+brow reads black); blurs of the lashes of 4 to 6 pixels at twice the covering and more (a bar of mascara);
+the lower lid's strips in full or at a third (kohl); the painted line at 0.55 and 0.45 (an old woman's lid
+then has no dark edge of its own left: the test of round 65 caught it); the hairs' grey carried out under the
+pixels of the brow's image that no hair covers, which are black (no effect: the covering falls off so gently
+that the black never shows).
+A trap: the stage knows brows and lashes by their image's name (`surfaceKind`: `eyebrow...`, `Eyelashes...`).
+Named `lashes1356.webp`, the fringe was drawn as a hair card, with a depth pass of its own, and the rim read
+-63.7 instead of -62.2; nothing failed. The test now holds the kind and the density of both.
+Tests: "people of England wear the dress of 1356, everyone else Apoleia's" (England's brows and lashes are
+England's images on MakeHuman's cards, drawn as brows and lashes at the profile's densities; a Roman's are
+Apoleia's) and `the_brows_and_lashes_of_england_are_drawn_with_its_own_images` (`portrait/tests/faces.rs`).
+Pictures: `runde76_brauen_wimpern_vorher_nachher.png` (six people, round 75 above round 76),
+`runde76_augen_neben_ck3.png` (the reference's woman's eyes, three women of ours before and after),
+`runde76_neben_ck3.png`, `runde76_stichprobe.png`.
+Still open: what round 74 left. A woman's lid rim is still 13 L darker than the reference's woman's and the
+skin between lid and brow 6 L; a man's brow is narrower than a woman's by this measure (0.036: his is not
+lifted and lies nearer the lid, the line may not span it); the lower lid has next to no lashes; the iris is
+flat; the reference's eye is narrower. Beside the reference the thing that now differs most on a woman is not
+in the eyes: the far cheek's outline has a pouch at the height of the nose's tip.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

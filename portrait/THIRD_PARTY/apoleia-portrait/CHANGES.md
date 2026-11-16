@@ -148,3 +148,10 @@ writes the skin's triangles and the eyeballs' vertices. Roman bytes unchanged.
 Round 75: nothing in the builder. England's `gaze` turns the eyes to the camera (its first value had the wrong
 sign since round 50). The stage's reckoning of camera and frame is a function of its own (`src/portrait/stage.ts`
 `framing`, the game's file). Roman bytes unchanged.
+
+Round 76: a dress with a table may name another image for the brow's cards and for the lashes'
+(`DressSet::brow_image`, `lash_image`; `build.rs` sets the surface's image, the cards are MakeHuman's as
+before). New, not Apoleia's: `real/eyebrow1356.webp` (MakeHuman's `eyebrow001` written without `ALPHA_GAIN`,
+its tail faded; Apoleia's `eyebrow001.webp` is the same image with the covering times 2.5),
+`real/Eyelashes1356.webp` (Apoleia's `Eyelashes01.webp` blurred into a fringe), the pipeline's `brow_tail.py`
+and `lash_soft.py`, a test in `tests/faces.rs`. Roman bytes unchanged.

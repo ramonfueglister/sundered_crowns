@@ -115,9 +115,24 @@ describe('portraits', { timeout: 20_000 }, () => {
       // women from the age of the veil wear it, men never
       expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
       expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
-      // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a frown)
-      expect(worn.some(t => t.includes('/eyebrow001.')), `person ${p.pid}: brows`).toBe(true);
-      expect(worn.some(t => /\/eyebrow0(02|05|11)\./.test(t)), `person ${p.pid}: no slanted brows`).toBe(false);
+      // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
+      // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
+      // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
+      // the lashes: England's are a soft fringe. The stage tells brows and lashes from hair cards by the image's
+      // name, and how densely it draws each (`lashes1356.webp` was drawn as a hair card, with its own depth pass)
+      const [brow, lashes] = ['/eyebrow1356.', '/Eyelashes1356.'].map(n => english.surfaces.filter(s => s.tex.includes(n)));
+      expect([brow.length, lashes.length], `person ${p.pid}: brows and lashes of England`).toEqual([1, 1]);
+      expect([surfaceKind(brow[0]), surfaceKind(lashes[0])]).toEqual(['brow', 'brow']);
+      expect(surfaceMaterials(brow[0], null, null, ENGLAND_1356)[0].opacity).toBe(ENGLAND_1356.brow!.brows);
+      expect(surfaceMaterials(lashes[0], null, null, ENGLAND_1356)[0].opacity).toBe(ENGLAND_1356.brow!.lashes);
+      expect(worn.some(t => /\/eyebrow0(01|02|05|11)\.|\/Eyelashes01\./.test(t)), `person ${p.pid}: no brows or lashes but England's`).toBe(false);
+      const romans = roman.surfaces.map(s => s.tex);
+      expect([romans.filter(t => t.includes('/eyebrow001.')).length, romans.filter(t => t.includes('/Eyelashes01.')).length], `person ${p.pid}: a Roman's`).toEqual([1, 1]);
+      expect(romans.some(t => t.includes('1356')), `person ${p.pid}: nothing of England's on a Roman`).toBe(false);
+      // the cards are the same, the image alone differs
+      const cards = (list: typeof english.surfaces, n: string) => list.find(s => s.tex.includes(n))!;
+      expect(Array.from(cards(english.surfaces, '/eyebrow1356.').uv)).toEqual(Array.from(cards(roman.surfaces, '/eyebrow001.').uv));
+      expect(Array.from(cards(english.surfaces, '/Eyelashes1356.').uv)).toEqual(Array.from(cards(roman.surfaces, '/Eyelashes01.').uv));
       // a head that loses its hair wears the dress's own hair for it, and no beard the dress leaves out
       // (nor Apoleia's short beard or stubble, whose hairs run on over the line of the mouth: on a mouth closed by
       // raising the lower lip they lie on it as a row of teeth)
