@@ -129,3 +129,38 @@ muenster,done,35,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,
 archbishopric_cologne,done,29,https://en.wikipedia.org/wiki/Archbishop_of_Cologne,secularized 1803
 hesse,done,16,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs,ends 1567 with partition among Philip I's sons; 1458–1500 Lower/Upper Hesse split included
 salzburg,done,35,https://en.wikipedia.org/wiki/Archdiocese_of_Salzburg,gap 1540–1554 in source list; secularized 1803
+como,collective,1,https://en.wikipedia.org/wiki/Como#History,Rusca lordship before 1335 noted; annexed to Milan 1335
+novara,collective,1,https://en.wikipedia.org/wiki/Novara#History,source gives no date for loss of independence
+montferrat,done,33,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,"Gonzaga to 1708, then Savoy heads (title used 1631-1861; Savoy rows from Counts and dukes of Savoy); Maria Gonzaga 1612-60 overlaps"
+tver,done,14,https://en.wikipedia.org/wiki/Prince_of_Tver,annexed by Moscow 1485
+benin,done,30,https://en.wikipedia.org/wiki/Oba_of_Benin,
+bar,done,24,https://en.wikipedia.org/wiki/Duchy_of_Bar,1508-1766 from Lorraine list (Bar identical); ends 1766 incorporation into France; row1 Theobald II d.1291 vs work list Henry III
+arborea,done,13,https://en.wikipedia.org/wiki/Judge_of_Arborea,"ends with William (1407-1410), title sold to Aragon 1420; titular Cubello rulers omitted"
+warmia,done,36,https://en.wikipedia.org/wiki/List_of_bishops_of_Warmia,"temporal rule ends 1772 (Prussian annexation); list continues as bishops, not included"
+ladik,done,4,https://en.wikipedia.org/wiki/Beylik_of_L%C3%A2dik,"list ends 1368, end of beylik not described"
+jerusalem,done,1,https://en.wikipedia.org/wiki/Monarch_of_Jerusalem,kingdom ended 1291 (fall of Acre); later titular claimants not listed
+tir_eoghain,done,25,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,multiple tenures as separate rows; list ends 1607
+sahib_ata,done,1,https://en.wikipedia.org/wiki/Sahib_Ataids,single bey in period
+liege,done,29,https://en.wikipedia.org/wiki/List_of_bishops_and_prince-bishops_of_Li%C3%A8ge,no bishop listed 1291-1295; ends with annexation by France 1795
+brunswick_wolfenbuettel,done,31,https://en.wikipedia.org/wiki/List_of_princes_of_Brunswick-Wolfenb%C3%BCttel,1279-1291 joint rule of three brothers (work list); 1318-1344 division rows; 1807-1813 Westphalian occupation gap; Duchy of Brunswick from 1815
+siena,collective,1,https://en.wikipedia.org/wiki/Republic_of_Siena,
+foix_bearn,done,16,https://en.wikipedia.org/wiki/Count_of_Foix,counts of Foix list (Béarn held jointly from Gaston I); ends 1607 reunion with French crown
+luxembourg,done,37,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,county>duchy 1354>grand duchy 1815; 1443-1467 claimants as rival claimant; French occupation 1794-1815 gap
+abbey_st_gallen,done,29,https://en.wikipedia.org/wiki/Abbey_of_Saint_Gall,secular power suppressed 1798; Vorster listed 1796-1805
+thomond,done,21,https://en.wikipedia.org/wiki/List_of_monarchs_of_Thomond,claimants included as rival claimant; ends 1543
+oppeln,partial,23,https://en.wikipedia.org/wiki/Duke_of_Opole,"Piasts to 1532 complete; later holders only as listed by source, Habsburg (kings of Bohemia) periods 1558-1597 etc. and 1666-1742 not itemised; to Prussia 1742"
+tir_chonaill,done,19,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrconnell,Niall Garbh and Rory both listed as disputed 1602/1603-1608/1626; list ends 1608
+maccarthy_mor,done,14,https://en.wikipedia.org/wiki/List_of_monarchs_of_Desmond,list of kings of Desmond ends 1596
+bourbon,done,12,https://en.wikipedia.org/wiki/Duke_of_Bourbon,lordship to 1327 then duchy; ends 1531 merger into royal domain; Beatrice reign_end not given (lordship superseded 1327)
+aquileia,done,16,https://en.wikipedia.org/wiki/List_of_bishops_and_patriarchs_of_Aquileia,ends with loss of temporal power to Venice 7 July 1420 (Louis of Teck)
+treviso,partial,3,https://en.wikipedia.org/wiki/Da_Camino,no list; assembled from Da Camino family article and two biographies; end of da Camino rule (Guecellone ousted) undated; later Treviso history not covered
+hama,done,3,https://en.wikipedia.org/wiki/List_of_Ayyubid_rulers,gap 1299-1310 direct Mamluk rule
+holstein_rendsburg,done,12,https://en.wikipedia.org/wiki/Counts_of_Schauenburg_and_Holstein,"Rendsburg line extinct 1459; Christian I 1460-1474, then elevated to Duchy of Holstein (not continued)"
+werle,done,17,https://en.wikipedia.org/wiki/Werle,"divided lordship: all parallel lords (Güstrow, Parchim/Goldberg, Waren, Penzlin lines) listed; extinct 1436"
+bremen_archbishopric,done,28,https://en.wikipedia.org/wiki/List_of_prince-archbishops%2C_archbishops%2C_bishops_and_administrators_of_Bremen,"includes elects, administrators and 1635/1645 papal appointees (as rival claimants); secularised 1648 into the Swedish Duchy of Bremen"
+archipelago,done,21,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago,"source abbreviates years (e.g. 1303-23), expanded; Ottoman-appointed dukes included; title ends 1617"
+yaroslavl,done,8,https://en.wikipedia.org/wiki/Principality_of_Yaroslavl,work list Fyodor the Black = Fyodor Rostislavich (contested with Michael to c.1290)
+hainaut,done,29,https://en.wikipedia.org/wiki/Count_of_Hainaut,title factually abolished 1795 (French annexation); Francis I listed 1792-1835 by source
+baden,done,36,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden,"Baden proper with 1288 Eberstein/Pforzheim partitions and co-rulers; Hachberg, Sausenberg, Rodemachern and pre-1771 Durlach lines excluded; elector 1803, grand duchy 1806"
+arezzo,collective,1,https://en.wikipedia.org/wiki/Arezzo#History,
+saxe_wittenberg,done,27,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony,Saxe-Wittenberg > Electorate of Saxony (1356) > Wettin 1423 > Albertine 1547 > Kingdom 1806; 1291 joint Saxon rule noted on Albert II row
