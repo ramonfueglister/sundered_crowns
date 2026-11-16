@@ -1,0 +1,29 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Bohemond I von Warnesberg,,,1286,1299,year,,Q879631,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+2,Diether von Nassau,,,1300,1307,year,,Q1223243,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+3,Heinrich II von Virneburg,,,1300,1306,year,,Q87060,in opposition (rival claimant),https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+4,Baldwin von Luxemburg,,,1307,1354,year,,Q152347,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+5,Bohemond II von Saarbrücken,,,1354,1361,year,,Q661654,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+6,Kuno II von Falkenstein,,,1362,1388,year,,Q104252,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+7,Werner von Falkenstein,,,1388,1418,year,,Q2563015,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+8,Otto von Ziegenhain,,,1418,1430,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+9,Rhaban von Helmstadt,,,1430,1438,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+10,Jakob von Sierck,,1456-05-28,1439-05-19,1456-05-28,day,,,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+11,Johann Markgraf von Baden,,1502-02-09,1456-06-21,1502-02-09,day,,Q104806,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,1380577862
+12,Jakob Markgraf von Baden,,1511-04-27,1503-02-09,1511-04-27,day,,Q105938,start = succeeded,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+13,Richard von Greiffenclau zu Vollrads,,1531-03-13,1511-05-15,1531-03-13,day,,Q91308,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+14,Johann von Metzenhausen,,1540-07-22,1531-03-27,1540-07-22,day,,Q119532,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+15,Johann Ludwig von Hagen,,1547-03-23,1540-08-09,1547-03-23,day,,Q119556,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+16,Johann von Isenburg,,1556-02-18,1547-04-20,1556-02-18,day,,Q1696445,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+17,Johann von der Leyen,,1567-02-10,1556-04-25,1567-02-10,day,,Q572386,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+18,Jakob von Eltz,,1581-06-04,1567-04-07,1581-06-04,day,,Q1679124,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+19,Johann von Schönenberg,,1599-05-01,1581-07-31,1599-05-01,day,,Q1696457,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+20,Lothar von Metternich,,1623-09-17,1599-08-07,1623-09-17,day,,Q1871059,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+21,Philipp Christoph Reichsritter von Sötern,,1652-02-07,1623-09-25,1652-02-07,day,,Q316832,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+22,Karl Kaspar Reichsfreiherr von Leyen-Hohengeroldseck,,1676-06-01,1652-02-07,1676-06-01,day,,Q1636147,start = succeeded,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+23,Johann Hugo von Orsbeck,,1711-01-06,1676-06-01,1711-01-06,day,,Q878159,start = succeeded,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+24,Karl Joseph Ignaz Herzog von Lothringen,,1715-12-04,1710-09-24,1715-12-04,day,,Q651883,start = elected (overlaps predecessor in source),https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+25,Franz Ludwig Pfalzgraf am Rhein zu Neuburg,,,1716-02-20,1729-03-03,day,,Q53109,start = elected; resigned,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+26,Franz Georg Reichsgraf von Schönborn,,1756-01-18,1729-05-02,1756-01-18,day,,Q69904,start = elected,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+27,Johann Philipp Reichsgraf von Waldendorff,,1768-01-12,1756-01-18,1768-01-12,day,,Q87686,start = succeeded,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862
+28,Klemens Wenzeslaus Herzog von Sachsen,,,1768-02-10,1801-11-29,day,,Q565780,start = elected; last archbishop-elector; from 1801 after French conquest of the left bank archbishop with effect on the right bank only; later bishops (from 1802) are not territorial rulers; resigned,https://en.wikipedia.org/wiki/Diocese_of_Trier#1500–1800,1380577862

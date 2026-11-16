@@ -1,0 +1,27 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Mieszko I,,,1290,1315,year,Silesian Piasts,Q689152,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+2,Casimir I,,,1315,1358,year,Silesian Piasts,Q689157,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+3,Przemyslaus I Noszak,,,1358,1410,year,Silesian Piasts,Q690312,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+4,Boleslaus I,,,1410,1431,year,Silesian Piasts,Q571128,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+5,Wenceslaus I,,,1431,1442,year,Silesian Piasts,Q571461,"co-ruler with Wladislaus, Boleslaus II and Przemyslaus II",https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+6,Wladislaus,,,1431,1442,year,Silesian Piasts,Q571459,"co-ruler with Wenceslaus I, Boleslaus II and Przemyslaus II",https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+7,Boleslaus II,,,1431,1452,year,Silesian Piasts,Q571457,co-ruler with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+8,Przemyslaus II,,,1431,1477,year,Silesian Piasts,Q571455,co-ruler with his brothers until 1452,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+9,Casimir II,,,1477,1528,year,Silesian Piasts,Q571451,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+10,Wenceslaus II,,,1518,1524,year,Silesian Piasts,Q324725,co-ruler with his father Casimir II,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+11,Wenceslaus III Adam,,,1528,1579,year,Silesian Piasts,Q666719,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+12,Adam Wenceslaus,,,1579,1617,year,Silesian Piasts,Q351135,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+13,Frederick William,,,1617,1625,year,Silesian Piasts,Q667875,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+14,Elizabeth Lucretia,,,1625,1653,year,Silesian Piasts,Q443664,after her death Teschen reverted to the royal domain of Bohemia,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+15,Ferdinand III,,,1653,1657,year,House of Habsburg,Q150575,title held by the king of Bohemia; start year from Duchy of Teschen page (Bohemian reign 1637-1657),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,1382627044
+16,Ferdinand IV,,,1653,1654,year,House of Habsburg,Q157103,title held by the king of Bohemia; junior co-monarch with Ferdinand III (Bohemian reign 1646-1654),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,1382627044
+17,Leopold I,,,1657,1705,year,House of Habsburg,Q150494,title held by the king of Bohemia,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,1382627044
+18,Joseph I,,,1705,1711,year,House of Habsburg,Q152480,title held by the king of Bohemia,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,1382627044
+19,Charles II (Emperor Charles VI),,,1711,1722,year,House of Habsburg,Q150665,title held by the king of Bohemia; vested Leopold of Lorraine with the ducal title in 1722 (Duchy of Teschen page),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,1382627044
+20,Leopold,,,1722,1729,year,House of Habsburg-Lorraine,Q319954,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+21,Francis I Stephen,,,1729,1765,year,House of Habsburg-Lorraine,Q151075,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+22,Joseph II,,,1765,1766,year,House of Habsburg-Lorraine,Q76555,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+23,Maria Christina,,,1766,1797,year,House of Habsburg-Lorraine,Q167439,co-ruler with her husband Albert Casimir,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+24,Albert Casimir,,,1766,1822,year,House of Habsburg-Lorraine,Q60657,co-ruler with his wife Maria Christina until 1797,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+25,Charles,,,1822,1847,year,House of Habsburg-Lorraine,Q84201,,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466
+26,Albert,,,1847,1849,year,House of Habsburg-Lorraine,Q310807,list continues 1849 as titular duke,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1273858466

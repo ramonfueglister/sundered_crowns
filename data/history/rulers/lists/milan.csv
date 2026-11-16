@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Ottone Visconti,,,1277-01-21,1295-08-08,day,Visconti,Q511984,archbishop; Matteo I Visconti captain general 1287-95,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+2,Matteo I Visconti,,,1295-08-08,1302-06,month,Visconti,Q715225,,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+3,Guido della Torre,,,1302-06,1311-01-06,month,della Torre,Q323020,,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+4,Matteo I Visconti,,,1311-01-06,1322-06-24,day,Visconti,Q715225,,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+5,Galeazzo I Visconti,,,1322-06-24,1328-08-06,day,Visconti,Q456873,,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+6,Azzone Visconti,,,1328-08-06,1339-08-16,day,Visconti,Q511928,,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+7,Luchino Visconti,,,1339-08-16,1349-01-24,day,Visconti,Q195825,co-ruler with Giovanni Visconti,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+8,Giovanni Visconti,,,1339-08-16,1354-10-05,day,Visconti,Q777163,co-ruler with Luchino Visconti until 1349,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+9,Matteo II Visconti,,,1354-10-05,1355-09-29,day,Visconti,Q711567,co-ruler with Galeazzo II and Bernabò,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+10,Galeazzo II Visconti,,,1354-10-05,1378-08-04,day,Visconti,Q453300,co-ruler with Matteo II and Bernabò,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+11,Bernabò Visconti,,,1354-10-05,1385-05-06,day,Visconti,Q378756,co-ruler with Matteo II and Galeazzo II,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+12,Gian Galeazzo Visconti,1351,1402,1385-05-06,1402-09-03,day,House of Visconti,Q357539,"lord until 5 Sep 1395, then first duke (List of dukes of Milan)",https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,1368070748
+13,Giovanni Maria,1388,1412,1402-09-03,1412-05-16,day,House of Visconti,Q456902,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+14,Filippo Maria,1392,1447,1412-05-16,1447-08-13,day,House of Visconti,Q289285,followed by the Ambrosian Republic 1447-1450 (no duke),https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+15,Francesco I,1401,1466,1450-03-25,1466-03-08,day,House of Sforza,Q310536,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+16,Galeazzo Maria,1444,1476,1466-03-08,1476-12-26,day,House of Sforza,Q317894,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+17,Gian Galeazzo,1469,1494,1476-12-26,1494-10-21,day,House of Sforza,Q314514,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+18,Ludovico,1452,1508,1494-10-21,1499-09-17,day,House of Sforza,Q236853,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+19,Louis XII,1462,1515,1499-10-06,1512-06-20,day,House of Valois,Q58514,title held by the king of France,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+20,Massimiliano,1493,1530,1512-06-16,1515-10-05,day,House of Sforza,Q378739,,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+21,Francis I,1494,1547,1515-10-11,1521-11-20,day,House of Valois,Q129857,title held by the king of France,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+22,Francesco II,1495,1535,1522-04-04,1535-10-24,day,House of Sforza,Q378868,after his death Emperor Charles V annexed the duchy as a vacant imperial state (no row in source 1535-1540),https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+23,Philip I (Philip II of Spain),1527,1598,1540-10-11,1598-09-13,day,House of Habsburg-Spain,Q34417,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+24,Philip II (Philip III of Spain),1578,1621,1598-09-13,1621-03-31,day,House of Habsburg-Spain,Q34464,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+25,Philip III (Philip IV of Spain),1605,1665,1621-03-31,1665-09-17,day,House of Habsburg-Spain,Q691402,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+26,Charles I (Charles II of Spain),1661,1700,1665-09-17,1700-11-01,day,House of Habsburg-Spain,Q36174,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+27,Philip V,1683,1746,1700-11-01,1714-03-07,day,House of Bourbon-Anjou,Q170467,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+28,Charles II (Emperor Charles VI),1685,1740,1714-03-07,1740-10-20,day,House of Habsburg-Austria,Q150665,title held by the Habsburg monarch,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+29,Maria Theresa,1717,1780,1740-10-20,1780-11-29,day,House of Habsburg-Austria,Q131706,title held by the Habsburg monarch,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+30,Joseph I (Emperor Joseph II),1741,1790,1780-11-29,1790-02-20,day,House of Habsburg-Lorraine,Q76555,title held by the Habsburg monarch,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+31,Leopold I (Emperor Leopold II),1747,1792,1790-02-20,1792-03-01,day,House of Habsburg-Lorraine,Q151321,title held by the Habsburg monarch,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+32,Francis II,1768,1835,1792-03-01,1796-05-15,day,House of Habsburg-Lorraine,Q130834,title held by the Habsburg monarch; interregnum 1796-1814 (Revolutionary and Napoleonic Wars),https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434
+33,Francis II,1768,1835,1814-04-11,1815-04-07,day,House of Habsburg-Lorraine,Q130834,restored; duchy incorporated into the Kingdom of Lombardy-Venetia by the Congress of Vienna,https://en.wikipedia.org/wiki/List_of_dukes_of_Milan,1379621434

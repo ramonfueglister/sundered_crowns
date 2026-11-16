@@ -1,0 +1,11 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Robert II,1248,1306-03-21,1271-10-27,1306-03-21,day,House of Burgundy,Q503063,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Burgundy_(1032–1361),1381025706
+2,Hugh V,1282,1315-05-09,1306-03-21,1315-05-09,day,House of Burgundy,Q707654,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Burgundy_(1032–1361),1381025706
+3,Odo IV,1295,1350-04-03,1315-05-09,1350-04-03,day,House of Burgundy,Q707899,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Burgundy_(1032–1361),1381025706
+4,Philip I of Rouvres,1346,1361-11-21,1350-04-03,1361-11-21,day,House of Burgundy,Q19254,last Capet duke,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Burgundy_(1032–1361),1381025706
+5,John II the Good,1319-04-26,1364-04-08,1361-12-28,1363-09-06,day,House of Valois-Burgundy,Q169992,"king of France; claimed the duchy, passed it to Philip as apanage 1363",https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706
+6,Philip II the Bold,1342-01-15,1404-04-27,1363-09-06,1404-04-27,day,House of Valois-Burgundy,Q298892,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706
+7,John I the Fearless,1371-05-28,1419-09-10,1404-04-27,1419-09-10,day,House of Valois-Burgundy,Q298901,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706
+8,Philip III the Good,1396-07-31,1467-06-15,1419-09-10,1467-06-15,day,House of Valois-Burgundy,Q239337,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706
+9,Charles I the Bold,1433-11-21,1477-01-05,1467-06-15,1477-01-05,day,House of Valois-Burgundy,Q151120,,https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706
+10,Mary the Rich,1457-02-13,1482-03-27,1477-01-05,1482-03-27,day,House of Valois-Burgundy,Q157073,"duchy confiscated by Louis XI of France in 1477 (source intro); title then passed to the Habsburgs, duchy annexed to the French crown",https://en.wikipedia.org/wiki/Duke_of_Burgundy#House_of_Valois-Burgundy_(1361–1482),1381025706

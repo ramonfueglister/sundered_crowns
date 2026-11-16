@@ -1,0 +1,25 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Theobald II,,,1239,1291,year,Montbéliard,Q558318,"source gives 1239-1291; month of his 1291 death not given, so 1 Jan 1291 holder may be him; work list has Henry III",https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+2,Henry III,,,1291,1302,year,Montbéliard,Q558233,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+3,Edward I,,,1302,1337,year,Montbéliard,Q670516,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+4,Henry IV,,,1337,1344,year,Montbéliard,Q573424,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+5,Edward II,,,1344,1352,year,Montbéliard,Q764578,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+6,Robert,,,1352,1411,year,Montbéliard,Q570573,Duke of Bar (duchy from 1354 per page heading),https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+7,Edward III,,,1411,1415,year,Montbéliard,Q571406,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+8,Louis,,,1415,1431,year,Montbéliard,Q290499,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+9,René I,,,1431,1480,year,Anjou,Q170353,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+10,Yolanda,,,1480,1483,year,Anjou,Q269932,,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+11,René II,,,1483,1508,year,Anjou,Q441416,also Duke of Lorraine; from his death the list is identical with that of Lorraine,https://en.wikipedia.org/wiki/Duchy_of_Bar#List_of_rulers,1346897944
+12,Antoine,,,1508-12-10,1544-06-14,day,Lorraine,Q590487,title held by the duke of Lorraine,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+13,Francis I,,,1544-06-14,1545-06-12,day,Lorraine,Q525683,title held by the duke of Lorraine,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+14,Charles III,,,1545-06-12,1608-05-14,day,Lorraine,Q505040,title held by the duke of Lorraine,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+15,Henry II,,,1608-05-14,1624-07-31,day,Lorraine,Q704178,title held by the duke of Lorraine,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+16,Nicole,,,1624-07-31,1625-11-25,day,Lorraine,Q267704,title held by the duke of Lorraine; Estates of Lorraine decided she was not eligible to reign,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+17,Francis II,,,1625-11-25,1625-12-01,day,Lorraine,Q205797,title held by the duke of Lorraine; immediately abdicated in favour of his son Charles IV,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+18,Charles IV,,,1625-12-01,1634-01-19,day,Lorraine,Q505101,title held by the duke of Lorraine; abdicated in favour of his brother,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+19,Nicholas II,,,1634-01-19,1634-04-01,day,Lorraine,Q701583,title held by the duke of Lorraine; fled into exile and abdicated,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+20,Charles IV,,,1634-04-01,1675-09-18,day,Lorraine,Q505101,title held by the duke of Lorraine; nominally restored; Lorraine occupied by France 1634-1661 and 1670 until his death,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+21,Charles V Leopold,,,1675-09-18,1690-04-18,day,Lorraine,Q156949,"title held by the duke of Lorraine; in exile, Lorraine occupied by France",https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+22,Leopold,,,1690-04-18,1729-03-27,day,Lorraine,Q319954,title held by the duke of Lorraine,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+23,Francis III Stephen,,,1729-03-27,1737-07-09,day,Lorraine,Q151075,title held by the duke of Lorraine; traded Lorraine for Tuscany; Duchy of Bar page: Treaty of Vienna 1735 granted Bar to Stanislaus,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319
+24,Stanisław I,,,1737-07-09,1766-02-23,day,Leszczyński,Q54022,title held by the duke of Lorraine; Duchy of Bar page: took possession of Bar 8 February 1737; after him the duchy was inherited by Louis XV of France and incorporated in his dominions (1766),https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine#House_of_Lorraine,1382877319

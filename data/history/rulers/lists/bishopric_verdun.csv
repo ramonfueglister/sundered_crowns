@@ -1,0 +1,33 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Jacques de Révigny,,,1289,1296,year,,Q1678141,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+2,Jean d'Aspromonte,,,1297,1302,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+3,Thomas de Blamont,,,1303,1305,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+4,Nicholas de Neuville,,,1305,1312,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+5,Henri d'Aspremont,,,1312,1350,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+6,Otho de Poitiers,,,1350,1351,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+7,Hugues de Bar,,,1351,1361,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+8,Jean de Bourbon-Montperoux,,,1362,1372,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+9,Jean de Dampierre,,,1372,1375,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+10,Guy de Roye,,,1375,1381,year,,Q3122293,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+11,Liébauld de Cousans,,,1381,1404,year,,,Avignon Obedience,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+12,Jean de Sarrebrück,,,1404,1420,year,,,Avignon Obedience,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+13,Louis de Bar,,,1419,1423,year,,Q290499,administrator,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+14,Raymond,,,1423,1423,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+15,Guillaume de Montjoie,,,1423,1424,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+16,Louis de Bar,,,1424,1430,year,,Q290499,administrator,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+17,Louis of Haraucourt,,,1430,1437,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+18,Guillaume Fillastre,,,1437,1449,year,,Q1388943,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+19,Louis de Haraucourt,,,1449,1456,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+20,William of Haraucourt,,,1457,1500,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+21,Warry de Dommartin,,,1500,1508,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+22,Louis de Lorraine,,,1508,1522,year,,Q1993565,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+23,Jean de Lorraine,,,1523,1544,year,,Q1563911,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+24,Nicolas de Mercœur,,,1544,1547,year,,Q1372471,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+25,Nicolas Psaume,,,1548,1575,year,,Q373252,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+26,Nicolas Bousmard,,,1576,1584,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+27,Charles de Lorraine,,,1585,1587,year,,Q517843,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+28,Nicolas Boucher,,,1588,1593,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+29,Eric of Lorraine,,,1593,1610,year,,Q3591417,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+30,Christophe de la Vallée,,,1593,1601,year,,,administrator (sub-entry under Eric of Lorraine),https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+31,Charles de Lorraine,,,1610,1622,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Verdun#Prince-bishops,1384588171
+32,François de Lorraine,,,1623,1661,year,,,"listed under 'Bishops under French rule'; French control since 1552, formally recognised by the Peace of Westphalia 1648 (History section)",https://en.wikipedia.org/wiki/Diocese_of_Verdun#Bishops_under_French_rule,1384588171

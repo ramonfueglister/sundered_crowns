@@ -1,0 +1,4 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Kaidu,1235,1301,,1301,year,Ögedeid (Borjigin),Q558670,ruler of the Ulus of Ögedei; source gives no date for the start of his rule; born c. 1235,https://en.wikipedia.org/wiki/Kaidu,1383649376
+2,Chapar,,,1301,1307,year,Ögedeid (Borjigin),,son of Kaidu; deposed 1307,https://en.wikipedia.org/wiki/Kaidu,1383649376
+3,Yangichar,,,1307,1310,year,Ögedeid (Borjigin),,"brother of Chapar; Yangichar and Chapar submitted to Külüg Khan in 1310, ending the Ulus of Ögedei as a viable power; source says he died 1310",https://en.wikipedia.org/wiki/Kaidu,1383649376

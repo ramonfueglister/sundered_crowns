@@ -1,0 +1,7 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Bolko I the Strict,1252,1301-11-09,1278-12-31,1301-11-09,day,Silesian Piasts,Q673302,,https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932
+2,Bernard of Świdnica,1291,1326-05-06,1301-11-09,1326-05-06,day,Silesian Piasts,Q571364,co-ruler with his brother Henry I; duchy divided into Świdnica and Jawor (1312-1346); Bernard in Świdnica,https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932
+3,Henry I of Jawor,1292,1346-05-15,1301-11-09,1346-05-15,day,Silesian Piasts,Q429210,"co-ruler; in Jawor (and Głogów from 1337); died without male heirs, Jawor reincorporated in Świdnica",https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932
+4,Bolko II the Small,1312,1368-07-28,1326-05-06,1368-07-28,day,Silesian Piasts,Q666676,"in Świdnica, jointly with his brother Henry II until 1345; reunited Świdnica-Jawor 1346",https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932
+5,Henry II of Świdnica,1316,,1326-05-06,1345-06-28,day,Silesian Piasts,Q553884,co-ruler with Bolko II (in Świdnica),https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932
+6,Agnes of Austria,1322,1392-02-02,1368-07-28,1392-02-02,day,,Q291511,"widow of Bolko II, succeeded by his will; after her death the duchy was annexed to the Kingdom of Bohemia",https://en.wikipedia.org/wiki/Duke_of_Silesia,1384184932

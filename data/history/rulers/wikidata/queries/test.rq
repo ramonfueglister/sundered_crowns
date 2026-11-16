@@ -1,0 +1,5 @@
+SELECT ?cls ?l (COUNT(DISTINCT ?pos) AS ?n) WHERE {
+ VALUES ?cls { wd:Q116 wd:Q12097 wd:Q39018 wd:Q166382 wd:Q3519259 wd:Q15995642 wd:Q34167 wd:Q33923 wd:Q177053 wd:Q2747456 wd:Q48352 wd:Q355567 }
+ { ?pos wdt:P279+ ?cls } UNION { ?pos wdt:P31/wdt:P279* ?cls }
+ ?cls rdfs:label ?l FILTER(lang(?l)="en")
+} GROUP BY ?cls ?l

@@ -1,0 +1,15 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Daumantas,,,1266,1299,year,,Q2069501,prince of Pskov; work list Dovmont,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+2,David,,,1299,1299,year,,Q2562821,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+3,Feodor Mikhailovich,,,1307,1307,year,Rurikids,,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+4,David,,,1323,1323,year,,,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+5,Seloga,,,1327,1331,year,,,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+6,Aleksandr Mikhailovich,,,1331,1337,year,Yaroslavichi of Tver,Q679083,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+7,Vsevolod,,,1341,1341,year,Yaroslavichi of Tver,,,https://en.wikipedia.org/wiki/Pskov_Land#List_of_princes_(until_1348),1375836743
+8,Andrei of Polotsk,,,1342,1349,year,Gediminids,Q2494481,,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+9,Eustaphy Feodorovich,,,1349,1360,year,,,also Prince of Izborsk,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+10,Alexander of Polotsk,,,1360,1369,year,,,,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+11,Matvei,,,1375,1377,year,,,,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+12,Andrei of Polotsk,,,1377,1399,year,,Q2494481,second time,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+13,Ivan Andreyevich,,,1386,1394,year,,,overlaps Andrei of Polotsk in source,https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233
+14,viceroys of the Grand Prince of Moscow,,,1399,1510,year,,,unnamed in source; Pskov incorporated into the centralized Russian state under Vasily III (1510),https://en.wikipedia.org/wiki/Pskov_Republic#List_of_princes,1384472233

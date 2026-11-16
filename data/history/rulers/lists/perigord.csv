@@ -1,0 +1,17 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Archambaud III of Périgord,1237,1295,1251,1295,year,House of Talleyrand,,"work list has Hélie VII Talleyrand (Elias VII, 1295-1311 per source)",https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+2,Elias VII of Périgord,1261,1311,1295,1311,year,House of Talleyrand,,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+3,Archambaud IV of Périgord,,1336,1311,1336,year,House of Talleyrand,,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+4,Roger-Bernard of Périgord,1299,1368,1336,1368,year,House of Talleyrand,,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+5,Archambaud V of Périgord,1339,1399,1368,1398,year,House of Talleyrand,,deposed in 1398,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+6,Archambaud VI of Périgord,,1430,1398,1399,year,House of Talleyrand,,deposed in 1399,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+7,"Louis I, Duke of Orléans",1372,1407,1400,1407,year,House of Orléans,Q337057,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+8,"Charles I, Duke of Orléans",1394,1465,1407,1437,year,House of Orléans,Q310146,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+9,John I,,1452,1437,1452,year,House of Châtillon,Q2478500,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+10,William,1400,1453,1452,1453,year,House of Châtillon,Q3120313,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+11,Frances,,1481,1453,1481,year,House of Châtillon,Q3086638,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+12,John III of Navarre,1469,1516,1481,1516,year,House of Albret,Q371100,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+13,Henry II of Navarre,1503,1555,1516,1555,year,House of Albret,Q317506,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+14,Jeanne III of Navarre,1528,1572,1555,1572,year,House of Albret,Q229286,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+15,Henry IV of France,1553,1610,1572,1584,year,House of Bourbon,Q936976,,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047
+16,Catherine de Bourbon,1559,1604,1584,1604,year,House of Bourbon,Q268652,last count in the source list (1604),https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,1332347047

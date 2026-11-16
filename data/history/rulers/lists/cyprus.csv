@@ -1,0 +1,13 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Henry II,1270-06,1324-03-31,1285-05-20,1324-03-31,day,House of Lusignan,Q546497,Amalric listed as regent 1306–1310,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+2,Hugh IV,,1358-11-24,1324-03-31,1358-11-24,day,House of Lusignan,Q712809,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+3,Peter I,1328-10-09,1369-01-17,1358-11-24,1369-01-17,day,House of Lusignan,Q546469,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+4,Peter II,,1382-10-13,1369-01-17,1382-10-13,day,House of Lusignan,Q546544,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+5,James I,1334,1398-09-09,1382-10-13,1398-09-09,day,House of Lusignan,Q546626,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+6,Janus,1375,1432-06-29,1398-09-09,1432-06-29,day,House of Lusignan,Q878345,Mamluks made the kingdom a tributary state in 1426,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+7,John II,1418-05-16,1458-07-28,1432-06-29,1458-07-28,day,House of Lusignan,Q878962,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+8,Charlotte,1444-06-28,1487-07-16,1458-07-28,1464,year,House of Lusignan,Q261847,"co-ruler with her husband Louis 1459–1464; continued as pretender, renounced 1482",https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+9,Louis,1436-06,1482-04,1459-10-07,1464,year,House of Lusignan,Q672446,co-ruler with Charlotte,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+10,James II,,1473-07-10,1464,1473-07-10,year,House of Lusignan,Q878977,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+11,James III,1473-08-06,1474-08-26,1473-08-06,1474-08-26,day,House of Lusignan,Q592506,,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207
+12,Catherine,1454-11-25,1510-07-10,1474-08-26,1489-02-26,day,House of Lusignan,Q149192,last monarch; forced to sell the island to Venice in 1489,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus#List_of_monarchs_of_Cyprus,1383531207

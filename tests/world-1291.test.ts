@@ -54,7 +54,7 @@ describe('a world of 1291', () => {
     expect(cities.map((c) => c.site).sort((a, b) => a - b)).toEqual(expected);
     expect(cities[0].name).toBe('Cairo');
     for (const out of ['Texcoco', 'Tenayuca', 'Mali']) expect(cities.some((c) => c.name === out)).toBe(false); // outside the world
-    expect(s.person.size).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0));
+    expect(s.person.size - s.named.length).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0)); // the rest are rulers
     expect(s.person.size).toBeGreaterThan(100_000);
     for (const c of cities) {
       expect(towns.people[c.site]).toBe(c.people); // the town of the picture holds the city's people
@@ -73,17 +73,17 @@ describe('a world of 1291', () => {
     let old: ReturnType<typeof createWorldState>;
     try { old = createWorldState(w, s1291, 1291); } finally { list.splice(0, list.length, ...all); }
     old.v = 14;
-    expect(old.person.size).toBe(24_828); expect(old.economy.cities!.places.length).toBe(30);
+    expect(old.person.size - old.named.length).toBe(24_828); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
     const before = decodeState(encodeState(old));
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s)); // as a new world
     const P = up.person.cols, B = before.person.cols;
     let differ = 0; // counted, not one expect per person: 24,828 persons
-    for (let id = 0; id < before.person.size; id++) {
+    for (let id = 0; id < 24_828; id++) {
       if (P.born[id] !== B.born[id] || P.sex[id] !== B.sex[id] || P.family[id] !== B.family[id] || P.mother[id] !== B.mother[id] || P.iq[id] !== B.iq[id]) differ++;
     }
-    for (let k = 0; k < before.person.size * 68; k++) if (P.genes[k] !== B.genes[k]) differ++; // 68 gene bytes a person
+    for (let k = 0; k < 24_828 * 68; k++) if (P.genes[k] !== B.genes[k]) differ++; // 68 gene bytes a person
     expect(differ).toBe(0);
     expect(up.economy.cities!.places.length).toBe(550);
   }, 120_000);

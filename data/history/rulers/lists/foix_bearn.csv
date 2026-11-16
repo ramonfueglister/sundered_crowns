@@ -1,0 +1,17 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Roger-Bernard III,,1302-03-03,1265,1302,year,Foix,Q633333,born c. 1243,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+2,Gaston I,,1315-12-13,1302,1315,year,Foix-Béarn,Q726943,born c. 1287,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+3,Gaston II,,1343-09-26,1315,1343,year,Foix-Béarn,Q612148,born c. 1308,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+4,Gaston III Phoebus,1331-04-30,1391-08-01,1343,1391,year,Foix-Béarn,Q386816,,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+5,Matthew,,1398-08,1391,1398,year,Foix-Béarn,Q562433,born c. 1363,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+6,Isabella,,,1398,1428,year,Foix-Béarn,Q279418,co-ruler with Archambaud (1398-1412) and John I (1412-1428); died c. 1428,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+7,Archambaud de Grailly,,,1398,1412,year,Foix-Béarn,Q632403,co-ruler with Isabella; died c. 1412,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+8,John I,,1436-05-04,1412,1436,year,Foix-Grailly,Q879187,co-ruler with Isabella 1412-1428,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+9,Gaston IV,1422-11-27,,1436,1472,year,Foix-Grailly,Q372977,died 25/28 July 1472,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+10,Francis Phoebus,,1483-01-30,1472,1483,year,Foix-Grailly,Q363572,,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+11,Catherine,1468,1517-02-12,1483,1517,year,Foix-Grailly,Q236896,co-ruler with John II (1484-1516),https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+12,John II,1469,1516-06-14,1484,1516,year,Foix-Grailly,Q371100,co-ruler with Catherine,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+13,Henry I,1503-04-18,1555-05-25,1517,1555,year,Albret,Q317506,,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+14,Jeanne,1528-01-07,1572-06-09,1555,1572,year,Albret,Q229286,co-ruler with Antoine (1555-1562),https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+15,Antoine,1518-04-22,1562-11-17,1555,1562,year,Albret,Q310334,co-ruler with Jeanne,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550
+16,Henry II,1553-12-13,1610-05-14,1572,1607,year,Bourbon,Q936976,in 1607 the county of Foix was reunited to the French crown,https://en.wikipedia.org/wiki/Count_of_Foix#List_of_counts_of_Foix,1314183550

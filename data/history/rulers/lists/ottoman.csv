@@ -1,0 +1,41 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Osman I,,,1299,1324,circa,Ottoman dynasty,Q83100,source reign c. 1299 – c. 1324; work list has Osman as holder in 1291,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+2,Orhan,,,1324,1362-03,circa,Ottoman dynasty,Q133168,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+3,Murad I,,,1362-03,1389-06-15,month,Ottoman dynasty,Q96261,killed at the Battle of Kosovo,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+4,Bayezid I,,,1389-06-15,1402-07-20,day,Ottoman dynasty,Q128358,captured at the Battle of Ankara,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+5,Süleyman Çelebi,,,1402-07-20,1411-02-17,day,Ottoman dynasty,Q1095044,rival claimant (Ottoman Interregnum); Sultan of Rumelia,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+6,İsa Çelebi,,,1403-01,1403,year,Ottoman dynasty,Q1085744,"rival claimant (Ottoman Interregnum); co-sultan of Anatolia, January – March/May 1403",https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+7,Mehmed Çelebi,,,1403,1413-07-05,year,Ottoman dynasty,Q168769,"rival claimant (Ottoman Interregnum); co-sultan, eastern Anatolia",https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+8,Musa Çelebi,,,1411-02-18,1413-07-05,day,Ottoman dynasty,Q1095287,rival claimant (Ottoman Interregnum); Sultan of Rumelia,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+9,Mehmed I,,,1413-07-05,1421-05-26,day,Ottoman dynasty,Q168769,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+10,Mustafa Çelebi,,,1419-01,1422-05,month,Ottoman dynasty,Q944433,rival claimant; Sultan of Rumelia,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+11,Murad II,,,1421-06-25,1444-08,month,Ottoman dynasty,Q131394,abdicated in favour of Mehmed II,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+12,Mehmed II,,,1444-08,1446-09,month,Ottoman dynasty,Q34503,first reign,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+13,Murad II,,,1446-09,1451-02-03,month,Ottoman dynasty,Q131394,second reign,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+14,Mehmed II,,,1451-02-03,1481-05-03,day,Ottoman dynasty,Q34503,second reign,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+15,Bayezid II,,,1481-05-19,1512-04-25,day,Ottoman dynasty,Q165983,abdicated,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+16,Cem Sultan,,,1481-05-28,1481-06-20,day,Ottoman dynasty,Q441311,rival claimant,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+17,Selim I,,,1512-04-25,1520-09-21,day,Ottoman dynasty,Q494660,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+18,Suleiman I,,,1520-09-30,1566-09-06,day,Ottoman dynasty,Q8474,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+19,Selim II,,,1566-09-29,1574-12-15,day,Ottoman dynasty,Q161872,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+20,Murad III,,,1574-12-27,1595-01-16,day,Ottoman dynasty,Q159934,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+21,Mehmed III,,,1595-01-16,1603-12-22,day,Ottoman dynasty,Q171465,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+22,Ahmed I,,,1603-12-22,1617-11-22,day,Ottoman dynasty,Q114749,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+23,Mustafa I,,,1617-11-22,1618-02-26,day,Ottoman dynasty,Q174798,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+24,Osman II,,,1618-02-26,1622-05-19,day,Ottoman dynasty,Q172056,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+25,Mustafa I,,,1622-05-20,1623-09-10,day,Ottoman dynasty,Q174798,second reign; deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+26,Murad IV,,,1623-09-10,1640-02-08,day,Ottoman dynasty,Q174762,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+27,Ibrahim,,,1640-02-09,1648-08-08,day,Ottoman dynasty,Q168776,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+28,Mehmed IV,,,1648-08-08,1687-11-08,day,Ottoman dynasty,Q170514,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+29,Suleiman II,,,1687-11-08,1691-06-22,day,Ottoman dynasty,Q172061,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+30,Ahmed II,,,1691-06-22,1695-02-06,day,Ottoman dynasty,Q199660,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+31,Mustafa II,,,1695-02-06,1703-08-22,day,Ottoman dynasty,Q199659,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+32,Ahmed III,,,1703-08-22,1730-10-01,day,Ottoman dynasty,Q199482,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+33,Mahmud I,,,1730-10-02,1754-12-13,day,Ottoman dynasty,Q199481,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+34,Osman III,,,1754-12-13,1757-10-30,day,Ottoman dynasty,Q199825,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+35,Mustafa III,,,1757-10-30,1774-01-21,day,Ottoman dynasty,Q199484,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+36,Abdul Hamid I,,,1774-01-21,1789-04-07,day,Ottoman dynasty,Q170707,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+37,Selim III,,,1789-04-07,1807-05-29,day,Ottoman dynasty,Q199633,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+38,Mustafa IV,,,1807-05-29,1808-07-28,day,Ottoman dynasty,Q199830,deposed,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+39,Mahmud II,,,1808-07-28,1839-07-01,day,Ottoman dynasty,Q174791,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084
+40,Abdul Mejid I,,,1839-07-01,1861-06-25,day,Ottoman dynasty,Q174772,,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire#List_of_sultans,1379937084

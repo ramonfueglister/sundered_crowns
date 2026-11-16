@@ -1,0 +1,13 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Albert I,1240,1304-04-01,1258-07-22,1304-04-01,day,Meinhard dynasty,Q677836,work list has Albert II (source numbering: Albert I),https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+2,Henry III,1263,1323-04-24,1304-04-01,1323-04-24,day,Meinhard dynasty,Q3408343,shared rule with his brother Albert II,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+3,Albert II,,1327,1304-04-01,1327,year,Meinhard dynasty,Q2796178,co-ruler with Henry III,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+4,Meinhard V,,,1314,1320,circa,Meinhard dynasty,Q2320071,co-ruler associated by his father Henry III; source: c.1314 – 1320?,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+5,(John) Henry IV,1322,1338-03-17,1327,1338-03-17,year,Meinhard dynasty,Q1694421,under regencies; died childless,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+6,Albert III,,1374,1338-03-17,1374,year,Meinhard dynasty,Q699170,co-ruler with his brothers; bequeathed Istrian and Carniolan possessions to Rudolf IV of Austria,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+7,Meinhard VI,,1385-05,1338-03-17,1385-05,month,Meinhard dynasty,Q599228,co-ruler; raised to Princely County of Gorizia 1365,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+8,Henry V,,1362,1338-03-17,1362,year,Meinhard dynasty,Q1569291,co-ruler,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+9,Henry VI,1376-06-22,1454-03-18,1385-05,1454-03-18,month,Meinhard dynasty,Q1599115,ruled jointly with his brother (Gorizia proper),https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+10,(John) Meinhard VII,1378,1430-05-22,1385-05,1430-05-22,month,Meinhard dynasty,Q88607,co-ruler (at the County of Kirchberg),https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+11,John II,1438,1462-05-22,1454-03-18,1462-05-22,day,Meinhard dynasty,Q86742,co-ruler with Leonard,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262
+12,Leonard,1440,1500-04-12,1454-03-18,1500-04-12,day,Meinhard dynasty,Q448478,last count; Gorizia annexed to the Habsburg domain,https://en.wikipedia.org/wiki/County_of_Gorizia#Table_of_rulers,1330114262

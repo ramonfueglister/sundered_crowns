@@ -1,0 +1,16 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Berthold V the Wise,1272,,1284-09-15,1340-04-13,day,House of Henneberg,Q121846,co-ruler with his brothers Berthold VI and Henry IV,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+2,Berthold VI the Younger,,1330-08-21,1284-09-15,1330-08-21,day,House of Henneberg,,co-ruler,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+3,Henry IV,,1340-03-12,1284-09-15,1340-03-12,day,House of Henneberg,,co-ruler,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+4,John I,1289,1359-05-02,1340-04-13,1359-05-02,day,House of Henneberg,,Schleusingen (brother Henry VI took the County of Coburg 1340),https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+5,Henry VII,1352-06-19,1405-12-26,1359-05-02,1405-12-26,day,House of Henneberg,,co-ruler with Berthold VIII until 1375,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+6,Berthold VIII,1356,1416-02-11,1359-05-02,1375,year,House of Henneberg,,co-ruler with Henry VII,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+7,William I,1384-07-31,1426-07-07,1405-12-26,1426-07-07,day,House of Henneberg,,,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+8,William II,1415-03-14,1444-01-08,1426-07-07,1444-01-08,day,House of Henneberg,Q174985,,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+9,Henry XI,1422-03-17,1475-09-10,1444-01-08,1475-09-10,day,House of Henneberg,,co-ruler (at Kaltennordheim),https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+10,William III,1434-03-12,,1444-01-08,1480-05-25,day,House of Henneberg,Q1751665,co-ruler,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+11,John II,1439-07-02,,1444-01-08,1473,year,House of Henneberg,,co-ruler (at Osterburg),https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+12,Wolfgang,1479-03,1484-12-27,1480-05-25,1484-12-27,day,House of Henneberg,,born 14/17 March 1479,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+13,William IV,1478-01-29,1559-01-24,1484-12-27,1559-01-24,day,House of Henneberg,Q16854422,,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+14,George Ernest,1511-05-27,,1559-01-24,1583-12-27,day,House of Henneberg,,co-ruler with Poppo X until 1574; last count; in 1583 Schleusingen was divided (Wettin branches; per table between Hesse and Saxony),https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573
+15,Poppo X,1513-09-20,,1559-01-24,1574-03-04,day,House of Henneberg,,co-ruler with George Ernest,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,1384517573

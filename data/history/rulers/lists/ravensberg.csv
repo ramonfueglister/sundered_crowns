@@ -1,0 +1,21 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Otto III,,,1249,1306,year,Calvelage-Ravensberg,Q2456279,,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+2,Otto IV,,,1306,1328,year,Calvelage-Ravensberg,Q2039351,,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+3,Bernard,,,1328,1346,year,Calvelage-Ravensberg,,,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+4,Gerhard I,,,1346,1360,year,House of Jülich,Q343243,,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+5,William I,,,1360,1408,year,House of Jülich,Q464594,lets his 2 sons rule,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+6,Adolf,,,1395,1403,year,House of Jülich,Q87944,co-ruler with William I (source: William I lets his 2 sons rule),https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+7,William II,,,1403,1428,year,House of Jülich,Q92176,co-ruler with William I (source: William I lets his 2 sons rule),https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+8,Gerhard II,,,1428,1475,year,House of Jülich,Q90387,personal union with Jülich-Berg,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+9,William III,,,1475,1511,year,House of Jülich,Q86055,personal union with Jülich-Berg,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+10,John,,,1511,1539,year,"House of La Marck, Dukes",Q704339,title held by the dukes of Jülich-Cleves-Berg,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+11,William V,,,1539,1592,year,"House of La Marck, Dukes",Q62483,title held by the dukes of Jülich-Cleves-Berg,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+12,John William I,,,1592,1609,year,"House of La Marck, Dukes",Q67345,title held by the dukes of Jülich-Cleves-Berg,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+13,John Sigismund of Hohenzollern,,,1614,1619,year,House of Hohenzollern,Q40746,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+14,George William,,,1619,1640,year,House of Hohenzollern,Q166675,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+15,Frederick William I,,,1640,1688,year,House of Hohenzollern,Q152727,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+16,Frederick I,,,1688,1713,year,House of Hohenzollern,Q151826,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+17,Frederick William I,,,1713,1740,year,House of Hohenzollern,Q105013,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+18,Frederick II,,,1740,1786,year,House of Hohenzollern,Q33550,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+19,Frederick William II,,,1786,1797,year,House of Hohenzollern,Q152229,title held by the margraves of Brandenburg / kings of Prussia,https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339
+20,Frederick William III,,,1797,1807,year,House of Hohenzollern,Q37134,"title held by the margraves of Brandenburg / kings of Prussia; to France by the 1807 Treaty of Tilsit, incorporated into the Kingdom of Westphalia",https://en.wikipedia.org/wiki/County_of_Ravensberg#Rulers,1368563339

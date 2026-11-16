@@ -1,0 +1,22 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Papal control,,,1285,1296,year,,,"source: papal control 1285-1296; work list has Guido da Montefeltro (Guido I, reign from 1255, died 29 Sep 1298)",https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+2,Federico I da Montefeltro,,1322,1296,,year,Montefeltro,,source gives reign start only,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+3,Papal control,,,1322,1324,year,,,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+4,Guido II da Montefeltro,,1360,1324,,year,Montefeltro,,co-ruler with Galasso and Nolfo; source gives reign start only,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+5,Galasso da Montefeltro,,1360,1324,,year,Montefeltro,,co-ruler with Guido II and Nolfo; source gives reign start only,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+6,Nolfo da Montefeltro,1290,1364,1324,,year,Montefeltro,Q1032942,co-ruler with Guido II and Galasso; source gives reign start only; born c. 1290,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+7,Federico II da Montefeltro,,1370,1364,1370,circa,Montefeltro,Q1763344,source: 1364–1370?; died 1370?,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+8,Antonio II da Montefeltro,1348,1404-04-29,1363,1404,year,Montefeltro,Q1093668,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+9,Guidantonio da Montefeltro,1377,1443-02,1403,1443,year,Montefeltro,Q942595,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+10,Oddantonio da Montefeltro,1428,1444-07-22,1443,1444,year,Montefeltro,Q1347628,created Duke,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+11,Federico III da Montefeltro,1422-06-07,1482-09-10,1444,1482,year,Montefeltro,Q435501,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+12,Guidobaldo da Montefeltro,1472-01-17,1508-04-10,1482,1502,year,Montefeltro,Q969797,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+13,Cesare Borgia,1475-09-13,,1502,1503,year,,Q187998,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+14,Guidobaldo da Montefeltro,1472-01-17,1508-04-10,1503,1508,year,Montefeltro,Q969797,second reign,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+15,Francesco Maria I della Rovere,1490-03-22,1538-10-20,1508,1516,year,della Rovere,Q555015,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+16,Lorenzo II de' Medici,1492-09-12,1519-05-04,1516,1519,year,,Q312612,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+17,Francesco Maria I della Rovere,1490-03-22,1538-10-20,1521,1538,year,della Rovere,Q555015,second reign,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+18,Guidobaldo II della Rovere,1514-04-02,1574-09-28,1538,1574,year,della Rovere,Q1397788,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+19,Francesco Maria II della Rovere,1549-02-20,1631-04-23,1574,1621,year,della Rovere,Q1441126,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+20,Federico Ubaldo della Rovere,1605-05-16,1623-06-28,1621,1623,year,della Rovere,Q718174,,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567
+21,Francesco Maria II della Rovere,1549-02-20,1631-04-23,1623,1625,year,della Rovere,Q1441126,second reign; duchy annexed to the Papal States (article: 1625 by Urban VIII; infobox end 1631),https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1371770567

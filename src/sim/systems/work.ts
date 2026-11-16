@@ -19,6 +19,8 @@
 // city are drawn at a lower rate, so that of all its women of working age the table's share is expected to work:
 // that lower rate is our arithmetic, not a source.
 import type { WorldState } from '../state';
+import { ALIVE } from '../state';
+import { namedPersons } from './rulers';
 import { hash01 } from '../rng';
 import { ageOn } from './people';
 
@@ -72,8 +74,9 @@ export function workforce(s: WorldState, places: readonly number[], participatio
   for (let id = 0; id < s.person.size; id++) if (s.person.alive[id]) members[P.family[id]]++;
   const adults: number[][] = places.map(() => []), women = new Int32Array(places.length), alone = new Int32Array(places.length);
   const withoutHusband = (id: number) => { const f = P.family[id]; return F.man[f] < 0 && (F.woman[f] === id || members[f] === 1); };
+  const named = namedPersons(s); // the rulers have no part in the economy (src/sim/systems/rulers.ts)
   for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id]) continue;
+    if (!s.person.alive[id] || named.has(id) || P.died[id] !== ALIVE) continue;
     const k = at.get(F.place[P.family[id]]);
     if (k === undefined || ageOn(P.born[id], s.day) < WORKING_AGE) continue;
     adults[k].push(id);

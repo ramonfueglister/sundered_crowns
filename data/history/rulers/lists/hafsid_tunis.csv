@@ -1,0 +1,24 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Abu Hafs Umar bin Yahya,1245,1295,1284,1295,year,Hafsid,Q335030,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+2,Abu Asida Muhammad II,1279,1309-09,1295,1309,year,Hafsid,Q11903881,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+3,Abu Yahya Abu Bakr ash-Shahid,,1309-09,1309,1309,year,Hafsid,Q11903914,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+4,Abu-l-Baqa Khalid An-Nasr,,1311,1309,1311,year,Hafsid,Q11903928,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+5,Abd al-Wahid Zakariya ibn al-Lihyani,1253,1326,1311,1317,year,Hafsid,Q17321124,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+6,Abu Darba Muhammad Al-Mustansir,1274,1323,1317,1318,year,Hafsid,,link points to a section of the predecessor's article,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+7,Abu Yahya Abu Bakr II,1293,1346-10-19,1318,1346,year,Hafsid,Q324785,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+8,Abu-l Abbas Ahmad,,1346,1346,1346,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+9,Abu Hafs Umar II,,1347,1346,1347,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+10,Abu al-Abbas Ahmad al-Fadl al-Mutawakkil,,1350,1347,1350,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+11,Abu Ishaq Ibrahim II,,1369-02-19,1350,1369,year,Hafsid,Q10949545,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+12,Abu-l-Baqa Khalid II,,1370-11,1369,1370,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+13,Ahmad II,1329,1394-06-03,1370,1394,year,Hafsid,Q335558,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+14,Abd al-Aziz II,1361,1434-07,1394,1434,year,Hafsid,Q307147,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+15,Abu Abd-Allah Muhammad al-Muntasir,,1435-09-16,1434,1435,year,Hafsid,Q11937796,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+16,Abu 'Amr 'Uthman,1419-02,1488-09,1435,1488,year,Hafsid,Q705556,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+17,Abu Zakariya Yahya II,,1489,1488,1489,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+18,Abd al-Mu'min,,1490,1489,1490,year,Hafsid,,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+19,Abu Yahya Zakariya III,,1494,1490,1494,year,Hafsid,Q11903915,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+20,Abu Abdallah Muhammad IV al-Mutawakkil,,1526,1494,1526,year,Hafsid,Q11903874,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+21,"Muhammad V (""Moulay Hasan"")",,1543,1526,1543,year,Hafsid,Q2822168,,https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+22,Ahmad III,,1575-08,1543,1569,year,Hafsid,Q2827584,followed by Ottoman conquest (1569–1573),https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853
+23,Muhammad VI,,1594,1573,1574,year,Hafsid,Q2822167,last Hafsid ruler in source table (1573–1574),https://en.wikipedia.org/wiki/Hafsid_dynasty,1383605853

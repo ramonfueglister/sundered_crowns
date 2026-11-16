@@ -1,0 +1,27 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Conrad II,1250,1294-12-21,1262-06-23,1294-12-21,day,Piast dynasty,Q1959756,Duchy of Czersk; co-ruler with his brother (partition),https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+2,Boleslaus II,1253,1313-04-20,1262-06-23,1313-04-20,day,Piast dynasty,Q2663972,Duchy of Płock,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+3,Siemowit II,1283,1345-02-18,1313-04-20,1345-02-18,day,Piast dynasty,Q2348917,Duchy of Rawa; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+4,Trojden I,1284,1341-03-13,1313-04-20,1341-03-13,day,Piast dynasty,Q2593286,Duchy of Warsaw (Czersk); partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+5,Wenceslaus,1293,1336-05-23,1313-04-20,1336-05-23,day,Piast dynasty,Q178603,Duchy of Płock; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+6,Boleslaus III,1322,1351-08-20,1336-05-23,1351-08-20,day,Piast dynasty,Q2628158,Duchy of Płock; Płock then annexed to Poland 1351-1370,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+7,Siemowit III,1314,1381-06-16,1341-03-13,1381-06-16,day,Piast dynasty,Q2132097,Duchy of Warsaw; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+8,Casimir I,1329,1355-12-05,1341-03-13,1355-12-05,day,Piast dynasty,Q2941051,Duchy of Rawa; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+9,Janusz I the Elder,1347,1429-12-08,1381-06-16,1429-12-08,day,Piast dynasty,Q2975528,Duchy of Warsaw; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+10,Siemowit IV the Younger,1353,1426-01-21,1381-06-16,1426-01-21,day,Piast dynasty,Q1980579,Duchy of Płock; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+11,Siemowit V,1389,1442-02-17,1426-01-21,1442-02-17,day,Piast dynasty,Q2348420,Duchy of Rawa; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+12,Casimir II,1401,1442-09-15,1426-01-21,1442-09-15,day,Piast dynasty,Q2133975,Duchy of Płock (in Bełz); partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+13,Trojden II,1403,1427-07-25,1426-01-21,1427-07-25,day,Piast dynasty,Q4463654,Duchy of Płock (Płock proper); partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+14,Ladislaus I,1406,1455-12-12,1426-01-21,1455-12-12,day,Piast dynasty,Q2456100,Duchy of Płock; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+15,Boleslaus IV,1421,1454-09-10,1429-12-08,1454-09-10,day,Piast dynasty,Q2349138,Duchy of Warsaw; partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+16,Margareta of Racibórz,1410,1459-07-05,1442-02-17,1459-07-05,day,Piast dynasty,,Duchy of Rawa (at Gostynin); partition co-ruler,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+17,Anna of Oleśnica,1425,1482-08,1455-12-12,1482-08,month,Piast dynasty,,"Duchy of Płock (Sochaczew, later Koło and Mszczonów); partition co-ruler; born c. 1425",https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+18,Siemowit VI,1446-01-02,1462-01-01,1455-12-12,1462-01-01,day,Piast dynasty,Q2887861,Duchy of Płock (Płock proper); co-ruler with his brother,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+19,Ladislaus II,1448-11,1462-02-27,1455-12-12,1462-02-27,day,Piast dynasty,Q2262242,Duchy of Płock; co-ruler with his brother,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+20,Conrad III the Red,1447,1503-10-28,1454-09-10,1503-10-28,day,Piast dynasty,Q938326,Duchy of Masovia (in Czersk until 1495); co-ruler with his brothers,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+21,Casimir III,1448-06-10,1480-06-09,1454-09-10,1475,year,Piast dynasty,Q615572,Duchy of Płock (Duchy of Warsaw); co-ruler with his brothers,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+22,Boleslaus V,1453,1488-04-27,1454-09-10,1488-04-27,day,Piast dynasty,Q4090790,Duchy of Warsaw; co-ruler with his brothers,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+23,Janusz II,1455,1495-02-16,1454-09-10,1495-02-16,day,Piast dynasty,Q4538307,Duchy of Warsaw (at Ciechanów and Łomża); co-ruler with his brothers,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+24,Stanisław,1501-05-17,1524-08-08,1503-10-28,1524-08-08,day,Piast dynasty,Q2617885,Duchy of Masovia; co-ruler with his brother,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+25,Janusz III,1502-09-27,1526-03-10,1503-10-28,1526-03-10,day,Piast dynasty,Q1378676,Duchy of Masovia; co-ruler with his brother,https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
+26,Anna,1498,1557-01,1526-03-10,1537,year,Piast dynasty,Q4767654,"Duchy of Masovia; last Masovian Piast, elected by the nobles; born c. 1498; forfeited her rights to Poland in 1537",https://en.wikipedia.org/wiki/Duke_of_Masovia#Table_of_rulers,1360572354
