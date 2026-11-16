@@ -688,7 +688,7 @@ capital, the people).
   calendar year are kept as a row of `years` in the state of the world, written before 1 January is computed. Still
   growing: the port's series of GDP and inflation, 16 bytes a day (5.8 kB a game year).
 - `src/sim/systems/economy.ts`: one period for each day of the world. State version 7 at the time (the cities are
-  version 8 now, section 5). A world saved by an older
+  version 10 now, section 5). A world saved by an older
   build (the running world, state version 6) is upgraded when it is loaded: England starts again from the starting
   position of 1356 and computes every day the world has seen (`src/sim/upgrade.ts`); the result is the economy of a
   world that had the daily clock from its first day, and the yearly figures shown before are gone. If a day cannot
@@ -961,15 +961,20 @@ for every calendar year that is complete. On every day of the world all cities c
 own seed, derived from the seed of the world and the place of the city. If the engine cannot compute a day, all
 cities stop with the day before and the panel names date and reason; the world goes on.
 
-**State version 8 and the running world.** A world saved with England's economy (version 7, the running world
-since main took version 7 for the places and realms of the whole globe on 15 November 2026; older versions take
-their steps first) founds the cities on the day it has reached: they start from the starting position of 1356 on
+**State version 10 and the running world.** (The cities were version 8 while this branch was built; main then
+took 8 for the people of 1291 and 9 for heads at 1:100, pull request 39, so the cities are the step 9 → 10.) A world
+saved with England's economy (version 9, the running world of 1291; older versions take their steps first) founds
+the cities on the day it has reached: they start from the starting position of 1356 on
 that day, and no past days are computed for them. England's state is dropped. (Computing the past would hold the
 world server for minutes when it starts; the cities of a new world start on its first day.) Rehearsed with a world
 of 400 days made by the build of main (fbdc9be, state version 7, 25,103 places): upgraded by this build to
 version 8 in 0.03 s, 60 more days computed in 1.0 s with the books off by at most 6e-15, saved (6.3 MB) and loaded
 again with the same hash, and both go on to the same state. (First rehearsed with a world of main c84e60b, then
-version 6.)
+version 6.) Rehearsed again on 16 November 2026 with features 7 to 9 and the world server itself: the server of main
+b746536 made a world of 1291 on disk (state version 9, 12 and 45 days), the server of this build resumed it in
+1.6 s as version 10 with the economies of the 29 cities founded on the day reached, computed 70 more days (20 ms a
+day) with the books off by at most 4e-15, replayed its log from its first snapshot to the live state, and stopped
+and started again with the same hash. The same with a world of version 7 made by the server of main c5f2aa6.
 
 **What a player sees.** The panel of a place with a city has the section "Wirtschaft der Stadt": real GDP of the last
 365 days, its level against the start, the price level of today, consumption, the crown's purchases, investment,
@@ -1338,7 +1343,8 @@ An economy without the feature computes as before, bit for bit: the port's own d
 port used directly (economy/tests/shell.rs), and the WebAssembly build against the native one with either wage.
 
 The state of an economy has the format 3 (the two lists at the end of the clock's fields; empty lists for the port's
-wage). The state of the world stays version 8, which is not in the running world yet.
+wage). The state of the world stays the cities' version (8 then, 10 since main took 8 and 9), which is not in the running
+world yet.
 
 ### Calibration and the way into the game
 
