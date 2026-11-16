@@ -1,0 +1,4953 @@
+{
+ "region": "italy_balkans",
+ "year": 1291,
+ "date": "1291-01-01",
+ "sources": [
+  "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300; regional maps Apennine Peninsula and Aegean Area",
+  "W. R. Shepherd, Historical Atlas (1923), 'Italy about 1300'? (to be checked) and 'Europe and the Mediterranean Lands about 1300'",
+  "J. K. Hyde, Society and Politics in Medieval Italy (1973); D. Waley, The Italian City-Republics (3rd ed., 1988): communes and signori c.1290",
+  "D. Abulafia, The Western Mediterranean Kingdoms 1200-1500 (1997): Angevin Naples and Provence, Aragonese Sicily",
+  "J. V. A. Fine, The Late Medieval Balkans (1987): Serbia under Milutin and Dragutin, Bulgaria under George I Terter, Vidin, Bosnia, Epirus, Thessaly",
+  "D. M. Nicol, The Last Centuries of Byzantium 1261-1453 (2nd ed., 1993); D. M. Nicol, The Despotate of Epiros 1267-1479 (1984)",
+  "P. Engel, The Realm of St Stephen: A History of Medieval Hungary (2001): Andrew III 1290",
+  "K. M. Setton (ed.), A History of the Crusades vol. II-III; P. Lock, The Franks in the Aegean 1204-1500 (1995): Achaea, Athens, the Archipelago, Venetian Crete, Negroponte",
+  "P. Jackson / R. Irwin; J. Riley-Smith, The Crusades (3rd ed.): the last Latin coast before the fall of Acre (18 May 1291)",
+  "Wikipedia: Kingdom of Albania (medieval) — Durazzo Byzantine 1288, Kanina, Butrint and Corfu Angevin to 1292-94"
+ ],
+ "new_ids": [
+  "treviso",
+  "gorizia",
+  "syrmia",
+  "thessaly",
+  "jerusalem"
+ ],
+ "notes": [
+  "Date: 1 January 1291. The War of the Sicilian Vespers continues: Sicily (with Malta and Djerba) under James II of Aragon, Naples and Provence under Charles II of Anjou.",
+  "The Latin East: only Acre, Tyre, Sidon, Beirut, Haifa, Atlit and the Templar Tortosa remain; all fall between May and August 1291. They are modelled as the Kingdom of Jerusalem of Henry II of Cyprus; the military orders (Hospitallers, Templars, Teutonic Knights) hold quarters and castles in it.",
+  "Northern Italian signori: Visconti (Milan), della Scala (Verona), Este (Ferrara, Modena since 1288, Reggio since 1289), Bonacolsi (Mantua), da Camino (Treviso). Many smaller communes (Pavia, Piacenza, Parma, Cremona, Brescia, Bergamo, Como, Asti, Alessandria, Pistoia, Volterra) are not modelled as realms yet: a gap.",
+  "Meinhard II of Gorizia-Tyrol holds Tyrol, the duchy of Carinthia (1286) and Carniola in pledge (from 1282); modelled as one realm.",
+  "Sardinia: Arborea (judges of Bas-Serra), Pisan Cagliari and Gallura (Nino Visconti expelled 1288), the Genoese Doria and Sassari in the old Logudoro.",
+  "Hungary: the great oligarchs (Kőszegi, Csák, Aba, Šubić, Borsa) are not modelled separately.",
+  "Thessaly (Great Vlachia) of the sons of John I Doukas and the Byzantine Durazzo (1288-96) differ from 1356."
+ ],
+ "states": [
+  {
+   "id": "papal_states",
+   "name": {
+    "en": "Papal States",
+    "de": "Kirchenstaat"
+   },
+   "short": {
+    "en": "Papacy",
+    "de": "Papsttum"
+   },
+   "adjective": {
+    "en": "Papal",
+    "de": "päpstlich"
+   },
+   "rank": "principality",
+   "government": "theocracy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#877229",
+   "capital": {
+    "name": "Rome",
+    "lat": 41.902,
+    "lon": 12.496
+   },
+   "holdings": [
+    {
+     "name": "Rome",
+     "lat": 41.902,
+     "lon": 12.496
+    },
+    {
+     "name": "Viterbo",
+     "lat": 42.42,
+     "lon": 12.107
+    },
+    {
+     "name": "Orvieto",
+     "lat": 42.718,
+     "lon": 12.111
+    },
+    {
+     "name": "Spoleto",
+     "lat": 42.734,
+     "lon": 12.738
+    },
+    {
+     "name": "Foligno",
+     "lat": 42.956,
+     "lon": 12.703
+    },
+    {
+     "name": "Rieti",
+     "lat": 42.404,
+     "lon": 12.857
+    },
+    {
+     "name": "Civitavecchia",
+     "lat": 42.093,
+     "lon": 11.796
+    },
+    {
+     "name": "Anagni",
+     "lat": 41.744,
+     "lon": 13.158
+    },
+    {
+     "name": "Terracina",
+     "lat": 41.291,
+     "lon": 13.248
+    },
+    {
+     "name": "Ancona",
+     "lat": 43.616,
+     "lon": 13.519
+    },
+    {
+     "name": "Macerata",
+     "lat": 43.3,
+     "lon": 13.453
+    },
+    {
+     "name": "Fermo",
+     "lat": 43.16,
+     "lon": 13.718
+    },
+    {
+     "name": "Ascoli",
+     "lat": 42.854,
+     "lon": 13.575
+    },
+    {
+     "name": "Benevento",
+     "lat": 41.13,
+     "lon": 14.782
+    },
+    {
+     "name": "Carpentras",
+     "lat": 44.055,
+     "lon": 5.048
+    },
+    {
+     "name": "Ravenna",
+     "lat": 44.418,
+     "lon": 12.204
+    },
+    {
+     "name": "Forlì",
+     "lat": 44.222,
+     "lon": 12.041
+    },
+    {
+     "name": "Faenza",
+     "lat": 44.285,
+     "lon": 11.883
+    },
+    {
+     "name": "Imola",
+     "lat": 44.353,
+     "lon": 11.714
+    },
+    {
+     "name": "Cesena",
+     "lat": 44.139,
+     "lon": 12.243
+    },
+    {
+     "name": "Rimini",
+     "lat": 44.06,
+     "lon": 12.568
+    },
+    {
+     "name": "Senigallia",
+     "lat": 43.71,
+     "lon": 13.22
+    },
+    {
+     "name": "Jesi",
+     "lat": 43.52,
+     "lon": 13.24
+    },
+    {
+     "name": "Camerino",
+     "lat": 43.14,
+     "lon": 13.07
+    },
+    {
+     "name": "Tivoli",
+     "lat": 41.96,
+     "lon": 12.8
+    },
+    {
+     "name": "Velletri",
+     "lat": 41.69,
+     "lon": 12.78
+    },
+    {
+     "name": "Frosinone",
+     "lat": 41.64,
+     "lon": 13.35
+    },
+    {
+     "name": "Todi",
+     "lat": 42.78,
+     "lon": 12.41
+    }
+   ],
+   "ruler": {
+    "name": "Nicholas IV",
+    "born": 1227,
+    "dynasty": "Masci",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Pope Nicholas IV (Girolamo Masci, the first Franciscan pope), 1288-92. Romagna is under papal rectors since 1278; the Comtat Venaissin papal since 1274.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples",
+    "france",
+    "florence"
+   ],
+   "rivals": [
+    "aragon",
+    "sicily"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "Nicholas IV preaches a new crusade for Acre and backs the Angevins against Aragonese Sicily.",
+    "de": "Nikolaus IV. predigt einen Kreuzzug für Akkon und stützt die Anjou gegen das aragonesische Sizilien."
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire Or and argent beneath a papal tiara",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "crown",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "naples",
+   "name": {
+    "en": "Kingdom of Naples",
+    "de": "Königreich Neapel"
+   },
+   "short": {
+    "en": "Naples",
+    "de": "Neapel"
+   },
+   "adjective": {
+    "en": "Neapolitan",
+    "de": "neapolitanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "neapolitan",
+   "faith": "latin",
+   "color": "#285563",
+   "capital": {
+    "name": "Naples",
+    "lat": 40.852,
+    "lon": 14.268
+   },
+   "holdings": [
+    {
+     "name": "Naples",
+     "lat": 40.852,
+     "lon": 14.268
+    },
+    {
+     "name": "Capua",
+     "lat": 41.106,
+     "lon": 14.212
+    },
+    {
+     "name": "Gaeta",
+     "lat": 41.213,
+     "lon": 13.571
+    },
+    {
+     "name": "L'Aquila",
+     "lat": 42.35,
+     "lon": 13.4
+    },
+    {
+     "name": "Sulmona",
+     "lat": 42.048,
+     "lon": 13.926
+    },
+    {
+     "name": "Chieti",
+     "lat": 42.351,
+     "lon": 14.168
+    },
+    {
+     "name": "Foggia",
+     "lat": 41.462,
+     "lon": 15.545
+    },
+    {
+     "name": "Lucera",
+     "lat": 41.51,
+     "lon": 15.34
+    },
+    {
+     "name": "Manfredonia",
+     "lat": 41.63,
+     "lon": 15.917
+    },
+    {
+     "name": "Trani",
+     "lat": 41.277,
+     "lon": 16.416
+    },
+    {
+     "name": "Bari",
+     "lat": 41.117,
+     "lon": 16.872
+    },
+    {
+     "name": "Brindisi",
+     "lat": 40.638,
+     "lon": 17.946
+    },
+    {
+     "name": "Taranto",
+     "lat": 40.464,
+     "lon": 17.247
+    },
+    {
+     "name": "Lecce",
+     "lat": 40.352,
+     "lon": 18.169
+    },
+    {
+     "name": "Otranto",
+     "lat": 40.146,
+     "lon": 18.491
+    },
+    {
+     "name": "Matera",
+     "lat": 40.666,
+     "lon": 16.604
+    },
+    {
+     "name": "Melfi",
+     "lat": 40.996,
+     "lon": 15.652
+    },
+    {
+     "name": "Potenza",
+     "lat": 40.64,
+     "lon": 15.806
+    },
+    {
+     "name": "Salerno",
+     "lat": 40.682,
+     "lon": 14.768
+    },
+    {
+     "name": "Amalfi",
+     "lat": 40.63,
+     "lon": 14.6
+    },
+    {
+     "name": "Cosenza",
+     "lat": 39.298,
+     "lon": 16.254
+    },
+    {
+     "name": "Rossano",
+     "lat": 39.576,
+     "lon": 16.634
+    },
+    {
+     "name": "Aix",
+     "lat": 43.529,
+     "lon": 5.447
+    },
+    {
+     "name": "Marseille",
+     "lat": 43.296,
+     "lon": 5.37
+    },
+    {
+     "name": "Arles",
+     "lat": 43.677,
+     "lon": 4.631
+    },
+    {
+     "name": "Tarascon",
+     "lat": 43.806,
+     "lon": 4.66
+    },
+    {
+     "name": "Toulon",
+     "lat": 43.124,
+     "lon": 5.928
+    },
+    {
+     "name": "Draguignan",
+     "lat": 43.538,
+     "lon": 6.464
+    },
+    {
+     "name": "Grasse",
+     "lat": 43.658,
+     "lon": 6.923
+    },
+    {
+     "name": "Digne",
+     "lat": 44.092,
+     "lon": 6.236
+    },
+    {
+     "name": "Sisteron",
+     "lat": 44.195,
+     "lon": 5.944
+    },
+    {
+     "name": "Forcalquier",
+     "lat": 43.96,
+     "lon": 5.78
+    },
+    {
+     "name": "Avignon",
+     "lat": 43.949,
+     "lon": 4.806
+    },
+    {
+     "name": "Nice",
+     "lat": 43.7,
+     "lon": 7.27
+    },
+    {
+     "name": "Corfu",
+     "lat": 39.624,
+     "lon": 19.921
+    },
+    {
+     "name": "Butrint",
+     "lat": 39.746,
+     "lon": 20.02
+    },
+    {
+     "name": "Kanina",
+     "lat": 40.44,
+     "lon": 19.52
+    }
+   ],
+   "ruler": {
+    "name": "Charles II",
+    "born": 1254,
+    "dynasty": "Anjou",
+    "female": false
+   },
+   "heir": {
+    "name": "Charles Martel",
+    "born": 1271,
+    "dynasty": "Anjou",
+    "female": false
+   },
+   "consort": {
+    "name": "Mary of Hungary",
+    "born": 1257,
+    "dynasty": "Árpád",
+    "female": true
+   },
+   "dynasty_note": "House of Anjou. King of Sicily without the island; also Count of Provence and Forcalquier, overlord of Achaea, and lord of Corfu and the Albanian coast at Kanina and Butrint.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "papal_states",
+    "france",
+    "achaea"
+   ],
+   "rivals": [
+    "aragon",
+    "sicily"
+   ],
+   "claims_on": [
+    "sicily"
+   ],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or, a label gules",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 9,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sicily",
+   "name": {
+    "en": "Kingdom of Trinacria",
+    "de": "Königreich Trinakria"
+   },
+   "short": {
+    "en": "Sicily",
+    "de": "Sizilien"
+   },
+   "adjective": {
+    "en": "Sicilian",
+    "de": "sizilianisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sicilian",
+   "faith": "latin",
+   "color": "#575711",
+   "capital": {
+    "name": "Palermo",
+    "lat": 38.116,
+    "lon": 13.361
+   },
+   "holdings": [
+    {
+     "name": "Palermo",
+     "lat": 38.116,
+     "lon": 13.361
+    },
+    {
+     "name": "Messina",
+     "lat": 38.193,
+     "lon": 15.554
+    },
+    {
+     "name": "Catania",
+     "lat": 37.502,
+     "lon": 15.087
+    },
+    {
+     "name": "Syracuse",
+     "lat": 37.075,
+     "lon": 15.286
+    },
+    {
+     "name": "Girgenti",
+     "lat": 37.311,
+     "lon": 13.577
+    },
+    {
+     "name": "Trapani",
+     "lat": 38.017,
+     "lon": 12.514
+    },
+    {
+     "name": "Marsala",
+     "lat": 37.8,
+     "lon": 12.44
+    },
+    {
+     "name": "Cefalù",
+     "lat": 38.04,
+     "lon": 14.02
+    },
+    {
+     "name": "Noto",
+     "lat": 36.89,
+     "lon": 15.07
+    },
+    {
+     "name": "Caltanissetta",
+     "lat": 37.49,
+     "lon": 14.06
+    },
+    {
+     "name": "Reggio Calabria",
+     "lat": 38.11,
+     "lon": 15.65
+    },
+    {
+     "name": "Malta",
+     "lat": 35.886,
+     "lon": 14.403
+    },
+    {
+     "name": "Gozo",
+     "lat": 36.044,
+     "lon": 14.24
+    },
+    {
+     "name": "Pantelleria",
+     "lat": 36.83,
+     "lon": 11.95
+    },
+    {
+     "name": "Houmt Souk",
+     "lat": 33.876,
+     "lon": 10.857,
+     "outpost": true
+    }
+   ],
+   "ruler": {
+    "name": "James II",
+    "born": 1267,
+    "dynasty": "Barcelona",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Barcelona: James, second son of Peter III, King of Sicily since 1285; heir of Aragon (from June 1291). Roger of Lauria holds Djerba and the Kerkennah islands (1284).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "aragon"
+   ],
+   "rivals": [
+    "naples",
+    "papal_states"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per saltire Or paly gules and argent an eagle sable",
+    "field": "or",
+    "division": "per_saltire",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "arborea",
+   "name": {
+    "en": "Judicate of Arborea",
+    "de": "Judikat Arborea"
+   },
+   "short": {
+    "en": "Arborea",
+    "de": "Arborea"
+   },
+   "adjective": {
+    "en": "Arborean",
+    "de": "arboreisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "sardinian",
+   "faith": "latin",
+   "color": "#28522f",
+   "capital": {
+    "name": "Oristano",
+    "lat": 39.903,
+    "lon": 8.592
+   },
+   "holdings": [
+    {
+     "name": "Oristano",
+     "lat": 39.903,
+     "lon": 8.592
+    },
+    {
+     "name": "Bosa",
+     "lat": 40.298,
+     "lon": 8.498
+    },
+    {
+     "name": "Macomer",
+     "lat": 40.27,
+     "lon": 8.78
+    },
+    {
+     "name": "Laconi",
+     "lat": 39.85,
+     "lon": 9.05
+    }
+   ],
+   "ruler": {
+    "name": "Mariano II de Bas-Serra",
+    "born": null,
+    "dynasty": "Bas-Serra",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Judicate of Arborea.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "pisa"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, an uprooted tree vert",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "venice",
+   "name": {
+    "en": "Republic of Venice",
+    "de": "Republik Venedig"
+   },
+   "short": {
+    "en": "Venice",
+    "de": "Venedig"
+   },
+   "adjective": {
+    "en": "Venetian",
+    "de": "venezianisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#2b8285",
+   "capital": {
+    "name": "Venice",
+    "lat": 45.438,
+    "lon": 12.335
+   },
+   "holdings": [
+    {
+     "name": "Venice",
+     "lat": 45.438,
+     "lon": 12.335
+    },
+    {
+     "name": "Chioggia",
+     "lat": 45.22,
+     "lon": 12.28
+    },
+    {
+     "name": "Capodistria",
+     "lat": 45.548,
+     "lon": 13.73
+    },
+    {
+     "name": "Parenzo",
+     "lat": 45.227,
+     "lon": 13.594
+    },
+    {
+     "name": "Pirano",
+     "lat": 45.53,
+     "lon": 13.57
+    },
+    {
+     "name": "Umago",
+     "lat": 45.43,
+     "lon": 13.52
+    },
+    {
+     "name": "Rovigno",
+     "lat": 45.08,
+     "lon": 13.64
+    },
+    {
+     "name": "Cittanova",
+     "lat": 45.32,
+     "lon": 13.57
+    },
+    {
+     "name": "Zara",
+     "lat": 44.119,
+     "lon": 15.231
+    },
+    {
+     "name": "Veglia",
+     "lat": 45.03,
+     "lon": 14.58
+    },
+    {
+     "name": "Cherso",
+     "lat": 44.96,
+     "lon": 14.41
+    },
+    {
+     "name": "Arbe",
+     "lat": 44.76,
+     "lon": 14.76
+    },
+    {
+     "name": "Candia",
+     "lat": 35.339,
+     "lon": 25.144
+    },
+    {
+     "name": "Chania",
+     "lat": 35.51,
+     "lon": 24.02
+    },
+    {
+     "name": "Rethymno",
+     "lat": 35.37,
+     "lon": 24.48
+    },
+    {
+     "name": "Sitia",
+     "lat": 35.207,
+     "lon": 26.104
+    },
+    {
+     "name": "Modon",
+     "lat": 36.82,
+     "lon": 21.705
+    },
+    {
+     "name": "Coron",
+     "lat": 36.795,
+     "lon": 21.96
+    },
+    {
+     "name": "Negroponte",
+     "lat": 38.463,
+     "lon": 23.6
+    },
+    {
+     "name": "Cerigo",
+     "lat": 36.15,
+     "lon": 22.99
+    },
+    {
+     "name": "Ragusa",
+     "lat": 42.641,
+     "lon": 18.108
+    }
+   ],
+   "ruler": {
+    "name": "Pietro Gradenigo",
+    "born": 1251,
+    "dynasty": "Gradenigo",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Doge since November 1289. Crete, Modon and Coron are Venetian colonies; Negroponte is ruled by Lombard triarchs under a Venetian bailo; Ragusa has a Venetian count.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "genoa"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a winged lion passant Or holding a book",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "genoa",
+   "name": {
+    "en": "Republic of Genoa",
+    "de": "Republik Genua"
+   },
+   "short": {
+    "en": "Genoa",
+    "de": "Genua"
+   },
+   "adjective": {
+    "en": "Genoese",
+    "de": "genuesisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#6c2e43",
+   "capital": {
+    "name": "Genoa",
+    "lat": 44.407,
+    "lon": 8.934
+   },
+   "holdings": [
+    {
+     "name": "Genoa",
+     "lat": 44.407,
+     "lon": 8.934
+    },
+    {
+     "name": "Savona",
+     "lat": 44.309,
+     "lon": 8.477
+    },
+    {
+     "name": "Ventimiglia",
+     "lat": 43.79,
+     "lon": 7.608
+    },
+    {
+     "name": "Albenga",
+     "lat": 44.05,
+     "lon": 8.218
+    },
+    {
+     "name": "Noli",
+     "lat": 44.21,
+     "lon": 8.41
+    },
+    {
+     "name": "Chiavari",
+     "lat": 44.317,
+     "lon": 9.322
+    },
+    {
+     "name": "Rapallo",
+     "lat": 44.35,
+     "lon": 9.23
+    },
+    {
+     "name": "Portovenere",
+     "lat": 44.05,
+     "lon": 9.84
+    },
+    {
+     "name": "La Spezia",
+     "lat": 44.103,
+     "lon": 9.824
+    },
+    {
+     "name": "Bonifacio",
+     "lat": 41.387,
+     "lon": 9.159
+    },
+    {
+     "name": "Calvi",
+     "lat": 42.567,
+     "lon": 8.757
+    },
+    {
+     "name": "Alghero",
+     "lat": 40.558,
+     "lon": 8.32
+    },
+    {
+     "name": "Castelsardo",
+     "lat": 40.91,
+     "lon": 8.71
+    },
+    {
+     "name": "Sassari",
+     "lat": 40.727,
+     "lon": 8.56
+    },
+    {
+     "name": "Pera",
+     "lat": 41.026,
+     "lon": 28.974
+    },
+    {
+     "name": "Caffa",
+     "lat": 45.03,
+     "lon": 35.38,
+     "outpost": true
+    }
+   ],
+   "ruler": {
+    "name": "Captains of the People (Oberto Spinola, Corrado Doria)",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune under two Ghibelline captains of the people. Victor over Pisa at Meloria (1284). Pera (Galata) since 1267; Caffa is modelled as its own city. The Doria hold Alghero and Castelgenovese in Sardinia; Sassari is a commune in the Genoese orbit.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "venice",
+    "pisa"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "pisa",
+   "name": {
+    "en": "Republic of Pisa",
+    "de": "Republik Pisa"
+   },
+   "short": {
+    "en": "Pisa",
+    "de": "Pisa"
+   },
+   "adjective": {
+    "en": "Pisan",
+    "de": "pisanisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#8e657f",
+   "capital": {
+    "name": "Pisa",
+    "lat": 43.716,
+    "lon": 10.401
+   },
+   "holdings": [
+    {
+     "name": "Pisa",
+     "lat": 43.716,
+     "lon": 10.401
+    },
+    {
+     "name": "Livorno",
+     "lat": 43.55,
+     "lon": 10.31
+    },
+    {
+     "name": "Piombino",
+     "lat": 42.926,
+     "lon": 10.526
+    },
+    {
+     "name": "Cagliari",
+     "lat": 39.223,
+     "lon": 9.121
+    },
+    {
+     "name": "Iglesias",
+     "lat": 39.31,
+     "lon": 8.537
+    },
+    {
+     "name": "Olbia",
+     "lat": 40.92,
+     "lon": 9.5
+    },
+    {
+     "name": "Elba",
+     "lat": 42.81,
+     "lon": 10.31
+    }
+   ],
+   "ruler": {
+    "name": "Guido da Montefeltro (capitano)",
+    "born": 1223,
+    "dynasty": "Montefeltro",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ghibelline commune, captain of war Guido da Montefeltro (1289-93); holds Cagliari and Gallura in Sardinia.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "arborea",
+    "arezzo"
+   ],
+   "rivals": [
+    "genoa",
+    "florence",
+    "lucca"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross pommée argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "florence",
+   "name": {
+    "en": "Republic of Florence",
+    "de": "Republik Florenz"
+   },
+   "short": {
+    "en": "Florence",
+    "de": "Florenz"
+   },
+   "adjective": {
+    "en": "Florentine",
+    "de": "florentinisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#6f2e31",
+   "capital": {
+    "name": "Florence",
+    "lat": 43.769,
+    "lon": 11.256
+   },
+   "holdings": [
+    {
+     "name": "Florence",
+     "lat": 43.769,
+     "lon": 11.256
+    },
+    {
+     "name": "Prato",
+     "lat": 43.88,
+     "lon": 11.097
+    },
+    {
+     "name": "Fiesole",
+     "lat": 43.81,
+     "lon": 11.29
+    },
+    {
+     "name": "Empoli",
+     "lat": 43.72,
+     "lon": 10.95
+    },
+    {
+     "name": "San Miniato",
+     "lat": 43.68,
+     "lon": 10.85
+    },
+    {
+     "name": "Figline Valdarno",
+     "lat": 43.62,
+     "lon": 11.47
+    },
+    {
+     "name": "Poggibonsi",
+     "lat": 43.47,
+     "lon": 11.15
+    }
+   ],
+   "ruler": {
+    "name": "Priors of the Guilds",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune; victor at Campaldino (11 June 1289).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lucca",
+    "siena",
+    "bologna",
+    "papal_states"
+   ],
+   "rivals": [
+    "pisa",
+    "arezzo"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a fleur-de-lis florencée gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "siena",
+   "name": {
+    "en": "Republic of Siena",
+    "de": "Republik Siena"
+   },
+   "short": {
+    "en": "Siena",
+    "de": "Siena"
+   },
+   "adjective": {
+    "en": "Sienese",
+    "de": "sienesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#2b582f",
+   "capital": {
+    "name": "Siena",
+    "lat": 43.318,
+    "lon": 11.331
+   },
+   "holdings": [
+    {
+     "name": "Siena",
+     "lat": 43.318,
+     "lon": 11.331
+    },
+    {
+     "name": "Montalcino",
+     "lat": 43.058,
+     "lon": 11.49
+    },
+    {
+     "name": "Grosseto",
+     "lat": 42.76,
+     "lon": 11.113
+    },
+    {
+     "name": "Massa Marittima",
+     "lat": 43.049,
+     "lon": 10.889
+    }
+   ],
+   "ruler": {
+    "name": "The Nine",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune under the government of the Nine (from 1287).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess argent and sable (the Balzana)",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "lucca",
+   "name": {
+    "en": "Commune of Lucca",
+    "de": "Kommune Lucca"
+   },
+   "short": {
+    "en": "Lucca",
+    "de": "Lucca"
+   },
+   "adjective": {
+    "en": "Lucchese",
+    "de": "lucchesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#42794d",
+   "capital": {
+    "name": "Lucca",
+    "lat": 43.843,
+    "lon": 10.507
+   },
+   "holdings": [
+    {
+     "name": "Lucca",
+     "lat": 43.843,
+     "lon": 10.507
+    },
+    {
+     "name": "Pietrasanta",
+     "lat": 43.959,
+     "lon": 10.227
+    },
+    {
+     "name": "Camaiore",
+     "lat": 43.94,
+     "lon": 10.3
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [
+    "pisa"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess argent and gules",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "arezzo",
+   "name": {
+    "en": "Commune of Arezzo",
+    "de": "Kommune Arezzo"
+   },
+   "short": {
+    "en": "Arezzo",
+    "de": "Arezzo"
+   },
+   "adjective": {
+    "en": "Aretine",
+    "de": "aretinisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#93577f",
+   "capital": {
+    "name": "Arezzo",
+    "lat": 43.463,
+    "lon": 11.88
+   },
+   "holdings": [
+    {
+     "name": "Arezzo",
+     "lat": 43.463,
+     "lon": 11.88
+    },
+    {
+     "name": "Cortona",
+     "lat": 43.28,
+     "lon": 11.99
+    },
+    {
+     "name": "Bibbiena",
+     "lat": 43.7,
+     "lon": 11.82
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ghibelline commune, defeated at Campaldino.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "pisa"
+   ],
+   "rivals": [
+    "florence"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a horse rampant sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "perugia",
+   "name": {
+    "en": "Commune of Perugia",
+    "de": "Kommune Perugia"
+   },
+   "short": {
+    "en": "Perugia",
+    "de": "Perugia"
+   },
+   "adjective": {
+    "en": "Perugian",
+    "de": "perugianisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#4d3c67",
+   "capital": {
+    "name": "Perugia",
+    "lat": 43.112,
+    "lon": 12.389
+   },
+   "holdings": [
+    {
+     "name": "Perugia",
+     "lat": 43.112,
+     "lon": 12.389
+    },
+    {
+     "name": "Assisi",
+     "lat": 43.07,
+     "lon": 12.61
+    },
+    {
+     "name": "Gubbio",
+     "lat": 43.35,
+     "lon": 12.58
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune within the Papal States.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a griffin rampant gules crowned Or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "griffin",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "urbino",
+   "name": {
+    "en": "County of Urbino",
+    "de": "Grafschaft Urbino"
+   },
+   "short": {
+    "en": "Urbino",
+    "de": "Urbino"
+   },
+   "adjective": {
+    "en": "Urbinate",
+    "de": "urbinatisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#317f94",
+   "capital": {
+    "name": "Urbino",
+    "lat": 43.726,
+    "lon": 12.637
+   },
+   "holdings": [
+    {
+     "name": "Urbino",
+     "lat": 43.726,
+     "lon": 12.637
+    },
+    {
+     "name": "Montefeltro",
+     "lat": 43.88,
+     "lon": 12.38
+    }
+   ],
+   "ruler": {
+    "name": "Guido da Montefeltro",
+    "born": 1223,
+    "dynasty": "Montefeltro",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Montefeltro lordship.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "pisa"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Bendy Or and azure, a chief Or with an eagle sable",
+    "field": "or",
+    "division": "bendy",
+    "field2": "azure",
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "san_marino",
+   "name": {
+    "en": "Commune of San Marino",
+    "de": "Kommune San Marino"
+   },
+   "short": {
+    "en": "San Marino",
+    "de": "San Marino"
+   },
+   "adjective": {
+    "en": "Sammarinese",
+    "de": "san-marinesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "roman",
+   "faith": "latin",
+   "color": "#43502a",
+   "capital": {
+    "name": "San Marino",
+    "lat": 43.936,
+    "lon": 12.447
+   },
+   "holdings": [
+    {
+     "name": "San Marino",
+     "lat": 43.936,
+     "lon": 12.447
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, three towers argent on three peaks vert",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "argent",
+      "count": 3
+     },
+     {
+      "type": "mountain",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bologna",
+   "name": {
+    "en": "Lordship of Bologna",
+    "de": "Herrschaft Bologna"
+   },
+   "short": {
+    "en": "Bologna",
+    "de": "Bologna"
+   },
+   "adjective": {
+    "en": "Bolognese",
+    "de": "bolognesisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#266d7b",
+   "capital": {
+    "name": "Bologna",
+    "lat": 44.494,
+    "lon": 11.343
+   },
+   "holdings": [
+    {
+     "name": "Bologna",
+     "lat": 44.494,
+     "lon": 11.343
+    },
+    {
+     "name": "Budrio",
+     "lat": 44.54,
+     "lon": 11.53
+    },
+    {
+     "name": "Castel San Pietro Terme",
+     "lat": 44.4,
+     "lon": 11.59
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune (the Pepoli lordship comes only in 1337).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "florence"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules (Bologna)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "milan",
+   "name": {
+    "en": "Lordship of Milan",
+    "de": "Herrschaft Mailand"
+   },
+   "short": {
+    "en": "Milan",
+    "de": "Mailand"
+   },
+   "adjective": {
+    "en": "Milanese",
+    "de": "mailändisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#245f7f",
+   "capital": {
+    "name": "Milan",
+    "lat": 45.464,
+    "lon": 9.19
+   },
+   "holdings": [
+    {
+     "name": "Milan",
+     "lat": 45.464,
+     "lon": 9.19
+    },
+    {
+     "name": "Monza",
+     "lat": 45.58,
+     "lon": 9.27
+    },
+    {
+     "name": "Novara",
+     "lat": 45.446,
+     "lon": 8.622
+    },
+    {
+     "name": "Lodi",
+     "lat": 45.314,
+     "lon": 9.503
+    },
+    {
+     "name": "Varese",
+     "lat": 45.82,
+     "lon": 8.83
+    },
+    {
+     "name": "Vigevano",
+     "lat": 45.317,
+     "lon": 8.85
+    }
+   ],
+   "ruler": {
+    "name": "Ottone Visconti, archbishop; Matteo Visconti, captain of the people",
+    "born": 1207,
+    "dynasty": "Visconti",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Archbishop Ottone Visconti rules Milan since 1277; his great-nephew Matteo is captain of the people (1287) and becomes imperial vicar in 1294.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "montferrat"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a serpent azure crowned Or devouring a child gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "dragon",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "verona",
+   "name": {
+    "en": "Lordship of Verona",
+    "de": "Herrschaft Verona"
+   },
+   "short": {
+    "en": "Verona",
+    "de": "Verona"
+   },
+   "adjective": {
+    "en": "Veronese",
+    "de": "veronesisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#946379",
+   "capital": {
+    "name": "Verona",
+    "lat": 45.438,
+    "lon": 10.992
+   },
+   "holdings": [
+    {
+     "name": "Verona",
+     "lat": 45.438,
+     "lon": 10.992
+    },
+    {
+     "name": "Legnago",
+     "lat": 45.193,
+     "lon": 11.307
+    },
+    {
+     "name": "Peschiera del Garda",
+     "lat": 45.44,
+     "lon": 10.69
+    },
+    {
+     "name": "Soave",
+     "lat": 45.42,
+     "lon": 11.25
+    }
+   ],
+   "ruler": {
+    "name": "Alberto I della Scala",
+    "born": null,
+    "dynasty": "della Scala",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Scaliger lordship (since 1277).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a ladder argent ensigned with an imperial eagle sable",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "pale",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mantua",
+   "name": {
+    "en": "Lordship of Mantua",
+    "de": "Herrschaft Mantua"
+   },
+   "short": {
+    "en": "Mantua",
+    "de": "Mantua"
+   },
+   "adjective": {
+    "en": "Mantuan",
+    "de": "mantuanisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#653045",
+   "capital": {
+    "name": "Mantua",
+    "lat": 45.156,
+    "lon": 10.791
+   },
+   "holdings": [
+    {
+     "name": "Mantua",
+     "lat": 45.156,
+     "lon": 10.791
+    },
+    {
+     "name": "Sabbioneta",
+     "lat": 44.99,
+     "lon": 10.49
+    },
+    {
+     "name": "Ostiglia",
+     "lat": 45.07,
+     "lon": 11.14
+    }
+   ],
+   "ruler": {
+    "name": "Pinamonte Bonacolsi",
+    "born": null,
+    "dynasty": "Bonacolsi",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Bonacolsi lordship; Pinamonte is deposed by his son Bardellone later in 1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry of six Or and sable",
+    "field": "or",
+    "division": "barry",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ferrara",
+   "name": {
+    "en": "Lordship of Ferrara and Modena",
+    "de": "Herrschaft Ferrara und Modena"
+   },
+   "short": {
+    "en": "Ferrara",
+    "de": "Ferrara"
+   },
+   "adjective": {
+    "en": "Ferrarese",
+    "de": "ferraresisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#2b4a0f",
+   "capital": {
+    "name": "Ferrara",
+    "lat": 44.836,
+    "lon": 11.62
+   },
+   "holdings": [
+    {
+     "name": "Ferrara",
+     "lat": 44.836,
+     "lon": 11.62
+    },
+    {
+     "name": "Modena",
+     "lat": 44.647,
+     "lon": 10.925
+    },
+    {
+     "name": "Reggio Emilia",
+     "lat": 44.7,
+     "lon": 10.63
+    },
+    {
+     "name": "Rovigo",
+     "lat": 45.07,
+     "lon": 11.79
+    },
+    {
+     "name": "Comacchio",
+     "lat": 44.694,
+     "lon": 12.183
+    },
+    {
+     "name": "Adria",
+     "lat": 45.05,
+     "lon": 12.05
+    }
+   ],
+   "ruler": {
+    "name": "Obizzo II d'Este",
+    "born": 1247,
+    "dynasty": "Este",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Este lordship; Modena (1288) and Reggio (1289) accepted Obizzo as lord.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle argent crowned Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "padua",
+   "name": {
+    "en": "Lordship of Padua",
+    "de": "Herrschaft Padua"
+   },
+   "short": {
+    "en": "Padua",
+    "de": "Padua"
+   },
+   "adjective": {
+    "en": "Paduan",
+    "de": "paduanisch"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#5b2d56",
+   "capital": {
+    "name": "Padua",
+    "lat": 45.406,
+    "lon": 11.876
+   },
+   "holdings": [
+    {
+     "name": "Padua",
+     "lat": 45.406,
+     "lon": 11.876
+    },
+    {
+     "name": "Vicenza",
+     "lat": 45.548,
+     "lon": 11.546
+    },
+    {
+     "name": "Bassano del Grappa",
+     "lat": 45.77,
+     "lon": 11.73
+    },
+    {
+     "name": "Este",
+     "lat": 45.23,
+     "lon": 11.66
+    },
+    {
+     "name": "Monselice",
+     "lat": 45.243,
+     "lon": 11.75
+    },
+    {
+     "name": "Cittadella",
+     "lat": 45.648,
+     "lon": 11.784
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Free commune ruling Vicenza (the Carrara lordship begins only in 1318).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "verona"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cart (carro) gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "treviso",
+   "name": {
+    "en": "Lordship of Treviso",
+    "de": "Herrschaft Treviso"
+   },
+   "short": {
+    "en": "Treviso",
+    "de": "Treviso"
+   },
+   "adjective": {
+    "en": "Trevisan",
+    "de": "trevisanisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#9d5e70",
+   "capital": {
+    "name": "Treviso",
+    "lat": 45.666,
+    "lon": 12.243
+   },
+   "holdings": [
+    {
+     "name": "Treviso",
+     "lat": 45.666,
+     "lon": 12.243
+    },
+    {
+     "name": "Feltre",
+     "lat": 46.02,
+     "lon": 11.91
+    },
+    {
+     "name": "Belluno",
+     "lat": 46.14,
+     "lon": 12.22
+    },
+    {
+     "name": "Conegliano",
+     "lat": 45.89,
+     "lon": 12.3
+    },
+    {
+     "name": "Ceneda",
+     "lat": 45.99,
+     "lon": 12.3
+    }
+   ],
+   "ruler": {
+    "name": "Gherardo III da Camino",
+    "born": null,
+    "dynasty": "da Camino",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The da Camino lordship of Treviso, Feltre and Belluno (1283-1312).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "aquileia",
+   "name": {
+    "en": "Patriarchate of Aquileia",
+    "de": "Patriarchat Aquileja"
+   },
+   "short": {
+    "en": "Aquileia",
+    "de": "Aquileja"
+   },
+   "adjective": {
+    "en": "Friulian",
+    "de": "friaulisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#657d41",
+   "capital": {
+    "name": "Udine",
+    "lat": 46.063,
+    "lon": 13.235
+   },
+   "holdings": [
+    {
+     "name": "Udine",
+     "lat": 46.063,
+     "lon": 13.235
+    },
+    {
+     "name": "Cividale del Friuli",
+     "lat": 46.09,
+     "lon": 13.43
+    },
+    {
+     "name": "Aquileia",
+     "lat": 45.769,
+     "lon": 13.37
+    },
+    {
+     "name": "Gemona del Friuli",
+     "lat": 46.28,
+     "lon": 13.14
+    },
+    {
+     "name": "Venzone",
+     "lat": 46.33,
+     "lon": 13.14
+    },
+    {
+     "name": "Sacile",
+     "lat": 45.954,
+     "lon": 12.502
+    },
+    {
+     "name": "Portogruaro",
+     "lat": 45.78,
+     "lon": 12.84
+    }
+   ],
+   "ruler": {
+    "name": "Raimondo della Torre",
+    "born": null,
+    "dynasty": "della Torre",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Patriarch of Aquileia (1273-99), lord of Friuli.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "venice",
+    "tyrol"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "gorizia",
+   "name": {
+    "en": "County of Gorizia",
+    "de": "Grafschaft Görz"
+   },
+   "short": {
+    "en": "Gorizia",
+    "de": "Görz"
+   },
+   "adjective": {
+    "en": "Gorizian",
+    "de": "görzisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "slovene",
+   "faith": "latin",
+   "color": "#114c2c",
+   "capital": {
+    "name": "Gorizia",
+    "lat": 45.94,
+    "lon": 13.62
+   },
+   "holdings": [
+    {
+     "name": "Gorizia",
+     "lat": 45.94,
+     "lon": 13.62
+    },
+    {
+     "name": "Lienz",
+     "lat": 46.83,
+     "lon": 12.77
+    },
+    {
+     "name": "Pazin",
+     "lat": 45.24,
+     "lon": 13.94
+    },
+    {
+     "name": "Gradisca",
+     "lat": 45.89,
+     "lon": 13.5
+    }
+   ],
+   "ruler": {
+    "name": "Albert II",
+    "born": null,
+    "dynasty": "Meinhardiner",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Albert II, brother of Meinhard II, holds Gorizia, the Puster valley and Istrian lordships (division of 1271).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "tyrol"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "tyrol",
+   "name": {
+    "en": "County of Tyrol",
+    "de": "Grafschaft Tirol"
+   },
+   "short": {
+    "en": "Tyrol",
+    "de": "Tirol"
+   },
+   "adjective": {
+    "en": "Tyrolean",
+    "de": "tirolisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#75460a",
+   "capital": {
+    "name": "Meran",
+    "lat": 46.67,
+    "lon": 11.16
+   },
+   "holdings": [
+    {
+     "name": "Meran",
+     "lat": 46.67,
+     "lon": 11.16
+    },
+    {
+     "name": "Innsbruck",
+     "lat": 47.268,
+     "lon": 11.393
+    },
+    {
+     "name": "Bozen",
+     "lat": 46.498,
+     "lon": 11.354
+    },
+    {
+     "name": "Hall in Tirol",
+     "lat": 47.28,
+     "lon": 11.51
+    },
+    {
+     "name": "Trento",
+     "lat": 46.07,
+     "lon": 11.12
+    },
+    {
+     "name": "Klagenfurt",
+     "lat": 46.62,
+     "lon": 14.31
+    },
+    {
+     "name": "Sankt Veit an der Glan",
+     "lat": 46.77,
+     "lon": 14.36
+    },
+    {
+     "name": "Völkermarkt",
+     "lat": 46.66,
+     "lon": 14.634
+    },
+    {
+     "name": "Wolfsberg",
+     "lat": 46.84,
+     "lon": 14.84
+    },
+    {
+     "name": "Ljubljana",
+     "lat": 46.05,
+     "lon": 14.51
+    },
+    {
+     "name": "Kranj",
+     "lat": 46.24,
+     "lon": 14.36
+    },
+    {
+     "name": "Kamnik",
+     "lat": 46.22,
+     "lon": 14.61
+    }
+   ],
+   "ruler": {
+    "name": "Meinhard II",
+    "born": 1238,
+    "dynasty": "Meinhardiner",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Meinhard II, Count of Tyrol, Duke of Carinthia since 1286, holds Carniola and the Windic March in pledge from the Habsburgs; father-in-law of Albert of Austria. Controls the bishopric of Trent.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [
+    "aquileia"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules crowned or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "montferrat",
+   "name": {
+    "en": "Marquisate of Montferrat",
+    "de": "Markgrafschaft Montferrat"
+   },
+   "short": {
+    "en": "Montferrat",
+    "de": "Montferrat"
+   },
+   "adjective": {
+    "en": "Montferratese",
+    "de": "montferratisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#926957",
+   "capital": {
+    "name": "Casale Monferrato",
+    "lat": 45.13,
+    "lon": 8.45
+   },
+   "holdings": [
+    {
+     "name": "Casale Monferrato",
+     "lat": 45.13,
+     "lon": 8.45
+    },
+    {
+     "name": "Chivasso",
+     "lat": 45.191,
+     "lon": 7.889
+    },
+    {
+     "name": "Moncalvo",
+     "lat": 45.05,
+     "lon": 8.266
+    },
+    {
+     "name": "Trino",
+     "lat": 45.193,
+     "lon": 8.296
+    },
+    {
+     "name": "Acqui Terme",
+     "lat": 44.68,
+     "lon": 8.47
+    },
+    {
+     "name": "Nizza Monferrato",
+     "lat": 44.77,
+     "lon": 8.36
+    }
+   ],
+   "ruler": {
+    "name": "William VII",
+    "born": 1240,
+    "dynasty": "Aleramici",
+    "female": false
+   },
+   "heir": {
+    "name": "John I",
+    "born": 1277,
+    "dynasty": "Aleramici",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "William VII, the Great Marquis, has been held in an iron cage by the Alessandrians since September 1290 (dies February 1292); his son John I acts.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "milan",
+    "savoy"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a chief gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "saluzzo",
+   "name": {
+    "en": "Marquisate of Saluzzo",
+    "de": "Markgrafschaft Saluzzo"
+   },
+   "short": {
+    "en": "Saluzzo",
+    "de": "Saluzzo"
+   },
+   "adjective": {
+    "en": "Saluzzese",
+    "de": "saluzzisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#125127",
+   "capital": {
+    "name": "Saluzzo",
+    "lat": 44.645,
+    "lon": 7.49
+   },
+   "holdings": [
+    {
+     "name": "Saluzzo",
+     "lat": 44.645,
+     "lon": 7.49
+    },
+    {
+     "name": "Carmagnola",
+     "lat": 44.847,
+     "lon": 7.718
+    },
+    {
+     "name": "Revello",
+     "lat": 44.66,
+     "lon": 7.39
+    },
+    {
+     "name": "Dronero",
+     "lat": 44.466,
+     "lon": 7.364
+    }
+   ],
+   "ruler": {
+    "name": "Thomas I",
+    "born": 1239,
+    "dynasty": "Del Vasto",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a chief azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "savoy",
+   "name": {
+    "en": "County of Savoy",
+    "de": "Grafschaft Savoyen"
+   },
+   "short": {
+    "en": "Savoy",
+    "de": "Savoyen"
+   },
+   "adjective": {
+    "en": "Savoyard",
+    "de": "savoyisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#652d30",
+   "capital": {
+    "name": "Chambéry",
+    "lat": 45.566,
+    "lon": 5.92
+   },
+   "holdings": [
+    {
+     "name": "Chambéry",
+     "lat": 45.566,
+     "lon": 5.92
+    },
+    {
+     "name": "Saint-Jean-de-Maurienne",
+     "lat": 45.276,
+     "lon": 6.346
+    },
+    {
+     "name": "Moûtiers",
+     "lat": 45.485,
+     "lon": 6.53
+    },
+    {
+     "name": "Aosta",
+     "lat": 45.737,
+     "lon": 7.32
+    },
+    {
+     "name": "Susa",
+     "lat": 45.138,
+     "lon": 7.048
+    },
+    {
+     "name": "Avigliana",
+     "lat": 45.08,
+     "lon": 7.4
+    },
+    {
+     "name": "Turin",
+     "lat": 45.07,
+     "lon": 7.686
+    },
+    {
+     "name": "Pinerolo",
+     "lat": 44.885,
+     "lon": 7.331
+    },
+    {
+     "name": "Bourg-en-Bresse",
+     "lat": 46.205,
+     "lon": 5.225
+    },
+    {
+     "name": "Belley",
+     "lat": 45.76,
+     "lon": 5.69
+    },
+    {
+     "name": "Chillon",
+     "lat": 46.414,
+     "lon": 6.927
+    },
+    {
+     "name": "Évian",
+     "lat": 46.4,
+     "lon": 6.59
+    },
+    {
+     "name": "Moudon",
+     "lat": 46.67,
+     "lon": 6.8
+    },
+    {
+     "name": "Romont",
+     "lat": 46.69,
+     "lon": 6.92
+    },
+    {
+     "name": "Yverdon",
+     "lat": 46.78,
+     "lon": 6.64
+    },
+    {
+     "name": "Pont-de-Beauvoisin",
+     "lat": 45.536,
+     "lon": 5.67
+    }
+   ],
+   "ruler": {
+    "name": "Amadeus V",
+    "born": 1249,
+    "dynasty": "Savoy",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count since 1285; Turin and Pinerolo are held by his nephew Philip of Savoy under him (the principality of Piedmont/Achaea dates from 1294-1301). Bresse through his marriage to Sibylle of Baugé.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "geneva",
+    "montferrat",
+    "dauphine"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "geneva",
+   "name": {
+    "en": "County of Geneva",
+    "de": "Grafschaft Genf"
+   },
+   "short": {
+    "en": "Geneva",
+    "de": "Genf"
+   },
+   "adjective": {
+    "en": "Genevan",
+    "de": "genferisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#536646",
+   "capital": {
+    "name": "Annecy",
+    "lat": 45.9,
+    "lon": 6.125
+   },
+   "holdings": [
+    {
+     "name": "Annecy",
+     "lat": 45.9,
+     "lon": 6.125
+    },
+    {
+     "name": "Rumilly",
+     "lat": 45.867,
+     "lon": 5.94
+    },
+    {
+     "name": "La Roche-sur-Foron",
+     "lat": 46.07,
+     "lon": 6.31
+    }
+   ],
+   "ruler": {
+    "name": "Amadeus II",
+    "born": null,
+    "dynasty": "Geneva",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "savoy"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, four points equipollé azure",
+    "field": "or",
+    "division": "chequy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hungary",
+   "name": {
+    "en": "Kingdom of Hungary",
+    "de": "Königreich Ungarn"
+   },
+   "short": {
+    "en": "Hungary",
+    "de": "Ungarn"
+   },
+   "adjective": {
+    "en": "Hungarian",
+    "de": "ungarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "hungarian",
+   "faith": "latin",
+   "color": "#705453",
+   "capital": {
+    "name": "Buda",
+    "lat": 47.497,
+    "lon": 19.04
+   },
+   "holdings": [
+    {
+     "name": "Buda",
+     "lat": 47.497,
+     "lon": 19.04
+    },
+    {
+     "name": "Esztergom",
+     "lat": 47.786,
+     "lon": 18.74
+    },
+    {
+     "name": "Székesfehérvár",
+     "lat": 47.19,
+     "lon": 18.41
+    },
+    {
+     "name": "Pressburg",
+     "lat": 48.144,
+     "lon": 17.107
+    },
+    {
+     "name": "Nyitra",
+     "lat": 48.31,
+     "lon": 18.09
+    },
+    {
+     "name": "Trencsén",
+     "lat": 48.894,
+     "lon": 18.04
+    },
+    {
+     "name": "Zólyom",
+     "lat": 48.578,
+     "lon": 19.126
+    },
+    {
+     "name": "Lőcse",
+     "lat": 49.022,
+     "lon": 20.59
+    },
+    {
+     "name": "Kassa",
+     "lat": 48.72,
+     "lon": 21.258
+    },
+    {
+     "name": "Eger",
+     "lat": 47.902,
+     "lon": 20.377
+    },
+    {
+     "name": "Munkács",
+     "lat": 48.44,
+     "lon": 22.718
+    },
+    {
+     "name": "Szatmár",
+     "lat": 47.792,
+     "lon": 22.885
+    },
+    {
+     "name": "Várad",
+     "lat": 47.072,
+     "lon": 21.921
+    },
+    {
+     "name": "Szeged",
+     "lat": 46.253,
+     "lon": 20.148
+    },
+    {
+     "name": "Kalocsa",
+     "lat": 46.528,
+     "lon": 18.985
+    },
+    {
+     "name": "Temesvár",
+     "lat": 45.754,
+     "lon": 21.226
+    },
+    {
+     "name": "Csanád",
+     "lat": 46.08,
+     "lon": 20.43
+    },
+    {
+     "name": "Szörény",
+     "lat": 44.632,
+     "lon": 22.656
+    },
+    {
+     "name": "Kolozsvár",
+     "lat": 46.77,
+     "lon": 23.59
+    },
+    {
+     "name": "Gyulafehérvár",
+     "lat": 46.07,
+     "lon": 23.58
+    },
+    {
+     "name": "Bistritz",
+     "lat": 47.133,
+     "lon": 24.5
+    },
+    {
+     "name": "Hermannstadt",
+     "lat": 45.793,
+     "lon": 24.152
+    },
+    {
+     "name": "Kronstadt",
+     "lat": 45.65,
+     "lon": 25.606
+    },
+    {
+     "name": "Győr",
+     "lat": 47.687,
+     "lon": 17.635
+    },
+    {
+     "name": "Sopron",
+     "lat": 47.685,
+     "lon": 16.59
+    },
+    {
+     "name": "Pécs",
+     "lat": 46.073,
+     "lon": 18.233
+    },
+    {
+     "name": "Pozsega",
+     "lat": 45.34,
+     "lon": 17.685
+    },
+    {
+     "name": "Zagreb",
+     "lat": 45.815,
+     "lon": 15.982
+    },
+    {
+     "name": "Varaždin",
+     "lat": 46.305,
+     "lon": 16.336
+    },
+    {
+     "name": "Bihać",
+     "lat": 44.817,
+     "lon": 15.87
+    },
+    {
+     "name": "Knin",
+     "lat": 44.041,
+     "lon": 16.199
+    },
+    {
+     "name": "Split",
+     "lat": 43.51,
+     "lon": 16.44
+    },
+    {
+     "name": "Trogir",
+     "lat": 43.52,
+     "lon": 16.25
+    },
+    {
+     "name": "Šibenik",
+     "lat": 43.73,
+     "lon": 15.89
+    },
+    {
+     "name": "Senj",
+     "lat": 44.99,
+     "lon": 14.905
+    },
+    {
+     "name": "Vukovar",
+     "lat": 45.35,
+     "lon": 19.0
+    }
+   ],
+   "ruler": {
+    "name": "Andrew III",
+    "born": 1265,
+    "dynasty": "Árpád",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Fenenna of Kuyavia",
+    "born": 1276,
+    "dynasty": "Piast",
+    "female": true
+   },
+   "dynasty_note": "The last Árpád, crowned 23 July 1290 after Ladislaus IV was murdered. Charles II of Naples claims the crown for his son Charles Martel; the great lords (Kőszegi, Csák, Aba, Šubić) act almost on their own.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria",
+    "naples"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale: barry gules and argent; azure semé-de-lis Or",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 6,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "syrmia",
+   "name": {
+    "en": "Kingdom of Syrmia",
+    "de": "Königreich Syrmien"
+   },
+   "short": {
+    "en": "Syrmia",
+    "de": "Syrmien"
+   },
+   "adjective": {
+    "en": "Syrmian",
+    "de": "syrmisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "serbian",
+   "faith": "orthodox",
+   "color": "#a25f4f",
+   "capital": {
+    "name": "Belgrade",
+    "lat": 44.82,
+    "lon": 20.46
+   },
+   "holdings": [
+    {
+     "name": "Belgrade",
+     "lat": 44.82,
+     "lon": 20.46
+    },
+    {
+     "name": "Mačva",
+     "lat": 44.76,
+     "lon": 19.69
+    },
+    {
+     "name": "Šabac",
+     "lat": 44.75,
+     "lon": 19.69
+    },
+    {
+     "name": "Rudnik",
+     "lat": 44.13,
+     "lon": 20.51
+    },
+    {
+     "name": "Brčko",
+     "lat": 44.87,
+     "lon": 18.81
+    }
+   ],
+   "ruler": {
+    "name": "Stefan Dragutin",
+    "born": 1244,
+    "dynasty": "Nemanjić",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The former Serbian king Dragutin rules Mačva, Belgrade (1284), Usora and Soli as a vassal of Hungary.",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "serbia"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "bosnia",
+   "name": {
+    "en": "Banate of Bosnia",
+    "de": "Banat Bosnien"
+   },
+   "short": {
+    "en": "Bosnia",
+    "de": "Bosnien"
+   },
+   "adjective": {
+    "en": "Bosnian",
+    "de": "bosnisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "bosnian",
+   "faith": "bosnian_church",
+   "color": "#3d4b6b",
+   "capital": {
+    "name": "Visoko",
+    "lat": 43.99,
+    "lon": 18.18
+   },
+   "holdings": [
+    {
+     "name": "Visoko",
+     "lat": 43.99,
+     "lon": 18.18
+    },
+    {
+     "name": "Vrhbosna",
+     "lat": 43.85,
+     "lon": 18.39
+    },
+    {
+     "name": "Srebrenik",
+     "lat": 44.7,
+     "lon": 18.49
+    },
+    {
+     "name": "Doboj",
+     "lat": 44.73,
+     "lon": 18.08
+    }
+   ],
+   "ruler": {
+    "name": "Stephen I Kotromanić",
+    "born": 1242,
+    "dynasty": "Kotromanić",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Banate of Bosnia under Hungarian overlordship; Usora and Soli belong to Dragutin.",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a bend argent between fleurs-de-lis Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "lily",
+      "tincture": "or",
+      "count": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "serbia",
+   "name": {
+    "en": "Kingdom of Serbia",
+    "de": "Königreich Serbien"
+   },
+   "short": {
+    "en": "Serbia",
+    "de": "Serbien"
+   },
+   "adjective": {
+    "en": "Serbian",
+    "de": "serbisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "serbian",
+   "faith": "orthodox",
+   "color": "#733330",
+   "capital": {
+    "name": "Ras",
+    "lat": 43.15,
+    "lon": 20.42
+   },
+   "holdings": [
+    {
+     "name": "Ras",
+     "lat": 43.15,
+     "lon": 20.42
+    },
+    {
+     "name": "Prizren",
+     "lat": 42.213,
+     "lon": 20.739
+    },
+    {
+     "name": "Skopje",
+     "lat": 41.996,
+     "lon": 21.431
+    },
+    {
+     "name": "Peć",
+     "lat": 42.66,
+     "lon": 20.29
+    },
+    {
+     "name": "Priština",
+     "lat": 42.663,
+     "lon": 21.164
+    },
+    {
+     "name": "Kotor",
+     "lat": 42.424,
+     "lon": 18.771
+    },
+    {
+     "name": "Ulcinj",
+     "lat": 41.93,
+     "lon": 19.2
+    },
+    {
+     "name": "Bar",
+     "lat": 42.09,
+     "lon": 19.1
+    },
+    {
+     "name": "Shkodër",
+     "lat": 42.07,
+     "lon": 19.51
+    },
+    {
+     "name": "Trebinje",
+     "lat": 42.712,
+     "lon": 18.343
+    },
+    {
+     "name": "Zvečan",
+     "lat": 42.9,
+     "lon": 20.84
+    },
+    {
+     "name": "Lipljan",
+     "lat": 42.52,
+     "lon": 21.13
+    },
+    {
+     "name": "Tetovo",
+     "lat": 42.01,
+     "lon": 20.97
+    }
+   ],
+   "ruler": {
+    "name": "Stefan Uroš II Milutin",
+    "born": 1253,
+    "dynasty": "Nemanjić",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "King since 1282; took Skopje (1282) and northern Macedonia from Byzantium. Zeta and Hum belong to the realm.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "syrmia"
+   ],
+   "rivals": [
+    "byzantium",
+    "bulgaria",
+    "vidin"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a double-headed eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "ragusa",
+   "name": {
+    "en": "Republic of Ragusa",
+    "de": "Republik Ragusa"
+   },
+   "short": {
+    "en": "Ragusa",
+    "de": "Ragusa"
+   },
+   "adjective": {
+    "en": "Ragusan",
+    "de": "ragusanisch"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "croatian",
+   "faith": "latin",
+   "color": "#154955",
+   "capital": {
+    "name": "Ragusa",
+    "lat": 42.641,
+    "lon": 18.108
+   },
+   "holdings": [
+    {
+     "name": "Ragusa",
+     "lat": 42.641,
+     "lon": 18.108
+    },
+    {
+     "name": "Ston",
+     "lat": 42.838,
+     "lon": 17.697
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune under a Venetian count.",
+   "overlord": "venice",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry gules and argent",
+    "field": "gules",
+    "division": "barry",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bulgaria",
+   "name": {
+    "en": "Tsardom of Bulgaria (Tarnovo)",
+    "de": "Zarentum Bulgarien (Tarnowo)"
+   },
+   "short": {
+    "en": "Bulgaria",
+    "de": "Bulgarien"
+   },
+   "adjective": {
+    "en": "Bulgarian",
+    "de": "bulgarisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "bulgarian",
+   "faith": "orthodox",
+   "color": "#75744b",
+   "capital": {
+    "name": "Tarnovo",
+    "lat": 43.081,
+    "lon": 25.629
+   },
+   "holdings": [
+    {
+     "name": "Tarnovo",
+     "lat": 43.081,
+     "lon": 25.629
+    },
+    {
+     "name": "Preslav",
+     "lat": 43.16,
+     "lon": 26.815
+    },
+    {
+     "name": "Shumen",
+     "lat": 43.27,
+     "lon": 26.93
+    },
+    {
+     "name": "Varna",
+     "lat": 43.21,
+     "lon": 27.91
+    },
+    {
+     "name": "Silistra",
+     "lat": 44.117,
+     "lon": 27.261
+    },
+    {
+     "name": "Sofia",
+     "lat": 42.7,
+     "lon": 23.32
+    },
+    {
+     "name": "Lovech",
+     "lat": 43.137,
+     "lon": 24.717
+    },
+    {
+     "name": "Svishtov",
+     "lat": 43.62,
+     "lon": 25.35
+    },
+    {
+     "name": "Nikopol",
+     "lat": 43.705,
+     "lon": 24.895
+    },
+    {
+     "name": "Kaliakra",
+     "lat": 43.362,
+     "lon": 28.465
+    },
+    {
+     "name": "Provadiya",
+     "lat": 43.18,
+     "lon": 27.44
+    }
+   ],
+   "ruler": {
+    "name": "George I Terter",
+    "born": null,
+    "dynasty": "Terter",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tsar since 1280, tributary to Nogai of the Golden Horde (his son Theodore Svetoslav is a hostage there); he flees to Byzantium in 1292.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "byzantium",
+    "serbia"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant Or crowned",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "vidin",
+   "name": {
+    "en": "Despotate of Vidin",
+    "de": "Despotat Widin"
+   },
+   "short": {
+    "en": "Vidin",
+    "de": "Widin"
+   },
+   "adjective": {
+    "en": "Vidinian",
+    "de": "widinisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "bulgarian",
+   "faith": "orthodox",
+   "color": "#3f5330",
+   "capital": {
+    "name": "Vidin",
+    "lat": 43.99,
+    "lon": 22.873
+   },
+   "holdings": [
+    {
+     "name": "Vidin",
+     "lat": 43.99,
+     "lon": 22.873
+    },
+    {
+     "name": "Lom",
+     "lat": 43.824,
+     "lon": 23.236
+    },
+    {
+     "name": "Kula",
+     "lat": 43.89,
+     "lon": 22.52
+    },
+    {
+     "name": "Belogradchik",
+     "lat": 43.627,
+     "lon": 22.683
+    }
+   ],
+   "ruler": {
+    "name": "Shishman",
+    "born": null,
+    "dynasty": "Shishman",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Despot Shishman, a Cuman-Bulgarian lord, vassal of Nogai.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "serbia"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "byzantium",
+   "name": {
+    "en": "Empire of the Romans",
+    "de": "Byzantinisches Reich"
+   },
+   "short": {
+    "en": "Byzantium",
+    "de": "Byzanz"
+   },
+   "adjective": {
+    "en": "Byzantine",
+    "de": "byzantinisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#613f73",
+   "capital": {
+    "name": "Constantinople",
+    "lat": 41.008,
+    "lon": 28.978
+   },
+   "holdings": [
+    {
+     "name": "Constantinople",
+     "lat": 41.008,
+     "lon": 28.978
+    },
+    {
+     "name": "Adrianople",
+     "lat": 41.677,
+     "lon": 26.556
+    },
+    {
+     "name": "Didymoteicho",
+     "lat": 41.35,
+     "lon": 26.497
+    },
+    {
+     "name": "Rhaidestos",
+     "lat": 40.98,
+     "lon": 27.51
+    },
+    {
+     "name": "Selymbria",
+     "lat": 41.074,
+     "lon": 28.247
+    },
+    {
+     "name": "Gallipoli",
+     "lat": 40.411,
+     "lon": 26.67
+    },
+    {
+     "name": "Mesembria",
+     "lat": 42.659,
+     "lon": 27.734
+    },
+    {
+     "name": "Anchialos",
+     "lat": 42.56,
+     "lon": 27.64
+    },
+    {
+     "name": "Thessalonica",
+     "lat": 40.64,
+     "lon": 22.944
+    },
+    {
+     "name": "Serres",
+     "lat": 41.09,
+     "lon": 23.548
+    },
+    {
+     "name": "Drama",
+     "lat": 41.151,
+     "lon": 24.147
+    },
+    {
+     "name": "Christoupolis",
+     "lat": 40.937,
+     "lon": 24.412
+    },
+    {
+     "name": "Berroia",
+     "lat": 40.52,
+     "lon": 22.2
+    },
+    {
+     "name": "Edessa",
+     "lat": 40.8,
+     "lon": 22.05
+    },
+    {
+     "name": "Kastoria",
+     "lat": 40.52,
+     "lon": 21.263
+    },
+    {
+     "name": "Ohrid",
+     "lat": 41.117,
+     "lon": 20.802
+    },
+    {
+     "name": "Prilep",
+     "lat": 41.345,
+     "lon": 21.555
+    },
+    {
+     "name": "Berat",
+     "lat": 40.705,
+     "lon": 19.952
+    },
+    {
+     "name": "Durazzo",
+     "lat": 41.323,
+     "lon": 19.441
+    },
+    {
+     "name": "Valona",
+     "lat": 40.466,
+     "lon": 19.49
+    },
+    {
+     "name": "Mistra",
+     "lat": 37.073,
+     "lon": 22.367
+    },
+    {
+     "name": "Monemvasia",
+     "lat": 36.687,
+     "lon": 23.056
+    },
+    {
+     "name": "Kalamata",
+     "lat": 37.04,
+     "lon": 22.11
+    },
+    {
+     "name": "Nicaea",
+     "lat": 40.429,
+     "lon": 29.721
+    },
+    {
+     "name": "Nicomedia",
+     "lat": 40.765,
+     "lon": 29.94
+    },
+    {
+     "name": "Prusa",
+     "lat": 40.18,
+     "lon": 29.06
+    },
+    {
+     "name": "Philadelphia",
+     "lat": 38.35,
+     "lon": 28.52
+    },
+    {
+     "name": "Nymphaion",
+     "lat": 38.62,
+     "lon": 27.43
+    },
+    {
+     "name": "Smyrna",
+     "lat": 38.42,
+     "lon": 27.14
+    },
+    {
+     "name": "Magnesia",
+     "lat": 38.61,
+     "lon": 27.43
+    },
+    {
+     "name": "Adramyttion",
+     "lat": 39.59,
+     "lon": 27.02
+    },
+    {
+     "name": "Pergamon",
+     "lat": 39.12,
+     "lon": 27.18
+    },
+    {
+     "name": "Phocaea",
+     "lat": 38.67,
+     "lon": 26.76
+    },
+    {
+     "name": "Mytilene",
+     "lat": 39.107,
+     "lon": 26.555
+    },
+    {
+     "name": "Chios",
+     "lat": 38.37,
+     "lon": 26.136
+    },
+    {
+     "name": "Samos",
+     "lat": 37.69,
+     "lon": 26.94
+    },
+    {
+     "name": "Lemnos",
+     "lat": 39.875,
+     "lon": 25.062
+    },
+    {
+     "name": "Thasos",
+     "lat": 40.78,
+     "lon": 24.71
+    },
+    {
+     "name": "Rhodes",
+     "lat": 36.444,
+     "lon": 28.224
+    },
+    {
+     "name": "Kos",
+     "lat": 36.893,
+     "lon": 27.288
+    },
+    {
+     "name": "Lindos",
+     "lat": 36.092,
+     "lon": 28.086
+    }
+   ],
+   "ruler": {
+    "name": "Andronikos II Palaiologos",
+    "born": 1259,
+    "dynasty": "Palaiologos",
+    "female": false
+   },
+   "heir": {
+    "name": "Michael IX Palaiologos",
+    "born": 1277,
+    "dynasty": "Palaiologos",
+    "female": false
+   },
+   "consort": {
+    "name": "Irene of Montferrat",
+    "born": 1274,
+    "dynasty": "Aleramici",
+    "female": true
+   },
+   "dynasty_note": "Andronikos II (1282-1328). The Anatolian frontier is crumbling under the Turkmen; Durazzo was recovered from the Angevins in 1288; the Zaccaria hold Phocaea under the emperor.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "genoa"
+   ],
+   "rivals": [
+    "venice",
+    "naples",
+    "serbia",
+    "epirus",
+    "thessaly"
+   ],
+   "claims_on": [
+    "epirus",
+    "thessaly",
+    "achaea",
+    "athens"
+   ],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross Or between four betas Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "letter",
+      "tincture": "or",
+      "count": 4,
+      "text": "B"
+     }
+    ]
+   }
+  },
+  {
+   "id": "epirus",
+   "name": {
+    "en": "Despotate of Epirus and Thessaly",
+    "de": "Despotat Epirus und Thessalien"
+   },
+   "short": {
+    "en": "Epirus",
+    "de": "Epirus"
+   },
+   "adjective": {
+    "en": "Epirote",
+    "de": "epirotisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#5f2f38",
+   "capital": {
+    "name": "Arta",
+    "lat": 39.16,
+    "lon": 20.985
+   },
+   "holdings": [
+    {
+     "name": "Arta",
+     "lat": 39.16,
+     "lon": 20.985
+    },
+    {
+     "name": "Ioannina",
+     "lat": 39.665,
+     "lon": 20.853
+    },
+    {
+     "name": "Preveza",
+     "lat": 38.96,
+     "lon": 20.75
+    },
+    {
+     "name": "Vonitsa",
+     "lat": 38.92,
+     "lon": 20.89
+    },
+    {
+     "name": "Naupaktos",
+     "lat": 38.39,
+     "lon": 21.83
+    },
+    {
+     "name": "Angelokastro",
+     "lat": 39.68,
+     "lon": 19.69
+    },
+    {
+     "name": "Rogoi",
+     "lat": 39.07,
+     "lon": 20.79
+    }
+   ],
+   "ruler": {
+    "name": "Nikephoros I Komnenos Doukas",
+    "born": 1240,
+    "dynasty": "Komnenodoukas",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anna Kantakouzene",
+    "born": null,
+    "dynasty": "Kantakouzenos",
+    "female": true
+   },
+   "dynasty_note": "Despotate of Epirus; allied with the Angevins against Byzantium.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "naples"
+   ],
+   "rivals": [
+    "byzantium",
+    "thessaly"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a double-headed eagle argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "double_eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "thessaly",
+   "name": {
+    "en": "Lordship of Thessaly (Great Vlachia)",
+    "de": "Herrschaft Thessalien (Großwalachei)"
+   },
+   "short": {
+    "en": "Thessaly",
+    "de": "Thessalien"
+   },
+   "adjective": {
+    "en": "Thessalian",
+    "de": "thessalisch"
+   },
+   "rank": "despotate",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#836385",
+   "capital": {
+    "name": "Neopatras",
+    "lat": 38.9,
+    "lon": 22.38
+   },
+   "holdings": [
+    {
+     "name": "Neopatras",
+     "lat": 38.9,
+     "lon": 22.38
+    },
+    {
+     "name": "Larissa",
+     "lat": 39.639,
+     "lon": 22.419
+    },
+    {
+     "name": "Trikala",
+     "lat": 39.555,
+     "lon": 21.768
+    },
+    {
+     "name": "Pharsala",
+     "lat": 39.296,
+     "lon": 22.383
+    },
+    {
+     "name": "Demetrias",
+     "lat": 39.34,
+     "lon": 22.93
+    },
+    {
+     "name": "Zetouni",
+     "lat": 38.9,
+     "lon": 22.43
+    },
+    {
+     "name": "Kalambaka",
+     "lat": 39.71,
+     "lon": 21.63
+    }
+   ],
+   "ruler": {
+    "name": "Constantine Doukas",
+    "born": null,
+    "dynasty": "Komnenodoukas",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The sons of the sebastokrator John I Doukas (d. c.1289), Constantine and Theodore, under their mother Hypomone.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "byzantium",
+    "epirus"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "achaea",
+   "name": {
+    "en": "Principality of Achaea",
+    "de": "Fürstentum Achaia"
+   },
+   "short": {
+    "en": "Achaea",
+    "de": "Achaia"
+   },
+   "adjective": {
+    "en": "Achaean",
+    "de": "achaiisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#816889",
+   "capital": {
+    "name": "Andravida",
+    "lat": 37.904,
+    "lon": 21.271
+   },
+   "holdings": [
+    {
+     "name": "Andravida",
+     "lat": 37.904,
+     "lon": 21.271
+    },
+    {
+     "name": "Glarentza",
+     "lat": 37.93,
+     "lon": 21.14
+    },
+    {
+     "name": "Chlemoutsi",
+     "lat": 37.89,
+     "lon": 21.13
+    },
+    {
+     "name": "Patras",
+     "lat": 38.246,
+     "lon": 21.735
+    },
+    {
+     "name": "Vostitsa",
+     "lat": 38.25,
+     "lon": 22.081
+    },
+    {
+     "name": "Corinth",
+     "lat": 37.906,
+     "lon": 22.88
+    },
+    {
+     "name": "Karytaina",
+     "lat": 37.484,
+     "lon": 22.037
+    },
+    {
+     "name": "Kalavryta",
+     "lat": 38.03,
+     "lon": 22.11
+    },
+    {
+     "name": "Androusa",
+     "lat": 37.1,
+     "lon": 21.93
+    },
+    {
+     "name": "Akova",
+     "lat": 37.62,
+     "lon": 22.03
+    }
+   ],
+   "ruler": {
+    "name": "Isabella of Villehardouin",
+    "born": 1263,
+    "dynasty": "Villehardouin",
+    "female": true
+   },
+   "heir": null,
+   "consort": {
+    "name": "Florent of Hainaut",
+    "born": 1255,
+    "dynasty": "Avesnes",
+    "female": false
+   },
+   "dynasty_note": "Princess since 1289 with her husband Florent, vassals of Charles II of Naples.",
+   "overlord": "naples",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "athens",
+    "venice"
+   ],
+   "rivals": [
+    "byzantium"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross moline Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "athens",
+   "name": {
+    "en": "Duchy of Athens and Neopatras",
+    "de": "Herzogtum Athen und Neopatras"
+   },
+   "short": {
+    "en": "Athens",
+    "de": "Athen"
+   },
+   "adjective": {
+    "en": "Catalan",
+    "de": "katalanisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "catalan",
+   "faith": "latin",
+   "color": "#695d0e",
+   "capital": {
+    "name": "Thebes",
+    "lat": 38.32,
+    "lon": 23.32
+   },
+   "holdings": [
+    {
+     "name": "Thebes",
+     "lat": 38.32,
+     "lon": 23.32
+    },
+    {
+     "name": "Athens",
+     "lat": 37.971,
+     "lon": 23.726
+    },
+    {
+     "name": "Argos",
+     "lat": 37.63,
+     "lon": 22.73
+    },
+    {
+     "name": "Nauplia",
+     "lat": 37.57,
+     "lon": 22.8
+    },
+    {
+     "name": "Livadeia",
+     "lat": 38.436,
+     "lon": 22.876
+    },
+    {
+     "name": "Megara",
+     "lat": 37.996,
+     "lon": 23.344
+    },
+    {
+     "name": "Salona",
+     "lat": 38.53,
+     "lon": 22.38
+    },
+    {
+     "name": "Bodonitsa",
+     "lat": 38.79,
+     "lon": 22.77
+    }
+   ],
+   "ruler": {
+    "name": "Guy II de la Roche",
+    "born": 1280,
+    "dynasty": "de la Roche",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Duke since 1287 under the regency of his mother Helena Angelina Komnene; Argos and Nauplia, Salona and Bodonitsa are fiefs of the duchy.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "achaea"
+   ],
+   "rivals": [
+    "byzantium"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per saltire Or paly gules and argent with eagles sable (Aragon-Sicily)",
+    "field": "or",
+    "division": "per_saltire",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "archipelago",
+   "name": {
+    "en": "Duchy of the Archipelago",
+    "de": "Herzogtum Archipelagos"
+   },
+   "short": {
+    "en": "Naxos",
+    "de": "Naxos"
+   },
+   "adjective": {
+    "en": "Naxian",
+    "de": "naxisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "venetian",
+   "faith": "latin",
+   "color": "#49806d",
+   "capital": {
+    "name": "Naxos",
+    "lat": 37.105,
+    "lon": 25.376
+   },
+   "holdings": [
+    {
+     "name": "Naxos",
+     "lat": 37.105,
+     "lon": 25.376
+    },
+    {
+     "name": "Paros",
+     "lat": 37.085,
+     "lon": 25.15
+    },
+    {
+     "name": "Milos",
+     "lat": 36.725,
+     "lon": 24.43
+    },
+    {
+     "name": "Antiparos",
+     "lat": 37.04,
+     "lon": 25.08
+    },
+    {
+     "name": "Sifnos",
+     "lat": 36.97,
+     "lon": 24.71
+    },
+    {
+     "name": "Ios",
+     "lat": 36.72,
+     "lon": 25.28
+    }
+   ],
+   "ruler": {
+    "name": "Marco II Sanudo",
+    "born": null,
+    "dynasty": "Sanudo",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Duchy of the Archipelago (Naxos) under Venetian protection.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a fess azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "azure",
+    "charges": []
+   }
+  },
+  {
+   "id": "jerusalem",
+   "name": {
+    "en": "Kingdom of Jerusalem",
+    "de": "Königreich Jerusalem"
+   },
+   "short": {
+    "en": "Jerusalem",
+    "de": "Jerusalem"
+   },
+   "adjective": {
+    "en": "Latin",
+    "de": "lateinisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#3d815d",
+   "capital": {
+    "name": "Acre",
+    "lat": 32.92,
+    "lon": 35.07
+   },
+   "holdings": [
+    {
+     "name": "Acre",
+     "lat": 32.92,
+     "lon": 35.07
+    },
+    {
+     "name": "Tyre",
+     "lat": 33.27,
+     "lon": 35.2
+    },
+    {
+     "name": "Sidon",
+     "lat": 33.56,
+     "lon": 35.37
+    },
+    {
+     "name": "Beirut",
+     "lat": 33.89,
+     "lon": 35.5
+    },
+    {
+     "name": "Haifa",
+     "lat": 32.82,
+     "lon": 34.99
+    },
+    {
+     "name": "Atlit",
+     "lat": 32.7,
+     "lon": 34.94
+    },
+    {
+     "name": "Tortosa (Tartus)",
+     "lat": 34.89,
+     "lon": 35.88
+    }
+   ],
+   "ruler": {
+    "name": "Henry II",
+    "born": 1271,
+    "dynasty": "Lusignan",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Henry II of Cyprus, crowned King of Jerusalem at Tyre in 1286. The Hospitallers, Templars and Teutonic Knights hold quarters and castles (Atlit, Tortosa, Sidon's sea castle). Acre falls on 18 May 1291, the rest by August.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "cyprus",
+    "armenia_cilicia"
+   ],
+   "rivals": [
+    "mamluk"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 5,
+   "summary": {
+    "en": "The last crusader coast. Sultan al-Ashraf Khalil is gathering the army that will besiege Acre in April.",
+    "de": "Die letzte Kreuzfahrerküste. Sultan al-Aschraf Chalil sammelt das Heer, das im April Akkon belagern wird."
+   },
+   "coa": {}
+  },
+  {
+   "id": "cyprus",
+   "name": {
+    "en": "Kingdom of Cyprus",
+    "de": "Königreich Zypern"
+   },
+   "short": {
+    "en": "Cyprus",
+    "de": "Zypern"
+   },
+   "adjective": {
+    "en": "Cypriot",
+    "de": "zyprisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#1f6455",
+   "capital": {
+    "name": "Nicosia",
+    "lat": 35.17,
+    "lon": 33.36
+   },
+   "holdings": [
+    {
+     "name": "Nicosia",
+     "lat": 35.17,
+     "lon": 33.36
+    },
+    {
+     "name": "Famagusta",
+     "lat": 35.12,
+     "lon": 33.94
+    },
+    {
+     "name": "Limassol",
+     "lat": 34.68,
+     "lon": 33.04
+    },
+    {
+     "name": "Paphos",
+     "lat": 34.77,
+     "lon": 32.42
+    },
+    {
+     "name": "Kyrenia",
+     "lat": 35.34,
+     "lon": 33.32
+    },
+    {
+     "name": "Larnaca",
+     "lat": 34.92,
+     "lon": 33.63
+    }
+   ],
+   "ruler": {
+    "name": "Henry II",
+    "born": 1271,
+    "dynasty": "Lusignan",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Lusignan.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "jerusalem",
+    "armenia_cilicia"
+   ],
+   "rivals": [
+    "mamluk"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly: Jerusalem and Lusignan",
+    "field": "argent",
+    "division": "quarterly",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "armenia_cilicia",
+   "name": {
+    "en": "Armenian Kingdom of Cilicia",
+    "de": "Armenisches Königreich Kilikien"
+   },
+   "short": {
+    "en": "Cilicia",
+    "de": "Kilikien"
+   },
+   "adjective": {
+    "en": "Cilician Armenian",
+    "de": "kilikisch-armenisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "armenian",
+   "faith": "armenian_apostolic",
+   "color": "#584225",
+   "capital": {
+    "name": "Sis",
+    "lat": 37.45,
+    "lon": 35.82
+   },
+   "holdings": [
+    {
+     "name": "Sis",
+     "lat": 37.45,
+     "lon": 35.82
+    },
+    {
+     "name": "Tarsus",
+     "lat": 36.92,
+     "lon": 34.89
+    },
+    {
+     "name": "Adana",
+     "lat": 37.0,
+     "lon": 35.32
+    },
+    {
+     "name": "Mopsuestia",
+     "lat": 36.96,
+     "lon": 35.62
+    },
+    {
+     "name": "Ayas",
+     "lat": 36.77,
+     "lon": 35.79
+    },
+    {
+     "name": "Anazarbus",
+     "lat": 37.26,
+     "lon": 35.9
+    },
+    {
+     "name": "Korikos",
+     "lat": 36.46,
+     "lon": 34.15
+    },
+    {
+     "name": "Seleucia",
+     "lat": 36.38,
+     "lon": 33.93
+    },
+    {
+     "name": "Lampron",
+     "lat": 37.2,
+     "lon": 34.6
+    }
+   ],
+   "ruler": {
+    "name": "Hethum II",
+    "born": 1266,
+    "dynasty": "Hethumid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Armenian Kingdom of Cilicia, vassal of the Ilkhan.",
+   "overlord": "ilkhanate",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "cyprus",
+    "jerusalem"
+   ],
+   "rivals": [
+    "mamluk",
+    "karaman"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion rampant Gules crowned",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Siege of Acre and the end of the crusader states",
+    "de": "Belagerung von Akkon und das Ende der Kreuzfahrerstaaten"
+   },
+   "attackers": [
+    "mamluk"
+   ],
+   "defenders": [
+    "jerusalem",
+    "cyprus"
+   ],
+   "since": 1289,
+   "goal": "conquest"
+  }
+ ]
+}

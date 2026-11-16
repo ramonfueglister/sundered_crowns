@@ -1,0 +1,4975 @@
+{
+ "region": "north_east",
+ "year": 1291,
+ "date": "1291-01-01",
+ "sources": [
+  "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300; regional map Between Oder and Dnieper",
+  "W. R. Shepherd, Historical Atlas (1923), 'Europe and the Mediterranean Lands about 1300', 'The Baltic Lands about 1300'? (to be checked)",
+  "K. Helle (ed.), The Cambridge History of Scandinavia I (2003): Eric VI Menved, Birger Magnusson's regency, Eric II of Norway, Danish Estonia 1219-1346",
+  "W. Urban, The Teutonic Knights (2003); W. Urban, The Livonian Crusade (2nd ed., 2004): Prussia conquered by 1283, Semigallia 1290",
+  "S. C. Rowell, Lithuania Ascending (1994): Butigeidis and Butvydas, Black Ruthenia",
+  "P. W. Knoll, The Rise of the Polish Monarchy (1972); K. Jasiński, Rodowód Piastów śląskich (2nd ed., 2007): the Piast duchies in 1290-91",
+  "J. Fennell, The Crisis of Medieval Russia 1200-1304 (1983): the princes of North-East Rus' under Dmitry and Andrey Alexandrovich",
+  "J. Martin, Medieval Russia 980-1584 (2nd ed., 2007); A. Majorov, Galician-Volhynian Rus' (Lev I, Mstislav Danylovych)",
+  "I. Vásáry, Cumans and Tatars (2005); P. Jackson, The Mongols and the West (2005): Talabuga, Tokhta and Nogai",
+  "D. Rayfield, Edge of Empires: A History of Georgia (2012): Vakhtang II, David VI Narin of Imereti, Beka Jaqeli",
+  "A. Bryer, The Empire of Trebizond and the Pontos (1980); M. Kuršanskis on John II Megas Komnenos"
+ ],
+ "new_ids": [
+  "greater_poland",
+  "sandomierz",
+  "ratibor",
+  "beuthen",
+  "vladimir",
+  "gorodets",
+  "galicia",
+  "nogai",
+  "imereti"
+ ],
+ "notes": [
+  "Date: 1 January 1291. Sweden: Magnus Ladulås died on 18 December 1290; his son Birger (b. 1280) reigns under the regency of the marshal Torgils Knutsson. Visby submitted to the crown after the Gotland war of 1288.",
+  "Denmark holds northern Estonia (Reval, Wesenberg, Narva) from 1219 to 1346, and Scania (lost to Sweden only in 1332).",
+  "Kraków: Przemysł II of Greater Poland has held it since 1290; during 1291 he leaves it to Wenceslaus II of Bohemia. On 1 January it is modelled as Przemysł's.",
+  "Silesia (death of Henry IV Probus, 23 June 1290): Henry V the Fat (Legnica-Wrocław), Henry III (Głogów), Bolko I the Strict (Jawor-Świdnica), Bolko I (Opole), Przemysław (Racibórz), Mieszko I (Cieszyn and Oświęcim), Casimir (Bytom); the bishop holds Nysa-Otmuchów. Opava belongs to the Bohemian crown.",
+  "North-East Rus': the Grand Prince of Vladimir is Dmitry Alexandrovich of Pereslavl (1283-93), against his brother Andrey of Gorodets. Moscow (Daniel), Tver (Mikhail), Rostov-Uglich, Yaroslavl (Fyodor the Black, also Smolensk), Belozersk, Galich, Ryazan and Murom are appanage principalities tributary to the Horde. Suzdal and Nizhny Novgorod belong to Andrey of Gorodets.",
+  "The Golden Horde: Khan Talabuga is overthrown by Nogai and Tokhta during 1291. Nogai rules his own ulus between the Dnieper and the Danube from Isaccea; Bulgaria and Vidin pay him tribute.",
+  "Moldavia and Wallachia did not exist yet as states; their lands are under the Tatar ulus of Nogai and local Vlach and Cuman lords (not modelled).",
+  "Polotsk and Vitebsk: ruled by princes in the Lithuanian orbit; the details before 1307 are poorly documented (gap)."
+ ],
+ "states": [
+  {
+   "id": "denmark",
+   "name": {
+    "en": "Kingdom of Denmark",
+    "de": "Königreich Dänemark"
+   },
+   "short": {
+    "en": "Denmark",
+    "de": "Dänemark"
+   },
+   "adjective": {
+    "en": "Danish",
+    "de": "dänisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "danish",
+   "faith": "latin",
+   "color": "#844c4b",
+   "capital": {
+    "name": "Roskilde",
+    "lat": 55.64,
+    "lon": 12.08
+   },
+   "holdings": [
+    {
+     "name": "Roskilde",
+     "lat": 55.64,
+     "lon": 12.08
+    },
+    {
+     "name": "Vordingborg",
+     "lat": 55.01,
+     "lon": 11.91
+    },
+    {
+     "name": "Copenhagen",
+     "lat": 55.68,
+     "lon": 12.57
+    },
+    {
+     "name": "Lund",
+     "lat": 55.7,
+     "lon": 13.19
+    },
+    {
+     "name": "Helsingborg",
+     "lat": 56.05,
+     "lon": 12.69
+    },
+    {
+     "name": "Malmö",
+     "lat": 55.6,
+     "lon": 13.0
+    },
+    {
+     "name": "Ystad",
+     "lat": 55.43,
+     "lon": 13.82
+    },
+    {
+     "name": "Ribe",
+     "lat": 55.33,
+     "lon": 8.76
+    },
+    {
+     "name": "Aarhus",
+     "lat": 56.16,
+     "lon": 10.2
+    },
+    {
+     "name": "Aalborg",
+     "lat": 57.05,
+     "lon": 9.92
+    },
+    {
+     "name": "Viborg",
+     "lat": 56.45,
+     "lon": 9.4
+    },
+    {
+     "name": "Randers",
+     "lat": 56.46,
+     "lon": 10.04
+    },
+    {
+     "name": "Odense",
+     "lat": 55.4,
+     "lon": 10.39
+    },
+    {
+     "name": "Nyborg",
+     "lat": 55.31,
+     "lon": 10.79
+    },
+    {
+     "name": "Kalundborg",
+     "lat": 55.68,
+     "lon": 11.09
+    },
+    {
+     "name": "Rønne",
+     "lat": 55.1,
+     "lon": 14.7
+    },
+    {
+     "name": "Reval",
+     "lat": 59.44,
+     "lon": 24.75
+    },
+    {
+     "name": "Wesenberg",
+     "lat": 53.278,
+     "lon": 12.967
+    },
+    {
+     "name": "Narva",
+     "lat": 59.38,
+     "lon": 28.19
+    }
+   ],
+   "ruler": {
+    "name": "Eric VI Menved",
+    "born": 1274,
+    "dynasty": "Estridsen",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Estridsen. Eric VI, king since 1286 (murder of Eric V at Finderup), rules with the support of his mother Agnes of Brandenburg; northern Estonia is a Danish duchy.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "rugen",
+    "rostock"
+   ],
+   "rivals": [
+    "norway",
+    "sweden"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or semé of hearts gules, three lions passant azure crowned or",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "azure",
+      "count": 3,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "schleswig",
+   "name": {
+    "en": "Duchy of Schleswig",
+    "de": "Herzogtum Schleswig"
+   },
+   "short": {
+    "en": "Schleswig",
+    "de": "Schleswig"
+   },
+   "adjective": {
+    "en": "Schleswig",
+    "de": "schleswigsch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "danish",
+   "faith": "latin",
+   "color": "#52511b",
+   "capital": {
+    "name": "Gottorf",
+    "lat": 54.52,
+    "lon": 9.57
+   },
+   "holdings": [
+    {
+     "name": "Gottorf",
+     "lat": 54.52,
+     "lon": 9.57
+    },
+    {
+     "name": "Flensburg",
+     "lat": 54.78,
+     "lon": 9.43
+    },
+    {
+     "name": "Haderslev",
+     "lat": 55.25,
+     "lon": 9.49
+    },
+    {
+     "name": "Aabenraa",
+     "lat": 55.04,
+     "lon": 9.42
+    },
+    {
+     "name": "Tønder",
+     "lat": 54.93,
+     "lon": 8.86
+    },
+    {
+     "name": "Husum",
+     "lat": 54.48,
+     "lon": 9.05
+    }
+   ],
+   "ruler": {
+    "name": "Valdemar IV",
+    "born": 1262,
+    "dynasty": "Abelslægten",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Duke of South Jutland (Schleswig), of the line of King Abel.",
+   "overlord": "denmark",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, two lions passant azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "azure",
+      "count": 2,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sweden",
+   "name": {
+    "en": "Kingdom of Sweden",
+    "de": "Königreich Schweden"
+   },
+   "short": {
+    "en": "Sweden",
+    "de": "Schweden"
+   },
+   "adjective": {
+    "en": "Swedish",
+    "de": "schwedisch"
+   },
+   "rank": "kingdom",
+   "government": "elective_monarchy",
+   "culture": "swedish",
+   "faith": "latin",
+   "color": "#26596b",
+   "capital": {
+    "name": "Stockholm",
+    "lat": 59.33,
+    "lon": 18.07
+   },
+   "holdings": [
+    {
+     "name": "Stockholm",
+     "lat": 59.33,
+     "lon": 18.07
+    },
+    {
+     "name": "Uppsala",
+     "lat": 59.86,
+     "lon": 17.64
+    },
+    {
+     "name": "Linköping",
+     "lat": 58.41,
+     "lon": 15.62
+    },
+    {
+     "name": "Skara",
+     "lat": 58.39,
+     "lon": 13.44
+    },
+    {
+     "name": "Jönköping",
+     "lat": 57.78,
+     "lon": 14.16
+    },
+    {
+     "name": "Kalmar",
+     "lat": 56.66,
+     "lon": 16.36
+    },
+    {
+     "name": "Nyköping",
+     "lat": 58.75,
+     "lon": 17.01
+    },
+    {
+     "name": "Västerås",
+     "lat": 59.61,
+     "lon": 16.55
+    },
+    {
+     "name": "Örebro",
+     "lat": 59.27,
+     "lon": 15.21
+    },
+    {
+     "name": "Strängnäs",
+     "lat": 59.38,
+     "lon": 17.03
+    },
+    {
+     "name": "Söderköping",
+     "lat": 58.48,
+     "lon": 16.32
+    },
+    {
+     "name": "Lödöse",
+     "lat": 58.03,
+     "lon": 12.15
+    },
+    {
+     "name": "Visby",
+     "lat": 57.64,
+     "lon": 18.3
+    },
+    {
+     "name": "Turku",
+     "lat": 60.45,
+     "lon": 22.27
+    },
+    {
+     "name": "Hämeenlinna",
+     "lat": 61.0,
+     "lon": 24.46
+    },
+    {
+     "name": "Raseborg",
+     "lat": 60.02,
+     "lon": 23.55
+    },
+    {
+     "name": "Gävle",
+     "lat": 60.67,
+     "lon": 17.14
+    },
+    {
+     "name": "Hudiksvall",
+     "lat": 61.73,
+     "lon": 17.1
+    }
+   ],
+   "ruler": {
+    "name": "Birger Magnusson",
+    "born": 1280,
+    "dynasty": "Bjälbo",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Bjälbo. Birger succeeds his father Magnus Ladulås (d. 18 December 1290) as a boy of ten; the marshal Torgils Knutsson governs.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "novgorod",
+    "denmark"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, three crowns or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "two_and_one"
+     }
+    ]
+   }
+  },
+  {
+   "id": "norway",
+   "name": {
+    "en": "Kingdom of Norway",
+    "de": "Königreich Norwegen"
+   },
+   "short": {
+    "en": "Norway",
+    "de": "Norwegen"
+   },
+   "adjective": {
+    "en": "Norwegian",
+    "de": "norwegisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "norwegian",
+   "faith": "latin",
+   "color": "#5e7279",
+   "capital": {
+    "name": "Bergen",
+    "lat": 60.39,
+    "lon": 5.32
+   },
+   "holdings": [
+    {
+     "name": "Bergen",
+     "lat": 60.39,
+     "lon": 5.32
+    },
+    {
+     "name": "Oslo",
+     "lat": 59.91,
+     "lon": 10.75
+    },
+    {
+     "name": "Nidaros",
+     "lat": 63.43,
+     "lon": 10.39
+    },
+    {
+     "name": "Tønsberg",
+     "lat": 59.27,
+     "lon": 10.41
+    },
+    {
+     "name": "Stavanger",
+     "lat": 58.97,
+     "lon": 5.73
+    },
+    {
+     "name": "Hamar",
+     "lat": 60.79,
+     "lon": 11.07
+    },
+    {
+     "name": "Skien",
+     "lat": 59.21,
+     "lon": 9.61
+    },
+    {
+     "name": "Sarpsborg",
+     "lat": 59.28,
+     "lon": 11.11
+    },
+    {
+     "name": "Konghelle",
+     "lat": 57.87,
+     "lon": 11.98
+    },
+    {
+     "name": "Marstrand",
+     "lat": 57.89,
+     "lon": 11.58
+    },
+    {
+     "name": "Kirkwall",
+     "lat": 58.98,
+     "lon": -2.96
+    },
+    {
+     "name": "Lerwick",
+     "lat": 60.15,
+     "lon": -1.15
+    },
+    {
+     "name": "Tórshavn",
+     "lat": 62.01,
+     "lon": -6.77
+    },
+    {
+     "name": "Skálholt",
+     "lat": 64.13,
+     "lon": -20.52
+    },
+    {
+     "name": "Hólar",
+     "lat": 65.73,
+     "lon": -19.11
+    },
+    {
+     "name": "Reykjavík",
+     "lat": 64.15,
+     "lon": -21.94
+    },
+    {
+     "name": "Bodø",
+     "lat": 67.28,
+     "lon": 14.4
+    },
+    {
+     "name": "Tromsø",
+     "lat": 69.65,
+     "lon": 18.96
+    },
+    {
+     "name": "Vardø",
+     "lat": 70.37,
+     "lon": 31.11
+    },
+    {
+     "name": "Frösö",
+     "lat": 63.18,
+     "lon": 14.53
+    }
+   ],
+   "ruler": {
+    "name": "Eric II Magnusson",
+    "born": 1268,
+    "dynasty": "Sverre",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Sverre. Eric II, the \"priest-hater\"; his daughter Margaret, heiress of Scotland, died in Orkney in autumn 1290. Iceland since 1262-64, Greenland, the Faroes, Orkney, Shetland, Jämtland and Bohuslän belong to the realm.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "scotland"
+   ],
+   "rivals": [
+    "denmark"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant or crowned, holding an axe argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "teutonic_order",
+   "name": {
+    "en": "State of the Teutonic Order",
+    "de": "Deutschordensstaat"
+   },
+   "short": {
+    "en": "Teutonic Order",
+    "de": "Deutscher Orden"
+   },
+   "adjective": {
+    "en": "Teutonic",
+    "de": "Ordens-"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#625a5c",
+   "capital": {
+    "name": "Elbing",
+    "lat": 54.16,
+    "lon": 19.4
+   },
+   "holdings": [
+    {
+     "name": "Elbing",
+     "lat": 54.16,
+     "lon": 19.4
+    },
+    {
+     "name": "Marienburg",
+     "lat": 54.04,
+     "lon": 19.03
+    },
+    {
+     "name": "Thorn",
+     "lat": 53.01,
+     "lon": 18.6
+    },
+    {
+     "name": "Kulm",
+     "lat": 53.35,
+     "lon": 18.42
+    },
+    {
+     "name": "Graudenz",
+     "lat": 53.48,
+     "lon": 18.75
+    },
+    {
+     "name": "Marienwerder",
+     "lat": 53.73,
+     "lon": 18.93
+    },
+    {
+     "name": "Christburg",
+     "lat": 53.92,
+     "lon": 19.3
+    },
+    {
+     "name": "Königsberg",
+     "lat": 54.71,
+     "lon": 20.51
+    },
+    {
+     "name": "Balga",
+     "lat": 54.55,
+     "lon": 19.98
+    },
+    {
+     "name": "Brandenburg (Prussia)",
+     "lat": 54.62,
+     "lon": 20.27
+    },
+    {
+     "name": "Ragnit",
+     "lat": 55.04,
+     "lon": 21.93
+    },
+    {
+     "name": "Labiau",
+     "lat": 54.86,
+     "lon": 21.1
+    },
+    {
+     "name": "Insterburg",
+     "lat": 54.63,
+     "lon": 21.81
+    },
+    {
+     "name": "Strasburg in Westpreußen",
+     "lat": 53.25,
+     "lon": 19.4
+    },
+    {
+     "name": "Rehden",
+     "lat": 53.37,
+     "lon": 18.94
+    },
+    {
+     "name": "Osterode in Ostpreußen",
+     "lat": 53.7,
+     "lon": 19.97
+    }
+   ],
+   "ruler": {
+    "name": "Burchard von Schwanden (Grand Master, resigned 1290); Konrad von Feuchtwangen from 1291",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Order has subdued Prussia (last rising 1283) and holds Kulmerland; the Grand Master still sits in Acre (Venice from 1291, Marienburg from 1309). Memel belongs to the Livonian branch.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "livonian_order"
+   ],
+   "rivals": [
+    "lithuania",
+    "pomerelia"
+   ],
+   "claims_on": [
+    "pomerelia"
+   ],
+   "personality": "zealot",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "warmia",
+   "name": {
+    "en": "Prince-Bishopric of Ermland",
+    "de": "Fürstbistum Ermland"
+   },
+   "short": {
+    "en": "Ermland",
+    "de": "Ermland"
+   },
+   "adjective": {
+    "en": "Ermland",
+    "de": "ermländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#642f02",
+   "capital": {
+    "name": "Braunsberg",
+    "lat": 54.33,
+    "lon": 19.82
+   },
+   "holdings": [
+    {
+     "name": "Braunsberg",
+     "lat": 54.33,
+     "lon": 19.82
+    },
+    {
+     "name": "Heilsberg",
+     "lat": 54.13,
+     "lon": 20.58
+    },
+    {
+     "name": "Frauenburg",
+     "lat": 54.36,
+     "lon": 19.68
+    },
+    {
+     "name": "Wormditt",
+     "lat": 54.03,
+     "lon": 20.23
+    },
+    {
+     "name": "Allenstein",
+     "lat": 53.78,
+     "lon": 20.49
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, the Lamb of God argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "samland",
+   "name": {
+    "en": "Prince-Bishopric of Samland",
+    "de": "Fürstbistum Samland"
+   },
+   "short": {
+    "en": "Samland",
+    "de": "Samland"
+   },
+   "adjective": {
+    "en": "Samland",
+    "de": "samländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "prussian_german",
+   "faith": "latin",
+   "color": "#044d29",
+   "capital": {
+    "name": "Fischhausen",
+    "lat": 54.72,
+    "lon": 19.99
+   },
+   "holdings": [
+    {
+     "name": "Fischhausen",
+     "lat": 54.72,
+     "lon": 19.99
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, crossed keys gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "livonian_order",
+   "name": {
+    "en": "Livonian Order",
+    "de": "Livländischer Orden"
+   },
+   "short": {
+    "en": "Livonia",
+    "de": "Livland"
+   },
+   "adjective": {
+    "en": "Livonian",
+    "de": "livländisch"
+   },
+   "rank": "order",
+   "government": "military_order",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#4e461e",
+   "capital": {
+    "name": "Wenden",
+    "lat": 57.31,
+    "lon": 25.27
+   },
+   "holdings": [
+    {
+     "name": "Wenden",
+     "lat": 57.31,
+     "lon": 25.27
+    },
+    {
+     "name": "Fellin",
+     "lat": 58.36,
+     "lon": 25.59
+    },
+    {
+     "name": "Segewold",
+     "lat": 57.15,
+     "lon": 24.85
+    },
+    {
+     "name": "Ascheraden",
+     "lat": 56.58,
+     "lon": 25.2
+    },
+    {
+     "name": "Dünaburg",
+     "lat": 55.87,
+     "lon": 26.51
+    },
+    {
+     "name": "Goldingen",
+     "lat": 56.97,
+     "lon": 21.97
+    },
+    {
+     "name": "Windau",
+     "lat": 57.39,
+     "lon": 21.57
+    },
+    {
+     "name": "Memel",
+     "lat": 55.71,
+     "lon": 21.13
+    },
+    {
+     "name": "Mitau",
+     "lat": 56.65,
+     "lon": 23.72
+    },
+    {
+     "name": "Doblen",
+     "lat": 56.62,
+     "lon": 23.3
+    },
+    {
+     "name": "Weißenstein",
+     "lat": 58.88,
+     "lon": 25.56
+    },
+    {
+     "name": "Karkus",
+     "lat": 58.18,
+     "lon": 25.62
+    },
+    {
+     "name": "Mesoten",
+     "lat": 56.43,
+     "lon": 24.05
+    }
+   ],
+   "ruler": {
+    "name": "Halt von Hohenbach",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Livonian branch of the Teutonic Order; Semigallia surrendered in 1290 after the destruction of its hillforts.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "teutonic_order"
+   ],
+   "rivals": [
+    "lithuania",
+    "riga"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable, a sword gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "riga",
+   "name": {
+    "en": "Archbishopric of Riga",
+    "de": "Erzstift Riga"
+   },
+   "short": {
+    "en": "Riga",
+    "de": "Riga"
+   },
+   "adjective": {
+    "en": "Riga",
+    "de": "rigisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#663c4e",
+   "capital": {
+    "name": "Riga",
+    "lat": 56.95,
+    "lon": 24.11
+   },
+   "holdings": [
+    {
+     "name": "Riga",
+     "lat": 56.95,
+     "lon": 24.11
+    },
+    {
+     "name": "Kokenhusen",
+     "lat": 56.64,
+     "lon": 25.42
+    },
+    {
+     "name": "Treyden",
+     "lat": 57.17,
+     "lon": 24.85
+    },
+    {
+     "name": "Lennewarden",
+     "lat": 56.75,
+     "lon": 24.85
+    },
+    {
+     "name": "Üxküll",
+     "lat": 56.83,
+     "lon": 24.43
+    },
+    {
+     "name": "Lemsal",
+     "lat": 57.51,
+     "lon": 24.71
+    }
+   ],
+   "ruler": {
+    "name": "Johannes II von Vechten",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The archbishop and the city of Riga, increasingly at odds with the Order (open war from 1297).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross and a crozier in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "dorpat",
+   "name": {
+    "en": "Prince-Bishopric of Dorpat",
+    "de": "Fürstbistum Dorpat"
+   },
+   "short": {
+    "en": "Dorpat",
+    "de": "Dorpat"
+   },
+   "adjective": {
+    "en": "Dorpat",
+    "de": "dorpater"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "estonian",
+   "faith": "latin",
+   "color": "#8d6d4d",
+   "capital": {
+    "name": "Dorpat",
+    "lat": 58.38,
+    "lon": 26.72
+   },
+   "holdings": [
+    {
+     "name": "Dorpat",
+     "lat": 58.38,
+     "lon": 26.72
+    },
+    {
+     "name": "Odenpäh",
+     "lat": 58.06,
+     "lon": 26.5
+    },
+    {
+     "name": "Neuhausen",
+     "lat": 57.65,
+     "lon": 27.37
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a key and a sword in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "osel_wiek",
+   "name": {
+    "en": "Prince-Bishopric of Ösel-Wiek",
+    "de": "Fürstbistum Ösel-Wiek"
+   },
+   "short": {
+    "en": "Ösel-Wiek",
+    "de": "Ösel-Wiek"
+   },
+   "adjective": {
+    "en": "Ösel-Wiek",
+    "de": "ösel-wiekisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "estonian",
+   "faith": "latin",
+   "color": "#468078",
+   "capital": {
+    "name": "Arensburg",
+    "lat": 58.25,
+    "lon": 22.48
+   },
+   "holdings": [
+    {
+     "name": "Arensburg",
+     "lat": 58.25,
+     "lon": 22.48
+    },
+    {
+     "name": "Leal",
+     "lat": 58.73,
+     "lon": 23.94
+    },
+    {
+     "name": "Pernau",
+     "lat": 58.39,
+     "lon": 24.5
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, an eagle sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "courland",
+   "name": {
+    "en": "Prince-Bishopric of Courland",
+    "de": "Fürstbistum Kurland"
+   },
+   "short": {
+    "en": "Courland",
+    "de": "Kurland"
+   },
+   "adjective": {
+    "en": "Courland",
+    "de": "kurländisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "latvian",
+   "faith": "latin",
+   "color": "#22455f",
+   "capital": {
+    "name": "Pilten",
+    "lat": 57.22,
+    "lon": 21.67
+   },
+   "holdings": [
+    {
+     "name": "Pilten",
+     "lat": 57.22,
+     "lon": 21.67
+    },
+    {
+     "name": "Hasenpoth",
+     "lat": 56.72,
+     "lon": 21.6
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a cross argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "lithuania",
+   "name": {
+    "en": "Grand Duchy of Lithuania",
+    "de": "Großfürstentum Litauen"
+   },
+   "short": {
+    "en": "Lithuania",
+    "de": "Litauen"
+   },
+   "adjective": {
+    "en": "Lithuanian",
+    "de": "litauisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "lithuanian",
+   "faith": "baltic_old",
+   "color": "#6f4d5c",
+   "capital": {
+    "name": "Kernavė",
+    "lat": 55.19,
+    "lon": 24.85
+   },
+   "holdings": [
+    {
+     "name": "Kernavė",
+     "lat": 55.19,
+     "lon": 24.85
+    },
+    {
+     "name": "Vilna",
+     "lat": 54.69,
+     "lon": 25.28
+    },
+    {
+     "name": "Trakai",
+     "lat": 54.64,
+     "lon": 24.93
+    },
+    {
+     "name": "Kaunas",
+     "lat": 54.9,
+     "lon": 23.89
+    },
+    {
+     "name": "Medininkai",
+     "lat": 54.54,
+     "lon": 25.65
+    },
+    {
+     "name": "Veliuona",
+     "lat": 55.08,
+     "lon": 23.28
+    },
+    {
+     "name": "Raseiniai",
+     "lat": 55.38,
+     "lon": 23.12
+    },
+    {
+     "name": "Telšiai",
+     "lat": 55.98,
+     "lon": 22.25
+    },
+    {
+     "name": "Šiauliai",
+     "lat": 55.93,
+     "lon": 23.31
+    },
+    {
+     "name": "Navahrudak",
+     "lat": 53.6,
+     "lon": 25.83
+    },
+    {
+     "name": "Grodno",
+     "lat": 53.68,
+     "lon": 23.83
+    },
+    {
+     "name": "Slonim",
+     "lat": 53.09,
+     "lon": 25.32
+    },
+    {
+     "name": "Vawkavysk",
+     "lat": 53.16,
+     "lon": 24.45
+    },
+    {
+     "name": "Ashmyany",
+     "lat": 54.42,
+     "lon": 25.94
+    },
+    {
+     "name": "Lida",
+     "lat": 53.89,
+     "lon": 25.3
+    }
+   ],
+   "ruler": {
+    "name": "Butvydas (Pukuveras)",
+    "born": null,
+    "dynasty": "Gediminids",
+    "female": false
+   },
+   "heir": {
+    "name": "Vytenis",
+    "born": 1260,
+    "dynasty": "Gediminids",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "Grand Duke Butvydas succeeds his brother Butigeidis (d. c.1290/91); Samogitia and Black Ruthenia (Navahrudak, Grodno) belong to the realm.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "teutonic_order",
+    "livonian_order"
+   ],
+   "claims_on": [
+    "polotsk"
+   ],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a mounted knight argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "polotsk",
+   "name": {
+    "en": "Principality of Polotsk",
+    "de": "Fürstentum Polozk"
+   },
+   "short": {
+    "en": "Polotsk",
+    "de": "Polozk"
+   },
+   "adjective": {
+    "en": "Polotsk",
+    "de": "polozker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#3a846b",
+   "capital": {
+    "name": "Polotsk",
+    "lat": 55.49,
+    "lon": 28.78
+   },
+   "holdings": [
+    {
+     "name": "Polotsk",
+     "lat": 55.49,
+     "lon": 28.78
+    },
+    {
+     "name": "Vitebsk",
+     "lat": 55.19,
+     "lon": 30.2
+    },
+    {
+     "name": "Drutsk",
+     "lat": 54.34,
+     "lon": 29.99
+    },
+    {
+     "name": "Lukoml",
+     "lat": 54.67,
+     "lon": 29.08
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Princes in the Lithuanian orbit; poorly documented before 1307.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "lithuania"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a mounted knight argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "greater_poland",
+   "name": {
+    "en": "Duchy of Greater Poland and Kraków",
+    "de": "Herzogtum Großpolen und Krakau"
+   },
+   "short": {
+    "en": "Greater Poland",
+    "de": "Großpolen"
+   },
+   "adjective": {
+    "en": "Polish",
+    "de": "polnisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "polish",
+   "faith": "latin",
+   "color": "#9e5b76",
+   "capital": {
+    "name": "Poznań",
+    "lat": 52.41,
+    "lon": 16.93
+   },
+   "holdings": [
+    {
+     "name": "Poznań",
+     "lat": 52.41,
+     "lon": 16.93
+    },
+    {
+     "name": "Gniezno",
+     "lat": 52.53,
+     "lon": 17.6
+    },
+    {
+     "name": "Kalisz",
+     "lat": 51.76,
+     "lon": 18.09
+    },
+    {
+     "name": "Konin",
+     "lat": 52.22,
+     "lon": 18.25
+    },
+    {
+     "name": "Międzyrzecz",
+     "lat": 52.44,
+     "lon": 15.58
+    },
+    {
+     "name": "Wieluń",
+     "lat": 51.22,
+     "lon": 18.57
+    },
+    {
+     "name": "Kraków",
+     "lat": 50.06,
+     "lon": 19.94
+    },
+    {
+     "name": "Wieliczka",
+     "lat": 49.99,
+     "lon": 20.06
+    },
+    {
+     "name": "Bochnia",
+     "lat": 49.97,
+     "lon": 20.43
+    },
+    {
+     "name": "Nowy Sącz",
+     "lat": 49.62,
+     "lon": 20.7
+    },
+    {
+     "name": "Biecz",
+     "lat": 49.73,
+     "lon": 21.26
+    },
+    {
+     "name": "Wiślica",
+     "lat": 50.35,
+     "lon": 20.67
+    }
+   ],
+   "ruler": {
+    "name": "Przemysł II",
+    "born": 1257,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Piast duke of Greater Poland, heir of Pomerelia (Kępno 1282), duke of Kraków since 1290; leaves Kraków to Wenceslaus II during 1291 and is crowned King of Poland in 1295.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "pomerelia"
+   ],
+   "rivals": [
+    "brandenburg",
+    "bohemia"
+   ],
+   "claims_on": [
+    "pomerelia",
+    "sandomierz"
+   ],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "sandomierz",
+   "name": {
+    "en": "Duchy of Sandomierz",
+    "de": "Herzogtum Sandomierz"
+   },
+   "short": {
+    "en": "Sandomierz",
+    "de": "Sandomierz"
+   },
+   "adjective": {
+    "en": "Polish",
+    "de": "polnisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "polish",
+   "faith": "latin",
+   "color": "#4e4107",
+   "capital": {
+    "name": "Sandomierz",
+    "lat": 50.68,
+    "lon": 21.75
+   },
+   "holdings": [
+    {
+     "name": "Sandomierz",
+     "lat": 50.68,
+     "lon": 21.75
+    },
+    {
+     "name": "Radom",
+     "lat": 51.4,
+     "lon": 21.15
+    },
+    {
+     "name": "Lublin",
+     "lat": 51.25,
+     "lon": 22.57
+    },
+    {
+     "name": "Opatów",
+     "lat": 50.8,
+     "lon": 21.42
+    },
+    {
+     "name": "Sieradz",
+     "lat": 51.6,
+     "lon": 18.73
+    },
+    {
+     "name": "Brześć Kujawski",
+     "lat": 52.6,
+     "lon": 18.9
+    },
+    {
+     "name": "Radziejów",
+     "lat": 52.63,
+     "lon": 18.53
+    },
+    {
+     "name": "Kowal",
+     "lat": 52.53,
+     "lon": 19.15
+    },
+    {
+     "name": "Przedbórz",
+     "lat": 51.09,
+     "lon": 19.88
+    }
+   ],
+   "ruler": {
+    "name": "Władysław I the Elbow-high",
+    "born": 1260,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Władysław Łokietek holds Sandomierz (1289-92), Sieradz and Brześć Kujawski; later King of Poland (1320).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "bohemia",
+    "greater_poland"
+   ],
+   "claims_on": [
+    "greater_poland"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "masovia",
+   "name": {
+    "en": "Duchy of Masovia",
+    "de": "Herzogtum Masowien"
+   },
+   "short": {
+    "en": "Masovia",
+    "de": "Masowien"
+   },
+   "adjective": {
+    "en": "Masovian",
+    "de": "masowisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "polish",
+   "faith": "latin",
+   "color": "#7e6f27",
+   "capital": {
+    "name": "Płock",
+    "lat": 52.55,
+    "lon": 19.7
+   },
+   "holdings": [
+    {
+     "name": "Płock",
+     "lat": 52.55,
+     "lon": 19.7
+    },
+    {
+     "name": "Czersk",
+     "lat": 51.96,
+     "lon": 21.23
+    },
+    {
+     "name": "Warsaw",
+     "lat": 52.25,
+     "lon": 21.01
+    },
+    {
+     "name": "Wizna",
+     "lat": 53.19,
+     "lon": 22.38
+    },
+    {
+     "name": "Rawa",
+     "lat": 51.76,
+     "lon": 20.25
+    },
+    {
+     "name": "Ciechanów",
+     "lat": 52.88,
+     "lon": 20.62
+    },
+    {
+     "name": "Sochaczew",
+     "lat": 52.23,
+     "lon": 20.24
+    },
+    {
+     "name": "Łęczyca",
+     "lat": 52.06,
+     "lon": 19.2
+    }
+   ],
+   "ruler": {
+    "name": "Bolesław II",
+    "born": 1253,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Bolesław II of Płock with his brother Konrad II of Czersk (reunited 1294); Łęczyca (Casimir II) is attached here.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "liegnitz",
+   "name": {
+    "en": "Duchy of Legnica-Wrocław",
+    "de": "Herzogtum Liegnitz-Breslau"
+   },
+   "short": {
+    "en": "Breslau",
+    "de": "Breslau"
+   },
+   "adjective": {
+    "en": "Liegnitz",
+    "de": "liegnitzisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#713325",
+   "capital": {
+    "name": "Breslau",
+    "lat": 51.11,
+    "lon": 17.032
+   },
+   "holdings": [
+    {
+     "name": "Breslau",
+     "lat": 51.11,
+     "lon": 17.032
+    },
+    {
+     "name": "Liegnitz",
+     "lat": 51.207,
+     "lon": 16.155
+    },
+    {
+     "name": "Brieg",
+     "lat": 50.861,
+     "lon": 17.468
+    },
+    {
+     "name": "Haynau",
+     "lat": 51.198,
+     "lon": 15.933
+    },
+    {
+     "name": "Ohlau",
+     "lat": 50.946,
+     "lon": 17.297
+    },
+    {
+     "name": "Namslau",
+     "lat": 51.074,
+     "lon": 17.718
+    },
+    {
+     "name": "Strehlen",
+     "lat": 50.722,
+     "lon": 17.064
+    },
+    {
+     "name": "Goldberg",
+     "lat": 51.042,
+     "lon": 15.92
+    },
+    {
+     "name": "Neumarkt in Schlesien",
+     "lat": 51.15,
+     "lon": 16.59
+    },
+    {
+     "name": "Münsterberg",
+     "lat": 50.567,
+     "lon": 17.025
+    }
+   ],
+   "ruler": {
+    "name": "Henry V the Fat",
+    "born": 1248,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Henry V of Legnica took Wrocław at the death of Henry IV Probus (1290).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sagan_glogau"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sagan_glogau",
+   "name": {
+    "en": "Duchy of Głogów",
+    "de": "Herzogtum Glogau"
+   },
+   "short": {
+    "en": "Glogau",
+    "de": "Glogau"
+   },
+   "adjective": {
+    "en": "Sagan",
+    "de": "saganisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#4e7f60",
+   "capital": {
+    "name": "Glogau",
+    "lat": 51.663,
+    "lon": 16.085
+   },
+   "holdings": [
+    {
+     "name": "Glogau",
+     "lat": 51.663,
+     "lon": 16.085
+    },
+    {
+     "name": "Sagan",
+     "lat": 51.617,
+     "lon": 15.315
+    },
+    {
+     "name": "Steinau",
+     "lat": 51.403,
+     "lon": 16.437
+    },
+    {
+     "name": "Fraustadt",
+     "lat": 51.81,
+     "lon": 16.32
+    },
+    {
+     "name": "Sprottau",
+     "lat": 51.567,
+     "lon": 15.555
+    },
+    {
+     "name": "Crossen",
+     "lat": 52.05,
+     "lon": 15.1
+    },
+    {
+     "name": "Oels",
+     "lat": 51.209,
+     "lon": 17.39
+    },
+    {
+     "name": "Lüben",
+     "lat": 51.4,
+     "lon": 16.201
+    }
+   ],
+   "ruler": {
+    "name": "Henry III",
+    "born": 1251,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Henry III of Głogów; claimant to Wrocław and later to Greater Poland.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "liegnitz"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "schweidnitz_jauer",
+   "name": {
+    "en": "Duchy of Jawor-Świdnica",
+    "de": "Herzogtum Jauer-Schweidnitz"
+   },
+   "short": {
+    "en": "Schweidnitz",
+    "de": "Schweidnitz"
+   },
+   "adjective": {
+    "en": "Schweidnitz",
+    "de": "schweidnitzisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#4d5686",
+   "capital": {
+    "name": "Jauer",
+    "lat": 51.053,
+    "lon": 16.193
+   },
+   "holdings": [
+    {
+     "name": "Jauer",
+     "lat": 51.053,
+     "lon": 16.193
+    },
+    {
+     "name": "Schweidnitz",
+     "lat": 50.845,
+     "lon": 16.489
+    },
+    {
+     "name": "Löwenberg",
+     "lat": 51.112,
+     "lon": 15.582
+    },
+    {
+     "name": "Hirschberg",
+     "lat": 50.903,
+     "lon": 15.734
+    },
+    {
+     "name": "Bolkenhain",
+     "lat": 50.928,
+     "lon": 16.109
+    },
+    {
+     "name": "Landeshut",
+     "lat": 50.789,
+     "lon": 16.034
+    },
+    {
+     "name": "Reichenbach",
+     "lat": 50.722,
+     "lon": 16.656
+    },
+    {
+     "name": "Frankenstein",
+     "lat": 50.59,
+     "lon": 16.81
+    }
+   ],
+   "ruler": {
+    "name": "Bolko I the Strict",
+    "born": 1253,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "bohemia"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable with a crescent argent on its breast",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "breslau_bishopric",
+   "name": {
+    "en": "Prince-Bishopric of Breslau (Neisse-Ottmachau)",
+    "de": "Fürstbistum Breslau (Neisse-Ottmachau)"
+   },
+   "short": {
+    "en": "Neisse",
+    "de": "Neisse"
+   },
+   "adjective": {
+    "en": "Breslau episcopal",
+    "de": "fürstbischöflich breslauisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#3e7a7b",
+   "capital": {
+    "name": "Neisse",
+    "lat": 50.473,
+    "lon": 17.334
+   },
+   "holdings": [
+    {
+     "name": "Neisse",
+     "lat": 50.473,
+     "lon": 17.334
+    },
+    {
+     "name": "Ottmachau",
+     "lat": 50.46,
+     "lon": 17.17
+    },
+    {
+     "name": "Patschkau",
+     "lat": 50.45,
+     "lon": 17.0
+    }
+   ],
+   "ruler": {
+    "name": "Thomas II Zaremba",
+    "born": null,
+    "dynasty": "Zaremba",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, six fleurs-de-lis azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "azure",
+      "count": 6,
+      "arrangement": "3-2-1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "oppeln",
+   "name": {
+    "en": "Duchy of Oppeln",
+    "de": "Herzogtum Oppeln"
+   },
+   "short": {
+    "en": "Oppeln",
+    "de": "Oppeln"
+   },
+   "adjective": {
+    "en": "Oppeln",
+    "de": "oppelnsch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#284874",
+   "capital": {
+    "name": "Oppeln",
+    "lat": 50.672,
+    "lon": 17.926
+   },
+   "holdings": [
+    {
+     "name": "Oppeln",
+     "lat": 50.672,
+     "lon": 17.926
+    },
+    {
+     "name": "Falkenberg",
+     "lat": 50.611,
+     "lon": 17.622
+    },
+    {
+     "name": "Groß Strehlitz",
+     "lat": 50.513,
+     "lon": 18.301
+    },
+    {
+     "name": "Rosenberg",
+     "lat": 50.896,
+     "lon": 18.418
+    },
+    {
+     "name": "Oberglogau",
+     "lat": 50.35,
+     "lon": 17.86
+    }
+   ],
+   "ruler": {
+    "name": "Bolko I",
+    "born": 1258,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ratibor",
+   "name": {
+    "en": "Duchy of Racibórz",
+    "de": "Herzogtum Ratibor"
+   },
+   "short": {
+    "en": "Ratibor",
+    "de": "Ratibor"
+   },
+   "adjective": {
+    "en": "Ratibor",
+    "de": "ratiborer"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#7e433b",
+   "capital": {
+    "name": "Ratibor",
+    "lat": 50.092,
+    "lon": 18.219
+   },
+   "holdings": [
+    {
+     "name": "Ratibor",
+     "lat": 50.092,
+     "lon": 18.219
+    },
+    {
+     "name": "Rybnik",
+     "lat": 50.1,
+     "lon": 18.54
+    },
+    {
+     "name": "Sohrau",
+     "lat": 50.04,
+     "lon": 18.63
+    }
+   ],
+   "ruler": {
+    "name": "Przemysław",
+    "born": 1268,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "teschen",
+   "name": {
+    "en": "Duchy of Teschen",
+    "de": "Herzogtum Teschen"
+   },
+   "short": {
+    "en": "Teschen",
+    "de": "Teschen"
+   },
+   "adjective": {
+    "en": "Teschen",
+    "de": "teschnisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#134a41",
+   "capital": {
+    "name": "Teschen",
+    "lat": 49.75,
+    "lon": 18.632
+   },
+   "holdings": [
+    {
+     "name": "Teschen",
+     "lat": 49.75,
+     "lon": 18.632
+    },
+    {
+     "name": "Auschwitz",
+     "lat": 50.038,
+     "lon": 19.221
+    },
+    {
+     "name": "Bielitz",
+     "lat": 49.822,
+     "lon": 19.045
+    },
+    {
+     "name": "Zator",
+     "lat": 49.996,
+     "lon": 19.437
+    }
+   ],
+   "ruler": {
+    "name": "Mieszko I",
+    "born": null,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mieszko I of Cieszyn and Oświęcim (division of 1290 with Racibórz).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "beuthen",
+   "name": {
+    "en": "Duchy of Bytom",
+    "de": "Herzogtum Beuthen"
+   },
+   "short": {
+    "en": "Beuthen",
+    "de": "Beuthen"
+   },
+   "adjective": {
+    "en": "Beuthen",
+    "de": "beuthener"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "silesian",
+   "faith": "latin",
+   "color": "#3d786c",
+   "capital": {
+    "name": "Beuthen",
+    "lat": 50.35,
+    "lon": 18.92
+   },
+   "holdings": [
+    {
+     "name": "Beuthen",
+     "lat": 50.35,
+     "lon": 18.92
+    },
+    {
+     "name": "Cosel",
+     "lat": 50.33,
+     "lon": 18.15
+    },
+    {
+     "name": "Gleiwitz",
+     "lat": 50.29,
+     "lon": 18.67
+    },
+    {
+     "name": "Tost",
+     "lat": 50.43,
+     "lon": 18.48
+    }
+   ],
+   "ruler": {
+    "name": "Casimir",
+    "born": 1253,
+    "dynasty": "Piast",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Casimir of Bytom, the first Silesian duke to do homage to Wenceslaus II (1289).",
+   "overlord": "bohemia",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "novgorod",
+   "name": {
+    "en": "Novgorod Republic",
+    "de": "Republik Nowgorod"
+   },
+   "short": {
+    "en": "Novgorod",
+    "de": "Nowgorod"
+   },
+   "adjective": {
+    "en": "Novgorodian",
+    "de": "nowgoroder"
+   },
+   "rank": "republic",
+   "government": "merchant_republic",
+   "culture": "novgorodian",
+   "faith": "orthodox",
+   "color": "#606339",
+   "capital": {
+    "name": "Novgorod",
+    "lat": 58.52,
+    "lon": 31.27
+   },
+   "holdings": [
+    {
+     "name": "Novgorod",
+     "lat": 58.52,
+     "lon": 31.27
+    },
+    {
+     "name": "Ladoga",
+     "lat": 60.0,
+     "lon": 32.3
+    },
+    {
+     "name": "Korela",
+     "lat": 61.03,
+     "lon": 30.12
+    },
+    {
+     "name": "Oreshek",
+     "lat": 59.95,
+     "lon": 31.04
+    },
+    {
+     "name": "Koporye",
+     "lat": 59.71,
+     "lon": 29.03
+    },
+    {
+     "name": "Rusa",
+     "lat": 57.99,
+     "lon": 31.35
+    },
+    {
+     "name": "Torzhok",
+     "lat": 57.04,
+     "lon": 34.96
+    },
+    {
+     "name": "Velikiye Luki",
+     "lat": 56.34,
+     "lon": 30.53
+    },
+    {
+     "name": "Kholmogory",
+     "lat": 64.22,
+     "lon": 41.65
+    },
+    {
+     "name": "Ustyug",
+     "lat": 60.76,
+     "lon": 46.3
+    }
+   ],
+   "ruler": {
+    "name": "Archbishop and posadnik",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Republic; the princes it invites are those of Vladimir.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sweden",
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, two bears sable supporting a throne",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "pskov",
+   "name": {
+    "en": "Pskov Republic",
+    "de": "Republik Pskow"
+   },
+   "short": {
+    "en": "Pskov",
+    "de": "Pskow"
+   },
+   "adjective": {
+    "en": "Pskovian",
+    "de": "pskower"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#146e8b",
+   "capital": {
+    "name": "Pskov",
+    "lat": 57.82,
+    "lon": 28.33
+   },
+   "holdings": [
+    {
+     "name": "Pskov",
+     "lat": 57.82,
+     "lon": 28.33
+    },
+    {
+     "name": "Izborsk",
+     "lat": 57.71,
+     "lon": 27.86
+    },
+    {
+     "name": "Ostrov",
+     "lat": 57.34,
+     "lon": 28.35
+    },
+    {
+     "name": "Opochka",
+     "lat": 56.71,
+     "lon": 28.67
+    }
+   ],
+   "ruler": {
+    "name": "Dovmont (Daumantas)",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Lithuanian-born prince Dovmont defends Pskov (1266-99).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "livonian_order"
+   ],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a leopard passant or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "great_perm",
+   "name": {
+    "en": "Land of Perm",
+    "de": "Land Perm"
+   },
+   "short": {
+    "en": "Perm",
+    "de": "Perm"
+   },
+   "adjective": {
+    "en": "Permian",
+    "de": "permisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "komi",
+   "faith": "finnic_old",
+   "color": "#886a51",
+   "capital": {
+    "name": "Ust-Vym",
+    "lat": 62.23,
+    "lon": 50.4
+   },
+   "holdings": [
+    {
+     "name": "Ust-Vym",
+     "lat": 62.23,
+     "lon": 50.4
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a bear argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "vladimir",
+   "name": {
+    "en": "Grand Principality of Vladimir",
+    "de": "Großfürstentum Wladimir"
+   },
+   "short": {
+    "en": "Vladimir",
+    "de": "Wladimir"
+   },
+   "adjective": {
+    "en": "Russian",
+    "de": "russisch"
+   },
+   "rank": "grand_duchy",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#744a7b",
+   "capital": {
+    "name": "Pereslavl-Zalessky",
+    "lat": 56.74,
+    "lon": 38.85
+   },
+   "holdings": [
+    {
+     "name": "Pereslavl-Zalessky",
+     "lat": 56.74,
+     "lon": 38.85
+    },
+    {
+     "name": "Vladimir",
+     "lat": 56.13,
+     "lon": 40.41
+    },
+    {
+     "name": "Kostroma",
+     "lat": 57.77,
+     "lon": 40.93
+    },
+    {
+     "name": "Yuryev-Polsky",
+     "lat": 56.5,
+     "lon": 39.68
+    },
+    {
+     "name": "Dmitrov",
+     "lat": 56.34,
+     "lon": 37.52
+    },
+    {
+     "name": "Volokolamsk",
+     "lat": 56.04,
+     "lon": 35.96
+    }
+   ],
+   "ruler": {
+    "name": "Dmitry Alexandrovich",
+    "born": 1250,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Grand Prince of Vladimir (1283-93) from his own appanage of Pereslavl, protected by Nogai against his brother Andrey.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "tver",
+    "moscow"
+   ],
+   "rivals": [
+    "gorodets"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "gorodets",
+   "name": {
+    "en": "Principality of Gorodets",
+    "de": "Fürstentum Gorodez"
+   },
+   "short": {
+    "en": "Gorodets",
+    "de": "Gorodez"
+   },
+   "adjective": {
+    "en": "Russian",
+    "de": "russisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#493859",
+   "capital": {
+    "name": "Gorodets",
+    "lat": 56.65,
+    "lon": 43.47
+   },
+   "holdings": [
+    {
+     "name": "Gorodets",
+     "lat": 56.65,
+     "lon": 43.47
+    },
+    {
+     "name": "Nizhny Novgorod",
+     "lat": 56.33,
+     "lon": 44.0
+    },
+    {
+     "name": "Suzdal",
+     "lat": 56.42,
+     "lon": 40.44
+    },
+    {
+     "name": "Bogolyubovo",
+     "lat": 56.2,
+     "lon": 40.53
+    }
+   ],
+   "ruler": {
+    "name": "Andrey Alexandrovich",
+    "born": 1255,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Andrey of Gorodets, backed by Khan Tokhta, takes the grand principality in 1293.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "vladimir"
+   ],
+   "claims_on": [
+    "vladimir"
+   ],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "moscow",
+   "name": {
+    "en": "Principality of Moscow",
+    "de": "Fürstentum Moskau"
+   },
+   "short": {
+    "en": "Moscow",
+    "de": "Moskau"
+   },
+   "adjective": {
+    "en": "Muscovite",
+    "de": "moskowitisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#523c55",
+   "capital": {
+    "name": "Moscow",
+    "lat": 55.75,
+    "lon": 37.62
+   },
+   "holdings": [
+    {
+     "name": "Moscow",
+     "lat": 55.75,
+     "lon": 37.62
+    },
+    {
+     "name": "Zvenigorod",
+     "lat": 55.73,
+     "lon": 36.85
+    },
+    {
+     "name": "Ruza",
+     "lat": 55.7,
+     "lon": 36.2
+    }
+   ],
+   "ruler": {
+    "name": "Daniel Alexandrovich",
+    "born": 1261,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "A small appanage of the youngest son of Alexander Nevsky; Kolomna is still Ryazan's (taken 1301).",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, Saint George on horseback argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horse",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "tver",
+   "name": {
+    "en": "Principality of Tver",
+    "de": "Fürstentum Twer"
+   },
+   "short": {
+    "en": "Tver",
+    "de": "Twer"
+   },
+   "adjective": {
+    "en": "Tverian",
+    "de": "twerisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#234d2a",
+   "capital": {
+    "name": "Tver",
+    "lat": 56.86,
+    "lon": 35.9
+   },
+   "holdings": [
+    {
+     "name": "Tver",
+     "lat": 56.86,
+     "lon": 35.9
+    },
+    {
+     "name": "Kashin",
+     "lat": 57.36,
+     "lon": 37.61
+    },
+    {
+     "name": "Zubtsov",
+     "lat": 56.18,
+     "lon": 34.58
+    },
+    {
+     "name": "Staritsa",
+     "lat": 56.51,
+     "lon": 34.93
+    },
+    {
+     "name": "Kholm",
+     "lat": 57.15,
+     "lon": 31.18
+    }
+   ],
+   "ruler": {
+    "name": "Mikhail Yaroslavich",
+    "born": 1271,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a throne with a crown or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "rostov",
+   "name": {
+    "en": "Principality of Rostov",
+    "de": "Fürstentum Rostow"
+   },
+   "short": {
+    "en": "Rostov",
+    "de": "Rostow"
+   },
+   "adjective": {
+    "en": "Rostovian",
+    "de": "rostower"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#5f2f53",
+   "capital": {
+    "name": "Rostov",
+    "lat": 57.19,
+    "lon": 39.41
+   },
+   "holdings": [
+    {
+     "name": "Rostov",
+     "lat": 57.19,
+     "lon": 39.41
+    },
+    {
+     "name": "Uglich",
+     "lat": 57.53,
+     "lon": 38.33
+    },
+    {
+     "name": "Ustyuzhna",
+     "lat": 58.84,
+     "lon": 36.44
+    }
+   ],
+   "ruler": {
+    "name": "Dmitry Borisovich",
+    "born": null,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "With his brother Konstantin of Uglich.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a stag argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "stag_head",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "yaroslavl",
+   "name": {
+    "en": "Principality of Yaroslavl",
+    "de": "Fürstentum Jaroslawl"
+   },
+   "short": {
+    "en": "Yaroslavl",
+    "de": "Jaroslawl"
+   },
+   "adjective": {
+    "en": "Yaroslavl",
+    "de": "jaroslawler"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#4d6b8a",
+   "capital": {
+    "name": "Yaroslavl",
+    "lat": 57.63,
+    "lon": 39.87
+   },
+   "holdings": [
+    {
+     "name": "Yaroslavl",
+     "lat": 57.63,
+     "lon": 39.87
+    },
+    {
+     "name": "Mologa",
+     "lat": 58.09,
+     "lon": 38.43
+    },
+    {
+     "name": "Romanov",
+     "lat": 57.88,
+     "lon": 39.53
+    }
+   ],
+   "ruler": {
+    "name": "Fyodor the Black",
+    "born": null,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Fyodor Rostislavich, a favourite at the Horde; also prince of Smolensk.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a bear sable holding an axe",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "belozersk",
+   "name": {
+    "en": "Principality of Beloozero",
+    "de": "Fürstentum Beloosero"
+   },
+   "short": {
+    "en": "Beloozero",
+    "de": "Beloosero"
+   },
+   "adjective": {
+    "en": "Beloozero",
+    "de": "beloosero"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#325161",
+   "capital": {
+    "name": "Beloozero",
+    "lat": 60.03,
+    "lon": 37.79
+   },
+   "holdings": [
+    {
+     "name": "Beloozero",
+     "lat": 60.03,
+     "lon": 37.79
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, two fish in saltire argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "argent",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "galich_mersky",
+   "name": {
+    "en": "Principality of Galich-Dmitrov",
+    "de": "Fürstentum Galitsch-Dmitrow"
+   },
+   "short": {
+    "en": "Galich",
+    "de": "Galitsch"
+   },
+   "adjective": {
+    "en": "Galich",
+    "de": "galitscher"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#5d4027",
+   "capital": {
+    "name": "Galich",
+    "lat": 58.38,
+    "lon": 42.35
+   },
+   "holdings": [
+    {
+     "name": "Galich",
+     "lat": 58.38,
+     "lon": 42.35
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a castle gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "ryazan",
+   "name": {
+    "en": "Principality of Ryazan",
+    "de": "Fürstentum Rjasan"
+   },
+   "short": {
+    "en": "Ryazan",
+    "de": "Rjasan"
+   },
+   "adjective": {
+    "en": "Ryazanian",
+    "de": "rjasanisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#6f4d09",
+   "capital": {
+    "name": "Ryazan",
+    "lat": 54.24,
+    "lon": 39.72
+   },
+   "holdings": [
+    {
+     "name": "Ryazan",
+     "lat": 54.24,
+     "lon": 39.72
+    },
+    {
+     "name": "Pereyaslavl-Ryazansky",
+     "lat": 54.63,
+     "lon": 39.74
+    },
+    {
+     "name": "Pronsk",
+     "lat": 54.12,
+     "lon": 39.62
+    },
+    {
+     "name": "Kolomna",
+     "lat": 55.1,
+     "lon": 38.77
+    },
+    {
+     "name": "Zaraysk",
+     "lat": 54.76,
+     "lon": 38.88
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a prince with a sword gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "murom",
+   "name": {
+    "en": "Principality of Murom",
+    "de": "Fürstentum Murom"
+   },
+   "short": {
+    "en": "Murom",
+    "de": "Murom"
+   },
+   "adjective": {
+    "en": "Murom",
+    "de": "muromer"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#7b6d86",
+   "capital": {
+    "name": "Murom",
+    "lat": 55.58,
+    "lon": 42.05
+   },
+   "holdings": [
+    {
+     "name": "Murom",
+     "lat": 55.58,
+     "lon": 42.05
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a sword or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "smolensk",
+   "name": {
+    "en": "Principality of Smolensk",
+    "de": "Fürstentum Smolensk"
+   },
+   "short": {
+    "en": "Smolensk",
+    "de": "Smolensk"
+   },
+   "adjective": {
+    "en": "Smolensk",
+    "de": "smolensker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#1f636f",
+   "capital": {
+    "name": "Smolensk",
+    "lat": 54.78,
+    "lon": 32.05
+   },
+   "holdings": [
+    {
+     "name": "Smolensk",
+     "lat": 54.78,
+     "lon": 32.05
+    },
+    {
+     "name": "Vyazma",
+     "lat": 55.21,
+     "lon": 34.29
+    },
+    {
+     "name": "Dorogobuzh",
+     "lat": 54.92,
+     "lon": 33.3
+    },
+    {
+     "name": "Toropets",
+     "lat": 56.5,
+     "lon": 31.63
+    }
+   ],
+   "ruler": {
+    "name": "Fyodor the Black",
+    "born": null,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bryansk",
+   "name": {
+    "en": "Principality of Bryansk",
+    "de": "Fürstentum Brjansk"
+   },
+   "short": {
+    "en": "Bryansk",
+    "de": "Brjansk"
+   },
+   "adjective": {
+    "en": "Bryansk",
+    "de": "brjansker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#4a3e33",
+   "capital": {
+    "name": "Bryansk",
+    "lat": 53.25,
+    "lon": 34.37
+   },
+   "holdings": [
+    {
+     "name": "Bryansk",
+     "lat": 53.25,
+     "lon": 34.37
+    },
+    {
+     "name": "Chernigov",
+     "lat": 51.49,
+     "lon": 31.29
+    },
+    {
+     "name": "Trubchevsk",
+     "lat": 52.58,
+     "lon": 33.77
+    }
+   ],
+   "ruler": {
+    "name": "Roman Mikhailovich",
+    "born": null,
+    "dynasty": "Rurikid",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a star azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "azure",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "kozelsk",
+   "name": {
+    "en": "Principality of Kozelsk",
+    "de": "Fürstentum Koselsk"
+   },
+   "short": {
+    "en": "Kozelsk",
+    "de": "Koselsk"
+   },
+   "adjective": {
+    "en": "Kozelsk",
+    "de": "koselsker"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "russian",
+   "faith": "orthodox",
+   "color": "#34622e",
+   "capital": {
+    "name": "Kozelsk",
+    "lat": 54.03,
+    "lon": 35.78
+   },
+   "holdings": [
+    {
+     "name": "Kozelsk",
+     "lat": 54.03,
+     "lon": 35.78
+    },
+    {
+     "name": "Karachev",
+     "lat": 53.12,
+     "lon": 34.98
+    },
+    {
+     "name": "Novosil",
+     "lat": 52.97,
+     "lon": 37.05
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "galicia",
+   "name": {
+    "en": "Kingdom of Galicia (Ruthenia)",
+    "de": "Königreich Galizien (Ruthenien)"
+   },
+   "short": {
+    "en": "Galicia",
+    "de": "Galizien"
+   },
+   "adjective": {
+    "en": "Ruthenian",
+    "de": "ruthenisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#4d7f70",
+   "capital": {
+    "name": "Lviv",
+    "lat": 49.84,
+    "lon": 24.03
+   },
+   "holdings": [
+    {
+     "name": "Lviv",
+     "lat": 49.84,
+     "lon": 24.03
+    },
+    {
+     "name": "Halych",
+     "lat": 49.12,
+     "lon": 24.72
+    },
+    {
+     "name": "Przemyśl",
+     "lat": 49.78,
+     "lon": 22.77
+    },
+    {
+     "name": "Chełm",
+     "lat": 51.13,
+     "lon": 23.47
+    },
+    {
+     "name": "Belz",
+     "lat": 50.38,
+     "lon": 24.01
+    },
+    {
+     "name": "Zvenyhorod",
+     "lat": 49.68,
+     "lon": 24.2
+    },
+    {
+     "name": "Terebovlia",
+     "lat": 49.3,
+     "lon": 25.7
+    },
+    {
+     "name": "Kamianets",
+     "lat": 48.68,
+     "lon": 26.58
+    },
+    {
+     "name": "Lutsk",
+     "lat": 50.75,
+     "lon": 25.33
+    }
+   ],
+   "ruler": {
+    "name": "Lev I",
+    "born": 1228,
+    "dynasty": "Romanovichi",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Lev I, son of King Daniel, rules Galicia from Lviv; Lublin he lost again in 1289. Tributary to the Horde (Nogai).",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sandomierz"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "volhynia",
+   "name": {
+    "en": "Principality of Volhynia",
+    "de": "Fürstentum Wolhynien"
+   },
+   "short": {
+    "en": "Volhynia",
+    "de": "Wolhynien"
+   },
+   "adjective": {
+    "en": "Volhynian",
+    "de": "wolhynisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#7b3d39",
+   "capital": {
+    "name": "Volodymyr",
+    "lat": 50.85,
+    "lon": 24.32
+   },
+   "holdings": [
+    {
+     "name": "Volodymyr",
+     "lat": 50.85,
+     "lon": 24.32
+    },
+    {
+     "name": "Berestia",
+     "lat": 52.1,
+     "lon": 23.69
+    },
+    {
+     "name": "Dorohychyn",
+     "lat": 52.4,
+     "lon": 22.63
+    },
+    {
+     "name": "Kremenets",
+     "lat": 50.1,
+     "lon": 25.73
+    },
+    {
+     "name": "Ostroh",
+     "lat": 50.33,
+     "lon": 26.52
+    }
+   ],
+   "ruler": {
+    "name": "Mstislav Danylovych",
+    "born": null,
+    "dynasty": "Romanovichi",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince of Volhynia since 1289 (death of Volodymyr Vasylkovych); Lutsk is attached here only through the spread.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "kiev",
+   "name": {
+    "en": "Principality of Kiev",
+    "de": "Fürstentum Kiew"
+   },
+   "short": {
+    "en": "Kiev",
+    "de": "Kiew"
+   },
+   "adjective": {
+    "en": "Kievan",
+    "de": "kiewer"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "ruthenian",
+   "faith": "orthodox",
+   "color": "#526077",
+   "capital": {
+    "name": "Kiev",
+    "lat": 50.45,
+    "lon": 30.52
+   },
+   "holdings": [
+    {
+     "name": "Kiev",
+     "lat": 50.45,
+     "lon": 30.52
+    },
+    {
+     "name": "Pereyaslav",
+     "lat": 50.07,
+     "lon": 31.45
+    },
+    {
+     "name": "Kaniv",
+     "lat": 49.75,
+     "lon": 31.46
+    },
+    {
+     "name": "Vyshhorod",
+     "lat": 50.58,
+     "lon": 30.49
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Under Tatar baskaks; its princes are not reliably known.",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a sword argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "sword",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "golden_horde",
+   "name": {
+    "en": "Golden Horde",
+    "de": "Goldene Horde"
+   },
+   "short": {
+    "en": "Golden Horde",
+    "de": "Goldene Horde"
+   },
+   "adjective": {
+    "en": "Horde",
+    "de": "Horden-"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "tatar",
+   "faith": "sunni",
+   "color": "#7d6d39",
+   "capital": {
+    "name": "Sarai Batu",
+    "lat": 47.17,
+    "lon": 47.43
+   },
+   "holdings": [
+    {
+     "name": "Sarai Batu",
+     "lat": 47.17,
+     "lon": 47.43
+    },
+    {
+     "name": "Ukek",
+     "lat": 51.45,
+     "lon": 46.05
+    },
+    {
+     "name": "Bolghar",
+     "lat": 54.98,
+     "lon": 49.06
+    },
+    {
+     "name": "Kazan",
+     "lat": 55.79,
+     "lon": 49.12
+    },
+    {
+     "name": "Mokhshi",
+     "lat": 53.88,
+     "lon": 43.69
+    },
+    {
+     "name": "Saraychik",
+     "lat": 47.51,
+     "lon": 51.73
+    },
+    {
+     "name": "Hajji Tarkhan",
+     "lat": 46.35,
+     "lon": 48.04
+    },
+    {
+     "name": "Urgench",
+     "lat": 42.33,
+     "lon": 59.15
+    },
+    {
+     "name": "Majar",
+     "lat": 44.8,
+     "lon": 44.17
+    },
+    {
+     "name": "Qırım",
+     "lat": 45.06,
+     "lon": 35.09
+    },
+    {
+     "name": "Kerch",
+     "lat": 45.36,
+     "lon": 36.47
+    },
+    {
+     "name": "Azaq",
+     "lat": 47.11,
+     "lon": 39.42
+    },
+    {
+     "name": "Beldzhamen",
+     "lat": 48.71,
+     "lon": 44.51
+    },
+    {
+     "name": "Ufa",
+     "lat": 54.73,
+     "lon": 55.95
+    },
+    {
+     "name": "Sighnaq",
+     "lat": 44.03,
+     "lon": 68.0
+    },
+    {
+     "name": "Ulus of Orda (Irtysh)",
+     "lat": 50.4,
+     "lon": 76.0
+    },
+    {
+     "name": "Ishim steppe",
+     "lat": 52.0,
+     "lon": 71.5
+    },
+    {
+     "name": "Balkhash steppe",
+     "lat": 46.5,
+     "lon": 74.5
+    }
+   ],
+   "ruler": {
+    "name": "Talabuga",
+    "born": null,
+    "dynasty": "Borjigin (Jochid)",
+    "female": false
+   },
+   "heir": {
+    "name": "Tokhta",
+    "born": 1270,
+    "dynasty": "Borjigin (Jochid)",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "Khan Talabuga (1287-91) rules the right (western) wing; the left wing east of the Ural, the ulus of Orda, is held by Köchü (Konichi) under him. Talabuga is overthrown by Nogai and his protégé Tokhta during 1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ilkhanate",
+    "nogai"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a tamga or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nogai",
+   "name": {
+    "en": "Ulus of Nogai",
+    "de": "Ulus des Nogai"
+   },
+   "short": {
+    "en": "Nogai",
+    "de": "Nogai"
+   },
+   "adjective": {
+    "en": "Tatar",
+    "de": "tatarisch"
+   },
+   "rank": "khanate",
+   "government": "nomadic_horde",
+   "culture": "kipchak_nomad",
+   "faith": "tengri",
+   "color": "#645000",
+   "capital": {
+    "name": "Isaccea",
+    "lat": 45.27,
+    "lon": 28.46
+   },
+   "holdings": [
+    {
+     "name": "Isaccea",
+     "lat": 45.27,
+     "lon": 28.46
+    },
+    {
+     "name": "Akkerman",
+     "lat": 46.2,
+     "lon": 30.35
+    },
+    {
+     "name": "Kiliya",
+     "lat": 45.42,
+     "lon": 29.27
+    },
+    {
+     "name": "Oleshky",
+     "lat": 46.62,
+     "lon": 32.72
+    },
+    {
+     "name": "Ochakiv",
+     "lat": 46.62,
+     "lon": 31.54
+    },
+    {
+     "name": "Orheiul Vechi",
+     "lat": 47.3,
+     "lon": 28.96
+    }
+   ],
+   "ruler": {
+    "name": "Nogai",
+    "born": null,
+    "dynasty": "Borjigin (Jochid)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The beklerbek Nogai, great-grandson of Jochi, rules the western steppe from the Dnieper to the Danube and makes and unmakes khans; Bulgaria and Vidin pay him tribute. His faith: he is said to have accepted Islam, his ulus is largely shamanist.",
+   "overlord": "golden_horde",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "byzantium",
+    "hungary"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "caffa",
+   "name": {
+    "en": "Genoese Caffa",
+    "de": "Genuesisches Caffa"
+   },
+   "short": {
+    "en": "Caffa",
+    "de": "Caffa"
+   },
+   "adjective": {
+    "en": "Caffan",
+    "de": "caffesisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "ligurian",
+   "faith": "latin",
+   "color": "#6a3938",
+   "capital": {
+    "name": "Caffa",
+    "lat": 45.03,
+    "lon": 35.38
+   },
+   "holdings": [
+    {
+     "name": "Caffa",
+     "lat": 45.03,
+     "lon": 35.38
+    }
+   ],
+   "ruler": {
+    "name": "Genoese consul",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Genoese colony under Tatar suzerainty since c.1266.",
+   "overlord": "genoa",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "mordva",
+   "name": {
+    "en": "Mordvin Lands",
+    "de": "Mordwinenland"
+   },
+   "short": {
+    "en": "Mordva",
+    "de": "Mordwinen"
+   },
+   "adjective": {
+    "en": "Mordvin",
+    "de": "mordwinisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "mordvin",
+   "faith": "finnic_old",
+   "color": "#5e502a",
+   "capital": {
+    "name": "Temnikov",
+    "lat": 54.63,
+    "lon": 43.22
+   },
+   "holdings": [
+    {
+     "name": "Temnikov",
+     "lat": 54.63,
+     "lon": 43.22
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "golden_horde",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a tamga argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "circassia",
+   "name": {
+    "en": "Circassian Princedoms",
+    "de": "Tscherkessische Fürstentümer"
+   },
+   "short": {
+    "en": "Circassia",
+    "de": "Tscherkessien"
+   },
+   "adjective": {
+    "en": "Circassian",
+    "de": "tscherkessisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "circassian",
+   "faith": "orthodox",
+   "color": "#2b4f38",
+   "capital": {
+    "name": "Mapa",
+    "lat": 44.89,
+    "lon": 37.32
+   },
+   "holdings": [
+    {
+     "name": "Mapa",
+     "lat": 44.89,
+     "lon": 37.32
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a tamga or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tamga",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "georgia",
+   "name": {
+    "en": "Kingdom of Georgia",
+    "de": "Königreich Georgien"
+   },
+   "short": {
+    "en": "Georgia",
+    "de": "Georgien"
+   },
+   "adjective": {
+    "en": "Georgian",
+    "de": "georgisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#744242",
+   "capital": {
+    "name": "Tiflis",
+    "lat": 41.69,
+    "lon": 44.8
+   },
+   "holdings": [
+    {
+     "name": "Tiflis",
+     "lat": 41.69,
+     "lon": 44.8
+    },
+    {
+     "name": "Mtskheta",
+     "lat": 41.85,
+     "lon": 44.72
+    },
+    {
+     "name": "Gori",
+     "lat": 41.98,
+     "lon": 44.11
+    },
+    {
+     "name": "Telavi",
+     "lat": 41.92,
+     "lon": 45.47
+    },
+    {
+     "name": "Kvetera",
+     "lat": 42.08,
+     "lon": 45.43
+    },
+    {
+     "name": "Lori",
+     "lat": 41.02,
+     "lon": 44.31
+    },
+    {
+     "name": "Ani",
+     "lat": 40.51,
+     "lon": 43.57
+    }
+   ],
+   "ruler": {
+    "name": "Vakhtang II",
+    "born": null,
+    "dynasty": "Bagrationi",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Eastern Georgia under Ilkhanid overlordship; Vakhtang II installed by the Ilkhan after the execution of Demetrius II (1289).",
+   "overlord": "ilkhanate",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules between four crosses gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 4,
+      "arrangement": "quarters"
+     }
+    ]
+   }
+  },
+  {
+   "id": "imereti",
+   "name": {
+    "en": "Kingdom of Imereti",
+    "de": "Königreich Imeretien"
+   },
+   "short": {
+    "en": "Imereti",
+    "de": "Imeretien"
+   },
+   "adjective": {
+    "en": "Imeretian",
+    "de": "imeretisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#a05c71",
+   "capital": {
+    "name": "Kutaisi",
+    "lat": 42.27,
+    "lon": 42.7
+   },
+   "holdings": [
+    {
+     "name": "Kutaisi",
+     "lat": 42.27,
+     "lon": 42.7
+    },
+    {
+     "name": "Zugdidi",
+     "lat": 42.51,
+     "lon": 41.87
+    },
+    {
+     "name": "Poti",
+     "lat": 42.15,
+     "lon": 41.67
+    },
+    {
+     "name": "Sukhumi",
+     "lat": 43.0,
+     "lon": 41.02
+    },
+    {
+     "name": "Tsageri",
+     "lat": 42.65,
+     "lon": 42.77
+    },
+    {
+     "name": "Shorapani",
+     "lat": 42.1,
+     "lon": 43.08
+    }
+   ],
+   "ruler": {
+    "name": "David VI Narin",
+    "born": 1225,
+    "dynasty": "Bagrationi",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Western Georgia, independent of the Mongols, under David VI Narin; Mingrelia (Odishi) and Abkhazia are its fiefs.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "ilkhanate"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "samtskhe",
+   "name": {
+    "en": "Atabegate of Samtskhe",
+    "de": "Atabegat Samzche"
+   },
+   "short": {
+    "en": "Samtskhe",
+    "de": "Samzche"
+   },
+   "adjective": {
+    "en": "Meskhian",
+    "de": "meschisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "georgian",
+   "faith": "orthodox",
+   "color": "#8d6434",
+   "capital": {
+    "name": "Akhaltsikhe",
+    "lat": 41.64,
+    "lon": 42.98
+   },
+   "holdings": [
+    {
+     "name": "Akhaltsikhe",
+     "lat": 41.64,
+     "lon": 42.98
+    },
+    {
+     "name": "Akhalkalaki",
+     "lat": 41.41,
+     "lon": 43.48
+    },
+    {
+     "name": "Artanuji",
+     "lat": 41.25,
+     "lon": 42.07
+    }
+   ],
+   "ruler": {
+    "name": "Beka I Jaqeli",
+    "born": null,
+    "dynasty": "Jaqeli",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Atabeg of Samtskhe, a direct vassal of the Ilkhan.",
+   "overlord": "ilkhanate",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a tower gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "trebizond",
+   "name": {
+    "en": "Empire of Trebizond",
+    "de": "Kaiserreich Trapezunt"
+   },
+   "short": {
+    "en": "Trebizond",
+    "de": "Trapezunt"
+   },
+   "adjective": {
+    "en": "Trapezuntine",
+    "de": "trapezuntisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "greek",
+   "faith": "orthodox",
+   "color": "#6d2c3e",
+   "capital": {
+    "name": "Trebizond",
+    "lat": 41.0,
+    "lon": 39.72
+   },
+   "holdings": [
+    {
+     "name": "Trebizond",
+     "lat": 41.0,
+     "lon": 39.72
+    },
+    {
+     "name": "Kerasous",
+     "lat": 40.91,
+     "lon": 38.39
+    },
+    {
+     "name": "Rizaion",
+     "lat": 41.02,
+     "lon": 40.52
+    },
+    {
+     "name": "Oinaion",
+     "lat": 41.13,
+     "lon": 37.29
+    },
+    {
+     "name": "Tripolis",
+     "lat": 41.05,
+     "lon": 39.22
+    },
+    {
+     "name": "Gümüşhane",
+     "lat": 40.46,
+     "lon": 39.48
+    },
+    {
+     "name": "Athens (Pontus)",
+     "lat": 41.04,
+     "lon": 40.83
+    }
+   ],
+   "ruler": {
+    "name": "John II Megas Komnenos",
+    "born": 1262,
+    "dynasty": "Komnenos",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Eudokia Palaiologina",
+    "born": 1265,
+    "dynasty": "Palaiologos",
+    "female": true
+   },
+   "dynasty_note": "John II, married to the emperor's daughter Eudokia (1282), the first to style himself \"Emperor of the East\".",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "byzantium"
+   ],
+   "rivals": [
+    "ilkhanate"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an eagle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}

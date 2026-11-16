@@ -1,0 +1,107 @@
+"""Anatolia, the Near East, Iran and Central Asia west of 70°E, North Africa and Africa on 1 January 1291."""
+import os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+from lib import *
+
+SOURCES = [
+    "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300 (with North Africa and the Near East)",
+    "W. R. Shepherd, Historical Atlas (1923), 'Europe and the Mediterranean Lands about 1300'; 'The Mongol Dominions 1300'? (to be checked)",
+    "C. E. Bosworth, The New Islamic Dynasties (1996): every dynasty with its dates",
+    "C. Cahen, The Formation of Turkey (2001); Wikipedia, 'List of states in late medieval Anatolia' (beyliks before 1300)",
+    "R. Amitai-Preiss, Mongols and Mamluks (1995); P. M. Holt, The Age of the Crusades (1986): al-Ashraf Khalil 1290-93, Hama under its Ayyubid princes",
+    "The Cambridge History of Iran vol. 5 (1968): the Ilkhanate under Arghun, its vassals (Kart, Qutlugh-Khanids of Kerman, Artuqids, Seljuks of Rum)",
+    "M. Biran, Qaidu and the Rise of the Independent Mongol State in Central Asia (1997): Qaidu and Du'a",
+    "M. Shatzmiller, The Marinids (2000); Ibn Khaldun, Kitab al-Ibar (trans. de Slane): Marinids, Zayyanids, Hafsids of Tunis and Bijaya, the Azafids of Ceuta",
+    "N. Levtzion, Ancient Ghana and Mali (1973): Sakura; Taddesse Tamrat, Church and State in Ethiopia 1270-1527 (1972): Yagbe'u Seyon, Walashma Ifat 1285",
+    "R. Oliver (ed.), The Cambridge History of Africa vol. 3 (1977)",
+]
+NOTES = [
+    "Date: 1 January 1291. The Ilkhan Arghun (d. 10 March 1291) rules Iran, Iraq and the overlordship of Anatolia, Georgia, Cilicia, the Kart of Herat and Kerman.",
+    "Anatolia: the Seljuk sultan Mesud II reigns at Konya under Ilkhanid governors. The Turkmen beyliks of 1291 are Karaman, Germiyan, Menteshe, the Sahib Ataids (Karahisar), the Pervaneids (Sinop), the Chobanids (Kastamonu), Ladik (Denizli) and the Eshrefids (Beyşehir). Osman's chieftaincy at Söğüt is tiny; Aydın, Saruhan, Karasi, Teke, Hamid, Candar, Eretna, Dulkadir and Ramadan of 1356 did not exist yet.",
+    "The Iranian successor states of 1356 (Jalayirids, Chobanids, Muzaffarids, Injuids, Sarbadars) and the Turkmen confederations of the Kara and Ak Koyunlu did not exist yet.",
+    "Hama is an Ayyubid principality under the Mamluks (al-Muzaffar III Mahmud, to 1299). Tripoli fell to the Mamluks in April 1289.",
+    "Maghreb: Marinids (Abu Yaqub Yusuf), Zayyanids of Tlemcen (Uthman I), Hafsids of Tunis (Abu Hafs Umar I) and of Bijaya and Constantine (Abu Zakariya, since 1285); Ceuta under the Azafids, nominally Marinid.",
+    "Jolof (founded c.1350 by tradition), Dulkadir and Ramadan are left out.",
+]
+
+states = [
+S('mamluk', inherit=True, cap='Cairo',
+  hold='Alexandria;Damietta;Rosetta;Fustat;Bilbeis;Qus;Aswan;Asyut;Gaza;Jerusalem;Hebron;Nablus;Safad;Karak;Damascus;Baalbek;Homs;Aleppo;Antioch;Latakia;Tripoli;Margat@35.15,35.95;Krak des Chevaliers@34.76,36.29;Bira@37.06,37.98;Ayla@29.53,35.0',
+  ruler=R('al-Ashraf Khalil', 1262, 'Qalawunid'), note='Bahri Mamluk sultan since November 1290 (death of his father Qalawun on the march against Acre).', rivals='jerusalem cyprus ilkhanate armenia_cilicia', claims='jerusalem', pers='conqueror', diff=1,
+  en='Al-Ashraf Khalil has sworn to finish his father\'s work: Acre will be besieged in April.', de='Al-Aschraf Chalil hat geschworen, das Werk seines Vaters zu vollenden: im April wird Akkon belagert.'),
+N('hama', 'Ayyubid Principality of Hama', 'Ayyubidisches Fürstentum Hama', 'principality', 'feudal_monarchy', 'levantine', 'sunni', 'Hama', hold='Maarrat al-Numan;Barin@34.97,36.47', sh=('Hama', 'Hama'), adj=('Ayyubid', 'ayyubidisch'), color='#8b7d4e',
+  ruler=R('al-Muzaffar III Mahmud', None, 'Ayyubid'), note='The last Ayyubid principality, vassal of the Mamluks.', over='mamluk', subj='vassal', pers='diplomat', diff=5, en='', de=''),
+S('mecca_sharifate', inherit=True, cap='Mecca', hold='Jeddah;Ta\'if;Yanbu;Medina', ruler=R('Abu Numayy I', None, 'Banu Qatada'), note='Sharifs of Mecca under Mamluk suzerainty; Medina has its own Husaynid emirs, attached here.', over='mamluk', subj='vassal', pers='diplomat', diff=5, en='', de=''),
+S('rasulid', inherit=True, cap='Ta\'izz', hold='Zabid;Aden;Mocha;Sana\'a;Dhamar;Lahij;Zafar@17.0,54.08', ruler=R('al-Muzaffar Yusuf I', None, 'Rasulid'), note='Rasulid sultan since 1250, at the height of the dynasty; took Zafar in Dhofar (1279).', rivals='zaydi_imamate', pers='trader', diff=4, en='', de=''),
+S('zaydi_imamate', inherit=True, cap='Sa\'da', hold='Hajjah;Thula', ruler=None, rivals='rasulid', pers='zealot', diff=5, en='', de=''),
+S('nabhani_oman', inherit=True, cap='Bahla', hold='Nizwa;Sohar;Muscat;Qalhat', ruler=None, note='Nabhani maliks of inner Oman; Qalhat and the coast stand under Hormuz.', pers='opportunist', diff=5, en='', de=''),
+S('hormuz', inherit=True, cap='Hormuz', hold='Qalhat;Qais', ruler=R('Mahmud Qalhati', None, None), note='The kings of Old Hormuz on the mainland (the move to Jarun island c.1300), tributary to the Ilkhan.', over='ilkhanate', subj='tributary', pers='trader', diff=4, en='', de=''),
+N('ilkhanate', 'Ilkhanate', 'Ilchanat', 'khanate', 'nomadic_horde', 'persian', 'tengri', 'Tabriz',
+  hold='Maragheh;Ardabil;Qazvin;Zanjan;Hamadan;Rey;Isfahan;Kashan;Shiraz;Yazd;Baghdad;Basra;Mosul;Erbil;Kirkuk;Wasit;Diyarbakır;Erzurum;Erzincan;Van;Akhlat;Nakhchivan;Shirvan@40.63,48.64;Derbent;Baku;Gilan@37.28,49.58;Sari;Astarabad;Nishapur;Tus;Merv;Sarakhs;Bukhara@39.77,64.42',
+  sh=('Ilkhanate', 'Ilchanat'), adj=('Ilkhanid', 'ilchanidisch'), color='#8a6b49',
+  ruler=R('Arghun', 1258, 'Borjigin (Hulaguid)'), heir=R('Gaykhatu', None, 'Borjigin (Hulaguid)'), note='Ilkhan Arghun (1284-91), a Buddhist who sought an alliance with the Latin West against the Mamluks; he dies on 10 March 1291. Islam becomes the state faith only under Ghazan (1295).',
+  allies='armenia_cilicia', rivals='mamluk golden_horde kaidu', pers='conqueror', diff=1, en='', de=''),
+N('rum', 'Sultanate of Rum', 'Sultanat der Rum-Seldschuken', 'sultanate', 'feudal_monarchy', 'anatolian_turkish', 'sunni', 'Konya',
+  hold='Kayseri;Aksaray;Niğde;Kırşehir;Ankara;Amasya;Tokat;Sivas;Malatya;Kastamonu@41.38,33.78;Beyşehir@37.68,31.72;Akşehir;Ilgın@38.28,31.91;Antalya;Alanya',
+  sh=('Rum', 'Rum'), adj=('Seljuk', 'seldschukisch'), color='#9b7a5c',
+  ruler=R('Mesud II', None, 'Seljuk'), note='Sultan since 1282/84 under Ilkhanid governors; real power lies with the Mongol officers and the Turkmen begs.', over='ilkhanate', subj='vassal', rivals='karaman', pers='diplomat', diff=4, en='', de=''),
+S('karaman', inherit=True, cap='Ermenek', hold='Larende;Mut;Silifke@36.38,33.93;Ereğli (Konya)@37.51,34.05', ruler=R('Güneri Bey', None, 'Karamanid'), note='Karamanid beylik in the Taurus, at war with the Seljuks and the Ilkhanids.', rivals='rum armenia_cilicia', claims='rum', pers='conqueror', diff=4, en='', de=''),
+S('germiyan', inherit=True, cap='Kütahya', hold='Simav;Uşak;Gediz', ruler=R('Yakub I', None, 'Germiyanid'), note='The strongest beylik of the west, raiding the Byzantine frontier.', rivals='byzantium', pers='conqueror', diff=4, en='', de=''),
+S('menteshe', inherit=True, cap='Milas', hold='Beçin@37.29,27.79;Muğla;Tralles@37.86,27.84;Marmaris', ruler=R('Menteşe Bey', None, 'Menteshe'), note='Turkmen beylik on the Carian coast; took Tralles from Byzantium (1282-84).', rivals='byzantium', pers='conqueror', diff=4, en='', de=''),
+N('sahib_ata', 'Beylik of the Sahib Ataids', 'Beylik der Sahib-Ataiden', 'beylik', 'feudal_monarchy', 'anatolian_turkish', 'sunni', 'Karahisar@38.76,30.54', hold='Sandıklı@38.47,30.27',
+  sh=('Karahisar', 'Karahisar'), adj=('Sahib Ataid', 'sahib-ataidisch'), color='#7f6a50', ruler=None, note='Descendants of the vizier Sahib Ata Fakhr al-Din Ali (d. 1288), lords of Afyonkarahisar (1275-1341).', pers='opportunist', diff=5, en='', de=''),
+N('pervane', 'Beylik of the Pervaneids', 'Beylik der Pervaneiden', 'beylik', 'feudal_monarchy', 'anatolian_turkish', 'sunni', 'Sinop', hold='Samsun@41.29,36.33;Boyabat@41.47,34.77',
+  sh=('Sinop', 'Sinop'), adj=('Pervaneid', 'pervaneidisch'), color='#6d6a58', ruler=R('Mehmed Bey', None, 'Pervaneid'), note='The sons of the pervane Mu\'in al-Din Süleyman (d. 1277) hold Sinop (1277-1322).', pers='opportunist', diff=5, en='', de=''),
+N('chobanid_kastamonu', 'Beylik of the Chobanids of Kastamonu', 'Beylik der Tschobaniden von Kastamonu', 'beylik', 'feudal_monarchy', 'anatolian_turkish', 'sunni', 'Kastamonu', hold='Taşköprü;Safranbolu@41.25,32.69',
+  sh=('Kastamonu', 'Kastamonu'), adj=('Chobanid', 'tschobanidisch'), color='#5f6c5a', ruler=R('Muzaffer al-Din Yavlak Arslan', None, 'Chobanid (Kastamonu)'), note='Frontier begs of Kastamonu since the early 13th century (the Candarids replace them c.1292-1309).', rivals='byzantium', pers='opportunist', diff=5, en='', de=''),
+N('ladik', 'Beylik of Ladik (İnançids)', 'Beylik von Ladik (İnançiden)', 'beylik', 'feudal_monarchy', 'turkmen', 'sunni', 'Denizli', hold='Honaz@37.76,29.26;Laodicea@37.83,29.11',
+  sh=('Ladik', 'Ladik'), adj=('Ladik', 'ladiker'), color='#7a5f4c', ruler=None, note='Turkmen lords of Denizli (Ladik), 1262-1368.', rivals='byzantium', pers='opportunist', diff=5, en='', de=''),
+N('eshref', 'Beylik of the Eshrefids', 'Beylik der Eşrefoğulları', 'beylik', 'feudal_monarchy', 'anatolian_turkish', 'sunni', 'Beyşehir', hold='Seydişehir@37.42,31.85;Bozkır@37.19,32.25',
+  sh=('Eşref', 'Eşref'), adj=('Eshrefid', 'eşrefidisch'), color='#806b58', ruler=R('Süleyman I', None, 'Eshrefid'), note='Lords of Beyşehir (1285-1326).', pers='builder', diff=5, en='', de=''),
+S('ottoman', inherit=True, n=('Chieftaincy of Osman', 'Häuptlingstum des Osman'), sh=('Osman', 'Osman'), adj=('Ottoman', 'osmanisch'), cap='Söğüt', hold='Domaniç@39.80,29.60;Karacahisar@39.73,30.55',
+  ruler=R('Osman', 1258, 'Osmanli'), note='Osman, son of Ertuğrul, a frontier chief on the Bithynian border; the beylik is only counted from c.1299.', rivals='byzantium germiyan', pers='conqueror', diff=5, en='', de=''),
+S('artuqid_mardin', inherit=True, cap='Mardin', hold='Dunaysir@37.06,40.85;Hasankeyf', ruler=R('al-Muzaffar Qara Arslan', None, 'Artuqid'), over='ilkhanate', subj='vassal', pers='diplomat', diff=5, en='', de=''),
+S('kart', inherit=True, cap='Herat', hold='Ghur@34.5,64.5;Farah@32.37,62.11;Ghazni@33.55,68.42', ruler=R('Shams al-Din II (Rukn al-Din)', None, 'Kart'), note='Kart maliks of Herat, vassals of the Ilkhan.', over='ilkhanate', subj='vassal', pers='builder', diff=4, en='', de=''),
+N('kerman', 'Qutlugh-Khanid Kerman', 'Kerman der Qutlugh-Chane', 'sultanate', 'feudal_monarchy', 'persian', 'sunni', 'Kerman', hold='Bam;Sirjan;Jiroft',
+  sh=('Kerman', 'Kerman'), adj=('Kermani', 'kermanisch'), color='#9a6a4c', ruler=R('Jalal al-Din Soyurghatmish', None, 'Qutlugh-Khanid'), note='The Qara Khitai dynasty of Kerman under Ilkhanid overlordship (1222-1307).', over='ilkhanate', subj='vassal', pers='opportunist', diff=5, en='', de=''),
+S('chagatai', inherit=True, cap='Almaliq@43.9,80.7', hold='Samarkand@39.65,66.96;Kashgar@39.47,75.99;Otrar@42.85,68.30;Andijan@40.78,72.34;Termez@37.22,67.28;Balkh@36.76,66.9',
+  ruler=R('Du\'a', None, 'Borjigin (Chagatayid)'), note='Du\'a, khan of the Chagatai ulus (1282-1307), the junior partner of Qaidu.', over='kaidu', subj='vassal', rivals='ilkhanate yuan', pers='conqueror', diff=3, en='', de=''),
+N('kaidu', 'Ulus of Qaidu', 'Ulus des Qaidu', 'khanate', 'nomadic_horde', 'mongol', 'tengri', 'Talas@42.52,72.24', hold='Emil@46.53,83.6;Qayaliq@45.13,80.1;Besh Baliq@44.1,89.2;Kulja@43.9,81.3',
+  sh=('Qaidu', 'Qaidu'), adj=('Ögedeid', 'ögedeidisch'), color='#a0855a', ruler=R('Qaidu', 1230, 'Borjigin (Ögedeid)'), note='Qaidu, grandson of Ögedei, the paramount power of Central Asia and Kublai\'s enemy (1269-1301).',
+  rivals='yuan ilkhanate', claims='yuan', pers='conqueror', diff=2, en='', de=''),
+
+S('armenia_cilicia', inherit=True, cap='Sis', hold='', ruler=R('Hethum II', 1266, 'Hethumid'), pers='diplomat', diff=4, en='', de='') if False else None,
+S('marinid', inherit=True, cap='Fez',
+  hold='Fes el-Bali@34.06,-4.97;Meknes;Taza;Salé;Rabat;Azemmour;Safi;Anfa;Marrakesh;Aghmat@31.42,-7.8;Taroudant;Sijilmasa;Tangier;Ksar es-Seghir@35.84,-5.56;Algeciras;Tarifa;Gibraltar;Ronda;Oujda',
+  ruler=R('Abu Yaqub Yusuf', None, 'Marinid'), note='Marinid sultan since 1286; Algeciras, Tarifa, Gibraltar and Ronda are his Andalusian bridgeheads.', rivals='castile zayyanid granada', pers='conqueror', diff=2, en='', de=''),
+N('ceuta', 'Azafid Ceuta', 'Ceuta der Azafiden', 'emirate', 'merchant_republic', 'maghrebi', 'sunni', 'Ceuta', hold='', sh=('Ceuta', 'Ceuta'), adj=('Ceutan', 'ceutanisch'), color='#7a7860',
+  ruler=R('Abu Hatim al-Azafi', None, 'Azafid'), note='The Banu al-Azafi rule the trading city of Ceuta (1249-1327), recognising the Marinids.', over='marinid', subj='tributary', pers='trader', diff=5, en='', de=''),
+N('zayyanid', 'Zayyanid Sultanate of Tlemcen', 'Zayyanidisches Sultanat Tlemcen', 'sultanate', 'feudal_monarchy', 'maghrebi', 'sunni', 'Tlemcen', hold='Oran;Honaine@35.17,-1.65;Mostaganem;Miliana;Ténès;Algiers;Médéa',
+  sh=('Tlemcen', 'Tlemcen'), adj=('Zayyanid', 'zayyanidisch'), color='#7c5a3c', ruler=R('Abu Said Uthman I', None, 'Zayyanid'), note='Zayyanid sultan (1283-1304), besieged by the Marinids from 1299.', rivals='marinid hafsid_tunis', pers='diplomat', diff=3, en='', de=''),
+S('hafsid_tunis', inherit=True, cap='Tunis', hold='Kairouan;Sousse;Monastir;Mahdia;Sfax;Gabès;Gafsa;Tozeur;Tripoli (Libya)@32.89,13.19;Bizerte;Béja', ruler=R('Abu Hafs Umar I', None, 'Hafsid'), note='Hafsid caliph at Tunis (1284-95); the west of the realm (Bijaya, Constantine) has broken away under his nephew.', rivals='hafsid_bejaia sicily', pers='diplomat', diff=3, en='', de=''),
+S('hafsid_bejaia', inherit='hafsid_constantine', n=('Hafsid Emirate of Bijaya', 'Hafsidisches Emirat Bejaia'), sh=('Bijaya', 'Bejaia'), cap='Bougie', hold='Constantine;Annaba;Bône@36.9,7.76;Jijel;Mila;Biskra', ruler=R('Abu Zakariya Yahya', None, 'Hafsid'), note='Separate Hafsid realm of Bijaya and Constantine since 1285.', rivals='hafsid_tunis zayyanid', pers='opportunist', diff=4, en='', de=''),
+S('tenerife_menceyatos', inherit=True, cap='Taoro', hold='', ruler=None, pers='isolationist', diff=5, en='', de=''),
+S('gran_canaria_guanartemes', inherit=True, cap='Gáldar', hold='', ruler=None, pers='isolationist', diff=5, en='', de=''),
+S('lanzarote_majos', inherit=True, cap='Zonzamas', hold='', ruler=None, pers='isolationist', diff=5, en='', de=''),
+S('mali', inherit=True, cap='Niani', hold='Timbuktu;Djenné;Walata;Gao@16.27,-0.05;Kangaba@11.94,-8.41', ruler=R('Sakura', None, None), note='The freed slave Sakura, a general who seized the throne (c.1285-1300), extends Mali to Gao.', pers='conqueror', diff=3, en='', de=''),
+S('kanem', inherit=True, cap='Njimi', hold='', ruler=None, note='Sayfawa kings of Kanem; ruler names around 1290 are uncertain.', pers='opportunist', diff=4, en='', de=''),
+S('kano', inherit=True, cap='Kano', hold='', ruler=None, pers='opportunist', diff=5, en='', de=''),
+S('katsina', inherit=True, cap='Katsina', hold='', ruler=None, pers='opportunist', diff=5, en='', de=''),
+S('ethiopia', inherit=True, cap='Tegulet', hold='', ruler=R('Yagbe\'u Seyon', None, 'Solomonic'), note='Son of Yekuno Amlak, founder of the Solomonic dynasty (1270); reigns 1285-94.', rivals='ifat', pers='zealot', diff=3, en='', de=''),
+S('ifat', inherit=True, cap='Ifat', hold='Zeila', ruler=R('Umar Walashma', None, 'Walashma'), note='The Walashma took Ifat and ended the Makhzumi sultanate of Shewa in 1285.', rivals='ethiopia', pers='trader', diff=4, en='', de=''),
+S('makuria', inherit=True, cap='Dongola', hold='Faras;Qasr Ibrim', ruler=R('Shemamun', None, None), note='King Shemamun, fighting Mamluk-backed rivals for the throne of Dongola.', rivals='mamluk', pers='opportunist', diff=4, en='', de=''),
+S('alodia', inherit=True, cap='Soba', hold='', ruler=None, pers='isolationist', diff=5, en='', de=''),
+S('kilwa', inherit=True, cap='Kilwa Kisiwani', hold='Mafia@-7.9,39.75;Sofala', ruler=R('al-Hasan ibn Talut', None, 'Mahdali'), note='The Mahdali sultans (from c.1277) control the gold trade of Sofala.', pers='trader', diff=4, en='', de=''),
+S('great_zimbabwe', inherit=True, cap='Great Zimbabwe', hold='', ruler=None, pers='trader', diff=5, en='', de=''),
+S('benin', inherit=True, cap='Edo (Benin City)', hold='', ruler=R('Oguola', None, 'Eweka'), note='Oba Oguola (c.1280-95), who walled Benin City by tradition.', pers='builder', diff=5, en='', de=''),
+S('ife', inherit=True, cap='Ile-Ife', hold='', ruler=None, pers='builder', diff=5, en='', de=''),
+]
+states = [s for s in states if s]
+
+wars = [
+  WAR('Mamluk-Ilkhanid war', 'Mamlukisch-ilchanidischer Krieg', 'ilkhanate', 'mamluk', 1260, 'conquest'),
+  WAR('War of Qaidu', 'Krieg des Qaidu', 'kaidu chagatai', 'yuan', 1269, 'conquest'),
+]
+
+if __name__ == '__main__':
+    write('south_east', SOURCES, states, wars, new_ids=['hama', 'ilkhanate', 'rum', 'sahib_ata', 'pervane', 'chobanid_kastamonu', 'ladik', 'eshref', 'kerman', 'kaidu', 'ceuta', 'zayyanid', 'hafsid_bejaia'], notes=NOTES)
