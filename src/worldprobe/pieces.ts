@@ -149,6 +149,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     const lay = blend > 0 ? coarser.map((p) => held.get(p.key)) : [], goal = lay.length && lay.every((h) => h) ? blend : 0;
     const by = o.ahead && !stepped && mixed ? Math.min(50, now - mixed) / DISSOLVE : 1;
     mix = goal > mix ? Math.min(goal, mix + by) : Math.max(goal, mix - by); mixed = now;
+    stage.blend(mix);
     for (const h of held.values()) h.laid = false;
     if (mix > 0) for (const h of lay) if (h) h.laid = true;
     if (stepped) for (const h of [...coming, ...going]) { h.on = shown.has(h); h.fade = undefined; }

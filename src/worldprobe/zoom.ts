@@ -70,6 +70,19 @@ export function blendOf(wide: number): number {
 export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
 /** How deep the creases and corners of the blocks are drawn, 1 … 0: they go as the relief goes. */
 export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, TILT_UNTIL, wide);
+/**
+ * How far the creases reach, in finest blocks, as a share of the look's own reach. The stage draws them in its own
+ * blocks, which double in width at every step of the map; so that the picture does not darken at a step's border,
+ * their reach grows evenly with the view instead: as that of the steps does in the mean (a step's blocks are 1/300
+ * to 1/600 of the picture wide, 1/424 at the middle), and never below that of the finest step.
+ */
+export const creaseReachOf = (wide: number) => Math.max(1, wide / MIDDLE);
+/**
+ * How far away the camera stands, in finest blocks, as a share of the look's own distance. The stage keeps it at a
+ * fixed count of its own blocks, so at every step of the map the camera would leap to twice as far and the far side
+ * of the picture be drawn wider at once; it moves away evenly with the view instead, as the creases' reach does.
+ */
+export const awayOf = creaseReachOf;
 /** How strongly the realms colour the world, 0 … 1. */
 export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
 /**
