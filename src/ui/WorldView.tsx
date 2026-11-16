@@ -6,6 +6,7 @@ import { owners, realms, status, world } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './MapView';
 import { mapMode } from './mapmode';
+import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
 import type { WorldView as View } from '../worldprobe/view';
 
@@ -60,10 +61,11 @@ export function WorldView() {
         stops.push(() => { mapCtl.home = () => {}; });
         // colours and names follow the owners and the realms
         stops.push(effect(() => {
-          const o = owners.value, rs = realms.value; void lang.value;
+          const rp = replay.value, o = rp ? rp.owner : owners.value, rs = realms.value; void lang.value;
           if (!o) return;
           const colors: number[] = [], names: string[] = [];
-          for (const r of rs) { colors[r.id] = r.color; names[r.id] = L(r.short); }
+          if (rp) rp.colors.forEach((c, k) => { colors[k] = c; names[k] = L(rp.names[k]); }); // the replay of the borders (replay.ts)
+          else for (const r of rs) { colors[r.id] = r.color; names[r.id] = L(r.short); }
           // the realms change in other ways too (a new ruler, a place more): the map is painted anew only for what it shows
           const now = `${colors.join()}|${names.join('|')}`;
           if (o === shown.owner && now === shown.realms) return;

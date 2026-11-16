@@ -32,7 +32,8 @@ Rules (nothing is invented; what the sources leave open is counted):
 - A realm whose title ended into another realm (the merges of the same file: Aragon into Castile 1707, Scotland
   into England 1707) gives all its places to that realm that year.
 - A realm whose title ended while its state went on under another title of the same holder (Moscow 1547 tsardom,
-  England 1707 Great Britain, Brandenburg 1806 Prussia; the successions of the same file) counts as held after.
+  England 1707 Great Britain, Brandenburg 1806 Prussia; the successions of the same file) counts as held after, and
+  takes the new title's name that day where no polity of its own gave it already.
 - A place no row covers (coasts, straits, small islands: Constantinople lies outside every polygon) keeps its realm;
   once that realm holds no place a row covers any more (it has left the map), or its title has ended for good (the
   ruler lists, no succession: Byzantium after 29 May 1453), the place goes to the realm that holds
@@ -313,6 +314,14 @@ def build():
                            'source': f"Cliopatria v0.2.1: {q} {row['from']}-{row['to']} ({row['wikidata']})"})
             report['names'] += 1
         prev = now
+    # a realm whose title went on under another (the successions) takes that title's name on the day the old ended,
+    # unless a polity of its own already gave it that name
+    for k, sc in sorted(successions.items()):
+        if any(e['kind'] == 'name' and e['realm'] == k and e['name'] == sc['title'] for e in events): continue
+        end = ends.get(k) or str(sc['from'])
+        events.append({'date': end, 'precision': precision(end), 'realm': k, 'name': sc['title'], 'short': short_of(sc['title']),
+                       'wikidata': '', 'kind': 'name', 'source': f"succession of the title: {sc['why']} ({sc['source']})"})
+        report['names'] += 1
     date_events(events, rulers)
     out = {'year': FIRST, 'until': f'{LAST}-12-31', 'source': clio['source'], 'realms': new_realms, 'events': events,
            'mapping': {n: {'how': why[n], 'realm': (keys[kind[n][1]] if kind[n][0] != 'union' else 'union')} for n in sorted(kind)}}
