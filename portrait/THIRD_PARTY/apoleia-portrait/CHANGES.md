@@ -87,3 +87,6 @@ Round 60: `DressSet::converge` and `gaze_of` (each eye turned towards the nose; 
 1356. Roman bytes unchanged.
 Round 62: `DressSet::beard_short` (the file of the short beard; `build.rs`), `beard_short1356` for 1356. Roman
 bytes unchanged.
+Round 65: `DressSet::lash_line` (the lid's edge drawn towards the lashes' colour where they grow; `real_look.rs`
+`real_skin` reads `skin_lash.txt` only when a dress asks for it), 0.75 for women and 0.65 for men of 1356; in
+`rest` the brows higher, men's eyes larger, cheekbones and a leaner head. Roman bytes unchanged.

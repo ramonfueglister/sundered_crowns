@@ -423,6 +423,43 @@ before on the left, after on the right).
 Still open: the wimple's cape lies on the shoulders as a wide flat collar; seen from above the inside of its sides
 shows beside the jaw.
 
+**Eyes that lie in the face without an outline (round 65).** A face of the sample held at the same size beside
+the one face in the screenshots of CK3 that is large enough to measure (the woman of the ruler designer, 110 pixels
+wide). The spread of light over the whole face was the same as there already (lit third L 60 against 51 to 56,
+shaded third 36 against 23 to 32: rounds 41 to 60). What differed lay in the eye:
+
+| CIELAB L (in brackets: against the lit cheek) | CK3 | round 64 | round 65 |
+|---|---|---|---|
+| lit cheek | 53 | 63 | 63 |
+| white of the eye, beside the iris | 65 (+11) | 40 (-23) | 57 (-6) |
+| iris | 14 (-40) | 17 (-47) | 12 (-51) |
+| the lid's edge over the white (its darkest row) | 19 (-35) | 29 (-34) | 18 (-45) |
+| under the eye | 38 (-15) | 50 (-13) | 42 (-21) |
+
+There the white of the eye is the lightest thing in the face, the iris nearly black, and a dark line of lashes
+runs round the opening: an eye that is all contrast. Ours was a grey white beside a mid-grey iris with a thin
+line round it, grey in grey; at the panel's size the eyes were two pale spots.
+
+| What | Cause | Now |
+|---|---|---|
+| the white of the eye grey | the shade in the eye's corners began at a third of the way to the side and so lay over all the white that shows beside the iris; a tint and the lid's shade on top | `eye.white` 1.6 (the white alone, told from the iris by the image: light in every colour), the corners' shade from half way out (`eye.corner` 0.5 to 0.9) |
+| the iris as light as the shaded white | the image's irises are light, and `eye.lift` lightens darks further | `eye.iris` 0.7 |
+| no line of lashes | MakeHuman's lashes are long single hairs in clumps. Dense enough to darken the lid they stand off it as spikes, which is why the stage draws them at three tenths (`brow.lashes`) | the lid's edge itself is drawn towards the lashes' colour where they grow (`lash_line` in the dress table, 0.75 women, 0.65 men; `skin_lash.txt`, real_look.rs `real_skin`), never lighter than the skin (white lashes leave the lid as it is) |
+| the brow on the upper lid | from the pupil to the brow 0.41 of the eye's width (there 0.6 to 0.75) | `rest`: brows up 1.0 for both (0.6, 0.25); MakeHuman's target moves them 2 mm at most, so they are still lower than there |
+| men's eyes slits in a wide flat face | MakeHuman's man, and a well-fed sample | `rest`: men's eyes larger (0.5), cheekbones (0.4, 0.5) and a leaner head (0.2, 0.5) for both |
+
+The test builds the 36 people of the sample and holds the skin within reach of the eyeball against the lid further
+out (0.36 to 0.59 with the lash line, 0.73 to 0.83 without); a second one writes every material of the profile
+into three.js' own shaders, so that a piece a new three.js no longer has is noticed there.
+Picture: `runde65_augen_vorher_nachher.png` (ten grown people of the sample at the panel's size, before above,
+after below).
+Tried and dropped (tools/portrait/pipeline/README.md): MakeHuman's skin images at full contrast and 2048 pixels, a
+shade file for the hollows of the face with longer rays, the lash line as a band on the lashes' cards.
+Still open: one face in CK3 is a thin base for these numbers (the others are 30 to 60 pixels wide); the skin
+round the eye is flat (no fold of the upper lid, no shade under the brow: the brow sits too low for either); the
+iris's colour hardly shows at the panel's size; the eyes look past the viewer (round 60), which the lighter white
+shows more.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

@@ -6,7 +6,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
-import { skinTone, surfaceKind } from '../src/portrait/materials';
+import { ShaderLib } from 'three';
+import { skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 
@@ -224,5 +225,58 @@ describe('portraits', () => {
     }
     expect(worn.cloth_hood_up).toBeGreaterThan(3);
     expect(worn.cloth_wimple).toBeGreaterThan(1);
+  });
+  it('the lid\'s edge of a person of England is dark where the lashes grow', () => {
+    // MakeHuman's lashes are long single hairs that point at the viewer where they grow: the eye lay in the face
+    // without an outline (until round 65). The skin within reach of the eyeball against the lid further out:
+    // 0.36 to 0.59 with the lash line, 0.73 to 0.83 without (the shade of the fold alone)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const edgeToLid = (p: Portrait): number => {
+      const eye = p.surfaces.find(s => surfaceKind(s) === 'eyeball')!, skin = p.surfaces.find(s => surfaceKind(s) === 'skin')!;
+      const sums = { edge: 0, edges: 0, lid: 0, lids: 0 };
+      for (const side of [1, -1]) {
+        const own: number[] = [];
+        for (let i = 0; i < eye.pos.length; i += 3) if ((eye.pos[i]! - p.cx) * side > 0) own.push(i);
+        const c = [0, 1, 2].map(k => own.reduce((a, i) => a + eye.pos[i + k]!, 0) / own.length);
+        const r = own.reduce((a, i) => a + Math.hypot(eye.pos[i]! - c[0]!, eye.pos[i + 1]! - c[1]!, eye.pos[i + 2]! - c[2]!), 0) / own.length;
+        for (let i = 0; i < skin.pos.length; i += 3) {
+          if (skin.pos[i + 2]! < c[2]! + 0.3 * r) continue;
+          const d = Math.hypot(skin.pos[i]! - c[0]!, skin.pos[i + 1]! - c[1]!, skin.pos[i + 2]! - c[2]!) / r;
+          const light = 0.2126 * skin.col[i]! + 0.7152 * skin.col[i + 1]! + 0.0722 * skin.col[i + 2]!;
+          if (d < 1.15) { sums.edge += light; sums.edges++; } else if (d > 1.45 && d < 1.9) { sums.lid += light; sums.lids++; }
+        }
+      }
+      expect(sums.edges).toBeGreaterThan(300);
+      expect(sums.lids).toBeGreaterThan(300);
+      return sums.edge / sums.edges / (sums.lid / sums.lids);
+    };
+    for (const p of sample) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeLessThan(0.65);
+    // and everyone else's lids are Apoleia's
+    for (const p of people) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeGreaterThan(0.7);
+  });
+  it('the eye of England\'s profile tells its white from its iris, and every material finds its place in three.js', () => {
+    // the profile's materials are written into three.js' own shaders (materials.ts `swap`): a piece that a new
+    // three.js no longer has must be noticed here, not as a grey face in the game
+    const compiled = (tex: string, double: boolean): string => {
+      const s = { rough: 0.5, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) };
+      return surfaceMaterials(s, null, null, ENGLAND_1356).map(m => {
+        const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+        m.onBeforeCompile(shader as never, null as never);
+        return shader.fragmentShader;
+      }).join('\n');
+    };
+    const eye = compiled('real/eyeball.webp', false);
+    expect(surfaceKind({ tex: 'real/eyeball.webp', double: false } as never)).toBe('eyeball');
+    expect(eye).toContain('eyeWhite = smoothstep(');
+    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)}, ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    // the white of the eye lighter, the iris darker than the image gives them
+    expect(ENGLAND_1356.eye!.white).toBeGreaterThan(1);
+    expect(ENGLAND_1356.eye!.iris).toBeLessThan(1);
+    expect(compiled('real/skin_young_female.webp', false)).toContain('skinTint');
+    expect(compiled('real/bob01.webp', true)).toContain('hairStrand');
+    expect(compiled('real/bob01_cap.webp', true)).toContain('wrapBy');
+    // Apoleia's eye is left as it is
+    expect(APOLEIA.eye).toBeNull();
   });
 });

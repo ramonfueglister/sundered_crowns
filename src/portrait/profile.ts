@@ -35,12 +35,14 @@ export interface StageProfile {
   skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
-   *  of the gaze), a tint, how much of its colour is left (1 = all), how far its darks are lifted (the exponent
+   *  of the gaze), a tint, how much lighter the white of the eye and how much darker the iris are drawn than the
+   *  image has them (`white`, `iris`: factors; the two are told apart by the image), how much of its colour is
+   *  left (1 = all), how far its darks are lifted (the exponent
    *  on the colour: below 1 a dark iris shows its colour), the glint of the key light on it
    *  (roughness: the rougher the larger and fainter; Godot's "specular"), and how far light reaches round to the
    *  ball's shaded side (wrap lighting as on skin: the white of the eye lets light through; without it the side
    *  of each ball away from the key light is a dark sickle beside the iris). */
-  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; colour: number; lift: number; rough: number; specular: number; wrap: number };
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -99,8 +101,12 @@ export const APOLEIA: StageProfile = {
  *  docs/PORTRAITS.md. Round 55: stubble is not drawn lighter (`cap.stubble`). Round 60: the key light lower
  *  (24 degrees above the head instead of 37: from 37 the upper lip, which faces down, lay in shade and read as a
  *  dark gap, an open mouth, and the eyes lay in dark sockets) and a little weaker, so that the share of the
- *  lightest band of skin stays where it was; light reaches round the eyeball (`eye.wrap`). All PLACEHOLDER (see
- *  above). */
+ *  lightest band of skin stays where it was; light reaches round the eyeball (`eye.wrap`). Round 65: the eye
+ *  measured against the one face of CK3 that is large enough (docs/PORTRAITS.md): there the white of the eye is
+ *  the lightest thing in the face and the iris nearly black; ours was grey beside a mid-grey iris (L 40 beside
+ *  17). The white lighter and the iris darker (`eye.white`, `eye.iris`: L 57 beside 12; there 65 beside 14), and
+ *  the shade in the eye's corners begins further out (it lay over all the white that shows beside the iris). All
+ *  PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -114,7 +120,7 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
-  eye: { corner: { from: 0.35, to: 0.8, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6, wrap: 0.5 },
+  eye: { corner: { from: 0.5, to: 0.9, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], white: 1.6, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6, wrap: 0.5 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },

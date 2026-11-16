@@ -132,9 +132,16 @@ function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageP
   m.onBeforeCompile = shader => {
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y; vLidX = abs( objectNormal.x );');
-    shader.fragmentShader = swap(swap(swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
+    // the white of the eye and the iris are told apart by the image: its white is light in every colour (0.41 in
+    // linear light at its dullest), an iris of any colour is dark in at least one (0.17 at its lightest)
+    const code = swap(shader.fragmentShader, '#include <map_fragment>', `#include <map_fragment>
+float eyeWhite = 1.0;
+#ifdef USE_MAP
+  eyeWhite = smoothstep( 0.22, 0.36, min( sampledDiffuseColor.r, min( sampledDiffuseColor.g, sampledDiffuseColor.b ) ) );
+#endif`);
+    shader.fragmentShader = swap(swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <color_fragment>', `#include <color_fragment>
-diffuseColor.rgb *= vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
+diffuseColor.rgb *= mix( ${f(k.iris)}, ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;

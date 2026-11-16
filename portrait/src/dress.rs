@@ -99,6 +99,11 @@ pub struct DressSet {
     pub brow_paint: [f32; 2],
     /// Lips: how far towards red, women and men.
     pub lips: [f32; 2],
+    /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
+    /// (0 = not at all, Apoleia's; real_look.rs `real_skin`, the file skin_lash.txt). MakeHuman's lashes are long
+    /// single hairs: drawn dense enough to frame the eye they stand off the lid as spikes, drawn thin (the stage's
+    /// `brow.lashes`) the eye has no dark edge at all and lies in the face without an outline.
+    pub lash_line: [f32; 2],
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
@@ -133,7 +138,10 @@ pub struct DressSet {
     /// which on a calm face reads as lifeless; its man has a short neck with the head pushed forward, so that a
     /// gown's shoulders stand as high as his chin; its woman has a round head with a short nose and chin under
     /// small eyes, which under a veil reads as a child (the women's weights for brows, eyes, chin, nose, head and
-    /// forehead). A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
+    /// forehead). Since round 65 the brows stand higher on both (they lay on the upper lid: from the pupil to
+    /// the brow 0.41 of the eye's width, in CK3's face 0.6 to 0.75), the men's eyes are larger (slits in a wide
+    /// face), and both have cheekbones and a leaner head (the well-fed sample's faces were round and flat).
+    /// A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
     /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
     /// face do, `Look::face`: on a child's small mouth they gave a pout).
     pub rest: &'static [(&'static str, f32, f32)],
@@ -217,6 +225,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     lips: [0.55, 0.45],
+    lash_line: [0.75, 0.65],
     hair_red: [0.45, 0.74],
     flush: 0.7,
     lids: [[0.0, 0.0, 0.0, 0.3], [0.1, 0.3, 0.1, 0.3]],
@@ -227,10 +236,13 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("mouth/mouth-angles-up", 0.3, 0.3),
         ("cheek/l-cheek-trans-up", 0.15, 0.15),
         ("cheek/r-cheek-trans-up", 0.15, 0.15),
-        ("eyebrows/eyebrows-trans-up", 0.6, 0.25),
+        ("eyebrows/eyebrows-trans-up", 1.0, 1.0),
         ("eyebrows/eyebrows-angle-up", 0.45, 0.0),
-        ("eyes/l-eye-scale-incr", 0.4, 0.0),
-        ("eyes/r-eye-scale-incr", 0.4, 0.0),
+        ("eyes/l-eye-scale-incr", 0.4, 0.5),
+        ("eyes/r-eye-scale-incr", 0.4, 0.5),
+        ("head/head-fat-decr", 0.2, 0.5),
+        ("cheek/l-cheek-bones-incr", 0.4, 0.5),
+        ("cheek/r-cheek-bones-incr", 0.4, 0.5),
         ("chin/chin-jaw-drop-decr", 0.6, 0.6),
         ("chin/chin-height-incr", 0.35, 0.0),
         ("nose/nose-scale-vert-incr", 0.4, 0.0),
@@ -266,7 +278,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, lips, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, lips, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 

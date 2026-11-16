@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: f32) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: f32, lash_line: f32) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -77,6 +77,12 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // (skin_ao.txt, per vertex of the base head); PLACEHOLDER strength
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/skin_ao.txt"), 1.0);
     let ao_k = settings::SKIN_AO;
+    // real look: the lash line. Where the lashes grow the lid's edge is dark with their roots (skin_lash.txt, 0..1
+    // per vertex; tools/portrait/pipeline/skin_lash.py); the lashes' cards themselves point at the viewer there
+    // and show only further out. Only a dress with a table asks for it (`lash_line`); the colour is the lashes'
+    // (build.rs), and only ever darker than the skin (white lashes leave the lid as it is)
+    let lash: Vec<f32> = if lash_line > 0.0 { crate::real::column(&format!("{dir}/skin_lash.txt"), 0.0) } else { Vec::new() };
+    let lash_c = mix(mul(linear(hair), 0.5), linear(hex("#140d08")), 0.5);
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
     // redder (skin_red.txt, 0..1 per vertex); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
@@ -131,6 +137,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
             }
             if let Some(&a) = ao.get(v as usize) {
                 c = mul(c, 1.0 - ao_k * (1.0 - a.max(0.0)).powf(1.3));
+            }
+            if let Some(&l) = lash.get(v as usize) {
+                c = mix(c, [c[0].min(lash_c[0]), c[1].min(lash_c[1]), c[2].min(lash_c[2])], (l * lash_line).min(1.0));
             }
             if let Some(fv) = folds.as_ref().and_then(|f| f.get(v as usize)) {
                 let dark: f32 = fv.iter().zip(&gdepth).map(|(w, d)| w * d).sum();
