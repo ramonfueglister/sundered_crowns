@@ -37,7 +37,7 @@ players and the AI of realms without a player act through the same commands.
 | 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
-| 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; not in the running world (draft pull request 44) |
+| 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
 
 ## 1. Grain harvest per place
 
@@ -1798,7 +1798,8 @@ met at their plans (section 8) was not counted again. The output lies in the pro
 
 ## 10. The persons of the cities' economies are the persons of the cities
 
-Status: built, not in the running world (draft pull request 44). Ramon asked on 16 November 2026 (14:13 UTC) whether
+Status: built; in the running world since 16 November 2026 (pull request 44, world server release 15: the world
+of 1291 resumed at day 68 with the economies of its 30 cities founded anew on that day). Ramon asked on 16 November 2026 (14:13 UTC) whether
 the economy had been fitted to the real persons of the world in size. It had the same size source, but its persons
 were persons of the engine alone: nobody in the world had a job or a wage. He answered "das wollen wir mit ecs"
 (14:18 UTC). The proposal (Claude Doc "Feature 10: Die Personen der Wirtschaft sind die ECS-Personen") offered two
