@@ -23,3 +23,25 @@ SHA-256 `fc6f0d1e4cc42f45da83522b3696db6f2cc85ec0d12259a85c89b31347b8fc0a`.
 ```
 3864 rows, 399 polities, 1073586 place-rows, 12538 places in the frame; skipped {'type': 385, 'years': 7916, 'frame': 1632}
 ```
+
+## wikipedia_timeline.json
+
+The dated events of the English Wikipedia timelines of geopolitical changes, 1291–1848, one row per table row.
+Written by `tools/history/borders/wp_timeline.py` from the MediaWiki API (the raw wikitext stays local).
+
+**Source:** English Wikipedia, at fixed revisions:
+- "Timeline of geopolitical changes (before 1500)", revision [1382963230](https://en.wikipedia.org/w/index.php?oldid=1382963230) (2026-10-31)
+- "Timeline of geopolitical changes (1500–1899)", revision [1383299739](https://en.wikipedia.org/w/index.php?oldid=1383299739) (2026-11-02)
+
+**License:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), authors: the Wikipedia contributors (see the page histories). This file is an adaptation and stays under CC BY-SA 4.0.
+Changes: the table rows from 1291 to 1848 are turned into plain text; each row gets the linked article titles with their Wikidata item and coordinates (MediaWiki API, pageprops and coordinates, after redirects) and a flag `in_frame`.
+
+**Retrieved:** 2026-11-16.
+
+**Fields per row:** page, revid, year, date (YYYY, YYYY-MM or YYYY-MM-DD as the source gives it; null when the year is approximate or a range, e.g. "c. 1430"), year_text and date_text (original text), text, links (title, target after a redirect, qid, lon, lat), in_frame (a linked article has coordinates inside the world frame; null when no linked article has any — a generous rule: "colonies on the coast of Angola" counts because of Portugal).
+
+**Output of the run:**
+
+```
+876 rows (420 in frame, 298 outside, 158 unknown), dates {'year': 486, 'day': 365, 'month': 22, 'none': 3}, 2774 links, 2770 with QID (99.9%), 1442 distinct titles
+```
