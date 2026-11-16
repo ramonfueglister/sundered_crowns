@@ -5,6 +5,7 @@ import { effect } from '@preact/signals';
 import { owners, realms, status, world } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './MapView';
+import { mapMode } from './mapmode';
 import { listenForWorldClicks } from '../people/panel';
 import type { WorldView as View } from '../worldprobe/view';
 
@@ -55,9 +56,8 @@ export function WorldView() {
         if (import.meta.env.DEV) (window as any).__world = made; // for browser tests
         // the places of the game map, to fly to
         const geo: Promise<Geo> = fetch(`${import.meta.env.BASE_URL}data/geo.json`).then((r) => r.json());
-        mapCtl.overview = () => made.flyTo(START.lon, START.lat, START.wide);
         mapCtl.home = (loc: number) => { geo.then((g) => { if (loc >= 0 && loc < g.loc.lon.length) made.flyTo(g.loc.lon[loc], g.loc.lat[loc], AT_PLACE); }); };
-        stops.push(() => { mapCtl.overview = () => {}; mapCtl.home = () => {}; });
+        stops.push(() => { mapCtl.home = () => {}; });
         // colours and names follow the owners and the realms
         stops.push(effect(() => {
           const o = owners.value, rs = realms.value; void lang.value;
@@ -70,6 +70,8 @@ export function WorldView() {
           shown = { owner: o, realms: now };
           made.setRealms({ owner: o, colors, names });
         }));
+        // the map mode chosen bottom right (political: the realms' colours lie on the land near and far)
+        stops.push(effect(() => { made.mapMode(mapMode.value); }));
         // the place selected is picked out on the far map
         stops.push(effect(() => { made.choose(selectedPlace.value); }));
         // a click on a figure of the great cities opens that person

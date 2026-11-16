@@ -4,7 +4,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners).
 import * as THREE from 'three/webgpu';
-import { convertToTexture, dot, float, fract, mix, mrt, normalView, output, pass, reflector, screenCoordinate, uniform, userData, vec2, vec3 } from 'three/tsl';
+import { clamp, convertToTexture, dot, float, fract, getViewPosition, max, mix, mrt, normalView, output, pass, reflector, screenCoordinate, screenUV, smoothstep, step, texture, uniform, userData, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -42,6 +42,8 @@ export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'sky
  */
 export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
 const FAR_SHADOW = 2;
+/** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
+const LIT_GROUND = 0.32;
 
 /** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
 export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
@@ -95,6 +97,18 @@ export interface Stage {
   creases(share: number): void;
   /** Softens the light towards the near view's, by a share (0: the page's own light, 1: the light of the near view). */
   soften(share: number): void;
+  /**
+   * The map's paper: what is put on it (the realms' colours, realms.ts) is seen from straight above and laid onto the
+   * ground of the picture where it really lies, over relief, houses and trees alike, as the map modes of EU5 lie on
+   * its land. Its pictures hold colour times cover and the cover, in linear light.
+   */
+  paper: THREE.Scene;
+  /**
+   * How the paper lies on the picture: `strength` how much it covers (0: not at all); `flat` how much of the land's own
+   * light and shade it hides and whether it covers the sea too (0: the land shows through it and the sea is left
+   * free, 1: the paper's colours as they are, sea and all, as on a printed map); the water's surface lies below `seaTop`.
+   */
+  lay(strength: number, flat: number, seaTop: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees. */
   aim(x: number, z: number, frameW: number, elevation: number): void;
   /** Asks for a new picture. */
@@ -190,6 +204,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(frameW / camera.aspect / 2 / LOOK.distance));
     camera.updateProjectionMatrix();
   };
+  /** the ground the picture shows, last laid out by `aim` (see `aimPaper`) */
+  let ground = { x: 0, z: 0, wide: 1, elev: 1 };
   const aim = (x: number, z: number, across: number, elevation: number) => {
     frameW = across;
     const elev = rad(elevation), frameD = (frameW * 941) / 1672 / Math.sin(elev), centre = new THREE.Vector3(x, LAND_Y, z);
@@ -210,6 +226,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     camera.near = LOOK.distance - reach; camera.far = LOOK.distance + reach;
     camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(LOOK.distance));
     camera.lookAt(centre);
+    ground = { x, z, wide: frameW, elev };
     if (controls) { controls.target.copy(centre); controls.update(); }
     lens();
     showFigures(frameW);
@@ -233,8 +250,39 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
     picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
   }
+  // the map's paper (see Stage.paper): drawn from straight above into a picture of its own, which the picture of the
+  // scene then takes its colour from by where each of its points lies on the ground
+  const paper = new THREE.Scene(), paperEye = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
+  const paperPicture = new THREE.RenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
+  const laid = { strength: uniform(0), flat: uniform(1), seaTop: uniform(SEA_Y) };
+  const paperFrom = uniform(new THREE.Matrix4()), eyeInverse = uniform(camera.projectionMatrixInverse), eyeWorld = uniform(camera.matrixWorld);
+  {
+    const depth = far.sample(screenUV).r, inView = getViewPosition(screenUV, depth, eyeInverse), there = eyeWorld.mul(vec4(inView, 1));
+    const onPaper = paperFrom.mul(there), at = onPaper.xy.mul(vec2(0.5, -0.5)).add(0.5), dots = texture(paperPicture.texture, at);
+    // nothing beyond the paper's edges, nor where the picture shows no ground (its depth at the far end)
+    const inside = step(0, at.x).mul(step(at.x, 1)).mul(step(0, at.y)).mul(step(at.y, 1)).mul(step(depth, 0.999999));
+    // the sea keeps its own look unless the paper is laid flat as a printed map
+    const land = max(smoothstep(laid.seaTop.sub(0.05), laid.seaTop.add(0.05), there.y), laid.flat);
+    const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land);
+    // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
+    // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
+    const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
+    picture = mix(picture, mix(ink.mul(light), ink, laid.flat), cover);
+  }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
+  /** points the paper's eye straight down at the ground of the picture, with one of its dots to about one of the picture's */
+  const aimPaper = () => {
+    const { x, z, wide, elev } = ground, size = new THREE.Vector2(), deep = wide / camera.aspect / Math.sin(elev);
+    renderer.getDrawingBufferSize(size);
+    // what stands tall is seen beyond the ground's edges at the far side of a slanted picture
+    const halfW = wide * 0.52, halfD = deep * 0.52 + (o.tall ?? 36) / Math.tan(elev);
+    paperEye.left = -halfW; paperEye.right = halfW; paperEye.top = halfD; paperEye.bottom = -halfD; paperEye.updateProjectionMatrix();
+    paperEye.position.set(x, 2000, z); paperEye.up.set(-NEAR[0], 0, -NEAR[1]); paperEye.lookAt(x, 0, z); paperEye.updateMatrixWorld();
+    const across = Math.min(4096, Math.max(256, size.x)), down = Math.min(4096, Math.max(256, Math.round((across * halfD) / halfW)));
+    if (paperPicture.width !== across || paperPicture.height !== down) paperPicture.setSize(across, down);
+    paperFrom.value.multiplyMatrices(paperEye.projectionMatrix, paperEye.matrixWorldInverse);
+  };
 
   const resize = () => {
     // a canvas of the page's own is laid out by the page; the stage only follows its size
@@ -286,6 +334,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     },
     put(thing) { scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
+    paper,
+    lay(strength, flat, seaTop) {
+      if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop) return;
+      laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; pending = Math.max(pending, 1);
+    },
     creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
     redraw() { pending = Math.max(pending, 1); },
     dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
@@ -304,6 +357,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
     if (!fixedW && anyFigures()) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
+    if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
     pipeline.render();
     drawn++;
     if (performance.now() - since >= 1000) { stage.probe.fps = Math.round((drawn * 1000) / (performance.now() - since)); drawn = 0; since = performance.now(); }

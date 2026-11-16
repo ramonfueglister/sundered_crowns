@@ -35,20 +35,20 @@ export const IconGear = ({ size = 23 }: P) => <svg width={size} height={size} vi
   <circle cx="13" cy="13" r="7" fill="none" stroke="url(#icg)" stroke-width="3.2" />
 </svg>;
 
-/** Back to one's own realm: a crown. */
-export const IconCrown = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 34 34" aria-hidden="true">
-  <path class="ic" d="M6.5 25L4 11l6 6.5L12.5 9 17 15.5 21.5 9l2.5 8.5 6-6.5-2.5 14z" />
-  <circle class="ic" cx="4" cy="10" r="2" /><circle class="ic" cx="12.5" cy="8" r="2" /><circle class="ic" cx="17" cy="6" r="2.2" /><circle class="ic" cx="21.5" cy="8" r="2" /><circle class="ic" cx="30" cy="10" r="2" />
-  <rect class="ic" x="6" y="25.5" width="22" height="4.5" rx="1" />
+/** The political map mode: lands of three realms, each in its own colour, meeting at their borders. */
+export const IconPolitical = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
+  <path d="M2.5 6.5 9 3l4.5 2.5L13 13l-6 2.5-4.5-2z" fill="#c75b4a" />
+  <path d="M13.5 5.5 19 3.5l4.5 3.5-1 7.5-6.5.5-3-2z" fill="#4f86b8" />
+  <path d="M2.5 13.5l4.5 2 6-2.5 3 2 6.5-.5L21 22l-8 1.5-10-2.5z" fill="#d6b04c" />
+  <path d="M9 3l4.5 2.5L13 13l-6 2.5M13 13l3 2 6.5-.5" fill="none" stroke="#f4ecd6" stroke-width="1.3" stroke-linejoin="round" />
+  <path d="M2.5 6.5 9 3l4.5 2.5 5.5-2 4.5 3.5-1 7.5L21 22l-8 1.5-10.5-2.5z" fill="none" stroke="url(#icg)" stroke-width="1.6" stroke-linejoin="round" />
 </svg>;
 
-/** The whole map: a globe. */
-export const IconGlobe = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
-  <g fill="none" stroke="url(#icg)" stroke-width="2.2"><circle cx="13" cy="13" r="10.5" /><ellipse cx="13" cy="13" rx="4.5" ry="10.5" /><path d="M3 9.5h20M3 16.5h20" /></g>
-</svg>;
-
-export const IconFullscreen = ({ size = 24 }: P) => <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-  <g fill="none" stroke="url(#icg)" stroke-width="2.6"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" /></g>
+/** The terrain map mode: the land alone, its hills and mountains. */
+export const IconTerrain = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
+  <path class="ic2" d="M1.5 21.5 8 12l3 4 2.5-3 6 8.5z" />
+  <path class="ic" d="M6.5 21.5 14.5 5l9 16.5z" />
+  <path d="M12.3 9.5 14.5 5l2.4 4.4-1.2-.6-1.2 1.1-1-1z" fill="#fdfaef" />
 </svg>;
 
 export const IconClose = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
