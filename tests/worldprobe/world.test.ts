@@ -134,7 +134,7 @@ describe('the land from farther away', () => {
   const laid = (ox: number, step: number) => {
     const g = ground(ox), sites: Site[] = places.map(([x, z, size, pop], id) => ({ id, at: [x - ox + 0.5, z + 0.5], size, pop, region: '', style }));
     return coverLand(g, step, new Batch(), sites, {
-      cultivated: (x, z) => (Math.floor((x + ox) / 40) + Math.floor(z / 40)) % 2 ? 0.7 : 0.2, vines: () => 0.2, farm: () => style.house, own: () => true,
+      ploughed: (x, z) => (Math.floor((x + ox) / 40) + Math.floor(z / 40)) % 2 ? 0.35 : 0.1, courses: () => 3, vines: () => 0.2, farm: () => style.house, own: () => true,
       woods: (x, z) => ((x + ox + z) % 90 < 45 ? { share: 0.6, crowns: LEAVES, tall: (x + ox) % 2 === 0 } : null),
     });
   };
