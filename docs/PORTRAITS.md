@@ -408,8 +408,20 @@ underside (`CHIN=-50`: a full chin shows through it); the cloth following the he
 cape).
 Picture: `runde63_kapuze_vorher_nachher.png` (four hooded men, a boy, a veiled woman; before above, after below).
 Still open: a small tuck in the cloth at each corner of the jaw and a crease down the cape below it (seen large,
-not at the panel's size); the hood thrown back is still a wide flat collar without folds; veil and wimple keep the
-smoothing of their hems without the cloth following.
+not at the panel's size); the hood thrown back is still a wide flat collar without folds; the veil keeps the
+smoothing of its hem without the cloth following; the wimple stands round the neck as a ring (round 64).
+
+**The wimple under the chin (round 64).** The wimple of the older women stood round the neck as a ring with the
+throat bare in its middle: it had the hood's fault (round 63), its rows under the chin lay in the mouth's cavity and
+its front was cut open instead (`UCUT`). It is built as the hood now: the last row under the jaw (`CHIN=-60`), the
+rings below hanging from the jaw (`TH0=-36`), the opening for the face a little wider (`FACE_W=38`: at 36 the rim
+is ragged at the corners of the jaw, at 32 the jaw comes through the cloth), bound with `HEMFOLLOW=4,6.9,0.1`. Its
+hem lies on the throat, no more than 3 cm in front of the skin (before: 5 to 7 cm in front, or inside the head). The
+test of round 63 holds both garments to that now.
+Picture: `runde64_wimpel_vorher_nachher.png` (two women as the panel shows them, from the front and from the side;
+before on the left, after on the right).
+Still open: the wimple's cape lies on the shoulders as a wide flat collar; seen from above the inside of its sides
+shows beside the jaw.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

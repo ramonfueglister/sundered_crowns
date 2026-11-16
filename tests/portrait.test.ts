@@ -191,35 +191,38 @@ describe('portraits', () => {
     }
     expect([...seen].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple']);
   });
-  it('the hood worn on the head is closed under the chin', () => {
-    // until round 63 it was open in front down to the chest, its front edges hanging beside the neck as cords (and
-    // what cloth it had under the chin lay inside the head: rays from the head's centre end in the mouth's cavity).
-    // Closed, the hem of the opening for the face runs in front of the throat, between the gown's neckline and
-    // the face (heights and depths in the builder's units of 10 cm)
+  it('the hood worn on the head and the wimple are closed under the chin', () => {
+    // until round 63 the hood was open in front down to the chest, its front edges hanging beside the neck as cords,
+    // and until round 64 the wimple stood round the neck as a ring: their hems in front were half a hand and more
+    // in front of the skin, and what cloth they had under the chin lay inside the head (rays from the head's centre
+    // end in the mouth's cavity). Closed, the hem of the opening for the face lies on the throat between the gown's
+    // neckline and the face: no more than 3 cm in front of the skin at its height (the builder's units are 10 cm)
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    let hoods = 0;
+    const worn = { cloth_hood_up: 0, cloth_wimple: 0 };
     for (const p of sample) {
       const surfaces = b.build(p).surfaces;
-      const hood = surfaces.find(s => s.tex.includes('/cloth_hood_up.')), gown = surfaces.find(s => s.tex.includes('/cloth_cote.'));
-      const skin = surfaces.find(s => surfaceKind(s) === 'skin');
-      if (!hood || !gown || !skin) continue;
-      hoods++;
-      let neckline = -Infinity;
-      for (let v = 0; v < gown.pos.length / 3; v++) if (Math.abs(gown.pos[v * 3]!) < 0.15 && gown.pos[v * 3 + 2]! > 0.5) neckline = Math.max(neckline, gown.pos[v * 3 + 1]!);
-      let seen = 0;
-      for (let v = 0; v < hood.pos.length / 3; v++) {
-        const [x, y, z] = [hood.pos[v * 3]!, hood.pos[v * 3 + 1]!, hood.pos[v * 3 + 2]!];
-        if (Math.abs(hood.uv[v * 2 + 1]!) > 0.05 || Math.abs(x) > 0.15 || y < neckline + 0.35 || y > neckline + 1.0) continue;
-        // in front of the skin there
-        let behind = true;
-        for (let k = 0; k < skin.pos.length / 3 && behind; k++) {
-          if (Math.abs(skin.pos[k * 3]! - x) < 0.12 && Math.abs(skin.pos[k * 3 + 1]! - y) < 0.08 && skin.pos[k * 3 + 2]! > z) behind = false;
+      const gown = surfaces.find(s => s.tex.includes('/cloth_cote.')), skin = surfaces.find(s => surfaceKind(s) === 'skin');
+      for (const name of Object.keys(worn) as (keyof typeof worn)[]) {
+        const cloth = surfaces.find(s => s.tex.includes(`/${name}.`));
+        if (!cloth || !gown || !skin) continue;
+        worn[name]++;
+        let neckline = -Infinity;
+        for (let v = 0; v < gown.pos.length / 3; v++) if (Math.abs(gown.pos[v * 3]!) < 0.15 && gown.pos[v * 3 + 2]! > 0.5) neckline = Math.max(neckline, gown.pos[v * 3 + 1]!);
+        let on = 0;
+        for (let v = 0; v < cloth.pos.length / 3; v++) {
+          const [x, y, z] = [cloth.pos[v * 3]!, cloth.pos[v * 3 + 1]!, cloth.pos[v * 3 + 2]!];
+          if (Math.abs(cloth.uv[v * 2 + 1]!) > 0.05 || Math.abs(x) > 0.15 || z < 0.5 || y < neckline + 0.1 || y > neckline + 1.0) continue;
+          let front = -Infinity;
+          for (let k = 0; k < skin.pos.length / 3; k++) {
+            if (Math.abs(skin.pos[k * 3]! - x) < 0.12 && Math.abs(skin.pos[k * 3 + 1]! - y) < 0.05) front = Math.max(front, skin.pos[k * 3 + 2]!);
+          }
+          if (z - front > -0.02 && z - front < 0.3) on++;
         }
-        if (behind) seen++;
+        expect(on, `person ${p.pid}: points of the hem of ${name} on the throat`).toBeGreaterThan(20);
       }
-      expect(seen, `person ${p.pid}: points of the hem in front of the throat`).toBeGreaterThan(20);
     }
-    expect(hoods).toBeGreaterThan(3);
+    expect(worn.cloth_hood_up).toBeGreaterThan(3);
+    expect(worn.cloth_wimple).toBeGreaterThan(1);
   });
 });
