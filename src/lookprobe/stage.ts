@@ -87,18 +87,13 @@ export interface Stage {
   /**
    * Draws a group, or one mesh of it, on a share of the picture's dots only, to dissolve it into the picture or out of it: of a fine
    * pattern that gives every dot a value from 0 to 1, those from `from` up to `until` (0 and 1: all of the group).
-   * Two groups whose shares meet take each other's place dot by dot.
+   * Two groups whose shares meet take each other's place dot by dot; the picture is then put together from the two,
+   * each made whole from its own dots and mixed by the share, so that they blend and no pattern of dots shows.
    */
   dissolve(thing: THREE.Group | THREE.Mesh, from: number, until: number): void;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
   put(thing: THREE.Object3D): void;
   take(thing: THREE.Object3D): void;
-  /**
-   * Tells the stage that two layers of things share the picture's dots: the one drawn on the dots below `share`, the
-   * other on those from it up (see `dissolve`). The picture is then put together from the two, each made whole from
-   * its own dots, mixed by the share: a blend of the two, not a pattern of dots. 0: one layer alone, the picture as drawn.
-   */
-  blend(share: number): void;
   /** How deep creases and corners are drawn, as a share of the look's own depth (1: as in the reference, 0: not at all), and how far they reach, as a share of the look's own reach in the stage's blocks. */
   creases(share: number, reach?: number): void;
   /** Softens the light towards the near view's, by a share (0: the page's own light, 1: the light of the near view). */
@@ -147,6 +142,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // pattern is interleaved gradient noise, which has no stripes or clumps
   const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)), marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>;
   solid.maskNode = dots.greaterThanEqual(marks.x).and(dots.lessThan(marks.y));
+  // what share of the dots a mesh is drawn on is written beside the picture, for putting the picture together from
+  // the two sets of dots (see below): the dots from 0 up to a mark as half the mark, those from a mark up to 1 as a
+  // half and half the mark; all of the dots is 0.5
+  const shareCode = select(marks.x.greaterThan(0), marks.x.mul(0.5).add(0.5), marks.y.mul(0.5));
+  solid.mrtNode = mrt({ normal: vec4(normalView, shareCode) });
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -156,7 +156,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     mirror.target.position.y = SEA_Y;
     scene.add(mirror.target);
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
-    water.maskNode = solid.maskNode;
+    water.maskNode = solid.maskNode; water.mrtNode = solid.mrtNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
@@ -249,32 +249,36 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   let picture: typeof colour | ReturnType<typeof colour.mul> = colour;
   const creased = uniform(1);
   let reached: { value: number } | null = null;
+  // beside the picture: which way every point faces, and with it the share of the dots its mesh is drawn on
+  scenePass.setMRT(mrt({ output, normal: vec4(normalView, 0.5) }));
+  const facing = scenePass.getTextureNode('normal');
   if (flag('ao', true)) {
-    scenePass.setMRT(mrt({ output, normal: normalView }));
-    const facing = scenePass.getTextureNode('normal'), creases = ao(far, facing, camera);
+    const creases = ao(far, facing, camera);
     creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = 4; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
     const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
     picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
   }
-  // two layers that share the picture's dots (see Stage.blend): at every dot the layer drawn there is taken as it
-  // is, the other one is the mean of the dots around that are its own, and the two are mixed by the share. So both
-  // layers are whole pictures again, as in a resolve of screen-door transparency, and no single dots show.
-  const blended = uniform(0);
+  // things that share the picture's dots (see Stage.dissolve): at every dot the thing drawn there is taken as it is,
+  // what it shares the dots with is the mean of the dots around that are drawn on the other set, and the two are
+  // mixed by their shares. So both are whole pictures again, as in a resolve of screen-door transparency, and they
+  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn.
   {
-    const whole = convertToTexture(picture), here = whole.sample(screenUV).rgb;
-    const lower = (by: [number, number]) => select(fract(fract(dot(screenCoordinate.xy.add(vec2(...by)), vec2(0.06711056, 0.00583715))).mul(52.9829189)).lessThan(blended), float(1), float(0));
-    const mine = lower([0, 0]);
+    const whole = convertToTexture(picture);
+    /** of a dot: whether it is of the set from a mark up to 1, and the mark */
+    const read = (at: Parameters<typeof facing.sample>[0]) => { const code = facing.sample(at).a, upper = step(0.5001, code).mul(step(code, 0.999)); return { upper, mark: mix(code.mul(2).min(1), code.sub(0.5).mul(2), upper) }; };
+    const own = read(screenUV), here = whole.sample(screenUV).rgb, mine = mix(own.mark, own.mark.oneMinus(), own.upper);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sums of nodes: every `add` is a node type of its own
-    let low: any = vec3(0, 0, 0), lows: any = float(0), high: any = vec3(0, 0, 0), highs: any = float(0);
+    let others: any = vec3(0, 0, 0), found: any = float(0);
     for (const by of [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]] as [number, number][]) {
-      const there = whole.sample(screenUV.add(vec2(...by).div(screenSize))).rgb, is = lower(by);
-      low = low.add(there.mul(is)); lows = lows.add(is); high = high.add(there.mul(is.oneMinus())); highs = highs.add(is.oneMinus());
+      const at = screenUV.add(vec2(...by).div(screenSize)), it = read(at);
+      // of the other set, and sharing its dots (a thing with all the dots is no one's other half)
+      const counts = it.upper.sub(own.upper).abs().mul(max(it.upper, step(it.mark, 0.9999)));
+      others = others.add(whole.sample(at).rgb.mul(counts)); found = found.add(counts);
     }
-    // where no dot around belongs to the other layer, the dot's own stands in for it
-    const lowAt = mix(mix(here, low.div(max(lows, 1)), step(0.5, lows)), here, mine), highAt = mix(here, mix(here, high.div(max(highs, 1)), step(0.5, highs)), mine);
-    picture = mix(highAt, lowAt, blended) as unknown as typeof picture;
+    const other = mix(here, others.div(max(found, 1)), step(0.5, found));
+    picture = mix(other, here, mine) as unknown as typeof picture;
   }
   // the map's paper (see Stage.paper): drawn from straight above into a picture of its own, which the picture of the
   // scene then takes its colour from by where each of its points lies on the ground
@@ -365,7 +369,6 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop) return;
       laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; pending = Math.max(pending, 1);
     },
-    blend(share) { if (blended.value !== share) { blended.value = share; pending = Math.max(pending, 1); } },
     creases(share, reach = 1) {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }
       if (reached && reached.value !== LOOK.creaseReach * reach) { reached.value = LOOK.creaseReach * reach; pending = Math.max(pending, 1); }
