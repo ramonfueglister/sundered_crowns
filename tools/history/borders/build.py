@@ -33,6 +33,10 @@ Rules (nothing is invented; what the sources leave open is counted):
   into England 1707) gives all its places to that realm that year.
 - A realm whose title ended while its state went on under another title of the same holder (Moscow 1547 tsardom,
   England 1707 Great Britain, Brandenburg 1806 Prussia; the successions of the same file) counts as held after.
+- A place no row covers (coasts, straits, small islands: Constantinople lies outside every polygon) keeps its realm;
+  once that realm holds no place a row covers any more (it has left the map), or its title has ended for good (the
+  ruler lists, no succession: Byzantium after 29 May 1453), the place goes to the realm that holds
+  most (more than half) of its neighbours over the land, again and again while places follow.
 - The date of a change: Cliopatria gives only the first year of the row that shows it, so the change happened after
   the first year of the row that held the places before, and after 1291 and the places' last change (the window). Within that window, in this order:
   1. the end of the losing realm's title in the ruler lists, when the change takes the realm's last places (Bosnia
@@ -76,11 +80,19 @@ def build():
     keys = [st['id'] for st in setup['states']]
     index = {k: i for i, k in enumerate(keys)}
     current = list(setup['owner'])
+    seen = set()                                         # the realms that have held a place a row covers
+    ends = {}                                            # the realm -> the end of its title (none while one is open)
+    for r in rulers['reigns']:
+        if r['end'] and (r['realm'] not in ends or r['end'] > ends[r['realm']]): ends[r['realm']] = r['end']
+    for r in rulers['reigns']:
+        if r['end'] is None: ends.pop(r['realm'], None)
     changed = [FIRST] * len(current)                     # the year of a place's last change in our world
     history = [[] for _ in current]                       # the realms that held a place before its present one, oldest first
     frame = sorted({p for r in clio['rows'] for p in r['places']})
     nbr = collections.defaultdict(list)
-    for a, b, *_ in geo['edges']: nbr[a].append(b); nbr[b].append(a)
+    for a, b, k, *_ in geo['edges']:                     # 1-based (src/sim/world.ts); over the land only
+        if k == 0: nbr[a - 1].append(b - 1); nbr[b - 1].append(a - 1)
+    for a, b, *_ in geo['straits']: nbr[a - 1].append(b - 1); nbr[b - 1].append(a - 1)
 
     # the titles: which realm has a holder in which year (a realm without a list counts as held)
     held = collections.defaultdict(set)
@@ -221,7 +233,7 @@ def build():
             if to == current[p]: report['same_realm'] += 1; continue
             moved[(current[p], to, i)].append(p)
         lose = collections.Counter(a for (a, b, i), places in moved.items() for p in places)
-        size_now = collections.Counter(current[p] for p in frame)
+        size_now = collections.Counter(current)
         for (a, b, i), places in sorted(moved.items(), key=lambda kv: (kv[0][1], kv[0][0], kv[0][2])):
             last = a >= 0 and lose[a] == size_now[a]
             for p in places: history[p].append(current[p]); current[p] = b
@@ -234,6 +246,35 @@ def build():
                                                          [min((rows[prev[p]]['from'] for p in places if p in prev), default=y - 1)])})
             for p in places: changed[p] = y
             report['events'] += 1; report['place_moves'] += len(places)
+        # the places no row covers (coasts, straits, small islands: Constantinople) of a realm that has left the map
+        on_map = {current[p] for p in now if current[p] >= 0}
+        seen |= on_map
+        gone = (seen - on_map) | {index[k] for k, e in ends.items() if k in index and int(e[:4]) < y and k not in successions}
+        orphans = {p for p in range(len(current)) if current[p] in gone}
+        while orphans:
+            step = {}
+            for p in sorted(orphans):
+                c = collections.Counter(current[q] for q in nbr[p] if q < len(current) and current[q] >= 0 and current[q] not in gone)
+                if c:
+                    (r, n), = c.most_common(1)
+                    if 2 * n > sum(c.values()): step[p] = r
+            if not step: break
+            by = collections.defaultdict(list)
+            for p, r in step.items(): by[(current[p], r)].append(p)
+            size_now = collections.Counter(current)
+            for (a, b), places in sorted(by.items()):
+                end = ends.get(keys[a])
+                since = int(end[:4]) - 1 if end and FIRST < int(end[:4]) <= y else y - 1
+                last = len(places) == size_now[a] - sum(len(v) for (x, _), v in by.items() if x == a and _ != b) \
+                    or bool(end and FIRST < int(end[:4]) <= y)    # the end of the title moves them: its day dates them
+                events.append({'date': str(y), 'precision': 'year', 'from': keys[a], 'to': keys[b], 'places': sorted(places),
+                               'kind': 'transfer',
+                               'source': f"Cliopatria v0.2.1 covers none of these places; {keys[a]} has left its map or its title has ended by {y}: "
+                                         f"each follows the realm of most of its neighbours",
+                               '_gain': '', '_lost': [], '_last': last, '_since': max([FIRST, since] + [changed[p] for p in places])})
+                for p in places: history[p].append(a); current[p] = b; changed[p] = y
+                report['orphan_moves'] += len(places)
+            orphans -= set(step)
         prev = now
     date_events(events, rulers)
     out = {'year': FIRST, 'until': f'{LAST}-12-31', 'source': clio['source'], 'realms': new_realms, 'events': events,
@@ -259,7 +300,7 @@ def date_events(events, rulers):
     left = collections.Counter()                      # places each realm holds, played forward
     for e in events:
         if e['kind'] == 'transfer':
-            y, lo = int(e['date']), e['_since']
+            y = int(e['date']); lo = min(e['_since'], y - 1)   # a place that moved twice in one year: that year
             d, how = None, None
             end = ends.get(e['from']) if e['from'] not in open_ else None
             if end and lo < int(end[:4]) <= y and e['_last']: d, how = end, 'title'

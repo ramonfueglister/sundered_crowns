@@ -15,8 +15,9 @@ import type { Table } from './ecs';
  *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
  *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
- *  history are named. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 16;
+ *  history are named. 17: the borders of the chronicle of borders (src/sim/systems/borders.ts): places change
+ *  hands on their days, realms come in with their first places. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 17;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

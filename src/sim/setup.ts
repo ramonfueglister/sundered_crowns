@@ -12,6 +12,7 @@ import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople } from './systems/people';
 import { foundRulers } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -56,6 +57,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   fitPlacesToCities(s); // no place is smaller than its cities (those of the start year)
   foundPeople(s);
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
+  foundBorders(s, w); // the borders of the day the world starts on (src/sim/systems/borders.ts), before the rulers' seats
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundEconomy(s, w);
   return s;

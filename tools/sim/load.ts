@@ -8,6 +8,7 @@ import { wasmEconomyEngine, type EconomyClock, type EconomyEngine, type EconomyP
 import { createWorldState, type SetupState } from '../../src/sim/setup';
 import type { WorldState } from '../../src/sim/state';
 import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicle';
+import { compileBorders, type Borders } from '../../src/sim/content/borders';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
@@ -57,10 +58,16 @@ export function loadChronicle(year: number): Chronicle | null {
   const f = dataPath(`rulers_${year}.json`);
   return existsSync(f) ? compileChronicle(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
-/** The world with the chronicle of rulers of `year`. */
+/** The chronicle of borders of a start year (public/data/borders_<year>.json), compiled; null when there is none. */
+export function loadBorders(year: number): Borders | null {
+  const f = dataPath(`borders_${year}.json`);
+  return existsSync(f) ? compileBorders(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
+/** The world with the chronicles of rulers and of borders of `year`. */
 export function loadWorldFor(year: number): World {
   const w = loadWorld();
   if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
+  if (w.borders?.year !== year) w.borders = loadBorders(year);
   return w;
 }
 export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
