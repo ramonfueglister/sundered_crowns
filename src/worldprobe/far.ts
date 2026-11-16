@@ -11,7 +11,7 @@ import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/bloc
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
-import { FALLOW, FARMS, HAMLET, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
+import { FALLOW, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -42,8 +42,12 @@ const MODELS_UNTIL = 2;
 const SEARCH = 16;
 /** fields at the finest step lie in lots of eleven by eight blocks (settle.ts) */
 const LOT_W = 11, LOT_D = 8;
-/** a lot at a step: its sides in blocks, and the share of its blocks that are its field (all, once it is too small to keep a balk) */
-const lotAt = (step: number) => { const w = Math.max(1, Math.round(LOT_W / 2 ** step)), d = Math.max(1, Math.round(LOT_D / 2 ** step)); return { w, d, fill: w >= 4 ? ((w - 1) * (d - 1)) / (w * d) : 1 }; };
+/**
+ * A lot at a step: its sides in blocks, and the share of its blocks that are its field. From afar a lot is all field:
+ * the fields of a landscape lie together as one ground of many colours, without the balks between them (which made
+ * of them a pattern of bricks) and without the farmhouses at their corners.
+ */
+const lotAt = (step: number) => { const w = Math.max(1, Math.round(LOT_W / 2 ** step)), d = Math.max(1, Math.round(LOT_D / 2 ** step)); return { w, d, fill: 1 }; };
 /** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
 export const lotFill = (step: number) => lotAt(step).fill;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
@@ -140,27 +144,20 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (step === 1 && half > 1) for (let k = -half; k <= half; k++) for (const [x, z] of [[cx + k, cz - half], [cx + k, cz + half], [cx - half, cz + k], [cx + half, cz + k]]) if (k !== 0 && free(x, z)) put(x, z, 1, WALL);
   }
 
-  // fields: the lots of the finest step, as large as they are. While a lot is wide enough to show it, it keeps a
-  // balk's width free on two sides, the crop stands a block high and the farmhouses stand at the fields' corners.
+  // fields: the lots of the finest step, as large as they are, each all field and flat, in the colour of its crop.
   // A field that lies fallow is the grass with its stubble showing through, one under spring corn is green.
-  const { w: lotW, d: lotD, fill } = lotAt(step), hedged = fill < 1, blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
+  const { w: lotW, d: lotD, fill } = lotAt(step), blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
   const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
-  const springOf = (lx: number, lz: number): [RGB, RGB] => [field(pick(OATS, hash2(lx, lz, 68)), !hedged, OATS_SIDE), OATS_SIDE];
-  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + step) < o.vines(mx, mz) ? [VINEYARD, shade(VINE_BODY, 0.8)] : [field(pick(WHEAT, hash2(lx, lz, 68)), !hedged), WHEAT_SIDE]);
+  const springOf = (lx: number, lz: number): [RGB, RGB] => [field(pick(OATS, hash2(lx, lz, 68)), true, OATS_SIDE), OATS_SIDE];
+  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + step) < o.vines(mx, mz) ? [VINEYARD, shade(VINE_BODY, 0.8)] : [field(pick(WHEAT, hash2(lx, lz, 68)), true), WHEAT_SIDE]);
   if (!blended) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || !level(x, z)) continue;
     const wz = z + oz, lz = Math.floor(wz / lotD), shift = lz & 1 ? Math.floor(lotW / 2) : 0, wx = x + ox + shift, lx = Math.floor(wx / lotW);
     const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
     if (hash2(lx, lz, 65 + step) > o.ploughed(mx, mz) / fill) continue;
-    if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) {
-      // a hamlet at the end of the field: a block of houses at its corner and one a block on
-      if (wx - lx * lotW === lotW - 1 && (wz - lz * lotD) % 2 === 0 && wz - lz * lotD < 2 * HAMLET && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS) / HAMLET) house(o.farm(mx, mz), x, z, 1);
-      continue;
-    }
     const course = courseOf(courses(mx, mz), hash2(lx, lz, 166 + step));
     if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)));
-    raised[idx(x, z)] = hedged ? 1 : 0;
   }
 
   // woods: single trees while a tree is a block, then woods as raised ground, then as its colour
