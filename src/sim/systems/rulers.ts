@@ -86,13 +86,23 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
   }
   const id = x.persons.get(cp.key);
   if (id === undefined) return false;
+  /** The crown of `r` that `id` leaves goes to a co-ruler who still reigns that day, else to nobody. */
+  const leave = (r: number) => {
+    let next = -1;
+    for (const g of c.reignsOf.get(s.realmText[r].key) ?? []) {
+      if (g.person === e.person || g.start > e.day || (g.end !== null && g.end <= e.day)) continue;
+      const q = x.persons.get(c.persons[g.person].key);
+      if (q !== undefined && P.died[q] === ALIVE) { next = q; break; }
+    }
+    R.holder[r] = next;
+  };
   if (e.what === Happening.Die) {
     P.died[id] = e.day;
-    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) R.holder[r] = -1;
+    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) leave(r);
     return true;
   }
   if (realm === undefined || P.died[id] !== ALIVE) return false;
-  if (e.what === Happening.End) { if (R.holder[realm] === id) R.holder[realm] = -1; return true; }
+  if (e.what === Happening.End) { if (R.holder[realm] === id) leave(realm); return true; }
   R.holder[realm] = id; // Accede
   return true;
 }

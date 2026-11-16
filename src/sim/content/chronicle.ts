@@ -52,6 +52,9 @@ export interface Chronicle {
   home: readonly string[];
   /** sorted by day, then by what happens, then by person */
   events: readonly ChronicleEvent[];
+  /** the reigns of each realm as days (end null: past the chronicle), for co-rulers: when one of them leaves, the
+   *  crown stays with another who still reigns */
+  reignsOf: ReadonlyMap<string, readonly { person: number; start: number; end: number | null }[]>;
 }
 
 /** A date of the source as a day of the world. A date without a day is taken as the middle of its month, one without
@@ -100,7 +103,12 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
     if (r.e !== null) events.push({ day: r.e, what: Happening.End, person: r.person, realm: r.realm });
   }
   events.sort((a, b) => a.day - b.day || a.what - b.what || a.person - b.person || (a.realm < b.realm ? -1 : a.realm > b.realm ? 1 : 0));
-  return { year: Y, persons: j.persons, bornDay, diedDay, home, events };
+  const reignsOf = new Map<string, { person: number; start: number; end: number | null }[]>();
+  for (const r of reigns) {
+    const l = reignsOf.get(r.realm) ?? []; reignsOf.set(r.realm, l);
+    l.push({ person: r.person, start: r.s ?? 0, end: r.e });
+  }
+  return { year: Y, persons: j.persons, bornDay, diedDay, home, events, reignsOf };
 }
 
 /** The index of the first event on or after `day` (binary search). */

@@ -9,7 +9,8 @@
 // - A person is one person across all lists: the same Wikidata id, else the same name and birth date.
 // - A reign without a start begins when the reign before it in the list ends; without an end it ends when the next
 //   begins. A reign with neither stays out (counted).
-// - Rows of a collective government (councils, priors) are no person and stay out.
+// - Rows of a collective government (councils, priors) are no person and stay out, and so do rows the source marks as
+//   a claimant or "not a monarch" (they did not hold the title), unless the note says the claimant was in control.
 // - The sex is that of Wikidata where the person has an id there; else female when the name or note calls the person
 //   queen, empress, duchess, countess, margravine, princess, abbess or lady, else male (counted, so it can be checked).
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
@@ -38,6 +39,7 @@ export function parseCsv(text: string): Record<string, string>[] {
 
 const FEMALE = /\b(queen|empress|duchess|countess|margravine|princess|abbess|lady|tsaritsa|sultana)\b/i;
 const COLLECTIVE = /collective government/i;
+const NOT_HOLDER = /claimant|pretender|not a monarch|anti-?king|antipope/i, IN_CONTROL = /in control|de facto/i;
 const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null);
 /** Later of two dates given as the source gives them (compared on the text, padded to a full day). */
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
@@ -49,7 +51,7 @@ export function build(): { chronicle: ChronicleJson; report: Record<string, numb
     if (r.sex === 'Q6581072') sex.set(r.person, 0); else if (r.sex === 'Q6581097') sex.set(r.person, 1);
   }
   const persons: ChroniclePerson[] = [], reigns: ChronicleReign[] = [], byKey = new Map<string, number>();
-  const report = { lists: 0, rows: 0, collective: 0, noDates: 0, beforeStart: 0, sexByWikidata: 0, sexByWord: 0, sexAssumed: 0, problems: [] as string[] };
+  const report = { lists: 0, rows: 0, collective: 0, claimants: 0, noDates: 0, beforeStart: 0, sexByWikidata: 0, sexByWord: 0, sexAssumed: 0, problems: [] as string[] };
   const files = existsSync(LISTS) ? readdirSync(LISTS).filter((f) => f.endsWith('.csv') && f !== 'INDEX.csv').sort() : [];
   for (const file of files) {
     const realm = file.slice(0, -4), rows = parseCsv(readFileSync(resolve(LISTS, file), 'utf8'));
@@ -57,6 +59,7 @@ export function build(): { chronicle: ChronicleJson; report: Record<string, numb
     report.lists++;
     const kept = rows.filter((r) => {
       if (COLLECTIVE.test(r.note ?? '') || !r.name) { report.collective++; return false; }
+      if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) { report.claimants++; return false; }
       return true;
     });
     kept.forEach((r, k) => {
