@@ -137,5 +137,22 @@
     "Ca' d'Oro-Masswerk (1421 bis 1431)",
     "dritte Geschosse der byzantinischen Paläste",
     "Giebelgauben"
-  ]
+  ],
+  "kai": {
+    "was": "Fondamenta und Riva: der gemauerte Uferweg mit Steinkante, Wassertreppen und Anlegepfählen",
+    "mauer": "Ziegel mit Abdeckung aus Istrischem Stein; hier als Steinquader 2 x 1 Feinblöcke im Läuferverband gezeichnet",
+    "mauer_hex": "#cdbba4",
+    "abdeckung_hex": "#e8dcc4",
+    "pflaster_hex": "#e2c296",
+    "treppe_alle_m": [
+      16,
+      28
+    ],
+    "poller_alle_m": [
+      2.4,
+      3.0
+    ],
+    "poller_hex": "#8a5a34",
+    "quelle": "Annahme: Fondamente mit Steinkante und Rive (Wassertreppen) in regelmässigen Abständen nach dem heutigen Bild der Stadt und Wikipedia (Fondamenta); Masse und Farben nicht gemessen, nach der Referenzklasse der Nahsicht gesetzt. Pali (Anlegepfähle) aus Holz: Annahme."
+  }
 }
