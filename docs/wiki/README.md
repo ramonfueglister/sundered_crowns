@@ -10,7 +10,12 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
 - [Wirtschaft](wirtschaft/README.md): Übersicht über alle Wirtschafts-Features
   - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Im Spiel)*
   - [Bestellte Fläche](wirtschaft/bestellte-flaeche.md) *(Beschlossen)*
-  - [Volkswirtschaft England](wirtschaft/volkswirtschaft-england.md) *(Beschlossen)*
+  - [Volkswirtschaft England](wirtschaft/volkswirtschaft-england.md) *(Abgelöst)*
+  - [Wirtschaft der Städte](wirtschaft/wirtschaft-der-staedte.md) *(Beschlossen)*
+  - [Arbeitslosengeld der Städte](wirtschaft/arbeitslosengeld-der-staedte.md) *(Abgelöst)*
+  - [Lohn in Geld](wirtschaft/lohn-in-geld.md) *(Beschlossen)*
+  - [Preise nach Absatz](wirtschaft/preise-nach-absatz.md) *(Beschlossen)*
+  - [Ohne Arbeitslosengeld](wirtschaft/ohne-arbeitslosengeld.md) *(Beschlossen)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 
@@ -23,10 +28,11 @@ Jede Seite trägt oben ihren Status:
 | **Beschlossen** | Das Design ist abgesegnet. So rechnet das Spiel oder wird es rechnen. |
 | **Im Spiel** | Beschlossen und bereits gebaut. |
 | **Entwurf** | Ein Vorschlag, der noch nicht abgesegnet ist. Er kann sich ganz oder teilweise ändern. |
+| **Abgelöst** | War im Spiel und ist durch ein späteres Feature ersetzt. Die Seite bleibt, wo das spätere Feature auf ihr aufbaut. |
 
 ## Grundsätze
 
-- **Belegt statt erfunden.** Jede Formel und jede Zahl der Wirtschaft stammt aus wirtschaftshistorischer oder ökonomischer Fachliteratur. Die Fundstelle steht direkt dabei.
+- **Belegt statt erfunden.** Jede Formel und jede Zahl der Wirtschaft stammt aus wirtschaftshistorischer oder ökonomischer Fachliteratur. Die Fundstelle steht direkt dabei. Wo eine Regel oder ein Wert eine eigene Festlegung ohne Quelle ist, steht das auf der Seite ausdrücklich dabei.
 - **Ein Feature pro Seite.** Jedes Feature hat seine eigene Seite mit Modell, Daten, historischer Prüfung, Grenzen und Quellen.
 - **Schwächen offen.** Wo ein Modell schwächer belegt ist, als es aussieht, steht das unter *Grenzen*.
 

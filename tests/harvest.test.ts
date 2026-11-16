@@ -52,7 +52,7 @@ describe('the harvest on the map', () => {
     s.day = 366 - 1; // 31 December 1356, a leap year
     advanceDay(s, w);
     expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(2, 1 - LAND_SHARE), 6);
-  });
+  }, 30_000); // the economies of the cities compute the 364 days the test jumps over
   it('tells a client the harvest of a place and what it was computed from', () => {
     const { s, w } = newWorldState();
     const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'england')];
