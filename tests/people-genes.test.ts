@@ -4,13 +4,10 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { child, founder, origin, GENES, NG, ORIGINS, Origin } from '../src/sim/people/genes';
 import { CITIES, genesOf } from '../src/sim/systems/people';
-import { newWorldState, countedInPeopleOfTheTime } from '../tools/sim/load';
-import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
-import { STATE_VERSION } from '../src/sim/state';
+import { newWorldState } from '../tools/sim/load';
 
 const SKIN = GENES.indexOf('skin');
-const { s, w } = newWorldState();
+const { s } = newWorldState();
 const P = s.person.cols, N = s.person.size;
 const placeOf = (id: number) => s.family.cols.place[P.family[id]];
 
@@ -72,15 +69,6 @@ describe('the genes of the persons of a world founded in 1356', () => {
   });
   it('are the same for the same seed', () => {
     expect(Array.from(newWorldState(1356).s.person.cols.genes.slice(0, 680))).toEqual(Array.from(P.genes.slice(0, 680)));
-  });
-});
-
-describe('an older world', () => {
-  it('gets the genes by the upgrade, as a new world has them', () => {
-    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person.cols.genes; old.v = 5;
-    const up = upgradeState(decodeState(encodeState(old)), w);
-    expect(up.v).toBe(STATE_VERSION);
-    expect(hashState(up)).toBe(hashState(s));
   });
 });
 

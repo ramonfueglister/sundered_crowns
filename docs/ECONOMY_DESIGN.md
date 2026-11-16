@@ -29,14 +29,16 @@ players and the AI of realms without a player act through the same commands.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
-| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
+| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world since 15 Nov 2026 |
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
-| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world since 16 Nov 2026 14:04 UTC (pull request 17 merged as 0b8db90, world server release 13, world Europa 1291 resumed at day 15 with the cities founded on that day; the 1291 world takes the 1356 tables as placeholders). Over decades the linked cities sank (section 5); feature 6 mends it |
 | 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built. Taken out again by feature 9 before it ever ran in the world |
-| 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built on the branch of features 5 and 6; not in the running world |
-| 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built on the same branch; not in the running world |
-| 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built on the same branch; not in the running world |
+| 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built; in the running world since 16 Nov 2026, with feature 5 |
+| 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built; in the running world since 16 Nov 2026, with feature 5 |
+| 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
+| 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
+| 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
 
 ## 1. Grain harvest per place
 
@@ -445,7 +447,7 @@ between countries; nothing a player does reaches it; none of the deviations belo
 
 **Calibration.** The port computes its parameters from national accounts (its `src/calibration.rs`). The table
 `data/economy/england_1356.json` holds every input with its source, or marked as an assumption;
-`tools/sim/economy_calibration.ts` applies the port's formulas and `npm run economy:calibrate` writes
+`src/sim/economy/calibration.ts` applies the port's formulas and `npm run economy:calibrate` writes
 `public/data/economy_england.json` (the port's `Parameters` and `InitialConditions`). A test fails if the file no
 longer follows from the table. Three sectors (agriculture, industry, services); amounts in pounds of 1356.
 
@@ -657,7 +659,7 @@ numbers bit for bit (tested).
 - Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
   all firms planning on the first day, and three of the seven conversions below.
 
-**From the year to the day** (`dailyEconomy` in `tools/sim/economy_calibration.ts`; the table of sources
+**From the year to the day** (`dailyEconomy` in `src/sim/economy/calibration.ts`; the table of sources
 `data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
 and 30 days between two plans, from Eurace@Unibi).
 
@@ -838,7 +840,7 @@ standstill with its date.
 
 Status: built in the engine and in the game. Ramon decided on 15 November 2026 (17:15 UTC, "Ja, Städte ersetzen
 England") that in the game the largest cities each compute an economy of their own and trade with each other, and
-that England's economy as one whole goes. In the running world once the world server is redeployed. Player wiki:
+that England's economy as one whole goes. In the running world since 16 November 2026 (world server release 13). Player wiki:
 docs/wiki/wirtschaft/wirtschaft-der-staedte.md.
 
 Feature 6 (below) switched the model's unemployment benefit on in the calibration of every city. The tables of the
@@ -940,7 +942,7 @@ Chandler, the places that have persons). Two of them, Texcoco and Tenayuca, lie 
 one economy, so there are 29 economies. Together they have 2,572,165 people, by chance almost the people of England
 in the table (2,583,180).
 
-**Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `tools/sim/economy_calibration.ts`,
+**Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `src/sim/economy/calibration.ts`,
 `cityTable`). Two assumptions, both marked as such in the table (feature 6 adds a third, the unemployment
 benefit; section 6):
 
@@ -1131,8 +1133,7 @@ Status: built. Ramon agreed on 15 November 2026 (19:29 UTC): "das kannst du gern
 historisch gab es ja kein arbeitslosengeld? wie würde die wirschaft dann immer noch gehen?" So it is set for the
 time being, and what it stands for in 1356 is an open question of his (see "What it stands for" below). His
 condition for mending the slump of section 5 (18:34 UTC): "das muss aber in einklang mit dem echten urcode und dem
-paper passieren." In the running world together with feature 5 once the world server is redeployed; no state of a
-running world changes with it, because feature 5 is not live yet. Player wiki:
+paper passieren." It never ran in the world: feature 9 took it out before feature 5 went live. Player wiki:
 docs/wiki/wirtschaft/arbeitslosengeld-der-staedte.md.
 
 Since feature 9 (section 9) the cities pay no benefit any more: with wages in money (section 7) and the demand pull
@@ -1160,7 +1161,7 @@ laid off more. In the original this loop is cut by the benefit: a person who los
 more than half the income. The cities on their own did not sink only because the port's rest of the world paid them
 coin from nowhere; the merchants of feature 5 closed that, as they were meant to, and the missing benefit showed.
 
-### Calibration (`data/economy/england_1356.json`, `tools/sim/economy_calibration.ts`)
+### Calibration (`data/economy/england_1356.json`, `src/sim/economy/calibration.ts`)
 
 | Entry | Value | Kind |
 |---|---|---|
@@ -1290,7 +1291,7 @@ and 0.6 % without work and the lowest city at 98 and 101.
 
 ## 7. The cities pay wages in money
 
-Status: built on the branch of features 5 and 6 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (07:05 UTC) on the card "Soll ich den Lohn in Geld als Feature 7 bauen?" with "Ja, Lohn in Geld
 bauen": only this, in the cities, with tests and numbers from the game; the price rule and the unemployment benefit
 stay, nothing goes live. Player wiki: docs/wiki/wirtschaft/lohn-in-geld.md.
@@ -1466,7 +1467,7 @@ The merchants' books are off by at most 2.5e-13. The output of the three runs li
 
 ## 8. The firms of the cities plan by the demand pull of CANVAS
 
-Status: built on the branch of features 5 to 7 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (12:12 UTC) on the card "Wie soll es mit der Wirtschaft der Städte weitergehen?" with
 "CANVAS-Preisregel bauen": only the price rule of CANVAS as feature 8, with tests and numbers from the game; the
 unemployment benefit stays, nothing goes live. Player wiki: docs/wiki/wirtschaft/preise-nach-absatz.md.
@@ -1643,7 +1644,7 @@ With feature 7 alone and no benefit the trial had output at 89.8 and the lowest 
 
 ## 9. The cities pay no unemployment benefit
 
-Status: built on the branch of features 5 to 8 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (12:53 UTC) on the card "Wähle den nächsten Schritt für die Wirtschaft der Städte" with
 "Arbeitslosengeld entfernen": the unemployment benefit of the cities is taken out as feature 9, with tests and
 numbers from the game; nothing goes live. It answers his objection of 15 November 2026 to feature 6 ("aber
@@ -1665,7 +1666,7 @@ person without work, so the share they consume of it (`psi`) and the share they 
 higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
 
 The calibration tool still computes the benefit of the original code when the table asks for it
-(`unemploymentBenefit` in `tools/sim/economy_calibration.ts`), and the engine still computes such cities.
+(`unemploymentBenefit` in `src/sim/economy/calibration.ts`), and the engine still computes such cities.
 
 ### Why the cities hold without it
 
@@ -1795,3 +1796,377 @@ met at their plans (section 8) was not counted again. The output lies in the pro
 - The demand pull has no bound (section 8, limits). That stays; no run of this feature stopped over it.
 - The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
 - Nothing here is checked against history.
+
+## 10. The persons of the cities' economies are the persons of the cities
+
+Status: built; in the running world since 16 November 2026 (pull request 44, world server release 15: the world
+of 1291 resumed at day 68 with the economies of its 30 cities founded anew on that day). Ramon asked on 16 November 2026 (14:13 UTC) whether
+the economy had been fitted to the real persons of the world in size. It had the same size source, but its persons
+were persons of the engine alone: nobody in the world had a job or a wage. He answered "das wollen wir mit ecs"
+(14:18 UTC). The proposal (Claude Doc "Feature 10: Die Personen der Wirtschaft sind die ECS-Personen") offered two
+variants, and he chose "A: Grösse aus den ECS-Personen" (15:57 UTC): the economies take their head count from the
+persons of the world, the economies of a running world are founded anew, with tests and numbers from the game;
+nothing goes live. Player wiki: docs/wiki/wirtschaft/personen-der-wirtschaft.md.
+
+### What it is
+
+The model of the cities (Poledna et al. 2023, computed by the unchanged port of BeforeIT.jl) has persons: workers,
+the owner of every firm, the owner of the bank, and persons who are not active (src/agents.rs of the port, lines 207
+to 213; BeforeIT.jl, src/model_init/init_workers.jl, lines 30 to 31, and init_firms.jl, lines 85 to 106). Until now
+they were rows of the engine, as many as a share of the city's people. Now each of them is a person of the world:
+
+- **Who works** (`src/sim/systems/work.ts`). A person of a city works from the age of 15, a man with a chance of
+  97.1 % and a woman with 43 %: the participation rates the calibration table has always had (Broadberry, Campbell,
+  van Leeuwen 2013, pp. 13 to 14), applied to the single person with one draw from the person's own stream of
+  random numbers. The table's share of adults (`adult_share` 0.62, an assumption without a source) is no longer
+  used for the cities: the world's persons have ages.
+- **The parts.** The persons who work are put in an order by a second draw. The first of them own the firms (one
+  firm for every four persons of a sector, as before), the next owns the bank, the others are the workers. One
+  adult who does not work is the model's person who is not active (the port needs one). That an owner is drawn at
+  random is an assumption; no source.
+- **The calibration moves into the game** (`src/sim/economy/calibration.ts`, before `tools/sim/`). A city is
+  calibrated when its economy is founded: as England in 1356 at the city's share of England's people, with exactly
+  as many active persons as the city has persons who work (`labour_force`, apportioned to the sectors by the
+  largest remainder). The output of a city does not change by this: it follows from the city's people. Only the
+  number of heads that make it changes, and with it the output and the wage of a head.
+- **The firms are entities** (`WorldState.firm`: place, owner, sector, employees, output, price, pay).
+- **The engine stays the place where the amounts are computed.** `Economy::agents` (economy/src/lib.rs,
+  `sce_agents`) gives the port's own lists row by row: for a worker the employer, the wage, the income (A.53), the
+  deposits (A.54) and the consumption (A.48); for a firm the sector, the employees (A.24), the output (A.13), the
+  price (A.8), the pay, and its owner's income, deposits and consumption; the same three for the owner of the bank
+  and the person who is not active. After every day the economy system writes them into the components of the
+  persons (`role`, `agent`, `firm`, `wage`, `income`, `spent`, `savings`) and of the firms
+  (`writeAgents` in `src/sim/systems/economy.ts`). A component is a copy of the day; no rule reads it yet.
+- **The economies are those of the cities where the persons live.** Since pull request 45 the persons of a world
+  of 1291 live in the 30 cities of 1291 (`citiesOf(startYear)`). So a world of 1291 has the economies of its own 30
+  cities (Bruges, Rouen, Acre and Tunis among them, London not), each as England in 1356 at its share: the tables
+  of 1356 stay the placeholder.
+
+No rule of the model changes and no line of the port.
+
+### The numbers
+
+The reference world (start 1356, seed 1356; `public/data/economy_cities.json` is its calibration, which the tests
+of the engine read) and a world of 1291 with the seed of the running world:
+
+| | World of 1356 | World of 1291 |
+|---|---|---|
+| Persons of the cities | 25,722 | 24,828 |
+| of them aged 15 or more | 16,968 | 16,483 |
+| Persons who work | 11,755 | 11,455 |
+| of them workers | 8,801 | 8,577 |
+| owners of a firm (= firms) | 2,925 | 2,848 |
+| owners of a bank (= cities) | 29 | 30 |
+| Persons without a part (children, adults who do not work) | 13,967 | 13,373 |
+| Families without a person who works | 690 of 6,568 (806 persons) | 738 of 6,454 (861 persons) |
+| Active persons of the engine before feature 10 | 11,257 | 11,257 (the cities of 1356) |
+
+The head count is 4.4 % above the old one in the reference world (Cairo 1,606 instead of 1,527, Paris 1,072
+instead of 1,006, London 292 instead of 266), so output and wage per head are that much lower; the output of a
+city is the same (all cities £45,055 a year at the start, as before). Another seed draws other persons: the count
+of a world differs by some dozens.
+
+What a person has after 30 days in the reference world: a worker with work is paid 2.08 d a day on average (1.48 d
+to 3.63 d; the sectors differ), keeps 97.5 % of it after the tax on income and spends about as much. The firms are
+of very different sizes, because the model draws their employees from a power law (port src/agents.rs, line 382;
+BeforeIT.jl init_firms.jl, line 66): 1,883 of the 2,925 firms have one employee, the largest has 108 (in the world
+of 1291 the largest has 483, in Cairo).
+
+### State and upgrade
+
+State version 12 (11 is main's: the persons of the 30 cities of 1291). The upgrade gives the persons their
+components and founds the economies anew on the day the world has reached, from the starting position, with the
+persons who work on that day: the days and yearly figures of the old economies are gone, as when the cities
+replaced England. Who has turned 15 since the start of the world and draws work, works. A world from before the
+economy takes the same steps.
+
+The world server reads the table at run time, so its image copies `data/economy/england_1356.json`
+(`server/Dockerfile`). Tried with the real server code: a world of 1291 as the running world has it (state version
+10, the build of release 13) ran to day 69; the new server, laid out as the image, resumed it at day 69 as version
+12, computed on to day 146 and answered `/person/<id>` with the part in the economy.
+
+A day of the world takes 24 ms instead of about 17 ms on the machine of the tests (a world of 1291): writing the
+persons and firms costs 6 ms, most of it the engine reading its state once more.
+
+### Tests
+
+`economy/tests/agents.rs` (3 tests, new): every person and firm of the model has a row, and the active persons are
+the workers and the owners; on each of 120 days of London the rows add up to the figures of the economy (who has
+work firm by firm, persons without work, owners, the savings of all persons against the deposits of the
+households to 1e-9), a worker is paid what the firm pays and the income is that after tax to 1e-12 (A.53); the rows
+of a saved state are those of the running one.
+
+`tests/economy-persons.test.ts` (16 tests, new): who has a part is a person of a city aged 15 or more; the draw is
+at the table's rates within three standard errors, the same for the same seed and another for another; every city
+has as many active persons as its calibration, one firm for every four persons of a sector, and every part its
+numbers once; every firm is an entity in its city with its own owner; on the day of the founding everybody but one
+worker a city has work and nothing is paid yet; on each of 45 days the persons and firms add up to the figures of
+every city (employed, without work, owners, savings to 1e-5 because the components hold 32 bits), a worker's firm
+is of the worker's own city and pays the worker's wage; the books balance; a saved world goes on as the running
+one; a world of version 11 gets the persons and firms by the upgrade and computes on; a world of 1291 has the
+economies of its 30 cities; the server gives a person with the part, and the panel shows it.
+
+`tests/economy.test.ts` (51 tests, changed where they read the calibration): the file of the reference world is
+what the tool writes; a world of 1291 has 30 economies and London none; an upgraded world has the economies founded
+on its day with the persons who work then.
+
+Two tests of the engine have bounds measured with London, which now has 292 active persons instead of 266, so
+other random numbers. They were measured again, not loosened:
+
+- `benefit.rs`, a person without work has no income: the seeds are now 1356, 1359 and 1360, with which somebody
+  is without work on 245, 272 and 281 of the 730 days (five of the eight seeds 1356 to 1363 have more than 100
+  such days).
+- `demand_pull.rs`, the demand pull keeps a city in work: with the paper's rule London now shows its slump (more
+  than 4 % without work at the end of a year within ten years) in four of twelve seeds tried (1356 to 1367; up to
+  12 %), before in four of six (up to 15 %, section 9). Three of the four are computed. With the demand pull the
+  twelve seeds have at most 2.1 % at the end of a year and nobody from the seventh year on.
+
+All tests: 1012 of the game (with main of 16 November 2026, 17:30 UTC), 53 of the engine.
+
+### In the game
+
+`npm run economy:check 30 4` and `npm run economy:check 5 8` as in section 9 (worlds of 1356, the seeds 1356 on),
+every day computed. Each world now has the head count of its own persons:
+
+| All cities together, year 30 (4 worlds) | Feature 9 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.2 | 116.0 | 115.7 to 116.4 |
+| Price level of output (start = 100) | 94.9 | 95.1 | 94.5 to 95.7 |
+| Exports = imports, share of output | 2.70 % | 2.67 % | 2.64 % to 2.71 % |
+| Without work, mean of all cities and days of the 30 years | 0.07 % | 0.09 % | 0.07 % to 0.10 % |
+| Without work, the worst city on its worst day | 3.0 % | 3.4 % | 3.1 % to 4.0 % |
+| City with the lowest output (its start = 100) | 111.2 | 109.0 | 108.2 to 110.0 |
+| City with the highest output | 117.5 | 117.5 | 117.5 to 117.5 |
+
+| All cities together, year 5 (8 worlds) | Feature 9 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 108.2 | 108.1 | 106.3 to 109.1 |
+| Price level of output (start = 100) | 99.5 | 99.5 | 99.1 to 99.7 |
+| Without work, mean of all cities and days | 0.39 % | 0.45 % | 0.35 % to 0.62 % |
+| Without work, the worst city on its worst day | 3.0 % | 3.2 % | 2.9 % to 4.0 % |
+| City with the lowest output (its start = 100) | 103.2 | 102.6 | 100.9 to 104.5 |
+| City with the highest output | 115.5 | 113.9 | 109.0 to 116.4 |
+
+The books are off by at most 2.4e-13 of the amount they are judged by. The outputs lie in the project files
+(wirtschaft/staedte/befunde/feature10_check_30_4.txt and feature10_check_5_8.txt).
+
+So the economies stand where they stood: the same rules with other random numbers and 4 % more heads. The
+differences (0.2 points of output, 0.02 points without work, the lowest city 2 points lower) are within what
+other seeds give or close to it; they were not taken apart further.
+
+In the person panel (a click on a figure) the section "Wirtschaft" shows the part: "Arbeiter" or "Arbeiterin" with
+the sector of the firm, its employees, the wage of the day, income, spending and savings, and a button to the
+owner of the firm; "führt einen Betrieb"; "führt die Bank der Stadt"; "ohne Arbeit"; "nicht erwerbstätig". A day's
+amounts are in pence, savings in pounds, shillings and pence. Pictures in the project files
+(wirtschaft/staedte/befunde/feature10_fenster_*.png).
+
+### What it does not change
+
+- The rules of the model, the port, the merchants, the clock, the wage in money, the demand pull.
+- The persons: nobody is born, dies, marries or moves yet, so who works stands from the day of the founding.
+- The figures of a city in the place panel.
+
+### Limits
+
+- About 14,000 persons have no part: children and adults who do not work. They have no income and no consumption
+  of their own. The model lets every active person consume alone; it has no family budget. 690 families (806
+  persons, most of them living alone) have nobody who works and so nothing at all.
+- Who owns a firm or the bank is drawn at random among those who work: a girl of 15 can own a firm. No source, no
+  rule of inheritance or wealth.
+- The wage is the firm's, not the person's: all employees of a firm are paid the same, and age, sex and the
+  person's traits play no part.
+- The amounts are in two places: the engine's lists, where they are computed, and the components, a copy of the
+  day in 32 bits. Nothing reads the components back into the engine.
+- The port can add and remove persons (src/agents.rs, lines 123 and 144; BeforeIT.jl src/utils/modify.jl), but
+  that is not tried here. Birth and death will need it, and the daily clock does not follow a change in the number
+  of firms.
+- The wage shown is what the port books: the firm's wage in money times the effort of its people, times the change
+  of the consumer price level within the day (below 0.1 % on a day after the first, about 1.2 % on the first day, measured with London).
+  That last factor has been in the wage in money since feature 7 (the real wage is set from the price level of the
+  day before, the income is computed with the price level of the day); the person's row made it visible. It was
+  not changed here.
+- The participation rates are those of the nineteenth century, carried back by the authors, and are applied to
+  every city from Cairo to Paris.
+- The founding day decides who works: a person who turns 15 later does not start to work until the economies are
+  founded anew.
+- In a world of 1291 the cities are those of 1291, but each is still England in 1356 at its share.
+
+## 11. The family is the purse, and a woman without a husband works
+
+Status: built; in the running world since 16 November 2026 (pull request 49, world server release 16: the world
+of 1291 resumed at day 83 with the economies of its 30 cities founded anew on that day). After feature 10 Ramon chose the next feature on
+16 November 2026: "Haushalt der Familie" (17:50 UTC). The proposal (Claude Doc "Feature 11: Haushalt der Familie")
+offered two variants, and he chose "B: Kasse, Frauen ohne Mann arbeiten" (18:01 UTC): the family becomes the
+purse, and a woman without a husband works, so that the economies of a running world are founded anew. Player wiki: docs/wiki/wirtschaft/haushalt-der-familie.md.
+
+### What it is
+
+Two things, both outside the engine. The port computes as before.
+
+**The purse** (`src/sim/systems/household.ts`). The model knows single persons: every person spends the share ψ of
+the own expected income, C = ψ · Y / (1 + τ_VAT) (port `src/households.rs`, function `budget`, line 83; BeforeIT.jl
+`src/agent_actions/households.jl`, lines 96, 115, 134 and 150; appendix A.46), and saves the rest (A.54;
+households.rs line 124, households.jl line 182). Its persons who do not work are persons of the model who live on
+social benefits of the state (households.rs line 43; households.jl line 45: "Inactive households do not
+participate in the labor market and receive social benefits provided by the government", Poledna, Miess and Hommes
+2020, section 3, p. 8; in Austria 4.13 of 8.86 million persons, table 1, p. 9). The cities pay no benefits and keep
+one such person each, so the children and the adults who do not work, more than half of the persons of a city, had
+neither an income nor a consumption (the first limit of section 10).
+
+Now they live on their family, as the history of English working families counts it. Horrell, Humphries and
+Weisdorf (2022, "Beyond the male breadwinner: Life-cycle living standards of intact and disrupted English working
+families, 1260–1850", Economic History Review 75(2), 530 to 560) add up "family incomes from the contributions of
+all family members" (p. 531) and set the family's needs against them: "Adults are each assumed to consume a whole
+consumption basket, children just one-half" (p. 540); children "became independent at age 15" (p. 538). The rules:
+
+1. The income, the spending and the savings of a family are the sums over its members of what the economy
+   computed for them on the last day.
+2. A person aged 15 or more is one basket, a child under 15 half a basket, on the day up to which the economies
+   are computed.
+3. A person's consumption is the family's spending times the person's baskets over the baskets of the family.
+
+The purse is a booking of the world and no rule of the model: nothing reads it, the engine's state is the same to
+the bit with and without it, and nobody goes hungry in a family that spends nothing.
+
+**A woman without a husband works** (`src/sim/systems/work.ts`). The same paper assumes that a wife worked little
+"except when the family lacked an income-generating husband when we assume that the wife worked full-time"
+(p. 535; "the lack of adult male support dramatically reduces family earnings and forces the mother to work
+full-time", p. 548). So the woman at the head of a family that has no man at its head, and a woman who lives on
+her own, always works from the age of 15. In the worlds as they are founded these are all women living alone: no
+family has a mother without a husband yet, because nobody dies. The other women of the city are drawn at the rate
+(0.43 · W − H) / (W − H), W the women of working age of the city and H those without a husband, so that the
+table's 43 % of all women is still expected to work. That lower rate is our arithmetic, not a source. The men are
+drawn as before.
+
+### Entries of the world
+
+- Family (`FAMILY_SCHEMA`): `persons`, `working`, `baskets`, and of the last day `income`, `spent`, `savings`.
+- Person (`PERSON_SCHEMA`): `consumed`, the person's share of the family's spending.
+- Written after every day of the economy, with the persons and firms (`writeAgents`), and on the day of the
+  founding. A world without economies has no purses: everything is 0.
+- The world server gives a person with the `household` of the family (`/person/<id>`, `src/net/people.ts`).
+
+### The numbers
+
+The reference world (start 1356, seed 1356) and a world of 1291 with the seed of the running world, on the day
+they are founded, against feature 10:
+
+| | World of 1356, feature 10 | now | World of 1291, feature 10 | now |
+|---|---|---|---|---|
+| Persons who work | 11,755 | 11,725 | 11,455 | 11,454 |
+| of them workers | 8,801 | 8,779 | 8,577 | 8,571 |
+| owners of a firm (= firms) | 2,925 | 2,917 | 2,848 | 2,853 |
+| Women aged 15 or more | 8,746 | 8,746 | 8,477 | 8,477 |
+| of them without a husband (all work now) | 1,189 | 1,189 | 1,211 | 1,211 |
+| Women who work | 43 % (drawn) | 3,739 = 42.8 % | 43 % (drawn) | 3,680 = 43.4 % |
+| Rate at which the other women are drawn | 43 % | 34.0 % (23.9 % to 42.4 % by city) | 43 % | 33.5 % (22.3 % to 43.0 % by city) |
+| Families without a person who works | 690 of 6,568 (806 persons) | 53 (199 persons) | 738 of 6,454 (861 persons) | 54 (201 persons) |
+
+The families that still have nobody who works are couples of which neither the man (2.9 % of the men do not work)
+nor the wife is drawn, with their children: in the world of 1291 54 men, 61 women and 86 children.
+
+The households of the world of 1291 on day 60: 20,694.5 baskets for 24,828 persons; a family has an income of
+1.05 d a day per head and spends 1.24 d per basket (a worker with work is paid 2.07 d). By person, what the family
+spends per basket: a tenth of the persons have 0.40 d or less, the median 0.93 d, a tenth 1.91 d or more. 245
+persons live in the 67 families that spend nothing that day; with feature 10 it was 881 persons.
+
+### State and upgrade
+
+State version 14 (13 is main's: a world of 1291 has the borders of its setup again). The upgrade gives the families their purse and
+the persons their consumption, and it founds the economies anew on the day the world has reached, as the step to
+12 did: who works has changed, so the days and the yearly figures of the economies are gone, and the first period
+is the next day of the world.
+
+Tried with the real server code, laid out as the image: a world of 1291 of state version 12, as the running world
+has it, at day 175 was resumed by the new server at day 175 as version 14, computed on and answered `/person/<id>`
+with the household. Writing the purses costs about 2 ms a day on the machine of the tests.
+
+### Tests
+
+`tests/economy-households.test.ts` (20 tests, new): in the worlds of 1356 and of 1291 every woman without a husband
+works, every city keeps the table's share of women at work within three standard deviations of the draw (all
+cities together within one point of 43 %), fewer than one family in a hundred has nobody who works and no woman on
+her own is among them; a man works by his own draw as before; the rate of the other women (also where the women
+without a husband are more than the share); the same draw for the same seed. The purse: persons, persons who work
+and baskets of every family; income, spending and savings are the sums over the members to the bit; the families of
+a city add up to its persons and their savings to the deposits of the households of the city's books; the
+consumption of the persons of a family adds up to its spending, two adults consume the same and a child half; the
+child with the next fifteenth birthday is a whole basket from that day and does not start to work; the engine
+computes the same 20 days to the byte without the world; everything is 0 in a world without economies. The state:
+a saved world goes on as the running one; a world of version 13 gets purses and consumption by the upgrade, with
+the economies founded anew and every woman without a husband at work, and computes on. The server gives a person
+with the household, and the panel shows it.
+
+`tests/economy-persons.test.ts` (16 tests): the test of the upgrade from version 11 now follows the men, because
+the rate of the women of a city moves with its women of working age.
+
+`public/data/economy_cities.json` is written anew (the reference world has 11,725 persons who work). London, the
+city the tests of the engine compute, still has 292, so they pass unchanged, the measured bounds of `benefit.rs`
+and `demand_pull.rs` included.
+
+All tests: 1027 of the game (with main of 16 November 2026, 18:02 UTC), 53 of the engine.
+
+### In the game
+
+`npm run economy:check 30 4` and `npm run economy:check 5 8` as in section 10 (worlds of 1356, the seeds 1356 on),
+every day computed:
+
+| All cities together, year 30 (4 worlds) | Feature 10 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.0 | 116.3 | 115.9 to 116.7 |
+| Price level of output (start = 100) | 95.1 | 95.2 | 94.4 to 95.8 |
+| Exports, share of output | 2.67 % | 2.65 % | 2.63 % to 2.67 % |
+| Imports, share of output | 2.67 % | 2.66 % | 2.64 % to 2.67 % |
+| Without work, mean of all cities and days of the 30 years | 0.09 % | 0.07 % | 0.07 % to 0.08 % |
+| Without work, the worst city on its worst day | 3.4 % | 3.2 % | 2.9 % to 3.7 % |
+| City with the lowest output (its start = 100) | 109.0 | 111.8 | 108.6 to 115.2 |
+| City with the highest output | 117.5 | 117.5 | 117.4 to 117.5 |
+
+| All cities together, year 5 (8 worlds) | Feature 10 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 108.1 | 108.2 | 107.1 to 109.3 |
+| Price level of output (start = 100) | 99.5 | 99.7 | 99.0 to 100.0 |
+| Without work, mean of all cities and days | 0.45 % | 0.41 % | 0.31 % to 0.46 % |
+| Without work, the worst city on its worst day | 3.2 % | 3.1 % | 2.6 % to 3.7 % |
+| City with the lowest output (its start = 100) | 102.6 | 103.0 | 102.4 to 103.6 |
+| City with the highest output | 113.9 | 113.5 | 111.6 to 115.9 |
+
+The books are off by at most 2.0e-13 of the amount they are judged by. The outputs lie in the project files
+(wirtschaft/staedte/befunde/feature11_check_30_4.txt and feature11_check_5_8.txt).
+
+So the economies stand where they stood. The purse changes nothing in them; the new draw of the women gives the
+cities other persons who work and so other random numbers, and the differences are within what other seeds give
+(output 0.3 points, without work 0.02 points). They were not taken apart further.
+
+In the person panel the section "Haushalt" shows, for every person of a city: the persons of the family, those of
+them who work, the income and the spending of the family on the day, the person's own consumption and the savings
+of the family. Pictures in the project files (wirtschaft/staedte/befunde/feature11_fenster_*.png).
+
+### What it does not change
+
+- The rules of the model, the port, the merchants, the clock, the wage in money, the demand pull.
+- The men who work, the owners' draw, one firm for every four persons of a sector.
+- The persons: nobody is born, dies, marries or moves.
+
+### Limits
+
+- The purse is a booking. No rule of the model reads it: a person still spends the share ψ of the own income, the
+  family does not decide together, and nobody starves when the purse is empty.
+- The weights of the baskets (1 and ½) are the paper's assumption for English working families on the land, and
+  are applied to every city. The paper also lets children work from the age of six; here nobody under 15 works.
+- A family is the couple and its unmarried children. No servants, no kin outside the family, no payments between
+  families (the paper rules out transfers between generations too, p. 538).
+- The savings of a family are a sum: in the engine every person who works still saves alone.
+- 54 families (201 persons) of the world of 1291 still have nobody who works.
+- That a woman without a husband works is the paper's assumption; the lower rate of the other women is our
+  arithmetic. It differs from city to city (22 % to 43 %), because the share of women living alone does.
+- All women without a husband are women living alone, about one woman in seven: the people of the start have no
+  widows with children, because nobody has died.
+- The 43 % stay the rate of the nineteenth century (section 10).
+- Not read: the online appendix of Horrell, Humphries and Weisdorf (tables S2 and S4) and the last 18,000 of the
+  118,613 characters of the paper's file; the journal version of Poledna et al. (the working paper of 2020 was
+  read, the equations are cited from the code).
+- Considered and left out: the dependants as persons of the engine, paid by their family in place of the state.
+  It would double the engine's persons, need rules of our own beside the port and a new founding, and because the
+  model's consumption is linear in income with one ψ for all, the cities' figures would stay the same (reasoned
+  from the code, not measured). And the modified OECD scale (1.0 / 0.5 / 0.3): it compares households of today.

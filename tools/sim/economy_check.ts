@@ -8,11 +8,11 @@
 // The worlds run in parallel, one process each on every core; a year of a world takes about six seconds of one core.
 import { spawn } from 'node:child_process';
 import { availableParallelism } from 'node:os';
-import { loadWorld, loadSetup, loadEconomy } from './load';
+import { loadWorld, loadSetup } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { advanceDay } from '../../src/sim/engine';
 import { FIGURE, FIGURES } from '../../src/sim/economy/engine';
-import { yearRow } from '../../src/sim/systems/economy';
+import { cityPlaces, yearRow } from '../../src/sim/systems/economy';
 
 const START = 1356;
 
@@ -31,7 +31,7 @@ interface Run {
 /** Runs one world for `years` years, day by day. */
 function runWorld(seed: number, years: number): Run {
   const w = loadWorld(), s = createWorldState(w, loadSetup(START), seed), F = FIGURE;
-  const e = s.economy.cities!, N = w.cityEconomies.cities.length;
+  const e = s.economy.cities!, N = e.places.length;
   const r: Run = {
     seed, halted: '', days: 0, gdp: [], prices: [], exports: [], imports: [],
     unemployed: new Array(N).fill(0), unemployedMax: new Array(N).fill(0), priceToday: new Array(N).fill(1), books: 0,
@@ -74,7 +74,7 @@ if (process.argv[2] === '--world') {
 
 const years = Number(process.argv[2] ?? 5), worlds = Number(process.argv[3] ?? 4);
 if (!(Number.isInteger(years) && years >= 1 && Number.isInteger(worlds) && worlds >= 1)) throw new Error('usage: economy:check [years] [worlds]');
-const CITIES = loadEconomy().cities, N = CITIES.length;
+const CITIES = cityPlaces(START), N = CITIES.length;
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 const mean = (v: number[]) => sum(v) / v.length;

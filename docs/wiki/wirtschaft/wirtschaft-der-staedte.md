@@ -1,6 +1,6 @@
 # Wirtschaft der Städte
 
-**Status:** Beschlossen (am 15.11.2026 entschieden und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 15.11.2026 entschieden und gebaut; seit dem 16.11.2026 in der laufenden Welt. Die laufende Welt beginnt im Jahr 1291 und rechnet die Städte vorläufig mit den Tabellen von 1356) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Jede der grössten Städte der Welt ist eine eigene, vollständige Volkswirtschaft: Personen, Betriebe, eine Bank, eine Krone und ein Ausland, jeder mit eigener Bilanz. Das Ausland einer Stadt sind die anderen Städte: Händler kaufen in einer Stadt und verkaufen am nächsten Tag in einer anderen. Gerechnet wird an jedem Spieltag.
 
@@ -39,7 +39,7 @@ In der laufenden Welt beginnen die Städte am Tag der Umstellung mit der Startpo
 
 ## Die Städte
 
-Es sind die 30 grössten Städte der Welt im Jahr 1356 nach Chandler, dieselben, deren Einwohner als Personen in der Welt leben ([Einwohner der grössten Städte](../personen/einwohner-der-staedte.md)). Texcoco und Tenayuca liegen im selben Ort der Karte und sind eine Volkswirtschaft. Es sind also 29.
+Es sind die 30 grössten Städte der Welt im Jahr 1356 nach Chandler, dieselben, deren Einwohner als Personen in der Welt leben ([Einwohner der Städte](../personen/einwohner-der-staedte.md)). Texcoco und Tenayuca liegen im selben Ort der Karte und sind eine Volkswirtschaft. Es sind also 29.
 
 Kairo, Paris, Fès, Sarai, Täbris, Bagdad, Venedig, Damiette, Schiras, Konstantinopel, Damaskus, Sevilla, Aleppo, Isfahan, Genua, Texcoco, Granada, London, Prag, Gent, Niani, Alexandria, Caffa, Trapezunt, Mailand, Tlemcen, Köln, Marrakesch, Soltaniyeh.
 
@@ -141,5 +141,5 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 
 - Poledna, Miess, Hommes, Rabitsch (2023): Economic forecasting with an agent-based model. European Economic Review 151, 104306.
 - port-beforeit (Rust-Port von BeforeIT.jl, Apache-2.0): https://github.com/ramonfueglister/port-beforeit
-- Stadtgrössen: Reba, Reitsma & Seto 2016 (Chandler 1987), siehe [Einwohner der grössten Städte](../personen/einwohner-der-staedte.md).
+- Stadtgrössen: Reba, Reitsma & Seto 2016 (Chandler 1987), siehe [Einwohner der Städte](../personen/einwohner-der-staedte.md).
 - Alle Quellen der Eichtabelle: [Volkswirtschaft England](volkswirtschaft-england.md).

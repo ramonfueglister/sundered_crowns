@@ -1,8 +1,20 @@
-# Einwohner der grössten Städte
+# Einwohner der Städte
 
-**Status:** Beschlossen · **Bereich:** Personen · **Stand:** 2026-11-15
+**Status:** Beschlossen · **Bereich:** Personen · **Stand:** 2026-11-16
 
-> Die 30 grössten Städte der Welt von 1356 haben echte Personen, eine für je hundert Einwohner: zusammen 25'722. Jede hat Geburtstag, Geschlecht, Eltern, Familie, IQ und Big Five.
+> In der Welt von 1291 hat jede Stadt der Karte im Kartenrahmen echte Personen: 558 Städte, rund 102'000 Personen. In der Welt von 1356 sind es die 30 grössten Städte mit 25'722 Personen. Jede Person hat Geburtstag, Geschlecht, Eltern, Familie, IQ und Big Five.
+
+## Welt von 1291: alle Städte der Karte
+
+Ramon, 16.11.2026: In der Welt gibt es nur, was die Simulation rechnet, und alle Personen sollen auf der Karte zu sehen sein. Darum leben die Personen von 1291 in jeder Stadt, die die 3D-Welt im Kartenrahmen baut und für die eine Einwohnerzahl bekannt ist.
+
+- **Welche Städte:** alle Orte des Gazetteers mit Einwohnern in `public/data/towns_1291.json`, die im Kartenrahmen liegen (`data/content/world_extent.json`): 558 Städte in 550 Orten der Karte. Liegen zwei Städte im selben Ort, sind sie eine Wirtschaft.
+- **Woher die Zahlen kommen:** 65 Städte nach Chandler für 1291 (Reba, Reitsma & Seto 2016). Für die 493 übrigen gilt die Schätzung des Gazetteers für 1356 mal den Faktor ihrer Region aus `data/history/1291/demography.json`. Annahme: Eine Stadt verlor in der Pest denselben Anteil wie ihr Land. Diese Zahlen sind grob.
+- **Reihenfolge:** Zuerst kommen Chandlers Städte, dann die übrigen, jede Gruppe nach Grösse. So behalten die Personen der 30 grössten Städte, die die Welt seit dem 16.11.2026 hatte, ihre Nummern, Familien und Gene. Die neuen Städte kommen dazu.
+- **Wirtschaft:** Jeder Ort mit einer Stadt hat eine eigene Wirtschaft (550). Die kleinste Stadt hat 40 Personen. Die Kalibrierung braucht mindestens einen Betrieb und eine beschäftigte Person je Sektor, das reicht in jeder Stadt.
+- **Noch nicht dabei:** die 131 Hauptstädte ohne Stadt auf der Karte, die Bauern der Städte in Weilern vor den Mauern, Kultur und Glaube pro Person. Das Land ausserhalb der Städte ist noch eine Zahl pro Ort und soll verschwinden, sobald die Weiler gebaut sind.
+
+Prüfung: In einem Lauf über 30 Jahre mit 4 Seeds blieb keine Wirtschaft stehen. Ohne Arbeit war im Median niemand, in der schlechtesten Stadt höchstens 7 % (das sind Städte mit unter 20 Erwerbstätigen, wo eine Person schon 5 % ist). Die Produktion steigt auf rund 115 % und bleibt dort, wie mit den 30 Städten.
 
 ## Das Feature
 
@@ -29,7 +41,8 @@ Noch nicht sichtbar. Die Personen stehen im Zustand der Welt; Porträts, Figuren
 
 | Grösse | Wert | Herkunft |
 |---|---|---|
-| Stadtgrössen | 30 Städte, 2'572'165 Einwohner | Reba, Reitsma & Seto 2016 (Chandler 1987), CC BY 4.0 |
+| Stadtgrössen 1356 | 30 Städte, 2'572'165 Einwohner | Reba, Reitsma & Seto 2016 (Chandler 1987), CC BY 4.0 |
+| Stadtgrössen 1291 | 558 Städte, 10'198'197 Einwohner; 65 nach Chandler, 493 geschätzt | Chandler wie oben; sonst Gazetteer 1356 mal Faktor der Region (Annahme) |
 | Sterbetafel | Coale-Demeny West, Stufe 3 | Coale & Demeny 1983; Stufe nach Bailey & Rigby 2012 und Ohlin 1966 |
 | Erstes Heiratsalter | Frauen 24, Männer 27 | La Poutré & Paping 2025, England um 1300 |
 | Streuung des Heiratsalters | 4 Jahre, frühestens 15 | Annahme |
@@ -42,7 +55,7 @@ Noch nicht sichtbar. Die Personen stehen im Zustand der Welt; Porträts, Figuren
 
 ## Massstab 1 : 100
 
-Eine Person steht für hundert Menschen von 1356, wie überall auf der Karte. Kairo hat 3'512 Personen, London 609.
+Die Welt hat ein Hundertstel der Menschen der echten Welt; jede Person ist eine Person. Kairo hat 1356 3'512 Personen, London 609; 1291 hat Kairo 3'820, Paris 2'147.
 
 ## Grenzen
 

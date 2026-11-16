@@ -1,6 +1,6 @@
 # Bestellte Fläche
 
-**Status:** Beschlossen und gebaut (freigegeben am 14.11.2026; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-14
+**Status:** Im Spiel (freigegeben am 14.11.2026; seit dem 15.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-14
 
 > Ein Ort bestellt nur so viel Acker, wie seine Menschen bearbeiten können, und nie mehr als einen festen Anteil seines Landes. Die Getreideernte rechnet mit dieser Fläche statt mit dem ganzen Land des Ortes.
 

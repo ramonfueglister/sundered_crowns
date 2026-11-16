@@ -28,6 +28,22 @@ export const FIGURE = {
 } as const;
 export const FIGURES = 16;
 
+/** The persons and firms of a city one by one, as `Economy::agents` gives them (economy/src/lib.rs, economy feature
+ *  10): four counts (workers, firms, banks, persons who do not work), then for every worker `AGENT.worker` numbers,
+ *  for every firm `AGENT.firm`, for the owner of every bank and every person who does not work `AGENT.person`.
+ *  Amounts of money are in the units of the calibration; flows are those of the last period, a day. */
+export const AGENT = {
+  counts: 4,
+  /** a worker: the firm that employs the person (its position among the firms of the city, −1 without work), the
+   *  wage in money of the day before tax, the disposable income, the deposits, the money spent on consumption */
+  worker: 5, employer: 0, wage: 1, income: 2, deposits: 3, consumption: 4,
+  /** a firm: its sector, its employees, its production, its price, the wage in money it pays a person for the day,
+   *  then the income, the deposits and the consumption of its owner */
+  firm: 8, sector: 0, employees: 1, production: 2, price: 3, pay: 4, owner: 5,
+  /** the owner of a bank or a person who does not work: income, deposits, consumption */
+  person: 3,
+} as const;
+
 /** The two lengths of the daily clock in periods: a firm plans every `plan` periods, expectations are formed on
  *  windows of `window` periods. With 1 and 1 the engine computes the port as it is. */
 export interface EconomyClock { plan: number; window: number }
@@ -61,6 +77,8 @@ export interface EconomyEngine {
   /** The key figures of every city, `FIGURES` numbers a city in the order of the cities. */
   figures(state: Uint8Array): Float64Array;
   checks(state: Uint8Array): EconomyChecks;
+  /** The persons and firms of every city one by one (`AGENT`), one city after the other. */
+  agents(state: Uint8Array): Float64Array;
 }
 
 interface Exports {
@@ -70,6 +88,7 @@ interface Exports {
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
+  sce_agents(state: number, len: number): number;
   sce_out_ptr(): number; sce_out_len(): number; sce_panic_ptr(): number; sce_panic_len(): number;
 }
 
@@ -133,6 +152,7 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       return call([state], (e, a) => e.sce_step(a[0], a[1], periods));
     },
     figures(state) { return floats(call([state], (e, a) => e.sce_figures(a[0], a[1]))); },
+    agents(state) { return floats(call([state], (e, a) => e.sce_agents(a[0], a[1]))); },
     checks(state) {
       // the cities are counted by their figures: six numbers a city come first, then the pairs of the merchants
       const v = floats(call([state], (e, a) => e.sce_checks(a[0], a[1]))), n = this.figures(state).length / FIGURES;

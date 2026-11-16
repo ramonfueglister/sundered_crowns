@@ -29,6 +29,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY public/data ./public/data
+# the calibration table the economies of the cities are founded from (tools/sim/load.ts)
+COPY data/economy/england_1356.json ./data/economy/england_1356.json
 COPY --from=build /app/build/server ./build/server
 # where tools/sim/load.ts looks for the engine
 COPY --from=economy /economy/target/wasm32-unknown-unknown/release/sc_economy.wasm ./build/economy/sc_economy.wasm

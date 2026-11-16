@@ -1,6 +1,6 @@
 # Volkswirtschaft England
 
-**Status:** Im Spiel abgelöst durch die [Wirtschaft der Städte](wirtschaft-der-staedte.md) (entschieden am 15.11.2026). Bis der Weltserver neu aufgespielt ist, läuft England in der laufenden Welt noch als Jahresmodell. Modell, Tagestakt und Eichtabelle dieser Seite gelten weiter, für jede Stadt · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
+**Status:** Im Spiel abgelöst durch die [Wirtschaft der Städte](wirtschaft-der-staedte.md) (entschieden am 15.11.2026). Seit dem 16.11.2026 rechnet die laufende Welt die Städte und nicht mehr England. Modell, Tagestakt und Eichtabelle dieser Seite gelten weiter, für jede Stadt · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
 
 > England läuft in der Welt als eine ganze Volkswirtschaft: Personen, Betriebe, eine Bank, die Krone und das Ausland, jeder mit eigener Bilanz. Gerechnet wird sie an jedem Spieltag von einem wissenschaftlichen Modell, dessen Regeln unverändert übernommen sind. Jeder Betrieb legt alle 30 Tage an seinem eigenen Plantag Menge und Preis neu fest.
 

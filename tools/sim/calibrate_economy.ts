@@ -1,39 +1,39 @@
-// Computes the port's parameters for every city from the calibration table and writes public/data/economy_cities.json
-// (economy features 3 to 8, docs/ECONOMY_DESIGN.md): for each of the places with one of the 30 largest cities, the
-// yearly calibration of England at the city's size, turned into days. Run after the table or the cities have changed:
+// Writes public/data/economy_cities.json: the calibration of every city of a reference world, as the game computes
+// it when it founds the economies (economy features 3 to 10, docs/ECONOMY_DESIGN.md).
+//
+// Since feature 10 the game calibrates a city itself, from the calibration table and the persons of the city who
+// work (src/sim/systems/economy.ts), so the numbers of a city belong to a world: its start year and its seed. This
+// file holds them for the world of 1356 with the seed 1356. The tests of the engine compute its cities
+// (economy/tests), and it shows what the port is given. The game does not read it. Run after the table, the cities
+// or the persons have changed:
 //   npm run economy:calibrate
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { calibrateEconomy, cityTable, dailyEconomy, type CalibrationTable, type EconomyCalibration } from './economy_calibration';
-import { CITIES } from '../../src/sim/systems/people';
-import { dataPath } from './load';
+import type { CalibrationTable, EconomyCalibration } from '../../src/sim/economy/calibration';
+import type { WorldState } from '../../src/sim/state';
+import { World } from '../../src/sim/world';
+import { cityCalibrations as calibrationsOf } from '../../src/sim/systems/economy';
+import { ECONOMY_TABLE, dataPath, loadEconomyTable, newWorldState } from './load';
 
-export const TABLE = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../data/economy/england_1356.json');
-export const readTable = (): CalibrationTable => JSON.parse(readFileSync(TABLE, 'utf8'));
-/** The yearly calibration turned into days (economy feature 4). */
-export function dailyCalibration(t: CalibrationTable): EconomyCalibration {
-  return dailyEconomy(calibrateEconomy(t), t.clock.days_per_year.value, t.clock.plan_days.value);
+export const TABLE = ECONOMY_TABLE;
+export const readTable = (): CalibrationTable => loadEconomyTable();
+/** The world whose cities the file holds. */
+export const REFERENCE = { year: 1356, seed: 1356 } as const;
+
+let reference: { s: WorldState; w: World } | null = null;
+/** The cities of the reference world as the game founds them, each with its persons who work and its calibration;
+ *  with `t`, as the game would found them from that table. */
+export function cityCalibrations(t?: CalibrationTable): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
+  const { s, w } = (reference ??= newWorldState(REFERENCE.seed, REFERENCE.year));
+  return calibrationsOf(s, t ? Object.assign(Object.create(World.prototype), w, { cityEconomies: { ...w.cityEconomies, table: t } }) as World : w);
 }
-/** The places that have a city, in the order of the list of cities, each with its name and the people of its cities
- *  (two cities of the list lie in one place: they are one economy). */
-export function cityPlaces(): { place: number; name: string; people: number }[] {
-  const out: { place: number; name: string; people: number }[] = [];
-  for (const c of CITIES) {
-    const at = out.find((x) => x.place === c.place);
-    if (at) at.people += c.people; else out.push({ place: c.place, name: c.placeName, people: c.people });
-  }
-  return out;
-}
-/** The calibration of every city: England's table at the city's size, in days. */
-export function cityCalibrations(t: CalibrationTable): { place: number; name: string; people: number; calibration: EconomyCalibration }[] {
-  return cityPlaces().map((c) => ({ ...c, calibration: dailyCalibration(cityTable(t, c.people)) }));
-}
+
 /** The file as it is written: one key per line at the top, one city per line. */
-export function calibrationJson(t: CalibrationTable): string {
+export function calibrationJson(t: CalibrationTable = readTable()): string {
   const cities = cityCalibrations(t), c = cities[0].calibration;
-  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "cities": [\n`
-    + cities.map((x) => `  ${JSON.stringify({ place: x.place, name: x.name, people: x.people, parameters: x.calibration.parameters, initial_conditions: x.calibration.initial_conditions })}`).join(',\n')
+  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "world": ${JSON.stringify(REFERENCE)},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "cities": [\n`
+    + cities.map((x) => `  ${JSON.stringify({ place: x.place, name: x.name, people: x.people, working: x.working.length, parameters: x.calibration.parameters, initial_conditions: x.calibration.initial_conditions })}`).join(',\n')
     + '\n ]\n}\n';
 }
 
@@ -41,11 +41,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const t = readTable();
   writeFileSync(dataPath('economy_cities.json'), calibrationJson(t));
   const f = (v: number) => Math.round(v).toLocaleString('en-GB');
-  for (const x of cityCalibrations(t)) {
+  const cities = cityCalibrations(t);
+  for (const x of cities) {
     const a = x.calibration.accounts as Record<string, any>;
-    console.log(`${x.name} (place ${x.place}): ${f(x.people)} people, at 1:${1 / t.scale.value} GDP £${f(a.gdp)}, labour force ${f(a.labourForce)}, firms ${a.firms.join(' / ')}, exports £${f(a.exports)}, imports £${f(a.imports)}`);
+    console.log(`${x.name} (place ${x.place}): ${f(x.people)} people, at 1:${1 / t.scale.value} GDP £${f(a.gdp)}, ${f(x.working.length)} persons who work, firms ${a.firms.join(' / ')}, exports £${f(a.exports)}, imports £${f(a.imports)}`);
   }
-  const c = cityCalibrations(t)[0].calibration;
+  const c = cities[0].calibration;
+  console.log(`${cities.length} cities of the world of ${REFERENCE.year} with the seed ${REFERENCE.seed}: ${f(cities.reduce((n, x) => n + x.working.length, 0))} persons who work`);
   console.log(`${c.periods_per_year} periods a year; a firm plans every ${c.clock.plan} days, expectations on windows of ${c.clock.window} days`);
   console.log(t.cities.wage.value === 'money' ? 'the firms pay a wage in money that never changes' : 'the firms pay a real wage that follows the consumer prices, as in the port');
   console.log(t.cities.prices.value === 'demand' ? 'a planning firm changes its supply or its price by the gap between demand and supply (CANVAS)' : 'a planning firm sets supply and price by the rule of the paper');

@@ -1,4 +1,4 @@
-// Features 3 to 5 of the economy, the cities as economies of their own that trade with each other, computed every
+// Features 3 to 9 of the economy (feature 10, the persons of the cities, has tests/economy-persons.test.ts): the cities as economies of their own that trade with each other, computed every
 // day by the port of BeforeIT.jl (docs/ECONOMY_DESIGN.md): the calibration of England, its turn into days and into
 // cities, the engine against its native build, the system in the world, the snapshot, the upgrade of an older world
 // and the view of a place. The shell around the port, the daily clock and the merchants have their own tests in
@@ -8,17 +8,17 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath, countedInPeopleOfTheTime } from '../tools/sim/load';
+import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
-import { calibrationJson, cityCalibrations, cityPlaces, dailyCalibration, readTable } from '../tools/sim/calibrate_economy';
-import { calibrateEconomy, cityTable, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
+import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
+import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
-import { citySeed, computeTo, foundEconomy, yearRow } from '../src/sim/systems/economy';
+import { cityAt, cityPlaces, citySeed, computeTo, yearRow } from '../src/sim/systems/economy';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION, type WorldState } from '../src/sim/state';
+import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
 import { World } from '../src/sim/world';
 import { WorldCore, configFromEnv } from '../server/world';
@@ -154,24 +154,27 @@ describe('the calibration of the cities', () => {
   const table = readTable(), cities = cityCalibrations(table), england = calibrateEconomy(table);
   const pe = england.parameters as Record<string, any>, ae = england.accounts as Record<string, any>;
 
-  it('is the file the world server reads', () => {
+  it('is the file of the reference world, as the game founds the economies of its cities', () => {
     expect(readFileSync(dataPath('economy_cities.json'), 'utf8')).toBe(calibrationJson(table)); // else: npm run economy:calibrate
     const w = loadWorld();
-    expect(w.cityEconomies.cities.length).toBe(cities.length);
     expect(w.cityEconomies).toMatchObject({ year: 1356, scale: 0.01, clock: { plan: 30, window: 365 }, rules: { wage: 'money', prices: 'demand' } });
+    expect(w.cityEconomies.table).toEqual(table); // the game calibrates from the table itself
+    const file = loadEconomy(), e = newWorldState(REFERENCE.seed, REFERENCE.year).s.economy.cities!;
+    expect(file.world).toEqual(REFERENCE);
+    expect(Array.from(e.places)).toEqual(cities.map((c) => c.place));
     cities.forEach((c, k) => {
-      expect(w.cityEconomies.cities[k]).toMatchObject({ place: c.place, people: c.people });
-      expect(w.cityOf[c.place]).toBe(k);
-      expect(JSON.parse(w.cityEconomies.cities[k].parameters)).toEqual(c.calibration.parameters);
+      expect(file.cities[k]).toMatchObject({ place: c.place, people: c.people, working: c.working.length });
+      expect(file.cities[k].parameters).toEqual(JSON.parse(JSON.stringify(c.calibration.parameters)));
+      expect(cityAt(e, c.place)).toBe(k);
     });
-    expect(Array.from(w.cityOf).filter((k) => k >= 0).length).toBe(cities.length);
+    expect(cityAt(e, w.names.indexOf('York'))).toBe(-1);
   });
   it('has one economy for every place with one of the 30 largest cities, with the people of its cities', () => {
     const byPlace = cityPeopleByPlace();
     expect(cities.length).toBe(byPlace.size);
     expect(cities.length).toBe(29); // two cities of the list lie in one place
     for (const c of cities) expect(c.people).toBe(byPlace.get(c.place));
-    expect(cityPlaces().map((c) => c.place)).toEqual([...byPlace.keys()]);
+    expect(cityPlaces(1356).map((c) => c.place)).toEqual([...byPlace.keys()]);
     expect(cities.find((c) => c.name === 'Texcoco')!.people).toBe(68800 + 54000);
     expect(cities[0]).toMatchObject({ name: 'Cairo', people: 351200 });
   });
@@ -205,7 +208,7 @@ describe('the calibration of the cities', () => {
       expect(po.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
       expect(io.w_UB).toBe(0); expect(io.sb_other).toBe(0); expect(io.sb_inact).toBe(0);
       // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
-      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people)), 365, 30);
+      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length)), 365, 30);
       const p = on.parameters as Record<string, any>, ic = on.initial_conditions as Record<string, any>;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
       expect(p.theta_UB).toBeGreaterThan(0.5); expect(p.theta_UB).toBeLessThan(0.55);
@@ -214,7 +217,7 @@ describe('the calibration of the cities', () => {
       expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
       expect(ic.w_UB * 365).toBeCloseTo(p.theta_UB * sum(a.wages) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
-      const year = calibrateEconomy(cityTable(withBenefit, c.people));
+      const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length));
       expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
       expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
       // Between the two: with the benefit households spend from an income that includes the benefit of the one
@@ -341,7 +344,7 @@ describe('the economy engine (WebAssembly)', () => {
     const table = readTable();
     table.cities.unemployment_benefit.value = 0.55;
     const paid = THREE.map((x, k): CitySetup => {
-      const d = dailyEconomy(calibrateEconomy(cityTable(table, x.people)), 365, CLOCK.plan);
+      const d = dailyEconomy(calibrateEconomy(cityTable(table, x.people, x.working)), 365, CLOCK.plan);
       expect((d.parameters as any).theta_UB).toBeGreaterThan(0.5);
       return { parameters: JSON.stringify(d.parameters), initialConditions: JSON.stringify(d.initial_conditions), seed: 1356 + k };
     });
@@ -457,7 +460,8 @@ describe('the economy engine (WebAssembly)', () => {
 describe('the economies of the cities in the world', () => {
   // one world that runs 400 days, day by day (1356 is a leap year: day 365 is 31 December, day 366 is 1 January 1357)
   const run = newWorldState();
-  const N = run.w.cityEconomies.cities.length;
+  const CITIES = cityCalibrations(), N = CITIES.length; // the cities of this world: it is the reference world
+  if (run.s.seed !== REFERENCE.seed || run.s.startYear !== REFERENCE.year) throw new Error('the tests run the reference world');
   const at: Record<number, { hash: string; state: Uint8Array; figures: Float64Array; model: number }> = {};
   beforeAll(() => {
     for (let d = 1; d <= 400; d++) {
@@ -473,12 +477,13 @@ describe('the economies of the cities in the world', () => {
     expect(e.day).toBe(0); expect(e.halted).toBe(''); expect(e.years.length).toBe(0);
     expect(e.figures.length).toBe(N * FIGURES);
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    const setups = c.cities.map((x) => ({ parameters: x.parameters, initialConditions: x.initialConditions, seed: citySeed(s.seed, x.place) }));
+    expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
+    const setups = CITIES.map((x) => ({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) }));
     expect(Buffer.compare(e.model, w.economyEngine.create(setups, c.clock, c.rules))).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
   it('give every city random numbers of its own, from the seed of the world and its place', () => {
-    const seeds = run.w.cityEconomies.cities.map((x) => citySeed(1356, x.place));
+    const seeds = CITIES.map((x) => citySeed(1356, x.place));
     expect(new Set(seeds).size).toBe(N);
     for (const x of seeds) expect(Number.isSafeInteger(x) && x >= 0).toBe(true);
     expect(citySeed(1356, 4)).toBe(citySeed(1356, 4));
@@ -528,8 +533,8 @@ describe('the economies of the cities in the world', () => {
     // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
     // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
     const f = at[365].figures, share = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
-    const people = run.w.cityEconomies.cities.map((c) => c.people), largest = people.indexOf(Math.max(...people));
-    expect(run.w.names[run.w.cityEconomies.cities[largest].place]).toBe('Cairo');
+    const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
+    expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
     expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
     expect(share[largest]).toBeGreaterThan(0.75 * Math.max(...share));
   });
@@ -557,26 +562,34 @@ describe('the economies of the cities in the world', () => {
     loaded.economy.cities!.model[loaded.economy.cities!.model.length - 1] ^= 1;
     expect(hashState(loaded)).not.toBe(before);
   }, 30_000);
-  it('do not exist in a world that starts in another year', () => {
-    const { s, w } = newWorldState(1492, 1492);
+  it('do not exist in a world that starts in a year without its cities', () => {
+    const w = loadWorld(), s = createWorldState(w, { ...loadSetup(1356), year: 1400 }, 1356); // no file has the cities of 1400
     expect(s.economy.cities).toBeNull();
     days(s, w, 400);
     expect(s.economy.cities).toBeNull();
-    expect(placeDetail(s, w, w.cityEconomies.cities[0].place)!.cityEconomy).toBeUndefined();
+    expect(placeDetail(s, w, CITIES[0].place)!.cityEconomy).toBeUndefined();
+    expect(s.firm.size).toBe(0);
   });
-  it('are founded in a world that starts in 1291 too, which takes the tables of 1356 as placeholders', () => {
+  it('are founded in a world that starts in 1291 too: an economy in every place with a town, with the table of 1356 as a placeholder', () => {
     const { s, w } = newWorldState(1291, 1291);
-    const e = s.economy.cities!;
+    const e = s.economy.cities!, n = e.places.length;
     expect(s.startYear).toBe(1291);
+    expect(Array.from(e.places)).toEqual(cityPlaces(1291).map((c) => c.place));
+    expect(n).toBe(550); // 558 towns inside the world frame, some places hold two
     expect(e.day).toBe(0); expect(e.halted).toBe('');
-    expect(e.figures.length).toBe(N * FIGURES);
+    expect(e.figures.length).toBe(n * FIGURES);
     days(s, w, 35); // past the first plan of every firm
     expect(e.day).toBe(35); expect(e.halted).toBe('');
-    for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(35);
+    for (let k = 0; k < n; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(35);
     const c = w.economyEngine.checks(e.model);
     for (const x of c.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
-    expect(placeDetail(s, w, w.cityEconomies.cities[0].place)!.cityEconomy).toBeDefined();
-  }, 30_000);
+    expect(placeDetail(s, w, e.places[0])!.cityEconomy).toBeDefined();
+    // the economies are where the persons live: in every town of the world graphic with people, and nowhere else
+    expect(placeDetail(s, w, w.names.indexOf('London'))!.cityEconomy).toBeDefined();
+    expect(cityPlaces(1291).map((x) => x.name)).toContain('Bruges');
+    const noTown = Array.from({ length: w.L }, (_, i) => i).find((i) => s.place.pop[i] > 0 && !e.places.includes(i))!;
+    expect(placeDetail(s, w, noTown)!.cityEconomy).toBeUndefined();
+  }, 300_000);
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
     let calls = 0;
@@ -592,7 +605,7 @@ describe('the economies of the cities in the world', () => {
     expect(calls).toBe(1);
     expect(s.day).toBe(401);
     expect(e.years.length).toBe(0); // a year that was not computed has no row
-    expect(placeDetail(s, real, real.cityEconomies.cities[0].place)!.cityEconomy!.halted).toBe(e.halted);
+    expect(placeDetail(s, real, e.places[0])!.cityEconomy!.halted).toBe(e.halted);
     computeTo(s, real, 401); // not even with a working engine: halted economies stay as they were
     expect(s.economy.cities!.day).toBe(0);
   });
@@ -622,53 +635,12 @@ describe('the economies of the cities in the world', () => {
     expect(s.economy.cities!.halted).toBe('2 January 1356: the day ended without a GDP (not a number)');
     expect(s.economy.cities!.model).toBe(before);
   });
-
-  describe('in a world saved by an older build', () => {
-    it('are founded when a world from before the economy is loaded', () => {
-      const { s, w } = newWorldState();
-      const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.economy; old.v = 3;
-      const loaded = decodeState(encodeState(old));
-      expect(loaded.v).toBe(3); expect((loaded as any).economy).toBeUndefined();
-      expect(hashState(upgradeState(loaded, w))).toBe(hashState(s));
-    });
-    it("replace England's economy on the day the world has reached, each from its starting position", () => {
-      // the state of the yearly economy of England: a year, a model, 15 figures. Version 9 is the running world (the
-      // places of the whole globe, heads at 1:100, England's economy); versions 7 and 6 counted people of the time
-      // and take the steps to 9 first
-      const england = (v: number) => {
-        let old = decodeState(encodeState(run.s)) as any;
-        if (v < 9) old = countedInPeopleOfTheTime(old);
-        old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = v;
-        return upgradeState(decodeState(encodeState(old)), run.w, () => loadSetup(1356));
-      };
-      const loaded = england(9);
-      expect(STATE_VERSION).toBeGreaterThanOrEqual(10);
-      expect(loaded.v).toBe(STATE_VERSION);
-      expect(hashState(england(7))).toBe(hashState(loaded));
-      expect(hashState(england(6))).toBe(hashState(loaded));
-      expect((loaded.economy as any).england).toBeUndefined();
-      const e = loaded.economy.cities!;
-      expect(e.day).toBe(400); expect(e.years.length).toBe(0); expect(e.halted).toBe('');
-      for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0); // the days before are not computed
-      expect(Buffer.compare(e.model, newWorldState().s.economy.cities!.model)).toBe(0); // the cities of a new world
-      // it is the state of this world with the economies founded today
-      const founded = decodeState(encodeState(run.s)); foundEconomy(founded, run.w);
-      expect(hashState(loaded)).toBe(hashState(founded));
-      // from the next day on they compute: one period a day, and the upgraded world encodes as it runs
-      days(loaded, run.w, 5);
-      expect(loaded.economy.cities!.day).toBe(405);
-      expect(loaded.economy.cities!.figures[FIGURE.periods]).toBe(5);
-      const again = decodeState(encodeState(loaded));
-      days(again, run.w, 3); days(loaded, run.w, 3);
-      expect(hashState(again)).toBe(hashState(loaded));
-    }, 60_000);
-  });
 });
 
 describe('what a player sees of the economy', () => {
   it('is a section in every place with a city, and in no other place', () => {
     const { s, w } = newWorldState();
-    const places = w.cityEconomies.cities.map((c) => c.place);
+    const places = cityPlaces(1356).map((c) => c.place);
     let shown = 0;
     for (let i = 0; i < w.L; i++) {
       const d = placeDetail(s, w, i)!;
@@ -684,8 +656,8 @@ describe('what a player sees of the economy', () => {
   });
   it('shows the last 365 days of the city and its price level of today, new every day', () => {
     const { s, w } = newWorldState();
-    const london = w.names.indexOf('London'), k = w.cityOf[london];
-    const p = JSON.parse(w.cityEconomies.cities[k].parameters);
+    const london = w.names.indexOf('London'), k = cityAt(s.economy.cities!, london);
+    const p = cityCalibrations()[k].calibration.parameters as Record<string, any>;
     const d0 = placeDetail(s, w, london)!.cityEconomy!;
     expect(d0).toMatchObject({ day: 0, baseYear: 1356, scale: 0.01 });
     expect(d0.realGdp).toBeCloseTo(45247.8 * 60862 / 2583180, 3); // London's share of England's GDP at 1:100
