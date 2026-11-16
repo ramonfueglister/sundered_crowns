@@ -1,11 +1,13 @@
-// The houses of the near view. From afar a house that has fine blocks is drawn as a few blocks, like every other
-// house. Once the view is so near that its fine blocks would show, the houses in the picture are built again from
-// them, cell by cell of their piece, by workers off the page's thread, and dissolve into the picture while the far
-// houses of their cell dissolve out of it. Only what the picture shows is built this way: a house of fine blocks
-// takes some forty times the triangles of a far one. What the view leaves behind is let go again.
+// The near view of the towns. From afar a house that has fine blocks is drawn as a few blocks, like every other
+// house, and the paved ground as whole blocks. Once the view is so near that fine blocks would show, the cells of
+// the towns in the picture are built again from them, cell by cell of their piece, by workers off the page's thread:
+// the houses (which dissolve into the picture while the far houses of their cell dissolve out of it) and the fine
+// ground, which lies over the whole blocks (nearground.ts). Only what the picture shows is built this way: a house
+// of fine blocks takes many times the triangles of a far one. What the view leaves behind is let go again.
 import type * as THREE from 'three/webgpu';
 import type { Stage } from '../lookprobe/stage';
 import type { HousesDone, HousesJob } from './houses.worker';
+import type { Columns } from './nearground';
 import type { Lot } from './settle';
 import { FINE_UNTIL } from './zoom';
 
@@ -14,8 +16,12 @@ const AHEAD = 12, KEPT = 60;
 /** the fine houses of a cell take the place of its far ones over this many milliseconds */
 const DISSOLVE = 300;
 
-/** A cell of houses on the stage: its piece's group, the mesh of its far houses, their lots, how far it lies outside the picture and from its middle. */
-export interface HouseCell { key: string; group: THREE.Group; far: THREE.Mesh; lots: Lot[]; out: number; away: number }
+/**
+ * A cell of a town on the stage: its piece's group and the share of the picture's dots the piece is drawn on, the
+ * mesh of its far houses (none where no house of the cell has fine blocks) and their lots, the columns of its paved
+ * ground, and how far it lies outside the picture and from its middle.
+ */
+export interface HouseCell { key: string; group: THREE.Group; dots: readonly [number, number]; far?: THREE.Mesh; lots: Lot[]; ground?: Columns; out: number; away: number }
 interface State { cell: HouseCell; fine?: THREE.Mesh; asked: boolean; /** the share of the cell that shows its fine houses */ share: number }
 
 export interface Fine {
@@ -70,17 +76,17 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void })
       if (!goal && s.share === 0) letGo(s);
       fading ||= s.share > 0 && s.share < 1;
       // the two take each other's place dot by dot, within the dots their piece is drawn on
-      const [from, until] = (cell.far.userData.dots as THREE.Vector2).toArray(), mid = from + (until - from) * s.share;
-      cell.far.visible = s.share < 1; stage.dissolve(cell.far, mid, until);
+      const [from, until] = cell.dots, mid = from + (until - from) * s.share;
+      if (cell.far) { cell.far.visible = s.share < 1; stage.dissolve(cell.far, mid, until); }
       if (s.fine) { s.fine.visible = s.share > 0; stage.dissolve(s.fine, from, mid); }
     }
     // cells that left the stage: their meshes went with their piece, or go now
-    for (const [key, s] of states) if (!seen.has(key)) { letGo(s); s.cell.far.visible = true; states.delete(key); }
+    for (const [key, s] of states) if (!seen.has(key)) { letGo(s); if (s.cell.far) s.cell.far.visible = true; states.delete(key); }
     queue.sort((a, b) => b.cell.away - a.cell.away);
     while (idle.length && queue.length) {
       const s = queue.pop()!, id = nextId++;
       s.asked = true; jobs.set(id, s.cell.key);
-      idle.pop()!.postMessage({ id, lots: s.cell.lots } satisfies HousesJob);
+      idle.pop()!.postMessage({ id, lots: s.cell.lots, ground: s.cell.ground } satisfies HousesJob);
     }
     return { missing, fading };
   }

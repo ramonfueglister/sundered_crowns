@@ -7,6 +7,7 @@ import { type Ground, LAND_Y, Mat, N, SEA_Y } from '../../src/lookprobe/layout';
 import { heightOf, styleOf } from '../../src/buildings';
 import { coverLand } from '../../src/worldprobe/far';
 import { cellOf, loadWindow, projectionOf } from '../../src/worldprobe/region';
+import { columnsOf, pave } from '../../src/worldprobe/nearground';
 import { type Lot, type Site, raise, settle } from '../../src/worldprobe/settle';
 
 /** a level meadow with a lake, starting at world block (ox, 0) */
@@ -128,4 +129,62 @@ describe('the houses of the near view', () => {
       expect(Math.abs(top(far) - top(near))).toBeLessThan(1);
     }
   }, 60000);
+});
+
+describe('the ground of the near view', () => {
+  /** the meadow with its lake (world blocks 250 to 270 by 150 to 170), paved from 230 to 290 by 140 to 180 */
+  const town = (ox: number) => {
+    const g = ground(ox);
+    for (let z = 140; z < 180; z++) for (let x = 0; x < N; x++) if (x + ox >= 230 && x + ox < 290 && !g.wet[z * N + x]) g.mat[z * N + x] = Mat.Paved;
+    return g;
+  };
+  /** the fine ground of the cell at world block (wx, z) of a ground starting at (ox, 0) */
+  const cell = (ox: number, wx: number, z: number) => {
+    const b = new Batch(), columns = columnsOf(town(ox), wx - ox, z, 25, 'italy');
+    if (columns) pave(b, columns);
+    return b;
+  };
+  const span = (b: Batch, axis: number) => { let lo = Infinity, hi = -Infinity; for (let i = axis; i < b.pos.length; i += 3) { lo = Math.min(lo, b.pos[i]); hi = Math.max(hi, b.pos[i]); } return [lo, hi]; };
+
+  it('is built only where a cell has paved ground', () => {
+    expect(columnsOf(town(0), 100, 300, 25, 'italy')).toBeNull();
+    expect(cell(0, 100, 300).triangles).toBe(0);
+    expect(cell(0, 250, 150).triangles).toBeGreaterThan(0);
+  });
+
+  it('stays within its cell and over the whole blocks it lies on', () => {
+    const b = cell(0, 250, 150), [x0, x1] = span(b, 0), [z0, z1] = span(b, 2);
+    expect(x0).toBeGreaterThanOrEqual(250); expect(x1).toBeLessThanOrEqual(275);
+    expect(z0).toBeGreaterThanOrEqual(150); expect(z1).toBeLessThanOrEqual(175);
+    // a pane over the paving, a mooring post on it: under a block over the ground
+    expect(span(b, 1)[1]).toBeLessThan(LAND_Y + 1);
+  });
+
+  it('has a quay wall where the paving meets the water, and none along a meadow', () => {
+    // the lake's east shore lies in the cell from 250; the cell from 275 has the paving's edge to the meadow at 290
+    expect(span(cell(0, 250, 150), 1)[0]).toBeLessThan(SEA_Y);
+    const dry = cell(0, 275, 150);
+    expect(dry.triangles).toBeGreaterThan(0);
+    expect(span(dry, 1)[0]).toBeGreaterThanOrEqual(LAND_Y);
+  });
+
+  it('comes out the same on every ground that covers it', () => {
+    const a = cell(0, 250, 150), b = cell(200, 250, 150);
+    expect(a.triangles).toBe(b.triangles);
+    for (let i = 0; i < a.pos.length; i++) expect(a.pos[i] - b.pos[i]).toBeCloseTo(i % 3 === 0 ? 200 : 0, 6);
+    expect(a.col).toEqual(b.col);
+  });
+
+  it('lays no paving under a house, and costs a cell less than a great house of fine blocks', () => {
+    // a cell paved all over is the most ground a cell can have: the near view's budget is counted in houses
+    const g = ground(0);
+    for (let i = 0; i < N * N; i++) if (!g.wet[i]) g.mat[i] = Mat.Paved;
+    const all = new Batch(), built = new Batch();
+    pave(all, columnsOf(g, 300, 300, 25, 'italy')!);
+    pave(built, columnsOf(g, 300, 300, 25, 'italy', [{ x: 295, z: 305, w: 15, d: 10 }])!);
+    expect(all.triangles).toBeLessThan(16000);
+    // ten by ten columns of the house lie in the cell
+    expect(built.triangles).toBeLessThan(all.triangles * (1 - 90 / 625));
+    expect(built.triangles).toBeGreaterThan(all.triangles * (1 - 110 / 625));
+  });
 });

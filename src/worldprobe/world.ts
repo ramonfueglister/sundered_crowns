@@ -12,6 +12,7 @@ import { BARE, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, line
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
 import { type Lot, type Monument, type Settled, type Site, raise, settle } from './settle';
+import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
 /**
@@ -24,9 +25,9 @@ import { MONUMENTS, modelOf, styleOf } from '../buildings';
 export interface Piece { ox: number; oz: number; part: Part }
 /** the houses that have fine blocks are kept in cells of this many blocks a side */
 export const CELL = 25;
-/** A cell of houses: its middle on the ground, the houses as the far view shows them, and their lots. */
-export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[] }
-/** A piece of the world for the stage, with its cells of houses. */
+/** A cell of a town: its middle on the ground, its houses as the far view shows them and their lots, and the columns of its paved ground. */
+export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[]; ground?: Columns }
+/** A piece of the world for the stage, with the cells of its towns. */
 export interface WorldScene<S extends Shape = Batch> extends StageScene<S> { cells: Cell<S>[] }
 /** The window of whole-map cells that the ground starting at world block (ox, oz) needs. */
 export function windowOf(ox: number, oz: number): { gx0: number; gy0: number; w: number; h: number } {
@@ -304,16 +305,20 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / at(snow, x, z)) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
   const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
-  // the houses that have fine blocks stand in cells of their own, so that the near view can take them out cell by cell
-  const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), byCell = new Map<number, Lot[]>();
+  // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
+  // that the near view can build them again cell by cell
+  const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();
   for (const l of settled?.lots ?? []) {
     const k = Math.floor((l.x + l.w / 2 - part.x0) / CELL) + across * Math.floor((l.z + l.d / 2 - part.z0) / CELL);
     byCell.set(k, [...(byCell.get(k) ?? []), l]);
   }
-  for (const [k, lots] of byCell) {
+  if (settled) for (let k = 0; k < across * down; k++) {
+    const x0 = part.x0 + (k % across) * CELL, z0 = part.z0 + Math.floor(k / across) * CELL, lots = byCell.get(k) ?? [];
+    const ground = columnsOf(g, x0, z0, CELL, farm(x0 + CELL / 2, z0 + CELL / 2).region, settled.lots) ?? undefined;
+    if (!lots.length && !ground) continue;
     const far = new Batch();
     for (const l of lots) raise(far, l, 0);
-    cells.push({ x: part.x0 + ((k % across) + 0.5) * CELL, z: part.z0 + (Math.floor(k / across) + 0.5) * CELL, far, lots });
+    cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
   counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
