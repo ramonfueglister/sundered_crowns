@@ -1,11 +1,15 @@
 // Properties the map mode of the world must keep: whatever tiles have arrived, the picture is covered exactly once
 // (no hole, nothing drawn twice); the rules of the view change smoothly with its width; and the realms' map shows
 // the realms where they are.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { seeded } from '../../src/lookprobe/batch';
 import { layoutNames, nameSvg } from '../../src/worldprobe/names';
 import { distance, mapColours, paintRealms, realmNames } from '../../src/worldprobe/paint';
 import { cover, keyOf } from '../../src/worldprobe/pyramid';
+import { extentOf, heldIn } from '../../src/worldprobe/extent';
+import { FINER } from '../../src/worldprobe/land';
+import { type Index, projectionFrom } from '../../src/worldprobe/region';
 import { VIEW } from '../../src/lookprobe/layout';
 import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, PAPER_COARSEST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
 
@@ -40,6 +44,37 @@ describe('pyramid', () => {
       expect(shown.length).toBeGreaterThan(0);
       for (const t of shown) { expect(t.level).toBe(want); expect(inView(t.level, t.x, t.y)).toBe(true); }
     }
+  });
+});
+
+describe('the frame of the world', () => {
+  const projection = projectionFrom(JSON.parse(readFileSync('public/map/regions/world/index.json', 'utf8')) as Index, FINER), frame = extentOf(projection);
+
+  it('lies inside the land\'s data, from Iceland to Persia and from the North Cape to the equator', () => {
+    expect(frame.west).toBeGreaterThan(0); expect(frame.east).toBeLessThanOrEqual(projection.map[0]);
+    expect(frame.north).toBeGreaterThanOrEqual(0); expect(frame.south).toBeLessThan(projection.rows);
+    const inside = (lon: number, lat: number) => { const [u, v] = projection.cellOf(lon, lat); return u > frame.west && u < frame.east && v > frame.north && v < frame.south; };
+    for (const [lon, lat] of [[-21.9, 64.1], [-9.1, 38.7], [2.35, 48.85], [28.98, 41.01], [51.4, 35.7], [38.75, 9.0], [-16.0, 14.7]]) expect(inside(lon, lat), `${lon} ${lat}`).toBe(true);
+    // the Americas, India and China lie outside
+    for (const [lon, lat] of [[-74, 40.7], [-43.2, -22.9], [77.2, 28.6], [116.4, 39.9], [18.4, -33.9]]) expect(inside(lon, lat), `${lon} ${lat}`).toBe(false);
+  });
+
+  it('is shown from west to east by the widest view', () => {
+    const width = frame.east - frame.west;
+    expect(FARTHEST).toBeLessThanOrEqual(width); expect(FARTHEST).toBeGreaterThan(0.98 * width);
+  });
+
+  it('holds the picture inside it, and leaves a picture inside it where it is', () => {
+    const r = seeded(7), e = { west: 100, east: 900, north: 50, south: 650 };
+    for (let k = 0; k < 500; k++) {
+      const wide = r.range(10, 800), tall = r.range(10, 600), u = r.range(-500, 1500), v = r.range(-500, 1500), [hu, hv] = heldIn(e, u, v, wide, tall);
+      expect(hu - wide / 2).toBeGreaterThanOrEqual(e.west - 1e-9); expect(hu + wide / 2).toBeLessThanOrEqual(e.east + 1e-9);
+      expect(hv - tall / 2).toBeGreaterThanOrEqual(e.north - 1e-9); expect(hv + tall / 2).toBeLessThanOrEqual(e.south + 1e-9);
+      if (u - wide / 2 >= e.west && u + wide / 2 <= e.east) expect(hu).toBe(u);
+      if (v - tall / 2 >= e.north && v + tall / 2 <= e.south) expect(hv).toBe(v);
+    }
+    // a picture taller than the frame is held at its middle
+    expect(heldIn(e, 500, 0, 400, 2000)).toEqual([500, 350]);
   });
 });
 

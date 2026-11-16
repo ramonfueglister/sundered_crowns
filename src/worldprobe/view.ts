@@ -1,8 +1,9 @@
 // The world to travel through, on a canvas: the real world of 1356 in the look of the look probe, from a single town
-// to half the globe. It is a diorama of blocks, built in pieces around the place the camera looks at (pieces.ts);
+// to the whole width of its frame. It is a diorama of blocks, built in pieces around the place the camera looks at (pieces.ts);
 // farther out the same world is seen from farther away, with less and less detail and relief, until it lies flat
 // and the realms and their names show on it (realms.ts, names.ts). zoom.ts holds the rules of the change. To the
-// east and west the world goes round the globe without an end; in the north and south the picture stops at its edge.
+// east and west the data go round the globe, but the world ends at its frame (data/content/world_extent.json): the
+// picture stops at its edges.
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
@@ -16,6 +17,7 @@ import '@fontsource/eb-garamond/latin-ext-500.css';
 import { type Layout, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
+import { extentOf, heldIn } from './extent';
 import { projectionOf } from './region';
 import { FINER, blockOfCell, cellOfBlock } from './land';
 import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, realmsOf, reliefOf } from './zoom';
@@ -67,8 +69,10 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const stage = await createStage({ fixed: true, tall: 70, canvas: o.canvas }), canvas = stage.canvas;
   // the world's cells are its finest blocks, FINER to a cell of the land's data (land.ts)
   const projection = await projectionOf(name, base, FINER);
+  // the world's frame in cells (they run with the picture's sides), and the widest view: the frame's whole width
+  const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
-  let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(FARTHEST, Math.max(NEAREST, o.wide));
+  let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
   const realms = createRealms(stage, { region: name, base, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
@@ -77,9 +81,9 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   let laid: Layout = { step: 0, coarse: 1, homeX: 0, homeZ: 0 };
   const look = () => {
     const elevation = elevationOf(wide), aspect = canvas.clientWidth / canvas.clientHeight, squash = Math.sin((elevation * Math.PI) / 180);
-    // north and south of the world there is nothing: the picture stops at its edge (the map's rows run with the picture's)
-    const [u, v] = cellOfBlock(x, z), half = Math.min(projection.rows, wide / aspect / squash) / 2, held = Math.min(projection.rows - half, Math.max(half, v));
-    if (held !== v) [x, z] = blockOfCell(u, held);
+    // the picture stops at the edges of the world's frame (the map's rows and columns run with the picture's sides)
+    const [u0, v0] = cellOfBlock(x, z), [u, held] = heldIn(frame, u0, v0, wide, wide / aspect / squash);
+    if (held !== v0 || u !== u0) [x, z] = blockOfCell(u, held);
     const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
@@ -101,7 +105,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   /** zooms so that the ground under a point of the page stays under it */
   const zoom = (to: number, px: number, py: number) => {
     const before = offset(px, py);
-    wide = Math.min(FARTHEST, Math.max(NEAREST, to));
+    wide = Math.min(farthest, Math.max(NEAREST, to));
     const after = offset(px, py);
     move(before[0] - after[0], before[1] - after[1]);
   };
@@ -117,7 +121,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
       flight.since += dt;
       const p = smooth(0, 1, flight.since / FLIGHT), f = flight;
       x = f.x + (f.toX - f.x) * p; z = f.z + (f.toZ - f.z) * p;
-      wide = Math.min(FARTHEST, f.wide * (f.toWide / f.wide) ** p * f.rise ** Math.sin(Math.PI * p)); goal = wide; glide = [0, 0];
+      wide = Math.min(farthest, f.wide * (f.toWide / f.wide) ** p * f.rise ** Math.sin(Math.PI * p)); goal = wide; glide = [0, 0];
       if (p >= 1) flight = null;
       look(); note();
     }
@@ -130,15 +134,13 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const set = () => { if (!moving) { moving = true; requestAnimationFrame(step); } };
   const zoomTo = (factor: number, at = middle()) => {
     flight = null;
-    goal = Math.min(FARTHEST, Math.max(NEAREST, goal * factor)); about = at;
+    goal = Math.min(farthest, Math.max(NEAREST, goal * factor)); about = at;
     if (still) zoom(goal, ...at); else set();
   };
   /** sets the view gliding so that it comes to rest this far on */
   const push = (right: number, near: number) => { flight = null; if (still) move(right, near); else { glide = [glide[0] + right * GLIDE_EASE, glide[1] + near * GLIDE_EASE]; set(); } };
   const flyTo = (lon: number, lat: number, to: number) => {
-    // the place on the lap round the globe nearest the view
-    const [u, v] = projection.cellOf(lon, lat), [here] = cellOfBlock(x, z), lap = Number.isFinite(projection.round) ? Math.round((here - u) / projection.round) * projection.round : 0;
-    const [toX, toZ] = blockOfCell(u + lap, v), toWide = Math.min(FARTHEST, Math.max(NEAREST, to));
+    const [toX, toZ] = blockOfCell(...projection.cellOf(lon, lat)), toWide = Math.min(farthest, Math.max(NEAREST, to));
     if (still) { x = toX; z = toZ; wide = goal = toWide; look(); note(); return; }
     flight = { x, z, wide, toX, toZ, toWide, rise: Math.max(1, (Math.hypot(toX - x, toZ - z) * FLIGHT_SEES) / Math.max(wide, toWide)), since: 0 };
     set();

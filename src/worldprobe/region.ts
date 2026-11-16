@@ -156,8 +156,10 @@ export interface Projection {
   placeOf(u: number, v: number): [number, number];
 }
 /** `finer`: the cells counted are that many times finer than the region's own (see loadWindow). */
-export async function projectionOf(name: string, base = '/', finer = 1): Promise<Projection> {
-  const index = await indexOf(name, base), m = { ...index, cells: index.cells * finer };
+export const projectionOf = async (name: string, base = '/', finer = 1): Promise<Projection> => projectionFrom(await indexOf(name, base), finer);
+/** The projection of a region with this index. */
+export function projectionFrom(index: Index, finer = 1): Projection {
+  const m = { ...index, cells: index.cells * finer };
   return {
     cells: m.cells, round: m.worldW ? m.worldW * m.cells : Infinity, rows: (m.worldH ?? m.mapH) * m.cells, map: [m.mapW * m.cells, m.mapH * m.cells],
     cellOf: (lon, lat) => { const [x, y] = mapPixel(m, lon, lat); return [x * m.cells, y * m.cells]; },
