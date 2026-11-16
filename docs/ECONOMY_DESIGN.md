@@ -29,14 +29,14 @@ players and the AI of realms without a player act through the same commands.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Grain harvest per place | agreed, built and accepted by Ramon 14 Nov 2026; in the running world since then (world server redeployed, the public site follows with the rebuild) |
-| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world once the world server is redeployed |
+| 2 | Cultivated land per place | agreed by Ramon 14 Nov 2026 and built as proposed; in the running world since 15 Nov 2026 |
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
-| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
+| 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world since 16 Nov 2026 14:04 UTC (pull request 17 merged as 0b8db90, world server release 13, world Europa 1291 resumed at day 15 with the cities founded on that day; the 1291 world takes the 1356 tables as placeholders). Over decades the linked cities sank (section 5); feature 6 mends it |
 | 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built. Taken out again by feature 9 before it ever ran in the world |
-| 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built on the branch of features 5 and 6; not in the running world |
-| 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built on the same branch; not in the running world |
-| 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built on the same branch; not in the running world |
+| 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built; in the running world since 16 Nov 2026, with feature 5 |
+| 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built; in the running world since 16 Nov 2026, with feature 5 |
+| 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 
 ## 1. Grain harvest per place
 
@@ -838,7 +838,7 @@ standstill with its date.
 
 Status: built in the engine and in the game. Ramon decided on 15 November 2026 (17:15 UTC, "Ja, Städte ersetzen
 England") that in the game the largest cities each compute an economy of their own and trade with each other, and
-that England's economy as one whole goes. In the running world once the world server is redeployed. Player wiki:
+that England's economy as one whole goes. In the running world since 16 November 2026 (world server release 13). Player wiki:
 docs/wiki/wirtschaft/wirtschaft-der-staedte.md.
 
 Feature 6 (below) switched the model's unemployment benefit on in the calibration of every city. The tables of the
@@ -1131,8 +1131,7 @@ Status: built. Ramon agreed on 15 November 2026 (19:29 UTC): "das kannst du gern
 historisch gab es ja kein arbeitslosengeld? wie würde die wirschaft dann immer noch gehen?" So it is set for the
 time being, and what it stands for in 1356 is an open question of his (see "What it stands for" below). His
 condition for mending the slump of section 5 (18:34 UTC): "das muss aber in einklang mit dem echten urcode und dem
-paper passieren." In the running world together with feature 5 once the world server is redeployed; no state of a
-running world changes with it, because feature 5 is not live yet. Player wiki:
+paper passieren." It never ran in the world: feature 9 took it out before feature 5 went live. Player wiki:
 docs/wiki/wirtschaft/arbeitslosengeld-der-staedte.md.
 
 Since feature 9 (section 9) the cities pay no benefit any more: with wages in money (section 7) and the demand pull
@@ -1290,7 +1289,7 @@ and 0.6 % without work and the lowest city at 98 and 101.
 
 ## 7. The cities pay wages in money
 
-Status: built on the branch of features 5 and 6 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (07:05 UTC) on the card "Soll ich den Lohn in Geld als Feature 7 bauen?" with "Ja, Lohn in Geld
 bauen": only this, in the cities, with tests and numbers from the game; the price rule and the unemployment benefit
 stay, nothing goes live. Player wiki: docs/wiki/wirtschaft/lohn-in-geld.md.
@@ -1466,7 +1465,7 @@ The merchants' books are off by at most 2.5e-13. The output of the three runs li
 
 ## 8. The firms of the cities plan by the demand pull of CANVAS
 
-Status: built on the branch of features 5 to 7 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (12:12 UTC) on the card "Wie soll es mit der Wirtschaft der Städte weitergehen?" with
 "CANVAS-Preisregel bauen": only the price rule of CANVAS as feature 8, with tests and numbers from the game; the
 unemployment benefit stays, nothing goes live. Player wiki: docs/wiki/wirtschaft/preise-nach-absatz.md.
@@ -1643,7 +1642,7 @@ With feature 7 alone and no benefit the trial had output at 89.8 and the lowest 
 
 ## 9. The cities pay no unemployment benefit
 
-Status: built on the branch of features 5 to 8 (draft pull request 17), not in the running world. Ramon agreed on
+Status: built; in the running world since 16 November 2026 (pull request 17, world server release 13). Ramon agreed on
 16 November 2026 (12:53 UTC) on the card "Wähle den nächsten Schritt für die Wirtschaft der Städte" with
 "Arbeitslosengeld entfernen": the unemployment benefit of the cities is taken out as feature 9, with tests and
 numbers from the game; nothing goes live. It answers his objection of 15 November 2026 to feature 6 ("aber
