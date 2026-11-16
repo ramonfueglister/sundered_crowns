@@ -10,8 +10,8 @@ import type { Table } from './ecs';
  *  10: the cities have economies of their own that trade with each other and compute one period a day; England's
  *  economy is gone. 11: a world of 1291 has the persons of its own 30 cities of 1291. 12: the persons of the cities'
  *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
- *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the cultures and faiths of 1291
- *  (data/history/1291/peoples.json). 14: the family is the purse and a woman without a husband works (economy feature
+ *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the borders of its setup
+ *  again (Murcia to Castile). 14: the family is the purse and a woman without a husband works (economy feature
  *  11); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
 export const STATE_VERSION = 14;
 

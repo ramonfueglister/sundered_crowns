@@ -95,19 +95,27 @@ describe('the peoples of 1291', () => {
   it('give the kingdom of Murcia and Villena to Castile', () => {
     for (const n of ['Cieza', 'Mula', 'Villena', 'Almansa', 'Moya']) expect(owner(at(n)), n).toBe('castile');
   });
-  it('come into a world of 1291 that was founded with those of 1356 by the upgrade from 12', () => {
+  it('come into a world of 1291 by the upgrade from 12 only as borders: Murcia goes to Castile', () => {
     const old = structuredClone(s);
     old.v = 12;
     const aragon = old.realmText.findIndex((r) => r.key === 'aragon');
-    for (let i = 0; i < w.L; i++) {
-      old.place.culture[i] = ALL_CULTURES.indexOf(s1356.culture[i] ?? 'unknown');
-      old.place.faith[i] = FAITHS.findIndex((f) => f.id === s1356.faith[i]);
-    }
     for (const n of ['Cieza', 'Mula', 'Villena', 'Almansa', 'Moya']) old.place.owner[at(n)] = aragon;
     expect(hashState(old)).not.toBe(hashState(s));
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
+  });
+  it('leave the cultures and faiths a world of 1291 was founded with when it upgrades from 12', () => {
+    const old = structuredClone(s);
+    old.v = 12;
+    for (let i = 0; i < w.L; i++) {
+      old.place.culture[i] = ALL_CULTURES.indexOf(s1356.culture[i] ?? 'unknown');
+      old.place.faith[i] = FAITHS.findIndex((f) => f.id === s1356.faith[i]);
+    }
+    const culture = old.place.culture.slice(), faith = old.place.faith.slice();
+    const up = upgradeState(old, w, () => s1291);
+    expect(Array.from(up.place.culture)).toEqual(Array.from(culture));
+    expect(Array.from(up.place.faith)).toEqual(Array.from(faith));
   });
 });
 
