@@ -61,7 +61,7 @@ self.onmessage = async (e: MessageEvent<RealmsJob>) => {
     if (job.kind === 'names') {
       // only what the world shows is named: the frame (extent.ts) in map pixels
       const index = await indexOf(job.region, job.base), frame = extentOf(projectionFrom(index, 1 / index.cells));
-      return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? '')].length, frame).map((n) => ({ ...n, name: r.names[n.realm] })) });
+      return done({ names: realmNames(r, 4, (k) => r.names[k] ?? '', frame).map((n) => ({ ...n, name: r.names[n.realm] })) });
     }
     const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, job.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
