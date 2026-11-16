@@ -5,7 +5,8 @@
 // Until then the coarser piece stands in, and where that is missing too, finer pieces left from before. Pieces around
 // the picture are built ahead of need, and so are those of the step the view is about to change to. Where pieces
 // take the place of others, the new ones are dissolved into the picture while the old ones dissolve out of it.
-// The houses that have fine blocks lie in cells of their own on their piece: from near, fine.ts builds them again.
+// The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
+// builds them again.
 import type * as THREE from 'three/webgpu';
 import { N, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
@@ -36,8 +37,10 @@ export interface View { x: number; z: number; wide: number; aspect: number; pixe
 export interface Layout { step: number; coarse: number; homeX: number; homeZ: number }
 interface Held {
   group: THREE.Group; step: number; px: number; pz: number;
-  /** its cells of houses that have fine blocks, with their middles in finest blocks */
-  cells: (Pick<HouseCell, 'key' | 'far' | 'lots'> & { x: number; z: number })[];
+  /** the cells of its towns, with their middles in finest blocks */
+  cells: (Pick<HouseCell, 'key' | 'far' | 'lots' | 'ground'> & { x: number; z: number })[];
+  /** the share of the picture's dots it is drawn on, while it dissolves into the picture or out of it */
+  dots: [number, number];
   /** the last look that showed or asked for it */
   seen: number;
   /** whether the piece is part of the picture */
@@ -76,8 +79,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       else if (e.data.scene) {
         const group = stage.add(e.data.scene);
         group.visible = false;
-        const cells = e.data.scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: stage.more(group, c.far), lots: c.lots, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
-        held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, seen: looks, on: false });
+        const cells = e.data.scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
+        held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false });
         for (const [name, n] of Object.entries(e.data.scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
       }
       o.changed();
@@ -145,7 +148,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       h.group.visible = h.on || !!h.fade;
       if (!h.group.visible) continue;
       h.seen = looks; fading ||= !!h.fade;
-      stage.dissolve(h.group, h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1);
+      h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
+      stage.dissolve(h.group, ...h.dots);
       // a piece of another step is scaled to the stage's blocks; all sink towards the sea's level as the view widens
       const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);
       h.group.scale.set(f, tall, f);
@@ -153,7 +157,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     }
     // the houses of the pieces in the picture, from their fine blocks where the view is near
     const cells: HouseCell[] = [];
-    for (const h of held.values()) if (h.group.visible) for (const c of h.cells) cells.push({ key: c.key, group: h.group, far: c.far, lots: c.lots, out: beyond(v, c.x, c.z, CELL, HOUSE_LEAN), away: Math.hypot(c.x - v.x, c.z - v.z) });
+    for (const h of held.values()) if (h.group.visible) for (const c of h.cells) cells.push({ key: c.key, group: h.group, far: c.far, lots: c.lots, ground: c.ground, dots: h.dots, out: beyond(v, c.x, c.z, CELL, HOUSE_LEAN), away: Math.hypot(c.x - v.x, c.z - v.z) });
     const houses = fine.look(v.wide, cells);
     missing += houses.missing; fading ||= houses.fading; pieces.failed ||= fine.failed;
     // pieces the view no longer asks for leave the stage, those unused the longest first

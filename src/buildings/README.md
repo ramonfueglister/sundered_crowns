@@ -46,3 +46,16 @@ Each region goes through the same steps, and the next region starts only after R
 Order: Italy (Venice first), the Alps and Upper Germany, North Germany and the Hanse, France and England, Iberia,
 Byzantium and the Balkans, the Rus, the Islamic Mediterranean and the Near East. The rest of the world follows once
 it has settlement data.
+
+## The ground of the near view
+
+What the reference class shows between the houses and the water is built by `ground/` (`fineGround`) as a pure
+function per cell of the world: it reads the columns of its cell (`Column`: top height, wet, paved) and builds into
+a batch in the piece's coordinates, never beyond the cell's rectangle and never above a column's top but for the
+mooring posts, so that houses and figures keep standing. Everything random comes from world coordinates, so paving
+bonds, steps and posts agree across cell borders (tested). Parts: paving slabs on paved columns; the quay wall where
+a dry column meets the water (stone blocks in running bond under a pale coping); a flight of water steps every so
+often along a straight quay, and mooring posts along it; the measures and colours are a tradition's `quay` (Venice:
+`measures/venedig_1356.json` "kai", by assumption). The water keeps its own surface and material: `waterColourAt`
+gives the near view's banded colour for its corners, `waterFlecks` the streaks and spots as quads a hair over the
+wet columns, for a page that draws its water in one mesh. The near probe builds its quay and water this way.
