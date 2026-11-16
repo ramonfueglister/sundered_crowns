@@ -9,6 +9,7 @@ import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
 import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } from '../src/net/people';
+import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
 
 // local development: read ./.env if present (production hosts set real environment variables)
@@ -45,6 +46,13 @@ const http = createServer((req, res) => {
   if (person) {
     const d = personDetail(core.s, Number(person[1]), (i) => ALL_CULTURES[i] ?? 'unknown');
     if (d) { res.writeHead(200, h); res.end(JSON.stringify(d)); return; }
+  }
+  // the land register (src/net/lots.ts): the parcels of a town, for the houses of the world graphic
+  const lots = /^\/lots\/(\d+)$/.exec(req.url ?? ''), manyLots = /^\/lots\?sites=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
+  if (lots && Number(lots[1]) <= 0x7fff) { res.writeHead(200, h); res.end(JSON.stringify(townLots(core.s, Number(lots[1])))); return; }
+  if (manyLots) {
+    const sites = manyLots[1].split(',').map(Number);
+    if (sites.length <= MAX_SITES_PER_REQUEST && sites.every((x) => x <= 0x7fff)) { res.writeHead(200, h); res.end(JSON.stringify(manyTownsLots(core.s, sites))); return; }
   }
   res.writeHead(404, h); res.end('{"error":"not found"}');
 });

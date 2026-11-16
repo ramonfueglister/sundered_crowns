@@ -15,8 +15,9 @@ import type { Table } from './ecs';
  *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
  *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
- *  history are named. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 16;
+ *  history are named. 17: the land register (src/sim/systems/lots.ts): every family of a town has a parcel.
+ *  Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 17;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -92,8 +93,32 @@ export const FAMILY_SCHEMA = {
   /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
    *  and their savings */
   income: 'f32', spent: 'f32', savings: 'f32',
+  /** the parcel the family lives on (the land register below, src/sim/systems/lots.ts), NO_LOT when it has none.
+   *  Several families may share a parcel; at the founding each has its own */
+  lot: 'i32',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
+/** `lot` of a family without a parcel. */
+export const NO_LOT = -1;
+/** The land register (settlement feature 1, src/sim/systems/lots.ts): every piece of ground of a town that somebody
+ *  or something holds. A row is never freed, so the id of a parcel stays the parcel. */
+export const LOT_SCHEMA = {
+  /** what stands on the ground (LOT_KIND) */
+  kind: 'u8',
+  /** the place of the map the ground lies in, and the town it belongs to: its index into data/content/gazetteer.json
+   *  (the `site` of src/sim/content/cities.ts; a place may hold several towns) */
+  place: 'i16', site: 'i16',
+  /** the middle of the ground: metres east and south of the centre of the town, at the scale of the houses */
+  x: 'f32', z: 'f32',
+  /** metres along the street and metres deep */
+  w: 'f32', d: 'f32',
+  /** the side the street lies on (FRONT in src/sim/settlement/rule.ts: 0 north, 1 east, 2 south, 3 west) */
+  front: 'u8',
+} as const;
+export type LotSchema = typeof LOT_SCHEMA;
+/** What a row of the land register is. Only parcels exist yet; walls, gates, bridges, streets, squares and
+ *  landmarks get their numbers when their features are built. */
+export const LOT_KIND = { parcel: 0 } as const;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -170,6 +195,8 @@ export interface WorldState {
   firm: Table<FirmSchema>;
   /** the persons of history (the rulers), src/sim/systems/rulers.ts */
   named: NamedPerson[];
+  /** the land register: the parcels of the towns (src/sim/systems/lots.ts) */
+  lot: Table<LotSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

@@ -1,0 +1,1107 @@
+{
+ "year": 1300,
+ "source": "Cesaretti, Lobo, Bettencourt, Ortman & Smith (2016), PLOS ONE 11(10): e0162678, dataset S1 (CC BY 4.0)",
+ "note": "written by tools/history/1291/settled_area.py; law: ln A = ln a_ha + beta ln N over the 173 towns (A settled hectares, N inhabitants); towns: the inhabitants and settled hectares the dataset gives for a town of src/sim/content/cities_1291.json (site = its index into data/content/gazetteer.json)",
+ "law": {
+  "a_ha": 0.119409,
+  "beta": 0.7141,
+  "se_beta": 0.0264384,
+  "r2": 0.810113,
+  "n": 173,
+  "sd_ln": 0.314218
+ },
+ "towns": [
+  {
+   "site": 0,
+   "name": "Calais",
+   "as": "Calais",
+   "people": 12000,
+   "area_ha": 50.0
+  },
+  {
+   "site": 2,
+   "name": "Saint-Omer",
+   "as": "Saint-Omer",
+   "people": 35000,
+   "area_ha": 120.0
+  },
+  {
+   "site": 9,
+   "name": "Arras",
+   "as": "Arras",
+   "people": 30000,
+   "area_ha": 182.0
+  },
+  {
+   "site": 18,
+   "name": "Amiens",
+   "as": "Amiens",
+   "people": 21000,
+   "area_ha": 140.0
+  },
+  {
+   "site": 35,
+   "name": "Rouen",
+   "as": "Rouen",
+   "people": 40000,
+   "area_ha": 224.0
+  },
+  {
+   "site": 36,
+   "name": "Beauvais",
+   "as": "Beauvais",
+   "people": 15500,
+   "area_ha": 103.0
+  },
+  {
+   "site": 45,
+   "name": "Reims",
+   "as": "Reims",
+   "people": 20000,
+   "area_ha": 240.0
+  },
+  {
+   "site": 63,
+   "name": "Châlons",
+   "as": "Chalons-sur-Marne",
+   "people": 10000,
+   "area_ha": 100.0
+  },
+  {
+   "site": 68,
+   "name": "Paris",
+   "as": "Paris",
+   "people": 200000,
+   "area_ha": 800.0
+  },
+  {
+   "site": 86,
+   "name": "Provins",
+   "as": "Provins",
+   "people": 10000,
+   "area_ha": 146.0
+  },
+  {
+   "site": 94,
+   "name": "Chartres",
+   "as": "Chartres",
+   "people": 8700,
+   "area_ha": 60.0
+  },
+  {
+   "site": 103,
+   "name": "Troyes",
+   "as": "Troyes",
+   "people": 25000,
+   "area_ha": 120.0
+  },
+  {
+   "site": 109,
+   "name": "Sens",
+   "as": "Sens",
+   "people": 5000,
+   "area_ha": 32.0
+  },
+  {
+   "site": 125,
+   "name": "Orléans",
+   "as": "Orleans",
+   "people": 21700,
+   "area_ha": 150.0
+  },
+  {
+   "site": 146,
+   "name": "Blois",
+   "as": "Blois",
+   "people": 5000,
+   "area_ha": 32.0
+  },
+  {
+   "site": 155,
+   "name": "Tours",
+   "as": "Tours",
+   "people": 24000,
+   "area_ha": 175.0
+  },
+  {
+   "site": 161,
+   "name": "Dijon",
+   "as": "Dijon",
+   "people": 17300,
+   "area_ha": 104.0
+  },
+  {
+   "site": 164,
+   "name": "Besançon",
+   "as": "Besancon",
+   "people": 10200,
+   "area_ha": 99.0
+  },
+  {
+   "site": 174,
+   "name": "Bourges",
+   "as": "Bourges",
+   "people": 16300,
+   "area_ha": 115.0
+  },
+  {
+   "site": 182,
+   "name": "Autun",
+   "as": "Autun",
+   "people": 7000,
+   "area_ha": 80.0
+  },
+  {
+   "site": 190,
+   "name": "Chalon-sur-Saône",
+   "as": "Chalon-sur-Saone",
+   "people": 3000,
+   "area_ha": 24.0
+  },
+  {
+   "site": 195,
+   "name": "Poitiers",
+   "as": "Poitiers",
+   "people": 15000,
+   "area_ha": 200.0
+  },
+  {
+   "site": 212,
+   "name": "Mâcon",
+   "as": "Macon",
+   "people": 4000,
+   "area_ha": 36.0
+  },
+  {
+   "site": 230,
+   "name": "Limoges",
+   "as": "Limoges",
+   "people": 4000,
+   "area_ha": 75.0
+  },
+  {
+   "site": 232,
+   "name": "Clermont",
+   "as": "Clermont-Ferrand",
+   "people": 8300,
+   "area_ha": 38.0
+  },
+  {
+   "site": 233,
+   "name": "Lyon",
+   "as": "Lyon",
+   "people": 20000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 239,
+   "name": "Angoulême",
+   "as": "Angouleme",
+   "people": 5000,
+   "area_ha": 40.0
+  },
+  {
+   "site": 248,
+   "name": "Vienne",
+   "as": "Vienne",
+   "people": 4500,
+   "area_ha": 36.0
+  },
+  {
+   "site": 263,
+   "name": "Grenoble",
+   "as": "Grenoble",
+   "people": 3000,
+   "area_ha": 20.0
+  },
+  {
+   "site": 264,
+   "name": "Périgueux",
+   "as": "Perigueux",
+   "people": 8000,
+   "area_ha": 70.0
+  },
+  {
+   "site": 267,
+   "name": "Le Puy",
+   "as": "Le Puy",
+   "people": 6000,
+   "area_ha": 50.0
+  },
+  {
+   "site": 271,
+   "name": "Valence",
+   "as": "Valence",
+   "people": 5000,
+   "area_ha": 40.0
+  },
+  {
+   "site": 278,
+   "name": "Bordeaux",
+   "as": "Bordeaux",
+   "people": 30000,
+   "area_ha": 197.5
+  },
+  {
+   "site": 296,
+   "name": "Cahors",
+   "as": "Cahors",
+   "people": 4500,
+   "area_ha": 45.0
+  },
+  {
+   "site": 301,
+   "name": "Rodez",
+   "as": "Rodez",
+   "people": 5000,
+   "area_ha": 35.0
+  },
+  {
+   "site": 307,
+   "name": "Agen",
+   "as": "Agen",
+   "people": 6000,
+   "area_ha": 60.0
+  },
+  {
+   "site": 325,
+   "name": "Avignon",
+   "as": "Avignon",
+   "people": 23200,
+   "area_ha": 151.0
+  },
+  {
+   "site": 326,
+   "name": "Albi",
+   "as": "Albi",
+   "people": 10700,
+   "area_ha": 98.0
+  },
+  {
+   "site": 347,
+   "name": "Arles",
+   "as": "Arles",
+   "people": 6700,
+   "area_ha": 40.0
+  },
+  {
+   "site": 353,
+   "name": "Montpellier",
+   "as": "Montpellier",
+   "people": 40000,
+   "area_ha": 150.0
+  },
+  {
+   "site": 356,
+   "name": "Toulouse",
+   "as": "Toulouse",
+   "people": 33000,
+   "area_ha": 250.5
+  },
+  {
+   "site": 360,
+   "name": "Aix",
+   "as": "Aix-en-Provence",
+   "people": 6000,
+   "area_ha": 42.0
+  },
+  {
+   "site": 375,
+   "name": "Béziers",
+   "as": "Beziers",
+   "people": 15000,
+   "area_ha": 99.0
+  },
+  {
+   "site": 378,
+   "name": "Marseille",
+   "as": "Marseilles",
+   "people": 19500,
+   "area_ha": 84.0
+  },
+  {
+   "site": 382,
+   "name": "Tarbes",
+   "as": "Tarbes",
+   "people": 4000,
+   "area_ha": 38.0
+  },
+  {
+   "site": 384,
+   "name": "Carcassonne",
+   "as": "Carcassone",
+   "people": 10000,
+   "area_ha": 68.0
+  },
+  {
+   "site": 386,
+   "name": "Narbonne",
+   "as": "Narbonne",
+   "people": 30000,
+   "area_ha": 150.0
+  },
+  {
+   "site": 388,
+   "name": "Pamiers",
+   "as": "Pamiers",
+   "people": 3500,
+   "area_ha": 33.0
+  },
+  {
+   "site": 452,
+   "name": "Brugge",
+   "as": "Bruges",
+   "people": 45000,
+   "area_ha": 300.0
+  },
+  {
+   "site": 460,
+   "name": "Ghent",
+   "as": "Ghent",
+   "people": 60000,
+   "area_ha": 362.0
+  },
+  {
+   "site": 462,
+   "name": "Mechelen",
+   "as": "Mechlin",
+   "people": 10000,
+   "area_ha": 105.0
+  },
+  {
+   "site": 476,
+   "name": "Ypres",
+   "as": "Ypres",
+   "people": 30000,
+   "area_ha": 250.0
+  },
+  {
+   "site": 490,
+   "name": "Lille",
+   "as": "Lille",
+   "people": 30000,
+   "area_ha": 120.0
+  },
+  {
+   "site": 491,
+   "name": "Liège",
+   "as": "Liege",
+   "people": 15000,
+   "area_ha": 200.0
+  },
+  {
+   "site": 493,
+   "name": "Tournai",
+   "as": "Tournai",
+   "people": 35000,
+   "area_ha": 175.0
+  },
+  {
+   "site": 498,
+   "name": "Namur",
+   "as": "Namur",
+   "people": 14400,
+   "area_ha": 75.0
+  },
+  {
+   "site": 500,
+   "name": "Mons",
+   "as": "Mons",
+   "people": 10000,
+   "area_ha": 150.0
+  },
+  {
+   "site": 572,
+   "name": "Newcastle upon Tyne",
+   "as": "Newcastle-upon-Tyne",
+   "people": 9900,
+   "area_ha": 90.0
+  },
+  {
+   "site": 602,
+   "name": "York",
+   "as": "York",
+   "people": 22700,
+   "area_ha": 135.0
+  },
+  {
+   "site": 608,
+   "name": "Kingston upon Hull",
+   "as": "Kingston-upon-Hull",
+   "people": 3800,
+   "area_ha": 35.0
+  },
+  {
+   "site": 637,
+   "name": "Lincoln",
+   "as": "Lincoln",
+   "people": 12300,
+   "area_ha": 115.0
+  },
+  {
+   "site": 640,
+   "name": "Chester",
+   "as": "Chester",
+   "people": 3300,
+   "area_ha": 53.0
+  },
+  {
+   "site": 650,
+   "name": "Boston",
+   "as": "Boston",
+   "people": 6200,
+   "area_ha": 40.0
+  },
+  {
+   "site": 651,
+   "name": "Nottingham",
+   "as": "Nottingham",
+   "people": 4200,
+   "area_ha": 63.0
+  },
+  {
+   "site": 665,
+   "name": "King's Lynn",
+   "as": "King’s Lynn",
+   "people": 6900,
+   "area_ha": 95.0
+  },
+  {
+   "site": 667,
+   "name": "Shrewsbury",
+   "as": "Shrewsbury",
+   "people": 5700,
+   "area_ha": 58.0
+  },
+  {
+   "site": 677,
+   "name": "Norwich",
+   "as": "Norwich",
+   "people": 14000,
+   "area_ha": 185.0
+  },
+  {
+   "site": 678,
+   "name": "Leicester",
+   "as": "Leicester",
+   "people": 5400,
+   "area_ha": 75.0
+  },
+  {
+   "site": 680,
+   "name": "Great Yarmouth",
+   "as": "Great Yarmouth",
+   "people": 7000,
+   "area_ha": 80.0
+  },
+  {
+   "site": 688,
+   "name": "Coventry",
+   "as": "Coventry",
+   "people": 9500,
+   "area_ha": 85.0
+  },
+  {
+   "site": 703,
+   "name": "Bury St Edmunds",
+   "as": "Bury St Edmunds",
+   "people": 5800,
+   "area_ha": 78.0
+  },
+  {
+   "site": 704,
+   "name": "Northampton",
+   "as": "Northampton",
+   "people": 4200,
+   "area_ha": 90.0
+  },
+  {
+   "site": 706,
+   "name": "Cambridge",
+   "as": "Cambridge",
+   "people": 6900,
+   "area_ha": 88.0
+  },
+  {
+   "site": 708,
+   "name": "Worcester",
+   "as": "Worcester",
+   "people": 3700,
+   "area_ha": 40.0
+  },
+  {
+   "site": 715,
+   "name": "Ipswich",
+   "as": "Ipswich",
+   "people": 5300,
+   "area_ha": 90.0
+  },
+  {
+   "site": 716,
+   "name": "Hereford",
+   "as": "Hereford",
+   "people": 5500,
+   "area_ha": 75.0
+  },
+  {
+   "site": 728,
+   "name": "Colchester",
+   "as": "Colchester",
+   "people": 3500,
+   "area_ha": 60.0
+  },
+  {
+   "site": 730,
+   "name": "Gloucester",
+   "as": "Gloucester",
+   "people": 7200,
+   "area_ha": 75.0
+  },
+  {
+   "site": 740,
+   "name": "Oxford",
+   "as": "Oxford",
+   "people": 9800,
+   "area_ha": 94.0
+  },
+  {
+   "site": 753,
+   "name": "London",
+   "as": "London & Southwark",
+   "people": 70000,
+   "area_ha": 330.0
+  },
+  {
+   "site": 759,
+   "name": "Bristol",
+   "as": "Bristol",
+   "people": 14400,
+   "area_ha": 130.0
+  },
+  {
+   "site": 766,
+   "name": "Canterbury",
+   "as": "Canterbury",
+   "people": 8800,
+   "area_ha": 110.0
+  },
+  {
+   "site": 780,
+   "name": "Salisbury",
+   "as": "Salisbury",
+   "people": 7700,
+   "area_ha": 83.0
+  },
+  {
+   "site": 782,
+   "name": "Winchester",
+   "as": "Winchester",
+   "people": 9500,
+   "area_ha": 100.0
+  },
+  {
+   "site": 790,
+   "name": "Southampton",
+   "as": "Southampton",
+   "people": 3500,
+   "area_ha": 35.0
+  },
+  {
+   "site": 799,
+   "name": "Exeter",
+   "as": "Exeter",
+   "people": 3700,
+   "area_ha": 40.0
+  },
+  {
+   "site": 820,
+   "name": "Stralsund",
+   "as": "Stralsund",
+   "people": 12000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 828,
+   "name": "Greifswald",
+   "as": "Greifswald",
+   "people": 8000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 829,
+   "name": "Rostock",
+   "as": "Rostock",
+   "people": 14000,
+   "area_ha": 98.0
+  },
+  {
+   "site": 836,
+   "name": "Wismar",
+   "as": "Wismar",
+   "people": 8000,
+   "area_ha": 58.0
+  },
+  {
+   "site": 837,
+   "name": "Lübeck",
+   "as": "Luebeck",
+   "people": 23600,
+   "area_ha": 200.0
+  },
+  {
+   "site": 853,
+   "name": "Hamburg",
+   "as": "Hamburg",
+   "people": 8000,
+   "area_ha": 88.0
+  },
+  {
+   "site": 866,
+   "name": "Lüneburg",
+   "as": "Lueneburg",
+   "people": 8000,
+   "area_ha": 56.0
+  },
+  {
+   "site": 875,
+   "name": "Bremen",
+   "as": "Bremen",
+   "people": 12000,
+   "area_ha": 70.0
+  },
+  {
+   "site": 905,
+   "name": "Hanover",
+   "as": "Hannover",
+   "people": 5000,
+   "area_ha": 54.0
+  },
+  {
+   "site": 909,
+   "name": "Osnabrück",
+   "as": "Osnabrueck",
+   "people": 9000,
+   "area_ha": 98.0
+  },
+  {
+   "site": 911,
+   "name": "Brunswick",
+   "as": "Braunschweig",
+   "people": 12000,
+   "area_ha": 115.0
+  },
+  {
+   "site": 924,
+   "name": "Münster",
+   "as": "Muenster",
+   "people": 16000,
+   "area_ha": 140.0
+  },
+  {
+   "site": 930,
+   "name": "Halberstadt",
+   "as": "Halberstadt",
+   "people": 6000,
+   "area_ha": 89.0
+  },
+  {
+   "site": 946,
+   "name": "Paderborn",
+   "as": "Paderborn",
+   "people": 7000,
+   "area_ha": 70.0
+  },
+  {
+   "site": 952,
+   "name": "Soest",
+   "as": "Soest",
+   "people": 11500,
+   "area_ha": 111.0
+  },
+  {
+   "site": 957,
+   "name": "Dortmund",
+   "as": "Dortmund",
+   "people": 7000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 969,
+   "name": "Leipzig",
+   "as": "Leipzig",
+   "people": 3000,
+   "area_ha": 42.0
+  },
+  {
+   "site": 976,
+   "name": "Mühlhausen",
+   "as": "Muehlhausen",
+   "people": 7500,
+   "area_ha": 50.0
+  },
+  {
+   "site": 980,
+   "name": "Bautzen",
+   "as": "Bautzen",
+   "people": 5000,
+   "area_ha": 70.0
+  },
+  {
+   "site": 983,
+   "name": "Görlitz",
+   "as": "Goerlitz",
+   "people": 7000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 993,
+   "name": "Erfurt",
+   "as": "Erfurt",
+   "people": 23300,
+   "area_ha": 133.0
+  },
+  {
+   "site": 998,
+   "name": "Cologne",
+   "as": "Koeln",
+   "people": 54000,
+   "area_ha": 400.0
+  },
+  {
+   "site": 1010,
+   "name": "Aachen",
+   "as": "Aachen",
+   "people": 20000,
+   "area_ha": 175.0
+  },
+  {
+   "site": 1039,
+   "name": "Frankfurt am Main",
+   "as": "Frankfurt am Main",
+   "people": 13000,
+   "area_ha": 128.0
+  },
+  {
+   "site": 1045,
+   "name": "Mainz",
+   "as": "Mainz",
+   "people": 24500,
+   "area_ha": 120.0
+  },
+  {
+   "site": 1053,
+   "name": "Bamberg",
+   "as": "Bamberg",
+   "people": 8000,
+   "area_ha": 75.0
+  },
+  {
+   "site": 1057,
+   "name": "Würzburg",
+   "as": "Wuerzburg",
+   "people": 7000,
+   "area_ha": 72.0
+  },
+  {
+   "site": 1058,
+   "name": "Trier",
+   "as": "Trier",
+   "people": 12700,
+   "area_ha": 133.0
+  },
+  {
+   "site": 1065,
+   "name": "Worms",
+   "as": "Worms",
+   "people": 18700,
+   "area_ha": 170.0
+  },
+  {
+   "site": 1070,
+   "name": "Nuremberg",
+   "as": "Nuernberg",
+   "people": 13000,
+   "area_ha": 149.0
+  },
+  {
+   "site": 1092,
+   "name": "Metz",
+   "as": "Metz",
+   "people": 26800,
+   "area_ha": 160.0
+  },
+  {
+   "site": 1099,
+   "name": "Regensburg",
+   "as": "Regensburg",
+   "people": 11000,
+   "area_ha": 95.0
+  },
+  {
+   "site": 1107,
+   "name": "Nördlingen",
+   "as": "Noerdlingen",
+   "people": 10000,
+   "area_ha": 93.0
+  },
+  {
+   "site": 1131,
+   "name": "Strasbourg",
+   "as": "Strasbourg",
+   "people": 20000,
+   "area_ha": 270.0
+  },
+  {
+   "site": 1145,
+   "name": "Ulm",
+   "as": "Ulm",
+   "people": 7300,
+   "area_ha": 75.0
+  },
+  {
+   "site": 1147,
+   "name": "Augsburg",
+   "as": "Augsburg",
+   "people": 25000,
+   "area_ha": 189.0
+  },
+  {
+   "site": 1203,
+   "name": "Konstanz",
+   "as": "Konstanz",
+   "people": 6000,
+   "area_ha": 50.0
+  },
+  {
+   "site": 1210,
+   "name": "Basel",
+   "as": "Basel",
+   "people": 11000,
+   "area_ha": 75.0
+  },
+  {
+   "site": 1222,
+   "name": "Zürich",
+   "as": "Zurich",
+   "people": 9500,
+   "area_ha": 70.0
+  },
+  {
+   "site": 1284,
+   "name": "Geneva",
+   "as": "Geneva",
+   "people": 3500,
+   "area_ha": 45.0
+  },
+  {
+   "site": 1310,
+   "name": "Como",
+   "as": "Como",
+   "people": 12000,
+   "area_ha": 96.0
+  },
+  {
+   "site": 1316,
+   "name": "Bergamo",
+   "as": "Bergamo",
+   "people": 12000,
+   "area_ha": 119.0
+  },
+  {
+   "site": 1320,
+   "name": "Monza",
+   "as": "Monza",
+   "people": 9000,
+   "area_ha": 56.0
+  },
+  {
+   "site": 1322,
+   "name": "Vicenza",
+   "as": "Vicenza",
+   "people": 20000,
+   "area_ha": 84.0
+  },
+  {
+   "site": 1324,
+   "name": "Brescia",
+   "as": "Brescia",
+   "people": 45000,
+   "area_ha": 252.0
+  },
+  {
+   "site": 1327,
+   "name": "Milan",
+   "as": "Milano",
+   "people": 150000,
+   "area_ha": 500.0
+  },
+  {
+   "site": 1329,
+   "name": "Venice",
+   "as": "Venezia",
+   "people": 110000,
+   "area_ha": 324.0
+  },
+  {
+   "site": 1330,
+   "name": "Verona",
+   "as": "Verona",
+   "people": 40000,
+   "area_ha": 380.0
+  },
+  {
+   "site": 1332,
+   "name": "Padua",
+   "as": "Padova",
+   "people": 40000,
+   "area_ha": 300.0
+  },
+  {
+   "site": 1342,
+   "name": "Pavia",
+   "as": "Pavia",
+   "people": 20000,
+   "area_ha": 158.0
+  },
+  {
+   "site": 1345,
+   "name": "Mantua",
+   "as": "Mantova",
+   "people": 30000,
+   "area_ha": 215.0
+  },
+  {
+   "site": 1347,
+   "name": "Cremona",
+   "as": "Cremona",
+   "people": 45000,
+   "area_ha": 165.0
+  },
+  {
+   "site": 1353,
+   "name": "Piacenza",
+   "as": "Piacenza",
+   "people": 23000,
+   "area_ha": 290.0
+  },
+  {
+   "site": 1366,
+   "name": "Ferrara",
+   "as": "Ferrara",
+   "people": 12000,
+   "area_ha": 150.0
+  },
+  {
+   "site": 1367,
+   "name": "Parma",
+   "as": "Parma",
+   "people": 25000,
+   "area_ha": 201.0
+  },
+  {
+   "site": 1370,
+   "name": "Reggio",
+   "as": "Reggio Emilia",
+   "people": 13000,
+   "area_ha": 100.0
+  },
+  {
+   "site": 1374,
+   "name": "Modena",
+   "as": "Modena",
+   "people": 19000,
+   "area_ha": 150.0
+  },
+  {
+   "site": 1378,
+   "name": "Bologna",
+   "as": "Bologna",
+   "people": 50000,
+   "area_ha": 419.0
+  },
+  {
+   "site": 1379,
+   "name": "Ravenna",
+   "as": "Ravenna",
+   "people": 12000,
+   "area_ha": 110.0
+  },
+  {
+   "site": 1380,
+   "name": "Genova",
+   "as": "Genova",
+   "people": 60000,
+   "area_ha": 220.0
+  },
+  {
+   "site": 1388,
+   "name": "Faenza",
+   "as": "Faenza",
+   "people": 10000,
+   "area_ha": 80.0
+  },
+  {
+   "site": 1390,
+   "name": "Forlì",
+   "as": "Forli",
+   "people": 14000,
+   "area_ha": 99.0
+  },
+  {
+   "site": 1396,
+   "name": "Rimini",
+   "as": "Rimini",
+   "people": 14000,
+   "area_ha": 48.0
+  },
+  {
+   "site": 1402,
+   "name": "Pistoia",
+   "as": "Pistoia",
+   "people": 12000,
+   "area_ha": 115.5
+  },
+  {
+   "site": 1404,
+   "name": "Prato",
+   "as": "Prato",
+   "people": 13000,
+   "area_ha": 66.0
+  },
+  {
+   "site": 1406,
+   "name": "Lucca",
+   "as": "Lucca",
+   "people": 25000,
+   "area_ha": 95.0
+  },
+  {
+   "site": 1410,
+   "name": "Florence",
+   "as": "Firenze",
+   "people": 110000,
+   "area_ha": 630.0
+  },
+  {
+   "site": 1412,
+   "name": "Pisa",
+   "as": "Pisa",
+   "people": 30000,
+   "area_ha": 185.0
+  },
+  {
+   "site": 1421,
+   "name": "Arezzo",
+   "as": "Arezzo",
+   "people": 18000,
+   "area_ha": 107.0
+  },
+  {
+   "site": 1428,
+   "name": "Siena",
+   "as": "Siena",
+   "people": 50000,
+   "area_ha": 180.0
+  }
+ ]
+}
