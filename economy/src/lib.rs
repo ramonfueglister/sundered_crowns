@@ -30,6 +30,10 @@ pub struct Economy {
 
 /// Number of key figures of [`Economy::figures`].
 pub const FIGURES: usize = 16;
+/// Numbers of a worker, of a firm and of another person in [`Economy::agents`].
+pub const WORKER: usize = 5;
+pub const FIRM: usize = 8;
+pub const PERSON: usize = 3;
 
 /// The sum of a series of the national accounts over the last `window` periods. While fewer periods are computed,
 /// the first row (the starting position) stands for the periods before the start.
@@ -131,6 +135,49 @@ impl Economy {
     /// uses, real GDP against its uses (summed over the rows of the national accounts that are kept), the balance
     /// sheet of the central bank, the combined balance sheet of the banks; then nominal GDP summed over those rows,
     /// as the scale to judge the first three by.
+    /// The persons and the firms of the economy one by one (economy feature 10): what the world writes to the persons
+    /// and firms of its city after every day. First four counts: the workers, the firms, the banks and the persons
+    /// who do not work, each in the order of the port's lists (a position in a list never changes: the cities of the
+    /// game neither add nor delete an agent). Then, with amounts of money in the units of the calibration and flows
+    /// for the last period:
+    ///
+    /// - for every worker [`WORKER`] numbers: the firm that employs the person (its position, −1 without work), the
+    ///   wage in money for the period before tax (0 without work), the disposable income (A.53), the deposits (A.54)
+    ///   and what the person spent on consumption (A.48);
+    /// - for every firm [`FIRM`] numbers: the sector, the employees (A.24), the production (A.13), the price (A.8),
+    ///   the wage in money it pays a person for the period, and of its owner the income, the deposits and the
+    ///   consumption;
+    /// - for the owner of every bank and for every person who does not work [`PERSON`] numbers: the income, the
+    ///   deposits and the consumption.
+    ///
+    /// The wage a firm pays is what the port books for the period: the firm's real wage of the period, which holds
+    /// the effort of its people (A.26), times the consumer price level at the end of the period (A.53 computes the
+    /// worker's income from it). Where the firms pay wages in money ([`clock::DailyClock::pay_in_money`]) the real
+    /// wage is the wage in money over the price level at the start of the period, so the amount paid is the wage in
+    /// money times the effort times the change of the price level within the period. In the starting position no
+    /// period is computed and nothing is paid yet: the wage is 0.
+    pub fn agents(&self) -> Vec<f64> {
+        let m = &self.model;
+        let (w, f, b, x) = (&m.w_act, &m.firms, &m.banks, &m.w_inact);
+        let pay = |i: usize| f.w_i[i] * m.agg.P_bar_HH;
+        let mut v = Vec::with_capacity(4 + WORKER * w.len() + FIRM * f.len() + PERSON * (b.Y_h.len() + x.len()));
+        v.extend([w.len() as f64, f.len() as f64, b.Y_h.len() as f64, x.len() as f64]);
+        for h in 0..w.len() {
+            let firm = w.O_h[h].map(|id| f.index(id));
+            v.extend([firm.map_or(-1.0, |i| i as f64), firm.map_or(0.0, pay), w.Y_h[h], w.D_h[h], w.C_h[h]]);
+        }
+        for i in 0..f.len() {
+            v.extend([f.G_i[i] as f64, f.N_i[i] as f64, f.Y_i[i], f.P_i[i], pay(i), f.Y_h[i], f.D_h[i], f.C_h[i]]);
+        }
+        for k in 0..b.Y_h.len() {
+            v.extend([b.Y_h[k], b.D_h[k], b.C_h[k]]);
+        }
+        for h in 0..x.len() {
+            v.extend([x.Y_h[h], x.D_h[h], x.C_h[h]]);
+        }
+        v
+    }
+
     pub fn checks(&self) -> [f64; 6] {
         let (a, b, c) = get_accounting_identities(&self.model.data);
         let (cb, banks) = get_accounting_identity_banks(&self.model);
@@ -356,6 +403,18 @@ pub mod abi {
     pub unsafe extern "C" fn sce_figures(state: *const u8, len: usize) -> u32 {
         hook();
         answer(look(unsafe { bytes(state, len) }, |all| floats(all.cities.iter().flat_map(Economy::figures))))
+    }
+
+    /// Result: the persons and firms of every city of a state one by one, as 64-bit floats: the lists of
+    /// [`Economy::agents`], one city after the other.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`].
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_agents(state: *const u8, len: usize) -> u32 {
+        hook();
+        answer(look(unsafe { bytes(state, len) }, |all| floats(all.cities.iter().flat_map(Economy::agents))))
     }
 
     /// Result: what must be 0 in a state, as 64-bit floats: for every city the six numbers of [`Economy::checks`],

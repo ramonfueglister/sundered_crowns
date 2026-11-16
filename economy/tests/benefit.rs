@@ -52,7 +52,9 @@ fn no_city_of_the_game_pays_a_person_without_work() {
 
 #[test]
 fn a_person_without_work_has_no_income_and_buys_nothing() {
-    for seed in [1356, 1357, 1358] {
+    // seeds with which somebody is without work on more than 100 of the 730 days, so the rule is seen at work
+    // (measured with London as the reference world has it since feature 10: five of the eight seeds 1356 to 1363)
+    for seed in [1356, 1359, 1360] {
         let mut e = city("London", seed);
         let p = e.model.prop.clone();
         let (mut days_with, mut most) = (0, 0);

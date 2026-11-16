@@ -445,7 +445,7 @@ between countries; nothing a player does reaches it; none of the deviations belo
 
 **Calibration.** The port computes its parameters from national accounts (its `src/calibration.rs`). The table
 `data/economy/england_1356.json` holds every input with its source, or marked as an assumption;
-`tools/sim/economy_calibration.ts` applies the port's formulas and `npm run economy:calibrate` writes
+`src/sim/economy/calibration.ts` applies the port's formulas and `npm run economy:calibrate` writes
 `public/data/economy_england.json` (the port's `Parameters` and `InitialConditions`). A test fails if the file no
 longer follows from the table. Three sectors (agriculture, industry, services); amounts in pounds of 1356.
 
@@ -657,7 +657,7 @@ numbers bit for bit (tested).
 - Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
   all firms planning on the first day, and three of the seven conversions below.
 
-**From the year to the day** (`dailyEconomy` in `tools/sim/economy_calibration.ts`; the table of sources
+**From the year to the day** (`dailyEconomy` in `src/sim/economy/calibration.ts`; the table of sources
 `data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
 and 30 days between two plans, from Eurace@Unibi).
 
@@ -940,7 +940,7 @@ Chandler, the places that have persons). Two of them, Texcoco and Tenayuca, lie 
 one economy, so there are 29 economies. Together they have 2,572,165 people, by chance almost the people of England
 in the table (2,583,180).
 
-**Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `tools/sim/economy_calibration.ts`,
+**Calibration of a city** (`data/economy/england_1356.json`, section `cities`; `src/sim/economy/calibration.ts`,
 `cityTable`). Two assumptions, both marked as such in the table (feature 6 adds a third, the unemployment
 benefit; section 6):
 
@@ -1159,7 +1159,7 @@ laid off more. In the original this loop is cut by the benefit: a person who los
 more than half the income. The cities on their own did not sink only because the port's rest of the world paid them
 coin from nowhere; the merchants of feature 5 closed that, as they were meant to, and the missing benefit showed.
 
-### Calibration (`data/economy/england_1356.json`, `tools/sim/economy_calibration.ts`)
+### Calibration (`data/economy/england_1356.json`, `src/sim/economy/calibration.ts`)
 
 | Entry | Value | Kind |
 |---|---|---|
@@ -1664,7 +1664,7 @@ person without work, so the share they consume of it (`psi`) and the share they 
 higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
 
 The calibration tool still computes the benefit of the original code when the table asks for it
-(`unemploymentBenefit` in `tools/sim/economy_calibration.ts`), and the engine still computes such cities.
+(`unemploymentBenefit` in `src/sim/economy/calibration.ts`), and the engine still computes such cities.
 
 ### Why the cities hold without it
 

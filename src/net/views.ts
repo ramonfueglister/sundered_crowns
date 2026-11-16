@@ -3,6 +3,7 @@ import type { WorldState } from '../sim/state';
 import type { World } from '../sim/world';
 import type { CityEconomyDetail, PlaceDetail, RealmInfo } from './protocol';
 import { FIGURE, FIGURES } from '../sim/economy/engine';
+import { cityAt } from '../sim/systems/economy';
 import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
@@ -25,7 +26,7 @@ export function realmInfos(s: WorldState, rulerName: (uid: string) => string | n
 
 /** The economy of the city of a place; undefined for a place without a city and in a world without economies. */
 export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEconomyDetail | undefined {
-  const e = s.economy.cities, k = w.cityOf[i];
+  const e = s.economy.cities, k = e ? cityAt(e, i) : -1;
   if (!e || k < 0) return undefined;
   const f = e.figures.subarray(k * FIGURES, (k + 1) * FIGURES), F = FIGURE;
   return {
