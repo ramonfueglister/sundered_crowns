@@ -101,13 +101,25 @@ class Head:
         return (R[i0, j0] * (1 - fi) * (1 - fj) + R[i0 + 1, j0] * fi * (1 - fj)
                 + R[i0, j0 + 1] * (1 - fi) * fj + R[i0 + 1, j0 + 1] * fi * fj)
 
-    def covered(self, reach, soft, where=None):
+    def covered(self, reach, soft, where=None, trend=0.0):
         """The skin as hair lying over it takes it: by direction the farthest skin within `reach` degrees, then
         evened out over `soft` degrees. Hair that follows the skin itself stands off at an ear as a wing, and
         dips in behind it; over this it passes the ear in one bow. `where(th, el)`: how much of that is taken at
-        a direction (0: the skin itself, 1: all of it), everywhere if left out."""
+        a direction (0: the skin itself, 1: all of it), everywhere if left out. `trend`: the farthest skin is
+        looked for in what the skin stands off its own mean over so many degrees, not in the skin's distance
+        itself: from the head's middle the neck is further away the lower one looks, and "the farthest within
+        reach" lifts hair off the whole neck by what the neck gains over `reach` degrees (hair that ends above
+        the neck needs none of this: 0)."""
         k = max(1, int(round(reach / self.step)))
         R = self.R[:-1]                                   # round the head: the last column is the first again
+        def even(a, over):
+            g = np.exp(-0.5 * (np.arange(-int(3 * over / self.step), int(3 * over / self.step) + 1) * self.step / max(over, 1e-6)) ** 2); g /= g.sum()
+            n = len(g) // 2
+            a = np.stack([np.convolve(np.concatenate([c[-n:], c, c[:n]]), g, 'valid') for c in a.T], 1)
+            return np.stack([np.convolve(np.pad(r, n, mode='edge'), g, 'valid') for r in a])
+        skin = R
+        low = even(R, trend) if trend > 0 else 0 * R
+        R = R - low
         far = R.copy()
         for i in range(-k, k + 1):
             for j in range(-k, k + 1):
@@ -119,7 +131,8 @@ class Head:
         n = len(g) // 2
         far = np.stack([np.convolve(np.concatenate([c[-n:], c, c[:n]]), g, 'valid') for c in far.T], 1)
         far = np.stack([np.convolve(np.pad(r, n, mode='edge'), g, 'valid') for r in far])
-        far = np.maximum(far, R)
+        far = np.maximum(far, R) + low
+        R = skin
         if where is not None:
             far = R + (far - R) * where(*np.meshgrid(self.TH[:-1], self.EL, indexing='ij'))
         other = Head.__new__(Head)
@@ -222,17 +235,23 @@ LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest 
 LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
 
 
-def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0):
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0):
     """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
     wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
     times as high, `m` corners from flank to flank. Its image's length part lies back and forth
     along the lock (once back and forth over about two `vlen`), its frayed part over the lock's two ends: the
     beginning (`root`: the share of the lock's length, at most so long, and how much of its breadth and of its
-    height it has at the very beginning) and the end (`tip`, the same four). A ring of corners at every place
+    height it has at the very beginning) and the end (`tip`, the same four; a fifth, 0: the end is drawn with the
+    length's part, whole to its last ring: hair that is gathered there, not cut). A ring of corners at every place
     where the image turns, and between them one every `ring` at most. A lock lies the higher over the skin the
-    further it has run from its root (`layer`: lowest, highest, the run over which it rises), as hair rooted
+    further it has run from its root (`layer`: lowest, highest, the run over which it rises; a fourth number: how
+    much higher still for every unit it has run, for long hair that is drawn to one place: there the locks that
+    have come furthest lie on top, and at one height they cut through each other in jagged lines), as hair rooted
     higher up lies on the hair rooted below it; each lock a little higher or lower by `jitter`. `wave` as for
-    cards. `over`: the skin the locks lie over, if not the head's own (`Head.covered`). Returns bands for
+    cards. `over`: the skin the locks lie over, if not the head's own (`Head.covered`). `back`: a lock begins so
+    far before the middle of its strands' roots, against the way it sets off (the roots of a wisp lie on a patch
+    of skin as broad as the wisp, and the band begins in that patch's middle: along a parting the locks of either
+    side began a finger's breadth off it, a bare strip between two rows of ends). Returns bands for
     write_tubes(closed=False)."""
     over = head if over is None else over
     steps = S.shape[1] - 1
@@ -250,6 +269,9 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         Sj = Sj + (c0[None] - Sj) * cl
         b0 = unit(np.cross(unit(np.gradient(c0, axis=0)), unit(c0 - head.hc)))
         w0 = np.clip(spread * np.sqrt((((Sj - c0[None]) * b0[None]).sum(-1) ** 2).mean(0)), wmin, wmax)
+        if back > 0:
+            c0 = np.concatenate([c0[:1] - unit(c0[1] - c0[0])[None] * back, c0])
+            w0 = np.concatenate([w0[:1], w0])
         run0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c0, axis=0), axis=1))])
         total = max(run0[-1], 1e-6)
         rl, el = min(root[0] * total, root[1]), min(tip[0] * total, tip[1])
@@ -264,6 +286,8 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         r = np.clip(run / rl, 0, 1)                                 # 0..1 along the beginning
         e = np.clip((run - (total - el)) / el, 0, 1)                # 0..1 along the end
         h = layer[0] + (layer[1] - layer[0]) * (1 - np.exp(-run / layer[2])) + rng.uniform(-jitter, jitter)
+        if len(layer) > 3:
+            h = h + layer[3] * run
         if wave is not None:
             ramp = np.clip(run / (0.5 * wave[2]), 0, 1)
             ph = rng.uniform(0, 2 * np.pi, 2)
@@ -276,7 +300,9 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         dd = unit(q - head.hc)
         rings = head.hc + dd * (over.skin(dd) + h[:, None] + ht[:, None] * (2 * np.cos(turn)[None, :] - 1))[..., None]
         x = 1 + (run - rl) * 2 * half / body
-        v = np.where(run < rl, LOCK_END - (LOCK_END - LOCK_BODY) * r, np.where(run > total - el, LOCK_BODY + (LOCK_END - LOCK_BODY) * e, LOCK_BODY * (1 - np.abs(x % 2 - 1))))
+        along = LOCK_BODY * (1 - np.abs(x % 2 - 1))
+        frayed = LOCK_BODY + (LOCK_END - LOCK_BODY) * e if len(tip) < 5 or tip[4] else along
+        v = np.where(run < rl, LOCK_END - (LOCK_END - LOCK_BODY) * r, np.where(run > total - el, frayed, along))
         uv = np.stack(np.broadcast_arrays(u_round[None, :] + rng.random(), v[:, None]), -1)
         cc = head.hc + n0 * (over.skin(n0) + h)[:, None]
         bands.append((rings, uv, cc))

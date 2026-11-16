@@ -118,7 +118,7 @@
    "bytes": 58785
   },
   {
-   "name": "bob01_rope.txt.zst",
+   "name": "bob01_locks.txt.zst",
    "bytes": 379389
   },
   {
@@ -130,7 +130,7 @@
    "bytes": 58785
   },
   {
-   "name": "bob02_rope.txt.zst",
+   "name": "bob02_locks.txt.zst",
    "bytes": 379437
   },
   {
@@ -142,7 +142,7 @@
    "bytes": 53257
   },
   {
-   "name": "bob03_rope.txt.zst",
+   "name": "bob03_locks.txt.zst",
    "bytes": 403263
   },
   {
@@ -154,7 +154,7 @@
    "bytes": 47367
   },
   {
-   "name": "bob04_rope.txt.zst",
+   "name": "bob04_locks.txt.zst",
    "bytes": 360572
   },
   {
@@ -166,7 +166,7 @@
    "bytes": 58785
   },
   {
-   "name": "bob05_rope.txt.zst",
+   "name": "bob05_locks.txt.zst",
    "bytes": 501251
   },
   {
@@ -178,7 +178,7 @@
    "bytes": 58785
   },
   {
-   "name": "bob06_rope.txt.zst",
+   "name": "bob06_locks.txt.zst",
    "bytes": 348753
   },
   {
@@ -190,7 +190,7 @@
    "bytes": 58785
   },
   {
-   "name": "bob07_rope.txt.zst",
+   "name": "bob07_locks.txt.zst",
    "bytes": 410051
   },
   {
@@ -322,12 +322,12 @@
    "bytes": 20765
   },
   {
-   "name": "plait01.txt.zst",
-   "bytes": 317603
-  },
-  {
    "name": "plait01_cap.txt",
    "bytes": 67945
+  },
+  {
+   "name": "plait01_locks.txt.zst",
+   "bytes": 384427
   },
   {
    "name": "plait01_rope.txt.zst",
@@ -486,12 +486,10 @@
   "eyeball.webp",
   "eyebrow001.webp",
   "eyebrow1356.webp",
-  "hair1356_rope.webp",
-  "hair1356_rope_n.webp",
-  "plait01.webp",
+  "hair1356_locks.webp",
+  "hair1356_locks_n.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",
-  "plait01_n.webp",
   "plait01_rope.webp",
   "receding01.webp",
   "receding01_cap.webp",

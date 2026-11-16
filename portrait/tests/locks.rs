@@ -22,7 +22,7 @@ fn len(a: V3) -> f32 {
 }
 
 /// The image all locks of England's hair are drawn with (`DressSet::lock_image`).
-const IMAGE: &str = "/hair1356_rope.";
+const IMAGE: &str = "/hair1356_locks.";
 /// The share of the image's height that is a lock's length; below it its frayed end
 /// (`tools/portrait/pipeline/hairlib.py` `LOCK_BODY`, `LOCK_END`).
 const LOCK_BODY: f32 = 0.75;
@@ -110,5 +110,45 @@ fn locks_lie_on_a_head_of_any_size() {
         let fringe = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
         let ends = (crown - fringe) / (crown - out.chin);
         assert!((0.27..0.42).contains(&ends), "{who}: the fringe ends {ends} of the head's height below the crown");
+    }
+}
+
+#[test]
+fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
+    // Until round 88 the hair of a girl's head was cards, as a man's was: blotched from the side where cards
+    // lay over each other, a ragged tuft at the ear where it is gathered. Now it is locks, laid for hair that is
+    // long, parted in the middle and drawn to one place below each ear (`styles.py`, style `plait`).
+    let Some(h) = head() else { return };
+    for (k, age) in [(0u32, 8.0f32), (2, 13.0), (4, 17.0), (14, 8.0), (16, 13.0), (18, 17.0), (6, 19.0)] {
+        let out = build(&h, &person(k, true, age), 1);
+        let who = format!("girl {k} of {age}");
+        let hair = locks(&out).unwrap_or_else(|| panic!("{who}: locks"));
+        assert!(hair.mat.double, "{who}: a lock is seen from both sides");
+        let named = |part: &str| out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(part)));
+        assert!(named("/plait01_cap.") && named("/plait01_rope."), "{who}: the painted layer and the plaits");
+        assert!(!named("/plait01."), "{who}: no cards beside the locks");
+        let (skin, crown) = skin(&out);
+        let height = crown - out.chin;
+        // sleek: the hair lies closer to the skull than a man's cut (that: 1.0 to 1.5 cm over the crown)
+        let top = hair.pos.iter().map(|p| p[1]).fold(f32::MIN, f32::max);
+        assert!((0.03..0.09).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
+        // parted: no fringe, the forehead is free
+        let upper = crown - 0.3 * height;
+        let broad = skin.pos.iter().filter(|p| p[1] > upper).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let front = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
+        assert!((crown - front) / height < 0.2, "{who}: hair on the forehead down to {} of the head's height", (crown - front) / height);
+        // the locks of either side meet in the parting: a lock begins before its strands' roots, so the
+        // beginnings of both sides reach across the head's middle (300 to 370 triangles; begun at the middle of
+        // their roots, a finger's breadth off the parting, 0 to 85: a bare strip between two rows of ends)
+        let on_top = |p: &V3| p[1] > crown - 0.12 * height;
+        let across = hair.pos.chunks_exact(3).zip(hair.uv.chunks_exact(3)).filter(|(t, u)| u.iter().any(|u| u[1] > LOCK_END - 1e-3) && t.iter().all(on_top) && t.iter().any(|p| p[0] > out.cx) && t.iter().any(|p| p[0] < out.cx)).count();
+        assert!(across > 200, "{who}: {across} triangles of a lock's beginning lie across the parting");
+        // drawn to the plait below the ear, on the neck: the lower part of the hair is nowhere further than
+        // 1.8 cm from the skin (1.4 to 1.5; over "the farthest skin within reach", which the neck's slope
+        // lifts, 2.0 to 2.4: a sheet of hair under the jaw)
+        let low = hair.pos.iter().map(|p| p[1]).fold(f32::MAX, f32::min);
+        assert!((0.65..0.84).contains(&((crown - low) / height)), "{who}: the hair ends {} of the head's height below the crown", (crown - low) / height);
+        let off = hair.pos.iter().filter(|p| p[1] < crown - 0.62 * height).step_by(3).map(|p| skin.pos.iter().map(|q| len(sub(*p, *q))).fold(f32::MAX, f32::min)).fold(0f32, f32::max);
+        assert!(off < 0.18, "{who}: hair {off} off the skin below the ear");
     }
 }

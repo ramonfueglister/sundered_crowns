@@ -15,8 +15,8 @@ import type { PortraitSurface } from './wire';
 
 /** What kind of surface an image belongs to, in the order Apoleia's bridge asks. Brows and lashes are known by
  *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
- *  hair card. The round strands of a plait and the locks of a head's hair (`..._rope`) are hair that is solid: no
- *  card, nothing shows through but where the image is empty (a lock's frayed ends). */
+ *  hair card. The round strands of a plait (`..._rope`) and the locks of a head's hair (`..._locks`) are hair that
+ *  is solid: no card, nothing shows through but where the image is empty (a lock's frayed ends). */
 export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {
@@ -24,7 +24,7 @@ export function surfaceKind(s: PortraitSurface): SurfaceKind {
   if (!path) return 'plain';
   if (path.includes('/cloth_')) return 'cloth';
   if (path.includes('_cap.')) return 'cap';
-  if (path.includes('_rope.')) return 'rope';
+  if (path.includes('_rope.') || path.includes('_locks.')) return 'rope';
   if (path.includes('/eyeball')) return 'eyeball';
   if ((s.double && path.includes('/eye')) || path.includes('/Eye')) return 'brow';
   if (s.double) return 'cards';

@@ -224,3 +224,12 @@ counted: a plait's strands stay one-sided). `dress.rs`: `DressSet::lock_image` (
 `hair1356_rope_n.webp`; gone `bob01.txt.zst` to `bob07.txt.zst` and their images (England's own files of
 cards; Apoleia's hairstyles are untouched). `tests/locks.rs` (new, 2 tests). The game's stage cuts solid hair
 out where its image is empty (`src/portrait/materials.ts`, `LOCK_OPAQUE`). Roman bytes unchanged.
+
+Round 88: `build.rs`: a hairstyle can have two files of solid hair, `<hair>_locks` (drawn with the dress set's
+lock image) and `<hair>_rope` (a plait's strands, with their own image); round 87's files and image are
+renamed to that (`bob01_locks.txt.zst` to `bob07_locks.txt.zst`, `hair1356_locks.webp`, `_n`). Pipeline:
+`hairlib.py` `locks_from_wisps` with `back=`, a rise per run in `layer`, a whole end in `tip`,
+`Head.covered(trend=)`; `styles.py` `write_locks` (the lock writing of the styles `bob` and `plait`), style
+`plait` writes locks with `PLAIT_LOCKS`. New file `plait01_locks.txt.zst`; gone `plait01.txt.zst` and its
+images (England's dress has no hair cards left; Apoleia's hairstyles are untouched). `tests/locks.rs`: a third
+test. The game's stage knows solid hair by either name. Roman bytes unchanged.

@@ -256,6 +256,8 @@ export const APOLEIA: StageProfile = {
  *  (materials.ts `rope`, cut out where the locks' image is empty: frayed ends), no longer cards: it throws
  *  a shadow on the forehead and each lock has a lit and a shaded flank. Nothing of this profile changed for
  *  it; hair above the brows reads 2 L darker (eight heads, median 25.5, with cards 27.3).
+ *  Round 88: the head hair of girls and young women is locks too, parted and drawn sleek to the plaits: no
+ *  hair of England's dress is cards any more (this profile's `cards` is the look of its solid hair).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {

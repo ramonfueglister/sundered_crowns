@@ -61,7 +61,10 @@ fn a_girl_of_england_wears_plaits_of_round_strands() {
         let out = build(&h, &person(k, true, age), 1);
         let named = |part: &str| out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(part)));
         let rope = named("/plait01_rope.").unwrap_or_else(|| panic!("girl {k}: the plaits' strands"));
-        assert!(named("/plait01.").is_some(), "girl {k}: the hair of the head");
+        // the hair of the head: locks since round 88 (tests/locks.rs), over its painted layer, no cards
+        assert!(named("/hair1356_locks.").is_some(), "girl {k}: the hair of the head");
+        assert!(named("/plait01_cap.").is_some(), "girl {k}: the painted layer under the hair");
+        assert!(named("/plait01.").is_none(), "girl {k}: no cards");
         assert!(!rope.mat.double, "girl {k}: a strand is solid");
         assert_eq!(rope.pos.len() % (STRANDS * 2 * ROUND * 3), 0, "girl {k}: six strands of eight corners");
         // closed and facing outward: the faces of a closed surface add up to nothing, and what they enclose has a

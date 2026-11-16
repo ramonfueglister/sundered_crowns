@@ -7,10 +7,11 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
 - Frisuren (crop01, roman01, curly01, receding01, bald01, sidepart01, bun01, braid01): Karten
   (`name.txt.zst`: je Ecke drei Kopf-Ecken, Gewichte, Versatz; `name.webp` Farbe mit Alpha,
   `name_n.webp` Normalen), bemalte Kappe (`name_cap.*`), Kopfhaut je Kopf-Ecke (`name_scalp.txt`).
-  Im Kleid England 1356 (bob01 bis bob07, plait01): das Kopfhaar von Männern, Knaben und Kleinkindern ist seit
-  Runde 87 Strähnen statt Karten (`bobNN_rope.txt.zst`: gewölbte Bänder, fest, mit Schatten; alle mit dem einen
-  Bild `hair1356_rope.webp`, dessen unteres Viertel die ausgefransten Enden sind), darunter die bemalte Kappe
-  (`bobNN_cap.*`). Die Zöpfe der Mädchen sind runde Stränge (`plait01_rope.*`), ihr Kopfhaar Karten (`plait01.*`).
+  Im Kleid England 1356 (bob01 bis bob07, plait01): das Kopfhaar besteht aus Strähnen statt Karten (Männer,
+  Knaben und Kleinkinder seit Runde 87, Mädchen und junge Frauen seit Runde 88): `<name>_locks.txt.zst`
+  (gewölbte Bänder, fest, mit Schatten; alle mit dem einen Bild `hair1356_locks.webp`, dessen unteres Viertel
+  die ausgefransten Enden sind), darunter die bemalte Kappe (`<name>_cap.*`). Die Zöpfe der Mädchen sind runde
+  Stränge (`plait01_rope.*`). Karten hat im Kleid England 1356 keine Frisur mehr.
 - Bärte (beard_stubble, beard_short, beard_full, beard_phil, beard_chin): wie die Frisuren.
   beard_crop (Vollbart im Kleid England 1356): ohne Karten, nur die bemalte Schicht, die von der Haut absteht.
   beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der

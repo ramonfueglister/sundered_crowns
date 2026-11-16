@@ -1797,7 +1797,7 @@ envelope let the fringe hang lower, so it is used from 35 degrees round the head
 | `bob03` (gone back at the temples), `bob04` (horseshoe) | 23 520, 35 840 | 28 640, 25 568 |
 | `bob05` (wavy) | 29 120 | 36 400 |
 
-All locks are drawn with one image (`hair1356_rope.webp`, 256 by 1024, 47 kB, with normals 9 kB;
+All locks are drawn with one image (`hair1356_locks.webp`, 256 by 1024, 47 kB, with normals 9 kB;
 `lock_tex.py`): 420 single hairs of 2.6 pixels side by side, drawn one over the other from the lowest to the
 topmost, the lower ones darker, with broad streaks of tone across the lock. Its upper three quarters are a
 lock's length, the same read downward and upward, and are laid back and forth along a lock of any length
@@ -1807,7 +1807,7 @@ with that part: the fringe is frayed, and so is the beginning of a lock on the c
 part it began as a blunt bar). The image's mean tone is 0.815 where it covers (the cards' 0.809), so that a
 person's hair colour stays what it was.
 
-In the builder the locks are a file of their own beside the painted layer (`bob01_rope.txt.zst`, read by
+In the builder the locks are a file of their own beside the painted layer (`bob01_locks.txt.zst`, read by
 `real_look.rs` `mh_rope` as a plait's strands are): a corner's direction is its own surface's. A surface
 that is not closed is drawn from both sides (the builder counts the edges: a plait's strand is closed and
 stays one-sided). A lock goes with the head ring by ring, and its way is evened out along it three times
@@ -1862,6 +1862,64 @@ scaly and has a ragged upper edge. The painted layer shows as a band at the nape
 relief is weaker than the reference's sculpted locks (the span above). A lock's sheen still takes its hairs
 as running down along the head. The hair of girls and young women (`plait01`) is cards as before. All
 measures PLACEHOLDER, by eye: no head of hair was measured, and the cuts themselves are unsourced as before.
+
+**A girl's hair, parted and drawn to her plaits, is locks (round 88).** Round 87 left the head hair of girls
+and young women as cards (320, under the plaits of round 86). Seen large from the side it was blotched: cards
+lie over each other at different depths and are blended in an order that is right for one of them only, so
+that patches of a centimetre stand dark in the hair; at the ear, where the hair is gathered, a tuft of card
+ends stood off; at the parting the outline had a notch (`runde88_maedchenhaar_vorher_nachher.png`, upper half).
+
+Now it is 300 locks (`styles.py`, style `plait` with `PLAIT_LOCKS`, written as `plait01_locks`; the lock files
+of round 87 are named `<hair>_locks` too since this round, and their image `hair1356_locks.webp`: `_rope` is
+the name of a plait's strands). The lock of a man's cut did not do for this hair, which is long, parted and
+drawn to one place below each ear. What was tried, in order:
+
+| trial | what showed |
+|---|---|
+| a man's locks as they were (breadth 2.6 to 4.2 cm, 10 % thick) | no blotches, no tuft; but ragged ends standing up along the parting, and under the jaw a sheet of hair standing off the neck |
+| the bow over the ear ended in the ear's height (none of it 40 degrees below level, all of it at 22) | the sheet gone, but small steps all over the hair above the plait |
+| a lock begins 1.5 cm before its strands' roots | the parting is a line: the locks of either side meet in it (a wisp's roots lie on a patch as broad as the wisp and the band began in that patch's middle, a finger's breadth off the parting) |
+| ends drawn whole, narrow, into the plait's beginning | no flap of frayed ends over the plait; the steps as before |
+| locks higher by 0.25 mm for every centimetre they have run, 6 % thick, each higher or lower by 0.3 mm only | the steps as before: they were not locks cutting through each other, as thought |
+| beginnings frayed over 6 cm, locks up to 5 cm broad | the steps as before, and a hole behind the ear: dropped |
+| the bow taken over the skin's own trend, down to the hair's end | the steps gone: they were the ear's own forms, which the hair followed where the bow ended. And the sheet's cause: from the head's middle the neck is further away the lower one looks (9.7 cm at 40 degrees below level, 12.7 at 60, beside the ear), and "the farthest skin within 8 degrees" lifts the hair by what the neck gains in 8 degrees, 1.3 cm in front of the ear's lobe. Left: a smaller sheet, and a sawtooth line where two neighbours of one height cut through each other |
+| that bow to below the ear's lobe (all of it above 42 degrees below level, none below 50), each lock higher or lower by 1 mm | as built: sleek to the plait, no steps, no sheet, no sawtooth |
+
+In `hairlib.py`: `locks_from_wisps(back=)`, a fourth number of `layer` (the rise per unit run), a fifth of
+`tip` (0: the end drawn with the image's length part, hair that is gathered and not cut), `Head.covered(trend=)`
+(the farthest skin is looked for in what the skin stands off its own mean over 14 degrees). The lock writing
+of both styles is one function now (`styles.py` `write_locks`, the switches read under the style's name:
+`BOB_LOCK_...`, `PLAIT_LOCK_...`); the seven files of round 87 come out of it byte for byte (checked on
+`bob01`, `bob04`, `bob05`). In the builder a style can have both kinds of solid hair, each in its own file:
+`<hair>_locks` with the dress set's lock image, `<hair>_rope` with its own (`build.rs`); the stage knows solid
+hair by either name (`materials.ts`).
+
+Numbers. On seven girls of 8 to 19 (`portrait/tests/locks.rs`): the hair's top 0.5 to 0.65 cm over the crown
+(a man's cut 1.0 to 1.5); the forehead free (the lowest hair in front of the face's middle 0.12 to 0.15 of
+the head's height below the crown); 308 to 373 triangles of a lock's beginning lie across the parting (begun
+at the middle of their roots 0 to 85); below the ear the hair is nowhere further than 1.4 to 1.5 cm from the
+skin (with round 87's bow 2.0 to 2.4). The field above the brows of the six girls of the sample: its darkest
+tenth is 2.1 L lighter (the parting's dark stripe and the dark patches), its median 0.6 L darker. No measure
+was found that tells the cards' blotches from the locks' own streaks (tried: the share of the hair from the
+side that is 5 L darker than a square of 41 pixels round it, 9.8 % before and 10.0 % now; the same over
+patches of a centimetre, 11.1 and 11.5 %, on a field that takes in skin): that finding rests on the pictures.
+28 032 triangles where the cards had 17 920; `plait01_locks.txt.zst` is 384 kB where cards and their two
+images were 685. Building a girl's portrait takes 28.6 ms where it took 24.0 (best of 40, six girls, native).
+Of the sample's 35 portraits the six girls changed; the other 29 are the same pixel for pixel, with the lock
+files renamed, and the Roman ones too.
+
+Tests: `portrait/tests/locks.rs`, `a_girl_wears_her_hair_parted_and_drawn_to_her_plaits` (the numbers above as
+bounds: fails on locks begun at their roots' middle and on round 87's bow); `portrait/tests/plait.rs`: a girl
+wears locks, the painted layer and the strands, no cards; `tests/portrait.test.ts`: whoever wears hair in
+England wears one surface of locks over the cut's painted layer and no cards.
+Pictures: `runde88_maedchenhaar_vorher_nachher.png` (cards above, locks below: four girls from the front, two
+from both sides), `runde88_stichprobe.png`.
+Still open: the hair is one sleek shell of streaks; the reference's parted hair has strands that lift off and
+a soft outline. Where locks overlap, a lighter and a darker streak meet in a straight edge. At the front end
+of the parting a speck of skin shows. The hairline on the forehead is the painted layer's, a soft band. Every
+girl has the same locks. The sheen takes the hairs as running down along the head, which on hair drawn back
+over the ear is wrong by up to a quarter turn. England has no hair cards left; Apoleia's styles are cards as
+before. All measures PLACEHOLDER, by eye; the hairstyle is unsourced as before.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

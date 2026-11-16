@@ -46,6 +46,49 @@ def e_dn(d):
     return tangent(np.broadcast_to(np.array([0, -1.0, 0]), d.shape).copy(), d)
 
 
+def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', seed=87):
+    """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
+    `locks_from_wisps`), written as `name_locks.txt`, bound to the head `bind`. The switches are read under the
+    style's own name `key` (`BOB`, `PLAIT`):
+    `<key>_LOCKS`: how many, their least and greatest breadth, their height as a share of the breadth, their height
+    over the skin at the root and far from it, and the run over which it rises (base units, 0.1 = 1 cm), an
+    eighth number: how much higher still for every unit it has run (`locks_from_wisps(layer=)`);
+    `<key>_LOCK_JITTER`: how much higher or lower a lock lies than the next, by chance;
+    `<key>_LOCK_OVER`: the locks pass the ears in one bow: how far round a place the skin is looked at for that,
+    over how many degrees it is evened out, and from how many degrees off the face's middle over how many more (in
+    front the locks keep to the forehead: over a bow that takes in the brows a fringe hangs lower); a fifth and
+    sixth number: the height in degrees up to which nothing of the bow is taken, and from which all of it (hair
+    that goes on down the neck lies on the neck: over the bow from skull to shoulder it stands off as a sheet);
+    `<key>_LOCK_TREND`: the bow is taken over what the skin stands off its own mean over so many degrees
+    (`Head.covered(trend=)`: for hair that goes on down to the neck);
+    `<key>_LOCK_TIP`, `<key>_LOCK_ROOT`: a lock's end and its beginning as a share of its length and at most so
+    long, and its breadth and thickness there against its middle; `<key>_LOCK_BACK`: how far before its strands'
+    roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_M`: corners across a band;
+    `<key>_LOCK_RING`: from ring to ring; `<key>_LOCK_EVEN`: how often the builder evens out the locks' way with a
+    head along them (a few times, so that a lock stays the head's form: evened out to the end it would move as a
+    stiff piece). The wisps are drawn with random numbers of their own (`seed`): the cards and the painted layer
+    of a style stay as they were. All PLACEHOLDER by eye."""
+    get = lambda name, default: os.environ.get(key + name, default)
+    LK, LW0, LW1, LFLAT, *LAYER = [float(t) for t in os.environ[key + '_LOCKS'].split(',')]
+    rl = np.random.default_rng(seed)
+    lab2 = wisps(S, int(LK), rl)
+    cover = [float(t) for t in get('_LOCK_OVER', over).split(',')]
+    def beside(th, el):
+        g = np.clip((np.abs(th) - cover[2]) / cover[3], 0, 1)
+        g = g * g * (3 - 2 * g)
+        if len(cover) > 4:
+            e = np.clip((el - cover[4]) / (cover[5] - cover[4]), 0, 1)
+            g = g * e * e * (3 - 2 * e)
+        return g
+    fours = lambda name, default: tuple(float(t) for t in get(name, default).split(','))
+    bands = locks_from_wisps(H, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', '5')), jitter=float(get('_LOCK_JITTER', jitter)),
+                             tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
+                             wave=wave, ring=float(get('_LOCK_RING', '0.14')), back=float(get('_LOCK_BACK', back)),
+                             over=H.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
+    nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
+    print(style, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
+
+
 def empty_cards():
     with open(os.path.join(out, name + '.txt'), 'w') as f:
         f.write('0 0\n')
@@ -211,8 +254,28 @@ elif style == 'plait':
     _l = [float(t) for t in os.environ.get('PLAIT_LIFT', '0.075,0.05').split(',')]
     # PLAIT_ROPE_ONLY: the plaits' file alone (a few seconds; the head's hair takes more than a minute)
     rope_only = bool(os.environ.get('PLAIT_ROPE_ONLY'))
+    # the hair lies on the head and, below the ear, on the neck: a head that knows the body down to the chest
+    # (the plaits are bound to neck, shoulders and chest as well)
+    H2 = Head(base, ymin=3.9, hc=H.hc)
+    # Locks (round 88; `write_locks` above), written as `name_locks.txt`: the game draws them in place of the
+    # head's cards. `PLAIT_LOCKS_ONLY` writes that file alone. This hair is long, parted and drawn to one place
+    # below the ear, which a short cut's locks are not made for; so here
+    # - a lock begins 1.5 cm before its strands' roots: the locks of either side meet in the parting (they began a
+    #   finger's breadth off it, a bare strip under two rows of ragged ends);
+    # - the locks lie the higher the further they have come (the eighth number of `PLAIT_LOCKS`), and flatter:
+    #   at one height they cut through each other in sawtooth lines where they run together;
+    # - their ends are drawn whole, not frayed, and run narrow into the plait's beginning;
+    # - the bow over the ear is taken over the skin's own trend and ends below the ear's lobe: the neck is
+    #   further from the head's middle the lower one looks, and over "the farthest skin within reach" the hair
+    #   stood off the neck as a sheet under the jaw; with the bow ending in the ear's height the ear's own forms
+    #   showed through the hair as steps.
+    locks_only = bool(os.environ.get('PLAIT_LOCKS_ONLY'))
     if not rope_only:
-        S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26)
+        S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26, strands_only=locks_only)
+        if os.environ.get('PLAIT_LOCKS'):
+            write_locks(S, H2, 'PLAIT', over='8,6,35,30,-50,-42', trend='14', tip='0.35,0.5,0.4,0.6,0', back='0.15', jitter='0.01')
+            if locks_only:
+                sys.exit(0)
     WAY = np.array([[0.74, 7.02, 0.34], [0.80, 6.55, 0.42], [0.84, 5.98, 0.62], [0.82, 5.40, 1.12], [0.76, 4.60, 1.46], [0.72, 4.15, 1.66]])
     # The plait itself: three round strands, plaited (round 86). Until then it was flat cards along the same three
     # ways, 1.9 cm broad: ragged ribbons, each lit as one face turned away from the head, the whole 4.5 cm broad.
@@ -270,8 +333,6 @@ elif style == 'plait':
             v = 1 - np.abs(along % 2 - 1)
             uv = np.stack(np.broadcast_arrays(u_round[None, :], v[:, None]), -1)
             tubes.append((rings, uv, c))
-    # the plaits are bound to neck, shoulders and chest as well: a head that knows the body down to there
-    H2 = Head(base, ymin=3.9, hc=H.hc)
     nvr, ntr = write_tubes(H2, out, name + '_rope', tubes)
     if rope_only:
         print(style, 'plaits alone: corners', nvr, 'tris', ntr)
@@ -320,34 +381,12 @@ elif style == 'bob':
     _l = [float(t) for t in os.environ.get('BOB_LIFT', '0.07,0.07').split(',')]   # height over the skin: least, and spread
     # how many strands (cards) and their least and greatest width
     BK = int(os.environ.get('BOB_K', '420')); _w = [float(t) for t in os.environ.get('BOB_W', '0.34,0.5').split(',')]
-    # Locks (round 87): the same strands gathered into fewer wisps, each an arched band that is solid (`hairlib.py`
-    # `locks_from_wisps`), written as `name_rope.txt`; the game draws them in place of the cards. `BOB_LOCKS`:
-    # how many, their least and greatest breadth, their height as a share of the breadth, their height over the
-    # skin at the root and far from it, and the run over which it rises (base units, 0.1 = 1 cm). `BOB_LOCKS_ONLY`
-    # writes that file alone (a minute; cards and the painted layer take several). All PLACEHOLDER by eye.
+    # Locks (round 87; `write_locks` above), written as `name_locks.txt`: the game draws them in place of the
+    # cards. `BOB_LOCKS_ONLY` writes that file alone (a minute; cards and the painted layer take several).
     locks_only = bool(os.environ.get('BOB_LOCKS_ONLY'))
     S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim, wave=WAVE, strands_only=locks_only)
     if os.environ.get('BOB_LOCKS'):
-        LK, LW0, LW1, LFLAT, LH0, LH1, LRUN = [float(t) for t in os.environ['BOB_LOCKS'].split(',')]
-        rl = np.random.default_rng(87)      # numbers of their own: cards and painted layer stay as they were
-        lab2 = wisps(S, int(LK), rl)
-        # the locks pass the ears in one bow (`BOB_LOCK_OVER`): how far round a place the skin is looked at for
-        # that, over how many degrees it is evened out, and from how many degrees off the face's middle over how
-        # many more (in front the locks keep to the forehead: over a bow that takes in the brows a fringe hangs
-        # lower)
-        cover = [float(t) for t in os.environ.get('BOB_LOCK_OVER', '8,6,35,30').split(',')]
-        def beside(th, el):
-            g = np.clip((np.abs(th) - cover[2]) / cover[3], 0, 1)
-            return g * g * (3 - 2 * g)
-        fours = lambda key, default: tuple(float(t) for t in os.environ.get(key, default).split(','))
-        bands = locks_from_wisps(H, S, lab2, int(LK), rl, LW0, LW1, LFLAT, (LH0, LH1, LRUN), m=int(os.environ.get('BOB_LOCK_M', '5')),
-                                 tip=fours('BOB_LOCK_TIP', '0.3,0.25,0.8,0.4'), root=fours('BOB_LOCK_ROOT', '0.15,0.2,0.7,0.3'),
-                                 wave=WAVE, ring=float(os.environ.get('BOB_LOCK_RING', '0.14')),
-                                 over=H.covered(cover[0], cover[1], beside) if cover[0] > 0 else None)
-        # (`BOB_LOCK_EVEN`: how often the builder evens out the locks' way with a head along them; a few times,
-        # so that a lock stays the head's form: evened out to the end it would move as a stiff piece)
-        nvr, ntr = write_tubes(H, out, name + '_rope', bands, even=int(os.environ.get('BOB_LOCK_EVEN', '3')), closed=False)
-        print(style, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
+        write_locks(S, H, 'BOB', wave=WAVE)
         if locks_only:
             sys.exit(0)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6)

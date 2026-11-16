@@ -114,16 +114,18 @@ describe('portraits', { timeout: 20_000 }, () => {
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
       // women from the age of the veil wear it, men never
       expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
-      expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
-      // the plaits themselves are round strands, a surface of their own beside the cards of the head's hair (round 86)
-      expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(p.female && p.age >= 7 && p.age < 20);
-      // a man's and a boy's hair is locks (round 87): one surface of arched bands, seen from both sides, drawn
-      // with the one image of England's locks, over the painted layer of his cut. No cards of it are left
-      const locks = english.surfaces.filter(s => s.tex.includes('/hair1356_rope.'));
-      expect(locks.length, `person ${p.pid}: locks where there is hair`).toBe(worn.some(t => /\/bob0\d_cap\./.test(t)) ? 1 : 0);
+      const plaited = p.female && p.age >= 7 && p.age < 20;
+      expect(worn.some(t => t.includes('/plait01_cap.')), `person ${p.pid}: plaits before the veil`).toBe(plaited);
+      // the plaits themselves are round strands, a surface of their own (round 86)
+      expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(plaited);
+      // hair is locks (a man's and a boy's since round 87, a girl's head above her plaits since round 88): one
+      // surface of arched bands, seen from both sides, drawn with the one image of England's locks, over the
+      // painted layer of the cut. No cards of England's hair are left
+      const locks = english.surfaces.filter(s => s.tex.includes('/hair1356_locks.'));
+      expect(locks.length, `person ${p.pid}: locks where there is hair`).toBe(worn.some(t => /\/(bob0\d|plait01)_cap\./.test(t)) ? 1 : 0);
       expect(locks.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: locks are open bands of solid hair`).toBe(true);
-      expect(locks.length === 1 && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
-      expect(worn.some(t => /\/bob0\d\./.test(t)), `person ${p.pid}: no cards of a man's hair`).toBe(false);
+      expect(worn.some(t => /\/bob0\d_cap\./.test(t)) && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
+      expect(worn.some(t => /\/(bob0\d|plait01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
       // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
       // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
@@ -492,7 +494,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(ENGLAND_1356.eye!.cornea).toBeGreaterThan(0);
     expect(eye).toContain('eyeLean');
     expect(compiled('real/skin_young_female.webp', false)).toContain('skinTint');
-    expect(compiled('real/plait01.webp', true)).toContain('hairStrand');
+    expect(compiled('real/roman01.webp', true)).toContain('hairStrand');
     expect(compiled('real/bob01_cap.webp', true)).toContain('wrapBy');
     // Apoleia's eye is left as it is
     expect(APOLEIA.eye).toBeNull();
@@ -509,7 +511,7 @@ describe('portraits', { timeout: 20_000 }, () => {
       m.onBeforeCompile(shader as never, null as never);
       return shader.fragmentShader;
     });
-    const rope = of('real/plait01_rope.webp', false), cards = of('real/plait01.webp', true);
+    const rope = of('real/plait01_rope.webp', false), cards = of('real/roman01.webp', true);
     expect([surfaceKind(rope), surfaceKind(cards)]).toEqual(['rope', 'cards']);
     expect([drawOrder(rope), drawOrder(cards)]).toEqual([0, 2]);
     const solid = surfaceMaterials(rope, null, null, ENGLAND_1356);
@@ -536,7 +538,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     // is open below, so it is drawn from both sides; its hairs end one after the other, so the image is empty
     // between them there, and where the image is empty nothing is drawn and nothing throws a shadow
     const of = (tex: string, double: boolean) => ({ rough: 0.6, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
-    const locks = of('real/hair1356_rope.webp', true), plait = of('real/plait01_rope.webp', false);
+    const locks = of('real/hair1356_locks.webp', true), plait = of('real/plait01_rope.webp', false);
     expect(surfaceKind(locks)).toBe('rope');
     expect(drawOrder(locks)).toBe(0);
     const [lock, ...more] = surfaceMaterials(locks, null, null, ENGLAND_1356);
