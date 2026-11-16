@@ -20,6 +20,7 @@ import type { World } from '../world';
 import { FIGURE, FIGURES } from '../economy/engine';
 import { dateToDay, dayToDate, fmtDate } from '../calendar';
 import { hash01 } from '../rng';
+import { uses1356Tables } from '../tables';
 
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
@@ -31,12 +32,13 @@ export function citySeed(seed: number, place: number): number {
   return (u32(1) % 0x200000) * 0x100000000 + u32(2);
 }
 
-/** Founds the economies of the cities in a world that starts in the year of their calibration: the starting
- *  position of every city on the day the world has reached, with no period computed. The random numbers of a city
- *  come from the seed of the world and the city's place, through the engine's own generator. */
+/** Founds the economies of the cities in a world that starts in the year of their calibration, or in a year that
+ *  takes the tables of 1356 as placeholders (src/sim/tables.ts): the starting position of every city on the day the
+ *  world has reached, with no period computed. The random numbers of a city come from the seed of the world and the
+ *  city's place, through the engine's own generator. */
 export function foundEconomy(s: WorldState, w: World): void {
   const c = w.cityEconomies;
-  if (s.startYear !== c.year) { s.economy = { cities: null }; return; }
+  if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) { s.economy = { cities: null }; return; }
   const model = w.economyEngine.create(c.cities.map((x) => ({ parameters: x.parameters, initialConditions: x.initialConditions, seed: citySeed(s.seed, x.place) })), c.clock, c.rules);
   s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '' } };
 }

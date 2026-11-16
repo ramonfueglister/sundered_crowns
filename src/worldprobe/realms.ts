@@ -53,7 +53,7 @@ export interface RealmsMap {
  * which the world begins again.
  * `ahead`: paint the surroundings of the picture too. `changed` is called whenever a tile has arrived.
  */
-export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
+export function createRealms(stage: Stage, o: { region: string; base: string; year?: number; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
   const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, choose, placeAt, dispose: () => worker.terminate() };
   /** how strongly the realms' colours cover the world */
@@ -70,11 +70,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
   };
 
   const worker = new Worker(new URL('./realms.worker.ts', import.meta.url), { type: 'module' });
-  type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base'> : never) : never;
+  type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base' | 'year'> : never) : never;
   const ask = (job: Job, what: Asked) => {
     const id = nextId++;
     asked.set(id, what);
-    worker.postMessage({ id, region: o.region, base: o.base, ...job } satisfies RealmsJob);
+    worker.postMessage({ id, region: o.region, base: o.base, year: o.year, ...job } satisfies RealmsJob);
   };
   worker.onmessage = (e: MessageEvent<RealmsDone>) => {
     const what = asked.get(e.data.id)!;
@@ -162,7 +162,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (wash.value > 0 && w.level === level && w.rank < 2e9) missing++; }
     // to paint: what is not there yet, and what still shows the old realms
     const queue = wanted.filter((w) => { const h = held.get(w.key); return (!h || h.old) && !busy.has(w.key); }).sort((a, b) => b.rank - a.rank);
-    while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y }, next); }
+    while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y, cells: o.cells }, next); }
 
     // what is shown: every part of the picture once, from the tiles nearest the view's level that are there
     const shown = wash.value > 0 ? cover(level, PAPER_COARSEST, near(PAPER_COARSEST, 0).map((t) => [t.x, t.y] as const), (l, x, y) => held.get(keyOf(l, x, y)), (l, x, y) => outside(l, x, y) <= 0) : new Set<Held>();

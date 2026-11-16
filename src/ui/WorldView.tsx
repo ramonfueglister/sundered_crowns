@@ -2,14 +2,14 @@
 // and shows the realms as the world server last told them; a click on a place of the game map selects it.
 import { useEffect, useRef } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { owners, realms } from '../net/client';
+import { owners, realms, world } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './MapView';
 import { listenForWorldClicks } from '../people/panel';
 import type { WorldView as View } from '../worldprobe/view';
 
-/** where the game opens: Europe as a map of its realms */
-const START = { lon: 12, lat: 47, wide: 20000 };
+/** where the game opens: as far out as the view goes, the world's frame from west to east as a map of its realms */
+const START = { lon: 21.5, lat: 47, wide: Infinity };
 /** a flight to a place shows this many finest blocks across the picture: its town and the land round it */
 const AT_PLACE = 260;
 
@@ -28,7 +28,7 @@ export function WorldView() {
         // taken down while the world was being fetched: the canvas is gone
         if (disposed) return;
         const made = await createWorldView({
-          canvas: canvas.current!, names: wrap.current!, ...START,
+          canvas: canvas.current!, names: wrap.current!, ...START, year: world.value?.startYear,
           status: (text) => { mapError.value = text || null; },
           moved: (_lon, _lat, w) => { wide = w; },
           // far out a click selects the place under it; near, it is for what stands there (people/panel.ts), and the
