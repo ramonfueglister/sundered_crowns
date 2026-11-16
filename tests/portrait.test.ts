@@ -10,6 +10,7 @@ import { ShaderLib } from 'three';
 import { portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
+import { framing } from '../src/portrait/stage';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
 interface Golden { pid: number; top: number; chin: number; cx: number; cz: number; fill: number; tris: number; surfaces: GoldenSurface[] }
@@ -24,6 +25,22 @@ const sum = (v: Float32Array) => v.reduce((a, x) => a + x, 0);
  *  which differ a little between the machines' libraries and WebAssembly. */
 function near(got: number, want: number, what: string): void {
   expect(Math.abs(got - want), what).toBeLessThanOrEqual(0.05 + 2e-5 * Math.abs(want));
+}
+
+/** The solution of a small set of linear equations, each row its coefficients and then its right-hand side. */
+function solve(m: number[][]): number[] {
+  const n = m.length;
+  for (let c = 0; c < n; c++) {
+    let best = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(m[r]![c]!) > Math.abs(m[best]![c]!)) best = r;
+    [m[c], m[best]] = [m[best]!, m[c]!];
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = m[r]![c]! / m[c]![c]!;
+      for (let k = c; k <= n; k++) m[r]![k]! -= f * m[c]![k]!;
+    }
+  }
+  return m.map((row, r) => row[n]! / row[r]!);
 }
 
 function expectSame(p: Portrait, g: Golden): void {
@@ -171,6 +188,53 @@ describe('portraits', { timeout: 20_000 }, () => {
       // Apoleia's, on the same head: 14 to 17 mm
       for (const mm of irises({ ...p, origin: 'Italia' })) expect(mm, `person ${p.pid} as a Roman`).toBeGreaterThan(13.5);
     }
+  });
+  it('the eyes of a person of England look at whoever looks at the picture', () => {
+    // The stage turns the person away from the camera (profile.ts `turn`); the dress table turns the eyes back
+    // (portrait/src/dress.rs `gaze`, `converge`). From round 50 to round 74 the table's angle had the turn's own
+    // sign: the eyes were turned further away, 19 degrees past the viewer (people who look at nobody). Measured on
+    // the built head as the stage frames it: the middle of the iris (the mean of the directions of the ball's
+    // points that lie in the iris of its image, 0.0765 of a cell round the cell's middle) against the line from
+    // the ball's middle to the camera.
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const offs = (p: PortraitPerson, profile = ENGLAND_1356): [number, number][] => {
+      const built = b.build(p), ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
+      const f = framing(built, profile), [cs, sn] = [Math.cos(profile.turn), Math.sin(profile.turn)];
+      // a point or a direction of the portrait as the stage turns it about the upright axis through the head
+      const turned = (q: number[], point: boolean): number[] => {
+        const [x, z] = [q[0]! - (point ? built.cx : 0), q[2]! - (point ? built.cz : 0)];
+        return [x * cs + z * sn + (point ? built.cx : 0), q[1]!, -x * sn + z * cs + (point ? built.cz : 0)];
+      };
+      const n = ball.pos.length / 3, all = Array.from({ length: n }, (_, i) => i);
+      const mid = all.reduce((a, i) => a + ball.pos[3 * i]!, 0) / n;
+      return [all.filter(i => ball.pos[3 * i]! < mid), all.filter(i => ball.pos[3 * i]! >= mid)].map(eye => {
+        const c = [0, 1, 2].map(k => eye.reduce((a, i) => a + ball.pos[3 * i + k]!, 0) / eye.length);
+        const cell = [0, 1].map(k => Math.floor(eye.map(i => ball.uv[2 * i + k]! * 4).sort((x, y) => x - y)[eye.length >> 1]!) + 0.5);
+        // the ball's image is laid round the line of sight by the angle to it: for a point at the angle t from that
+        // line and the unit direction d, d . sight = cos t, and t is its distance from the cell's middle times a
+        // factor. Near the line cos t = 1 - t t / 2: least squares for the line of sight and that factor's square
+        const near = eye.map(i => ({ i, rr: Math.hypot(ball.uv[2 * i]! * 4 - cell[0]!, ball.uv[2 * i + 1]! * 4 - cell[1]!) })).filter(v => v.rr < 0.1);
+        expect(near.length, `person ${p.pid}: points of the ball in and round its iris`).toBeGreaterThan(8);
+        const rows = near.map(({ i, rr }) => { const q = [0, 1, 2].map(k => ball.pos[3 * i + k]! - c[k]!), l = Math.hypot(...q); return [...q.map(x => x / l), rr * rr / 2]; });
+        const sight = turned(solve(rows.reduce((m, r) => m.map((row, a) => row.map((x, k) => x + r[a]! * (k < 4 ? r[k]! : 1))), Array.from({ length: 4 }, () => [0, 0, 0, 0, 0]))).slice(0, 3), false);
+        const to = turned(c, true).map((x, k) => f.camera[k]! - x);
+        // how far the eye looks beside the camera and above it, in degrees
+        const [yaw, pitch] = [(q: number[]) => Math.atan2(q[0]!, q[2]!), (q: number[]) => Math.atan2(q[1]!, Math.hypot(q[0]!, q[2]!))];
+        return [(yaw(sight) - yaw(to)) * 180 / Math.PI, (pitch(sight) - pitch(to)) * 180 / Math.PI] as [number, number];
+      });
+    };
+    for (const p of sample) {
+      for (const [beside, above] of offs(p)) {
+        expect(Math.abs(beside), `person ${p.pid}: beside the camera`).toBeLessThan(1.5);
+        expect(Math.abs(above), `person ${p.pid}: above the camera`).toBeLessThan(1.5);
+      }
+    }
+    // on a stage that turns the person the other way the same eyes look past the camera by twice the turn
+    const other = offs(sample[6]!, { ...ENGLAND_1356, turn: -ENGLAND_1356.turn });
+    for (const [beside] of other) expect(Math.abs(beside)).toBeGreaterThan(20);
+    // and a Roman looks straight ahead of the head, past the viewer by the turn of Apoleia's stage
+    for (const [beside] of offs({ ...sample[6]!, origin: 'Italia' }, APOLEIA)) expect(Math.abs(Math.abs(beside) - Math.abs(APOLEIA.turn) * 180 / Math.PI)).toBeLessThan(3);
   });
   it('the hems of the garments of England are wound outward', () => {
     // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals

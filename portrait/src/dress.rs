@@ -292,13 +292,17 @@ pub struct DressSet {
     /// MakeHuman's child and none where it has its adult form (`child_share`). A child's eyes are more open and
     /// its lashes fine: with the adults' values children looked out of narrowed, lined eyes. PLACEHOLDER.
     pub eyes_child: [f32; 2],
-    /// Where the eyes look, seen from the head: turned about the vertical (radians, in the sense of the stage's
-    /// `turn`, src/portrait/profile.ts: with the turn's sign the eyes come back towards whoever looks at the
-    /// picture) and upwards. The lean is taken out of it, so that the eyes keep looking level. Apoleia's eyes look
-    /// straight ahead of the head, past the viewer. Less than the stage's turn: turned all the way back to the
-    /// viewer the irises stand in the corners of the eyes, a glance out of the corner of the eye (until round 60).
-    /// A little downwards since round 68: MakeHuman's opening lies lower than the ball's middle, and an iris of
-    /// real size that looks level shows white under it (a stare).
+    /// Where the eyes look, seen from the head: turned about the vertical towards the head's left (radians) and
+    /// upwards. The stage turns the person about the same axis by its `turn` (src/portrait/profile.ts), and the
+    /// eyes look at whoever looks at the picture when the first value is that turn with the other sign (the
+    /// head turned to its right by 0.24, the eyes to their left by 0.24) and the second is 0: the camera stands
+    /// at the eyes' height, and the lean is taken out of the second, so that the eyes keep looking level
+    /// (tests/portrait.test.ts holds the two against each other). Apoleia's eyes look straight ahead of the head,
+    /// past the viewer. From round 50 to round 74 the first value had the turn's own sign (-0.2, then -0.1): meant
+    /// to bring the eyes back to the viewer, it turned them further away, 19 degrees past the camera at the end.
+    /// What round 60 saw at -0.2 and took for eyes turned too far back ("a glance out of the corner of the eye")
+    /// were eyes turned away twice. The second value was -0.04 from round 68 (an iris that looked level showed
+    /// white under it); since round 74 the ball is set between the lids for any gaze (`pupil`).
     pub gaze: [f32; 2],
     /// How far each eye is turned towards the nose on top of that (radians). Eyes that look at somebody near meet
     /// on them; eyes that stand parallel look through them into the distance. 0.03 lets them meet about a metre
@@ -413,7 +417,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     lean: [0.12, 0.10],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
-    gaze: [-0.1, -0.04],
+    gaze: [0.24, 0.0],
     converge: 0.03,
     jaw_women: -0.2,
     kid: 0.0,
@@ -439,7 +443,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
         Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
         Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
         Source { what: "a grown woman's eyes brought forward by 2 mm with their lids: how deep a woman's eye lies in her head against a man's", source: "Exophthalmometry at eyewiki.org (Hertel's reading from the bone's rim beside the eye to the cornea: 16.5 mm in white men, 15.4 mm in white women, after Erb et al. 2003 and Migliori & Gladstone 1984). Shin, Lee, Koh & Song 2017, Anatomy & Cell Biology 50: 41-47 (computed tomography of 70 men and 71 women of Korea, 20 to 30: the cornea 5.3 and 6.3 mm behind the rim over the eye, 11.6 and 12.4 mm in front of the rim under it; read from a summary of the paper's table, which column is which sex inferred). Bone, where ours reads skin, and people of today: only the difference between the sexes is used, and the 2 mm is fitted to it." },
         Source { what: "how the grown hold their heads (the bust's lean, women 0.12 and men 0.10)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (20 white men and 26 white women with balanced faces, in natural head position: glabella, lips and chin against the true vertical line through the subnasale; read from a copy of the paper). The lean is the best fit to it: women then lie within 1.2 of its standard deviations at every point, men's glabella 1.85 behind and their lips about 1 (MakeHuman's form; no lean brings them nearer)." },
         Source { what: "the pupil at 0.57 of the way from the lower lid's edge to the upper lid's", source: "Neuro-ophthalmology Illustrated, ch. 1, at neuro-ophthalmology.stanford.edu (the upper lid's edge 4 to 5 mm over the pupil's middle, covering the upper 1 to 2 mm of the iris; the lower lid just reaching the iris's foot; opening 9 to 12 mm high) and Margin to reflex distance at eyewiki.org (lower lid 5.5 mm under the pupil). Ours are set by moving the ball, not the lids. The opening is 8.9 mm high in grown women and 9.1 in men, the upper lid 3.8 to 3.9 mm over the pupil and the lower 5.0 to 5.2 under it: at the low end of theirs." },

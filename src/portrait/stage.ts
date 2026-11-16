@@ -26,6 +26,16 @@ const FOV = 22;
  *  three.js' at full strength (tools/portrait/compare.mjs, docs/PORTRAITS.md). */
 const SHADOW = { map: 512, strength: 0.7 } as const;
 
+/** Where the camera stands for a portrait and what it looks at (the portrait's own coordinates, before the person
+ *  is turned by the profile's `turn` about the upright axis through `at`), and the height of what the picture
+ *  shows there. The head from the chin to above the crown (or hat) fills `fill` of the height, the eyes a little
+ *  above the middle. */
+export function framing(p: Pick<Portrait, 'top' | 'chin' | 'cx' | 'cz' | 'fill'>, profile: StageProfile): { at: [number, number, number]; camera: [number, number, number]; height: number } {
+  const h = Math.max(0.8, p.top - p.chin), hv = h / (p.fill * profile.close);
+  const cy = p.top - 0.36 * hv, dist = (hv * 0.5) / Math.tan((FOV / 2) * Math.PI / 180);
+  return { at: [p.cx, cy, p.cz], camera: [p.cx, cy + profile.rise * hv, p.cz + dist], height: hv };
+}
+
 export interface StageOptions {
   /** Pixels of the picture; default twice the size in the game, for clean edges. */
   width?: number; height?: number;
@@ -136,14 +146,13 @@ export class PortraitStage {
   /** The framing: the head from the chin to above the crown (or hat) fills `fill` of the height, the eyes a little
    *  above the middle; the person turns about the axis through the head's centre. */
   private frame(p: Portrait, inner: Group, profile: StageProfile): void {
-    const h = Math.max(0.8, p.top - p.chin), hv = h / (p.fill * profile.close);
-    const cy = p.top - 0.36 * hv, dist = (hv * 0.5) / Math.tan((FOV / 2) * Math.PI / 180);
+    const f = framing(p, profile), hv = f.height;
     this.pivot.position.set(p.cx, 0, p.cz);
     this.pivot.rotation.y = profile.turn;
     inner.position.set(-p.cx, 0, -p.cz);
     this.pivot.add(inner);
-    const at = new Vector3(p.cx, cy, p.cz);
-    this.camera.position.set(p.cx, cy + profile.rise * hv, p.cz + dist);
+    const at = new Vector3(...f.at);
+    this.camera.position.set(...f.camera);
     this.camera.lookAt(at);
     for (const k of Object.keys(this.lights) as (keyof StageProfile['lights'])[]) {
       const l = this.lights[k], f = profile.lights[k].from;

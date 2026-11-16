@@ -144,3 +144,7 @@ lift takes the last skin its ray meets instead of `outer_skin` (which is as it w
 not Apoleia's: `measure.rs` `skin_front`, `ball`, `eye_stands`, `EYE_SEX`, `profile`, `PROFILE`,
 `lids_to_pupil`, three tests in `tests/faces.rs`, two in `src/lib.rs`; `examples/face_measure.rs --dump` also
 writes the skin's triangles and the eyeballs' vertices. Roman bytes unchanged.
+
+Round 75: nothing in the builder. England's `gaze` turns the eyes to the camera (its first value had the wrong
+sign since round 50). The stage's reckoning of camera and frame is a function of its own (`src/portrait/stage.ts`
+`framing`, the game's file). Roman bytes unchanged.

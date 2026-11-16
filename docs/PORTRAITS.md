@@ -961,6 +961,37 @@ people of today, one of them of Korea, and read bone where ours reads skin: used
 sexes only. And what rounds 72 and 73 left: the brow's form and soft edge, lashes as a dark fringe, the iris'
 depth, faces half in a hood's shade.
 
+**Eyes that look at whoever looks at the picture (round 75).** Held large beside the reference's woman, ours
+looked past the viewer with much white beside the iris; she looks at the viewer. The stage turns the person away
+from the camera by `turn` (-0.24: the head to its right), and the dress table's `gaze` is meant to turn the eyes
+back. Its first value had the turn's own sign since round 50 (-0.2, since round 60 -0.1): that turns the eyes
+to the head's right as well, further away. Round 60 saw the result of -0.2, "a glance out of the corner of the
+eye", took it for eyes turned too far back and halved the value. Measured on the built heads as the stage
+frames them (the middle of the iris by least squares from the ball's image, against the line from the ball to
+the camera; `tests/portrait.test.ts`), the 36 people of the sample:
+
+| | round 74 | now |
+|---|---|---|
+| `gaze` (to the head's left, upwards), `converge` | -0.1, -0.04; 0.03 | 0.24, 0; 0.03 |
+| the eyes look beside the camera by (degrees) | 19.1 to 20.2 (away from it) | 0.9 at most |
+| below (-) or above the camera by | -2.8 to -1.4 | -0.8 to +0.8 |
+
+The second value was -0.04 since round 68, so that no white showed under an iris of real size; since round 74
+the ball is set between the lids for any gaze (`pupil`), and the camera stands at the eyes' height. The colours
+read on the faces are as in round 74 (the lid's rim of the women -59.4 against the skin over the brow, before
+-61.1). `framing` in `src/portrait/stage.ts` is the stage's own reckoning of camera and frame, for the test.
+Tried on the way: the lashes at 0.7 and at full strength instead of 0.3 (`brow.lashes`): single hairs that
+stand off the lid like a doll's; the reference has a soft dark fringe. Measured at the reference's size, along
+the lit eye from corner to corner, ours were already near hers before this round (mean -32.6 L against the lit
+cheek, hers -28.5; the white +6.1 and +0.7; the iris -58 and -49): what differed was where the eyes look.
+Test: "the eyes of a person of England look at whoever looks at the picture" (every eye of the sample within
+1.5 degrees of the camera both ways; on a stage that turns the person the other way the same eyes look more
+than 20 degrees past it; a Roman looks straight ahead of the head). Pictures:
+`runde75_blick_vorher_nachher.png` (eight people, round 74 above round 75), `runde75_neben_ck3.png`,
+`runde75_stichprobe.png`.
+Still open: what round 74 left, and for the eyes the lashes as a soft fringe, the brow's soft edge and tapering
+tail, an iris with depth; the reference's eye is narrower (the upper lid lower over the iris).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

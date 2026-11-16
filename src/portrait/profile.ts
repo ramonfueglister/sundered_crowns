@@ -147,6 +147,8 @@ export const APOLEIA: StageProfile = {
  *  lips L 20.8 and 33.6 (21.0, 33.3), brow 38.9 darker than the skin over it (37.9), the skin between lid and
  *  brow 24.4 darker than that over the brow (17.9; in round 73 46.3). Further round, the upper lip goes dark (76
  *  degrees: L 12); lower (26 degrees), the shade under the brow goes and with it the eye's depth.
+ *  Round 75: `turn` and the dress table's `gaze` belong together (portrait/src/dress.rs): the eyes look at the
+ *  camera when the gaze's first value is this turn with the other sign (tests/portrait.test.ts).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
