@@ -10,11 +10,15 @@ into warped Voronoi cells over the land; the sea into coarse zones. They are mad
 (the world probe's step z3, 2 map pixels a cell): the borders of the realms are drawn from them only on the map from
 afar.
 
+These places are LIVE since 2026-11-15 (state v7 of the running world, tools/geo/merge_beyond.py): a new run with
+other seeds or settings numbers them anew, so it must not replace them. Lists of towns for other uses (the voxel
+world's settlements) go into files of their own, not into data/content/gazetteer_world.json.
+
 Writes CACHE/beyond/ids.npy (int32 over step z3 of the world frame; 0 inside the game map and on lakes, 1..L2 land,
 L2+1..L2+S2 sea) and CACHE/beyond/places.json (seeds, L2, S2). tools/geo/merge_beyond.py joins them to the game map.
 Run: python3 tools/geo/build_beyond.py
 """
-import gzip, json, math, os
+import gzip, json, math, os, sys
 import numpy as np
 from scipy import ndimage
 from scipy.spatial import cKDTree
@@ -97,6 +101,8 @@ def spacing_km(lon, lat, height):
 
 
 def main():
+    if '--again' not in sys.argv:
+        sys.exit('the places beyond the game map are live (see the module text); run with --again only to study a new build')
     os.makedirs(OUT, exist_ok=True)
     ix, cells, water, height = load_step()
     h, w = water.shape
