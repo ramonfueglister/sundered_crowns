@@ -47,7 +47,7 @@
    "government": "feudal_monarchy",
    "culture": "english",
    "faith": "latin",
-   "color": "#84443e",
+   "color": "#83453e",
    "capital": {
     "name": "London",
     "lat": 51.507,
@@ -507,7 +507,7 @@
    "government": "feudal_monarchy",
    "culture": "scottish",
    "faith": "latin",
-   "color": "#5a5421",
+   "color": "#574f20",
    "capital": {
     "name": "Perth",
     "lat": 56.396,
@@ -790,7 +790,7 @@
    "government": "elective_monarchy",
    "culture": "irish",
    "faith": "latin",
-   "color": "#583b5a",
+   "color": "#583b58",
    "capital": {
     "name": "Donegal",
     "lat": 54.654,
@@ -1120,7 +1120,7 @@
    "government": "elective_monarchy",
    "culture": "irish",
    "faith": "latin",
-   "color": "#716b3e",
+   "color": "#786a43",
    "capital": {
     "name": "Ferns",
     "lat": 52.59,
@@ -1710,7 +1710,7 @@
    "government": "feudal_monarchy",
    "culture": "flemish",
    "faith": "latin",
-   "color": "#3a815c",
+   "color": "#378563",
    "capital": {
     "name": "Ghent",
     "lat": 51.054,
@@ -1875,7 +1875,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#6a363d",
+   "color": "#5e3538",
    "capital": {
     "name": "Dijon",
     "lat": 47.322,
@@ -1980,7 +1980,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#456b7f",
+   "color": "#416a7e",
    "capital": {
     "name": "Bourbon-l'Archambault",
     "lat": 46.583,
@@ -2292,7 +2292,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#59343b",
+   "color": "#59343c",
    "capital": {
     "name": "Lectoure",
     "lat": 43.934,
@@ -2383,7 +2383,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#69557c",
+   "color": "#625379",
    "capital": {
     "name": "Saint-Bertrand-de-Comminges",
     "lat": 43.03,
@@ -2456,7 +2456,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#7c6943",
+   "color": "#5d623c",
    "capital": {
     "name": "Périgueux",
     "lat": 45.184,
@@ -2535,7 +2535,7 @@
    "government": "feudal_monarchy",
    "culture": "occitan",
    "faith": "latin",
-   "color": "#886476",
+   "color": "#7e607e",
    "capital": {
     "name": "Casteljaloux",
     "lat": 44.31,
@@ -2739,7 +2739,7 @@
    "government": "feudal_monarchy",
    "culture": "hollandic",
    "faith": "latin",
-   "color": "#a06045",
+   "color": "#a0614d",
    "capital": {
     "name": "The Hague",
     "lat": 52.08,
@@ -2863,7 +2863,7 @@
    "government": "feudal_monarchy",
    "culture": "picard",
    "faith": "latin",
-   "color": "#6b6091",
+   "color": "#706190",
    "capital": {
     "name": "Mons",
     "lat": 50.454,
@@ -3163,7 +3163,7 @@
    "government": "theocracy",
    "culture": "french",
    "faith": "latin",
-   "color": "#6f7934",
+   "color": "#5a773a",
    "capital": {
     "name": "Liège",
     "lat": 50.633,
@@ -3256,7 +3256,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#7c5166",
+   "color": "#7f546f",
    "capital": {
     "name": "Namur",
     "lat": 50.467,
@@ -3337,7 +3337,7 @@
    "government": "feudal_monarchy",
    "culture": "flemish",
    "faith": "latin",
-   "color": "#5e6ea4",
+   "color": "#5c72a5",
    "capital": {
     "name": "Hasselt",
     "lat": 50.93,
@@ -3410,7 +3410,7 @@
    "government": "theocracy",
    "culture": "picard",
    "faith": "latin",
-   "color": "#5f4828",
+   "color": "#5b4d2a",
    "capital": {
     "name": "Cambrai",
     "lat": 50.176,
@@ -3479,7 +3479,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#094971",
+   "color": "#244371",
    "capital": {
     "name": "Luxembourg",
     "lat": 49.611,
@@ -3680,7 +3680,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#4177a3",
+   "color": "#4678a5",
    "capital": {
     "name": "Bar-le-Duc",
     "lat": 48.772,
@@ -3783,7 +3783,7 @@
    "government": "feudal_monarchy",
    "culture": "castilian",
    "faith": "latin",
-   "color": "#816627",
+   "color": "#816626",
    "capital": {
     "name": "Burgos",
     "lat": 42.344,
@@ -4140,7 +4140,7 @@
    "government": "feudal_monarchy",
    "culture": "catalan",
    "faith": "latin",
-   "color": "#6d4b4a",
+   "color": "#6e4a4a",
    "capital": {
     "name": "Barcelona",
     "lat": 41.385,
@@ -4342,7 +4342,7 @@
    "government": "feudal_monarchy",
    "culture": "catalan",
    "faith": "latin",
-   "color": "#513e07",
+   "color": "#513e0e",
    "capital": {
     "name": "Perpignan",
     "lat": 42.699,
@@ -4438,7 +4438,7 @@
    "government": "feudal_monarchy",
    "culture": "portuguese",
    "faith": "latin",
-   "color": "#3b5a63",
+   "color": "#3c5a62",
    "capital": {
     "name": "Lisbon",
     "lat": 38.722,

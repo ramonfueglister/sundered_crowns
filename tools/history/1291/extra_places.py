@@ -27,4 +27,5 @@ EXTRA = {
  'Zvenyhorod': (49.68, 24.20), 'Terebovlia': (49.30, 25.70), 'Berestia': (52.10, 23.69), 'Dorohychyn': (52.40, 22.63), 'Artanuji': (41.25, 42.07),
  'Bilbeis': (30.42, 31.56), 'Maarrat al-Numan': (35.65, 36.67), 'Hajjah': (15.69, 43.60), 'Qais': (26.53, 53.98), 'Maragheh': (37.39, 46.24),
  'Akhlat': (38.80, 42.49), 'Gediz': (39.00, 29.41), 'Marmaris': (36.85, 28.27), 'Taşköprü': (41.51, 34.21),
+ 'Voghera': (44.99, 9.01), 'Bobbio': (44.77, 9.39), 'Valenza': (45.01, 8.64),
 }

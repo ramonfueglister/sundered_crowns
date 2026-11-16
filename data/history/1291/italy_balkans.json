@@ -12,6 +12,7 @@
   "P. Engel, The Realm of St Stephen: A History of Medieval Hungary (2001): Andrew III 1290",
   "K. M. Setton (ed.), A History of the Crusades vol. II-III; P. Lock, The Franks in the Aegean 1204-1500 (1995): Achaea, Athens, the Archipelago, Venetian Crete, Negroponte",
   "P. Jackson / R. Irwin; J. Riley-Smith, The Crusades (3rd ed.): the last Latin coast before the fall of Acre (18 May 1291)",
+  "Ş. Papacostea, Between the Crusade and the Mongol Empire: The Romanians in the 13th Century (1998); P. Engel (2001): Litovoi, Bărbat and the Wallachian voivodes",
   "Wikipedia: Kingdom of Albania (medieval) — Durazzo Byzantine 1288, Kanina, Butrint and Corfu Angevin to 1292-94"
  ],
  "new_ids": [
@@ -19,12 +20,25 @@
   "gorizia",
   "syrmia",
   "thessaly",
-  "jerusalem"
+  "jerusalem",
+  "pavia",
+  "piacenza",
+  "parma",
+  "cremona",
+  "brescia",
+  "bergamo",
+  "como",
+  "lodi",
+  "novara",
+  "asti",
+  "alessandria",
+  "pistoia",
+  "volterra"
  ],
  "notes": [
   "Date: 1 January 1291. The War of the Sicilian Vespers continues: Sicily (with Malta and Djerba) under James II of Aragon, Naples and Provence under Charles II of Anjou.",
   "The Latin East: only Acre, Tyre, Sidon, Beirut, Haifa, Atlit and the Templar Tortosa remain; all fall between May and August 1291. They are modelled as the Kingdom of Jerusalem of Henry II of Cyprus; the military orders (Hospitallers, Templars, Teutonic Knights) hold quarters and castles in it.",
-  "Northern Italian signori: Visconti (Milan), della Scala (Verona), Este (Ferrara, Modena since 1288, Reggio since 1289), Bonacolsi (Mantua), da Camino (Treviso). Many smaller communes (Pavia, Piacenza, Parma, Cremona, Brescia, Bergamo, Como, Asti, Alessandria, Pistoia, Volterra) are not modelled as realms yet: a gap.",
+  "Northern Italian signori: Visconti (Milan), della Scala (Verona), Este (Ferrara, Modena since 1288, Reggio since 1289), Bonacolsi (Mantua), da Camino (Treviso). The communes of Pavia, Parma, Cremona, Brescia, Bergamo, Como, Lodi, Novara, Asti, Alessandria, Pistoia and Volterra and the Scotti lordship of Piacenza are realms of their own; Vercelli, Tortona and San Gimignano are joined to neighbours (gap).",
   "Meinhard II of Gorizia-Tyrol holds Tyrol, the duchy of Carinthia (1286) and Carniola in pledge (from 1282); modelled as one realm.",
   "Sardinia: Arborea (judges of Bas-Serra), Pisan Cagliari and Gallura (Nino Visconti expelled 1288), the Genoese Doria and Sassari in the old Logudoro.",
   "Hungary: the great oligarchs (Kőszegi, Csák, Aba, Šubić, Borsa) are not modelled separately.",
@@ -265,7 +279,7 @@
    "government": "feudal_monarchy",
    "culture": "neapolitan",
    "faith": "latin",
-   "color": "#275564",
+   "color": "#285563",
    "capital": {
     "name": "Naples",
     "lat": 40.852,
@@ -679,7 +693,7 @@
    "government": "feudal_monarchy",
    "culture": "sardinian",
    "faith": "latin",
-   "color": "#285736",
+   "color": "#507b5c",
    "capital": {
     "name": "Oristano",
     "lat": 39.903,
@@ -765,7 +779,7 @@
    "government": "merchant_republic",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#188387",
+   "color": "#178388",
    "capital": {
     "name": "Venice",
     "lat": 45.438,
@@ -936,7 +950,7 @@
    "government": "merchant_republic",
    "culture": "ligurian",
    "faith": "latin",
-   "color": "#652f44",
+   "color": "#622b3e",
    "capital": {
     "name": "Genoa",
     "lat": 44.407,
@@ -1078,7 +1092,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#8b5d7b",
+   "color": "#875888",
    "capital": {
     "name": "Pisa",
     "lat": 43.716,
@@ -1184,7 +1198,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#623044",
+   "color": "#5c2f4a",
    "capital": {
     "name": "Florence",
     "lat": 43.769,
@@ -1291,7 +1305,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#2b582f",
+   "color": "#1b4c22",
    "capital": {
     "name": "Siena",
     "lat": 43.318,
@@ -1371,7 +1385,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#4d794f",
+   "color": "#627445",
    "capital": {
     "name": "Lucca",
     "lat": 43.843,
@@ -1521,7 +1535,7 @@
    "government": "city_republic",
    "culture": "roman",
    "faith": "latin",
-   "color": "#4d3861",
+   "color": "#4a3d6a",
    "capital": {
     "name": "Perugia",
     "lat": 43.112,
@@ -1810,7 +1824,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#245f7f",
+   "color": "#034953",
    "capital": {
     "name": "Milan",
     "lat": 45.464,
@@ -1826,16 +1840,6 @@
      "name": "Monza",
      "lat": 45.58,
      "lon": 9.27
-    },
-    {
-     "name": "Novara",
-     "lat": 45.446,
-     "lon": 8.622
-    },
-    {
-     "name": "Lodi",
-     "lat": 45.314,
-     "lon": 9.503
     },
     {
      "name": "Varese",
@@ -1906,7 +1910,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#956473",
+   "color": "#83668e",
    "capital": {
     "name": "Verona",
     "lat": 45.438,
@@ -1990,7 +1994,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#653045",
+   "color": "#67334f",
    "capital": {
     "name": "Mantua",
     "lat": 45.156,
@@ -2063,7 +2067,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#2b4a0f",
+   "color": "#2e4a0e",
    "capital": {
     "name": "Ferrara",
     "lat": 44.836,
@@ -2157,7 +2161,7 @@
    "government": "city_republic",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#513a65",
+   "color": "#533a5f",
    "capital": {
     "name": "Padua",
     "lat": 45.406,
@@ -2231,6 +2235,756 @@
    }
   },
   {
+   "id": "pavia",
+   "name": {
+    "en": "Commune of Pavia",
+    "de": "Kommune Pavia"
+   },
+   "short": {
+    "en": "Pavia",
+    "de": "Pavia"
+   },
+   "adjective": {
+    "en": "Pavia",
+    "de": "Pavia"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#6f3029",
+   "capital": {
+    "name": "Pavia",
+    "lat": 45.19,
+    "lon": 9.16
+   },
+   "holdings": [
+    {
+     "name": "Pavia",
+     "lat": 45.19,
+     "lon": 9.16
+    },
+    {
+     "name": "Voghera",
+     "lat": 44.99,
+     "lon": 9.01
+    },
+    {
+     "name": "Lomellina",
+     "lat": 45.2,
+     "lon": 8.75
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ghibelline commune, its parties led by the counts of Langosco and the Beccaria; free again after William VII of Montferrat lost his lordship in 1290.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "piacenza",
+   "name": {
+    "en": "Lordship of Piacenza",
+    "de": "Herrschaft Piacenza"
+   },
+   "short": {
+    "en": "Piacenza",
+    "de": "Piacenza"
+   },
+   "adjective": {
+    "en": "Piacenza",
+    "de": "Piacenza"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#084d2f",
+   "capital": {
+    "name": "Piacenza",
+    "lat": 45.052,
+    "lon": 9.693
+   },
+   "holdings": [
+    {
+     "name": "Piacenza",
+     "lat": 45.052,
+     "lon": 9.693
+    },
+    {
+     "name": "Bobbio",
+     "lat": 44.77,
+     "lon": 9.39
+    },
+    {
+     "name": "Castell'Arquato",
+     "lat": 44.85,
+     "lon": 9.87
+    }
+   ],
+   "ruler": {
+    "name": "Alberto Scotti",
+    "born": null,
+    "dynasty": "Scotti",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Alberto Scotti, Guelph merchant-banker, made himself lord (dominus) of Piacenza in 1290.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "parma",
+   "name": {
+    "en": "Commune of Parma",
+    "de": "Kommune Parma"
+   },
+   "short": {
+    "en": "Parma",
+    "de": "Parma"
+   },
+   "adjective": {
+    "en": "Parma",
+    "de": "Parma"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#673950",
+   "capital": {
+    "name": "Parma",
+    "lat": 44.801,
+    "lon": 10.328
+   },
+   "holdings": [
+    {
+     "name": "Parma",
+     "lat": 44.801,
+     "lon": 10.328
+    },
+    {
+     "name": "Borgo San Donnino",
+     "lat": 44.86,
+     "lon": 10.06
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune; the Correggio lordship begins only in 1303.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "cremona",
+   "name": {
+    "en": "Commune of Cremona",
+    "de": "Kommune Cremona"
+   },
+   "short": {
+    "en": "Cremona",
+    "de": "Cremona"
+   },
+   "adjective": {
+    "en": "Cremona",
+    "de": "Cremona"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#316d85",
+   "capital": {
+    "name": "Cremona",
+    "lat": 45.133,
+    "lon": 10.022
+   },
+   "holdings": [
+    {
+     "name": "Cremona",
+     "lat": 45.133,
+     "lon": 10.022
+    },
+    {
+     "name": "Casalmaggiore",
+     "lat": 44.99,
+     "lon": 10.42
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune (the Cavalcabò lordship comes later).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "brescia",
+   "name": {
+    "en": "Commune of Brescia",
+    "de": "Kommune Brescia"
+   },
+   "short": {
+    "en": "Brescia",
+    "de": "Brescia"
+   },
+   "adjective": {
+    "en": "Brescia",
+    "de": "Brescia"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#194d2c",
+   "capital": {
+    "name": "Brescia",
+    "lat": 45.541,
+    "lon": 10.211
+   },
+   "holdings": [
+    {
+     "name": "Brescia",
+     "lat": 45.541,
+     "lon": 10.211
+    },
+    {
+     "name": "Salò",
+     "lat": 45.61,
+     "lon": 10.52
+    },
+    {
+     "name": "Chiari",
+     "lat": 45.54,
+     "lon": 9.93
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune ruling its contado and Valcamonica.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "bergamo",
+   "name": {
+    "en": "Commune of Bergamo",
+    "de": "Kommune Bergamo"
+   },
+   "short": {
+    "en": "Bergamo",
+    "de": "Bergamo"
+   },
+   "adjective": {
+    "en": "Bergamo",
+    "de": "Bergamo"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#217d76",
+   "capital": {
+    "name": "Bergamo",
+    "lat": 45.698,
+    "lon": 9.677
+   },
+   "holdings": [
+    {
+     "name": "Bergamo",
+     "lat": 45.698,
+     "lon": 9.677
+    },
+    {
+     "name": "Clusone",
+     "lat": 45.89,
+     "lon": 9.95
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune divided between the Suardi (Ghibelline) and the Colleoni (Guelph).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "como",
+   "name": {
+    "en": "Commune of Como",
+    "de": "Kommune Como"
+   },
+   "short": {
+    "en": "Como",
+    "de": "Como"
+   },
+   "adjective": {
+    "en": "Como",
+    "de": "Como"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#734f7b",
+   "capital": {
+    "name": "Como",
+    "lat": 45.808,
+    "lon": 9.085
+   },
+   "holdings": [
+    {
+     "name": "Como",
+     "lat": 45.808,
+     "lon": 9.085
+    },
+    {
+     "name": "Bellinzona",
+     "lat": 46.19,
+     "lon": 9.02
+    },
+    {
+     "name": "Lugano",
+     "lat": 46.01,
+     "lon": 8.96
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune ruled by its parties (Rusca and Vitani); Bellinzona and Lugano belong to it.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "lodi",
+   "name": {
+    "en": "Commune of Lodi",
+    "de": "Kommune Lodi"
+   },
+   "short": {
+    "en": "Lodi",
+    "de": "Lodi"
+   },
+   "adjective": {
+    "en": "Lodi",
+    "de": "Lodi"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#9a605b",
+   "capital": {
+    "name": "Lodi",
+    "lat": 45.314,
+    "lon": 9.503
+   },
+   "holdings": [
+    {
+     "name": "Lodi",
+     "lat": 45.314,
+     "lon": 9.503
+    },
+    {
+     "name": "Lodi Vecchio",
+     "lat": 45.3,
+     "lon": 9.42
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune under the Guelph Vistarini and Fissiraga families.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "novara",
+   "name": {
+    "en": "Commune of Novara",
+    "de": "Kommune Novara"
+   },
+   "short": {
+    "en": "Novara",
+    "de": "Novara"
+   },
+   "adjective": {
+    "en": "Novara",
+    "de": "Novara"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#20816c",
+   "capital": {
+    "name": "Novara",
+    "lat": 45.446,
+    "lon": 8.622
+   },
+   "holdings": [
+    {
+     "name": "Novara",
+     "lat": 45.446,
+     "lon": 8.622
+    },
+    {
+     "name": "Vercelli",
+     "lat": 45.32,
+     "lon": 8.42
+    },
+    {
+     "name": "Biandrate",
+     "lat": 45.45,
+     "lon": 8.46
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune; out of the Montferrat lordship since 1290. Vercelli, its own commune, is joined to it here (gap).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "asti",
+   "name": {
+    "en": "Commune of Asti",
+    "de": "Kommune Asti"
+   },
+   "short": {
+    "en": "Asti",
+    "de": "Asti"
+   },
+   "adjective": {
+    "en": "Asti",
+    "de": "Asti"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#545d88",
+   "capital": {
+    "name": "Asti",
+    "lat": 44.9,
+    "lon": 8.207
+   },
+   "holdings": [
+    {
+     "name": "Asti",
+     "lat": 44.9,
+     "lon": 8.207
+    },
+    {
+     "name": "Alba",
+     "lat": 44.7,
+     "lon": 8.03
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wealthy commune of merchant-bankers, leader of the league against William VII of Montferrat.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "alessandria",
+   "name": {
+    "en": "Commune of Alessandria",
+    "de": "Kommune Alessandria"
+   },
+   "short": {
+    "en": "Alessandria",
+    "de": "Alessandria"
+   },
+   "adjective": {
+    "en": "Alessandria",
+    "de": "Alessandria"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "lombard",
+   "faith": "latin",
+   "color": "#4e799d",
+   "capital": {
+    "name": "Alessandria",
+    "lat": 44.913,
+    "lon": 8.615
+   },
+   "holdings": [
+    {
+     "name": "Alessandria",
+     "lat": 44.913,
+     "lon": 8.615
+    },
+    {
+     "name": "Valenza",
+     "lat": 45.01,
+     "lon": 8.64
+    },
+    {
+     "name": "Tortona",
+     "lat": 44.895,
+     "lon": 8.865
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune that took William VII of Montferrat prisoner in September 1290 and keeps him caged until his death in 1292. Tortona, its ally, is joined to it here (gap).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "pistoia",
+   "name": {
+    "en": "Commune of Pistoia",
+    "de": "Kommune Pistoia"
+   },
+   "short": {
+    "en": "Pistoia",
+    "de": "Pistoia"
+   },
+   "adjective": {
+    "en": "Pistoia",
+    "de": "Pistoia"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#6c5e95",
+   "capital": {
+    "name": "Pistoia",
+    "lat": 43.933,
+    "lon": 10.917
+   },
+   "holdings": [
+    {
+     "name": "Pistoia",
+     "lat": 43.933,
+     "lon": 10.917
+    },
+    {
+     "name": "Serravalle Pistoiese",
+     "lat": 43.9,
+     "lon": 10.83
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Guelph commune in Florence's orbit.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "volterra",
+   "name": {
+    "en": "Commune of Volterra",
+    "de": "Kommune Volterra"
+   },
+   "short": {
+    "en": "Volterra",
+    "de": "Volterra"
+   },
+   "adjective": {
+    "en": "Volterra",
+    "de": "Volterra"
+   },
+   "rank": "republic",
+   "government": "city_republic",
+   "culture": "tuscan",
+   "faith": "latin",
+   "color": "#667242",
+   "capital": {
+    "name": "Volterra",
+    "lat": 43.402,
+    "lon": 10.861
+   },
+   "holdings": [
+    {
+     "name": "Volterra",
+     "lat": 43.402,
+     "lon": 10.861
+    },
+    {
+     "name": "San Gimignano",
+     "lat": 43.47,
+     "lon": 11.04
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Commune beside its bishop; San Gimignano, a free commune of its own, is joined here (gap).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
    "id": "treviso",
    "name": {
     "en": "Lordship of Treviso",
@@ -2248,7 +3002,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#966274",
+   "color": "#905f85",
    "capital": {
     "name": "Treviso",
     "lat": 45.666,
@@ -2323,7 +3077,7 @@
    "government": "theocracy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#448053",
+   "color": "#2f8668",
    "capital": {
     "name": "Udine",
     "lat": 46.063,
@@ -2497,7 +3251,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#694d02",
+   "color": "#776215",
    "capital": {
     "name": "Meran",
     "lat": 46.67,
@@ -2625,7 +3379,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#926655",
+   "color": "#9b6442",
    "capital": {
     "name": "Casale Monferrato",
     "lat": 45.13,
@@ -2721,7 +3475,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#3a5e2a",
+   "color": "#3a5e28",
    "capital": {
     "name": "Saluzzo",
     "lat": 44.645,
@@ -2799,7 +3553,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#652d30",
+   "color": "#612f33",
    "capital": {
     "name": "Chambéry",
     "lat": 45.566,
@@ -2941,7 +3695,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#536646",
+   "color": "#546847",
    "capital": {
     "name": "Annecy",
     "lat": 45.9,
@@ -3269,7 +4023,7 @@
    "government": "feudal_monarchy",
    "culture": "serbian",
    "faith": "orthodox",
-   "color": "#4f4009",
+   "color": "#4d481f",
    "capital": {
     "name": "Belgrade",
     "lat": 44.82,
@@ -3408,6 +4162,85 @@
       "type": "lily",
       "tincture": "or",
       "count": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "wallachia",
+   "name": {
+    "en": "Voivodeship of Wallachia",
+    "de": "Woiwodschaft Walachei"
+   },
+   "short": {
+    "en": "Wallachia",
+    "de": "Walachei"
+   },
+   "adjective": {
+    "en": "Wallachian",
+    "de": "walachisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "vlach",
+   "faith": "orthodox",
+   "color": "#526b80",
+   "capital": {
+    "name": "Curtea de Argeș",
+    "lat": 45.14,
+    "lon": 24.68
+   },
+   "holdings": [
+    {
+     "name": "Curtea de Argeș",
+     "lat": 45.14,
+     "lon": 24.68
+    },
+    {
+     "name": "Câmpulung",
+     "lat": 45.27,
+     "lon": 25.05
+    },
+    {
+     "name": "Râmnicu Vâlcea",
+     "lat": 45.1,
+     "lon": 24.37
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Romanian voivodes south of the Carpathians under Hungarian overlordship. Litovoi fell fighting Hungary c. 1277-1279; his brother Bărbat was captured, ransomed himself and accepted Ladislaus IV as overlord. No ruler is attested between Bărbat and Thocomerius (c. 1310); the ruler of 1 January 1291 is unknown (the Negru Vodă founding of 1290 is later legend). Comes Laurentius of Câmpulung is attested 1300.",
+   "overlord": "hungary",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle Or holding a cross",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1
+     },
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 1
      }
     ]
    }
@@ -3628,7 +4461,7 @@
    "government": "feudal_monarchy",
    "culture": "bulgarian",
    "faith": "orthodox",
-   "color": "#656626",
+   "color": "#636824",
    "capital": {
     "name": "Tarnovo",
     "lat": 43.081,
@@ -3750,7 +4583,7 @@
    "government": "feudal_monarchy",
    "culture": "bulgarian",
    "faith": "orthodox",
-   "color": "#3b4d2c",
+   "color": "#3d5030",
    "capital": {
     "name": "Vidin",
     "lat": 43.99,
@@ -4238,7 +5071,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#886290",
+   "color": "#886492",
    "capital": {
     "name": "Neopatras",
     "lat": 38.9,
@@ -4326,7 +5159,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#855d8f",
+   "color": "#825c8c",
    "capital": {
     "name": "Andravida",
     "lat": 37.904,
@@ -4552,7 +5385,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#284a3d",
+   "color": "#3e4b30",
    "capital": {
     "name": "Naxos",
     "lat": 37.105,
@@ -4640,7 +5473,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#4a826b",
+   "color": "#4a806f",
    "capital": {
     "name": "Acre",
     "lat": 32.92,
@@ -4730,7 +5563,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#1f6455",
+   "color": "#216353",
    "capital": {
     "name": "Nicosia",
     "lat": 35.17,
@@ -4834,7 +5667,7 @@
    "government": "feudal_monarchy",
    "culture": "armenian",
    "faith": "armenian_apostolic",
-   "color": "#9e6250",
+   "color": "#9c6064",
    "capital": {
     "name": "Sis",
     "lat": 37.45,

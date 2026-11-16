@@ -58,7 +58,7 @@
    "government": "feudal_monarchy",
    "culture": "mongol",
    "faith": "vajrayana",
-   "color": "#75693e",
+   "color": "#74693e",
    "capital": {
     "name": "Dadu",
     "lat": 39.9,
@@ -308,7 +308,7 @@
    "government": "feudal_monarchy",
    "culture": "korean",
    "faith": "mahayana",
-   "color": "#737650",
+   "color": "#747550",
    "capital": {
     "name": "Kaegyeong",
     "lat": 37.97,
@@ -920,7 +920,7 @@
    "government": "feudal_monarchy",
    "culture": "sindhi",
    "faith": "shia",
-   "color": "#51440d",
+   "color": "#4d4112",
    "capital": {
     "name": "Thatta",
     "lat": 24.75,
@@ -1250,7 +1250,7 @@
    "government": "feudal_monarchy",
    "culture": "rajput",
    "faith": "hindu",
-   "color": "#5b4c24",
+   "color": "#5e4e27",
    "capital": {
     "name": "Chittor",
     "lat": 24.89,
@@ -2140,7 +2140,7 @@
    "government": "feudal_monarchy",
    "culture": "dhivehi",
    "faith": "sunni",
-   "color": "#885948",
+   "color": "#826248",
    "capital": {
     "name": "Malé",
     "lat": 4.17,
@@ -2546,7 +2546,7 @@
    "government": "feudal_monarchy",
    "culture": "thai",
    "faith": "theravada",
-   "color": "#346132",
+   "color": "#306132",
    "capital": {
     "name": "Chiang Rai",
     "lat": 19.91,
@@ -2626,7 +2626,7 @@
    "government": "feudal_monarchy",
    "culture": "burmese",
    "faith": "theravada",
-   "color": "#836c48",
+   "color": "#806946",
    "capital": {
     "name": "Pagan",
     "lat": 21.17,
@@ -3596,7 +3596,7 @@
    "government": "elective_monarchy",
    "culture": "maya",
    "faith": "mesoamerican",
-   "color": "#2a866f",
+   "color": "#145142",
    "capital": {
     "name": "Mayapan",
     "lat": 20.63,
