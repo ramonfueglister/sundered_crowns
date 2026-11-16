@@ -54,19 +54,19 @@ export const stepOf = (wide: number) => (wide < DETAIL_UNTIL ? 0 : Math.max(1, M
 /** How far the camera looks down, in degrees. */
 export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - VIEW.elevation) * nearOf(wide) + (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
 /**
- * a coarser step does not take over all at once: over the last stretch before its border, from the border's width
- * divided by this, it is laid into the picture of the finer step dot by dot, more and more as the view widens, so
- * that the change follows the zoom and has happened when the border is reached
+ * Whether a coarser step is laid into the picture of the finer one by the zoom, dot by dot over the last stretch
+ * before its border (from the border's width divided by BLEND). OFF: as the steps are built today they show
+ * different things at the same place (single houses and trees against blocks of town and wood), and laid over each
+ * other in a resting view they made a milky double picture where the finer step alone is sharp (seen in Chrome on a
+ * Mac at 360 and at 1000 blocks across, 16 November 2026). The steps take each other's place in a short dissolve at
+ * the border instead (pieces.ts). To be switched on again once a coarser step is the mean of the finer one.
  */
+export const BLENDS: boolean = false;
 const BLEND = 1.6;
 /** How much of the next coarser step a view already shows in place of its own, 0 … 1 (1 only at the step's border). */
 export function blendOf(wide: number): number {
   const step = stepOf(wide);
-  // The step built house by house is not blended by the zoom: its picture and that of the first far step differ
-  // too much to lie over each other while the view rests (a town of sharp houses turned to a milky haze; seen in
-  // Chrome on a Mac, 16 November 2026). The two take each other's place in a short dissolve at the border instead
-  // (pieces.ts).
-  if (step === 0 || step >= COARSEST) return 0;
+  if (!BLENDS || step === 0 || step >= COARSEST) return 0;
   return over((STEP_FROM * 2 ** (step + 1)) / BLEND, STEP_FROM * 2 ** (step + 1), wide);
 }
 /** The level of the realms' map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */

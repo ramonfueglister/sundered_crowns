@@ -14,7 +14,7 @@ import { type HouseCell, createFine } from './fine';
 import type { PieceDone, PieceJob } from './piece.worker';
 import { cover, keyOf } from './pyramid';
 import { CELL } from './world';
-import { COARSEST, blendOf, reliefOf, stepOf } from './zoom';
+import { BLENDS, COARSEST, blendOf, reliefOf, stepOf } from './zoom';
 
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
@@ -47,6 +47,12 @@ interface Held {
   on: boolean;
   /** the share of the picture's dots on which the piece, of the next coarser step, is laid into the picture in place of the view's own step, as the view nears that step (zoom.ts `blendOf`) */
   laid: number;
+  /**
+   * a piece built ahead of need is drawn once on none of the dots when it arrives, so that the graphics card has
+   * its shapes and the renderer its pipelines by then, and not all pieces of a step in the one frame in which the
+   * step is first shown (100 to 200 ms at a step's border, Chrome on a Mac, 16 November 2026)
+   */
+  warm: number;
   /** the piece is dissolving into the picture (`rising`) or out of it since this time */
   fade?: { since: number; rising: boolean };
 }
@@ -84,7 +90,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         const group = stage.add(e.data.scene);
         group.visible = false;
         const cells = e.data.scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
-        held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0 });
+        held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead ? 2 : 0 });
         for (const [name, n] of Object.entries(e.data.scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
       }
       o.changed();
@@ -115,8 +121,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
 
   function look(v: View): Layout & { missing: number } {
     const step = stepOf(v.wide), coarse = 2 ** step, stepped = step !== layout.step, blend = blendOf(v.wide);
-    // between the far steps the zoom has blended the two by the time their border is crossed, so nothing dissolves there; the step built house by house and the first far one dissolve into each other at their border
-    const seamless = stepped && Math.min(step, layout.step) > 0;
+    // where the zoom has blended two far steps by the time their border is crossed, nothing dissolves there
+    const seamless = BLENDS && stepped && Math.min(step, layout.step) > 0;
     if (step !== layout.step || Math.abs(v.x / coarse - layout.homeX) > HOME_REACH || Math.abs(v.z / coarse - layout.homeZ) > HOME_REACH)
       layout = { step, coarse, homeX: Math.floor(v.x / coarse / PIECE) * PIECE, homeZ: Math.floor(v.z / coarse / PIECE) * PIECE };
     looks++;
@@ -168,8 +174,12 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     for (const h of held.values()) {
       const share = h.fade ? Math.min(1, (now - h.fade.since) / DISSOLVE) : 1;
       if (share >= 1) h.fade = undefined;
-      h.group.visible = h.on || !!h.fade || h.laid > 0;
+      // for two pictures, so that one is surely drawn in between
+      const warming = h.warm > 0 && !(h.on || h.fade || h.laid > 0);
+      h.warm = Math.max(0, h.warm - 1);
+      h.group.visible = h.on || !!h.fade || h.laid > 0 || warming;
       if (!h.group.visible) continue;
+      fading ||= warming;
       h.seen = looks; fading ||= !!h.fade;
       h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
       // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
@@ -178,6 +188,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       // while the finer pieces dissolve into a piece that stood in for them, they take the last of the dots and leave it the first
       if (h.laid > 0 && !h.on) h.dots = [0, h.fade ? 1 - (1 - h.laid) * share : h.laid];
       else if (under > 0) h.dots = h.fade?.rising ? [1 - (1 - under) * share, 1] : [under + (1 - under) * h.dots[0], under + (1 - under) * h.dots[1]];
+      if (warming) h.dots = [0, 0];
       stage.dissolve(h.group, ...h.dots);
       // a piece of another step is scaled to the stage's blocks; all sink towards the sea's level as the view widens
       const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);

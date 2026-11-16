@@ -12,7 +12,7 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
-import { type Figures, anyFigures, figureMeshes, showFigures, warmFigures } from '../figures/stage';
+import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
 const q = new URLSearchParams(location.search);
@@ -376,7 +376,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       // well before the other layer has taken a third of the dots, so that it is not seen through them
       const kept = Math.max(0, Math.min(1, until) * (1 - from / FIGURES_GONE));
       for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) {
-        if (part.userData.figures) { const all = (part.userData.all ??= (part as THREE.InstancedMesh).count) as number; (part as THREE.InstancedMesh).count = Math.round(all * kept); }
+        if (part.userData.figures) keepFigures(part, kept);
         else (part.userData.dots as THREE.Vector2).set(from, until);
       }
       pending = Math.max(pending, 1);
