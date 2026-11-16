@@ -10,7 +10,7 @@ import { ShaderLib } from 'three';
 import { portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
-import { framing } from '../src/portrait/stage';
+import { framing, keyPlaces } from '../src/portrait/stage';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
 interface Golden { pid: number; top: number; chin: number; cx: number; cz: number; fill: number; tris: number; surfaces: GoldenSurface[] }
@@ -540,5 +540,42 @@ describe('portraits', { timeout: 20_000 }, () => {
     // Apoleia's stage is as it was
     expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);
     expect(APOLEIA.exposure).toBe(0.92);
+  });
+  it('England\'s key light has a size, so that the shadows it throws have soft edges', () => {
+    // a light without size throws shadows with hard edges, whatever throws them: the nose's shadow on the far
+    // cheek was a dark wedge with a straight edge, a hood's a line across the forehead (until round 80; the
+    // reference's shades all run out softly). A light with a size is seen from the head under an angle, and the
+    // edge of a shadow is as broad as that angle times how far the thing that throws it stands off the skin.
+    // The stage draws such a light as several lights spread over its disc, which share its energy
+    const { shadow, lights } = ENGLAND_1356, from = lights.key.from;
+    // a window or a lamp with a shade, not the sun (a quarter of a degree) and not the whole sky
+    expect(shadow.spread).toBeGreaterThanOrEqual(6);
+    expect(shadow.spread).toBeLessThanOrEqual(20);
+    expect(shadow.lights).toBeGreaterThanOrEqual(6);
+    // WebGL 2 promises 16 images to a material: the key's shadows, the rim's, the surface's image and its normals
+    expect(shadow.lights + 1 + 2).toBeLessThanOrEqual(16);
+    const places = keyPlaces(from, shadow.spread, shadow.lights);
+    expect(places.length).toBe(shadow.lights);
+    const unit = (v: readonly number[]) => { const l = Math.hypot(...v); return v.map(x => x / l); };
+    const angle = (a: readonly number[], b: readonly number[]) => { const [p, q] = [unit(a), unit(b)]; return Math.acos(Math.min(1, p[0]! * q[0]! + p[1]! * q[1]! + p[2]! * q[2]!)) * 180 / Math.PI; };
+    const off = places.map(p => angle(p, from));
+    // every light on the disc, as far from the head as the key; the disc filled to its rim, not a ring or a clump
+    for (const [k, p] of places.entries()) {
+      expect(Math.hypot(...p)).toBeCloseTo(Math.hypot(...from), 5);
+      expect(off[k]!, `light ${k}`).toBeLessThanOrEqual(shadow.spread * 1.05);
+    }
+    expect(Math.max(...off)).toBeGreaterThan(0.85 * shadow.spread);
+    expect(Math.min(...off)).toBeLessThan(0.4 * shadow.spread);
+    // no two at one place (two shadows on each other are one hard edge again)
+    for (let i = 0; i < places.length; i++) for (let j = 0; j < i; j++) expect(angle(places[i]!, places[j]!), `lights ${j} and ${i}`).toBeGreaterThan(0.25 * shadow.spread);
+    // together they shine from where the key stands: the light's place, and with it the far cheek's shade, is
+    // the profile's, whatever the number of lights
+    const mean = [0, 1, 2].map(k => places.reduce((t, p) => t + p[k]!, 0));
+    expect(angle(mean, from)).toBeLessThan(0.2);
+    // a light without size, or drawn as one light, is the key itself; Apoleia's is such a light
+    expect(keyPlaces(from, 0, 8)).toEqual([[...from]]);
+    expect(keyPlaces(from, 10, 1)).toEqual([[...from]]);
+    expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 });
+    expect(keyPlaces(APOLEIA.lights.key.from, APOLEIA.shadow.spread, APOLEIA.shadow.lights)).toEqual([[-3.5, 4.5, 5.0]]);
   });
 });

@@ -178,3 +178,9 @@ Round 80: nothing in the builder. The stage's profile for England draws the laye
 with values of its own (`src/portrait/profile.ts` `cap.beard`, `src/portrait/materials.ts` `capLook`, the
 game's own files): England's beards are that layer alone, and were drawn as the shade under a head of hair.
 Apoleia's stage is as it was. Roman bytes unchanged.
+
+Round 81: nothing in the builder. The stage's profile for England has a key light with a size, drawn as eight
+lights that share its energy, so that shadows have soft edges (`src/portrait/profile.ts` `shadow`,
+`src/portrait/stage.ts` `keyPlaces`, the game's own files). Apoleia's stage has one light without size as
+before; its shadow's map and strength moved from a constant into its profile. Roman bytes and the comparison
+with Godot unchanged.

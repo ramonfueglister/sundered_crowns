@@ -1285,6 +1285,78 @@ apart, the reference's 18 (no shadow falls on a layer: `cap.shadow`). Black hair
 (L 6 and 2; no black-haired face of the reference was read). A boy of 17 can wear a short beard. Apoleia's
 paint is still in the skin under short and full beards. What rounds 78 and 79 left.
 
+**Shadows with hard edges (round 81).** Seen large, a man's face had a dark wedge with a straight edge beside
+the nose on the far cheek, with a notch at the nose's root, and a hood threw a line across the forehead. The
+reference's shades all run out softly. The men's noses are larger than the women's, so it showed on them.
+
+Cause. The stage's key light was a light without size, as the sun through a hole: whatever throws a shadow
+throws it with a hard edge, and the shadow's map (512 pixels across head and shoulders, a pixel about 2 pixels
+of the panel's picture) drew that edge in steps. A real light in a room has a size, a window or a lamp with a
+shade; the edge of a shadow is then as broad as the angle under which the light is seen times how far the thing
+that throws the shadow stands off the skin: narrow under a fringe, broad under a hood.
+
+Now. England's key light has a size (`profile.ts` `shadow`: `spread` 10 degrees to either side, as a window a
+metre broad seen from three metres) and is drawn as 8 lights spread evenly over its disc, which share its
+energy and throw a shadow each (`stage.ts` `keyPlaces`: a sunflower's seeds, equal shares of the disc; their
+mean direction is the key's). The sum of 8 lights is the light of an area sampled at 8 places, in one pass of
+three.js' own lights and shadows; the maps have 1024 pixels and a blur of 2. Apoleia's stage has one light
+without size as before (`spread` 0; its map and strength moved from a constant of `stage.ts` into its profile).
+
+A broad light reaches further round the face: with the key where it stood, the women's far cheek was 23.8 L
+darker than the lit one (before 27.7, the reference 27.7; at 15 degrees 22.4). The key stands 6 degrees
+further round for it (70 degrees from the face's front, before 64; `from` 4.88, 3.47, 3.29). Grown women and
+men of the sample, `face_colour.mjs`:
+
+| | lit cheek L | chroma | far cheek | upper lip | lower lip | brow | under the brow | under the chin |
+|---|---|---|---|---|---|---|---|---|
+| the reference's woman | 56.1 | 34.2 | -27.7 | 21.0 | 33.3 | 37.9 | -17.9 | -40 to -42 |
+| women, round 80 | 61.5 | 34.0 | -27.7 | 20.7 | 33.5 | 37.4 | -20.7 | -42 to -43 |
+| women, now | 59.4 | 34.8 | -27.9 | 18.3 | 31.3 | 37.1 | -21.5 | -39 to -41 |
+| men, round 80 | 66.3 | 28.9 | -36.5 | 23.5 | 32.6 | 35.6 | -18.7 | |
+| men, now | 64.2 | 30.3 | -36.0 | 21.5 | 30.3 | 35.1 | -19.3 | |
+
+The whole face is 2 L darker (the key lights its front less): the lit cheek is nearer the reference's, the
+lips are 2 to 3 L darker than hers; against the lit cheek the lips stand as before (upper -41.1, before -40.8;
+the reference's -35.1). The brown beard of round 80: lit jaw 2.0 L lighter than the man's hair (2.4), far jaw
+9.8 L darker than the lit one (9.1).
+
+How hard the shade beside the nose is, read as lightness along level lines from the nose's back across the
+far cheek (three heights between the nose's root and its wings, steps of 2.2 % of the face's length; the
+largest rise over one step between the darkest place beside the nose and the cheek beyond it; a scratch
+script): four men before 5.8 L in the mean of twelve lines, 11.9 at most; now 3.8 and 8.3. The reference's
+woman, read the same way: 5 and 5 on two lines (9 and 11 on two more that a pale streak on her nose's flank
+crosses). The measure is coarse (it reads form and thrown shadow together); the pictures show the change.
+
+Tried: the map at 1024 pixels without a size (the wedge's edge sharper still, its steps gone); sizes of 6, 10,
+15 and 20 degrees with the key where it stood (from 10 on the wedge is soft; larger takes more of the far
+cheek's shade); the key 4 degrees further round (far cheek -26.4); shadows on the painted layers of hair and
+beard again, which round 53 took off them for their hard edges (`cap.shadow`: the far jaw of one brown beard
+12.0 instead of 14.9, the other four beards as they were: left off).
+
+Cost. A material of England's reads 9 shadows instead of 2, with the surface's image and its normals 11 images
+(WebGL 2 promises 16). On the software driver here the sample's 35 pictures at the panel's size take 107
+seconds instead of 48. On a graphics card it was not measured.
+
+Test (`tests/portrait.test.ts`): `England's key light has a size, so that the shadows it throws have soft
+edges`: the size lies between 6 and 20 degrees and is drawn as at least 6 lights within the 16 images; the
+lights lie on the disc, fill it to its rim, no two at one place, each as far away as the key, their mean
+direction the key's; a light without size or drawn as one light is the key itself, and Apoleia's is that. It
+holds where the lights stand, not that they share the key's energy (that is the stage's, which needs a
+graphics context): a stage that draws a Roman, a person of England, the Roman again and the person again gave
+the same pictures for each (a scratch script), and the comparison with Godot is unchanged.
+Before pictures: `?set=shadow.spread:0,shadow.lights:1,shadow.map:512,shadow.radius:1,lights.key.from.0:4.53,lights.key.from.2:3.76`
+gives round 80's sample pixel for pixel.
+Pictures: `runde81_schatten_vorher_nachher.png` (three men and three women, round 80 above round 81),
+`runde81_neben_ck3_vorher_nachher.png` (the reference's woman; a woman and a man before and now),
+`runde81_stichprobe.png`.
+Still open: size and number of the lights are by eye beside one face of the reference, PLACEHOLDER; no shadow
+of hers could be read for its breadth. The lips are 2 to 3 L darker than hers, and darker against the cheek
+than hers by 6 L as before: their colour and the exposure want a round of their own. The shade beside a man's
+nose is deeper than the reference's (down to 13 where the nose's back is 62; hers 34 under 65), and the men's
+far cheek is 36 L darker than the lit one as before. The nose's own form is flat planes with a ridge. Seen
+large, the lights' eight shadows could show as steps behind something far off the skin; none was seen. What
+rounds 78 to 80 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
@@ -1318,7 +1390,7 @@ Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choic
 - **No light scattering inside skin.** Godot's skin mode softens the shading of faces; three.js has no counterpart.
   Faces come out a little harder and darker in the shadows.
 - **The shadow of the key light is calibrated, not derived**: map of 512 pixels, strength 0.7
-  (`src/portrait/stage.ts`). At full strength three.js' shadows were darker and sharper than Godot's (mean colour
+  (Apoleia's profile, `shadow` in `src/portrait/profile.ts`; until round 81 a constant of `stage.ts`). At full strength three.js' shadows were darker and sharper than Godot's (mean colour
   difference 8.0 instead of 7.0, measured before the textures repeated).
 - **Hair cards** are drawn in two passes (depth of their opaque parts, then blended), which stands in for Godot's
   "alpha with depth pre-pass". Fine strands at the edge of beards differ.

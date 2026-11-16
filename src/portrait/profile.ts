@@ -15,6 +15,13 @@ export interface StageProfile {
   /** Whether the rim light throws shadows too. Without them it shines through the head from behind onto the side
    *  of the nose (Apoleia's stage has none). */
   rimShadow: boolean;
+  /** The shadows: pixels of a shadow's map (its side), how dark the key light's shadow falls (1 = no key light in
+   *  it), how far the edge of a shadow is blurred in the map (three.js' `radius`, pixels of the map), and the size
+   *  of the key light: `spread` is the half angle under which it is seen from the head (degrees; 0 = a light
+   *  without size, as the sun through a hole: every shadow has a hard edge) and `lights` the number of lights it
+   *  is drawn as, spread evenly over its disc (stage.ts `keyPlaces`). A light with a size throws a shadow whose
+   *  edge is the softer the further the thing that throws it stands off the skin. */
+  shadow: { map: number; strength: number; radius: number; spread: number; lights: number };
   sky: { top: string; ground: string; energy: number };
   exposure: number;
   /** How far the head is turned to the left (radians), and how far above the point it looks at the camera stands
@@ -84,6 +91,9 @@ export const APOLEIA: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.75 },
   rimShadow: false,
+  // measured, not derived: with this map and strength the pictures come closest to Godot's, whose shadows are
+  // softer and lighter than three.js' at full strength (tools/portrait/compare.mjs, docs/PORTRAITS.md)
+  shadow: { map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 },
   exposure: 0.92,
   turn: -0.35, rise: 0.08, close: 1,
   anisotropy: 1,
@@ -179,17 +189,24 @@ export const APOLEIA: StageProfile = {
  *  reference's emperor: 2 to 8 L lighter than his hair, the lit side 18 L lighter than the far one). The
  *  layer of a beard has values of its own (`cap.beard`): lit jaw 2.4 L lighter than the man's hair, the far
  *  jaw 9.1 L darker. Hair, its under-layer and stubble as before.
+ *  Round 81: shadows had hard edges (a dark wedge with a straight edge beside a man's nose, a hood's line
+ *  across the forehead), because the key was a light without size. It has one now (`shadow.spread` 10 degrees
+ *  to either side, as a window a metre broad seen from three metres), drawn as 8 lights over its disc. A
+ *  broad light reaches further round the face (the women's far cheek 23.8 L darker than the lit one, before
+ *  27.7): the key stands 6 degrees further round for it (70 from the face's front; far cheek 27.9, the
+ *  reference 27.7). The face is 2 L darker with it (lit cheek 59.4, lips 18.3 and 31.3).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
-    key: { from: [4.53, 3.47, 3.76], colour: '#fff0de', energy: 1.8 },
+    key: { from: [4.88, 3.47, 3.29], colour: '#fff0de', energy: 1.8 },
     rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
     fill: { from: [1.5, -3.0, 5.0], colour: '#efe4da', energy: 0.35 },
   },
   sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },
   rimShadow: true,
+  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
   exposure: 0.375,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,

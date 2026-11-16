@@ -21,10 +21,20 @@ import type { Portrait } from './wire';
 export const PORTRAIT_SIZE = { width: 112, height: 140 } as const;
 /** Vertical field of view of the camera in degrees. */
 const FOV = 22;
-/** The shadow of the key light: pixels of its map, and how dark it falls (1 = no key light in the shadow). Measured,
- *  not derived: with these two the pictures come closest to Godot's, whose shadows are softer and lighter than
- *  three.js' at full strength (tools/portrait/compare.mjs, docs/PORTRAITS.md). */
-const SHADOW = { map: 512, strength: 0.7 } as const;
+
+/** Where the lights stand that a key light with a size is drawn as (profile.ts `shadow`): `n` places spread evenly
+ *  over the disc under which the light is seen from the head, `spread` degrees to either side of `from`, each as
+ *  far from the head as `from`; their mean direction is `from`'s. One light, or no size: `from` itself. */
+export function keyPlaces(from: readonly [number, number, number], spread: number, n: number): [number, number, number][] {
+  if (n <= 1 || spread <= 0) return [[from[0], from[1], from[2]]];
+  const d = new Vector3(...from), far = d.length();
+  d.normalize();
+  const u = new Vector3(0, 1, 0).cross(d).normalize(), v = d.clone().cross(u), r = Math.tan(spread * Math.PI / 180);
+  // a sunflower's seeds: equal shares of the disc's area (Vogel 1979); moved so that their centre is the disc's
+  const seeds = Array.from({ length: n }, (_, i) => { const q = Math.sqrt((i + 0.5) / n), a = i * Math.PI * (3 - Math.sqrt(5)); return [q * Math.cos(a), q * Math.sin(a)] as const; });
+  const mid = [0, 1].map(k => seeds.reduce((t, p) => t + p[k]!, 0) / n) as [number, number];
+  return seeds.map(([x, y]) => d.clone().addScaledVector(u, r * (x - mid[0])).addScaledVector(v, r * (y - mid[1])).normalize().multiplyScalar(far).toArray());
+}
 
 /** Where the camera stands for a portrait and what it looks at (the portrait's own coordinates, before the person
  *  is turned by the profile's `turn` about the upright axis through `at`), and the height of what the picture
@@ -51,6 +61,8 @@ export class PortraitStage {
   private readonly camera: PerspectiveCamera;
   private readonly pivot = new Group();
   private readonly lights: Record<keyof StageProfile['lights'], DirectionalLight>;
+  /** The further lights of a key light that has a size (profile.ts `shadow.lights`), made when first asked for. */
+  private readonly keys: DirectionalLight[] = [];
   private readonly sky = new HemisphereLight();
   private readonly textures = new Map<string, Promise<Texture | null>>();
   private readonly loader = new TextureLoader();
@@ -67,29 +79,40 @@ export class PortraitStage {
     this.renderer.shadowMap.type = PCFShadowMap;
     this.camera = new PerspectiveCamera(FOV, width / height, 0.1, 100);
     this.scene.add(this.sky);
-    const light = (): DirectionalLight => {
-      const l = new DirectionalLight();
-      this.scene.add(l, l.target);
-      return l;
-    };
-    this.lights = { key: light(), rim: light(), fill: light() };
+    this.lights = { key: this.lamp(), rim: this.lamp(), fill: this.lamp() };
     this.light(APOLEIA);
-    const { key, rim } = this.lights;
-    key.castShadow = true;
-    key.shadow.intensity = SHADOW.strength;
-    for (const l of [key, rim]) {
-      l.shadow.mapSize.set(SHADOW.map, SHADOW.map);
-      l.shadow.bias = -0.0005;
-      l.shadow.normalBias = 0.02;
-    }
+    this.lights.key.castShadow = true;
     this.scene.add(this.pivot);
   }
 
-  /** Sets the lights, the sky and the exposure of a profile (where the lights stand is set with the framing). */
+  private lamp(): DirectionalLight {
+    const l = new DirectionalLight();
+    l.shadow.bias = -0.0005;
+    l.shadow.normalBias = 0.02;
+    this.scene.add(l, l.target);
+    return l;
+  }
+
+  /** Sets the lights, their shadows, the sky and the exposure of a profile (where the lights stand is set with the
+   *  framing). */
   private light(p: StageProfile): void {
     for (const k of Object.keys(this.lights) as (keyof StageProfile['lights'])[]) {
       this.lights[k].color.set(p.lights[k].colour);
       this.lights[k].intensity = p.lights[k].energy * Math.PI;
+    }
+    // a key light with a size is drawn as several lights that share its energy
+    const { key, rim } = this.lights, n = keyPlaces(p.lights.key.from, p.shadow.spread, p.shadow.lights).length;
+    while (this.keys.length < n - 1) { const l = this.lamp(); l.castShadow = true; this.keys.push(l); }
+    key.intensity /= n;
+    this.keys.forEach((l, i) => { l.visible = i < n - 1; l.color.copy(key.color); l.intensity = key.intensity; });
+    for (const l of [key, rim, ...this.keys]) {
+      if (l.shadow.mapSize.x !== p.shadow.map) {
+        l.shadow.map?.dispose();
+        l.shadow.map = null;
+        l.shadow.mapSize.set(p.shadow.map, p.shadow.map);
+      }
+      l.shadow.radius = p.shadow.radius;
+      if (l !== rim) l.shadow.intensity = p.shadow.strength;
     }
     this.sky.color.set(p.sky.top);
     this.sky.groundColor.set(p.sky.ground);
@@ -154,15 +177,18 @@ export class PortraitStage {
     const at = new Vector3(...f.at);
     this.camera.position.set(...f.camera);
     this.camera.lookAt(at);
-    for (const k of Object.keys(this.lights) as (keyof StageProfile['lights'])[]) {
-      const l = this.lights[k], f = profile.lights[k].from;
+    const stand = (l: DirectionalLight, f: readonly [number, number, number]) => {
       l.position.set(at.x + f[0], at.y + f[1], at.z + f[2]);
       l.target.position.copy(at);
-    }
+    };
+    stand(this.lights.rim, profile.lights.rim.from);
+    stand(this.lights.fill, profile.lights.fill.from);
+    const keys = [this.lights.key, ...this.keys];
+    keyPlaces(profile.lights.key.from, profile.shadow.spread, profile.shadow.lights).forEach((f, i) => stand(keys[i]!, f));
     // the shadows of the key light and, where the profile has them, of the rim light: a box around head and
     // shoulders
     this.lights.rim.castShadow = profile.rimShadow;
-    for (const l of [this.lights.key, this.lights.rim]) {
+    for (const l of [this.lights.rim, ...keys]) {
       const c = l.shadow.camera, r = hv * 0.9;
       c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
       c.updateProjectionMatrix();
