@@ -19,6 +19,7 @@ import type { System } from '../schedule';
 import type { WorldState } from '../state';
 import type { World } from '../world';
 import { soilOf } from './cultivation';
+import { ofTime, toHeads } from '../scale';
 
 /** α, the share of land: Bouscasse, Nakamura, Steinsson (2025), Quarterly Journal of Economics 140(2), p. 847. */
 export const LAND_SHARE = 0.70;
@@ -52,10 +53,12 @@ export function harvestKcal(soil: number, labour: number, englandLand: number, l
 /** Kilocalories per head and day that a year's harvest gives the people of a place. */
 export const kcalPerHeadDay = (kcal: number, people: number): number => (people > 0 ? kcal / people / DAYS_PER_YEAR : 0);
 
-/** Brings in the harvest of every place from its arable and the people who live there now. */
+/** Brings in the harvest of every place from its arable and the people who live there now. The rule is fitted in
+ *  people of the time; the harvest is counted for the heads of the simulation (src/sim/scale.ts), so a head gets as
+ *  many kilocalories a day as a person of the time. */
 export function bringInHarvest(s: WorldState, w: World): void {
   const h = s.place.harvest, pop = s.place.pop, arable = s.place.arable;
-  for (let i = 0; i < h.length; i++) h[i] = harvestKcal(soilOf(w, i, arable[i]), farmers(pop[i]), w.landEngland);
+  for (let i = 0; i < h.length; i++) h[i] = toHeads(harvestKcal(soilOf(w, i, arable[i]), farmers(ofTime(pop[i])), w.landEngland));
 }
 
 /** One harvest a year, on the first day of the year. */

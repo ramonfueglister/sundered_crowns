@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { newWorldState, loadWorld, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
+import { newWorldState, loadWorld, loadEconomy, loadEconomyEngine, dataPath, countedInPeopleOfTheTime } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { calibrationJson, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
@@ -246,7 +246,7 @@ describe("England's economy in the world", () => {
 });
 
 describe('a world saved before England had an economy', () => {
-  const older = (s: any) => { const old = decodeState(encodeState(s)) as any; delete old.economy; old.v = 3; return decodeState(encodeState(old)); };
+  const older = (s: any) => { const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.economy; old.v = 3; return decodeState(encodeState(old)); };
   it('gets it when it is loaded', () => {
     const { s, w } = newWorldState();
     const loaded = older(s);

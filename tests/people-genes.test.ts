@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { child, founder, origin, GENES, NG, ORIGINS, Origin } from '../src/sim/people/genes';
 import { CITIES, genesOf } from '../src/sim/systems/people';
-import { newWorldState } from '../tools/sim/load';
+import { newWorldState, countedInPeopleOfTheTime } from '../tools/sim/load';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
@@ -77,7 +77,7 @@ describe('the genes of the persons of a world founded in 1356', () => {
 
 describe('an older world', () => {
   it('gets the genes by the upgrade, as a new world has them', () => {
-    const old = decodeState(encodeState(s)) as any; delete old.person.cols.genes; old.v = 5;
+    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person.cols.genes; old.v = 5;
     const up = upgradeState(decodeState(encodeState(old)), w);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));

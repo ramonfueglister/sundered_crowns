@@ -39,7 +39,7 @@ export interface WorldViewOptions {
   canvas?: HTMLCanvasElement;
   /** the cut of the world to show */
   region?: string;
-  /** the world's start year, whose setup colours the far map until setRealms (default 1356) */
+  /** the world's start year: its setup colours the far map until setRealms, its towns are built (default 1356) */
   year?: number;
   /** the place at the middle of the picture, in degrees, and the finest blocks across the picture */
   lon: number; lat: number; wide: number;
@@ -75,7 +75,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
