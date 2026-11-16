@@ -2,7 +2,8 @@
 // tables of 1356 as placeholders (src/sim/tables.ts); a world of 1291 founded with the people of 1356 gets those of 1291
 // by the upgrade 7 → 8.
 import { describe, it, expect } from 'vitest';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { readFileSync } from 'node:fs';
+import { newWorldState, loadSetup, dataPath } from '../tools/sim/load';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
 import { SCALE } from '../src/sim/scale';
@@ -31,6 +32,14 @@ describe('a world of 1291', () => {
     expect(up.v).toBe(STATE_VERSION);
     for (let i = 0; i < w.L; i++) expect(up.place.pop[i]).toBeCloseTo(s.place.pop[i], 3);
     for (let i = 0; i < w.L; i++) expect(up.place.harvest[i] / Math.max(1, s.place.harvest[i])).toBeCloseTo(s.place.harvest[i] > 0 ? 1 : 0, 4);
+  });
+  it('holds in every place at least the people of the towns the world graphic builds there', () => {
+    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
+    const inTowns = new Map<number, number>();
+    towns.people.forEach((n, k) => { if (n) inTowns.set(towns.place[k], (inTowns.get(towns.place[k]) ?? 0) + n); });
+    expect(inTowns.size).toBeGreaterThan(400);
+    for (const [p, n] of inTowns) expect(s.place.pop[p]).toBeGreaterThanOrEqual(n / SCALE - 0.01);
+    expect(inTowns.get(w.names.indexOf('Paris'))).toBeGreaterThan(200_000); // Chandler 1291
   });
   it('counts heads at 1:100 and feeds a head as a person of the time', () => {
     expect(sum(s.place.pop)).toBeGreaterThan(sum(s1291.pop) / SCALE * 0.999);
