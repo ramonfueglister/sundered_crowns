@@ -48,7 +48,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
-| Hair: cut round with a fringe (men), flat under a hood, a bun under the veil; girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
+| Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), softer jaw for women, redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `jaw_women`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -637,6 +637,46 @@ inner end, the outer part lower than measured); the outline of the far cheek on 
 how much darker eyes and lips are than the skin on a woman than on a man (Russell 2009, Perception 38:
 1211-1219) is not measured; all weights but the means they are fitted to are PLACEHOLDER; CK3's framing of the
 bust needs a posed body.
+
+**A veil that was a bathing cap (round 70).** The gap named last in round 69: beside the reference's veiled
+woman (the emperor's wife in the screenshots) ours read as bald. Her veil lies on the forehead, runs down the
+cheeks in front of the ears and falls from there to the shoulders; one sees face and linen, nothing else. Ours,
+seen from the front and from the side and without it:
+
+| What was wrong | Cause | Now |
+|---|---|---|
+| the ears, the temples and a bare head behind them inside the veil's opening | the veil was a hood 2 cm and more off the head all round (room for Apoleia's bun): its rim stood 1.5 cm off the cheeks, and from the front one looked into it | round the face the cloth lies on the skin: `drape_sim.py` `FACE_ON` (7 mm at the rim above the cheekbones, its full distance seven edges of the grid further in), and the smoothed rim, which sinks into the forehead, is lifted back with the cloth beside it (`tunic_bind.py` `HEMFOLLOW` with a height above the head). Measured on the built heads of six women: the rim 0.7 to 1.1 cm off the cheek at the height of the eyes, the hem's own roll of 0.6 cm included |
+| a cap that ended at the jaw in front, with a flap behind the shoulders | below the jaw the cloth was cut away for 100 degrees to either side of the front (round 29: the first try of a veil down to the shoulders clung to the neck and stood out as wings) | cut away for 52 degrees only (`UCUT=52:8`): it falls from the cheeks to the shoulders in front of them too, and hangs free from the cheekbones down |
+| a head like an egg | the veil 1.8 cm off the skull, over a bun | 1 cm off (`OFF0=0.1`), with 1 cm more over the ears (`EARS`: at 1 cm they came through), and no hair under it: `hair_veiled` is empty for England, the builder then draws none (`real_look.rs` `mh_pick`, `build.rs`) |
+| from the side a knot of hair came through the veil behind the crown | Apoleia's `bun01` under a veil that did not cover it | no hair under the veil |
+| the wimple of the older women over the veil (seen once the veil lay on the skin) | the wimple stood 1.2 cm and more off the head, as a hood of its own | the wimple lies on the skin (`OFF0=0.03`, `FACE_ON=0.02,4`), its opening is wider than the veil's (`FACE_W=48`), its hem thinner and close (`R_HEM=0.02`, `HEMFOLLOW` 0.04): its sides are under the veil from the forehead to the jaw, it shows under the chin and round the throat |
+| on a woman with large ears the wimple came through the veil at the ears (found by the new test, not in a picture) | linen is bound to the skin under it. The wimple, close on the ear, went out with an ear that is large or has grown with age (`ears/*-ear-scale-incr`), the veil further off did not | ears under a veil keep MakeHuman's form: `morph.rs` leaves out every target of the ears for a woman who wears the veil (`DressSet::veiled`); they are hidden there |
+
+The rim over the forehead is where it was (3.7 to 4.8 cm above the nose's root on six women; on the first of
+them 3.7 before and now, and its lowest point touched the forehead before, too): what read as a bare forehead up
+to the hairline was the cloth standing up behind the rim and the bare temples beside it.
+
+Tests (`portrait/tests/veil.rs`, with `portrait/tests/common/mod.rs` for what the tests of the real look share):
+on six women of 30 the veil's rim is within 1.3 cm of the skin of the cheek at the height of the eyes and in
+front of the ear (the veil of round 69: 1.5 cm, fails), the ear's outermost point is under the veil, more than
+50 points of the veil hang in front below the chin, and no image of hair is worn; on six women of 60 no point
+of the wimple above the jaw is further off the skin than the veil over it.
+Pictures: `runde70_schleier_vorher_nachher.png` (eight veiled women at the panel's size, before above after),
+`runde70_schleier_nah_ck3.png` (the reference's veiled woman, ours before, three of ours now),
+`runde70_schleier_drei_ansichten.png` (a woman of 24 and two with a wimple: as the panel shows them, from the
+front, from the side).
+Tried and dropped: the rim 3 mm off the skin without the lift (a ragged edge without a hem: the rim is in the
+forehead); the veil 1 cm off the skull without room for the ears; the wimple with its hem lifted 1 cm off the
+skin as the hood's (a hook of hem outside the veil at the jaw); the wimple of round 64 under the new veil (its rim
+inside the veil's opening and through the veil above it: three hems along the cheek).
+Still open: the reference's veil lies lower on the forehead under a circlet and is of thinner cloth with folds,
+ours is a smooth shell with one crease behind the jaw where its held part ends; the hem's line over the forehead
+wavers by a millimetre or two seen large; from the side a sliver of the wimple shows at that crease on some
+heads; seen from the side there is a dark gap between rim and temple; the veil is held on the head down to the
+jaw and hangs only below (it does not swing or lie differently from person to person); where the rim sits and
+how the veil is worn are by eye against one figure of the reference, of another century and rank (PLACEHOLDER;
+a townswoman's or countrywoman's kerchief of 1356 is not sourced); men's ears under the hood are still morphed
+(no second cloth there).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

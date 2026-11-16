@@ -114,7 +114,9 @@ for ch in chains:
 # vertices. Without that, where the smoothing takes a corner off the edge, the next row of the cloth stays behind
 # and stands out beyond the hem as a point (the hood's rim at the corners of the jaw). Not above `height`: over the
 # forehead the edge moves in towards the head, and the cloth would follow it into the hair. What has moved stays
-# `off` outside the skin (the smoothed rim under the chin rose into the jaw, which then showed through the cloth)
+# `off` outside the skin (the smoothed rim under the chin rose into the jaw, which then showed through the cloth).
+# A veil that lies on the forehead has no hair under its rim and is bound with a height above the head (round 70):
+# its smoothed rim sinks into the forehead, and this lifts rim and cloth back off the skin
 FOLLOW = [float(t) for t in os.environ.get('HEMFOLLOW', '').split(',') if t]
 if FOLLOW:
     near = defaultdict(set)

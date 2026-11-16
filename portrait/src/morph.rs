@@ -14,8 +14,12 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
+    // Ears under a veil keep MakeHuman's form: they are hidden there, and linen is bound to the skin under it. The
+    // wimple, close on the skin, went out with an ear that is large or has grown with age, the veil over it,
+    // further off, did not: the wimple came through the veil at the ears (round 70)
+    let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age));
     let mut add = |name: &str, w: f32| {
-        if w <= 1e-3 {
+        if w <= 1e-3 || ears_hidden && name.starts_with("ears/") {
             return;
         }
         let Some(t) = h.targets.get(name) else { return };

@@ -897,8 +897,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     let hatted_mh = hatted;
     let veiled = long_hair && p.hair_style() == Hair::Veil;
-    // (a dress with a table has hair under the veil, the Roman veil the builder's own)
+    // (a dress with a table has hair under the veil, the Roman veil the builder's own; a dress whose veil hides
+    // all hair has none, `hair_veiled` empty)
     let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
+    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty());
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -1101,8 +1103,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             let f = (i % w) as f32 / w as f32 * 2.0 - 1.0 + 1.0 / w as f32;
             (1.0 - 1.3 * f * f, 1.0 - f.abs())
         };
-        // (with a Blender hairstyle (real look) the bands stay away)
-        if mh.is_none() {
+        // (with a Blender hairstyle (real look) the bands stay away, and under a veil that hides all hair)
+        if mh.is_none() && !no_hair {
         for sg in [1f32, -1.0] {
             let (mut g, mut sk) = (Vec::new(), Vec::new());
             for i in 0..=ns {

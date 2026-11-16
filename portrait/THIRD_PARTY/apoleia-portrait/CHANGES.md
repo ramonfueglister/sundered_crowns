@@ -113,3 +113,9 @@ this head); `jaw_women` shifts the gene of the jaw only, no longer the one of th
 `rest` the measures of a woman's and a man's face fitted to a survey's means. New, not Apoleia's: `src/measure.rs`
 (a face's measures in millimetres, the survey's numbers), `examples/face_measure.rs`, `tests/faces.rs`. Roman
 bytes unchanged.
+
+Round 70: a dress whose `hair_veiled` is empty has no hair under the veil (`real_look.rs` `mh_pick`; `build.rs`
+then draws none of its own either); `DressSet::veiled`; the targets of the ears are left out for a woman who wears
+the veil of a dress with a table (`morph.rs`: linen bound to a grown ear came through the veil over it). The
+pipeline's `drape_sim.py` gets `FACE_ON` and `EARS` (Apoleia's script, changed in the game's copy only); veil and
+wimple of England written anew. New, not Apoleia's: `tests/veil.rs`, `tests/common/mod.rs`. Roman bytes unchanged.

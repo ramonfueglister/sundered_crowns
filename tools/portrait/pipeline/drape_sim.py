@@ -361,6 +361,39 @@ elif kind == 'hood':
     _t = [float(t) for t in os.environ.get('THROAT', '0,6.9,300,0.9').split(',')]
     _ph = np.degrees(np.abs(np.arctan2(B[:, 0], B[:, 2] - 0.1)))
     off = off - LOOSE * S * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1) * _t[0] * np.clip((_t[1] - B[:, 1]) / _t[3], 0, 1) * np.clip((_t[2] - _ph) / 25.0, 0, 1)
+    # EARS=extra,width: a hood that lies close to the skull stands off by `extra` more over the ears, within `width`
+    # degrees of them as seen from the head's centre (the ears stand 2 cm off the head and came through the cloth)
+    _e = [float(t) for t in os.environ.get('EARS', '').split(',') if t]
+    if _e:
+        _d = B - np.array([0.0, 6.95, 0.2])
+        _th = np.degrees(np.arcsin(_d[:, 1] / np.linalg.norm(_d, axis=1))); _pe = np.degrees(np.abs(np.arctan2(_d[:, 0], _d[:, 2])))
+        off = off + _e[0] * S * np.exp(-(((_th - 5.0) / _e[1]) ** 2 + ((_pe - 92.0) / _e[1]) ** 2))
+    # FACE_ON=off,rings[,height]: the cloth lies on the skin round the face (a veil held on the forehead and at the
+    # cheeks, where a cloth that stands off shows the bare head under it): at the edge of the face's opening
+    # above `height` it stands off by `off` only, and by its full distance from `rings` edges of the grid further in
+    _f = [float(t) for t in os.environ.get('FACE_ON', '').split(',') if t]
+    if _f:
+        _cnt = {}
+        for p_ in me.polygons:
+            vs = list(p_.vertices)
+            for a_, b_ in zip(vs, vs[1:] + vs[:1]):
+                _cnt[(min(a_, b_), max(a_, b_))] = _cnt.get((min(a_, b_), max(a_, b_)), 0) + 1
+        _nb = [[] for _ in range(len(B))]
+        for a_, b_ in _cnt:
+            _nb[a_].append(b_); _nb[b_].append(a_)
+        _y0 = _f[2] if len(_f) > 2 else 6.7
+        ring = sorted({v for (a_, b_), c_ in _cnt.items() if c_ == 1 for v in (a_, b_) if B[v, 1] > _y0 and _ph[v] < 110})
+        dist = np.full(len(B), 1e9); dist[ring] = 0.0
+        while ring:
+            nxt = []
+            for v in ring:
+                for w in _nb[v]:
+                    if dist[w] > dist[v] + 1:
+                        dist[w] = dist[v] + 1; nxt.append(w)
+            ring = nxt
+        _k = np.clip(dist / max(_f[1], 1.0), 0, 1); _k = _k * _k * (3 - 2 * _k)
+        off = _f[0] * S + (off - _f[0] * S) * _k
+        print('face: the cloth on the skin at', int((dist == 0).sum()), 'points of the opening')
 else:
     off = (0.15 + LOOSE * np.clip((5.4 - B[:, 1]) / 1.4, 0, 1)) * S
 # start outside the tunic: where a ray along the normal meets the tunic, at
