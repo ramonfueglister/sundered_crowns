@@ -5,13 +5,14 @@
 # as far as LINE says, by the distance off the eyeball. Written in head.bin's vertex order, one value per line.
 # usage: python3 -I skin_lash.py base.obj Eyelashes01.txt out.txt
 # LOWER=0.5 the lower lid's share, ROOT=0.012 how far off the eyeball a lash's root may lie (base units, 0.1 =
-# 1 cm), LINE=0.025,0.05 the line in full up to this distance off the eyeball and gone at this one, RINGS=5 how
-# many rings of vertices out from the roots are looked at
+# 1 cm), LINE=0.035,0.11 the line in full up to this distance off the eyeball and gone at this one (until round
+# 67: 0.025,0.05, a line half as broad as the reference's), RINGS=5 how many rings of vertices out from the roots
+# are looked at
 import sys, os
 import numpy as np
 base, mesh, outp = sys.argv[1:4]
 LOWER, ROOT = float(os.environ.get('LOWER', '0.5')), float(os.environ.get('ROOT', '0.012'))
-FULL, WIDTH = [float(t) for t in os.environ.get('LINE', '0.025,0.05').split(',')]
+FULL, WIDTH = [float(t) for t in os.environ.get('LINE', '0.035,0.11').split(',')]
 RINGS = int(os.environ.get('RINGS', '5'))
 vs, faces, g = [], {}, None
 for l in open(base):

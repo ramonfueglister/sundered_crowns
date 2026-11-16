@@ -105,7 +105,11 @@ export const APOLEIA: StageProfile = {
  *  measured against the one face of CK3 that is large enough (docs/PORTRAITS.md): there the white of the eye is
  *  the lightest thing in the face and the iris nearly black; ours was grey beside a mid-grey iris (L 40 beside
  *  17). The white lighter and the iris darker (`eye.white`, `eye.iris`: L 57 beside 12; there 65 beside 14), and
- *  the shade in the eye's corners begins further out (it lay over all the white that shows beside the iris). All
+ *  the shade in the eye's corners begins further out (it lay over all the white that shows beside the iris).
+ *  Round 68: held beside a woman's eye of CK3 at the same size, the white there is warm and no lighter than the
+ *  cheek beside the iris (L -0.5 against the cheek, a 6, b 18) and dark in the corners; ours was a cold light
+ *  grey from corner to corner (L +3 to +8, a 2, b 10). A warm tint, the white lighter by what the tint takes, and
+ *  the shade of corners and upper lid deeper and from further in (now L -2, a 3, b 15, the corners -22). All
  *  PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
@@ -120,7 +124,7 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.72, specular: 0.35, pores: 1.5, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
-  eye: { corner: { from: 0.5, to: 0.9, dark: 0.5 }, lid: { from: -0.35, to: 0.05, dark: 0.65 }, tint: [0.84, 0.82, 0.8], white: 1.6, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6, wrap: 0.5 },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6, wrap: 0.5 },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },

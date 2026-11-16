@@ -100,3 +100,8 @@ of it only when a dress asks for it. Roman bytes unchanged.
 
 Round 67: `DressSet::beard_stubble` (the file of the stubble; `build.rs`), `beard_stubble1356` for 1356. Roman
 bytes unchanged.
+
+Round 68: `DressSet::iris_mm` (the iris's size across; `build.rs`: the ball's image is laid round the gaze so that
+its iris, 27.5 degrees of the ball, has that size on this ball; 0 leaves it as it is), `DressSet::eyes_child` and
+`eyes_of` (a child's share of lids and lash line; `morph.rs`, `build.rs`), the image radius of the ball kept inside
+its cell (no change where the iris is not scaled). Roman bytes unchanged.

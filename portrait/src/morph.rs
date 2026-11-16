@@ -212,7 +212,9 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     if let Some(d) = p.dress.set() {
         for sd in ["l", "r"] {
             for (k, t) in ["height1-decr", "height2-decr", "height3-decr", "eyefold-down"].iter().enumerate() {
-                add(&format!("eyes/{sd}-eye-{t}"), crate::dress::by_sex(d.lids[0][k], d.lids[1][k], p.female, p.grown()));
+                // (a child's lids stand higher: the three heights, not the fold)
+                let child = if k < 3 { d.eyes_of(p.female, p.age)[0] } else { 1.0 };
+                add(&format!("eyes/{sd}-eye-{t}"), crate::dress::by_sex(d.lids[0][k], d.lids[1][k], p.female, p.grown()) * child);
             }
         }
         let child = 0.35 + 0.65 * p.grown();

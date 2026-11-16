@@ -134,6 +134,42 @@ describe('portraits', () => {
     }
     expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard_stubble_cap.'))), "a Roman wears Apoleia's stubble").toBe(true);
   });
+  it('the iris of a person of England is as large as a real one', () => {
+    // MakeHuman's eyeball is 30 mm across (a real one 24) and England's resting face scales the eyes up: with the
+    // iris as the ball's image has it, it was 14 to 16 mm across and took 0.59 of the opening between the lids, a
+    // doll's eyes (until round 68). A real iris is 11.71 mm (SD 0.42) across (Rüfer, Schröder & Erb 2005, Cornea
+    // 24: 259-261) in an opening of 25.6 mm (Rana et al. 2023, Int Ophthalmol 43: 2695-2701): 0.46 of it.
+    // Measured on the built head: the image of the ball is laid round the gaze by the angle to it, the edge of the
+    // iris lies at 0.0765 of a cell (public/portrait/real/eyeball.webp)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const irises = (p: PortraitPerson): number[] => {
+      const ball = b.build(p).surfaces.find(s => surfaceKind(s) === 'eyeball')!;
+      const n = ball.pos.length / 3;
+      const all = Array.from({ length: n }, (_, i) => i);
+      const mid = all.reduce((a, i) => a + ball.pos[3 * i]!, 0) / n;
+      return [all.filter(i => ball.pos[3 * i]! < mid), all.filter(i => ball.pos[3 * i]! >= mid)].map(eye => {
+        const c = [0, 1, 2].map(k => eye.reduce((a, i) => a + ball.pos[3 * i + k]!, 0) / eye.length);
+        const dir = (i: number) => { const q = [0, 1, 2].map(k => ball.pos[3 * i + k]! - c[k]!); const l = Math.hypot(...q); return { q: q.map(x => x / l), l }; };
+        const radius = eye.reduce((a, i) => a + dir(i).l, 0) / eye.length;
+        const cell = [0, 1].map(k => Math.floor(eye.map(i => ball.uv[2 * i + k]! * 4).sort((x, y) => x - y)[eye.length >> 1]!) + 0.5);
+        const rr = (i: number) => Math.hypot(ball.uv[2 * i]! * 4 - cell[0]!, ball.uv[2 * i + 1]! * 4 - cell[1]!);
+        const pole = dir(eye.reduce((a, i) => (rr(i) < rr(a) ? i : a))).q;
+        // radians of the ball per cell of the image, from the vertices between the iris and the ball's back
+        const per = eye.filter(i => rr(i) > 0.1 && rr(i) < 0.4).map(i => Math.acos(Math.min(1, dir(i).q.reduce((a, x, k) => a + x * pole[k]!, 0))) / rr(i)).sort((x, y) => x - y);
+        return 2 * radius * Math.sin(0.0765 * per[per.length >> 1]!) * 100;
+      });
+    };
+    for (const p of sample) {
+      // one standard deviation round the mean of real ones, for children too (a child's iris is nearly grown)
+      for (const mm of irises(p)) {
+        expect(mm, `person ${p.pid}`).toBeGreaterThan(11.71 - 0.42);
+        expect(mm, `person ${p.pid}`).toBeLessThan(11.71 + 0.42);
+      }
+      // Apoleia's, on the same head: 14 to 17 mm
+      for (const mm of irises({ ...p, origin: 'Italia' })) expect(mm, `person ${p.pid} as a Roman`).toBeGreaterThan(13.5);
+    }
+  });
   it('the hems of the garments of England are wound outward', () => {
     // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals
     // point into it, the stage's shadow lookup starts inside the tube, and the hem lies in its own shadow: a black

@@ -130,7 +130,9 @@ pub struct DressSet {
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
     /// (0 = not at all, Apoleia's; real_look.rs `real_skin`, the file skin_lash.txt). MakeHuman's lashes are long
     /// single hairs: drawn dense enough to frame the eye they stand off the lid as spikes, drawn thin (the stage's
-    /// `brow.lashes`) the eye has no dark edge at all and lies in the face without an outline.
+    /// `brow.lashes`) the eye has no dark edge at all and lies in the face without an outline. Since round 68
+    /// the line is broader on the upper lid (skin_lash.py `LINE`): at the size of the reference's eye ours was
+    /// one and a half pixels of 27 where theirs is three.
     pub lash_line: [f32; 2],
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
@@ -141,7 +143,10 @@ pub struct DressSet {
     pub flush: f32,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down). Half as much as up to round 49: lids that far down over eyes that
-    /// look past the viewer read as lifeless.
+    /// look past the viewer read as lifeless. Since round 68, with the iris at its real size, the three heights
+    /// are set so that the opening is 0.30 as high as it is long seen from the front (a real one 0.34, Rana et
+    /// al. 2023; the reference's about 0.26; before 0.35 round an iris half as large again), the upper lid
+    /// over the top of the iris and the lower at its lower edge.
     /// For women and for men (a boy's grow from the women's to the men's, `by_sex`): on MakeHuman's woman, seen a
     /// little from above, the men's lids left a slit.
     pub lids: [[f32; 4]; 2],
@@ -184,11 +189,25 @@ pub struct DressSet {
     /// eye level the man's brow hangs over his eyes and his head sits between the shoulders. A boy's grows from the
     /// women's to the men's (`by_sex`).
     pub lean: [f32; 2],
+    /// How large the iris is, across, in millimetres (0 = as the ball's image has it, Apoleia's: 27.5 degrees of
+    /// the ball, tools/portrait/pipeline/eye_tex.py). MakeHuman's eyeball is 30 mm across (a real one 24), and
+    /// `rest` scales the eyes up on top of that: the iris was 14 to 17 mm across and, seen from the front, took
+    /// 0.59 of the opening between the lids. Large irises in a small opening are a doll's eyes. A real iris is
+    /// 11.71 mm across (SD 0.42; Rüfer, Schröder & Erb 2005, Cornea 24: 259-261, from the abstract) whatever the
+    /// size of the head, in an opening of 25.6 mm (Rana et al. 2023, Int Ophthalmol 43: 2695-2701): 0.46 of it;
+    /// in the reference 0.44.
+    pub iris_mm: f32,
+    /// A child's eyes: factors on the lids' three height weights and on `lash_line`, in full on a head that is
+    /// MakeHuman's child and none where it has its adult form (`child_share`). A child's eyes are more open and
+    /// its lashes fine: with the adults' values children looked out of narrowed, lined eyes. PLACEHOLDER.
+    pub eyes_child: [f32; 2],
     /// Where the eyes look, seen from the head: turned about the vertical (radians, in the sense of the stage's
     /// `turn`, src/portrait/profile.ts: with the turn's sign the eyes come back towards whoever looks at the
     /// picture) and upwards. The lean is taken out of it, so that the eyes keep looking level. Apoleia's eyes look
     /// straight ahead of the head, past the viewer. Less than the stage's turn: turned all the way back to the
     /// viewer the irises stand in the corners of the eyes, a glance out of the corner of the eye (until round 60).
+    /// A little downwards since round 68: MakeHuman's opening lies lower than the ball's middle, and an iris of
+    /// real size that looks level shows white under it (a stare).
     pub gaze: [f32; 2],
     /// How far each eye is turned towards the nose on top of that (radians). Eyes that look at somebody near meet
     /// on them; eyes that stand parallel look through them into the distance. 0.03 lets them meet about a metre
@@ -210,9 +229,10 @@ pub struct DressSet {
     /// Targets of a child's face, a weight for girls and one for boys: in full for as long as the head is
     /// MakeHuman's child (up to eleven), fading to none where it has its adult form (`child_share`). The
     /// counterpart of `rest`, which a child takes a third of. MakeHuman's child has wide open eyes and a narrow
-    /// mouth with full lips, on which the genes for full lips and a narrow mouth give a pout: lids lower, the
-    /// mouth wider, the lips thinner. (Until round 55 they faded with `Look::grown`, which is at four fifths
-    /// when a girl is eleven and her head still all child: the pout was strongest then.)
+    /// mouth with full lips, on which the genes for full lips and a narrow mouth give a pout: the mouth wider,
+    /// the lips thinner. (Until round 55 they faded with `Look::grown`, which is at four fifths when a girl is
+    /// eleven and her head still all child: the pout was strongest then. Until round 67 the lids were lowered
+    /// here; since `lids` lowers everyone's, a child's share of that is `eyes_child`.)
     pub child: &'static [(&'static str, f32, f32)],
     /// How strongly single genes of the face show (names of `look::GENES`; 1 = as Apoleia, which is every gene not
     /// named). Apoleia draws its genes large, so that a face is told apart at the size of a coin
@@ -254,10 +274,10 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     lips: [Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }, Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }],
-    lash_line: [0.75, 0.65],
+    lash_line: [0.85, 0.75],
     hair_red: [0.45, 0.74],
     flush: 0.7,
-    lids: [[0.0, 0.0, 0.0, 0.3], [0.1, 0.3, 0.1, 0.3]],
+    lids: [[0.15, 0.4, 0.15, 0.3], [0.1, 0.35, 0.1, 0.3]],
     adult: [15.0, 17.0],
     mouth_shut: &[("mouth/mouth-upperlip-height-incr", 0.6), ("mouth/mouth-lowerlip-middle-down", 0.4)],
     mouth_part: &[("mouth/mouth-lowerlip-middle-up", 1.0)],
@@ -282,15 +302,15 @@ pub static ENGLAND_1356: DressSet = DressSet {
     mood: 0.6,
     eye_forward: 0.0,
     lean: [-0.1, 0.14],
-    gaze: [-0.1, 0.0],
+    iris_mm: 11.7,
+    eyes_child: [0.6, 0.5],
+    gaze: [-0.1, -0.04],
     converge: 0.03,
     jaw_women: -0.35,
     kid: 0.0,
     cheeks: [0.0, 0.0],
     sockets: [0.0, 0.0],
     child: &[
-        ("eyes/l-eye-height2-decr", 0.7, 0.4),
-        ("eyes/r-eye-height2-decr", 0.7, 0.4),
         ("mouth/mouth-scale-horiz-incr", 0.45, 0.45),
         ("mouth/mouth-upperlip-volume-decr", 0.5, 0.5),
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
@@ -307,7 +327,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
@@ -353,6 +374,11 @@ pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
 }
 
 impl DressSet {
+    /// The factors of `eyes_child` for a person: on the lids' heights and on the lash line.
+    pub fn eyes_of(&self, female: bool, yrs: f32) -> [f32; 2] {
+        let young = child_share(self.adult[if female { 0 } else { 1 }], yrs);
+        self.eyes_child.map(|k| 1.0 + (k - 1.0) * young)
+    }
     /// What a man wears on the head.
     /// The hair of the head of a person with this seed: one of `hair_lengths` by its share, else `hair`.
     pub fn hair_of(&self, seed: u32) -> &'static str {
@@ -419,5 +445,22 @@ mod tests {
         // the lean is taken out of the pitch, the same for both
         assert_eq!(left[1], right[1]);
         assert!((left[1] - (e.gaze[1] - 0.1)).abs() < 1e-6);
+    }
+
+    #[test]
+    fn a_child_of_england_has_a_childs_eyes_until_its_head_is_grown() {
+        let e = Dress::England1356.set().unwrap();
+        // in full while the head is MakeHuman's child, none on a grown head, in between as the head grows
+        for female in [true, false] {
+            assert_eq!(e.eyes_of(female, 2.0), e.eyes_child);
+            assert_eq!(e.eyes_of(female, 10.0), e.eyes_child);
+            assert_eq!(e.eyes_of(female, 30.0), [1.0, 1.0]);
+            let between = e.eyes_of(female, 13.0);
+            for k in 0..2 {
+                assert!(between[k] > e.eyes_child[k] && between[k] < 1.0, "{between:?}");
+            }
+        }
+        // a girl's head is grown earlier than a boy's
+        assert!(e.eyes_of(true, 14.0)[0] > e.eyes_of(false, 14.0)[0]);
     }
 }

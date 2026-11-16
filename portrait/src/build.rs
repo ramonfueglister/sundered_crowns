@@ -378,7 +378,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{n}_scalp.txt")).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or(1.0, |d| d.flush), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }]), garb.map(|d| &d.lips[if fem { 0 } else { 1 }]));
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or(1.0, |d| d.flush), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| &d.lips[if fem { 0 } else { 1 }]));
         }
         out.push(s);
     }
@@ -817,6 +817,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 c = add(c, x.pp[v as usize]);
             }
             c = mul(c, 1.0 / idx.len() as f32);
+            let ball = idx.iter().map(|&v| len(sub(x.pp[v as usize], c))).sum::<f32>() / idx.len() as f32;
             let mut seen = vec![false; h.n];
             for &v in idx {
                 if !seen[v as usize] {
@@ -829,7 +830,12 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let (cx, cy) = ((cell % 4) as f32, (cell / 4) as f32);
                 // +u away from the nose; a child's iris fills more of the eye
                 let temporal = if c[0] >= 0.0 { 1.0 } else { -1.0 };
-                let ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
+                let mut ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
+                // a dress that gives the iris in millimetres: the image has it at 27.5 degrees of the ball
+                // (eye_tex.py), this ball has it where a disc of that size meets it (1 = 10 cm)
+                if let Some(mm) = garb.map(|d| d.iris_mm).filter(|&mm| mm > 0.0) {
+                    ks = 27.5_f32.to_radians() / (mm / 200.0 / ball.max(1e-6)).min(1.0).asin();
+                }
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
                 // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
                 // image is laid round that direction, which on a ball is the same as turning the eye)
@@ -844,7 +850,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                         q = [dot(q, r), dot(q, u), dot(q, g)];
                     }
                     let l = len(q).max(1e-9);
-                    let rr = (q[2] / l).clamp(-1.0, 1.0).acos() * ks / PI * 0.5;
+                    // (a smaller iris stretches the image: what would lie beyond its cell is the ball's back)
+                    let rr = ((q[2] / l).clamp(-1.0, 1.0).acos() * ks / PI * 0.5).min(0.5);
                     let rho = q[0].hypot(q[1]).max(1e-9);
                     let a = eye_ao.get(v as usize).copied().unwrap_or(1.0).clamp(0.0, 1.0);
                     // linear shade, stored for the sRGB vertex colour

@@ -517,6 +517,48 @@ ray hits. Apoleia's file is untouched and still worn by everyone else. Test: Eng
 `beard_stubble1356` and no `beard_stubble`, a Roman the other way round (`tests/portrait.test.ts`); it holds the
 name only, not what is painted. Picture: `runde67_stoppeln_vorher_nachher.png`.
 
+**A doll's eyes (round 68).** Held beside the reference at the panel's size, the sample still looked out of
+round, wide, bright eyes. One eye of the woman in the screenshots (27 pixels long) and one of ours, scaled to
+the same length, side by side; ours also from the front, where lengths can be read:
+
+| | CK3 | a real eye | ours before | ours now |
+|---|---|---|---|---|
+| iris across | | 11.71 mm (SD 0.42) | 14 to 17 mm | 11.7 mm |
+| iris across, of the opening's length | 0.44 | 0.46 | 0.60 (woman), 0.58 (man) | 0.46, 0.48 |
+| opening's height, of its length | about 0.26 | 0.34 | 0.35 | 0.30 |
+| white beside the iris, against the cheek | L -0.5, a 6, b 18 | | L +3 to +8, a 2, b 10 | L -2, a 3, b 15 |
+| white in the corner of the eye, against the cheek | dark | | L -9 | L -22 |
+| dark band of lashes over the eye, of 27 pixels | about 3 | | about 1.5 | about 2.5 |
+
+The real eye: white-to-white corneal diameter of 390 people of 10 to 80 (Rüfer, Schröder & Erb 2005, Cornea 24:
+259-261, from the abstract); opening between the lids 25.6 mm long (SD 2.0) and 8.7 mm high (SD 1.3) in 380
+adults in Adelaide (Rana et al. 2023, International Ophthalmology 43: 2695-2701).
+
+| What was wrong | Cause | Now |
+|---|---|---|
+| irises half as large again as real ones | MakeHuman's eyeball is 30 mm across (a real one 24), the ball's image has the iris at 27.5 degrees of the ball (right for a real ball), and `rest` scales the eyes up on top of that (rounds 52, 65) | `iris_mm` in the dress table: 11.7. The builder lays the image round the gaze so that the iris has that size on the ball as built (`build.rs`), on every head: a child's small head has the larger iris in its opening that children have |
+| eyes wide open round them | with an iris of real size the old lids showed white under it (a stare) | `lids`: the three heights at 0.15, 0.4, 0.15 (women) and 0.1, 0.35, 0.1 (men), the gaze 0.04 downwards (MakeHuman's opening lies lower than the ball's middle): the upper lid lies over the top of the iris, the lower at its edge |
+| a cold, light white from corner to corner | one tint, a shade that began far out | stage profile: `eye.tint` warm, `eye.white` 1.85 (what the tint takes), the corners' shade from 0.3 to 0.8 of the ball's side down to 0.35, the upper lid's down to 0.5 |
+| a thin line of lashes | `skin_lash.txt` held the line within 2.5 to 5 mm of the eyeball | written with `LINE=0.035,0.11` (now the script's default), `lash_line` 0.85 and 0.75 |
+| children with narrowed, lined eyes (after the above) | the adults' lids and lash line on a child | `eyes_child`: 0.6 of the lids' heights and half the lash line on a head that is MakeHuman's child, fading as the head grows (`eyes_of`); the lids' entry in `child` is gone |
+
+Tests: the iris of all 36 people of the sample, measured on the built head, is within one standard deviation of
+the real mean, and the same head as a Roman has one of more than 13.5 mm (`tests/portrait.test.ts`; fails with
+`iris_mm` 0); a child's share of lids and lash line by the head's age (`portrait/src/dress.rs`).
+Pictures: `runde68_augen_vorher_nachher.png` (seven grown people and seven children at the panel's size, before
+above after), `runde68_auge_nah_ck3_vorher_nachher.png` (the eye of CK3's woman, ours before, ours now, at the
+same length).
+Tried and dropped: the iris as a factor on the image's (0.75: right on the grown, too small on small children,
+whose balls are smaller, and too large on people with the gene for large eyes); the lids at 0.3, 0.7, 0.3 (the
+opening 0.27 as high as long, as the reference's: the women looked tired, and it is further from a real eye
+than from the reference); the lash line in full on both lids (`LINE=0.04,0.085 LOWER=0.8`, `lash_line` 1: kohl
+round the eye); the same iris, lids and lash line on children.
+Still open: one eye of CK3 of 27 pixels and one woman of ours are a thin base; the opening is still higher than
+the reference's and lower than a real one; seen large a hair's breadth of white shows under some irises; the
+opening between the lids is about a tenth shorter than a real one for the head's size (the eyes look small in
+a broad face); the white of the eye has no veins or wet rim, the iris no depth (no cornea), and the lashes
+themselves are still thin single hairs; brows are flat bands.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
