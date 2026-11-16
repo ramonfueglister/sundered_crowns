@@ -89,6 +89,9 @@ function slabs(b: Batch, x: number, z: number, y: number, wx: number, wz: number
 /** The quay wall on one side of a column, from `top` down to `y0`: stone blocks of two by one fine blocks in running bond, a pale coping on top. */
 function quayWall(b: Batch, x: number, z: number, side: Side, top: number, y0: number, wx: number, wz: number, q: Quay) {
   const w = wallOf(x, z, x + 1, z + 1, side), rows = Math.ceil((top - y0) / V), along = side === 'px' || side === 'nx' ? wz : wx;
+  // the joints: a darker pane behind the blocks, so that the courses read on the lit faces too (in the picture of the
+  // game the sunlit quay was one plain face: the block's own ground showed through the joints in the same tone)
+  pane(b, w, 0, y0, w.len, top, shade(q.wall, 0.78), LIFT * 0.5);
   for (let k = 0; k < rows; k++) {
     const yb = top - (k + 1) * V, yt = top - k * V, off = (k % 2) * V;
     if (k === 0) { pane(b, w, 0, yb + V * 0.05, w.len, yt, q.coping, LIFT); continue; }
