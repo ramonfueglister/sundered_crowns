@@ -227,12 +227,16 @@ const HALF_HEIGHT = 0.4, MARGIN = 0.1;
 const SIZE_OVER = 0.7;
 /** a little in favour of the longer stretch, so that a name is spread as on a map rather than squeezed */
 const LONGER = 0.012;
+/** besides its own way, a name may run level or this far turned from it (radians), carried that way only if this much larger */
+const AXIS_TURN = 0.4, OTHER_WAY = 0.92;
 /** a name bends no further than this share of its length */
 const BEND_MOST = 0.16, TILT_MOST = 0.3;
 /** the bounding box of a piece is padded by this many sampled pixels */
 const PAD = 2;
 /** an enclave of another realm of no more than this many sampled pixels does not stop a name */
 const ENCLAVE = 6;
+/** nor does a lake or land without a realm inside it of no more than this many */
+const LAKE = 6;
 /** a piece less than this many times as long as broad has its name run level (fully from 0.6 more) */
 const ROUND = 1.3;
 
@@ -271,10 +275,7 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     if (Math.cos(turn) < -1e-9 || (Math.abs(Math.cos(turn)) < 1e-9 && Math.sin(turn) < 0)) turn += Math.PI;
     if (turn > Math.PI) turn -= 2 * Math.PI;
     // a piece about as broad as long has no way of its own: its name runs level, as is easiest to read
-    const lean = smoothstep(ROUND, ROUND + 0.6, long / broad), along = turn * lean;
-    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux;
-    let span = 1;
-    for (const i of members.get(s.id)!) { const x = i % w - mx, y = (i - (i % w)) / w - my; span = Math.max(span, Math.abs(x * ux + y * uy) + 1); }
+    const lean = smoothstep(ROUND, ROUND + 0.6, long / broad), prefer = turn * lean;
     // the distance of every point of the piece to its outline (Felzenszwalb & Huttenlocher), on its bounding box
     const cells = members.get(s.id)!;
     let bx0 = w, by0 = h, bx1 = 0, by1 = 0;
@@ -307,9 +308,19 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
         if (gx >= 0 && gy >= 0 && gx < w && gy < h && of[gy * w + gx] >= 0) others = true;
         for (const j of [x > 0 ? i - 1 : -1, x < bw - 1 ? i + 1 : -1, i >= bw ? i - bw : -1, i < (bh - 1) * bw ? i + bw : -1]) if (j >= 0 && outside[j] && !open[j] && blocked[j] !== 2) { blocked[j] = 2; hole.push(j); }
       }
-      if (others && hole.length > ENCLAVE) for (const i of hole) blocked[i] = 3;
+      if (hole.length > (others ? ENCLAVE : LAKE)) for (const i of hole) blocked[i] = 3;
     }
     const inside = distance(Uint8Array.from(blocked, (v) => (v === 1 || v === 3 ? 1 : 0)), bw, bh);
+    // the name runs along the piece's own way, or level, or a little turned from its way: whichever carries it largest
+    // (another way than its own a little less willingly)
+    const axes = [prefer];
+    for (const t of [0, prefer - AXIS_TURN, prefer + AXIS_TURN]) if (Math.abs(t) < 1.4 && axes.every((q) => Math.abs(q - t) > 0.15)) axes.push(t);
+    const letters = Math.max(3, lettersOf(realm));
+    let pick: RealmName | undefined, score = 0;
+    for (const along of axes) {
+    const ux = Math.cos(along), uy = Math.sin(along), vx = -uy, vy = ux, own = along === prefer ? 1 : OTHER_WAY;
+    let span = 1;
+    for (const i of cells) { const x = i % w - mx, y = (i - (i % w)) / w - my; span = Math.max(span, Math.abs(x * ux + y * uy) + 1); }
     // slices across the long axis: in each, the point deepest inside the piece (on its ridge, the medial axis) and its depth
     const mids = new Array<number>(SLICES).fill(0), thick = new Array<number>(SLICES).fill(0);
     for (const i of cells) {
@@ -321,8 +332,13 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     // the stretch of slices and the curve through it where the name can be written largest with every letter on the
     // realm: the letters are placed as names.ts places them (spread from the middle of the curve, `NAME_FILL` of it at
     // most, `NAME_ASPECT` wide for their height) and each is tested, across its whole height, against the piece itself
-    const letters = Math.max(3, lettersOf(realm));
-    const free = (gx: number, gy: number) => { const x = Math.round(gx) - bx0 + pad, y = Math.round(gy) - by0 + pad; return x >= 0 && y >= 0 && x < bw && y < bh && (blocked[y * bw + x] === 0 || blocked[y * bw + x] === 2); };
+    // tested on the map itself, not on its samples: a point of the realm's own land, or of a hole in it small enough to write over
+    const free = (gx: number, gy: number) => {
+      const x = Math.round(gx) - bx0 + pad, y = Math.round(gy) - by0 + pad;
+      if (x < 0 || y < 0 || x >= bw || y >= bh) return false;
+      const place = placeAt(r, Math.floor((gx + 0.5) * every), Math.floor((gy + 0.5) * every)), own = place >= 0 && place < lands ? r.owner[place] : -1;
+      return own === realm ? blocked[y * bw + x] !== 1 && blocked[y * bw + x] !== 3 : blocked[y * bw + x] === 2;
+    };
     /** the name's curve through slices `first` … `last` (straight: no bend) and the largest size its letters all keep to the land at */
     const curveOf = (first: number, last: number, straight: boolean, need = 0): { name: RealmName; size: number } => {
       const pts: [number, number, number][] = [];
@@ -383,16 +399,17 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
       if (top > 0) tries.push([i, j, Math.min(SIZE_OVER * top, ((j - i + 1) * width * NAME_FILL * 1.2) / (letters * NAME_ASPECT)) * (1 + LONGER * (j - i))]);
     }
     tries.sort((p, q) => q[2] - p[2]);
-    let pick: RealmName | undefined, score = 0;
     for (const [i, j, bound] of tries) {
-      if (bound <= score) break;
+      if (bound * own <= score) break;
       for (const straight of [false, true]) {
-        const c = curveOf(i, j, straight, score / (1 + LONGER * (j - i))), sc = c.size * (1 + LONGER * (j - i));
+        const c = curveOf(i, j, straight, score / own / (1 + LONGER * (j - i))), sc = c.size * own * (1 + LONGER * (j - i));
         if (sc > score) { score = sc; pick = c.name; }
       }
     }
     // a piece too small for any name: its curve across the middle, at no size (names.ts leaves it out)
-    named.push(pick ?? curveOf(0, SLICES - 1, true).name);
+    if (!pick && along === prefer) pick = curveOf(0, SLICES - 1, true).name;
+    }
+    named.push(pick!);
   }
   return named;
 
