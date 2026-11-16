@@ -10,9 +10,9 @@ import type { Table } from './ecs';
  *  10: the cities have economies of their own that trade with each other and compute one period a day; England's
  *  economy is gone. 11: a world of 1291 has the persons of its own 30 cities of 1291. 12: the persons of the cities'
  *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
- *  those of the cities of the start year and are founded anew. Older snapshots are brought up to date by
- *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 12;
+ *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the cultures and faiths of 1291
+ *  (data/history/1291/peoples.json). Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 13;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
