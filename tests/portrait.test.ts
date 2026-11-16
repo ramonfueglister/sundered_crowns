@@ -6,8 +6,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
-import { FrontSide, ShaderLib } from 'three';
-import { drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
+import { DoubleSide, FrontSide, ShaderLib } from 'three';
+import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 import { framing, keyPlaces } from '../src/portrait/stage';
@@ -117,6 +117,13 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
       // the plaits themselves are round strands, a surface of their own beside the cards of the head's hair (round 86)
       expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(p.female && p.age >= 7 && p.age < 20);
+      // a man's and a boy's hair is locks (round 87): one surface of arched bands, seen from both sides, drawn
+      // with the one image of England's locks, over the painted layer of his cut. No cards of it are left
+      const locks = english.surfaces.filter(s => s.tex.includes('/hair1356_rope.'));
+      expect(locks.length, `person ${p.pid}: locks where there is hair`).toBe(worn.some(t => /\/bob0\d_cap\./.test(t)) ? 1 : 0);
+      expect(locks.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: locks are open bands of solid hair`).toBe(true);
+      expect(locks.length === 1 && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
+      expect(worn.some(t => /\/bob0\d\./.test(t)), `person ${p.pid}: no cards of a man's hair`).toBe(false);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
       // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
       // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
@@ -485,7 +492,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(ENGLAND_1356.eye!.cornea).toBeGreaterThan(0);
     expect(eye).toContain('eyeLean');
     expect(compiled('real/skin_young_female.webp', false)).toContain('skinTint');
-    expect(compiled('real/bob01.webp', true)).toContain('hairStrand');
+    expect(compiled('real/plait01.webp', true)).toContain('hairStrand');
     expect(compiled('real/bob01_cap.webp', true)).toContain('wrapBy');
     // Apoleia's eye is left as it is
     expect(APOLEIA.eye).toBeNull();
@@ -521,6 +528,35 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(card).not.toContain('directLight.color * hairLit');
     // a profile without a sheen of strands (Apoleia's) draws a plait's strands as plain solid hair
     expect(surfaceMaterials(rope, null, null, APOLEIA)[0]!.transparent).toBe(false);
+  });
+  it('a lock of hair is solid, open below, and frayed where its image is empty', () => {
+    // Until round 87 the hair of a man's head was cards: thin sheets blended over each other, lit as one smooth
+    // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Now it
+    // is locks: arched bands, each lit by its own form, in the stage's shadows as a plait's strands are. A band
+    // is open below, so it is drawn from both sides; its hairs end one after the other, so the image is empty
+    // between them there, and where the image is empty nothing is drawn and nothing throws a shadow
+    const of = (tex: string, double: boolean) => ({ rough: 0.6, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const locks = of('real/hair1356_rope.webp', true), plait = of('real/plait01_rope.webp', false);
+    expect(surfaceKind(locks)).toBe('rope');
+    expect(drawOrder(locks)).toBe(0);
+    const [lock, ...more] = surfaceMaterials(locks, null, null, ENGLAND_1356);
+    expect(more.length).toBe(0);
+    expect([lock!.transparent, lock!.depthWrite, lock!.colorWrite, lock!.side]).toEqual([false, true, true, DoubleSide]);
+    expect(lock!.alphaTest).toBe(LOCK_OPAQUE);
+    // cut out, not blended: a part-covered pixel would be written part-clear into the picture, which stands
+    // on whatever the page shows behind it
+    expect(lock!.alphaToCoverage).toBe(false);
+    expect(LOCK_OPAQUE).toBeGreaterThan(0.25);
+    expect(LOCK_OPAQUE).toBeLessThan(0.75);
+    // a plait's strands are cut out by the same rule (their image covers everywhere) and stay one-sided
+    const strand = surfaceMaterials(plait, null, null, ENGLAND_1356)[0]!;
+    expect([strand.alphaTest, strand.side]).toEqual([LOCK_OPAQUE, FrontSide]);
+    // the same hair as the cards were: roughness, glint, and the sheen from each light as it arrives
+    expect([lock!.roughness, lock!.anisotropy]).toEqual([ENGLAND_1356.cards.rough, ENGLAND_1356.cards.anisotropy]);
+    const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+    lock!.onBeforeCompile(shader as never, null as never);
+    expect(shader.fragmentShader).toContain('directLight.color * hairLit * hairStrand');
+    expect(shader.fragmentShader).not.toContain('directionalLights[ i ].color * hairLit');
   });
   it('a scar takes the tone of the skin it lies in', () => {
     // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a

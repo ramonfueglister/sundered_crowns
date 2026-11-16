@@ -125,6 +125,9 @@ pub struct DressSet {
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     pub hair_small: &'static str,
+    /// The image of a hair's locks (the file `<hair>_rope`, tools/portrait/pipeline/hairlib.py
+    /// `locks_from_wisps`) where the file has none of its own beside it: one image for the locks of every cut.
+    pub lock_image: &'static str,
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
     pub beards: [Beard; 6],
@@ -417,6 +420,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_veiled: "",
     hair_girl: "plait01",
     hair_small: "bob01",
+    lock_image: "hair1356_rope",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
     beard_short: "beard_short1356",

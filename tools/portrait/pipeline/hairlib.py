@@ -101,6 +101,32 @@ class Head:
         return (R[i0, j0] * (1 - fi) * (1 - fj) + R[i0 + 1, j0] * fi * (1 - fj)
                 + R[i0, j0 + 1] * (1 - fi) * fj + R[i0 + 1, j0 + 1] * fi * fj)
 
+    def covered(self, reach, soft, where=None):
+        """The skin as hair lying over it takes it: by direction the farthest skin within `reach` degrees, then
+        evened out over `soft` degrees. Hair that follows the skin itself stands off at an ear as a wing, and
+        dips in behind it; over this it passes the ear in one bow. `where(th, el)`: how much of that is taken at
+        a direction (0: the skin itself, 1: all of it), everywhere if left out."""
+        k = max(1, int(round(reach / self.step)))
+        R = self.R[:-1]                                   # round the head: the last column is the first again
+        far = R.copy()
+        for i in range(-k, k + 1):
+            for j in range(-k, k + 1):
+                if i * i + j * j <= k * k:
+                    sh = np.roll(R, i, axis=0)
+                    sh = np.pad(sh, ((0, 0), (k, k)), mode='edge')[:, k + j:k + j + R.shape[1]]
+                    far = np.maximum(far, sh)
+        g = np.exp(-0.5 * (np.arange(-3 * k, 3 * k + 1) * self.step / max(soft, 1e-6)) ** 2); g /= g.sum()
+        n = len(g) // 2
+        far = np.stack([np.convolve(np.concatenate([c[-n:], c, c[:n]]), g, 'valid') for c in far.T], 1)
+        far = np.stack([np.convolve(np.pad(r, n, mode='edge'), g, 'valid') for r in far])
+        far = np.maximum(far, R)
+        if where is not None:
+            far = R + (far - R) * where(*np.meshgrid(self.TH[:-1], self.EL, indexing='ij'))
+        other = Head.__new__(Head)
+        other.__dict__.update(self.__dict__)
+        other.R = np.concatenate([far, far[:1]])
+        return other
+
     def at(self, d, h):
         """The point over direction d at height h above the skin."""
         return self.hc + d * (self.skin(d) + h)[..., None]
@@ -192,6 +218,71 @@ def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7)
     return cards, tiles
 
 
+LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest is its frayed end (lock_tex.py)
+LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
+
+
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0):
+    """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
+    wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
+    times as high, `m` corners from flank to flank. Its image's length part lies back and forth
+    along the lock (once back and forth over about two `vlen`), its frayed part over the lock's two ends: the
+    beginning (`root`: the share of the lock's length, at most so long, and how much of its breadth and of its
+    height it has at the very beginning) and the end (`tip`, the same four). A ring of corners at every place
+    where the image turns, and between them one every `ring` at most. A lock lies the higher over the skin the
+    further it has run from its root (`layer`: lowest, highest, the run over which it rises), as hair rooted
+    higher up lies on the hair rooted below it; each lock a little higher or lower by `jitter`. `wave` as for
+    cards. `over`: the skin the locks lie over, if not the head's own (`Head.covered`). Returns bands for
+    write_tubes(closed=False)."""
+    over = head if over is None else over
+    steps = S.shape[1] - 1
+    turn = np.linspace(-np.pi / 2, np.pi / 2, m)
+    u_round = np.linspace(0, 1, m)
+    smooth = lambda g: g * g * (3 - 2 * g)
+    bands = []
+    for j in range(K):
+        mk = lab == j
+        if mk.sum() < 6:
+            continue
+        Sj = S[mk]
+        c0 = Sj.mean(0)
+        cl = np.linspace(clump[0], clump[1], steps + 1)[None, :, None]
+        Sj = Sj + (c0[None] - Sj) * cl
+        b0 = unit(np.cross(unit(np.gradient(c0, axis=0)), unit(c0 - head.hc)))
+        w0 = np.clip(spread * np.sqrt((((Sj - c0[None]) * b0[None]).sum(-1) ** 2).mean(0)), wmin, wmax)
+        run0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c0, axis=0), axis=1))])
+        total = max(run0[-1], 1e-6)
+        rl, el = min(root[0] * total, root[1]), min(tip[0] * total, tip[1])
+        body = total - rl - el
+        half = max(1, int(round(body / (2 * vlen))))                 # how often the image goes back and forth
+        per = int(np.ceil(body / (2 * half) / ring))                # rings between two turns
+        run = np.concatenate([[0], rl + body * np.arange(2 * half * per + 1) / (2 * half * per), total - el + el * np.arange(1, 4) / 3])
+        c = np.stack([np.interp(run, run0, c0[:, i]) for i in range(3)], -1)
+        w = np.interp(run, run0, w0)
+        n0 = unit(c - head.hc)
+        b = unit(np.cross(unit(np.gradient(c, axis=0)), n0))
+        r = np.clip(run / rl, 0, 1)                                 # 0..1 along the beginning
+        e = np.clip((run - (total - el)) / el, 0, 1)                # 0..1 along the end
+        h = layer[0] + (layer[1] - layer[0]) * (1 - np.exp(-run / layer[2])) + rng.uniform(-jitter, jitter)
+        if wave is not None:
+            ramp = np.clip(run / (0.5 * wave[2]), 0, 1)
+            ph = rng.uniform(0, 2 * np.pi, 2)
+            c = c + b * (wave[0] * ramp * np.sin(2 * np.pi * run / wave[2] + ph[0]))[:, None]
+            h = h + wave[1] * ramp * (0.5 + 0.5 * np.sin(2 * np.pi * run / wave[2] + ph[1]))
+        hw = 0.5 * w * (root[2] + (1 - root[2]) * smooth(r)) * (1 - (1 - tip[2]) * smooth(e))
+        ht = 0.5 * flat * w * (root[3] + (1 - root[3]) * smooth(r)) * (1 - (1 - tip[3]) * smooth(e))
+        h = np.maximum(h, ht + 0.006)                               # its flanks stay off the skin
+        q = c[:, None, :] + b[:, None, :] * (hw[:, None] * np.sin(turn)[None, :])[..., None]
+        dd = unit(q - head.hc)
+        rings = head.hc + dd * (over.skin(dd) + h[:, None] + ht[:, None] * (2 * np.cos(turn)[None, :] - 1))[..., None]
+        x = 1 + (run - rl) * 2 * half / body
+        v = np.where(run < rl, LOCK_END - (LOCK_END - LOCK_BODY) * r, np.where(run > total - el, LOCK_BODY + (LOCK_END - LOCK_BODY) * e, LOCK_BODY * (1 - np.abs(x % 2 - 1))))
+        uv = np.stack(np.broadcast_arrays(u_round[None, :] + rng.random(), v[:, None]), -1)
+        cc = head.hc + n0 * (over.skin(n0) + h)[:, None]
+        bands.append((rings, uv, cc))
+    return bands
+
+
 def bind_points(head, verts, anc):
     """Binds points to the head: each to the triangle nearest to its anchor (itself, or a point given for it), as
     the triangle's three corners, their weights at the anchor's foot on it, and the way from that foot to the point."""
@@ -218,11 +309,12 @@ def bind_points(head, verts, anc):
     return bind
 
 
-def write_bound(out, name, bind, tri_list, tri_uv):
-    """The file the builder reads: the number of points and of triangles, a line for each point (three corners of
-    the head, three weights, the way from there), a line for each triangle (three points, three places in the image)."""
+def write_bound(out, name, bind, tri_list, tri_uv, even=None):
+    """The file the builder reads: the number of points and of triangles (and for tubes, if given, how often the
+    builder evens out their way with the body along them), a line for each point (three corners of the head,
+    three weights, the way from there), a line for each triangle (three points, three places in the image)."""
     with open(os.path.join(out, name + '.txt'), 'w') as f:
-        f.write(f'{len(bind)} {len(tri_list)}\n')
+        f.write(f'{len(bind)} {len(tri_list)}' + ('' if even is None else f' {even}') + '\n')
         for r, w_, o in bind:
             f.write(' '.join(map(str, r)) + ' ' + ' '.join(f'{x:.6f}' for x in list(w_) + list(o)) + '\n')
         for t, uv in zip(tri_list, tri_uv):
@@ -266,13 +358,17 @@ def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=No
     return len(verts), len(tri_list)
 
 
-def write_tubes(head, out, name, tubes):
+def write_tubes(head, out, name, tubes, even=None, closed=True):
     """Round strands (a plait's): each tube is its rings (n rings of m corners, closed round, counted so that the
     corners go round the strand's direction as the fingers of the right hand go round its thumb), the place in the
     image of each corner (n rings of m + 1: the first corner again at the end, so that the image may have a seam
     there), and for each ring the point it is bound to the body by (a whole ring moves with one triangle and keeps
     its form). The triangles are counter-clockwise seen from outside; the builder reads the surface's direction
-    from them, so that each strand is lit as the round thing it is."""
+    from them, so that each strand is lit as the round thing it is. `even`: how often the builder evens out the
+    tubes' way with the body along them (a plait, which hangs from jaw to chest, by the builder's own count; locks
+    on the head a few times). `closed=False`: bands instead of tubes, the rings not closed round (m corners
+    from flank to flank, and m places in the image): the builder takes a surface that is not closed as one seen
+    from both sides."""
     verts, anc, tri_list, tri_uv = [], [], [], []
     for rings, uv, anchors in tubes:
         n, m = rings.shape[:2]
@@ -280,14 +376,14 @@ def write_tubes(head, out, name, tubes):
         verts += list(rings.reshape(-1, 3))
         anc += list(np.repeat(anchors, m, axis=0))
         for s in range(n - 1):
-            for j in range(m):
+            for j in range(m if closed else m - 1):
                 k = (j + 1) % m
                 a, b, c, d = o + s * m + j, o + s * m + k, o + (s + 1) * m + j, o + (s + 1) * m + k
                 ua, ub, uc, ud = uv[s, j], uv[s, j + 1], uv[s + 1, j], uv[s + 1, j + 1]
                 tri_list.append([a, b, c]); tri_uv.append([tuple(ua), tuple(ub), tuple(uc)])
                 tri_list.append([b, d, c]); tri_uv.append([tuple(ub), tuple(ud), tuple(uc)])
     verts = np.array(verts).reshape(-1, 3)
-    write_bound(out, name, bind_points(head, verts, np.array(anc).reshape(-1, 3)), tri_list, tri_uv)
+    write_bound(out, name, bind_points(head, verts, np.array(anc).reshape(-1, 3)), tri_list, tri_uv, even)
     with open(os.path.join(out, name + '.obj'), 'w') as f:
         for p in verts:
             f.write('v %.5f %.5f %.5f\n' % tuple(p))

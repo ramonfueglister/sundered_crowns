@@ -994,8 +994,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, hangs, (thin, p.seed ^ 0x3c6e_f372)) {
             out.push(sf);
         }
-        // a style whose plaits are round strands has them in a file of their own (England's `plait01_rope`)
-        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &x.pp, &h.base, hair) {
+        // a style whose plaits are round strands has them in a file of their own (England's `plait01_rope`), and
+        // so has one whose hair is locks (England's men: `bob01_rope`, no cards)
+        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, hair) {
             out.push(sf);
         }
         // real look: a painted cap of fine hairs under the cards, if there is one

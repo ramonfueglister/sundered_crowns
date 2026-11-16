@@ -558,20 +558,28 @@ fn bound<'a>(rows: &'a [Vec<f32>], pp: &[V3], base: &[V3]) -> Option<(Vec<V3>, &
 
 /// How often a plait's way with the body is evened out along it (`mh_rope`): after n rounds over a tube of
 /// eight corners a place is the mean of about the square root of 2 n / 3 rings up and down, here 14 rings of
-/// 2.5 mm, 3.5 cm.
+/// 2.5 mm, 3.5 cm. A file of shorter pieces says a number of its own (the third of its first line): the locks
+/// of a head's hair 3. A lock is some 15 rings long and with 300 rounds moves as one stiff piece: on a child's
+/// head, smaller than the base's, the hair stood 2.7 cm over the crown and the fringe hung over the eyes
+/// (tests/locks.rs).
 const ROPE_EVEN: usize = 300;
 
-/// Real look: the round strands of a plait (`name`.txt, `hairlib.py` `write_tubes`), each a closed tube. The
-/// surface's direction is read from the triangles (a corner's is the mean of its triangles', weighted by their
-/// size), so that a strand is lit round: bright on the side towards a light, dark on the other. As hair cards
-/// (`mh_hair2`: the direction from the head's centre to the card) a plait was one face turned away from the head.
+/// Real look: hair that is solid (`name`.txt, `hairlib.py` `write_tubes`): the round strands of a plait, each a
+/// closed tube, and the locks of a head's hair, each an arched band that is open below (`locks_from_wisps`).
+/// The surface's direction is read from the triangles (a corner's is the mean of its triangles', weighted by
+/// their size), so that a strand is lit round: bright on the side towards a light, dark on the other. As hair
+/// cards (`mh_hair2`: the direction from the head's centre to the card) a plait was one face turned away from
+/// the head, and a head's hair one smooth dome whatever way its cards lay.
 ///
 /// Each ring of a strand is bound to the one triangle of the body nearest to it: jaw, neck, shoulder, chest in
 /// turn down a plait. On another body than the base's these go different ways, and where the plait passes from
 /// one to the next it had a kink (its middle line turned up to 74 degrees within 2 cm on girls of 8 to 19; as it
 /// is laid, 23). So a plait keeps the form it was laid in, and goes with the body by the way its points are
 /// carried, evened out along the plait (tests/plait.rs).
-pub(crate) fn mh_rope(dir: &str, name: &str, pp: &[V3], base: &[V3], hair: Rgb) -> Option<Surface> {
+///
+/// `image`: the image of the surface where the file has none of its own beside it (all hair of a dress set's
+/// locks is drawn with one image, `DressSet::lock_image`).
+pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], hair: Rgb) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let (carried, tris) = bound(&rows, pp, base)?;
     let (laid, _) = bound(&rows, base, base)?;
@@ -596,7 +604,8 @@ pub(crate) fn mh_rope(dir: &str, name: &str, pp: &[V3], base: &[V3], hair: Rgb) 
     }
     let mut way: Vec<V3> = carried.iter().zip(&laid).map(|(&c, &l)| sub(c, l)).collect();
     let mut next = way.clone();
-    for _ in 0..ROPE_EVEN {
+    // (a file may say how often itself: the third number of its first line)
+    for _ in 0..rows[0].get(2).map_or(ROPE_EVEN, |&n| n as usize) {
         for (i, near) in beside.iter().enumerate() {
             if !near.is_empty() {
                 let sum = near.iter().fold([0f32; 3], |s, &j| add(s, way[j as usize]));
@@ -607,8 +616,23 @@ pub(crate) fn mh_rope(dir: &str, name: &str, pp: &[V3], base: &[V3], hair: Rgb) 
     }
     let vs: Vec<V3> = laid.iter().zip(&one).map(|(&l, &i)| add(l, way[i])).collect();
     let nn = vnormals(&vs, &idx);
-    let mut s = Surface::new(mat(0.6));
-    s.tex = Some(crate::real::image(dir, name));
+    // a closed surface (every edge between two triangles: a plait's strands) is seen from outside only; one that
+    // is not (the arched bands of a head's locks) from both sides. A triangle with two corners at one place (at
+    // a strand's point) is no triangle and has no edges
+    let mut edges = std::collections::HashMap::new();
+    for f in idx.chunks_exact(3) {
+        let f = [one[f[0] as usize], one[f[1] as usize], one[f[2] as usize]];
+        if f[0] != f[1] && f[1] != f[2] && f[2] != f[0] {
+            for (a, b) in [(f[0], f[1]), (f[1], f[2]), (f[2], f[0])] {
+                *edges.entry((a.min(b), a.max(b))).or_insert(0u32) += 1;
+            }
+        }
+    }
+    let closed = edges.values().all(|&n| n == 2);
+    let mut s = Surface::new(if closed { mat(0.6) } else { mat2(0.6) });
+    // its own image beside the file, else the one given
+    let own = crate::real::image(dir, name);
+    s.tex = Some(if crate::real::has(&own) || image.is_empty() { own } else { crate::real::image(dir, image) });
     let c = linear(hair);
     for f in tris {
         for k in 0..3 {

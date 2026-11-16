@@ -213,3 +213,14 @@ with such a file gets the surface (England's `plait01`; Apoleia has none). Pipel
 `plait` writes the plaits as tubes; `rope_tex.py` (new). New files `plait01_rope.txt.zst`,
 `plait01_rope.webp`; `plait01.txt.zst` without the plaits' cards. `tests/plait.rs` (new, 2 tests). The game's
 stage draws the strands as solid hair (`src/portrait/materials.ts`). Roman bytes unchanged.
+
+Round 87: `real_look.rs`: `mh_rope` takes the image to draw with where the file has none of its own beside it,
+reads how often to even out from the file (the third number of its first line; a plait's default stays), and
+gives a surface that is not closed a two-sided material (triangles with two corners at one place are not
+counted: a plait's strands stay one-sided). `dress.rs`: `DressSet::lock_image` (England: `hair1356_rope`).
+`build.rs` passes it on. Pipeline: `hairlib.py` `Head.covered`, `locks_from_wisps` (new), `write_bound` and
+`write_tubes` with `even=`, `write_tubes` with `closed=`; `styles.py` style `bob` writes locks with
+`BOB_LOCKS`; `lock_tex.py` (new). New files `bob01_rope.txt.zst` to `bob07_rope.txt.zst`, `hair1356_rope.webp`,
+`hair1356_rope_n.webp`; gone `bob01.txt.zst` to `bob07.txt.zst` and their images (England's own files of
+cards; Apoleia's hairstyles are untouched). `tests/locks.rs` (new, 2 tests). The game's stage cuts solid hair
+out where its image is empty (`src/portrait/materials.ts`, `LOCK_OPAQUE`). Roman bytes unchanged.

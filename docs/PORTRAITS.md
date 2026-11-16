@@ -1768,6 +1768,101 @@ along its own way across the plait. The strands pass through each other a little
 laid by a formula, not pressed together). The plait's end is a plain round tip without band or tuft; it lies
 below the picture's edge. All measures PLACEHOLDER.
 
+**A head's hair is locks (round 87).** The hair of men, boys and small children was 520 cards a head (420 to
+640 by cut): flat strips of 2 to 4 cm, blended over each other and over a painted layer on the skull. Three
+things kept it flat. Every card was lit as a face turned away from the head's centre (the builder's direction for a card),
+so the hair was one smooth dome whatever way its strips lay. Blended surfaces throw no shadow on this stage:
+none on the forehead under the fringe, none from one strip on the next. And a card ends where its image
+ends, in a straight edge: a fringe like a comb, and beside the ear a tuft of strips that followed the ear's
+skin outward (round 86 left it open as "a ragged tuft at the ear").
+
+Now the hair is 420 locks (`tools/portrait/pipeline/hairlib.py` `locks_from_wisps`; `styles.py`, style `bob`
+with `BOB_LOCKS`). A lock is one bundle of the grown strands, as a card was (the strands sorted into bundles
+by K-means; hair as bundles that are each drawn as one body is the cluster model of Yang and others 2000 and
+the wisp model of Choe and Ko 2005, both named from memory and not read for this round), drawn as an arched
+band along the bundle's middle line: in section the upper half of
+a lens of five corners from flank to flank, 2.2 to 4 cm broad (four times the bundle's mean spread, as a card)
+and 12 % of that thick, open below. It lies 3 mm over the skin at its root and rises to 1.1 cm over a run of
+5 cm, so that a lock that began further up lies over one that begins here. A ring every 1.4 cm, in wavy hair
+every 0.7 (with 1.4 a wave was a zigzag). Its first 15 % (2 cm at most) and its last 30 % (2.5 cm at most)
+run out narrower and flatter. Beside the face a lock does not follow the skin but the highest skin within 8
+degrees round it, smoothed (`Head.covered`): it passes over the ear as hair does. Over the brows that
+envelope let the fringe hang lower, so it is used from 35 degrees round the head on.
+
+| file | cards before | locks now |
+|---|---|---|
+| `bob01` (to the ear) | 29 120 triangles | 26 976 |
+| `bob06` (above the ear), `bob07` (to the jaw) | 29 120, 29 120 | 24 544, 29 168 |
+| `bob02` (under a hood) | 23 520 | 26 704 |
+| `bob03` (gone back at the temples), `bob04` (horseshoe) | 23 520, 35 840 | 28 640, 25 568 |
+| `bob05` (wavy) | 29 120 | 36 400 |
+
+All locks are drawn with one image (`hair1356_rope.webp`, 256 by 1024, 47 kB, with normals 9 kB;
+`lock_tex.py`): 420 single hairs of 2.6 pixels side by side, drawn one over the other from the lowest to the
+topmost, the lower ones darker, with broad streaks of tone across the lock. Its upper three quarters are a
+lock's length, the same read downward and upward, and are laid back and forth along a lock of any length
+without a seam. The last quarter is a lock's end: there the hairs end one after the other, each run out to a
+point, in a few points across the lock, and between them the image is empty. Both ends of a lock are drawn
+with that part: the fringe is frayed, and so is the beginning of a lock on the crown (drawn with the length's
+part it began as a blunt bar). The image's mean tone is 0.815 where it covers (the cards' 0.809), so that a
+person's hair colour stays what it was.
+
+In the builder the locks are a file of their own beside the painted layer (`bob01_rope.txt.zst`, read by
+`real_look.rs` `mh_rope` as a plait's strands are): a corner's direction is its own surface's. A surface
+that is not closed is drawn from both sides (the builder counts the edges: a plait's strand is closed and
+stays one-sided). A lock goes with the head ring by ring, and its way is evened out along it three times
+only, a number the file says itself. With the plait's 300 rounds a lock, some 15 rings long, moved as one
+stiff piece: on a child of two, whose head is smaller than the one the hair was laid on, the hair stood 2.7
+cm over the crown (now 1.0 to 1.5 on nine heads of 2 to 68) and the fringe hung over the eyes, 0.49 of the
+head's height below the crown (now 0.30 to 0.40).
+
+On the stage locks are the kind a plait's strands are (`materials.ts`, `rope`): solid, drawn with the solid
+surfaces, throwing and taking shadows, their sheen part of each light's own share. Where the image covers
+less than half, nothing is drawn (`LOCK_OPAQUE`), in the picture and in the shadow. Not three.js'
+`alphaToCoverage`: its part-covered edge is written into the picture as a part-clear pixel, and the picture
+stands on whatever the page shows behind it.
+
+What it gives, read on pictures (`runde87_haar_vorher_nachher.png`): the fringe ends in points of different
+length and throws a shadow on the forehead; locks lie over each other with a lit and a shaded flank; the hair
+passes over the ear and ends in single points below it; wavy hair is waves (`gene=30:250`). Hair above the
+brows of eight heads from fair to black (CIELAB, tenth, median and ninth tenth, means): 21.1 / 27.3 / 36.3
+with cards, 19.3 / 25.5 / 33.6 now: 2 L darker, the shade between the locks; chroma the same (median 23.2 and
+23.1 on the fair boy). The reference's heir has 22.5 / 36.8 / 55.9, a span of 33 L where a fair boy's of ours
+has 17 (28.4 / 36.2 / 45.1; with cards 15).
+
+Of the sample's 35 portraits 20 changed (13 men and boys, the 7 small children); the 14 women and girls and
+an old man whose hood shows no hair are the same pixel for pixel, the Roman ones too. The seven files and the
+one image are 2.8 MB in the repository where the cards and their images were 5.6. Building a portrait takes
+20.3 ms where it took 15.0 (the mean of seven heads with hair, best of 40 runs each, on this machine, not as
+WebAssembly): a lock file's points are bound twice, as laid and as carried, and its directions are read from
+its triangles.
+
+Tried and dropped: locks as closed tubes of eight corners (94 080 triangles a head) and of six (they look
+like planks; an underside that faces the rim light shows as pale slivers between the locks); 300 locks of
+1.2 to 2 cm (spikes with bare scalp between); locks 2.5 times as broad as their bundle's spread (gaps in the
+fringe, bare temples); the first image at a mean tone of 0.47 (every head nearly black); the image running to
+its lower edge (it repeats, so its solid top showed as a thin line across each lock's end: the last rows are
+empty and a lock's end stops at 0.985 of the image's height).
+
+Tests: `portrait/tests/locks.rs`: `a_man_of_england_wears_locks` (nine heads of all cuts: one surface with
+the locks' image, no cards, the painted layer under it, seen from both sides, between half and 1.3 times the
+cards' triangles, more than 0.9 of the surface facing away from the head, corner directions that are not a
+card's, a share of 0.15 to 0.6 of the corners in the image's frayed part and none below its last hairs),
+`locks_lie_on_a_head_of_any_size` (nine heads of 2 to 68: the hair's top 0.7 to 1.8 cm over the crown, the
+fringe 0.27 to 0.42 of the head's height below it). `tests/portrait.test.ts`: 'a lock of hair is solid, open
+below, and frayed where its image is empty' (one material, not blended, both sides, cut out at
+`LOCK_OPAQUE`, the sheen from each light as it arrives; a plait's strands one-sided), and in the dress test:
+whoever wears a man's cut wears one surface of locks and no cards.
+Pictures: `runde87_haar_vorher_nachher.png` (cards above, locks below: six heads large, twelve at the game's
+size), `runde87_haar_wellen_kapuze_seite.png` (wavy hair, under a hood, from the side), `runde87_stichprobe.png`.
+Still open: everyone with the same cut has the same locks, the same gap in the fringe at the same place (one
+file per cut; the cards had that too, less visibly). The fringe's points are long and narrow, cut paper more
+than hair, and a block of locks stands at the temple seen from the side. The horseshoe of a bald head is
+scaly and has a ragged upper edge. The painted layer shows as a band at the nape from behind. The locks'
+relief is weaker than the reference's sculpted locks (the span above). A lock's sheen still takes its hairs
+as running down along the head. The hair of girls and young women (`plait01`) is cards as before. All
+measures PLACEHOLDER, by eye: no head of hair was measured, and the cuts themselves are unsourced as before.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

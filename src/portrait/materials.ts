@@ -15,7 +15,8 @@ import type { PortraitSurface } from './wire';
 
 /** What kind of surface an image belongs to, in the order Apoleia's bridge asks. Brows and lashes are known by
  *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
- *  hair card. The round strands of a plait (`..._rope`) are hair that is solid: no card, nothing shows through. */
+ *  hair card. The round strands of a plait and the locks of a head's hair (`..._rope`) are hair that is solid: no
+ *  card, nothing shows through but where the image is empty (a lock's frayed ends). */
 export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {
@@ -62,6 +63,9 @@ function blended(m: MeshPhysicalMaterial): void {
 
 /** How strongly the opaque parts of a hair card have to cover to be drawn in the depth pass. */
 const CARD_OPAQUE = 0.99;
+
+/** How far the image of solid hair has to cover for the hair to be there: below it, nothing is drawn. */
+export const LOCK_OPAQUE = 0.5;
 
 const f = (v: number): string => v.toFixed(3);
 const DIFFUSE = 'reflectedLight.directDiffuse += irradiance * diffuseBRDF * ( 1.0 - F );';
@@ -177,9 +181,9 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
  *  triangles is constant on each triangle and showed as a band of rectangles.
  *
  *  Cards take sheen and the light round their shaded side from every light, in shadow or not: a card knows of no
- *  shadow but its own direction's. `solid` hair (the round strands of a plait) stands in the stage's shadows as
- *  any solid thing: its sheen and the light round its shaded side are part of each light's own share, which
- *  three.js has darkened by the light's shadow. */
+ *  shadow but its own direction's. `solid` hair (the round strands of a plait, the locks of a head's hair) stands
+ *  in the stage's shadows as any solid thing: its sheen and the light round its shaded side are part of each
+ *  light's own share, which three.js has darkened by the light's shadow. */
 function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['sheen']>, solid = false): void {
   // the strand's direction and the two directions the bands are measured against
   const strand = (normal: string, eye: string): string => `vec3 hairDown = - normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
@@ -279,10 +283,15 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
         m.opacity = s.tex.includes('/Eyelashes') ? p.brow.lashes : p.brow.brows;
       }
       break;
-    // the strands of a plait: hair as the cards are, but solid: drawn with the solid surfaces, it hides what is
-    // behind it, throws shadows and takes them
+    // the strands of a plait, the locks of a head's hair: hair as the cards are, but solid: drawn with the solid
+    // surfaces, it hides what is behind it, throws shadows and takes them. A plait's strand is closed and drawn
+    // from outside; a lock is an arched band, open below and drawn from both sides (the builder says which,
+    // `double`). Where the image covers less than half there is nothing (a lock's hairs end one after the other:
+    // a frayed end), and so in the shadow it throws. Not `alphaToCoverage`: its part-covered edge would be written
+    // into the picture as a part-clear pixel, and the picture stands on whatever the page shows behind it
     case 'rope':
       m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;
+      m.alphaTest = LOCK_OPAQUE;
       if (p.sheen) hairLook(m, p, p.sheen, true);
       break;
     case 'cards': {

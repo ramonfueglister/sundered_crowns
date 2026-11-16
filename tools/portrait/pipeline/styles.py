@@ -5,7 +5,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
-from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
+from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, locks_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
 
 base, out, style, name = sys.argv[1:5]
 rng = np.random.default_rng(int(os.environ.get('SEED', '17')))
@@ -53,7 +53,7 @@ def empty_cards():
         f.write('')
 
 
-def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000, trim=None, wave=None):
+def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(0, 4)), wmax=0.3, wmin=0.12, steps=8, clump=(0.15, 0.7), Nr=9000, trim=None, wave=None, strands_only=False):
     P = roots(Nr, margin, rng)
     th, el = ang(P)
     Ls = L(th, el) * (0.9 + 0.2 * rng.random(len(P)))
@@ -61,6 +61,8 @@ def men_cards(margin, flow, L, K, lift0, taper, tile=lambda d: int(rng.integers(
     S = grow(H, P, Ls, steps, flow, lambda s, d, P0: lw * min(1, 0.35 + s * 2) + 0.004)
     if trim is not None:
         S = trim(S)
+    if strands_only:
+        return S, None, 0, 0
     lab = wisps(S, K, rng)
     cards, tiles = cards_from_wisps(H, S, lab, K, rng, 4.0, taper, tile, clump=clump, wmax=wmax, wmin=wmin, wave=wave)
     nv, nt = write_cards(H, out, name, cards, tiles)
@@ -318,7 +320,36 @@ elif style == 'bob':
     _l = [float(t) for t in os.environ.get('BOB_LIFT', '0.07,0.07').split(',')]   # height over the skin: least, and spread
     # how many strands (cards) and their least and greatest width
     BK = int(os.environ.get('BOB_K', '420')); _w = [float(t) for t in os.environ.get('BOB_W', '0.34,0.5').split(',')]
-    S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim, wave=WAVE)
+    # Locks (round 87): the same strands gathered into fewer wisps, each an arched band that is solid (`hairlib.py`
+    # `locks_from_wisps`), written as `name_rope.txt`; the game draws them in place of the cards. `BOB_LOCKS`:
+    # how many, their least and greatest breadth, their height as a share of the breadth, their height over the
+    # skin at the root and far from it, and the run over which it rises (base units, 0.1 = 1 cm). `BOB_LOCKS_ONLY`
+    # writes that file alone (a minute; cards and the painted layer take several). All PLACEHOLDER by eye.
+    locks_only = bool(os.environ.get('BOB_LOCKS_ONLY'))
+    S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim, wave=WAVE, strands_only=locks_only)
+    if os.environ.get('BOB_LOCKS'):
+        LK, LW0, LW1, LFLAT, LH0, LH1, LRUN = [float(t) for t in os.environ['BOB_LOCKS'].split(',')]
+        rl = np.random.default_rng(87)      # numbers of their own: cards and painted layer stay as they were
+        lab2 = wisps(S, int(LK), rl)
+        # the locks pass the ears in one bow (`BOB_LOCK_OVER`): how far round a place the skin is looked at for
+        # that, over how many degrees it is evened out, and from how many degrees off the face's middle over how
+        # many more (in front the locks keep to the forehead: over a bow that takes in the brows a fringe hangs
+        # lower)
+        cover = [float(t) for t in os.environ.get('BOB_LOCK_OVER', '8,6,35,30').split(',')]
+        def beside(th, el):
+            g = np.clip((np.abs(th) - cover[2]) / cover[3], 0, 1)
+            return g * g * (3 - 2 * g)
+        fours = lambda key, default: tuple(float(t) for t in os.environ.get(key, default).split(','))
+        bands = locks_from_wisps(H, S, lab2, int(LK), rl, LW0, LW1, LFLAT, (LH0, LH1, LRUN), m=int(os.environ.get('BOB_LOCK_M', '5')),
+                                 tip=fours('BOB_LOCK_TIP', '0.3,0.25,0.8,0.4'), root=fours('BOB_LOCK_ROOT', '0.15,0.2,0.7,0.3'),
+                                 wave=WAVE, ring=float(os.environ.get('BOB_LOCK_RING', '0.14')),
+                                 over=H.covered(cover[0], cover[1], beside) if cover[0] > 0 else None)
+        # (`BOB_LOCK_EVEN`: how often the builder evens out the locks' way with a head along them; a few times,
+        # so that a lock stays the head's form: evened out to the end it would move as a stiff piece)
+        nvr, ntr = write_tubes(H, out, name + '_rope', bands, even=int(os.environ.get('BOB_LOCK_EVEN', '3')), closed=False)
+        print(style, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
+        if locks_only:
+            sys.exit(0)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6)
     print(style, 'cards', nc, 'tris', nt, 'cap coverage', round(cov, 3))
 
