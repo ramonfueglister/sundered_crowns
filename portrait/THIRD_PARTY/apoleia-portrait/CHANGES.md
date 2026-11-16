@@ -161,3 +161,8 @@ women none of `cheek-bones-incr` at rest (`rest`): that target of MakeHuman's is
 cheek, which on a woman was a pouch in the outline of the cheek turned away from the viewer. New, not Apoleia's:
 `measure.rs` `far_cheek`, `CHEEK`, `STAGE_TURN`, a test in `tests/faces.rs`; `examples/face_measure.rs` prints
 the two numbers as measures 17 and 18. Roman bytes unchanged.
+
+Round 78: nothing in the builder. England's dress table paints the upper lip 1.15 times the lips' colour
+(`Lips::upper`, before 1.5): the stage's profile for England has a fill light from below and in front since
+(`src/portrait/profile.ts`, the game's own file), which lights what faces down; Apoleia's stage is as it was.
+Roman bytes unchanged.

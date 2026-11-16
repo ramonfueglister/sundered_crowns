@@ -62,8 +62,11 @@ pub struct Lips {
     /// and the colour of the blood added to it (red, green, blue, in linear light). Lips are skin without its
     /// horn layer: they go with the skin's colour a little and are not one red for everyone.
     pub blood: [f32; 3],
-    /// The upper lip's colour is the lips' times this. It faces down, away from the stage's lights, and the stage
-    /// has no light thrown back up by the lower lip and the chest: without, it is a dark bar over the mouth.
+    /// The upper lip's colour is the lips' times this. It faces down, away from the stage's key light. Until
+    /// round 77 the stage had no light thrown back up by the chest, and the upper lip was a dark bar over the
+    /// mouth unless painted half as light again (1.5). Since round 78 the stage's fill light is that light
+    /// (src/portrait/profile.ts): 1.15 keeps a grown woman's upper lip where the reference's is (L 20.7 against
+    /// 21.0; at 1.0 it reads 18.3, at 1.5 27.2).
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
@@ -408,7 +411,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.5, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.5, seam: 1.6, child: 0.6 }],
+    lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.15, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.15, seam: 1.6, child: 0.6 }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],

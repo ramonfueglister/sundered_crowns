@@ -407,16 +407,19 @@ describe('portraits', { timeout: 20_000 }, () => {
       const [lip, all] = [mean(first, skin.pos.length), mean(0, first)] as [number[], number[]];
       // a flesh colour as the skin's own, not a painted red (green to red 0.72 to 1.03 of the skin's as a whole;
       // until round 71 0.87 to 1.03: the lips are redder since, by the hue read on the reference's lips; the
-      // lips' blood alone would be 0.5 to 0.6); and lighter than the skin (1.12 to 1.41 of its red): the strip
-      // stands in the lips' shade, where the stage has no light that comes through flesh, and is as dark as the
-      // line of a mouth only so
+      // lips' blood alone would be 0.5 to 0.6); and no darker than the skin (0.95 to 1.40 of its red, the grown
+      // 0.95 to 1.11): the strip stands in the lips' shade, where the stage has no light that comes through flesh,
+      // and is as dark as the line of a mouth only so. Until round 77 1.12 to 1.41: the upper lip was painted half
+      // as light again and the strip with it; since round 78 the stage's fill lights both from below (`Lips::upper`
+      // 1.15), and the line between the lips reads 4 L lighter in the picture than before (54 L under the lit
+      // cheek, the reference's 41 to 47)
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.65);
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeLessThan(1.1);
-      expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(1.05);
+      expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(0.9);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeLessThan(1.45);
       tones.push([all[0]!, lip[0]!]);
     }
-    // the lips go with the skin: fairer skin, fairer lips, not one red for everyone (0.85 over the sample)
+    // the lips go with the skin: fairer skin, fairer lips, not one red for everyone (0.78 over the sample)
     const m = [0, 1].map(k => tones.reduce((a, t) => a + t[k]!, 0) / tones.length);
     const cov = (j: number, k: number) => tones.reduce((a, t) => a + (t[j]! - m[j]!) * (t[k]! - m[k]!), 0);
     expect(cov(0, 1) / Math.sqrt(cov(0, 0) * cov(1, 1))).toBeGreaterThan(0.6);
@@ -486,8 +489,17 @@ describe('portraits', { timeout: 20_000 }, () => {
     const far = ENGLAND_1356.turn - 0.5 * Math.sign(key.from[0]);
     const rimOn = (rim.from[0] * Math.sin(far) + rim.from[2] * Math.cos(far)) / Math.hypot(...rim.from);
     expect(rimOn).toBeLessThan(0.1);
-    // the light that fills the shade is far weaker than the key
-    expect(fill.energy).toBeLessThan(0.15 * key.energy);
+    // the light that fills the shade is what chest and ground throw back (round 78): from below and in front,
+    // so that it reaches what faces down (the jaw's underside and the neck under it, the upper lip, the skin
+    // under the brow) more than the far cheek, and far weaker than the key. Until then it stood level on the
+    // far side (10 degrees below, 0.07 of the key): the neck under the chin was 53 L darker than the lit cheek
+    // where the reference's is 42, and the upper lip had to be painted half as light again
+    const below = degrees(Math.atan2(-fill.from[1], Math.hypot(fill.from[0], fill.from[2])));
+    expect(below).toBeGreaterThan(20);
+    expect(below).toBeLessThan(45);
+    expect(fill.from[2]).toBeGreaterThan(0);
+    expect(fill.energy).toBeGreaterThan(0.15 * key.energy);
+    expect(fill.energy).toBeLessThan(0.25 * key.energy);
     expect(ENGLAND_1356.sky.energy).toBeLessThan(0.15 * key.energy);
     // Apoleia's stage is as it was
     expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);

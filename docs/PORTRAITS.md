@@ -1092,6 +1092,80 @@ Still open: the women of 68 keep a dent under the cheek (2.6 and 2.7 mm: the age
 Apoleia's and unsourced); the men's outline has a dent of 3.5 mm that was not looked at (a lean head and
 cheekbones at rest; under a beard it does not show); what rounds 74 and 76 left.
 
+**Shade that fell into black (round 78).** Held beside the reference at the game's size, the shade of our
+faces was black where hers is dark skin: under the chin, under the brow, under the nose. Measured down the
+face's middle line from the chin's lowest point over the jaw's underside to the neck, against the lit cheek
+(L; steps of 3 % of the face's length from sellion to menton; six women of 17 to 35 of the sample, whose necks
+are bare; the reference's woman read by hand one hundredth further down, at 4 to 28 %):
+
+| below the chin's lowest point (% of the face) | 0 | 3 | 6 | 9 | 12 | 15 | 18 | 21 | 24 | 27 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| round 77 | -53 | -52 | -51 | -50 | -49 | -44 | -38 | -33 | -33 | -30 |
+| now | -42 | -43 | -43 | -43 | -42 | -39 | -34 | -30 | -31 | -29 |
+| the reference's woman | | -40 | -41 | -42 | -42 | -39 | -36 | -34 | -32 | -30 |
+
+The cause was the stage, not the skin. Its fill light stood level on the far side of the face (from (-3, -1,
+5), 10 degrees below, energy 0.12): it lit the far cheek and little else. Skin that faces down had the light
+from all round and nothing more (energy 0.2, from below `#8a6f5c`). On a real bust that skin is lit by what
+chest and ground throw back. The fill is now that light (`src/portrait/profile.ts`): from (1.5, -3, 5), 30
+degrees below and in front, a little to the key's side, energy 0.35 (a fifth of the key's).
+
+Tried and measured on the way (grown women; under the chin against the lit cheek, the far cheek against the
+lit cheek, the upper lip's L; round 77: -53, -28.0, 20.8):
+
+| trial | under the chin | far cheek | upper lip |
+|---|---|---|---|
+| light from all round at 0.3 (before 0.2) | -51 | | |
+| its ground colour lighter (`#c9a58c`) | -49 | | |
+| the old fill at 0.3 | -45 | -23.8 | 25.5 |
+| the fill from (1.5, -3, 5) at 0.35 | -42 to -43 | -27.8 | 27.2 |
+| from (0, -3, 5) at 0.3 | much the same | -26.9 | |
+| from (3, -4, 5) at 0.4 | much the same | -29.4 | |
+| from steeper below, two trials | nothing gained | -30.4, -31.2 | |
+| the key at 36 and at 40 degrees with the new fill | | -20.6, -16.6 | |
+
+Also tried and dropped: shade baked into the skin (the share of the hemisphere over each vertex that the head
+itself hides, rays of 12 cm, over head and neck). The neck under the chin keeps 0.92 to 0.95 of its light by
+that measure: a chin hides little of what a neck sees. The black there was want of light, not want of baked
+shade; Apoleia's baked shade (`skin_ao.txt`, rays of 3.5 cm, the face only) is as it was.
+
+With that light a makeshift of round 66 goes: the upper lip, which faces down, was painted half as light again
+(`Lips::upper` 1.5 in `portrait/src/dress.rs`) so as not to be a dark bar over the mouth. Under the new fill
+that read 27.2 (the reference 21.0); it is now 1.15 (at 1.0: 18.3). The strip that closes the lips takes the
+upper lip's colour on its upper edge and went darker with it (its red 0.95 to 1.40 of the skin's, before 1.12
+to 1.41; the factor `seam` is as it was, 1.6), and still the line between the lips reads lighter in the
+picture, because the fill reaches it. The exposure is a little lower (0.375, before 0.4) and the brows a little
+denser (`brow.brows` 0.85, before 0.8), by what the fill adds.
+
+| at the reference's size, against her | the reference's woman | our grown women, round 77 | now | our grown men, round 77 | now |
+|---|---|---|---|---|---|
+| lit cheek L | 56.1 | 61.1 | 61.5 | 65.6 | 66.2 |
+| lit cheek chroma | 34.2 | 34.0 | 34.0 | 28.9 | 28.9 |
+| the far cheek against the lit one (L) | -27.7 | -28.0 | -27.7 | -36.1 | -36.4 |
+| upper lip L | 21.0 | 20.8 | 20.7 | 21.2 | 22.3 |
+| lower lip L | 33.3 | 33.6 | 33.5 | 32.6 | 32.6 |
+| the line between the lips against the lit cheek (L) | -41 to -47 | -58.0 | -54.1 | -59.1 | -56.5 |
+| the brow against the skin above it (L) | -37.9 | -38.2 | -37.4 | -36.6 | -35.6 |
+| the brow's breadth at half its darkness (faces) | 0.045 | 0.045 | 0.041 | 0.036 | 0.034 |
+| the lightest skin between lid and brow against the skin above the brow (L) | -17.9 | -24.4 | -20.7 | -21.5 | -18.7 |
+| the lid's rim against the skin above the brow (L) | about -46 | -59.5 | -58.5 | -53.8 | -53.6 |
+| the nose's back against the lit cheek (L) | +2.6 | 0.0 | -1.6 | -6.4 | -8.0 |
+
+Seen large, the eyes have no second glint from the fill, and the nostrils and the hoods are as before.
+Tests (`tests/portrait.test.ts`): 'England's stage lights a face from above and from the side it is turned away
+from' holds the fill below and in front (20 to 45 degrees below) and between 0.15 and 0.25 of the key's energy
+(before: under 0.15); 'the lips of a person of England close over the mouth, in a colour that goes with the
+skin' has the strip's new range (its red over 0.9 of the skin's, before over 1.05).
+Pictures: `runde78_vorher_nachher.png` (four women and two men, round 77 above round 78),
+`runde78_neben_ck3_vorher_nachher.png`, `runde78_stichprobe.png`.
+What it cost, and what is still open: the nose's back is 1.6 L darker than the lit cheek (before level with
+it; the reference's is lighter), and a woman's brow reads narrower again (0.041; the fill lights the skin
+under it). Across the neck, on the key's side, the neck's flank stands in the key's light (1 to 17 L darker
+than the lit cheek at 14 % under the chin; the reference's 25 to 36: her neck lies in even shade), not looked
+into. The line between the lips is still 7 to 13 L darker than hers, the lid's rim 12. The men's far half
+(-36) and the hard edge of the shade that hood and fringe throw across a man's face are as they were. What
+rounds 74, 76 and 77 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

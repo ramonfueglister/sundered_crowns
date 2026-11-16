@@ -155,6 +155,20 @@ export const APOLEIA: StageProfile = {
  *  (`brow.brows` 0.8, before 0.5; `brow.lashes` 0.6, before 0.3). Grown women's brow 38.2 L darker than the
  *  skin over it and 0.045 of the face broad at half its darkness (the reference 37.9 and 0.045; before 38.9 and
  *  0.050); the lid's rim as dark as before (the painted line under the lashes weaker, `lash_line`).
+ *  Round 78: shade fell into black where no light of the stage reached: read down the face's middle line, the
+ *  neck under the chin was 53 L darker than the lit cheek (the reference's woman 42), and the skin between lid
+ *  and brow 24 darker than that over the brow (18). The fill light stood level on the far side, where it lit
+ *  the far cheek and little else. It is now what chest and ground throw back: from below and in front (30
+ *  degrees below, a little to the key's side) and stronger (0.35, before 0.12). Under the chin 42 to 43 L
+ *  darker than the lit cheek, the far cheek as before (27.7; the reference 27.7), the skin under the brow 20.7.
+ *  The upper lip, which faces down, had been painted half as light again for want of this light
+ *  (portrait/src/dress.rs `Lips::upper` 1.5): now 1.15, and as dark as before (L 20.7, the reference 21.0). The
+ *  exposure a little lower (0.375, before 0.4) and the brows a little denser (0.85, before 0.8), by what the
+ *  fill adds: lit cheek L 61.5, brow 37.4 darker than the skin over it (37.9). Tried: more light from the sky
+ *  (0.3: under the chin 51), a lighter ground (49), the old fill stronger (0.3: under the chin 45, but the far
+ *  cheek 4 L lighter and the upper lip 5), the fill from steeper below (the far cheek 3 L darker, nothing
+ *  gained under the chin), the key higher with the new fill (36 and 40 degrees: the far cheek 7 and 11 L
+ *  lighter).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -162,16 +176,16 @@ export const ENGLAND_1356: StageProfile = {
   lights: {
     key: { from: [4.53, 3.47, 3.76], colour: '#fff0de', energy: 1.8 },
     rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
-    fill: { from: [-3.0, -1.0, 5.0], colour: '#efe4da', energy: 0.12 },
+    fill: { from: [1.5, -3.0, 5.0], colour: '#efe4da', energy: 0.35 },
   },
   sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },
   rimShadow: true,
-  exposure: 0.4,
+  exposure: 0.375,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
-  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.8 },
+  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
