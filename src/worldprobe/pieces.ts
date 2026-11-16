@@ -115,6 +115,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
 
   function look(v: View): Layout & { missing: number } {
     const step = stepOf(v.wide), coarse = 2 ** step, stepped = step !== layout.step, blend = blendOf(v.wide);
+    // between the far steps the zoom has blended the two by the time their border is crossed, so nothing dissolves there; the step built house by house and the first far one dissolve into each other at their border
+    const seamless = stepped && Math.min(step, layout.step) > 0;
     if (step !== layout.step || Math.abs(v.x / coarse - layout.homeX) > HOME_REACH || Math.abs(v.z / coarse - layout.homeZ) > HOME_REACH)
       layout = { step, coarse, homeX: Math.floor(v.x / coarse / PIECE) * PIECE, homeZ: Math.floor(v.z / coarse / PIECE) * PIECE };
     looks++;
@@ -157,7 +159,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     }
     /** the share of a piece's dots that the coarser piece over it has taken */
     const taken = (h: Held) => { const k = 2 ** (step + 1 - h.step); return h.step <= step ? (held.get(keyOf(step + 1, Math.floor(h.px / k), Math.floor(h.pz / k)))?.laid ?? 0) : 0; };
-    if (stepped) for (const h of [...coming, ...going]) { h.on = shown.has(h); h.fade = undefined; }
+    if (seamless) for (const h of [...coming, ...going]) { h.on = shown.has(h); h.fade = undefined; }
     else {
     const over = (a: Held, b: Held) => { const [fine, wide] = a.step <= b.step ? [a, b] : [b, a], k = 2 ** (wide.step - fine.step); return Math.floor(fine.px / k) === wide.px && Math.floor(fine.pz / k) === wide.pz; };
     for (const h of coming) { h.on = true; h.fade = o.ahead && going.some((g) => over(h, g)) ? { since: now, rising: true } : undefined; }

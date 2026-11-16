@@ -12,7 +12,7 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
-import { type Figures, anyFigures, figureMeshes, showFigures } from '../figures/stage';
+import { type Figures, anyFigures, figureMeshes, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
 const q = new URLSearchParams(location.search);
@@ -46,6 +46,8 @@ const FAR_SHADOW = 2;
 const LIT_GROUND = 0.32;
 /** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
 const FIGURES_GONE = 0.3;
+/** the layer the figures are drawn on: the picture's camera sees it, the water mirror's does not */
+const FIGURES_LAYER = 1;
 
 /** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
 export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
@@ -154,8 +156,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
+  let mirrored: ReturnType<typeof reflector> | null = null;
   if (flag('mirror', true)) {
-    const mirror = reflector({ resolutionScale: 0.5 });
+    const mirror = mirrored = reflector({ resolutionScale: 0.5 });
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
     marked(mirror.target); scene.add(mirror.target);
@@ -206,6 +209,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
   const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, 1, LOOK.distance * 2);
+  // The figures are not in the water's mirror image: there they are smaller than its blur, and the frame in which
+  // the mirror was first drawn stood for 70 to 90 ms building their shader for its pass (Chrome on a Mac, 16 November 2026).
+  camera.layers.enable(FIGURES_LAYER);
+  mirrored?.reflector.getVirtualCamera(camera).layers.set(0);
+  // one figure of each kit stands out of sight below the stage from the start, so that the figures' shaders are
+  // built while the world loads and not in the frame in which a piece's figures or the other kit first show
+  { const warm = warmFigures(); warm.position.y = -5000; marked(warm); scene.add(warm); }
   const controls = o.fixed ? null : new MapControls(camera, canvas);
   if (controls) { controls.minDistance = 600; controls.maxDistance = 4200; controls.maxPolarAngle = rad(80); }
   let frameW = o.frameW ?? FRAME_W, distance: number = LOOK.distance;
@@ -348,7 +358,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         part.userData.ground = shape === built.ground;
         group.add(part);
       }
-      if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); marked(group); showFigures(frameW); }
+      if (built.figures?.count) { const f = figureMeshes(built.figures); f.near.layers.set(FIGURES_LAYER); f.far.layers.set(FIGURES_LAYER); group.add(f.near, f.far); marked(group); showFigures(frameW); }
       scene.add(group);
       pending = Math.max(pending, 3);
       return group;

@@ -1,6 +1,7 @@
 // The figures on the stage (lookprobe/stage.ts): which pieces show figures, near or far kit by how much of the world
 // is in the picture, and whether anything walks, so that the stage keeps drawing. Main thread only.
 import type * as THREE from 'three/webgpu';
+import { Group } from 'three/webgpu';
 import type { Figures } from './crowd';
 import { figureMeshes as build, figureAt as standing, figureSeconds } from './material';
 
@@ -23,6 +24,13 @@ export function figureMeshes(f: Figures) {
   shown.add(pair);
   pair.near.addEventListener('dispose', () => { shown.delete(pair); pair.far.dispose(); });
   return pair;
+}
+
+/** One figure of each kit, both shown, on the figures' layer `1`: drawn once somewhere out of sight, it has the renderer build the figures' shaders ahead of need. */
+export function warmFigures(): THREE.Group {
+  const none = () => new Float32Array(4), pair = build({ count: 1, a: none(), b: none(), c: none(), d: none(), e: none() }), group = new Group();
+  for (const mesh of [pair.near, pair.far]) { mesh.layers.set(1); group.add(mesh); }
+  return group;
 }
 
 /** Shows the near or the far kit, for a picture `across` blocks wide. */
