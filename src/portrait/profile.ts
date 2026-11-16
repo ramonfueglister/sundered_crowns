@@ -41,8 +41,10 @@ export interface StageProfile {
    *  on the colour: below 1 a dark iris shows its colour), the glint of the key light on it
    *  (roughness: the rougher the larger and fainter; Godot's "specular"), and how far light reaches round to the
    *  ball's shaded side (wrap lighting as on skin: the white of the eye lets light through; without it the side
-   *  of each ball away from the key light is a dark sickle beside the iris). */
-  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number };
+   *  of each ball away from the key light is a dark sickle beside the iris), and the cornea: how far the surface's
+   *  normal leans outward at the iris' rim (the tangent of the angle; 0 = a plain ball. A cornea of 7.8 mm radius
+   *  on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm: 0.36). */
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -116,8 +118,13 @@ export const APOLEIA: StageProfile = {
  *  lit cheek of the grown women stays at L 67). Read at landmarks (tools/portrait/face_colour.mjs) the back of
  *  the nose is still no lighter than the cheek (L -2.0; there +8.2), and lit skin is still paler than there
  *  (chroma 30 against 34): ACES tone mapping takes the colour out of what is lit, whatever the skin's
- *  own colour is (three.js' Neutral and AgX tone mappings tried: too orange, too pale). All PLACEHOLDER (see
- *  above). */
+ *  own colour is (three.js' Neutral and AgX tone mappings tried: too orange, too pale).
+ *  Round 72: seen very large the eye was a plain ball of glass, the key light's glint a dot on the white beside
+ *  the iris. The eye has a cornea (`eye.cornea`), so the glint lies on the iris, and the eye is a little rougher
+ *  (0.14, before 0.07: a larger, softer glint, which the game's size still shows). The brows less dense
+ *  (`brow.brows` 0.5, before 0.6): read along a line from the upper lid to the forehead at the reference's size, a
+ *  woman's brow was 34.5 L darker than her forehead where the reference's woman's is 26.4; now 30.5 (the men's
+ *  36.3 and 31.8). All PLACEHOLDER (see above). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -131,8 +138,8 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.07, specular: 0.6, wrap: 0.5 },
-  brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.6 },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
+  brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.5 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },

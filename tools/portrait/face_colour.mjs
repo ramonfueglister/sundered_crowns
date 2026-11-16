@@ -4,10 +4,15 @@
 // beside them. To hold a face against a reference in numbers before a value is tuned by eye (docs/PORTRAITS.md).
 //
 //   npx vite --port 5199 &            (the game's dev server)
-//   NODE_PATH=$(npm root -g) node tools/portrait/face_colour.mjs http://localhost:5199 [query] [--all]
+//   NODE_PATH=$(npm root -g) node tools/portrait/face_colour.mjs http://localhost:5199 [query] [--all] [--brow] [--size=WxH]
 //
 // `query` goes to the test page as it is (set=skin.colour:1.1 to try a value of the stage profile); --all prints
 // every person, not the means alone. Needs Playwright with its Chromium (not a dependency of the game).
+// --brow prints the brow instead: the lightness along a line from the upper lid over the pupil up to the forehead
+// (in steps of 0.005 of the face's length, sellion to menton), and from it how far above the lid the brow lies,
+// how much darker than the forehead it is, how broad at half that darkness, and the lightest place between lid
+// and brow. A soft picture reads broader and paler: hold a face against a reference at the reference's size
+// (--size=224x280 gives a face of about 88 pixels; the default is 448x560).
 //
 // The landmarks are places on the skin's image, the same for everyone (written by
 // `cargo run --release --example face_measure -- England Gallia 36 ../public/portrait --marks` in portrait/); the
@@ -46,23 +51,26 @@ const MARKS = [
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const args = process.argv.slice(2);
-const all = args.includes('--all');
-const [base, query] = args.filter(a => a !== '--all');
-if (!base) throw new Error('usage: face_colour.mjs <address of the dev server> [query for the test page] [--all]');
+const all = args.includes('--all'), brow = args.includes('--brow');
+const size = args.find(a => a.startsWith('--size='))?.slice(7) ?? '448x560';
+const [base, query] = args.filter(a => !a.startsWith('--'));
+if (!base) throw new Error('usage: face_colour.mjs <address of the dev server> [query for the test page] [--all] [--brow] [--size=WxH]');
+// the steps of the line over the lid, in lengths of the face
+const STEPS = Array.from({ length: 81 }, (_, k) => (k - 20) * 0.005);
 const sample = JSON.parse(readFileSync(fileURLToPath(new URL('../../tests/portrait/sample_england.json', import.meta.url)), 'utf8'));
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
 page.on('pageerror', e => console.error(String(e)));
 const at = MARKS.map(([, u, v]) => `${u}:${v}`).join(',');
-await page.goto(`${base}/portrait-test.html?sample=england&size=448x560&at=${at}${query ? `&${query}` : ''}`);
+await page.goto(`${base}/portrait-test.html?sample=england&size=${size}&at=${at}${query ? `&${query}` : ''}`);
 await page.waitForFunction('window.portraitsDone || window.portraitError', null, { timeout: 600000 });
 const failed = await page.evaluate('window.portraitError');
 if (failed) throw new Error(failed);
 
 // per person: the mean colour (linear light) of a disc round each place measured, laid on black where the picture
 // is clear (a place beside the face then reads dark, and is seen as such)
-const read = await page.evaluate(names => {
+const read = await page.evaluate(([names, STEPS]) => {
   const out = {};
   for (const canvas of document.querySelectorAll('canvas[id^=p]')) {
     const m = Object.fromEntries(canvas.dataset.at.split(',').map((t, k) => [names[k], t.split(':').map(Number)]));
@@ -96,13 +104,17 @@ const read = await page.evaluate(names => {
       return sum.map(s => s / Math.max(1, n));
     };
     const lipsHeight = Math.hypot(m['lips\' top, outside'][0] - m['lips\' foot, outside'][0], m['lips\' top, outside'][1] - m['lips\' foot, outside'][1]);
+    // the line over each eye: from the upper lid over the pupil along the face's own upright (menton to sellion)
+    const up = [(m.sellion[0] - m.menton[0]) / face, (m.sellion[1] - m.menton[1]) / face];
+    const line = s => STEPS.map(d => colour([m[`upper lid, ${s}`][0] + up[0] * d * face, m[`upper lid, ${s}`][1] + up[1] * d * face], Math.max(1, 0.008 * face)));
     out[canvas.id.slice(1)] = {
       face,
+      lines: { left: line('left'), right: line('right') },
       colours: Object.fromEntries(Object.entries(places).map(([k, p]) => [k, colour(p, k.includes('lip') && !k.startsWith('above') ? Math.max(1.5, 0.12 * lipsHeight) : 0.022 * face)])),
     };
   }
   return out;
-}, MARKS.map(m => m[0]));
+}, [MARKS.map(m => m[0]), STEPS]);
 await browser.close();
 
 function lab(rgb) {
@@ -133,13 +145,37 @@ function row(person) {
   };
 }
 
-const rows = sample.filter(p => read[p.pid]).map(p => ({ p, r: row(read[p.pid]) }));
+/** What is printed of a brow (--brow), read on the side of the lit cheek: how far above the upper lid its darkest
+ *  place lies (in lengths of the face), how much darker than the forehead that is (L), how broad the brow is at
+ *  half that darkness, and the lightest place between lid and brow against the forehead. */
+function browRow(person) {
+  const L = rgb => lab(rgb)[0], c = person.colours;
+  const lit = L(c['cheek, left']) >= L(c['cheek, right']) ? 'left' : 'right';
+  const line = person.lines[lit].map(rgb => L(rgb) - L(c.forehead));
+  const within = STEPS.map((d, k) => k).filter(k => STEPS[k] >= 0.04 && STEPS[k] <= 0.26);
+  const dark = within.reduce((a, k) => line[k] < line[a] ? k : a);
+  let under = dark, over = dark;
+  for (let k = dark; k >= 0 && STEPS[k] >= 0; k--) if (line[k] > line[under]) under = k;
+  for (let k = dark; k < STEPS.length; k++) if (line[k] > line[over]) over = k;
+  const half = (line[dark] + Math.min(line[under], line[over])) / 2;
+  let a = dark, b = dark;
+  while (a > 0 && line[a - 1] < half) a--;
+  while (b < STEPS.length - 1 && line[b + 1] < half) b++;
+  return {
+    'face, pixels': person.face,
+    'brow above the upper lid (faces)': STEPS[dark], 'brow darker than forehead (L)': -line[dark],
+    'brow broad at half its darkness (faces)': STEPS[b] - STEPS[a] + 0.005,
+    'lightest between lid and brow, against the forehead (L)': line[under],
+  };
+}
+
+const rows = sample.filter(p => read[p.pid]).map(p => ({ p, r: brow ? browRow(read[p.pid]) : row(read[p.pid]) }));
 const keys = Object.keys(rows[0].r);
 const show = (name, list) => {
   if (!list.length) return;
-  const cell = k => (list.reduce((s, x) => s + x.r[k], 0) / list.length).toFixed(1).padStart(6);
+  const cell = k => (list.reduce((s, x) => s + x.r[k], 0) / list.length).toFixed(k.includes('(faces)') ? 3 : 1).padStart(7);
   console.log(`\n${name} (${list.length})`);
-  for (const k of keys) console.log(`  ${k.padEnd(38)}${cell(k)}`);
+  for (const k of keys) console.log(`  ${k.padEnd(brow ? 56 : 38)}${cell(k)}`);
 };
 if (all) for (const x of rows) show(`${x.p.pid}, ${x.p.female ? 'woman' : 'man'} of ${x.p.age}`, [x]);
 show('grown women (20 and older)', rows.filter(x => x.p.female && x.p.age >= 20));

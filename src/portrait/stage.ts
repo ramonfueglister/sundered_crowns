@@ -13,7 +13,7 @@ import {
   PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { surfaceGeometry } from './mesh';
-import { drawOrder, normalMapOf, surfaceKind, surfaceMaterials } from './materials';
+import { drawOrder, normalMapOf, portraitSkinTone, surfaceKind, surfaceMaterials } from './materials';
 import { APOLEIA, profileOf, type StageProfile } from './profile';
 import type { Portrait } from './wire';
 
@@ -117,9 +117,10 @@ export class PortraitStage {
     this.clear();
     this.light(profile);
     const inner = new Group();
+    const tone = portraitSkinTone(p.surfaces);
     parts.forEach(({ s, map, normalMap }) => {
       const geometry = surfaceGeometry(s);
-      for (const material of surfaceMaterials(s, map, normalMap, profile)) {
+      for (const material of surfaceMaterials(s, map, normalMap, profile, tone)) {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = material.colorWrite && !material.transparent;
         // the painted layer of short hairs may be lit without shadows (profile.ts `cap.shadow`)

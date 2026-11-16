@@ -737,9 +737,52 @@ back is no lighter than the cheek (there +8); the upper lip still stands 3 mm in
 first woman of the sample the profile still shows an overbite; the lips are as matt as the skin (no wetness of
 their own). Seen beside the reference: brows thin sharp lines (there thick and soft), the eyes pale in sockets
 with little shade, skin still smooth; one woman of the sample strongly orange; a dark stroke on the forehead of
-another under the veil's rim (there before this round, not looked into yet). One face of the reference is a thin
+another under the veil's rim (there before this round; a scar, see round 72). One face of the reference is a thin
 base for these numbers, and it is a ruler of another century with paint on her lips: form and colour of the
 mouth, the flush and the sheen are PLACEHOLDER by eye and by that one face; only the lips' height is sourced.
+
+**Scars, eyes and brows (round 72).** Three things seen when the faces of round 71 were held large beside the
+reference's.
+
+| What was wrong | Cause | Now |
+|---|---|---|
+| a dark brown strip with facets on a cheek, a dark stroke through a brow (two of the 36 people of the sample; in round 71 the stroke was noted as a gap without knowing what it was) | a scar. Apoleia's scar is a raised ribbon of its own, without the skin's image and in a colour mixed for skin without one: on a face of the real look, bark | a dress with a table asks for a line in the skin itself (`dress.rs` `ScarLine`, `build.rs`): a ribbon that takes the skin's image, normals and colours from where it lies, lighter and pinker along its middle, fading into the skin at both edges and both ends. It is a small surface of skin of its own, and takes the tone of the person's skin as a whole on the stage (`materials.ts` `portraitSkinTone`). Romans keep Apoleia's ribbon |
+| eyes of glass: the key light's glint a dot on the white beside the iris | the eye is a plain ball. A real eye has a cornea, a cap of a smaller ball over the iris, on which the lights of a room are mirrored | over the iris the normal leans outward from the iris' middle, up to the rim (`eye.cornea` 0.36: a cornea of 7.8 mm radius on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm; these radii from memory, not read). The glint lies on the iris; the eye a little rougher (0.14), so that the glint is larger and softer and shows at the game's size |
+| brows as dark bars | measured, see below | the women's band 0.9 of MakeHuman's (`brow_band`, before 0.7), the brows drawn less densely (`brow.brows` 0.5, before 0.6) |
+
+The brow measured: the lightness along a line from the upper lid over the pupil up to the forehead, on the side
+of the lit cheek, in steps of the face's length (`face_colour.mjs --brow`), ours at the size of the reference's
+face (88 pixels from sellion to menton; a soft picture reads broader and paler).
+
+| | the reference's woman | our grown women, round 71 | now | our grown men, round 71 | now |
+|---|---|---|---|---|---|
+| the brow darker than the forehead (L) | 26.4 | 34.5 | 30.5 | 36.3 | 31.8 |
+| the brow broad at half its darkness (lengths of the face) | 0.045 | 0.036 | 0.036 | 0.044 | 0.045 |
+| the brow above the upper lid (lengths of the face) | 0.115 | 0.099 | 0.096 | 0.078 | 0.076 |
+
+So the brows were darker than the reference's, not paler, and the women's narrower: the narrowing of round 69
+(by eye) went the wrong way by this measure. The darkness is nearer now; the women's breadth is not (a broader
+band drawn less densely is as broad at half its darkness as before): the reference's brow has soft edges and
+tapers, ours is MakeHuman's band with a hard edge and a thin tail.
+Also measured, and other than it looked: across the opening of the eye from corner to corner our eyes are not
+lighter than the reference's (mean L against the lit cheek -33 where she has -29): what reads as staring is not
+the white's lightness.
+
+Tests: `tests/faces.rs` `a_scar_of_england_is_a_pale_line_in_the_skin` (a second surface in the skin's image,
+on the skin, 0.9 to 1.4 of the lightness of the skin beside it; Apoleia's ribbon has no image and fails);
+`tests/portrait.test.ts`: the eye's shader holds the cornea, and a scar's material takes the tone of the skin as
+a whole (with its own it takes another tint). The Roman portraits of the real look are held by
+`tests/portrait.test.ts` (golden), which is what noticed that the first form of the scar changed them too: it is
+a value of the dress table since.
+Pictures: `runde72_frauen_vorher_nachher.png` (four women large, before above after),
+`runde72_narben_vorher_nachher.png`, `runde72_auge_nah_ck3.png` (the reference's eye, two of ours before and
+now), `runde72_stichprobe.png`.
+Still open: the brow's form (the reference's is arched, thick at its inner end and tapers to a point; ours a
+band with a hard edge and a hook at its tail); the lashes are thin single hairs, seen large like a spider's legs,
+where the reference has a dark fringe above and below the eye; the iris is a flat disc with a hard pupil (the
+image's fibres and rim are too fine for the size it is drawn at); little shade in the socket beside the nose;
+the eyes are rounder and wider open than the reference's. The scar's breadth and colour, the cornea's lean and
+the brows' density are PLACEHOLDER by eye and by one face of the reference.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

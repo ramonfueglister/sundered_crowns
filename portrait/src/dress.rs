@@ -33,6 +33,18 @@ pub struct Source {
     pub source: &'static str,
 }
 
+/// A scar of a dress with a table (build.rs): a healed scar is a fine line in the skin itself, paler than the skin
+/// round it and a little pink, that fades into it at both edges. Built as a ribbon that takes the skin's image,
+/// normals and colours from where it lies, lighter along its middle. Apoleia's is a raised ribbon without the skin's
+/// image, in a colour mixed for skin without one: on a face of the real look a dark brown strip with facets, bark
+/// on the face (until round 72; two of the 36 people of England's sample wore one). PLACEHOLDER, by eye.
+pub struct ScarLine {
+    /// Half its breadth at its middle (0.1 = 1 cm); it narrows to three tenths of that at its ends.
+    pub half: f32,
+    /// The skin's colour times this along its middle (red, green, blue, in linear light).
+    pub tone: [f32; 3],
+}
+
 /// The lips of a dress with a table (real_look.rs `real_skin`). Apoleia's are the builder's own: every facet that
 /// the targets for full lips move, mixed towards one red, softened over its neighbours: a broad band without the
 /// lips' outline, the same red on every skin. Measured against three mouths of the reference (round 66, CIELAB
@@ -148,7 +160,13 @@ pub struct DressSet {
     pub brow_lift: [[f32; 3]; 2],
     /// How broad the band of the brow's hairs is, women and men (1 = MakeHuman's, one brow for both sexes: its
     /// hairs span 5 mm over the pupil and more at the inner end). A woman's brow is the narrower. PLACEHOLDER, by
-    /// eye against the reference. A child's as MakeHuman's (`brow_band_of`).
+    /// eye against the reference. A child's as MakeHuman's (`brow_band_of`). Until round 71 the women's was 0.7:
+    /// read in the picture at the reference's size (the lightness along a line from the upper lid up to the
+    /// forehead), their brow was then 0.036 of the face's length broad at half its darkness, the reference's
+    /// woman's 0.045, and darker than hers. With 0.9, and drawn less densely (profile.ts `brow.brows`), 0.036 to
+    /// 0.039 still: the reference's brow has soft edges, ours a hard one. (The band is drawn together about its
+    /// middle: its upper edge lies half a millimetre higher with 0.9 than the heights given at `brow_lift`, by
+    /// reckoning, not measured anew.)
     pub brow_band: [f32; 2],
     /// Lips, women and men (real_look.rs `real_skin`).
     pub lips: [Lips; 2],
@@ -168,6 +186,8 @@ pub struct DressSet {
     /// tools/portrait/pipeline/skin_red.py; Apoleia's is skin_red.txt).
     pub flush: [f32; 2],
     pub flush_map: &'static str,
+    /// How a scar is drawn (`ScarLine`); None = Apoleia's raised ribbon.
+    pub scar: Option<ScarLine>,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down). Half as much as up to round 49: lids that far down over eyes that
     /// look past the viewer read as lifeless. Since round 68, with the iris at its real size, the three heights
@@ -320,12 +340,13 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
-    brow_band: [0.7, 1.0],
+    brow_band: [0.9, 1.0],
     lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.5, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.5, seam: 1.6, child: 0.6 }],
     lash_line: [0.85, 0.75],
     hair_red: [0.45, 0.74],
     flush: [0.7, 0.5],
     flush_map: "skin_flush.txt",
+    scar: Some(ScarLine { half: 0.016, tone: [1.4, 1.14, 1.22] }),
     lids: [[0.15, 0.4, 0.15, 0.3], [0.1, 0.35, 0.1, 0.3]],
     adult: [15.0, 17.0],
     mouth_shut: &[("mouth/mouth-upperlip-height-incr", 0.6), ("mouth/mouth-lowerlip-middle-down", 0.4)],
@@ -390,7 +411,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
         Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
         Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
         Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
     ],
 };

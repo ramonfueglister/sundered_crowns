@@ -203,3 +203,43 @@ fn a_woman_of_england_wears_her_brows_higher_and_narrower_than_makehuman_draws_t
         }
     }
 }
+
+#[test]
+fn a_scar_of_england_is_a_pale_line_in_the_skin() {
+    // Until round 72 a scar was Apoleia's raised ribbon: a surface without the skin's image, with facets, in a
+    // colour mixed for skin without an image. On a face of the real look it was a dark brown strip of bark (two
+    // of the 36 people of the sample wore one). Now it is a ribbon in the skin's own image, normals and colours,
+    // lighter along its middle.
+    let Some(h) = head() else { return };
+    let idx = &h.parts["body"][LODS - 1];
+    let grey = |c: &[f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    for k in 0..12 {
+        let mut p = person(k, k % 2 == 0, 35.0);
+        p.life.scars = 2;
+        let out = build(&h, &p, 1);
+        let skins: Vec<_> = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("skin"))).collect();
+        assert_eq!(skins.len(), 2, "person {k}: the skin and its scars");
+        let (skin, scar) = (skins[0], skins[1]);
+        assert!(skin.pos.len() >= idx.len() && !scar.pos.is_empty() && scar.pos.len() % 3 == 0, "person {k}: {} corners", scar.pos.len());
+        assert!(scar.tex == skin.tex && scar.nmap == skin.nmap && scar.uv.len() == scar.pos.len() && scar.nrm.len() == scar.pos.len(), "person {k}: in the skin's image");
+        // on the skin: no corner further from a corner of the skin than the skin's triangles are long (on cheek
+        // and forehead up to 2 cm)
+        let (mut dark, mut light) = (f32::MAX, 0f32);
+        for (q, c) in scar.pos.iter().zip(&scar.col) {
+            let near = (0..idx.len()).min_by(|&a, &b| dist(q, &skin.pos[a]).total_cmp(&dist(q, &skin.pos[b]))).unwrap();
+            assert!(dist(q, &skin.pos[near]) < 0.2, "person {k}: a corner {} off the skin", dist(q, &skin.pos[near]));
+            // against the skin beside it: as light at its edges, lighter along its middle, nowhere dark
+            let against = grey(c) / grey(&skin.col[near]);
+            dark = dark.min(against);
+            light = light.max(against);
+        }
+        if std::env::var("SHOW").is_ok() {
+            println!("person {k}: {} corners, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
+        }
+        assert!(dark > 0.8 && light > 1.1 && light < 1.6, "person {k}: {dark} to {light} of the skin's lightness");
+    }
+}
+
+fn dist(a: &[f32; 3], b: &[f32; 3]) -> f32 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
 import { ShaderLib } from 'three';
-import { skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
+import { portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 
@@ -358,10 +358,30 @@ describe('portraits', () => {
     // the white of the eye lighter, the iris darker than the image gives them
     expect(ENGLAND_1356.eye!.white).toBeGreaterThan(1);
     expect(ENGLAND_1356.eye!.iris).toBeLessThan(1);
+    // the cornea: over the iris the normal leans outward (until round 72 the eye was a plain ball and the key
+    // light's glint lay on the white beside the iris)
+    expect(ENGLAND_1356.eye!.cornea).toBeGreaterThan(0);
+    expect(eye).toContain('eyeLean');
     expect(compiled('real/skin_young_female.webp', false)).toContain('skinTint');
     expect(compiled('real/bob01.webp', true)).toContain('hairStrand');
     expect(compiled('real/bob01_cap.webp', true)).toContain('wrapBy');
     // Apoleia's eye is left as it is
     expect(APOLEIA.eye).toBeNull();
+  });
+  it('a scar takes the tone of the skin it lies in', () => {
+    // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a
+    // tone of its own it would take more of the profile's tint than the skin round it and show as a patch
+    const tint = (s: object, tone?: number): number[] => {
+      const shader = { uniforms: {} as Record<string, { value: { toArray(): number[] } }>, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      surfaceMaterials(s as never, null, null, ENGLAND_1356, tone)[0]!.onBeforeCompile(shader as never, null as never);
+      return shader.uniforms.skinTint!.value.toArray();
+    };
+    const of = (corners: number, light: number) => ({ rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female.webp', nmap: '', pos: new Float32Array(3 * corners), col: new Float32Array(3 * corners).fill(light), uv: new Float32Array(2 * corners), nrm: new Float32Array(3 * corners) });
+    const [skin, scar] = [of(300, 0.25), of(30, 0.6)];
+    const tone = portraitSkinTone([scar, skin] as never);
+    expect(tone).toBeCloseTo(0.25);
+    expect(portraitSkinTone([{ ...skin, tex: '' }] as never)).toBeUndefined();
+    expect(tint(scar, tone)).toEqual(tint(skin, tone));
+    expect(tint(scar)).not.toEqual(tint(skin));
   });
 });

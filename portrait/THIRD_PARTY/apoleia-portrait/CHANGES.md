@@ -128,3 +128,7 @@ form of the mouth. The pipeline's `skin_red.py` gets its zones as switches (`CHE
 `CHIN`, `EARS`; Apoleia's script, changed in the game's copy only; its defaults write `skin_red.txt` number for
 number). New, not Apoleia's: `real/skin_flush.txt`, `measure.rs` `marks`, `lips`, `LIPS`, three tests in
 `tests/faces.rs`, one in `src/lib.rs`, `tools/portrait/face_colour.mjs`. Roman bytes unchanged.
+
+Round 72: a dress with a table may ask for a scar as a line in the skin (`DressSet::scar`, `ScarLine`; `build.rs`
+builds it from the skin's own surface); without it Apoleia's raised ribbon, as before. New, not Apoleia's: a test
+in `tests/faces.rs`. Roman bytes unchanged.

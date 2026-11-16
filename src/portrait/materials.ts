@@ -139,7 +139,26 @@ float eyeWhite = 1.0;
 #ifdef USE_MAP
   eyeWhite = smoothstep( 0.22, 0.36, min( sampledDiffuseColor.r, min( sampledDiffuseColor.g, sampledDiffuseColor.b ) ) );
 #endif`);
-    shader.fragmentShader = swap(swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
+    // the cornea: over the iris the eye's surface is a cap of a smaller ball, so its normal leans outward from the
+    // iris' middle, the more the nearer its rim, and the key light's glint lies on the iris instead of on the white
+    // beside it. The iris' middle is the middle of its cell of the image (4 x 4 cells), its rim at 27.5 degrees of
+    // 360 (tools/portrait/pipeline/eye_tex.py); which way is outward is read from the image's own coordinates
+    const bulged = k.cornea <= 0 ? code : swap(code, '#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+#ifdef USE_MAP
+{
+  vec2 eyeC = fract( vMapUv * 4.0 ) - 0.5;
+  float eyeR = length( eyeC ) / ${f(27.5 / 360)};
+  float eyeLean = ${f(k.cornea)} * eyeR * ( 1.0 - smoothstep( 0.9, 1.15, eyeR ) );
+  if ( eyeLean > 0.0 ) {
+    vec3 eyeQ0 = dFdx( - vViewPosition ), eyeQ1 = dFdy( - vViewPosition );
+    vec2 eyeS0 = dFdx( vMapUv ), eyeS1 = dFdy( vMapUv );
+    vec3 eyeP1 = cross( eyeQ1, normal ), eyeP0 = cross( normal, eyeQ0 );
+    vec3 eyeOut = ( eyeP1 * eyeS0.x + eyeP0 * eyeS1.x ) * eyeC.x + ( eyeP1 * eyeS0.y + eyeP0 * eyeS1.y ) * eyeC.y;
+    if ( dot( eyeOut, eyeOut ) > 0.0 ) normal = normalize( normal + eyeLean * normalize( eyeOut ) );
+  }
+}
+#endif`);
+    shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= mix( ${f(k.iris)}, ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
@@ -202,8 +221,17 @@ export function skinTone(col: Float32Array): number {
   return grey[grey.length >> 1]!;
 }
 
-/** The materials of a surface, drawn in this order (hair cards have two, everything else one). */
-export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA): MeshPhysicalMaterial[] {
+/** How light the skin of a portrait is as a whole: the tone of its largest surface of skin (a scar of the real look
+ *  is a small surface of skin of its own and takes the tone of the skin it lies in). */
+export function portraitSkinTone(surfaces: readonly PortraitSurface[]): number | undefined {
+  let skin: PortraitSurface | undefined;
+  for (const s of surfaces) if (surfaceKind(s) === 'skin' && (!skin || s.pos.length > skin.pos.length)) skin = s;
+  return skin && skinTone(skin.col);
+}
+
+/** The materials of a surface, drawn in this order (hair cards have two, everything else one). `tone`: how light
+ *  the person's skin is as a whole (`portraitSkinTone`; left out, the surface's own). */
+export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA, tone?: number): MeshPhysicalMaterial[] {
   const kind = surfaceKind(s);
   const m = new MeshPhysicalMaterial({
     vertexColors: true, roughness: s.rough, metalness: s.metal, ior: ior(0.5),
@@ -212,7 +240,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
   });
   switch (kind) {
     case 'plain': break;
-    case 'skin': if (p.skin) skinLook(m, p, p.skin, skinTone(s.col)); break;
+    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col)); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex.includes('/beard_stubble')); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;

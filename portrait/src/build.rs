@@ -19,6 +19,11 @@ use std::f32::consts::PI;
 /// triangles.
 pub const LODS: usize = 4;
 
+/// A scar of a dress with a table (dress.rs `ScarLine`): how far its ribbon stands off the skin (0.1 = 1 cm), and
+/// into how many steps it is cut along its length.
+const SCAR_OFF: f32 = 0.004;
+const SCAR_STEPS: usize = 12;
+
 pub struct Portrait {
     /// One per material.
     pub surfaces: Vec<Surface>,
@@ -735,9 +740,82 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
         out.push(sd);
     }
-    // scars: narrow, slightly raised ribbons on the morphed skin (each point
-    // found by triangle in the base mesh's front view)
-    if !scars.is_empty() {
+    // scars. A dress with a table may ask for a fine line in the skin itself (dress.rs `ScarLine`): a ribbon that
+    // takes the skin's image, normals and colours from where it lies, lighter along its middle (the corners of the
+    // skin's surface are those of the head's finest list, three per triangle). Else Apoleia's raised ribbon.
+    let skin_at = garb.and_then(|d| d.scar.as_ref()).filter(|_| real.is_some()).and_then(|line| {
+        let n = h.parts["body"][lod].len();
+        let at = out.iter().position(|s| s.pos.len() >= n && s.uv.len() == s.pos.len() && s.nrm.len() == s.pos.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin")));
+        at.map(|si| (si, line))
+    });
+    if let (false, Some((si, line))) = (scars.is_empty(), skin_at) {
+        let idx = &h.parts["body"][lod];
+        let sk = &out[si];
+        let front: Vec<usize> = (0..idx.len()).step_by(3).filter(|&f| (0..3).map(|q| h.base[idx[f + q] as usize][2]).sum::<f32>() > 2.1).collect();
+        // the skin under a point of the base head's front view: its place, normal, place on the image and colour,
+        // and which way round its triangle is wound
+        let under = |xx: f32, yy: f32| -> Option<(V3, V3, [f32; 2], Rgb, f32)> {
+            for &f in &front {
+                let b = |q: usize| h.base[idx[f + q] as usize];
+                let (x1, y1, x2, y2, x3, y3) = (b(0)[0], b(0)[1], b(1)[0], b(1)[1], b(2)[0], b(2)[1]);
+                let den = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+                if den.abs() < 1e-9 {
+                    continue;
+                }
+                let l1 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) / den;
+                let l2 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) / den;
+                let l3 = 1.0 - l1 - l2;
+                if l1 < 0.0 || l2 < 0.0 || l3 < 0.0 {
+                    continue;
+                }
+                let at = |v: &[V3]| add(add(mul(v[f], l1), mul(v[f + 1], l2)), mul(v[f + 2], l3));
+                let n = norm(at(&sk.nrm));
+                let uv = [sk.uv[f][0] * l1 + sk.uv[f + 1][0] * l2 + sk.uv[f + 2][0] * l3, sk.uv[f][1] * l1 + sk.uv[f + 1][1] * l2 + sk.uv[f + 2][1] * l3];
+                let wound = dot(cross(sub(sk.pos[f + 1], sk.pos[f]), sub(sk.pos[f + 2], sk.pos[f])), n).signum();
+                return Some((madd(at(&sk.pos), n, SCAR_OFF), n, uv, at(&sk.col), wound));
+            }
+            None
+        };
+        let mut ss = Surface::new(sk.mat);
+        (ss.tex, ss.nmap) = (sk.tex.clone(), sk.nmap.clone());
+        for sc in &scars {
+            let (dx, dy) = (sc.x1 - sc.x0, sc.y1 - sc.y0);
+            let l = dx.hypot(dy).max(1e-6);
+            let (px, py) = (-dy / l, dx / l);
+            // across the scar: the skin's own colour at either edge, the scar's along the middle
+            let mut rows = Vec::new();
+            for k in 0..=SCAR_STEPS {
+                let t = k as f32 / SCAR_STEPS as f32;
+                let (cx, cy) = (lerp(sc.x0, sc.x1, t) + 0.006 * (t * 13.8).sin(), lerp(sc.y0, sc.y1, t));
+                let w = line.half * (1.0 - 0.7 * (2.0 * t - 1.0).abs());
+                if let (Some(a), Some(mut m), Some(b)) = (under(cx - px * w, cy - py * w), under(cx, cy), under(cx + px * w, cy + py * w)) {
+                    // (faint at its ends)
+                    let k = 1.0 - (2.0 * t - 1.0).abs().powi(4);
+                    m.3 = std::array::from_fn(|c| m.3[c] * (1.0 + (line.tone[c] - 1.0) * k));
+                    rows.push([a, m, b]);
+                }
+            }
+            for pair in rows.windows(2) {
+                for side in 0..2 {
+                    let quad = [pair[0][side], pair[0][side + 1], pair[1][side + 1], pair[1][side]];
+                    for t in [[0, 1, 2], [0, 2, 3]] {
+                        let (a, b, c) = (quad[t[0]], quad[t[1]], quad[t[2]]);
+                        // wound as the skin under it
+                        let turn = dot(cross(sub(b.0, a.0), sub(c.0, a.0)), a.1) * a.4 < 0.0;
+                        for q in if turn { [a, c, b] } else { [a, b, c] } {
+                            ss.pos.push(q.0);
+                            ss.nrm.push(q.1);
+                            ss.uv.push(q.2);
+                            ss.col.push(q.3);
+                        }
+                    }
+                }
+            }
+        }
+        out.push(ss);
+    } else if !scars.is_empty() {
+        // Apoleia's: narrow, slightly raised ribbons on the morphed skin (each point
+        // found by triangle in the base mesh's front view)
         let front: Vec<usize> = (0..body_full.len()).step_by(3).filter(|&f| (0..3).map(|q| h.base[body_full[f + q] as usize][2]).sum::<f32>() > 2.1).collect();
         let surf = |xx: f32, yy: f32| -> Option<(V3, V3)> {
             for &f in &front {
