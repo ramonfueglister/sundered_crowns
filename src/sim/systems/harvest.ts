@@ -54,7 +54,7 @@ export function harvestKcal(soil: number, labour: number, englandLand: number, l
 export const kcalPerHeadDay = (kcal: number, people: number): number => (people > 0 ? kcal / people / DAYS_PER_YEAR : 0);
 
 /** Brings in the harvest of every place from its arable and the people who live there now. The rule is fitted in
- *  people of the time; the harvest is counted for the heads of the simulation (src/sim/scale.ts), so a head gets as
+ *  people of the time; the harvest is what the people of the world have (src/sim/scale.ts), so a person gets as
  *  many kilocalories a day as a person of the time. */
 export function bringInHarvest(s: WorldState, w: World): void {
   const h = s.place.harvest, pop = s.place.pop, arable = s.place.arable;

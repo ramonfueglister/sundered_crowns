@@ -2,9 +2,10 @@
 // and shows the realms as the world server last told them; a click on a place of the game map selects it.
 import { useEffect, useRef } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { owners, realms, world } from '../net/client';
+import { owners, realms, status, world } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './MapView';
+import { mapMode } from './mapmode';
 import { listenForWorldClicks } from '../people/panel';
 import type { WorldView as View } from '../worldprobe/view';
 
@@ -14,6 +15,21 @@ const START = { lon: 21.5, lat: 47, wide: Infinity };
 const AT_PLACE = 260;
 
 interface Geo { loc: { lon: number[]; lat: number[] } }
+/** how long the world waits for the server to name its start year before it builds that of 1356 (no server: a preview) */
+const WAIT_FOR_YEAR = 8000;
+/** the world's start year as the server names it on welcome: its realms, towns, persons and woods are built from it */
+function startYear(): Promise<number | undefined> {
+  return new Promise((done) => {
+    const stops: (() => void)[] = [];
+    let over = false;
+    const end = (y: number | undefined) => { if (over) return; over = true; clearTimeout(t); for (const s of stops) s(); done(y); };
+    const t = setTimeout(() => end(undefined), WAIT_FOR_YEAR);
+    stops.push(world.subscribe((w) => { if (w) end(w.startYear); }));
+    // no server to ask: the connection is lost or refused before a welcome
+    stops.push(status.subscribe((st) => { if (st === 'lost' || st === 'refused') end(world.value?.startYear); }));
+    if (over) for (const s of stops) s();
+  });
+}
 /** the panel of the person clicked, once for the page */
 let people: ReturnType<typeof listenForWorldClicks> | undefined;
 
@@ -24,11 +40,11 @@ export function WorldView() {
     const stops: (() => void)[] = [];
     (async () => {
       try {
-        const [{ createWorldView }, { realmsShown }] = await Promise.all([import('../worldprobe/view'), import('../worldprobe/zoom')]);
+        const [{ createWorldView }, { realmsShown }, year] = await Promise.all([import('../worldprobe/view'), import('../worldprobe/zoom'), startYear()]);
         // taken down while the world was being fetched: the canvas is gone
         if (disposed) return;
         const made = await createWorldView({
-          canvas: canvas.current!, names: wrap.current!, ...START, year: world.value?.startYear,
+          canvas: canvas.current!, names: wrap.current!, ...START, year,
           status: (text) => { mapError.value = text || null; },
           moved: (_lon, _lat, w) => { wide = w; },
           // far out a click selects the place under it; near, it is for what stands there (people/panel.ts), and the
@@ -40,9 +56,8 @@ export function WorldView() {
         if (import.meta.env.DEV) (window as any).__world = made; // for browser tests
         // the places of the game map, to fly to
         const geo: Promise<Geo> = fetch(`${import.meta.env.BASE_URL}data/geo.json`).then((r) => r.json());
-        mapCtl.overview = () => made.flyTo(START.lon, START.lat, START.wide);
         mapCtl.home = (loc: number) => { geo.then((g) => { if (loc >= 0 && loc < g.loc.lon.length) made.flyTo(g.loc.lon[loc], g.loc.lat[loc], AT_PLACE); }); };
-        stops.push(() => { mapCtl.overview = () => {}; mapCtl.home = () => {}; });
+        stops.push(() => { mapCtl.home = () => {}; });
         // colours and names follow the owners and the realms
         stops.push(effect(() => {
           const o = owners.value, rs = realms.value; void lang.value;
@@ -55,6 +70,8 @@ export function WorldView() {
           shown = { owner: o, realms: now };
           made.setRealms({ owner: o, colors, names });
         }));
+        // the map mode chosen bottom right (political: the realms' colours lie on the land near and far)
+        stops.push(effect(() => { made.mapMode(mapMode.value); }));
         // the place selected is picked out on the far map
         stops.push(effect(() => { made.choose(selectedPlace.value); }));
         // a click on a figure of the great cities opens that person

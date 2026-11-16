@@ -6,10 +6,11 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
-import { t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
+import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose } from './icons';
+import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
+import { MAP_MODES, mapMode, mapModeKey, setMapMode } from './mapmode';
 import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
@@ -29,7 +30,6 @@ export function App() {
       <Music />
       <TopBar />
       <RealmBanner />
-      <MapTools />
       {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
       {selectedPlace.value >= 0 && <PlacePanel />}
     </>}
@@ -86,13 +86,22 @@ function MusicSettings() {
   </div>;
 }
 
-function MapTools() {
-  const r = myRealm.value;
-  const full = () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.(); };
-  return <div class="maptools" role="toolbar" aria-label={t('map_tools')}>
-    {r && <><button class="tool" title={t('to_my_realm')} aria-label={t('to_my_realm')} onClick={() => mapCtl.home(r.capital)}><IconCrown /></button><i /></>}
-    <button class="tool" title={t('whole_map')} aria-label={t('whole_map')} onClick={() => mapCtl.overview()}><IconGlobe /></button><i />
-    <button class="tool" title={t('fullscreen')} aria-label={t('fullscreen')} onClick={full}><IconFullscreen /></button>
+const MODE_ICON = { political: IconPolitical, terrain: IconTerrain } as const;
+
+/** The map modes in the top bar (Ramon, 16 November 2026: "die umschaltmöglichkeiten der karte kommen dafür nach oben"): the one shown is lit in gold; keys 1 and 2. */
+function MapModes() {
+  const now = mapMode.value;
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (mapModeKey(e)) e.preventDefault(); };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, []);
+  return <div class="mapmodes" role="radiogroup" aria-label={t('map_modes')}>
+    {MAP_MODES.map(({ mode, key }) => {
+      const Icon = MODE_ICON[mode], name = t(`map_mode_${mode}` as TextKey);
+      return <button key={mode} class="tool mode" role="radio" aria-checked={now === mode} aria-label={name}
+        title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`} onClick={() => setMapMode(mode)}><Icon /></button>;
+    })}
   </div>;
 }
 
@@ -117,22 +126,19 @@ function Refused() {
 function TopBar() {
   const wi = world.value, mine = myRealm.value;
   const [menu, setMenu] = useState(false);
+  // no texts in the bar but the date (Ramon, 16 November 2026): the map modes, the date and the settings
   return <header class="hud-top">
-    <div class="hud-values">
-      {mine ? <>
-        <span class="realm-name">{L(mine.short)}</span>
-        <span class="val" title={t('places')}><IconPlaces /><span><b>{num(mine.places)}</b><small>{t('places')}</small></span></span>
-      </> : <span class="hint">{t(me.value?.observer ? 'observer_hint' : 'no_realm')}</span>}
-      <span class="val" title={t('players')}><IconPlayers /><span><b>{num(wi?.players ?? 0)} / {num(wi?.maxPlayers ?? 0)}</b><small>{t('players')}</small></span></span>
+    <div class={`hud-values${mine ? ' ruled' : ''}`}>
+      <MapModes />
+      {mine && <span class="val" title={`${L(mine.name)}: ${num(mine.places)} ${t('places')}`}><IconPlaces /><b>{num(mine.places)}</b></span>}
     </div>
     <div class="hud-date"><IconCalendar /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{wi?.paused && <small>{t('paused')}</small>}</div>
-    <button class="tb lang" title={t('language')} onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>
     <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />
+      <div class="music-row lang-row" onClick={(e) => e.stopPropagation()}><span class="music-label">{t('language')}</span><LangSwitch /></div>
       {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
       {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
-      <p class="credit">{t('music_credit')}</p>
     </div>}
   </header>;
 }

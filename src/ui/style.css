@@ -33,7 +33,12 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 
 /* HUD: value bar */
 .hud-top { position: absolute; left: 0; top: 0; right: 0; height: 52px; z-index: 15; display: flex; align-items: stretch; background: linear-gradient(var(--bar2), var(--bar)); border-bottom: 2px solid var(--gold); box-shadow: 0 1px 0 #0a2234, 0 3px 10px rgba(0,0,0,.35); }
-.hud-values { flex: 1; min-width: 0; display: flex; align-items: center; gap: 36px; padding-left: 175px; overflow: hidden; white-space: nowrap; }
+.hud-values { flex: 1; min-width: 0; display: flex; align-items: center; gap: 36px; padding-left: 10px; overflow: hidden; white-space: nowrap; }
+/* room for the realm's banner, which hangs over the bar's left end */
+.hud-values.ruled { padding-left: 175px; }
+/* the map modes in the bar: round buttons as the bar's height allows */
+.hud-top .tool.mode { width: 42px; height: 42px; }
+.lang-row { padding: 0 4px; }
 .realm-name { font-size: 22px; font-weight: 600; color: var(--gold); }
 .val { display: flex; align-items: center; gap: 11px; }
 .val > span { display: grid; line-height: 1.05; }
@@ -64,10 +69,14 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .realm-banner .initial { position: absolute; left: 6px; right: 0; top: 10px; text-align: center; font-size: 52px; font-weight: 700; color: var(--brass); text-shadow: 0 2px 0 #0a2e60; }
 
 /* HUD: map tools (bottom right) */
-.maptools { position: absolute; right: 10px; bottom: 17px; z-index: 10; height: 55px; display: flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 28px; background: linear-gradient(#174a6e, #0f3d5e); border: 2px solid #bed0db; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
-.maptools i { width: 1px; height: 30px; background: rgba(190,208,219,.35); }
 .tool { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; display: grid; place-items: center; }
 .tool:hover { background: rgba(255,255,255,.08); }
+/* the map modes: the one shown sits in a gold ring on a lighter ground, the others are dimmed until hovered */
+.mapmodes { display: flex; gap: 4px; }
+.tool.mode { opacity: .62; transition: opacity .12s, box-shadow .12s, background .12s; }
+.tool.mode:hover { opacity: .9; }
+.tool.mode[aria-checked="true"] { opacity: 1; background: radial-gradient(circle at 50% 40%, var(--btn), var(--btn2)); box-shadow: inset 0 0 0 2px var(--gold), 0 0 8px rgba(241,219,164,.35); }
+.tool:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 
 .notice { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: linear-gradient(var(--panel), var(--panel2)); color: var(--minus); padding: 8px 16px; border: 2px solid var(--minus); border-radius: 10px; z-index: 20; }
 
@@ -85,7 +94,8 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 /* narrow screens: the banner shrinks, the values scroll */
 @media (max-width: 760px) {
   .realm-banner { transform: scale(.7); transform-origin: 0 0; }
-  .hud-values { padding-left: 112px; gap: 20px; overflow-x: auto; }
+  .hud-values { gap: 20px; overflow-x: auto; }
+  .hud-values.ruled { padding-left: 112px; }
   .realm-name, .val small { display: none; }
   .hud-date { padding: 0 10px; font-size: 16px; }
   .hud-date svg { display: none; }

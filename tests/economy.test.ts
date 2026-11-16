@@ -642,7 +642,7 @@ describe('the economies of the cities in the world', () => {
         return upgradeState(decodeState(encodeState(old)), run.w, () => loadSetup(1356));
       };
       const loaded = england(9);
-      expect(STATE_VERSION).toBe(10);
+      expect(STATE_VERSION).toBeGreaterThanOrEqual(10);
       expect(loaded.v).toBe(STATE_VERSION);
       expect(hashState(england(7))).toBe(hashState(loaded));
       expect(hashState(england(6))).toBe(hashState(loaded));

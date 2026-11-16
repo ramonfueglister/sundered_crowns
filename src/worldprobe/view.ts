@@ -20,7 +20,7 @@ import type { RealmsNow } from './realms.worker';
 import { extentOf, heldIn } from './extent';
 import { projectionOf } from './region';
 import { FINER, blockOfCell, cellOfBlock } from './land';
-import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, realmsOf, reliefOf } from './zoom';
+import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, reliefOf } from './zoom';
 
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
 const ZOOM_EASE = 1 / 90, GLIDE_EASE = 1 / 280;
@@ -55,6 +55,9 @@ export interface WorldViewOptions {
   clicked?(hit: WorldClick, place: () => Promise<number>): void;
 }
 
+/** The map modes, as EU5's: what the land is coloured by. */
+export type MapMode = 'political' | 'terrain';
+
 export interface WorldView {
   /** Flies to a place, to show `wide` finest blocks across the picture there. */
   flyTo(lon: number, lat: number, wide: number): void;
@@ -62,6 +65,8 @@ export interface WorldView {
   setRealms(now: RealmsNow): void;
   /** Picks a place of the game map out on the far map (counted from 0; -1: none). */
   choose(place: number): void;
+  /** Sets the map mode: `political` lays the realms' colours on the land at every distance, `terrain` shows the land alone (until it is set, they show only on the flat world far out). */
+  mapMode(mode: MapMode): void;
   /** Stops the view and lets go of all it holds. */
   dispose(): void;
 }
@@ -91,7 +96,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
     stage.creases(creasesOf(wide)); stage.soften(nearOf(wide)); laid = at;
     const box = canvas.getBoundingClientRect();
-    names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realmsOf(wide));
+    names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realms.named);
     stage.busy = missing > 0 && !failed;
     if (stage.busy) stage.probe.ready = false;
     o.status?.(failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : ''));
@@ -208,6 +213,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     flyTo,
     setRealms(now) { realms.set(now); },
     choose(place) { realms.choose(place); },
+    mapMode(mode) { if (realms.mode !== mode) { realms.mode = mode; look(); } },
     dispose() {
       gone = true;
       window.removeEventListener('keydown', key); window.removeEventListener('resize', look); sized.disconnect();

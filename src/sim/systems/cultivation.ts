@@ -54,7 +54,7 @@ export function soilOf(w: World, i: number, ha: number): number {
 }
 
 /** Sets the arable of every place from the people who live there now. The land is not scaled (src/sim/scale.ts): the
- *  heads of a place cultivate what the people of the time they stand for cultivated. */
+ *  people of a place cultivate what the real people of the time they are derived from cultivated. */
 export function cultivate(s: WorldState, w: World): void {
   const a = s.place.arable, pop = s.place.pop;
   for (let i = 0; i < a.length; i++) a[i] = arableHa(w, i, ofTime(pop[i]));
