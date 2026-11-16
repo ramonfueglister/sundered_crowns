@@ -181,8 +181,11 @@ describe('the calibration of the cities', () => {
       expect(e.source.length).toBeGreaterThan(10);
     }
     expect(table.cities.duty_shillings_per_sack.value).toBe(0);
-    expect(table.cities.unemployment_benefit.value).toBe(0.55); // the constant of the original code's calibration
+    // no benefit since feature 9; the entry still names the rate the cities had from feature 6 to feature 8
+    expect(table.cities.unemployment_benefit.value).toBe(0);
     expect(table.cities.unemployment_benefit.source).toMatch(/0\.55 \* \(1 - tau_INC\) \* \(1 - tau_SIW\)/);
+    expect(table.cities.unemployment_benefit.source).toMatch(/economy feature 9/);
+    expect(table.cities.unemployment_benefit.source).toMatch(/general knowledge, not a table/);
   });
   it("computes the benefit of a person without work by the original code's rule, and none for a rate of 0", () => {
     const b = unemploymentBenefit(0.55, 0.2, 0.1, 10);
@@ -192,12 +195,18 @@ describe('the calibration of the cities', () => {
     expect(unemploymentBenefit(0, 0.2, 0.1, 10)).toEqual({ theta_UB: 1e-9, w_UB: 0 });
     for (const rate of [-0.1, 1, NaN]) expect(() => unemploymentBenefit(rate, 0.2, 0.1, 10)).toThrow(/unemployment benefit/);
   });
-  it('pays a person without work 55 % of the last wage after tax in every city, from the first day', () => {
-    const without = structuredClone(table);
-    without.cities.unemployment_benefit.value = 0;
+  it('pays a person without work nothing in any city, and still computes the benefit of the original code when the table asks for it', () => {
+    const withBenefit = structuredClone(table);
+    withBenefit.cities.unemployment_benefit.value = 0.55;
     for (const c of cities) {
-      const p = c.calibration.parameters as Record<string, any>, ic = c.calibration.initial_conditions as Record<string, any>;
+      // the game (feature 9): the rate is switched off and nobody starts with a benefit
+      const po = c.calibration.parameters as Record<string, any>, io = c.calibration.initial_conditions as Record<string, any>;
       const a = c.calibration.accounts as Record<string, any>;
+      expect(po.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
+      expect(io.w_UB).toBe(0); expect(io.sb_other).toBe(0); expect(io.sb_inact).toBe(0);
+      // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
+      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people)), 365, 30);
+      const p = on.parameters as Record<string, any>, ic = on.initial_conditions as Record<string, any>;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
       expect(p.theta_UB).toBeGreaterThan(0.5); expect(p.theta_UB).toBeLessThan(0.55);
       // the benefit of a day at the start: on the mean wage of an employee of the city on a day
@@ -205,18 +214,16 @@ describe('the calibration of the cities', () => {
       expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
       expect(ic.w_UB * 365).toBeCloseTo(p.theta_UB * sum(a.wages) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
-      const year = calibrateEconomy(cityTable(table, c.people));
+      const year = calibrateEconomy(cityTable(withBenefit, c.people));
       expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
       expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
-      // Against the same city without the benefit: households spend from an income that includes the benefit of
-      // the one person without work at the start (the original's calibration), so they buy at the start what the
-      // accounts say. Nothing else changes.
-      const off = dailyEconomy(calibrateEconomy(cityTable(without, c.people)), 365, 30);
-      const po = off.parameters as Record<string, any>, io = off.initial_conditions as Record<string, any>;
-      expect(po.theta_UB).toBe(1e-9); expect(io.w_UB).toBe(0);
-      expect(off.accounts).toEqual(c.calibration.accounts);
+      // Between the two: with the benefit households spend from an income that includes the benefit of the one
+      // person without work at the start (the original's calibration), so they buy at the start what the accounts
+      // say. Nothing else differs.
+      expect(on.accounts).toEqual(c.calibration.accounts);
       expect(sum(a.households) / p.psi).toBeCloseTo(sum(a.households) / po.psi + ic.w_UB * 365, 9);
       expect(a.building / p.psi_H).toBeCloseTo(sum(a.households) / p.psi, 9);
+      expect(a.building / po.psi_H).toBeCloseTo(sum(a.households) / po.psi, 9);
       expect(p.psi / po.psi).toBeGreaterThan(0.995); // the benefit of one person is a small part of the city's income
       expect(p.psi).toBeLessThan(po.psi);
       for (const k of Object.keys(p)) if (!['theta_UB', 'psi', 'psi_H'].includes(k)) expect(p[k], k).toEqual(po[k]);
@@ -330,6 +337,23 @@ describe('the economy engine (WebAssembly)', () => {
     const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)), g = engine.figures(engine.step(a, 5));
     expect(bits(city(f, 0))).not.toBe(bits(city(g, 0)));
   });
+  it('still computes cities that pay the benefit of the original code, as the game did from feature 6 to feature 8', () => {
+    const table = readTable();
+    table.cities.unemployment_benefit.value = 0.55;
+    const paid = THREE.map((x, k): CitySetup => {
+      const d = dailyEconomy(calibrateEconomy(cityTable(table, x.people)), 365, CLOCK.plan);
+      expect((d.parameters as any).theta_UB).toBeGreaterThan(0.5);
+      return { parameters: JSON.stringify(d.parameters), initialConditions: JSON.stringify(d.initial_conditions), seed: 1356 + k };
+    });
+    let state = engine.create(paid, CLOCK, RULES);
+    expect(Buffer.compare(state, create(1356))).not.toBe(0); // another economy than the game's
+    for (let t = 0; t < 40; t++) {
+      state = engine.step(state, 1);
+      const k = engine.checks(state);
+      for (const x of k.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+      for (const m of k.merchants) expect(Math.abs(m.off)).toBeLessThanOrEqual(1e-9 * m.scale);
+    }
+  }, 30_000);
   it('continues from a saved state as if it had never stopped, in the middle of a month', () => {
     const start = create(1356);
     let state = start;

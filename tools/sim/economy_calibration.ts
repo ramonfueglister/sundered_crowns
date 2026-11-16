@@ -100,7 +100,8 @@ const NO_BENEFIT = 1e-9;
  *  `w_UB` is the benefit of a person at the start. The original takes it from the data (benefits paid per person
  *  without work); no such data exist here, so it is the benefit on the mean wage of an employee. The port starts
  *  every person with the last wage `w_UB / theta_UB` (src/agents.rs, line 222), which is then that mean wage.
- *  A rate of 0 switches the benefit off. */
+ *  A rate of 0 switches the benefit off. The cities of the game have had the rate 0 since economy feature 9
+ *  (0.55 from feature 6 to feature 8). */
 export function unemploymentBenefit(rate: number, taxOnIncome: number, taxOnWages: number, meanWage: number): { theta_UB: number; w_UB: number } {
   if (!(rate >= 0 && rate < 1)) throw new Error(`an unemployment benefit of ${rate} of the wage`);
   if (rate === 0) return { theta_UB: NO_BENEFIT, w_UB: 0 };
@@ -231,8 +232,8 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
 
 /** The table of a city with `people` inhabitants (economy feature 5): England's table at the city's share of
  *  England's people, so that the model computes the city at the scale of the table (1:100), with the duty
- *  between cities in place of England's wool duty, and with the model's unemployment benefit (economy feature 6).
- *  All three are assumptions of the table (`cities`). */
+ *  between cities in place of England's wool duty, and with the cities' rate of the model's unemployment benefit
+ *  (economy feature 6; 0 since feature 9). All three are assumptions of the table (`cities`). */
 export function cityTable(t: CalibrationTable, people: number): CalibrationTable {
   if (!(people > 0)) throw new Error(`a city of ${people} people`);
   const c = structuredClone(t);

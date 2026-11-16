@@ -49,4 +49,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   console.log(`${c.periods_per_year} periods a year; a firm plans every ${c.clock.plan} days, expectations on windows of ${c.clock.window} days`);
   console.log(t.cities.wage.value === 'money' ? 'the firms pay a wage in money that never changes' : 'the firms pay a real wage that follows the consumer prices, as in the port');
   console.log(t.cities.prices.value === 'demand' ? 'a planning firm changes its supply or its price by the gap between demand and supply (CANVAS)' : 'a planning firm sets supply and price by the rule of the paper');
+  console.log(t.cities.unemployment_benefit.value === 0 ? 'a person without work is paid nothing' : `a person without work is paid ${t.cities.unemployment_benefit.value} of the last wage after tax`);
 }

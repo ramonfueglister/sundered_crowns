@@ -1,10 +1,12 @@
 # Arbeitslosengeld der Städte
 
-**Status:** Beschlossen (am 15.11.2026 vorläufig freigegeben und gebaut; in der laufenden Welt zusammen mit der Wirtschaft der Städte, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
+**Status:** Abgelöst (am 15.11.2026 vorläufig freigegeben und gebaut; am 16.11.2026 durch Feature 9 wieder herausgenommen, bevor es in der laufenden Welt war) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Wer in einer Stadt keine Arbeit hat, bekommt von der Krone der Stadt gut die Hälfte seines letzten Lohns und kauft damit weiter ein. Ohne diese Regel des Modells sanken die verbundenen Städte über Jahrzehnte eine nach der anderen ab; mit ihr bleiben sie stehen.
 
 Diese Seite beschreibt Feature 6. Es gehört zur [Wirtschaft der Städte](wirtschaft-der-staedte.md) und ändert nur einen Eintrag in deren Eichung. Alle Zahlen stammen aus dem Spielcode.
+
+**Seit Feature 9 zahlen die Städte kein Arbeitslosengeld mehr:** Mit dem [Lohn in Geld](lohn-in-geld.md) und den [Preisen nach Absatz](preise-nach-absatz.md) tragen sie sich ohne es. Siehe [Ohne Arbeitslosengeld](ohne-arbeitslosengeld.md). Diese Seite bleibt als Beleg stehen, warum es die Stütze eine Zeit lang brauchte. Die Zahlen unten sind die von damals, mit der Preisregel des Papiers.
 
 ## Das Feature
 

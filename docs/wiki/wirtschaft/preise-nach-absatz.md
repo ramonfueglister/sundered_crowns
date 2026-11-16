@@ -94,7 +94,7 @@ In keinem geprüften Jahr steht eine Stadt unter ihrem Start, und nach dem Jahr 
 
 ### Ohne Arbeitslosengeld
 
-Das Spiel behält das Arbeitslosengeld. Ausserhalb des Spiels liefen dieselben Städte drei Mal 30 Jahre ohne es: Produktion 115,8 bis 116,1, tiefste Stadt 109,4 bis 111,9, keine Stadt unter ihrem Start, ab dem Jahr 10 an den geprüften Tagen niemand ohne Arbeit, Preisniveau 95,1 bis 95,8. Mit dem Lohn in Geld allein und ohne Arbeitslosengeld stand die Produktion im Probelauf bei 89,8 und die tiefste Stadt bei 65,4.
+Mit diesem Feature behielt das Spiel das Arbeitslosengeld. Ausserhalb des Spiels liefen dieselben Städte drei Mal 30 Jahre ohne es: Produktion 115,8 bis 116,1, tiefste Stadt 109,4 bis 111,9, keine Stadt unter ihrem Start, ab dem Jahr 10 an den geprüften Tagen niemand ohne Arbeit, Preisniveau 95,1 bis 95,8. Mit dem Lohn in Geld allein und ohne Arbeitslosengeld stand die Produktion im Probelauf bei 89,8 und die tiefste Stadt bei 65,4.
 
 ## Massstab 1 : 100
 
@@ -108,7 +108,7 @@ Die Regel rechnet mit Verhältnissen und hängt nicht vom Massstab ab.
 - Die Städte laufen an der Grenze ihres Kapitals, und niemand ist ohne Arbeit. Das Modell kennt keine Regel, nach der Kapital über den Ersatz hinaus wächst.
 - Der Lohn bewegt sich weiterhin nicht. Preise sinken und steigen jetzt mit dem Absatz, Löhne nicht.
 - Die Regel am Plantag mit der mittleren Nachfrage pro Tag anzuwenden, ist unsere Übertragung; CANVAS rechnet in Quartalen.
-- Das Arbeitslosengeld bleibt und ist weiter vorläufig.
+- Das Arbeitslosengeld blieb mit diesem Feature. Seit Feature 9 ist es wieder ausgeschaltet (siehe [Ohne Arbeitslosengeld](ohne-arbeitslosengeld.md)); die Zahlen dieser Seite sind mit Arbeitslosengeld gerechnet.
 - Der Handel sinkt weiter, von 3,3 % der Produktion am Start auf 2,68 % im Jahr 30.
 - Die langen Läufe sind wenige: vier Welten über 30 Jahre im Spiel, drei Läufe über 100 Jahre ausserhalb.
 - An der Geschichte ist nichts davon geprüft.

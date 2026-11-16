@@ -12,9 +12,10 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Bestellte Fläche](wirtschaft/bestellte-flaeche.md) *(Beschlossen)*
   - [Volkswirtschaft England](wirtschaft/volkswirtschaft-england.md) *(Abgelöst)*
   - [Wirtschaft der Städte](wirtschaft/wirtschaft-der-staedte.md) *(Beschlossen)*
-  - [Arbeitslosengeld der Städte](wirtschaft/arbeitslosengeld-der-staedte.md) *(Beschlossen)*
+  - [Arbeitslosengeld der Städte](wirtschaft/arbeitslosengeld-der-staedte.md) *(Abgelöst)*
   - [Lohn in Geld](wirtschaft/lohn-in-geld.md) *(Beschlossen)*
   - [Preise nach Absatz](wirtschaft/preise-nach-absatz.md) *(Beschlossen)*
+  - [Ohne Arbeitslosengeld](wirtschaft/ohne-arbeitslosengeld.md) *(Beschlossen)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 

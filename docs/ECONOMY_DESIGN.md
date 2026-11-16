@@ -33,9 +33,10 @@ players and the AI of realms without a player act through the same commands.
 | 3 | England as one national economy, computed by the port of BeforeIT.jl | agreed by Ramon 15 Nov 2026 and built as proposed; in the running world since 15 Nov 2026. Replaced in the game by feature 5: the port, the calibration table and its sources stay |
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
 | 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
-| 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built; in the running world together with feature 5 once the world server is redeployed |
+| 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built. Taken out again by feature 9 before it ever ran in the world |
 | 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built on the branch of features 5 and 6; not in the running world |
 | 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built on the same branch; not in the running world |
+| 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built on the same branch; not in the running world |
 
 ## 1. Grain harvest per place
 
@@ -1129,6 +1130,9 @@ paper passieren." In the running world together with feature 5 once the world se
 running world changes with it, because feature 5 is not live yet. Player wiki:
 docs/wiki/wirtschaft/arbeitslosengeld-der-staedte.md.
 
+Since feature 9 (section 9) the cities pay no benefit any more: with wages in money (section 7) and the demand pull
+(section 8) they hold without it. This section stays as the record of the feature and of why it was needed.
+
 ### What it is
 
 One entry in the calibration of the cities. Not a line of the engine changes, and no rule is written in the game.
@@ -1609,7 +1613,8 @@ With feature 7 alone and no benefit the trial had output at 89.8 and the lowest 
 
 ### What it does not change
 
-- The unemployment benefit of feature 6 stays. Taking it out is not part of this feature.
+- The unemployment benefit of feature 6 stays. Taking it out is not part of this feature (it is feature 9, section
+  9).
 - The wage in money never changes (feature 7). Prices now fall and rise with what a firm sells; wages do not.
 - Capital does not grow, so output has a ceiling (above).
 - Trade still shrinks from 3.3 % of output at the start, now to 2.68 % in year 30 instead of 2.00 %.
@@ -1629,3 +1634,150 @@ With feature 7 alone and no benefit the trial had output at 89.8 and the lowest 
   wants is open; the model has no rule by which capital grows beyond replacement.
 - The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
 - Nothing here is checked against history, and no source for 1356 was used.
+
+## 9. The cities pay no unemployment benefit
+
+Status: built on the branch of features 5 to 8 (draft pull request 17), not in the running world. Ramon agreed on
+16 November 2026 (12:53 UTC) on the card "Wähle den nächsten Schritt für die Wirtschaft der Städte" with
+"Arbeitslosengeld entfernen": the unemployment benefit of the cities is taken out as feature 9, with tests and
+numbers from the game; nothing goes live. It answers his objection of 15 November 2026 to feature 6 ("aber
+historisch gab es ja kein arbeitslosengeld? wie würde die wirschaft dann immer noch gehen?"). Player wiki:
+docs/wiki/wirtschaft/ohne-arbeitslosengeld.md.
+
+### What it is
+
+One entry of the table changes: `cities.unemployment_benefit` goes from 0.55 to 0. The calibration of every city
+then has the rate switched off (`theta_UB = 1e-9`, not 0, because the port divides the wage of the start by this
+rate, src/agents.rs, line 222) and nobody starts with a benefit (`w_UB = 0`). That is the calibration the cities had
+before feature 6, and the one England's own table has always had. No line of the engine changes, and the rule of
+the model stays what it is (Poledna et al. 2023, appendix A.44, A.53): a person without an employer has the rate
+times the last wage as income, which is now a billionth of that wage. Such a person buys nothing, and the crown of
+the city pays nothing (A.60, A.61).
+
+With the benefit gone, the income that households spend from at the start no longer includes the benefit of the one
+person without work, so the share they consume of it (`psi`) and the share they build with (`psi_H`) are a little
+higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
+
+The calibration tool still computes the benefit of the original code when the table asks for it
+(`unemploymentBenefit` in `tools/sim/economy_calibration.ts`), and the engine still computes such cities.
+
+### Why the cities hold without it
+
+Section 5 found that linked cities without the benefit sank over decades and stayed down, and section 6 mended that
+with the benefit. What has changed since is the firm. With the rule of the paper a firm that sells less plans less
+and dismisses, the dismissed buy nothing, and the firms sell less again. With the demand pull (section 8) a firm
+that sells less lowers its price or its supply by the gap, and with wages in money (section 7) a lower price is a
+higher real wage of those in work. That this is why the cities come back is our reading of the runs, not something
+taken apart further. What is measured is the difference: London alone without the benefit has more than 4 % without
+work in some year within ten years with the paper's rule (in four of six seeds tried, up to 15 %), and with the
+demand pull at most 3.4 % at the end of a year in its first six years and nobody from the seventh on (all six
+seeds, 20 years).
+
+### Tests
+
+`economy/tests/benefit.rs` (4 tests, written anew; cities of the game with the rules of the game):
+
+- No city of the game pays a person without work: all 29 calibrations have the rate at a billionth and no benefit
+  at the start; the one person without work of London's start has no last wage.
+- A person without work has no income and buys nothing: London, 730 days, 3 seeds, every person on every day. With
+  an employer the income is the wage after tax (A.53); without one it is at most a billionth of the last wage, and
+  so is the budget. Persons without work occur on 196, 460 and 700 of the 730 days (at most 1, 2 and 6 persons).
+  The books balance every day.
+- The crown owes nothing for persons without work: London, 400 days, what the rule pays is less than 1e-8 of the
+  wages of the day.
+- Cities that trade keep their people in work without the benefit: Cairo, Paris, Venice and London with the
+  merchants between them, 10 years, 2 seeds. In every year every city stands above 95 % of its start with less than
+  5 % without work and a price level within a tenth of its start; in year 10 every city stands above 105 % with
+  nobody without work. A city can still have a slump: with the second seed Cairo has 3 % without work for six years
+  and an output of 98 % before it comes back. The bounds are measured ones.
+
+`economy/tests/demand_pull.rs` (9 tests as before, two of them changed, because their city is now London without the
+benefit):
+
+- With the demand pull a city keeps its people in work without the benefit: the bounds are those of the paragraph
+  above (three of the four seeds in which the paper's rule shows its slump within ten years).
+- With wages in money the price level holds, and without them it leaves: with the port's wage and the demand pull
+  London's price level now leaves its start by a quarter, or the port stops over a number that is none
+  (`N_d_i: cannot round NaN`), within ten years in all three seeds. The test counts both. This is not a
+  configuration of the game.
+
+`tests/economy.test.ts` (50 tests, 1 new): the table says 0 and names the rate the cities had; every city of the
+game has the rate switched off; the same cities calibrated with 0.55 have the benefit of the original code and
+differ from the game's in `theta_UB`, `w_UB`, `psi` and `psi_H` only; the engine computes three such cities for 40
+days with balanced books.
+
+### In the game
+
+`npm run economy:check 30 4` (4 worlds of the game, seeds 1356 to 1359) and `npm run economy:check 5 8` (8 worlds,
+seeds 1356 to 1363), every day computed in all of them, against the same worlds with the benefit (section 8):
+
+| All cities together, year 30 (4 worlds) | With the benefit (feature 8) | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.4 | 116.2 | 115.9 to 116.7 |
+| Price level of output (start = 100) | 94.8 | 94.9 | 94.1 to 95.5 |
+| Price level of a single city on the last day | 90.0 to 100.7 | 90.5 to 99.6 | 89.6 to 100.6 |
+| Exports = imports, share of output | 2.68 % | 2.70 % | 2.65 % to 2.74 % |
+| Without work, mean of all cities and days of the 30 years | 0.05 % | 0.07 % | 0.05 % to 0.09 % |
+| Without work, the worst city on its worst day | 2.4 % | 3.0 % | 2.3 % to 3.4 % |
+| City with the lowest output (its start = 100) | 111.4 | 111.2 | 108.6 to 113.7 |
+| City with the highest output | 117.5 | 117.5 | 117.5 to 117.6 |
+
+| All cities together, mean of the 4 worlds | Year 5 | Year 10 | Year 20 | Year 30 |
+|---|---|---|---|---|
+| Real output (start = 100), now | 108.6 | 113.6 | 115.9 | 116.2 |
+| With the benefit (feature 8) | 107.9 | 113.2 | 115.9 | 116.4 |
+| Now, world of the seed 1356 | 108.8 | 114.1 | 115.6 | 115.9 |
+| Exports = imports, share of output, now | 2.81 % | 2.83 % | 2.73 % | 2.70 % |
+
+| All cities together, year 5 (8 worlds) | With the benefit (feature 8) | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 107.8 | 108.2 | 107.4 to 108.8 |
+| Price level of output (start = 100) | 99.7 | 99.5 | 99.0 to 99.9 |
+| Exports = imports, share of output | 2.73 % | 2.77 % | 2.67 % to 2.87 % |
+| Without work, mean of all cities and days | 0.29 % | 0.39 % | 0.29 % to 0.54 % |
+| Without work, the worst city on its worst day | 2.4 % | 3.0 % | 2.3 % to 3.4 % |
+| City with the lowest output (its start = 100) | 103.2 | 103.2 | 102.7 to 104.0 |
+| City with the highest output | 114.2 | 115.5 | 114.3 to 116.5 |
+
+The books are off by at most 1.7e-13 of the amount they are judged by. The outputs of both runs lie in the project
+files (wirtschaft/staedte/befunde/feature9_check_30_4.txt and feature9_check_5_8.txt).
+
+So the cities stand where they stood with the benefit. More people are without work, 0.07 % instead of 0.05 % over
+30 years and on the worst day of the worst city 3.0 % instead of 2.4 %, and no city sinks. In the first years output is a little
+higher than with the benefit, because households spend a little more of their income (`psi` above).
+
+Outside the game the same 29 linked cities ran 100 years in 3 runs (native build, the calibrations of the game,
+seeds 1356 to 1358; `economy/examples/cities.rs` with `money demand`), every day computed:
+
+| Year (3 runs) | 5 | 10 | 30 | 50 | 75 | 100 |
+|---|---|---|---|---|---|---|
+| Real output of all cities (start = 100) | 108.3 to 109.1 | 113.8 to 113.9 | 115.8 to 116.1 | 116.2 to 116.5 | 116.0 to 116.4 | 115.9 to 116.4 |
+| Price level of all cities (start = 100) | 98.8 to 99.8 | 97.4 to 98.0 | 95.1 to 95.8 | 94.4 to 95.2 | 94.6 to 95.3 | 94.7 to 95.5 |
+| City with the lowest output (its start = 100) | 102.5 to 103.9 | 108.5 to 108.8 | 109.4 to 111.9 | 113.3 to 114.6 | 112.2 to 113.7 | 111.9 to 114.5 |
+
+Output stays between 115.6 and 116.5 from year 30 to year 100 and the price level between 94.2 and 95.8. No city is
+below its start in any year checked (years 5, 10, 12, 20, 30, 40, 50, 60, 75, 90, 100), and on the days checked
+nobody is without work after year 5. The merchants' books are off by at most 1.9e-13. No run stopped. What the firms
+met at their plans (section 8) was not counted again. The output lies in the project files
+(wirtschaft/staedte/befunde/feature9_100_jahre.txt).
+
+### What it does not change
+
+- The rule of the model. The benefit is a number of the calibration; the cities can have it again by one entry.
+- The wage in money never changes (section 7), capital does not grow, so output has its ceiling at 117.6 (section
+  8).
+- England's own table, which never had the benefit.
+
+### Limits
+
+- A person without work has nothing at all in the model and buys nothing. That is not 1356 either: what such a
+  person lived on (savings, family, church, guild) is not in the model, which lets households consume from their
+  current income only. No source was opened for it.
+- That none of these cities paid people without work in 1356 is general knowledge; no source was opened.
+- A city can still have a slump of years (Cairo in the test above: 3 % without work for six years). In the runs
+  every such city came back; nothing in the model promises that.
+- The cities hold without the benefit only with features 7 and 8. With the rule of the paper the slump of section 5
+  is back.
+- The demand pull has no bound (section 8, limits). That stays; no run of this feature stopped over it.
+- The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
+- Nothing here is checked against history.

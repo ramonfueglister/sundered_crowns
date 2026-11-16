@@ -1,118 +1,127 @@
-//! The unemployment benefit in the cities of the game (economy feature 6, docs/ECONOMY_DESIGN.md). The rule is the
-//! port's own (Poledna et al. 2023, appendix A.44, A.53: a person without work is paid `theta_UB` times the last
-//! wage); what the feature sets is the calibration. So these tests compute a city of the game, London, from the
-//! file the world server reads (public/data/economy_cities.json, written by `npm run economy:calibrate`).
+//! No unemployment benefit in the cities of the game (economy feature 9, docs/ECONOMY_DESIGN.md). The model's rule is
+//! the port's own (Poledna et al. 2023, appendix A.44, A.53: a person without work is paid `theta_UB` times the last
+//! wage by the government); what the feature sets is the calibration: the rate is switched off, as it was before
+//! feature 6. That the cities hold without it rests on the wage in money (feature 7) and the demand pull (feature 8).
+//! These tests compute cities of the game from the file the world server reads (public/data/economy_cities.json,
+//! written by `npm run economy:calibrate`).
 #![allow(non_snake_case)]
 
 use sc_economy::Economy;
+use sc_economy::trade::Cities;
 
 const CITIES: &str = include_str!("../../public/data/economy_cities.json");
 
-/// London of the game with the seed given; `benefit: false` switches the benefit off, as the calibration did before
-/// feature 6 (the rate 1e-9, because the port divides by it, and no benefit at the start).
-fn london(seed: u64, benefit: bool) -> Economy {
+/// A city of the game with the rules of the game (wages in money, the demand pull) and the seed given.
+fn city(name: &str, seed: u64) -> Economy {
     let file: serde_json::Value = serde_json::from_str(CITIES).unwrap();
-    let city = file["cities"].as_array().unwrap().iter().find(|c| c["name"] == "London").expect("London is a city of the game");
-    let (mut p, mut ic) = (city["parameters"].clone(), city["initial_conditions"].clone());
-    if !benefit {
-        p["theta_UB"] = 1e-9.into();
-        ic["w_UB"] = 0.0.into();
-    }
+    assert_eq!((&file["wage"], &file["prices"]), (&"money".into(), &"demand".into()));
+    let city = file["cities"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap_or_else(|| panic!("{name} is a city of the game"));
     let clock = &file["clock"];
     let (plan, window) = (clock["plan"].as_u64().unwrap() as usize, clock["window"].as_u64().unwrap() as usize);
-    Economy::new(&p.to_string(), &ic.to_string(), seed, plan, window).unwrap()
+    Economy::new(&city["parameters"].to_string(), &city["initial_conditions"].to_string(), seed, plan, window).unwrap().with_wages_in_money().with_demand_pull().unwrap()
 }
 
-/// What the persons without an employer have on this day: how many they are, the smallest of their incomes as a
-/// part of the last wage at today's prices, and the smallest of their consumption budgets.
-fn without_work(e: &Economy) -> (usize, f64, f64) {
-    let (w, P) = (&e.model.w_act, e.model.agg.P_bar_HH);
-    let out: Vec<usize> = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_none()).collect();
-    let least = |v: &dyn Fn(usize) -> f64| out.iter().map(|&h| v(h)).fold(f64::INFINITY, f64::min);
-    (out.len(), least(&|h| w.Y_h[h] / (w.w_h[h] * P)), least(&|h| w.C_d_h[h]))
+fn assert_books(e: &Economy, at: &str) {
+    let [income, nominal, real, central_bank, banks, gdp] = e.checks();
+    for v in [income, nominal, real, central_bank, banks] {
+        assert!((v / gdp).abs() < 1e-9, "{at}: the books are off by {v} against {gdp}");
+    }
 }
 
 #[test]
-fn the_calibration_of_a_city_sets_the_rate_of_the_original_code() {
-    let e = london(1356, true);
-    let p = &e.model.prop;
-    assert_eq!(p.tau_SIW, 0.0);
-    assert!((p.theta_UB - 0.55 * (1.0 - p.tau_INC) * (1.0 - p.tau_SIW)).abs() < 1e-15, "theta_UB = {}", p.theta_UB);
-    assert_eq!(e.model.gov.sb_other, 0.0); // nothing else is paid to a person
-    // every person starts with a last wage: the mean wage of an employee of the city
+fn no_city_of_the_game_pays_a_person_without_work() {
+    let file: serde_json::Value = serde_json::from_str(CITIES).unwrap();
+    let cities = file["cities"].as_array().unwrap();
+    assert_eq!(cities.len(), 29);
+    for c in cities {
+        // the rate is a billionth, not 0: the port divides the wage of the start by it (src/agents.rs, line 222)
+        assert_eq!(c["parameters"]["theta_UB"], 1e-9, "{}", c["name"]);
+        for k in ["w_UB", "sb_other", "sb_inact"] {
+            assert_eq!(c["initial_conditions"][k].as_f64(), Some(0.0), "{}: {k}", c["name"]);
+        }
+    }
+    let e = city("London", 1356);
+    assert_eq!(e.model.prop.theta_UB, 1e-9);
+    assert_eq!(e.model.gov.sb_other, 0.0);
+    // the one person without work of the start has no last wage
     let w = &e.model.w_act;
-    let employed: Vec<usize> = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_some()).collect();
-    assert!(w.w_h.iter().all(|&x| x > 0.0));
-    let one = (0..w.w_h.len()).find(|&h| w.O_h[h].is_none()).expect("the calibration has one person without work");
-    let mean = employed.iter().map(|&h| w.w_h[h]).sum::<f64>() / employed.len() as f64;
-    assert!((w.w_h[one] / mean - 1.0).abs() < 1e-9, "{} against {mean}", w.w_h[one]);
+    let out: Vec<usize> = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_none()).collect();
+    assert_eq!(out.len(), 1);
+    assert_eq!(w.w_h[out[0]], 0.0);
 }
 
 #[test]
-fn a_person_without_work_is_paid_a_part_of_the_last_wage_and_buys_from_it() {
-    let mut e = london(1356, true);
-    let p = e.model.prop.clone();
-    let (mut days_with, mut most) = (0, 0);
+fn a_person_without_work_has_no_income_and_buys_nothing() {
+    for seed in [1356, 1357, 1358] {
+        let mut e = city("London", seed);
+        let p = e.model.prop.clone();
+        let (mut days_with, mut most) = (0, 0);
+        for day in 1..=730 {
+            e.step(1);
+            let (w, P) = (&e.model.w_act, e.model.agg.P_bar_HH);
+            let mut out = 0;
+            for h in 0..w.w_h.len() {
+                if w.O_h[h].is_some() {
+                    // A.53, as the port computes it: the wage after tax
+                    let income = w.w_h[h] * (1.0 - p.tau_INC) * P;
+                    assert!((w.Y_h[h] - income).abs() <= 1e-12 * income, "seed {seed}, day {day}, person {h}: {} against {income}", w.Y_h[h]);
+                    assert!(w.C_d_h[h] > 0.0 && w.C_d_h[h].is_finite());
+                } else {
+                    // a billionth of the last wage, and nothing for the person who never had one
+                    out += 1;
+                    assert!(w.Y_h[h] <= 1.0001e-9 * w.w_h[h] * P, "seed {seed}, day {day}, person {h}: an income of {}", w.Y_h[h]);
+                    assert!(w.C_d_h[h] <= 1.0001e-9 * w.w_h[h] * P * 1.01, "seed {seed}, day {day}, person {h}: a budget of {}", w.C_d_h[h]);
+                }
+            }
+            if out > 0 {
+                days_with += 1;
+                most = most.max(out);
+            }
+            assert_books(&e, &format!("seed {seed}, day {day}"));
+        }
+        assert!(days_with > 100 && most >= 1, "seed {seed}: persons without work on {days_with} days, at most {most}");
+    }
+}
+
+#[test]
+fn the_crown_owes_nothing_for_persons_without_work() {
+    // A.60, A.61 as the port computes them: what the crown pays to persons without work is the rate times their
+    // last wages. With the rate switched off this is less than a millionth of a penny a day, whoever is without work.
+    let mut e = city("London", 7);
     for day in 1..=400 {
         e.step(1);
         let (w, P) = (&e.model.w_act, e.model.agg.P_bar_HH);
-        for h in 0..w.w_h.len() {
-            // A.53, as the port computes it: the wage after tax with an employer, the benefit without
-            let income = if w.O_h[h].is_some() { w.w_h[h] * (1.0 - p.tau_INC) * P } else { p.theta_UB * w.w_h[h] * P };
-            assert!((w.Y_h[h] - income).abs() <= 1e-12 * income, "day {day}, person {h}: {} against {income}", w.Y_h[h]);
-            assert!(w.C_d_h[h] > 0.0 && w.C_d_h[h].is_finite(), "day {day}, person {h} plans to buy {}", w.C_d_h[h]);
-        }
-        let (n, part, budget) = without_work(&e);
-        if n > 0 {
-            days_with += 1;
-            most = most.max(n);
-            // 55 % of what the same wage pays after tax
-            assert!((part / (1.0 - p.tau_INC) - 0.55).abs() < 1e-12, "day {day}: {part}");
-            assert!(budget > 0.0);
-        }
-        let [income, nominal, real, central_bank, banks, gdp] = e.checks();
-        for v in [income, nominal, real, central_bank, banks] {
-            assert!((v / gdp).abs() < 1e-9, "day {day}: the books are off by {v} against {gdp}");
-        }
+        let paid: f64 = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_none()).map(|h| e.model.prop.theta_UB * w.w_h[h] * P).sum();
+        let wages: f64 = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_some()).map(|h| w.w_h[h] * P).sum();
+        assert!(paid <= 1e-8 * wages, "day {day}: the crown paid {paid} against wages of {wages}");
     }
-    assert!(days_with > 200 && most >= 2, "persons without work on {days_with} days, at most {most}");
 }
 
 #[test]
-fn without_the_benefit_a_person_without_work_has_no_income_and_buys_nothing() {
-    // the calibration before feature 6, as the control: this is what let a slump of a city feed itself
-    let mut e = london(1356, false);
-    let mut days_with = 0;
-    for _ in 1..=400 {
-        e.step(1);
-        let (w, P) = (&e.model.w_act, e.model.agg.P_bar_HH);
-        let out: Vec<usize> = (0..w.w_h.len()).filter(|&h| w.O_h[h].is_none()).collect();
-        if !out.is_empty() {
-            days_with += 1;
-        }
-        for h in out {
-            // a billionth of the last wage, and nothing for the person who never had one
-            assert!(w.Y_h[h] <= 1.0001e-9 * w.w_h[h] * P, "person {h}: an income of {}", w.Y_h[h]);
-            assert!(w.C_d_h[h] <= 1.0001e-9 * w.w_h[h] * P * 1.01, "person {h}: a budget of {}", w.C_d_h[h]);
+fn cities_that_trade_keep_their_people_in_work_without_the_benefit() {
+    // Four cities of the game with the merchants between them, ten years. Before features 7 and 8 linked cities
+    // without the benefit sank and stayed down (feature 5: single cities at half their start after decades). Now a
+    // city can still have a slump (with the second seed Cairo has 3 % without work for six years and an output of
+    // 98 % of its start), but it comes back: in the tenth year nobody is without work and every city stands above
+    // its start. The bounds are measured ones, not a paper's.
+    for seed in [1356, 1357] {
+        let names = ["Cairo", "Paris", "Venice", "London"];
+        let mut all = Cities::new(names.iter().enumerate().map(|(k, n)| city(n, seed + 100 * k as u64)).collect()).unwrap();
+        for year in 1..=10 {
+            all.step(365);
+            for (k, [off, scale]) in all.checks().into_iter().enumerate() {
+                assert!(off.abs() <= 1e-9 * scale, "seed {seed}, year {year}: check {k} of the merchants is off by {off} against {scale}");
+            }
+            for (name, e) in names.iter().zip(&all.cities) {
+                assert_books(e, &format!("seed {seed}, year {year}, {name}"));
+                let f = e.figures();
+                let (output, without, P) = (f[1] / f[2], f[12] / (f[10] + f[12]), f[15]);
+                let at = format!("seed {seed}, year {year}, {name}: output {output:.4}, without work {without:.4}, prices {P:.4}");
+                assert!(output > 0.95 && without < 0.05 && (P - 1.0).abs() < 0.1, "{at}");
+                if year == 10 {
+                    assert!(output > 1.05 && without < 0.01, "{at}");
+                }
+            }
         }
     }
-    assert!(days_with > 200, "persons without work on {days_with} days");
-}
-
-#[test]
-fn the_crown_pays_the_benefit_and_owes_what_it_lacks() {
-    // A.60, A.61 as the port computes them. The same city with and without the benefit, one day: the crown's debt
-    // differs by the benefit of the one person without work (at the prices of the day; what the person buys moves
-    // the profits of the firms and with them the tax a little, hence 1 %).
-    let (mut with, mut without) = (london(7, true), london(7, false));
-    let benefit = with.model.prop.theta_UB * with.model.w_act.w_h[(0..with.model.w_act.w_h.len()).find(|&h| with.model.w_act.O_h[h].is_none()).unwrap()];
-    assert_eq!(with.model.gov.L_G, 0.0);
-    with.step(1);
-    without.step(1);
-    let (n_with, _, _) = without_work(&with);
-    let (n_without, _, _) = without_work(&without);
-    assert_eq!(n_with, n_without);
-    let paid = with.model.gov.L_G - without.model.gov.L_G;
-    assert_eq!(n_with, 1);
-    assert!((paid / benefit - 1.0).abs() < 0.01, "the crown paid {paid} for one person with a benefit of {benefit}");
 }
