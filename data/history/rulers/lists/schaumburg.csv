@@ -1,0 +1,19 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Adolf VI,,,1290,1315,year,House of Schaumburg,Q364418,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+2,Adolf VII,,,1315,1354,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+3,Adolf VIII,,,1354,1370,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+4,Otto I,,,1370,1404,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+5,Adolf IX,,,1404,1426,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+6,Otto II,1400,1464,1426,1464,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+7,Adolf X,1419,1474,1464,1474,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+8,Erich,1420,1492,1474,1492,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+9,Otto III,1426,1510,1492,1510,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+10,Antonius,1439,1526,1510,1526,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+11,John IV,1449,1527,1526,1527,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+12,Jobst I,1483,1531,1527,1531,year,House of Schaumburg,Q322686,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+13,John V,,,1531,1560,year,House of Schaumburg,,co-ruler with his brother Otto IV from 1544 (source: joint rule),https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+14,Otto IV,1517,1576,1544,1576,year,House of Schaumburg,Q2039358,co-ruler with his brother John V until 1560,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+15,Adolf XI,1547,1601,1576,1601,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+16,Ernst,1569,1622,1601,1622,year,House of Schaumburg,Q782868,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+17,Jobst Herman,1593,1635,1622,1635,year,House of Schaumburg,Q667913,,https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738
+18,Otto V,1614,1640,1635,1640,year,House of Schaumburg,,"died childless 1640; House of Schaumburg extinct, county ended 1640",https://en.wikipedia.org/wiki/County_of_Schaumburg#Counts_of_Schauenburg,1379549738

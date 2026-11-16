@@ -249,3 +249,44 @@ kaidu,partial,3,https://en.wikipedia.org/wiki/Kaidu,no list page; rulers taken f
 cologne,collective,1,https://en.wikipedia.org/wiki/Cologne,Free Imperial City of Cologne page not fetched (rate limit); Cologne article used
 bremen,collective,1,https://en.wikipedia.org/wiki/Bremen,
 frankfurt,collective,1,https://en.wikipedia.org/wiki/Free_City_of_Frankfurt,
+nuremberg,collective,1,https://en.wikipedia.org/wiki/Free_Imperial_City_of_Nuremberg,
+metz,collective,1,https://en.wikipedia.org/wiki/Metz,
+bishopric_regensburg,done,39,https://en.wikipedia.org/wiki/List_of_bishops_of_Regensburg,
+strasbourg,collective,1,https://en.wikipedia.org/wiki/Strasbourg,
+augsburg,collective,1,https://en.wikipedia.org/wiki/Augsburg,
+cambrai,done,39,https://en.wikipedia.org/wiki/List_of_bishops_and_archbishops_of_Cambrai,list does not state when the prince-bishopric ended; stopped at 1801
+minden,done,27,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,
+hildesheim,done,28,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim,
+ravensberg,done,20,https://en.wikipedia.org/wiki/County_of_Ravensberg,source gives no holder 1609-1614
+goslar,collective,1,https://en.wikipedia.org/wiki/Goslar,
+halberstadt,done,26,https://en.wikipedia.org/wiki/Roman_Catholic_Diocese_of_Halberstadt,
+dortmund,collective,1,https://en.wikipedia.org/wiki/Dortmund,
+nordhausen,collective,1,https://en.wikipedia.org/wiki/Nordhausen%2C_Thuringia,
+muehlhausen,collective,1,https://en.wikipedia.org/wiki/M%C3%BChlhausen,
+aachen,collective,1,https://en.wikipedia.org/wiki/Free_Imperial_City_of_Aachen,
+worms,collective,1,https://en.wikipedia.org/wiki/Worms%2C_Germany,
+speyer,collective,1,https://en.wikipedia.org/wiki/Speyer,
+bishopric_speyer,done,30,https://en.wikipedia.org/wiki/Bishop_of_Speyer,source list has gap 1797-1801
+bishopric_verdun,done,32,https://en.wikipedia.org/wiki/Diocese_of_Verdun,prince-bishops section ends 1622; French acquisition formally recognised 1648
+bishopric_toul,done,36,https://en.wikipedia.org/wiki/Diocese_of_Toul,"list switches to ""Bishops after the French annexation"" from 1543; annexed 1552, recognised 1648; stopped at Jacques Lebret (1645)"
+colmar,collective,1,https://en.wikipedia.org/wiki/Colmar,
+constance,collective,1,https://en.wikipedia.org/wiki/Konstanz,
+basel,collective,1,https://en.wikipedia.org/wiki/Basel,
+zurich,collective,1,https://en.wikipedia.org/wiki/Zurich,
+bern,collective,1,https://en.wikipedia.org/wiki/Bern,
+lodi,collective,1,https://en.wikipedia.org/wiki/Lodi%2C_Lombardy,
+pavia,collective,1,https://en.wikipedia.org/wiki/Pavia,
+montbeliard,done,26,https://en.wikipedia.org/wiki/County_of_Montb%C3%A9liard,source gives no holder 1631-1640 and 1737-1744
+anhalt_zerbst,done,10,https://en.wikipedia.org/wiki/Principality_of_Anhalt-Zerbst,"title ended 1396 (partition); the same page lists a re-created principality 1544-1796, not included"
+sponheim_kreuznach,no_list,0,https://en.wikipedia.org/wiki/County_of_Sponheim,"County of Sponheim article has only narrative: Lower County (Sponheim-Kreuznach) counts John II, Simon II, Walram named without reign dates; line extinct 1417"
+bishopric_freising,done,33,https://en.wikipedia.org/wiki/List_of_bishops_of_Freising_and_archbishops_of_Munich_and_Freising,
+breslau_bishopric,done,41,https://en.wikipedia.org/wiki/Bishop_of_Wroc%C5%82aw,"concurrent administrators (Liesch 1635-55, Strachwitz/Rothkirch for the Prussian part) and capitular vicars not included"
+mainz,collective,1,https://en.wikipedia.org/wiki/Free_City_of_Mainz,
+esslingen,collective,1,https://en.wikipedia.org/wiki/Esslingen_am_Neckar,
+samland,done,21,https://en.wikipedia.org/wiki/Diocese_of_Samland,source gives no end date for temporal rule; list stops 1577; gap 1318-1320
+circassia,partial,23,https://en.wikipedia.org/wiki/Rulers_of_Circassia,"Rulers of Circassia: Chemguy ""Prince of Princes"" known only by sporadic attestations (many undated), plus separate overlapping list of de-facto confederation leaders 1787-; no holder for 1291"
+lanzarote_majos,no_list,0,https://en.wikipedia.org/wiki/Conquest_of_the_Canary_Islands,"no list; Conquest of the Canary Islands names native kings of Lanzarote (Zonzamas, Guanarame, Guadarfia) only in a story it calls suspect, without reign dates"
+regensburg,collective,1,https://en.wikipedia.org/wiki/Regensburg,
+volterra,collective,1,https://en.wikipedia.org/wiki/Volterra,
+san_marino,collective,1,https://en.wikipedia.org/wiki/San_Marino,
+schaumburg,done,18,https://en.wikipedia.org/wiki/County_of_Schaumburg,sub-entry Jobst II (ruled Herrschaft of Gemen) not included

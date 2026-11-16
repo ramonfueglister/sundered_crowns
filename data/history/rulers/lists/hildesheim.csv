@@ -1,0 +1,29 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Siegfried II of Querfurt,,,1279,1310,year,,Q2283432,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+2,Heinrich II of Woldenberg,,,1310,1318,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+3,Otto II of Woldenberg,,,1318,1331,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+4,Henry III of Brunswick and Lunenburg,,,1331,1363,year,,Q1597809,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+5,Erich I of Schauenburg,,,1332,1349,year,,,source dates overlap with Henry III,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+6,Johann II Schadland,,,1363,1365,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+7,Gerhard of Berg,,,1365,1398,year,,Q1443865,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+8,John III of Hoya,,,1398,1424,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+9,Magnus of Saxe-Lauenburg,,,1424,1452,year,,Q1884619,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+10,Bernhard III of Brunschwick and Lunenburg,,,1452,1458,year,,Q73514,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+11,Ernst I of Schauenburg,,,1458,1471,year,,Q1358797,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+12,Henning of Haus,,,1471,1481,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+13,Berthold II of Landsberg,,,1481,1502,year,,Q254790,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+14,Eric II of Saxe-Lauenburg,,,1503,1504,year,,Q875397,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+15,John IV of Saxe-Lauenburg,,,1504,1527,year,,Q222906,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+16,Balthasar Merklin,,,1527,1531,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+17,Otto III of Schauenburg,,,1531,1537,year,,Q2039358,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+18,Valentin of Teutleben,,,1537,1551,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+19,Frederick of Denmark,,,1551,1556,year,,Q876198,not consecrated for being Lutheran,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+20,Burkhard of Oberg,,,1557,1573,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+21,Ernest II of Bavaria,,,1573,1612,year,,Q62051,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+22,Ferdinand of Bavaria,,,1612,1650,year,,Q63249,"administrator only, due to lack of canonical qualification",https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+23,Maximilian Henry of Bavaria,,,1650,1688,year,,Q76722,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+24,Jobst Edmund of Brabeck,,,1688,1702,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+25,Joseph Clemens of Bavaria,,,1702,1723,year,,Q76341,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+26,Clemens August of Bavaria,,,1723,1761,year,,Q215086,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+27,Friedrich Wilhelm von Westphalen,,,1763,1789,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537
+28,Franz Egon von Fürstenberg,,,1789,1803,year,,Q1446631,"list gives tenure 1789–1825; prince-bishops held princely rank 1235–1803 (list intro), bishop only after 1803",https://en.wikipedia.org/wiki/List_of_bishops_of_Hildesheim#Prince-bishops_of_Hildesheim_between_1235_and_1803,1377887537

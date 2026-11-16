@@ -1,0 +1,28 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Volkwin of Schwalenberg,,1293-05-04,1275,1293,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+2,Conrad of Wardenberg (Conrad II),,1295,1293,1295,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+3,Ludolph of Rostorf,,,1295,1304,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+4,Godfrey of Waldeck,,1324-05-14,1304,1324,year,House of Waldeck,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+5,Louis of Brunswick-Lüneburg,,1346-07-18,1324,1346,year,House of Welf,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+6,Gerard of Schauenburg (Gerard I),,1353-01-01,1346,1353,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+7,Dietrich Kagelwit (Dietrich III),,1367-12-17,1353,1361,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+8,Gerard of Schaumburg (Gerard II),,1366-09-25,1361,1366,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+9,Otto of Wettin (Otto II),,1368-07-16,1366,1368,year,House of Wettin,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+10,Wedekind of Schalksberg (Wedekind II),,1383,1369,1383,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+11,Otto of Schalksberg (Otto III),,1398-01-01,1384,1397,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+12,Gerard of Hoya (Gerard III),,,1397,1398,year,Counts of Hoya,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+13,Marquard of Randegg,,1406-12-28,1398,1398,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+14,William of Buchen (William II),,,1398,1402,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+15,Otto of Rietberg (Otto IV),,1406,1403,1406,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+16,Wilbrand of Hallermund,,1436-12-23,1406,1436,year,,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+17,Albert of Hoya,,,1436,1473,year,Counts of Hoya,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+18,Henry of Schauenburg (Henry III),,,1473,1508,year,House of Schaumburg,,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+19,Francis of Brunswick-Wolfenbüttel (Francis I),1492,1529-11-25,1508,1529,year,House of Welf,Q1449876,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+20,Francis of Waldeck (Francis II),1491,1553-07-15,1530,1553,year,House of Waldeck,Q71448,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+21,"Julius of Brunswick and Lunenburg, Wolfenbüttel",1528-06-29,1589-05-03,1553,1554,year,House of Welf,Q62953,,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+22,"George of Brunswick and Lunenburg, Wolfenbüttel",1494-11-22,1566-12-04,1554,1566,year,House of Welf,,Lutheran prince-bishop (papally confirmed bishop who turned Lutheran),https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+23,Hermann of Schauenburg,1545,1592,1566,1582,year,House of Schaumburg,,Lutheran administrator,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+24,"Henry Julius of Brunswick and Lunenburg, Wolfenbüttel",1564-10-15,1613-07-20,1582,1585,year,House of Welf,Q77557,Lutheran administrator,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+25,Anthony of Schauenburg,1549,1599,1587,1599,year,House of Schaumburg,,Lutheran administrator,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+26,"Christian of Brunswick and Lunenburg, Celle",1566-11-09,1633-11-08,1599,1625,year,House of Welf,Q529521,Lutheran administrator; deposed,https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden,1345460984
+27,Francis of Wartenberg (Francis III),1593-03-01,1661-12-01,1631,1648,year,,Q84750,deposed by the Swedish conquerors; after 15 May 1648 the prince-bishopric was converted into the hereditary Principality of Minden (Hohenzollern of Brandenburg),https://en.wikipedia.org/wiki/List_of_bishops%2C_prince-bishops%2C_and_administrators_of_Minden#Catholic_Prince-Bishop_(1631–1648),1345460984
