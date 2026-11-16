@@ -17,7 +17,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Preise nach Absatz](wirtschaft/preise-nach-absatz.md) *(Beschlossen)*
   - [Ohne Arbeitslosengeld](wirtschaft/ohne-arbeitslosengeld.md) *(Beschlossen)*
   - [Personen der Wirtschaft](wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*
-  - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Beschlossen)*
+  - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Im Spiel)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 

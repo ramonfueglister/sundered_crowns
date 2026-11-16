@@ -38,7 +38,7 @@ players and the AI of realms without a player act through the same commands.
 | 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
-| 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; not in the running world |
+| 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
 
 ## 1. Grain harvest per place
 
@@ -1993,11 +1993,11 @@ amounts are in pence, savings in pounds, shillings and pence. Pictures in the pr
 
 ## 11. The family is the purse, and a woman without a husband works
 
-Status: built, not in the running world (draft pull request 49). After feature 10 Ramon chose the next feature on
+Status: built; in the running world since 16 November 2026 (pull request 49, world server release 16: the world
+of 1291 resumed at day 83 with the economies of its 30 cities founded anew on that day). After feature 10 Ramon chose the next feature on
 16 November 2026: "Haushalt der Familie" (17:50 UTC). The proposal (Claude Doc "Feature 11: Haushalt der Familie")
 offered two variants, and he chose "B: Kasse, Frauen ohne Mann arbeiten" (18:01 UTC): the family becomes the
-purse, and a woman without a husband works, so that the economies of a running world are founded anew. Nothing
-goes live without his word. Player wiki: docs/wiki/wirtschaft/haushalt-der-familie.md.
+purse, and a woman without a husband works, so that the economies of a running world are founded anew. Player wiki: docs/wiki/wirtschaft/haushalt-der-familie.md.
 
 ### What it is
 
@@ -2072,7 +2072,7 @@ persons live in the 67 families that spend nothing that day; with feature 10 it 
 
 ### State and upgrade
 
-State version 14 (13 is main's: the cultures and faiths of 1291). The upgrade gives the families their purse and
+State version 14 (13 is main's: a world of 1291 has the borders of its setup again). The upgrade gives the families their purse and
 the persons their consumption, and it founds the economies anew on the day the world has reached, as the step to
 12 did: who works has changed, so the days and the yearly figures of the economies are gone, and the first period
 is the next day of the world.
