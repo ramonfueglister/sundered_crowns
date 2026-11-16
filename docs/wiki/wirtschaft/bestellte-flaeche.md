@@ -33,7 +33,7 @@ $$
 | Zeichen | Bedeutung |
 |---|---|
 | *X* | bestellte Fläche des Ortes in Hektar: Ackerland samt Brache |
-| *P* | Menschen des Ortes |
+| *P* | Menschen des Ortes: seit dem 16.11.2026 seine Personen ([Weiler der Bauern](../personen/weiler-der-bauern.md)) |
 | *c* | Ackerland pro Kopf, solange Land frei ist |
 | *F* | Landfläche des Ortes |
 | *s* | Landgrenze: der grösste Anteil der Ortsfläche, der Acker werden kann |

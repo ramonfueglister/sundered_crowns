@@ -10,7 +10,8 @@ import type { I18n } from './i18n';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
-import { fitPlacesToCities, foundPeople } from './systems/people';
+import { foundPeople } from './systems/people';
+import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
 import { toHeads } from './scale';
 
@@ -53,11 +54,12 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   setPlaces(s, setup, 0, L);
   // a capital the realm does not hold is no capital
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
-  fitPlacesToCities(s); // no place is smaller than its cities (those of the start year)
   foundPeople(s);
-  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundEconomy(s, w);
+  settleHamlets(s); // the families who live from agriculture, by the firms of the economy
+  countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)
+  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   return s;
 }
 
