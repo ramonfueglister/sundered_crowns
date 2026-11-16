@@ -132,3 +132,96 @@ pub fn face(h: &Head, pp: &[V3]) -> Vec<f32> {
         (dist(pp[LIDS[0].0], pp[LIDS[0].1]) + dist(pp[LIDS[1].0], pp[LIDS[1].1])) / 2.0,
     ]
 }
+
+/// How far the front of the skin stands forward under the point (x, y) of the head seen from the front (the
+/// foremost of the skin's triangles over it); None beside the head.
+pub fn skin_front(h: &Head, pp: &[V3], x: f32, y: f32) -> Option<f32> {
+    let idx = &h.parts["body"][crate::LODS - 1];
+    let mut front: Option<f32> = None;
+    for t in idx.chunks_exact(3) {
+        let (a, b, c) = (pp[t[0] as usize], pp[t[1] as usize], pp[t[2] as usize]);
+        let (v0, v1, v2) = ([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]], [x - a[0], y - a[1]]);
+        let den = v0[0] * v1[1] - v1[0] * v0[1];
+        if den.abs() < 1e-14 {
+            continue;
+        }
+        let (w1, w2) = ((v2[0] * v1[1] - v1[0] * v2[1]) / den, (v0[0] * v2[1] - v2[0] * v0[1]) / den);
+        if w1 >= 0.0 && w2 >= 0.0 && w1 + w2 <= 1.0 {
+            let z = a[2] + w1 * (b[2] - a[2]) + w2 * (c[2] - a[2]);
+            front = Some(front.map_or(z, |f| f.max(z)));
+        }
+    }
+    front
+}
+
+/// An eyeball's middle and radius (the eye at positive x for 0, the other for 1).
+pub fn ball(h: &Head, pp: &[V3], k: usize) -> (V3, f32) {
+    let idx = &h.parts[["leye", "reye"][k]][0];
+    let n = idx.len().max(1) as f32;
+    let c = idx.iter().fold([0.0; 3], |c, &v| std::array::from_fn(|a| c[a] + pp[v as usize][a] / n));
+    (c, idx.iter().map(|&v| dist(pp[v as usize], c) / 100.0).sum::<f32>() / n)
+}
+
+/// How a woman's eye stands in her head against a man's, in millimetres (women minus men), as `eye_stands`
+/// measures it. Beside the eye: Hertel's exophthalmometer reads how far the cornea stands in front of the bone's
+/// rim beside the eye's outer corner, 16.5 mm in white men and 15.4 mm in white women (eyewiki.org,
+/// Exophthalmometry, after Erb et al. 2003 and Migliori & Gladstone 1984). Under and over the eye: the cornea
+/// stands 11.6 mm in front of the bone's rim under the eye in men and 12.4 mm in women, and 5.3 and 6.3 mm
+/// behind the rim over it (Shin, Lee, Koh & Song 2017, Three-dimensional and topographic relationships between
+/// the orbital margins with reference to assessment of eyeball protrusion, Anatomy & Cell Biology 50: 41-47;
+/// computed tomography of 70 men and 71 women of Korea, 20 to 30 years old; read from a summary of the paper's
+/// table). Bone, where `eye_stands` reads skin: only the difference between the sexes is held against these,
+/// which is about a millimetre each way and smaller than a head's own spread (2 mm).
+pub const EYE_SEX: [(&str, f32); 3] = [("the ball in front of the skin beside the eye", 15.4 - 16.5), ("the ball in front of the skin under the eye", 12.4 - 11.6), ("the brow's ridge in front of the ball", 6.3 - 5.3)];
+
+/// Where the eye at positive x stands in the morphed head (`morph_test`), in millimetres: the ball's front before
+/// the skin 6 mm beside the eye's outer corner (where the exophthalmometer's foot rests), before the skin 8 mm
+/// under the lower lid's edge, and behind the foremost skin 10 to 24 mm over the upper lid's edge (the brow's
+/// ridge), the last two on the pupil's line.
+pub fn eye_stands(h: &Head, pp: &[V3]) -> [f32; 3] {
+    let front = h.parts["leye"][0].iter().map(|&v| pp[v as usize][2]).fold(f32::MIN, f32::max);
+    let (outer, upper, lower) = (pp[EYE_CORNERS[0][1]], pp[LIDS[0].0], pp[LIDS[0].1]);
+    let at = |x: f32, y: f32| skin_front(h, pp, x, y).expect("skin about the eye");
+    let ridge = (10..=24).map(|k| at(upper[0], upper[1] + k as f32 * 0.01)).fold(f32::MIN, f32::max);
+    [100.0 * (front - at(outer[0] + 0.06, outer[1])), 100.0 * (front - at(upper[0], lower[1] - 0.08)), 100.0 * (ridge - front)]
+}
+
+/// Points of the profile, and how far each stands in front (+) of the upright line through the subnasale on a
+/// head held as people hold theirs (natural head position), mean and standard deviation for men and for women in
+/// millimetres: the forehead's foremost point between the brows (glabella), the foremost of the upper lip and of
+/// the lower lip, and the chin's foremost point (soft tissue pogonion). Arnett, Jelic, Kim, Cummings, Beress,
+/// Worley, Chung & Bergman 1999, Soft tissue cephalometric analysis: diagnosis and treatment planning of
+/// dentofacial deformity, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253; 20 white
+/// men and 26 white women with faces judged as balanced (the table of projections to the true vertical line,
+/// read from a copy of the paper).
+pub const PROFILE: [(&str, [f32; 2], [f32; 2]); 4] = [("glabella", [-8.0, 2.5], [-8.5, 2.4]), ("upper lip", [3.3, 1.7], [3.7, 1.2]), ("lower lip", [1.0, 2.2], [1.9, 1.4]), ("chin", [-3.5, 1.8], [-2.6, 1.9])];
+
+/// The points of `PROFILE` on a morphed head (`morph_test`) whose bust leans back by `lean` radians (the dress
+/// table's `lean`): how far each stands in front of the upright line through the subnasale, in millimetres. Each
+/// is the foremost of the skin within 3 mm of the middle line: over the nose's root, between nose and mouth, under
+/// the mouth, over the chin's foot.
+pub fn profile(h: &Head, pp: &[V3], lean: f32) -> [f32; 4] {
+    let mut seen = vec![false; pp.len()];
+    let mut mid: Vec<V3> = Vec::new();
+    for &v in &h.parts["body"][crate::LODS - 1] {
+        let q = pp[v as usize];
+        if !seen[v as usize] && q[0].abs() < 0.03 && q[2] > pp[SUBNASALE][2] - 0.4 {
+            seen[v as usize] = true;
+            mid.push(q);
+        }
+    }
+    let (sn, mouth) = (pp[SUBNASALE], between(pp[STOMION[0]], pp[STOMION[1]]));
+    let front = |y0: f32, y1: f32| mid.iter().filter(|q| q[1] > y0 && q[1] < y1).fold([0.0, 0.0, f32::MIN], |f, q| if q[2] > f[2] { *q } else { f });
+    let (cs, sn_) = (lean.cos(), lean.sin());
+    [front(pp[SELLION][1] + 0.06, pp[SELLION][1] + 0.25), front(mouth[1] + 0.01, sn[1] - 0.03), front(mouth[1] - 0.12, mouth[1] - 0.01), front(pp[MENTON][1] + 0.02, pp[MENTON][1] + 0.22)]
+        .map(|q| 100.0 * ((q[2] - sn[2]) * cs - (q[1] - sn[1]) * sn_))
+}
+
+/// How the lids of the eye at positive x stand to the pupil of a morphed head (`morph_test`) whose eye looks
+/// `pitch` radians up from straight ahead, in millimetres: the upper lid's edge over the pupil and the lower
+/// lid's under it (the margin reflex distances of a clinic).
+pub fn lids_to_pupil(h: &Head, pp: &[V3], pitch: f32) -> [f32; 2] {
+    let (c, r) = ball(h, pp, 0);
+    let pupil = c[1] + r * pitch.sin();
+    [100.0 * (pp[LIDS[0].0][1] - pupil), 100.0 * (pupil - pp[LIDS[0].1][1])]
+}

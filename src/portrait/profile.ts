@@ -139,12 +139,20 @@ export const APOLEIA: StageProfile = {
  *  set so that the women's lit cheek lies where the reference's woman's does. Grown women, the reference's
  *  woman in brackets: lit cheek L 59.0, a 22.5, b 27.2 (56.1, 22.9, 25.4; before 67.1, 17.8, 23.7), the
  *  shaded cheek 26 L darker (28; before 14), upper lip L 17 (21; before 26). Higher, the upper lip turns into a
- *  dark bar (37 degrees: L 13.5). All values of this profile are PLACEHOLDER: held against one face of the
- *  reference, set by measure and by eye (docs/PORTRAITS.md). */
+ *  dark bar (37 degrees: L 13.5).
+ *  Round 74: the women's heads were bowed and their eyes lay too deep (portrait/src/dress.rs `lean`, `eye_out`,
+ *  `pupil`); upright, their faces took more light and the shaded half and the upper lip grew light (the shaded
+ *  cheek 18 L darker, the reference 28). The key 4 degrees further round (64) and 1.5 lower (30.5): grown women's
+ *  lit cheek L 61.0, a 21.5, chroma 34.2 (the reference 56.1, 22.9, 34.2), the shaded cheek 27.1 L darker (27.7),
+ *  lips L 20.8 and 33.6 (21.0, 33.3), brow 38.9 darker than the skin over it (37.9), the skin between lid and
+ *  brow 24.4 darker than that over the brow (17.9; in round 73 46.3). Further round, the upper lip goes dark (76
+ *  degrees: L 12); lower (26 degrees), the shade under the brow goes and with it the eye's depth.
+ *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
+ *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
-    key: { from: [4.2, 3.6, 4.0], colour: '#fff0de', energy: 1.8 },
+    key: { from: [4.53, 3.47, 3.76], colour: '#fff0de', energy: 1.8 },
     rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
     fill: { from: [-3.0, -1.0, 5.0], colour: '#efe4da', energy: 0.12 },
   },

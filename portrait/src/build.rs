@@ -1114,8 +1114,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                                 let up = crate::dress::brow_lift_at(q[0].abs(), eyes[if q[0] < 0.0 { 1 } else { 0 }], lift) / 100.0;
                                 let (d0, moved) = (sub(*q, hc), [q[0], q[1] + up, q[2]]);
                                 let d1 = sub(moved, hc);
-                                // as far off the skin as it was
-                                let (r0, r1) = (outer_skin(&cast_h, d0, hs), outer_skin(&cast_h, d1, hs));
+                                // as far off the skin as it was. The skin is the last the ray from the head's
+                                // centre meets (before it, the inside of the eye's socket): a ray to the brow
+                                // leaves the head through the face, and `outer_skin` takes a face that stands
+                                // far out for a shoulder
+                                let (r0, r1) = (cast_h.cast(d0, true), cast_h.cast(d1, true));
                                 if r0 > 0.0 && r1 > 0.0 { madd(hc, norm(d1), r1 + len(d0) - r0) } else { moved }
                             });
                             *n = norm(sub(*q, hc));

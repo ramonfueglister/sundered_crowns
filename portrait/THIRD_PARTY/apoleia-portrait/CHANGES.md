@@ -136,3 +136,11 @@ in `tests/faces.rs`. Roman bytes unchanged.
 Round 73: nothing in the crate. The stage's profile for England lights a face from the other side of the camera
 and from higher up (`src/portrait/profile.ts`, the game's own file); Apoleia's stage is as it was. Roman bytes
 unchanged.
+
+Round 74: a dress with a table may bring a grown head's eyes forward with their lids (`DressSet::eye_out`,
+`morph.rs` `eyes_out`, `EYE_FIELD`) and set each eyeball up or down in its socket so that the pupil stands
+between the lids (`DressSet::pupil`, `pupils_set`); England's lean is the same way for both sexes. The brow's
+lift takes the last skin its ray meets instead of `outer_skin` (which is as it was, for Apoleia's hair). New,
+not Apoleia's: `measure.rs` `skin_front`, `ball`, `eye_stands`, `EYE_SEX`, `profile`, `PROFILE`,
+`lids_to_pupil`, three tests in `tests/faces.rs`, two in `src/lib.rs`; `examples/face_measure.rs --dump` also
+writes the skin's triangles and the eyeballs' vertices. Roman bytes unchanged.

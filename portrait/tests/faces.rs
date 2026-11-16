@@ -243,3 +243,88 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
 fn dist(a: &[f32; 3], b: &[f32; 3]) -> f32 {
     ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
 }
+
+#[test]
+fn a_woman_of_england_has_her_eyes_as_deep_in_her_head_as_real_women_have() {
+    // Until round 74 a woman's eyes lay 2 to 5 mm deeper in her head than a man's (MakeHuman's woman): the ball's
+    // front 10.4 mm before the skin beside the eye where a man's stands 13.5 mm before it, 1.1 mm before the skin
+    // under the eye (a man's 3.5), the nose's root 13.6 mm in front of it (9.0). In real heads the sexes differ
+    // by about a millimetre (src/measure.rs `EYE_SEX`). The skin over her lid leaned 39 degrees down where a man's
+    // leans 22, and lay in shade in any light. Her eyes are brought forward with their lids (`DressSet::eye_out`):
+    // now the difference between the sexes is within a millimetre and a half of the real one at all three places.
+    let Some(h) = head() else { return };
+    let (n, mut sums) = (60, [[0.0; 3]; 2]);
+    for k in 0..2 * n {
+        let female = k % 2 == 0;
+        let m = sc_portrait::measure::eye_stands(&h, &morph_test(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
+        for (s, x) in sums[female as usize].iter_mut().zip(&m) {
+            *s += x / n as f32;
+        }
+    }
+    for (k, &(name, real)) in sc_portrait::measure::EYE_SEX.iter().enumerate() {
+        let ours = sums[1][k] - sums[0][k];
+        if std::env::var("SHOW").is_ok() {
+            println!("{name}: women {:.1} mm, men {:.1} mm, the difference {ours:.1} (real heads {real:.1})", sums[1][k], sums[0][k]);
+        }
+        assert!((ours - real).abs() < 1.5, "{name}: women {} mm, men {} mm, in real heads the difference is {real}", sums[1][k], sums[0][k]);
+    }
+}
+
+#[test]
+fn the_grown_of_england_hold_their_heads_as_people_do() {
+    // MakeHuman's head stands bowed, a woman's as a man's: seen from the side its chin lies 9 mm behind the upright
+    // line through the subnasale and its forehead 3 to 4 mm behind it, where a head held naturally has the chin 3 mm
+    // and the forehead 8 mm behind that line (src/measure.rs `PROFILE`). Round 50 leaned the men back (0.14) and
+    // the women further forward (-0.1, because their upturned noses read as seen from below): a woman held her
+    // head 14 degrees lower than a man and looked up from under her brows, with her eyes in their shade (until
+    // round 74). With the table's lean the four points of the profile lie within two of the reference's standard
+    // deviations for either sex, and one and a half in the mean; with the old lean a woman's did not.
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    let rms = |female: bool, lean: f32, show: bool| {
+        let (n, mut sums) = (60, [0.0; 4]);
+        for k in 0..n {
+            let m = sc_portrait::measure::profile(&h, &morph_test(&h, &person(2 * k + !female as u32, female, [24.0, 35.0, 50.0][k as usize % 3])), lean);
+            for (s, x) in sums.iter_mut().zip(&m) {
+                *s += x / n as f32;
+            }
+        }
+        let off: Vec<f32> = sc_portrait::measure::PROFILE.iter().zip(&sums).map(|(&(_, men, women), ours)| (ours - if female { women } else { men }[0]) / if female { women } else { men }[1]).collect();
+        if show && std::env::var("SHOW").is_ok() {
+            println!("{}, lean {lean}: {:?} mm, in standard deviations from the reference {:?}", if female { "women" } else { "men" }, sums, off);
+        }
+        (off.iter().map(|x| x * x).sum::<f32>() / 4.0).sqrt().max(if show { off.iter().fold(0.0, |m: f32, x| m.max(x.abs())) - 0.5 } else { 0.0 })
+    };
+    for female in [true, false] {
+        let worst = rms(female, set.lean[if female { 0 } else { 1 }], true);
+        assert!(worst < 1.5, "{}: {worst} standard deviations from the reference", if female { "women" } else { "men" });
+    }
+    assert!(rms(true, -0.1, false) > 3.0);
+}
+
+#[test]
+fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
+    // In an eye that looks straight ahead the upper lid covers the upper 1 to 2 mm of the iris and the lower lid
+    // just reaches its lower edge: the pupil stands a little above the middle of the opening (Stanford's
+    // Neuro-ophthalmology Illustrated, chapter 1: margin reflex distance 4 to 5 mm, opening 9 to 12 mm). The
+    // eye looks at the viewer whatever the bust's lean, and MakeHuman's lids do not follow it: until round 74 a
+    // woman's upper lid stood 2.0 mm over her pupil (half the iris covered, the lower lid 0.5 mm under its edge),
+    // and on a head held upright the white showed over the iris. Each ball is set so that the pupil stands at
+    // `DressSet::pupil` of the opening: no white over an iris, hardly any under it, more of it covered above than
+    // below.
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    let iris = set.iris_mm / 2.0;
+    for k in 0..84 {
+        let (female, age) = (k % 2 == 0, [2.0, 5.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k / 2) as usize % 9]);
+        let p = person(k, female, age);
+        let lean = sc_portrait::dress::by_sex(set.lean[0], set.lean[1], female, p.grown());
+        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_of(1.0, lean)[1]);
+        if std::env::var("SHOW").is_ok() {
+            println!("{} of {age}: the upper lid {over:.1} mm over the pupil, the lower lid {under:.1} mm under it", if female { "woman" } else { "man" });
+        }
+        assert!(((under / (over + under)) - set.pupil).abs() < 0.01, "person {k}: {over} mm over, {under} mm under");
+        // (an eye that is open wider than the iris is high shows a little white under it, as wide eyes do)
+        assert!(over < iris - 0.5 && under < iris + 1.0 && over < under, "person {k}: {over} mm over, {under} mm under, the iris {iris} mm");
+    }
+}

@@ -3,7 +3,9 @@
 //!
 //!   cargo run --release --example face_measure -- England Gallia 36 ../public/portrait
 //!   ... --grown             the people are that many grown ones instead (of 24, 35 and 50 in turn), for steadier means
-//!   ... --dump <folder>     also writes each morphed head as <pid>.f32 (x y z per vertex, little endian)
+//!   ... --dump <folder>     also writes each morphed head as <pid>.f32 (x y z per vertex, little endian), the
+//!                           skin's triangles as body.u32 (three vertex numbers each) and the eyeballs' vertices
+//!                           as leye.u32 and reye.u32
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
 //!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
 //!
@@ -77,6 +79,16 @@ fn main() {
     let o = ORIGINS.iter().position(|k| *k == pool).unwrap_or_else(|| panic!("no pool {pool}: {ORIGINS:?}")) as u8;
     let (ages, small) = ([8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0], [2.0, 5.0]);
     let dump = option("--dump");
+    if let Some(folder) = &dump {
+        // the skin's triangles (three corners each, as numbers of the head's vertices), for tools that need normals
+        let bytes: Vec<u8> = head.parts["body"][LODS - 1].iter().flat_map(|i| (*i as u32).to_le_bytes()).collect();
+        std::fs::write(format!("{folder}/body.u32"), bytes).expect("the folder to dump into");
+        // and the eyeballs' vertices (the eye at positive x first)
+        for part in ["leye", "reye"] {
+            let bytes: Vec<u8> = head.parts[part][0].iter().flat_map(|i| (*i as u32).to_le_bytes()).collect();
+            std::fs::write(format!("{folder}/{part}.u32"), bytes).expect("the folder to dump into");
+        }
+    }
     let many = args.iter().any(|a| a == "--grown");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
     println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len()).map(|k| format!("{k:>6}")).collect::<String>());

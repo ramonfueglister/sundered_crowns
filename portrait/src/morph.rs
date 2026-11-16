@@ -277,6 +277,15 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
             }
         }
     }
+    // the eyes brought forward with their lids, where a dress with a table asks for it (`DressSet::eye_out`)
+    if let Some(mm) = p.dress.set().map(|d| d.eye_out_of(p.female, p.age)).filter(|mm| *mm != 0.0) {
+        eyes_out(h, &mut pp, mm / 100.0);
+    }
+    // and each ball set in its socket so that the pupil stands between the lids as a real one does (`DressSet::pupil`)
+    if let Some(d) = p.dress.set().filter(|d| d.pupil > 0.0) {
+        let lean = crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown());
+        pupils_set(h, &mut pp, d.pupil, |side| d.gaze_of(side, lean)[1]);
+    }
     // arms down from the A pose, softly weighted around the shoulder joint
     for sg in [1.0f32, -1.0] {
         let (mut px, mut py, mut n) = (0f32, 0f32, 0);
@@ -308,6 +317,65 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         }
     }
     (pp, used)
+}
+
+/// The field in which an eye is brought forward (`eyes_out`), in halves of the opening's length: how far it
+/// reaches sideways and up and down from the opening's middle, and the share of that way on which all moves in
+/// full. With an opening of 29 mm: in full to 2 mm over the upper lid's edge and under the lower lid's, nothing
+/// from 8 mm over and under them and from 5 mm beside the corners (where the bone's rim lies), half at the corners.
+pub(crate) const EYE_FIELD: [f32; 3] = [1.33, 0.84, 0.5];
+
+/// Which of the head's vertices are the eyeball `k`'s (the eye at positive x for 0).
+fn ball_of(h: &Head, k: usize) -> Vec<bool> {
+    let mut ball = vec![false; h.n];
+    for &v in &h.parts[["leye", "reye"][k]][0] {
+        ball[v as usize] = true;
+    }
+    ball
+}
+
+/// Brings the eyes forward by `by` (head units), each with its lids and the skin on it: the ball as it is, the
+/// skin in full where it lies on the ball and less and less towards the rim of the socket (`EYE_FIELD`), where it
+/// stays. MakeHuman's targets move an eye up, down, in and out, none forward.
+pub(crate) fn eyes_out(h: &Head, pp: &mut [V3], by: f32) {
+    for k in 0..2 {
+        let (ball, (c, r)) = (ball_of(h, k), crate::measure::ball(h, pp, k));
+        let (inner, outer) = (pp[EYE_CORNERS[k][0]], pp[EYE_CORNERS[k][1]]);
+        let (upper, lower) = (pp[crate::measure::LIDS[k].0], pp[crate::measure::LIDS[k].1]);
+        let (mx, my, half) = ((inner[0] + outer[0]) / 2.0, (upper[1] + lower[1]) / 2.0, (outer[0] - inner[0]).abs() / 2.0);
+        for (v, q) in pp.iter_mut().enumerate() {
+            if ball[v] {
+                q[2] += by;
+                continue;
+            }
+            let rho = ((q[0] - mx) / (EYE_FIELD[0] * half)).hypot((q[1] - my) / (EYE_FIELD[1] * half));
+            // (the head's back lies behind the same ellipse: only what stands before the ball's middle)
+            if rho < 1.0 && q[2] > c[2] - r {
+                q[2] += by * (1.0 - sm(EYE_FIELD[2], 1.0, rho)) * sm(c[2] - r, c[2], q[2]);
+            }
+        }
+    }
+}
+
+/// How far at most a ball is moved up or down in its socket to set the pupil between the lids (`pupils_set`; head
+/// units).
+pub(crate) const PUPIL_MOST: f32 = 0.04;
+
+/// Moves each eyeball up or down in its socket so that the pupil, looking `pitch` up from straight ahead (by the
+/// side of the eye, 1 for the one at positive x), stands at `share` of the way from the lower lid's edge to the
+/// upper lid's. The lids stay: MakeHuman has no target that moves both the same way.
+pub(crate) fn pupils_set(h: &Head, pp: &mut [V3], share: f32, pitch: impl Fn(f32) -> f32) {
+    for k in 0..2 {
+        let (ball, (c, r)) = (ball_of(h, k), crate::measure::ball(h, pp, k));
+        let (upper, lower) = (pp[crate::measure::LIDS[k].0][1], pp[crate::measure::LIDS[k].1][1]);
+        let pupil = c[1] + r * pitch(if k == 0 { 1.0 } else { -1.0 }).sin();
+        let up = (lower + share * (upper - lower) - pupil).clamp(-PUPIL_MOST, PUPIL_MOST);
+        for (v, q) in pp.iter_mut().enumerate() {
+            if ball[v] {
+                q[1] += up;
+            }
+        }
+    }
 }
 
 /// The lowest point of the upper lip and the highest of the lower lip in the middle of the mouth (vertices of

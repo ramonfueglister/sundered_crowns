@@ -297,6 +297,61 @@ mod tests {
     }
 
     #[test]
+    fn an_eye_comes_forward_with_its_lids_and_the_rim_of_its_socket_stays() {
+        use crate::measure::{ball, CHEEKBONES, LIDS, NOSE, PRONASALE, SELLION};
+        use crate::morph::{eyes_out, EYE_CORNERS};
+        let Some(h) = head() else { return };
+        let (by, mut pp) = (0.02, h.base.clone());
+        eyes_out(&h, &mut pp, by);
+        let moved = |v: usize| pp[v][2] - h.base[v][2];
+        // nothing moves sideways, up or down, nothing back and nothing further than the ball
+        for v in 0..h.n {
+            assert!(pp[v][0] == h.base[v][0] && pp[v][1] == h.base[v][1] && (0.0..=by + 1e-6).contains(&moved(v)), "{v}");
+        }
+        for (k, part) in ["leye", "reye"].iter().enumerate() {
+            // the ball as it is
+            assert!(h.parts[*part][0].iter().all(|&v| (moved(v as usize) - by).abs() < 1e-6), "{part}");
+            // the lids' edges with it, the corners half as far (there the bone is near)
+            assert!((moved(LIDS[k].0) - by).abs() < 1e-6 && (moved(LIDS[k].1) - by).abs() < 1e-6, "{part}: lids");
+            for c in EYE_CORNERS[k] {
+                assert!((0.3 * by..0.7 * by).contains(&moved(c)), "{part}: corner by {}", moved(c));
+            }
+        }
+        // the face about the sockets stays: the nose's root, tip and wings, the cheekbones
+        for v in [SELLION, PRONASALE].into_iter().chain(NOSE.iter().chain(&CHEEKBONES).flat_map(|p| [p.0, p.1])) {
+            assert_eq!(moved(v), 0.0, "{v}");
+        }
+        // and so does all that lies behind the balls (the same field reaches through the head)
+        let back = ball(&h, &h.base, 0).0[2] - ball(&h, &h.base, 0).1;
+        assert!((0..h.n).all(|v| h.base[v][2] > back || moved(v) == 0.0));
+    }
+
+    #[test]
+    fn a_ball_is_set_in_its_socket_so_that_the_pupil_stands_between_the_lids() {
+        use crate::measure::{ball, LIDS};
+        use crate::morph::{pupils_set, PUPIL_MOST};
+        let Some(h) = head() else { return };
+        let share_of = |pp: &[[f32; 3]], k: usize| (ball(&h, pp, k).0[1] - pp[LIDS[k].1][1]) / (pp[LIDS[k].0][1] - pp[LIDS[k].1][1]);
+        let mut pp = h.base.clone();
+        pupils_set(&h, &mut pp, 0.57, |_| 0.0);
+        for (k, part) in ["leye", "reye"].iter().enumerate() {
+            assert!((share_of(&pp, k) - 0.57).abs() < 1e-3, "{part}: {}", share_of(&pp, k));
+            // the ball as a whole, up or down only
+            let by = pp[h.parts[*part][0][0] as usize][1] - h.base[h.parts[*part][0][0] as usize][1];
+            assert!(h.parts[*part][0].iter().all(|&v| (pp[v as usize][1] - h.base[v as usize][1] - by).abs() < 1e-6 && pp[v as usize][0] == h.base[v as usize][0] && pp[v as usize][2] == h.base[v as usize][2]), "{part}");
+        }
+        // nothing else moves: the lids stay
+        let balls: std::collections::HashSet<u32> = h.parts["leye"][0].iter().chain(&h.parts["reye"][0]).copied().collect();
+        assert!((0..h.n).all(|v| balls.contains(&(v as u32)) || pp[v] == h.base[v]));
+        // an eye looking down has its ball set higher, and no ball leaves its socket
+        let (mut down, mut far) = (h.base.clone(), h.base.clone());
+        pupils_set(&h, &mut down, 0.57, |_| -0.1);
+        pupils_set(&h, &mut far, 5.0, |_| 0.0);
+        assert!(ball(&h, &down, 0).0[1] > ball(&h, &pp, 0).0[1]);
+        assert!((ball(&h, &far, 0).0[1] - ball(&h, &h.base, 0).0[1] - PUPIL_MOST).abs() < 1e-5);
+    }
+
+    #[test]
     fn a_brow_is_lifted_evenly_between_its_inner_end_the_pupil_and_the_eyes_corner() {
         use crate::dress::brow_lift_at;
         let (xs, lift) = ([0.2, 0.3, 0.45], [1.0, 3.0, 6.0]);

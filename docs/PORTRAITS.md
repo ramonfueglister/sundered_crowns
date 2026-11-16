@@ -864,6 +864,103 @@ lighter against the shaded cheek than the reference's; and what round 72 left: t
 lashes as a dark fringe, the iris' depth. All values PLACEHOLDER: one face of the reference, by measure and by
 eye.
 
+**A woman's eyes, her head and her lids (round 74).** Round 73 left the skin between a woman's lid and brow 46 L
+darker than the skin over the brow (the reference 18, our men 21), and had ruled out paint, the lash line and
+the baked shade. Under a light without direction that skin is as light as the skin over the brow (-1 for women,
+0 for men): the band was shade, and shade comes from form and posture. Three causes, each measured on the
+morphed heads (`examples/face_measure.rs --dump`, `src/measure.rs`):
+
+1. *The eye lay too deep.* MakeHuman's female form sets the eye deeper in the head than its male one.
+
+   | grown, mm (60 of each) | women before | women now | men | women minus men, now | real heads |
+   |---|---|---|---|---|---|
+   | the ball's front before the skin 6 mm beside the outer corner | 10.4 | 12.4 | 13.4 | -1.0 | -1.1 |
+   | the ball's front before the skin 8 mm under the lower lid | 1.1 | 3.3 | 3.8 | -0.4 | +0.8 |
+   | the brow's ridge in front of the ball | 10.3 | 8.2 | 8.0 | +0.2 | +1.0 |
+
+   Real heads: Hertel's exophthalmometer reads the cornea 16.5 mm in front of the bone's rim beside the eye in
+   white men and 15.4 mm in white women (eyewiki.org, Exophthalmometry, after Erb et al. 2003 and Migliori &
+   Gladstone 1984); in computed tomography the cornea lies 5.3 (men) and 6.3 mm (women) behind the rim over the
+   eye and 11.6 and 12.4 mm in front of the rim under it (Shin, Lee, Koh & Song 2017, Anatomy & Cell Biology 50:
+   41-47, 141 people of Korea; read from a summary of the table, which column is which sex inferred). About a
+   millimetre between the sexes; ours had 2 to 5. The skin 3 to 9 mm over a woman's lid leaned 38 to 40 degrees
+   from upright, a man's 20 to 28: it faced the ground. A grown woman's eyes are now brought forward by 2 mm
+   (`DressSet::eye_out`, the least-squares fit to the three differences; 2.5 would give exactly the men's
+   profile), the ball as it is, the lids and the skin on the ball in full, less and less towards the bone's rim
+   (`morph.rs` `eyes_out`, `EYE_FIELD`). The skin over the lid now leans 23 to 30 degrees. Girls stand as boys
+   up to 8; the gap opens from 13, and the move grows with the head's adult form.
+   Tried first and dropped: MakeHuman's own field for moving an eye up, turned forward. It carries the fold over
+   the lid along with the lid, and the lean of that skin stayed at 35 degrees.
+2. *The head was bowed.* Round 50 leaned the men back by 0.14 and the women forward by 0.1, on the belief that
+   MakeHuman's woman stands upright. She does not: as morphed, both stand the same (the line from chin to
+   glabella 8.7 and 8.6 degrees off upright, the top forward). With the old lean a woman held her head 14 degrees
+   lower than a man and looked up from under her brows. Against people holding their heads naturally (Arnett et
+   al. 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253: glabella, lips and
+   chin in front of the upright line through the subnasale, 20 men and 26 women; `measure.rs` `PROFILE`) the
+   women's old lean lay 4.4 standard deviations off in the mean, no lean 2.4. The best fit is 0.12 for women
+   (0.6 off; glabella -11.4 mm against -8.5, upper lip 3.1 against 3.7, lower lip 1.3 against 1.9, chin -3.2
+   against -2.6) and 0.10 for men (1.1 off: glabella -12.6 against -8.0, lips 1.8 and -1.3 against 3.3 and 1.0,
+   chin -3.2 against -3.5; at 0.14 it was 1.5). `DressSet::lean` is now `[0.12, 0.10]`.
+3. *The lids did not suit the pupil.* The eye looks at the viewer however the head leans; the lids stay. On the
+   bowed women the upper lid lay 2.0 mm over the pupil and the lower 6.3 under it (a sullen look from under the
+   lid); upright at 0.14 it was 5.9 and 2.4, white over the iris and the lower lid across it (startled, and seen
+   from below). A real upper lid lies 4 to 5 mm over the pupil and covers the upper 1 to 2 mm of the iris, the
+   lower lid just reaches the iris's foot (Neuro-ophthalmology Illustrated ch. 1 at
+   neuro-ophthalmology.stanford.edu; eyewiki.org, Margin to reflex distance). Each ball is now set up or down in
+   its socket (by 4 mm at most) so that the pupil stands at 0.57 of the way from the lower lid's edge to the
+   upper lid's (`DressSet::pupil`, `morph.rs` `pupils_set`): that is an iris of 11.7 mm with its upper 1.5 mm
+   covered and its foot at the lower lid. MakeHuman has no target that moves both lids the same way, so the ball
+   moves, not the lids.
+
+A test that was there already found a bug on the way: with the eye 2 mm further out, the brow's lift took the
+inside of the eye's socket for the skin at one corner of each brow card and threw it 2 cm forward
+(`outer_skin`'s rule for shoulders). The lift now takes the last skin its ray meets (`build.rs`).
+
+With the heads upright the faces take the light more fully: the women's shaded cheek came to 18 L under the lit
+one (the reference 28) and the upper lip to L 22. The key light now stands 64 degrees round from where the face
+looks and 30.5 up (from (4.53, 3.47, 3.76); before 60 and 32). Read as in round 73 (`face_colour.mjs`, with
+`--brow` at the reference's size):
+
+| | the reference's woman | grown women, round 73 | now | grown men, round 73 | now |
+|---|---|---|---|---|---|
+| the lightest skin between lid and brow against the skin over the brow (L) | -17.9 | -46.3 | -24.4 | -21.0 | -21.3 |
+| the brow against the skin over it (L) | -37.9 | -48.1 | -38.9 | -37.7 | -37.2 |
+| lit cheek L | 56.1 | 59.0 | 61.0 | 67.4 | 65.4 |
+| lit cheek a* / chroma | 22.9 / 34.2 | 22.5 / 35.3 | 21.5 / 34.2 | 15.9 / 27.4 | 17.2 / 29.2 |
+| the shaded cheek against the lit one (L) | -27.7 | -26.4 | -27.1 | -35.3 | -36.1 |
+| upper lip L | 21.0 | 17.0 | 20.8 | 22.7 | 21.2 |
+| lower lip L | 33.3 | 33.1 | 33.6 | 34.4 | 32.6 |
+
+Tried on the way (grown women: the shaded cheek against the lit one, the lips, the skin between lid and brow):
+the eye forward alone, bowed as before, -25.6, 17.5 / 33.1, -30.3; upright alone (0.14), the eye as it was,
+-18.4, 23.0 / 35.3, -32.4; both (at 0.14), in round 73's light, -18.1, 22.7 / 35.3, -23.8. The key at 68 degrees round and
+32 up -29.2, 17.5 / 32.2, -26.0 (the upper lip dark again); at 76 the upper lip L 12; at 60 and 26 up -27.3,
+25.8 / 34.6, -21.0 (the shade under the brow nearly gone, and the eye's depth with it).
+
+Tests: `tests/faces.rs` "a woman of England has her eyes as deep in her head as real women have" (the
+difference between the sexes within 1.5 mm of the real one at the three places), "the grown of England hold
+their heads as people do" (the profile within the survey's spread; the old lean fails), "the lids of England
+stand to the pupil as real lids do" (84 people of all ages: the share, the upper lid on the iris, no white over
+it); `src/lib.rs` "an eye comes forward with its lids and the rim of its socket stays" and "a ball is set in its
+socket so that the pupil stands between the lids". The Roman portraits are byte for byte as they were.
+Pictures: `runde74_frauen_vorher_nachher.png` (the eight grown women of the sample, round 73 above round 74),
+`runde74_neben_ck3.png` (the reference's woman and three of ours at her size, before above after),
+`runde74_profil_vorher_nachher.png` (four women and two men from the side), `runde74_stichprobe.png`.
+Still open, and not hidden: the skin between a woman's lid and brow is 24 L darker than that over the brow
+where the reference has 18; her lid's rim is darker than a man's (-61 against -53; under a light without
+direction -53 and -46: the lash line) and her lit cheek 5 L lighter than the reference's; the men's lit cheek
+is still pale (L 65, chroma 29). By our reading of Arnett's landmarks the skin over the bone's rim under a
+woman's eye lies 2.7 mm deeper against the nose's wing than in his women (a man's 0.1) and the skin under the
+pupil 4.2 mm (a man's 3.0): the field that brings the eye forward does not reach there. The opening between the
+lids is 8.9 mm high in grown women and 9.1 in men, at the low end of what a clinic expects (9 to 12): the upper
+lid lies 3.8 mm over the pupil (4 to 5) and covers 2 mm of the iris, the lower lid 0.8 mm of it; a boy of 13
+with a wide opening shows 0.4 mm of white under the iris. Upturned noses show their nostrils on the upright
+heads. The men's
+forehead lies 1.85 of the survey's standard deviations behind the line (MakeHuman's form). The surveys are of
+people of today, one of them of Korea, and read bone where ours reads skin: used for the difference between the
+sexes only. And what rounds 72 and 73 left: the brow's form and soft edge, lashes as a dark fringe, the iris'
+depth, faces half in a hood's shade.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

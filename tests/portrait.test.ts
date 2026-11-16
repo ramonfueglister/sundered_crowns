@@ -40,7 +40,9 @@ function expectSame(p: Portrait, g: Golden): void {
   });
 }
 
-describe('portraits', () => {
+// several of these build England's whole sample (36 people) and take 4 to 5 seconds on a busy machine: the
+// default limit of 5 seconds failed one run in six
+describe('portraits', { timeout: 20_000 }, () => {
   it('the test people are the ones the numbers were written for', () => {
     expect(people.map(p => p.pid)).toEqual(golden.map(g => g.pid));
     const lines = readFileSync(here('people.txt'), 'utf8').trim().split('\n');
