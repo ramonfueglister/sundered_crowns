@@ -83,6 +83,31 @@ const FIELDS_1356 = 0.3;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
+ * Makes clean terraces of the overgrown land: heights rounded column by column leave single columns standing a step
+ * up or down and fray every edge where the land lies near a step. A step of the grass land stays only where it is
+ * three columns wide: first what stands out narrower than that is taken down to the ground round it, then what
+ * lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a column and
+ * its eight neighbours). The rock and the water keep their heights and count for nothing.
+ */
+export function terrace(level: Int16Array, mat: Uint8Array) {
+  const pass = (from: Int16Array, up: boolean) => {
+    const to = new Int16Array(from);
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      if (mat[idx(x, z)] !== Mat.Grass) continue;
+      let v = from[idx(x, z)];
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        if (!inGrid(x + dx, z + dz) || mat[idx(x + dx, z + dz)] !== Mat.Grass) continue;
+        const o = from[idx(x + dx, z + dz)];
+        if (up ? o > v : o < v) v = o;
+      }
+      to[idx(x, z)] = v;
+    }
+    return to;
+  };
+  level.set(pass(pass(pass(pass(level, false), true), true), false));
+}
+
+/**
  * `region` must cover `windowOf(piece.ox, piece.oz)` in the blocks of `step`: at step s a block is 2^s finest blocks
  * wide, and so 2^(s − FINER_STEPS) cells of the land's data (see tools/worldprobe/build_overviews.py; the steps finer
  * than the data are drawn from its finest cells, region.ts). The land is drawn the same way at every step: the valleys
@@ -200,6 +225,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const single = hash2(x + ox, z + oz, 19), groove = single < 0.03 ? 3 : single < 0.08 ? 1 : 0;
     level[i] = Math.max(1, Math.round(levelOf(m, i)) + lean - lower - groove); g.mat[i] = Mat.Rock;
   }
+  terrace(level, g.mat);
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
   const river = new Int16Array(N * N).fill(-1);

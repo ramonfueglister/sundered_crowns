@@ -1,0 +1,22 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Simon I,1261,1344-08-03,1275-06,1344-08-03,month,House of Lippe,Q95627,"Lordship of Lippe; reunited the lordship (source also lists son Simon II, d. 1334, as co-ruler, unclear)",https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+2,Bernard V,,1364,1344-08-03,1364,year,House of Lippe,Q95621,co-ruler with his brother Otto,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+3,Otto,1300,1360-01,1344-08-03,1360-01,month,House of Lippe,Q95635,co-ruler with his brother Bernard V,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+4,Simon III,1340,1410,1360-01,1410,year,House of Lippe,Q95633,,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+5,Bernard VI,1363,1415-01-19,1410,1415-01-19,year,House of Lippe,Q95626,,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+6,Simon IV,1404,1429-08-11,1415-01-19,1429-08-11,day,House of Lippe,Q104131,,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+7,Bernard VII the Bellicose,1428-12-04,1511-04-02,1429-08-11,1511-04-02,day,House of Lippe,Q95997,,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+8,Simon V,1471,1536-09-17,1511-04-02,1536-09-17,day,House of Lippe,Q91490,during his rule the lordship became the County of Lippe (1528),https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+9,Bernard VIII,1527-12-06,1563-04-15,1536-09-17,1563-04-15,day,House of Lippe,Q96001,,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+10,Simon VI,1554-04-15,1613-12-07,1563-04-15,1613-12-07,day,House of Lippe,Q90988,after his death the county was divided (Detmold main line followed here),https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+11,Simon VII,1587-12-30,1627-03-26,1613-12-07,1627-03-26,day,House of Lippe,Q85475,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+12,Simon Louis,1610-03-14,1636-08-08,1627-03-26,1636-08-08,day,House of Lippe,Q84635,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+13,Simon Philip,1632-04-06,1650-06-19,1636-08-08,1650-06-19,day,House of Lippe,Q89313,County of Detmold; died with no descendants,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+14,John Bernard,1613-10-18,1652-06-10,1650-06-19,1652-06-10,day,House of Lippe,Q92252,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+15,Herman Adolphus,1616-01-31,,1652-06-10,1666-10-10,day,House of Lippe,Q96041,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+16,Simon Henry,1649-03-13,1697-05-02,1666-10-20,1697-05-02,day,House of Lippe,Q95609,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+17,Frederick Adolphus,1667-09-02,,1697-05-02,1718-07-18,day,House of Lippe,Q85473,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+18,Simon Henry Adolphus,1694-01-25,,1718-07-18,1734-10-12,day,House of Lippe,Q319161,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+19,Simon Augustus,1727-06-12,,1734-10-12,1782-05-01,day,House of Lippe,Q76100,County of Detmold,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+20,Leopold I,1767-12-02,1802-04-04,1782-05-01,1802-04-04,day,House of Lippe,Q67043,county elevated to Principality of Lippe during his rule,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111
+21,Leopold II,1796-11-06,1851-01-01,1802-04-04,1851-01-01,day,House of Lippe,Q213882,Principality of Lippe; regency of his mother 1802-1820,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,1384518111

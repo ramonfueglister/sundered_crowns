@@ -1,0 +1,30 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,John II,,,1280,1304,year,Avesnes,Q182028,also Count of Holland,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+2,William I,,,1304,1337,year,Avesnes,Q617496,also Count of Holland,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+3,William II,,,1337,1345,year,Avesnes,Q737820,also Count of Holland,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+4,Margaret II,,,1345,1356,year,Avesnes,Q467019,jointly with her husband Louis IV and their son William III; returned in 1350 in opposition to her son and held Hainaut until 1356,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+5,"Louis IV, Holy Roman Emperor",,,1345,1347,year,Avesnes,Q57161,co-ruler with Margaret II (d. 1347),https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+6,William III,,,1345,1389,year,Bavaria,Q77244,son of Margaret II and Louis IV,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+7,Louis the Brandenburger,,,1347,1349,year,Bavaria,Q61473,co-ruler with his brother William III,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+8,Louis the Roman,,,1347,1349,year,Bavaria,Q60831,co-ruler with his brother William III,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+9,Otto the Bavarian,,,1347,1349,year,Bavaria,Q702205,co-ruler with his brother William III,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+10,Stephen II of Bavaria,,,1347,1353,year,Bavaria,Q63178,co-ruler with his brother William III,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+11,Albert I,,,1389,1404,year,Bavaria,Q77253,regent since 1358; also listed among William III's joint rulers,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+12,William IV,,,1404,1417,year,Bavaria,Q77247,,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+13,Jacqueline,,,1417,1433,year,Bavaria,Q467007,"opposed by her uncle John, Duke of Bavaria-Straubing, in a war of succession; his claims devolved upon Philip of Burgundy",https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+14,Philip I the Good,,,1433,1467,year,Burgundy,Q239337,,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+15,Charles I the Bold,,,1467,1477,year,Burgundy,Q151120,,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+16,Mary the Rich,,,1477,1482,year,Burgundy,Q157073,jointly with her husband Maximilian I,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+17,"Maximilian I, Holy Roman Emperor",,,1477,1482,year,Burgundy,Q150726,co-ruler with Mary (source gives no own dates),https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+18,Philip II the Handsome,,,1482,1506,year,Habsburg,Q157098,,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+19,Charles II,,,1506,1555,year,Habsburg,Q32500,also Holy Roman Emperor (Charles V); Pragmatic Sanction of 1549,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+20,Philip III,,,1555,1598,year,Habsburg,Q34417,also King of Spain,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+21,Isabella Clara Eugenia,,,1598,1621,year,Habsburg,Q158256,jointly with her husband Albert,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+22,"Albert, Archduke of Austria",,,1598,1621,year,Habsburg,Q311452,co-ruler with Isabella Clara Eugenia (source gives no own dates),https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+23,Philip IV,,,1621,1665,year,Habsburg,Q691402,also King of Spain,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+24,Charles III,,,1665,1700,year,Habsburg,Q36174,"also King of Spain; 1706-1714 fief claimed by Habsburg and Bourbon, settled by Treaty of Rastatt 1714",https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+25,Charles IV,,,1714,1740,year,Habsburg,Q150665,Holy Roman Emperor,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+26,Maria Theresa,,,1740,1780,year,Habsburg,Q131706,,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+27,Joseph I,,,1780,1790,year,Habsburg,Q76555,also Holy Roman Emperor,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+28,Leopold I,,,1790,1792,year,Habsburg,Q151321,also Holy Roman Emperor,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289
+29,Francis I,,,1792,1835,year,Habsburg,Q130834,title factually abolished after the French Revolution and the annexation by France in 1795; afterwards only claimed,https://en.wikipedia.org/wiki/Count_of_Hainaut#List_of_counts_of_Hainaut,1360305289

@@ -1,0 +1,31 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Friedrich of Bolanden,,,1272,1302,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+2,Sigibodo II of Lichtenberg,,,1302,1314,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+3,"Emich, Count of Leiningen",,,1314,1328,year,,Q651871,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+4,"Berthold, Count of Bucheck",,,1328,1328,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+5,"Walram, Count of Veldenz",,,1328,1336,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+6,"Baldwin, Archbishop of Trier",,,1332,1336,year,,Q152347,administrator,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+7,Gerhard of Ehrenberg,,,1336,1363,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+8,Lambert of Born,,,1364,1371,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+9,"Adolf I, Count of Nassau",,,1371,1388,year,,Q364831,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+10,Nikolaus I aus Wiesbaden,,,1388,1396,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+11,Raban of Helmstatt,,,1396,1438,year,,Q88077,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+12,Reinhard of Helmstatt,,,1438,1456,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+13,Siegfried III Freiherr of Venningen,,,1456,1459,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+14,Johann II Nix of Hoheneck,,,1459,1464,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+15,Matthias Freiherr of Rammingen,,,1464,1478,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+16,Ludwig of Helmstädt,,,1478,1504,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+17,Philip I of Rosenberg,,,1504,1513,year,,Q2087432,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+18,"George, Count Palatine by Rhine",,,1513,1529,year,,Q72921,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+19,Philip II of Flersheim,,,1529,1552,year,,Q517961,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+20,Rudolf of Frankenstein,,,1552,1560,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+21,Marquard Freiherr of Hattstein,,,1560,1581,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+22,Eberhard of Dienheim,,,1581,1610,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+23,Philipp Christoph von Sötern,,,1610,1652,year,,Q316832,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+24,Lothar Friedrich of Metternich,,,1652,1675,year,,Q84596,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+25,Johann Hugo von Orsbeck,,,1675,1711,year,,Q878159,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+26,Heinrich Hartard of Rollingen,,,1711,1719,year,,Q106551357,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+27,Hugo Damian of Schönborn,,,1719,1743,year,,Q69886,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+28,Franz Christoph of Hutten zu Stolzenberg,,,1743,1770,year,,,,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+29,"Damian August Philipp Karl, Count of Limburg-Stirum-Vehlen",,,1770,1797,year,,Q111175,source gives no bishop 1797-1801,https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523
+30,Philipp Franz Wilderich of Walderdorf,,1810,1801,1802,year,,Q214525,"last bishop before secularisation; Prince-Bishopric of Speyer article: secular responsibilities ended 1801-1803 (left bank to France, right bank to Baden)",https://en.wikipedia.org/wiki/Bishop_of_Speyer#Bishops_to_1802,1370360523

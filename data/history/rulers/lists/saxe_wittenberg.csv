@@ -1,0 +1,28 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Albert II,1250,1298-08-25,1260,1298,year,Ascania,Q661181,"Duke of Saxony 1260-1296, ruling jointly (with brother John I, then nephews John II, Eric I, Albert III); after the 1296 partition Duke of Saxe-Wittenberg 1296-1298",https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+2,Rudolph I,1284,1356-03-12,1298,1356-03-12,year,Ascania,Q699820,Duke of Saxe-Wittenberg 1298-1356; Electorate of Saxony confirmed by the Golden Bull of 1356 (10 January - 12 March 1356),https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+3,Rudolph II the Blind,1307,1370-12-06,1356-03-12,1370-12-06,day,Ascania,Q566714,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+4,Wenceslaus I,1337,1388-05-15,1370-12-06,1388-05-15,day,Ascania,Q598379,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+5,Rudolph III,1378,1419-06-11,1388-05-15,1419-06-11,day,Ascania,Q651948,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+6,Albert IV,,,1419-06-11,1422,year,Ascania,Q651898,"reign end '(before 12 November) 1422'; Ascanian line extinct 1422, electorate granted to the House of Wettin",https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Ascania,1383931312
+7,Frederick I the Warlike,1370-04-11,1428-01-04,1423-01-06,1428-01-04,day,Wettin,Q704939,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+8,Frederick II the Gentle,1412-04-22,1464-09-07,1428-01-04,1464-09-07,day,Wettin,Q702602,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+9,Ernest I,1441-03-24,1486-08-26,1464-09-07,1486-08-26,day,Wettin (Ernestine),Q682736,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+10,Frederick III the Wise,1463-01-17,1525-05-05,1486-08-26,1525-05-05,day,Wettin (Ernestine),Q77233,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+11,John I the Steadfast,1468-06-30,1532-08-16,1525-05-05,1532-08-16,day,Wettin (Ernestine),Q61277,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+12,John Frederick I the Magnanimous,1503-06-30,1554-03-03,1532-08-16,1547-05-19,day,Wettin (Ernestine),Q506182,lost the electorate 19 May 1547; Duke of Saxony (Ernestine) 1547-1554,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+13,Maurice,1521-03-21,1553-07-09,1547-06-04,1553-07-09,day,Wettin (Albertine),Q317710,Duke of Saxony from 1541; Electorate of Saxony from 4 June 1547 (Ernestines displaced),https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+14,Augustus I,1526-07-31,1586-02-11,1553-07-09,1586-02-11,day,Wettin (Albertine),Q435016,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+15,Christian I,1560-10-29,1591-09-25,1586-02-11,1591-09-25,day,Wettin (Albertine),Q705358,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+16,Christian II,1583-09-23,1611-06-23,1591-09-25,1611-06-23,day,Wettin (Albertine),Q695210,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+17,John George I,1585-03-05,1656-10-08,1611-06-23,1656-10-08,day,Wettin (Albertine),Q366652,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+18,John George II,1613-05-31,1680-08-22,1656-10-08,1680-08-22,day,Wettin (Albertine),Q505548,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+19,John George III,1647-06-20,1691-09-12,1680-08-22,1691-09-12,day,Wettin (Albertine),Q454483,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+20,John George IV,1668-10-18,1694-04-27,1691-09-12,1694-04-27,day,Wettin (Albertine),Q61093,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+21,Frederick Augustus I the Strong,1670-05-12,1733-02-01,1694-04-27,1733-02-01,day,Wettin (Albertine),Q53437,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+22,Frederick Augustus II the Fat,1696-10-17,1763-10-05,1733-02-01,1763-10-05,day,Wettin (Albertine),Q53438,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+23,Frederick Christian,1722-09-05,1763-12-17,1763-10-05,1763-12-17,day,Wettin (Albertine),Q58020,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+24,Frederick Augustus III the Just,1750-12-23,1827-05-05,1763-12-17,1806-12-20,day,Wettin (Albertine),Q53444,Elector; became King of Saxony as Frederick Augustus I in 1806,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#House_of_Wettin,1383931312
+25,Frederick Augustus I the Just,1750-12-23,1827-05-05,1806-12-20,1827-05-05,day,Wettin (Albertine),Q53444,Kingdom of Saxony (title elevated 1806),https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#Kingdom_of_Saxony,1383931312
+26,Anthony the Kind,1755-12-27,1836-06-06,1827-05-05,1836-06-06,day,Wettin (Albertine),Q60727,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#Kingdom_of_Saxony,1383931312
+27,Frederick Augustus II,1797-05-18,1854-08-09,1836-06-06,1854-08-09,day,Wettin (Albertine),Q57986,,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony#Kingdom_of_Saxony,1383931312

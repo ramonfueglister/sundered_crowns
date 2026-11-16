@@ -1,0 +1,38 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Henry VII,,1313-08-24,1288-06-05,1313-08-24,day,Luxembourg-Limburg,Q152717,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+2,John the Blind,1296-08-10,1346-08-26,1313-08-24,1346-08-26,day,Luxembourg-Limburg,Q155167,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+3,Charles I,1316-05-14,1378-11-29,1346-08-26,1353,year,Luxembourg-Limburg,Q155669,county elevated to a duchy in 1354,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+4,Wenceslaus I,1337-02-25,1383-12-07,1353,1354-03-13,year,Luxembourg-Limburg,Q658785,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+5,Wenceslaus I,1337-02-25,1383-12-07,1354-03-13,1383-12-07,day,Luxembourg-Limburg,Q658785,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+6,Wenceslaus II the Lazy,1361-02-26,1419-08-16,1383-12-07,1388,year,Luxembourg-Limburg,Q152148,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+7,Jobst,1351-12,1411-01-18,1388,1411-01-18,year,Luxembourg-Limburg,Q158181,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+8,Elisabeth I,1390-11,1451-08-02,1411-01-18,1443,year,Luxembourg-Limburg,Q266265,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+9,Anthony,1384-08,1415-10-25,1411-01-18,1415-10-25,day,Luxembourg-Limburg,Q470800,co-ruler (Her first husband and co-ruler),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+10,John II the Pitiless,1374,1425-01-06,1418-03-10,1425-01-06,day,Luxembourg-Limburg,Q77252,co-ruler (Her second husband and co-ruler ),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+11,Elisabeth I,1390-11,1451-08-02,1443,1451-08-02,year,,Q266265,rival claimant,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+12,Ladislaus the Posthumous,1440-02-22,1457-11-23,1451-08-02,1457-11-23,day,,Q116382,rival claimant,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+13,Anne,1432-04-12,1462-11-13,1457-11-23,1462-11-13,day,,Q270234,rival claimant,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+14,William the Brave,1425-04-30,1482-09-17,1457-11-23,1462-11-13,day,,Q210569,rival claimant (co-pretender),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+15,Elisabeth II,1436,1505-08-30,1462-11-13,1467,year,,Q93408,rival claimant,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+16,Casimir Jagiellon,1427-11-30,1492-06-07,1462-11-13,1467,year,,Q53459,rival claimant (co-pretender),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+17,George of Poděbrady,1420-04-23,1471-03-22,1458,1471,year,,Q159679,rival claimant; claimed title as king of Bohemia,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+18,Philip I the Good,1396-07-31,1467-06-15,1443,1467-06-15,year,Valois-Burgundy,Q239337,captured Luxembourg City 1443 (source: did not assume the ducal title because of conflicting claims),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+19,Charles II the Bold,1433-11-10,1477-01-05,1467-06-15,1477-01-05,day,Valois-Burgundy,Q151120,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+20,Mary I the Rich,1457-02-13,1482-03-27,1477-01-05,1482-03-27,day,Valois-Burgundy,Q157073,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+21,Maximilian I the Last Knight,1459-03-22,1519-01-12,1477-01-05,1482-03-27,day,Valois-Burgundy,Q150726,co-ruler (Her husband and co-ruler ),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+22,Philip II the Handsome,1478-07-22,1506-09-25,1482-03-27,1506-09-25,day,Habsburg,Q157098,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+23,Charles III the Golden,1500-02-24,1558-09-21,1506-09-25,1556-01-16,day,Habsburg,Q32500,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+24,Philip III the Prudent,1527-05-21,1598-09-13,1556-01-16,1598-05-06,day,Habsburg,Q34417,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+25,Isabella Clara Eugenia,1566-08-12,1633-12-01,1598-05-06,1621-07-13,day,Habsburg,Q158256,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+26,Albert,1559-11-15,1621-07-13,1598-05-06,1621-07-13,day,Habsburg,Q311452,"co-ruler with Isabella Clara Eugenia (her husband, source: son-in-law of predecessor)",https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+27,Philip IV the Great,1605-04-08,1665-09-17,1621-07-13,1665-09-17,day,Habsburg,Q691402,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+28,Charles IV the Bewitched,1661-11-06,1700-11-01,1665-09-17,1700-11-01,day,Habsburg,Q36174,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+29,Philip V,1683-12-19,1746-07-09,1700-11-01,1712,year,Bourbon,Q170467,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+30,Maximilian II,1662-07-11,1726-02-26,1712,1713-04-11,year,Wittelsbach,Q57628,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+31,Charles V,1685-10-01,1740-10-20,1713-04-11,1740-10-20,day,Habsburg,Q150665,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+32,Maria II Theresa,1717-05-13,1780-11-29,1740-10-20,1780-11-29,day,Habsburg,Q131706,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+33,Joseph,1741-03-13,1790-02-20,1780-11-29,1790-02-20,day,Habsburg,Q76555,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+34,Leopold,1747-05-05,1792-03-01,1790-02-20,1792-03-01,day,Habsburg,Q151321,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+35,Francis,1768-02-12,1835-03-02,1792-03-01,1794,year,Habsburg,Q130834,Luxembourg occupied by France 1794-1813; elevated to a grand duchy at the Vienna Congress (1815),https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+36,William I,1772-08-24,1843-12-12,1815-03-15,1840-10-07,day,Orange-Nassau,Q2079957,Grand Duke; personal union with the Netherlands,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569
+37,William II,1792-12-06,1849-03-17,1840-10-07,1849-03-17,day,Orange-Nassau,Q154287,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Luxembourg,1382725569

@@ -1,6 +1,7 @@
-// The persons of the 30 great cities (src/sim/systems/people.ts) as the figures need them: who lives in which town of
-// the world graphic, female or male, how old. Runs in the world's web workers: the list is fetched once per worker
-// from the world server (GET /people/<place>, src/net/people.ts) before the first piece is built. Without a server
+// The persons of the cities of the start year (src/sim/systems/people.ts) as the figures need them: who lives in which
+// town of the world graphic, female or male, how old. Runs in the world's web workers: the lists are fetched once per
+// worker from the world server (GET /people?places=…, src/net/people.ts), a few hundred places a request, before the
+// first piece is built. Without a server
 // (a preview, the cloud) nothing is fetched and the towns keep their anonymous figures.
 import { hash2 } from '../lookprobe/batch';
 import { citiesOf } from '../sim/content/cities';
@@ -9,6 +10,10 @@ import { citiesOf } from '../sim/content/cities';
 export interface TownPerson { id: number; female: boolean; age: number }
 /** What the server sends for a place (src/net/people.ts PlacePeople). */
 export interface PlacePeopleList { place: number; day: number; id: number[]; born: number[]; sex: number[] }
+
+/** Places per request: the server's MAX_PLACES_PER_REQUEST (src/net/people.ts, not imported: it would bring the
+ *  simulation into the workers; tests/people-net.test.ts checks they agree). */
+export const PLACES_PER_REQUEST = 200;
 
 /** Persons are drawn from this age on: the kit has no children yet (figures thread, 15 November 2026). */
 export const FIGURE_FROM_AGE = 14;
@@ -44,9 +49,11 @@ export function setPlacePeople(list: PlacePeopleList, year = 1356): void {
  *  when there is no server to ask. */
 export function loadTownPeople(url: string | undefined = (import.meta as { env?: Record<string, string> }).env?.VITE_WORLD_URL, year = 1356): Promise<void> {
   if (!url) return Promise.resolve();
-  loading ??= Promise.all([...new Set(citiesOf(year).map((c) => c.place))].map(async (place) => {
-    const r = await fetch(`${httpOf(url)}/people/${place}`);
-    if (r.ok) setPlacePeople(await r.json(), year);
+  const places = [...new Set(citiesOf(year).map((c) => c.place))], parts: number[][] = [];
+  for (let k = 0; k < places.length; k += PLACES_PER_REQUEST) parts.push(places.slice(k, k + PLACES_PER_REQUEST));
+  loading ??= Promise.all(parts.map(async (part) => {
+    const r = await fetch(`${httpOf(url)}/people?places=${part.join(',')}`);
+    if (r.ok) for (const list of (await r.json()) as PlacePeopleList[]) setPlacePeople(list, year);
   })).then(() => undefined, () => undefined);
   return loading;
 }

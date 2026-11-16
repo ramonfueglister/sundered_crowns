@@ -84,6 +84,42 @@ def main(year=1291):
     n = lambda w: sum(1 for h in how if h == w)
     print(f'{n("chandler")} towns after Chandler, {n("factor")} by the factor of their region, '
           f'{sum(1 for p in people if p is None)} unknown; {sum(p or 0 for p in people)} people -> {path}')
+    write_cities(year, gaz, people, how, place, geo)
+
+
+def write_cities(year, gaz, people, how, place, geo):
+    """The towns whose persons the simulation founds (src/sim/systems/people.ts), in the shape of
+    src/sim/content/cities_1356.json: every town with people inside the world frame (data/content/world_extent.json),
+    the towns of the world graphic that have a number (Ramon, 16 November 2026: only what the simulation computes is in
+    the world, and the persons live in the towns the map shows). `source` says where the number comes from:
+    'chandler' (Chandler's value for the year) or 'factor' (pop1356 of the gazetteer times the factor of the region)."""
+    ext = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json'), encoding='utf-8'))
+    ch = {c['site']: c for c in json.load(open(os.path.join(ROOT, 'data', 'history', str(year), f'chandler_{year}.json'), encoding='utf-8'))['cities']}
+    loc = geo['loc']
+    cities = []
+    for k, p in enumerate(gaz):
+        if not people[k] or not (ext['west'] <= p['lon'] <= ext['east'] and ext['south'] <= p['lat'] <= ext['north']):
+            continue
+        c, i = ch.get(k), place[k]
+        cities.append({'name': c['name'] if c else p['name'], 'country': c['country'] if c else '', 'people': people[k],
+                       'certainty': c['certainty'] if c else 0, 'years': c['years'] if c else [], 'source': how[k],
+                       'place': i, 'placeName': loc['name'][i], 'lon': round(loc['lon'][i], 3), 'lat': round(loc['lat'][i], 3),
+                       'site': k})
+    # Chandler's towns first, largest first, then the others: the persons of a world are founded town by town in this
+    # order, so the persons of the 30 largest of Chandler keep the numbers they had when only those had persons
+    cities.sort(key=lambda c: (c['source'] != 'chandler', -c['people'], c['name'], c['site']))
+    doc = {'year': year,
+           'source': 'Chandler (1987) via Reba, Reitsma & Seto (2016), Scientific Data 3, 160034 (CC BY 4.0), where source is '
+                     '"chandler"; otherwise pop1356 of data/content/gazetteer.json times the factor of the region in '
+                     f'data/history/{year}/demography.json (assumption: towns lost the share their land lost)',
+           'note': f'written by tools/history/1291/towns.py; every town of public/data/towns_{year}.json with people inside the '
+                   'world frame (data/content/world_extent.json); people = inhabitants of the time (the game divides by 100); '
+                   'place = the place of the map, site = the town of the world graphic (index into data/content/gazetteer.json); '
+                   'the towns of Chandler first, each group largest first',
+           'cities': cities}
+    dst = os.path.join(ROOT, 'src', 'sim', 'content', f'cities_{year}.json')
+    with open(dst, 'w', encoding='utf-8') as f: f.write(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
+    print(f'{len(cities)} towns, {len(set(c["place"] for c in cities))} places, {sum(c["people"] for c in cities)} people -> {dst}')
 
 
 if __name__ == '__main__':

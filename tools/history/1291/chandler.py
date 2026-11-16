@@ -7,13 +7,13 @@ CC BY 4.0), the digitised tables of T. Chandler (1987), Four Thousand Years of U
 
 The value of a year is interpolated as tools/people/build_cities.py does for 1356 (nearest years before and after, each
 at most 60 years away). Each city gets the place of the gazetteer it stands at (build_cities.site), the town of the
-world graphic. The 30 largest also go to src/sim/content/cities_<year>.json, the cities whose persons the simulation
-founds.
+world graphic. tools/history/1291/towns.py then writes the towns of the year (public/data/towns_<year>.json) and the
+towns whose persons the simulation founds (src/sim/content/cities_<year>.json): all towns with people in the frame.
 
     curl -L -o chandlerV2.csv https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/5407640/chandlerV2.csv
     python3 tools/history/1291/chandler.py chandlerV2.csv [year]
 """
-import csv, hashlib, json, math, sys
+import csv, hashlib, json, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -53,25 +53,6 @@ def main(csv_path, year=1291):
     dst = ROOT / 'data' / 'history' / str(year) / f'chandler_{year}.json'
     dst.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
     print(f'{len(out)} cities in the frame, {sum(c["people"] for c in out)} people -> {dst.relative_to(ROOT)}')
-    # the 30 largest are the cities whose persons the simulation founds (src/sim/systems/people.ts), in the shape of
-    # src/sim/content/cities_1356.json: the place of the map is the one whose centre is nearest to the town
-    geo = json.loads((ROOT / 'public/data/geo.json').read_text())
-    loc = geo['loc']
-    cities = []
-    for c in out[:build_cities.KEEP]:
-        # by the town's own point (its gazetteer place), as towns.py places a town, so the setup holds its people there
-        g = gaz[c['site']]; k = math.cos(math.radians(g['lat']))
-        place = min(range(geo['L']), key=lambda i: (loc['lat'][i] - g['lat']) ** 2 + ((loc['lon'][i] - g['lon']) * k) ** 2)
-        cities.append({'name': c['name'], 'country': c['country'], 'people': c['people'], 'certainty': c['certainty'],
-                       'years': c['years'], 'place': place, 'placeName': loc['name'][place],
-                       'lon': round(loc['lon'][place], 3), 'lat': round(loc['lat'][place], 3), 'site': c['site']})
-    doc = {'year': year, 'source': doc['source'],
-           'note': f'written by tools/history/1291/chandler.py; the {build_cities.KEEP} largest cities inside the world frame '
-                   f'(data/content/world_extent.json) in {year}; people = inhabitants of the time (the game divides by 100)',
-           'cities': cities}
-    dst = ROOT / 'src' / 'sim' / 'content' / f'cities_{year}.json'
-    dst.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
-    print(f'{len(cities)} cities, {sum(c["people"] for c in cities)} people -> {dst.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

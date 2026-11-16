@@ -1,0 +1,28 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Eric II Magnusson,1268,1299-07-15,1273,1299,year,Sverre dynasty,Q314450,born c. 1268,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+2,Haakon V Magnusson,1270-04-10,1319-05-08,1299,1319,year,Sverre dynasty,Q313153,followed by interregnum May–August 1319,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+3,Magnus VII Eriksson,1316,1374-12-01,1319-08,1355-08,month,House of Bjälbo,Q314457,abdicated (de facto) August 1355; born c. 1316,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+4,Haakon VI Magnusson,1340-08-15,1380-09-11,1343-08-15,1380-09-11,day,House of Bjälbo,Q313015,co-ruler with Magnus VII until 1355,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+5,Olav IV Haakonsson,1370-12,1387-08-23,1380-09-11,1387-08-23,day,House of Bjälbo,Q313879,followed by interregnum 1387–1388,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+6,Margaret,1353,1412-10-28,1388-02-02,1412-10-28,day,House of Estridsen,Q202266,with Eric III 1389–1412; born c. 1353,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+7,Eric III,,1459-05-03,1389-09-08,1442-06-04,day,House of Griffin,Q161958,co-ruler with Margaret until 1412; deposed; source gives birth c. 1381/82,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+8,Christopher,1416-02-26,1448-01-05,1442-06-04,1448-01-05,day,House of Palatinate-Neumarkt,Q58056,followed by interregnum 1448–1449,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+9,Charles I,1409-10-05,1470-05-14,1449-11-20,1450-05-13,day,House of Bonde,Q310433,abdicated/deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+10,Christian I,1426-02,1481-05-21,1450-05-13,1481-05-21,day,House of Oldenburg,Q153940,followed by interregnum 1481–1483,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+11,John,1455-02-02,1513-02-20,1483-07-20,1513-02-20,day,House of Oldenburg,Q157776,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+12,Christian II,1481-07-01,1559-01-25,1513-07-22,1523-01-20,day,House of Oldenburg,Q154460,deposed; followed by interregnum 1523–1524,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+13,Frederick I,1471-10-07,1533-04-10,1524-08-05,1533-04-10,day,House of Oldenburg,Q157789,followed by interregnum 1533–1537,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+14,Christian III,1503-08-12,1559-01-01,1537-04-01,1559-01-01,day,House of Oldenburg,Q154998,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+15,Frederick II,1534-07-01,1588-04-04,1559-01-01,1588-04-04,day,House of Oldenburg,Q154041,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+16,Christian IV,1577-04-12,1648-02-28,1588-04-04,1648-02-28,day,House of Oldenburg,Q153586,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+17,Frederick III,1609-03-18,1670-02-09,1648-07-06,1670-02-09,day,House of Oldenburg,Q157812,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+18,Christian V,1646-04-15,1699-08-25,1670-02-09,1699-08-25,day,House of Oldenburg,Q157793,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+19,Frederick IV,1671-10-11,1730-10-12,1699-08-25,1730-10-12,day,House of Oldenburg,Q161059,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+20,Christian VI,1699-11-30,1746-08-06,1730-10-12,1746-08-06,day,House of Oldenburg,Q154993,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+21,Frederick V,1723-03-31,1766-01-14,1746-08-06,1766-01-14,day,House of Oldenburg,Q156187,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+22,Christian VII,1749-01-29,1808-03-13,1766-01-14,1808-03-13,day,House of Oldenburg,Q156572,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+23,Frederick VI,1768-01-28,1839-12-03,1808-03-13,1814-02-07,day,House of Oldenburg,Q155002,abdicated,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+24,Christian Frederick,1786-09-18,1848-01-20,1814-05-17,1814-10-10,day,House of Oldenburg,Q157781,abdicated,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+25,Charles II,1748-10-07,1818-02-05,1814-11-04,1818-02-05,day,House of Holstein-Gottorp,Q52928,union with Sweden,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+26,Charles III John,1763-01-26,1844-03-08,1818-02-05,1844-03-08,day,House of Bernadotte,Q52927,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043
+27,Oscar I,1799-07-04,1859-07-08,1844-03-08,1859-07-08,day,House of Bernadotte,Q52926,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,1385217043

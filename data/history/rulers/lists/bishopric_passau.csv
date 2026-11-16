@@ -1,0 +1,36 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Bernhard of Prambach,,,1285,1313,year,,Q826334,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+2,"Albert II, Duke of Austria",,,1313,1313,year,,Q158434,vacancy due to disputed election 1313-1317; listed as candidate (Canon of Passau),https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+3,Gebhard Walso,,,1313,1315,year,,,vacancy due to disputed election 1313-1317; listed as candidate (Canon of Passau),https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+4,Henri de la Tour-du-Pin,,,1317,1319,year,,Q257283,"bishop-elect only, never ordained or consecrated",https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+5,Albert II of Saxe-Wittenberg,,,1320,1342,year,,Q88207,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+6,Gottfried of Weißeneck,,,1342,1362,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+7,Albert von Winkel,,,1363,1380,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+8,Johann of Scharffenberg,,,1381,1387,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+9,Hermann Digni,,,1387,1388,year,,,elected but rejected by Pope Urban VI,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+10,Rupert of Jülich-Berg (de Monte),,,1388,1390,year,,,appointed by Pope Urban VI against the chapter; transferred to Paderborn 1389,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+11,George von Hohenlohe,,,1390,1423,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+12,Leonhard of Laiming,,,1423,1451,circa,,Q1600808,source: 1423/1424,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+13,Ulrich of Nußdorf,,,1451,1479,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+14,George Hessler,,,1480,1482,year,,Q324328,cardinal; intruded against elected Friedrich Mauerkircher,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+15,Friedrich Mauerkircher,,,1482,1485,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+16,Frederick of Öttingen,,,1485,1490,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+17,Christopher of Schachner,,,1490,1500,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+18,Wiguleus Fröschl of Marzoll,,,1500,1516,year,,Q120347,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+19,Ernest of Bavaria,,,1516,1541,year,,Q541271,"bishop-elect, never consecrated; administrator only",https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+20,Wolfgang von Salm,,,1541,1555,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+21,Wolfgang von Closen,,,1555,1561,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+22,Urban von Trennbach,,,1561,1598,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+23,Leopold Ferdinand of Austria,,,1598,1625,year,,Q112066,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+24,Leopold Wilhelm of Austria,,,1625,1662,year,,Q437295,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+25,Charles Joseph of Austria,,,1662,1664,year,,Q647419,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+26,Wenzeslaus von Thun,,,1664,1673,year,,Q1478722,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+27,Sebastian von Pötting,,,1673,1689,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+28,Johann Philipp von Lamberg,,,1689,1712,year,,Q84949,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+29,"Raymund Ferdinand, Count of Rabatta",,,1713,1722,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+30,Joseph Dominicus von Lamberg,,,1723,1761,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+31,Joseph Maria von Thun,,,1761,1763,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+32,Leopold Ernst von Firmian,,,1763,1783,year,,Q85063,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+33,Joseph Francis von Auersperg,,,1783,1795,year,,Q79127,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+34,Thomas Johann Kaspar von Thun und Hohenstein,,,1795,1796,year,,Q2425100,,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266
+35,Leopold Leonhard von Thun und Hohenstein,,,1796-12-13,1826-10-22,day,,Q318907,last prince-bishop; bishopric secularized in 1803 (temporalities to Bavaria),https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,1380578266

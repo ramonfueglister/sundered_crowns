@@ -1,0 +1,15 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Wilhelm I,,1331,,,,Senior branch,Q1281013,senior branch (county divided 1260); source gives no reign dates; born 1276/1277,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+2,Wilhelm II,,,,,,Senior branch,,senior branch; born before 1331; died before 23 October 1385,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+3,Eberhard V,,1402,,,,Senior branch,,senior branch; born c. 1322,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+4,Eberhard I,,1311,,,,Junior branch,,junior branch; born c. 1243,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+5,Gerhard,,1312,,,,Junior branch,,"junior branch, son of Eberhard I",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+6,Berthold III,,1321,,,,Junior branch,,"junior branch, son of Eberhard I",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+7,Eberhard II,,1329,,,,Junior branch,,"junior branch, son of Gerhard",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+8,Eberhard III,,1328,,,,Junior branch,,"junior branch, son of Berthold III",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+9,Johann II,,1357,,,,Junior branch,,"junior branch, son of Eberhard II",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+10,Eberhard IV,,1354,,,,Junior branch,,"junior branch, son of Eberhard III; succeeded by Diether VIII",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+11,Diether VIII,1340,1402,,,,Junior branch,Q1223227,reunited the junior branch,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+12,Johann IV,,1444,1402,,year,Reunited county,Q1689282,reunited the whole county in 1402,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+13,Philipp I,1402,1479,,,,Reunited county,Q1122672,,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038
+14,Anna,1443,1494,,,,Reunited county,,"married Henry III, Landgrave of Upper Hesse; county passed to the House of Hesse (infobox: 1479, comital line extinct, to Hesse-Marburg)",https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,1329221038

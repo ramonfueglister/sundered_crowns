@@ -1,0 +1,16 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Lev,1228,1301,1271,1301,year,Galicia (Monomakh),Q156357,son of Daniel; work list has no ruler,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+2,Ivan-Volodymyr,,,1301,,year,Siverski (Olgovichi),,end not given,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+3,Stanislav Ivanovich,,,,1321,year,Siverski (Olgovichi),Q1786470,start not given; source lifespan 1228–1301 conflicts with reign,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+4,Mindaugas Holshanski,,,1321,1324,year,Alšėniškiai,,son of Holsha Romanovich,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+5,Algimantas-Michael,,,1324,1331,year,Alšėniškiai,,son of Mindaugas,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+6,Fyodor (Teodoras),,,1331,1362,year,Siverski (Olgovichi),Q3271351,son of Ivan,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+7,Vladimir V Algirdaitis,,,1362,1394,year,Gediminids,Q2494512,son of Algirdas,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+8,Skirgaila,1354,1397,1395,1397,year,Gediminids,Q992978,son of Algirdas,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+9,Ivan Olshansky,,,1397,1402,circa,Alšėniškiai,Q2666645,son of Algimantas; end c. 1402; 1404–11 Jurgis Gedgaudas as voivode,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+10,Andrew,,,1412,1422,circa,Alšėniškiai,,son of Ivan; c. 1412 – c. 1422,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+11,Michael IV,,1433,1422,1432,circa,Alšėniškiai,,son of Ivan; c. 1422 – c. 1432,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+12,Michael V Boloban,,1435,1433,1435,circa,Alšėniškiai,,son of Simonas; c. 1433 – c. 1435,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+13,Boleslav (Švitrigaila),1370,1452,1432,1440,year,Gediminids,Q392792,son of Algirdas,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+14,Aleksandras Olelka,,1454,1443,1454,year,Olelkovich,Q2498472,son of Vladimir,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859
+15,Simeon Olelkovich,1418,1470,1454,1470,year,Olelkovich,Q3920483,son of Alexander; last prince in source table (how the title ended not stated),https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev,1349729859

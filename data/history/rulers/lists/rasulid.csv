@@ -1,0 +1,13 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,al-Muzaffar Yusuf I,,,1250,1295,year,Rasulid,Q20394105,son of Umar I,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+2,al-Ashraf Umar II,,,1295,1296,year,Rasulid,Q16123878,son of Yusuf I,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+3,al-Mu'ayyad Dawud,,,1296,1321,year,Rasulid,,son of Yusuf I,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+4,al-Mujahid Ali,,,1321,1363,year,Rasulid,,son of Dawud,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+5,al-Afdal al-Abbas,,,1363,1377,year,Rasulid,Q4702151,son of Ali,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+6,al-Ashraf Isma'il I,,,1377,1400,year,Rasulid,Q12183466,son of al-Abbas,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+7,al-Nasir Ahmad,,,1400,1424,year,Rasulid,Q22684129,son of Isma'il I,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+8,al-Mansur Abdallah,,,1424,1427,year,Rasulid,,son of Ahmad,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+9,al-Ashraf Isma'il II,,,1427,1428,year,Rasulid,,son of Abdallah,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+10,al-Zahir Yahya,,,1428,1439,year,Rasulid,,son of Isma'il II,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+11,al-Ashraf Isma'il III,,,1439,1442,year,Rasulid,,son of Yahya,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212
+12,al-Muzaffar Yusuf II,,,1442,1454,year,Rasulid,,son of Umar ibn Yahya; in 1454 the Tahirid dynasty captured Aden and ended Rasulid rule,https://en.wikipedia.org/wiki/Rasulid_dynasty,1384895212

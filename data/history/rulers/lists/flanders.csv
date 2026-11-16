@@ -1,0 +1,26 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Guy,1226,1305-03-07,1251-06-06,1305-03-07,day,Dampierre,Q28531,born c. 1226,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Dampierre,1384854494
+2,Robert III,1249,1322-09-17,1305-03-07,1322-09-17,day,Dampierre,Q252724,also Count of Nevers,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Dampierre,1384854494
+3,Louis I,1304,1346-08-26,1322-09-17,1346-08-26,day,Dampierre,Q469643,born c. 1304,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Dampierre,1384854494
+4,Louis II,1330-10-25,1384-01-30,1346-08-26,1384-01-30,day,Dampierre,Q469648,also Count of Burgundy,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Dampierre,1384854494
+5,Margaret III,1350-04-13,1405-03-16,1384-01-30,1405-03-16,day,Dampierre,Q466252,,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Dampierre,1384854494
+6,Philip II,1342-01-17,1404-04-27,1384-01-30,1404-04-27,day,Valois-Burgundy,Q298892,"husband of Margaret III, co-ruler; also Duke of Burgundy",https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Burgundy,1384854494
+7,John,1371-05-28,1419-09-10,1404-04-27,1419-09-10,day,Valois-Burgundy,Q298901,"source start 27 April 1404, while Margaret III lived to 1405",https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Burgundy,1384854494
+8,Philip III,1396-07-31,1467-06-15,1419-09-10,1467-06-15,day,Valois-Burgundy,Q239337,,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Burgundy,1384854494
+9,Charles II,1433-11-10,1477-01-05,1467-06-15,1477-01-05,day,Valois-Burgundy,Q151120,,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Burgundy,1384854494
+10,Mary,1457-02-13,1482-03-27,1477-01-05,1482-03-27,day,Valois-Burgundy,Q157073,,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Burgundy,1384854494
+11,Maximilian I,1459-03-22,1519-01-12,1477-08-19,1482-03-27,day,Habsburg,Q150726,"husband of Mary, co-ruler",https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+12,Philip IV,1478-07-22,1506-09-25,1482-03-27,1506-09-25,day,Habsburg,Q157098,Philip the Fair,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+13,Charles III,1500-02-24,1558-09-21,1506-09-25,1555-10-25,day,Habsburg,Q32500,"Emperor Charles V, King Charles I of Spain",https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+14,Philip V,1527-05-21,1598-09-13,1556-01-16,1598-05-06,day,Habsburg,Q34417,King Philip II of Spain; source gap 25 Oct 1555 – 16 Jan 1556,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+15,Isabella Clara Eugenia,1566-08-12,1633-12-01,1598-05-06,1621-07-13,day,Habsburg,Q158256,co-ruler with Albert,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+16,Albert,1559-11-13,1621-07-13,1598-05-06,1621-07-13,day,Habsburg,Q311452,co-ruler with Isabella Clara Eugenia,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+17,Philip VI,1605-04-08,1665-09-17,1621-07-13,1665-09-17,day,Habsburg,Q691402,King Philip IV of Spain,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+18,Charles IV,1661-11-06,1700-11-01,1665-09-17,1700-11-01,day,Habsburg,Q36174,King Charles II of Spain,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg,1384854494
+19,Philip VII,1683-12-19,1746-07-09,1700-11-01,1713-03-14,day,Bourbon,Q170467,King Philip V of Spain; succession contested with the Habsburgs during the War of the Spanish Succession,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Bourbon,1384854494
+20,Charles V,1685-10-01,1740-10-20,1714-09-07,1740-10-20,day,Habsburg,Q150665,Emperor Charles VI,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494
+21,Maria Theresa,1717-05-13,1780-11-29,1740-10-20,1780-11-29,day,Habsburg,Q131706,jointly with Francis I,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494
+22,Francis I,1708-12-08,1765-08-18,1740-11-21,1765-08-18,day,Habsburg,Q151075,"husband of Maria Theresa, co-ruler",https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494
+23,Joseph,1741-03-13,1790-02-20,1765-08-18,1790-02-20,day,Habsburg,Q76555,source start 18 August 1765 (Maria Theresa reigned to 1780),https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494
+24,Leopold,1747-05-05,1792-03-01,1790-02-20,1792-03-01,day,Habsburg,Q151321,,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494
+25,Francis II,1768-02-12,1835-03-02,1792-03-01,1797-10-17,day,Habsburg,Q130834,title abolished de facto after French annexation 1795; claim relinquished in the Treaty of Campo Formio 1797,https://en.wikipedia.org/wiki/Count_of_Flanders#House_of_Habsburg_2,1384854494

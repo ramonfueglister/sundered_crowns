@@ -42,4 +42,4 @@ kill_timeout = "30s"
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "1gb"
+  memory = "2gb" # persons and economies in all 558 towns of 1291: ~1.5 GB after a year (Ramon chose 2 GB, 16 November 2026)

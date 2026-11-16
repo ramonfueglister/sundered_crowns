@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Isabella of Villehardouin,,1312-01-23,1289-09-16,1307,year,Villehardouin,Q261720,born 1260–1263; deposed by Charles II 1307,"https://en.wikipedia.org/wiki/Prince_of_Achaea#Houses_of_Villehardouin,_Avesnes_and_Savoy_(1289–1307)",1375228020
+2,Florent of Hainaut,,1297-01-23,1289-09-16,1297-01-23,day,Avesnes,Q597299,co-ruler with Isabella; born c. 1255,"https://en.wikipedia.org/wiki/Prince_of_Achaea#Houses_of_Villehardouin,_Avesnes_and_Savoy_(1289–1307)",1375228020
+3,Philip I of Savoy,1278,1334-09-25,1300,1307,year,Savoy,Q1365386,co-ruler with Isabella,"https://en.wikipedia.org/wiki/Prince_of_Achaea#Houses_of_Villehardouin,_Avesnes_and_Savoy_(1289–1307)",1375228020
+4,Philip II of Taranto,1278-11-10,,1307,1313-07,year,Anjou,Q712759,died 1331–1332,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1307–1313),1375228020
+5,Ferdinand of Majorca,1278,1316-07-05,1315-06,1316-07-05,circa,Barcelona,Q1367881,"source start: June/July 1315; rival claimant, took control with mercenaries",https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Barcelona_(1315–1316),1375228020
+6,Matilda of Hainaut,1293-11-29,1331,1316-07-05,1321,year,Avesnes,Q287015,"granted Achaea 1313, took control 1316",https://en.wikipedia.org/wiki/Prince_of_Achaea#Houses_of_Avesnes_and_Bourbon_(1316–1321),1375228020
+7,Louis of Burgundy,1297,1316-08-02,1316-07-05,1316-08-02,day,Burgundy,Q717968,co-ruler with Matilda,https://en.wikipedia.org/wiki/Prince_of_Achaea#Houses_of_Avesnes_and_Bourbon_(1316–1321),1375228020
+8,John of Gravina,1294,1336-04-05,1318-03,1333,year,Anjou,Q576665,,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+9,Catherine of Valois,1303,1346-10,1333,1346-10,year,Anjou,Q260269,co-ruler with her son Robert,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+10,Robert of Taranto,,1364-09-10,1333,1364-09-10,year,Anjou,Q878347,"co-ruler with Catherine until 1346, then sole ruler",https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+11,Maria I of Bourbon,,1387,1364-09-10,1370,year,Bourbon,Q576479,rival claimant against Philip III; born c. 1315,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+12,Hugh of Lusignan,,,1364-09-10,1370,year,Lusignan,Q3142724,co-ruler with Maria I; rival claimant,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+13,Philip III of Taranto,1329,1373-11-25,1364-09-10,1373-11-25,day,Anjou,Q658100,,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+14,Joanna of Naples,1325-12,1382-05-12,1373,1381,year,Anjou,Q235381,1377–1381 de facto under the Knights Hospitaller,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+15,Otto of Brunswick,1320,1398-12-01,1376,1381,year,Brunswick,Q602408,co-ruler with Joanna,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Anjou_(1318–1381),1375228020
+16,James of Baux,,1383-07-17,1380,1383-07-17,year,Baux,Q592881,,https://en.wikipedia.org/wiki/Prince_of_Achaea#House_of_Baux_(1381–1383),1375228020
+17,Charles III of Naples,1345,1386-02-24,1383-07-17,1386-02-24,day,Anjou,Q311861,"nominal, recognised by the Navarrese Company (interregnum)",https://en.wikipedia.org/wiki/Prince_of_Achaea#Interregnum_(1383–1396),1375228020
+18,Ladislaus of Naples,1377-02-15,1414-08-06,1386-02-24,1396,year,Anjou,Q317593,nominal (interregnum),https://en.wikipedia.org/wiki/Prince_of_Achaea#Interregnum_(1383–1396),1375228020
+19,Peter of San Superano,,1402,1396,1402,year,Navarrese-Genoese,Q1410950,,https://en.wikipedia.org/wiki/Prince_of_Achaea#Navarrese-Genoese_dynasty_(1396–1432/54),1375228020
+20,Maria II Zaccaria,,,1402,1404,year,Zaccaria,Q4965723,"widow of Peter, regent for his son (listed as holder)",https://en.wikipedia.org/wiki/Prince_of_Achaea#Navarrese-Genoese_dynasty_(1396–1432/54),1375228020
+21,Centurione II Zaccaria,,1432,1404,1432,year,Zaccaria,Q3273863,1432 Thomas Palaiologos inherited the last remnants (initial loss of the principality),https://en.wikipedia.org/wiki/Prince_of_Achaea#Navarrese-Genoese_dynasty_(1396–1432/54),1375228020
+22,Centurione III Zaccaria (John Asen),,1469,1453,1454,year,Zaccaria,Q15118568,proclaimed prince during the Morean revolt of 1453,https://en.wikipedia.org/wiki/Prince_of_Achaea#Navarrese-Genoese_dynasty_(1396–1432/54),1375228020

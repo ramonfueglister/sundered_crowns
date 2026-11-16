@@ -1,0 +1,5 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Gerhard II the Blind,1253,1312,1295,1312,year,House of Schauenburg,Q826435,list starts 1295; county existed from 1290 (infobox); work list Gerhard II matches,https://en.wikipedia.org/wiki/Holstein-Pl%C3%B6n,1342805217
+2,Gerhard IV,,,1312,1314,year,House of Schauenburg,Q1511836,co-ruler with his half-brother John III; sold his lands to John III in 1314,https://en.wikipedia.org/wiki/Holstein-Pl%C3%B6n,1342805217
+3,John III the Mild,,1359,1312,1359,year,House of Schauenburg,Q574718,"co-ruler with Gerhard IV until 1314, then sole count; also Count of Holstein-Kiel (list repeats him 1321-1359); Gerhard V (1323-1350) listed but 'never a ruler'",https://en.wikipedia.org/wiki/Holstein-Pl%C3%B6n,1342805217
+4,Adolphus VII,,1390,1359,1390,year,House of Schauenburg,Q364420,also Count of Holstein-Kiel; when the Plön line died out in 1390 Holstein-Plön reverted to Holstein-Rendsburg,https://en.wikipedia.org/wiki/Holstein-Pl%C3%B6n,1342805217

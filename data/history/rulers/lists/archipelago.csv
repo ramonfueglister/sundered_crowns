@@ -1,0 +1,22 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Marco II,,,1262,1303,year,Sanudo,Q2759395,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+2,Guglielmo I,,,1303,1323,year,Sanudo,Q2759806,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+3,Niccolò I,,,1323,1341,year,Sanudo,Q2759814,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+4,Giovanni I,,,1341,1362,year,Sanudo,Q2759793,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+5,Fiorenza,,,1362,1371,year,Sanudo,Q2071796,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+6,Niccolò II,,,1364,1371,year,Sanudo,Q3339569,overlaps Fiorenza (1362-71),https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+7,Niccolò III dalle Carceri,,,1371,1383,year,Sanudo,Q2759131,listed under Sanudo dynasty,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+8,Francesco I Crispo,,,1383,1397,year,Crispo,Q2071807,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+9,Giacomo I,,,1397,1418,year,Crispo,Q2705166,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+10,Giovanni II,,,1418,1433,year,Crispo,Q661629,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+11,Giacomo II,,,1433,1447,year,Crispo,Q2759331,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+12,Gian Giacomo,,,1447,1453,year,Crispo,Q635834,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+13,Guglielmo II,,,1453,1463,year,Crispo,Q2758550,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+14,Francesco II,,,1463,1463,year,Crispo,Q935405,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+15,Giacomo III,,,1463,1480,year,Crispo,Q2072658,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+16,Giovanni III,,,1480,1494,year,Crispo,Q3107226,followed by interregnum,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+17,Francesco III,,,1500,1511,year,Crispo,Q2072646,followed by interregnum,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+18,Giovanni IV,,,1517,1564,year,Crispo,Q3107230,,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+19,Giacomo IV,,,1564,1566,year,Crispo,Q2759412,"last Latin Christian duke, deposed 1566 by Ottoman Sultan Selim II",https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+20,Joseph Nasi,,,1566,1579,year,,Q472202,Ottoman ducal appointment; the Sultan's appointed representative,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028
+21,Gaspar Graziani,,,1616,1617,year,,Q2439735,Ottoman ducal appointment; island again under direct Ottoman rule at the end of 1617; last to hold the title,https://en.wikipedia.org/wiki/Duchy_of_the_Archipelago#Dukes_of_the_Archipelago,1386052028

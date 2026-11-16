@@ -1,0 +1,19 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Sakura,,,1285,1300,circa,,Q3025939,usurper (source branch column),https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+2,Gao Keita,,,1300,1305,circa,Maridjatids,Q5521576,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+3,Mohammed ibn Gao Keita,,,1305,1312,circa,Maridjatids,Q3027412,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+4,Mansa Musa Keita I,,,1312,1337,year,Abubakrids,Q309333,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+5,Maghan Keita I,,,1337,1341,year,Abubakrids,Q3276821,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+6,Souleyman Keita,,,1341,1360,year,Abubakrids,Q3028531,co-ruler: Kassi,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+7,Kassi,,,1341,1360,year,,Q48969522,co-ruler with Souleyman; source gives no separate dates,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+8,Camba Keita,,,1360,1360,year,Abubakrids,Q3228871,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+9,Mari Djata Keita II,,,1360,1374,year,Abubakrids,Q947664,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+10,Musa Keita II,,,1374,1387,year,Abubakrids,Q3029215,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+11,Maghan Keita II,,,1387,1389,year,Abubakrids,Q3029594,,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+12,Sandaki,,,1389,1390,year,,Q7415950,usurper (source branch column),https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+13,Maghan Keita III,,,1390,1404,year,Maridjatids,Q12496067,also known as Mahmud Keita I,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+14,Musa Keita III,,,1404,1440,circa,,Q6939927,end c. 1440; source lists no mansa c. 1440–c. 1460,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+15,Uli Keita II,,,1460,1480,circa,,Q7878939,source end '1480/1481',https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+16,Mahmud Keita II,,,1480,1496,year,,Q6734478,also known as Mamadou Keita; source start '1480/1481',https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+17,Mahmud Keita III,,,1496,1559,year,,Q6734479,followed by unknown mansa or vacancy 1559–c. 1590,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
+18,Mahmud Keita IV,,,1590,1610,circa,,Q6734486,empire collapses after his death; later post-imperial mansas (c. 1610–c. 1670) not continued,https://en.wikipedia.org/wiki/Keita_dynasty#List_of_imperial_mansas_of_Mali,1379778298
