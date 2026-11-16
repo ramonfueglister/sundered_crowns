@@ -91,5 +91,5 @@ describe('cultivated land in the running world', () => {
     // half the people on the better half of the land: more than half the harvest
     expect(s.place.harvest[i]).toBeGreaterThan(harvest / 2);
     expect(s.place.harvest[i]).toBeLessThan(harvest);
-  });
+  }, 30_000); // the jump to 31 December lets the economies of the cities compute a year of days (about 5 s)
 });

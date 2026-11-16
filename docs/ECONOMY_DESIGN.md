@@ -1701,10 +1701,18 @@ benefit):
   (`N_d_i: cannot round NaN`), within ten years in all three seeds. The test counts both. This is not a
   configuration of the game.
 
-`tests/economy.test.ts` (50 tests, 1 new): the table says 0 and names the rate the cities had; every city of the
+`tests/economy.test.ts` (51 tests, 2 new): the table says 0 and names the rate the cities had; every city of the
 game has the rate switched off; the same cities calibrated with 0.55 have the benefit of the original code and
 differ from the game's in `theta_UB`, `w_UB`, `psi` and `psi_H` only; the engine computes three such cities for 40
 days with balanced books.
+
+The second new test comes with main of 16 November 2026, where a new world starts in 1291 and takes the tables of
+1356 as placeholders (`src/sim/tables.ts`, pull request 36): the economies of the cities are founded in such a
+world as well, by the same rule as the persons of the cities, and compute with balanced books (35 days). The
+numbers of this section are from worlds that start in 1356; the cities' tables are the same in both.
+
+`tests/cultivation.test.ts`: the test that jumps to 31 December has 30 s instead of 5 s, because the jump lets the
+economies of the cities compute a year of days (about 5 s; it timed out when all files ran together).
 
 ### In the game
 

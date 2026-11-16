@@ -564,6 +564,19 @@ describe('the economies of the cities in the world', () => {
     expect(s.economy.cities).toBeNull();
     expect(placeDetail(s, w, w.cityEconomies.cities[0].place)!.cityEconomy).toBeUndefined();
   });
+  it('are founded in a world that starts in 1291 too, which takes the tables of 1356 as placeholders', () => {
+    const { s, w } = newWorldState(1291, 1291);
+    const e = s.economy.cities!;
+    expect(s.startYear).toBe(1291);
+    expect(e.day).toBe(0); expect(e.halted).toBe('');
+    expect(e.figures.length).toBe(N * FIGURES);
+    days(s, w, 35); // past the first plan of every firm
+    expect(e.day).toBe(35); expect(e.halted).toBe('');
+    for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(35);
+    const c = w.economyEngine.checks(e.model);
+    for (const x of c.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+    expect(placeDetail(s, w, w.cityEconomies.cities[0].place)!.cityEconomy).toBeDefined();
+  }, 30_000);
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
     let calls = 0;
