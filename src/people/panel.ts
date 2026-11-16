@@ -12,7 +12,7 @@ import type { PortraitAssets } from '../portrait/assets';
 import type { PortraitPerson } from '../portrait/wire';
 import '../ui/fonts';
 import './panel.css';
-import { economyRows } from './economy_rows';
+import { economyRows, householdRows } from './economy_rows';
 
 /** The dress of a culture in the portraits. Only England 1356 has its own so far (portrait/src/dress.rs); every other
  *  string falls back to Apoleia's Roman dress until the portrait thread draws more. */
@@ -99,11 +99,18 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
         const e = p.economy!;
         if (e.role === 'worker' && e.firmOwner >= 0) { const l = el('div', 'kin'); l.append(kin('Inhaber des Betriebs', e.firmOwner)); work.append(l); }
       }
+      const house = el('div', 'section'), purse = householdRows(p);
+      if (purse.length) {
+        const table = el('table', 'facts'), tb = el('tbody');
+        for (const [k, v] of purse) { const tr = el('tr'); tr.append(el('th', '', k), el('td', '', v)); tb.append(tr); }
+        table.append(tb);
+        house.append(el('h3', '', 'Haushalt'), table);
+      }
       const family = el('div', 'section'), links = el('div', 'kin');
       if (p.mother >= 0) links.append(kin('Mutter', p.mother));
       if (p.father >= 0) links.append(kin('Vater', p.father));
       if (links.childElementCount) family.append(el('h3', '', 'Eltern'), links);
-      box.replaceChildren(head, pic, facts, ...(rows.length ? [work] : []), traits, ...(links.childElementCount ? [family] : []));
+      box.replaceChildren(head, pic, facts, ...(rows.length ? [work] : []), ...(purse.length ? [house] : []), traits, ...(links.childElementCount ? [family] : []));
       box.hidden = false;
       await portrait(p, pic).catch((e) => console.warn('portrait', e));
     },

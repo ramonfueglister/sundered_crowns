@@ -1,4 +1,4 @@
-// The cities as economies of their own that trade with each other: features 3 to 10 of the economy
+// The cities as economies of their own that trade with each other: features 3 to 11 of the economy
 // (docs/ECONOMY_DESIGN.md).
 //
 // Every place with one of the 30 largest cities of the start year is a whole economy, computed by the unchanged port
@@ -17,7 +17,8 @@
 // of England's people (data/economy/england_1356.json, src/sim/economy/calibration.ts), with as many active persons
 // as the city has persons who work. The engine computes; after every day this system writes what it computed for
 // every person and every firm into their components, where everything else reads it. The engine's lists stay the
-// place where the amounts are computed: a component is a copy of the day.
+// place where the amounts are computed: a component is a copy of the day. From the persons the purse of every
+// family follows (economy feature 11, src/sim/systems/household.ts).
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has 365 equal days: no seasons.
@@ -33,6 +34,7 @@ import { dateToDay, dayToDate, fmtDate } from '../calendar';
 import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
+import { writeHouseholds } from './household';
 
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
@@ -87,7 +89,7 @@ export function foundEconomy(s: WorldState, w: World): void {
   s.firm = createTable(FIRM_SCHEMA, 4096);
   P.role.fill(0); P.agent.fill(0); P.firm.fill(-1); P.wage.fill(0); P.income.fill(0); P.spent.fill(0); P.savings.fill(0);
   const cities = cityCalibrations(s, w);
-  if (cities.length === 0) { s.economy = { cities: null }; return; }
+  if (cities.length === 0) { s.economy = { cities: null }; writeHouseholds(s); return; }
   const F = s.firm.cols, firm0 = new Int32Array(cities.length + 1), setups: CitySetup[] = [];
   cities.forEach((x, k) => {
     const p = x.calibration.parameters as { I_s: number[]; H_inact: number };
@@ -110,7 +112,8 @@ export function foundEconomy(s: WorldState, w: World): void {
 
 /** Writes what the engine has computed for every person and every firm into their components: the employer, the
  *  wage, the income, the spending and the savings of a person, and the sector, the employees, the output, the price
- *  and the pay of a firm. The lists of the engine and the persons and firms of the world must fit one to one. */
+ *  and the pay of a firm; then the purse of every family from its persons. The lists of the engine and the persons
+ *  and firms of the world must fit one to one. */
 export function writeAgents(s: WorldState, w: World): void {
   const e = s.economy.cities;
   if (!e) return;
@@ -148,6 +151,7 @@ export function writeAgents(s: WorldState, w: World): void {
     P.income[id] = a[r]; P.savings[id] = a[r + 1]; P.spent[id] = a[r + 2];
   }
   for (let i = 0; i < seen.length; i++) if (seen[i] !== count[i]) throw new Error(`city ${i >> 2} has ${seen[i]} persons of part ${(i & 3) + 1}, the engine ${count[i]}`);
+  writeHouseholds(s);
 }
 
 /** Computes `days` periods from the state of the economies and writes the persons and firms. A period the engine cannot compute, or one that ends

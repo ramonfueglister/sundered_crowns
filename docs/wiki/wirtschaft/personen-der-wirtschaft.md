@@ -1,6 +1,6 @@
 # Personen der Wirtschaft
 
-**Status:** Beschlossen (am 16.11.2026 freigegeben und gebaut; noch nicht in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 16.11.2026 freigegeben und gebaut; seit dem 16.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Wer in der Wirtschaft einer Stadt arbeitet, einen Betrieb führt oder die Bank besitzt, ist jetzt eine Person der Welt: dieselbe, die als Figur durch die Stadt geht. Im Personenfenster steht, bei wem sie arbeitet, was sie am Tag verdient, ausgibt und gespart hat.
 
@@ -86,6 +86,8 @@ Die Bücher gehen auf: Abweichung höchstens 2,4e-13 des Betrags, an dem sie gem
 Die Welt hat ein Hundertstel der Menschen der wirklichen. Jede Person der Wirtschaft ist eine Person der Welt, nicht ein Stellvertreter für hundert.
 
 ## Laufende Welt
+
+Die laufende Welt (Start 1291) rechnet seit dem 16.11.2026 so: Am Tag 68 wurden die Wirtschaften ihrer 30 Städte neu gegründet.
 
 Beim Aufspielen bekommt eine laufende Welt die neuen Einträge, und die Wirtschaften der Städte werden am erreichten Tag neu gegründet: aus der Startlage, mit den Personen, die an diesem Tag arbeiten. Die bisherigen Tage und Jahreszahlen der Wirtschaften gehen dabei verloren.
 

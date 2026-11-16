@@ -1,7 +1,7 @@
 // Brings the state of a world that was saved by an older build up to this build's STATE_VERSION. The world runs
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
-import { STATE_VERSION, PERSON_SCHEMA } from './state';
+import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA } from './state';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
@@ -45,6 +45,19 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
       s.place.pop.set(pop);
     }
     s.v = 13;
+  }
+  if (s.v === 13) { // 13 → 14: the family is the purse, and a woman without a husband works (economy feature 11).
+    // The families get their purse and the persons their consumption. Who works changes (a woman without a husband
+    // always works, the other women of a city at a lower rate, src/sim/systems/work.ts), so the economies are
+    // founded anew on the day the world has reached, as in the step to 12: their days and yearly figures are gone,
+    // and the first period is the next day of the world. Nobody has been born or died.
+    for (const [table, schema] of [[s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
+      const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
+      for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+      (table as { cols: unknown }).cols = fresh;
+    }
+    foundEconomy(s, w);
+    s.v = 14;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
