@@ -13,7 +13,9 @@ export const SHORE_LEVEL = 0.2;
 /** from this much over the level on the bank is as high as the land behind it */
 const SHORE_FULL = 0.06, SHORE_GENTLE = 0.3;
 /** the bank's foot lies this deep under the water, and its top at most this high over it */
-const SHORE_DIP = 0.25, SHORE_MOST = 1.3;
+const SHORE_DIP = 0.25, SHORE_MOST = 2.3;
+/** a bank lower than this over the water (a river's) runs level at the height of the lowest land beside the column */
+const SHORE_LOW = 0.6;
 /** water a single column wide keeps its middle open: the middle counts this far under the level */
 const SHORE_THIN = 1.2, SHORE_BEND = 0.18;
 export const SAND = rgb(0xdcc790);
@@ -96,7 +98,7 @@ export function buildShore(b: Batch, g: Ground, t: GroundTraits, baked = true, p
     let dry = mid.f > 0;
     for (let k = 0; k < 9 && !dry; k++) dry = f[(2 * z + Math.floor(k / 3)) * L + 2 * x + (k % 3)] > 0;
     if (!dry) continue;
-    // the bank of a column is as high as the lowest land round it, so that it runs level along the water
+    // the lowest land round the column
     let low = Infinity;
     for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
       const n = x + dx >= 0 && z + dz >= 0 && x + dx < N && z + dz < N ? idx(x + dx, z + dz) : -1;
@@ -107,9 +109,9 @@ export function buildShore(b: Batch, g: Ground, t: GroundTraits, baked = true, p
     const vertex = (p: P, v: number): [V3, RGB] => {
       const key = v > 0 ? p.j * L + p.i : -1, known = key >= 0 ? seen.get(key) : undefined;
       if (known) return known;
-      const land = v > 0 ? behind(p.i, p.j) : null, top = land ? Math.min(land[0], low, surf + SHORE_MOST) : surf + 0.15;
+      const land = v > 0 ? behind(p.i, p.j) : null, top = land ? Math.min(land[0], low - surf < SHORE_LOW ? low : Infinity, surf + SHORE_MOST) : surf + 0.15;
       // a low bank falls gently to the water, a high one keeps its height up to the land's corners and falls steeply
-      const k = Math.min(1, v / (SHORE_FULL + (SHORE_GENTLE - SHORE_FULL) * smooth(SHORE_MOST, 0.4, top - surf))), y = foot + (top - foot) * k;
+      const k = Math.min(1, v / (SHORE_FULL + (SHORE_GENTLE - SHORE_FULL) * smooth(1.3, 0.4, top - surf))), y = foot + (top - foot) * k;
       const own = land?.[1] ? ROCK_TOP_LOW : topColor(t, p.x, p.z, Mat.Grass, p.x + ox, p.z + oz), base = mix(SAND, own, smooth(0.35, 1, k));
       const l = baked ? skyLight(skyShare(g, p.x, p.z, Math.max(y, surf) + 0.02)) : 1;
       const made: [V3, RGB] = [[p.x, y, p.z], [base[0] * l ** 1.5, base[1] * l, base[2] * l ** 0.3]];
