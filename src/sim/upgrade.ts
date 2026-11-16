@@ -9,7 +9,6 @@ import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
 import { type SetupState, addRealms, parseColor, setPlaces } from './setup';
-import { uses1356Tables } from './tables';
 import { toHeads } from './scale';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -20,7 +19,7 @@ const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 
  * adds (only read when the state has fewer places than the map).
  */
 export function upgradeState(s: WorldState, w: World, setup?: () => SetupState): WorldState {
-  // Before 9 the world counted people of the time; since 9 it counts heads at 1:100 (src/sim/scale.ts). This is done
+  // Before 9 the world counted the real people of the time; since 9 it has a hundredth of them (src/sim/scale.ts). This is done
   // first, so the steps below run with the systems of this build, which count heads: the people of a place and its
   // harvest shrink by SCALE, its arable stays (the land is not scaled), and per head nothing changes.
   if (s.v < 9) {
@@ -44,7 +43,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
   if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
     // died since: the people do not change yet). Places smaller than their cities grow to them; the arable and the
     // harvest follow on the next 1 January, as they do for any change of people.
-    if (uses1356Tables(s.startYear)) fitPlacesToCities(s);
+    fitPlacesToCities(s);
     foundPeople(s);
     s.v = 5;
   }
@@ -89,7 +88,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
       if (!setup) throw new Error('the upgrade of a world of 1291 needs its setup');
       const st = setup(), pop = s.place.pop;
       for (let i = 0; i < pop.length; i++) pop[i] = toHeads(Math.max(0, st.pop[i] ?? 0));
-      if (uses1356Tables(s.startYear)) fitPlacesToCities(s);
+      fitPlacesToCities(s);
     }
     s.v = 8;
   }
@@ -100,6 +99,19 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // stand still for minutes), so the first period of the economies is the next day of the world.
     foundEconomy(s, w);
     s.v = 10;
+  }
+  if (s.v === 10) { // 10 → 11: a world of 1291 has the persons of the 30 largest cities of 1291 (src/sim/content/
+    // cities.ts) in place of those of 1356 it was founded with: its places take the people of the setup again (nothing
+    // has changed them since), grow to their cities of 1291, and the persons are founded anew, as in a new world of
+    // 1291 (nobody has been born or died: the people do not change yet). Worlds of other years are as they were.
+    if (s.startYear === 1291) {
+      if (!setup) throw new Error('the upgrade of a world of 1291 needs its setup');
+      const st = setup(), pop = s.place.pop;
+      for (let i = 0; i < pop.length; i++) pop[i] = toHeads(Math.max(0, st.pop[i] ?? 0));
+      fitPlacesToCities(s);
+      foundPeople(s);
+    }
+    s.v = 11;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
