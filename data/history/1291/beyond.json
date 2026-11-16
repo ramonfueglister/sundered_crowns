@@ -58,7 +58,7 @@
    "government": "feudal_monarchy",
    "culture": "mongol",
    "faith": "vajrayana",
-   "color": "#74693e",
+   "color": "#75693d",
    "capital": {
     "name": "Dadu",
     "lat": 39.9,
@@ -308,7 +308,7 @@
    "government": "feudal_monarchy",
    "culture": "korean",
    "faith": "mahayana",
-   "color": "#747550",
+   "color": "#737551",
    "capital": {
     "name": "Kaegyeong",
     "lat": 37.97,
@@ -837,7 +837,7 @@
    "government": "feudal_monarchy",
    "culture": "bengali",
    "faith": "sunni",
-   "color": "#733323",
+   "color": "#73322a",
    "capital": {
     "name": "Lakhnauti",
     "lat": 24.87,
@@ -920,7 +920,7 @@
    "government": "feudal_monarchy",
    "culture": "sindhi",
    "faith": "shia",
-   "color": "#4d4112",
+   "color": "#4d4113",
    "capital": {
     "name": "Thatta",
     "lat": 24.75,
@@ -1762,7 +1762,7 @@
    "government": "feudal_monarchy",
    "culture": "nepali",
    "faith": "hindu",
-   "color": "#376343",
+   "color": "#3c6347",
    "capital": {
     "name": "Sinja",
     "lat": 29.26,
@@ -1883,7 +1883,7 @@
    "government": "feudal_monarchy",
    "culture": "ahom",
    "faith": "tai_folk",
-   "color": "#3f5d22",
+   "color": "#3a5d27",
    "capital": {
     "name": "Charaideo",
     "lat": 26.94,
@@ -2082,7 +2082,7 @@
    "government": "feudal_monarchy",
    "culture": "tamil",
    "faith": "hindu",
-   "color": "#7b623b",
+   "color": "#7b643d",
    "capital": {
     "name": "Nallur",
     "lat": 9.67,
@@ -2546,7 +2546,7 @@
    "government": "feudal_monarchy",
    "culture": "thai",
    "faith": "theravada",
-   "color": "#306132",
+   "color": "#326134",
    "capital": {
     "name": "Chiang Rai",
     "lat": 19.91,
@@ -4224,7 +4224,7 @@
    "government": "tribal_federation",
    "culture": "iroquoian",
    "faith": "american_traditional",
-   "color": "#56395a",
+   "color": "#533c56",
    "capital": {
     "name": "Hochelaga",
     "lat": 45.5,

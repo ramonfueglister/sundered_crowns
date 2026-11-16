@@ -1,74 +1,881 @@
 {
  "about": "Which of our 1 January 1291 realms may hold a place that Euratlas 1300 labels with an entity (index:name of euratlas_1300_states.tsv). A place's dependent label is used first, else its sovereign label. A list is the set of our realms that may hold such a place (the spread from their researched seats decides between them); null means we model nothing for that entity and the spread alone decides. Where 1291 differs from 1300 the reason is given in notes or in overrides.",
  "map": {
-  "0:Achaia": ["achaea"], "1:Airgíalla": ["england", "tir_eoghain"], "2:Alaiye": ["rum", "karaman"], "3:Alessandria": ["alessandria"],
-  "4:Ancona": ["papal_states", "urbino"], "5:Andorra": null, "6:Anhalt": ["anhalt_zerbst", "anhalt_bernburg"], "7:Ankara": ["rum", "germiyan"],
-  "8:Aragón": ["aragon"], "9:Arborea": ["arborea"], "10:Arezzo": ["arezzo"], "11:Argveti": ["georgia", "imereti"], "12:Argyll": ["scotland"],
-  "13:Asti": ["asti"], "14:Athens": ["athens"], "15:Baden": ["baden"], "16:Banu Sulaym": null, "17:Bar": ["bar"],
-  "18:Bavaria": ["bavaria_upper"], "19:Bavaria": ["bavaria_landshut"], "20:Belluno": null, "21:Bergamo": ["bergamo"],
-  "22:Bieloozero": ["belozersk"], "23:Bodonitsa": ["athens"], "24:Bohemia": ["bohemia"], "25:Bologna": ["bologna"],
-  "26:Bosnia": ["bosnia"], "27:Bougie": ["hafsid_bejaia"], "28:Brabant": ["brabant"], "29:Brandenburg": ["brandenburg"],
-  "30:Brescia": ["brescia"], "31:Brunswick-Lüneburg": ["brunswick_lueneburg", "brunswick_wolfenbuettel"], "32:Bréifne": null,
-  "33:Bulgaria": ["bulgaria"], "34:Burgundy": ["county_burgundy"], "35:Caralis": ["pisa"], "36:Castile": ["castile"],
-  "37:Cephallenia": null, "38:Chalkis": ["venice"], "39:Chernigov": ["bryansk", "kozelsk"], "40:Circassians": ["circassia"],
-  "41:Cologne": ["archbishopric_cologne", "cologne"], "42:Como": ["como"], "43:Connaught": ["connacht", "england"], "44:Cortona": null,
-  "45:Courland": ["courland", "livonian_order"], "46:Cracow": ["greater_poland"], "47:Cremona": ["cremona"], "48:Croatia": ["hungary"],
-  "49:Cyprus": ["cyprus"], "50:Denmark": ["denmark", "schleswig"], "51:Desmond": ["maccarthy_mor", "england"], "52:Djerba": ["sicily"],
-  "53:Dmitrov": ["vladimir"], "54:Dorpat": ["dorpat"], "55:Egypt": ["mamluk", "hama", "jerusalem"], "56:England": ["england"],
-  "57:Epirus": ["epirus"], "58:Eshref": ["eshref"], "59:Este": ["ferrara"], "60:Flanders": ["flanders"], "61:Florence": ["florence"],
-  "62:France": ["france", "brittany", "burgundy", "bourbon", "foix_bearn", "armagnac", "comminges", "perigord", "albret"],
-  "63:Freiburg": null, "64:Friesland": null, "65:Galich": ["galich_mersky"], "66:Galicja-Volhynia": ["galicia", "volhynia"],
-  "67:Gallura": ["pisa"], "68:Genoa": ["genoa"], "69:Georgia": ["georgia"], "70:Germiyan": ["germiyan"], "71:Glogau": ["sagan_glogau"],
-  "72:Gorizia": ["gorizia"], "73:Granada": ["granada"], "74:Greater Poland": ["greater_poland"], "75:Grosseto": null,
-  "76:Guelders": ["guelders"], "77:Göynük": ["byzantium", "ottoman"], "78:Habsburg": ["austria"], "79:Hainaut-Holland": ["hainaut", "holland"],
-  "80:Hamid": ["rum"], "81:Hebrides": ["scotland"], "82:Hereti-Mtiuleti": ["georgia"], "83:Hesse": ["hesse"],
-  "84:Holstein": ["holstein_rendsburg", "holstein_ploen"], "85:Hungary": ["hungary"], "86:Ibadites": null,
-  "87:Ilkhanate": ["ilkhanate", "artuqid_mardin", "kart", "kerman"], "88:Imereti": ["imereti"], "89:Isfendiyar": ["chobanid_kastamonu"],
-  "90:Karaman": ["karaman", "rum"], "91:Karesi": ["byzantium"], "92:Karvuna": ["nogai"], "93:Karystos": ["venice"],
-  "94:Kastamonu": ["chobanid_kastamonu"], "95:Kiev": ["kiev"], "96:Kostroma": ["vladimir"], "97:Kremenets": ["volhynia", "galicia"],
-  "98:Krăn": ["bulgaria"], "99:Kuyavia": ["sandomierz", "greater_poland"], "100:Ladik": ["ladik"], "101:Ladislaus Kán": ["hungary"],
-  "102:Leinster": ["leinster", "england"], "103:Liegnitz": ["liegnitz"], "104:Lithuania": ["lithuania"], "105:Liège": ["liege", "loon"],
-  "106:Lodi": ["lodi"], "107:Logudoro": null, "108:Lorne": ["scotland"], "109:Lorraine": ["lorraine"], "110:Lovech": ["bulgaria"],
-  "111:Lucca": ["lucca"], "112:Luxemburg": ["luxembourg"], "113:Luzk": ["galicia", "volhynia"], "114:Maghreb": ["marinid", "ceuta"],
-  "115:Mainz": ["archbishopric_mainz", "mainz", "frankfurt"], "116:Majorca": ["majorca", "aragon"], "117:Man": ["england"], "118:Mantua": ["mantua"],
-  "119:Mazovia": ["masovia"], "120:Meath": ["england"], "121:Mecklenburg": ["mecklenburg", "rostock", "werle"], "122:Menteşe": ["menteshe"],
-  "123:Milan": ["milan"], "124:Moldavia": ["nogai"], "125:Montferrat": ["montferrat"], "126:Moravia": ["bohemia"], "127:Moscow": ["moscow"],
-  "128:Murom": ["murom"], "129:Namur": ["namur"], "130:Navarre": ["navarre"], "131:Naxos": ["archipelago"], "132:New Armenia": ["armenia_cilicia"],
-  "133:Nizhni-Novgorod": ["gorodets"], "134:Nogai": ["nogai"], "135:Norway": ["norway"], "136:Novara": ["novara"], "137:Novgorod": ["novgorod", "pskov"],
-  "138:Oppeln": ["oppeln", "ratibor", "beuthen", "teschen"], "139:Orange": null, "140:Oreoi": ["venice"], "141:Orkney": ["norway"],
-  "142:Osman": ["ottoman"], "143:Ossetians": ["golden_horde"], "144:Padua": ["padua"], "145:Palatinate": ["bavaria_upper"],
-  "146:Papal States": ["papal_states"], "147:Parma": ["parma"], "148:Pavia": ["pavia"], "149:Pereslavl-Ryazanski": ["ryazan"], "150:Pereyaslav-Rus": ["kiev", "golden_horde"],
-  "151:Pereyaslavl-Zalessky": ["vladimir"], "152:Perugia": ["perugia"], "153:Pervâne": ["pervane"], "154:Piacenza": ["piacenza"], "155:Pinsk": null,
-  "156:Pisa": ["pisa"], "157:Pistoia": ["pistoia"], "158:Podlesia": ["volhynia"], "159:Polotsk": ["polotsk"], "160:Pomerania-Wolgast": ["pomerania_stettin"],
-  "161:Pomerelia": ["pomerelia"], "162:Portugal": ["portugal"], "163:Ragusa": ["ragusa"], "164:Raška": ["serbia"], "165:Riga": ["riga"], "166:Riga": ["riga"],
-  "167:Romagna": ["papal_states"], "168:Roman Empire": ["byzantium"], "169:Ross": ["scotland"], "170:Rostov": ["rostov"], "171:Rugia": ["rugen"],
-  "172:Rûm": ["rum"], "173:Sahip Ata": ["sahib_ata"], "174:Saluzzo": ["saluzzo"], "175:Samtskhe": ["samtskhe"], "176:San Marino": ["san_marino"],
-  "177:Sandomierz": ["sandomierz"], "178:Sasan": ["menteshe"], "179:Savoy": ["savoy", "geneva"], "180:Saxe-Lauenburg": ["saxe_lauenburg"],
-  "181:Saxony": ["saxe_wittenberg"], "182:Schweidnitz": ["schweidnitz_jauer"], "183:Schwerin": ["schwerin"], "184:Scotland": ["scotland"],
-  "185:Selonians": ["livonian_order", "riga"], "186:Semigallians": ["livonian_order", "riga"], "187:Severia": ["bryansk", "kozelsk"],
-  "188:Severin": ["hungary"], "189:Sicily-Naples": ["naples"], "190:Sicily-Trinacria": ["sicily"], "191:Siena": ["siena"], "192:Sieradz": ["sandomierz"],
-  "193:Slavonia": ["hungary"], "194:Small States": null, "195:Smolensk": ["smolensk"], "196:Sovana": null, "197:Spoleto": ["papal_states"],
-  "198:Sredna Gora": ["bulgaria"], "199:Starodub": ["bryansk", "kozelsk"], "200:Strathgryfe": ["scotland"], "201:Sudovians": ["teutonic_order"],
-  "202:Sweden": ["sweden"], "203:Syrmia": ["syrmia"], "204:Syrmia": ["syrmia", "hungary"], "205:Tavas": ["menteshe"],
-  "206:Teutonic Knights": ["teutonic_order", "livonian_order", "warmia", "samland"], "207:Theodoro": null, "208:Thessaly": ["thessaly"],
-  "209:Thomond": ["thomond", "england"], "210:Thuringia and Meissen": ["thuringia", "meissen"], "211:Tlemcen": ["zayyanid"], "212:Tortona": ["alessandria"],
-  "213:Transdanubia": ["hungary"], "214:Trebizond": ["trebizond"], "215:Trencsén": ["hungary"], "216:Treviso": ["treviso"],
-  "217:Trier": ["archbishopric_trier"], "218:Tunis": ["hafsid_tunis"], "219:Tver": ["tver"], "220:Tyrol": ["tyrol"], "221:Tír Eógain": ["tir_eoghain", "tir_chonaill"],
-  "222:Uglich": ["rostov"], "223:Ulster": ["england"], "224:Ustyug": ["rostov"], "225:Valentinois": null, "226:Venice": ["venice"], "227:Verona": ["verona"],
-  "228:Vicenza": ["padua"], "229:Vidin": ["vidin"], "230:Viennois": ["dauphine"], "231:Vladimir": ["vladimir", "gorodets"], "232:Volhynia": ["volhynia"],
-  "233:Volterra": ["volterra"], "234:Waldstätte": null, "235:Wales": ["england"], "236:Wallachia": ["wallachia"], "237:Western Kipchak": ["golden_horde", "mordva", "nogai"],
-  "238:Wieluń": ["sandomierz"], "239:Yaroslavl": ["yaroslavl"], "240:Yuryev": ["vladimir"], "241:Zhytomyr": ["kiev", "volhynia"],
-  "242:Ösel-Wiek": ["osel_wiek"], "243:Österland": ["sweden"], "244:Łęczyca": ["sandomierz"]
+  "0:Achaia": [
+   "achaea"
+  ],
+  "1:Airgíalla": [
+   "england",
+   "tir_eoghain"
+  ],
+  "2:Alaiye": [
+   "rum",
+   "karaman"
+  ],
+  "3:Alessandria": [
+   "alessandria"
+  ],
+  "4:Ancona": [
+   "papal_states",
+   "urbino"
+  ],
+  "5:Andorra": null,
+  "6:Anhalt": [
+   "anhalt_zerbst",
+   "anhalt_bernburg"
+  ],
+  "7:Ankara": [
+   "rum",
+   "germiyan"
+  ],
+  "8:Aragón": [
+   "aragon"
+  ],
+  "9:Arborea": [
+   "arborea"
+  ],
+  "10:Arezzo": [
+   "arezzo"
+  ],
+  "11:Argveti": [
+   "georgia",
+   "imereti"
+  ],
+  "12:Argyll": [
+   "scotland"
+  ],
+  "13:Asti": [
+   "asti"
+  ],
+  "14:Athens": [
+   "athens"
+  ],
+  "15:Baden": [
+   "baden"
+  ],
+  "16:Banu Sulaym": null,
+  "17:Bar": [
+   "bar"
+  ],
+  "18:Bavaria": [
+   "bavaria_upper"
+  ],
+  "19:Bavaria": [
+   "bavaria_landshut"
+  ],
+  "20:Belluno": null,
+  "21:Bergamo": [
+   "bergamo"
+  ],
+  "22:Bieloozero": [
+   "belozersk"
+  ],
+  "23:Bodonitsa": [
+   "athens"
+  ],
+  "24:Bohemia": [
+   "bohemia"
+  ],
+  "25:Bologna": [
+   "bologna"
+  ],
+  "26:Bosnia": [
+   "bosnia"
+  ],
+  "27:Bougie": [
+   "hafsid_bejaia"
+  ],
+  "28:Brabant": [
+   "brabant"
+  ],
+  "29:Brandenburg": [
+   "brandenburg"
+  ],
+  "30:Brescia": [
+   "brescia"
+  ],
+  "31:Brunswick-Lüneburg": [
+   "brunswick_lueneburg",
+   "brunswick_wolfenbuettel"
+  ],
+  "32:Bréifne": null,
+  "33:Bulgaria": [
+   "bulgaria"
+  ],
+  "34:Burgundy": [
+   "county_burgundy"
+  ],
+  "35:Caralis": [
+   "pisa"
+  ],
+  "36:Castile": [
+   "castile"
+  ],
+  "37:Cephallenia": null,
+  "38:Chalkis": [
+   "venice"
+  ],
+  "39:Chernigov": [
+   "bryansk",
+   "kozelsk"
+  ],
+  "40:Circassians": [
+   "circassia"
+  ],
+  "41:Cologne": [
+   "archbishopric_cologne",
+   "cologne"
+  ],
+  "42:Como": [
+   "como"
+  ],
+  "43:Connaught": [
+   "england"
+  ],
+  "44:Cortona": null,
+  "45:Courland": [
+   "courland",
+   "livonian_order"
+  ],
+  "46:Cracow": [
+   "greater_poland"
+  ],
+  "47:Cremona": [
+   "cremona"
+  ],
+  "48:Croatia": [
+   "hungary"
+  ],
+  "49:Cyprus": [
+   "cyprus"
+  ],
+  "50:Denmark": [
+   "denmark",
+   "schleswig"
+  ],
+  "51:Desmond": [
+   "england",
+   "maccarthy_mor"
+  ],
+  "52:Djerba": [
+   "sicily"
+  ],
+  "53:Dmitrov": [
+   "vladimir"
+  ],
+  "54:Dorpat": [
+   "dorpat"
+  ],
+  "55:Egypt": [
+   "mamluk",
+   "hama",
+   "jerusalem"
+  ],
+  "56:England": [
+   "england"
+  ],
+  "57:Epirus": [
+   "epirus"
+  ],
+  "58:Eshref": [
+   "eshref"
+  ],
+  "59:Este": [
+   "ferrara"
+  ],
+  "60:Flanders": [
+   "flanders"
+  ],
+  "61:Florence": [
+   "florence"
+  ],
+  "62:France": [
+   "france",
+   "brittany",
+   "burgundy",
+   "bourbon",
+   "foix_bearn",
+   "armagnac",
+   "comminges",
+   "perigord",
+   "albret"
+  ],
+  "63:Freiburg": null,
+  "64:Friesland": null,
+  "65:Galich": [
+   "galich_mersky"
+  ],
+  "66:Galicja-Volhynia": [
+   "galicia",
+   "volhynia"
+  ],
+  "67:Gallura": [
+   "pisa"
+  ],
+  "68:Genoa": [
+   "genoa"
+  ],
+  "69:Georgia": [
+   "georgia"
+  ],
+  "70:Germiyan": [
+   "germiyan"
+  ],
+  "71:Glogau": [
+   "sagan_glogau"
+  ],
+  "72:Gorizia": [
+   "gorizia"
+  ],
+  "73:Granada": [
+   "granada"
+  ],
+  "74:Greater Poland": [
+   "greater_poland"
+  ],
+  "75:Grosseto": null,
+  "76:Guelders": [
+   "guelders"
+  ],
+  "77:Göynük": [
+   "byzantium",
+   "ottoman"
+  ],
+  "78:Habsburg": [
+   "austria"
+  ],
+  "79:Hainaut-Holland": [
+   "hainaut",
+   "holland"
+  ],
+  "80:Hamid": [
+   "rum"
+  ],
+  "81:Hebrides": [
+   "scotland"
+  ],
+  "82:Hereti-Mtiuleti": [
+   "georgia"
+  ],
+  "83:Hesse": [
+   "hesse"
+  ],
+  "84:Holstein": [
+   "holstein_rendsburg",
+   "holstein_ploen"
+  ],
+  "85:Hungary": [
+   "hungary"
+  ],
+  "86:Ibadites": null,
+  "87:Ilkhanate": [
+   "ilkhanate",
+   "artuqid_mardin",
+   "kart",
+   "kerman"
+  ],
+  "88:Imereti": [
+   "imereti"
+  ],
+  "89:Isfendiyar": [
+   "chobanid_kastamonu"
+  ],
+  "90:Karaman": [
+   "karaman",
+   "rum"
+  ],
+  "91:Karesi": [
+   "byzantium"
+  ],
+  "92:Karvuna": [
+   "nogai"
+  ],
+  "93:Karystos": [
+   "venice"
+  ],
+  "94:Kastamonu": [
+   "chobanid_kastamonu"
+  ],
+  "95:Kiev": [
+   "kiev"
+  ],
+  "96:Kostroma": [
+   "vladimir"
+  ],
+  "97:Kremenets": [
+   "volhynia",
+   "galicia"
+  ],
+  "98:Krăn": [
+   "bulgaria"
+  ],
+  "99:Kuyavia": [
+   "sandomierz",
+   "greater_poland"
+  ],
+  "100:Ladik": [
+   "ladik"
+  ],
+  "101:Ladislaus Kán": [
+   "hungary"
+  ],
+  "102:Leinster": [
+   "england"
+  ],
+  "103:Liegnitz": [
+   "liegnitz"
+  ],
+  "104:Lithuania": [
+   "lithuania"
+  ],
+  "105:Liège": [
+   "liege",
+   "loon"
+  ],
+  "106:Lodi": [
+   "lodi"
+  ],
+  "107:Logudoro": null,
+  "108:Lorne": [
+   "scotland"
+  ],
+  "109:Lorraine": [
+   "lorraine"
+  ],
+  "110:Lovech": [
+   "bulgaria"
+  ],
+  "111:Lucca": [
+   "lucca"
+  ],
+  "112:Luxemburg": [
+   "luxembourg"
+  ],
+  "113:Luzk": [
+   "galicia",
+   "volhynia"
+  ],
+  "114:Maghreb": [
+   "marinid",
+   "ceuta"
+  ],
+  "115:Mainz": [
+   "archbishopric_mainz",
+   "mainz",
+   "frankfurt"
+  ],
+  "116:Majorca": [
+   "majorca",
+   "aragon"
+  ],
+  "117:Man": [
+   "england"
+  ],
+  "118:Mantua": [
+   "mantua"
+  ],
+  "119:Mazovia": [
+   "masovia"
+  ],
+  "120:Meath": [
+   "england"
+  ],
+  "121:Mecklenburg": [
+   "mecklenburg",
+   "rostock",
+   "werle"
+  ],
+  "122:Menteşe": [
+   "menteshe"
+  ],
+  "123:Milan": [
+   "milan"
+  ],
+  "124:Moldavia": [
+   "nogai"
+  ],
+  "125:Montferrat": [
+   "montferrat"
+  ],
+  "126:Moravia": [
+   "bohemia"
+  ],
+  "127:Moscow": [
+   "moscow"
+  ],
+  "128:Murom": [
+   "murom"
+  ],
+  "129:Namur": [
+   "namur"
+  ],
+  "130:Navarre": [
+   "navarre"
+  ],
+  "131:Naxos": [
+   "archipelago"
+  ],
+  "132:New Armenia": [
+   "armenia_cilicia"
+  ],
+  "133:Nizhni-Novgorod": [
+   "gorodets"
+  ],
+  "134:Nogai": [
+   "nogai"
+  ],
+  "135:Norway": [
+   "norway"
+  ],
+  "136:Novara": [
+   "novara"
+  ],
+  "137:Novgorod": [
+   "novgorod",
+   "pskov"
+  ],
+  "138:Oppeln": [
+   "oppeln",
+   "ratibor",
+   "beuthen",
+   "teschen"
+  ],
+  "139:Orange": null,
+  "140:Oreoi": [
+   "venice"
+  ],
+  "141:Orkney": [
+   "scotland"
+  ],
+  "142:Osman": [
+   "ottoman"
+  ],
+  "143:Ossetians": [
+   "golden_horde"
+  ],
+  "144:Padua": [
+   "padua"
+  ],
+  "145:Palatinate": [
+   "bavaria_upper"
+  ],
+  "146:Papal States": [
+   "papal_states"
+  ],
+  "147:Parma": [
+   "parma"
+  ],
+  "148:Pavia": [
+   "pavia"
+  ],
+  "149:Pereslavl-Ryazanski": [
+   "ryazan"
+  ],
+  "150:Pereyaslav-Rus": [
+   "kiev",
+   "golden_horde"
+  ],
+  "151:Pereyaslavl-Zalessky": [
+   "vladimir"
+  ],
+  "152:Perugia": [
+   "perugia"
+  ],
+  "153:Pervâne": [
+   "pervane"
+  ],
+  "154:Piacenza": [
+   "piacenza"
+  ],
+  "155:Pinsk": null,
+  "156:Pisa": [
+   "pisa"
+  ],
+  "157:Pistoia": [
+   "pistoia"
+  ],
+  "158:Podlesia": [
+   "volhynia"
+  ],
+  "159:Polotsk": [
+   "polotsk"
+  ],
+  "160:Pomerania-Wolgast": [
+   "pomerania_stettin"
+  ],
+  "161:Pomerelia": [
+   "pomerelia"
+  ],
+  "162:Portugal": [
+   "portugal"
+  ],
+  "163:Ragusa": [
+   "ragusa"
+  ],
+  "164:Raška": [
+   "serbia"
+  ],
+  "165:Riga": [
+   "riga"
+  ],
+  "166:Riga": [
+   "riga"
+  ],
+  "167:Romagna": [
+   "papal_states"
+  ],
+  "168:Roman Empire": [
+   "byzantium"
+  ],
+  "169:Ross": [
+   "scotland"
+  ],
+  "170:Rostov": [
+   "rostov"
+  ],
+  "171:Rugia": [
+   "rugen"
+  ],
+  "172:Rûm": [
+   "rum"
+  ],
+  "173:Sahip Ata": [
+   "sahib_ata"
+  ],
+  "174:Saluzzo": [
+   "saluzzo"
+  ],
+  "175:Samtskhe": [
+   "samtskhe"
+  ],
+  "176:San Marino": [
+   "san_marino"
+  ],
+  "177:Sandomierz": [
+   "sandomierz"
+  ],
+  "178:Sasan": [
+   "menteshe"
+  ],
+  "179:Savoy": [
+   "savoy",
+   "geneva"
+  ],
+  "180:Saxe-Lauenburg": [
+   "saxe_lauenburg"
+  ],
+  "181:Saxony": [
+   "saxe_wittenberg"
+  ],
+  "182:Schweidnitz": [
+   "schweidnitz_jauer"
+  ],
+  "183:Schwerin": [
+   "schwerin"
+  ],
+  "184:Scotland": [
+   "scotland"
+  ],
+  "185:Selonians": [
+   "livonian_order",
+   "riga"
+  ],
+  "186:Semigallians": [
+   "livonian_order",
+   "riga"
+  ],
+  "187:Severia": [
+   "bryansk",
+   "kozelsk"
+  ],
+  "188:Severin": [
+   "hungary"
+  ],
+  "189:Sicily-Naples": [
+   "naples"
+  ],
+  "190:Sicily-Trinacria": [
+   "sicily"
+  ],
+  "191:Siena": [
+   "siena"
+  ],
+  "192:Sieradz": [
+   "sandomierz"
+  ],
+  "193:Slavonia": [
+   "hungary"
+  ],
+  "194:Small States": null,
+  "195:Smolensk": [
+   "smolensk"
+  ],
+  "196:Sovana": null,
+  "197:Spoleto": [
+   "papal_states"
+  ],
+  "198:Sredna Gora": [
+   "bulgaria"
+  ],
+  "199:Starodub": [
+   "vladimir",
+   "gorodets"
+  ],
+  "200:Strathgryfe": [
+   "scotland"
+  ],
+  "201:Sudovians": [
+   "teutonic_order"
+  ],
+  "202:Sweden": [
+   "sweden"
+  ],
+  "203:Syrmia": [
+   "syrmia"
+  ],
+  "204:Syrmia": [
+   "syrmia",
+   "hungary"
+  ],
+  "205:Tavas": [
+   "menteshe"
+  ],
+  "206:Teutonic Knights": [
+   "teutonic_order",
+   "livonian_order",
+   "warmia",
+   "samland"
+  ],
+  "207:Theodoro": null,
+  "208:Thessaly": [
+   "thessaly"
+  ],
+  "209:Thomond": [
+   "thomond"
+  ],
+  "210:Thuringia and Meissen": [
+   "thuringia",
+   "meissen"
+  ],
+  "211:Tlemcen": [
+   "zayyanid"
+  ],
+  "212:Tortona": [
+   "alessandria"
+  ],
+  "213:Transdanubia": [
+   "hungary"
+  ],
+  "214:Trebizond": [
+   "trebizond"
+  ],
+  "215:Trencsén": [
+   "hungary"
+  ],
+  "216:Treviso": [
+   "treviso"
+  ],
+  "217:Trier": [
+   "archbishopric_trier"
+  ],
+  "218:Tunis": [
+   "hafsid_tunis"
+  ],
+  "219:Tver": [
+   "tver"
+  ],
+  "220:Tyrol": [
+   "tyrol"
+  ],
+  "221:Tír Eógain": [
+   "tir_eoghain",
+   "tir_chonaill"
+  ],
+  "222:Uglich": [
+   "rostov"
+  ],
+  "223:Ulster": [
+   "england"
+  ],
+  "224:Ustyug": [
+   "rostov",
+   "novgorod"
+  ],
+  "225:Valentinois": null,
+  "226:Venice": [
+   "venice"
+  ],
+  "227:Verona": [
+   "verona"
+  ],
+  "228:Vicenza": [
+   "padua"
+  ],
+  "229:Vidin": [
+   "vidin"
+  ],
+  "230:Viennois": [
+   "dauphine"
+  ],
+  "231:Vladimir": [
+   "vladimir",
+   "gorodets"
+  ],
+  "232:Volhynia": [
+   "volhynia"
+  ],
+  "233:Volterra": [
+   "volterra"
+  ],
+  "234:Waldstätte": null,
+  "235:Wales": [
+   "england"
+  ],
+  "236:Wallachia": [
+   "wallachia"
+  ],
+  "237:Western Kipchak": [
+   "golden_horde",
+   "mordva",
+   "nogai"
+  ],
+  "238:Wieluń": [
+   "sandomierz"
+  ],
+  "239:Yaroslavl": [
+   "yaroslavl"
+  ],
+  "240:Yuryev": [
+   "vladimir"
+  ],
+  "241:Zhytomyr": [
+   "kiev",
+   "volhynia"
+  ],
+  "242:Ösel-Wiek": [
+   "osel_wiek"
+  ],
+  "243:Österland": [
+   "sweden"
+  ],
+  "244:Łęczyca": [
+   "sandomierz"
+  ]
  },
  "overrides": [
-  {"why": "Ghazan's occupation of Syria (1299-1300) shown by Euratlas did not exist in 1291: Aleppo and northern Syria were Mamluk under al-Ashraf Khalil (Holt, The Age of the Crusades; Amitai-Preiss, Mongols and Mamluks).",
-   "box": [35.0, 32.0, 39.8, 37.0], "entity": "87:Ilkhanate", "to": ["mamluk", "hama"]},
-  {"why": "The Balearic Islands were taken from James II of Majorca by Alfonso III of Aragon in 1285 and given back only in 1298 (Treaty of Anagni); Euratlas 1300 shows them Majorcan.",
-   "box": [1.0, 38.5, 4.6, 40.2], "entity": "116:Majorca", "to": ["aragon"]},
-  {"why": "Orkney and Shetland were Norwegian until 1468-69; Euratlas lists Orkney under Scotland as the earls were Scottish lords, but the earldom was held of the King of Norway.",
-   "box": [-4.0, 58.6, -0.5, 61.0], "entity": "141:Orkney", "to": ["norway"]},
-  {"why": "Konya was the Seljuk capital in 1291 (Mesud II); Karaman held Ermenek and Larende but took Konya only after 1300 (Cahen, Pre-Ottoman Turkey).",
-   "box": [31.8, 37.4, 33.2, 38.4], "entity": "90:Karaman", "to": ["rum"]}
+  {
+   "why": "Ghazan's occupation of Syria (1299-1300) shown by Euratlas did not exist in 1291: Aleppo and northern Syria were Mamluk under al-Ashraf Khalil (Holt, The Age of the Crusades; Amitai-Preiss, Mongols and Mamluks).",
+   "box": [
+    35.0,
+    32.0,
+    39.8,
+    37.0
+   ],
+   "entity": "87:Ilkhanate",
+   "to": [
+    "mamluk",
+    "hama"
+   ]
+  },
+  {
+   "why": "The Balearic Islands were taken from James II of Majorca by Alfonso III of Aragon in 1285 and given back only in 1298 (Treaty of Anagni); Euratlas 1300 shows them Majorcan.",
+   "box": [
+    1.0,
+    38.5,
+    4.6,
+    40.2
+   ],
+   "entity": "116:Majorca",
+   "to": [
+    "aragon"
+   ]
+  },
+  {
+   "why": "Orkney and Shetland were Norwegian until 1468-69; Euratlas lists the earldom under Scotland because the earls also held Caithness of the Scottish king. The islands go to Norway, Caithness on the mainland stays Scottish.",
+   "box": [
+    -4.0,
+    58.6,
+    -0.5,
+    61.0
+   ],
+   "entity": "141:Orkney",
+   "to": [
+    "norway"
+   ]
+  },
+  {
+   "why": "Konya was the Seljuk capital in 1291 (Mesud II); Karaman held Ermenek and Larende but took Konya only after 1300 (Cahen, Pre-Ottoman Turkey).",
+   "box": [
+    31.8,
+    37.4,
+    33.2,
+    38.4
+   ],
+   "entity": "90:Karaman",
+   "to": [
+    "rum"
+   ]
+  },
+  {
+   "why": "Our georeferenced Euratlas labels put eastern Westphalia (Herford, Lippstadt, Diepholz, Quakenbrück) in Guelders; Guelders held nothing there in 1291. These are the county of Ravensberg, the lordship of Lippe and the bishoprics of Osnabrück, Minden, Paderborn and Münster (Ravensberg goes to Jülich-Berg only in 1346).",
+   "box": [
+    7.6,
+    51.5,
+    9.6,
+    52.9
+   ],
+   "entity": "76:Guelders",
+   "to": [
+    "ravensberg",
+    "lippe",
+    "osnabrueck",
+    "minden",
+    "paderborn",
+    "muenster"
+   ]
+  },
+  {
+   "why": "After 1235 Connacht was granted to the de Burghs; the O'Conor kings kept only the King's Five Cantreds round Roscommon, held of the crown (Otway-Ruthven, A History of Medieval Ireland, 1968; Lydon, The Lordship of Ireland in the Middle Ages, 1972). Euratlas's 'Kingdom of Connaught' covers the whole province.",
+   "box": [
+    -8.7,
+    53.35,
+    -7.85,
+    54.15
+   ],
+   "entity": "43:Connaught",
+   "to": [
+    "connacht"
+   ]
+  },
+  {
+   "why": "The MacMurrough-Kavanagh kings of Leinster held only the uplands of north Wexford and Carlow and, with the O'Byrnes and O'Tooles, the Wicklow mountains; the plains were the English lordship (Otway-Ruthven 1968).",
+   "box": [
+    -6.95,
+    52.5,
+    -6.05,
+    53.15
+   ],
+   "entity": "102:Leinster",
+   "to": [
+    "leinster"
+   ]
+  },
+  {
+   "why": "North of the upper Volga the forest lands (Vologda, the Sukhona) were Russian, not the khan's own domain: Vologda is a Novgorodian volost in Novgorod's treaties with Tver (1264-1270 and later), Ustyug belongs to Rostov. Euratlas leaves them in the khanate's colour.",
+   "box": [
+    36.0,
+    57.6,
+    52.0,
+    62.5
+   ],
+   "entity": "237:Western Kipchak",
+   "to": [
+    "novgorod",
+    "rostov",
+    "belozersk",
+    "galich_mersky"
+   ]
+  }
  ],
  "notes": [
   "Cracow (Bohemian in 1300) was held by Przemysł II of Greater Poland from 1290 until Wenceslaus II took it later in 1291; Sandomierz, Sieradz, Łęczyca and Brześć Kujawski were Władysław the Elbow-high's (our sandomierz).",
@@ -77,6 +884,8 @@
   "Wallachia is a voivodeship under Hungary whose ruler on 1 January 1291 is not attested (Bărbat c. 1279-1285, Thocomerius c. 1310). Moldavia between Carpathians and Dniester lay under Nogai's Tatars.",
   "The Prussian and Livonian branches of the Teutonic Order are one entity in Euratlas; Semigallia (conquered 1290) and Sudovia (1283) are labelled as peoples there and given to the orders here.",
   "Caralis and Gallura were Pisan in 1291 (Cagliari Pisan since 1258, Gallura annexed 1288); Logudoro was split between Genoa, the Doria and Sassari, left to the spread.",
-  "Italian lordships of 1300 still not modelled (Belluno, Cortona, Grosseto, Sovana, Valentinois, Orange and others) are left to the spread: a gap."
+  "Italian lordships of 1300 still not modelled (Belluno, Cortona, Grosseto, Sovana, Valentinois, Orange and others) are left to the spread: a gap.",
+  "Ireland: Euratlas draws Gaelic Connaught and Leinster as kingdoms covering their whole provinces and Thomond as an O'Brien kingdom; 'Lordship of Desmond' is the Anglo-Norman FitzGerald lordship, so the MacCarthy Mór realm is left to the spread there. Gaelic Connacht and Leinster are narrowed to their 1291 lands by overrides.",
+  "Euratlas's 'Principality of Starodub' is Starodub on the Klyazma (east of Vladimir), not Starodub of Severia; its small appanage is not modelled and goes to the neighbouring grand principality."
  ]
 }

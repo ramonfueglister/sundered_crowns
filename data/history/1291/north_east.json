@@ -55,7 +55,7 @@
    "government": "feudal_monarchy",
    "culture": "danish",
    "faith": "latin",
-   "color": "#844b4a",
+   "color": "#8b5353",
    "capital": {
     "name": "Roskilde",
     "lat": 55.64,
@@ -316,7 +316,7 @@
    "government": "elective_monarchy",
    "culture": "swedish",
    "faith": "latin",
-   "color": "#26596a",
+   "color": "#25596a",
    "capital": {
     "name": "Stockholm",
     "lat": 59.33,
@@ -474,7 +474,7 @@
    "government": "feudal_monarchy",
    "culture": "norwegian",
    "faith": "latin",
-   "color": "#5f7279",
+   "color": "#5e7279",
    "capital": {
     "name": "Bergen",
     "lat": 60.39,
@@ -935,7 +935,7 @@
    "government": "military_order",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#4a4115",
+   "color": "#4b431a",
    "capital": {
     "name": "Wenden",
     "lat": 57.31,
@@ -1249,7 +1249,7 @@
    "government": "theocracy",
    "culture": "estonian",
    "faith": "latin",
-   "color": "#207f6e",
+   "color": "#1e7e6e",
    "capital": {
     "name": "Arensburg",
     "lat": 58.25,
@@ -1323,7 +1323,7 @@
    "government": "theocracy",
    "culture": "latvian",
    "faith": "latin",
-   "color": "#21465e",
+   "color": "#27445b",
    "capital": {
     "name": "Pilten",
     "lat": 57.22,
@@ -1386,7 +1386,7 @@
    "government": "feudal_monarchy",
    "culture": "lithuanian",
    "faith": "baltic_old",
-   "color": "#6f4e5d",
+   "color": "#704e5d",
    "capital": {
     "name": "Kernavė",
     "lat": 55.19,
@@ -1734,7 +1734,7 @@
    "government": "feudal_monarchy",
    "culture": "polish",
    "faith": "latin",
-   "color": "#5d5002",
+   "color": "#5d5102",
    "capital": {
     "name": "Sandomierz",
     "lat": 50.68,
@@ -1938,7 +1938,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#69311f",
+   "color": "#6b3220",
    "capital": {
     "name": "Breslau",
     "lat": 51.11,
@@ -2162,7 +2162,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#465380",
+   "color": "#435280",
    "capital": {
     "name": "Jauer",
     "lat": 51.053,
@@ -2349,7 +2349,7 @@
    "government": "feudal_monarchy",
    "culture": "silesian",
    "faith": "latin",
-   "color": "#284874",
+   "color": "#22486e",
    "capital": {
     "name": "Oppeln",
     "lat": 50.672,
@@ -2659,7 +2659,7 @@
    "government": "merchant_republic",
    "culture": "novgorodian",
    "faith": "orthodox",
-   "color": "#5f6339",
+   "color": "#5f6237",
    "capital": {
     "name": "Novgorod",
     "lat": 58.52,
@@ -2712,9 +2712,9 @@
      "lon": 41.65
     },
     {
-     "name": "Ustyug",
-     "lat": 60.76,
-     "lon": 46.3
+     "name": "Vologda",
+     "lat": 59.22,
+     "lon": 39.89
     }
    ],
    "ruler": {
@@ -2776,7 +2776,7 @@
    "government": "city_republic",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#236c86",
+   "color": "#236b86",
    "capital": {
     "name": "Pskov",
     "lat": 57.82,
@@ -2862,7 +2862,7 @@
    "government": "tribal_federation",
    "culture": "komi",
    "faith": "finnic_old",
-   "color": "#886b50",
+   "color": "#856c57",
    "capital": {
     "name": "Ust-Vym",
     "lat": 62.23,
@@ -2926,7 +2926,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#754e7a",
+   "color": "#7a5280",
    "capital": {
     "name": "Pereslavl-Zalessky",
     "lat": 56.74,
@@ -3164,7 +3164,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#324d33",
+   "color": "#2c4e31",
    "capital": {
     "name": "Tver",
     "lat": 56.86,
@@ -3253,7 +3253,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#8d4b3f",
+   "color": "#81453d",
    "capital": {
     "name": "Rostov",
     "lat": 57.19,
@@ -3274,6 +3274,11 @@
      "name": "Ustyuzhna",
      "lat": 58.84,
      "lon": 36.44
+    },
+    {
+     "name": "Ustyug",
+     "lat": 60.76,
+     "lon": 46.3
     }
    ],
    "ruler": {
@@ -3284,7 +3289,7 @@
    },
    "heir": null,
    "consort": null,
-   "dynasty_note": "With his brother Konstantin of Uglich.",
+   "dynasty_note": "With his brother Konstantin of Uglich. Veliky Ustyug on the Sukhona belongs to the Rostov princes.",
    "overlord": "golden_horde",
    "subject_type": "tributary",
    "empire_member": false,
@@ -3332,7 +3337,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#4c7394",
+   "color": "#547388",
    "capital": {
     "name": "Yaroslavl",
     "lat": 57.63,
@@ -3475,7 +3480,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#6f471b",
+   "color": "#5c3d05",
    "capital": {
     "name": "Galich",
     "lat": 58.38,
@@ -3539,7 +3544,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#6d4a03",
+   "color": "#724900",
    "capital": {
     "name": "Ryazan",
     "lat": 54.24,
@@ -3623,7 +3628,7 @@
    "government": "feudal_monarchy",
    "culture": "russian",
    "faith": "orthodox",
-   "color": "#3d6b8d",
+   "color": "#4d708b",
    "capital": {
     "name": "Murom",
     "lat": 55.58,
@@ -4183,7 +4188,7 @@
    "government": "nomadic_horde",
    "culture": "tatar",
    "faith": "sunni",
-   "color": "#7d6b37",
+   "color": "#7e6c38",
    "capital": {
     "name": "Sarai Batu",
     "lat": 47.17,
@@ -4491,7 +4496,7 @@
    "government": "tribal_federation",
    "culture": "mordvin",
    "faith": "finnic_old",
-   "color": "#5c5132",
+   "color": "#575431",
    "capital": {
     "name": "Temnikov",
     "lat": 54.63,
@@ -4555,7 +4560,7 @@
    "government": "tribal_federation",
    "culture": "circassian",
    "faith": "orthodox",
-   "color": "#504f24",
+   "color": "#574f23",
    "capital": {
     "name": "Mapa",
     "lat": 44.89,
@@ -4801,7 +4806,7 @@
    "government": "feudal_monarchy",
    "culture": "georgian",
    "faith": "orthodox",
-   "color": "#575d24",
+   "color": "#565e26",
    "capital": {
     "name": "Akhaltsikhe",
     "lat": 41.64,

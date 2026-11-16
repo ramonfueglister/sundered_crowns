@@ -29,6 +29,8 @@ RANK_W = {'free_city': 2.6, 'lordship': 1.5, 'county': 1.25, 'prince_bishopric':
           'margraviate': 1.05, 'principality': 1.1, 'duchy': 1.0, 'grand_duchy': 0.85, 'kingdom': 0.8, 'empire': 0.75,
           'khanate': 0.7, 'sultanate': 0.85, 'republic': 1.2, 'order': 1.0, 'tribe': 1.0, 'chiefdom': 1.2, 'emirate': 1.0, 'beylik': 1.0, 'despotate': 1.0}
 OUTPOST_KM = 45
+NEAR_KM = 90        # a labelled place cut off on the mainland
+ISLAND_KM = 700     # a labelled island (Orkney from Bergen, Aegean islands from the mainland)
 
 
 def load_states():
@@ -187,6 +189,33 @@ def main():
             if nd < best[v] and (al is not None or nd < reach(v)) and nd < rcap * w:
                 best[v] = nd; owner[v] = si
                 heapq.heappush(pq, (nd, v, si, w, rcap))
+    # a labelled place the constrained spread could not reach (an island, or land behind another realm's label) goes to
+    # the nearest place held by one of the realms its label allows: within ISLAND_KM on islands without a seat, else NEAR_KM
+    comp = np.zeros(L + 1, np.int32); cid = 0
+    for st0 in range(1, L + 1):
+        if comp[st0]: continue
+        cid += 1; comp[st0] = cid; stack = [st0]
+        while stack:
+            u = stack.pop()
+            for v in adj[u]:
+                if v <= L and not comp[v]: comp[v] = cid; stack.append(v)
+    csize = np.bincount(comp); seated = {comp[l] for l in capital_loc if l}
+    held_xyz = {}
+    for l in range(1, L + 1):
+        if owner[l] >= 0: held_xyz.setdefault(int(owner[l]), []).append(l)
+    trees = {si: (cKDTree(xyz[np.array(ls) - 1]), ls) for si, ls in held_xyz.items()}
+    filled = 0
+    for l in range(1, L + 1):
+        al = allow[l]
+        if owner[l] >= 0 or not al: continue
+        cap = ISLAND_KM if (csize[comp[l]] < 300 and comp[l] not in seated) else NEAR_KM
+        best_d, best_si = cap / 6371, -1
+        for si in al:
+            if si not in trees: continue
+            d, _ = trees[si][0].query(xyz[l - 1])
+            if d < best_d: best_d, best_si = d, si
+        if best_si >= 0: owner[l] = best_si; filled += 1
+    print('labelled places filled from the nearest allowed realm:', filled)
     fixed = [int(v) for v in owner[1:]]
     borders.apply(fixed, [s['id'] for s in states], geo, names, YEAR)
     print('places held', sum(1 for o in fixed if o >= 0), 'of', L)

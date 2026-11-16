@@ -56,7 +56,7 @@
    "government": "feudal_monarchy",
    "culture": "egyptian_arab",
    "faith": "sunni",
-   "color": "#75633b",
+   "color": "#76633b",
    "capital": {
     "name": "Cairo",
     "lat": 30.044,
@@ -259,7 +259,7 @@
    "government": "feudal_monarchy",
    "culture": "levantine",
    "faith": "sunni",
-   "color": "#524924",
+   "color": "#534927",
    "capital": {
     "name": "Hama",
     "lat": 35.13,
@@ -324,7 +324,7 @@
    "government": "theocracy",
    "culture": "hejazi",
    "faith": "shia",
-   "color": "#2d7c5b",
+   "color": "#2f7c5d",
    "capital": {
     "name": "Mecca",
     "lat": 21.422,
@@ -514,7 +514,7 @@
    "government": "theocracy",
    "culture": "yemeni",
    "faith": "shia",
-   "color": "#3e522a",
+   "color": "#3e4f2d",
    "capital": {
     "name": "Sa'da",
     "lat": 16.94,
@@ -676,7 +676,7 @@
    "government": "feudal_monarchy",
    "culture": "persian",
    "faith": "sunni",
-   "color": "#184753",
+   "color": "#194754",
    "capital": {
     "name": "Hormuz",
     "lat": 27.1,
@@ -1119,7 +1119,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#2a5849",
+   "color": "#28594a",
    "capital": {
     "name": "Ermenek",
     "lat": 36.64,
@@ -1301,7 +1301,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#124e46",
+   "color": "#134e47",
    "capital": {
     "name": "Milas",
     "lat": 37.32,
@@ -1393,7 +1393,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#503c27",
+   "color": "#513d22",
    "capital": {
     "name": "Karahisar",
     "lat": 38.76,
@@ -1642,7 +1642,7 @@
    "government": "feudal_monarchy",
    "culture": "anatolian_turkish",
    "faith": "sunni",
-   "color": "#827333",
+   "color": "#7f7639",
    "capital": {
     "name": "Beyşehir",
     "lat": 37.68,
@@ -1790,7 +1790,7 @@
    "government": "feudal_monarchy",
    "culture": "turkmen",
    "faith": "sunni",
-   "color": "#78563e",
+   "color": "#755640",
    "capital": {
     "name": "Mardin",
     "lat": 37.31,
@@ -2208,7 +2208,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#775a44",
+   "color": "#775a45",
    "capital": {
     "name": "Fez",
     "lat": 34.06,
@@ -2513,7 +2513,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#6c6542",
+   "color": "#6c6644",
    "capital": {
     "name": "Tunis",
     "lat": 36.8,
@@ -2641,7 +2641,7 @@
    "government": "feudal_monarchy",
    "culture": "maghrebi",
    "faith": "sunni",
-   "color": "#57432f",
+   "color": "#5d4329",
    "capital": {
     "name": "Bougie",
     "lat": 36.75,
@@ -2934,7 +2934,7 @@
    "government": "feudal_monarchy",
    "culture": "mande",
    "faith": "sunni",
-   "color": "#727668",
+   "color": "#6f7665",
    "capital": {
     "name": "Niani",
     "lat": 11.38,
@@ -3373,7 +3373,7 @@
    "government": "feudal_monarchy",
    "culture": "nubian",
    "faith": "coptic",
-   "color": "#734f42",
+   "color": "#744f41",
    "capital": {
     "name": "Dongola",
     "lat": 18.22,

@@ -119,6 +119,10 @@ S('magdeburg', inherit=True, cap='Magdeburg', hold='Halle;Burg;Calbe;Jüterbog',
 S('halberstadt', inherit=True, cap='Halberstadt', hold='Quedlinburg;Oschersleben', ruler=None, pers='diplomat', diff=5, en='', de=''),
 S('hildesheim', inherit=True, cap='Hildesheim', hold='Peine;Alfeld', ruler=None, pers='diplomat', diff=5, en='', de=''),
 S('muenster', inherit=True, cap='Münster', hold='Coesfeld;Warendorf;Vechta;Meppen;Bocholt', ruler=None, pers='diplomat', diff=4, en='', de=''),
+N('ravensberg', 'County of Ravensberg', 'Grafschaft Ravensberg', 'county', 'feudal_monarchy', 'low_saxon', 'latin', 'Bielefeld', hold='Herford;Vlotho@52.17,8.86;Bünde@52.20,8.58', sh=('Ravensberg', 'Ravensberg'), adj=('Ravensberg', 'ravensbergisch'), color='#6f6a8a',
+  ruler=R('Otto III', None, 'Calvelage-Ravensberg'), note='Count Otto III (r. 1249-1306); the county passes to Jülich-Berg only in 1346. Herford itself is an imperial abbey and town under the counts\' protection.', pers='diplomat', diff=5, en='', de=''),
+N('lippe', 'Lordship of Lippe', 'Herrschaft Lippe', 'lordship', 'feudal_monarchy', 'low_saxon', 'latin', 'Lippstadt', hold='Detmold@51.94,8.88;Horn@51.87,8.94;Blomberg@51.94,9.09', sh=('Lippe', 'Lippe'), adj=('Lippe', 'lippisch'), color='#7a5f4c',
+  ruler=R('Simon I', None, 'Lippe'), note='Noble lords of Lippe; Simon I rules from 1273/75 to 1344.', pers='diplomat', diff=5, en='', de=''),
 S('osnabrueck', inherit=True, cap='Osnabrück', hold='Quakenbrück;Fürstenau', ruler=None, pers='diplomat', diff=5, en='', de=''),
 S('paderborn', inherit=True, cap='Paderborn', hold='Warburg;Brakel;Büren', ruler=None, pers='diplomat', diff=5, en='', de=''),
 S('minden', inherit=True, cap='Minden', hold='Petershagen;Lübbecke', ruler=None, pers='diplomat', diff=5, en='', de=''),
@@ -156,4 +160,4 @@ S('nordhausen', inherit=True, cap='Nordhausen', hold='', ruler=None, pers='trade
 wars = []
 
 if __name__ == '__main__':
-    write('empire', SOURCES, states, wars, new_ids=['bern', 'zurich', 'dauphine', 'thuringia', 'rostock', 'pomerelia', 'rugen'], notes=NOTES)
+    write('empire', SOURCES, states, wars, new_ids=['bern', 'zurich', 'dauphine', 'thuringia', 'rostock', 'pomerelia', 'rugen', 'ravensberg', 'lippe'], notes=NOTES)

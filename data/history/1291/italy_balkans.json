@@ -279,7 +279,7 @@
    "government": "feudal_monarchy",
    "culture": "neapolitan",
    "faith": "latin",
-   "color": "#285563",
+   "color": "#295563",
    "capital": {
     "name": "Naples",
     "lat": 40.852,
@@ -779,7 +779,7 @@
    "government": "merchant_republic",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#178388",
+   "color": "#177e90",
    "capital": {
     "name": "Venice",
     "lat": 45.438,
@@ -1910,7 +1910,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#83668e",
+   "color": "#886591",
    "capital": {
     "name": "Verona",
     "lat": 45.438,
@@ -1994,7 +1994,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#67334f",
+   "color": "#663750",
    "capital": {
     "name": "Mantua",
     "lat": 45.156,
@@ -2161,7 +2161,7 @@
    "government": "city_republic",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#533a5f",
+   "color": "#573b5e",
    "capital": {
     "name": "Padua",
     "lat": 45.406,
@@ -2252,7 +2252,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#6f3029",
+   "color": "#703027",
    "capital": {
     "name": "Pavia",
     "lat": 45.19,
@@ -2377,7 +2377,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#673950",
+   "color": "#6e3b4c",
    "capital": {
     "name": "Parma",
     "lat": 44.801,
@@ -2487,7 +2487,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#194d2c",
+   "color": "#204e25",
    "capital": {
     "name": "Brescia",
     "lat": 45.541,
@@ -2547,7 +2547,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#217d76",
+   "color": "#277c71",
    "capital": {
     "name": "Bergamo",
     "lat": 45.698,
@@ -2602,7 +2602,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#734f7b",
+   "color": "#754e72",
    "capital": {
     "name": "Como",
     "lat": 45.808,
@@ -2717,7 +2717,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#20816c",
+   "color": "#227d76",
    "capital": {
     "name": "Novara",
     "lat": 45.446,
@@ -2777,7 +2777,7 @@
    "government": "city_republic",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#545d88",
+   "color": "#54618d",
    "capital": {
     "name": "Asti",
     "lat": 44.9,
@@ -2947,7 +2947,7 @@
    "government": "city_republic",
    "culture": "tuscan",
    "faith": "latin",
-   "color": "#667242",
+   "color": "#607347",
    "capital": {
     "name": "Volterra",
     "lat": 43.402,
@@ -3002,7 +3002,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#905f85",
+   "color": "#955f8a",
    "capital": {
     "name": "Treviso",
     "lat": 45.666,
@@ -3077,7 +3077,7 @@
    "government": "theocracy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#2f8668",
+   "color": "#4b4d11",
    "capital": {
     "name": "Udine",
     "lat": 46.063,
@@ -3179,7 +3179,7 @@
    "government": "feudal_monarchy",
    "culture": "slovene",
    "faith": "latin",
-   "color": "#0b4851",
+   "color": "#17436d",
    "capital": {
     "name": "Gorizia",
     "lat": 45.94,
@@ -3251,7 +3251,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#776215",
+   "color": "#87722a",
    "capital": {
     "name": "Meran",
     "lat": 46.67,
@@ -3475,7 +3475,7 @@
    "government": "feudal_monarchy",
    "culture": "lombard",
    "faith": "latin",
-   "color": "#3a5e28",
+   "color": "#3e5c26",
    "capital": {
     "name": "Saluzzo",
     "lat": 44.645,
@@ -3553,7 +3553,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#612f33",
+   "color": "#642d34",
    "capital": {
     "name": "Chambéry",
     "lat": 45.566,
@@ -3695,7 +3695,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#546847",
+   "color": "#526645",
    "capital": {
     "name": "Annecy",
     "lat": 45.9,
@@ -3770,7 +3770,7 @@
    "government": "feudal_monarchy",
    "culture": "hungarian",
    "faith": "latin",
-   "color": "#705452",
+   "color": "#715452",
    "capital": {
     "name": "Buda",
     "lat": 47.497,
@@ -4023,7 +4023,7 @@
    "government": "feudal_monarchy",
    "culture": "serbian",
    "faith": "orthodox",
-   "color": "#4d481f",
+   "color": "#4f491b",
    "capital": {
     "name": "Belgrade",
     "lat": 44.82,
@@ -4669,7 +4669,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#613f73",
+   "color": "#5e3e73",
    "capital": {
     "name": "Constantinople",
     "lat": 41.008,
@@ -5071,7 +5071,7 @@
    "government": "feudal_monarchy",
    "culture": "greek",
    "faith": "orthodox",
-   "color": "#886492",
+   "color": "#826391",
    "capital": {
     "name": "Neopatras",
     "lat": 38.9,
@@ -5159,7 +5159,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#825c8c",
+   "color": "#875887",
    "capital": {
     "name": "Andravida",
     "lat": 37.904,
@@ -5277,7 +5277,7 @@
    "government": "feudal_monarchy",
    "culture": "catalan",
    "faith": "latin",
-   "color": "#7d5f1d",
+   "color": "#786322",
    "capital": {
     "name": "Thebes",
     "lat": 38.32,
@@ -5385,7 +5385,7 @@
    "government": "feudal_monarchy",
    "culture": "venetian",
    "faith": "latin",
-   "color": "#3e4b30",
+   "color": "#505124",
    "capital": {
     "name": "Naxos",
     "lat": 37.105,
@@ -5563,7 +5563,7 @@
    "government": "feudal_monarchy",
    "culture": "french",
    "faith": "latin",
-   "color": "#216353",
+   "color": "#236355",
    "capital": {
     "name": "Nicosia",
     "lat": 35.17,
@@ -5667,7 +5667,7 @@
    "government": "feudal_monarchy",
    "culture": "armenian",
    "faith": "armenian_apostolic",
-   "color": "#9c6064",
+   "color": "#9d6167",
    "capital": {
     "name": "Sis",
     "lat": 37.45,

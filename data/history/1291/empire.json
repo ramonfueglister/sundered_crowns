@@ -18,7 +18,9 @@
   "thuringia",
   "rostock",
   "pomerelia",
-  "rugen"
+  "rugen",
+  "ravensberg",
+  "lippe"
  ],
  "notes": [
   "Date: 1 January 1291. King of the Romans: Rudolf I of Habsburg (dies 15 July 1291; interregnum until Adolf of Nassau, May 1292). The king is not a realm of his own: his house is modelled as Austria.",
@@ -503,7 +505,7 @@
    "government": "theocracy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#556595",
+   "color": "#626a93",
    "capital": {
     "name": "Brixen",
     "lat": 46.716,
@@ -572,7 +574,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#60294e",
+   "color": "#6d3450",
    "capital": {
     "name": "Munich",
     "lat": 48.137,
@@ -704,7 +706,7 @@
    "government": "feudal_monarchy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#01557c",
+   "color": "#035279",
    "capital": {
     "name": "Landshut",
     "lat": 48.537,
@@ -804,7 +806,7 @@
    "government": "theocracy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#865e73",
+   "color": "#83576d",
    "capital": {
     "name": "Passau",
     "lat": 48.574,
@@ -937,7 +939,7 @@
    "government": "theocracy",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#46490d",
+   "color": "#5e431a",
    "capital": {
     "name": "Wörth an der Donau",
     "lat": 49.0,
@@ -1000,7 +1002,7 @@
    "government": "city_republic",
    "culture": "bavarian",
    "faith": "latin",
-   "color": "#607959",
+   "color": "#547a60",
    "capital": {
     "name": "Regensburg",
     "lat": 49.015,
@@ -1064,7 +1066,7 @@
    "government": "theocracy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#67608f",
+   "color": "#685984",
    "capital": {
     "name": "Eichstätt",
     "lat": 48.89,
@@ -1128,7 +1130,7 @@
    "government": "feudal_monarchy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#295438",
+   "color": "#304e33",
    "capital": {
     "name": "Cadolzburg",
     "lat": 49.457,
@@ -1212,7 +1214,7 @@
    "government": "city_republic",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#787842",
+   "color": "#6e7945",
    "capital": {
     "name": "Nuremberg",
     "lat": 49.452,
@@ -1276,7 +1278,7 @@
    "government": "theocracy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#1d5a56",
+   "color": "#225353",
    "capital": {
     "name": "Würzburg",
     "lat": 49.794,
@@ -1349,7 +1351,7 @@
    "government": "theocracy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#4d76ab",
+   "color": "#3b7d9e",
    "capital": {
     "name": "Bamberg",
     "lat": 49.891,
@@ -1428,7 +1430,7 @@
    "government": "feudal_monarchy",
    "culture": "franconian",
    "faith": "latin",
-   "color": "#904f37",
+   "color": "#8a5257",
    "capital": {
     "name": "Schleusingen",
     "lat": 50.51,
@@ -1740,7 +1742,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#02506a",
+   "color": "#12485a",
    "capital": {
     "name": "Dillingen",
     "lat": 48.58,
@@ -1929,7 +1931,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#593a57",
+   "color": "#573d5f",
    "capital": {
     "name": "Pruntrut",
     "lat": 47.416,
@@ -2003,7 +2005,7 @@
    "government": "theocracy",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#1c828b",
+   "color": "#017f8e",
    "capital": {
     "name": "St. Gallen",
     "lat": 47.424,
@@ -2199,7 +2201,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#39677d",
+   "color": "#3e6979",
    "capital": {
     "name": "Colmar",
     "lat": 48.079,
@@ -2379,7 +2381,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#605b33",
+   "color": "#665a34",
    "capital": {
     "name": "Esslingen",
     "lat": 48.74,
@@ -2443,7 +2445,7 @@
    "government": "city_republic",
    "culture": "alemannic",
    "faith": "latin",
-   "color": "#725728",
+   "color": "#715528",
    "capital": {
     "name": "Augsburg",
     "lat": 48.366,
@@ -2616,7 +2618,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#275e86",
+   "color": "#03577d",
    "capital": {
     "name": "Dole",
     "lat": 47.093,
@@ -2719,7 +2721,7 @@
    "government": "feudal_monarchy",
    "culture": "burgundian_fr",
    "faith": "latin",
-   "color": "#7b663c",
+   "color": "#696a40",
    "capital": {
     "name": "Montbéliard",
     "lat": 47.51,
@@ -2891,7 +2893,7 @@
    "government": "theocracy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#945571",
+   "color": "#8d516c",
    "capital": {
     "name": "Trier",
     "lat": 49.756,
@@ -2984,7 +2986,7 @@
    "government": "theocracy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#3c4c03",
+   "color": "#354905",
    "capital": {
     "name": "Bonn",
     "lat": 50.735,
@@ -3270,7 +3272,7 @@
    "government": "city_republic",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#744a66",
+   "color": "#744d69",
    "capital": {
     "name": "Aachen",
     "lat": 50.776,
@@ -3334,7 +3336,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#1d7e8a",
+   "color": "#288289",
    "capital": {
     "name": "Nideggen",
     "lat": 50.69,
@@ -3601,7 +3603,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#825689",
+   "color": "#805e84",
    "capital": {
     "name": "Hamm",
     "lat": 51.68,
@@ -3772,7 +3774,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#046683",
+   "color": "#046a83",
    "capital": {
     "name": "Dillenburg",
     "lat": 50.74,
@@ -3851,7 +3853,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#5b7e44",
+   "color": "#637f40",
    "capital": {
     "name": "Katzenelnbogen",
     "lat": 50.267,
@@ -3925,7 +3927,7 @@
    "government": "feudal_monarchy",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#33502e",
+   "color": "#3f4d2a",
    "capital": {
     "name": "Kreuznach",
     "lat": 49.843,
@@ -4051,7 +4053,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#4c3167",
+   "color": "#42356e",
    "capital": {
     "name": "Marburg",
     "lat": 50.81,
@@ -4152,7 +4154,7 @@
    "government": "city_republic",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#53491c",
+   "color": "#574b20",
    "capital": {
     "name": "Frankfurt am Main",
     "lat": 50.111,
@@ -4864,7 +4866,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#1c6f5f",
+   "color": "#996539",
    "capital": {
     "name": "Ratzeburg",
     "lat": 53.7,
@@ -4942,7 +4944,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#1a517d",
+   "color": "#1d4977",
    "capital": {
     "name": "Meissen",
     "lat": 51.163,
@@ -5064,7 +5066,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#317e5b",
+   "color": "#3f805f",
    "capital": {
     "name": "Eisenach",
     "lat": 50.975,
@@ -5156,7 +5158,7 @@
    "government": "feudal_monarchy",
    "culture": "central_german",
    "faith": "latin",
-   "color": "#3b5136",
+   "color": "#435130",
    "capital": {
     "name": "Zerbst",
     "lat": 51.966,
@@ -5484,7 +5486,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#254173",
+   "color": "#254070",
    "capital": {
     "name": "Lüneburg",
     "lat": 53.249,
@@ -5579,7 +5581,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#2a4c14",
+   "color": "#284e16",
    "capital": {
     "name": "Brunswick",
     "lat": 52.27,
@@ -5981,6 +5983,146 @@
    }
   },
   {
+   "id": "ravensberg",
+   "name": {
+    "en": "County of Ravensberg",
+    "de": "Grafschaft Ravensberg"
+   },
+   "short": {
+    "en": "Ravensberg",
+    "de": "Ravensberg"
+   },
+   "adjective": {
+    "en": "Ravensberg",
+    "de": "ravensbergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#786aa3",
+   "capital": {
+    "name": "Bielefeld",
+    "lat": 52.021,
+    "lon": 8.532
+   },
+   "holdings": [
+    {
+     "name": "Bielefeld",
+     "lat": 52.021,
+     "lon": 8.532
+    },
+    {
+     "name": "Herford",
+     "lat": 52.11,
+     "lon": 8.67
+    },
+    {
+     "name": "Vlotho",
+     "lat": 52.17,
+     "lon": 8.86
+    },
+    {
+     "name": "Bünde",
+     "lat": 52.2,
+     "lon": 8.58
+    }
+   ],
+   "ruler": {
+    "name": "Otto III",
+    "born": null,
+    "dynasty": "Calvelage-Ravensberg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count Otto III (r. 1249-1306); the county passes to Jülich-Berg only in 1346. Herford itself is an imperial abbey and town under the counts' protection.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "lippe",
+   "name": {
+    "en": "Lordship of Lippe",
+    "de": "Herrschaft Lippe"
+   },
+   "short": {
+    "en": "Lippe",
+    "de": "Lippe"
+   },
+   "adjective": {
+    "en": "Lippe",
+    "de": "lippisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#443a62",
+   "capital": {
+    "name": "Lippstadt",
+    "lat": 51.67,
+    "lon": 8.35
+   },
+   "holdings": [
+    {
+     "name": "Lippstadt",
+     "lat": 51.67,
+     "lon": 8.35
+    },
+    {
+     "name": "Detmold",
+     "lat": 51.94,
+     "lon": 8.88
+    },
+    {
+     "name": "Horn",
+     "lat": 51.87,
+     "lon": 8.94
+    },
+    {
+     "name": "Blomberg",
+     "lat": 51.94,
+     "lon": 9.09
+    }
+   ],
+   "ruler": {
+    "name": "Simon I",
+    "born": null,
+    "dynasty": "Lippe",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Noble lords of Lippe; Simon I rules from 1273/75 to 1344.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
    "id": "osnabrueck",
    "name": {
     "en": "Prince-Bishopric of Osnabrück",
@@ -5998,7 +6140,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#774d48",
+   "color": "#714b3b",
    "capital": {
     "name": "Osnabrück",
     "lat": 52.279,
@@ -6073,7 +6215,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#306c81",
+   "color": "#457b5d",
    "capital": {
     "name": "Paderborn",
     "lat": 51.719,
@@ -6146,7 +6288,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#74464f",
+   "color": "#854c30",
    "capital": {
     "name": "Minden",
     "lat": 52.289,
@@ -6221,7 +6363,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#a35d5d",
+   "color": "#9e5c53",
    "capital": {
     "name": "Bremervörde",
     "lat": 53.484,
@@ -6301,7 +6443,7 @@
    "government": "theocracy",
    "culture": "pomeranian",
    "faith": "latin",
-   "color": "#79673f",
+   "color": "#78663e",
    "capital": {
     "name": "Kammin",
     "lat": 53.972,
@@ -6369,7 +6511,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#383f6b",
+   "color": "#4a3c68",
    "capital": {
     "name": "Wismar",
     "lat": 53.893,
@@ -6464,7 +6606,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#9a654c",
+   "color": "#9b634a",
    "capital": {
     "name": "Rostock",
     "lat": 54.088,
@@ -6694,7 +6836,7 @@
    "government": "feudal_monarchy",
    "culture": "pomeranian",
    "faith": "latin",
-   "color": "#204070",
+   "color": "#5275ab",
    "capital": {
     "name": "Stettin",
     "lat": 53.428,
@@ -6906,7 +7048,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#69302a",
+   "color": "#673b57",
    "capital": {
     "name": "Stralsund",
     "lat": 54.309,
@@ -6981,7 +7123,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#423c6e",
+   "color": "#3f3b68",
    "capital": {
     "name": "Rendsburg",
     "lat": 54.304,
@@ -7066,7 +7208,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#8a5a6c",
+   "color": "#61739f",
    "capital": {
     "name": "Plön",
     "lat": 54.162,
@@ -7141,7 +7283,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#3f7c7b",
+   "color": "#37757f",
    "capital": {
     "name": "Stadthagen",
     "lat": 52.324,
@@ -7221,7 +7363,7 @@
    "government": "feudal_monarchy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#57471e",
+   "color": "#594a17",
    "capital": {
     "name": "Oldenburg",
     "lat": 53.143,
@@ -7284,7 +7426,7 @@
    "government": "tribal_federation",
    "culture": "frisian",
    "faith": "latin",
-   "color": "#5d71aa",
+   "color": "#5f6da6",
    "capital": {
     "name": "Oldeborg",
     "lat": 53.51,
@@ -7394,7 +7536,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#613e01",
+   "color": "#415724",
    "capital": {
     "name": "Lübeck",
     "lat": 53.866,
@@ -7457,7 +7599,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#198086",
+   "color": "#36808c",
    "capital": {
     "name": "Hamburg",
     "lat": 53.55,
@@ -7527,7 +7669,7 @@
    "government": "merchant_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#4a5d8a",
+   "color": "#4a5a87",
    "capital": {
     "name": "Bremen",
     "lat": 53.076,
@@ -7592,7 +7734,7 @@
    "government": "city_republic",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#537b5b",
+   "color": "#4e7b4c",
    "capital": {
     "name": "Dortmund",
     "lat": 51.514,
