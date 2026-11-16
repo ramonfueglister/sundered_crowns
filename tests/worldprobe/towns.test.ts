@@ -16,7 +16,7 @@ const meadow = (): Ground => ({ h: new Int16Array(N * N).fill(LAND_Y), mat: new 
 /** the persons the houses of a town of `pop` people hold, laid out on a level meadow as Venice builds */
 const housed = (pop: number) => {
   const site: Site = { id: venice, at: [N / 2 + 0.5, N / 2 + 0.5], size: 5, pop, region: 'italy', style: styleOf('italy') };
-  const { lots } = settle(meadow(), new Batch(), [site], [], () => 0, () => 0, {});
+  const { lots } = settle(meadow(), new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, {});
   return lots.reduce((s, l) => s + l.w * l.d * l.floors * PERSONS_PER_FLOOR_BLOCK, 0);
 };
 

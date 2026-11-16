@@ -85,15 +85,15 @@ export function acacia(b: Batch, x: number, y: number, z: number, r: Rnd) {
  * A field. Wheat stands as single sheaves in rows; vines come as single plants on a grid (a green body under a head
  * with a yellow top) or, every other field, as green hedges along x with yellow tips. The crops of the reference glow more than
  * the light allows: their sides turned from the sun are as bright as the lit ones. The `GLOW` colours (above 1) give
- * those sides that brightness. Where `on` is given the crop stands only on the ground it holds.
+ * those sides that brightness.
  */
-export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd, on: (x: number, z: number) => boolean = () => true) {
+export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd) {
   const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2);
   if (crop !== 'vine') {
     const ripe = crop === 'wheat', tops = ripe ? WHEAT : OATS, side = ripe ? WHEAT_SIDE : OATS_SIDE;
     for (let row = 0; row + 1 <= w; row++) for (let k = 0; k + 1 <= d; k++) {
       const x = x0 + row + 0.5, z = z0 + k + 0.5;
-      if (isWet(g, x, z) || !on(x, z)) continue;
+      if (isWet(g, x, z)) continue;
       const y = groundY(g, x, z), top = y + (ripe ? 1.35 : 0.8) + 0.5 * hash2(row, k, 51);
       b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], ripe ? 1.2 : 1.05), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
     }
@@ -102,7 +102,7 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
   const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.4 : 1.2;
   for (let row = 0.6; row < w - 0.3; row += pitchX) for (let k = 0; k * pitchZ < d - 0.5; k++) {
     const x = x0 + row, z = z0 + k * pitchZ + 0.6, seed = Math.round(row * 10), lot = hash2(k, seed, 51);
-    if (isWet(g, x, z) || lot < 0.04 || !on(x, z)) continue;
+    if (isWet(g, x, z) || lot < 0.04) continue;
     const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
     if (hedges) {
       // a row is a line of bushes of uneven height, not a clipped hedge

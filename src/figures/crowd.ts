@@ -69,7 +69,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
   const free = (x: number, z: number, street: boolean) => {
     if (x < 1 || z < 1 || x >= N - 1 || z >= N - 1) return false;
     const i = idx(x, z);
-    return !g.wet[i] && (street ? s.town[i] === 1 && s.used[i] === 2 : (s.used[i] === 0 || s.used[i] === 3) && s.town[i] === 0 && g.mat[i] !== Mat.Rock);
+    return !g.wet[i] && (street ? s.town[i] === 1 && s.used[i] === 2 : s.used[i] === 0 && s.town[i] === 0 && g.mat[i] !== Mat.Rock);
   };
   const nearHouse = (x: number, z: number) => {
     for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) { const i = idx(x + dx, z + dz); if (s.used[i] === 1 && !s.field[i] && !s.town[i]) return true; }

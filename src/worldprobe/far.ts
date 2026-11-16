@@ -11,7 +11,7 @@ import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/bloc
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
-import { CHURCH_FROM, FALLOW, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, VILLAGE_MOST, VILLAGE_REACH, WALLED_FROM, courseOf } from './settle';
+import { FALLOW, FARMS, HAMLET, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -28,6 +28,8 @@ const STOREYS = 2, HOUSE_TALL = 4.5, STANDS_FROM = 2 / 3;
 const HOUSES = 0.8;
 /** a roof lies in the sun with one side only: seen as a flat top it is this much darker */
 const ROOF_LIGHT = 0.82;
+/** a village's houses lie scattered this far about its middle, in finest blocks: five and this much for every root of a person */
+const SCATTER = 2.5;
 /** a town is at most this many finest blocks from its middle to its wall (settle.ts) */
 const TOWN_MOST = 70;
 /** the streets of a town lie this many finest blocks apart */
@@ -65,12 +67,12 @@ const CANOPY_LIGHT = 0.8;
  * `sites` are the places on the ground; `ploughed` is the share of the ground under the plough at a ground point,
  * the fallow counted in (`laid`: of that very point, the fields laid out together; else of the land about it),
  * `courses` in how many courses the fields there are tilled (settle.ts `courseOf`), `vines` the share of the winter
- * fields that are vineyards, `woods` what grows on a column. Everything depends on the
+ * fields that are vineyards, `farm` the style of the farmhouses there, `woods` what grows on a column. Everything depends on the
  * world block alone, so that pieces laid side by side fit together; only what `own` holds at its middle is added to
  * `things`.
  */
 export function coverLand(g: Ground, step: number, things: Batch, sites: readonly Site[], o: {
-  ploughed(x: number, z: number): number; laid?: boolean; courses?(x: number, z: number): number; vines(x: number, z: number): number;
+  ploughed(x: number, z: number): number; laid?: boolean; courses?(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the farmhouses to a field (everywhere FARMS without it) */ farms?(x: number, z: number): number;
   woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean;
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1) };
@@ -110,13 +112,12 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     // the same great buildings as at the finest step (settle.ts)
     const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = s.style.house, r = seeded(1000 + s.id), roof = pick(style.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
     // as many blocks of houses as hold the place's people (settle.ts), as tall as a house is at this step
-    const people = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, need = s.size < WALLED_FROM ? Math.min(VILLAGE_MOST, people) : people, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
+    const need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
     if (s.size < WALLED_FROM) {
-      // a village is houses close about its church (settle.ts)
-      if ((s.size === 2 || need >= CHURCH_FROM) && step <= MODELS_UNTIL) landmark(s.style.church, r, cx, cz, roof);
-      const reach = (2 + VILLAGE_REACH * Math.sqrt(need)) / wider;
-      const houses = Math.max(1, Math.round(need / holds));
-      for (let k = houses, tries = 0; k > 0 && tries < 60 + 4 * houses; tries++) {
+      // a village is houses scattered about its middle, a small town has its church among them
+      if (s.size === 2 && step <= MODELS_UNTIL) landmark(s.style.church, r, cx, cz, roof);
+      const reach = (5 + SCATTER * Math.sqrt(need)) / wider;
+      for (let k = Math.max(1, Math.round(need / holds)), tries = 0; k > 0 && tries < 60; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, x = Math.round(cx + Math.cos(a) * q), z = Math.round(cz + Math.sin(a) * q);
         if (free(x, z)) { house(style, x, z, tall); k--; }
       }
@@ -140,7 +141,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   }
 
   // fields: the lots of the finest step, as large as they are. While a lot is wide enough to show it, it keeps a
-  // balk's width free on two sides and the crop stands a block high.
+  // balk's width free on two sides, the crop stands a block high and the farmhouses stand at the fields' corners.
   // A field that lies fallow is the grass with its stubble showing through, one under spring corn is green.
   const { w: lotW, d: lotD, fill } = lotAt(step), hedged = fill < 1, blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
   const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
@@ -151,7 +152,11 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const wz = z + oz, lz = Math.floor(wz / lotD), shift = lz & 1 ? Math.floor(lotW / 2) : 0, wx = x + ox + shift, lx = Math.floor(wx / lotW);
     const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
     if (hash2(lx, lz, 65 + step) > o.ploughed(mx, mz) / fill) continue;
-    if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) continue;
+    if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) {
+      // a hamlet at the end of the field: a block of houses at its corner and one a block on
+      if (wx - lx * lotW === lotW - 1 && (wz - lz * lotD) % 2 === 0 && wz - lz * lotD < 2 * HAMLET && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS) / HAMLET) house(o.farm(mx, mz), x, z, 1);
+      continue;
+    }
     const course = courseOf(courses(mx, mz), hash2(lx, lz, 166 + step));
     if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)));
