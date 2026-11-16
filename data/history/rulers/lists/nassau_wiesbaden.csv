@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Adolf I,1255,1298-07-02,1276-01-24,1298-07-02,day,House of Nassau,Q160101,County of Southern Nassau; crowned King of Germany 1292,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+2,Rupert V,1280,1304-11-02,1298-07-02,1304-11-02,day,House of Nassau,,co-ruler with his brothers Gerlach I and Waleran III (mother Imagina received a seat at Weilburg),https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+3,Gerlach I,1285,1361-01-07,1298-07-02,1344,year,House of Nassau,Q68712,co-ruler with his brothers; abdicated 1344,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+4,Waleran III,1294,1324-12-22,1298-07-02,1316,year,House of Nassau,,co-ruler with his brothers; abdicated 1316,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+5,Adolph I,1307,1370-01-17,1344,1370-01-17,year,House of Nassau,Q2045409,co-ruler of Southern Nassau with his brother John I until the 1355 division; then Count of Idstein,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+6,John I,1309,1371-09-20,1344,1355-11-25,year,House of Nassau,Q475891,co-ruler with Adolph I; received Weilburg in 1355,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+7,Gerlach II,1333,1386,1370-01-17,1386,year,House of Nassau,Q2293823,kept Idstein; brother Waleran IV inherited Wiesbaden,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+8,Waleran IV,,1393-11-07,1370-01-17,1393-11-07,day,House of Nassau,Q2028705,Wiesbaden; reunited Idstein after his brother's death,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+9,Adolph II,1386,1426-07-16,1393-11-07,1426-07-16,day,House of Nassau,Q2824843,,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+10,John II,1419,1480-05-09,1426-07-16,1480-05-09,day,House of Nassau,Q2518245,,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+11,Adolph III,1443-11-10,1511-07-06,1480-05-09,1511-07-06,day,House of Nassau,Q2339637,inherited Wiesbaden; reunited the county,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+12,Philip (I),1450,1509-06-16,1480-05-09,1509-06-16,day,House of Nassau,Q7183079,kept Idstein,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+13,Philip I the Elder,1492-04-26,1558-06-06,1511-07-06,1554,year,House of Nassau,Q2086837,abdicated for his children,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+14,Philip II the Younger,1516,1566-01-03,1554,1566-01-03,year,House of Nassau,Q2150055,"inherited Wiesbaden; reunited Idstein after Adolph IV's death, then divided it with Balthasar",https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+15,Adolph IV,1518,1556-01-05,1554,1556-01-05,year,House of Nassau,,kept Idstein,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+16,Balthasar,1520,1568-01-11,1564,1568-01-11,year,House of Nassau,Q926050,definitely reunited Idstein,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+17,John Louis I,1567-04-10,1596-06-10,1568-01-11,1596-06-10,day,House of Nassau,Q2021996,,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+18,John Philip,1595-03-26,1599-08-29,1596-06-20,1599-08-29,day,House of Nassau,,died as a minor,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+19,John Louis II,1596-05-21,1605-06-19,1599-08-29,1605-06-19,day,House of Nassau,Q2506102,died as a minor; Nassau-Idstein merged again in Nassau-Weilburg,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+20,Louis II,1565-08-09,1627-11-08,1605-06-19,1627-11-08,day,House of Nassau,Q559437,"Count of Weilburg, reunited all Southern Nassau (start = John Louis II's death)",https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+21,John,1603-11-24,1677-05-23,1627-11-08,1677-05-23,day,House of Nassau,Q325735,"received Idstein, and from 1651 Wiesbaden",https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314
+22,George August,1665-02-26,1721-10-26,1677-05-23,1721-10-26,day,House of Nassau,Q325089,county then principality; Nassau-Idstein was then annexed by Nassau-Saarbrücken (title ends),https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,1366123314

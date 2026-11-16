@@ -1,0 +1,20 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Dietrich VII [VIII],,,1275,1305,year,House of Wassenberg,Q832610,work list has Dietrich VI (numbering differs),https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+2,Otto I the Peaceable,,,1305,1310,year,House of Wassenberg,Q592021,,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+3,Dietrich VIII [IX] the Pious,,,1310,1347,year,House of Wassenberg,Q832933,,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+4,Johann,,,1347,1368,year,House of Wassenberg,Q76233,at his death the fief was inherited by his nephew Adolf III of the Marck,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+5,Adolf III of the Marck,,,1368,1394,year,House of La Marck,Q68851,Cleves and Mark in personal union from 1391,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+6,Adolph I,,,1394,1448,year,House of La Marck,Q362618,raised to duke 1417,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+7,John I,,,1448,1481,year,House of La Marck,Q570195,,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+8,John II the Pious,,,1481,1521,year,House of La Marck,Q570155,,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+9,John III the Peaceful,,,1521,1539,year,House of La Marck,Q704339,United Duchies of Jülich-Cleves-Berg,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+10,William the Rich,,,1539,1592,year,House of La Marck,Q62483,,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+11,John William,,,1592,1609,year,House of La Marck,Q67345,died without issue 1609; War of the Jülich Succession,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,1379340704
+12,John Sigismund,1572-11-08,1619-12-23,1614,1619-11-03,year,House of Hohenzollern,Q40746,"title held by the Elector of Brandenburg; Cleves to Brandenburg 1614 (Treaty of Xanten, Duchy of Cleves article)",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+13,George William I,1595-11-13,1640-12-01,1619-11-03,1640-12-01,day,House of Hohenzollern,Q166675,title held by the Elector of Brandenburg,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+14,Frederick William I the Great Elector,1620-02-16,1688-04-29,1640-12-01,1688-04-29,day,House of Hohenzollern,Q152727,title held by the Elector of Brandenburg,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+15,Frederick III,1657-07-11,1713-02-25,1688-04-29,1713-02-25,day,House of Hohenzollern,Q151826,title held by the Elector of Brandenburg (King in Prussia from 1701),https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+16,Frederick William I,1688-08-14,1740-05-31,1713-02-25,1740-05-31,day,House of Hohenzollern,Q105013,title held by the King of Prussia,https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+17,Frederick II,1712-01-24,1786-08-17,1740-05-31,1786-08-17,day,House of Hohenzollern,Q33550,title held by the King of Prussia,https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+18,Frederick William II,1744-09-25,1797-11-16,1786-08-17,1797-11-16,day,House of Hohenzollern,Q152229,title held by the King of Prussia,https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+19,Frederick William III,1770-08-03,1840-06-07,1797-11-16,1805,year,House of Hohenzollern,Q37134,title held by the King of Prussia; Cleves west of the Rhine ceded to France 1795 (Peace of Basel); rest occupied 1803-1805 and became part of the Grand Duchy of Berg (Duchy of Cleves article),https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783

@@ -204,3 +204,48 @@ mecklenburg,done,29,https://en.wikipedia.org/wiki/List_of_rulers_of_Mecklenburg#
 osnabrueck,done,31,https://en.wikipedia.org/wiki/Prince-Bishopric_of_Osnabr%C3%BCck#List_of_prince-bishops,
 berg,done,20,https://en.wikipedia.org/wiki/Duchy_of_Berg#Rulers_of_Berg,includes Grand Duchy of Berg 1806-1813; gap 1609-1614
 bishopric_bamberg,done,45,"https://en.wikipedia.org/wiki/List_of_bishops_and_archbishops_of_Bamberg#Prince-Bishops,_1245–1802",
+bishopric_constance,done,43,https://en.wikipedia.org/wiki/List_of_bishops_of_Constance,secularised 1803 (per Prince-Bishopric of Constance article); last bishop listed to 1817
+bergamo,collective,1,https://en.wikipedia.org/wiki/Bergamo,source names no governing body and no date for end of independence
+asti,collective,1,https://en.wikipedia.org/wiki/Asti,
+urbino,done,21,https://en.wikipedia.org/wiki/Duchy_of_Urbino#List_of_rulers_of_Urbino,1 Jan 1291 = papal control per source (work list has Guido da Montefeltro); early rows give reign start only
+albret,done,13,https://en.wikipedia.org/wiki/House_of_Albret#Lords_of_Albret,lords from House of Albret page; end 1589 from Duke of Albret page (title merged in the French crown); later duke creations omitted
+comminges,done,9,https://en.wikipedia.org/wiki/Counts_of_Comminges,crown domain 1443/1453-1462; title ends 1498 (reunited to French crown); later titular counts omitted
+oldenburg,done,32,https://en.wikipedia.org/wiki/County_of_Oldenburg#Rulers,Danish kings 1667-1773 added from the same table (rows for Schleswig) per history section; title continues as duchy 1774 and grand duchy 1815
+nassau_dillenburg,done,27,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,"Ottonian line: Northern Nassau, Dillenburg, then Nassau-Siegen (holding Dillenburg 1328-1606), Nassau-Dillenburg 1606-1739, Nassau-Dietz/Orange 1739-1815; widows' dower rows and Nassau-Schaumburg rows omitted"
+bishopric_basel,done,35,https://en.wikipedia.org/wiki/List_of_bishops_of_Basel,secular rule ended 1803 (Prince-Bishopric of Basel article); Friedrich von Blankenheim undated (?-1392-?)
+bishopric_brixen,done,45,https://en.wikipedia.org/wiki/Diocese_of_Bolzano-Brixen#Bishops_of_Brixen,secularised 1803 (Prince-Bishopric of Brixen article); last bishop listed to 1828
+ratibor,done,11,https://en.wikipedia.org/wiki/Duchy_of_Racib%C3%B3rz#Dukes,ends 1521 (merged with Opole); later Hohenlohe 'Dukes of Ratibor' from 1840 (Prussian title) not included
+connacht,partial,16,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,source list ends 1474 without saying how the kingship ended; gap 1350-1368
+beuthen,partial,23,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,"list ends 1532; text: Brandenburg-Ansbach enfeoffed 1526, Habsburg after 1620, Prussia 1742 (not listed); gap 1472-1498 (Corvinus/Zierotin pledge); work list Casimir matches"
+mordva,no_list,0,https://en.wikipedia.org/wiki/Mordvins,Mordvins article has no ruler list for 1291-1848
+saxe_lauenburg,partial,33,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,source list starts 1296 (partition of Saxony); 1291-1296 not covered; two parallel Ascanian lines 1303-1401 both included
+ulm,collective,1,https://en.wikipedia.org/wiki/Ulm,
+mantua,done,22,https://en.wikipedia.org/wiki/List_of_rulers_of_Mantua,"Bonacolsi rows have no person article (family link only), qid empty"
+cremona,partial,2,https://en.wikipedia.org/wiki/Cremona#Seignory_Lords,"source names no lord 1310-1322; Visconti signoria from 1322, then Duchy of Milan (not continued)"
+lucca,collective,1,https://en.wikipedia.org/wiki/Lucca,Republic of Lucca article not fetched; Lucca city article used
+perugia,collective,1,https://en.wikipedia.org/wiki/Perugia,
+caffa,no_list,0,https://en.wikipedia.org/wiki/Feodosia,Genoese colony governed by consuls of Genoa; Feodosia article has no consul list; Ottomans took the city June 1475
+cleves,done,19,https://en.wikipedia.org/wiki/Duchy_of_Cleves#Rulers_of_Cleves,counts/dukes to 1609 from Duchy of Cleves; Brandenburg/Prussian holders 1614-1805 from Brandenburg and Prussian monarch lists; ends 1805
+namur,done,22,https://en.wikipedia.org/wiki/List_of_counts_and_margraves_of_Namur,ends 1795 (annexation by France); gaps 1482-1493 and 1700-1714 in source
+paderborn,done,30,https://en.wikipedia.org/wiki/Prince-Bishopric_of_Paderborn#Prince-bishops,bishops to 1321 from Archdiocese of Paderborn; prince-bishops from Prince-Bishopric page; secularised 1802
+bishopric_passau,done,35,https://en.wikipedia.org/wiki/Diocese_of_Passau#Bishops_of_Passau,secularised 1803; last bishop listed to 1826
+pistoia,collective,1,https://en.wikipedia.org/wiki/Pistoia,source says Pistoia was a Florentine holding from 1254
+ragusa,collective,1,https://en.wikipedia.org/wiki/Republic_of_Ragusa#Government,no list of rectors on English Wikipedia (List of rectors page missing)
+geneva,done,28,https://en.wikipedia.org/wiki/County_of_Geneva#List_of_counts,"gap 1401-1424 (sale to Savoy contested); ends 1724, joined to the Duchy of Savoy"
+schwerin,done,5,https://en.wikipedia.org/wiki/County_of_Schwerin#List_of_counts,list ends 1358; county sold to Mecklenburg 1368 (no counts listed 1358-1368)
+mark,done,20,https://en.wikipedia.org/wiki/County_of_Mark#List_of_counts,gap 1609-1614 (Jülich succession); list ends 1807
+lippe,done,21,https://en.wikipedia.org/wiki/House_of_Lippe#Rulers_of_Lippe,"Detmold main line followed after the 1613 division; branch counties (Brake, Schwalenberg, Biesterfeld, Schaumburg) omitted"
+nassau_wiesbaden,done,22,https://en.wikipedia.org/wiki/County_of_Nassau#Rulers,"Walram line followed through Southern Nassau and Nassau-(Wiesbaden-)Idstein; ends 1721 when Idstein was annexed by Nassau-Saarbrücken (Wiesbaden later under Usingen, not followed)"
+katzenelnbogen,partial,14,https://en.wikipedia.org/wiki/County_of_Katzenelnbogen#Counts_of_Katzenelnbogen,"source gives only birth/death years, no reign dates; two parallel branches 1260-1402; ends 1479 (to Hesse)"
+bishopric_eichstatt,done,34,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,"list gives no secularisation date (prince-bishopric ended 1802/03, not stated in source); last row runs to 1818"
+bishopric_metz,done,23,https://en.wikipedia.org/wiki/List_of_bishops_of_Metz,prince-bishop period ends 1648 per section heading; gap 1553-1555 in source
+alessandria,collective,1,https://en.wikipedia.org/wiki/Alessandria,no end date of independence in source
+holstein_ploen,done,4,https://en.wikipedia.org/wiki/Holstein-Pl%C3%B6n,ends 1390 (reverted to Holstein-Rendsburg); list starts 1295 although county from 1290
+lubeck,collective,1,https://en.wikipedia.org/wiki/L%C3%BCbeck,
+sponheim_starkenburg,partial,33,https://en.wikipedia.org/wiki/List_of_counts_at_Sponheim,Upper (Hinder) County of Sponheim; condominium co-rulers 1437 on (Palatinate and Baden); end of the county (French annexation) not stated in source; Maximilian Joseph undated
+tenerife_menceyatos,partial,2,https://en.wikipedia.org/wiki/Guanches,"no list for 1291-1490s; Guanches article names only conquest-era menceys (Taoro line: Bencomo, Bentor); Tenerife conquered 1496; earlier grand mencey Tinerfe undated"
+gran_canaria_guanartemes,no_list,0,https://en.wikipedia.org/wiki/Guanches,no list of guanartemes on English Wikipedia (Guanches article mentions only Fernando Guanarteme at the conquest)
+kaidu,partial,3,https://en.wikipedia.org/wiki/Kaidu,no list page; rulers taken from Kaidu article text (Family section); Kaidu's start of rule not dated; ends 1310
+cologne,collective,1,https://en.wikipedia.org/wiki/Cologne,Free Imperial City of Cologne page not fetched (rate limit); Cologne article used
+bremen,collective,1,https://en.wikipedia.org/wiki/Bremen,
+frankfurt,collective,1,https://en.wikipedia.org/wiki/Free_City_of_Frankfurt,

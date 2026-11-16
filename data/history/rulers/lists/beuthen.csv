@@ -1,0 +1,24 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Casimir of Bytom,,,1281,1312,year,Piast (of Bytom),Q668238,source: 1281/1282-1312,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+2,Siemowit of Bytom,,,1312,1316,year,Piast (of Bytom),Q199059,,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+3,George of Bytom,,,1316,1327,year,Piast (of Bytom),Q479930,co-ruler with Władysław,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+4,Władysław of Bytom,,,1316,1352,year,Piast (of Bytom),Q479930,co-ruler with George until 1327,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+5,Bolesław of Bytom,,,1352,1355,year,Piast (of Bytom),Q327980,Bytom branch of the Piasts extinct at his death,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+6,Margareta of Sternberg,,,1355,1357,year,Piast (of Bytom),Q6760088,widow of Bolesław,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+7,Kazimierz I of Cieszyn,,,1357,1358,year,Cieszyn Piasts,Q689157,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; southern part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+8,Przemysław I Noszak,,,1358,1405,year,Cieszyn Piasts,Q690312,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; Cieszyn part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+9,"Bolesław I, Duke of Cieszyn",,,1405,1431,year,Cieszyn Piasts,Q571128,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; Cieszyn part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+10,Wacław I of Cieszyn,,,1431,1459,circa,Cieszyn Piasts,Q571461,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; source: 1431/1442-1452 and 1452-1459; sold his portion to Konrad IX in 1459,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+11,Bolesław II of Cieszyn,,,1452,1452,year,Cieszyn Piasts,Q571457,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; Cieszyn part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+12,Konrad I of Oleśnica,,,1357,1366,year,Oleśnica Piasts,Q557504,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; northern part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+13,Konrad II the Gray,,,1366,1403,year,Oleśnica Piasts,Q481400,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; Oleśnica part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+14,Konrad III the Old,,,1403,1412,year,Oleśnica Piasts,Q374340,duchy divided 1357-1459 between Cieszyn and Oleśnica Piasts; Oleśnica part,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+15,Konrad IV the Elder,,,1412,1416,circa,Oleśnica Piasts,Q320760,co-ruler with his brothers; source: 1412/1413-1416,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+16,Konrad V Kantner,,,1412,1427,circa,Oleśnica Piasts,Q557484,co-ruler with his brothers; source: 1412/1413-1427,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+17,Konrad VI the Dean,,,1416,1427,year,Oleśnica Piasts,Q480717,co-ruler with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+18,Konrad VII the White,,,1316,1450,year,Oleśnica Piasts,Q526114,co-ruler with his brothers; source gives 1316-1450 (start year looks wrong),https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+19,Konrad VIII the Younger,,,1416,1427,year,Oleśnica Piasts,Q442650,co-ruler with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+20,Konrad IX the Black,,,1450,1471,year,Oleśnica Piasts,Q442137,with Konrad X; reunited the duchy in 1459,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+21,Konrad X the White,,,1450,1452,year,Oleśnica Piasts,Q480588,co-ruler with Konrad IX,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+22,Konrad X the White,,,1471,1472,year,Oleśnica Piasts,Q480588,source: de facto 1492; in 1472 Matthias Corvinus annexed Bytom and pledged it to Jan of Zierotin,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894
+23,Jan II the Good,,,1498,1532,year,Opole Piasts,Q479934,Bytom merged back into the Duchy of Opole in 1498; list ends here,https://en.wikipedia.org/wiki/Duchy_of_Bytom#Dukes,1346574894

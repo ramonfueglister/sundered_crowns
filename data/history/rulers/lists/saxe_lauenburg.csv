@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Eric I,,,1296,1303,year,House of Ascania,Q68679,"joint rule with brothers John II and Albert III; source list starts 1296 (before that the undivided Saxon dukedom); work list has John II, Albert III and Eric I",https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+2,John II,,,1296,1303,year,House of Ascania,Q474236,joint rule with brothers Eric I and Albert III,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+3,Albert III,,,1296,1303,year,House of Ascania,Q2084639,"joint rule; then ruled in Saxe-Ratzeburg until 1308, died without issue, Eric I inherited his share",https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+4,John II,,1322,1303,1322,year,House of Ascania (Bergedorf-Mölln line),Q474236,ruled alone in Bergedorf-Mölln (parallel line),https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+5,Albrecht (Albert) IV,,1343,1322,1343,year,House of Ascania (Bergedorf-Mölln line),Q75477,parallel line,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+6,John III,,1356,1343,1356,year,House of Ascania (Bergedorf-Mölln line),Q86503,parallel line,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+7,Albrecht (Albert) V,,1370,1356,1370,year,House of Ascania (Bergedorf-Mölln line),Q91492,parallel line,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+8,Eric III,,1401,1370,1401,year,House of Ascania (Bergedorf-Mölln line),Q90959,parallel line; in 1401 the elder branch became extinct and Lauenburg rejoined the Ratzeburg-Lauenburg line,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+9,Eric I,,1360,1303,1338,year,House of Ascania (Ratzeburg-Lauenburg line),Q68679,Ratzeburg-Lauenburg line; resigned 1338,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+10,Eric II,,1368,1338,1368,year,House of Ascania (Ratzeburg-Lauenburg line),Q72219,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+11,Eric IV,1354,,1368,1412,year,House of Ascania (Ratzeburg-Lauenburg line),Q72255,ruled jointly with his sons Eric V and Bernard II since 1401; died 1411/1412,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+12,Eric V,,1436,1401,1436,year,House of Ascania (Ratzeburg-Lauenburg line),Q466948,"co-ruler with his father until 1412, brother John IV until 1414 and brother Bernard II from 1426",https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+13,John IV,,1414,1401,1414,year,House of Ascania (Ratzeburg-Lauenburg line),Q5132307,co-ruler with his father and brother Eric V,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+14,Bernard II,,1463,1426,1463,year,House of Ascania (Ratzeburg-Lauenburg line),Q480262,co-ruler with his brother Eric V from 1426,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+15,John V,1439,1507,1463,1507,year,House of Ascania,Q69242,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+16,Magnus I,1488,1543,1507,1543,year,House of Ascania,Q567378,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+17,Francis I,1510,1581,1543,1571,year,House of Ascania,Q553550,resigned in favour of his son Magnus II,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+18,Magnus II,1543,1603,1571,1574,year,House of Ascania,Q328024,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+19,Francis I,1510,1581,1574,1581,year,House of Ascania,Q553550,"reascended the throne, replacing Magnus II",https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+20,Magnus II,1543,1603,1581,1588,year,House of Ascania,Q328024,co-ruler with his brothers Maurice and Francis II; resigned 1588,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+21,Maurice,1551,1612,1581,1612,year,House of Ascania,Q328009,co-ruler with his brothers,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+22,Francis II,1547,1619,1581,1619,year,House of Ascania,Q479538,co-ruler with his brothers,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+23,Augustus,1577,1656,1619,1656,year,House of Ascania,Q479429,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+24,Julius Henry,1586,1665,1656,1665,year,House of Ascania,Q558253,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+25,Francis Erdmann,1629,1666,1665,1666,year,House of Ascania,Q249112,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+26,Julius Francis,1641,1689,1666,1689,year,House of Ascania,Q64737,,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+27,George William,,,1689,1705,year,House of Brunswick and Lunenburg–Celle (Welf),Q61574,Welf rule not legitimised until 1728,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+28,George I Louis,,,1705,1727,year,House of Hanover,Q130805,title held by the Elector of Hanover / King of Great Britain,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+29,George II Augustus,,,1727,1760,year,House of Hanover,Q131981,enfeoffed 1728; title held by the King of Great Britain,https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+30,George III,,,1760,1814,year,House of Hanover,Q127318,"de facto dispossessed 1803-05 and 1805-14 (French, Prussian, Westphalian occupation/annexation) but held the title",https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+31,Frederick I,,,1815,1839,year,House of Oldenburg,Q155002,title held by the king of Denmark (as Frederick VI),https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+32,Christian I,,,1839,1848,year,House of Oldenburg,Q157781,title held by the king of Denmark (as Christian VIII),https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
+33,Frederick II,,,1848,1863,year,House of Oldenburg,Q94941,title held by the king of Denmark (as Frederick VII),https://en.wikipedia.org/wiki/Saxe-Lauenburg#Dukes_of_Saxe-Lauenburg,1386004480
