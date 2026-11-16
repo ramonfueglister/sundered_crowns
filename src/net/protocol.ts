@@ -25,7 +25,7 @@ export interface PlaceDetail {
 export interface CityEconomyDetail {
   /** the day of the world the figures reach, and the year of the starting position */
   day: number; baseYear: number;
-  /** the model computes the city at this scale (0.01: one person of the model stands for a hundred) */
+  /** the model computes the city at this scale (0.01: the model's city has a hundredth of the real people) */
   scale: number;
   /** real GDP at the prices of the base year, and as an index with the starting position at 100 */
   realGdp: number; realGdpIndex: number;
