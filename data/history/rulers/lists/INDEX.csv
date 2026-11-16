@@ -164,3 +164,43 @@ hainaut,done,29,https://en.wikipedia.org/wiki/Count_of_Hainaut,title factually a
 baden,done,36,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden,"Baden proper with 1288 Eberstein/Pforzheim partitions and co-rulers; Hachberg, Sausenberg, Rodemachern and pre-1771 Durlach lines excluded; elector 1803, grand duchy 1806"
 arezzo,collective,1,https://en.wikipedia.org/wiki/Arezzo#History,
 saxe_wittenberg,done,27,https://en.wikipedia.org/wiki/List_of_rulers_of_Saxony,Saxe-Wittenberg > Electorate of Saxony (1356) > Wettin 1423 > Albertine 1547 > Kingdom 1806; 1291 joint Saxon rule noted on Albert II row
+teschen,done,26,https://en.wikipedia.org/wiki/Duchy_of_Teschen#Dukes_of_Teschen,1653-1722 filled from List of Bohemian monarchs (duchy reverted to the Bohemian crown)
+courland,partial,19,https://en.wikipedia.org/wiki/Bishopric_of_Courland#Bishops_of_Courland,gap 1292-1300 in source list; ends 1583/1585
+vaghela,done,2,https://en.wikipedia.org/wiki/Vaghela_dynasty#List_of_rulers,
+milan,done,33,https://en.wikipedia.org/wiki/Lordship_of_Milan#Lords_of_Milan,"lords from Lordship of Milan page to 1395, dukes from List of dukes of Milan to 1815; gaps 1447-50 (Ambrosian Republic), 1535-40, 1796-1814"
+rugen,done,14,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Princes_of_Rügen,1325-1478 Pomeranian dukes from the same page; list ends 1478
+brescia,collective,1,https://en.wikipedia.org/wiki/Brescia#History,commune; source gives no clear end date of independence
+piacenza,partial,1,https://en.wikipedia.org/wiki/Piacenza#History,no list; single lord from the Piacenza article prose
+bologna,collective,1,https://en.wikipedia.org/wiki/Bologna#History,free commune until papal rule 1327; signoria of Taddeo Pepoli 1334
+anhalt_bernburg,done,17,"https://en.wikipedia.org/wiki/Anhalt-Bernburg#Princes_of_Anhalt-Bernburg,_1252–1468","gap 1468-1603 (inherited by Anhalt-Dessau, re-created 1603); work list has Bernhard I"
+archbishopric_trier,done,28,https://en.wikipedia.org/wiki/Diocese_of_Trier#Archbishop-Electors_of_Trier,list ends with last archbishop-elector (resigned 1801)
+wurttemberg,done,28,https://en.wikipedia.org/wiki/List_of_monarchs_of_W%C3%BCrttemberg#Table_of_monarchs,"main line only (Urach/Stuttgart partition 1442-1482 both included); appanage lines (Montbéliard, Oels, Neuenstadt etc.) and dowager widows' seats excluded; 1519-1534 Austrian annexation gap"
+schweidnitz_jauer,done,6,https://en.wikipedia.org/wiki/Duke_of_Silesia,from the Silesian rulers table on Duke of Silesia; ends 1392 (annexed to Bohemia)
+saarbrucken,done,22,https://en.wikipedia.org/wiki/County_of_Nassau-Saarbr%C3%BCcken#Rulers,Counts of Saarbrücken to 1381 then Nassau-Saarbrücken to 1797
+saluzzo,done,13,https://en.wikipedia.org/wiki/List_of_marquises_of_Saluzzo#Marquises,
+leinster,done,20,"https://en.wikipedia.org/wiki/List_of_kings_of_Leinster#Caomhánach,_1171–1603_(Uí_Cheinnselaig)",Mac Murchada Caomhánach kings; list ends 1603
+murom,partial,3,https://en.wikipedia.org/wiki/Principality_of_Murom#List_of_princes,no holder known c.1240s-1340s; list resumes with Vasily Yaroslavich (?-1344x8); annexed by Moscow 1392
+florence,done,3,https://en.wikipedia.org/wiki/Republic_of_Florence,"collective row to 1532, then Medici dukes to 1569 (Grand Duchy of Tuscany)"
+verona,done,15,https://en.wikipedia.org/wiki/Lords_of_Verona,
+padua,done,11,https://en.wikipedia.org/wiki/Lords_of_Padua,"commune row to 1318, then Carrara lords to 1405 (Venetian annexation)"
+moscow,done,18,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,gap 1325-1332 in source; ends 1547
+armagnac,partial,15,https://en.wikipedia.org/wiki/Count_of_Armagnac#House_of_Armagnac,"gaps 1497-1509, 1525-1527, c.1572-1607; list ends 1751"
+zollern,done,26,https://en.wikipedia.org/wiki/House_of_Hohenzollern#Rulers_of_the_House_of_Hohenzollern,"County of (Hoh)enzollern to 1512/1576, then the Hechingen line (seat of the original county); Haigerloch/Sigmaringen lines and the Bergen op Zoom share excluded"
+ceuta,partial,3,https://en.wikipedia.org/wiki/Banu_al-Azafi,stub article only; no ruler known for 1291; rows from prose
+julich,done,17,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Rulers,gap 1609-1614 (succession dispute) in source
+loon,done,28,https://en.wikipedia.org/wiki/County_of_Loon#Counts_of_Loon,from 1366 title held by the prince-bishops of Liège (List of bishops and prince-bishops of Liège)
+henneberg,done,15,https://en.wikipedia.org/wiki/House_of_Henneberg#Counts_of_Henneberg,"Schleusingen line only (Coburg, Hartenberg, Aschach lines excluded); extinct 1583"
+bishopric_strasbourg,done,27,https://en.wikipedia.org/wiki/Archdiocese_of_Strasbourg#Bishops_and_archbishops,bishops list; ends 1801; secularisation not stated in list
+bishopric_augsburg,done,28,https://en.wikipedia.org/wiki/Prince-Bishopric_of_Augsburg#Prince-bishops,
+nuremberg_burgraviate,done,7,https://en.wikipedia.org/wiki/Burgraviate_of_Nuremberg#List_of_burgraves,list ends 1427 (burgrave rights sold to the city)
+rostock,partial,1,https://en.wikipedia.org/wiki/Lordship_of_Rostock,no list; single holder taken from prose of the article
+hamburg,collective,1,https://en.wikipedia.org/wiki/Hamburg#History,council (Rat)/Senate; still independent in 1848
+magdeburg,done,24,https://en.wikipedia.org/wiki/Archbishopric_of_Magdeburg#Archbishops_and_administrators,
+bishopric_wurzburg,done,40,"https://en.wikipedia.org/wiki/Prince-Bishopric_of_W%C3%BCrzburg#Prince-Bishops_of_Würzburg,_1168–1803",
+parma,collective,1,https://en.wikipedia.org/wiki/Parma#History,commune until Rolando de' Rossi signore by 1328
+perigord,done,16,https://en.wikipedia.org/wiki/Count_of_P%C3%A9rigord#List_of_Counts_of_Périgord,list ends 1604; work list 1291 ruler differs (source: Archambaud III to 1295)
+kammin,done,33,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Bishops,Lutheran superintendents 1558-1645 not included (administrators are the territorial holders)
+mecklenburg,done,29,https://en.wikipedia.org/wiki/List_of_rulers_of_Mecklenburg#Table_of_rulers,"main Mecklenburg line, from the 1520s the Schwerin line; Güstrow, Strelitz, Stargard, Werle and dowager/appanage seats excluded"
+osnabrueck,done,31,https://en.wikipedia.org/wiki/Prince-Bishopric_of_Osnabr%C3%BCck#List_of_prince-bishops,
+berg,done,20,https://en.wikipedia.org/wiki/Duchy_of_Berg#Rulers_of_Berg,includes Grand Duchy of Berg 1806-1813; gap 1609-1614
+bishopric_bamberg,done,45,"https://en.wikipedia.org/wiki/List_of_bishops_and_archbishops_of_Bamberg#Prince-Bishops,_1245–1802",

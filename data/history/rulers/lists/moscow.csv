@@ -1,0 +1,19 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Daniel,1261,1303-03-04,1283,1303-03-04,year,Rurik,Q295186,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+2,Yury,1281,1325-11-21,1303-03-04,1325-11-21,day,Rurik,Q297295,source gives no holder 1325-1332,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+3,Ivan I,1288,1340,1332,1340-03-31,year,Rurik,Q185316,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+4,Simeon,1316-11-07,1353-04-27,1340-03-31,1353-04-27,day,Rurik,Q297102,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+5,Ivan II,1326-03-30,1359-11-13,1353-04-27,1359-11-13,day,Rurik,Q210162,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+6,Dmitry Donskoy,1350-10-12,1389-05-19,1359-11-13,1389-05-19,day,Rurik,Q188995,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+7,Vasily I,1371-12-30,1425-02-27,1389-05-19,1425-02-27,day,Rurik,Q272156,first grand prince of Moscow in the list,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+8,Vasily II,1415-03-10,1462-03-27,1425-02-27,1434-03-30,day,Rurik,Q210359,deposed (Muscovite Civil War),https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+9,Yury of Zvenigorod,1374-11-26,1434-06-05,1434-03-31,1434-06-05,day,Rurik,Q2622520,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+10,Vasily the Squint,1421,1448,1434-06-05,1435,year,Rurik,Q1282755,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+11,Vasily II the Dark,1415-03-10,1462-03-27,1435,1446,year,Rurik,Q210359,restored,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+12,Dmitry Shemyaka,,1453-07-17,1446,1447-03-26,year,Rurik,Q1282778,,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+13,Vasily II the Dark,1415-03-10,1462-03-27,1447-02-27,1462-03-27,day,Rurik,Q210359,restored; co-ruler Ivan (III) since 1449,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+14,Ivan III the Great,1440-01-22,1505-11-06,1462-04-05,1505-11-06,day,Rurik,Q171185,co-ruler with his father since 1449,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+15,Ivan the Young,,,1471,1490,year,Rurik,Q2651990,co-ruler with Ivan III,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+16,Dmitry the Grandson,,,1498,1502,year,Rurik,Q433484,co-ruler with Ivan III,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+17,Vasily III,1479-03-25,1533-12-13,1505-11-06,1533-12-13,day,Rurik,Q49686,co-ruler with Ivan III since 1502,https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103
+18,Ivan IV the Terrible,1530-08-25,1584-03-28,1533-12-13,1547-01-26,day,Rurik,Q7996,list of grand princes ends 1547 (title replaced by Tsar of Russia; principality disestablished 1547),https://en.wikipedia.org/wiki/Grand_Prince_of_Moscow#List,1281259103

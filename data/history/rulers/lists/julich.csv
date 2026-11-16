@@ -1,0 +1,18 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Walram,,,1278,1297,year,,Q137951,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Counts_of_Jülich,1379340468
+2,Gerhard V,,,1297,1328,year,,Q196030,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Counts_of_Jülich,1379340468
+3,William V (Duke William I),,,1328,1361,year,,Q322852,"count; margrave from 1336, duke from 1356 as William I (listed twice in source: 1328-1356 and 1356-1361)",https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Counts_of_Jülich,1379340468
+4,William II,,,1362,1393,year,,Q322819,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+5,William III,,,1393,1402,year,,Q69607,also Duke of Guelders since 1377; union with Guelders 1393-1423,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+6,Reinald,,,1402,1423,year,,Q76097,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+7,Adolf,,,1423,1437,year,,Q87944,union with Berg from 1423,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+8,Gerhard,,,1437,1475,year,,Q90387,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+9,William IV,,,1475,1511,year,,Q86055,,https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#Dukes,1379340468
+10,John,,,1511,1539,year,House of La Marck,Q704339,from 1521 part of the United Duchies of Jülich-Cleves-Berg,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_La_Marck,_Dukes",1379340468
+11,William V,,,1539,1592,year,House of La Marck,Q62483,,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_La_Marck,_Dukes",1379340468
+12,John William I,,,1592,1609,year,House of La Marck,Q67345,source gives no holder 1609-1614,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_La_Marck,_Dukes",1379340468
+13,Wolfgang William,,,1614,1653,year,House of Wittelsbach,Q61214,,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_Wittelsbach,_Dukes",1379340468
+14,Philip William,,,1653,1679,year,House of Wittelsbach,Q60514,,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_Wittelsbach,_Dukes",1379340468
+15,John William II,,,1679,1716,year,House of Wittelsbach,Q64266,,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_Wittelsbach,_Dukes",1379340468
+16,Charles Philip,,,1716,1742,year,House of Wittelsbach,Q62594,,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_Wittelsbach,_Dukes",1379340468
+17,Charles Theodore,,,1742,1794,year,House of Wittelsbach,Q44961,1794 occupied and annexed by Revolutionary France,"https://en.wikipedia.org/wiki/Duchy_of_J%C3%BClich#House_of_Wittelsbach,_Dukes",1379340468
