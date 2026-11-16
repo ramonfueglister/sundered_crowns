@@ -108,7 +108,7 @@ Agents may add an id if truly missing; list it in the file's `new_ids` array.
 ```
 
 Rules:
-- Only states that actually existed on 1 Jan 1356 (or the 1492 file for 1492). Rulers must be the ones reigning on that date.
+- Only states that actually existed on 1 Jan of the file's year (1356, 1291). Rulers must be the ones reigning on that date.
 - Holdings must be inside the state's 1356 territory, on land, with correct coordinates (±0.1°).
 - A subject (vassal etc.) is its own state with `overlord` set; its holdings are its own lands only.
 - Avoid overlapping territory: anchors of different states should not be closer than ~15 km unless it is a free city enclave.

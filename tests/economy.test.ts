@@ -8,17 +8,17 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath, countedInPeopleOfTheTime } from '../tools/sim/load';
+import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
-import { cityAt, cityPlaces, citySeed, computeTo, foundEconomy, yearRow } from '../src/sim/systems/economy';
+import { cityAt, cityPlaces, citySeed, computeTo, yearRow } from '../src/sim/systems/economy';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION, type WorldState } from '../src/sim/state';
+import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
 import { World } from '../src/sim/world';
 import { WorldCore, configFromEnv } from '../server/world';
@@ -562,8 +562,8 @@ describe('the economies of the cities in the world', () => {
     loaded.economy.cities!.model[loaded.economy.cities!.model.length - 1] ^= 1;
     expect(hashState(loaded)).not.toBe(before);
   }, 30_000);
-  it('do not exist in a world that starts in another year', () => {
-    const { s, w } = newWorldState(1492, 1492);
+  it('do not exist in a world that starts in a year without its cities', () => {
+    const w = loadWorld(), s = createWorldState(w, { ...loadSetup(1356), year: 1400 }, 1356); // no file has the cities of 1400
     expect(s.economy.cities).toBeNull();
     days(s, w, 400);
     expect(s.economy.cities).toBeNull();
@@ -632,50 +632,6 @@ describe('the economies of the cities in the world', () => {
     days(s, w, 2);
     expect(s.economy.cities!.halted).toBe('2 January 1356: the day ended without a GDP (not a number)');
     expect(s.economy.cities!.model).toBe(before);
-  });
-
-  describe('in a world saved by an older build', () => {
-    it('are founded when a world from before the economy is loaded', () => {
-      const { s, w } = newWorldState();
-      const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.economy; old.v = 3;
-      const loaded = decodeState(encodeState(old));
-      expect(loaded.v).toBe(3); expect((loaded as any).economy).toBeUndefined();
-      expect(hashState(upgradeState(loaded, w))).toBe(hashState(s));
-    });
-    it("replace England's economy on the day the world has reached, each from its starting position", () => {
-      // the state of the yearly economy of England: a year, a model, 15 figures. Version 9 is the running world (the
-      // places of the whole globe, heads at 1:100, England's economy); versions 7 and 6 counted people of the time
-      // and take the steps to 9 first
-      const england = (v: number) => {
-        let old = decodeState(encodeState(run.s)) as any;
-        if (v < 9) old = countedInPeopleOfTheTime(old);
-        old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = v;
-        return upgradeState(decodeState(encodeState(old)), run.w, () => loadSetup(1356));
-      };
-      const loaded = england(9);
-      expect(STATE_VERSION).toBeGreaterThanOrEqual(10);
-      expect(loaded.v).toBe(STATE_VERSION);
-      expect(hashState(england(7))).toBe(hashState(loaded));
-      expect(hashState(england(6))).toBe(hashState(loaded));
-      expect((loaded.economy as any).england).toBeUndefined();
-      const e = loaded.economy.cities!;
-      expect(e.day).toBe(400); expect(e.years.length).toBe(0); expect(e.halted).toBe('');
-      for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0); // the days before are not computed
-      // the cities of a new world, but with the persons who work on this day: who has turned 15 since the start works too
-      const working = (x: WorldState) => x.person.cols.role.reduce((n, r) => n + (r ? 1 : 0), 0);
-      expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
-      expect(working(loaded)).toBeGreaterThan(working(newWorldState().s));
-      // it is the state of this world with the economies founded today
-      const founded = decodeState(encodeState(run.s)); foundEconomy(founded, run.w);
-      expect(hashState(loaded)).toBe(hashState(founded));
-      // from the next day on they compute: one period a day, and the upgraded world encodes as it runs
-      days(loaded, run.w, 5);
-      expect(loaded.economy.cities!.day).toBe(405);
-      expect(loaded.economy.cities!.figures[FIGURE.periods]).toBe(5);
-      const again = decodeState(encodeState(loaded));
-      days(again, run.w, 3); days(loaded, run.w, 3);
-      expect(hashState(again)).toBe(hashState(loaded));
-    }, 60_000);
   });
 });
 

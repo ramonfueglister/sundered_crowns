@@ -11,9 +11,10 @@ Who holds a place:
   4. the researched corrections of data/history/1291/borders.json (tools/map/borders.py) are applied last.
 People and density per place are those of 1356 raised to before the Black Death by region (data/history/1291/
 demography.json), and at least the people of the towns in the place (towns.py, which also writes the towns of the
-world graphic); culture, faith and minority are taken over from setup_1356.json (a gap).
+world graphic); culture, faith and minority are those of setup_1356.json, changed where 1291 differed by the sourced
+rules of data/history/1291/peoples.json (peoples.py).
 
-Run: python3 tools/history/1291/build.py   (after the region scripts; then python3 tools/map/palette.py 1291)
+Run: python3 tools/history/1291/build.py   (after the region scripts and peoples.py; then python3 tools/map/palette.py 1291)
 """
 import glob, heapq, json, math, os, sys
 import numpy as np
@@ -243,9 +244,15 @@ def main():
             if pop[i] and dens[i] is not None: dens[i] = round(dens[i] * in_towns[i] / pop[i], 2)
             pop[i] = in_towns[i]; lifted += 1
     print('places lifted to the people of their towns:', lifted)
+    # culture, faith and minority: those of 1356 where 1291 had the same, the rules of data/history/1291/peoples.json
+    # (tools/history/1291/peoples.py) where it did not
+    import peoples
+    culture, faith, minority = list(s56['culture']), list(s56['faith']), [None if m is None else list(m) for m in s56['minority']]
+    rules = json.load(open(os.path.join(ROOT, 'data', 'history', str(YEAR), 'peoples.json'), encoding='utf-8'))['rules']
+    peoples.apply(rules, fixed, [s['id'] for s in states], lon, lat, names, in_towns, culture, faith, minority)
     print('people (M): 1356', round(sum(p or 0 for p in s56['pop']) / 1e6, 1), '-> 1291', round(sum(p or 0 for p in pop) / 1e6, 1))
     setup = {'year': YEAR, 'states': out_states, 'wars': wars, 'owner': fixed,
-             'culture': s56['culture'], 'faith': s56['faith'], 'minority': s56['minority'], 'pop': pop, 'density': dens}
+             'culture': culture, 'faith': faith, 'minority': minority, 'pop': pop, 'density': dens}
     path = os.path.join(ROOT, 'public', 'data', f'setup_{YEAR}.json')
     json.dump(setup, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     size = np.bincount([o for o in fixed if o >= 0], minlength=len(states))
