@@ -155,3 +155,9 @@ before). New, not Apoleia's: `real/eyebrow1356.webp` (MakeHuman's `eyebrow001` w
 its tail faded; Apoleia's `eyebrow001.webp` is the same image with the covering times 2.5),
 `real/Eyelashes1356.webp` (Apoleia's `Eyelashes01.webp` blurred into a fringe), the pipeline's `brow_tail.py`
 and `lash_soft.py`, a test in `tests/faces.rs`. Roman bytes unchanged.
+
+Round 77: nothing in the builder. England's dress table shows the gene of the cheeks at 0.4 (`genes`) and gives
+women none of `cheek-bones-incr` at rest (`rest`): that target of MakeHuman's is a pad on the front of the
+cheek, which on a woman was a pouch in the outline of the cheek turned away from the viewer. New, not Apoleia's:
+`measure.rs` `far_cheek`, `CHEEK`, `STAGE_TURN`, a test in `tests/faces.rs`; `examples/face_measure.rs` prints
+the two numbers as measures 17 and 18. Roman bytes unchanged.

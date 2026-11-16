@@ -154,6 +154,72 @@ pub fn skin_front(h: &Head, pp: &[V3], x: f32, y: f32) -> Option<f32> {
     front
 }
 
+/// How far the stage turns a head of England away from the camera, in radians (src/portrait/profile.ts
+/// `ENGLAND_1356.turn`, there with the other sign; the dress table's `gaze` turns the eyes back by as much,
+/// which tests hold): the turn at which `far_cheek` is read.
+pub const STAGE_TURN: f32 = 0.24;
+
+/// What `far_cheek` measures (no survey read for it: the zeros).
+pub const CHEEK: [(&str, [f32; 2], [f32; 2]); 2] = [("the far cheek's pad", [0.0; 2], [0.0; 2]), ("the dent under that pad", [0.0; 2], [0.0; 2])];
+
+/// The outline of the cheek that is turned away from the viewer, as a picture shows a head turned by `turn`
+/// (radians): at every 2 mm of height, from 6 mm under the lower lid down to 12 mm over the menton, the skin that
+/// stands furthest towards the picture's edge (the skin's triangles cut by level planes; what lies less than
+/// 12 mm in front of the jaw's corners is left out: the ear). In millimetres: how much further out than at its
+/// top the outline stands at most (the cheek's pad), and how far it lies inside the tightest line round it from
+/// outside at most (the dent under the pad). A pad over a dent reads as a pouch in the cheek.
+pub fn far_cheek(h: &Head, pp: &[V3], turn: f32) -> [f32; 2] {
+    let (c, s) = (turn.cos(), turn.sin());
+    let back = JAW.iter().map(|&(a, b)| pp[a][2] + pp[b][2]).sum::<f32>() / (2 * JAW.len()) as f32 + 0.12;
+    let top = pp[LIDS[0].1][1];
+    // (height under the lid, how far out), mm
+    let mut line: Vec<[f32; 2]> = Vec::new();
+    let mut at = 6.0;
+    while at < (top - pp[MENTON][1]) * 100.0 - 12.0 {
+        let y = top - at / 100.0;
+        let mut out = f32::MIN;
+        for t in h.body_full().chunks_exact(3) {
+            for k in 0..3 {
+                let (p, q) = (pp[t[k] as usize], pp[t[(k + 1) % 3] as usize]);
+                if (p[1] - y) * (q[1] - y) < 0.0 {
+                    let f = (y - p[1]) / (q[1] - p[1]);
+                    let (x, z) = (p[0] + f * (q[0] - p[0]), p[2] + f * (q[2] - p[2]));
+                    if z > back && x < 0.0 {
+                        out = out.max(-(x * c - z * s) * 100.0);
+                    }
+                }
+            }
+        }
+        if out > f32::MIN {
+            line.push([at, out]);
+        }
+        at += 2.0;
+    }
+    if line.is_empty() {
+        return [0.0; 2];
+    }
+    // the tightest line round the outline from outside: the upper hull of its points
+    let mut hull: Vec<[f32; 2]> = Vec::new();
+    for &q in &line {
+        while hull.len() >= 2 {
+            let (a, b) = (hull[hull.len() - 2], hull[hull.len() - 1]);
+            if (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) >= 0.0 {
+                hull.pop();
+            } else {
+                break;
+            }
+        }
+        hull.push(q);
+    }
+    let mut dent = 0.0f32;
+    for w in hull.windows(2) {
+        for q in line.iter().filter(|q| q[0] > w[0][0] && q[0] < w[1][0]) {
+            dent = dent.max(w[0][1] + (w[1][1] - w[0][1]) * (q[0] - w[0][0]) / (w[1][0] - w[0][0]) - q[1]);
+        }
+    }
+    [line.iter().map(|q| q[1]).fold(f32::MIN, f32::max) - line[0][1], dent]
+}
+
 /// An eyeball's middle and radius (the eye at positive x for 0, the other for 1).
 pub fn ball(h: &Head, pp: &[V3], k: usize) -> (V3, f32) {
     let idx = &h.parts[["leye", "reye"][k]][0];

@@ -9,10 +9,11 @@
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
 //!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
 //!
-//! The survey, the lips' reference (the last three measures) and the landmarks: src/measure.rs.
+//! The survey, the lips' reference (three measures) and the landmarks: src/measure.rs. The last two measures are
+//! the outline of the cheek that is turned away from the viewer (`far_cheek`), for which no survey is read.
 
 use sc_portrait::dna::{founder, ORIGINS};
-use sc_portrait::measure::{face, lips, marks, CHEEKBONES, JAW, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, SUBNASALE};
+use sc_portrait::measure::{face, far_cheek, lips, marks, CHEEK, CHEEKBONES, JAW, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, STAGE_TURN, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
 use sc_portrait::{build, morph_test, real, Head, LODS};
 
@@ -91,7 +92,7 @@ fn main() {
     }
     let many = args.iter().any(|a| a == "--grown");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
-    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len()).map(|k| format!("{k:>6}")).collect::<String>());
+    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
         let r = draws(if many { 8000 } else { 7000 } + k as u64, 68);
         let genes = founder(o, |i| r[i as usize]).bytes();
@@ -104,6 +105,7 @@ fn main() {
         }
         let mut m = face(&head, &pp);
         m.extend(lips(&pp));
+        m.extend(far_cheek(&head, &pp, STAGE_TURN));
         if !many {
             println!("{:>7} {:>3} {:>4} {}", 940000 + k, if female { "f" } else { "m" }, age, m.iter().map(|x| format!("{x:6.1}")).collect::<String>());
         }
@@ -115,7 +117,7 @@ fn main() {
     println!("{:>2} {:<32} {:>34} {:>34} {:>14}", "", "", "men", "women", "women / men");
     let mean = |g: &Vec<Vec<f32>>, k: usize| g.iter().map(|m| m[k]).sum::<f32>() / g.len().max(1) as f32;
     let spread = |g: &Vec<Vec<f32>>, k: usize| (g.iter().map(|m| (m[k] - mean(g, k)).powi(2)).sum::<f32>() / g.len().max(1) as f32).sqrt();
-    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).enumerate() {
+    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).chain(&CHEEK).enumerate() {
         let (a, b) = (mean(&grown[0], k), mean(&grown[1], k));
         let cell = |x: f32, sd: f32, s: [f32; 2]| if s[0] > 0.0 { format!("{x:6.1} ({sd:4.1}) {:6.1} ({:4.1}) {:+5.1}", s[0], s[1], (x - s[0]) / s[1]) } else { format!("{x:6.1} ({sd:4.1}) {:>19}", "") };
         let ratio = if men[0] > 0.0 { format!("{:5.3} {:5.3}", b / a, women[0] / men[0]) } else { format!("{:5.3}", b / a) };

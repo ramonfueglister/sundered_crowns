@@ -266,6 +266,8 @@ pub struct DressSet {
     /// front is a dark bar over a pale crescent. A cupid's bow, a lower lip with some volume, and the women's
     /// lower jaw 1.4 mm forward: 3.0 mm. The red of the lips stays within the measure of real ones
     /// (src/measure.rs `LIPS`, tests/faces.rs).
+    /// Since round 77 the women have none of `cheek-bones-incr` (0.4 in round 65, 0.15 from round 69): it is a
+    /// pad on the front of the cheek and no cheekbone (see `genes`).
     /// A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
     /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
     /// face do, `Look::face`: on a child's small mouth they gave a pout).
@@ -360,6 +362,13 @@ pub struct DressSet {
     /// How strongly single genes of the face show (names of `look::GENES`; 1 = as Apoleia, which is every gene not
     /// named). Apoleia draws its genes large, so that a face is told apart at the size of a coin
     /// (`settings::FACE_GAIN`); in the real look the fullest lips are a pout.
+    /// The gene of the cheeks (round 77): its first target, MakeHuman's `cheek-bones-incr`, lifts no cheekbone
+    /// (the breadth at the cheekbones does not change with it) but lays a pad on the front of the cheek, 17 mm
+    /// under the cheekbone, and the gene hollows the cheek under it as well. On a woman's full cheek that was a
+    /// pouch in the outline of the cheek turned away from the viewer (`measure::far_cheek`: on 150 women a pad of
+    /// 1.4 mm over a dent of 1.7 mm in the mean, the pad 3.4 mm at most; at 0.4 and without the women's share of
+    /// it in `rest` 0.7 over 1.0 mm, 1.5 at most; men 0.9 to 0.6 mm). 0.4 is by eye, PLACEHOLDER: no measured
+    /// outline of real faces read.
     pub genes: &'static [(&'static str, f32)],
     pub sources: &'static [Source],
 }
@@ -419,8 +428,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("eyes/l-eye-scale-incr", 0.4, 0.5),
         ("eyes/r-eye-scale-incr", 0.4, 0.5),
         ("head/head-fat-decr", 0.0, 0.5),
-        ("cheek/l-cheek-bones-incr", 0.15, 0.5),
-        ("cheek/r-cheek-bones-incr", 0.15, 0.5),
+        ("cheek/l-cheek-bones-incr", 0.0, 0.5),
+        ("cheek/r-cheek-bones-incr", 0.0, 0.5),
         ("chin/chin-jaw-drop-decr", 0.6, 0.6),
         ("chin/chin-height-incr", 0.3, 0.15),
         ("nose/nose-scale-vert-incr", 0.4, 0.0),
@@ -457,7 +466,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("mouth/mouth-upperlip-volume-decr", 0.5, 0.5),
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
     ],
-    genes: &[("lips", 0.4)],
+    genes: &[("lips", 0.4), ("cheek", 0.4)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },

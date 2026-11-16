@@ -1045,6 +1045,53 @@ lifted and lies nearer the lid, the line may not span it); the lower lid has nex
 flat; the reference's eye is narrower. Beside the reference the thing that now differs most on a woman is not
 in the eyes: the far cheek's outline has a pouch at the height of the nose's tip.
 
+**The far cheek without a pouch (round 77).** Beside the reference, the outline of a woman's cheek that is
+turned away from the viewer had a pouch: it stood out at the height of the nose's tip and fell back in at the
+height of the mouth.
+The measure is `measure::far_cheek` (`portrait/src/measure.rs`): the head turned as the stage turns it (0.24
+radians), the skin's triangles cut by level planes every 2 mm from 6 mm under the lower lid to 12 mm over the
+chin's lowest point, and at each height the skin that stands furthest towards the picture's edge. Two numbers,
+in millimetres: the pad (how much further out than at its top the outline stands at most) and the dent under it
+(how far the outline lies inside the tightest line round it from outside). `cargo run --release --example
+face_measure` prints both as measures 17 and 18.
+
+| 150 of each sex, 24 to 50 | pad before | pad now | dent before | dent now |
+|---|---|---|---|---|
+| women, mean (spread) | 1.4 (0.8) | 0.7 (0.3) | 1.7 (1.2) | 1.0 (0.6) |
+| women, the tenth with most of it from | 2.7 | 1.2 | | |
+| women, most | 3.4 | 1.5 | | |
+| men, mean (spread) | 0.9 (0.7) | 0.6 (0.3) | 3.6 (1.2) | 3.5 (0.6) |
+
+On the eight grown women of the sample the pad went from 2.1 to 1.0 mm and the dent from 2.6 to 1.5 mm.
+
+How the cause was found. MakeHuman's young woman alone has a pad of 0.4 mm and a dent of 0.4 mm, with England's
+face at rest 0.9 and 0.9. The eight women's heads were then built again from the list of their targets, leaving
+out each target in turn: without `cheek-bones-incr` (they had 0.15 to 0.72 of it) the pad fell by 1.65 mm and
+the dent by 1.5 mm in the mean; next came `cheek-volume-decr` (dent 0.7; the age's sag and the gene of the
+cheeks), `chin-height-incr` (dent 0.5) and `head-diamond` (dent 0.2). `cheek-bones-incr` moves none of the
+landmarks at which the breadth at the cheekbones is measured: it lays a pad on the front of the cheek, whose
+furthest point lies 21 mm under the lower lid, 17 mm under the cheekbone. A woman's face at rest had 0.15 of it
+(round 65: 0.4, round 69: 0.15), and her genes added up to 0.7 (the gene of the cheeks most of it, which
+hollows the cheek under the pad as well).
+Changed in the dress table: the gene of the cheeks shows at 0.4 of Apoleia's strength (`genes`), and the women
+have none of `cheek-bones-incr` at rest (`rest`). 0.4 is by eye, PLACEHOLDER: no measured outline of real faces
+was read, and the reference's own outline cannot be read to the millimetre (1.3 mm to a pixel, the ear and an
+earring lie over it). The survey's measures are as they were (women's breadth at the cheekbones 135.1 mm, at
+the jaw's corners 109.6), the colours too (women's lit cheek L 61.1, the shaded one 28.0 darker, the
+reference's 27.7).
+Tried before the cause was known, on the women's face at rest, and dropped: `cheek-volume-decr` 0.5,
+`cheek-trans-up` 0.5 and `cheek-inner-decr` 0.5 (next to nothing), `head-fat-decr` 0.27 and 0.5 (a smaller pad
+over a deeper dent), `cheek-bones-decr` with `cheek-volume-incr` and `head-fat-incr` 0.4 (they fill the dent
+and widen the jaw of the sample's eight women from 112.5 to 115 to 121 mm; the survey's women have 110). A
+negative weight in `rest` does nothing.
+Test: `the_far_cheek_of_a_woman_of_england_has_no_pouch` (`portrait/tests/faces.rs`; its bounds lie between
+the two states).
+Pictures: `runde77_wange_vorher_nachher.png` (seven women, round 76 above round 77),
+`runde77_wange_neben_ck3_vorher_nachher.png`, `runde77_stichprobe.png`.
+Still open: the women of 68 keep a dent under the cheek (2.6 and 2.7 mm: the age's sag, whose weights are
+Apoleia's and unsourced); the men's outline has a dent of 3.5 mm that was not looked at (a lean head and
+cheekbones at rest; under a beard it does not show); what rounds 74 and 76 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

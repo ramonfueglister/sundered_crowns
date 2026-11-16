@@ -5,7 +5,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{face, lips, marks, LIPS, MEASURES, MENTON, SELLION};
+use sc_portrait::measure::{face, far_cheek, lips, marks, LIPS, MEASURES, MENTON, SELLION, STAGE_TURN};
 use sc_portrait::{build, morph_test, real, Head, Look, LODS};
 
 #[test]
@@ -59,6 +59,33 @@ fn the_red_of_the_lips_of_england_is_as_high_as_on_real_lips() {
             assert!(((ours - real[0]) / real[1]).abs() < 0.5, "{name}, {sex}: {ours} mm, the reference {} ({})", real[0], real[1]);
         }
     }
+}
+
+#[test]
+fn the_far_cheek_of_a_woman_of_england_has_no_pouch() {
+    // Until round 77 the cheek that is turned away from the viewer had a pouch in its outline on many women: a
+    // pad that stood out at the height of the nose's tip over a dent at the height of the mouth. It is MakeHuman's
+    // target `cheek-bones-incr`, which lifts no cheekbone (the breadth at the cheekbones stays as it is) but lays
+    // a pad on the front of the cheek, 17 mm under the cheekbone; a woman's face at rest had 0.15 of it and her
+    // genes gave up to 0.7 more. On these 150 women the pad stood out 1.4 mm in the mean (the tenth
+    // with most of it 2.7 mm and more, 3.4 mm at most) over a dent of 1.7 mm; now 0.7 mm (1.2 and more, 1.5 at
+    // most) over 1.0 mm. (No measured outline of real faces read for this: the bounds lie between the two states,
+    // PLACEHOLDER.)
+    let Some(h) = head() else { return };
+    // (the outline is read on a head turned as the stage turns it: the eyes are turned back by as much)
+    assert_eq!(STAGE_TURN, sc_portrait::dress::Dress::England1356.set().unwrap().gaze[0]);
+    let n = 150;
+    let mut all: Vec<[f32; 2]> = (0..n).map(|k| far_cheek(&h, &morph_test(&h, &person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3])), STAGE_TURN)).collect();
+    let mean = |i: usize| all.iter().map(|m| m[i]).sum::<f32>() / n as f32;
+    let (pad, dent) = (mean(0), mean(1));
+    all.sort_by(|a, b| b[0].total_cmp(&a[0]));
+    let tenth = all[n as usize / 10][0];
+    if std::env::var("SHOW").is_ok() {
+        println!("the far cheek of {n} women: pad {pad:.2} mm in the mean, {tenth:.2} mm where the tenth with most of it begins, {:.2} mm at most; dent {dent:.2} mm", all[0][0]);
+    }
+    assert!(pad < 1.05, "a woman's far cheek stands out as a pad: {pad} mm in the mean");
+    assert!(tenth < 1.9, "one woman in ten has a pad of {tenth} mm and more on her far cheek");
+    assert!(dent < 1.35, "under the pad of a woman's far cheek the outline has a dent: {dent} mm in the mean");
 }
 
 #[test]
