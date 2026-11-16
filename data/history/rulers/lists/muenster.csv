@@ -1,0 +1,36 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Everhard of Diest,,,1275,1301,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+2,Otto III of Rietberg,,,1301,1306,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+3,Conrad I of Berg,,,1306,1310,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+4,Ludwig II of Hesse,,,1310,1357,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+5,Adolf III of the March,,,1357,1363,year,,Q68851,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+6,John I of Virneburg,,,1363,1364,year,,Q829001,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+7,Florence of Wevelinghoven,,,1364,1378,year,,Q828968,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+8,Potho of Pothenstein,,,1379,1382-10-11,year,,Q537775,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+9,Heidenreich Wolf of Lüdinghausen,,,1382,1392-04-09,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+10,Otto IV of Hoya,,,1392-04-11,1424-10-03,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+11,Henry II of Moers,,,1424-10-31,1450-06-02,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+12,Walram of Moers,,,1450-07-15,1456-10-03,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+13,Eric I of Hoya,,,1450-07-15,1457-10-23,day,,,antibishop 1450–1457 (Roman Catholic Diocese of Münster list),https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+14,John of Pfalz-Simmern,,,1457-04-09,1466-02,month,,,disputed (Roman Catholic Diocese of Münster list),https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+15,Henry III of Schwarzburg,,,1466-12-07,1496-12-24,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+16,Conrad II of Rietberg,,,1497,1508-02-09,year,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+17,Eric II of Saxe-Lauenburg,,,1508-02-24,1522-10-20,day,,Q875397,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+18,Frederick III of Wied,,,1522-11-06,1532-03-22,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+19,Eric of Brunswick-Grubenhagen,,,1532-03-26,1532-05-14,day,,Q75547,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+20,Francis von Waldeck,,,1532-06-01,1553-07-15,day,,Q71448,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+21,William of Ketteler,,,1553-07-21,1557-12-02,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+22,Bernhard of Raesfeld,,,1557-12-04,1566-10-25,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+23,John II of Hoya,,,1566-10-28,1574-04-05,day,,Q1694775,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+24,"John William, Duke of Jülich-Cleves-Berg",,,1574-04-28,1585-05-08,day,,Q67345,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+25,Ernest of Bavaria,,,1585-05-18,1612-01-17,day,,Q62051,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+26,Ferdinand I of Bavaria,,,1612-04-12,1650-09-13,day,,Q63249,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+27,Bernhard von Galen,,,1650-11-04,1678-09-19,day,,Q76491,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+28,Ferdinand II of Fürstenberg,,,1678-11-01,1683-06-26,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+29,Maximilian Henry of Bavaria,,,1683-09-11,1688-06-03,day,,Q76722,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+30,Frederick Christian of Plettenberg,,,1688-07-29,1706-05-05,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+31,Francis Arnold von Wolff-Metternich zur Gracht,,,1706-08-30,1718-12-25,day,,,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+32,Clemens August I of Bavaria,,,1719-03-26,1761-02-06,day,,Q215086,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+33,Maximilian Frederick of Königsegg-Rothenfels,,,1761-04-07,1784-04-15,day,,Q69878,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+34,Archduke Maximilian Franz of Austria,,,1784-04-15,1801-07-27,day,,Q93362,,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913
+35,Archduke Anton Victor of Austria,,,1801-09-09,1803-02-25,day,,Q595088,prince-bishopric secularized 1803 (Reichsdeputationshauptschluss),https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,1366568913

@@ -99,3 +99,33 @@ osel_wiek,done,20,https://en.wikipedia.org/wiki/Bishopric_of_%C3%96sel%E2%80%93W
 samtskhe,done,17,https://en.wikipedia.org/wiki/Samtskhe-Saatabago,princes/atabegs to 1625 (infobox end 1625); gap 1535–1545 in list
 flanders,done,25,https://en.wikipedia.org/wiki/Count_of_Flanders,counts to 1797 (Campo Formio); title abolished de facto after French annexation 1795
 navarre,done,33,https://en.wikipedia.org/wiki/List_of_Navarrese_monarchs,"unified kingdom to 1512/1516, then Upper Navarre (Pamplona) line held by the kings of Spain to 1833; Lower Navarre line (Albret/Bourbon, titular French kings to 1830) not included"
+schleswig,done,39,https://en.wikipedia.org/wiki/Duke_of_Schleswig,"1460–1848 from List of rulers of Schleswig-Holstein (Danish kings plus Haderslev/Gottorp co-dukes); Gottorp dukes after 1713 held only Holstein, omitted"
+athens,done,26,https://en.wikipedia.org/wiki/Duchy_of_Athens,Briennist claimants included as rival claimants; Catalan vicars-general and Venetian podestàs (1395–1402) not included
+eshref,done,3,https://en.wikipedia.org/wiki/Eshrefids,
+brabant,done,25,https://en.wikipedia.org/wiki/Duke_of_Brabant,"title revived 1840 as Belgian heir title (dynastic, not listed)"
+east_frisia,collective,1,https://en.wikipedia.org/wiki/Frisian_freedom,infobox year_end 1498; County of East Frisia from 1464
+holland,done,18,https://en.wikipedia.org/wiki/Count_of_Holland,"after 1581 only titular Spanish counts, title renounced 1648"
+kano,done,36,https://en.wikipedia.org/wiki/List_of_rulers_of_Kano,"stops 1807 with fall of Bagauda dynasty; Fulani emirs of Kano (Suleimanu 1807–, Dabo dynasty) not included as a new title"
+karaman,done,21,https://en.wikipedia.org/wiki/Karamanids,
+guelders,partial,22,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,"list ends with Philip II in 1598; later holders (Spanish kings, Upper Guelders) not in source"
+ife,partial,5,https://en.wikipedia.org/wiki/List_of_rulers_of_Ife,aggregated list (tagged original research) gives dates only from 1770; holder of 1291 and order before 1770 cannot be dated
+brunswick_lueneburg,done,30,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,"title ended 1705, merged into Electorate of Brunswick-Lüneburg; source has gaps 1478–1486"
+bavaria_landshut,done,21,https://en.wikipedia.org/wiki/List_of_rulers_of_Bavaria,"Lower Bavaria 1290–1340, reunited Bavaria 1340–1349, Lower Bavaria 1349–1353, Bavaria-Landshut 1353–1503; ends 1503"
+lorraine,done,24,https://en.wikipedia.org/wiki/List_of_kings_and_dukes_of_Lorraine,"title ended 1766, incorporated into France"
+sagan_glogau,done,17,https://en.wikipedia.org/wiki/Duchy_of_G%C5%82og%C3%B3w,1331–1337 and 1346–1349 gaps (Bohemian seizure); from 1349 only half the duchy ducal
+ottoman,done,40,https://en.wikipedia.org/wiki/List_of_sultans_of_the_Ottoman_Empire,list starts with Osman I c. 1299 (no entry for 1291); interregnum claimants and Mustafa Çelebi/Cem included as rival claimants; rebel Savcı Bey omitted
+liegnitz,done,35,https://en.wikipedia.org/wiki/Duchy_of_Legnica,Duchy of Legnica list used (Henry V also Duke of Wrocław 1290–1296; Wrocław split off 1311 to Henry VI); ends 1675
+gorizia,done,12,https://en.wikipedia.org/wiki/County_of_Gorizia,"Gorizia line only (Tyrol branch omitted); ends 1500, annexed by Habsburgs"
+pervane,done,3,https://en.wikipedia.org/wiki/Perv%C3%A2neo%C4%9Flu,
+delhi,done,21,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi,gap 1413–1414 in source
+artuqid_mardin,done,10,https://en.wikipedia.org/wiki/Artuqids,
+majorca,done,22,https://en.wikipedia.org/wiki/Kingdom_of_Majorca,1344–1715 held by the kings of Aragon (List of Aragonese monarchs); pretenders James IV and Isabella included as rival claimants; kingdom abolished 1715
+utrecht,done,19,https://en.wikipedia.org/wiki/List_of_bishops_and_archbishops_of_Utrecht,"secular rule ended 1527 (sale to Charles V, per Prince-Bishopric of Utrecht article); source list continues as diocese"
+thuringia,partial,20,https://en.wikipedia.org/wiki/List_of_rulers_of_Thuringia,source list ends 1572 (John William); later Ernestine holders not listed
+archbishopric_mainz,done,40,https://en.wikipedia.org/wiki/List_of_bishops_and_archbishops_of_Mainz,gap 1337–1346 in source list; secularized 1803
+ferrara,done,29,https://en.wikipedia.org/wiki/Duke_of_Ferrara_and_of_Modena,"Ferrara lordship line (Este-only branches omitted); Ferrara lost 1598, list continues with dukes of Modena and Reggio; interruption 1796–1814"
+cyprus,done,12,https://en.wikipedia.org/wiki/Kingdom_of_Cyprus,ends 1489 (sold to Venice); later Savoy pretenders not included
+muenster,done,35,https://en.wikipedia.org/wiki/Prince-Bishopric_of_M%C3%BCnster,secularized 1803
+archbishopric_cologne,done,29,https://en.wikipedia.org/wiki/Archbishop_of_Cologne,secularized 1803
+hesse,done,16,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs,ends 1567 with partition among Philip I's sons; 1458–1500 Lower/Upper Hesse split included
+salzburg,done,35,https://en.wikipedia.org/wiki/Archdiocese_of_Salzburg,gap 1540–1554 in source list; secularized 1803

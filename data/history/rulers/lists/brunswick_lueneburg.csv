@@ -1,0 +1,31 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Otto II the Strict,1266,1330,1277,1330,year,Old House of Lüneburg,Q70791,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+2,Otto III,1296,1352,1330,1352,year,Old House of Lüneburg,Q70817,co-ruler with William,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+3,William,,1369,1330,1369,year,Old House of Lüneburg,Q70794,co-ruler with Otto III; his death precipitated the Lüneburg War of Succession,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+4,Magnus Torquatus,1328,1373,1369,1373,year,Old House of Brunswick,Q657947,Lüneburg War of Succession; rival of the Saxe-Wittenberg dukes,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+5,Albert of Saxe-Wittenberg,,1385,1370,1385,year,Dukes of Saxe-Wittenberg,Q477306,co-ruler with Wenceslas; War of Succession,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+6,Wenceslas of Saxe-Wittenberg,,1388,1370,1388,year,Dukes of Saxe-Wittenberg,Q598379,co-ruler with Albert,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+7,Henry I the Mild,,1416,1388,1416,year,Middle House of Brunswick,Q658714,co-ruler with Bernard I,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+8,Bernard I,,1434,1388,1409,year,Middle House of Lüneburg,Q689386,co-ruler with Henry I; first reign,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+9,William the Victorious,1392,1482,1416,1428,year,Middle House of Brunswick,Q667966,co-ruler with Henry II,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+10,Henry II the Peaceful,1411,1473,1416,1428,year,Middle House of Brunswick,Q571632,co-ruler with William,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+11,Bernard I,,1434,1428,1434,year,Middle House of Lüneburg,Q689386,second reign,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+12,Otto I the Lame,,1446,1434,1446,year,Middle House of Lüneburg,Q67181,co-ruler with Frederick the Pious,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+13,Frederick the Pious,,1478,1434,1457,year,Middle House of Lüneburg,Q64548,first reign,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+14,Bernard II,1432,1464,1457,1464,year,Middle House of Lüneburg,Q73514,co-ruler with Otto II,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+15,Otto II the Magnanimous,1439,1471,1457,1471,year,Middle House of Lüneburg,Q70820,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+16,Frederick the Pious,,1478,1472,1478,year,Middle House of Lüneburg,Q64548,second reign,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+17,Henry I of Lüneburg,1468,1532,1486,1520,year,Middle House of Lüneburg,Q64595,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+18,Otto I of Harburg,1495,1549,1520,1527,year,Middle House of Lüneburg,Q67167,co-ruler with Ernest,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+19,Ernest the Confessor,1497,1546,1520,1546,year,Middle House of Lüneburg,Q700441,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+20,Francis,1508,1549,1536,1539,year,Middle House of Lüneburg,Q70811,co-ruler with Ernest,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+21,Francis Otto,1530,1559,1555,1559,year,Middle House of Lüneburg,Q72936,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+22,Henry of Dannenberg,1533,1598,1559,1569,year,Middle House of Lüneburg,Q65819,co-ruler with William the Younger,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+23,William the Younger,1535,1592,1559,1592,year,Middle House of Lüneburg,Q62481,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+24,Ernest II,1564,1611,1592,1611,year,Middle House of Lüneburg,Q67190,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+25,Christian,1566,1633,1611,1633,year,Middle House of Lüneburg,Q529521,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+26,Augustus the Elder,1568,1636,1633,1636,year,Middle House of Lüneburg,Q67352,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+27,Frederick,1571,1648,1636,1648,year,Middle House of Lüneburg,Q68652,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+28,Christian Louis,,,1648-12-10,1665-03-15,day,New House of Lüneburg,Q69987,,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+29,John Frederick,1625,1679,1665,1665,year,New House of Lüneburg,Q62800,source gives only start 1665,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867
+30,George William,,,1665-03-15,1705-08-28,day,New House of Lüneburg,Q61574,1705 principality united with the Electorate of Brunswick-Lüneburg through inheritance,https://en.wikipedia.org/wiki/List_of_princes_of_L%C3%BCneburg,1374524867

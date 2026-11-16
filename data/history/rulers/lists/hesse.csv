@@ -1,0 +1,17 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Henry I the Child,1244-06-24,1308-12-21,1264,1308-12-21,year,House of Hesse,Q76968,,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+2,Otto I the Elder,1272,1328-01-17,1308-12-21,1328-01-17,day,House of Hesse,Q70868,"Upper Hesse until 1311, then all Hesse",https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+3,John,1278,1311-02-14,1308-12-21,1311-02-14,day,House of Hesse,Q91491,"co-ruler, Landgraviate of Lower Hesse",https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+4,Henry II the Iron,1299,1376-06-03,1328-01-17,1376-06-03,day,House of Hesse,Q76256,,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+5,Louis (I) the Younger,1305,1345-02-02,1328-01-17,1345-02-02,day,House of Hesse,Q103697,co-ruler (at Grebenstein),https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+6,Herman I the Elder,1305,1370,1328-01-17,1370,year,House of Hesse,,co-ruler (at Burg Nordeck),https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+7,Otto II the Younger,1322,,1340,1366-12,year,House of Hesse,Q102134,co-ruler with his father Henry II,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+8,Herman II the Scholar,1341,1413-05-24,1376,1413-05-24,year,House of Hesse,Q469389,in co-rulership since 1366,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+9,Louis I the Peaceful,1402-02-06,1458-01-17,1413-05-24,1458-01-17,day,House of Hesse,Q469397,at his death Hesse was divided again,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+10,Louis II the Frank,1438-09-07,1471-11-08,1458-01-17,1471-11-08,day,House of Hesse,Q320101,Lower Hesse,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+11,Henry III the Rich,1440-10-15,1483-01-13,1458-01-17,1483-01-13,day,House of Hesse,Q87986,Upper Hesse,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+12,Louis III the Younger,,1478-07-02,1474,1478-07-02,year,House of Hesse,,"co-ruler, Upper Hesse",https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+13,William I the Elder,1466-07-04,1515-02-08,1471-11-08,1493-06-03,day,House of Hesse,Q542751,Lower Hesse; abdicated 1493,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+14,William III the Younger,1471-09-08,1500-02-17,1483-01-13,1500-02-17,day,House of Hesse,Q96557,Upper Hesse,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+15,William II,1469-04-29,1509-07-11,1493-06-03,1509-07-11,day,House of Hesse,Q567043,Lower Hesse until 1500; reunited Hesse in 1500,https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741
+16,Philip I the Magnanimous,1504-11-13,1567-03-31,1509-07-11,1567-03-31,day,House of Hesse,Q169319,"after his death the landgraviate was divided into Cassel, Marburg, Rheinfels and Darmstadt (1567)",https://en.wikipedia.org/wiki/List_of_Hessian_monarchs#Table_of_rulers,1361575741

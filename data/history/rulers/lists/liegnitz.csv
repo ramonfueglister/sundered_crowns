@@ -1,0 +1,36 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Henry V,,,1278,1296,year,Silesian Piasts,Q571475,also Duke of Wrocław from 1290,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+2,Bolesław III the Generous,,,1296,1311,year,Silesian Piasts,Q646226,also Duke of Wrocław; jointly with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+3,Henry VI the Good,,,1296,1311,year,Silesian Piasts,Q664454,co-ruler; sole Duke of Wrocław from 1311,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+4,Władysław,,,1296,1312,year,Silesian Piasts,Q558459,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+5,Bolesław III the Generous,,,1312,1342,year,Silesian Piasts,Q646226,again (sole),https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+6,Wenceslaus I,,,1342,1345,year,Silesian Piasts,Q442091,jointly with Louis I,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+7,Louis I the Fair,,,1342,1346,year,Silesian Piasts,Q480192,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+8,Wenceslaus I,,,1346,1364,year,Silesian Piasts,Q442091,again,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+9,Rupert I,,,1364,1409,year,Silesian Piasts,Q367271,jointly with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+10,Wenceslaus II,,,1364,1413,year,Silesian Piasts,Q320582,co-ruler; also Bishop of Wrocław,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+11,Bolesław IV,,,1364,1394,year,Silesian Piasts,Q4939246,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+12,Henry VIII,,,1364,1398,year,Silesian Piasts,Q367640,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+13,Louis II,,,1413,1436,year,Silesian Piasts,Q442611,"line extinct, duchy seized by Bohemia",https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+14,Louis III of Oława,,,1436,1453,year,Silesian Piasts,Q442748,claimant after the line became extinct and the duchy was seized by Bohemia,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+15,John I of Lüben,,,1436,1453,year,Silesian Piasts,Q442595,claimant after the line became extinct and the duchy was seized by Bohemia,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+16,Henryk X of Chojnów,,,1436,1453,year,Silesian Piasts,Q822750,claimant after the line became extinct and the duchy was seized by Bohemia,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+17,Frederick I,,,1454,1488,year,Silesian Piasts,Q479920,also Duke of Brzeg from 1481,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+18,John II,,,1488,1495,year,Silesian Piasts,Q442604,jointly with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+19,Frederick II,,,1488,1547,year,Silesian Piasts,Q225524,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+20,George I,,,1488,1521,year,Silesian Piasts,Q373524,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+21,Frederick III,,,1547,1551,year,Silesian Piasts,Q479906,deposed,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+22,Henry XI,,,1551,1556,year,Silesian Piasts,Q879227,under regency of George II of Brzeg,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+23,Frederick III,,,1556,1559,year,Silesian Piasts,Q479906,"again, deposed",https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+24,Henry XI,,,1559,1576,year,Silesian Piasts,Q879227,again; deposed,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+25,Frederick IV,,,1571,1596,year,Silesian Piasts,Q325598,co-ruler with Henry XI,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+26,Henry XI,,,1580,1581,year,Silesian Piasts,Q879227,"restored again, deposed",https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+27,Joachim Frederick,,,1596,1602,year,Silesian Piasts,Q325583,Duke of Brzeg since 1595,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+28,John Christian,,,1602,1612,year,Silesian Piasts,Q479945,also Duke of Brzeg; jointly with George Rudolph,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+29,George Rudolph,,,1602,1653,year,Silesian Piasts,Q325784,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+30,George III,,,1653,1654,year,Silesian Piasts,Q558223,jointly with his brothers,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+31,Louis IV,,,1653,1663,year,Silesian Piasts,Q326605,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+32,Christian,,,1653,1654,year,Silesian Piasts,Q479718,co-ruler,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+33,George III,,,1663,1664,year,Silesian Piasts,Q558223,again,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+34,Christian,,,1663,1672,year,Silesian Piasts,Q479718,again,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
+35,George William,,,1672,1675,year,Silesian Piasts,Q542099,male line of Silesian Piasts extinct,https://en.wikipedia.org/wiki/Duchy_of_Legnica#Dukes_of_Legnica,1370582706
