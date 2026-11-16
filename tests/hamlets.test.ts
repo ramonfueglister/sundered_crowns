@@ -12,7 +12,8 @@ import { upgradeState } from '../src/sim/upgrade';
 import { hashState } from '../src/sim/snapshot';
 import { manyPlacesPeople } from '../src/net/people';
 import { placeDetail } from '../src/net/views';
-import { loadSetup } from '../tools/sim/load';
+import { loadSetup, dataPath } from '../tools/sim/load';
+import { readFileSync } from 'node:fs';
 
 const { s, w } = newWorldState(1291, 1291);
 const P = s.person.cols, F = s.family.cols;
@@ -77,6 +78,17 @@ describe('the people of a place', () => {
     expect(list.hamlet.length).toBe(list.id.length);
     list.id.forEach((id, k) => expect(list.hamlet[k]).toBe(F.hamlet[P.family[id]]));
     expect(placeDetail(s, w, paris)!.harvest!.farmers).toBe(list.hamlet.filter((h) => h === 1).length);
+  });
+});
+
+describe('the hamlets for the world graphic (public/data/hamlets_1291.json)', () => {
+  it('are those of a new world', () => {
+    const file = JSON.parse(readFileSync(dataPath('hamlets_1291.json'), 'utf8')) as { place: number[]; persons: number[]; hamlet_persons: number[]; hamlet_families: number[] };
+    const { people, farmers } = residents(s);
+    expect(file.place.length).toBe(people.filter((n) => n > 0).length);
+    file.place.forEach((p, k) => { expect(file.persons[k]).toBe(people[p]); expect(file.hamlet_persons[k]).toBe(farmers[p]); });
+    let families = 0; for (let f = 0; f < s.family.size; f++) families += F.hamlet[f];
+    expect(file.hamlet_families.reduce((a, b) => a + b, 0)).toBe(families);
   });
 });
 
