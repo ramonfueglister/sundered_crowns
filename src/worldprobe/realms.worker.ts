@@ -22,7 +22,7 @@ export interface RealmsDone {
 }
 /** a realm the page gave no colour for */
 const NO_COLOUR = 0x808080;
-interface Setup { states: { short: { de: string }; color: string }[]; owner: number[] }
+interface Setup { states: { short: { de: string }; color: string }[]; owner: (number | null)[] }
 
 const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
 const u16 = (raw: Uint8Array) => new Uint16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength));
@@ -40,7 +40,7 @@ const realmsOf = (name: string, base: string) => realms ??= (async (): Promise<R
   const [index, setup, packed] = await Promise.all([indexOf(name, base), get(`${base}data/setup_1356.json`).then((r) => r.json() as Promise<Setup>), get(`${base}map/ids.bin.gz`).then((r) => r.arrayBuffer())]);
   const raw = await maybeGunzip(new Uint8Array(packed));
   if (raw.byteLength !== index.mapW * index.mapH * 2) throw new Error(`ids.bin: expected ${index.mapW * index.mapH * 2} bytes, got ${raw.byteLength}`);
-  return { ids: u16(raw), w: index.mapW, h: index.mapH, round: index.worldW, rest: index.worldW ? await restOf(base, index.worldW) : undefined, owner: setup.owner, colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
+  return { ids: u16(raw), w: index.mapW, h: index.mapH, round: index.worldW, rest: index.worldW ? await restOf(base, index.worldW) : undefined, owner: Int16Array.from(setup.owner, (o) => (typeof o === 'number' && o >= 0 ? o : -1)), colors: setup.states.map((s) => rgb(Number.parseInt(s.color.slice(1), 16))), names: setup.states.map((s) => s.short.de) };
 })();
 
 self.onmessage = async (e: MessageEvent<RealmsJob>) => {

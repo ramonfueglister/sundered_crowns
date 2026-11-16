@@ -348,7 +348,7 @@ def main():
     print('yield of the new places: without data %d, median %.0f' % (int(np.isnan(ymean).sum()), float(np.nanmedian(ymean))))
     json.dump(land, open(os.path.join(DATA, 'land.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     setup['states'] = states
-    setup['owner'] = [None if v < 0 else int(v) for v in owner[1:L + 1]] + [int(v) for v in owner[L + 1:]]
+    setup['owner'] = [int(v) for v in owner[1:L + 1]] + [int(v) for v in owner[L + 1:]]  # -1: no realm, as the game map's own setup writes it
     setup['culture'] += culture; setup['faith'] += faith; setup['minority'] += minority
     setup['pop'] += [int(v) for v in pop]; setup['density'] += [round(float(v), 2) for v in dens]
     setup['wars'] += hist['wars']
