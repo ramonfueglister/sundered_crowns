@@ -70,6 +70,8 @@ const SLOPE = rgb(0x86983c);
 const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
+/** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
+const STRAY_TREES = 0.01, CLOSED = 0.88;
 /** km to a degree of longitude at the equator */
 const KM_PER_DEGREE = 111.32;
 /**
@@ -403,7 +405,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       if (!fits) continue;
       // palms line the water of the desert and of the hot steppe, and stand among the trees of the rain forest
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
-      if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : 0.04) + 0.7 * wooded(x, z)) continue;
+      if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
       const mine = own(Math.floor(x), Math.floor(z)), r = seeded(seedOf(tx, tz, 75)), sort = hash2(tx, tz, 74);
       if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5); }
       else if (here === Land.Savanna) { if (mine) acacia(things, x, g.h[i], z, r); occlude(g, x - 1.1, z - 1.1, x + 1.1, z + 1.1, g.h[i] + 2.4); }

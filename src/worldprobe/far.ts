@@ -56,7 +56,7 @@ const field = (crop: RGB, flat: boolean, side: RGB = WHEAT_SIDE) => mix(crop, si
 const WOODS_FAR = 0.5;
 const soft = (share: number, lot: number) => share + (lot - 0.5) * 2 * Math.min(share, 1 - share);
 /** a single tree stands on this share of the woods' ground at the step where a tree is one block; from the next step on a block is woods or not */
-const TREES = 0.85, CANOPY = 0.9, STRAY = 0.05;
+const TREES = 0.85, CANOPY = 0.9, STRAY = 0.01;
 /** how much of the chance from block to block is left where the woods and the fields are laid out */
 const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
