@@ -1,0 +1,158 @@
+{
+  "was": "Die Häuser Venedigs im Bauzustand 1356: jede Zahl mit Quelle oder als Annahme markiert. Grundlage der Tradition VENICE (traditions/venice.ts).",
+  "einheit": "Meter; der venezianische Fuss (piede) ist 0,3477 m (aus Dorigos Umrechnungen 8 piedi = 2,78 m).",
+  "geschoss": {
+    "erdgeschoss_m": [
+      2.78,
+      3.13
+    ],
+    "obergeschoss_m": [
+      2.43,
+      2.78
+    ],
+    "piano_nobile_m": [
+      4.87,
+      5.56,
+      6.26
+    ],
+    "quelle": "Dorigo, I rialzi del suolo urbano di Venezia (Insula Quaderni Q05-02): Decke des Erdgeschosses bei 8 oder 9 piedi im 13. Jh., Obergeschosse 7 oder 8 piedi, piani nobili 14, 16 oder 18 piedi.",
+    "im_spiel": "Kleine Häuser 3,0 m je Geschoss (FLOOR); Kaufmannshäuser Erdgeschoss 3,0 m und Hauptgeschoss 4,9 m (14 piedi)."
+  },
+  "geschosse": {
+    "klein": [
+      2,
+      3
+    ],
+    "kaufmannshaus": [
+      3,
+      3
+    ],
+    "quelle": "Calle del Paradiso: Laden unten, Wohnung darüber (Calabi, Insula Q16-02, S. 12; capturingvenice nach Goy); Polo-Haus S. Giovanni Grisostomo: zwei Geschosse über dem Erdgeschoss (Bortoletto, Insula Q16-03, S. 23). Dritte Geschosse auf Ca' da Mosto und Ca' Loredan sind später (imagesofvenice.com)."
+  },
+  "wand": {
+    "staerke_m": 0.52,
+    "quelle_staerke": "Squassina 2011, S. 12 f.: 1,5 Fuss üblich, früher 59 bis 69,5 cm.",
+    "ziegel_cm": [
+      6.5,
+      13,
+      26.5
+    ],
+    "quelle_ziegel": "Squassina 2011, S. 12: gotische Ziegel 6 bis 7 × 13 bis 13,5 × 26 bis 27 cm; Verordnungen 1327 und 1368.",
+    "altinelle_cm": [
+      5.2,
+      8,
+      17
+    ],
+    "quelle_altinelle": "Squassina 2011, S. 11: 12. bis 14./15. Jh.",
+    "oberflaeche": "Sichtziegel hell ockergelb (albasi) bis rot, darüber oft dünne Putze mit Quaderimitation (regalzier) oder farbige Fassungen; gotische Muster in Rot, Grün, Gelb.",
+    "quelle_oberflaeche": "Squassina 2011, S. 1 f., 5, 13; venice.jc-r.net/plaster-frescoes nach Schuller 2000.",
+    "farben_hex": {
+      "ziegel_hell": "#f4aa7a",
+      "ziegel_rot": "#e8886a",
+      "putz_hell": "#f8bc8a",
+      "putz_rosa": "#f4ac86",
+      "putz_rot": "#dc765e",
+      "istrischer_stein": "#f2dcb4"
+    },
+    "farben_bemerkung": "Annahme: Hexwerte nach den Beschreibungen (albasi = ockergelb; Putze ocker bis rosa; roter Putz = rosso veneziano), nicht gemessen; als Albedo so gesetzt, dass die Bühne der Nahsicht sie wie das Referenzbild beleuchtet (Gauntlet).",
+    "anteile": {
+      "ziegel_hell": 3,
+      "putz_hell": 2,
+      "putz_rosa": 1,
+      "ziegel_rot": 1,
+      "putz_rot": 1
+    },
+    "anteile_bemerkung": "Annahme nach Squassina 2011: meist Sichtziegel (albasi), oft dünne Putze; rote Fassungen seltener."
+  },
+  "oeffnungen": {
+    "fenster_m": [
+      0.75,
+      1.125
+    ],
+    "fenster_bemerkung": "Annahme nach Referenzklasse (2 × 3 Feinblöcke); gotischer Bogen aus Istrischem Stein belegt: ICCD-Karte 10198988 (Bogen 60 × 100 cm, 14. Jh.), Dreipass ICCD 11730613.",
+    "tuer_m": [
+      1.125,
+      1.875
+    ],
+    "tuer_bemerkung": "Annahme nach Referenzklasse (3 × 5 Feinblöcke).",
+    "bogenanteil": 0.2,
+    "bogen_bemerkung": "Annahme: ein Fünftel der kleinen Häuser mit Spitzbogenfenstern, die übrigen gerade mit Steinsturz; die Hauptgeschosse der Kaufmannshäuser immer mit Bogenreihe (ICCD-Karten zeigen Bogenfenster an besseren Häusern).",
+    "laeden_anteil": 0.55,
+    "laeden_bemerkung": "Annahme: gut die Hälfte der geraden Fenster mit offenen Holzläden; Fensterglas war vor 1400 selten, Fenster wurden mit Holzläden oder impannate (gewachstes Leinen) geschlossen (Wikipedia: Window, History; Murano-Glas für Fenster erst 15. Jh.).",
+    "waesche_anteil": 0.3,
+    "waesche_bemerkung": "Annahme ohne Quelle für 1356: Wäscheleine über dem Obergeschoss an knapp einem Drittel der Fronten, nach der Referenzklasse, die an den meisten Obergeschossen Tuch hängen hat."
+  },
+  "barbacani": {
+    "vorsprung_m": 0.75,
+    "ab_geschoss": 1,
+    "anteil": 0.3,
+    "quelle": "Calabi, Insula Q16-02, S. 12: Obergeschosse auf hölzernen Barbacani über den Läden (Calle del Paradiso ab 1407). Vorsprung und Anteil sind Annahmen (2 Feinblöcke).",
+    "holz_hex": "#7a5230",
+    "holz_bemerkung": "Annahme: dunkles Lärchenholz der Barbacani, Türen und Vordächer."
+  },
+  "dach": {
+    "neigung": [
+      0.08,
+      0.14
+    ],
+    "deckung": "coppi, rot",
+    "bemerkung": "Annahme: flache Satteldächer mit Mönch-Nonne-Ziegeln (coppi) wie in de' Barbaris Ansicht 1500; die Neigung (Anstieg über die halbe Breite) ist nicht belegt und nach dem Referenzbild der Nahsicht flach gesetzt.",
+    "altana_anteil": 0.15,
+    "altana_quelle": "Altane bezeugt um 1500 (Carpaccio, Bellini, de' Barbari); Anteil und Vorkommen 1356 Annahme.",
+    "farbe_hex": "#ff8a58",
+    "farbe_bemerkung": "Annahme: coppi in Rot, als Albedo auf der Höhe der Dachfarben des Look-Probe (ROOFS), damit die Bühne sie wie die Referenzbilder beleuchtet."
+  },
+  "kamin": {
+    "hoehe_m": [
+      2.0,
+      2.6
+    ],
+    "form": "schlanker Schaft mit umgekehrter Glocke oben",
+    "quelle": "Lupo 2016, ArcHistoR 5, S. 16 bis 19: hoch, schlank, Glocke gegen Funken, alla Carpaccio; Höhe über First Annahme (Serlio: furchterregend hoch; hier das untere Ende, damit die Kamine im Bild nicht als Spitzen stehen).",
+    "anteil_je_haus": 1.5,
+    "farbe_hex": "#ece4d4",
+    "farbe_bemerkung": "Annahme: verputzte Kaminschäfte (Lupo 2016 nennt Putz und Ziegel)."
+  },
+  "parzelle": {
+    "breite_m": [
+      4.5,
+      7.0
+    ],
+    "tiefe_m": [
+      8,
+      16
+    ],
+    "kaufmannshaus_breite_m": [
+      12,
+      20
+    ],
+    "bemerkung": "Annahme: Breiten kleiner Häuser 13 bis 20 piedi; Kaufmannshäuser nach Ca' da Mosto / Ca' Loredan (Fünferarkade plus Flügel, Ruskin Stones of Venice Bd. 10). Trincanato 1948 und Niero 2015 Kap. 3 bis 4 nicht lesbar."
+  },
+  "wasser": {
+    "wasserfront": "Loggia oder Wassertür am Kanal, Lager im Erdgeschoss",
+    "quelle": "imagesofvenice.com Palace Styles; Wikipedia Venetian Gothic: Portico am Kanal zum Laden der Waren, im 13. Jh. oft durch grosse Tore ersetzt."
+  },
+  "nicht_1356": [
+    "Obeliskkamine (ab 1560, Lupo)",
+    "Ca' d'Oro-Masswerk (1421 bis 1431)",
+    "dritte Geschosse der byzantinischen Paläste",
+    "Giebelgauben"
+  ],
+  "kai": {
+    "was": "Fondamenta und Riva: der gemauerte Uferweg mit Steinkante, Wassertreppen und Anlegepfählen",
+    "mauer": "Ziegel mit Abdeckung aus Istrischem Stein; hier als Steinquader 2 x 1 Feinblöcke im Läuferverband gezeichnet",
+    "mauer_hex": "#cdbba4",
+    "abdeckung_hex": "#e8dcc4",
+    "pflaster_hex": "#e2c296",
+    "treppe_alle_m": [
+      16,
+      28
+    ],
+    "poller_alle_m": [
+      2.4,
+      3.0
+    ],
+    "poller_hex": "#8a5a34",
+    "quelle": "Annahme: Fondamente mit Steinkante und Rive (Wassertreppen) in regelmässigen Abständen nach dem heutigen Bild der Stadt und Wikipedia (Fondamenta); Masse und Farben nicht gemessen, nach der Referenzklasse der Nahsicht gesetzt. Pali (Anlegepfähle) aus Holz: Annahme."
+  }
+}

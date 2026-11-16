@@ -1,10 +1,11 @@
-// Application shell: the map of the world with the HUD (banner, value bar, map tools) and the panel of the selected place.
+// Application shell: the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
 // For now everyone only watches the world (Ramon, 15 November 2026: "im moment nur zuschauer möglichkeit"): the game opens at
 // once as an observer and offers no sign-in. The server still knows players (src/online, server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
+import { WorldView } from './WorldView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
 import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
@@ -13,6 +14,8 @@ import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+/** the address option ?map=2d shows the earlier flat map in place of the world (kept until the world has all it showed) */
+const FLAT_MAP = new URLSearchParams(location.search).get('map') === '2d';
 
 
 export function App() {
@@ -22,7 +25,7 @@ export function App() {
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
     {st === 'refused' ? <Refused /> : <>
-      <MapView />
+      {FLAT_MAP ? <MapView /> : <WorldView />}
       <Music />
       <TopBar />
       <RealmBanner />

@@ -7,6 +7,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { type Batch, seeded } from '../../src/lookprobe/batch';
 import * as B from '../../src/buildings';
+import { glbToBatch } from '../../src/buildings/landmarks/glb';
+
+/** the monument files as the world's workers load them, read from public/ */
+const FILES = new Map(B.MONUMENT_FILES.map((f) => { const buf = readFileSync(`public/models/landmarks/${f}`); return [f, glbToBatch(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength))]; }));
 
 const FIXTURE = new URL('./golden.json', import.meta.url);
 
@@ -23,6 +27,12 @@ function cases(): Record<string, () => Batch> {
   for (const [name, style] of Object.entries(styles)) for (const seed of [1, 2, 3, 4]) for (const [w, d, floors] of [[4, 3, 1], [5, 4, 2], [12, 6, 3], [6, 9, 2]] as const) {
     out[`house/${name}/${seed}/${w}x${d}x${floors}`] = () => { const r = seeded(seed); return B.house(w, d, floors, r.pick(style.walls), r.pick(style.roofs), r, style); };
     out[`townHouse/${name}/${seed}/${w}x${d}x${floors}`] = () => { const r = seeded(seed + 100); return B.townHouse(w, d, floors, r.pick(style.walls), r.pick(style.roofs), r, style); };
+  }
+  for (const seed of [1, 2, 3, 4]) for (const [w, d, floors, o] of [[3, 5, 2, {}], [2.5, 4, 3, { shop: true, canal: 'nz' }], [7, 9, 3, { great: true, canal: 'nz' }], [3.5, 6, 2, { detail: 0 }]] as const) {
+    out[`fineHouse/VENICE/${seed}/${w}x${d}x${floors}/${JSON.stringify(o)}`] = () => B.fineHouse(w, d, floors, B.VENICE, seeded(seed), o);
+  }
+  for (const region of ['italy', 'germany']) for (const seed of [1, 2]) for (const detail of [0, 1] as const) {
+    out[`houseOf/${region}/${seed}/${detail}`] = () => { const r = seeded(seed), st = B.styleOf(region); return B.houseOf(st, 3, 5, 2, r.pick(st.house.walls), r.pick(st.house.roofs), r, detail).model; };
   }
   for (const seed of [1, 2, 3, 4, 5, 6]) {
     out[`tower/${seed}`] = () => B.tower(seeded(seed));
@@ -47,7 +57,7 @@ function cases(): Record<string, () => Batch> {
     out[`style/${region}/church/${seed}`] = () => st.church.build(seeded(seed));
     out[`style/${region}/great/${seed}`] = () => st.great.build(seeded(seed));
   }
-  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => { out[`monument/${id}/${k}`] = () => p.model.build(seeded(500)); });
+  for (const [id, parts] of Object.entries(B.MONUMENTS)) parts.forEach((p, k) => { out[`monument/${id}/${k}`] = () => B.modelOf(p, FILES).build(seeded(500)); });
   return out;
 }
 

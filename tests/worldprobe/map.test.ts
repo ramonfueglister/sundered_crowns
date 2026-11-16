@@ -1,14 +1,13 @@
 // Properties the map mode of the world must keep: whatever tiles have arrived, the picture is covered exactly once
-// (no hole, nothing drawn twice); the rules of the view change smoothly with its width; and the painted map shows
-// sea, land, snow and realms where they are.
+// (no hole, nothing drawn twice); the rules of the view change smoothly with its width; and the realms' map shows
+// the realms where they are.
 import { describe, expect, it } from 'vitest';
 import { seeded } from '../../src/lookprobe/batch';
-import { OPEN_WATER } from '../../src/lookprobe/terrain';
-import { Land } from '../../src/worldprobe/climate';
-import { paintLand, paintRealms, realmNames } from '../../src/worldprobe/paint';
+import { layoutNames, nameSvg } from '../../src/worldprobe/names';
+import { distance, mapColours, paintRealms, realmNames } from '../../src/worldprobe/paint';
 import { cover, keyOf } from '../../src/worldprobe/pyramid';
-import { type Region, Water, latOf } from '../../src/worldprobe/region';
-import { COARSEST, FARTHEST, NEAREST, creasesOf, elevationOf, paperLevelOf, paperOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
+import { VIEW } from '../../src/lookprobe/layout';
+import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
 
 describe('pyramid', () => {
   interface T { level: number; x: number; y: number }
@@ -49,12 +48,20 @@ describe('zoom', () => {
   for (let w = NEAREST; w <= FARTHEST; w *= 1.01) widths.push(w);
 
   it('changes every rule smoothly and in one direction as the view widens', () => {
-    const rules: [string, (w: number) => number, number][] = [['elevation', elevationOf, 1], ['paper', paperOf, 1], ['realms', realmsOf, 1], ['creases', creasesOf, -1]];
+    // the camera looks down the least on the diorama: more steeply from very near, and straight down from far away
+    const rules: [string, (w: number) => number, (w: number) => number][] = [['elevation', elevationOf, (w) => (w < 300 ? -1 : 1)], ['near', nearOf, () => -1], ['realms', realmsOf, () => 1], ['creases', creasesOf, () => -1]];
     for (const [name, rule, way] of rules) for (let k = 1; k < widths.length; k++) {
       const a = rule(widths[k - 1]), b = rule(widths[k]), span = name === 'elevation' ? 90 : 1;
-      expect((b - a) * way, `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
-      expect(Math.abs(b - a) / span, `${name} at ${widths[k]}`).toBeLessThan(0.03);
+      expect((b - a) * way(widths[k]), `${name} at ${widths[k]}`).toBeGreaterThanOrEqual(-1e-9);
+      // the realms come in over a short way, so that the world is not seen half under them for long: still without a leap
+      expect(Math.abs(b - a) / span, `${name} at ${widths[k]}`).toBeLessThan(name === 'realms' ? 0.12 : 0.03);
     }
+  });
+
+  it('is the near view where the houses are built from their fine blocks, and the diorama of the reference from a town on', () => {
+    expect(NEAREST).toBeLessThan(FINE_UNTIL);
+    for (const w of [NEAREST, FINE_UNTIL]) { expect(nearOf(w)).toBe(1); expect(elevationOf(w)).toBeCloseTo(30, 6); }
+    for (const w of [160, 190, 400]) { expect(nearOf(w)).toBe(0); expect(elevationOf(w)).toBeCloseTo(VIEW.elevation, 6); }
   });
 
   it('draws the land at the same height on both sides of a change of step', () => {
@@ -65,13 +72,25 @@ describe('zoom', () => {
     }
   });
 
-  it('has laid the world flat under a camera looking straight down before the map stands alone', () => {
-    const alone = widths.find((w) => paperOf(w) >= 1)!;
-    expect(elevationOf(alone)).toBeGreaterThan(89);
-    expect(reliefOf(alone, stepOf(alone))).toBeLessThan(0.1);
-    expect(creasesOf(widths.find((w) => paperOf(w) > 0)!)).toBeLessThan(0.01);
-    expect(stepOf(alone)).toBe(COARSEST);
-    expect(realmsOf(alone)).toBe(0);
+  it('goes through every step of the map, one at a time, and keeps a step for at least a doubling of the width', () => {
+    let from = widths[0];
+    for (let k = 1; k < widths.length; k++) {
+      const a = stepOf(widths[k - 1]), b = stepOf(widths[k]);
+      if (a === b) continue;
+      expect(b).toBe(a + 1);
+      if (a > 0) expect(widths[k] / from).toBeGreaterThan(1.9);
+      from = widths[k];
+    }
+    expect(stepOf(NEAREST)).toBe(0); expect(stepOf(FARTHEST)).toBe(COARSEST);
+  });
+
+  it('shows the realms only once the world lies flat under a camera looking straight down', () => {
+    const first = widths.find((w) => realmsOf(w) > 0)!;
+    expect(elevationOf(first)).toBeGreaterThan(89);
+    expect(reliefOf(first, stepOf(first))).toBeLessThan(0.1);
+    expect(creasesOf(first)).toBeLessThan(0.01);
+    expect(stepOf(first)).toBeGreaterThanOrEqual(COARSEST - 1);
+    expect(realmsOf(FARTHEST)).toBe(1);
   });
 
   it('paints the map at about a dot to a pixel', () => {
@@ -83,63 +102,91 @@ describe('zoom', () => {
   });
 });
 
-describe('painted map', () => {
-  const W = 16;
-  /** a tile at the latitude of the Alps: sea in the west, plains, and a mountain of 4000 m in the east */
-  const region = (): Region => {
-    const r: Region = { w: W, h: W, x0: 3000, y0: 1900, cells: 4, mapW: 6144, mapH: 5296, lon0: -100, lon1: 70, latN: 72, latS: -38, shaped: new Int16Array(W * W), drainage: new Uint8Array(W * W), water: new Uint8Array(W * W), forest: new Uint8Array(W * W), crops: new Uint8Array(W * W), rivers: [] };
-    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { r.water[y * W + x] = x < 4 ? Water.Sea : Water.Land; r.shaped[y * W + x] = x < 4 ? 0 : x > 11 ? 4000 : 200; }
-    return r;
-  };
-  const climate = { w: 3072, h: 2648, cells: new Uint8Array(3072 * 2648).fill(Land.Temperate | 128) };
-  const dot = (p: Uint8ClampedArray, x: number, y: number) => [...p.subarray((y * W + x) * 4, (y * W + x) * 4 + 4)];
-
-  it('paints sea, meadow and snow, and lets the realms colour the land alone', () => {
-    const p = paintLand(region(), climate, 0), sea = dot(p, 1, 8), meadow = dot(p, 8, 8), snow = dot(p, 14, 8);
-    const srgb = (v: number) => Math.round(255 * (1.055 * v ** (1 / 2.4) - 0.055));
-    expect(sea.slice(0, 3)).toEqual(OPEN_WATER.map(srgb));
-    expect(meadow[1]).toBeGreaterThan(meadow[2] + 40);
-    expect(Math.min(...snow.slice(0, 3))).toBeGreaterThan(230);
-    expect([sea[3], meadow[3], snow[3]]).toEqual([0, 255, 255]);
-  });
-
-  it('draws a river and a town where they are', () => {
-    const plain = paintLand(region(), climate, 0), r = region();
-    r.rivers = [{ name: 'test', rank: 1, pts: [[6.5, 0], [6.5, 16]] }];
-    const p = paintLand(r, climate, 0, [{ lon: -100 + ((r.x0 + 9.5 / r.cells) / r.mapW) * 170, lat: latOf(r, 13), size: 3 }]);
-    // the river is bluer than the meadow it crosses, and the meadow beside it is as it was
-    expect(dot(p, 6, 2)[2]).toBeGreaterThan(dot(plain, 6, 2)[2] + 40);
-    expect(dot(p, 9, 2)).toEqual(dot(plain, 9, 2));
-    expect(dot(p, 6, 2)[3]).toBeLessThan(100);
-    // the town is a mark in the red of its roofs
-    expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(plain, 9, 13)[0] + 40);
-    expect(dot(p, 9, 13)[0]).toBeGreaterThan(dot(p, 9, 13)[1] + 40);
-  });
-
+describe('realms', () => {
   // two realms of 8 × 16 map pixels side by side, a strip of land without a realm and water to the east
   const ids = new Uint16Array(32 * 16), owner = [0, 1, -1];
   for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) ids[y * 32 + x] = x < 8 ? 1 : x < 16 ? 2 : x < 24 ? 3 : 4;
-  const realms = { ids, w: 32, h: 16, owner, colors: [[1, 0, 0], [0, 0, 1]] as const };
+  const realms = { ids, w: 32, h: 16, owner, colors: [[0.6, 0.05, 0.03], [0.04, 0.08, 0.5]] as const };
+  /** the dot's colour (un-premultiplied, linear 0 … 1) and cover */
+  const look = (p: Uint8ClampedArray, x: number, y: number) => { const i = (y * 64 + x) * 4, a = p[i + 3]; return { r: p[i] / a, g: p[i + 1] / a, b: p[i + 2] / a, a: a / 255 }; };
 
-  it('colours the realms, draws the line between them and leaves the rest alone', () => {
-    const p = paintRealms(realms, 0, 0, 0, 64, 2), at = (x: number, y: number) => [...p.subarray((y * 64 + x) * 4, (y * 64 + x) * 4 + 4)];
-    const inside = at(6, 10), edge = at(15, 10), other = at(24, 10);
-    expect(inside[0]).toBeGreaterThan(150); expect(inside[2]).toBe(0); expect(inside[3]).toBeGreaterThan(150);
-    expect(edge[3]).toBeGreaterThan(inside[3]); expect(edge[0]).toBeLessThan(inside[0]);
-    expect(other[2]).toBeGreaterThan(150); expect(other[0]).toBe(0);
-    // the edge towards the land without a realm is a line too, the land itself and the water are clear
-    expect(at(31, 10)[3]).toBeGreaterThan(inside[3]);
-    expect(at(40, 10)).toEqual([0, 0, 0, 0]); expect(at(60, 10)).toEqual([0, 0, 0, 0]);
+  it('paints the realms in their hue, the land without a realm in sand and the water in slate blue, all covered', () => {
+    const p = paintRealms(realms, 0, 0, 0, 64, 2);
+    const red = look(p, 6, 10), blue = look(p, 24, 10), sand = look(p, 40, 10), sea = look(p, 60, 10);
+    expect(red.r).toBeGreaterThan(red.b * 1.5); expect(blue.b).toBeGreaterThan(blue.r * 1.2);
+    expect(sand.r).toBeGreaterThan(sand.b); expect(sea.b).toBeGreaterThan(sea.r);
+    for (const d of [red, blue, sand, sea]) expect(d.a).toBeGreaterThan(0.85);
     // colour times cover never exceeds the cover
     for (let i = 0; i < p.length; i += 4) expect(Math.max(p[i], p[i + 1], p[i + 2])).toBeLessThanOrEqual(p[i + 3]);
   });
 
-  it('finds where a realm lies and how', () => {
+  it('draws a darker line of the realm’s own colour at its border and keeps the realm flat inside, as the reference', () => {
+    const p = paintRealms(realms, 0, 0, 0, 64, 2), lum = (d: { r: number; g: number; b: number }) => 0.2126 * d.r + 0.7152 * d.g + 0.0722 * d.b;
+    const line = look(p, 15, 10), nearBorder = look(p, 13, 10), inside = look(p, 4, 10), inside2 = look(p, 6, 10);
+    expect(lum(line)).toBeLessThan(lum(inside) * 0.8);
+    expect(lum(nearBorder)).toBeLessThanOrEqual(lum(inside) * 1.001);
+    expect(Math.abs(lum(inside) - lum(inside2))).toBeLessThan(lum(inside) * 0.08);
+    // the line keeps the realm's hue
+    expect(line.r).toBeGreaterThan(line.b * 1.5);
+  });
+
+  it('lightens the shallow water along the coast', () => {
+    const p = paintRealms(realms, 0, 0, 0, 64, 2), coast = look(p, 50, 10), open = look(p, 63, 10);
+    expect(coast.g).toBeGreaterThan(open.g);
+  });
+
+  it('runs on unbroken from one tile into the next', () => {
+    // the same map painted as one tile of 64 dots and as two of 32: the dots must agree
+    const whole = paintRealms(realms, 0, 0, 0, 64, 2), west = paintRealms(realms, 0, 0, 0, 32, 2), east = paintRealms(realms, 0, 1, 0, 32, 2);
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 64; x++) {
+      const part = x < 32 ? west : east, i = (y * 32 + (x % 32)) * 4, j = (y * 64 + x) * 4;
+      for (let c = 0; c < 4; c++) expect(Math.abs(part[i + c] - whole[j + c]), `${x}, ${y}`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('picks a place out: lighter, inside a gold line, and nothing else changes', () => {
+    const plain = paintRealms(realms, 0, 0, 0, 64, 2), p = paintRealms({ ...realms, chosen: 1 }, 0, 0, 0, 64, 2);
+    const raw = (of: Uint8ClampedArray, x: number, y: number) => [...of.subarray((y * 64 + x) * 4, (y * 64 + x) * 4 + 4)];
+    expect(look(p, 24, 10).b).toBeGreaterThan(look(plain, 24, 10).b);
+    // on its rim, towards the other realm: the gold line
+    const rim = look(p, 16, 10);
+    expect(rim.r).toBeGreaterThan(rim.b);
+    for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (x < 15 || x >= 33) expect(raw(p, x, y), `${x}, ${y}`).toEqual(raw(plain, x, y));
+    for (let i = 0; i < p.length; i += 4) expect(Math.max(p[i], p[i + 1], p[i + 2])).toBeLessThanOrEqual(p[i + 3]);
+  });
+
+  it('keeps every realm in the muted band of the atlas', () => {
+    for (const c of [[1, 0, 0], [0, 0, 1], [1, 1, 0], [0.02, 0.02, 0.02], [1, 1, 1]] as const) {
+      const [inner] = mapColours(c), max = Math.max(...inner), min = Math.min(...inner);
+      expect(max).toBeLessThan(0.75); expect(min).toBeGreaterThan(0.005); expect(max - min).toBeLessThan(0.5);
+    }
+  });
+
+  it('finds where a realm lies and writes its name along it, on its land', () => {
     const names = realmNames(realms, 1), first = names.find((n) => n.realm === 0)!;
     expect(names.length).toBe(2);
-    expect(first.x).toBeCloseTo(4, 0); expect(first.y).toBeCloseTo(8, 0);
-    // 8 wide and 16 tall: it lies north to south
+    // 8 wide and 16 tall: it lies north to south, and the name runs down it inside the realm
     expect(Math.abs(Math.abs(first.turn) - Math.PI / 2)).toBeLessThan(0.01);
     expect(first.long).toBeGreaterThan(first.broad * 1.5);
+    for (const p of [first.from, first.bend, first.to, [first.x, first.y]]) { expect(p[0]).toBeGreaterThanOrEqual(0); expect(p[0]).toBeLessThanOrEqual(8); }
+    expect(Math.abs(first.to[1] - first.from[1])).toBeGreaterThan(6);
+    expect(first.size).toBeGreaterThan(1); expect(first.size).toBeLessThan(8);
+  });
+
+  it('measures exact distances', () => {
+    const n = 9, marked = new Uint8Array(n * n); marked[4 * n + 4] = 1;
+    const d = distance(marked, n);
+    expect(d[4 * n + 4]).toBe(0); expect(d[4 * n + 7]).toBe(9); expect(d[0]).toBe(32);
+  });
+});
+
+describe('names', () => {
+  const name = { realm: 0, x: 50, y: 50, long: 80, broad: 20, turn: 0, from: [10, 50] as [number, number], bend: [50, 50] as [number, number], to: [90, 50] as [number, number], size: 12, name: 'Ungarn' };
+  it('lays a name along its curve, as large as the land allows, and leaves out what is too small or outside', () => {
+    const [n] = layoutNames([name], 100, 400, 50, 200, 1, 1);
+    expect(n.size).toBeCloseTo(12, 0); expect(n.length).toBeGreaterThan(30); expect(n.d.startsWith('M10.0 50.0Q')).toBe(true);
+    expect(layoutNames([{ ...name, size: 3 }], 100, 400, 50, 200, 1, 1)).toEqual([]);
+    expect(layoutNames([name], 100, 100, 500, 500, 1, 1)).toEqual([]);
+    expect(nameSvg(n, 'a')).toContain('textPath');
   });
 });

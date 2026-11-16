@@ -15,6 +15,8 @@ Usage:
 --csi   raster that keeps cells of zero yield (file name without the trailing 0)
 --csi0  the variant that drops them; only compared against --csi, and exported as well if the two disagree on
         cells where both hold a value
+--world write the whole raster instead (pre1500_max_world.*), for the places beyond the game map
+        (tools/geo/merge_beyond.py); nothing else is written then
 """
 import argparse, datetime, gzip, hashlib, json, os, sys
 import numpy as np
@@ -157,8 +159,10 @@ def load(path):
                   'stats': stats}
 
 
-def window(g, shape):
+def window(g, shape, world=False):
     h, w = shape
+    if world:
+        return 0, h, 0, w
     c0 = max(0, int(np.floor((LON0 - g['x0']) / g['sx'])) - MARGIN)
     c1 = min(w, int(np.ceil((LON1 - g['x0']) / g['sx'])) + MARGIN)
     r0 = max(0, int(np.floor((g['y0'] - LAT_N) / g['sy'])) - MARGIN)
@@ -166,8 +170,8 @@ def window(g, shape):
     return r0, r1, c0, c1
 
 
-def export(a, g, meta, stem):
-    r0, r1, c0, c1 = window(g, a.shape)
+def export(a, g, meta, stem, world=False):
+    r0, r1, c0, c1 = window(g, a.shape, world)
     crop = np.ascontiguousarray(a[r0:r1, c0:c1]).astype('<f4')
     os.makedirs(OUT, exist_ok=True)
     bin_path = os.path.join(OUT, stem + '.f32.gz')
@@ -201,9 +205,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--csi', required=True)
     ap.add_argument('--csi0')
+    ap.add_argument('--world', action='store_true')
     args = ap.parse_args()
 
     a, g, meta = load(args.csi)
+    if args.world:
+        export(a, g, meta, 'pre1500_max_world', world=True)
+        return
     b = gb = metab = None
     if args.csi0:
         b, gb, metab = load(args.csi0)
