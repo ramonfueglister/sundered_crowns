@@ -1919,7 +1919,7 @@ other random numbers. They were measured again, not loosened:
   12 %), before in four of six (up to 15 %, section 9). Three of the four are computed. With the demand pull the
   twelve seeds have at most 2.1 % at the end of a year and nobody from the seventh year on.
 
-All tests: 990 of the game, 53 of the engine.
+All tests: 1012 of the game (with main of 16 November 2026, 17:30 UTC), 53 of the engine.
 
 ### In the game
 
