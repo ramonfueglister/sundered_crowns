@@ -6,8 +6,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
-import { ShaderLib } from 'three';
-import { portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
+import { FrontSide, ShaderLib } from 'three';
+import { drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 import { framing, keyPlaces } from '../src/portrait/stage';
@@ -115,6 +115,8 @@ describe('portraits', { timeout: 20_000 }, () => {
       // women from the age of the veil wear it, men never
       expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
       expect(worn.some(t => t.includes('/plait01.')), `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7 && p.age < 20);
+      // the plaits themselves are round strands, a surface of their own beside the cards of the head's hair (round 86)
+      expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(p.female && p.age >= 7 && p.age < 20);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
       // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
       // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
@@ -488,6 +490,38 @@ describe('portraits', { timeout: 20_000 }, () => {
     // Apoleia's eye is left as it is
     expect(APOLEIA.eye).toBeNull();
   });
+  it('a plait is solid hair: drawn with the solid surfaces, in the stage\'s shadows', () => {
+    // Until round 86 a plait was hair cards: blended over what is behind them, throwing no shadow, and with a
+    // sheen that every light gave them whether it reached them or not (a card knows of no shadow but its own
+    // direction's). The far plait hangs in the head's shadow and shone as the near one. Now a plait's strands
+    // are solid: one material, not blended, writing depth, one-sided; the stage lets what is not blended throw
+    // shadows; and the sheen is part of each light's own share, which three.js darkens by the light's shadow
+    const of = (tex: string, double: boolean) => ({ rough: 0.6, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const compiled = (s: ReturnType<typeof of>): string[] => surfaceMaterials(s, null, null, ENGLAND_1356).map(m => {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return shader.fragmentShader;
+    });
+    const rope = of('real/plait01_rope.webp', false), cards = of('real/plait01.webp', true);
+    expect([surfaceKind(rope), surfaceKind(cards)]).toEqual(['rope', 'cards']);
+    expect([drawOrder(rope), drawOrder(cards)]).toEqual([0, 2]);
+    const solid = surfaceMaterials(rope, null, null, ENGLAND_1356);
+    expect(solid.length).toBe(1);
+    expect([solid[0]!.transparent, solid[0]!.depthWrite, solid[0]!.colorWrite, solid[0]!.side]).toEqual([false, true, true, FrontSide]);
+    expect(surfaceMaterials(cards, null, null, ENGLAND_1356).map(m => m.transparent)).toEqual([false, true]);
+    // the same hair: roughness and glint as the cards have them
+    expect([solid[0]!.roughness, solid[0]!.anisotropy]).toEqual([ENGLAND_1356.cards.rough, ENGLAND_1356.cards.anisotropy]);
+    // the sheen's two bands: on a strand from the light as it arrives (`directLight`, shadowed), inside three.js'
+    // own function for one light; on cards from every light as it was sent, after all lights are done
+    const [strand] = compiled(rope), card = compiled(cards)[1]!;
+    expect(strand).toContain('directLight.color * hairLit * hairStrand');
+    expect(strand).not.toContain('directionalLights[ i ].color * hairLit');
+    expect(strand.indexOf('directLight.color * hairLit')).toBeLessThan(strand.indexOf('void main()'));
+    expect(card).toContain('directionalLights[ i ].color * hairLit * hairStrand');
+    expect(card).not.toContain('directLight.color * hairLit');
+    // a profile without a sheen of strands (Apoleia's) draws a plait's strands as plain solid hair
+    expect(surfaceMaterials(rope, null, null, APOLEIA)[0]!.transparent).toBe(false);
+  });
   it('a scar takes the tone of the skin it lies in', () => {
     // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a
     // tone of its own it would take more of the profile's tint than the skin round it and show as a patch
@@ -532,7 +566,9 @@ describe('portraits', { timeout: 20_000 }, () => {
     // children, 6.2 % on the reference's woman; now 8.3 %)
     expect(facing(rim, 0.5)).toBeLessThan(-0.05);
     // and it stays above the head: hair that hangs straight down shines most under a level light (a girl's far
-    // plait 11.5 L lighter with the rim level, a pale lilac)
+    // plait 11.5 L lighter with the rim level, a pale lilac, while a plait was cards), and level it lays more
+    // grey beside the nose on everyone but small children (round 86: the young 10.7 %, women 9.1 %, men 11.1 %,
+    // with the rim as it is 6.5, 6.2, 7.9)
     const over = degrees(Math.atan2(rim.from[1], Math.hypot(rim.from[0], rim.from[2])));
     expect(over).toBeGreaterThan(15);
     expect(over).toBeLessThan(35);

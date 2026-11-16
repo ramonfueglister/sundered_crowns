@@ -1632,8 +1632,9 @@ plait: the picture-left plait of six girls, L; the reference's woman has 29.8 be
 | 40 round, 24 up, fill 0.28: now | 8.3 %, 6.2 % | 20.6, 26.5 | 23.5, 32.6 | 17.3 |
 
 The rim level with the head is the best light for the faces (the gloss then lies on what faces level and to
-the side: the nose's flank, the far cheek's turn), and it was the first choice of this round. It is not kept
-because of the hair: a girl's far plait turned a pale lilac, 11.5 L lighter (`runde85_versuch_waagrecht_zopf.png`).
+the side: the nose's flank, the far cheek's turn), and it was the first choice of this round. (Round 86
+corrects this: read on all four groups the level rim is better for small children only, see there.) It is not
+kept because of the hair: a girl's far plait turned a pale lilac, 11.5 L lighter (`runde85_versuch_waagrecht_zopf.png`).
 The stage draws hair's sheen after Kajiya & Kay: brightest where the strand stands square to the direction
 half way between light and eye. The strands are taken as running down along the head; with the rim 24 degrees
 up that direction rises 27 degrees, with the rim level it is level, and every strand that hangs straight down
@@ -1674,7 +1675,98 @@ where the reference's woman has 6.2). The shade beside the nose is 2 L darker on
 than in round 84 (the reference's woman 9 L lighter than ours), the men's far cheek 2 L darker (the emperor's
 12 L lighter than theirs). The nose's back is 0.8 L under the lit cheek on the women (the reference's 8.2
 over it), the women's eye 2.5 L lighter than hers, the chin a further 1 L too light. The rim level with the
-head waits for plaits drawn as ropes and for a sheen that knows the head's shadow. PLACEHOLDER, both values.
+head waits for plaits drawn as ropes and for a sheen that knows the head's shadow (round 86 has both, tried
+the level rim again and left it). PLACEHOLDER, both values.
+
+**A plait is three round strands, plaited (round 86).** A girl's plaits were hair cards: three rows of flat
+cards, 1.9 cm broad, along three ways that swing 1.3 cm to either side every 3.4 cm, the whole 4.5 cm broad.
+The cards' image is strands with gaps and thin tips, so the outline was ragged; the ways crossed the plait's
+middle 67 degrees off its length, a zigzag; and every card was lit as a face turned away from the head (the
+builder gives a card the direction from the head's middle to it), a plait as one flat thing. Round 85 found
+the last of these the hard way: a light from the far side lit the far plait's whole breadth.
+
+Now each plait is three closed tubes (`tools/portrait/pipeline/styles.py`, style `plait`; written by
+`hairlib.py` `write_tubes` as `plait01_rope.txt`). A strand's middle swings 8.5 mm to either side and 3 mm in
+depth at twice the rate, the three a third of a swing apart: that is a plait, each strand over one and under
+the next. A strand is 12.4 mm broad and 9 mm thick, eight corners round, a ring every 2.5 mm; one swing is
+6.2 cm long, so that the strands cross the middle 41 degrees off the plait's length. The plait is 2.9 cm
+broad and 1.5 cm thick on the base body (PLACEHOLDER by eye: no plait was measured; the hairstyle itself is
+unsourced as before). Below the ear the three begin as one bundle and part over 3 cm; the last seventh runs
+out thin; both ends are round. The plait's line down the gown is the table the cards had, now smoothed until
+it turns over a hand's breadth (it turned 40 degrees within 2 cm below the ear). 12 384 triangles, 6 240
+points; the 54 cards of the plaits (2 592 triangles) are gone from `plait01.txt`, the 320 cards of the head's
+hair in it are the same rows, number for number.
+
+The strands' image (`plait01_rope.webp`, 128 by 512, 9 kB; `rope_tex.py`) is the middle of one tile of the
+cards' image, where the hairs lie close, its gaps filled with the hairs beside them at 0.7 of their
+brightness: a strand of a plait is solid. It is laid across a strand from flank to flank over the front and
+back again behind, and down the strand and up again: no seam.
+
+In the builder (`portrait/src/real_look.rs` `mh_rope`) a corner's direction is read from the strand's own
+triangles, so that a strand is lit round. And a plait goes with the body in one piece: each ring is bound to
+the triangle of the body nearest to the plait's middle there, jaw, neck, shoulder and chest in turn, and on a
+body other than the base's these go different ways. The plait had kinks where it passed from one to the next,
+its middle line turning up to 74 degrees within 2 cm (40 girls of 8 to 19), and on girls of 8 strands folded
+over themselves. Now a plait keeps the form it was laid in, and the way the body carries its points is evened
+out along it (300 rounds of each point taking the mean of its neighbours, about 3.5 cm up and down): 23
+degrees at most, the turn it is laid with below the ear. The last folds, eight triangles near the end of a
+girl of 8's plaits, went with a flatter swing in depth (3 mm, first 4) and an end that runs out smoothly.
+
+On the stage a strand is a kind of its own (`materials.ts`, `rope`, known by its image's name): hair with the
+cards' roughness, glint and sheen of strands, but solid. It is drawn with the solid surfaces, hides what is
+behind it, throws shadows (on neck and gown) and takes them. The cards' sheen and their light round the
+shaded side come from every light whether it reaches the card or not; a strand's are part of each light's own
+share, which three.js darkens by that light's shadow. So the far plait now hangs in the head's shadow:
+
+| the picture-left plait of six girls | L | chroma |
+|---|---|---|
+| round 85 (cards) | 17.3 | 7.9 |
+| strands, sheen as the cards have it (read on the first laying of the strands) | 17.5 | 14.2 |
+| strands in the stage's shadows: now | 12.2 | 10.2 |
+
+Twice the chroma at the same lightness: the cards' plait was grey with the rim's sheen. In the shadow it is 5 L
+darker, as the far cheek beside it is.
+
+A side effect on the head's hair. A hair file's offsets from the skin are scaled by how much smaller the part
+of the body is that the file is bound to. With the plaits in it that part was head and chest together, now it
+is the head: for a girl of 8 the scale across was 0.66 and is 0.83, at 13 0.83 and 0.91, at 17 0.94 and 1.04.
+The hair of the head stands off by the head's own measure, as every other hairstyle's does. A girl of 8 is 3 %
+broader across the hair, the older ones 1 % or less.
+
+The rim light level with the head, tried again (round 85 gave it up for the plait). The plait is no longer in
+the way: 12.6 against 12.2 L (as cards 26.7 against 17.3). But read on all four groups it is not the better
+light for the faces. Grey share beside the nose (round 85's measure):
+
+| rim light | children of 2 to 8 | girls of 13, 17, boys of 8, 13 | grown women | grown men |
+|---|---|---|---|---|
+| now: 40 degrees round, 24 up | 8.3 % | 6.5 % | 6.2 % | 7.9 % |
+| 49 round, level | 6.4 % | 10.7 % | 9.1 % | 11.1 % |
+
+Round 85 called the level rim "the best light for the faces" on the children's share and the men's shade
+beside the nose; it had not read the young and the men's share. The rim stays where it is. The other level
+lights of round 85's table (35 degrees round: 1.8 % and 4.0 %) take the gloss off and leave the shade beside
+the nose 5 L darker on the women; that is a choice about faces alone now and stays open.
+
+Everything else is as it was: of the sample's 35 portraits the 29 without plaits are the same pixel for
+pixel, the Roman ones too. Building a girl's portrait takes 30 ms where a woman's or a boy's takes 21 (on this
+machine, not as WebAssembly): the evening out.
+
+Tests: `portrait/tests/plait.rs`: `a_girl_of_england_wears_plaits_of_round_strands` (a surface of its own,
+one-sided; closed: its faces add up to nothing; it encloses 0.1 to 0.4 litres; of its surface more than 15 %
+faces each of the four ways, to and from the head, front and back), `a_plait_hangs_without_a_kink_on_every_body`
+(40 girls: no triangle folded over, the middle line turns less than 30 degrees within 2 cm). `tests/portrait.test.ts`,
+'a plait is solid hair: drawn with the solid surfaces, in the stage's shadows' (one material, not blended,
+writing depth; the sheen inside three.js' function for one light, on cards after all lights), and girls of 7
+to 19 wear the strands' surface.
+Pictures: `runde86_zopf_vorher_nachher.png` (six girls, round 85 above), `runde86_zopf_gross.png`,
+`runde86_zopf_von_der_seite.png` (from both sides and from the front), `runde86_licht_waagrecht_nochmals.png`
+(now above, the rim level below), `runde86_stichprobe.png`.
+Still open: the hair of the head is cards as before, with a ragged tuft at the ear where it is gathered, and
+its sheen knows no shadow (above a plait in the head's shadow the hair still shines). On dark hair the far
+plait is nearly black in that shadow (L 4.4). The sheen takes a strand as running down along the head, not
+along its own way across the plait. The strands pass through each other a little where they cross (they are
+laid by a formula, not pressed together). The plait's end is a plain round tip without band or tuft; it lies
+below the picture's edge. All measures PLACEHOLDER.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

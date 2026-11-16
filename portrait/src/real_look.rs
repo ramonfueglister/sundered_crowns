@@ -525,22 +525,18 @@ pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dy
     Some(s)
 }
 
-/// Real look: as mh_hair, the colour per vertex; `hang`: normals outward from the
-/// vertical axis below hc (for beards hanging below the chin); `thin`: the share
-/// of cards left out (thinning hair in age) and the seed that picks them.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn mh_hair2(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, color: &dyn Fn(V3) -> Rgb, hang: bool, thin: (f32, u32)) -> Option<Surface> {
-    let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
-    let mut it = rows.iter();
-    let head = it.next()?;
+/// The points of a file bound to the body (`tools/portrait/pipeline/hairlib.py` `write_bound`: the number of points
+/// and of triangles, then a row for each point: three corners of the base body, their weights, the way from there),
+/// where the morphed body carries them, and the rows of its triangles (three points, three places in the image).
+fn bound<'a>(rows: &'a [Vec<f32>], pp: &[V3], base: &[V3]) -> Option<(Vec<V3>, &'a [Vec<f32>])> {
+    let head = rows.first()?;
     let (nv, nt) = (*head.first()? as usize, *head.get(1)? as usize);
-    if nt == 0 {
+    if nt == 0 || rows.len() < 1 + nv + nt {
         return None;
     }
     let mut refs = Vec::with_capacity(nv);
     let (mut lo0, mut hi0, mut lo1, mut hi1) = ([f32::MAX; 3], [f32::MIN; 3], [f32::MAX; 3], [f32::MIN; 3]);
-    for _ in 0..nv {
-        let f = it.next()?;
+    for f in &rows[1..=nv] {
         let r = [f[0] as usize, f[1] as usize, f[2] as usize];
         for &i in &r {
             for a in 0..3 {
@@ -553,16 +549,89 @@ pub(crate) fn mh_hair2(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, co
         refs.push((r, [f[3], f[4], f[5]], [f[6], f[7], f[8]]));
     }
     let sc: V3 = std::array::from_fn(|a| (hi1[a] - lo1[a]) / (hi0[a] - lo0[a]).max(1e-4));
-    let vs: Vec<V3> = refs
+    let vs = refs
         .iter()
         .map(|(r, w, o)| std::array::from_fn(|a| w[0] * pp[r[0]][a] + w[1] * pp[r[1]][a] + w[2] * pp[r[2]][a] + o[a] * sc[a]))
         .collect();
+    Some((vs, &rows[1 + nv..1 + nv + nt]))
+}
+
+/// How often a plait's way with the body is evened out along it (`mh_rope`): after n rounds over a tube of
+/// eight corners a place is the mean of about the square root of 2 n / 3 rings up and down, here 14 rings of
+/// 2.5 mm, 3.5 cm.
+const ROPE_EVEN: usize = 300;
+
+/// Real look: the round strands of a plait (`name`.txt, `hairlib.py` `write_tubes`), each a closed tube. The
+/// surface's direction is read from the triangles (a corner's is the mean of its triangles', weighted by their
+/// size), so that a strand is lit round: bright on the side towards a light, dark on the other. As hair cards
+/// (`mh_hair2`: the direction from the head's centre to the card) a plait was one face turned away from the head.
+///
+/// Each ring of a strand is bound to the one triangle of the body nearest to it: jaw, neck, shoulder, chest in
+/// turn down a plait. On another body than the base's these go different ways, and where the plait passes from
+/// one to the next it had a kink (its middle line turned up to 74 degrees within 2 cm on girls of 8 to 19; as it
+/// is laid, 23). So a plait keeps the form it was laid in, and goes with the body by the way its points are
+/// carried, evened out along the plait (tests/plait.rs).
+pub(crate) fn mh_rope(dir: &str, name: &str, pp: &[V3], base: &[V3], hair: Rgb) -> Option<Surface> {
+    let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
+    let (carried, tris) = bound(&rows, pp, base)?;
+    let (laid, _) = bound(&rows, base, base)?;
+    let idx: Vec<u32> = tris.iter().flat_map(|f| [f[0] as u32, f[1] as u32, f[2] as u32]).collect();
+    // points laid at one place are one point (a strand begins and ends as a point, its ring's corners all there):
+    // they go one way and stay together
+    let mut first = std::collections::HashMap::new();
+    let one: Vec<usize> = laid.iter().enumerate().map(|(i, p)| *first.entry(p.map(f32::to_bits)).or_insert(i)).collect();
+    let mut beside: Vec<Vec<u32>> = vec![Vec::new(); laid.len()];
+    for f in idx.chunks_exact(3) {
+        for (a, b) in [(f[0], f[1]), (f[1], f[2]), (f[2], f[0])] {
+            let (a, b) = (one[a as usize], one[b as usize]);
+            if a != b {
+                if !beside[a].contains(&(b as u32)) {
+                    beside[a].push(b as u32);
+                }
+                if !beside[b].contains(&(a as u32)) {
+                    beside[b].push(a as u32);
+                }
+            }
+        }
+    }
+    let mut way: Vec<V3> = carried.iter().zip(&laid).map(|(&c, &l)| sub(c, l)).collect();
+    let mut next = way.clone();
+    for _ in 0..ROPE_EVEN {
+        for (i, near) in beside.iter().enumerate() {
+            if !near.is_empty() {
+                let sum = near.iter().fold([0f32; 3], |s, &j| add(s, way[j as usize]));
+                next[i] = mul(sum, 1.0 / near.len() as f32);
+            }
+        }
+        std::mem::swap(&mut way, &mut next);
+    }
+    let vs: Vec<V3> = laid.iter().zip(&one).map(|(&l, &i)| add(l, way[i])).collect();
+    let nn = vnormals(&vs, &idx);
+    let mut s = Surface::new(mat(0.6));
+    s.tex = Some(crate::real::image(dir, name));
+    let c = linear(hair);
+    for f in tris {
+        for k in 0..3 {
+            let i = f[k] as usize;
+            s.pos.push(vs[i]);
+            s.col.push(c);
+            s.uv.push([f[3 + 2 * k], 1.0 - f[4 + 2 * k]]);
+            s.nrm.push(nn[i]);
+        }
+    }
+    Some(s)
+}
+
+/// Real look: as mh_hair, the colour per vertex; `hang`: normals outward from the
+/// vertical axis below hc (for beards hanging below the chin); `thin`: the share
+/// of cards left out (thinning hair in age) and the seed that picks them.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mh_hair2(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, color: &dyn Fn(V3) -> Rgb, hang: bool, thin: (f32, u32)) -> Option<Surface> {
+    let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
+    let (vs, tris) = bound(&rows, pp, base)?;
+    let nv = vs.len();
     let mut s = Surface::new(mat2(0.6));
     s.tex = Some(crate::real::image(dir, name));
-    let tris: Vec<&Vec<f32>> = it.by_ref().take(nt).collect();
-    if tris.len() < nt {
-        return None;
-    }
     // thinning: whole cards (triangles joined by shared corners) left out
     let mut card: Vec<usize> = (0..nv).collect();
     if thin.0 > 0.0 {
@@ -573,7 +642,7 @@ pub(crate) fn mh_hair2(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, co
             }
             i
         }
-        for f in &tris {
+        for f in tris {
             let a = root(&mut card, f[0] as usize);
             for k in 1..3 {
                 let b = root(&mut card, f[k] as usize);

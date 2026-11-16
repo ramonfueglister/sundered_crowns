@@ -5,7 +5,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
-from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, paint_cap, make_shade, write_head_obj
+from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
 
 base, out, style, name = sys.argv[1:5]
 rng = np.random.default_rng(int(os.environ.get('SEED', '17')))
@@ -207,10 +207,25 @@ elif style == 'plait':
         way = f * (ac(d, td(d)) + ac(td(d), gd(d))) + (1 - f) * ac(d, gd(d))
         return 0.98 * way * (0.92 + 0.1 * rng.random(np.shape(th))) + 0.08
     _l = [float(t) for t in os.environ.get('PLAIT_LIFT', '0.075,0.05').split(',')]
-    S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26)
+    # PLAIT_ROPE_ONLY: the plaits' file alone (a few seconds; the head's hair takes more than a minute)
+    rope_only = bool(os.environ.get('PLAIT_ROPE_ONLY'))
+    if not rope_only:
+        S, lab, nc0, nt0 = men_cards(margin, flow, length, 320, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.7, steps=14, clump=(0.1, 0.6), Nr=12000, wmax=0.42, wmin=0.26)
     WAY = np.array([[0.74, 7.02, 0.34], [0.80, 6.55, 0.42], [0.84, 5.98, 0.62], [0.82, 5.40, 1.12], [0.76, 4.60, 1.46], [0.72, 4.15, 1.66]])
-    RB, LAM = [float(t) for t in os.environ.get('PLAIT_R', '0.13,0.34').split(',')]
-    cards, tiles = [], []
+    # The plait itself: three round strands, plaited (round 86). Until then it was flat cards along the same three
+    # ways, 1.9 cm broad: ragged ribbons, each lit as one face turned away from the head, the whole 4.5 cm broad.
+    # `PLAIT_ROPE`: how far a strand's middle swings to the side and in depth, half its breadth and half its
+    # thickness, and the length of one swing to both sides and back (base units, 0.1 = 1 cm). A plait of half a
+    # head's hair is about 3 cm broad and 1.7 cm thick; where the strands cross in its middle they run about
+    # 40 degrees off its length (PLACEHOLDER by eye, not measured on plaits).
+    RA, RD, RW, RH, LAM = [float(t) for t in os.environ.get('PLAIT_ROPE', '0.085,0.03,0.062,0.045,0.62').split(',')]
+    ROUND = 8                     # corners round a strand
+    V_LEN = 1.0                   # the length of strand that one height of the image covers
+    turn = -np.pi / 2 + 2 * np.pi * np.arange(ROUND) / ROUND
+    # across the image from one flank of the strand over its front to the other, and back again behind it; along
+    # it down the image and up again: the image has no seam anywhere
+    u_round = 1 - np.abs(2 * np.arange(ROUND + 1) / ROUND - 1)
+    tubes = []
     for sgn in (1.0, -1.0):
         way = WAY * np.array([sgn, 1, 1])
         way[0] = H.at(dirs(np.array([sgn * GTH]), np.array([GEL])), np.array([0.05]))[0]
@@ -220,31 +235,49 @@ elif style == 'plait':
         rp = np.stack([np.interp(uu, u0, way[:, i]) for i in range(3)], -1)
         for _ in range(40):
             rp[1:-1] = 0.5 * rp[1:-1] + 0.25 * (rp[:-2] + rp[2:])
+        if not rope_only:
+            # the head's hair is laid with numbers drawn after those the plaits' cards took (as many as the line
+            # smoothed so far was long): drawn still, so that it stays as it was, card for card
+            for _ in range(3 * int(np.linalg.norm(np.diff(rp, axis=0), axis=1).sum() / 0.36)):
+                rng.integers(0, 4)
+        # a plait is stiff: it turns over a hand's breadth, not at a point of the table (smoothed 40 times as the
+        # cards were, the line turned 40 degrees within 2 cm below the ear and 20 at the collar and on the chest)
+        for _ in range(int(os.environ.get('PLAIT_EVEN', '600'))):
+            rp[1:-1] = 0.5 * rp[1:-1] + 0.25 * (rp[:-2] + rp[2:])
         arc = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(rp, axis=0), axis=1))])
         total = arc[-1]
-        nseg = int(total / 0.36)
+        tt = np.linspace(0, total, int(total / 0.025) + 1)
+        c = np.stack([np.interp(tt, arc, rp[:, i]) for i in range(3)], -1)
+        nrm = unit(c - np.stack([0 * c[:, 0], c[:, 1], 0.2 + 0 * c[:, 0]], -1))
+        tg = unit(np.gradient(c, axis=0))
+        nrm = unit(nrm - (nrm * tg).sum(-1, keepdims=True) * tg)
+        bn = unit(np.cross(tg, nrm))
+        g = np.clip((total - tt) / (0.14 * total), 0, 1); thin = 0.3 + 0.7 * g * g * (3 - 2 * g)   # the end runs out thin
+        g = np.clip(tt / 0.3, 0, 1); part = g * g * (3 - 2 * g)              # gathered below the ear, the strands part over 3 cm
+        e = 0.06; tip = np.sqrt(np.clip(1 - (np.clip(tt - (total - e), 0, None) / e) ** 2, 0, 1))   # a round end
+        tip = tip * np.sqrt(np.clip(1 - np.clip(1 - tt / e, 0, None) ** 2, 0, 1))                    # and a round beginning, in the hair below the ear
         for k in range(3):
-            for sg in range(nseg):
-                a0 = sg * total / nseg; a1 = min(total, a0 + total / nseg * 1.15)
-                tt = np.linspace(a0, a1, 13)
-                c = np.stack([np.interp(tt, arc, rp[:, i]) for i in range(3)], -1)
-                nrm = unit(c - np.stack([0 * c[:, 0], c[:, 1], 0.2 + 0 * c[:, 0]], -1))
-                tg = unit(np.gradient(c, axis=0))
-                nrm = unit(nrm - (nrm * tg).sum(-1, keepdims=True) * tg)
-                bn = unit(np.cross(tg, nrm))
-                thin = np.clip((total - tt) / (0.14 * total), 0.3, 1)        # the end runs out thin
-                ph = 2 * np.pi * tt / LAM + 2 * np.pi * k / 3
-                q = c + bn * (RB * thin * np.sin(ph))[:, None] + nrm * (0.4 * RB * thin * np.sin(2 * ph) + 0.03)[:, None]
-                tg2 = unit(np.gradient(q, axis=0)); b2 = unit(np.cross(tg2, nrm))
-                w = float(os.environ.get('PLAIT_W', '0.19')) * thin[:, None]
-                cards.append((q - b2 * w / 2, q + nrm * 0.006, q + b2 * w / 2))
-                tiles.append(int(rng.integers(0, 4)))
-    hair_cards, hair_tiles = cards_from_wisps(H, S, lab, 320, rng, 4.0, 0.7, lambda d: int(rng.integers(0, 4)), clump=(0.1, 0.6), wmax=0.42, wmin=0.26)
+            ph = 2 * np.pi * tt / LAM + 2 * np.pi * k / 3
+            q = c + bn * (RA * thin * part * np.sin(ph))[:, None] + nrm * (RD * thin * part * np.sin(2 * ph) + (RD + RH) * thin + 0.01)[:, None]
+            tg2 = unit(np.gradient(q, axis=0))
+            n2 = unit(nrm - (nrm * tg2).sum(-1, keepdims=True) * tg2)
+            b2 = np.cross(tg2, n2)
+            size = thin * tip * (1 + 0.35 * (1 - part))
+            rings = q[:, None, :] + n2[:, None, :] * (RH * size[:, None] * np.cos(turn)[None, :])[..., None] + b2[:, None, :] * (RW * size[:, None] * np.sin(turn)[None, :])[..., None]
+            along = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))]) / V_LEN + 0.37 * k
+            v = 1 - np.abs(along % 2 - 1)
+            uv = np.stack(np.broadcast_arrays(u_round[None, :], v[:, None]), -1)
+            tubes.append((rings, uv, c))
     # the plaits are bound to neck, shoulders and chest as well: a head that knows the body down to there
     H2 = Head(base, ymin=3.9, hc=H.hc)
-    nv, nt = write_cards(H2, out, name, hair_cards + cards, hair_tiles + tiles)
+    nvr, ntr = write_tubes(H2, out, name + '_rope', tubes)
+    if rope_only:
+        print(style, 'plaits alone: corners', nvr, 'tris', ntr)
+        sys.exit(0)
+    hair_cards, hair_tiles = cards_from_wisps(H, S, lab, 320, rng, 4.0, 0.7, lambda d: int(rng.integers(0, 4)), clump=(0.1, 0.6), wmax=0.42, wmin=0.26)
+    nv, nt = write_cards(H2, out, name, hair_cards, hair_tiles)
     cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.4 + 0 * th, make_shade(H, S, lab, 320, rng), n=60000, mean=0.6)
-    print(style, 'cards', len(hair_cards), '+ plaits', len(cards), 'tris', nt, 'cap coverage', round(cov, 3))
+    print(style, 'cards', len(hair_cards), 'tris', nt, '+ plaits: corners', nvr, 'tris', ntr, 'cap coverage', round(cov, 3))
 
 elif style == 'bob':
     # about 1350: the hair grown to the jaw all round, covering the ears, a

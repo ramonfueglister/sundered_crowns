@@ -203,3 +203,13 @@ are the same pixel for pixel, and the comparison with Godot is unchanged. Roman 
 Round 85: nothing in the builder. England's stage profile (`src/portrait/profile.ts`, the game's own file):
 the rim light stands further behind the head (from (-3.55, 2.5, -4.25), before (-4.2, 2.5, -3.6)) and the
 fill is 0.28 (before 0.18). Apoleia's profile and pictures unchanged. Roman bytes unchanged.
+
+Round 86: `real_look.rs`: `mh_rope` (new) builds the round strands of a plait from a file of their own
+(`<hair>_rope.txt`, written by the pipeline's `write_tubes`): the surface's direction from the strands' own
+triangles, the way the body carries the points evened out along the plait (`ROPE_EVEN`). `bound` (new) is the
+reading of a file bound to the body, taken out of `mh_hair2` unchanged, for both. `build.rs`: a hairstyle
+with such a file gets the surface (England's `plait01`; Apoleia has none). Pipeline: `hairlib.py`
+`bind_points`, `write_bound` (taken out of `write_cards` unchanged), `write_tubes` (new); `styles.py` style
+`plait` writes the plaits as tubes; `rope_tex.py` (new). New files `plait01_rope.txt.zst`,
+`plait01_rope.webp`; `plait01.txt.zst` without the plaits' cards. `tests/plait.rs` (new, 2 tests). The game's
+stage draws the strands as solid hair (`src/portrait/materials.ts`). Roman bytes unchanged.

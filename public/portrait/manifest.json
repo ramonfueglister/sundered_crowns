@@ -323,11 +323,15 @@
   },
   {
    "name": "plait01.txt.zst",
-   "bytes": 367473
+   "bytes": 317603
   },
   {
    "name": "plait01_cap.txt",
    "bytes": 67945
+  },
+  {
+   "name": "plait01_rope.txt.zst",
+   "bytes": 129578
   },
   {
    "name": "plait01_scalp.txt",
@@ -500,6 +504,7 @@
   "plait01_cap.webp",
   "plait01_cap_n.webp",
   "plait01_n.webp",
+  "plait01_rope.webp",
   "receding01.webp",
   "receding01_cap.webp",
   "receding01_cap_n.webp",

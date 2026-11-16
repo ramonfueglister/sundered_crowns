@@ -71,7 +71,7 @@ export interface StageProfile {
    *  one sees, not the shade under hair, and wants the lightness of the head's hair and a lit and a shaded side. */
   cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number;
     beard: { tone: number; light: number; colour: number; wrap: number } };
-  /** Hair cards: roughness, "specular", anisotropy of the glint. */
+  /** Hair cards, and the round strands of a plait: roughness, "specular", anisotropy of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
   /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
    *  cards with their plain glint. Else a white band and a band in the hair's own colour: strength and sharpness
@@ -247,6 +247,10 @@ export const APOLEIA: StageProfile = {
  *  lighter, the shade beside the nose 6 L darker); 35 and 25 degrees round (children 6.3 and 3.1 %, the
  *  shade beside a man's nose 7 and 11 L darker than it was); less of the rim's shadow at 40 degrees (0.35:
  *  children 11.6 %).
+ *  Round 86: a girl's plaits are round strands, solid, in the stage's shadows (materials.ts `rope`), and the
+ *  rim level with the head no longer lights the far plait (L 12.6, with the rim as it is 12.2). Read on every
+ *  group it is still not the better light for the faces: grey share beside the nose children 6.4 %, the young
+ *  10.7, women 9.1, men 11.1 (as it is 8.3, 6.5, 6.2, 7.9). The lights stay as round 85 left them.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {

@@ -15,14 +15,15 @@ import type { PortraitSurface } from './wire';
 
 /** What kind of surface an image belongs to, in the order Apoleia's bridge asks. Brows and lashes are known by
  *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
- *  hair card. */
-export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'skin';
+ *  hair card. The round strands of a plait (`..._rope`) are hair that is solid: no card, nothing shows through. */
+export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {
   const path = s.tex;
   if (!path) return 'plain';
   if (path.includes('/cloth_')) return 'cloth';
   if (path.includes('_cap.')) return 'cap';
+  if (path.includes('_rope.')) return 'rope';
   if (path.includes('/eyeball')) return 'eyeball';
   if ((s.double && path.includes('/eye')) || path.includes('/Eye')) return 'brow';
   if (s.double) return 'cards';
@@ -32,7 +33,7 @@ export function surfaceKind(s: PortraitSurface): SurfaceKind {
 /** The order in which the blended surfaces are drawn over the solid ones: the painted cap first, the hair cards
  *  over it, brows and lashes last. */
 export function drawOrder(s: PortraitSurface): number {
-  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
+  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, rope: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
 }
 
 /** The normal map of a surface: the one it names (skin with age wrinkles), else the one beside its image (name_n). */
@@ -170,14 +171,46 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;
 }
 
-/** Hair cards of a profile: two bands of sheen along the strands, for every directional light, shifted towards
- *  root and tip, and ragged by the strands' image. The strand's direction is taken as "down along the head" (the
- *  card's normal points away from the head's centre, portrait/src/real_look.rs): the direction read from the
- *  card's own triangles is constant on each triangle and showed as a band of rectangles. */
-function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['sheen']>): void {
+/** Hair of a profile: two bands of sheen along the strands, for every directional light, shifted towards root and
+ *  tip, and ragged by the strands' image. The strand's direction is taken as "down along the head" (a card's
+ *  normal points away from the head's centre, portrait/src/real_look.rs): the direction read from the card's own
+ *  triangles is constant on each triangle and showed as a band of rectangles.
+ *
+ *  Cards take sheen and the light round their shaded side from every light, in shadow or not: a card knows of no
+ *  shadow but its own direction's. `solid` hair (the round strands of a plait) stands in the stage's shadows as
+ *  any solid thing: its sheen and the light round its shaded side are part of each light's own share, which
+ *  three.js has darkened by the light's shadow. */
+function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['sheen']>, solid = false): void {
+  // the strand's direction and the two directions the bands are measured against
+  const strand = (normal: string, eye: string): string => `vec3 hairDown = - normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
+  vec3 hairT = hairDown - ${normal} * dot( hairDown, ${normal} );
+  if ( dot( hairT, hairT ) > 1e-4 ) {
+    hairT = normalize( hairT );
+    vec3 hairV = ${eye};
+    float hairJ = ( hairStrand - 0.5 ) * ${f(k.ragged)};
+    vec3 hairT1 = normalize( hairT + ${normal} * ( ${f(k.whiteShift)} + hairJ ) );
+    vec3 hairT2 = normalize( hairT + ${normal} * ( ${f(k.ownShift)} + hairJ ) );`;
+  // one light's bands, and its light round the shaded side
+  const bands = (colour: string, towards: string, normal: string, diffuse: string): string => `vec3 hairL = ${towards};
+      vec3 hairH = normalize( hairL + hairV );
+      float hairLit = saturate( dot( ${normal}, hairL ) * 0.7 + 0.3 );
+      float hairA = dot( hairT1, hairH ), hairB = dot( hairT2, hairH );
+      float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
+      float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
+      reflectedLight.directSpecular += ${colour} * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * ${diffuse} );
+      float hairN = dot( ${normal}, hairL );
+      reflectedLight.directDiffuse += ${colour} * ${diffuse} * RECIPROCAL_PI * ( saturate( ( hairN + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) - saturate( hairN ) );`;
+  const lights = solid && swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE, `${DIFFUSE}
+#ifdef USE_MAP
+{
+  ${strand('geometryNormal', 'geometryViewDir')}
+      ${bands('directLight.color', 'directLight.direction', 'geometryNormal', 'material.diffuseColor')}
+  }
+}
+#endif`);
   m.onBeforeCompile = shader => {
     let code = swap(shader.fragmentShader, '#include <map_fragment>', `#include <map_fragment>
-float hairStrand = 1.0;
+${solid ? '' : 'float '}hairStrand = 1.0;
 #ifdef USE_MAP
   hairStrand = dot( sampledDiffuseColor.rgb, vec3( 0.3333 ) );
   diffuseColor.rgb *= pow( max( hairStrand, 0.001 ) / 0.6, ${f(k.strands - 1)} );
@@ -185,34 +218,25 @@ float hairStrand = 1.0;
     code = swap(code, '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= pow( min( hairStrand / 0.8, 1.0 ), ${f(k.light)} * smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
-    code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
+    if (lights) {
+      // the strands' image is read in the picture's main part and used in each light's share: a value of the
+      // whole shader
+      code = swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nfloat hairStrand;');
+    } else {
+      code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
 #if defined( USE_MAP ) && NUM_DIR_LIGHTS > 0
 {
-  vec3 hairDown = - normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
-  vec3 hairT = hairDown - normal * dot( hairDown, normal );
-  if ( dot( hairT, hairT ) > 1e-4 ) {
-    hairT = normalize( hairT );
-    vec3 hairV = normalize( vViewPosition );
-    float hairJ = ( hairStrand - 0.5 ) * ${f(k.ragged)};
-    vec3 hairT1 = normalize( hairT + normal * ( ${f(k.whiteShift)} + hairJ ) );
-    vec3 hairT2 = normalize( hairT + normal * ( ${f(k.ownShift)} + hairJ ) );
+  ${strand('normal', 'normalize( vViewPosition )')}
     for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
-      vec3 hairL = directionalLights[ i ].direction;
-      vec3 hairH = normalize( hairL + hairV );
-      float hairLit = saturate( dot( normal, hairL ) * 0.7 + 0.3 );
-      float hairA = dot( hairT1, hairH ), hairB = dot( hairT2, hairH );
-      float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
-      float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
-      reflectedLight.directSpecular += directionalLights[ i ].color * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * diffuseColor.rgb );
-      float hairN = dot( normal, hairL );
-      reflectedLight.directDiffuse += directionalLights[ i ].color * diffuseColor.rgb * RECIPROCAL_PI * ( saturate( ( hairN + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) - saturate( hairN ) );
+      ${bands('directionalLights[ i ].color', 'directionalLights[ i ].direction', 'normal', 'diffuseColor.rgb')}
     }
   }
 }
 #endif`);
+    }
     shader.fragmentShader = code;
   };
-  m.customProgramCacheKey = () => `portrait-hair-${p.key}`;
+  m.customProgramCacheKey = () => `portrait-hair-${p.key}${solid ? '-solid' : ''}`;
 }
 
 /** How light a person's skin is: the median brightness of the skin's colours (linear light; the skin's images are
@@ -254,6 +278,12 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
         m.roughness = p.brow.rough; m.ior = ior(p.brow.specular);
         m.opacity = s.tex.includes('/Eyelashes') ? p.brow.lashes : p.brow.brows;
       }
+      break;
+    // the strands of a plait: hair as the cards are, but solid: drawn with the solid surfaces, it hides what is
+    // behind it, throws shadows and takes them
+    case 'rope':
+      m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;
+      if (p.sheen) hairLook(m, p, p.sheen, true);
       break;
     case 'cards': {
       m.side = DoubleSide; m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;

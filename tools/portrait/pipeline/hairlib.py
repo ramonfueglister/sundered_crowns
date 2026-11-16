@@ -192,6 +192,44 @@ def cards_from_wisps(head, S, lab, K, rng, width, taper, tile, clump=(0.15, 0.7)
     return cards, tiles
 
 
+def bind_points(head, verts, anc):
+    """Binds points to the head: each to the triangle nearest to its anchor (itself, or a point given for it), as
+    the triangle's three corners, their weights at the anchor's foot on it, and the way from that foot to the point."""
+    A, B, C, T = head.A, head.B, head.C, head.T
+    cen = (A + B + C) / 3
+    bind = []
+    for p, pa in zip(verts, anc):
+        best = None
+        for ti in ((cen - pa) ** 2).sum(1).argsort()[:12]:
+            a, b_, c_ = A[ti], B[ti], C[ti]
+            nrm = unit(np.cross(b_ - a, c_ - a))
+            q = pa - nrm * ((pa - a) @ nrm)
+            v0, v1, v2 = b_ - a, c_ - a, q - a
+            d00, d01, d11, d20, d21 = v0 @ v0, v0 @ v1, v1 @ v1, v2 @ v0, v2 @ v1
+            den = d00 * d11 - d01 * d01
+            wv = (d11 * d20 - d01 * d21) / den; ww = (d00 * d21 - d01 * d20) / den
+            bc = np.clip([1 - wv - ww, wv, ww], 0, 1); bc /= bc.sum()
+            on = bc[0] * a + bc[1] * b_ + bc[2] * c_
+            dist = np.linalg.norm(pa - on)
+            if best is None or dist < best[0]:
+                best = (dist, ti, bc, p - on)
+        _, ti, bc, off = best
+        bind.append(([head.remap[x] for x in T[ti]], bc, off))
+    return bind
+
+
+def write_bound(out, name, bind, tri_list, tri_uv):
+    """The file the builder reads: the number of points and of triangles, a line for each point (three corners of
+    the head, three weights, the way from there), a line for each triangle (three points, three places in the image)."""
+    with open(os.path.join(out, name + '.txt'), 'w') as f:
+        f.write(f'{len(bind)} {len(tri_list)}\n')
+        for r, w_, o in bind:
+            f.write(' '.join(map(str, r)) + ' ' + ' '.join(f'{x:.6f}' for x in list(w_) + list(o)) + '\n')
+        for t, uv in zip(tri_list, tri_uv):
+            # v as in OBJ files (up from the bottom): the reader flips it
+            f.write(' '.join(map(str, t)) + ' ' + ' '.join(f'{u:.6f} {1 - v:.6f}' for u, v in uv) + '\n')
+
+
 def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=None, vend=1.0):
     verts, tri_list, tri_uv = [], [], []
     for ci, (lft, mid, rgt) in enumerate(cards):
@@ -215,33 +253,8 @@ def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=No
                 tri_list.append([a1, b1, b0]); tri_uv.append([(us[jj], vA), (us[jj], vB), (us[i], vB)])
     verts = np.array(verts).reshape(-1, 3)
     anc = verts if anchors is None else np.repeat(np.concatenate(anchors), 3, axis=0)
-    A, B, C, T = head.A, head.B, head.C, head.T
-    cen = (A + B + C) / 3
-    bind = []
-    for p, pa in zip(verts, anc):
-        best = None
-        for ti in ((cen - pa) ** 2).sum(1).argsort()[:12]:
-            a, b_, c_ = A[ti], B[ti], C[ti]
-            nrm = unit(np.cross(b_ - a, c_ - a))
-            q = pa - nrm * ((pa - a) @ nrm)
-            v0, v1, v2 = b_ - a, c_ - a, q - a
-            d00, d01, d11, d20, d21 = v0 @ v0, v0 @ v1, v1 @ v1, v2 @ v0, v2 @ v1
-            den = d00 * d11 - d01 * d01
-            wv = (d11 * d20 - d01 * d21) / den; ww = (d00 * d21 - d01 * d20) / den
-            bc = np.clip([1 - wv - ww, wv, ww], 0, 1); bc /= bc.sum()
-            on = bc[0] * a + bc[1] * b_ + bc[2] * c_
-            dist = np.linalg.norm(pa - on)
-            if best is None or dist < best[0]:
-                best = (dist, ti, bc, p - on)
-        _, ti, bc, off = best
-        bind.append(([head.remap[x] for x in T[ti]], bc, off))
-    with open(os.path.join(out, name + '.txt'), 'w') as f:
-        f.write(f'{len(verts)} {len(tri_list)}\n')
-        for r, w_, o in bind:
-            f.write(' '.join(map(str, r)) + ' ' + ' '.join(f'{x:.6f}' for x in list(w_) + list(o)) + '\n')
-        for t, uv in zip(tri_list, tri_uv):
-            # v as in OBJ files (up from the bottom): the reader flips it
-            f.write(' '.join(map(str, t)) + ' ' + ' '.join(f'{u:.6f} {1 - v:.6f}' for u, v in uv) + '\n')
+    bind = bind_points(head, verts, anc)
+    write_bound(out, name, bind, tri_list, tri_uv)
     with open(os.path.join(out, name + '_cards.obj'), 'w') as f:
         for p in verts:
             f.write('v %.5f %.5f %.5f\n' % tuple(p))
@@ -250,6 +263,36 @@ def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=No
             for u, v in uv:
                 f.write('vt %.5f %.5f\n' % (u, 1 - v))
             f.write('f %d/%d %d/%d %d/%d\n' % (t[0] + 1, k, t[1] + 1, k + 1, t[2] + 1, k + 2)); k += 3
+    return len(verts), len(tri_list)
+
+
+def write_tubes(head, out, name, tubes):
+    """Round strands (a plait's): each tube is its rings (n rings of m corners, closed round, counted so that the
+    corners go round the strand's direction as the fingers of the right hand go round its thumb), the place in the
+    image of each corner (n rings of m + 1: the first corner again at the end, so that the image may have a seam
+    there), and for each ring the point it is bound to the body by (a whole ring moves with one triangle and keeps
+    its form). The triangles are counter-clockwise seen from outside; the builder reads the surface's direction
+    from them, so that each strand is lit as the round thing it is."""
+    verts, anc, tri_list, tri_uv = [], [], [], []
+    for rings, uv, anchors in tubes:
+        n, m = rings.shape[:2]
+        o = len(verts)
+        verts += list(rings.reshape(-1, 3))
+        anc += list(np.repeat(anchors, m, axis=0))
+        for s in range(n - 1):
+            for j in range(m):
+                k = (j + 1) % m
+                a, b, c, d = o + s * m + j, o + s * m + k, o + (s + 1) * m + j, o + (s + 1) * m + k
+                ua, ub, uc, ud = uv[s, j], uv[s, j + 1], uv[s + 1, j], uv[s + 1, j + 1]
+                tri_list.append([a, b, c]); tri_uv.append([tuple(ua), tuple(ub), tuple(uc)])
+                tri_list.append([b, d, c]); tri_uv.append([tuple(ub), tuple(ud), tuple(uc)])
+    verts = np.array(verts).reshape(-1, 3)
+    write_bound(out, name, bind_points(head, verts, np.array(anc).reshape(-1, 3)), tri_list, tri_uv)
+    with open(os.path.join(out, name + '.obj'), 'w') as f:
+        for p in verts:
+            f.write('v %.5f %.5f %.5f\n' % tuple(p))
+        for t in tri_list:
+            f.write('f %d %d %d\n' % (t[0] + 1, t[1] + 1, t[2] + 1))
     return len(verts), len(tri_list)
 
 
