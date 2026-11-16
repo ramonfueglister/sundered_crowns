@@ -5,7 +5,7 @@ import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA } from './state';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
-import { type SetupState, setPlaces } from './setup';
+import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm'] as const;
@@ -33,16 +33,14 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundEconomy(s, w);
     s.v = 12;
   }
-  if (s.v === 12) { // 12 → 13: a world of 1291 has the cultures and faiths of 1291 (data/history/1291/peoples.json) in
-    // place of those of 1356 it was founded with, and the borders of the setup again (seven places of Murcia that were
-    // Aragon's are Castile's). Nothing has changed a holder, a culture or a faith since the first day, so the places take
-    // those of the setup as a new world does; their people stay as they are, and so do the capitals (none of the seven
-    // is one).
+  if (s.v === 12) { // 12 → 13: a world of 1291 has the borders of its setup again: seven places of Murcia that were
+    // Aragon's are Castile's (Treaty of Almizra 1244). Nothing has changed a holder since the first day, so the places
+    // take the holders of the setup as a new world does; nothing else changes (their people, cultures and faiths stay
+    // as the world was founded with them, and the capitals: none of the seven is one).
     if (s.startYear === 1291) {
       if (!setup) throw new Error('the upgrade of a world of 1291 needs its setup');
-      const pop = s.place.pop.slice();
-      setPlaces(s, setup(), 0, s.place.owner.length);
-      s.place.pop.set(pop);
+      const st = setup(), owner = s.place.owner, n = s.realm.size;
+      for (let i = 0; i < owner.length; i++) { const o = st.owner[i]; owner[i] = Number.isInteger(o) && o >= 0 && o < n ? o : -1; }
     }
     s.v = 13;
   }
