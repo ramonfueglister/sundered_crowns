@@ -33,7 +33,12 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 
 /* HUD: value bar */
 .hud-top { position: absolute; left: 0; top: 0; right: 0; height: 52px; z-index: 15; display: flex; align-items: stretch; background: linear-gradient(var(--bar2), var(--bar)); border-bottom: 2px solid var(--gold); box-shadow: 0 1px 0 #0a2234, 0 3px 10px rgba(0,0,0,.35); }
-.hud-values { flex: 1; min-width: 0; display: flex; align-items: center; gap: 36px; padding-left: 175px; overflow: hidden; white-space: nowrap; }
+.hud-values { flex: 1; min-width: 0; display: flex; align-items: center; gap: 36px; padding-left: 10px; overflow: hidden; white-space: nowrap; }
+/* room for the realm's banner, which hangs over the bar's left end */
+.hud-values.ruled { padding-left: 175px; }
+/* the map modes in the bar: round buttons as the bar's height allows */
+.hud-top .tool.mode { width: 42px; height: 42px; }
+.lang-row { padding: 0 4px; }
 .realm-name { font-size: 22px; font-weight: 600; color: var(--gold); }
 .val { display: flex; align-items: center; gap: 11px; }
 .val > span { display: grid; line-height: 1.05; }
@@ -91,7 +96,8 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 /* narrow screens: the banner shrinks, the values scroll */
 @media (max-width: 760px) {
   .realm-banner { transform: scale(.7); transform-origin: 0 0; }
-  .hud-values { padding-left: 112px; gap: 20px; overflow-x: auto; }
+  .hud-values { gap: 20px; overflow-x: auto; }
+  .hud-values.ruled { padding-left: 112px; }
   .realm-name, .val small { display: none; }
   .hud-date { padding: 0 10px; font-size: 16px; }
   .hud-date svg { display: none; }
