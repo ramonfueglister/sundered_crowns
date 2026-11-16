@@ -108,7 +108,7 @@ describe('the rulers of a world of 1291', () => {
     const t = decodeState(encodeState(s));
     expect(t.named).toEqual(s.named);
     expect(Array.from(t.realm.cols.holder)).toEqual(Array.from(s.realm.cols.holder));
-  });
+  }, 60_000);
 });
 
 describe('a world of 1291 saved before the rulers', () => {
@@ -117,7 +117,7 @@ describe('a world of 1291 saved before the rulers', () => {
     until(s, '1310-01-01');
     // the world as the build before saved it: no holders, nobody's death, no persons of history
     const old = decodeState(encodeState(fresh()));
-    old.day = s.day; old.v = 14;
+    old.day = s.day; old.v = 15;
     const R = old.realm.cols as Record<string, unknown>, P = old.person.cols as Record<string, unknown>;
     delete R.holder; delete P.died; delete (old as Partial<WorldState>).named;
     // rows of the persons of history out again: the build before had only the persons of the cities
@@ -128,5 +128,5 @@ describe('a world of 1291 saved before the rulers', () => {
     expect(holderName(up, 'england')).toBe('Edward II');
     expect(holderName(up, 'france')).toBe('Philip IV');
     expect(up.named.map((n) => n.name).sort()).toEqual(s.named.map((n) => n.name).sort());
-  });
+  }, 60_000);
 });

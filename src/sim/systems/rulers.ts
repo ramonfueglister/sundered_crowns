@@ -67,7 +67,8 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     const id = spawn(s.person), seed = s.seed >>> 0, kh = keyHash(cp.key);
     const born = c.bornDay[e.person];
     P.born[id] = born ?? BORN_UNKNOWN; P.sex[id] = cp.sex; P.mother[id] = -1; P.father[id] = -1;
-    P.role[id] = 0; P.agent[id] = -1; P.firm[id] = -1; P.died[id] = ALIVE;
+    P.role[id] = 0; P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
+    P.firm[id] = -1; P.died[id] = ALIVE;
     const z = (j: number) => normal(seed, kh, K.trait + 2 * j);
     P.iq[id] = clampU8(100 + 15 * z(0));
     P.o[id] = clampU8(50 + 10 * z(1)); P.c[id] = clampU8(50 + 10 * z(2)); P.e[id] = clampU8(50 + 10 * z(3));

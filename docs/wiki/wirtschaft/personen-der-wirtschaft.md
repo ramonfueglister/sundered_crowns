@@ -4,7 +4,7 @@
 
 > Wer in der Wirtschaft einer Stadt arbeitet, einen Betrieb führt oder die Bank besitzt, ist jetzt eine Person der Welt: dieselbe, die als Figur durch die Stadt geht. Im Personenfenster steht, bei wem sie arbeitet, was sie am Tag verdient, ausgibt und gespart hat.
 
-Diese Seite beschreibt Feature 10. Es gehört zur [Wirtschaft der Städte](wirtschaft-der-staedte.md) und zu den [Einwohnern der grössten Städte](../personen/einwohner-der-staedte.md). Alle Zahlen stammen aus dem Spielcode.
+Diese Seite beschreibt Feature 10. Es gehört zur [Wirtschaft der Städte](wirtschaft-der-staedte.md) und zu den [Einwohnern der Städte](../personen/einwohner-der-staedte.md). Alle Zahlen stammen aus dem Spielcode.
 
 ## Das Feature
 
@@ -91,7 +91,7 @@ Die laufende Welt (Start 1291) rechnet seit dem 16.11.2026 so: Am Tag 68 wurden 
 
 Beim Aufspielen bekommt eine laufende Welt die neuen Einträge, und die Wirtschaften der Städte werden am erreichten Tag neu gegründet: aus der Startlage, mit den Personen, die an diesem Tag arbeiten. Die bisherigen Tage und Jahreszahlen der Wirtschaften gehen dabei verloren.
 
-Die Wirtschaften sind die der Städte, in denen die Personen leben. Die Welt von 1291 hat darum die Wirtschaften ihrer eigenen 30 Städte (darunter Brügge, Rouen, Akkon und Tunis; London ist 1291 nicht unter den 30 grössten und hat keine). Gerechnet wird jede weiter wie England 1356 im Anteil der Stadt.
+Die Wirtschaften sind die der Städte, in denen die Personen leben. Die Welt von 1291 hatte darum zuerst die Wirtschaften ihrer eigenen 30 Städte. Mit Zustand 15 hat sie eine Wirtschaft in jedem Ort mit einer Stadt der Karte, 550 (siehe [Einwohner der Städte](../personen/einwohner-der-staedte.md)). Gerechnet wird jede weiter wie England 1356 im Anteil der Stadt.
 
 ## Grenzen
 

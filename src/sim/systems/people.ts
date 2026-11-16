@@ -1,7 +1,7 @@
 // The people: feature 1 of the person system (docs/PEOPLE_DESIGN.md, where every source is listed).
 //
-// The 30 largest cities of 1356 after Chandler (src/sim/content/cities_1356.json) get real persons at the scale of
-// the whole world, 1:100. Each person has a birthday, a sex, a mother and a father, a family, an IQ and the Big Five;
+// The cities of the start year (src/sim/content/cities.ts: in 1356 the 30 largest after Chandler, in 1291 every town
+// of the world graphic with people inside the world frame) get real persons at the scale of the whole world, 1:100. Each person has a birthday, a sex, a mother and a father, a family, an IQ and the Big Five;
 // a family is a place and the couple at its head. The rest of every place stays a number (place.pop), as before.
 //
 // The population is built once, when the world is founded, and does not change yet: nobody is born, dies or marries

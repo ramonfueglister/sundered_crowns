@@ -8,7 +8,7 @@ import { WorldCore, configFromEnv, type Session } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
-import { placePeople, personDetail } from '../src/net/people';
+import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } from '../src/net/people';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
 
 // local development: read ./.env if present (production hosts set real environment variables)
@@ -37,6 +37,11 @@ const http = createServer((req, res) => {
   // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
   const people = /^\/people\/(\d+)$/.exec(req.url ?? ''), person = /^\/person\/(\d+)$/.exec(req.url ?? '');
   if (people && Number(people[1]) < core.s.place.pop.length) { res.writeHead(200, h); res.end(JSON.stringify(placePeople(core.s, Number(people[1])))); return; }
+  const many = /^\/people\?places=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
+  if (many) {
+    const places = many[1].split(',').map(Number);
+    if (places.length <= MAX_PLACES_PER_REQUEST && places.every((p) => p < core.s.place.pop.length)) { res.writeHead(200, h); res.end(JSON.stringify(manyPlacesPeople(core.s, places))); return; }
+  }
   if (person) {
     const d = personDetail(core.s, Number(person[1]), (i) => ALL_CULTURES[i] ?? 'unknown');
     if (d) { res.writeHead(200, h); res.end(JSON.stringify(d)); return; }

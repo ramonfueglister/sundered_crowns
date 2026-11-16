@@ -19,7 +19,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Personen der Wirtschaft](wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*
   - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Im Spiel)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
-  - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
+  - [Einwohner der Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 
 ## Status der Seiten
 
