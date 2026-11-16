@@ -255,6 +255,49 @@ describe('portraits', () => {
     // and everyone else's lids are Apoleia's
     for (const p of people) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeGreaterThan(0.7);
   });
+  it('the lips of a person of England close over the mouth, in a colour that goes with the skin', () => {
+    // MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips turn inward: one looked
+    // through it into the black inside of the mouth (until round 66). A strip from edge to edge closes it: the last
+    // triangles of the skin, two sides of 11 and 8 vertices each, which Apoleia's skin does not have
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const STRIP = 2 * (11 + 8 - 2) * 3;
+    const tones: [number, number][] = [];
+    for (const p of sample) {
+      const skin = b.build(p).surfaces.find(s => surfaceKind(s) === 'skin')!;
+      const bare = b.build({ ...p, origin: 'Italia' }).surfaces.find(s => surfaceKind(s) === 'skin')!;
+      expect(skin.pos.length / 3 - bare.pos.length / 3, `person ${p.pid}`).toBe(STRIP);
+      const first = skin.pos.length - 3 * STRIP;
+      const at = (i: number) => `${skin.pos[i]},${skin.pos[i + 1]},${skin.pos[i + 2]}`;
+      // welded to the lips: every corner of the strip is a corner of the skin itself
+      const own = new Set<string>();
+      for (let i = 0; i < first; i += 3) own.add(at(i));
+      const box = [[Infinity, -Infinity], [Infinity, -Infinity]];
+      const mean = (from: number, to: number) => [0, 1, 2].map(k => { let a = 0; for (let i = from; i < to; i += 3) a += skin.col[i + k]!; return a / ((to - from) / 3); });
+      for (let i = first; i < skin.pos.length; i += 3) {
+        expect(own.has(at(i)), `person ${p.pid}: corner ${i / 3} of the strip lies on the lips`).toBe(true);
+        for (const k of [0, 1]) box[k] = [Math.min(box[k]![0]!, skin.pos[i + k]!), Math.max(box[k]![1]!, skin.pos[i + k]!)];
+      }
+      // from one corner of the mouth to the other (3.4 to 5.3 cm, a small child's to a man's), and flat
+      const [wide, high] = box.map(r => r[1]! - r[0]!) as [number, number];
+      expect(wide, `person ${p.pid}`).toBeGreaterThan(0.25);
+      expect(wide, `person ${p.pid}`).toBeLessThan(0.6);
+      expect(high, `person ${p.pid}`).toBeLessThan(0.15 * wide);
+      const [lip, all] = [mean(first, skin.pos.length), mean(0, first)] as [number[], number[]];
+      // a flesh colour as the skin's own, not a painted red (green to red 0.87 to 1.03 of the skin's as a whole);
+      // and lighter than the skin (1.15 to 1.31 of its red): the strip stands in the lips' shade, where the stage
+      // has no light that comes through flesh, and is as dark as the line of a mouth only so
+      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.8);
+      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeLessThan(1.1);
+      expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(1.05);
+      expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeLessThan(1.45);
+      tones.push([all[0]!, lip[0]!]);
+    }
+    // the lips go with the skin: fairer skin, fairer lips, not one red for everyone (0.85 over the sample)
+    const m = [0, 1].map(k => tones.reduce((a, t) => a + t[k]!, 0) / tones.length);
+    const cov = (j: number, k: number) => tones.reduce((a, t) => a + (t[j]! - m[j]!) * (t[k]! - m[k]!), 0);
+    expect(cov(0, 1) / Math.sqrt(cov(0, 0) * cov(1, 1))).toBeGreaterThan(0.6);
+  });
   it('the eye of England\'s profile tells its white from its iris, and every material finds its place in three.js', () => {
     // the profile's materials are written into three.js' own shaders (materials.ts `swap`): a piece that a new
     // three.js no longer has must be noticed here, not as a grey face in the game

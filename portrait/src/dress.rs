@@ -33,6 +33,30 @@ pub struct Source {
     pub source: &'static str,
 }
 
+/// The lips of a dress with a table (real_look.rs `real_skin`). Apoleia's are the builder's own: every facet that
+/// the targets for full lips move, mixed towards one red, softened over its neighbours: a broad band without the
+/// lips' outline, the same red on every skin. Measured against three mouths of the reference (round 66, CIELAB
+/// against the lit cheek: lower lip 21 darker, 6 to 9 redder; upper lip 30 to 36 darker; the line between them 41
+/// to 47 darker) that band was twice as red as a lip (17 to 18 redder), its upper lip 44 darker and the line
+/// black (60 to 65 darker). All values PLACEHOLDER, set by those measurements on two people of the sample.
+pub struct Lips {
+    /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
+    /// skin's own colour that is kept,
+    pub skin: f32,
+    /// and the colour of the blood added to it (red, green, blue, in linear light). Lips are skin without its
+    /// horn layer: they go with the skin's colour a little and are not one red for everyone.
+    pub blood: [f32; 3],
+    /// The upper lip's colour is the lips' times this. It faces down, away from the stage's lights, and the stage
+    /// has no light thrown back up by the lower lip and the chest: without, it is a dark bar over the mouth.
+    pub upper: f32,
+    /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
+    /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
+    /// `LIP_SEAM`). It has the lips' colour times this, and so has the upper lip's edge: above 1, because the
+    /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
+    /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open.
+    pub seam: f32,
+}
+
 /// A dress: the garments (images and bound shapes under public/portrait/real), their colours, who wears what on
 /// the head, the hair, and how the faces are read.
 pub struct DressSet {
@@ -97,8 +121,8 @@ pub struct DressSet {
     /// a band of two fifths to half the hair's colour, drawn for the faceted look that has no hairs). Under hairs
     /// it reads as a broad dark bar low over the eye.
     pub brow_paint: [f32; 2],
-    /// Lips: how far towards red, women and men.
-    pub lips: [f32; 2],
+    /// Lips, women and men (real_look.rs `real_skin`).
+    pub lips: [Lips; 2],
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
     /// (0 = not at all, Apoleia's; real_look.rs `real_skin`, the file skin_lash.txt). MakeHuman's lashes are long
     /// single hairs: drawn dense enough to frame the eye they stand off the lid as spikes, drawn thin (the stage's
@@ -224,7 +248,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows: ["eyebrow001", "eyebrow001"],
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
-    lips: [0.55, 0.45],
+    lips: [Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }, Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }],
     lash_line: [0.75, 0.65],
     hair_red: [0.45, 0.74],
     flush: 0.7,
@@ -278,7 +302,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, lips, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, women's jaw, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 

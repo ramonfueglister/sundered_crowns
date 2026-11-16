@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: f32, lash_line: f32) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: f32, lash_line: f32, lips: Option<&crate::dress::Lips>) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -83,6 +83,14 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // (build.rs), and only ever darker than the skin (white lashes leave the lid as it is)
     let lash: Vec<f32> = if lash_line > 0.0 { crate::real::column(&format!("{dir}/skin_lash.txt"), 0.0) } else { Vec::new() };
     let lash_c = mix(mul(linear(hair), 0.5), linear(hex("#140d08")), 0.5);
+    // real look: the lips. Where the red of the lips is (skin_lip.txt, per vertex how much lip, 0..1, and how
+    // much of that upper lip; tools/portrait/pipeline/skin_lip.py) a share of the skin's own colour is kept and
+    // the colour of the blood under it added: lips are skin without its horn layer, so they go with the skin's
+    // colour a little and are not one red for everyone; the upper lip times its own factor. Only a dress with a
+    // table asks for it (`lips`, crate::dress::Lips); without, the builder's facets carry the lips (build.rs)
+    let lip = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_lip.txt")));
+    let lip: &[Vec<f32>] = lip.as_ref().map_or(&[], |l| &l[..]);
+    let lip_k = lips.map_or((1.0, [0.0; 3], 1.0), |l| (l.skin, l.blood, l.upper));
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
     // redder (skin_red.txt, 0..1 per vertex); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
@@ -106,10 +114,55 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
         .unwrap_or_default();
     // texture mean 0.88 in sRGB is about 0.755 in linear light
     let lift = 1.0 / 0.755;
+    // the two edges of the lips' seam (see below): no shade of the mouth's inside on them, which the strip closes;
+    // the upper lip's edge has the strip's share of the lips' colour, so that the lip's underside lightens towards
+    // the seam (on the lower lip's edge, which lies in the light, that share stood as a pale rim)
+    let seam: f32 = lips.map_or(0.0, |l| l.seam);
+    let mut on_seam = vec![0f32; n];
+    if seam > 0.0 {
+        for side in &crate::morph::LIP_SEAM {
+            for (edge, k) in [(&side.0[..], seam), (&side.1[..], 1.0)] {
+                for &v in edge.iter().filter(|&&v| v < n) {
+                    on_seam[v] = k;
+                }
+            }
+        }
+    }
+    // the skin's colour per vertex
+    let vc: Vec<V3> = (0..n)
+        .map(|v| {
+            let mut c = mul(acc[v], 1.0 / wsum[v].max(1e-9));
+            if let Some(&m) = scalp.get(v) {
+                // (only darker: under grey or white hair the scalp stays skin)
+                c = mix(c, [c[0].min(hl[0]), c[1].min(hl[1]), c[2].min(hl[2])], 0.8 * m);
+            }
+            if let Some(&[on_lip, upper]) = lip.get(v).map(|r| &r[..]) {
+                c = mix(c, mul(add(mul(c, lip_k.0), lip_k.1), 1.0 + (lip_k.2 - 1.0) * upper), on_lip);
+            }
+            if let Some(&r) = red.get(v) {
+                let lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+                let k = r * red_k * (lum / 0.35).clamp(0.15, 1.0);
+                c = [c[0], c[1] * (1.0 - 0.45 * k), c[2] * (1.0 - 0.4 * k)];
+            }
+            if on_seam[v] > 0.0 {
+                c = mul(c, on_seam[v]);
+            } else if let Some(&a) = ao.get(v) {
+                c = mul(c, 1.0 - ao_k * (1.0 - a.max(0.0)).powf(1.3));
+            }
+            if let Some(&l) = lash.get(v) {
+                c = mix(c, [c[0].min(lash_c[0]), c[1].min(lash_c[1]), c[2].min(lash_c[2])], (l * lash_line).min(1.0));
+            }
+            if let Some(fv) = folds.as_ref().and_then(|f| f.get(v)) {
+                let dark: f32 = fv.iter().zip(&gdepth).map(|(w, d)| w * d).sum();
+                c = mul(c, 1.0 - dark.min(0.5));
+            }
+            [(c[0] * lift).min(1.0), (c[1] * lift).min(1.0), (c[2] * lift).min(1.0)]
+        })
+        .collect();
     s.uv.clear();
     s.nrm.clear();
+    let none = vec![[0f32, 0.0]];
     for (k, f) in idx.chunks_exact(3).enumerate() {
-        let none = vec![[0f32, 0.0]];
         let l: Vec<&Vec<[f32; 2]>> = f.iter().map(|&v| uvs.get(v as usize).filter(|u| !u.is_empty()).unwrap_or(&none)).collect();
         let mut best = ([0f32; 2], [0f32; 2], [0f32; 2]);
         let mut bd = f32::MAX;
@@ -125,30 +178,48 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
             }
         }
         for (j, &v) in f.iter().enumerate() {
-            let mut c = mul(acc[v as usize], 1.0 / wsum[v as usize].max(1e-9));
-            if let Some(&m) = scalp.get(v as usize) {
-                // (only darker: under grey or white hair the scalp stays skin)
-                c = mix(c, [c[0].min(hl[0]), c[1].min(hl[1]), c[2].min(hl[2])], 0.8 * m);
-            }
-            if let Some(&r) = red.get(v as usize) {
-                let lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-                let k = r * red_k * (lum / 0.35).clamp(0.15, 1.0);
-                c = [c[0], c[1] * (1.0 - 0.45 * k), c[2] * (1.0 - 0.4 * k)];
-            }
-            if let Some(&a) = ao.get(v as usize) {
-                c = mul(c, 1.0 - ao_k * (1.0 - a.max(0.0)).powf(1.3));
-            }
-            if let Some(&l) = lash.get(v as usize) {
-                c = mix(c, [c[0].min(lash_c[0]), c[1].min(lash_c[1]), c[2].min(lash_c[2])], (l * lash_line).min(1.0));
-            }
-            if let Some(fv) = folds.as_ref().and_then(|f| f.get(v as usize)) {
-                let dark: f32 = fv.iter().zip(&gdepth).map(|(w, d)| w * d).sum();
-                c = mul(c, 1.0 - dark.min(0.5));
-            }
-            s.col[3 * k + j] = [(c[0] * lift).min(1.0), (c[1] * lift).min(1.0), (c[2] * lift).min(1.0)];
+            s.col[3 * k + j] = vc[v as usize];
             s.nrm.push(nrm[v as usize]);
         }
         s.uv.extend([best.0, best.1, best.2]);
+    }
+    // real look: the seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where
+    // the lips turn inward, the lower edge some millimetres behind the upper: one looks through it into the
+    // mouth, which is black, and no target closes it beside the middle. A strip from edge to edge closes it, in
+    // the lips' colour times `seam`, facing the way the lips do (crate::morph::LIP_SEAM, the two edges from the
+    // middle outward on either side)
+    if seam > 0.0 {
+        for (up, lo) in crate::morph::LIP_SEAM.iter().map(|side| (&side.0[..], &side.1[..])) {
+            if up.iter().chain(lo).any(|&v| v >= n) {
+                continue;
+            }
+            let mut face = [0f32; 3];
+            for &v in up.iter().chain(lo) {
+                face = add(face, nrm[v]);
+            }
+            let face = mul(face, 1.0 / len(face).max(1e-9));
+            let (mut i, mut j) = (0, 0);
+            while i + 1 < up.len() || j + 1 < lo.len() {
+                // the next vertex along either edge, whichever is less far along its own (the edges have 11 and 8
+                // vertices; by their count, not by where they lie, so that every head gets the same strip)
+                let upper = j + 1 >= lo.len() || (i + 1 < up.len() && (i + 1) * (lo.len() - 1) <= (j + 1) * (up.len() - 1));
+                let mut t = if upper { [up[i], lo[j], up[i + 1]] } else { [up[i], lo[j], lo[j + 1]] };
+                if upper {
+                    i += 1;
+                } else {
+                    j += 1;
+                }
+                if dot(cross(sub(pp[t[1]], pp[t[0]]), sub(pp[t[2]], pp[t[0]])), face) < 0.0 {
+                    t.swap(1, 2);
+                }
+                for v in t {
+                    s.pos.push(pp[v]);
+                    s.col.push(mul(vc[v], seam / on_seam[v]));
+                    s.nrm.push(face);
+                    s.uv.push(uvs.get(v).and_then(|u| u.first()).copied().unwrap_or([0.0, 0.0]));
+                }
+            }
+        }
     }
     let a = if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" };
     let sex = if female { "female" } else { "male" };

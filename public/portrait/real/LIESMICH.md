@@ -14,7 +14,9 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
 - Kleider (cloth_tunic, cloth_toga, cloth_palla, cloth_veil): in Blender drapiert, `_ao.txt`
   Schatten in den Falten.
 - Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt; skin_lash.txt (Wimpernrand am
-  Lid, nur im Kleid England 1356 gelesen; tools/portrait/pipeline/skin_lash.py);
+  Lid, nur im Kleid England 1356 gelesen; tools/portrait/pipeline/skin_lash.py); skin_lip.txt (Lippenrot entlang
+  des Lippenumrisses und Anteil Oberlippe, aus MakeHumans Hautbild der jungen Frau gelesen, nur im Kleid England
+  1356 gelesen; tools/portrait/pipeline/skin_lip.py);
   Augen (eyeball.webp: 4 x 4 Irisfarben), Brauen und Wimpern (eyebrow001, Eyelashes01, MakeHuman CC0).
 
 Gebaut mit der Realismus-Pipeline (Blender 5.2, Skripte in /mnt/project-files/portraits/realismus-pipeline/),

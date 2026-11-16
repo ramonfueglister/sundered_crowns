@@ -460,6 +460,52 @@ round the eye is flat (no fold of the upper lid, no shade under the brow: the br
 iris's colour hardly shows at the panel's size; the eyes look past the viewer (round 60), which the lighter white
 shows more.
 
+**Lips that were a salmon band over a black slit (round 66).** Three mouths in the screenshots of CK3 are large
+enough to measure (the woman of the ruler designer, 30 pixels wide; the emperor and his wife in the game's panel,
+15 and 10), held against a woman and a man of the sample at twice the panel's size (940006, 940009). CIELAB,
+in brackets against the lit cheek:
+
+| | CK3 man | CK3 woman | our man, round 65 | our woman, round 65 | our man, round 66 | our woman, round 66 |
+|---|---|---|---|---|---|---|
+| lit cheek, L | 67 | 59 | 71 | 63 | 71 | 63 |
+| lower lip, L | 46 (-21) | 39 (-21) | 47 (-25) | 40 (-23) | 44 (-28) | 41 (-22) |
+| lower lip, a* and b* | 26, 22 | 27, 21 | 31, 24 | 43, 29 | 25, 21 | 28, 24 |
+| lower lip, redder than the cheek by (a*) | 6 | 9 | 17 | 18 | 11 | 3 |
+| upper lip, L | 37 (-30) | 23 (-36) | 28 (-44) | 21 (-42) | 32 (-39) | 27 (-36) |
+| the line between the lips, L | 26 (-41) | 12 (-47) | 6 (-65) | 4 (-60) | 20 (-52) | 7 (-56) |
+
+(The third mouth, the emperor's wife, stands in shade: lower lip 3 darker than her cheek and 8 redder, upper lip
+11, the line 17 darker.) There a lip is skin's own colour taken down by a fifth of the scale and turned a little
+towards red, the same a* and b* on a fair man and a tanned woman; the upper lip is a lip, a third darker; the line
+between them is dark red. Ours was as dark as that but twice as red, the same red mixed into every skin, as a
+broad band without an outline; the upper lip a dark bar, the line black.
+
+| What | Cause | Now |
+|---|---|---|
+| a band, not lips | the builder's lips are every facet that MakeHuman's targets for full lips move, softened over the neighbours | the red of the lips per vertex, read from MakeHuman's own skin image where its paint is redder than skin (`skin_lip.txt`, `tools/portrait/pipeline/skin_lip.py`): the head's mesh has its edges along the lips' outline |
+| salmon on everyone | one red (`#9a3238`, `#8a3a36`) mixed into the skin at 0.55 and 0.45 | `Lips` in the dress table: a quarter of the skin's own colour kept, the blood's colour added (`skin` 0.25, `blood` 0.2, 0.095, 0.07 in linear light); fairer skin, fairer lips |
+| the upper lip a dark bar | it faces down, away from the key light, and the stage has no light thrown back up by the lower lip and the chest (twice the light from the ground lifts it by 1.5 to 2 L) | its colour times 1.5 (`upper`) |
+| the line black | MakeHuman's closed mouth is a slit: between the edges where the lips turn inward lies a millimetre, the lower edge 1 to 6 mm behind the upper, and no target closes it beside the middle (seen in sections through a built head, its positions written out by the builder for the purpose). One looked into the mouth | a strip of 34 triangles from edge to edge closes it (morph.rs `LIP_SEAM`, real_look.rs `real_skin`), in the lips' colour times 1.6 (`seam`), as the upper lip's edge is: it lies in the lips' own shade, where the stage has no light that comes through flesh |
+
+The tests: the crate holds the two edges of the seam to MakeHuman's head (from the middle of the mouth outward
+to its corners, the upper over the lower, mirrored); tests/portrait.test.ts builds the 36 people of the sample
+and holds the strip to the lips (every corner of it a corner of the skin, from one corner of the mouth to the
+other), to a flesh colour, and to the skin it goes with (0.85 between the skin's and the strip's tone over the
+sample). It fails without the strip.
+Pictures: `runde66_mund_vorher_nachher.png` (ten grown people of the sample at the panel's size, before above,
+after below), `runde66_mund_nah_vorher_nachher.png` (six mouths at twice that size).
+Tried and dropped: the lips' colour as factors on the skin's colour alone (a fair man's lips came out grey, a
+tanned woman's too red: the reference has the same lip on both); no shade of the mouth's inside on the lips (no
+difference: what was black was not the lips); the strip at half the lips' colour, and at 1.6 times with the lips'
+edges left as they were (as black as the slit: 2 to 8 L); the strip's share of the colour on the lower lip's edge
+as well (a pale rim along the lower lip, which lies in the light).
+Still open: these numbers rest on two people of ours and three mouths of 10 to 30 pixels; the man's upper lip is
+9 L darker than there and the woman's line 5 to 19 L; the strip is lighter than the skin and dark only because it
+stands in shade (a light from below, or a mouth that opens, would show it pale); lips are smooth, without their
+creases and without a highlight on the lower lip; the upper lip is thin, with hardly a bow; the lower lip stands
+4 to 6 mm behind the upper; under a beard of stubble, Apoleia's hairs still lie on the lower lip (as the short
+beard's did until round 62); one line for every mouth.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

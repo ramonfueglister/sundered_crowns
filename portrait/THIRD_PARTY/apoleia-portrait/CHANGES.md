@@ -90,3 +90,10 @@ bytes unchanged.
 Round 65: `DressSet::lash_line` (the lid's edge drawn towards the lashes' colour where they grow; `real_look.rs`
 `real_skin` reads `skin_lash.txt` only when a dress asks for it), 0.75 for women and 0.65 for men of 1356; in
 `rest` the brows higher, men's eyes larger, cheekbones and a leaner head. Roman bytes unchanged.
+Round 66: `DressSet::lips` is a `Lips` per sex (was: how far the builder's lip facets are mixed towards red; a
+dress with a table now leaves those facets in the skin's colour). `real_look.rs` `real_skin`: the skin's colour is
+worked out per vertex and then given to the corners (the same numbers as before, in the same order); where
+`skin_lip.txt` says lip, a share of the skin's colour plus the blood's (`skin`, `blood`), the upper lip times
+`upper`; and a strip of 34 triangles appended to the skin that closes the slit between the lips (`morph.rs`
+`LIP_SEAM`, the two edges where the lips turn inward; `seam`), whose edges take no shade from `skin_ao.txt`. All
+of it only when a dress asks for it. Roman bytes unchanged.

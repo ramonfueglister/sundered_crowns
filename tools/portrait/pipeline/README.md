@@ -5,7 +5,7 @@ bind both to the head's triangles so the builder can move them with a morphed he
 1356 needed added: `tunic_sim.py` (neck opening `NECK`, `NDIP`; sleeves `SLEN`, `SFLARE`), `drape_sim.py` (kinds
 `hood` and `cowl`; `UCUT`, `CHIN`, `THROAT`, `THMAX`, `OFF0`, `VTH`, `SK_OUT`, `CW_IN`, `CW_UP`, `CW_GAP`), `styles.py` (hairstyles `bob` and `plait`; `bob` with `BOB_CUT`: every strand is cut where it crosses the fringe's line in front of the face),
 `tunic_bind.py` (`HEAD`, `HEM`, `HEMSMOOTH`, `HEMFOLLOW`, `HEM_AO`, `TAUBIN`; the hem's tube welded to the cloth's edge), `fabric_tex.py` (woven cloth as an image),
-`skin_lash.py` (the lash line on the lid's edge).
+`skin_lash.py` (the lash line on the lid's edge), `skin_lip.py` (the red of the lips along their outline).
 
 Not part of the game's build: the files they wrote are in `public/portrait/real/`. This folder is there so that
 they can be written again.
@@ -37,6 +37,7 @@ Every value is a choice by eye from the rounds against the reference pictures (P
 | normals of the painted caps | `python3 nmap.py bob01_cap.png bob01_cap_n.png` (no third argument: `8` is the number of strands side by side in an image of cards and adds a round profile to each of eight columns. Until round 53 the caps of 1356 were written with it: eight upright bands of tilted normals, dark patches with straight edges on beard and hair. `bob01` to `bob05`, `plait01` rewritten from their images) |
 | cloth images | `python3 fabric_tex.py out.png out_n.png wool 88`, `... linen 128` |
 | lash line `skin_lash.txt` (round 65) | `python3 -I skin_lash.py $B Eyelashes01.txt skin_lash.txt` (per vertex of the head how much of it lies on the lid's edge where the lashes grow: 1 on the upper lid, `LOWER=0.5` on the lower; in full up to 2.5 mm off the eyeball, gone at 5 mm, `LINE=0.025,0.05`. The head vertices that MakeHuman's lashes are bound to are the lids' inner rim, which lies against the eyeball and is hidden: the line goes outwards from there over `RINGS=5` rings of vertices) |
+| lips `skin_lip.txt` (round 66) | `python3 -I skin_lip.py $B young_lightskinned_female_diffuse.png skin_lip.txt` (the image: MakeHuman's skin `young_caucasian_female`, 2048 pixels, CC0. Per vertex of the head how much of it is lip, and how much of that upper lip: lip where the image's paint is redder than skin, `RED=14,24` in CIELAB a* (its skin 8 to 11, its lips 25 to 40), inside `BOX=0.5,6.4,6.76,0.8` round the mouth (the nostrils' red lies above it), on the face's part of the image `ISLAND=0.62,0.25,0.75` (the mouth's inside is painted elsewhere); upper lip above the middle between the two edges where the lips turn inward, `SEAM` in the script, the builder's `LIP_SEAM`. The young woman's image is clean there; the young man's and the old man's have broken paint in the middle of the mouth) |
 
 The image of the hair cards (`bob01.webp`, `bob02.webp`, with `_n`) is Apoleia's `roman01.webp` with blunt ends: its
 rows along the strand remapped by `np.interp(v, [0, 0.6, 0.93, 1.0], [0, 0.6, 0.8, 1.0])`, so the fading of the last

@@ -259,10 +259,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let beard = p.beard_style();
     let cov = p.u(BEARD_G);
     // (real look: with the textured skin lips only a little redder than the skin;
-    // the full mix read as lipstick there)
+    // the full mix read as lipstick there. A dress with a table has its lips drawn per vertex, from the lips'
+    // own outline: real_look.rs `real_skin`, `DressSet::lips`)
     let lip_c = cmix(skin, hex(if fem { "#9a3238" } else { "#8a3a36" }), match (real.is_some(), fem) {
-        (true, true) => garb.map_or(0.3, |d| d.lips[0]),
-        (true, false) => garb.map_or(0.2, |d| d.lips[1]),
+        (true, true) => garb.map_or(0.3, |_| 0.0),
+        (true, false) => garb.map_or(0.2, |_| 0.0),
         (false, true) => 0.55,
         (false, false) => 0.3,
     });
@@ -377,7 +378,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{n}_scalp.txt")).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or(1.0, |d| d.flush), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }]));
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or(1.0, |d| d.flush), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }]), garb.map(|d| &d.lips[if fem { 0 } else { 1 }]));
         }
         out.push(s);
     }

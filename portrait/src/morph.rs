@@ -308,6 +308,13 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
 /// MakeHuman's base head; lib.rs tests that they are those).
 pub(crate) const LIP_UPPER: usize = 474;
 pub(crate) const LIP_LOWER: usize = 493;
+/// The two edges where the lips turn inward, from the middle of the mouth outward to its corner, on either side:
+/// the upper lip's and the lower lip's (vertices of MakeHuman's base head; lib.rs tests that they lie on the lips
+/// and run outward). Between them the closed mouth is a slit (real_look.rs `real_skin` closes it).
+pub(crate) const LIP_SEAM: [([usize; 11], [usize; 8]); 2] = [
+    ([474, 3335, 3334, 3333, 3332, 5203, 3331, 3285, 3284, 3296, 3293], [493, 3348, 3342, 3336, 3303, 3310, 3298, 3356]),
+    ([474, 473, 472, 471, 470, 2453, 469, 419, 418, 430, 427], [493, 487, 481, 475, 437, 444, 432, 501]),
+];
 /// The most a mouth is closed or opened by (the weight on the targets' shares; MakeHuman's targets are made
 /// for 0 to 1).
 const MOUTH_MOST: f32 = 2.5;

@@ -214,6 +214,36 @@ mod tests {
     }
 
     #[test]
+    fn the_seam_of_the_lips_runs_from_the_middle_of_the_mouth_to_its_corners() {
+        use crate::geo::{len, sub};
+        use crate::morph::{LIP_LOWER, LIP_SEAM, LIP_UPPER};
+        let Some(h) = head() else { return };
+        for (side, sign) in LIP_SEAM.iter().zip([1f32, -1.0]) {
+            assert_eq!((side.0[0], side.1[0]), (LIP_UPPER, LIP_LOWER), "from where the lips meet in the middle");
+            for edge in [&side.0[..], &side.1[..]] {
+                for w in edge.windows(2) {
+                    let (a, b) = (h.base[w[0]], h.base[w[1]]);
+                    assert!(b[0] * sign > a[0] * sign && len(sub(a, b)) < 0.09, "outward, step by step: {} {}", w[0], w[1]);
+                }
+            }
+            // the upper lip's edge lies over the lower lip's, a millimetre at most, and in front of it
+            for &u in &side.0 {
+                let up = h.base[u];
+                let lo = side.1.iter().map(|&v| h.base[v]).min_by(|a, b| (a[0] - up[0]).abs().total_cmp(&(b[0] - up[0]).abs())).unwrap();
+                assert!(up[1] > lo[1] && up[1] - lo[1] < 0.012 && up[2] > lo[2], "{u}: {up:?} over {lo:?}");
+            }
+            // and both end at the corner of the mouth
+            let (eu, el) = (h.base[side.0[side.0.len() - 1]], h.base[side.1[side.1.len() - 1]]);
+            assert!(eu[0].abs() > 0.24 && len(sub(eu, el)) < 0.03, "{eu:?} {el:?}");
+        }
+        // the two sides mirror each other
+        for (a, b) in LIP_SEAM[0].0.iter().chain(&LIP_SEAM[0].1).zip(LIP_SEAM[1].0.iter().chain(&LIP_SEAM[1].1)) {
+            let (p, q) = (h.base[*a], h.base[*b]);
+            assert!(len(sub([-p[0], p[1], p[2]], q)) < 1e-4, "{a} {b}");
+        }
+    }
+
+    #[test]
     fn every_style_builds() {
         let Some(h) = head() else { return };
         let mut n = 0;
