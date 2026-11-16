@@ -7,6 +7,7 @@ import { crops } from '../lookprobe/blocks';
 import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
+import { FINER } from './land';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style }
@@ -48,13 +49,14 @@ export const WALLED_FROM = 3;
 /** a field lot with the hedge round it, in blocks */
 const LOT_W = 11, LOT_D = 8;
 /**
- * The share of the fields with a farmhouse beside it. A farmhouse holds some ten persons, a thousand people of 1356,
- * and a lot is about one and a half km² of the land (blocks of some 130 m, land.ts): so the countryside holds some
- * 35 people to the km² where half the land is under the plough, about as many as France had around 1328 (some 16 to
- * 20 million in today's borders, after the État des paroisses et des feux). An assumption: the places of the
- * gazetteer are a few of the villages there were, and the farms stand in for the rest.
+ * The share of the fields with a farmhouse beside it: one farmhouse to 55 cells of the land's data under fields,
+ * some 15 km² in middle Europe, whatever the size of a block (land.ts). A farmhouse holds some ten persons, a thousand
+ * people of 1356: so the countryside holds some 35 people to the km² where half the land is under the plough, about
+ * as many as France had around 1328 (some 16 to 20 million in today's borders, after the État des paroisses et des
+ * feux). An assumption: the places of the gazetteer are a few of the villages there were, and the farms stand in for
+ * the rest.
  */
-export const FARMS = 0.1;
+export const FARMS = Math.min(1, (LOT_W * LOT_D) / 55 / FINER ** 2);
 const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
 /** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
 export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
@@ -108,8 +110,34 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // no level, dry, free ground within reach: the model is left out, and the count says so
     if (own(cx, cz)) count(`${kind} dropped`);
   };
+  /**
+   * The height of ground made for a footprint that stands partly in water, as Venice's was: the footprint and the
+   * column round it are free, the dry ground under and beside it is at least a quarter of the footprint and level to
+   * within a step, and the rest becomes paved ground at that height. Null where that cannot be.
+   */
+  const madeGround = (x0: number, z0: number, x1: number, z1: number): number | null => {
+    let lo = Infinity, hi = -Infinity, dry = 0;
+    for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
+      if (x < 2 || z < 2 || x >= N - 2 || z >= N - 2 || used[idx(x, z)] || g.mat[idx(x, z)] === Mat.Rock) return null;
+      if (!g.wet[idx(x, z)]) { dry++; lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]); }
+    }
+    if (dry * 4 < (x1 - x0) * (z1 - z0) || hi - lo > 1) return null;
+    for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) { const i = idx(x, z); if (g.wet[i]) { g.wet[i] = 0; g.h[i] = hi; g.mat[i] = Mat.Paved; g.occ[i] = hi; } }
+    return hi;
+  };
+  /**
+   * A monument as near its real place as it can stand: on dry ground there, else on ground made for it at the
+   * water's edge, else on the nearest dry ground.
+   */
+  const monument = (model: Model, r: Rnd, cx: number, cz: number) => {
+    for (let k = 0; k <= 3; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx += Math.abs(dz) === k ? 1 : 2 * k || 1) {
+      const x = cx + dx - Math.floor(model.w / 2), z = cz + dz - Math.floor(model.d / 2), y = lot(x, z, x + model.w, z + model.d, 1) ?? madeGround(x, z, x + model.w, z + model.d);
+      if (y !== null) { build(model.build(r), x, z, model.w, model.d, y, model.height, 'monument'); return; }
+    }
+    landmark(model, r, cx, cz, 14, 'monument');
+  };
 
-  for (const mon of monuments) landmark(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]), 14, 'monument');
+  for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]));
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0) || a.id - b.id).forEach((s) => {
     // the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on
