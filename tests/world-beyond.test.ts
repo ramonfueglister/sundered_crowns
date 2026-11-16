@@ -35,6 +35,9 @@ describe('the realms of the rest of the globe', () => {
     expect(hanHeld / held).toBeGreaterThan(0.4);
     expect(mahaHeld / held).toBeGreaterThan(0.3);
   });
+  it('leave land without a realm at -1 in the setup, never null (the map reads null as realm 0)', () => {
+    expect(setup.owner.every((o) => Number.isInteger(o) && o >= -1)).toBe(true);
+  });
   it('do not change the cultures and faiths of the game map', () => {
     expect(ALL_CULTURES.indexOf('unknown')).toBeLessThan(ALL_CULTURES.indexOf('han'));
     expect(FAITHS.findIndex((f) => f.id === 'anglican_type')).toBeLessThan(FAITHS.findIndex((f) => f.id === 'mahayana'));
