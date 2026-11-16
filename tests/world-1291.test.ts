@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
+import { SCALE } from '../src/sim/scale';
 
 const { s, w } = newWorldState(1291, 1291);
 const s1291 = loadSetup(1291), s1356 = loadSetup(1356);
@@ -25,8 +26,17 @@ describe('a world of 1291', () => {
     const old = structuredClone(s);
     old.v = 7;
     for (let i = 0; i < old.place.pop.length; i++) old.place.pop[i] = Math.max(0, s1356.pop[i] ?? 0);
+    for (let i = 0; i < old.place.harvest.length; i++) old.place.harvest[i] *= SCALE; // a world of 7 counted people of the time
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
-    expect(Array.from(up.place.pop)).toEqual(Array.from(s.place.pop));
+    for (let i = 0; i < w.L; i++) expect(up.place.pop[i]).toBeCloseTo(s.place.pop[i], 3);
+    for (let i = 0; i < w.L; i++) expect(up.place.harvest[i] / Math.max(1, s.place.harvest[i])).toBeCloseTo(s.place.harvest[i] > 0 ? 1 : 0, 4);
+  });
+  it('counts heads at 1:100 and feeds a head as a person of the time', () => {
+    expect(sum(s.place.pop)).toBeGreaterThan(sum(s1291.pop) / SCALE * 0.999);
+    expect(sum(s.place.pop)).toBeLessThan(sum(s1291.pop) / SCALE * 1.01); // the 30 cities may lift a few places
+    let kcal = 0, heads = 0;
+    for (let i = 0; i < w.L; i++) if (s.place.harvest[i] > 0) { kcal += s.place.harvest[i]; heads += s.place.pop[i]; }
+    expect(kcal / heads / 365).toBeGreaterThan(800); expect(kcal / heads / 365).toBeLessThan(3000);
   });
 });
