@@ -1,10 +1,11 @@
-// The 2D map: once the world lies flat under a camera that looks straight down (zoom.ts), the realms of 1356 colour
-// it. Their colours are painted tile by tile (paint.ts) by a worker, at the level whose dots are about a pixel wide,
-// and laid over the blocks. The tiles form a pyramid (pyramid.ts), so that a coarser tile stands in for finer ones
+// The realms' map: once the world lies flat under a camera that looks straight down (zoom.ts), the realms colour it
+// as a 2D map; with the political map mode on, their colours lie on the land at every distance, over
+// its relief, as EU5's map modes do (`mode`). Their colours are painted tile by tile (paint.ts) by a worker, at the level whose
+// dots are about a pixel wide, put on the stage's paper and laid by it onto the ground where they lie (stage.ts). The tiles form a pyramid (pyramid.ts), so that a coarser tile stands in for finer ones
 // that are not there yet. The realms lie on the game map only; round the globe they come again with it, and between
 // its laps the map goes on as land and water.
 import * as THREE from 'three/webgpu';
-import { texture, uniform } from 'three/tsl';
+import { texture } from 'three/tsl';
 import { LAND_Y, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { blockOfCell, cellOfBlock } from './land';
@@ -12,7 +13,7 @@ import type { RealmName } from './paint';
 import type { Layout, View } from './pieces';
 import { cover, keyOf } from './pyramid';
 import type { RealmsDone, RealmsJob, RealmsNow } from './realms.worker';
-import { PAPER_COARSEST, paperLevelOf, realmsOf, reliefOf } from './zoom';
+import { PAPER_COARSEST, paperLevelOf, paperOf, reliefOf } from './zoom';
 
 /** dots along the side of a tile: as the tiles of the region (region.ts) */
 const TILE = 512;
@@ -42,6 +43,10 @@ export interface RealmsMap {
   set(now: RealmsNow): void;
   /** Picks a place of the game map out on the map from now on (counted from 0; -1: none). */
   choose(place: number): void;
+  /** where the realms' colours lie: on the land at every distance, nowhere, or only on the flat world far out (zoom.ts `paperOf`) */
+  mode: 'political' | 'terrain' | 'far';
+  /** how strongly the realms' names are written over the view last looked at, 0 … 1 */
+  named: number;
   /** The place of the game map at a cell of the world (-1: none, sea or beyond the game map), counted from 0. */
   placeAt(u: number, v: number): Promise<number>;
   /** Stops the worker; the map is not used after that. */
@@ -55,9 +60,7 @@ export interface RealmsMap {
  */
 export function createRealms(stage: Stage, o: { region: string; base: string; year?: number; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
-  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, choose, placeAt, dispose: () => worker.terminate() };
-  /** how strongly the realms' colours cover the world */
-  const wash = uniform(0);
+  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', mode: 'far', named: 0, set, choose, placeAt, dispose: () => worker.terminate() };
   let nextId = 1, looks = 0, named = false, age = 0, chosen = -1;
 
   /** the tile as a square on the ground, in finest blocks from its north-west corner */
@@ -94,11 +97,10 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
         h.picture = new THREE.DataTexture(new Uint8Array(e.data.tile.buffer), TILE, TILE, THREE.RGBAFormat);
         h.picture.magFilter = THREE.LinearFilter; h.picture.minFilter = THREE.LinearMipmapLinearFilter; h.picture.generateMipmaps = true; h.picture.anisotropy = 4; h.picture.needsUpdate = true;
         const dots = texture(h.picture), material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false, transparent: true });
-        material.colorNode = dots.rgb.div(dots.a.max(1 / 255)); material.opacityNode = dots.a.mul(wash);
+        material.colorNode = dots.rgb.div(dots.a.max(1 / 255)); material.opacityNode = dots.a;
         h.mesh = new THREE.Mesh(square(what.level), material);
-        // drawn after the blocks, whatever their heights
-        h.mesh.renderOrder = 1; h.mesh.frustumCulled = false; h.mesh.visible = false;
-        stage.put(h.mesh);
+        h.mesh.frustumCulled = false; h.mesh.visible = false;
+        stage.paper.add(h.mesh); stage.redraw();
       }
       const before = held.get(what.key);
       if (before) drop(before);
@@ -110,7 +112,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
   worker.onerror = (e) => { realms.failed ||= e.message; o.changed(); };
   const drop = (h: Held) => {
     if (!h.mesh) return;
-    stage.take(h.mesh); (h.mesh.material as THREE.Material).dispose(); h.mesh.geometry.dispose(); h.picture!.dispose();
+    stage.paper.remove(h.mesh); stage.redraw(); (h.mesh.material as THREE.Material).dispose(); h.mesh.geometry.dispose(); h.picture!.dispose();
   };
 
   function set(now: RealmsNow) {
@@ -130,12 +132,14 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
 
   function look(v: View, at: Layout): number {
     const [u, cv] = cellOfBlock(v.x, v.z), halfW = v.wide / 2, halfD = v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2;
-    const level = paperLevelOf(v.wide, v.pixels), soon = realmsOf(v.wide * SOON) > 0;
+    const level = paperLevelOf(v.wide, v.pixels), lies = paperOf(v.wide, realms.mode), soon = paperOf(v.wide * SOON, realms.mode).strength > 0;
     // the lap of the globe whose game map lies nearest the picture
     realms.lap = Number.isFinite(o.round) ? Math.round((u - o.map[0] / 2) / o.round) * o.round : 0;
     const cu = u - realms.lap;
     looks++;
-    wash.value = realmsOf(v.wide);
+    // the land's own light shows through the colours until the world lies flat; there the sea is part of the map
+    stage.lay(lies.strength, lies.flat, SEA_Y + 0.3 * (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step));
+    realms.named = lies.names;
     /** how far a tile lies outside the picture, in finest cells (0: it reaches into it); the map's cells run with the picture's sides */
     const outside = (l: number, x: number, y: number) => { const side = TILE * 2 ** l; return Math.max(0, Math.abs((x + 0.5) * side - cu) - halfW - side / 2, Math.abs((y + 0.5) * side - cv) - halfD - side / 2); };
     /** the tiles of a level on the game map within `around` cells of the picture */
@@ -159,15 +163,13 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
       if (!named) { named = true; ask({ kind: 'names' }, 'names'); }
     }
     let missing = 0;
-    for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (wash.value > 0 && w.level === level && w.rank < 2e9) missing++; }
+    for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (lies.strength > 0 && w.level === level && w.rank < 2e9) missing++; }
     // to paint: what is not there yet, and what still shows the old realms
     const queue = wanted.filter((w) => { const h = held.get(w.key); return (!h || h.old) && !busy.has(w.key); }).sort((a, b) => b.rank - a.rank);
     while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y, cells: o.cells }, next); }
 
     // what is shown: every part of the picture once, from the tiles nearest the view's level that are there
-    const shown = wash.value > 0 ? cover(level, PAPER_COARSEST, near(PAPER_COARSEST, 0).map((t) => [t.x, t.y] as const), (l, x, y) => held.get(keyOf(l, x, y)), (l, x, y) => outside(l, x, y) <= 0) : new Set<Held>();
-    // the map lies at the height of the plains, which sink towards the sea's level as the view widens
-    const ground = SEA_Y + (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step);
+    const shown = lies.strength > 0 ? cover(level, PAPER_COARSEST, near(PAPER_COARSEST, 0).map((t) => [t.x, t.y] as const), (l, x, y) => held.get(keyOf(l, x, y)), (l, x, y) => outside(l, x, y) <= 0) : new Set<Held>();
     for (const h of held.values()) {
       const show = shown.has(h);
       if (show) h.seen = looks;
@@ -175,7 +177,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
       h.mesh.visible = show;
       if (!show) continue;
       const side = TILE * 2 ** h.level, [bx, bz] = blockOfCell(h.x * side + realms.lap, h.y * side);
-      h.mesh.position.set(bx / at.coarse - at.homeX, ground, bz / at.coarse - at.homeZ); h.mesh.scale.set(1 / at.coarse, 1, 1 / at.coarse);
+      h.mesh.position.set(bx / at.coarse - at.homeX, 0, bz / at.coarse - at.homeZ); h.mesh.scale.set(1 / at.coarse, 1, 1 / at.coarse);
     }
     // tiles the view no longer asks for leave the stage, those unused the longest first
     const spare = [...held].filter(([, h]) => h.seen !== looks).sort((a, b) => a[1].seen - b[1].seen);

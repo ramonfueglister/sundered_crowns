@@ -15,14 +15,14 @@ import { createTable, spawn } from '../ecs';
 import { hash01 } from '../rng';
 import { personYears, type Sex } from '../people/lifetable';
 import { child, founder, origin, NG } from '../people/genes';
-import CITIES_JSON from '../content/cities_1356.json';
-import { uses1356Tables } from '../tables';
+import { type City, citiesOf, hasCities } from '../content/cities';
 import { SCALE, toHeads } from '../scale';
 
-export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number; site: number }
-export const CITIES: readonly City[] = CITIES_JSON.cities;
+export type { City } from '../content/cities';
+/** The cities of a world of 1356 (src/sim/content/cities.ts has those of every start year). */
+export const CITIES: readonly City[] = citiesOf(1356);
 
-/** The scale of the world (src/sim/scale.ts): one person for this many people of the time. */
+/** The scale of the world (src/sim/scale.ts): the real world of the time has this many times its people. */
 export { SCALE } from '../scale';
 /** Coale-Demeny West level 3: life expectancy at birth of women 25 years (Bailey & Rigby 2012: 20 to 25 in the
  *  Middle Ages; Ohlin 1966: about 25 for the nobility around 1300). The population is stationary. */
@@ -46,18 +46,18 @@ const DAYS_PER_YEAR = 365.25;
 /** The age of a person on a day of the world, in years. */
 export const ageOn = (born: number, day: number): number => (day - born) / DAYS_PER_YEAR;
 
-/** People who live in each place according to the cities (several cities may lie in one place). */
-export function cityPeopleByPlace(): Map<number, number> {
+/** People who live in each place according to the cities of a start year (several cities may lie in one place). */
+export function cityPeopleByPlace(year = 1356): Map<number, number> {
   const m = new Map<number, number>();
-  for (const c of CITIES) m.set(c.place, (m.get(c.place) ?? 0) + c.people);
+  for (const c of citiesOf(year)) m.set(c.place, (m.get(c.place) ?? 0) + c.people);
   return m;
 }
 
 /** A place is never smaller than the cities in it: where Chandler gives a city more people than the start setup gives
- *  its whole place, the place gets the city's (Ramon's decision of 15 November 2026). Cities count people of the time,
- *  places heads of the simulation. */
+ *  its whole place, the place gets the city's (Ramon's decision of 15 November 2026). Cities count the real people of the time,
+ *  places the people of the world (a hundredth of them). */
 export function fitPlacesToCities(s: WorldState): void {
-  for (const [p, n] of cityPeopleByPlace()) if (s.place.pop[p] < toHeads(n)) s.place.pop[p] = toHeads(n);
+  for (const [p, n] of cityPeopleByPlace(s.startYear)) if (s.place.pop[p] < toHeads(n)) s.place.pop[p] = toHeads(n);
 }
 
 // --- random numbers: a stream of their own, a hash of the world's seed, the person and the number of the draw ---
@@ -83,14 +83,14 @@ function stationary(level: number) {
 export function foundPeople(s: WorldState): void {
   const person = createTable(PERSON_SCHEMA, 32768), family = createTable(FAMILY_SCHEMA, 8192);
   s.person = person; s.family = family;
-  if (!uses1356Tables(s.startYear)) return; // the cities are those of 1356 (src/sim/tables.ts)
+  if (!hasCities(s.startYear)) return; // the cities of the start year (src/sim/content/cities.ts)
   const st = stationary(LIFE_TABLE_LEVEL), seed = s.seed >>> 0, P = person.cols, F = family.cols;
   const z: Record<Trait, number[]> = { iq: [], o: [], c: [], e: [], a: [], n: [] };
   const newFamily = (place: number, man: number, woman: number) => {
     const f = spawn(family); F.place[f] = place; F.man[f] = man; F.woman[f] = woman; return f;
   };
 
-  for (const city of CITIES) {
+  for (const city of citiesOf(s.startYear)) {
     const n = Math.round(city.people / SCALE);
     const ids: number[] = [], age = new Map<number, number>(), marriageAge = new Map<number, number>();
     // 1. sex and age from the stationary population; the personal age at first marriage
@@ -161,9 +161,9 @@ const geneBits = (seed: number, id: number) => (k: number) => {
   const u = (j: number) => BigInt(Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296));
   return (u(1) << 32n) | u(0);
 };
-/** The gene pool of each city place: the origin of the place (genes.ts, after dna.rs). */
-function poolOf(place: number): number {
-  const c = CITIES.find((x) => x.place === place);
+/** The gene pool of each city place of a start year: the origin of the place (genes.ts, after dna.rs). */
+function poolOf(year: number, place: number): number {
+  const c = citiesOf(year).find((x) => x.place === place);
   return c ? origin(c.lon, c.lat) : 0;
 }
 
@@ -173,7 +173,7 @@ export function giveGenes(s: WorldState): void {
   const P = s.person.cols, F = s.family.cols, G = P.genes, seed = s.seed >>> 0;
   for (let id = 0; id < s.person.size; id++) {
     if (P.mother[id] >= 0) continue;
-    G.set(founder(poolOf(F.place[P.family[id]]), geneBits(seed, id)), id * 2 * NG);
+    G.set(founder(poolOf(s.startYear, F.place[P.family[id]]), geneBits(seed, id)), id * 2 * NG);
   }
   for (let id = 0; id < s.person.size; id++) {
     const m = P.mother[id], f = P.father[id];

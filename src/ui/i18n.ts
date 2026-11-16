@@ -73,10 +73,12 @@ const S = {
   paused: ['Paused', 'Angehalten'],
   settings: ['Settings', 'Einstellungen'],
   language: ['Language', 'Sprache'],
-  map_tools: ['Map tools', 'Kartenwerkzeuge'],
-  to_my_realm: ['To my realm', 'Zu meinem Reich'],
-  whole_map: ['Whole map', 'Ganze Karte'],
-  fullscreen: ['Full screen', 'Vollbild'],
+  map_modes: ['Map modes', 'Kartenmodi'],
+  map_mode_political: ['Political', 'Politisch'],
+  map_mode_political_hint: ['The realms in their colours, near and far', 'Die Reiche in ihren Farben, nah und fern'],
+  map_mode_terrain: ['Terrain', 'Gelände'],
+  map_mode_terrain_hint: ['The land alone, without the realms', 'Nur das Land, ohne die Reiche'],
+  key: ['Key', 'Taste'],
   music: ['Music', 'Musik'],
   music_on: ['Turn on', 'Einschalten'],
   music_off: ['Turn off', 'Ausschalten'],
@@ -109,7 +111,7 @@ const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.sl
 export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
 export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
-/** Heads of the simulation (1:100, src/sim/scale.ts): a village has a few, so below 100 with one decimal. */
+/** People of the world (a hundredth of the real ones, src/sim/scale.ts): a village has a few, so below 100 with one decimal. */
 export const heads = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: Math.abs(v) < 100 ? 1 : 0 });
 /** A share as per cent with one decimal. */
 export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;

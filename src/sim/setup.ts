@@ -11,7 +11,6 @@ import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople } from './systems/people';
-import { uses1356Tables } from './tables';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -53,7 +52,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   setPlaces(s, setup, 0, L);
   // a capital the realm does not hold is no capital
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
-  if (uses1356Tables(s.startYear)) fitPlacesToCities(s); // no place is smaller than its cities
+  fitPlacesToCities(s); // no place is smaller than its cities (those of the start year)
   foundPeople(s);
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   foundEconomy(s, w);
@@ -85,6 +84,6 @@ export function setPlaces(s: WorldState, setup: SetupState, from: number, to: nu
     place.owner[i] = Number.isInteger(o) && o >= 0 && o < n ? o : -1;
     place.culture[i] = cultureIndex(setup.culture[i]);
     place.faith[i] = faithIndex(setup.faith[i]);
-    place.pop[i] = toHeads(Math.max(0, setup.pop[i] ?? 0)); // the setup counts people of the time, the world heads
+    place.pop[i] = toHeads(Math.max(0, setup.pop[i] ?? 0)); // the setup counts the real people of the time, the world a hundredth of them
   }
 }
