@@ -160,7 +160,11 @@ if style == 'region':
 
 # --- per style ---
 P_ = dict(
-    stubble=dict(cards=False, Lc=0.013, Lm=0.013, base=0.3, mean=0.5, n=65000),
+    # STUB_N: how many hairs are tried (those of them that fall into the zone are drawn: the call prints how many
+    # and how many that is to the square centimetre); STUB_BASE: how dark the shade under the hairs is at most
+    # (the layer's own, in the hair's colour); STUB_L: the hairs' length (0.01 = 1 mm). Without them Apoleia's
+    stubble=dict(cards=False, Lc=float(os.environ.get('STUB_L', '0.013')), Lm=float(os.environ.get('STUB_L', '0.013')), base=float(os.environ.get('STUB_BASE', '0.3')), mean=0.5,
+                 n=int(os.environ.get('STUB_N', '65000'))),
     shortcap=dict(cards=False, Lc=0.024, base=0.6, mean=0.55, n=95000),
     short=dict(cards=False, Lc=0.03, Lm=0.038, base=0.82, mean=0.55, n=115000),
     full=dict(cards=True, K=340, Nr=14000, L=(0.32, 0.62, 0.11), lift=(0.012, 0.09), hang=True, steps=18, w=(0.07, 0.16), taper=0.35, Lc=0.07, base=0.9, mean=0.55, n=110000, conv=0.55, wave=0.012, Lm=0.075),
@@ -341,4 +345,10 @@ cov = paint_cap(H, out, name, margin, flow, rng, Lfun, shade, n=P_['n'], steps=8
                 base=P_['base'], base_ramp=float(os.environ.get('CROP_RAMP', '1.5')) if style == 'crop' else 4.0, mean=P_['mean'], ymin=5.7, uvc=UVC,
                 lift=crop_lift if style == 'crop' else None)
 print(style, 'cap coverage', round(cov, 3))
+# the zone's area on the base head (triangles whose middle lies inside it), and the layer's hairs to the square centimetre
+_tri = H.V[np.array(H.T)]; _cen = _tri.mean(1)
+# (the skin's outer side alone: the walls of the mouth's hollow lie in the same directions)
+_in = (margin(*ang(unit(_cen - hc))) > 0) & (_cen[:, 1] > 5.7) & (np.linalg.norm(_cen - hc, axis=1) > 0.85 * H.skin(unit(_cen - hc)))
+_cm2 = 100 * 0.5 * np.linalg.norm(np.cross(_tri[:, 1] - _tri[:, 0], _tri[:, 2] - _tri[:, 0]), axis=1)[_in].sum()
+print(style, 'zone', round(_cm2, 1), 'cm2,', H.cap_hairs, 'hairs,', round(H.cap_hairs / _cm2, 1), 'to the cm2')
 write_head_obj(H, os.path.join(out, name + '_head.obj'))

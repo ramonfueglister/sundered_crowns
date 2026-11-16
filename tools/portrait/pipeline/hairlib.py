@@ -297,6 +297,7 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     cuv = uvof(cdir)
     Q = golden(n * 3, rng, 0.004)
     qm = margin(*ang(Q)); Q = Q[qm > -2.0]; Q = Q[rng.permutation(len(Q))[:n]]
+    head.cap_hairs = len(Q)
     qt, qe = ang(Q)
     L = Lc(qt, qe) * (0.7 + 0.5 * rng.random(len(Q)))
     shd_q = shade(Q) * rng.uniform(0.85, 1.1, len(Q))

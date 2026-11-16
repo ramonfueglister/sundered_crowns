@@ -273,6 +273,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         (false, false) => 0.3,
     });
     let brow_c = cmix(skin, hair, (if fem { 0.4 } else { 0.55 }) * garb.filter(|_| real.is_some()).map_or(1.0, |d| d.brow_paint[if fem { 0 } else { 1 }]));
+    // (a dress with a table says how much of this paint the skin under stubble keeps: `DressSet::stubble_paint`)
+    let stub_paint = if beard == Beard::Stubble { garb.filter(|_| real.is_some()).map_or(1.0, |d| d.stubble_paint) } else { 1.0 };
     let stub_c = cmix(skin, cmix(hex("#33271f"), hair, 0.3), (if p.age < 20.0 { 0.22 } else { 0.4 }) + 0.22 * cov);
     let in_brow = |c: V3| {
         let ax = c[0].abs();
@@ -332,8 +334,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             if in_brow(c) {
                 return cmul(brow_c, 0.9 + 0.15 * hh);
             }
-            if beard != Beard::Shaven && in_beard(c, a, b, cc) {
-                return cmul(cmix(skin, stub_c, 0.55 + 0.45 * hh), 0.94 + 0.08 * hash(cc, a, b));
+            if beard != Beard::Shaven && stub_paint > 0.0 && in_beard(c, a, b, cc) {
+                return cmul(cmix(skin, stub_c, (0.55 + 0.45 * hh) * stub_paint), 0.94 + 0.08 * hash(cc, a, b));
             }
             let cm = Ctx::mask3(&h.cheek, a, b, cc);
             if cm > 0.35 {
@@ -370,7 +372,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // a shadow of beard in the skin's colour instead of grains
             if beard == Beard::Stubble || (beard != Beard::Shaven && !fem) {
                 let dc = linear(cmix(hex("#2b211b"), hair, 0.35));
-                let k = (if beard == Beard::Stubble { 0.1 + 0.15 * cov } else { 0.07 }) * if real_beard.is_some() { 0.4 } else { 1.0 };
+                let k = (if beard == Beard::Stubble { 0.1 + 0.15 * cov } else { 0.07 }) * if real_beard.is_some() { 0.4 } else { 1.0 } * stub_paint;
                 for (t, f) in h.parts["body"][lod].chunks_exact(3).enumerate() {
                     let (a, b, c) = (f[0], f[1], f[2]);
                     if in_beard(x.base_c(a, b, c), a, b, c) {

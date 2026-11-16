@@ -6,7 +6,7 @@ mod common;
 
 use common::{head, person};
 use sc_portrait::measure::{face, far_cheek, lips, marks, LIPS, MEASURES, MENTON, SELLION, STAGE_TURN};
-use sc_portrait::{build, morph_test, real, Head, Look, LODS};
+use sc_portrait::{build, morph_test, real, Beard, Head, Look, LODS};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -281,6 +281,41 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
             println!("person {k}: {} corners, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
         }
         assert!(dark > 0.8 && light > 1.1 && light < 1.6, "person {k}: {dark} to {light} of the skin's lightness");
+    }
+}
+
+#[test]
+fn stubble_of_england_is_hairs_on_skin_and_no_paint_in_it() {
+    // Apoleia paints the skin of the beard's zone towards a dark brown under any beard (the grains of its faceted
+    // look), and the real look lays its layer of hairs over that. On England's stage a man with stubble had a
+    // jaw 33 L darker than the same skin without it, two thirds of the way to a dark full beard (44 to 54): a
+    // dirty mask over the lower face, with a line across the cheek where the paint ends and a pale patch over the
+    // upper lip, which the paint leaves free (until round 79). England's skin keeps none of that paint under
+    // stubble: the skin of a man with stubble is the skin he has shaven, and the stubble is the layer of hairs.
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert_eq!((set.beard_stubble, set.stubble_paint), ("beard_stubble1356", 0.0));
+    let skin = |out: &sc_portrait::Portrait| out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("skin"))).unwrap().col.clone();
+    let grey = |c: &[[f32; 3]]| c.iter().map(|c| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]).sum::<f32>() / c.len() as f32;
+    for k in 0..6 {
+        let mut p = person(2 * k + 1, false, [24.0, 35.0, 50.0][k as usize % 3]);
+        p.beard = Some(Beard::Shaven);
+        let shaven = build(&h, &p, 1);
+        p.beard = Some(Beard::Stubble);
+        let worn = build(&h, &p, 1);
+        assert!(skin(&shaven) == skin(&worn), "person {k}: the skin under stubble is painted");
+        let layers = |out: &sc_portrait::Portrait, name: &str| out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(name))).count();
+        assert_eq!((layers(&worn, "/beard_stubble1356_cap."), layers(&shaven, "/beard_stubble")), (1, 0), "person {k}");
+        // a Roman keeps Apoleia's paint (his portrait is held byte for byte elsewhere): all of his skin taken
+        // together, the body's too, is a tenth darker by it (0.89 to 0.91 of its lightness)
+        p.dress = sc_portrait::dress::Dress::Roman;
+        let roman = build(&h, &p, 1);
+        p.beard = Some(Beard::Shaven);
+        let against = grey(&skin(&roman)) / grey(&skin(&build(&h, &p, 1)));
+        if std::env::var("SHOW").is_ok() {
+            println!("person {k}: a Roman's skin under stubble has {against:.3} of its lightness shaven");
+        }
+        assert!(against < 0.95, "person {k}: {against}");
     }
 }
 

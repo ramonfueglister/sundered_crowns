@@ -166,3 +166,10 @@ Round 78: nothing in the builder. England's dress table paints the upper lip 1.1
 (`Lips::upper`, before 1.5): the stage's profile for England has a fill light from below and in front since
 (`src/portrait/profile.ts`, the game's own file), which lights what faces down; Apoleia's stage is as it was.
 Roman bytes unchanged.
+
+Round 79: a dress with a table says how much of Apoleia's paint the skin under stubble keeps
+(`DressSet::stubble_paint`, `build.rs` `stub_paint`; England none: the skin of a man with stubble is his skin
+shaven). England's layer of stubble is written anew with a real beard's number of hairs (the pipeline's
+`beards.py`: `STUB_N`, `STUB_BASE`, `STUB_L`, and a line that prints the zone's area and its hairs;
+`hairlib.py` keeps the number of hairs drawn). New, not Apoleia's: a test in `tests/faces.rs`. Apoleia's
+stubble and Roman bytes unchanged.

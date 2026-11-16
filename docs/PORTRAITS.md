@@ -1166,6 +1166,68 @@ into. The line between the lips is still 7 to 13 L darker than hers, the lid's r
 (-36) and the hard edge of the shade that hood and fringe throw across a man's face are as they were. What
 rounds 74, 76 and 77 left.
 
+**Stubble that was a mask (round 79).** In the sample at the game's size, four of the eight grown men had a
+dirty brown lower face with a line across the cheek and a pale grey patch over the upper lip. They are the four
+who wear stubble. The reference's men have beards or none; none of its screenshots shows stubble large enough
+to read, so this round is held against the same faces without stubble and against what is known of real beards.
+
+Measured on the four (`940007`, `940009`, `940023`, `940025`), on the lit side, against the lit cheek (L; the
+cheek as `face_colour.mjs` reads it; the jaw beside the chin; the skin over the upper lip beside the philtrum),
+with the builder's parts left out in turn (a scratch switch in `build.rs`, not committed):
+
+| | jaw | over the upper lip |
+|---|---|---|
+| the same skin without stubble | -6.8 | +3.2 |
+| Apoleia's paint in the skin alone | -24.2 | +0.4 |
+| the layer of hairs alone | -29.5 | -17.4 |
+| both, as it was | -39.8 | -19.4 |
+| a dark full beard on two other men (the same skin without: -8.5, -10.4) | -62.2, -54.3 | |
+| now | -16.0 | -4.4 |
+
+A jaw with stubble was 33 L darker than the same jaw without, two thirds of the way to a dark full beard (44
+to 54 darker). Two things lay over each other:
+
+- Apoleia paints the skin of the beard's zone towards a dark brown, facet by facet, under any beard (`build.rs`
+  `stub_c`, `in_beard`: 0.2 to 0.6 of that colour on a grown man). These are the grains of its faceted look; in
+  the real look they stayed under the layer of hairs. The paint ends at the zone's edge, a line from the
+  mouth's corner to the ear, and the zone leaves the skin over the upper lip free: there the layer's hairs lay
+  on light skin, as a pale patch beside the painted jaw.
+- The layer of hairs (`beard_stubble1356_cap`, Apoleia's with the mouth left free, round 67) has 38 363 hairs on a
+  zone of 251 square centimetres of skin, 153 to the square centimetre, over a dark shade of its own of up to
+  0.3 (`beards.py` now prints zone and hairs). Real beards have 19 to 55 hairs to the square centimetre (van
+  Eemeren 2004, J. Cosmet. Sci. 55 (6), 547 to 548: the range over his shaven subjects; read from the journal's
+  page of the abstract through a tool's summary, not from the paper).
+
+Now. England's skin keeps none of Apoleia's paint under stubble (`DressSet::stubble_paint` 0; other beards and
+Romans as before). England's layer is written anew with 12 402 hairs, 49 to the square centimetre, and a shade
+of 0.12 at most (`LIPS=1 STUB_N=21000 STUB_BASE=0.12 python3 beards.py $B beard stubble beard_stubble1356`; the
+hairs' length is Apoleia's, 1.3 mm, three days' growth at 0.4 mm a day, a rate from memory and not looked up;
+the layer's triangles are the same, its image covers 0.41 of what it did). The jaw is 9.2 L darker than without
+stubble, the skin over the upper lip 7.6: one stubble over both, where before the two differed by 10 L. Its
+hue against the same skin: a -2.2, b -3.8 (before a -5.1, b -11.5: a grey mask). The mean chin of the eight
+grown men, bearded ones included, went from L 27.5 to 40.1; cheeks, lips, brows and eyes measure as in round 78.
+
+The density is within the measured range. The shade of 0.12 is by eye (PLACEHOLDER): it stands for the shafts
+that show through the skin and for hairs too short to draw, and no measured colour of a stubbled jaw was found
+(two searches; the one paper that looked likely could not be opened). By reckoning, hairs of 0.12 mm breadth
+(from memory) and 1.3 mm length at 49 to the square centimetre cover 8 hundredths of the skin, which would take
+about 2 L; ours takes 9 with its shade. Tried: 59 hairs to the square centimetre with a shade of 0.08 (jaw 7.8
+darker than without, the hairs read as pepper) and with 0.15 (10.7).
+
+Test: `stubble_of_england_is_hairs_on_skin_and_no_paint_in_it` (`portrait/tests/faces.rs`): the skin of six men
+with stubble is, number for number, their skin shaven, they wear England's layer, and a Roman keeps Apoleia's
+paint (all of his skin together 0.89 to 0.91 as light as shaven). It holds the skin, not what the layer's
+image shows: that is held by the call above, which writes the image.
+Pictures: `runde79_stoppeln_vorher_nachher.png` (the four men as the panel shows them, round 78 above round
+79), `runde79_stoppeln_teile.png` (three of them large: as it was, the paint alone, the hairs alone, now),
+`runde79_stichprobe.png`.
+Still open: seen large, the hairs are single dark dashes, each about 0.4 mm broad (the image has 1024 pixels;
+a real hair is a third of that); all point one way; the stubble of a man of 24 is as dense as that of a man of
+50, and a boy of 17 can wear it; the gene of the beard's growth, which set the paint's strength, no longer
+shows in stubble. The paint is still under England's short and full beards, where the hairs
+hide it except at the beard's edge on the cheek. The dark full beards are a hard, nearly black shape. What
+round 78 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

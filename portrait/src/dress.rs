@@ -133,7 +133,17 @@ pub struct DressSet {
     /// The file of the stubble. Apoleia's has the same hairs in the gap between the lips as its short beard; they
     /// are short, and seen large they lie on the lower lip as a row of dark dashes along the line of the mouth.
     /// England's `beard_stubble1356` is the same stubble with the mouth left free (beards.py `LIPS=1`).
+    /// Since round 79 it has a real beard's number of hairs, 49 to the square centimetre (Apoleia's 153; real
+    /// beards 19 to 55), over a lighter shade of its own: see `stubble_paint` and docs/PORTRAITS.md.
     pub beard_stubble: &'static str,
+    /// How much of Apoleia's paint the skin under stubble keeps (1 = all of it). Apoleia mixes the skin of the
+    /// beard's zone towards a dark brown, facet by facet (build.rs `stub_c`, `in_beard`; 0.2 to 0.6 of it on a
+    /// grown man): the grains of its faceted look, which stayed under the real look's layer of hairs. Measured on
+    /// England's stage (round 79), that paint alone made a man's jaw 17 L darker than the same skin without, the
+    /// layer of hairs alone 23, both 33; a dark full beard is 44 to 54 darker. The paint ends at the zone's edge
+    /// as a line across the cheek, and the zone leaves the skin over the upper lip free, where the hairs then lay
+    /// pale on light skin. 0: the layer of hairs has a shade of its own, in its image, that fades out with them.
+    pub stubble_paint: f32,
     /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Of those tried, Apoleia's
     /// `eyebrow001` alone sits level on these heads. `eyebrow011` (women's until round 53), `eyebrow005` and
     /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
@@ -405,6 +415,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     beard_full: "beard_crop",
     beard_short: "beard_short1356",
     beard_stubble: "beard_stubble1356",
+    stubble_paint: 0.0,
     brows: ["eyebrow001", "eyebrow001"],
     brow_image: "eyebrow1356",
     brows_child: 0.6,
