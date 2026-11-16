@@ -6,7 +6,7 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconCalendar, IconGear, IconCrown, IconPolitical, IconTerrain, IconFullscreen, IconClose } from './icons';
+import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose } from './icons';
 import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
@@ -30,7 +30,6 @@ export function App() {
       <Music />
       <TopBar />
       <RealmBanner />
-      <MapTools />
       {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
       {selectedPlace.value >= 0 && <PlacePanel />}
     </>}
@@ -103,16 +102,6 @@ function MapModes() {
       return <button key={mode} class="tool mode" role="radio" aria-checked={now === mode} aria-label={name}
         title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`} onClick={() => setMapMode(mode)}><Icon /></button>;
     })}
-  </div>;
-}
-
-/** Bottom right: the way home to one's realm and full screen. */
-function MapTools() {
-  const r = myRealm.value;
-  const full = () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.(); };
-  return <div class="maptools" role="toolbar" aria-label={t('map_tools')}>
-    {r && <><button class="tool" title={t('to_my_realm')} aria-label={t('to_my_realm')} onClick={() => mapCtl.home(r.capital)}><IconCrown /></button><i /></>}
-    <button class="tool" title={t('fullscreen')} aria-label={t('fullscreen')} onClick={full}><IconFullscreen /></button>
   </div>;
 }
 

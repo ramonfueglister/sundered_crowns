@@ -69,8 +69,6 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .realm-banner .initial { position: absolute; left: 6px; right: 0; top: 10px; text-align: center; font-size: 52px; font-weight: 700; color: var(--brass); text-shadow: 0 2px 0 #0a2e60; }
 
 /* HUD: map tools (bottom right) */
-.maptools { position: absolute; right: 10px; bottom: 17px; z-index: 10; height: 55px; display: flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 28px; background: linear-gradient(#174a6e, #0f3d5e); border: 2px solid #bed0db; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
-.maptools i { width: 1px; height: 30px; background: rgba(190,208,219,.35); }
 .tool { width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; display: grid; place-items: center; }
 .tool:hover { background: rgba(255,255,255,.08); }
 /* the map modes: the one shown sits in a gold ring on a lighter ground, the others are dimmed until hovered */
