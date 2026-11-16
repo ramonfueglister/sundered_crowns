@@ -95,7 +95,7 @@ Die Wirtschaften sind die der Städte, in denen die Personen leben. Die Welt von
 
 ## Grenzen
 
-- Rund 14'000 Personen haben keine Rolle: Kinder und Erwachsene, die nicht arbeiten. Sie haben kein eigenes Einkommen und keinen eigenen Konsum. Das Modell kennt kein Haushaltsbudget; 690 Familien (806 Personen, meist Alleinstehende) haben niemanden, der arbeitet, und damit nichts.
+- Rund 14'000 Personen haben keine Rolle: Kinder und Erwachsene, die nicht arbeiten. Sie haben kein eigenes Einkommen und keinen eigenen Konsum. Das Modell kennt kein Haushaltsbudget; 690 Familien (806 Personen, meist Alleinstehende) haben niemanden, der arbeitet, und damit nichts. Seit dem [Haushalt der Familie](haushalt-der-familie.md) leben sie von der Kasse ihrer Familie, und Frauen ohne Mann arbeiten; noch 54 Familien der Welt von 1291 haben niemanden, der arbeitet.
 - Wer einen Betrieb oder die Bank führt, ist ausgelost. Auch eine Fünfzehnjährige kann einen Betrieb führen.
 - Der Lohn hängt am Betrieb, nicht an der Person: Alle Beschäftigten eines Betriebs bekommen dasselbe; Alter, Geschlecht und Eigenschaften spielen keine Rolle.
 - Die Werte stehen an zwei Orten: in den Listen des Motors, wo sie gerechnet werden, und als Kopie des Tages bei Person und Betrieb.
