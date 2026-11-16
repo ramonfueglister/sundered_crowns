@@ -10,7 +10,7 @@ import { type Batch, type RGB, type Rnd, hash2, mix, rgb, seeded, shade } from '
 import { VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
-import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
+import { FARMS, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -37,10 +37,10 @@ const MODELS_UNTIL = 2;
 const SEARCH = 16;
 /**
  * Fields at the finest step lie in lots of eleven by eight blocks. Of the lots the land's share under the plough is
- * tried, about this share of those finds level, free ground, and about half of a lot is crop. One field in four has
- * a farmhouse beside it.
+ * tried, about this share of those finds level, free ground, and about half of a lot is crop. One field in ten has
+ * a farmhouse beside it (settle.ts).
  */
-const LOT_W = 11, LOT_D = 8, LOTS_FOUND = 0.45, CROP_SHARE = 0.5, FARMS = 0.25;
+const LOT_W = 11, LOT_D = 8, LOTS_FOUND = 0.45, CROP_SHARE = 0.5;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
 const field = (crop: RGB, flat: boolean) => mix(crop, WHEAT_SIDE, flat ? 0.6 : 0.3), VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
 /**

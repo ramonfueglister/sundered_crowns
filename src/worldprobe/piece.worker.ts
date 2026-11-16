@@ -8,6 +8,7 @@ import type { Shape } from '../lookprobe/stage';
 import { buildOpenSea } from '../lookprobe/terrain';
 import { loadClimate } from './climate';
 import { loadModels } from './models';
+import { FINER_STEPS } from './land';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { loadTownPeople } from '../figures';
@@ -24,7 +25,9 @@ const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
   const { id, piece, region: name, step, base, bakedSky } = e.data;
   try {
-    const w = windowOf(piece.ox, piece.oz), region = await loadWindow(step ? `${name}/z${step}` : name, w.gx0, w.gy0, w.w, w.h, base);
+    // the step's blocks are cells of the data's step `data`, or drawn finer than its finest cells (land.ts)
+    const data = Math.max(0, step - FINER_STEPS), w = windowOf(piece.ox, piece.oz);
+    const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
     let scene: WorldScene<Shape>;
     if (region.water.every((k) => k === Water.Sea)) scene = { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
     else { if (step === 0) await loadTownPeople(); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
