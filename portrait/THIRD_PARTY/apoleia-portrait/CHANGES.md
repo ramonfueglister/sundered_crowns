@@ -105,3 +105,11 @@ Round 68: `DressSet::iris_mm` (the iris's size across; `build.rs`: the ball's im
 its iris, 27.5 degrees of the ball, has that size on this ball; 0 leaves it as it is), `DressSet::eyes_child` and
 `eyes_of` (a child's share of lids and lash line; `morph.rs`, `build.rs`), the image radius of the ball kept inside
 its cell (no change where the iris is not scaled). Roman bytes unchanged.
+
+Round 69: `DressSet::brow_lift`, `brow_band`, `brow_lift_of`, `brow_band_of` and `brow_lift_at` (`dress.rs`); the
+hairs of the brow's cards drawn together and moved up over the skin when a dress asks for it (`build.rs`;
+`morph.rs` `eye_spans`, `EYE_CORNERS`: where the brow's inner end, the pupil and the eye's outer corner lie on
+this head); `jaw_women` shifts the gene of the jaw only, no longer the one of the head's form (`morph.rs`); in
+`rest` the measures of a woman's and a man's face fitted to a survey's means. New, not Apoleia's: `src/measure.rs`
+(a face's measures in millimetres, the survey's numbers), `examples/face_measure.rs`, `tests/faces.rs`. Roman
+bytes unchanged.

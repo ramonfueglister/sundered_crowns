@@ -125,6 +125,24 @@ pub struct DressSet {
     /// a band of two fifths to half the hair's colour, drawn for the faceted look that has no hairs). Under hairs
     /// it reads as a broad dark bar low over the eye.
     pub brow_paint: [f32; 2],
+    /// How much higher than MakeHuman's the brow's hairs lie, women and men, in millimetres along the skin: near
+    /// the brow's inner end, over the pupil, over the eye's outer corner (evenly between them, the brow's tail as
+    /// over the corner; `brow_lift_at`). MakeHuman's brow lies on the rim of the eye's socket: its upper edge
+    /// 18.0, 16.9 and 16.9 mm above the line through the eyes' inner corners on the women of England (60 grown
+    /// ones, with the face at rest), a band of 5 mm over the pupil. A young woman's lies at 15.7, 19.8 and 21.3 mm
+    /// (36 women of 20 to 30; Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301,
+    /// read from the summary at dryaremchuk.com, the journal's volume and pages from memory); a man's lies lower
+    /// and more level (Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2), from the abstract, without
+    /// numbers): the men's stay. A brow low and broad over the eye is what made the women read as men, and as
+    /// glowering. With these values and `brow_band` the women's lie at 19.7, 19.6 and 19.5 mm: over the pupil as
+    /// measured, the inner end higher and the outer lower than measured, because lifted by the measured numbers
+    /// (the inner end down by 2, the outer up by 4) the brow slants and reads as a frown (tried in round 69).
+    /// On a child's head none of it, growing in as the head gets its adult form (`brow_lift_of`).
+    pub brow_lift: [[f32; 3]; 2],
+    /// How broad the band of the brow's hairs is, women and men (1 = MakeHuman's, one brow for both sexes: its
+    /// hairs span 5 mm over the pupil and more at the inner end). A woman's brow is the narrower. PLACEHOLDER, by
+    /// eye against the reference. A child's as MakeHuman's (`brow_band_of`).
+    pub brow_band: [f32; 2],
     /// Lips, women and men (real_look.rs `real_skin`).
     pub lips: [Lips; 2],
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
@@ -174,6 +192,15 @@ pub struct DressSet {
     /// forehead). Since round 65 the brows stand higher on both (they lay on the upper lid: from the pupil to
     /// the brow 0.41 of the eye's width, in CK3's face 0.6 to 0.75), the men's eyes are larger (slits in a wide
     /// face), and both have cheekbones and a leaner head (the well-fed sample's faces were round and flat).
+    /// Since round 69 the two sexes' faces are held against a survey of 3997 heads (src/measure.rs, Zhuang &
+    /// Bradtmiller 2005): the weights above had made the women's faces as long as the men's and broader (200 grown
+    /// of each sex: face length 0.99 of the men's, in the survey 0.92; cheekbones 152 mm across, the survey's
+    /// women 135; from the mouth's line to the chin 7 % more than a man's), which read as men, and left the men's
+    /// short (115 mm, the survey's 123) with narrow jaws and eyes close together. Now the women have no oval head (MakeHuman's is 11 mm broader at each
+    /// cheekbone), a shorter chin, a narrower head and nose, softer cheeks; the men a longer face, a squarer jaw,
+    /// a wider mouth, a nose that stands out further; both their eyes further apart. On 150 grown women and 150
+    /// grown men every measure the survey has lies within half a standard deviation of its mean, and a woman's
+    /// is the smaller by the survey's share (tests/faces.rs; `cargo run --example face_measure`).
     /// A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
     /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
     /// face do, `Look::face`: on a child's small mouth they gave a pout).
@@ -213,7 +240,8 @@ pub struct DressSet {
     /// on them; eyes that stand parallel look through them into the distance. 0.03 lets them meet about a metre
     /// in front of the face.
     pub converge: f32,
-    /// Women's jaw and jaw angle narrower and softer on average: shift of the genes headF and jaw.
+    /// Women's jaws narrower on average: shift of the gene jaw. (Until round 69 of the gene headF as well, towards
+    /// MakeHuman's oval head: that one is broader at the cheekbones, 11 mm a side, rather than softer at the jaw.)
     pub jaw_women: f32,
     /// How much of Apoleia's child's face lies over MakeHuman's own child (1 = all of it): Apoleia adds a round
     /// head with a high forehead, a small chin and nose and large, wide open eyes (look.rs `KID`, morph.rs) to a
@@ -273,6 +301,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows: ["eyebrow001", "eyebrow001"],
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
+    brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
+    brow_band: [0.7, 1.0],
     lips: [Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }, Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }],
     lash_line: [0.85, 0.75],
     hair_red: [0.45, 0.74],
@@ -289,13 +319,20 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("eyebrows/eyebrows-angle-up", 0.45, 0.0),
         ("eyes/l-eye-scale-incr", 0.4, 0.5),
         ("eyes/r-eye-scale-incr", 0.4, 0.5),
-        ("head/head-fat-decr", 0.2, 0.5),
-        ("cheek/l-cheek-bones-incr", 0.4, 0.5),
-        ("cheek/r-cheek-bones-incr", 0.4, 0.5),
+        ("head/head-fat-decr", 0.0, 0.5),
+        ("cheek/l-cheek-bones-incr", 0.15, 0.5),
+        ("cheek/r-cheek-bones-incr", 0.15, 0.5),
         ("chin/chin-jaw-drop-decr", 0.6, 0.6),
-        ("chin/chin-height-incr", 0.35, 0.0),
+        ("chin/chin-height-incr", 0.3, 0.15),
         ("nose/nose-scale-vert-incr", 0.4, 0.0),
-        ("head/head-oval", 0.3, 0.0),
+        ("head/head-scale-vert-incr", 0.0, 0.2),
+        ("head/head-scale-horiz-decr", 0.1, 0.0),
+        ("head/head-square", 0.0, 0.3),
+        ("mouth/mouth-scale-horiz-incr", 0.4, 0.3),
+        ("eyes/l-eye-trans-out", 0.2, 0.3),
+        ("eyes/r-eye-trans-out", 0.2, 0.3),
+        ("nose/nose-scale-horiz-decr", 0.4, 0.0),
+        ("nose/nose-scale-depth-incr", 0.0, 0.55),
         ("forehead/forehead-scale-vert-decr", 0.3, 0.0),
         ("neck/neck-scale-vert-incr", 0.0, 0.4),
     ],
@@ -306,7 +343,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     eyes_child: [0.6, 0.5],
     gaze: [-0.1, -0.04],
     converge: 0.03,
-    jaw_women: -0.35,
+    jaw_women: -0.2,
     kid: 0.0,
     cheeks: [0.0, 0.0],
     sockets: [0.0, 0.0],
@@ -328,7 +365,9 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
+        Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, and how strongly the gene of the lips shows", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
     ],
 };
 
@@ -373,7 +412,28 @@ pub fn by_sex(women: f32, men: f32, female: bool, grown: f32) -> f32 {
     }
 }
 
+/// A brow's lift (`DressSet::brow_lift`) at the distance `ax` from the middle of the face, where the brow's inner
+/// end, the pupil and the eye's outer corner lie at `xs` (morph.rs `eye_spans`): evenly between the three, and
+/// beyond them as at the nearest.
+pub fn brow_lift_at(ax: f32, xs: [f32; 3], lift: [f32; 3]) -> f32 {
+    let k = if ax < xs[1] { 0 } else { 1 };
+    let t = ((ax - xs[k]) / (xs[k + 1] - xs[k]).max(1e-6)).clamp(0.0, 1.0);
+    lift[k] + (lift[k + 1] - lift[k]) * t
+}
+
 impl DressSet {
+    /// The brow's lift for a person (`brow_lift`): the sex's own, by how much of the head has its adult form.
+    pub fn brow_lift_of(&self, female: bool, yrs: f32) -> [f32; 3] {
+        let k = if female { 0 } else { 1 };
+        self.brow_lift[k].map(|mm| mm * (1.0 - child_share(self.adult[k], yrs)))
+    }
+
+    /// The breadth of the brow's band for a person (`brow_band`), by how much of the head has its adult form.
+    pub fn brow_band_of(&self, female: bool, yrs: f32) -> f32 {
+        let k = if female { 0 } else { 1 };
+        1.0 + (self.brow_band[k] - 1.0) * (1.0 - child_share(self.adult[k], yrs))
+    }
+
     /// The factors of `eyes_child` for a person: on the lids' heights and on the lash line.
     pub fn eyes_of(&self, female: bool, yrs: f32) -> [f32; 2] {
         let young = child_share(self.adult[if female { 0 } else { 1 }], yrs);

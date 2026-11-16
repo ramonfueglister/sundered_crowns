@@ -15,6 +15,7 @@ pub mod geo;
 mod hair;
 pub mod head;
 pub mod look;
+pub mod measure;
 mod morph;
 pub mod person;
 pub mod real;
@@ -241,6 +242,52 @@ mod tests {
             let (p, q) = (h.base[*a], h.base[*b]);
             assert!(len(sub([-p[0], p[1], p[2]], q)) < 1e-4, "{a} {b}");
         }
+    }
+
+    #[test]
+    fn the_corners_of_the_eyes_lie_at_the_ends_of_their_opening() {
+        use crate::geo::{len, sub};
+        use crate::morph::{eye_spans, EYE_CORNERS};
+        let Some(h) = head() else { return };
+        for (k, part) in ["leye", "reye"].iter().enumerate() {
+            let ball = &h.parts[*part][0];
+            let mid = ball.iter().fold([0f32; 3], |c, &v| std::array::from_fn(|a| c[a] + h.base[v as usize][a] / ball.len() as f32));
+            let (inner, outer) = (h.base[EYE_CORNERS[k][0]], h.base[EYE_CORNERS[k][1]]);
+            // on either side of the pupil, 27 to 28 mm apart (MakeHuman's eye is large), at the pupil's height
+            assert!(inner[0].abs() < mid[0].abs() && outer[0].abs() > mid[0].abs(), "{part}");
+            assert!((0.27..0.285).contains(&len(sub(inner, outer))), "{part}: {}", len(sub(inner, outer)));
+            assert!((inner[1] - mid[1]).abs() < 0.02 && (outer[1] - mid[1]).abs() < 0.02, "{part}");
+            // and where the brow's lift is told by: its inner end, the pupil, the outer corner, outward in this order
+            let xs = eye_spans(&h, &h.base)[k];
+            assert!(xs[0] > inner[0].abs() && xs[0] < xs[1] && xs[1] < xs[2] && (xs[2] - outer[0].abs()).abs() < 1e-6, "{xs:?}");
+        }
+        // the two eyes mirror each other
+        for j in 0..2 {
+            let (p, q) = (h.base[EYE_CORNERS[0][j]], h.base[EYE_CORNERS[1][j]]);
+            assert!(len(sub([-p[0], p[1], p[2]], q)) < 1e-4);
+        }
+    }
+
+    #[test]
+    fn a_brow_is_lifted_evenly_between_its_inner_end_the_pupil_and_the_eyes_corner() {
+        use crate::dress::brow_lift_at;
+        let (xs, lift) = ([0.2, 0.3, 0.45], [1.0, 3.0, 6.0]);
+        for (x, mm) in [(0.2, 1.0), (0.25, 2.0), (0.3, 3.0), (0.375, 4.5), (0.45, 6.0)] {
+            assert!((brow_lift_at(x, xs, lift) - mm).abs() < 1e-5, "{x}");
+        }
+        // beyond the ends as at the ends: the brow's inner end and its tail
+        assert_eq!(brow_lift_at(0.1, xs, lift), 1.0);
+        assert_eq!(brow_lift_at(0.6, xs, lift), 6.0);
+        // a child's brow is MakeHuman's: no lift, the whole band; a grown woman has all of both, a man none
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        assert_eq!(set.brow_lift_of(true, 8.0), [0.0; 3]);
+        assert_eq!(set.brow_band_of(true, 8.0), 1.0);
+        assert_eq!(set.brow_lift_of(true, 30.0), set.brow_lift[0]);
+        assert_eq!(set.brow_band_of(true, 30.0), set.brow_band[0]);
+        assert!(set.brow_lift[0].iter().all(|mm| *mm > 0.0) && set.brow_band[0] < 1.0);
+        assert_eq!((set.brow_lift_of(false, 30.0), set.brow_band_of(false, 30.0)), ([0.0; 3], 1.0));
+        // a girl of 13 is half way (her head has its adult form at 15)
+        assert!((set.brow_lift_of(true, 13.0)[1] - set.brow_lift[0][1] / 2.0).abs() < 1e-5);
     }
 
     #[test]

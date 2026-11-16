@@ -1006,8 +1006,41 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // (lashes a very dark shade of the brows' colour, not black; PLACEHOLDER)
             let brow = garb.map_or("eyebrow001", |d| d.brows[if fem { 0 } else { 1 }]);
             let young = garb.map_or(0.0, |d| d.brows_child * (1.0 - p.grown()));
+            // a dress may have the brow grow higher on the forehead than MakeHuman's, which lies on the rim of the
+            // eye's socket: along the skin, by where along the eye a hair stands
+            let lift = garb.map(|d| d.brow_lift_of(fem, p.age)).filter(|l| *l != [0.0; 3]);
+            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age));
             for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
-                if let Some(sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
+                if let Some(mut sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
+                    // a narrower band: every corner drawn towards the middle of those that stand at its place along
+                    // the brow (the card is a strip of five corners across, columns a good 4 mm apart)
+                    if band != 1.0 && name == brow {
+                        let was = sf.pos.clone();
+                        for q in sf.pos.iter_mut() {
+                            let (mut c, mut n) = ([0.0; 3], 0.0);
+                            for o in was.iter().filter(|o| (o[0] - q[0]).abs() < 0.02) {
+                                c = add(c, *o);
+                                n += 1.0;
+                            }
+                            *q = madd(mul(c, 1.0 / n), sub(*q, mul(c, 1.0 / n)), band);
+                        }
+                    }
+                    if let Some(lift) = lift.filter(|_| name == brow) {
+                        let eyes = crate::morph::eye_spans(h, &x.pp);
+                        // (a corner is shared by up to six triangles: each place is looked up once)
+                        let mut done: std::collections::HashMap<[u32; 3], V3> = std::collections::HashMap::new();
+                        for (q, n) in sf.pos.iter_mut().zip(sf.nrm.iter_mut()) {
+                            *q = *done.entry(q.map(f32::to_bits)).or_insert_with(|| {
+                                let up = crate::dress::brow_lift_at(q[0].abs(), eyes[if q[0] < 0.0 { 1 } else { 0 }], lift) / 100.0;
+                                let (d0, moved) = (sub(*q, hc), [q[0], q[1] + up, q[2]]);
+                                let d1 = sub(moved, hc);
+                                // as far off the skin as it was
+                                let (r0, r1) = (outer_skin(&cast_h, d0, hs), outer_skin(&cast_h, d1, hs));
+                                if r0 > 0.0 && r1 > 0.0 { madd(hc, norm(d1), r1 + len(d0) - r0) } else { moved }
+                            });
+                            *n = norm(sub(*q, hc));
+                        }
+                    }
                     out.push(sf);
                 }
             }

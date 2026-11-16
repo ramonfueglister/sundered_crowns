@@ -559,6 +559,85 @@ opening between the lids is about a tenth shorter than a real one for the head's
 a broad face); the white of the eye has no veins or wet rim, the iris no depth (no cornea), and the lashes
 themselves are still thin single hairs; brows are flat bands.
 
+**A woman's face larger than a man's (round 69).** At the panel's size the women of the sample read as men in
+a veil: broad, long faces, a heavy brow low over the eye. Pictures do not say why (what a face measures in a
+picture depends on camera and tilt), so the faces are now measured as with a caliper, on the morphed head, in
+millimetres (`portrait/src/measure.rs`), and held against a survey of real heads: Zhuang & Bradtmiller 2005,
+Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene
+2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020).
+200 grown women and 200 grown men of England, the face at rest, mean in mm (in brackets: how many of the
+survey's standard deviations from its mean):
+
+| | men before | men now | survey's men | women before | women now | survey's women |
+|---|---|---|---|---|---|---|
+| face length (sellion to menton) | 115.2 (-1.1) | 123.0 (0.0) | 122.7 | 114.5 (+0.2) | 113.6 (0.0) | 113.4 |
+| sellion to subnasale | 50.8 (-0.3) | 52.7 (+0.2) | 52.0 | 49.1 (+0.2) | 49.1 (+0.2) | 48.2 |
+| breadth at the cheekbones | 143.5 (0.0) | 143.5 (0.0) | 143.5 | 152.2 (+2.6) | 134.9 (0.0) | 135.1 |
+| breadth at the jaw's corners | 117.1 (-0.3) | 121.2 (+0.1) | 120.4 | 110.0 (0.0) | 110.0 (0.0) | 110.1 |
+| between the pupils | 61.7 (-0.8) | 64.4 (0.0) | 64.5 | 61.0 (-0.3) | 61.7 (-0.1) | 61.9 |
+| nose breadth | 36.8 (0.0) | 37.2 (+0.2) | 36.6 | 36.8 (+0.9) | 33.5 (+0.1) | 33.2 |
+| nose protrusion | 18.4 (-1.0) | 21.1 (0.0) | 21.1 | 19.9 (0.0) | 19.9 (0.0) | 19.8 |
+| lip length (mouth's corners) | 46.6 (-1.1) | 49.5 (-0.4) | 51.1 | 43.8 (-1.0) | 46.4 (-0.4) | 48.0 |
+
+A woman's face as a share of a man's, before, now, and in the survey: length 0.99, 0.92, 0.92; cheekbones 1.06,
+0.94, 0.94; nose breadth 1.00, 0.90, 0.91; from the mouth's line to the chin (the survey has no such measure)
+1.07, 0.97. Without a survey's number: the red of the lips 15.9 and 16.3 mm high, the opening of the eye
+31.8 x 8.9 and 29.6 x 8.8 mm (a real one 25.6 x 8.7, round 68: MakeHuman's eye stays large).
+
+| What was wrong | Cause | Now |
+|---|---|---|
+| women's faces broader than men's, 17 mm more across the cheekbones than a real woman's | `rest` gave women MakeHuman's oval head (0.3), and `jaw_women` shifted the gene of the head's form towards it as well: that head is 11 mm broader at each cheekbone, not softer at the jaw | no oval head in `rest`, `jaw_women` (-0.2) shifts the gene of the jaw only, the head a little narrower (`head-scale-horiz-decr` 0.1) |
+| women's faces as long as men's, the chin longer | `chin-height-incr` 0.35 for women (round 56, by eye), none for men | 0.3 and 0.15; the men's head longer (`head-scale-vert-incr` 0.2) |
+| men's faces short, eyes close together, flat noses, small mouths | MakeHuman's base head (face length 117 mm) with the leaner head of round 65 | `head-square` 0.3 (the jaw's corners), `eye-trans-out` 0.3 (women 0.2), `nose-scale-depth-incr` 0.55, `mouth-scale-horiz-incr` 0.3 (women 0.4) |
+| a woman's nose as broad as a man's | one nose for both | `nose-scale-horiz-decr` 0.4 for women |
+| hard cheeks on women | cheekbones 0.4 and a leaner head (round 65) on a face that was too broad already | cheekbones 0.15, `head-fat-decr` 0 |
+| a brow low and heavy over a woman's eye | MakeHuman draws one brow for both sexes, on the rim of the eye's socket | `brow_lift` and `brow_band` in the dress table, see below |
+
+The brow. Its upper edge above the line through the eyes' inner corners, in mm, on 60 grown women (men: 60),
+beside 36 real women of 20 to 30 (Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124:
+1296-1301; the numbers read from the summary at dryaremchuk.com, the journal's volume and pages from memory;
+that a man's lies lower and more level: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2), from the
+abstract, without numbers):
+
+| | at the eye's inner corner | over the pupil | at the eye's outer corner | the band over the pupil |
+|---|---|---|---|---|
+| real young women | 15.7 | 19.8 | 21.3 | |
+| our women before | 18.0 | 16.9 | 16.9 | 12.0 to 16.9 |
+| our women now | 19.7 | 19.6 | 19.5 | 15.7 to 19.6 |
+| our men (unchanged) | 17.6 | 16.5 | 18.0 | |
+
+`brow_lift` (mm along the skin near the brow's inner end, over the pupil, over the eye's outer corner: 3.0, 3.0,
+3.5 for women, none for men) moves the hairs of the brow's cards up over the skin, `brow_band` (0.7 for women)
+draws the band's hairs together (`build.rs`; where the three places lie on this head: `morph.rs` `eye_spans`).
+Both grow in with the head's adult form: a child's brow is MakeHuman's. Over the pupil the women's brow is where
+a real one is. Its inner end is higher and its outer end lower than measured, on purpose: lifted by the measured
+numbers (the inner end down by 2 mm, the outer up by 4) MakeHuman's brow, heavy at its inner end, slants and
+reads as a frown.
+
+Tests (`portrait/tests/faces.rs`, a process of its own because the real look is global state): on 150 grown
+women and 150 grown men every measure the survey has lies within half a standard deviation of the survey's
+mean, and a woman's is smaller than a man's by the survey's share within 0.06 (fails with the values of round
+68); a woman's brow is lifted by what the table says and narrower, a man's and a child's lie where MakeHuman
+draws them. In `portrait/src/lib.rs`: the eye's corners lie at the ends of its opening; the lift between its
+three places. To measure a sample: `cargo run --release --example face_measure -- England Gallia 400
+../public/portrait --grown` in `portrait/` (`--target <name>` shows by how many mm one of MakeHuman's targets
+moves the landmarks, which is how the weights above were found instead of by eye).
+Pictures: `runde69_frauen_maenner_vorher_nachher.png` (eight women, eight men at the panel's size, before above
+after), `runde69_frau_nah_ck3.png` (CK3's woman beside three of ours, close).
+Tried and dropped: the brow lifted by the measured numbers, and rising outward without `eyebrows-angle-up`
+(a frown, stern); the camera higher (`rise` 0.08 and 0.14: hardly a difference).
+Still open: the survey is of people of the United States of today, used for how a woman's head stands to a
+man's and the parts of a face to each other, not for the size of a head of 1356; the spread of the measures
+comes from the genes as before and was not fitted (the jaw's is narrower than the survey's: SD 6.4 and 8.4
+against 8.9 and 10.4); the lips are 1.6 mm shorter than the survey's on both sexes; no measure of depth but the
+nose's (profile of forehead, jaw and chin unmeasured); beside CK3's woman ours still have the heavier jaw and
+chin (hers is idealised, ours the mean of real women), brownish lips that are flat in the shade, a skin without
+form, and the veil sits far back (a high bare forehead, the ears show); the brow keeps MakeHuman's shape (heavy
+inner end, the outer part lower than measured); the outline of the far cheek on girls of 13 to 17 has a pouch;
+how much darker eyes and lips are than the skin on a woman than on a man (Russell 2009, Perception 38:
+1211-1219) is not measured; all weights but the means they are fitted to are PLACEHOLDER; CK3's framing of the
+bust needs a posed body.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

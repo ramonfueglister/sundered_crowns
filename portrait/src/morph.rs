@@ -100,7 +100,7 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
             let xl = if soft > 0.0 { soft * (xl / soft).tanh() } else { xl };
             // a dress with a table may read women's jaws softer on average (genes headF and jaw)
             let xl = match p.dress.set() {
-                Some(d) if p.female && (k == 2 || k == 4) => xl + d.jaw_women,
+                Some(d) if p.female && k == 4 => xl + d.jaw_women,
                 _ => xl,
             };
             let x = xl * (0.35 + 0.65 * gr) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k));
@@ -317,6 +317,21 @@ pub(crate) const LIP_SEAM: [([usize; 11], [usize; 8]); 2] = [
     ([474, 3335, 3334, 3333, 3332, 5203, 3331, 3285, 3284, 3296, 3293], [493, 3348, 3342, 3336, 3303, 3310, 3298, 3356]),
     ([474, 473, 472, 471, 470, 2453, 469, 419, 418, 430, 427], [493, 487, 481, 475, 437, 444, 432, 501]),
 ];
+/// The corners of the eye's opening, inner and outer, of the eye at positive x and of the other (vertices of
+/// MakeHuman's base head; lib.rs tests that they lie at the ends of the opening).
+pub(crate) const EYE_CORNERS: [[usize; 2]; 2] = [[2958, 2911], [68, 21]];
+
+/// Along each eye, as distances from the middle of the face: a sixth of the opening outward of its inner corner
+/// (where MakeHuman's brow begins), the pupil, and the outer corner. The eye at positive x first.
+pub(crate) fn eye_spans(h: &Head, pp: &[V3]) -> [[f32; 3]; 2] {
+    std::array::from_fn(|k| {
+        let ball = &h.parts[["leye", "reye"][k]][0];
+        let pupil = ball.iter().map(|&v| pp[v as usize][0]).sum::<f32>() / ball.len().max(1) as f32;
+        let (inner, outer) = (pp[EYE_CORNERS[k][0]][0].abs(), pp[EYE_CORNERS[k][1]][0].abs());
+        [inner + (outer - inner) / 6.0, pupil.abs(), outer]
+    })
+}
+
 /// The most a mouth is closed or opened by (the weight on the targets' shares; MakeHuman's targets are made
 /// for 0 to 1).
 const MOUTH_MOST: f32 = 2.5;
