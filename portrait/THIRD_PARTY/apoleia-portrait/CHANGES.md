@@ -184,3 +184,7 @@ lights that share its energy, so that shadows have soft edges (`src/portrait/pro
 `src/portrait/stage.ts` `keyPlaces`, the game's own files). Apoleia's stage has one light without size as
 before; its shadow's map and strength moved from a constant into its profile. Roman bytes and the comparison
 with Godot unchanged.
+
+Round 82: England's dress table mixes the lips anew (`dress.rs` `Lips`: more of the skin's own colour, less
+blood, a blood with less red for men; the strip's factor `seam` 1.3, before 1.6). No code of the builder
+changed. New, not Apoleia's: a test in `tests/faces.rs`. Roman bytes unchanged.

@@ -53,8 +53,12 @@ pub struct ScarLine {
 /// black (60 to 65 darker). In round 71 read anew at landmarks on the whole sample (tools/portrait/face_colour.mjs)
 /// against the one face of the reference that is large enough (the woman of the ruler designer): the lower lip of
 /// our grown women was as dark against the cheek as hers (24 against 23) but more orange (hue 43 degrees where
-/// she and the emperor have 36): less skin and a blood with less green in it bring it to 37 degrees. All values
-/// PLACEHOLDER, set by those measurements.
+/// she and the emperor have 36): less skin and a blood with less green in it bring it to 37 degrees. That was
+/// under a light that lit the face level and from the front. Under the light of rounds 73 to 81 (from the side
+/// and above) the same lips read 28 L darker than a woman's lit cheek (hers 23) and 34 on a man (the emperor's
+/// 26), while the skin over the upper lip stood as hers: in round 82 more of the skin's own colour and less
+/// blood, and a blood with less red for men: 22.4 and 25.2, a* 6.1 and 8.6 over the cheek's (hers 6.2, the
+/// emperor's 7.1). All values PLACEHOLDER, set by those measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -65,14 +69,16 @@ pub struct Lips {
     /// The upper lip's colour is the lips' times this. It faces down, away from the stage's key light. Until
     /// round 77 the stage had no light thrown back up by the chest, and the upper lip was a dark bar over the
     /// mouth unless painted half as light again (1.5). Since round 78 the stage's fill light is that light
-    /// (src/portrait/profile.ts): 1.15 keeps a grown woman's upper lip where the reference's is (L 20.7 against
-    /// 21.0; at 1.0 it reads 18.3, at 1.5 27.2).
+    /// (src/portrait/profile.ts): 1.15 kept a grown woman's upper lip where the reference's is (L 20.7 against
+    /// 21.0; at 1.0 it read 18.3, at 1.5 27.2). With the lips of round 82 it is 36.7 L darker than the lit cheek
+    /// (the reference's 35.1).
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
     /// `LIP_SEAM`). It has the lips' colour times this, and so has the upper lip's edge: above 1, because the
     /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
-    /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open.
+    /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open. 1.3 since the lips
+    /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red.
     pub seam: f32,
     /// How much of the lips' colour a child's lips have (1 = as a grown person's), growing to all of it as the
     /// head grows up (`child_share`): at a woman's strength a girl of eight wears paint.
@@ -422,7 +428,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.15, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.15, seam: 1.6, child: 0.6 }],
+    lips: [Lips { skin: 0.30, blood: [0.21, 0.078, 0.069], upper: 1.15, seam: 1.3, child: 0.6 }, Lips { skin: 0.42, blood: [0.165, 0.073, 0.074], upper: 1.15, seam: 1.3, child: 0.6 }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],

@@ -441,21 +441,21 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(wide, `person ${p.pid}`).toBeLessThan(0.6);
       expect(high, `person ${p.pid}`).toBeLessThan(0.15 * wide);
       const [lip, all] = [mean(first, skin.pos.length), mean(0, first)] as [number[], number[]];
-      // a flesh colour as the skin's own, not a painted red (green to red 0.72 to 1.03 of the skin's as a whole;
-      // until round 71 0.87 to 1.03: the lips are redder since, by the hue read on the reference's lips; the
-      // lips' blood alone would be 0.5 to 0.6); and no darker than the skin (0.95 to 1.40 of its red, the grown
-      // 0.95 to 1.11): the strip stands in the lips' shade, where the stage has no light that comes through flesh,
-      // and is as dark as the line of a mouth only so. Until round 77 1.12 to 1.41: the upper lip was painted half
-      // as light again and the strip with it; since round 78 the stage's fill lights both from below (`Lips::upper`
-      // 1.15), and the line between the lips reads 4 L lighter in the picture than before (54 L under the lit
-      // cheek, the reference's 41 to 47)
+      // a flesh colour as the skin's own, not a painted red (green to red 0.81 to 0.99 of the skin's as a whole;
+      // until round 71 0.87 to 1.03, until round 81 0.72 to 1.03: the lips' blood alone would be 0.55 to 0.8);
+      // and no darker than the skin (0.95 to 1.28 of its red, the grown 0.95 to 1.19): the strip stands in the
+      // lips' shade, where the stage has no light that comes through flesh, and is as dark as the line of a
+      // mouth only so. Until round 77 1.12 to 1.41: the upper lip was painted half as light again and the strip
+      // with it; since round 78 the stage's fill lights both from below (`Lips::upper` 1.15). Since round 82
+      // the lips themselves are lighter and the strip's factor smaller by as much (`Lips::seam` 1.3, before
+      // 1.6): the line between the lips reads 50 L under the lit cheek (before 54, the reference's 41 to 47)
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.65);
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeLessThan(1.1);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(0.9);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeLessThan(1.45);
       tones.push([all[0]!, lip[0]!]);
     }
-    // the lips go with the skin: fairer skin, fairer lips, not one red for everyone (0.78 over the sample)
+    // the lips go with the skin: fairer skin, fairer lips, not one red for everyone (0.75 over the sample)
     const m = [0, 1].map(k => tones.reduce((a, t) => a + t[k]!, 0) / tones.length);
     const cov = (j: number, k: number) => tones.reduce((a, t) => a + (t[j]! - m[j]!) * (t[k]! - m[k]!), 0);
     expect(cov(0, 1) / Math.sqrt(cov(0, 0) * cov(1, 1))).toBeGreaterThan(0.6);

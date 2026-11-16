@@ -1357,6 +1357,54 @@ far cheek is 36 L darker than the lit one as before. The nose's own form is flat
 large, the lights' eight shadows could show as steps behind something far off the skin; none was seen. What
 rounds 78 to 80 left.
 
+**Lips that were too dark against the skin (round 82).** Round 81 left the lips 2 to 3 L darker than the
+reference's. Read against the lit cheek of the same face, which is what the eye does, they had been too dark
+since the light of round 73; rounds 73 to 78 held the lips' lightness as such against hers, with a lit cheek
+5 L lighter than hers.
+
+`face_colour.mjs`, grown women and men of the sample, against the lit cheek (L; a* for how much redder):
+
+| | lower lip | its red (a*) | upper lip | skin over the upper lip | line between the lips |
+|---|---|---|---|---|---|
+| the reference's woman | -22.9 | +6.2 | -35.1 | -4.4 | -41 to -47 |
+| women, round 81 | -28.1 | +6.3 | -41.1 | -5.2 | -54 (round 78) |
+| women, now | -22.4 | +6.1 | -36.7 | -5.0 | -49.7 |
+| the reference's emperor | -25.8 | +7.1 | | | |
+| men, round 81 | -34.0 | +10.3 | -42.7 | | |
+| men, now | -25.2 | +8.6 | -38.9 | | -50.9 |
+
+The skin over the upper lip stood as hers before and after: the light on the mouth is right, the lips' paint
+was too dark. Round 71 had set it under a light that lit the face level and from the front (lower lip 24
+darker than the cheek, hers 23); a lip faces forward and a little down, and the light of round 73, from the
+side and above, lights it less than a cheek.
+
+Now (`portrait/src/dress.rs` `Lips`). A lip keeps more of the skin's own colour and takes less blood: women
+0.30 of the skin (before 0.2) and blood 0.21, 0.078, 0.069 (before 0.2, 0.068, 0.06); men 0.42 and 0.165,
+0.073, 0.074 (before 0.2 and 0.2, 0.072, 0.066: a man's lips were 4 a* redder against his cheek than a
+woman's against hers, the emperor's 1). The strip that closes the lips has the lips' colour times a factor;
+the factor is smaller by as much as the lips are lighter (`seam` 1.3, before 1.6), so that the strip keeps
+its colour (0.95 to 1.28 of the skin's red; before 0.95 to 1.40). The line between the lips reads 4 L
+lighter all the same: at the game's size it is the lips' own shade more than the strip (round 78).
+
+Three trials: skin and blood both times 1.3 (lower lip -22.0, but a* +8.8 on women and +12.5 on men: too
+red); more skin and less blood (-21.0 and +6.4; men -24.2 and +9.5); the values above. PLACEHOLDER: held
+against two faces of the reference, the emperor's a small one (lips of 10 to 30 pixels) and the woman's a
+ruler's with paint on her lips.
+
+Tests. `the_lips_of_england_are_as_light_against_the_skin_as_the_references` (`portrait/tests/faces.rs`): the
+skin's own colour as the builder paints it, before light and image: the lower lip's red has 0.46 to 0.52 of
+the cheek's light on six women and 0.54 to 0.57 on six men (until round 81 0.36 to 0.41 and 0.36 to 0.40;
+the bounds lie between; fails on round 81). The test of the lips' strip (`tests/portrait.test.ts`) keeps its
+bounds; its comment has the new ranges.
+Pictures: `runde82_lippen_vorher_nachher.png` (three women and three men, round 81 above round 82),
+`runde82_neben_ck3_vorher_nachher.png` (the reference's woman; two women before and now),
+`runde82_stichprobe.png`.
+Still open: the women's lit cheek is 3 L lighter than the reference's (59.4 against 56.1) and the men's as
+light as the emperor's (64.2 against 65.5): the exposure is left as it is, the two faces of the reference
+are 9 L apart. The reference's lips have a sheen and creases, ours are as matt as the skin. A man's lower
+lip is 1.5 a* redder against his cheek than the emperor's and less blue (b* -4.7 against -7.5). The line
+between the lips is 3 to 9 L darker than hers. What rounds 78 to 81 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

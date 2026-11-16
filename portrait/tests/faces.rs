@@ -151,6 +151,49 @@ fn the_cheeks_of_england_are_redder_than_the_forehead() {
     }
 }
 
+#[test]
+fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
+    // Round 71 set the lips' colour under a light that lit the face level and from the front. Under the light of
+    // rounds 73 to 81 (from the side and above, a lit and a shaded half) the lips read darker against the lit
+    // cheek than the reference's: a grown woman's lower lip 28.1 L darker (the reference's woman 22.9), a grown
+    // man's 34.0 (the emperor's 25.8), while the skin over the upper lip stood as hers (5.2 against 4.4): the
+    // paint, not the light. With more of the skin's own colour in the lips and less blood (round 82): 22.4 and
+    // 25.2, and as red against the cheek as hers (a* +6.1, hers +6.2). Here the skin's own colour as the
+    // builder paints it, before any light and before the skin's image: how light the lower lip's red is against
+    // the cheek (linear light, weighed as the eye weighs red, green and blue). Until round 81 0.36 to 0.41 on
+    // women and 0.36 to 0.40 on men; now 0.46 to 0.52 and 0.54 to 0.57 (in the picture a man's lower lip
+    // still reads the darker against his cheek, 25.2 L against a woman's 22.4). The upper bounds are a tenth
+    // over what is measured now, no more than a guard.
+    let Some(h) = head() else { return };
+    let idx = &h.parts["body"][LODS - 1];
+    let red = real::rows("real/skin_lip.txt").expect("the lips' red");
+    let mark = |name: &str| marks().iter().find(|m| m.0 == name).unwrap().1;
+    let light = |c: &[f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    for k in 0..12 {
+        let (female, age) = (k % 2 == 0, [24.0, 35.0, 50.0][(k / 2) as usize % 3]);
+        let mut p = person(k, female, age);
+        p.beard = Some(Beard::Shaven);
+        let out = build(&h, &p, 1);
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        let corner = |v: usize| idx.iter().position(|&i| i as usize == v);
+        let at = |v: usize| skin.pos[corner(v).unwrap()];
+        let lower: Vec<f32> = (0..red.len()).filter(|&v| red[v][0] > 0.9 && red[v][1] < 0.5).filter_map(corner).map(|c| light(&skin.col[c])).collect();
+        assert!(lower.len() > 20, "the lower lip's red has {} vertices", lower.len());
+        let lip = lower.iter().sum::<f32>() / lower.len() as f32;
+        // the cheek: the skin within a centimetre of the middle between the eye's outer corner, the mouth's corner
+        // and the nose's wing
+        let (a, b, c) = (at(mark("eye's outer corner, left")), at(mark("mouth's corner, left")), at(mark("nose's wing, left")));
+        let q: [f32; 3] = std::array::from_fn(|i| (a[i] + b[i] + c[i]) / 3.0);
+        let near: Vec<f32> = (0..idx.len()).filter(|&v| (0..3).map(|i| (skin.pos[v][i] - q[i]).powi(2)).sum::<f32>() < 0.01).map(|v| light(&skin.col[v])).collect();
+        let cheek = near.iter().sum::<f32>() / near.len() as f32;
+        if std::env::var("SHOW").is_ok() {
+            println!("{} {k}: the lower lip {:.3} of the cheek's light ({} corners of the cheek)", if female { "woman" } else { "man" }, lip / cheek, near.len());
+        }
+        let bounds = if female { (0.43, 0.57) } else { (0.47, 0.63) };
+        assert!(lip / cheek > bounds.0 && lip / cheek < bounds.1, "{} {k}: the lower lip {} of the cheek's light", if female { "woman" } else { "man" }, lip / cheek);
+    }
+}
+
 /// The brow as the builder made it and as MakeHuman's card lies on the same head (the binding of real_look.rs
 /// `mh_hair2`), per corner of its triangles: how far the builder moved it, in millimetres, in the head's own
 /// frame (the bust's lean taken out by two points of the skin), and where it stands along the eye.
