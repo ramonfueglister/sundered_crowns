@@ -155,7 +155,9 @@ export class PortraitStage {
     const inner = new Group();
     const tone = portraitSkinTone(p.surfaces);
     parts.forEach(({ s, map, normalMap }) => {
-      const geometry = surfaceGeometry(s);
+      // the skin as the smooth surface its triangles stand for (subdivide.ts)
+      const skin = surfaceKind(s) === 'skin' ? profile.skin : null;
+      const geometry = surfaceGeometry(s, skin ? skin.finer : 0, skin ? skin.fit : 0);
       for (const material of surfaceMaterials(s, map, normalMap, profile, tone)) {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = material.colorWrite && !material.transparent;

@@ -193,3 +193,9 @@ Round 83: the stage only (`src/portrait/profile.ts`, `stage.ts`; the game's own 
 have a fourth, `bounce` (what chest and ground throw back), and `rimShadow` is a strength instead of yes or no.
 Apoleia's stage has no bounce (energy 0: the light is left out) and no rim shadow (0), as before; its pictures
 are the same pixel for pixel, and the comparison with Godot is unchanged. In the builder a comment alone.
+
+Round 84: nothing in the builder. The stage draws the skin of a profile that asks for it as the smooth surface
+its net stands for (`src/portrait/subdivide.ts`, new; `mesh.ts`, `stage.ts`, `profile.ts` `skin.finer` and
+`skin.fit`, the game's own files): Loop's subdivision surface, each triangle split in four, after one round of
+fitting to the builder's corners. Apoleia's profile has no skin of its own and is drawn as built; its pictures
+are the same pixel for pixel, and the comparison with Godot is unchanged. Roman bytes unchanged.

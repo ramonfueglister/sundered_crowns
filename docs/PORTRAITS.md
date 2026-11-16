@@ -1480,6 +1480,109 @@ cheek 10 L (hoods, fringes). Forehead 6 L darker than the lit cheek (hers level)
 (hers 8 L lighter): a key nearer the front would mend both and was not kept for the far cheek's sake. The
 upper lip is 2 L darker than hers (less light from below). PLACEHOLDER, all three values.
 
+**A streak in zigzag down the nose: the skin as a smooth surface (round 84).** Round 83 left the pale streak
+beside a man's nose with a jagged edge and named the rim light's shadow map for it; round 81 had called the
+nose "flat planes with a ridge". Neither holds.
+
+The noses are of human measure. Against the survey of real heads (the table above: nose protrusion men 21.1,
+the survey 21.1; women 19.9, 19.8; sellion to subnasale 52.7 and 49.1, the survey 52.0 and 48.2). And their
+backs are round: on 24 grown heads of the sample (`face_measure --dump`, scratch `nose84.py`) the back is 7.8,
+13.6 and 18.5 mm broad at 1, 3 and 6 mm under its ridge on men (an arch of about 7.6 mm radius), 3.4, 7.4 and
+11.5 mm on women; it leans 29.9 and 27.5 degrees.
+
+What made the zigzag, by drawing a man's nose large (672 by 840) with one thing changed at a time:
+
+| changed | the streak |
+|---|---|
+| the rim's shadow held 6, 8, 12, 25 mm off the surface (`normalBias`) | zigzag, a little broader |
+| its edge blurred 3, 6, 10 times as wide | zigzag |
+| the shadow map at 4096 | the same picture |
+| no rim shadow at all | zigzag, brighter |
+| no pores (`skin.pores` 0) | zigzag |
+| no highlight (`skin.specular` 0) | the thin bright line is gone; the edge of the nose's shade is still bent |
+| no rim light | no streak; the nose's outline against the far cheek is bent |
+
+So it is the highlight of the rim light and the edge of the nose's own shade, and both are bent where the
+head's net has an edge: the net is coarse there, triangles of 8 mm along the nose's back
+(`runde84_netz_nase.png`; the whole body has 11 194 triangles). Lit square on, a coarse net does not show,
+the light is passed evenly from corner to corner; a highlight and the edge of a shade are lines, and a line
+across such triangles has a bend at every edge.
+
+Now (`src/portrait/subdivide.ts`, `mesh.ts`, `profile.ts` `skin.finer` and `skin.fit`). The stage draws the
+skin as the smooth surface its net stands for: Loop's subdivision surface (Loop 1987), with the weights of
+Pixar's OpenSubdiv (`opensubdiv/sdc/loopScheme.h`, read for this). Every triangle is split in four; each corner
+is set on the surface the splitting would arrive at if it went on (the limit position) with that surface's
+normal (the tangent masks). Edges with one triangle on them (the mouth's and the eyes' openings) keep to the
+rules of a border. Colour and the place in the image are halved along the edges of a corner's own triangle,
+so the image's seams stay. Only the skin: cloth, hair, eyeballs are as built.
+
+Loop's surface lies inside its net where the net is rounded outwards. Before the splitting the net is
+therefore moved once by what each corner's limit position is off (one round of progressive interpolation:
+Cheng and others 2009, read for this). Measured on the head (from a little under the chin up) of a man, a
+woman and a girl of 8 of the sample:
+
+| | a corner of the built head off the surface (mm): mean, twentieth worst | the nose's tip | triangles off the surface they are lit as (degrees, mean) |
+|---|---|---|---|
+| as built | 0 | 0 | 9.0 to 9.8 |
+| split once, not fitted | 0.56 to 0.74, 1.6 to 2.1 | -0.15 to -0.37 | 4.1 to 4.3 |
+| split once, one round (now) | 0.24 to 0.33, 0.7 to 1.0 | within 0.11 | 4.6 to 4.9 |
+| two rounds | 0.15 to 0.20, 0.4 to 0.6 | within 0.13 | 4.8 to 5.3 |
+| fitted to the end | 0 | 0 | waves |
+| split twice, one round | | | 2.3 to 2.5 |
+
+Fitted to the end, the surface goes through every corner and waves between them round the eyes and along the
+nose (the net is not even there); the waves begin to show at two rounds. Split twice looks the same as once
+at 672 by 840. The corners furthest off (5 to 6 mm) lie inside the mouth. A portrait takes 55 to 65 ms longer
+to draw (node, one head; the game draws one on a click).
+
+The face reads as before (`face_colour.mjs` and `edge81.mjs` as in round 83, against the lit cheek, L):
+
+| | lit cheek | far cheek | forehead | nose's back | lips | eye | beside the nose |
+|---|---|---|---|---|---|---|---|
+| women, round 83 | 59.0 | -24.3 | -5.9 | 0.0 | -37.1, -21.2 | -39.7 | -36.2 |
+| women, now | 58.3 | -23.2 | -5.3 | +1.1 | -34.3, -20.3 | -39.0 | -36.4 |
+| men, round 83 | 63.4 | -30.9 | -13.3 | -6.4 | -38.7, -23.7 | -50.3 | -24.0 |
+| men, now | 62.6 | -30.3 | -13.6 | -5.8 | -37.4, -23.0 | -49.6 | -26.1 |
+
+Of the sample's 35 pictures none shows skin through a beard, a hood or a veil; a bald head's outline is round
+where it had corners.
+
+Tried and not kept: the light inside skin. Skin passes light on under its surface and lets it out a little way
+off, red furthest; games draw it by a table read by the angle to the light and by how tightly the surface is
+curved (Penner & Borshukov 2011, Pre-Integrated Skin Shading), filled from the measured profile of skin (d'Eon
+& Luebke 2007, GPU Gems 3 chapter 14: six Gaussians of 0.0064 to 7.41 mm², the weights per colour summing to
+1). Built with the curvature per corner from the head's own form (the nose's tip 9.4 and 9.8 mm radius; half of
+all corners tighter than 24 mm, a tenth tighter than 5.8, a hundredth tighter than 1.9). What the measured skin
+shows of a light that stands level with the surface (red, green, blue; 1 = the light square on): 0.008 at
+50 mm radius, 0.053, 0.012, 0.008 at 8 mm, 0.103, 0.025, 0.016 at 4 mm, 0.171, 0.049, 0.031 at 2 mm. The
+profile's wrap gives 0.15, 0.13, 0.12 everywhere. In place of the wrap the table leaves a face
+harder and darker in its shade; on top of it, it changes 340 of 564 480 pixels by 8 of 255 or more on a woman,
+253 on a man, 931 on a girl of 8 (lid rims, nostrils, corners of the mouth). With the skin's profile three
+times as wide, which no measure stands for, 6279, 3903 and 8152, and a red seam in the lid's fold. Skin passes
+light on over millimetres; a face in these pictures is about half a millimetre a pixel at 672 by 840 and
+three times that in the game's panel. The wrap stays (it
+is about what a lamp of the key's breadth reaches round a surface: 10 degrees, 0.17) and the table is not in
+the code; its source and what it changed in the materials are kept beside the pictures
+(`charaktere/versuch1356/runde84_hautstreuung/`). Read for it: the ring's formula from two weblogs that give
+it (Dong 2019, Pesce 2011, the second with Penner's integral as code and the first four rows of weights); the
+chapter's page says the weights sum to 1, its table is an image: the last two rows and the unit are from
+memory.
+
+Tests (`tests/portrait_skin.test.ts`). Corners at one place are one corner. An icosahedron becomes a ball
+(round to 1.5 %, the normals along the radius; inside its net without fitting, nearer with each round, through
+the corners in the end). A flat sheet stays flat with its border where it was, and what its corners carry is
+halved along the edges. A triangle without area is left out. The skin of three people of England: four times
+the corners; a corner of the head off by less than 0.4 mm in the mean after one round (more than 0.5
+without); the triangles less than 0.6 times as far off the surface as built; the stage's geometry is that
+surface. Apoleia's skin and surfaces without normals are drawn as built (Apoleia's pictures are the same
+pixel for pixel).
+Pictures: `runde84_nase_vorher_nachher.png` (four men's noses, round 83 and now),
+`runde84_umriss_vorher_nachher.png` (two bald heads), `runde84_netz_nase.png`, `runde84_stichprobe.png`.
+Still open: the streak is a line now, not yet a quiet one: beside it the skin between nose and cheek still
+shows the net's unevenness as faint second lines on some men, and it is still pale grey on warm skin and
+broad on children. Only the skin is finer: the eyeball, the cloth and the painted layers of hair are the
+builder's nets. What round 83 left (men's eye, forehead, nose's back, upper lip).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

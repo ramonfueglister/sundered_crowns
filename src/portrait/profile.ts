@@ -40,8 +40,10 @@ export interface StageProfile {
    *  for scattering inside skin); how blotchy (broad patches redder or paler) and speckled (fine, in brightness);
    *  how much of its colour is left (1 = all), and a tint over that, which grows with the lightness of the person's skin
    *  as a whole (none on dark skin, all of it on light skin: blood shows through light skin, melanin hides it; the
-   *  same over the whole head, so that what is painted darker on it keeps its red). */
-  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
+   *  same over the whole head, so that what is painted darker on it keeps its red). `finer`: how many times each
+   *  of its triangles is split in four to draw it as the smooth surface its net stands for, after `fit` rounds
+   *  of moving the net so that this surface keeps to the builder's corners (subdivide.ts; 0 = the net as built). */
+  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
    *  of the gaze), a tint, how much lighter the white of the eye and how much darker the iris are drawn than the
@@ -214,6 +216,20 @@ export const APOLEIA: StageProfile = {
  *  more sky (0.35: wedge 50), fills alone at 45 to 63 degrees round without the rim's change (wedge 44 to 49),
  *  three.js' neutral and AgX tone mapping in place of ACES (lighter shade, but the skin salmon and flat, or
  *  pale).
+ *  Round 84: the pale streak the rim light draws down a man's nose ran in zigzag, the edge of the nose's own
+ *  shade was bent, and a bald head had corners in its outline. The noses themselves are of human measure (24
+ *  heads in mm, docs/PORTRAITS.md), and neither the rim's shadow (held 6 to 25 mm off the surface, its edge
+ *  blurred 3 to 10 times as wide, a map of 4096, or none at all) nor the pores' normal map made the zigzag: the
+ *  head's net is coarse there (triangles of 8 mm along the nose's back), and a highlight and the edge of a
+ *  shade are bent at every edge of a triangle. The skin is now drawn as the smooth surface its net stands for
+ *  (`skin.finer` 1 after one round of fitting, `skin.fit` 1: more rounds wave round the eyes; twice split
+ *  looks the same as once). Faces measure as before to within 3 L. Tried and not kept: the light inside skin
+ *  by d'Eon & Luebke's measured profile, read from a table by the angle to the light and the surface's
+ *  curvature (Penner & Borshukov 2011), on top of `skin.wrap`: skin passes light on over a few millimetres,
+ *  which at a portrait's size changes 340 of 564 480 pixels by 8 of 255 or more (lid rims, nostrils); three
+ *  times as wide, which nothing measured stands for, it draws a red seam in the lid's fold. In place of the
+ *  wrap it leaves the faces harder: the wrap is about what a lamp of the key's breadth reaches round a surface
+ *  (10 degrees: 0.17), and stays.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -230,7 +246,7 @@ export const ENGLAND_1356: StageProfile = {
   exposure: 0.375,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
-  skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
+  skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], finer: 1, fit: 1, blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
