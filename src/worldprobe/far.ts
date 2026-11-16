@@ -10,7 +10,7 @@ import { type Batch, type RGB, type Rnd, hash2, mix, rgb, seeded, shade } from '
 import { VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
-import { FARMS, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
+import { FARMS, LOTS_FOUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -44,7 +44,7 @@ const SEARCH = 16;
  * tried, about this share of those finds level, free ground, and about half of a lot is crop. One field in ten has
  * a farmhouse beside it (settle.ts).
  */
-const LOT_W = 11, LOT_D = 8, LOTS_FOUND = 0.45, CROP_SHARE = 0.5;
+const LOT_W = 11, LOT_D = 8, CROP_SHARE = 0.5;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
 const field = (crop: RGB, flat: boolean) => mix(crop, WHEAT_SIDE, flat ? 0.6 : 0.3), VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
 /**
@@ -69,7 +69,7 @@ const CANOPY_LIGHT = 0.8;
  * only what `own` holds at its middle is added to `things`.
  */
 export function coverLand(g: Ground, step: number, things: Batch, sites: readonly Site[], o: {
-  cultivated(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle;
+  cultivated(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the share of the fields with a farmhouse beside it (everywhere FARMS without it) */ farms?(x: number, z: number): number;
   woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean;
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1) };
@@ -149,7 +149,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
     if (hash2(lx, lz, 65 + step) > o.cultivated(mx, mz) * (hedged ? LOTS_FOUND : crops)) continue;
     if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) {
-      if (wx - lx * lotW === lotW - 1 && wz - lz * lotD === 0 && hash2(lx, lz, 69) < FARMS) house(o.farm(mx, mz), x, z, 1);
+      if (wx - lx * lotW === lotW - 1 && wz - lz * lotD === 0 && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS)) house(o.farm(mx, mz), x, z, 1);
       continue;
     }
     put(x, z, 0, ...cropOf(lx, lz, mx, mz));
