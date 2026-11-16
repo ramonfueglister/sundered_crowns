@@ -34,6 +34,18 @@ export interface PersonEconomy {
   wage: number; income: number; spent: number; savings: number;
 }
 
+/** The household of a person's family (economy feature 11, src/sim/systems/household.ts): the family is the purse.
+ *  Money is in £ of the calibration; flows are those of the last day. */
+export interface PersonHousehold {
+  /** the persons of the family, those of them who work, and the baskets they consume together (an adult one, a
+   *  child under 15 half) */
+  persons: number; working: number; baskets: number;
+  /** of the whole family: the disposable income and the spending of the day, and the savings */
+  income: number; spent: number; savings: number;
+  /** what this person consumed that day: the person's share by baskets of what the family spent */
+  consumed: number;
+}
+
 /** One person in full. */
 export interface PersonDetail {
   id: number; alive: boolean; day: number;
@@ -48,6 +60,8 @@ export interface PersonDetail {
   genes: number[];
   /** null in a world without economies of the cities */
   economy: PersonEconomy | null;
+  /** null in a world without economies of the cities */
+  household: PersonHousehold | null;
 }
 
 const ROLES: Record<number, PersonEconomy['role']> = { [ROLE.worker]: 'worker', [ROLE.owner]: 'owner', [ROLE.banker]: 'banker' };
@@ -61,6 +75,13 @@ export function personEconomy(s: WorldState, id: number): PersonEconomy | null {
     sector: firm < 0 ? -1 : F.sector[firm], firmOwner: firm < 0 ? -1 : F.owner[firm], employees: firm < 0 ? 0 : F.employees[firm],
     wage: P.wage[id], income: P.income[id], spent: P.spent[id], savings: P.savings[id],
   };
+}
+
+/** The household of a person's family; null in a world without economies. */
+export function personHousehold(s: WorldState, id: number): PersonHousehold | null {
+  if (!s.economy.cities) return null;
+  const F = s.family.cols, f = s.person.cols.family[id];
+  return { persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: s.person.cols.consumed[id] };
 }
 
 export function placePeople(s: WorldState, place: number): PlacePeople {
@@ -83,5 +104,6 @@ export function personDetail(s: WorldState, id: number, cultureKey: (index: numb
     iq: P.iq[id], big5: [P.o[id], P.c[id], P.e[id], P.a[id], P.n[id]],
     genes: Array.from(genesOf(s, id).subarray(0, 2 * NG)),
     economy: personEconomy(s, id),
+    household: personHousehold(s, id),
   };
 }

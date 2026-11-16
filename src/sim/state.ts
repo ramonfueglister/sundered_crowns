@@ -11,8 +11,9 @@ import type { Table } from './ecs';
  *  economy is gone. 11: a world of 1291 has the persons of its own 30 cities of 1291. 12: the persons of the cities'
  *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
  *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the cultures and faiths of 1291
- *  (data/history/1291/peoples.json). Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 13;
+ *  (data/history/1291/peoples.json). 14: the family is the purse and a woman without a husband works (economy feature
+ *  11); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 14;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -64,6 +65,9 @@ export const PERSON_SCHEMA = {
    *  the wage before tax, the disposable income and what was spent on consumption, each of that day; and the savings
    *  (the deposits at the bank) */
   wage: 'f32', income: 'f32', spent: 'f32', savings: 'f32',
+  /** what the person consumed on the last day, in £ at the scale of the world: the person's share by baskets of what
+   *  the family spent (economy feature 11, src/sim/systems/household.ts) */
+  consumed: 'f32',
 } as const;
 export type PersonSchema = typeof PERSON_SCHEMA;
 /** A family: a couple and its unmarried children in one place, or a person on their own. The id is never reused. */
@@ -71,6 +75,12 @@ export const FAMILY_SCHEMA = {
   place: 'i16',
   /** the couple at its head: person ids, −1 where there is none */
   man: 'i32', woman: 'i32',
+  /** the purse of the family (economy feature 11, src/sim/systems/household.ts), written after every day of the
+   *  economy: its persons, those of them who work, and the baskets they consume (an adult one, a child under 15 half) */
+  persons: 'u16', working: 'u16', baskets: 'f32',
+  /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
+   *  and their savings */
+  income: 'f32', spent: 'f32', savings: 'f32',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of

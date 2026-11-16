@@ -47,7 +47,7 @@ describe('who works', () => {
     }
     expect(withPart).toBeGreaterThan(11_000);
   });
-  it('is drawn at the rates of the table: 97.1 % of the men and 43 % of the women of working age', () => {
+  it('follows the rates of the table: 97.1 % of the men and 43 % of the women of working age', () => {
     expect(rate).toEqual({ men: 0.971, women: 0.43 });
     const n = [0, 0], works = [0, 0];
     for (let id = 0; id < s.person.size; id++) {
@@ -181,9 +181,11 @@ describe('the state', () => {
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
     for (let k = 0; k < N; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    // who worked works; who has turned 15 since the start and draws work, works now too
+    // a man who worked works; a man who has turned 15 since the start and draws work, works now too. (The women of
+    // a city are drawn at a rate that follows its women of working age, economy feature 11: tests/economy-households.test.ts)
     let fresh = 0;
     for (let id = 0; id < up.person.size; id++) {
+      if (up.person.cols.sex[id] !== 1) continue;
       const was = start.person.cols.role[id], is = up.person.cols.role[id], works = (r: number) => r !== ROLE.none && r !== ROLE.idle;
       if (works(was)) expect(works(is)).toBe(true);
       else if (works(is)) { fresh++; expect(ageOn(up.person.cols.born[id], up.day)).toBeGreaterThanOrEqual(WORKING_AGE); expect(ageOn(up.person.cols.born[id], 0)).toBeLessThan(WORKING_AGE); }
