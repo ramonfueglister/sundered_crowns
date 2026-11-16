@@ -47,7 +47,7 @@ describe('a world of 1291', () => {
     expect(cities.length).toBe(30);
     expect(cities[0].name).toBe('Cairo');
     for (const out of ['Texcoco', 'Tenayuca', 'Mali']) expect(cities.some((c) => c.name === out)).toBe(false); // outside the world
-    expect(s.person.size).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0));
+    expect(s.person.size - s.named.length).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0)); // the rest are rulers
     const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
     for (const c of cities) {
       expect(towns.people[c.site]).toBe(c.people); // the town of the picture holds the city's people

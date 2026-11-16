@@ -1,6 +1,7 @@
 // Economy feature 11 (docs/ECONOMY_DESIGN.md): the family is the purse, and a woman without a husband works. Who
 // works (src/sim/systems/work.ts), the purse of a family and the consumption of a person
 // (src/sim/systems/household.ts), the state, the upgrade, and what the server and the panel say of a household.
+import { namedPersons } from '../src/sim/systems/rulers';
 import { describe, it, expect } from 'vitest';
 import { newWorldState } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
@@ -24,9 +25,10 @@ const adult = (x: WorldState, id: number) => ageOn(x.person.cols.born[id], x.day
 /** Equal to the six digits a stored amount has (the components are 32-bit numbers). */
 const near = (a: number, b: number) => expect(Math.abs(a - b)).toBeLessThanOrEqual(1e-6 * Math.max(Math.abs(a), Math.abs(b)));
 /** The persons of every family. */
+/** The persons of each family of the cities (the rulers, src/sim/systems/rulers.ts, have no part in the economy). */
 function members(x: WorldState): number[][] {
-  const out: number[][] = Array.from({ length: x.family.size }, () => []);
-  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id]) out[x.person.cols.family[id]].push(id);
+  const out: number[][] = Array.from({ length: x.family.size }, () => []), named = namedPersons(x);
+  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id] && !named.has(id)) out[x.person.cols.family[id]].push(id);
   return out;
 }
 /** A woman without a husband: at the head of a family without a man at its head, or on her own. */

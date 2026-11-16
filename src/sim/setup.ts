@@ -56,8 +56,8 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   fitPlacesToCities(s); // no place is smaller than its cities (those of the start year)
   foundPeople(s);
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
+  foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundEconomy(s, w);
-  foundRulers(s, w); // after the economy: rulers have no part in it
   return s;
 }
 
