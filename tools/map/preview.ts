@@ -9,6 +9,8 @@ import { gunzipSync } from 'node:zlib';
 import { rgb } from '../../src/lookprobe/batch';
 import { NAME_STYLE, layoutNames, nameSvg } from '../../src/worldprobe/names';
 import { paintRealms, placeAt, realmNames } from '../../src/worldprobe/paint';
+import { extentOf } from '../../src/worldprobe/extent';
+import { projectionFrom, type Index } from '../../src/worldprobe/region';
 
 const [out, sx0, sy0, sx1, sy1, slevel, setupPath = 'public/data/setup_1356.json'] = process.argv.slice(2);
 const level = Number(slevel), CELLS = 4, TILE = 512, W = 6144;
@@ -36,7 +38,9 @@ for (let ty = Math.floor(d0[1] / TILE); ty * TILE < d1[1]; ty++) for (let tx = M
 }
 // raw RGBA; tools/map/gauntlet.py turns it into a PNG
 writeFileSync(out.replace(/\.png$/, '.rgba'), png.data);
-const names = realmNames(realms, 4, (k) => [...setup.states[k].short.de].length).map((n) => ({ ...n, name: setup.states[n.realm].short.de }));
+// the names over what the world shows (data/content/world_extent.json), as the game lays them
+const index = JSON.parse(readFileSync('public/map/regions/world/index.json', 'utf8')) as Index, frame = extentOf(projectionFrom(index, 1 / index.cells));
+const names = realmNames(realms, 4, (k) => setup.states[k].short.de, frame).map((n) => ({ ...n, name: setup.states[n.realm].short.de }));
 writeFileSync(out.replace(/\.png$/, '.names.json'), JSON.stringify({ x0: d0[0] * perDot, y0: d0[1] * perDot, perDot, w: pw, h: ph, names }));
 console.log(`${tiles} tiles in ${Date.now() - t0} ms, ${pw}x${ph}`);
 
@@ -58,29 +62,40 @@ await page.evaluate(async (b64) => {
   await document.fonts.ready;
 }, rgba);
 await page.screenshot({ path: out });
-// how far the letters keep to their realms: each letter as the box of its advance along the curve, ±0.3 of the type size
-// across it (mixed case about the curve's middle), sampled 5 × 3; a sample on land of another holder, land of none or
-// water counts as outside
-const glyphs = await page.evaluate(() => Array.from(document.querySelectorAll('text'), (t) => {
-  const el = t as SVGTextContentElement, size = Number(t.getAttribute('font-size')), n = el.getNumberOfChars(), out: number[][] = [];
-  for (let i = 0; i < n; i++) { const a = el.getStartPositionOfChar(i), b = el.getEndPositionOfChar(i); out.push([a.x, a.y, b.x, b.y]); }
-  return { realm: Number((t.querySelector('textPath')?.getAttribute('href') ?? '#n-1').slice(2)), size, glyphs: out };
-}));
+// the names' own ink, pixel by pixel: each name in a colour of its own over white and nothing else, read back where a
+// pixel has exactly a name's colour (inside its letters, not on their smoothed edges)
+const code = (k: number) => [40 + (k % 8) * 25, 40 + (Math.floor(k / 8) % 8) * 25, 40 + Math.floor(k / 64) * 25];
+const texts = await page.evaluate((codes) => {
+  document.body.style.background = '#fff';
+  (document.getElementById('c') as HTMLCanvasElement).style.visibility = 'hidden';
+  const svg = document.querySelector('svg')!; svg.style.opacity = '1';
+  return Array.from(svg.querySelectorAll('text'), (t, k) => { t.setAttribute('fill', `rgb(${codes[k].join(',')})`); return Number((t.querySelector('textPath')?.getAttribute('href') ?? '#n-1').slice(2)); });
+}, laid.map((_, k) => code(k)));
+const shot = (await page.screenshot()).toString('base64');
+const inkOf = await page.evaluate(async ({ b64, n }) => {
+  const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d')!; g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height).data, of: number[] = [];
+  for (let i = 0; i < c.width * c.height; i++) {
+    const r = d[i * 4], gg = d[i * 4 + 1], b = d[i * 4 + 2];
+    if ((r - 40) % 25 || (gg - 40) % 25 || (b - 40) % 25 || r < 40 || gg < 40 || b < 40) continue;
+    const k = (r - 40) / 25 + ((gg - 40) / 25) * 8 + ((b - 40) / 25) * 64;
+    if (k < n) of.push(i, k);
+  }
+  return of;
+}, { b64: shot, n: laid.length });
 await browser.close();
 const ownerAt = (px: number, py: number) => { const at = placeAt(realms, Math.floor((d0[0] + px) * perDot), Math.floor((d0[1] + py) * perDot)); return at >= 0 && at < realms.owner.length ? realms.owner[at] : -2; };
-let outside = 0, samples = 0, bad = 0;
-const worst: [string, number][] = [];
-for (const g of glyphs) {
-  let o = 0, k = 0;
-  for (const [ax, ay, bx, by] of g.glyphs) {
-    const len = Math.hypot(bx - ax, by - ay) || 1, nx = -(by - ay) / len, ny = (bx - ax) / len;
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) {
-      const t = (i + 0.5) / 5, off = (j - 1) * 0.3 * g.size, px = ax + (bx - ax) * t + nx * off, py = ay + (by - ay) * t + ny * off;
-      k++; if (ownerAt(px, py) !== g.realm) o++;
-    }
-  }
-  outside += o; samples += k;
-  if (o / k > 0.05) { bad++; worst.push([setup.states[g.realm].short.de, Math.round((100 * o) / k)]); }
+// the ink: every pixel of a name's letters on land of its own realm
+const inkOut = new Map<number, [number, number]>();
+for (let j = 0; j < inkOf.length; j += 2) {
+  const i = inkOf[j], k = inkOf[j + 1], realm = texts[k], o = ownerAt((i % pw) + 0.5, Math.floor(i / pw) + 0.5) !== realm ? 1 : 0;
+  const t = inkOut.get(realm) ?? [0, 0]; t[0] += o; t[1]++; inkOut.set(realm, t);
 }
-worst.sort((p, q) => q[1] - p[1]);
-console.log(`${laid.length} names; letters outside their realm: ${((100 * outside) / Math.max(1, samples)).toFixed(1)} % of samples; names over 5 %: ${bad}; worst ${worst.slice(0, 12).map(([n, v]) => `${n} ${v}%`).join(', ')}`);
+let inkAll = 0, inkBad = 0;
+const inkWorst: [string, number][] = [];
+for (const [realm, [o, n]] of inkOut) { inkAll += n; inkBad += o; if (o > 0) inkWorst.push([`${setup.states[realm].short.de}`, o]); }
+inkWorst.sort((p, q) => q[1] - p[1]);
+console.log(`ink of the names: ${inkBad} of ${inkAll} pixels off their realm; names with any: ${inkWorst.length}; worst ${inkWorst.slice(0, 12).map(([n, v]) => `${n} ${v}px`).join(', ')}`);
+console.log(`${laid.length} names`);

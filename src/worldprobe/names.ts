@@ -8,7 +8,7 @@ import type { RealmName } from './paint';
 /** a name fills this share of its curve; letters are about this wide for their height (Crimson Pro, mixed case) */
 const FILL = 0.84, ASPECT = 0.46;
 /** names smaller than this many pixels are left out; none is written larger than this share of the picture's height */
-const SMALLEST = 9, LARGEST = 0.11;
+const SMALLEST = 11, LARGEST = 0.11;
 /** letters stand no further apart than this many times their height */
 const SPREAD_MOST = 0.9;
 /** two names keep this share of their summed heights apart (between points along them) */

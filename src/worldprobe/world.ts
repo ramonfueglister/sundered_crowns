@@ -16,8 +16,8 @@ import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
 /**
- * The world is laid out in blocks: one block of the finest step is a quarter of a cell of the game map's data (FINER,
- * land.ts: about 0.19 km × cos(latitude), so 0.13 km in the Alps), and the block grid is turned against the map so
+ * The world is laid out in blocks: one block of the finest step is a part of a cell of the game map's data (FINER
+ * to a cell, land.ts: about 0.38 km × cos(latitude), so 0.26 km in the Alps), and the block grid is turned against the map so
  * that north is at the top of the picture. A ground is the
  * square of N × N blocks that starts at world block (ox, oz); of it, the columns of `part` become meshes. What is built
  * on a column depends only on the world around it, never on where the ground begins, so that grounds laid side by side
@@ -59,10 +59,10 @@ const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
 /**
- * half the width of a great river (rank 6 or less) and of the others, in finest blocks: some 500 m and 300 m, more
- * than most were, so that they show from the low camera
+ * half the width of a great river (rank 6 or less) and of the others, in cells of the land's data: some 500 m and
+ * 300 m, more than most were, so that they show from the low camera; never less than a block
  */
-const RIVER_HALF = 2, BROOK_HALF = 1.2;
+const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
@@ -185,7 +185,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const river = new Int16Array(N * N).fill(-1);
   for (const r of region.rivers) {
     // a river is as wide as at the finest step, and never narrower than a block
-    const half = Math.max(0.6, (r.rank <= 6 ? RIVER_HALF : BROOK_HALF) / 2 ** step), steps: [number, number, number][] = [];
+    const half = Math.max(0.6, (r.rank <= 6 ? RIVER_HALF : BROOK_HALF) / cell), steps: [number, number, number][] = [];
     for (let k = 0; k + 1 < r.pts.length; k++) {
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
       for (let t = 0; t < len; t += 0.5) {
@@ -267,7 +267,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover = coverLand(g, step, things, sites, { cultivated, vines, farm: (x, z) => farm(x, z).style.house, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
-      if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / 2 ** step))) ? { share: 0.8, crowns: PALM, tall: true } : null;
+      if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const share = wooded(x + 0.5, z + 0.5);
       if (!share) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true };
