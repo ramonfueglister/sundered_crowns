@@ -570,12 +570,12 @@ describe('the economies of the cities in the world', () => {
     expect(placeDetail(s, w, CITIES[0].place)!.cityEconomy).toBeUndefined();
     expect(s.firm.size).toBe(0);
   });
-  it('are founded in a world that starts in 1291 too: the economies of its own 30 cities, with the table of 1356 as a placeholder', () => {
+  it('are founded in a world that starts in 1291 too: an economy in every place with a town, with the table of 1356 as a placeholder', () => {
     const { s, w } = newWorldState(1291, 1291);
     const e = s.economy.cities!, n = e.places.length;
     expect(s.startYear).toBe(1291);
     expect(Array.from(e.places)).toEqual(cityPlaces(1291).map((c) => c.place));
-    expect(n).toBe(30);
+    expect(n).toBe(550); // 558 towns inside the world frame, some places hold two
     expect(e.day).toBe(0); expect(e.halted).toBe('');
     expect(e.figures.length).toBe(n * FIGURES);
     days(s, w, 35); // past the first plan of every firm
@@ -584,10 +584,12 @@ describe('the economies of the cities in the world', () => {
     const c = w.economyEngine.checks(e.model);
     for (const x of c.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
     expect(placeDetail(s, w, e.places[0])!.cityEconomy).toBeDefined();
-    // the economies are where the persons live: London is not one of the 30 largest cities of 1291, Bruges is
-    expect(placeDetail(s, w, w.names.indexOf('London'))!.cityEconomy).toBeUndefined();
+    // the economies are where the persons live: in every town of the world graphic with people, and nowhere else
+    expect(placeDetail(s, w, w.names.indexOf('London'))!.cityEconomy).toBeDefined();
     expect(cityPlaces(1291).map((x) => x.name)).toContain('Bruges');
-  }, 30_000);
+    const noTown = Array.from({ length: w.L }, (_, i) => i).find((i) => s.place.pop[i] > 0 && !e.places.includes(i))!;
+    expect(placeDetail(s, w, noTown)!.cityEconomy).toBeUndefined();
+  }, 300_000);
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
     let calls = 0;
