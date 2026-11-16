@@ -10,7 +10,7 @@
 // Ids are never reused: no row of either table is ever freed, so a mother, a father or a family that a person points
 // to is always the one it was (the portraits seed their randomness from the person id).
 import type { WorldState } from '../state';
-import { PERSON_SCHEMA, FAMILY_SCHEMA } from '../state';
+import { PERSON_SCHEMA, FAMILY_SCHEMA, ALIVE } from '../state';
 import { createTable, spawn } from '../ecs';
 import { hash01 } from '../rng';
 import { personYears, type Sex } from '../people/lifetable';
@@ -102,7 +102,7 @@ export function foundPeople(s: WorldState): void {
       const a = y + u01(seed, id, K.ageInYear);
       P.sex[id] = sex === 'm' ? 1 : 0;
       P.born[id] = -Math.ceil(a * DAYS_PER_YEAR);
-      P.mother[id] = -1; P.father[id] = -1; P.family[id] = -1;
+      P.mother[id] = -1; P.father[id] = -1; P.family[id] = -1; P.died[id] = ALIVE;
       age.set(id, ageOn(P.born[id], 0));
       marriageAge.set(id, Math.max(MARRIAGE_AGE_MIN, MARRIAGE_AGE[sex] + MARRIAGE_AGE_SD * normal(seed, id, K.marriage)));
     }
@@ -188,9 +188,11 @@ export function giveGenes(s: WorldState): void {
 export const genesOf = (s: WorldState, id: number): Uint8Array => s.person.cols.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG);
 const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
-/** The persons who live in a place (the people of its cities). */
+/** The living persons of a place (the people of its cities, and the rulers who live there). */
 export function personsIn(s: WorldState, place: number): number[] {
   const out: number[] = [];
-  for (let i = 0; i < s.person.size; i++) if (s.person.alive[i] && s.family.cols.place[s.person.cols.family[i]] === place) out.push(i);
+  for (let i = 0; i < s.person.size; i++) {
+    if (s.person.alive[i] && s.person.cols.died[i] === ALIVE && s.family.cols.place[s.person.cols.family[i]] === place) out.push(i);
+  }
   return out;
 }

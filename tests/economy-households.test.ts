@@ -205,7 +205,7 @@ describe('the purse of a family', () => {
 describe('the state', () => {
   it('holds the purses: a saved world goes on as the running one', () => {
     const a = decodeState(encodeState(s)), b = decodeState(encodeState(s));
-    expect(a.v).toBe(STATE_VERSION); expect(STATE_VERSION).toBe(14);
+    expect(a.v).toBe(STATE_VERSION); expect(STATE_VERSION).toBe(15);
     expect(hashState(a)).toBe(hashState(s));
     expect(Object.keys(a.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
     for (let d = 0; d < 3; d++) { advanceDay(a, w); advanceDay(b, w); }
@@ -218,7 +218,7 @@ describe('the state', () => {
     delete old.person.cols.consumed; old.v = 13;
     old.person.cols.role.fill(0); // whatever the parts were: they are given out again
     const up = upgradeState(decodeState(encodeState(old)), w);
-    expect(up.v).toBe(14);
+    expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
