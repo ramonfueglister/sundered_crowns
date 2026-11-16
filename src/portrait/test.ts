@@ -8,6 +8,9 @@
 // its profile says, to see a face from the side; ?without=_cap. leaves out every surface whose image has that in its
 // name, to see what lies under it; ?set=exposure:0.5,skin.colour:1.1,skin.tint.1:0.75,sky.top:ffe9d6 sets values
 // of the stage profile by their path (a number, or a colour as six hex digits), to try them without a build.
+// ?at=0.835:0.5168,0.9031:0.5168 writes where points of the skin's image (u:v) lie in each picture, into the
+// picture's data-at as x:y in pixels, for tools that measure a picture at the face's landmarks
+// (tools/portrait/face_colour.mjs).
 // ?sample=england draws founders of the pool England's people come from instead of the twelve test people
 // (tests/portrait/sample_england.json, written by portrait/examples/sample.rs): women and men of 8 to 68.
 import people from '../../tests/portrait/people.json';
@@ -15,9 +18,26 @@ import england from '../../tests/portrait/sample_england.json';
 import { loadPortraitAssets } from './assets';
 import { profileOf } from './profile';
 import { PortraitStage } from './stage';
-import type { PortraitPerson } from './wire';
+import { surfaceKind } from './materials';
+import type { Portrait, PortraitPerson } from './wire';
 
 declare global { interface Window { portraitsDone?: boolean; portraitError?: string } }
+
+/** Where points of the skin's image lie in the picture drawn last: for each the corner of the skin nearest to it
+ *  on the image, as "x:y" in pixels. */
+function placesOf(portrait: Portrait, at: number[][], stage: PortraitStage): string {
+  const skin = portrait.surfaces.filter(s => surfaceKind(s) === 'skin' && s.tex.includes('skin')).sort((a, b) => b.pos.length - a.pos.length)[0];
+  if (!skin) throw new Error('?at: the portrait has no skin with an image');
+  return at.map(([u, v]) => {
+    let best = 0, least = Infinity;
+    for (let k = 0; k < skin.uv.length / 2; k++) {
+      const d = (skin.uv[2 * k] - u) ** 2 + (skin.uv[2 * k + 1] - v) ** 2;
+      if (d < least) { least = d; best = k; }
+    }
+    if (least > 1e-6) throw new Error(`?at: no corner of the skin at ${u}:${v}`);
+    return stage.place(skin.pos[3 * best], skin.pos[3 * best + 1], skin.pos[3 * best + 2]).map(x => x.toFixed(1)).join(':');
+  }).join(',');
+}
 
 async function main(): Promise<void> {
   const q = new URLSearchParams(location.search);
@@ -29,6 +49,7 @@ async function main(): Promise<void> {
   const origin = q.get('origin');
   const genes = (q.get('gene') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   const only = (q.get('only') ?? '').split(',').filter(Boolean).map(Number);
+  const at = (q.get('at') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   for (const given of (q.get('sample') === 'england' ? england : people) as PortraitPerson[]) {
     if (only.length && !only.includes(given.pid)) continue;
     const person: PortraitPerson = {
@@ -58,11 +79,13 @@ async function main(): Promise<void> {
     const without = q.get('without');
     if (without) portrait.surfaces = portrait.surfaces.filter(s => !s.tex.includes(without));
     await stage.draw(portrait);
+    const places = at.length ? placesOf(portrait, at, stage) : '';
     const picture = document.createElement('canvas');
     picture.width = width; picture.height = height;
     picture.id = `p${person.pid}`;
     picture.title = `${person.pid}: ${portrait.look}, ${portrait.tris} triangles, built in ${(t1 - t0).toFixed(0)} ms, drawn in ${(performance.now() - t1).toFixed(0)} ms`;
     picture.getContext('2d')!.drawImage(stage.renderer.domElement, 0, 0);
+    if (places) picture.dataset.at = places;
     wall.append(picture);
     console.log(picture.title);
   }

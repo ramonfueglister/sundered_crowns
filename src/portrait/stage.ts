@@ -10,7 +10,7 @@
 // (profile.ts).
 import {
   ACESFilmicToneMapping, DirectionalLight, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, NoColorSpace,
-  PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector3, WebGLRenderer,
+  PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { surfaceGeometry } from './mesh';
 import { drawOrder, normalMapOf, surfaceKind, surfaceMaterials } from './materials';
@@ -157,6 +157,15 @@ export class PortraitStage {
       c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
       c.updateProjectionMatrix();
     }
+  }
+
+  /** Where a point of the portrait drawn last lies in the picture: pixels from its top left corner. */
+  place(x: number, y: number, z: number): [number, number] {
+    const inner = this.pivot.children[0];
+    if (!inner) throw new Error('no portrait drawn');
+    const p = new Vector3(x, y, z).applyMatrix4(inner.matrixWorld).project(this.camera);
+    const size = this.renderer.getSize(new Vector2());
+    return [(p.x + 1) / 2 * size.x, (1 - p.y) / 2 * size.y];
   }
 
   private clear(): void {

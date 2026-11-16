@@ -34,6 +34,26 @@ pub const NOSE: [(usize, usize); 3] = [(4992, 2230), (4908, 2142), (4924, 2160)]
 /// The lids' edges over and under the pupil, of the eye at positive x and of the other.
 pub const LIDS: [(usize, usize); 2] = [(2891, 2934), (1, 44)];
 
+/// The landmarks by name, for tools that measure a picture at them (examples/face_measure.rs --marks finds each on
+/// the skin's image, tools/portrait/face_colour.mjs reads the picture there). Left and right are the head's own:
+/// its left is at positive x, which a viewer sees on the right.
+pub fn marks() -> Vec<(&'static str, usize)> {
+    let corner = |side: usize| LIP_SEAM[side].0[LIP_SEAM[side].0.len() - 1];
+    vec![
+        ("sellion", SELLION), ("subnasale", SUBNASALE), ("pronasale", PRONASALE), ("menton", MENTON),
+        ("upper lip's edge", STOMION[0]), ("lower lip's edge", STOMION[1]),
+        ("lips' top, inside", LIP_TOP[0]), ("lips' top, outside", LIP_TOP[1]),
+        ("lips' foot, inside", LIP_FOOT[0]), ("lips' foot, outside", LIP_FOOT[1]),
+        ("mouth's corner, left", corner(0)), ("mouth's corner, right", corner(1)),
+        ("eye's inner corner, left", EYE_CORNERS[0][0]), ("eye's outer corner, left", EYE_CORNERS[0][1]),
+        ("eye's inner corner, right", EYE_CORNERS[1][0]), ("eye's outer corner, right", EYE_CORNERS[1][1]),
+        ("upper lid, left", LIDS[0].0), ("lower lid, left", LIDS[0].1),
+        ("upper lid, right", LIDS[1].0), ("lower lid, right", LIDS[1].1),
+        ("nose's wing, left", NOSE[0].0), ("nose's wing, right", NOSE[0].1),
+        ("cheekbone, left", CHEEKBONES[1].0), ("cheekbone, right", CHEEKBONES[1].1),
+    ]
+}
+
 /// What `face` measures, and the survey's mean and standard deviation for men and for women (0 where it has none).
 pub const MEASURES: [(&str, [f32; 2], [f32; 2]); 13] = [
     ("face length (sellion to menton)", [122.7, 7.0], [113.4, 6.1]),
@@ -50,6 +70,29 @@ pub const MEASURES: [(&str, [f32; 2], [f32; 2]); 13] = [
     ("eye's opening, length", [0.0, 0.0], [0.0, 0.0]),
     ("eye's opening, height", [0.0, 0.0], [0.0, 0.0]),
 ];
+
+/// The red of the lips on the middle line, and its mean and standard deviation for men and for women: the upper
+/// lip's (labiale superius to stomion), the lower lip's (stomion to labiale inferius) and both (labiale superius to
+/// labiale inferius). The reference group of Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Three-dimensional lip
+/// morphometry in adults operated on for cleft lip and palate, Plastic and Reconstructive Surgery 111(7):
+/// 2149-2156: 89 men and 73 women, healthy young adults of northern Italy (tables I and II, read from the copy at
+/// boa.unimib.it/handle/10281/15745; the standard deviations as a summary of that copy gave them). Their mouths
+/// are 51.9 and 48.5 mm wide, as the survey's above. They measured between points touched on the face; ours are
+/// heights as seen from the front (`lips`), which for points on a face's front is nearly the same.
+pub const LIPS: [(&str, [f32; 2], [f32; 2]); 3] = [
+    ("the upper lip's red", [6.84, 2.21], [6.62, 2.38]),
+    ("the lower lip's red", [8.80, 2.73], [9.09, 2.76]),
+    ("the red of both lips", [15.39, 2.98], [15.49, 2.77]),
+];
+
+/// The measures of `LIPS` on a morphed head (`morph_test`), in millimetres: heights as seen from the front (the
+/// morphed head stands upright). The head's line where the lips meet is where they turn inward, 5 to 7 mm behind
+/// their front, where a caliper's point lies on the front: the way through space from the upper lip's top to that
+/// line is a third longer than the lip is high.
+pub fn lips(pp: &[V3]) -> [f32; 3] {
+    let (top, line, foot) = (between(pp[LIP_TOP[0]], pp[LIP_TOP[1]]), between(pp[STOMION[0]], pp[STOMION[1]]), between(pp[LIP_FOOT[0]], pp[LIP_FOOT[1]]));
+    [100.0 * (top[1] - line[1]), 100.0 * (line[1] - foot[1]), 100.0 * (top[1] - foot[1])]
+}
 
 fn dist(a: V3, b: V3) -> f32 {
     100.0 * (0..3).map(|k| (a[k] - b[k]).powi(2)).sum::<f32>().sqrt()

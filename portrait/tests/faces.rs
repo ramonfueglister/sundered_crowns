@@ -5,7 +5,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{face, MEASURES, MENTON, SELLION};
+use sc_portrait::measure::{face, lips, marks, LIPS, MEASURES, MENTON, SELLION};
 use sc_portrait::{build, morph_test, real, Head, Look, LODS};
 
 #[test]
@@ -34,6 +34,93 @@ fn the_grown_of_england_have_faces_of_human_measure() {
         // and a woman's is the smaller, by about as much as in the survey
         let (share, real) = (sums[1][k] / sums[0][k], women[0] / men[0]);
         assert!(share < 1.0 && (share - real).abs() < 0.06, "{name}: women {share} of men, the survey {real}");
+    }
+}
+
+#[test]
+fn the_red_of_the_lips_of_england_is_as_high_as_on_real_lips() {
+    // The lips' red on the middle line, upper lip, lower lip and both, against a reference group of young adults
+    // (src/measure.rs `LIPS`): within half a standard deviation of its mean for either sex.
+    let Some(h) = head() else { return };
+    let mut sums = [[0.0; 3], [0.0; 3]];
+    let n = 150;
+    for k in 0..2 * n {
+        let female = k % 2 == 0;
+        let m = lips(&morph_test(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
+        for (s, x) in sums[female as usize].iter_mut().zip(&m) {
+            *s += x / n as f32;
+        }
+    }
+    for (k, &(name, men, women)) in LIPS.iter().enumerate() {
+        for (sex, ours, real) in [("men", sums[0][k], men), ("women", sums[1][k], women)] {
+            if std::env::var("SHOW").is_ok() {
+                println!("{name}, {sex}: {ours:.1} mm, the reference {} ({})", real[0], real[1]);
+            }
+            assert!(((ours - real[0]) / real[1]).abs() < 0.5, "{name}, {sex}: {ours} mm, the reference {} ({})", real[0], real[1]);
+        }
+    }
+}
+
+#[test]
+fn the_upper_lip_of_a_woman_of_england_does_not_stand_out_as_a_beak() {
+    // Until round 71 a woman's upper lip stood 5.0 mm in front of her lower lip in the mean of these 24 and up to
+    // 6.7 mm (MakeHuman's young woman, whose lower lip lies 3 mm further back than its base head's), which from
+    // the side is a beak and from the front a dark bar over a pale crescent. With the lower lip's volume and the
+    // jaw a little forward it is 3.0 mm in the mean and 4.6 mm at most. Seen from the side: the foremost point of
+    // the upper lip's red against that of the lower lip's, within a centimetre of the middle line. (No measure of
+    // real profiles read for this: the bounds lie between the two states, PLACEHOLDER.)
+    let Some(h) = head() else { return };
+    let red = real::rows("real/skin_lip.txt").expect("the lips' red");
+    let front = |pp: &[[f32; 3]], upper: bool| {
+        (0..pp.len()).filter(|&v| red[v][0] > 0.5 && (red[v][1] > 0.5) == upper && pp[v][0].abs() < 0.1).map(|v| pp[v][2]).fold(f32::MIN, f32::max)
+    };
+    let (n, mut sum, mut most) = (24, 0.0, f32::MIN);
+    for k in 0..n {
+        let pp = morph_test(&h, &person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]));
+        let over = 100.0 * (front(&pp, true) - front(&pp, false));
+        if std::env::var("SHOW").is_ok() {
+            println!("woman {k}: the upper lip {over:.1} mm in front of the lower");
+        }
+        sum += over / n as f32;
+        most = most.max(over);
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("the upper lip of {n} women: {sum:.2} mm in front of the lower in the mean, {most:.2} mm at most");
+    }
+    assert!(sum < 3.5 && most < 5.2, "the upper lip of {n} women: {sum} mm in front of the lower in the mean, {most} mm at most");
+}
+
+#[test]
+fn the_cheeks_of_england_are_redder_than_the_forehead() {
+    // Until round 71 a face was one colour from forehead to chin (Apoleia's flush map has the nose's tip reddest
+    // and a patch of 2.4 cm radius on each cheek): in the picture the cheek was no redder than the forehead
+    // (CIELAB a* -1.1), where the reference's woman has +5. The skin's own colour as the builder paints it,
+    // before any light: how much green is left beside the red, on the cheek (between the eye's outer corner,
+    // the mouth's corner and the nose's wing) against the forehead above the nose's root. With Apoleia's map at
+    // seven tenths the cheek's share is 0.97, with England's 0.85 to 0.89. (In the picture the lit cheek is
+    // still no redder than the forehead: the stage's tone mapping takes the colour out of lit skin.)
+    let Some(h) = head() else { return };
+    let idx = &h.parts["body"][LODS - 1];
+    let mark = |name: &str| marks().iter().find(|m| m.0 == name).unwrap().1;
+    for k in 0..12 {
+        let (female, age) = (k % 2 == 0, [24.0, 35.0, 50.0][(k / 2) as usize % 3]);
+        let out = build(&h, &person(k, female, age), 1);
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        let at = |v: usize| skin.pos[idx.iter().position(|&i| i as usize == v).unwrap()];
+        // the colour of the skin nearest to a point
+        let near = |q: [f32; 3]| {
+            let d = |p: &[f32; 3]| (0..3).map(|a| (p[a] - q[a]).powi(2)).sum::<f32>();
+            let v = (0..idx.len()).min_by(|&a, &b| d(&skin.pos[a]).total_cmp(&d(&skin.pos[b]))).unwrap();
+            skin.col[v][1] / skin.col[v][0]
+        };
+        let (a, b, c) = (at(mark("eye's outer corner, left")), at(mark("mouth's corner, left")), at(mark("nose's wing, left")));
+        let cheek = near(std::array::from_fn(|i| (a[i] + b[i] + c[i]) / 3.0));
+        let (s, n) = (at(SELLION), at(mark("subnasale")));
+        let forehead = near(std::array::from_fn(|i| s[i] + 0.45 * (s[i] - n[i])));
+        if std::env::var("SHOW").is_ok() {
+            println!("{} {k}: green beside red on the cheek {cheek:.3}, on the forehead {forehead:.3}, the cheek's share {:.3}", if female { "woman" } else { "man" }, cheek / forehead);
+        }
+        assert!(cheek < 0.93 * forehead, "{} {k}: green beside red on the cheek {cheek}, on the forehead {forehead}", if female { "woman" } else { "man" });
     }
 }
 

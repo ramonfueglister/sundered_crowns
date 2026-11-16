@@ -38,7 +38,11 @@ pub struct Source {
 /// lips' outline, the same red on every skin. Measured against three mouths of the reference (round 66, CIELAB
 /// against the lit cheek: lower lip 21 darker, 6 to 9 redder; upper lip 30 to 36 darker; the line between them 41
 /// to 47 darker) that band was twice as red as a lip (17 to 18 redder), its upper lip 44 darker and the line
-/// black (60 to 65 darker). All values PLACEHOLDER, set by those measurements on two people of the sample.
+/// black (60 to 65 darker). In round 71 read anew at landmarks on the whole sample (tools/portrait/face_colour.mjs)
+/// against the one face of the reference that is large enough (the woman of the ruler designer): the lower lip of
+/// our grown women was as dark against the cheek as hers (24 against 23) but more orange (hue 43 degrees where
+/// she and the emperor have 36): less skin and a blood with less green in it bring it to 37 degrees. All values
+/// PLACEHOLDER, set by those measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -55,6 +59,9 @@ pub struct Lips {
     /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
     /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open.
     pub seam: f32,
+    /// How much of the lips' colour a child's lips have (1 = as a grown person's), growing to all of it as the
+    /// head grows up (`child_share`): at a woman's strength a girl of eight wears paint.
+    pub child: f32,
 }
 
 /// A dress: the garments (images and bound shapes under public/portrait/real), their colours, who wears what on
@@ -156,9 +163,11 @@ pub struct DressSet {
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
     pub hair_red: [f32; 2],
-    /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED):
-    /// people who work out of doors.
-    pub flush: f32,
+    /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED),
+    /// for women and for men; and the file of the real look that says where (per vertex of the head 0..1,
+    /// tools/portrait/pipeline/skin_red.py; Apoleia's is skin_red.txt).
+    pub flush: [f32; 2],
+    pub flush_map: &'static str,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
     /// -height3 (decr) and eye-eyefold (down). Half as much as up to round 49: lids that far down over eyes that
     /// look past the viewer read as lifeless. Since round 68, with the iris at its real size, the three heights
@@ -181,7 +190,10 @@ pub struct DressSet {
     /// in these shares (`mouth_shut`), and opened by as much as its lips lie in each other (`mouth_part`;
     /// morph.rs `lip_gap`). Until round 53 fixed weights on mouth-upperlip-ext-down and mouth-lowerlip-ext-up,
     /// which do not move the middle of the lips at all: they left mouths open and gave a pout. Empty lists leave
-    /// the mouth as it comes.
+    /// the mouth as it comes. A negative share takes a target back. The lips are parted by the targets that shut
+    /// them, taken back: until round 71 by mouth-lowerlip-middle-up, which for each millimetre it parts the lips
+    /// draws the lower lip's foot down by four, so that a lower lip under an upper lip with a bow ended in a point
+    /// (MakeHuman's names say where the lip's red grows to, not where its edge goes: -middle-down lifts the edge).
     pub mouth_shut: &'static [(&'static str, f32)],
     pub mouth_part: &'static [(&'static str, f32)],
     /// Face and bearing at rest, under every mood: MakeHuman's targets and their weights for women and for men.
@@ -201,6 +213,12 @@ pub struct DressSet {
     /// a wider mouth, a nose that stands out further; both their eyes further apart. On 150 grown women and 150
     /// grown men every measure the survey has lies within half a standard deviation of its mean, and a woman's
     /// is the smaller by the survey's share (tests/faces.rs; `cargo run --example face_measure`).
+    /// Since round 71 the mouth has a form: MakeHuman's upper lip is a flat band without a bow that stands out
+    /// over a flat lower lip as a beak (seen from the side, a woman's upper lip 5.0 mm in front of her lower lip
+    /// in the mean of 24; its young woman's lower lip lies 3 mm further back than the base's), which from the
+    /// front is a dark bar over a pale crescent. A cupid's bow, a lower lip with some volume, and the women's
+    /// lower jaw 1.4 mm forward: 3.0 mm. The red of the lips stays within the measure of real ones
+    /// (src/measure.rs `LIPS`, tests/faces.rs).
     /// A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
     /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
     /// face do, `Look::face`: on a child's small mouth they gave a pout).
@@ -303,14 +321,15 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.7, 1.0],
-    lips: [Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }, Lips { skin: 0.25, blood: [0.2, 0.095, 0.07], upper: 1.5, seam: 1.6 }],
+    lips: [Lips { skin: 0.2, blood: [0.2, 0.068, 0.06], upper: 1.5, seam: 1.6, child: 0.6 }, Lips { skin: 0.2, blood: [0.2, 0.072, 0.066], upper: 1.5, seam: 1.6, child: 0.6 }],
     lash_line: [0.85, 0.75],
     hair_red: [0.45, 0.74],
-    flush: 0.7,
+    flush: [0.7, 0.5],
+    flush_map: "skin_flush.txt",
     lids: [[0.15, 0.4, 0.15, 0.3], [0.1, 0.35, 0.1, 0.3]],
     adult: [15.0, 17.0],
     mouth_shut: &[("mouth/mouth-upperlip-height-incr", 0.6), ("mouth/mouth-lowerlip-middle-down", 0.4)],
-    mouth_part: &[("mouth/mouth-lowerlip-middle-up", 1.0)],
+    mouth_part: &[("mouth/mouth-upperlip-height-incr", -0.5), ("mouth/mouth-lowerlip-middle-down", -0.5)],
     rest: &[
         ("mouth/mouth-angles-up", 0.3, 0.3),
         ("cheek/l-cheek-trans-up", 0.15, 0.15),
@@ -335,6 +354,10 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("nose/nose-scale-depth-incr", 0.0, 0.55),
         ("forehead/forehead-scale-vert-decr", 0.3, 0.0),
         ("neck/neck-scale-vert-incr", 0.0, 0.4),
+        ("mouth/mouth-cupidsbow-incr", 0.6, 0.3),
+        ("mouth/mouth-lowerlip-volume-incr", 0.3, 0.2),
+        ("mouth/mouth-upperlip-volume-incr", 0.15, 0.0),
+        ("chin/chin-prognathism-incr", 0.2, 0.0),
     ],
     mood: 0.6,
     eye_forward: 0.0,
@@ -367,7 +390,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
         Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
         Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it and the seam, the lash line, flush, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, eyeballs' depth, lean, gaze and how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
     ],
 };
 
@@ -437,6 +461,12 @@ impl DressSet {
     pub fn brow_band_of(&self, female: bool, yrs: f32) -> f32 {
         let k = if female { 0 } else { 1 };
         1.0 + (self.brow_band[k] - 1.0) * (1.0 - child_share(self.adult[k], yrs))
+    }
+
+    /// The lips of a person, and how much of their colour that person has (`Lips::child`).
+    pub fn lips_of(&self, female: bool, yrs: f32) -> (&Lips, f32) {
+        let k = if female { 0 } else { 1 };
+        (&self.lips[k], 1.0 + (self.lips[k].child - 1.0) * child_share(self.adult[k], yrs))
     }
 
     /// The factors of `eyes_child` for a person: on the lids' heights and on the lash line.

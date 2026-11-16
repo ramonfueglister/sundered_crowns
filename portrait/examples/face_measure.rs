@@ -5,13 +5,14 @@
 //!   ... --grown             the people are that many grown ones instead (of 24, 35 and 50 in turn), for steadier means
 //!   ... --dump <folder>     also writes each morphed head as <pid>.f32 (x y z per vertex, little endian)
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
+//!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
 //!
-//! The survey and the landmarks: src/measure.rs.
+//! The survey, the lips' reference (the last three measures) and the landmarks: src/measure.rs.
 
 use sc_portrait::dna::{founder, ORIGINS};
-use sc_portrait::measure::{face, CHEEKBONES, JAW, LIDS, MEASURES, MENTON, NOSE, SELLION, SUBNASALE};
+use sc_portrait::measure::{face, lips, marks, CHEEKBONES, JAW, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
-use sc_portrait::{morph_test, real, Head};
+use sc_portrait::{build, morph_test, real, Head, LODS};
 
 /// SplitMix64, as in examples/sample.rs.
 fn draws(seed: u64, n: usize) -> Vec<u64> {
@@ -58,12 +59,27 @@ fn main() {
         }
         return;
     }
+    if args.iter().any(|a| a == "--marks") {
+        // a portrait's skin lists the corners of its triangles in the order of the head's own list, each with its
+        // place on the skin's image: the same for everyone
+        let r = draws(7000, 68);
+        let genes = founder(0, |i| r[i as usize]).bytes();
+        let look = look_of(&genes, true, 30.0, 1, "Bauern", 1000.0, 1000.0, 940000, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });
+        let out = build(&head, &look, 1);
+        let idx = &head.parts["body"][LODS - 1];
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        for (name, v) in marks() {
+            let uv = skin.uv[idx.iter().position(|&i| i as usize == v).expect("a landmark on the skin")];
+            println!("  [\"{name}\", {:.4}, {:.4}],", uv[0], uv[1]);
+        }
+        return;
+    }
     let o = ORIGINS.iter().position(|k| *k == pool).unwrap_or_else(|| panic!("no pool {pool}: {ORIGINS:?}")) as u8;
     let (ages, small) = ([8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0], [2.0, 5.0]);
     let dump = option("--dump");
     let many = args.iter().any(|a| a == "--grown");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
-    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len()).map(|k| format!("{k:>6}")).collect::<String>());
+    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
         let r = draws(if many { 8000 } else { 7000 } + k as u64, 68);
         let genes = founder(o, |i| r[i as usize]).bytes();
@@ -74,7 +90,8 @@ fn main() {
             let bytes: Vec<u8> = pp.iter().flatten().flat_map(|x| x.to_le_bytes()).collect();
             std::fs::write(format!("{folder}/{}.f32", 940000 + k), bytes).expect("the folder to dump into");
         }
-        let m = face(&head, &pp);
+        let mut m = face(&head, &pp);
+        m.extend(lips(&pp));
         if !many {
             println!("{:>7} {:>3} {:>4} {}", 940000 + k, if female { "f" } else { "m" }, age, m.iter().map(|x| format!("{x:6.1}")).collect::<String>());
         }
@@ -86,7 +103,7 @@ fn main() {
     println!("{:>2} {:<32} {:>34} {:>34} {:>14}", "", "", "men", "women", "women / men");
     let mean = |g: &Vec<Vec<f32>>, k: usize| g.iter().map(|m| m[k]).sum::<f32>() / g.len().max(1) as f32;
     let spread = |g: &Vec<Vec<f32>>, k: usize| (g.iter().map(|m| (m[k] - mean(g, k)).powi(2)).sum::<f32>() / g.len().max(1) as f32).sqrt();
-    for (k, &(name, men, women)) in MEASURES.iter().enumerate() {
+    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).enumerate() {
         let (a, b) = (mean(&grown[0], k), mean(&grown[1], k));
         let cell = |x: f32, sd: f32, s: [f32; 2]| if s[0] > 0.0 { format!("{x:6.1} ({sd:4.1}) {:6.1} ({:4.1}) {:+5.1}", s[0], s[1], (x - s[0]) / s[1]) } else { format!("{x:6.1} ({sd:4.1}) {:>19}", "") };
         let ratio = if men[0] > 0.0 { format!("{:5.3} {:5.3}", b / a, women[0] / men[0]) } else { format!("{:5.3}", b / a) };

@@ -324,10 +324,12 @@ describe('portraits', () => {
       expect(wide, `person ${p.pid}`).toBeLessThan(0.6);
       expect(high, `person ${p.pid}`).toBeLessThan(0.15 * wide);
       const [lip, all] = [mean(first, skin.pos.length), mean(0, first)] as [number[], number[]];
-      // a flesh colour as the skin's own, not a painted red (green to red 0.87 to 1.03 of the skin's as a whole);
-      // and lighter than the skin (1.15 to 1.31 of its red): the strip stands in the lips' shade, where the stage
-      // has no light that comes through flesh, and is as dark as the line of a mouth only so
-      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.8);
+      // a flesh colour as the skin's own, not a painted red (green to red 0.72 to 1.03 of the skin's as a whole;
+      // until round 71 0.87 to 1.03: the lips are redder since, by the hue read on the reference's lips; the
+      // lips' blood alone would be 0.5 to 0.6); and lighter than the skin (1.12 to 1.41 of its red): the strip
+      // stands in the lips' shade, where the stage has no light that comes through flesh, and is as dark as the
+      // line of a mouth only so
+      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.65);
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeLessThan(1.1);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(1.05);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeLessThan(1.45);

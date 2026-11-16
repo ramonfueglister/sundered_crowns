@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: f32, lash_line: f32, lips: Option<&crate::dress::Lips>) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -90,14 +90,14 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // table asks for it (`lips`, crate::dress::Lips); without, the builder's facets carry the lips (build.rs)
     let lip = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_lip.txt")));
     let lip: &[Vec<f32>] = lip.as_ref().map_or(&[], |l| &l[..]);
-    let lip_k = lips.map_or((1.0, [0.0; 3], 1.0), |l| (l.skin, l.blood, l.upper));
+    let lip_k = lips.map_or((1.0, [0.0; 3], 1.0, 1.0), |(l, share)| (l.skin, l.blood, l.upper, share));
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
-    // redder (skin_red.txt, 0..1 per vertex); haemoglobin takes green and
+    // redder (skin_red.txt, 0..1 per vertex, or the file a dress names); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
     // PLACEHOLDER: weaker on dark skin, where melanin hides it, a little
     // more on old men (weathered, broken veins)
-    let red: Vec<f32> = crate::real::column(&format!("{dir}/skin_red.txt"), 0.0);
-    let red_k: f32 = settings::SKIN_RED * flush * if female { 1.0 } else { 1.0 + 0.5 * ((age - 40.0) / 30.0).clamp(0.0, 1.0) };
+    let red: Vec<f32> = crate::real::column(&format!("{dir}/{}", flush.1), 0.0);
+    let red_k: f32 = settings::SKIN_RED * flush.0 * if female { 1.0 } else { 1.0 + 0.5 * ((age - 40.0) / 30.0).clamp(0.0, 1.0) };
     // real look: age wrinkles. A "wrinkle age": years in the sun add some (the
     // weathered farmer looks older than the scribe of his age), and people
     // differ by a few years (PLACEHOLDER 14 and 4 years)
@@ -117,7 +117,7 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // the two edges of the lips' seam (see below): no shade of the mouth's inside on them, which the strip closes;
     // the upper lip's edge has the strip's share of the lips' colour, so that the lip's underside lightens towards
     // the seam (on the lower lip's edge, which lies in the light, that share stood as a pale rim)
-    let seam: f32 = lips.map_or(0.0, |l| l.seam);
+    let seam: f32 = lips.map_or(0.0, |(l, _)| l.seam);
     let mut on_seam = vec![0f32; n];
     if seam > 0.0 {
         for side in &crate::morph::LIP_SEAM {
@@ -137,7 +137,7 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
                 c = mix(c, [c[0].min(hl[0]), c[1].min(hl[1]), c[2].min(hl[2])], 0.8 * m);
             }
             if let Some(&[on_lip, upper]) = lip.get(v).map(|r| &r[..]) {
-                c = mix(c, mul(add(mul(c, lip_k.0), lip_k.1), 1.0 + (lip_k.2 - 1.0) * upper), on_lip);
+                c = mix(c, mul(add(mul(c, lip_k.0), lip_k.1), 1.0 + (lip_k.2 - 1.0) * upper), on_lip * lip_k.3);
             }
             if let Some(&r) = red.get(v) {
                 let lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];

@@ -119,3 +119,12 @@ then draws none of its own either); `DressSet::veiled`; the targets of the ears 
 the veil of a dress with a table (`morph.rs`: linen bound to a grown ear came through the veil over it). The
 pipeline's `drape_sim.py` gets `FACE_ON` and `EARS` (Apoleia's script, changed in the game's copy only); veil and
 wimple of England written anew. New, not Apoleia's: `tests/veil.rs`, `tests/common/mod.rs`. Roman bytes unchanged.
+
+Round 71: `real_skin` takes the flush as a strength and the name of its map (a dress names its own,
+`DressSet::flush_map`; without a dress Apoleia's `skin_red.txt` at 1) and the lips with the share of their colour
+a person has (`DressSet::lips_of`, `Lips::child`); `DressSet::flush` per sex; `mouth_part` parts the lips with
+the targets that shut them (negative shares) instead of `mouth-lowerlip-middle-up`; four rows in `rest` for the
+form of the mouth. The pipeline's `skin_red.py` gets its zones as switches (`CHEEK`, `WING`, `TIP`, `BRIDGE`,
+`CHIN`, `EARS`; Apoleia's script, changed in the game's copy only; its defaults write `skin_red.txt` number for
+number). New, not Apoleia's: `real/skin_flush.txt`, `measure.rs` `marks`, `lips`, `LIPS`, three tests in
+`tests/faces.rs`, one in `src/lib.rs`, `tools/portrait/face_colour.mjs`. Roman bytes unchanged.

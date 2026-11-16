@@ -678,6 +678,69 @@ how the veil is worn are by eye against one figure of the reference, of another 
 a townswoman's or countrywoman's kerchief of 1356 is not sourced); men's ears under the hood are still morphed
 (no second cloth there).
 
+**Lips and skin of a woman's face (round 71).** Ramon on the state of round 70: "zombie mode, not CK3's level".
+Held large beside the reference's one face that is large enough (the woman of the ruler designer), a woman of
+ours had a brown flat band for a mouth, a face of one colour from forehead to chin, and skin as matt as chalk.
+This round measured first, with a new instrument: `tools/portrait/face_colour.mjs` photographs the sample and
+reads the colour (CIELAB) of forehead, cheeks, the nose's back, lips and chin at landmarks, which are places on
+the skin's image and so the same on every head (`measure.rs` `marks`; `face_measure --marks` writes where they
+lie on the image, the test page says where each lies in a picture, `?at=`). The reference's face was read at the
+same places, set by hand. Means of the eight grown women of the sample:
+
+| | round 70 | now | the reference's woman |
+|---|---|---|---|
+| lit cheek, L | 67.4 | 67.1 | 56.1 |
+| lit cheek, a* / b* / hue | 16.7 / 25.5 / 57 degrees | 17.8 / 23.7 / 53 degrees | 22.9 / 25.4 / 48 degrees |
+| the cheek redder than the forehead (a*) | -1.1 | 0.0 | +5.0 |
+| shaded cheek, a* | 20.4 | 24.3 | 21.1 |
+| the nose's back against the lit cheek (L) | -1.9 | -2.0 | +8.2 |
+| the chin against the lit cheek (L) | -7.2 | -9.2 | -11.6 |
+| lower lip, L (against the lit cheek) | 43.2 (-24.2) | 41.3 (-25.8) | 33.3 (-22.9) |
+| lower lip, a* / b* / hue | 25.8 / 23.7 / 43 degrees | 27.5 / 20.7 / 37 degrees | 29.2 / 21.0 / 36 degrees |
+| upper lip, L | 29.7 | 26.2 | 21.0 |
+
+(The emperor of the screenshots, a smaller face: lit cheek L 65.5, a* 20.0, b* 27.1; lower lip L 39.6, a* 27.1,
+b* 19.5, hue 36 degrees.)
+
+| What was wrong | Cause | Now |
+|---|---|---|
+| lips brown-orange | the lips kept a quarter of the skin's colour and their blood had too much green in it (hue 43 degrees where the reference has 36) | `Lips::skin` 0.2 and a redder blood: 37 degrees. A child's lips have six tenths of that colour (`Lips::child`: at a woman's strength a girl of eight wore paint) |
+| a flat band for a mouth, from the side an upper lip that stands out as a beak | MakeHuman's upper lip has no bow and its young woman's lower lip lies 3 mm further back than the base head's: on 24 women the upper lip's red stood 5.0 mm in front of the lower lip's in the mean, 6.7 mm at most | a cupid's bow, a lower lip with volume, the women's lower jaw 1.4 mm forward (`rest`: `mouth-cupidsbow-incr`, `mouth-lowerlip-volume-incr`, `mouth-upperlip-volume-incr`, `chin-prognathism-incr`): 3.0 mm in the mean, 4.6 mm at most |
+| with the bow, a lower lip that ended in a point (a V) on every mouth whose lips had lain in each other | such lips were parted with `mouth-lowerlip-middle-up`, which for each millimetre it parts the lips draws the lower lip's foot down by four (MakeHuman's names say where the lip's red grows to, not where its edge goes) | parted by the targets that shut them, taken back (`mouth_part` with negative shares) |
+| a face of one colour | Apoleia's flush map has the nose's tip reddest and on each cheek a patch of 2.4 cm radius at three quarters of that | a flush map of England's own (`real/skin_flush.txt`, `DressSet::flush_map`): the cheek's patch with a radius of 3.3 cm, lower and further to the front, at full weight; the nose's tip, wings and bridge at six, five and three tenths; women 0.7, men 0.5 (`flush` per sex: at the women's strength an old man's cheeks glowed) |
+| skin matt as chalk | roughness 0.72, specular 0.35, and pores so strong that any sheen broke into a greasy sparkle | roughness 0.5, specular 0.5, pores 0.8 (stage profile), the picture a little darker by what the sheen adds (exposure 0.385) |
+
+The red of the lips against real ones (heights as seen from the front; Ferrario, Sforza, Tartaglia, Sozzi & Carù
+2003, Plastic and Reconstructive Surgery 111(7): 2149-2156, 89 men and 73 women, `measure.rs` `LIPS`), means of
+150 grown women and 150 grown men: the women's upper lip 6.6 mm (round 70: 6.9; real 6.62), lower lip 8.5 (8.1;
+9.09), both 15.1 (15.1; 15.49); the men's 6.3 (6.6; 6.84), 8.7 (8.3; 8.80), 15.0 (14.9; 15.39). The form of the
+mouth did not cost the measures of the face (women's sellion to subnasale +0.4 SD, every other within 0.4).
+
+Tests: `tests/faces.rs` `the_red_of_the_lips_of_england_is_as_high_as_on_real_lips` (each height within half a
+standard deviation; held before the round too: it guards the form),
+`the_upper_lip_of_a_woman_of_england_does_not_stand_out_as_a_beak` (24 women: under 3.5 mm in the mean, 5.2 mm
+at most; round 70 fails with 5.0 and 6.7),
+`the_cheeks_of_england_are_redder_than_the_forehead` (the builder's colour before any light: green beside red
+on the cheek under 0.93 of the forehead's; 0.85 to 0.89 now, 0.97 with Apoleia's map); `src/lib.rs`
+`parting_or_closing_the_lips_moves_their_edges_and_leaves_the_lower_lips_foot` (fails with
+`mouth-lowerlip-middle-up`).
+Pictures: `runde71_frauen_vorher_nachher.png` (four women large, before above after),
+`runde71_profil_vorher_nachher.png` (the same from the side), `runde71_frau_nah_ck3.png` (the reference's woman,
+two of ours before, the same two now), `runde71_stichprobe.png` (the whole sample at the panel's size).
+Tried and dropped: more sheen with the old pores (roughness 0.45, specular 0.7, pores 1.5: a greasy sparkle);
+three.js' Neutral tone mapping (orange, oversaturated) and AgX (pale) instead of ACES; `skin.colour` 1.2 (lit
+skin no redder, shaded skin orange); the flush times 1.5 by age (old men glowing).
+Still open, and measured: lit skin is as pale as before (the lit cheek's chroma 29.6, the reference's 34; ACES
+tone mapping takes the colour out of what is lit, so the flush shows in half-shade: the shaded cheek is now
+redder than the reference's, the lit cheek no redder than the forehead, where the reference has +5); the nose's
+back is no lighter than the cheek (there +8); the upper lip still stands 3 mm in front of the lower, and on the
+first woman of the sample the profile still shows an overbite; the lips are as matt as the skin (no wetness of
+their own). Seen beside the reference: brows thin sharp lines (there thick and soft), the eyes pale in sockets
+with little shade, skin still smooth; one woman of the sample strongly orange; a dark stroke on the forehead of
+another under the veil's rim (there before this round, not looked into yet). One face of the reference is a thin
+base for these numbers, and it is a ruler of another century with paint on her lips: form and colour of the
+mouth, the flush and the sheen are PLACEHOLDER by eye and by that one face; only the lips' height is sourced.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

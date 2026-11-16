@@ -215,6 +215,34 @@ mod tests {
     }
 
     #[test]
+    fn parting_or_closing_the_lips_moves_their_edges_and_leaves_the_lower_lips_foot() {
+        // Until round 71 lips that lay in each other were parted with MakeHuman's `mouth-lowerlip-middle-up`,
+        // which, against its name, drags the lower lip's foot down four times as far as its edge: with a cupid's
+        // bow on the upper lip the lower lip of every such mouth became a V. Whatever a dress parts or closes a
+        // mouth with moves the lips' edges, and the foot of the lower lip's red by less than half as far.
+        use crate::head::DELTA_SCALE;
+        use crate::measure::LIP_FOOT;
+        use crate::morph::{LIP_LOWER, LIP_UPPER};
+        let Some(h) = head() else { return };
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        for (what, with) in [("closing", set.mouth_shut), ("parting", set.mouth_part)] {
+            let moved = |v: usize| -> f32 {
+                with.iter()
+                    .map(|&(name, share)| {
+                        let t = &h.targets[name];
+                        t.ids.iter().position(|&i| i as usize == v).map_or(0.0, |j| share * t.d[j][1] as f32 * DELTA_SCALE)
+                    })
+                    .sum()
+            };
+            let gap = moved(LIP_UPPER) - moved(LIP_LOWER);
+            assert!(gap.abs() > 0.01, "{what}: the lips move {gap} apart per weight");
+            for foot in LIP_FOOT {
+                assert!(moved(foot).abs() < 0.5 * gap.abs(), "{what}: the lower lip's foot moves {}, the lips {gap} apart", moved(foot));
+            }
+        }
+    }
+
+    #[test]
     fn the_seam_of_the_lips_runs_from_the_middle_of_the_mouth_to_its_corners() {
         use crate::geo::{len, sub};
         use crate::morph::{LIP_LOWER, LIP_SEAM, LIP_UPPER};
