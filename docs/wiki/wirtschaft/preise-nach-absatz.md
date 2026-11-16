@@ -1,6 +1,6 @@
 # Preise nach Absatz
 
-**Status:** Beschlossen (am 16.11.2026 freigegeben und gebaut; noch nicht in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 16.11.2026 freigegeben und gebaut; seit dem 16.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Ein Betrieb, der mehr Nachfrage hatte als geplant, hebt seinen Preis oder seine Menge. Ein Betrieb, der zu wenig verkauft hat, senkt seinen Preis oder seine Menge. Vorher folgte der Preis nur den Kosten. Mit dieser Regel hat in den Städten fast niemand mehr keine Arbeit.
 

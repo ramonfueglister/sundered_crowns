@@ -1,6 +1,6 @@
 # Lohn in Geld
 
-**Status:** Beschlossen (am 16.11.2026 freigegeben und gebaut; noch nicht in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 16.11.2026 freigegeben und gebaut; seit dem 16.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Jeder Betrieb einer Stadt zahlt einen Lohn in Geld, der sich nicht ändert. Vorher folgte der Lohn den Preisen eins zu eins, und nichts hielt das Preisniveau. Mit dem Lohn in Geld bleibt es über Jahrzehnte bei seinem Start.
 

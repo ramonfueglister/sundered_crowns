@@ -11,6 +11,8 @@
 // period). Since economy feature 4 the model computes one day per period: `dailyEconomy` turns the yearly calibration
 // into the daily one, by the rules listed there. Since feature 5 the world has no economy of England as a whole:
 // every city is an economy of its own, calibrated from the table of England at the city's size (`cityTable`).
+// Since feature 10 the world does that itself when it founds the economies (src/sim/systems/economy.ts): the persons
+// of a city's economy are the persons of the city, so a city has as many of them as it has persons who work.
 
 export type Kind = 'source' | 'derived' | 'assumption';
 export interface Entry<T> { value: T; kind: Kind; source: string }
@@ -50,6 +52,10 @@ export interface CalibrationTable {
     input_matrix: Entry<[V3, V3, V3]>;
     persons_per_firm: Entry<number>;
     adult_share: Entry<number>;
+    /** the persons of the labour force, counted (economy feature 10: the persons of a city who work, without the
+     *  one without work at the start and the owner of the bank). Where it is given, it takes the place of the labour
+     *  force computed from the people, `adult_share` and `participation`. England's table has none. */
+    labour_force?: Entry<number>;
     unemployed: Entry<number>;
     /** the part of the last wage after tax that a person without work is paid (economy feature 6); 0 = none */
     unemployment_benefit: Entry<number>;
@@ -120,6 +126,17 @@ export function roundHalfEven(x: number): number {
   return f % 2 === 0 ? f : f + 1;
 }
 
+/** `total` whole units split by `shares` (which sum to 1) so that the parts sum to `total`: every part gets the whole
+ *  number below its share, and the units left over go to the parts with the largest remainders, the first of equal
+ *  ones first (the method of the largest remainder). */
+export function apportion(total: number, shares: readonly number[]): number[] {
+  if (!(Number.isInteger(total) && total >= 0)) throw new Error(`${total} is not a number of units to split`);
+  const exact = shares.map((s) => total * s), parts = exact.map(Math.floor);
+  const order = shares.map((_, k) => k).sort((a, b) => (exact[b] - parts[b]) - (exact[a] - parts[a]) || a - b);
+  for (let k = 0, left = total - sum(parts); k < left; k++) parts[order[k % order.length]]++;
+  return parts;
+}
+
 /** y_t = α · y_(t−1) + β + ε by least squares, σ the standard deviation of the residuals: the port's
  *  `estimate_for_calibration_script`. */
 export function ar1(y: readonly number[]): { alpha: number; beta: number; sigma: number } {
@@ -173,10 +190,15 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const wages = va.map((v) => wageShare * v);
   const surplus = sectors.map((g) => va[g] - wages[g] - used[g]);
 
-  const labourForce = roundHalfEven(people * i.adult_share.value * (i.participation.value.men + i.participation.value.women) / 2);
-  const persons = i.labour_share.value.map((s) => roundHalfEven(labourForce * s));
+  // the labour force: counted where the table gives it (the persons of a city who work, economy feature 10: the
+  // sectors then share exactly those persons), else from the people, the share of adults and their participation
+  const counted = i.labour_force?.value;
+  if (counted !== undefined && !(Number.isInteger(counted) && counted >= 2 * G)) throw new Error(`a labour force of ${counted} persons: every sector needs a firm and a person it employs`);
+  const labourForce = counted ?? roundHalfEven(people * i.adult_share.value * (i.participation.value.men + i.participation.value.women) / 2);
+  const persons = counted !== undefined ? apportion(counted, i.labour_share.value) : i.labour_share.value.map((s) => roundHalfEven(labourForce * s));
   const firms = persons.map((p) => Math.max(1, roundHalfEven(p / i.persons_per_firm.value)));
   const employees = sectors.map((g) => persons[g] - firms[g]);
+  if (!(Math.min(...employees) > 0)) throw new Error(`a sector has nobody to employ: ${persons} persons in ${firms} firms`);
   const I = sum(firms), N = sum(employees);
   const directTax = revenue - duty;
   const mixed = sum(surplus);
@@ -197,7 +219,7 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const arG = ar1(crownSeries.map(Math.log)), arE = ar1(exportSeries.map(Math.log));
 
   const parameters = {
-    G, T_prime: history.length, H_act: N + i.unemployed.value + I + 1, H_inact: 1, J: roundHalfEven(I / 4), L: roundHalfEven(I / 2), I_s: firms,
+    G, T_prime: history.length, H_act: N + i.unemployed.value + I + BANK_OWNERS, H_inact: 1, J: roundHalfEven(I / 4), L: roundHalfEven(I / 2), I_s: firms,
     alpha_s: sectors.map((g) => output[g] / employees[g]), beta_s: beta,
     kappa_s: sectors.map((g) => output[g] / capital[g] / b.omega), delta_s: sectors.map((g) => used[g] / capital[g] / b.omega),
     w_s: sectors.map((g) => wages[g] / employees[g]), tau_Y_s: [0, 0, 0], tau_K_s: [0, 0, 0],
@@ -230,13 +252,26 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   return { case: t.case, year: t.year, scale: S, periods_per_year: 1, clock: { plan: 1, window: 1 }, parameters, initial_conditions, accounts };
 }
 
+/** The owners of the bank among the active persons of the model: the port has one bank (`n_banks`), and the
+ *  calibration counts its owner as the one active person who is neither in a firm nor without work. */
+export const BANK_OWNERS = 1;
+
+/** The active persons of the model that a calibration asks for (`H_act`): the workers, the owner of every firm and
+ *  the owner of the bank. */
+export const activePersons = (c: EconomyCalibration): number => (c.parameters as { H_act: number }).H_act;
+
 /** The table of a city with `people` inhabitants (economy feature 5): England's table at the city's share of
  *  England's people, so that the model computes the city at the scale of the table (1:100), with the duty
  *  between cities in place of England's wool duty, and with the cities' rate of the model's unemployment benefit
- *  (economy feature 6; 0 since feature 9). All three are assumptions of the table (`cities`). */
-export function cityTable(t: CalibrationTable, people: number): CalibrationTable {
+ *  (economy feature 6; 0 since feature 9). All three are assumptions of the table (`cities`).
+ *
+ *  `working` is the number of persons of the city who work (economy feature 10): the model then has exactly that
+ *  many active persons (the labour force, the one person without work at the start and the owner of the bank).
+ *  Without it the labour force is computed from the people as for England. */
+export function cityTable(t: CalibrationTable, people: number, working?: number): CalibrationTable {
   if (!(people > 0)) throw new Error(`a city of ${people} people`);
   const c = structuredClone(t);
+  if (working !== undefined) c.inputs.labour_force = { value: working - t.inputs.unemployed.value - BANK_OWNERS, kind: 'derived', source: 'the persons of the city who work (src/sim/systems/work.ts), without the one without work at the start and the owner of the bank' };
   c.scale.value = t.scale.value * people / (t.inputs.population_thousand.value * 1e3);
   c.inputs.wool_export.value.duty_shillings_per_sack = t.cities.duty_shillings_per_sack.value;
   c.inputs.unemployment_benefit = structuredClone(t.cities.unemployment_benefit);
@@ -276,4 +311,9 @@ export function dailyEconomy(c: EconomyCalibration, days: number, plan: number):
   for (const k of ['Y', 'pi', 'C_G', 'C_E', 'Y_I']) ic[k] = perDay(ic[k]);
   ic.w_UB = ic.w_UB / days;
   return { ...c, periods_per_year: days, clock: { plan, window: days }, parameters: p, initial_conditions: ic };
+}
+
+/** The yearly calibration of a table turned into days, with the clock of the table (economy feature 4). */
+export function dailyCalibration(t: CalibrationTable): EconomyCalibration {
+  return dailyEconomy(calibrateEconomy(t), t.clock.days_per_year.value, t.clock.plan_days.value);
 }
