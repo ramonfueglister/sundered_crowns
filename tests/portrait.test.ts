@@ -161,4 +161,65 @@ describe('portraits', () => {
     // gown, hood on the head and thrown back, veil and wimple all have a hem
     expect([...seen.keys()].map(t => t.replace(/^.*\/|\..*$/g, '')).sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple']);
   });
+  it('the hems of the garments of England are part of the cloth', () => {
+    // a hem that is a mesh of its own, each of its points bound to its own nearest triangle of the body, leaves the
+    // cloth's edge on a body other than the one the garment was draped on: under the chin of a hood it hung a
+    // finger's breadth above the edge, with the throat between them (until round 63). Welded, one corner of the
+    // tube's ring is the cloth's own edge vertex: a third of the tube's triangles have a corner on the cloth
+    // (fewer on a child's gown, a fifth; none before)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const seen = new Set<string>();
+    for (const p of sample) {
+      for (const s of b.build(p).surfaces) {
+        if (surfaceKind(s) !== 'cloth') continue;
+        const at = (v: number) => `${s.pos[v * 3]},${s.pos[v * 3 + 1]},${s.pos[v * 3 + 2]}`;
+        const hem = (t: number) => [0, 1, 2].every(k => Math.abs(s.uv[(t + k) * 2 + 1]!) <= 0.05);
+        const cloth = new Set<string>();
+        for (let t = 0; t + 2 < s.pos.length / 3; t += 3) if (!hem(t)) for (const k of [0, 1, 2]) cloth.add(at(t + k));
+        let tube = 0, welded = 0;
+        for (let t = 0; t + 2 < s.pos.length / 3; t += 3) {
+          if (!hem(t)) continue;
+          tube++;
+          if ([0, 1, 2].some(k => cloth.has(at(t + k)))) welded++;
+        }
+        if (tube) {
+          expect(welded / tube, `person ${p.pid}: ${s.tex}`).toBeGreaterThan(0.15);
+          seen.add(s.tex.replace(/^.*\/|\..*$/g, ''));
+        }
+      }
+    }
+    expect([...seen].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple']);
+  });
+  it('the hood worn on the head is closed under the chin', () => {
+    // until round 63 it was open in front down to the chest, its front edges hanging beside the neck as cords (and
+    // what cloth it had under the chin lay inside the head: rays from the head's centre end in the mouth's cavity).
+    // Closed, the hem of the opening for the face runs in front of the throat, between the gown's neckline and
+    // the face (heights and depths in the builder's units of 10 cm)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    let hoods = 0;
+    for (const p of sample) {
+      const surfaces = b.build(p).surfaces;
+      const hood = surfaces.find(s => s.tex.includes('/cloth_hood_up.')), gown = surfaces.find(s => s.tex.includes('/cloth_cote.'));
+      const skin = surfaces.find(s => surfaceKind(s) === 'skin');
+      if (!hood || !gown || !skin) continue;
+      hoods++;
+      let neckline = -Infinity;
+      for (let v = 0; v < gown.pos.length / 3; v++) if (Math.abs(gown.pos[v * 3]!) < 0.15 && gown.pos[v * 3 + 2]! > 0.5) neckline = Math.max(neckline, gown.pos[v * 3 + 1]!);
+      let seen = 0;
+      for (let v = 0; v < hood.pos.length / 3; v++) {
+        const [x, y, z] = [hood.pos[v * 3]!, hood.pos[v * 3 + 1]!, hood.pos[v * 3 + 2]!];
+        if (Math.abs(hood.uv[v * 2 + 1]!) > 0.05 || Math.abs(x) > 0.15 || y < neckline + 0.35 || y > neckline + 1.0) continue;
+        // in front of the skin there
+        let behind = true;
+        for (let k = 0; k < skin.pos.length / 3 && behind; k++) {
+          if (Math.abs(skin.pos[k * 3]! - x) < 0.12 && Math.abs(skin.pos[k * 3 + 1]! - y) < 0.08 && skin.pos[k * 3 + 2]! > z) behind = false;
+        }
+        if (behind) seen++;
+      }
+      expect(seen, `person ${p.pid}: points of the hem in front of the throat`).toBeGreaterThan(20);
+    }
+    expect(hoods).toBeGreaterThan(3);
+  });
 });

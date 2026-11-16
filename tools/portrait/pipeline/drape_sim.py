@@ -242,6 +242,27 @@ if GRID:
                     idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + (yi - yn) * (1 + math.cos(u)) / 2 + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
         UCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('UCUT', '').split(',') if c]
         DCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('DCUT', '').split(',') if c]
+        # CHIN=angle: the hood closed under the chin. Where the face's oval has cut the last row of rays (FACE_LO
+        # below TH0), that row is laid under the jaw instead: on the skin a ray from the head's centre leaves the
+        # head through (the first thing it meets in front is the mouth's cavity), at `angle` below the horizon in
+        # the middle, rising to the row's own angle beside the oval
+        CHIN = [float(t) for t in os.environ.get('CHIN', '').split(',') if t]
+        if kind == 'hood' and CHIN:
+            K0 = NPH // 2
+            miss = [k for k in range(NPH) if (R0, k) not in idx and abs(k - K0) < NPH // 6]
+            kl = min(miss) - 1
+            for k in miss:
+                t_ = abs(k - K0) / (K0 - kl)
+                th = math.radians(CHIN[0] + (ths[R0] - CHIN[0]) * t_ ** 2); ph = math.radians(360.0 * k / NPH - 180.0)
+                d = np.array([math.cos(th) * math.sin(ph), math.sin(th), math.cos(th) * math.cos(ph)])
+                o_ = Vector(np.array([C[0], -C[2], C[1]]) * S); dv = Vector([d[0], -d[2], d[1]]); far, t, q = 1.7 * S, 0.0, None
+                while True:
+                    h = hb.ray_cast(o_ + dv * t, dv, far - t)
+                    if h[0] is None:
+                        break
+                    q = np.array(h[0]) / S; t += h[3] + 1e-3 * S
+                idx[(R0, k)] = len(gp); gp.append([q[0], q[2], -q[1]]); rows.append(0.0)
+            print('chin: columns', kl + 1, 'to', max(miss), 'in the middle at', [round(float(c), 2) for c in gp[idx[(R0, K0)]]])
         st = {}
         for k in range(NPH):
             i0 = idx.get((R0, k))
@@ -334,6 +355,12 @@ elif kind == 'cowl':
 elif kind == 'hood':
     # close on the crown, baggy round the neck, the cape standing off the shoulders
     off = (float(os.environ.get('OFF0', '0.12')) + LOOSE * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1)) * S
+    # THROAT=share,height,width,span: a hood that lies close round the neck (closed under the chin): that share of the
+    # bagginess is taken off below `height` (wholly from `span` further down), within `width` degrees to either
+    # side of the front (300: all round)
+    _t = [float(t) for t in os.environ.get('THROAT', '0,6.9,300,0.9').split(',')]
+    _ph = np.degrees(np.abs(np.arctan2(B[:, 0], B[:, 2] - 0.1)))
+    off = off - LOOSE * S * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1) * _t[0] * np.clip((_t[1] - B[:, 1]) / _t[3], 0, 1) * np.clip((_t[2] - _ph) / 25.0, 0, 1)
 else:
     off = (0.15 + LOOSE * np.clip((5.4 - B[:, 1]) / 1.4, 0, 1)) * S
 # start outside the tunic: where a ray along the normal meets the tunic, at

@@ -384,6 +384,33 @@ Picture: `runde62_bart_vorher_nachher.png` (short beard before and after, full b
 Still open: stubble is Apoleia's file too (its hairs are too short to show on the lip, not checked large on every
 mouth); one outline for all beards.
 
+**The hood closed under the chin, and hems that are part of the cloth (round 63).** The hood worn on the head was
+open in front down to the chest, and its front edges hung beside the neck as cords. Three causes, found one after the
+other:
+
+| what | cause | now |
+|---|---|---|
+| no cloth under the chin | the hood's cloth is laid on rays from the head's centre; in front and downwards such a ray ends in the mouth's cavity, so the rows under the chin lay inside the head and the front was cut open instead (`UCUT`) | where the face's oval has cut the last row of rays, that row is laid on the skin the ray leaves the head through, under the jaw (`drape_sim.py` `CHIN=-60`: the ray's angle in the middle); the rings below hang from the jaw (`TH0=-36`), and the hood lies closer round the neck (`THROAT=0.7,6.9,300,0.9`) |
+| a pointed lappet at each corner of the jaw | the hem's line is smoothed after the draping, the cloth's own edge moves with it, the next row of the cloth did not: where the smoothing takes a corner off, that row stood out beyond the hem | below the cheeks the cloth beside the edge goes with it, less from ring to ring, and stays off the skin (`tunic_bind.py` `HEMFOLLOW=4,6.9,0.1`) |
+| the hem a finger's breadth above the cloth's edge, the throat showing between them; cords beside the cheeks | the hem's tube was a mesh of its own, each of its points bound to its own nearest triangle of the body. On another body than the one the garment was draped on the builder evens out a garment's shift along its own triangles (`calm` in `real_look.rs`): tube and cloth were evened out apart. Measured on the built portrait of a man with a full chin: tube at 7.10 to 7.17, the cloth's edge at 7.03 | the tube is welded to the cloth: the corner of its ring that faces the cloth is the cloth's own edge vertex, and its other corners are bound with that vertex. For every hem of England: gown, hood on the head and thrown back, veil, wimple (all five written anew) |
+
+The builder is untouched. Two new tests: a part of every hem's triangles has a corner on the cloth (none before),
+and a hooded man's hem runs in front of his throat between the gown's neckline and the face (150 points or more of it
+in the sample, none before).
+
+Tried and dropped on the way: the old hood without the cut (a bib standing in front of chin and mouth: its rows
+start in the mouth); the last row laid on the throat by rays from outside (the rim climbs over the sides of the chin:
+kinks); the hood close to the neck with the rows under the jaw kept (`TH0=-49`: the cloth follows the underside of
+the jaw inwards, the cheeks' cloth hangs over it as lappets); the cloth laid on the skin round the chin, and the rim
+smoothed in the draping script (both sank the cloth beside the rim into the neck); the neck part left free in the
+simulation (`PINY=6.55`: the rim sags as a loop to the collar bones, the throat bare); the rim at the chin's own
+underside (`CHIN=-50`: a full chin shows through it); the cloth following the hem over seven rings (a ridge down the
+cape).
+Picture: `runde63_kapuze_vorher_nachher.png` (four hooded men, a boy, a veiled woman; before above, after below).
+Still open: a small tuck in the cloth at each corner of the jaw and a crease down the cape below it (seen large,
+not at the panel's size); the hood thrown back is still a wide flat collar without folds; veil and wimple keep the
+smoothing of their hems without the cloth following.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
