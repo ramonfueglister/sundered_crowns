@@ -59,12 +59,17 @@ export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - 
  * that the change follows the zoom and has happened when the border is reached
  */
 const BLEND = 1.6;
+/**
+ * the same for the step built house by house: its picture and that of the first far step differ too much to lie
+ * over each other for long (a town of sharp houses turns to haze), so the way is short there
+ */
+const BLEND_DETAIL = 1.2;
 /** How much of the next coarser step a view already shows in place of its own, 0 … 1 (1 only at the step's border). */
 export function blendOf(wide: number): number {
   const step = stepOf(wide);
   if (step >= COARSEST) return 0;
   const border = step === 0 ? DETAIL_UNTIL : STEP_FROM * 2 ** (step + 1);
-  return over(border / BLEND, border, wide);
+  return over(border / (step === 0 ? BLEND_DETAIL : BLEND), border, wide);
 }
 /** The level of the realms' map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */
 export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));

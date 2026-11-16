@@ -44,6 +44,8 @@ export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky
 const FAR_SHADOW = 2;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
 const LIT_GROUND = 0.32;
+/** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
+const FIGURES_GONE = 0.3;
 
 /** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
 export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
@@ -360,8 +362,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     more(group, things) { const part = mesh(things, solid, true); group.add(part); pending = Math.max(pending, 3); return part; },
     drop(part) { part.removeFromParent(); part.geometry.dispose(); pending = Math.max(pending, 1); },
     dissolve(thing, from, until) {
-      // the figures are too small to dissolve: they show with the whole group only
-      for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) if (part.userData.figures) part.visible = from <= 0 && until >= 1; else (part.userData.dots as THREE.Vector2).set(from, until);
+      // the figures are too small to dissolve dot by dot: they come and go one by one instead, and are all gone
+      // well before the other layer has taken a third of the dots, so that it is not seen through them
+      const kept = Math.max(0, Math.min(1, until) * (1 - from / FIGURES_GONE));
+      for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) {
+        if (part.userData.figures) { const all = (part.userData.all ??= (part as THREE.InstancedMesh).count) as number; (part as THREE.InstancedMesh).count = Math.round(all * kept); }
+        else (part.userData.dots as THREE.Vector2).set(from, until);
+      }
       pending = Math.max(pending, 1);
     },
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },

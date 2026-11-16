@@ -3,7 +3,7 @@
 // wear or carry, and takes its colours, from five numbers per figure that never change. Per frame the processor only
 // advances the clock. Main thread only (needs the renderer's node materials).
 import * as THREE from 'three/webgpu';
-import { Fn, abs, attribute, cos, float, fract, instancedBufferAttribute, length, max, mix, normalLocal, positionGeometry, select, sin, uniform, varying, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, abs, attribute, cos, float, fract, length, max, mix, normalLocal, positionGeometry, select, sin, uniform, varying, vec2, vec3, vec4 } from 'three/tsl';
 import type { Figures } from './crowd';
 import { HIP, Joint, Load, SHOULDER, Slot, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';
 
@@ -42,14 +42,17 @@ export function interleave(lists: readonly Float32Array[], count: number): Float
   return out;
 }
 
-function material(f: Figures): THREE.MeshLambertNodeMaterial {
-  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: with three of the kit and
-  // the instance matrix, five separate ones made nine, and WebGPU allows only eight by default (maxVertexBuffers),
-  // so the pipeline failed and no figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
-  const all = interleave([f.a, f.b, f.c, f.d, f.e], f.count);
-  const buffer = new THREE.InstancedInterleavedBuffer(all, 20);
-  const inst = (k: number) => (instancedBufferAttribute(buffer as never, 'vec4', 20, k * 4) as unknown as { setInstanced(v: boolean): THREE.Node<'vec4'> }).setInstanced(true);
-  const A = inst(0), B = inst(1), C = inst(2), D = inst(3), E = inst(4);
+/** the names under which a mesh's geometry carries the five numbers of its figures */
+const NUMBERS = ['figureA', 'figureB', 'figureC', 'figureD', 'figureE'] as const;
+
+/**
+ * ONE material for the figures of every piece: the numbers of a piece's figures are attributes of its mesh's
+ * geometry, not part of the material. A material of its own per piece made the renderer build and compile the
+ * shader anew for every piece, and again for the shadows' and the water mirror's pass: 3 to 11 ms each, 80 to 100 ms
+ * in the one frame in which the mirror was first drawn (measured in Chrome on a Mac, 16 November 2026).
+ */
+function material(): THREE.MeshLambertNodeMaterial {
+  const [A, B, C, D, E] = NUMBERS.map((name) => vec4(attribute(name, 'vec4')));
   const info = vec4(attribute('info', 'vec4')), slot = info.x, joint = info.y, part = info.z, variant = info.w;
   const mode = C.x, carried = C.y, cut = C.z, head = C.w, walking = is(mode, 1), working = is(mode, 2);
 
@@ -95,26 +98,36 @@ function material(f: Figures): THREE.MeshLambertNodeMaterial {
 }
 
 const kits = { near: buildKit(NEAR_PARTS), far: buildKit(FAR_PARTS) };
-const geometries = new Map<'near' | 'far', THREE.BufferGeometry>();
-function geometry(which: 'near' | 'far') {
-  let g = geometries.get(which);
-  if (!g) {
+const shapes = new Map<'near' | 'far', Record<'position' | 'normal' | 'info', THREE.BufferAttribute>>();
+/** the kit's shape, held once, with the numbers of a piece's figures beside it */
+function geometry(which: 'near' | 'far', numbers: THREE.InstancedInterleavedBuffer) {
+  let shape = shapes.get(which);
+  if (!shape) {
     const k = kits[which];
-    g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(k.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(k.nor, 3)); g.setAttribute('info', new THREE.BufferAttribute(k.info, 4));
-    geometries.set(which, g);
+    shape = { position: new THREE.BufferAttribute(k.pos, 3), normal: new THREE.BufferAttribute(k.nor, 3), info: new THREE.BufferAttribute(k.info, 4) };
+    shapes.set(which, shape);
   }
+  const g = new THREE.BufferGeometry();
+  for (const [name, list] of Object.entries(shape)) g.setAttribute(name, list);
+  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: with three of the kit and
+  // the instance matrix, five separate ones made nine, and WebGPU allows only eight by default (maxVertexBuffers),
+  // so the pipeline failed and no figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
+  NUMBERS.forEach((name, k) => g.setAttribute(name, new THREE.InterleavedBufferAttribute(numbers, 4, k * 4)));
   return g;
 }
+/** Lets a mesh's geometry go: the numbers of its figures, not the kit's shape, which all meshes share. */
+function letGo(g: THREE.BufferGeometry) { for (const name of ['position', 'normal', 'info']) g.deleteAttribute(name); g.dispose(); }
+let shared: THREE.MeshLambertNodeMaterial | undefined;
 
 /** triangles of one figure, near and far */
 export const TRIANGLES = { near: kits.near.triangles, far: kits.far.triangles };
 
 /** The two meshes of a piece's figures, near and far; the caller shows one of them (see detail.ts). */
 export function figureMeshes(f: Figures): { near: THREE.InstancedMesh; far: THREE.InstancedMesh } {
-  const m = material(f);
+  const m = (shared ??= material()), numbers = new THREE.InstancedInterleavedBuffer(interleave([f.a, f.b, f.c, f.d, f.e], f.count), 20);
   const make = (which: 'near' | 'far') => {
-    const mesh = new THREE.InstancedMesh(geometry(which), m, f.count);
+    const mesh = new THREE.InstancedMesh(geometry(which, numbers), m, f.count);
+    mesh.addEventListener('dispose', () => letGo(mesh.geometry));
     // the figures are placed by the material, not by the instance matrices (left as they are, unit), so the mesh
     // cannot know its own bounds: it is never culled, and a piece leaves the stage as a whole
     mesh.frustumCulled = false;

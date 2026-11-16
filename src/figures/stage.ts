@@ -21,7 +21,7 @@ export function figureMeshes(f: Figures) {
   const pair = { ...build(f), f };
   pair.near.visible = near; pair.far.visible = !near;
   shown.add(pair);
-  pair.near.addEventListener('dispose', () => { shown.delete(pair); pair.far.dispose(); (pair.near.material as THREE.Material).dispose(); });
+  pair.near.addEventListener('dispose', () => { shown.delete(pair); pair.far.dispose(); });
   return pair;
 }
 
