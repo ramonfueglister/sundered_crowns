@@ -26,7 +26,8 @@ const TAG_CITIES: &[u8; 4] = b"SCET";
 pub const FORMAT_CITIES: u32 = 1;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
-pub const FORMAT: u32 = 3;
+/// 4: the demand pull.
+pub const FORMAT: u32 = 4;
 const NONE: u32 = u32::MAX;
 
 // ---- writing
@@ -648,7 +649,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, wage, real_wage, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, wage, real_wage, demand_pull, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -660,6 +661,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.f64(start[1]);
     o.f64s(wage);
     o.f64s(real_wage);
+    o.bool(*demand_pull);
 }
 
 fn get_clock(i: &mut In) -> Res<DailyClock> {
@@ -678,7 +680,7 @@ fn get_clock(i: &mut In) -> Res<DailyClock> {
     if wage.len() != real_wage.len() || (!wage.is_empty() && wage.len() != demand.len()) {
         return Err(format!("a clock with wages in money of {} firms, real wages of {} and {} firms", wage.len(), real_wage.len(), demand.len()));
     }
-    Ok(DailyClock { plan, window, demand, periods, start, wage, real_wage, trade: None })
+    Ok(DailyClock { plan, window, demand, periods, start, wage, real_wage, demand_pull: i.bool()?, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.

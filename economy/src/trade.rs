@@ -134,6 +134,9 @@ impl Cities {
             if e.model.ext.pays_in_money() != cities[0].model.ext.pays_in_money() {
                 return Err(format!("city {c} pays wages in another way than city 0"));
             }
+            if e.model.ext.demand_pull != cities[0].model.ext.demand_pull {
+                return Err(format!("city {c} sets prices in another way than city 0"));
+            }
         }
         let stock: Vec<Vec<f64>> = cities.iter().map(|e| e.model.prop.c_I_g.iter().map(|c| c * e.model.rotw.Y_I).collect()).collect();
         let value: Vec<Vec<f64>> = cities.iter().zip(&stock).map(|(e, s)| (0..G).map(|g| s[g] * e.model.agg.P_bar_g[g]).collect()).collect();

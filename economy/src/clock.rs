@@ -33,6 +33,18 @@
 //! start, which stays where it was at the start; that reading of A.9 is ours, the papers do not give it. Without
 //! [`DailyClock::pay_in_money`] nothing of this happens and the economy computes as before.
 //!
+//! And it carries the demand pull of CANVAS (economy feature 8): Hommes, He, Poledna, Siqueira and Zhang (2022,
+//! CANVAS: A Canadian Behavioral Agent-Based Model, Bank of Canada Staff Working Paper 2022-51, section 3.2.4,
+//! equations 34 to 37), as BeforeIT.jl has it in src/model_extensions/init_CANVAS.jl (lines 45 to 75) and the port in
+//! src/model_extensions/canvas.rs. In the paper of Poledna et al. a firm's price moves with its costs and with expected
+//! inflation only, and its supply is the demand it met. With the demand pull a firm compares the demand it met with
+//! the supply it had planned, and changes either its supply or its price by the gap between the two, never both: its
+//! supply if it sold out and is no cheaper than its sector or did not sell out and is cheaper, its price otherwise.
+//! Here a firm does so on its plan day, with the supply per day of its last plan and the mean demand per day since.
+//! With a plan in every period that is the rule of the port's CANVAS model, number for number
+//! (economy/tests/demand_pull.rs). The other change of the port's CANVAS model, a central bank that learns its rule,
+//! is not part of this.
+//!
 //! The port takes one model type per model, so this one also carries what a city needs that trades with other cities
 //! ([`crate::trade`]): while the merchants have set what they want and bring, the rule of the rest of the world reads
 //! that instead of the port's random series. An economy on its own never has merchants and computes as before.
@@ -58,6 +70,10 @@ pub struct DailyClock {
     /// wage it had when the wage in money was set. Both empty: the wage follows the consumer prices, as in the port.
     pub wage: Vec<f64>,
     pub real_wage: Vec<f64>,
+    /// whether a planning firm changes its supply or its price by the gap between the demand it met and the supply
+    /// it had planned (the demand pull of CANVAS, economy feature 8); without it the firm plans by the rule of the
+    /// paper (A.5, A.8)
+    pub demand_pull: bool,
     /// what the merchants want from this economy and bring to it in the period that is being computed
     /// ([`crate::trade`]); `None` between two periods and in an economy on its own. Not part of the saved state.
     pub trade: Option<Trade>,
@@ -69,7 +85,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], wage: Vec::new(), real_wage: Vec::new(), trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -161,6 +177,15 @@ impl Extension for DailyClock {
     /// period. In an economy that pays wages in money every firm's real wage is first set to its wage in money over
     /// the consumer price level, so that the port's rules of this period pay the wage in money.
     ///
+    /// A planning firm sets by the rule of the paper (A.5, A.8): supply = the mean demand per day since its last plan
+    /// times expected growth; price = price times cost push times expected inflation. With the demand pull
+    /// ([`DailyClock::demand_pull`]) it sets by the rule of CANVAS (equations 34 to 37): with `Q_s` the supply per day
+    /// of its last plan, `Q_d` the mean demand per day since and the gap `Q_d / Q_s − 1`, the gap goes into the supply
+    /// if `Q_s <= Q_d` and the firm's price is at least the price index of its sector, or `Q_s > Q_d` and its price is
+    /// below it; into the price otherwise. Supply = `Q_s` times expected growth times (1 + gap or 0); price = price
+    /// times cost push times expected inflation times (1 + gap or 0). Every planning firm adjusts (the port's
+    /// `theta_calvo` of 1; the port's random draw for it is not made).
+    ///
     /// # Panics
     ///
     /// If the model has gained or lost firms: the clock does not follow that.
@@ -182,8 +207,17 @@ impl Extension for DailyClock {
             m.ext.demand[i] += m.firms.Q_d_i[i];
             m.ext.periods[i] += 1;
             if m.ext.plans(i, t) {
-                d.Q_s_i[i] = m.ext.demand[i] / m.ext.periods[i] as f64 * growth;
-                d.new_P_i[i] = m.firms.P_i[i] * (1.0 + cost_push[i]) * inflation;
+                let Q_d = m.ext.demand[i] / m.ext.periods[i] as f64;
+                if m.ext.demand_pull {
+                    let (Q_s, P, P_g) = (m.firms.Q_s_i[i], m.firms.P_i[i], m.agg.P_bar_g[m.firms.G_i[i]]);
+                    let gap = Q_d / Q_s - 1.0;
+                    let (gamma_d, pi_d) = if (Q_s <= Q_d) == (P >= P_g) { (gap, 0.0) } else { (0.0, gap) };
+                    d.Q_s_i[i] = Q_s * growth * (1.0 + gamma_d);
+                    d.new_P_i[i] = P * (1.0 + cost_push[i]) * inflation * (1.0 + pi_d);
+                } else {
+                    d.Q_s_i[i] = Q_d * growth;
+                    d.new_P_i[i] = m.firms.P_i[i] * (1.0 + cost_push[i]) * inflation;
+                }
                 m.ext.demand[i] = 0.0;
                 m.ext.periods[i] = 0;
             } else {

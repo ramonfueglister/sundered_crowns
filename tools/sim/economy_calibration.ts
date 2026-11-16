@@ -28,6 +28,9 @@ export interface CalibrationTable {
     /** how the firms of a city pay wages (economy feature 7): 'money' is a wage in money that never changes,
      *  'prices' the port's real wage that follows the consumer prices */
     wage: Entry<'money' | 'prices'>;
+    /** how the firms of a city plan supply and price (economy feature 8): 'demand' is the demand pull of CANVAS,
+     *  'costs' the rule of the paper */
+    prices: Entry<'demand' | 'costs'>;
   };
   sectors: string[];
   inputs: {

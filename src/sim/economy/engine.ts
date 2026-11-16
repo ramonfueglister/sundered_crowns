@@ -34,6 +34,12 @@ export interface EconomyClock { plan: number; window: number }
 /** How the firms pay wages (economy feature 7, economy/src/clock.rs): 'prices' is the port's rule, a real wage that
  *  never changes, paid times the consumer price level; 'money' is a wage in money that never changes. */
 export type EconomyWage = 'prices' | 'money';
+/** How a planning firm sets its supply and its price (economy feature 8, economy/src/clock.rs): 'costs' is the rule
+ *  of the paper (supply = the demand it met, price by costs and expected inflation); 'demand' is the demand pull of
+ *  CANVAS (supply or price changes by the gap between the demand it met and the supply it had planned). */
+export type EconomyPrices = 'costs' | 'demand';
+/** The rules of the cities that the calibration chooses. */
+export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices }
 
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
@@ -48,8 +54,8 @@ export interface CityChecks { income: number; nominal: number; real: number; cen
 export interface EconomyChecks { cities: CityChecks[]; merchants: { off: number; scale: number }[] }
 
 export interface EconomyEngine {
-  /** New cities that trade with each other, with the clock and the way their firms pay wages: their state. */
-  create(cities: readonly CitySetup[], clock: EconomyClock, wage: EconomyWage): Uint8Array;
+  /** New cities that trade with each other, with the clock and the rules of their firms: their state. */
+  create(cities: readonly CitySetup[], clock: EconomyClock, rules: EconomyRules): Uint8Array;
   /** The state after `periods` more periods. */
   step(state: Uint8Array, periods: number): Uint8Array;
   /** The key figures of every city, `FIGURES` numbers a city in the order of the cities. */
@@ -60,7 +66,7 @@ export interface EconomyEngine {
 interface Exports {
   memory: WebAssembly.Memory;
   sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
-  sce_create(list: number, len: number, plan: number, window: number, wage: number): number;
+  sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -116,10 +122,11 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   }
 
   return {
-    create(cities, clock, wage) {
+    create(cities, clock, { wage, prices }) {
       for (const n of [clock.plan, clock.window]) if (!Number.isInteger(n) || n < 1 || n > 0xffff) throw new Error(`${n} is not a length of the economy's clock`);
       if (wage !== 'prices' && wage !== 'money') throw new Error(`${wage} is not a way to pay wages: 'prices' or 'money'`);
-      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0));
+      if (prices !== 'costs' && prices !== 'demand') throw new Error(`${prices} is not a way to set prices: 'costs' or 'demand'`);
+      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0));
     },
     step(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);

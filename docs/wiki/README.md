@@ -14,6 +14,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Wirtschaft der Städte](wirtschaft/wirtschaft-der-staedte.md) *(Beschlossen)*
   - [Arbeitslosengeld der Städte](wirtschaft/arbeitslosengeld-der-staedte.md) *(Beschlossen)*
   - [Lohn in Geld](wirtschaft/lohn-in-geld.md) *(Beschlossen)*
+  - [Preise nach Absatz](wirtschaft/preise-nach-absatz.md) *(Beschlossen)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der grössten Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 

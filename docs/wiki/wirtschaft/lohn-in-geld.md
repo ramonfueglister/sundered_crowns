@@ -100,7 +100,7 @@ Der Lohn in Geld ist der Lohn der Eichung und wie alle Beträge der Städte im M
 - Ein Lohn, der sich nie ändert, kann auch nicht sinken und nicht steigen. Er ist der Anker, den eine Lohn- oder Preisregel braucht, die reagiert, und noch nicht diese Regel.
 - Der Lohn ist je Betrieb auf dem Wert des Starts fest. Nichts bindet ihn an den Arbeitsmarkt, an die Leistung je Kopf oder an das Münzgeld der Stadt.
 - Wie der feste Lohn in den Kostendruck eingeht, ist unsere Lesart der Formel A.9 und steht in keinem Papier.
-- Die Preisregel ist die des Papiers: Preise folgen den Kosten und der erwarteten Teuerung, nicht dem Absatz eines Betriebs. Die Regel von CANVAS auf dem Lohn in Geld wurde ausserhalb des Spiels geprobt (Produktion 116, niemand ohne Arbeit, mit und ohne Arbeitslosengeld); sie ist nicht gebaut und wäre ein eigenes Feature.
+- Mit diesem Feature allein ist die Preisregel die des Papiers: Preise folgen den Kosten und der erwarteten Teuerung, nicht dem Absatz eines Betriebs. Die Regel von CANVAS auf dem Lohn in Geld ist Feature 8: [Preise nach Absatz](preise-nach-absatz.md). Die Zahlen dieser Seite sind ohne sie gemessen.
 - Das Arbeitslosengeld bleibt und ist weiter vorläufig.
 - Der Motor rechnet den Lohn mit dem Preisniveau vom Ende des Tages; der ausgezahlte Lohn weicht darum um die Preisänderung eines Tages vom Lohn in Geld ab.
 - Der Handel sinkt weiter, auf 2,00 % der Produktion im Jahr 30.

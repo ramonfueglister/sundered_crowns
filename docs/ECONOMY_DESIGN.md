@@ -35,6 +35,7 @@ players and the AI of realms without a player act through the same commands.
 | 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
 | 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built; in the running world together with feature 5 once the world server is redeployed |
 | 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built on the branch of features 5 and 6; not in the running world |
+| 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built on the same branch; not in the running world |
 
 ## 1. Grain harvest per place
 
@@ -1434,8 +1435,7 @@ The merchants' books are off by at most 2.5e-13. The output of the three runs li
 ### What it does not change
 
 - The price rule is the paper's (A.8, A.9). Prices move with costs and with expected inflation, not with what a
-  firm sells. The rule of CANVAS on top of the wage in money was tried outside the game (output 116, nobody without
-  work, with and without the benefit); it is not built and would be a feature of its own.
+  firm sells. The rule of CANVAS on top of the wage in money is feature 8 (section 8).
 - The unemployment benefit of feature 6 stays. A person without work keeps the real wage of the last day of work,
   and the benefit is 55 % of it at the prices of the day, as in the port.
 - Households still expect their income of the next day at today's prices times the expected inflation
@@ -1453,3 +1453,179 @@ The merchants' books are off by at most 2.5e-13. The output of the three runs li
   wages at the level customary before the plague, as a ceiling; no source was used to calibrate this feature.
 - The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
 - Nothing here is checked against history.
+
+## 8. The firms of the cities plan by the demand pull of CANVAS
+
+Status: built on the branch of features 5 to 7 (draft pull request 17), not in the running world. Ramon agreed on
+16 November 2026 (12:12 UTC) on the card "Wie soll es mit der Wirtschaft der Städte weitergehen?" with
+"CANVAS-Preisregel bauen": only the price rule of CANVAS as feature 8, with tests and numbers from the game; the
+unemployment benefit stays, nothing goes live. Player wiki: docs/wiki/wirtschaft/preise-nach-absatz.md.
+
+### What it is
+
+In the paper a firm's supply is the demand it met, and its price moves with its costs and with expected inflation
+only (A.5, A.8, A.9): what a firm sells never reaches its price. Ramon's point of 15 November 2026 was that prices
+and wages should be able to fall. CANVAS, the model of the Bank of Canada that is built on the paper's, has a rule
+for that (Hommes, He, Poledna, Siqueira, Zhang 2022, CANVAS: A Canadian Behavioral Agent-Based Model, Bank of Canada
+Staff Working Paper 2022-51, section 3.2.4, equations 34 to 37). BeforeIT.jl has it as a model type
+(src/model_extensions/init_CANVAS.jl, lines 45 to 75), and so has the port (src/model_extensions/canvas.rs).
+
+A firm compares the demand it met, `Q_d`, with the supply it had planned, `Q_s`. The gap is `Q_d / Q_s − 1`. It
+changes either its supply or its price by the gap, never both:
+
+| | its price is at least the price index of its sector | its price is below it |
+|---|---|---|
+| it sold out (`Q_s <= Q_d`) | supply rises by the gap | price rises by the gap |
+| it did not sell out (`Q_s > Q_d`) | price falls by the gap | supply falls by the gap |
+
+    supply = Q_s · (1 + expected growth) · (1 + gap or 0)
+    price  = price · (1 + cost push) · (1 + expected inflation) · (1 + gap or 0)
+
+The cost push and the two expectations are the paper's; the cost push takes the wage in money as the price of labour
+(feature 7).
+
+### How it enters the daily clock (`economy/src/clock.rs`)
+
+Not a line of the port changes. The model type of the daily clock gains one switch, `demand_pull`, kept in the
+state (format 4).
+
+- A firm applies the rule on its plan day, every 30 days. `Q_s` is the supply per day of its last plan, `Q_d` the
+  mean demand per day since, growth and inflation are those expected over the 30 days ahead. CANVAS applies it every
+  quarter. That carrying over is ours. With a plan in every period it is the port's rule, bit for bit (a test).
+- Every planning firm adjusts. The original code can let only a random part `theta_calvo` of the firms adjust; its
+  default is 1 (src/model_init/init_properties.jl, line 85), and the plan day already spreads the firms over the
+  month. Parameters with another `theta_calvo` are refused, and the port's random draw for it is not made.
+- At the start the supply every firm had planned is set to the demand it met, as the original code does
+  (`firms.Q_s_i .= firms.Q_d_i`, init_CANVAS.jl, line 146), so the first gap is 0.
+- Of the two changes of CANVAS that the original code implements, this is one. The other, a central bank that
+  learns its rule, is not taken: the cities have no rule for the rate (feature 3).
+
+### Why it needs feature 7
+
+With the port's wage, which follows the prices, the same rule drove the prices of the 29 cities to zero within 7 to
+11 years in the trial of 15 November 2026, and the port's own CANVAS model on its data set for Italy ran away upward
+(only measured in the port, not in Julia). The price level is then the sum of all gaps and nothing pulls it back.
+The wage in money of feature 7 is what pulls it back: a firm whose price has fallen sees labour as dear against
+its price, and the cost push raises the price again.
+
+### Calibration and the way into the game
+
+| Entry | Value | Kind |
+|---|---|---|
+| `cities.prices` in `data/economy/england_1356.json` | `demand` | assumption: no source for 1356; the rule of CANVAS; set by Ramon's word of 16 November 2026. `costs` is the paper's rule |
+
+`npm run economy:calibrate` writes it as the key `prices` of `public/data/economy_cities.json`; no parameter of a
+city changes. `sce_create` has a sixth argument (0 for the paper's rule, 1 for the demand pull); in TypeScript the
+wage and the prices are the `EconomyRules` the world hands to the engine (src/sim/economy/engine.ts).
+
+### Tests
+
+`economy/tests/demand_pull.rs` (9 tests; the port's data set for Italy and London of the game):
+
+- With a plan every period the clock decides what the port's CANVAS decides: for all firms of Italy, at the start
+  and after 1 and 5 quarters, two seeds, the supply, the price and everything that follows from them are the same
+  bit for bit; all four cases of the rule occur more than 100 times; without the switch the clock decides the
+  paper's prices.
+- A planning firm changes its supply or its price by the gap and never both: 150 days of London, every firm on
+  every day against the formula above; firms that do not plan keep both; the books balance.
+- The first plan is the paper's, because no firm has a gap yet: after the first day London with and without the
+  demand pull are the same bit for bit, after 61 days they differ.
+- With wages in money the price level holds, and without them it leaves: London, 10 years, 3 seeds. With the wage in
+  money the price level stays within a tenth of its start in every year; with the port's wage it is further than a
+  quarter away, or not a number, in at least one year of every seed.
+- With the demand pull a city keeps its people in work without the benefit: London, 10 years, 3 seeds. With the
+  paper's rule and no benefit more than 4 % are without work at the end of some year; with the demand pull at most
+  1 % at the end of every year from the third on, with the benefit and without it.
+- The demand pull goes with every planning firm adjusting (`theta_calvo` other than 1 is refused).
+- The switch is part of the state (45 days through bytes day by day).
+- Cities that trade set prices in the same way (a mix is refused); three cities trade for 90 days with balanced
+  books.
+- The calibration of the cities says `demand`, on top of `money`.
+
+Swapping the two cases of the rule fails the first two tests.
+
+`tests/economy.test.ts` (1 new test, 49 in all): the table marks the entry as an assumption and names the paper,
+the lines of the original code and what is ours. The engine tests compare the WebAssembly build with the native one
+for all four pairs of rules, refuse a rule that is none, and refuse parameters with another `theta_calvo`.
+
+### In the game
+
+`npm run economy:check 30 4` (4 worlds of the game, seeds 1356 to 1359) and `npm run economy:check 5 8` (8 worlds,
+seeds 1356 to 1363), every day computed in all of them, against the same worlds with feature 7 (section 7) and
+with feature 6 alone (section 6):
+
+| All cities together, year 30 (4 worlds) | Feature 6 alone | With feature 7 | Now | Range of the worlds now |
+|---|---|---|---|---|
+| Real output (start = 100) | 107.2 | 104.1 | 116.4 | 116.1 to 116.6 |
+| Price level of output (start = 100) | 123.6 | 100.0 | 94.8 | 94.1 to 95.3 |
+| Price level of a single city on the last day | not kept | 99.5 to 100.5 | 90.0 to 100.7 | 88.8 to 101.9 |
+| Exports = imports, share of output | 2.25 % | 2.00 % | 2.68 % | 2.64 % to 2.69 % |
+| Without work, mean of all cities and days of the 30 years | 0.70 % | 1.14 % | 0.05 % | 0.04 % to 0.06 % |
+| Without work, the worst city on its worst day | 4.9 % | 6.2 % | 2.4 % | 2.3 % to 2.5 % |
+| City with the lowest output (its start = 100) | 101.3 | 98.5 | 111.4 | 109.8 to 113.3 |
+| City with the highest output | 113.9 | 114.1 | 117.5 | 117.4 to 117.5 |
+
+| All cities together, mean of the 4 worlds | Year 5 | Year 10 | Year 20 | Year 30 |
+|---|---|---|---|---|
+| Real output (start = 100), now | 107.9 | 113.2 | 115.9 | 116.4 |
+| With feature 7 | 106.1 | 106.6 | 105.5 | 104.1 |
+| Exports = imports, share of output, now | 2.75 % | 2.85 % | 2.72 % | 2.68 % |
+
+| All cities together, year 5 (8 worlds) | With feature 7 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 106.9 | 107.8 | 106.9 to 108.6 |
+| Price level of output (start = 100) | 100.1 | 99.7 | 99.4 to 99.8 |
+| Exports = imports, share of output | 2.77 % | 2.73 % | 2.60 % to 2.85 % |
+| Without work, mean of all cities and days | 0.35 % | 0.29 % | 0.23 % to 0.37 % |
+| Without work, the worst city on its worst day | 2.5 % | 2.4 % | 2.3 % to 2.5 % |
+| City with the lowest output (its start = 100) | 102.6 | 103.2 | 102.1 to 104.2 |
+| City with the highest output | 114.2 | 114.2 | 112.9 to 115.9 |
+
+The books are off by at most 1.2e-13 of the amount they are judged by. The outputs of both runs lie in the project
+files (wirtschaft/staedte/befunde/feature8_check_30_4.txt and feature8_check_5_8.txt).
+
+Output rises for about 20 years and then stays at 116: that is the limit of the capital of the cities. The
+calibration starts every firm at 85 % of what its capital can make (`omega = 0.85`; `K_i = Y_i / (omega · kappa_i)`
+in src/agents.rs of the port, line 387), a firm cannot make more than its capital allows (A.13), and investment only
+replaces what wears off (A.14). So no city can stand above 100 / 0.85 = 117.6.
+
+Outside the game the same 29 linked cities ran 100 years in 3 runs (native build, the calibrations of the game,
+seeds 1356 to 1358; `economy/examples/cities.rs` with `money demand`). Output stays between 115.1 and 116.3 from
+year 30 to year 100, the price level between 94.4 and 95.7, no city falls below its start in any year checked
+(lowest 104.9 in year 10, at least 109.4 from year 20 on), and on the days checked nobody is without work after
+year 5. The
+merchants' books are off by at most 4.0e-13. In the run of seed 1356 the firms planned 3.4 million times: the demand
+they met was between 0.14 and 2.2 times the supply they had planned, 1.1 % of the plans lay outside one half to
+double, 64.5 % of the plans moved the price and the others the supply. The prices of single firms spread widely: the
+cheapest firm stood at 0.14 of its start, the dearest at 1.87. The output lies in the project files
+(wirtschaft/staedte/befunde/feature8_100_jahre.txt).
+
+Without the unemployment benefit, which the game keeps, the cities hold as well. Outside the game the same cities
+ran 30 years in 3 runs with the benefit switched off (the calibrations of the trial of 15 November 2026:
+`theta_UB = 1e-9`, no benefit at the start), with the engine of this feature: output 115.8 to 116.1 in year 30, the
+lowest city at 109.4 to 111.9, no city below its start in any year checked, nobody without work on the days checked
+from year 10 on, price level 95.1 to 95.8 (project file wirtschaft/staedte/befunde/feature8_ohne_arbeitslosengeld.txt).
+With feature 7 alone and no benefit the trial had output at 89.8 and the lowest city at 65.4.
+
+### What it does not change
+
+- The unemployment benefit of feature 6 stays. Taking it out is not part of this feature.
+- The wage in money never changes (feature 7). Prices now fall and rise with what a firm sells; wages do not.
+- Capital does not grow, so output has a ceiling (above).
+- Trade still shrinks from 3.3 % of output at the start, now to 2.68 % in year 30 instead of 2.00 %.
+
+### Limits
+
+- The rule has no bound. A firm that met no demand at all since its last plan would set its price or its supply to
+  zero, and a firm with no supply divides by zero at its next plan; the original code has the same property (a cap
+  of the price change is commented out there, init_CANVAS.jl, line 63). The economies of a world would then stand
+  still with the reason (src/sim/systems/economy.ts). In 3.4 million plans of 100 years the smallest demand was 0.14
+  of the supply; it did not happen in any run. Nothing was added against it.
+- Applying the rule on the plan day with the mean demand per day is our carrying over; CANVAS is quarterly.
+- The price level settles at about 95, not at 100, and single cities between 89 and 102. Why at 95 was not
+  examined.
+- The prices of single firms drift far apart (0.14 to 1.87 of the start in 100 years).
+- The cities run at the limit of their capital with nobody without work. Whether that is the economy the game
+  wants is open; the model has no rule by which capital grows beyond replacement.
+- The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
+- Nothing here is checked against history, and no source for 1356 was used.

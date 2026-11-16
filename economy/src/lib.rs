@@ -63,6 +63,24 @@ impl Economy {
         self
     }
 
+    /// The same economy with the demand pull of CANVAS from now on (economy feature 8, [`clock`]): a planning firm
+    /// changes its supply or its price by the gap between the demand it met and the supply it had planned. As the
+    /// port's CANVAS model does at its start (`firms.Q_s_i .= firms.Q_d_i` in init_CANVAS.jl), the supply every firm
+    /// had planned is set to the demand it met last, so that the first gap is 0 and not a division by 0.
+    ///
+    /// The clock lets every planning firm adjust, which is the port's `theta_calvo` of 1; parameters that say
+    /// otherwise are refused.
+    pub fn with_demand_pull(mut self) -> Result<Economy, String> {
+        let theta_calvo = self.model.prop.theta_calvo;
+        if theta_calvo != 1.0 {
+            return Err(format!("theta_calvo = {theta_calvo}: with the demand pull every planning firm adjusts (theta_calvo = 1)"));
+        }
+        let f = &mut self.model.firms;
+        f.Q_s_i.clone_from(&f.Q_d_i);
+        self.model.ext.demand_pull = true;
+        Ok(self)
+    }
+
     /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. Of
     /// the rows only the last `window` are kept (no rule of the port reads them).
     pub fn step(&mut self, periods: usize) {
@@ -247,7 +265,7 @@ pub mod abi {
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32) -> Result<Cities, String> {
+    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -263,6 +281,9 @@ pub mod abi {
         if wage > 1 {
             return Err(format!("wages of kind {wage}: 0 is the port's wage that follows the prices, 1 the wage in money"));
         }
+        if prices > 1 {
+            return Err(format!("prices of kind {prices}: 0 is the paper's rule of costs, 1 the demand pull of CANVAS"));
+        }
         let mut all = Vec::new();
         while !list.is_empty() {
             let c = all.len();
@@ -270,7 +291,8 @@ pub mod abi {
             let p = text(&mut list, "the parameters", c)?;
             let ic = text(&mut list, "the initial conditions", c)?;
             let e = Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?;
-            all.push(if wage == 1 { e.with_wages_in_money() } else { e });
+            let e = if wage == 1 { e.with_wages_in_money() } else { e };
+            all.push(if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e });
         }
         Cities::new(all)
     }
@@ -297,16 +319,17 @@ pub mod abi {
     /// New cities that trade with each other, from a list of cities (for every city the 64-bit seed, then the
     /// port's parameters and initial conditions as JSON, each with its length in 32 bits before it) and the two
     /// lengths of the daily clock ([`Economy::new`], [`Cities::new`]) and the kind of wages: 0 for the port's wage
-    /// that follows the consumer prices, 1 for the wage in money ([`Economy::with_wages_in_money`]). Result: their
-    /// state.
+    /// that follows the consumer prices, 1 for the wage in money ([`Economy::with_wages_in_money`]); and the kind
+    /// of prices: 0 for the paper's rule of costs, 1 for the demand pull of CANVAS ([`Economy::with_demand_pull`]).
+    /// Result: their state.
     ///
     /// # Safety
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage).map(keep))
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices).map(keep))
     }
 
     /// Computes `periods` periods from a state. Result: the state after them.

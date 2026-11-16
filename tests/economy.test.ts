@@ -12,7 +12,7 @@ import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, da
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { calibrationJson, cityCalibrations, cityPlaces, dailyCalibration, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, cityTable, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
-import { FIGURE, FIGURES, type CitySetup, type EconomyEngine } from '../src/sim/economy/engine';
+import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import { citySeed, computeTo, foundEconomy, yearRow } from '../src/sim/systems/economy';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
@@ -158,7 +158,7 @@ describe('the calibration of the cities', () => {
     expect(readFileSync(dataPath('economy_cities.json'), 'utf8')).toBe(calibrationJson(table)); // else: npm run economy:calibrate
     const w = loadWorld();
     expect(w.cityEconomies.cities.length).toBe(cities.length);
-    expect(w.cityEconomies).toMatchObject({ year: 1356, scale: 0.01, clock: { plan: 30, window: 365 }, wage: 'money' });
+    expect(w.cityEconomies).toMatchObject({ year: 1356, scale: 0.01, clock: { plan: 30, window: 365 }, rules: { wage: 'money', prices: 'demand' } });
     cities.forEach((c, k) => {
       expect(w.cityEconomies.cities[k]).toMatchObject({ place: c.place, people: c.people });
       expect(w.cityOf[c.place]).toBe(k);
@@ -272,6 +272,16 @@ describe('the calibration of the cities', () => {
     expect(JSON.parse(calibrationJson(other)).wage).toBe('prices');
     expect(calibrationJson(other).replace('"wage": "prices"', '"wage": "money"')).toBe(calibrationJson(table));
   });
+  it('says that the demand pull is an assumption, with the paper and the code it is taken from and what is ours', () => {
+    const e = table.cities.prices;
+    expect(e).toMatchObject({ value: 'demand', kind: 'assumption' });
+    expect(e.source).toMatch(/Bank of Canada Staff Working Paper 2022-51, section 3\.2\.4, equations 34 to 37/);
+    expect(e.source).toMatch(/init_CANVAS\.jl, lines 45 to 75/);
+    expect(e.source).toMatch(/What is ours: a firm applies it on its plan day/);
+    expect(JSON.parse(calibrationJson(table)).prices).toBe('demand');
+    const other = structuredClone(table); other.cities.prices.value = 'costs';
+    expect(calibrationJson(other).replace('"prices": "costs"', '"prices": "demand"')).toBe(calibrationJson(table));
+  });
 });
 
 describe('the economy engine (WebAssembly)', () => {
@@ -280,11 +290,11 @@ describe('the economy engine (WebAssembly)', () => {
   const THREE = ['London', 'Ghent', 'Cologne'].map((name) => c.cities.find((x) => x.name === name)!);
   const setups = (seed: number, cities = THREE): CitySetup[] =>
     cities.map((x, k) => ({ parameters: JSON.stringify(x.parameters), initialConditions: JSON.stringify(x.initial_conditions), seed: seed + k }));
-  const CLOCK = c.clock, WAGE = c.wage;
-  const create = (seed: number) => engine.create(setups(seed), CLOCK, WAGE);
+  const CLOCK = c.clock, RULES: EconomyRules = { wage: c.wage, prices: c.prices }, PORT: EconomyRules = { wage: 'prices', prices: 'costs' };
+  const create = (seed: number) => engine.create(setups(seed), CLOCK, RULES);
   const city = (f: Float64Array, k: number) => f.subarray(k * FIGURES, (k + 1) * FIGURES);
 
-  it('computes bit for bit what the native build computes, day by day, with the clock of the port and with either wage', () => {
+  it('computes bit for bit what the native build computes, day by day, with the clock of the port and with every rule', () => {
     const dir = mkdtempSync(join(tmpdir(), 'sce-'));
     try {
       const files = THREE.flatMap((x, k) => {
@@ -292,27 +302,32 @@ describe('the economy engine (WebAssembly)', () => {
         return [join(dir, `p${k}.json`), join(dir, `ic${k}.json`)];
       });
       // 65 days: every firm has planned three times. With a plan and a window of one period the clock is the port's.
-      for (const [seed, clock, periods, wage] of [[1356, CLOCK, 65, WAGE], [7, CLOCK, 65, WAGE], [1356, CLOCK, 65, 'prices'], [1356, { plan: 1, window: 1 }, 10, 'prices'], [1356, { plan: 1, window: 1 }, 10, 'money']] as const) {
-        const args = [String(periods), String(clock.plan), String(clock.window), wage, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
+      const ONE = { plan: 1, window: 1 };
+      for (const [seed, clock, periods, rules] of [
+        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs' }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand' }],
+        [1356, ONE, 10, PORT], [1356, ONE, 10, RULES],
+      ] as const) {
+        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
         const native = execFileSync(join(ECONOMY_DIR, 'target/release/examples/reference'), args, { encoding: 'utf8' }).trim().split('\n');
         expect(native.length).toBe(periods + 1);
-        let state = engine.create(setups(seed), clock, wage);
+        let state = engine.create(setups(seed), clock, rules);
         expect(bits(engine.figures(state))).toBe(native[0]);
         for (let t = 1; t <= periods; t++) { state = engine.step(state, 1); expect(bits(engine.figures(state))).toBe(native[t]); }
       }
     } finally { rmSync(dir, { recursive: true, force: true }); }
   }, 60_000);
-  it('gives the same state for the same seeds and another for another seed, another clock or another wage', () => {
+  it('gives the same state for the same seeds and another for another seed, another clock or another rule', () => {
     const a = create(1356), b = create(1356), other = create(1357);
     expect(Buffer.compare(a, b)).toBe(0);
     expect(Buffer.compare(engine.step(a, 3), engine.step(b, 3))).toBe(0);
     expect(Buffer.compare(a, other)).not.toBe(0);
-    expect(Buffer.compare(a, engine.create(setups(1356), { plan: 31, window: 365 }, WAGE))).not.toBe(0);
-    expect(WAGE).toBe('money');
-    expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, 'prices'))).not.toBe(0);
+    expect(Buffer.compare(a, engine.create(setups(1356), { plan: 31, window: 365 }, RULES))).not.toBe(0);
+    expect(RULES).toEqual({ wage: 'money', prices: 'demand' });
+    expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, wage: 'prices' }))).not.toBe(0);
+    expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, prices: 'costs' }))).not.toBe(0);
     // the seed of one city changes the others too, through the merchants
     const one = setups(1356); one[2] = { ...one[2], seed: 99 };
-    const f = engine.figures(engine.step(engine.create(one, CLOCK, WAGE), 5)), g = engine.figures(engine.step(a, 5));
+    const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)), g = engine.figures(engine.step(a, 5));
     expect(bits(city(f, 0))).not.toBe(bits(city(g, 0)));
   });
   it('continues from a saved state as if it had never stopped, in the middle of a month', () => {
@@ -382,17 +397,22 @@ describe('the economy engine (WebAssembly)', () => {
     expect(gdp.size).toBe(40);
     expect(prices.size).toBeGreaterThan(30);
   }, 30_000);
-  it('refuses what is not a state, not a calibration, not a clock, not a wage or not cities, and keeps working', () => {
+  it('refuses what is not a state, not a calibration, not a clock, not a rule or not cities, and keeps working', () => {
     expect(() => engine.step(new Uint8Array(10), 1)).toThrow(/economy engine/);
     expect(() => engine.figures(new Uint8Array(0))).toThrow(/economy engine/);
     const [a, b] = setups(1);
-    expect(() => engine.create([a, { ...b, parameters: '{}' }], CLOCK, WAGE)).toThrow(/economy engine: city 1: /);
-    expect(() => engine.create([a], CLOCK, WAGE)).toThrow(/economy engine: 1 city: trade needs two/);
-    expect(() => engine.create([], CLOCK, WAGE)).toThrow(/trade needs two/);
-    expect(() => engine.create([a, { ...b, seed: -1 }], CLOCK, WAGE)).toThrow();
-    expect(() => engine.create([a, b], { plan: 0, window: 365 }, WAGE)).toThrow();
-    expect(() => engine.create([a, b], { plan: 30, window: 1.5 }, WAGE)).toThrow();
-    expect(() => engine.create([a, b], CLOCK, 'gold' as any)).toThrow(/not a way to pay wages/);
+    expect(() => engine.create([a, { ...b, parameters: '{}' }], CLOCK, RULES)).toThrow(/economy engine: city 1: /);
+    expect(() => engine.create([a], CLOCK, RULES)).toThrow(/economy engine: 1 city: trade needs two/);
+    expect(() => engine.create([], CLOCK, RULES)).toThrow(/trade needs two/);
+    expect(() => engine.create([a, { ...b, seed: -1 }], CLOCK, RULES)).toThrow();
+    expect(() => engine.create([a, b], { plan: 0, window: 365 }, RULES)).toThrow();
+    expect(() => engine.create([a, b], { plan: 30, window: 1.5 }, RULES)).toThrow();
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, wage: 'gold' as any })).toThrow(/not a way to pay wages/);
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, prices: 'stars' as any })).toThrow(/not a way to set prices/);
+    // parameters of the port that let only a part of the firms adjust do not go with the demand pull of the clock
+    const calvo = { ...b, parameters: JSON.stringify({ ...JSON.parse(b.parameters), theta_calvo: 0.5 }) };
+    expect(() => engine.create([a, calvo], CLOCK, RULES)).toThrow(/economy engine: city 1: theta_calvo = 0\.5/);
+    expect(engine.figures(engine.create([a, calvo], CLOCK, { ...RULES, prices: 'costs' }))[FIGURE.periods]).toBe(0);
     expect(engine.figures(create(1))[FIGURE.periods]).toBe(0);
   });
   it('reports a rule of the port that fails, and starts afresh', () => {
@@ -430,7 +450,7 @@ describe('the economies of the cities in the world', () => {
     expect(e.figures.length).toBe(N * FIGURES);
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
     const setups = c.cities.map((x) => ({ parameters: x.parameters, initialConditions: x.initialConditions, seed: citySeed(s.seed, x.place) }));
-    expect(Buffer.compare(e.model, w.economyEngine.create(setups, c.clock, c.wage))).toBe(0);
+    expect(Buffer.compare(e.model, w.economyEngine.create(setups, c.clock, c.rules))).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
   it('give every city random numbers of its own, from the seed of the world and its place', () => {
