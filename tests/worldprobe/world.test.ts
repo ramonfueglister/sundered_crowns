@@ -162,6 +162,45 @@ describe('the land from farther away', () => {
   }, 60000);
 });
 
+describe('a monument', () => {
+  const model = { build: () => new Batch(), w: 12, d: 10, height: 8 }, farm = () => ({ region: '', style: styleOf('') });
+  /** a lake of 80 × 80 blocks from (100, 100) with an island of 8 × 8 in its middle */
+  const lagoon = (): Ground => {
+    const g = ground(0);
+    for (let z = 100; z < 180; z++) for (let x = 100; x < 180; x++) g.wet[z * N + x] = x >= 136 && x < 144 && z >= 136 && z < 144 ? 0 : 1;
+    return g;
+  };
+  const wetIn = (g: Ground, x0: number, z0: number, x1: number, z1: number) => { let n = 0; for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) n += g.wet[z * N + x]; return n; };
+
+  it('stands at its place on ground made for it, where its place is an island too small for it', () => {
+    const g = lagoon(), counts: Record<string, number> = {}, before = wetIn(g, 100, 100, 180, 180);
+    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }], farm, () => 0, () => 0, counts);
+    expect(counts.monument).toBe(1);
+    // its footprint, with the column round it, is dry and paved, and the lake beyond is as it was
+    expect(wetIn(g, 133, 134, 147, 146)).toBe(0);
+    for (let z = 135; z < 145; z++) for (let x = 134; x < 146; x++) { expect(used[z * N + x]).toBe(1); expect(g.h[z * N + x]).toBe(LAND_Y); }
+    expect(g.mat[134 * N + 133]).toBe(Mat.Paved);
+    expect(before - wetIn(g, 100, 100, 180, 180)).toBe(14 * 12 - 64);
+  });
+
+  it('stands beside another on the ground made for that one', () => {
+    const g = lagoon(), counts: Record<string, number> = {}, tower = { build: () => new Batch(), w: 3, d: 3, height: 20 };
+    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }, { id: 2, at: [140.5, 147.5], model: tower }], farm, () => 0, () => 0, counts);
+    expect(counts.monument).toBe(2);
+    // at its place, a column of the first one's made ground between them
+    for (let z = 146; z < 149; z++) for (let x = 139; x < 142; x++) { expect(used[z * N + x]).toBe(1); expect(g.wet[z * N + x]).toBe(0); }
+    expect(used[145 * N + 140]).toBe(0); expect(g.wet[145 * N + 140]).toBe(0);
+  });
+
+  it('is left out in open water, and leaves dry ground as it is', () => {
+    const g = lagoon(), counts: Record<string, number> = {};
+    settle(g, new Batch(), [], [{ id: 1, at: [115.5, 115.5], model }, { id: 2, at: [300.5, 300.5], model }], farm, () => 0, () => 0, counts);
+    expect(counts['monument dropped']).toBe(1); expect(counts.monument).toBe(1);
+    expect(wetIn(g, 100, 100, 180, 180)).toBe(80 * 80 - 64);
+    expect(g.mat[300 * N + 300]).toBe(Mat.Grass);
+  });
+});
+
 describe('the houses of the near view', () => {
   /** a town and a village that build as Venice does, and a town that has no fine blocks yet, where they lie in the world */
   const places: [number, number, number, number | null, string][] = [[300, 200, 4, 60000, 'italy'], [240, 110, 1, null, 'italy'], [330, 300, 3, 20000, '']];
