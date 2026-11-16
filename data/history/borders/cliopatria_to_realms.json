@@ -1,0 +1,227 @@
+{
+ "note": "Which of our realms a Cliopatria polity is, where the rules of tools/history/borders/build.py decide wrongly. realm: a realm key of setup_1291.json; 'union' (the polity unites realms that keep their own titles; our division stays); 'new' (a realm of its own); or as: the same realm as another Cliopatria polity. A realm is the state: its name follows the polity (a name event), its holder follows the ruler list of its title.",
+ "polities": {
+  "French First Republic": {
+   "realm": "france",
+   "why": "the French state; the list of French monarchs has no holder 1792-1804"
+  },
+  "French Directory": {
+   "realm": "france",
+   "why": "the French state"
+  },
+  "French Consulate": {
+   "realm": "france",
+   "why": "the French state"
+  },
+  "First French Empire": {
+   "realm": "france",
+   "why": "the French state; Napoleon I is in the list of French monarchs"
+  },
+  "Bourbon Kingdom of France": {
+   "realm": "france",
+   "why": "the French state; Louis XVIII in the list"
+  },
+  "French Second Republic": {
+   "realm": "france",
+   "why": "the French state; no holder from February 1848"
+  },
+  "Kingdom of Great Britain": {
+   "realm": "england",
+   "why": "Acts of Union 1707: England and Scotland as one state; England holds most of it"
+  },
+  "British Empire": {
+   "as": "Kingdom of Great Britain",
+   "why": "the possessions of the British crown in the frame (Gibraltar, Malta, Ionian Islands)"
+  },
+  "Russian Empire": {
+   "as": "Tsardom of Russia",
+   "why": "the Russian state, renamed 1721"
+  },
+  "Kingdom of Prussia": {
+   "realm": "brandenburg",
+   "why": "Brandenburg-Prussia, the same state, royal title from 1701"
+  },
+  "Duchy of Prussia": {
+   "realm": "new",
+   "why": "the secularised state of the Teutonic Order 1525, a duchy of its own until united with Brandenburg"
+  },
+  "Kingdom of Poland": {
+   "realm": "new",
+   "why": "the kingdom restored 1320 (Wladyslaw I), one title over Greater Poland and Krakow-Sandomierz"
+  },
+  "Kingdom of Spain": {
+   "realm": "union",
+   "head": "castile",
+   "why": "Cliopatria's Kingdom of Spain is the whole composite monarchy (Castile, Aragon, Naples, Sicily; 1529-1555 even Charles V's Austrian lands): each crown keeps its title; Castile is its head"
+  },
+  "Spanish Empire": {
+   "realm": "union",
+   "why": "the crowns of Castile, Aragon, Naples, Sicily under one king, each its own title",
+   "head": "castile"
+  },
+  "Habsburg Monarchy": {
+   "realm": "union",
+   "why": "the lands of the Habsburgs: Austria, Bohemia, Hungary keep their titles",
+   "head": "austria"
+  },
+  "Austrian Empire": {
+   "realm": "union",
+   "why": "1804: still Austria, Bohemia, Hungary each its title",
+   "head": "austria"
+  },
+  "Polish-Lithuanian Commonwealth": {
+   "realm": "union",
+   "why": "Crown of Poland and Grand Duchy of Lithuania, two titles",
+   "head": "c_kingdom_of_poland"
+  },
+  "Holy Roman Empire": {
+   "realm": "union",
+   "why": "the Empire is no state of its own here: its members keep their lands",
+   "league": true
+  },
+  "Holy Roman Empire Minor States": {
+   "realm": "union",
+   "why": "Cliopatria's lump of the small estates of the Empire",
+   "league": true
+  },
+  "Confederation of the Rhine": {
+   "realm": "union",
+   "why": "1806-1813: a league of sovereign states",
+   "league": true
+  },
+  "German Confederation": {
+   "realm": "union",
+   "why": "1815-1866: a league of sovereign states",
+   "league": true
+  },
+  "Duchies of Poland": {
+   "realm": "union",
+   "why": "the Piast duchies, each its own",
+   "league": true
+  },
+  "Mongol Empire": {
+   "realm": "union",
+   "why": "the khanates, each its own",
+   "league": true
+  },
+  "Kalmar Union": {
+   "realm": "union",
+   "why": "Denmark, Norway, Sweden under one crown, three titles",
+   "head": "denmark"
+  },
+  "Denmark-Norway": {
+   "realm": "union",
+   "why": "two titles under one king",
+   "head": "denmark"
+  },
+  "United Kingdoms of Sweden and Norway": {
+   "realm": "union",
+   "why": "two titles under one king",
+   "head": "sweden"
+  },
+  "Iberian Union": {
+   "realm": "union",
+   "why": "Portugal and Spain under one king 1580-1640, separate titles",
+   "head": "castile"
+  },
+  "House of Ascania": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "league": true
+  },
+  "House of Wittelsbach": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "league": true
+  },
+  "House of Habsburg": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "head": "austria"
+  },
+  "House of Jagiellon": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "league": true
+  },
+  "Capetian House of Anjou": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "league": true
+  },
+  "House of Anjou-Sicily": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "head": "naples"
+  },
+  "House of Valois-Anjou": {
+   "realm": "union",
+   "why": "a dynasty, not a state",
+   "league": true
+  },
+  "Electorate of Hanover": {
+   "realm": "brunswick_lueneburg",
+   "why": "Brunswick-Lüneburg, elector from 1692; in personal union with Great Britain, not part of it"
+  },
+  "Kingdom of Hanover": {
+   "realm": "brunswick_lueneburg",
+   "why": "the same state, kingdom from 1814"
+  }
+ },
+ "successions": {
+  "moscow": {
+   "title": "Tsardom of Russia",
+   "from": 1547,
+   "why": "the list of grand princes ends 1547 because Ivan IV took the title of tsar; the state went on (Tsardom of Russia, Russian Empire 1721)",
+   "source": "https://en.wikipedia.org/wiki/List_of_Russian_monarchs"
+  },
+  "england": {
+   "title": "Kingdom of Great Britain",
+   "from": 1707,
+   "why": "Acts of Union 1707: the English crown went on as the crown of Great Britain (United Kingdom 1801)",
+   "source": "https://en.wikipedia.org/wiki/List_of_British_monarchs"
+  },
+  "castile": {
+   "title": "Kingdom of Spain",
+   "from": 1715,
+   "why": "the Nueva Planta decrees dissolved the Crown of Castile into the Kingdom of Spain under the same king, Philip V",
+   "source": "https://en.wikipedia.org/wiki/List_of_Spanish_monarchs"
+  },
+  "naples": {
+   "title": "Kingdom of the Two Sicilies",
+   "from": 1816,
+   "why": "8 December 1816 Naples and Sicily became the Kingdom of the Two Sicilies under the same king, Ferdinand I",
+   "source": "https://en.wikipedia.org/wiki/List_of_monarchs_of_the_Two_Sicilies"
+  },
+  "brunswick_lueneburg": {
+   "title": "Electorate of Hanover",
+   "from": 1705,
+   "why": "1705 the principality of Lüneburg went by inheritance to the Electorate of Brunswick-Lüneburg (Hanover; Kingdom of Hanover 1814)",
+   "source": "https://en.wikipedia.org/wiki/List_of_monarchs_of_Hanover"
+  },
+  "brandenburg": {
+   "title": "Kingdom of Prussia",
+   "from": 1806,
+   "why": "the electorate ended with the Empire on 6 August 1806; its holder went on as King of Prussia",
+   "source": "https://en.wikipedia.org/wiki/List_of_Prussian_monarchs"
+  }
+ },
+ "note_successions": "A realm whose title ended while its state went on under another title of the same holder: the realm keeps its land and counts as held from that year (its holders under the new title are still to be added to the ruler lists).",
+ "merges": {
+  "aragon": {
+   "into": "castile",
+   "year": 1707,
+   "date": "1707-06-29",
+   "source": "https://en.wikipedia.org/wiki/Nueva_Planta_decrees",
+   "why": "Nueva Planta decree of 29 June 1707 abolished the Crown of Aragon; the list of Aragonese monarchs ends 1707"
+  },
+  "scotland": {
+   "into": "england",
+   "year": 1707,
+   "date": "1707-05-01",
+   "source": "https://en.wikipedia.org/wiki/Acts_of_Union_1707",
+   "why": "Acts of Union, in force 1 May 1707: Scotland and England became Great Britain"
+  }
+ },
+ "note_unions": "head: the realm a union's conquests go to (the realm of its leading crown); league: a union without a holder of its own (the Empire, confederations, dynasties)."
+}
