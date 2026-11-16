@@ -784,6 +784,86 @@ image's fibres and rim are too fine for the size it is drawn at); little shade i
 the eyes are rounder and wider open than the reference's. The scar's breadth and colour, the cornea's lean and
 the brows' density are PLACEHOLDER by eye and by one face of the reference.
 
+**The light (round 73).** Ramon on the state of round 72: still "Zombie-Modus", not the reference's level. The
+rounds since 50 had looked for that in the face's parts (lids, gaze, lips, the eye's white, brows). Held beside
+the reference's woman at her size and measured, the parts were not it:
+
+| at the reference's size (a face of 88 pixels), round 72 | the reference's woman | our grown women | our grown men |
+|---|---|---|---|
+| across the eye's opening against the lit cheek, mean (L) | -31.2 | -30.8 | -35.4 |
+| the brow against the lightest skin above it on the same line (L) | -37.9 | -38.8 | -38.1 |
+| the lightest skin between lid and brow against the skin above the brow (L) | -17.9 | -26.4 | -15.0 |
+
+The eye, the brow and the skin under it were as dark as hers or darker. What differed was the light on the
+face as a whole (`face_colour.mjs`, places as in round 71; her shaded cheek read by hand at the same place):
+
+| | the reference's woman | our grown women, round 72 | now | our grown men, round 72 | now |
+|---|---|---|---|---|---|
+| lit cheek L | 56.1 | 67.1 | 59.0 | 67.7 | 67.4 |
+| lit cheek a* / b* | 22.9 / 25.4 | 17.8 / 23.7 | 22.5 / 27.2 | 17.3 / 24.3 | 15.9 / 22.4 |
+| lit cheek chroma | 34.2 | 29.6 | 35.3 | 29.8 | 27.4 |
+| the shaded cheek against the lit one (L) | -27.7 | -14.3 | -26.4 | -24.9 | -35.3 |
+| shaded cheek a* | 20.4 | 24.3 | 22.4 | 22.2 | 18.5 |
+| the lit cheek redder than the forehead (a*) | +5.0 | 0.0 | +2.2 | +1.9 | -3.5 |
+| the nose's back against the lit cheek (L) | +2.6 | -2.0 | +1.3 | -6.5 | -6.7 |
+| lower lip L | 33.3 | 41.3 | 33.1 | 42.6 | 34.4 |
+| upper lip L | 21.0 | 26.2 | 17.0 | 29.9 | 22.7 |
+
+(Her nose's back was given as +8.2 in round 71, read further up; +2.6 is the place the tool reads on ours. The
+men's cheeks lie under stubble and beards, which the reference's woman has not: the men's columns say what
+changed, not how near they are.)
+
+Her face has a lit and a shaded half, shade under the brow, the nose and the lower lip, and lit skin of a full
+colour. Ours was lit from the side the head is turned to, level (24 degrees up): the whole face in light, no
+shaded half, no shade under anything, and the lit cheek so bright that the tone mapping washed its colour out.
+Rounds 54 and 71 had tried to mend that paleness through the skin's own colour and written it down to the tone
+mapping; round 60 had lowered the light because the upper lip in shade "read as a dark gap" and the eyes "lay
+in dark sockets", both of which the reference has. Now (`src/portrait/profile.ts`):
+
+| | round 72 | now |
+|---|---|---|
+| key light | from (-5.0, 2.6, 3.2): on the side the head is turned to, 43 degrees round from where the face looks, 24 degrees up | from (4.2, 3.6, 4.0): on the other side of the camera, 60 degrees round, 32 degrees up. The broad side of the face is lit, the far cheek and the far side of the nose lie in shade |
+| rim light | from (3.5, 2.5, -4.0), energy 0.8 | from (-4.2, 2.5, -3.6), energy 1.0: behind the head on the shaded side, where it draws the far cheek's edge against the ground without lighting the cheek beside the nose (from (-5, 2.5, -2.5) at 1.1 it lay on the far cheek as a pale patch and turned the far eye's white blue) |
+| fill light | from (3, -1, 5), energy 0.15 | from (-3, -1, 5), energy 0.12 |
+| light from all round | energy 0.3, from below `#4d443c` | energy 0.2, from below `#8a6f5c` (what a tunic throws back: shade under brow, nose and chin stays warm) |
+| exposure | 0.385 | 0.4 |
+
+Tried and measured on the way (grown women; the first value the lit cheek's L, then the shaded cheek against
+it, then the upper lip's L): the old side raised to 40 degrees, all else as in round 72, 62.9 / -6.2 / 19.6
+(shade under the brow, but no shaded half); the new side at 37 degrees 58.1 / -21.4 / 13.5 (the upper lip a
+dark bar); at 32 degrees 59.0 / -26.4 / 17.0. Seen from the front, from the side and turned the other way the faces hold
+(`runde73_ansichten.png`).
+
+Other than assumed, and left as it is: the skin between a woman's lid and brow is now 46 L darker than the
+skin above the brow (the reference's 18, our men's 21). It is shade under the brow, not paint: without the
+lash line only the first two millimetres above the lid's edge get lighter, without the baked shade
+(`SKIN_AO`) nothing changes, with the women's heads held 7 degrees further back 4 L (and their nostrils show).
+The men's lit cheek is as light as before and paler (chroma 27.4; the reference's emperor, a small face, L
+65.5 and chroma 33.7): males' cheeks take the new light more fully than females' (boys 64.0 / 31.4, girls
+60.3 / 35.8), and at that lightness the tone mapping takes the colour.
+
+A correction to round 72: the brow was read there against the forehead on the face's middle line. On the
+reference that place lies 10 L darker than the forehead above the brow (her light comes from the side), so her
+brow read 26.4 where against the skin above it on the same line it is 37.9. Ours after round 72 read 30.5
+against the middle of the forehead ("still darker than hers") and 38.8 against the skin above the brow (the
+men's 38.1): at her level. `face_colour.mjs --brow` now prints both, the lid's rim as well, and with `--line`
+the line itself. In the new light a woman's brow lies in the shade of the socket (48.1 against the skin above
+it, the men's 37.7): to be looked at with the brow's form.
+
+Tests: `tests/portrait.test.ts` "England's stage lights a face from above and from the side it is turned away
+from" (the key on the other side of the camera, 45 to 75 degrees round and 30 to 45 degrees up; the rim behind
+the head on the shaded side and not on the cheek beside the nose; fill and sky under 0.15 of the key; Apoleia's
+stage as it was). The Roman portraits and the comparison with Godot are untouched (Apoleia's profile).
+Pictures: `runde73_licht_vorher_nachher.png` (eight people, before above after), `runde73_neben_ck3.png` (the
+reference's woman and three of ours at her size, before above after), `runde73_ansichten.png` (front, side,
+turned the other way), `runde73_stichprobe.png`.
+Still open: the women's dark sockets and the men's pale lit cheek (above); the upper lip is darker than the
+reference's (17 against 21); a face in a hood worn up lies half in the hood's shade, and a man whose eyes are
+wide open by his genes (the opening 10 mm high) still stares out of it; the white of the men's far eye is
+lighter against the shaded cheek than the reference's; and what round 72 left: the brow's form and soft edge,
+lashes as a dark fringe, the iris' depth. All values PLACEHOLDER: one face of the reference, by measure and by
+eye.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

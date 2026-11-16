@@ -88,8 +88,9 @@ export const APOLEIA: StageProfile = {
   sheen: null,
 };
 
-/** England 1356: the key light more from the side and less light from all round than Apoleia's, so that a face has
- *  a lit and a shaded half; a rim light with shadows; matt, blotchy, less coloured skin with a soft edge of the
+/** England 1356: the key light on the side of the camera the head is turned away from and less light from all
+ *  round than Apoleia's, so that a face has a lit and a shaded half (round 73, see below; until then the key
+ *  stood on the side the head is turned to); a rim light with shadows; matt, blotchy, less coloured skin with a soft edge of the
  *  shadow; eyes shaded by the lid and in their corners, with a glint; thin lashes and brows that do not read as
  *  painted; hair with a sheen of strands that keeps its colour in the shade. Exposure, the skin's tint and the
  *  colour of the light from below were set in round 41 so that lit skin lies where it does in one screenshot of
@@ -124,17 +125,32 @@ export const APOLEIA: StageProfile = {
  *  (0.14, before 0.07: a larger, softer glint, which the game's size still shows). The brows less dense
  *  (`brow.brows` 0.5, before 0.6): read along a line from the upper lid to the forehead at the reference's size, a
  *  woman's brow was 34.5 L darker than her forehead where the reference's woman's is 26.4; now 30.5 (the men's
- *  36.3 and 31.8). All PLACEHOLDER (see above). */
+ *  36.3 and 31.8).
+ *  Round 73 (Ramon on round 72: still "Zombie-Modus"): the light, not the eye. Measured at the same size, the
+ *  white of our eyes, the brow and the skin under it were as dark as the reference's or darker; what differed was that
+ *  the reference's face has a shaded half (the far cheek 28 L darker than the lit one; ours 14), shade under
+ *  brow, nose and lower lip, and lit skin of a full colour (chroma 34; ours 30). Our key light stood level (24
+ *  degrees up) on the side the head is turned to: it lit the whole face flat and so brightly that the tone
+ *  mapping washed the lit cheek pale, which rounds 54 and 71 had tried to mend through the skin's colour. Now
+ *  the key stands on the other side of the camera, 60 degrees round from where the face looks and 32 degrees
+ *  up (the broad side of the face lit, the far cheek and the far side of the nose in shade); the rim light
+ *  behind the head on the shaded side, where it draws the far cheek's edge without lighting the cheek; the
+ *  light from below warmer and lighter (what a tunic throws back), the sky and the fill weaker, the exposure
+ *  set so that the women's lit cheek lies where the reference's woman's does. Grown women, the reference's
+ *  woman in brackets: lit cheek L 59.0, a 22.5, b 27.2 (56.1, 22.9, 25.4; before 67.1, 17.8, 23.7), the
+ *  shaded cheek 26 L darker (28; before 14), upper lip L 17 (21; before 26). Higher, the upper lip turns into a
+ *  dark bar (37 degrees: L 13.5). All values of this profile are PLACEHOLDER: held against one face of the
+ *  reference, set by measure and by eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
-    key: { from: [-5.0, 2.6, 3.2], colour: '#fff0de', energy: 1.8 },
-    rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 0.8 },
-    fill: { from: [3.0, -1.0, 5.0], colour: '#efe4da', energy: 0.15 },
+    key: { from: [4.2, 3.6, 4.0], colour: '#fff0de', energy: 1.8 },
+    rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
+    fill: { from: [-3.0, -1.0, 5.0], colour: '#efe4da', energy: 0.12 },
   },
-  sky: { top: '#e6ecff', ground: '#4d443c', energy: 0.3 },
+  sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },
   rimShadow: true,
-  exposure: 0.385,
+  exposure: 0.4,
   turn: -0.24, rise: 0.02, close: 1.3,
   anisotropy: 8,
   skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },

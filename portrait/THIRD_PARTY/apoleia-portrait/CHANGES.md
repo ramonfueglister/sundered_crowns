@@ -132,3 +132,7 @@ number). New, not Apoleia's: `real/skin_flush.txt`, `measure.rs` `marks`, `lips`
 Round 72: a dress with a table may ask for a scar as a line in the skin (`DressSet::scar`, `ScarLine`; `build.rs`
 builds it from the skin's own surface); without it Apoleia's raised ribbon, as before. New, not Apoleia's: a test
 in `tests/faces.rs`. Roman bytes unchanged.
+
+Round 73: nothing in the crate. The stage's profile for England lights a face from the other side of the camera
+and from higher up (`src/portrait/profile.ts`, the game's own file); Apoleia's stage is as it was. Roman bytes
+unchanged.

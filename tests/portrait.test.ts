@@ -384,4 +384,32 @@ describe('portraits', () => {
     expect(tint(scar, tone)).toEqual(tint(skin, tone));
     expect(tint(scar)).not.toEqual(tint(skin));
   });
+  it('England\'s stage lights a face from above and from the side it is turned away from', () => {
+    // a face lit level and from the side it is turned to has no shaded half and no shade under brow, nose and
+    // lip (rounds 60 to 72: flat, pale, the eyes wide in full light). The key light stands on the other side of
+    // the camera, far enough round that the far cheek lies in shade and near enough that the face's front is
+    // lit, and high enough to shade the eye's socket without being a light from the ceiling
+    const { key, rim, fill } = ENGLAND_1356.lights;
+    const degrees = (r: number): number => r * 180 / Math.PI;
+    const round = degrees(Math.atan2(key.from[0], key.from[2]) - ENGLAND_1356.turn);
+    const above = degrees(Math.atan2(key.from[1], Math.hypot(key.from[0], key.from[2])));
+    expect(key.from[0] * Math.sin(ENGLAND_1356.turn)).toBeLessThan(0);
+    expect(round).toBeGreaterThan(45);
+    expect(round).toBeLessThan(75);
+    expect(above).toBeGreaterThan(30);
+    expect(above).toBeLessThan(45);
+    // the rim light stands behind the head on the shaded side: it draws the far cheek's edge and does not light
+    // the cheek beside the nose (which faces half a radian round from the face's front)
+    expect(rim.from[2]).toBeLessThan(0);
+    expect(rim.from[0] * key.from[0]).toBeLessThan(0);
+    const far = ENGLAND_1356.turn - 0.5 * Math.sign(key.from[0]);
+    const rimOn = (rim.from[0] * Math.sin(far) + rim.from[2] * Math.cos(far)) / Math.hypot(...rim.from);
+    expect(rimOn).toBeLessThan(0.1);
+    // the light that fills the shade is far weaker than the key
+    expect(fill.energy).toBeLessThan(0.15 * key.energy);
+    expect(ENGLAND_1356.sky.energy).toBeLessThan(0.15 * key.energy);
+    // Apoleia's stage is as it was
+    expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);
+    expect(APOLEIA.exposure).toBe(0.92);
+  });
 });
