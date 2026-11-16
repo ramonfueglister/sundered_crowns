@@ -1,0 +1,78 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Abu Numayy Muhammad ibn Abi Sa'd (Najm al-Din),,,1288,1301-10,circa,,Q29261524,reigned until his death; start given as 1288/1289,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+2,Humaydah ibn Abi Numayy (Izz al-Din),,,1301-10,1302-08,month,,Q39048767,co-ruler with Rumaythah,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+3,Rumaythah ibn Abi Numayy (Asad al-Din),,,1301-10,1302-08,month,,Q29840947,co-ruler with Humaydah,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+4,Abu al-Ghayth ibn Abi Numayy (Imad al-Din),,,1302-08,1305-07,month,,Q39048770,co-ruler with Utayfah,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+5,Utayfah ibn Abi Numayy (Sayf al-Din),,,1302-08,1305-07,month,,Q39048768,co-ruler with Abu al-Ghayth,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+6,Humaydah ibn Abi Numayy (Izz al-Din),,,1305-07,1314-03,circa,,Q39048767,co-ruler with Rumaythah; end c. Mar 1314,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+7,Rumaythah ibn Abi Numayy (Asad al-Din),,,1305-07,1314-03,circa,,Q29840947,co-ruler with Humaydah; end c. Mar 1314,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+8,Abu al-Ghayth ibn Abi Numayy (Imad al-Din),,,1314-03,1314-06,circa,,Q39048770,c. Mar – c. Jun 1314,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+9,Humaydah ibn Abi Numayy (Izz al-Din),,,1314-03,1315-12,circa,,Q39048767,start c. Mar 1314,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+10,Rumaythah ibn Abi Numayy (Asad al-Din),,,1315-12,1318-03,circa,,Q29840947,end c. Mar 1318,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+11,Humaydah ibn Abi Numayy (Izz al-Din),,,1318-03,1318-06,circa,,Q39048767,c. Mar – c. Jun 1318,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+12,Rumaythah ibn Abi Numayy (Asad al-Din),,,1318-06,1319-02,circa,,Q29840947,start c. Jun 1318,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+13,Utayfah ibn Abi Numayy (Sayf al-Din),,,1319-03,1331-01,circa,,Q39048768,end c. Jan 1331; co-ruler with Rumaythah from Dec 1320,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+14,Rumaythah ibn Abi Numayy (Asad al-Din),,,1320-12,1331-01,circa,,Q29840947,co-ruler with Utayfah; end c. Jan 1331; followed by Egyptian occupation,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+15,Rumaythah ibn Abi Numayy (Asad al-Din),,,1331-02,1343,circa,,Q29840947,end given as 1343/1344,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+16,Utayfah ibn Abi Numayy (Sayf al-Din),,,1333,1334-08,circa,,Q39048768,start given as 1333/1334,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+17,Utayfah ibn Abi Numayy (Sayf al-Din),,,1335-07,1337-05,circa,,Q39048768,end c. May 1337,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+18,Thaqabah ibn Rumaythah (Asad al-Din),,,1343,1344-03,circa,,Q29920918,co-ruler with Ajlan; given as 1343/1344 – Mar/Apr 1344,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+19,Ajlan ibn Rumaythah (Izz al-Din),,,1343,1344-03,circa,,Q29919643,co-ruler with Thaqabah; given as 1343/1344 – Mar/Apr 1344,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+20,Rumaythah ibn Abi Numayy (Asad al-Din),,,1344-03,1345-10,circa,,Q29840947,start given as Mar/Apr 1344; last row of the detailed table,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+21,Ajlan Abul-Sarjah,,,1346,1375,year,,Q29919643,from the Mamluk-era table (coarse years),https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+22,Ali bin Ajlan,,,1375,1394,year,,Q39048909,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+23,Hasan ibn Ajlan,,,1394,1425,year,,Q39058357,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+24,Barakat ibn Hasan,,,1425,1455,year,,Q6728409,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+25,Malik ul-Adil ibn Muhammad ibn Barakat,,,1455,1473,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+26,Barakat II bin Muhammed,,,1473,1525,year,,,co-ruler with his son Abu Numayy II for the last 13 years; first Ottoman sharif (source),https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+27,Abu Numayy II bin Barakat,,,1512,1584,year,,Q27923123,"Co-reigned with his father Barakat II for the first thirteen years of his rule, and with his son Hassan for the last thirty-one years of his rule; rebuilt the walls of Jeddah in 1525 following the victory over the Portuguese in the Red Sea.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+28,Hassan bin Abu Numayy II,,,1553,1601,year,,,Co-reigned with his father for the first thirty-one years of his rule.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+29,Abd al-Muttalib bin Hassan,,,1601,1601,year,,,Reigned for less than a year.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+30,Abu Talib bin Hassan,,,1601,1603,year,,,Co-reigned with his brother Idris.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+31,Idris bin Hassan,,,1601,1620,year,,Q42727895,"Co-reigned with his brother Abu Talib for the first two years of his rule, then with his brother Fuhaid for six years and nephew Muhsin for sixteen.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+32,Fuhaid bin Hassan,,,1604,1610,year,,,Co-reigned with his brother Idris and his son Muhsin.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+33,Muhsin bin Fuhaid,,,1604,1628,year,,,"Co-reigned with his father for the first six years of his rule, and with his uncle Idris for the first sixteen.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+34,Ahmed bin Abd al-Muttalib,,,1628,1629,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+35,Masoud bin Idris,,,1629,1630,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+36,Abdullah I bin Hassan,,,1630,1631,year,,Q43039610,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+37,Muhammed bin Abdullah,,,1631,1632,year,,,"Co-reigned with his first cousin once removed, Zeid.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+38,Zeid bin Muhsin,,,1631,1632,year,,,"First reign, co-reigned with his first cousin once removed, Muhammed.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+39,Namy bin Abd al-Muttalib,,,1632,1632,year,,,Briefly co-reigned with his cousin Abd al-Aziz.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+40,Abd al-Aziz bin Idris,,,1632,1632,year,,,Briefly co-reigned with his cousin Namy.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+41,Zeid bin Muhsin,,,1632,1666,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+42,Saad bin Zeid,,,1666,1672,year,,,"First reign, co-reigned with his brother Ahmed for the last three years of his rule.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+43,Ahmed bin Zeid,,,1669,1672,year,,,"First reign, co-reigned with his brother Saad.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+44,Barakat bin Muhammed bin Ibrahim bin Barakat bin Abu Numayy,,,1672,1682,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+45,Said bin Barakat,,,1682,1683,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+46,Ahmed bin Zeid,,,1672,1688,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+47,Ahmed bin Ghalib bin Muhammed bin Musaid bin Masoud bin Hasan,,,1688,1690,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+48,Muhsin bin Hussein,,,1690,1691,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+49,Said bin Saad,,,1691,1691,year,,,Ceded reign to his father Saad.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+50,Saad bin Zeid,,,1691,1696,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+51,Abdullah II bin Hashim,,,1696,1696,year,,,Co-reigned with Said.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+52,Saad bin Zeid,,,1694,1702,year,,,Third reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+53,Abdulkarim bin Muhammed,,,1704,1705,year,,,First reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+54,Saad bin Zeid,,,1705,1705,year,,,"Fourth reign, lasted eighteen days.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+55,Said bin Saad,,,1705,1705,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+56,Abdulkarim bin Muhammed,,,1705,1711,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+57,Said bin Saad,,,1711,1717,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+58,Abdullah III bin Said,,,1717,1718,year,,,First reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+59,Ali bin Said,,,1718,1718,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+60,Yahya bin Barakat,,,1718,1720,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+61,Mubarak bin Ahmad,,,1720,1723,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+62,Yahya bin Barakat,,,1723,1725,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+63,Abdullah III bin Said,,,1725,1731,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+64,Muhammed bin Abdullah,,,1731,1733,year,,,Co-reigned with his uncle Masoud for the last year of his rule.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+65,Masoud bin Said,,,1732,1752,year,,,Briefly co-reigned with his nephew Muhammed for the first year of his rule.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+66,Musaid bin Said,,,1752,1759,year,,Q27899040,First reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+67,Jafar bin Said,,,1759,1760,year,,Q27998754,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+68,Musaid bin Said,,,1760,1770,year,,,Second reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+69,Abdullah IV bin Hussein bin Barakat,,,1770,1771,year,,,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+70,Ahmed bin Said,,,1771,1773,year,,Q28221166,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+71,Surur bin Musaid,,,1773,1788,year,,Q27850013,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+72,Abd al-Muin bin Musaid,,,1788,1788,year,,Q28059717,"First reign, only lasted a few days.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+73,Ghalib bin Musaid,,,1788,1813,year,,Q12188964,Co-reigned with his brother Abd al-Muin while Saudis held the city of Mecca.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+74,Abd al-Muin bin Musaid,,,1796,1813,year,,Q28059717,"Second reign, co-reigned with his brother Ghalib.",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+75,Yahya bin Surur,,,1813,1827,year,,Q22935815,,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+76,Abd al-Muttalib bin Ghalib,,,1827,1827,year,,Q20810360,First reign.,https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920
+77,Muhammed bin Abd al-Muin bin Awn bin Muhsin bin Abdullah bin al-Hussain bin Abdullah I,,,1827,1851,year,,Q22020409,"First reign, placed in power by Muhammad Ali Pasha.; reign continues past 1848",https://en.wikipedia.org/wiki/Sharif_of_Mecca,1383874920

@@ -1,0 +1,48 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,al-Ashraf Khalil,,,1290-11-12,1293-12-12,day,Bahri Mamluks,Q392815,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+2,an-Nasir Muhammad,,,1293-12-14,1294-12,month,Bahri Mamluks,Q293505,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+3,al-Adil Kitbugha,,,1294-12,1296-12-07,month,Bahri Mamluks,Q558359,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+4,al-Mansur Lajin,,,1296-12-07,1299-01-16,day,Bahri Mamluks,Q558157,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+5,an-Nasir Muhammad,,,1299-01-16,1309-03,month,Bahri Mamluks,Q293505,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+6,al-Muzaffar Baybars II,,,1309-04,1310-03-05,month,Bahri Mamluks,Q558305,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+7,an-Nasir Muhammad,,,1310-03-05,1341-06-06,day,Bahri Mamluks,Q293505,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+8,al-Mansur Abu Bakr,,,1341-06-08,1341-08,month,Bahri Mamluks,Q286582,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+9,al-Ashraf Kujuk,,,1341-08,1342-01-21,month,Bahri Mamluks,Q425325,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+10,an-Nasir Ahmad,,,1342-01-21,1342-06-27,day,Bahri Mamluks,Q482338,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+11,as-Salih Isma'il,,,1342-06-27,1345-08-03,day,Bahri Mamluks,Q280412,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+12,al-Kamil Sha'ban,,,1345-08-03,1346-09-18,day,Bahri Mamluks,Q294139,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+13,al-Muzaffar Hajji,,,1346-09-18,1347-12-10,day,Bahri Mamluks,Q294130,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+14,an-Nasir Hasan,,,1347-12,1351-08-21,month,Bahri Mamluks,Q288557,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+15,as-Salih Salih,,,1351-08-21,1354-10-20,day,Bahri Mamluks,Q288013,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+16,an-Nasir Hasan,,,1354-10-20,1361-03-16,day,Bahri Mamluks,Q288557,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+17,al-Mansur Muhammad,,,1361-03-17,1363-05-29,day,Bahri Mamluks,Q288580,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+18,al-Ashraf Sha'ban II,,,1363-05-29,1377-03-15,day,Bahri Mamluks,Q286592,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+19,al-Mansur Ali II,,,1377-03-15,1381-05-19,day,Bahri Mamluks,Q288507,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+20,as-Salih Hajji II,,,1381-05-19,1382-11-26,day,Bahri Mamluks,Q286573,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+21,az-Zahir Barquq,,,1382-11-26,1389-06-01,day,Burji Mamluks,Q248996,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+22,as-Salih Hajji II,,,1389-06-01,1390-01,month,Bahri Mamluks,Q286573,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+23,az-Zahir Barquq,,,1390-01-21,1399-06-20,day,Burji Mamluks,Q248996,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+24,an-Nasir Faraj,,,1399-06-20,1405-09-20,day,Burji Mamluks,Q698037,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+25,al-Mansur Abd al-Aziz,,,1405-09-20,1405-11,month,Burji Mamluks,Q558111,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+26,an-Nasir Faraj,,,1405-11,1412-05-23,month,Burji Mamluks,Q698037,restored,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+27,al-Musta'in Billah,,,1412-05-23,1412-11-06,day,Abbasid Dynasty,Q210445,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+28,al-Mu'ayyad Shaykh,,,1412-11-06,1421-01-13,day,Burji Mamluks,Q286551,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+29,al-Muzaffar Ahmad,,,1421-01-13,1421-08-29,day,Burji Mamluks,Q2829259,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+30,az-Zahir Tatar,,,1421-08-29,1421-11-30,day,Burji Mamluks,Q2875067,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+31,as-Salih Muhammad,,,1421-11-30,1422-04-01,day,Burji Mamluks,Q2829281,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+32,al-Ashraf Barsbay,,,1422-04-01,1438-06-07,day,Burji Mamluks,Q557812,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+33,al-Aziz Yusuf,,,1438-06-07,1438-09-09,day,Burji Mamluks,Q557903,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+34,az-Zahir Jaqmaq,,,1438-09-09,1453-02-01,day,Burji Mamluks,Q647942,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+35,al-Mansur Uthman,,,1453-02-01,1453-03-15,day,Burji Mamluks,Q2829237,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+36,al-Ashraf Inal,,,1453-03-15,1461-02-26,day,Burji Mamluks,Q286532,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+37,al-Mu'ayyad Ahmad,,,1461-02-26,1461-06-28,day,Burji Mamluks,Q2829257,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+38,az-Zahir Khushqadam,,,1461-06-28,1467-10-09,day,Burji Mamluks,Q2086849,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+39,az-Zahir Bilbay,,,1467-10-09,1467-12-04,day,Burji Mamluks,Q2875064,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+40,az-Zahir Timurbugha,,,1467-12-04,1468-01-31,day,Burji Mamluks,Q301612,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+41,al-Ashraf Qaitbay,,,1468-01-31,1496-08-07,day,Burji Mamluks,Q557847,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+42,an-Nasir Muhammad II,,,1496-08-07,1498-10-31,day,Burji Mamluks,Q3042922,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+43,az-Zahir Qansuh,,,1498-10-31,1500-06-30,day,Burji Mamluks,Q2875062,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+44,al-Ashraf Janbalat,,,1500-06-30,1501-01-25,day,Burji Mamluks,Q2386612,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+45,al-Adil Tumanbay,,,1501-01-25,1501-04-20,day,Burji Mamluks,Q257837,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+46,al-Ashraf Qansuh II,,,1501-04-20,1516-08-24,day,Burji Mamluks,Q286337,,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377
+47,al-Ashraf Tumanbay II,,,1516-10-17,1517-04-15,day,Burji Mamluks,Q557896,Ottoman capture of Cairo; end of Mamluk sultanate; executed by Selim I,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,1382959377

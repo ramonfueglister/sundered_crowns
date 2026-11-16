@@ -1,0 +1,40 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Wenceslaus II,1271-09-27,1305-06-21,1278-08-26,1305-06-21,day,Přemyslid dynasty,Q155581,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+2,Wenceslaus III,1289-10-06,1306-08-04,1305-06-21,1306-08-04,day,Přemyslid dynasty,Q54040,uncrowned as Bohemian king,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+3,Anna,1290-10-10,1313-09-03,1306-08-04,1306,year,,Q269565,heiress; co-ruler with her husband Henry of Carinthia (succession crisis),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+4,Henry of Carinthia,1265,1335-04-02,1306-08-04,1306,year,,Q275408,co-ruler with Anna; source gives no separate dates (shares Anna's),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+5,Elisabeth Richeza of Poland,1288-09-01,1335-10-19,1306,1307-07,year,,Q259040,co-ruler with her husband Rudolf of Habsburg; source gives end '3/4 July 1307',https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+6,Rudolf of Habsburg the Good,1281,1307-07,1306,1307-07,year,,Q168254,"co-ruler with Elisabeth Richeza; born c. 1281, died 3/4 July 1307 per source",https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+7,Anna,1290-10-10,1313-09-03,1307-07,1310-12-03,month,,Q269565,"second tenure, co-ruler with Henry of Carinthia; start '3/4 July 1307' per source",https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+8,Henry of Carinthia,1265,1335-04-02,1307-07,1310-12-03,month,,Q275408,"second tenure, co-ruler with Anna",https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+9,Elisabeth,1292-01-20,1330-09-28,1310-12-03,1330-09-28,day,,Q254322,heiress; co-ruler with her husband John,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+10,John of Luxembourg the Blind,1296-08-10,1346-08-26,1310-12-03,1346-08-26,day,House of Luxembourg,Q155167,co-ruler with Elisabeth until 1330,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Table_of_rulers,1382627044
+11,Charles I,,,1346,1378,year,House of Luxembourg,Q155669,also Holy Roman Emperor as Charles IV,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+12,Wenceslaus IV,,,1378,1419,year,House of Luxembourg,Q152148,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+13,Sigismund,,,1419,1437,year,House of Luxembourg,Q57124,ruled effectively 1436–1437 only (Hussite Revolution),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+14,Albert,,,1437,1439,year,House of Habsburg,Q157112,followed by interregnum 1440–1453,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+15,Ladislaus the Posthumous,,,1453,1457,year,House of Habsburg,Q116382,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+16,George of Podebrady,,,1458,1471,year,Non-Dynastic,Q159679,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+17,Matthias I,,,1469,1490,year,Non-Dynastic,Q188634,"rival claimant: anti-king elected by Catholic nobles, never crowned; from 1479 limited to Moravia, Silesia, Lusatia",https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+18,Vladislaus II the Jagiellonian,,,1471,1516,year,House of Jagiellon,Q155599,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+19,Louis the Jagiellonian,,,1516,1526,year,House of Jagiellon,Q157092,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+20,Ferdinand I,,,1526,1564,year,House of Habsburg,Q150611,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+21,Maximilian I,,,1564,1576,year,House of Habsburg,Q150862,Holy Roman Emperor as Maximilian II,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+22,Rudolph II,,,1576,1612,year,House of Habsburg,Q150586,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+23,Matthias II,,,1612,1615,year,House of Habsburg,Q152157,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+24,Ferdinand II,,,1615,1619,year,House of Habsburg,Q150599,first tenure,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+25,Frederick I,,,1619,1620,year,House of Wittelsbach,Q57195,elected by the Estates; fled after White Mountain,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+26,Ferdinand II,,,1620,1637,year,House of Habsburg,Q150599,second tenure,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+27,Ferdinand III,,,1637,1657,year,House of Habsburg,Q150575,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+28,Ferdinand IV,,,1646,1654,year,House of Habsburg,Q157103,co-ruler with Ferdinand III (junior co-monarch),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+29,Leopold I,,,1657,1705,year,House of Habsburg,Q150494,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+30,Joseph I,,,1705,1711,year,House of Habsburg,Q152480,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+31,Charles II,,,1711,1740,year,House of Habsburg,Q150665,Holy Roman Emperor as Charles VI,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+32,Maria Theresa,,,1740,1741,year,House of Habsburg,Q131706,first tenure,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+33,Charles Albert,,,1741,1743,year,House of Wittelsbach,Q76736,rival claimant: anti-king to Maria Theresa (War of the Austrian Succession),https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+34,Maria Theresa,,,1743,1780,year,House of Habsburg,Q131706,second tenure,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+35,Joseph II,,,1780,1790,year,House of Habsburg-Lorraine,Q76555,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+36,Leopold II,,,1790,1792,year,House of Habsburg-Lorraine,Q151321,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+37,Francis I,,,1792,1835,year,House of Habsburg-Lorraine,Q130834,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+38,Ferdinand V,,,1835,1848,year,House of Habsburg-Lorraine,Q183579,Emperor of Austria as Ferdinand I; abdicated in the Revolution of 1848,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044
+39,Franz Joseph I,,,1848,1916,year,House of Habsburg-Lorraine,Q51056,,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs#Kings_of_Bohemia,1382627044

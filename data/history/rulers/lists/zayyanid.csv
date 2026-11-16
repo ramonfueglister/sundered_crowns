@@ -1,0 +1,39 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Abu Said Uthman I,,,1283-03,1304-06-06,month,Zayyanid,Q335327,son of Abu Yahya I,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+2,Abu Zayyan I,,,1304-06-06,1308-04-14,day,Zayyanid,Q11903919,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+3,Abu Hammu I,,,1308-04-14,1318-07-22,day,Zayyanid,Q324772,assassinated by his son Abu Tashufin I,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+4,Abu Tashufin I,,,1318-07-22,1336-05,month,Zayyanid,Q335416,followed by first Marinid conquest (1337–1348),https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+5,Abu Said Uthman II,,,1348,1352,year,Zayyanid,,co-ruler with Abu Thabit I; followed by second Marinid conquest (1352–1359),https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+6,Abu Thabit I,,,1348,1352,year,Zayyanid,,co-ruler with Abu Said Uthman II,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+7,Abu Hammu II Musa,,,1359-02,1360-05-20,month,Zayyanid,Q335050,first reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+8,Abu Zayyan II,,,1360-05-20,1360,year,Zayyanid,,first reign; ruled when Abu Hammu II was forced from power,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+9,Abu Hammu II,,,1360,1370,year,Zayyanid,Q335050,second reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+10,Abu Zayyan II,,,1370,1372,year,Zayyanid,,second reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+11,Abu Hammu II,,,1372,1383,year,Zayyanid,Q335050,third reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+12,Abu Zayyan II,,,1383,1384,year,Zayyanid,,third reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+13,Abu Hammu II,,,1384,1387,year,Zayyanid,Q335050,fourth reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+14,Abu Zayyan II,,,1387,1387,year,Zayyanid,,fourth and final reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+15,Abu Hammu II,,,1387,1389,year,Zayyanid,Q335050,fifth and final reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+16,Abu Tashufin II,,,1389,1393-05-29,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+17,Abu Thabid II,,,1393-05-29,1393-07-08,day,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+18,Abul Hadjdjadj I,,,1393-07-08,1393-11,month,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+19,Abu Zayyan II,,,1393-11,1397,year,Zayyanid,,"brother of Abul Hadjdjadj I (source numbers him separately, no. 13)",https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+20,Abu Muhammad I,,,1397,1400,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+21,Abu Abdallah I,,,1400,1411,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+22,Abd al-Rahman I,,,1411,1411,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+23,Said I,,,1411,1412-11,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+24,Abu Malek I,,,1412-11,1424-05,month,Zayyanid,,first reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+25,Abu Abdallah II,,,1424-05,1427,year,Zayyanid,,"first reign; followed by interregnum, civil war 1427–1429",https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+26,Abu Malek I,,,1429,1430,year,Zayyanid,,second reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+27,Abu Abdallah II,,,1430,1430,year,Zayyanid,,second reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+28,Abu Abbas Ahmad I,,,1430,1462-01,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+29,Abu Abdallah III,,,1462-02,1468,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+30,Abu Tashufin III,,,1468,1468,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+31,Abu Abdallah IV,,,1468,1504,year,Zayyanid,Q11903873,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+32,Abu Abdallah V,,,1504,1517,year,Zayyanid,Q11903876,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+33,Abu Hammu III,,,1517,1527,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+34,Abu Muhammad II,,,1527,1541-01,year,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+35,Abu Zayyan III,,,1541-01,1543-03-07,month,Zayyanid,,first reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+36,Abu Abdallah VI,,,1543-03-07,1543-06,month,Zayyanid,,,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+37,Abu Zayyan III,,,1543-06,1550,year,Zayyanid,,second reign,https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990
+38,Al Hassan ibn Abu Muhammad II,,,1550,1557,year,Zayyanid,Q11904629,"last ruler; article: by 1551 the Ottomans had occupied Tlemcen, the last Zayyanid fled to Oran, ending Zayyanid rule",https://en.wikipedia.org/wiki/Zayyanid_dynasty,1384513990

@@ -1,0 +1,51 @@
+realm_id,status,rows,source_url,remark
+golden_horde,done,56,https://en.wikipedia.org/wiki/List_of_khans_of_the_Golden_Horde,"main table, western (Sarai) column and later united khans; White Horde column omitted; secondary list gives partly different chronology"
+ilkhanate,done,16,https://en.wikipedia.org/wiki/Ilkhanate#Ilkhans,from the Ilkhans section of the realm article; after 1335 several rival puppet khans overlap; Khurasan claimants (House of Hasar) included as rival claimants
+novgorod,collective,1,https://en.wikipedia.org/wiki/Novgorod_Republic,collective government until annexation by Ivan III in 1478
+hungary,done,35,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,
+mamluk,done,47,https://en.wikipedia.org/wiki/List_of_Mamluk_sultans,
+england,done,28,https://en.wikipedia.org/wiki/List_of_English_monarchs,title ends 1707 (Acts of Union); Lord Protectors 1653–1659 included as listed by source
+norway,done,27,https://en.wikipedia.org/wiki/List_of_monarchs_of_Norway,interregnums noted on preceding row
+castile,done,19,https://en.wikipedia.org/wiki/List_of_Castilian_monarchs,title ends 1715 (Nueva Planta decrees) per source
+marinid,done,21,https://en.wikipedia.org/wiki/Marinid_dynasty#List_of_rulers,from List of rulers section of dynasty article; ends 1465
+sweden,done,32,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,regency periods noted on preceding rows
+byzantium,done,13,https://en.wikipedia.org/wiki/List_of_Byzantine_emperors#Palaiologos_dynasty_(1259–1453),"ends 1453; Irene and Anna (Thessalonica) mentioned in notes, not rows"
+france,done,37,https://en.wikipedia.org/wiki/List_of_French_monarchs,claimants listed by source included as rival claimants; no monarch 1792–1804 (First Republic) and from 1848 (Second Republic); Napoleon I as Emperor of the French included
+nogai,partial,1,https://en.wikipedia.org/wiki/Nogai_Khan,no list of holders; one row from Nogai Khan article (reign start not given); ulus ended at his death 1299/1300
+rum,done,5,https://en.wikipedia.org/wiki/List_of_Seljuk_sultans_of_Rum,
+zayyanid,done,38,https://en.wikipedia.org/wiki/Zayyanid_dynasty#List_of_rulers,list section 'List of rulers' (after Stewart 1989); Marinid occupations 1337–1348 and 1352–1359 not rows
+naples,done,37,https://en.wikipedia.org/wiki/List_of_Neapolitan_monarchs,"ends 8 Dec 1816 merger into Kingdom of the Two Sicilies; includes Valois-Anjou claimants, Doge of Naples 1647–48 and two Parthenopean Republic dictators 1799"
+mecca_sharifate,done,77,https://en.wikipedia.org/wiki/Sharif_of_Mecca#List_of_Sharifs_of_Mecca_(967–1925),"section 'List of Sharifs of Mecca': detailed table to 1345 (many co-rulers), then coarse year-only tables; source order kept where not chronological (e.g. 1672–1705)"
+aragon,done,22,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,ends 1707 (Nueva Planta decrees); interregnum 1410–1412 not a row; Catalan Civil War claimants included
+lithuania,done,33,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,ends 1795 (Partitions) plus 1812 General Confederation; row 1 Butigeidis vs work list Butvydas
+kart,done,8,https://en.wikipedia.org/wiki/Kart_dynasty#Rulers,from 'Rulers' table; source table end 1389 conflicts with article text (Pir 'Ali executed c. 1383)
+hafsid_tunis,done,23,https://en.wikipedia.org/wiki/Hafsid_dynasty#Hafsid_rulers,from 'Hafsid rulers' table (year-only reigns)
+hafsid_bejaia,partial,7,https://en.wikipedia.org/wiki/Hafsids_of_B%C3%A9ja%C3%AFa,"no list; rulers taken from article prose; periods of reunion with Tunis 1318–c.1350s, 1370–1430s, 1439–late 15th c. not rows; many dates missing"
+great_perm,partial,2,https://en.wikipedia.org/wiki/Great_Perm,"no list; 2 princes from article text 1451–1505; nothing for 1291–1451; work-list capital Ust-Vym belongs to Vychegda (Old) Perm, not Great Perm"
+rasulid,done,12,https://en.wikipedia.org/wiki/Rasulid_dynasty#List_of_rulers,from 'List of rulers' (after Bosworth 1996)
+scotland,done,20,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,"no monarch on 1 Jan 1291 (First Interregnum, Guardians); interregna 1296–1306 and 1651–1660 not rows; ends 1707 Acts of Union"
+denmark,done,27,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,interregna 1332–1340 and 1533–1534 not rows
+galicia,done,9,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,gap 1323–1325 in source; ends 1399 merger into Poland
+portugal,done,32,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,includes disputed Beatrice (1383–85) and Anthony I (1580–83); Ferdinand II jure uxoris
+kiev,done,15,https://en.wikipedia.org/wiki/Grand_Prince_of_Kiev#Princes_of_Kiev_after_the_Mongol_conquest_of_Kiev,section 'Princes of Kiev after the Mongol conquest'; gaps 1402–1412 and 1440–1443; source ends 1470 without stating how
+soomra,done,7,https://en.wikipedia.org/wiki/Soomra_dynasty#List_of_Soomro_rulers,from 'List of Soomro rulers' (no linked names); ends 1351 (Samma); Umarkot successor kings 1351–1440 listed in source but not included
+bohemia,done,39,https://en.wikipedia.org/wiki/List_of_Bohemian_monarchs,interregnum 1440–1453 and 1306–1310 succession crisis per source
+livonian_order,done,31,https://en.wikipedia.org/wiki/Livonian_Order,list of masters in the realm article; order secularized 1561
+mali,partial,18,https://en.wikipedia.org/wiki/Keita_dynasty,source gaps c.1440–c.1460 and 1559–c.1590; empire collapses c.1610 (List of Mansas redirects to Keita dynasty)
+volhynia,done,1,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,principality ceased to exist 1293 (absorbed into Halych–Volhynia under Lev I)
+serbia,done,13,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs,"kingdom/empire to 1371, then Moravian Serbia and Serbian Despotate to Ottoman conquest 1459; modern Principality of Serbia (1815+) not continued"
+austria,done,33,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,follows Austria proper (Lower Austria line) through the Habsburg partitions; Inner/Further Austria/Tyrol lines omitted; continues as Emperors of Austria from 1804
+chagatai,done,17,https://en.wikipedia.org/wiki/List_of_Chagatai_khans,"united khanate only; stops at the 1347 division into Western Chagatai Khanate and Moghulistan (both lines in source, not continued)"
+smolensk,partial,8,https://en.wikipedia.org/wiki/Prince_of_Smolensk,source gap 1287–1297 (no holder for 1291); principality conquered by Lithuania (source: since 1407)
+rostov,no_list,0,https://en.wikipedia.org/wiki/Rostov_Veliky,no English Wikipedia list of princes of Rostov (Principality of Rostov / Prince of Rostov redirect to Vladimir-Suzdal; Rostov Veliky has no list)
+polotsk,done,5,https://en.wikipedia.org/wiki/Prince_of_Polotsk,"1290–1307 Livonian occupation, then Gediminid princes under Lithuania; principality abolished in the 1390s"
+kerman,done,7,https://en.wikipedia.org/wiki/Qutlugh-Khanids,dynasty ended by the Ilkhanate in 1306
+bryansk,no_list,0,https://en.wikipedia.org/wiki/Upper_Oka_Principalities,no English Wikipedia list of princes of Bryansk (no Principality/Prince of Bryansk article); Prince of Chernigov list has Roman I Mikhailovich 1246/1247–after 1288 but does not name Bryansk
+sandomierz,done,3,https://en.wikipedia.org/wiki/Duchy_of_Sandomierz,list ends with Władysław I the Elbow-high (to 1333)
+nabhani_oman,partial,7,https://en.wikipedia.org/wiki/Nabhani_dynasty,source list covers 1406–1624 only; no ruler known for 1291–1406
+bavaria_upper,done,34,https://en.wikipedia.org/wiki/List_of_rulers_of_Bavaria,"Upper Bavaria to 1363, then via Bavaria-Landshut/Bavaria-Munich (Munich line) to reunified Bavaria 1503, Electorate 1623, Kingdom 1806; Rhine Palatinate (released 1329), Lower Bavaria, Straubing, Ingolstadt, Leuchtenberg lines omitted"
+kozelsk,no_list,0,https://en.wikipedia.org/wiki/Kozelsk,no English Wikipedia list of princes of Kozelsk (Kozelsk and Upper Oka Principalities articles have none; principality only an interlanguage link to ru)
+belozersk,partial,8,https://en.wikipedia.org/wiki/Prince_of_Beloozero,later princes undated (nominal princes under Moscow until annexation 1485); list section marked unsourced
+bulgaria,done,13,https://en.wikipedia.org/wiki/List_of_Bulgarian_monarchs,"Tarnovo line; ends with Ottoman conquest (Ivan Shishman to 1395); Vidin line (Ivan Sratsimir, Constantine II to 1422) not included"
+venice,done,72,https://en.wikipedia.org/wiki/List_of_doges_of_Venice,"doges of Venice; list ends with Ludovico Manin, forced to abdicate by Napoleon 1797"
+greater_poland,done,10,https://en.wikipedia.org/wiki/Duchy_of_Greater_Poland,list 'Rulers of all Greater Poland'; gap 1312–1314 in source; duchy merged into the Kingdom of Poland 1320
