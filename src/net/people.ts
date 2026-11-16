@@ -142,7 +142,7 @@ export function personDetail(s: WorldState, id: number, cultureKey: (index: numb
     female: P.sex[id] === 0, born: P.born[id],
     age: P.born[id] === BORN_UNKNOWN ? null : Math.round(((Math.min(s.day, P.died[id]) - P.born[id]) / 365.25) * 10) / 10,
     mother: P.mother[id], father: P.father[id], family: P.family[id],
-    place, culture: cultureKey(s.place.culture[place]),
+    place, culture: cultureKey(P.culture[id]),
     iq: P.iq[id], big5: [P.o[id], P.c[id], P.e[id], P.a[id], P.n[id]],
     genes: Array.from(genesOf(s, id).subarray(0, 2 * NG)),
     economy: personEconomy(s, id),

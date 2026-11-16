@@ -96,7 +96,8 @@ describe('a world of 1291', () => {
 describe('the peoples of 1291', () => {
   const rules = JSON.parse(readFileSync('data/history/1291/peoples.json', 'utf8')).rules as { id: string; sources: string[]; note: string }[];
   const at = (name: string) => { const i = w.names.indexOf(name); expect(i, name).toBeGreaterThanOrEqual(0); return i; };
-  const culture = (i: number) => ALL_CULTURES[s.place.culture[i]], faith = (i: number) => FAITHS[s.place.faith[i]].id;
+  // the setup of 1291 (its rules): the persons of a town are founded with these (src/sim/systems/cultures.ts)
+  const culture = (i: number) => s1291.culture[i] ?? 'unknown', faith = (i: number) => s1291.faith[i] ?? 'latin';
   const owner = (i: number) => s.realmText[s.place.owner[i]]?.key;
   it('differ from those of 1356 only by rules that name their sources', () => {
     expect(rules.length).toBeGreaterThanOrEqual(10);
@@ -141,17 +142,18 @@ describe('the peoples of 1291', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
   });
-  it('leave the cultures and faiths a world of 1291 was founded with when it upgrades from 12', () => {
-    const old = structuredClone(s);
-    old.v = 12;
-    for (let i = 0; i < w.L; i++) {
-      old.place.culture[i] = ALL_CULTURES.indexOf(s1356.culture[i] ?? 'unknown');
-      old.place.faith[i] = FAITHS.findIndex((f) => f.id === s1356.faith[i]);
+  it('are the persons\' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin', () => {
+    const P = s.person.cols, F = s.family.cols;
+    for (const [n, c, f] of [['Bursa', 'greek', 'orthodox'], ['Smyrna', 'greek', 'orthodox'], ['Acre', 'french', 'latin']] as const) {
+      const i = citiesOf(1291).find((c) => c.name === n)!.place;
+      let persons = 0;
+      for (let id = 0; id < s.person.size; id++) {
+        if (F.place[P.family[id]] !== i || s.named.some((x) => x.person === id)) continue;
+        persons++;
+        expect([ALL_CULTURES[P.culture[id]], FAITHS[P.faith[id]].id], n).toEqual([c, f]);
+      }
+      expect(persons, n).toBeGreaterThan(0);
     }
-    const culture = old.place.culture.slice(), faith = old.place.faith.slice();
-    const up = upgradeState(old, w, () => s1291);
-    expect(Array.from(up.place.culture)).toEqual(Array.from(culture));
-    expect(Array.from(up.place.faith)).toEqual(Array.from(faith));
   });
 });
 

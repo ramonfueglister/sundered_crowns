@@ -42,6 +42,9 @@ const myRealm = computed(() => { const m = me.value; return m && m.realm >= 0 ? 
 /** Realms with a drawn coat of arms; the others show their initial. */
 const ARMS: Record<string, string> = { venice: '/ui/arms/venice.svg' };
 
+/** A share in percent: one decimal below 1 %, else whole. */
+const share = (n: number, of: number) => { const p = 100 * n / Math.max(1, of); return (p < 1 ? p.toFixed(1) : Math.round(p).toString()).replace('.', lang.value === 'de' ? ',' : '.'); };
+
 function RealmBanner() {
   const r = myRealm.value;
   if (!r) return null;
@@ -157,8 +160,9 @@ function PlacePanel() {
     {d && <table class="facts"><tbody>
       <tr><th>{t('owner')}</th><td>{r ? <><i class="swatch" style={{ background: hex(r.color) }} />{L(r.name)}</> : t('nobody')}</td></tr>
       <tr><th>{t('population')}</th><td>{heads(d.pop)}</td></tr>
-      <tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr>
-      <tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr>
+      {d.peoples && d.peoples.length > 1
+        ? <tr><th>{t('culture')}</th><td>{d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}</td></tr>
+        : <><tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr><tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr></>}
       <tr><th>{t('terrain')}</th><td>{terrainName(d.terrain)}</td></tr>
       <tr><th>{t('resource')}</th><td>{resourceName(d.resource)}</td></tr>
     </tbody></table>}

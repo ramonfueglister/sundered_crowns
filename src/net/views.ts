@@ -1,5 +1,7 @@
 // What the world server tells clients about the state (shared so that tests can check the same views).
 import type { WorldState } from '../sim/state';
+import { ALIVE } from '../sim/state';
+import type { I18n } from '../sim/i18n';
 import type { World } from '../sim/world';
 import type { CityEconomyDetail, PlaceDetail, RealmInfo } from './protocol';
 import { FIGURE, FIGURES } from '../sim/economy/engine';
@@ -40,13 +42,28 @@ export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEcono
   };
 }
 
+const NONE = { en: '—', de: '—' };
+
+/** The cultures and faiths of the living persons of a place, as pairs, most persons first (src/sim/systems/cultures.ts). */
+export function placePeoples(s: WorldState, place: number): { culture: I18n; faith: I18n; persons: number }[] {
+  const P = s.person.cols, F = s.family.cols, n = new Map<number, number>();
+  for (let id = 0; id < s.person.size; id++) {
+    if (!s.person.alive[id] || P.died[id] !== ALIVE || F.place[P.family[id]] !== place) continue;
+    const k = P.culture[id] * 256 + P.faith[id];
+    n.set(k, (n.get(k) ?? 0) + 1);
+  }
+  return [...n].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([k, persons]) => ({
+    culture: cultureLabel(ALL_CULTURES[k >> 8] ?? 'unknown'), faith: FAITHS[k & 255]?.name ?? { en: '?', de: '?' }, persons,
+  }));
+}
+
 export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | null {
   if (!Number.isInteger(i) || i < 0 || i >= w.L) return null;
-  const f = FAITHS[s.place.faith[i]];
+  const peoples = placePeoples(s, i), first = peoples[0];
   const arable = s.place.arable[i], land = hectares(w, i);
   return {
     id: i, name: w.names[i], nameDe: w.namesDe[i], owner: s.place.owner[i], terrain: TERRAINS[w.terrain[i]], resource: RESOURCES[w.resource[i]],
-    culture: cultureLabel(ALL_CULTURES[s.place.culture[i]] ?? 'unknown'), faith: f ? f.name : { en: '?', de: '?' }, pop: Math.round(10 * s.place.pop[i]) / 10,
+    culture: first?.culture ?? NONE, faith: first?.faith ?? NONE, peoples, pop: Math.round(10 * s.place.pop[i]) / 10,
     harvest: {
       kcal: s.place.harvest[i], perHeadDay: kcalPerHeadDay(s.place.harvest[i], s.place.pop[i]),
       landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: land, farmers: farmersOf(s, i),
