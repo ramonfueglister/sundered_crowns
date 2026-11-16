@@ -11,7 +11,8 @@ export const blockOfCell = (u: number, v: number): [number, number] => [u * RIGH
 
 /**
  * above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale.
- * The snow line of a place comes from its climate where that is known (paleFrom); this one stands in elsewhere.
+ * Where the climate of a place is known, the trees end and the rock is pale by its own lines (woodsUntil, paleFrom);
+ * these stand in elsewhere, and the heights are stretched by them everywhere.
  */
 export const TREE_LINE = 1900, SNOW_LINE = 2530;
 /**
@@ -38,9 +39,17 @@ export const rockAt = (massif: number, floor: number, shift: number) => massif >
  * fifth of the line's own height, though: at the ocean's edge (Norway's coast, Iceland, Scotland) the snow line lies
  * so low that the Alps' margin would whiten hills.
  */
-const SNOW_BELOW = 3090 - SNOW_LINE, SNOW_BELOW_MOST = 0.2;
+const SNOW_BELOW = 3090 - SNOW_LINE, BELOW_MOST = 0.2;
 /** The height from which the raised rock is pale, for the snow line of a place. */
-export const paleFrom = (snowLine: number) => snowLine - Math.min(SNOW_BELOW, SNOW_BELOW_MOST * snowLine);
+export const paleFrom = (snowLine: number) => snowLine - Math.min(SNOW_BELOW, BELOW_MOST * snowLine);
+/**
+ * The woods of the look end some way below the height up to which the climate lets a tree grow: as in the Alps, where
+ * the last trees stand at 2220 m and the closed forest ends near TREE_LINE. Again by no more than a fifth of the
+ * line: in Scotland the last tree stands at 770 m and the forest ends near 620 m, in Iceland at 420 m and 330 m.
+ */
+const TREES_BELOW = 2220 - TREE_LINE;
+/** The height up to which the woods grow, for the tree line of a place. */
+export const woodsUntil = (treeLine: number) => treeLine - Math.min(TREES_BELOW, BELOW_MOST * treeLine);
 /** the ground of the lands that are not green: the colour the meadow is pulled towards, and how far */
 export const TINT: Record<number, readonly [RGB, number]> = {
   [Land.Mediterranean]: [rgb(0xd2c444), 0.2], [Land.Steppe]: [rgb(0xd0c264), 0.7], [Land.Desert]: [rgb(0xe8d096), 1], [Land.Savanna]: [rgb(0xc6bc52), 0.55],
