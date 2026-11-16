@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { fbm2 } from '../../src/lookprobe/batch';
-import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand } from '../../src/worldprobe/forest';
+import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from '../../src/worldprobe/forest';
 
 describe('the forest of a year at a place', () => {
   // 4 by 2 cells, 8 by 4 map pixels: the cells' middles lie at the odd pixels
@@ -70,6 +70,39 @@ describe('the woods of a landscape', () => {
   it('stand at the same places for every piece and step: by the place alone', () => {
     expect(stand(0.4, 1234.25, -77.5)).toBe(stand(0.4, 1234.25, -77.5));
     expect(stand(0.4, 1234.25, -77.5, 0.5)).toBeCloseTo(0.4 + (stand(0.4, 1234.25, -77.5) - 0.4) * 0.5);
+  });
+});
+
+describe('the fields of a landscape', () => {
+  const over = (of: (x: number, z: number) => number, side = 400, pitch = 0.5) => { let sum = 0, n = 0; for (let z = 0; z < side; z += pitch) for (let x = 0; x < side; x += pitch) { sum += of(x, z); n++; } return sum / n; };
+
+  it('cover the share of it that is under the plough', () => {
+    for (const share of [0.03, 0.15, 0.39, 0.57, 0.9]) expect(Math.abs(over((x, z) => tilth(share, x + 700, z - 300)) - share)).toBeLessThan(0.02);
+  });
+
+  it('lie together, where the woods do not, and leave the open grass between the two', () => {
+    const woods = 0.25, fields = 0.5;
+    let both = 0, grass = 0, n = 0;
+    for (let z = 0; z < 300; z += 0.5) for (let x = 0; x < 300; x += 0.5) { const w = stand(woods, x, z), f = tilth(fields, x, z); if (w > 0.5 && f > 0.5) both++; if (w < 0.5 && f < 0.5) grass++; n++; }
+    expect(both).toBe(0);
+    // a quarter of the land is neither: the open grass
+    expect(grass / n).toBeGreaterThan(0.22);
+    expect(grass / n).toBeLessThan(0.28);
+    let same = 0, pairs = 0;
+    for (let z = 0; z < 300; z += 0.5) for (let x = 0; x < 300; x += 0.5) { pairs++; if (tilth(fields, x, z) > 0.5 === tilth(fields, x + 0.5, z) > 0.5) same++; }
+    expect(same / pairs).toBeGreaterThan(1 - 2 / WOOD);
+  });
+
+  it('take the floors and plains of the land, as the woods keep its heights', () => {
+    let floors = 0, heights = 0;
+    for (let k = 0; k < 4000; k++) { floors += tilth(0.3, k * 3.7, k * 1.3, 1, -1); heights += tilth(0.3, k * 3.7, k * 1.3, 1, 1); }
+    expect(floors / 4000).toBeGreaterThan(0.45);
+    expect(heights / 4000).toBeLessThan(0.15);
+  });
+
+  it('give way to the share itself where a block is as large as a wood', () => {
+    expect(tilth(0.3, 12.5, 7.5, 0)).toBe(0.3);
+    expect(tilth(0, 12.5, 7.5)).toBe(0);
   });
 });
 

@@ -7,10 +7,11 @@
 // while everything stays where it is and as large as it is.
 import * as THREE from 'three/webgpu';
 import { type Batch, type RGB, type Rnd, hash2, mix, rgb, seeded, shade } from '../lookprobe/batch';
-import { VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
+import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
-import { FARMS, LOTS_FOUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
+import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
+import { FALLOW, FARMS, HAMLET, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -39,14 +40,14 @@ const WALL = rgb(0xcdb89c), STONE = rgb(0xe6dccc);
 const MODELS_UNTIL = 2;
 /** a great building stands as near its place as it finds free ground, within this many finest blocks */
 const SEARCH = 16;
-/**
- * Fields at the finest step lie in lots of eleven by eight blocks. Of the lots the land's share under the plough is
- * tried, about this share of those finds level, free ground, and about half of a lot is crop. One field in ten has
- * a farmhouse beside it (settle.ts).
- */
-const LOT_W = 11, LOT_D = 8, CROP_SHARE = 0.5;
+/** fields at the finest step lie in lots of eleven by eight blocks (settle.ts) */
+const LOT_W = 11, LOT_D = 8;
+/** a lot at a step: its sides in blocks, and the share of its blocks that are its field (all, once it is too small to keep a balk) */
+const lotAt = (step: number) => { const w = Math.max(1, Math.round(LOT_W / 2 ** step)), d = Math.max(1, Math.round(LOT_D / 2 ** step)); return { w, d, fill: w >= 4 ? ((w - 1) * (d - 1)) / (w * d) : 1 }; };
+/** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
+export const lotFill = (step: number) => lotAt(step).fill;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
-const field = (crop: RGB, flat: boolean) => mix(crop, WHEAT_SIDE, flat ? 0.6 : 0.3), VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
+const field = (crop: RGB, flat: boolean, side: RGB = WHEAT_SIDE) => mix(crop, side, flat ? 0.6 : 0.3), VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
 /**
  * Where a lot is no larger than a block, fields and woods are no longer blocks of their own: every block takes their
  * colour as far as they cover it, a little more or less from block to block. Woods seen so are as dark as their
@@ -56,20 +57,22 @@ const WOODS_FAR = 0.5;
 const soft = (share: number, lot: number) => share + (lot - 0.5) * 2 * Math.min(share, 1 - share);
 /** a single tree stands on this share of the woods' ground at the step where a tree is one block; from the next step on a block is woods or not */
 const TREES = 0.85, CANOPY = 0.9, STRAY = 0.05;
-/** how much of the chance from block to block is left where the woods are laid out */
+/** how much of the chance from block to block is left where the woods and the fields are laid out */
 const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
 const CANOPY_LIGHT = 0.8;
 
 /**
  * Lays towns, fields and woods on the ground of a piece at `step` (1 or coarser) and raises the ground under them.
- * `sites` are the places on the ground; `cultivated` is the share of the land under the plough at a ground point,
- * `vines` the share of the fields there that are vineyards, `farm` the style of the farmhouses there, `woods` what
- * grows on a column. Everything depends on the world block alone, so that pieces laid side by side fit together;
- * only what `own` holds at its middle is added to `things`.
+ * `sites` are the places on the ground; `ploughed` is the share of the ground under the plough at a ground point,
+ * the fallow counted in (`laid`: of that very point, the fields laid out together; else of the land about it),
+ * `courses` in how many courses the fields there are tilled (settle.ts `courseOf`), `vines` the share of the winter
+ * fields that are vineyards, `farm` the style of the farmhouses there, `woods` what grows on a column. Everything depends on the
+ * world block alone, so that pieces laid side by side fit together; only what `own` holds at its middle is added to
+ * `things`.
  */
 export function coverLand(g: Ground, step: number, things: Batch, sites: readonly Site[], o: {
-  cultivated(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the share of the fields with a farmhouse beside it (everywhere FARMS without it) */ farms?(x: number, z: number): number;
+  ploughed(x: number, z: number): number; laid?: boolean; courses?(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the farmhouses to a field (everywhere FARMS without it) */ farms?(x: number, z: number): number;
   woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean;
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1) };
@@ -138,21 +141,25 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   }
 
   // fields: the lots of the finest step, as large as they are. While a lot is wide enough to show it, it keeps a
-  // hedge's width free on two sides, the crop stands a block high and a farmhouse stands beside one field in four.
-  const lotW = Math.max(1, Math.round(LOT_W / wider)), lotD = Math.max(1, Math.round(LOT_D / wider)), hedged = lotW >= 4, blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
-  /** the share of the ground that is crop where the land is all under the plough */
-  const crops = LOTS_FOUND * CROP_SHARE;
+  // balk's width free on two sides, the crop stands a block high and the farmhouses stand at the fields' corners.
+  // A field that lies fallow is the grass with its stubble showing through, one under spring corn is green.
+  const { w: lotW, d: lotD, fill } = lotAt(step), hedged = fill < 1, blended = lotW * lotD === 1, raised = new Uint8Array(N * N);
+  const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
+  const springOf = (lx: number, lz: number): [RGB, RGB] => [field(pick(OATS, hash2(lx, lz, 68)), !hedged, OATS_SIDE), OATS_SIDE];
   const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + step) < o.vines(mx, mz) ? [VINEYARD, shade(VINE_BODY, 0.8)] : [field(pick(WHEAT, hash2(lx, lz, 68)), !hedged), WHEAT_SIDE]);
   if (!blended) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || !level(x, z)) continue;
     const wz = z + oz, lz = Math.floor(wz / lotD), shift = lz & 1 ? Math.floor(lotW / 2) : 0, wx = x + ox + shift, lx = Math.floor(wx / lotW);
     const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
-    if (hash2(lx, lz, 65 + step) > o.cultivated(mx, mz) * (hedged ? LOTS_FOUND : crops)) continue;
+    if (hash2(lx, lz, 65 + step) > o.ploughed(mx, mz) / fill) continue;
     if (hedged && (wx - lx * lotW === lotW - 1 || wz - lz * lotD === lotD - 1)) {
-      if (wx - lx * lotW === lotW - 1 && wz - lz * lotD === 0 && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS)) house(o.farm(mx, mz), x, z, 1);
+      // a hamlet at the end of the field: a block of houses at its corner and one a block on
+      if (wx - lx * lotW === lotW - 1 && (wz - lz * lotD) % 2 === 0 && wz - lz * lotD < 2 * HAMLET && hash2(lx, lz, 69) < (o.farms ? o.farms(mx, mz) : FARMS) / HAMLET) house(o.farm(mx, mz), x, z, 1);
       continue;
     }
-    put(x, z, 0, ...cropOf(lx, lz, mx, mz));
+    const course = courseOf(courses(mx, mz), hash2(lx, lz, 166 + step));
+    if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
+    put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)));
     raised[idx(x, z)] = hedged ? 1 : 0;
   }
 
@@ -170,13 +177,17 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   if (blended) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z)) continue;
     const wx = x + ox, wz = z + oz, w = g.mat[idx(x, z)] === Mat.Grass ? o.woods(x, z) : null;
-    const tilled = soft(o.cultivated(x + 0.5, z + 0.5) * crops, hash2(wx, wz, 65 + step));
+    // of the ploughed ground one course is the fallow, the grass with its stubble showing through, of three courses
+    // one the green spring corn, and the rest the winter corn
+    const ploughed = o.ploughed(x + 0.5, z + 0.5), n = courses(x + 0.5, z + 0.5), idle = n >= 2 ? ploughed / n : 0, green = n >= 3 ? ploughed / n : 0, sown = ploughed - idle - green;
+    const tilled = sown + (soft(sown, hash2(wx, wz, 65 + step)) - sown) * (o.laid ? LAID_CHANCE : 1), bare = idle * FALLOW_SHOWS, fields = tilled + green + bare;
     // a tree darkens its own block and with its shadow about one beside it
     const trees = w ? STRAY + CANOPY * w.share : 0, shaded = 1 - (1 - trees) ** 2, grown = shaded + (soft(shaded, hash2(wx, wz, 73 + step)) - shaded) * (w?.laid ? LAID_CHANCE : 1);
-    if (tilled + grown <= 0) continue;
-    const crop = cropOf(wx, wz, x + 0.5, z + 0.5)[0], crown = w ? shade(pick(w.crowns, hash2(wx, wz, 74)), WOODS_FAR) : crop;
-    put(x, z, 0, mix(crop, crown, grown / (tilled + grown)));
-    c.share[idx(x, z)] = Math.min(1, tilled + grown);
+    if (fields + grown <= 0) continue;
+    const corn = mix(cropOf(wx, wz, x + 0.5, z + 0.5)[0], springOf(wx, wz)[0], tilled + green > 0 ? green / (tilled + green) : 0);
+    const crop = mix(corn, SOIL_FALLOW, fields > 0 ? bare / fields : 0), crown = w ? shade(pick(w.crowns, hash2(wx, wz, 74)), WOODS_FAR) : crop;
+    put(x, z, 0, mix(crop, crown, grown / (fields + grown)));
+    c.share[idx(x, z)] = Math.min(1, fields + grown);
   }
   // the ground is raised only now, so that what was laid out saw the land as it is
   for (let i = 0; i < N * N; i++) {

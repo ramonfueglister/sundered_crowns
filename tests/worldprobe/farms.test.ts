@@ -1,5 +1,5 @@
 // The farmhouses of the world graphic stand for the people the simulation counts on the land of a place, outside its
-// towns: as many as hold them, beside the fields the land has.
+// towns: as many as hold them, in hamlets on the fields the land has.
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import { Batch } from '../../src/lookprobe/batch';
 import { type Ground, LAND_Y, Mat, N, SEA_Y } from '../../src/lookprobe/layout';
 import { styleOf } from '../../src/buildings';
 import { type Rural, ruralAt } from '../../src/worldprobe/rural';
-import { FARMS, FIELDS_FOUND, LOTS_FOUND, PEOPLE_PER_FARM, farmsFor, settle } from '../../src/worldprobe/settle';
+import { FALLOW, FARMS, FIELDS_FOUND, FIELD_GROUND, HAMLET, LOT_FILL, PEOPLE_PER_FARM, SPRING, courseOf, farmsFor, settle } from '../../src/worldprobe/settle';
 
 describe('the people on the land of a place', () => {
   // 3 by 2 cells, 6 by 4 pixels of the game map: no place, 0, 1, 3, 1023 and 187 people per km²
@@ -35,52 +35,77 @@ describe('the people on the land of a place', () => {
   });
 });
 
-describe('the share of the fields with a farmhouse', () => {
+describe('the farmhouses to a field', () => {
   const lot = 5.7; // km² of a lot in the north of France
 
-  it('houses the people of the land: farmhouses by the fields found hold them', () => {
-    for (const [people, cultivated] of [[6, 0.5], [20, 0.3], [30, 0.6], [2, 0.05]]) for (const found of [FIELDS_FOUND, LOTS_FOUND]) {
-      const farms = farmsFor(people, lot, cultivated, found);
-      expect(farms).toBeLessThan(1);
-      // of the lots of a km², `cultivated * found` are fields, and `farms` of those have a farmhouse
-      expect((farms * cultivated * found * PEOPLE_PER_FARM) / lot).toBeCloseTo(people);
+  it('house the people of the land: farmhouses on the fields it has hold them', () => {
+    // `fields` of the lots of a km² are fields, and `farms` farmhouses stand to each
+    for (const [people, fields] of [[6, 0.5], [20, 0.3], [61, 0.49], [2, 0.05]]) {
+      const farms = farmsFor(people, lot, fields);
+      expect(farms).toBeLessThan(HAMLET);
+      expect((farms * fields * PEOPLE_PER_FARM) / lot).toBeCloseTo(people);
     }
   });
 
-  it('grows with the people and is no more than one farmhouse to a field', () => {
-    expect(farmsFor(12, lot, 0.5, FIELDS_FOUND)).toBeCloseTo(2 * farmsFor(6, lot, 0.5, FIELDS_FOUND));
-    expect(farmsFor(187, lot, 0.5, FIELDS_FOUND)).toBe(1);
-    expect(farmsFor(0, lot, 0.5, FIELDS_FOUND)).toBe(0);
+  it('grow with the people and are no more than a hamlet to a field', () => {
+    expect(farmsFor(12, lot, 0.5)).toBeCloseTo(2 * farmsFor(6, lot, 0.5));
+    expect(farmsFor(400, lot, 0.5)).toBe(HAMLET);
+    expect(farmsFor(0, lot, 0.5)).toBe(0);
   });
 
-  it('is none where nothing is ploughed', () => {
-    expect(farmsFor(30, lot, 0, FIELDS_FOUND)).toBe(0);
+  it('are none where nothing is ploughed', () => {
+    expect(farmsFor(30, lot, 0)).toBe(0);
   });
 });
 
-describe('the farmhouses on the ground', () => {
+describe('the fields and farmhouses on the ground', () => {
   const meadow = (): Ground => ({ h: new Int16Array(N * N).fill(LAND_Y), mat: new Uint8Array(N * N).fill(Mat.Grass), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N).fill(LAND_Y), surf: new Float32Array(N * N).fill(SEA_Y), ox: 0, oz: 0 });
   const farm = () => ({ region: '', style: styleOf('') });
-  const settled = (farms?: (x: number, z: number) => number) => { const counts: Record<string, number> = {}; settle(meadow(), new Batch(), [], [], farm, () => 0.5, () => 0, counts, () => true, farms); return counts; };
+  const PLOUGHED = 0.3;
+  const settled = (farms?: (x: number, z: number) => number, courses?: (x: number, z: number) => number, own: (x: number, z: number) => boolean = () => true) => {
+    const counts: Record<string, number> = {}, laid = settle(meadow(), new Batch(), [], [], farm, () => PLOUGHED, () => 0, counts, own, farms, courses);
+    return { ...counts, ground: laid.field.reduce((n, kind) => n + (kind ? 1 : 0), 0) / (N * N) } as Record<string, number>;
+  };
 
-  it('stand by as many of the fields as the land has people for', () => {
-    const none = settled(() => 0), all = settled(() => 1), some = settled(() => 0.25);
+  it('plough as much of the ground as the land has under the plough', () => {
+    const none = settled(() => 0);
     expect(none.field).toBeGreaterThan(200);
+    // on a meadow every lot tried finds its ground: on real land FIELDS_FOUND of them do
+    expect(none.ground).toBeGreaterThan(PLOUGHED * 0.95);
+    expect(none.ground).toBeLessThan((PLOUGHED / FIELDS_FOUND) * 1.05);
+    expect(FIELD_GROUND).toBeCloseTo(LOT_FILL * FIELDS_FOUND);
+  });
+
+  it('are tilled in courses: of three one lies fallow and one is under spring corn, of two one lies fallow', () => {
+    for (const u of [0, 0.2, 0.33]) expect(courseOf(3, u)).toBe(FALLOW);
+    for (const u of [0.34, 0.5, 0.66]) expect(courseOf(3, u)).toBe(SPRING);
+    for (const u of [0.67, 0.99]) expect(courseOf(3, u)).toBe(1);
+    expect([courseOf(2, 0.49), courseOf(2, 0.51), courseOf(1, 0)]).toEqual([FALLOW, 1, 1]);
+    const one = settled(() => 0), three = settled(() => 0, () => 3), two = settled(() => 0, () => 2);
+    expect([one.fallow ?? 0, one.spring ?? 0, two.spring ?? 0]).toEqual([0, 0, 0]);
+    for (const share of [three.fallow / three.field, three.spring / three.field]) { expect(share).toBeGreaterThan(0.27); expect(share).toBeLessThan(0.4); }
+    expect(two.fallow / two.field).toBeGreaterThan(0.43);
+    expect(two.fallow / two.field).toBeLessThan(0.57);
+    // a fallow field is a field: as many lie as without the courses
+    expect(three.field).toBe(one.field);
+  });
+
+  it('stand as hamlets on as many of the fields as the land has people for', () => {
+    const none = settled(() => 0), all = settled(() => HAMLET), some = settled(() => 0.5);
     expect(none.farm ?? 0).toBe(0);
-    // by nearly every field, where its neighbours leave room
-    expect(all.farm).toBeGreaterThan(0.9 * all.field);
-    expect(some.farm / some.field).toBeGreaterThan(0.18);
-    expect(some.farm / some.field).toBeLessThan(0.32);
-    // a farmhouse takes its ground from the lot beside it: the more of them, the fewer fields find room
-    expect(some.field).toBeLessThanOrEqual(none.field);
-    expect(all.field).toBeLessThan(some.field);
-    expect(all.field).toBeGreaterThan(0.6 * none.field);
+    // a hamlet on every field
+    expect(all.farm).toBeGreaterThan(0.95 * HAMLET * all.field);
+    expect(some.farm / some.field).toBeGreaterThan(0.4);
+    expect(some.farm / some.field).toBeLessThan(0.6);
+    // a hamlet stands on the ground of its own field: the fields are as many, and a little smaller
+    expect(all.field).toBe(none.field);
+    expect(all.ground).toBeLessThan(none.ground);
+    expect(all.ground).toBeGreaterThan(0.4 * none.ground);
   });
 
   it('follow the land from place to place', () => {
     // people in the west half only
-    const counts = settled((x) => (x < N / 2 ? 1 : 0)), west: Record<string, number> = {};
-    settle(meadow(), new Batch(), [], [], farm, () => 0.5, () => 0, west, (x) => x < N / 2, (x) => (x < N / 2 ? 1 : 0));
+    const counts = settled((x) => (x < N / 2 ? 1 : 0)), west = settled((x) => (x < N / 2 ? 1 : 0), undefined, (x) => x < N / 2);
     expect(counts.farm).toBeGreaterThan(50);
     expect(west.farm).toBe(counts.farm);
   });

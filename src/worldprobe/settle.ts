@@ -30,7 +30,7 @@ export interface Settled {
   used: Uint8Array;
   /** 1 on the paved ground of the walled towns */
   town: Uint8Array;
-  /** the crop of each column: 0 none, 1 wheat, 2 vine */
+  /** what each column of a field carries: 0 no field, 1 winter corn, 2 vine, 3 nothing this year (the fallow), 4 spring corn */
   field: Uint8Array;
   /** the walled towns as they were laid out, in world blocks */
   towns: Town[];
@@ -46,53 +46,61 @@ export const PERSONS_PER_FLOOR_BLOCK = 5 / m2(33);
 export const POP_OF_SIZE = [0, 500, 2000];
 /** towns from this size on are walled and paved */
 export const WALLED_FROM = 3;
-/** a field lot with the hedge round it, in blocks */
+/** a field lot with its balk, in blocks */
 const LOT_W = 11, LOT_D = 8;
-/**
- * The share of the fields with a farmhouse beside it where the simulation counts no people on the land (beyond the
- * game map, a start year without the layer of rural.ts; elsewhere see `farmsFor`): one farmhouse to 55 cells of the
- * land's data under fields, some 15 km² in middle Europe, whatever the size of a block (land.ts). A farmhouse holds
- * some ten persons, derived from a thousand people of the time: so the countryside holds some 35 people of the time
- * to the km² where half the land is under the plough, about
- * as many as France had around 1328 (some 16 to 20 million in today's borders, after the État des paroisses et des
- * feux). An assumption: the places of the gazetteer are a few of the villages there were, and the farms stand in for
- * the rest.
- */
-export const FARMS = Math.min(1, (LOT_W * LOT_D) / 55 / FINER ** 2);
-/** blocks of the finest step a field lot takes with its hedge */
+/** blocks of the finest step a field lot takes with its balk */
 export const LOT_BLOCKS = LOT_W * LOT_D;
-/** of the lots tried for a field this share is one where the fields are part of the ground (far.ts) */
-export const LOTS_FOUND = 0.45;
+/** the share of a lot's ground that is its field: all of it but a balk a block wide on two sides */
+export const LOT_FILL = ((LOT_W - 1) * (LOT_D - 1)) / LOT_BLOCKS;
 /**
- * Of the lots tried for a field at the finest step about this share finds level, free ground: a half where much of
- * the land is ploughed (Flanders, Brie), four fifths where little is (round Kraków). Measured, 16 November 2026.
+ * Of the lots tried for a field at the finest step about this share finds level, free, dry ground in the low
+ * country (measured, 16 November 2026: 0.78 in Flanders, 0.82 in Brie, 0.85 round Kraków, 0.87 in the English
+ * Midlands). In hill country only a half does (Tuscany, the Swiss Mittelland): there the fields fall short of the
+ * land under the plough.
  */
-export const FIELDS_FOUND = 0.6;
+export const FIELDS_FOUND = 0.85;
+/** the share of the ground that is ploughed where field lies by field: no land holds more */
+export const FIELD_GROUND = LOT_FILL * FIELDS_FOUND;
+/** the farmhouses stand together, this many at the end of a field: a hamlet, and the fields between the hamlets are open */
+export const HAMLET = 2;
+/**
+ * The farmhouses to a field where the simulation counts no people on the land (beyond the game map, a start year
+ * without the layer of rural.ts; elsewhere see `farmsFor`): four to ten fields. An assumption: the places of the
+ * gazetteer are a few of the villages there were, and the farms stand in for the rest.
+ */
+export const FARMS = Math.min(1, LOT_BLOCKS / 55 / FINER ** 2);
 /** a farmhouse holds some ten persons: the people of the real world of the time they were derived from */
 export const PEOPLE_PER_FARM = 10 * PEOPLE_PER_PERSON;
 /**
- * The share of the fields with a farmhouse beside it where `people` of the real world of the time live on a km² of
- * the land outside its towns (the simulation's own count, rural.ts): as many farmhouses as hold the world's persons
- * derived from them, on the fields the land has. `lotKm2` is the ground a lot takes, `cultivated` the share of the
- * land under the plough, `found` the share of the lots tried that become fields. No more than one farmhouse stands
- * by a field: where more people live than that holds (some 50 to the km² where half the land is ploughed), the
- * farmhouses fall short of them; where people live and nothing is ploughed, none stand.
+ * The farmhouses to a field where `people` of the real world of the time live on a km² of the land outside its towns
+ * (the simulation's own count, rural.ts): as many as hold the world's persons derived from them, on the fields the
+ * land has. `lotKm2` is the ground a lot takes, `fields` the share of the land's lots that are fields. No more than
+ * a hamlet stands on a field: where more people live than that holds, the farmhouses fall short of them; where
+ * people live and nothing is ploughed, none stand.
  */
-export const farmsFor = (people: number, lotKm2: number, cultivated: number, found: number) => (cultivated > 0 ? Math.min(1, (people * lotKm2) / PEOPLE_PER_FARM / (cultivated * found)) : 0);
-const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
+export const farmsFor = (people: number, lotKm2: number, fields: number) => (fields > 0 ? Math.min(HAMLET, (people * lotKm2) / PEOPLE_PER_FARM / fields) : 0);
+const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine', null, 'oats'];
+/** a field that lies fallow this year, and one under spring corn */
+export const FALLOW = 3, SPRING = 4;
+/**
+ * What a field of land tilled in `courses` carries this year, by its lot `u` (0 … 1): of two courses one is the
+ * fallow, of three one the fallow and one the spring corn; the rest is winter corn (1). One course: no rotation.
+ */
+export const courseOf = (courses: number, u: number): 1 | typeof FALLOW | typeof SPRING => (courses >= 2 && u < 1 / courses ? FALLOW : courses >= 3 && u < 2 / courses ? SPRING : 1);
 /** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
 export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
 /** A footprint side drawn between two lengths in metres, whole blocks (the footprints were read off the reference image). */
 const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(m(lo))), Math.max(2, Math.round(m(hi))));
 
 /**
- * Builds the monuments, then the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
- * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` how the farmhouses there are
- * built, `farms` the share of the fields with a farmhouse beside it. Everything is laid out so that it comes out the same on every ground that covers it; only what `own` holds
- * at its middle is added to `things`, but for the houses that have fine blocks for the near view: those are handed
- * back as `lots`.
+ * Builds the monuments, then the sites, largest first, and lays the fields. `ploughed` is the share of the ground
+ * under the plough at a ground point (0 … FIELD_GROUND), the fallow counted in, `courses` in how many courses the
+ * fields there are tilled (`courseOf`), `vines` the share of the winter fields that are vineyards, `farm` how the farmhouses there
+ * are built, `farms` the farmhouses to a field. Everything is laid out so that it comes out the same
+ * on every ground that covers it; only what `own` holds at its middle is added to `things`, but for the houses that
+ * have fine blocks for the near view: those are handed back as `lots`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [];
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
@@ -224,19 +232,29 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (own(cx, cz)) count('town');
   });
 
-  // fields: the world is cut into lots, and of the lots as many are fields as the land was under the plough
+  // fields: the world is cut into lots, and of the lots as many are fields as hold the land under the plough
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
   for (let lz = Math.floor(oz / LOT_D); lz * LOT_D < oz + N; lz++) for (let lx = Math.floor(ox / LOT_W) - 1; lx * LOT_W < ox + N; lx++) {
-    // every other row of lots is set off by half a lot, and a lot is a little smaller than its place
-    const x0 = lx * LOT_W - ox + (lz & 1 ? Math.floor(LOT_W / 2) : 0) + 1, z0 = lz * LOT_D - oz + 1, w = LOT_W - 2 - Math.floor(hash2(lx, lz, 61) * 3), d = LOT_D - 2 - Math.floor(hash2(lx, lz, 63) * 2);
+    // every other row of lots is set off by half a lot; a field fills its lot but for the balk on two sides
+    const x0 = lx * LOT_W - ox + (lz & 1 ? Math.floor(LOT_W / 2) : 0) + 1, z0 = lz * LOT_D - oz + 1, w = LOT_W - 1, d = LOT_D - 1;
     const mx = x0 + w / 2, mz = z0 + d / 2;
-    if (mx < 0 || mz < 0 || mx >= N || mz >= N || hash2(lx, lz, 65) > cultivated(mx, mz) || lot(x0, z0, x0 + w, z0 + d, 1, 2) === null) continue;
-    const kind = hash2(lx, lz, 67) < vines(mx, mz) ? 2 : 1, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296));
-    for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) { const i = idx(x, z); field[i] = kind; g.mat[i] = Mat.Soil; }
-    if (own(Math.floor(mx), Math.floor(mz))) { crops(things, g, [mx, mz], w, d, CROPS[kind]!, r); count('field'); }
+    if (mx < 0 || mz < 0 || mx >= N || mz >= N || hash2(lx, lz, 65) > ploughed(mx, mz) / FIELD_GROUND || lot(x0, z0, x0 + w, z0 + d, 1, 2) === null) continue;
+    const mine = own(Math.floor(mx), Math.floor(mz));
+    // the farmhouses the people on the land ask for stand as hamlets at the ends of as many of the fields, on their ground
+    let sown = w;
+    if (hash2(lx, lz, 69) < farms(mx, mz) / HAMLET) {
+      const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296));
+      for (let k = 0; k < HAMLET; k++) {
+        const hw = f.int(3, 4), hd = 3, floors = f.chance(0.4) ? 2 : 1;
+        if (!home(f, x0 + w - hw, z0 + k * (d - hd), hw, hd, floors, 0, farm(mx, mz))) continue;
+        sown = Math.min(sown, w - hw - 1);
+        if (mine) count('farm');
+      }
+    }
+    const course = courseOf(courses(mx, mz), hash2(lx, lz, 66)), kind = course === 1 && hash2(lx, lz, 67) < vines(mx, mz) ? 2 : course, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296));
+    for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + sown; x++) { const i = idx(x, z); field[i] = kind; g.mat[i] = Mat.Soil; }
+    if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
-    // a farmhouse beside as many of the fields as the people on the land ask for
-    if (hash2(lx, lz, 69) < farms(mx, mz)) { const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296)); if (home(f, x0 + w + 1, z0 + f.int(0, 2), f.int(3, 4), f.int(3, 4), f.chance(0.4) ? 2 : 1, 0, farm(mx, mz)) && own(Math.floor(mx), Math.floor(mz))) count('farm'); }
   }
   return { used, town, field, towns, lots };
 }
