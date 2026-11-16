@@ -11,7 +11,7 @@ import { playChronicle } from '../../../src/sim/systems/rulers';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 const frame: { realms: { id: string; ruler_1291: string | null }[] } = JSON.parse(readFileSync(resolve(ROOT, 'data/history/rulers/realms_frame.json'), 'utf8'));
-const lists = new Set(readdirSync(resolve(ROOT, 'data/history/rulers/lists')).map((f) => f.replace(/\.csv$/, '')));
+const lists = new Set(readdirSync(resolve(ROOT, 'data/history/rulers/lists')).filter((f) => f.endsWith('.csv') && f !== 'INDEX.csv').map((f) => f.slice(0, -4)));
 const { s, w } = newWorldState(1291, 1291);
 const at = new Map(s.realmText.map((t, k) => [t.key, k]));
 const holder = (id: string) => { const h = s.realm.cols.holder[at.get(id)!]; return h < 0 ? null : s.named.find((n) => n.person === h)!.name; };

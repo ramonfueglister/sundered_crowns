@@ -9,7 +9,8 @@
 // - A person is one person across all lists: the same Wikidata id, else the same name and birth date.
 // - A reign without a start begins when the reign before it in the list ends; without an end it ends when the next
 //   begins. A reign with neither stays out (counted).
-// - Rows of a collective government (councils, priors) are no person and stay out, and so do rows the source marks as
+// - Rows of a collective government (councils, priors) are no person and stay out, so are rows that name a rule
+//   instead of a person ("Papal control", "occupation by the Livonian Order"), and so are rows the source marks as
 //   a claimant or "not a monarch" (they did not hold the title), unless the note says the claimant was in control.
 // - The sex is that of Wikidata where the person has an id there; else female when the name or note calls the person
 //   queen, empress, duchess, countess, margravine, princess, abbess or lady, else male (counted, so it can be checked).
@@ -38,7 +39,7 @@ export function parseCsv(text: string): Record<string, string>[] {
 }
 
 const FEMALE = /\b(queen|empress|duchess|countess|margravine|princess|abbess|lady|tsaritsa|sultana)\b/i;
-const COLLECTIVE = /collective government/i;
+const COLLECTIVE = /collective government/i, NO_PERSON = /^(papal control|occupation by)\b/i;
 const NOT_HOLDER = /claimant|pretender|not a monarch|anti-?king|antipope/i, IN_CONTROL = /in control|de facto/i;
 const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null);
 /** Later of two dates given as the source gives them (compared on the text, padded to a full day). */
@@ -58,7 +59,7 @@ export function build(): { chronicle: ChronicleJson; report: Record<string, numb
     rows.sort((a, b) => Number(a.order) - Number(b.order));
     report.lists++;
     const kept = rows.filter((r) => {
-      if (COLLECTIVE.test(r.note ?? '') || !r.name) { report.collective++; return false; }
+      if (COLLECTIVE.test(r.note ?? '') || !r.name || NO_PERSON.test(r.name)) { report.collective++; return false; }
       if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) { report.claimants++; return false; }
       return true;
     });

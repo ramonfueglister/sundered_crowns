@@ -39,9 +39,9 @@ function withoutHusband(x: WorldState, m: number[][], id: number): boolean {
 /** Per city the women of working age, those of them without a husband, and those who work. */
 function women(x: WorldState): { all: number; alone: number; working: number }[] {
   const c = x.economy.cities!, at = new Map<number, number>(Array.from(c.places, (p, k) => [p, k])), m = members(x);
-  const out = Array.from(c.places, () => ({ all: 0, alone: 0, working: 0 }));
+  const out = Array.from(c.places, () => ({ all: 0, alone: 0, working: 0 })), named = namedPersons(x);
   for (let id = 0; id < x.person.size; id++) {
-    if (x.person.cols.sex[id] !== 0 || !adult(x, id)) continue;
+    if (x.person.cols.sex[id] !== 0 || !adult(x, id) || named.has(id)) continue;
     const o = out[at.get(x.family.cols.place[x.person.cols.family[id]])!];
     o.all++; if (withoutHusband(x, m, id)) o.alone++; if (works(x, id)) o.working++;
   }
@@ -51,10 +51,10 @@ function women(x: WorldState): { all: number; alone: number; working: number }[]
 describe('a woman without a husband', () => {
   for (const [name, x] of [['1356', start], ['1291', newWorldState(1291, 1291).s]] as const) {
     it(`works, in every city of the world of ${name}`, () => {
-      const m = members(x);
+      const m = members(x), named = namedPersons(x);
       let alone = 0;
       for (let id = 0; id < x.person.size; id++) {
-        if (!adult(x, id) || !withoutHusband(x, m, id)) continue;
+        if (named.has(id) || !adult(x, id) || !withoutHusband(x, m, id)) continue;
         alone++;
         expect(works(x, id)).toBe(true);
       }
