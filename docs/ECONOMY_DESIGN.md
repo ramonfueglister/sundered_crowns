@@ -38,6 +38,7 @@ players and the AI of realms without a player act through the same commands.
 | 8 | The firms of the cities plan by the demand pull of CANVAS | agreed by Ramon 16 Nov 2026 ("CANVAS-Preisregel bauen", 12:12 UTC): only this, the unemployment benefit stays. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
+| 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; not in the running world |
 
 ## 1. Grain harvest per place
 
@@ -1989,3 +1990,183 @@ amounts are in pence, savings in pounds, shillings and pence. Pictures in the pr
 - The founding day decides who works: a person who turns 15 later does not start to work until the economies are
   founded anew.
 - In a world of 1291 the cities are those of 1291, but each is still England in 1356 at its share.
+
+## 11. The family is the purse, and a woman without a husband works
+
+Status: built, not in the running world (draft pull request 49). After feature 10 Ramon chose the next feature on
+16 November 2026: "Haushalt der Familie" (17:50 UTC). The proposal (Claude Doc "Feature 11: Haushalt der Familie")
+offered two variants, and he chose "B: Kasse, Frauen ohne Mann arbeiten" (18:01 UTC): the family becomes the
+purse, and a woman without a husband works, so that the economies of a running world are founded anew. Nothing
+goes live without his word. Player wiki: docs/wiki/wirtschaft/haushalt-der-familie.md.
+
+### What it is
+
+Two things, both outside the engine. The port computes as before.
+
+**The purse** (`src/sim/systems/household.ts`). The model knows single persons: every person spends the share ψ of
+the own expected income, C = ψ · Y / (1 + τ_VAT) (port `src/households.rs`, function `budget`, line 83; BeforeIT.jl
+`src/agent_actions/households.jl`, lines 96, 115, 134 and 150; appendix A.46), and saves the rest (A.54;
+households.rs line 124, households.jl line 182). Its persons who do not work are persons of the model who live on
+social benefits of the state (households.rs line 43; households.jl line 45: "Inactive households do not
+participate in the labor market and receive social benefits provided by the government", Poledna, Miess and Hommes
+2020, section 3, p. 8; in Austria 4.13 of 8.86 million persons, table 1, p. 9). The cities pay no benefits and keep
+one such person each, so the children and the adults who do not work, more than half of the persons of a city, had
+neither an income nor a consumption (the first limit of section 10).
+
+Now they live on their family, as the history of English working families counts it. Horrell, Humphries and
+Weisdorf (2022, "Beyond the male breadwinner: Life-cycle living standards of intact and disrupted English working
+families, 1260–1850", Economic History Review 75(2), 530 to 560) add up "family incomes from the contributions of
+all family members" (p. 531) and set the family's needs against them: "Adults are each assumed to consume a whole
+consumption basket, children just one-half" (p. 540); children "became independent at age 15" (p. 538). The rules:
+
+1. The income, the spending and the savings of a family are the sums over its members of what the economy
+   computed for them on the last day.
+2. A person aged 15 or more is one basket, a child under 15 half a basket, on the day up to which the economies
+   are computed.
+3. A person's consumption is the family's spending times the person's baskets over the baskets of the family.
+
+The purse is a booking of the world and no rule of the model: nothing reads it, the engine's state is the same to
+the bit with and without it, and nobody goes hungry in a family that spends nothing.
+
+**A woman without a husband works** (`src/sim/systems/work.ts`). The same paper assumes that a wife worked little
+"except when the family lacked an income-generating husband when we assume that the wife worked full-time"
+(p. 535; "the lack of adult male support dramatically reduces family earnings and forces the mother to work
+full-time", p. 548). So the woman at the head of a family that has no man at its head, and a woman who lives on
+her own, always works from the age of 15. In the worlds as they are founded these are all women living alone: no
+family has a mother without a husband yet, because nobody dies. The other women of the city are drawn at the rate
+(0.43 · W − H) / (W − H), W the women of working age of the city and H those without a husband, so that the
+table's 43 % of all women is still expected to work. That lower rate is our arithmetic, not a source. The men are
+drawn as before.
+
+### Entries of the world
+
+- Family (`FAMILY_SCHEMA`): `persons`, `working`, `baskets`, and of the last day `income`, `spent`, `savings`.
+- Person (`PERSON_SCHEMA`): `consumed`, the person's share of the family's spending.
+- Written after every day of the economy, with the persons and firms (`writeAgents`), and on the day of the
+  founding. A world without economies has no purses: everything is 0.
+- The world server gives a person with the `household` of the family (`/person/<id>`, `src/net/people.ts`).
+
+### The numbers
+
+The reference world (start 1356, seed 1356) and a world of 1291 with the seed of the running world, on the day
+they are founded, against feature 10:
+
+| | World of 1356, feature 10 | now | World of 1291, feature 10 | now |
+|---|---|---|---|---|
+| Persons who work | 11,755 | 11,725 | 11,455 | 11,454 |
+| of them workers | 8,801 | 8,779 | 8,577 | 8,571 |
+| owners of a firm (= firms) | 2,925 | 2,917 | 2,848 | 2,853 |
+| Women aged 15 or more | 8,746 | 8,746 | 8,477 | 8,477 |
+| of them without a husband (all work now) | 1,189 | 1,189 | 1,211 | 1,211 |
+| Women who work | 43 % (drawn) | 3,739 = 42.8 % | 43 % (drawn) | 3,680 = 43.4 % |
+| Rate at which the other women are drawn | 43 % | 34.0 % (23.9 % to 42.4 % by city) | 43 % | 33.5 % (22.3 % to 43.0 % by city) |
+| Families without a person who works | 690 of 6,568 (806 persons) | 53 (199 persons) | 738 of 6,454 (861 persons) | 54 (201 persons) |
+
+The families that still have nobody who works are couples of which neither the man (2.9 % of the men do not work)
+nor the wife is drawn, with their children: in the world of 1291 54 men, 61 women and 86 children.
+
+The households of the world of 1291 on day 60: 20,694.5 baskets for 24,828 persons; a family has an income of
+1.05 d a day per head and spends 1.24 d per basket (a worker with work is paid 2.07 d). By person, what the family
+spends per basket: a tenth of the persons have 0.40 d or less, the median 0.93 d, a tenth 1.91 d or more. 245
+persons live in the 67 families that spend nothing that day; with feature 10 it was 881 persons.
+
+### State and upgrade
+
+State version 14 (13 is main's: the cultures and faiths of 1291). The upgrade gives the families their purse and
+the persons their consumption, and it founds the economies anew on the day the world has reached, as the step to
+12 did: who works has changed, so the days and the yearly figures of the economies are gone, and the first period
+is the next day of the world.
+
+Tried with the real server code, laid out as the image: a world of 1291 of state version 12, as the running world
+has it, at day 175 was resumed by the new server at day 175 as version 14, computed on and answered `/person/<id>`
+with the household. Writing the purses costs about 2 ms a day on the machine of the tests.
+
+### Tests
+
+`tests/economy-households.test.ts` (20 tests, new): in the worlds of 1356 and of 1291 every woman without a husband
+works, every city keeps the table's share of women at work within three standard deviations of the draw (all
+cities together within one point of 43 %), fewer than one family in a hundred has nobody who works and no woman on
+her own is among them; a man works by his own draw as before; the rate of the other women (also where the women
+without a husband are more than the share); the same draw for the same seed. The purse: persons, persons who work
+and baskets of every family; income, spending and savings are the sums over the members to the bit; the families of
+a city add up to its persons and their savings to the deposits of the households of the city's books; the
+consumption of the persons of a family adds up to its spending, two adults consume the same and a child half; the
+child with the next fifteenth birthday is a whole basket from that day and does not start to work; the engine
+computes the same 20 days to the byte without the world; everything is 0 in a world without economies. The state:
+a saved world goes on as the running one; a world of version 13 gets purses and consumption by the upgrade, with
+the economies founded anew and every woman without a husband at work, and computes on. The server gives a person
+with the household, and the panel shows it.
+
+`tests/economy-persons.test.ts` (16 tests): the test of the upgrade from version 11 now follows the men, because
+the rate of the women of a city moves with its women of working age.
+
+`public/data/economy_cities.json` is written anew (the reference world has 11,725 persons who work). London, the
+city the tests of the engine compute, still has 292, so they pass unchanged, the measured bounds of `benefit.rs`
+and `demand_pull.rs` included.
+
+All tests: 1027 of the game (with main of 16 November 2026, 18:02 UTC), 53 of the engine.
+
+### In the game
+
+`npm run economy:check 30 4` and `npm run economy:check 5 8` as in section 10 (worlds of 1356, the seeds 1356 on),
+every day computed:
+
+| All cities together, year 30 (4 worlds) | Feature 10 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.0 | 116.3 | 115.9 to 116.7 |
+| Price level of output (start = 100) | 95.1 | 95.2 | 94.4 to 95.8 |
+| Exports, share of output | 2.67 % | 2.65 % | 2.63 % to 2.67 % |
+| Imports, share of output | 2.67 % | 2.66 % | 2.64 % to 2.67 % |
+| Without work, mean of all cities and days of the 30 years | 0.09 % | 0.07 % | 0.07 % to 0.08 % |
+| Without work, the worst city on its worst day | 3.4 % | 3.2 % | 2.9 % to 3.7 % |
+| City with the lowest output (its start = 100) | 109.0 | 111.8 | 108.6 to 115.2 |
+| City with the highest output | 117.5 | 117.5 | 117.4 to 117.5 |
+
+| All cities together, year 5 (8 worlds) | Feature 10 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 108.1 | 108.2 | 107.1 to 109.3 |
+| Price level of output (start = 100) | 99.5 | 99.7 | 99.0 to 100.0 |
+| Without work, mean of all cities and days | 0.45 % | 0.41 % | 0.31 % to 0.46 % |
+| Without work, the worst city on its worst day | 3.2 % | 3.1 % | 2.6 % to 3.7 % |
+| City with the lowest output (its start = 100) | 102.6 | 103.0 | 102.4 to 103.6 |
+| City with the highest output | 113.9 | 113.5 | 111.6 to 115.9 |
+
+The books are off by at most 2.0e-13 of the amount they are judged by. The outputs lie in the project files
+(wirtschaft/staedte/befunde/feature11_check_30_4.txt and feature11_check_5_8.txt).
+
+So the economies stand where they stood. The purse changes nothing in them; the new draw of the women gives the
+cities other persons who work and so other random numbers, and the differences are within what other seeds give
+(output 0.3 points, without work 0.02 points). They were not taken apart further.
+
+In the person panel the section "Haushalt" shows, for every person of a city: the persons of the family, those of
+them who work, the income and the spending of the family on the day, the person's own consumption and the savings
+of the family. Pictures in the project files (wirtschaft/staedte/befunde/feature11_fenster_*.png).
+
+### What it does not change
+
+- The rules of the model, the port, the merchants, the clock, the wage in money, the demand pull.
+- The men who work, the owners' draw, one firm for every four persons of a sector.
+- The persons: nobody is born, dies, marries or moves.
+
+### Limits
+
+- The purse is a booking. No rule of the model reads it: a person still spends the share ψ of the own income, the
+  family does not decide together, and nobody starves when the purse is empty.
+- The weights of the baskets (1 and ½) are the paper's assumption for English working families on the land, and
+  are applied to every city. The paper also lets children work from the age of six; here nobody under 15 works.
+- A family is the couple and its unmarried children. No servants, no kin outside the family, no payments between
+  families (the paper rules out transfers between generations too, p. 538).
+- The savings of a family are a sum: in the engine every person who works still saves alone.
+- 54 families (201 persons) of the world of 1291 still have nobody who works.
+- That a woman without a husband works is the paper's assumption; the lower rate of the other women is our
+  arithmetic. It differs from city to city (22 % to 43 %), because the share of women living alone does.
+- All women without a husband are women living alone, about one woman in seven: the people of the start have no
+  widows with children, because nobody has died.
+- The 43 % stay the rate of the nineteenth century (section 10).
+- Not read: the online appendix of Horrell, Humphries and Weisdorf (tables S2 and S4) and the last 18,000 of the
+  118,613 characters of the paper's file; the journal version of Poledna et al. (the working paper of 2020 was
+  read, the equations are cited from the code).
+- Considered and left out: the dependants as persons of the engine, paid by their family in place of the state.
+  It would double the engine's persons, need rules of our own beside the port and a new founding, and because the
+  model's consumption is linear in income with one ψ for all, the cities' figures would stay the same (reasoned
+  from the code, not measured). And the modified OECD scale (1.0 / 0.5 / 0.3): it compares households of today.

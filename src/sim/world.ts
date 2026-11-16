@@ -40,7 +40,7 @@ export interface CultivationJson {
 }
 
 /** The economy of the world: the engine that computes a period, and the calibration table of the cities' economies
- *  (data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3 to 10). The world calibrates every city from
+ *  (data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3 to 11). The world calibrates every city from
  *  the table when it founds the economies (src/sim/systems/economy.ts). */
 export interface EconomySetup { engine: EconomyEngine; table: CalibrationTable }
 
