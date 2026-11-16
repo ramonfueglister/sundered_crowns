@@ -1,5 +1,5 @@
 // Computes the port's parameters for every city from the calibration table and writes public/data/economy_cities.json
-// (economy features 3 to 6, docs/ECONOMY_DESIGN.md): for each of the places with one of the 30 largest cities, the
+// (economy features 3 to 7, docs/ECONOMY_DESIGN.md): for each of the places with one of the 30 largest cities, the
 // yearly calibration of England at the city's size, turned into days. Run after the table or the cities have changed:
 //   npm run economy:calibrate
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ export function cityCalibrations(t: CalibrationTable): { place: number; name: st
 /** The file as it is written: one key per line at the top, one city per line. */
 export function calibrationJson(t: CalibrationTable): string {
   const cities = cityCalibrations(t), c = cities[0].calibration;
-  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "cities": [\n`
+  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "cities": [\n`
     + cities.map((x) => `  ${JSON.stringify({ place: x.place, name: x.name, people: x.people, parameters: x.calibration.parameters, initial_conditions: x.calibration.initial_conditions })}`).join(',\n')
     + '\n ]\n}\n';
 }
@@ -47,4 +47,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   }
   const c = cityCalibrations(t)[0].calibration;
   console.log(`${c.periods_per_year} periods a year; a firm plans every ${c.clock.plan} days, expectations on windows of ${c.clock.window} days`);
+  console.log(t.cities.wage.value === 'money' ? 'the firms pay a wage in money that never changes' : 'the firms pay a real wage that follows the consumer prices, as in the port');
 }

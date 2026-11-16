@@ -56,6 +56,13 @@ impl Economy {
         Ok(Economy { model: AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext }, rng })
     }
 
+    /// The same economy with wages paid in money from now on (economy feature 7, [`clock`]): every firm keeps the
+    /// wage it pays today as an amount of money, instead of a real wage that follows the consumer prices.
+    pub fn with_wages_in_money(mut self) -> Economy {
+        self.model.ext.pay_in_money(&self.model.firms.w_bar_i, self.model.agg.P_bar_HH);
+        self
+    }
+
     /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. Of
     /// the rows only the last `window` are kept (no rule of the port reads them).
     pub fn step(&mut self, periods: usize) {
@@ -240,7 +247,7 @@ pub mod abi {
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize) -> Result<Cities, String> {
+    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -253,13 +260,17 @@ pub mod abi {
             let n = u32::from_le_bytes(take(list, 4)?.try_into().unwrap()) as usize;
             std::str::from_utf8(take(list, n)?).map_err(|e| format!("{what} of city {c} are not text: {e}"))
         }
+        if wage > 1 {
+            return Err(format!("wages of kind {wage}: 0 is the port's wage that follows the prices, 1 the wage in money"));
+        }
         let mut all = Vec::new();
         while !list.is_empty() {
             let c = all.len();
             let seed = u64::from_le_bytes(take(&mut list, 8)?.try_into().unwrap());
             let p = text(&mut list, "the parameters", c)?;
             let ic = text(&mut list, "the initial conditions", c)?;
-            all.push(Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?);
+            let e = Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?;
+            all.push(if wage == 1 { e.with_wages_in_money() } else { e });
         }
         Cities::new(all)
     }
@@ -285,15 +296,17 @@ pub mod abi {
 
     /// New cities that trade with each other, from a list of cities (for every city the 64-bit seed, then the
     /// port's parameters and initial conditions as JSON, each with its length in 32 bits before it) and the two
-    /// lengths of the daily clock ([`Economy::new`], [`Cities::new`]). Result: their state.
+    /// lengths of the daily clock ([`Economy::new`], [`Cities::new`]) and the kind of wages: 0 for the port's wage
+    /// that follows the consumer prices, 1 for the wage in money ([`Economy::with_wages_in_money`]). Result: their
+    /// state.
     ///
     /// # Safety
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize).map(keep))
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage).map(keep))
     }
 
     /// Computes `periods` periods from a state. Result: the state after them.

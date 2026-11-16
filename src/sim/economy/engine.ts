@@ -31,6 +31,9 @@ export const FIGURES = 16;
 /** The two lengths of the daily clock in periods: a firm plans every `plan` periods, expectations are formed on
  *  windows of `window` periods. With 1 and 1 the engine computes the port as it is. */
 export interface EconomyClock { plan: number; window: number }
+/** How the firms pay wages (economy feature 7, economy/src/clock.rs): 'prices' is the port's rule, a real wage that
+ *  never changes, paid times the consumer price level; 'money' is a wage in money that never changes. */
+export type EconomyWage = 'prices' | 'money';
 
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
@@ -45,8 +48,8 @@ export interface CityChecks { income: number; nominal: number; real: number; cen
 export interface EconomyChecks { cities: CityChecks[]; merchants: { off: number; scale: number }[] }
 
 export interface EconomyEngine {
-  /** New cities that trade with each other, with the clock: their state. */
-  create(cities: readonly CitySetup[], clock: EconomyClock): Uint8Array;
+  /** New cities that trade with each other, with the clock and the way their firms pay wages: their state. */
+  create(cities: readonly CitySetup[], clock: EconomyClock, wage: EconomyWage): Uint8Array;
   /** The state after `periods` more periods. */
   step(state: Uint8Array, periods: number): Uint8Array;
   /** The key figures of every city, `FIGURES` numbers a city in the order of the cities. */
@@ -57,7 +60,7 @@ export interface EconomyEngine {
 interface Exports {
   memory: WebAssembly.Memory;
   sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
-  sce_create(list: number, len: number, plan: number, window: number): number;
+  sce_create(list: number, len: number, plan: number, window: number, wage: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -113,9 +116,10 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   }
 
   return {
-    create(cities, clock) {
+    create(cities, clock, wage) {
       for (const n of [clock.plan, clock.window]) if (!Number.isInteger(n) || n < 1 || n > 0xffff) throw new Error(`${n} is not a length of the economy's clock`);
-      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window));
+      if (wage !== 'prices' && wage !== 'money') throw new Error(`${wage} is not a way to pay wages: 'prices' or 'money'`);
+      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0));
     },
     step(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);

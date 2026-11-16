@@ -21,12 +21,24 @@
 //!
 //! With `plan` and `window` of 1 both rules are the port's rules, number for number (economy/tests/shell.rs).
 //!
+//! It also carries the wage in money (economy feature 7). In the port a firm has a real wage that never changes, and
+//! what it pays is that real wage times the consumer price level of the period (`firms.jl:120-127` and `:221` of
+//! BeforeIT.jl; A.26 and the wage bill of the profits): the wage follows the prices one to one, so nothing holds the
+//! level of prices. In an economy that pays wages in money ([`DailyClock::pay_in_money`]) a firm has a wage in money
+//! that never changes, as in Assenza, Delli Gatti and Grazzini (2015, Emergent Dynamics of a Macroeconomic Agent
+//! Based Model with Capital and Credit, CESifo Working Paper 4765, table 2: the nominal wage is a constant). The
+//! port's rules stay as they are and go on paying "real wage times consumer price level": before the firms decide,
+//! the real wage of every firm is set to its wage in money over the consumer price level. And in the cost push
+//! (A.9) the price of labour is no longer the consumer price level but the wage in money over the real wage of the
+//! start, which stays where it was at the start; that reading of A.9 is ours, the papers do not give it. Without
+//! [`DailyClock::pay_in_money`] nothing of this happens and the economy computes as before.
+//!
 //! The port takes one model type per model, so this one also carries what a city needs that trades with other cities
 //! ([`crate::trade`]): while the merchants have set what they want and bring, the rule of the rest of the world reads
 //! that instead of the port's random series. An economy on its own never has merchants and computes as before.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
-use beforeit::{AbstractModel, Extension, FirmsDecisions, Randomness, base};
+use beforeit::{AbstractModel, Extension, Firms, FirmsDecisions, Randomness, base};
 
 use crate::trade::{self, Trade};
 
@@ -42,6 +54,10 @@ pub struct DailyClock {
     pub periods: Vec<u32>,
     /// real and nominal GDP of the starting position, per period
     pub start: [f64; 2],
+    /// the wage in money (economy feature 7): per firm the wage in money it pays for a unit of work, and the real
+    /// wage it had when the wage in money was set. Both empty: the wage follows the consumer prices, as in the port.
+    pub wage: Vec<f64>,
+    pub real_wage: Vec<f64>,
     /// what the merchants want from this economy and bring to it in the period that is being computed
     /// ([`crate::trade`]); `None` between two periods and in an economy on its own. Not part of the saved state.
     pub trade: Option<Trade>,
@@ -53,13 +69,25 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], wage: Vec::new(), real_wage: Vec::new(), trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
     /// firm `i` plans every `plan` periods, the firms spread evenly over them in their order.
     pub fn plans(&self, i: usize, t: usize) -> bool {
         t == 1 || (t - 1) % self.plan == i % self.plan
+    }
+
+    /// From now on the firms pay wages in money: every firm keeps the wage it pays today, its real wage `w_bar_i`
+    /// times the consumer price level `P_bar_HH`, as an amount of money.
+    pub fn pay_in_money(&mut self, w_bar_i: &[f64], P_bar_HH: f64) {
+        self.wage = w_bar_i.iter().map(|w| w * P_bar_HH).collect();
+        self.real_wage = w_bar_i.to_vec();
+    }
+
+    /// Whether the firms pay wages in money ([`DailyClock::pay_in_money`]).
+    pub fn pays_in_money(&self) -> bool {
+        !self.wage.is_empty()
     }
 }
 
@@ -110,16 +138,43 @@ impl Extension for DailyClock {
         (Y_e / window as f64, per_period(gamma_e, window), per_period(pi_e, window))
     }
 
+    /// The port's `cost_push_inflation` (A.9). In an economy that pays wages in money the term of labour is the
+    /// port's with another price of labour: the port has `(1 + tau_SIF) * w_bar_i / alpha_bar_i * (P_bar_HH / P_i - 1)`,
+    /// where the consumer price level `P_bar_HH` is the price of labour because the wage follows it. Here the price of
+    /// labour is the wage in money over the real wage of the start, so the term is
+    /// `(1 + tau_SIF) * real_wage / alpha_bar_i * (wage / real_wage / P_i - 1)`, computed as
+    /// `(1 + tau_SIF) / alpha_bar_i * (wage / P_i - real_wage)`. The terms of materials and of capital are the port's.
+    fn cost_push_inflation(m: &AbstractModel<Self>, firms: &Firms) -> Vec<f64> {
+        let mut push = base::cost_push_inflation(m, firms);
+        if m.ext.pays_in_money() {
+            let (c, f, tax, P_bar_HH) = (&m.ext, firms, 1.0 + m.prop.tau_SIF, m.agg.P_bar_HH);
+            for (i, push) in push.iter_mut().enumerate() {
+                let port = tax * f.w_bar_i[i] / f.alpha_bar_i[i] * (P_bar_HH / f.P_i[i] - 1.0);
+                let money = tax / f.alpha_bar_i[i] * (c.wage[i] / f.P_i[i] - c.real_wage[i]);
+                *push += money - port;
+            }
+        }
+        push
+    }
+
     /// The port's `firms_expectations_and_decisions`, with supply and price set only by the firms that plan in this
-    /// period.
+    /// period. In an economy that pays wages in money every firm's real wage is first set to its wage in money over
+    /// the consumer price level, so that the port's rules of this period pay the wage in money.
     ///
     /// # Panics
     ///
     /// If the model has gained or lost firms: the clock does not follow that.
     fn firms_expectations_and_decisions<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> FirmsDecisions {
-        let mut d = base::firms_expectations_and_decisions(m, rng);
         let I = m.firms.len();
         assert!(m.ext.demand.len() == I && m.ext.periods.len() == I, "the daily clock holds {} firms, the model has {I}", m.ext.demand.len());
+        if m.ext.pays_in_money() {
+            assert!(m.ext.wage.len() == I && m.ext.real_wage.len() == I, "the daily clock holds the wages of {} firms, the model has {I}", m.ext.wage.len());
+            let P_bar_HH = m.agg.P_bar_HH;
+            for i in 0..I {
+                m.firms.w_bar_i[i] = m.ext.wage[i] / P_bar_HH;
+            }
+        }
+        let mut d = base::firms_expectations_and_decisions(m, rng);
         let (plan, t) = (m.ext.plan, m.agg.t);
         let (growth, inflation) = (compound(m.agg.gamma_e, plan), compound(m.agg.pi_e, plan));
         let cost_push = Self::cost_push_inflation(m, &m.firms);

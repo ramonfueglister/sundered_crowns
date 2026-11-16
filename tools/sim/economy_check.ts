@@ -1,4 +1,4 @@
-// The economies of the cities in worlds of the game (docs/ECONOMY_DESIGN.md, features 3 to 6). Runs worlds from
+// The economies of the cities in worlds of the game (docs/ECONOMY_DESIGN.md, features 3 to 7). Runs worlds from
 // their start in 1356, day by day (advanceDay), and prints Markdown tables: what all cities together and the single
 // cities show after the years, what the days show (people without work), and whether the books of the merchants
 // and of every city balance.

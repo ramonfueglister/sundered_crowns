@@ -23,7 +23,12 @@ export interface CalibrationTable {
   /** the daily clock of economy feature 4 */
   clock: { days_per_year: Entry<number>; plan_days: Entry<number> };
   /** what a city's table takes in place of England's (economy feature 5) */
-  cities: { structure: Entry<string>; duty_shillings_per_sack: Entry<number>; unemployment_benefit: Entry<number> };
+  cities: {
+    structure: Entry<string>; duty_shillings_per_sack: Entry<number>; unemployment_benefit: Entry<number>;
+    /** how the firms of a city pay wages (economy feature 7): 'money' is a wage in money that never changes,
+     *  'prices' the port's real wage that follows the consumer prices */
+    wage: Entry<'money' | 'prices'>;
+  };
   sectors: string[];
   inputs: {
     gdp_nominal_gbp_mn: Entry<number>;

@@ -1,6 +1,6 @@
 # Wirtschaft der Städte
 
-**Status:** Beschlossen (am 15.11.2026 entschieden und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-15
+**Status:** Beschlossen (am 15.11.2026 entschieden und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Jede der grössten Städte der Welt ist eine eigene, vollständige Volkswirtschaft: Personen, Betriebe, eine Bank, eine Krone und ein Ausland, jeder mit eigener Bilanz. Das Ausland einer Stadt sind die anderen Städte: Händler kaufen in einer Stadt und verkaufen am nächsten Tag in einer anderen. Gerechnet wird an jedem Spieltag.
 
@@ -61,13 +61,14 @@ Die Regeln 3 und 5 sind eigene Festlegungen dieses Spiels. Das Modell kennt kein
 
 ## Daten und Parameter
 
-Keine Stadt hat eigene Daten. Drei Annahmen, alle in der Eichtabelle (`data/economy/england_1356.json`) als Annahme markiert:
+Keine Stadt hat eigene Daten. Vier Annahmen, alle in der Eichtabelle (`data/economy/england_1356.json`) als Annahme markiert:
 
 | Annahme | Wert | Was sie bedeutet |
 |---|---|---|
 | Struktur jeder Stadt | England 1356 | Jede Stadt ist Englands Eichtabelle im Verhältnis ihrer Einwohner zu Englands Einwohnern (2'583'180). Kairo ist England mit mehr Menschen |
 | Zoll zwischen Städten | 0 | Englands Wollzoll von 1356 gilt nicht für den Handel zwischen Städten. Die Krone einer Stadt lebt von der direkten Steuer allein. Am Start führt jede Stadt so viel ein wie aus: 3,3 % ihrer Produktion |
 | Unterstützung ohne Arbeit | 55 % des Lohns nach Steuern | Wer keine Arbeit hat, bekommt von der Krone der Stadt diesen Teil des letzten Lohns: die Regel des Modells mit dem Wert des Originalcodes. 1356 gab es kein Arbeitslosengeld; der Eintrag ist vorläufig. Siehe [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md) |
+| Lohn | fester Lohn in Geld je Betrieb | Jeder Betrieb zahlt den Lohn seines Starts in Geld weiter, statt eines Lohns, der den Preisen folgt (Assenza u. a. 2015). So bleibt das Preisniveau bei seinem Start. Siehe [Lohn in Geld](lohn-in-geld.md) |
 
 Jede Stadt hat einen eigenen Zufallsstartwert aus dem Startwert der Welt und ihrem Ort.
 
@@ -77,21 +78,21 @@ Acht Welten des Spiels über fünf Jahre, Tag für Tag gerechnet (`npm run econo
 
 | Alle Städte zusammen, Jahr 5 | Mittel der Welten | Spanne der Welten |
 |---|---|---|
-| Reale Produktion (Start = 100) | 105,0 | 104,3 bis 106,7 |
-| Preisniveau (Start = 100) | 103,7 | 102,6 bis 104,5 |
-| Ausfuhr = Einfuhr, Anteil an der Produktion | 2,57 % | 2,46 % bis 2,76 % |
-| Ohne Arbeit, Mittel aller Städte und Tage | 0,51 % | 0,39 % bis 0,63 % |
-| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 2,9 % | 2,6 % bis 3,6 % |
-| Stadt mit der tiefsten Produktion (ihr Start = 100) | 100,8 | 99,1 bis 101,8 |
-| Stadt mit der höchsten Produktion | 111,2 | 107,8 bis 114,5 |
+| Reale Produktion (Start = 100) | 106,9 | 104,7 bis 109,3 |
+| Preisniveau (Start = 100) | 100,1 | 100,0 bis 100,1 |
+| Ausfuhr = Einfuhr, Anteil an der Produktion | 2,77 % | 2,53 % bis 2,93 % |
+| Ohne Arbeit, Mittel aller Städte und Tage | 0,35 % | 0,19 % bis 0,50 % |
+| Ohne Arbeit, schlechteste Stadt an ihrem schlechtesten Tag | 2,5 % | 1,9 % bis 3,2 % |
+| Stadt mit der tiefsten Produktion (ihr Start = 100) | 102,6 | 99,6 bis 104,4 |
+| Stadt mit der höchsten Produktion | 113,7 | 108,4 bis 114,7 |
 
-Die Bücher (die Identitäten jeder Stadt und die Bücher der Händler, einmal im Monat geprüft) weichen höchstens um 1 · 10⁻¹³ ihres Betrags ab.
+Die Bücher (die Identitäten jeder Stadt und die Bücher der Händler, einmal im Monat geprüft) weichen höchstens um 8 · 10⁻¹⁴ ihres Betrags ab.
 
 Was die Tabelle sagt:
 
-- Alle Städte zusammen wachsen leicht, und die Preise steigen um knapp 1 % im Jahr. Ausfuhr und Einfuhr aller Städte sind in jedem Jahr gleich.
+- Alle Städte zusammen wachsen leicht, und das Preisniveau bleibt bei seinem Start (seit Feature 7, [Lohn in Geld](lohn-in-geld.md); vorher stiegen die Preise um knapp 1 % im Jahr). Ausfuhr und Einfuhr aller Städte sind in jedem Jahr gleich.
 - Grosse und kleine Städte stehen nach fünf Jahren nahe beieinander. In einer ersten Fassung der Regel 4 fielen die grossen Städte zurück (Kairo auf 89), weil jede Stadt als ein einziger Verkäufer zählte und Kairo darum nur für 1,7 % seiner Produktion angefragt wurde, die kleinsten Städte für 3,9 %. Das ist korrigiert.
-- Der Handel sinkt von 3,3 % auf 2,57 % der Produktion. Der Grund liegt im Gütermarkt des Modells: Der Stand der Händler ist dort ein Verkäufer unter allen Betrieben der Stadt. In Kairo verkauft er 70 bis 80 % seiner Ware, in den kleinsten Städten fast alles.
+- Der Handel sinkt von 3,3 % auf 2,77 % der Produktion. Der Grund liegt im Gütermarkt des Modells: Der Stand der Händler ist dort ein Verkäufer unter allen Betrieben der Stadt. In Kairo verkauft er 70 bis 80 % seiner Ware, in den kleinsten Städten fast alles.
 
 ### Über 30 Jahre
 
@@ -99,14 +100,14 @@ Vier Welten des Spiels über 30 Jahre (`npm run economy:check 30 4`):
 
 | Alle Städte zusammen | Jahr 5 | Jahr 10 | Jahr 20 | Jahr 30 | Spanne der Welten im Jahr 30 |
 |---|---|---|---|---|---|
-| Reale Produktion (Start = 100), Mittel | 105,1 | 107,0 | 108,0 | 107,2 | 105,3 bis 108,6 |
-| Welt mit dem Startwert 1356 | 104,3 | 106,4 | 109,2 | 107,2 | |
+| Reale Produktion (Start = 100), Mittel | 106,1 | 106,6 | 105,5 | 104,1 | 103,2 bis 104,8 |
+| Welt mit dem Startwert 1356 | 104,7 | 105,2 | 105,5 | 103,2 | |
 
-Über die 30 Jahre sind im Mittel 0,7 % ohne Arbeit, die schlechteste Stadt an ihrem schlechtesten Tag 4,9 % (bis 5,9 %). Die tiefste Stadt steht im Jahr 30 bei 101 (100 bis 102).
+Über die 30 Jahre sind im Mittel 1,1 % ohne Arbeit, die schlechteste Stadt an ihrem schlechtesten Tag 6,2 % (bis 7,3 %). Die tiefste Stadt steht im Jahr 30 bei 98,5 (97,5 bis 99,4). Das Preisniveau steht bei 100,0. Die Produktion erreicht im Jahr 12 mit 107,4 ihren höchsten Stand und sinkt danach langsam; mit Feature 6 allein stand sie im Jahr 30 bei 107,2 und keine Stadt unter ihrem Start, dafür stiegen die Preise auf 124 (Zahlen dazu unter [Lohn in Geld](lohn-in-geld.md)).
 
 **Ohne die Unterstützung für Menschen ohne Arbeit sanken die verbundenen Städte über Jahrzehnte, eine nach der anderen, und kamen nicht zurück** (Produktion im Jahr 30 im Mittel 97, in einer Welt 75; einzelne Städte bei der Hälfte). In einer gesunkenen Stadt fehlte die Nachfrage, nichts sonst: Wer entlassen war, hatte kein Einkommen und kaufte nichts, die Betriebe verkauften weniger und entliessen weiter. Die Ursache lag in unserer Eichung, die diese Regel des Modells ausgeschaltet hatte. Seit Feature 6 ist sie eingeschaltet: [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md), dort stehen die Zahlen vorher und jetzt.
 
-Geblieben ist: Die Preise steigen um rund 0,7 % im Jahr, weil nichts im Modell das Preisniveau hält, und das Münzgeld aller Städte zusammen ist fest.
+Das Preisniveau hält seit Feature 7 der [Lohn in Geld](lohn-in-geld.md). Geblieben ist: Das Münzgeld aller Städte zusammen ist fest, und der Handel sinkt weiter (2,00 % der Produktion im Jahr 30).
 
 Nichts davon ist an der Geschichte geprüft, und die langen Läufe sind wenige (vier Welten).
 
@@ -117,7 +118,7 @@ Jede Stadt rechnet verkleinert. London: 609 statt 60'862 Menschen, davon 266 Erw
 ## Grenzen
 
 - Die Unterstützung für Menschen ohne Arbeit gab es 1356 nicht; sie ist vorläufig eingestellt (siehe [Arbeitslosengeld der Städte](arbeitslosengeld-der-staedte.md)). Ohne sie sinken die verbundenen Städte über Jahrzehnte.
-- Die Preise steigen dauernd leicht, und das Münzgeld aller Städte zusammen wächst nicht mit.
+- Die Löhne sind in Geld fest und können weder sinken noch steigen (siehe [Lohn in Geld](lohn-in-geld.md)). Das Preisniveau bleibt damit bei seinem Start; das Münzgeld aller Städte zusammen ist fest.
 - Alle Städte haben Englands Struktur und unterscheiden sich nur in Grösse und Zufall.
 - Keine Entfernung: Jede Stadt ist von jeder einen Tag entfernt, auch Texcoco in Mexiko und Niani in Mali von Paris. Transport kostet nichts.
 - Das Umland steckt in der Volkswirtschaft der Stadt, weil die Eichung die eines ganzen Landes ist. Orte ohne eine dieser Städte haben keine Wirtschaft.

@@ -2,7 +2,7 @@
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
-import type { EconomyClock, EconomyEngine } from './economy/engine';
+import type { EconomyClock, EconomyEngine, EconomyWage } from './economy/engine';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -50,6 +50,8 @@ export interface EconomyJson {
   /** periods of the model in a year (365: one period is one day), and the lengths of the daily clock in periods */
   periods_per_year: number;
   clock: EconomyClock;
+  /** how the firms pay wages (economy feature 7) */
+  wage: EconomyWage;
   /** the cities: the place, its name and its people, and `Parameters` and `InitialConditions` of the port, with its keys */
   cities: { place: number; name: string; people: number; parameters: Record<string, unknown>; initial_conditions: Record<string, unknown> }[];
 }
@@ -82,7 +84,7 @@ export class World {
   /** the engine of the economies and the calibration of the cities: for every city its place, its people and the
    *  JSON texts the engine reads (src/sim/systems/economy.ts) */
   economyEngine: EconomyEngine;
-  cityEconomies: { year: number; scale: number; clock: EconomyClock; cities: { place: number; people: number; parameters: string; initialConditions: string }[] };
+  cityEconomies: { year: number; scale: number; clock: EconomyClock; wage: EconomyWage; cities: { place: number; people: number; parameters: string; initialConditions: string }[] };
   /** per place: the number of its city in `cityEconomies.cities`, -1 for a place without one */
   cityOf: Int32Array;
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
@@ -125,8 +127,9 @@ export class World {
     this.economyEngine = economy.engine;
     const e = economy.cities;
     if (e.periods_per_year !== e.clock.window) throw new Error(`the economy of ${e.case} computes ${e.periods_per_year} periods a year, the window of its clock is ${e.clock.window}`);
+    if (e.wage !== 'prices' && e.wage !== 'money') throw new Error(`the economy of ${e.case} pays wages in the way "${e.wage}", the engine knows 'prices' and 'money'`);
     this.cityEconomies = {
-      year: e.year, scale: e.scale, clock: e.clock,
+      year: e.year, scale: e.scale, clock: e.clock, wage: e.wage,
       cities: e.cities.map((c) => ({ place: c.place, people: c.people, parameters: JSON.stringify(c.parameters), initialConditions: JSON.stringify(c.initial_conditions) })),
     };
     this.cityOf = new Int32Array(L).fill(-1);

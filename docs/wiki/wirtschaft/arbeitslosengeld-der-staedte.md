@@ -81,7 +81,7 @@ Die Unterstützung ist ein Anteil am Lohn und hängt nicht vom Massstab ab. Die 
 
 - Kein Arbeitslosengeld im Jahr 1356: Der Eintrag ist eine Annahme und vorläufig.
 - Jede Person ohne Arbeitgeber bekommt die Unterstützung, solange sie ohne Arbeit ist. Niemand ist ausgeschlossen.
-- Die Preise steigen weiter um rund 0,7 % im Jahr; nichts im Modell hält das Preisniveau, und das Münzgeld aller Städte zusammen ist fest.
+- Die Preise steigen weiter um rund 0,7 % im Jahr; nichts im Modell hält das Preisniveau, und das Münzgeld aller Städte zusammen ist fest. Seit Feature 7 hält der [Lohn in Geld](lohn-in-geld.md) das Preisniveau.
 - Der Handel sinkt weiter, von 3,3 % der Produktion am Start auf 2,25 % im Jahr 30.
 - Im Probelauf ausserhalb des Spiels floss das Münzgeld der Betriebe weiter langsam ab, und die Kronen machten Überschüsse. Im Spiel ist das nicht gemessen.
 - Die langen Läufe sind wenige: vier Welten über 30 Jahre im Spiel, zwei Läufe über 100 Jahre ausserhalb. Ein Spieljahr dauert einen echten Tag.

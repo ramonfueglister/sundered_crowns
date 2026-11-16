@@ -34,6 +34,7 @@ players and the AI of realms without a player act through the same commands.
 | 4 | England's economy computes every day | agreed by Ramon 15 Nov 2026 and built as proposed. It never ran in the world as England's clock: feature 5 took its place before the world server was redeployed, and the daily clock is now the clock of every city |
 | 5 | Cities as economies of their own that trade with each other | direction given by Ramon 15 Nov 2026; that the cities replace England's economy in the game decided by him the same day ("Ja, Städte ersetzen England", 17:15 UTC). Built; in the running world once the world server is redeployed. Over decades the linked cities sank (section 5); feature 6 mends it |
 | 6 | The cities pay the model's unemployment benefit | agreed by Ramon 15 Nov 2026 for the time being ("das kannst du gerne einstellen für den moment", 19:29 UTC). Built; in the running world together with feature 5 once the world server is redeployed |
+| 7 | The cities pay wages in money | agreed by Ramon 16 Nov 2026 ("Ja, Lohn in Geld bauen", 07:05 UTC): only this, the price rule and the unemployment benefit stay. Built on the branch of features 5 and 6; not in the running world |
 
 ## 1. Grain harvest per place
 
@@ -1258,6 +1259,7 @@ and 0.6 % without work and the lowest city at 98 and 101.
 
 - Prices still rise, by about 0.7 % a year (123.6 after 30 years; 248 and 263 after 100 years in the trial). The
   model has nothing that holds the price level (section 3), and the coin of the cities together is still fixed.
+  Feature 7 (section 7) holds the price level.
 - Trade still shrinks, from 3.3 % of output at the start to 2.25 % in year 30 (the stalls do not sell out;
   section 5).
 - Cities still differ by chance and a little by size: in the world of seed 1356 the cities stand between 101.2
@@ -1274,4 +1276,180 @@ and 0.6 % without work and the lowest city at 98 and 101.
 - The benefit at the start is the benefit on the mean wage; the original takes it from data.
 - The long runs are few: 4 worlds over 30 years in the game, 2 runs over 100 years outside it. A year of the game is
   a day of real time, so 30 years are a month of the running world.
+- Nothing here is checked against history.
+
+## 7. The cities pay wages in money
+
+Status: built on the branch of features 5 and 6 (draft pull request 17), not in the running world. Ramon agreed on
+16 November 2026 (07:05 UTC) on the card "Soll ich den Lohn in Geld als Feature 7 bauen?" with "Ja, Lohn in Geld
+bauen": only this, in the cities, with tests and numbers from the game; the price rule and the unemployment benefit
+stay, nothing goes live. Player wiki: docs/wiki/wirtschaft/lohn-in-geld.md.
+
+It comes from his objection to feature 6 on 15 November 2026: "löhne und preise sollte auch in der modernen
+wirtschaft sinken" (21:18 UTC) and "naja aber das stimmt doch nicht historsich. wie könnten wir das sauber fien?
+erweitern etc?" (21:26 UTC), and from three trials outside the game that he released one by one (project files
+wirtschaft/staedte/befunde/feature7_probelauf_canvas.txt, feature7_probelauf_preisregeln.txt,
+feature7_probelauf_lohnregeln.txt).
+
+### What the trials found
+
+In the model of the paper a firm has a real wage that never changes, and what it pays is that real wage times the
+consumer price level of the period (BeforeIT.jl, src/agent_actions/firms.jl, lines 120 to 127 and line 221; in the
+port `firms_wages` and `firms_profits` in src/firms.rs; A.26). The wage follows the prices one to one. So nothing in
+the model holds the level of prices: in section 6 they rose by 0.7 % a year, and every price rule of the literature
+that reacts to a firm's sales ran away in our cities when it was put in place of the paper's (the rule of CANVAS,
+Hommes et al. 2022; the mark-up of the K+S model, Dosi et al. 2010; the rule of CATS, Assenza et al. 2015).
+
+What holds the level is a wage in money. Assenza, Delli Gatti and Grazzini (2015, Emergent Dynamics of a
+Macroeconomic Agent Based Model with Capital and Credit, CESifo Working Paper 4765, table 2) keep the nominal wage
+constant (w = 1). With that, the paper's own price rule kept the prices of the 29 cities at 100.0 for 100 years in
+the trial. The two rules of the literature that tie the wage to the labour market did not hold in the cities: the
+wage equation of the K+S model (Dosi et al. 2015, equation 8) divides by a rate of unemployment that is close to
+zero here and broke 6 of 12 runs; the rule of Lengnick (2013, equation 5) multiplied the prices of Cairo by 12.8 in
+30 years.
+
+### The rule (`economy/src/clock.rs`)
+
+Not a line of the port changes. The model type of the daily clock gains two numbers per firm, both kept in the state:
+the wage in money `wage` and the real wage of the start `real_wage`.
+
+1. When the economy is made, `wage = w_bar_i · P_bar_HH`: the wage every firm pays at the start (the consumer price
+   level of the start is 1). It never changes after that.
+2. Every day, before the firms decide, the real wage of every firm is set to `w_bar_i = wage / P_bar_HH`, with the
+   consumer price level the firms know on that day. The port's rules then pay "real wage times consumer price
+   level" as before, which is now the wage in money. (The port multiplies by the price level at the end of the day,
+   so the wage paid on a day is off by the change of the consumer prices within that day.)
+3. In the cost push of a firm's price (A.9) the port has the term of labour
+   `(1 + tau_SIF) · w_bar_i / alpha_bar_i · (P_bar_HH / P_i − 1)`: the price of labour is the consumer price level,
+   because the wage follows it. Here the price of labour is the wage in money over the real wage of the start, which
+   stays at 1: the term is `(1 + tau_SIF) / alpha_bar_i · (wage / P_i − real_wage)`. The terms of materials and of
+   capital are the port's. A firm whose price lies above its start now sees labour as cheap against its price and
+   lowers the price; that is what pulls prices back.
+
+Points 2 and 3 are how the constant wage of Assenza et al. enters the model of Poledna et al.; that carrying over is
+ours and stands in no paper. Their own model has another price rule and no cost push.
+
+An economy without the feature computes as before, bit for bit: the port's own data set for Austria against the
+port used directly (economy/tests/shell.rs), and the WebAssembly build against the native one with either wage.
+
+The state of an economy has the format 3 (the two lists at the end of the clock's fields; empty lists for the port's
+wage). The state of the world stays version 8, which is not in the running world yet.
+
+### Calibration and the way into the game
+
+| Entry | Value | Kind |
+|---|---|---|
+| `cities.wage` in `data/economy/england_1356.json` | `money` | assumption: no source for 1356; the constant nominal wage of Assenza et al. (2015), table 2; set by Ramon's word of 16 November 2026. `prices` is the port's wage |
+
+`npm run economy:calibrate` writes it as the key `wage` of `public/data/economy_cities.json`; no parameter of a city
+changes. The world hands it to the engine when it founds the economies (`sce_create` has a fifth argument, 0 for the
+port's wage and 1 for the wage in money; `EconomyWage` in src/sim/economy/engine.ts).
+
+### Tests
+
+`economy/tests/wage.rs` (8 tests; Austria by the port's own rules and London of the game):
+
+- The port pays a real wage times the prices, the feature a wage in money: over 40 quarters of Austria the port's
+  real wages stay as they are while consumer prices move by more than 5 %; with the feature the wage in money of
+  every firm stays the same bit for bit, the real wage of every period is that wage over the consumer prices the
+  firms knew, what a firm pays for a unit of work is the wage in money up to the price change within the period, and
+  the books balance.
+- The cost push takes the wage in money as the price of labour: at the start it is the port's; with every price a
+  quarter higher the port's push is unchanged (it does not see the level), the feature's is lower by exactly the
+  term of labour; it does not depend on the real wage the port holds at the moment.
+- Prices come back: every price of London raised by 20 % on day 60. Two years later the price level is above 115
+  with the port's wage and within 2 % of the start with the wage in money (3 seeds).
+- The price level of London stays within 2 % of the start in each of 6 years (3 seeds), and the wage of every person
+  with an employer is the wage of that firm.
+- The wages are part of the state: 45 days through bytes day by day give the same economy as 45 days in one go; the
+  state of an economy with the port's wage loads as such; wages that do not fit the firms are refused.
+- The clock stops when it does not hold the wage of every firm.
+- Cities that trade pay wages in the same way (a mix is refused); three cities with wages in money trade for 90
+  days with balanced books and unchanged wages.
+- The calibration of the cities says `money`.
+
+Taking out point 2 fails the first test; taking out point 3 fails the tests of the cost push and of the price level.
+
+`tests/economy.test.ts` (1 new test, 48 in all): the table marks the wage as an assumption and names the paper, the
+lines of the original it replaces and that the carrying over is ours; the file of the cities carries it and no
+parameter of a city changes with it. The engine tests now create the cities with the wage of the game, compare the
+WebAssembly build with the native one for both wages (also with the clock of the port), and refuse a wage that is
+neither.
+
+### In the game
+
+`npm run economy:check 30 4` (4 worlds of the game, seeds 1356 to 1359) and `npm run economy:check 5 8` (8 worlds,
+seeds 1356 to 1363), every day computed in all of them, against the same worlds with feature 6 alone (section 6):
+
+| All cities together, year 30 (4 worlds) | Feature 6 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 107.2 | 104.1 | 103.2 to 104.8 |
+| Price level of output (start = 100) | 123.6 | 100.0 | 100.0 to 100.1 |
+| Price level of a single city on the last day | not kept | 99.5 to 100.5 | 99.5 to 100.6 |
+| Exports = imports, share of output | 2.25 % | 2.00 % | 1.97 % to 2.03 % |
+| Without work, mean of all cities and days of the 30 years | 0.70 % | 1.14 % | 0.77 % to 1.34 % |
+| Without work, the worst city on its worst day | 4.9 % | 6.2 % | 5.8 % to 7.3 % |
+| City with the lowest output (its start = 100) | 101.3 | 98.5 | 97.5 to 99.4 |
+| City with the highest output | 113.9 | 114.1 | 113.6 to 114.7 |
+
+| All cities together, mean of the 4 worlds | Year 5 | Year 10 | Year 12 | Year 20 | Year 30 |
+|---|---|---|---|---|---|
+| Real output (start = 100), now | 106.1 | 106.6 | 107.4 | 105.5 | 104.1 |
+| Feature 6 | 105.1 | 107.0 | | 108.0 | 107.2 |
+| Exports = imports, share of output, now | 2.67 % | 2.33 % | 2.36 % | 2.12 % | 2.00 % |
+
+| All cities together, year 5 (8 worlds) | Feature 6 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 105.0 | 106.9 | 104.7 to 109.3 |
+| Price level of output (start = 100) | 103.7 | 100.1 | 100.0 to 100.1 |
+| Exports = imports, share of output | 2.57 % | 2.77 % | 2.53 % to 2.93 % |
+| Without work, mean of all cities and days | 0.51 % | 0.35 % | 0.19 % to 0.50 % |
+| Without work, the worst city on its worst day | 2.9 % | 2.5 % | 1.9 % to 3.2 % |
+| City with the lowest output (its start = 100) | 100.8 | 102.6 | 99.6 to 104.4 |
+| City with the highest output | 111.2 | 113.7 | 108.4 to 114.7 |
+
+The price level holds: 100.0 after 30 years in every world, and no city further than 0.6 from 100. The books are
+off by at most 2.0e-13 of the amount they are judged by. The outputs of both runs lie in the project files
+(wirtschaft/staedte/befunde/feature7_check_30_4.txt and feature7_check_5_8.txt).
+
+The goods side is better in the first years and worse later than with feature 6 alone. Output peaks in year 12 at
+107.4 and then falls slowly, to 104.1 in year 30. In the world of seed 1356 two of the 29 cities stand below their
+start after 30 years (Isfahan 98.6, Aleppo 99.0); with feature 6 alone none did.
+
+Outside the game the same 29 linked cities ran 100 years in 3 runs (native build, the calibrations of the game,
+seeds 1356 to 1358, every day computed; `economy/examples/cities.rs` with `money`). Output does not keep falling: it
+swings between 102 and 108 for the whole century and ends at 102.3, 106.6 and 104.3. The price level of all cities
+stays between 99.9 and 100.2 in every year checked, no city further than 1.0 from 100. Between 0 and 9 of the 29
+cities stand below their start at a time, the lowest at 95.1; on the days checked 0.5 % to 2.6 % are without work.
+The merchants' books are off by at most 2.5e-13. The output of the three runs lies in the project files
+(wirtschaft/staedte/befunde/feature7_100_jahre.txt).
+
+| Year (3 runs outside the game) | 10 | 30 | 50 | 75 | 100 |
+|---|---|---|---|---|---|
+| Real output of all cities (start = 100) | 105.1 to 105.7 | 103.2 to 106.6 | 103.2 to 104.4 | 103.6 to 104.6 | 102.3 to 106.6 |
+| Price level of all cities (start = 100) | 99.9 to 100.0 | 100.0 to 100.1 | 100.0 to 100.1 | 100.0 to 100.1 | 100.0 to 100.1 |
+| Lowest city (its start = 100) | 98.8 to 100.2 | 97.1 to 101.1 | 97.2 to 98.3 | 95.1 to 98.3 | 98.0 to 100.4 |
+| Cities below their start | 0 to 1 | 0 to 7 | 4 to 6 | 3 to 8 | 0 to 9 |
+
+### What it does not change
+
+- The price rule is the paper's (A.8, A.9). Prices move with costs and with expected inflation, not with what a
+  firm sells. The rule of CANVAS on top of the wage in money was tried outside the game (output 116, nobody without
+  work, with and without the benefit); it is not built and would be a feature of its own.
+- The unemployment benefit of feature 6 stays. A person without work keeps the real wage of the last day of work,
+  and the benefit is 55 % of it at the prices of the day, as in the port.
+- Households still expect their income of the next day at today's prices times the expected inflation
+  (`households_income_act` of the port).
+- Trade still shrinks, to 2.00 % of output in year 30.
+
+### Limits
+
+- A wage that never changes cannot fall either, and it cannot rise. Ramon's point that wages should be able to fall
+  is not met by this feature; it is the anchor that a rule for wages or prices needs before it can hold.
+- The wage is fixed firm by firm at the value of the start. Nothing ties it to the labour market, to output per
+  head or to the coin in the city.
+- How the constant wage enters the cost push is our reading of A.9, not a rule of a paper.
+- A wage in money that never changes for decades is no finding about 1356. The Ordinance of Labourers of 1349 set
+  wages at the level customary before the plague, as a ceiling; no source was used to calibrate this feature.
+- The long runs are few: 4 worlds over 30 years in the game, 3 runs over 100 years outside it.
 - Nothing here is checked against history.

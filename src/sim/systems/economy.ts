@@ -37,7 +37,7 @@ export function citySeed(seed: number, place: number): number {
 export function foundEconomy(s: WorldState, w: World): void {
   const c = w.cityEconomies;
   if (s.startYear !== c.year) { s.economy = { cities: null }; return; }
-  const model = w.economyEngine.create(c.cities.map((x) => ({ parameters: x.parameters, initialConditions: x.initialConditions, seed: citySeed(s.seed, x.place) })), c.clock);
+  const model = w.economyEngine.create(c.cities.map((x) => ({ parameters: x.parameters, initialConditions: x.initialConditions, seed: citySeed(s.seed, x.place) })), c.clock, c.wage);
   s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '' } };
 }
 

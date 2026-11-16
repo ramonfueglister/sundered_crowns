@@ -6,7 +6,8 @@
 //! with the merchants' checks (each as a share of the amount it is judged by).
 //! With `alone` in place of `linked` every city computes on its own, with the port's rule for the rest of the
 //! world: the same cities without merchants, to set the linked ones against.
-//! usage: cities <days> <every> <seed> <plan> <window> <linked|alone> (<parameters.json> <initial_conditions.json>)…
+//! With `money` the firms pay wages in money (economy feature 7), with `prices` the port's wage.
+//! usage: cities <days> <every> <seed> <plan> <window> <linked|alone> <prices|money> (<parameters.json> <initial_conditions.json>)…
 use sc_economy::Economy;
 use sc_economy::trade::Cities;
 
@@ -54,15 +55,22 @@ fn line(day: usize, c: usize, e: &Economy, stock: f64, met: &mut Met) {
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();
-    if a.len() < 11 || a.len() % 2 != 1 || !["linked", "alone"].contains(&a[6].as_str()) {
-        eprintln!("usage: cities <days> <every> <seed> <plan> <window> <linked|alone> (<parameters.json> <initial_conditions.json>)…");
+    if a.len() < 12 || a.len() % 2 != 0 || !["linked", "alone"].contains(&a[6].as_str()) || !["prices", "money"].contains(&a[7].as_str()) {
+        eprintln!("usage: cities <days> <every> <seed> <plan> <window> <linked|alone> <prices|money> (<parameters.json> <initial_conditions.json>)…");
         std::process::exit(2);
     }
     let n = |k: usize, what: &str| a[k].parse::<usize>().unwrap_or_else(|_| panic!("{what}: {}", a[k]));
     let (days, every, seed, plan, window) = (n(1, "days"), n(2, "every"), n(3, "seed") as u64, n(4, "plan"), n(5, "window"));
     let read = |p: &str| std::fs::read_to_string(p).unwrap_or_else(|e| panic!("{p}: {e}"));
-    let mut cities: Vec<Economy> =
-        a[7..].chunks(2).enumerate().map(|(c, f)| Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).expect("economy")).collect();
+    let money = a[7] == "money";
+    let mut cities: Vec<Economy> = a[8..]
+        .chunks(2)
+        .enumerate()
+        .map(|(c, f)| {
+            let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).expect("economy");
+            if money { e.with_wages_in_money() } else { e }
+        })
+        .collect();
     let t0 = std::time::Instant::now();
     let mut met = vec![Met::default(); cities.len()];
     if a[6] == "alone" {
