@@ -9,8 +9,11 @@ kill_timeout = "30s"
 [env]
   PORT = "8787"
   WORLD_DATA_DIR = "/data"
-  WORLD_ID = "europa-1"
-  WORLD_NAME = "Europa I"
+  # a new world for the start year 1291 (its own folder on the volume; the world of 1356, "europa-1", stays on disk)
+  WORLD_ID = "europa-1291"
+  WORLD_NAME = "Europa 1291"
+  WORLD_START_YEAR = "1291"
+  WORLD_SEED = "1291"
   SECONDS_PER_DAY = "240"
   MAX_PLAYERS = "100"
 

@@ -1,0 +1,105 @@
+{
+ "year": 1291,
+ "sources": [
+  "Novgorod's treaty charters with the princes of Tver (1264, 1266, 1270; Gramoty Velikogo Novgoroda i Pskova, nos. 1-3): Novgorod's volosts Volok, Torzhok, Bezhichi, Vologda, Zavoloch'e, Koloperem', Tre, Perm', Pechera, Yugra",
+  "J. Martin, Medieval Russia 980-1584 (2nd ed., 2007): Novgorod's northern tribute lands",
+  "Treaty of Nöteborg (1323) for the Karelian frontier as it had stood"
+ ],
+ "rules": [
+  {
+   "state": "novgorod",
+   "area": [
+    [
+     29.5,
+     60.3
+    ],
+    [
+     37.5,
+     60.3
+    ],
+    [
+     41.0,
+     64.0
+    ],
+    [
+     41.5,
+     66.5
+    ],
+    [
+     34.0,
+     66.8
+    ],
+    [
+     32.0,
+     66.0
+    ],
+    [
+     29.5,
+     64.0
+    ]
+   ],
+   "from": [
+    null
+   ],
+   "note": "Karelia between Lake Ladoga and the White Sea: Korela and the Karelians under Novgorod."
+  },
+  {
+   "state": "novgorod",
+   "area": [
+    [
+     32.0,
+     66.0
+    ],
+    [
+     41.5,
+     66.0
+    ],
+    [
+     41.5,
+     67.6
+    ],
+    [
+     32.0,
+     67.3
+    ]
+   ],
+   "from": [
+    null
+   ],
+   "note": "Tre, the Terek coast of the Kola peninsula, a Novgorodian tribute land (its northern Sami shared tribute with Norway)."
+  },
+  {
+   "state": "novgorod",
+   "area": [
+    [
+     40.0,
+     58.0
+    ],
+    [
+     60.0,
+     58.5
+    ],
+    [
+     66.0,
+     62.0
+    ],
+    [
+     66.0,
+     69.0
+    ],
+    [
+     44.0,
+     68.6
+    ],
+    [
+     40.0,
+     64.5
+    ]
+   ],
+   "from": [
+    null
+   ],
+   "note": "Zavoloch'e, Pechora and Yugra: Novgorod's northern tribute lands up to the Urals (Perm' of the Vychegda has a realm of its own)."
+  }
+ ]
+}

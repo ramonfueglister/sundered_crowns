@@ -1,0 +1,4771 @@
+{
+ "region": "west",
+ "year": 1291,
+ "date": "1291-01-01",
+ "sources": [
+  "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300 (sovereign and dependent states)",
+  "W. R. Shepherd, Historical Atlas (1923), 'Europe and the Mediterranean Lands about 1300' and 'France 1154-1328'",
+  "Handbook of British Chronology (3rd ed., 1986): rulers of England, Scotland, Ireland",
+  "M. Prestwich, Edward I (1988): Wales 1283, Gascony and the treaties of Amiens 1279 and Paris 1286, Isle of Man 1290, the Great Cause",
+  "A New History of Ireland vol. II (1987) and vol. IX (maps, genealogies, succession lists)",
+  "J. R. Strayer, The Reign of Philip the Fair (1980): royal domain, Champagne and Navarre through Joan I, Anjou to Charles of Valois 1290",
+  "J. F. O'Callaghan, A History of Medieval Spain (1975); J. F. O'Callaghan, The Gibraltar Crusade (2011), ch. 4-5: Marinid Algeciras, Tarifa, Ronda until 1292-95",
+  "L. P. Harvey, Islamic Spain 1250-1500 (1990): Granada under Muhammad II, Málaga 1279, Guadix 1288",
+  "D. Abulafia, The Western Mediterranean Kingdoms 1200-1500 (1997): Crown of Aragon, Majorca 1285-98"
+ ],
+ "new_ids": [
+  "majorca",
+  "brittany"
+ ],
+ "notes": [
+  "Date: 1 January 1291. Edward I holds England, the conquered principality of Wales, Gascony with the Agenais (Amiens 1279), Ponthieu (inherited by Edward of Caernarfon at Eleanor of Castile's death, 28 Nov 1290), the Channel Islands and, since June 1290, the Isle of Man.",
+  "Scotland is in interregnum after Margaret, Maid of Norway, died in autumn 1290; the Guardians govern. Berwick is Scottish until 1296.",
+  "The Anglo-Irish earldoms of 1356 (Desmond 1329, Ormond 1328, Kildare 1316) did not exist yet; the colonial lordships are part of Edward I's Lordship of Ireland.",
+  "Navarre and Champagne belong to Queen Joan I and her husband Philip IV; Champagne is modelled as part of France, Navarre as its own kingdom in personal union.",
+  "Philip IV ceded his half of Avignon to Charles II of Anjou in 1290; Avignon is Provençal, the Comtat Venaissin papal (since 1274).",
+  "The Kingdom of Majorca of James II is reduced to Roussillon, Cerdanya and Montpellier: Alfonso III of Aragon took Mallorca (1285), Ibiza (1286) and Menorca (January 1287).",
+  "Alicante, Elche and Orihuela belong to Castile until 1296; Riba-Côa (Sabugal, Castelo Rodrigo) and Olivenza to Castile until the Treaty of Alcañices 1297.",
+  "Algeciras, Tarifa, Gibraltar and Ronda are Marinid (ceded by Granada 1275); Tarifa falls to Castile in October 1292.",
+  "Gaelic rulers' names follow the Annals of Connacht and NHI IX; where the succession is disputed the ruler is left out."
+ ],
+ "states": [
+  {
+   "id": "england",
+   "name": {
+    "en": "Kingdom of England",
+    "de": "Königreich England"
+   },
+   "short": {
+    "en": "England",
+    "de": "England"
+   },
+   "adjective": {
+    "en": "English",
+    "de": "englisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "english",
+   "faith": "latin",
+   "color": "#82453f",
+   "capital": {
+    "name": "London",
+    "lat": 51.507,
+    "lon": -0.128
+   },
+   "holdings": [
+    {
+     "name": "London",
+     "lat": 51.507,
+     "lon": -0.128
+    },
+    {
+     "name": "York",
+     "lat": 53.958,
+     "lon": -1.08
+    },
+    {
+     "name": "Winchester",
+     "lat": 51.063,
+     "lon": -1.308
+    },
+    {
+     "name": "Lincoln",
+     "lat": 53.23,
+     "lon": -0.54
+    },
+    {
+     "name": "Norwich",
+     "lat": 52.628,
+     "lon": 1.297
+    },
+    {
+     "name": "Bristol",
+     "lat": 51.454,
+     "lon": -2.588
+    },
+    {
+     "name": "Exeter",
+     "lat": 50.718,
+     "lon": -3.534
+    },
+    {
+     "name": "Chester",
+     "lat": 53.19,
+     "lon": -2.89
+    },
+    {
+     "name": "Carlisle",
+     "lat": 54.892,
+     "lon": -2.933
+    },
+    {
+     "name": "Newcastle upon Tyne",
+     "lat": 54.97,
+     "lon": -1.61
+    },
+    {
+     "name": "Durham",
+     "lat": 54.776,
+     "lon": -1.575
+    },
+    {
+     "name": "Shrewsbury",
+     "lat": 52.707,
+     "lon": -2.754
+    },
+    {
+     "name": "Hereford",
+     "lat": 52.056,
+     "lon": -2.716
+    },
+    {
+     "name": "Gloucester",
+     "lat": 51.86,
+     "lon": -2.24
+    },
+    {
+     "name": "Oxford",
+     "lat": 51.752,
+     "lon": -1.258
+    },
+    {
+     "name": "Cambridge",
+     "lat": 52.205,
+     "lon": 0.119
+    },
+    {
+     "name": "Canterbury",
+     "lat": 51.28,
+     "lon": 1.08
+    },
+    {
+     "name": "Dover",
+     "lat": 51.127,
+     "lon": 1.313
+    },
+    {
+     "name": "Southampton",
+     "lat": 50.904,
+     "lon": -1.404
+    },
+    {
+     "name": "Plymouth",
+     "lat": 50.375,
+     "lon": -4.143
+    },
+    {
+     "name": "Nottingham",
+     "lat": 52.954,
+     "lon": -1.158
+    },
+    {
+     "name": "Leicester",
+     "lat": 52.63,
+     "lon": -1.13
+    },
+    {
+     "name": "Coventry",
+     "lat": 52.407,
+     "lon": -1.512
+    },
+    {
+     "name": "Worcester",
+     "lat": 52.19,
+     "lon": -2.22
+    },
+    {
+     "name": "Bath",
+     "lat": 51.38,
+     "lon": -2.36
+    },
+    {
+     "name": "Salisbury",
+     "lat": 51.07,
+     "lon": -1.79
+    },
+    {
+     "name": "Ipswich",
+     "lat": 52.06,
+     "lon": 1.16
+    },
+    {
+     "name": "King's Lynn",
+     "lat": 52.75,
+     "lon": 0.4
+    },
+    {
+     "name": "Hull",
+     "lat": 53.744,
+     "lon": -0.333
+    },
+    {
+     "name": "Lancaster",
+     "lat": 54.047,
+     "lon": -2.801
+    },
+    {
+     "name": "Caernarfon",
+     "lat": 53.139,
+     "lon": -4.276
+    },
+    {
+     "name": "Conwy",
+     "lat": 53.28,
+     "lon": -3.83
+    },
+    {
+     "name": "Harlech",
+     "lat": 52.86,
+     "lon": -4.11
+    },
+    {
+     "name": "Beaumaris",
+     "lat": 53.264,
+     "lon": -4.09
+    },
+    {
+     "name": "Aberystwyth",
+     "lat": 52.415,
+     "lon": -4.083
+    },
+    {
+     "name": "Carmarthen",
+     "lat": 51.857,
+     "lon": -4.311
+    },
+    {
+     "name": "Cardigan",
+     "lat": 52.08,
+     "lon": -4.66
+    },
+    {
+     "name": "Pembroke",
+     "lat": 51.674,
+     "lon": -4.912
+    },
+    {
+     "name": "Cardiff",
+     "lat": 51.481,
+     "lon": -3.179
+    },
+    {
+     "name": "Swansea",
+     "lat": 51.62,
+     "lon": -3.94
+    },
+    {
+     "name": "Brecon",
+     "lat": 51.946,
+     "lon": -3.39
+    },
+    {
+     "name": "Montgomery",
+     "lat": 52.56,
+     "lon": -3.15
+    },
+    {
+     "name": "Denbigh",
+     "lat": 53.184,
+     "lon": -3.42
+    },
+    {
+     "name": "Flint",
+     "lat": 53.25,
+     "lon": -3.13
+    },
+    {
+     "name": "Bordeaux",
+     "lat": 44.838,
+     "lon": -0.579
+    },
+    {
+     "name": "Bayonne",
+     "lat": 43.493,
+     "lon": -1.475
+    },
+    {
+     "name": "Dax",
+     "lat": 43.71,
+     "lon": -1.05
+    },
+    {
+     "name": "Saint-Sever",
+     "lat": 43.757,
+     "lon": -0.573
+    },
+    {
+     "name": "Agen",
+     "lat": 44.203,
+     "lon": 0.616
+    },
+    {
+     "name": "Libourne",
+     "lat": 44.915,
+     "lon": -0.244
+    },
+    {
+     "name": "Bazas",
+     "lat": 44.43,
+     "lon": -0.21
+    },
+    {
+     "name": "Saint-Émilion",
+     "lat": 44.89,
+     "lon": -0.16
+    },
+    {
+     "name": "La Réole",
+     "lat": 44.58,
+     "lon": -0.04
+    },
+    {
+     "name": "Abbeville",
+     "lat": 50.105,
+     "lon": 1.835
+    },
+    {
+     "name": "St Helier",
+     "lat": 49.18,
+     "lon": -2.11
+    },
+    {
+     "name": "St Peter Port",
+     "lat": 49.455,
+     "lon": -2.536
+    },
+    {
+     "name": "Castletown",
+     "lat": 54.074,
+     "lon": -4.653
+    },
+    {
+     "name": "Dublin",
+     "lat": 53.349,
+     "lon": -6.26
+    },
+    {
+     "name": "Waterford",
+     "lat": 52.259,
+     "lon": -7.11
+    },
+    {
+     "name": "Wexford",
+     "lat": 52.336,
+     "lon": -6.463
+    },
+    {
+     "name": "Cork",
+     "lat": 51.898,
+     "lon": -8.471
+    },
+    {
+     "name": "Limerick",
+     "lat": 52.664,
+     "lon": -8.623
+    },
+    {
+     "name": "Kilkenny",
+     "lat": 52.654,
+     "lon": -7.244
+    },
+    {
+     "name": "Drogheda",
+     "lat": 53.717,
+     "lon": -6.35
+    },
+    {
+     "name": "Dundalk",
+     "lat": 54.0,
+     "lon": -6.4
+    },
+    {
+     "name": "Carrickfergus",
+     "lat": 54.716,
+     "lon": -5.806
+    },
+    {
+     "name": "Athlone",
+     "lat": 53.423,
+     "lon": -7.94
+    },
+    {
+     "name": "Galway",
+     "lat": 53.271,
+     "lon": -9.049
+    },
+    {
+     "name": "Trim",
+     "lat": 53.56,
+     "lon": -6.79
+    },
+    {
+     "name": "Kildare",
+     "lat": 53.158,
+     "lon": -6.909
+    },
+    {
+     "name": "Youghal",
+     "lat": 51.953,
+     "lon": -7.85
+    },
+    {
+     "name": "Kinsale",
+     "lat": 51.71,
+     "lon": -8.52
+    },
+    {
+     "name": "Downpatrick",
+     "lat": 54.33,
+     "lon": -5.71
+    },
+    {
+     "name": "Roscommon",
+     "lat": 53.632,
+     "lon": -8.19
+    },
+    {
+     "name": "Sligo",
+     "lat": 54.27,
+     "lon": -8.47
+    }
+   ],
+   "ruler": {
+    "name": "Edward I",
+    "born": 1239,
+    "dynasty": "Plantagenet",
+    "female": false
+   },
+   "heir": {
+    "name": "Edward of Caernarfon",
+    "born": 1284,
+    "dynasty": "Plantagenet",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "House of Plantagenet. Queen Eleanor of Castile died on 28 November 1290. Edward I is Lord of Ireland, Duke of Aquitaine and, for his son, holds Ponthieu.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "flanders",
+    "holland",
+    "brabant",
+    "guelders"
+   ],
+   "rivals": [
+    "france"
+   ],
+   "claims_on": [
+    "scotland"
+   ],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Edward I has conquered Wales and sits as arbiter of the Scottish succession after the death of the Maid of Norway.",
+    "de": "Eduard I. hat Wales erobert und soll nach dem Tod der Maid von Norwegen über die schottische Thronfolge entscheiden."
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Azure semé-de-lis Or (France ancient), 2 and 3 Gules three lions passant guardant Or (England)",
+    "field": "azure",
+    "division": "quarterly",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 6,
+      "arrangement": "semee"
+     },
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "scotland",
+   "name": {
+    "en": "Kingdom of Scotland",
+    "de": "Königreich Schottland"
+   },
+   "short": {
+    "en": "Scotland",
+    "de": "Schottland"
+   },
+   "adjective": {
+    "en": "Scottish",
+    "de": "schottisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "scottish",
+   "faith": "latin",
+   "color": "#554e23",
+   "capital": {
+    "name": "Perth",
+    "lat": 56.396,
+    "lon": -3.437
+   },
+   "holdings": [
+    {
+     "name": "Perth",
+     "lat": 56.396,
+     "lon": -3.437
+    },
+    {
+     "name": "Edinburgh",
+     "lat": 55.953,
+     "lon": -3.189
+    },
+    {
+     "name": "Stirling",
+     "lat": 56.117,
+     "lon": -3.936
+    },
+    {
+     "name": "Scone",
+     "lat": 56.42,
+     "lon": -3.4
+    },
+    {
+     "name": "Aberdeen",
+     "lat": 57.149,
+     "lon": -2.094
+    },
+    {
+     "name": "Inverness",
+     "lat": 57.478,
+     "lon": -4.225
+    },
+    {
+     "name": "Dundee",
+     "lat": 56.462,
+     "lon": -2.971
+    },
+    {
+     "name": "Glasgow",
+     "lat": 55.861,
+     "lon": -4.251
+    },
+    {
+     "name": "Dumfries",
+     "lat": 55.07,
+     "lon": -3.605
+    },
+    {
+     "name": "Berwick-upon-Tweed",
+     "lat": 55.77,
+     "lon": -2.0
+    },
+    {
+     "name": "Roxburgh",
+     "lat": 55.596,
+     "lon": -2.46
+    },
+    {
+     "name": "Elgin",
+     "lat": 57.65,
+     "lon": -3.318
+    },
+    {
+     "name": "Dingwall",
+     "lat": 57.6,
+     "lon": -4.43
+    },
+    {
+     "name": "Ayr",
+     "lat": 55.458,
+     "lon": -4.629
+    },
+    {
+     "name": "Lanark",
+     "lat": 55.67,
+     "lon": -3.78
+    },
+    {
+     "name": "St Andrews",
+     "lat": 56.34,
+     "lon": -2.796
+    },
+    {
+     "name": "Dunfermline",
+     "lat": 56.07,
+     "lon": -3.46
+    },
+    {
+     "name": "Kirkcudbright",
+     "lat": 54.836,
+     "lon": -4.05
+    },
+    {
+     "name": "Wigtown",
+     "lat": 54.87,
+     "lon": -4.44
+    },
+    {
+     "name": "Forfar",
+     "lat": 56.64,
+     "lon": -2.89
+    },
+    {
+     "name": "Banff",
+     "lat": 57.665,
+     "lon": -2.524
+    },
+    {
+     "name": "Dunstaffnage",
+     "lat": 56.451,
+     "lon": -5.437
+    },
+    {
+     "name": "Finlaggan",
+     "lat": 55.836,
+     "lon": -6.17
+    },
+    {
+     "name": "Stornoway",
+     "lat": 58.209,
+     "lon": -6.389
+    },
+    {
+     "name": "Portree",
+     "lat": 57.41,
+     "lon": -6.19
+    },
+    {
+     "name": "Tarbert",
+     "lat": 55.864,
+     "lon": -5.413
+    },
+    {
+     "name": "Rothesay",
+     "lat": 55.84,
+     "lon": -5.06
+    },
+    {
+     "name": "Wick",
+     "lat": 58.44,
+     "lon": -3.09
+    }
+   ],
+   "ruler": {
+    "name": "Guardians of Scotland (William Fraser, Robert Wishart, John Comyn, James the Steward)",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Interregnum: Margaret, Maid of Norway, died in Orkney in autumn 1290. Thirteen claimants; Edward I is asked to judge (the Great Cause, Norham 1291).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "norway"
+   ],
+   "rivals": [
+    "england"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "Scotland has no king. The Guardians must choose between Balliol and Bruce, with Edward I of England as arbiter.",
+    "de": "Schottland hat keinen König. Die Guardians müssen zwischen Balliol und Bruce wählen, mit Eduard I. von England als Schiedsrichter."
+   },
+   "coa": {
+    "blazon": "Or a lion rampant within a double tressure flory-counter-flory Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "tir_eoghain",
+   "name": {
+    "en": "Kingdom of Tír Eoghain",
+    "de": "Königreich Tír Eoghain"
+   },
+   "short": {
+    "en": "Tír Eoghain",
+    "de": "Tír Eoghain"
+   },
+   "adjective": {
+    "en": "Tyrone",
+    "de": "tyronisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#8d6965",
+   "capital": {
+    "name": "Dungannon",
+    "lat": 54.503,
+    "lon": -6.767
+   },
+   "holdings": [
+    {
+     "name": "Dungannon",
+     "lat": 54.503,
+     "lon": -6.767
+    },
+    {
+     "name": "Armagh",
+     "lat": 54.35,
+     "lon": -6.65
+    },
+    {
+     "name": "Omagh",
+     "lat": 54.6,
+     "lon": -7.3
+    },
+    {
+     "name": "Coleraine",
+     "lat": 55.133,
+     "lon": -6.667
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Uí Néill; the kingship is disputed between Domnall mac Briain and the Mac Lochlainn line.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tir_chonaill"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent a sinister hand couped at the wrist Gules (the Red Hand)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tir_chonaill",
+   "name": {
+    "en": "Kingdom of Tír Chonaill",
+    "de": "Königreich Tír Chonaill"
+   },
+   "short": {
+    "en": "Tír Chonaill",
+    "de": "Tír Chonaill"
+   },
+   "adjective": {
+    "en": "Tyrconnell",
+    "de": "tyrconnellisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#583b58",
+   "capital": {
+    "name": "Donegal",
+    "lat": 54.654,
+    "lon": -8.11
+   },
+   "holdings": [
+    {
+     "name": "Donegal",
+     "lat": 54.654,
+     "lon": -8.11
+    },
+    {
+     "name": "Ballyshannon",
+     "lat": 54.5,
+     "lon": -8.19
+    },
+    {
+     "name": "Raphoe",
+     "lat": 54.874,
+     "lon": -7.6
+    },
+    {
+     "name": "Letterkenny",
+     "lat": 54.95,
+     "lon": -7.733
+    }
+   ],
+   "ruler": {
+    "name": "Toirdhealbhach Ó Domhnaill",
+    "born": null,
+    "dynasty": "Ó Domhnaill",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ó Domhnaill kings of Tír Chonaill.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "tir_eoghain"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or issuing from the sinister a cross Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "connacht",
+   "name": {
+    "en": "Kingdom of Connacht",
+    "de": "Königreich Connacht"
+   },
+   "short": {
+    "en": "Connacht",
+    "de": "Connacht"
+   },
+   "adjective": {
+    "en": "Connacht",
+    "de": "connachtisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#47654c",
+   "capital": {
+    "name": "Roscommon",
+    "lat": 53.633,
+    "lon": -8.19
+   },
+   "holdings": [
+    {
+     "name": "Roscommon",
+     "lat": 53.633,
+     "lon": -8.19
+    },
+    {
+     "name": "Tulsk",
+     "lat": 53.783,
+     "lon": -8.25
+    },
+    {
+     "name": "Carrick-on-Shannon",
+     "lat": 53.946,
+     "lon": -8.09
+    }
+   ],
+   "ruler": {
+    "name": "Maghnus Ó Conchobhair",
+    "born": null,
+    "dynasty": "Ó Conchobhair",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The O'Conor kingship is reduced to the Shannon plain around Roscommon; the de Burgh earls of Ulster hold most of Connacht as lords of Connacht under the English crown.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "england"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent an oak tree eradicated Vert",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "vert",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "thomond",
+   "name": {
+    "en": "Kingdom of Thomond",
+    "de": "Königreich Thomond"
+   },
+   "short": {
+    "en": "Thomond",
+    "de": "Thomond"
+   },
+   "adjective": {
+    "en": "Thomond",
+    "de": "thomondisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#607753",
+   "capital": {
+    "name": "Clonroad",
+    "lat": 52.844,
+    "lon": -8.986
+   },
+   "holdings": [
+    {
+     "name": "Clonroad",
+     "lat": 52.844,
+     "lon": -8.986
+    },
+    {
+     "name": "Killaloe",
+     "lat": 52.807,
+     "lon": -8.44
+    },
+    {
+     "name": "Corcomroe",
+     "lat": 53.13,
+     "lon": -9.05
+    }
+   ],
+   "ruler": {
+    "name": "Toirdhealbhach Mór Ó Briain",
+    "born": null,
+    "dynasty": "Ó Briain",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ó Briain kings of Thomond, contesting Thomas de Clare's lordship of Bunratty.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "england"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules three lions passant guardant in pale per pale Or and Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "maccarthy_mor",
+   "name": {
+    "en": "Kingdom of Desmond (MacCarthy Mór)",
+    "de": "Königreich Desmond (MacCarthy Mór)"
+   },
+   "short": {
+    "en": "MacCarthy Mór",
+    "de": "MacCarthy Mór"
+   },
+   "adjective": {
+    "en": "MacCarthy",
+    "de": "maccarthyisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#573b5a",
+   "capital": {
+    "name": "Pallis",
+    "lat": 52.06,
+    "lon": -9.51
+   },
+   "holdings": [
+    {
+     "name": "Pallis",
+     "lat": 52.06,
+     "lon": -9.51
+    },
+    {
+     "name": "Kenmare",
+     "lat": 51.88,
+     "lon": -9.584
+    },
+    {
+     "name": "Dingle",
+     "lat": 52.14,
+     "lon": -10.27
+    }
+   ],
+   "ruler": {
+    "name": "Domhnall Ruadh Mac Carthaigh",
+    "born": null,
+    "dynasty": "Mac Carthaigh",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "MacCarthy kings of Desmond.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "england"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent a stag trippant Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "stag_head",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "leinster",
+   "name": {
+    "en": "Kingdom of Leinster",
+    "de": "Königreich Leinster"
+   },
+   "short": {
+    "en": "Leinster",
+    "de": "Leinster"
+   },
+   "adjective": {
+    "en": "Leinster",
+    "de": "leinsterisch"
+   },
+   "rank": "lordship",
+   "government": "elective_monarchy",
+   "culture": "irish",
+   "faith": "latin",
+   "color": "#786a43",
+   "capital": {
+    "name": "Ferns",
+    "lat": 52.59,
+    "lon": -6.5
+   },
+   "holdings": [
+    {
+     "name": "Ferns",
+     "lat": 52.59,
+     "lon": -6.5
+    },
+    {
+     "name": "Enniscorthy",
+     "lat": 52.5,
+     "lon": -6.56
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mac Murchadha Caomhánach kings of Leinster in the Wicklow and Wexford uplands.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "england"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent a lion passant Gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "france",
+   "name": {
+    "en": "Kingdom of France",
+    "de": "Königreich Frankreich"
+   },
+   "short": {
+    "en": "France",
+    "de": "Frankreich"
+   },
+   "adjective": {
+    "en": "French",
+    "de": "französisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#39376e",
+   "capital": {
+    "name": "Paris",
+    "lat": 48.857,
+    "lon": 2.352
+   },
+   "holdings": [
+    {
+     "name": "Paris",
+     "lat": 48.857,
+     "lon": 2.352
+    },
+    {
+     "name": "Rouen",
+     "lat": 49.443,
+     "lon": 1.099
+    },
+    {
+     "name": "Caen",
+     "lat": 49.183,
+     "lon": -0.37
+    },
+    {
+     "name": "Évreux",
+     "lat": 49.024,
+     "lon": 1.151
+    },
+    {
+     "name": "Le Mans",
+     "lat": 48.004,
+     "lon": 0.197
+    },
+    {
+     "name": "Angers",
+     "lat": 47.473,
+     "lon": -0.554
+    },
+    {
+     "name": "Tours",
+     "lat": 47.394,
+     "lon": 0.685
+    },
+    {
+     "name": "Orléans",
+     "lat": 47.903,
+     "lon": 1.909
+    },
+    {
+     "name": "Chartres",
+     "lat": 48.446,
+     "lon": 1.489
+    },
+    {
+     "name": "Bourges",
+     "lat": 47.081,
+     "lon": 2.399
+    },
+    {
+     "name": "Poitiers",
+     "lat": 46.58,
+     "lon": 0.34
+    },
+    {
+     "name": "Niort",
+     "lat": 46.32,
+     "lon": -0.46
+    },
+    {
+     "name": "Limoges",
+     "lat": 45.833,
+     "lon": 1.262
+    },
+    {
+     "name": "Angoulême",
+     "lat": 45.65,
+     "lon": 0.16
+    },
+    {
+     "name": "La Rochelle",
+     "lat": 46.16,
+     "lon": -1.15
+    },
+    {
+     "name": "Saintes",
+     "lat": 45.745,
+     "lon": -0.633
+    },
+    {
+     "name": "Clermont",
+     "lat": 45.778,
+     "lon": 3.087
+    },
+    {
+     "name": "Le Puy",
+     "lat": 45.043,
+     "lon": 3.885
+    },
+    {
+     "name": "Mâcon",
+     "lat": 46.307,
+     "lon": 4.83
+    },
+    {
+     "name": "Reims",
+     "lat": 49.258,
+     "lon": 4.032
+    },
+    {
+     "name": "Troyes",
+     "lat": 48.297,
+     "lon": 4.074
+    },
+    {
+     "name": "Meaux",
+     "lat": 48.96,
+     "lon": 2.88
+    },
+    {
+     "name": "Provins",
+     "lat": 48.56,
+     "lon": 3.3
+    },
+    {
+     "name": "Châlons",
+     "lat": 48.957,
+     "lon": 4.365
+    },
+    {
+     "name": "Amiens",
+     "lat": 49.894,
+     "lon": 2.296
+    },
+    {
+     "name": "Laon",
+     "lat": 49.564,
+     "lon": 3.62
+    },
+    {
+     "name": "Beauvais",
+     "lat": 49.43,
+     "lon": 2.08
+    },
+    {
+     "name": "Senlis",
+     "lat": 49.21,
+     "lon": 2.59
+    },
+    {
+     "name": "Compiègne",
+     "lat": 49.42,
+     "lon": 2.83
+    },
+    {
+     "name": "Saint-Quentin",
+     "lat": 49.85,
+     "lon": 3.29
+    },
+    {
+     "name": "Sens",
+     "lat": 48.197,
+     "lon": 3.283
+    },
+    {
+     "name": "Auxerre",
+     "lat": 47.8,
+     "lon": 3.57
+    },
+    {
+     "name": "Nevers",
+     "lat": 46.99,
+     "lon": 3.159
+    },
+    {
+     "name": "Blois",
+     "lat": 47.59,
+     "lon": 1.33
+    },
+    {
+     "name": "Toulouse",
+     "lat": 43.604,
+     "lon": 1.444
+    },
+    {
+     "name": "Carcassonne",
+     "lat": 43.213,
+     "lon": 2.351
+    },
+    {
+     "name": "Béziers",
+     "lat": 43.34,
+     "lon": 3.22
+    },
+    {
+     "name": "Narbonne",
+     "lat": 43.184,
+     "lon": 3.004
+    },
+    {
+     "name": "Nîmes",
+     "lat": 43.837,
+     "lon": 4.36
+    },
+    {
+     "name": "Beaucaire",
+     "lat": 43.81,
+     "lon": 4.64
+    },
+    {
+     "name": "Mende",
+     "lat": 44.518,
+     "lon": 3.5
+    },
+    {
+     "name": "Rodez",
+     "lat": 44.35,
+     "lon": 2.575
+    },
+    {
+     "name": "Cahors",
+     "lat": 44.448,
+     "lon": 1.441
+    },
+    {
+     "name": "Montauban",
+     "lat": 44.018,
+     "lon": 1.355
+    },
+    {
+     "name": "Albi",
+     "lat": 43.928,
+     "lon": 2.146
+    },
+    {
+     "name": "Figeac",
+     "lat": 44.61,
+     "lon": 2.03
+    },
+    {
+     "name": "Melun",
+     "lat": 48.54,
+     "lon": 2.66
+    },
+    {
+     "name": "Étampes",
+     "lat": 48.43,
+     "lon": 2.16
+    },
+    {
+     "name": "Dreux",
+     "lat": 48.74,
+     "lon": 1.37
+    },
+    {
+     "name": "Coutances",
+     "lat": 49.05,
+     "lon": -1.44
+    },
+    {
+     "name": "Bayeux",
+     "lat": 49.28,
+     "lon": -0.7
+    },
+    {
+     "name": "Cherbourg",
+     "lat": 49.64,
+     "lon": -1.62
+    },
+    {
+     "name": "Dieppe",
+     "lat": 49.92,
+     "lon": 1.08
+    },
+    {
+     "name": "Alençon",
+     "lat": 48.432,
+     "lon": 0.091
+    },
+    {
+     "name": "Guéret",
+     "lat": 46.17,
+     "lon": 1.87
+    },
+    {
+     "name": "Tulle",
+     "lat": 45.27,
+     "lon": 1.77
+    },
+    {
+     "name": "Aurillac",
+     "lat": 44.93,
+     "lon": 2.44
+    }
+   ],
+   "ruler": {
+    "name": "Philip IV",
+    "born": 1268,
+    "dynasty": "Capet",
+    "female": false
+   },
+   "heir": {
+    "name": "Louis",
+    "born": 1289,
+    "dynasty": "Capet",
+    "female": false
+   },
+   "consort": {
+    "name": "Joan I of Navarre",
+    "born": 1273,
+    "dynasty": "Blois-Champagne",
+    "female": true
+   },
+   "dynasty_note": "House of Capet. Philip IV rules jure uxoris Navarre and Champagne. Anjou and Maine were given to his brother Charles of Valois in 1290.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "navarre",
+    "castile"
+   ],
+   "rivals": [
+    "england",
+    "aragon",
+    "flanders"
+   ],
+   "claims_on": [
+    "flanders"
+   ],
+   "personality": "opportunist",
+   "difficulty": 1,
+   "summary": {
+    "en": "The young Philip the Fair consolidates the royal domain and eyes Gascony and Flanders.",
+    "de": "Der junge Philipp der Schöne festigt die Krondomäne und hat Gascogne und Flandern im Blick."
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 10,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brittany",
+   "name": {
+    "en": "Duchy of Brittany",
+    "de": "Herzogtum Bretagne"
+   },
+   "short": {
+    "en": "Brittany",
+    "de": "Bretagne"
+   },
+   "adjective": {
+    "en": "Breton",
+    "de": "bretonisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "breton",
+   "faith": "latin",
+   "color": "#746c42",
+   "capital": {
+    "name": "Nantes",
+    "lat": 47.218,
+    "lon": -1.554
+   },
+   "holdings": [
+    {
+     "name": "Nantes",
+     "lat": 47.218,
+     "lon": -1.554
+    },
+    {
+     "name": "Rennes",
+     "lat": 48.117,
+     "lon": -1.678
+    },
+    {
+     "name": "Vannes",
+     "lat": 47.658,
+     "lon": -2.76
+    },
+    {
+     "name": "Quimper",
+     "lat": 47.996,
+     "lon": -4.102
+    },
+    {
+     "name": "Brest",
+     "lat": 48.39,
+     "lon": -4.486
+    },
+    {
+     "name": "Saint-Malo",
+     "lat": 48.65,
+     "lon": -2.0
+    },
+    {
+     "name": "Dinan",
+     "lat": 48.455,
+     "lon": -2.05
+    },
+    {
+     "name": "Saint-Brieuc",
+     "lat": 48.51,
+     "lon": -2.77
+    },
+    {
+     "name": "Guingamp",
+     "lat": 48.562,
+     "lon": -3.15
+    },
+    {
+     "name": "Morlaix",
+     "lat": 48.58,
+     "lon": -3.83
+    },
+    {
+     "name": "Ploërmel",
+     "lat": 47.93,
+     "lon": -2.4
+    },
+    {
+     "name": "Redon",
+     "lat": 47.65,
+     "lon": -2.08
+    },
+    {
+     "name": "Fougères",
+     "lat": 48.352,
+     "lon": -1.199
+    },
+    {
+     "name": "Vitré",
+     "lat": 48.12,
+     "lon": -1.21
+    },
+    {
+     "name": "Hennebont",
+     "lat": 47.805,
+     "lon": -3.277
+    },
+    {
+     "name": "Guérande",
+     "lat": 47.33,
+     "lon": -2.43
+    },
+    {
+     "name": "Lamballe",
+     "lat": 48.469,
+     "lon": -2.517
+    }
+   ],
+   "ruler": {
+    "name": "John II",
+    "born": 1239,
+    "dynasty": "Dreux",
+    "female": false
+   },
+   "heir": {
+    "name": "Arthur",
+    "born": 1262,
+    "dynasty": "Dreux",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "House of Dreux (Montfort-l'Amaury branch of the Capetians). John II is also Earl of Richmond in England.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Ermine (plain)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "flanders",
+   "name": {
+    "en": "County of Flanders",
+    "de": "Grafschaft Flandern"
+   },
+   "short": {
+    "en": "Flanders",
+    "de": "Flandern"
+   },
+   "adjective": {
+    "en": "Flemish",
+    "de": "flämisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "flemish",
+   "faith": "latin",
+   "color": "#378563",
+   "capital": {
+    "name": "Ghent",
+    "lat": 51.054,
+    "lon": 3.717
+   },
+   "holdings": [
+    {
+     "name": "Ghent",
+     "lat": 51.054,
+     "lon": 3.717
+    },
+    {
+     "name": "Bruges",
+     "lat": 51.209,
+     "lon": 3.224
+    },
+    {
+     "name": "Ypres",
+     "lat": 50.851,
+     "lon": 2.885
+    },
+    {
+     "name": "Lille",
+     "lat": 50.63,
+     "lon": 3.06
+    },
+    {
+     "name": "Douai",
+     "lat": 50.37,
+     "lon": 3.08
+    },
+    {
+     "name": "Kortrijk",
+     "lat": 50.83,
+     "lon": 3.26
+    },
+    {
+     "name": "Oudenaarde",
+     "lat": 50.845,
+     "lon": 3.605
+    },
+    {
+     "name": "Aalst",
+     "lat": 50.937,
+     "lon": 4.04
+    },
+    {
+     "name": "Dendermonde",
+     "lat": 51.03,
+     "lon": 4.1
+    },
+    {
+     "name": "Sluis",
+     "lat": 51.31,
+     "lon": 3.39
+    },
+    {
+     "name": "Dunkirk",
+     "lat": 51.034,
+     "lon": 2.377
+    },
+    {
+     "name": "Bergues",
+     "lat": 50.97,
+     "lon": 2.43
+    },
+    {
+     "name": "Cassel",
+     "lat": 50.8,
+     "lon": 2.49
+    },
+    {
+     "name": "Saint-Omer",
+     "lat": 50.75,
+     "lon": 2.25
+    },
+    {
+     "name": "Orchies",
+     "lat": 50.47,
+     "lon": 3.24
+    },
+    {
+     "name": "Béthune",
+     "lat": 50.53,
+     "lon": 2.64
+    },
+    {
+     "name": "Ostend",
+     "lat": 51.23,
+     "lon": 2.92
+    },
+    {
+     "name": "Diksmuide",
+     "lat": 51.03,
+     "lon": 2.86
+    }
+   ],
+   "ruler": {
+    "name": "Guy of Dampierre",
+    "born": 1226,
+    "dynasty": "Dampierre",
+    "female": false
+   },
+   "heir": {
+    "name": "Robert of Béthune",
+    "born": 1247,
+    "dynasty": "Dampierre",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "House of Dampierre. Guy also holds the march of Namur in the Empire. Saint-Omer and Béthune belong to Artois (Robert II of Artois) and are left to France in the spread; see borders rules.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "england",
+    "holland"
+   ],
+   "rivals": [
+    "france",
+    "hainaut"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or a lion rampant Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "burgundy",
+   "name": {
+    "en": "Duchy of Burgundy",
+    "de": "Herzogtum Burgund"
+   },
+   "short": {
+    "en": "Burgundy",
+    "de": "Burgund"
+   },
+   "adjective": {
+    "en": "Burgundian",
+    "de": "burgundisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#633535",
+   "capital": {
+    "name": "Dijon",
+    "lat": 47.322,
+    "lon": 5.041
+   },
+   "holdings": [
+    {
+     "name": "Dijon",
+     "lat": 47.322,
+     "lon": 5.041
+    },
+    {
+     "name": "Beaune",
+     "lat": 47.025,
+     "lon": 4.84
+    },
+    {
+     "name": "Chalon-sur-Saône",
+     "lat": 46.78,
+     "lon": 4.85
+    },
+    {
+     "name": "Autun",
+     "lat": 46.951,
+     "lon": 4.299
+    },
+    {
+     "name": "Semur-en-Auxois",
+     "lat": 47.49,
+     "lon": 4.33
+    },
+    {
+     "name": "Avallon",
+     "lat": 47.49,
+     "lon": 3.91
+    },
+    {
+     "name": "Châtillon-sur-Seine",
+     "lat": 47.858,
+     "lon": 4.574
+    },
+    {
+     "name": "Nuits-Saint-Georges",
+     "lat": 47.14,
+     "lon": 4.95
+    },
+    {
+     "name": "Montbard",
+     "lat": 47.62,
+     "lon": 4.34
+    }
+   ],
+   "ruler": {
+    "name": "Robert II",
+    "born": 1248,
+    "dynasty": "Capet (Burgundy)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Elder Capetian house of Burgundy.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Bendy of six Or and Azure, a bordure Gules",
+    "field": "or",
+    "division": "bendy",
+    "field2": "azure",
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "bourbon",
+   "name": {
+    "en": "Lordship of Bourbon",
+    "de": "Herrschaft Bourbon"
+   },
+   "short": {
+    "en": "Bourbon",
+    "de": "Bourbon"
+   },
+   "adjective": {
+    "en": "Bourbonnais",
+    "de": "bourbonisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#3f6a7f",
+   "capital": {
+    "name": "Bourbon-l'Archambault",
+    "lat": 46.583,
+    "lon": 3.056
+   },
+   "holdings": [
+    {
+     "name": "Bourbon-l'Archambault",
+     "lat": 46.583,
+     "lon": 3.056
+    },
+    {
+     "name": "Moulins",
+     "lat": 46.566,
+     "lon": 3.333
+    },
+    {
+     "name": "Montluçon",
+     "lat": 46.34,
+     "lon": 2.6
+    },
+    {
+     "name": "Souvigny",
+     "lat": 46.53,
+     "lon": 3.19
+    },
+    {
+     "name": "Hérisson",
+     "lat": 46.51,
+     "lon": 2.71
+    }
+   ],
+   "ruler": {
+    "name": "Beatrice of Burgundy",
+    "born": 1257,
+    "dynasty": "Burgundy",
+    "female": true
+   },
+   "heir": null,
+   "consort": {
+    "name": "Robert, Count of Clermont",
+    "born": 1256,
+    "dynasty": "Capet",
+    "female": false
+   },
+   "dynasty_note": "Beatrice, lady of Bourbon, married to Robert of Clermont, son of Saint Louis. Raised to a duchy only in 1327.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure semé-de-lis Or, a bend Gules",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 8,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "navarre",
+   "name": {
+    "en": "Kingdom of Navarre",
+    "de": "Königreich Navarra"
+   },
+   "short": {
+    "en": "Navarre",
+    "de": "Navarra"
+   },
+   "adjective": {
+    "en": "Navarrese",
+    "de": "navarresisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "basque",
+   "faith": "latin",
+   "color": "#533b11",
+   "capital": {
+    "name": "Pamplona",
+    "lat": 42.812,
+    "lon": -1.645
+   },
+   "holdings": [
+    {
+     "name": "Pamplona",
+     "lat": 42.812,
+     "lon": -1.645
+    },
+    {
+     "name": "Estella",
+     "lat": 42.671,
+     "lon": -2.032
+    },
+    {
+     "name": "Tudela",
+     "lat": 42.06,
+     "lon": -1.606
+    },
+    {
+     "name": "Olite",
+     "lat": 42.48,
+     "lon": -1.65
+    },
+    {
+     "name": "Sangüesa",
+     "lat": 42.575,
+     "lon": -1.283
+    },
+    {
+     "name": "Puente la Reina",
+     "lat": 42.67,
+     "lon": -1.81
+    },
+    {
+     "name": "Viana",
+     "lat": 41.69,
+     "lon": -8.83
+    },
+    {
+     "name": "Saint-Jean-Pied-de-Port",
+     "lat": 43.163,
+     "lon": -1.236
+    }
+   ],
+   "ruler": {
+    "name": "Joan I",
+    "born": 1273,
+    "dynasty": "Blois-Champagne",
+    "female": true
+   },
+   "heir": null,
+   "consort": {
+    "name": "Philip IV of France",
+    "born": 1268,
+    "dynasty": "Capet",
+    "female": false
+   },
+   "dynasty_note": "Queen Joan I and her husband Philip IV; Navarre is governed by French governors.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [
+    "castile",
+    "aragon"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Gules a cross saltire and orle of chains Or (Navarre), 2 and 3 Azure semé-de-lis Or a bend compony Argent and Gules (Évreux)",
+    "field": "gules",
+    "division": "quarterly",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fleur_de_lis",
+      "tincture": "or",
+      "count": 6,
+      "arrangement": "semee"
+     }
+    ]
+   }
+  },
+  {
+   "id": "foix_bearn",
+   "name": {
+    "en": "County of Foix and Viscounty of Béarn",
+    "de": "Grafschaft Foix und Vizegrafschaft Béarn"
+   },
+   "short": {
+    "en": "Foix-Béarn",
+    "de": "Foix-Béarn"
+   },
+   "adjective": {
+    "en": "Fuxéen",
+    "de": "foixisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#5a7e5b",
+   "capital": {
+    "name": "Foix",
+    "lat": 42.965,
+    "lon": 1.607
+   },
+   "holdings": [
+    {
+     "name": "Foix",
+     "lat": 42.965,
+     "lon": 1.607
+    },
+    {
+     "name": "Orthez",
+     "lat": 43.488,
+     "lon": -0.77
+    },
+    {
+     "name": "Pau",
+     "lat": 43.295,
+     "lon": -0.37
+    },
+    {
+     "name": "Morlaàs",
+     "lat": 43.35,
+     "lon": -0.27
+    },
+    {
+     "name": "Oloron-Sainte-Marie",
+     "lat": 43.19,
+     "lon": -0.61
+    },
+    {
+     "name": "Pamiers",
+     "lat": 43.116,
+     "lon": 1.611
+    },
+    {
+     "name": "Lescar",
+     "lat": 43.33,
+     "lon": -0.43
+    },
+    {
+     "name": "Sauveterre-de-Béarn",
+     "lat": 43.4,
+     "lon": -0.94
+    }
+   ],
+   "ruler": {
+    "name": "Roger-Bernard III",
+    "born": null,
+    "dynasty": "Foix",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Roger-Bernard III of Foix inherited Béarn from his father-in-law Gaston VII Moncada (d. April 1290).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "armagnac"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Or three pallets Gules (Foix), 2 and 3 Or two cows passant Gules (Béarn)",
+    "field": "or",
+    "division": "paly",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "armagnac",
+   "name": {
+    "en": "County of Armagnac",
+    "de": "Grafschaft Armagnac"
+   },
+   "short": {
+    "en": "Armagnac",
+    "de": "Armagnac"
+   },
+   "adjective": {
+    "en": "Armagnac",
+    "de": "armagnakisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#59343c",
+   "capital": {
+    "name": "Lectoure",
+    "lat": 43.934,
+    "lon": 0.622
+   },
+   "holdings": [
+    {
+     "name": "Lectoure",
+     "lat": 43.934,
+     "lon": 0.622
+    },
+    {
+     "name": "Auch",
+     "lat": 43.646,
+     "lon": 0.586
+    },
+    {
+     "name": "Eauze",
+     "lat": 43.86,
+     "lon": 0.1
+    },
+    {
+     "name": "Nogaro",
+     "lat": 43.759,
+     "lon": -0.033
+    },
+    {
+     "name": "Vic-Fezensac",
+     "lat": 43.76,
+     "lon": 0.3
+    }
+   ],
+   "ruler": {
+    "name": "Bernard VI",
+    "born": null,
+    "dynasty": "Lomagne",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Counts of Armagnac and Fezensac.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "foix_bearn"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Argent a lion Gules (Armagnac), 2 and 3 Gules a lion passant guardant Or (Rodez)",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "comminges",
+   "name": {
+    "en": "County of Comminges",
+    "de": "Grafschaft Comminges"
+   },
+   "short": {
+    "en": "Comminges",
+    "de": "Comminges"
+   },
+   "adjective": {
+    "en": "Commingeois",
+    "de": "comingeois"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#64517b",
+   "capital": {
+    "name": "Saint-Bertrand-de-Comminges",
+    "lat": 43.03,
+    "lon": 0.57
+   },
+   "holdings": [
+    {
+     "name": "Saint-Bertrand-de-Comminges",
+     "lat": 43.03,
+     "lon": 0.57
+    },
+    {
+     "name": "Muret",
+     "lat": 43.46,
+     "lon": 1.33
+    },
+    {
+     "name": "Saint-Gaudens",
+     "lat": 43.108,
+     "lon": 0.723
+    }
+   ],
+   "ruler": {
+    "name": "Bernard VI of Comminges",
+    "born": null,
+    "dynasty": "Comminges",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules four otelles in saltire Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "saltire",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "perigord",
+   "name": {
+    "en": "County of Périgord",
+    "de": "Grafschaft Périgord"
+   },
+   "short": {
+    "en": "Périgord",
+    "de": "Périgord"
+   },
+   "adjective": {
+    "en": "Périgourdin",
+    "de": "périgordinisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#5d623c",
+   "capital": {
+    "name": "Périgueux",
+    "lat": 45.184,
+    "lon": 0.721
+   },
+   "holdings": [
+    {
+     "name": "Périgueux",
+     "lat": 45.184,
+     "lon": 0.721
+    },
+    {
+     "name": "Montignac",
+     "lat": 45.06,
+     "lon": 1.16
+    },
+    {
+     "name": "Bergerac",
+     "lat": 44.85,
+     "lon": 0.483
+    }
+   ],
+   "ruler": {
+    "name": "Hélie VII Talleyrand",
+    "born": null,
+    "dynasty": "Talleyrand",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules three lions Or armed, langued and crowned Azure",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "albret",
+   "name": {
+    "en": "Lordship of Albret",
+    "de": "Herrschaft Albret"
+   },
+   "short": {
+    "en": "Albret",
+    "de": "Albret"
+   },
+   "adjective": {
+    "en": "Albret",
+    "de": "albretisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#7e607e",
+   "capital": {
+    "name": "Casteljaloux",
+    "lat": 44.31,
+    "lon": 0.09
+   },
+   "holdings": [
+    {
+     "name": "Casteljaloux",
+     "lat": 44.31,
+     "lon": 0.09
+    },
+    {
+     "name": "Nérac",
+     "lat": 44.136,
+     "lon": 0.339
+    },
+    {
+     "name": "Labrit",
+     "lat": 44.07,
+     "lon": -0.55
+    }
+   ],
+   "ruler": {
+    "name": "Amanieu VII",
+    "born": null,
+    "dynasty": "Albret",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "england",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules (plain)",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "brabant",
+   "name": {
+    "en": "Duchy of Brabant and Limburg",
+    "de": "Herzogtum Brabant und Limburg"
+   },
+   "short": {
+    "en": "Brabant",
+    "de": "Brabant"
+   },
+   "adjective": {
+    "en": "Brabantine",
+    "de": "brabantisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "flemish",
+   "faith": "latin",
+   "color": "#474904",
+   "capital": {
+    "name": "Brussels",
+    "lat": 50.847,
+    "lon": 4.352
+   },
+   "holdings": [
+    {
+     "name": "Brussels",
+     "lat": 50.847,
+     "lon": 4.352
+    },
+    {
+     "name": "Leuven",
+     "lat": 50.879,
+     "lon": 4.701
+    },
+    {
+     "name": "Antwerp",
+     "lat": 51.219,
+     "lon": 4.402
+    },
+    {
+     "name": "Mechelen",
+     "lat": 51.028,
+     "lon": 4.478
+    },
+    {
+     "name": "Tienen",
+     "lat": 50.807,
+     "lon": 4.938
+    },
+    {
+     "name": "Nivelles",
+     "lat": 50.598,
+     "lon": 4.328
+    },
+    {
+     "name": "Breda",
+     "lat": 51.589,
+     "lon": 4.776
+    },
+    {
+     "name": "'s-Hertogenbosch",
+     "lat": 51.69,
+     "lon": 5.3
+    },
+    {
+     "name": "Limbourg",
+     "lat": 50.613,
+     "lon": 5.94
+    },
+    {
+     "name": "Herzogenrath",
+     "lat": 50.87,
+     "lon": 6.1
+    },
+    {
+     "name": "Lier",
+     "lat": 51.13,
+     "lon": 4.57
+    }
+   ],
+   "ruler": {
+    "name": "John I",
+    "born": 1252,
+    "dynasty": "Reginar",
+    "female": false
+   },
+   "heir": {
+    "name": "John II",
+    "born": 1275,
+    "dynasty": "Reginar",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "John I won the duchy of Limburg at Worringen (5 June 1288).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "england",
+    "holland"
+   ],
+   "rivals": [
+    "guelders",
+    "luxembourg",
+    "archbishopric_cologne"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Sable a lion rampant Or armed and langued Gules",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "holland",
+   "name": {
+    "en": "County of Holland and Zeeland",
+    "de": "Grafschaft Holland und Seeland"
+   },
+   "short": {
+    "en": "Holland",
+    "de": "Holland"
+   },
+   "adjective": {
+    "en": "Hollandic",
+    "de": "holländisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "hollandic",
+   "faith": "latin",
+   "color": "#a06248",
+   "capital": {
+    "name": "The Hague",
+    "lat": 52.08,
+    "lon": 4.31
+   },
+   "holdings": [
+    {
+     "name": "The Hague",
+     "lat": 52.08,
+     "lon": 4.31
+    },
+    {
+     "name": "Haarlem",
+     "lat": 52.38,
+     "lon": 4.64
+    },
+    {
+     "name": "Leiden",
+     "lat": 52.16,
+     "lon": 4.49
+    },
+    {
+     "name": "Delft",
+     "lat": 52.01,
+     "lon": 4.36
+    },
+    {
+     "name": "Dordrecht",
+     "lat": 51.81,
+     "lon": 4.67
+    },
+    {
+     "name": "Alkmaar",
+     "lat": 52.63,
+     "lon": 4.75
+    },
+    {
+     "name": "Middelburg",
+     "lat": 51.5,
+     "lon": 3.61
+    },
+    {
+     "name": "Zierikzee",
+     "lat": 51.65,
+     "lon": 3.92
+    },
+    {
+     "name": "Medemblik",
+     "lat": 52.77,
+     "lon": 5.1
+    },
+    {
+     "name": "Rotterdam",
+     "lat": 51.92,
+     "lon": 4.48
+    },
+    {
+     "name": "Gouda",
+     "lat": 52.012,
+     "lon": 4.711
+    }
+   ],
+   "ruler": {
+    "name": "Floris V",
+    "born": 1254,
+    "dynasty": "Holland",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count of Holland and Zeeland; West Friesland subdued 1289.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "england"
+   ],
+   "rivals": [
+    "flanders",
+    "utrecht"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 lozengy Argent and Azure (Bavaria), 2 and 3 Or a lion rampant Gules (Holland)",
+    "field": "or",
+    "division": "quarterly",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "hainaut",
+   "name": {
+    "en": "County of Hainaut",
+    "de": "Grafschaft Hennegau"
+   },
+   "short": {
+    "en": "Hainaut",
+    "de": "Hennegau"
+   },
+   "adjective": {
+    "en": "Hainuyer",
+    "de": "hennegauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "picard",
+   "faith": "latin",
+   "color": "#706190",
+   "capital": {
+    "name": "Mons",
+    "lat": 50.454,
+    "lon": 3.952
+   },
+   "holdings": [
+    {
+     "name": "Mons",
+     "lat": 50.454,
+     "lon": 3.952
+    },
+    {
+     "name": "Valenciennes",
+     "lat": 50.357,
+     "lon": 3.523
+    },
+    {
+     "name": "Maubeuge",
+     "lat": 50.278,
+     "lon": 3.973
+    },
+    {
+     "name": "Le Quesnoy",
+     "lat": 50.25,
+     "lon": 3.64
+    },
+    {
+     "name": "Ath",
+     "lat": 50.63,
+     "lon": 3.78
+    },
+    {
+     "name": "Binche",
+     "lat": 50.41,
+     "lon": 4.165
+    },
+    {
+     "name": "Avesnes",
+     "lat": 50.12,
+     "lon": 3.93
+    }
+   ],
+   "ruler": {
+    "name": "John II of Avesnes",
+    "born": 1247,
+    "dynasty": "Avesnes",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "flanders"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Or a lion rampant Sable, 2 and 3 Or a lion rampant Gules",
+    "field": "or",
+    "division": "quarterly",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 2
+     },
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "guelders",
+   "name": {
+    "en": "County of Guelders",
+    "de": "Grafschaft Geldern"
+   },
+   "short": {
+    "en": "Guelders",
+    "de": "Geldern"
+   },
+   "adjective": {
+    "en": "Guelderian",
+    "de": "geldrisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "hollandic",
+   "faith": "latin",
+   "color": "#014b73",
+   "capital": {
+    "name": "Geldern",
+    "lat": 51.52,
+    "lon": 6.32
+   },
+   "holdings": [
+    {
+     "name": "Geldern",
+     "lat": 51.52,
+     "lon": 6.32
+    },
+    {
+     "name": "Arnhem",
+     "lat": 51.98,
+     "lon": 5.911
+    },
+    {
+     "name": "Nijmegen",
+     "lat": 51.842,
+     "lon": 5.853
+    },
+    {
+     "name": "Zutphen",
+     "lat": 52.14,
+     "lon": 6.196
+    },
+    {
+     "name": "Roermond",
+     "lat": 51.194,
+     "lon": 5.987
+    },
+    {
+     "name": "Venlo",
+     "lat": 51.37,
+     "lon": 6.17
+    },
+    {
+     "name": "Harderwijk",
+     "lat": 52.35,
+     "lon": 5.62
+    },
+    {
+     "name": "Tiel",
+     "lat": 51.886,
+     "lon": 5.43
+    }
+   ],
+   "ruler": {
+    "name": "Reinald I",
+    "born": null,
+    "dynasty": "Wassenberg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count (the duchy dates from 1339). Lost the Limburg succession at Worringen 1288.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "brabant"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure a lion rampant queue fourchée Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "utrecht",
+   "name": {
+    "en": "Prince-Bishopric of Utrecht",
+    "de": "Hochstift Utrecht"
+   },
+   "short": {
+    "en": "Utrecht",
+    "de": "Utrecht"
+   },
+   "adjective": {
+    "en": "Utrecht",
+    "de": "utrechtisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "hollandic",
+   "faith": "latin",
+   "color": "#733554",
+   "capital": {
+    "name": "Utrecht",
+    "lat": 52.09,
+    "lon": 5.12
+   },
+   "holdings": [
+    {
+     "name": "Utrecht",
+     "lat": 52.09,
+     "lon": 5.12
+    },
+    {
+     "name": "Deventer",
+     "lat": 52.255,
+     "lon": 6.16
+    },
+    {
+     "name": "Kampen",
+     "lat": 52.56,
+     "lon": 5.91
+    },
+    {
+     "name": "Zwolle",
+     "lat": 52.512,
+     "lon": 6.091
+    },
+    {
+     "name": "Amersfoort",
+     "lat": 52.156,
+     "lon": 5.387
+    },
+    {
+     "name": "Oldenzaal",
+     "lat": 52.31,
+     "lon": 6.93
+    },
+    {
+     "name": "Rhenen",
+     "lat": 51.96,
+     "lon": 5.57
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-bishopric (Oversticht and Nedersticht).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules a cross Argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "liege",
+   "name": {
+    "en": "Prince-Bishopric of Liège",
+    "de": "Hochstift Lüttich"
+   },
+   "short": {
+    "en": "Liège",
+    "de": "Lüttich"
+   },
+   "adjective": {
+    "en": "Liégeois",
+    "de": "lüttichisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#687d42",
+   "capital": {
+    "name": "Liège",
+    "lat": 50.633,
+    "lon": 5.567
+   },
+   "holdings": [
+    {
+     "name": "Liège",
+     "lat": 50.633,
+     "lon": 5.567
+    },
+    {
+     "name": "Huy",
+     "lat": 50.518,
+     "lon": 5.24
+    },
+    {
+     "name": "Dinant",
+     "lat": 50.26,
+     "lon": 4.912
+    },
+    {
+     "name": "Tongeren",
+     "lat": 50.78,
+     "lon": 5.464
+    },
+    {
+     "name": "Maastricht",
+     "lat": 50.85,
+     "lon": 5.69
+    },
+    {
+     "name": "Thuin",
+     "lat": 50.34,
+     "lon": 4.29
+    },
+    {
+     "name": "Bouillon",
+     "lat": 49.795,
+     "lon": 5.067
+    },
+    {
+     "name": "Sint-Truiden",
+     "lat": 50.82,
+     "lon": 5.19
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or a fess chequy Argent and Gules (La Marck)",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "namur",
+   "name": {
+    "en": "Margraviate of Namur",
+    "de": "Markgrafschaft Namur"
+   },
+   "short": {
+    "en": "Namur",
+    "de": "Namur"
+   },
+   "adjective": {
+    "en": "Namurois",
+    "de": "namurisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#7f546f",
+   "capital": {
+    "name": "Namur",
+    "lat": 50.467,
+    "lon": 4.867
+   },
+   "holdings": [
+    {
+     "name": "Namur",
+     "lat": 50.467,
+     "lon": 4.867
+    },
+    {
+     "name": "Bouvignes",
+     "lat": 50.27,
+     "lon": 4.9
+    },
+    {
+     "name": "Fleurus",
+     "lat": 50.48,
+     "lon": 4.55
+    }
+   ],
+   "ruler": {
+    "name": "Guy of Dampierre",
+    "born": 1226,
+    "dynasty": "Dampierre",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Held by Guy of Dampierre, count of Flanders, since 1263.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "flanders"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or a lion rampant Sable, over all a bendlet Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "loon",
+   "name": {
+    "en": "County of Loon",
+    "de": "Grafschaft Loon"
+   },
+   "short": {
+    "en": "Loon",
+    "de": "Loon"
+   },
+   "adjective": {
+    "en": "Loonish",
+    "de": "loonisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "flemish",
+   "faith": "latin",
+   "color": "#5d72a3",
+   "capital": {
+    "name": "Hasselt",
+    "lat": 50.93,
+    "lon": 5.338
+   },
+   "holdings": [
+    {
+     "name": "Hasselt",
+     "lat": 50.93,
+     "lon": 5.338
+    },
+    {
+     "name": "Borgloon",
+     "lat": 50.8,
+     "lon": 5.34
+    },
+    {
+     "name": "Bilzen",
+     "lat": 50.87,
+     "lon": 5.52
+    }
+   ],
+   "ruler": {
+    "name": "Arnold V",
+    "born": null,
+    "dynasty": "Loon",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry of ten Or and Gules",
+    "field": "or",
+    "division": "barry",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "cambrai",
+   "name": {
+    "en": "Prince-Bishopric of Cambrai",
+    "de": "Hochstift Cambrai"
+   },
+   "short": {
+    "en": "Cambrai",
+    "de": "Cambrai"
+   },
+   "adjective": {
+    "en": "Cambrésien",
+    "de": "cambraisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "picard",
+   "faith": "latin",
+   "color": "#5b4d2a",
+   "capital": {
+    "name": "Cambrai",
+    "lat": 50.176,
+    "lon": 3.235
+   },
+   "holdings": [
+    {
+     "name": "Cambrai",
+     "lat": 50.176,
+     "lon": 3.235
+    },
+    {
+     "name": "Le Cateau-Cambrésis",
+     "lat": 50.1,
+     "lon": 3.54
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or three lions Azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "azure",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "luxembourg",
+   "name": {
+    "en": "County of Luxembourg",
+    "de": "Grafschaft Luxemburg"
+   },
+   "short": {
+    "en": "Luxembourg",
+    "de": "Luxemburg"
+   },
+   "adjective": {
+    "en": "Luxembourgish",
+    "de": "luxemburgisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#264370",
+   "capital": {
+    "name": "Luxembourg",
+    "lat": 49.611,
+    "lon": 6.13
+   },
+   "holdings": [
+    {
+     "name": "Luxembourg",
+     "lat": 49.611,
+     "lon": 6.13
+    },
+    {
+     "name": "Arlon",
+     "lat": 49.683,
+     "lon": 5.816
+    },
+    {
+     "name": "Bitburg",
+     "lat": 49.967,
+     "lon": 6.527
+    },
+    {
+     "name": "Echternach",
+     "lat": 49.812,
+     "lon": 6.42
+    },
+    {
+     "name": "Diekirch",
+     "lat": 49.868,
+     "lon": 6.16
+    },
+    {
+     "name": "Durbuy",
+     "lat": 50.353,
+     "lon": 5.456
+    },
+    {
+     "name": "La Roche-en-Ardenne",
+     "lat": 50.18,
+     "lon": 5.58
+    }
+   ],
+   "ruler": {
+    "name": "Henry VII",
+    "born": 1278,
+    "dynasty": "Luxembourg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count since his father Henry VI fell at Worringen (1288); later King of the Romans and Emperor.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "brabant"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry argent and azure, a lion rampant gules crowned or, tail forked",
+    "field": "argent",
+    "division": "barry",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "lorraine",
+   "name": {
+    "en": "Duchy of Lorraine",
+    "de": "Herzogtum Lothringen"
+   },
+   "short": {
+    "en": "Lorraine",
+    "de": "Lothringen"
+   },
+   "adjective": {
+    "en": "Lorrainer",
+    "de": "lothringisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#404504",
+   "capital": {
+    "name": "Nancy",
+    "lat": 48.693,
+    "lon": 6.184
+   },
+   "holdings": [
+    {
+     "name": "Nancy",
+     "lat": 48.693,
+     "lon": 6.184
+    },
+    {
+     "name": "Épinal",
+     "lat": 48.17,
+     "lon": 6.45
+    },
+    {
+     "name": "Saint-Dié",
+     "lat": 48.285,
+     "lon": 6.95
+    },
+    {
+     "name": "Neufchâteau",
+     "lat": 48.356,
+     "lon": 5.696
+    },
+    {
+     "name": "Lunéville",
+     "lat": 48.59,
+     "lon": 6.5
+    },
+    {
+     "name": "Sierck",
+     "lat": 49.44,
+     "lon": 6.36
+    },
+    {
+     "name": "Remiremont",
+     "lat": 48.017,
+     "lon": 6.59
+    }
+   ],
+   "ruler": {
+    "name": "Frederick III",
+    "born": 1240,
+    "dynasty": "Châtenois",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, on a bend gules three alerions argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 3,
+      "arrangement": "on_bend"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bar",
+   "name": {
+    "en": "County of Bar",
+    "de": "Grafschaft Bar"
+   },
+   "short": {
+    "en": "Bar",
+    "de": "Bar"
+   },
+   "adjective": {
+    "en": "Barrois",
+    "de": "barisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#5773ab",
+   "capital": {
+    "name": "Bar-le-Duc",
+    "lat": 48.772,
+    "lon": 5.16
+   },
+   "holdings": [
+    {
+     "name": "Bar-le-Duc",
+     "lat": 48.772,
+     "lon": 5.16
+    },
+    {
+     "name": "Saint-Mihiel",
+     "lat": 48.888,
+     "lon": 5.543
+    },
+    {
+     "name": "Pont-à-Mousson",
+     "lat": 48.905,
+     "lon": 6.054
+    },
+    {
+     "name": "Briey",
+     "lat": 49.25,
+     "lon": 5.94
+    },
+    {
+     "name": "Longwy",
+     "lat": 49.52,
+     "lon": 5.76
+    },
+    {
+     "name": "Étain",
+     "lat": 49.21,
+     "lon": 5.64
+    }
+   ],
+   "ruler": {
+    "name": "Henry III",
+    "born": null,
+    "dynasty": "Montbéliard (Bar)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "County; a duchy only from 1354.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "france"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure semé of crosses crosslet fitchy or, two barbels addorsed or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "or",
+      "count": 12,
+      "arrangement": "semee"
+     },
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "addorsed"
+     }
+    ]
+   }
+  },
+  {
+   "id": "castile",
+   "name": {
+    "en": "Crown of Castile",
+    "de": "Krone Kastilien"
+   },
+   "short": {
+    "en": "Castile",
+    "de": "Kastilien"
+   },
+   "adjective": {
+    "en": "Castilian",
+    "de": "kastilisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "castilian",
+   "faith": "latin",
+   "color": "#816627",
+   "capital": {
+    "name": "Burgos",
+    "lat": 42.344,
+    "lon": -3.697
+   },
+   "holdings": [
+    {
+     "name": "Burgos",
+     "lat": 42.344,
+     "lon": -3.697
+    },
+    {
+     "name": "Toledo",
+     "lat": 39.857,
+     "lon": -4.024
+    },
+    {
+     "name": "Valladolid",
+     "lat": 41.652,
+     "lon": -4.724
+    },
+    {
+     "name": "León",
+     "lat": 42.598,
+     "lon": -5.567
+    },
+    {
+     "name": "Oviedo",
+     "lat": 43.362,
+     "lon": -5.849
+    },
+    {
+     "name": "Santiago de Compostela",
+     "lat": 42.88,
+     "lon": -8.545
+    },
+    {
+     "name": "A Coruña",
+     "lat": 43.37,
+     "lon": -8.4
+    },
+    {
+     "name": "Lugo",
+     "lat": 43.012,
+     "lon": -7.556
+    },
+    {
+     "name": "Ourense",
+     "lat": 42.34,
+     "lon": -7.864
+    },
+    {
+     "name": "Salamanca",
+     "lat": 40.965,
+     "lon": -5.664
+    },
+    {
+     "name": "Zamora",
+     "lat": 41.503,
+     "lon": -5.745
+    },
+    {
+     "name": "Segovia",
+     "lat": 40.948,
+     "lon": -4.118
+    },
+    {
+     "name": "Ávila",
+     "lat": 40.656,
+     "lon": -4.7
+    },
+    {
+     "name": "Soria",
+     "lat": 41.764,
+     "lon": -2.468
+    },
+    {
+     "name": "Logroño",
+     "lat": 42.465,
+     "lon": -2.445
+    },
+    {
+     "name": "Vitoria",
+     "lat": 42.847,
+     "lon": -2.672
+    },
+    {
+     "name": "Bilbao",
+     "lat": 43.263,
+     "lon": -2.935
+    },
+    {
+     "name": "San Sebastián",
+     "lat": 43.318,
+     "lon": -1.981
+    },
+    {
+     "name": "Santander",
+     "lat": 43.462,
+     "lon": -3.81
+    },
+    {
+     "name": "Palencia",
+     "lat": 42.01,
+     "lon": -4.53
+    },
+    {
+     "name": "Cuenca",
+     "lat": 40.07,
+     "lon": -2.137
+    },
+    {
+     "name": "Guadalajara",
+     "lat": 40.633,
+     "lon": -3.167
+    },
+    {
+     "name": "Madrid",
+     "lat": 40.417,
+     "lon": -3.704
+    },
+    {
+     "name": "Ciudad Real",
+     "lat": 38.985,
+     "lon": -3.927
+    },
+    {
+     "name": "Murcia",
+     "lat": 37.992,
+     "lon": -1.131
+    },
+    {
+     "name": "Cartagena",
+     "lat": 37.6,
+     "lon": -0.98
+    },
+    {
+     "name": "Lorca",
+     "lat": 37.68,
+     "lon": -1.7
+    },
+    {
+     "name": "Orihuela",
+     "lat": 38.085,
+     "lon": -0.944
+    },
+    {
+     "name": "Alicante",
+     "lat": 38.345,
+     "lon": -0.481
+    },
+    {
+     "name": "Elche",
+     "lat": 38.27,
+     "lon": -0.7
+    },
+    {
+     "name": "Chinchilla",
+     "lat": 38.92,
+     "lon": -1.72
+    },
+    {
+     "name": "Córdoba",
+     "lat": 37.888,
+     "lon": -4.779
+    },
+    {
+     "name": "Jaén",
+     "lat": 37.779,
+     "lon": -3.784
+    },
+    {
+     "name": "Úbeda",
+     "lat": 38.01,
+     "lon": -3.37
+    },
+    {
+     "name": "Baeza",
+     "lat": 37.99,
+     "lon": -3.47
+    },
+    {
+     "name": "Seville",
+     "lat": 37.389,
+     "lon": -5.984
+    },
+    {
+     "name": "Jerez",
+     "lat": 36.686,
+     "lon": -6.137
+    },
+    {
+     "name": "Cádiz",
+     "lat": 36.527,
+     "lon": -6.288
+    },
+    {
+     "name": "Niebla",
+     "lat": 37.36,
+     "lon": -6.68
+    },
+    {
+     "name": "Huelva",
+     "lat": 37.26,
+     "lon": -6.95
+    },
+    {
+     "name": "Badajoz",
+     "lat": 38.879,
+     "lon": -6.97
+    },
+    {
+     "name": "Mérida",
+     "lat": 38.916,
+     "lon": -6.344
+    },
+    {
+     "name": "Cáceres",
+     "lat": 39.476,
+     "lon": -6.372
+    },
+    {
+     "name": "Plasencia",
+     "lat": 40.03,
+     "lon": -6.09
+    },
+    {
+     "name": "Talavera",
+     "lat": 39.96,
+     "lon": -4.83
+    },
+    {
+     "name": "Écija",
+     "lat": 37.541,
+     "lon": -5.083
+    },
+    {
+     "name": "Calahorra",
+     "lat": 42.305,
+     "lon": -1.965
+    },
+    {
+     "name": "Sigüenza",
+     "lat": 41.07,
+     "lon": -2.64
+    },
+    {
+     "name": "Sabugal",
+     "lat": 40.35,
+     "lon": -7.09
+    },
+    {
+     "name": "Castelo Rodrigo",
+     "lat": 40.88,
+     "lon": -6.96
+    },
+    {
+     "name": "Olivenza",
+     "lat": 38.68,
+     "lon": -7.1
+    },
+    {
+     "name": "Medina Sidonia",
+     "lat": 36.46,
+     "lon": -5.93
+    },
+    {
+     "name": "Arcos de la Frontera",
+     "lat": 36.75,
+     "lon": -5.81
+    },
+    {
+     "name": "Huéscar",
+     "lat": 37.81,
+     "lon": -2.54
+    }
+   ],
+   "ruler": {
+    "name": "Sancho IV",
+    "born": 1258,
+    "dynasty": "Burgundy (Ivrea)",
+    "female": false
+   },
+   "heir": {
+    "name": "Ferdinand",
+    "born": 1285,
+    "dynasty": "Burgundy (Ivrea)",
+    "female": false
+   },
+   "consort": {
+    "name": "María de Molina",
+    "born": 1265,
+    "dynasty": "Molina",
+    "female": true
+   },
+   "dynasty_note": "House of Burgundy (Ivrea). Sancho IV, the Brave, prepares the siege of Tarifa (taken October 1292).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france",
+    "aragon"
+   ],
+   "rivals": [
+    "marinid",
+    "granada"
+   ],
+   "claims_on": [
+    "marinid"
+   ],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "Sancho IV wants the Strait: the Marinid bridgeheads of Tarifa and Algeciras.",
+    "de": "Sancho IV. will die Meerenge: die merinidischen Brückenköpfe Tarifa und Algeciras."
+   },
+   "coa": {
+    "blazon": "Quarterly, 1 and 4 Gules a castle Or (Castile), 2 and 3 Argent a lion rampant Purpure (León)",
+    "field": "gules",
+    "division": "quarterly",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "or",
+      "count": 2
+     },
+     {
+      "type": "lion",
+      "tincture": "purpure",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "aragon",
+   "name": {
+    "en": "Crown of Aragon",
+    "de": "Krone Aragón"
+   },
+   "short": {
+    "en": "Aragon",
+    "de": "Aragón"
+   },
+   "adjective": {
+    "en": "Aragonese",
+    "de": "aragonesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "catalan",
+   "faith": "latin",
+   "color": "#6d4a4a",
+   "capital": {
+    "name": "Barcelona",
+    "lat": 41.385,
+    "lon": 2.173
+   },
+   "holdings": [
+    {
+     "name": "Barcelona",
+     "lat": 41.385,
+     "lon": 2.173
+    },
+    {
+     "name": "Zaragoza",
+     "lat": 41.649,
+     "lon": -0.889
+    },
+    {
+     "name": "Valencia",
+     "lat": 39.47,
+     "lon": -0.376
+    },
+    {
+     "name": "Lleida",
+     "lat": 41.617,
+     "lon": 0.62
+    },
+    {
+     "name": "Girona",
+     "lat": 41.979,
+     "lon": 2.821
+    },
+    {
+     "name": "Tarragona",
+     "lat": 41.119,
+     "lon": 1.245
+    },
+    {
+     "name": "Tortosa",
+     "lat": 40.812,
+     "lon": 0.521
+    },
+    {
+     "name": "Huesca",
+     "lat": 42.136,
+     "lon": -0.408
+    },
+    {
+     "name": "Jaca",
+     "lat": 42.57,
+     "lon": -0.55
+    },
+    {
+     "name": "Teruel",
+     "lat": 40.345,
+     "lon": -1.106
+    },
+    {
+     "name": "Calatayud",
+     "lat": 41.353,
+     "lon": -1.643
+    },
+    {
+     "name": "Castellón",
+     "lat": 39.986,
+     "lon": -0.051
+    },
+    {
+     "name": "Xàtiva",
+     "lat": 38.99,
+     "lon": -0.52
+    },
+    {
+     "name": "Dénia",
+     "lat": 38.84,
+     "lon": 0.11
+    },
+    {
+     "name": "Alzira",
+     "lat": 39.15,
+     "lon": -0.44
+    },
+    {
+     "name": "Morella",
+     "lat": 40.62,
+     "lon": -0.1
+    },
+    {
+     "name": "Balaguer",
+     "lat": 41.79,
+     "lon": 0.81
+    },
+    {
+     "name": "Vic",
+     "lat": 41.93,
+     "lon": 2.25
+    },
+    {
+     "name": "Urgell",
+     "lat": 42.358,
+     "lon": 1.461
+    },
+    {
+     "name": "Barbastro",
+     "lat": 42.036,
+     "lon": 0.127
+    },
+    {
+     "name": "Daroca",
+     "lat": 41.11,
+     "lon": -1.41
+    },
+    {
+     "name": "Palma",
+     "lat": 39.57,
+     "lon": 2.65
+    },
+    {
+     "name": "Alcúdia",
+     "lat": 39.85,
+     "lon": 3.12
+    },
+    {
+     "name": "Ciutadella",
+     "lat": 40.0,
+     "lon": 3.84
+    },
+    {
+     "name": "Mahón",
+     "lat": 39.888,
+     "lon": 4.265
+    },
+    {
+     "name": "Ibiza",
+     "lat": 38.909,
+     "lon": 1.433
+    }
+   ],
+   "ruler": {
+    "name": "Alfonso III",
+    "born": 1265,
+    "dynasty": "Barcelona",
+    "female": false
+   },
+   "heir": {
+    "name": "James II (King of Sicily)",
+    "born": 1267,
+    "dynasty": "Barcelona",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "House of Barcelona. Alfonso III, the Liberal, took the Balearics from his uncle James II of Majorca (1285-87); excommunicated, he negotiates the Treaty of Tarascon (February 1291). He dies on 18 June 1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sicily"
+   ],
+   "rivals": [
+    "france",
+    "naples",
+    "majorca",
+    "castile"
+   ],
+   "claims_on": [
+    "majorca"
+   ],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or four pallets Gules",
+    "field": "or",
+    "division": "paly",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "majorca",
+   "name": {
+    "en": "Kingdom of Majorca",
+    "de": "Königreich Mallorca"
+   },
+   "short": {
+    "en": "Majorca",
+    "de": "Mallorca"
+   },
+   "adjective": {
+    "en": "Majorcan",
+    "de": "mallorquinisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "catalan",
+   "faith": "latin",
+   "color": "#4f3e12",
+   "capital": {
+    "name": "Perpignan",
+    "lat": 42.699,
+    "lon": 2.895
+   },
+   "holdings": [
+    {
+     "name": "Perpignan",
+     "lat": 42.699,
+     "lon": 2.895
+    },
+    {
+     "name": "Collioure",
+     "lat": 42.53,
+     "lon": 3.08
+    },
+    {
+     "name": "Puigcerdà",
+     "lat": 42.43,
+     "lon": 1.93
+    },
+    {
+     "name": "Villefranche-de-Conflent",
+     "lat": 42.59,
+     "lon": 2.37
+    },
+    {
+     "name": "Céret",
+     "lat": 42.49,
+     "lon": 2.75
+    },
+    {
+     "name": "Elne",
+     "lat": 42.6,
+     "lon": 2.97
+    },
+    {
+     "name": "Montpellier",
+     "lat": 43.611,
+     "lon": 3.877
+    },
+    {
+     "name": "Carlat",
+     "lat": 44.88,
+     "lon": 2.57
+    }
+   ],
+   "ruler": {
+    "name": "James II of Majorca",
+    "born": 1243,
+    "dynasty": "Barcelona",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "James II of Majorca has lost the islands to Aragon (1285-87) and keeps Roussillon, Cerdanya and the lordship of Montpellier under French protection.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [
+    "aragon"
+   ],
+   "claims_on": [
+    "aragon"
+   ],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "portugal",
+   "name": {
+    "en": "Kingdom of Portugal",
+    "de": "Königreich Portugal"
+   },
+   "short": {
+    "en": "Portugal",
+    "de": "Portugal"
+   },
+   "adjective": {
+    "en": "Portuguese",
+    "de": "portugiesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "portuguese",
+   "faith": "latin",
+   "color": "#3b5a62",
+   "capital": {
+    "name": "Lisbon",
+    "lat": 38.722,
+    "lon": -9.139
+   },
+   "holdings": [
+    {
+     "name": "Lisbon",
+     "lat": 38.722,
+     "lon": -9.139
+    },
+    {
+     "name": "Coimbra",
+     "lat": 40.203,
+     "lon": -8.41
+    },
+    {
+     "name": "Porto",
+     "lat": 41.15,
+     "lon": -8.61
+    },
+    {
+     "name": "Braga",
+     "lat": 41.545,
+     "lon": -8.427
+    },
+    {
+     "name": "Guimarães",
+     "lat": 41.44,
+     "lon": -8.29
+    },
+    {
+     "name": "Évora",
+     "lat": 38.571,
+     "lon": -7.909
+    },
+    {
+     "name": "Beja",
+     "lat": 38.015,
+     "lon": -7.863
+    },
+    {
+     "name": "Silves",
+     "lat": 37.19,
+     "lon": -8.44
+    },
+    {
+     "name": "Faro",
+     "lat": 37.019,
+     "lon": -7.93
+    },
+    {
+     "name": "Tavira",
+     "lat": 37.13,
+     "lon": -7.65
+    },
+    {
+     "name": "Lamego",
+     "lat": 41.097,
+     "lon": -7.81
+    },
+    {
+     "name": "Viseu",
+     "lat": 40.657,
+     "lon": -7.913
+    },
+    {
+     "name": "Guarda",
+     "lat": 40.537,
+     "lon": -7.268
+    },
+    {
+     "name": "Santarém",
+     "lat": 39.236,
+     "lon": -8.686
+    },
+    {
+     "name": "Leiria",
+     "lat": 39.744,
+     "lon": -8.807
+    },
+    {
+     "name": "Bragança",
+     "lat": 41.806,
+     "lon": -6.757
+    },
+    {
+     "name": "Chaves",
+     "lat": 41.74,
+     "lon": -7.47
+    },
+    {
+     "name": "Elvas",
+     "lat": 38.88,
+     "lon": -7.163
+    },
+    {
+     "name": "Castelo Branco",
+     "lat": 39.82,
+     "lon": -7.49
+    },
+    {
+     "name": "Setúbal",
+     "lat": 38.524,
+     "lon": -8.893
+    },
+    {
+     "name": "Viana do Castelo",
+     "lat": 41.69,
+     "lon": -8.83
+    }
+   ],
+   "ruler": {
+    "name": "Denis",
+    "born": 1261,
+    "dynasty": "Burgundy (Portugal)",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Elizabeth of Aragon",
+    "born": 1271,
+    "dynasty": "Barcelona",
+    "female": true
+   },
+   "dynasty_note": "House of Burgundy. Denis, the Farmer King, founded the university at Lisbon (1290).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "castile"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent five escutcheons Azure each charged with bezants Argent, a bordure Gules charged with castles Or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "azure",
+      "count": 5,
+      "arrangement": "in_cross"
+     },
+     {
+      "type": "castle",
+      "tincture": "or",
+      "count": 7,
+      "arrangement": "in_orle"
+     }
+    ]
+   }
+  },
+  {
+   "id": "granada",
+   "name": {
+    "en": "Emirate of Granada",
+    "de": "Emirat Granada"
+   },
+   "short": {
+    "en": "Granada",
+    "de": "Granada"
+   },
+   "adjective": {
+    "en": "Granadan",
+    "de": "granadinisch"
+   },
+   "rank": "emirate",
+   "government": "feudal_monarchy",
+   "culture": "andalusi",
+   "faith": "sunni",
+   "color": "#44471d",
+   "capital": {
+    "name": "Granada",
+    "lat": 37.177,
+    "lon": -3.599
+   },
+   "holdings": [
+    {
+     "name": "Granada",
+     "lat": 37.177,
+     "lon": -3.599
+    },
+    {
+     "name": "Málaga",
+     "lat": 36.72,
+     "lon": -4.42
+    },
+    {
+     "name": "Almería",
+     "lat": 36.84,
+     "lon": -2.468
+    },
+    {
+     "name": "Guadix",
+     "lat": 37.3,
+     "lon": -3.14
+    },
+    {
+     "name": "Baza",
+     "lat": 37.49,
+     "lon": -2.773
+    },
+    {
+     "name": "Loja",
+     "lat": 37.17,
+     "lon": -4.15
+    },
+    {
+     "name": "Antequera",
+     "lat": 37.02,
+     "lon": -4.56
+    },
+    {
+     "name": "Vera",
+     "lat": 37.243,
+     "lon": -1.859
+    },
+    {
+     "name": "Almuñécar",
+     "lat": 36.734,
+     "lon": -3.69
+    },
+    {
+     "name": "Vélez-Málaga",
+     "lat": 36.78,
+     "lon": -4.1
+    },
+    {
+     "name": "Marbella",
+     "lat": 36.51,
+     "lon": -4.88
+    },
+    {
+     "name": "Alhama de Granada",
+     "lat": 37.006,
+     "lon": -3.989
+    },
+    {
+     "name": "Motril",
+     "lat": 36.745,
+     "lon": -3.52
+    },
+    {
+     "name": "Purchena",
+     "lat": 37.35,
+     "lon": -2.36
+    }
+   ],
+   "ruler": {
+    "name": "Muhammad II",
+    "born": 1235,
+    "dynasty": "Nasrid",
+    "female": false
+   },
+   "heir": {
+    "name": "Muhammad III",
+    "born": 1257,
+    "dynasty": "Nasrid",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "Nasrid dynasty. Málaga came back from the Banu Ashqilula through the Marinids in 1279, Guadix in 1288.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "castile",
+    "marinid"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules a bend Or engouled by dragons' heads, charged with the motto 'wa-la ghaliba illa Allah'",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "letter",
+      "tincture": "azure",
+      "count": 1,
+      "arrangement": "on_bend",
+      "text": "ولا غالب إلا الله"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": [
+  {
+   "name": {
+    "en": "Aragonese Crusade (War of the Sicilian Vespers)",
+    "de": "Aragonesischer Kreuzzug (Krieg der Sizilianischen Vesper)"
+   },
+   "attackers": [
+    "naples",
+    "france",
+    "papal_states",
+    "majorca"
+   ],
+   "defenders": [
+    "aragon",
+    "sicily"
+   ],
+   "since": 1282,
+   "goal": "throne_claim"
+  }
+ ]
+}
