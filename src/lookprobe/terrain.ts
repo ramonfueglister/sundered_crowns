@@ -10,7 +10,9 @@ const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_S
 const ROCK_GRAIN = 0.3, ROCK_NOTCH = 0.3;
 export const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8);
 const ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
-export const SOIL_WHEAT = rgb(0xc09a3c), SOIL_VINE = rgb(0x587a2a);
+export const SOIL_WHEAT = rgb(0xc09a3c), SOIL_OATS = rgb(0x6c9634), SOIL_VINE = rgb(0x587a2a);
+/** the fallow: stubble and weeds, grazed, shows through the grass this far */
+export const SOIL_FALLOW = rgb(0xb0a060), FALLOW_SHOWS = 0.65;
 export const SHADED_SOIL = rgb(0x6a705c);
 const DIRT = rgb(0xa88a52), QUAY = rgb(0xdcc4b4), EARTH = rgb(0x9a8450);
 export const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c), FALLS = rgb(0x9fd6d8);
@@ -62,7 +64,7 @@ function topColor(t: GroundTraits, x: number, z: number, mat: number, wx = x, wz
   c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(wx / 13, wz / 13, 25)) * 0.6);
   const tint = t.tint?.(x, z);
   if (tint) c = mix(c, shade(tint[0], 0.96 + 0.08 * hash2(Math.round(wx), Math.round(wz), 24)), tint[1]);
-  if (crop) c = mix(c, crop === 'wheat' ? SOIL_WHEAT : SOIL_VINE, 0.85);
+  if (crop) c = crop === 'fallow' ? mix(c, SOIL_FALLOW, FALLOW_SHOWS) : mix(c, crop === 'wheat' ? SOIL_WHEAT : crop === 'oats' ? SOIL_OATS : SOIL_VINE, 0.85);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
   const near = t.road(x, z), road = 1 - smooth(1.3, 2.0, near + (noise2(wx / 2, wz / 2, 27) - 0.5) * 0.9);
   // bare earth shows through in patches, mostly beside the paths

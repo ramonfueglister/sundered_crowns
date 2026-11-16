@@ -1,7 +1,7 @@
 // The real landscape in the look of the probe: heights, coast, lakes and rivers of a region become a ground of columns
 // on the probe's grid, with rock, meadow and woods chosen from the real heights and the forest of the world's start
 // year (forest.ts; the forest cover of 1356 for a year without one).
-// On it stand the towns, villages and fields of 1356 (see settle.ts). North is at the top of the picture. No roads yet.
+// On it stand the towns and villages (see settle.ts) and the fields the simulation has cultivated (arable.ts). North is at the top of the picture. No roads yet.
 import { Batch, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
@@ -9,11 +9,13 @@ import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
-import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand } from './forest';
-import { BARE, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
+import { type Arable, arableAt } from './arable';
+import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
+import { type Rural, ruralAt } from './rural';
+import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
-import { type Cover, type Woods, coverLand } from './far';
-import { type Lot, type Monument, type Settled, type Site, raise, settle } from './settle';
+import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, type Settled, type Site, farmsFor, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
@@ -67,6 +69,17 @@ const SLOPE = rgb(0x86983c);
 const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
+/** km to a degree of longitude at the equator */
+const KM_PER_DEGREE = 111.32;
+/**
+ * In how many courses the fields are tilled: in three (winter corn, spring corn, fallow), so that one field in
+ * three lies fallow in a year, grazed until it is ploughed again; in two (corn, fallow) round the Mediterranean,
+ * whose dry summers bear no spring corn (Slicher van Bath 1963, The Agrarian History of Western Europe, on the two-
+ * and three-course rotations). A rule: in the north two courses stood beside three in 1291.
+ */
+const COURSES = 3, COURSES_DRY = 2;
+/** of the land the game's layer of 1356 calls cultivated this share is ploughed ground: as much as was drawn of it before the simulation's arable */
+const FIELDS_1356 = 0.3;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
@@ -78,9 +91,10 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
  * finer the blocks). What stands on it is built house by house and tree by tree at step 0
  * only; from step 1 on it is part of the ground (far.ts). `inhabitants` gives the people of the places (by their
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files;
- * `forest` the forest of the world's start year, where one was made for it (forest.ts).
+ * `forest` the forest of the world's start year, where one was made for it (forest.ts); `rural` the people on the
+ * land of that year (rural.ts).
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -247,17 +261,52 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   });
   /** how much the game's layers of 1356 count at a cell: towards the east edge of the game map they give way, so that no line shows where they end */
   const reach = (cx: number) => { const px = region.x0 + cx / region.cells; return smooth(region.mapW, region.mapW - LAYERS_FADE, region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px); };
-  /** the share of its ground that is fields: none where the fields of 1356 are not known (the Americas, which the game map has as one farmland) */
-  const cultivated = (x: number, z: number) => { const [cx, cy] = toCell(x, z); return at(land, x, z) & FIELDS_KNOWN ? sample(region, region.crops, cx, cy) / 255 * reach(cx) : 0; };
+  /** the pixel of the game map a ground point lies at */
+  const mapPixel = (x: number, z: number): [number, number] => { const [cx, cy] = toCell(x, z), px = region.x0 + cx / region.cells; return [region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px, region.y0 + cy / region.cells]; };
+  /**
+   * The share of the land about a ground point that is under the plough, the fallow counted in: what the simulation
+   * has cultivated in the place there (arable.ts). Without its layer the game's layer of 1356 stands, a rule of thumb
+   * from the people of a place, of which FIELDS_1356 were drawn as fields; none where that is not known (the
+   * Americas, which the game map has as one farmland).
+   */
+  const arableOf = (x: number, z: number) => {
+    const [cx, cy] = toCell(x, z);
+    if (arable) return (arableAt(arable, ...mapPixel(x, z)) ?? 0) * reach(cx);
+    return at(land, x, z) & FIELDS_KNOWN ? (sample(region, region.crops, cx, cy) / 255) * reach(cx) * FIELDS_1356 : 0;
+  };
+  /**
+   * The share of the ground under the plough at a ground point. The fields of the simulation's arable lie together
+   * as the woods do, where the woods do not, and leave the open grass between them (forest.ts `tilth`); those of the
+   * layer of 1356 lie evenly over the land.
+   */
+  const ploughed = (x: number, z: number) => {
+    const share = arableOf(x, z);
+    return arable && share > 0 ? FIELD_GROUND * tilth(Math.min(1, share / FIELD_GROUND), (x + ox) * cell, (z + oz) * cell, woodsShow, lean ? lean[idx(Math.floor(x), Math.floor(z))] : 0) : share;
+  };
+  /** in how many courses the fields at a ground point are tilled */
+  const courses = (x: number, z: number) => ((at(land, x, z) & KIND) === Land.Mediterranean ? COURSES_DRY : COURSES);
+  /** km² a field lot of the finest step takes at a latitude: a cell of the data is a quarter of a map pixel wide */
+  const lotKm2 = (latitude: number) => LOT_BLOCKS * ((((region.lon1 - region.lon0) / region.mapW / (region.cells * cell)) * KM_PER_DEGREE * Math.cos((latitude * Math.PI) / 180)) / FINER) ** 2;
+  /**
+   * The farmhouses to a field at a ground point: as many as hold the people the simulation
+   * counts on the land of the place there, outside its towns; where it counts none (beyond the game map, a year
+   * without the layer) as everywhere before.
+   */
+  const farms = (x: number, z: number) => {
+    if (!rural) return FARMS;
+    const people = ruralAt(rural, ...mapPixel(x, z));
+    // of the land's lots as many are fields as hold its ploughed ground
+    return people === null ? FARMS : farmsFor(people, lotKm2(at(lat, x, z)), arableOf(x, z) / (step === 0 ? LOT_FILL : lotFill(step)));
+  };
   const vines = (x: number, z: number) => 0.25 * smooth(52, 47, at(lat, x, z)) * smooth(700, 400, metresAt(x, z));
   /** whether water lies within `reach` columns of a column */
   const byWater = (x: number, z: number, reach: number) => { for (let dz = -reach; dz <= reach; dz++) for (let dx = -reach; dx <= reach; dx++) if (inGrid(x + dx, z + dz) && g.wet[idx(x + dx, z + dz)]) return true; return false; };
   /** palms line the water of the desert and of the hot steppe */
   const oasis = (i: number) => Math.abs(lat[i]) < 37 && metres[i] < 1200 && ((land[i] & KIND) === Land.Desert || (land[i] & KIND) === Land.Steppe);
-  /** how far the single woods of the year's forest show at this step: no longer where a block is nearly as large as a wood */
+  /** how far the single woods of the year's forest and the fields lying together show at this step: no longer where a block is nearly as large as a wood */
   const woodsShow = smooth(WOOD * 0.8, WOOD * 0.4, cell);
-  /** where in its landscape, a wood's width to each side, a column is one for woods: on the heights, not on the valley floors */
-  const lean = forest && woodsShow > 0 ? leanOf(metres, Uint8Array.from(kind, (k) => (k === Water.Land ? 1 : 0)), N, Math.max(1, Math.round(WOOD / cell))) : null;
+  /** where in its landscape, a wood's width to each side, a column is one for woods and not for fields: on the heights, not on the valley floors */
+  const lean = (forest || arable) && woodsShow > 0 ? leanOf(metres, Uint8Array.from(kind, (k) => (k === Water.Land ? 1 : 0)), N, Math.max(1, Math.round(WOOD / cell))) : null;
   /** the share of the land under trees at a ground point by the forest of the world's year; null where it has none */
   const forestOf = (x: number, z: number) => { if (!forest) return null; const [cx, cy] = toCell(x, z); return forestAt(forest, region.x0 + cx / region.cells, region.y0 + cy / region.cells); };
   /**
@@ -288,7 +337,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   let settled: Settled | undefined, cover: Cover | undefined;
   if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { cultivated, vines, farm: (x, z) => farm(x, z).style.house, own, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -304,7 +353,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
-    const built = settled = settle(g, things, sites, monuments, farm, cultivated, vines, counts, own);
+    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses);
 
     // woods where the forest of the world's year stood (`wooded`), up to the tree line:
     // leafy in the low country, dark conifers towards the heights and in the north, the crowns of the rain forest, flat
@@ -333,7 +382,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
 
   const traits: GroundTraits = {
     city: (x, z) => at((settled ?? cover!).town, x, z) === 1, plaza: () => Infinity, road: () => Infinity,
-    crop: (x, z) => (settled ? ([null, 'wheat', 'vine'] as const)[at(settled.field, x, z)] : null),
+    crop: (x, z) => (settled ? ([null, 'wheat', 'vine', 'fallow', 'oats'] as const)[at(settled.field, x, z)] : null),
     cover: cover && ((x, z) => { const i = idx(x, z); return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]], side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]], rise: cover.rise[i], share: cover.share[i] } : null; }),
     // the low country is sun-bleached, the mountain meadows are green
     bleach: (x, z) => smooth(900, 200, metresAt(x, z)),
