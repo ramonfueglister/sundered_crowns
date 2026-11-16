@@ -145,8 +145,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // what share of the dots a mesh is drawn on is written beside the picture, for putting the picture together from
   // the two sets of dots (see below): the dots from 0 up to a mark as half the mark, those from a mark up to 1 as a
   // half and half the mark; all of the dots is 0.5
+  // (written by the picture's own pass alone, for everything on the stage: the mirror's and the shadows' passes have no such second picture)
   const shareCode = select(marks.x.greaterThan(0), marks.x.mul(0.5).add(0.5), marks.y.mul(0.5));
-  solid.mrtNode = mrt({ normal: vec4(normalView, shareCode) });
+  /** everything on the stage carries its two marks, all the dots unless it is dissolved */
+  const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); });
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -154,9 +156,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const mirror = reflector({ resolutionScale: 0.5 });
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
-    scene.add(mirror.target);
+    marked(mirror.target); scene.add(mirror.target);
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
-    water.maskNode = solid.maskNode; water.mrtNode = solid.mrtNode;
+    water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
@@ -250,7 +252,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const creased = uniform(1);
   let reached: { value: number } | null = null;
   // beside the picture: which way every point faces, and with it the share of the dots its mesh is drawn on
-  scenePass.setMRT(mrt({ output, normal: vec4(normalView, 0.5) }));
+  scenePass.setMRT(mrt({ output, normal: vec4(normalView, shareCode) }));
   const facing = scenePass.getTextureNode('normal');
   if (flag('ao', true)) {
     const creases = ao(far, facing, camera);
@@ -344,7 +346,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         part.userData.ground = shape === built.ground;
         group.add(part);
       }
-      if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); showFigures(frameW); }
+      if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); marked(group); showFigures(frameW); }
       scene.add(group);
       pending = Math.max(pending, 3);
       return group;
@@ -362,7 +364,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) if (part.userData.figures) part.visible = from <= 0 && until >= 1; else (part.userData.dots as THREE.Vector2).set(from, until);
       pending = Math.max(pending, 1);
     },
-    put(thing) { scene.add(thing); pending = Math.max(pending, 1); },
+    put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
     lay(strength, flat, seaTop) {
