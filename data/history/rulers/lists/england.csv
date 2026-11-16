@@ -1,0 +1,29 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Edward I,1239-06-17,1307-07-07,1272-11-20,1307-07-07,day,House of Plantagenet,Q57798,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+2,Edward II,1284-04-25,1327-09-21,1307-07-08,1327-01-20,day,House of Plantagenet,Q5236,abdicated,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+3,Edward III,1312-11-13,1377-06-21,1327-01-25,1377-06-21,day,House of Plantagenet,Q129247,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+4,Richard II,1367-01-06,1400-02-14,1377-06-22,1399-09-29,day,House of Plantagenet,Q81000,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+5,Henry IV,1367-04,1413-03-20,1399-09-30,1413-03-20,day,House of Lancaster,Q161866,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+6,Henry V,1386-09-16,1422-08-31,1413-03-21,1422-08-31,day,House of Lancaster,Q131581,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+7,Henry VI,1421-12-06,1471-05-21,1422-09-01,1461-03-04,day,House of Lancaster,Q160337,first reign,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+8,Edward IV,1442-04-28,1483-04-09,1461-03-04,1470-10-03,day,House of York,Q160341,first reign,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+9,Henry VI,1421-12-06,1471-05-21,1470-10-03,1471-04-11,day,House of Lancaster,Q160337,restored,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+10,Edward IV,1442-04-28,1483-04-09,1471-04-11,1483-04-09,day,House of York,Q160341,restored,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+11,Edward V,1470-11-02,,1483-04-09,1483-06-25,day,House of York,Q170470,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+12,Richard III,1452-10-02,1485-08-22,1483-06-26,1485-08-22,day,House of York,Q133028,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+13,Henry VII,1457-01-28,1509-04-21,1485-08-22,1509-04-21,day,House of Tudor,Q675493,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+14,Henry VIII,1491-06-28,1547-01-28,1509-04-22,1547-01-28,day,House of Tudor,Q38370,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+15,Edward VI,1537-10-12,1553-07-06,1547-01-28,1553-07-06,day,House of Tudor,Q83229,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+16,Jane,,1554-02-12,1553-07-10,1553-07-19,day,House of Tudor,Q162356,disputed claimant; source gives birth 1536 or 1537,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+17,Mary I,1516-02-18,1558-11-17,1553-07-19,1558-11-17,day,House of Tudor,Q82674,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+18,Philip,1527-05-21,1598-09-13,1554-07-25,1558-11-17,day,House of Habsburg,Q34417,co-ruler with Mary I by marriage treaty (jure uxoris),https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+19,Elizabeth I,1533-09-07,1603-03-24,1558-11-17,1603-03-24,day,House of Tudor,Q7207,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+20,James I,1566-06-19,1625-03-27,1603-03-24,1625-03-27,day,House of Stuart,Q79972,,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+21,Charles I,1600-11-19,1649-01-30,1625-03-27,1649-01-30,day,House of Stuart,Q81506,executed; no monarch 1649–1660 (interregnum),https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+22,Oliver Cromwell,1599-04-25,1658-09-03,1653-12-16,1658-09-03,day,,Q44279,"Lord Protector during the interregnum, not a monarch; listed by source",https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+23,Richard Cromwell,1626-10-04,1712-07-12,1658-09-03,1659-05-07,day,,Q203980,"Lord Protector during the interregnum, not a monarch; listed by source; removed May 1659",https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+24,Charles II,1630-05-29,1685-02-06,1660-05-29,1685-02-06,day,House of Stuart,Q122553,monarchy restored,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+25,James II,1633-10-14,1701-09-16,1685-02-06,1688-12-23,day,House of Stuart,Q126188,overthrown in the Glorious Revolution,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+26,Mary II,1662-04-30,1694-12-28,1689-02-13,1694-12-28,day,House of Stuart,Q130812,co-ruler with William III,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+27,William III,1650-11-04,1702-03-08,1689-02-13,1702-03-08,day,House of Orange,Q129987,co-ruler with Mary II until 1694,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795
+28,Anne,1665-02-06,1714-08-01,1702-03-08,1707-05-01,day,House of Stuart,Q119702,Acts of Union 1707: England ceased to be a sovereign state and became part of the Kingdom of Great Britain,https://en.wikipedia.org/wiki/List_of_English_monarchs,1385310795

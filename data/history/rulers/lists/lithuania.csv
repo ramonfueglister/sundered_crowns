@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Butigeidis,,1291,1285,1291,year,House of Gediminas,Q638650,"work list has Butvydas (Pukuveras); source gives Butigeidis 1285–1291, died 1291",https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+2,Butvydas,,,1291,1295,year,House of Gediminas,Q638646,brother of Butigeidis; died c. 1294–1295,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+3,Vytenis,1260,1316,1295,1316,year,House of Gediminas,Q557859,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+4,Gediminas,,,1316,1341,year,House of Gediminas,Q244852,"born c. 1275, died c. 1341",https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+5,Jaunutis,,,1341,1345,year,House of Gediminas,Q557916,died c. 1366,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+6,Algirdas,,,1345,1377,year,House of Gediminas,Q336754,"born c. 1296, died c. 1377",https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+7,Kęstutis,,1382,1345,1382,circa,House of Gediminas,Q355869,"co-ruler; source: 'probably 1345–1382', attested 1349–1351 and 1381–1382; died 1382 in captivity",https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+8,Jogaila,,1434-06-01,1377-05,1381-08,month,House of Gediminas,Q54049,first reign,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+9,Jogaila,,1434-06-01,1382-08-03,1434-06-01,day,House of Gediminas,Q54049,second reign; also King of Poland from the Act of Kreva (1385),https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+10,Vytautas the Great,,1430-10-27,1401,1430-10-27,year,House of Gediminas,Q218186,Grand Duke under Jogaila after the Astrava Agreement (1392),https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+11,Švitrigaila,,1452-02-10,1430-10,1432-08-01,month,House of Gediminas,Q392792,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+12,Sigismund Kęstutaitis,1365,1440-03-20,1432,1440,year,House of Gediminas,Q1091376,murdered,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+13,Władysław,1424-10-31,1444-11-10,1434-06-01,1444-11-10,day,House of Jagiellon,Q54053,King of Poland and Grand Duke per source (overlaps Sigismund Kęstutaitis and Casimir),https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+14,Casimir Andrew,1427-11-30,1492-06-07,1440-06-29,1492-06-07,day,House of Jagiellon,Q53459,also King of Poland,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+15,John I Albert,1459-12-27,1501-06-17,1492-08,1501-06-17,month,House of Jagiellon,Q53451,disputed (source); King of Poland,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+16,Alexander Jagiellon,1461-08-05,1506-08-19,1492-07-30,1506-08-19,day,House of Jagiellon,Q53450,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+17,Sigismund the Old,1467-01-01,1548-04-01,1506,1548-04-01,year,House of Jagiellon,Q54056,source start garbled ('20 October December 1506'),https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+18,Sigismund Augustus,1520-08-01,1572-07-07,1529-10-18,1572-07-07,day,House of Jagiellon,Q54058,co-ruler with his father until 1548; from 1 July 1569 (Union of Lublin) Grand Duke within the Commonwealth,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+19,Henry,1551-09-19,1589-08-02,1573-05-16,1575-05-12,day,House of Valois,Q53448,title held by the elected king of Poland; left Poland June 1574,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+20,Anna,1523-10-18,1596-09-09,1575-12-15,1587-08-19,day,House of Jagiellon,Q233989,co-ruler with Stephen Báthory; de facto,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+21,Stephen Báthory,1533-09-27,1586-12-12,1576-05-01,1586-12-12,day,Báthory,Q54030,co-ruler with Anna,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+22,Sigismund Vasa,1566-06-20,1632-04-30,1587-08-19,1632-04-30,day,House of Vasa,Q52940,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+23,Władysław,1595-06-09,1648-05-20,1632-11-08,1648-05-20,day,House of Vasa,Q54054,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+24,John Casimir,1609-03-22,1672-12-16,1648-11-20,1668-09-16,day,House of Vasa,Q53452,abdicated,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+25,Michael,1640-05-31,1673-11-10,1669-06-19,1673-11-10,day,Wiśniowiecki,Q54041,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+26,John Sobieski,1629-08-17,1696-06-17,1674-05-19,1696-06-17,day,Sobieski,Q53454,,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+27,Augustus II,1670-05-12,1733-02-01,1697-09-15,1706,year,Wettin,Q53437,first reign; dethroned by Stanislaus I,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+28,Stanislaus I,1677-10-20,1766-02-23,1704-07-12,1709-07-08,day,Leszczyński,Q54022,first reign; usurped,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+29,Augustus II,1670-05-12,1733-02-01,1709-07-08,1733-02-01,day,Wettin,Q53437,second reign,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+30,Stanislaus I,1677-10-20,1766-02-23,1733-09-12,1736-01-26,day,Leszczyński,Q54022,second reign; deposed by Augustus III,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+31,Augustus III,1696-10-17,1763-10-05,1733-10-05,1763-10-05,day,Wettin,Q53438,rival of Stanislaus I 1733–1736,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+32,Stanislaus II Augustus,1732-01-17,1798-02-01,1764-09-07,1795-11-25,day,Poniatowski,Q54019,last King of Poland and Grand Duke of Lithuania; reign ended in the Partitions of Poland,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265
+33,Frederick Augustus I,,,1812-07-01,1812-12-14,day,Wettin,Q53444,Grand Duke under the General Confederation of the Kingdom of Poland (1812); last holder in period,https://en.wikipedia.org/wiki/List_of_Lithuanian_monarchs,1383667265

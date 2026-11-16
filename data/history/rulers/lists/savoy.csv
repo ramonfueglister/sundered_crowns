@@ -1,0 +1,27 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Amadeus V the Great,1252,1323-10-16,1285-08-15,1323-10-16,day,House of Savoy,Q451989,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+2,Edward the Liberal,1284-02-08,1329-11-04,1323-10-16,1329-11-04,day,House of Savoy,Q739378,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+3,Aymon the Peaceful,1291-12-15,1343-06-22,1329-11-04,1343-06-22,day,House of Savoy,Q547610,rule contested by his niece Joan of Savoy,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+4,Amadeus VI the Green,1334-01-04,1383-03-01,1343-06-22,1383-03-01,day,House of Savoy,Q451995,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+5,Amadeus VII the Red,1360-02-24,1391-11-01,1383-03-01,1391-11-01,day,House of Savoy,Q451998,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+6,Amadeus VIII the Peaceful,1383-09-04,1451-01-07,1391-11-01,1440-01-06,day,House of Savoy,Q312636,"count until 1416, then first duke of Savoy",https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+7,Louis the Generous,1413-02-21,1465-01-29,1440-01-06,1465-01-29,day,House of Savoy,Q451408,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+8,Amadeus IX the Saint,1435-02-01,1472-03-30,1465-01-29,1472-03-30,day,House of Savoy,Q373236,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+9,Philibert I the Hunter,1465-08-17,1482-09-22,1472-03-30,1482-09-22,day,House of Savoy,Q461459,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+10,Charles I the Warrior,1468-03-28,1490-03-13,1482-09-22,1490-03-13,day,House of Savoy,Q460215,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+11,Charles II the Child,1489-06-23,1496-04-16,1490-03-13,1496-04-16,day,House of Savoy,Q520508,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+12,Philip II the Landless,1438-02-04,1497-11-07,1496-04-16,1497-11-07,day,House of Savoy,Q461667,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+13,Philibert II the Handsome,1480-04-10,1504-09-10,1497-11-07,1504-09-10,day,House of Savoy,Q221263,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+14,Charles III the Good,1486-10-10,1553-08-17,1504-09-10,1553-08-17,day,House of Savoy,Q444189,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+15,Emmanuel Philibert the Iron-headed,1528-07-08,1580-08-30,1553-08-17,1580-08-30,day,House of Savoy,Q76508,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+16,Charles Emmanuel I the Great,1562-01-12,1630-07-26,1580-08-30,1630-07-26,day,House of Savoy,Q318091,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+17,Victor Amadeus I the Lion of Susa,1587-05-08,1637-10-07,1630-07-26,1637-10-07,day,House of Savoy,Q356145,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+18,Francis Hyacinth,1632-09-14,1638-10-04,1637-10-07,1638-10-04,day,House of Savoy,Q472186,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+19,Charles Emmanuel II,1634-06-20,1675-06-12,1638-10-04,1675-06-12,day,House of Savoy,Q355755,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+20,Victor Amadeus II,1666-05-14,1732-10-31,1675-06-12,1730-09-03,day,House of Savoy,Q209579,king of Sardinia from 17 February 1720,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+21,Charles Emmanuel III,1701-04-27,1773-02-20,1730-09-03,1773-02-20,day,House of Savoy,Q312670,also king of Sardinia,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+22,Victor Amadeus III,1726-06-26,1796-10-16,1773-02-20,1796-10-16,day,House of Savoy,Q312681,also king of Sardinia,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+23,Charles Emmanuel IV,1751-05-24,1819-10-06,1796-10-16,1802-06-04,day,House of Savoy,Q175544,also king of Sardinia,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+24,Victor Emmanuel I,1759-07-24,1824-01-10,1802-06-04,1821-03-12,day,House of Savoy,Q175250,also king of Sardinia,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+25,Charles Felix,1765-04-06,1831-04-27,1821-03-12,1831-04-27,day,House of Savoy,Q312683,also king of Sardinia,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554
+26,Charles Albert,1798-10-02,1849-07-28,1831-04-27,1849-03-23,day,House of Savoy,Q181261,also king of Sardinia; Carignano branch,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,1384461554

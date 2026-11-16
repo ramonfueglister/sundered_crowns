@@ -1,0 +1,13 @@
+# P39 holders of positions under ROOTNAME (wd:ROOT); one row per statement
+SELECT ?h ?hLabel ?pos ?posLabel ?st ?start ?end ?replaces ?replacedBy ?birth ?death WHERE {
+  { ?pos wdt:P279+ wd:ROOT } UNION { ?pos wdt:P31/wdt:P279* wd:ROOT }
+  ?h p:P39 ?st . ?st ps:P39 ?pos .
+  OPTIONAL { ?st pq:P580 ?start } OPTIONAL { ?st pq:P582 ?end }
+  OPTIONAL { ?st pq:P1365 ?replaces } OPTIONAL { ?st pq:P1366 ?replacedBy }
+  OPTIONAL { ?h wdt:P569 ?birth } OPTIONAL { ?h wdt:P570 ?death }
+  FILTER( (BOUND(?start) && YEAR(?start) >= 1250 && YEAR(?start) <= 1848) ||
+          (BOUND(?end) && YEAR(?end) >= 1250 && YEAR(?end) <= 1848) ||
+          (!BOUND(?start) && !BOUND(?end) && (BOUND(?birth) || BOUND(?death)) && (!BOUND(?birth) || YEAR(?birth) <= 1848) && (!BOUND(?death) || YEAR(?death) >= 1250)) )
+  OPTIONAL { ?h rdfs:label ?hLabel FILTER(lang(?hLabel)="en") }
+  OPTIONAL { ?pos rdfs:label ?posLabel FILTER(lang(?posLabel)="en") }
+}

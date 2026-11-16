@@ -7,6 +7,7 @@ import type { CalibrationTable } from '../../src/sim/economy/calibration';
 import { wasmEconomyEngine, type EconomyClock, type EconomyEngine, type EconomyPrices, type EconomyWage } from '../../src/sim/economy/engine';
 import { createWorldState, type SetupState } from '../../src/sim/setup';
 import type { WorldState } from '../../src/sim/state';
+import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicle';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
@@ -51,8 +52,19 @@ export function loadEconomyEngine(): EconomyEngine {
   return (engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM)));
 }
 export function loadSetup(year = 1356): SetupState { return read(`setup_${year}.json`); }
-export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
+/** The chronicle of rulers of a start year (public/data/rulers_<year>.json), compiled; null when there is none. */
+export function loadChronicle(year: number): Chronicle | null {
+  const f = dataPath(`rulers_${year}.json`);
+  return existsSync(f) ? compileChronicle(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
+/** The world with the chronicle of rulers of `year`. */
+export function loadWorldFor(year: number): World {
   const w = loadWorld();
+  if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
+  return w;
+}
+export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
+  const w = loadWorldFor(year);
   return { s: createWorldState(w, loadSetup(year), seed), w };
 }
 

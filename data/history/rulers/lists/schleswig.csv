@@ -1,0 +1,40 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Valdemar IV,,1312-07-07,1272-05-27,1312-07-07,day,House of Estridsen,Q870782,Eric V of Denmark recognised him only in 1283,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+2,Eric Long-Legs,1272,1310,1293,1310,year,House of Estridsen,Q5386987,"co-ruler with Valdemar IV, ruled the Langeland part",https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+3,Eric II,,1325-03-12,1312-07-07,1325-03-12,day,House of Estridsen,Q476001,,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+4,Valdemar V,,,1325-03-12,1326,year,House of Estridsen,Q381082,3/4 of Schleswig; became king of Denmark 1326,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+5,Helvig,1320,1374,1325-03-12,1374,year,House of Estridsen,Q2599803,"co-ruler with Valdemar V, 1/4 of Schleswig",https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+6,Gerhard I the Great,1292,1340-04-01,1326,1330,year,House of Schauenburg,Q563794,regent who made himself duke; abdicated 1330,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+7,Valdemar V,,,1330,1364,year,House of Estridsen,Q381082,second reign; source gives death c.1364,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+8,Henry I,,1375-08,1364,1375-08,year,House of Estridsen,Q552665,3/4 of Schleswig,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+9,Henry II of Iron,1317,1384,1375-08,1384,year,House of Schauenburg,Q465347,co-ruler with Nicholas I,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+10,Nicholas I,1321,1397-05-08,1375-08,1386,year,House of Schauenburg,Q831327,co-ruler with Henry II; abdicated 1386,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+11,Gerhard II,1367,1404-08-05,1386,1404-08-05,year,House of Schauenburg,Q563792,,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+12,Henry II,1397,1427-05-28,1404-08-05,1427-05-28,day,House of Schauenburg,Q75055,,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+13,Adolph,1401,1459-12-04,1427-05-28,1459-12-04,day,House of Schauenburg,Q364431,co-ruler with Gerhard III,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+14,Gerhard III,1404,1433-07-24,1427-05-28,1433-07-24,day,House of Schauenburg,Q1512690,co-ruler with Adolph,https://en.wikipedia.org/wiki/Duke_of_Schleswig,1324240696
+15,Christian I,1426-02,1481-05-21,1460,1481,year,House of Oldenburg,Q153940,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+16,John I,1455-02-02,1513-02-20,1481,1513,year,House of Oldenburg,Q157776,co-ruler with Frederick I; king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+17,Frederick I,1471-10-07,1533-02-20,1490,1533,year,House of Oldenburg,Q157789,"co-ruler with John I, then Christian II; king of Denmark from 1523",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+18,Christian II the Tyrant,1426-02,1481-05-21,1513,1523,year,House of Oldenburg,Q154460,co-ruler with Frederick I; deposed 1523; source birth/death dates duplicate those of Christian I (doubtful),https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+19,Christian III,1503-08-12,1559-01-01,1533,1559,year,House of Oldenburg,Q154998,"king of Denmark; from 1544 royal share only, divided with his half-brothers",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+20,John II the Elder,1521-06-21,1580-10-01,1544,1580,year,House of Oldenburg,Q568967,"co-ruler, share Schleswig-Holstein-Haderslev; divided between royal and Gottorp shares after his death",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+21,Adolph,1526-01-25,1586-10-01,1544,1586,year,House of Oldenburg,Q60211,"co-ruler, share Schleswig-Holstein-Gottorp",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+22,Frederick II,1534-07-01,1588-04-04,1559,1588,year,House of Oldenburg,Q154041,royal share; king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+23,Frederick II,1568-04-21,1587-06-15,1586,1587,year,House of Oldenburg,Q64068,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+24,Philip,1570-08-10,1590-10-18,1587,1590,year,House of Oldenburg,Q63588,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+25,Christian IV,1577-04-12,1648-02-28,1588,1648,year,House of Oldenburg,Q153586,royal share; king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+26,John Adolph,1575-02-27,1616-03-31,1590,1616,year,House of Oldenburg,Q62160,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+27,Frederick III,1597-12-22,1659-08-10,1616,1659,year,House of Oldenburg,Q61360,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+28,Frederick III,1609-03-18,1670-02-09,1648,1670,year,House of Oldenburg,Q157812,royal share; king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+29,Christian Albert,1641-02-03,1695-01-06,1659,1695,year,House of Oldenburg,Q505976,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+30,Christian V,1646-04-15,1699-08-25,1670,1699,year,House of Oldenburg,Q157793,royal share; king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+31,Frederick IV,1671-10-18,1702-07-19,1695,1702,year,House of Oldenburg,Q60286,"co-ruler, Gottorp share",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+32,Frederick IV,1671-10-11,1730-10-12,1699,1730,year,House of Oldenburg,Q161059,king of Denmark; reunited Schleswig in 1713,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+33,Charles Frederick,1700-04-30,1739-06-18,1702,1713,year,House of Oldenburg,Q57852,"co-ruler, Gottorp share of Schleswig until 1713 (reigned in Holstein-Gottorp 1702–1739)",https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+34,Christian VI,1699-11-30,1746-08-06,1730,1746,year,House of Oldenburg,Q154993,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+35,Frederick V,1723-03-31,1766-01-14,1746,1766,year,House of Oldenburg,Q156187,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+36,Christian VII,1749-01-29,1808-03-13,1766,1808,year,House of Oldenburg,Q156572,title held by the king of Denmark; reunited Schleswig and Holstein 1773,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+37,Frederick VI,1768-01-28,1839-12-08,1808,1839,year,House of Oldenburg,Q155002,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+38,Christian VIII,1786-09-18,1848-01-20,1839,1848,year,House of Oldenburg,Q157781,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008
+39,Frederick VII,1808-10-06,1863-11-15,1848,1863,year,House of Oldenburg,Q94941,title held by the king of Denmark,https://en.wikipedia.org/wiki/List_of_rulers_of_Schleswig-Holstein,1350725008

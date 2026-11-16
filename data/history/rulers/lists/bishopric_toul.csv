@@ -1,0 +1,37 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Conrad II of Tübingen,,,1272,1296,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+2,John I of Sierck,,,1296,1305,year,,Q1696857,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+3,Vito Venosa,,,1305,1306,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+4,Odo III of Grançon,,,1306,1308,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+5,Giacomo Ottone Colonna,,,1308,1309,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+6,John II of Arzillières,,,1309,1320,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+7,Amatus of Geneva,,,1320,1330,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+8,Thomas of Bourlemont,,,1330,1353,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+9,Bertrand de la Tour,,,1353,1361,year,,Q2899739,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+10,Pietro di la Barreria,,,1361,1363,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+11,John III of Hoya,,,1363,1372,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+12,John IV of Neufchatel,,1398,1373,1384,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+13,Savin de Floxence,,,1384,1398,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+14,Philip II de la Ville-sur-Illon,,,1399,1409,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+15,Henry II de la Ville-sur-Illom,,,1409,1436,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+16,Louis de Haraucourt,,,1437,1449,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+17,Guillaume Fillastre,,,1449,1460,year,,Q1388943,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+18,John V de Chevrot,,,1460,1460,year,,,source gives only 1460,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+19,Anthony I of Neufchatel,,,1461,1495,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+20,Ulric of Blankenberg,,,1495,1506,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+21,Hugh des Hazards,,,1506,1517,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+22,"John, Cardinal of Lorraine",,1544,1517,1524,year,,Q1563911,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+23,Hector de Ailly-Rochefort,,,1526,1532,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+24,"John, Cardinal of Lorraine",,,1532,1537,year,,,second tenure,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+25,Anthony II Pellagrin,,,1537,1542,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+26,John of Lorraine-Guise,,1544,1542,1543,year,,,second tenure,https://en.wikipedia.org/wiki/Diocese_of_Toul#Prince-Bishops,1371241884
+27,Toussaint de Hossey,,,1543,1565,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+28,Peter III de Châtelet,,,1565,1580,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+29,Charles de Lorraine de Vaudémont,,,1580,1587,year,,Q517843,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+30,Christopher de la Vallée,,,1589,1607,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+31,John VII Porcelet de Maillane,,,1609,1624,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+32,"Nicholas II, Duke of Lorraine",,,1625,1634,year,,Q701583,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+33,Charles Christian de Gournay,,,1634,1637,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+34,Henri Arnauld,,,1637,1643,year,,Q3130579,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+35,Paolo Fiesco,,,1643,1645,year,,,,https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884
+36,Jacques Lebret,,,1645,1645,year,,Q22807066,"source gives only 1645; next listed bishop from 1687; Toul annexed by Henry II of France 1552, formally recognised by the Empire 1648 (History section); list continues with bishops under France",https://en.wikipedia.org/wiki/Diocese_of_Toul#Bishops_after_the_French_annexation,1371241884

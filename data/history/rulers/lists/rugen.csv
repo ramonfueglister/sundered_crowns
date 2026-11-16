@@ -1,0 +1,15 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Vitslav II,,1302,1260,1302,year,,Q514046,,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Princes_of_Rügen,1376050076
+2,Vitslav III,,,1303,1325,year,,Q454842,"co-ruler with Sambor III; text says joint princes after their father's death in 1302; last Rugian prince, died 1325, main line extinct",https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Princes_of_Rügen,1376050076
+3,Sambor III,,1304,1302,1304,year,,,co-ruler with Vitslav III,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Princes_of_Rügen,1376050076
+4,Wartislaw IV,,,1325,1326,year,House of Griffins,Q319946,Pomeranian duke; principality inherited by the Dukes of Pomerania,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+5,Bogislaw V,,,1326,1368,year,House of Griffins,Q469354,co-ruler with Wartislaw V and Barnim IV,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+6,Wartislaw V,,,1326,1368,year,House of Griffins,Q544773,co-ruler with Bogislaw V and Barnim IV,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+7,Barnim IV,,,1326,1368,year,House of Griffins,Q320929,co-ruler with Bogislaw V and Wartislaw V,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+8,Wartislaw VI,,,1368,1394,year,House of Griffins,Q320937,"co-ruler with Bogislaw VI 1368-1372, then alone",https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+9,Bogislaw VI,,,1368,1372,year,House of Griffins,Q2908763,co-ruler with Wartislaw VI,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+10,Wartislaw VIII,,,1394,1415,year,House of Griffins,Q824532,,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+11,Swietobor II,,,1415,1432,circa,House of Griffins,,end given as 1432/6,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+12,Barnim VIII,,,1432,1451,circa,House of Griffins,Q808503,start given as 1432/6,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+13,Wartislaw IX,,,1451,1457,year,House of Griffins,Q326198,,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076
+14,Wartislaw X,,,1457,1478,year,House of Griffins,Q873883,source list of Pomeranian holders ends 1478,https://en.wikipedia.org/wiki/Principality_of_R%C3%BCgen#Pomeranian_dukes_(House_of_Griffins),1376050076

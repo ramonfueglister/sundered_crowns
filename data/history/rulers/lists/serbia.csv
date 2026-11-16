@@ -1,0 +1,14 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Stefan Uroš II Milutin,,,1282,1321,year,Nemanjić,Q319597,"King; source also lists his brother Stefan Dragutin as king 1282–1316 in the northern lands (later Srem), not included as separate row",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+2,Stefan Konstantin,,,1321,1322,year,Nemanjić,Q1281457,King; defeated in 1322 by his brother Stefan Uroš III,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+3,Stefan Uroš III Dečanski,,,1322,1331,year,Nemanjić,Q314346,King,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+4,Stefan Dušan,,,1331,1355,year,Nemanjić,Q207303,"King, crowned Emperor in 1346",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+5,Stefan Uroš V,,,1355,1371,year,Nemanjić,Q279693,Emperor; last Nemanjić emperor,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+6,Simeon Uroš,,,1359,1370,year,Nemanjić,Q561940,"rival claimant: self-proclaimed Emperor of Serbs and Greeks (pretender), ruled Epirus/Thessaly",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+7,Jovan Uroš,,,1370,1373,year,Nemanjić,Q888583,"rival claimant: titular Emperor of Serbs and Greeks, ruled part of Epirus and Thessaly",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Nemanjić_dynasty_(1166–1373),1384360445
+8,Lazar Hrebeljanović,,,1371,1389,year,Lazarević,Q310197,Prince of Moravian Serbia; most powerful Serbian ruler after the end of the Nemanjić empire,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Magnate_provinces,1384360445
+9,Stefan Lazarević,,,1389,1427,year,Lazarević,Q336531,"Prince, then Despot (Serbian Despotate); Ottoman vassal 1391–1404, Hungarian 1404–1427",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#Magnate_provinces,1384360445
+10,Đurađ I Branković,,,1427,1456-12-26,year,Branković,Q342130,Despot; earlier Lord of the District of Branković 1396–1412,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#District_of_Branković_/_Serbian_Despotate,1384360445
+11,Lazar Branković,,,1456-12,1458-01-20,month,Branković,Q222373,Despot,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#District_of_Branković_/_Serbian_Despotate,1384360445
+12,Stefan Branković,,,1458,1459-04-08,year,Branković,Q849017,Despot; source: regent for niece,https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#District_of_Branković_/_Serbian_Despotate,1384360445
+13,Stephen Tomašević,,,1459-04-01,1459-06-20,day,,Q518086,"Despot; Serbian Despotate conquered by the Ottoman Empire in 1459 (later despots only titular, in Hungarian service)",https://en.wikipedia.org/wiki/List_of_Serbian_monarchs#District_of_Branković_/_Serbian_Despotate,1384360445

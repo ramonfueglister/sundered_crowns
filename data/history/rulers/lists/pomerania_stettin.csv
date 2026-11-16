@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Boguslaus IV,,1309-02-24,1278-12-13,1295,year,Griffins,Q463904,co-ruler of the Duchy of Pomerania with Barnim II and Otto I; from 1295 partition Duke of Wolgast (to 1309),https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+2,Barnim II,,1295-05-28,1278-12-13,1295-05-28,day,Griffins,Q167200,co-ruler,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+3,Otto I,1279,1344-12-31,1278-12-13,1344-12-31,day,Griffins,Q319932,"co-ruler in Pomerania until 1295, then Duke of Stettin",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+4,Barnim III the Great,,1368-08-14,1344-12-31,1368-08-14,day,Griffins,Q572065,co-ruling since 1320,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+5,Casimir III,1348,1372-08-24,1368-08-14,1372-08-24,day,Griffins,Q324463,,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+6,Swantibor I,1351,1413-06-21,1372-08-24,1413-06-21,day,Griffins,Q829333,co-ruler with Boguslaus VII,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+7,Boguslaus VII the Elder,,1404,1372-08-24,1404,year,Griffins,Q829345,co-ruler with Swantibor I,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+8,Otto II,,1428-03-27,1413-06-21,1428-03-27,day,Griffins,Q873218,co-ruler with Casimir V,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+9,Casimir V,,1435-04-13,1413-06-21,1435-04-13,day,Griffins,Q825148,co-ruler with Otto II,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+10,Joachim the Younger,1424,,1435-04-13,1451-10-04,day,Griffins,Q6306341,,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+11,Otto III,1444-05-29,1464-09-07,1451-10-04,1464-09-07,day,Griffins,Q873203,died without descendants; Stettin annexed to Wolgast,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+12,Eric II,,,1464,1474,year,Griffins,Q452699,Duke of Wolgast holding Stettin,https://en.wikipedia.org/wiki/Pomerania-Stettin#Second_state,1360920419
+13,Bogislaw X,,,1474,1478,year,Griffins,Q696734,,https://en.wikipedia.org/wiki/Pomerania-Stettin#Second_state,1360920419
+14,Boguslaus X the Great,1454-06-03,1523-10-05,1478-12-17,1523-10-05,day,Griffins,Q696734,sole Duke of Pomerania,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+15,George I,1493-04-11,1531-05-10,1523-10-05,1531-05-10,day,Griffins,Q314810,co-ruler with Barnim IX,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+16,Barnim IX the Pious,1501-12-02,1573-11-02,1523-10-05,1569,year,Griffins,Q519179,"co-ruler in Pomerania until 1531, then Duke of Stettin",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+17,John Frederick the Strong,1542-08-27,1600-02-09,1569,1600-02-09,year,Griffins,Q603277,,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+18,Barnim X the Younger,1549-02-15,1603-09-01,1600,1603-09-01,year,Griffins,Q601879,"table reign 1569–1603, held Darłowo until 1600",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+19,Boguslaus XIII [XI],1544-08-09,1606-03-07,1603,1606-03-07,year,Griffins,Q319870,"table reign 1569–1606, held Barth until 1603",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+20,Philip II the Pious,1573-07-29,1618-02-03,1606-03-07,1618-02-03,day,Griffins,Q348458,"brothers George II (Darłowo), Francis (Barth) and Boguslaus XIV (Darłowo) held parts",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+21,Francis,1577-03-24,1620-11-27,1618,1620-11-27,year,Griffins,Q249029,"table reign from 1606, at Barth until 1618",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051
+22,Boguslaus XIV [XII] the Sociable,1580-03-31,1637-03-10,1620,1637-03-10,year,Griffins,Q571957,"at Darłowo until 1620; reunited all Pomerania 1625; died without heirs 1637, Pomerania held by Sweden and Brandenburg",https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes#Table_of_rulers,1361865051

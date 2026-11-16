@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Alfonso I,1265,1291-06-18,1286,1291,year,House of Barcelona,Q336855,Alfonso III of Aragon; work list has James II of Majorca (deposed 1286),https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Monarchs_of_Majorca,1379543148
+2,James III,1267-08-10,1327-11-05,1291,1295,year,House of Barcelona,Q312735,James II of Aragon,https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Monarchs_of_Majorca,1379543148
+3,James II,1243,1311,1295,1311,year,House of Barcelona,Q528401,second rule,https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Monarchs_of_Majorca,1379543148
+4,Sancho,,1324-09-04,1311,1324,year,House of Barcelona,Q878340,,https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Monarchs_of_Majorca,1379543148
+5,James III,1315-04-05,1349-10-25,1324,1344,year,House of Barcelona,Q727402,Peter IV of Aragon annexed the kingdom in 1344,https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Monarchs_of_Majorca,1379543148
+6,Peter IV,1319-10-05,1387-01-05,1344,1387-01-05,year,House of Barcelona,Q336823,title held by the king of Aragon; annexed Majorca 1344 (Kingdom of Majorca article),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+7,James IV,1335,1375-01-20,1349,1375,year,House of Barcelona,Q878998,rival claimant (pretender),https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Pretenders_to_the_throne,1379543148
+8,John I,1350-12-27,1396-05-19,1387-01-05,1396-05-19,day,House of Barcelona,Q358374,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+9,Isabella,1337,1406,1375,1406,year,House of Barcelona,Q2467970,rival claimant (pretender); her descendants did not continue the claim,https://en.wikipedia.org/wiki/Kingdom_of_Majorca#Pretenders_to_the_throne,1379543148
+10,Martin,1356,1410-05-31,1396-05-19,1410-05-31,day,House of Barcelona,Q332681,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+11,Ferdinand I the Honest,1380-11-27,1416-04-02,1412-06-24,1416-04-02,day,House of Trastámara,Q47412,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+12,Alfonso V the Magnanimous,1396,1458-06-27,1416-04-02,1458-06-27,day,House of Trastámara,Q312304,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+13,John II the Great,1398-06-29,1479-01-19,1458-06-27,1479-01-19,day,House of Trastámara,Q312328,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+14,Ferdinand II the Catholic,1452-03-10,1516-01-23,1479-01-19,1516-01-23,day,House of Trastámara,Q12860,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+15,Joanna,1479-11-06,1555-04-12,1516-01-23,1555-04-12,day,House of Trastámara,Q171136,title held by the king of Aragon; nominally co-monarch with Charles I,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+16,Charles I the Emperor,1500-02-24,,1516-01-23,1556-01-16,day,House of Habsburg,Q32500,title held by the king of Aragon; co-ruler with Joanna,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+17,Philip I the Prudent,1527-05-21,,1556-01-16,1598-09-13,day,House of Habsburg,Q34417,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+18,Philip II the Pious,,,1598-09-13,1621-03-31,day,House of Habsburg,Q34464,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+19,Philip III the Great,,,1621-03-31,1665-09-17,day,House of Habsburg,Q691402,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+20,Charles II the Bewitched,,,1665-09-17,1700-11-01,day,House of Habsburg,Q36174,title held by the king of Aragon,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+21,Philip IV the Spirited,1683-12-19,,1700-11-01,1715,year,House of Bourbon,Q170467,title held by the king of Aragon; Aragon list: 1700–1705 and again 1707; Kingdom of Majorca article: Philip V abolished the kingdom via the Nueva Planta decrees in 1715,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+22,Charles III the Archduke,1685-10-01,,1705,1707,year,House of Habsburg,Q150665,rival claimant (War of the Spanish Succession),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023

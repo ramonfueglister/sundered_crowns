@@ -12,8 +12,11 @@ import type { Table } from './ecs';
  *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
  *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the borders of its setup
  *  again (Murcia to Castile). 14: the family is the purse and a woman without a husband works (economy feature
- *  11); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 14;
+ *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
+ *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
+ *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
+ *  history are named. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 16;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -29,7 +32,8 @@ export interface Places {
   arable: Float64Array;
 }
 
-export const REALM_SCHEMA = { capital: 'i32', color: 'u32', culture: 'u16', faith: 'u8', rank: 'u8' } as const;
+/** holder: the person who holds the realm's crown (src/sim/systems/rulers.ts), −1 when nobody does */
+export const REALM_SCHEMA = { capital: 'i32', color: 'u32', culture: 'u16', faith: 'u8', rank: 'u8', holder: 'i32' } as const;
 export type RealmSchema = typeof REALM_SCHEMA;
 
 /** Ranks of realms in the start setup (index stored in the rank column). */
@@ -68,7 +72,14 @@ export const PERSON_SCHEMA = {
   /** what the person consumed on the last day, in £ at the scale of the world: the person's share by baskets of what
    *  the family spent (economy feature 11, src/sim/systems/household.ts) */
   consumed: 'f32',
+  /** the day the person died (the persons of the cities do not die yet; a ruler dies on the real day), ALIVE while
+   *  the person lives. A dead person keeps the row: ids are never reused */
+  died: 'i32',
 } as const;
+/** `died` of a living person. */
+export const ALIVE = 0x7fffffff;
+/** `born` of a person whose birthday no source gives. */
+export const BORN_UNKNOWN = -0x80000000;
 export type PersonSchema = typeof PERSON_SCHEMA;
 /** A family: a couple and its unmarried children in one place, or a person on their own. The id is never reused. */
 export const FAMILY_SCHEMA = {
@@ -99,6 +110,20 @@ export const FIRM_SCHEMA = {
   output: 'f32', price: 'f32', pay: 'f32',
 } as const;
 export type FirmSchema = typeof FIRM_SCHEMA;
+
+/** A person of history (a ruler): who the person is in the sources. Kept beside the person table (strings do not go
+ *  into typed arrays), in the order the persons came into the world. */
+export interface NamedPerson {
+  /** the person's row in the person table */
+  person: number;
+  /** the key of the person in the chronicle of rulers (public/data/rulers_<year>.json) */
+  key: string;
+  name: string;
+  /** the house (dynasty), '' when the source names none */
+  house: string;
+  /** the Wikidata id, '' when not known */
+  qid: string;
+}
 
 /** Texts of a realm (kept beside the table: strings do not go into typed arrays). */
 export interface RealmText { key: string; name: I18n; short: I18n; adjective: I18n }
@@ -138,11 +163,13 @@ export interface WorldState {
   realmText: RealmText[];
   /** the player who rules each realm (account id), '' when nobody does */
   ruler: string[];
-  /** the persons of the 30 largest cities (src/sim/systems/people.ts) */
+  /** the persons of the cities of the start year (src/sim/content/cities.ts, src/sim/systems/people.ts) */
   person: Table<PersonSchema>;
   family: Table<FamilySchema>;
   /** the firms of the cities' economies (src/sim/systems/economy.ts) */
   firm: Table<FirmSchema>;
+  /** the persons of history (the rulers), src/sim/systems/rulers.ts */
+  named: NamedPerson[];
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

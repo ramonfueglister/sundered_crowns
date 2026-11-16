@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,William VII,,,1253,1292,circa,Aleramici,Q579846,source gives start 1253/55,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat#Aleramici_dynasty,1293538061
+2,John I,,,1292,1305,year,Aleramici,Q2252319,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat#Aleramici_dynasty,1293538061
+3,Theodore I,,,1306,1338,year,Paleologo,Q389345,nephew of John,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+4,John II,,,1338,1372,year,Paleologo,Q1070853,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+5,Secondotto (Otto III),,,1372,1378,year,Paleologo,Q1070862,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+6,John III,,,1378,1381,year,Paleologo,Q515241,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+7,Theodore II,,,1381,1418,year,Paleologo,Q719178,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+8,John Jacob,,,1418,1445,year,Paleologo,Q589230,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+9,John IV,,,1445,1464,year,Paleologo,Q2253023,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+10,William VIII,,,1464,1483,year,Paleologo,Q1125744,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+11,Boniface III,,,1483,1494,year,Paleologo,Q1072294,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+12,William IX,,,1494,1518,year,Paleologo,Q1272767,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+13,Boniface IV,,,1518,1530,year,Paleologo,Q1072631,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+14,John George,,,1530,1533,year,Paleologo,Q3767377,Spanish occupation until 1536,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+15,Margaret of Montferrat,,,1533,1536,year,Paleologo,Q891777,marchioness in her own right,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+16,Frederick Gonzaga,,,1536,1540,year,Gonzaga,Q932200,Duke of Mantua; husband of Margaret,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+17,Francis I,,,1540,1550,year,Gonzaga,Q715234,Duke of Mantua,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+18,Guglielmo I Gonzaga (William X),,,1550,1587,year,Gonzaga,Q935424,"marquis until 1574, then duke (Montferrat raised to duchy 1574)",https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+19,Vincent I,,,1587,1612,year,Gonzaga,Q452580,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+20,Francis II,,,1612,1612,year,Gonzaga,Q714803,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+21,Ferdinand,,,1612,1626,year,Gonzaga,Q969739,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+22,Vincent II,,,1626,1627,year,Gonzaga,Q2142124,"War of the Mantuan Succession 1627-1631, a portion lost to Savoy",https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+23,Maria,,,1612,1660,year,Gonzaga,Q588360,"source lists her as Duchess of Montferrat 1612-60, overlapping Ferdinand, Vincent II and Charles I/II",https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+24,Charles I,,,1627,1637,year,Gonzaga,Q547017,co-ruler with Maria and his son Charles,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+25,Charles II,,,1637,1665,year,Gonzaga,Q731656,,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+26,Ferdinand Charles,,,1665,1708,year,Gonzaga,Q714792,House of Savoy gained the remainder of the duchy in 1708,https://en.wikipedia.org/wiki/List_of_rulers_of_Montferrat,1293538061
+27,Victor Amadeus II,1666-05-14,1732-10-31,1708,1730-09-03,year,Savoy,Q209579,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861); reign start = 1708 Savoy acquisition per Montferrat list,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+28,Charles Emmanuel III,1701-04-27,1773-02-20,1730-09-03,1773-02-20,day,Savoy,Q312670,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+29,Victor Amadeus III,1726-06-26,1796-10-16,1773-02-20,1796-10-16,day,Savoy,Q312681,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+30,Charles Emmanuel IV,1751-05-24,1819-10-06,1796-10-16,1802-06-04,day,Savoy,Q175544,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+31,Victor Emmanuel I,1759-07-24,1824-01-10,1802-06-04,1821-03-12,day,Savoy,Q175250,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+32,Charles Felix,1765-04-06,1831-04-27,1821-03-12,1831-04-27,day,Savoy,Q312683,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554
+33,Charles Albert,1798-10-02,1849-07-28,1831-04-27,1849-03-23,day,Savoy,Q181261,title held by the head of the House of Savoy (source: used the title of Duke of Montferrat from 1631 until 1861),https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy#Table_of_rulers,1384461554

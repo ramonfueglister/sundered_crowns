@@ -1,0 +1,37 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Herman VII the Rouser,,,1288-11-19,1291-07-12,day,Zähringen,Q77873,Margraviate of Eberstein; co-ruler with his brothers after the 1288 division,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+2,Rudolph II the Elder,,,1288-11-19,1295-02-14,day,Zähringen,Q77867,Margraviate of Baden (at Baden proper); co-ruler,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+3,Rudolph III the Younger,,,1288-11-19,1332-02-02,day,Zähringen,Q2721192,co-ruler (son of Rudolph I),https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+4,Hesso,,,1288-11-19,1297-02-13,day,Zähringen,Q1397735,co-ruler (son of Rudolph I),https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+5,Frederick II,,,1291-07-12,1333-06-22,day,Zähringen,Q458062,Margraviate of Eberstein,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+6,Herman VIII,,,1291-07-12,1300,year,Zähringen,Q1397632,Margraviate of Pforzheim,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+7,Rudolph IV,,,1300,1348-06-25,year,Zähringen,Q77850,"Pforzheim 1300-1335 (co-ruling since 12 July 1291), Margraviate of Baden 17 August 1335 - 25 June 1348",https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+8,Rudolph Hesso,,,1332-02-02,1335-08-17,day,Zähringen,Q1399912,"Margraviate of Baden; co-ruling since 13 February 1297; no male heirs, Baden-Baden inherited by Rudolf IV",https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+9,Herman IX,,,1333-06-22,1353-04-13,day,Zähringen,Q75902,Margraviate of Eberstein; Eberstein then annexed to Baden,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+10,Frederick III the Peaceful,,,1348-06-25,1353-09-02,day,Zähringen,Q77866,Margraviate of Baden,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+11,Rudolph V the Rouser,,,1348-06-25,1361-08-28,day,Zähringen,Q1399234,Margraviate of Pforzheim; Pforzheim then annexed to Baden,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+12,Rudolph VI the Tall,,,1353-09-02,1372-03-21,day,Zähringen,Q77854,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+13,Bernard I,,,1372-03-21,1431-04-05,day,Zähringen,Q77875,at Durlach and Pforzheim; co-ruler with Rudolph VII,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+14,Rudolph VII,,,1372-03-21,1391,year,Zähringen,,"at Ettlingen, Rastatt and Baden; co-ruler with Bernard I",https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+15,James I,,,1431-04-05,1453-10-13,day,Zähringen,Q74019,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+16,Charles I the Warrior,,,1453-10-13,1475-02-24,day,Zähringen,Q86389,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+17,Bernard II,,,1453-10-13,1458-07-15,day,Zähringen,Q523903,co-ruler with Charles I,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+18,Christopher I,,,1475-02-24,1515,year,Zähringen,Q66602,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+19,Albert,,,1475-02-24,1488,year,Zähringen,Q110752,Margraviate of Baden (at Hachberg); co-ruler with Christopher I,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+20,Bernard III,,,1515,1536-06-19,year,Zähringen,Q72923,1515 division; Margraviate of Baden (Baden-Baden); Durlach line (Ernest I and successors to 1771) not listed here,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+21,Philip I,,,1515,1533-09-17,year,Zähringen,Q90443,Margraviate of Baden (at Sponheim),https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+22,Philibert I,,,1536-06-19,1569-10-03,day,Zähringen,Q71813,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+23,Philip II,,,1569-10-03,1588-06-07,day,Zähringen,Q71207,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+24,Edward Fortunatus,,,1588-06-07,1594,year,Zähringen,Q67719,Margraviate of Baden 1588-1594 (also Rodemachern),https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+25,Ernest Frederick,,,1594,1604-04-14,year,Zähringen,Q69785,"Margrave of Durlach, held Margraviate of Baden 1594-1604",https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+26,George Frederick,,,1604-04-14,1622-08-26,day,Zähringen,Q65236,"Margrave of Durlach, held Margraviate of Baden 1604-1622",https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+27,William,,,1622-08-26,1677-05-22,day,Zähringen,Q66842,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+28,Louis William the Turkish,,,1677-05-22,1707-01-04,day,Zähringen,Q58755,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+29,Louis George the Hunter,,,1707-01-04,1761-10-22,day,Zähringen,Q64971,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+30,August George,,,1761-10-22,1771-10-21,day,Zähringen,Q302561,Baden-Baden line extinct; inherited by Durlach line,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+31,Charles Frederick,,,1771-10-21,1803-04-27,day,Zähringen,Q213671,Margrave of Durlach from 1738; Margraviate of Baden reunited 1771,https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Table_of_monarchs,1329522034
+32,Charles Frederick,,,1803-04-27,1806-07-25,day,,Q213671,the first and only Elector of Baden,"https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Elector_of_Baden,_1803–1806",1329522034
+33,Charles Frederick,,,1806-07-25,1811-06-10,day,,Q213671,Grand Duke,"https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Grand_Dukes_of_Baden,_1806–1918",1329522034
+34,Charles I,,,1811-06-10,1818-12-08,day,,Q57799,Grand Duke,"https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Grand_Dukes_of_Baden,_1806–1918",1329522034
+35,Louis I,,,1818-12-08,1830-03-30,day,,Q57791,Grand Duke,"https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Grand_Dukes_of_Baden,_1806–1918",1329522034
+36,Leopold I,,,1830-03-30,1852-04-24,day,,Q57795,Grand Duke,"https://en.wikipedia.org/wiki/List_of_monarchs_of_Baden#Grand_Dukes_of_Baden,_1806–1918",1329522034

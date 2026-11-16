@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Alfonso III,1265,1291-06-18,1285-11-02,1291-06-18,day,House of Barcelona,Q336855,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+2,James II,1267-08-10,1327-11-05,1291-06-18,1327-11-02,day,House of Barcelona,Q312735,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+3,Alfonso IV,1299,1336-01-27,1327-11-02,1336-01-24,day,House of Barcelona,Q380088,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+4,Peter IV,1319-10-05,1387-01-05,1336-01-24,1387-01-05,day,House of Barcelona,Q336823,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+5,John I,1350-12-27,1396-05-19,1387-01-05,1396-05-19,day,House of Barcelona,Q358374,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+6,Martin,1356,1410-05-31,1396-05-19,1410-05-31,day,House of Barcelona,Q332681,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+7,Ferdinand I the Honest,1380-11-27,1416-04-02,1412-06-24,1416-04-02,day,House of Trastámara,Q47412,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+8,Alfonso V the Magnanimous,1396,1458-06-27,1416-04-02,1458-06-27,day,House of Trastámara,Q312304,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+9,John II the Great,1398-06-29,1479-01-20,1458-06-27,1479-01-19,day,House of Trastámara,Q312328,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+10,Henry IV of Castile,1425-01-05,1474-12-11,1462,1463,year,House of Trastámara,Q310918,rival claimant during the Catalan Civil War (not in Valencia),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+11,Peter V of Aragon,1429,1466,1463,1466,year,House of Aviz,Q965686,rival claimant during the Catalan Civil War (not in Valencia),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+12,René,1409-01-16,1480-07-10,1466,1472,year,House of Valois-Anjou,Q170353,rival claimant during the Catalan Civil War (not in Valencia),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+13,Ferdinand II the Catholic,1452-03-10,1516-01-23,1479-01-19,1516-01-23,day,House of Trastámara,Q12860,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+14,Joanna of Castile,1479-11-06,1555-04-12,1516-01-23,1555-04-12,day,House of Trastámara,Q171136,nominally co-monarch with her son Charles I; confined for alleged insanity,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+15,Charles I the Emperor,1500-02-24,1558-09-21,1516-01-23,1556-01-16,day,House of Habsburg,Q32500,co-ruler with Joanna,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+16,Philip I the Prudent,1527-05-21,1598-09-13,1556-01-16,1598-09-13,day,House of Habsburg,Q34417,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+17,Philip II the Pious,1578-04-14,1621-03-31,1598-09-13,1621-03-31,day,House of Habsburg,Q34464,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+18,Philip III the Great,1605-04-08,1665-09-17,1621-03-31,1665-09-17,day,House of Habsburg,Q691402,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+19,Charles II the Bewitched,1661-11-06,1700-11-01,1665-09-17,1700-11-01,day,House of Habsburg,Q36174,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+20,Philip IV the Spirited,1683-12-19,1746-07-09,1700-11-01,1705,year,House of Bourbon,Q170467,,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+21,Charles III the Archduke,1685-10-01,1740-10-20,1705,1707,year,House of Habsburg,Q150665,Habsburg claimant in control of Aragon 1705–1707 (War of the Spanish Succession),https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023
+22,Philip IV the Spirited,1683-12-19,1746-07-09,1707,1707,year,House of Bourbon,Q170467,Crown of Aragon disbanded by the Nueva Planta decrees (June 1707); no more Aragonese monarchs after this,https://en.wikipedia.org/wiki/List_of_Aragonese_monarchs,1384813023

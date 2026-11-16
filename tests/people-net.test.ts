@@ -1,6 +1,7 @@
 // What the world server tells a browser about the persons (src/net/people.ts).
 import { describe, it, expect } from 'vitest';
-import { placePeople, personDetail } from '../src/net/people';
+import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } from '../src/net/people';
+import { PLACES_PER_REQUEST } from '../src/figures/people';
 import { CITIES, personsIn, genesOf } from '../src/sim/systems/people';
 import { newWorldState } from '../tools/sim/load';
 
@@ -11,6 +12,13 @@ describe('the persons of a place', () => {
     expect(v.id).toEqual(personsIn(s, london));
     for (const k of ['born', 'sex', 'family'] as const) expect(v[k].length).toBe(v.id.length);
     expect(placePeople(s, 2000).id.length).toBe(0);
+  });
+  it('of several places come in one pass, each list as the one of its place alone, in the order asked', () => {
+    const places = [...new Set(CITIES.map((c) => c.place))].slice(0, 5).reverse().concat([2000]);
+    const many = manyPlacesPeople(s, places);
+    expect(many.map((m) => m.place)).toEqual(places);
+    places.forEach((p, k) => expect(many[k]).toEqual(placePeople(s, p)));
+    expect(PLACES_PER_REQUEST).toBe(MAX_PLACES_PER_REQUEST); // the figures ask for no more than the server gives
   });
 });
 describe('one person in full', () => {
