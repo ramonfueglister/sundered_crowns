@@ -110,7 +110,7 @@ export const courseOf = (courses: number, u: number): 1 | typeof FALLOW | typeof
  * The fields lie in blocks of one course: a block is this many lots wide and deep, and all its fields carry the same
  * this year, as the furlongs of an open field did. Gives the block a point of the world lies in, in finest blocks.
  */
-export const BLOCK_LOTS_W = 4, BLOCK_LOTS_D = 3;
+export const BLOCK_LOTS_W = 3, BLOCK_LOTS_D = 2;
 export const blockOf = (wx: number, wz: number): [number, number] => [Math.floor(wx / (BLOCK_LOTS_W * LOT_W)), Math.floor(wz / (BLOCK_LOTS_D * LOT_D))];
 /** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
 export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));

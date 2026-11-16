@@ -45,10 +45,10 @@ describe('the hamlets of a town', () => {
 });
 
 describe('the fields', () => {
-  it('lie in blocks of one course, four lots by three', () => {
+  it('lie in blocks of one course, three lots by two', () => {
     expect(blockOf(0, 0)).toEqual([0, 0]);
-    expect(blockOf(43, 23)).toEqual([0, 0]);
-    expect(blockOf(44, 24)).toEqual([1, 1]);
+    expect(blockOf(32, 15)).toEqual([0, 0]);
+    expect(blockOf(33, 16)).toEqual([1, 1]);
     expect(blockOf(-1, -1)).toEqual([-1, -1]);
   });
 });
