@@ -5,7 +5,10 @@ Who holds a place:
   1. every realm's researched anchors (capital and holdings in data/history/1291/*.json) are seeds;
   2. the realms spread over the land graph (public/data/geo.json edges, straits included) by weighted distance, as
      tools/geo/build_setup.py does for 1356 (same weights, same reach), so a border lies between the nearest anchors;
-  3. the researched corrections of data/history/1291/borders.json (tools/map/borders.py) are applied last.
+  3. where Euratlas 1300 labels a place (data/history/1291/ref, derived per place), only the realms that
+     data/history/1291/ref/euratlas_to_1291.json maps that label to may take it (1291 differences as overrides there);
+     a labelled place is filled even beyond the usual reach, an unlabelled one only within it;
+  4. the researched corrections of data/history/1291/borders.json (tools/map/borders.py) are applied last.
 Culture, faith, minority, people and density per place are taken over from setup_1356.json (the demography of 1291
 is not researched yet: a gap).
 
@@ -48,6 +51,32 @@ def load_states():
             if x not in known: bad.append((w['name']['en'], 'war', x))
     if bad: raise SystemExit(f'references to realms that do not exist in {YEAR}: {bad}')
     return states, wars
+
+
+def euratlas_allow(states, lon, lat, L, min_conf=0.5):
+    """Per place 1..L: the set of realm indices that may hold it by the Euratlas 1300 label, or None (no label)."""
+    ref = os.path.join(ROOT, 'data', 'history', str(YEAR), 'ref')
+    lab = json.load(open(os.path.join(ref, 'euratlas_1300_places.json'), encoding='utf-8'))
+    mp = json.load(open(os.path.join(ref, 'euratlas_to_1291.json'), encoding='utf-8'))
+    rows = [l.rstrip('\n').split('\t') for l in open(os.path.join(ref, 'euratlas_1300_states.tsv'), encoding='utf-8')][1:]
+    key = {int(r[0]): f'{r[0]}:{r[1]}' for r in rows}
+    idx = {s['id']: i for i, s in enumerate(states)}
+    sets = {k: (None if v is None else frozenset(idx[x] for x in v)) for k, v in mp['map'].items()}
+    allow = [None] * (L + 1); n = 0; ov = 0
+    for i in range(L):
+        if lab['confidence'][i] < min_conf: continue
+        ent = None
+        for e in (lab['dependent'][i], lab['place'][i]):
+            if e is not None and e >= 0 and sets.get(key[e]) is not None: ent = key[e]; break
+        if ent is None: continue
+        a = sets[ent]
+        for o in mp['overrides']:
+            x0, y0, x1, y1 = o['box']
+            if o['entity'] == ent and x0 <= lon[i] <= x1 and y0 <= lat[i] <= y1:
+                a = frozenset(idx[x] for x in o['to']); ov += 1
+        allow[i + 1] = a; n += 1
+    print('places bound by Euratlas 1300 labels:', n, 'of them by a 1291 override:', ov)
+    return allow
 
 
 def main():
@@ -117,6 +146,7 @@ def main():
             if new:
                 print('  seat moved:', states[si]['id'], 'shares', states[sis[0]]['id'], '->', names[new - 1])
                 capital_loc[si] = new; taken.add(new)
+    allow = euratlas_allow(states, lon, lat, L)
     best = np.full(L + 1, np.inf); owner = np.full(L + 1, -1, np.int32); pq = []; conflicts = []
 
     def anchor(si, p, l):
@@ -151,8 +181,10 @@ def main():
         if d > best[u] or owner[u] != si: continue
         for v in adj[u]:
             if v > L: continue
+            al = allow[v]
+            if al is not None and si not in al: continue
             nd = d + step_km(u, v) * w
-            if nd < best[v] and nd < reach(v) and nd < rcap * w:
+            if nd < best[v] and (al is not None or nd < reach(v)) and nd < rcap * w:
                 best[v] = nd; owner[v] = si
                 heapq.heappush(pq, (nd, v, si, w, rcap))
     fixed = [int(v) for v in owner[1:]]

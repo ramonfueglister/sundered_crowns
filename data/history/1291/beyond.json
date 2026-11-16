@@ -308,7 +308,7 @@
    "government": "feudal_monarchy",
    "culture": "korean",
    "faith": "mahayana",
-   "color": "#727550",
+   "color": "#737650",
    "capital": {
     "name": "Kaegyeong",
     "lat": 37.97,
@@ -686,7 +686,7 @@
    "government": "feudal_monarchy",
    "culture": "hindustani",
    "faith": "sunni",
-   "color": "#6e773c",
+   "color": "#6d773c",
    "capital": {
     "name": "Delhi",
     "lat": 28.61,
@@ -837,7 +837,7 @@
    "government": "feudal_monarchy",
    "culture": "bengali",
    "faith": "sunni",
-   "color": "#6d3217",
+   "color": "#733323",
    "capital": {
     "name": "Lakhnauti",
     "lat": 24.87,
@@ -1043,7 +1043,7 @@
    "government": "feudal_monarchy",
    "culture": "gujarati",
    "faith": "hindu",
-   "color": "#905b49",
+   "color": "#8a5d4f",
    "capital": {
     "name": "Anahilavada",
     "lat": 23.85,
@@ -1123,7 +1123,7 @@
    "government": "feudal_monarchy",
    "culture": "rajput",
    "faith": "hindu",
-   "color": "#754058",
+   "color": "#704259",
    "capital": {
     "name": "Dhar",
     "lat": 22.6,
@@ -1183,7 +1183,7 @@
    "government": "feudal_monarchy",
    "culture": "rajput",
    "faith": "hindu",
-   "color": "#8a605f",
+   "color": "#8b6260",
    "capital": {
     "name": "Ranthambhor",
     "lat": 26.02,
@@ -1250,7 +1250,7 @@
    "government": "feudal_monarchy",
    "culture": "rajput",
    "faith": "hindu",
-   "color": "#605331",
+   "color": "#5b4c24",
    "capital": {
     "name": "Chittor",
     "lat": 24.89,
@@ -1411,7 +1411,7 @@
    "government": "feudal_monarchy",
    "culture": "telugu",
    "faith": "hindu",
-   "color": "#6c7a5c",
+   "color": "#657951",
    "capital": {
     "name": "Warangal",
     "lat": 17.97,
@@ -1762,7 +1762,7 @@
    "government": "feudal_monarchy",
    "culture": "nepali",
    "faith": "hindu",
-   "color": "#356341",
+   "color": "#376343",
    "capital": {
     "name": "Sinja",
     "lat": 29.26,
@@ -1820,7 +1820,7 @@
    "government": "feudal_monarchy",
    "culture": "newar",
    "faith": "hindu",
-   "color": "#785320",
+   "color": "#785309",
    "capital": {
     "name": "Bhaktapur",
     "lat": 27.67,
@@ -2140,7 +2140,7 @@
    "government": "feudal_monarchy",
    "culture": "dhivehi",
    "faith": "sunni",
-   "color": "#89584a",
+   "color": "#885948",
    "capital": {
     "name": "Malé",
     "lat": 4.17,
@@ -2784,7 +2784,7 @@
    "government": "feudal_monarchy",
    "culture": "burmese",
    "faith": "theravada",
-   "color": "#5e5413",
+   "color": "#5c531a",
    "capital": {
     "name": "Launggyet",
     "lat": 20.6,
@@ -2900,7 +2900,7 @@
    "government": "feudal_monarchy",
    "culture": "javanese",
    "faith": "hindu",
-   "color": "#7c444f",
+   "color": "#663d45",
    "capital": {
     "name": "Singhasari",
     "lat": -7.9,
@@ -3045,7 +3045,7 @@
    "government": "feudal_monarchy",
    "culture": "malay",
    "faith": "vajrayana",
-   "color": "#5e4c1e",
+   "color": "#5d4c22",
    "capital": {
     "name": "Dharmasraya",
     "lat": -1.08,
