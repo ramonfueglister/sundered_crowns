@@ -11,10 +11,12 @@ export interface StageLight { from: readonly [number, number, number]; colour: s
 
 export interface StageProfile {
   key: string;
-  lights: { key: StageLight; rim: StageLight; fill: StageLight };
-  /** Whether the rim light throws shadows too. Without them it shines through the head from behind onto the side
-   *  of the nose (Apoleia's stage has none). */
-  rimShadow: boolean;
+  /** The lights by a photographer's names: the key, the rim behind the head, the fill that lightens the shade the
+   *  camera sees, and `bounce`: what chest and ground throw back at a face from below (energy 0 = none). */
+  lights: { key: StageLight; rim: StageLight; fill: StageLight; bounce: StageLight };
+  /** How dark the rim light's shadow falls (0 = it throws none, as on Apoleia's stage; 1 = no rim light in it).
+   *  Without a shadow the rim shines through the head from behind onto the far side of the nose. */
+  rimShadow: number;
   /** The shadows: pixels of a shadow's map (its side), how dark the key light's shadow falls (1 = no key light in
    *  it), how far the edge of a shadow is blurred in the map (three.js' `radius`, pixels of the map), and the size
    *  of the key light: `spread` is the half angle under which it is seen from the head (degrees; 0 = a light
@@ -88,9 +90,10 @@ export const APOLEIA: StageProfile = {
     key: { from: [-3.5, 4.5, 5.0], colour: '#fff0dc', energy: 2.0 },
     rim: { from: [3.5, 2.5, -4.0], colour: '#bcd0ff', energy: 1.4 },
     fill: { from: [3.0, -1.0, 5.0], colour: '#ffe2c8', energy: 0.35 },
+    bounce: { from: [0.0, -3.0, 5.0], colour: '#000000', energy: 0 },
   },
   sky: { top: '#e6ecff', ground: '#5a3d2a', energy: 0.75 },
-  rimShadow: false,
+  rimShadow: 0,
   // measured, not derived: with this map and strength the pictures come closest to Godot's, whose shadows are
   // softer and lighter than three.js' at full strength (tools/portrait/compare.mjs, docs/PORTRAITS.md)
   shadow: { map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 },
@@ -195,6 +198,22 @@ export const APOLEIA: StageProfile = {
  *  broad light reaches further round the face (the women's far cheek 23.8 L darker than the lit one, before
  *  27.7): the key stands 6 degrees further round for it (70 from the face's front; far cheek 27.9, the
  *  reference 27.7). The face is 2 L darker with it (lit cheek 59.4, lips 18.3 and 31.3).
+ *  Round 83: the skin between the nose and the far eye was a black wedge (on the women 55 L darker than the
+ *  nose's back, the reference's woman 35; a man's eye 60 L darker than his lit cheek, the reference's emperor's
+ *  41). That side of the nose faces a quarter turn away from the face's front: the key does not reach it, the
+ *  light from below (on the key's side since round 78) hardly, and the rim light, which shines on it from 36
+ *  degrees off its normal, lay in the head's shadow. On the reference's woman a pale bluish streak lies along
+ *  the nose's far side (read as the light behind her). Three changes: the rim light's shadow is half as dark
+ *  (`rimShadow` 0.5: the stage has no light that goes through the nose or comes back off the cheek, and this
+ *  stands for it); the fill is the photographer's again, in front on the side away from the key and about
+ *  level (0.18), where it reaches the far eye's socket; what chest and ground throw back is a light of its own
+ *  from the middle (`bounce` 0.15). Grown women: beside the nose 36 L under its back, eye 39.7 under the lit
+ *  cheek (40.2), under the chin 41 to 36 (42 to 36), the far cheek 24.3 (the reference 27.7 where the tool
+ *  reads it; its cheek falls from L 39 to 20 within a tenth of the face's length there). Men's eye 50.3. Tried:
+ *  the key nearer the front (60 degrees: the far cheek 20.8 and the wedge still 51; at 50 the far cheek 13.4),
+ *  more sky (0.35: wedge 50), fills alone at 45 to 63 degrees round without the rim's change (wedge 44 to 49),
+ *  three.js' neutral and AgX tone mapping in place of ACES (lighter shade, but the skin salmon and flat, or
+ *  pale).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -202,10 +221,11 @@ export const ENGLAND_1356: StageProfile = {
   lights: {
     key: { from: [4.88, 3.47, 3.29], colour: '#fff0de', energy: 1.8 },
     rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
-    fill: { from: [1.5, -3.0, 5.0], colour: '#efe4da', energy: 0.35 },
+    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.18 },
+    bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.15 },
   },
   sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },
-  rimShadow: true,
+  rimShadow: 0.5,
   shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
   exposure: 0.375,
   turn: -0.24, rise: 0.02, close: 1.3,

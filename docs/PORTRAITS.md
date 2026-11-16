@@ -1405,6 +1405,81 @@ are 9 L apart. The reference's lips have a sheen and creases, ours are as matt a
 lip is 1.5 a* redder against his cheek than the emperor's and less blue (b* -4.7 against -7.5). The line
 between the lips is 3 to 9 L darker than hers. What rounds 78 to 81 left.
 
+**The black wedge beside the nose (round 83).** Held beside the reference at the game's size, the skin between
+the nose and the far eye was a black wedge on our faces, and a man's far eye a dark hole; on hers that skin is
+dark brown and a pale streak lies along the nose's far side.
+
+Scratch `edge81.mjs` reads L along level lines from the nose's back across the far cheek; taken at half and at
+0.65 of the nose's length, four women and four shaven men of the sample. The other columns are
+`face_colour.mjs` on the eight grown women and men, against the lit cheek (L).
+
+| | beside the nose, under its back | the cheek beyond, under the nose's back | far cheek | eye | under the chin |
+|---|---|---|---|---|---|
+| the reference's woman | -34 to -35 | -16 | -27.7 | -40.2 | -40 to -42, then -39, -36 |
+| women, round 82 | -54.8 | -30.9 | -27.9 | -45.0 | -39 to -41, then -39, -36 |
+| women, now | -36.2 | -26.1 | -24.3 | -39.7 | -41 to -38, then -37, -36 |
+| the reference's emperor | | | -20.9 | -40.6 | |
+| men, round 82 | -32.2 | -25.1 | -36.0 | -59.6 | |
+| men, now | -24.0 | -20.2 | -30.9 | -50.3 | |
+
+The cause, seen by drawing each light of the stage alone. That side of the nose faces a quarter turn away from
+the face's front. The key (70 degrees round on the other side) does not reach it; the light from below stood on
+the key's side since round 78 and hardly reached it; the sky is weak; and the rim light, which shines on it
+from 36 degrees off its normal, lay in the head's shadow there. The reference's pale bluish streak lies on
+that very side: read here as her rim light (the reference's lights are not known, this is read off the
+picture).
+
+Now (`src/portrait/profile.ts`, `src/portrait/stage.ts`):
+- `rimShadow` is a strength (before: yes or no) and England's is 0.5: half of the rim light passes the head's
+  shadow. The stage computes no light that goes through a nose or comes back off a cheek, and this stands for
+  it. It is the one light that reaches the nose's far side and not the far cheek beside it (which faces half a
+  radian round and gets 0.03 of the rim).
+- The fill is the photographer's again: from (-4, -1, 4), in front on the side away from the key and about
+  level, energy 0.18. It reaches the far eye's socket.
+- What chest and ground throw back (round 78) is a light of its own, `bounce`: from (0, -3, 5), the middle,
+  energy 0.15 (before on the key's side, 0.35, under the name of the fill). A light without energy is left out
+  of the materials (Apoleia's stage has no bounce and no rim shadow; its pictures are the same pixel for pixel).
+
+Tried, and what each gave (women; beside the nose / far cheek):
+
+| | beside the nose | far cheek |
+|---|---|---|
+| the key at 60 degrees round | -50.9 | -20.8 |
+| the key at 50 degrees | | -13.4 |
+| the key at 45, 35 degrees | -37.2, -28.5 | |
+| sky 0.35 | -50.1 | -25.5 |
+| the old light from below moved to the far side (-2.5) | -45.2 | -24.3 |
+| fill 0.12 to 0.22 at 45 to 63 degrees with the light from below at 0.3 to 0.15, rim shadow whole | -44.1 to -49.1 | -23.5 to -25.3 |
+| the same lights, rim shadow 0.5 | -35.8 to -37.6 | -23.7 to -25.0 |
+| no fill, rim shadow 0.3, light from below 0.3 from the middle | -37.2 | -26.8 (men's eye -58.6) |
+
+A key nearer the front lights the far cheek long before it lights the wedge, and the face loses its shaded
+half (round 73). Any light from the front reaches the far cheek at least as well as the nose's far side. Three.js'
+neutral and AgX tone mapping in place of ACES were looked at for the same reason (ACES darkens what is dark):
+the shade is lighter, but the skin salmon and flat under the first and pale under the second; every colour of
+the profile would have to be set again. Not kept.
+
+The far cheek reads 3.4 L lighter than the reference's where `face_colour.mjs` reads it. Her cheek falls from
+L 39 to 20 within a tenth of the face's length there (a place set by hand reads -16.9), and her cheek beside the
+nose is 7 L lighter than ours (48 against 42): the far side as a whole is nearer hers than before. The rest of the face stands
+(women: lit cheek L 59.0, chroma 34.9; lips -37.1 and -21.2; brow 37.5; forehead -5.9; nose's back level with
+the cheek, before -1.3; chin -6.7).
+
+Tests. `England's stage lights a face from above and from the side it is turned away from`
+(`tests/portrait.test.ts`) holds: the rim on the nose's far side (above 0.6 of its light) with a shadow of 0.3
+to 0.7; the bounce below and in front from the middle; the fill in front on the far side, level; each above
+0.05 and both together between 0.15 and 0.25 of the key; Apoleia's fill as it was, no bounce, no rim shadow.
+Round 82's look, pixel for pixel:
+`?set=rimShadow:1,lights.fill.energy:0,lights.bounce.energy:0.35,lights.bounce.from.0:1.5`.
+Pictures: `runde83_keil_vorher_nachher.png` (a woman, two men and a boy, round 82 and now),
+`runde83_neben_ck3_vorher_nachher.png`, `runde83_stichprobe.png`.
+Still open: the streak beside the nose is the rim's cool colour, pale grey on warm skin, and broad on
+children, whose flat faces throw no shadow on it (it was there before and is a little stronger); its edge is
+jagged on a man's nose (the rim's shadow map). The men's eye is 10 L darker than the emperor's and their far
+cheek 10 L (hoods, fringes). Forehead 6 L darker than the lit cheek (hers level) and the nose's back level
+(hers 8 L lighter): a key nearer the front would mend both and was not kept for the far cheek's sake. The
+upper lip is 2 L darker than hers (less light from below). PLACEHOLDER, all three values.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

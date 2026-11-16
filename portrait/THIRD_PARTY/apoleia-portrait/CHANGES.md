@@ -188,3 +188,8 @@ with Godot unchanged.
 Round 82: England's dress table mixes the lips anew (`dress.rs` `Lips`: more of the skin's own colour, less
 blood, a blood with less red for men; the strip's factor `seam` 1.3, before 1.6). No code of the builder
 changed. New, not Apoleia's: a test in `tests/faces.rs`. Roman bytes unchanged.
+
+Round 83: the stage only (`src/portrait/profile.ts`, `stage.ts`; the game's own files). A profile's lights
+have a fourth, `bounce` (what chest and ground throw back), and `rimShadow` is a strength instead of yes or no.
+Apoleia's stage has no bounce (energy 0: the light is left out) and no rim shadow (0), as before; its pictures
+are the same pixel for pixel, and the comparison with Godot is unchanged. In the builder a comment alone.

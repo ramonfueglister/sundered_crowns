@@ -446,7 +446,7 @@ describe('portraits', { timeout: 20_000 }, () => {
       // and no darker than the skin (0.95 to 1.28 of its red, the grown 0.95 to 1.19): the strip stands in the
       // lips' shade, where the stage has no light that comes through flesh, and is as dark as the line of a
       // mouth only so. Until round 77 1.12 to 1.41: the upper lip was painted half as light again and the strip
-      // with it; since round 78 the stage's fill lights both from below (`Lips::upper` 1.15). Since round 82
+      // with it; since round 78 a light of the stage lights both from below (`Lips::upper` 1.15). Since round 82
       // the lips themselves are lighter and the strip's factor smaller by as much (`Lips::seam` 1.3, before
       // 1.6): the line between the lips reads 50 L under the lit cheek (before 54, the reference's 41 to 47)
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.65);
@@ -509,7 +509,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     // lip (rounds 60 to 72: flat, pale, the eyes wide in full light). The key light stands on the other side of
     // the camera, far enough round that the far cheek lies in shade and near enough that the face's front is
     // lit, and high enough to shade the eye's socket without being a light from the ceiling
-    const { key, rim, fill } = ENGLAND_1356.lights;
+    const { key, rim, fill, bounce } = ENGLAND_1356.lights;
     const degrees = (r: number): number => r * 180 / Math.PI;
     const round = degrees(Math.atan2(key.from[0], key.from[2]) - ENGLAND_1356.turn);
     const above = degrees(Math.atan2(key.from[1], Math.hypot(key.from[0], key.from[2])));
@@ -522,23 +522,47 @@ describe('portraits', { timeout: 20_000 }, () => {
     // the cheek beside the nose (which faces half a radian round from the face's front)
     expect(rim.from[2]).toBeLessThan(0);
     expect(rim.from[0] * key.from[0]).toBeLessThan(0);
-    const far = ENGLAND_1356.turn - 0.5 * Math.sign(key.from[0]);
-    const rimOn = (rim.from[0] * Math.sin(far) + rim.from[2] * Math.cos(far)) / Math.hypot(...rim.from);
-    expect(rimOn).toBeLessThan(0.1);
-    // the light that fills the shade is what chest and ground throw back (round 78): from below and in front,
-    // so that it reaches what faces down (the jaw's underside and the neck under it, the upper lip, the skin
-    // under the brow) more than the far cheek, and far weaker than the key. Until then it stood level on the
-    // far side (10 degrees below, 0.07 of the key): the neck under the chin was 53 L darker than the lit cheek
-    // where the reference's is 42, and the upper lip had to be painted half as light again
-    const below = degrees(Math.atan2(-fill.from[1], Math.hypot(fill.from[0], fill.from[2])));
-    expect(below).toBeGreaterThan(20);
-    expect(below).toBeLessThan(45);
+    const facing = (l: { from: readonly [number, number, number] }, turned: number): number => {
+      const a = ENGLAND_1356.turn - turned * Math.sign(key.from[0]);
+      return (l.from[0] * Math.sin(a) + l.from[2] * Math.cos(a)) / Math.hypot(...l.from);
+    };
+    expect(facing(rim, 0.5)).toBeLessThan(0.1);
+    // the far side of the nose faces a quarter turn round from the face's front, where neither the key nor a
+    // light from below reaches it: with the head's whole shadow in the rim light it was a black wedge between
+    // nose and far eye (55 L darker than the nose's back on the women, the reference's woman 35, on whom a pale
+    // bluish streak lies along the nose's far side). The rim light shines on that side from 36 degrees off its
+    // normal, and half of the head's shadow is taken off it (round 83)
+    expect(facing(rim, Math.PI / 2)).toBeGreaterThan(0.6);
+    expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.3);
+    expect(ENGLAND_1356.rimShadow).toBeLessThan(0.7);
+    // two weak lights lighten the shade. What chest and ground throw back (round 78) comes from below and in
+    // front, from the middle, and reaches what faces down: the jaw's underside and the neck under it, the upper
+    // lip, the skin under the brow. Until then the one fill stood level on the far side (10 degrees below, 0.07
+    // of the key): the neck under the chin was 53 L darker than the lit cheek where the reference's is 42, and
+    // the upper lip had to be painted half as light again
+    const below = (l: { from: readonly [number, number, number] }): number => degrees(Math.atan2(-l.from[1], Math.hypot(l.from[0], l.from[2])));
+    expect(below(bounce)).toBeGreaterThan(20);
+    expect(below(bounce)).toBeLessThan(45);
+    expect(bounce.from[2]).toBeGreaterThan(0);
+    expect(Math.abs(bounce.from[0])).toBeLessThan(0.2 * bounce.from[2]);
+    // the fill is the photographer's (round 83): in front on the side away from the key and about level, so that
+    // it reaches the far eye's socket and the far side of the nose (from round 78 to 82 the light from below did
+    // both, from the key's side: a man's eye was 60 L darker than his lit cheek, the reference's emperor's 41)
+    expect(fill.from[0] * key.from[0]).toBeLessThan(0);
     expect(fill.from[2]).toBeGreaterThan(0);
-    expect(fill.energy).toBeGreaterThan(0.15 * key.energy);
-    expect(fill.energy).toBeLessThan(0.25 * key.energy);
+    expect(Math.abs(below(fill))).toBeLessThan(20);
+    expect(facing(fill, 0)).toBeGreaterThan(0.4);
+    expect(facing(fill, Math.PI / 2)).toBeGreaterThan(0.4);
+    // each of the two is a light, and both together far weaker than the key: the face keeps its shaded half
+    for (const l of [fill, bounce]) expect(l.energy).toBeGreaterThan(0.05 * key.energy);
+    expect(fill.energy + bounce.energy).toBeGreaterThan(0.15 * key.energy);
+    expect(fill.energy + bounce.energy).toBeLessThan(0.25 * key.energy);
     expect(ENGLAND_1356.sky.energy).toBeLessThan(0.15 * key.energy);
     // Apoleia's stage is as it was
     expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);
+    expect(APOLEIA.lights.fill).toEqual({ from: [3.0, -1.0, 5.0], colour: '#ffe2c8', energy: 0.35 });
+    expect(APOLEIA.lights.bounce.energy).toBe(0);
+    expect(APOLEIA.rimShadow).toBe(0);
     expect(APOLEIA.exposure).toBe(0.92);
   });
   it('England\'s key light has a size, so that the shadows it throws have soft edges', () => {

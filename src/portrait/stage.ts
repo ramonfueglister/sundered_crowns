@@ -79,7 +79,7 @@ export class PortraitStage {
     this.renderer.shadowMap.type = PCFShadowMap;
     this.camera = new PerspectiveCamera(FOV, width / height, 0.1, 100);
     this.scene.add(this.sky);
-    this.lights = { key: this.lamp(), rim: this.lamp(), fill: this.lamp() };
+    this.lights = { key: this.lamp(), rim: this.lamp(), fill: this.lamp(), bounce: this.lamp() };
     this.light(APOLEIA);
     this.lights.key.castShadow = true;
     this.scene.add(this.pivot);
@@ -99,6 +99,8 @@ export class PortraitStage {
     for (const k of Object.keys(this.lights) as (keyof StageProfile['lights'])[]) {
       this.lights[k].color.set(p.lights[k].colour);
       this.lights[k].intensity = p.lights[k].energy * Math.PI;
+      // a light without energy is none: three.js then leaves it out of the materials' programs
+      this.lights[k].visible = p.lights[k].energy > 0;
     }
     // a key light with a size is drawn as several lights that share its energy
     const { key, rim } = this.lights, n = keyPlaces(p.lights.key.from, p.shadow.spread, p.shadow.lights).length;
@@ -112,8 +114,9 @@ export class PortraitStage {
         l.shadow.mapSize.set(p.shadow.map, p.shadow.map);
       }
       l.shadow.radius = p.shadow.radius;
-      if (l !== rim) l.shadow.intensity = p.shadow.strength;
+      l.shadow.intensity = l === rim ? p.rimShadow : p.shadow.strength;
     }
+    rim.castShadow = p.rimShadow > 0;
     this.sky.color.set(p.sky.top);
     this.sky.groundColor.set(p.sky.ground);
     this.sky.intensity = p.sky.energy * Math.PI;
@@ -183,11 +186,11 @@ export class PortraitStage {
     };
     stand(this.lights.rim, profile.lights.rim.from);
     stand(this.lights.fill, profile.lights.fill.from);
+    stand(this.lights.bounce, profile.lights.bounce.from);
     const keys = [this.lights.key, ...this.keys];
     keyPlaces(profile.lights.key.from, profile.shadow.spread, profile.shadow.lights).forEach((f, i) => stand(keys[i]!, f));
     // the shadows of the key light and, where the profile has them, of the rim light: a box around head and
     // shoulders
-    this.lights.rim.castShadow = profile.rimShadow;
     for (const l of [this.lights.rim, ...keys]) {
       const c = l.shadow.camera, r = hv * 0.9;
       c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;

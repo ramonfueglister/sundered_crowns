@@ -68,10 +68,10 @@ pub struct Lips {
     pub blood: [f32; 3],
     /// The upper lip's colour is the lips' times this. It faces down, away from the stage's key light. Until
     /// round 77 the stage had no light thrown back up by the chest, and the upper lip was a dark bar over the
-    /// mouth unless painted half as light again (1.5). Since round 78 the stage's fill light is that light
-    /// (src/portrait/profile.ts): 1.15 kept a grown woman's upper lip where the reference's is (L 20.7 against
-    /// 21.0; at 1.0 it read 18.3, at 1.5 27.2). With the lips of round 82 it is 36.7 L darker than the lit cheek
-    /// (the reference's 35.1).
+    /// mouth unless painted half as light again (1.5). Since round 78 the stage has that light (`bounce` in
+    /// src/portrait/profile.ts, until round 82 its `fill`): 1.15 kept a grown woman's upper lip where the
+    /// reference's is (L 20.7 against 21.0; at 1.0 it read 18.3, at 1.5 27.2). With the lips of round 82 it is
+    /// 36.7 L darker than the lit cheek (the reference's 35.1; 37.1 under the lights of round 83).
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
