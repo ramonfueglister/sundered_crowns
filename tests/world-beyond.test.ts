@@ -1,7 +1,7 @@
 // The rest of the globe (tools/geo/merge_beyond.py): the places beyond the game map follow its 15,220 places, their
 // realms follow the realms of the game map, and a running world of the game map alone gets them by the upgrade.
 import { describe, it, expect } from 'vitest';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { newWorldState, loadSetup, countedInPeopleOfTheTime } from '../tools/sim/load';
 import { encodeState, decodeState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
@@ -46,7 +46,7 @@ describe('the realms of the rest of the globe', () => {
 
 describe('a running world of the game map alone', () => {
   it('gets the places and realms of the rest of the globe by the upgrade, as the setup has them', () => {
-    const old = decodeState(encodeState(s)) as any;
+    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any);
     for (const k of Object.keys(old.place)) old.place[k] = old.place[k].slice(0, GAME_MAP);
     // the places of the game map no realm held before
     for (let i = 0; i < GAME_MAP; i++) if (old.place.owner[i] >= R0) old.place.owner[i] = -1;

@@ -1,0 +1,4731 @@
+{
+ "region": "beyond",
+ "year": 1291,
+ "date": "1291-01-01",
+ "sources": [
+  "H. Franke and D. Twitchett (eds.), The Cambridge History of China vol. 6: Alien Regimes and Border States 907-1368 (1994)",
+  "M. Rossabi, Khubilai Khan (1988); The Cambridge History of Japan vol. 3 (1990): the Kamakura bakufu under Hōjō Sadatoki",
+  "Kim Han-gyo / Goryeosa: King Chungnyeol, a son-in-law of Kublai",
+  "P. Jackson, The Delhi Sultanate (1999): Jalal al-Din Khalji (1290), Bughra Khan in Lakhnauti",
+  "R. C. Majumdar (ed.), The History and Culture of the Indian People vol. 5-6 (1957-60): Yadavas, Kakatiyas, Hoysalas, Pandyas, Eastern Gangas, Vaghelas, Paramaras, Chahamanas of Ranthambhor, Guhilas",
+  "G. Coedès, The Indianized States of Southeast Asia (1968): Singhasari under Kertanegara, Dharmasraya after the Pamalayu expedition (1275), Sukhothai, Lan Na, Champa, Angkor",
+  "M. Aung-Thwin, Myanmar in the Fifteenth Century / The Mists of Rāmañña (2005): Pagan after 1287, Wareru at Martaban",
+  "K. W. Taylor, A History of the Vietnamese (2013): Trần Nhân Tông",
+  "T. R. Pauketat, Cahokia (2009); Mississippian chronologies (Moundville, Etowah, Spiro)",
+  "M. E. Smith, The Aztecs (3rd ed., 2012): the Valley of Mexico before Tenochtitlan (1325)",
+  "B. Bauer, Ancient Cuzco (2004); M. Moseley, The Incas and their Ancestors (2001): Chimor"
+ ],
+ "new_ids": [
+  "kamakura",
+  "sakya",
+  "soomra",
+  "vaghela",
+  "paramara",
+  "ranthambore",
+  "yadava",
+  "kakatiya",
+  "hoysala",
+  "pandya",
+  "dambadeniya",
+  "pagan",
+  "singhasari",
+  "cahokia"
+ ],
+ "notes": [
+  "Date: 1 January 1291. Kublai Khan rules all of China after the fall of the Song (1279); Goryeo and the Sakya hierarchs of Tibet are under the Yuan; Qaidu and Du'a hold Central Asia (south_east.py).",
+  "India: Jalal al-Din Khalji has ruled Delhi since June 1290; Bengal (Lakhnauti) is under Balban's son Bughra Khan and his son Kaykaus. The Deccan kingdoms (Yadavas, Kakatiyas, Hoysalas, Pandyas) are still independent; Vijayanagara and the Bahmanis (both 1340s) did not exist yet.",
+  "Sri Lanka: after the Pandya sack of Yapahuwa (1284) the Sinhalese kingdom is weak; its ruler between 1284 and 1302 is uncertain (gap).",
+  "Java: Singhasari under Kertanegara (Majapahit is founded only in 1293). Pagan's empire broke apart after the Mongol invasion (1287); Pagan itself survives under Kyawswa, Martaban under Wareru (1287).",
+  "Ayutthaya (1351), Lan Xang (1353), Singapura (c.1299), the Red Turban states, the Ashikaga and the Southern Court of 1356 are left out; Tenochtitlan (1325) and the Purépecha state (c.1320s) did not exist yet.",
+  "Rulers of the Americas are not known by name for 1291; Cahokia is in decline but still occupied."
+ ],
+ "states": [
+  {
+   "id": "yuan",
+   "name": {
+    "en": "Great Yuan",
+    "de": "Große Yuan"
+   },
+   "short": {
+    "en": "Yuan",
+    "de": "Yuan"
+   },
+   "adjective": {
+    "en": "Yuan",
+    "de": "yuan"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "mongol",
+   "faith": "vajrayana",
+   "color": "#75693d",
+   "capital": {
+    "name": "Dadu",
+    "lat": 39.9,
+    "lon": 116.4
+   },
+   "holdings": [
+    {
+     "name": "Dadu",
+     "lat": 39.9,
+     "lon": 116.4
+    },
+    {
+     "name": "Shangdu",
+     "lat": 42.36,
+     "lon": 116.18
+    },
+    {
+     "name": "Karakorum",
+     "lat": 47.2,
+     "lon": 102.82
+    },
+    {
+     "name": "Liaoyang",
+     "lat": 41.27,
+     "lon": 123.17
+    },
+    {
+     "name": "Shenyang",
+     "lat": 41.8,
+     "lon": 123.43
+    },
+    {
+     "name": "Taiyuan",
+     "lat": 37.87,
+     "lon": 112.55
+    },
+    {
+     "name": "Datong",
+     "lat": 40.08,
+     "lon": 113.3
+    },
+    {
+     "name": "Lanzhou",
+     "lat": 36.06,
+     "lon": 103.83
+    },
+    {
+     "name": "Xi'an",
+     "lat": 34.27,
+     "lon": 108.95
+    },
+    {
+     "name": "Kaifeng",
+     "lat": 34.8,
+     "lon": 114.31
+    },
+    {
+     "name": "Jinan",
+     "lat": 36.67,
+     "lon": 117.0
+    },
+    {
+     "name": "Yangzhou",
+     "lat": 32.39,
+     "lon": 119.42
+    },
+    {
+     "name": "Hangzhou",
+     "lat": 30.25,
+     "lon": 120.17
+    },
+    {
+     "name": "Nanjing",
+     "lat": 32.06,
+     "lon": 118.79
+    },
+    {
+     "name": "Suzhou",
+     "lat": 31.3,
+     "lon": 120.62
+    },
+    {
+     "name": "Fuzhou",
+     "lat": 26.07,
+     "lon": 119.3
+    },
+    {
+     "name": "Quanzhou",
+     "lat": 24.87,
+     "lon": 118.68
+    },
+    {
+     "name": "Guangzhou",
+     "lat": 23.13,
+     "lon": 113.26
+    },
+    {
+     "name": "Wuchang",
+     "lat": 30.55,
+     "lon": 114.3
+    },
+    {
+     "name": "Changsha",
+     "lat": 28.2,
+     "lon": 112.97
+    },
+    {
+     "name": "Nanchang",
+     "lat": 28.68,
+     "lon": 115.86
+    },
+    {
+     "name": "Chengdu",
+     "lat": 30.66,
+     "lon": 104.07
+    },
+    {
+     "name": "Chongqing",
+     "lat": 29.56,
+     "lon": 106.55
+    },
+    {
+     "name": "Kunming",
+     "lat": 25.04,
+     "lon": 102.71
+    },
+    {
+     "name": "Dali",
+     "lat": 25.69,
+     "lon": 100.16
+    },
+    {
+     "name": "Guilin",
+     "lat": 25.27,
+     "lon": 110.29
+    },
+    {
+     "name": "Hezhou",
+     "lat": 31.72,
+     "lon": 118.37
+    },
+    {
+     "name": "Hanyang",
+     "lat": 30.55,
+     "lon": 114.27
+    },
+    {
+     "name": "Ningbo",
+     "lat": 29.87,
+     "lon": 121.55
+    },
+    {
+     "name": "Qingdao",
+     "lat": 36.07,
+     "lon": 120.38
+    },
+    {
+     "name": "Hami",
+     "lat": 42.82,
+     "lon": 93.5
+    },
+    {
+     "name": "Ningxia",
+     "lat": 38.47,
+     "lon": 106.27
+    },
+    {
+     "name": "Harbin",
+     "lat": 45.75,
+     "lon": 126.65
+    },
+    {
+     "name": "Hainan",
+     "lat": 20.03,
+     "lon": 110.35
+    },
+    {
+     "name": "Guiyang",
+     "lat": 26.58,
+     "lon": 106.71
+    }
+   ],
+   "ruler": {
+    "name": "Kublai",
+    "born": 1215,
+    "dynasty": "Borjigin (Toluid)",
+    "female": false
+   },
+   "heir": {
+    "name": "Temür",
+    "born": 1265,
+    "dynasty": "Borjigin (Toluid)",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "Kublai Khan, Great Khan and Emperor Shizu of Yuan (1260-94). The crown prince Zhenjin died in 1286; his son Temür succeeds in 1294.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "ilkhanate",
+    "goryeo"
+   ],
+   "rivals": [
+    "kaidu",
+    "chagatai",
+    "kamakura",
+    "dai_viet"
+   ],
+   "claims_on": [
+    "kamakura",
+    "dai_viet",
+    "champa"
+   ],
+   "personality": "conqueror",
+   "difficulty": 1,
+   "summary": {
+    "en": "The old Kublai rules all of China; his campaigns against Japan, Vietnam and Java have failed or are being prepared.",
+    "de": "Der greise Kublai beherrscht ganz China; seine Feldzüge gegen Japan, Vietnam und Java sind gescheitert oder in Vorbereitung."
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "goryeo",
+   "name": {
+    "en": "Kingdom of Goryeo",
+    "de": "Königreich Goryeo"
+   },
+   "short": {
+    "en": "Goryeo",
+    "de": "Goryeo"
+   },
+   "adjective": {
+    "en": "Goryeo",
+    "de": "koreanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "korean",
+   "faith": "mahayana",
+   "color": "#737551",
+   "capital": {
+    "name": "Kaegyeong",
+    "lat": 37.97,
+    "lon": 126.55
+   },
+   "holdings": [
+    {
+     "name": "Kaegyeong",
+     "lat": 37.97,
+     "lon": 126.55
+    },
+    {
+     "name": "Pyongyang",
+     "lat": 39.02,
+     "lon": 125.75
+    },
+    {
+     "name": "Gyeongju",
+     "lat": 35.84,
+     "lon": 129.21
+    },
+    {
+     "name": "Jeonju",
+     "lat": 35.82,
+     "lon": 127.15
+    },
+    {
+     "name": "Gwangju",
+     "lat": 35.16,
+     "lon": 126.85
+    },
+    {
+     "name": "Jeju",
+     "lat": 33.5,
+     "lon": 126.53
+    },
+    {
+     "name": "Andong",
+     "lat": 36.57,
+     "lon": 128.73
+    },
+    {
+     "name": "Hanyang (Seoul)",
+     "lat": 37.57,
+     "lon": 126.98
+    }
+   ],
+   "ruler": {
+    "name": "Chungnyeol",
+    "born": 1236,
+    "dynasty": "Wang",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "King Chungnyeol, son-in-law of Kublai; Goryeo is a Yuan vassal.",
+   "overlord": "yuan",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "kamakura",
+   "name": {
+    "en": "Kamakura Shogunate",
+    "de": "Kamakura-Shogunat"
+   },
+   "short": {
+    "en": "Japan",
+    "de": "Japan"
+   },
+   "adjective": {
+    "en": "Japanese",
+    "de": "japanisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "japanese",
+   "faith": "shinto",
+   "color": "#915668",
+   "capital": {
+    "name": "Kamakura",
+    "lat": 35.32,
+    "lon": 139.55
+   },
+   "holdings": [
+    {
+     "name": "Kamakura",
+     "lat": 35.32,
+     "lon": 139.55
+    },
+    {
+     "name": "Kyoto",
+     "lat": 35.01,
+     "lon": 135.77
+    },
+    {
+     "name": "Nara",
+     "lat": 34.69,
+     "lon": 135.8
+    },
+    {
+     "name": "Osaka",
+     "lat": 34.69,
+     "lon": 135.5
+    },
+    {
+     "name": "Hakata",
+     "lat": 33.59,
+     "lon": 130.4
+    },
+    {
+     "name": "Dazaifu",
+     "lat": 33.52,
+     "lon": 130.53
+    },
+    {
+     "name": "Kagoshima",
+     "lat": 31.6,
+     "lon": 130.56
+    },
+    {
+     "name": "Nagasaki",
+     "lat": 32.75,
+     "lon": 129.88
+    },
+    {
+     "name": "Hiroshima",
+     "lat": 34.39,
+     "lon": 132.46
+    },
+    {
+     "name": "Nagoya",
+     "lat": 35.18,
+     "lon": 136.91
+    },
+    {
+     "name": "Sendai",
+     "lat": 38.27,
+     "lon": 140.87
+    },
+    {
+     "name": "Hiraizumi",
+     "lat": 38.99,
+     "lon": 141.11
+    },
+    {
+     "name": "Niigata",
+     "lat": 37.92,
+     "lon": 139.04
+    },
+    {
+     "name": "Kanazawa",
+     "lat": 36.56,
+     "lon": 136.66
+    },
+    {
+     "name": "Kochi",
+     "lat": 33.56,
+     "lon": 133.53
+    },
+    {
+     "name": "Matsuyama",
+     "lat": 33.84,
+     "lon": 132.77
+    },
+    {
+     "name": "Morioka",
+     "lat": 39.7,
+     "lon": 141.15
+    },
+    {
+     "name": "Akita",
+     "lat": 39.72,
+     "lon": 140.1
+    }
+   ],
+   "ruler": {
+    "name": "Hōjō Sadatoki (shikken)",
+    "born": 1271,
+    "dynasty": "Hōjō",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Emperor Fushimi reigns in Kyoto; power lies with the Kamakura bakufu, the shogun prince Hisaaki and the regent Hōjō Sadatoki. Kyushu is guarded against a third Mongol invasion.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "sakya",
+   "name": {
+    "en": "Sakya Tibet",
+    "de": "Sakya-Tibet"
+   },
+   "short": {
+    "en": "Tibet",
+    "de": "Tibet"
+   },
+   "adjective": {
+    "en": "Tibetan",
+    "de": "tibetisch"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "color": "#454134",
+   "capital": {
+    "name": "Sakya",
+    "lat": 28.9,
+    "lon": 88.02
+   },
+   "holdings": [
+    {
+     "name": "Sakya",
+     "lat": 28.9,
+     "lon": 88.02
+    },
+    {
+     "name": "Lhasa",
+     "lat": 29.65,
+     "lon": 91.13
+    },
+    {
+     "name": "Shigatse",
+     "lat": 29.27,
+     "lon": 88.88
+    },
+    {
+     "name": "Nêdong",
+     "lat": 29.24,
+     "lon": 91.77
+    },
+    {
+     "name": "Gyantse",
+     "lat": 28.92,
+     "lon": 89.6
+    },
+    {
+     "name": "Chamdo",
+     "lat": 31.14,
+     "lon": 97.17
+    }
+   ],
+   "ruler": {
+    "name": "Sakya hierarchs and dpon-chen under the Yuan",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Tibet is governed for the Yuan by the Sakya school and its administrators (dpon-chen); the Drikung rising was crushed in 1290.",
+   "overlord": "yuan",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "zealot",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "guge",
+   "name": {
+    "en": "Kingdom of Guge",
+    "de": "Königreich Guge"
+   },
+   "short": {
+    "en": "Guge",
+    "de": "Guge"
+   },
+   "adjective": {
+    "en": "Guge",
+    "de": "gugeisch"
+   },
+   "rank": "kingdom",
+   "government": "theocracy",
+   "culture": "tibetan",
+   "faith": "vajrayana",
+   "color": "#4e3e16",
+   "capital": {
+    "name": "Tsaparang",
+    "lat": 31.48,
+    "lon": 79.8
+   },
+   "holdings": [
+    {
+     "name": "Tsaparang",
+     "lat": 31.48,
+     "lon": 79.8
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "delhi",
+   "name": {
+    "en": "Sultanate of Delhi",
+    "de": "Sultanat Delhi"
+   },
+   "short": {
+    "en": "Delhi",
+    "de": "Delhi"
+   },
+   "adjective": {
+    "en": "Delhi",
+    "de": "Delhier"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "hindustani",
+   "faith": "sunni",
+   "color": "#6d773c",
+   "capital": {
+    "name": "Delhi",
+    "lat": 28.61,
+    "lon": 77.21
+   },
+   "holdings": [
+    {
+     "name": "Delhi",
+     "lat": 28.61,
+     "lon": 77.21
+    },
+    {
+     "name": "Lahore",
+     "lat": 31.55,
+     "lon": 74.34
+    },
+    {
+     "name": "Multan",
+     "lat": 30.2,
+     "lon": 71.47
+    },
+    {
+     "name": "Uch",
+     "lat": 29.23,
+     "lon": 71.06
+    },
+    {
+     "name": "Dipalpur",
+     "lat": 30.67,
+     "lon": 73.65
+    },
+    {
+     "name": "Sunam",
+     "lat": 30.13,
+     "lon": 75.8
+    },
+    {
+     "name": "Hansi",
+     "lat": 29.1,
+     "lon": 75.96
+    },
+    {
+     "name": "Meerut",
+     "lat": 28.98,
+     "lon": 77.71
+    },
+    {
+     "name": "Badaun",
+     "lat": 28.03,
+     "lon": 79.12
+    },
+    {
+     "name": "Kara",
+     "lat": 25.7,
+     "lon": 81.35
+    },
+    {
+     "name": "Awadh",
+     "lat": 26.79,
+     "lon": 82.2
+    },
+    {
+     "name": "Kanauj",
+     "lat": 27.05,
+     "lon": 79.92
+    },
+    {
+     "name": "Bayana",
+     "lat": 26.91,
+     "lon": 77.29
+    },
+    {
+     "name": "Gwalior",
+     "lat": 26.22,
+     "lon": 78.18
+    },
+    {
+     "name": "Kalinjar",
+     "lat": 25.0,
+     "lon": 80.48
+    },
+    {
+     "name": "Bihar",
+     "lat": 25.2,
+     "lon": 85.52
+    },
+    {
+     "name": "Samana",
+     "lat": 30.15,
+     "lon": 76.19
+    }
+   ],
+   "ruler": {
+    "name": "Jalal al-Din Firuz Khalji",
+    "born": 1220,
+    "dynasty": "Khalji",
+    "female": false
+   },
+   "heir": {
+    "name": "Ala al-Din (nephew, governor of Kara)",
+    "born": 1266,
+    "dynasty": "Khalji",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "The Khalji took the throne in June 1290 after the last Mamluk (Slave) sultan. The Mongols of the Chagatai raid the Punjab.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "chagatai",
+    "ranthambore"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bengal",
+   "name": {
+    "en": "Sultanate of Lakhnauti",
+    "de": "Sultanat Lakhnauti"
+   },
+   "short": {
+    "en": "Bengal",
+    "de": "Bengalen"
+   },
+   "adjective": {
+    "en": "Bengali",
+    "de": "bengalisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "bengali",
+   "faith": "sunni",
+   "color": "#73312c",
+   "capital": {
+    "name": "Lakhnauti",
+    "lat": 24.87,
+    "lon": 88.13
+   },
+   "holdings": [
+    {
+     "name": "Lakhnauti",
+     "lat": 24.87,
+     "lon": 88.13
+    },
+    {
+     "name": "Sonargaon",
+     "lat": 23.65,
+     "lon": 90.61
+    },
+    {
+     "name": "Satgaon",
+     "lat": 22.96,
+     "lon": 88.38
+    },
+    {
+     "name": "Devkot",
+     "lat": 25.3,
+     "lon": 88.5
+    },
+    {
+     "name": "Pandua",
+     "lat": 25.13,
+     "lon": 88.15
+    }
+   ],
+   "ruler": {
+    "name": "Bughra Khan / Rukn al-Din Kaykaus",
+    "born": null,
+    "dynasty": "Balbani",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Balban's son Bughra Khan rules Bengal as an independent sultan; his son Kaykaus succeeds c.1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "soomra",
+   "name": {
+    "en": "Soomra Sindh",
+    "de": "Sindh der Soomra"
+   },
+   "short": {
+    "en": "Sindh",
+    "de": "Sindh"
+   },
+   "adjective": {
+    "en": "Sindhi",
+    "de": "sindhisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sindhi",
+   "faith": "shia",
+   "color": "#4d4113",
+   "capital": {
+    "name": "Thatta",
+    "lat": 24.75,
+    "lon": 67.92
+   },
+   "holdings": [
+    {
+     "name": "Thatta",
+     "lat": 24.75,
+     "lon": 67.92
+    },
+    {
+     "name": "Mansura",
+     "lat": 25.88,
+     "lon": 68.78
+    },
+    {
+     "name": "Sehwan",
+     "lat": 26.42,
+     "lon": 67.86
+    },
+    {
+     "name": "Bhakkar",
+     "lat": 31.63,
+     "lon": 71.07
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Soomra dynasty of lower Sindh (Ismaili tradition).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "kashmir",
+   "name": {
+    "en": "Kingdom of Kashmir",
+    "de": "Königreich Kaschmir"
+   },
+   "short": {
+    "en": "Kashmir",
+    "de": "Kaschmir"
+   },
+   "adjective": {
+    "en": "Kashmiri",
+    "de": "kaschmirisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "kashmiri",
+   "faith": "hindu",
+   "color": "#8b6058",
+   "capital": {
+    "name": "Srinagar",
+    "lat": 34.08,
+    "lon": 74.8
+   },
+   "holdings": [
+    {
+     "name": "Srinagar",
+     "lat": 34.08,
+     "lon": 74.8
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hindu kings of Kashmir (the sultanate dates from 1339); names around 1290 uncertain.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "vaghela",
+   "name": {
+    "en": "Vaghela Gujarat",
+    "de": "Gujarat der Vaghela"
+   },
+   "short": {
+    "en": "Gujarat",
+    "de": "Gujarat"
+   },
+   "adjective": {
+    "en": "Gujarati",
+    "de": "gujaratisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "gujarati",
+   "faith": "hindu",
+   "color": "#8a5d4f",
+   "capital": {
+    "name": "Anahilavada",
+    "lat": 23.85,
+    "lon": 72.12
+   },
+   "holdings": [
+    {
+     "name": "Anahilavada",
+     "lat": 23.85,
+     "lon": 72.12
+    },
+    {
+     "name": "Cambay",
+     "lat": 22.31,
+     "lon": 72.62
+    },
+    {
+     "name": "Somnath",
+     "lat": 20.89,
+     "lon": 70.4
+    },
+    {
+     "name": "Bharuch",
+     "lat": 21.71,
+     "lon": 72.98
+    },
+    {
+     "name": "Dholka",
+     "lat": 22.73,
+     "lon": 72.44
+    },
+    {
+     "name": "Junagadh",
+     "lat": 21.52,
+     "lon": 70.46
+    }
+   ],
+   "ruler": {
+    "name": "Sarangadeva",
+    "born": null,
+    "dynasty": "Vaghela",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Vaghela king of Gujarat (1275-96); conquered by the Khalji in 1299.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "paramara",
+   "name": {
+    "en": "Paramara Malwa",
+    "de": "Malwa der Paramara"
+   },
+   "short": {
+    "en": "Malwa",
+    "de": "Malwa"
+   },
+   "adjective": {
+    "en": "Malwi",
+    "de": "malwisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "rajput",
+   "faith": "hindu",
+   "color": "#704259",
+   "capital": {
+    "name": "Dhar",
+    "lat": 22.6,
+    "lon": 75.3
+   },
+   "holdings": [
+    {
+     "name": "Dhar",
+     "lat": 22.6,
+     "lon": 75.3
+    },
+    {
+     "name": "Ujjain",
+     "lat": 23.18,
+     "lon": 75.78
+    },
+    {
+     "name": "Mandu",
+     "lat": 22.36,
+     "lon": 75.39
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The declining Paramara kingdom, divided between rival claimants.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "ranthambore",
+   "name": {
+    "en": "Chahamanas of Ranthambhor",
+    "de": "Chahamanas von Ranthambhor"
+   },
+   "short": {
+    "en": "Ranthambhor",
+    "de": "Ranthambhor"
+   },
+   "adjective": {
+    "en": "Chahamana",
+    "de": "chahamana"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "rajput",
+   "faith": "hindu",
+   "color": "#8b6260",
+   "capital": {
+    "name": "Ranthambhor",
+    "lat": 26.02,
+    "lon": 76.46
+   },
+   "holdings": [
+    {
+     "name": "Ranthambhor",
+     "lat": 26.02,
+     "lon": 76.46
+    },
+    {
+     "name": "Jhain",
+     "lat": 26.1,
+     "lon": 76.6
+    },
+    {
+     "name": "Kota",
+     "lat": 25.18,
+     "lon": 75.83
+    }
+   ],
+   "ruler": {
+    "name": "Hammira",
+    "born": null,
+    "dynasty": "Chahamana",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Hammira repulses Jalal al-Din's attacks (1290-92).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "delhi"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "mewar",
+   "name": {
+    "en": "Kingdom of Mewar",
+    "de": "Königreich Mewar"
+   },
+   "short": {
+    "en": "Mewar",
+    "de": "Mewar"
+   },
+   "adjective": {
+    "en": "Mewari",
+    "de": "mewarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "rajput",
+   "faith": "hindu",
+   "color": "#5e4e27",
+   "capital": {
+    "name": "Chittor",
+    "lat": 24.89,
+    "lon": 74.65
+   },
+   "holdings": [
+    {
+     "name": "Chittor",
+     "lat": 24.89,
+     "lon": 74.65
+    }
+   ],
+   "ruler": {
+    "name": "Samarasimha",
+    "born": null,
+    "dynasty": "Guhila",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "yadava",
+   "name": {
+    "en": "Yadava Kingdom of Devagiri",
+    "de": "Yadava-Reich von Devagiri"
+   },
+   "short": {
+    "en": "Devagiri",
+    "de": "Devagiri"
+   },
+   "adjective": {
+    "en": "Yadava",
+    "de": "yadava"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "dakhini",
+   "faith": "hindu",
+   "color": "#533d24",
+   "capital": {
+    "name": "Devagiri",
+    "lat": 19.94,
+    "lon": 75.21
+   },
+   "holdings": [
+    {
+     "name": "Devagiri",
+     "lat": 19.94,
+     "lon": 75.21
+    },
+    {
+     "name": "Paithan",
+     "lat": 19.48,
+     "lon": 75.38
+    },
+    {
+     "name": "Nashik",
+     "lat": 20.0,
+     "lon": 73.79
+    },
+    {
+     "name": "Pune",
+     "lat": 18.52,
+     "lon": 73.85
+    },
+    {
+     "name": "Kolhapur",
+     "lat": 16.7,
+     "lon": 74.24
+    },
+    {
+     "name": "Bidar",
+     "lat": 17.91,
+     "lon": 77.52
+    },
+    {
+     "name": "Nagpur",
+     "lat": 21.15,
+     "lon": 79.09
+    },
+    {
+     "name": "Thane",
+     "lat": 19.2,
+     "lon": 72.97
+    },
+    {
+     "name": "Elichpur",
+     "lat": 21.26,
+     "lon": 77.51
+    }
+   ],
+   "ruler": {
+    "name": "Ramachandra",
+    "born": null,
+    "dynasty": "Seuna (Yadava)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ramachandra (1271-1311), raided by Ala al-Din Khalji in 1296.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "kakatiya",
+    "hoysala"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "kakatiya",
+   "name": {
+    "en": "Kakatiya Kingdom",
+    "de": "Kakatiya-Reich"
+   },
+   "short": {
+    "en": "Kakatiya",
+    "de": "Kakatiya"
+   },
+   "adjective": {
+    "en": "Kakatiya",
+    "de": "kakatiya"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "telugu",
+   "faith": "hindu",
+   "color": "#657951",
+   "capital": {
+    "name": "Warangal",
+    "lat": 17.97,
+    "lon": 79.6
+   },
+   "holdings": [
+    {
+     "name": "Warangal",
+     "lat": 17.97,
+     "lon": 79.6
+    },
+    {
+     "name": "Hyderabad",
+     "lat": 17.38,
+     "lon": 78.48
+    },
+    {
+     "name": "Kondavidu",
+     "lat": 16.25,
+     "lon": 80.25
+    },
+    {
+     "name": "Nellore",
+     "lat": 14.44,
+     "lon": 79.99
+    },
+    {
+     "name": "Raichur",
+     "lat": 16.2,
+     "lon": 77.36
+    },
+    {
+     "name": "Vijayawada",
+     "lat": 16.51,
+     "lon": 80.65
+    },
+    {
+     "name": "Motupalli",
+     "lat": 15.82,
+     "lon": 80.27
+    }
+   ],
+   "ruler": {
+    "name": "Prataparudra",
+    "born": null,
+    "dynasty": "Kakatiya",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prataparudra succeeded his grandmother Rudramadevi (d. c.1289).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yadava",
+    "pandya"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "hoysala",
+   "name": {
+    "en": "Hoysala Kingdom",
+    "de": "Hoysala-Reich"
+   },
+   "short": {
+    "en": "Hoysala",
+    "de": "Hoysala"
+   },
+   "adjective": {
+    "en": "Hoysala",
+    "de": "hoysala"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "kannada",
+   "faith": "hindu",
+   "color": "#7a542c",
+   "capital": {
+    "name": "Dorasamudra",
+    "lat": 13.21,
+    "lon": 75.99
+   },
+   "holdings": [
+    {
+     "name": "Dorasamudra",
+     "lat": 13.21,
+     "lon": 75.99
+    },
+    {
+     "name": "Belur",
+     "lat": 13.16,
+     "lon": 75.87
+    },
+    {
+     "name": "Talakad",
+     "lat": 12.18,
+     "lon": 77.03
+    },
+    {
+     "name": "Bangalore",
+     "lat": 12.97,
+     "lon": 77.59
+    },
+    {
+     "name": "Mysore",
+     "lat": 12.3,
+     "lon": 76.64
+    },
+    {
+     "name": "Kannanur",
+     "lat": 10.85,
+     "lon": 78.7
+    }
+   ],
+   "ruler": {
+    "name": "Narasimha III",
+    "born": null,
+    "dynasty": "Hoysala",
+    "female": false
+   },
+   "heir": {
+    "name": "Ballala III",
+    "born": null,
+    "dynasty": "Hoysala",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "pandya",
+   "name": {
+    "en": "Pandya Kingdom",
+    "de": "Pandya-Reich"
+   },
+   "short": {
+    "en": "Pandya",
+    "de": "Pandya"
+   },
+   "adjective": {
+    "en": "Pandyan",
+    "de": "pandyanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "tamil",
+   "faith": "hindu",
+   "color": "#4e411f",
+   "capital": {
+    "name": "Madurai",
+    "lat": 9.93,
+    "lon": 78.12
+   },
+   "holdings": [
+    {
+     "name": "Madurai",
+     "lat": 9.93,
+     "lon": 78.12
+    },
+    {
+     "name": "Kanchipuram",
+     "lat": 12.83,
+     "lon": 79.7
+    },
+    {
+     "name": "Thanjavur",
+     "lat": 10.79,
+     "lon": 79.14
+    },
+    {
+     "name": "Tiruchirappalli",
+     "lat": 10.8,
+     "lon": 78.69
+    },
+    {
+     "name": "Rameswaram",
+     "lat": 9.29,
+     "lon": 79.31
+    },
+    {
+     "name": "Kayal",
+     "lat": 8.6,
+     "lon": 78.12
+    },
+    {
+     "name": "Tirunelveli",
+     "lat": 8.73,
+     "lon": 77.7
+    },
+    {
+     "name": "Kollam",
+     "lat": 8.89,
+     "lon": 76.61
+    },
+    {
+     "name": "Chidambaram",
+     "lat": 11.4,
+     "lon": 79.69
+    }
+   ],
+   "ruler": {
+    "name": "Maravarman Kulasekara I",
+    "born": null,
+    "dynasty": "Pandya",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "At the height of the later Pandyas (1268-1310); Marco Polo visits the coast in 1292. Venad and the Kerala coast are attached through the spread.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "jaffna"
+   ],
+   "rivals": [
+    "hoysala",
+    "kakatiya"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "eastern_ganga",
+   "name": {
+    "en": "Eastern Ganga Kingdom",
+    "de": "Östliches Ganga-Reich"
+   },
+   "short": {
+    "en": "Odisha",
+    "de": "Orissa"
+   },
+   "adjective": {
+    "en": "Odia",
+    "de": "orissisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "odia",
+   "faith": "hindu",
+   "color": "#465d28",
+   "capital": {
+    "name": "Cuttack",
+    "lat": 20.46,
+    "lon": 85.88
+   },
+   "holdings": [
+    {
+     "name": "Cuttack",
+     "lat": 20.46,
+     "lon": 85.88
+    },
+    {
+     "name": "Puri",
+     "lat": 19.81,
+     "lon": 85.83
+    },
+    {
+     "name": "Konark",
+     "lat": 19.89,
+     "lon": 86.09
+    },
+    {
+     "name": "Kalinganagara",
+     "lat": 18.35,
+     "lon": 84.13
+    }
+   ],
+   "ruler": {
+    "name": "Bhanudeva I",
+    "born": null,
+    "dynasty": "Eastern Ganga",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "khasa",
+   "name": {
+    "en": "Khasa Kingdom",
+    "de": "Khasa-Königreich"
+   },
+   "short": {
+    "en": "Khasa",
+    "de": "Khasa"
+   },
+   "adjective": {
+    "en": "Khasa",
+    "de": "khasisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nepali",
+   "faith": "hindu",
+   "color": "#3c6347",
+   "capital": {
+    "name": "Sinja",
+    "lat": 29.26,
+    "lon": 82.18
+   },
+   "holdings": [
+    {
+     "name": "Sinja",
+     "lat": 29.26,
+     "lon": 82.18
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "nepal_malla",
+   "name": {
+    "en": "Nepal Mandala",
+    "de": "Nepal Mandala"
+   },
+   "short": {
+    "en": "Nepal",
+    "de": "Nepal"
+   },
+   "adjective": {
+    "en": "Newar",
+    "de": "newarisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "newar",
+   "faith": "hindu",
+   "color": "#785309",
+   "capital": {
+    "name": "Bhaktapur",
+    "lat": 27.67,
+    "lon": 85.43
+   },
+   "holdings": [
+    {
+     "name": "Bhaktapur",
+     "lat": 27.67,
+     "lon": 85.43
+    }
+   ],
+   "ruler": {
+    "name": "Ananta Malla",
+    "born": null,
+    "dynasty": "Malla",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ahom",
+   "name": {
+    "en": "Ahom Kingdom",
+    "de": "Ahom-Königreich"
+   },
+   "short": {
+    "en": "Ahom",
+    "de": "Ahom"
+   },
+   "adjective": {
+    "en": "Ahom",
+    "de": "ahomisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "ahom",
+   "faith": "tai_folk",
+   "color": "#3a5d27",
+   "capital": {
+    "name": "Charaideo",
+    "lat": 26.94,
+    "lon": 94.85
+   },
+   "holdings": [
+    {
+     "name": "Charaideo",
+     "lat": 26.94,
+     "lon": 94.85
+    }
+   ],
+   "ruler": {
+    "name": "Sukhaangphaa",
+    "born": null,
+    "dynasty": "Ahom",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "kamata",
+   "name": {
+    "en": "Kingdom of Kamarupa-Kamata",
+    "de": "Königreich Kamarupa-Kamata"
+   },
+   "short": {
+    "en": "Kamata",
+    "de": "Kamata"
+   },
+   "adjective": {
+    "en": "Kamata",
+    "de": "kamatisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "assamese",
+   "faith": "hindu",
+   "color": "#766944",
+   "capital": {
+    "name": "Kamatapur",
+    "lat": 26.3,
+    "lon": 89.4
+   },
+   "holdings": [
+    {
+     "name": "Kamatapur",
+     "lat": 26.3,
+     "lon": 89.4
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "dambadeniya",
+   "name": {
+    "en": "Sinhalese Kingdom",
+    "de": "Singhalesisches Königreich"
+   },
+   "short": {
+    "en": "Lanka",
+    "de": "Lanka"
+   },
+   "adjective": {
+    "en": "Sinhalese",
+    "de": "singhalesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sinhala",
+   "faith": "theravada",
+   "color": "#2a5236",
+   "capital": {
+    "name": "Kurunegala",
+    "lat": 7.48,
+    "lon": 80.36
+   },
+   "holdings": [
+    {
+     "name": "Kurunegala",
+     "lat": 7.48,
+     "lon": 80.36
+    },
+    {
+     "name": "Yapahuwa",
+     "lat": 7.82,
+     "lon": 80.31
+    },
+    {
+     "name": "Dambadeniya",
+     "lat": 7.37,
+     "lon": 80.15
+    },
+    {
+     "name": "Kotte",
+     "lat": 6.89,
+     "lon": 79.9
+    },
+    {
+     "name": "Galle",
+     "lat": 6.03,
+     "lon": 80.22
+    },
+    {
+     "name": "Polonnaruwa",
+     "lat": 7.94,
+     "lon": 81.0
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Pandya armies sacked Yapahuwa (1284) and took the Tooth Relic; the throne is uncertain until Parakramabahu III (1302).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "pandya",
+    "jaffna"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "jaffna",
+   "name": {
+    "en": "Kingdom of Jaffna",
+    "de": "Königreich Jaffna"
+   },
+   "short": {
+    "en": "Jaffna",
+    "de": "Jaffna"
+   },
+   "adjective": {
+    "en": "Jaffna",
+    "de": "jaffnesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "tamil",
+   "faith": "hindu",
+   "color": "#7b643d",
+   "capital": {
+    "name": "Nallur",
+    "lat": 9.67,
+    "lon": 80.03
+   },
+   "holdings": [
+    {
+     "name": "Nallur",
+     "lat": 9.67,
+     "lon": 80.03
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Aryacakravarti kings, vassals of the Pandya.",
+   "overlord": "pandya",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "maldives",
+   "name": {
+    "en": "Sultanate of the Maldives",
+    "de": "Sultanat der Malediven"
+   },
+   "short": {
+    "en": "Maldives",
+    "de": "Malediven"
+   },
+   "adjective": {
+    "en": "Maldivian",
+    "de": "maledivisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "dhivehi",
+   "faith": "sunni",
+   "color": "#826248",
+   "capital": {
+    "name": "Malé",
+    "lat": 4.17,
+    "lon": 73.51
+   },
+   "holdings": [
+    {
+     "name": "Malé",
+     "lat": 4.17,
+     "lon": 73.51
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "dai_viet",
+   "name": {
+    "en": "Đại Việt",
+    "de": "Đại Việt"
+   },
+   "short": {
+    "en": "Đại Việt",
+    "de": "Đại Việt"
+   },
+   "adjective": {
+    "en": "Vietnamese",
+    "de": "vietnamesisch"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "vietnamese",
+   "faith": "mahayana",
+   "color": "#444034",
+   "capital": {
+    "name": "Thăng Long",
+    "lat": 21.03,
+    "lon": 105.85
+   },
+   "holdings": [
+    {
+     "name": "Thăng Long",
+     "lat": 21.03,
+     "lon": 105.85
+    },
+    {
+     "name": "Thiên Trường",
+     "lat": 20.42,
+     "lon": 106.17
+    },
+    {
+     "name": "Thanh Hóa",
+     "lat": 19.8,
+     "lon": 105.78
+    },
+    {
+     "name": "Nghệ An",
+     "lat": 18.67,
+     "lon": 105.68
+    },
+    {
+     "name": "Lạng Sơn",
+     "lat": 21.85,
+     "lon": 106.76
+    }
+   ],
+   "ruler": {
+    "name": "Trần Nhân Tông",
+    "born": 1258,
+    "dynasty": "Trần",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Victor over the third Mongol invasion (Bạch Đằng, 1288).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan",
+    "champa"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "champa",
+   "name": {
+    "en": "Champa",
+    "de": "Champa"
+   },
+   "short": {
+    "en": "Champa",
+    "de": "Champa"
+   },
+   "adjective": {
+    "en": "Cham",
+    "de": "chamisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "cham",
+   "faith": "hindu",
+   "color": "#6b4e0e",
+   "capital": {
+    "name": "Vijaya",
+    "lat": 13.87,
+    "lon": 109.11
+   },
+   "holdings": [
+    {
+     "name": "Vijaya",
+     "lat": 13.87,
+     "lon": 109.11
+    },
+    {
+     "name": "Indrapura",
+     "lat": 15.88,
+     "lon": 108.33
+    },
+    {
+     "name": "Kauthara",
+     "lat": 12.25,
+     "lon": 109.18
+    },
+    {
+     "name": "Panduranga",
+     "lat": 11.56,
+     "lon": 108.99
+    }
+   ],
+   "ruler": {
+    "name": "Jaya Sinhavarman III",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Che Man, king from 1288.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "dai_viet",
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "khmer",
+   "name": {
+    "en": "Khmer Empire",
+    "de": "Khmer-Reich"
+   },
+   "short": {
+    "en": "Angkor",
+    "de": "Angkor"
+   },
+   "adjective": {
+    "en": "Khmer",
+    "de": "khmer"
+   },
+   "rank": "empire",
+   "government": "feudal_monarchy",
+   "culture": "khmer",
+   "faith": "theravada",
+   "color": "#6c7148",
+   "capital": {
+    "name": "Yasodharapura (Angkor)",
+    "lat": 13.41,
+    "lon": 103.87
+   },
+   "holdings": [
+    {
+     "name": "Yasodharapura (Angkor)",
+     "lat": 13.41,
+     "lon": 103.87
+    },
+    {
+     "name": "Lopburi",
+     "lat": 14.8,
+     "lon": 100.62
+    },
+    {
+     "name": "Phimai",
+     "lat": 15.22,
+     "lon": 102.49
+    },
+    {
+     "name": "Battambang",
+     "lat": 13.1,
+     "lon": 103.2
+    },
+    {
+     "name": "Kampong Thom",
+     "lat": 12.71,
+     "lon": 104.89
+    }
+   ],
+   "ruler": {
+    "name": "Jayavarman VIII",
+    "born": null,
+    "dynasty": "Mahidharapura",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Angkor under Jayavarman VIII (1243-95), paying tribute to Kublai since 1285. Lavo (Lopburi) is in its sphere.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "sukhothai",
+    "champa"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sukhothai",
+   "name": {
+    "en": "Kingdom of Sukhothai",
+    "de": "Königreich Sukhothai"
+   },
+   "short": {
+    "en": "Sukhothai",
+    "de": "Sukhothai"
+   },
+   "adjective": {
+    "en": "Sukhothai",
+    "de": "sukhothaiisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "thai",
+   "faith": "theravada",
+   "color": "#6f323a",
+   "capital": {
+    "name": "Sukhothai",
+    "lat": 17.01,
+    "lon": 99.82
+   },
+   "holdings": [
+    {
+     "name": "Sukhothai",
+     "lat": 17.01,
+     "lon": 99.82
+    },
+    {
+     "name": "Si Satchanalai",
+     "lat": 17.43,
+     "lon": 99.79
+    },
+    {
+     "name": "Phitsanulok",
+     "lat": 16.82,
+     "lon": 100.26
+    },
+    {
+     "name": "Kamphaeng Phet",
+     "lat": 16.48,
+     "lon": 99.52
+    },
+    {
+     "name": "Suphan Buri",
+     "lat": 14.47,
+     "lon": 100.12
+    },
+    {
+     "name": "Nakhon Si Thammarat",
+     "lat": 8.43,
+     "lon": 99.96
+    },
+    {
+     "name": "Phetchaburi",
+     "lat": 13.11,
+     "lon": 99.94
+    }
+   ],
+   "ruler": {
+    "name": "Ram Khamhaeng",
+    "born": null,
+    "dynasty": "Phra Ruang",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ram Khamhaeng (c.1279-98) has extended his overlordship to the Malay peninsula (Nakhon Si Thammarat).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "khmer"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "lan_na",
+   "name": {
+    "en": "Kingdom of Lan Na",
+    "de": "Königreich Lan Na"
+   },
+   "short": {
+    "en": "Lan Na",
+    "de": "Lan Na"
+   },
+   "adjective": {
+    "en": "Lanna",
+    "de": "lannaisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "thai",
+   "faith": "theravada",
+   "color": "#326135",
+   "capital": {
+    "name": "Chiang Rai",
+    "lat": 19.91,
+    "lon": 99.83
+   },
+   "holdings": [
+    {
+     "name": "Chiang Rai",
+     "lat": 19.91,
+     "lon": 99.83
+    },
+    {
+     "name": "Lamphun",
+     "lat": 18.58,
+     "lon": 99.01
+    },
+    {
+     "name": "Fang",
+     "lat": 19.92,
+     "lon": 99.21
+    },
+    {
+     "name": "Chiang Saen",
+     "lat": 20.27,
+     "lon": 100.08
+    }
+   ],
+   "ruler": {
+    "name": "Mangrai",
+    "born": 1238,
+    "dynasty": "Mangrai",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Mangrai took Hariphunchai (Lamphun) in 1281/92; Chiang Mai is founded only in 1296.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "sukhothai"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "pagan",
+   "name": {
+    "en": "Kingdom of Pagan",
+    "de": "Königreich Pagan"
+   },
+   "short": {
+    "en": "Pagan",
+    "de": "Pagan"
+   },
+   "adjective": {
+    "en": "Burmese",
+    "de": "birmanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "burmese",
+   "faith": "theravada",
+   "color": "#806946",
+   "capital": {
+    "name": "Pagan",
+    "lat": 21.17,
+    "lon": 94.86
+   },
+   "holdings": [
+    {
+     "name": "Pagan",
+     "lat": 21.17,
+     "lon": 94.86
+    },
+    {
+     "name": "Myinsaing",
+     "lat": 21.6,
+     "lon": 96.1
+    },
+    {
+     "name": "Pinle",
+     "lat": 21.5,
+     "lon": 96.0
+    },
+    {
+     "name": "Mekkhaya",
+     "lat": 21.42,
+     "lon": 96.06
+    },
+    {
+     "name": "Sagaing",
+     "lat": 21.88,
+     "lon": 95.98
+    },
+    {
+     "name": "Prome",
+     "lat": 18.82,
+     "lon": 95.22
+    },
+    {
+     "name": "Tagaung",
+     "lat": 23.5,
+     "lon": 96.02
+    }
+   ],
+   "ruler": {
+    "name": "Kyawswa",
+    "born": null,
+    "dynasty": "Pagan",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The remnant of the Pagan empire after the Mongol invasion (1287); the three Myinsaing brothers hold Kyaukse.",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "hanthawaddy",
+   "name": {
+    "en": "Kingdom of Martaban",
+    "de": "Königreich Martaban"
+   },
+   "short": {
+    "en": "Martaban",
+    "de": "Martaban"
+   },
+   "adjective": {
+    "en": "Mon",
+    "de": "mon"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "mon",
+   "faith": "theravada",
+   "color": "#4b3f15",
+   "capital": {
+    "name": "Martaban",
+    "lat": 16.53,
+    "lon": 97.6
+   },
+   "holdings": [
+    {
+     "name": "Martaban",
+     "lat": 16.53,
+     "lon": 97.6
+    },
+    {
+     "name": "Pegu",
+     "lat": 17.34,
+     "lon": 96.48
+    },
+    {
+     "name": "Bassein",
+     "lat": 16.78,
+     "lon": 94.73
+    }
+   ],
+   "ruler": {
+    "name": "Wareru",
+    "born": 1253,
+    "dynasty": "Wareru",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wareru proclaimed himself king at Martaban in 1287 (Pegu taken c.1287-96).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "arakan",
+   "name": {
+    "en": "Kingdom of Arakan",
+    "de": "Königreich Arakan"
+   },
+   "short": {
+    "en": "Arakan",
+    "de": "Arakan"
+   },
+   "adjective": {
+    "en": "Arakanese",
+    "de": "arakanesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "burmese",
+   "faith": "theravada",
+   "color": "#57511e",
+   "capital": {
+    "name": "Launggyet",
+    "lat": 20.6,
+    "lon": 93.19
+   },
+   "holdings": [
+    {
+     "name": "Launggyet",
+     "lat": 20.6,
+     "lon": 93.19
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "mong_mao",
+   "name": {
+    "en": "Mong Mao",
+    "de": "Mong Mao"
+   },
+   "short": {
+    "en": "Mong Mao",
+    "de": "Mong Mao"
+   },
+   "adjective": {
+    "en": "Shan",
+    "de": "shanisch"
+   },
+   "rank": "kingdom",
+   "government": "tribal_federation",
+   "culture": "shan",
+   "faith": "theravada",
+   "color": "#4f3c1d",
+   "capital": {
+    "name": "Mong Mao",
+    "lat": 24.01,
+    "lon": 97.85
+   },
+   "holdings": [
+    {
+     "name": "Mong Mao",
+     "lat": 24.01,
+     "lon": 97.85
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": "yuan",
+   "subject_type": "tributary",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "singhasari",
+   "name": {
+    "en": "Kingdom of Singhasari",
+    "de": "Königreich Singhasari"
+   },
+   "short": {
+    "en": "Singhasari",
+    "de": "Singhasari"
+   },
+   "adjective": {
+    "en": "Javanese",
+    "de": "javanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "javanese",
+   "faith": "hindu",
+   "color": "#663d45",
+   "capital": {
+    "name": "Singhasari",
+    "lat": -7.9,
+    "lon": 112.66
+   },
+   "holdings": [
+    {
+     "name": "Singhasari",
+     "lat": -7.9,
+     "lon": 112.66
+    },
+    {
+     "name": "Kediri",
+     "lat": -7.82,
+     "lon": 112.01
+    },
+    {
+     "name": "Tuban",
+     "lat": -6.9,
+     "lon": 112.06
+    },
+    {
+     "name": "Surabaya",
+     "lat": -7.25,
+     "lon": 112.75
+    },
+    {
+     "name": "Madura",
+     "lat": -7.05,
+     "lon": 113.3
+    },
+    {
+     "name": "Bali",
+     "lat": -8.65,
+     "lon": 115.22
+    },
+    {
+     "name": "Daha",
+     "lat": -7.8,
+     "lon": 112.0
+    }
+   ],
+   "ruler": {
+    "name": "Kertanegara",
+    "born": null,
+    "dynasty": "Rajasa",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Kertanegara (1268-92), who sent the Pamalayu expedition to Sumatra (1275) and mutilated Kublai's envoys (1289); Majapahit rises from his fall (1292-93).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "yuan"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "sunda",
+   "name": {
+    "en": "Kingdom of Sunda",
+    "de": "Königreich Sunda"
+   },
+   "short": {
+    "en": "Sunda",
+    "de": "Sunda"
+   },
+   "adjective": {
+    "en": "Sundanese",
+    "de": "sundanesisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "sundanese",
+   "faith": "hindu",
+   "color": "#786940",
+   "capital": {
+    "name": "Kawali",
+    "lat": -7.18,
+    "lon": 108.36
+   },
+   "holdings": [
+    {
+     "name": "Kawali",
+     "lat": -7.18,
+     "lon": 108.36
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "malayupura",
+   "name": {
+    "en": "Kingdom of Dharmasraya (Melayu)",
+    "de": "Königreich Dharmasraya (Melayu)"
+   },
+   "short": {
+    "en": "Melayu",
+    "de": "Melayu"
+   },
+   "adjective": {
+    "en": "Malay",
+    "de": "malaiisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "malay",
+   "faith": "vajrayana",
+   "color": "#5d4c22",
+   "capital": {
+    "name": "Dharmasraya",
+    "lat": -1.08,
+    "lon": 101.6
+   },
+   "holdings": [
+    {
+     "name": "Dharmasraya",
+     "lat": -1.08,
+     "lon": 101.6
+    },
+    {
+     "name": "Jambi",
+     "lat": -1.6,
+     "lon": 103.6
+    },
+    {
+     "name": "Palembang",
+     "lat": -2.98,
+     "lon": 104.76
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Melayu at Dharmasraya, heir to Srivijaya, under Singhasari overlordship since the Pamalayu expedition.",
+   "overlord": "singhasari",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "samudera_pasai",
+   "name": {
+    "en": "Sultanate of Samudera Pasai",
+    "de": "Sultanat Samudera Pasai"
+   },
+   "short": {
+    "en": "Pasai",
+    "de": "Pasai"
+   },
+   "adjective": {
+    "en": "Pasai",
+    "de": "pasaiisch"
+   },
+   "rank": "sultanate",
+   "government": "feudal_monarchy",
+   "culture": "malay",
+   "faith": "sunni",
+   "color": "#786b45",
+   "capital": {
+    "name": "Pasai",
+    "lat": 5.16,
+    "lon": 97.15
+   },
+   "holdings": [
+    {
+     "name": "Pasai",
+     "lat": 5.16,
+     "lon": 97.15
+    }
+   ],
+   "ruler": {
+    "name": "Malik al-Saleh",
+    "born": null,
+    "dynasty": null,
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The first Muslim ruler on Sumatra (d. 1297); Marco Polo calls at Samudra in 1292.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tondo",
+   "name": {
+    "en": "Polity of Tondo",
+    "de": "Tondo"
+   },
+   "short": {
+    "en": "Tondo",
+    "de": "Tondo"
+   },
+   "adjective": {
+    "en": "Tagalog",
+    "de": "tagalisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#7a4a3a",
+   "capital": {
+    "name": "Tondo",
+    "lat": 14.62,
+    "lon": 120.97
+   },
+   "holdings": [
+    {
+     "name": "Tondo",
+     "lat": 14.62,
+     "lon": 120.97
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, plain",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "ma_i",
+   "name": {
+    "en": "Ma-i",
+    "de": "Ma-i"
+   },
+   "short": {
+    "en": "Ma-i",
+    "de": "Ma-i"
+   },
+   "adjective": {
+    "en": "Ma-i",
+    "de": "ma-iisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#304c32",
+   "capital": {
+    "name": "Puerto Galera",
+    "lat": 13.5,
+    "lon": 120.95
+   },
+   "holdings": [
+    {
+     "name": "Puerto Galera",
+     "lat": 13.5,
+     "lon": 120.95
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, plain",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "butuan",
+   "name": {
+    "en": "Rajahnate of Butuan",
+    "de": "Rajahnat Butuan"
+   },
+   "short": {
+    "en": "Butuan",
+    "de": "Butuan"
+   },
+   "adjective": {
+    "en": "Butuanon",
+    "de": "butuanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#675221",
+   "capital": {
+    "name": "Butuan",
+    "lat": 8.95,
+    "lon": 125.54
+   },
+   "holdings": [
+    {
+     "name": "Butuan",
+     "lat": 8.95,
+     "lon": 125.54
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sulu",
+   "name": {
+    "en": "Sulu",
+    "de": "Sulu"
+   },
+   "short": {
+    "en": "Sulu",
+    "de": "Sulu"
+   },
+   "adjective": {
+    "en": "Tausug",
+    "de": "tausugisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "tagalog",
+   "faith": "anitism",
+   "color": "#896172",
+   "capital": {
+    "name": "Buansa",
+    "lat": 6.05,
+    "lon": 121.0
+   },
+   "holdings": [
+    {
+     "name": "Buansa",
+     "lat": 6.05,
+     "lon": 121.0
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Sable, plain",
+    "field": "sable",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tui_tonga",
+   "name": {
+    "en": "Tuʻi Tonga",
+    "de": "Tuʻi Tonga"
+   },
+   "short": {
+    "en": "Tonga",
+    "de": "Tonga"
+   },
+   "adjective": {
+    "en": "Tongan",
+    "de": "tongaisch"
+   },
+   "rank": "empire",
+   "government": "tribal_federation",
+   "culture": "polynesian",
+   "faith": "polynesian_faith",
+   "color": "#75693f",
+   "capital": {
+    "name": "Lapaha",
+    "lat": -21.15,
+    "lon": -175.18
+   },
+   "holdings": [
+    {
+     "name": "Lapaha",
+     "lat": -21.15,
+     "lon": -175.18
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, plain",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "tepanec",
+   "name": {
+    "en": "Tepanec Altepetl of Azcapotzalco",
+    "de": "Tepanekisches Altepetl Azcapotzalco"
+   },
+   "short": {
+    "en": "Azcapotzalco",
+    "de": "Azcapotzalco"
+   },
+   "adjective": {
+    "en": "Tepanec",
+    "de": "tepanekisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#483d5e",
+   "capital": {
+    "name": "Azcapotzalco",
+    "lat": 19.48,
+    "lon": -99.19
+   },
+   "holdings": [
+    {
+     "name": "Azcapotzalco",
+     "lat": 19.48,
+     "lon": -99.19
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Tepanec of Azcapotzalco, a rising lordship (its hegemony comes in the 14th century).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a stone (tetl) Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "texcoco_acolhua",
+   "name": {
+    "en": "Acolhua Altepetl of Texcoco",
+    "de": "Acolhua-Altepetl Texcoco"
+   },
+   "short": {
+    "en": "Texcoco",
+    "de": "Texcoco"
+   },
+   "adjective": {
+    "en": "Acolhua",
+    "de": "acolhuanisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "nahua",
+   "faith": "mesoamerican",
+   "color": "#3b502d",
+   "capital": {
+    "name": "Texcoco",
+    "lat": 19.51,
+    "lon": -98.88
+   },
+   "holdings": [
+    {
+     "name": "Texcoco",
+     "lat": 19.51,
+     "lon": -98.88
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a mountain Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "mountain",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mayapan",
+   "name": {
+    "en": "League of Mayapan",
+    "de": "Liga von Mayapán"
+   },
+   "short": {
+    "en": "Mayapan",
+    "de": "Mayapán"
+   },
+   "adjective": {
+    "en": "Mayapan",
+    "de": "mayapanisch"
+   },
+   "rank": "kingdom",
+   "government": "elective_monarchy",
+   "culture": "maya",
+   "faith": "mesoamerican",
+   "color": "#145142",
+   "capital": {
+    "name": "Mayapan",
+    "lat": 20.63,
+    "lon": -89.46
+   },
+   "holdings": [
+    {
+     "name": "Mayapan",
+     "lat": 20.63,
+     "lon": -89.46
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a sun Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "paquime",
+   "name": {
+    "en": "Paquimé",
+    "de": "Paquimé"
+   },
+   "short": {
+    "en": "Paquimé",
+    "de": "Paquimé"
+   },
+   "adjective": {
+    "en": "Paquimé",
+    "de": "paquimé"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "puebloan",
+   "faith": "american_traditional",
+   "color": "#5e4a0f",
+   "capital": {
+    "name": "Paquimé",
+    "lat": 30.37,
+    "lon": -107.95
+   },
+   "holdings": [
+    {
+     "name": "Paquimé",
+     "lat": 30.37,
+     "lon": -107.95
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, plain",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "taino_xaragua",
+   "name": {
+    "en": "Taíno Cacicazgo of Xaraguá",
+    "de": "Taíno-Cacicazgo Xaraguá"
+   },
+   "short": {
+    "en": "Xaraguá",
+    "de": "Xaraguá"
+   },
+   "adjective": {
+    "en": "Taíno",
+    "de": "taíno"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#195041",
+   "capital": {
+    "name": "Xaraguá",
+    "lat": 18.51,
+    "lon": -72.63
+   },
+   "holdings": [
+    {
+     "name": "Xaraguá",
+     "lat": 18.51,
+     "lon": -72.63
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_magua",
+   "name": {
+    "en": "Taíno Cacicazgo of Maguá",
+    "de": "Taíno-Cacicazgo Maguá"
+   },
+   "short": {
+    "en": "Maguá",
+    "de": "Maguá"
+   },
+   "adjective": {
+    "en": "Taíno",
+    "de": "taíno"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#43817b",
+   "capital": {
+    "name": "Maguá",
+    "lat": 19.22,
+    "lon": -70.53
+   },
+   "holdings": [
+    {
+     "name": "Maguá",
+     "lat": 19.22,
+     "lon": -70.53
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a sun Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "taino_boriken",
+   "name": {
+    "en": "Taíno Chiefdoms of Borikén",
+    "de": "Taíno-Häuptlingtümer von Borikén"
+   },
+   "short": {
+    "en": "Borikén",
+    "de": "Borikén"
+   },
+   "adjective": {
+    "en": "Boricua",
+    "de": "boricua"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "taino",
+   "faith": "american_traditional",
+   "color": "#4b807a",
+   "capital": {
+    "name": "Caguana",
+    "lat": 18.3,
+    "lon": -66.7
+   },
+   "holdings": [
+    {
+     "name": "Caguana",
+     "lat": 18.3,
+     "lon": -66.7
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a sun Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "cahokia",
+   "name": {
+    "en": "Cahokia",
+    "de": "Cahokia"
+   },
+   "short": {
+    "en": "Cahokia",
+    "de": "Cahokia"
+   },
+   "adjective": {
+    "en": "Mississippian",
+    "de": "Mississippi-"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#5c4a39",
+   "capital": {
+    "name": "Cahokia",
+    "lat": 38.66,
+    "lon": -90.06
+   },
+   "holdings": [
+    {
+     "name": "Cahokia",
+     "lat": 38.66,
+     "lon": -90.06
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The great Mississippian centre, past its peak and losing people; abandoned by c.1350.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "moundville",
+   "name": {
+    "en": "Moundville Chiefdom",
+    "de": "Häuptlingtum Moundville"
+   },
+   "short": {
+    "en": "Moundville",
+    "de": "Moundville"
+   },
+   "adjective": {
+    "en": "Moundville",
+    "de": "moundvillisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#794e3e",
+   "capital": {
+    "name": "Moundville",
+    "lat": 33.0,
+    "lon": -87.63
+   },
+   "holdings": [
+    {
+     "name": "Moundville",
+     "lat": 33.0,
+     "lon": -87.63
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a cross Gules (sun circle)",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "etowah",
+   "name": {
+    "en": "Etowah Chiefdom",
+    "de": "Häuptlingtum Etowah"
+   },
+   "short": {
+    "en": "Etowah",
+    "de": "Etowah"
+   },
+   "adjective": {
+    "en": "Etowah",
+    "de": "etowahisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#56372c",
+   "capital": {
+    "name": "Etowah",
+    "lat": 34.13,
+    "lon": -84.81
+   },
+   "holdings": [
+    {
+     "name": "Etowah",
+     "lat": 34.13,
+     "lon": -84.81
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an eagle Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "spiro",
+   "name": {
+    "en": "Spiro Chiefdom",
+    "de": "Häuptlingtum Spiro"
+   },
+   "short": {
+    "en": "Spiro",
+    "de": "Spiro"
+   },
+   "adjective": {
+    "en": "Spiro",
+    "de": "spiroisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "mississippian",
+   "faith": "american_traditional",
+   "color": "#6a483e",
+   "capital": {
+    "name": "Spiro",
+    "lat": 35.31,
+    "lon": -94.57
+   },
+   "holdings": [
+    {
+     "name": "Spiro",
+     "lat": 35.31,
+     "lon": -94.57
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a roundel Or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "haudenosaunee_ancestral",
+   "name": {
+    "en": "Ancestral Haudenosaunee Nations",
+    "de": "Frühe Haudenosaunee-Nationen"
+   },
+   "short": {
+    "en": "Haudenosaunee",
+    "de": "Haudenosaunee"
+   },
+   "adjective": {
+    "en": "Haudenosaunee",
+    "de": "haudenosaunee"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "iroquoian",
+   "faith": "american_traditional",
+   "color": "#6d557f",
+   "capital": {
+    "name": "Onondaga country",
+    "lat": 42.95,
+    "lon": -76.05
+   },
+   "holdings": [
+    {
+     "name": "Onondaga country",
+     "lat": 42.95,
+     "lon": -76.05
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Purpure, a tree Argent",
+    "field": "purpure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "st_lawrence_iroquoians",
+   "name": {
+    "en": "St. Lawrence Iroquoians",
+    "de": "Sankt-Lorenz-Irokesen"
+   },
+   "short": {
+    "en": "St. Lawrence",
+    "de": "Sankt Lorenz"
+   },
+   "adjective": {
+    "en": "St. Lawrence Iroquoian",
+    "de": "sanktlorenz-irokesisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "iroquoian",
+   "faith": "american_traditional",
+   "color": "#533c56",
+   "capital": {
+    "name": "Hochelaga",
+    "lat": 45.5,
+    "lon": -73.58
+   },
+   "holdings": [
+    {
+     "name": "Hochelaga",
+     "lat": 45.5,
+     "lon": -73.58
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Purpure, a fish Argent",
+    "field": "purpure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "algonquian_lenape",
+   "name": {
+    "en": "Lenape Peoples",
+    "de": "Lenape-Völker"
+   },
+   "short": {
+    "en": "Lenapehoking",
+    "de": "Lenapehoking"
+   },
+   "adjective": {
+    "en": "Lenape",
+    "de": "lenapisch"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "algonquian",
+   "faith": "american_traditional",
+   "color": "#324f32",
+   "capital": {
+    "name": "Delaware valley",
+    "lat": 40.75,
+    "lon": -75.12
+   },
+   "holdings": [
+    {
+     "name": "Delaware valley",
+     "lat": 40.75,
+     "lon": -75.12
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a tree Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "cusco",
+   "name": {
+    "en": "Kingdom of Cusco",
+    "de": "Königreich Cusco"
+   },
+   "short": {
+    "en": "Cusco",
+    "de": "Cusco"
+   },
+   "adjective": {
+    "en": "Inca",
+    "de": "inkaisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "quechua",
+   "faith": "andean",
+   "color": "#715023",
+   "capital": {
+    "name": "Cusco",
+    "lat": -13.53,
+    "lon": -71.97
+   },
+   "holdings": [
+    {
+     "name": "Cusco",
+     "lat": -13.53,
+     "lon": -71.97
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The early Inca kingdom of Cusco, one of several Andean chiefdoms (rulers before Pachacuti are legendary).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "chimor",
+   "name": {
+    "en": "Kingdom of Chimor",
+    "de": "Königreich Chimor"
+   },
+   "short": {
+    "en": "Chimor",
+    "de": "Chimor"
+   },
+   "adjective": {
+    "en": "Chimú",
+    "de": "chimú"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "chimu",
+   "faith": "andean",
+   "color": "#684035",
+   "capital": {
+    "name": "Chan Chan",
+    "lat": -8.11,
+    "lon": -79.07
+   },
+   "holdings": [
+    {
+     "name": "Chan Chan",
+     "lat": -8.11,
+     "lon": -79.07
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a moon Sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "moon",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muisca_bacata",
+   "name": {
+    "en": "Muisca Confederation of Bacatá",
+    "de": "Muisca-Konföderation Bacatá"
+   },
+   "short": {
+    "en": "Bacatá",
+    "de": "Bacatá"
+   },
+   "adjective": {
+    "en": "Muisca",
+    "de": "muiscanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "muisca",
+   "faith": "american_traditional",
+   "color": "#4d3f1c",
+   "capital": {
+    "name": "Bacatá",
+    "lat": 4.72,
+    "lon": -74.21
+   },
+   "holdings": [
+    {
+     "name": "Bacatá",
+     "lat": 4.72,
+     "lon": -74.21
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a sun Gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muisca_hunza",
+   "name": {
+    "en": "Muisca Confederation of Hunza",
+    "de": "Muisca-Konföderation Hunza"
+   },
+   "short": {
+    "en": "Hunza",
+    "de": "Hunza"
+   },
+   "adjective": {
+    "en": "Muisca",
+    "de": "muiscanisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "muisca",
+   "faith": "american_traditional",
+   "color": "#765037",
+   "capital": {
+    "name": "Hunza",
+    "lat": 5.54,
+    "lon": -73.36
+   },
+   "holdings": [
+    {
+     "name": "Hunza",
+     "lat": 5.54,
+     "lon": -73.36
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a sun Or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tupinamba",
+   "name": {
+    "en": "Tupinambá Peoples",
+    "de": "Tupinambá-Völker"
+   },
+   "short": {
+    "en": "Tupinambá",
+    "de": "Tupinambá"
+   },
+   "adjective": {
+    "en": "Tupinambá",
+    "de": "tupinambá"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "tupi",
+   "faith": "american_traditional",
+   "color": "#2c5230",
+   "capital": {
+    "name": "Bahia coast",
+    "lat": -12.97,
+    "lon": -38.51
+   },
+   "holdings": [
+    {
+     "name": "Bahia coast",
+     "lat": -12.97,
+     "lon": -38.51
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a horn Or",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horn",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "guarani",
+   "name": {
+    "en": "Guaraní Peoples",
+    "de": "Guaraní-Völker"
+   },
+   "short": {
+    "en": "Guaraní",
+    "de": "Guaraní"
+   },
+   "adjective": {
+    "en": "Guaraní",
+    "de": "guaraní"
+   },
+   "rank": "tribe",
+   "government": "tribal_federation",
+   "culture": "guarani",
+   "faith": "american_traditional",
+   "color": "#4a6245",
+   "capital": {
+    "name": "Paraguay river",
+    "lat": -25.28,
+    "lon": -57.63
+   },
+   "holdings": [
+    {
+     "name": "Paraguay river",
+     "lat": -25.28,
+     "lon": -57.63
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Vert, a tree Argent",
+    "field": "vert",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}

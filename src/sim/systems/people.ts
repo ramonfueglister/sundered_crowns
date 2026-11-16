@@ -16,12 +16,14 @@ import { hash01 } from '../rng';
 import { personYears, type Sex } from '../people/lifetable';
 import { child, founder, origin, NG } from '../people/genes';
 import CITIES_JSON from '../content/cities_1356.json';
+import { uses1356Tables } from '../tables';
+import { SCALE, toHeads } from '../scale';
 
 export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number; site: number }
 export const CITIES: readonly City[] = CITIES_JSON.cities;
 
-/** The scale of the world: one person for this many people of 1356. */
-export const SCALE = 100;
+/** The scale of the world (src/sim/scale.ts): one person for this many people of the time. */
+export { SCALE } from '../scale';
 /** Coale-Demeny West level 3: life expectancy at birth of women 25 years (Bailey & Rigby 2012: 20 to 25 in the
  *  Middle Ages; Ohlin 1966: about 25 for the nobility around 1300). The population is stationary. */
 export const LIFE_TABLE_LEVEL = 3;
@@ -52,9 +54,10 @@ export function cityPeopleByPlace(): Map<number, number> {
 }
 
 /** A place is never smaller than the cities in it: where Chandler gives a city more people than the start setup gives
- *  its whole place, the place gets the city's (Ramon's decision of 15 November 2026). */
+ *  its whole place, the place gets the city's (Ramon's decision of 15 November 2026). Cities count people of the time,
+ *  places heads of the simulation. */
 export function fitPlacesToCities(s: WorldState): void {
-  for (const [p, n] of cityPeopleByPlace()) if (s.place.pop[p] < n) s.place.pop[p] = n;
+  for (const [p, n] of cityPeopleByPlace()) if (s.place.pop[p] < toHeads(n)) s.place.pop[p] = toHeads(n);
 }
 
 // --- random numbers: a stream of their own, a hash of the world's seed, the person and the number of the draw ---
@@ -80,7 +83,7 @@ function stationary(level: number) {
 export function foundPeople(s: WorldState): void {
   const person = createTable(PERSON_SCHEMA, 32768), family = createTable(FAMILY_SCHEMA, 8192);
   s.person = person; s.family = family;
-  if (s.startYear !== 1356) return; // the cities are those of 1356
+  if (!uses1356Tables(s.startYear)) return; // the cities are those of 1356 (src/sim/tables.ts)
   const st = stationary(LIFE_TABLE_LEVEL), seed = s.seed >>> 0, P = person.cols, F = family.cols;
   const z: Record<Trait, number[]> = { iq: [], o: [], c: [], e: [], a: [], n: [] };
   const newFamily = (place: number, man: number, woman: number) => {
