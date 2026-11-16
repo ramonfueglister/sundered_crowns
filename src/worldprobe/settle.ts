@@ -10,7 +10,7 @@ import type { Town } from '../figures';
 import { FINER } from './land';
 
 /** A place of the gazetteer on the ground. */
-export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style }
+export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean }
 /** A monument on the ground: one building of it. */
 export interface Monument { id: number; at: P2; model: Model }
 /**
@@ -79,6 +79,25 @@ export const PEOPLE_PER_FARM = 10 * PEOPLE_PER_PERSON;
  * people live and nothing is ploughed, none stand.
  */
 export const farmsFor = (people: number, lotKm2: number, fields: number) => (fields > 0 ? Math.min(HAMLET, (people * lotKm2) / PEOPLE_PER_FARM / fields) : 0);
+/** a hamlet's houses stand no farther than this from its middle */
+const HAMLET_FAR = 14;
+/** a hamlet is no round disc: it reaches up to this much farther one way than the other, and has a bulge */
+const HAMLET_LONG = 0.3, HAMLET_BULGE = 0.12;
+/** the ground of a hamlet is levelled to that of its middle where it differs by no more than this many steps */
+const HAMLET_STEPS = 2;
+/**
+ * The columns round a hamlet's middle in the order its houses are built on them: outwards from the middle, as far
+ * as `far`, in the hamlet's own shape (drawn from `r`). Building outwards packs the houses to half the ground a
+ * random scatter takes.
+ */
+function outwards(r: Rnd, far: number): P2[] {
+  const turn = r.range(0, Math.PI), bulge = r.range(0, Math.PI * 2), all: [number, number, number][] = [];
+  for (let dz = -far; dz <= far; dz++) for (let dx = -far; dx <= far; dx++) {
+    const a = Math.atan2(dz, dx), q = Math.hypot(dx, dz) * (1 + HAMLET_LONG * Math.cos(2 * (a - turn)) + HAMLET_BULGE * Math.cos(3 * (a - bulge)));
+    if (q <= far) all.push([dx, dz, q]);
+  }
+  return all.sort((a, b) => a[2] - b[2] || a[1] - b[1] || a[0] - b[0]).map(([dx, dz]) => [dx, dz]);
+}
 const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine', null, 'oats'];
 /** a field that lies fallow this year, and one under spring corn */
 export const FALLOW = 3, SPRING = 4;
@@ -87,6 +106,12 @@ export const FALLOW = 3, SPRING = 4;
  * fallow, of three one the fallow and one the spring corn; the rest is winter corn (1). One course: no rotation.
  */
 export const courseOf = (courses: number, u: number): 1 | typeof FALLOW | typeof SPRING => (courses >= 2 && u < 1 / courses ? FALLOW : courses >= 3 && u < 2 / courses ? SPRING : 1);
+/**
+ * The fields lie in blocks of one course: a block is this many lots wide and deep, and all its fields carry the same
+ * this year, as the furlongs of an open field did. Gives the block a point of the world lies in, in finest blocks.
+ */
+export const BLOCK_LOTS_W = 4, BLOCK_LOTS_D = 3;
+export const blockOf = (wx: number, wz: number): [number, number] => [Math.floor(wx / (BLOCK_LOTS_W * LOT_W)), Math.floor(wz / (BLOCK_LOTS_D * LOT_D))];
 /** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
 export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
 /** A footprint side drawn between two lengths in metres, whole blocks (the footprints were read off the reference image). */
@@ -103,7 +128,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
 export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [];
-  const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
+  const count = (k: string, n = 1) => { counts[k] = (counts[k] ?? 0) + n; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
   /** The height to build at on a footprint, if it is free with `gap` columns round it and level to within a step. */
   const lot = (x0: number, z0: number, x1: number, z1: number, gap: number, steps = 1): number | null => {
@@ -180,6 +205,33 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     const pop = s.pop ?? POP_OF_SIZE[s.size], size = s.size;
     const r = seeded(1000 + s.id), need = pop / PEOPLE_PER_PERSON;
     let housed = 0;
+    if (s.hamlet) {
+      // a hamlet: its houses close together on ground levelled to that of its middle, built outwards from it
+      const y = g.h[idx(cx, cz)], level = 2 + 0.8 * Math.sqrt(need);
+      for (let z = Math.floor(cz - level); z <= cz + level; z++) for (let x = Math.floor(cx - level); x <= cx + level; x++) {
+        if (Math.hypot(x - cx, z - cz) > level || !buildable(x, z) || Math.abs(g.h[idx(x, z)] - y) > HAMLET_STEPS || g.wet[idx(x + 1, z)] || g.wet[idx(x - 1, z)] || g.wet[idx(x, z + 1)] || g.wet[idx(x, z - 1)]) continue;
+        g.h[idx(x, z)] = y; g.occ[idx(x, z)] = y;
+      }
+      let reach = 0;
+      for (const [dx, dz] of outwards(r, HAMLET_FAR)) {
+        if (housed >= need) break;
+        if (!buildable(cx + dx, cz + dz)) continue;
+        const turn = r.chance(0.5), long = blocks(r, 5.7, 7.2), short = blocks(r, 4.3, 5.7), w = turn ? short : long, d = turn ? long : short;
+        const got = home(r, cx + dx - (w >> 1), cz + dz - (d >> 1), w, d, r.chance(0.4) ? 2 : 1, 1, s);
+        if (got) { housed += got; reach = Math.max(reach, Math.ceil(Math.hypot(dx, dz))); if (own(cx + dx, cz + dz)) count('farm'); }
+      }
+      // the ground of a hamlet is its own: no field and no tree between its houses, nor within a column of them
+      const ground: number[] = [];
+      for (let z = cz - reach - 5; z <= cz + reach + 5; z++) for (let x = cx - reach - 5; x <= cx + reach + 5; x++) {
+        if (!inGrid(x, z) || used[idx(x, z)]) continue;
+        let near = false;
+        for (let dz = -1; dz <= 1 && !near; dz++) for (let dx = -1; dx <= 1; dx++) if (inGrid(x + dx, z + dz) && used[idx(x + dx, z + dz)] === 1) { near = true; break; }
+        if (near) ground.push(idx(x, z));
+      }
+      for (const i of ground) used[i] = 3;
+      if (own(cx, cz)) { count('hamlet'); count('asked', need); count('housed', housed); }
+      return;
+    }
     if (size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
       if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
@@ -251,9 +303,9 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
         if (mine) count('farm');
       }
     }
-    const course = courseOf(courses(mx, mz), hash2(lx, lz, 66)), kind = course === 1 && hash2(lx, lz, 67) < vines(mx, mz) ? 2 : course, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296));
+    const course = courseOf(courses(mx, mz), hash2(...blockOf(mx + ox, mz + oz), 66)), kind = course === 1 && hash2(lx, lz, 67) < vines(mx, mz) ? 2 : course, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296));
     for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + sown; x++) { const i = idx(x, z); field[i] = kind; g.mat[i] = Mat.Soil; }
-    if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
+    if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); count('tilled', sown * d); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
   }
   return { used, town, field, towns, lots };

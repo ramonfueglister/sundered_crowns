@@ -11,7 +11,7 @@ import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/bloc
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
-import { FALLOW, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
+import { blockOf, FALLOW, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
@@ -117,6 +117,13 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = s.style.house, r = seeded(1000 + s.id), roof = pick(style.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
     // as many blocks of houses as hold the place's people (settle.ts), as tall as a house is at this step
     const need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
+    if (s.hamlet) {
+      // a hamlet is a few houses close together, low against the towns
+      for (let k = Math.max(1, Math.round(need / holds)), q = 0; k > 0 && q <= 3; q++) for (let dz = -q; dz <= q && k > 0; dz++) for (let dx = -q; dx <= q && k > 0; dx += Math.abs(dz) === q ? 1 : 2 * q || 1) {
+        if (free(cx + dx, cz + dz)) { house(style, cx + dx, cz + dz, Math.min(1, tall)); k--; }
+      }
+      continue;
+    }
     if (s.size < WALLED_FROM) {
       // a village is houses scattered about its middle, a small town has its church among them
       if (s.size === 2 && step <= MODELS_UNTIL) landmark(s.style.church, r, cx, cz, roof);
@@ -155,7 +162,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const wz = z + oz, lz = Math.floor(wz / lotD), shift = lz & 1 ? Math.floor(lotW / 2) : 0, wx = x + ox + shift, lx = Math.floor(wx / lotW);
     const mx = (lx + 0.5) * lotW - ox - shift, mz = (lz + 0.5) * lotD - oz;
     if (hash2(lx, lz, 65 + step) > o.ploughed(mx, mz) / fill) continue;
-    const course = courseOf(courses(mx, mz), hash2(lx, lz, 166 + step));
+    // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
+    const course = courseOf(courses(mx, mz), hash2(...blockOf((mx + ox) * wider, (mz + oz) * wider), 66));
     if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)));
   }
