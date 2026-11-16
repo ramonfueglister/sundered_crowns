@@ -45,3 +45,26 @@ Changes: the table rows from 1291 to 1848 are turned into plain text; each row g
 ```
 876 rows (420 in frame, 298 outside, 158 unknown), dates {'year': 486, 'day': 365, 'month': 22, 'none': 3}, 2774 links, 2770 with QID (99.9%), 1442 distinct titles
 ```
+
+## euratlas/euratlas_<year>_places.json and _states.tsv
+
+Who holds each place of the map in Euratlas Periodis, for 1400, 1500, 1600, 1700 and 1800, in the format of
+`data/history/1291/ref/euratlas_1300_*` (see the README there for the columns and arrays). Derived facts only: no
+Euratlas images or HTML are stored in this repository.
+
+**Source:** Euratlas Periodis (Christos Nüssli), Europe in <year>, as shown on euratlas.net: the four quarter maps
+(`<year>_Northwest/Northeast/Southwest/Southeast`) and the per-entity maps. Retrieved 2026-11-16. The images stay
+local; © Euratlas.
+
+**Script:** `tools/history/borders/euratlas_places.py <year> <folder>`, the 1300 reading made into one script.
+The entity frame is the same in every year (median image of 1800 vs 1300: best shift 0 px), so the 1300 fit is reused:
+55 cities measured as dots on the 1300 quarter maps (62 points), 3rd-order polynomial in lon/lat, 0.74 px rms,
+0.97 px leave-one-out. The control points are in the script. Per year the JSON reports under `residuals_px` how well
+the quarter crops match and how far each predicted control city lies from the nearest city dot on that year's
+quarter (not every 1300 city has a dot in later years). Regional maps are not used. Run on the 1300 images, the
+script reproduces the committed 1300 labels for 98.7 % of the labelled places (most differences: "Small States"
+against Bavaria or Guelders).
+
+| year | entities | entities holding places | labelled places (share of entity frame) | dots near control cities, rms px (NW / NE / SW / SE) |
+|---|---|---|---|---|
+| 1800 | 143 | 69 | 7823 (97.6 %) | 7 of 13, 1.21 / 3 of 6, 0.94 / 16 of 20, 1.56 / 9 of 23, 2.08 |
