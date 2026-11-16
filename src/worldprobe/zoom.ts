@@ -59,6 +59,24 @@ export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.m
 export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, TILT_UNTIL, wide);
 /** How strongly the realms colour the world, 0 … 1. */
 export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
+/**
+ * the political map mode lies on the land this strongly where the world is still a diorama: the land's light and
+ * shade show through, as in EU5's political map close up; the names of the realms come in from NAMES_FROM, fully at
+ * NAMES_FULL, where a realm is small enough in the picture for its name to be read
+ */
+const POLITICAL_NEAR = 0.75, NAMES_FROM = 900 * FINER, NAMES_FULL = 2200 * FINER;
+/**
+ * How the realms' map lies on a view: `strength` how much it covers the land, `flat` how much it is a printed map
+ * (the land's light hidden, the sea painted too), `names` how strongly the realms' names are written; all 0 … 1.
+ * The political map mode lays it on the land at every distance, the terrain mode nowhere; `far` (the world probe's
+ * own page and the tools that take pictures of it) only where the world lies flat, as the 2D map.
+ */
+export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number } {
+  const flat = realmsOf(wide);
+  if (mode === 'terrain') return { strength: 0, flat: 0, names: 0 };
+  if (mode === 'far') return { strength: flat, flat, names: flat };
+  return { strength: POLITICAL_NEAR + (1 - POLITICAL_NEAR) * flat, flat, names: Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)) };
+}
 /** Whether a view shows the realms rather than the land: there a click means the place, nearer it means what stands on the ground. */
 export const realmsShown = (wide: number) => realmsOf(wide) >= 0.5;
 /**

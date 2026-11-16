@@ -6,10 +6,11 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
-import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
+import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconPolitical, IconTerrain, IconFullscreen, IconClose } from './icons';
+import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
+import { MAP_MODES, mapMode, mapModeKey, setMapMode } from './mapmode';
 import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
@@ -86,12 +87,26 @@ function MusicSettings() {
   </div>;
 }
 
+const MODE_ICON = { political: IconPolitical, terrain: IconTerrain } as const;
+
+/** Bottom right, as in EU5: the map modes (the one shown is lit in gold), then the way home and full screen. */
 function MapTools() {
-  const r = myRealm.value;
+  const r = myRealm.value, now = mapMode.value;
   const full = () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.(); };
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (mapModeKey(e)) e.preventDefault(); };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, []);
   return <div class="maptools" role="toolbar" aria-label={t('map_tools')}>
+    <div class="mapmodes" role="radiogroup" aria-label={t('map_modes')}>
+      {MAP_MODES.map(({ mode, key }) => {
+        const Icon = MODE_ICON[mode], name = t(`map_mode_${mode}` as TextKey);
+        return <button key={mode} class="tool mode" role="radio" aria-checked={now === mode} aria-label={name}
+          title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`} onClick={() => setMapMode(mode)}><Icon /></button>;
+      })}
+    </div><i />
     {r && <><button class="tool" title={t('to_my_realm')} aria-label={t('to_my_realm')} onClick={() => mapCtl.home(r.capital)}><IconCrown /></button><i /></>}
-    <button class="tool" title={t('whole_map')} aria-label={t('whole_map')} onClick={() => mapCtl.overview()}><IconGlobe /></button><i />
     <button class="tool" title={t('fullscreen')} aria-label={t('fullscreen')} onClick={full}><IconFullscreen /></button>
   </div>;
 }
