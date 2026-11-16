@@ -53,7 +53,7 @@ export interface RealmsMap {
  * which the world begins again.
  * `ahead`: paint the surroundings of the picture too. `changed` is called whenever a tile has arrived.
  */
-export function createRealms(stage: Stage, o: { region: string; base: string; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
+export function createRealms(stage: Stage, o: { region: string; base: string; year?: number; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
   const realms: RealmsMap = { look, names: [], lap: 0, failed: '', set, choose, placeAt, dispose: () => worker.terminate() };
   /** how strongly the realms' colours cover the world */
@@ -70,11 +70,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
   };
 
   const worker = new Worker(new URL('./realms.worker.ts', import.meta.url), { type: 'module' });
-  type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base'> : never) : never;
+  type Job = RealmsJob extends infer J ? (J extends unknown ? Omit<J, 'id' | 'region' | 'base' | 'year'> : never) : never;
   const ask = (job: Job, what: Asked) => {
     const id = nextId++;
     asked.set(id, what);
-    worker.postMessage({ id, region: o.region, base: o.base, ...job } satisfies RealmsJob);
+    worker.postMessage({ id, region: o.region, base: o.base, year: o.year, ...job } satisfies RealmsJob);
   };
   worker.onmessage = (e: MessageEvent<RealmsDone>) => {
     const what = asked.get(e.data.id)!;
