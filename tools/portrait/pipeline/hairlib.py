@@ -235,7 +235,7 @@ LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest 
 LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
 
 
-def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0):
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None):
     """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
     wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
     times as high, `m` corners from flank to flank. Its image's length part lies back and forth
@@ -251,14 +251,17 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
     cards. `over`: the skin the locks lie over, if not the head's own (`Head.covered`). `back`: a lock begins so
     far before the middle of its strands' roots, against the way it sets off (the roots of a wisp lie on a patch
     of skin as broad as the wisp, and the band begins in that patch's middle: along a parting the locks of either
-    side began a finger's breadth off it, a bare strip between two rows of ends). Returns bands for
-    write_tubes(closed=False)."""
+    side began a finger's breadth off it, a bare strip between two rows of ends). `vary` (three numbers and a
+    seed): each lock's end by chance longer or shorter than `tip` says (the share of that length), broader or
+    narrower (of the lock's breadth), and the lock itself shorter than its strands by up to so much. Returns bands
+    for write_tubes(closed=False)."""
     over = head if over is None else over
     steps = S.shape[1] - 1
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
     u_round = np.linspace(0, 1, m)
     smooth = lambda g: g * g * (3 - 2 * g)
     bands = []
+    tip0 = tuple(tip)
     for j in range(K):
         mk = lab == j
         if mk.sum() < 6:
@@ -274,6 +277,20 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
             w0 = np.concatenate([w0[:1], w0])
         run0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c0, axis=0), axis=1))])
         total = max(run0[-1], 1e-6)
+        tb = tip[2]
+        if vary is not None:
+            # no two locks end alike: this one's end is longer or shorter and broader or narrower than the style's,
+            # and the lock itself ends a little before its strands do (a line of hair cut at one height is many
+            # locks deep, and the lowest ends make its edge: all of one length, that edge is drawn with a ruler)
+            rv = np.random.default_rng(vary[3] + j)
+            tip = tip0[:1] + (tip0[1] * (1 + vary[0] * rv.uniform(-1, 1)),) + tip0[2:]
+            tb = float(np.clip(tip0[2] + vary[1] * rv.uniform(-1, 1), 0.05, 1))
+            less = min(vary[2] * rv.random(), 0.4 * total)
+            if less > 0:
+                keep = run0 <= total - less
+                last = np.array([np.interp(total - less, run0, c0[:, i]) for i in range(3)])
+                c0 = np.concatenate([c0[keep], last[None]]); w0 = np.concatenate([w0[keep], [np.interp(total - less, run0, w0)]])
+                run0 = np.concatenate([run0[keep], [total - less]]); total = total - less
         rl, el = min(root[0] * total, root[1]), min(tip[0] * total, tip[1])
         body = total - rl - el
         half = max(1, int(round(body / (2 * vlen))))                 # how often the image goes back and forth
@@ -293,14 +310,23 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
             ph = rng.uniform(0, 2 * np.pi, 2)
             c = c + b * (wave[0] * ramp * np.sin(2 * np.pi * run / wave[2] + ph[0]))[:, None]
             h = h + wave[1] * ramp * (0.5 + 0.5 * np.sin(2 * np.pi * run / wave[2] + ph[1]))
-        hw = 0.5 * w * (root[2] + (1 - root[2]) * smooth(r)) * (1 - (1 - tip[2]) * smooth(e))
+        hw = 0.5 * w * (root[2] + (1 - root[2]) * smooth(r)) * (1 - (1 - tb) * smooth(e))
         ht = 0.5 * flat * w * (root[3] + (1 - root[3]) * smooth(r)) * (1 - (1 - tip[3]) * smooth(e))
         h = np.maximum(h, ht + 0.006)                               # its flanks stay off the skin
         q = c[:, None, :] + b[:, None, :] * (hw[:, None] * np.sin(turn)[None, :])[..., None]
         dd = unit(q - head.hc)
         rings = head.hc + dd * (over.skin(dd) + h[:, None] + ht[:, None] * (2 * np.cos(turn)[None, :] - 1))[..., None]
         x = 1 + (run - rl) * 2 * half / body
-        along = LOCK_BODY * (1 - np.abs(x % 2 - 1))
+        # the image's length part is laid from its lower end (where the frayed part begins) up and back: all of it
+        # on a lock long enough. On a short lock that would be the whole image pressed into a finger's breadth
+        # (hairs that sway over a hand's length turn into a dark net of crossing lines: the block at the temple
+        # of a short cut, the scales of a bald head's horseshoe): there only as much of the image as the lock is
+        # long, and turned round gently, so that no hair has a kink where the image turns
+        far = np.abs(x % 2 - 1)
+        reach = min(1.0, body / (2 * half) / vlen)
+        if reach < 1:
+            far = reach * np.sin(0.5 * np.pi * far) ** 2
+        along = LOCK_BODY * (1 - far)
         frayed = LOCK_BODY + (LOCK_END - LOCK_BODY) * e if len(tip) < 5 or tip[4] else along
         v = np.where(run < rl, LOCK_END - (LOCK_END - LOCK_BODY) * r, np.where(run > total - el, frayed, along))
         uv = np.stack(np.broadcast_arrays(u_round[None, :] + rng.random(), v[:, None]), -1)
@@ -426,8 +452,34 @@ def write_head_obj(head, path):
             f.write('f %d %d %d\n' % tuple(t + 1))
 
 
+def outside(margin, step=0.5):
+    """How far outside the hair a direction lies: the angle in degrees to the nearest place where `margin` is not
+    negative, 0 inside. (`margin` itself counts degrees of height over the hairline: where the hairline is steep,
+    in front of the ear, a place many degrees under it lies a millimetre beside the hair.) Returns f(directions),
+    read from a table over the sphere, a place every `step` degrees."""
+    th = np.arange(-180, 180, step); el = np.arange(-90, 90 + step, step)
+    TH, EL = np.meshgrid(th, el)
+    ins = margin(TH, EL) >= 0
+    up = np.pad(ins, ((1, 0), (0, 0)), mode='edge')[:-1]; dn = np.pad(ins, ((0, 1), (0, 0)), mode='edge')[1:]
+    rim = ins & ~(np.roll(ins, 1, 1) & np.roll(ins, -1, 1) & up & dn)
+    E = dirs(TH[rim], EL[rim])
+    G = dirs(TH, EL).reshape(-1, 3)
+    far = np.zeros(len(G))
+    for k in range(0, len(G), 2048):
+        far[k:k + 2048] = np.degrees(np.arccos(np.clip((G[k:k + 2048] @ E.T).max(1), -1, 1)))
+    far = np.where(ins, 0, far.reshape(TH.shape))
+    def f(d):
+        t, e = ang(d)
+        x = (t + 180) / step; y = (e + 90) / step
+        x0 = np.floor(x).astype(int); y0 = np.clip(np.floor(y).astype(int), 0, len(el) - 2)
+        fx = x - x0; fy = y - y0
+        x0 = x0 % len(th); x1 = (x0 + 1) % len(th)
+        return (far[y0, x0] * (1 - fx) + far[y0, x1] * fx) * (1 - fy) + (far[y0 + 1, x0] * (1 - fx) + far[y0 + 1, x1] * fx) * fy
+    return f
+
+
 def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, curl=0.0, curl_len=0.06,
-              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None, cut=None):
+              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None, cut=None, fade=None):
     """The cap: scalp triangles lifted 0.008, textured with n painted fine
     hairs along the flow (length Lc(th, el) each, brightness shade(dirs)),
     over a darker base inside the margin. curl: sideways swing (radians of
@@ -435,11 +487,20 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     how much further each vertex stands off the skin (a vector per vertex),
     for a layer that has a thickness of its own (a beard cut close).
     cut(root directions, directions): how much of a hair is drawn at a point
-    of its way (0 to 1); from where it is cut the hair stays cut."""
+    of its way (0 to 1); from where it is cut the hair stays cut.
+    fade (from, to; degrees): the layer ends outside the hair, between so many degrees from it (`outside`): the
+    painted hairs run on over the hairline, and without this the layer ends where its net ends, covering in full,
+    in the straight edges of the skin's triangles (under a head of hair that covers it nobody sees that; a short
+    cut leaves the temple and the place in front of the ear bare: a dark block with corners)."""
     V, T, hc = head.V, head.T, head.hc
     cdir = unit(V - hc)
     cm = margin(*ang(cdir))
-    tsel = [t for t in T if cm[t].max() > -7 and V[t][:, 1].min() > ymin]
+    if fade is None:
+        tsel = [t for t in T if cm[t].max() > -7 and V[t][:, 1].min() > ymin]
+    else:
+        beyond = outside(margin)
+        cf = beyond(cdir)
+        tsel = [t for t in T if cf[t].min() < fade[1] + 1 and V[t][:, 1].min() > ymin]
     if lift is not None:
         # a layer that stands off the skin must be the skin's outer side alone: the triangles are chosen by their
         # direction from the head's centre, which also takes the walls of the mouth's hollow that lie behind the
@@ -513,6 +574,9 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     c_b = 0.42
     a = 1 - (1 - a_s) * (1 - a_b)
     c = (c_s * a_s + c_b * a_b * (1 - a_s)) / np.maximum(a, 1e-6)
+    if fade is not None:
+        g = np.clip((beyond(gd) - fade[0]) / (fade[1] - fade[0]), 0, 1)
+        a = a * (1 - g * g * (3 - 2 * g))
     c = c / max(1e-6, (c * a).sum() / max(a.sum(), 1e-6)) * mean
     img = np.dstack([np.clip(c, 0, 1)] * 3 + [np.clip(a, 0, 1)])
     Image.fromarray((img * 255).astype(np.uint8), 'RGBA').save(os.path.join(out, name + '_cap.png'))

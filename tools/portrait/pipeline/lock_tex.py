@@ -8,7 +8,9 @@
 # switches: HAIRS (how many), WIDE (a hair's breadth in pixels), SWAY (how far a hair leaves its place, pixels),
 # TONE (how light the topmost hairs are), DEEP (how much darker the hairs lying lowest are), ENDS (how the hairs
 # of one place across the lock end: 1 evenly over the last half of their reach, above 1 most of them at its end),
-# POINTS (how far into the end part the hairs between the lock's points reach, as a share of those in the points)
+# POINTS (how far into the end part the hairs between the lock's points reach, as a share of those in the points;
+# 0.75 since round 89, before 0.5: with a lock's end drawn 2.5 cm long that was two or three long narrow points to
+# a lock, a fringe cut from paper; the lock itself is narrower at its end now, `hairlib.py` `locks_from_wisps(tip=)`)
 import os
 import sys
 import numpy as np
@@ -24,7 +26,7 @@ SWAY = float(os.environ.get('SWAY', '5'))
 DEEP = float(os.environ.get('DEEP', '0.25'))
 TONE = float(os.environ.get('TONE', '0.98'))
 ENDS = float(os.environ.get('ENDS', '2.5'))
-POINTS = float(os.environ.get('POINTS', '0.5'))
+POINTS = float(os.environ.get('POINTS', '0.75'))
 
 rows = np.arange(H)
 t = rows / (BODY * H)                       # 0..1 down the lock's length, beyond 1 its end

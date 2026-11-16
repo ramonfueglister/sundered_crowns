@@ -12,6 +12,10 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
   (gewölbte Bänder, fest, mit Schatten; alle mit dem einen Bild `hair1356_locks.webp`, dessen unteres Viertel
   die ausgefransten Enden sind), darunter die bemalte Kappe (`<name>_cap.*`). Die Zöpfe der Mädchen sind runde
   Stränge (`plait01_rope.*`). Karten hat im Kleid England 1356 keine Frisur mehr.
+  Seit Runde 89 ist das Haar der sieben Schnitte geschnitten statt auf eine Länge gewachsen (jede Strähne
+  läuft bis zur Schnittlinie, die Fransen liegen mehrere Strähnen tief), eine kurze Strähne trägt nur so viel
+  vom Strähnenbild, wie sie lang ist, und die bemalte Kappe läuft ausserhalb des Haaransatzes weich aus
+  (Aufrufe in `tools/portrait/pipeline/README.md`).
 - Bärte (beard_stubble, beard_short, beard_full, beard_phil, beard_chin): wie die Frisuren.
   beard_crop (Vollbart im Kleid England 1356): ohne Karten, nur die bemalte Schicht, die von der Haut absteht.
   beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der

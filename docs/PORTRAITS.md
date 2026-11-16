@@ -1921,6 +1921,98 @@ girl has the same locks. The sheen takes the hairs as running down along the hea
 over the ear is wrong by up to a quarter turn. England has no hair cards left; Apoleia's styles are cards as
 before. All measures PLACEHOLDER, by eye; the hairstyle is unsourced as before.
 
+**Hair that is cut: a fringe several locks deep, ends that are hair (round 89).** Round 87 left open that the
+points of a man's fringe are long and narrow, cut paper more than hair, that a block stands at the temple and
+that the horseshoe of a bald head is scaly. Rendered large, these were four things with four causes
+(`runde89_fransen_vorher_nachher.png`, upper half):
+
+- The ends. A lock ended over its last 2.5 cm nearly as broad as it was (0.8 of its breadth), and the image's
+  frayed part has few hairs that end early: two or three long narrow points to a lock, with hard edges.
+- The edge of the painted layer. The layer of painted hair on the skin (`<name>_cap`) still covered where its
+  net ends: along the net's rim 0.57 in the mean, in front of the ears 0.73, over a half on 81 % of that part
+  (`cap_edge.py`). It ended in the straight edges of the skin's triangles. Under a head of hair nobody sees
+  that; where a short cut leaves the temple bare it is a dark shape with corners.
+- The block itself. With that edge made soft the block still stood. Rendered four times as large it was one
+  short lock with a dark cross-hatch on it. A lock wore the whole length part of the lock image whatever its
+  own length, and that part is drawn for 10 cm: on a lock of 3 cm hairs that sway over a hand's length are
+  pressed into a finger's breadth and turn into a net of crossing lines. Measured on nine heads, the share of
+  the image's height a lock wears per unit of its length (0.75 as the image is drawn): in the median 1.5 to
+  2.7, in the highest hundredth 4.5 to 6.8.
+- Gaps in the fringe, and scales. Over the forehead lay one layer of locks, with holes to the skin, and lock
+  ends lay all over the top of the head. A strand's length followed from the height of its root, as if all
+  hair hung straight down. But on top the hair runs away from the whorl: a strand that sets off from the
+  crown forward ended on top of the head or on the forehead, and only the strands rooted at the hairline
+  reached the fringe's line.
+
+What was tried, in order (four men and boys from the front, two from the side, each time):
+
+| trial | what showed |
+|---|---|
+| a lock's end at most 1.2 cm long instead of 2.5 | the points shorter, the ends blunt blocks |
+| the end drawn in to 0.35 of the lock's breadth, the image with more hairs ending early (`POINTS` 0.85) | every lock a spike |
+| the end 1.8 cm, drawn in to half the breadth, and longer or shorter by 40 %, broader or narrower by a quarter of the lock from lock to lock, `POINTS` 0.75 | points of different lengths and breadths, finer; the holes in the fringe and the block as before |
+| the painted layer fading out from 1 to 6 degrees outside the hairline | its edge gone (covering along the rim 0.000); the block as before: it was not the layer's |
+| a lock wears as much of the image as it is long | the block gone, and the dark net on every short lock with it |
+| all hair of the front long enough to reach the fringe (no common line) | the forehead covered, but a thatch: lock ends at every height |
+| every strand cut where it crosses one line, the line rising and falling by 3 degrees | the forehead covered several locks deep; the edge a helmet's, drawn with a ruler |
+| a lock ends up to 1.5 cm before its strands do, by chance | the edge is hair cut by hand |
+| the sides and the back cut at a line too, every strand running to it | as built: no lock ends on top of the head but those of the layers, the nape cut where the cut says |
+
+In `hairlib.py`: `locks_from_wisps(vary=)` (per lock, with random numbers of its own: the end longer or
+shorter, broader or narrower, the lock shorter than its strands), and the rule for the image along a lock
+(the length part laid from its lower end up and back: all of it on a lock of 20 cm or more, on a shorter one
+only so far up that the image keeps its scale; no switch); `outside` (for every direction the angle to the
+nearest place inside the hairline) and `paint_cap(fade=)`. In `styles.py` the style `bob` cuts: `BOB_CUT` (the
+fringe's line, 14 degrees below level seen from the hair scripts' head centre), `BOB_END` (the line at the
+sides and the back), `BOB_CUT_VARY`, `BOB_ROUND`, and lengths that let a strand reach the cut on any way
+(`BOB_SIDE_K`, `BOB_FK`, `BOB_FRINGE`, `BOB_FW`); `write_locks` reads `<key>_LOCK_VARY`. `lock_tex.py`: `POINTS`
+0.75. `cap_edge.py` (new): the painted layer's covering along its net's rim. The seven cuts are written anew
+(calls in `tools/portrait/pipeline/README.md`); `BOB_END` of the three lengths was set anew by measure, since
+a strand used to overshoot it by what its length gave it (`bob01` -43, `bob06` -31, `bob07` -51 where they
+were -26, -12, -38). The hair under a hood (`bob02`) is cut as the others and lies lower and thinner (lift 0.8
+to 1.5 mm, locks 7 % thick and 0.8 to 2.2 mm over the skin): cut long, its locks stood in front of the hood's
+rim. The girls' locks (`plait01_locks`) come out of the same call as in round 88, changed by the rule for
+the image alone; their plaits, painted layer and scalp are the same byte for byte. No Rust source changed.
+
+Numbers, old against new, on the nine heads of the test (men, boys, small children):
+
+| | round 88 | round 89 |
+|---|---|---|
+| image per unit of a lock's length (0.75 as drawn), median over a head's triangles | 1.54 to 2.72 | 0.68 to 1.04 |
+| the same, highest hundredth | 4.54 to 6.75 | 1.16 to 1.62 |
+| locks over each other in the fringe (84 places above its lower edge), median | 0 to 1 | 3 to 6 |
+| the same, lowest tenth | 0 | 1 to 2 |
+| the fringe's lowest corner below the crown, share of the head's height | 0.298 to 0.373 | 0.286 to 0.345 |
+| lowest lock beside the ear, `bob06` / `bob01` / `bob07` | 0.49 to 0.52 / 0.651 / 0.726 | 0.49 to 0.53 / 0.673 / 0.746 |
+| lowest lock at the back, `bob06` / `bob01` / `bob07` | 0.74 to 0.87 whatever the cut | 0.61 to 0.64 / 0.701 / 0.803 |
+| the painted layer's covering along its net's rim (in front of the ears) | 0.573 (0.729) | 0.000 (0.000) |
+| triangles of a cut's locks | 24 544 to 36 400 | 28 688 to 42 912 |
+| building a man's portrait, best of 40, native | 17.6 ms | 18.1 to 18.8 ms |
+
+The back is the plainest finding among them: until now the hair of the nape hung to the neck whatever the
+cut, since a strand rooted high at the back had the length to get there. Girls: the median of the image's
+measure 0.98 to 1.08 where it was 1.52 to 1.67; 105 triangles at the plaits' beginnings below the ear stay
+pressed (to 18 and 24 times), where the lock's rings fall together because the strand runs straight away from
+the head's centre: there before this round, hidden by the plait's beginning, not mended. Of the sample's 35
+portraits 26 changed (the 20 men, boys and small children with hair to see; the six girls by 0.8 to 3.1 % of
+their pixels); nine are the same pixel for pixel (the eight veiled women and the bald old man in his hood),
+and the Roman ones.
+
+Tests: `portrait/tests/locks.rs`, `hair_that_is_cut_runs_to_the_cut_and_wears_as_much_of_the_image_as_it_is_long`
+(the image's measure in the median below 1.3 and in the highest hundredth below 2.2; the fringe at least two
+locks deep in the median and one in the lowest tenth; it fails on round 88's files on both). The three tests
+of rounds 87 and 88 hold on the new files with their bounds as they were. The soft edge of the painted layer
+is not held by a test: the builder's tests read no images; `cap_edge.py` is the check, run by hand.
+Pictures: `runde89_fransen_vorher_nachher.png` (round 88 above, round 89 below: four men and boys from the
+front, two from the side), `runde89_stichprobe.png`.
+Still open: the fringe's edge is fairly even from temple to temple, a bowl cut; the reference's fringes part
+and fall in tufts. On top of the head the ends of the layers still show as small steps, fewer than the scales
+were. The front edge of the bald head's horseshoe is the straight side of a lock, with steps. White hair shows
+the image's dark gaps between hairs strongly. Seen from behind there is a dark dot at the whorl. Whoever wears
+the same cut wears the same locks. `bob05` and `bob07` are worn by nobody in the sample: they were measured
+on the test's heads and not looked at in a portrait this round. Beards are a painted shell as before. All
+measures PLACEHOLDER, by eye; the cut itself is unsourced as before.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

@@ -152,3 +152,78 @@ fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
         assert!(off < 0.18, "{who}: hair {off} off the skin below the ear");
     }
 }
+
+#[test]
+fn hair_that_is_cut_runs_to_the_cut_and_wears_as_much_of_the_image_as_it_is_long() {
+    // Round 89, two things the fringe of a man's cut showed.
+    // The image. Its length part was laid along a lock once up and back whatever the lock's length: on a lock
+    // of three centimetres a hand's length of hair, pressed together two to three times on every head (the
+    // median; six times and more on the shortest locks, where hairs that sway turn into a dark net of crossing
+    // lines: the block at the temple of a short cut, the scales of a bald head's horseshoe). Now a short lock
+    // wears as much of the image as it is long.
+    // The cut. A strand ended where its length ended, and the length followed from the height of its root. On
+    // top of the head the hair runs away from the whorl, so strands that set off forward ended on the top and
+    // on the forehead: lock ends all over the head, and one layer of locks, with holes, where the fringe ends.
+    // Now every strand runs to the line the hair is cut at, and the fringe is several locks deep.
+    let Some(h) = head() else { return };
+    for (k, female, age, fringed) in [(1u32, false, 8.0f32, true), (3, false, 13.0, true), (45, false, 13.0, true), (5, false, 17.0, true), (21, false, 24.0, true), (25, false, 50.0, false), (27, false, 68.0, true), (28, true, 2.0, true), (31, false, 5.0, true)] {
+        let out = build(&h, &person(k, female, age), 1);
+        let who = format!("person {k} of {age}");
+        let hair = locks(&out).unwrap_or_else(|| panic!("{who}: locks"));
+        // how much of the image's height lies on a unit of a lock's length (1 is 10 cm), triangle by triangle
+        // of the length part: the two corners of one ring have one height in the image, the third another
+        let mut dense: Vec<f32> = Vec::new();
+        for (t, u) in hair.pos.chunks_exact(3).zip(hair.uv.chunks_exact(3)) {
+            if u.iter().any(|u| u[1] > LOCK_BODY - 1e-3) {
+                continue;
+            }
+            let (a, b, c) = if (u[0][1] - u[1][1]).abs() < 1e-5 {
+                (0, 1, 2)
+            } else if (u[1][1] - u[2][1]).abs() < 1e-5 {
+                (1, 2, 0)
+            } else if (u[0][1] - u[2][1]).abs() < 1e-5 {
+                (0, 2, 1)
+            } else {
+                continue;
+            };
+            let mid = [0, 1, 2].map(|i| 0.5 * (t[a][i] + t[b][i]));
+            let (along, image) = (len(sub(t[c], mid)), (u[c][1] - u[a][1]).abs());
+            if along > 1e-4 && image > 1e-6 {
+                dense.push(image / along);
+            }
+        }
+        dense.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
+        let at = |share: f32| dense[((dense.len() - 1) as f32 * share) as usize];
+        // the image is made for LOCK_BODY of its height to a unit: 0.75; measured 0.68 to 1.04 in the median and
+        // 1.16 to 1.62 at the 99th hundredth (a child's head is smaller, and where the image turns round on a
+        // short lock it is laid 1.57 times as close); before 1.54 to 2.72 and 4.54 to 6.75
+        assert!(at(0.5) < 1.3 && at(0.99) < 2.2, "{who}: the image is pressed together along the locks: {} in the median, {} at the 99th hundredth of a unit's {LOCK_BODY}", at(0.5), at(0.99));
+        if !fringed {
+            continue;
+        }
+        // the locks over the forehead, a centimetre and more above the lowest end of the fringe, across the
+        // middle three fifths of the head's breadth: how many lie over each other at 84 places seen from the front
+        let (skin, crown) = skin(&out);
+        let height = crown - out.chin;
+        let broad = skin.pos.iter().filter(|p| p[1] > crown - 0.3 * height).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let fringe = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
+        let mut deep: Vec<u32> = Vec::new();
+        for row in 0..4 {
+            let y = fringe + (0.03 + 0.012 * row as f32) * height;
+            for col in -10..=10 {
+                let x = out.cx + 0.3 * broad * col as f32 / 10.0;
+                let over = hair.pos.chunks_exact(3).filter(|t| {
+                    let d = (t[1][1] - t[2][1]) * (t[0][0] - t[2][0]) + (t[2][0] - t[1][0]) * (t[0][1] - t[2][1]);
+                    let w0 = ((t[1][1] - t[2][1]) * (x - t[2][0]) + (t[2][0] - t[1][0]) * (y - t[2][1])) / d;
+                    let w1 = ((t[2][1] - t[0][1]) * (x - t[2][0]) + (t[0][0] - t[2][0]) * (y - t[2][1])) / d;
+                    t[0][2] > out.cz && d.abs() > 1e-12 && w0 >= 0.0 && w1 >= 0.0 && w0 + w1 <= 1.0
+                });
+                deep.push(over.count() as u32);
+            }
+        }
+        deep.sort();
+        // measured: 3 to 6 locks in the median and 1 to 2 at the lowest tenth; before 0 to 1 and 0
+        let (median, tenth) = (deep[deep.len() / 2], deep[deep.len() / 10]);
+        assert!(median >= 2 && tenth >= 1, "{who}: the fringe is {median} locks deep in the median and {tenth} at its thinnest tenth");
+    }
+}

@@ -233,3 +233,11 @@ renamed to that (`bob01_locks.txt.zst` to `bob07_locks.txt.zst`, `hair1356_locks
 `plait` writes locks with `PLAIT_LOCKS`. New file `plait01_locks.txt.zst`; gone `plait01.txt.zst` and its
 images (England's dress has no hair cards left; Apoleia's hairstyles are untouched). `tests/locks.rs`: a third
 test. The game's stage knows solid hair by either name. Roman bytes unchanged.
+
+Round 89: no Rust source changed. Pipeline: `hairlib.py` `locks_from_wisps` with `vary=` (no two locks end
+alike) and a rule for the image along a lock (a short lock wears as much of the lock image as it is long),
+`outside`, `paint_cap(fade=)` (the painted layer ends softly outside the hairline); `styles.py` style `bob`
+cuts the hair at a line round the head instead of growing it to a length (`BOB_CUT`, `BOB_END`,
+`BOB_CUT_VARY`, `BOB_ROUND`); `lock_tex.py` `POINTS` 0.75; new check tool `cap_edge.py`. Written anew:
+`bob01_locks.txt.zst` to `bob07_locks.txt.zst`, their `_cap.txt`, `_cap.webp`, `_cap_n.webp`,
+`plait01_locks.txt.zst`, `hair1356_locks.webp`, `_n`. `tests/locks.rs`: a fourth test. Roman bytes unchanged.

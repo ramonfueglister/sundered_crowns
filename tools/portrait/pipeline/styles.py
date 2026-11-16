@@ -46,7 +46,7 @@ def e_dn(d):
     return tangent(np.broadcast_to(np.array([0, -1.0, 0]), d.shape).copy(), d)
 
 
-def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', seed=87):
+def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87):
     """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
     `locks_from_wisps`), written as `name_locks.txt`, bound to the head `bind`. The switches are read under the
     style's own name `key` (`BOB`, `PLAIT`):
@@ -63,7 +63,10 @@ def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4
     (`Head.covered(trend=)`: for hair that goes on down to the neck);
     `<key>_LOCK_TIP`, `<key>_LOCK_ROOT`: a lock's end and its beginning as a share of its length and at most so
     long, and its breadth and thickness there against its middle; `<key>_LOCK_BACK`: how far before its strands'
-    roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_M`: corners across a band;
+    roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_VARY`: no two locks end alike:
+    by how much of itself an end is longer or shorter than `_LOCK_TIP` says, by how much of the lock's breadth it
+    is broader or narrower, and by how much at most the lock ends before its strands do (`locks_from_wisps(vary=)`;
+    nothing: all ends alike); `<key>_LOCK_M`: corners across a band;
     `<key>_LOCK_RING`: from ring to ring; `<key>_LOCK_EVEN`: how often the builder evens out the locks' way with a
     head along them (a few times, so that a lock stays the head's form: evened out to the end it would move as a
     stiff piece). The wisps are drawn with random numbers of their own (`seed`): the cards and the painted layer
@@ -81,9 +84,10 @@ def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4
             g = g * e * e * (3 - 2 * e)
         return g
     fours = lambda name, default: tuple(float(t) for t in get(name, default).split(','))
+    VARY = (fours('_LOCK_VARY', vary) + (0.0, 0.0, 0.0))[:3] + (seed * 1000,) if get('_LOCK_VARY', vary) else None
     bands = locks_from_wisps(H, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', '5')), jitter=float(get('_LOCK_JITTER', jitter)),
                              tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
-                             wave=wave, ring=float(get('_LOCK_RING', '0.14')), back=float(get('_LOCK_BACK', back)),
+                             wave=wave, ring=float(get('_LOCK_RING', '0.14')), back=float(get('_LOCK_BACK', back)), vary=VARY,
                              over=H.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
     nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
     print(style, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
@@ -350,29 +354,46 @@ elif style == 'bob':
     LINE = os.environ.get('BOB_LINE', 'men')
     hl, hln = line(REC if LINE == 'rec' else MEN)
     margin = (lambda th, el: np.minimum(el - hln(th), BARE(th) - el)) if LINE == 'bald' else (lambda th, el: el - hln(th))
-    END = float(os.environ.get('BOB_END', '-24'))     # where the hair ends at the sides and back, degrees
-    FR = float(os.environ.get('BOB_FRINGE', '26'))    # where the fringe ends on the forehead
+    # Since round 89 the hair is cut, not grown to a length: a strand runs along the flow until it crosses the line
+    # of the cut, in front of the face the fringe's (BOB_CUT), at the sides and the back the bob's (BOB_END), and
+    # ends there. (Until then a strand ended where its length ended, and the length followed from the height of
+    # its root, as if all hair hung straight down. But on top the hair runs away from the whorl: a strand that
+    # sets off from the crown forward ended on top of the head or on the forehead. So lock ends lay all over the
+    # head as scales, and of the hair over the forehead only one layer reached the fringe's line, with holes.)
+    # The angles are seen from the head's centre of the hair scripts, which lies high and forward: the hairline
+    # is at 20 degrees, the brows near -25, the jaw near -60.
+    END = float(os.environ.get('BOB_END', '-43'))     # where the hair is cut at the sides and back, degrees
+    FR = float(os.environ.get('BOB_FRINGE', '-30'))   # the height a strand of the front may grow down to
     def flow(d, th, el):
         w = np.clip((62 - el) / 35, 0, 1)[..., None]
         return unit((1 - w) * from_whorl(d, th, el, 0.25) + w * e_dn(d))
     def length(th, el):
-        side = 0.95 * np.radians(np.maximum(el - END, 4)) + 0.1
-        fringe = float(os.environ.get('BOB_FK', '0.95')) * np.radians(np.maximum(el - FR, float(os.environ.get('BOB_FMIN', '2')))) + 0.03
-        f = np.clip((np.abs(th) - float(os.environ.get('BOB_FW', '38'))) / 22, 0, 1)
-        return (fringe * (1 - f) + side * f) * (0.9 + 0.12 * rng.random(np.shape(th)))   # uneven ends
+        # how far a strand may grow: far enough to reach the cut on any way (BOB_SIDE_K 1.6, BOB_FK 1, BOB_FRINGE
+        # -30; until round 89 0.95, 0.75 and 40 with BOB_FMIN 11 and BOB_FW 62: the lengths the hair then had)
+        side = float(os.environ.get('BOB_SIDE_K', '1.6')) * np.radians(np.maximum(el - END, 4)) + 0.1
+        fringe = float(os.environ.get('BOB_FK', '1.0')) * np.radians(np.maximum(el - FR, float(os.environ.get('BOB_FMIN', '2')))) + 0.03
+        f = np.clip((np.abs(th) - float(os.environ.get('BOB_FW', '40'))) / 22, 0, 1)
+        return (fringe * (1 - f) + side * f) * (0.9 + 0.12 * rng.random(np.shape(th)))
     def trim(S):
-        # a strand's length follows from where its root is; one rooted behind the crown with the length of the
-        # sides can still run forward over the forehead (a lone lock down to the nose). So every strand is cut
-        # where it crosses the fringe's line in front of the face (BOB_CUT); the sides are left as they grow
-        # (angles seen from the head's centre of the hair scripts, which lies high and forward: the hairline is
-        # at 20 degrees, the brows near -25, the jaw near -60)
         th, el = ang(unit(S - H.hc))
         f = np.clip((np.abs(th) - 45) / 25, 0, 1)
-        over = el < float(os.environ.get('BOB_CUT', '-20')) * (1 - f) - 90 * f
+        # BOB_CUT_VARY (degrees, 0: none): the line is not drawn with a ruler: it rises and falls round the head,
+        # and no two hairs are cut at quite the same height (random numbers of its own)
+        rc = np.random.default_rng(89)
+        cv = float(os.environ.get('BOB_CUT_VARY', '3'))
+        t0 = np.radians(th[:, :1])
+        wavy = cv * (0.6 * np.sin(5 * t0 + rc.uniform(0, 6.28)) + 0.4 * np.sin(11 * t0 + rc.uniform(0, 6.28)) + 0.5 * rc.uniform(-1, 1, t0.shape)) if cv else 0.0
+        # BOB_ROUND (0: no, as until round 89): the sides and the back are cut too
+        low = END + wavy if os.environ.get('BOB_ROUND', '1') == '1' else -90
+        level = (float(os.environ.get('BOB_CUT', '-14')) + wavy) * (1 - f) + low * f
+        over = el < level
         out_ = S.copy(); t = np.arange(S.shape[1])
         for i in np.where(over.any(1))[0]:
             k = max(1, int(np.argmax(over[i])))          # the first point beyond the line
-            u = np.linspace(0, k - 1, S.shape[1]) if k > 1 else np.zeros(S.shape[1])
+            # the place between the last point before the line and the first beyond it where the strand crosses
+            a, b = el[i, k - 1] - level[i, k - 1], el[i, k] - level[i, k]
+            last = k - 1 + (a / (a - b) if a > 0 > b else 0.0)
+            u = np.linspace(0, last, S.shape[1])
             for c in range(3):
                 out_[i, :, c] = np.interp(u, t, S[i, :, c])
         return out_
@@ -386,10 +407,15 @@ elif style == 'bob':
     locks_only = bool(os.environ.get('BOB_LOCKS_ONLY'))
     S, lab, nc, nt = men_cards(margin, flow, length, BK, lambda P: _l[0] + _l[1] * rng.random(len(P)), 0.9, steps=14, clump=(0.12, 0.65), Nr=14000, wmax=_w[1], wmin=_w[0], trim=trim, wave=WAVE, strands_only=locks_only)
     if os.environ.get('BOB_LOCKS'):
-        write_locks(S, H, 'BOB', wave=WAVE)
+        # a lock's end (round 89): narrower than the lock, and no two alike (`locks_from_wisps(tip=, vary=)`). With
+        # the end as broad as the lock and as long as its last 2.5 cm, the image's frayed part showed as two or
+        # three long narrow points to a lock: a fringe cut from paper
+        write_locks(S, H, 'BOB', wave=WAVE, tip='0.3,0.18,0.5,0.4', vary='0.4,0.25,0.15')
         if locks_only:
             sys.exit(0)
-    cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6)
+    # the painted layer ends softly outside the hairline (round 89; `paint_cap(fade=)`): from, to, in degrees
+    FADE = tuple(float(t) for t in os.environ.get('BOB_CAP_FADE', '1,6').split(','))
+    cov = paint_cap(H, out, name, margin, flow, rng, lambda th, el: 0.35 + 0 * th, make_shade(H, S, lab, BK, rng), n=60000, mean=0.6, fade=FADE if FADE[1] > 0 else None)
     print(style, 'cards', nc, 'tris', nt, 'cap coverage', round(cov, 3))
 
 write_head_obj(H, os.path.join(out, name + '_head.obj'))
