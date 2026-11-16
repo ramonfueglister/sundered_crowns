@@ -100,9 +100,9 @@ describe('portraits', () => {
       expect(worn.some(t => t.includes('/eyebrow001.')), `person ${p.pid}: brows`).toBe(true);
       expect(worn.some(t => /\/eyebrow0(02|05|11)\./.test(t)), `person ${p.pid}: no slanted brows`).toBe(false);
       // a head that loses its hair wears the dress's own hair for it, and no beard the dress leaves out
-      // (nor Apoleia's short beard, whose hairs run on over the line of the mouth: on a mouth closed by raising the
-      // lower lip they lie on it as a row of teeth)
-      for (const not of ['/receding01.', '/curly01.', '/beard_chin.', '/beard_phil.', '/beard_full.', '/beard_short_cap.']) {
+      // (nor Apoleia's short beard or stubble, whose hairs run on over the line of the mouth: on a mouth closed by
+      // raising the lower lip they lie on it as a row of teeth)
+      for (const not of ['/receding01.', '/curly01.', '/beard_chin.', '/beard_phil.', '/beard_full.', '/beard_short_cap.', '/beard_stubble_cap.']) {
         expect(worn.some(t => t.includes(not)), `person ${p.pid} wears no ${not}`).toBe(false);
       }
     }
@@ -119,16 +119,20 @@ describe('portraits', () => {
     // 0.44 to 0.63: from 0.45 on a skin takes all of the tint (materials.ts skinLook)
     for (const t of tones) expect(t).toBeGreaterThan(0.4);
   });
-  it('a short beard in England is the one written for 1356', () => {
-    // Apoleia's short beard has hairs rooted in the gap between the lips that run on over the line of the mouth; on a
-    // mouth closed by raising the lower lip they lie on that lip as dark bars, a row of teeth (until round 62)
+  it('a short beard and stubble in England are the ones written for 1356', () => {
+    // Apoleia's short beard and its stubble have hairs rooted in the gap between the lips that run on over the line
+    // of the mouth; on a mouth closed by raising the lower lip they lie on that lip as dark bars, a row of teeth
+    // (the short beard until round 62, stubble until round 67)
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
     const worn = sample.flatMap(p => b.build(p).surfaces.map(s => s.tex));
-    expect(worn.some(t => t.includes('/beard_short1356_cap.'))).toBe(true);
-    expect(worn.some(t => t.includes('/beard_short_cap.'))).toBe(false);
-    // and everyone else's is Apoleia's
-    expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard_short1356_cap.')))).toBe(false);
+    for (const beard of ['short', 'stubble']) {
+      expect(worn.some(t => t.includes(`/beard_${beard}1356_cap.`)), `${beard} of 1356 is worn`).toBe(true);
+      expect(worn.some(t => t.includes(`/beard_${beard}_cap.`)), `Apoleia's ${beard} is not`).toBe(false);
+      // and everyone else's is Apoleia's
+      expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes(`/beard_${beard}1356_cap.`)))).toBe(false);
+    }
+    expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard_stubble_cap.'))), "a Roman wears Apoleia's stubble").toBe(true);
   });
   it('the hems of the garments of England are wound outward', () => {
     // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals

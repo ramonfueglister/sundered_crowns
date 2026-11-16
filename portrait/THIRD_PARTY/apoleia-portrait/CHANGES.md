@@ -97,3 +97,6 @@ worked out per vertex and then given to the corners (the same numbers as before,
 `upper`; and a strip of 34 triangles appended to the skin that closes the slit between the lips (`morph.rs`
 `LIP_SEAM`, the two edges where the lips turn inward; `seam`), whose edges take no shade from `skin_ao.txt`. All
 of it only when a dress asks for it. Roman bytes unchanged.
+
+Round 67: `DressSet::beard_stubble` (the file of the stubble; `build.rs`), `beard_stubble1356` for 1356. Roman
+bytes unchanged.

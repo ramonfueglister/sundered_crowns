@@ -94,6 +94,18 @@
    "bytes": 4
   },
   {
+   "name": "beard_stubble1356.txt.zst",
+   "bytes": 13
+  },
+  {
+   "name": "beard_stubble1356_cap.txt.zst",
+   "bytes": 58111
+  },
+  {
+   "name": "beard_stubble1356_scalp.txt",
+   "bytes": 42006
+  },
+  {
    "name": "beard_stubble_cap.txt.zst",
    "bytes": 58108
   },
@@ -411,6 +423,8 @@
   "beard_short_cap.webp",
   "beard_short_cap_n.webp",
   "beard_short_n.webp",
+  "beard_stubble1356_cap.webp",
+  "beard_stubble1356_cap_n.webp",
   "beard_stubble_cap.webp",
   "beard_stubble_cap_n.webp",
   "bob01.webp",

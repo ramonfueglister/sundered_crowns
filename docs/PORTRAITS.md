@@ -382,7 +382,7 @@ pictures of that quarter of an hour were thrown away. In the built site the file
 silent there too if a file is missing (open).
 Picture: `runde62_bart_vorher_nachher.png` (short beard before and after, full beard before and after).
 Still open: stubble is Apoleia's file too (its hairs are too short to show on the lip, not checked large on every
-mouth); one outline for all beards.
+mouth; they do show, round 67); one outline for all beards.
 
 **The hood closed under the chin, and hems that are part of the cloth (round 63).** The hood worn on the head was
 open in front down to the chest, and its front edges hung beside the neck as cords. Three causes, found one after the
@@ -503,8 +503,19 @@ Still open: these numbers rest on two people of ours and three mouths of 10 to 3
 9 L darker than there and the woman's line 5 to 19 L; the strip is lighter than the skin and dark only because it
 stands in shade (a light from below, or a mouth that opens, would show it pale); lips are smooth, without their
 creases and without a highlight on the lower lip; the upper lip is thin, with hardly a bow; the lower lip stands
-4 to 6 mm behind the upper; under a beard of stubble, Apoleia's hairs still lie on the lower lip (as the short
-beard's did until round 62); one line for every mouth.
+4 to 6 mm behind the upper; one line for every mouth.
+
+**Stubble that lay on the lower lip (round 67).** Seen large, a man with stubble had a row of dark dashes along
+the line of his mouth, on the lower lip. They are hairs of Apoleia's stubble: as its short beard (round 62), it
+roots hairs in the gap between the lips, and a mouth closed by raising the lower lip carries them on that lip.
+England wears stubble of its own (`beard_stubble` in the dress table: `beard_stubble1356`, written with
+`beards.py` `LIPS=1`, which leaves the mouth free by the direction of the ray from the head's centre). Before
+the change the documented call was run again and gave Apoleia's layer number for number (`beard_stubble_cap.txt`
+identical, the image's alpha identical at the installed size); the new layer has the same triangles, its image
+has no hairs in the gap and a few more beside the lower lip, where the mouth's zone had been cut by the point a
+ray hits. Apoleia's file is untouched and still worn by everyone else. Test: England's sample wears
+`beard_stubble1356` and no `beard_stubble`, a Roman the other way round (`tests/portrait.test.ts`); it holds the
+name only, not what is painted. Picture: `runde67_stoppeln_vorher_nachher.png`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

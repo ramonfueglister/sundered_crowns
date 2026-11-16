@@ -11,6 +11,7 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
   beard_crop (Vollbart im Kleid England 1356): ohne Karten, nur die bemalte Schicht, die von der Haut absteht.
   beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der
   Oberlippe enden über der Mundlinie (bei Apoleias Bart liegen sie auf einem geschlossenen Mund wie Zähne).
+  beard_stubble1356 (Stoppeln im Kleid England 1356): Apoleias Stoppeln mit freiem Mund, aus demselben Grund.
 - Kleider (cloth_tunic, cloth_toga, cloth_palla, cloth_veil): in Blender drapiert, `_ao.txt`
   Schatten in den Falten.
 - Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt; skin_lash.txt (Wimpernrand am

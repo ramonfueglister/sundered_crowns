@@ -108,6 +108,10 @@ pub struct DressSet {
     /// row of teeth. England's `beard_short1356` is the same beard with the mouth left free and the moustache
     /// ending over it (beards.py `LIPS=1`).
     pub beard_short: &'static str,
+    /// The file of the stubble. Apoleia's has the same hairs in the gap between the lips as its short beard; they
+    /// are short, and seen large they lie on the lower lip as a row of dark dashes along the line of the mouth.
+    /// England's `beard_stubble1356` is the same stubble with the mouth left free (beards.py `LIPS=1`).
+    pub beard_stubble: &'static str,
     /// The brows, women's and men's (a boy wears the men's): which of MakeHuman's. Of those tried, Apoleia's
     /// `eyebrow001` alone sits level on these heads. `eyebrow011` (women's until round 53), `eyebrow005` and
     /// `eyebrow002` are finer but sit slanted, the inner end low over the eye: on every woman that read as a
@@ -245,6 +249,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
     beard_short: "beard_short1356",
+    beard_stubble: "beard_stubble1356",
     brows: ["eyebrow001", "eyebrow001"],
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
