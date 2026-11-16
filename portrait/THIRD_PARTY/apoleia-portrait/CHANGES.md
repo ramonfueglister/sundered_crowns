@@ -173,3 +173,8 @@ shaven). England's layer of stubble is written anew with a real beard's number o
 `beards.py`: `STUB_N`, `STUB_BASE`, `STUB_L`, and a line that prints the zone's area and its hairs;
 `hairlib.py` keeps the number of hairs drawn). New, not Apoleia's: a test in `tests/faces.rs`. Apoleia's
 stubble and Roman bytes unchanged.
+
+Round 80: nothing in the builder. The stage's profile for England draws the layer of a short or a full beard
+with values of its own (`src/portrait/profile.ts` `cap.beard`, `src/portrait/materials.ts` `capLook`, the
+game's own files): England's beards are that layer alone, and were drawn as the shade under a head of hair.
+Apoleia's stage is as it was. Roman bytes unchanged.

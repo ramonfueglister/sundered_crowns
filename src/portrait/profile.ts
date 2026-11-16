@@ -54,8 +54,12 @@ export interface StageProfile {
    *  round to its shaded side (as `sheen.wrap`), and whether shadows fall on it (`shadow`: the edge of a shadow
    *  from the shadow map is a straight, hard line, which on skin reads as the chin's shadow and on a beard as a
    *  dark patch with corners), and how much of the lightening (`tone`, `light`) stubble takes (`stubble`: 1 = as the
-   *  other layers, 0 = none: skin shows between its hairs, and drawn lighter it is a pale dust on the face). */
-  cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number };
+   *  other layers, 0 = none: skin shows between its hairs, and drawn lighter it is a pale dust on the face).
+   *  `beard`: the same four values for the layer of a beard (an image named `beard_`, stubble aside). They are
+   *  for a beard that is its layer alone, without cards over it, as England's are: such a layer is the beard
+   *  one sees, not the shade under hair, and wants the lightness of the head's hair and a lit and a shaded side. */
+  cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number;
+    beard: { tone: number; light: number; colour: number; wrap: number } };
   /** Hair cards: roughness, "specular", anisotropy of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
   /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
@@ -169,6 +173,12 @@ export const APOLEIA: StageProfile = {
  *  cheek 4 L lighter and the upper lip 5), the fill from steeper below (the far cheek 3 L darker, nothing
  *  gained under the chin), the key higher with the new fill (36 and 40 degrees: the far cheek 7 and 11 L
  *  lighter).
+ *  Round 80: a short or a full beard of England is its painted layer alone, with no cards over it, but was
+ *  drawn with the values of the layer under the hair of the head, the shade between the cards: a brown beard
+ *  13.5 L darker than the same man's hair and as dark on the lit side as on the far one, a black shape (the
+ *  reference's emperor: 2 to 8 L lighter than his hair, the lit side 18 L lighter than the far one). The
+ *  layer of a beard has values of its own (`cap.beard`): lit jaw 2.4 L lighter than the man's hair, the far
+ *  jaw 9.1 L darker. Hair, its under-layer and stubble as before.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -186,7 +196,7 @@ export const ENGLAND_1356: StageProfile = {
   skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
-  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0 },
+  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
 };

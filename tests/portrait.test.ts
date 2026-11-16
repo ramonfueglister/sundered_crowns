@@ -168,6 +168,42 @@ describe('portraits', { timeout: 20_000 }, () => {
     }
     expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard_stubble_cap.'))), "a Roman wears Apoleia's stubble").toBe(true);
   });
+  it('a beard of England is a layer of its own to the stage, not the shade under a head of hair', () => {
+    // England's beards are their painted layer alone, with no hair cards over it (since round 53). Until round 80
+    // the stage drew that layer with the values of the layer under the hair of the head, which is the shade
+    // between the cards there: dark, and lit all the way round. A brown beard was 13 L darker than the same man's
+    // hair and as dark on the lit side of the face as on the far one, a black shape (docs/PORTRAITS.md, round 80)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const beards = sample.flatMap(p => b.build(p).surfaces.filter(s => s.tex.includes('/beard_')));
+    const names = [...new Set(beards.map(s => s.tex.slice(s.tex.lastIndexOf('/') + 1)))].sort();
+    expect(names).toEqual(['beard_crop_cap.webp', 'beard_short1356_cap.webp', 'beard_stubble1356_cap.webp']);
+    for (const s of beards) expect(surfaceKind(s), s.tex).toBe('cap');
+    const cap = ENGLAND_1356.cap!;
+    const drawn = (tex: string) => {
+      const m = surfaceMaterials({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) }, null, null, ENGLAND_1356)[0]!;
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return { code: shader.fragmentShader, key: m.customProgramCacheKey() };
+    };
+    const look = (v: { tone: number; light: number; colour: number; wrap: number }) => [
+      `diffuseColor.rgb *= mix( ${v.tone.toFixed(3)}, ${v.light.toFixed(3)}, smoothstep(`, `diffuseColor.rgb, ${v.colour.toFixed(3)} );`, `vec3 wrapBy = vec3( ${v.wrap.toFixed(3)} );`];
+    const [hair, full, short, stubble] = ['real/bob01_cap.webp', 'real/beard_crop_cap.webp', 'real/beard_short1356_cap.webp', 'real/beard_stubble1356_cap.webp'].map(drawn) as [ReturnType<typeof drawn>, ReturnType<typeof drawn>, ReturnType<typeof drawn>, ReturnType<typeof drawn>];
+    for (const piece of look(cap)) expect(hair.code).toContain(piece);
+    for (const piece of look(cap.beard)) { expect(full.code).toContain(piece); expect(short.code).toContain(piece); }
+    // stubble is hairs on skin that shows between them: neither lightened nor darkened (round 67)
+    expect(cap.stubble).toBe(0);
+    for (const piece of look({ ...cap, tone: 1, light: 1 })) expect(stubble.code).toContain(piece);
+    // three programs: with one key three.js would draw all three with whichever it compiled first
+    expect(new Set([hair.key, full.key, stubble.key]).size).toBe(3);
+    expect(short.key).toBe(full.key);
+    // a beard is lighter than the shade under hair, a dark one most of all (`tone` is the factor for dark hair,
+    // `light` for hair as light as white), and it has a shaded side: light reaches less than half way round it
+    expect(cap.beard.tone).toBeGreaterThan(2 * cap.tone);
+    expect(cap.beard.light).toBeGreaterThan(cap.light);
+    expect(cap.beard.wrap).toBeLessThan(0.5);
+    expect(cap.wrap).toBe(1);
+  });
   it('the iris of a person of England is as large as a real one', () => {
     // MakeHuman's eyeball is 30 mm across (a real one 24) and England's resting face scales the eyes up: with the
     // iris as the ball's image has it, it was 14 to 16 mm across and took 0.59 of the opening between the lids, a

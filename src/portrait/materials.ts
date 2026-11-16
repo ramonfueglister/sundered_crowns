@@ -111,19 +111,21 @@ diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * s
   m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
 
-/** The painted layer of short hairs of a profile (under the cards, and the short beards): lighter, and lit round
- *  its shaded side as the cards are. Its image is far darker than the cards' (it holds the shade between the hairs),
- *  which at a low exposure turns a brown beard black. */
-function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>, stubble: boolean): void {
-  const lights = wrapped(`vec3( ${f(k.wrap)} )`);
+/** The painted layer of short hairs of a profile (under the cards, and the beards): lighter, and lit round its
+ *  shaded side as the cards are. Its image is far darker than the cards' (it holds the shade between the hairs),
+ *  which at a low exposure turns a brown beard black. Under a head of hair the layer is that shade; a beard is
+ *  its layer alone and has values of its own (profile.ts `cap.beard`): lighter still, and with a shaded side. */
+function capLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cap']>, image: string): void {
+  const stubble = image.includes('/beard_stubble'), v = !stubble && image.includes('/beard_') ? k.beard : k;
+  const lights = wrapped(`vec3( ${f(v.wrap)} )`);
   // stubble lies on skin, which shows between its hairs: drawn lighter it is a pale dust on the face
-  const tone = stubble ? 1 + (k.tone - 1) * k.stubble : k.tone, light = stubble ? 1 + (k.light - 1) * k.stubble : k.light;
+  const tone = stubble ? 1 + (k.tone - 1) * k.stubble : v.tone, light = stubble ? 1 + (k.light - 1) * k.stubble : v.light;
   m.onBeforeCompile = shader => {
     const code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>\ndiffuseColor.rgb *= mix( ${f(tone)}, ${f(light)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(v.colour)} );`);
   };
-  m.customProgramCacheKey = () => `portrait-cap-${p.key}-${stubble}`;
+  m.customProgramCacheKey = () => `portrait-cap-${p.key}-${stubble ? 'stubble' : v === k ? 'hair' : 'beard'}`;
 }
 
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
@@ -244,7 +246,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'plain': break;
     case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col)); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
-    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex.includes('/beard_stubble')); break;
+    case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;
     case 'brow':
       blended(m); m.side = DoubleSide;

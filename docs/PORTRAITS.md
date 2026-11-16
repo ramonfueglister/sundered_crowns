@@ -1228,6 +1228,63 @@ shows in stubble. The paint is still under England's short and full beards, wher
 hide it except at the beard's edge on the cheek. The dark full beards are a hard, nearly black shape. What
 round 78 left.
 
+**Full beards that were a black shape (round 80).** Round 79 left the dark full beards as a hard, nearly black
+shape. Held beside the reference's emperor (the screenshot of emperor and wife, his face five times enlarged),
+read as round 79 read stubble (L and chroma; the hair of the head on the crown's lit side, the jaw beside the
+chin, the chin under the lower lip, the skin over the upper lip, the jaw on the far side):
+
+| | hair | lit jaw | chin | over the lip | far jaw |
+|---|---|---|---|---|---|
+| the reference's emperor | 20.5 (lit side), 26.3 (over the forehead) | 28.2 | 26.8 | 32.6 | 10.3 |
+| `940021`, brown, full beard, before | 23.9 | 10.4 | 9.0 | 10.3 | 7.9 |
+| now | 23.9 | 26.3 | 21.4 | 25.7 | 17.2 |
+| `940011`, bald, dark full beard, before | | 5.3 | 4.8 | 3.8 | 4.1 |
+| now | | 17.0 | 14.2 | 13.2 | 10.8 |
+| `940019`, short beard under a hood, before | | 5.1 | 3.9 | 16.2 | 2.6 |
+| now | | 12.4 | 8.8 | 23.6 | 5.2 |
+| `940013`, white, before | | 67.4 | 63.6 | 68.0 | 62.8 |
+| now | | 65.8 | 58.1 | 66.4 | 52.8 |
+| `940027`, white, before | 60.0 | 65.7 | 63.1 | 68.0 | 62.1 |
+| now | 60.0 | 63.1 | 56.9 | 66.0 | 50.9 |
+
+The emperor's beard is 2 to 8 L lighter than his hair, of 5 to 7 more chroma (32.9 against 25.9 and 28.4), and
+its lit side 18 L lighter than its far side. Ours was 13.5 L darker than the same man's hair and the same on
+both sides (2.5 apart): no colour and no form, so a black shape. The white beards had the same want of form
+(4 to 5 apart), which on white reads as a flat white bib.
+
+Cause. England's beards are their painted layer alone, without hair cards over it (the full beard since round
+53, when Apoleia's cards, which hang as long single strands, were left out; the short beard was a layer from
+the start). The stage went on drawing that layer with the values written for the layer under the hair of the
+head (`profile.ts` `cap`): there it is the shade between the cards, so it is dark (`tone` 1.7) and lit all the
+way round as the cards over it are (`wrap` 1). A beard that is its layer alone is the beard one sees.
+
+Now. The layer of a beard has values of its own (`cap.beard`; `materials.ts` `capLook` tells it by the image's
+name, `beard_`, stubble aside): `tone` 5.5, `light` 3.2, `colour` 0.65, `wrap` 0.3. The lit jaw of the brown
+beard is 2.4 L lighter than the man's hair and of 5.2 more chroma, its far side 9.1 L darker. The hair of the
+head, its under-layer and stubble are drawn as before: of 35 pictures of the sample the five men with a short
+or a full beard change, the other 30 are the same pixel for pixel. Over the hair's colours (`940021` with the gene
+of the hair's lightness at 0, 64, 128, 192, 255, and red), hair and lit jaw: 6.1 and 1.9, 12.0 and 10.5, 26.3
+and 30.9, 44.0 and 47.8, 59.3 and 63.9, red 31.9 and 37.4.
+
+The four values are set by measure against one face of the reference and by eye (PLACEHOLDER). Tried: the
+under-layer's own values raised for all layers (`cap.tone` 3: lit jaw 19.5, and the shade under the head's hair
+lighter with it); `wrap` 0.5 with `tone` 5 (lit 26.2, far 19.8: 6 apart, too flat); `tone` 6, `light` 3.4,
+`wrap` 0.2 (27.0 and 16.4).
+
+Test (`tests/portrait.test.ts`): `a beard of England is a layer of its own to the stage, not the shade under a
+head of hair`: every beard in England's sample is a layer and none a set of cards; the full and the short beard
+compile with `cap.beard`'s values, a head's under-layer with `cap`'s, stubble with neither; the three have
+three programs. It holds what the stage is told, not what the picture shows: the numbers above are read from
+pictures by a scratch script.
+Pictures: `runde80_baerte_vorher_nachher.png` (the five men, round 79 above round 80),
+`runde80_neben_ck3_vorher_nachher.png` (the emperor; `940021` and `940011` before and now),
+`runde80_haarfarben.png` (one man with six colours of hair), `runde80_stichprobe.png`.
+Still open: a beard is a painted shell on the jaw. It has no strands that stand out of its outline and no
+curls as the emperor's, and its upper edge on the cheek is a line of short hairs. Its lit and far side are 9 L
+apart, the reference's 18 (no shadow falls on a layer: `cap.shadow`). Black hair and its beard are near black
+(L 6 and 2; no black-haired face of the reference was read). A boy of 17 can wear a short beard. Apoleia's
+paint is still in the skin under short and full beards. What rounds 78 and 79 left.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
