@@ -141,6 +141,9 @@ function PlacePanel() {
   const p = selectedPlace.value;
   useEffect(() => { placeInfo.value = null; askPlace(p); }, [p]);
   const d = placeInfo.value?.id === p ? placeInfo.value : null;
+  const wi = world.value, day = wi?.day;
+  // the economy of a city computes every day: an open panel that shows it asks again on each new day
+  useEffect(() => { if (placeInfo.value?.id === p && placeInfo.value.cityEconomy) askPlace(p); }, [day]);
   const r = d && d.owner >= 0 ? realmById.value.get(d.owner) : undefined;
   const m = me.value;
   return <aside class="side pnl">
@@ -169,23 +172,23 @@ function PlacePanel() {
         <tr><th>{t('harvest_farmers')}</th><td>{heads(d.harvest.farmers)}</td></tr>
       </tbody></table>
     </div>}
-    {d?.economy && <div class="section">
-      <h3>{t('economy_england')}</h3>
-      <p class="muted">{t('economy_note', { year: d.economy.year })}</p>
-      {d.economy.halted && <p class="muted">{t('economy_halted', { why: d.economy.halted })}</p>}
+    {d?.cityEconomy && wi && <div class="section">
+      <h3>{t('economy_city')}</h3>
+      <p class="muted">{t('economy_note_city', { date: fmtDate(d.cityEconomy.day, wi.startYear, lang.value) })}</p>
+      {d.cityEconomy.halted && <p class="muted">{t('economy_halted', { why: d.cityEconomy.halted })}</p>}
       <table class="facts"><tbody>
-        <tr><th>{t('economy_gdp')}</th><td>{pounds(d.economy.realGdp)}</td></tr>
-        <tr><th>{t('economy_level', { base: d.economy.baseYear })}</th><td>{index(d.economy.realGdpIndex)}</td></tr>
-        <tr><th>{t('economy_prices', { base: d.economy.baseYear })}</th><td>{index(d.economy.priceIndex)}</td></tr>
-        <tr><th>{t('economy_consumption')}</th><td>{pounds(d.economy.consumption)}</td></tr>
-        <tr><th>{t('economy_crown')}</th><td>{pounds(d.economy.crown)}</td></tr>
-        <tr><th>{t('economy_investment')}</th><td>{pounds(d.economy.investment)}</td></tr>
-        <tr><th>{t('economy_exports')}</th><td>{pounds(d.economy.exports)}</td></tr>
-        <tr><th>{t('economy_imports')}</th><td>{pounds(d.economy.imports)}</td></tr>
-        <tr><th>{t('economy_employed')}</th><td>{num(d.economy.employed)}</td></tr>
-        <tr><th>{t('economy_unemployed')}</th><td>{num(d.economy.unemployed)}</td></tr>
-        <tr><th>{t('economy_coin_households')}</th><td>{pounds(d.economy.coinHouseholds)}</td></tr>
-        <tr><th>{t('economy_coin_firms')}</th><td>{pounds(d.economy.coinFirms)}</td></tr>
+        <tr><th>{t('economy_gdp')}</th><td>{pounds(d.cityEconomy.realGdp)}</td></tr>
+        <tr><th>{t('economy_level')}</th><td>{index(d.cityEconomy.realGdpIndex)}</td></tr>
+        <tr><th>{t('economy_prices_today')}</th><td>{index(d.cityEconomy.priceToday)}</td></tr>
+        <tr><th>{t('economy_consumption')}</th><td>{pounds(d.cityEconomy.consumption)}</td></tr>
+        <tr><th>{t('economy_crown')}</th><td>{pounds(d.cityEconomy.crown)}</td></tr>
+        <tr><th>{t('economy_investment')}</th><td>{pounds(d.cityEconomy.investment)}</td></tr>
+        <tr><th>{t('economy_exports')}</th><td>{pounds(d.cityEconomy.exports)}</td></tr>
+        <tr><th>{t('economy_imports')}</th><td>{pounds(d.cityEconomy.imports)}</td></tr>
+        <tr><th>{t('economy_employed')}</th><td>{num(d.cityEconomy.employed)}</td></tr>
+        <tr><th>{t('economy_unemployed')}</th><td>{num(d.cityEconomy.unemployed)}</td></tr>
+        <tr><th>{t('economy_coin_households')}</th><td>{pounds(d.cityEconomy.coinHouseholds)}</td></tr>
+        <tr><th>{t('economy_coin_firms')}</th><td>{pounds(d.cityEconomy.coinFirms)}</td></tr>
       </tbody></table>
     </div>}
     {r && <div class="section">

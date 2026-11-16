@@ -21,7 +21,8 @@ describe('a world of 1291', () => {
   it('has more people than 1356 (before the plague) and keeps the placeholder tables', () => {
     expect(sum(s1291.pop)).toBeGreaterThan(sum(s1356.pop) * 1.05);
     expect(s.person.size).toBeGreaterThan(0);
-    expect(s.economy.england?.year).toBe(1291);
+    expect(s.economy.cities?.day).toBe(0); // the economies of the cities of 1356, founded on the first day
+    expect(s.economy.cities!.halted).toBe('');
   });
   it('takes the people of 1291 by the upgrade from 7', () => {
     const old = structuredClone(s);

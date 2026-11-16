@@ -5,8 +5,7 @@ import { STATE_VERSION } from './state';
 import type { World } from './world';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
-import { foundEconomy, computeYear } from './systems/economy';
-import { dayToDate } from './calendar';
+import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
 import { type SetupState, addRealms, parseColor, setPlaces } from './setup';
@@ -38,11 +37,8 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 3;
   }
-  if (s.v === 3) { // 3 → 4: England's economy, with the years the world has already seen (it depends on nothing else
-    // in the state, so the result is the economy of a world that had it from its first day)
-    foundEconomy(s, w);
-    const now = dayToDate(s.day, s.startYear).y;
-    for (let y = s.startYear + 1; y <= now; y++) computeYear(s, w, y);
+  if (s.v === 3) { // 3 → 4: England's economy (one period a year; gone with the step to 8, which founds the cities)
+    s.economy = { cities: null };
     s.v = 4;
   }
   if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
@@ -98,6 +94,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     s.v = 8;
   }
   if (s.v === 8) s.v = 9; // 8 → 9: heads at 1:100, done above
+  if (s.v === 9) { // 9 → 10: the cities have economies of their own that trade and compute one period a day;
+    // England's economy and its yearly figures are gone. The cities are founded on the day the world has reached,
+    // each from its starting position: the days before are not computed (a world that has run for years would
+    // stand still for minutes), so the first period of the economies is the next day of the world.
+    foundEconomy(s, w);
+    s.v = 10;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

@@ -3,6 +3,6 @@
 import type { System } from '../schedule';
 import { cultivation } from './cultivation';
 import { harvest } from './harvest';
-import { nationalEconomy } from './economy';
+import { cityEconomies } from './economy';
 
-export const SYSTEMS: readonly System[] = [cultivation, harvest, nationalEconomy];
+export const SYSTEMS: readonly System[] = [cultivation, harvest, cityEconomies];

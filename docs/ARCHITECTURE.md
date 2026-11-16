@@ -25,14 +25,23 @@ Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`),
 generator inside the state of an economy (below).
 
 ## The economy engine
-National economies are computed by the port of BeforeIT.jl (github.com/ramonfueglister/port-beforeit), unchanged and
+Economies are computed by the port of BeforeIT.jl (github.com/ramonfueglister/port-beforeit), unchanged and
 pinned to one commit. `economy/` is a Rust shell around it, built to one WebAssembly file
-(`build/economy/sc_economy.wasm`: `npm run economy:build`, or the Rust stage of `server/Dockerfile`).
-`src/sim/economy/engine.ts` loads it. The engine holds nothing between calls: the state of an economy is a block of
-bytes in the state of the world (`state.economy`), and a period maps bytes to bytes. So the economy is in every
-snapshot and in its hash, and replays like everything else. Its random numbers come from the port's own generator,
-whose state is part of those bytes. `src/sim/systems/economy.ts` computes one period on the first day of each year
-(docs/ECONOMY_DESIGN.md, feature 3).
+(`build/economy/sc_economy.wasm`: `npm run economy:build`, or the Rust stage of `server/Dockerfile`). The shell also
+holds the model type of the daily clock (`economy/src/clock.rs`), which replaces two rules of the port through the
+port's own mechanism for model types. `src/sim/economy/engine.ts` loads the file. The result of a call depends on
+nothing but its arguments: the state of an economy is a block of bytes in the state of the world (`state.economy`),
+and a period maps bytes to bytes. (The engine remembers the economy of the bytes it handed out last, to save decoding
+them again on the next day; it uses it only for exactly those bytes.) So the economy is in every snapshot and in its
+hash, and replays like everything else. Its random numbers come from the port's own generator, whose state is part of
+those bytes. `src/sim/systems/economy.ts` computes one period for each day of the world (docs/ECONOMY_DESIGN.md,
+features 3 to 5).
+
+The economies of the game are those of its largest cities: one economy of the port per place with a city, all in one
+block of bytes together with the merchants that carry goods between them (`economy/src/trade.rs`, which stands in for
+the port's rule of the rest of the world; `state.economy.cities`). `public/data/economy_cities.json` holds the
+parameters and the starting position of every city (`npm run economy:calibrate`). The engine takes the list of
+cities, computes a day of all of them in one call, and gives figures and checks per city.
 
 ## Commands
 `src/sim/commands.ts` keeps one definition per command kind: a check that names the reason when it cannot be done,
