@@ -71,3 +71,24 @@ describe('fine ground', () => {
     expect(b.length).toBe(3);
   });
 });
+
+describe('terraces', () => {
+  it('builds a stone face where paved ground steps down to paved ground, and nothing where it steps up', () => {
+    // the town at 4, a paved rim at 3 along x = 12, water beyond
+    const rim: Column = { top: 3, wet: false, paved: true };
+    const atRim = (x: number, z: number): Column | null => (x < 0 || z < 0 || x >= 60 || z >= 60 ? null : x < 12 ? land : x < 13 ? rim : sea);
+    const b = new Batch();
+    fineGround(b, cell, atRim, VENICE.quay);
+    // faces with the normal +x lying on x = 12 between 3 and 4: the terrace wall; none with -x on x = 12 (the rim has nothing to show towards the town)
+    let terrace = 0, back = 0, quay = 0;
+    for (let i = 0; i < b.pos.length; i += 9) {
+      const nx = b.nor[i], x = b.pos[i], y0 = Math.min(b.pos[i + 1], b.pos[i + 4], b.pos[i + 7]), y1 = Math.max(b.pos[i + 1], b.pos[i + 4], b.pos[i + 7]);
+      if (Math.abs(x - 12) < 0.02 && nx > 0.9 && y0 >= 3 - 0.01 && y1 <= 4 + 0.01) terrace++;
+      if (Math.abs(x - 12) < 0.02 && nx < -0.9) back++;
+      if (Math.abs(x - 13) < 0.02 && nx > 0.9) quay++;
+    }
+    expect(terrace).toBeGreaterThan(cell.size * 4);
+    expect(back).toBe(0);
+    expect(quay).toBeGreaterThan(cell.size * 4);
+  });
+});
