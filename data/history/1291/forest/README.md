@@ -20,8 +20,10 @@ Layer for the world probe: `public/map/forest1291.bin.gz` (share of each place's
   potential holds the trees down (224 of 1,858 cells sit below the pollen for that reason).
 - Ireland: the pollen overstates its trees for 1600-1850 (Kaplan et al. 2017, Land 6:91); for about 1300 no count is
   known, and KK10 alone would give more trees (51 %) than the pollen (35 %). Left at the pollen.
-- KK10 is 5 arc-minutes (about 9 km); the fine pattern below that (valleys and plains cleared first) is the world
-  probe's.
+- KK10 is 5 arc-minutes (about 9 km); the fine pattern below that is the world probe's (`src/worldprobe/forest.ts`):
+  it lays the share out as woods about 8 km across with open land between them, on the heights of each landscape
+  rather than on its valley floors and plains, which were cleared first. Where exactly a wood stands is drawn, not
+  known. Besides the woods a few single trees stand on the open land, as before (4 in 100 places for a tree).
 - The climate kinds are today's.
 - After smoothing between the 1° cells, cells keep the pollen to 1.8 % on average (95 % within 7.9 %).
 
