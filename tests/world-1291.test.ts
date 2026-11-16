@@ -1,15 +1,16 @@
 // The world of 1291: its realms and borders (public/data/setup_1291.json), the people before the Black Death, the
-// persons of its own 30 cities, and the economy of 1356 as a placeholder (src/sim/tables.ts); a world of 1291 founded
+// persons of every town of the world graphic inside the world frame, and the economy of 1356 as a placeholder (src/sim/tables.ts); a world of 1291 founded
 // with the people and persons of 1356 got those of 1291 by upgrades this build no longer has (state versions 8 and 11).
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { newWorldState, loadSetup, dataPath } from '../tools/sim/load';
 import { SCALE } from '../src/sim/scale';
-import { citiesOf } from '../src/sim/content/cities';
+import { type City, citiesOf } from '../src/sim/content/cities';
 import { ALL_CULTURES, FAITHS } from '../src/sim/content/peoples';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
-import { hashState } from '../src/sim/snapshot';
+import { hashState, encodeState, decodeState } from '../src/sim/snapshot';
+import { createWorldState } from '../src/sim/setup';
 
 const { s, w } = newWorldState(1291, 1291);
 const s1291 = loadSetup(1291), s1356 = loadSetup(1356);
@@ -42,19 +43,50 @@ describe('a world of 1291', () => {
     for (let i = 0; i < w.L; i++) if (s.place.harvest[i] > 0) { kcal += s.place.harvest[i]; heads += s.place.pop[i]; }
     expect(kcal / heads / 365).toBeGreaterThan(800); expect(kcal / heads / 365).toBeLessThan(3000);
   });
-  it('has the persons of its own 30 cities of 1291, as many as the towns of the world graphic house', () => {
+  it('has persons in every town of the world graphic with people inside the world frame, as many as the towns house', () => {
     const cities = citiesOf(1291);
-    expect(cities.length).toBe(30);
+    const ext = JSON.parse(readFileSync('data/content/world_extent.json', 'utf8')) as { west: number; east: number; north: number; south: number };
+    const gaz = JSON.parse(readFileSync('data/content/gazetteer.json', 'utf8')).places as { lon: number; lat: number }[];
+    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
+    const inFrame = (k: number) => gaz[k].lon >= ext.west && gaz[k].lon <= ext.east && gaz[k].lat >= ext.south && gaz[k].lat <= ext.north;
+    const expected = towns.people.flatMap((n, k) => (n && inFrame(k) ? [k] : []));
+    expect(cities.length).toBe(558);
+    expect(cities.map((c) => c.site).sort((a, b) => a - b)).toEqual(expected);
     expect(cities[0].name).toBe('Cairo');
     for (const out of ['Texcoco', 'Tenayuca', 'Mali']) expect(cities.some((c) => c.name === out)).toBe(false); // outside the world
     expect(s.person.size).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0));
-    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
+    expect(s.person.size).toBeGreaterThan(100_000);
     for (const c of cities) {
       expect(towns.people[c.site]).toBe(c.people); // the town of the picture holds the city's people
       expect(towns.place[c.site]).toBe(c.place);
       expect(s.place.pop[c.place]).toBeGreaterThanOrEqual(c.people / SCALE - 0.01);
     }
+    // Chandler's towns first, each group largest first: the 30 largest of Chandler are the first 30
+    const ch = cities.filter((c) => c.source === 'chandler');
+    expect(ch.length).toBe(65); expect(cities.slice(0, 65)).toEqual(ch);
+    for (let k = 1; k < cities.length; k++) if (cities[k].source === cities[k - 1].source) expect(cities[k].people).toBeLessThanOrEqual(cities[k - 1].people);
   });
+  it('gets them by the upgrade from 14, and the persons of the 30 cities stay who they were, with their numbers', () => {
+    // a world of 1291 as version 14 founded it: persons only in the 30 largest towns of Chandler
+    const list = citiesOf(1291) as City[], all = list.slice();
+    list.splice(30);
+    let old: ReturnType<typeof createWorldState>;
+    try { old = createWorldState(w, s1291, 1291); } finally { list.splice(0, list.length, ...all); }
+    old.v = 14;
+    expect(old.person.size).toBe(24_828); expect(old.economy.cities!.places.length).toBe(30);
+    const before = decodeState(encodeState(old));
+    const up = upgradeState(old, w, () => s1291);
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(hashState(s)); // as a new world
+    const P = up.person.cols, B = before.person.cols;
+    let differ = 0; // counted, not one expect per person: 24,828 persons
+    for (let id = 0; id < before.person.size; id++) {
+      if (P.born[id] !== B.born[id] || P.sex[id] !== B.sex[id] || P.family[id] !== B.family[id] || P.mother[id] !== B.mother[id] || P.iq[id] !== B.iq[id]) differ++;
+    }
+    for (let k = 0; k < before.person.size * 68; k++) if (P.genes[k] !== B.genes[k]) differ++; // 68 gene bytes a person
+    expect(differ).toBe(0);
+    expect(up.economy.cities!.places.length).toBe(550);
+  }, 120_000);
 });
 
 describe('the peoples of 1291', () => {

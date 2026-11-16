@@ -16,6 +16,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | # | Feature | Status |
 |---|---|---|
 | 1 | Persons of the 30 largest cities in 1356 | agreed by Ramon 15 Nov 2026 and built; in the running world once the world server is redeployed |
+| 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
 
 ## Feature 1: persons of the 30 largest cities
 

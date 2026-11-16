@@ -199,13 +199,13 @@ describe('the state', () => {
 
 describe('a world of 1291', () => {
   const x = newWorldState(1291, 1291).s;
-  it('has the economies of its own 30 cities, with the persons who live there', () => {
+  it('has an economy in every place with a town, with the persons who live there', () => {
     const c = x.economy.cities!;
-    expect(c.places.length).toBe(30);
+    expect(c.places.length).toBe(550);
     expect(Array.from(c.places)).toEqual(cityPlaces(1291).map((p) => p.place));
     const by = parts(x); // throws for a person with a part outside the cities
-    for (let k = 0; k < 30; k++) {
-      expect(by[k][ROLE.worker].length).toBeGreaterThan(50);
+    for (let k = 0; k < c.places.length; k++) {
+      expect(by[k][ROLE.worker].length).toBeGreaterThanOrEqual(k < 30 ? 50 : 3); // a small town: one employee per sector at least
       expect(by[k][ROLE.owner].length).toBe(c.firm0[k + 1] - c.firm0[k]);
       expect(by[k][ROLE.banker].length).toBe(1); expect(by[k][ROLE.idle].length).toBe(1);
     }

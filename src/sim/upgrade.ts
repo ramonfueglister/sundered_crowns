@@ -5,6 +5,7 @@ import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA } from './state';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
+import { fitPlacesToCities, foundPeople } from './systems/people';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -56,6 +57,20 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     foundEconomy(s, w);
     s.v = 14;
+  }
+  if (s.v === 14) { // 14 → 15: a world of 1291 has persons in every town of the world graphic inside the world frame,
+    // not only in the 30 largest (Ramon, 16 November 2026: only what the simulation computes is in the world, and every
+    // person lives where the map shows a town). The persons are founded anew as a new world founds them: the towns of
+    // Chandler come first in the list (src/sim/content/cities_1291.json), so the persons and families of the 30 cities
+    // are founded first and are the same as before, with the same numbers; the others follow. Nobody has been born,
+    // died or married since the first day, so nothing a person did is lost. The economies are founded anew on the day
+    // the world has reached, one for each place with a town, as in the steps to 12 and 14.
+    if (s.startYear === 1291) {
+      fitPlacesToCities(s); // no place is smaller than its towns (the setup already holds them: build.py lifts them)
+      foundPeople(s);
+      foundEconomy(s, w);
+    }
+    s.v = 15;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

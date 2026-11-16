@@ -12,8 +12,10 @@ import type { Table } from './ecs';
  *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
  *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the borders of its setup
  *  again (Murcia to Castile). 14: the family is the purse and a woman without a husband works (economy feature
- *  11); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 14;
+ *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
+ *  the world frame (558 towns in 550 places), and an economy in each of those places. Snapshots from 11 on are
+ *  brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 15;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -138,7 +140,7 @@ export interface WorldState {
   realmText: RealmText[];
   /** the player who rules each realm (account id), '' when nobody does */
   ruler: string[];
-  /** the persons of the 30 largest cities (src/sim/systems/people.ts) */
+  /** the persons of the cities of the start year (src/sim/content/cities.ts, src/sim/systems/people.ts) */
   person: Table<PersonSchema>;
   family: Table<FamilySchema>;
   /** the firms of the cities' economies (src/sim/systems/economy.ts) */

@@ -1,6 +1,6 @@
 // What the world server tells a browser about the persons (src/sim/systems/people.ts): the persons of a place, short,
 // for the figures that walk its streets, and one person in full, for the portrait and the panel a click opens.
-// Read-only HTTP: GET /people/<place> and GET /person/<id> (server/main.ts).
+// Read-only HTTP: GET /people/<place>, GET /people?places=<a>,<b>,… and GET /person/<id> (server/main.ts).
 import type { WorldState } from '../sim/state';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
@@ -85,12 +85,25 @@ export function personHousehold(s: WorldState, id: number): PersonHousehold | nu
 }
 
 export function placePeople(s: WorldState, place: number): PlacePeople {
-  const P = s.person.cols, out: PlacePeople = { place, day: s.day, id: [], born: [], sex: [], family: [] };
+  return manyPlacesPeople(s, [place])[0];
+}
+
+/** The most places one request may ask for (GET /people?places=…). */
+export const MAX_PLACES_PER_REQUEST = 200;
+
+/** The living persons of several places, one list each in the order asked, in a single pass over the persons: the
+ *  figures of a world with persons in hundreds of towns ask for them in a few requests, not one per place. */
+export function manyPlacesPeople(s: WorldState, places: readonly number[]): PlacePeople[] {
+  const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [] }));
+  const at = new Map<number, PlacePeople>();
+  out.forEach((o) => { if (!at.has(o.place)) at.set(o.place, o); });
   for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || s.family.cols.place[P.family[i]] !== place) continue;
-    out.id.push(i); out.born.push(P.born[i]); out.sex.push(P.sex[i]); out.family.push(P.family[i]);
+    if (!s.person.alive[i]) continue;
+    const o = at.get(s.family.cols.place[P.family[i]]);
+    if (!o) continue;
+    o.id.push(i); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]);
   }
-  return out;
+  return out.map((o) => at.get(o.place)!);
 }
 
 export function personDetail(s: WorldState, id: number, cultureKey: (index: number) => string): PersonDetail | null {
