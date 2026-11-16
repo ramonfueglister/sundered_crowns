@@ -68,3 +68,4 @@ against Bavaria or Guelders).
 | year | entities | entities holding places | labelled places (share of entity frame) | dots near control cities, rms px (NW / NE / SW / SE) |
 |---|---|---|---|---|
 | 1800 | 143 | 69 | 7823 (97.6 %) | 7 of 13, 1.21 / 3 of 6, 0.94 / 16 of 20, 1.56 / 9 of 23, 2.08 |
+| 1500 | 194 | 132 | 7712 (95.3 %) | 7 of 13, 0.97 / 3 of 6, 0.82 / 17 of 20, 1.52 / 12 of 23, 1.95 |
