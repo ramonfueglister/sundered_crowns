@@ -230,14 +230,31 @@ export const APOLEIA: StageProfile = {
  *  times as wide, which nothing measured stands for, it draws a red seam in the lid's fold. In place of the
  *  wrap it leaves the faces harder: the wrap is about what a lamp of the key's breadth reaches round a surface
  *  (10 degrees: 0.17), and stays.
+ *  Round 85: a pale grey patch lay on the skin between the nose and the far eye, broad on children. It was the
+ *  rim light's gloss: the rim stood 49 degrees round from straight behind the head, 2 degrees in front of the
+ *  plane of the cheek beside the nose, and skin that a light skims shines pale towards whoever looks at it
+ *  from the other side (grey skin in that field, of its lighter half: children 16.4 %, grown women 10.8 %; the
+ *  reference's woman 6.2 %, on whom the streak is 3 mm wide along the nose's flank). The rim now stands 40
+ *  degrees round, 8 degrees behind that plane, at the height it had: children 8.3 %, women 6.2 %. The grey
+ *  gloss had also been much of the light on the far side of the face (with the rim there and nothing else
+ *  changed, the far cheek 2.5 L darker on the women and 5.6 on the men, the shade beside the nose 6.3 and
+ *  7.5): the fill, which reaches that side from the front in the skin's own colour, is half as strong again
+ *  for it (0.28: the women's far cheek 23.5 L under the lit one, before 23.2, the men's 32.6, before 30.3;
+ *  the shade beside a woman's nose L 20.6, before 23.0, the reference 29.8; a man's eye 47.4 under his lit
+ *  cheek, before 49.6, the reference's emperor's 40.6). Tried: the rim level with the head where it stood
+ *  (children 6.4 %, the faces best of all; but hair that hangs straight down shines most under a level
+ *  light, and a girl's far plait was 11.5 L lighter, a pale lilac); that at half its energy (plait 3 L
+ *  lighter, the shade beside the nose 6 L darker); 35 and 25 degrees round (children 6.3 and 3.1 %, the
+ *  shade beside a man's nose 7 and 11 L darker than it was); less of the rim's shadow at 40 degrees (0.35:
+ *  children 11.6 %).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
     key: { from: [4.88, 3.47, 3.29], colour: '#fff0de', energy: 1.8 },
-    rim: { from: [-4.2, 2.5, -3.6], colour: '#bcd0ff', energy: 1.0 },
-    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.18 },
+    rim: { from: [-3.55, 2.5, -4.25], colour: '#bcd0ff', energy: 1.0 },
+    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.28 },
     bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.15 },
   },
   sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },

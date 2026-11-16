@@ -1583,6 +1583,99 @@ shows the net's unevenness as faint second lines on some men, and it is still pa
 broad on children. Only the skin is finer: the eyeball, the cloth and the painted layers of hair are the
 builder's nets. What round 83 left (men's eye, forehead, nose's back, upper lip).
 
+**A pale grey patch beside the nose: the rim light behind the cheek's plane (round 85).** Rounds 83 and 84
+left the streak beside the nose "pale grey on warm skin and broad on children". On a child it was no streak:
+the field between the nose and the far eye was pale grey, as a smear of chalk.
+
+It is the rim light's gloss. Drawn alone (`?set=lights.key.energy:0,lights.fill.energy:0,lights.bounce.energy:0,
+sky.energy:0,exposure:1.2`, picture `runde85_licht_von_hinten_allein.png`) the rim paints exactly that field;
+it stays with `skin.wrap` at 0 and with the rim's shadow whole. The rim stood 49 degrees round from straight
+behind the head: 2 degrees in front of the plane of the cheek beside the nose (which faces half a radian round
+from the face's front; the test's `facing(rim, 0.5)` was +0.029). A light that skims a skin shines pale on it
+towards whoever looks from the other side, and on a child's flat face that plane is the whole field. On the
+reference's woman and emperor the streak is narrow (about 3 mm) and runs along the nose's far flank only.
+
+Measured (`grey share`: in the field from the nose's middle line to the far eye's outer corner, from 0.45 of
+the way from the sellion to the nose's wings down to the wings, the share of pixels lighter than the field's
+median with less than 0.7 of the lit cheek's chroma; 448 by 560; the reference's woman read the same way:
+6.2 %):
+
+| | children of 2 to 8 | girls of 13, 17, boys of 8, 13 | grown women | grown men |
+|---|---|---|---|---|
+| round 84 | 16.4 % | 12.5 % | 10.8 % | 12.7 % |
+| now | 8.3 % | 6.5 % | 6.2 % | 7.9 % |
+
+Now the rim stands 40 degrees round (from (-3.55, 2.5, -4.25), before (-4.2, 2.5, -3.6)): 8 degrees behind
+that plane (`facing` -0.123), at the height it had. It still shines on the nose's far flank (43 degrees off
+its normal, before 36).
+
+The gloss had been doing a second thing: it was much of the light on the far side of the face. With the rim
+moved and nothing else changed, the far cheek is 2.5 L darker on the women and 5.6 on the men, the shade
+beside the nose 6.3 and 7.5. The fill reaches that side from the front, in the skin's own colour, and is half
+as strong again for it (`lights.fill.energy` 0.28, before 0.18).
+
+What was tried (shade beside the nose as L, from the lit cheek, the nose's back and the shade under it; far
+plait: the picture-left plait of six girls, L; the reference's woman has 29.8 beside the nose):
+
+| rim light, fill | grey share children, women | beside the nose women, men | far cheek under the lit one women, men | far plait |
+|---|---|---|---|---|
+| round 84: 49 degrees round, 24 up, fill 0.18 | 16.4 %, 10.8 % | 23.0, 30.7 | 23.2, 30.3 | 15.2 |
+| 49 round, 10 / 5 / 3 degrees up, fill 0.18 | 14.6 / 10.9 / 8.6 % (children) | | | |
+| 49 round, level, fill 0.18 | 6.9 %, 9.5 % | 16.2, 31.7 | 25.7, 31.8 | |
+| 49 round, level, fill 0.28 | 6.4 %, 9.1 % | 20.1, 34.2 | 23.5, 28.9 | 26.7 |
+| the same at half the rim's energy | 1.0 %, 2.7 % | 17.0, 26.3 | 23.6, 31.4 | 18.5 |
+| 35 round, level, fill 0.28 | 1.8 %, 4.0 % | 15.1, 27.2 | 23.8, 34.0 | 37.4 |
+| 35 round, 24 up, fill 0.28 | 6.3 %, 4.7 % | 18.7, 23.3 | 23.7, 33.6 | 17.6 |
+| 25 round, 24 up, fill 0.28 | 3.1 %, 2.6 % | 15.2, 19.7 | 23.8, 34.1 | 17.8 |
+| 40 round, 24 up, fill 0.18 | 8.9 % (children) | 16.7, 23.2 | 25.7, 35.9 | |
+| 40 round, 24 up, fill 0.28, rim shadow 0.35 | 11.6 %, 7.8 % | 22.0, 28.9 | 23.4, 32.3 | 17.3 |
+| 40 round, 24 up, fill 0.28: now | 8.3 %, 6.2 % | 20.6, 26.5 | 23.5, 32.6 | 17.3 |
+
+The rim level with the head is the best light for the faces (the gloss then lies on what faces level and to
+the side: the nose's flank, the far cheek's turn), and it was the first choice of this round. It is not kept
+because of the hair: a girl's far plait turned a pale lilac, 11.5 L lighter (`runde85_versuch_waagrecht_zopf.png`).
+The stage draws hair's sheen after Kajiya & Kay: brightest where the strand stands square to the direction
+half way between light and eye. The strands are taken as running down along the head; with the rim 24 degrees
+up that direction rises 27 degrees, with the rim level it is level, and every strand that hangs straight down
+is at the sheen's peak. And a plait's normals point outward from the head's axis, not from the plait's own
+(`portrait/src/real_look.rs`), so the plait's whole breadth faces a light from the far side, where a rope
+shows such a light only its far flank. Every light that takes more gloss off the face takes light out of the
+shade beside the nose: the gloss was that shade's light.
+
+The whole face against the lit cheek (16 grown people, `tools/portrait/face_colour.mjs`; beside the nose and
+the cheek beyond it against the nose's back):
+
+| | women, round 84 | women, now | reference's woman | men, round 84 | men, now |
+|---|---|---|---|---|---|
+| lit cheek L, chroma | 58.3, 35.4 | 59.3, 35.2 | 56.1, 34.2 | 62.6, 31.1 | 63.3, 31.0 |
+| far cheek | -23.2 | -23.5 | -27.7 | -30.3 | -32.6 |
+| forehead | -5.3 | -4.5 | -0.3 | -13.6 | -12.0 |
+| nose's back | +1.1 | -0.8 | +8.2 | -5.8 | -6.4 |
+| above the lip | -2.4 | -2.7 | -4.4 | -19.1 | -18.4 |
+| chin | -6.1 | -5.1 | -11.6 | -23.4 | -22.5 |
+| upper, lower lip | -34.3, -20.3 | -33.2, -20.1 | -35.1, -22.9 | -37.4, -23.0 | -36.0, -22.3 |
+| eye | -39.0 | -37.7 | -40.2 | -49.6 | -47.4 (the emperor's -40.6) |
+| beside the nose | -36.4 | -37.9 | -34 to -35 | -26.1 | -30.4 |
+| cheek beyond | -25.0 | -24.5 | -16 | -20.5 | -21.9 |
+
+On the sample's sheet 3.0 % of the pixels differ from round 84 by more than 8 of 255 (mean 1.0): darker on
+the far temple, the far cheek's turn and beside the nose, a little lighter wherever the fill reaches. Hair,
+hoods, veils and bald heads are as before; the far plait is 2 L lighter.
+
+Test (`tests/portrait.test.ts`, 'England's stage lights a face from above and from the side it is turned away
+from'): the rim stands behind the plane of the cheek beside the nose (`facing(rim, 0.5)` under -0.05) and 15
+to 35 degrees above the head; the fill is more than 0.13 of the key and stronger than the bounce; the bounds
+of round 83 stay (the rim on the nose's far flank, fill and bounce together under a quarter of the key).
+Pictures: `runde85_fleck_vorher_nachher.png` (a girl of 8, two small children, a girl of 13, two women, a man;
+round 84 above, now below), `runde85_licht_von_hinten_allein.png`, `runde85_versuch_waagrecht_zopf.png`,
+`runde85_stichprobe.png`.
+Still open: the patch is halved, not gone: on children a narrower pale band still lies beside the nose (8.3 %
+where the reference's woman has 6.2). The shade beside the nose is 2 L darker on the women and 4 on the men
+than in round 84 (the reference's woman 9 L lighter than ours), the men's far cheek 2 L darker (the emperor's
+12 L lighter than theirs). The nose's back is 0.8 L under the lit cheek on the women (the reference's 8.2
+over it), the women's eye 2.5 L lighter than hers, the chin a further 1 L too light. The rim level with the
+head waits for plaits drawn as ropes and for a sheen that knows the head's shadow. PLACEHOLDER, both values.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

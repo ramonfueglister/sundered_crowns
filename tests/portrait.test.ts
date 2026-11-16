@@ -526,12 +526,21 @@ describe('portraits', { timeout: 20_000 }, () => {
       const a = ENGLAND_1356.turn - turned * Math.sign(key.from[0]);
       return (l.from[0] * Math.sin(a) + l.from[2] * Math.cos(a)) / Math.hypot(...l.from);
     };
-    expect(facing(rim, 0.5)).toBeLessThan(0.1);
+    // it stands behind the plane of that cheek, not in it (round 85): until then it stood 2 degrees in front of
+    // the plane, and skin that a light skims shines pale towards whoever looks at it from the other side: a grey
+    // patch between the nose and the far eye, on a child's flat face the whole field (16.4 % of it grey on the
+    // children, 6.2 % on the reference's woman; now 8.3 %)
+    expect(facing(rim, 0.5)).toBeLessThan(-0.05);
+    // and it stays above the head: hair that hangs straight down shines most under a level light (a girl's far
+    // plait 11.5 L lighter with the rim level, a pale lilac)
+    const over = degrees(Math.atan2(rim.from[1], Math.hypot(rim.from[0], rim.from[2])));
+    expect(over).toBeGreaterThan(15);
+    expect(over).toBeLessThan(35);
     // the far side of the nose faces a quarter turn round from the face's front, where neither the key nor a
     // light from below reaches it: with the head's whole shadow in the rim light it was a black wedge between
     // nose and far eye (55 L darker than the nose's back on the women, the reference's woman 35, on whom a pale
-    // bluish streak lies along the nose's far side). The rim light shines on that side from 36 degrees off its
-    // normal, and half of the head's shadow is taken off it (round 83)
+    // bluish streak lies along the nose's far side). The rim light shines on that side from 43 degrees off its
+    // normal (36 until round 85), and half of the head's shadow is taken off it (round 83)
     expect(facing(rim, Math.PI / 2)).toBeGreaterThan(0.6);
     expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.3);
     expect(ENGLAND_1356.rimShadow).toBeLessThan(0.7);
@@ -553,6 +562,12 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(Math.abs(below(fill))).toBeLessThan(20);
     expect(facing(fill, 0)).toBeGreaterThan(0.4);
     expect(facing(fill, Math.PI / 2)).toBeGreaterThan(0.4);
+    // it is the light of the face's far side, in the skin's own colour: until round 85 much of the light there
+    // was the rim's grey gloss, and with the rim behind the cheek's plane and the fill as it was (a tenth of the
+    // key) the shade beside a woman's nose was 6 L darker and a man's far cheek 6 (with the fill at 0.16 of the
+    // key 2 L darker each; the reference's woman 9 L lighter there than ours)
+    expect(fill.energy).toBeGreaterThan(0.13 * key.energy);
+    expect(fill.energy).toBeGreaterThan(bounce.energy);
     // each of the two is a light, and both together far weaker than the key: the face keeps its shaded half
     for (const l of [fill, bounce]) expect(l.energy).toBeGreaterThan(0.05 * key.energy);
     expect(fill.energy + bounce.energy).toBeGreaterThan(0.15 * key.energy);

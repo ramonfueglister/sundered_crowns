@@ -199,3 +199,7 @@ its net stands for (`src/portrait/subdivide.ts`, new; `mesh.ts`, `stage.ts`, `pr
 `skin.fit`, the game's own files): Loop's subdivision surface, each triangle split in four, after one round of
 fitting to the builder's corners. Apoleia's profile has no skin of its own and is drawn as built; its pictures
 are the same pixel for pixel, and the comparison with Godot is unchanged. Roman bytes unchanged.
+
+Round 85: nothing in the builder. England's stage profile (`src/portrait/profile.ts`, the game's own file):
+the rim light stands further behind the head (from (-3.55, 2.5, -4.25), before (-4.2, 2.5, -3.6)) and the
+fill is 0.28 (before 0.18). Apoleia's profile and pictures unchanged. Roman bytes unchanged.
