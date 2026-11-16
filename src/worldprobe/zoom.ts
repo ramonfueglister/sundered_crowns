@@ -53,6 +53,19 @@ export const nearOf = (wide: number) => 1 - over(FINE_UNTIL, NEAR_FROM, wide);
 export const stepOf = (wide: number) => (wide < DETAIL_UNTIL ? 0 : Math.max(1, Math.min(COARSEST, Math.floor(Math.log2(wide / STEP_FROM)))));
 /** How far the camera looks down, in degrees. */
 export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - VIEW.elevation) * nearOf(wide) + (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
+/**
+ * a coarser step does not take over all at once: over the last stretch before its border, from the border's width
+ * divided by this, it is laid into the picture of the finer step dot by dot, more and more as the view widens, so
+ * that the change follows the zoom and has happened when the border is reached
+ */
+const BLEND = 1.6;
+/** How much of the next coarser step a view already shows in place of its own, 0 … 1 (1 only at the step's border). */
+export function blendOf(wide: number): number {
+  const step = stepOf(wide);
+  if (step >= COARSEST) return 0;
+  const border = step === 0 ? DETAIL_UNTIL : STEP_FROM * 2 ** (step + 1);
+  return over(border / BLEND, border, wide);
+}
 /** The level of the realms' map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */
 export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
 /** How deep the creases and corners of the blocks are drawn, 1 … 0: they go as the relief goes. */
