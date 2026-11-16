@@ -8,9 +8,10 @@
 // Every rule but the step is a smooth function of `wide`, the finest blocks across the picture.
 import { smooth } from '../lookprobe/batch';
 import { VIEW } from '../lookprobe/layout';
+import { FINER, FINER_STEPS } from './land';
 
-/** finest blocks across the picture: from a street of houses to half the globe */
-export const NEAREST = 30, FARTHEST = 26000;
+/** finest blocks across the picture: from a street of houses to the whole width of the world (data/content/world_extent.json) */
+export const NEAREST = 30, FARTHEST = 14000 * FINER;
 /**
  * the near view: from NEAR_FROM inwards the camera rises to the angle and the light softens to that of the near
  * view's reference, fully at FINE_UNTIL; from there inwards the houses in the picture are built from their fine
@@ -23,19 +24,22 @@ export const FINE_UNTIL = 70;
 const DETAIL_UNTIL = 400;
 /** a coarser step takes over from the finer one when this many of its blocks lie across the picture */
 const STEP_FROM = 300;
-/** the coarsest step: its blocks are 2^6 cells wide */
-export const COARSEST = 6;
-/** the coarsest level of the realms' map: there a tile is 2^6 times 512 cells wide */
-export const PAPER_COARSEST = 6;
-/** the camera looks down as in the reference from near, and straight down where the realms begin to show */
-const TILT_FROM = 500, TILT_UNTIL = 11000, STRAIGHT_DOWN = 89.5;
+/** the coarsest step: its blocks are 2^7 finest blocks wide, 2^5 cells of the land's data */
+export const COARSEST = 5 + FINER_STEPS;
+/** the coarsest level of the realms' map: there a tile is 2^8 times 512 finest blocks wide */
+export const PAPER_COARSEST = 6 + FINER_STEPS;
+/**
+ * The rules of the land's look are reckoned in cells of the land's data, of which FINER finest blocks make one
+ * (land.ts). The camera looks down as in the reference from near, and straight down where the realms begin to show.
+ */
+const TILT_FROM = 500 * FINER, TILT_UNTIL = 5500 * FINER, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = 500, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 500 * FINER, RELIEF_LEAST = 0.06;
 /**
  * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
  * the map comes in one move of the wheel and the world is not seen half under it for long
  */
-const REALMS_FROM = 15000, REALMS_FULL = 17500;
+const REALMS_FROM = 7500 * FINER, REALMS_FULL = 8750 * FINER;
 /** blocks across the picture at the middle of a step: there its heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */

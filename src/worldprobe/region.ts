@@ -75,9 +75,15 @@ function tileOf(name: string, base: string, T: number, tx: number, ty: number): 
 /**
  * The window of region `name` that starts at cell (gx0, gy0) of the whole map and is w × h cells large. Tiles the
  * region does not have are open sea, and so is all that lies north or south of it; to the east and west a world
- * begins again.
+ * begins again. With `finer` above 1 the window is drawn that many times finer than the region's cells (its cells,
+ * gx0 and gy0 count in the finer cells): see `refine`.
  */
-export async function loadWindow(name: string, gx0: number, gy0: number, w: number, h: number, base = '/'): Promise<Region> {
+export async function loadWindow(name: string, gx0: number, gy0: number, w: number, h: number, base = '/', finer = 1): Promise<Region> {
+  if (finer > 1) {
+    // the cells of the data under the window, with one more on every side for the blending
+    const x0 = Math.floor(gx0 / finer) - 1, y0 = Math.floor(gy0 / finer) - 1;
+    return refine(await loadWindow(name, x0, y0, Math.ceil((gx0 + w) / finer) + 1 - x0, Math.ceil((gy0 + h) / finer) + 1 - y0, base), finer, gx0 - x0 * finer, gy0 - y0 * finer, w, h);
+  }
   const index = await indexOf(name, base), T = index.tile, n = w * h, round = index.worldW ? index.worldW * index.cells : Infinity;
   const region: Region = {
     w, h, x0: gx0 / index.cells, y0: gy0 / index.cells, cells: index.cells, mapW: index.mapW, mapH: index.mapH, lon0: index.lon0, lon1: index.lon1, latN: index.latN, latS: index.latS, worldW: index.worldW, worldH: index.worldH,
@@ -103,6 +109,39 @@ export async function loadWindow(name: string, gx0: number, gy0: number, w: numb
   return region;
 }
 
+/**
+ * A window `finer` times finer than `data`, w × h of its new cells from (x0, y0) of them on. The data hold nothing
+ * finer than their cells, so the new cells take what lies between the data's: heights, forest and fields are blended
+ * from the four cells around (as `sample` does), a cell is sea or lake where more than half the water about it is,
+ * and a lake keeps the level of its own cells; drainage is that of the cell the new one lies in. The rivers are the
+ * same lines.
+ */
+export function refine(data: Region, finer: number, x0: number, y0: number, w: number, h: number): Region {
+  const n = w * h, cell = (x: number, y: number) => Math.max(0, Math.min(data.h - 1, y)) * data.w + Math.max(0, Math.min(data.w - 1, x));
+  const r: Region = {
+    ...data, w, h, x0: data.x0 + x0 / (data.cells * finer), y0: data.y0 + y0 / (data.cells * finer), cells: data.cells * finer,
+    shaped: new Int16Array(n), drainage: new Uint8Array(n), water: new Uint8Array(n), forest: new Uint8Array(n), crops: new Uint8Array(n),
+    rivers: data.rivers.map((v) => ({ ...v, pts: v.pts.map(([px, py]): [number, number] => [px * finer - x0, py * finer - y0]) })),
+  };
+  const sea = Uint8Array.from(data.water, (k) => (k === Water.Sea ? 1 : 0)), lake = Uint8Array.from(data.water, (k) => (k === Water.Lake ? 1 : 0));
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    // the new cell's middle in cells of the data
+    const cx = (x0 + x + 0.5) / finer, cy = (y0 + y + 0.5) / finer, i = y * w + x;
+    r.shaped[i] = Math.round(sample(data, data.shaped, cx, cy)); r.forest[i] = Math.round(sample(data, data.forest, cx, cy)); r.crops[i] = Math.round(sample(data, data.crops, cx, cy));
+    r.drainage[i] = data.drainage[cell(Math.floor(cx), Math.floor(cy))];
+    const wet = sample(data, sea, cx, cy), still = sample(data, lake, cx, cy);
+    r.water[i] = wet + still <= 0.5 ? Water.Land : wet >= still ? Water.Sea : Water.Lake;
+    if (r.water[i] !== Water.Lake) continue;
+    // a lake lies level: at the height of the nearest of its cells of the data
+    let best = Infinity;
+    for (let dy = 0; dy <= 1; dy++) for (let dx = 0; dx <= 1; dx++) {
+      const qx = Math.floor(cx - 0.5) + dx, qy = Math.floor(cy - 0.5) + dy, j = cell(qx, qy), d = Math.hypot(qx + 0.5 - cx, qy + 0.5 - cy);
+      if (data.water[j] === Water.Lake && d < best) { best = d; r.shaped[i] = data.shaped[j]; }
+    }
+  }
+  return r;
+}
+
 /** How region `name` lies on the globe. */
 export interface Projection {
   /** cells per map pixel */
@@ -116,8 +155,11 @@ export interface Projection {
   /** the place of a cell, in degrees */
   placeOf(u: number, v: number): [number, number];
 }
-export async function projectionOf(name: string, base = '/'): Promise<Projection> {
-  const m = await indexOf(name, base);
+/** `finer`: the cells counted are that many times finer than the region's own (see loadWindow). */
+export const projectionOf = async (name: string, base = '/', finer = 1): Promise<Projection> => projectionFrom(await indexOf(name, base), finer);
+/** The projection of a region with this index. */
+export function projectionFrom(index: Index, finer = 1): Projection {
+  const m = { ...index, cells: index.cells * finer };
   return {
     cells: m.cells, round: m.worldW ? m.worldW * m.cells : Infinity, rows: (m.worldH ?? m.mapH) * m.cells, map: [m.mapW * m.cells, m.mapH * m.cells],
     cellOf: (lon, lat) => { const [x, y] = mapPixel(m, lon, lat); return [x * m.cells, y * m.cells]; },
