@@ -1,8 +1,8 @@
 // What the world server tells clients about the state (shared so that tests can check the same views).
 import type { WorldState } from '../sim/state';
 import type { World } from '../sim/world';
-import type { EconomyDetail, PlaceDetail, RealmInfo } from './protocol';
-import { FIGURE } from '../sim/economy/engine';
+import type { CityEconomyDetail, PlaceDetail, RealmInfo } from './protocol';
+import { FIGURE, FIGURES } from '../sim/economy/engine';
 import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
@@ -23,15 +23,14 @@ export function realmInfos(s: WorldState, rulerName: (uid: string) => string | n
   return out;
 }
 
-/** England's economy as a place in England shows it; undefined for other places and in a world without it. */
-export function economyDetail(s: WorldState, w: World, i: number): EconomyDetail | undefined {
-  const e = s.economy.england;
-  if (!e || !w.england[i]) return undefined;
-  const f = e.figures, F = FIGURE;
+/** The economy of the city of a place; undefined for a place without a city and in a world without economies. */
+export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEconomyDetail | undefined {
+  const e = s.economy.cities, k = w.cityOf[i];
+  if (!e || k < 0) return undefined;
+  const f = e.figures.subarray(k * FIGURES, (k + 1) * FIGURES), F = FIGURE;
   return {
-    country: 'england', year: e.year, baseYear: w.englandEconomy.year, scale: w.englandEconomy.scale,
-    realGdp: f[F.realGdp], realGdpIndex: 100 * f[F.realGdp] / f[F.realGdpStart],
-    priceIndex: 100 * (f[F.nominalGdp] / f[F.realGdp]) / (f[F.nominalGdpStart] / f[F.realGdpStart]),
+    day: e.day, baseYear: w.cityEconomies.year, scale: w.cityEconomies.scale,
+    realGdp: f[F.realGdp], realGdpIndex: 100 * f[F.realGdp] / f[F.realGdpStart], priceToday: 100 * f[F.priceLevel],
     consumption: f[F.consumption], crown: f[F.government], investment: f[F.investment], exports: f[F.exports], imports: f[F.imports],
     employed: f[F.employees] + f[F.owners], unemployed: f[F.unemployed],
     coinHouseholds: f[F.depositsHouseholds], coinFirms: f[F.depositsFirms],
@@ -45,7 +44,7 @@ export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | n
   const arable = s.place.arable[i], land = hectares(w, i);
   return {
     id: i, name: w.names[i], nameDe: w.namesDe[i], owner: s.place.owner[i], terrain: TERRAINS[w.terrain[i]], resource: RESOURCES[w.resource[i]],
-    culture: cultureLabel(ALL_CULTURES[s.place.culture[i]] ?? 'unknown'), faith: f ? f.name : { en: '?', de: '?' }, pop: Math.round(s.place.pop[i]),
+    culture: cultureLabel(ALL_CULTURES[s.place.culture[i]] ?? 'unknown'), faith: f ? f.name : { en: '?', de: '?' }, pop: Math.round(10 * s.place.pop[i]) / 10,
     harvest: {
       kcal: s.place.harvest[i], perHeadDay: kcalPerHeadDay(s.place.harvest[i], s.place.pop[i]),
       landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: land, farmers: farmers(s.place.pop[i]),
@@ -54,6 +53,6 @@ export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | n
         atLimit: s.place.pop[i] > 0 && arable >= landLimitHa(w, i),
       },
     },
-    economy: economyDetail(s, w, i),
+    cityEconomy: cityEconomyDetail(s, w, i),
   };
 }

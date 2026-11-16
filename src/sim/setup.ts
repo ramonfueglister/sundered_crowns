@@ -12,6 +12,7 @@ import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
 import { fitPlacesToCities, foundPeople } from './systems/people';
 import { uses1356Tables } from './tables';
+import { toHeads } from './scale';
 
 export interface SetupRealm {
   id: string; name: I18n; short?: I18n; adjective?: I18n; rank?: string; culture?: string; faith?: string; color?: string; capital_loc?: number;
@@ -45,7 +46,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText: [], ruler: [],
-    economy: { england: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
+    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
     // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
   addRealms(s, setup, 0, L);
@@ -84,6 +85,6 @@ export function setPlaces(s: WorldState, setup: SetupState, from: number, to: nu
     place.owner[i] = Number.isInteger(o) && o >= 0 && o < n ? o : -1;
     place.culture[i] = cultureIndex(setup.culture[i]);
     place.faith[i] = faithIndex(setup.faith[i]);
-    place.pop[i] = Math.max(0, setup.pop[i] ?? 0);
+    place.pop[i] = toHeads(Math.max(0, setup.pop[i] ?? 0)); // the setup counts people of the time, the world heads
   }
 }

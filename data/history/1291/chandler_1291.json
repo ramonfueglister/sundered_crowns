@@ -1,0 +1,903 @@
+{
+ "year": 1291,
+ "source": "Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)",
+ "note": "written by tools/history/1291/chandler.py; people of the time, interpolated between the nearest years within 60 years; site = index of the nearest place in data/content/gazetteer.json",
+ "cities": [
+  {
+   "name": "Cairo",
+   "country": "Egypt",
+   "people": 382000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 30.06263,
+   "lon": 31.24967,
+   "site": 2978,
+   "siteName": "Cairo"
+  },
+  {
+   "name": "Paris",
+   "country": "France",
+   "people": 214667,
+   "years": [
+    1250,
+    1292
+   ],
+   "certainty": 1,
+   "lat": 48.856614,
+   "lon": 2.352222,
+   "site": 68,
+   "siteName": "Paris"
+  },
+  {
+   "name": "Fez",
+   "country": "Morocco",
+   "people": 159000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 34.033333,
+   "lon": -5.01,
+   "site": 3053,
+   "siteName": "Fez"
+  },
+  {
+   "name": "Venice",
+   "country": "Italy",
+   "people": 106400,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.440847,
+   "lon": 12.315514,
+   "site": 1329,
+   "siteName": "Venice"
+  },
+  {
+   "name": "Istanbul",
+   "country": "Turkey",
+   "people": 100000,
+   "years": [
+    1261,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 41.005275,
+   "lon": 28.976944,
+   "site": 2575,
+   "siteName": "Constantinople"
+  },
+  {
+   "name": "Sarai",
+   "country": "Russian Federation",
+   "people": 96170,
+   "years": [
+    1253,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 53.74577,
+   "lon": 41.02126,
+   "site": 2759,
+   "siteName": "Sarai"
+  },
+  {
+   "name": "Seville",
+   "country": "Spain",
+   "people": 87404,
+   "years": [
+    1248,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 37.388097,
+   "lon": -5.982331,
+   "site": 1867,
+   "siteName": "Seville"
+  },
+  {
+   "name": "Granada",
+   "country": "Spain",
+   "people": 87300,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 37.177336,
+   "lon": -3.598558,
+   "site": 1876,
+   "siteName": "Granada"
+  },
+  {
+   "name": "Marrakech",
+   "country": "Morocco",
+   "people": 84000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 31.63416,
+   "lon": -7.99994,
+   "site": 3077,
+   "siteName": "Marrakesh"
+  },
+  {
+   "name": "Genova",
+   "country": "Italy",
+   "people": 79600,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 44.40565,
+   "lon": 8.946256,
+   "site": 1380,
+   "siteName": "Genoa"
+  },
+  {
+   "name": "Bukhara",
+   "country": "Uzbekistan",
+   "people": 70000,
+   "years": [
+    1260
+   ],
+   "certainty": 1,
+   "lat": 39.765869,
+   "lon": 64.422347,
+   "site": 3118,
+   "siteName": "Bukhara"
+  },
+  {
+   "name": "Damascus",
+   "country": "Syria",
+   "people": 68680,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 33.5102,
+   "lon": 36.29128,
+   "site": 2936,
+   "siteName": "Damascus"
+  },
+  {
+   "name": "Alexandria",
+   "country": "Egypt",
+   "people": 65000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 31.200092,
+   "lon": 29.918739,
+   "site": 2964,
+   "siteName": "Alexandria"
+  },
+  {
+   "name": "Esfahan",
+   "country": "Iran",
+   "people": 63440,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 32.651389,
+   "lon": 51.679192,
+   "site": 3168,
+   "siteName": "Isfahan"
+  },
+  {
+   "name": "Milan",
+   "country": "Italy",
+   "people": 60000,
+   "years": [
+    1288,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.465453,
+   "lon": 9.198786,
+   "site": 1327,
+   "siteName": "Milan"
+  },
+  {
+   "name": "Trabzon",
+   "country": "Turkey",
+   "people": 60000,
+   "years": [
+    1261,
+    1300
+   ],
+   "certainty": 3,
+   "lat": 41.00145,
+   "lon": 39.717806,
+   "site": 2823,
+   "siteName": "Trebizond"
+  },
+  {
+   "name": "Acre",
+   "country": "Israel",
+   "people": 57000,
+   "years": [
+    1250
+   ],
+   "certainty": 2,
+   "lat": 32.927778,
+   "lon": 35.081667,
+   "site": 2942,
+   "siteName": "Acre"
+  },
+  {
+   "name": "Cologne",
+   "country": "Germany",
+   "people": 53640,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 50.937531,
+   "lon": 6.960278,
+   "site": 998,
+   "siteName": "Cologne"
+  },
+  {
+   "name": "Tunis",
+   "country": "Tunisia",
+   "people": 53600,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 36.818811,
+   "lon": 10.165961,
+   "site": 3016,
+   "siteName": "Tunis"
+  },
+  {
+   "name": "Baghdad",
+   "country": "Iraq",
+   "people": 50800,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 33.34058,
+   "lon": 44.40088,
+   "site": 3107,
+   "siteName": "Baghdad"
+  },
+  {
+   "name": "Bejaia",
+   "country": "Algeria",
+   "people": 50000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 2,
+   "lat": 36.75,
+   "lon": 5.066667,
+   "site": 3018,
+   "siteName": "Bougie"
+  },
+  {
+   "name": "Kayseri",
+   "country": "Turkey",
+   "people": 50000,
+   "years": [
+    1250
+   ],
+   "certainty": 2,
+   "lat": 38.73222,
+   "lon": 35.48528,
+   "site": 2861,
+   "siteName": "Kayseri"
+  },
+  {
+   "name": "Kush",
+   "country": "Egypt",
+   "people": 50000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 3,
+   "lat": 18.53,
+   "lon": 31.84,
+   "site": 3007,
+   "siteName": "Dongola"
+  },
+  {
+   "name": "Brugge",
+   "country": "Belgium",
+   "people": 49667,
+   "years": [
+    1250,
+    1292
+   ],
+   "certainty": 1,
+   "lat": 51.210819,
+   "lon": 3.224936,
+   "site": 452,
+   "siteName": "Bruges"
+  },
+  {
+   "name": "Konya",
+   "country": "Turkey",
+   "people": 48750,
+   "years": [
+    1250,
+    1294
+   ],
+   "certainty": 1,
+   "lat": 37.87135,
+   "lon": 32.48464,
+   "site": 2880,
+   "siteName": "Konya"
+  },
+  {
+   "name": "Rouen",
+   "country": "France",
+   "people": 48393,
+   "years": [
+    1272,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 49.44313,
+   "lon": 1.09932,
+   "site": 35,
+   "siteName": "Rouen"
+  },
+  {
+   "name": "Thessaloniki",
+   "country": "Greece",
+   "people": 48200,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 40.63935,
+   "lon": 22.944606,
+   "site": 2582,
+   "siteName": "Thessalonica"
+  },
+  {
+   "name": "Tlemcen",
+   "country": "Algeria",
+   "people": 48200,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 34.87833,
+   "lon": -1.315,
+   "site": 3047,
+   "siteName": "Tlemcen"
+  },
+  {
+   "name": "Hormuz",
+   "country": "Iran",
+   "people": 45800,
+   "years": [
+    1270,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 27.1,
+   "lon": 56.45,
+   "site": 3192,
+   "siteName": "Hormuz"
+  },
+  {
+   "name": "Mosul",
+   "country": "Iraq",
+   "people": 45000,
+   "years": [
+    1250
+   ],
+   "certainty": 1,
+   "lat": 36.335,
+   "lon": 43.11889,
+   "site": 3094,
+   "siteName": "Mosul"
+  },
+  {
+   "name": "Bologna",
+   "country": "Italy",
+   "people": 42700,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 44.49381,
+   "lon": 11.33875,
+   "site": 1378,
+   "siteName": "Bologna"
+  },
+  {
+   "name": "Palermo",
+   "country": "Italy",
+   "people": 40870,
+   "years": [
+    1277,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 38.115689,
+   "lon": 13.361267,
+   "site": 1558,
+   "siteName": "Palermo"
+  },
+  {
+   "name": "Ceuta",
+   "country": "Spain",
+   "people": 40000,
+   "years": [
+    1279,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 35.88933,
+   "lon": -5.31979,
+   "site": 3029,
+   "siteName": "Ceuta"
+  },
+  {
+   "name": "Rabat",
+   "country": "Morocco",
+   "people": 40000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 34.01325,
+   "lon": -6.83255,
+   "site": 3055,
+   "siteName": "Rabat"
+  },
+  {
+   "name": "Padua",
+   "country": "Italy",
+   "people": 39000,
+   "years": [
+    1281,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.406436,
+   "lon": 11.876761,
+   "site": 1332,
+   "siteName": "Padua"
+  },
+  {
+   "name": "Veliko Tarnovo",
+   "country": "Bulgaria",
+   "people": 37700,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 2,
+   "lat": 43.083333,
+   "lon": 25.65,
+   "site": 2513,
+   "siteName": "Tarnovo"
+  },
+  {
+   "name": "Naples",
+   "country": "Italy",
+   "people": 37341,
+   "years": [
+    1278,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 40.851775,
+   "lon": 14.268122,
+   "site": 1512,
+   "siteName": "Naples"
+  },
+  {
+   "name": "Cremona",
+   "country": "Italy",
+   "people": 36244,
+   "years": [
+    1259,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.13617,
+   "lon": 10.02797,
+   "site": 1347,
+   "siteName": "Cremona"
+  },
+  {
+   "name": "Verona",
+   "country": "Italy",
+   "people": 35710,
+   "years": [
+    1238,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.43419,
+   "lon": 10.99779,
+   "site": 1330,
+   "siteName": "Verona"
+  },
+  {
+   "name": "Valencia",
+   "country": "Spain",
+   "people": 35548,
+   "years": [
+    1238,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 39.469908,
+   "lon": -0.376289,
+   "site": 1792,
+   "siteName": "Valencia"
+  },
+  {
+   "name": "Lyon",
+   "country": "France",
+   "people": 34100,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.74846,
+   "lon": 4.84671,
+   "site": 233,
+   "siteName": "Lyon"
+  },
+  {
+   "name": "Jerusalem",
+   "country": "Israel",
+   "people": 30000,
+   "years": [
+    1243
+   ],
+   "certainty": 1,
+   "lat": 31.76904,
+   "lon": 35.21633,
+   "site": 2953,
+   "siteName": "Jerusalem"
+  },
+  {
+   "name": "Messina",
+   "country": "Italy",
+   "people": 30000,
+   "years": [
+    1282,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 38.19327,
+   "lon": 15.54969,
+   "site": 1556,
+   "siteName": "Messina"
+  },
+  {
+   "name": "Pavia",
+   "country": "Italy",
+   "people": 30000,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.18446,
+   "lon": 9.16145,
+   "site": 1342,
+   "siteName": "Pavia"
+  },
+  {
+   "name": "Pisa",
+   "country": "Italy",
+   "people": 29500,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 43.71553,
+   "lon": 10.39659,
+   "site": 1412,
+   "siteName": "Pisa"
+  },
+  {
+   "name": "Antioch",
+   "country": "Syria/Turkey",
+   "people": 27000,
+   "years": [
+    1268
+   ],
+   "certainty": 2,
+   "lat": 36.20655,
+   "lon": 36.15722,
+   "site": 2911,
+   "siteName": "Antioch"
+  },
+  {
+   "name": "Dublin",
+   "country": "Ireland",
+   "people": 25000,
+   "years": [
+    1280,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 53.33306,
+   "lon": -6.24889,
+   "site": 628,
+   "siteName": "Dublin"
+  },
+  {
+   "name": "Mainz",
+   "country": "Germany",
+   "people": 24180,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 49.98419,
+   "lon": 8.2791,
+   "site": 1045,
+   "siteName": "Mainz"
+  },
+  {
+   "name": "Brescia",
+   "country": "Italy",
+   "people": 24000,
+   "years": [
+    1258,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 45.52478,
+   "lon": 10.22727,
+   "site": 1324,
+   "siteName": "Brescia"
+  },
+  {
+   "name": "Regensburg",
+   "country": "Germany",
+   "people": 24000,
+   "years": [
+    1239
+   ],
+   "certainty": 1,
+   "lat": 49.015,
+   "lon": 12.09556,
+   "site": 1099,
+   "siteName": "Regensburg"
+  },
+  {
+   "name": "Roskilde",
+   "country": "Denmark",
+   "people": 21308,
+   "years": [
+    1274,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 55.64152,
+   "lon": 12.08035,
+   "site": 1993,
+   "siteName": "Roskilde"
+  },
+  {
+   "name": "Provins",
+   "country": "France",
+   "people": 21000,
+   "years": [
+    1247
+   ],
+   "certainty": 1,
+   "lat": 48.55,
+   "lon": 3.3,
+   "site": 86,
+   "siteName": "Provins"
+  },
+  {
+   "name": "Marseille",
+   "country": "France",
+   "people": 20900,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 43.29695,
+   "lon": 5.38107,
+   "site": 378,
+   "siteName": "Marseille"
+  },
+  {
+   "name": "Worms",
+   "country": "Germany",
+   "people": 20900,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 49.63278,
+   "lon": 8.35916,
+   "site": 1065,
+   "siteName": "Worms"
+  },
+  {
+   "name": "Siena",
+   "country": "Italy",
+   "people": 20820,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 43.32004,
+   "lon": 11.33283,
+   "site": 1428,
+   "siteName": "Siena"
+  },
+  {
+   "name": "Arles",
+   "country": "France",
+   "people": 17000,
+   "years": [
+    1271,
+    1320
+   ],
+   "certainty": 1,
+   "lat": 43.6767,
+   "lon": 4.6278,
+   "site": 347,
+   "siteName": "Arles"
+  },
+  {
+   "name": "Bergen",
+   "country": "Norway",
+   "people": 15300,
+   "years": [
+    1270,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 60.391264,
+   "lon": 5.322053,
+   "site": 1930,
+   "siteName": "Bergen"
+  },
+  {
+   "name": "Badajoz",
+   "country": "Spain",
+   "people": 15000,
+   "years": [
+    1250
+   ],
+   "certainty": 1,
+   "lat": 38.87789,
+   "lon": -6.97061,
+   "site": 1811,
+   "siteName": "Badajoz"
+  },
+  {
+   "name": "Wroclaw",
+   "country": "Germany",
+   "people": 13690,
+   "years": [
+    1242,
+    1300
+   ],
+   "certainty": 3,
+   "lat": 51.116667,
+   "lon": 17.033333,
+   "site": 2228,
+   "siteName": "Breslau"
+  },
+  {
+   "name": "Munich",
+   "country": "Germany",
+   "people": 13000,
+   "years": [
+    1255
+   ],
+   "certainty": 1,
+   "lat": 48.136739,
+   "lon": 11.576756,
+   "site": 1168,
+   "siteName": "Munich"
+  },
+  {
+   "name": "Bari",
+   "country": "Italy",
+   "people": 10000,
+   "years": [
+    1278
+   ],
+   "certainty": 1,
+   "lat": 41.117142,
+   "lon": 16.871872,
+   "site": 1498,
+   "siteName": "Bari"
+  },
+  {
+   "name": "Catania",
+   "country": "Italy",
+   "people": 10000,
+   "years": [
+    1277
+   ],
+   "certainty": 1,
+   "lat": 37.50213,
+   "lon": 15.08719,
+   "site": 1576,
+   "siteName": "Catania"
+  },
+  {
+   "name": "Aleppo",
+   "country": "Syria",
+   "people": 9900,
+   "years": [
+    1250,
+    1300
+   ],
+   "certainty": 1,
+   "lat": 36.216667,
+   "lon": 37.166667,
+   "site": 2910,
+   "siteName": "Aleppo"
+  },
+  {
+   "name": "Aix",
+   "country": "France",
+   "people": 9000,
+   "years": [
+    1263
+   ],
+   "certainty": 3,
+   "lat": 43.526304,
+   "lon": 5.445429,
+   "site": 360,
+   "siteName": "Aix"
+  },
+  {
+   "name": "Limoges",
+   "country": "France",
+   "people": 4000,
+   "years": [
+    1250
+   ],
+   "certainty": 1,
+   "lat": 45.83153,
+   "lon": 1.2578,
+   "site": 230,
+   "siteName": "Limoges"
+  }
+ ]
+}

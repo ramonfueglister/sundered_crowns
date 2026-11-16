@@ -1,7 +1,8 @@
-# The economy engine of the world server: a thin shell around the unchanged port of BeforeIT.jl
-# (github.com/ramonfueglister/port-beforeit, Apache-2.0, see THIRD_PARTY/port-beforeit). The shell only loads the
-# parameters, computes periods, hands out key figures and saves and loads the state of the model. It is built to one
-# WebAssembly file that the world server loads (npm run economy:build, server/Dockerfile).
+# The economy engine of the world server: a shell around the unchanged port of BeforeIT.jl
+# (github.com/ramonfueglister/port-beforeit, Apache-2.0, see THIRD_PARTY/port-beforeit). The shell loads the
+# parameters, computes periods, hands out key figures and saves and loads the state of the model; src/clock.rs is the
+# model type that lets the port compute one day per period. It is built to one WebAssembly file that the world
+# server loads (npm run economy:build, server/Dockerfile).
 [package]
 name = "sc-economy"
 version = "0.1.0"
@@ -15,6 +16,12 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # pinned to one commit: the model of the world changes only when this line does
 beforeit = { git = "https://github.com/ramonfueglister/port-beforeit", rev = "729153175fa6ca86f67ee62aa2f8fbabec136217", default-features = false }
+# the mathematical functions the port itself uses, so that the native build and WebAssembly agree bit for bit
+libm = "0.2"
 
 [profile.release]
 opt-level = 3
+
+[dev-dependencies]
+# to read the calibration of a city of the game in tests/benefit.rs; the port itself depends on it
+serde_json = "1"

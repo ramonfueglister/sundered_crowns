@@ -14,8 +14,12 @@ import { FARMS, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Si
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover { has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array }
-/** The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the trees are tall ones. */
-export interface Woods { share: number; crowns: readonly RGB[]; tall: boolean }
+/**
+ * The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the
+ * trees are tall ones. `laid` says that the share is that of this very column, from the forest of the world's
+ * year (forest.ts): then chance makes a block only a little more or less wooded than it says.
+ */
+export interface Woods { share: number; crowns: readonly RGB[]; tall: boolean; laid?: boolean }
 
 /** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof; it stands out of the ground while that is two thirds of a block */
 const STOREYS = 2, HOUSE_TALL = 4.5, STANDS_FROM = 2 / 3;
@@ -52,6 +56,8 @@ const WOODS_FAR = 0.5;
 const soft = (share: number, lot: number) => share + (lot - 0.5) * 2 * Math.min(share, 1 - share);
 /** a single tree stands on this share of the woods' ground at the step where a tree is one block; from the next step on a block is woods or not */
 const TREES = 0.85, CANOPY = 0.9, STRAY = 0.05;
+/** how much of the chance from block to block is left where the woods are laid out */
+const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
 const CANOPY_LIGHT = 0.8;
 
@@ -166,7 +172,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const wx = x + ox, wz = z + oz, w = g.mat[idx(x, z)] === Mat.Grass ? o.woods(x, z) : null;
     const tilled = soft(o.cultivated(x + 0.5, z + 0.5) * crops, hash2(wx, wz, 65 + step));
     // a tree darkens its own block and with its shadow about one beside it
-    const trees = w ? STRAY + CANOPY * w.share : 0, grown = soft(1 - (1 - trees) ** 2, hash2(wx, wz, 73 + step));
+    const trees = w ? STRAY + CANOPY * w.share : 0, shaded = 1 - (1 - trees) ** 2, grown = shaded + (soft(shaded, hash2(wx, wz, 73 + step)) - shaded) * (w?.laid ? LAID_CHANCE : 1);
     if (tilled + grown <= 0) continue;
     const crop = cropOf(wx, wz, x + 0.5, z + 0.5)[0], crown = w ? shade(pick(w.crowns, hash2(wx, wz, 74)), WOODS_FAR) : crop;
     put(x, z, 0, mix(crop, crown, grown / (tilled + grown)));

@@ -7,7 +7,10 @@
 // not. This file turns the table into the port's two inputs, parameters and initial conditions, by the port's own
 // formulas. It adds no number of its own: every value is in the table.
 //
-// One period is one year (the port's `timescale` is 1: the amounts of a year are the amounts of a period).
+// The table and `calibrateEconomy` are yearly (the port's `timescale` is 1: the amounts of a year are the amounts of a
+// period). Since economy feature 4 the model computes one day per period: `dailyEconomy` turns the yearly calibration
+// into the daily one, by the rules listed there. Since feature 5 the world has no economy of England as a whole:
+// every city is an economy of its own, calibrated from the table of England at the city's size (`cityTable`).
 
 export type Kind = 'source' | 'derived' | 'assumption';
 export interface Entry<T> { value: T; kind: Kind; source: string }
@@ -17,6 +20,18 @@ export interface CalibrationTable {
   case: string;
   year: number;
   scale: Entry<number>;
+  /** the daily clock of economy feature 4 */
+  clock: { days_per_year: Entry<number>; plan_days: Entry<number> };
+  /** what a city's table takes in place of England's (economy feature 5) */
+  cities: {
+    structure: Entry<string>; duty_shillings_per_sack: Entry<number>; unemployment_benefit: Entry<number>;
+    /** how the firms of a city pay wages (economy feature 7): 'money' is a wage in money that never changes,
+     *  'prices' the port's real wage that follows the consumer prices */
+    wage: Entry<'money' | 'prices'>;
+    /** how the firms of a city plan supply and price (economy feature 8): 'demand' is the demand pull of CANVAS,
+     *  'costs' the rule of the paper */
+    prices: Entry<'demand' | 'costs'>;
+  };
   sectors: string[];
   inputs: {
     gdp_nominal_gbp_mn: Entry<number>;
@@ -36,6 +51,8 @@ export interface CalibrationTable {
     persons_per_firm: Entry<number>;
     adult_share: Entry<number>;
     unemployed: Entry<number>;
+    /** the part of the last wage after tax that a person without work is paid (economy feature 6); 0 = none */
+    unemployment_benefit: Entry<number>;
     depreciation: Entry<number>;
     import_share: Entry<V3>;
     crown_purchase_share: Entry<V3>;
@@ -55,12 +72,16 @@ export interface CalibrationTable {
   };
 }
 
-/** What the world server gives the engine (public/data/economy_england.json). */
+/** What the engine is given for one economy, with the accounts it was computed from. */
 export interface EconomyCalibration {
   case: string;
   /** the year the starting position stands for */
   year: number;
   scale: number;
+  /** periods of the model in a year, and the two lengths of the daily clock in periods (economy/src/clock.rs): a
+   *  firm plans every `plan` periods, expectations are formed on windows of `window` periods */
+  periods_per_year: number;
+  clock: { plan: number; window: number };
   /** the port's `Parameters` and `InitialConditions` (its JSON keys) */
   parameters: Record<string, unknown>;
   initial_conditions: Record<string, unknown>;
@@ -72,6 +93,21 @@ const SHILLINGS_PER_POUND = 20;
 /** The unemployment benefit cannot be switched off with 0: the port divides the starting wage by this rate
  *  (src/agents.rs, line 222 of the port). */
 const NO_BENEFIT = 1e-9;
+/** The model's unemployment benefit (economy feature 6): a person without work is paid `theta_UB` times the last
+ *  wage by the government (Poledna et al. 2023, appendix A.44, A.53), which adds what it lacks to its debt
+ *  (A.60, A.61). `rate` is the part of the wage after tax, as the original code calibrates it:
+ *  theta_UB = 0.55 · (1 − tau_INC) · (1 − tau_SIW) (BeforeIT.jl; src/calibration.rs, line 1287 of the port).
+ *  `w_UB` is the benefit of a person at the start. The original takes it from the data (benefits paid per person
+ *  without work); no such data exist here, so it is the benefit on the mean wage of an employee. The port starts
+ *  every person with the last wage `w_UB / theta_UB` (src/agents.rs, line 222), which is then that mean wage.
+ *  A rate of 0 switches the benefit off. The cities of the game have had the rate 0 since economy feature 9
+ *  (0.55 from feature 6 to feature 8). */
+export function unemploymentBenefit(rate: number, taxOnIncome: number, taxOnWages: number, meanWage: number): { theta_UB: number; w_UB: number } {
+  if (!(rate >= 0 && rate < 1)) throw new Error(`an unemployment benefit of ${rate} of the wage`);
+  if (rate === 0) return { theta_UB: NO_BENEFIT, w_UB: 0 };
+  const theta_UB = rate * (1 - taxOnIncome) * (1 - taxOnWages);
+  return { theta_UB, w_UB: theta_UB * meanWage };
+}
 /** The port needs a positive definite covariance of its three shocks; output abroad and imports do not move. */
 const NO_SHOCK = 1e-12;
 
@@ -144,7 +180,12 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const I = sum(firms), N = sum(employees);
   const directTax = revenue - duty;
   const mixed = sum(surplus);
-  const disposable = sum(wages) + mixed - directTax;
+  const tau_INC = directTax / (sum(wages) + mixed), tau_SIW = 0;
+  const benefit = unemploymentBenefit(i.unemployment_benefit.value, tau_INC, tau_SIW, sum(wages) / N);
+  // The income households spend from includes the benefits paid at the start, as in the original's calibration
+  // (disposable income with social benefits; src/calibration.rs, lines 1150 and 1282 of the port). Households
+  // then buy at the start what the accounts say, and the accounts of the first day add up.
+  const disposable = sum(wages) + mixed - directTax + i.unemployed.value * benefit.w_UB;
 
   // ---- the years before the start
   const at = (series: readonly number[], year: number) => series[year - first];
@@ -160,8 +201,8 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     alpha_s: sectors.map((g) => output[g] / employees[g]), beta_s: beta,
     kappa_s: sectors.map((g) => output[g] / capital[g] / b.omega), delta_s: sectors.map((g) => used[g] / capital[g] / b.omega),
     w_s: sectors.map((g) => wages[g] / employees[g]), tau_Y_s: [0, 0, 0], tau_K_s: [0, 0, 0],
-    tau_INC: directTax / (sum(wages) + mixed), tau_FIRM: 0, tau_VAT: 0, tau_SIF: 0, tau_SIW: 0, tau_EXPORT: duty / X, tau_CF: 0, tau_G: 0,
-    theta_UB: NO_BENEFIT, psi: sum(households) / disposable, psi_H: building / disposable, mu: r,
+    tau_INC, tau_FIRM: 0, tau_VAT: 0, tau_SIF: 0, tau_SIW, tau_EXPORT: duty / X, tau_CF: 0, tau_G: 0,
+    theta_UB: benefit.theta_UB, psi: sum(households) / disposable, psi_H: building / disposable, mu: r,
     theta_DIV: mixed / sum(surplus.map((s) => Math.max(0, s))),
     theta: b.theta, zeta: b.zeta, zeta_LTV: b.zeta_LTV, zeta_b: b.zeta_b,
     b_CF_g: i.investment_share.value, b_CFH_g: i.dwelling_share.value, b_HH_g: households.map((v) => v / sum(households)),
@@ -173,7 +214,7 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   };
   const D_H = i.coin_split.value.households * coin, D_I = i.coin_split.value.firms * coin, E_k = i.bank_equity_of_coin.value * coin;
   const initial_conditions = {
-    D_I, L_I: 0, omega: b.omega, w_UB: 0, sb_inact: 0, sb_other: 0, D_H, K_H: dwellings, L_G: 0, E_k, E_CB: -D_I - D_H - E_k, D_RoW: 0, N_s: employees,
+    D_I, L_I: 0, omega: b.omega, w_UB: benefit.w_UB, sb_inact: 0, sb_other: 0, D_H, K_H: dwellings, L_G: 0, E_k, E_CB: -D_I - D_H - E_k, D_RoW: 0, N_s: employees,
     Y: history.map((y) => sum(output) * at(h.real_gdp_gbp_mn_2013, y) / at(h.real_gdp_gbp_mn_2013, t.year)),
     pi: history.map((y) => Math.log(at(h.gdp_deflator_2013_100, y) / at(h.gdp_deflator_2013_100, y - 1))),
     Y_EA: i.rest_of_the_world.value.output, pi_EA: i.rest_of_the_world.value.inflation, r_bar: 0,
@@ -186,5 +227,53 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     // GDP by its uses (exports with their duty) minus GDP: 0 up to rounding
     gdpCheck: sum(households) + sum(crown) + sum(investment) + building + X + duty - sum(imports) - gdp,
   };
-  return { case: t.case, year: t.year, scale: S, parameters, initial_conditions, accounts };
+  return { case: t.case, year: t.year, scale: S, periods_per_year: 1, clock: { plan: 1, window: 1 }, parameters, initial_conditions, accounts };
+}
+
+/** The table of a city with `people` inhabitants (economy feature 5): England's table at the city's share of
+ *  England's people, so that the model computes the city at the scale of the table (1:100), with the duty
+ *  between cities in place of England's wool duty, and with the cities' rate of the model's unemployment benefit
+ *  (economy feature 6; 0 since feature 9). All three are assumptions of the table (`cities`). */
+export function cityTable(t: CalibrationTable, people: number): CalibrationTable {
+  if (!(people > 0)) throw new Error(`a city of ${people} people`);
+  const c = structuredClone(t);
+  c.scale.value = t.scale.value * people / (t.inputs.population_thousand.value * 1e3);
+  c.inputs.wool_export.value.duty_shillings_per_sack = t.cities.duty_shillings_per_sack.value;
+  c.inputs.unemployment_benefit = structuredClone(t.cities.unemployment_benefit);
+  return c;
+}
+
+/** The calibration with one day as the period (economy feature 4), from the yearly one. `days` is the number of
+ *  days of a year, `plan` the days between two plans of a firm. The accounts stay those of the year.
+ *
+ *  - Flows per period (output per employee and per unit of capital, depreciation, wages, the benefit of a person
+ *    without work, and the series of the years before the start) are divided by `days`: the port's own rule for a shorter period (`timescale` in
+ *    src/calibration.rs of the port, which turns yearly amounts into quarterly ones).
+ *  - The loan rate is compounded: (1 + r)^(1/days) − 1 (the port's rule for yearly rates, same file).
+ *  - The share of a loan repaid per period is divided by `days` (the linear form of Pichler et al. 2021, footnote
+ *    15, for a share per quarter as a share per day).
+ *  - The AR(1) rules of the crown's purchases and of exports (on logarithms) keep their long-run mean and
+ *    variance: α^(1/days), and β and σ to match. This conversion has no source; it is exact for the level on a
+ *    day, and sums over a year vary a little less than in the yearly rule.
+ *  - Shares stay as they are (propensity to consume, tax rates, dividends, capital requirements), and so do stocks.
+ *  - The history keeps one entry per year: an entry stands for the `days` days of its year (the window of the
+ *    clock), with the flow of one day and the inflation of one day. */
+export function dailyEconomy(c: EconomyCalibration, days: number, plan: number): EconomyCalibration {
+  if (!(Number.isInteger(days) && days > 1 && Number.isInteger(plan) && plan >= 1)) throw new Error(`a year of ${days} days and a plan every ${plan} days`);
+  if (c.periods_per_year !== 1) throw new Error('the daily calibration starts from the yearly one');
+  const p = structuredClone(c.parameters) as Record<string, any>, ic = structuredClone(c.initial_conditions) as Record<string, any>;
+  const perDay = (v: number[]) => v.map((x) => x / days);
+  for (const k of ['alpha_s', 'kappa_s', 'delta_s', 'w_s']) p[k] = perDay(p[k]);
+  p.mu = Math.pow(1 + p.mu, 1 / days) - 1;
+  p.theta = p.theta / days;
+  for (const s of ['G', 'E']) {
+    const a: number = p[`alpha_${s}`], b: number = p[`beta_${s}`], sigma: number = p[`sigma_${s}`];
+    if (!(a > 0 && a < 1)) throw new Error(`the AR(1) rule of ${s} has α = ${a}: only a rule with a long-run mean can be turned into a daily one`);
+    const ad = Math.pow(a, 1 / days), mean = b / (1 - a) - Math.log(days);
+    p[`alpha_${s}`] = ad; p[`beta_${s}`] = mean * (1 - ad); p[`sigma_${s}`] = sigma * Math.sqrt((1 - ad * ad) / (1 - a * a));
+  }
+  p.C[1][1] = p.sigma_E * p.sigma_E;
+  for (const k of ['Y', 'pi', 'C_G', 'C_E', 'Y_I']) ic[k] = perDay(ic[k]);
+  ic.w_UB = ic.w_UB / days;
+  return { ...c, periods_per_year: days, clock: { plan, window: days }, parameters: p, initial_conditions: ic };
 }

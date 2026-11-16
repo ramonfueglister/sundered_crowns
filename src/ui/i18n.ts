@@ -40,7 +40,7 @@ const S = {
   resource: ['Resource', 'Rohstoff'],
   culture: ['Culture', 'Kultur'],
   faith: ['Faith', 'Glaube'],
-  population: ['Population', 'Bevölkerung'],
+  population: ['Population (1:100)', 'Bevölkerung (1:100)'],
   harvest: ['Grain harvest', 'Getreideernte'],
   harvest_year: ['Food in the year', 'Nahrung im Jahr'],
   harvest_head: ['Per head and day', 'Pro Kopf und Tag'],
@@ -53,21 +53,21 @@ const S = {
   arable_limit: ['at the land limit', 'an der Landgrenze'],
   arable_none: ['no land with a yield', 'kein Land mit Ertrag'],
   arable_yield: ['Yield of the cultivated soil', 'Ertragskraft des bestellten Bodens'],
-  economy_england: ['Economy of England', 'Volkswirtschaft England'],
-  economy_note: ['All of England in {year}, at the scale 1:100', 'Ganz England im Jahr {year}, im Massstab 1:100'],
+  economy_city: ['Economy of the city', 'Wirtschaft der Stadt'],
+  economy_note_city: ['The city as an economy of its own, the last 365 days up to {date}, at the scale 1:100', 'Die Stadt als eigene Volkswirtschaft, die letzten 365 Tage bis zum {date}, im Massstab 1:100'],
   economy_gdp: ['Real GDP', 'Reales BIP'],
-  economy_level: ['Level ({base} = 100)', 'Stand ({base} = 100)'],
-  economy_prices: ['Price level ({base} = 100)', 'Preisniveau ({base} = 100)'],
+  economy_level: ['Level (start = 100)', 'Stand (Start = 100)'],
+  economy_prices_today: ['Price level today (start = 100)', 'Preisniveau heute (Start = 100)'],
   economy_consumption: ['Household consumption', 'Konsum der Haushalte'],
   economy_crown: ['Crown spending', 'Ausgaben der Krone'],
   economy_investment: ['Investment', 'Investitionen'],
-  economy_exports: ['Exports', 'Ausfuhr'],
-  economy_imports: ['Imports', 'Einfuhr'],
+  economy_exports: ['Sold to other cities', 'Ausfuhr in andere Städte'],
+  economy_imports: ['Bought from other cities', 'Einfuhr aus anderen Städten'],
   economy_employed: ['At work', 'Beschäftigte'],
   economy_unemployed: ['Without work', 'Ohne Arbeit'],
   economy_coin_households: ['Coin of households', 'Münzgeld der Haushalte'],
   economy_coin_firms: ['Coin of firms', 'Münzgeld der Betriebe'],
-  economy_halted: ['The economy stands still since {why}', 'Die Volkswirtschaft steht still seit {why}'],
+  economy_halted: ['The economies of the cities stand still since {why}', 'Die Wirtschaft der Städte steht still seit {why}'],
   no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
@@ -111,6 +111,8 @@ const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.sl
 export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
 export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
+/** Heads of the simulation (1:100, src/sim/scale.ts): a village has a few, so below 100 with one decimal. */
+export const heads = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: Math.abs(v) < 100 ? 1 : 0 });
 /** A share as per cent with one decimal. */
 export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
 /** An amount of money in pounds. */

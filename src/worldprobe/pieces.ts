@@ -63,7 +63,7 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** the world's start year, whose towns are built */ year?: number }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
@@ -128,7 +128,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year } satisfies PieceJob);
     }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share

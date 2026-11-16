@@ -3,7 +3,8 @@
 import { describe, it, expect } from 'vitest';
 import { lifeExpectancy, survivorship } from '../src/sim/people/lifetable';
 import { CITIES, SCALE, ageOn, cityPeopleByPlace, personsIn, MOTHER_AGE } from '../src/sim/systems/people';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { newWorldState, loadSetup, countedInPeopleOfTheTime } from '../tools/sim/load';
+import { toHeads } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
@@ -37,8 +38,8 @@ describe('the cities', () => {
   it('are never larger than their place: places that were smaller grow to their cities', () => {
     const { s } = newWorldState(), setup = loadSetup(1356);
     for (const [p, n] of cityPeopleByPlace()) {
-      expect(s.place.pop[p]).toBeGreaterThanOrEqual(n - 1); // Float32
-      expect(s.place.pop[p]).toBeCloseTo(Math.max(setup.pop[p] ?? 0, n), -1);
+      expect(s.place.pop[p]).toBeGreaterThanOrEqual(toHeads(n) - 0.01); // Float32, heads at 1:100
+      expect(s.place.pop[p]).toBeCloseTo(toHeads(Math.max(setup.pop[p] ?? 0, n)), 1);
     }
   });
 });
@@ -97,11 +98,13 @@ describe('the persons of a world founded in 1356', () => {
     expect(Array.from(newWorldState(1357).s.person.cols.born.slice(0, 50))).not.toEqual(Array.from(P.born.slice(0, 50)));
   });
   it('do not change while the world runs (only their age does)', () => {
-    const t = newWorldState().s, before = encodeState(t).length;
+    // the size of the state without the economy: its accounts of the last 365 days grow in the first year
+    const size = (x: typeof s) => encodeState({ ...x, economy: { cities: null } }).length;
+    const t = newWorldState().s, before = size(t);
     const { w } = newWorldState();
     for (let d = 0; d < 3; d++) advanceDay(t, w);
     expect(Array.from(t.person.cols.born)).toEqual(Array.from(P.born));
-    expect(encodeState(t).length).toBe(before);
+    expect(size(t)).toBe(before);
   });
 });
 
@@ -112,7 +115,7 @@ describe('the people in the state', () => {
   });
   it('are founded in an older world by the upgrade, as in a new one', () => {
     const { s, w } = newWorldState();
-    const old = decodeState(encodeState(s)) as any; delete old.person; delete old.family; old.v = 4;
+    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person; delete old.family; old.v = 4;
     const loaded = decodeState(encodeState(old));
     expect(loaded.v).toBe(4);
     const up = upgradeState(loaded, w);
@@ -121,9 +124,9 @@ describe('the people in the state', () => {
   });
   it('grow the places of an older world that are smaller than their cities', () => {
     const { s, w } = newWorldState(), setup = loadSetup(1356);
-    const old = decodeState(encodeState(s)) as any; delete old.person; delete old.family; old.v = 4;
+    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person; delete old.family; old.v = 4;
     for (const [p] of cityPeopleByPlace()) old.place.pop[p] = setup.pop[p] ?? 0;
     const up = upgradeState(decodeState(encodeState(old)), w);
-    for (const [p, n] of cityPeopleByPlace()) expect(up.place.pop[p]).toBeGreaterThanOrEqual(n - 1);
+    for (const [p, n] of cityPeopleByPlace()) expect(up.place.pop[p]).toBeGreaterThanOrEqual(toHeads(n) - 0.01);
   });
 });

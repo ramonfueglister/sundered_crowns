@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../src/sim/systems/harvest';
 import { hectares, soilOf } from '../src/sim/systems/cultivation';
-import { newWorldState } from '../tools/sim/load';
+import { newWorldState, countedInPeopleOfTheTime } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
@@ -52,7 +52,7 @@ describe('the harvest on the map', () => {
     s.day = 366 - 1; // 31 December 1356, a leap year
     advanceDay(s, w);
     expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(2, 1 - LAND_SHARE), 6);
-  });
+  }, 30_000); // the economies of the cities compute the 364 days the test jumps over
   it('tells a client the harvest of a place and what it was computed from', () => {
     const { s, w } = newWorldState();
     const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'england')];
@@ -75,7 +75,7 @@ describe('a world saved by an older build', () => {
     const { s, w } = newWorldState();
     const fresh = hashState(s);
     const old = decodeState(encodeState(s)) as any;
-    delete old.place.harvest; delete old.place.arable; old.v = 1;
+    countedInPeopleOfTheTime(old); delete old.place.harvest; delete old.place.arable; old.v = 1;
     const loaded = decodeState(encodeState(old));
     expect(loaded.v).toBe(1);
     expect(hashState(upgradeState(loaded, w))).toBe(fresh);
@@ -84,7 +84,7 @@ describe('a world saved by an older build', () => {
     const { s, w } = newWorldState();
     const fresh = hashState(s);
     const old = decodeState(encodeState(s)) as any;
-    delete old.place.arable; old.place.harvest = old.place.harvest.map((v: number) => v * 3); old.v = 2; // a harvest from all land
+    countedInPeopleOfTheTime(old); delete old.place.arable; old.place.harvest = old.place.harvest.map((v: number) => v * 3); old.v = 2; // a harvest from all land
     const loaded = decodeState(encodeState(old));
     expect(loaded.v).toBe(2);
     expect(hashState(upgradeState(loaded, w))).toBe(fresh);
