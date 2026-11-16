@@ -134,7 +134,7 @@ describe('the land from farther away', () => {
   const laid = (ox: number, step: number) => {
     const g = ground(ox), sites: Site[] = places.map(([x, z, size, pop], id) => ({ id, at: [x - ox + 0.5, z + 0.5], size, pop, region: '', style }));
     return coverLand(g, step, new Batch(), sites, {
-      ploughed: (x, z) => (Math.floor((x + ox) / 40) + Math.floor(z / 40)) % 2 ? 0.35 : 0.1, courses: () => 3, vines: () => 0.2, farm: () => style.house, own: () => true,
+      ploughed: (x, z) => (Math.floor((x + ox) / 40) + Math.floor(z / 40)) % 2 ? 0.35 : 0.1, courses: () => 3, vines: () => 0.2, own: () => true,
       woods: (x, z) => ((x + ox + z) % 90 < 45 ? { share: 0.6, crowns: LEAVES, tall: (x + ox) % 2 === 0 } : null),
     });
   };
@@ -163,7 +163,7 @@ describe('the land from farther away', () => {
 });
 
 describe('a monument', () => {
-  const model = { build: () => new Batch(), w: 12, d: 10, height: 8 }, farm = () => ({ region: '', style: styleOf('') });
+  const model = { build: () => new Batch(), w: 12, d: 10, height: 8 };
   /** a lake of 80 × 80 blocks from (100, 100) with an island of 8 × 8 in its middle */
   const lagoon = (): Ground => {
     const g = ground(0);
@@ -174,7 +174,7 @@ describe('a monument', () => {
 
   it('stands at its place on ground made for it, where its place is an island too small for it', () => {
     const g = lagoon(), counts: Record<string, number> = {}, before = wetIn(g, 100, 100, 180, 180);
-    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }], farm, () => 0, () => 0, counts);
+    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }], () => 0, () => 0, counts);
     expect(counts.monument).toBe(1);
     // its footprint, with the column round it, is dry and paved, and the lake beyond is as it was
     expect(wetIn(g, 133, 134, 147, 146)).toBe(0);
@@ -185,7 +185,7 @@ describe('a monument', () => {
 
   it('stands beside another on the ground made for that one', () => {
     const g = lagoon(), counts: Record<string, number> = {}, tower = { build: () => new Batch(), w: 3, d: 3, height: 20 };
-    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }, { id: 2, at: [140.5, 147.5], model: tower }], farm, () => 0, () => 0, counts);
+    const { used } = settle(g, new Batch(), [], [{ id: 1, at: [140.5, 140.5], model }, { id: 2, at: [140.5, 147.5], model: tower }], () => 0, () => 0, counts);
     expect(counts.monument).toBe(2);
     // at its place, a column of the first one's made ground between them
     for (let z = 146; z < 149; z++) for (let x = 139; x < 142; x++) { expect(used[z * N + x]).toBe(1); expect(g.wet[z * N + x]).toBe(0); }
@@ -194,7 +194,7 @@ describe('a monument', () => {
 
   it('is left out in open water, and leaves dry ground as it is', () => {
     const g = lagoon(), counts: Record<string, number> = {};
-    settle(g, new Batch(), [], [{ id: 1, at: [115.5, 115.5], model }, { id: 2, at: [300.5, 300.5], model }], farm, () => 0, () => 0, counts);
+    settle(g, new Batch(), [], [{ id: 1, at: [115.5, 115.5], model }, { id: 2, at: [300.5, 300.5], model }], () => 0, () => 0, counts);
     expect(counts['monument dropped']).toBe(1); expect(counts.monument).toBe(1);
     expect(wetIn(g, 100, 100, 180, 180)).toBe(80 * 80 - 64);
     expect(g.mat[300 * N + 300]).toBe(Mat.Grass);
@@ -206,7 +206,7 @@ describe('the houses of the near view', () => {
   const places: [number, number, number, number | null, string][] = [[300, 200, 4, 60000, 'italy'], [240, 110, 1, null, 'italy'], [330, 300, 3, 20000, '']];
   const laid = (ox: number) => {
     const things = new Batch(), sites: Site[] = places.map(([x, z, size, pop, region], id) => ({ id, at: [x - ox + 0.5, z + 0.5], size, pop, region, style: styleOf(region) }));
-    const { lots } = settle(ground(ox), things, sites, [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, {});
+    const { lots } = settle(ground(ox), things, sites, [], () => 0, () => 0, {});
     return { things, lots };
   };
   const key = (l: Lot, ox: number) => [l.x + ox, l.z, l.w, l.d, l.y, l.floors, l.seed, l.front, l.region].join(' ');
