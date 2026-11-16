@@ -8,6 +8,7 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inG
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
+import { buildShore } from '../lookprobe/shore';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
@@ -80,6 +81,8 @@ const KM_PER_DEGREE = 111.32;
 const COURSES = 3, COURSES_DRY = 2;
 /** of the land the game's layer of 1356 calls cultivated this share is ploughed ground: as much as was drawn of it before the simulation's arable */
 const FIELDS_1356 = 0.3;
+/** a river's water lies this far under its banks */
+const RIVER_UNDER = 0.22;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
@@ -257,11 +260,16 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       }
     }
   }
+  // a river is one water: where two of its columns touch only at a corner, the lower of the two columns between them is water too
+  for (let z = 0; z + 1 < N; z++) for (let x = 0; x + 1 < N; x++) for (const [a, c, p, q] of [[idx(x, z), idx(x + 1, z + 1), idx(x + 1, z), idx(x, z + 1)], [idx(x + 1, z), idx(x, z + 1), idx(x, z), idx(x + 1, z + 1)]]) {
+    if (river[a] < 0 || river[c] < 0 || river[p] >= 0 || river[q] >= 0 || kind[p] !== Water.Land || kind[q] !== Water.Land) continue;
+    river[level[p] <= level[q] ? p : q] = Math.max(river[a], river[c]);
+  }
   for (let i = 0; i < N * N; i++) {
     const wet = kind[i] !== Water.Land || river[i] >= 0, lv = river[i] >= 0 ? river[i] : level[i];
     if (!wet) { g.h[i] = LAND_Y + lv; continue; }
     // a river runs just under its banks, so that it shows from the low camera; lakes and the sea lie deeper, as in the probe
-    level[i] = lv; g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = river[i] >= 0 ? LAND_Y + lv - 0.35 : SEA_Y + lv; g.h[i] = LAND_Y + lv - 2;
+    level[i] = lv; g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = river[i] >= 0 ? LAND_Y + lv - RIVER_UNDER : SEA_Y + lv; g.h[i] = LAND_Y + lv - 2;
   }
   // no dry column lies below the water beside it
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
@@ -418,6 +426,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / at(snow, x, z)) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
   const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
+  buildShore(ground, g, traits, bakedSky, part);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
   const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();
