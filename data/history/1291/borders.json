@@ -3,7 +3,8 @@
  "sources": [
   "Novgorod's treaty charters with the princes of Tver (1264, 1266, 1270; Gramoty Velikogo Novgoroda i Pskova, nos. 1-3): Novgorod's volosts Volok, Torzhok, Bezhichi, Vologda, Zavoloch'e, Koloperem', Tre, Perm', Pechera, Yugra",
   "J. Martin, Medieval Russia 980-1584 (2nd ed., 2007): Novgorod's northern tribute lands",
-  "Treaty of Nöteborg (1323) for the Karelian frontier as it had stood"
+  "Treaty of Nöteborg (1323) for the Karelian frontier as it had stood",
+  "Treaty of Almizra (1244) and the Castilian kingdom of Murcia: Villena, Almansa, Cieza, Mula and Moya were Castilian until the Aragonese war of 1296-1304 (Treaty of Torrellas 1304 gave Aragon only Alicante, Elche and Orihuela)"
  ],
  "rules": [
   {
@@ -100,6 +101,38 @@
     null
    ],
    "note": "Zavoloch'e, Pechora and Yugra: Novgorod's northern tribute lands up to the Urals (Perm' of the Vychegda has a realm of its own)."
+  },
+  {
+   "state": "castile",
+   "from": [
+    "aragon"
+   ],
+   "area": [
+    [
+     -1.65,
+     37.9
+    ],
+    [
+     -0.9,
+     37.9
+    ],
+    [
+     -0.9,
+     38.9
+    ],
+    [
+     -1.65,
+     38.9
+    ]
+   ],
+   "note": "The kingdom of Murcia and Villena/Almansa were Castilian in 1291 (Treaty of Almizra 1244); Aragon took them only in 1296."
+  },
+  {
+   "state": "castile",
+   "places": [
+    "Moya"
+   ],
+   "note": "Moya, a town of the Castilian Serranía de Cuenca."
   }
  ]
 }

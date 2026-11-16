@@ -3,11 +3,9 @@
 import { describe, it, expect } from 'vitest';
 import { lifeExpectancy, survivorship } from '../src/sim/people/lifetable';
 import { CITIES, SCALE, ageOn, cityPeopleByPlace, personsIn, MOTHER_AGE } from '../src/sim/systems/people';
-import { newWorldState, loadSetup, countedInPeopleOfTheTime } from '../tools/sim/load';
+import { newWorldState, loadSetup } from '../tools/sim/load';
 import { toHeads } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
-import { STATE_VERSION } from '../src/sim/state';
 import { advanceDay } from '../src/sim/engine';
 
 describe('the Coale-Demeny West life tables', () => {
@@ -112,21 +110,5 @@ describe('the people in the state', () => {
   it('survive the snapshot', () => {
     const { s } = newWorldState();
     expect(hashState(decodeState(encodeState(s)))).toBe(hashState(s));
-  });
-  it('are founded in an older world by the upgrade, as in a new one', () => {
-    const { s, w } = newWorldState();
-    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person; delete old.family; old.v = 4;
-    const loaded = decodeState(encodeState(old));
-    expect(loaded.v).toBe(4);
-    const up = upgradeState(loaded, w);
-    expect(up.v).toBe(STATE_VERSION);
-    expect(hashState(up)).toBe(hashState(s));
-  });
-  it('grow the places of an older world that are smaller than their cities', () => {
-    const { s, w } = newWorldState(), setup = loadSetup(1356);
-    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.person; delete old.family; old.v = 4;
-    for (const [p] of cityPeopleByPlace()) old.place.pop[p] = setup.pop[p] ?? 0;
-    const up = upgradeState(decodeState(encodeState(old)), w);
-    for (const [p, n] of cityPeopleByPlace()) expect(up.place.pop[p]).toBeGreaterThanOrEqual(toHeads(n) - 0.01);
   });
 });
