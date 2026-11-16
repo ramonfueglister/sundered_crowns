@@ -837,7 +837,7 @@
    "government": "feudal_monarchy",
    "culture": "bengali",
    "faith": "sunni",
-   "color": "#73322a",
+   "color": "#73312c",
    "capital": {
     "name": "Lakhnauti",
     "lat": 24.87,
@@ -2546,7 +2546,7 @@
    "government": "feudal_monarchy",
    "culture": "thai",
    "faith": "theravada",
-   "color": "#326134",
+   "color": "#326135",
    "capital": {
     "name": "Chiang Rai",
     "lat": 19.91,
@@ -2784,7 +2784,7 @@
    "government": "feudal_monarchy",
    "culture": "burmese",
    "faith": "theravada",
-   "color": "#5c531a",
+   "color": "#57511e",
    "capital": {
     "name": "Launggyet",
     "lat": 20.6,

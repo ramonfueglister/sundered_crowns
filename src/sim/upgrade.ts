@@ -77,6 +77,17 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     s.v = 7;
   }
+  if (s.v === 7) { // 7 → 8: a world of 1291 takes the people of 1291 (before the Black Death, data/history/1291/
+    // demography.json) in place of those of 1356 it was founded with; places smaller than their cities grow to them, the
+    // arable and the harvest follow on the next 1 January. Worlds of other years are as they were.
+    if (s.startYear === 1291) {
+      if (!setup) throw new Error('the upgrade of a world of 1291 needs its setup');
+      const st = setup(), pop = s.place.pop;
+      for (let i = 0; i < pop.length; i++) pop[i] = Math.max(0, st.pop[i] ?? 0);
+      if (uses1356Tables(s.startYear)) fitPlacesToCities(s);
+    }
+    s.v = 8;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

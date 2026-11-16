@@ -4,8 +4,9 @@ import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
 /** 2: places have a harvest. 3: places have arable. 4: England has a national economy. 5: the 30 largest cities have
- *  persons and families. 6: persons have genes. 7: the places and realms of the rest of the globe. Older snapshots are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 7;
+ *  persons and families. 6: persons have genes. 7: the places and realms of the rest of the globe.
+ *  8: a world of 1291 has the people of 1291 (before the Black Death). Older snapshots are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 8;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
