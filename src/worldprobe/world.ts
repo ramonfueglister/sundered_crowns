@@ -7,8 +7,8 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inG
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
-import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt } from './climate';
-import { BARE, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt } from './land';
+import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
+import { BARE, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
 import { type Lot, type Monument, type Settled, type Site, raise, settle } from './settle';
@@ -80,15 +80,18 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // real height, water class and latitude of every column, taken at its centre; the tree line, the snow line and the
   // foot of the rock follow the latitude
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N), shift = new Float32Array(N * N), lat = new Float32Array(N * N);
-  // the height from which the raised rock is pale: by the snow line of the place's climate, by its latitude without it
-  const snow = new Float32Array(N * N);
+  // the height from which the raised rock is pale and the height up to which the woods grow: by the lines of the
+  // place's climate, by its latitude without it
+  const snow = new Float32Array(N * N), woodsEnd = new Float32Array(N * N);
   // the kind of land of every column, and whether the woods and fields of 1356 are known there; the borders between the kinds are
   // frayed by a few kilometres, the same at every step
   const land = new Uint8Array(N * N).fill(Land.Temperate | WOODS_KNOWN | FIELDS_KNOWN);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const [cx, cy] = toCell(x + 0.5, z + 0.5), i = idx(x, z);
     metres[i] = sample(region, region.shaped, cx, cy); kind[i] = waterAt(region, cx, cy); lat[i] = latOf(region, cy); shift[i] = lineShift(lat[i]);
-    snow[i] = climate ? paleFrom(snowLineAt(climate, region.x0 + cx / region.cells, region.y0 + cy / region.cells)) : SNOW_LINE + shift[i];
+    const px = region.x0 + cx / region.cells, py = region.y0 + cy / region.cells;
+    snow[i] = climate ? paleFrom(snowLineAt(climate, px, py)) : SNOW_LINE + shift[i];
+    woodsEnd[i] = climate ? woodsUntil(treeLineAt(climate, px, py)) : TREE_LINE + shift[i];
     if (climate) {
       const wx = (x + ox) * wider, wz = (z + oz) * wider, fray = 12 / region.cells / wider;
       land[i] = climateAt(climate, region.x0 + (cx + (noise2(wx / 9, wz / 9, 61) - 0.5) * fray) / region.cells, region.y0 + (cy + (noise2(wx / 9, wz / 9, 62) - 0.5) * fray) / region.cells);
@@ -252,7 +255,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // from farther away the towns, the fields and the woods are part of the ground
     cover = coverLand(g, step, things, sites, { cultivated, vines, farm: (x, z) => farm(x, z).style.house, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
-      if (metres[i] > TREE_LINE + shift[i]) return null;
+      if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / wider))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const share = wooded(x + 0.5, z + 0.5);
       if (!share) return null;
@@ -275,7 +278,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const x = tx * TREE_PITCH - ox + (hash2(tx, tz, 71) - 0.5) * 2.4, z = tz * TREE_PITCH - oz + (hash2(tx, tz, 72) - 0.5) * 2.4;
       if (x < 2 || z < 2 || x >= N - 2 || z >= N - 2) continue;
       const i = idx(Math.floor(x), Math.floor(z)), here = land[i] & KIND;
-      if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > TREE_LINE + shift[i]) continue;
+      if (g.wet[i] || g.mat[i] !== Mat.Grass || metres[i] > woodsEnd[i]) continue;
       // a tree stands clear of the water, of what is built and of drops of more than a step
       let fits = true;
       for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || built.used[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
