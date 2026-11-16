@@ -8,7 +8,7 @@ import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
-import { BARE, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
+import { BARE, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand } from './far';
 import { type Lot, type Monument, type Settled, type Site, raise, settle } from './settle';
@@ -16,8 +16,9 @@ import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
 /**
- * The world is laid out in blocks: one block is one cell of the game map (about 0.77 km × cos(latitude), so 0.54 km in
- * the Alps), and the block grid is turned against the map so that north is at the top of the picture. A ground is the
+ * The world is laid out in blocks: one block of the finest step is a quarter of a cell of the game map's data (FINER,
+ * land.ts: about 0.19 km × cos(latitude), so 0.13 km in the Alps), and the block grid is turned against the map so
+ * that north is at the top of the picture. A ground is the
  * square of N × N blocks that starts at world block (ox, oz); of it, the columns of `part` become meshes. What is built
  * on a column depends only on the world around it, never on where the ground begins, so that grounds laid side by side
  * fit together.
@@ -42,10 +43,11 @@ export interface Place { lon: number; lat: number; size: number; pop1356: number
 export interface Landmark { id: string; lon: number; lat: number; built_state: string }
 
 /**
- * How real heights become blocks. The plains stay level, as in the reference; above them one block stands for
- * `METRES_PER_BLOCK`, and above the tree line for `METRES_PER_BLOCK_HIGH`, so that the peaks stand out of the high
- * country as the massifs of the reference do. The mountains come out several times steeper than they are (a diorama,
- * not a relief map).
+ * How real heights become blocks as wide as a cell of the data. The plains stay level, as in the reference; above
+ * them one block stands for `METRES_PER_BLOCK`, and above the tree line for `METRES_PER_BLOCK_HIGH`, so that the
+ * peaks stand out of the high country as the massifs of the reference do. Finer blocks stand for fewer metres (see
+ * buildWorld). The mountains come out steeper than they are (a diorama, not a relief map): on the finest blocks
+ * about twice as steep.
  */
 const PLAIN = 150, METRES_PER_BLOCK = 165, METRES_PER_BLOCK_HIGH = 100;
 /** the woods and fields of 1356 end with the game map: over this many map pixels before its east edge (some eight degrees) they give way to what the climate grows */
@@ -56,20 +58,28 @@ const PEAK = 1.3;
 const VALLEY_FROM = 75, FOOT = 4;
 /** the sides of the steps of overgrown hills */
 const SLOPE = rgb(0x86983c);
+/**
+ * half the width of a great river (rank 6 or less) and of the others, in finest blocks: some 500 m and 300 m, more
+ * than most were, so that they show from the low camera
+ */
+const RIVER_HALF = 2, BROOK_HALF = 1.2;
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
- * `region` must cover `windowOf(piece.ox, piece.oz)`. `step` is the step of the map the region is taken from: at step z
- * a block is 2^z map cells wide (see tools/worldprobe/build_overviews.py). The land is drawn the same way at every
- * step: the valleys are those of rivers 4^z times the size, and the heights are flattened (by 2^(0.6 z), so that
- * ranges still stand out but do not tower). What stands on it is built house by house and tree by tree at step 0
+ * `region` must cover `windowOf(piece.ox, piece.oz)` in the blocks of `step`: at step s a block is 2^s finest blocks
+ * wide, and so 2^(s − FINER_STEPS) cells of the land's data (see tools/worldprobe/build_overviews.py; the steps finer
+ * than the data are drawn from its finest cells, region.ts). The land is drawn the same way at every step: the valleys
+ * are those of rivers 4^z times the size on the data's step z, and the heights are flattened by 2^0.6 for every
+ * doubling of a block's width (so that ranges still stand out but do not tower, and stand out the more steeply the
+ * finer the blocks). What stands on it is built house by house and tree by tree at step 0
  * only; from step 1 on it is part of the ground (far.ts). `inhabitants` gives the people of the places (by their
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files.
  */
 export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map()): WorldScene {
-  const wider = 2 ** step, flatter = wider ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * step), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(wider)));
+  // a block's width in cells of the data: the rules of the land were made for those cells
+  const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
   /** region cell under a ground point: east is the picture's right, south its near side */
   const toCell = (x: number, z: number): [number, number] => { const [u, v] = cellOfBlock(x + ox, z + oz); return [u - c0x, v - c0y]; };
@@ -93,7 +103,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     snow[i] = climate ? paleFrom(snowLineAt(climate, px, py)) : SNOW_LINE + shift[i];
     woodsEnd[i] = climate ? woodsUntil(treeLineAt(climate, px, py)) : TREE_LINE + shift[i];
     if (climate) {
-      const wx = (x + ox) * wider, wz = (z + oz) * wider, fray = 12 / region.cells / wider;
+      // frayed by three blocks, and on the steps finer than the data by three of its cells
+      const wx = (x + ox) * cell, wz = (z + oz) * cell, fray = 3 / Math.min(1, cell);
       land[i] = climateAt(climate, region.x0 + (cx + (noise2(wx / 9, wz / 9, 61) - 0.5) * fray) / region.cells, region.y0 + (cy + (noise2(wx / 9, wz / 9, 62) - 0.5) * fray) / region.cells);
     }
   }
@@ -174,7 +185,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const river = new Int16Array(N * N).fill(-1);
   for (const r of region.rivers) {
     // a river is as wide as at the finest step, and never narrower than a block
-    const half = Math.max(0.6, (r.rank <= 6 ? 1.5 : 1.0) / wider), steps: [number, number, number][] = [];
+    const half = Math.max(0.6, (r.rank <= 6 ? RIVER_HALF : BROOK_HALF) / 2 ** step), steps: [number, number, number][] = [];
     for (let k = 0; k + 1 < r.pts.length; k++) {
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
       for (let t = 0; t < len; t += 0.5) {
@@ -256,7 +267,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover = coverLand(g, step, things, sites, { cultivated, vines, farm: (x, z) => farm(x, z).style.house, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
-      if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / wider))) ? { share: 0.8, crowns: PALM, tall: true } : null;
+      if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(3 / 2 ** step))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const share = wooded(x + 0.5, z + 0.5);
       if (!share) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true };

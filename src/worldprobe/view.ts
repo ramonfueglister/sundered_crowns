@@ -17,7 +17,7 @@ import { type Layout, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
 import { projectionOf } from './region';
-import { blockOfCell, cellOfBlock } from './land';
+import { FINER, blockOfCell, cellOfBlock } from './land';
 import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, realmsOf, reliefOf } from './zoom';
 
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
@@ -65,7 +65,8 @@ export interface WorldView {
 export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const name = o.region ?? 'world', base = import.meta.env.BASE_URL, still = o.still ?? false;
   const stage = await createStage({ fixed: true, tall: 70, canvas: o.canvas }), canvas = stage.canvas;
-  const projection = await projectionOf(name, base);
+  // the world's cells are its finest blocks, FINER to a cell of the land's data (land.ts)
+  const projection = await projectionOf(name, base, FINER);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(FARTHEST, Math.max(NEAREST, o.wide));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look() });

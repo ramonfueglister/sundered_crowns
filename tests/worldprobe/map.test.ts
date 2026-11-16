@@ -7,7 +7,7 @@ import { layoutNames, nameSvg } from '../../src/worldprobe/names';
 import { distance, mapColours, paintRealms, realmNames } from '../../src/worldprobe/paint';
 import { cover, keyOf } from '../../src/worldprobe/pyramid';
 import { VIEW } from '../../src/lookprobe/layout';
-import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
+import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, PAPER_COARSEST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
 
 describe('pyramid', () => {
   interface T { level: number; x: number; y: number }
@@ -97,7 +97,7 @@ describe('zoom', () => {
     for (const w of widths) for (const pixels of [800, 1672, 2560]) {
       const dot = (2 ** paperLevelOf(w, pixels) * pixels) / w;
       if (paperLevelOf(w, pixels) > 0) expect(dot).toBeLessThanOrEqual(1.5);
-      if (paperLevelOf(w, pixels) < 6) expect(dot).toBeGreaterThanOrEqual(0.7);
+      if (paperLevelOf(w, pixels) < PAPER_COARSEST) expect(dot).toBeGreaterThanOrEqual(0.7);
     }
   });
 });

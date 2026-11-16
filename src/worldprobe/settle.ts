@@ -47,6 +47,14 @@ export const POP_OF_SIZE = [0, 500, 2000];
 export const WALLED_FROM = 3;
 /** a field lot with the hedge round it, in blocks */
 const LOT_W = 11, LOT_D = 8;
+/**
+ * The share of the fields with a farmhouse beside it. A farmhouse holds some ten persons, a thousand people of 1356,
+ * and a lot is about one and a half km² of the land (blocks of some 130 m, land.ts): so the countryside holds some
+ * 35 people to the km² where half the land is under the plough, about as many as France had around 1328 (some 16 to
+ * 20 million in today's borders, after the État des paroisses et des feux). An assumption: the places of the
+ * gazetteer are a few of the villages there were, and the farms stand in for the rest.
+ */
+export const FARMS = 0.1;
 const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine'];
 /** Half the side of the square a walled town of `pop` inhabitants is first packed into; it grows from there until all are housed. */
 export const firstHalf = (pop: number) => Math.max(6, Math.round(0.8 * Math.sqrt(pop / PEOPLE_PER_PERSON / PERSONS_PER_FLOOR_BLOCK / 2.3) / 2));
@@ -177,8 +185,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) { const i = idx(x, z); field[i] = kind; g.mat[i] = Mat.Soil; }
     if (own(Math.floor(mx), Math.floor(mz))) { crops(things, g, [mx, mz], w, d, CROPS[kind]!, r); count('field'); }
     claim(x0, z0, x0 + w, z0 + d);
-    // a farmhouse beside one field in four
-    if (hash2(lx, lz, 69) < 0.25) { const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296)); home(f, x0 + w + 1, z0 + f.int(0, 2), f.int(3, 4), f.int(3, 4), f.chance(0.4) ? 2 : 1, 0, farm(mx, mz)); }
+    // a farmhouse beside one field in ten
+    if (hash2(lx, lz, 69) < FARMS) { const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296)); home(f, x0 + w + 1, z0 + f.int(0, 2), f.int(3, 4), f.int(3, 4), f.chance(0.4) ? 2 : 1, 0, farm(mx, mz)); }
   }
   return { used, town, field, towns, lots };
 }

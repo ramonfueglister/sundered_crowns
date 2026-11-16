@@ -9,7 +9,7 @@ import { listenForWorldClicks } from '../people/panel';
 import type { WorldView as View } from '../worldprobe/view';
 
 /** where the game opens: Europe as a map of its realms */
-const START = { lon: 12, lat: 47, wide: 20000 };
+const START = { lon: 12, lat: 47, wide: 80000 };
 /** a flight to a place shows this many finest blocks across the picture: its town and the land round it */
 const AT_PLACE = 260;
 

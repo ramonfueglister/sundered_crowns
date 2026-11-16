@@ -4,7 +4,19 @@ import { type RGB, rgb } from '../lookprobe/batch';
 import { NEAR, RIGHT } from '../lookprobe/layout';
 import { Land } from './climate';
 
-/** Whole-map cell of a world block. */
+/**
+ * The finest blocks are drawn this many steps finer than the cells of the land's data: a cell of the data is about
+ * 0.77 km × cos(latitude) wide, a finest block a quarter of that (some 130 m in middle Europe). Houses, trees and
+ * people are as large as before in blocks, so that the land is no longer far too small for them: Paris (200,000
+ * people at one person to a hundred) took 30 km of land, now 8 km. Steps 0 and 1 of the map are drawn from the
+ * data's finest cells (region.ts), step 2 is drawn from them as they are, and each coarser step from the data's
+ * next coarser one.
+ */
+export const FINER_STEPS = 2;
+/** finest blocks along a cell of the data */
+export const FINER = 2 ** FINER_STEPS;
+
+/** Whole-map cell of a world block: the cells counted on the map are as large as the finest blocks, only turned against them. */
 export const cellOfBlock = (wx: number, wz: number): [number, number] => [wx * RIGHT[0] + wz * RIGHT[1], wx * NEAR[0] + wz * NEAR[1]];
 /** World block of a whole-map cell. */
 export const blockOfCell = (u: number, v: number): [number, number] => [u * RIGHT[0] + v * NEAR[0], u * RIGHT[1] + v * NEAR[1]];
