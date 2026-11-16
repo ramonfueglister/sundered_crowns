@@ -9,6 +9,8 @@ import { gunzipSync } from 'node:zlib';
 import { rgb } from '../../src/lookprobe/batch';
 import { NAME_STYLE, layoutNames, nameSvg } from '../../src/worldprobe/names';
 import { paintRealms, placeAt, realmNames } from '../../src/worldprobe/paint';
+import { extentOf } from '../../src/worldprobe/extent';
+import { projectionFrom, type Index } from '../../src/worldprobe/region';
 
 const [out, sx0, sy0, sx1, sy1, slevel, setupPath = 'public/data/setup_1356.json'] = process.argv.slice(2);
 const level = Number(slevel), CELLS = 4, TILE = 512, W = 6144;
@@ -36,7 +38,9 @@ for (let ty = Math.floor(d0[1] / TILE); ty * TILE < d1[1]; ty++) for (let tx = M
 }
 // raw RGBA; tools/map/gauntlet.py turns it into a PNG
 writeFileSync(out.replace(/\.png$/, '.rgba'), png.data);
-const names = realmNames(realms, 4, (k) => [...setup.states[k].short.de].length).map((n) => ({ ...n, name: setup.states[n.realm].short.de }));
+// the names over what the world shows (data/content/world_extent.json), as the game lays them
+const index = JSON.parse(readFileSync('public/map/regions/world/index.json', 'utf8')) as Index, frame = extentOf(projectionFrom(index, 1 / index.cells));
+const names = realmNames(realms, 4, (k) => [...setup.states[k].short.de].length, frame).map((n) => ({ ...n, name: setup.states[n.realm].short.de }));
 writeFileSync(out.replace(/\.png$/, '.names.json'), JSON.stringify({ x0: d0[0] * perDot, y0: d0[1] * perDot, perDot, w: pw, h: ph, names }));
 console.log(`${tiles} tiles in ${Date.now() - t0} ms, ${pw}x${ph}`);
 

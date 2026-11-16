@@ -240,12 +240,17 @@ const LAKE = 6;
 /** a piece less than this many times as long as broad has its name run level (fully from 0.6 more) */
 const ROUND = 1.3;
 
-/** The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along. */
-export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => number = () => 8): RealmName[] {
+/**
+ * The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along.
+ * With a `frame` (map pixels, see extent.ts), only the land inside it counts: a realm reaching out of the world the game
+ * shows has its name written over the part that is shown.
+ */
+export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => number = () => 8, frame?: { west: number; east: number; north: number; south: number }): RealmName[] {
   // over the game map, or over the whole world frame where the rest of the globe has its places
   const W = r.rest ? Math.round(r.rest.w / r.rest.cells) : r.w, H = r.rest ? Math.round(r.rest.h / r.rest.cells) : r.h;
   const w = Math.floor(W / every), h = Math.floor(H / every), lands = r.owner.length, of = new Int16Array(w * h), piece = new Int32Array(w * h).fill(-1);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = placeAt(r, x * every, y * every); of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
+  const shown = (x: number, y: number) => !frame || (x >= frame.west && x < frame.east && y >= frame.north && y < frame.south);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = shown(x * every, y * every) ? placeAt(r, x * every, y * every) : -1; of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
   const best = new Map<number, { id: number; n: number; sx: number; sy: number; sxx: number; syy: number; sxy: number }>(), stack: number[] = [];
   let pieces = 0;
   for (let start = 0; start < w * h; start++) {
@@ -336,7 +341,9 @@ export function realmNames(r: Realms, every = 4, lettersOf: (realm: number) => n
     const free = (gx: number, gy: number) => {
       const x = Math.round(gx) - bx0 + pad, y = Math.round(gy) - by0 + pad;
       if (x < 0 || y < 0 || x >= bw || y >= bh) return false;
-      const place = placeAt(r, Math.floor((gx + 0.5) * every), Math.floor((gy + 0.5) * every)), own = place >= 0 && place < lands ? r.owner[place] : -1;
+      const mx0 = Math.floor((gx + 0.5) * every), my0 = Math.floor((gy + 0.5) * every);
+      if (!shown(mx0, my0)) return false;
+      const place = placeAt(r, mx0, my0), own = place >= 0 && place < lands ? r.owner[place] : -1;
       return own === realm ? blocked[y * bw + x] !== 1 && blocked[y * bw + x] !== 3 : blocked[y * bw + x] === 2;
     };
     /** the name's curve through slices `first` … `last` (straight: no bend) and the largest size its letters all keep to the land at */

@@ -4,7 +4,8 @@
 import { rgb } from '../lookprobe/batch';
 import { maybeGunzip } from '../render/assets';
 import { type RealmName, type Realms, type Rest, paintRealms, placeAt, realmNames } from './paint';
-import { indexOf } from './region';
+import { extentOf } from './extent';
+import { indexOf, projectionFrom } from './region';
 
 /** The realms as they stand: who holds every place (-1: no realm), and every realm's colour (0xrrggbb) and name, by its number. */
 export interface RealmsNow { owner: Int16Array; colors: number[]; names: string[] }
@@ -57,7 +58,11 @@ self.onmessage = async (e: MessageEvent<RealmsJob>) => {
       const place = placeAt(r, Math.floor(job.x), Math.floor(job.y));
       return done({ place: place >= 0 && place < r.owner.length ? place : -1 });
     }
-    if (job.kind === 'names') return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? "")].length).map((n) => ({ ...n, name: r.names[n.realm] })) });
+    if (job.kind === 'names') {
+      // only what the world shows is named: the frame (extent.ts) in map pixels
+      const index = await indexOf(job.region, job.base), frame = extentOf(projectionFrom(index, 1 / index.cells));
+      return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? '')].length, frame).map((n) => ({ ...n, name: r.names[n.realm] })) });
+    }
     const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, job.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
   } catch (err) {
