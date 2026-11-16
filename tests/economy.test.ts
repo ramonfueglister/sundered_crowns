@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
+import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath, countedInPeopleOfTheTime } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { calibrationJson, cityCalibrations, cityPlaces, dailyCalibration, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, cityTable, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../tools/sim/economy_calibration';
@@ -626,22 +626,25 @@ describe('the economies of the cities in the world', () => {
   describe('in a world saved by an older build', () => {
     it('are founded when a world from before the economy is loaded', () => {
       const { s, w } = newWorldState();
-      const old = decodeState(encodeState(s)) as any; delete old.economy; old.v = 3;
+      const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any); delete old.economy; old.v = 3;
       const loaded = decodeState(encodeState(old));
       expect(loaded.v).toBe(3); expect((loaded as any).economy).toBeUndefined();
       expect(hashState(upgradeState(loaded, w))).toBe(hashState(s));
     });
     it("replace England's economy on the day the world has reached, each from its starting position", () => {
-      // the state of the yearly economy of England: a year, a model, 15 figures. Version 7 is the running world (the
-      // places of the whole globe, England's economy); version 6 takes the step to 7 first
+      // the state of the yearly economy of England: a year, a model, 15 figures. Version 9 is the running world (the
+      // places of the whole globe, heads at 1:100, England's economy); versions 7 and 6 counted people of the time
+      // and take the steps to 9 first
       const england = (v: number) => {
-        const old = decodeState(encodeState(run.s)) as any;
+        let old = decodeState(encodeState(run.s)) as any;
+        if (v < 9) old = countedInPeopleOfTheTime(old);
         old.economy = { england: { year: 1357, model: new Uint8Array(64), figures: new Float64Array(15), halted: '' } }; old.v = v;
         return upgradeState(decodeState(encodeState(old)), run.w, () => loadSetup(1356));
       };
-      const loaded = england(7);
-      expect(STATE_VERSION).toBe(8);
+      const loaded = england(9);
+      expect(STATE_VERSION).toBe(10);
       expect(loaded.v).toBe(STATE_VERSION);
+      expect(hashState(england(7))).toBe(hashState(loaded));
       expect(hashState(england(6))).toBe(hashState(loaded));
       expect((loaded.economy as any).england).toBeUndefined();
       const e = loaded.economy.cities!;

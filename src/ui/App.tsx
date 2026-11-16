@@ -7,7 +7,7 @@ import { status, refusal, me, world, realms, placeInfo, connect, disconnect, cla
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
 import { IconDefs, IconPlaces, IconPlayers, IconCalendar, IconGear, IconCrown, IconGlobe, IconFullscreen, IconClose } from './icons';
-import { t, L, lang, setLang, terrainName, resourceName, num, pct, kcalText, pounds, index } from './i18n';
+import { t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
 import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
@@ -150,7 +150,7 @@ function PlacePanel() {
     <div class="side-head"><b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b><button class="close" title={t('close')} aria-label={t('close')} onClick={() => { selectedPlace.value = -1; }}><IconClose /></button></div>
     {d && <table class="facts"><tbody>
       <tr><th>{t('owner')}</th><td>{r ? <><i class="swatch" style={{ background: hex(r.color) }} />{L(r.name)}</> : t('nobody')}</td></tr>
-      <tr><th>{t('population')}</th><td>{num(d.pop)}</td></tr>
+      <tr><th>{t('population')}</th><td>{heads(d.pop)}</td></tr>
       <tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr>
       <tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr>
       <tr><th>{t('terrain')}</th><td>{terrainName(d.terrain)}</td></tr>
@@ -169,7 +169,7 @@ function PlacePanel() {
             <tr><th>{t('arable_yield')}</th><td>{d.harvest.arable.landYield === null ? '–' : num(d.harvest.arable.landYield)}</td></tr>
           </>
           : <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>}
-        <tr><th>{t('harvest_farmers')}</th><td>{num(d.harvest.farmers)}</td></tr>
+        <tr><th>{t('harvest_farmers')}</th><td>{heads(d.harvest.farmers)}</td></tr>
       </tbody></table>
     </div>}
     {d?.cityEconomy && wi && <div class="section">

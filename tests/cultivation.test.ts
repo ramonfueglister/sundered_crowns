@@ -6,6 +6,7 @@ import { ENGLAND_1300 } from '../src/sim/systems/harvest';
 import { newWorldState, loadLand, loadCultivation } from '../tools/sim/load';
 import { calibrate, englandAt } from '../tools/sim/calibration';
 import { advanceDay } from '../src/sim/engine';
+import { ofTime } from '../src/sim/scale';
 
 const { s: start, w } = newWorldState();
 const england = loadLand().england.places;
@@ -14,21 +15,21 @@ const place = (name: string) => { const i = w.names.indexOf(name); if (i < 0 || 
 describe('the rule for cultivated land', () => {
   const free = place('Kraków'), full = place('Norwich');
   it('gives every head the same arable while the place has land to spare', () => {
-    const p = start.place.pop[free] / 4;
+    const p = ofTime(start.place.pop[free]) / 4;
     expect(arableHa(w, free, p)).toBeCloseTo(w.arablePerHead * p, 9);
     expect(arableHa(w, free, 2 * p)).toBeCloseTo(2 * arableHa(w, free, p), 9);
   });
   it('stops at the land limit, however many people there are', () => {
-    expect(arableHa(w, full, start.place.pop[full])).toBeCloseTo(w.landLimit * hectares(w, full), 6);
-    expect(arableHa(w, full, 10 * start.place.pop[full])).toBe(arableHa(w, full, start.place.pop[full]));
+    expect(arableHa(w, full, ofTime(start.place.pop[full]))).toBeCloseTo(w.landLimit * hectares(w, full), 6);
+    expect(arableHa(w, full, 10 * ofTime(start.place.pop[full]))).toBe(arableHa(w, full, ofTime(start.place.pop[full])));
   });
   it('never cultivates land without a yield, and nothing without people', () => {
     const cairo = place('Cairo');
     expect(w.landFertile[cairo]).toBe(0);
-    expect(arableHa(w, cairo, start.place.pop[cairo])).toBe(0);
+    expect(arableHa(w, cairo, ofTime(start.place.pop[cairo]))).toBe(0);
     expect(arableHa(w, free, 0)).toBe(0);
     for (let i = 0; i < w.L; i++) {
-      const x = arableHa(w, i, start.place.pop[i]);
+      const x = arableHa(w, i, ofTime(start.place.pop[i]));
       expect(x).toBeLessThanOrEqual(landLimitHa(w, i));
       expect(x).toBeLessThanOrEqual(w.landFertile[i] * hectares(w, i) + 1e-9);
     }
@@ -77,7 +78,7 @@ describe('cultivated land in the running world', () => {
   it('is set for every place from the first day', () => {
     const { s } = newWorldState();
     expect(s.place.arable.length).toBe(w.L);
-    for (let i = 0; i < w.L; i++) expect(s.place.arable[i]).toBe(arableHa(w, i, s.place.pop[i]));
+    for (let i = 0; i < w.L; i++) expect(s.place.arable[i]).toBe(arableHa(w, i, ofTime(s.place.pop[i])));
   });
   it('follows the people on the first day of a year, before the harvest is brought in', () => {
     const { s } = newWorldState();

@@ -4,10 +4,12 @@ import type { I18n } from './i18n';
 import type { Table } from './ecs';
 
 /** 2: places have a harvest. 3: places have arable. 4: England has a national economy. 5: the 30 largest cities have
- *  persons and families. 6: persons have genes. 7: the places and realms of the rest of the globe. 8: the cities have
- *  economies of their own that trade with each other and compute one period a day; England's economy is gone. Older
- *  snapshots are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 8;
+ *  persons and families. 6: persons have genes. 7: the places and realms of the rest of the globe.
+ *  8: a world of 1291 has the people of 1291 (before the Black Death).
+ *  9: people and harvest counted in heads at 1:100 (src/sim/scale.ts).
+ *  10: the cities have economies of their own that trade with each other and compute one period a day; England's
+ *  economy is gone. Older snapshots are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 10;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

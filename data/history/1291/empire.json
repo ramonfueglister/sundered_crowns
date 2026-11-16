@@ -3272,7 +3272,7 @@
    "government": "city_republic",
    "culture": "rhinelander",
    "faith": "latin",
-   "color": "#744d69",
+   "color": "#784f68",
    "capital": {
     "name": "Aachen",
     "lat": 50.776,
@@ -6140,7 +6140,7 @@
    "government": "theocracy",
    "culture": "low_saxon",
    "faith": "latin",
-   "color": "#714b3b",
+   "color": "#724b3b",
    "capital": {
     "name": "Osnabrück",
     "lat": 52.279,

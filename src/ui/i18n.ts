@@ -40,7 +40,7 @@ const S = {
   resource: ['Resource', 'Rohstoff'],
   culture: ['Culture', 'Kultur'],
   faith: ['Faith', 'Glaube'],
-  population: ['Population', 'Bevölkerung'],
+  population: ['Population (1:100)', 'Bevölkerung (1:100)'],
   harvest: ['Grain harvest', 'Getreideernte'],
   harvest_year: ['Food in the year', 'Nahrung im Jahr'],
   harvest_head: ['Per head and day', 'Pro Kopf und Tag'],
@@ -109,6 +109,8 @@ const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.sl
 export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
 export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
+/** Heads of the simulation (1:100, src/sim/scale.ts): a village has a few, so below 100 with one decimal. */
+export const heads = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: Math.abs(v) < 100 ? 1 : 0 });
 /** A share as per cent with one decimal. */
 export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
 /** An amount of money in pounds. */

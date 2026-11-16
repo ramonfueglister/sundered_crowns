@@ -9,8 +9,9 @@ Who holds a place:
      data/history/1291/ref/euratlas_to_1291.json maps that label to may take it (1291 differences as overrides there);
      a labelled place is filled even beyond the usual reach, an unlabelled one only within it;
   4. the researched corrections of data/history/1291/borders.json (tools/map/borders.py) are applied last.
-Culture, faith, minority, people and density per place are taken over from setup_1356.json (the demography of 1291
-is not researched yet: a gap).
+People and density per place are those of 1356 raised to before the Black Death by region (data/history/1291/
+demography.json), and at least the people of the towns in the place (towns.py, which also writes the towns of the
+world graphic); culture, faith and minority are taken over from setup_1356.json (a gap).
 
 Run: python3 tools/history/1291/build.py   (after the region scripts; then python3 tools/map/palette.py 1291)
 """
@@ -223,8 +224,28 @@ def main():
     out_states = []
     for si, s in enumerate(states):
         o = dict(s); o['capital_loc'] = capital_loc[si]; out_states.append(o)
+    # people before the plague: those of 1356 times the factor of their region (data/history/1291/demography.json)
+    dem = json.load(open(os.path.join(ROOT, 'data', 'history', str(YEAR), 'demography.json'), encoding='utf-8'))
+    factor = np.ones(L)
+    for i in range(L):
+        for r in dem['regions']:
+            x0, y0, x1, y1 = r['box']
+            if x0 <= lon[i] <= x1 and y0 <= lat[i] <= y1: factor[i] = r['factor']; break
+    pop = [None if p is None else int(round(p * factor[i])) for i, p in enumerate(s56['pop'])]
+    dens = [None if d is None else round(d * factor[i], 2) for i, d in enumerate(s56['density'])]
+    # a place holds at least the people of its towns (tools/history/1291/towns.py), so the towns the world graphic
+    # builds and the people the simulation counts are one source
+    import towns as towns_mod
+    in_towns = towns_mod.towns_by_place(YEAR, L, lon, lat)
+    lifted = 0
+    for i in range(L):
+        if in_towns[i] > (pop[i] or 0):
+            if pop[i] and dens[i] is not None: dens[i] = round(dens[i] * in_towns[i] / pop[i], 2)
+            pop[i] = in_towns[i]; lifted += 1
+    print('places lifted to the people of their towns:', lifted)
+    print('people (M): 1356', round(sum(p or 0 for p in s56['pop']) / 1e6, 1), '-> 1291', round(sum(p or 0 for p in pop) / 1e6, 1))
     setup = {'year': YEAR, 'states': out_states, 'wars': wars, 'owner': fixed,
-             'culture': s56['culture'], 'faith': s56['faith'], 'minority': s56['minority'], 'pop': s56['pop'], 'density': s56['density']}
+             'culture': s56['culture'], 'faith': s56['faith'], 'minority': s56['minority'], 'pop': pop, 'density': dens}
     path = os.path.join(ROOT, 'public', 'data', f'setup_{YEAR}.json')
     json.dump(setup, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     size = np.bincount([o for o in fixed if o >= 0], minlength=len(states))

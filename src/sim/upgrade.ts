@@ -10,6 +10,7 @@ import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
 import { type SetupState, addRealms, parseColor, setPlaces } from './setup';
 import { uses1356Tables } from './tables';
+import { toHeads } from './scale';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
@@ -19,6 +20,14 @@ const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 
  * adds (only read when the state has fewer places than the map).
  */
 export function upgradeState(s: WorldState, w: World, setup?: () => SetupState): WorldState {
+  // Before 9 the world counted people of the time; since 9 it counts heads at 1:100 (src/sim/scale.ts). This is done
+  // first, so the steps below run with the systems of this build, which count heads: the people of a place and its
+  // harvest shrink by SCALE, its arable stays (the land is not scaled), and per head nothing changes.
+  if (s.v < 9) {
+    const { pop, harvest } = s.place as { pop: Float32Array; harvest?: Float64Array };
+    for (let i = 0; i < pop.length; i++) pop[i] = toHeads(pop[i]);
+    if (harvest) for (let i = 0; i < harvest.length; i++) harvest[i] = toHeads(harvest[i]);
+  }
   if (s.v === 1) { // 1 → 2: the harvest of each place (filled by the next step)
     s.place.harvest = new Float64Array(w.L);
     s.v = 2;
@@ -73,12 +82,24 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     s.v = 7;
   }
-  if (s.v === 7) { // 7 → 8: the cities have economies of their own that trade and compute one period a day;
+  if (s.v === 7) { // 7 → 8: a world of 1291 takes the people of 1291 (before the Black Death, data/history/1291/
+    // demography.json) in place of those of 1356 it was founded with; the arable and the harvest follow on the next
+    // 1 January; places smaller than their cities grow to them. Worlds of other years are as they were.
+    if (s.startYear === 1291) {
+      if (!setup) throw new Error('the upgrade of a world of 1291 needs its setup');
+      const st = setup(), pop = s.place.pop;
+      for (let i = 0; i < pop.length; i++) pop[i] = toHeads(Math.max(0, st.pop[i] ?? 0));
+      if (uses1356Tables(s.startYear)) fitPlacesToCities(s);
+    }
+    s.v = 8;
+  }
+  if (s.v === 8) s.v = 9; // 8 → 9: heads at 1:100, done above
+  if (s.v === 9) { // 9 → 10: the cities have economies of their own that trade and compute one period a day;
     // England's economy and its yearly figures are gone. The cities are founded on the day the world has reached,
     // each from its starting position: the days before are not computed (a world that has run for years would
     // stand still for minutes), so the first period of the economies is the next day of the world.
     foundEconomy(s, w);
-    s.v = 8;
+    s.v = 10;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

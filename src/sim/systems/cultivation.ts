@@ -14,6 +14,7 @@
 import type { System } from '../schedule';
 import type { WorldState } from '../state';
 import type { World } from '../world';
+import { ofTime } from '../scale';
 
 const HECTARES_PER_KM2 = 100;
 /** One statute acre in hectares. */
@@ -52,10 +53,11 @@ export function soilOf(w: World, i: number, ha: number): number {
   return soil;
 }
 
-/** Sets the arable of every place from the people who live there now. */
+/** Sets the arable of every place from the people who live there now. The land is not scaled (src/sim/scale.ts): the
+ *  heads of a place cultivate what the people of the time they stand for cultivated. */
 export function cultivate(s: WorldState, w: World): void {
   const a = s.place.arable, pop = s.place.pop;
-  for (let i = 0; i < a.length; i++) a[i] = arableHa(w, i, pop[i]);
+  for (let i = 0; i < a.length; i++) a[i] = arableHa(w, i, ofTime(pop[i]));
 }
 
 /** The arable follows the people once a year, on the first day of the year, before the harvest is brought in. */
