@@ -54,7 +54,8 @@ function per cell of the world: it reads the columns of its cell (`Column`: top 
 a batch in the piece's coordinates, never beyond the cell's rectangle and never above a column's top but for the
 mooring posts, so that houses and figures keep standing. Everything random comes from world coordinates, so paving
 bonds, steps and posts agree across cell borders (tested). Parts: paving slabs on paved columns; the quay wall where
-a dry column meets the water (stone blocks in running bond under a pale coping); a flight of water steps every so
+a dry column meets the water (stone blocks in running bond under a pale coping), and the same face where paved ground
+steps down to a paved column a block lower (the rim the world's layout lays along a town's water); a flight of water steps every so
 often along a straight quay, and mooring posts along it; the measures and colours are a tradition's `quay` (Venice:
 `measures/venedig_1356.json` "kai", by assumption). The water keeps its own surface and material: `waterColourAt`
 gives the near view's banded colour for its corners, `waterFlecks` the streaks and spots as quads a hair over the

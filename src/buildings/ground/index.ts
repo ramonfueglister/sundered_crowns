@@ -6,7 +6,8 @@
 // paving bonds, steps and posts agree across cell borders.
 //
 // Parts: paving slabs on paved columns; the quay wall where a dry column meets the water (stone blocks in running
-// bond under a pale coping); a flight of water steps every so often along a straight quay, and mooring posts along
+// bond under a pale coping) and where it meets a dry column a step lower (the rim of a quay a block under the town,
+// as the world's layout lays it); a flight of water steps every so often along a straight quay, and mooring posts along
 // it (a tradition's `quay`: the measures of Venice by assumption, see traditions/measures/venedig_1356.json "kai").
 // The water keeps its own surface and material; `waterColourAt` gives the near view's colour of it at a point.
 import { type Batch, type RGB, hash2, rgb, shade } from '../../lookprobe/batch';
@@ -48,9 +49,14 @@ export function fineGround(b: Batch, cell: GroundCell, at: ColumnAt, q: Quay = P
     if (c.paved) slabs(b, x, z, c.top, wx, wz, q.paving);
     for (const [side, dx, dz] of OUT) {
       const n = at(x + dx, z + dz);
-      if (!n?.wet) continue;
+      if (!n) continue;
+      if (!n.wet) {
+        // a dry column a step lower (the rim of a quay, a terrace): the same stone face down to its top, no posts
+        if (n.top < c.top - 1e-3) quayWall(b, x, z, side, c.top, n.top, wx, wz, q);
+        continue;
+      }
       // a dry column beside the water: the quay wall on that side, its coping along the top edge
-      quayWall(b, x, z, side, c.top, cell.water, wx, wz, q);
+      quayWall(b, x, z, side, c.top, cell.water - UNDER, wx, wz, q);
       // a mooring post or a flight of steps along this edge, where the edge is long enough to be a quay (the two
       // columns along the edge are dry and have the water on the same side)
       const [ux, uz] = dx ? [0, 1] : [1, 0], straight = at(x - ux, z - uz)?.wet === false && at(x - ux + dx, z - uz + dz)?.wet && at(x + ux, z + uz)?.wet === false && at(x + ux + dx, z + uz + dz)?.wet;
@@ -80,9 +86,12 @@ function slabs(b: Batch, x: number, z: number, y: number, wx: number, wz: number
   }
 }
 
-/** The quay wall on one side of a column: stone blocks of two by one fine blocks in running bond, a pale coping on top. */
-function quayWall(b: Batch, x: number, z: number, side: Side, top: number, water: number, wx: number, wz: number, q: Quay) {
-  const w = wallOf(x, z, x + 1, z + 1, side), y0 = water - UNDER, rows = Math.ceil((top - y0) / V), along = side === 'px' || side === 'nx' ? wz : wx;
+/** The quay wall on one side of a column, from `top` down to `y0`: stone blocks of two by one fine blocks in running bond, a pale coping on top. */
+function quayWall(b: Batch, x: number, z: number, side: Side, top: number, y0: number, wx: number, wz: number, q: Quay) {
+  const w = wallOf(x, z, x + 1, z + 1, side), rows = Math.ceil((top - y0) / V), along = side === 'px' || side === 'nx' ? wz : wx;
+  // the joints: a darker pane behind the blocks, so that the courses read on the lit faces too (in the picture of the
+  // game the sunlit quay was one plain face: the block's own ground showed through the joints in the same tone)
+  pane(b, w, 0, y0, w.len, top, shade(q.wall, 0.78), LIFT * 0.5);
   for (let k = 0; k < rows; k++) {
     const yb = top - (k + 1) * V, yt = top - k * V, off = (k % 2) * V;
     if (k === 0) { pane(b, w, 0, yb + V * 0.05, w.len, yt, q.coping, LIFT); continue; }
