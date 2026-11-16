@@ -2,7 +2,8 @@
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
-import type { EconomyClock, EconomyEngine, EconomyPrices, EconomyRules, EconomyWage } from './economy/engine';
+import type { EconomyClock, EconomyEngine, EconomyRules } from './economy/engine';
+import type { CalibrationTable } from './economy/calibration';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -38,27 +39,10 @@ export interface CultivationJson {
   englandLand: number;
 }
 
-/** The calibration of the cities' economies (public/data/economy_cities.json, written by
- *  tools/sim/calibrate_economy.ts from the table data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3
- *  to 5). */
-export interface EconomyJson {
-  case: string;
-  /** the year the starting position stands for: the economies exist in a world that starts in this year */
-  year: number;
-  /** the model computes every city at this scale (1:100) */
-  scale: number;
-  /** periods of the model in a year (365: one period is one day), and the lengths of the daily clock in periods */
-  periods_per_year: number;
-  clock: EconomyClock;
-  /** how the firms pay wages (economy feature 7) */
-  wage: EconomyWage;
-  /** how a planning firm sets supply and price (economy feature 8) */
-  prices: EconomyPrices;
-  /** the cities: the place, its name and its people, and `Parameters` and `InitialConditions` of the port, with its keys */
-  cities: { place: number; name: string; people: number; parameters: Record<string, unknown>; initial_conditions: Record<string, unknown> }[];
-}
-/** The economy of the world: the engine that computes a period, and what it is given for the cities. */
-export interface EconomySetup { engine: EconomyEngine; cities: EconomyJson }
+/** The economy of the world: the engine that computes a period, and the calibration table of the cities' economies
+ *  (data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3 to 11). The world calibrates every city from
+ *  the table when it founds the economies (src/sim/systems/economy.ts). */
+export interface EconomySetup { engine: EconomyEngine; table: CalibrationTable }
 
 export const EDGE_RIVER = 1, EDGE_STRAIT = 2, EDGE_COAST = 4, EDGE_SEA = 8;
 
@@ -83,12 +67,12 @@ export class World {
   landEdges: Float64Array; landFertile: Float64Array; landStepStart: Int32Array; landSteps: Float32Array;
   /** 1 for the places inside the outline of England (land.json) */
   england: Uint8Array;
-  /** the engine of the economies and the calibration of the cities: for every city its place, its people and the
-   *  JSON texts the engine reads (src/sim/systems/economy.ts) */
+  /** the engine of the economies and what the cities' economies are calibrated from: the table, the year its
+   *  starting position stands for, the scale the model computes at (1:100), the daily clock and the rules of the
+   *  firms. Which places have an economy is part of the state of a world (`CityEconomies.places`): they are the
+   *  cities of its start year */
   economyEngine: EconomyEngine;
-  cityEconomies: { year: number; scale: number; clock: EconomyClock; rules: EconomyRules; cities: { place: number; people: number; parameters: string; initialConditions: string }[] };
-  /** per place: the number of its city in `cityEconomies.cities`, -1 for a place without one */
-  cityOf: Int32Array;
+  cityEconomies: { year: number; scale: number; clock: EconomyClock; rules: EconomyRules; table: CalibrationTable };
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
@@ -127,19 +111,11 @@ export class World {
     this.england = new Uint8Array(L);
     for (const i of land.england.places) this.england[i] = 1;
     this.economyEngine = economy.engine;
-    const e = economy.cities;
-    if (e.periods_per_year !== e.clock.window) throw new Error(`the economy of ${e.case} computes ${e.periods_per_year} periods a year, the window of its clock is ${e.clock.window}`);
-    if (e.wage !== 'prices' && e.wage !== 'money') throw new Error(`the economy of ${e.case} pays wages in the way "${e.wage}", the engine knows 'prices' and 'money'`);
-    if (e.prices !== 'costs' && e.prices !== 'demand') throw new Error(`the economy of ${e.case} sets prices in the way "${e.prices}", the engine knows 'costs' and 'demand'`);
-    this.cityEconomies = {
-      year: e.year, scale: e.scale, clock: e.clock, rules: { wage: e.wage, prices: e.prices },
-      cities: e.cities.map((c) => ({ place: c.place, people: c.people, parameters: JSON.stringify(c.parameters), initialConditions: JSON.stringify(c.initial_conditions) })),
-    };
-    this.cityOf = new Int32Array(L).fill(-1);
-    e.cities.forEach((c, k) => {
-      if (!(c.place >= 0 && c.place < L) || this.cityOf[c.place] >= 0) throw new Error(`the city ${c.name} of the economy lies in place ${c.place}, which is no place or has a city already`);
-      this.cityOf[c.place] = k;
-    });
+    const t = economy.table, clock = { plan: t.clock.plan_days.value, window: t.clock.days_per_year.value }, wage = t.cities.wage.value, prices = t.cities.prices.value;
+    if (!(Number.isInteger(clock.plan) && clock.plan >= 1 && Number.isInteger(clock.window) && clock.window > 1)) throw new Error(`the economy of ${t.case} has a year of ${clock.window} days and a plan every ${clock.plan} days`);
+    if (wage !== 'prices' && wage !== 'money') throw new Error(`the economy of ${t.case} pays wages in the way "${wage}", the engine knows 'prices' and 'money'`);
+    if (prices !== 'costs' && prices !== 'demand') throw new Error(`the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`);
+    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices }, table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

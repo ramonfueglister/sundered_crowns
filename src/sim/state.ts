@@ -8,9 +8,12 @@ import type { Table } from './ecs';
  *  8: a world of 1291 has the people of 1291 (before the Black Death).
  *  9: people and harvest counted in heads at 1:100 (src/sim/scale.ts).
  *  10: the cities have economies of their own that trade with each other and compute one period a day; England's
- *  economy is gone. 11: a world of 1291 has the persons of its own 30 cities of 1291. Older snapshots are brought up
- *  to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 11;
+ *  economy is gone. 11: a world of 1291 has the persons of its own 30 cities of 1291. 12: the persons of the cities'
+ *  economies are the persons of the cities, and every firm is an entity (economy feature 10); the economies are
+ *  those of the cities of the start year and are founded anew. 13: a world of 1291 has the borders of its setup
+ *  again (Murcia to Castile). 14: the family is the purse and a woman without a husband works (economy feature
+ *  11); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 14;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -52,6 +55,19 @@ export const PERSON_SCHEMA = {
   /** the genes the portraits draw the face from: 34 genes of two alleles, 68 bytes a person, the first allele of
    *  every gene then the second (src/sim/people/genes.ts, after Apoleia's portrait/src/dna.rs) */
   genes: ['u8', 68],
+  /** the part of the person in the economy of the city (ROLE in src/sim/systems/work.ts; 0: none), and the person's
+   *  position in the engine's list of that part (economy feature 10) */
+  role: 'u8', agent: 'i32',
+  /** the firm of the person: the employer of a worker (−1 without work), the own firm of an owner; −1 for everybody
+   *  else */
+  firm: 'i32',
+  /** money of the person as the economy of the city computed it for the last day, in £ at the scale of the world:
+   *  the wage before tax, the disposable income and what was spent on consumption, each of that day; and the savings
+   *  (the deposits at the bank) */
+  wage: 'f32', income: 'f32', spent: 'f32', savings: 'f32',
+  /** what the person consumed on the last day, in £ at the scale of the world: the person's share by baskets of what
+   *  the family spent (economy feature 11, src/sim/systems/household.ts) */
+  consumed: 'f32',
 } as const;
 export type PersonSchema = typeof PERSON_SCHEMA;
 /** A family: a couple and its unmarried children in one place, or a person on their own. The id is never reused. */
@@ -59,14 +75,36 @@ export const FAMILY_SCHEMA = {
   place: 'i16',
   /** the couple at its head: person ids, −1 where there is none */
   man: 'i32', woman: 'i32',
+  /** the purse of the family (economy feature 11, src/sim/systems/household.ts), written after every day of the
+   *  economy: its persons, those of them who work, and the baskets they consume (an adult one, a child under 15 half) */
+  persons: 'u16', working: 'u16', baskets: 'f32',
+  /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
+   *  and their savings */
+  income: 'f32', spent: 'f32', savings: 'f32',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
+/** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
+ *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
+ *  are written by the economy after every day (src/sim/systems/economy.ts). */
+export const FIRM_SCHEMA = {
+  place: 'i16',
+  /** the person who owns the firm */
+  owner: 'i32',
+  /** the sector: its number in the calibration table (agriculture, industry, services) */
+  sector: 'u8',
+  /** the persons it employs (the owner is not one of them) */
+  employees: 'i32',
+  /** of the last day: the goods made (at the prices of the start), the price (1 at the start) and the wage in money
+   *  it pays a person before tax, in £ at the scale of the world */
+  output: 'f32', price: 'f32', pay: 'f32',
+} as const;
+export type FirmSchema = typeof FIRM_SCHEMA;
 
 /** Texts of a realm (kept beside the table: strings do not go into typed arrays). */
 export interface RealmText { key: string; name: I18n; short: I18n; adjective: I18n }
 
-/** The economies of the cities, computed by the economy engine (src/sim/systems/economy.ts). The cities are those
- *  of `World.cityEconomies`, in its order. */
+/** The economies of the cities, computed by the economy engine (src/sim/systems/economy.ts). The cities are the
+ *  `places`, in the engine's order. */
 export interface CityEconomies {
   /** the day of the world up to which the economies are computed: the day they were founded on, then the day of the
    *  last period */
@@ -81,6 +119,10 @@ export interface CityEconomies {
   years: Float64Array;
   /** why the economies stand still, '' while they run: a day that the engine could not compute stops them for good */
   halted: string;
+  /** the place of every city, in the engine's order: the places of the cities of the start year */
+  places: Int32Array;
+  /** per city the id of its first firm (`WorldState.firm`), and after the last city the number of all firms */
+  firm0: Int32Array;
 }
 
 export interface WorldState {
@@ -99,6 +141,8 @@ export interface WorldState {
   /** the persons of the 30 largest cities (src/sim/systems/people.ts) */
   person: Table<PersonSchema>;
   family: Table<FamilySchema>;
+  /** the firms of the cities' economies (src/sim/systems/economy.ts) */
+  firm: Table<FirmSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

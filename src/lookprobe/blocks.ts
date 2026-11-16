@@ -12,6 +12,8 @@ export const JUNGLE = [rgb(0x4f9a2e), rgb(0x5aa232), rgb(0x47902c), rgb(0x62a636
 const PALM_TRUNK = rgb(0xa98558);
 export const PALM = [rgb(0x5aa23a), rgb(0x66aa3e), rgb(0x4f9636)], ACACIA = [rgb(0x8a9a34), rgb(0x94a23a), rgb(0x7e9230)];
 export const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
+/** the spring corn: still green when the winter corn is ripe, and not yet as tall */
+export const OATS = [rgb(0x9ccc52), rgb(0x92c44a), rgb(0xa6d25a)], OATS_SIDE = rgb(0x74a83c);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
 const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
 const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], VINE_SIDE = rgb(0xc8c42c), GRAPES = rgb(0xe89038);
@@ -87,12 +89,13 @@ export function acacia(b: Batch, x: number, y: number, z: number, r: Rnd) {
  */
 export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd) {
   const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2);
-  if (crop === 'wheat') {
+  if (crop !== 'vine') {
+    const ripe = crop === 'wheat', tops = ripe ? WHEAT : OATS, side = ripe ? WHEAT_SIDE : OATS_SIDE;
     for (let row = 0; row + 1 <= w; row++) for (let k = 0; k + 1 <= d; k++) {
       const x = x0 + row + 0.5, z = z0 + k + 0.5;
       if (isWet(g, x, z)) continue;
-      const y = groundY(g, x, z), top = y + 1.35 + 0.5 * hash2(row, k, 51);
-      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, WHEAT_SIDE, { top: shade(WHEAT[Math.floor(hash2(row, k, 53) * WHEAT.length)], 1.2), foot: 0.85, away: WHEAT_GLOW });
+      const y = groundY(g, x, z), top = y + (ripe ? 1.35 : 0.8) + 0.5 * hash2(row, k, 51);
+      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], ripe ? 1.2 : 1.05), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
     }
     return;
   }

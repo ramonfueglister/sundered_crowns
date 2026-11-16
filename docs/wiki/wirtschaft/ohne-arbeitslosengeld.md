@@ -1,6 +1,6 @@
 # Ohne Arbeitslosengeld
 
-**Status:** Beschlossen (am 16.11.2026 freigegeben und gebaut; noch nicht in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 16.11.2026 freigegeben und gebaut; seit dem 16.11.2026 in der laufenden Welt) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > In den Städten bekommt niemand mehr Geld dafür, dass er keine Arbeit hat. Wer entlassen wird, hat kein Einkommen und kauft nichts. Die Städte bleiben trotzdem stehen, weil ein Betrieb, der zu wenig verkauft, jetzt seinen Preis oder seine Menge senkt.
 

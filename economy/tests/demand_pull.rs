@@ -198,16 +198,17 @@ fn with_wages_in_money_the_price_level_holds_and_without_them_it_leaves() {
 
 #[test]
 fn with_the_demand_pull_a_city_keeps_its_people_in_work_without_the_benefit() {
-    // Of six seeds tried (1356 to 1361) four show the slump of the paper's rule within ten years; three of them are
-    // computed here. The bounds are measured ones.
-    for seed in [1356, 1358, 1361] {
-        // without the unemployment benefit and with the rule of the paper a slump feeds itself (feature 6): in some
-        // year more than 4 % are without work (up to 15 %)
+    // Of twelve seeds tried (1356 to 1367) four show the slump of the paper's rule within ten years (1358, 1360, 1361,
+    // 1367); three of them are computed here. The bounds are measured ones, with London as the reference world has it
+    // since feature 10 (292 active persons).
+    for seed in [1358, 1360, 1361] {
+        // without the unemployment benefit and with the rule of the paper a slump feeds itself (feature 6): at the end
+        // of some year more than 4 % are without work (up to 12 %)
         let paper = years_of(city("London", seed, true, false), 10);
         assert!(paper.iter().any(|(_, without)| *without > 0.04), "seed {seed}: {paper:?}");
         // with the demand pull a firm that sells too little lowers its price or its supply. A city can still lose
-        // work in its first years (up to 3.4 % at the end of a year), but from the seventh year on nobody is without
-        // work, though nobody pays a benefit (feature 9)
+        // work in its first years (up to 2.1 % at the end of a year among the twelve seeds), but from the seventh year
+        // on nobody is without work, though nobody pays a benefit (feature 9)
         let pull = years_of(london(seed), 10);
         for (year, (_, without)) in pull.iter().enumerate() {
             assert!(*without < if year < 6 { 0.04 } else { 0.005 }, "seed {seed}, year {}: {without} without work", year + 1);

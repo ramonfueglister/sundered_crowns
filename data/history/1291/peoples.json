@@ -1,0 +1,358 @@
+{
+ "year": 1291,
+ "about": "Culture, faith and minority of 1 January 1291 where they differ from those of 1356 (public/data/setup_1356.json). Applied in this order by tools/history/1291/build.py.",
+ "rules": [
+  {
+   "id": "byzantine_asia_minor",
+   "where": {
+    "owner": [
+     "byzantium"
+    ],
+    "culture": [
+     "anatolian_turkish",
+     "turkmen"
+    ]
+   },
+   "sources": [
+    "S. Vryonis, The Decline of Medieval Hellenism in Asia Minor and the Process of Islamization from the Eleventh through the Fifteenth Century (1971): the Greek Christian population of western Asia Minor under Byzantine rule until the Turkish conquests of c. 1300-1337",
+    "C. Foss, \"The Defenses of Asia Minor against the Turks\", Greek Orthodox Theological Review 27 (1982); and the dates of the Ottoman conquests in Bithynia: Prusa 1326, Nicaea 1331, Nicomedia 1337"
+   ],
+   "note": "The places of Asia Minor that Byzantium still held in 1291 (Bithynia, Mysia, Lydia, Smyrna, Philadelphia) were Greek and Orthodox; the setup of 1356 has the Turks who conquered them between 1300 and 1337.",
+   "set": {
+    "culture": "greek",
+    "faith": "orthodox"
+   },
+   "minority": null
+  },
+  {
+   "id": "crimea_kipchak",
+   "where": {
+    "culture": [
+     "crimean"
+    ]
+   },
+   "sources": [
+    "Codex Cumanicus (Caffa, c. 1303, Biblioteca Marciana): the Kipchak (Cuman) language of the steppe and of the Crimea around 1300; the name \"Crimean Tatar\" belongs to a later people"
+   ],
+   "note": "The Turkic people of the Crimea around 1300 were Kipchaks (Cumans).",
+   "set": {
+    "culture": "kipchak_nomad"
+   }
+  },
+  {
+   "id": "horde_steppe_faith",
+   "where": {
+    "owner": [
+     "golden_horde",
+     "nogai"
+    ],
+    "culture": [
+     "tatar",
+     "kipchak_nomad"
+    ],
+    "faith": [
+     "sunni"
+    ],
+    "box": [
+     25,
+     40,
+     90,
+     62
+    ],
+    "not_box": [
+     47,
+     53.5,
+     53.5,
+     57
+    ],
+    "town_below": 5000
+   },
+   "sources": [
+    "D. DeWeese, Islamization and Native Religion in the Golden Horde (1994): Islam became the faith of the Horde under Özbeg Khan (r. 1313-1341); before him the khans after Berke and most of the nomads kept the steppe religion, while Muslims lived in the towns (Sarai, Bolghar, Crimea) and in Volga Bulgaria (Muslim since 922)"
+   ],
+   "note": "The nomads of the Golden Horde kept the steppe religion until Özbeg Khan; Volga Bulgaria (the box left out) and the places with a town of 5,000 people or more (Sarai, Hajji Tarkhan, Solkhat) keep their Muslims.",
+   "set": {
+    "faith": "tengri"
+   },
+   "assumption": "a town of 5,000 people or more stands for a Muslim urban community; this threshold is ours"
+  },
+  {
+   "id": "horde_steppe_faith_minority",
+   "where": {
+    "owner": [
+     "golden_horde",
+     "nogai"
+    ],
+    "minority_culture": [
+     "tatar",
+     "kipchak_nomad"
+    ],
+    "minority_faith": [
+     "sunni"
+    ],
+    "box": [
+     25,
+     40,
+     90,
+     62
+    ],
+    "not_box": [
+     47,
+     53.5,
+     53.5,
+     57
+    ]
+   },
+   "sources": [
+    "D. DeWeese, Islamization and Native Religion in the Golden Horde (1994): Islam became the faith of the Horde under Özbeg Khan (r. 1313-1341); before him the khans after Berke and most of the nomads kept the steppe religion, while Muslims lived in the towns (Sarai, Bolghar, Crimea) and in Volga Bulgaria (Muslim since 922)"
+   ],
+   "note": "The same for the Kipchak and Tatar minorities of the steppe.",
+   "minority": {
+    "faith": "tengri"
+   }
+  },
+  {
+   "id": "hungarian_cumans",
+   "where": {
+    "owner": [
+     "hungary"
+    ],
+    "culture": [
+     "kipchak_nomad"
+    ]
+   },
+   "sources": [
+    "N. Berend, At the Gate of Christendom: Jews, Muslims and \"Pagans\" in Medieval Hungary c. 1000-c. 1300 (2001): the Cumans settled in Hungary in 1239/1246 were still largely pagan; the Cuman laws of 1279 demanded their conversion, which took until the 14th century"
+   ],
+   "note": "The Cumans of the Hungarian plain were still pagan in 1291 (the setup of 1356 has them Catholic).",
+   "set": {
+    "faith": "tengri"
+   }
+  },
+  {
+   "id": "hungarian_cumans_minority",
+   "where": {
+    "owner": [
+     "hungary"
+    ],
+    "minority_culture": [
+     "kipchak_nomad"
+    ]
+   },
+   "sources": [
+    "N. Berend, At the Gate of Christendom: Jews, Muslims and \"Pagans\" in Medieval Hungary c. 1000-c. 1300 (2001): the Cumans settled in Hungary in 1239/1246 were still largely pagan; the Cuman laws of 1279 demanded their conversion, which took until the 14th century"
+   ],
+   "note": "The same for the Cuman minorities.",
+   "minority": {
+    "faith": "tengri"
+   }
+  },
+  {
+   "id": "acre",
+   "where": {
+    "owner": [
+     "jerusalem"
+    ],
+    "name": [
+     "Acre"
+    ]
+   },
+   "sources": [
+    "The fall of the crusader states in 1291: Acre 18 May, Tyre 19 May, Sidon July, Beirut 31 July, Tortosa 3 August (P. M. Holt, The Age of the Crusades, 1986; D. Jacoby, \"Aspects of Everyday Life in Frankish Acre\", Crusades 4, 2005): on 1 January 1291 they were Frankish towns, Acre with a Latin (Frankish and Italian) majority",
+    "R. Ellenblum, Frankish Rural Settlement in the Latin Kingdom of Jerusalem (1998): the countryside of the kingdom was Arabic-speaking, with many Eastern (Melkite) Christians"
+   ],
+   "note": "Acre, the capital of the kingdom, with its Frankish and Italian quarters; the Arabic-speaking Christians of the town and its plain as the minority.",
+   "set": {
+    "culture": "french",
+    "faith": "latin"
+   },
+   "minority": [
+    "levantine",
+    "orthodox",
+    0.4
+   ],
+   "assumption": "the share of the minority (0.4) is ours"
+  },
+  {
+   "id": "frankish_towns",
+   "where": {
+    "owner": [
+     "jerusalem"
+    ],
+    "name": [
+     "Tyre",
+     "Sidon",
+     "Beirut",
+     "Tartus"
+    ]
+   },
+   "sources": [
+    "The fall of the crusader states in 1291: Acre 18 May, Tyre 19 May, Sidon July, Beirut 31 July, Tortosa 3 August (P. M. Holt, The Age of the Crusades, 1986; D. Jacoby, \"Aspects of Everyday Life in Frankish Acre\", Crusades 4, 2005): on 1 January 1291 they were Frankish towns, Acre with a Latin (Frankish and Italian) majority",
+    "R. Ellenblum, Frankish Rural Settlement in the Latin Kingdom of Jerusalem (1998): the countryside of the kingdom was Arabic-speaking, with many Eastern (Melkite) Christians"
+   ],
+   "note": "Tyre, Sidon, Beirut and Tortosa: Frankish lords, garrisons and merchants over an Arabic-speaking population.",
+   "minority": [
+    "french",
+    "latin",
+    0.2
+   ],
+   "assumption": "the share of the minority (0.2) is ours"
+  },
+  {
+   "id": "cilicia",
+   "where": {
+    "owner": [
+     "armenia_cilicia"
+    ],
+    "culture": [
+     "turkmen",
+     "anatolian_turkish"
+    ],
+    "box": [
+     34.0,
+     36,
+     37.5,
+     39
+    ]
+   },
+   "sources": [
+    "T. S. R. Boase (ed.), The Cilician Kingdom of Armenia (1978): in 1291 the kingdom held the plain of Cilicia (Sis, Adana, Tarsus, Mamistra, Ayas) with an Armenian, Greek and Syriac population; the Turkmen lords (Ramadanids) took Adana only in the 1350s"
+   ],
+   "note": "The plain of Cilicia was Armenian in 1291; the setup of 1356 has the Turkmen who took it in the 1350s, here kept as the minority.",
+   "set": {
+    "culture": "armenian",
+    "faith": "armenian_apostolic"
+   },
+   "minority": [
+    "$old",
+    "$old",
+    0.2
+   ],
+   "assumption": "the share of the Turkmen minority (0.2) is ours"
+  },
+  {
+   "id": "lucera",
+   "where": {
+    "owner": [
+     "naples"
+    ],
+    "name": [
+     "Lucera"
+    ]
+   },
+   "sources": [
+    "J. A. Taylor, Muslims in Medieval Italy: The Colony at Lucera (2003): the Muslims of Sicily, settled at Lucera by Frederick II from 1224, lived there until Charles II of Anjou destroyed the colony in August 1300; Charles I settled Provençal Christians there in the 1270s"
+   ],
+   "note": "Lucera was the town of the Muslims of Sicily until 1300. Their Siculo-Arabic was a Maghrebi Arabic (the ancestor of Maltese), hence the culture maghrebi.",
+   "set": {
+    "culture": "maghrebi",
+    "faith": "sunni"
+   },
+   "minority": [
+    "occitan",
+    "latin",
+    0.1
+   ],
+   "assumption": "the share of the Provençal settlers (0.1) is ours"
+  },
+  {
+   "id": "valencia_mudejars",
+   "where": {
+    "owner": [
+     "aragon"
+    ],
+    "box": [
+     -1.0,
+     38.0,
+     0.6,
+     39.95
+    ],
+    "minority_culture": [
+     "andalusi"
+    ],
+    "minority_share_min": 0.25,
+    "not_name": [
+     "Valencia"
+    ]
+   },
+   "sources": [
+    "R. I. Burns, Islam under the Crusaders: Colonial Survival in the Thirteenth-Century Kingdom of Valencia (1973) and Muslims, Christians, and Jews in the Crusader Kingdom of Valencia (1984): in the 13th century the Muslims (Mudejars) were the majority of the kingdom outside the city of Valencia, which the conquest of 1238 had emptied of them; Christian settlers held the city and the towns"
+   ],
+   "note": "In the kingdom of Valencia the Muslims were the majority outside the city of Valencia; the places where the setup of 1356 still has a Muslim minority of a quarter or more have a Muslim majority in 1291, with the Christian settlers as the minority.",
+   "set": {
+    "culture": "andalusi",
+    "faith": "sunni"
+   },
+   "minority": [
+    "$old",
+    "$old",
+    0.35
+   ],
+   "assumption": "the share of the Christian settlers (0.35) is ours"
+  },
+  {
+   "id": "prussia_old_prussians",
+   "where": {
+    "owner": [
+     "teutonic_order",
+     "warmia",
+     "samland",
+     "pomesania"
+    ],
+    "culture": [
+     "prussian_german"
+    ],
+    "box": [
+     19.6,
+     53,
+     23,
+     55.5
+    ],
+    "not_name": [
+     "Königsberg",
+     "Braunsberg"
+    ]
+   },
+   "sources": [
+    "H. Boockmann, Der Deutsche Orden (1981) and W. Urban, The Prussian Crusade (1980): Prussia was conquered by 1283; German settlement before 1300 was in the Kulmerland, along the Vistula (Thorn, Kulm, Graudenz, Marienwerder, Marienburg, Christburg, Elbing) and in the towns Braunsberg (1284) and Königsberg (1286); the towns further inland date from the 14th century (Heilsberg 1308, Osterode 1329, Bartenstein 1332, Allenstein 1353, Rastenburg 1357), so the land east of the Passarge was still Old Prussian"
+   ],
+   "note": "East of the Passarge the German villages and towns came in the 14th century; in 1291 the land was Old Prussian, with German settlers as a minority.",
+   "set": {
+    "culture": "old_prussian"
+   },
+   "minority": [
+    "prussian_german",
+    "latin",
+    0.15
+   ],
+   "assumption": "the share of the German settlers (0.15) is ours"
+  },
+  {
+   "id": "jews_of_france",
+   "where": {
+    "owner": [
+     "france"
+    ],
+    "town_at_least": 5000,
+    "no_minority": true
+   },
+   "sources": [
+    "W. C. Jordan, The French Monarchy and the Jews: From Philip Augustus to the Last Capetians (1989): the Jews lived in the royal domain until Philip IV expelled them in 1306 (Gascony had expelled them in 1287, Anjou and Maine in 1289, England in 1290); the setup of 1356 has none in royal France"
+   ],
+   "note": "Jews lived in the towns of the royal domain until 1306: Ashkenazi in the north (northern France was part of Ashkenaz), as the setup models the Jews of the Midi and Provence, Sephardi in the Occitan south.",
+   "minority": {
+    "occitan": [
+     "sephardi",
+     "jewish",
+     0.03
+    ],
+    "*": [
+     "ashkenazi",
+     "jewish",
+     0.03
+    ]
+   },
+   "assumption": "the share 0.03 in places with a town of 5,000 people or more is ours (about 100,000 Jews in France in 1306 after the usual estimate, most of them in towns)"
+  }
+ ]
+}

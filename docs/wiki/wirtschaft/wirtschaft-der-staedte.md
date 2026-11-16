@@ -1,6 +1,6 @@
 # Wirtschaft der Städte
 
-**Status:** Beschlossen (am 15.11.2026 entschieden und gebaut; in der laufenden Welt, sobald der Weltserver neu aufgespielt ist) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
+**Status:** Im Spiel (am 15.11.2026 entschieden und gebaut; seit dem 16.11.2026 in der laufenden Welt. Die laufende Welt beginnt im Jahr 1291 und rechnet die Städte vorläufig mit den Tabellen von 1356) · **Bereich:** Wirtschaft · **Stand:** 2026-11-16
 
 > Jede der grössten Städte der Welt ist eine eigene, vollständige Volkswirtschaft: Personen, Betriebe, eine Bank, eine Krone und ein Ausland, jeder mit eigener Bilanz. Das Ausland einer Stadt sind die anderen Städte: Händler kaufen in einer Stadt und verkaufen am nächsten Tag in einer anderen. Gerechnet wird an jedem Spieltag.
 

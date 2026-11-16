@@ -79,9 +79,22 @@ const LEAN = 0.7;
  * `lean` (-1 … 1, see `leanOf`) is how much more than the land round it the place is one for woods.
  */
 export function stand(share: number, wx: number, wz: number, fine = 1, lean = 0): number {
+  return laid(share, rankOf(lie(wx, wz)), fine, lean);
+}
+/**
+ * How far the ground at (wx, wz), counted in data cells, is ploughed land, 0 … 1, where `share` of the landscape is:
+ * 1 among the fields, 0 off them. The fields lie together as the woods do, and where the woods do not: at the other
+ * end of the same lie of the land and on its floors and plains, so that the open grass, the pastures and meadows, is
+ * left between the two. Over a landscape the mean is `share`; `fine` and `lean` as for `stand`.
+ */
+export function tilth(share: number, wx: number, wz: number, fine = 1, lean = 0): number {
+  return laid(share, 1 - rankOf(lie(wx, wz)), fine, -lean);
+}
+/** `share` of the land laid out where its rank is lowest, with a frayed edge */
+function laid(share: number, rank: number, fine: number, lean: number): number {
   if (fine <= 0 || share <= 0 || share >= 1) return Math.max(0, Math.min(1, share));
   const here = share + LEAN * lean * Math.min(share, 1 - share), edge = EDGE * Math.min(here, 1 - here);
-  return share + (smooth(here + edge, here - edge, rankOf(lie(wx, wz))) - share) * fine;
+  return share + (smooth(here + edge, here - edge, rank) - share) * fine;
 }
 
 /** heights of a landscape that differ by less than this many metres are a plain: there the lie of the land says little */

@@ -102,7 +102,10 @@ export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number
   { at: toXZ(0.52, 0.27), r: 7, houses: 4, towers: 0 },
   { at: toXZ(0.86, 0.19), r: 7, houses: 5, towers: 0 },
 ];
-export type Crop = 'wheat' | 'vine';
+/** wheat stands for the winter corn, ripe in the picture's summer; oats for the spring corn, still green then */
+export type Crop = 'wheat' | 'oats' | 'vine';
+/** what a ploughed column carries: a crop, or nothing this year (the fallow, grazed until it is ploughed again) */
+export type Tilled = Crop | 'fallow';
 /** fields as ground rectangles: centre, size along x and z, crop */
 export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
   { at: toXZ(0.04, 0.3), w: 22, d: 15, crop: 'vine' },
@@ -164,7 +167,7 @@ export interface GroundTraits {
   city(x: number, z: number): boolean;
   /** blocks to the edge of the main square, negative inside it (Infinity where there is none) */
   plaza(x: number, z: number): number;
-  crop(x: number, z: number, margin?: number): Crop | null;
+  crop(x: number, z: number, margin?: number): Tilled | null;
   /** blocks to the nearest path */
   road(x: number, z: number): number;
   /** how sun-bleached the meadow is (0 … 1) */
