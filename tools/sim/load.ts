@@ -17,11 +17,11 @@ export function loadWorld(): World {
 }
 /** A world with the given calibration of cultivated land (the calibration itself starts from one without). */
 export function buildWorld(cultivation: CultivationJson): World {
-  return new World(read('geo.json'), read('world.json'), loadLand(), cultivation, { engine: loadEconomyEngine(), england: loadEconomy() });
+  return new World(read('geo.json'), read('world.json'), loadLand(), cultivation, { engine: loadEconomyEngine(), cities: loadEconomy() });
 }
 export function loadLand(): LandJson { return read('land.json'); }
 export function loadCultivation(): CultivationJson { return read('cultivation.json'); }
-export function loadEconomy(): EconomyJson { return read('economy_england.json'); }
+export function loadEconomy(): EconomyJson { return read('economy_cities.json'); }
 /** The economy engine: the WebAssembly file built from economy/ (npm run economy:build; server/Dockerfile builds it
  *  into the image). */
 export const ECONOMY_WASM = resolve(ROOT, 'build/economy/sc_economy.wasm');

@@ -46,7 +46,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText: [], ruler: [],
-    economy: { england: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
+    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), // in the order
     // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
   addRealms(s, setup, 0, L);
