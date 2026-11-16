@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import { gunzipSync } from 'node:zlib';
 import { rgb } from '../../src/lookprobe/batch';
 import { NAME_STYLE, layoutNames, nameSvg } from '../../src/worldprobe/names';
-import { paintRealms, realmNames } from '../../src/worldprobe/paint';
+import { paintRealms, placeAt, realmNames } from '../../src/worldprobe/paint';
 
 const [out, sx0, sy0, sx1, sy1, slevel, setupPath = 'public/data/setup_1356.json'] = process.argv.slice(2);
 const level = Number(slevel), CELLS = 4, TILE = 512, W = 6144;
@@ -58,5 +58,29 @@ await page.evaluate(async (b64) => {
   await document.fonts.ready;
 }, rgba);
 await page.screenshot({ path: out });
+// how far the letters keep to their realms: each letter as the box of its advance along the curve, ±0.3 of the type size
+// across it (mixed case about the curve's middle), sampled 5 × 3; a sample on land of another holder, land of none or
+// water counts as outside
+const glyphs = await page.evaluate(() => Array.from(document.querySelectorAll('text'), (t) => {
+  const el = t as SVGTextContentElement, size = Number(t.getAttribute('font-size')), n = el.getNumberOfChars(), out: number[][] = [];
+  for (let i = 0; i < n; i++) { const a = el.getStartPositionOfChar(i), b = el.getEndPositionOfChar(i); out.push([a.x, a.y, b.x, b.y]); }
+  return { realm: Number((t.querySelector('textPath')?.getAttribute('href') ?? '#n-1').slice(2)), size, glyphs: out };
+}));
 await browser.close();
-console.log(`${laid.length} names`);
+const ownerAt = (px: number, py: number) => { const at = placeAt(realms, Math.floor((d0[0] + px) * perDot), Math.floor((d0[1] + py) * perDot)); return at >= 0 && at < realms.owner.length ? realms.owner[at] : -2; };
+let outside = 0, samples = 0, bad = 0;
+const worst: [string, number][] = [];
+for (const g of glyphs) {
+  let o = 0, k = 0;
+  for (const [ax, ay, bx, by] of g.glyphs) {
+    const len = Math.hypot(bx - ax, by - ay) || 1, nx = -(by - ay) / len, ny = (bx - ax) / len;
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) {
+      const t = (i + 0.5) / 5, off = (j - 1) * 0.3 * g.size, px = ax + (bx - ax) * t + nx * off, py = ay + (by - ay) * t + ny * off;
+      k++; if (ownerAt(px, py) !== g.realm) o++;
+    }
+  }
+  outside += o; samples += k;
+  if (o / k > 0.05) { bad++; worst.push([setup.states[g.realm].short.de, Math.round((100 * o) / k)]); }
+}
+worst.sort((p, q) => q[1] - p[1]);
+console.log(`${laid.length} names; letters outside their realm: ${((100 * outside) / Math.max(1, samples)).toFixed(1)} % of samples; names over 5 %: ${bad}; worst ${worst.slice(0, 12).map(([n, v]) => `${n} ${v}%`).join(', ')}`);
