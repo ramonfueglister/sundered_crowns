@@ -4,10 +4,10 @@
 import { describe, it, expect } from 'vitest';
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../src/sim/systems/harvest';
 import { hectares, soilOf } from '../src/sim/systems/cultivation';
-import { newWorldState, countedInPeopleOfTheTime } from '../tools/sim/load';
+import { newWorldState } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
-import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
+import { encodeState, decodeState } from '../src/sim/snapshot';
+import { upgradeState, OLDEST_STATE_VERSION } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
 import { placeDetail } from '../src/net/views';
 
@@ -71,23 +71,10 @@ describe('the harvest on the map', () => {
 });
 
 describe('a world saved by an older build', () => {
-  it('from before the harvest existed is brought up to date when it is loaded', () => {
+  it('older than the oldest step this build has is refused', () => {
     const { s, w } = newWorldState();
-    const fresh = hashState(s);
-    const old = decodeState(encodeState(s)) as any;
-    countedInPeopleOfTheTime(old); delete old.place.harvest; delete old.place.arable; old.v = 1;
-    const loaded = decodeState(encodeState(old));
-    expect(loaded.v).toBe(1);
-    expect(hashState(upgradeState(loaded, w))).toBe(fresh);
-  });
-  it('from before cultivated land existed gets its arable, and its harvest counts with it', () => {
-    const { s, w } = newWorldState();
-    const fresh = hashState(s);
-    const old = decodeState(encodeState(s)) as any;
-    countedInPeopleOfTheTime(old); delete old.place.arable; old.place.harvest = old.place.harvest.map((v: number) => v * 3); old.v = 2; // a harvest from all land
-    const loaded = decodeState(encodeState(old));
-    expect(loaded.v).toBe(2);
-    expect(hashState(upgradeState(loaded, w))).toBe(fresh);
+    const old = decodeState(encodeState(s)) as any; old.v = OLDEST_STATE_VERSION - 1;
+    expect(() => upgradeState(decodeState(encodeState(old)), w)).toThrow(/older/);
   });
   it('refuses a state from a newer build', () => {
     const { s } = newWorldState();

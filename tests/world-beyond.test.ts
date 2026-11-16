@@ -1,10 +1,7 @@
 // The rest of the globe (tools/geo/merge_beyond.py): the places beyond the game map follow its 15,220 places, their
 // realms follow the realms of the game map, and a running world of the game map alone gets them by the upgrade.
 import { describe, it, expect } from 'vitest';
-import { newWorldState, loadSetup, countedInPeopleOfTheTime } from '../tools/sim/load';
-import { encodeState, decodeState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
-import { STATE_VERSION } from '../src/sim/state';
+import { newWorldState, loadSetup } from '../tools/sim/load';
 import { ALL_CULTURES, FAITHS } from '../src/sim/content/peoples';
 
 const GAME_MAP = 15220;
@@ -41,35 +38,5 @@ describe('the realms of the rest of the globe', () => {
   it('do not change the cultures and faiths of the game map', () => {
     expect(ALL_CULTURES.indexOf('unknown')).toBeLessThan(ALL_CULTURES.indexOf('han'));
     expect(FAITHS.findIndex((f) => f.id === 'anglican_type')).toBeLessThan(FAITHS.findIndex((f) => f.id === 'mahayana'));
-  });
-});
-
-describe('a running world of the game map alone', () => {
-  it('gets the places and realms of the rest of the globe by the upgrade, as the setup has them', () => {
-    const old = countedInPeopleOfTheTime(decodeState(encodeState(s)) as any);
-    for (const k of Object.keys(old.place)) old.place[k] = old.place[k].slice(0, GAME_MAP);
-    // the places of the game map no realm held before
-    for (let i = 0; i < GAME_MAP; i++) if (old.place.owner[i] >= R0) old.place.owner[i] = -1;
-    old.realm.size = R0; old.realm.alive.fill(0, R0); old.realmText = old.realmText.slice(0, R0); old.ruler = old.ruler.slice(0, R0);
-    old.v = 6;
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
-    expect(up.v).toBe(STATE_VERSION);
-    expect(up.realm.size).toBe(s.realm.size);
-    expect(up.realmText.map((t) => t.key)).toEqual(s.realmText.map((t) => t.key));
-    expect(up.ruler.length).toBe(s.ruler.length);
-    for (const k of ['owner', 'culture', 'faith', 'pop', 'arable', 'harvest'] as const) expect(Array.from(up.place[k]), k).toEqual(Array.from(s.place[k]));
-    expect(Array.from(up.realm.cols.capital.slice(0, s.realm.size))).toEqual(Array.from(s.realm.cols.capital.slice(0, s.realm.size)));
-  });
-  it('takes the colours of the map of 1356 by the upgrade', () => {
-    const old = decodeState(encodeState(s)) as any;
-    old.realm.cols.color.fill(0x123456); old.v = 6;
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
-    expect(Array.from(up.realm.cols.color.slice(0, s.realm.size))).toEqual(Array.from(s.realm.cols.color.slice(0, s.realm.size)));
-  });
-  it('cannot be upgraded without the setup', () => {
-    const old = decodeState(encodeState(s)) as any;
-    for (const k of Object.keys(old.place)) old.place[k] = old.place[k].slice(0, GAME_MAP);
-    old.v = 6;
-    expect(() => upgradeState(decodeState(encodeState(old)), w)).toThrow(/setup/);
   });
 });

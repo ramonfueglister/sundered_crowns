@@ -7,7 +7,6 @@ import type { CalibrationTable } from '../../src/sim/economy/calibration';
 import { wasmEconomyEngine, type EconomyClock, type EconomyEngine, type EconomyPrices, type EconomyWage } from '../../src/sim/economy/engine';
 import { createWorldState, type SetupState } from '../../src/sim/setup';
 import type { WorldState } from '../../src/sim/state';
-import { SCALE } from '../../src/sim/scale';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
@@ -57,11 +56,3 @@ export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: Wor
   return { s: createWorldState(w, loadSetup(year), seed), w };
 }
 
-/** A world as a build before state version 9 saved it: people and harvest in people of the time, not heads at 1:100
- *  (src/sim/scale.ts). For tests of the upgrade; changes `s` and returns it. */
-export function countedInPeopleOfTheTime<T extends { place: { pop: ArrayLike<number> & { [i: number]: number }; harvest?: ArrayLike<number> & { [i: number]: number } } }>(s: T): T {
-  const { pop, harvest } = s.place;
-  for (let i = 0; i < pop.length; i++) pop[i] = Math.round(pop[i] * SCALE);
-  if (harvest) for (let i = 0; i < harvest.length; i++) harvest[i] *= SCALE;
-  return s;
-}

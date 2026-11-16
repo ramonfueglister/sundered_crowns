@@ -11,7 +11,7 @@ terrain and climate (tools/geo/build_setup.py's rules), culture, faith and peopl
 "demography"), and its holder in 1356: the realms of world_beyond.json and those of the game map that reach beyond it
 ("extends") spread from their capitals and holdings over the land, as build_setup.py spreads them.
 
-Writes public/data/geo.json, world.json, land.json, setup_1356.json, setup_1492.json, public/map/ids.bin.gz (the sea
+Writes public/data/geo.json, world.json, land.json, setup_1356.json, public/map/ids.bin.gz (the sea
 zones renumbered) and public/map/beyond.bin.gz (the new raster: u16 ids over step z3 of the world frame, 0 inside the
 game map). Run once on the files as committed before the merge: python3 tools/geo/merge_beyond.py
 """
@@ -353,10 +353,6 @@ def main():
     setup['pop'] += [int(v) for v in pop]; setup['density'] += [round(float(v), 2) for v in dens]
     setup['wars'] += hist['wars']
     json.dump(setup, open(os.path.join(DATA, 'setup_1356.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    s92 = read('setup_1492.json')
-    s92['owner'] += [-1] * L2; s92['culture'] += culture; s92['faith'] += faith; s92['minority'] += minority
-    s92['pop'] += [int(v * 1.3) for v in pop]; s92['density'] += [round(float(v) * 1.3, 2) for v in dens]
-    json.dump(s92, open(os.path.join(DATA, 'setup_1492.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     for name, a in (('ids.bin.gz', old_id(gids)), ('beyond.bin.gz', nb)):
         with open(os.path.join(MAP, name), 'wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
             f.write(a.astype('<u2').tobytes())
