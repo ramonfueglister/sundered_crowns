@@ -34,17 +34,16 @@ Rules (nothing is invented; what the sources leave open is counted):
 - A realm whose title ended while its state went on under another title of the same holder (Moscow 1547 tsardom,
   England 1707 Great Britain, Brandenburg 1806 Prussia; the successions of the same file) counts as held after.
 - The date of a change: Cliopatria gives only the first year of the row that shows it, so the change happened after
-  the first year of the row that held the places before (the window). Within that window, in this order:
+  the first year of the row that held the places before, and after 1291 and the places' last change (the window). Within that window, in this order:
   1. the end of the losing realm's title in the ruler lists, when the change takes the realm's last places (Bosnia
      5 June 1463, Granada 1492);
   2. a row of the Wikipedia timelines of geopolitical changes (data/history/borders/wikipedia_timeline.json) that
-     links both the gaining and the losing polity (their Wikidata ids), or one of them and a place within 150 km of a
-     moved place; the latest such row;
-  3. else the year of Cliopatria's row; precision "year". Merges carry their day.
+     links both the gaining and the losing polity (their Wikidata ids); the latest such row;
+  3. else the middle of the window, precision "window" with the window's years (counted). Merges carry their day.
 
     python3 tools/history/borders/build.py
 """
-import collections, json, math, os, re
+import collections, datetime, json, os, re
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848
@@ -77,6 +76,7 @@ def build():
     keys = [st['id'] for st in setup['states']]
     index = {k: i for i, k in enumerate(keys)}
     current = list(setup['owner'])
+    changed = [FIRST] * len(current)                     # the year of a place's last change in our world
     history = [[] for _ in current]                       # the realms that held a place before its present one, oldest first
     frame = sorted({p for r in clio['rows'] for p in r['places']})
     nbr = collections.defaultdict(list)
@@ -230,10 +230,12 @@ def build():
                            'places': sorted(places), 'kind': 'transfer',
                            'source': f"Cliopatria v0.2.1: {r['name']} {r['from']}-{r['to']} ({r['wikidata']})",
                            '_gain': r['wikidata'], '_lost': sorted({rows[prev[p]]['wikidata'] for p in places if p in prev}),
-                           '_last': last, '_since': min((rows[prev[p]]['from'] for p in places if p in prev), default=y - 1)})
+                           '_last': last, '_since': max([FIRST] + [changed[p] for p in places] +
+                                                         [min((rows[prev[p]]['from'] for p in places if p in prev), default=y - 1)])})
+            for p in places: changed[p] = y
             report['events'] += 1; report['place_moves'] += len(places)
         prev = now
-    date_events(events, rulers, geo)
+    date_events(events, rulers)
     out = {'year': FIRST, 'until': f'{LAST}-12-31', 'source': clio['source'], 'realms': new_realms, 'events': events,
            'mapping': {n: {'how': why[n], 'realm': (keys[kind[n][1]] if kind[n][0] != 'union' else 'union')} for n in sorted(kind)}}
     return out, report, keys, current, frame
@@ -243,7 +245,7 @@ def precision(d):
     return {4: 'year', 7: 'month', 10: 'day'}[len(d)]
 
 
-def date_events(events, rulers, geo):
+def date_events(events, rulers):
     """the dates of the transfers (rules in the header); removes the helper fields"""
     tl = json.load(open(os.path.join(ROOT, 'data', 'history', 'borders', 'wikipedia_timeline.json'), encoding='utf-8'))
     rows = tl['rows']; by_q = collections.defaultdict(list)
@@ -254,11 +256,6 @@ def date_events(events, rulers, geo):
     for r in rulers['reigns']:
         if r['end'] is None: open_.add(r['realm'])
         elif r['realm'] not in ends or r['end'] > ends[r['realm']]: ends[r['realm']] = r['end']
-    lon, lat = geo['loc']['lon'], geo['loc']['lat']
-    def near(link, places):
-        if 'lat' not in link: return False
-        c = math.cos(math.radians(link['lat']))
-        return any(((lon[p] - link['lon']) * c) ** 2 + (lat[p] - link['lat']) ** 2 < (150 / 111.2) ** 2 for p in places)
     left = collections.Counter()                      # places each realm holds, played forward
     for e in events:
         if e['kind'] == 'transfer':
@@ -278,8 +275,11 @@ def date_events(events, rulers, geo):
             if d:
                 e['date'], e['precision'] = d, precision(d)
                 if how == 'title': e['source'] += f"; date: end of the title of {e['from']} in the ruler lists"
+            else:                                     # undated: the middle of the window
+                a, b = datetime.date(lo + 1, 1, 1), datetime.date(y, 12, 31)
+                e['date'], e['precision'], e['window'] = (a + (b - a) / 2).isoformat(), 'window', [str(lo + 1), str(y)]
         for k in ('_gain', '_lost', '_since', '_last'): e.pop(k, None)
-    events.sort(key=lambda e: e['date'][:4])          # stable: the order within a year stays as built
+    events.sort(key=lambda e: e['date'])               # stable: equal dates keep the order as built
 
 
 if __name__ == '__main__':
