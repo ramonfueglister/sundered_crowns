@@ -9,9 +9,10 @@ export interface BordersJson {
   year: number;
   until: string;
   /** realms that are not in the setup of the start year: they come into the world with their first places */
-  realms: { id: string; name: string; wikidata: string; wikipedia: string; first: number }[];
-  /** in the order of their dates; `places` are place ids of the map */
-  events: {
+  realms: { id: string; name: string; short: string; wikidata: string; wikipedia: string; first: number }[];
+  /** in the order of their dates; `places` are place ids of the map. A transfer or merge moves places, a name
+   *  event gives a realm the name of the polity it has become (Moscow, Tsardom of Russia from 1547) */
+  events: ({
     date: string;
     /** day, month or year: the date as a source gives it; window: no source gives it, the date is the middle of the
      *  years `window` in which the maps show the change */
@@ -22,15 +23,16 @@ export interface BordersJson {
     places: number[];
     kind: 'transfer' | 'merge';
     source: string;
-  }[];
+  } | { date: string; precision: 'day' | 'month' | 'year'; realm: string; name: string; short: string; wikidata: string; kind: 'name'; source: string })[];
 }
 
-export interface BorderEvent { day: number; to: string; places: Int32Array }
+/** On `day` the places go to the realm `to`; or, with `name`, the realm `to` takes that name. */
+export interface BorderEvent { day: number; to: string; places: Int32Array; name?: { name: string; short: string } }
 
 export interface Borders {
   year: number;
   /** the realms that come in on the way: key → name and Wikidata id */
-  realms: ReadonlyMap<string, { name: string; wikidata: string }>;
+  realms: ReadonlyMap<string, { name: string; short: string; wikidata: string }>;
   /** sorted by day; on one day in the order of the file */
   events: readonly BorderEvent[];
 }
@@ -38,12 +40,15 @@ export interface Borders {
 /** Turns the chronicle of borders into the days on which places change hands. A date without a day is the middle of
  *  its month or year, as for the rulers (dayOf). */
 export function compileBorders(j: BordersJson): Borders {
-  const events = j.events.map((e, i) => ({ i, day: dayOf(e.date, j.year)!, to: e.to, places: Int32Array.from(e.places) }));
+  const none = new Int32Array(0);
+  const events = j.events.map((e, i) => (e.kind === 'name'
+    ? { i, day: dayOf(e.date, j.year)!, to: e.realm, places: none, name: { name: e.name, short: e.short } }
+    : { i, day: dayOf(e.date, j.year)!, to: e.to, places: Int32Array.from(e.places) }));
   events.sort((a, b) => a.day - b.day || a.i - b.i);
   return {
     year: j.year,
-    realms: new Map(j.realms.map((r) => [r.id, { name: r.name, wikidata: r.wikidata }])),
-    events: events.map(({ day, to, places }) => ({ day, to, places })),
+    realms: new Map(j.realms.map((r) => [r.id, { name: r.name, short: r.short ?? r.name, wikidata: r.wikidata }])),
+    events: events.map(({ i: _, ...e }) => e),
   };
 }
 

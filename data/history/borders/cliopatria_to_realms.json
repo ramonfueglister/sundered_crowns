@@ -178,6 +178,14 @@
   "Beylik of Tunis": {
    "realm": "new",
    "why": "the beys of Tunis (Muradids, Husainids) under Ottoman suzerainty, not the Hafsid title that ended 1574; same name only"
+  },
+  "Cisalpine Republic": {
+   "realm": "new",
+   "why": "1797: a French sister republic in Lombardy and Emilia, a new state (not a union of the old ones)"
+  },
+  "Kingdom of Etruria": {
+   "realm": "new",
+   "why": "1801: the Grand Duchy of Tuscany made a kingdom for the House of Bourbon-Parma by France, a new state"
   }
  },
  "successions": {

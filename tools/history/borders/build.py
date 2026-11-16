@@ -19,7 +19,7 @@ Rules (nothing is invented; what the sources leave open is counted):
   5. a union, when two or more of our realms that still have a holder each have most of their places in it (the
      Habsburg lands, the minor states of the Empire). A union keeps our division. A place that comes into a union keeps
      its realm when its polity of last year has ended and the realm still has a holder, or when the realm's holder is a
-     holder of the union (one person wears both crowns: Naples under Charles VI); else it goes back to the realm that
+     holder of the union (one person wears both crowns: Naples under Charles VI; with a head, the holder of the head); else it goes back to the realm that
      held it before, when that realm's holder is a holder of the union (Hungary retaken from the Ottomans in 1686-1699);
      else to the head of the union named in the file (conquests of the Habsburg Monarchy go to Austria); else to the
      realm of the union whose place is nearest over the land (the spread of tools/history/1291/build.py). A league (the
@@ -59,6 +59,14 @@ STOP = (r'\b(kingdom|duchy|grand|county|principality|margraviate|electorate|land
 def core(n):
     n = n.lower(); n = re.sub(r'\(.*?\)', '', n); n = re.sub(STOP, ' ', n); n = re.sub(r'[^a-zà-ÿ ]', ' ', n)
     return ' '.join(n.split())
+
+
+def short_of(name):
+    """the name for the map: after the title ("Kingdom of Great Britain" -> "Great Britain"), else the whole name"""
+    name = re.sub(r'\s*\(.*?\)', '', name)
+    if ' of ' not in name: return name
+    rest = name.split(' of ', 1)[1]
+    return rest[4:] if rest.startswith('the ') else rest
 
 
 def slug(name):
@@ -156,7 +164,7 @@ def build():
     def make_new(name, y, put):
         row = next(x for x in rows if x['name'] == name)
         keys.append(slug(name)); idx = len(keys) - 1; index[keys[idx]] = idx; polity_of[keys[idx]] = name
-        new_realms.append({'id': keys[idx], 'name': name, 'wikidata': row['wikidata'], 'wikipedia': row['wikipedia'], 'first': y})
+        new_realms.append({'id': keys[idx], 'name': name, 'short': short_of(name), 'wikidata': row['wikidata'], 'wikipedia': row['wikipedia'], 'first': y})
         return put(('new', idx), 'new' if name not in manual else 'manual')
 
     def nearest(p, members, staying):
@@ -177,6 +185,12 @@ def build():
     for i in sorted(set(prev.values()), key=lambda i: rows[i]['name']):
         name = rows[i]['name']
         classify(name, [p for p, j in prev.items() if rows[j]['name'] == name], FIRST, rows[i]['memberOf'])
+    named_as = {}                                        # realm -> the polity whose name it bears (in 1291: the setup's own name)
+    c0 = collections.defaultdict(collections.Counter)
+    for p, i in prev.items():
+        q = rows[i]['name']; k = kind.get(q)
+        if k and k[0] != 'union' and why.get(q) != 'hull' and current[p] == k[1]: c0[k[1]][q] += 1
+    for r, c in c0.items(): named_as[r] = c.most_common(1)[0][0]
     events = []
     for y in range(FIRST + 1, LAST + 1):
         for k, mg in sorted(merges.items()):
@@ -207,7 +221,8 @@ def build():
                 ended = was is None or was not in alive or (league and kind.get(was, ('',))[0] == 'union')
                 if was == q or (ended and current[x] >= 0 and has_holder(keys[current[x]], y)): keep.add(x)
             members = {current[x] for x in keep if current[x] >= 0} | ({head} if head >= 0 and has_holder(keys[head], y) else set())
-            persons = set().union(*(holders[keys[r]][y] for r in members)) if members else set()
+            if head >= 0 and has_holder(keys[head], y) and holders[keys[head]][y]: persons = set(holders[keys[head]][y])
+            else: persons = set().union(*(holders[keys[r]][y] for r in members)) if members else set()
             if not league:
                 for x in places:
                     r = current[x]
@@ -275,6 +290,28 @@ def build():
                 for p in places: history[p].append(a); current[p] = b; changed[p] = y
                 report['orphan_moves'] += len(places)
             orphans -= set(step)
+        # the names: a realm bears the name of the polity of its own (not a union, not a hull) that holds at least half
+        # of its places; it keeps a name while that polity does
+        size_now = collections.Counter(current)
+        cand = collections.defaultdict(collections.Counter)
+        for q, places in held_now.items():
+            k = kind.get(q)
+            if not k or k[0] == 'union' or why.get(q) == 'hull': continue
+            n = sum(1 for p in places if current[p] == k[1])
+            if n: cand[k[1]][q] = n
+        for r, c in sorted(cand.items()):
+            keepn = c.get(named_as.get(r), 0)
+            if 2 * keepn >= size_now[r] and named_as.get(r): continue
+            q, n = c.most_common(1)[0]
+            if 2 * n < size_now[r] or q == named_as.get(r): continue
+            named_as[r] = q
+            if r >= len(setup['states']) and q == polity_of.get(keys[r]): continue   # a new realm comes with this name
+            end = ends.get(keys[r]) or ''
+            row = rows[row_of[q]]
+            events.append({'date': end if end[:4] == str(y) else str(y), 'precision': precision(end) if end[:4] == str(y) else 'year',
+                           'realm': keys[r], 'name': q, 'short': short_of(q), 'wikidata': row['wikidata'], 'kind': 'name',
+                           'source': f"Cliopatria v0.2.1: {q} {row['from']}-{row['to']} ({row['wikidata']})"})
+            report['names'] += 1
         prev = now
     date_events(events, rulers)
     out = {'year': FIRST, 'until': f'{LAST}-12-31', 'source': clio['source'], 'realms': new_realms, 'events': events,

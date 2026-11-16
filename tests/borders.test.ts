@@ -27,7 +27,10 @@ const until = (s: WorldState, date: string) => { const d = dayOf(date, 1291)!; p
 describe('the chronicle of borders of 1291', () => {
   it('names only realms of the setup or realms it brings in, and is in the order of its dates', () => {
     const keys = new Set([...loadSetup(1291).states.map((st) => st.id), ...json.realms.map((r) => r.id)]);
-    for (const e of json.events) { expect(keys.has(e.to)).toBe(true); if (e.from) expect(keys.has(e.from)).toBe(true); }
+    for (const e of json.events) {
+      if (e.kind === 'name') { expect(keys.has(e.realm)).toBe(true); continue; }
+      expect(keys.has(e.to)).toBe(true); if (e.from) expect(keys.has(e.from)).toBe(true);
+    }
     const days = w.borders!.events.map((e) => e.day);
     for (let i = 1; i < days.length; i++) expect(days[i]).toBeGreaterThanOrEqual(days[i - 1]);
     expect(w.borders!.events.length).toBe(json.events.length);
@@ -35,7 +38,7 @@ describe('the chronicle of borders of 1291', () => {
   it('gives every change its source, and a window to every change no source dates', () => {
     for (const e of json.events) {
       expect(e.source).toBeTruthy();
-      if (e.precision === 'window') expect(Number(e.window![0])).toBeLessThanOrEqual(Number(e.window![1]));
+      if (e.kind !== 'name' && e.precision === 'window') expect(Number(e.window![0])).toBeLessThanOrEqual(Number(e.window![1]));
     }
   });
 });
@@ -63,6 +66,12 @@ describe('the borders of a world of 1291 played to 1848', () => {
     expect(s.realmText[swiss].name.en).toBe('Swiss Confederation');
     expect(s.place.owner[s.realm.cols.capital[swiss]]).toBe(swiss);
     for (let r = 0; r < s.realm.size; r++) { const c = s.realm.cols.capital[r]; if (c >= 0) expect(s.place.owner[c]).toBe(r); }
+  });
+  it('gives the realms the names of the polities they have become', () => {
+    const name = (key: string) => s.realmText[s.realmText.findIndex((t) => t.key === key)];
+    expect(name('moscow').name.en).toBe('Russian Empire');
+    expect(name('england').short.en).toBe('Great Britain');
+    expect(name('france').name.en).toBe('French Second Republic'); // from 24 February 1848
   });
   it('ranks a realm by the title word of its name', () => {
     expect(RANKS[rankOfName('Kingdom of Bavaria')]).toBe('kingdom');

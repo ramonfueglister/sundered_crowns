@@ -7,6 +7,8 @@
 //   lists of these realms are still to come), the culture and faith of its capital, and a colour of its own drawn
 //   from its key (no source gives realm colours). Its rank is the title word of its name, else a duchy, as the setup's
 //   default.
+// - A realm takes the name of the polity it has become on the day the chronicle says (Moscow the Tsardom of Russia in
+//   1547): the name of the source, and for the map the name after its title ("Great Britain").
 // - A realm that loses its capital takes the place it still holds with the most people as its capital (the lowest
 //   id on a tie); a realm without a capital takes one so with its next places. A realm that holds no place stays in
 //   the table: its title may go on.
@@ -64,15 +66,15 @@ function largestPlace(s: WorldState, realm: number): number {
 /** A realm that comes in on the way, with the places it comes with. */
 function addRealm(s: WorldState, b: Borders, key: string, places: Int32Array): number {
   const info = b.realms.get(key);
-  const name = info?.name ?? key;
+  const name = info?.name ?? key, short = info?.short ?? name;
   const id = spawn(s.realm), R = s.realm.cols;
   let cap = -1;
   for (const p of places) if (p < s.place.owner.length && (cap < 0 || s.place.pop[p] > s.place.pop[cap])) cap = p;
   R.capital[id] = cap; R.holder[id] = -1; R.color[id] = colorOfKey(key);
   R.culture[id] = cap >= 0 ? s.place.culture[cap] : 0; R.faith[id] = cap >= 0 ? s.place.faith[cap] : 0;
   R.rank[id] = rankOfName(name);
-  const text = { en: name, de: name };
-  s.realmText.push({ key, name: text, short: text, adjective: text });
+  const text = { en: name, de: name }, shortText = { en: short, de: short };
+  s.realmText.push({ key, name: text, short: shortText, adjective: shortText });
   s.ruler.push('');
   return id;
 }
@@ -86,6 +88,14 @@ export function playBorders(s: WorldState, w: World, from: number, to: number): 
   let moved = 0;
   for (let i = firstBorderEventOn(b, from); i < b.events.length && b.events[i].day <= to; i++) {
     const e = b.events[i];
+    if (e.name) { // a new name: the polity's, in English as the source gives it (German labels still to come)
+      const r = realmIndex(s).get(e.to);
+      if (r !== undefined) {
+        const t = s.realmText[r], name = { en: e.name.name, de: e.name.name }, short = { en: e.name.short, de: e.name.short };
+        s.realmText[r] = { key: t.key, name, short, adjective: short };
+      }
+      continue;
+    }
     let r = realmIndex(s).get(e.to);
     if (r === undefined) r = addRealm(s, b, e.to, e.places);
     const losers = new Set<number>();
