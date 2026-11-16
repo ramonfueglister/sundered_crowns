@@ -162,7 +162,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ma
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (wash.value > 0 && w.level === level && w.rank < 2e9) missing++; }
     // to paint: what is not there yet, and what still shows the old realms
     const queue = wanted.filter((w) => { const h = held.get(w.key); return (!h || h.old) && !busy.has(w.key); }).sort((a, b) => b.rank - a.rank);
-    while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y }, next); }
+    while (busy.size < AT_ONCE && queue.length) { const next = queue.pop()!; busy.add(next.key); ask({ kind: 'tile', level: next.level, tx: next.x, ty: next.y, cells: o.cells }, next); }
 
     // what is shown: every part of the picture once, from the tiles nearest the view's level that are there
     const shown = wash.value > 0 ? cover(level, PAPER_COARSEST, near(PAPER_COARSEST, 0).map((t) => [t.x, t.y] as const), (l, x, y) => held.get(keyOf(l, x, y)), (l, x, y) => outside(l, x, y) <= 0) : new Set<Held>();

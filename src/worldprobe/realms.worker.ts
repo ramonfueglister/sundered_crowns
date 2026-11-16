@@ -9,7 +9,7 @@ import { indexOf } from './region';
 /** The realms as they stand: who holds every place (-1: no realm), and every realm's colour (0xrrggbb) and name, by its number. */
 export interface RealmsNow { owner: Int16Array; colors: number[]; names: string[] }
 /** A tile of the realms' map, the realms' names, new realms to draw from now on, the place to pick out from now on (-1: none), or the place at a map pixel. */
-export type RealmsJob = { id: number; region: string; base: string } & ({ kind: 'tile'; level: number; tx: number; ty: number } | { kind: 'names' } | ({ kind: 'realms' } & RealmsNow) | { kind: 'choose'; place: number } | { kind: 'place'; x: number; y: number });
+export type RealmsJob = { id: number; region: string; base: string } & ({ kind: 'tile'; level: number; tx: number; ty: number; /** finest cells along a map pixel */ cells: number } | { kind: 'names' } | ({ kind: 'realms' } & RealmsNow) | { kind: 'choose'; place: number } | { kind: 'place'; x: number; y: number });
 export interface RealmsDone {
   id: number;
   /** the tile, RGBA row by row from the north; none where the tile holds no realm */
@@ -58,7 +58,7 @@ self.onmessage = async (e: MessageEvent<RealmsJob>) => {
       return done({ place: place >= 0 && place < r.owner.length ? place : -1 });
     }
     if (job.kind === 'names') return done({ names: realmNames(r, 4, (k) => [...(r.names[k] ?? "")].length).map((n) => ({ ...n, name: r.names[n.realm] })) });
-    const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, index.cells);
+    const index = await indexOf(job.region, job.base), tile = paintRealms(r, job.level, job.tx, job.ty, index.tile, job.cells);
     done({ tile: tile.some((v) => v > 0) ? tile : undefined });
   } catch (err) {
     done({ error: String(err) });
