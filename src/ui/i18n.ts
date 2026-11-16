@@ -11,7 +11,7 @@ export function L(t: I18n | string | undefined | null): string { if (!t) return 
 
 const S = {
   title: ['Sundered Crowns', 'Sundered Crowns'],
-  tagline: ['A persistent world, 1356 onwards', 'Eine persistente Welt, ab 1356'],
+  tagline: ['A persistent world, 1291 onwards', 'Eine persistente Welt, ab 1291'],
   enter: ['Enter the world', 'Welt betreten'],
   display_name: ['Display name', 'Anzeigename'],
   dev_login: ['Development server: sign in with a display name only.', 'Entwicklungsserver: Anmeldung nur mit Anzeigename.'],

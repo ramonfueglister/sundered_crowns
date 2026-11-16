@@ -1,6 +1,6 @@
 // World probe: the world to travel through (view.ts) on a page of its own.
 // Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
-// ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show). The address follows the view.
+// ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356). The address follows the view.
 import { showError } from '../lookprobe/stage';
 import { createWorldView } from './view';
 
@@ -9,7 +9,7 @@ const q = new URLSearchParams(location.search), status = document.querySelector<
 const num = (k: string, fallback: number) => { const v = Number(q.get(k) || NaN); return Number.isFinite(v) ? v : fallback; };
 let noted = 0;
 createWorldView({
-  region: q.get('region') ?? 'world', lon: num('lon', 12.1), lat: num('lat', 45.85), wide: num('wide', 190),
+  region: q.get('region') ?? 'world', year: q.has('year') ? num('year', 1356) : undefined, lon: num('lon', 12.1), lat: num('lat', 45.85), wide: num('wide', 190),
   // a picture of fixed size is taken by a tool
   still: q.has('w'),
   status: (text) => { if (status) status.textContent = text; },

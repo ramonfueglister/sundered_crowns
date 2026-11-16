@@ -10,6 +10,7 @@ import { dayToDate } from './calendar';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { NG } from './people/genes';
 import { type SetupState, addRealms, parseColor, setPlaces } from './setup';
+import { uses1356Tables } from './tables';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
 const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family'] as const;
@@ -38,7 +39,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
   if (s.v === 4) { // 4 → 5: the persons of the 30 largest cities, as founded on the first day (nobody has been born or
     // died since: the people do not change yet). Places smaller than their cities grow to them; the arable and the
     // harvest follow on the next 1 January, as they do for any change of people.
-    if (s.startYear === 1356) fitPlacesToCities(s);
+    if (uses1356Tables(s.startYear)) fitPlacesToCities(s);
     foundPeople(s);
     s.v = 5;
   }

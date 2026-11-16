@@ -13,7 +13,7 @@ Method: perceptual graph colouring. The realms' adjacency is weighted by the len
 and is lowered by coordinate descent over sampled candidates (deterministic seed).
 
 Writes the colours into public/data/setup_1356.json and into the state files data/history/1356/*.json.
-Run: python3 tools/map/palette.py [--dry]
+Run: python3 tools/map/palette.py [year] [--dry]   (year: 1356 by default)
 """
 import json, math, os, sys, glob, random
 from collections import defaultdict
@@ -125,7 +125,8 @@ def hue_shift(a, b):
 
 def main():
     dry = '--dry' in sys.argv
-    setup_path = os.path.join(ROOT, 'public', 'data', 'setup_1356.json')
+    year = int(next((a for a in sys.argv[1:] if a.isdigit()), 1356))
+    setup_path = os.path.join(ROOT, 'public', 'data', f'setup_{year}.json')
     setup = json.load(open(setup_path, encoding='utf-8'))
     geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
     states, owner, L = setup['states'], setup['owner'], geo['L']
@@ -234,7 +235,7 @@ def main():
     for s in states:
         s['color'] = colours[s['id']]
     json.dump(setup, open(setup_path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    for f in glob.glob(os.path.join(ROOT, 'data', 'history', '1356', '*.json')):
+    for f in glob.glob(os.path.join(ROOT, 'data', 'history', str(year), '*.json')):
         d = json.load(open(f, encoding='utf-8'))
         if 'states' not in d:
             continue

@@ -16,6 +16,7 @@ import { hash01 } from '../rng';
 import { personYears, type Sex } from '../people/lifetable';
 import { child, founder, origin, NG } from '../people/genes';
 import CITIES_JSON from '../content/cities_1356.json';
+import { uses1356Tables } from '../tables';
 
 export interface City { name: string; country: string; people: number; certainty: number; years: number[]; place: number; placeName: string; lon: number; lat: number; site: number }
 export const CITIES: readonly City[] = CITIES_JSON.cities;
@@ -80,7 +81,7 @@ function stationary(level: number) {
 export function foundPeople(s: WorldState): void {
   const person = createTable(PERSON_SCHEMA, 32768), family = createTable(FAMILY_SCHEMA, 8192);
   s.person = person; s.family = family;
-  if (s.startYear !== 1356) return; // the cities are those of 1356
+  if (!uses1356Tables(s.startYear)) return; // the cities are those of 1356 (src/sim/tables.ts)
   const st = stationary(LIFE_TABLE_LEVEL), seed = s.seed >>> 0, P = person.cols, F = family.cols;
   const z: Record<Trait, number[]> = { iq: [], o: [], c: [], e: [], a: [], n: [] };
   const newFamily = (place: number, man: number, woman: number) => {

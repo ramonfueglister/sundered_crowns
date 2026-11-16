@@ -1,0 +1,7981 @@
+{
+ "region": "empire",
+ "year": 1291,
+ "date": "1291-01-01",
+ "sources": [
+  "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300; regional maps Between Rhine and Oder, Between Rhine and Rhône",
+  "W. R. Shepherd, Historical Atlas (1923), 'Germany about 1300' and 'Europe and the Mediterranean Lands about 1300'",
+  "G. Köbler, Historisches Lexikon der deutschen Länder (7th ed., 2007): every territory with its holders",
+  "Putzger Historischer Weltatlas, Deutschland um 1300",
+  "O. Redlich, Rudolf von Habsburg (1903); K.-F. Krieger, Die Habsburger im Mittelalter (2nd ed., 2004)",
+  "J. K. Zelenka / Handbuch der Geschichte der böhmischen Länder I (1967): Wenceslaus II, Glatz 1290",
+  "Wikipedia articles on the respective territories and rulers (cross-checked against Köbler)"
+ ],
+ "new_ids": [
+  "bern",
+  "zurich",
+  "dauphine",
+  "thuringia",
+  "rostock",
+  "pomerelia",
+  "rugen",
+  "ravensberg",
+  "lippe"
+ ],
+ "notes": [
+  "Date: 1 January 1291. King of the Romans: Rudolf I of Habsburg (dies 15 July 1291; interregnum until Adolf of Nassau, May 1292). The king is not a realm of his own: his house is modelled as Austria.",
+  "Albert I of Habsburg holds Austria and Styria (1282) and, for the house, the Habsburg lands in Swabia, the Aargau and Upper Alsace; Carniola is pledged to Meinhard II (italy_balkans.py).",
+  "The Swiss Federal Charter is dated early August 1291: on 1 January there is no confederacy. Uri and Schwyz hold imperial charters (1231, 1240); they are left to the spread.",
+  "Louis II the Strict rules Upper Bavaria together with the Rhine Palatinate (one realm); Lower Bavaria (Landshut) belongs to Otto III. The Straubing duchy of 1356 did not exist.",
+  "Brunswick: the sons of Albert I divide the duchy during 1291 (Grubenhagen, Göttingen, Wolfenbüttel); on 1 January it is modelled as one duchy of Brunswick beside Lüneburg.",
+  "Brandenburg (the Ascanian margraves) holds the Altmark, Mittelmark, Uckermark, Neumark, Stargard (to Mecklenburg 1304) and Upper Lusatia; Lower Lusatia and Meissen belong to the Wettin Frederick Tuta, Thuringia to Albert the Degenerate.",
+  "Pomerania is one duchy (Bogislaw IV with his brothers, partition 1295); Pomerelia is ruled by the last Samborid Mestwin II; Rügen by Wizlaw II under Danish overlordship.",
+  "Smaller counts (Hoya, Diepholz, Tecklenburg, Ravensberg, Lippe, Waldeck, Wied, Isenburg, Leiningen, Hohenlohe, Oettingen, Montfort, Werdenberg, Kyburg's heirs) are not modelled as realms: a gap shared with 1356."
+ ],
+ "states": [
+  {
+   "id": "bohemia",
+   "name": {
+    "en": "Kingdom of Bohemia",
+    "de": "Königreich Böhmen"
+   },
+   "short": {
+    "en": "Bohemia",
+    "de": "Böhmen"
+   },
+   "adjective": {
+    "en": "Bohemian",
+    "de": "böhmisch"
+   },
+   "rank": "kingdom",
+   "government": "feudal_monarchy",
+   "culture": "czech",
+   "faith": "latin",
+   "color": "#6f663c",
+   "capital": {
+    "name": "Prague",
+    "lat": 50.088,
+    "lon": 14.42
+   },
+   "holdings": [
+    {
+     "name": "Prague",
+     "lat": 50.088,
+     "lon": 14.42
+    },
+    {
+     "name": "Brünn",
+     "lat": 49.195,
+     "lon": 16.608
+    },
+    {
+     "name": "Olmütz",
+     "lat": 49.594,
+     "lon": 17.251
+    },
+    {
+     "name": "Kuttenberg",
+     "lat": 49.949,
+     "lon": 15.268
+    },
+    {
+     "name": "Pilsen",
+     "lat": 49.747,
+     "lon": 13.378
+    },
+    {
+     "name": "Budweis",
+     "lat": 48.975,
+     "lon": 14.474
+    },
+    {
+     "name": "Znaim",
+     "lat": 48.856,
+     "lon": 16.049
+    },
+    {
+     "name": "Iglau",
+     "lat": 49.396,
+     "lon": 15.591
+    },
+    {
+     "name": "Königgrätz",
+     "lat": 50.209,
+     "lon": 15.833
+    },
+    {
+     "name": "Leitmeritz",
+     "lat": 50.534,
+     "lon": 14.131
+    },
+    {
+     "name": "Saaz",
+     "lat": 50.331,
+     "lon": 13.546
+    },
+    {
+     "name": "Troppau",
+     "lat": 49.938,
+     "lon": 17.903
+    },
+    {
+     "name": "Glatz",
+     "lat": 50.437,
+     "lon": 16.656
+    },
+    {
+     "name": "Taus",
+     "lat": 49.44,
+     "lon": 12.93
+    },
+    {
+     "name": "Kolin",
+     "lat": 50.03,
+     "lon": 15.2
+    },
+    {
+     "name": "Chrudim",
+     "lat": 49.95,
+     "lon": 15.8
+    },
+    {
+     "name": "Hradisch",
+     "lat": 49.07,
+     "lon": 17.46
+    },
+    {
+     "name": "Pisek",
+     "lat": 49.309,
+     "lon": 14.148
+    },
+    {
+     "name": "Tabor",
+     "lat": 49.41,
+     "lon": 14.66
+    }
+   ],
+   "ruler": {
+    "name": "Wenceslaus II",
+    "born": 1271,
+    "dynasty": "Přemyslid",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Judith of Habsburg",
+    "born": 1271,
+    "dynasty": "Habsburg",
+    "female": true
+   },
+   "dynasty_note": "Přemyslid king since 1278 (ruling himself since 1290). Kłodzko came to him at Henry IV Probus' death (1290); in 1291 he takes Kraków and becomes duke there.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [],
+   "claims_on": [
+    "greater_poland"
+   ],
+   "personality": "builder",
+   "difficulty": 2,
+   "summary": {
+    "en": "Silver from Kutná Hora and a claim on Kraków: Wenceslaus II is about to reach for the Polish crown.",
+    "de": "Silber aus Kuttenberg und ein Anspruch auf Krakau: Wenzel II. greift nach der polnischen Krone."
+   },
+   "coa": {
+    "blazon": "Gules, a lion rampant double-queued argent crowned or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "austria",
+   "name": {
+    "en": "Duchy of Austria",
+    "de": "Herzogtum Österreich"
+   },
+   "short": {
+    "en": "Austria",
+    "de": "Österreich"
+   },
+   "adjective": {
+    "en": "Austrian",
+    "de": "österreichisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#0c6342",
+   "capital": {
+    "name": "Vienna",
+    "lat": 48.208,
+    "lon": 16.373
+   },
+   "holdings": [
+    {
+     "name": "Vienna",
+     "lat": 48.208,
+     "lon": 16.373
+    },
+    {
+     "name": "Wiener Neustadt",
+     "lat": 47.813,
+     "lon": 16.243
+    },
+    {
+     "name": "Krems",
+     "lat": 48.41,
+     "lon": 15.6
+    },
+    {
+     "name": "Linz",
+     "lat": 48.306,
+     "lon": 14.286
+    },
+    {
+     "name": "Enns",
+     "lat": 48.213,
+     "lon": 14.475
+    },
+    {
+     "name": "Steyr",
+     "lat": 48.04,
+     "lon": 14.42
+    },
+    {
+     "name": "Graz",
+     "lat": 47.07,
+     "lon": 15.44
+    },
+    {
+     "name": "Leoben",
+     "lat": 47.38,
+     "lon": 15.09
+    },
+    {
+     "name": "Judenburg",
+     "lat": 47.17,
+     "lon": 14.66
+    },
+    {
+     "name": "Marburg",
+     "lat": 50.81,
+     "lon": 8.77
+    },
+    {
+     "name": "Pettau",
+     "lat": 46.42,
+     "lon": 15.87
+    },
+    {
+     "name": "Cilli",
+     "lat": 46.23,
+     "lon": 15.27
+    },
+    {
+     "name": "Brugg",
+     "lat": 47.48,
+     "lon": 8.21
+    },
+    {
+     "name": "Baden",
+     "lat": 47.47,
+     "lon": 8.31
+    },
+    {
+     "name": "Lenzburg",
+     "lat": 47.39,
+     "lon": 8.18
+    },
+    {
+     "name": "Winterthur",
+     "lat": 47.5,
+     "lon": 8.724
+    },
+    {
+     "name": "Kyburg",
+     "lat": 47.46,
+     "lon": 8.74
+    },
+    {
+     "name": "Zug",
+     "lat": 47.166,
+     "lon": 8.516
+    },
+    {
+     "name": "Freiburg im Üechtland",
+     "lat": 46.8,
+     "lon": 7.16
+    },
+    {
+     "name": "Ensisheim",
+     "lat": 47.87,
+     "lon": 7.35
+    },
+    {
+     "name": "Thann",
+     "lat": 47.81,
+     "lon": 7.1
+    },
+    {
+     "name": "Breisach",
+     "lat": 48.03,
+     "lon": 7.58
+    },
+    {
+     "name": "Säckingen",
+     "lat": 47.55,
+     "lon": 7.95
+    },
+    {
+     "name": "Rheinfelden",
+     "lat": 47.55,
+     "lon": 7.79
+    }
+   ],
+   "ruler": {
+    "name": "Albert I",
+    "born": 1255,
+    "dynasty": "Habsburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Elisabeth of Gorizia-Tyrol",
+    "born": 1262,
+    "dynasty": "Meinhardiner",
+    "female": true
+   },
+   "dynasty_note": "Albert I, Duke of Austria and Styria since 1282, son of King Rudolf I. He also manages the Habsburg lands in Swabia and the Aargau.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "tyrol",
+    "bohemia"
+   ],
+   "rivals": [
+    "hungary",
+    "salzburg"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 2,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a fess argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "salzburg",
+   "name": {
+    "en": "Prince-Archbishopric of Salzburg",
+    "de": "Erzstift Salzburg"
+   },
+   "short": {
+    "en": "Salzburg",
+    "de": "Salzburg"
+   },
+   "adjective": {
+    "en": "Salzburg",
+    "de": "salzburgisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#8e4f71",
+   "capital": {
+    "name": "Salzburg",
+    "lat": 47.8,
+    "lon": 13.045
+   },
+   "holdings": [
+    {
+     "name": "Salzburg",
+     "lat": 47.8,
+     "lon": 13.045
+    },
+    {
+     "name": "Hallein",
+     "lat": 47.683,
+     "lon": 13.097
+    },
+    {
+     "name": "Friesach",
+     "lat": 46.953,
+     "lon": 14.41
+    },
+    {
+     "name": "Radstadt",
+     "lat": 47.383,
+     "lon": 13.46
+    },
+    {
+     "name": "Mühldorf",
+     "lat": 48.247,
+     "lon": 12.523
+    },
+    {
+     "name": "Pettau",
+     "lat": 46.42,
+     "lon": 15.87
+    }
+   ],
+   "ruler": {
+    "name": "Rudolf of Hoheneck",
+    "born": null,
+    "dynasty": "Hoheneck",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince-archbishopric; Archbishop Rudolf of Hoheneck (1284-90) died in August 1290; the see is contested between his successor Stephan of Lower Bavaria and Konrad of Fohnsdorf (1291).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale or, a lion sable, and gules, a fess argent",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_brixen",
+   "name": {
+    "en": "Prince-Bishopric of Brixen",
+    "de": "Hochstift Brixen"
+   },
+   "short": {
+    "en": "Brixen",
+    "de": "Brixen"
+   },
+   "adjective": {
+    "en": "Brixen",
+    "de": "brixnerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#626a93",
+   "capital": {
+    "name": "Brixen",
+    "lat": 46.716,
+    "lon": 11.656
+   },
+   "holdings": [
+    {
+     "name": "Brixen",
+     "lat": 46.716,
+     "lon": 11.656
+    },
+    {
+     "name": "Bruneck",
+     "lat": 46.796,
+     "lon": 11.937
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a paschal lamb argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lamb",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bavaria_upper",
+   "name": {
+    "en": "Duchy of Upper Bavaria and Rhine Palatinate",
+    "de": "Herzogtum Oberbayern und Pfalzgrafschaft bei Rhein"
+   },
+   "short": {
+    "en": "Upper Bavaria",
+    "de": "Oberbayern"
+   },
+   "adjective": {
+    "en": "Bavarian",
+    "de": "bayerisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#6d3450",
+   "capital": {
+    "name": "Munich",
+    "lat": 48.137,
+    "lon": 11.575
+   },
+   "holdings": [
+    {
+     "name": "Munich",
+     "lat": 48.137,
+     "lon": 11.575
+    },
+    {
+     "name": "Ingolstadt",
+     "lat": 48.763,
+     "lon": 11.425
+    },
+    {
+     "name": "Wasserburg",
+     "lat": 48.06,
+     "lon": 12.23
+    },
+    {
+     "name": "Landsberg am Lech",
+     "lat": 48.05,
+     "lon": 10.88
+    },
+    {
+     "name": "Weilheim",
+     "lat": 47.84,
+     "lon": 11.14
+    },
+    {
+     "name": "Amberg",
+     "lat": 49.443,
+     "lon": 11.858
+    },
+    {
+     "name": "Neumarkt",
+     "lat": 49.28,
+     "lon": 11.46
+    },
+    {
+     "name": "Sulzbach",
+     "lat": 49.5,
+     "lon": 11.75
+    },
+    {
+     "name": "Heidelberg",
+     "lat": 49.41,
+     "lon": 8.694
+    },
+    {
+     "name": "Alzey",
+     "lat": 49.747,
+     "lon": 8.116
+    },
+    {
+     "name": "Neustadt an der Weinstraße",
+     "lat": 49.35,
+     "lon": 8.14
+    },
+    {
+     "name": "Bacharach",
+     "lat": 50.058,
+     "lon": 7.767
+    },
+    {
+     "name": "Kaiserslautern",
+     "lat": 49.44,
+     "lon": 7.77
+    },
+    {
+     "name": "Mosbach",
+     "lat": 49.353,
+     "lon": 9.144
+    }
+   ],
+   "ruler": {
+    "name": "Louis II the Strict",
+    "born": 1229,
+    "dynasty": "Wittelsbach",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wittelsbach duke of Upper Bavaria and Count Palatine of the Rhine, elector.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [
+    "bavaria_landshut"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Lozengy bendwise argent and azure",
+    "field": "argent",
+    "division": "lozengy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bavaria_landshut",
+   "name": {
+    "en": "Duchy of Lower Bavaria",
+    "de": "Herzogtum Niederbayern"
+   },
+   "short": {
+    "en": "Lower Bavaria",
+    "de": "Niederbayern"
+   },
+   "adjective": {
+    "en": "Bavarian",
+    "de": "bayerisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#035279",
+   "capital": {
+    "name": "Landshut",
+    "lat": 48.537,
+    "lon": 12.152
+   },
+   "holdings": [
+    {
+     "name": "Landshut",
+     "lat": 48.537,
+     "lon": 12.152
+    },
+    {
+     "name": "Straubing",
+     "lat": 48.883,
+     "lon": 12.573
+    },
+    {
+     "name": "Deggendorf",
+     "lat": 48.84,
+     "lon": 12.96
+    },
+    {
+     "name": "Cham",
+     "lat": 49.22,
+     "lon": 12.66
+    },
+    {
+     "name": "Burghausen",
+     "lat": 48.17,
+     "lon": 12.83
+    },
+    {
+     "name": "Dingolfing",
+     "lat": 48.63,
+     "lon": 12.5
+    },
+    {
+     "name": "Vilshofen",
+     "lat": 48.633,
+     "lon": 13.19
+    },
+    {
+     "name": "Kelheim",
+     "lat": 48.917,
+     "lon": 11.887
+    }
+   ],
+   "ruler": {
+    "name": "Otto III",
+    "born": 1261,
+    "dynasty": "Wittelsbach",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Wittelsbach duke of Lower Bavaria (later King of Hungary 1305).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Lozengy bendwise argent and azure",
+    "field": "argent",
+    "division": "lozengy",
+    "field2": "azure",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_passau",
+   "name": {
+    "en": "Prince-Bishopric of Passau",
+    "de": "Hochstift Passau"
+   },
+   "short": {
+    "en": "Passau",
+    "de": "Passau"
+   },
+   "adjective": {
+    "en": "Passau",
+    "de": "passauisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#83576d",
+   "capital": {
+    "name": "Passau",
+    "lat": 48.574,
+    "lon": 13.465
+   },
+   "holdings": [
+    {
+     "name": "Passau",
+     "lat": 48.574,
+     "lon": 13.465
+    },
+    {
+     "name": "Obernberg",
+     "lat": 48.32,
+     "lon": 13.33
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a wolf rampant gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wolf",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_freising",
+   "name": {
+    "en": "Prince-Bishopric of Freising",
+    "de": "Hochstift Freising"
+   },
+   "short": {
+    "en": "Freising",
+    "de": "Freising"
+   },
+   "adjective": {
+    "en": "Freising",
+    "de": "freisingisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#715b39",
+   "capital": {
+    "name": "Freising",
+    "lat": 48.4,
+    "lon": 11.745
+   },
+   "holdings": [
+    {
+     "name": "Freising",
+     "lat": 48.4,
+     "lon": 11.745
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a moor's head couped proper crowned gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "moor_head",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_regensburg",
+   "name": {
+    "en": "Prince-Bishopric of Regensburg",
+    "de": "Hochstift Regensburg"
+   },
+   "short": {
+    "en": "Bishopric of Regensburg",
+    "de": "Hochstift Regensburg"
+   },
+   "adjective": {
+    "en": "Regensburg",
+    "de": "regensburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#5e431a",
+   "capital": {
+    "name": "Wörth an der Donau",
+    "lat": 49.0,
+    "lon": 12.4
+   },
+   "holdings": [
+    {
+     "name": "Wörth an der Donau",
+     "lat": 49.0,
+     "lon": 12.4
+    },
+    {
+     "name": "Donaustauf",
+     "lat": 49.033,
+     "lon": 12.21
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "regensburg",
+   "name": {
+    "en": "Free City of Regensburg",
+    "de": "Freie Stadt Regensburg"
+   },
+   "short": {
+    "en": "Regensburg",
+    "de": "Regensburg"
+   },
+   "adjective": {
+    "en": "Regensburg",
+    "de": "Regensburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "bavarian",
+   "faith": "latin",
+   "color": "#547a60",
+   "capital": {
+    "name": "Regensburg",
+    "lat": 49.015,
+    "lon": 12.097
+   },
+   "holdings": [
+    {
+     "name": "Regensburg",
+     "lat": 49.015,
+     "lon": 12.097
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_eichstatt",
+   "name": {
+    "en": "Prince-Bishopric of Eichstätt",
+    "de": "Hochstift Eichstätt"
+   },
+   "short": {
+    "en": "Eichstätt",
+    "de": "Eichstätt"
+   },
+   "adjective": {
+    "en": "Eichstätt",
+    "de": "eichstättisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#685984",
+   "capital": {
+    "name": "Eichstätt",
+    "lat": 48.89,
+    "lon": 11.183
+   },
+   "holdings": [
+    {
+     "name": "Eichstätt",
+     "lat": 48.89,
+     "lon": 11.183
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a crozier argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nuremberg_burgraviate",
+   "name": {
+    "en": "Burgraviate of Nuremberg",
+    "de": "Burggrafschaft Nürnberg"
+   },
+   "short": {
+    "en": "Nuremberg (Burgraviate)",
+    "de": "Burggrafschaft Nürnberg"
+   },
+   "adjective": {
+    "en": "Burgravial",
+    "de": "burggräflich"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#304e33",
+   "capital": {
+    "name": "Cadolzburg",
+    "lat": 49.457,
+    "lon": 10.857
+   },
+   "holdings": [
+    {
+     "name": "Cadolzburg",
+     "lat": 49.457,
+     "lon": 10.857
+    },
+    {
+     "name": "Ansbach",
+     "lat": 49.3,
+     "lon": 10.57
+    },
+    {
+     "name": "Bayreuth",
+     "lat": 49.945,
+     "lon": 11.578
+    },
+    {
+     "name": "Kulmbach",
+     "lat": 50.1,
+     "lon": 11.45
+    }
+   ],
+   "ruler": {
+    "name": "Frederick III",
+    "born": null,
+    "dynasty": "Hohenzollern",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Burgrave of Nuremberg, a loyal ally of Rudolf I.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion sable within a bordure compony argent and gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nuremberg",
+   "name": {
+    "en": "Free Imperial City of Nuremberg",
+    "de": "Reichsstadt Nürnberg"
+   },
+   "short": {
+    "en": "Nuremberg",
+    "de": "Nürnberg"
+   },
+   "adjective": {
+    "en": "Nuremberger",
+    "de": "Nürnberger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#6e7945",
+   "capital": {
+    "name": "Nuremberg",
+    "lat": 49.452,
+    "lon": 11.077
+   },
+   "holdings": [
+    {
+     "name": "Nuremberg",
+     "lat": 49.452,
+     "lon": 11.077
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale or, a demi-eagle sable, and bendy gules and argent",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_wurzburg",
+   "name": {
+    "en": "Prince-Bishopric of Würzburg",
+    "de": "Hochstift Würzburg"
+   },
+   "short": {
+    "en": "Würzburg",
+    "de": "Würzburg"
+   },
+   "adjective": {
+    "en": "Würzburg",
+    "de": "würzburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#225353",
+   "capital": {
+    "name": "Würzburg",
+    "lat": 49.794,
+    "lon": 9.929
+   },
+   "holdings": [
+    {
+     "name": "Würzburg",
+     "lat": 49.794,
+     "lon": 9.929
+    },
+    {
+     "name": "Kitzingen",
+     "lat": 49.74,
+     "lon": 10.16
+    },
+    {
+     "name": "Karlstadt",
+     "lat": 49.96,
+     "lon": 9.77
+    },
+    {
+     "name": "Ochsenfurt",
+     "lat": 49.664,
+     "lon": 10.07
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess dancetty gules and argent",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_bamberg",
+   "name": {
+    "en": "Prince-Bishopric of Bamberg",
+    "de": "Hochstift Bamberg"
+   },
+   "short": {
+    "en": "Bamberg",
+    "de": "Bamberg"
+   },
+   "adjective": {
+    "en": "Bamberg",
+    "de": "bambergisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#3b7d9e",
+   "capital": {
+    "name": "Bamberg",
+    "lat": 49.891,
+    "lon": 10.886
+   },
+   "holdings": [
+    {
+     "name": "Bamberg",
+     "lat": 49.891,
+     "lon": 10.886
+    },
+    {
+     "name": "Forchheim",
+     "lat": 49.72,
+     "lon": 11.06
+    },
+    {
+     "name": "Kronach",
+     "lat": 50.24,
+     "lon": 11.33
+    },
+    {
+     "name": "Villach",
+     "lat": 46.61,
+     "lon": 13.85
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Bamberg also holds Villach and lands in Carinthia.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion sable, overall a bend argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "henneberg",
+   "name": {
+    "en": "County of Henneberg-Schleusingen",
+    "de": "Grafschaft Henneberg-Schleusingen"
+   },
+   "short": {
+    "en": "Henneberg",
+    "de": "Henneberg"
+   },
+   "adjective": {
+    "en": "Henneberg",
+    "de": "hennebergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "franconian",
+   "faith": "latin",
+   "color": "#8a5257",
+   "capital": {
+    "name": "Schleusingen",
+    "lat": 50.51,
+    "lon": 10.755
+   },
+   "holdings": [
+    {
+     "name": "Schleusingen",
+     "lat": 50.51,
+     "lon": 10.755
+    },
+    {
+     "name": "Coburg",
+     "lat": 50.258,
+     "lon": 10.965
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a hen sable on a mount vert",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "hen",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "wurttemberg",
+   "name": {
+    "en": "County of Württemberg",
+    "de": "Grafschaft Württemberg"
+   },
+   "short": {
+    "en": "Württemberg",
+    "de": "Württemberg"
+   },
+   "adjective": {
+    "en": "Württemberg",
+    "de": "württembergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#3c789f",
+   "capital": {
+    "name": "Stuttgart",
+    "lat": 48.776,
+    "lon": 9.18
+   },
+   "holdings": [
+    {
+     "name": "Stuttgart",
+     "lat": 48.776,
+     "lon": 9.18
+    },
+    {
+     "name": "Leonberg",
+     "lat": 48.8,
+     "lon": 9.013
+    },
+    {
+     "name": "Waiblingen",
+     "lat": 48.83,
+     "lon": 9.32
+    },
+    {
+     "name": "Urach",
+     "lat": 48.49,
+     "lon": 9.4
+    },
+    {
+     "name": "Tübingen",
+     "lat": 48.52,
+     "lon": 9.06
+    },
+    {
+     "name": "Göppingen",
+     "lat": 48.703,
+     "lon": 9.652
+    }
+   ],
+   "ruler": {
+    "name": "Eberhard I",
+    "born": 1265,
+    "dynasty": "Württemberg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count since 1279, a persistent opponent of Rudolf I's revindications.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, three stag antlers fesswise sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "horn",
+      "tincture": "sable",
+      "count": 3,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "baden",
+   "name": {
+    "en": "Margraviate of Baden",
+    "de": "Markgrafschaft Baden"
+   },
+   "short": {
+    "en": "Baden",
+    "de": "Baden"
+   },
+   "adjective": {
+    "en": "Baden",
+    "de": "badisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#034974",
+   "capital": {
+    "name": "Baden",
+    "lat": 48.762,
+    "lon": 8.24
+   },
+   "holdings": [
+    {
+     "name": "Baden",
+     "lat": 48.762,
+     "lon": 8.24
+    },
+    {
+     "name": "Pforzheim",
+     "lat": 48.892,
+     "lon": 8.694
+    },
+    {
+     "name": "Durlach",
+     "lat": 49.0,
+     "lon": 8.47
+    },
+    {
+     "name": "Ettlingen",
+     "lat": 48.94,
+     "lon": 8.41
+    },
+    {
+     "name": "Backnang",
+     "lat": 48.95,
+     "lon": 9.43
+    }
+   ],
+   "ruler": {
+    "name": "Hermann VII",
+    "born": 1266,
+    "dynasty": "Zähringen",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a bend gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "zollern",
+   "name": {
+    "en": "County of Zollern",
+    "de": "Grafschaft Zollern"
+   },
+   "short": {
+    "en": "Zollern",
+    "de": "Zollern"
+   },
+   "adjective": {
+    "en": "Zollern",
+    "de": "zollerisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#4f4309",
+   "capital": {
+    "name": "Hechingen",
+    "lat": 48.353,
+    "lon": 8.963
+   },
+   "holdings": [
+    {
+     "name": "Hechingen",
+     "lat": 48.353,
+     "lon": 8.963
+    },
+    {
+     "name": "Balingen",
+     "lat": 48.27,
+     "lon": 8.85
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Quarterly argent and sable",
+    "field": "argent",
+    "division": "quarterly",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_augsburg",
+   "name": {
+    "en": "Prince-Bishopric of Augsburg",
+    "de": "Hochstift Augsburg"
+   },
+   "short": {
+    "en": "Bishopric of Augsburg",
+    "de": "Hochstift Augsburg"
+   },
+   "adjective": {
+    "en": "Augsburg",
+    "de": "augsburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#12485a",
+   "capital": {
+    "name": "Dillingen",
+    "lat": 48.58,
+    "lon": 10.495
+   },
+   "holdings": [
+    {
+     "name": "Dillingen",
+     "lat": 48.58,
+     "lon": 10.495
+    },
+    {
+     "name": "Füssen",
+     "lat": 47.57,
+     "lon": 10.7
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale gules and argent",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_constance",
+   "name": {
+    "en": "Prince-Bishopric of Constance",
+    "de": "Hochstift Konstanz"
+   },
+   "short": {
+    "en": "Bishopric of Constance",
+    "de": "Hochstift Konstanz"
+   },
+   "adjective": {
+    "en": "Constance",
+    "de": "konstanzisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#9f5f62",
+   "capital": {
+    "name": "Meersburg",
+    "lat": 47.693,
+    "lon": 9.271
+   },
+   "holdings": [
+    {
+     "name": "Meersburg",
+     "lat": 47.693,
+     "lon": 9.271
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_strasbourg",
+   "name": {
+    "en": "Prince-Bishopric of Strasbourg",
+    "de": "Hochstift Straßburg"
+   },
+   "short": {
+    "en": "Bishopric of Strasbourg",
+    "de": "Hochstift Straßburg"
+   },
+   "adjective": {
+    "en": "Strasbourg",
+    "de": "straßburgisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#72324d",
+   "capital": {
+    "name": "Zabern",
+    "lat": 48.741,
+    "lon": 7.362
+   },
+   "holdings": [
+    {
+     "name": "Zabern",
+     "lat": 48.741,
+     "lon": 7.362
+    },
+    {
+     "name": "Molsheim",
+     "lat": 48.541,
+     "lon": 7.492
+    },
+    {
+     "name": "Rouffach",
+     "lat": 47.96,
+     "lon": 7.3
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_basel",
+   "name": {
+    "en": "Prince-Bishopric of Basel",
+    "de": "Hochstift Basel"
+   },
+   "short": {
+    "en": "Bishopric of Basel",
+    "de": "Hochstift Basel"
+   },
+   "adjective": {
+    "en": "Basel",
+    "de": "baslerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#573d5f",
+   "capital": {
+    "name": "Pruntrut",
+    "lat": 47.416,
+    "lon": 7.075
+   },
+   "holdings": [
+    {
+     "name": "Pruntrut",
+     "lat": 47.416,
+     "lon": 7.075
+    },
+    {
+     "name": "Delémont",
+     "lat": 47.36,
+     "lon": 7.34
+    },
+    {
+     "name": "Biel",
+     "lat": 47.137,
+     "lon": 7.247
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a crozier gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "abbey_st_gallen",
+   "name": {
+    "en": "Princely Abbey of St. Gallen",
+    "de": "Fürstabtei St. Gallen"
+   },
+   "short": {
+    "en": "St. Gallen",
+    "de": "St. Gallen"
+   },
+   "adjective": {
+    "en": "St. Gallen",
+    "de": "st. gallisch"
+   },
+   "rank": "principality",
+   "government": "theocracy",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#017f8e",
+   "capital": {
+    "name": "St. Gallen",
+    "lat": 47.424,
+    "lon": 9.376
+   },
+   "holdings": [
+    {
+     "name": "St. Gallen",
+     "lat": 47.424,
+     "lon": 9.376
+    },
+    {
+     "name": "Wil",
+     "lat": 47.461,
+     "lon": 9.046
+    },
+    {
+     "name": "Appenzell",
+     "lat": 47.33,
+     "lon": 9.41
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a bear rampant sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bear",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "strasbourg",
+   "name": {
+    "en": "Free City of Strasbourg",
+    "de": "Freie Stadt Straßburg"
+   },
+   "short": {
+    "en": "Strasbourg",
+    "de": "Straßburg"
+   },
+   "adjective": {
+    "en": "Strasbourg",
+    "de": "Straßburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#546848",
+   "capital": {
+    "name": "Strasbourg",
+    "lat": 48.583,
+    "lon": 7.746
+   },
+   "holdings": [
+    {
+     "name": "Strasbourg",
+     "lat": 48.583,
+     "lon": 7.746
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a bend gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "basel",
+   "name": {
+    "en": "Free City of Basel",
+    "de": "Freie Stadt Basel"
+   },
+   "short": {
+    "en": "Basel",
+    "de": "Basel"
+   },
+   "adjective": {
+    "en": "Basel",
+    "de": "Basler"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#6b6943",
+   "capital": {
+    "name": "Basel",
+    "lat": 47.557,
+    "lon": 7.588
+   },
+   "holdings": [
+    {
+     "name": "Basel",
+     "lat": 47.557,
+     "lon": 7.588
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a crozier sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "crozier",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "colmar",
+   "name": {
+    "en": "Free Imperial City of Colmar",
+    "de": "Reichsstadt Colmar"
+   },
+   "short": {
+    "en": "Colmar",
+    "de": "Colmar"
+   },
+   "adjective": {
+    "en": "Colmar",
+    "de": "Colmarer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#3e6979",
+   "capital": {
+    "name": "Colmar",
+    "lat": 48.079,
+    "lon": 7.358
+   },
+   "holdings": [
+    {
+     "name": "Colmar",
+     "lat": 48.079,
+     "lon": 7.358
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per bend gules and vert, a morning star or",
+    "field": "gules",
+    "division": "per_bend",
+    "field2": "vert",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "constance",
+   "name": {
+    "en": "Free Imperial City of Constance",
+    "de": "Reichsstadt Konstanz"
+   },
+   "short": {
+    "en": "Constance",
+    "de": "Konstanz"
+   },
+   "adjective": {
+    "en": "Constance",
+    "de": "Konstanzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#7d5269",
+   "capital": {
+    "name": "Konstanz",
+    "lat": 47.66,
+    "lon": 9.175
+   },
+   "holdings": [
+    {
+     "name": "Konstanz",
+     "lat": 47.66,
+     "lon": 9.175
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable, a chief gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "ulm",
+   "name": {
+    "en": "Free Imperial City of Ulm",
+    "de": "Reichsstadt Ulm"
+   },
+   "short": {
+    "en": "Ulm",
+    "de": "Ulm"
+   },
+   "adjective": {
+    "en": "Ulm",
+    "de": "Ulmer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#4e5834",
+   "capital": {
+    "name": "Ulm",
+    "lat": 48.398,
+    "lon": 9.992
+   },
+   "holdings": [
+    {
+     "name": "Ulm",
+     "lat": 48.398,
+     "lon": 9.992
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess sable and argent",
+    "field": "sable",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "esslingen",
+   "name": {
+    "en": "Free Imperial City of Esslingen",
+    "de": "Reichsstadt Esslingen"
+   },
+   "short": {
+    "en": "Esslingen",
+    "de": "Esslingen"
+   },
+   "adjective": {
+    "en": "Esslingen",
+    "de": "Esslinger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#665a34",
+   "capital": {
+    "name": "Esslingen",
+    "lat": 48.74,
+    "lon": 9.31
+   },
+   "holdings": [
+    {
+     "name": "Esslingen",
+     "lat": 48.74,
+     "lon": 9.31
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "augsburg",
+   "name": {
+    "en": "Free Imperial City of Augsburg",
+    "de": "Reichsstadt Augsburg"
+   },
+   "short": {
+    "en": "Augsburg",
+    "de": "Augsburg"
+   },
+   "adjective": {
+    "en": "Augsburg",
+    "de": "Augsburger"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#715528",
+   "capital": {
+    "name": "Augsburg",
+    "lat": 48.366,
+    "lon": 10.898
+   },
+   "holdings": [
+    {
+     "name": "Augsburg",
+     "lat": 48.366,
+     "lon": 10.898
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale gules and argent, a pine cone or",
+    "field": "gules",
+    "division": "per_pale",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tree",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bern",
+   "name": {
+    "en": "Imperial City of Bern",
+    "de": "Reichsstadt Bern"
+   },
+   "short": {
+    "en": "Bern",
+    "de": "Bern"
+   },
+   "adjective": {
+    "en": "Bernese",
+    "de": "bernisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#6f673f",
+   "capital": {
+    "name": "Bern",
+    "lat": 46.948,
+    "lon": 7.447
+   },
+   "holdings": [
+    {
+     "name": "Bern",
+     "lat": 46.948,
+     "lon": 7.447
+    },
+    {
+     "name": "Laupen",
+     "lat": 46.9,
+     "lon": 7.24
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Imperial city since 1218; besieged twice by Rudolf I in 1288-89 and forced to submit, still an imperial city.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "zurich",
+   "name": {
+    "en": "Imperial City of Zürich",
+    "de": "Reichsstadt Zürich"
+   },
+   "short": {
+    "en": "Zürich",
+    "de": "Zürich"
+   },
+   "adjective": {
+    "en": "Zürich",
+    "de": "zürcherisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "alemannic",
+   "faith": "latin",
+   "color": "#4d5e7e",
+   "capital": {
+    "name": "Zürich",
+    "lat": 47.37,
+    "lon": 8.54
+   },
+   "holdings": [
+    {
+     "name": "Zürich",
+     "lat": 47.37,
+     "lon": 8.54
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Imperial city (Reichsfreiheit 1218).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "county_burgundy",
+   "name": {
+    "en": "County of Burgundy",
+    "de": "Freigrafschaft Burgund"
+   },
+   "short": {
+    "en": "Franche-Comté",
+    "de": "Freigrafschaft Burgund"
+   },
+   "adjective": {
+    "en": "Comtois",
+    "de": "freigräflich-burgundisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#03577d",
+   "capital": {
+    "name": "Dole",
+    "lat": 47.093,
+    "lon": 5.49
+   },
+   "holdings": [
+    {
+     "name": "Dole",
+     "lat": 47.093,
+     "lon": 5.49
+    },
+    {
+     "name": "Besançon",
+     "lat": 47.24,
+     "lon": 6.02
+    },
+    {
+     "name": "Gray",
+     "lat": 47.444,
+     "lon": 5.59
+    },
+    {
+     "name": "Salins-les-Bains",
+     "lat": 46.94,
+     "lon": 5.88
+    },
+    {
+     "name": "Poligny",
+     "lat": 46.837,
+     "lon": 5.71
+    },
+    {
+     "name": "Vesoul",
+     "lat": 47.62,
+     "lon": 6.155
+    },
+    {
+     "name": "Pontarlier",
+     "lat": 46.904,
+     "lon": 6.354
+    }
+   ],
+   "ruler": {
+    "name": "Otto IV",
+    "born": 1248,
+    "dynasty": "Ivrea (Chalon)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count Palatine of Burgundy; in 1291 he betroths his daughter Joan to a son of Philip IV (Treaty of Évreux 1295 hands the county to France).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "france"
+   ],
+   "rivals": [
+    "austria"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "montbeliard",
+   "name": {
+    "en": "County of Montbéliard",
+    "de": "Grafschaft Mömpelgard"
+   },
+   "short": {
+    "en": "Montbéliard",
+    "de": "Mömpelgard"
+   },
+   "adjective": {
+    "en": "Montbéliard",
+    "de": "mömpelgardisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "burgundian_fr",
+   "faith": "latin",
+   "color": "#696a40",
+   "capital": {
+    "name": "Montbéliard",
+    "lat": 47.51,
+    "lon": 6.8
+   },
+   "holdings": [
+    {
+     "name": "Montbéliard",
+     "lat": 47.51,
+     "lon": 6.8
+    },
+    {
+     "name": "Belfort",
+     "lat": 47.64,
+     "lon": 6.86
+    }
+   ],
+   "ruler": {
+    "name": "Renaud of Burgundy",
+    "born": null,
+    "dynasty": "Ivrea",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two barbels addorsed or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "fish",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "addorsed"
+     }
+    ]
+   }
+  },
+  {
+   "id": "dauphine",
+   "name": {
+    "en": "Dauphiné of Viennois",
+    "de": "Dauphiné von Viennois"
+   },
+   "short": {
+    "en": "Dauphiné",
+    "de": "Dauphiné"
+   },
+   "adjective": {
+    "en": "Dauphinois",
+    "de": "dauphinesisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "occitan",
+   "faith": "latin",
+   "color": "#437292",
+   "capital": {
+    "name": "Grenoble",
+    "lat": 45.188,
+    "lon": 5.724
+   },
+   "holdings": [
+    {
+     "name": "Grenoble",
+     "lat": 45.188,
+     "lon": 5.724
+    },
+    {
+     "name": "Vienne",
+     "lat": 45.525,
+     "lon": 4.874
+    },
+    {
+     "name": "Romans-sur-Isère",
+     "lat": 45.04,
+     "lon": 5.05
+    },
+    {
+     "name": "Briançon",
+     "lat": 44.9,
+     "lon": 6.64
+    },
+    {
+     "name": "Embrun",
+     "lat": 44.56,
+     "lon": 6.5
+    },
+    {
+     "name": "Gap",
+     "lat": 44.56,
+     "lon": 6.08
+    },
+    {
+     "name": "La Tour-du-Pin",
+     "lat": 45.57,
+     "lon": 5.44
+    },
+    {
+     "name": "Bourgoin",
+     "lat": 45.59,
+     "lon": 5.27
+    }
+   ],
+   "ruler": {
+    "name": "Humbert I",
+    "born": null,
+    "dynasty": "La Tour-du-Pin",
+    "female": false
+   },
+   "heir": null,
+   "consort": {
+    "name": "Anne of Burgundy",
+    "born": null,
+    "dynasty": "Burgundy (Albon)",
+    "female": true
+   },
+   "dynasty_note": "Humbert I of La Tour-du-Pin, Dauphin through his wife Anne (1282). An imperial fief until it is sold to France in 1349.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "savoy"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "archbishopric_trier",
+   "name": {
+    "en": "Electorate of Trier",
+    "de": "Kurfürstentum Trier"
+   },
+   "short": {
+    "en": "Trier",
+    "de": "Kurtrier"
+   },
+   "adjective": {
+    "en": "Trevirian",
+    "de": "kurtrierisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#8d516c",
+   "capital": {
+    "name": "Trier",
+    "lat": 49.756,
+    "lon": 6.641
+   },
+   "holdings": [
+    {
+     "name": "Trier",
+     "lat": 49.756,
+     "lon": 6.641
+    },
+    {
+     "name": "Koblenz",
+     "lat": 50.357,
+     "lon": 7.594
+    },
+    {
+     "name": "Ehrenbreitstein",
+     "lat": 50.36,
+     "lon": 7.62
+    },
+    {
+     "name": "Montabaur",
+     "lat": 50.437,
+     "lon": 7.826
+    },
+    {
+     "name": "Wittlich",
+     "lat": 49.986,
+     "lon": 6.889
+    },
+    {
+     "name": "Bernkastel",
+     "lat": 49.92,
+     "lon": 7.07
+    },
+    {
+     "name": "Cochem",
+     "lat": 50.147,
+     "lon": 7.167
+    }
+   ],
+   "ruler": {
+    "name": "Boemund I of Warsberg",
+    "born": null,
+    "dynasty": "Warsberg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "archbishopric_cologne",
+   "name": {
+    "en": "Electorate of Cologne",
+    "de": "Kurfürstentum Köln"
+   },
+   "short": {
+    "en": "Cologne",
+    "de": "Kurköln"
+   },
+   "adjective": {
+    "en": "Colognian",
+    "de": "kurkölnisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#354905",
+   "capital": {
+    "name": "Bonn",
+    "lat": 50.735,
+    "lon": 7.1
+   },
+   "holdings": [
+    {
+     "name": "Bonn",
+     "lat": 50.735,
+     "lon": 7.1
+    },
+    {
+     "name": "Neuss",
+     "lat": 51.2,
+     "lon": 6.69
+    },
+    {
+     "name": "Andernach",
+     "lat": 50.44,
+     "lon": 7.4
+    },
+    {
+     "name": "Ahrweiler",
+     "lat": 50.54,
+     "lon": 7.1
+    },
+    {
+     "name": "Zons",
+     "lat": 51.12,
+     "lon": 6.85
+    },
+    {
+     "name": "Soest",
+     "lat": 51.571,
+     "lon": 8.106
+    },
+    {
+     "name": "Arnsberg",
+     "lat": 51.4,
+     "lon": 8.06
+    },
+    {
+     "name": "Brilon",
+     "lat": 51.395,
+     "lon": 8.57
+    },
+    {
+     "name": "Recklinghausen",
+     "lat": 51.614,
+     "lon": 7.198
+    },
+    {
+     "name": "Rheinberg",
+     "lat": 51.55,
+     "lon": 6.6
+    }
+   ],
+   "ruler": {
+    "name": "Siegfried of Westerburg",
+    "born": null,
+    "dynasty": "Westerburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Defeated and captured at Worringen (1288); the city of Cologne is free of him since.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "brabant",
+    "cologne",
+    "berg"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a cross sable",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "sable",
+    "charges": []
+   }
+  },
+  {
+   "id": "archbishopric_mainz",
+   "name": {
+    "en": "Electorate of Mainz",
+    "de": "Kurfürstentum Mainz"
+   },
+   "short": {
+    "en": "Mainz",
+    "de": "Kurmainz"
+   },
+   "adjective": {
+    "en": "Mainzian",
+    "de": "kurmainzisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#a25c4e",
+   "capital": {
+    "name": "Eltville",
+    "lat": 50.028,
+    "lon": 8.118
+   },
+   "holdings": [
+    {
+     "name": "Eltville",
+     "lat": 50.028,
+     "lon": 8.118
+    },
+    {
+     "name": "Aschaffenburg",
+     "lat": 49.974,
+     "lon": 9.149
+    },
+    {
+     "name": "Bingen",
+     "lat": 49.967,
+     "lon": 7.9
+    },
+    {
+     "name": "Höchst",
+     "lat": 50.1,
+     "lon": 8.545
+    },
+    {
+     "name": "Fritzlar",
+     "lat": 51.132,
+     "lon": 9.274
+    },
+    {
+     "name": "Erfurt",
+     "lat": 50.98,
+     "lon": 11.03
+    },
+    {
+     "name": "Heiligenstadt",
+     "lat": 51.38,
+     "lon": 10.14
+    },
+    {
+     "name": "Amöneburg",
+     "lat": 50.8,
+     "lon": 8.92
+    },
+    {
+     "name": "Miltenberg",
+     "lat": 49.703,
+     "lon": 9.25
+    }
+   ],
+   "ruler": {
+    "name": "Gerhard II of Eppstein",
+    "born": null,
+    "dynasty": "Eppstein",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Archchancellor of Germany; he will crown Adolf of Nassau in 1292.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a wheel argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "cologne",
+   "name": {
+    "en": "Free City of Cologne",
+    "de": "Freie Stadt Köln"
+   },
+   "short": {
+    "en": "Cologne",
+    "de": "Köln"
+   },
+   "adjective": {
+    "en": "Colognian",
+    "de": "Kölner"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#905b52",
+   "capital": {
+    "name": "Cologne",
+    "lat": 50.938,
+    "lon": 6.958
+   },
+   "holdings": [
+    {
+     "name": "Cologne",
+     "lat": 50.938,
+     "lon": 6.958
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a chief gules charged with three crowns or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "crown",
+      "tincture": "or",
+      "count": 3,
+      "arrangement": "in_chief"
+     }
+    ]
+   }
+  },
+  {
+   "id": "aachen",
+   "name": {
+    "en": "Free Imperial City of Aachen",
+    "de": "Reichsstadt Aachen"
+   },
+   "short": {
+    "en": "Aachen",
+    "de": "Aachen"
+   },
+   "adjective": {
+    "en": "Aachen",
+    "de": "Aachener"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#744d69",
+   "capital": {
+    "name": "Aachen",
+    "lat": 50.776,
+    "lon": 6.084
+   },
+   "holdings": [
+    {
+     "name": "Aachen",
+     "lat": 50.776,
+     "lon": 6.084
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "julich",
+   "name": {
+    "en": "County of Jülich",
+    "de": "Grafschaft Jülich"
+   },
+   "short": {
+    "en": "Jülich",
+    "de": "Jülich"
+   },
+   "adjective": {
+    "en": "Jülich",
+    "de": "jülichsch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#288289",
+   "capital": {
+    "name": "Nideggen",
+    "lat": 50.69,
+    "lon": 6.483
+   },
+   "holdings": [
+    {
+     "name": "Nideggen",
+     "lat": 50.69,
+     "lon": 6.483
+    },
+    {
+     "name": "Jülich",
+     "lat": 50.922,
+     "lon": 6.358
+    },
+    {
+     "name": "Düren",
+     "lat": 50.8,
+     "lon": 6.48
+    },
+    {
+     "name": "Münstereifel",
+     "lat": 50.557,
+     "lon": 6.763
+    }
+   ],
+   "ruler": {
+    "name": "Walram",
+    "born": null,
+    "dynasty": "Jülich",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "berg",
+   "name": {
+    "en": "County of Berg",
+    "de": "Grafschaft Berg"
+   },
+   "short": {
+    "en": "Berg",
+    "de": "Berg"
+   },
+   "adjective": {
+    "en": "Bergish",
+    "de": "bergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#65293e",
+   "capital": {
+    "name": "Burg an der Wupper",
+    "lat": 51.135,
+    "lon": 7.15
+   },
+   "holdings": [
+    {
+     "name": "Burg an der Wupper",
+     "lat": 51.135,
+     "lon": 7.15
+    },
+    {
+     "name": "Düsseldorf",
+     "lat": 51.227,
+     "lon": 6.776
+    },
+    {
+     "name": "Ratingen",
+     "lat": 51.297,
+     "lon": 6.85
+    },
+    {
+     "name": "Lennep",
+     "lat": 51.19,
+     "lon": 7.26
+    },
+    {
+     "name": "Siegburg",
+     "lat": 50.8,
+     "lon": 7.2
+    }
+   ],
+   "ruler": {
+    "name": "Adolf V",
+    "born": null,
+    "dynasty": "Limburg (Berg)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count of Berg, victor at Worringen with Brabant; raised Düsseldorf to a town in 1288.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brabant"
+   ],
+   "rivals": [
+    "archbishopric_cologne"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a lion gules crowned azure",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "cleves",
+   "name": {
+    "en": "County of Cleves",
+    "de": "Grafschaft Kleve"
+   },
+   "short": {
+    "en": "Cleves",
+    "de": "Kleve"
+   },
+   "adjective": {
+    "en": "Clevish",
+    "de": "klevisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#676f91",
+   "capital": {
+    "name": "Kleve",
+    "lat": 51.789,
+    "lon": 6.138
+   },
+   "holdings": [
+    {
+     "name": "Kleve",
+     "lat": 51.789,
+     "lon": 6.138
+    },
+    {
+     "name": "Wesel",
+     "lat": 51.659,
+     "lon": 6.618
+    },
+    {
+     "name": "Kalkar",
+     "lat": 51.74,
+     "lon": 6.29
+    },
+    {
+     "name": "Emmerich",
+     "lat": 51.83,
+     "lon": 6.25
+    }
+   ],
+   "ruler": {
+    "name": "Dietrich VI",
+    "born": null,
+    "dynasty": "Cleves",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an inescutcheon argent, an escarbuncle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "overall"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mark",
+   "name": {
+    "en": "County of the Mark",
+    "de": "Grafschaft Mark"
+   },
+   "short": {
+    "en": "Mark",
+    "de": "Mark"
+   },
+   "adjective": {
+    "en": "Märkish",
+    "de": "märkisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#805e84",
+   "capital": {
+    "name": "Hamm",
+    "lat": 51.68,
+    "lon": 7.817
+   },
+   "holdings": [
+    {
+     "name": "Hamm",
+     "lat": 51.68,
+     "lon": 7.817
+    },
+    {
+     "name": "Unna",
+     "lat": 51.537,
+     "lon": 7.689
+    },
+    {
+     "name": "Iserlohn",
+     "lat": 51.376,
+     "lon": 7.7
+    },
+    {
+     "name": "Lüdenscheid",
+     "lat": 51.22,
+     "lon": 7.63
+    },
+    {
+     "name": "Altena",
+     "lat": 51.3,
+     "lon": 7.67
+    }
+   ],
+   "ruler": {
+    "name": "Eberhard I",
+    "born": null,
+    "dynasty": "La Marck",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brabant"
+   ],
+   "rivals": [
+    "archbishopric_cologne"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a fess chequy gules and argent",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "nassau_wiesbaden",
+   "name": {
+    "en": "County of Nassau (Walram line)",
+    "de": "Grafschaft Nassau (walramische Linie)"
+   },
+   "short": {
+    "en": "Nassau-Idstein",
+    "de": "Nassau-Idstein"
+   },
+   "adjective": {
+    "en": "Nassau",
+    "de": "nassauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#7a67a4",
+   "capital": {
+    "name": "Wiesbaden",
+    "lat": 50.08,
+    "lon": 8.24
+   },
+   "holdings": [
+    {
+     "name": "Wiesbaden",
+     "lat": 50.08,
+     "lon": 8.24
+    },
+    {
+     "name": "Idstein",
+     "lat": 50.22,
+     "lon": 8.27
+    },
+    {
+     "name": "Weilburg",
+     "lat": 50.485,
+     "lon": 8.262
+    },
+    {
+     "name": "Usingen",
+     "lat": 50.336,
+     "lon": 8.535
+    }
+   ],
+   "ruler": {
+    "name": "Adolf",
+    "born": 1250,
+    "dynasty": "Nassau",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count Adolf of Nassau, elected King of the Romans in May 1292.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "nassau_dillenburg",
+   "name": {
+    "en": "County of Nassau-Dillenburg",
+    "de": "Grafschaft Nassau-Dillenburg"
+   },
+   "short": {
+    "en": "Nassau-Dillenburg",
+    "de": "Nassau-Dillenburg"
+   },
+   "adjective": {
+    "en": "Nassau",
+    "de": "nassauisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#046a83",
+   "capital": {
+    "name": "Dillenburg",
+    "lat": 50.74,
+    "lon": 8.287
+   },
+   "holdings": [
+    {
+     "name": "Dillenburg",
+     "lat": 50.74,
+     "lon": 8.287
+    },
+    {
+     "name": "Siegen",
+     "lat": 50.874,
+     "lon": 8.024
+    },
+    {
+     "name": "Herborn",
+     "lat": 50.68,
+     "lon": 8.3
+    }
+   ],
+   "ruler": {
+    "name": "Otto I",
+    "born": null,
+    "dynasty": "Nassau",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Ottonian line of Nassau.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure billetty or, a lion or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "katzenelnbogen",
+   "name": {
+    "en": "County of Katzenelnbogen",
+    "de": "Grafschaft Katzenelnbogen"
+   },
+   "short": {
+    "en": "Katzenelnbogen",
+    "de": "Katzenelnbogen"
+   },
+   "adjective": {
+    "en": "Katzenelnbogen",
+    "de": "katzenelnbogisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#637f40",
+   "capital": {
+    "name": "Katzenelnbogen",
+    "lat": 50.267,
+    "lon": 7.977
+   },
+   "holdings": [
+    {
+     "name": "Katzenelnbogen",
+     "lat": 50.267,
+     "lon": 7.977
+    },
+    {
+     "name": "Darmstadt",
+     "lat": 49.872,
+     "lon": 8.651
+    },
+    {
+     "name": "Rheinfels",
+     "lat": 50.15,
+     "lon": 7.71
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion gules crowned azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "sponheim_kreuznach",
+   "name": {
+    "en": "County of Sponheim-Kreuznach",
+    "de": "Vordere Grafschaft Sponheim"
+   },
+   "short": {
+    "en": "Sponheim-Kreuznach",
+    "de": "Sponheim-Kreuznach"
+   },
+   "adjective": {
+    "en": "Sponheim",
+    "de": "sponheimisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#3f4d2a",
+   "capital": {
+    "name": "Kreuznach",
+    "lat": 49.843,
+    "lon": 7.867
+   },
+   "holdings": [
+    {
+     "name": "Kreuznach",
+     "lat": 49.843,
+     "lon": 7.867
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Chequy gules and argent",
+    "field": "gules",
+    "division": "chequy",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "sponheim_starkenburg",
+   "name": {
+    "en": "County of Sponheim-Starkenburg",
+    "de": "Hintere Grafschaft Sponheim"
+   },
+   "short": {
+    "en": "Sponheim-Starkenburg",
+    "de": "Sponheim-Starkenburg"
+   },
+   "adjective": {
+    "en": "Sponheim",
+    "de": "sponheimisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#75752e",
+   "capital": {
+    "name": "Starkenburg",
+    "lat": 49.958,
+    "lon": 7.118
+   },
+   "holdings": [
+    {
+     "name": "Starkenburg",
+     "lat": 49.958,
+     "lon": 7.118
+    },
+    {
+     "name": "Birkenfeld",
+     "lat": 49.65,
+     "lon": 7.167
+    },
+    {
+     "name": "Trarbach",
+     "lat": 49.95,
+     "lon": 7.2
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Chequy azure and or",
+    "field": "azure",
+    "division": "chequy",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hesse",
+   "name": {
+    "en": "Landgraviate of Hesse",
+    "de": "Landgrafschaft Hessen"
+   },
+   "short": {
+    "en": "Hesse",
+    "de": "Hessen"
+   },
+   "adjective": {
+    "en": "Hessian",
+    "de": "hessisch"
+   },
+   "rank": "landgraviate",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#42356e",
+   "capital": {
+    "name": "Marburg",
+    "lat": 50.81,
+    "lon": 8.77
+   },
+   "holdings": [
+    {
+     "name": "Marburg",
+     "lat": 50.81,
+     "lon": 8.77
+    },
+    {
+     "name": "Kassel",
+     "lat": 51.316,
+     "lon": 9.49
+    },
+    {
+     "name": "Gießen",
+     "lat": 50.584,
+     "lon": 8.678
+    },
+    {
+     "name": "Alsfeld",
+     "lat": 50.75,
+     "lon": 9.27
+    },
+    {
+     "name": "Homberg",
+     "lat": 51.03,
+     "lon": 9.4
+    },
+    {
+     "name": "Grünberg",
+     "lat": 50.594,
+     "lon": 8.96
+    },
+    {
+     "name": "Eschwege",
+     "lat": 51.188,
+     "lon": 10.053
+    }
+   ],
+   "ruler": {
+    "name": "Henry I the Child",
+    "born": 1244,
+    "dynasty": "Hesse (Brabant)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Landgrave of Hesse since the separation from Thuringia (1264); raised to imperial prince in 1292.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "archbishopric_mainz"
+   ],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a lion barry argent and gules crowned or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "frankfurt",
+   "name": {
+    "en": "Free Imperial City of Frankfurt",
+    "de": "Reichsstadt Frankfurt"
+   },
+   "short": {
+    "en": "Frankfurt",
+    "de": "Frankfurt"
+   },
+   "adjective": {
+    "en": "Frankfurt",
+    "de": "Frankfurter"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#574b20",
+   "capital": {
+    "name": "Frankfurt am Main",
+    "lat": 50.111,
+    "lon": 8.682
+   },
+   "holdings": [
+    {
+     "name": "Frankfurt am Main",
+     "lat": 50.111,
+     "lon": 8.682
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an eagle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "mainz",
+   "name": {
+    "en": "Free City of Mainz",
+    "de": "Freie Stadt Mainz"
+   },
+   "short": {
+    "en": "Mainz",
+    "de": "Mainz"
+   },
+   "adjective": {
+    "en": "Mainz",
+    "de": "Mainzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#4c638d",
+   "capital": {
+    "name": "Mainz",
+    "lat": 49.999,
+    "lon": 8.273
+   },
+   "holdings": [
+    {
+     "name": "Mainz",
+     "lat": 49.999,
+     "lon": 8.273
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two wheels argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "argent",
+      "count": 2,
+      "arrangement": "in_pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "worms",
+   "name": {
+    "en": "Free City of Worms",
+    "de": "Freie Stadt Worms"
+   },
+   "short": {
+    "en": "Worms",
+    "de": "Worms"
+   },
+   "adjective": {
+    "en": "Worms",
+    "de": "Wormser"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#79763a",
+   "capital": {
+    "name": "Worms",
+    "lat": 49.632,
+    "lon": 8.359
+   },
+   "holdings": [
+    {
+     "name": "Worms",
+     "lat": 49.632,
+     "lon": 8.359
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a key argent with a mullet or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1
+     },
+     {
+      "type": "star",
+      "tincture": "or",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "speyer",
+   "name": {
+    "en": "Free Imperial City of Speyer",
+    "de": "Reichsstadt Speyer"
+   },
+   "short": {
+    "en": "Speyer",
+    "de": "Speyer"
+   },
+   "adjective": {
+    "en": "Speyer",
+    "de": "Speyerer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#1b5850",
+   "capital": {
+    "name": "Speyer",
+    "lat": 49.317,
+    "lon": 8.431
+   },
+   "holdings": [
+    {
+     "name": "Speyer",
+     "lat": 49.317,
+     "lon": 8.431
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a church gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "tower",
+      "tincture": "gules",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bishopric_speyer",
+   "name": {
+    "en": "Prince-Bishopric of Speyer",
+    "de": "Hochstift Speyer"
+   },
+   "short": {
+    "en": "Bishopric of Speyer",
+    "de": "Hochstift Speyer"
+   },
+   "adjective": {
+    "en": "Speyer",
+    "de": "speyerisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#716292",
+   "capital": {
+    "name": "Bruchsal",
+    "lat": 49.124,
+    "lon": 8.598
+   },
+   "holdings": [
+    {
+     "name": "Bruchsal",
+     "lat": 49.124,
+     "lon": 8.598
+    },
+    {
+     "name": "Udenheim",
+     "lat": 49.22,
+     "lon": 8.43
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a cross argent",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_metz",
+   "name": {
+    "en": "Prince-Bishopric of Metz",
+    "de": "Hochstift Metz"
+   },
+   "short": {
+    "en": "Bishopric of Metz",
+    "de": "Hochstift Metz"
+   },
+   "adjective": {
+    "en": "Messin",
+    "de": "metzisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#58416a",
+   "capital": {
+    "name": "Vic-sur-Seille",
+    "lat": 48.783,
+    "lon": 6.533
+   },
+   "holdings": [
+    {
+     "name": "Vic-sur-Seille",
+     "lat": 48.783,
+     "lon": 6.533
+    },
+    {
+     "name": "Épinal",
+     "lat": 48.173,
+     "lon": 6.45
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a bend argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bend",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_toul",
+   "name": {
+    "en": "Prince-Bishopric of Toul",
+    "de": "Hochstift Toul"
+   },
+   "short": {
+    "en": "Bishopric of Toul",
+    "de": "Hochstift Toul"
+   },
+   "adjective": {
+    "en": "Toulois",
+    "de": "toulisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#855748",
+   "capital": {
+    "name": "Toul",
+    "lat": 48.675,
+    "lon": 5.891
+   },
+   "holdings": [
+    {
+     "name": "Toul",
+     "lat": 48.675,
+     "lon": 5.891
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a pale argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "pale",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "bishopric_verdun",
+   "name": {
+    "en": "Prince-Bishopric of Verdun",
+    "de": "Hochstift Verdun"
+   },
+   "short": {
+    "en": "Bishopric of Verdun",
+    "de": "Hochstift Verdun"
+   },
+   "adjective": {
+    "en": "Verdunois",
+    "de": "verdunisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#785147",
+   "capital": {
+    "name": "Verdun",
+    "lat": 49.16,
+    "lon": 5.384
+   },
+   "holdings": [
+    {
+     "name": "Verdun",
+     "lat": 49.16,
+     "lon": 5.384
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a cross gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "gules",
+    "charges": []
+   }
+  },
+  {
+   "id": "metz",
+   "name": {
+    "en": "Free Imperial City of Metz",
+    "de": "Reichsstadt Metz"
+   },
+   "short": {
+    "en": "Metz",
+    "de": "Metz"
+   },
+   "adjective": {
+    "en": "Messin",
+    "de": "Metzer"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "french",
+   "faith": "latin",
+   "color": "#896143",
+   "capital": {
+    "name": "Metz",
+    "lat": 49.12,
+    "lon": 6.177
+   },
+   "holdings": [
+    {
+     "name": "Metz",
+     "lat": 49.12,
+     "lon": 6.177
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale argent and sable",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "saarbrucken",
+   "name": {
+    "en": "County of Saarbrücken",
+    "de": "Grafschaft Saarbrücken"
+   },
+   "short": {
+    "en": "Saarbrücken",
+    "de": "Saarbrücken"
+   },
+   "adjective": {
+    "en": "Saarbrücken",
+    "de": "saarbrückisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "rhinelander",
+   "faith": "latin",
+   "color": "#2f7b9c",
+   "capital": {
+    "name": "Saarbrücken",
+    "lat": 49.233,
+    "lon": 6.997
+   },
+   "holdings": [
+    {
+     "name": "Saarbrücken",
+     "lat": 49.233,
+     "lon": 6.997
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure crusily, a lion argent crowned or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "cross_small",
+      "tincture": "argent",
+      "count": 10,
+      "arrangement": "semee"
+     },
+     {
+      "type": "lion",
+      "tincture": "argent",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "saxe_wittenberg",
+   "name": {
+    "en": "Duchy of Saxony (Saxe-Wittenberg)",
+    "de": "Herzogtum Sachsen-Wittenberg"
+   },
+   "short": {
+    "en": "Saxony",
+    "de": "Sachsen"
+   },
+   "adjective": {
+    "en": "Saxon",
+    "de": "sächsisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#258570",
+   "capital": {
+    "name": "Wittenberg",
+    "lat": 51.866,
+    "lon": 12.646
+   },
+   "holdings": [
+    {
+     "name": "Wittenberg",
+     "lat": 51.866,
+     "lon": 12.646
+    },
+    {
+     "name": "Belzig",
+     "lat": 52.142,
+     "lon": 12.593
+    },
+    {
+     "name": "Aken",
+     "lat": 51.85,
+     "lon": 12.05
+    },
+    {
+     "name": "Schweinitz",
+     "lat": 51.79,
+     "lon": 13.01
+    }
+   ],
+   "ruler": {
+    "name": "Albert II",
+    "born": 1250,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Duke of Saxony at Wittenberg, son-in-law of Rudolf I; claims the Saxon electoral vote.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": true,
+   "allies": [
+    "austria"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry of ten sable and or, a crancelin vert in bend",
+    "field": "sable",
+    "division": "barry",
+    "field2": "or",
+    "ordinary": "bend",
+    "ordinary_tincture": "vert",
+    "charges": []
+   }
+  },
+  {
+   "id": "saxe_lauenburg",
+   "name": {
+    "en": "Duchy of Saxe-Lauenburg",
+    "de": "Herzogtum Sachsen-Lauenburg"
+   },
+   "short": {
+    "en": "Lauenburg",
+    "de": "Lauenburg"
+   },
+   "adjective": {
+    "en": "Lauenburg",
+    "de": "lauenburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#996539",
+   "capital": {
+    "name": "Ratzeburg",
+    "lat": 53.7,
+    "lon": 10.757
+   },
+   "holdings": [
+    {
+     "name": "Ratzeburg",
+     "lat": 53.7,
+     "lon": 10.757
+    },
+    {
+     "name": "Lauenburg",
+     "lat": 53.373,
+     "lon": 10.561
+    },
+    {
+     "name": "Mölln",
+     "lat": 53.627,
+     "lon": 10.687
+    },
+    {
+     "name": "Bergedorf",
+     "lat": 53.488,
+     "lon": 10.212
+    }
+   ],
+   "ruler": {
+    "name": "John II, Albert III and Eric I",
+    "born": null,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The sons of John I of Saxony rule jointly (divided 1296).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Barry of ten sable and or, a crancelin vert in bend",
+    "field": "or",
+    "division": "barry",
+    "field2": "sable",
+    "ordinary": "bend",
+    "ordinary_tincture": "vert",
+    "charges": []
+   }
+  },
+  {
+   "id": "meissen",
+   "name": {
+    "en": "Margraviate of Meissen and Landgraviate of Thuringia",
+    "de": "Markgrafschaft Meißen und Landgrafschaft Thüringen"
+   },
+   "short": {
+    "en": "Meissen",
+    "de": "Meißen"
+   },
+   "adjective": {
+    "en": "Meissen",
+    "de": "meißnisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#1d4977",
+   "capital": {
+    "name": "Meissen",
+    "lat": 51.163,
+    "lon": 13.473
+   },
+   "holdings": [
+    {
+     "name": "Meissen",
+     "lat": 51.163,
+     "lon": 13.473
+    },
+    {
+     "name": "Dresden",
+     "lat": 51.05,
+     "lon": 13.738
+    },
+    {
+     "name": "Freiberg",
+     "lat": 50.912,
+     "lon": 13.342
+    },
+    {
+     "name": "Leipzig",
+     "lat": 51.34,
+     "lon": 12.375
+    },
+    {
+     "name": "Grimma",
+     "lat": 51.236,
+     "lon": 12.725
+    },
+    {
+     "name": "Oschatz",
+     "lat": 51.3,
+     "lon": 13.11
+    },
+    {
+     "name": "Pirna",
+     "lat": 50.96,
+     "lon": 13.94
+    },
+    {
+     "name": "Landsberg",
+     "lat": 51.53,
+     "lon": 12.16
+    },
+    {
+     "name": "Luckau",
+     "lat": 51.852,
+     "lon": 13.718
+    },
+    {
+     "name": "Guben",
+     "lat": 51.95,
+     "lon": 14.717
+    },
+    {
+     "name": "Lübben",
+     "lat": 51.942,
+     "lon": 13.893
+    }
+   ],
+   "ruler": {
+    "name": "Frederick Tuta",
+    "born": 1269,
+    "dynasty": "Wettin",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Margrave of Meissen (1288/89-91) and of Landsberg and Lower Lusatia; dies August 1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "thuringia"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a lion rampant sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "thuringia",
+   "name": {
+    "en": "Landgraviate of Thuringia",
+    "de": "Landgrafschaft Thüringen"
+   },
+   "short": {
+    "en": "Thuringia",
+    "de": "Thüringen"
+   },
+   "adjective": {
+    "en": "Thuringian",
+    "de": "thüringisch"
+   },
+   "rank": "landgraviate",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#3f805f",
+   "capital": {
+    "name": "Eisenach",
+    "lat": 50.975,
+    "lon": 10.32
+   },
+   "holdings": [
+    {
+     "name": "Eisenach",
+     "lat": 50.975,
+     "lon": 10.32
+    },
+    {
+     "name": "Gotha",
+     "lat": 50.948,
+     "lon": 10.702
+    },
+    {
+     "name": "Weißensee",
+     "lat": 51.2,
+     "lon": 11.07
+    },
+    {
+     "name": "Weimar",
+     "lat": 50.979,
+     "lon": 11.329
+    },
+    {
+     "name": "Jena",
+     "lat": 50.93,
+     "lon": 11.59
+    },
+    {
+     "name": "Naumburg",
+     "lat": 51.15,
+     "lon": 11.81
+    },
+    {
+     "name": "Weißenfels",
+     "lat": 51.2,
+     "lon": 11.969
+    },
+    {
+     "name": "Tenneberg",
+     "lat": 50.92,
+     "lon": 10.56
+    }
+   ],
+   "ruler": {
+    "name": "Albert II the Degenerate",
+    "born": 1240,
+    "dynasty": "Wettin",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Albert the Degenerate at the Wartburg, at war with his sons Frederick and Dietrich; sells the landgraviate to Adolf of Nassau in 1294.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "meissen"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "anhalt_zerbst",
+   "name": {
+    "en": "Principality of Anhalt-Zerbst",
+    "de": "Fürstentum Anhalt-Zerbst"
+   },
+   "short": {
+    "en": "Anhalt-Zerbst",
+    "de": "Anhalt-Zerbst"
+   },
+   "adjective": {
+    "en": "Anhalt",
+    "de": "anhaltisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#435130",
+   "capital": {
+    "name": "Zerbst",
+    "lat": 51.966,
+    "lon": 12.085
+   },
+   "holdings": [
+    {
+     "name": "Zerbst",
+     "lat": 51.966,
+     "lon": 12.085
+    },
+    {
+     "name": "Köthen",
+     "lat": 51.752,
+     "lon": 11.974
+    },
+    {
+     "name": "Dessau",
+     "lat": 51.833,
+     "lon": 12.246
+    }
+   ],
+   "ruler": {
+    "name": "Albert I",
+    "born": null,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale argent and barry sable and or, an eagle gules dimidiated",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "dexter"
+     }
+    ]
+   }
+  },
+  {
+   "id": "anhalt_bernburg",
+   "name": {
+    "en": "Principality of Anhalt-Bernburg",
+    "de": "Fürstentum Anhalt-Bernburg"
+   },
+   "short": {
+    "en": "Anhalt-Bernburg",
+    "de": "Anhalt-Bernburg"
+   },
+   "adjective": {
+    "en": "Anhalt-Bernburg",
+    "de": "anhalt-bernburgisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#6f6aa7",
+   "capital": {
+    "name": "Bernburg",
+    "lat": 51.795,
+    "lon": 11.738
+   },
+   "holdings": [
+    {
+     "name": "Bernburg",
+     "lat": 51.795,
+     "lon": 11.738
+    },
+    {
+     "name": "Aschersleben",
+     "lat": 51.757,
+     "lon": 11.459
+    },
+    {
+     "name": "Ballenstedt",
+     "lat": 51.719,
+     "lon": 11.233
+    }
+   ],
+   "ruler": {
+    "name": "Bernhard I",
+    "born": null,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale argent and barry sable and or, an eagle gules dimidiated",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "sable",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "dexter"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brandenburg",
+   "name": {
+    "en": "Margraviate of Brandenburg",
+    "de": "Markgrafschaft Brandenburg"
+   },
+   "short": {
+    "en": "Brandenburg",
+    "de": "Brandenburg"
+   },
+   "adjective": {
+    "en": "Brandenburg",
+    "de": "brandenburgisch"
+   },
+   "rank": "margraviate",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#69272c",
+   "capital": {
+    "name": "Brandenburg an der Havel",
+    "lat": 52.412,
+    "lon": 12.556
+   },
+   "holdings": [
+    {
+     "name": "Brandenburg an der Havel",
+     "lat": 52.412,
+     "lon": 12.556
+    },
+    {
+     "name": "Spandau",
+     "lat": 52.535,
+     "lon": 13.2
+    },
+    {
+     "name": "Berlin",
+     "lat": 52.517,
+     "lon": 13.4
+    },
+    {
+     "name": "Tangermünde",
+     "lat": 52.541,
+     "lon": 11.968
+    },
+    {
+     "name": "Stendal",
+     "lat": 52.605,
+     "lon": 11.858
+    },
+    {
+     "name": "Salzwedel",
+     "lat": 52.852,
+     "lon": 11.152
+    },
+    {
+     "name": "Frankfurt (Oder)",
+     "lat": 52.34,
+     "lon": 14.55
+    },
+    {
+     "name": "Prenzlau",
+     "lat": 53.317,
+     "lon": 13.863
+    },
+    {
+     "name": "Angermünde",
+     "lat": 53.016,
+     "lon": 13.997
+    },
+    {
+     "name": "Eberswalde",
+     "lat": 52.833,
+     "lon": 13.817
+    },
+    {
+     "name": "Landsberg an der Warthe",
+     "lat": 52.733,
+     "lon": 15.238
+    },
+    {
+     "name": "Königsberg in der Neumark",
+     "lat": 52.79,
+     "lon": 14.24
+    },
+    {
+     "name": "Soldin",
+     "lat": 52.92,
+     "lon": 14.69
+    },
+    {
+     "name": "Neubrandenburg",
+     "lat": 53.557,
+     "lon": 13.261
+    },
+    {
+     "name": "Stargard",
+     "lat": 53.49,
+     "lon": 13.33
+    },
+    {
+     "name": "Bautzen",
+     "lat": 51.181,
+     "lon": 14.424
+    },
+    {
+     "name": "Görlitz",
+     "lat": 51.153,
+     "lon": 14.987
+    },
+    {
+     "name": "Zittau",
+     "lat": 50.896,
+     "lon": 14.807
+    },
+    {
+     "name": "Lauban",
+     "lat": 51.118,
+     "lon": 15.289
+    },
+    {
+     "name": "Kamenz",
+     "lat": 51.268,
+     "lon": 14.094
+    }
+   ],
+   "ruler": {
+    "name": "Otto IV with the Arrow",
+    "born": 1238,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Ascanian margraves rule jointly in two lines (Otto IV and his kin; Otto V the Long). Upper Lusatia and Stargard belong to them.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "pomerania_stettin",
+    "pomerelia"
+   ],
+   "claims_on": [],
+   "personality": "conqueror",
+   "difficulty": 3,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, an eagle gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brunswick_lueneburg",
+   "name": {
+    "en": "Duchy of Brunswick-Lüneburg (Lüneburg)",
+    "de": "Herzogtum Braunschweig-Lüneburg (Lüneburg)"
+   },
+   "short": {
+    "en": "Lüneburg",
+    "de": "Lüneburg"
+   },
+   "adjective": {
+    "en": "Lüneburg",
+    "de": "lüneburgisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#254070",
+   "capital": {
+    "name": "Lüneburg",
+    "lat": 53.249,
+    "lon": 10.411
+   },
+   "holdings": [
+    {
+     "name": "Lüneburg",
+     "lat": 53.249,
+     "lon": 10.411
+    },
+    {
+     "name": "Celle",
+     "lat": 52.624,
+     "lon": 10.081
+    },
+    {
+     "name": "Uelzen",
+     "lat": 52.966,
+     "lon": 10.558
+    },
+    {
+     "name": "Dannenberg",
+     "lat": 53.098,
+     "lon": 11.093
+    },
+    {
+     "name": "Gifhorn",
+     "lat": 52.479,
+     "lon": 10.546
+    },
+    {
+     "name": "Hanover",
+     "lat": 52.37,
+     "lon": 9.73
+    }
+   ],
+   "ruler": {
+    "name": "Otto II the Strict",
+    "born": 1266,
+    "dynasty": "Welf",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "builder",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or semé of hearts gules, a lion azure",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion",
+      "tincture": "azure",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "brunswick_wolfenbuettel",
+   "name": {
+    "en": "Duchy of Brunswick",
+    "de": "Herzogtum Braunschweig"
+   },
+   "short": {
+    "en": "Brunswick",
+    "de": "Braunschweig"
+   },
+   "adjective": {
+    "en": "Brunswick",
+    "de": "braunschweigisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#284e16",
+   "capital": {
+    "name": "Brunswick",
+    "lat": 52.27,
+    "lon": 10.52
+   },
+   "holdings": [
+    {
+     "name": "Brunswick",
+     "lat": 52.27,
+     "lon": 10.52
+    },
+    {
+     "name": "Wolfenbüttel",
+     "lat": 52.162,
+     "lon": 10.535
+    },
+    {
+     "name": "Göttingen",
+     "lat": 51.534,
+     "lon": 9.932
+    },
+    {
+     "name": "Osterode",
+     "lat": 51.729,
+     "lon": 10.252
+    },
+    {
+     "name": "Einbeck",
+     "lat": 51.82,
+     "lon": 9.866
+    },
+    {
+     "name": "Northeim",
+     "lat": 51.71,
+     "lon": 10.0
+    },
+    {
+     "name": "Herzberg",
+     "lat": 51.69,
+     "lon": 13.233
+    },
+    {
+     "name": "Helmstedt",
+     "lat": 52.228,
+     "lon": 11.01
+    },
+    {
+     "name": "Hamelin",
+     "lat": 52.1,
+     "lon": 9.36
+    },
+    {
+     "name": "Münden",
+     "lat": 51.417,
+     "lon": 9.651
+    }
+   ],
+   "ruler": {
+    "name": "Henry, Albert and William",
+    "born": null,
+    "dynasty": "Welf",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The three sons of Albert I the Tall; the partition into Grubenhagen, Göttingen and Wolfenbüttel takes effect during 1291.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two lions passant guardant or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "lion_passant",
+      "tincture": "or",
+      "count": 2,
+      "arrangement": "pale"
+     }
+    ]
+   }
+  },
+  {
+   "id": "magdeburg",
+   "name": {
+    "en": "Archbishopric of Magdeburg",
+    "de": "Erzstift Magdeburg"
+   },
+   "short": {
+    "en": "Magdeburg",
+    "de": "Magdeburg"
+   },
+   "adjective": {
+    "en": "Magdeburg",
+    "de": "magdeburgisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#9a6240",
+   "capital": {
+    "name": "Magdeburg",
+    "lat": 52.131,
+    "lon": 11.64
+   },
+   "holdings": [
+    {
+     "name": "Magdeburg",
+     "lat": 52.131,
+     "lon": 11.64
+    },
+    {
+     "name": "Halle",
+     "lat": 51.483,
+     "lon": 11.97
+    },
+    {
+     "name": "Burg",
+     "lat": 52.272,
+     "lon": 11.855
+    },
+    {
+     "name": "Calbe",
+     "lat": 51.91,
+     "lon": 11.78
+    },
+    {
+     "name": "Jüterbog",
+     "lat": 51.995,
+     "lon": 13.073
+    }
+   ],
+   "ruler": {
+    "name": "Eric of Brandenburg",
+    "born": null,
+    "dynasty": "Ascania",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Archbishop Eric (1283-95), a brother of the Brandenburg margraves.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [
+    "brandenburg"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess gules and argent",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "halberstadt",
+   "name": {
+    "en": "Prince-Bishopric of Halberstadt",
+    "de": "Hochstift Halberstadt"
+   },
+   "short": {
+    "en": "Halberstadt",
+    "de": "Halberstadt"
+   },
+   "adjective": {
+    "en": "Halberstadt",
+    "de": "halberstädtisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#653d55",
+   "capital": {
+    "name": "Halberstadt",
+    "lat": 51.896,
+    "lon": 11.047
+   },
+   "holdings": [
+    {
+     "name": "Halberstadt",
+     "lat": 51.896,
+     "lon": 11.047
+    },
+    {
+     "name": "Quedlinburg",
+     "lat": 51.79,
+     "lon": 11.15
+    },
+    {
+     "name": "Oschersleben",
+     "lat": 52.031,
+     "lon": 11.226
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale argent and gules",
+    "field": "argent",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hildesheim",
+   "name": {
+    "en": "Prince-Bishopric of Hildesheim",
+    "de": "Hochstift Hildesheim"
+   },
+   "short": {
+    "en": "Hildesheim",
+    "de": "Hildesheim"
+   },
+   "adjective": {
+    "en": "Hildesheim",
+    "de": "hildesheimisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#7e4d5a",
+   "capital": {
+    "name": "Hildesheim",
+    "lat": 52.151,
+    "lon": 9.951
+   },
+   "holdings": [
+    {
+     "name": "Hildesheim",
+     "lat": 52.151,
+     "lon": 9.951
+    },
+    {
+     "name": "Peine",
+     "lat": 52.32,
+     "lon": 10.234
+    },
+    {
+     "name": "Alfeld",
+     "lat": 51.986,
+     "lon": 9.823
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per pale or and gules",
+    "field": "or",
+    "division": "per_pale",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "muenster",
+   "name": {
+    "en": "Prince-Bishopric of Münster",
+    "de": "Hochstift Münster"
+   },
+   "short": {
+    "en": "Münster",
+    "de": "Münster"
+   },
+   "adjective": {
+    "en": "Münster",
+    "de": "münsterisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#438359",
+   "capital": {
+    "name": "Münster",
+    "lat": 51.962,
+    "lon": 7.626
+   },
+   "holdings": [
+    {
+     "name": "Münster",
+     "lat": 51.962,
+     "lon": 7.626
+    },
+    {
+     "name": "Coesfeld",
+     "lat": 51.946,
+     "lon": 7.168
+    },
+    {
+     "name": "Warendorf",
+     "lat": 51.954,
+     "lon": 7.99
+    },
+    {
+     "name": "Vechta",
+     "lat": 52.728,
+     "lon": 8.288
+    },
+    {
+     "name": "Meppen",
+     "lat": 52.693,
+     "lon": 7.291
+    },
+    {
+     "name": "Bocholt",
+     "lat": 51.838,
+     "lon": 6.616
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a fess or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "fess",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "ravensberg",
+   "name": {
+    "en": "County of Ravensberg",
+    "de": "Grafschaft Ravensberg"
+   },
+   "short": {
+    "en": "Ravensberg",
+    "de": "Ravensberg"
+   },
+   "adjective": {
+    "en": "Ravensberg",
+    "de": "ravensbergisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#786aa3",
+   "capital": {
+    "name": "Bielefeld",
+    "lat": 52.021,
+    "lon": 8.532
+   },
+   "holdings": [
+    {
+     "name": "Bielefeld",
+     "lat": 52.021,
+     "lon": 8.532
+    },
+    {
+     "name": "Herford",
+     "lat": 52.11,
+     "lon": 8.67
+    },
+    {
+     "name": "Vlotho",
+     "lat": 52.17,
+     "lon": 8.86
+    },
+    {
+     "name": "Bünde",
+     "lat": 52.2,
+     "lon": 8.58
+    }
+   ],
+   "ruler": {
+    "name": "Otto III",
+    "born": null,
+    "dynasty": "Calvelage-Ravensberg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Count Otto III (r. 1249-1306); the county passes to Jülich-Berg only in 1346. Herford itself is an imperial abbey and town under the counts' protection.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "lippe",
+   "name": {
+    "en": "Lordship of Lippe",
+    "de": "Herrschaft Lippe"
+   },
+   "short": {
+    "en": "Lippe",
+    "de": "Lippe"
+   },
+   "adjective": {
+    "en": "Lippe",
+    "de": "lippisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#443a62",
+   "capital": {
+    "name": "Lippstadt",
+    "lat": 51.67,
+    "lon": 8.35
+   },
+   "holdings": [
+    {
+     "name": "Lippstadt",
+     "lat": 51.67,
+     "lon": 8.35
+    },
+    {
+     "name": "Detmold",
+     "lat": 51.94,
+     "lon": 8.88
+    },
+    {
+     "name": "Horn",
+     "lat": 51.87,
+     "lon": 8.94
+    },
+    {
+     "name": "Blomberg",
+     "lat": 51.94,
+     "lon": 9.09
+    }
+   ],
+   "ruler": {
+    "name": "Simon I",
+    "born": null,
+    "dynasty": "Lippe",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Noble lords of Lippe; Simon I rules from 1273/75 to 1344.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "osnabrueck",
+   "name": {
+    "en": "Prince-Bishopric of Osnabrück",
+    "de": "Hochstift Osnabrück"
+   },
+   "short": {
+    "en": "Osnabrück",
+    "de": "Osnabrück"
+   },
+   "adjective": {
+    "en": "Osnabrück",
+    "de": "osnabrückisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#714b3b",
+   "capital": {
+    "name": "Osnabrück",
+    "lat": 52.279,
+    "lon": 8.047
+   },
+   "holdings": [
+    {
+     "name": "Osnabrück",
+     "lat": 52.279,
+     "lon": 8.047
+    },
+    {
+     "name": "Quakenbrück",
+     "lat": 52.676,
+     "lon": 7.951
+    },
+    {
+     "name": "Fürstenau",
+     "lat": 52.517,
+     "lon": 7.673
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a wheel gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "paderborn",
+   "name": {
+    "en": "Prince-Bishopric of Paderborn",
+    "de": "Hochstift Paderborn"
+   },
+   "short": {
+    "en": "Paderborn",
+    "de": "Paderborn"
+   },
+   "adjective": {
+    "en": "Paderborn",
+    "de": "paderbornisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#457b5d",
+   "capital": {
+    "name": "Paderborn",
+    "lat": 51.719,
+    "lon": 8.754
+   },
+   "holdings": [
+    {
+     "name": "Paderborn",
+     "lat": 51.719,
+     "lon": 8.754
+    },
+    {
+     "name": "Warburg",
+     "lat": 51.49,
+     "lon": 9.14
+    },
+    {
+     "name": "Brakel",
+     "lat": 51.716,
+     "lon": 9.184
+    },
+    {
+     "name": "Büren",
+     "lat": 51.55,
+     "lon": 8.56
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "or",
+    "charges": []
+   }
+  },
+  {
+   "id": "minden",
+   "name": {
+    "en": "Prince-Bishopric of Minden",
+    "de": "Hochstift Minden"
+   },
+   "short": {
+    "en": "Minden",
+    "de": "Minden"
+   },
+   "adjective": {
+    "en": "Minden",
+    "de": "mindisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#854c30",
+   "capital": {
+    "name": "Minden",
+    "lat": 52.289,
+    "lon": 8.917
+   },
+   "holdings": [
+    {
+     "name": "Minden",
+     "lat": 52.289,
+     "lon": 8.917
+    },
+    {
+     "name": "Petershagen",
+     "lat": 52.38,
+     "lon": 8.97
+    },
+    {
+     "name": "Lübbecke",
+     "lat": 52.304,
+     "lon": 8.617
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bremen_archbishopric",
+   "name": {
+    "en": "Archbishopric of Bremen",
+    "de": "Erzstift Bremen"
+   },
+   "short": {
+    "en": "Bremen (See)",
+    "de": "Erzstift Bremen"
+   },
+   "adjective": {
+    "en": "Bremen",
+    "de": "bremisch"
+   },
+   "rank": "archbishopric",
+   "government": "theocracy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#9e5c53",
+   "capital": {
+    "name": "Bremervörde",
+    "lat": 53.484,
+    "lon": 9.141
+   },
+   "holdings": [
+    {
+     "name": "Bremervörde",
+     "lat": 53.484,
+     "lon": 9.141
+    },
+    {
+     "name": "Stade",
+     "lat": 53.6,
+     "lon": 9.476
+    },
+    {
+     "name": "Buxtehude",
+     "lat": 53.477,
+     "lon": 9.701
+    },
+    {
+     "name": "Verden",
+     "lat": 52.92,
+     "lon": 9.23
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, two keys in saltire argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "keys_crossed",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "kammin",
+   "name": {
+    "en": "Prince-Bishopric of Kammin",
+    "de": "Hochstift Cammin"
+   },
+   "short": {
+    "en": "Kammin",
+    "de": "Cammin"
+   },
+   "adjective": {
+    "en": "Kammin",
+    "de": "camminisch"
+   },
+   "rank": "prince_bishopric",
+   "government": "theocracy",
+   "culture": "pomeranian",
+   "faith": "latin",
+   "color": "#78663e",
+   "capital": {
+    "name": "Kammin",
+    "lat": 53.972,
+    "lon": 14.775
+   },
+   "holdings": [
+    {
+     "name": "Kammin",
+     "lat": 53.972,
+     "lon": 14.775
+    },
+    {
+     "name": "Kolberg",
+     "lat": 54.176,
+     "lon": 15.576
+    },
+    {
+     "name": "Köslin",
+     "lat": 54.194,
+     "lon": 16.172
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a cross argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "cross",
+    "ordinary_tincture": "argent",
+    "charges": []
+   }
+  },
+  {
+   "id": "mecklenburg",
+   "name": {
+    "en": "Lordship of Mecklenburg",
+    "de": "Herrschaft Mecklenburg"
+   },
+   "short": {
+    "en": "Mecklenburg",
+    "de": "Mecklenburg"
+   },
+   "adjective": {
+    "en": "Mecklenburg",
+    "de": "mecklenburgisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#4a3c68",
+   "capital": {
+    "name": "Wismar",
+    "lat": 53.893,
+    "lon": 11.465
+   },
+   "holdings": [
+    {
+     "name": "Wismar",
+     "lat": 53.893,
+     "lon": 11.465
+    },
+    {
+     "name": "Gadebusch",
+     "lat": 53.703,
+     "lon": 11.116
+    },
+    {
+     "name": "Grevesmühlen",
+     "lat": 53.862,
+     "lon": 11.179
+    },
+    {
+     "name": "Sternberg",
+     "lat": 53.711,
+     "lon": 11.826
+    },
+    {
+     "name": "Crivitz",
+     "lat": 53.577,
+     "lon": 11.65
+    }
+   ],
+   "ruler": {
+    "name": "Henry I the Pilgrim",
+    "born": 1230,
+    "dynasty": "Mecklenburg",
+    "female": false
+   },
+   "heir": {
+    "name": "Henry II the Lion",
+    "born": 1266,
+    "dynasty": "Mecklenburg",
+    "female": false
+   },
+   "consort": null,
+   "dynasty_note": "Henry I has been a prisoner in Cairo since 1271 (released 1298); his son Henry II governs. A duchy only from 1348.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, a bull's head sable crowned gules",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bull_head",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "rostock",
+   "name": {
+    "en": "Lordship of Rostock",
+    "de": "Herrschaft Rostock"
+   },
+   "short": {
+    "en": "Rostock",
+    "de": "Rostock"
+   },
+   "adjective": {
+    "en": "Rostock",
+    "de": "rostocker"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#9b634a",
+   "capital": {
+    "name": "Rostock",
+    "lat": 54.088,
+    "lon": 12.14
+   },
+   "holdings": [
+    {
+     "name": "Rostock",
+     "lat": 54.088,
+     "lon": 12.14
+    },
+    {
+     "name": "Kröpelin",
+     "lat": 54.07,
+     "lon": 11.8
+    },
+    {
+     "name": "Ribnitz",
+     "lat": 54.243,
+     "lon": 12.432
+    },
+    {
+     "name": "Marlow",
+     "lat": 54.15,
+     "lon": 12.57
+    }
+   ],
+   "ruler": {
+    "name": "Nicholas the Child",
+    "born": null,
+    "dynasty": "Mecklenburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Lordship of Rostock (to Denmark 1300, to Mecklenburg 1323).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "denmark"
+   ],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "werle",
+   "name": {
+    "en": "Lordship of Werle",
+    "de": "Herrschaft Werle"
+   },
+   "short": {
+    "en": "Werle",
+    "de": "Werle"
+   },
+   "adjective": {
+    "en": "Werle",
+    "de": "werlisch"
+   },
+   "rank": "lordship",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#36633c",
+   "capital": {
+    "name": "Güstrow",
+    "lat": 53.794,
+    "lon": 12.174
+   },
+   "holdings": [
+    {
+     "name": "Güstrow",
+     "lat": 53.794,
+     "lon": 12.174
+    },
+    {
+     "name": "Parchim",
+     "lat": 53.426,
+     "lon": 11.848
+    },
+    {
+     "name": "Malchow",
+     "lat": 53.475,
+     "lon": 12.424
+    },
+    {
+     "name": "Waren",
+     "lat": 53.518,
+     "lon": 12.681
+    },
+    {
+     "name": "Plau",
+     "lat": 53.458,
+     "lon": 12.262
+    }
+   ],
+   "ruler": {
+    "name": "Henry I and Nicholas II of Werle",
+    "born": null,
+    "dynasty": "Mecklenburg (Werle)",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a bull's head sable crowned or",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "bull_head",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "schwerin",
+   "name": {
+    "en": "County of Schwerin",
+    "de": "Grafschaft Schwerin"
+   },
+   "short": {
+    "en": "Schwerin",
+    "de": "Schwerin"
+   },
+   "adjective": {
+    "en": "Schwerin",
+    "de": "schwerinisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#4e769f",
+   "capital": {
+    "name": "Schwerin",
+    "lat": 53.629,
+    "lon": 11.414
+   },
+   "holdings": [
+    {
+     "name": "Schwerin",
+     "lat": 53.629,
+     "lon": 11.414
+    },
+    {
+     "name": "Boizenburg",
+     "lat": 53.38,
+     "lon": 10.72
+    },
+    {
+     "name": "Wittenburg",
+     "lat": 53.51,
+     "lon": 11.07
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess gules and or",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "or",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "pomerania_stettin",
+   "name": {
+    "en": "Duchy of Pomerania",
+    "de": "Herzogtum Pommern"
+   },
+   "short": {
+    "en": "Pomerania",
+    "de": "Pommern"
+   },
+   "adjective": {
+    "en": "Pomeranian",
+    "de": "pommersch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "pomeranian",
+   "faith": "latin",
+   "color": "#5275ab",
+   "capital": {
+    "name": "Stettin",
+    "lat": 53.428,
+    "lon": 14.553
+   },
+   "holdings": [
+    {
+     "name": "Stettin",
+     "lat": 53.428,
+     "lon": 14.553
+    },
+    {
+     "name": "Wolgast",
+     "lat": 54.053,
+     "lon": 13.77
+    },
+    {
+     "name": "Anklam",
+     "lat": 53.856,
+     "lon": 13.689
+    },
+    {
+     "name": "Demmin",
+     "lat": 53.907,
+     "lon": 13.043
+    },
+    {
+     "name": "Greifswald",
+     "lat": 54.096,
+     "lon": 13.378
+    },
+    {
+     "name": "Pasewalk",
+     "lat": 53.506,
+     "lon": 13.989
+    },
+    {
+     "name": "Ueckermünde",
+     "lat": 53.736,
+     "lon": 14.045
+    },
+    {
+     "name": "Stargard in Pommern",
+     "lat": 53.34,
+     "lon": 15.05
+    },
+    {
+     "name": "Pyritz",
+     "lat": 53.146,
+     "lon": 14.892
+    },
+    {
+     "name": "Greifenberg",
+     "lat": 53.919,
+     "lon": 15.199
+    },
+    {
+     "name": "Treptow an der Rega",
+     "lat": 54.082,
+     "lon": 15.267
+    },
+    {
+     "name": "Belgard",
+     "lat": 54.004,
+     "lon": 15.986
+    }
+   ],
+   "ruler": {
+    "name": "Bogislaw IV",
+    "born": 1258,
+    "dynasty": "Griffins",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "House of Griffins: Bogislaw IV with his brothers Barnim II and Otto I (partition of 1295).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [
+    "brandenburg"
+   ],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, a griffin segreant gules crowned or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "griffin",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "pomerelia",
+   "name": {
+    "en": "Duchy of Pomerelia",
+    "de": "Herzogtum Pommerellen"
+   },
+   "short": {
+    "en": "Pomerelia",
+    "de": "Pommerellen"
+   },
+   "adjective": {
+    "en": "Pomerelian",
+    "de": "pommerellisch"
+   },
+   "rank": "duchy",
+   "government": "feudal_monarchy",
+   "culture": "pomeranian",
+   "faith": "latin",
+   "color": "#314904",
+   "capital": {
+    "name": "Danzig",
+    "lat": 54.35,
+    "lon": 18.65
+   },
+   "holdings": [
+    {
+     "name": "Danzig",
+     "lat": 54.35,
+     "lon": 18.65
+    },
+    {
+     "name": "Dirschau",
+     "lat": 54.09,
+     "lon": 18.78
+    },
+    {
+     "name": "Stolp",
+     "lat": 54.464,
+     "lon": 17.028
+    },
+    {
+     "name": "Schlawe",
+     "lat": 54.358,
+     "lon": 16.676
+    },
+    {
+     "name": "Putzig",
+     "lat": 54.72,
+     "lon": 18.41
+    },
+    {
+     "name": "Lauenburg in Pommern",
+     "lat": 54.54,
+     "lon": 17.75
+    }
+   ],
+   "ruler": {
+    "name": "Mestwin II",
+    "born": 1220,
+    "dynasty": "Samborides",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The last Samborid; by the Treaty of Kępno (1282) Pomerelia passes to Przemysł II of Greater Poland at his death (1294).",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": false,
+   "elector": false,
+   "allies": [
+    "greater_poland"
+   ],
+   "rivals": [
+    "brandenburg",
+    "teutonic_order"
+   ],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "rugen",
+   "name": {
+    "en": "Principality of Rügen",
+    "de": "Fürstentum Rügen"
+   },
+   "short": {
+    "en": "Rügen",
+    "de": "Rügen"
+   },
+   "adjective": {
+    "en": "Rügen",
+    "de": "rügisch"
+   },
+   "rank": "principality",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#673b57",
+   "capital": {
+    "name": "Stralsund",
+    "lat": 54.309,
+    "lon": 13.082
+   },
+   "holdings": [
+    {
+     "name": "Stralsund",
+     "lat": 54.309,
+     "lon": 13.082
+    },
+    {
+     "name": "Bergen auf Rügen",
+     "lat": 54.418,
+     "lon": 13.433
+    },
+    {
+     "name": "Barth",
+     "lat": 54.37,
+     "lon": 12.723
+    },
+    {
+     "name": "Grimmen",
+     "lat": 54.11,
+     "lon": 13.041
+    },
+    {
+     "name": "Tribsees",
+     "lat": 54.1,
+     "lon": 12.76
+    }
+   ],
+   "ruler": {
+    "name": "Wizlaw II",
+    "born": 1240,
+    "dynasty": "Wizlawids",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "Prince Wizlaw II, a Danish vassal; Stralsund is his town.",
+   "overlord": "denmark",
+   "subject_type": "vassal",
+   "empire_member": false,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "diplomat",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {}
+  },
+  {
+   "id": "holstein_rendsburg",
+   "name": {
+    "en": "County of Holstein-Rendsburg",
+    "de": "Grafschaft Holstein-Rendsburg"
+   },
+   "short": {
+    "en": "Holstein",
+    "de": "Holstein"
+   },
+   "adjective": {
+    "en": "Holstein",
+    "de": "holsteinisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#3f3b68",
+   "capital": {
+    "name": "Rendsburg",
+    "lat": 54.304,
+    "lon": 9.663
+   },
+   "holdings": [
+    {
+     "name": "Rendsburg",
+     "lat": 54.304,
+     "lon": 9.663
+    },
+    {
+     "name": "Itzehoe",
+     "lat": 53.925,
+     "lon": 9.516
+    },
+    {
+     "name": "Kiel",
+     "lat": 54.323,
+     "lon": 10.135
+    },
+    {
+     "name": "Segeberg",
+     "lat": 53.936,
+     "lon": 10.309
+    }
+   ],
+   "ruler": {
+    "name": "Henry I",
+    "born": null,
+    "dynasty": "Schauenburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a nettle-leaf argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "holstein_ploen",
+   "name": {
+    "en": "County of Holstein-Plön",
+    "de": "Grafschaft Holstein-Plön"
+   },
+   "short": {
+    "en": "Holstein-Plön",
+    "de": "Holstein-Plön"
+   },
+   "adjective": {
+    "en": "Plön",
+    "de": "plönisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#61739f",
+   "capital": {
+    "name": "Plön",
+    "lat": 54.162,
+    "lon": 10.422
+   },
+   "holdings": [
+    {
+     "name": "Plön",
+     "lat": 54.162,
+     "lon": 10.422
+    },
+    {
+     "name": "Oldenburg in Holstein",
+     "lat": 54.292,
+     "lon": 10.887
+    }
+   ],
+   "ruler": {
+    "name": "Gerhard II the Blind",
+    "born": null,
+    "dynasty": "Schauenburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a nettle-leaf argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "schaumburg",
+   "name": {
+    "en": "County of Schaumburg (Holstein-Pinneberg)",
+    "de": "Grafschaft Schaumburg (Holstein-Pinneberg)"
+   },
+   "short": {
+    "en": "Schaumburg",
+    "de": "Schaumburg"
+   },
+   "adjective": {
+    "en": "Schaumburg",
+    "de": "schaumburgisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#37757f",
+   "capital": {
+    "name": "Stadthagen",
+    "lat": 52.324,
+    "lon": 9.207
+   },
+   "holdings": [
+    {
+     "name": "Stadthagen",
+     "lat": 52.324,
+     "lon": 9.207
+    },
+    {
+     "name": "Rinteln",
+     "lat": 52.189,
+     "lon": 9.08
+    },
+    {
+     "name": "Pinneberg",
+     "lat": 53.66,
+     "lon": 9.799
+    }
+   ],
+   "ruler": {
+    "name": "Adolf VI",
+    "born": null,
+    "dynasty": "Schauenburg",
+    "female": false
+   },
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a nettle-leaf argent",
+    "field": "gules",
+    "division": "per_fess",
+    "field2": "argent",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "roundel",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "oldenburg",
+   "name": {
+    "en": "County of Oldenburg",
+    "de": "Grafschaft Oldenburg"
+   },
+   "short": {
+    "en": "Oldenburg",
+    "de": "Oldenburg"
+   },
+   "adjective": {
+    "en": "Oldenburg",
+    "de": "oldenburgisch"
+   },
+   "rank": "county",
+   "government": "feudal_monarchy",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#594a17",
+   "capital": {
+    "name": "Oldenburg",
+    "lat": 53.143,
+    "lon": 8.214
+   },
+   "holdings": [
+    {
+     "name": "Oldenburg",
+     "lat": 53.143,
+     "lon": 8.214
+    },
+    {
+     "name": "Delmenhorst",
+     "lat": 53.051,
+     "lon": 8.632
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "opportunist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, two bars gules",
+    "field": "or",
+    "division": "barry",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "east_frisia",
+   "name": {
+    "en": "Frisian lands",
+    "de": "Friesische Landgemeinden"
+   },
+   "short": {
+    "en": "Frisia",
+    "de": "Friesland"
+   },
+   "adjective": {
+    "en": "Frisian",
+    "de": "friesisch"
+   },
+   "rank": "chiefdom",
+   "government": "tribal_federation",
+   "culture": "frisian",
+   "faith": "latin",
+   "color": "#5f6da6",
+   "capital": {
+    "name": "Oldeborg",
+    "lat": 53.51,
+    "lon": 7.38
+   },
+   "holdings": [
+    {
+     "name": "Oldeborg",
+     "lat": 53.51,
+     "lon": 7.38
+    },
+    {
+     "name": "Emden",
+     "lat": 53.367,
+     "lon": 7.206
+    },
+    {
+     "name": "Norden",
+     "lat": 53.596,
+     "lon": 7.206
+    },
+    {
+     "name": "Aurich",
+     "lat": 53.471,
+     "lon": 7.484
+    },
+    {
+     "name": "Jever",
+     "lat": 53.574,
+     "lon": 7.898
+    },
+    {
+     "name": "Groningen",
+     "lat": 53.22,
+     "lon": 6.57
+    },
+    {
+     "name": "Leeuwarden",
+     "lat": 53.2,
+     "lon": 5.79
+    },
+    {
+     "name": "Dokkum",
+     "lat": 53.33,
+     "lon": 6.0
+    },
+    {
+     "name": "Sneek",
+     "lat": 53.03,
+     "lon": 5.66
+    },
+    {
+     "name": "Franeker",
+     "lat": 53.19,
+     "lon": 5.54
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "The Frisian freedom: self-governing rural districts (Ostergo, Westergo, the Ommelanden, Emsland, Rüstringen) under elected judges.",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "isolationist",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Azure, an eagle or",
+    "field": "azure",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "chief",
+    "ordinary_tincture": "or",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lubeck",
+   "name": {
+    "en": "Free Imperial City of Lübeck",
+    "de": "Freie Reichsstadt Lübeck"
+   },
+   "short": {
+    "en": "Lübeck",
+    "de": "Lübeck"
+   },
+   "adjective": {
+    "en": "Lübeck",
+    "de": "lübisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#415724",
+   "capital": {
+    "name": "Lübeck",
+    "lat": 53.866,
+    "lon": 10.686
+   },
+   "holdings": [
+    {
+     "name": "Lübeck",
+     "lat": 53.866,
+     "lon": 10.686
+    },
+    {
+     "name": "Travemünde",
+     "lat": 53.962,
+     "lon": 10.87
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Per fess argent and gules",
+    "field": "argent",
+    "division": "per_fess",
+    "field2": "gules",
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": []
+   }
+  },
+  {
+   "id": "hamburg",
+   "name": {
+    "en": "City of Hamburg",
+    "de": "Stadt Hamburg"
+   },
+   "short": {
+    "en": "Hamburg",
+    "de": "Hamburg"
+   },
+   "adjective": {
+    "en": "Hamburg",
+    "de": "hamburgisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#36808c",
+   "capital": {
+    "name": "Hamburg",
+    "lat": 53.55,
+    "lon": 9.993
+   },
+   "holdings": [
+    {
+     "name": "Hamburg",
+     "lat": 53.55,
+     "lon": 9.993
+    },
+    {
+     "name": "Ritzebüttel",
+     "lat": 53.86,
+     "lon": 8.7
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 4,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a castle argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "castle",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bremen",
+   "name": {
+    "en": "City of Bremen",
+    "de": "Stadt Bremen"
+   },
+   "short": {
+    "en": "Bremen",
+    "de": "Bremen"
+   },
+   "adjective": {
+    "en": "Bremen",
+    "de": "bremisch"
+   },
+   "rank": "free_city",
+   "government": "merchant_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#4a5a87",
+   "capital": {
+    "name": "Bremen",
+    "lat": 53.076,
+    "lon": 8.807
+   },
+   "holdings": [
+    {
+     "name": "Bremen",
+     "lat": 53.076,
+     "lon": 8.807
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, a key argent",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "key",
+      "tincture": "argent",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "dortmund",
+   "name": {
+    "en": "Free Imperial City of Dortmund",
+    "de": "Freie Reichsstadt Dortmund"
+   },
+   "short": {
+    "en": "Dortmund",
+    "de": "Dortmund"
+   },
+   "adjective": {
+    "en": "Dortmund",
+    "de": "dortmundisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#4e7b4c",
+   "capital": {
+    "name": "Dortmund",
+    "lat": 51.514,
+    "lon": 7.465
+   },
+   "holdings": [
+    {
+     "name": "Dortmund",
+     "lat": 51.514,
+     "lon": 7.465
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "goslar",
+   "name": {
+    "en": "Free Imperial City of Goslar",
+    "de": "Freie Reichsstadt Goslar"
+   },
+   "short": {
+    "en": "Goslar",
+    "de": "Goslar"
+   },
+   "adjective": {
+    "en": "Goslar",
+    "de": "goslarsch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "low_saxon",
+   "faith": "latin",
+   "color": "#3b7c5e",
+   "capital": {
+    "name": "Goslar",
+    "lat": 51.906,
+    "lon": 10.429
+   },
+   "holdings": [
+    {
+     "name": "Goslar",
+     "lat": 51.906,
+     "lon": 10.429
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Gules, an eagle or",
+    "field": "gules",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "or",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "muehlhausen",
+   "name": {
+    "en": "Free Imperial City of Mühlhausen",
+    "de": "Freie Reichsstadt Mühlhausen"
+   },
+   "short": {
+    "en": "Mühlhausen",
+    "de": "Mühlhausen"
+   },
+   "adjective": {
+    "en": "Mühlhausen",
+    "de": "mühlhäusisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#63410e",
+   "capital": {
+    "name": "Mühlhausen",
+    "lat": 51.209,
+    "lon": 10.454
+   },
+   "holdings": [
+    {
+     "name": "Mühlhausen",
+     "lat": 51.209,
+     "lon": 10.454
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Argent, a mill-iron gules",
+    "field": "argent",
+    "division": "plain",
+    "field2": null,
+    "ordinary": null,
+    "ordinary_tincture": null,
+    "charges": [
+     {
+      "type": "wheel",
+      "tincture": "gules",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nordhausen",
+   "name": {
+    "en": "Free Imperial City of Nordhausen",
+    "de": "Freie Reichsstadt Nordhausen"
+   },
+   "short": {
+    "en": "Nordhausen",
+    "de": "Nordhausen"
+   },
+   "adjective": {
+    "en": "Nordhausen",
+    "de": "nordhäusisch"
+   },
+   "rank": "free_city",
+   "government": "city_republic",
+   "culture": "central_german",
+   "faith": "latin",
+   "color": "#11526e",
+   "capital": {
+    "name": "Nordhausen",
+    "lat": 51.505,
+    "lon": 10.791
+   },
+   "holdings": [
+    {
+     "name": "Nordhausen",
+     "lat": 51.505,
+     "lon": 10.791
+    }
+   ],
+   "ruler": null,
+   "heir": null,
+   "consort": null,
+   "dynasty_note": "",
+   "overlord": null,
+   "subject_type": null,
+   "empire_member": true,
+   "elector": false,
+   "allies": [],
+   "rivals": [],
+   "claims_on": [],
+   "personality": "trader",
+   "difficulty": 5,
+   "summary": {
+    "en": "",
+    "de": ""
+   },
+   "coa": {
+    "blazon": "Or, an eagle sable crowned",
+    "field": "or",
+    "division": "plain",
+    "field2": null,
+    "ordinary": "bordure",
+    "ordinary_tincture": "gules",
+    "charges": [
+     {
+      "type": "eagle",
+      "tincture": "sable",
+      "count": 1,
+      "arrangement": "single"
+     }
+    ]
+   }
+  }
+ ],
+ "wars": []
+}

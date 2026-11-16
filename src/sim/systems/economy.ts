@@ -13,14 +13,15 @@ import type { System } from '../schedule';
 import type { WorldState } from '../state';
 import type { World } from '../world';
 import { FIGURE } from '../economy/engine';
+import { uses1356Tables } from '../tables';
 
 /** Founds England's economy in a world that starts in the year of the calibration: the starting position, with no
  *  period computed. Its random numbers come from the seed of the world, through the engine's own generator. */
 export function foundEconomy(s: WorldState, w: World): void {
   const c = w.englandEconomy;
-  if (s.startYear !== c.year) { s.economy = { england: null }; return; }
+  if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) { s.economy = { england: null }; return; }
   const model = w.economyEngine.create(c.parameters, c.initialConditions, s.seed);
-  s.economy = { england: { year: c.year, model, figures: w.economyEngine.figures(model), halted: '' } };
+  s.economy = { england: { year: s.startYear, model, figures: w.economyEngine.figures(model), halted: '' } };
 }
 
 /** Computes one period for the year `year`. A period the engine cannot compute, or one that ends without a GDP,
