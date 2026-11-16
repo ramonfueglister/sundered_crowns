@@ -1,0 +1,82 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Yagbe'u Seyon,,1294,1285-06-19,1294,year,Solomonic,Q887998,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+2,Senfa Ared IV,,,1294,1295,year,Solomonic,Q889538,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+3,Hezba Asgad,,,1295,1296,year,Solomonic,Q889538,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+4,Qedma Asgad,,,1296,1297,year,Solomonic,Q889538,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+5,Jan Asgad,,,1297,1298,year,Solomonic,Q889538,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+6,Saba Asgad,,,1298,1299,year,Solomonic,Q889538,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+7,Wedem Arad,,1314,1299,1314,year,Solomonic,Q328495,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+8,Amda Seyon I,,1344,1314,1344,year,Solomonic,Q460342,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+9,Newaya Krestos,,1372,1344,1372,year,Solomonic,Q736112,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+10,Newaya Maryam,,1382,1372,1382,year,Solomonic,Q343713,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+11,Dawit I,,1413-10-06,1382,1413-10-06,year,Solomonic,Q716024,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+12,Tewodros I,,1414,1413-10-12,1414-06-23,day,Solomonic,Q888016,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+13,Yeshaq I,,1429,1414,1429-09,year,Solomonic,Q581685,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+14,Andreyas,,1430-03,1429-09,1430-03,month,Solomonic,Q495619,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+15,Takla Maryam,,1433,1430-03,1433-06,month,Solomonic,Q342818,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+16,Sarwe Iyasus,,1433,1433-06,1433-11,month,Solomonic,Q127112,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+17,Amda Iyasus,,1434-06,1433-11,1434-06,month,Solomonic,Q460316,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+18,Zara Yaqob,1399,1468-08-26,1434,1468-08-26,year,Solomonic,Q147677,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+19,Baeda Maryam I,1448,1478-11-08,1468-08-26,1478-11-08,day,Solomonic,Q733163,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+20,Eskender,1471-07-15,1494-05-07,1478,1494-05-07,year,Solomonic,Q713338,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+21,Amda Seyon II,1487,1494-10-26,1494,1494-10-26,year,Solomonic,Q460332,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+22,Na'od,,1508-07-31,1494,1508-07-31,year,Solomonic,Q324688,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+23,Dawit II or Libne Dengel,1501,1540-09-02,1508,1540-09-02,year,Solomonic,Q558437,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+24,Gelawdewos,1521,1559-03-23,1540-09-03,1559-03-23,day,Solomonic,Q887847,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+25,Menas,,1563-02-01,1559,1563-02-01,year,Solomonic,Q659242,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+26,Sarsa Dengel,1550,1597-10-04,1563,1597-10-04,year,Solomonic,Q887763,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+27,Yaqob,1590,1606-03-10,1597,1603-09,year,Solomonic,Q725222,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+28,Za Dengel,,1604-10-24,1603-09,1604-10-24,month,Solomonic,Q136652,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+29,Yaqob,1590,1606-03-10,1604,1606-03-10,year,Solomonic,Q725222,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+30,Susenyos I,1572,1632-09-17,1606,1632-09-17,year,Solomonic,Q738321,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+31,Fasilides,1603-11-20,1667-10-18,1632,1667-10-18,year,Solomonic,Q642265,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+32,Yohannes I,1640,1682-07-19,1667-10-18,1682-07-19,day,Solomonic,Q888036,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+33,Iyasu I,1654,1706-10-13,1682-07-19,1706-10-13,day,Solomonic,Q888011,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+34,Yeshaq Iyasu,,1685,1685,1685,year,Claimed Solomonic,Q2901157,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+35,Tekle Haymanot I,1684-03-28,1708-06-30,1706-03-27,1708-06-30,day,Solomonic,Q716286,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+36,Amda Seyon,,1707-09,1707-09,1707-09,month,Non-dynastic,Q2842498,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+37,Tewoflos,,1711-10-14,1708-07-01,1711-10-14,day,Solomonic,Q887412,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+38,Nebahne Yohannes,,,1709,1710-07,year,Non-dynastic,Q2901164,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+39,Yostos,,1716,1711-10-14,1716-02-19,day,Solomonic,Q711866,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+40,Dawit III,1695,1721-05-18,1716-02-08,1721-05-18,day,Solomonic,Q887840,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+41,Bakaffa,,1730-09-19,1721-05-18,1730-09-19,day,Solomonic,Q732878,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+42,Iyasu II,1723-10-21,1755-06-27,1730-09-19,1755-06-27,day,Solomonic,Q735638,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+43,Hezqeyas,,,1736,1737,year,Solomonic,Q2869837,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+44,Iyoas I,1740,1769-05-14,1755-06-27,1769-05-07,day,Solomonic,Q343708,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+45,Yohannes II,1699,1769-10-18,1769-05-07,1769-10-18,day,Solomonic,Q881197,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+46,Tekle Haymanot II,1754,1777-09-07,1769-10-18,1770-08,month,Solomonic,Q343723,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+47,Tekle Haymanot II,1754,1777-09-07,1770-12,1777-04-13,month,Solomonic,Q343723,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+48,Susenyos II,,1771,1770-08,1770-12,month,Solomonic,Q3339358,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+49,Salomon II,,1782,1777-04-13,1779-07-20,day,Solomonic,Q343719,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+50,Tekle Giyorgis I,1751,1817-12-12,1779-07-20,1784-02-08,day,Solomonic,Q888848,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+51,Iyasu III,,1810,1784-02-16,1788-04-24,day,Solomonic,Q716403,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+52,Iyasu,,1813-05,1787,1788,year,Non-dynastic,Q2869833,rival claimant: In opposition to Iyasu III,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+53,Baeda Maryam,,,1787,1788,year,Non-dynastic,Q2869831,rival claimant: In opposition to Iyasu III,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+54,Tekle Giyorgis I,1751,1817-12-12,1788-04-24,1789-07-26,day,Solomonic,Q888848,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+55,Tekle Haymanot,,1810,1788-02,1789,year,Non-dynastic,Q3514357,rival claimant: In opposition to Iyasu III,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+56,Hezqeyas,,1813-09-13,1789-07-26,1794-01,month,Solomonic,Q278808,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+57,Tekle Giyorgis I,1751,1817-12-12,1794-01,1795-04-15,month,Solomonic,Q888848,reign 3,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+58,Tekle Giyorgis I,1751,1817-12-12,1795-12,1796-05-20,month,Solomonic,Q888848,reign 4,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+59,Baeda Maryam II,1749,1833,1795-04-15,1795-12,month,Possibly Solomonic,Q797415,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+60,Salomon III,,,1796-05-20,1797-07-15,day,Solomonic,Q717219,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+61,Yonas,,1813-05,1797-08-18,1798-01-04,day,Solomonic,Q342894,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+62,Tekle Giyorgis I,1751,1817-12-12,1798-01-04,1799-05-20,day,Solomonic,Q888848,reign 5,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+63,Salomon III,,,1799-05-20,1799-07-15,day,Solomonic,Q717219,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+64,Demetros,,1802,1799-07-25,1800-03-24,day,Non-dynastic,Q343733,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+65,Tekle Giyorgis I,1751,1817-12-12,1800-03-24,1800-06,month,Solomonic,Q888848,reign 6,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+66,Demetros,,1802,1800-06,1801-06,month,Non-dynastic,Q343733,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+67,Egwale Seyon,,1818-06-12,1801-06,1818-06-12,month,Solomonic,Q733750,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+68,Iyoas II,,1821-06-03,1818-06-14,1821-06-03,day,Solomonic,Q343695,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+69,Gigar,1745,1832-11-26,1821-06-03,1826-04,month,Possibly Solomonic,Q342829,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+70,Gigar,1745,1832-11-26,1826-04,1830-06-18,month,Possibly Solomonic,Q342829,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+71,Baeda Maryam III,,,1826-04,1826-04,month,Non-dynastic,Q797420,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+72,Iyasu IV,,,1830-06-18,1832-03-18,day,Solomonic,Q888079,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+73,Gebre Krestos,,,1832-03-18,1832,year,Allegedly Solomonic,Q888086,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+74,Gebre Krestos,,,1832,1832-06-08,year,Allegedly Solomonic,Q888086,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+75,Sahle Dengel,1778,1855-02-11,1832,1832,year,Solomonic,Q888067,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+76,Sahle Dengel,1778,1855-02-11,1832-10,1840-08-29,month,Solomonic,Q888067,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+77,Egwale Anbesa,,,1832,1832,year,Non-dynastic,Q3049262,,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+78,Yohannes III,1797,1873,1840-08-30,1841-10,month,Solomonic,Q611063,reign 1,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+79,Sahle Dengel,1778,1855-02-11,1841-10,1845,year,Solomonic,Q888067,reign 3,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+80,Sahle Dengel,1778,1855-02-11,1845,1850,year,Solomonic,Q888067,reign 4,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270
+81,Yohannes III,1797,1873,1845,1845,year,Solomonic,Q611063,reign 2,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia#Solomonic_dynasty,1371455270

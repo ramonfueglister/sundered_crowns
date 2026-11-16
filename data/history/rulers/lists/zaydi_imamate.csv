@@ -1,0 +1,42 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,al-Mutawakkil al-Mutahhar bin Yahya bin al-Murtada,,,1276,1298,year,,Q4702991,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+2,al-Mahdi Muhammad,,,1301,1328,year,,Q4702773,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+3,al-Mu'ayyad Yahya bin Hamzah,,,1328,1346,year,,Q4702922,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+4,an-Nasir Ali bin Salah,,,1328,1329,year,,Q4749668,grandson of al-Mahdi Ibrahim,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+5,Ahmad bin Ali al-Fathi,,,1329,1349,year,,Q4163223,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+6,al-Wathiq al-Mutahhar,,,1349,1349,year,,Q4703338,son of al-Mahdi Muhammad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+7,al-Mahdi Ali bin Muhammad,,,1349,1372,year,,Q4702769,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+8,al-Nasir Muhammad Salah al-Din,,,1372,1391,year,,Q4703019,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+9,al-Mansur Ali,,,1391,1436,year,,Q4702812,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+10,al-Mahdi Ahmad bin Yahya bin al-Murtada,,1436,1391,1392,year,,Q4702777,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+11,al-Hadi Ali bin al-Muayyad,,,1393,1432,year,,Q4163174,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+12,al-Mahdi Salah ad-Din bin Ali,,,1436,1445,year,,Q4702775,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+13,al-Mansur an-Nasir bin Muhammad,,,1436,1462,year,,Q4702821,great-great-grandson of al-Mutawakkil al-Mutahhar bin Yahya,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+14,al-Mutawakkil al-Mutahhar bin Muhammad,,,1436,1474,year,,Q4702990,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+15,al-Mu’ayyad Muhammad,,,1462,1503,year,,Q4703004,son of al-Mansur an-Nasir,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+16,an-Nasir Muhammad bin Yusuf,,,1474,1488,year,,Q4749673,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+17,al-Hadi Izz ad-Din bin al-Hasan,,,1474,1495,year,,Q4302074,grandson of al-Hadi Ali,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+18,al-Mansur Muhammad bin Ali al-Washali,,,1475,1504,year,,Q4702815,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+19,an-Nasir al-Hasan,,,1495,1523,year,,Q4749677,son of al-Hadi Izz-ad-Din,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+20,al-Mutawakkil Yahya Sharaf ad-Din bin Shams-ad-Din,,,1506,1555,year,,Q4702989,grandson of al-Mahdi Ahmad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+21,al-Mutahhar,,,1547,1572,year,,Q4702981,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+22,an-Nasir al-Hasan bin Ali,,,1579,1585,year,,Q4749679,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+23,al-Mansur al-Qasim bin Muhammad,,,1597,1620,year,,Q4702822,,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+24,al-Mu'ayyad Muhammad I,,,1620,1644,year,,Q4702920,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+25,al-Mutawakkil Isma'il,,,1644,1676,year,,Q4702988,brother,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+26,al-Mahdi Ahmad bin al-Hasan,,,1676,1681,year,,Q4348583,nephew,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+27,al-Mu'ayyad Muhammad II,,,1681,1686,year,,Q4702921,son of al-Mutawakkil Isma'il,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+28,al-Mahdi Muhammad,,,1687,1718,year,,Q4702771,son of al-Mahdi Ahmad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+29,al-Mansur al-Husayn I bin al-Qasim,,,1716,1720,year,,Q4702818,grandson of al-Mu'ayyad Muhammad I,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+30,al-Mutawakkil al-Qasim bin al-Hasan,,,1716,1727,year,,Q22121148,grandson of al-Mahdi Ahmad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+31,An-Nasir Muhammad (Zaidi imam) bin Ishaq,,1754,1723,1723,year,,Q4749674,grandson of al-Mahdi Ahmad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+32,al-Mansur al-Husayn II,,,1727,1748,year,,Q4702819,son of al-Mutawakkil al-Qasim,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+33,al-Mahdi Abbas,,,1748,1775,year,,Q4348561,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+34,al-Mansur Ali I,,,1775,1809,year,,Q4702809,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+35,al-Mutawakkil Ahmad,,,1809,1816,year,,Q4702984,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+36,al-Mahdi Abdallah,,,1816,1835,year,,Q4347933,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+37,al-Mansur Ali II,,1871,1835,1837,year,,Q4702810,son,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+38,an-Nasir Abdallah bin al-Hasan bin Ahmad,,,1837,1840,year,,Q4749669,great-grandson of al-Mahdi Abbas,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+39,al-Hadi Muhammad,,,1840,1844,year,,Q4702443,son of al-Mutawakkil Ahmad,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+40,al-Mansur Ali II,,,1844,1845,year,,Q4702810,second reign,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679
+41,al-Mutawakkil Muhammad bin Yahya,,,1845,1849,year,,Q4702986,grandson of al-Mansur Ali I; reign continues past 1848,https://en.wikipedia.org/wiki/Imams_of_Yemen#List_of_imams,1375885679

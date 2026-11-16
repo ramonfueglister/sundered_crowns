@@ -1,0 +1,19 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,John II,1239-01,1305-11-16,1286,1305,year,House of Dreux,Q453989,born 3/4 January 1239,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+2,Arthur II,1262-07-02,1312-08-27,1305,1312,year,House of Dreux,Q506501,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+3,John III the Good,1286-03-08,1341-04-30,1312,1341,year,House of Dreux,Q259146,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+4,Joan the Lame,1319,1384-09-10,1341,1364,year,,Q257621,Breton War of Succession claimant; rival claimant (Blois-Penthièvre); co-ruler with Charles I; born c. 1319,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+5,Charles I,1319,1364-09-29,1341,1364,year,,Q454063,Breton War of Succession claimant; rival claimant (Blois-Penthièvre); co-ruler with Joan; born c. 1319,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+6,John (IV) of Montfort,1293,1345-09-26,1341-05,1345,year,,Q544055,Breton War of Succession claimant; rival claimant (Montfort); born c. 1293,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+7,John (V) of Montfort,1339,1399-11,1345,1364,year,,Q449008,Breton War of Succession claimant; rival claimant (Montfort); same person as John IV below; died 1/2 November 1399,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+8,John IV the Conqueror,1339,1399-11,1364,1399,year,House of Montfort,Q449008,born c. 1339; died 1/2 November 1399,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+9,John V the Wise,1389-12-24,1442-08-29,1399,1442,year,House of Montfort,Q454013,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+10,Francis I the Well-Loved,1414-05-11,1450-07-17,1442,1450,year,House of Montfort,Q472719,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+11,Peter II the Simple,1418-07-07,1457-09-22,1450,1457,year,House of Montfort,Q545140,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+12,Arthur III the Justicier,1393-08-24,1458-12-26,1457,1458,year,House of Montfort,Q454053,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+13,Francis II,1433-06-23,1488-09-09,1458,1488,year,House of Montfort,Q352462,,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+14,Anne,1477-01-25,1514-01-09,1488,1514,year,House of Montfort,Q201143,queen of France by marriage,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+15,Claude,1499-10-14,1524-07-20,1514,1524,year,House of Valois,Q229208,co-ruler with Francis 1514-1515,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+16,Francis,1494-09-12,1547-03-31,1514,1515,year,House of Valois,Q129857,co-ruler with Claude; king of France,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+17,Francis III,1518-02-28,1536-08-10,1524,1536,year,House of Valois,Q378825,Dauphin of France,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552
+18,Henry,1519-03-31,1559-07-10,1536,1547,year,House of Valois,Q132545,"became King Henry II of France 1547; titles of King of France and Duke of Brittany joined, duchy ends 1547 (Duchy of Brittany article)",https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,1385982552

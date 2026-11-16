@@ -49,3 +49,53 @@ belozersk,partial,8,https://en.wikipedia.org/wiki/Prince_of_Beloozero,later prin
 bulgaria,done,13,https://en.wikipedia.org/wiki/List_of_Bulgarian_monarchs,"Tarnovo line; ends with Ottoman conquest (Ivan Shishman to 1395); Vidin line (Ivan Sratsimir, Constantine II to 1422) not included"
 venice,done,72,https://en.wikipedia.org/wiki/List_of_doges_of_Venice,"doges of Venice; list ends with Ludovico Manin, forced to abdicate by Napoleon 1797"
 greater_poland,done,10,https://en.wikipedia.org/wiki/Duchy_of_Greater_Poland,list 'Rulers of all Greater Poland'; gap 1312–1314 in source; duchy merged into the Kingdom of Poland 1320
+brittany,done,18,https://en.wikipedia.org/wiki/List_of_rulers_of_Brittany,work-list John II matches; Breton War of Succession claimants (both sides) as rival rows; ends 1547 union with French crown; later courtesy dukes omitted
+georgia,done,17,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,Eastern/united Georgian kings to the 1490 division; work-list Vakhtang II matches; Kartli kings after 1490 not included
+wallachia,done,139,https://en.wikipedia.org/wiki/List_of_princes_of_Wallachia,"row 1 legendary Radu Negru (c.1290-1310); kaymakam regency rows omitted; one row per tenure, sorted by start"
+sicily,done,23,https://en.wikipedia.org/wiki/List_of_Sicilian_monarchs,work-list James II matches; 1410-1412 vacancy as in source; ends 1816 merger into Two Sicilies
+papal_states,done,65,https://en.wikipedia.org/wiki/List_of_popes,popes from Nicholas IV (work list matches); interregna not rows; antipopes not in source list
+teutonic_order,done,25,https://en.wikipedia.org/wiki/Grand_Master_of_the_Teutonic_Order,state ends 1525 (Duchy of Prussia); later Hoch- und Deutschmeister not included; Konrad von Feuchtwangen from 1290 per source (work list 1291)
+pskov,partial,14,https://en.wikipedia.org/wiki/Pskov_Land,"princes (head of state of the veche republic) from Pskov Land list to 1348 and Pskov Republic list; single years only, gaps (1337-41, 1369-75); 1399-1510 viceroys unnamed"
+brandenburg,done,43,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,"Ascanian co-rulers in 1291 each one row (incl. partition holders listed by source); branch margraviates (Ansbach, Kulmbach/Bayreuth, Küstrin, Schwedt) omitted; 1713-1806 from List of Prussian monarchs; ends 1806"
+granada,done,31,https://en.wikipedia.org/wiki/Emirate_of_Granada,sultan list section of Emirate of Granada (flagged for date update); overlaps and 1455-1462 gap as in source
+menteshe,done,7,https://en.wikipedia.org/wiki/Menteshe,"beys list ends with Ilyas Bey 1424; 1291 holder Mesut Bey, work list Menteşe Bey; Ottoman interlude 1391-1402"
+zaydi_imamate,done,41,https://en.wikipedia.org/wiki/Imams_of_Yemen,source calls its list 'fairly inclusive' with no uncontroversial succession: overlapping/rival imams kept as listed; gap 1298-1301; work list has no 1291 ruler
+tyrol,partial,33,https://en.wikipedia.org/wiki/County_of_Tyrol,"County of Tyrol list to 1705, gaps 1519-1564 and 1705-1848 filled from List of rulers of Austria; 1595-1612 no holder in source; 1805-1814 Bavarian rule (no row); Countess Margaret 1335-1363 not a bulleted holder in source"
+masovia,done,26,https://en.wikipedia.org/wiki/Duke_of_Masovia,all Masovian partition dukes as co-ruler rows (Kuyavian lines on the same page excluded); work-list Bolesław II matches; ends 1537 (Anna forfeits rights to Poland)
+ethiopia,done,81,https://en.wikipedia.org/wiki/List_of_emperors_of_Ethiopia,Solomonic emperors from Yagbe'u Seyon (work list matches); Zemene Mesafint multiple reigns one row per tenure sorted by start; rivals 'in opposition' noted; Sahle Dengel/Yohannes III reigns after 1848 omitted
+ifat,done,17,https://en.wikipedia.org/wiki/Sultanate_of_Ifat,1291 holder per source Ali Baziwi (work list Umar Walashma); most 14th-c. reign dates unknown (13??) in source
+hormuz,partial,9,https://en.wikipedia.org/wiki/Kingdom_of_Hormuz,"source king list only covers 1514-1622; history text names Mahmud Qalhati (r. 1249-1286, work list has him for 1291) and Baha ud-Din Ayaz (1301) but no list for 1291-1514; ends 1622"
+alodia,no_list,0,https://en.wikipedia.org/wiki/Alodia,Alodia article king list ends in the 12th century; no rulers known for 1291-c.1500 (kingdom destroyed c. 1500)
+vladimir,partial,14,https://en.wikipedia.org/wiki/Grand_Prince_of_Vladimir,"list ends 1389; title then held by grand princes of Moscow (see moscow realm), not continued here"
+genoa,done,187,https://en.wikipedia.org/wiki/Doge_of_Genoa,"collective row to 1339, then doges to 1797 (lifetime 1339-1528 incl. vacancies noted, biennial 1528-1797)"
+savoy,done,26,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Savoy,"main line only (Vaud, Piedmont/Achaea, Nemours, Carignano branches omitted); kings of Sardinia from 1720 hold the ducal title; work-list Amadeus V matches"
+epirus,done,14,https://en.wikipedia.org/wiki/Despot_of_Epirus,Despot of Epirus list; work-list Nikephoros I matches; Thessaly not separately covered; ends 1479
+armenia_cilicia,done,14,https://en.wikipedia.org/wiki/List_of_Armenian_monarchs,work-list Hethum II matches; ends 1375 Mamluk conquest; later Lusignan/Savoy claimants omitted
+germiyan,done,4,https://en.wikipedia.org/wiki/Germiyanids,"from infobox leader list; beylik independent from c. 1300, no holder given for 1291"
+kanem,done,57,https://en.wikipedia.org/wiki/List_of_mais_of_Kanem%E2%80%93Bornu,list of mais (Sayfawa); approximate dates per Cohen; continued in Bornu after loss of Kanem; office abolished after 1846
+makuria,partial,14,https://en.wikipedia.org/wiki/List_of_rulers_of_Makuria,"gaps: 1295–c.1304, after 1333 only isolated attested rulers (Paper 14th c., Nasir c.1397, Joel c.1484, Gaua c.1520–1526, Qasqash 17th c.); no end date of the kingdom in list"
+riga,done,18,https://en.wikipedia.org/wiki/Archdiocese_of_Riga,archbishops 1255–1561 table; archbishopric suppressed 1561
+meissen,partial,11,https://en.wikipedia.org/wiki/List_of_margraves_of_Meissen,"margraves list only, ends 1440 (Frederick V); Wettins merged Meissen into Electorate of Saxony (1423 electorate, 1547 final integration per Margravate of Meissen article); Thuringian landgraves not transcribed"
+bosnia,done,17,https://en.wikipedia.org/wiki/List_of_rulers_of_medieval_Bosnia,bans then kings to 1463; Šubić 'lords of Bosnia' 1305–1322 included as listed; nominal/titular kings after 1463 excluded
+dauphine,partial,13,https://en.wikipedia.org/wiki/List_of_counts_of_Albon_and_dauphins_of_Viennois,"list ends with Louis II (Louis XI) 1466; title then merged into Dauphin of France (heir to the French crown), later holders not transcribed"
+pomerania_stettin,partial,22,https://en.wikipedia.org/wiki/List_of_Pomeranian_duchies_and_dukes,"Duchy of Pomerania 1291–1295, Stettin line 1295–1478 and 1531–1625, united duchy 1478–1531 and 1625–1637; Griffin line extinct 1637, later Swedish/Brandenburg holders of the title not listed"
+vidin,partial,8,https://en.wikipedia.org/wiki/Tsardom_of_Vidin,"list has gaps 1336–1337 and 1349–1356, Hungarian rule 1365–1369; ends with Ottoman conquest"
+imereti,partial,50,https://en.wikipedia.org/wiki/Kingdom_of_Imereti,"list has vacancies 1330–1387, 1392–1396, 1455–1463, 1478–1484; Solomon II end 1810 taken from family tree on same page (list says 1789–1790); kingdom ends 1810"
+pisa,collective,1,https://en.wikipedia.org/wiki/Republic_of_Pisa,collective; infobox lists Consiglio degli Anziani 1202–1312 and Gabriele Maria Visconti 1402–1406; annexed by Florence 1406
+pomerelia,done,7,https://en.wikipedia.org/wiki/Duchy_of_Pomerelia,dukes 1270–1308 from Duchy of Pomerelia list; annexed by the Teutonic Order 1308/1309
+syrmia,done,2,https://en.wikipedia.org/wiki/Realm_of_Stefan_Dragutin,article 'Realm of Stefan Dragutin' (Kingdom of Syrmia redirects); realm ends 1325
+chobanid_kastamonu,done,2,https://en.wikipedia.org/wiki/Chobanids_%28beylik%29,beys to 1309; Kastamonu annexed into the Beylik of Candar
+gorodets,no_list,0,https://en.wikipedia.org/wiki/Andrey_of_Gorodets,no Wikipedia list of princes of Gorodets (no 'Principality of Gorodets' article); Andrey of Gorodets article has only Grand Prince of Vladimir succession box
+achaea,done,22,https://en.wikipedia.org/wiki/Prince_of_Achaea,princes 1289–1432 (+Centurione III 1453–1454); principality inherited by Thomas Palaiologos 1432; gaps 1313–1315 and 1321–1318 as in source
+ryazan,done,14,https://en.wikipedia.org/wiki/Principality_of_Ryazan,list of princes; merged with Muscovy 1521
+katsina,partial,38,https://en.wikipedia.org/wiki/Kingdom_of_Katsina,Hogben's list of Hausa sarakuna; three early Wangarawa rulers undated (Korau 1260–? to 1492/3); Fulani emirs from family chart on same page after 1805/6 conquest
+burgundy,done,10,https://en.wikipedia.org/wiki/Duke_of_Burgundy,"dukes to Mary (1477/1482); duchy confiscated by Louis XI 1477, later Habsburg holders of the title not included"
+galich_mersky,no_list,0,https://en.wikipedia.org/wiki/Galich%2C_Russia,no Wikipedia list of princes of Galich-Mersky/Galich-Dmitrov (no principality article); town article has no ruler list
+trebizond,done,15,https://en.wikipedia.org/wiki/List_of_Trapezuntine_emperors,emperors to Ottoman conquest 1461
+county_burgundy,done,22,https://en.wikipedia.org/wiki/List_of_counts_of_Burgundy,counts to 1678; annexed by France (Treaty of Nijmegen); later titular holders excluded
+thessaly,done,3,https://en.wikipedia.org/wiki/Constantine_Doukas_of_Thessaly,"no list page; built from infobox/succession boxes of the rulers' articles (Constantine Doukas, John II Doukas); Thessaly partitioned 1318"
+dorpat,done,24,https://en.wikipedia.org/wiki/Bishopric_of_Dorpat,list of bishops; prince-bishopric existed until 1558
+osel_wiek,done,20,https://en.wikipedia.org/wiki/Bishopric_of_%C3%96sel%E2%80%93Wiek,bishops list; vacancies c.1307–1310 and 1381–1385; principality sold to Denmark 1560
+samtskhe,done,17,https://en.wikipedia.org/wiki/Samtskhe-Saatabago,princes/atabegs to 1625 (infobox end 1625); gap 1535–1545 in list
+flanders,done,25,https://en.wikipedia.org/wiki/Count_of_Flanders,counts to 1797 (Campo Formio); title abolished de facto after French annexation 1795
+navarre,done,33,https://en.wikipedia.org/wiki/List_of_Navarrese_monarchs,"unified kingdom to 1512/1516, then Upper Navarre (Pamplona) line held by the kings of Spain to 1833; Lower Navarre line (Albret/Bourbon, titular French kings to 1830) not included"

@@ -1,0 +1,44 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Otto IV of the Arrow,1238,1308-11-27,1267,1308,year,House of Ascania,Q62568,"co-ruler, at Stendal",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+2,Conrad I,1240,1304,1267,1304,year,House of Ascania,Q1782077,"co-ruler, at Neumark",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+3,Otto V the Tall,1246,1298,1267,1298,year,House of Ascania,Q64721,"co-ruler, at Salzwedel",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+4,Albert III,1250,1300,1267,1300,year,House of Ascania,Q571375,"co-ruler, at Stargard; born c. 1250; died between 19 September and 4 December 1300",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+5,Conrad II,1261,1308,1281,1308,year,House of Ascania,,"co-ruler, at Krossen",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+6,Otto VII,1260,1297,1286,1297,year,House of Ascania,,"co-ruler, at Neumark; born c. 1260",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+7,Herman the Tall,1275,1308-02-01,1298,1308,year,House of Ascania,Q69761,"co-ruler, at Salzwedel",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+8,Beatrice (I),1270,1316,1298,1316,year,House of Ascania,Q3492126,"co-ruler, at Upper Lusatia",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+9,Beatrice (II),1270,1314-09-22,1300,1314,year,House of Ascania,Q813296,"co-ruler, at Stargard; born c. 1270",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+10,John IV,1261,1305,1304,1305,year,House of Ascania,,"co-ruler, at Neumark; co-ruler of his father since 1291",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+11,Waldemar the Great,1280,1319-08-14,1305,1318,year,House of Ascania,Q565434,"co-ruler, at Neumark",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+12,Henry I Lackland,1256-03-21,1318-02-14,1308,1318,year,House of Ascania,Q555384,"co-ruler, at Stendal since 1308",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+13,John V the Illustrious,1302,1317-03-26,1308,1317,year,House of Ascania,Q557218,"co-ruler, at Salzwedel",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+14,Matilda,1296,1329-03-31,1308,1329,year,House of Ascania,,"co-ruler, at Lower Lusatia",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+15,Agnes,1297,1334-11-27,1308,1334,year,House of Ascania,,"co-ruler, at Altmark",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+16,Judith,1301,1353,1308,1353,year,House of Ascania,,"co-ruler, at Coburg",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+17,Waldemar the Great,1280,1319-08-14,1318,1319,year,House of Ascania,Q565434,whole margraviate,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+18,Henry II the Child,1302,,1319,1320,year,House of Ascania,Q657689,source gives death 26 March 1317 (inconsistent); Ascanian dynasty extinct 1320,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+19,Sophia,1300,1356,1320,1356,year,House of Ascania,Q3078144,at Landsberg,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+20,Louis I the Brandenburger,1315-05,1361-09-18,1323,1351,year,House of Wittelsbach,Q61473,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+21,Louis II the Roman,1328-05-07,1365-05-17,1351,1365,year,House of Wittelsbach,Q60831,made first Elector of Brandenburg in 1356,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+22,Otto the Lazy,,1379-11-15,1365,1373,year,House of Wittelsbach,Q702205,co-ruler with his brother from 1351; born 1340/1342; abdicated 1373,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+23,Wenceslaus,,,1373-10-02,1378-11-29,day,Luxembourg Dynasty,Q152148,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+24,Sigismund,,,1378-11-29,1388,year,Luxembourg Dynasty,Q57124,gave Brandenburg to Jobst as security for a loan,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+25,Jobst,,,1388,1411-01-16,year,Luxembourg Dynasty,Q158181,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+26,Sigismund,,,1411-01-16,1415-04-30,day,Luxembourg Dynasty,Q57124,second tenure,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+27,Frederick I,1371-09-21,1440-09-20,1415-04-30,1440-09-20,day,House of Hohenzollern,Q61336,"Elector; enfeoffed with the Margraviate 1417, abdicated it to his son 1426",https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+28,John the Alchemist,1406,1464-11-16,1426,1440,year,House of Hohenzollern,Q524105,Margraviate of Brandenburg while his father was Elector,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+29,Frederick II Irontooth,1413-11-19,1471-02-10,1440-09-20,1471-02-10,day,House of Hohenzollern,Q701736,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+30,Albert Achilles,1414-11-09,1486-03-11,1471-02-10,1486-03-11,day,House of Hohenzollern,Q453771,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+31,John Cicero,1455-08-02,1499-01-09,1486-03-11,1499-01-09,day,House of Hohenzollern,Q702209,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+32,Joachim I Nestor,1484-02-21,1535-07-11,1499-01-09,1535-07-11,day,House of Hohenzollern,Q61814,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+33,Joachim II Hector,1505-01-13,1571-01-03,1535-07-11,1571-01-03,day,House of Hohenzollern,Q506527,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+34,John George,1525-09-11,1598-01-08,1571-01-03,1598-01-08,day,House of Hohenzollern,Q505918,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+35,Joachim Frederick,1546-01-27,1608-07-18,1598-01-08,1608-07-18,day,House of Hohenzollern,Q57920,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+36,John Sigismund,1572-11-08,1619-12-23,1608-07-18,1619-11-03,day,House of Hohenzollern,Q40746,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+37,George William I,1595-11-13,1640-12-01,1619-11-03,1640-12-01,day,House of Hohenzollern,Q166675,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+38,Frederick William I the Great Elector,1620-02-16,1688-04-29,1640-12-01,1688-04-29,day,House of Hohenzollern,Q152727,,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+39,Frederick III,1657-07-11,1713-02-25,1688-04-29,1713-02-25,day,House of Hohenzollern,Q151826,also Duke of Prussia; King in Prussia from 1701,https://en.wikipedia.org/wiki/List_of_margraves_and_electors_of_Brandenburg,1365301693
+40,Frederick William I,1688-08-14,1740-05-31,1713-02-25,1740-05-31,day,House of Hohenzollern,Q105013,title held by the king of Prussia (Elector of Brandenburg),https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+41,Frederick II,1712-01-24,1786-08-17,1740-05-31,1786-08-17,day,House of Hohenzollern,Q33550,title held by the king of Prussia (Elector of Brandenburg),https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+42,Frederick William II,1744-09-25,1797-11-16,1786-08-17,1797-11-16,day,House of Hohenzollern,Q152229,title held by the king of Prussia (Elector of Brandenburg),https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783
+43,Frederick William III,1770-08-03,1840-06-07,1797-11-16,1806-08-06,day,House of Hohenzollern,Q37134,title held by the king of Prussia (Elector of Brandenburg); the Brandenburg list counts kings of Prussia as only titular margraves from 6 August 1806 (end of the electorate); end date from that page,https://en.wikipedia.org/wiki/List_of_Prussian_monarchs,1385689783

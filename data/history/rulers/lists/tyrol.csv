@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Meinhard II,,,1258,1295,year,House of Meinhardin,Q697204,also Duke of Carinthia from 1286; jointly with his son Albert VI until 1292,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+2,Albert VI,,,,1292,year,House of Meinhardin,,"co-ruler with his father Meinhard II, until 1292",https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+3,Henry II,,,1295,1335,year,House of Meinhardin,Q275408,"co-ruler with his brothers Louis (until 1305) and Otto (until 1310); also King of Bohemia; male line extinct, county passed to his daughter Countess Margaret",https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+4,Louis,,,1295,1305,year,House of Meinhardin,,co-ruler with Henry II,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+5,Otto,,,1295,1310,year,House of Meinhardin,Q682317,co-ruler with Henry II,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+6,John Henry,,,1335,1341,year,House of Luxembourg,Q697880,husband of Countess Margaret; divorced,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+7,Louis,,,1341,1361,year,House of Wittelsbach,Q61473,second husband of Countess Margaret,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+8,Meinhard III,,,1361,1363,year,House of Meinhardin,Q61833,"son; line extinct, county bequeathed to the Habsburgs",https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+9,Rudolph IV,,,1363,1365,year,House of Habsburg,Q156404,,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+10,Leopold I,,,1365,1386,year,House of Habsburg,Q275651,jointly with his brother Albert IV until 1379,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+11,Albert IV,,,1365,1379,year,House of Habsburg,Q166853,co-ruler with Leopold I,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+12,William,,,1386,1406,year,House of Habsburg,Q313179,jointly with his brother Leopold II,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+13,Leopold II,,,1396,1406,year,House of Habsburg,Q453031,co-ruler with William; regent of Tyrol and Further Austria,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+14,Frederick of the Empty Pockets,,,1406,1439,year,House of Habsburg,Q550692,,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+15,Sigismund,,,1439,1490,year,House of Habsburg,Q438375,deposed; line extinct,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+16,Maximilian I,,,1490,1519,year,House of Habsburg,Q150726,Habsburg lands re-unified,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+17,Charles I,1500-02-24,1558-09-21,1519-01-12,1521-04-21,day,House of Habsburg,Q32500,title held by the Archduke of Austria (gap in the Tyrol list filled from Austria list),https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+18,Ferdinand I,1503-03-10,1564-07-25,1521-04-21,1564-07-25,day,House of Habsburg,Q150611,title held by the Archduke of Austria (gap in the Tyrol list filled from Austria list),https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+19,Ferdinand II,,,1564,1595,year,House of Habsburg,Q313426,Habsburg ruler of Tyrol and Further Austria; source lists no holder 1595-1612,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+20,Maximilian III,,,1612,1618,year,House of Habsburg,Q283909,,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+21,Leopold V,,,1619,1632,year,House of Habsburg,Q112066,,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+22,Ferdinand Charles,,,1632,1662,year,House of Habsburg,Q560021,with his mother Claudia de' Medici as regent 1632-1646,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+23,Sigismund Francis,,,1663,1665,year,House of Habsburg,Q94393,last of the Tyrolean line,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+24,Leopold I,,,1665,1705,year,House of Habsburg,Q150494,Habsburg lands re-unified; last entry of the Tyrol list,https://en.wikipedia.org/wiki/County_of_Tyrol#Counts_of_Tyrol,1374518728
+25,Joseph I,1678-07-26,1711-04-17,1705-05-05,1711-04-17,day,House of Habsburg,Q152480,title held by the Archduke of Austria,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+26,Charles III,1685-10-01,1740-10-20,1711-04-17,1740-10-20,day,House of Habsburg,Q150665,title held by the Archduke of Austria,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+27,Maria Theresa,1717-05-13,,1740-10-20,1780-11-29,day,House of Habsburg,Q131706,title held by the Archduke of Austria; co-ruler with Francis I Stephen 1740-1765,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+28,Francis I Stephen,1708-12-08,1765-08-18,1740-10-20,1765-08-18,day,House of Habsburg-Lorraine,Q151075,co-ruler with Maria Theresa,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+29,Joseph II,1741-03-13,1790-02-20,1780-11-29,1790-02-20,day,House of Habsburg-Lorraine,Q76555,title held by the Archduke of Austria,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+30,Leopold VII,1747-05-05,1792-03-01,1790-02-20,1792-03-01,day,House of Habsburg-Lorraine,Q151321,title held by the Archduke of Austria,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+31,Francis II,1768-02-12,1835-03-02,1792-03-01,1805,year,House of Habsburg-Lorraine,Q130834,title held by the Archduke of Austria (Emperor of Austria from 1804); Tyrol ceded to Bavaria by the Peace of Pressburg 1805 (County of Tyrol article),https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+32,Francis,1768-02-12,1835-03-02,1814,1835-03-02,year,House of Habsburg-Lorraine,Q130834,title held by the Emperor of Austria; Tyrol returned to Austria 1814 as crown land (County of Tyrol article),https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
+33,Ferdinand the Benevolent,1793-04-19,1875-06-29,1835-03-02,1848-12-02,day,House of Habsburg-Lorraine,Q183579,title held by the Emperor of Austria,https://en.wikipedia.org/wiki/List_of_rulers_of_Austria,1379687359
