@@ -166,6 +166,18 @@
   "Kingdom of Hanover": {
    "realm": "brunswick_lueneburg",
    "why": "the same state, kingdom from 1814"
+  },
+  "Bessarabia": {
+   "realm": "moscow",
+   "why": "1812 Treaty of Bucharest: eastern Moldavia became the Bessarabia Governorate of the Russian Empire"
+  },
+  "Ottoman Tripolitania": {
+   "realm": "ottoman",
+   "why": "1835: the Ottomans ended the Karamanli dynasty and ruled Tripoli directly as a province"
+  },
+  "Beylik of Tunis": {
+   "realm": "new",
+   "why": "the beys of Tunis (Muradids, Husainids) under Ottoman suzerainty, not the Hafsid title that ended 1574; same name only"
   }
  },
  "successions": {
