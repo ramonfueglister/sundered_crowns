@@ -18,7 +18,7 @@ import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
 import { projectionOf } from './region';
 import { blockOfCell, cellOfBlock } from './land';
-import { FARTHEST, NEAREST, creasesOf, elevationOf, realmsOf, reliefOf } from './zoom';
+import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, realmsOf, reliefOf } from './zoom';
 
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
 const ZOOM_EASE = 1 / 90, GLIDE_EASE = 1 / 280;
@@ -82,7 +82,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
-    stage.creases(creasesOf(wide)); laid = at;
+    stage.creases(creasesOf(wide)); stage.soften(nearOf(wide)); laid = at;
     const box = canvas.getBoundingClientRect();
     names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realmsOf(wide));
     stage.busy = missing > 0 && !failed;

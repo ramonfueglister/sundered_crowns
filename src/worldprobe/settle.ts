@@ -2,16 +2,28 @@
 // their inhabitants and built in the tradition of their land (buildings/traditions), the monuments that have a model, and fields
 // where the land was under the plough.
 import * as THREE from 'three/webgpu';
-import { Batch, type Rnd, hash2, seeded } from '../lookprobe/batch';
+import { Batch, type RGB, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { FLOOR, type HouseStyle, type Model, SOUTH, type Style, house, m, m2, tower, townHouse, townWall } from '../buildings';
+import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 
 /** A place of the gazetteer on the ground. */
-export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; style: Style }
+export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style }
 /** A monument on the ground: one building of it. */
 export interface Monument { id: number; at: P2; model: Model }
+/**
+ * A house on its lot: all that is needed to build it, so that the near view can build the houses that have fine
+ * blocks again from them (fine.ts). `x`, `z` is the corner of its footprint on the ground, `y` the height it stands at.
+ */
+export interface Lot { x: number; z: number; w: number; d: number; y: number; floors: number; wall: RGB; roof: RGB; seed: number; front: Side; region: string }
+/** Builds the house of a lot into a batch: as the far view shows it (0), or from its fine blocks for the near view (1). */
+export function raise(into: Batch, l: Lot, detail: 0 | 1) {
+  const { model } = houseOf(styleOf(l.region), l.w, l.d, l.floors, l.wall, l.roof, seeded(l.seed), detail, l.front);
+  into.append(model, new THREE.Matrix4().setPosition(l.x + l.w / 2, l.y, l.z + l.d / 2));
+}
+/** How a house is built: the region's style, and the region itself by name. */
+export interface Builds { region: string; style: Style }
 export interface Settled {
   /** 1 where something stands or grows */
   used: Uint8Array;
@@ -21,6 +33,8 @@ export interface Settled {
   field: Uint8Array;
   /** the walled towns as they were laid out, in world blocks */
   towns: Town[];
+  /** the houses of this piece that have fine blocks: they are not among the `things`, but for the caller to draw */
+  lots: Lot[];
 }
 
 /** The diorama holds one person for every hundred of 1356 (the scale agreed for the simulation too). */
@@ -41,13 +55,14 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
 
 /**
  * Builds the monuments, then the sites, largest first, and lays the fields. `cultivated` is the share of the land under the plough at a
- * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` the style of the farmhouses
- * there. Everything is laid out so that it comes out the same on every ground that covers it; only what `own` holds
- * at its middle is added to `things`.
+ * ground point (0 … 1), `vines` the share of the fields there that are vineyards, `farm` how the farmhouses there are
+ * built. Everything is laid out so that it comes out the same on every ground that covers it; only what `own` holds
+ * at its middle is added to `things`, but for the houses that have fine blocks for the near view: those are handed
+ * back as `lots`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => HouseStyle, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, cultivated: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
-  const towns: Town[] = [];
+  const towns: Town[] = [], lots: Lot[] = [];
   const count = (k: string) => { counts[k] = (counts[k] ?? 0) + 1; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
   /** The height to build at on a footprint, if it is free with `gap` columns round it and level to within a step. */
@@ -65,13 +80,15 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { things.append(model, mat.makeRotationY(0).setPosition(x + w / 2, y, z + d / 2)); count(kind); }
     claim(x, z, x + w, z + d); occlude(g, x, z, x + w, z + d, y + height);
   };
-  /** A house on the footprint from (x, z), if it is free; returns the persons it holds. */
-  const home = (r: Rnd, x: number, z: number, w: number, d: number, floors: number, gap: number, style = SOUTH): number => {
+  /** A house on the footprint from (x, z), if it is free, its door towards `front`; returns the persons it holds. */
+  const home = (r: Rnd, x: number, z: number, w: number, d: number, floors: number, gap: number, by: Builds, front: Side = 'pz'): number => {
     const y = lot(x, z, x + w, z + d, gap);
     if (y === null) return 0;
-    const wallC = r.pick(style.walls), roofC = r.pick(style.roofs);
-    const model = Math.max(w, d) >= m(11.4) && r.chance(0.7) ? townHouse(w, d, floors, wallC, roofC, r, style) : house(w, d, floors, wallC, roofC, r, style);
-    build(model, x, z, w, d, y, floors * FLOOR + m(1.7) + style.maxRise, 'house');
+    const { style, region } = by, wall = r.pick(style.house.walls), roof = r.pick(style.house.roofs), seed = r.int(0, 0x7fffffff);
+    // a house draws from a source of its own: the place is laid out the same whatever its houses are built from
+    const l: Lot = { x, z, w, d, y, floors, wall, roof, seed, front, region };
+    if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { if (style.tradition) lots.push(l); else raise(things, l, 0); count('house'); }
+    claim(x, z, x + w, z + d); occlude(g, x, z, x + w, z + d, y + heightOf(style, w, d, floors));
     return w * d * floors * PERSONS_PER_FLOOR_BLOCK;
   };
   /** A great building as near a point as it finds room, within `reach` blocks. */
@@ -103,7 +120,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, turn = r.chance(0.5), long = blocks(r, 5.7, 7.2), short = blocks(r, 4.3, 5.7), w = turn ? short : long, d = turn ? long : short;
-        housed += home(r, Math.round(cx + Math.cos(a) * q - w / 2), Math.round(cz + Math.sin(a) * q - d / 2), w, d, r.chance(0.5) ? 2 : 1, 1, s.style.house);
+        housed += home(r, Math.round(cx + Math.cos(a) * q - w / 2), Math.round(cz + Math.sin(a) * q - d / 2), w, d, r.chance(0.5) ? 2 : 1, 1, s);
       }
       if (own(cx, cz)) count('village');
       return;
@@ -115,6 +132,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
+    /** the side of a footprint that lies on a street, the sides towards the viewer first */
+    const onStreet = (x: number, z: number, w: number, d: number): Side => (street(x, z + d) ? 'pz' : street(x + w, z) ? 'px' : street(x, z - 1) ? 'nz' : street(x - 1, z) ? 'nx' : 'pz');
     let half = firstHalf(pop);
     for (; housed < need && half <= 70; half += 2) {
       for (let z = cz - half; z < cz + half && housed < need; z++) for (let x = cx - half; x < cx + half && housed < need; x++) {
@@ -123,7 +142,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
         for (const [long, short, floors] of [[blocks(r, 13, 20), blocks(r, 7.2, 8.6), r.chance(0.4) ? 3 : 2], [blocks(r, 7.2, 10), blocks(r, 5.7, 7.2), r.chance(0.25) ? 3 : 2], [blocks(r, 5.7, 5.7), blocks(r, 5.7, 5.7), 2]].slice(r.chance(0.35) ? 0 : 1)) {
           const w = turn ? short : long, d = turn ? long : short;
           if (x + w > cx + half || z + d > cz + half || crosses(x, z, w, d)) continue;
-          const got = home(r, x, z, w, d, floors, r.chance(0.5) ? 1 : 0, s.style.house);
+          const got = home(r, x, z, w, d, floors, r.chance(0.5) ? 1 : 0, s, onStreet(x, z, w, d));
           if (got) { housed += got; break; }
         }
       }
@@ -161,5 +180,5 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // a farmhouse beside one field in four
     if (hash2(lx, lz, 69) < 0.25) { const f = seeded(Math.floor(hash2(lx, lz, 70) * 4294967296)); home(f, x0 + w + 1, z0 + f.int(0, 2), f.int(3, 4), f.int(3, 4), f.chance(0.4) ? 2 : 1, 0, farm(mx, mz)); }
   }
-  return { used, town, field, towns };
+  return { used, town, field, towns, lots };
 }
