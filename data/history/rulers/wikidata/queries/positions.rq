@@ -1,0 +1,11 @@
+# positions: monarch (Q116), head of state (Q48352), noble title (Q355567); subclass* or instance-of/subclass*
+SELECT ?pos ?posLabel (GROUP_CONCAT(DISTINCT ?rootName; separator="|") AS ?roots)
+       (GROUP_CONCAT(DISTINCT STR(?jur); separator="|") AS ?jurisdiction)
+       (GROUP_CONCAT(DISTINCT ?jurL; separator="|") AS ?jurisdictionLabel)
+WHERE {
+  VALUES (?root ?rootName) { (wd:Q116 "monarch") (wd:Q48352 "head_of_state") (wd:Q355567 "noble_title") }
+  { ?pos wdt:P279+ ?root } UNION { ?pos wdt:P31/wdt:P279* ?root }
+  OPTIONAL { ?pos rdfs:label ?posLabel FILTER(lang(?posLabel)="en") }
+  OPTIONAL { { ?pos wdt:P1001 ?jur } UNION { ?pos wdt:P17 ?jur }
+             OPTIONAL { ?jur rdfs:label ?jurL FILTER(lang(?jurL)="en") } }
+} GROUP BY ?pos ?posLabel

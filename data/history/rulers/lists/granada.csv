@@ -1,0 +1,32 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Muhammad II,,,1273,1302,year,Nasrid,Q972278,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+2,Muhammad III,,,1302,1309,year,Nasrid,Q704786,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+3,Nasr,,,1309,1314,year,Nasrid,Q321060,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+4,Ismail I,,,1314,1325,year,Nasrid,Q563129,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+5,Muhammad IV,,,1325,1333,year,Nasrid,Q1346472,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+6,Yusuf I,,,1333,1354,year,Nasrid,Q2141886,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+7,Muhammad V,,,1354,1359,year,Nasrid,Q1267953,first reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+8,Ismail II,,,1359,1360,year,Nasrid,Q559223,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+9,Muhammad VI,,,1360,1362,year,Nasrid,Q559373,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+10,Muhammad V,,,1362,1391,year,Nasrid,Q1267953,second reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+11,Yusuf II,,,1391,1392,year,Nasrid,Q338419,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+12,Muhammad VII,,,1392,1408,year,Nasrid,Q1344647,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+13,Yusuf III,,,1408,1417,year,Nasrid,Q1346443,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+14,Muhammad VIII,,,1417,1419,year,Nasrid,Q559209,first reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+15,Muhammad IX,,,1419,1427,year,Nasrid,Q559406,first reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+16,Muhammad VIII,,,1427,1429,year,Nasrid,Q559209,second reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+17,Muhammad IX,,,1429,1432,year,Nasrid,Q559406,second reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+18,Yusuf IV,,,1432,1432,year,Nasrid,Q559204,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+19,Muhammad IX,,,1432,1445,year,Nasrid,Q559406,third reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+20,Yusuf V,,,1445,1446,year,Nasrid,Q386851,first reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+21,Ismail III,,,1447,1448,year,Nasrid,,rival claimant (overlapping reigns per source),https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+22,Muhammad IX,,,1447,1453,year,Nasrid,Q559406,fourth reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+23,Muhammad X,,,1453,1454,year,Nasrid,Q321900,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+24,Sa'd,,,1454,1455,year,Nasrid,Q563124,source gives 1454-1455; no ruler listed 1455-1462,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+25,Ismail IV,,,1462,1463,year,Nasrid,Q139072337,,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+26,Yusuf V,,,1462,1462,year,Nasrid,Q386851,second reign; rival claimant,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+27,Abu'l Hasan,,,1464,1482,year,Nasrid,Q335624,first reign; Muley Hácen in Christian sources,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+28,Muhammad XI,,,1482,1483,year,Nasrid,Q312763,first reign; Boabdil in Christian sources,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+29,Abu'l Hasan,,,1483,1485,year,Nasrid,Q335624,second reign,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+30,Muhammad XII,,,1485,1489,year,Nasrid,Q1377360,al-Zaghal; overlaps Muhammad XI,https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691
+31,Muhammad XI,,,1486,1492,year,Nasrid,Q312763,second reign; emirate ended 1492 with the Castilian conquest (Granada War),https://en.wikipedia.org/wiki/Emirate_of_Granada#List_of_the_sultans_of_Granada,1385859691

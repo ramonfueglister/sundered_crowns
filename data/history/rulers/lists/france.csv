@@ -1,0 +1,38 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Philip IV,1268,1314-11-29,1285-10-05,1314-11-29,day,House of Capet,Q130969,also King of Navarre,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+2,Louis X,1289-10-03,1316-06-05,1314-11-29,1316-06-05,day,House of Capet,Q8384,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+3,John I,1316-11-15,1316-11-19,1316-11-15,1316-11-19,day,House of Capet,Q8404,"posthumous son of Louis X, king for the four days he lived",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+4,Philip V,,1322-01-03,1316-11-20,1322-01-03,day,House of Capet,Q8433,born 1293/4,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+5,Charles IV,1294,1328-02-01,1322-01-03,1328-02-01,day,House of Capet,Q174964,end of the direct line of Capetians,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+6,Philip VI,1293,1350-08-22,1328-04-01,1350-08-22,day,House of Valois,Q170586,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+7,John II,1319-04,1364-04-08,1350-08-22,1364-04-08,day,House of Valois,Q169992,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+8,Charles V,1337-01-21,1380-09-16,1364-04-08,1380-09-16,day,House of Valois,Q167782,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+9,Charles VI,1368-12-03,1422-10-21,1380-09-16,1422-10-21,day,House of Valois,Q160349,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+10,Henry (II),1421-12-06,1471-05-21,1422-10-21,1453-10-19,day,,Q160337,"rival claimant (source: claimant, disputed); King of England; recognized as heir by the Treaty of Troyes",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+11,Charles VII,1403-02-22,1461-07-22,1422-10-21,1461-07-22,day,House of Valois,Q133372,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+12,Louis XI,1423-07-03,1483-08-30,1461-07-22,1483-08-30,day,House of Valois,Q8058,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+13,Charles VIII,1470-06-30,1498-04-07,1483-08-30,1498-04-07,day,House of Valois,Q134452,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+14,Louis XII,1462-06-27,1515-01-01,1498-04-07,1515-01-01,day,House of Valois-Orléans,Q58514,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+15,Francis I,1494-09-12,1547-03-31,1515-01-01,1547-03-31,day,House of Valois-Angoulême,Q129857,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+16,Henry II,1519-03-31,1559-07-10,1547-03-31,1559-07-10,day,House of Valois-Angoulême,Q132545,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+17,Francis II,1544-01-20,1560-12-05,1559-07-10,1560-12-05,day,House of Valois-Angoulême,Q132548,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+18,Charles IX,1550-06-27,1574-05-30,1560-12-05,1574-05-30,day,House of Valois-Angoulême,Q134309,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+19,Henry III,1551-09-19,1589-08-02,1574-05-30,1589-08-02,day,House of Valois-Angoulême,Q53448,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+20,Charles X,1523-12-22,1590-05-09,1589-08-02,1590-05-09,day,House of Bourbon,Q544166,"rival claimant (source: claimant, disputed); proclaimed by the Catholic League, in captivity throughout",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+21,Henry IV,1553-12-13,1610-05-14,1589-08-02,1610-05-14,day,House of Bourbon,Q936976,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+22,Louis XIII,1601-09-27,1643-05-14,1610-05-14,1643-05-14,day,House of Bourbon,Q737533,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+23,Louis XIV,1638-09-05,1715-09-01,1643-05-14,1715-09-01,day,House of Bourbon,Q7742,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+24,Louis XV,1710-02-15,1774-05-10,1715-09-01,1774-05-10,day,House of Bourbon,Q7738,,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+25,Louis XVI,1754-08-23,1793-01-21,1774-05-10,1792-09-21,day,House of Bourbon,Q7732,deposed on proclamation of the First Republic,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+26,Louis XVII,1785-03-27,1795-06-08,1793-01-21,1795-06-08,day,House of Bourbon,Q49765,"rival claimant (source: claimant, disputed); royalist king in captivity during the First Republic",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+27,Napoleon I,1769-08-15,1821-05-05,1804-05-18,1814-04-02,day,House of Bonaparte,Q517,Emperor of the French (First French Empire); deposed,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+28,Napoleon II,1811-03-20,1832-07-22,1814-04-04,1814-04-06,day,House of Bonaparte,Q7723,"rival claimant (source: claimant, disputed); unrecognized",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+29,Louis XVIII,1755-11-17,1824-09-16,1814-05-03,1815-03-20,day,House of Bourbon,Q7750,First Restoration; fled on Napoleon's return,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+30,Napoleon I,1769-08-15,1821-05-05,1815-03-20,1815-06-22,day,House of Bonaparte,Q517,Hundred Days; Emperor of the French; abdicated,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+31,Napoleon II,1811-03-20,1832-07-22,1815-06-22,1815-07-07,day,House of Bonaparte,Q7723,"rival claimant (source: claimant, disputed); titular emperor, unrecognized",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+32,Louis XVIII,1755-11-17,1824-09-16,1815-07-08,1824-09-16,day,House of Bourbon,Q7750,Second Restoration,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+33,Charles X,1757-10-09,1836-11-06,1824-09-16,1830-08-02,day,House of Bourbon,Q7758,abdicated after the July Revolution,https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+34,Louis XIX,1775-08-06,1844-06-03,1830-08-02,1830-08-02,day,House of Bourbon,Q1465751,"rival claimant (source: claimant, disputed); allegedly king for 20 minutes, heavily disputed",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+35,Henry V,1820-09-29,1883-08-24,1830-08-02,1830-08-09,day,House of Bourbon,Q88851,"rival claimant (source: claimant, disputed)",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+36,Louis Philippe I,1773-10-06,1850-08-26,1830-08-09,1848-02-24,day,House of Bourbon-Orléans,Q7771,King of the French; deposed on proclamation of the Second Republic (1848),https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433
+37,Louis Philippe II,1838-08-24,1894-09-08,1848-02-24,1848-02-26,day,House of Bourbon-Orléans,Q354477,"rival claimant (source: claimant, disputed); National Assembly refused to recognize him and proclaimed the Second Republic",https://en.wikipedia.org/wiki/List_of_French_monarchs,1381524433

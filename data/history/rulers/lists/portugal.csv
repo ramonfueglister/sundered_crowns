@@ -1,0 +1,33 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Denis I,1261-10-09,1325-01-07,1279-02-16,1325-01-07,day,House of Burgundy,Q212890,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+2,Afonso IV,1291-02-08,1357-05-28,1325-01-07,1357-05-28,day,House of Burgundy,Q272903,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+3,Peter I,1320-04-08,1367-01-18,1357-05-28,1367-01-18,day,House of Burgundy,Q295824,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+4,Ferdinand I,1345-10-31,1383-10-22,1367-01-18,1383-10-22,day,House of Burgundy,Q108442,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+5,Beatrice,,,1383,1385,year,House of Burgundy,Q233745,disputed (source),https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+6,John I,1357-04-11,1433-08-14,1385-04-06,1433-08-14,day,House of Aviz,Q201575,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+7,Edward,1391-10-31,1438-09-09,1433-08-14,1438-09-09,day,House of Aviz,Q294607,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+8,Afonso V,1432-01-15,1481-08-28,1438-09-13,1477-11-11,day,House of Aviz,Q299119,first reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+9,John II,1455-03-03,1495-10-25,1477-11-11,1477-11-15,day,House of Aviz,Q217637,first reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+10,Afonso V,1432-01-15,1481-08-28,1477-11-15,1481-08-28,day,House of Aviz,Q299119,second reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+11,John II,1455-03-03,1495-10-25,1481-08-28,1495-10-25,day,House of Aviz,Q217637,second reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+12,Manuel I,1469-05-31,1521-12-13,1495-10-25,1521-12-13,day,House of Aviz,Q191231,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+13,John III,1502-06-07,1557-06-11,1521-12-13,1557-06-11,day,House of Aviz,Q216789,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+14,Sebastian I,1554-01-20,1578-08-04,1557-06-11,1578-08-04,day,House of Aviz,Q272899,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+15,Henry I,1512-01-31,1580-01-31,1578-08-04,1580-01-31,day,House of Aviz,Q222123,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+16,Anthony I,,1595-08-28,1580-07-24,1583-08-25,day,House of Aviz,Q321325,disputed (source),https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+17,Philip I,1527-05-21,1598-09-13,1581-04-17,1598-09-13,day,House of Habsburg,Q34417,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+18,Philip II,1578-04-14,1621-03-31,1598-09-13,1621-03-31,day,House of Habsburg,Q34464,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+19,Philip III,1605-04-08,1665-09-17,1621-03-31,1640-12-01,day,House of Habsburg,Q691402,title held by the king of Spain,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+20,John IV,1604-03-19,1656-11-06,1640-12-01,1656-11-06,day,House of Braganza,Q1060796,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+21,Afonso VI,1643-08-21,1683-09-12,1656-11-06,1683-09-12,day,House of Braganza,Q691168,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+22,Peter II,1648-04-26,1706-12-09,1683-11-06,1706-12-09,day,House of Braganza,Q156190,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+23,John V,1689-10-22,1750-07-31,1706-12-09,1750-07-31,day,House of Braganza,Q299650,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+24,Joseph I,1714-06-06,1777-02-24,1750-07-31,1777-02-24,day,House of Braganza,Q1058391,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+25,Maria I,1734-12-17,1816-03-20,1777-02-24,1816-03-20,day,House of Braganza,Q773874,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+26,Peter III,1717-07-05,1786-05-25,1777-02-24,1786-05-25,day,House of Braganza,Q964094,"jure uxoris king, co-ruler with his wife",https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+27,John VI,1767-05-13,1826-03-10,1816-03-20,1826-03-10,day,House of Braganza,Q676301,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+28,Peter IV,1798-10-12,1834-09-24,1826-03-10,1826-05-02,day,House of Braganza,Q939,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+29,Maria II,1819-04-04,1853-11-15,1826-05-02,1828-06-23,day,House of Braganza,Q221145,1st reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+30,Miguel I,1802-10-26,1866-11-14,1828-02-26,1834-05-06,day,House of Braganza,Q310790,,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+31,Maria II,1819-04-04,1853-11-15,1834-05-26,1853-11-15,day,House of Braganza,Q221145,2nd reign,https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342
+32,Ferdinand II,1816-10-29,1885-12-15,1837-09-16,1853-11-15,day,House of Braganza,Q60721,"jure uxoris king, co-ruler with his wife; reign continues past 1848",https://en.wikipedia.org/wiki/List_of_Portuguese_monarchs,1385745342

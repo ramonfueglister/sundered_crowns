@@ -8,6 +8,7 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inG
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
+import { buildShore } from '../lookprobe/shore';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
@@ -80,7 +81,34 @@ const KM_PER_DEGREE = 111.32;
 const COURSES = 3, COURSES_DRY = 2;
 /** of the land the game's layer of 1356 calls cultivated this share is ploughed ground: as much as was drawn of it before the simulation's arable */
 const FIELDS_1356 = 0.3;
+/** a river's water lies this far under its banks */
+const RIVER_UNDER = 0.22;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
+
+/**
+ * Makes clean terraces of the overgrown land: heights rounded column by column leave single columns standing a step
+ * up or down and fray every edge where the land lies near a step. A step of the grass land stays only where it is
+ * three columns wide: first what stands out narrower than that is taken down to the ground round it, then what
+ * lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a column and
+ * its eight neighbours). The rock and the water keep their heights and count for nothing.
+ */
+export function terrace(level: Int16Array, mat: Uint8Array) {
+  const pass = (from: Int16Array, up: boolean) => {
+    const to = new Int16Array(from);
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      if (mat[idx(x, z)] !== Mat.Grass) continue;
+      let v = from[idx(x, z)];
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        if (!inGrid(x + dx, z + dz) || mat[idx(x + dx, z + dz)] !== Mat.Grass) continue;
+        const o = from[idx(x + dx, z + dz)];
+        if (up ? o > v : o < v) v = o;
+      }
+      to[idx(x, z)] = v;
+    }
+    return to;
+  };
+  level.set(pass(pass(pass(pass(level, false), true), true), false));
+}
 
 /**
  * `region` must cover `windowOf(piece.ox, piece.oz)` in the blocks of `step`: at step s a block is 2^s finest blocks
@@ -200,6 +228,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const single = hash2(x + ox, z + oz, 19), groove = single < 0.03 ? 3 : single < 0.08 ? 1 : 0;
     level[i] = Math.max(1, Math.round(levelOf(m, i)) + lean - lower - groove); g.mat[i] = Mat.Rock;
   }
+  terrace(level, g.mat);
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
   const river = new Int16Array(N * N).fill(-1);
@@ -231,11 +260,16 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       }
     }
   }
+  // a river is one water: where two of its columns touch only at a corner, the lower of the two columns between them is water too
+  for (let z = 0; z + 1 < N; z++) for (let x = 0; x + 1 < N; x++) for (const [a, c, p, q] of [[idx(x, z), idx(x + 1, z + 1), idx(x + 1, z), idx(x, z + 1)], [idx(x + 1, z), idx(x, z + 1), idx(x, z), idx(x + 1, z + 1)]]) {
+    if (river[a] < 0 || river[c] < 0 || river[p] >= 0 || river[q] >= 0 || kind[p] !== Water.Land || kind[q] !== Water.Land) continue;
+    river[level[p] <= level[q] ? p : q] = Math.max(river[a], river[c]);
+  }
   for (let i = 0; i < N * N; i++) {
     const wet = kind[i] !== Water.Land || river[i] >= 0, lv = river[i] >= 0 ? river[i] : level[i];
     if (!wet) { g.h[i] = LAND_Y + lv; continue; }
     // a river runs just under its banks, so that it shows from the low camera; lakes and the sea lie deeper, as in the probe
-    level[i] = lv; g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = river[i] >= 0 ? LAND_Y + lv - 0.35 : SEA_Y + lv; g.h[i] = LAND_Y + lv - 2;
+    level[i] = lv; g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = river[i] >= 0 ? LAND_Y + lv - RIVER_UNDER : SEA_Y + lv; g.h[i] = LAND_Y + lv - 2;
   }
   // no dry column lies below the water beside it
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
@@ -392,6 +426,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / at(snow, x, z)) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
   const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
+  buildShore(ground, g, traits, bakedSky, part);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
   const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();

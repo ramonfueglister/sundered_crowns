@@ -1,0 +1,17 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Maghnus Ó Conchobair,,1293,1288,1293,year,Muircheartaigh Uí Conchobhair,Q16853855,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+2,Cathal Ó Conchobair,,1293,1293,1293,year,Muircheartaigh Uí Conchobhair,Q5052067,second reign (first 1280-1288),https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+3,Aedh Ó Conchobair,,1309,1293,1309,year,Ó Conchobhair,Q16853854,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+4,Ruaidri Ó Conchobair,,1310,1309,1310,year,Muircheartaigh Uí Conchobhair,Q1660081,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+5,Fedlim Ó Conchobair,,1316,1310,1316,year,Ó Conchubhair Ruadh,Q5441103,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+6,Ruaidri na bhFeadh Ó Conchobair,,,1316,1317,year,Ó Conchobhair,Q7375666,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+7,Toirdelbach Ó Conchobair,,,1317,1318,year,Ó Conchubhair Donn,Q7813383,first reign,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+8,Cathal mac Domhnall Ó Conchobair,,1324,1318,1324,year,Ó Conchobhair Sligigh,Q5052052,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+9,Aedh mac Tairdelbach Ó Conchobair,,1345,1324,1324,year,Ó Conchubhair Donn,Q4687492,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+10,Toirdelbach Ó Conchobair,,1350,1324,1350,year,Ó Conchubhair Donn,Q7813383,second reign,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+11,Aedh mac Aedh Breifneach Ó Conchobair,,1350,1342,1350,year,Muircheartaigh Uí Conchobhair,Q76809055,overlaps Toirdelbach in source,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+12,Ruaidri mac Tairdelbach Ó Conchobair,,1384,1368,1384,year,Ó Conchubhair Donn,Q7375663,source lists no king 1350-1368,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+13,Toirdhealbhach Óg Donn Ó Conchobair,,1406-12-09,1384,1406,year,Ó Conchubhair Donn,Q7813385,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+14,Cathal mac Ruaidri Ó Conchobair,,1439-03-19,1406,1439,year,Ó Conchubhair Donn,Q5052062,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+15,Aedh mac Tairdelbach Óg Ó Conchobair,,1461-05-15,1439,1461,year,Ó Conchubhair Donn,Q30049881,,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545
+16,Fedlim Geancach Ó Conchobair,,1474,1461,1474,year,Ó Conchubhair Donn,Q30049887,last king in source list,https://en.wikipedia.org/wiki/List_of_kings_of_Connacht,1381289545

@@ -1,0 +1,10 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Leo I,1228,1301,1264,1301,year,Romanovichi,Q156357,,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+2,Yuri I,1252,1308,1301,1308,year,Romanovichi,Q2715343,,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+3,Andrew,,1323,1308,1323,year,Romanovichi,Q2387770,co-ruler with his brother Leo II,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+4,Leo II,,1323,1308,1323,year,Romanovichi,Q2404211,co-ruler with his brother Andrew,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+5,Boleslaw-Yuri II,,1340,1325,1340,year,Piast,Q891323,grandson of Yuri I; born 1298/1308,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+6,Casimir,1310,1370,1340,1370,year,Piast,Q53457,title held by the king of Poland (from 1333),https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+7,Louis I the Great,1326,1382,1370,1382,year,House of Anjou,Q53998,title held by the king of Hungary and Poland,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+8,Maria,1371,1395,1382,1387,year,House of Anjou,Q154412,title held by the queen of Hungary,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033
+9,Hedwig,1373,1399,1387,1399,year,House of Anjou,Q53449,title held by the queen of Poland; in 1399 Galicia-Volhynia merged into the Kingdom of Poland,https://en.wikipedia.org/wiki/List_of_princes_of_Galicia_and_Volhynia,1359775033

@@ -1,0 +1,12 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Commune of Padua (podestà and councils),,,,1318,year,,,"collective government, no single ruler; Jacopo da Carrara elected lord (signore) in 1318",https://en.wikipedia.org/wiki/Padua#Emergence_of_the_Commune,1383750578
+2,Jacopo I the Great da Carrara,,,1318-07-25,1324-11,month,Carrara,Q429760,"de jure abdicated Nov 1319 in favour of imperial vicars, de facto in control until death; end given as 22/23 November 1324",https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+3,Marsilio da Carrara,,,1324-11,1338-03-21,month,Carrara,Q956984,1328-1337 formally vicar of Cangrande I della Scala,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+4,Ubertino I da Carrara,,,1338-03-21,1345-03-27,day,Carrara,Q729314,,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+5,Marsilietto Papafava da Carrara,,,1345-03-27,1345-05-06,day,Carrara,,assassinated by Jacopo II,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+6,Jacopo II da Carrara,,,1345-05-06,1350-12-19,day,Carrara,Q3157643,assassinated,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+7,Jacopino da Carrara,,,1350-12-19,1355,year,Carrara,,co-ruler with his nephew Francesco I,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+8,Francesco I il Vecchio da Carrara,,,1350-12-19,1388-06-29,day,Carrara,Q3081129,co-ruler with Jacopino until 1355; forced to abdicate by Gian Galeazzo Visconti,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+9,Francesco II il Novello da Carrara,,,1388-06-29,1389-02-11,day,Carrara,Q3080981,lost Padua to the Visconti,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+10,Gian Galeazzo Visconti,,,1389-02-11,1390-09-08,day,Visconti,Q357539,Duke of Milan,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105
+11,Francesco II il Novello da Carrara,,,1390-09-08,1405-11-22,day,Carrara,Q3080981,defeated by Venice in the War of Padua; Padua annexed by Venice; executed 1406,https://en.wikipedia.org/wiki/Lords_of_Padua,1375900105

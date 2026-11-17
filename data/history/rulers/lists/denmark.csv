@@ -1,0 +1,28 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Eric VI Menved,,1319-11-13,1286,1319,year,House of Estridsen,Q359601,born c. 1274,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+2,Christopher II,1276-09-29,1332-08-02,1320-01-25,1326,year,House of Estridsen,Q350186,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+3,Eric,,1332,1321,1326,year,House of Estridsen,Q4774063,co-ruler with his father Christopher II; deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+4,Valdemar III,,,1326,1329,year,House of Estridsen,Q381082,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+5,Christopher II,1276-09-29,1332-08-02,1329,1332,year,House of Estridsen,Q350186,restored,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+6,Eric,,,1329,1331,circa,House of Estridsen,Q4774063,co-ruler with Christopher II; source: 1329–1331/32,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+7,Valdemar IV Atterdag,,1375-10-24,1340-06-21,1375,year,House of Estridsen,Q216630,after Interregnum 1332–1340,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+8,Olaf II,1370-12,1387-08-03,1376-05-03,1387,year,House of Bjälbo,Q313879,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+9,Margaret I,,1412-10-28,1387,1412,year,House of Estridsen,Q202266,de facto,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+10,Eric VII,,1459-09-24,1412-01-24,1439,year,House of Griffin,Q161958,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+11,Christopher III,1416-02-26,1448-01,1440-04-09,1448,year,House of Wittelsbach,Q58056,died 5/6 January 1448,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+12,Christian I,1426-02,1481-05-21,1448-09-01,1481-05-21,day,House of Oldenburg,Q153940,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+13,John,1455-02-02,1513-02-20,1481-05-21,1513-02-20,day,House of Oldenburg,Q157776,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+14,Christian II,1481-07-01,1559-01-25,1513-07-22,1523-01-20,day,House of Oldenburg,Q154460,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+15,Frederick I,1471-10-07,1533-04-10,1523-04-13,1533-04-10,day,House of Oldenburg,Q157789,followed by Interregnum 1533–1534,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+16,Christian III,1503-08-12,1559-01-01,1534-07-04,1559-01-01,day,House of Oldenburg,Q154998,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+17,Frederick II,1534-07-01,1588-04-04,1559-01-01,1588-04-04,day,House of Oldenburg,Q154041,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+18,Christian IV,1577-04-12,1648-02-28,1588-04-04,1648-02-28,day,House of Oldenburg,Q153586,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+19,Frederick III,1609-03-18,1670-02-09,1648-07-06,1670-02-09,day,House of Oldenburg,Q157812,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+20,Christian V,1646-04-15,1699-08-25,1670-02-09,1699-08-25,day,House of Oldenburg,Q157793,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+21,Frederick IV,1671-10-11,1730-10-12,1699-08-25,1730-10-12,day,House of Oldenburg,Q161059,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+22,Christian VI,1699-11-30,1746-08-06,1730-10-12,1746-08-06,day,House of Oldenburg,Q154993,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+23,Frederick V,1723-03-31,1766-01-14,1746-08-06,1766-01-14,day,House of Oldenburg,Q156187,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+24,Christian VII,1749-01-29,1808-03-13,1766-01-14,1808-03-13,day,House of Oldenburg,Q156572,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+25,Frederick VI,1768-01-28,1839-12-03,1808-03-13,1839-12-03,day,House of Oldenburg,Q155002,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+26,Christian VIII,1786-09-18,1848-01-20,1839-12-03,1848-01-20,day,House of Oldenburg,Q157781,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269
+27,Frederick VII,1808-10-06,1863-11-15,1848-01-20,1863-11-15,day,House of Oldenburg,Q94941,reign continues past 1848,https://en.wikipedia.org/wiki/List_of_monarchs_of_Denmark,1376544269

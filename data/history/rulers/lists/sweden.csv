@@ -1,0 +1,33 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Birger,1280,1321-05-31,1290-12-18,1318-04,month,House of Bjälbo,Q434782,source gives end as March/April 1318; deposed and exiled; regency of Duchess Ingeborg 1318–1319,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+2,Magnus IV,1316,1374-12-01,1319-07-08,1364-02-15,day,House of Bjälbo,Q314457,born c. 1316; also king of Norway 1319–1355; deposed in favour of Albert,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+3,Eric (XII),,1359-06-20,1356-10-17,1359-06-20,day,House of Bjälbo,Q350330,"initially ruled in opposition to his father Magnus IV, co-ruler after 1359 reconciliation",https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+4,Håkan,1340,1380-09-11,1362-02-15,1364-02-15,day,House of Bjälbo,Q313015,co-ruler with his father Magnus IV; deposed in favour of Albert,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+5,Albert,1340,1412-04-01,1364-02-15,1389-02-24,day,House of Mecklenburg,Q167250,born c. 1340,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+6,Margaret,1353-03,1412-10-28,1389-02-24,1412-10-28,day,Estridsen dynasty,Q202266,Kalmar Union,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+7,Eric (XIII),,1459-05-03,1396-07-23,1439-09-24,day,,Q161958,initially co-ruler of Margaret; Kalmar Union; deposed in Sweden; born 1381/1382; regency of Charles Knutsson 1438–1440,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+8,Christopher,1416-02-26,1448-01-06,1441,1448-01-06,year,Wittelsbach dynasty,Q58056,source gives start as autumn 1441; Kalmar Union,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+9,Charles (VIII),,1470-05-15,1448-06-20,1457-02-24,day,,Q310433,first reign,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+10,Christian I,1426-02,1481-05-21,1457-06-23,1464-06-23,day,Oldenburg dynasty,Q153940,Kalmar Union; deposed in Sweden,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+11,Charles (VIII),,1470-05-15,1464-08-09,1465-01-30,day,,Q310433,second reign; followed by regencies 1464–1467,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+12,Charles (VIII),,1470-05-15,1467-11-12,1470-05-15,day,,Q310433,third reign; followed by regency of Sten Sture the Elder 1470–1497,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+13,John II,1455-07-08,1513-02-20,1497-10-06,1501-08-01,day,Oldenburg dynasty,Q157776,"Kalmar Union; deposed in Sweden; regents (Sten Sture, Svante Nilsson, Sten Sture the Younger) 1501–1520",https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+14,Christian II,1481-07-02,1559-01-25,1520-11-01,1521-08-23,day,Oldenburg dynasty,Q154460,Kalmar Union; deposed; regency of Gustav Vasa 1521–1523,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+15,Gustav I,1496-05-12,1560-09-29,1523-06-06,1560-09-29,day,House of Vasa,Q52947,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+16,Eric XIV,1533-12-13,1577-02-26,1560-09-29,1569-01-26,day,House of Vasa,Q52945,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+17,John III,1537-12-20,1592-11-17,1569-01-26,1592-11-17,day,House of Vasa,Q52944,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+18,Sigismund,1566-06-20,1632-04-19,1592-11-17,1599-07-24,day,House of Vasa,Q52940,deposed; regency of Duke Charles 1599–1604,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+19,Charles IX,1550-10-04,1611-10-30,1604-03-22,1611-10-30,day,House of Vasa,Q52939,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+20,Gustav II Adolf,1594-12-09,1632-11-06,1611-10-30,1632-11-06,day,House of Vasa,Q52938,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+21,Christina,1626-12-07,1689-04-09,1632-11-06,1654-06-06,day,House of Vasa,Q52937,abdicated,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+22,Charles X Gustav,1622-11-08,1660-02-13,1654-06-06,1660-02-13,day,House of Palatinate-Zweibrücken,Q52936,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+23,Charles XI,1655-11-24,1697-04-05,1660-02-13,1697-04-05,day,House of Palatinate-Zweibrücken,Q52935,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+24,Charles XII,1682-06-17,1718-11-30,1697-04-05,1718-11-30,day,House of Palatinate-Zweibrücken,Q52934,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+25,Ulrika Eleonora,1688-01-23,1741-11-24,1719-01-23,1720-03-24,day,House of Palatinate-Zweibrücken,Q52933,abdicated in favour of her husband,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+26,Frederick I,1676-04-18,1751-03-25,1720-03-24,1751-03-25,day,House of Hesse,Q52932,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+27,Adolf Frederick,1710-05-03,1771-02-12,1751-03-25,1771-02-12,day,House of Holstein-Gottorp,Q52931,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+28,Gustav III,1746-01-13,1792-03-29,1771-02-12,1792-03-29,day,House of Holstein-Gottorp,Q52930,assassinated,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+29,Gustav IV Adolf,1778-11-01,1837-02-07,1792-03-29,1809-05-10,day,House of Holstein-Gottorp,Q52929,deposed,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+30,Charles XIII,1748-09-26,1818-02-05,1809-06-06,1818-02-05,day,House of Holstein-Gottorp,Q52928,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+31,Charles XIV John,1763-01-26,1844-03-08,1818-02-05,1844-03-08,day,House of Bernadotte,Q52927,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727
+32,Oscar I,1799-07-04,1859-07-08,1844-03-08,1859-07-08,day,House of Bernadotte,Q52926,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Sweden,1378778727

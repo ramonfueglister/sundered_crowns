@@ -1,0 +1,21 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,John Balliol,,1314-11-25,1292,1296,year,House of Balliol,Q310065,"no monarch on 1 Jan 1291: First Interregnum 1286–1292 under Guardians (work list has the Guardians); elected 1292, abdicated March 1296; followed by Second Interregnum 1296–1306",https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+2,"Robert I, the Bruce",1274-07-11,1329-06-07,1306,1329,year,House of Bruce,Q187312,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+3,David II,1324-03-05,1371-02-22,1329,1371,year,House of Bruce,Q239486,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+4,Edward Balliol,1283,1367,1332,1356,year,House of Balliol,Q471796,rival claimant in opposition to David II (English candidate),https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+5,"Robert II, the Stewart",1316-03-02,1390-04-19,1371,1390,year,House of Stewart/Stuart,Q312592,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+6,Robert III,,1406-04-04,1390,1406,year,House of Stewart/Stuart,Q294671,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+7,James I,,1437-02-21,1406,1437,year,House of Stewart/Stuart,Q235234,assassinated,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+8,James II,1430-10-16,1460-08-03,1437,1460,year,House of Stewart/Stuart,Q272864,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+9,James III,1451-07-10,1488-06-11,1460,1488,year,House of Stewart/Stuart,Q222616,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+10,James IV,1473-03-17,1513-09-09,1488,1513,year,House of Stewart/Stuart,Q137906,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+11,James V,1512-04-15,1542-12-14,1513,1542,year,House of Stewart/Stuart,Q137814,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+12,Mary I,1542-12-08,1587-02-08,1542,1567,year,House of Stewart/Stuart,Q131412,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+13,James VI,1566-06-19,1625-03-27,1567,1625,year,House of Stewart/Stuart,Q79972,also King of England and Ireland from 1603,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+14,Charles I,1600-11-19,1649-01-30,1625,1649,year,House of Stewart/Stuart,Q81506,executed,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+15,Charles II,1630-05-29,1685-02-06,1649,1651,year,House of Stewart/Stuart,Q122553,followed by Third Interregnum 1651–1660 (Commonwealth),https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+16,Charles II,1630-05-29,1685-02-06,1660,1685,year,House of Stuart (restored),Q122553,restored,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+17,James VII,1633-10-14,1701-09-16,1685,1688,year,House of Stuart (restored),Q126188,,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+18,Mary II,1662-04-30,1694-12-28,1689,1694,year,House of Stuart (restored),Q130812,co-ruler with William II,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+19,William II,1650-11-04,1702-03-08,1689,1702,year,House of Stuart (restored),Q129987,co-ruler with Mary II,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179
+20,Anne,1665-02-06,1714-08-01,1702,1707,year,House of Stuart (restored),Q119702,Acts of Union 1707: Kingdom of Scotland merged into Great Britain; title ended,https://en.wikipedia.org/wiki/List_of_Scottish_monarchs,1378195179

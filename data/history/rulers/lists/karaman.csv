@@ -1,0 +1,22 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Güneri Beg,,,1277,1300,year,Karamanid,Q5626931,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+2,Badr al-Din Mahmud,,,1300,1311,year,Karamanid,Q6734662,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+3,Yahshi Khan,,,1311,1312,year,Karamanid,Q11955464,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+4,Haci Sufi Musa,,,1312,1318,year,Karamanid,Q6940013,first reign,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+5,Ibrahim I,,,1318,1332,year,Karamanid,Q8080024,first reign,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+6,Halil,,,1332,1340,year,Karamanid,Q5642314,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+7,Ibrahim I,,,1340,1349,year,Karamanid,Q8080024,second reign,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+8,Ahmed I,,,1349,1350,year,Karamanid,Q4696209,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+9,Şemseddin,,,1350,1352,year,Karamanid,Q8082464,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+10,Haci Sufi Musa,,,1352,1356,year,Karamanid,Q6940013,second reign,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+11,Süleyman,,,1356,1361,year,Karamanid,Q7666721,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+12,Alaattin Ali,,,1361,1398,year,Karamanid,Q4705136,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+13,Erhan,,,1398,1402,year,Karamanid,,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+14,Mehmed II,,,1402,1423,year,Karamanid,Q6809630,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+15,Alaatin Ali II,,,1420,1421,year,Karamanid,Q4887755,overlaps Mehmed II in source,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+16,Ibrahim II,,,1423,1464,year,Karamanid,Q6011506,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+17,Ishak Beg,,,1464,1465,year,Karamanid,Q8080189,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+18,Pir Ahmed II,,,1465,1466,year,Karamanid,Q6581124,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+19,Kasım Beg,,,1466,1483,year,Karamanid,Q6628751,,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+20,Turgutoglu Mahmut II,,,1483,1487,year,Karamanid,,"infobox: beylik ended 1487, succeeded by the Ottoman Empire",https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694
+21,Mustafa Beg,,,1500,1501,year,Karamanid,,source marks as rebellion,https://en.wikipedia.org/wiki/Karamanids#List_of_rulers,1384657694

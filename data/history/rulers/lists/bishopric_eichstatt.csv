@@ -1,0 +1,35 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Reimbrecht von Mulenhard,,,1279,1297,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+2,Konrad II von Pfaffenhausen,,,1297,1305,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+3,Johann I von Durbheim,,,1305,1306,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+4,Philipp von Rathsamhausen,,,1306,1322,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+5,Marquard I von Hageln,,,1322,1324,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+6,Gebhard III von Graisbacch,,,1324,1327,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+7,Friedrich III von Leuchtenberg,,,1328,1329,year,,,overlaps Friedrich IV in source,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+8,Friedrich IV von Nürnburg,,,1328,1329,year,,,overlaps Friedrich III in source,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+9,Heinrich V Schenk von Reicheneck,,,1329,1344,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+10,Albrecht I von Hohenfels,,,1344,1353,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+11,Berthold von Nürnburg,,,1355,1365,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+12,Rhabanus Schenk von Wildburgstetten,,,1365,1383,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+13,Friedrich V von Öttingen,,,1383,1415,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+14,Johann II von Heideck,,,1415,1429,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+15,Albrecht II von Rechberg,,,1429,1445,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+16,Johann III von Eich,,,1445,1464,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+17,Wilhelm von Reichenau,,,1464,1496,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+18,Gabriel von Eyb,,,1496,1535,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+19,Christoph von Pappenheim-Stahlingen,,,1535,1539,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+20,Moritz von Hutten,,,1539,1552,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+21,Eberhard II von Hirnheim,,,1552,1560,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+22,Martin von Schaumburg,,,1560,1590,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+23,Kaspar von Seckendorf,,,1590,1595,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+24,Johann Konrad von Gemmingen,,,1595,1612,year,,Q110347,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+25,Johann Christoph von Westerstetten,,,1612,1636,year,,Q1167762,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+26,Marquard II Schenk von Castell,,,1637,1685,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+27,Johann Eucharius Schenk von Castell,,,1685,1697,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+28,Johann Martin von Eyb,,,1697,1704,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+29,Johann Anton I Knebel von Katznellenbogen,,,1705,1725,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+30,Ludwig Franz Schenk von Castell,,,1725,1736,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+31,Johann Anton II von Freinerg-Hopferau,,,1736,1757,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+32,Raimondo Antonio di Strasoldo,,,1757,1781,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+33,Johann Anton III von Zehmen,,,1781,1790,year,,,,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466
+34,Joseph Graf von Stubenberg,,,1790-09-21,1818-02-05,day,,,appointed Archbishop of Bamberg; the source does not mention the secularisation of the prince-bishopric,https://en.wikipedia.org/wiki/List_of_bishops_of_Eichst%C3%A4tt,1370021466

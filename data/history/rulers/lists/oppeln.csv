@@ -1,0 +1,24 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Bolko I,,,1281,1313,year,Piast,Q670447,,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+2,Bolko II,,,1313,1356,year,Piast,Q571012,jointly with his brother Albert,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+3,Albert,,,1313,1323,year,Piast,Q555413,co-ruler with Bolko II,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+4,Władysław II,,,1356,1401,year,Piast,Q699306,jointly with his brothers,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+5,Bolko III,,,1356,1370,year,Piast,Q479897,co-ruler with Władysław II,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+6,Henry,,,1356,1365,year,Piast,Q613807,co-ruler with Władysław II,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+7,Bolko IV,,,1396,1437,year,Piast,Q479941,jointly with his brother Bernard,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+8,Bernard,,,1396,1400,year,Piast,Q481511,co-ruler with Bolko IV,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+9,Nicholas I,,,1437,1476,year,Piast,Q326595,jointly with his brother Jan I,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+10,Jan I,,,1437,1439,year,Piast,Q1906957,co-ruler with Nicholas I,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+11,Jan II the Good,,,1476,1532,year,Piast,Q479934,"jointly with his brothers; Duchy of Opole page: died without issue in 1532, Opole Piasts extinct, fief reverted to the Bohemian Crown; source: 1532-1543 possession of Brandenburg",https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+12,Louis,,,1476,1476,year,Piast,Q2438769,co-ruler with Jan II,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+13,Nicholas II,,,1476,1476,year,Piast,Q479724,co-ruler with Jan II,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+14,Georg Friedrich of Brandenburg,,,1543,1549,year,Hohenzollern,Q41919,,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+15,Ferdinand of Austria,,,1549,1551,year,Habsburg,Q150611,,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+16,Isabelle Zapolya,,,1551,1556,year,Zapolya,,jointly with Sigismund Zapolya,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+17,Sigismund Zapolya,,,1551,1556,year,Zapolya,Q313396,jointly with Isabelle,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+18,Georg Friedrich of Brandenburg,,,1556,1558,year,Hohenzollern,Q41919,"from 1558 possession of the Habsburgs as kings of Bohemia, sometimes governed by dukes from other dynasties (not itemised by source)",https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+19,Sigismund Bathory,,,1597,1598,year,Báthory,Q368154,Prince of Transylvania,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+20,Gabriel Bethlen,,,1622,1625,year,Bethlen,Q313494,Prince of Transylvania,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+21,Władysław IV,,,1645,1648,year,Vasa,Q54054,King of Poland,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+22,Charles Ferdinand Vasa,,,1648,1655,year,Vasa,Q655548,,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187
+23,John II Casimir,,,1655,1666,year,Vasa,Q53452,King of Poland; 1666-1742 possession of the House of Habsburg as kings of Bohemia; Duchy of Opole page: fell to the Kingdom of Prussia by the Treaty of Berlin 1742,https://en.wikipedia.org/wiki/Duke_of_Opole,1225879187

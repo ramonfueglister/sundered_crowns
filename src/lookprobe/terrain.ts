@@ -51,7 +51,7 @@ function meadowPatch(x: number, z: number): readonly [RGB, number] | null {
 }
 
 /** `wx`, `wz`: the point in world blocks, which the patterns of the ground are laid out in. */
-function topColor(t: GroundTraits, x: number, z: number, mat: number, wx = x, wz = z): RGB {
+export function topColor(t: GroundTraits, x: number, z: number, mat: number, wx = x, wz = z): RGB {
   if (mat === Mat.Rock) return t.summit(x, z) > SUMMIT ? ROCK_TOP_HIGH : ROCK_TOP_LOW;
   if (mat === Mat.Paved && !t.city(x, z)) return shade(ISLE_STONE, 0.94 + 0.1 * noise2(wx / 1.7, wz / 1.7, 6));
   if (mat === Mat.Paved) return shade(mix(PLAZA, PAVED, smooth(-1, 3, t.plaza(x, z))), 0.93 + 0.12 * noise2(wx / 2.3, wz / 2.3, 4));

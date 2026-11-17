@@ -1,0 +1,15 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Saint Mikhail I Yaroslavich,1272,1318,1286,1318,year,Rurik,Q380373,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+2,Dmitry Mikhailovich,1299,1326,1318,1326,year,Rurik,Q982255,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+3,Alexander I Mikhailovich,1301,1339,1326,1327,year,Rurik,Q679083,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+4,Konstantin Mikhailovich,1306,1345,1327,1338,year,Rurik,Q4231318,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+5,Alexander I Mikhailovich,1301,1339,1338,1339,year,Rurik,Q679083,Restored.,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+6,Konstantin Mikhailovich,1306,1345,1339,1345,year,Rurik,Q4231318,Restored,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+7,Vsevolod Alexandrovich,,1364,1346,1349,year,Rurik,Q4127277,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+8,Vasily Mikhailovich,,1368,1349,1368,year,Rurik,Q4104445,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+9,Mikhail II Alexandrovich,1333,1399,1368,1399,year,Rurik,Q1188685,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+10,Ivan Mikhailovich,1357,1425,1399,1425,year,Rurik,,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+11,Alexander II Ivanovich,,1425,1425-05-22,1425-10-25,day,Rurik,,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+12,Yuri Alexandrovich,,1425,1425-10-25,1425-11-26,day,Rurik,,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+13,Boris Alexandrovich,,1461,1425-11-26,1461-02-10,day,Rurik,Q4093742,,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922
+14,Mikhail III Borisovich,1453,1505,1461,1485,year,Rurik,Q2635644,forced into exile; in 1485 Ivan III conquered Tver and the principality was annexed by Moscow,https://en.wikipedia.org/wiki/Prince_of_Tver#List_of_princes,1349729922

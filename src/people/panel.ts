@@ -22,7 +22,8 @@ const NEUTRAL = { stand: 1, job: 'Bauern', health: 1000, fed: 1000 } as const;
 const BIG5 = ['Offenheit', 'Gewissenhaftigkeit', 'Extraversion', 'Verträglichkeit', 'Neurotizismus'] as const;
 /** The portrait input of a person. */
 export function portraitPerson(p: PersonDetail): PortraitPerson {
-  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age), origin: DRESS[p.culture] ?? p.culture, ...NEUTRAL };
+  // a ruler whose birthday no source gives is drawn as a grown person of 40 (the portrait needs an age)
+  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age ?? 40), origin: DRESS[p.culture] ?? p.culture, ...NEUTRAL };
 }
 
 export interface PersonPanel {
@@ -71,11 +72,15 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
       close.title = 'Schliessen'; close.setAttribute('aria-label', 'Schliessen');
       close.onclick = () => panel.close();
       const head = el('div', 'head');
-      head.append(el('b', '', `${p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' (verstorben)'}`), close);
+      const h = p.history;
+      head.append(el('b', '', `${h ? h.name : p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' (verstorben)'}`), close);
       const pic = el('canvas', 'portrait');
       pic.width = 224; pic.height = 280;
       const facts = el('table', 'facts'), body = el('tbody');
-      for (const [k, v] of [['Alter', `${Math.floor(p.age)} Jahre`], ['IQ', String(p.iq)]]) {
+      const known: [string, string][] = [['Alter', p.age === null ? 'unbekannt' : `${Math.floor(p.age)} Jahre`]];
+      if (h?.house) known.push(['Haus', h.house]);
+      if (h?.crowns.length) known.push([h.crowns.length > 1 ? 'Kronen' : 'Krone', h.crowns.map((c) => c.name).join(', ')]);
+      for (const [k, v] of [...known, ['IQ', String(p.iq)]]) {
         const tr = el('tr');
         tr.append(el('th', '', k), el('td', '', v));
         body.append(tr);

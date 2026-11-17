@@ -1,0 +1,18 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Vakhtang II,1250,1292,1289-03-12,1292,year,Bagrationi,Q887097,king of Eastern Georgia (Georgia divided 1259-1330),https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+2,David VIII,1273,1311,1292,1302,year,Bagrationi,Q887088,king of Eastern Georgia (Georgia divided 1259-1330); first reign; source notes George V as 'shadow king' in Tbilisi 1299-1302,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+3,Vakhtang III,1275,1308,1302,1308,year,Bagrationi,Q887056,king of Eastern Georgia (Georgia divided 1259-1330),https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+4,David VIII,1273,1311,1308,1311,year,Bagrationi,Q887088,king of Eastern Georgia (Georgia divided 1259-1330); second reign,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+5,George VI the Minor,,1318,1311,1318,year,Bagrationi,Q888692,king of Eastern Georgia (Georgia divided 1259-1330),https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+6,George V the Brilliant,1286,1346,1318,1346,year,Bagrationi,Q714844,"king of Eastern Georgia, reunited Georgia 1330",https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+7,David IX,1300,1360,1346,1360,year,Bagrationi,Q887107,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+8,Bagrat V the Great,1330,1393,1360,1393,year,Bagrationi,Q2691017,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+9,George VII,1360,1407,1393,1407,year,Bagrationi,Q2756704,Western Georgia separate again from 1396,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+10,Constantine I,1366,1412,1407,1412,year,Bagrationi,Q431850,,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+11,Alexander I the Great,1390,,1412,1442,year,Bagrationi,Q2180153,source gives death as 27 August 1445 or 7 March 1446,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+12,Demetrius III,1413,1453,1442,1446-12,year,Bagrationi,Q1106993,co-ruler with Vakhtang IV,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+13,Vakhtang IV,1413,,1442,1446-12,year,Bagrationi,Q1944912,co-ruler with Demetrius III,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+14,George VIII,1417,1476,1446-12,1466,year,Bagrationi,Q2914978,Eastern Georgia only from 1463; from 1466 king of Kakheti only,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+15,Bagrat VI,1435,1478,1463,1478,year,Bagrationi,Q2486531,"rival king from 1463, in Western Georgia only until 1466",https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+16,Alexander II,,1510-04-01,1478,1478,year,Bagrationi,Q2036006,born c. 1460; deposed by Constantine II,https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836
+17,Constantine II,1447,1505,1478,1490,year,Bagrationi,Q2663461,"king of Kartli 1490-1505; in 1490 the Kingdom of Georgia was divided into three kingdoms (Kartli, Kakheti, Imereti), title ends",https://en.wikipedia.org/wiki/List_of_monarchs_of_Georgia,1386008836

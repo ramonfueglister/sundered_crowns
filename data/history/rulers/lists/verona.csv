@@ -1,0 +1,16 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Alberto I della Scala,,,1277-10-26,1301-09-03,day,della Scala,Q322158,,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+2,Bartolomeo I della Scala,,,1301-09-03,1304-03-07,day,della Scala,Q733418,,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+3,Alboino della Scala,,,1304-03-07,1311-11-29,day,della Scala,Q322127,joint-lord with Cangrande I 1308-1311,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+4,Cangrande I della Scala,,,1311-11-29,1339-07-22,day,della Scala,Q785349,joint-lord with Alboino 1308-1311 and with Mastino II and Alberto II 1329-1339,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+5,Mastino II della Scala,,,1339-07-22,1351-06-03,day,della Scala,Q773450,co-ruler with Alberto II; joint-lord with Cangrande I 1329-1339,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+6,Alberto II della Scala,,,1339-07-22,1351-06-03,day,della Scala,Q212653,co-ruler with Mastino II; joint-lord with Cangrande I 1329-1339,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+7,Cangrande II della Scala,,,1351-06-03,1359-12-14,day,della Scala,Q704799,murdered by his brother Cansignorio,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+8,Cansignorio della Scala,,,1359-12-14,1375-10-18,day,della Scala,Q321854,co-ruler with Paolo Alboino,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+9,Paolo Alboino della Scala,,,1359-12-14,1375-10-18,day,della Scala,Q321891,"co-ruler with Cansignorio, murdered by him",https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+10,Bartolomeo II della Scala,,,1375-10-18,1381-07-12,day,della Scala,Q1133672,,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+11,Antonio I della Scala,,1388-08-05,1381-07-12,1387-10-19,day,della Scala,Q3620396,deposed by pro-Milanese nobles,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+12,Gian Galeazzo Visconti,,,1387-10-20,1402-09-03,day,Visconti,Q357539,also Lord of Milan,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+13,Gian Maria Visconti,,,1402-09-03,1404-04-08,day,Visconti,Q456902,deposed by anti-Visconti forces,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+14,Guglielmo della Scala,,,1404-04-08,1404-04-18,day,della Scala,Q1470198,,https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940
+15,Francesco II da Carrara,,,1404-04-18,1405-06-22,day,Carrara,Q3080981,also Lord of Padua; executed after the Venetian victory in the War of Padua; lordship ends (Verona to Venice),https://en.wikipedia.org/wiki/Lords_of_Verona,1351715940

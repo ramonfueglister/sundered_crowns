@@ -1,0 +1,22 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Firuz II,1220,1296-07-19,1290-06-13,1296-07-19,day,Khalji dynasty,Q2691885,work list has Jalal al-Din Firuz Khalji,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+2,Ibrahim,,1297,1296-07-19,1296-11,month,Khalji dynasty,Q11348920,not numbered in source; titular ruler under regency,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+3,Muhammad I,1266,1316-01-04,1296-07-19,1316-01-04,day,Khalji dynasty,Q335362,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+4,Omar,,1316-04-14,1316-01-05,1316-04-14,day,Khalji dynasty,Q16863366,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+5,Mubarak I,1299,1320-07-09,1316-04-14,1320-05-01,day,Khalji dynasty,Q3179907,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+6,Khusrau,,1320,1320-07-10,1320-09-05,day,Khalji dynasty,Q3776964,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Khalji_dynasty,1384688883
+7,Tughluq I,,1325-02-01,1320-09-08,1325-02-01,day,Tughluq dynasty,Q1391172,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+8,Muhammad II,,1351-03-20,1325-02-01,1351-03-20,day,Tughluq dynasty,Q381830,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+9,Firuz III,1309,1388-09-20,1351-03-23,1388-09-20,day,Tughluq dynasty,Q455442,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+10,Tughluq II,,1389-03-14,1388-09-20,1389-03-14,day,Tughluq dynasty,Q3104923,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+11,Abu Bakr,,,1389-03-15,1390-08-31,day,Tughluq dynasty,Q2822165,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+12,Muhammad III,1352-06-17,1394-01-20,1390-08-31,1394-01-20,day,Tughluq dynasty,Q3028975,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+13,Sikandar I,,1394-03-08,1394-01-22,1394-03-08,day,Tughluq dynasty,Q17191893,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+14,Mahmud II,,1413-02,1394-03-08,1413-02,month,Tughluq dynasty,Q3277857,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Tughluq_dynasty,1384688883
+15,Khizr,,1421-05-20,1414-05-28,1421-05-20,day,Sayyid dynasty,Q2741754,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Sayyid_dynasty,1384688883
+16,Mubarak II,,1434-02-19,1421-05-21,1434-02-19,day,Sayyid dynasty,Q3029931,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Sayyid_dynasty,1384688883
+17,Muhammad IV,,1445-01-01,1434-02,1445-01-01,month,Sayyid dynasty,Q11947897,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Sayyid_dynasty,1384688883
+18,Alam,,1478-07,1445-01-01,1451-04-19,day,Sayyid dynasty,Q11947898,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Sayyid_dynasty,1384688883
+19,Bahlul,1420,1489-07-12,1451-04-19,1489-07-12,day,Lodi dynasty,Q2747189,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Lodi_dynasty,1384688883
+20,Sikandar II,1458-07-17,1517-11-21,1489-07-17,1517-11-21,day,Lodi dynasty,Q2597227,,https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Lodi_dynasty,1384688883
+21,Ibrahim,1480,1526-04-21,1517-11,1526-04-21,month,Lodi dynasty,Q381754,"killed at the First Battle of Panipat (1526); end of the Delhi Sultanate, Mughal rule begins",https://en.wikipedia.org/wiki/List_of_sultans_of_Delhi#Lodi_dynasty,1384688883

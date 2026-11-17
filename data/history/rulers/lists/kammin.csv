@@ -1,0 +1,34 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Jaromar Prince of Rugia,,,1288,1298,year,,Q538799,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+2,Peter,,,1298,1298,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+3,Heinrich von Wachholz,,,1299,1317,circa,,,end given as 1317?,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+4,Conrad IV,,,1317,1324,circa,,,start given as 1317?,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+5,Wilhelm II,,,1324,1329,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+6,Otto,,,1324,1326,year,,,anti-bishop (rival claimant),https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+7,Arnold von Eltz,,,1326,1329,year,,,anti-bishop (rival claimant),https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+8,Friedrich von Eickstedt,,,1329,1343,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+9,John I of Saxe-Lauenburg,,,1344,1372,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+10,Philipp von Rehberg,,,1372,1385,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+11,John II Wilken von Kosselyn,,,1386,1394,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+12,"Bogislaw VIII, Duke of Pomerania",,,1386,1398,year,,Q317133,"diocesan administrator 1386-1392, bishop elect 1394-1398 rivalling John III",https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+13,John III Kropidło,,,1394,1398,year,,Q479890,rival claimant against Bogislaw VIII,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+14,Nikolaus Bock,,,1398,1410,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+15,Magnus of Saxe-Lauenburg,,,1410,1424,year,,Q1884619,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+16,Siegfried II von Bock,,,1424,1449,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+17,Henning Iwen,,,1449,1469,year,,,source also lists sede vacante 1449-1471,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+18,Henning Kessebogen,,,1471,1471,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+19,Count Ludwig von Eberstein-Naugard,,,1471,1479,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+20,Nicolaus von Tüngen,,,1479,1479,year,,Q1991830,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+21,Marinus Freganus,,,1479,1482,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+22,Angelo Geraldini,,,1482,1485,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+23,Benedikt von Waldstein,,,1486,1498,year,,,Nikolaus Westphal diocesan administrator 1486-1488,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+24,Martin Karith,,,1499,1521,year,,,,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+25,Erasmus von Manteuffel-Arnhausen,,,1521,1544,year,,,after 1532 lost influence except the secular area around Kolberg; last Catholic bishop,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Prince-Bishops,1359510130
+26,Bartholomaeus Suawe,,,1544,1549,year,,,Lutheran bishop for the secular episcopal area,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Lutheran_Bishops_and_Superintendents,1359510130
+27,Martin Weiher,,,1549,1556,year,,,Lutheran bishop for the secular episcopal area; vacancy 1556-1558 per source,https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Lutheran_Bishops_and_Superintendents,1359510130
+28,"John Frederick, Duke of Pomerania",,1600,1556,1574,year,,Q603277,prince-administrator,"https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130
+29,Casimir IX,,1605,1574,1602,year,,Q325482,prince-administrator,"https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130
+30,Francis,,1620,1602,1618,year,,Q249029,prince-administrator,"https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130
+31,Ulrich,,,1618,1623,year,,Q118299,prince-administrator,"https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130
+32,"Bogislaw XIV, Duke of Pomerania",,,1623,1637,year,,Q571957,prince-administrator,"https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130
+33,Ernst Bogislaw von Croÿ,,1684,1637,1650,year,,Q71772,"prince-administrator; prince-bishopric ends 1650 (infobox), merged into Pomerania Province 1653","https://en.wikipedia.org/wiki/Bishopric_of_Cammin#Pomeranian_Prince-Administrators_(""Bishops"")",1359510130

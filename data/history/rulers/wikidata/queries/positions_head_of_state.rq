@@ -1,0 +1,6 @@
+# positions under head_of_state (wd:Q48352): subclass+ or instance-of/subclass*
+SELECT ?pos ?posLabel ?jur WHERE {
+  { ?pos wdt:P279+ wd:Q48352 } UNION { ?pos wdt:P31/wdt:P279* wd:Q48352 }
+  OPTIONAL { ?pos rdfs:label ?posLabel FILTER(lang(?posLabel)="en") }
+  OPTIONAL { ?pos wdt:P1001|wdt:P17 ?jur }
+}

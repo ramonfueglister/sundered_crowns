@@ -1,0 +1,36 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Andrew III,1265,1301-01-14,1290-07-10,1301-01-14,day,House of Árpád,Q298056,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+2,Wenceslaus,1289-10-06,1306-08-04,1301-08-27,1305-10-09,day,House of Přemyslid,Q54040,"abdicated in favour of Otto III, Duke of Bavaria",https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+3,Otto,1261-02-11,1312-11-09,1305-10-09,1307,year,House of Wittelsbach,Q57323,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+4,Charles I,1288,1342-07-16,1308-11-17,1342-07-16,day,House of Anjou,Q213061,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+5,Louis I,1326-03-05,1382-09-10,1342-07-16,1382-09-10,day,House of Anjou,Q53998,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+6,Mary,1371-04-14,1395-05-17,1382-09-10,1385-12,month,House of Anjou,Q154412,first reign,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+7,Charles II,1345,1386-02-24,1385-12-31,1386-02-24,day,House of Anjou,Q311861,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+8,Mary,1371-04-14,1395-05-17,1386-02-24,1395-05-17,day,House of Anjou,Q154412,second reign; co-ruler with Sigismund from 1387,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+9,Sigismund,1368-02-15,1437-12-09,1387-03-31,1437-12-09,day,House of Luxembourg,Q57124,co-ruler with Mary 1387–1395,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+10,Albert,1397-08-16,1439-10-27,1437-12-18,1439-10-27,day,House of Habsburg,Q157112,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+11,Ladislaus V,1440-02-22,1457-11-23,1440-05-15,1457-11-23,day,House of Habsburg,Q116382,reign overlaps with Vladislaus I 1440–1444,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+12,Vladislaus I,1424-10-31,1444-11-10,1440-07-17,1444-11-10,day,House of Jagiellon,Q54053,reign overlaps with Ladislaus V,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+13,Matthias I,1443-02-23,1490-04-06,1458-01-24,1490-04-06,day,House of Hunyadi,Q188634,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+14,Vladislaus II,1456-03-01,1516-03-13,1490-07-15,1516-03-13,day,House of Jagiellon,Q155599,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+15,Louis II,1506-07-01,1526-08-29,1516-03-13,1526-08-29,day,House of Jagiellon,Q157092,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+16,John I,1487,1540-07-22,1526-11-11,1540-07-22,day,House of Zápolya,Q32607,rival king to Ferdinand I (kingdom divided),https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+17,Ferdinand I,1503-03-10,1564-07-25,1526-12-17,1564-07-25,day,House of Habsburg,Q150611,rival king to John I and John II,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+18,John II,1540-07-07,1571-03-14,1540-09-13,1551-07-19,day,House of Zápolya,Q313396,"first reign; never crowned; Eastern Hungarian Kingdom, rival to Habsburg kings",https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+19,John II,1540-07-07,1571-03-14,1556-11-25,1570-08-16,day,House of Zápolya,Q313396,second reign; never crowned; became Prince of Transylvania 1570,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+20,Maximilian,1527-07-31,1576-10-12,1564-07-26,1576-10-12,day,House of Habsburg,Q150862,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+21,Rudolph,1552-07-18,1612-01-20,1576-10-12,1608-06-26,day,House of Habsburg,Q150586,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+22,Matthias II,1557-02-24,1619-03-20,1608-06-26,1619-03-20,day,House of Habsburg,Q152157,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+23,Ferdinand II,1578-07-09,1637-02-15,1619-03-20,1637-02-15,day,House of Habsburg,Q150599,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+24,Gabriel,1580-11-15,1629-11-15,1620-08-25,1621-12-31,day,House of Bethlen,Q313494,"anti-king, contested by Ferdinand II; never crowned; rival claimant",https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+25,Ferdinand III,1608-07-13,1657-04-02,1637-02-15,1657-04-02,day,House of Habsburg,Q150575,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+26,Ferdinand IV,1633-09-08,1654-07-09,1647-06-16,1654-07-09,day,House of Habsburg,Q157103,"junior king, co-ruler with Ferdinand III",https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+27,Leopold I,1640-06-09,1705-05-05,1657-04-02,1705-05-05,day,House of Habsburg,Q150494,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+28,Joseph I,1678-07-26,1711-04-17,1705-05-05,1711-04-17,day,House of Habsburg,Q152480,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+29,Charles III,1685-10-01,1740-10-20,1711-04-17,1740-10-20,day,House of Habsburg,Q150665,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+30,Maria Theresa,1717-05-13,1780-11-29,1740-10-20,1780-11-29,day,House of Habsburg,Q131706,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+31,Joseph II,1741-03-13,1790-02-20,1780-11-29,1790-02-20,day,House of Habsburg-Lorraine,Q76555,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+32,Leopold II,1747-05-05,1792-03-01,1790-02-20,1792-03-01,day,House of Habsburg-Lorraine,Q151321,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+33,Francis I,1768-02-12,1835-03-02,1792-03-01,1835-03-02,day,House of Habsburg-Lorraine,Q130834,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+34,Ferdinand V,1793-04-19,1875-06-29,1835-03-02,1848-12-02,day,House of Habsburg-Lorraine,Q183579,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850
+35,Franz Joseph I,1830-08-18,1916-11-21,1848-12-02,1916-11-21,day,House of Habsburg-Lorraine,Q51056,,https://en.wikipedia.org/wiki/List_of_Hungarian_monarchs,1383468850

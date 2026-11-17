@@ -14,7 +14,7 @@ import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
-import { loadWorld, loadSetup } from '../tools/sim/load';
+import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import { NullStore, type WorldStore } from './store';
@@ -176,7 +176,7 @@ export class WorldCore {
 
   /** Creates the world, or resumes it from its latest snapshot and the log after it. */
   init(): this {
-    this.w = loadWorld();
+    this.w = loadWorldFor(this.cfg.startYear);
     mkdirSync(this.root, { recursive: true });
     const metaPath = join(this.root, 'meta.json');
     this.meta = existsSync(metaPath) ? JSON.parse(readFileSync(metaPath, 'utf8'))

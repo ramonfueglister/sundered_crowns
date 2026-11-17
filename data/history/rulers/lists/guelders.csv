@@ -1,0 +1,23 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Reginald I,,,1271,1318,year,House of Wassenberg,Q71384,count,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+2,Reginald II,,,1318,1343,year,House of Wassenberg,Q314383,county elevated to duchy during his reign,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+3,Reginald III,,,1343,1361,year,House of Wassenberg,Q474801,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+4,Edward,,,1361,1371,year,House of Wassenberg,Q1287846,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+5,Reginald III,,,1371,1371,year,House of Wassenberg,Q474801,second time; died without issue,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+6,Matilde,,,1371,1379,year,House of Wassenberg,Q95412,"disputed succession (War of the Succession of Guelders); co-ruler with her husband John II, Count of Blois",https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+7,"John II, Count of Blois",,,1371,1379,year,,Q522239,disputed succession (War of the Succession of Guelders); co-ruler with Matilde,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+8,Maria,,,1371,1379,year,House of Wassenberg,Q3292896,"disputed succession (War of the Succession of Guelders); co-ruler with her husband William II, Duke of Jülich",https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+9,"William II, Duke of Jülich",,,1371,1379,year,,Q322819,disputed succession (War of the Succession of Guelders); co-ruler with Maria,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+10,William I,,,1379,1402,year,House of Jülich-Hengebach,Q69607,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+11,Reginald IV,,,1402,1423,year,House of Jülich-Hengebach,Q76097,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+12,Arnold,,,1423,1465,year,House of Egmond,Q464362,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+13,Adolf,,,1465,1471,year,House of Egmond,Q153819,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+14,Arnold,,,1471,1473,year,House of Egmond,Q464362,second time; sold the duchy to Charles the Bold,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+15,Charles I,,,1473,1477,year,House of Burgundy,Q151120,title held by the duke of Burgundy,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+16,Mary,,,1477,1482,year,House of Burgundy,Q157073,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+17,Maximilian I,,,1477,1482,year,House of Habsburg,Q150726,"jure uxoris, co-ruler with Mary",https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+18,Philip I,,,1482,1492,year,House of Habsburg,Q157098,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+19,Charles II,,,1492,1538,year,House of Egmond,Q832225,conquered the duchy in 1492,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+20,William II,,,1538,1543,year,House of La Marck,Q62483,,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+21,Charles III,,,1543,1555,year,House of Habsburg,Q32500,Emperor Charles V,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830
+22,Philip II,,,1555,1598,year,House of Habsburg,Q34417,title held by the king of Spain; source list ends 1598,https://en.wikipedia.org/wiki/Counts_and_dukes_of_Guelders,1379342830

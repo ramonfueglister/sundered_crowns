@@ -1,0 +1,15 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Nikephoros I Komnenos Doukas,,,1271,1297,year,Komnenos Doukas dynasty,Q889914,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+2,Thomas I Komnenos Doukas,,,1297,1318,year,Komnenos Doukas dynasty,Q878381,murdered by his nephew Nicholas Orsini,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+3,Nicholas Orsini,,,1318,1323,year,Orsini dynasty,Q576971,killed by his brother John,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+4,John II Orsini,,,1323,1335,year,Orsini dynasty,Q552601,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+5,Nikephoros II Orsini,,,1335,1338,circa,Orsini dynasty,Q2347022,"first reign; end given as 1338/1340; Byzantine reconquest 1338/1340-1348, Serbian rule 1348-1356",https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+6,Nikephoros II Orsini,,,1356,1359,year,Orsini dynasty,Q2347022,second reign; died in battle,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+7,Simeon Uroš,,,1359,1366,year,Nemanjić dynasty,Q561940,claimant Serbian emperor,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+8,Thomas II Preljubović,,,1366,1384,year,Nemanjić dynasty,Q718006,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+9,Maria Angelina,,,1384,1385,year,Nemanjić dynasty,Q2984872,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+10,Esau de' Buondelmonti,,,1385,1411,year,Buondelmonti dynasty,Q2336853,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+11,Giorgio de' Buondelmonti,,,1411,1411,year,Buondelmonti dynasty,Q2336837,deposed,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+12,Carlo I Tocco,,,1411,1429,year,Tocco dynasty,Q878387,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+13,Carlo II Tocco,,,1429,1448,year,Tocco dynasty,Q888476,,https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326
+14,Leonardo III Tocco,,,1448,1479,year,Tocco dynasty,Q253704,fled to Naples when his last territories were conquered by the Ottomans in 1479; despotate ends (later titular despots omitted),https://en.wikipedia.org/wiki/Despot_of_Epirus,1366430326

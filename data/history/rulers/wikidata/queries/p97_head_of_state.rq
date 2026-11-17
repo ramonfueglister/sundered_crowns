@@ -1,0 +1,14 @@
+# P97 noble title statements, titles under head_of_state (wd:Q48352)
+SELECT ?h ?hLabel ?title ?titleLabel ?of ?st ?start ?end ?replaces ?replacedBy ?birth ?death WHERE {
+  { ?title wdt:P279+ wd:Q48352 } UNION { ?title wdt:P31/wdt:P279* wd:Q48352 }
+  ?h p:P97 ?st . ?st ps:P97 ?title .
+  OPTIONAL { ?st pq:P642|pq:P1001 ?of }
+  OPTIONAL { ?st pq:P580 ?start } OPTIONAL { ?st pq:P582 ?end }
+  OPTIONAL { ?st pq:P1365 ?replaces } OPTIONAL { ?st pq:P1366 ?replacedBy }
+  OPTIONAL { ?h wdt:P569 ?birth } OPTIONAL { ?h wdt:P570 ?death }
+  FILTER( (BOUND(?start) && YEAR(?start) >= 1250 && YEAR(?start) <= 1848) ||
+          (BOUND(?end) && YEAR(?end) >= 1250 && YEAR(?end) <= 1848) ||
+          (!BOUND(?start) && !BOUND(?end) && (BOUND(?birth) || BOUND(?death)) && (!BOUND(?birth) || YEAR(?birth) <= 1848) && (!BOUND(?death) || YEAR(?death) >= 1250)) )
+  OPTIONAL { ?h rdfs:label ?hLabel FILTER(lang(?hLabel)="en") }
+  OPTIONAL { ?title rdfs:label ?titleLabel FILTER(lang(?titleLabel)="en") }
+}

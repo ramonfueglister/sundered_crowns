@@ -1,0 +1,26 @@
+order,name,born,died,reign_start,reign_end,precision,house,qid,note,source_url,source_revid
+1,Domhnall O'Neill,,1325,1290,1291,year,O'Neill,Q97571986,"second of three tenures (1283-1286, 1290-1291, 1295-1325)",https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+2,Brian O'Neill,,1295,1291,1295,year,O'Neill,Q97161556,also King of Clandeboye,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+3,Domhnall O'Neill,,1325,1295,1325,year,O'Neill,Q97571986,third tenure,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+4,Henry O'Neill,,1347,1325,1345,year,O'Neill,Q97161820,contested; also King of Clandeboye,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+5,Aodh Reamhair O'Neill,,1364,1325,1345,year,O'Neill,,contested with Henry O'Neill,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+6,Aodh Reamhair O'Neill,,1364,1345,1364,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+7,Niall Mór mac Aodha Reamhair O'Neill,,1398,1364,1397,year,O'Neill,,also styled King of Ulster 1364,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+8,Niall Óg mac Néill O'Neill,,1403,1397,1402,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+9,Brian Óg mac Néill Óg O'Neill,,1403,1402,1403,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+10,Domhnall mac Éinri Aimhreidh O'Neill,,1410,1404,1410,year,O'Neill,,source gives death 1410 although later tenures are listed,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+11,Eoghan mac Néill Óg O'Neill,,1456,1410,1414,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+12,Domhnall mac Éinri Aimhreidh O'Neill,,1410,1414,1419,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+13,Eoghan mac Néill Óg O'Neill,,1456,1419,1421,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+14,Domhnall mac Éinri Aimhreidh O'Neill,,1410,1421,1432,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+15,Eoghan mac Néill Óg O'Neill,,1456,1432,1455,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+16,Éinri mac Eoghain O'Neill,,1484,1455,1483,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+17,Conn Mór mac Éinri O'Neill,,1493-01-08,1483,1493,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+18,Éinri Óg mac Éinri O'Neill,,1498-08-21,1493,1498,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+19,Domhnall Clarach O'Neill,,1509-08-06,1498,1509,year,O'Neill,Q20713247,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+20,Art mac Aodh O'Neill,,1513,1509,1513,year,O'Neill,,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+21,Art Oge O'Neill,1470,1519,1513,1519,year,O'Neill,Q20065029,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+22,Conn Bacagh O'Neill,1484,1559-07-16,1519,1558,year,O'Neill,Q3687018,"source notes he took the title Earl of Tyrone in 1542 (surrender and regrant), arguably waiving the kingship",https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+23,Shane O'Neill,1530,1567-06-02,1559,1567,year,O'Neill,Q3079070,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+24,Turlough Luineach O'Neill,1532,1595-09-10,1567,1593,year,O'Neill,Q2750123,,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
+25,Hugh O'Neill,1550,1616-07-20,1593,1607,year,O'Neill,Q225649,not proclaimed king at Tullyhogue; list of kings ends 1607,https://en.wikipedia.org/wiki/List_of_rulers_of_Tyrone,1355552332
