@@ -30,6 +30,12 @@ export const IconCalendar = ({ size = 26 }: P) => <svg width={size} height={size
   <rect class="ic" x="6" y="1.5" width="3" height="6" rx="1.2" /><rect class="ic" x="17" y="1.5" width="3" height="6" rx="1.2" />
 </svg>;
 
+/** The replay of the borders: an hourglass. */
+export const IconReplay = ({ size = 23 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
+  <path class="ic" d="M5 2h16v2h-1.5c0 4-2.5 6.5-5 9 2.5 2.5 5 5 5 9H21v2H5v-2h1.5c0-4 2.5-6.5 5-9-2.5-2.5-5-5-5-9H5z" />
+  <path class="ic2" d="M9 21.5c.5-2.5 2.2-4 4-5.5 1.8 1.5 3.5 3 4 5.5zM10 6h6c-.5 1.5-1.7 2.8-3 4-1.3-1.2-2.5-2.5-3-4z" />
+</svg>;
+
 export const IconGear = ({ size = 23 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
   {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => <rect key={a} class="ic" x="11.3" y="1.5" width="3.4" height="5" rx=".8" transform={`rotate(${a} 13 13)`} />)}
   <circle cx="13" cy="13" r="7" fill="none" stroke="url(#icg)" stroke-width="3.2" />

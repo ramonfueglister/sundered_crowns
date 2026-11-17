@@ -37,8 +37,8 @@ export const faithIndex = (f: string | null | undefined): number => FAITH_INDEX[
 export const communitiesOf = (year: number): readonly Community[] => COMMUNITIES.get(year) ?? [];
 
 /** Gives every person of the towns the culture and faith of the setup for its place, every ruler those of the realm
- *  of the ruler's seat, then sets the counted communities. Done when the world is founded (after the persons and the
- *  rulers). */
+ *  of the ruler's seat, then sets the counted communities. Done when the world is founded (after the persons, before
+ *  the borders and the rulers, who take theirs from the realm they enter in) and by the upgrade to state 19. */
 export function foundCultures(s: WorldState, setup: SetupState): void {
   const P = s.person.cols, F = s.family.cols, R = s.realm.cols;
   const ruler = new Set(s.named.map((n) => n.person)), holds = new Map<number, number>();

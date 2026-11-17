@@ -16,11 +16,12 @@ import type { Table } from './ecs';
  *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
  *  history are named. 17: the families who live from agriculture live in hamlets outside the walls of their town, and
- *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). 18: every person has
- *  a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it has those of
- *  its persons (src/sim/systems/cultures.ts). Snapshots from 11 on
- *  are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 18;
+ *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). 18: the borders of the chronicle of borders
+ *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
+ *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
+ *  has those of its persons (src/sim/systems/cultures.ts). Snapshots from 11 on are brought up to date by
+ *  src/sim/upgrade.ts. */
+export const STATE_VERSION = 19;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

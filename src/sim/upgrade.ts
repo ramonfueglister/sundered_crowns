@@ -3,6 +3,7 @@
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
 import { foundRulers } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
@@ -107,20 +108,26 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 17;
   }
-  if (s.v === 17) { // 17 → 18: every person has a culture and a faith, and a place has none of its own (Ramon, 16
+  if (s.v === 17) { // 17 → 18: the borders (src/sim/systems/borders.ts). The changes of the chronicle of borders up to
+    // the day the world has reached, as a world that had them from the first day; the realms that came in on the way
+    // get their rows in the same order.
+    foundBorders(s, w);
+    s.v = 18;
+  }
+  if (s.v === 18) { // 18 → 19: every person has a culture and a faith, and a place has none of its own (Ramon, 16
     // November 2026: only what the simulation computes is in the world; a town has the culture of its persons, with
     // its minorities). The persons get them as a new world gives them (src/sim/systems/cultures.ts): the culture and
     // faith of the setup for their place, a ruler those of the realm, and the counted communities of the start year.
     // Nobody has been born, married or moved since the first day, so the persons get what they were founded with. The
     // places' own columns go.
-    if (!setup) throw new Error('the upgrade to 18 needs the setup of the start year');
+    if (!setup) throw new Error('the upgrade to 19 needs the setup of the start year');
     const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.person as { cols: unknown }).cols = fresh;
     foundCultures(s, setup());
     const place = s.place as unknown as Record<string, unknown>;
     delete place.culture; delete place.faith;
-    s.v = 18;
+    s.v = 19;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
