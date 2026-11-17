@@ -17,6 +17,12 @@ export interface Site { /** the same in every ground the place falls on */ id: n
  * street on the side `front` (0 north, 1 east, 2 south, 3 west). Metres at the scale of the houses.
  */
 export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[] }
+/**
+ * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
+ * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
+ * The simulation's land register lays its parcels by it (tools/worldprobe/build_ground.ts).
+ */
+export type Survey = (s: Site, free: (dx: number, dz: number) => boolean) => void;
 /** A monument on the ground: one building of it. */
 export interface Monument { id: number; at: P2; model: Model }
 /**
@@ -131,7 +137,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  * on every ground that covers it; only what `own` holds at its middle is added to `things`, but for the houses that
  * have fine blocks for the near view: those are handed back as `lots`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [];
   const count = (k: string, n = 1) => { counts[k] = (counts[k] ?? 0) + n; };
@@ -220,6 +226,9 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     return reach;
   };
 
+  /** whether a house can stand on a column: buildable, and within a step of the columns beside it */
+  const bears = (x: number, z: number) => buildable(x, z) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => Math.abs(g.h[idx(x + dx, z + dz)] - g.h[idx(x, z)]) <= 1);
+
   for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]));
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0) || a.id - b.id).forEach((s) => {
@@ -263,6 +272,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
       if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
+      survey?.(s, (dx, dz) => bears(cx + dx, cz + dz));
       if (s.lots) { onParcels(s, r, cx, cz, false); if (own(cx, cz)) count('village'); return; }
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
@@ -276,6 +286,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     landmark(size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, size >= 4 ? 'landmark' : 'church');
     for (let k = size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
     if (s.style.towers) for (let k = size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + r.int(-7, 7), cz + r.int(-7, 7), 5, 'tower');
+    survey?.(s, (dx, dz) => bears(cx + dx, cz + dz));
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
