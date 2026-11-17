@@ -44,7 +44,7 @@ export interface StageProfile {
    *  same over the whole head, so that what is painted darker on it keeps its red). `finer`: how many times each
    *  of its triangles is split in four to draw it as the smooth surface its net stands for, after `fit` rounds
    *  of moving the net so that this surface keeps to the builder's corners (subdivide.ts; 0 = the net as built). */
-  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number] };
+  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number]; relief: number; oil: number; fuzz: number };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
    *  of the gaze), a tint, how much lighter the white of the eye and how much darker the iris are drawn than the
@@ -56,7 +56,7 @@ export interface StageProfile {
    *  of each ball away from the key light is a dark sickle beside the iris), and the cornea: how far the surface's
    *  normal leans outward at the iris' rim (the tangent of the angle; 0 = a plain ball. A cornea of 7.8 mm radius
    *  on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm: 0.36). */
-  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number };
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number; ring: number };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -85,6 +85,25 @@ export interface StageProfile {
    *  that hair passes round to its shaded side reaches it (wrap lighting as on skin: 0 = none, 1 = Valve's half
    *  Lambert). */
   sheen: null | { white: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number; light: number; colour: number; wrap: number };
+  /** The finish of the picture (finish.ts): null draws it straight onto the canvas through three.js' ACES curve,
+   *  as Apoleia's. Else the picture is drawn in linear light `fine` times as fine a side as the canvas (each pixel
+   *  of the canvas the mean of fine x fine pixels: the edges of hair, which are cut out and not blended, come out
+   *  soft) and brought to the screen through a tone curve of its own: `curve` (its slope in the middle, where
+   *  its straight part starts and how far it runs, and how tightly the darks are drawn together), `hue` (1 = the
+   *  curve keeps a colour's hue, 0 = it bends red, green and blue each on its own, as three.js' curves do),
+   *  `pale` (how much of its colour what is nearly white loses), `colour` (how much colour the picture as a
+   *  whole keeps, 1 = all), a tint of the darks and of the lights (`shade`, `light`: factors on red, green and
+   *  blue), the `backdrop` (null: none, the picture stands on whatever the page shows; else its colour round the
+   *  point `at`, x and y from the top left in shares of the picture, and towards the corners, and how far from
+   *  that point the outer colour is reached), and how much darker the corners are (`vignette`). */
+  finish: null | {
+    fine: number;
+    curve: { contrast: number; start: number; length: number; black: number };
+    hue: number; pale: number; colour: number;
+    shade: readonly [number, number, number]; light: readonly [number, number, number];
+    backdrop: null | { inner: string; outer: string; at: readonly [number, number]; reach: number };
+    vignette: number;
+  };
 }
 
 /** Apoleia's stage (app/scripts/ui/portrait_cache.gd) and materials (sim/godot/src/portrait.rs). */
@@ -107,6 +126,7 @@ export const APOLEIA: StageProfile = {
   skin: null, eye: null, brow: null, cap: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
   sheen: null,
+  finish: null,
 };
 
 /** England 1356: the key light on the side of the camera the head is turned away from and less light from all
@@ -277,28 +297,53 @@ export const APOLEIA: StageProfile = {
  *  a rough reckoning the half let through is already twice what the lit far cheek throws back at the nose),
  *  the fill at 0.35 (38.8 and 32.8, but the women's far cheek 22.2 L under the lit one where the reference's
  *  is 27.7, and fill and the light from below together more than a quarter of the key).
+ *  Round 103: after 102 rounds on single measures the pictures still read as plastic (Ramon). Held as whole
+ *  pictures against what a portrait of the reference has, four things were the stage's, not the builder's.
+ *  The curve: three.js' ACES bends red, green and blue each on its own, so lit skin went yellow and pale and
+ *  was pulled back by tints; the picture is now drawn in linear light at twice the size and finished by
+ *  `finish` (finish.ts): a curve that keeps a colour's hue, each pixel the mean of four. The ground: the
+ *  panel's blue under a warm face made the skin orange by contrast; the picture brings its own, a neutral
+ *  dark grey that is lighter behind the head, and darkens towards its corners. The skin: one smooth gloss on a
+ *  face of 70 texels; it has a fine relief, a gloss that differs from place to place, a soft sheen at grazing
+ *  angles (`relief`, `oil`, `fuzz`), and red light that reaches a little further round than green and blue
+ *  (`wrap` 0.2, 0.16, 0.13; tried 0.45, 0.26, 0.18 with the key 60 degrees round: the far cheek 9.5 L under
+ *  the lit one, the face a balloon). The eyes: an iris at 0.7 of its image was a dark hole at the panel's
+ *  size; 1.3, its colour fuller, a darker ring at its rim (`iris`, `colour`, `lift`, `ring`). The key light
+ *  stands 70 degrees round as before and 36 above (31 before: for the shade under brow, nose and lip), the
+ *  rim is stronger (1.5; it has a dark ground to stand against now), fill, bounce and sky weaker (0.24, 0.1,
+ *  0.12), and the head is nearer (`close` 1.12, before 1.3). Grown women: lit cheek L 55.7, a* 22.4, b* 26.6
+ *  (the reference's 56.1, 22.9, 25.4), far cheek 22.1 under it (27.7; round 102 24.1; men 32.3), lower lip
+ *  24.5 under and a* 4.5 over (22.9, 6.2; the lips' paint, dress.rs `Lips`), eye 30.5 under (37.5).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
-    key: { from: [4.88, 3.47, 3.29], colour: '#fff0de', energy: 1.8 },
-    rim: { from: [-3.55, 2.5, -4.25], colour: '#bcd0ff', energy: 1.0 },
-    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.28 },
-    bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.15 },
+    key: { from: [4.58, 4.0, 3.06], colour: '#fff0de', energy: 1.8 },
+    rim: { from: [-3.55, 2.5, -4.25], colour: '#bcd0ff', energy: 1.5 },
+    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.24 },
+    bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.1 },
   },
-  sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.2 },
+  sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.12 },
   rimShadow: 0.5,
   shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
-  exposure: 0.375,
-  turn: -0.24, rise: 0.02, close: 1.3,
+  exposure: 0.35,
+  turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
-  skin: { rough: 0.5, specular: 0.5, pores: 0.8, wrap: [0.18, 0.15, 0.13], finer: 1, fit: 1, blotch: 0.11, speckle: 0.10, colour: 1.1, tint: [1, 0.72, 0.82] },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.85, iris: 0.7, colour: 0.85, lift: 0.8, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36 },
+  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3 },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.95, iris: 1.3, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },
+  finish: {
+    fine: 2,
+    curve: { contrast: 1.4, start: 0.22, length: 0.4, black: 1.5 },
+    hue: 1, pale: 0.3, colour: 1.08,
+    shade: [1, 1, 1], light: [1, 1, 1],
+    backdrop: { inner: '#4a4e50', outer: '#15181b', at: [0.42, 0.36], reach: 0.75 },
+    vignette: 0.25,
+  },
 };
 
 const PROFILES = [ENGLAND_1356];

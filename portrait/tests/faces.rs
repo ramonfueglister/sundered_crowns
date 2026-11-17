@@ -166,6 +166,12 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
     // women and 0.36 to 0.40 on men; now 0.46 to 0.52 and 0.54 to 0.57 (in the picture a man's lower lip
     // still reads the darker against his cheek, 25.2 L against a woman's 22.4). The upper bounds are a tenth
     // over what is measured now, no more than a guard.
+    // Round 103: those lips were read through three.js' ACES curve, which bends red, green and blue each on its
+    // own and so draws a dark red darker and redder than it is painted. Since the picture is finished through a
+    // curve that keeps a colour's hue (src/portrait/finish.ts), the same paint read 15 L under a woman's lit
+    // cheek and less red than it (a* -1.9): the red has to be in the paint itself. Less of the skin's own colour
+    // and a blood with half the green and blue for women, more red in a man's: 0.26 to 0.30 on women (24.5 L
+    // under the lit cheek in the picture) and 0.50 to 0.55 on men.
     let Some(h) = head() else { return };
     let idx = &h.parts["body"][LODS - 1];
     let red = real::rows("real/skin_lip.txt").expect("the lips' red");
@@ -191,7 +197,7 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
         if std::env::var("SHOW").is_ok() {
             println!("{} {k}: the lower lip {:.3} of the cheek's light ({} corners of the cheek)", if female { "woman" } else { "man" }, lip / cheek, near.len());
         }
-        let bounds = if female { (0.43, 0.57) } else { (0.47, 0.63) };
+        let bounds = if female { (0.23, 0.34) } else { (0.45, 0.61) };
         assert!(lip / cheek > bounds.0 && lip / cheek < bounds.1, "{} {k}: the lower lip {} of the cheek's light", if female { "woman" } else { "man" }, lip / cheek);
     }
 }

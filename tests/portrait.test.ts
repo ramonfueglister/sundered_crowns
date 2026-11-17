@@ -9,6 +9,7 @@ import { loadPortraitBuilder } from '../tools/portrait/load';
 import { DoubleSide, FrontSide, ShaderLib } from 'three';
 import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
+import { CURVE, toneCurve } from '../src/portrait/finish';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 import { framing, keyPlaces } from '../src/portrait/stage';
 
@@ -501,8 +502,11 @@ describe('portraits', { timeout: 20_000 }, () => {
       // mouth only so. Until round 77 1.12 to 1.41: the upper lip was painted half as light again and the strip
       // with it; since round 78 a light of the stage lights both from below (`Lips::upper` 1.15). Since round 82
       // the lips themselves are lighter and the strip's factor smaller by as much (`Lips::seam` 1.3, before
-      // 1.6): the line between the lips reads 50 L under the lit cheek (before 54, the reference's 41 to 47)
-      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.65);
+      // 1.6): the line between the lips reads 50 L under the lit cheek (before 54, the reference's 41 to 47).
+      // Since round 103 the lips' red is in their paint (the picture's curve keeps a colour's hue and no longer
+      // reddens what is dark, `Lips::blood`): the strip has the lips' red with it, green to red 0.46 to 0.82 of
+      // the skin's, and is about as light as it was (1.08 to 1.34 of the skin's red; `Lips::seam` 1.43 and 1.0)
+      expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeGreaterThan(0.4);
       expect(lip[1]! / lip[0]! / (all[1]! / all[0]!), `person ${p.pid}`).toBeLessThan(1.1);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeGreaterThan(0.9);
       expect(lip[0]! / all[0]!, `person ${p.pid}`).toBeLessThan(1.45);
@@ -527,10 +531,16 @@ describe('portraits', { timeout: 20_000 }, () => {
     const eye = compiled('real/eyeball.webp', false);
     expect(surfaceKind({ tex: 'real/eyeball.webp', double: false } as never)).toBe('eyeball');
     expect(eye).toContain('eyeWhite = smoothstep(');
-    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)}, ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
-    // the white of the eye lighter, the iris darker than the image gives them
+    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)} * ( 1.0 - ${ENGLAND_1356.eye!.ring.toFixed(3)} * eyeRing ), ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    // the white of the eye lighter than the image gives it. The iris too, since round 103, and its darks lifted:
+    // from round 65 to 102 it was drawn darker (0.7), by one brown-eyed face of the reference, and a blue or a
+    // green iris was as black as a brown one, a hole in the face. It is darkest in a ring at its rim
     expect(ENGLAND_1356.eye!.white).toBeGreaterThan(1);
-    expect(ENGLAND_1356.eye!.iris).toBeLessThan(1);
+    expect(ENGLAND_1356.eye!.iris).toBeGreaterThan(1);
+    expect(ENGLAND_1356.eye!.lift).toBeLessThan(0.7);
+    expect(ENGLAND_1356.eye!.ring).toBeGreaterThan(0.3);
+    expect(ENGLAND_1356.eye!.ring).toBeLessThan(0.8);
+    expect(eye).toContain('eyeRing = smoothstep(');
     // the cornea: over the iris the normal leans outward (until round 72 the eye was a plain ball and the key
     // light's glint lay on the white beside the iris)
     expect(ENGLAND_1356.eye!.cornea).toBeGreaterThan(0);
@@ -698,6 +708,31 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(APOLEIA.rimShadow).toBe(0);
     expect(APOLEIA.exposure).toBe(0.92);
   });
+  it('England\'s picture is finished through a curve that keeps a colour\'s hue', () => {
+    // Until round 103 the picture went onto the canvas through three.js' ACES curve, which bends red, green and
+    // blue each on its own: lit skin turned yellow and pale, whatever the skin's colour, and the rounds mended
+    // that through the skin's tint. The profile now finishes its picture itself (finish.ts): drawn in linear
+    // light, finer than the canvas, through a curve on the strongest of the three colours
+    const f = ENGLAND_1356.finish!;
+    expect(APOLEIA.finish).toBeNull();
+    expect(f.fine).toBeGreaterThanOrEqual(2);
+    expect(f.hue).toBeGreaterThan(0.8);
+    // the curve: nothing in, nothing out; it rises all the way; its straight part begins at `start`, which it
+    // leaves where it is, with the slope `contrast`; it comes to rest at white and never passes it
+    const y = (x: number): number => toneCurve(x, f.curve);
+    expect(y(0)).toBe(0);
+    for (let x = 0.01; x < 8; x += 0.01) expect(y(x), `at ${x.toFixed(2)}`).toBeGreaterThan(y(x - 0.01));
+    expect(y(f.curve.start)).toBeCloseTo(f.curve.start, 6);
+    expect((y(f.curve.start + 0.02) - y(f.curve.start + 0.01)) / 0.01).toBeCloseTo(f.curve.contrast, 3);
+    expect(y(8)).toBeLessThanOrEqual(1);
+    expect(y(8)).toBeGreaterThan(0.99);
+    // darks are drawn together, not lifted: under the straight part the curve lies under the straight line
+    expect(y(f.curve.start / 4)).toBeLessThan(f.curve.start / 4);
+    // the shader has the same curve, and takes it on the strongest colour
+    expect(CURVE).toContain('float toneCurve( float x, float a, float m, float l, float c )');
+    // the backdrop is part of the picture: nothing of the page shows through it
+    expect(f.backdrop).not.toBeNull();
+  });
   it('the skin of England shows no highlight of a lamp that is hidden', () => {
     // A shadow that is not full lets a share of its light through (the key's 0.3, the rim's half): that share
     // stands for light that comes by other ways, off a wall, off the cheek, through the nose. three.js lets the
@@ -718,8 +753,8 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(skin).not.toContain('#include <lights_fragment_begin>');
     expect(skin).toContain('getDirectionalLightInfo( directionalLight, directLight ); skinGloss = 1.0;');
     expect(skin).toContain('directLight.color *= skinLit;');
-    expect(skin).toContain('reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation * skinGloss;');
-    expect(skin.indexOf('* skinGloss;')).toBeLessThan(skin.indexOf('void main()'));
+    expect(skin).toContain('reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation * skinGloss * skinOil;');
+    expect(skin.indexOf('* skinGloss * skinOil;')).toBeLessThan(skin.indexOf('void main()'));
     // the shader's own arithmetic, run here: of a lamp of which the share `seen` is seen through a shadow of
     // some strength, the light keeps what the shadow lets through and the highlight only the share seen
     const line = /skinGloss = (saturate\(.*\));/.exec(skin)![1]!;

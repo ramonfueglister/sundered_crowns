@@ -58,7 +58,18 @@ pub struct ScarLine {
 /// and above) the same lips read 28 L darker than a woman's lit cheek (hers 23) and 34 on a man (the emperor's
 /// 26), while the skin over the upper lip stood as hers: in round 82 more of the skin's own colour and less
 /// blood, and a blood with less red for men: 22.4 and 25.2, a* 6.1 and 8.6 over the cheek's (hers 6.2, the
-/// emperor's 7.1). All values PLACEHOLDER, set by those measurements.
+/// emperor's 7.1). Those values were read through three.js' ACES curve, which bends red, green and blue each on
+/// its own and so shows a dark red darker and redder than it is painted. Since round 103 England's picture is
+/// finished through a curve that keeps a colour's hue (src/portrait/finish.ts): the lips of round 82 read 15 L
+/// under a woman's lit cheek and less red than it (a* -1.9), a grey mauve. The red now stands in the paint: less
+/// of the skin's own colour (0.12 and 0.3, before 0.30 and 0.42) and a blood with half the green and blue for
+/// women, twice the red for men. Tried: as red as the reference's numbers ask of a woman (a* 8.8 over the
+/// cheek; skin 0.08, blood 0.30, 0.03, 0.03) read as lipstick on a farmer's wife, since the lips' red ends at
+/// a sharp line where a real lip fades into the skin; a man's at a* 6.5 over his cheek the same. What the
+/// picture reads now stands in docs/PORTRAITS.md (round 103). The upper lip, which the steeper curve and a key
+/// light further round left 13.8 L (the reference's 21.0), is painted half as light again as before round 78
+/// (`upper` 1.5). The seam's factor follows so that the strip is about as light as it was. All values
+/// PLACEHOLDER, set by those measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -71,7 +82,8 @@ pub struct Lips {
     /// mouth unless painted half as light again (1.5). Since round 78 the stage has that light (`bounce` in
     /// src/portrait/profile.ts, until round 82 its `fill`): 1.15 kept a grown woman's upper lip where the
     /// reference's is (L 20.7 against 21.0; at 1.0 it read 18.3, at 1.5 27.2). With the lips of round 82 it is
-    /// 36.7 L darker than the lit cheek (the reference's 35.1; 37.1 under the lights of round 83).
+    /// 36.7 L darker than the lit cheek (the reference's 35.1; 37.1 under the lights of round 83). 1.5 again
+    /// since round 103 (see `Lips`): L 18.6 on a grown woman.
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
@@ -80,7 +92,8 @@ pub struct Lips {
     /// lips' colour times this, and so has the upper lip's edge: above 1, because the
     /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
     /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open. 1.3 since the lips
-    /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red.
+    /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red. 1.43 and
+    /// 1.0 (women, men) since round 103, when the lips' red went into their paint: about as light as it was.
     pub seam: f32,
     /// How much of the lips' colour a child's lips have (1 = as a grown person's), growing to all of it as the
     /// head grows up (`child_share`): at a woman's strength a girl of eight wears paint.
@@ -571,7 +584,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.30, blood: [0.21, 0.078, 0.069], upper: 1.15, seam: 1.3, child: 0.6 }, Lips { skin: 0.42, blood: [0.165, 0.073, 0.074], upper: 1.15, seam: 1.3, child: 0.6 }],
+    lips: [Lips { skin: 0.12, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6 }, Lips { skin: 0.3, blood: [0.33, 0.075, 0.074], upper: 1.5, seam: 1.0, child: 0.6 }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],

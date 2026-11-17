@@ -9,9 +9,11 @@
 // where Apoleia took it from. Those are Apoleia's values; a set of dress of the game's own may bring others
 // (profile.ts).
 import {
-  ACESFilmicToneMapping, DirectionalLight, Group, HemisphereLight, LinearMipmapLinearFilter, Mesh, NoColorSpace,
+  ACESFilmicToneMapping, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearMipmapLinearFilter, Mesh, NoColorSpace,
   PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,
+  WebGLRenderTarget,
 } from 'three';
+import { Finish } from './finish';
 import { surfaceGeometry } from './mesh';
 import { drawOrder, normalMapOf, portraitSkinTone, surfaceKind, surfaceMaterials } from './materials';
 import { APOLEIA, profileOf, type StageProfile } from './profile';
@@ -66,6 +68,9 @@ export class PortraitStage {
   private readonly sky = new HemisphereLight();
   private readonly textures = new Map<string, Promise<Texture | null>>();
   private readonly loader = new TextureLoader();
+  /** The picture in linear light before it is finished (profile.ts `finish`), and what finishes it. */
+  private target: WebGLRenderTarget | null = null;
+  private finish: Finish | null = null;
 
   constructor(private readonly options: StageOptions) {
     const width = options.width ?? 2 * PORTRAIT_SIZE.width, height = options.height ?? 2 * PORTRAIT_SIZE.height;
@@ -168,7 +173,34 @@ export class PortraitStage {
       }
     });
     this.frame(p, inner, profile);
+    const fine = profile.finish && this.linear(profile.finish.fine);
+    if (!profile.finish || !fine) {
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+    // a profile that finishes its picture: drawn in linear light, finer than the picture, then brought to the
+    // canvas through the profile's tone curve (finish.ts)
+    this.renderer.setRenderTarget(fine);
+    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
+    this.renderer.setRenderTarget(null);
+    this.finish ??= new Finish();
+    this.finish.draw(this.renderer, fine.texture, profile.finish, profile.exposure);
+  }
+
+  /** The target a finished picture is first drawn to: `fine` times the picture's size a side, in half floats (light
+   *  above white is kept), with four samples a pixel. Null where the graphics card cannot draw to such a target:
+   *  the picture is then drawn straight to the canvas. */
+  private linear(fine: number): WebGLRenderTarget | null {
+    const gl = this.renderer.getContext() as WebGL2RenderingContext;
+    if (!gl.getExtension('EXT_color_buffer_float') && !gl.getExtension('EXT_color_buffer_half_float')) return null;
+    const size = this.renderer.getSize(new Vector2()), w = Math.round(size.x * fine), h = Math.round(size.y * fine);
+    if (!this.target || this.target.width !== w || this.target.height !== h) {
+      this.target?.dispose();
+      this.target = new WebGLRenderTarget(w, h, { type: HalfFloatType, samples: 4, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: true });
+    }
+    return this.target;
   }
 
   /** The framing: the head from the chin to above the crown (or hat) fills `fill` of the height, the eyes a little
@@ -224,6 +256,8 @@ export class PortraitStage {
   dispose(): void {
     this.clear();
     for (const t of this.textures.values()) void t.then(tex => tex?.dispose());
+    this.target?.dispose();
+    this.finish?.dispose();
     this.renderer.dispose();
   }
 }

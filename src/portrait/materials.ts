@@ -76,7 +76,7 @@ const DIFFUSE = 'reflectedLight.directDiffuse += irradiance * diffuseBRDF * ( 1.
 function wrapped(wrap: string, gloss = false): string {
   const code = swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE,
     `vec3 wrapBy = ${wrap}; reflectedLight.directDiffuse += saturate( ( dot( geometryNormal, directLight.direction ) + wrapBy ) / ( 1.0 + wrapBy ) ) * directLight.color * diffuseBRDF * ( 1.0 - F );`);
-  return gloss ? swap(code, SPECULAR, SPECULAR.replace(';', ' * skinGloss;')) : code;
+  return gloss ? swap(code, SPECULAR, SPECULAR.replace(';', ' * skinGloss * skinOil;')) : code;
 }
 const SPECULAR = 'reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation;';
 const DIR_LIGHT = 'getDirectionalLightInfo( directionalLight, directLight );';
@@ -113,6 +113,8 @@ function swap(code: string, piece: string, by: string): string {
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
 function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number): void {
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores, k.pores);
+  // the down on skin: light that skims it is thrown back towards whoever looks along it (three.js' sheen)
+  if (k.fuzz > 0) { m.sheen = k.fuzz; m.sheenRoughness = 0.6; m.sheenColor.setRGB(1, 0.86, 0.78); }
   const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden();
   // the tint by the person's skin as a whole (none on dark skin, all of it on light skin), the same over the whole
   // head: taken point by point (until round 54) everything painted darker on light skin lost its red and turned
@@ -125,7 +127,21 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
       '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     code = swap(code, '#include <lights_fragment_begin>', loop);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;`);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
+    // the skin's fine relief: no skin is a smooth surface, and a highlight on a smooth surface is one pale patch
+    // with a soft edge, as on vinyl. The relief is noise over the head at two sizes (4 and 2 mm), as a height
+    // whose slope leans the normal (three.js' bump mapping, with the height reckoned instead of read from an
+    // image); and the skin's film of oil is not even: the highlight is weaker and stronger in patches
+    if (k.relief > 0 || k.oil > 0) code = swap(code, '#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+{
+  float skinH = ${f(k.relief)} * ( skinNoise( vSkinP * 24.0 ) * 0.6 + skinNoise( vSkinP * 51.0 ) * 0.4 );
+  vec3 skinDx = dFdx( - vViewPosition ), skinDy = dFdy( - vViewPosition );
+  vec3 skinR1 = cross( skinDy, normal ), skinR2 = cross( normal, skinDx );
+  float skinDet = dot( skinDx, skinR1 );
+  vec3 skinGrad = sign( skinDet ) * ( dFdx( skinH ) * skinR1 + dFdy( skinH ) * skinR2 );
+  normal = normalize( abs( skinDet ) * normal - skinGrad );
+  skinOil = 1.0 + ${f(k.oil)} * ( skinNoise( vSkinP * 9.0 ) * 0.5 + skinNoise( vSkinP * 33.0 ) * 0.5 - 0.5 ) * 2.0;
+}`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
@@ -165,8 +181,11 @@ function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageP
     // linear light at its dullest), an iris of any colour is dark in at least one (0.17 at its lightest)
     const code = swap(shader.fragmentShader, '#include <map_fragment>', `#include <map_fragment>
 float eyeWhite = 1.0;
+float eyeRing = 0.0;
 #ifdef USE_MAP
   eyeWhite = smoothstep( 0.22, 0.36, min( sampledDiffuseColor.r, min( sampledDiffuseColor.g, sampledDiffuseColor.b ) ) );
+  // the iris' rim: a living iris is darkest in a ring where it meets the white (the cornea's edge lies over it)
+  eyeRing = smoothstep( 0.62, 0.98, length( fract( vMapUv * 4.0 ) - 0.5 ) / ${f(27.5 / 360)} ) * ( 1.0 - eyeWhite );
 #endif`);
     // the cornea: over the iris the eye's surface is a cap of a smaller ball, so its normal leans outward from the
     // iris' middle, the more the nearer its rim, and the key light's glint lies on the iris instead of on the white
@@ -189,7 +208,7 @@ float eyeWhite = 1.0;
 #endif`);
     shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <color_fragment>', `#include <color_fragment>
-diffuseColor.rgb *= mix( ${f(k.iris)}, ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
+diffuseColor.rgb *= mix( ${f(k.iris)} * ( 1.0 - ${f(k.ring)} * eyeRing ), ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;

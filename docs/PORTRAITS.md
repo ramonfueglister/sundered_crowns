@@ -22,6 +22,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
+| Finish | `src/portrait/finish.ts` | For a profile that asks for it (England's, round 103): the picture is drawn in linear light at twice the size and brought to the screen by a tone curve that keeps a colour's hue, on a backdrop of its own; Apoleia's portraits keep three.js' ACES curve |
 | Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
@@ -3245,6 +3246,84 @@ wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold
 women's small heads, the forehead's least breadth, the chin's breadth by eye, `head-square` and
 `head-oval`.
 
+**The whole picture: finish, ground, light, skin, eyes, lips (round 103).** Ramon after round 102: still
+rubbish, as after rounds 49, 53, 71 and 72. Each of those verdicts had been answered by rounds on single
+measures, and the measures were met: a woman's lit cheek, her lips and her brow stood within a few L of the
+reference's, and the pictures still read as plastic. This round held the sample as whole pictures at the
+panel's size and asked what the eye meets first, before any landmark. The reference's screenshots are not in
+this repository and could not be fetched (the machine that ran the round reaches GitHub alone); the round
+rests on the numbers that rounds 66 to 94 read from them, and Ramon was asked to upload them again.
+
+| seen first | cause | fix |
+|---|---|---|
+| orange faces on a blue ground | the panel lays its blue (`#2a5878` to `#10283b`) under a picture that is clear round the head: beside that blue a warm skin reads orange, and the hair's cut-out edge stands hard against it | the picture brings its own ground (`finish.backdrop`): a neutral dark grey, lighter round a point behind the head, darker towards the corners (`vignette`). The picture is opaque; the panel's gradient is covered and left as it is |
+| lit skin yellow and chalky, and every colour pulled back by a tint | three.js' ACES curve bends red, green and blue each on its own, and what is light loses its red first. Rounds 41 to 94 pulled against it with `skin.tint` and `skin.colour` | `src/portrait/finish.ts`: the scene is drawn in linear light into a half-float picture and brought to the screen by a curve on the strongest of the three colours, the other two in step with it (Uchimura's curve: a toe, a straight part, a shoulder that comes to rest at white); `hue` 1, `curve` contrast 1.4, `exposure` 0.35 |
+| stepped edges of hair, lashes and cloth | hair is cut out, not blended, and the canvas had the driver's four samples | drawn at twice the size (`fine` 2) with four samples, each pixel of the canvas the mean of four |
+| dark holes for eyes | `eye.iris` 0.7, set in round 60 against one brown-eyed face: at the panel's size iris and pupil were one dark disc | `iris` 1.3, `colour` 1.1, `lift` 0.6 (the iris' own colour shows), a darker ring at its rim (`ring` 0.55), the white a little lighter (1.95) |
+| skin like a balloon: one even gloss, no grain | the face is about 70 texels of a 512 image and its normal map is flat | a fine relief from two scales of noise (`relief` 0.0015, a bump as three.js' own, from the noise's slope on the screen), a gloss that differs from place to place (`oil` 0.5), a soft sheen at grazing angles (`fuzz` 0.3), red light a little further round than green and blue (`wrap` 0.2, 0.16, 0.13), `rough` 0.55, `specular` 0.42, `blotch` 0.05, `colour` 1.0, `tint` 1, 0.75, 0.77 |
+| a level light | the key stood 31 degrees above the head | 36 above, 70 round as before (`from` 4.58, 4.0, 3.06); the rim at 1.5 (it has a dark ground to stand against now); fill 0.24, bounce 0.1, sky 0.12; the head nearer (`close` 1.12, `rise` 0.03) |
+| lips a grey mauve (under the new curve) | their red had been ACES': a dark red drawn darker and redder than it is painted. With the paint of round 82 the lower lip read 15 L under a woman's lit cheek and a* 1.9 less red than it | the red is in the paint, dress.rs `Lips`: women skin 0.12 and blood 0.26, 0.032, 0.036, men 0.3 and 0.33, 0.075, 0.074; `upper` 1.5; `seam` 1.43 and 1.0 |
+
+Measured (`tools/portrait/face_colour.mjs`, the sample's eight grown women and eight grown men, 448 by 560;
+round 102 read again from the commit before this round):
+
+| | women, round 102 | women now | men, round 102 | men now | the reference's woman |
+|---|---|---|---|---|---|
+| lit cheek L | 58.7 | 55.7 | 63.6 | 58.8 | 56.1 |
+| lit cheek a* | 23.1 | 22.4 | 18.2 | 21.0 | 22.9 |
+| lit cheek b* | 27.4 | 26.6 | 24.2 | 26.5 | 25.4 |
+| lit cheek, chroma | 35.8 | 34.8 | 30.3 | 33.8 | 34.2 |
+| far cheek under the lit one, L | 24.1 | 22.1 | 32.6 | 32.3 | 27.7 |
+| lower lip under the lit cheek, L | 19.7 | 24.5 | 27.3 | 24.0 | 22.9 (the emperor 25.8) |
+| lower lip redder than the cheek, a* | 5.5 | 4.5 | 7.5 | 3.8 | 6.2 (the emperor 7.1) |
+| upper lip L | 25.4 | 18.6 | 26.7 | 23.5 | 21.0 |
+| eye under the lit cheek, L | 37.5 | 30.5 | 47.1 | 37.4 | not read |
+| cheek redder than the forehead, a* | 2.9 | 5.0 | -1.3 | 6.2 | not read |
+
+The skin's colour stands at the reference's; the lips are as dark against the cheek as hers; the eye is 7
+to 10 L lighter than it was. Two things are further from the reference than in round 102 and are left so,
+by eye: the women's far cheek (22.1 L under the lit one, the reference's 27.7, round 102 24.1) and the lips'
+red (see below).
+
+Tried and not kept:
+
+- The curve partly on each colour alone (`finish.hue` 0.6 and 0.3), for the lips' red: a woman's lower lip
+  a* 1.0 and 0.3 under her cheek. The curve gives no red back; the paint has to carry it.
+- Lips as red as the reference's numbers (a woman's a* 8.8 over her cheek; a man's 6.5): lipstick on a
+  farmer's wife and on every man. The lips' red ends at a sharp line where a real lip fades into the skin,
+  and a red that the reference carries reads as paint on ours. Women 4.5, men 3.8.
+- The red reaching far round (`wrap` 0.45, 0.26, 0.18) with the key 60 degrees round: the far cheek 9.5 L
+  under the lit one, the face a balloon. With the key 66 round and `wrap` 0.24: 18.4; 74 round: 24.7, but
+  the lit cheek 53.6 and the upper lip L 12.0.
+- A deeper relief (`relief` 0.004 and 0.008): orange peel, goose flesh.
+- Skin images of 2048 pixels, written anew from MakeHuman's files (`real_prep.py`): no gain to be seen; the
+  images are soft themselves and the pipeline halves their detail's contrast.
+- More sheen on hair (`sheen.white` 0.9, `own` 1.0): grey, dusty hair.
+
+Honest about the rest. What a picture shows first now is not the stage's any more:
+
+- Hair: 420 broad locks read as a helmet of shingles, worst on the children; the fringe is cut with a
+  knife. Next round.
+- Faces: the women's lower faces are broad, their cheeks full down to the jaw, their mouths large; small
+  children look old. The round after.
+- The women's far cheek is lighter than the reference's (above); the lips' red ends at a line.
+- Nothing of this round was held against a screenshot of the reference itself, only against numbers read
+  from them in earlier rounds.
+- Cost: four times the pixels, with four samples each, and one more pass. Not timed on a real graphics
+  card. Where the driver has no half-float picture to draw into, the stage draws as before (ACES, no
+  backdrop).
+- All values are PLACEHOLDER, by measure and by eye.
+
+Tests: `tests/portrait.test.ts`, 27. New: "England's picture is finished through a curve that keeps a
+colour's hue" (Apoleia has no finish; England's is at least twice as fine and keeps the hue; the curve
+rises, passes through its start with the slope `contrast`, lies under the straight line in the toe and comes
+to rest at white; the shader has the same curve; there is a backdrop). Changed: the eye (the ring, an iris
+lighter than its image), the skin's highlight (times the gloss of the place), the strip between the lips
+(green to red 0.46 to 0.82 of the skin's, with the lips' red). `portrait/tests/faces.rs`, 24: the lower lip's
+paint against the cheek's (0.26 to 0.30 on women, 0.50 to 0.55 on men).
+Pictures: `runde103_vorher_nachher.png` (eight of the sample, round 102 above), `runde103_stichprobe.png`
+(the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
@@ -3283,6 +3362,9 @@ Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choic
 - **Hair cards** are drawn in two passes (depth of their opaque parts, then blended), which stands in for Godot's
   "alpha with depth pre-pass". Fine strands at the edge of beards differ.
 - Veils and cloaks come out up to 4 units darker.
+- **England's picture has a finish of its own** (round 103, `src/portrait/finish.ts`): its own tone curve, its own
+  backdrop, drawn at twice the size. Apoleia's portraits are drawn as before, through three.js' ACES curve onto a
+  clear ground.
 
 ## What is still Apoleia and has to go (next steps, each needs Ramon's yes where it is a choice)
 
