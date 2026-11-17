@@ -89,7 +89,7 @@ export function foundEconomy(s: WorldState, w: World): void {
   s.firm = createTable(FIRM_SCHEMA, 4096);
   P.role.fill(0); P.agent.fill(0); P.firm.fill(-1); P.wage.fill(0); P.income.fill(0); P.spent.fill(0); P.savings.fill(0);
   const cities = cityCalibrations(s, w);
-  if (cities.length === 0) { s.economy = { cities: null }; writeHouseholds(s); return; }
+  if (cities.length === 0) { s.economy = { cities: null }; writeHouseholds(s, w); return; }
   const F = s.firm.cols, firm0 = new Int32Array(cities.length + 1), setups: CitySetup[] = [];
   cities.forEach((x, k) => {
     const p = x.calibration.parameters as { I_s: number[]; H_inact: number };
@@ -151,7 +151,7 @@ export function writeAgents(s: WorldState, w: World): void {
     P.income[id] = a[r]; P.savings[id] = a[r + 1]; P.spent[id] = a[r + 2];
   }
   for (let i = 0; i < seen.length; i++) if (seen[i] !== count[i]) throw new Error(`city ${i >> 2} has ${seen[i]} persons of part ${(i & 3) + 1}, the engine ${count[i]}`);
-  writeHouseholds(s);
+  writeHouseholds(s, w);
 }
 
 /** Computes `days` periods from the state of the economies and writes the persons and firms. A period the engine cannot compute, or one that ends

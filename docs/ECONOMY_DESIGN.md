@@ -42,6 +42,7 @@ players and the AI of realms without a player act through the same commands.
 | 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world **Taken back 17 Nov 2026** (Ramon, "C: Feature 12 zurücknehmen", 17:38 UTC): the cities' trade does not add up together (section 14) |
 | 13 | The merchants' money (examined, nothing built) | chosen by Ramon 17 Nov 2026 as the next feature ("Händlerguthaben abbauen"), with "möglichst papernah" and "kein delulu"; after the reading and the measurement he left the decision to Claude ("du entscheidest selbständig", 17:19 UTC): the finding is recorded, no rule is built (section 13) |
 | 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
+| 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
 
 ## 1. Grain harvest per place
 
@@ -2479,3 +2480,145 @@ city on its own.
 
 By Ramon's order the next features are the distance in trade, then consumption and hunger; no yearly yields.
 
+## 15. Households spend out of their savings, and a family has a need of food
+
+### Why
+
+The trials of the distance in trade (17 November 2026, outside the game; the proposal
+https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV holds them) showed remote cities falling into a slump within 30
+years (Sarai: output 69 of 100, 21 % without work). The cause is not the distance. It is in the model as the game
+runs it, and shows without any distance, only later (29 cities, world of 1356, sums over all cities and all days of
+a year, `economy/examples/longrun.rs`):
+
+| Year | Firms' deposits | Households' deposits | Banks' equity | Consumption wanted | got | Stock built | Losses | Written off by banks |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 2045 | 8949 | 551 | 40858 | 40725 | 159 | 0 | 0 |
+| 10 | 1679 | 10406 | 551 | 45400 | 44912 | 381 | 202 | 0 |
+| 20 | −2082 | 20233 | −2398 | 45786 | 44564 | 723 | 666 | 794 |
+| 30 | −5540 | 32879 | −13972 | 45675 | 44502 | 727 | 767 | 1345 |
+
+Two things work together:
+
+1. Households do not get everything they want to buy (2.6 % is missing in year 30). What they did not spend stays in
+   their deposits for ever, because the budget follows the income only: C = ψ · Y (A.46), and in the calibration
+   ψ + ψ_H = 1. The interest on deposits is 0 (`r_bar`), so no interest is behind it (a first guess that was wrong).
+   Poledna et al. say so themselves: no wealth effects on consumption. Their model is run for 12 quarters, the game
+   for centuries of days.
+2. Firms count unsold goods as profit (`firms_profits` of the port: sales plus the change of the stock at the
+   price) and pay the whole profit out (θ_DIV = 1 in our calibration, where the whole surplus is the income of the
+   owners), while losses stay in the firm. So their deposits drain, they overdraw, become insolvent, and the bank
+   writes off (A.38 to A.40). From year 15 on banks have negative equity.
+
+This feature answers the first. The second stays open (below).
+
+### What was read
+
+- Godley, W., Lavoie, M. (2007). Monetary Economics. Model SIM, equation 3.7: C = α1 · YD + α2 · H₋₁, households
+  consume out of their disposable income and out of the wealth of the period before; with equation 3.9 (wealth grows by
+  what is not consumed) this is a target for wealth relative to income, (1 − α1) / α2. Parameters 0.6 and 0.4. **Read
+  in the recomputation of MacroStat** (https://macrostat.readthedocs.io/en/stable/models/GL06/GL06SIM.html and its
+  pages of equations and parameters), not in the book; the pages do not name the length of a period.
+- Allen, R. C. (2013). The High Wage Economy and the Industrial Revolution: A Restatement. Oxford Discussion Papers
+  in Economic and Social History 115. https://www.nuff.ox.ac.uk/Economics/History/Paper115/allen115.pdf Table 2
+  (p. 16): the "respectability" and the "bare bones subsistence" basket per person and year, note: "each basket
+  provides 2100 calories per day"; on the older basis the baskets held 1,940 calories (p. 4).
+- Broadberry et al. (2010), table 19 (p. 56), read again: kilocalories per head and day, animal products and arable
+  crops net of seed, losses and fodder: 1300/09 139 + 1,242 = 1,381; 1310/19 1,334; 1380/89 242 + 1,801 = 2,042;
+  1420/29 1,760. **The table has no row between 1310/19 and 1380/89.** The same paper sets about 1,500 kcal as what
+  agriculture had to give and cites 2,000 kcal as an average intake (Livi-Bacci 1991; p. 29).
+- Blanz, A. (2023). Climate-related Agricultural Productivity Losses through a Poverty Lens. arXiv 2310.16490.
+  A household must cover a subsistence level of food F before anything else (utility of Stone 1954 and Geary 1950,
+  cited there, not read); demand (equations 5 and 6): c = φ(y − pF), f = (1 − φ) y / p + φF. First half read word for
+  word. The paper has no rule for a household whose spending is below pF.
+- Not used as evidence: Ivanova, Kancs, Thissen (2019, arXiv 1912.07115) use the same form for all goods; the
+  appendix with the equation could not be read.
+
+### The rule
+
+**1. The budget (the engine, `economy/src/clock.rs`).** Through the port's own hooks for the budgets of the four
+kinds of households (`households_budget_*`), nothing else of the port is touched:
+
+C = ψ · Y + s · (D − n · ψ · Y), never below 0
+
+D are the household's deposits, n the deposits of all households of the city over their budgets in the first period
+that is computed (so the households together start at their target and the starting position stays where it was),
+s the share of the gap spent per period. The table gives s per year (`cities.savings_spent_per_year` = 0.4, the α2
+of Godley and Lavoie, taken per year: an assumption), the engine gets s / 365. With s = 0 the engine computes bit
+for bit as before (economy/tests/savings.rs). The market of the port is unchanged: every household still splits what
+it buys by the fixed shares b_HH_g (`src/markets.rs` of the port).
+
+**2. The need (the world, `src/sim/systems/household.ts`).** A basket needs 2,100 kcal a day
+(`cities.food_need_kcal`). What they cost follows from the model: the households of the table buy from
+agriculture per head and day what stands for 2,042 kcal (`inputs.food_kcal_per_head`), so the need of a basket
+costs that amount times 2,100 / 2,042 at the prices of the start (`foodNeedCost`: 0.37 d a day), and on a later
+day times the price of the city's agriculture (the mean price of its farms, weighted by what they made).
+
+**3. Fed.** A family covers its need first (Stone-Geary), so the part of its need it covered on the last day is
+fed = min(1, spent / need). The family has the columns `need` (£ a day) and `fed` (0 to 1); `need` 0 means the place
+has no economy. The panel of a person shows both ("Nahrungsbedarf am Tag", "davon gedeckt"). Nothing reads `fed`
+yet: what hunger does to a person belongs to the persons of the world (docs/PEOPLE_DESIGN.md).
+
+### The numbers
+
+All cities together over 30 years (29 cities of 1356, `economy/examples/longrun.rs`, results in
+`/mnt/project-files/wirtschaft/verbrauch_hunger/`):
+
+| After 30 years | Port's budget (seed 1356) | With the spending out of savings (seeds 1356, 1357, 1358) |
+|---|---|---|
+| Real output of all cities (start 100) | 115.9 | 116.1, 115.8, 116.1 |
+| Weakest city (start 100) | 112.0 | 113.5, 113.4, 110.8 |
+| Households' deposits (start 8,949) | 32,879 | 14,578, 13,457, 14,341 |
+| Firms' deposits (start 2,045) | −5,540 | −113, −2,173, −770 |
+| Equity of all banks (start 551) | −13,972 | −731, −2,348, −816 |
+| Banks with negative equity | 26 of 29 | 10, 17, 12 |
+| Written off by the banks in year 30 | 1,345 | 71, 126, 56 |
+| Consumption got over wanted, year 30 | 97.4 % | 96.1 %, 97.3 %, 96.4 % |
+| Merchants' money of a city over its GDP | −0.16 to +0.09 | −0.13 to +0.15, −0.08 to +0.11, −0.34 to +0.23 |
+
+The merchants' books balance in every year (largest check 1e-13).
+
+The need in the game (`fed`, on the day named):
+
+| | World of 1356, day 60 | day 730 | World of 1291, day 60 | day 365 |
+|---|---|---|---|---|
+| Persons in families of the cities | 25,722 | 25,722 | 102,217 | 102,223 |
+| fed = 1 | 92.2 % | 92.0 % | 92.1 % | 91.8 % |
+| fed 0.75 to 1 | 4.0 % | 4.2 % | 3.5 % | 3.8 % |
+| fed 0.5 to 0.75 | 2.3 % | 2.4 % | 1.8 % | 1.8 % |
+| fed above 0, below 0.5 | 0.7 % | 0.6 % | 0.6 % | 0.7 % |
+| fed = 0 | 0.9 % | 0.8 % | 2.0 % | 1.9 % |
+| Of the persons below 1: the family holds savings of more than 30 days of its need | 88 % | 89 % | 74 % | 75 % |
+
+With the fixed share of the port for every family (35.5 % of what it spends is agriculture) 69 % of the persons
+would lie below the need (measured before the build, world of 1356, day 60).
+
+### Deviations and what stays open
+
+- **Short of food with coin in the chest.** About 8 % of the persons live in families that spend less than their
+  need, and three quarters or more of them hold savings of more than a month of that need. These are large families
+  on one low wage. By the rule they spend ψ of their income and 0.4 / 365 a day of what they hold above the target,
+  whatever they need. A budget that covers the need first would be a rule inside the engine that the papers read do
+  not give for this model; it is not built. Whoever reads `fed` must know this.
+- **fed = 0** are the families nobody of whom has a part in the economy (economy feature 11: 53 families in the
+  world of 1356): they have neither income nor deposits in the engine.
+- **The day.** `fed` is of the last day, and on a single day a household may not find all goods.
+- **2,042 kcal is the decade 1380/89**, not the 1350s: the table has no nearer row.
+- **Agriculture is not food only** (wool), and bread and ale are partly industry.
+- **0.4 a year** is a textbook value, read as per year by us.
+- **The booking and the market differ.** The engine sells agriculture by fixed shares; the family is booked as
+  covering its need first. The two are not the same number.
+- **Firms pay out profits on unsold goods** (the second cause above): unchanged. Banks still end with negative
+  equity, at a tenth to a sixth of the amount.
+- **Households want more than they get**: the gap grows to 3 to 4 % of what they want.
+- **No famine years.** Without yearly yields and without distance, hunger comes from the lack of work and from
+  prices only.
+
+### State and upgrade
+
+State version 21 (20 is main's). The format of the engine's state is 7: the clock holds the share and the target;
+states of formats 4 to 6 are read and spend nothing out of savings. The upgrade gives the families the two columns
+and founds the economies anew on the day the world has reached, as the steps to 12 and 14 did: the rule changes
+what every city computes. **The persons' feature 2 (pull request 69) also uses the state versions 21 and 22: the one
+merged second has to take the next numbers.**
+
+Next by Ramon's order: the distance in trade.

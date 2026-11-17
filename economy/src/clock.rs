@@ -45,6 +45,17 @@
 //! (economy/tests/demand_pull.rs). The other change of the port's CANVAS model, a central bank that learns its rule,
 //! is not part of this.
 //!
+//! And it carries the spending out of savings (economy feature 15). In the paper a household spends the share ψ of
+//! its expected income and nothing else (A.46): "no wealth effects on consumption". What a household could not buy
+//! or did not spend stays in its deposits for ever, and over the centuries of the game the deposits of the
+//! households pile up while those of the firms drain (docs/ECONOMY_DESIGN.md, section 15). Godley and Lavoie
+//! (Monetary Economics, 2007, Model SIM, equation 3.7) let households consume out of income and out of the wealth
+//! of the period before, C = α1 · YD + α2 · H, which is the same as a target for wealth relative to income. Here
+//! ([`DailyClock::savings`]) the budget of the paper gets that second term, with the target set to what the
+//! calibration says at the start: C = ψ · Y + s · (D − n · ψ · Y), D the household's deposits, n the deposits of all
+//! households of the economy over their budgets in the first period, s the share of the gap spent per period. A
+//! household at the target spends what the paper says; with s = 0 the rule is the paper's.
+//!
 //! The port takes one model type per model, so this one also carries what a city needs that trades with other cities
 //! ([`crate::trade`]): while the merchants have set what they want and bring, the rule of the rest of the world reads
 //! that instead of the port's random series. An economy on its own never has merchants and computes as before.
@@ -79,6 +90,12 @@ pub struct DailyClock {
     /// it had planned (the demand pull of CANVAS, economy feature 8); without it the firm plans by the rule of the
     /// paper (A.5, A.8)
     pub demand_pull: bool,
+    /// the spending out of savings (economy feature 15): the share of the gap between a household's deposits and its
+    /// target that it spends per period, and the target as deposits over the budget for consumption, set in the
+    /// first period that is computed (−1 before). 0: a household spends out of its income only, as in
+    /// the port.
+    pub savings: f64,
+    pub norm: f64,
     /// the past in a fixed size ([`crate::past`]); `None`: the expectations are estimated on the port's lists of
     /// every period since the start, bit for bit as the port does
     pub past: Option<Past>,
@@ -93,7 +110,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, past: None, trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, past: None, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -148,6 +165,34 @@ pub fn windows(series: &[f64], history: usize, window: usize) -> Vec<f64> {
             (from..from + window).map(value).sum()
         })
         .collect()
+}
+
+/// The target of the households' deposits (economy feature 15): the deposits of all households of the economy over
+/// their budgets for consumption, both as they are when the first budget is drawn up. Set once and kept.
+fn norm(m: &mut AbstractModel<DailyClock>) -> f64 {
+    if m.ext.savings == 0.0 {
+        return 0.0;
+    }
+    if m.ext.norm < 0.0 {
+        let sum = |v: &[f64]| v.iter().sum::<f64>();
+        let budgets = sum(&base::households_budget_act(m).0) + sum(&base::households_budget_inact(m).0) + sum(&base::households_budget_firms(m).0) + sum(&base::households_budget_banks(m).0);
+        let deposits = sum(&m.w_act.D_h) + sum(&m.w_inact.D_h) + sum(&m.firms.D_h) + sum(&m.banks.D_h);
+        m.ext.norm = if budgets > 0.0 { deposits / budgets } else { 0.0 };
+    }
+    m.ext.norm
+}
+
+/// Adds to every budget for consumption `c` the share `savings` of the gap between the household's deposits `d` and
+/// its target, `norm` times its budget (Godley and Lavoie 2007, equation 3.7, as a target for wealth). The deposits
+/// are money and the budget is net of the value added tax, as in A.46. A household below its target spends less, never
+/// less than nothing.
+fn spend_savings(c: &mut [f64], d: &[f64], savings: f64, norm: f64, tau_VAT: f64) {
+    if savings == 0.0 {
+        return;
+    }
+    for (c, d) in c.iter_mut().zip(d) {
+        *c = (*c + savings * (*d / (1.0 + tau_VAT) - norm * *c)).max(0.0);
+    }
 }
 
 impl Extension for DailyClock {
@@ -265,6 +310,32 @@ impl Extension for DailyClock {
         }
     }
 
+    /// The port's budgets of the four kinds of households (A.46, A.49), and out of savings ([`spend_savings`]).
+    fn households_budget_act(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
+        let n = norm(m);
+        let (mut c, i) = base::households_budget_act(m);
+        spend_savings(&mut c, &m.w_act.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        (c, i)
+    }
+    fn households_budget_inact(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
+        let n = norm(m);
+        let (mut c, i) = base::households_budget_inact(m);
+        spend_savings(&mut c, &m.w_inact.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        (c, i)
+    }
+    fn households_budget_firms(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
+        let n = norm(m);
+        let (mut c, i) = base::households_budget_firms(m);
+        spend_savings(&mut c, &m.firms.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        (c, i)
+    }
+    fn households_budget_banks(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
+        let n = norm(m);
+        let (mut c, i) = base::households_budget_banks(m);
+        spend_savings(&mut c, &m.banks.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        (c, i)
+    }
+
     /// The port's `rotw_deposits`. The port divides the exports by the mean price paid for them, which is 0 / 0 on
     /// a day without exports; its own rule of exports never gives such a day, the merchants do. For such a day the
     /// mean price is set to 1 here, before the national accounts read it, so that real exports are 0.
@@ -289,6 +360,17 @@ mod tests {
         assert_eq!(windows(&s[..2], 2, 3), vec![30.0, 60.0]); // nothing computed yet: the history itself
         assert_eq!(windows(&s[..5], 2, 3), vec![30.0, 60.0, 6.0]); // a whole window computed
         assert_eq!(windows(&s, 2, 1), s.to_vec());
+    }
+
+    #[test]
+    fn a_household_spends_a_share_of_what_it_holds_above_its_target() {
+        let mut c = [10.0, 10.0, 10.0, 0.0, 1.0];
+        // the target is 20 times the budget: at it, above it, below it, without an income, and far below it
+        spend_savings(&mut c, &[200.0, 300.0, 100.0, 50.0, -500.0], 0.01, 20.0, 0.0);
+        assert_eq!(c, [10.0, 11.0, 9.0, 0.5, 0.0]);
+        let mut c = [10.0];
+        spend_savings(&mut c, &[300.0], 0.0, 20.0, 0.0);
+        assert_eq!(c, [10.0]); // the port's rule
     }
 
     #[test]
