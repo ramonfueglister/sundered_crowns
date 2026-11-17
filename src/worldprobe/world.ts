@@ -82,7 +82,7 @@ const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
 const STREAM_BELOW = 0.4, STREAM_SEEN = 1.5, STREAM_LEAST = 0.35, STREAM_RANK: Record<number, number> = { 1: 8, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 2 };
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
-/** what far.ts lays on a column (far.ts KINDS) that stands on the ground: houses, walls, great buildings, crops and woods; fallow soil and woods mixed evenly into a block are the ground's own */
+/** what far.ts lays on a column (far.ts KINDS) that stands on the ground: houses, walls, great buildings, crops and woods; fallow soil is the ground's own */
 const STANDS: ReadonlySet<number> = new Set([1, 2, 3, 5, 6, 7, 8, 9]);
 /** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
 const STRAY_TREES = 0.01, CLOSED = 0.88;
@@ -449,11 +449,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
-      const known = forestOf(x + 0.5, z + 0.5), share = wooded(x + 0.5, z + 0.5, known), laid = known !== null;
+      // from the third far step on a block shows as much woods as lie on all of it, not on its middle alone: the mean of its quarters
+      const known = forestOf(x + 0.5, z + 0.5), laid = known !== null, share = laid && step > FINER_STEPS && woodsShow > 0 ? (wooded(x + 0.25, z + 0.25) + wooded(x + 0.75, z + 0.25) + wooded(x + 0.25, z + 0.75) + wooded(x + 0.75, z + 0.75)) / 4 : wooded(x + 0.5, z + 0.5, known);
       // without woods a lone tree still stands here and there, as at the finest step, but not on bare land
       if (!share && BARE.includes(here)) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true, laid };
@@ -462,6 +463,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     } });
   }
   // the rivers narrower than a block lie on what covers the ground: the blocks they run through take the water's colour
+  // (no woods stand on them: a stream shows as a line through a wood, as a river does)
   if (cover) for (let i = 0; i < N * N; i++) {
     const wet = stream[i];
     if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;

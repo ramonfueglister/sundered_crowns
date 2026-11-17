@@ -1,12 +1,13 @@
 // The land from farther away. On the coarser steps of the map a block is two, four, eight … cells wide, and what
 // stands and grows on the land is no longer built house by house and tree by tree: it becomes part of the ground
 // itself, as it would look if the finest world were seen from that far. A tree is a green block, then woods are a
-// raised green ground, then only its colour; a house is a block with a roof-coloured top, a town a square of them
-// that shrinks to a single block; a field is a low block of its crop, then its colour. Only the great buildings
-// stay themselves for two steps, built as small as the step makes them. So the world loses its detail step by step
-// while everything stays where it is and as large as it is.
+// raised green ground; a house is a block with a roof-coloured top, a town a square of them that shrinks to a
+// single block; a field is a flat block of its crop. Only the great buildings stay themselves for two steps, built
+// as small as the step makes them. So the world loses its detail step by step while everything stays where it is
+// and as large as it is, and it is drawn the same way from every distance: from the second far step on woods are
+// dark blocks standing out of the open land and fields patches of their crops, however much land a block holds.
 import * as THREE from 'three/webgpu';
-import { type Batch, type RGB, type Rnd, hash2, mix, rgb, seeded, shade } from '../lookprobe/batch';
+import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade } from '../lookprobe/batch';
 import { CYPRESS, LEAVES, OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { type HouseStyle, type Model, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
@@ -43,27 +44,22 @@ const SEARCH = 16;
 /** fields at the finest step lie in lots of eleven by eight blocks (settle.ts) */
 const LOT_W = 11, LOT_D = 8;
 /**
- * A lot at a step. The lots are those of the finest step (settle.ts), at the same places of the world at every step:
- * rows of LOT_D finest blocks, every other row set off by half a lot. A block of the step belongs to the lot its
- * middle lies in. From afar a lot is all field: the fields of a landscape lie together as one ground of many
- * colours, without the balks between them (which made of them a pattern of bricks) and without the farmhouses at
- * their corners. `blended`: a lot is no larger than a block.
+ * The lots are those of the finest step (settle.ts), at the same places of the world at every step: rows of LOT_D
+ * finest blocks, every other row set off by half a lot. A block of the step belongs to the lot its middle lies in.
+ * From afar a lot is all field: the fields of a landscape lie together as one ground of many colours, without the
+ * balks between them (which made of them a pattern of bricks) and without the farmhouses at their corners. Up to
+ * the step LOTS_UNTIL a lot is larger than a block; beyond it the lots are drawn twice as large with every step.
  */
-const lotAt = (step: number) => ({ blended: Math.max(1, Math.round(LOT_W / 2 ** step)) * Math.max(1, Math.round(LOT_D / 2 ** step)) === 1, fill: 1 });
+const LOTS_UNTIL = 2;
 /** Where a point of the world (in finest blocks) lies among the lots: the lot and how far its row is set off. */
 function spotOf(fx: number, fz: number) {
   const lz = Math.floor(fz / LOT_D), shift = lz & 1 ? Math.floor(LOT_W / 2) : 0, lx = Math.floor((fx - shift) / LOT_W);
   return { lx, lz, shift };
 }
 /** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
-export const lotFill = (step: number) => lotAt(step).fill;
+export const lotFill = (_step: number) => 1;
 /** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
 const field = (crop: RGB, flat: boolean, side: RGB = WHEAT_SIDE) => mix(crop, side, flat ? 0.6 : 0.3), VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
-/**
- * Where a lot is no larger than a block, fields and woods are no longer blocks of their own: every block takes their
- * colour as far as they cover it, a little more or less from block to block.
- */
-const soft = (share: number, lot: number) => share + (lot - 0.5) * 2 * Math.min(share, 1 - share);
 /** where no woods stand, a lone tree still stands on this share of the finest step's places for one */
 const STRAY = 0.01;
 /** the finest step's places for a tree lie this many finest blocks apart, and inside a wood this share of them carries one (world.ts TREE_PITCH, CLOSED) */
@@ -84,26 +80,34 @@ const ROOF_SEEN = 1.42;
 /** the tops of a closed wood at the second far step, as a share of those of the first: measured on the pictures of both sides of the border between them (width 1150 against 1242, tools/zoom) at Paris, checked in the Black Forest */
 const ROOFED = 0.72;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
-/**
- * From the step on where a tree no longer stands a block high, the woods lie flat in the ground's colour. What the
- * steps before show of them the camera, looking from low down, still has to see: their tops with the shade between
- * the crowns (FLAT_WOODS, as a share of the first far step's tops), and before the land behind a wood the shaded
- * sides of its trees, lit as a top is (SIDE_FLAT, as a share of the sides' colour). STANDS_OVER is how far those
- * sides hide the land behind them, in finest blocks by step: a tree four blocks high seen from 19 to 40 degrees
- * above, and less as the camera rises towards the flat map. A lone tree of the finest step, a dot of the steps
- * before, darkens a block as often as its crown and its side cover one, LONE_SEEN times that (the dot stands in
- * shade of its own); the frayed edge of a wood by its share and a little more (EDGE_SEEN). Measured on the pictures
- * of both sides of the steps' borders (2300 against 2500 blocks across, 4600 against 5000, 9200 against 10000,
- * 18400 against 20000; tools/zoom/border.py) at Paris, checked in the Black Forest, in Tuscany and in Sweden.
- */
-/** from this step on a block is larger than a wood (forest.ts WOOD: forty finest blocks) */
-const WOODS_BLEND = 5;
 /** a walled town smaller than a block still shows on the block of its middle, this much of it its roofs: a town is found from as far as the land is seen */
 const TOWN_LEAST = 0.6;
-/** mixed evenly into a block the woods show paler than as blocks of their own beside open ones: this much more of them, measured at the border of the steps (9200 against 10000 blocks across at Paris) */
-const BLEND_SEEN = 1.3;
-const SIDE_FLAT = 0.55, LONE_SEEN = 1.6, EDGE_SEEN = 16;
-const FLAT_WOODS = [0.55, 0.55, 0.55] as const, STANDS_OVER: Record<number, number> = { 3: 8, 4: 10, 5: 8, 6: 7, 7: 4 };
+/** what stands on a block too large for it shows its walls too: this many finest blocks more of the block than its ground, by step */
+const STANDS_OVER: Record<number, number> = { 3: 8, 4: 10, 5: 8, 6: 7, 7: 4 };
+/** of the open land's blocks at the second far step this share carries a tree (a place for one every TREE_PITCH finest blocks, STRAY of them with a tree): as many carry trees farther out */
+const LONE = 1 - (1 - STRAY) ** ((4 / TREE_PITCH) ** 2);
+/**
+ * Where the woods of a landscape lie on blocks that hold more than one wood: a field over the world, spread evenly
+ * over 0 … 1, and a block is woods where more of its ground is under trees than the field's value there. Its hills
+ * and hollows are some WOODS_ACROSS blocks of the step across, as the single woods are at the second far step, and
+ * its wider ones are those of the step before: from step to step the woods of a landscape draw together and stay
+ * where they are. (fx, fz) in finest blocks. DRAWN: the woods within this many blocks of a block count for it.
+ */
+const WOODS_ACROSS = 10, LIES = [4, 3, 1] as const, DRAWN = 2;
+const lie = (fx: number, fz: number, step: number) => { let v = 0; for (let j = 0; j < LIES.length; j++) { const wave = WOODS_ACROSS * 2 ** (step + j); v += LIES[j] * noise2(fx / wave, fz / wave, 84 + step + j); } return v / 8; };
+const RANKS = 512;
+let ranks: Float32Array | undefined;
+function liesAt(fx: number, fz: number, step: number): number {
+  if (!ranks) {
+    // the share of the land on which `lie` is below k / RANKS
+    const seen = new Uint32Array(RANKS + 1), side = 400;
+    for (let z = 0; z < side; z++) for (let x = 0; x < side; x++) seen[Math.min(RANKS, Math.ceil(lie(x * 7.31, z * 7.31, 0) * RANKS))]++;
+    ranks = new Float32Array(RANKS + 1);
+    for (let k = 1, below = 0; k <= RANKS; k++) { below += seen[k]; ranks[k] = below / (side * side); }
+  }
+  const at = Math.max(0, Math.min(1, lie(fx, fz, step))) * RANKS, k = Math.min(RANKS - 1, Math.floor(at));
+  return ranks[k] + (ranks[k + 1] - ranks[k]) * (at - k);
+}
 /**
  * The same for the fields, as a share of the colours far.ts gave them by eye: the rows of the winter corn stand
  * in each other's shade and creases, the spring corn shows more of its ground, and the finest step's vineyards
@@ -111,8 +115,6 @@ const FLAT_WOODS = [0.55, 0.55, 0.55] as const, STANDS_OVER: Record<number, numb
  * pale and grey beside the finest step's stubble in the grass. Measured at Paris and in the Black Forest.
  */
 const SEEN_WINTER = [0.84, 0.9, 0.9] as const, SEEN_SPRING = [1.08, 0.83, 0.94] as const, SEEN_VINES = [1.53, 1.1, 1.13] as const, SEEN_FALLOW = [0.99, 1.14, 0.76] as const;
-/** how much of the chance from block to block is left where the woods and the fields are laid out */
-const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
 const CANOPY_LIGHT = 0.8;
 
@@ -153,7 +155,7 @@ export const laidOut = () => last;
  */
 export function coverLand(g: Ground, step: number, things: Batch, sites: readonly Site[], o: {
   ploughed(x: number, z: number): number; laid?: boolean; courses?(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the farmhouses to a field (everywhere FARMS without it) */ farms?(x: number, z: number): number;
-  woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean;
+  woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean; /** whether a column is kept clear of woods: a stream narrower than a block runs through it (world.ts) */ clear?(x: number, z: number): boolean;
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1), kind: new Uint8Array(N * N) };
   const wider = 2 ** step, ox = g.ox ?? 0, oz = g.oz ?? 0, m = new THREE.Matrix4();
@@ -164,7 +166,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   const pick = <T>(list: readonly T[], lot: number) => list[Math.min(list.length - 1, Math.floor(lot * list.length))];
   const house = (style: HouseStyle, x: number, z: number, rise: number) => { if (free(x, z)) put(x, z, rise, shade(pick(style.roofs, hash2(x + ox, z + oz, 211)), ROOF_LIGHT), pick(style.walls, hash2(x + ox, z + oz, 212)), 1); };
   /** how many blocks something as tall as `height` finest blocks stands out of the ground at this step */
-  /** what stands on a block too large for it shows its walls too, as the trees their sides (STANDS_OVER): this much more of the block than its ground */
+  /** what stands on a block too large for it shows its walls too (STANDS_OVER): this much more of the block than its ground */
   const seenStanding = 1 + (STANDS_OVER[step] ?? 0) / HOUSE_DEEP;
   const stands = (height: number) => (height / wider >= STANDS_FROM ? Math.max(1, Math.round(height / wider)) : 0);
   /** A great building as near a column as it finds free ground. */
@@ -326,22 +328,25 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
 
   // fields: the lots of the finest step, as large as they are, each all field and flat, in the colour of its crop.
   // A field that lies fallow is the grass with its stubble showing through, one under spring corn is green.
-  const { blended } = lotAt(step), raised = new Uint8Array(N * N);
+  // Farther out than LOTS_UNTIL a block is as large as a lot and then larger. The fields are drawn as before all the
+  // same: in patches of some three blocks by two, each of one crop, a patch for the lots that lie under it. So the
+  // ploughed land looks from every distance as it does from the middle one, and only shows less of itself.
+  const grown = 2 ** Math.max(0, step - LOTS_UNTIL), salt = grown > 1 ? 7 * step : 0, raised = new Uint8Array(N * N);
   const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
-  const springOf = (lx: number, lz: number): [RGB, RGB] => [tinted(field(pick(OATS, hash2(lx, lz, 68)), true, OATS_SIDE), SEEN_SPRING), OATS_SIDE];
-  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67) < o.vines(mx, mz) ? [tinted(VINEYARD, SEEN_VINES), shade(VINE_BODY, 0.8)] : [tinted(field(pick(WHEAT, hash2(lx, lz, 68)), true), SEEN_WINTER), WHEAT_SIDE]);
+  const springOf = (lx: number, lz: number): [RGB, RGB] => [tinted(field(pick(OATS, hash2(lx, lz, 68 + salt)), true, OATS_SIDE), SEEN_SPRING), OATS_SIDE];
+  const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + salt) < o.vines(mx, mz) ? [tinted(VINEYARD, SEEN_VINES), shade(VINE_BODY, 0.8)] : [tinted(field(pick(WHEAT, hash2(lx, lz, 68 + salt)), true), SEEN_WINTER), WHEAT_SIDE]);
   // the lots, their crops and their courses are those of the finest step (settle.ts: the same lot, the same lots
   // drawn by the same numbers), so that a field stays the field it is from step to step
-  if (!blended) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || !level(x, z)) continue;
-    const { lx, lz, shift } = spotOf((x + ox + 0.5) * wider, (z + oz + 0.5) * wider);
-    const fx = (lx + 0.5) * LOT_W + shift, fz = (lz + 0.5) * LOT_D, mx = fx / wider - ox, mz = fz / wider - oz;
+    const { lx, lz, shift } = spotOf(((x + ox + 0.5) * wider) / grown, ((z + oz + 0.5) * wider) / grown);
+    const fx = ((lx + 0.5) * LOT_W + shift) * grown, fz = (lz + 0.5) * LOT_D * grown, mx = fx / wider - ox, mz = fz / wider - oz;
     // a lot is a field here if it is one at the finest step (settle.ts draws the same number against the same share)
-    if (hash2(lx, lz, 65) > o.ploughed(mx, mz) / FIELD_GROUND) continue;
+    if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND) continue;
     // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
-    const course = courseOf(courses(mx, mz), hash2(...blockOf(fx, fz), 66));
+    const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
     if (course === FALLOW) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
-    const vines = course !== SPRING && hash2(lx, lz, 67) < o.vines(mx, mz);
+    const vines = course !== SPRING && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)), course === SPRING ? 5 : vines ? 7 : 6);
   }
 
@@ -384,9 +389,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     c.share[idx(x, z)] = closed || stand ? 1 : under / 4;
     raised[idx(x, z)] = rise;
   }
-  // farther out, while a tree still stands a block high: a block is woods by the trees of the finest step that
+  // at the second far step: a block is woods by the trees of the finest step that
   // stand on it, in the same colours; a closed wood shows whole
-  if (!blended && step > 1) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+  if (step === 2) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
     const w = o.woods(x, z);
     if (!w) continue;
@@ -410,55 +415,36 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     c.share[idx(x, z)] = closed ? 1 : Math.min(1, (trees * (2 * (tall ? CROWN_TALL : CROWN)) ** 2) / (wider * wider));
     raised[idx(x, z)] = rise;
   }
-  // fields and woods as the colour of the ground. The woods are those of the steps before: a closed wood shows
-  // whole, and out of the woods a block is a tree's as often as the finest step's lone trees darken the land.
-  // Trees no longer stand out of this ground, but the camera still looks at them from low down and sees their
-  // shaded sides before the land behind them: the blocks behind a wood take the colour of its sides as far as a
-  // tree's height reaches over them (STANDS_OVER).
-  if (blended) {
-    const over = STANDS_OVER[step] ?? 0, reach = Math.min(1, over / wider), tops = new Float32Array(N * N * 3), sides = new Float32Array(N * N * 3), wood = new Float32Array(N * N);
+  // Farther out a block is larger than a tree, then than a wood. The woods are drawn as at the second far step all
+  // the same: dark blocks that stand a block out of the open land, whole woods with clearings between them, some
+  // WOODS_ACROSS blocks across. For that the woods of a landscape draw together: a block is woods where more of the
+  // ground about it (within DRAWN blocks) lies under trees than `liesAt` asks there. So a landscape keeps as much
+  // woodland as it has, lying where most of its woods lie. Here and there a block of the open land carries trees,
+  // as often as one of the second far step does.
+  if (step > 2) {
+    const grows: (Woods | null)[] = new Array(N * N).fill(null), under = new Float32Array(N * N);
     for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-      if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
+      if (g.wet[idx(x, z)] || g.mat[idx(x, z)] !== Mat.Grass) continue;
       const w = o.woods(x, z);
-      if (!w) continue;
-      const wx = x + ox, wz = z + oz, lot = hash2(wx, wz, 74);
-      const tall = w.conifers === undefined ? w.tall : lot < w.conifers, crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
-      // a lone tree darkens its crown's ground and what its side hides
-      const lone = (STRAY * (1 + over / TREE_PITCH) * LONE_SEEN + TREES_CLOSED * w.share * (1 + over / EDGE_SEEN)) * (tall ? (CROWN_TALL / CROWN) ** 2 : 1);
-      // while a block is smaller than a wood it is a wood's or a tree's or not; a larger one holds woods and open
-      // land both and is wooded as far as they cover it, a little more or less from block to block
-      const some = Math.min(1, lone * BLEND_SEEN), grown = step < WOODS_BLEND ? (w.share > 0.5 || hash2(wx, wz, 73 + step) < lone ? 1 : 0) : some + (soft(some, hash2(wx, wz, 73 + step)) - some) * (w.laid ? LAID_CHANCE : 1);
-      if (grown <= 0) continue;
-      const crown = pick(crowns, lot), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null;
-      wood[idx(x, z)] = grown;
-      tops.set(tinted(seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), FLAT_WOODS), idx(x, z) * 3);
-      sides.set(shade(seen ? tinted(crown, seen.side) : shade(crown, 0.7), SIDE_FLAT), idx(x, z) * 3);
+      if (w) { grows[idx(x, z)] = w; under[idx(x, z)] = w.share; }
     }
-    /** the wood before a block, towards the camera: how much of the block its sides hide, and their colour */
-    const before = (x: number, z: number): [number, RGB] => {
-      let hid = 0; const col: [number, number, number] = [0, 0, 0];
-      if (reach > 0) for (const [dx, dz, share] of [[1, 1, 0.5], [1, 0, 0.25], [0, 1, 0.25]] as const) {
-        const j = inGrid(x + dx, z + dz) ? idx(x + dx, z + dz) : -1;
-        if (j < 0 || !wood[j]) continue;
-        hid += share * wood[j]; for (let k = 0; k < 3; k++) col[k] += share * wood[j] * sides[j * 3 + k];
-      }
-      return hid > 0 ? [hid * reach, [col[0] / hid, col[1] / hid, col[2] / hid]] : [0, col];
-    };
     for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-      if (!free(x, z)) continue;
-      const wx = x + ox, wz = z + oz, i = idx(x, z);
-      // of the ploughed ground one course is the fallow, the grass with its stubble showing through, of three courses
-      // one the green spring corn, and the rest the winter corn
-      const ploughed = o.ploughed(x + 0.5, z + 0.5), n = courses(x + 0.5, z + 0.5), idle = n >= 2 ? ploughed / n : 0, green = n >= 3 ? ploughed / n : 0, sown = ploughed - idle - green;
-      const tilled = sown + (soft(sown, hash2(wx, wz, 65 + step)) - sown) * (o.laid ? LAID_CHANCE : 1), bare = idle * FALLOW_SHOWS, fields = Math.min(1, tilled + green + bare);
-      // the fields lie where they lie first, the woods on the rest (in a block larger than both they lie apart, as
-      // in the landscape), and the sides of the wood in front before both
-      const [hid, side] = before(x, z), grown = step < WOODS_BLEND ? wood[i] * (1 - fields) : Math.min(wood[i], 1 - fields), lies = fields + grown, share = hid + (1 - hid) * lies;
-      if (share <= 0) continue;
-      const corn = mix(cropOf(wx, wz, x + 0.5, z + 0.5)[0], springOf(wx, wz)[0], tilled + green > 0 ? green / (tilled + green) : 0);
-      const crop = mix(corn, SOIL_FALLOW, fields > 0 ? bare / fields : 0), crown: RGB = [tops[i * 3], tops[i * 3 + 1], tops[i * 3 + 2]];
-      put(x, z, 0, lies > 0 ? mix(mix(crop, crown, grown / lies), side, hid / share) : side, undefined, 10);
-      c.share[i] = Math.min(1, share);
+      const w = grows[idx(x, z)];
+      if (!w || !free(x, z) || !level(x, z) || o.clear?.(x, z)) continue;
+      // where the single woods still show (the share differs from block to block), those about the block count
+      let about = w.share;
+      if (w.laid) {
+        let sum = 0, n = 0;
+        for (let dz = -DRAWN; dz <= DRAWN; dz++) for (let dx = -DRAWN; dx <= DRAWN; dx++) if (inGrid(x + dx, z + dz) && grows[idx(x + dx, z + dz)]) { sum += under[idx(x + dx, z + dz)]; n++; }
+        about = sum / n;
+      }
+      const wx = x + ox, wz = z + oz, closed = about > 0 && about >= liesAt((wx + 0.5) * wider, (wz + 0.5) * wider, step);
+      if (!closed && hash2(wx, wz, 73 + step) >= LONE) continue;
+      const tall = w.conifers === undefined ? w.tall : hash2(wx, wz, 76) < w.conifers, crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
+      const crown = pick(crowns, hash2(wx, wz, 74)), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null;
+      put(x, z, 0, shade(seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), closed ? ROOFED : 1), seen ? tinted(crown, seen.side) : shade(crown, 0.7), tall ? 9 : 8);
+      c.share[idx(x, z)] = closed ? 1 : Math.min(1, (2 * (tall ? CROWN_TALL : CROWN)) ** 2 / 16);
+      raised[idx(x, z)] = 1;
     }
   }
   // the ground is raised only now, so that what was laid out saw the land as it is

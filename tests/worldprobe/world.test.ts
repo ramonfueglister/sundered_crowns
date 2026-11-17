@@ -153,12 +153,30 @@ describe('the land from farther away', () => {
     }
   }, 60000);
 
-  it('stands lower step by step, until it is only the colour of the ground', () => {
+  it('stands no higher step by step, and far out only as the woods do: a block out of the open land', () => {
     // from the step at which the great buildings too are part of the ground
     const tallest = [3, 4, 5, 6].map((step) => laid(0, step).rise.reduce((m, v) => Math.max(m, v), 0));
     for (let k = 1; k < tallest.length; k++) expect(tallest[k]).toBeLessThanOrEqual(tallest[k - 1]);
     expect(tallest[0]).toBeGreaterThan(0);
-    expect(tallest[3]).toBe(0);
+    expect(tallest[3]).toBe(1);
+  }, 60000);
+
+  it('is drawn the same way from every distance: woods as blocks of their own, as much of the land as is wooded', () => {
+    for (const step of [3, 4, 5, 6, 7]) {
+      const c = laid(0, step);
+      let woods = 0, land = 0;
+      for (let z = 20; z < N - 20; z++) for (let x = 20; x < N - 20; x++) {
+        const i = z * N + x, kind = c.kind![i];
+        // where woods grow, off the towns and the fields
+        if ((x + z) % 90 >= 45 || c.town[i] || (kind >= 1 && kind <= 7)) continue;
+        land++;
+        if ((kind === 8 || kind === 9) && c.share[i] === 1) { woods++; expect(c.rise[i]).toBe(1); }
+        // nothing is mixed into the colour of the ground
+        expect(kind).not.toBe(10);
+      }
+      expect(woods / land, `step ${step}`).toBeGreaterThan(0.5);
+      expect(woods / land, `step ${step}`).toBeLessThan(0.7);
+    }
   }, 60000);
 });
 
