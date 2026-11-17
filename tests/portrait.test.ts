@@ -909,7 +909,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     const pieces: [string, string[], boolean][] = [
       ['helm_great', ['metal_helm_great'], false], ['bascinet', ['metal_bascinet', 'metal_mail_aventail'], false],
       ['mail_coif', ['metal_mail_coif', 'metal_mail_coif_skirt'], false], ['crown', ['metal_crown'], true],
-      ['coif_linen', ['cloth_coif_linen', 'cloth_coif_ties'], false], ['hat_felt', ['cloth_hat_felt'], true],
+      ['coif_linen', ['cloth_coif_linen'], false], ['hat_felt', ['cloth_hat_felt'], true],
       ['hat_straw', ['cloth_hat_straw'], true],
     ];
     for (const [key, files, hair] of pieces) {
@@ -930,6 +930,12 @@ describe('portraits', { timeout: 20_000 }, () => {
         expect([m!.metalness, m!.roughness > 0 && m!.roughness < 1], `${s.tex} is metal`).toEqual([1, true]);
       }
     }
+    // a woman of the veil's age wears the piece instead of her veil and wimple (the headwear's gauntlet, round 2)
+    const woman = { ...people.find(p => p.female)!, origin: 'England', age: 55 };
+    b.headwear('hat_felt');
+    const veiled = b.build(woman).surfaces.map(s => s.tex);
+    expect(veiled.some(t => t.includes('/cloth_hat_felt.')), 'the hat on a woman').toBe(true);
+    expect(veiled.some(t => t.includes('/cloth_veil_linen.') || t.includes('/cloth_wimple.')), 'no veil under the hat').toBe(false);
     b.headwear('');
     expect(b.build(man).surfaces.some(s => surfaceKind(s) === 'metal'), 'the tried piece is taken off again').toBe(false);
     expect(APOLEIA.metal).toBeNull();

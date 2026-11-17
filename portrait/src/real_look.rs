@@ -249,7 +249,8 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
                 match w.hair {
                     crate::dress::HairUnder::None => return None,
                     crate::dress::HairUnder::Flat => {
-                        let n = if long_hair { d.hair_veiled } else { d.hair_hooded };
+                        // (women and girls too: plaits came through a hat, and without hair it sat loose)
+                        let n = d.hair_hooded;
                         return (!n.is_empty()).then(|| (dir, n.to_string()));
                     }
                     crate::dress::HairUnder::Own => {}

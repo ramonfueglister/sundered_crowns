@@ -239,19 +239,11 @@
   },
   {
    "name": "cloth_coif_linen.txt.zst",
-   "bytes": 44864
+   "bytes": 44763
   },
   {
    "name": "cloth_coif_linen_ao.txt",
-   "bytes": 9222
-  },
-  {
-   "name": "cloth_coif_ties.txt",
-   "bytes": 44826
-  },
-  {
-   "name": "cloth_coif_ties_ao.txt",
-   "bytes": 1296
+   "bytes": 9216
   },
   {
    "name": "cloth_cote.txt.zst",
@@ -271,7 +263,7 @@
   },
   {
    "name": "cloth_hat_straw.txt.zst",
-   "bytes": 34295
+   "bytes": 34514
   },
   {
    "name": "cloth_hat_straw_ao.txt",
@@ -548,8 +540,6 @@
   "bun01_n.webp",
   "cloth_coif_linen.webp",
   "cloth_coif_linen_n.webp",
-  "cloth_coif_ties.webp",
-  "cloth_coif_ties_n.webp",
   "cloth_cote.webp",
   "cloth_cote_n.webp",
   "cloth_hat_felt.webp",

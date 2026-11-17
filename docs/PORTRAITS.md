@@ -3511,9 +3511,9 @@ pictures. Agreed with the portrait thread: soft pieces are bound like the hoods,
 | `bascinet` bascinet with aventail, about 1350 | `metal_bascinet`, `metal_mail_aventail` | rigid + soft | none | 5,228 + 4,352 |
 | `mail_coif` mail coif with its skirt, about 1291 | `metal_mail_coif`, `metal_mail_coif_skirt` | soft | none | 3,136 + 4,352 |
 | `crown` open crown with fleurons and stones | `metal_crown` | rigid | own, loose | 6,784 |
-| `coif_linen` linen coif tied under the chin | `cloth_coif_linen`, `cloth_coif_ties` | soft | none | 3,136 + 464 |
-| `hat_felt` felt hat, round crown, brim turned up behind | `cloth_hat_felt` | soft | flat (`hair_hooded`) | 2,240 |
-| `hat_straw` straw hat with a wide brim | `cloth_hat_straw` | soft | flat (`hair_hooded`) | 2,240 |
+| `coif_linen` linen coif | `cloth_coif_linen` | soft | none | 3,134 |
+| `hat_felt` felt hat, round crown, brim turned up behind | `cloth_hat_felt` | soft | flat (`hair_hooded`, women and girls too) | 2,240 |
+| `hat_straw` straw hat with a wide brim | `cloth_hat_straw` | soft | flat (`hair_hooded`, women and girls too) | 2,240 |
 
 - **Who wears what**: `DressSet::headwear` (rows `Wear`: sex, from what age, share in ten by the seed's third digit
   from the end). England's table is empty: who wore helms, coifs, hats or a crown in 1356 needs sources and Ramon's
@@ -3534,9 +3534,21 @@ pictures. Agreed with the portrait thread: soft pieces are bound like the hoods,
   (24 rings to 20 cm), not geometry.
 - **Load**: the data files add about 0.5 MB packed to what is loaded with the first portrait; images (2.9 MB) only
   when a piece is drawn.
-- **Open**: sources and shares; the mail's skirt stands stiff round the neck like a collar; the coif's ties read as
-  a white bar under a beard; hats and the crown were looked at on men only; on a woman of veil age the veil stays
-  under the piece.
+- **The gauntlet** (`tools/portrait/headwear_gauntlet.ts`, `npx tsx`): every piece on all 36 people of England's
+  sample (women and men of 2 to 68), 41 lines PASS or FAIL: every file built; no hood, veil or wimple under it; skin
+  and (where it keeps hair) hair through it, mean and worst person, seen from the head's middle in 72 x 24
+  directions (a piece's own edge left out); and where it rests, the narrowest tenth of its gaps (1.5 cm soft, 4 cm
+  rigid). It reads triangles, not pictures; limits by judgement, PLACEHOLDER.
+
+  | Round | passes | what changed |
+  |---|---|---|
+  | 1 (first build) | 26 of 41 | |
+  | 2 | 38 | no veil or wimple under a piece (build.rs); the straw hat's crown higher (0.82, was 0.62): men's hair came through it |
+  | 3 | 41 | the coif 1.3 cm off the skin (0.9): temples and jaw came through on broad heads; the straw hat 1.3 cm over the hair (1.0): toddlers' hair; women and girls under a hat wear the flat hair of the hood (none: the hat sat loose; plaits: came through) |
+
+  By eye after round 3: the coif's ties were dropped (a white bar under a beard, which no line sees).
+- **Open**: sources and shares; the mail's skirt stands stiff round the neck like a collar; a dark speck where the
+  coif's grid closes at the top.
 
 ## Measured against Apoleia
 

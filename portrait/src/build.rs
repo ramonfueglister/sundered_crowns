@@ -1379,7 +1379,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             }
         }
         out.push(hm);
-        if veil {
+        // (no veil under a piece on the head: the piece takes its place, as the hood's)
+        if veil && wear.is_none() {
             // the palla drawn over the head: open around the face, falling
             // in folds onto the shoulders
             let vcol = match garb {

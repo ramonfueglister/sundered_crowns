@@ -66,7 +66,7 @@ pub static HEADWEAR: [Headwear; 7] = [
     Headwear { key: "bascinet", files: &["metal_bascinet", "metal_mail_aventail"], fit: Fit::Rigid, hair: HairUnder::None, colour: "#ffffff" },
     Headwear { key: "mail_coif", files: &["metal_mail_coif", "metal_mail_coif_skirt"], fit: Fit::Soft, hair: HairUnder::None, colour: "#ffffff" },
     Headwear { key: "crown", files: &["metal_crown"], fit: Fit::Rigid, hair: HairUnder::Own, colour: "#ffffff" },
-    Headwear { key: "coif_linen", files: &["cloth_coif_linen", "cloth_coif_ties"], fit: Fit::Soft, hair: HairUnder::None, colour: "#e6dfcd" },
+    Headwear { key: "coif_linen", files: &["cloth_coif_linen"], fit: Fit::Soft, hair: HairUnder::None, colour: "#e6dfcd" },
     Headwear { key: "hat_felt", files: &["cloth_hat_felt"], fit: Fit::Soft, hair: HairUnder::Flat, colour: "#5e4a3a" },
     Headwear { key: "hat_straw", files: &["cloth_hat_straw"], fit: Fit::Soft, hair: HairUnder::Flat, colour: "#e8c98a" },
 ];

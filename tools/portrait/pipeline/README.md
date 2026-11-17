@@ -75,7 +75,7 @@ eye, PLACEHOLDER. docs/PORTRAITS.md says how the builder uses the files.
 | bascinet (rigid) and aventail (soft) | `OUT=out bascinet.py`; `write_rigid([bascinet, bascinet_rivets], metal_bascinet.txt)`; the aventail bound without `UVFILE` (the uv round the body) |
 | crown (rigid) | `crown.py`, `write_rigid([crown, crown_stones], metal_crown.txt)` |
 | coif, mail coif, felt hat, straw hat (soft) | `WHICH=coif_linen,mail_coif,hat_felt,hat_straw OUT=out headwear_soft.py` (each writes `<name>.obj` and `<name>_uv.txt`) |
-| the soft ones, bound | `HEAD=1 HEM=all R_HEM=0.025 TAUBIN=2 HEMSMOOTH=20 AO=6 UVFILE=out/<name>_uv.txt python3 -I tunic_bind.py $B out/<name>.obj out/bound <file>` (the mail coif's skirt and the aventail without `UVFILE`) |
+| the soft ones, bound (`sh headwear_bind.sh [name ...]` does all of this row and copies into public/portrait/real) | `HEAD=1 HEM=all R_HEM=0.025 TAUBIN=2 HEMSMOOTH=20 AO=6 UVFILE=out/<name>_uv.txt python3 -I tunic_bind.py $B out/<name>.obj out/bound <file>` (the mail coif's skirt and the aventail without `UVFILE`) |
 | mail | `python3 -I mail_tex.py metal_mail_aventail.webp metal_mail_aventail_n.webp 512 24 48` (the same images for the coif and its skirt) |
 | plate | `python3 -I plate_tex.py metal_helm_great.webp metal_helm_great_n.webp 512 260` (the same for bascinet and crown) |
 | linen, felt | `fabric_tex.py ... linen 128`, `... wool 160` |

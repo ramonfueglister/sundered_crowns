@@ -129,14 +129,14 @@ def cap(name, bvh, off, lower, mat, N=64, NE=18, smooth=3, uv_scale=(4.0, 1.5)):
 def coif_linen(bvh):
     linen = L.material('cloth_coif', (0.86, 0.83, 0.76), 0.0, 0.8, bump=0.02, bump_scale=60)
     edge = [(0, 7.98), (40, 7.92), (55, 7.55), (66, 6.42), (100, 6.38), (140, 6.62), (180, 6.70)]
-    o, A = cap('coif_linen', bvh, 0.09, lambda t: interp_deg(edge, t), linen)
+    o, A = cap('coif_linen', bvh, 0.13, lambda t: interp_deg(edge, t), linen)
     s = o.modifiers.new('solid', 'SOLIDIFY'); s.thickness = 0.015; s.offset = 1.0
     # the ties under the chin: two narrow bands from the lower corners to a knot under the jaw
     bm = bmesh.new()
     knot = Vector((0.0, 5.92, 1.05))
     for sg in (-1, 1):
         t = sg * math.radians(72)
-        a = level(bvh, t, interp_deg(edge, t), 0.09)
+        a = level(bvh, t, interp_deg(edge, t), 0.13)
         pts = []
         for k in range(9):
             u = k / 8
@@ -241,7 +241,7 @@ def hat_felt(bvh):
 
 def hat_straw(bvh):
     straw = L.material('cloth_straw', (0.80, 0.65, 0.38), 0.0, 0.75, bump=0.12, bump_scale=90)
-    return hat(bvh, 'hat_straw', straw, crown_h=0.62, crown_k=0.78, brim=1.05, droop=0.22, uv=(16.0, 2.0), e=2.6)
+    return hat(bvh, 'hat_straw', straw, off=0.13, crown_h=0.82, crown_k=0.86, brim=1.05, droop=0.22, uv=(16.0, 2.0), e=2.6)
 
 
 BUILD = dict(coif_linen=coif_linen, mail_coif=mail_coif, hat_felt=hat_felt, hat_straw=hat_straw)
