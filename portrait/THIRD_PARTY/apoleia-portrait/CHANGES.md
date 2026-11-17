@@ -338,3 +338,13 @@ survey), `skull_of`, a source. `lib.rs` exports them. `examples/face_measure.rs`
 and `--skull`. `tests/faces.rs`: a twenty-second test. `tests/locks.rs`: the fringe's end is held against
 the eyes, not as a share of the head's height under the crown. A head without a dress table is morphed as
 before: Roman bytes unchanged.
+
+Round 101: a child's mouth as broad against a grown one's as a real child's. `dress.rs`: `DressSet::child_mouth`
+(England: per age the weight of MakeHuman's `mouth-scale-horiz-incr`, girls' and boys', fitted to the survey
+of round 100), `child_mouth_of`, `CHILD_MOUTH` (the pair of targets, by the weight's sign), `by_age` (the
+reading of a table by age, shared with `skull_of`); the row `mouth-scale-horiz-incr` of round 55 is gone from
+`child`; the source of the survey names the mouth's breadth as fitted. `morph.rs`: the weight after the
+`child` list, and the hook `morph_test_wide`. `lib.rs` exports it. `examples/face_measure.rs`: `--children`
+with `--mouth`. `tests/faces.rs`: a twenty-third test. Tried in the same round and not kept: weights for a
+shorter nose and a longer chin, fitted to the same survey (the faces were worse). A head without a dress
+table is morphed as before: Roman bytes unchanged.

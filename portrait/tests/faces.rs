@@ -6,7 +6,7 @@ mod common;
 
 use common::{head, person};
 use sc_portrait::measure::{children, children_at, CHILDREN, CHILD_AGES, EAR_RIM, GLABELLA, BACK, arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_skull, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_skull, morph_test_wide, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -1184,6 +1184,75 @@ fn a_child_of_england_has_a_braincase_as_large_against_its_face_as_a_real_childs
     for (k, female, age) in [(0u32, true, 24.0f32), (1, false, 24.0), (2, true, 15.0), (3, false, 13.0), (4, true, 68.0), (5, false, 50.0)] {
         let p = person(k, female, age);
         assert!(morph_test(&h, &p) == morph_test_skull(&h, &p, [1.0; 3]), "a person of {age} ({k}) has another head");
+    }
+}
+
+#[test]
+fn a_child_of_england_has_a_mouth_as_broad_against_a_grown_ones_as_a_real_childs() {
+    // MakeHuman's child has a narrow mouth, and since round 55 the table's `child` made every child's wider by
+    // one weight, chosen by eye against a pout (`mouth-scale-horiz-incr` 0.45). Held against the survey of
+    // children's heads (measure.rs `CHILDREN`) that was too much for the small and too little for a girl of
+    // eleven: the mouth of a child of two was 37.0 and 35.7 mm broad where the survey has 33 (0.74 and 0.77
+    // of England's grown, the survey's children 0.69 and 0.72 of its oldest group), a flat stroke across a small
+    // face. The table's `child_mouth` has the weight by age and sex, fitted so that the mouth's breadth stands
+    // to the grown of England as the survey's children's stands to its oldest group's.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    // The table: ages rising, weights of a target (under 1), nothing in its last row; nothing for the grown.
+    assert!(set.child_mouth.len() >= 2 && set.child_mouth.windows(2).all(|w| w[0].0 < w[1].0), "the table's ages rise");
+    assert!(set.child_mouth.iter().all(|row| row.1[0].abs() <= 1.0 && row.2[0].abs() <= 1.0), "weights of a target");
+    let last = set.child_mouth.last().unwrap();
+    assert!(last.1 == [0.0] && last.2 == [0.0] && last.0 <= set.adult[0].min(set.adult[1]), "the table ends in nothing at {}", last.0);
+    for (female, age) in [(true, 15.0), (true, 24.0), (false, 17.0), (false, 68.0)] {
+        assert!(set.child_mouth_of(female, age) == 0.0, "{age}: {}", set.child_mouth_of(female, age));
+    }
+    assert!(set.child_mouth_of(true, 0.0) == set.child_mouth[0].1[0] && set.child_mouth_of(false, 1.0) == set.child_mouth[0].2[0], "before the first age that age's");
+    let between = set.child_mouth_of(false, (set.child_mouth[0].0 + set.child_mouth[1].0) / 2.0);
+    assert!((between - (set.child_mouth[0].2[0] + set.child_mouth[1].2[0]) / 2.0).abs() < 1e-6, "between two ages in a straight line: {between}");
+    assert!(!set.child.iter().any(|row| row.0.contains("mouth-scale-horiz")), "the one weight for every child is gone");
+    let n = 20u32;
+    let grown: Vec<[f32; 11]> = [false, true].iter().map(|&female| mean((0..n).map(|k| children(&h, &morph_test(&h, &person(k, female, 24.0)))))).collect();
+    for age in [2.0f32, 5.0, 8.0, 11.0, 13.0] {
+        for female in [false, true] {
+            let who = format!("{} of {age}", if female { "girls" } else { "boys" });
+            // what round 55 gave a child of this age: 0.45, fading as the head gets its adult form
+            let was = 0.45 * sc_portrait::dress::child_share(set.adult[if female { 0 } else { 1 }], age);
+            let (mut with_all, mut none_all, mut was_all) = (Vec::new(), Vec::new(), Vec::new());
+            for k in 0..n {
+                let p = person(k, female, age);
+                let (with, none) = (morph_test(&h, &p), morph_test_wide(&h, &p, 0.0));
+                // the nose, the chin, the cheekbones, the jaw and the ears stay where they are
+                for v in [SELLION, SUBNASALE, MENTON, GLABELLA].into_iter().chain(CHEEKBONES.into_iter().chain(JAW).chain([TRAGION]).flat_map(|q| [q.0, q.1])) {
+                    assert!(with[v] == none[v], "{who} ({k}): the landmark {v} moves");
+                }
+                with_all.push(children(&h, &with));
+                none_all.push(children(&h, &none));
+                was_all.push(children(&h, &morph_test_wide(&h, &p, was)));
+            }
+            let (with, none, was_so) = (mean(with_all.into_iter()), mean(none_all.into_iter()), mean(was_all.into_iter()));
+            // every other measure of the survey's is what it is without the table
+            for m in (0..11).filter(|m| *m != 9) {
+                assert!((with[m] - none[m]).abs() < 0.01, "{who}: {} {} with, {} without", CHILDREN[m].name, with[m], none[m]);
+            }
+            let (survey, oldest) = (children_at(9, female, age), children_at(9, female, 18.0));
+            let g = grown[female as usize][9];
+            let (ours, bare, before, real) = (with[9] / g, none[9] / g, was_so[9] / g, survey[0] / oldest[0]);
+            if show {
+                println!("{who}: the mouth {:.1} mm broad ({:+.1} SD), of the grown {ours:.3}; MakeHuman's {:.1}, {bare:.3}; round 55's {:.1} ({:+.1} SD), {before:.3}; the survey {:.1}, {real:.3}", with[9], (with[9] - survey[0]) / survey[1], none[9], was_so[9], (was_so[9] - survey[0]) / survey[1], survey[0]);
+            }
+            assert!((ours - real).abs() < 0.008, "{who}: the mouth {ours} of the grown's, the survey {real}");
+            assert!(((with[9] - survey[0]) / survey[1]).abs() < 0.6, "{who}: the mouth {} mm, the survey {} ({})", with[9], survey[0], survey[1]);
+            // the one weight of round 55 was too much for the small
+            assert!(age > 5.0 || before - real > if female { 0.015 } else { 0.03 }, "{who}: with round 55's weight {before} of the grown's, the survey {real}");
+            // and MakeHuman's own child's mouth is narrow at every age
+            assert!(real - bare > 0.008, "{who}: without the table {bare} of the grown's, the survey {real}");
+        }
+    }
+    // The grown, and the young whose head has its adult form, are what they were, to the bit.
+    for (k, female, age) in [(0u32, true, 24.0f32), (1, false, 24.0), (2, true, 15.0), (3, false, 17.0), (4, true, 68.0), (5, false, 50.0)] {
+        let p = person(k, female, age);
+        assert!(morph_test(&h, &p) == morph_test_wide(&h, &p, 0.0), "a person of {age} ({k}) has another head");
     }
 }
 

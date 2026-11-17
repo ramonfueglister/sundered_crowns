@@ -15,21 +15,28 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at), None, None, None).0
+    morph_as(h, p, Some(mouth_at), None, None, None, None).0
 }
 
 /// `morph_test` with another share of the lips' slit closed along the seam than the dress table's
 /// (`DressSet::seam_shut`; 0: the mouth as it is closed in its middle alone), for tests that hold the table's
 /// value against the head without it.
 pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
-    morph_as(h, p, None, Some(seam_shut), None, None).0
+    morph_as(h, p, None, Some(seam_shut), None, None, None).0
 }
 
 /// `morph_test` with the braincase larger by other factors than the dress table's (`DressSet::skull`: breadth,
 /// length, height; ones: the head as MakeHuman's targets leave it), for tests and for the tool that finds the
 /// table's values (examples/face_measure.rs `--children --skull`).
 pub fn morph_test_skull(h: &Head, p: &Look, by: [f32; 3]) -> Vec<V3> {
-    morph_as(h, p, None, None, Some(by), None).0
+    morph_as(h, p, None, None, Some(by), None, None).0
+}
+
+/// `morph_test` with another weight for a wider mouth than the dress table's (`DressSet::child_mouth`; 0: the
+/// mouth as MakeHuman's child and the rest of the table leave it), for tests and for the tool that finds the
+/// table's values (examples/face_measure.rs `--children --mouth`).
+pub fn morph_test_wide(h: &Head, p: &Look, wide: f32) -> Vec<V3> {
+    morph_as(h, p, None, None, None, Some(wide), None).0
 }
 
 /// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
@@ -37,7 +44,7 @@ pub fn morph_test_skull(h: &Head, p: &Look, by: [f32; 3]) -> Vec<V3> {
 /// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
 pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     let mut list = Vec::new();
-    morph_as(h, p, None, None, None, Some(&mut list));
+    morph_as(h, p, None, None, None, None, Some(&mut list));
     list
 }
 
@@ -127,10 +134,10 @@ pub(crate) fn skull_grow(h: &Head, pp: &mut [V3], by: [f32; 3]) {
 }
 
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None, None, None, None)
+    morph_as(h, p, None, None, None, None, None)
 }
 
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -353,6 +360,10 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
         for &(n, girls, boys) in d.child {
             add(n, (if p.female { girls } else { boys }) * young);
         }
+        // a child's mouth as broad against a grown one's as a real child's (`DressSet::child_mouth`): of the pair
+        // of targets the one the weight's sign asks for
+        let w = wide.unwrap_or(d.child_mouth_of(p.female, p.age));
+        add(if w > 0.0 { crate::dress::CHILD_MOUTH.0 } else { crate::dress::CHILD_MOUTH.1 }, w.abs());
     }
     let strength = p.dress.set().map_or(1.7, |d| d.mood);
     for &(n, w) in mood {

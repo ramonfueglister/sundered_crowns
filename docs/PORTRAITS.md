@@ -50,6 +50,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Children: a braincase as large against the face as a real child's, by age and sex (round 100; MakeHuman's child is a grown head made small) | `skull`, `skull_of` | fitted to a survey of children's heads (Snyder and others 1977); where the braincase begins and the band it fades over by anatomy and by eye |
+| Children: a mouth as broad against a grown one's as a real child's, by age and sex (round 101; until then one weight for all ages, by eye) | `child_mouth`, `child_mouth_of` | fitted to the same survey; a child's nose is still too long and its lower face too short (tried in round 101 and dropped) |
 | Faces: relaxed lids, a closed mouth with the lips on each other from corner to corner (round 99), the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `seam_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -3054,6 +3055,102 @@ Still open: a small child's nose, lower face and mouth against the survey; and a
 the nose's wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold beside the
 mouth, the women's small heads, the forehead's least breadth, the chin's breadth by eye, `head-square` and
 `head-oval`.
+
+**A child's mouth (round 101).** Open since round 100: in a small child's face the features were a grown
+person's. Three of the survey's measures say how (60 girls and 60 boys an age; boys, then girls):
+
+| mm at two | ours | what the survey's share of England's grown asks for | the survey |
+|---|---|---|---|
+| nose, sellion to its foot | 34.9, 32.9 | 29.1, 30.2 | 29, 29 |
+| lower face, sellion to menton | 77.1, 73.5 | 84.4, 83.4 | 82, 80 |
+| mouth's breadth | 37.0, 35.7 | 34.2, 33.4 | 33, 33 |
+
+The nose 3 to 6 mm too long, the face under the brow 7 to 10 mm too short, so from the nose's foot to the
+chin 42 and 41 mm where a real child of two has about 53 and 51; the mouth 2 to 3 mm too broad. The first
+two are MakeHuman's child, which has a grown face's proportions. The third was ours: MakeHuman's child has
+a narrow mouth (32.7 and 31.4 mm at two; against the grown 0.02 to 0.13 under the survey's share at every
+age), and round 55 widened it by eye with one weight for all ages (`mouth-scale-horiz-incr` at 0.45 in
+`DressSet::child`): too much on the small (0.05 over the share at two, a grown mouth on a small face) and
+too little on the girls of 8 and 11 (0.015 and 0.035 under).
+
+*Tried: all three by measure.* Three weights per age and sex (`nose-scale-vert-decr`, under 0 its `-incr`;
+`chin-height-incr`; `mouth-scale-horiz-incr`), fitted so that nose, lower face and mouth stand to England's
+own grown as the survey's children stand to its oldest group (`fit101.py`, a scratch tool). The fit met all
+three to 0.1 mm, and the head's height from menton to vertex, which was not fitted, came within 2.2 in 100
+of its share (before, 1.3 to 7.9 under).
+
+| age | boys: nose, chin, mouth | girls: nose, chin, mouth |
+|---|---|---|
+| 2 | 1.197, 0.357, 0.164 | 0.544, 0.486, 0.216 |
+| 5 | 0.779, 0.322, 0.265 | -0.023, 0.551, 0.362 |
+| 8 | 0.661, 0.231, 0.333 | -0.670, 0.537, 0.521 |
+| 11 | 0.470, 0.111, 0.234 | -1.065, 0.577, 0.626 |
+| 13 | 0.319, 0.069, 0.084 | -0.398, 0.368, 0.169 |
+
+The numbers were right and the faces were worse (`runde101_verworfen_nase_kinn.png`). The target that
+shortens a nose pushes its foot up by 4.8 mm at its full weight; from 0.6 on the nose is squashed, with a
+crease across its bridge and the skin under it smeared, and a boy of two needs 1.2. The target that
+lengthens a chin pulls its point down (20 mm at its full weight): the lower face is as long as the survey's
+and reads as a long, heavy chin, a grown one's; at half the weight too. Each was looked at alone: the mouth
+a clear gain, the nose and the chin not. A real child's lower face is not long by its chin, and its nose is
+not a grown one pushed together: these two need a child's form of the head of its own, which MakeHuman's
+targets for a grown face do not give. Nose and chin were dropped; the code keeps no trace of them.
+
+*Kept: the mouth's breadth.* `DressSet::child_mouth`: per age the weight of `mouth-scale-horiz-incr`, girls'
+and boys' (`CHILD_MOUTH`, `child_mouth_of`; morph.rs after the `child` list); the row of round 55 is gone
+from `child`. The weights are the fit's, with the nose and the chin left as they are (the mouth's breadth
+does not depend on them: the same to 0.1 mm).
+
+| age | girls | boys | mouth now, mm (round 100; the survey, its SD): girls | boys |
+|---|---|---|---|---|
+| 2 | 0.216 | 0.164 | 33.4 (35.7; 33, 4) | 34.2 (37.0; 33, 4) |
+| 5 | 0.362 | 0.265 | 36.5 (37.3; 36, 3.5) | 37.3 (39.1; 36, 4) |
+| 8 | 0.521 | 0.333 | 40.0 (39.3; 39.5, 3.5) | 40.4 (41.6; 39, 4) |
+| 11 | 0.626 | 0.234 | 43.0 (41.4; 42.5, 5) | 42.0 (44.1; 40.5, 3.5) |
+| 13 | 0.169 | 0.084 | 43.6 (44.1; 43, 4.5) | 44.1 (46.1; 42.5, 4) |
+| 15 | 0 | 0 | 46.6 (the same) | 46.7 (the same) |
+
+Between two ages in a straight line, under two the two-year-olds', none from 15 on (the fit asked for 0.05
+and -0.05 there). A girl's weight is larger than a boy's because MakeHuman's girl has the narrower mouth
+and the survey's girl the mouth nearer a grown woman's; it falls from 11 to 13 because MakeHuman's child
+fades into its grown form there and brings its own breadth. At every year of age from 2 to 15 (the ages
+between the table's measured too) the mouth lies 0.1 to 0.4 of the survey's standard deviations over it,
+as England's grown lie over its oldest group (0.5 and 0.1): the share is the survey's, the size England's.
+
+*What stays.* The mouth's breadth is the only measure that moves: on 20 girls and 20 boys of 2, 5, 8, 11
+and 13 the landmarks of nose, chin, brow, cheekbones, jaw and ear are where they were to the bit, the ten
+other measures of the survey the same to 0.01 mm. On 400 grown people each of the 28 measures is the same
+to the last digit printed as in round 100; of the sample's 35 pictures the 20 of people from 17 on are the
+same pixel for pixel, the 15 of children of 2 to 13 change in 0.0 to 0.3 in 100 of their pixels (by more than 8 of 255).
+
+Seen (`runde101_kinder_vorher_nachher.png`, `runde101_fuenf_acht_vorher_nachher.png`,
+`runde101_stichprobe.png`): a small child's mouth is smaller in its face, which reads rounder for it; on
+the girls of eight and eleven a little broader. A modest gain, not the round's aim.
+
+Honest about the rest. A small child's nose is as long and its lower face as short as before: at two the
+nose 2.0 and 1.3 standard deviations over the survey (boys, girls), at five and eight the boys' 1.1 over;
+the lower face 1.0 and 1.6 under at two, the girls' 1.4 to 1.6 under through eight and 1.1 under at eleven.
+The girls' noses of 8 to 11 are 0.4 to 0.6 short. The two lip rows left in `child` (thinner lips) are by
+eye. The rest as in round 100: boys' cheekbones broad from 8 (1.3 to 1.7 over), girls' necks thin at 2 to
+11 (0.9 to 1.3 under), "from tragion to tragion" 9 to 24 mm over at every age, the skin drawn out in the
+band over the ear.
+
+Tests: `tests/faces.rs`, 23 now. "A child of England has a mouth as broad against a grown one's as a real
+child's": the table (ages rising, weights within 1, zeros from where the head is grown, read in a straight
+line between the ages, no row of the mouth's breadth left in `child`); on 20 girls and 20 boys of 2, 5, 8,
+11 and 13 nothing but the mouth moves (seven landmarks to the bit, ten measures to 0.01 mm); the mouth
+stands to the grown within 0.008 of the survey's share and within 0.6 of its standard deviations; round
+55's weight was over the share by more than 0.03 (boys) and 0.015 (girls) up to five, MakeHuman's own is
+under it by more than 0.008 at every age; the grown, a girl of 15 and a boy of 17 are the same to the bit.
+`examples/face_measure.rs --children --mouth b,g` measures with other weights.
+Pictures: `runde101_kinder_vorher_nachher.png` (four of two, two of five; round 100 above),
+`runde101_fuenf_acht_vorher_nachher.png` (round 100 above), `runde101_stichprobe.png`,
+`runde101_verworfen_nase_kinn.png` (two of two: round 100 beside nose, chin and mouth by measure, which was
+dropped).
+Still open: a small child's nose and lower face (a child's form of the head of its own); and as before the
+lips' form, the nose's wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold
+beside the mouth, the women's small heads, the forehead's least breadth, the chin's breadth by eye,
+`head-square` and `head-oval`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
