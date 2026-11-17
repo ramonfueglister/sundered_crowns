@@ -17,7 +17,7 @@ import { foundPersonCultures } from './systems/cultures';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -132,9 +132,9 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     s.v = 19;
   }
   if (s.v === 19) { // 19 → 20: the land register (src/sim/systems/lots.ts). The families get the column of their
-    // parcel, and the parcels of the towns are laid out as a new world lays them out, for the families who live in the
-    // towns on the day the world has reached: nobody has been born, has died or has moved among the persons of the
-    // towns since the first day. The families of the hamlets and the rulers have none. Nothing else changes.
+    // parcel; the parcels of the towns and the hamlets with their farmsteads are laid out as a new world lays them
+    // out, for the families as they live on the day the world has reached: nobody has been born, has died or has
+    // moved since the first day. The rulers have no ground. Nothing else changes.
     const cols = s.family.cols as Record<string, Column>, fresh = makeColumns(FAMILY_SCHEMA, s.family.alive.length) as Record<string, Column>;
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.family as { cols: unknown }).cols = fresh;

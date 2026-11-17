@@ -22,6 +22,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Einwohner der Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen
   - [Jede Familie hat eine Parzelle](siedlung/parzellen.md) *(Entwurf)*
+  - [Die Höfe in den Weilern](siedlung/hoefe.md) *(Entwurf)*
 
 ## Status der Seiten
 

@@ -8,11 +8,11 @@ Der Entwurf ist gebaut, aber nicht im Spiel. Die Simulation führt das Grundbuch
 
 ## Das Feature
 
-Beim Gründen der Welt bekommt jede Stadt ihren Baugrund und jede Familie, die in ihr wohnt, eine Parzelle darauf. Die Bauernfamilien der Stadt wohnen in [Weilern vor den Mauern](../personen/weiler-der-bauern.md) und haben noch keine Parzelle. Die Parzellen sind eigene Einträge der Simulation, die Familie zeigt auf ihre Parzelle. Was eine Stadt an Häusern zeigt, soll nur noch aus diesem Grundbuch kommen.
+Beim Gründen der Welt bekommt jede Stadt ihren Baugrund und jede Familie, die in ihr wohnt, eine Parzelle darauf. Die Bauernfamilien der Stadt wohnen in Weilern vor den Mauern und haben dort [einen Hof](hoefe.md). Die Parzellen sind eigene Einträge der Simulation, die Familie zeigt auf ihre Parzelle. Was eine Stadt an Häusern zeigt, soll nur noch aus diesem Grundbuch kommen.
 
 Das Grundbuch ändert sich noch nicht, solange niemand geboren wird, stirbt oder umzieht.
 
-Nicht dabei: wo ein neues Haus entsteht, wie Gassen wachsen, Mauern, Tore, Brücken und Wahrzeichen (das Grundbuch hat Platz für sie), die Weiler der Bauern, das Bauen durch Spieler. Herrscher haben keine Parzelle, Burgen und Residenzen folgen später.
+Nicht dabei: wo ein neues Haus entsteht, wie Gassen wachsen, Mauern, Tore, Brücken und Wahrzeichen (das Grundbuch hat Platz für sie), das Bauen durch Spieler. Herrscher haben keine Parzelle, Burgen und Residenzen folgen später.
 
 ## Im Spiel
 
@@ -49,7 +49,7 @@ Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-W
 - **Platz für ein Haus je Familie.** Die schmalste Parzelle der Welt ist 5,9 m breit, belegt sind Parzellen ab etwa 4,1 m.
 - **Buchhaltung.** Tests prüfen für alle 558 Städte: Jede Familie in der Stadt hat genau eine Parzelle, jedes Haus steht auf Baugrund, keine Parzelle hat zwei Familien, die Parzellen einer Stadt überlappen nicht und ergeben zusammen 76 % ihres Baugrunds.
 
-Was die Welt von 1291 bekommt: 8'150 Parzellen in 558 Städten, für die 8'150 Familien (26'124 Personen), die in den Städten wohnen. Die 18'665 Familien der Weiler haben noch keine.
+Was die Welt von 1291 bekommt: 8'150 Parzellen in 558 Städten, für die 8'150 Familien (26'124 Personen), die in den Städten wohnen. Die 18'665 Familien der Weiler haben [Höfe](hoefe.md).
 
 | Stadt | Einwohner der Zeit | Familien in der Stadt | Parzelle | Breite der Stadt |
 |---|---|---|---|---|
@@ -75,7 +75,6 @@ Die Stadt hat ein Hundertstel der Menschen auf einem Hundertstel der Fläche. Di
 - Das Raster ist ein Platzhalter ohne Platz, Kirche und Mauer. Gewachsene Städte hatten kein Raster.
 - Den Baugrund kennt die Simulation aus einer Datei der Landschaft. Ändert sich die Landschaft, legt eine neue Welt ihre Parzellen anders als eine laufende. Der hintere Teil einer Parzelle kann auf Grund liegen, der kein Haus trüge.
 - Kleine Städte sind breiter, als ihre Fläche erwarten lässt, weil der äusserste Ring der Blöcke nur teilweise gefüllt ist. Limoges hat drei Parzellen in einer Reihe.
-- Die Höfe der Bauernfamilien in den Weilern stehen noch nicht im Grundbuch.
 
 ## Quellen
 

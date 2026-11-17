@@ -14,7 +14,8 @@ computes is in the world: what a town shows must be state of the ECS.
 | # | Feature | Status |
 |---|---|---|
 | 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, not merged. The world graphic on main sets a house on each parcel as soon as `public/data/lots_1291.json` is on main |
-| – | Parcels of the farmers' hamlets; where a new house arises and streets grow; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
+| 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, not merged. The world graphic still sets its own hamlets on a spiral until it reads them from the file |
+| – | Where a new house arises and streets grow; walls and gates; bridges; landmarks on their ground; which field belongs to which farm; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -34,7 +35,7 @@ runs yet: nobody is born, dies, marries or moves, so no parcel is laid out, spli
 | lot | x, z | f32 | middle of the ground: metres east and south of the town's centre, at the scale of the houses |
 | lot | w, d | f32 | metres along the street, metres deep |
 | lot | front | u8 | side of the street: 0 north, 1 east, 2 south, 3 west |
-| family | lot | i32 | the parcel the family lives on, −1 without one (rulers, and the families of the hamlets: `family.hamlet` 1) |
+| family | lot | i32 | the parcel or the farmstead (feature 2) the family lives on, −1 without one (rulers) |
 
 `GET /lots/<site>` and `GET /lots?sites=a,b,…` (at most 200) give the ground of towns as columns: id, kind, x, z, w,
 d, front, family (−1 vacant), persons.
@@ -79,7 +80,7 @@ change while the world runs, the graphic has to read `/lots` instead.
 ### What the world of 1291 gets (seed 1291)
 
 8,150 parcels for the 8,150 families who live in the 558 towns (26,124 persons); the 18,665 families of the hamlets
-and the 314 ruler families have none. Families per town 1 / 9 / 280 (smallest, median, largest). Fronts 5.9 / 9.6 /
+have farmsteads (feature 2) and the 314 ruler families have no ground. Families per town 1 / 9 / 280 (smallest, median, largest). Fronts 5.9 / 9.6 /
 17.3 m. Town ground per family 139 / 365 / 1,181 m² (Grenade planned 333 m² of town per lot: an independent check of
 the law's level, not of the share, which is Grenade's own).
 
@@ -132,3 +133,92 @@ Salé.
   https://regionalia.blb-karlsruhe.de/files/17820/BLB_Loebbecke_Parzellenstruktur_Freiburg.pdf
 - Stell & Tait (2016): Framework and form: burgage plots, street lines and domestic architecture in early urban
   Scotland. Urban History 43(1), pp. 5 and 23
+
+## Feature 2: every farming family has a farmstead in a hamlet
+
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/K7hysEWpwvBCFTrkqgsVfA
+
+Code: `src/sim/settlement/hamlets.ts` (the arithmetic), `src/sim/systems/lots.ts` (`foundLots` lays the hamlets
+after the parcels of the town), state in `src/sim/state.ts` (`hamlets`, `lot.hamlet`, `LOT_KIND.farmstead`),
+`src/net/lots.ts` and `tools/sim/write_lots.ts` (the hamlets in the answer of the server and in the file). Tests:
+`tests/settlement.test.ts`. Before this feature the simulation held only `family.hamlet = 1`; how many hamlets a
+town has and where they lie was the world graphic's own (src/worldprobe/hamlets.ts).
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| hamlets | place, site | i16 | place of the map and the town the hamlet belongs to |
+| hamlets | x, z | f32 | its middle: metres east and south of the town's centre, at the scale of the houses (as the parcels) |
+| hamlets | farms | u16 | farmsteads laid out in it |
+| lot | hamlet | i32 | the hamlet a farmstead lies in, −1 for the ground of the town itself |
+| lot | kind | u8 | 1 = farmstead |
+
+### Steps
+
+1. **Hamlets.** The farming families of a town (`family.hamlet`) make as few hamlets as hold them at ten farmsteads
+   each: ⌈families / 10⌉, the families shared out evenly, lowest ids first.
+2. **Farmstead.** 10 m at the lane, 17.5 m deep, one per family.
+3. **In the hamlet.** Two rows at a lane that runs east-west, each fronting the lane; the lane as wide as the
+   streets of a town of such parcels (5.15 m). A hamlet of ten takes 50 m by 40.15 m.
+4. **Where the hamlet lies.** The hamlets of a town are spread evenly (a sunflower: equal ground to each, the golden
+   angle between one and the next) over the ring from the edge of the town (its outermost parcel + 20 m + half a
+   hamlet) to the edge of its fields: the radius of the disc that holds the town's arable (`place.arable`, of which
+   a town has the share of its farming persons among those of its place), at 125 m of land to a block of 2 m. The
+   ring is never narrower than gives each hamlet the square of its diagonal.
+5. **Ground.** Each hamlet takes the spot nearest to its own (within 8 blocks) that is clear of every parcel of the
+   town (20 m) and of the hamlets before it (4 m) and, where the building ground is surveyed, carries all its
+   farmhouses (`houseGround`, as for the parcels); else the clear spot that carries the most; else the nearest
+   clear spot farther out.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| farmsteads in a hamlet | 10 at most | HLS, Dorf: three to five Gehöfte already made a village, most villages had 10 to 20. Henkel (2007): the Drubbel has 3 to 15 Hofstätten. Bolòs (2026): Catalan hamlets "generally fewer than ten" houses |
+| farmstead | 10 × 17.5 m | half the sides of the smallest measured: Cottam (Yorkshire), a row of four regular tofts of just over 20 m by 35 m (Historic England, list entry 1017068). The half is Ramon's choice, no source: at 20 × 35 m a hamlet of ten would be 6.2 km wide on the map and the farmsteads would take 30 % of the median town's arable. Larger ones are attested too: Cottam's seven lesser tofts 20 m by up to 100 m, Croxton's enclosures 40 by 50 m (list entry 1016858), a single farm near Dorsten 3,800 m² (Pfeffer) |
+| rows at a lane | 2 | Cottam's row; Pfaffenschlag, sixteen houses along the stream (Archaeological Atlas of Bohemia) |
+| lane | 5.15 m | the street share of Grenade applied to the farmsteads; no source for a hamlet's lane |
+| land to a block | 125 m | the half house size of the world graphic (src/worldprobe/land.ts), nominal: a block is some 130 m in middle Europe |
+| distances 20 m, 4 m, search 8 blocks | – | PLACEHOLDER, no source |
+
+### What the world of 1291 gets (seed 1291)
+
+2,127 hamlets with 18,665 farmsteads for the 18,665 farming families (75,918 persons); with the 8,150 parcels the
+register has 26,815 rows, and only the 314 ruler families are without ground. Hamlets per town 1 / 2 / 8 / 71
+(smallest, median, nine in ten at most, largest: Cairo); farmsteads per hamlet 5 to 10, median 9. A hamlet lies
+4.2 / 8.0 / 21.8 km from the centre of its town (nearest, median, farthest). No hamlet lies on another or on its
+town. In 544 hamlets not every farmhouse stands on building ground: 209 of them lie beyond the survey of their town
+(it ends at 12 km), the others on steps, water or rock. 11 hamlets found no clear spot near their own and lie
+farther off.
+
+### Own rules and gaps (no source)
+
+- The size of the farmstead (above). All farmsteads are alike; Cottam shows two classes.
+- The limit of ten farmsteads comes from Switzerland, Westphalia and Catalonia and is applied everywhere.
+- Real hamlets lay 0.5 to 1.5 km apart (Bolòs 2026). The world has a hundredth of the people on the real land, so a
+  hundredth of the hamlets: they lie some kilometres apart.
+- Which family lives in which hamlet (by id), the even split, the sunflower, the lane running east-west.
+- Thirteen towns have no arable in their place (Cairo, Fustat, Asyut, Qus, Kush, Sijilmasa, Medina, Mecca, Sana'a,
+  Zabid, Ta'izz, Aden, Timbuktu: no fertile land in `land.json`): their hamlets lie in the ring their room makes.
+- Hamlets of different towns are not held apart, and the building ground is known only as far as the survey of the
+  town reaches.
+- Which field belongs to which farm is not in the register. Nothing changes while the world runs.
+
+### Sources
+
+- Dubler & Della Casa: Dorf. Historisches Lexikon der Schweiz, version of 25.03.2015.
+  https://hls-dhs-dss.ch/de/articles/007947/2015-03-25/
+- Henkel (2007): Ländliche Siedlungsformen in Westfalen.
+  https://www.lwl.org/westfalen-regional-download/PDF/S098_Siedlungsformen.pdf
+- Bolòs (2026): Land 15(2), 225. https://www.mdpi.com/2073-445X/15/2/225
+- Historic England: Cottam medieval settlement and cultivation terraces, list entry 1017068.
+  https://historicengland.org.uk/listing/the-list/list-entry/1017068
+- Historic England: Medieval settlement of Croxton, list entry 1016858.
+  https://historicengland.org.uk/listing/the-list/list-entry/1016858
+- Pfeffer: Die Ergebnisse der Ausgrabung am Nonnenkamp. Ein hochmittelalterlicher Bauernhof vor den Toren von
+  Dorsten, pp. 32–33.
+  https://www.lwl-archaeologie.de/media/filer_public/75/22/7522895f-c814-4547-93d5-1b30efade942/ein_hochmittelalterlicher_bauernhof_dorsten_pfeffer.pdf
+- Archaeological Atlas of Bohemia: Slavonice, deserted medieval village Pfaffenschlag.
+  https://www.archeologickyatlas.cz/en/lokace/slavonice_jh_ves_pfaffenschlag
+- Shukurov et al., citing Chisholm (1979, p. 72): fields "within not more than about 5 km of the settlement, and
+  preferably within 1–2 km" (Chisholm itself not opened). https://arxiv.org/pdf/1505.05121
+
