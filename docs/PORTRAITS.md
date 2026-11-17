@@ -3683,6 +3683,21 @@ times as light). Pictures (project files, `portraits/`): `runde108_vergleich_ck3
 `runde108_vergleich_ck3_frauen.png`, `runde108_vergleich_ck3_maenner.png`, `runde108_vorher_nachher.png`
 (eight people, round 107 above), `runde108_stichprobe.png` (the sample of 36).
 
+**The hair beside the reference (after round 108; looked at, nothing changed).** Two of the reference's bowl
+cuts enlarged beside two of ours. Theirs is a body of hair: some dozens of thick bundles, each 1.5 to 2 cm
+broad, running in one piece from the crown to the fringe, with dark furrows between them and a light back on
+each; the fringe is the bundles' pointed ends, and it throws a shade on the forehead. Ours is 950 narrow
+locks lying over each other as scales on a painted layer: one tone, no furrows, a fringe of straight-cut ends
+with steps between them. Tried on the stage, each on two heads, and none kept, because none changes that
+reading: `sheen.strands` 2.4 (single hairs a little clearer), `cap.light` 1.2 with `cap.tone` 1 (a darker
+ground under the locks: hardly seen, the locks cover it), `sheen.white` 0.7 with `sheen.own` 0.9 (a dusty
+grey), every lock lighter or darker than the hair by up to a quarter (a value of the builder, taken out
+again: on short overlapping locks the tones show the scales, a patched coat on fair hair), and furrows of a
+bundle's breadth painted into the painted layer with a relief to match (they read as combed hair where the
+layer shows, but it lies on the skull inside the hairline and the locks hide all of it). What follows: the
+reading is a matter of the hair's build, a body with relief and bundles at its rim, not of a value. Rounds 50
+to 104 went from broad cards to broad locks to narrow locks within one build and did not reach it.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; the hair (no volume, a
