@@ -2,7 +2,7 @@
 //
 // The cities of the start year (src/sim/content/cities.ts: in 1356 the 30 largest after Chandler, in 1291 every town
 // of the world graphic with people inside the world frame) get real persons at the scale of the whole world, 1:100. Each person has a birthday, a sex, a mother and a father, a family, an IQ and the Big Five;
-// a family is a place and the couple at its head. The rest of every place stays a number (place.pop), as before.
+// a family is a place and the couple at its head. The people of a place are its persons, counted (src/sim/systems/hamlets.ts).
 //
 // The population is built once, when the world is founded, and does not change yet: nobody is born, dies or marries
 // while the world runs. Age is never stored; it follows from the birthday and the day of the world.

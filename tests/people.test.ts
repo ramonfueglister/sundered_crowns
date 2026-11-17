@@ -7,6 +7,8 @@ import { newWorldState, loadSetup } from '../tools/sim/load';
 import { toHeads } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { advanceDay } from '../src/sim/engine';
+import { residents } from '../src/sim/systems/hamlets';
+import { ALIVE } from '../src/sim/state';
 
 describe('the Coale-Demeny West life tables', () => {
   it('give the published life expectancy at birth of women, 20 + 2.5 years per level', () => {
@@ -33,12 +35,13 @@ describe('the cities', () => {
     for (let i = 1; i < CITIES.length; i++) expect(CITIES[i].people).toBeLessThanOrEqual(CITIES[i - 1].people);
     for (const c of CITIES) { expect(c.place).toBeGreaterThanOrEqual(0); expect(c.place).toBeLessThan(w.L); }
   });
-  it('are never larger than their place: places that were smaller grow to their cities', () => {
-    const { s } = newWorldState(), setup = loadSetup(1356);
-    for (const [p, n] of cityPeopleByPlace()) {
-      expect(s.place.pop[p]).toBeGreaterThanOrEqual(toHeads(n) - 0.01); // Float32, heads at 1:100
-      expect(s.place.pop[p]).toBeCloseTo(toHeads(Math.max(setup.pop[p] ?? 0, n)), 1);
-    }
+  it('are the people of their place: a place has its persons and nobody else', () => {
+    const { s } = newWorldState(), counted = residents(s).people;
+    let all = 0;
+    for (let i = 0; i < s.place.pop.length; i++) { expect(s.place.pop[i]).toBe(counted[i]); all += counted[i]; }
+    for (const [p, n] of cityPeopleByPlace()) expect(s.place.pop[p]).toBeGreaterThanOrEqual(Math.round(toHeads(n)));
+    let alive = 0; for (let i = 0; i < s.person.size; i++) if (s.person.alive[i] && s.person.cols.died[i] === ALIVE) alive++;
+    expect(all).toBe(alive);
   });
 });
 

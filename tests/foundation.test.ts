@@ -35,7 +35,7 @@ describe('the start of a world', () => {
     expect(w.names[cap]).toBe('Paris');
     for (let r = 0; r < s.realm.size; r++) { const c = s.realm.cols.capital[r]; if (c >= 0) expect(s.place.owner[c]).toBe(r); }
     let people = 0; for (let i = 0; i < w.L; i++) people += s.place.pop[i];
-    expect(people).toBeGreaterThan(5e5); // heads at 1:100 (src/sim/scale.ts)
+    expect(people).toBe(s.person.size); // only the persons live in the world, all of them alive on the first day
     expect(s.ruler.every((x) => x === '')).toBe(true);
   });
   it('describes realms and places for the clients', () => {

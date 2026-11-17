@@ -16,6 +16,9 @@ import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION, FAMILY_SCHEMA, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personHousehold } from '../src/net/people';
 import { householdRows, lsd, pence } from '../src/people/economy_rows';
+import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
+import { cultivate } from '../src/sim/systems/cultivation';
+import { bringInHarvest } from '../src/sim/systems/harvest';
 
 const { s, w } = newWorldState();
 const start = decodeState(encodeState(s)); // the world on the day it is founded
@@ -231,6 +234,7 @@ describe('the state', () => {
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

@@ -10,7 +10,7 @@ const ROAD = rgb(0xe0c6a4), PAVED = rgb(0xe4c6b4), PLAZA = rgb(0xecd6c6), ISLE_S
 const ROCK_GRAIN = 0.3, ROCK_NOTCH = 0.3;
 export const ROCK_TOP_LOW = rgb(0xb4aaa6), ROCK_TOP_HIGH = rgb(0xfdfaf8);
 const ROCK_SIDE_LOW = rgb(0xa09a9e), ROCK_SIDE = rgb(0xc4ac9e), ROCK_SIDE_COOL = rgb(0xa8b4c0), ROCK_SIDE_HIGH = rgb(0xfff5ed), ROCK_SIDE_HIGH_COOL = rgb(0xd0dae6);
-export const SOIL_WHEAT = rgb(0xc09a3c), SOIL_OATS = rgb(0x6c9634), SOIL_VINE = rgb(0x587a2a);
+export const SOIL_WHEAT = rgb(0xc4aa4c), SOIL_OATS = rgb(0x6c9634), SOIL_VINE = rgb(0x587a2a);
 /** the fallow: stubble and weeds, grazed, shows through the grass this far */
 export const SOIL_FALLOW = rgb(0xb0a060), FALLOW_SHOWS = 0.65;
 export const SHADED_SOIL = rgb(0x6a705c);
@@ -42,12 +42,12 @@ export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.0
  * drier than the next, and single dark tufts. Gives the colour a cell is pulled towards and how far, or null.
  */
 function meadowPatch(x: number, z: number): readonly [RGB, number] | null {
-  if (hash2(x, z, 87) < 0.02) return [TUFT, 0.8];
+  if (hash2(x, z, 87) < 0.008) return [TUFT, 0.6];
   // slabs of three by two cells, every other column of slabs shifted; dry patches of two by two between them
   const col = Math.floor(x / 3), lot = hash2(col, Math.floor((z + col) / 2), 83);
-  if (lot < 0.22) return [MEADOW_MID, 0.7];
-  if (lot > 0.93) return [MEADOW_DEEP, 0.7];
-  return hash2(Math.floor(x / 2), Math.floor((z + Math.floor(x / 2)) / 2), 85) < 0.2 ? [GRASS_DRY, 0.42] : null;
+  if (lot < 0.22) return [MEADOW_MID, 0.4];
+  if (lot > 0.93) return [MEADOW_DEEP, 0.4];
+  return hash2(Math.floor(x / 2), Math.floor((z + Math.floor(x / 2)) / 2), 85) < 0.2 ? [GRASS_DRY, 0.22] : null;
 }
 
 /** `wx`, `wz`: the point in world blocks, which the patterns of the ground are laid out in. */
@@ -60,7 +60,7 @@ export function topColor(t: GroundTraits, x: number, z: number, mat: number, wx 
   let c = mix(GRASS_A, GRASS_B, fbm2(wx / 11, wz / 11, 21));
   // sun-bleached blades between the green ones, changing from cell to cell: the lit meadows of the reference are
   // speckled yellow-green
-  c = mix(c, GRASS_DRY, hash2(Math.round(wx), Math.round(wz), 23) * (0.25 + 0.3 * t.bleach(x, z)));
+  c = mix(c, GRASS_DRY, hash2(Math.round(wx), Math.round(wz), 23) * (0.12 + 0.2 * t.bleach(x, z)));
   c = mix(c, GRASS_DEEP, smooth(0.45, 0.75, fbm2(wx / 13, wz / 13, 25)) * 0.6);
   const tint = t.tint?.(x, z);
   if (tint) c = mix(c, shade(tint[0], 0.96 + 0.08 * hash2(Math.round(wx), Math.round(wz), 24)), tint[1]);

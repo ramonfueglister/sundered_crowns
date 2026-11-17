@@ -31,14 +31,18 @@ describe('a world of 1291', () => {
   it('holds in every place at least the people of the towns the world graphic builds there', () => {
     const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
     const inTowns = new Map<number, number>();
-    towns.people.forEach((n, k) => { if (n) inTowns.set(towns.place[k], (inTowns.get(towns.place[k]) ?? 0) + n); });
+    const inFrame = new Set(citiesOf(1291).map((c) => c.site)), persons = new Map<number, number>();
+    towns.people.forEach((n, k) => {
+      if (!n) return;
+      inTowns.set(towns.place[k], (inTowns.get(towns.place[k]) ?? 0) + n);
+      if (inFrame.has(k)) persons.set(towns.place[k], (persons.get(towns.place[k]) ?? 0) + Math.round(n / SCALE));
+    });
     expect(inTowns.size).toBeGreaterThan(400);
-    for (const [p, n] of inTowns) expect(s.place.pop[p]).toBeGreaterThanOrEqual(n / SCALE - 0.01);
+    for (const [p, n] of persons) expect(s.place.pop[p]).toBeGreaterThanOrEqual(n); // its persons (and rulers)
     expect(inTowns.get(w.names.indexOf('Paris'))).toBeGreaterThan(200_000); // Chandler 1291
   });
-  it('counts heads at 1:100 and feeds a head as a person of the time', () => {
-    expect(sum(s.place.pop)).toBeGreaterThan(sum(s1291.pop) / SCALE * 0.999);
-    expect(sum(s.place.pop)).toBeLessThan(sum(s1291.pop) / SCALE * 1.01); // the 30 cities may lift a few places
+  it('has only its persons as people and feeds a head as a person of the time', () => {
+    expect(sum(s.place.pop)).toBe(s.person.size); // all alive on the first day; the land without towns is empty
     let kcal = 0, heads = 0;
     for (let i = 0; i < w.L; i++) if (s.place.harvest[i] > 0) { kcal += s.place.harvest[i]; heads += s.place.pop[i]; }
     expect(kcal / heads / 365).toBeGreaterThan(800); expect(kcal / heads / 365).toBeLessThan(3000);
@@ -59,7 +63,7 @@ describe('a world of 1291', () => {
     for (const c of cities) {
       expect(towns.people[c.site]).toBe(c.people); // the town of the picture holds the city's people
       expect(towns.place[c.site]).toBe(c.place);
-      expect(s.place.pop[c.place]).toBeGreaterThanOrEqual(c.people / SCALE - 0.01);
+      expect(s.place.pop[c.place]).toBeGreaterThanOrEqual(Math.round(c.people / SCALE));
     }
     // Chandler's towns first, each group largest first: the 30 largest of Chandler are the first 30
     const ch = cities.filter((c) => c.source === 'chandler');

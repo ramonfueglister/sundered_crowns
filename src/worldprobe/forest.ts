@@ -54,9 +54,9 @@ export const conifersAt = (f: Forest, px: number, py: number) => (f.conifers ? s
  */
 export const WOOD = 10;
 /** the edge of a wood is this wide, as a share of the smaller of woods and open land */
-const EDGE = 0.35;
+const EDGE = 0.15;
 /** where the woods lie: a field that is the same at every step, 0 … 1 */
-const lie = (wx: number, wz: number) => (noise2(wx / WOOD, wz / WOOD, 81) * 4 + noise2(wx / WOOD * 2.3, wz / WOOD * 2.3, 82) * 2 + noise2(wx / WOOD * 5.1, wz / WOOD * 5.1, 83)) / 7;
+const lie = (wx: number, wz: number) => (noise2(wx / WOOD, wz / WOOD, 81) * 4 + noise2(wx / WOOD * 2.3, wz / WOOD * 2.3, 82) * 2 + noise2(wx / WOOD * 5.1, wz / WOOD * 5.1, 83) * 0.5) / 6.5;
 /** the share of the land on which `lie` is below k / RANKS: makes of it a rank spread evenly over 0 … 1 */
 const RANKS = 512;
 let ranks: Float32Array | undefined;

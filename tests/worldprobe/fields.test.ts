@@ -54,8 +54,8 @@ describe('the shipped land under the plough of 1291', () => {
 });
 
 describe('a field lot from farther away', () => {
-  it('keeps a balk while it is wide enough, and is all field once it is not', () => {
-    expect(lotFill(1)).toBeCloseTo((5 * 3) / (6 * 4));
+  it('is all field, without a balk', () => {
+    expect(lotFill(1)).toBe(1);
     expect(lotFill(2)).toBe(1);
     expect(lotFill(5)).toBe(1);
   });

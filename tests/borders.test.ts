@@ -85,7 +85,7 @@ describe('a world of 1291 saved before the borders', () => {
     const s = fresh();
     until(s, '1400-01-01');
     const old = decodeState(encodeState(fresh()));
-    old.day = s.day; old.v = 16;
+    old.day = s.day; old.v = 17;
     const up = upgradeState(old, w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
     expect(Array.from(up.place.owner)).toEqual(Array.from(s.place.owner));
