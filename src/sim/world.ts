@@ -3,7 +3,7 @@ import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
 import type { EconomyClock, EconomyEngine, EconomyRules } from './economy/engine';
-import type { CalibrationTable } from './economy/calibration';
+import { foodNeedCost, type CalibrationTable } from './economy/calibration';
 import type { Chronicle } from './content/chronicle';
 import type { Borders } from './content/borders';
 import type { Ground } from './content/ground';
@@ -72,10 +72,11 @@ export class World {
   england: Uint8Array;
   /** the engine of the economies and what the cities' economies are calibrated from: the table, the year its
    *  starting position stands for, the scale the model computes at (1:100), the daily clock and the rules of the
-   *  firms. Which places have an economy is part of the state of a world (`CityEconomies.places`): they are the
+   *  firms and households, and what the food a basket needs costs per day at the prices of the start (£, economy
+   *  feature 15). Which places have an economy is part of the state of a world (`CityEconomies.places`): they are the
    *  cities of its start year */
   economyEngine: EconomyEngine;
-  cityEconomies: { year: number; scale: number; clock: EconomyClock; rules: EconomyRules; table: CalibrationTable };
+  cityEconomies: { year: number; scale: number; clock: EconomyClock; rules: EconomyRules; foodNeed: number; table: CalibrationTable };
   names: string[]; namesDe: string[]; altNames: (string | null)[]; townSize: Uint8Array;
   adjStart: Int32Array; adj: Int32Array; adjKm: Float32Array; adjFlag: Uint8Array;
   provOf: Int32Array; provinces: Province[]; areas: Area[]; regions: string[]; regionOf: Uint8Array; // per province
@@ -131,7 +132,9 @@ export class World {
     if (!(Number.isInteger(clock.plan) && clock.plan >= 1 && Number.isInteger(clock.window) && clock.window > 1)) throw new Error(`the economy of ${t.case} has a year of ${clock.window} days and a plan every ${clock.plan} days`);
     if (wage !== 'prices' && wage !== 'money') throw new Error(`the economy of ${t.case} pays wages in the way "${wage}", the engine knows 'prices' and 'money'`);
     if (prices !== 'costs' && prices !== 'demand') throw new Error(`the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`);
-    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices }, table: t };
+    const spent = t.cities.savings_spent_per_year.value;
+    if (!(spent >= 0 && spent <= clock.window)) throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
+    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window }, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours
