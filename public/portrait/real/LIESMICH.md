@@ -21,7 +21,13 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
   seit Runde 90 darüber 300 kurze, gewellte Strähnen (`beard_crop_locks.txt.zst`: gewölbte Bänder, fest, mit
   Schatten wie die Strähnen des Kopfhaars; sie liegen auf der Form des Bartes, nicht auf der Haut, und enden,
   wo der Bart endet), gezeichnet mit dem Bild `beard1356_locks.webp` (`_n` Normalen: weniger und breitere
-  Haare als im Bild des Kopfhaars, stärker geschwungen). Kurzer Bart und Stoppeln bleiben bemalte Schichten.
+  Haare als im Bild des Kopfhaars, stärker geschwungen). Seit Runde 91 sind es 390 Strähnen: der Schnurrbart
+  hat 90 eigene, schmale Strähnen, die der Oberlippe entlang nach aussen und um den Mundwinkel in den Bart
+  laufen; die Strähnen lassen einen kleineren Mund frei als die bemalte Schicht (sie reichen bis an die Lippen),
+  eine Strähne beginnt breit und dort, wo ihre vordersten Haare wurzeln, und die Zone des Bartes endet hinten
+  vor dem Kieferwinkel mit runder Ecke (vorher lag sie hinter dem Kiefer auf dem Hals: im Profil ein Latz).
+  Dafür neu geschrieben: `beard_crop_locks.txt.zst`, `beard_crop_cap.*`, `beard_crop_scalp.txt`.
+  Kurzer Bart und Stoppeln bleiben bemalte Schichten.
   beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der
   Oberlippe enden über der Mundlinie (bei Apoleias Bart liegen sie auf einem geschlossenen Mund wie Zähne).
   beard_stubble1356 (Stoppeln im Kleid England 1356): Apoleias Stoppeln mit freiem Mund, aus demselben Grund.

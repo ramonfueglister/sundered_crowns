@@ -241,7 +241,7 @@ LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest 
 LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
 
 
-def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None):
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None, first=0.0):
     """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
     wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
     times as high, `m` corners from flank to flank. Its image's length part lies back and forth
@@ -257,7 +257,10 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
     cards. `over`: the skin the locks lie over, if not the head's own (`Head.covered`). `back`: a lock begins so
     far before the middle of its strands' roots, against the way it sets off (the roots of a wisp lie on a patch
     of skin as broad as the wisp, and the band begins in that patch's middle: along a parting the locks of either
-    side began a finger's breadth off it, a bare strip between two rows of ends). `vary` (three numbers and a
+    side began a finger's breadth off it, a bare strip between two rows of ends). `first`: a lock begins where the
+    foremost of its strands are rooted (so far before the middle of the roots as that share of them lies, measured
+    against the way the lock sets off; 0: in the middle): at the edge of hair that nothing lies over, a beard's on
+    the cheek and under the lip, the locks began a patch's half breadth inside the edge, in a row. `vary` (three numbers and a
     seed): each lock's end by chance longer or shorter than `tip` says (the share of that length), broader or
     narrower (of the lock's breadth), and the lock itself shorter than its strands by up to so much. Returns bands
     for write_tubes(closed=False)."""
@@ -278,8 +281,11 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         Sj = Sj + (c0[None] - Sj) * cl
         b0 = unit(np.cross(unit(np.gradient(c0, axis=0)), unit(c0 - head.hc)))
         w0 = np.clip(spread * np.sqrt((((Sj - c0[None]) * b0[None]).sum(-1) ** 2).mean(0)), wmin, wmax)
-        if back > 0:
-            c0 = np.concatenate([c0[:1] - unit(c0[1] - c0[0])[None] * back, c0])
+        before = back
+        if first > 0:
+            before = before + max(0.0, float(np.quantile(((c0[0][None] - S[mk][:, 0]) * unit(c0[1] - c0[0])[None]).sum(-1), first)))
+        if before > 0:
+            c0 = np.concatenate([c0[:1] - unit(c0[1] - c0[0])[None] * before, c0])
             w0 = np.concatenate([w0[:1], w0])
         run0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c0, axis=0), axis=1))])
         total = max(run0[-1], 1e-6)
@@ -450,7 +456,7 @@ def write_tubes(head, out, name, tubes, even=None, closed=True):
     return len(verts), len(tri_list)
 
 
-def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87, form=None, label='', ring='0.14', m='5'):
+def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87, form=None, label='', ring='0.14', m='5', extra=(), write=True, first='0'):
     """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
     `locks_from_wisps`), written as `name_locks.txt` in `out`, bound to the head `bind`; `head`: the head they are
     laid over (its centre and skin). The switches are read under the style's own name `key` (`BOB`, `PLAIT`,
@@ -471,12 +477,15 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_VARY`: no two locks end alike:
     by how much of itself an end is longer or shorter than `_LOCK_TIP` says, by how much of the lock's breadth it
     is broader or narrower, and by how much at most the lock ends before its strands do (`locks_from_wisps(vary=)`;
-    nothing: all ends alike); `<key>_LOCK_M`: corners across a band;
+    nothing: all ends alike); `<key>_LOCK_FIRST`: a lock begins where the foremost of its strands are rooted, this
+    share of them (`locks_from_wisps(first=)`; 0: in the middle of its roots); `<key>_LOCK_M`: corners across a band;
     `<key>_LOCK_RING`: from ring to ring; `<key>_LOCK_EVEN`: how often the builder evens out the locks' way with a
     head along them (a few times, so that a lock stays the head's form: evened out to the end it would move as a
     stiff piece). The wisps are drawn with random numbers of their own (`seed`): the cards and the painted layer
     of a style stay as they were. `form`: the skin the locks lie over, given whole (a beard's own form:
-    `<key>_LOCK_OVER` is not read then). All PLACEHOLDER by eye."""
+    `<key>_LOCK_OVER` is not read then). `write=False`: the bands are returned and no file is written; `extra`:
+    bands made so that are written into this file with its own (a beard's moustache, whose locks are gathered
+    and measured apart from the rest). All PLACEHOLDER by eye."""
     get = lambda name, default: os.environ.get(key + name, default)
     LK, LW0, LW1, LFLAT, *LAYER = [float(t) for t in os.environ[key + '_LOCKS'].split(',')]
     rl = np.random.default_rng(seed)
@@ -493,8 +502,11 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     VARY = (fours('_LOCK_VARY', vary) + (0.0, 0.0, 0.0))[:3] + (seed * 1000,) if get('_LOCK_VARY', vary) else None
     bands = locks_from_wisps(head, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', m)), jitter=float(get('_LOCK_JITTER', jitter)),
                              tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
-                             wave=wave, ring=float(get('_LOCK_RING', ring)), back=float(get('_LOCK_BACK', back)), vary=VARY,
+                             wave=wave, ring=float(get('_LOCK_RING', ring)), back=float(get('_LOCK_BACK', back)), vary=VARY, first=float(get('_LOCK_FIRST', first)),
                              over=form if form is not None else head.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
+    if not write:
+        return bands
+    bands = bands + list(extra)
     nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
     print(label, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
     return bands

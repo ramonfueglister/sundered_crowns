@@ -2094,6 +2094,91 @@ a boy of 17 can wear a beard. The chin of a brown beard is now 12 L lighter than
 reference's emperor: 2 to 8), since the locks there catch the key light. All measures PLACEHOLDER, by eye,
 `sheen.light` by eye on three values.
 
+**A moustache of its own, a beard that closes round the mouth and keeps to the jaw (round 91).** Round 90
+left small scales on the upper lip and a straight back edge below the ear. Rendered four times as large
+(1792 x 2240) and once with the locks alone (`?without=beard_crop_cap`), these were four things
+(`runde91_mund_profil_vorher_nachher.png`, upper row):
+
+- Chips on the upper lip. There the beard's flow runs out and down, into the mouth. A strand of a
+  moustache's length was cut at the lips after a few millimetres, and the locks made of such strands, as
+  broad as the beard's (0.9 to 1.8 cm on a lip 1.4 cm high), stood on the lip as a row of chips.
+- A bare ring round the mouth. The zone leaves the mouth free as an ellipse 0.39 by 0.12 (7.8 by 2.4 cm):
+  the base's full lips with a margin. A man of England's lips are thinner. The locks ended 5 to 8 mm above
+  his upper lip and began as far below his lower one; the painted layer alone filled the ring. On seven
+  heads the band the locks leave free at the middle of the face was 0.102 to 0.120 of the head's height.
+- A row of flames at the chin. A lock began in the middle of its strands' roots, half a patch inside the
+  edge of the hair, and its beginning was a point (a quarter of its breadth over 1 cm): good under other
+  locks, a row of spearheads where nothing lies over it, under the lip and along the cheek.
+- In profile, a bib. The line that ends the zone in front of the ear ran backwards on its way down (z 0.6
+  at the ear's lobe, 0.25 at the height of the neckline) and met the neckline in a corner: the beard covered
+  the side of the neck behind the jaw, with two ruled edges. Its hindmost corner near the neckline lay
+  0.075 to 0.100 of the head's depth behind its edge in front of the ear (1.5 to 2 cm). That was the
+  painted layer's own outline, not the locks'.
+
+What was tried, in order (two men from the front with mouth and jaw large, one from both sides; from trial
+8 two men in profile from both sides):
+
+| trial | what showed |
+|---|---|
+| 1: the upper lip's roots as the moustache's own: strands that sweep out along the lip, 44 locks of 3.5 to 7 mm | no chips; thin wavy twigs with the painted layer between them |
+| 2: 90 locks of 5 to 10 mm, flatter (22 % as thick as broad), waves a quarter as far | a moustache from the front and from the side; a strip of painted layer between it and the lip |
+| 3: a lock's beginning broad and flat (0.8 of its breadth over 6 mm) and 3 mm before the middle of its roots | no flames; a ruled line of beginnings under the lip |
+| 4: a lock begins where the foremost of its strands are rooted; waves 2.2 cm long instead of 1.5 | the line softer and where the hair's edge is; the waves read as hair, not as a zigzag |
+| 5: the beginning 3 mm long instead of 6 | a hard edge under the lip: not kept |
+| 6: the locks alone rendered: the ring; a mouth of their own for the locks, 0.36 by 0.055 above and 0.075 below the line of the lips | the moustache down to the lip, the chin's locks from under the lower lip; the upper lip covered |
+| 7: 0.07 above the line | the upper lip's edge shows; as built |
+| 8: strands cut 3 mm outside the zone at the back instead of 10.5, each sooner by chance | the bib as before: it is the painted layer |
+| 9: the zone's back line straight down in front of the jaw's angle (z 0.47 and 0.42), the corner rounded with 1.5 cm; strands cut 7.5 mm outside the zone at the back and each up to 0.6 sooner | in profile the beard keeps to the jaw; as built |
+
+As built, all in the pipeline; no Rust source and nothing of the stage changed. `beards.py`, style `crop`:
+`CROP_M_LOCKS` (the moustache apart: 2 400 roots on the upper lip, strands of 2 cm along a flow that turns
+along the mouth's outline, `CROP_M_FLOW`; gathered into 90 locks of their own by `write_locks(write=False)`
+and written into the beard's file with `extra=`; the beard's other locks are made without those roots),
+`CROP_LOCK_MOUTH` (the mouth the locks leave free: roots, cut and the moustache's flow take it, the painted
+layer keeps the zone's), `CROP_LOCK_CUT` with up to five numbers (in front, at the back, between which
+depths, the share by chance), `CROP_BACK` (the zone's back line and the radius of its corner: this one
+changes the painted layer, its net and the scalp file). `hairlib.py`: `locks_from_wisps(first=)` and
+`<key>_LOCK_FIRST` (a lock begins where the foremost of its strands are rooted). The call is in
+`tools/portrait/pipeline/README.md`; without the new switches it writes round 90's files byte for byte, and
+every cut, the plaits and the beards as documented before come out as they were.
+
+Numbers, old against new (seven heads of the test given the full beard; the sample's four):
+
+| | round 90 | round 91 |
+|---|---|---|
+| the band the locks leave free at the middle of the face, share of the head's height | 0.102 to 0.120 | 0.039 to 0.051 |
+| the beard's hindmost corner near the neckline behind its edge in front of the ear, share of the head's depth | 0.075 to 0.100 | -0.001 to 0.019 |
+| locks / triangles | 300 / 16 528 | 390 / 25 824 |
+| the zone / hairs painted on the layer | 233.5 cm2 / 71 939 | 228.1 cm2 / 68 344 |
+| the locks' lowest point below the chin, share of the head's height | -0.009 to 0.020 | -0.022 to 0.016 |
+| the locks off the skin, median / at most | 6.7 to 7.2 mm / 1.45 to 1.56 cm | 6.3 to 6.9 mm / 1.55 to 1.62 cm |
+| relief round the lit jaw, lightest tenth less darkest tenth (L), 940011, 940013, 940021, 940027 | 10.0, 13.2, 10.3, 17.4 | 8.6, 14.1, 9.8, 14.6 |
+| 940021: chin against his hair (L; the reference's emperor 2 to 8 lighter) | 12.0 lighter | 7.6 lighter |
+| 940021: lit jaw / far jaw (L; the reference's lit side 18 lighter) | 26.1 / 16.9 | 18.7 / 13.7 |
+| `beard_crop_locks.txt.zst` | 235 kB | 366 kB |
+| building a man's portrait with the full beard, best of 40, native (two men; without it 13.4 and 21.8 ms) | 18.4 and 27.9 ms | 22.7 and 31.5 ms |
+
+The relief is what it was. The lit jaw of the brown beard reads 7 L darker at the place measured and its
+lit side is 5 L lighter than the far side where it was 9: a measure over a few pixels, on locks laid anew
+(my reading; the pictures show no darker beard), and further from the reference's 18 either way. Of the
+sample's 35 portraits four changed (the full beards, 10 to 11 % of their pixels); 31 and the Roman pictures
+are the same pixel for pixel.
+
+Tests: `portrait/tests/locks.rs`, `a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw` (seven men
+given the full beard: the locks leave between 0.03 and 0.085 of the head's height free at the middle of the
+face, and the beard's hindmost corner near the neckline lies less than 0.04 of the head's depth behind its
+edge in front of the ear; it fails on round 90's files on both, on all seven). The test of round 90 holds
+with its bounds as they were. Pictures: `runde91_bart_vorher_nachher.png` (round 90 above, round 91 below),
+`runde91_mund_profil_vorher_nachher.png` (mouth and jaw of two men large, two profiles),
+`runde91_stichprobe.png`.
+Still open: the moustache covers most of the upper lip's red on some men (a full moustache; whether the
+mouth reads worse for it was judged by eye only). In profile the outline below is one straight line from
+the chin to the corner, with a fringe of the painted layer's short hairs. The chin's locks begin in a row
+under the lower lip. Where the moustache meets the beard at the corner of the mouth the locks cross. Lit
+to far side as far from the reference as before. The short beard and stubble as they were; every man the
+same beard. One man's mouth was measured against (the ring was read off renders of 940021), and the
+locks' mouth is the same for every man. All measures PLACEHOLDER, by eye.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

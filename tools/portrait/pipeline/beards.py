@@ -68,17 +68,33 @@ RAISE = {'full': 0.04, 'trim': 0.04, 'crop': 0.04, 'phil': 0.07}.get(style, 0.0)
 # (Apoleia's reaches 0.15 below the chin and so down the front of the throat; `crop` ends under the jaw, a little
 # behind the tip of the chin, whose underside lies at 6.155 to 6.2: a line at 6.2 cut a hole into the beard there)
 NECK = tuple(float(t) for t in os.environ.get('CROP_NECK', '6.1,0.3,1.0,0.4').split(',')) if style == 'crop' else (6.05, 0.37, 0.8, 0.5)
+# the zone's back edge (`crop`, round 91: CROP_BACK): the radius of the corner in which the neckline and the line
+# in front of the ear meet (0: a corner), and how far back that line lies at the height of the neckline and of
+# the jaw's angle (z at y 6.3 and 6.6). As it was (0, 0.25, 0.45) the line ran backwards on its way down: the
+# beard covered the side of the neck behind the jaw, in profile a bib with two ruled edges and a corner
+BACK = tuple(float(t) for t in os.environ.get('CROP_BACK', '0,0.25,0.45').split(',')) if style == 'crop' else (0.0, 0.25, 0.45)
 # the mouth left free by where a direction passes the plane of the lips, and the moustache ending over it: `crop`
 # always, any other style with LIPS=1 (without it they are written as Apoleia's were)
 LIPS = style == 'crop' or os.environ.get('LIPS') == '1'
+
+# the mouth left free: half its width, and its height above and below the line where the lips meet (6.6), on the
+# plane of the lips. The base's lips are fuller than a man's of England: the beard's locks take a smaller one
+# (`CROP_LOCK_MOUTH`, round 91)
+MOUTH = (0.39, 0.12, 0.12)
 
 def gfield(p):
     x, y, z = p[..., 0], p[..., 1], p[..., 2]
     ax = np.abs(x)
     top = np.interp(ax, [0, 0.3, 0.45, 0.55, 0.68, 0.78, 1.3], [6.86, 6.85, 6.80, 6.745 + RAISE, 6.93 + RAISE, TOPS, TOPS])
     g = top - y
-    g = np.minimum(g, y - (NECK[0] + NECK[1] * np.clip((NECK[2] - z) / NECK[3], 0, 1)))       # neckline
-    g = np.minimum(g, z - np.interp(y, [6.3, 6.6, 6.85, 7.5], [0.25, 0.45, 0.6, 0.66]))    # in front of the ear
+    gn = y - (NECK[0] + NECK[1] * np.clip((NECK[2] - z) / NECK[3], 0, 1))                    # neckline
+    ge = z - np.interp(y, [6.3, 6.6, 6.85, 7.5], [BACK[1], BACK[2], 0.6, 0.66])            # in front of the ear
+    if BACK[0] > 0:
+        # the two lines meet in a corner behind the jaw: rounded, with this radius
+        r = BACK[0]
+        ge = np.where((gn < r) & (ge < r), r - np.hypot(np.clip(r - gn, 0, None), np.clip(r - ge, 0, None)), np.minimum(gn, ge))
+    g = np.minimum(g, gn)
+    g = np.minimum(g, ge)
     g = np.minimum(g, 0.86 - ax)
     em = (np.sqrt((x / 0.39) ** 2 + ((y - 6.6) / 0.12) ** 2) - 1) * 0.11          # the mouth
     if LIPS:
@@ -87,7 +103,7 @@ def gfield(p):
         # beards were written so). Here the mouth is left free by where the direction passes the plane of the lips
         k = (1.5 - HC[2]) / np.maximum(z - HC[2], 1e-3)
         xm, ym = HC[0] + (x - HC[0]) * k, HC[1] + (y - HC[1]) * k
-        em = (np.sqrt((xm / 0.39) ** 2 + ((ym - 6.6) / 0.12) ** 2) - 1) * 0.11
+        em = (np.sqrt((xm / MOUTH[0]) ** 2 + ((ym - 6.6) / np.where(ym > 6.6, MOUTH[1], MOUTH[2])) ** 2) - 1) * 0.11
         g = np.minimum(g, np.where(z - HC[2] > 0.2, em, 1.0))
     else:
         g = np.minimum(g, np.where(z > 1.0, em, 1.0))
@@ -101,6 +117,15 @@ def gfield(p):
 def margin(th, el):
     d = dirs(th, el)
     return gfield(H.at(d, 0.0 * th)) / 0.015
+
+def margin_with(mouth, th, el):
+    """`margin` with another mouth left free."""
+    global MOUTH
+    keep, MOUTH = MOUTH, mouth
+    try:
+        return margin(th, el)
+    finally:
+        MOUTH = keep
 
 def e_th(d):
     return tangent(np.stack([d[..., 2], np.zeros_like(d[..., 0]), -d[..., 0]], -1), d)
@@ -370,10 +395,19 @@ if style == 'crop' and os.environ.get('CROP_LOCKS'):
         form.R = np.maximum(H.R, farthest(hc, P[ts[:, 0]], P[ts[:, 1]], P[ts[:, 2]], D).reshape(H.R.shape))
         return form
     form = beard_form()
+    # CROP_LOCK_MOUTH (round 91): the mouth the locks leave free (half its width, its height above and below the
+    # line where the lips meet). With the zone's own (0.39, 0.12, 0.12: the base's full lips with a margin) the
+    # locks ended 5 to 8 mm above a man's upper lip and began as far below his lower one, a bare ring round the
+    # mouth that the painted layer alone filled
+    LM = tuple(float(t) for t in os.environ.get('CROP_LOCK_MOUTH', '0.39,0.12,0.12').split(','))
+    margin_l = lambda th, el: margin_with(LM, th, el)
+    def mouth_l(d):
+        xm_, ym_ = lips(d)
+        return np.sqrt((xm_ / LM[0]) ** 2 + ((ym_ - 6.6) / np.where(ym_ > 6.6, LM[1], LM[2])) ** 2), xm_, ym_
     rl_ = np.random.default_rng(90)
     NR = int(os.environ.get('CROP_LOCK_ROOTS', '9000'))
     Pl = golden(NR * 24, rl_, 0.003)
-    Pl = Pl[margin(*ang(Pl)) > 0.5]
+    Pl = Pl[margin_l(*ang(Pl)) > 0.5]
     Pl = Pl[rl_.permutation(len(Pl))[:NR]]
     skl = H.at(Pl, np.zeros(len(Pl)))
     axl, yl, zl = np.abs(skl[:, 0]), skl[:, 1], skl[:, 2]
@@ -381,27 +415,71 @@ if style == 'crop' and os.environ.get('CROP_LOCKS'):
     chin_l = np.clip(1 - axl / 0.55, 0, 1) ** 0.8 * np.clip((6.6 - yl) / 0.25, 0, 1) ** 0.5
     must_l = (yl > 6.66) & (axl < 0.55) & (zl > 1.1)
     Ll = np.where(must_l, L2, L0 + (L1 - L0) * chin_l) * (0.85 + 0.3 * rl_.random(len(Pl)))
-    Sl = grow(form, Pl, Ll, 10, flow, lambda s_, d_, P0: 0.0 * d_[..., 0])
-    # a strand ends where it comes to the mouth (a lock run on over it lies on the lips as a bar) and where it
-    # leaves the zone (below the jaw the form goes on as the neck: a beard down to the collar)
-    dl = unit(Sl - hc)
-    xm_, ym_ = lips(dl)
-    gone = ((xm_ / 0.39) ** 2 + ((ym_ - 6.6) / 0.12) ** 2 < 1) | (margin(*ang(dl)) < -float(os.environ.get('CROP_LOCK_CUT', '7')))
-    tt = np.arange(Sl.shape[1])
-    whole = np.ones(len(Sl), bool)
-    for i in np.where(gone.any(1))[0]:
-        k = int(np.argmax(gone[i]))
-        whole[i] = k > 3                                  # rooted at the very edge: no strand
-        u = np.linspace(0, max(k - 1, 0), Sl.shape[1])
-        for c in range(3):
-            Sl[i, :, c] = np.interp(u, tt, Sl[i, :, c])
-    Sl = Sl[whole]
+    # CROP_LOCK_CUT: how far outside the zone a strand is cut (units of 1.5 mm). Since round 91 up to five numbers:
+    # so far in front, so far at the back, the depth (z) below which it is the back and above which the front, and
+    # the share of it by which a strand is cut sooner by chance. With one number for all, the beard hung a
+    # centimetre over its zone on the neck below the ear too, a bib with a ruled edge and a corner behind the jaw
+    CUTS = [float(t) for t in os.environ.get('CROP_LOCK_CUT', '7').split(',')]
+    def cut(Sl):
+        # a strand ends where it comes to the mouth (a lock run on over it lies on the lips as a bar) and where it
+        # leaves the zone (below the jaw the form goes on as the neck: a beard down to the collar)
+        dl = unit(Sl - hc)
+        far = CUTS[0]
+        if len(CUTS) > 1:
+            zs = H.at(dl, 0.0 * dl[..., 0])[..., 2]
+            far = CUTS[1] + (CUTS[0] - CUTS[1]) * np.clip((zs - CUTS[2]) / (CUTS[3] - CUTS[2]), 0, 1)
+            far = far * (1 - CUTS[4] * np.random.default_rng(92 + len(Sl)).random(len(Sl)))[:, None]
+        gone = (mouth_l(dl)[0] < 1) | (margin_l(*ang(dl)) < -far)
+        tt = np.arange(Sl.shape[1])
+        whole = np.ones(len(Sl), bool)
+        for i in np.where(gone.any(1))[0]:
+            k = int(np.argmax(gone[i]))
+            whole[i] = k > 3                                  # rooted at the very edge: no strand
+            u = np.linspace(0, max(k - 1, 0), Sl.shape[1])
+            for c in range(3):
+                Sl[i, :, c] = np.interp(u, tt, Sl[i, :, c])
+        return Sl[whole]
+    # CROP_M_LOCKS (round 91): the moustache apart. On the upper lip the beard's flow runs out and down into the
+    # mouth: strands of a moustache's length were cut at the lips after a few millimetres, and the locks made of
+    # them, as broad as the beard's, stood on the lip as a row of chips. With this switch the roots on the upper
+    # lip are the moustache's own: its strands sweep out along the lip (near the mouth along its outline, round
+    # its corner and down into the beard: CROP_M_FLOW = from how far off the mouth's outline, as a share of the
+    # mouth, the flow begins to turn and where it runs along it, and how much it is pushed off the lips),
+    # CROP_M_L long, gathered into locks of their own number and measure (the switches of `write_locks` under
+    # `CROP_M_LOCK_...`), and the beard's other locks are made without those roots
+    MOUST = os.environ.get('CROP_M_LOCKS')
+    extra = []
+    if MOUST:
+        rm_ = np.random.default_rng(91)
+        Pm = golden(int(os.environ.get('CROP_M_TRIED', '1500000')), rm_, 0.0006)
+        Pm = Pm[margin_l(*ang(Pm)) > 0.5]
+        skm = H.at(Pm, np.zeros(len(Pm)))
+        Pm = Pm[(skm[:, 1] > 6.66) & (np.abs(skm[:, 0]) < 0.55) & (skm[:, 2] > 1.1)]
+        Pm = Pm[rm_.permutation(len(Pm))[:int(os.environ.get('CROP_M_ROOTS', '2400'))]]
+        F0, F1, FP = (float(t) for t in os.environ.get('CROP_M_FLOW', '1.9,1.3,0.25').split(','))
+        def flow_m(d, th, el):
+            e, xm_, ym_ = mouth_l(d)
+            sx = np.sign(xm_ + 1e-6)
+            hy = np.where(ym_ > 6.6, LM[1], LM[2])
+            # along the mouth's outline, away from the middle and round the corner; and straight off it
+            along = np.stack([sx * (ym_ - 6.6) / hy ** 2, -np.abs(xm_) / LM[0] ** 2, 0 * xm_], -1)
+            off = np.stack([xm_ / LM[0] ** 2, (ym_ - 6.6) / hy ** 2, 0 * xm_], -1)
+            w = np.clip((F0 - e) / (F0 - F1), 0, 1)[..., None]
+            return unit((1 - w) * flow(d, th, el) + w * (tangent(unit(along), d) + FP * tangent(unit(off), d)))
+        Lms = float(os.environ.get('CROP_M_L', '0.2')) * (0.85 + 0.3 * rm_.random(len(Pm)))
+        Sm = cut(grow(form, Pm, Lms, 16, flow_m, lambda s_, d_, P0: 0.0 * d_[..., 0]))
+        WM = tuple(float(t) for t in os.environ.get('CROP_M_WAVE', '0.003,0.002,0.15').split(','))
+        extra = write_locks(H, H, out, name, Sm, 'CROP_M', wave=WM if len(WM) == 3 else None, form=form, tip='0.45,0.12,0.6,0.5', root='0.2,0.03,0.8,0.3',
+                            vary='0.4,0.25,0.04', jitter='0.004', ring='0.03', seed=91, label=style, write=False, first='0.9')
+        print(style, 'moustache', len(Pm), 'roots', len(Sm), 'strands', len(extra), 'locks')
+        Pl, Ll = Pl[~must_l], Ll[~must_l]
+    Sl = cut(grow(form, Pl, Ll, 10, flow, lambda s_, d_, P0: 0.0 * d_[..., 0]))
     # CROP_LOCK_WAVE: a lock swings to the side and off the beard along its way (how far, how far, the length
     # of a wave; 0: straight)
     WAVE = tuple(float(t) for t in os.environ.get('CROP_LOCK_WAVE', '0.012,0.006,0.15').split(','))
     WAVE = WAVE if len(WAVE) == 3 else None
     write_locks(H, H, out, name, Sl, 'CROP', wave=WAVE, form=form, tip='0.45,0.18,0.75,0.5', root='0.3,0.1,0.25,0.3', vary='0.4,0.25,0.06',
-                jitter='0.008', ring='0.04', seed=90, label=style)
+                jitter='0.008', ring='0.04', seed=90, label=style, extra=extra)
     if os.environ.get('CROP_LOCKS_ONLY'):
         sys.exit(0)
 

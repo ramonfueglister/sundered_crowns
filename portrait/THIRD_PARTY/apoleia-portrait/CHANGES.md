@@ -252,3 +252,11 @@ edge), `CROP_EDGE`. New files `beard_crop_locks.txt.zst`, `beard1356_locks.webp`
 written anew `beard_crop_cap.txt.zst` (the layer further off the skin). `tests/locks.rs`: a fifth test. The
 game's stage draws them as solid hair by the image's name; its `sheen.light` for England 0.5 (was 1.5).
 Roman bytes unchanged.
+
+Round 91: no Rust source changed. Pipeline: `beards.py` style `crop`: `CROP_M_LOCKS` (the moustache as locks
+of its own, along a flow that turns along the mouth's outline), `CROP_LOCK_MOUTH` (the mouth the locks leave
+free, smaller than the painted layer's), `CROP_LOCK_CUT` with up to five numbers, `CROP_BACK` (the zone ends
+in front of the jaw's angle, its corner rounded); `hairlib.py`: `locks_from_wisps(first=)` and
+`<key>_LOCK_FIRST` (a lock begins where the foremost of its strands are rooted), `write_locks(write=False,
+extra=)`. Written anew: `beard_crop_locks.txt.zst` (390 locks), `beard_crop_cap.txt.zst`, `beard_crop_cap.webp`,
+`beard_crop_cap_n.webp`, `beard_crop_scalp.txt`. `tests/locks.rs`: a sixth test. Roman bytes unchanged.

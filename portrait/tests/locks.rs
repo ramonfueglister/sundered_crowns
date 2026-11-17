@@ -280,3 +280,50 @@ fn a_full_beard_of_england_is_locks_over_its_painted_layer() {
         assert!(!build(&h, &p, 1).surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))), "locks on a jaw without a full beard");
     }
 }
+
+#[test]
+fn a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw() {
+    // Round 90's locks left a ring round the mouth that the painted layer alone filled: the zone's mouth is the
+    // base's, with fuller lips than a man of England's and a margin. The moustache's strands were cut there
+    // after a few millimetres (chips on the upper lip) and the chin's locks began a centimetre below the lower
+    // lip. And the zone ran backwards below the ear: in profile a bib on the side of the neck. Since round 91
+    // the locks have a mouth of their own, the moustache its own strands along the lip, and the zone's back edge
+    // comes down in front of the jaw's angle (`beards.py`: `CROP_LOCK_MOUTH`, `CROP_M_LOCKS`, `CROP_BACK`).
+    let Some(h) = head() else { return };
+    let mut bad: Vec<String> = Vec::new();
+    for (k, age) in [(1u32, 24.0f32), (3, 35.0), (5, 50.0), (7, 68.0), (9, 35.0), (11, 50.0), (13, 68.0)] {
+        let mut p = person(k, false, age);
+        p.beard = Some(Beard::Full);
+        let out = build(&h, &p, 1);
+        let who = format!("person {k} of {age}");
+        let beard = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))).unwrap_or_else(|| panic!("{who}: a beard's locks"));
+        let (skin, crown) = skin(&out);
+        let height = crown - out.chin;
+        // the band the locks leave free at the middle of the face: the widest gap between the heights of their
+        // corners there, from under the nose to the chin. It is the mouth: no less than the lips are high, and
+        // not much more
+        let mut ys: Vec<f32> = beard.pos.iter().filter(|q| (q[0] - out.cx).abs() < 0.012 * height * 10.0 / 2.3 && q[1] > out.chin + 0.05 * height && q[1] < out.chin + 0.4 * height && q[2] > out.cz).map(|q| q[1]).collect();
+        ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let free = ys.windows(2).map(|w| w[1] - w[0]).fold(0f32, f32::max) / height;
+        // the beard's back edge: its hindmost corner in front of the ear (0.3 to 0.35 of the head's height above
+        // the chin) and near the neckline (up to 0.1 above the chin), against the head's depth (from the hindmost
+        // skin of the head to the foremost, the tip of the nose). The edge comes down, it does not run backwards
+        // onto the side of the neck
+        let (back, front) = skin.pos.iter().filter(|q| q[1] > out.chin).fold((f32::MAX, f32::MIN), |(b, f), q| (b.min(q[2]), f.max(q[2])));
+        let hind = |from: f32, to: f32| (beard.pos.iter().filter(|q| q[1] > out.chin + from * height && q[1] < out.chin + to * height).map(|q| q[2]).fold(f32::MAX, f32::min) - back) / (front - back);
+        let (ear, neck) = (hind(0.3, 0.35), hind(-1.0, 0.1));
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: the mouth's free band {free:.3} of the head's height, the beard's hindmost corner in front of the ear {ear:.3} and near the neckline {neck:.3} of the head's depth, {} triangles", beard.pos.len() / 3);
+        }
+        // measured: 0.039 to 0.051 free (round 90's files 0.102 to 0.120: a ring of 6 to 8 mm round the lips)
+        if !(free > 0.03 && free < 0.085) {
+            bad.push(format!("{who}: the locks leave {free} of the head's height free at the mouth"));
+        }
+        // measured: near the neckline 0.001 in front of to 0.019 behind the edge in front of the ear (round 90's
+        // files 0.075 to 0.100 behind it: a bib)
+        if !(ear - neck < 0.04) {
+            bad.push(format!("{who}: the beard's back edge runs {} of the head's depth backwards on its way down", ear - neck));
+        }
+    }
+    assert!(bad.is_empty(), "{bad:#?}");
+}
