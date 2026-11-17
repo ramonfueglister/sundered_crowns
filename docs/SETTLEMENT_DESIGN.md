@@ -168,7 +168,7 @@ town has and where they lie was the world graphic's own (src/worldprobe/hamlets.
    town (20 m) and of the hamlets before it (4 m) and carries all its farmhouses (`houseGround`, as for the
    parcels); else the nearest such spot farther out (within 128 blocks); else the clear spot near its own that
    carries the most. The ground of a hamlet is the dry ground round the town (`public/data/dry_<year>.json`, written
-   by `tools/worldprobe/build_plan.ts` of the world graphic: no water, no rock, up to 200 blocks from the centre;
+   by `tools/worldprobe/build_plan.ts` of the world graphic: no water, no rock, up to 227 blocks from the centre;
    `World.dry`). Steps do not count there, because the world graphic levels the ground of a hamlet. Without that
    file the building ground of the town is used, as far as it reaches.
 
@@ -188,12 +188,10 @@ town has and where they lie was the world graphic's own (src/worldprobe/hamlets.
 2,127 hamlets with 18,665 farmsteads for the 18,665 farming families (75,918 persons); with the 8,150 parcels the
 register has 26,815 rows, and only the 314 ruler families are without ground. Hamlets per town 1 / 2 / 8 / 71
 (smallest, median, nine in ten at most, largest: Cairo); farmsteads per hamlet 5 to 10, median 9. A hamlet lies
-4.3 / 8.0 / 21.8 km from the centre of its town (nearest, median, farthest). No hamlet lies on another or on its
-town. In 55 hamlets not every farmhouse stands on dry ground (509 farmhouses): 47 of them are Cairo's, whose
-hamlets lie up to 174 blocks out while its dry ground was surveyed to 110; the others are of Venice (4), Ceuta,
-Alexandria, Hormuz and Rhodes (1 each), with no dry spot for them within reach. By the building ground alone, which
-ends 96 blocks from the centre and counts every step, it would be 117. 32 hamlets found no clear spot near their own
-and lie farther off.
+4.3 / 8.0 / 24.4 km from the centre of its town (nearest, median, farthest). No hamlet lies on another or on its
+town. In 3 hamlets not every farmhouse stands on dry ground (27 farmhouses): one each of Ceuta, Alexandria and
+Rhodes, with no dry spot for them within reach. By the building ground alone, which ends 96 blocks from the centre
+and counts every step, it would be 117. 28 hamlets found no clear spot near their own and lie farther off.
 
 ### Own rules and gaps (no source)
 
@@ -204,8 +202,9 @@ and lie farther off.
 - Which family lives in which hamlet (by id), the even split, the sunflower, the lane running east-west.
 - Thirteen towns have no arable in their place (Cairo, Fustat, Asyut, Qus, Kush, Sijilmasa, Medina, Mecca, Sana'a,
   Zabid, Ta'izz, Aden, Timbuktu: no fertile land in `land.json`): their hamlets lie in the ring their room makes.
-- Hamlets of different towns are not held apart, and the dry ground is known only as far as its survey reaches (for
-  31 towns less far than their outermost hamlet may lie).
+- Hamlets of different towns are not held apart. The dry ground is surveyed as far as the outermost hamlet of each
+  town may lie (the ring of step 4, half a hamlet and the near search; the world graphic adds 20 blocks): when the
+  ring of a town grows, its survey must grow with it.
 - A house is built at its real size and the land is 125 m to a block, so the hamlets of a large town crowd its
   fields: the ground of Paris's 39 hamlets is 69 % of the disc that holds its arable, and in the world graphic the
   cultivated blocks round Paris fall from 35,560 to 24,430. For the median town it is 9 %.
