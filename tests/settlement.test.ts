@@ -9,7 +9,9 @@ import { STATE_VERSION, LOT_KIND, NO_LOT, type WorldState } from '../src/sim/sta
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { namedPersons } from '../src/sim/systems/rulers';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { readFileSync } from 'node:fs';
+import { newWorldState, loadSetup, dataPath } from '../tools/sim/load';
+import { lotsFile } from '../tools/sim/write_lots';
 
 const { s, w } = newWorldState(1291, 1291);
 const cities = citiesOf(1291), site = (name: string) => cities.find((c) => c.name === name)!.site;
@@ -137,5 +139,14 @@ describe('what the world server tells of the ground of a town', () => {
     expect(many.map((m) => m.site)).toEqual(sites);
     sites.forEach((x, i) => expect(many[i]).toEqual(townLots(s, x)));
     expect(many[1].id.length).toBe(0);
+  });
+});
+
+describe('the file of parcels the world graphic reads', () => {
+  it('is the land register of a new world of 1291 (npx tsx tools/sim/write_lots.ts 1291)', () => {
+    const file = JSON.parse(readFileSync(dataPath('lots_1291.json'), 'utf8'));
+    expect(file).toEqual(JSON.parse(JSON.stringify(lotsFile(s))));
+    expect(file.towns.length).toBe(cities.length);
+    expect(file.towns.reduce((n: number, t: { x: number[] }) => n + t.x.length, 0)).toBe(s.lot.size);
   });
 });

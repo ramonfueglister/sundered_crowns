@@ -39,6 +39,11 @@ runs yet: nobody is born, dies, marries or moves, so no parcel is laid out, spli
 `GET /lots/<site>` and `GET /lots?sites=a,b,…` (at most 200) give the ground of towns as columns: id, kind, x, z, w,
 d, front, family (−1 vacant), persons.
 
+`public/data/lots_1291.json` (`npm run lots:write 1291`, `tools/sim/write_lots.ts`) is the register of a new world
+with the seed of the running one (1291), for the world graphic: its probe page has no world server. A copy of the
+state, true while the register does not change; a test fails when it is not what a new world has. Once parcels
+change while the world runs, the graphic has to read `/lots` instead.
+
 ### Steps
 
 1. **Who lives in the town.** The families of the town and their persons (`townFamilies`). Today these are all
@@ -94,8 +99,9 @@ towns would touch: Cairo and Fustat, Rabat and Salé.
   known to the simulation: `foundLots` and `layParcels` take a `free` test for it, which nothing passes yet. The
   landscape thread writes the building-ground layer (`public/data/ground_<year>.json`) after its half-size change.
 - The town stands still until persons are born, die and move.
-- The world graphic still builds its towns from `public/data/towns_1291.json` (src/worldprobe/settle.ts); it will
-  set one house on each parcel from `/lots`.
+- The world graphic on main still builds its towns from `public/data/towns_1291.json` (src/worldprobe/settle.ts).
+  The landscape work (PR #59) sets one house on each parcel, from the file above and not yet from `/lots`; the far
+  zoom steps (far.ts) do not know the parcels yet.
 
 ### Sources
 
