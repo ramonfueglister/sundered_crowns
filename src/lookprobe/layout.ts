@@ -183,7 +183,7 @@ export interface GroundTraits {
    * a tree is a single block: the colour of its top, and of its sides down to `rise` blocks below the top (a field
    * only colours the top: `rise` 0).
    */
-  cover?(x: number, z: number): { top: readonly [number, number, number]; side: readonly [number, number, number]; rise: number; /** how much of the top the cover colours, 0 … 1 (all of it if left out) */ share?: number } | null;
+  cover?(x: number, z: number): { top: readonly [number, number, number]; side: readonly [number, number, number]; rise: number; /** how much of the top the cover colours, 0 … 1 (all of it if left out) */ share?: number; /** false: the cover is the ground's own, bare soil for one, not something that stands on it (terrain.ts `carried`) */ stands?: boolean } | null;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

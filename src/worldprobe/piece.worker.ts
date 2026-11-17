@@ -13,7 +13,6 @@ import { loadHamletLands } from './hamlets';
 import { loadParcels } from './lots';
 import { loadModels } from './models';
 import { FINER_STEPS } from './land';
-import { DIORAMA_FAR } from './zoom';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
@@ -68,12 +67,13 @@ async function meanOf(job: PieceJob): Promise<Cover> {
  * colours of the tops and sides and the rise, of far.ts (`far`) and of the mean (`mean`), and the top as the far
  * ground is drawn (`drawn`).
  */
-function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch) {
+function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch, carried?: Batch) {
   const far = laidOut();
   if (!far?.kind) return;
   // the tops of the far ground as they are drawn, with the sky's light baked into them
   const drawn = above(N, N);
   lay(drawn, ground, 0, 0, true);
+  if (carried) lay(drawn, carried, 0, 0, true);
   const add = (k: string, v: number) => { counts[k] = (counts[k] ?? 0) + v; };
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = x + z * N, kind = far.kind[i];
@@ -91,16 +91,16 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
   const { id, piece, step } = e.data;
   try {
-    const began = performance.now(), mean = step === 1 && e.data.mean && !DIORAMA_FAR ? await meanOf(e.data) : null, meant = performance.now();
+    const began = performance.now(), mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
     const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
-    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground);
+    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); }
-    const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
+    const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), carried: built.carried && flat(built.carried), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
       : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
-    const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
+    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
-    const sum = step === 0 && e.data.mean === true && !DIORAMA_FAR ? summed(built, piece.part) ?? undefined : undefined;
+    const sum = step === 0 && e.data.mean === true ? summed(built, piece.part) ?? undefined : undefined;
     (self as unknown as Worker).postMessage({ id, scene, summary: sum } satisfies PieceDone, sum ? [...lists, sum.buffer as ArrayBuffer] : lists);
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies PieceDone);

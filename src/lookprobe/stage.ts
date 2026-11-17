@@ -43,6 +43,8 @@ export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'sky
  */
 export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
 const FAR_SHADOW = 2;
+/** of the land's light and shade this share is left under the map's paper where it is fully calmed (see Stage.lay) */
+const CALM_KEPT = 0.4;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
 const LIT_GROUND = 0.32;
 /** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
@@ -58,6 +60,8 @@ export interface StageScene<S extends Shape = Batch> {
   water: S;
   /** water above sea level (lakes, rivers): drawn plain, because the mirror lies at sea level */
   raised?: S;
+  /** what the columns of the ground carry as part of themselves (terrain.ts `carried`): ground to a click, but to the map's paper what stands on the ground */
+  carried?: S;
   /** the people standing and walking on it (figures/crowd.ts) */
   figures?: Figures;
   counts: Record<string, number>;
@@ -114,9 +118,10 @@ export interface Stage {
    * light and shade it hides and whether it covers the sea too (0: the land shows through it and the sea is left
    * free, 1: the paper's colours as they are, sea and all, as on a printed map); the water's surface lies below `seaTop`.
    * `things`: how much of it lies on what stands on the ground (houses, trees, fields), as a share of what lies on the
-   * ground itself (default: as much).
+   * ground itself (default: as much). `calm`: how far the land's light and shade are evened out under it, 0 … 1: from
+   * afar woods and fields are many small blocks, which would speckle the realm's colour.
    */
-  lay(strength: number, flat: number, seaTop: number, things?: number): void;
+  lay(strength: number, flat: number, seaTop: number, things?: number, calm?: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees, from `away` times the look's own distance (the farther, the less the far side of the picture is drawn smaller than the near). */
   aim(x: number, z: number, frameW: number, elevation: number, away?: number): void;
   /** Asks for a new picture. */
@@ -300,7 +305,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // scene then takes its colour from by where each of its points lies on the ground
   const paper = new THREE.Scene(), paperEye = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
   const paperPicture = new THREE.RenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
-  const laid = { strength: uniform(0), flat: uniform(1), seaTop: uniform(SEA_Y), things: uniform(1) };
+  const laid = { strength: uniform(0), flat: uniform(1), seaTop: uniform(SEA_Y), things: uniform(1), calm: uniform(0) };
   const paperFrom = uniform(new THREE.Matrix4()), eyeInverse = uniform(camera.projectionMatrixInverse), eyeWorld = uniform(camera.matrixWorld);
   {
     const depth = far.sample(screenUV).r, inView = getViewPosition(screenUV, depth, eyeInverse), there = eyeWorld.mul(vec4(inView, 1));
@@ -314,7 +319,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
     const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
-    picture = mix(picture, mix(ink.mul(light), ink, laid.flat), cover);
+    picture = mix(picture, mix(ink.mul(mix(light, light.mul(CALM_KEPT).add(1 - CALM_KEPT), laid.calm)), ink, laid.flat), cover);
   }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
   pipeline.outputNode = flag('blur', false) ? dof(picture, scenePass.getViewZNode(), LOOK.distance, LOOK.focusRange, LOOK.blur) : picture;
@@ -356,11 +361,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     add(built, x = 0, z = 0) {
       const group = new THREE.Group();
       group.position.set(x, 0, z);
-      for (const [shape, material, casts] of [[built.ground, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
+      for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape || !shape.pos.length) continue;
         const part = mesh(shape, material, casts);
-        part.userData.ground = shape === built.ground;
-        if (shape === built.things) part.userData.ink = 0;
+        part.userData.ground = shape === built.ground || shape === built.carried;
+        if (shape === built.things || shape === built.carried) part.userData.ink = 0;
         group.add(part);
       }
       if (built.figures?.count) { const f = figureMeshes(built.figures); f.near.layers.set(FIGURES_LAYER); f.far.layers.set(FIGURES_LAYER); group.add(f.near, f.far); marked(group); showFigures(frameW); }
@@ -389,9 +394,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
-    lay(strength, flat, seaTop, things = 1) {
-      if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things) return;
-      laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; laid.things.value = things; pending = Math.max(pending, 1);
+    lay(strength, flat, seaTop, things = 1, calm = 0) {
+      if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things && laid.calm.value === calm) return;
+      laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; laid.things.value = things; laid.calm.value = calm; pending = Math.max(pending, 1);
     },
     creases(share, reach = 1) {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }

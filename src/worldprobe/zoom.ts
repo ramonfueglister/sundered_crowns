@@ -33,14 +33,13 @@ export const PAPER_COARSEST = 6 + FINER_STEPS;
  * (land.ts). The camera looks down as in the reference from near, and straight down where the realms begin to show.
  */
 /**
- * The far steps as a diorama (world.ts): every step is built house by house and tree by tree like the finest one, on a
- * world that many times smaller, so that the picture of the middle distance lasts until the realms' map takes over.
- * Then the camera keeps its angle and the relief its strength until shortly before that map.
+ * The camera keeps the angle of the middle distance, and the relief its strength, for as long as the land is seen as
+ * a land: it rises and the land sinks only over the last stretch before the realms' map (which begins once the camera
+ * looks straight down, REALMS_FROM).
  */
-export const DIORAMA_FAR: boolean = true;
-const TILT_FROM = (DIORAMA_FAR ? 4200 : 500) * FINER, TILT_UNTIL = (DIORAMA_FAR ? 7400 : 5500) * FINER, STRAIGHT_DOWN = 89.5;
+const TILT_FROM = 4200 * FINER, TILT_UNTIL = 7400 * FINER, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = (DIORAMA_FAR ? 4200 : 500) * FINER, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 4200 * FINER, RELIEF_LEAST = 0.06;
 /**
  * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
  * the map comes in one move of the wheel and the world is not seen half under it for long
@@ -109,18 +108,25 @@ const POLITICAL_NEAR = 0.75, NAMES_FROM = 900 * FINER, NAMES_FULL = 2200 * FINER
  */
 const THINGS_NEAR = 0.3, THINGS_FAR = 0.6;
 /**
+ * from afar woods, fields and towns are blocks of the ground, many and small: there the colour lies more strongly on
+ * the land (POLITICAL_FAR) and the land's light and shade are evened out under it (`calm`), so that a realm is one
+ * calm colour with the woods and the relief as a soft shade in it, not a speckled dark carpet
+ */
+const POLITICAL_FAR = 0.9, CALM_FROM = DETAIL_UNTIL, CALM_FULL = 6 * DETAIL_UNTIL;
+/**
  * How the realms' map lies on a view: `strength` how much it covers the land, `flat` how much it is a printed map
  * (the land's light hidden, the sea painted too), `names` how strongly the realms' names are written, `things` how
- * much of it lies on what stands on the ground, as a share of what lies on the ground; all 0 … 1.
+ * much of it lies on what stands on the ground, as a share of what lies on the ground, `calm` how far the land's
+ * light and shade are evened out under it; all 0 … 1.
  * The political map mode lays it on the land at every distance, the terrain mode nowhere; `far` (the world probe's
  * own page and the tools that take pictures of it) only where the world lies flat, as the 2D map.
  */
-export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number; things: number } {
+export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number; things: number; calm: number } {
   const flat = realmsOf(wide);
-  if (mode === 'terrain') return { strength: 0, flat: 0, names: 0, things: 1 };
-  if (mode === 'far') return { strength: flat, flat, names: flat, things: 1 };
-  const names = Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide));
-  return { strength: POLITICAL_NEAR + (1 - POLITICAL_NEAR) * flat, flat, names, things: THINGS_NEAR + (THINGS_FAR - THINGS_NEAR) * names };
+  if (mode === 'terrain') return { strength: 0, flat: 0, names: 0, things: 1, calm: 0 };
+  if (mode === 'far') return { strength: flat, flat, names: flat, things: 1, calm: 0 };
+  const names = Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)), calm = over(CALM_FROM, CALM_FULL, wide), near = POLITICAL_NEAR + (POLITICAL_FAR - POLITICAL_NEAR) * calm;
+  return { strength: near + (1 - near) * flat, flat, names, things: THINGS_NEAR + (THINGS_FAR - THINGS_NEAR) * Math.max(names, calm), calm };
 }
 /** Whether a view shows the realms rather than the land: there a click means the place, nearer it means what stands on the ground. */
 export const realmsShown = (wide: number) => realmsOf(wide) >= 0.5;

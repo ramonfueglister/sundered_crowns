@@ -77,11 +77,16 @@ export function topColor(t: GroundTraits, x: number, z: number, mat: number, wx 
 export interface Part { x0: number; z0: number; x1: number; z1: number }
 const WHOLE: Part = { x0: 0, z0: 0, x1: N, z1: N };
 
+/** a column is what it carries, and not ground, from this share of cover on (GroundTraits.cover) */
+const CARRIED_FROM = 0.5;
 /**
  * `baked` switches the sky share on (light step 2); without it the ground has only the live sun and sky of step 1.
  * `part` limits the mesh to a rectangle of columns, for a ground that is one piece of a larger world.
+ * With `carried` the tops and sides of what the columns carry as part of themselves (houses, trees and fields of a
+ * far step, `cover`) are put there instead of into the ground: a mesh of its own, which the stage treats as what
+ * stands on the ground (Stage.lay).
  */
-export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = WHOLE): Batch {
+export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = WHOLE, carried?: Batch): Batch {
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
   const b = new Batch(), light = (x: number, z: number, y: number) => (baked ? skyLight(skyShare(g, x, z, y)) : 1);
   const NB: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -108,7 +113,8 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
       return [c[0] * grain * l ** 1.5, c[1] * grain * l, c[2] * grain * l ** 0.3];
     };
     const c00 = corner(x, z), c10 = corner(x + 1, z), c11 = corner(x + 1, z + 1), c01 = corner(x, z + 1);
-    if (!g.wet[i]) b.quad([x, h, z], [x, h, z + 1], [x + 1, h, z + 1], [x + 1, h, z], [c00, c01, c11, c10], [0, 1, 0]);
+    const on = carried && cover && cover.stands !== false && !(cover.share! < CARRIED_FROM) ? carried : b;
+    if (!g.wet[i]) on.quad([x, h, z], [x, h, z + 1], [x + 1, h, z + 1], [x + 1, h, z], [c00, c01, c11, c10], [0, 1, 0]);
     if (g.wet[i]) continue;
     for (const [dx, dz] of NB) {
       const nx = x + dx, nz = z + dz;
@@ -150,7 +156,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
       }
       // what the column carries shows its own sides, down to the ground it stands on
       const ground = cover ? Math.max(nh, h - cover.rise) : h;
-      if (ground < h) b.quad([ax, ground, az], [bx, ground, bz], [bx, h, bz], [ax, h, az], [shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la)], [dx, 0, dz]);
+      if (ground < h) on.quad([ax, ground, az], [bx, ground, bz], [bx, h, bz], [ax, h, az], [shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la)], [dx, 0, dz]);
       if (nh < ground) b.quad([ax, nh, az], [bx, nh, bz], [bx, ground, bz], [ax, ground, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
     }
   }
