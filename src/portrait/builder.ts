@@ -11,6 +11,9 @@ export interface PortraitBuilder {
   image(path: string): void;
   /** Switches the real look on (the folder its files were handed in under) or off (''): the simple, faceted look. */
   real(folder: string): void;
+  /** The piece on the head every portrait wears from now on, by its key in portrait/src/dress.rs `HEADWEAR`
+   *  ('': what each person's dress says), to look at one piece on many faces. */
+  headwear(key: string): void;
   /** The portrait of a person at a level of detail 0..3 (1 in the game). */
   build(person: PortraitPerson, lod?: number): Portrait;
 }
@@ -22,6 +25,7 @@ interface Exports {
   scp_file(path: number, pathLen: number, ptr: number, len: number): number;
   scp_image(path: number, len: number): number;
   scp_real(folder: number, len: number): number;
+  scp_headwear(key: number, len: number): number;
   scp_build(person: number, len: number): number;
   scp_out_ptr(): number; scp_out_len(): number;
 }
@@ -51,6 +55,7 @@ export function wasmPortraitBuilder(wasm: Uint8Array): PortraitBuilder {
     file(path, bytes) { call([utf8.encode(path), bytes], a => e.scp_file(a[0], a[1], a[2], a[3])); },
     image(path) { call([utf8.encode(path)], a => e.scp_image(a[0], a[1])); },
     real(folder) { call([utf8.encode(folder)], a => e.scp_real(a[0], a[1])); },
+    headwear(key) { call([utf8.encode(key)], a => e.scp_headwear(a[0], a[1])); },
     build(person, lod = 1) { return decodePortrait(call([encodePerson(person, lod)], a => e.scp_build(a[0], a[1]))); },
   };
 }

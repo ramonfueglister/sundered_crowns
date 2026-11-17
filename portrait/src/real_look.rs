@@ -241,6 +241,19 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
     // the style from the person's genes, age, sex and stand
     {
         let r = Rng::new(p.seed ^ 0x2545_f491).next();
+        // under a piece on the head: none, flat, or the person's own
+        if let Some(d) = p.dress.set() {
+            if let Some(w) = crate::dress::headwear_of(d, p.female, p.age, p.seed) {
+                match w.hair {
+                    crate::dress::HairUnder::None => return None,
+                    crate::dress::HairUnder::Flat => {
+                        let n = if long_hair { d.hair_veiled } else { d.hair_hooded };
+                        return (!n.is_empty()).then(|| (dir, n.to_string()));
+                    }
+                    crate::dress::HairUnder::Own => {}
+                }
+            }
+        }
         let name = if p.age < 7.0 {
             // small children: short loose hair
             p.dress.set().map_or("crop01", |d| d.hair_small)
@@ -442,7 +455,8 @@ pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dy
             vn[i] = add(vn[i], n);
         }
     }
-    let mut s = Surface::new(mat2(0.95));
+    // mail (`metal_` files) is metal, everything else cloth
+    let mut s = Surface::new(if name.starts_with("metal_") { Mat { rough: 0.5, metal: 1.0, double: true } } else { mat2(0.95) });
     s.tex = Some(crate::real::image(dir, name));
     // shade in the folds per vertex (name_ao.txt), if there is one
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/{name}_ao.txt"), 1.0);
@@ -693,6 +707,76 @@ pub(crate) fn mh_hair2(dir: &str, name: &str, pp: &[V3], base: &[V3], hc: V3, co
                 d[1] = d[1].max(0.0);
             }
             s.nrm.push(norm(d));
+        }
+    }
+    Some(s)
+}
+
+/// A stiff piece on the head (dress.rs `Fit::Rigid`: helms, crowns), from its file (tools/portrait/pipeline
+/// `headwear_lib.write_rigid`): the number of points and of triangles; five of the head's points it is placed by
+/// (above the left and the right ear, the brows' middle, the back of the head, the top); a row for each point
+/// (place, normal, place in the image, colour of its material); a row for each triangle. Made on MakeHuman's base
+/// body, it is moved and turned with the morphed head and scaled along the head's own axes by how much broader
+/// (ear to ear), longer (brows to back) and higher (ears to top) it is, but not bent: a helm keeps its form.
+pub(crate) fn mh_rigid(dir: &str, name: &str, pp: &[V3], base: &[V3], tint: Rgb) -> Option<Surface> {
+    let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
+    let head = rows.first()?;
+    let (nv, nt) = (*head.first()? as usize, *head.get(1)? as usize);
+    let an = rows.get(1)?;
+    if an.len() < 5 || rows.len() < 2 + nv + nt {
+        return None;
+    }
+    let a: Vec<usize> = an.iter().take(5).map(|&i| i as usize).collect();
+    if a.iter().any(|&i| i >= pp.len() || i >= base.len()) {
+        return None;
+    }
+    // a frame of the head: its middle, its axes (right, up, forward) and its extent along them
+    let frame = |v: &[V3]| -> (V3, [V3; 3], V3) {
+        let (l, r, brow, back, top) = (v[a[0]], v[a[1]], v[a[2]], v[a[3]], v[a[4]]);
+        let ears = mul(add(l, r), 0.5);
+        let mid = [ears[0], ears[1], 0.5 * (brow[2] + back[2])];
+        let x = norm(sub(l, r));
+        let fwd = sub(brow, back);
+        let z = norm(sub(fwd, mul(x, dot(fwd, x))));
+        let y = cross(z, x);
+        let ext = [dot(sub(l, r), x), dot(sub(top, ears), y), dot(fwd, z)];
+        (mid, [x, y, z], ext)
+    };
+    let (m0, ax0, e0) = frame(base);
+    let (m1, ax1, e1) = frame(pp);
+    let k: V3 = std::array::from_fn(|i| if e0[i].abs() > 1e-6 { e1[i] / e0[i] } else { 1.0 });
+    let place = |q: V3| -> V3 {
+        let d = sub(q, m0);
+        let mut out = m1;
+        for i in 0..3 {
+            out = madd(out, ax1[i], dot(d, ax0[i]) * k[i]);
+        }
+        out
+    };
+    let turn = |n: V3| -> V3 {
+        let mut out = [0.0; 3];
+        for i in 0..3 {
+            out = madd(out, ax1[i], dot(n, ax0[i]) / k[i]);
+        }
+        norm(out)
+    };
+    let pts = &rows[2..2 + nv];
+    if pts.iter().any(|r| r.len() < 11) {
+        return None;
+    }
+    // drawn from both sides: the inside of a helm shows through its openings, dark as its file paints it
+    let mut s = Surface::new(Mat { rough: 0.35, metal: 1.0, double: true });
+    s.tex = Some(crate::real::image(dir, name));
+    for t in &rows[2 + nv..2 + nv + nt] {
+        if t.len() < 3 {
+            return None;
+        }
+        for &i in &t[..3] {
+            let r = pts.get(i as usize)?;
+            s.pos.push(place([r[0], r[1], r[2]]));
+            s.nrm.push(turn([r[3], r[4], r[5]]));
+            s.uv.push([r[6], 1.0 - r[7]]);
+            s.col.push(linear([r[8] * tint[0], r[9] * tint[1], r[10] * tint[2]]));
         }
     }
     Some(s)

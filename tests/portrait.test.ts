@@ -819,4 +819,45 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 });
     expect(keyPlaces(APOLEIA.lights.key.from, APOLEIA.shadow.spread, APOLEIA.shadow.lights)).toEqual([[-3.5, 4.5, 5.0]]);
   });
+
+  it('every piece on the head can be worn on a person of England, the metal ones mirror the stage', () => {
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
+    const man = { ...people.find(p => !p.female && p.age >= 20)!, origin: 'England' };
+    const bare = b.build(man);
+    expect(bare.surfaces.some(s => surfaceKind(s) === 'metal'), 'nothing of metal unless a piece is worn').toBe(false);
+    const skinTop = (q: Portrait) => {
+      const skin = q.surfaces.find(s => surfaceKind(s) === 'skin')!;
+      let top = -Infinity;
+      for (let i = 1; i < skin.pos.length; i += 3) top = Math.max(top, skin.pos[i]!);
+      return top;
+    };
+    const pieces: [string, string[], boolean][] = [
+      ['helm_great', ['metal_helm_great'], false], ['bascinet', ['metal_bascinet', 'metal_mail_aventail'], false],
+      ['mail_coif', ['metal_mail_coif', 'metal_mail_coif_skirt'], false], ['crown', ['metal_crown'], true],
+      ['coif_linen', ['cloth_coif_linen', 'cloth_coif_ties'], false], ['hat_felt', ['cloth_hat_felt'], true],
+      ['hat_straw', ['cloth_hat_straw'], true],
+    ];
+    for (const [key, files, hair] of pieces) {
+      b.headwear(key);
+      const q = b.build(man), worn = q.surfaces.map(s => s.tex);
+      for (const f of files) expect(worn.some(t => t.includes(`/${f}.`)), `${key} wears ${f}`).toBe(true);
+      for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
+      // no hood under it, and hair only where the piece leaves it
+      expect(worn.some(t => t.includes('/cloth_hood_up.') || t.includes('/cloth_hood_down.')), `${key}: no hood`).toBe(false);
+      expect(worn.some(t => t.includes('/hair1356_locks.') || t.includes('_cap.') && !t.includes('beard')), `${key}: hair under it`).toBe(hair);
+      // what is worn sits over the head's top
+      const piece = q.surfaces.find(s => s.tex.includes(`/${files[0]}.`))!;
+      let top = -Infinity;
+      for (let i = 1; i < piece.pos.length; i += 3) top = Math.max(top, piece.pos[i]!);
+      expect(top, `${key} reaches over the head`).toBeGreaterThan(skinTop(q));
+      for (const s of q.surfaces.filter(s => surfaceKind(s) === 'metal')) {
+        const [m] = surfaceMaterials(s, null, null, ENGLAND_1356);
+        expect([m!.metalness, m!.roughness > 0 && m!.roughness < 1], `${s.tex} is metal`).toEqual([1, true]);
+      }
+    }
+    b.headwear('');
+    expect(b.build(man).surfaces.some(s => surfaceKind(s) === 'metal'), 'the tried piece is taken off again').toBe(false);
+    expect(APOLEIA.metal).toBeNull();
+  });
 });

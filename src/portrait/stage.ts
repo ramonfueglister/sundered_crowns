@@ -9,9 +9,9 @@
 // where Apoleia took it from. Those are Apoleia's values; a set of dress of the game's own may bring others
 // (profile.ts).
 import {
-  ACESFilmicToneMapping, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearMipmapLinearFilter, Mesh, NoColorSpace,
-  PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,
-  WebGLRenderTarget,
+  ACESFilmicToneMapping, BackSide, BufferAttribute, Color, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearMipmapLinearFilter, Mesh,
+  MeshBasicMaterial, NoColorSpace, PCFShadowMap, PerspectiveCamera, PlaneGeometry, PMREMGenerator, RepeatWrapping, Scene, SphereGeometry, SRGBColorSpace,
+  type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer, WebGLRenderTarget,
 } from 'three';
 import { Finish } from './finish';
 import { surfaceGeometry } from './mesh';
@@ -71,6 +71,8 @@ export class PortraitStage {
   /** The picture in linear light before it is finished (profile.ts `finish`), and what finishes it. */
   private target: WebGLRenderTarget | null = null;
   private finish: Finish | null = null;
+  /** What metal mirrors, per profile (`surroundings`). */
+  private readonly mirrored = new Map<string, Texture>();
 
   constructor(private readonly options: StageOptions) {
     const width = options.width ?? 2 * PORTRAIT_SIZE.width, height = options.height ?? 2 * PORTRAIT_SIZE.height;
@@ -164,6 +166,7 @@ export class PortraitStage {
       const skin = surfaceKind(s) === 'skin' ? profile.skin : null;
       const geometry = surfaceGeometry(s, skin ? skin.finer : 0, skin ? skin.fit : 0);
       for (const material of surfaceMaterials(s, map, normalMap, profile, tone)) {
+        if (surfaceKind(s) === 'metal' && profile.metal) material.envMap = this.surroundings(profile);
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = material.colorWrite && !material.transparent;
         // the painted layer of short hairs may be lit without shadows (profile.ts `cap.shadow`)
@@ -187,6 +190,35 @@ export class PortraitStage {
     this.renderer.setRenderTarget(null);
     this.finish ??= new Finish();
     this.finish.draw(this.renderer, fine.texture, profile.finish, profile.exposure);
+  }
+
+  /** What metal mirrors (profile.ts `metal`): no picture of a real place, but a small world made here, a sphere
+   *  from the sky's colour above to the ground's below with a bright window on the key light's side, blurred for
+   *  every roughness by three.js' PMREM. Made once per profile. */
+  private surroundings(p: StageProfile): Texture {
+    const kept = this.mirrored.get(p.key);
+    if (kept || !p.metal) return kept!;
+    const world = new Scene();
+    const sphere = new SphereGeometry(10, 32, 16);
+    const sky = new Color(p.metal.sky), ground = new Color(p.metal.ground), c = new Color();
+    const pos = sphere.getAttribute('position'), col = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const up = pos.getY(i) / 10;
+      c.copy(ground).lerp(sky, Math.min(1, Math.max(0, 0.5 + 0.8 * up)));
+      col.set([c.r, c.g, c.b], 3 * i);
+    }
+    sphere.setAttribute('color', new BufferAttribute(col, 3));
+    world.add(new Mesh(sphere, new MeshBasicMaterial({ vertexColors: true, side: BackSide })));
+    const window = new Mesh(new PlaneGeometry(5, 4), new MeshBasicMaterial({ color: new Color(p.metal.window).multiplyScalar(4), side: BackSide }));
+    window.position.copy(new Vector3(...p.lights.key.from).normalize().multiplyScalar(8));
+    window.lookAt(0, 0, 0);
+    world.add(window);
+    const pmrem = new PMREMGenerator(this.renderer);
+    const env = pmrem.fromScene(world, 0.02).texture;
+    pmrem.dispose();
+    sphere.dispose();
+    this.mirrored.set(p.key, env);
+    return env;
   }
 
   /** The target a finished picture is first drawn to: `fine` times the picture's size a side, in half floats (light

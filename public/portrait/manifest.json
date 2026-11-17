@@ -226,12 +226,44 @@
    "bytes": 42006
   },
   {
+   "name": "cloth_coif_linen.txt.zst",
+   "bytes": 44864
+  },
+  {
+   "name": "cloth_coif_linen_ao.txt",
+   "bytes": 9222
+  },
+  {
+   "name": "cloth_coif_ties.txt",
+   "bytes": 44826
+  },
+  {
+   "name": "cloth_coif_ties_ao.txt",
+   "bytes": 1296
+  },
+  {
    "name": "cloth_cote.txt.zst",
    "bytes": 122667
   },
   {
    "name": "cloth_cote_ao.txt",
    "bytes": 16632
+  },
+  {
+   "name": "cloth_hat_felt.txt.zst",
+   "bytes": 34199
+  },
+  {
+   "name": "cloth_hat_felt_ao.txt",
+   "bytes": 6534
+  },
+  {
+   "name": "cloth_hat_straw.txt.zst",
+   "bytes": 34295
+  },
+  {
+   "name": "cloth_hat_straw_ao.txt",
+   "bytes": 6534
   },
   {
    "name": "cloth_hood_down.txt.zst",
@@ -324,6 +356,42 @@
   {
    "name": "eyebrow001.txt",
    "bytes": 20765
+  },
+  {
+   "name": "metal_bascinet.txt.zst",
+   "bytes": 71637
+  },
+  {
+   "name": "metal_crown.txt.zst",
+   "bytes": 98750
+  },
+  {
+   "name": "metal_helm_great.txt.zst",
+   "bytes": 102704
+  },
+  {
+   "name": "metal_mail_aventail.txt.zst",
+   "bytes": 74154
+  },
+  {
+   "name": "metal_mail_aventail_ao.txt",
+   "bytes": 12672
+  },
+  {
+   "name": "metal_mail_coif.txt.zst",
+   "bytes": 46221
+  },
+  {
+   "name": "metal_mail_coif_ao.txt",
+   "bytes": 9222
+  },
+  {
+   "name": "metal_mail_coif_skirt.txt.zst",
+   "bytes": 74584
+  },
+  {
+   "name": "metal_mail_coif_skirt_ao.txt",
+   "bytes": 12672
   },
   {
    "name": "plait01_cap.txt",
@@ -464,8 +532,16 @@
   "bun01_cap.webp",
   "bun01_cap_n.webp",
   "bun01_n.webp",
+  "cloth_coif_linen.webp",
+  "cloth_coif_linen_n.webp",
+  "cloth_coif_ties.webp",
+  "cloth_coif_ties_n.webp",
   "cloth_cote.webp",
   "cloth_cote_n.webp",
+  "cloth_hat_felt.webp",
+  "cloth_hat_felt_n.webp",
+  "cloth_hat_straw.webp",
+  "cloth_hat_straw_n.webp",
   "cloth_hood_down.webp",
   "cloth_hood_down_n.webp",
   "cloth_hood_up.webp",
@@ -494,6 +570,18 @@
   "eyebrow1356.webp",
   "hair1356_locks.webp",
   "hair1356_locks_n.webp",
+  "metal_bascinet.webp",
+  "metal_bascinet_n.webp",
+  "metal_crown.webp",
+  "metal_crown_n.webp",
+  "metal_helm_great.webp",
+  "metal_helm_great_n.webp",
+  "metal_mail_aventail.webp",
+  "metal_mail_aventail_n.webp",
+  "metal_mail_coif.webp",
+  "metal_mail_coif_n.webp",
+  "metal_mail_coif_skirt.webp",
+  "metal_mail_coif_skirt_n.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",
   "plait01_rope.webp",

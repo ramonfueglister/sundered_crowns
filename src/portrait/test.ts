@@ -13,6 +13,8 @@
 // (tools/portrait/face_colour.mjs).
 // ?sample=england draws founders of the pool England's people come from instead of the twelve test people
 // (tests/portrait/sample_england.json, written by portrait/examples/sample.rs): women and men of 8 to 68.
+// ?headwear=bascinet puts that piece on every head whose dress has a table (with ?origin=England), whatever the
+// table says: helm_great, bascinet, mail_coif, crown, coif_linen, hat_felt, hat_straw (portrait/src/dress.rs).
 import people from '../../tests/portrait/people.json';
 import england from '../../tests/portrait/sample_england.json';
 import { loadPortraitAssets } from './assets';
@@ -44,6 +46,7 @@ async function main(): Promise<void> {
   const [width, height] = (q.get('size') ?? '336x420').split('x').map(Number);
   const assets = await loadPortraitAssets();
   if (q.has('simple')) assets.builder.real('');
+  assets.builder.headwear(q.get('headwear') ?? '');
   const stage = new PortraitStage({ width, height, images: assets.images, url: assets.url });
   const wall = document.getElementById('wall')!;
   const origin = q.get('origin');

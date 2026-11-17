@@ -11,3 +11,7 @@ build/
 __pycache__/
 economy/target/
 portrait/target/
+
+# Blender output of the headwear scripts (OBJ, previews); the game files are copied to public/portrait/real
+tools/portrait/pipeline/out/
+tools/portrait/pipeline/base.obj

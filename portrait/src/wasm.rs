@@ -101,6 +101,20 @@ pub unsafe extern "C" fn scp_real(folder: *const u8, len: usize) -> u32 {
     }))
 }
 
+/// The piece on the head every portrait wears from now on, by its key in dress.rs `HEADWEAR` (an empty or unknown
+/// text: what each person's dress says), to look at one piece on many faces.
+///
+/// # Safety
+///
+/// As [`scp_head`].
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn scp_headwear(key: *const u8, len: usize) -> u32 {
+    answer(unsafe { text(key, len) }.map(|k| {
+        crate::dress::try_headwear(k);
+        Vec::new()
+    }))
+}
+
 /// The portrait of a person (wire.rs describes both).
 ///
 /// # Safety

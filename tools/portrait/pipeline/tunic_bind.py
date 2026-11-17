@@ -57,6 +57,9 @@ for f in cf:
             tris.append(t)
 used = sorted({i for t in tris for i in t}); rm = {o: k for k, o in enumerate(used)}
 P = CV[used]
+# UVFILE: the garment's own uv per vertex of the OBJ (text, two numbers a line), e.g. a hat's
+# brim, where the uv round the body would smear
+UV0 = np.loadtxt(os.environ['UVFILE'])[used] if os.environ.get('UVFILE') else None
 T = np.array([[rm[i] for i in t] for t in tris])
 # keep the winding outward (normal away from the body's axis)
 c = P[T].mean(1)
@@ -140,6 +143,8 @@ if FOLLOW:
                 P[i] = P[i] + n * (FOLLOW[2] - way @ n); lifted += 1
     print('hem: the cloth follows over', n_, 'rings,', lifted, 'points lifted off the skin')
 uv = np.stack([np.arctan2(P[:, 0], P[:, 2] - 0.2) * 1.2 / 2.0, P[:, 1] / 2.0], -1)
+if UV0 is not None:
+    uv = UV0.copy()
 R_HEM, NS = float(os.environ.get('R_HEM', '0.028')), 6
 # The tube is welded to the cloth: the corner of its ring that faces the cloth is the cloth's own edge vertex (KW), and
 # its other corners are bound to the body with that vertex (below). As a mesh of its own, each of its points bound

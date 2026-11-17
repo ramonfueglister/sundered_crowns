@@ -25,6 +25,88 @@ pub enum Hood {
     Back,
 }
 
+/// How a piece on the head is put on a person. `Soft`: bound to the head's triangles as the hoods are (cloth, mail,
+/// hats; tools/portrait/pipeline/tunic_bind.py), so it follows every morph. `Rigid`: a stiff shape (helms, crowns,
+/// tools/portrait/pipeline/helm_great.py and the like) that is only moved and scaled per person, by the head's
+/// breadth over the ears, its length from the brows to the back and the height of its top (real_look.rs
+/// `mh_rigid`); bending a helm with the face would crumple it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Fit {
+    Soft,
+    Rigid,
+}
+
+/// The hair under a piece on the head.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum HairUnder {
+    /// None: the piece hides it all (helms, mail).
+    None,
+    /// Flat, as under the hood on the head (`DressSet::hair_hooded`; women: `hair_veiled`).
+    Flat,
+    /// The person's own hair, loose (a crown sits on it).
+    Own,
+}
+
+/// A piece worn on the head instead of the hood: its files under public/portrait/real (the first the piece itself,
+/// the others parts of it: a bascinet's aventail, a coif's ties), how the first is put on (the parts after it are
+/// always soft), the hair under it and its colour (cloth: the dye laid over the grey of its image; metal: a tint of
+/// its image). Made in Blender (tools/portrait/pipeline, 17.11.2026); shapes by eye, PLACEHOLDER until held
+/// against sources.
+pub struct Headwear {
+    pub key: &'static str,
+    pub files: &'static [&'static str],
+    pub fit: Fit,
+    pub hair: HairUnder,
+    pub colour: &'static str,
+}
+
+/// Every piece the builder knows. Who wears which is a dress table's (`DressSet::headwear`).
+pub static HEADWEAR: [Headwear; 7] = [
+    Headwear { key: "helm_great", files: &["metal_helm_great"], fit: Fit::Rigid, hair: HairUnder::None, colour: "#ffffff" },
+    Headwear { key: "bascinet", files: &["metal_bascinet", "metal_mail_aventail"], fit: Fit::Rigid, hair: HairUnder::None, colour: "#ffffff" },
+    Headwear { key: "mail_coif", files: &["metal_mail_coif", "metal_mail_coif_skirt"], fit: Fit::Soft, hair: HairUnder::None, colour: "#ffffff" },
+    Headwear { key: "crown", files: &["metal_crown"], fit: Fit::Rigid, hair: HairUnder::Own, colour: "#ffffff" },
+    Headwear { key: "coif_linen", files: &["cloth_coif_linen", "cloth_coif_ties"], fit: Fit::Soft, hair: HairUnder::None, colour: "#e6dfcd" },
+    Headwear { key: "hat_felt", files: &["cloth_hat_felt"], fit: Fit::Soft, hair: HairUnder::Flat, colour: "#5e4a3a" },
+    Headwear { key: "hat_straw", files: &["cloth_hat_straw"], fit: Fit::Soft, hair: HairUnder::Flat, colour: "#e8c98a" },
+];
+
+/// A piece by its key.
+pub fn headwear(key: &str) -> Option<&'static Headwear> {
+    HEADWEAR.iter().find(|h| h.key == key)
+}
+
+/// Who of a dress wears a piece on the head: women or men (none: both), from what age, and how many in ten of them
+/// (by the person's seed, its third digit from the end; the first two choose hood and hair length).
+pub struct Wear {
+    pub piece: &'static str,
+    pub female: Option<bool>,
+    pub from: f32,
+    pub share: u32,
+}
+
+/// The piece every portrait wears whatever its dress says, for looking at one on many faces (the test page's
+/// ?headwear=, wasm.rs `scp_headwear`); none in the game.
+static TRYING: std::sync::RwLock<Option<&'static Headwear>> = std::sync::RwLock::new(None);
+
+/// Sets or clears the piece every portrait wears (`TRYING`); an unknown key clears it.
+pub fn try_headwear(key: &str) {
+    *TRYING.write().unwrap_or_else(|e| e.into_inner()) = headwear(key);
+}
+
+/// What a person of a dress with a table wears on the head: the piece being tried, else the first of the table's
+/// rows that holds for the person, else none.
+pub fn headwear_of(set: &DressSet, female: bool, age: f32, seed: u32) -> Option<&'static Headwear> {
+    if let Some(h) = *TRYING.read().unwrap_or_else(|e| e.into_inner()) {
+        return Some(h);
+    }
+    let r = (seed / 100) % 10;
+    set.headwear
+        .iter()
+        .find(|w| w.female.is_none_or(|f| f == female) && age >= w.from && r < w.share)
+        .and_then(|w| headwear(w.piece))
+}
+
 /// One statement of a dress table and where it comes from.
 use crate::look::Beard;
 
@@ -543,6 +625,8 @@ pub struct DressSet {
     /// corners, which are at the survey's, by 5.7 mm per unit; under the jaw it moves no landmark.
     /// `neck-scale-depth-incr` would do for the depth too but pushes the chin forward (3.8 mm per unit).
     pub neck: &'static [(&'static str, f32, f32)],
+    /// Who wears which piece on the head (`HEADWEAR`) instead of the hood; the first row that holds wins.
+    pub headwear: &'static [Wear],
     pub sources: &'static [Source],
 }
 
@@ -689,6 +773,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
         (15.0, [1.0], [1.0]),
     ],
     neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
+    // none yet: who wore helms, coifs, hats or a crown in England 1356 needs sources and Ramon's yes (17.11.2026)
+    headwear: &[],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -872,7 +958,8 @@ impl DressSet {
     }
 
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {
-        if female || age < self.hood_from {
+        // a piece on the head takes the hood's place
+        if female || age < self.hood_from || headwear_of(self, female, age, seed).is_some() {
             Hood::None
         } else {
             self.hood[(seed % 10) as usize]

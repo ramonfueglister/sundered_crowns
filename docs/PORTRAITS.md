@@ -3333,6 +3333,46 @@ round 35, but has no folds across its cloth.
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and
 Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choice.
 
+## Headwear (17.11.2026, made in Blender, not yet worn by anyone)
+
+Seven pieces for the head, made on MakeHuman's body in Blender through the Blender MCP on Ramon's Mac
+(tools/portrait/pipeline: `helm_great.py`, `bascinet.py`, `crown.py`, `headwear_soft.py`, `headwear_lib.py`,
+`mail_tex.py`, `straw_tex.py`, `plate_tex.py`). Shapes by eye, PLACEHOLDER until held against surviving pieces and
+pictures. Agreed with the portrait thread: soft pieces are bound like the hoods, rigid ones are not bent.
+
+| Key (`dress.rs` `HEADWEAR`) | Files under `public/portrait/real` | Fit | Hair under it | Triangles |
+|---|---|---|---|---|
+| `helm_great` great helm, late 13th c. | `metal_helm_great` | rigid | none | 8,244 |
+| `bascinet` bascinet with aventail, about 1350 | `metal_bascinet`, `metal_mail_aventail` | rigid + soft | none | 5,228 + 4,352 |
+| `mail_coif` mail coif with its skirt, about 1291 | `metal_mail_coif`, `metal_mail_coif_skirt` | soft | none | 3,136 + 4,352 |
+| `crown` open crown with fleurons and stones | `metal_crown` | rigid | own, loose | 6,784 |
+| `coif_linen` linen coif tied under the chin | `cloth_coif_linen`, `cloth_coif_ties` | soft | none | 3,136 + 464 |
+| `hat_felt` felt hat, round crown, brim turned up behind | `cloth_hat_felt` | soft | flat (`hair_hooded`) | 2,240 |
+| `hat_straw` straw hat with a wide brim | `cloth_hat_straw` | soft | flat (`hair_hooded`) | 2,240 |
+
+- **Who wears what**: `DressSet::headwear` (rows `Wear`: sex, from what age, share in ten by the seed's third digit
+  from the end). England's table is empty: who wore helms, coifs, hats or a crown in 1356 needs sources and Ramon's
+  yes. A piece on the head takes the hood's place (`hood_of` is then None).
+- **Trying one**: the test page's `?headwear=bascinet` (with `?origin=England`) puts a piece on every head
+  (`dress::try_headwear`, wasm `scp_headwear`, builder.ts `headwear`); none in the game.
+- **Soft** (`Fit::Soft`) pieces are bound with `tunic_bind.py` (`HEAD=1 HEM=all R_HEM=0.025 TAUBIN=2 HEMSMOOTH=20
+  AO=6`; hats, coifs and the mail coif's hood keep their own uv through the new `UVFILE`) and drawn by `mh_cloth` as
+  `Layer::Over`. Their hulls keep about 5 mm off the hair hull, so the coming finer hair should not poke through.
+- **Rigid** (`Fit::Rigid`) pieces are not bound: `headwear_lib.write_rigid` writes them in base.obj's coordinates with
+  five of the head's points (above both ears, the brows' middle, the back of the head, the top; head.bin numbers
+  5233, 2486, 237, 962, 881). `real_look.rs` `mh_rigid` moves and turns them with the morphed head and scales them
+  along the head's own axes by its breadth, length and height; a helm keeps its form. Each corner carries the
+  colour of its part (steel, iron bands, dark inside, gold, stones).
+- **Metal** (`metal_` files): surface kind `metal` (materials.ts), values in the stage profile (`metal`: null for
+  Apoleia). It mirrors surroundings made on the stage (`stage.ts` `surroundings`: a sphere from sky to ground with a
+  bright window on the key light's side, through three.js' PMREM), no outside image. Mail rings are a normal map
+  (24 rings to 20 cm), not geometry.
+- **Load**: the data files add about 0.5 MB packed to what is loaded with the first portrait; images (2.9 MB) only
+  when a piece is drawn.
+- **Open**: sources and shares; the mail's skirt stands stiff round the neck like a collar; the coif's ties read as
+  a white bar under a beard; hats and the crown were looked at on men only; on a woman of veil age the veil stays
+  under the piece.
+
 ## Measured against Apoleia
 
 1. **The triangles.** `portrait/examples/reference.rs` run on Apoleia's own crate and on the game's, same machine,

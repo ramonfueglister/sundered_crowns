@@ -151,6 +151,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         None => st0,
     };
     let hood = garb.map_or(crate::dress::Hood::None, |d| d.hood_of(fem, p.age, p.seed));
+    // a piece on the head instead of the hood (dress.rs `Headwear`; hood_of is then None)
+    let wear = garb.and_then(|d| crate::dress::headwear_of(d, fem, p.age, p.seed));
     let lf = p.life;
     let hung = c01((0.42 - lf.food) / 0.42);
     let hair = p.hair_colour();
@@ -980,7 +982,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     // (a dress with a table has hair under the veil, the Roman veil the builder's own; a dress whose veil hides
     // all hair has none, `hair_veiled` empty)
     let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
-    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty());
+    // (and none under a piece on the head that hides it: no hair of the builder's own in its place)
+    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty()) || wear.is_some() && mh.is_none();
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -1028,7 +1031,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             out.push(sf);
         }
     }
-    if !long_hair && mh.is_none() {
+    // (no cap of the builder's own under a piece on the head that hides the hair)
+    if !long_hair && mh.is_none() && !no_hair {
         let mut cap = Surface::new(mat(0.85));
         // the ear seen from the head's centre: from and to (degrees from
         // the front), and its top (degrees up)
@@ -1522,6 +1526,21 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             let hc = hex(d.wool[((p.seed / 10) as usize + 3) % d.wool.len()]);
             if let Some(s) = crate::real::folder().and_then(|f| mh_cloth(&f, name, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
                 out.push(s);
+            }
+        }
+        // the piece on the head: the first of its files bound as the hoods or placed stiff, its parts bound
+        if let (Some(w), Some(f)) = (wear, crate::real::folder()) {
+            let wc = hex(w.colour);
+            for (k, name) in w.files.iter().enumerate() {
+                let s = if k == 0 && w.fit == crate::dress::Fit::Rigid {
+                    crate::real_look::mh_rigid(&f, name, &x.pp, &h.base, wc)
+                } else {
+                    // (mail has no patches)
+                    mh_cloth(&f, name, &x.pp, &h.base, &|v| if name.starts_with("metal_") { wc } else { cloth_col(wc, v) }, None, Layer::Over)
+                };
+                if let Some(s) = s {
+                    out.push(s);
+                }
             }
         }
     }

@@ -17,12 +17,14 @@ import type { PortraitSurface } from './wire';
  *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
  *  hair card. The round strands of a plait (`..._rope`) and the locks of a head's hair (`..._locks`) are hair that
  *  is solid: no card, nothing shows through but where the image is empty (a lock's frayed ends). */
-export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
+export type SurfaceKind = 'plain' | 'cloth' | 'metal' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {
   const path = s.tex;
   if (!path) return 'plain';
   if (path.includes('/cloth_')) return 'cloth';
+  // helms, mail and crowns (portrait/src/dress.rs `HEADWEAR`): metal that mirrors the stage's surroundings
+  if (path.includes('/metal_')) return 'metal';
   if (path.includes('_cap.')) return 'cap';
   if (path.includes('_rope.') || path.includes('_locks.')) return 'rope';
   if (path.includes('/eyeball')) return 'eyeball';
@@ -34,7 +36,7 @@ export function surfaceKind(s: PortraitSurface): SurfaceKind {
 /** The order in which the blended surfaces are drawn over the solid ones: the painted cap first, the hair cards
  *  over it, brows and lashes last. */
 export function drawOrder(s: PortraitSurface): number {
-  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, rope: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
+  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, metal: 0, rope: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
 }
 
 /** The normal map of a surface: the one it names (skin with age wrinkles), else the one beside its image (name_n). */
@@ -313,6 +315,14 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'plain': break;
     case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col)); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
+    // metal: the builder says how rough (plate smoother than mail); it mirrors the surroundings the stage hands it
+    // (stage.ts `surroundings`), which only a profile with `metal` has: without, it is drawn as Apoleia drew metal
+    case 'metal':
+      if (p.metal) {
+        m.metalness = 1; m.roughness = Math.min(1, s.rough * p.metal.rough); m.envMapIntensity = p.metal.mirror;
+        m.side = s.double ? DoubleSide : FrontSide;
+      }
+      break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;
     case 'brow':

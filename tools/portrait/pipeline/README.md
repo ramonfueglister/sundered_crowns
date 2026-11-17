@@ -60,3 +60,27 @@ file for the hollows of the face, rays of 6 and 10 cm instead of 3.5 (`DIST=0.6`
 on MakeHuman's flat face the sockets come out one tenth darker at most, no depth to speak of); the lash line as a
 band on the lashes' own cards with the lashes cut short (an image of its own for `Eyelashes01`: where they grow the
 cards point at the viewer, so that nothing of the band shows from the front).
+
+## Headwear, as written on 17.11.2026
+
+Made in Blender 5.1 through the Blender MCP (the scripts also run with `bpy` from pip): each script builds on the
+body `base.obj` imported as `body` (only its first 13380 points, the skin) and writes into `OUT`. Every value by
+eye, PLACEHOLDER. docs/PORTRAITS.md says how the builder uses the files.
+
+| Piece | Call |
+|---|---|
+| great helm (rigid) | `helm_great.py`, then `headwear_lib.write_rigid([helm_great, _bands, _rivets, _holes], metal_helm_great.txt)` |
+| bascinet (rigid) and aventail (soft) | `OUT=out bascinet.py`; `write_rigid([bascinet, bascinet_rivets], metal_bascinet.txt)`; the aventail bound without `UVFILE` (the uv round the body) |
+| crown (rigid) | `crown.py`, `write_rigid([crown, crown_stones], metal_crown.txt)` |
+| coif, mail coif, felt hat, straw hat (soft) | `WHICH=coif_linen,mail_coif,hat_felt,hat_straw OUT=out headwear_soft.py` (each writes `<name>.obj` and `<name>_uv.txt`) |
+| the soft ones, bound | `HEAD=1 HEM=all R_HEM=0.025 TAUBIN=2 HEMSMOOTH=20 AO=6 UVFILE=out/<name>_uv.txt python3 -I tunic_bind.py $B out/<name>.obj out/bound <file>` (the mail coif's skirt and the aventail without `UVFILE`) |
+| mail | `python3 -I mail_tex.py metal_mail_aventail.webp metal_mail_aventail_n.webp 512 24 48` (the same images for the coif and its skirt) |
+| plate | `python3 -I plate_tex.py metal_helm_great.webp metal_helm_great_n.webp 512 260` (the same for bascinet and crown) |
+| linen, felt | `fabric_tex.py ... linen 128`, `... wool 160` |
+| straw | `python3 -I straw_tex.py c.webp cloth_hat_straw_n.webp 512 16`, the colour brought to grey 0.85 (the dye comes from `Headwear::colour`) |
+
+A rigid piece's file: `nv nt`, the five anchors in head.bin's numbering (`headwear_lib.ANCHORS_HEAD`), a row per
+corner (place, normal, uv, sRGB colour of its part), a row per triangle. Parts without a uv of their own get one
+round the head's axis (`CYL_UV`): a constant uv leaves the renderer no tangent for the normal map, and the part draws
+black. Write rigid pieces with their objects visible: Blender leaves the modifiers (the plates' thickness) out of
+a hidden object's mesh.

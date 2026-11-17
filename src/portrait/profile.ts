@@ -96,6 +96,11 @@ export interface StageProfile {
    *  blue), the `backdrop` (null: none, the picture stands on whatever the page shows; else its colour round the
    *  point `at`, x and y from the top left in shares of the picture, and towards the corners, and how far from
    *  that point the outer colour is reached), and how much darker the corners are (`vignette`). */
+  /** Metal (helms, mail, crowns; materials.ts `metal`): null draws it as any other surface. Else it mirrors
+   *  surroundings the stage makes from these colours (stage.ts `surroundings`): the sky above, the ground below and
+   *  a bright window on the key light's side, `mirror` how strongly; `rough` is a factor on the roughness the
+   *  builder gives (plate 0.35, mail 0.5). */
+  metal: null | { rough: number; mirror: number; sky: string; ground: string; window: string };
   finish: null | {
     fine: number;
     curve: { contrast: number; start: number; length: number; black: number };
@@ -126,6 +131,7 @@ export const APOLEIA: StageProfile = {
   skin: null, eye: null, brow: null, cap: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
   sheen: null,
+  metal: null,
   finish: null,
 };
 
@@ -336,6 +342,8 @@ export const ENGLAND_1356: StageProfile = {
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },
+  // by eye on the test page (?headwear=), PLACEHOLDER
+  metal: { rough: 1, mirror: 1, sky: '#7d838a', ground: '#2b231d', window: '#fff3e2' },
   finish: {
     fine: 2,
     curve: { contrast: 1.4, start: 0.22, length: 0.4, black: 1.5 },
