@@ -21,6 +21,8 @@ const TILE = 512;
 const AHEAD = 0.3;
 /** the realms are fetched and painted from when the view is within this factor of the width at which they show */
 const SOON = 2;
+/** how much wider than its middle the far side of the picture is, and how far beyond its far edge the ground is seen, as shares of its half width and depth */
+const FAR_SIDE = 1.2, FAR_END = 1.1;
 /** tiles kept beyond those the view asks for, and how many the worker is given at once */
 const SPARE = 16, AT_ONCE = 4;
 
@@ -131,7 +133,8 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
   }
 
   function look(v: View, at: Layout): number {
-    const [u, cv] = cellOfBlock(v.x, v.z), halfW = v.wide / 2, halfD = v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2;
+    // (the far side of a slanted picture is wider than its middle, and what stands tall is seen beyond its far edge: the tiles reach that far)
+    const [u, cv] = cellOfBlock(v.x, v.z), halfW = (v.wide / 2) * FAR_SIDE, halfD = (v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2) * FAR_END;
     const level = paperLevelOf(v.wide, v.pixels), lies = paperOf(v.wide, realms.mode), soon = paperOf(v.wide * SOON, realms.mode).strength > 0;
     // the lap of the globe whose game map lies nearest the picture
     realms.lap = Number.isFinite(o.round) ? Math.round((u - o.map[0] / 2) / o.round) * o.round : 0;

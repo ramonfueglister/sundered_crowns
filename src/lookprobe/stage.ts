@@ -324,7 +324,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     renderer.getDrawingBufferSize(size);
     // what stands tall is seen beyond the ground's edges at the far side of a slanted picture
     // (the far side of the picture is wider than its middle by as much as it lies farther from the camera)
-    const halfW = wide * 0.52 * (1 + ((deep / 2) * Math.cos(elev)) / distance), halfD = deep * 0.52 + (o.tall ?? 36) / Math.tan(elev);
+    const halfW = wide * 0.56 * (1 + ((deep / 2) * Math.cos(elev)) / distance), halfD = deep * 0.54 + (o.tall ?? 36) / Math.tan(elev);
     paperEye.left = -halfW; paperEye.right = halfW; paperEye.top = halfD; paperEye.bottom = -halfD; paperEye.updateProjectionMatrix();
     paperEye.position.set(x, 2000, z); paperEye.up.set(-NEAR[0], 0, -NEAR[1]); paperEye.lookAt(x, 0, z); paperEye.updateMatrixWorld();
     const across = Math.min(4096, Math.max(256, size.x)), down = Math.min(4096, Math.max(256, Math.round((across * halfD) / halfW)));
