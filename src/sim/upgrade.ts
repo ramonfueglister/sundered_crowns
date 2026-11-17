@@ -2,6 +2,7 @@
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
+import { foundLots } from './systems/lots';
 import { foundRulers, rulerCultures } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
@@ -16,7 +17,7 @@ import { foundPersonCultures } from './systems/cultures';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -85,7 +86,8 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // since the first day, so the holders are those of the day the world has reached. The economies stay as they
     // are: rulers have no part in them.
     const hadDied = 'died' in s.person.cols, hadHolder = 'holder' in s.realm.cols;
-    for (const [table, schema] of [[s.realm, REALM_SCHEMA], [s.person, PERSON_SCHEMA]] as const) {
+    // (the families too: founding a ruler writes the family's column of the parcel, which the step to 20 fills)
+    for (const [table, schema] of [[s.realm, REALM_SCHEMA], [s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
       const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
       for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
       (table as { cols: unknown }).cols = fresh;
@@ -128,6 +130,16 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     const place = s.place as unknown as Record<string, unknown>;
     delete place.culture; delete place.faith;
     s.v = 19;
+  }
+  if (s.v === 19) { // 19 → 20: the land register (src/sim/systems/lots.ts). The families get the column of their
+    // parcel; the parcels of the towns and the hamlets with their farmsteads are laid out as a new world lays them
+    // out, for the families as they live on the day the world has reached: nobody has been born, has died or has
+    // moved since the first day. The rulers have no ground. Nothing else changes.
+    const cols = s.family.cols as Record<string, Column>, fresh = makeColumns(FAMILY_SCHEMA, s.family.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.family as { cols: unknown }).cols = fresh;
+    foundLots(s, w.ground, w.dry);
+    s.v = 20;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

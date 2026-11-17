@@ -9,7 +9,7 @@
 // the realm of the first reign, in a family of their own, and has no part in the economy (role 0). Who the person is
 // in the sources stands beside the table (`WorldState.named`).
 import type { WorldState, NamedPerson } from '../state';
-import { ALIVE, BORN_UNKNOWN } from '../state';
+import { ALIVE, BORN_UNKNOWN, NO_LOT } from '../state';
 import { spawn } from '../ecs';
 import type { World } from '../world';
 import type { System } from '../schedule';
@@ -82,6 +82,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     P.genes.set(founder(origin(w.lon[place], w.lat[place]), bits), id * 2 * NG);
     const f = spawn(s.family), F = s.family.cols;
     F.place[f] = place; F.man[f] = cp.sex === 1 ? id : -1; F.woman[f] = cp.sex === 0 ? id : -1;
+    F.lot[f] = NO_LOT; // a ruler holds no parcel of a town: castles and residences are not built yet
     P.family[id] = f;
     const named: NamedPerson = { person: id, key: cp.key, name: cp.name, house: cp.house, qid: cp.qid };
     s.named.push(named);

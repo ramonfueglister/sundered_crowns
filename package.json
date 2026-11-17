@@ -18,6 +18,7 @@
     "economy:calibrate": "tsx tools/sim/calibrate_economy.ts",
     "economy:check": "tsx tools/sim/economy_check.ts",
     "people:check": "tsx tools/sim/people_check.ts",
+    "lots:write": "tsx tools/sim/write_lots.ts",
     "portrait:build": "tsx tools/portrait/build_portrait.ts"
   },
   "devDependencies": {

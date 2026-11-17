@@ -19,9 +19,9 @@ import type { Table } from './ecs';
  *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). 18: the borders of the chronicle of borders
  *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
- *  has those of its persons (src/sim/systems/cultures.ts). Snapshots from 11 on are brought up to date by
- *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 19;
+ *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
+ *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 20;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -100,8 +100,48 @@ export const FAMILY_SCHEMA = {
   income: 'f32', spent: 'f32', savings: 'f32',
   /** 1: the family lives from agriculture and lives in a hamlet outside the walls of its town (src/sim/systems/hamlets.ts) */
   hamlet: 'u8',
+  /** the parcel or the farmstead the family lives on (the land register below, src/sim/systems/lots.ts), NO_LOT
+   *  when it has none. Several families may share one; at the founding each has its own */
+  lot: 'i32',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
+/** `lot` of a family without a parcel. */
+export const NO_LOT = -1;
+/** The land register (settlement features 1 and 2, src/sim/systems/lots.ts): every piece of ground of a town and
+ *  of its hamlets that somebody or something holds. A row is never freed, so the id of a parcel stays the parcel. */
+export const LOT_SCHEMA = {
+  /** what stands on the ground (LOT_KIND) */
+  kind: 'u8',
+  /** the place of the map the ground lies in, and the town it belongs to: its index into data/content/gazetteer.json
+   *  (the `site` of src/sim/content/cities.ts; a place may hold several towns) */
+  place: 'i16', site: 'i16',
+  /** the middle of the ground: metres east and south of the centre of the town, at the scale of the houses */
+  x: 'f32', z: 'f32',
+  /** metres along the street and metres deep */
+  w: 'f32', d: 'f32',
+  /** the side the street lies on (FRONT in src/sim/settlement/rule.ts: 0 north, 1 east, 2 south, 3 west) */
+  front: 'u8',
+  /** the hamlet a farmstead lies in (a row of the table of hamlets), NO_HAMLET for the ground of the town itself */
+  hamlet: 'i32',
+} as const;
+export type LotSchema = typeof LOT_SCHEMA;
+/** `hamlet` of a piece of ground in the town itself. */
+export const NO_HAMLET = -1;
+/** The hamlets of the towns (settlement feature 2, src/sim/systems/lots.ts): where the families who live from
+ *  agriculture have their farmsteads, outside the walls of their town. A row is never freed. */
+export const HAMLET_SCHEMA = {
+  /** the place of the map the hamlet lies in, and the town it belongs to (its site, as in the land register) */
+  place: 'i16', site: 'i16',
+  /** its middle: metres east and south of the centre of its town, at the scale of the houses, as the ground of the
+   *  town itself (a block of the houses is 2 m and is shown as about 125 m of land) */
+  x: 'f32', z: 'f32',
+  /** the farmsteads laid out in it */
+  farms: 'u16',
+} as const;
+export type HamletSchema = typeof HAMLET_SCHEMA;
+/** What a row of the land register is: the parcel of a family in a town, or the farmstead of a family in a hamlet.
+ *  Walls, gates, bridges, streets, squares and landmarks get their numbers when their features are built. */
+export const LOT_KIND = { parcel: 0, farmstead: 1 } as const;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -178,6 +218,10 @@ export interface WorldState {
   firm: Table<FirmSchema>;
   /** the persons of history (the rulers), src/sim/systems/rulers.ts */
   named: NamedPerson[];
+  /** the land register: the parcels of the towns and the farmsteads of their hamlets (src/sim/systems/lots.ts) */
+  lot: Table<LotSchema>;
+  /** the hamlets of the towns (src/sim/systems/lots.ts) */
+  hamlets: Table<HamletSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;
