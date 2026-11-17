@@ -17,12 +17,13 @@
 //           (side nz | px | pz | nx, from and to along the side from its middle; buildings/fortified/town-wall.ts)
 //
 // It also writes public/data/dry_<year>.json for the simulation's land register: round every town with hamlets, as
-// far as its hamlets may lie (at most 200 blocks), whether a block is dry ground without rock. Same shape as
+// far as its hamlets may lie or the register asks (DRY_REACH=<file>, at most 260 blocks), whether a block is dry ground without rock. Same shape as
 // ground_<year>.json (build_ground.ts): per site `w`, `d` (odd, the middle block is the town's centre) and `cells`,
 // base64 of a bit field, rows north to south, west to east, lowest bit first, 1 = dry and no rock. It says nothing
 // of slopes and buildings: the ground of a hamlet is levelled when it is built.
 //
 //   npx tsx tools/worldprobe/build_plan.ts 1291
+//   DRY_REACH=dry_reach_1291.json npx tsx tools/worldprobe/build_plan.ts 1291
 //   npx tsx tools/worldprobe/build_plan.ts 1291 2.35,48.86 /tmp/paris.json   (a trial: only the nine pieces round a place)
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -63,6 +64,10 @@ const PIECE = 200, MARGIN = (N - PIECE) / 2, KM_PER_DEGREE = 111.32;
 const HOUSE_KINDS = ['town', 'village', 'hamlet', 'farm'] as const, greatKinds: string[] = [];
 const proj = await projectionOf('world', base, FINER), lands = await loadHamletLands(base, year), inhabitants = await loadInhabitants(base, year);
 
+/** the dry ground is written at most this far from a town's middle, in blocks */
+const DRY_MOST = 260;
+/** how far the land register needs the dry ground round each town: `{reach: {site: blocks}}`, the file named by DRY_REACH (tools/sim of the land register writes it) */
+const asked: Record<string, number> = process.env.DRY_REACH ? (JSON.parse(readFileSync(process.env.DRY_REACH, 'utf8')) as { reach: Record<string, number> }).reach : {};
 // the pieces that hold a town, one of its hamlets (they lie within the town's reach, world.ts) or a monument
 const wanted = new Set<string>(), round: { site: number; wx: number; wz: number; r: number }[] = [];
 const want = (wx: number, wz: number, r: number) => { for (let pz = Math.floor((wz - r) / PIECE); pz <= Math.floor((wz + r) / PIECE); pz++) for (let px = Math.floor((wx - r) / PIECE); px <= Math.floor((wx + r) / PIECE); px++) wanted.add(`${px},${pz}`); };
@@ -72,9 +77,10 @@ gazetteer.places.forEach((p, id) => {
   if (!h) return want(wx, wz, 90);
   const east = blockOfCell(...proj.cellOf(p.lon + 0.1, p.lat)), perKm = Math.hypot(east[0] - wx, east[1] - wz) / (0.1 * KM_PER_DEGREE * Math.cos((p.lat * Math.PI) / 180));
   const n = hamletsOf(h.families), inner = firstHalf(h.inside * PEOPLE_PER_PERSON) + 10;
-  const far = Math.max(90, 0.8 * h.reachKm * perKm, inner + 5 * Math.sqrt(n)) + 20;
+  // as far as the hamlets lie in the world graphic, and as far as the land register asks for (DRY_REACH)
+  const far = Math.min(DRY_MOST, Math.max(90, 0.8 * h.reachKm * perKm, inner + 5 * Math.sqrt(n), asked[id] ?? 0) + 20);
   want(wx, wz, far);
-  round.push({ site: id, wx: Math.floor(wx), wz: Math.floor(wz), r: Math.min(200, Math.ceil(far)) });
+  round.push({ site: id, wx: Math.floor(wx), wz: Math.floor(wz), r: Math.ceil(far) });
 });
 for (const l of landmarks.landmarks) want(...blockOfCell(...proj.cellOf(l.lon, l.lat)), 30);
 if (process.argv[3]) {
