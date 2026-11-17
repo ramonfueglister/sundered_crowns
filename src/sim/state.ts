@@ -15,8 +15,10 @@ import type { Table } from './ecs';
  *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
  *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
- *  history are named. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 16;
+ *  history are named. 17: the families who live from agriculture live in hamlets outside the walls of their town, and
+ *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). Snapshots from 11 on
+ *  are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 17;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -24,7 +26,7 @@ export interface Places {
   owner: Int16Array;
   culture: Uint16Array;
   faith: Uint8Array;
-  /** people living there */
+  /** people living there: its living persons, counted once a year (src/sim/systems/hamlets.ts) */
   pop: Float32Array;
   /** the last harvest: kilocalories of food from arable farming in a year (src/sim/systems/harvest.ts) */
   harvest: Float64Array;
@@ -92,6 +94,8 @@ export const FAMILY_SCHEMA = {
   /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
    *  and their savings */
   income: 'f32', spent: 'f32', savings: 'f32',
+  /** 1: the family lives from agriculture and lives in a hamlet outside the walls of its town (src/sim/systems/hamlets.ts) */
+  hamlet: 'u8',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
