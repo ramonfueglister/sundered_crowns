@@ -39,6 +39,7 @@ players and the AI of realms without a player act through the same commands.
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
 | 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
+| 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world |
 
 ## 1. Grain harvest per place
 
@@ -2199,3 +2200,140 @@ of the family. Pictures in the project files (wirtschaft/staedte/befunde/feature
   It would double the engine's persons, need rules of our own beside the port and a new founding, and because the
   model's consumption is linear in income with one ψ for all, the cities' figures would stay the same (reasoned
   from the code, not measured). And the modified OECD scale (1.0 / 0.5 / 0.3): it compares households of today.
+
+## 12. The harvest feeds the cities: a city buys the food its harvest lacks
+
+Status: built; not yet in the running world. Ramon chose the feature on 17 November 2026 ("Ernte speist die Städte",
+15:49 UTC) and variant A of the proposal (Claude Doc "Feature 12: Ernte speist die Städte",
+https://claude.ai/artifact/8GGxSGubnLXmtTqh9HrUng): the factor of the harvest of a city's own place, Egypt for the
+time being as England ("A, Ägypten vorerst wie England", 15:54 UTC). The way proposed there, the port's productivity
+shock on agriculture alone, did not hold (below), and neither did the factor in the calibration alone; he chose that
+a city with a weak harvest buys its food from the merchants ("Getreide über die Händler kaufen", 16:03 UTC) and agreed
+the rule as proposed ("Ja, so bauen", 16:16 UTC). Player wiki: docs/wiki/wirtschaft/getreide-ueber-die-haendler.md.
+
+### What it is
+
+Every city is founded with the factor of its harvest (`harvestFactors`, src/sim/systems/economy.ts):
+
+    f_c = (Y_c / L_c) / (Y_E / L_E)
+
+Y_c is the harvest of the city's place (feature 1, with the arable of feature 2), L_c the persons of its hamlets, who
+live from agriculture; Y_E / L_E is the harvest per farmer of England in 1300–09, the case the harvest is calibrated
+on (1,678 kcal per farmer and day). London has 1.04, Ghent 1.04.
+
+The value added of the city's agriculture per person who works there is England's times f_c; industry and services
+keep theirs, and the persons of every sector stay as they are (`withAgriculture`, src/sim/economy/calibration.ts). So
+everything the port's calibration derives from the value added of agriculture follows it: output and inputs, the
+output per employee (the port's labour productivity `alpha_s`, times f_c exactly), the wage and the capital.
+
+The households of the city buy as much of the goods of agriculture as England's at the same scale. What the city's
+agriculture lacks for that, d, the merchants bring (`tradeFood`):
+
+    d = H_agr(England) − H_agr(what is left);  M_agr += d;  X_g += d · H_g / (H_ind + H_serv);  H_g −= the same
+
+The city pays with as much more exports of industry and services, taken from what its households buy of those, in
+proportion. A city with a surplus (d < 0) exports goods of agriculture, and its households get as much more of
+industry and services from imports. Trade is balanced at the start, GDP does not change by it, and every other use
+of every good stays as it is: supply equals use. The mixes of exports and imports of the city (`c_E_g`, `c_I_g`)
+follow; the rules of the merchants (section 5) do not change.
+
+Assumptions, not sources: that every person eats as much as a person in England in 1356; that food is paid for with
+industry and services in proportion to what the households buy of them; and that the cities of Egypt, and places
+whose harvest is 0 because the index of the soil knows rain-fed farming only (Mecca, Aden, Timbuktu and others in
+the world of 1291), keep England's agriculture (f = 1). Egypt is the region of the province of the place (`egypt`),
+because the list of the cities of 1291 often names no country.
+
+### What did not hold
+
+1. The proposal: the port's ProductivityShock on the firms of agriculture alone, at the founding. The wage stays
+   England's while the output per employee falls, so the cost of a unit rises by 1 / f; the cost push of the clock
+   divides by `alpha_bar_i`. In all eight worlds of `npm run economy:check 5 8` Venice (f = 0.21) reached a negative
+   price within 4 to 7 months and the economies stopped.
+2. The factor in the calibration alone, without trade: in England's table every other use of the goods of agriculture
+   is fixed in pounds (inputs to industry and services, wool exports, the crown, investment), so the whole change
+   lands on what the households eat: a quarter of England's at f = 0.5, nothing below 0.35 (the calibration stops:
+   Venice, Genoa, Paris), two and a half times at 1.86.
+
+### Founding and state
+
+A city's factor needs the harvest, the harvest needs the hamlets, and who lives in a hamlet follows from the firms of
+agriculture (src/sim/systems/hamlets.ts). So a world founds its economies, settles the hamlets, counts the people and
+brings in the harvest as before, and then founds the economies anew with the factors (`foundWithHarvest`). The factor
+changes no count of persons, so who works where, the hamlets and the harvest come out the same (tested: a fixed point).
+The factor is set when the economies are founded; it is not set again each year, because the harvest of a place does
+not change while nobody is born or dies.
+
+State version 21: the economies carry `harvestFactor`. The upgrade founds the economies anew with the factors on the
+day the world has reached, as the upgrade of feature 11 did: the days and the yearly figures of the economies are
+gone, and the first period is the next day of the world. A world of 1291 now founds its 550 economies twice when it
+is created (about ten seconds on the machine of the tests).
+
+### Tests
+
+`tests/economy-harvest.test.ts` (new): the factor is the harvest per farmer against England's and is what a new world
+was founded with; London and Ghent lie near 1, Egypt is 1, also in the world of 1291 where its rows name no country;
+a city founded at 0.21, 0.5 and 1.86 has the value added, the output per employee and the wage of agriculture times
+the factor and the other sectors as England, households that buy England's food, balanced trade and balanced
+accounts; at 1 it is England's city number for number; down to 0.05 it can be founded, 0 and less are refused; the
+trade in food by hand in both directions; a new world is a fixed point of `foundWithHarvest`; the cities compute 40
+days with the books balanced; a world of version 20 gets the factor by the upgrade.
+
+Changed: `tests/economy.test.ts` (a city's GDP is England's share times the value added with the factor; the test of
+the merchants' shares compares the cities whose factor is within 10 % of 1; London's GDP), the upgrade tests of
+features 10 and 11 (step 21), `tests/rulers.test.ts` (a timeout of 60 s: the world of 1291 founds its economies twice).
+`public/data/economy_cities.json` is written anew with the factors. Engine (`economy/tests`): London of the reference
+world changed, so the measured bounds were measured again over twelve seeds: `agents.rs` (the wage paid off the wage
+in money up to 0.22 % on a day, bound 0.3 %), `demand_pull.rs` (the seeds with the slump of the paper's rule are now
+1357, 1358, 1363, 1365, 1367; with the demand pull up to 4.5 % without work in the first six years, none after; without
+the wage in money the level leaves by a quarter in ten of twelve seeds), `benefit.rs` (four cities whose factor is
+near 1, Cairo, Ghent, Alexandria and London, in place of Paris and Venice, which now buy their food).
+
+### In the game
+
+`npm run economy:check 30 4` and `npm run economy:check 5 8` (worlds of 1356, seeds 1356 on, every day computed).
+Outputs in the project files (wirtschaft/feature12/feature12_check_30_4.txt and feature12_check_5_8.txt).
+
+| All cities together, year 30 (4 worlds) | Feature 11 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.3 | 113.4 | 113.1 to 113.7 |
+| Price level of output (start = 100) | 95.2 | 88.9 | 88.4 to 89.2 |
+| Exports, share of output | 2.65 % | 16.89 % | 16.45 % to 17.62 % |
+| Without work, mean of all cities and days of the 30 years | 0.07 % | 0.26 % | 0.17 % to 0.38 % |
+| Without work, the worst city on its worst day | 3.2 % | 12.8 % | 10.2 % to 17.0 % |
+| City with the lowest output (its start = 100) | 111.8 | 82.5 | 64.3 to 93.9 |
+| City with the highest output | 117.5 | 117.6 | 117.6 to 117.6 |
+
+| City (world 1356) | Factor | Output in year 30 | Price level | Exports | Imports |
+|---|---|---|---|---|---|
+| London | 1.04 | 117.6 | 98.5 | 12.2 % | 4.1 % |
+| Texcoco | 1.86 | 115.3 | 93.6 | 29.8 % | 26.7 % |
+| Milan | 0.59 | 113.1 | 86.4 | 15.3 % | 22.8 % |
+| Damascus | 0.38 | 111.1 | 64.4 | 20.7 % | 36.9 % |
+| Genoa | 0.25 | 105.8 | 67.8 | 36.1 % | 48.2 % |
+| Baghdad | 0.37 | 105.2 | 72.5 | 25.7 % | 37.5 % |
+| Paris | 0.35 | 102.4 | 77.3 | 28.1 % | 38.6 % |
+| Venice | 0.21 | 93.9 | 65.9 | 38.0 % | 51.3 % |
+
+Year 5 (8 worlds): all cities 108.2 (feature 11: 108.2), Venice 83.0, the weakest city 75.4 (58.2 to 83.3). The books
+are off by at most 5e-11 of the amount they are judged by. A world of 1291 (550 cities, factors 0.16 to 2.60, mean
+1.42) computes a year without stopping: all cities 99.7, the weakest 67.
+
+### Limits
+
+- A city that buys more than it sells pays with money that leaves it: it lies as the merchants' deposits at the
+  city's central bank (the port's `D_RoW`). No rule of the model reads it, but it grows without bound: Venice 7 years
+  of its GDP after 20 years, Paris 4.4; in cities with a surplus it is negative. The outflow is why prices fall in
+  those cities (Venice 66), as in Hume's flow of money and prices; trade does not come back into balance, because the
+  merchants order by the fixed import shares of the cities.
+- The cities of 1356 together want more food than the others sell: most have a factor below 1. In the world of 1291
+  it is the other way round (mean 1.42).
+- The factor is set when the economies are founded and not again: no good or bad years (a candidate for a feature of
+  its own: yearly yields).
+- Everyone eats as much as an Englishman of 1356, in Cairo as in Paris; nobody starves when the food is dear.
+- Egypt and the places without a rain-fed harvest are England by assumption, until a source for irrigated land is
+  read.
+- The harvest of the city's own place only: Paris, Venice and Genoa have little arable in their place and no
+  hinterland (variant B of the proposal, not chosen).
+- The kilocalories of the harvest and the pounds of the port are linked by a ratio only: the value of the output of
+  agriculture per farmer is taken to rise as its kilocalories do.
+

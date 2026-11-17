@@ -8,7 +8,7 @@ import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
 import { BASKET_AGE, basketsOf, writeHouseholds } from '../src/sim/systems/household';
-import { foundEconomy } from '../src/sim/systems/economy';
+import { foundEconomy, foundWithHarvest } from '../src/sim/systems/economy';
 import { ageOn } from '../src/sim/systems/people';
 import { hash01 } from '../src/sim/rng';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -237,6 +237,7 @@ describe('the state', () => {
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
     settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
     foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
+    foundWithHarvest(founded, w); // step 21: the economies anew with the factor of the harvest (economy feature 12)
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

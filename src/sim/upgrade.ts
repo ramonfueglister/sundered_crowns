@@ -146,7 +146,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // their places, as feature 11 founded them anew: the days and the yearly figures of the economies are gone, and
     // the first period is the next day of the world. Who works, the hamlets and the harvest stay as they are.
     const e = s.economy.cities;
-    if (e) e.harvestFactor = new Float64Array(e.places.length).fill(1);
+    if (e && !e.harvestFactor) e.harvestFactor = new Float64Array(e.places.length).fill(1); // founded without the harvest
     foundWithHarvest(s, w);
     s.v = 21;
   }

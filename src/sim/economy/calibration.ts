@@ -253,7 +253,7 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     theta_DIV: mixed / sum(surplus.map((s) => Math.max(0, s))),
     theta: b.theta, zeta: b.zeta, zeta_LTV: b.zeta_LTV, zeta_b: b.zeta_b,
     b_CF_g: i.investment_share.value, b_CFH_g: i.dwelling_share.value, b_HH_g: households.map((v) => v / sum(households)),
-    c_G_g: i.crown_purchase_share.value, c_E_g: exports.map((e) => e / X), c_I_g: imports.map((m) => m / sum(imports)), a_sg: A,
+    c_G_g: i.crown_purchase_share.value, c_E_g: exports.map((e) => e / X), c_I_g: i.food_households ? imports.map((m) => m / sum(imports)) : i.import_share.value, a_sg: A,
     C: [[NO_SHOCK, 0, 0], [0, arE.sigma * arE.sigma, 0], [0, 0, NO_SHOCK]],
     alpha_G: arG.alpha, beta_G: arG.beta, sigma_G: arG.sigma, alpha_E: arE.alpha, beta_E: arE.beta, sigma_E: arE.sigma,
     alpha_I: 1, beta_I: 0, sigma_I: 0, alpha_pi_EA: 1, beta_pi_EA: 0, sigma_pi_EA: 0, alpha_Y_EA: 1, beta_Y_EA: 0, sigma_Y_EA: 0,

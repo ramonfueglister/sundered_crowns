@@ -152,6 +152,7 @@ describe('the calibration turned into days', () => {
 
 describe('the calibration of the cities', () => {
   const table = readTable(), cities = cityCalibrations(table), england = calibrateEconomy(table);
+  const factors = newWorldState(REFERENCE.seed, REFERENCE.year).s.economy.cities!.harvestFactor; // economy feature 12
   const pe = england.parameters as Record<string, any>, ae = england.accounts as Record<string, any>;
 
   it('is the file of the reference world, as the game founds the economies of its cities', () => {
@@ -201,14 +202,14 @@ describe('the calibration of the cities', () => {
   it('pays a person without work nothing in any city, and still computes the benefit of the original code when the table asks for it', () => {
     const withBenefit = structuredClone(table);
     withBenefit.cities.unemployment_benefit.value = 0.55;
-    for (const c of cities) {
+    for (const [k, c] of cities.entries()) {
       // the game (feature 9): the rate is switched off and nobody starts with a benefit
       const po = c.calibration.parameters as Record<string, any>, io = c.calibration.initial_conditions as Record<string, any>;
       const a = c.calibration.accounts as Record<string, any>;
       expect(po.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
       expect(io.w_UB).toBe(0); expect(io.sb_other).toBe(0); expect(io.sb_inact).toBe(0);
       // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
-      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length)), 365, 30);
+      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length, factors[k])), 365, 30);
       const p = on.parameters as Record<string, any>, ic = on.initial_conditions as Record<string, any>;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
       expect(p.theta_UB).toBeGreaterThan(0.5); expect(p.theta_UB).toBeLessThan(0.55);
@@ -217,7 +218,7 @@ describe('the calibration of the cities', () => {
       expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
       expect(ic.w_UB * 365).toBeCloseTo(p.theta_UB * sum(a.wages) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
-      const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length));
+      const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length, factors[k]));
       expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
       expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
       // Between the two: with the benefit households spend from an income that includes the benefit of the one
@@ -233,14 +234,14 @@ describe('the calibration of the cities', () => {
       for (const k of Object.keys(ic)) if (k !== 'w_UB') expect(ic[k], k).toEqual(io[k]);
     }
   });
-  it('gives a city the economy of England at its share of the people, without a duty', () => {
-    const englandPeople = table.inputs.population_thousand.value * 1e3;
-    for (const c of cities) {
-      const share = c.people / englandPeople;
+  it('gives a city the economy of England at its share of the people, without a duty, with its agriculture at the factor of its harvest', () => {
+    const englandPeople = table.inputs.population_thousand.value * 1e3, va = table.inputs.value_added_share.value;
+    for (const [k, c] of cities.entries()) {
+      const share = c.people / englandPeople, f = factors[k];
       const p = c.calibration.parameters as Record<string, any>, a = c.calibration.accounts as Record<string, any>;
       expect(c.calibration.scale).toBeCloseTo(0.01 * share, 15);
       expect(a.people).toBeCloseTo(c.people / 100, 6); // the model computes the city at 1:100
-      expect(a.gdp / ae.gdp).toBeCloseTo(share, 12);
+      expect(a.gdp / ae.gdp).toBeCloseTo(share * (va[0] * f + va[1] + va[2]), 12); // the value added of agriculture times the factor
       expect(a.coin / ae.coin).toBeCloseTo(share, 12);
       expect(a.duty).toBe(0); expect(p.tau_EXPORT).toBe(0);
       expect(a.directTax).toBeCloseTo(a.revenue, 9); // the crown of a city takes all its revenue as a direct tax
@@ -251,6 +252,7 @@ describe('the calibration of the cities', () => {
       for (const k of ['G', 'T_prime', 'beta_s', 'theta', 'zeta', 'zeta_LTV', 'zeta_b', 'mu', 'c_E_g', 'c_I_g', 'c_G_g', 'b_CF_g', 'b_CFH_g', 'a_sg', 'alpha_G', 'alpha_E']) {
         if (k === 'mu') expect(Math.pow(1 + p.mu, 365)).toBeCloseTo(1 + pe.mu, 12); else if (k === 'theta') expect(p.theta * 365).toBeCloseTo(pe.theta, 12);
         else if (k === 'alpha_G' || k === 'alpha_E') expect(Math.pow(p[k], 365)).toBeCloseTo(pe[k], 12);
+        else if ((k === 'c_E_g' || k === 'c_I_g') && f !== 1) continue; // the trade in food (tests/economy-harvest.test.ts)
         else if (k === 'c_E_g') for (let g = 0; g < 3; g++) expect(p.c_E_g[g]).toBeCloseTo(pe.c_E_g[g], 12); // a quotient of scaled amounts
         else expect(p[k], k).toEqual(pe[k]);
       }
@@ -406,7 +408,10 @@ describe('the economy engine (WebAssembly)', () => {
       expect(y[FIGURE.priceLevel]).toBe(1);
       expect(y[FIGURE.depositsHouseholds] + y[FIGURE.depositsFirms]).toBeCloseTo(a.coin, 3);
     });
-    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo(45247.8 * 60862 / 2583180, 3); // London: its share of England's GDP at 1:100
+    // London: its share of England's GDP at 1:100, its agriculture at the factor of its harvest (economy feature 12)
+    const ref = newWorldState(REFERENCE.seed, REFERENCE.year), va = ref.w.cityEconomies.table.inputs.value_added_share.value;
+    const london = ref.s.economy.cities!.harvestFactor[cityAt(ref.s.economy.cities!, ref.w.names.indexOf('London'))];
+    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo(45247.8 * 60862 / 2583180 * (va[0] * london + va[1] + va[2]), 3);
   });
   it('moves a little every day: the sums of the last 365 days and the price level of today', () => {
     let state = create(1356);
@@ -532,11 +537,16 @@ describe('the economies of the cities in the world', () => {
   it('sell to the merchants about the same share of their output, the largest city as the smallest', () => {
     // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
     // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
-    const f = at[365].figures, share = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
+    // Since economy feature 12 a city trades food by its harvest; the cities compared are those whose agriculture
+    // makes about what England's does (a factor of the harvest within 10 % of 1), as all cities did before it.
+    const factor = run.s.economy.cities!.harvestFactor, like = Array.from({ length: N }, (_, c) => c).filter((c) => Math.abs(factor[c] - 1) <= 0.1);
+    expect(like.length).toBeGreaterThanOrEqual(6);
+    const f = at[365].figures, share = like.map((c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
+    expect(like).toContain(largest);
     expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
-    expect(share[largest]).toBeGreaterThan(0.75 * Math.max(...share));
+    expect(share[like.indexOf(largest)]).toBeGreaterThan(0.75 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();
@@ -660,7 +670,8 @@ describe('what a player sees of the economy', () => {
     const p = cityCalibrations()[k].calibration.parameters as Record<string, any>;
     const d0 = placeDetail(s, w, london)!.cityEconomy!;
     expect(d0).toMatchObject({ day: 0, baseYear: 1356, scale: 0.01 });
-    expect(d0.realGdp).toBeCloseTo(45247.8 * 60862 / 2583180, 3); // London's share of England's GDP at 1:100
+    const va = w.cityEconomies.table.inputs.value_added_share.value, f = s.economy.cities!.harvestFactor[k];
+    expect(d0.realGdp).toBeCloseTo(45247.8 * 60862 / 2583180 * (va[0] * f + va[1] + va[2]), 3); // London's share of England's GDP at 1:100, its agriculture at the factor of its harvest (economy feature 12)
     expect(d0.realGdpIndex).toBeCloseTo(100, 9); expect(d0.priceToday).toBe(100);
     expect(d0.employed + d0.unemployed).toBe(p.H_act);
     expect(d0.halted).toBeUndefined();
