@@ -77,8 +77,14 @@ const CROWN = 1.2, CROWN_TALL = 0.6;
  * Tuscany.
  */
 const SEEN_LEAVES = { top: [0.61, 0.66, 0.87], side: [0.31, 0.51, 0.83] } as const, SEEN_CONIFERS = { top: [2.34, 1.14, 1.03], side: [1.6, 1.09, 1.1] } as const;
-/** a house of the plan as the camera sees it from afar, by its roof's own colour: both sides of the roof, the gable and what shows of the walls are this much lighter than the roof (measured against the mean of the finest step on the house blocks about Paris, as `SEEN_LEAVES`; one number, so that every roof keeps its hue) */
-const ROOF_SEEN = 1.42;
+/**
+ * A house of the plan as the camera sees it from above, at a far step: this much of its roof's colour and this much
+ * of its walls' (both sides of the roof, the gable, the chimneys and what shows of the walls and the ground between
+ * the houses). Measured against the mean of the finest step (`?mean=compare`) on the house blocks about Paris and
+ * about Taranto, as `SEEN_LEAVES`: steep roofs of the north and low ones of the south come out within a tenth.
+ */
+const ROOF_SEEN = 0.82, WALL_SEEN = 0.115;
+const roofSeen = (roof: RGB, wall: RGB): RGB => [roof[0] * ROOF_SEEN + wall[0] * WALL_SEEN, roof[1] * ROOF_SEEN + wall[1] * WALL_SEEN, roof[2] * ROOF_SEEN + wall[2] * WALL_SEEN];
 /** the tops of a closed wood at the second far step, as a share of those of the first: measured on the pictures of both sides of the border between them (width 1150 against 1242, tools/zoom) at Paris, checked in the Black Forest */
 const ROOFED = 0.72;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
@@ -257,7 +263,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         // where a block is larger than a house, it is the houses' as far as they cover it: a block for every
         // house made a town many times its size
         for (let k = 0; k + 8 < here.houses.length; k += 9) {
-          const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), top = shade(rgb(roof), ROOF_SEEN), walls = rgb(wall);
+          const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = rgb(wall), top = roofSeen(rgb(roof), walls);
           for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
             const x = bx - ox, z = bz - oz;
             if (!inGrid(x, z)) continue;
@@ -271,7 +277,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
           }
         }
       } else for (let k = 0; k + 8 < here.houses.length; k += 9) {
-        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), top = shade(rgb(roof), ROOF_SEEN), walls = rgb(wall);
+        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = rgb(wall), top = roofSeen(rgb(roof), walls);
         const on: [number, number][] = [];
         for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
           const covered = (Math.min(hx + w, (bx + 1) * wider) - Math.max(hx, bx * wider)) * (Math.min(hz + d, (bz + 1) * wider) - Math.max(hz, bz * wider)) / (wider * wider);
@@ -309,7 +315,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
         if (wider > 2 * t.half) {
           // a town smaller than a block: the blocks it lies on show its roofs as far as it covers them
-          const s = sites.find((q) => q.id === t.site), roofs = s ? shade(pick(shownBy(s.style).roofs, 0), ROOF_SEEN) : null;
+          const s = sites.find((q) => q.id === t.site), roofs = s ? roofSeen(pick(shownBy(s.style).roofs, 0), pick(shownBy(s.style).walls, 0)) : null;
           for (let z = z0; roofs && z < z1; z++) for (let x = x0; x < x1; x++) {
             if (!inGrid(x, z) || g.wet[idx(x, z)] || !(free(x, z) || c.kind![idx(x, z)] === 1)) continue;
             const bx = (x + ox) * wider, bz = (z + oz) * wider, i = idx(x, z);
