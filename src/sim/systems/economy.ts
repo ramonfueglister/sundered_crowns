@@ -199,22 +199,22 @@ export function computeTo(s: WorldState, w: World, day: number): void {
  *  kilocalories a year. A city whose farmers bring in this much has the productivity of England's agriculture. */
 export const ENGLAND_HARVEST_PER_FARMER = ENGLAND_HARVEST / farmers(ENGLAND_1300.people);
 
-/** The country whose cities keep England's productivity of agriculture: the Caloric Suitability Index of the harvest
- *  is that of rain-fed farming, and Egypt's fields were watered by the Nile. An assumption of the game (Ramon, 17
- *  November 2026: "Ägypten vorerst wie England"), until a source for irrigated land is read. */
-export const IRRIGATED_COUNTRY = 'Egypt';
+/** The region of the map whose cities keep England's productivity of agriculture: the Caloric Suitability Index of
+ *  the harvest is that of rain-fed farming, and Egypt's fields were watered by the Nile. An assumption of the game
+ *  (Ramon, 17 November 2026: "Ägypten vorerst wie England"), until a source for irrigated land is read. */
+export const IRRIGATED_REGION = 'egypt';
 
 /** The factor of the harvest of every city of a world (economy feature 12): the harvest per farmer of the city's
  *  place (the persons of its hamlets, src/sim/systems/hamlets.ts) against that of England in 1300–09, the case the
  *  harvest is calibrated on. A city of Egypt, or one whose place brings in no harvest (the index of the soil knows
- *  rain-fed farming only), keeps 1: England's productivity. */
-export function harvestFactors(s: WorldState): Float64Array {
+ *  rain-fed farming only), keeps 1: England's productivity. The region is that of the province of the place. */
+export function harvestFactors(s: WorldState, w: World): Float64Array {
   const e = s.economy.cities;
   if (!e) return new Float64Array(0);
   const { farmers: L } = residents(s), h = s.place.harvest;
-  const watered = new Set(citiesOf(s.startYear).filter((c) => c.country === IRRIGATED_COUNTRY).map((c) => c.place));
+  const region = (p: number) => (w.provOf[p] >= 0 ? w.regions[w.regionOf[w.provOf[p]]] : '');
   return Float64Array.from(e.places, (p) => {
-    if (watered.has(p) || !(h[p] > 0) || !(L[p] > 0)) return 1;
+    if (region(p) === IRRIGATED_REGION || !(h[p] > 0) || !(L[p] > 0)) return 1;
     return h[p] / L[p] / ENGLAND_HARVEST_PER_FARMER;
   });
 }
@@ -228,7 +228,7 @@ export function harvestFactors(s: WorldState): Float64Array {
 export function foundWithHarvest(s: WorldState, w: World): void {
   const e = s.economy.cities;
   if (!e) return;
-  const f = harvestFactors(s);
+  const f = harvestFactors(s, w);
   if (f.length === e.harvestFactor.length && f.every((x, k) => x === e.harvestFactor[k])) return;
   foundEconomy(s, w, f);
   settleHamlets(s); countPeople(s); cultivate(s, w); bringInHarvest(s, w);
