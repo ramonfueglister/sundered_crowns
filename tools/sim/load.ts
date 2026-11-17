@@ -71,12 +71,19 @@ export function loadGround(year: number): Ground | null {
   const f = dataPath(`ground_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
-/** The world with the chronicles of rulers and of borders and the building ground of the towns of `year`. */
+/** The dry ground round the towns of a start year (public/data/dry_<year>.json), compiled; null when there is none. */
+export function loadDry(year: number): Ground | null {
+  const f = dataPath(`dry_${year}.json`);
+  return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
+/** The world with the chronicles of rulers and of borders, the building ground of the towns of `year` and the dry
+ *  ground round them. */
 export function loadWorldFor(year: number): World {
   const w = loadWorld();
   if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
   if (w.borders?.year !== year) w.borders = loadBorders(year);
   if (w.ground?.year !== year) w.ground = loadGround(year);
+  if (w.dry?.year !== year) w.dry = loadDry(year);
   return w;
 }
 /** The people of every place of the map in heads (1:100), as the setup of `year` spreads them, no place smaller than

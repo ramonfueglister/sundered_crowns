@@ -91,6 +91,10 @@ export class World {
   /** the building ground of the towns of the start year (src/sim/content/ground.ts), null without one: then the land
    *  register lays its parcels without regard to the ground */
   ground: Ground | null = null;
+  /** the dry ground round the towns of the start year (public/data/dry_<year>.json: no water, no rock, farther out
+   *  than the building ground and nothing said of steps and buildings), null without one: then the land register
+   *  lays its hamlets by the building ground, as far as that reaches */
+  dry: Ground | null = null;
   constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;

@@ -63,7 +63,8 @@ Ein Haus ist so gross gebaut wie ein echtes, steht aber auf der Karte für 125 m
 - Die Masse der Höfe stammen von zwei englischen Dörfern und einem westfälischen Einzelhof. Für den Mittelmeerraum und die islamische Welt ist keine Quelle gelesen. Alle Höfe sind gleich gross.
 - Die Obergrenze von 10 Höfen gilt für alle Städte, auch für Kairo.
 - Ohne Quelle: die gleichmässige Aufteilung, welche Familie in welchem Weiler wohnt, das Muster der Verteilung um die Stadt.
-- In 544 Weilern steht nicht jedes Bauernhaus auf Baugrund. 209 davon liegen weiter draussen, als der Baugrund der Stadt vermessen ist.
+- Ein Weiler, dessen Platz im Wasser oder auf Fels läge, liegt auf dem nächsten trockenen Grund. In 55 von 2'127 Weilern steht trotzdem nicht jedes Bauernhaus trocken: 47 davon gehören zu Kairo, dessen Umland noch nicht weit genug vermessen ist, die übrigen zu Venedig, Ceuta, Alexandria, Hormus und Rhodos.
+- Bei grossen Städten drängen die Weiler die Felder zurück: Die 39 Weiler von Paris belegen 69 % der Fläche, die Paris als Ackerland hat. Bei einer mittleren Stadt sind es 9 %.
 - Dreizehn Städte in Ägypten, Arabien und der Sahara haben kein Ackerland; ihre Weiler liegen dicht um die Stadt.
 - Weiler verschiedener Städte können sich in die Quere kommen.
 - Solange niemand geboren wird, stirbt oder umzieht, entsteht kein neuer Hof.

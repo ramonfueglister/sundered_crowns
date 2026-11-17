@@ -61,7 +61,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
-  foundLots(s, w.ground); // the parcels of the families who live in the towns (after the hamlets: their families have none)
+  foundLots(s, w.ground, w.dry); // the parcels of the families who live in the towns (after the hamlets: their families have none)
   return s;
 }
 

@@ -180,10 +180,19 @@ describe('the farmsteads of a world of 1291', () => {
       for (const h of hs) for (const p of built.get(town) ?? []) expect(near(boxes[h], p, HAMLET_OFF)).toBe(false);
     }
   });
-  it('stand on building ground in most hamlets the survey reaches', () => {
-    const found = foundLots(decodeState(encodeState(s)), w.ground);
-    expect(found.crowded).toBeLessThan(s.hamlets.size / 100);
-    expect(found.rough).toBeLessThan(s.hamlets.size / 3);
+  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', () => {
+    const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
+    for (let i = 0; i < s.lot.size; i++) {
+      if (C.kind[i] !== LOT_KIND.farmstead) continue;
+      expect(dry.has(C.site[i])).toBe(true);
+      if (!houseGround(dry, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] })) wet.add(C.hamlet[i]);
+    }
+    const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
+    expect(found.rough).toBe(wet.size);
+    expect(found.rough).toBeLessThan(s.hamlets.size / 30);
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 50);
+    // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
+    expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
   });
 });
 
@@ -239,7 +248,7 @@ describe('the land register of a world of 1291', () => {
     const t = decodeState(encodeState(s));
     expect(hashState(t)).toBe(hashState(s));
     expect(Array.from(t.lot.cols.x.subarray(0, t.lot.size))).toEqual(Array.from(L.x.subarray(0, s.lot.size)));
-    foundLots(t, w.ground);
+    foundLots(t, w.ground, w.dry);
     expect(hashState(t)).toBe(hashState(s));
   });
 });
