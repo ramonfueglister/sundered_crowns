@@ -56,11 +56,6 @@ export interface CalibrationTable {
      *  one without work at the start and the owner of the bank). Where it is given, it takes the place of the labour
      *  force computed from the people, `adult_share` and `participation`. England's table has none. */
     labour_force?: Entry<number>;
-    /** what the households buy of the goods of agriculture in a year, in £ at the scale of the table (economy
-     *  feature 12): where it is given, the city buys what its own agriculture lacks for it from the merchants and
-     *  pays with goods of industry and services, or sells what it has over and buys those goods with it. England's
-     *  table has none: its households buy what is left. */
-    food_households?: Entry<number>;
     unemployed: Entry<number>;
     /** the part of the last wage after tax that a person without work is paid (economy feature 6); 0 = none */
     unemployment_benefit: Entry<number>;
@@ -154,24 +149,6 @@ export function ar1(y: readonly number[]): { alpha: number; beta: number; sigma:
   return { alpha, beta, sigma: Math.sqrt(sum(res.map((e) => (e - mr) ** 2)) / (n - 1)) };
 }
 
-/** The trade in food of a city (economy feature 12), in place of what its households would have left of the goods of
- *  agriculture: they buy `food` of them. What its own agriculture lacks for that, `d`, the merchants bring as imports
- *  of agriculture, and the city pays for it with as much more exports of industry and services, taken from what its
- *  households buy of those in proportion to what they buy; what it has over is exported, and the households buy as
- *  much more of industry and services, imported in the same proportion. Trade stays balanced, GDP stays the same, and
- *  every other use of every good stays as it is. Changes `households`, `imports` and `exports` in place. */
-export function tradeFood(food: number, households: number[], imports: number[], exports: number[]): void {
-  const AGRICULTURE = 0, d = food - households[AGRICULTURE];
-  const rest = households.reduce((a, h, g) => (g === AGRICULTURE ? a : a + h), 0);
-  if (!(rest > 0)) throw new Error('the households buy nothing of industry and services to pay for food with');
-  for (let g = 0; g < households.length; g++) {
-    const part = g === AGRICULTURE ? -1 : households[g] / rest; // the share of the other goods in the payment
-    households[g] -= part * d;
-    if (g === AGRICULTURE) { if (d > 0) imports[g] += d; else exports[g] -= d; }
-    else if (d > 0) exports[g] += part * d; else imports[g] -= part * d;
-  }
-}
-
 export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const i = t.inputs, S = t.scale.value, G = 3, sectors = [0, 1, 2];
   const h = t.history, first = h.first_year, years = t.year - first; // the history covers first + 1 … year
@@ -202,16 +179,14 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const supplied = sectors.map((row) => sum(sectors.map((c) => A[row][c] * inputs[c]))); // inputs sold by each sector
   const capital = va.map((v) => (capitalShare / r) * v);
   const used = capital.map((k) => dep * k); // consumption of fixed capital
-  const exports = [wool, cloth, 0];
-  const imports = i.import_share.value.map((c) => c * sum(exports));
+  const exports = [wool, cloth, 0], X = sum(exports);
+  const imports = i.import_share.value.map((c) => c * X);
   const crown = i.crown_purchase_share.value.map((c) => c * revenue);
   const investment = i.investment_share.value.map((s) => s * sum(used));
   const dwellings = houseShare / r * gdp, building = dep * dwellings;
   const built = i.dwelling_share.value.map((s) => s * building);
   const households = sectors.map((g) => output[g] + imports[g] - supplied[g] - crown[g] - investment[g] - built[g] - exports[g]);
-  if (i.food_households) tradeFood(i.food_households.value, households, imports, exports);
   if (!(Math.min(...households) > 0)) throw new Error(`a sector has nothing left for the households: ${households}`);
-  const X = sum(exports);
   const wages = va.map((v) => wageShare * v);
   const surplus = sectors.map((g) => va[g] - wages[g] - used[g]);
 
@@ -253,7 +228,7 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     theta_DIV: mixed / sum(surplus.map((s) => Math.max(0, s))),
     theta: b.theta, zeta: b.zeta, zeta_LTV: b.zeta_LTV, zeta_b: b.zeta_b,
     b_CF_g: i.investment_share.value, b_CFH_g: i.dwelling_share.value, b_HH_g: households.map((v) => v / sum(households)),
-    c_G_g: i.crown_purchase_share.value, c_E_g: exports.map((e) => e / X), c_I_g: i.food_households ? imports.map((m) => m / sum(imports)) : i.import_share.value, a_sg: A,
+    c_G_g: i.crown_purchase_share.value, c_E_g: exports.map((e) => e / X), c_I_g: i.import_share.value, a_sg: A,
     C: [[NO_SHOCK, 0, 0], [0, arE.sigma * arE.sigma, 0], [0, 0, NO_SHOCK]],
     alpha_G: arG.alpha, beta_G: arG.beta, sigma_G: arG.sigma, alpha_E: arE.alpha, beta_E: arE.beta, sigma_E: arE.sigma,
     alpha_I: 1, beta_I: 0, sigma_I: 0, alpha_pi_EA: 1, beta_pi_EA: 0, sigma_pi_EA: 0, alpha_Y_EA: 1, beta_Y_EA: 0, sigma_Y_EA: 0,
@@ -293,34 +268,14 @@ export const activePersons = (c: EconomyCalibration): number => (c.parameters as
  *  `working` is the number of persons of the city who work (economy feature 10): the model then has exactly that
  *  many active persons (the labour force, the one person without work at the start and the owner of the bank).
  *  Without it the labour force is computed from the people as for England. */
-export function cityTable(t: CalibrationTable, people: number, working?: number, agriculture = 1): CalibrationTable {
+export function cityTable(t: CalibrationTable, people: number, working?: number): CalibrationTable {
   if (!(people > 0)) throw new Error(`a city of ${people} people`);
   const c = structuredClone(t);
   if (working !== undefined) c.inputs.labour_force = { value: working - t.inputs.unemployed.value - BANK_OWNERS, kind: 'derived', source: 'the persons of the city who work (src/sim/systems/work.ts), without the one without work at the start and the owner of the bank' };
   c.scale.value = t.scale.value * people / (t.inputs.population_thousand.value * 1e3);
   c.inputs.wool_export.value.duty_shillings_per_sack = t.cities.duty_shillings_per_sack.value;
   c.inputs.unemployment_benefit = structuredClone(t.cities.unemployment_benefit);
-  if (agriculture !== 1) withAgriculture(c, agriculture);
   return c;
-}
-
-/** The table with the value added of agriculture per person who works there `factor` times England's (economy
- *  feature 12: the harvest of a city's place against England's, src/sim/systems/economy.ts). Industry and services
- *  keep theirs, and the persons in each sector stay the same. So GDP changes by the value added of agriculture, and
- *  everything the calibration derives from the value added of agriculture follows it: its output and its inputs,
- *  hence its output per employee (the port's labour productivity `alpha_s`, times `factor`), its wages and its
- *  capital. The value added shares of the table are those of the new GDP. */
-export function withAgriculture(c: CalibrationTable, factor: number): void {
-  if (!(Number.isFinite(factor) && factor > 0)) throw new Error(`a factor of ${factor} for agriculture`);
-  const food = (calibrateEconomy(c).accounts.households as number[])[0]; // England's at the city's scale
-  const i = c.inputs, S = c.scale.value, AGRICULTURE = 0;
-  const duty = i.wool_export.value.sacks * i.wool_export.value.duty_shillings_per_sack / SHILLINGS_PER_POUND * S;
-  const gdp = i.gdp_nominal_gbp_mn.value * 1e6 * S, va = i.value_added_share.value.map((v) => v * (gdp - duty));
-  va[AGRICULTURE] *= factor;
-  const total = sum(va);
-  i.gdp_nominal_gbp_mn = { ...i.gdp_nominal_gbp_mn, value: (total + duty) / (1e6 * S), kind: 'derived', source: `${i.gdp_nominal_gbp_mn.source}; with the value added of agriculture times ${factor}, the factor of the harvest of the city (economy feature 12)` };
-  i.value_added_share = { ...i.value_added_share, value: va.map((v) => v / total) as typeof i.value_added_share.value, kind: 'derived', source: `${i.value_added_share.source}; with the value added of agriculture times ${factor} (economy feature 12)` };
-  i.food_households = { value: food, kind: 'assumption', source: 'the households of the city buy as much of the goods of agriculture as those of England at the same scale (economy feature 12): what the city lacks for it, the merchants bring' };
 }
 
 /** The calibration with one day as the period (economy feature 4), from the yearly one. `days` is the number of

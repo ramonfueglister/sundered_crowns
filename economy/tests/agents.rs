@@ -90,9 +90,8 @@ fn the_rows_add_up_to_the_figures_of_the_economy_every_day() {
         let savings: f64 = w.iter().map(|r| r[3]).sum::<f64>() + f.iter().map(|r| r[6]).sum::<f64>() + b.iter().map(|r| r[1]).sum::<f64>() + x.iter().map(|r| r[1]).sum::<f64>();
         assert!((savings - fig[13]).abs() <= 1e-9 * fig[13].abs(), "day {day}: {savings} against {}", fig[13]);
         // measured: about 1.2 % on the first day (the price level of the start is 1, the first index is not), then
-        // below 0.1 % a day; with London's agriculture at the factor of its harvest (economy feature 12) up to 0.22 %
-        // on day 4
-        assert!(drift < if day == 1 { 0.02 } else { 3e-3 }, "day {day}: the wage paid is {drift} off the wage in money");
+        // below 0.1 % a day
+        assert!(drift < if day == 1 { 0.02 } else { 2e-3 }, "day {day}: the wage paid is {drift} off the wage in money");
         // nobody spends a negative amount
         assert!(w.iter().all(|r| r[4] >= 0.0) && f.iter().all(|r| r[7] >= 0.0));
     }

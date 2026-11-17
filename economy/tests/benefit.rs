@@ -106,13 +106,8 @@ fn cities_that_trade_keep_their_people_in_work_without_the_benefit() {
     // city can still have a slump (with the second seed Cairo has 3 % without work for six years and an output of
     // 98 % of its start), but it comes back: in the tenth year nobody is without work and every city stands above
     // its start. The bounds are measured ones, not a paper's.
-    //
-    // Since economy feature 12 a city with a weak harvest buys its food from the merchants (Paris, Venice): such a
-    // city falls by a fifth in its first year and comes back more slowly, which the economies of the game show
-    // (`npm run economy:check`). This test keeps to cities whose agriculture makes about what England's does (a
-    // factor of the harvest within 10 % of 1), as all cities did when it was written.
     for seed in [1356, 1357] {
-        let names = ["Cairo", "Ghent", "Alexandria", "London"];
+        let names = ["Cairo", "Paris", "Venice", "London"];
         let mut all = Cities::new(names.iter().enumerate().map(|(k, n)| city(n, seed + 100 * k as u64)).collect()).unwrap();
         for year in 1..=10 {
             all.step(365);

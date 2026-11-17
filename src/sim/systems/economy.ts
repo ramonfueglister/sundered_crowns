@@ -20,9 +20,8 @@
 // place where the amounts are computed: a component is a copy of the day. From the persons the purse of every
 // family follows (economy feature 11, src/sim/systems/household.ts).
 //
-// The harvest of a city's place sets what its agriculture makes per person (economy feature 12, `foundWithHarvest`):
-// a city whose farmers bring in more per head than England's in 1300–09 is founded with an agriculture that makes
-// more per person it employs, and pays more. Nothing else in the world reaches the economies: nothing a player does. Places without a city have no economy. The year has 365 equal days: no seasons.
+// The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
+// player does reaches them. Places without a city have no economy. The year has 365 equal days: no seasons.
 import type { System } from '../schedule';
 import type { CityEconomies, WorldState } from '../state';
 import { FIRM_SCHEMA } from '../state';
@@ -36,9 +35,6 @@ import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
 import { writeHouseholds } from './household';
-import { countPeople, residents, settleHamlets } from './hamlets';
-import { bringInHarvest, ENGLAND_1300, ENGLAND_HARVEST, farmers } from './harvest';
-import { cultivate } from './cultivation';
 
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
@@ -67,7 +63,7 @@ export const cityAt = (e: CityEconomies, place: number): number => e.places.inde
 /** What the economy of each city of a world is founded from: its place, its people, its persons who work
  *  (src/sim/systems/work.ts) and its calibration, which has as many active persons as the city has persons who
  *  work. A world whose start year has no cities, or no calibration table, has none. */
-export function cityCalibrations(s: WorldState, w: World, agriculture?: ArrayLike<number>): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
+export function cityCalibrations(s: WorldState, w: World): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
   const c = w.cityEconomies;
   if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) return [];
   const cities = cityPlaces(s.startYear);
@@ -75,7 +71,7 @@ export function cityCalibrations(s: WorldState, w: World, agriculture?: ArrayLik
   return cities.map((x, k) => {
     const { working, idle } = force[k];
     if (idle < 0) throw new Error(`every adult of ${x.name} works: the model needs a person who does not`);
-    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length, agriculture?.[k] ?? 1));
+    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length));
     if (activePersons(calibration) !== working.length) throw new Error(`${x.name} has ${working.length} persons who work, its calibration ${activePersons(calibration)} active persons`);
     return { ...x, working, idle, calibration };
   });
@@ -88,11 +84,11 @@ export function cityCalibrations(s: WorldState, w: World, agriculture?: ArrayLik
  *  entity. The random numbers of a city come from the seed of the world and the city's place, through the engine's
  *  own generator. A world without cities or without a calibration for its start year (src/sim/tables.ts) has no
  *  economies, no firms, and no person has a part. */
-export function foundEconomy(s: WorldState, w: World, agriculture?: Float64Array): void {
+export function foundEconomy(s: WorldState, w: World): void {
   const P = s.person.cols, c = w.cityEconomies;
   s.firm = createTable(FIRM_SCHEMA, 4096);
   P.role.fill(0); P.agent.fill(0); P.firm.fill(-1); P.wage.fill(0); P.income.fill(0); P.spent.fill(0); P.savings.fill(0);
-  const cities = cityCalibrations(s, w, agriculture);
+  const cities = cityCalibrations(s, w);
   if (cities.length === 0) { s.economy = { cities: null }; writeHouseholds(s); return; }
   const F = s.firm.cols, firm0 = new Int32Array(cities.length + 1), setups: CitySetup[] = [];
   cities.forEach((x, k) => {
@@ -110,7 +106,7 @@ export function foundEconomy(s: WorldState, w: World, agriculture?: Float64Array
   });
   firm0[cities.length] = s.firm.size;
   const model = w.economyEngine.create(setups, c.clock, c.rules);
-  s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0, harvestFactor: agriculture ? Float64Array.from(agriculture) : new Float64Array(cities.length).fill(1) } };
+  s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0 } };
   writeAgents(s, w);
 }
 
@@ -193,45 +189,6 @@ export function computeTo(s: WorldState, w: World, day: number): void {
     const lastOfYear = dateToDay(next.y + 1, 0, 1, s.startYear) - 1;
     compute(e, s, w, Math.min(day, lastOfYear) - e.day);
   }
-}
-
-/** The harvest per farmer of the calibration case of the harvest, England in 1300–09 (src/sim/systems/harvest.ts):
- *  kilocalories a year. A city whose farmers bring in this much has the productivity of England's agriculture. */
-export const ENGLAND_HARVEST_PER_FARMER = ENGLAND_HARVEST / farmers(ENGLAND_1300.people);
-
-/** The region of the map whose cities keep England's productivity of agriculture: the Caloric Suitability Index of
- *  the harvest is that of rain-fed farming, and Egypt's fields were watered by the Nile. An assumption of the game
- *  (Ramon, 17 November 2026: "Ägypten vorerst wie England"), until a source for irrigated land is read. */
-export const IRRIGATED_REGION = 'egypt';
-
-/** The factor of the harvest of every city of a world (economy feature 12): the harvest per farmer of the city's
- *  place (the persons of its hamlets, src/sim/systems/hamlets.ts) against that of England in 1300–09, the case the
- *  harvest is calibrated on. A city of Egypt, or one whose place brings in no harvest (the index of the soil knows
- *  rain-fed farming only), keeps 1: England's productivity. The region is that of the province of the place. */
-export function harvestFactors(s: WorldState, w: World): Float64Array {
-  const e = s.economy.cities;
-  if (!e) return new Float64Array(0);
-  const { farmers: L } = residents(s), h = s.place.harvest;
-  const region = (p: number) => (w.provOf[p] >= 0 ? w.regions[w.regionOf[w.provOf[p]]] : '');
-  return Float64Array.from(e.places, (p) => {
-    if (region(p) === IRRIGATED_REGION || !(h[p] > 0) || !(L[p] > 0)) return 1;
-    return h[p] / L[p] / ENGLAND_HARVEST_PER_FARMER;
-  });
-}
-
-/** Founds the economies of the cities anew with the factor of the harvest of their places (economy feature 12), after
- *  the harvest has been brought in: the value added of a city's agriculture per person who works there is England's
- *  times the factor (`withAgriculture`, src/sim/economy/calibration.ts), and so is the productivity of its firms of
- *  agriculture. Who works, and where, stays as it was founded (the factor changes no count of persons), so the
- *  hamlets, the people of the places, the arable and the harvest are set again as they were. Nothing happens when the
- *  economies already carry these factors. */
-export function foundWithHarvest(s: WorldState, w: World): void {
-  const e = s.economy.cities;
-  if (!e) return;
-  const f = harvestFactors(s, w);
-  if (f.length === e.harvestFactor.length && f.every((x, k) => x === e.harvestFactor[k])) return;
-  foundEconomy(s, w, f);
-  settleHamlets(s); countPeople(s); cultivate(s, w); bringInHarvest(s, w);
 }
 
 /** One period a day. */

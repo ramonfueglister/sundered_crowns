@@ -39,8 +39,9 @@ players and the AI of realms without a player act through the same commands.
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
 | 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
-| 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world |
+| 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world **Taken back 17 Nov 2026** (Ramon, "C: Feature 12 zurücknehmen", 17:38 UTC): the cities' trade does not add up together (section 14) |
 | 13 | The merchants' money (examined, nothing built) | chosen by Ramon 17 Nov 2026 as the next feature ("Händlerguthaben abbauen"), with "möglichst papernah" and "kein delulu"; after the reading and the measurement he left the decision to Claude ("du entscheidest selbständig", 17:19 UTC): the finding is recorded, no rule is built (section 13) |
+| 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
 
 ## 1. Grain harvest per place
 
@@ -2204,6 +2205,9 @@ of the family. Pictures in the project files (wirtschaft/staedte/befunde/feature
 
 ## 12. The harvest feeds the cities: a city buys the food its harvest lacks
 
+> **Taken back on 17 Nov 2026.** The code of this feature is no longer in the game (state version 20 again). The
+> section stays as the record of what was built and measured. Why it was taken back: section 14.
+
 Status: built; not yet in the running world. Ramon chose the feature on 17 November 2026 ("Ernte speist die Städte",
 15:49 UTC) and variant A of the proposal (Claude Doc "Feature 12: Ernte speist die Städte",
 https://claude.ai/artifact/8GGxSGubnLXmtTqh9HrUng): the factor of the harvest of a city's own place, Egypt for the
@@ -2340,6 +2344,9 @@ are off by at most 5e-11 of the amount they are judged by. A world of 1291 (550 
 
 ## 13. The merchants' money: examined, nothing built
 
+> The numbers of this section were measured with feature 12 in the game. Section 14 shows that the growth of the
+> merchants' money came from feature 12 itself; without it the stocks stay near their start.
+
 Feature 12 left a limit: the merchants' deposits in a city that buys more than it sells (`D_RoW`) grow without
 bound. Ramon chose to work them down, as near to the papers as possible. No rule was built, because no paper that
 was read gives one that fits what was measured. This section records what was read and measured, so that the
@@ -2409,4 +2416,66 @@ with numbers nobody measured.
 - A limit for a bank without equity (no overdraft for its firms): an extension of the rule of CANVAS, and ours.
 - A stock of coin for every city that can run out, as the gold of Godley & Lavoie: needs a source for the coin of
   the cities around 1356.
+
+## 14. The check of the model, and feature 12 taken back
+
+Ramon asked on 17 Nov 2026 to check the model cleanly before anything else is built: does everything add up?
+The books do. The economy with feature 12 did not, and feature 12 was taken back.
+
+### What adds up
+
+| Check | Result |
+|---|---|
+| Tests of the game (with feature 12) | 1150 of 1150 pass (40 files) |
+| Tests of the engine (`economy/`) | 62 of 62 pass |
+| Identities of every city and the merchants' books, 30 years, 4 worlds (with feature 12) | off by at most 9.1e-10 of the amount they are judged by |
+| Sum of the merchants' deposits over all cities, 20 years | stays at 6 to 7 pounds: what one city loses another gains |
+
+### What did not add up: the cities' trade together
+
+Feature 12 calibrated every city balanced on its own (exports = imports). Summed over the 29 cities of 1356, pounds
+a year at the scale 1:100, at the start:
+
+| | Agriculture | Industry | Services |
+|---|---|---|---|
+| Exports the cities expect | 2669 | 3601 | 2637 |
+| Imports the cities expect | 6522 | 1738 | 646 |
+
+3853 pounds of food a year are missing (about 9.5 % of the GDP of all cities), and as much industry and services
+finds no buyer: most cities have a factor below 1, each pays for food with industry and services, and nobody buys
+those and sells food. Section 12 named this as a limit; its weight was misjudged. Before feature 12 the trade by
+product did not match either (agriculture: exports 1317, imports 443), at a tenth of the size.
+
+What follows from it, one world of 1356, 20 years (`/mnt/project-files/wirtschaft/feature13/` in the project files:
+`bilanz_20_jahre.txt` with feature 12, `bilanz_20_jahre_vor_feature12.txt` without):
+
+| After 20 years | Without feature 12 | With feature 12 |
+|---|---|---|
+| Merchants' deposits of a city, in years of GDP | −0.12 to +0.07 | −1.80 to +7.22 |
+| Households' deposits, in years of GDP (start 0.2) | 0.18 to 0.66 | 0.76 to 7.06 |
+| Lowest equity of a bank, in years of GDP | −0.20 | −11.97 |
+| Cities whose bank has negative equity | 20 of 29 | 19 of 29 |
+| Lowest price level of a city (start 1) | 0.90 | 0.64 |
+| Real output of all cities (start 100) | 115.9 | 111.2 |
+
+Without feature 12 the stocks stay near their start. With it they run away. The growth of the merchants' money
+(section 13) was therefore a fault of the construction of feature 12, not a missing rule of the papers.
+
+### What stays open without feature 12
+
+- 20 of 29 banks have negative equity after 20 years, though little (at most 0.2 years of GDP): firms fail, the
+  bank writes off, and no rule of the port stops a bank with negative equity (section 13, what was read).
+- The trade by product does not match at the start (England's exports of wool and cloth in every city).
+
+### What was decided
+
+Ramon chose to take feature 12 back (the other ways: food from the countryside around the cities, or a factor
+normed to the world). The code, the state (version 20), the calibrations (`public/data/economy_cities.json`) and
+the tests are those before feature 12. The trade in food is to be built anew with consumption and hunger: the
+food that is missing is the question hunger answers.
+
+**For every later calibration:** check the position of all cities together, product by product, not only each
+city on its own.
+
+By Ramon's order the next features are the distance in trade, then consumption and hunger; no yearly yields.
 

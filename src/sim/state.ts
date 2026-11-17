@@ -20,9 +20,8 @@ import type { Table } from './ecs';
  *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
  *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
- *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. 21: the harvest of a city's
- *  place sets what its agriculture makes per person (economy feature 12, src/sim/systems/economy.ts). Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 21;
+ *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 20;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -197,9 +196,6 @@ export interface CityEconomies {
   places: Int32Array;
   /** per city the id of its first firm (`WorldState.firm`), and after the last city the number of all firms */
   firm0: Int32Array;
-  /** per city the factor of the harvest its economy was founded with (economy feature 12, `foundWithHarvest` in
-   *  src/sim/systems/economy.ts): what its agriculture makes per person against England's in 1356 */
-  harvestFactor: Float64Array;
 }
 
 export interface WorldState {

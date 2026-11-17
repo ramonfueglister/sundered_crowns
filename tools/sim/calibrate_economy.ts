@@ -26,8 +26,7 @@ let reference: { s: WorldState; w: World } | null = null;
  *  with `t`, as the game would found them from that table. */
 export function cityCalibrations(t?: CalibrationTable): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
   const { s, w } = (reference ??= newWorldState(REFERENCE.seed, REFERENCE.year));
-  // with the factor of the harvest the cities of the world were founded with (economy feature 12)
-  return calibrationsOf(s, t ? Object.assign(Object.create(World.prototype), w, { cityEconomies: { ...w.cityEconomies, table: t } }) as World : w, s.economy.cities?.harvestFactor);
+  return calibrationsOf(s, t ? Object.assign(Object.create(World.prototype), w, { cityEconomies: { ...w.cityEconomies, table: t } }) as World : w);
 }
 
 /** The file as it is written: one key per line at the top, one city per line. */
