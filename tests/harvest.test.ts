@@ -10,6 +10,8 @@ import { encodeState, decodeState } from '../src/sim/snapshot';
 import { upgradeState, OLDEST_STATE_VERSION } from '../src/sim/upgrade';
 import { STATE_VERSION } from '../src/sim/state';
 import { placeDetail } from '../src/net/views';
+import { residents } from '../src/sim/systems/hamlets';
+import { ALIVE } from '../src/sim/state';
 
 describe('the harvest model', () => {
   const T = 5e11; // England's land in the model's unit; any value serves here
@@ -37,21 +39,26 @@ describe('the harvest on the map', () => {
     const { s, w } = newWorldState();
     expect(s.v).toBe(STATE_VERSION);
     expect(s.place.harvest.length).toBe(w.L);
-    for (let i = 0; i < w.L; i++) expect(s.place.harvest[i] > 0).toBe(s.place.pop[i] > 0 && soilOf(w, i, s.place.arable[i]) > 0);
+    const { farmers } = residents(s);
+    for (let i = 0; i < w.L; i++) expect(s.place.harvest[i] > 0).toBe(farmers[i] > 0 && soilOf(w, i, s.place.arable[i]) > 0);
     // the capital of France has people and good soil
     const paris = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')];
     expect(s.place.harvest[paris]).toBeGreaterThan(0);
   });
   it('brings in a new harvest on the first day of a year and not before', () => {
     const { s, w } = newWorldState();
-    // the capital of France is at its land limit: twice the people work the same arable
-    const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')], before = s.place.harvest[i];
-    s.place.pop[i] *= 2;
+    // the capital of France is at its land limit: half the families of its hamlets leave, the others work the same arable
+    const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')], before = s.place.harvest[i], arable = s.place.arable[i];
+    const P = s.person.cols, F = s.family.cols, L = residents(s).farmers[i];
+    for (let f = 0; f < s.family.size; f++) if (F.place[f] === i && F.hamlet[f] && f % 2 === 0) F.hamlet[f] = 0;
     advanceDay(s, w);
     expect(s.place.harvest[i]).toBe(before);
     s.day = 366 - 1; // 31 December 1356, a leap year
     advanceDay(s, w);
-    expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(2, 1 - LAND_SHARE), 6);
+    expect(s.place.arable[i]).toBe(arable);
+    let left = 0; for (let id = 0; id < s.person.size; id++) if (F.place[P.family[id]] === i && F.hamlet[P.family[id]] && P.died[id] === ALIVE) left++;
+    expect(left).toBeLessThan(L);
+    expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(left / L, 1 - LAND_SHARE), 6);
   }, 30_000); // the economies of the cities compute the 364 days the test jumps over
   it('tells a client the harvest of a place and what it was computed from', () => {
     const { s, w } = newWorldState();
@@ -60,7 +67,8 @@ describe('the harvest on the map', () => {
     expect(h.kcal).toBe(s.place.harvest[i]);
     expect(h.perHeadDay).toBeCloseTo(h.kcal / s.place.pop[i] / 365, 6);
     expect(h.hectares).toBeCloseTo(w.area[i] * 100, 6);
-    expect(h.farmers).toBeCloseTo(0.74 * s.place.pop[i], 3);
+    expect(h.farmers).toBe(residents(s).farmers[i]); // the persons of its hamlets
+    expect(h.farmers).toBeGreaterThan(0); expect(h.farmers).toBeLessThan(s.place.pop[i]);
     expect(h.landYield).toBeGreaterThan(0);
     const a = h.arable!;
     expect(a.hectares).toBe(s.place.arable[i]);

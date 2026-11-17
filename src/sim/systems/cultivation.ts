@@ -15,6 +15,7 @@ import type { System } from '../schedule';
 import type { WorldState } from '../state';
 import type { World } from '../world';
 import { ofTime } from '../scale';
+import { countPeople } from './hamlets';
 
 const HECTARES_PER_KM2 = 100;
 /** One statute acre in hectares. */
@@ -60,8 +61,9 @@ export function cultivate(s: WorldState, w: World): void {
   for (let i = 0; i < a.length; i++) a[i] = arableHa(w, i, ofTime(pop[i]));
 }
 
-/** The arable follows the people once a year, on the first day of the year, before the harvest is brought in. */
+/** The arable follows the people once a year, on the first day of the year, before the harvest is brought in: the
+ *  people of every place are counted (its persons), then the arable is set. */
 export const cultivation: System = {
   id: 'cultivation',
-  run(s, w, t) { if (t.newYear) cultivate(s, w); },
+  run(s, w, t) { if (t.newYear) { countPeople(s); cultivate(s, w); } },
 };

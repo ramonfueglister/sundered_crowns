@@ -75,22 +75,27 @@ describe('the parcels of a town', () => {
 
 describe('the land register of a world of 1291', () => {
   const L = s.lot.cols, F = s.family.cols, P = s.person.cols, towns = townFamilies(s);
-  it('gives every family of a town a parcel of its own in that town', () => {
+  it('gives every family who lives in a town a parcel of its own in that town, and the hamlets none', () => {
     const rulers = namedPersons(s), held = new Set<number>();
-    let inTowns = 0;
+    let inTowns = 0, hamlets = 0, farmers = 0;
     cities.forEach((c, k) => {
       for (const f of towns[k].families) {
         const l = F.lot[f];
+        expect(F.hamlet[f]).toBe(0);
         expect(l).toBeGreaterThanOrEqual(0); expect(held.has(l)).toBe(false); held.add(l);
         expect(L.site[l]).toBe(c.site); expect(L.place[l]).toBe(c.place); expect(L.kind[l]).toBe(LOT_KIND.parcel);
       }
       inTowns += towns[k].families.length;
     });
     expect(s.lot.size).toBe(inTowns);
-    expect(towns.reduce((n, t) => n + t.persons, 0)).toBe(s.person.size - rulers.size);
+    // the families of the hamlets live outside the walls and have no parcel yet
+    for (let f = 0; f < s.family.size; f++) if (F.hamlet[f]) { hamlets++; expect(F.lot[f]).toBe(NO_LOT); }
+    for (let i = 0; i < s.person.size; i++) if (F.hamlet[P.family[i]]) farmers++;
+    expect(hamlets).toBeGreaterThan(inTowns); // most families live from agriculture
+    expect(towns.reduce((n, t) => n + t.persons, 0)).toBe(s.person.size - rulers.size - farmers);
     // everybody else is a ruler, and a ruler has no parcel
     for (const id of rulers) expect(F.lot[P.family[id]]).toBe(NO_LOT);
-    expect(s.family.size - inTowns).toBe(rulers.size);
+    expect(s.family.size - inTowns - hamlets).toBe(rulers.size);
   });
   it('gives the parcels of each town 76 % of the ground the law gives its persons', () => {
     const sum = new Map<number, number>();
@@ -116,7 +121,7 @@ describe('the land register of a world of 1291', () => {
 describe('a world of 1291 saved before the land register', () => {
   it('gets the parcels a new world has, and encodes as one', () => {
     const old = decodeState(encodeState(s)) as WorldState;
-    old.v = 16;
+    old.v = 17;
     delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);

@@ -13,7 +13,7 @@ computes is in the world: what a town shows must be state of the ECS.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | Every family of a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 17, not merged; the world graphic does not draw from it yet |
+| 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 18, not merged. The world graphic on main sets a house on each parcel as soon as `public/data/lots_1291.json` is on main |
 | – | Parcels of the farmers' hamlets; where a new house arises and streets grow; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -23,7 +23,7 @@ Code: `src/sim/settlement/rule.ts` (the arithmetic), `src/sim/systems/lots.ts` (
 `src/sim/content/settled_area_1300.json` (written by `tools/history/1291/settled_area.py`). Tests:
 `tests/settlement.test.ts`.
 
-Written once when a world is founded (or by the upgrade 16 → 17 of an older one). Nothing changes while the world
+Written once when a world is founded (or by the upgrade 17 → 18 of an older one). Nothing changes while the world
 runs yet: nobody is born, dies, marries or moves, so no parcel is laid out, split or left. No row is ever freed.
 
 | Table | Column | Type | Meaning |
@@ -34,7 +34,7 @@ runs yet: nobody is born, dies, marries or moves, so no parcel is laid out, spli
 | lot | x, z | f32 | middle of the ground: metres east and south of the town's centre, at the scale of the houses |
 | lot | w, d | f32 | metres along the street, metres deep |
 | lot | front | u8 | side of the street: 0 north, 1 east, 2 south, 3 west |
-| family | lot | i32 | the parcel the family lives on, −1 without one (rulers) |
+| family | lot | i32 | the parcel the family lives on, −1 without one (rulers, and the families of the hamlets: `family.hamlet` 1) |
 
 `GET /lots/<site>` and `GET /lots?sites=a,b,…` (at most 200) give the ground of towns as columns: id, kind, x, z, w,
 d, front, family (−1 vacant), persons.
@@ -46,8 +46,9 @@ change while the world runs, the graphic has to read `/lots` instead.
 
 ### Steps
 
-1. **Who lives in the town.** The families of the town and their persons (`townFamilies`). Today these are all
-   persons founded for the town; once families live in hamlets, only those in the town count.
+1. **Who lives in the town.** The families who live in the town and their persons (`townFamilies`): those founded
+   for the town who do not live from agriculture. The families who do live in hamlets outside the walls
+   (`family.hamlet`, src/sim/systems/hamlets.ts) and have no parcel yet.
 2. **Ground.** Settled area of the real town, A = a·N^β hectares with N = persons × 100. A town the data measured
    takes its measured hectares, carried along the exponent from the data's inhabitants to N (it keeps how far it lies
    off the line). The world's town takes a hundredth of it at the scale of the houses: ground = A × 100 m².
@@ -70,38 +71,42 @@ change while the world runs, the graphic has to read `/lots` instead.
 
 ### What the world of 1291 gets (seed 1291)
 
-26,815 parcels for 26,815 families in 558 towns; the 314 ruler families have none. Families per town 8 / 29 / 983
-(smallest, median, largest). Fronts 5.4 / 8.9 / 13.2 m. Town ground per family 116 / 310 / 683 m² (Grenade planned
-333 m² of town per lot: an independent check of the law's level, not of the share, which is Grenade's own).
+8,150 parcels for the 8,150 families who live in the 558 towns (26,124 persons); the 18,665 families of the hamlets
+and the 314 ruler families have none. Families per town 1 / 9 / 280 (smallest, median, largest). Fronts 5.9 / 9.6 /
+17.3 m. Town ground per family 139 / 365 / 1,181 m² (Grenade planned 333 m² of town per lot: an independent check of
+the law's level, not of the share, which is Grenade's own).
 
-| Town | People of the time | Families | Parcel | Ground | Width at 125 m per house block |
+| Town | People of the time | Families in the town | Parcel | Ground | Width at 125 m per house block |
 |---|---|---|---|---|---|
-| Limoges (smallest, measured) | 4,000 | 13 | 12.1 × 36.3 m | 7,500 m² | 6.0 km |
-| Bayonne (median, by the law) | 11,000 | 32 | 8.5 × 25.6 m | 9,183 m² | 7.3 km |
-| Zürich (measured) | 11,550 | 27 | 8.7 × 26.1 m | 8,073 m² | 7.5 km |
-| Venice (measured) | 106,400 | 267 | 5.5 × 16.4 m | 31,639 m² | 11.5 km |
-| Paris (measured) | 214,667 | 570 | 6.1 × 18.4 m | 84,156 m² | 18.1 km |
-| Cairo (by the law) | 382,000 | 983 | 5.5 × 16.4 m | 115,661 m² | 22.1 km |
+| Limoges (smallest, measured) | 4,000 | 3 | 17.3 × 51.9 m | 3,544 m² | 6.5 km |
+| Bayonne (median, by the law) | 11,000 | 12 | 9.6 × 28.9 m | 4,379 m² | 3.6 km |
+| Zürich (measured) | 11,550 | 9 | 9.0 × 26.9 m | 2,851 m² | 3.4 km |
+| Venice (measured) | 106,400 | 78 | 6.0 × 17.9 m | 10,989 m² | 7.4 km |
+| Paris (measured) | 214,667 | 182 | 6.8 × 20.4 m | 33,173 m² | 11.7 km |
+| Cairo (by the law) | 382,000 | 280 | 6.2 × 18.7 m | 42,979 m² | 13.1 km |
 
-Width = the larger side of the box around the parcels, in house blocks of 2 m, each shown as 125 m of land (the half
-house size of the landscape work, not merged). Median over all towns 7.7 km (3.4 to 22.1). The outer ring of blocks
-is only partly filled, so a small town is wider than the square root of its ground (median 6.0 km). Two pairs of
-towns would touch: Cairo and Fustat, Rabat and Salé.
+"People of the time" are all people of the real town; about a quarter of the world's persons of a town live inside
+it, and the ground follows from them alone. Width = the larger side of the box around the parcels, in house blocks
+of 2 m, each shown as 125 m of land (the half house size, live since PR #59). Median over all towns 4.2 km (1.8 to
+13.1). The outer ring of blocks is only partly filled, so a small town is wider than the square root of its ground
+(Limoges: three parcels in a row). Two pairs of towns would touch: Cairo and Fustat, Rabat and Salé.
 
 ### Own rules and gaps (no source)
 
 - The measured towns keep their distance from the line when the world counts them differently (ratio 0.4 to 3.3).
 - All families of a town get equal parcels; who lives in the centre is the order of the ids.
 - One family a parcel. No source read on families per house; the narrowest attested front is not reached.
+- The law is fitted to the whole population of a town. The world applies it to the persons who live inside (the
+  farmers of the town live in hamlets), so its towns stand for real towns of 300 to 94,700 people.
 - The law is fitted to western European towns of 1,000 to 200,000; Cairo (382,000) and towns outside western Europe
   are extrapolated.
 - The grid is a placeholder: no square, no church, no bent streets, no wall. The ground (water, rock, slope) is not
   known to the simulation: `foundLots` and `layParcels` take a `free` test for it, which nothing passes yet. The
-  landscape thread writes the building-ground layer (`public/data/ground_<year>.json`) after its half-size change.
+  landscape thread's building-ground layer (`public/data/ground_<year>.json`, draft PR #62) is to be passed to it.
 - The town stands still until persons are born, die and move.
-- The world graphic on main still builds its towns from `public/data/towns_1291.json` (src/worldprobe/settle.ts).
-  The landscape work (PR #59) sets one house on each parcel, from the file above and not yet from `/lots`; the far
-  zoom steps (far.ts) do not know the parcels yet.
+- The world graphic (src/worldprobe/lots.ts, settle.ts `onParcels`, on main since PR #59) sets one house on each
+  parcel of `public/data/lots_<year>.json`, at the nearest zoom step only, and not yet from `/lots`; without the file
+  it packs its towns as before. The far zoom steps (far.ts) do not know the parcels yet.
 
 ### Sources
 

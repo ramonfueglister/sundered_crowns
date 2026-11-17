@@ -1,14 +1,14 @@
 # Jede Familie hat eine Parzelle
 
-**Status:** Entwurf · **Bereich:** Siedlung · **Stand:** 2026-11-16
+**Status:** Entwurf · **Bereich:** Siedlung · **Stand:** 2026-11-17
 
-> Jede Familie einer Stadt hat im Grundbuch der Welt eine Parzelle mit festem Platz, Breite und Tiefe. Die Fläche der Stadt folgt der Zahl ihrer Bewohner nach einem Gesetz, das an 173 Städten um 1300 gemessen ist.
+> Jede Familie, die in einer Stadt wohnt, hat im Grundbuch der Welt eine Parzelle mit festem Platz, Breite und Tiefe. Die Fläche der Stadt folgt der Zahl ihrer Bewohner nach einem Gesetz, das an 173 Städten um 1300 gemessen ist.
 
-Der Entwurf ist gebaut, aber nicht im Spiel: Die Simulation führt das Grundbuch, die 3D-Welt zeichnet ihre Häuser noch nicht daraus.
+Der Entwurf ist gebaut, aber nicht im Spiel. Die Simulation führt das Grundbuch; die 3D-Welt stellt auf jede Parzelle ein Haus, sobald der Entwurf live geht.
 
 ## Das Feature
 
-Beim Gründen der Welt bekommt jede Stadt ihren Baugrund und jede ihrer Familien eine Parzelle darauf. Die Parzellen sind eigene Einträge der Simulation, die Familie zeigt auf ihre Parzelle. Was eine Stadt an Häusern zeigt, soll nur noch aus diesem Grundbuch kommen.
+Beim Gründen der Welt bekommt jede Stadt ihren Baugrund und jede Familie, die in ihr wohnt, eine Parzelle darauf. Die Bauernfamilien der Stadt wohnen in [Weilern vor den Mauern](../personen/weiler-der-bauern.md) und haben noch keine Parzelle. Die Parzellen sind eigene Einträge der Simulation, die Familie zeigt auf ihre Parzelle. Was eine Stadt an Häusern zeigt, soll nur noch aus diesem Grundbuch kommen.
 
 Das Grundbuch ändert sich noch nicht, solange niemand geboren wird, stirbt oder umzieht.
 
@@ -16,7 +16,7 @@ Nicht dabei: wo ein neues Haus entsteht, wie Gassen wachsen, Mauern, Tore, Brüc
 
 ## Im Spiel
 
-Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-Welt stellt später auf jede Parzelle ein Haus an die Gassenseite.
+Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-Welt stellt in der nächsten Ansicht auf jede Parzelle ein Haus an die Gassenseite, sobald der Entwurf live ist.
 
 ## Das Modell
 
@@ -44,22 +44,22 @@ Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-W
 
 ## Historische Prüfung
 
-- **Bodenfläche je Familie.** Das Gesetz gibt einer Familie in einer Stadt von 11'000 Einwohnern 325 m² Stadtfläche. Grenade war mit 333 m² je Hausplatz geplant. Die beiden Quellen sind voneinander unabhängig. Anteil und Seitenverhältnis der Parzelle stammen dagegen von Grenade selbst.
-- **Platz für ein Haus je Familie.** Die schmalste Parzelle der Welt ist 5,4 m breit, belegt sind Parzellen ab etwa 4,1 m.
-- **Buchhaltung.** Tests prüfen für alle 558 Städte: Jede Familie hat genau eine Parzelle, keine Parzelle hat zwei Familien, die Parzellen einer Stadt überlappen nicht und ergeben zusammen 76 % ihres Baugrunds.
+- **Bodenfläche je Familie.** Das Gesetz gibt einer Familie in einer mittleren Stadt der Welt (Bayonne, 12 Familien in der Stadt) 365 m² Stadtfläche. Grenade war mit 333 m² je Hausplatz geplant. Die beiden Quellen sind voneinander unabhängig. Anteil und Seitenverhältnis der Parzelle stammen dagegen von Grenade selbst.
+- **Platz für ein Haus je Familie.** Die schmalste Parzelle der Welt ist 5,9 m breit, belegt sind Parzellen ab etwa 4,1 m.
+- **Buchhaltung.** Tests prüfen für alle 558 Städte: Jede Familie in der Stadt hat genau eine Parzelle, keine Parzelle hat zwei Familien, die Parzellen einer Stadt überlappen nicht und ergeben zusammen 76 % ihres Baugrunds.
 
-Was die Welt von 1291 bekommt: 26'815 Parzellen in 558 Städten.
+Was die Welt von 1291 bekommt: 8'150 Parzellen in 558 Städten, für die 8'150 Familien (26'124 Personen), die in den Städten wohnen. Die 18'665 Familien der Weiler haben noch keine.
 
-| Stadt | Einwohner der Zeit | Familien | Parzelle | Breite der Stadt |
+| Stadt | Einwohner der Zeit | Familien in der Stadt | Parzelle | Breite der Stadt |
 |---|---|---|---|---|
-| Limoges (kleinste Stadt, vermessen) | 4'000 | 13 | 12,1 mal 36,3 m | 6,0 km |
-| Bayonne (mittlere Stadt, nach Formel) | 11'000 | 32 | 8,5 mal 25,6 m | 7,3 km |
-| Zürich (vermessen) | 11'550 | 27 | 8,7 mal 26,1 m | 7,5 km |
-| Venedig (vermessen) | 106'400 | 267 | 5,5 mal 16,4 m | 11,5 km |
-| Paris (vermessen) | 214'667 | 570 | 6,1 mal 18,4 m | 18,1 km |
-| Kairo (nach Formel) | 382'000 | 983 | 5,5 mal 16,4 m | 22,1 km |
+| Limoges (kleinste Stadt, vermessen) | 4'000 | 3 | 17,3 mal 51,9 m | 6,5 km |
+| Bayonne (mittlere Stadt, nach Formel) | 11'000 | 12 | 9,6 mal 28,9 m | 3,6 km |
+| Zürich (vermessen) | 11'550 | 9 | 9,0 mal 26,9 m | 3,4 km |
+| Venedig (vermessen) | 106'400 | 78 | 6,0 mal 17,9 m | 7,4 km |
+| Paris (vermessen) | 214'667 | 182 | 6,8 mal 20,4 m | 11,7 km |
+| Kairo (nach Formel) | 382'000 | 280 | 6,2 mal 18,7 m | 13,1 km |
 
-Die Breite gilt bei halber Hausgrösse (ein Hausblock von 2 m steht für 125 m Land; diese Grösse ist selbst noch ein Entwurf). Über alle Städte ist die mittlere Breite 7,7 km. Zwei Städtepaare würden sich berühren: Kairo und Fustat, Rabat und Salé.
+«Einwohner der Zeit» sind alle Menschen der echten Stadt. In der Stadt der Welt wohnt rund ein Viertel ihrer Personen, die übrigen sind Bauern in den Weilern; die Fläche der Stadt folgt nur aus denen in der Stadt. Die Breite gilt bei halber Hausgrösse (ein Hausblock von 2 m steht für 125 m Land). Über alle Städte ist die mittlere Breite 4,2 km. Zwei Städtepaare würden sich berühren: Kairo und Fustat, Rabat und Salé.
 
 ## Massstab 1 : 100
 
@@ -67,13 +67,14 @@ Die Stadt hat ein Hundertstel der Menschen auf einem Hundertstel der Fläche. Di
 
 ## Grenzen
 
+- Das Gesetz ist an der ganzen Bevölkerung einer Stadt gemessen. Die Welt wendet es auf die Personen an, die in der Stadt wohnen.
 - Das Gesetz ist an Städten Westeuropas mit 1'000 bis 200'000 Einwohnern gemessen. Für Kairo und für Städte ausserhalb Westeuropas ist es eine Übertragung.
 - Anteil und Form der Parzelle kommen von einer einzigen Planstadt in Südfrankreich. Freiburg im Breisgau hatte Hofstätten von 16,2 mal 32,4 m im Verhältnis 1 zu 2 (Löbbecke).
 - Eigene Festlegungen ohne Quelle: Alle Parzellen einer Stadt sind gleich gross. Wer in der Mitte wohnt, folgt der Nummer der Familie. Eine Familie je Parzelle (zu Familien je Haus ist keine Quelle gelesen). Die Umrechnung der vermessenen Städte auf die Einwohnerzahl der Welt.
 - Das Raster ist ein Platzhalter ohne Platz, Kirche und Mauer. Gewachsene Städte hatten kein Raster.
 - Die Simulation kennt den Boden noch nicht: Parzellen können im Wasser oder auf Fels liegen, bis die Baugrund-Schicht der Landschaft da ist.
-- Kleine Städte sind breiter, als ihre Fläche erwarten lässt, weil der äusserste Ring der Blöcke nur teilweise gefüllt ist.
-- Sobald die Bauernfamilien in Weilern vor der Stadt wohnen, zählen für die Stadtfläche nur noch die Familien in der Stadt. Die Städte werden dann deutlich kleiner.
+- Kleine Städte sind breiter, als ihre Fläche erwarten lässt, weil der äusserste Ring der Blöcke nur teilweise gefüllt ist. Limoges hat drei Parzellen in einer Reihe.
+- Die Höfe der Bauernfamilien in den Weilern stehen noch nicht im Grundbuch.
 
 ## Quellen
 

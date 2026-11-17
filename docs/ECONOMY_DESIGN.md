@@ -791,7 +791,8 @@ again and are not those of the trial.
 
 **Tests.** `economy/src/clock.rs` and `economy/tests/shell.rs` (cargo test, 15 tests): with a plan and a window of
 one period the engine computes what the port computes; a firm sets supply and price only on its plan day, as the
-mean demand times the expected growth; the accounts keep the rows of one window and the figures are their sums; one
+mean demand times the expected growth; the clock keeps one window of the series of the accounts that the figures
+sum (the port keeps its last row alone, a state of the older format with whole rows is still read); one
 call for many periods equals many calls; a state loads bit for bit and continues as if it had never stopped; the
 clock stops when it does not hold every firm; the accounting identities hold. `tests/economy.test.ts` (36 of the 774 tests of the game): the
 daily calibration follows from the yearly one by the rules above; the WebAssembly engine gives bit for bit the

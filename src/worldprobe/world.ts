@@ -13,10 +13,12 @@ import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLin
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
+import type { TownParcels } from './lots';
+import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
-import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, type Settled, type Site, farmsFor, raise, settle } from './settle';
+import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
@@ -70,8 +72,12 @@ const SLOPE = rgb(0x86983c);
 const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
+/** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
+const STRAY_TREES = 0.01, CLOSED = 0.88;
 /** km to a degree of longitude at the equator */
 const KM_PER_DEGREE = 111.32;
+/** the ids of the hamlets, above those of the gazetteer's places: 256 to a town */
+const HAMLET_IDS = 1 << 20;
 /**
  * In how many courses the fields are tilled: in three (winter corn, spring corn, fallow), so that one field in
  * three lies fallow in a year, grazed until it is ploughed again; in two (corn, fallow) round the Mediterranean,
@@ -120,9 +126,11 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * only; from step 1 on it is part of the ground (far.ts). `inhabitants` gives the people of the places (by their
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files;
  * `forest` the forest of the world's start year, where one was made for it (forest.ts); `rural` the people on the
- * land of that year (rural.ts).
+ * land of that year (rural.ts). With `hamlets` (hamlets.ts) only what the simulation holds persons for stands in the
+ * world: its towns, their hamlets before the walls, and the fields round them. With `parcels` (lots.ts) the houses of
+ * a town stand on the parcels of its families.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -288,10 +296,28 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // Vineyards are a quarter of the fields of the warm low country and thin out to none by 52° north (a rule of thumb).
   const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [], monuments: Monument[] = [], all: Site[] = [];
   const onGround = (p: readonly [number, number]) => p[0] >= 2 && p[1] >= 2 && p[0] < N - 2 && p[1] < N - 2;
+  /** the fields of the towns: the ground within `r` blocks of a town's middle */
+  const fields: { x: number; z: number; r: number }[] = [];
   places.forEach((p, id) => {
-    const site: Site = { id, at: toGround(...cellOf(region, p.lon, p.lat)), size: p.size, pop: inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region) };
+    const h = hamlets?.get(id);
+    // with the hamlets of the simulation only the places it holds persons for stand in the world
+    if (hamlets && !h) return;
+    const at = toGround(...cellOf(region, p.lon, p.lat));
+    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step === 0 ? parcels?.get(id) : undefined };
     all.push(site);
     if (onGround(site.at)) sites.push(site);
+    if (!h) return;
+    // the town's fields lie round it, as far as holds the land its farmers till; its hamlets stand among them
+    const east = toGround(...cellOf(region, p.lon + 0.1, p.lat)), perKm = Math.hypot(east[0] - at[0], east[1] - at[1]) / (0.1 * KM_PER_DEGREE * Math.cos((p.lat * Math.PI) / 180));
+    const r = h.reachKm * perKm, n = hamletsOf(h.families);
+    // what the fields are held against: the blocks of ploughed ground the town's arable is at the finest step
+    if (step === 0 && own(Math.floor(at[0]), Math.floor(at[1]))) counts.arable = (counts.arable ?? 0) + h.km2 * perKm * perKm;
+    if (r > 0 && at[0] > -1.4 * r && at[1] > -1.4 * r && at[0] < N + 1.4 * r && at[1] < N + 1.4 * r) fields.push({ x: at[0], z: at[1], r });
+    const inner = (firstHalf(h.inside * PEOPLE_PER_PERSON) + 10) / 2 ** step, outer = Math.max(0.8 * r, inner + (5 * Math.sqrt(n)) / 2 ** step), turn = hash2(id, 3, 91) * Math.PI * 2;
+    for (let k = 0; k < n; k++) {
+      const q = hamletAt(k, n, inner, outer), a = turn + k * HAMLET_TURN, here: [number, number] = [at[0] + Math.cos(a) * q, at[1] + Math.sin(a) * q];
+      if (onGround(here)) sites.push({ id: HAMLET_IDS + id * 256 + k, at: here, size: 1, pop: (h.hamlet * PEOPLE_PER_PERSON) / n, region: p.region, style: site.style, hamlet: true });
+    }
   });
   /** how much the game's layers of 1356 count at a cell: towards the east edge of the game map they give way, so that no line shows where they end */
   const reach = (cx: number) => { const px = region.x0 + cx / region.cells; return smooth(region.mapW, region.mapW - LAYERS_FADE, region.worldW ? ((px % region.worldW) + region.worldW) % region.worldW : px); };
@@ -314,6 +340,13 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
    * layer of 1356 lie evenly over the land.
    */
   const ploughed = (x: number, z: number) => {
+    if (hamlets) {
+      // the fields of a town lie together round it, with a frayed edge, and leave the woods standing
+      let d = Infinity;
+      for (const f of fields) d = Math.min(d, Math.hypot(x - f.x, z - f.z) / f.r);
+      if (d >= 1.2 || !inGrid(Math.floor(x), Math.floor(z))) return 0;
+      return d * (0.85 + 0.3 * noise2(((x + ox) * cell) / 14, ((z + oz) * cell) / 14, 93)) < 1 && wooded(x, z) < 0.5 ? FIELD_GROUND : 0;
+    }
     const share = arableOf(x, z);
     return arable && share > 0 ? FIELD_GROUND * tilth(Math.min(1, share / FIELD_GROUND), (x + ox) * cell, (z + oz) * cell, woodsShow, lean ? lean[idx(Math.floor(x), Math.floor(z))] : 0) : share;
   };
@@ -327,6 +360,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
    * without the layer) as everywhere before.
    */
   const farms = (x: number, z: number) => {
+    if (hamlets) return 0;
     if (!rural) return FARMS;
     const people = ruralAt(rural, ...mapPixel(x, z));
     // of the land's lots as many are fields as hold its ploughed ground
@@ -371,7 +405,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   let settled: Settled | undefined, cover: Cover | undefined;
   if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -403,7 +437,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       if (!fits) continue;
       // palms line the water of the desert and of the hot steppe, and stand among the trees of the rain forest
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
-      if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : 0.04) + 0.7 * wooded(x, z)) continue;
+      if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
       const mine = own(Math.floor(x), Math.floor(z)), r = seeded(seedOf(tx, tz, 75)), sort = hash2(tx, tz, 74);
       if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5); }
       else if (here === Land.Savanna) { if (mine) acacia(things, x, g.h[i], z, r); occlude(g, x - 1.1, z - 1.1, x + 1.1, z + 1.1, g.h[i] + 2.4); }
