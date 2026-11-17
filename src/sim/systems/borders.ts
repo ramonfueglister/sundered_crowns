@@ -69,12 +69,11 @@ function largestPlace(s: WorldState, realm: number): number {
  *  has none known, a realm without a capital the first of the lists. */
 function cultureOfCapital(s: WorldState, cap: number): [number, number] {
   if (cap < 0) return [0, 0];
-  if ((s.person.cols as Record<string, unknown>).culture) {
-    const { culture, faith, persons } = placeCultures(s, cap);
-    if (persons > 0) return [majority(culture), majority(faith)];
-  } else {
-    const old = s.place as unknown as { culture?: ArrayLike<number>; faith?: ArrayLike<number> };
-    if (old.culture && old.faith) return [old.culture[cap], old.faith[cap]];
+  const { culture, faith, persons } = placeCultures(s, cap);
+  if (persons > 0) {
+    if ((s.person.cols as Record<string, unknown>).culture) return [majority(culture), majority(faith)];
+    const old = s.place as unknown as { culture: ArrayLike<number>; faith: ArrayLike<number> }; // the persons there have it
+    return [old.culture[cap], old.faith[cap]];
   }
   return [cultureIndex(null), faithIndex(null)];
 }

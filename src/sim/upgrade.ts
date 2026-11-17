@@ -122,9 +122,10 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // places' own columns go.
     if (!setup) throw new Error('the upgrade to 19 needs the setup of the start year');
     const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    const had = 'culture' in cols; // the persons of a world that has them keep theirs
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.person as { cols: unknown }).cols = fresh;
-    foundCultures(s, setup());
+    if (!had) foundCultures(s, setup());
     const place = s.place as unknown as Record<string, unknown>;
     delete place.culture; delete place.faith;
     s.v = 19;
