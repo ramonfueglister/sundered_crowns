@@ -156,10 +156,11 @@ fn a_day_without_exports_has_real_exports_of_zero() {
         let (r, d) = (&e.model.rotw, &e.model.data);
         assert_eq!(r.C_E, 0.0);
         assert_eq!(r.C_l, 0.0);
-        assert_eq!(d.real_exports[1], 0.0);
-        assert_eq!(d.nominal_exports[1], 0.0);
-        assert!(d.real_gdp[1].is_finite() && d.real_gdp[1] > 0.0);
-        assert!(d.real_imports[1] > 0.0); // the stalls were full
+        // the port keeps the row of the period just computed
+        assert_eq!(d.real_exports, [0.0]);
+        assert_eq!(d.nominal_exports, [0.0]);
+        assert!(d.real_gdp[0].is_finite() && d.real_gdp[0] > 0.0);
+        assert!(d.real_imports[0] > 0.0); // the stalls were full
         // without orders the mix of the exports stays that of the calibration
         assert_eq!(e.model.prop.c_E_g, AUSTRIA2010Q1.parameters.c_E_g);
     }
@@ -275,8 +276,8 @@ fn the_merchants_pick_among_the_firms_of_the_other_cities_as_a_buyer_of_the_port
 
     // what a city has sold does not count: with the sales of city 1 halved its part is the same
     let mut slump = all.clone();
-    for y in &mut slump.cities[1].model.data.real_gdp {
-        *y *= 0.5;
+    for row in &mut slump.cities[1].model.ext.accounts {
+        row[0] *= 0.5;
     }
     assert_eq!(origins(&slump.cities, 0, g), w);
 

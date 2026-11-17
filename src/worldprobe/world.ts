@@ -13,6 +13,7 @@ import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLin
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
+import type { TownParcels } from './lots';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
@@ -126,10 +127,11 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files;
  * `forest` the forest of the world's start year, where one was made for it (forest.ts); `rural` the people on the
  * land of that year (rural.ts). With `hamlets` (hamlets.ts) only what the simulation holds persons for stands in the
- * world: its towns, their hamlets before the walls, and the fields round them. With `mean` the ground of a coarser
- * step is covered by what the finer step shows there (mean.ts) instead of what far.ts lays out.
+ * world: its towns, their hamlets before the walls, and the fields round them. With `parcels` (lots.ts) the houses of
+ * a town stand on the parcels of its families. With `mean` the ground of a coarser step is covered by what the finer
+ * step shows there (mean.ts) instead of what far.ts lays out.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, mean: Cover | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, mean: Cover | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -302,7 +304,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // with the hamlets of the simulation only the places it holds persons for stand in the world
     if (hamlets && !h) return;
     const at = toGround(...cellOf(region, p.lon, p.lat));
-    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region) };
+    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step === 0 ? parcels?.get(id) : undefined };
     all.push(site);
     if (onGround(site.at)) sites.push(site);
     if (!h) return;

@@ -10,7 +10,13 @@ import type { Town } from '../figures';
 import { FINER } from './land';
 
 /** A place of the gazetteer on the ground. */
-export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean }
+export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels }
+/**
+ * The parcels of a town as the simulation's land register holds them (src/sim/systems/lots.ts): all `w` metres along
+ * the street and `d` metres deep, their middles `x` metres east and `z` metres south of the town's centre, the
+ * street on the side `front` (0 north, 1 east, 2 south, 3 west). Metres at the scale of the houses.
+ */
+export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[] }
 /** A monument on the ground: one building of it. */
 export interface Monument { id: number; at: P2; model: Model }
 /**
@@ -192,6 +198,28 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     landmark(model, r, cx, cz, 14, 'monument');
   };
 
+  /**
+   * The houses of a town on the parcels of its families: one to a parcel, as wide as the parcel and at its street
+   * side, the yard behind it left open. Neighbours stand wall to wall, as the houses of a medieval street did.
+   * Returns how far the houses reach from the middle, in blocks; a parcel whose ground is taken, wet or steep gets
+   * no house, and the count says so.
+   */
+  const onParcels = (s: Site, r: Rnd, cx: number, cz: number, tall: boolean): number => {
+    const L = s.lots!, mine = own(cx, cz);
+    let reach = 0;
+    for (let k = 0; k < L.x.length; k++) {
+      const side = L.front[k], across = side === 0 || side === 2, along = across ? L.x[k] : L.z[k], into = across ? L.z[k] : L.x[k];
+      // the edges of neighbouring parcels round to the same block, so that their houses neither overlap nor gape
+      const a0 = Math.round(m(along - L.w / 2)), a1 = Math.max(a0 + 2, Math.round(m(along + L.w / 2))), b0 = Math.round(m(into - L.d / 2)), b1 = Math.max(b0 + 2, Math.round(m(into + L.d / 2)));
+      const deep = Math.min(b1 - b0, r.int(3, 5)), b = side === 0 || side === 3 ? b0 : b1 - deep, floors = tall ? (r.chance(0.35) ? 3 : 2) : r.chance(0.5) ? 2 : 1;
+      const x = cx + (across ? a0 : b), z = cz + (across ? b : a0), w = across ? a1 - a0 : deep, d = across ? deep : a1 - a0;
+      if (home(r, x, z, w, d, floors, 0, s, (['nz', 'px', 'pz', 'nx'] as const)[side])) reach = Math.max(reach, Math.abs(x - cx), Math.abs(x + w - cx), Math.abs(z - cz), Math.abs(z + d - cz));
+      else if (mine) count('parcel without house');
+    }
+    if (mine) count('parcel', L.x.length);
+    return reach;
+  };
+
   for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]));
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0) || a.id - b.id).forEach((s) => {
@@ -235,6 +263,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
       if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
+      if (s.lots) { onParcels(s, r, cx, cz, false); if (own(cx, cz)) count('village'); return; }
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, turn = r.chance(0.5), long = blocks(r, 5.7, 7.2), short = blocks(r, 4.3, 5.7), w = turn ? short : long, d = turn ? long : short;
@@ -252,8 +281,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
     /** the side of a footprint that lies on a street, the sides towards the viewer first */
     const onStreet = (x: number, z: number, w: number, d: number): Side => (street(x, z + d) ? 'pz' : street(x + w, z) ? 'px' : street(x, z - 1) ? 'nz' : street(x - 1, z) ? 'nx' : 'pz');
-    let half = firstHalf(pop);
-    for (; housed < need && half <= 70; half += 2) {
+    let half = s.lots ? onParcels(s, r, cx, cz, true) + 2 : firstHalf(pop);
+    for (; !s.lots && housed < need && half <= 70; half += 2) {
       for (let z = cz - half; z < cz + half && housed < need; z++) for (let x = cx - half; x < cx + half && housed < need; x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || street(x, z)) continue;
         const turn = r.chance(0.5);
